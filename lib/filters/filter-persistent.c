@@ -114,7 +114,7 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 		return_0;
 	}
 
-	if (!(cft = config_open(CONFIG_FILE, pf->file, 1)))
+	if (!(cft = config_open(CONFIG_FILE_SPECIAL, pf->file, 1)))
 		return_0;
 
 	if (!config_file_read(cft))

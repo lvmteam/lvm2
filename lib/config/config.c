@@ -38,7 +38,8 @@ static const char *_config_source_names[] = {
 	[CONFIG_FILE] = "file",
 	[CONFIG_MERGED_FILES] = "merged files",
 	[CONFIG_STRING] = "string",
-	[CONFIG_PROFILE] = "profile"
+	[CONFIG_PROFILE] = "profile",
+	[CONFIG_FILE_SPECIAL] = "special purpose"
 };
 
 struct config_file {
@@ -100,7 +101,9 @@ struct dm_config_tree *config_open(config_source_t source,
 		goto fail;
 	}
 
-	if ((source == CONFIG_FILE) || (source == CONFIG_PROFILE)) {
+	if ((source == CONFIG_FILE) ||
+	    (source == CONFIG_FILE_SPECIAL) ||
+	    (source == CONFIG_PROFILE)) {
 		if (!(cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file)))) {
 			log_error("Failed to allocate config file.");
 			goto fail;
@@ -133,9 +136,12 @@ int config_file_check(struct dm_config_tree *cft, const char **filename, struct 
 	struct config_file *cf;
 	struct stat _info;
 
-	if ((cs->type != CONFIG_FILE) && (cs->type != CONFIG_PROFILE)) {
-		log_error(INTERNAL_ERROR "config_file_check: expected file or profile config source, "
-					 "found %s config source.", _config_source_names[cs->type]);
+	if ((cs->type != CONFIG_FILE) &&
+	    (cs->type != CONFIG_PROFILE) &&
+	    (cs->type != CONFIG_FILE_SPECIAL)) {
+		log_error(INTERNAL_ERROR "config_file_check: expected file, special file or "
+					 "profile config source, found %s config source.",
+					 _config_source_names[cs->type]);
 		return 0;
 	}
 
@@ -227,7 +233,9 @@ void config_destroy(struct dm_config_tree *cft)
 
 	cs = dm_config_get_custom(cft);
 
-	if ((cs->type == CONFIG_FILE) || (cs->type == CONFIG_PROFILE)) {
+	if ((cs->type == CONFIG_FILE) ||
+	    (cs->type == CONFIG_PROFILE) ||
+	    (cs->type == CONFIG_FILE_SPECIAL)) {
 		cf = cs->source.file;
 		if (cf && cf->dev)
 			if (!dev_close(cf->dev))
@@ -377,9 +385,12 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 	char *buf = NULL;
 	struct config_source *cs = dm_config_get_custom(cft);
 
-	if ((cs->type != CONFIG_FILE) && (cs->type != CONFIG_PROFILE)) {
-		log_error(INTERNAL_ERROR "config_file_read_fd: expected file or profile config source, "
-					 "found %s config source.", _config_source_names[cs->type]);
+	if ((cs->type != CONFIG_FILE) &&
+	    (cs->type != CONFIG_PROFILE) &&
+	    (cs->type != CONFIG_FILE_SPECIAL)) {
+		log_error(INTERNAL_ERROR "config_file_read_fd: expected file, special file "
+					 "or profile config source, found %s config source.",
+					 _config_source_names[cs->type]);
 		return 0;
 	}
 

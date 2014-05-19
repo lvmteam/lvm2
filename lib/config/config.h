@@ -30,7 +30,8 @@ typedef enum {
 	CONFIG_FILE,		/* one file config */
 	CONFIG_MERGED_FILES,	/* config that is a result of merging more config files */
 	CONFIG_STRING,		/* config string typed on cmdline using '--config' arg */
-	CONFIG_PROFILE		/* profile config */
+	CONFIG_PROFILE,		/* profile config */
+	CONFIG_FILE_SPECIAL	/* special purpose file config (e.g. metadata, persistent filter...) */
 } config_source_t;
 
 struct profile {
