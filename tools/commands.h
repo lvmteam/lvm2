@@ -139,10 +139,10 @@ xx(lvchange,
    ignoreskippedcluster_ARG,
    major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG,
    noudevsync_ARG, partial_ARG, permission_ARG, persistent_ARG, poll_ARG,
-   profile_ARG, raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG,
-   raidsyncaction_ARG, raidwritebehind_ARG, raidwritemostly_ARG, readahead_ARG,
-   resync_ARG, refresh_ARG, setactivationskip_ARG, syncaction_ARG, sysinit_ARG,
-   test_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
+   raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, raidsyncaction_ARG,
+   raidwritebehind_ARG, raidwritemostly_ARG, readahead_ARG, resync_ARG,
+   refresh_ARG, setactivationskip_ARG, syncaction_ARG, sysinit_ARG, test_ARG,
+   writebehind_ARG, writemostly_ARG, zero_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -894,7 +894,7 @@ xx(vgchange,
    ignoreactivationskip_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
    ignoreskippedcluster_ARG,
    logicalvolume_ARG, maxphysicalvolumes_ARG, monitor_ARG, noudevsync_ARG,
-   metadatacopies_ARG, vgmetadatacopies_ARG, partial_ARG, profile_ARG,
+   metadatacopies_ARG, vgmetadatacopies_ARG, partial_ARG,
    physicalextentsize_ARG, poll_ARG, refresh_ARG, resizeable_ARG,
    resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
 
