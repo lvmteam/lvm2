@@ -256,24 +256,32 @@ static int _check_disable_udev(const char *msg) {
 	return 0;
 }
 
+static int _check_config_by_source(struct cmd_context *cmd, config_source_t source)
+{
+	struct dm_config_tree *cft;
+	struct cft_check_handle *handle;
+
+	if (!(cft = get_config_tree_by_source(cmd, source)) ||
+	    !(handle = get_config_tree_check_handle(cmd, cft)))
+		return 1;
+
+	return config_def_check(handle);
+}
+
 static int _check_config(struct cmd_context *cmd)
 {
+	int abort_on_error;
+
 	if (!find_config_tree_bool(cmd, config_checks_CFG, NULL))
 		return 1;
 
-	if (!cmd->cft_check_handle) {
-		if (!(cmd->cft_check_handle = dm_pool_zalloc(cmd->libmem, sizeof(*cmd->cft_check_handle)))) {
-			log_error("Configuration check handle allocation failed.");
-			return 0;
-		}
-	}
+	abort_on_error = find_config_tree_bool(cmd, config_abort_on_errors_CFG, NULL);
 
-	cmd->cft_check_handle->cft = cmd->cft;
-	cmd->cft_check_handle->cmd = cmd;
-
-	if (!config_def_check(cmd->cft_check_handle) &&
-	    find_config_tree_bool(cmd, config_abort_on_errors_CFG, NULL)) {
-		log_error("LVM configuration invalid.");
+	if ((!_check_config_by_source(cmd, CONFIG_STRING) ||
+	    !_check_config_by_source(cmd, CONFIG_MERGED_FILES) ||
+	    !_check_config_by_source(cmd, CONFIG_FILE)) &&
+	    abort_on_error) {
+		log_error("LVM_ configuration invalid.");
 		return 0;
 	}
 
@@ -571,7 +579,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl->cft = config_file_open_and_read(config_file, CONFIG_FILE)))
+	if (!(cfl->cft = config_file_open_and_read(config_file, CONFIG_FILE, cmd)))
 		return_0;
 
 	dm_list_add(&cmd->config_files, &cfl->list);

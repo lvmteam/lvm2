@@ -105,7 +105,6 @@ struct cmd_context {
 	int config_initialized; /* used to reinitialize config if previous init was not successful */
 
 	struct dm_hash_table *cft_def_hash; /* config definition hash used for validity check (item type + item recognized) */
-	struct cft_check_handle *cft_check_handle;
 
 	/* selected settings with original default/configured value which can be changed during cmd processing */
 	struct config_info default_settings;

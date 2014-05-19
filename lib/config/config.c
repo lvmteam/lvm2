@@ -57,6 +57,7 @@ struct config_source {
 		struct config_file *file;
 		struct config_file *profile;
 	} source;
+	struct cft_check_handle *check_handle;
 };
 
 /*
@@ -246,7 +247,8 @@ void config_destroy(struct dm_config_tree *cft)
 }
 
 struct dm_config_tree *config_file_open_and_read(const char *config_file,
-						 config_source_t source)
+						 config_source_t source,
+						 struct cmd_context *cmd)
 {
 	struct dm_config_tree *cft;
 	struct stat info;
@@ -277,6 +279,22 @@ bad:
 	return NULL;
 }
 
+struct dm_config_tree *get_config_tree_by_source(struct cmd_context *cmd,
+						 config_source_t source)
+{
+	struct dm_config_tree *cft = cmd->cft;
+	struct config_source *cs;
+
+	while (cft) {
+		cs = dm_config_get_custom(cft);
+		if (cs && cs->type == source)
+			return cft;
+		cft = cft->cascade;
+	}
+
+	return NULL;
+}
+
 /*
  * Returns config tree if it was removed.
  */
@@ -304,6 +322,35 @@ struct dm_config_tree *remove_config_tree_by_source(struct cmd_context *cmd,
 
 	return cft;
 }
+
+struct cft_check_handle *get_config_tree_check_handle(struct cmd_context *cmd,
+						      struct dm_config_tree *cft)
+{
+	struct config_source *cs = dm_config_get_custom(cft);
+
+	if (!(cs = dm_config_get_custom(cft)))
+		return NULL;
+
+	if (cs->check_handle)
+		goto out;
+
+	/*
+	 * Attach config check handle to all config types but
+	 * CONFIG_FILE_SPECIAL - this one uses its own check
+	 * methods and the cft_check_handle is not applicable here.
+	 */
+	if (cs->type != CONFIG_FILE_SPECIAL) {
+		if (!(cs->check_handle = dm_pool_zalloc(cft->mem, sizeof(*cs->check_handle)))) {
+			log_error("Failed to allocate configuration check handle.");
+			return NULL;
+		}
+		cs->check_handle->cft = cft;
+		cs->check_handle->cmd = cmd;
+	}
+out:
+	return cs->check_handle;
+}
+
 
 int override_config_tree_from_string(struct cmd_context *cmd,
 				     const char *config_settings)
@@ -1646,7 +1693,7 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 		return 0;
 	}
 
-	if (!(profile->cft = config_file_open_and_read(profile_path, CONFIG_PROFILE)))
+	if (!(profile->cft = config_file_open_and_read(profile_path, CONFIG_PROFILE, cmd)))
 		return 0;
 
 	dm_list_move(&cmd->profile_params->profiles, &profile->list);
