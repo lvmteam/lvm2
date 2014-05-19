@@ -97,10 +97,14 @@ typedef union {
 #define CFG_UNSUPPORTED		0x08
 /* whether the configuration item is customizable by a profile */
 #define CFG_PROFILABLE		0x10
+/* whether the configuration item is customizable by a profile */
+/* and whether it can be attached to VG/LV metadata at the same time
+ * The CFG_PROFILABLE_METADATA flag incorporates CFG_PROFILABLE flag!!! */
+#define CFG_PROFILABLE_METADATA 0x30
 /* whether the default value is undefned */
-#define CFG_DEFAULT_UNDEFINED	0x20
+#define CFG_DEFAULT_UNDEFINED	0x40
 /* whether the defualt value is calculated during run time */
-#define CFG_DEFAULT_RUN_TIME	0x40
+#define CFG_DEFAULT_RUN_TIME	0x80
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
