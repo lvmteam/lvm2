@@ -13,6 +13,7 @@
 %with clvmd corosync
 
 # TODO %global req_dm_persistent device-mapper-persistent-data >= 0.1.4
+%with cache internal
 %with thin internal
 %with thin_check %{_sbindir}/thin_check
 %with thin_repair %{_sbindir}/thin_repair
@@ -39,6 +40,7 @@
 %endif
 
 %if %{fedora} == 16
+%with cache none
 %with thin none
 %with thin_check
 %with thin_repair

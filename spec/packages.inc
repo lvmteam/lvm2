@@ -82,9 +82,13 @@ fi
 %if %{have_service lvmetad}
  %{_sbindir}/lvmetad
 %endif
+%if %{have_with cache}
+  %{_mandir}/man7/lvmcache.7.gz
+%endif
+%if %{have_with thin}
+  %{_mandir}/man7/lvmthin.7.gz
+%endif
 %{_mandir}/man5/lvm.conf.5.gz
-%{_mandir}/man7/lvmcache.7.gz
-%{_mandir}/man7/lvmthin.7.gz
 %{_mandir}/man8/fsadm.8.gz
 %{_mandir}/man8/lvchange.8.gz
 %{_mandir}/man8/lvconvert.8.gz
