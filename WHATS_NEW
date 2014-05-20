@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Prompt before converting volumes to thin pool and thin pool metadata.
   Add dumpconfig --type profilable-{metadata,command} to select profile type.
   Exit immediately with error if command profile is found invalid.
   Separate --profile cmd line arg into --commandprofile and --metadataprofile.
