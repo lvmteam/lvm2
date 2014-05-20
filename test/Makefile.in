@@ -137,7 +137,7 @@ lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@
 	chmod +x $@
 
-lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
+lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	$(RM) $@-t
 	echo 'top_srcdir="$(top_srcdir)"' >> $@-t
 	echo 'abs_top_builddir="$(abs_top_builddir)"' >> $@-t
