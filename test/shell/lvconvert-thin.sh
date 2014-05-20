@@ -44,29 +44,23 @@ lvcreate -aey -L10M -n $lv2 $vg
 lvchange -an $vg/$lv1
 
 # conversion fails for mirror segment type
-not lvconvert --thinpool $vg/$lv1
-not lvconvert --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
-lvremove -f $vg
-
-# create RAID LVs for data and metadata volumes
-lvcreate -aey -L10M --type raid1 -m1 -n $lv1 $vg
-lvcreate -aey -L10M --type raid1 -m1 -n $lv2 $vg
-lvchange -an $vg/$lv1
-
-# conversion fails for internal volumes
-not lvconvert --thinpool $vg/${lv1}_rimage_0
-not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_rimage_0
-# can't use --readahead with --poolmetadata
-not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
-
-lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+fail lvconvert --thinpool $vg/$lv1
+# cannot use same LV
+fail lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
 
 prepare_lvs
-lvconvert -c 64 --stripes 2 --thinpool $vg/$lv1 --readahead 48
+
+# conversion fails for internal volumes
+# can't use --readahead with --poolmetadata
+invalid lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
+lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+
+prepare_lvs
+lvconvert --yes -c 64 --stripes 2 --thinpool $vg/$lv1 --readahead 48
 
 lvremove -f $vg
 lvcreate -L1T -n $lv1 $vg
-lvconvert -c 8M --thinpool $vg/$lv1
+lvconvert --yes -c 8M --thinpool $vg/$lv1
 
 lvremove -f $vg
 # test with bigger sizes
@@ -75,29 +69,30 @@ lvcreate -L8M -n $lv2 $vg
 lvcreate -L1M -n $lv3 $vg
 
 # chunk size is bigger then size of thin pool data
-not lvconvert -c 1G --thinpool $vg/$lv3
+fail lvconvert --yes -c 1G --thinpool $vg/$lv3
 # stripes can't be used with poolmetadata
-not lvconvert --stripes 2 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+invalid lvconvert --stripes 2 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too small metadata (<2M)
-not lvconvert -c 64 --thinpool $vg/$lv1 --poolmetadata $vg/$lv3
+fail lvconvert --yes -c 64 --thinpool $vg/$lv1 --poolmetadata $vg/$lv3
 # too small chunk size fails
-not lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+# 'fail' because profiles need to read VG
+fail lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too big chunk size fails
-not lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+fail lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # negative chunk size fails
-not lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+fail lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # non power of 2 fails
-not lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+fail lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
 # Warning about smaller then suggested
-lvconvert -c 256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err
+lvconvert --yes -c 256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err
 grep "WARNING: Chunk size is smaller" err
 
 lvremove -f $vg
 lvcreate -L1T -n $lv1 $vg
 lvcreate -L32G -n $lv2 $vg
 # Warning about bigger then needed
-lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err
+lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err
 grep "WARNING: Maximum size" err
 
 lvremove -f $vg
@@ -105,14 +100,14 @@ lvremove -f $vg
 if test "$TSIZE" -eq 64T; then
 lvcreate -L24T -n $lv1 $vg
 # Warning about bigger then needed (24T data and 16G -> 128K chunk)
-lvconvert -c 64 --thinpool $vg/$lv1 |& tee err
+lvconvert --yes -c 64 --thinpool $vg/$lv1 |& tee err
 grep "WARNING: Chunk size is too small" err
 fi
 
 #lvs -a -o+chunk_size,stripe_size,seg_pe_ranges
 
 # Convertions of pool to mirror or RAID is unsupported
-not lvconvert --type mirror -m1 $vg/$lv1
-not lvconvert --type raid1 -m1 $vg/$lv1
+fail lvconvert --type mirror -m1 $vg/$lv1
+fail lvconvert --type raid1 -m1 $vg/$lv1
 
 vgremove -ff $vg

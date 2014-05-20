@@ -49,7 +49,7 @@ lvremove -ff $vg
 lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
 lvcreate --type raid1 -m 1 -l 4 -n ${lv1}_raid1_pool $vg "$dev1" "$dev2"
 lvcreate --type raid1 -m 1 -L 2 -n ${lv1}_raid1_meta $vg "$dev1" "$dev2"
-lvconvert --thinpool $vg/${lv1}_raid1_pool \
+lvconvert --yes --thinpool $vg/${lv1}_raid1_pool \
         --poolmetadata ${lv1}_raid1_meta
 lvcreate -T $vg/${lv1}_raid1_pool -V 8 -n $lv1
 check lv_tree_on $vg ${lv1}_foo "$dev1"
