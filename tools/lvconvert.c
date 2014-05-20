@@ -1054,12 +1054,9 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 					  int failed_log, int failed_mirrors,
 					  int *replace_log, int *replace_mirrors)
 {
-	const char *leg_policy = NULL, *log_policy = NULL;
-
+	const char *leg_policy, *log_policy;
 	int force = arg_count(cmd, force_ARG);
 	int yes = arg_count(cmd, yes_ARG);
-
-	*replace_log = *replace_mirrors = 1;
 
 	if (arg_count(cmd, use_policies_ARG)) {
 		leg_policy = find_config_tree_str(cmd, activation_mirror_image_fault_policy_CFG, NULL);
@@ -1073,6 +1070,8 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 		*replace_log = *replace_mirrors = 0;
 		return;
 	}
+
+	*replace_log = *replace_mirrors = 1;
 
 	if (yes)
 		return;
@@ -1616,8 +1615,8 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 				     struct logical_volume *lv,
 				     struct lvconvert_params *lp)
 {
-	int failed_logs = 0;
-	int failed_mimages = 0;
+	int failed_logs;
+	int failed_mimages;
 	int replace_logs = 0;
 	int replace_mimages = 0;
 	uint32_t log_count;
