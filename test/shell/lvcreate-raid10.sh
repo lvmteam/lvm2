@@ -18,7 +18,7 @@ lv_devices() {
 ########################################################
 # MAIN
 ########################################################
-aux target_at_least dm-raid 1 3 0 || skip
+aux have_raid 1 3 0 || skip
 
 aux prepare_pvs 6 20  # 6 devices for RAID10 (2-mirror,3-stripe) test
 vgcreate -s 512k $vg $(cat DEVICES)

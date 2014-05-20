@@ -14,7 +14,7 @@ TEST_RAID=raid456
 . shell/lvchange-raid.sh
 
 aux raid456_replace_works || skip
-aux target_at_least dm-raid 1 5 2 || skip
+aux have_raid 1 5 2 || skip
 
 run_types raid4 -i 2 "$dev1" "$dev2" "$dev3" "$dev4"
 run_types raid5 -i 2 "$dev1" "$dev2" "$dev3" "$dev4"

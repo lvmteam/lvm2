@@ -22,10 +22,10 @@ test_description="ensure pvmove works with the cache segment types"
 test -e LOCAL_CLVMD && skip
 which md5sum || skip
 
-aux target_at_least dm-cache 1 3 0 || skip
+aux have_cache 1 3 0 || skip
 # for stacking
-aux target_at_least dm-thin-pool 1 8 0 || skip
-aux target_at_least dm-raid 1 4 2 || skip
+aux have_thin 1 8 0 || skip
+aux have_raid 1 4 2 || skip
 
 aux prepare_vg 5 80
 

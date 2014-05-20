@@ -21,7 +21,7 @@ create_vg_() {
 	vgcreate -s 64k "$@"
 }
 
-aux target_at_least dm-raid 1 1 0 || skip
+aux have_raid 1 1 0 || skip
 
 aux prepare_pvs 5 10
 

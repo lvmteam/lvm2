@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux target_at_least dm-raid 1 1 0 || skip
+aux have_raid 1 1 0 || skip
 
 aux prepare_pvs 6 80
 

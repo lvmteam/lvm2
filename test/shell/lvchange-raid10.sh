@@ -13,7 +13,7 @@ TEST_RAID=raid10
 
 . shell/lvchange-raid.sh
 
-aux target_at_least dm-raid 1 5 2 || skip
+aux have_raid 1 5 2 || skip
 
 run_types raid10 -m 1 -i 2 "$dev1" "$dev2" "$dev3" "$dev4"
 

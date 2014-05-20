@@ -17,9 +17,9 @@
 # Proper mismatch count 1.5.2 upstream,1.3.5 < x < 1.4.0 in RHEL6
 #
 # We will simplify and simple test for 1.5.2 and 1.3.5 < x < 1.4.0
-aux target_at_least dm-raid 1 3 5 &&
-  ! aux target_at_least dm-raid 1 4 0 ||
-  aux target_at_least dm-raid 1 5 2 || skip
+aux have_raid 1 3 5 &&
+  ! aux have_raid 1 4 0 ||
+  aux have_raid 1 5 2 || skip
 
 # DEVICE "$dev6" is reserved for non-RAID LVs that
 # will not undergo failure

@@ -157,7 +157,7 @@ lvremove -ff $vg
 # Test conversion to the pool and thin external at the same time (rhbz #1003461)
 lvcreate -l50 -n pool $vg
 lvcreate -l100 -n thin $vg
-lvconvert --thin --thinpool $vg/pool $vg/thin --originname thin-origin
+lvconvert --yes --thin --thinpool $vg/pool $vg/thin --originname thin-origin
 check lv_field $vg/thin segtype thin
 check lv_field $vg/thin-origin segtype linear
 

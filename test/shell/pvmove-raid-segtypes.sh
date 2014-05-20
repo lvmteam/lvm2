@@ -16,7 +16,7 @@ test_description="ensure pvmove works with raid segment types"
 test -e LOCAL_CLVMD && skip
 which md5sum || skip
 
-aux target_at_least dm-raid 1 3 5 || skip
+aux have_raid 1 3 5 || skip
 
 aux prepare_pvs 5 20
 vgcreate -c n -s 128k $vg $(cat DEVICES)

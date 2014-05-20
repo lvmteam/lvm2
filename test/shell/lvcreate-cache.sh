@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux target_at_least dm-cache 1 3 0 || skip
+aux have_cache 1 3 0 || skip
 
 aux prepare_vg 5 80
 

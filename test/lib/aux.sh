@@ -770,11 +770,21 @@ target_at_least() {
 }
 
 have_thin() {
-	target_at_least dm-thin-pool "$@" || exit 1
-	test "$THIN" = shared || test "$THIN" = internal || exit 1
+	test "$THIN" = shared -o "$THIN" = internal || return 1
+	target_at_least dm-thin-pool "$@" || return 1
 
 	# disable thin_check if not present in system
 	which thin_check || lvmconf 'global/thin_check_executable = ""'
+}
+
+have_raid() {
+	test "$RAID" = shared -o "$RAID" = internal || return 1
+	target_at_least dm-raid "$@"
+}
+
+have_cache() {
+	test "$CACHE" = shared -o "$CACHE" = internal || return 1
+	target_at_least dm-cache "$@"
 }
 
 # check if lvm shell is build-in  (needs readline)

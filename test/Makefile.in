@@ -146,6 +146,8 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp
 	echo 'abs_builddir="$(abs_builddir)"' >> $@-t
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
 	echo 'export THIN=@THIN@' >> $@-t
+	echo 'export RAID=@RAID@' >> $@-t
+	echo 'export CACHE=@CACHE@' >> $@-t
 	echo 'export LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
 	echo 'export DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
 	echo 'export CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
