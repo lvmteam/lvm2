@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Add dumpconfig --type profilable-{metadata,command} to select profile type.
   Exit immediately with error if command profile is found invalid.
   Separate --profile cmd line arg into --commandprofile and --metadataprofile.
   Strictly separate command profiles and per-VG/LV profiles referenced in mda.

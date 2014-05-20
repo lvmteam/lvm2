@@ -59,18 +59,22 @@ xx(dumpconfig,
    "dumpconfig\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-f|--file filename] \n"
-   "\t[--type {current|default|diff|missing|new|profilable} \n"
+   "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata} \n"
    "\t[--atversion version]] \n"
    "\t[--ignoreadvanced] \n"
    "\t[--ignoreunsupported] \n"
+   "\t[--config ConfigurationString] \n"
+   "\t[--commandprofile ProfileName] \n"
+   "\t[--profile ProfileName] \n"
+   "\t[--metadataprofile ProfileName] \n"
    "\t[--mergedconfig] \n"
    "\t[--validate]\n"
    "\t[--withcomments] \n"
    "\t[--withversions] \n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
-   ignoreunsupported_ARG, mergedconfig_ARG, validate_ARG,
-   withcomments_ARG, withversions_ARG)
+   ignoreunsupported_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   validate_ARG, withcomments_ARG, withversions_ARG)
 
 xx(formats,
    "List available metadata formats",

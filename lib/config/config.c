@@ -1622,6 +1622,7 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_id, int id)
 {
 	cfg_def_item_t *def = cfg_def_get_item_p(id);
+	uint16_t flags;
 
 	if ((def->parent != section_id) ||
 	    (spec->ignoreadvanced && def->flags & CFG_ADVANCED) ||
@@ -1645,9 +1646,19 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 				return 1;
 			break;
 		case CFG_DEF_TREE_PROFILABLE:
+		case CFG_DEF_TREE_PROFILABLE_CMD:
+		case CFG_DEF_TREE_PROFILABLE_MDA:
 			if (!(def->flags & CFG_PROFILABLE) ||
 			    (def->since_version > spec->version))
 				return 1;
+			flags = def->flags & ~CFG_PROFILABLE;
+			if (spec->type == CFG_DEF_TREE_PROFILABLE_CMD) {
+				if (flags & CFG_PROFILABLE_METADATA)
+					return 1;
+			} else if (spec->type == CFG_DEF_TREE_PROFILABLE_MDA) {
+				if (!(flags & CFG_PROFILABLE_METADATA))
+					return 1;
+			}
 			break;
 		default:
 			if (def->since_version > spec->version)

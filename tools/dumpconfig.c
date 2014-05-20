@@ -92,6 +92,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	struct config_def_tree_spec tree_spec = {0};
 	struct dm_config_tree *cft = NULL;
 	struct cft_check_handle *cft_check_handle = NULL;
+	struct profile *profile = NULL;
 	int r = ECMD_PROCESSED;
 
 	tree_spec.cmd = cmd;
@@ -130,6 +131,18 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!_get_vsn(cmd, &tree_spec.version))
 		return EINVALID_CMD_LINE;
+
+	/*
+	 * The profile specified by --profile cmd arg is like --commandprofile,
+	 * but it is used just for dumping the profile content and not for
+	 * application.
+	 */
+	if (arg_count(cmd, profile_ARG) &&
+	    (!(profile = add_profile(cmd, arg_str_value(cmd, profile_ARG, NULL), CONFIG_PROFILE_COMMAND)) ||
+	    !override_config_tree_from_profile(cmd, profile))) {
+		log_error("Failed to load profile %s.", arg_str_value(cmd, profile_ARG, NULL));
+		return ECMD_FAILED;
+	}
 
 	/*
 	 * Set the 'cft' to work with based on whether we need the plain
@@ -188,9 +201,18 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		tree_spec.type = CFG_DEF_TREE_PROFILABLE;
 		/* profilable type does not require check status */
 	}
+	else if (!strcmp(type, "profilable-command")) {
+		tree_spec.type = CFG_DEF_TREE_PROFILABLE_CMD;
+		/* profilable-command type does not require check status */
+	}
+	else if (!strcmp(type, "profilable-metadata")) {
+		tree_spec.type = CFG_DEF_TREE_PROFILABLE_MDA;
+		/* profilable-metadata  type does not require check status */
+	}
 	else {
 		log_error("Incorrect type of configuration specified. "
-			  "Expected one of: current, default, missing, new, profilable.");
+			  "Expected one of: current, default, missing, new, "
+			  "profilable, profilable-command, profilable-metadata.");
 		r = EINVALID_CMD_LINE;
 		goto out;
 	}
@@ -218,6 +240,8 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 out:
 	if (cft && (cft != cmd->cft))
 		dm_pool_destroy(cft->mem);
+	else if (profile)
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE_COMMAND);
 
 	/*
 	 * The cmd->cft (the "current" tree) is destroyed
