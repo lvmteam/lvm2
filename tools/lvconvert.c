@@ -1629,7 +1629,7 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	lv_check_transient(lv); /* TODO check this in lib for all commands? */
 
 	if (!(lv->status & PARTIAL_LV)) {
-		log_warn("%s is consistent. Nothing to repair.", lv->name);
+		log_print_unless_silent("%s is consistent. Nothing to repair.", lv->name);
 		return 1;
 	}
 
@@ -1640,15 +1640,15 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 		return_0;
 
 	if (failed_mimages)
-		log_error("Mirror status: %d of %d images failed.",
-			  failed_mimages, original_mimages);
+		log_print_unless_silent("Mirror status: %d of %d images failed.",
+					failed_mimages, original_mimages);
 
 	/*
 	 * Count the failed log devices
 	 */
 	if (failed_logs)
-		log_error("Mirror log status: %d of %d images failed.",
-			  failed_logs, original_logs);
+		log_print_unless_silent("Mirror log status: %d of %d images failed.",
+					failed_logs, original_logs);
 
 	/*
 	 * Find out our policies
