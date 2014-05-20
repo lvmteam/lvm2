@@ -2570,7 +2570,9 @@ static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 		goto deactivate_and_revert_new_lv;
 	}
 
-	log_print_unless_silent("Converted %s/%s to thin external origin.",
+	log_print_unless_silent("Converted \"%s/%s\" to thin volume with "
+				"external origin \"%s/%s\".",
+				vg->name, torigin_lv->name,
 				vg->name, external_lv->name);
 
 	return 1;
@@ -2954,7 +2956,7 @@ mda_write:
 		goto out;
 	}
 
-	log_print_unless_silent("Converted %s/%s to %s pool.",
+	log_print_unless_silent("Converted \"%s/%s\" to %s pool.",
 				pool_lv->vg->name, pool_lv->name,
 				(segtype_is_cache_pool(lp->segtype)) ?
 				"cache" : "thin");
