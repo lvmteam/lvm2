@@ -227,7 +227,7 @@ in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
 .TP
 .B \-\-splitmirrors \fIImages
-The number of redundant Images of a mirror to be split off and used
+The number of redundant \fIImages\fP of a mirror to be split off and used
 to form a new logical volume.  A name must be supplied for the
 newly-split-off logical volume using the \fB\-\-name\fP argument, unless
 the \fB\-\-trackchanges\fP argument is given.
@@ -246,11 +246,11 @@ Please note that this feature is only supported with the new md-based mirror
 implementation and not with the original device-mapper mirror implementation.
 .TP
 .B \-\-splitsnapshot
-Separates SnapshotLogicalVolume from its origin.
+Separates \fISnapshotLogicalVolume\fP from its origin.
 The volume that is split off contains the chunks that differ from the origin
 along with the metadata describing them.  This volume can be wiped and then
 destroyed with lvremove.
-The inverse of \-\-snapshot.
+The inverse of \fB\-\-snapshot\fP.
 .TP
 .B \-s, \-\-snapshot
 Recreates a snapshot from constituent logical volumes (or copies of them) after
