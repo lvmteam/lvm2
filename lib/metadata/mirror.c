@@ -2156,7 +2156,7 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_name,
 	 */
 	r = _split_mirror_images(lv, split_name, split_count, removable_pvs);
 	if (!r)
-		return 0;
+		return_0;
 
 	return 1;
 }

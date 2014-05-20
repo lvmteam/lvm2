@@ -1001,7 +1001,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 
 	if (!(failed_pvs = dm_pool_alloc(vg->vgmem, sizeof(*failed_pvs)))) {
 		log_error("Allocation of list of failed_pvs failed.");
-		return_NULL;
+		return NULL;
 	}
 
 	dm_list_init(failed_pvs);
@@ -1022,7 +1022,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 
 		if (!(new_pvl = dm_pool_alloc(vg->vgmem, sizeof(*new_pvl)))) {
 			log_error("Allocation of failed_pvs list entry failed.");
-			return_NULL;
+			return NULL;
 		}
 		new_pvl->pv = pvl->pv;
 		dm_list_add(failed_pvs, &new_pvl->list);
@@ -1539,7 +1539,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 			}
 			if (!lv_split_mirror_images(lv, lp->lv_split_name,
 						    nmc, operable_pvs))
-				return 0;
+				return_0;
 		} else if (!lv_remove_mirrors(cmd, lv, nmc, nlc,
 					      is_mirror_image_removable, operable_pvs, 0))
 			return_0;
@@ -1584,17 +1584,17 @@ int mirror_remove_missing(struct cmd_context *cmd,
 	 * will get stuck during a suspend.
 	 */
 	if (!_lv_update_mirrored_log(lv, failed_pvs, log_count))
-		return 0;
+		return_0;
 
 	if (_failed_mirrors_count(lv) > 0 &&
 	    !lv_remove_mirrors(cmd, lv, _failed_mirrors_count(lv),
 			       log_count ? 0U : 1U,
 			       _is_partial_lv, NULL, 0))
-		return 0;
+		return_0;
 
 	if (lv_is_mirrored(lv) &&
 	    !_lv_update_log_type(cmd, NULL, lv, failed_pvs, log_count))
-		return 0;
+		return_0;
 
 	if (!_reload_lv(cmd, lv->vg, lv))
 		return_0;
