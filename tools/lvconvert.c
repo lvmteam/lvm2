@@ -1639,7 +1639,8 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	failed_mimages = _failed_mirrors_count(lv);
 	failed_logs = _failed_logs_count(lv);
 
-	mirror_remove_missing(cmd, lv, 0);
+	if (!mirror_remove_missing(cmd, lv, 0))
+		return_0;
 
 	if (failed_mimages)
 		log_error("Mirror status: %d of %d images failed.",
