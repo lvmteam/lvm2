@@ -4525,7 +4525,7 @@ struct logical_volume *lv_create_empty(const char *name,
 		goto_bad;
 
 	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
-		lv->profile = vg->cmd->profile_params->global_profile;
+		lv->profile = vg->cmd->profile_params->global_metadata_profile;
  
 	return lv;
 bad:

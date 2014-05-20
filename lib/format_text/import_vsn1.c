@@ -576,7 +576,7 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	if (dm_config_get_str(lvn, "profile", &str)) {
 		log_debug_metadata("Adding profile configuration %s for LV %s/%s.",
 				   str, vg->name, lv->name);
-		lv->profile = add_profile(vg->cmd, str);
+		lv->profile = add_profile(vg->cmd, str, CONFIG_PROFILE_METADATA);
 		if (!lv->profile) {
 			log_error("Failed to add configuration profile %s for LV %s/%s",
 				  str, vg->name, lv->name);
@@ -814,7 +814,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	if (dm_config_get_str(vgn, "profile", &str)) {
 		log_debug_metadata("Adding profile configuration %s for VG %s.", str, vg->name);
-		vg->profile = add_profile(vg->cmd, str);
+		vg->profile = add_profile(vg->cmd, str, CONFIG_PROFILE_METADATA);
 		if (!vg->profile) {
 			log_error("Failed to add configuration profile %s for VG %s", str, vg->name);
 			goto bad;

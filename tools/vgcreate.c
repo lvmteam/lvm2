@@ -63,7 +63,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
-		vg->profile = vg->cmd->profile_params->global_profile;
+		vg->profile = vg->cmd->profile_params->global_metadata_profile;
 
 	if (!vg_set_extent_size(vg, vp_new.extent_size) ||
 	    !vg_set_max_lv(vg, vp_new.max_lv) ||

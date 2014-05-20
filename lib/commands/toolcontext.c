@@ -717,7 +717,8 @@ static void _destroy_config(struct cmd_context *cmd)
 
 	/* CONFIG_PROFILE */
 	if (cmd->profile_params) {
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE_COMMAND);
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE_METADATA);
 		/*
 		 * Destroy config trees for any loaded profiles and
 		 * move these profiles to profile_to_load list.
@@ -1605,7 +1606,7 @@ int refresh_filters(struct cmd_context *cmd)
 int refresh_toolcontext(struct cmd_context *cmd)
 {
 	struct dm_config_tree *cft_cmdline, *cft_tmp;
-	const char *profile_name;
+	const char *profile_command_name, *profile_metadata_name;
 	struct profile *profile;
 
 	log_verbose("Reloading config files");
@@ -1633,8 +1634,10 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	cft_cmdline = remove_config_tree_by_source(cmd, CONFIG_STRING);
 
 	/* save the global profile name used */
-	profile_name = cmd->profile_params->global_profile ?
-			cmd->profile_params->global_profile->name : NULL;
+	profile_command_name = cmd->profile_params->global_command_profile ?
+				cmd->profile_params->global_command_profile->name : NULL;
+	profile_metadata_name = cmd->profile_params->global_metadata_profile ?
+				cmd->profile_params->global_metadata_profile->name : NULL;
 
 	_destroy_config(cmd);
 
@@ -1653,8 +1656,13 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		cmd->cft = dm_config_insert_cascaded_tree(cft_cmdline, cft_tmp);
 
 	/* Reload the global profile. */
-	if (profile_name) {
-		if (!(profile = add_profile(cmd, profile_name)) ||
+	if (profile_command_name) {
+		if (!(profile = add_profile(cmd, profile_command_name, CONFIG_PROFILE_COMMAND)) ||
+		    !override_config_tree_from_profile(cmd, profile))
+			return_0;
+	}
+	if (profile_metadata_name) {
+		if (!(profile = add_profile(cmd, profile_metadata_name, CONFIG_PROFILE_METADATA)) ||
 		    !override_config_tree_from_profile(cmd, profile))
 			return_0;
 	}

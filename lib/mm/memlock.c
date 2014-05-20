@@ -417,7 +417,7 @@ void critical_section_inc(struct cmd_context *cmd, const char *reason)
 	 * entering the critical section all needed profiles are
 	 * loaded to avoid the disk access later.
 	 */
-	load_pending_profiles(cmd);
+	(void) load_pending_profiles(cmd);
 
 	if (!_critical_section) {
 		_critical_section = 1;

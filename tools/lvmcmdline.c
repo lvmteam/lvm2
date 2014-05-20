@@ -622,6 +622,7 @@ void lvm_register_commands(void)
 					    version_ARG, verbose_ARG, \
 					    yes_ARG, \
 					    quiet_ARG, config_ARG, \
+					    commandprofile_ARG, \
 					    profile_ARG, -1);
 #include "commands.h"
 #undef xx
@@ -1079,10 +1080,122 @@ static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **
 	return NULL;
 }
 
+static int _prepare_profiles(struct cmd_context *cmd)
+{
+	static const char _failed_to_add_profile_msg[] = "Failed to add %s %s.";
+	static const char _failed_to_apply_profile_msg[] = "Failed to apply %s %s.";
+	static const char _command_profile_source_name[] = "command profile";
+	static const char _metadata_profile_source_name[] = "metadata profile";
+	static const char _setting_global_profile_msg[] = "Setting global %s \"%s\".";
+
+	const char *name;
+	struct profile *profile;
+	config_source_t source;
+	const char *source_name;
+
+	if (arg_count(cmd, profile_ARG)) {
+		/*
+		 * If --profile is used with dumpconfig, it's used
+		 * to dump the profile without the profile being applied.
+		 */
+		if (!strcmp(cmd->command->name, "dumpconfig"))
+			return 1;
+
+		/*
+		 * If --profile is used with lvcreate/lvchange/vgchange,
+		 * it's recognized as shortcut to --metadataprofile.
+		 * The --commandprofile is assumed otherwise.
+		 */
+		if (!strcmp(cmd->command->name, "lvcreate") ||
+		    !strcmp(cmd->command->name, "vgcreate") ||
+		    !strcmp(cmd->command->name, "lvchange") ||
+		    !strcmp(cmd->command->name, "vgchange")) {
+			if (arg_count(cmd, metadataprofile_ARG)) {
+				log_error("Only one of --profile or "
+					  " --metadataprofile allowed.");
+				return 0;
+			}
+			source = CONFIG_PROFILE_METADATA;
+			source_name = _metadata_profile_source_name;
+		}
+		else {
+			if (arg_count(cmd, commandprofile_ARG)) {
+				log_error("Only one of --profile or "
+					  "--commandprofile allowed.");
+				return 0;
+			}
+			source = CONFIG_PROFILE_COMMAND;
+			source_name = _command_profile_source_name;
+		}
+
+		name = arg_str_value(cmd, profile_ARG, NULL);
+
+		if (!(profile = add_profile(cmd, name, source))) {
+			log_error(_failed_to_add_profile_msg, source_name, name);
+			return 0;
+		}
+
+		if (source == CONFIG_PROFILE_COMMAND) {
+			log_debug(_setting_global_profile_msg, _command_profile_source_name, profile->name);
+			cmd->profile_params->global_command_profile = profile;
+		} else if (source == CONFIG_PROFILE_METADATA) {
+			log_debug(_setting_global_profile_msg, _metadata_profile_source_name, profile->name);
+			/* This profile will override any VG/LV-based profile if present */
+			cmd->profile_params->global_metadata_profile = profile;
+		}
+
+		if (!override_config_tree_from_profile(cmd, profile)) {
+			log_error(_failed_to_apply_profile_msg, source_name, name);
+			return 0;
+		}
+
+	}
+
+	if (arg_count(cmd, commandprofile_ARG)) {
+		name = arg_str_value(cmd, commandprofile_ARG, NULL);
+		source_name = _command_profile_source_name;
+
+		if (!(profile = add_profile(cmd, name, CONFIG_PROFILE_COMMAND))) {
+			log_error(_failed_to_add_profile_msg, source_name, name);
+			return 0;
+		}
+		if (!override_config_tree_from_profile(cmd, profile)) {
+			log_error(_failed_to_apply_profile_msg, source_name, name);
+			return 0;
+		}
+
+		log_debug(_setting_global_profile_msg, _command_profile_source_name, profile->name);
+		cmd->profile_params->global_command_profile = profile;
+	}
+
+
+	if (arg_count(cmd, metadataprofile_ARG)) {
+		name = arg_str_value(cmd, metadataprofile_ARG, NULL);
+		source_name = _metadata_profile_source_name;
+
+		if (!(profile = add_profile(cmd, name, CONFIG_PROFILE_METADATA))) {
+			log_error(_failed_to_add_profile_msg, source_name, name);
+			return 0;
+		}
+		if (!override_config_tree_from_profile(cmd, profile)) {
+			log_error(_failed_to_apply_profile_msg, source_name, name);
+			return 0;
+		}
+
+		log_debug(_setting_global_profile_msg, _metadata_profile_source_name, profile->name);
+		cmd->profile_params->global_metadata_profile = profile;
+	}
+
+	if (!process_profilable_config(cmd))
+		return_0;
+
+	return 1;
+}
+
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct dm_config_tree *config_string_cft, *config_profile_cft;
-	struct profile *profile;
+	struct dm_config_tree *config_string_cft;
+	struct dm_config_tree *config_profile_command_cft, *config_profile_metadata_cft;
 	int ret = 0;
 	int locking_type;
 	int monitoring;
@@ -1131,19 +1244,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (arg_count(cmd, profile_ARG)) {
-		if (!(profile = add_profile(cmd, arg_str_value(cmd, profile_ARG, NULL)))) {
-			log_error("Failed to add configuration profile.");
-			return ECMD_FAILED;
-		}
-		log_debug("Setting global configuration profile \"%s\".", profile->name);
-		/* This profile will override any VG/LV-based profile if present */
-		cmd->profile_params->global_profile = profile;
-		if (!override_config_tree_from_profile(cmd, profile)) {
-			log_error("Failed to apply configuration profile.");
-			return ECMD_FAILED;
-		}
-		if (!process_profilable_config(cmd))
+	if (arg_count(cmd, profile_ARG) ||
+	    arg_count(cmd, commandprofile_ARG) ||
+	    arg_count(cmd, metadataprofile_ARG)) {
+		if (!_prepare_profiles(cmd))
 			return_ECMD_FAILED;
 	}
 
@@ -1206,10 +1310,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
 		dm_config_destroy(config_string_cft);
 
-	config_profile_cft = remove_config_tree_by_source(cmd, CONFIG_PROFILE);
-	cmd->profile_params->global_profile = NULL;
+	config_profile_command_cft = remove_config_tree_by_source(cmd, CONFIG_PROFILE_COMMAND);
+	config_profile_metadata_cft = remove_config_tree_by_source(cmd, CONFIG_PROFILE_METADATA);
+	cmd->profile_params->global_metadata_profile = NULL;
 
-	if (config_string_cft || config_profile_cft) {
+	if (config_string_cft || config_profile_command_cft || config_profile_metadata_cft) {
 		/* Move this? */
 		if (!refresh_toolcontext(cmd))
 			stack;

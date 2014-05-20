@@ -38,7 +38,8 @@ static const char *_config_source_names[] = {
 	[CONFIG_FILE] = "file",
 	[CONFIG_MERGED_FILES] = "merged files",
 	[CONFIG_STRING] = "string",
-	[CONFIG_PROFILE] = "profile",
+	[CONFIG_PROFILE_COMMAND] = "command profile",
+	[CONFIG_PROFILE_METADATA] = "metadata profile",
 	[CONFIG_FILE_SPECIAL] = "special purpose"
 };
 
@@ -83,6 +84,19 @@ config_source_t config_get_source_type(struct dm_config_tree *cft)
 	return cs ? cs->type : CONFIG_UNDEFINED;
 }
 
+static inline int _is_profile_based_config_source(config_source_t source)
+{
+	return (source == CONFIG_PROFILE_COMMAND) ||
+	       (source == CONFIG_PROFILE_METADATA);
+}
+
+static inline int _is_file_based_config_source(config_source_t source)
+{
+	return (source == CONFIG_FILE) ||
+	       (source == CONFIG_FILE_SPECIAL) ||
+	       _is_profile_based_config_source(source);
+}
+
 /*
  * public interface
  */
@@ -102,9 +116,7 @@ struct dm_config_tree *config_open(config_source_t source,
 		goto fail;
 	}
 
-	if ((source == CONFIG_FILE) ||
-	    (source == CONFIG_FILE_SPECIAL) ||
-	    (source == CONFIG_PROFILE)) {
+	if (_is_file_based_config_source(source)) {
 		if (!(cf = dm_pool_zalloc(cft->mem, sizeof(struct config_file)))) {
 			log_error("Failed to allocate config file.");
 			goto fail;
@@ -137,9 +149,7 @@ int config_file_check(struct dm_config_tree *cft, const char **filename, struct 
 	struct config_file *cf;
 	struct stat _info;
 
-	if ((cs->type != CONFIG_FILE) &&
-	    (cs->type != CONFIG_PROFILE) &&
-	    (cs->type != CONFIG_FILE_SPECIAL)) {
+	if (!_is_file_based_config_source(cs->type)) {
 		log_error(INTERNAL_ERROR "config_file_check: expected file, special file or "
 					 "profile config source, found %s config source.",
 					 _config_source_names[cs->type]);
@@ -234,9 +244,7 @@ void config_destroy(struct dm_config_tree *cft)
 
 	cs = dm_config_get_custom(cft);
 
-	if ((cs->type == CONFIG_FILE) ||
-	    (cs->type == CONFIG_PROFILE) ||
-	    (cs->type == CONFIG_FILE_SPECIAL)) {
+	if (_is_file_based_config_source(cs->type)) {
 		cf = cs->source.file;
 		if (cf && cf->dev)
 			if (!dev_close(cf->dev))
@@ -261,7 +269,7 @@ struct dm_config_tree *config_file_open_and_read(const char *config_file,
 	/* Is there a config file? */
 	if (stat(config_file, &info) == -1) {
 		/* Profile file must be present! */
-		if (errno == ENOENT && (source != CONFIG_PROFILE))
+		if (errno == ENOENT && (!_is_profile_based_config_source(source)))
 			return cft;
 		log_sys_error("stat", config_file);
 		goto bad;
@@ -360,7 +368,7 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 
 	/*
 	 * Follow this sequence:
-	 * CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 * CONFIG_STRING -> CONFIG_PROFILE_COMMAND -> CONFIG_PROFILE_METADATA -> CONFIG_FILE/CONFIG_MERGED_FILES
 	 */
 
 	if (cs->type == CONFIG_STRING) {
@@ -388,37 +396,87 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _override_config_tree_from_command_profile(struct cmd_context *cmd,
+						      struct profile *profile)
+{
+	struct dm_config_tree *cft = cmd->cft, *cft_previous = NULL;
+	struct config_source *cs = dm_config_get_custom(cft);
+
+	if (cs->type == CONFIG_STRING) {
+		cft_previous = cft;
+		cft = cft->cascade;
+		cs = dm_config_get_custom(cft);
+	}
+
+	if (cs->type == CONFIG_PROFILE_COMMAND) {
+		log_error(INTERNAL_ERROR "_override_config_tree_from_command_profile: "
+				"config cascade already contains a command profile config.");
+		return 0;
+	}
+
+	if (cft_previous)
+		dm_config_insert_cascaded_tree(cft_previous, profile->cft);
+	else
+		cmd->cft = profile->cft;
+
+	dm_config_insert_cascaded_tree(profile->cft, cft);
+
+	return 1;
+}
+
+static int _override_config_tree_from_metadata_profile(struct cmd_context *cmd,
+						       struct profile *profile)
+{
+	struct dm_config_tree *cft = cmd->cft, *cft_previous = NULL;
+	struct config_source *cs = dm_config_get_custom(cft);
+
+	if (cs->type == CONFIG_STRING) {
+		cft_previous = cft;
+		cft = cft->cascade;
+	}
+
+	if (cs->type == CONFIG_PROFILE_COMMAND) {
+		cft_previous = cft;
+		cft = cft->cascade;
+		cs = dm_config_get_custom(cft);
+	}
+
+	cs = dm_config_get_custom(cft);
+
+	if (cs->type == CONFIG_PROFILE_METADATA) {
+		log_error(INTERNAL_ERROR "_override_config_tree_from_metadata_profile: "
+				"config cascade already contains a metadata profile config.");
+		return 0;
+	}
+
+	if (cft_previous)
+		dm_config_insert_cascaded_tree(cft_previous, profile->cft);
+	else
+		cmd->cft = profile->cft;
+
+	dm_config_insert_cascaded_tree(profile->cft, cft);
+
+	return 1;
+}
+
 int override_config_tree_from_profile(struct cmd_context *cmd,
 				      struct profile *profile)
 {
-	struct dm_config_tree *cft = cmd->cft, *cft_string = NULL;
-	struct config_source *cs = dm_config_get_custom(cft);
-
 	/*
 	 * Follow this sequence:
-	 * CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES
+	 * CONFIG_STRING -> CONFIG_PROFILE_COMMAND -> CONFIG_PROFILE_METADATA -> CONFIG_FILE/CONFIG_MERGED_FILES
 	 */
 
 	if (!profile->cft && !load_profile(cmd, profile))
 		return_0;
 
-	if (cs->type == CONFIG_STRING) {
-		cft_string = cft;
-		cft = cft->cascade;
-		cs = dm_config_get_custom(cft);
-		if (cs->type == CONFIG_PROFILE) {
-			log_error(INTERNAL_ERROR "override_config_tree_from_profile: "
-				  "config cascade already contains a profile config.");
-			return 0;
-		}
-		dm_config_insert_cascaded_tree(cft_string, profile->cft);
-	}
+	if (profile->source == CONFIG_PROFILE_COMMAND)
+		return _override_config_tree_from_command_profile(cmd, profile);
+	else if (profile->source == CONFIG_PROFILE_METADATA)
+		return _override_config_tree_from_metadata_profile(cmd, profile);
 
-	cmd->cft = dm_config_insert_cascaded_tree(profile->cft, cft);
-
-	cmd->cft = cft_string ? : profile->cft;
-
-	return 1;
+	log_error(INTERNAL_ERROR "override_config_tree_from_profile: incorrect profile source type");
+	return 0;
 }
 
 int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
@@ -432,9 +490,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 	char *buf = NULL;
 	struct config_source *cs = dm_config_get_custom(cft);
 
-	if ((cs->type != CONFIG_FILE) &&
-	    (cs->type != CONFIG_PROFILE) &&
-	    (cs->type != CONFIG_FILE_SPECIAL)) {
+	if (!_is_file_based_config_source(cs->type)) {
 		log_error(INTERNAL_ERROR "config_file_read_fd: expected file, special file "
 					 "or profile config source, found %s config source.",
 					 _config_source_names[cs->type]);
@@ -850,6 +906,48 @@ static int _config_def_check_node_value(struct cft_check_handle *handle,
 	return 1;
 }
 
+static int _config_def_check_node_is_profilable(struct cft_check_handle *handle,
+						const char *rp, struct dm_config_node *cn,
+						const cfg_def_item_t *def)
+{
+	uint16_t flags;
+
+	if (!(def->flags & CFG_PROFILABLE)) {
+		log_warn_suppress(handle->suppress_messages,
+				  "Configuration %s \"%s\" is not customizable by "
+				  "a profile.", cn->v ? "option" : "section", rp);
+		return 0;
+	}
+
+	flags = def->flags & ~CFG_PROFILABLE;
+
+	/*
+	* Make sure there is no metadata profilable config in the command profile!
+	*/
+	if ((handle->source == CONFIG_PROFILE_COMMAND) && (flags & CFG_PROFILABLE_METADATA)) {
+		log_warn_suppress(handle->suppress_messages,
+				  "Configuration %s \"%s\" is customizable by "
+				  "metadata profile only, not command profile.",
+				   cn->v ? "option" : "section", rp);
+		return 0;
+	}
+
+	/*
+	 * Make sure there is no command profilable config in the metadata profile!
+	 * (sections do not need to be flagged with CFG_PROFILABLE_METADATA, the
+	 *  CFG_PROFILABLE is enough as sections may contain both types inside)
+	 */
+	if ((handle->source == CONFIG_PROFILE_METADATA) && cn->v && !(flags & CFG_PROFILABLE_METADATA)) {
+		log_warn_suppress(handle->suppress_messages,
+				  "Configuration %s \"%s\" is customizable by "
+				  "command profile only, not metadata profile.",
+				   cn->v ? "option" : "section", rp);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _config_def_check_node(struct cft_check_handle *handle,
 				  const char *vp, char *pvp, char *rp, char *prp,
 				  size_t buf_size, struct dm_config_node *cn)
@@ -896,13 +994,9 @@ static int _config_def_check_node(struct cft_check_handle *handle,
 	 * in certain types of configuration trees as in some
 	 * the use of configuration is restricted, e.g. profiles...
 	 */
-	if (handle->source == CONFIG_PROFILE &&
-	    !(def->flags & CFG_PROFILABLE)) {
-		log_warn_suppress(handle->suppress_messages,
-			"Configuration %s \"%s\" is not customizable by "
-			"a profile.", cn->v ? "option" : "section", rp);
-		return 0;
-	}
+	if (_is_profile_based_config_source(handle->source) &&
+	    !_config_def_check_node_is_profilable(handle, rp, cn, def))
+		return_0;
 
 	handle->status[def->id] |= CFG_VALID;
 	return 1;
@@ -1028,6 +1122,23 @@ out:
 	return r;
 }
 
+static int _apply_local_profile(struct cmd_context *cmd, struct profile *profile)
+{
+	if (!profile)
+		return 0;
+
+	/*
+	 * Global metadata profile overrides the local one.
+	 * This simply means the "--metadataprofile" arg
+	 * overrides any profile attached to VG/LV.
+	 */
+	if ((profile->source == CONFIG_PROFILE_METADATA) &&
+	     cmd->profile_params->global_metadata_profile)
+		return 0;
+
+	return override_config_tree_from_profile(cmd, profile);
+}
+
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
@@ -1035,14 +1146,13 @@ const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int 
 	int profile_applied = 0;
 	const struct dm_config_node *cn;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
+
 	cn = dm_config_tree_find_node(cmd->cft, path);
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return cn;
 }
@@ -1054,9 +1164,7 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 	int profile_applied = 0;
 	const char *str;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
 
 	if (item->type != CFG_TYPE_STRING)
@@ -1065,7 +1173,7 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 	str = dm_config_tree_find_str(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile));
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return str;
 }
@@ -1077,9 +1185,7 @@ const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, st
 	int profile_applied = 0;
 	const char *str;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
 
 	if (item->type != CFG_TYPE_STRING)
@@ -1090,7 +1196,7 @@ const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, st
 	str = dm_config_tree_find_str_allow_empty(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile));
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return str;
 }
@@ -1102,9 +1208,7 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 	int profile_applied = 0;
 	int i;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
 
 	if (item->type != CFG_TYPE_INT)
@@ -1113,7 +1217,7 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 	i = dm_config_tree_find_int(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile));
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return i;
 }
@@ -1125,9 +1229,7 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 	int profile_applied = 0;
 	int i64;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
 
 	if (item->type != CFG_TYPE_INT)
@@ -1136,7 +1238,7 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 	i64 = dm_config_tree_find_int64(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile));
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return i64;
 }
@@ -1148,9 +1250,7 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 	int profile_applied = 0;
 	float f;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
 
 	if (item->type != CFG_TYPE_FLOAT)
@@ -1159,7 +1259,7 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 	f = dm_config_tree_find_float(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_FLOAT, profile));
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return f;
 }
@@ -1171,9 +1271,7 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 	int profile_applied = 0;
 	int b;
 
-	if (profile && !cmd->profile_params->global_profile)
-		profile_applied = override_config_tree_from_profile(cmd, profile);
-
+	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
 
 	if (item->type != CFG_TYPE_BOOL)
@@ -1182,7 +1280,7 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 	b = dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_BOOL, profile));
 
 	if (profile_applied)
-		remove_config_tree_by_source(cmd, CONFIG_PROFILE);
+		remove_config_tree_by_source(cmd, profile->source);
 
 	return b;
 }
@@ -1627,7 +1725,7 @@ static int _check_profile(struct cmd_context *cmd, struct profile *profile)
 
 	handle->cmd = cmd;
 	handle->cft = profile->cft;
-	handle->source = CONFIG_PROFILE;
+	handle->source = profile->source;
 	/* the check is compulsory - allow only profilable items in a profile config! */
 	handle->force_check = 1;
 	/* provide warning messages only if config/checks=1 */
@@ -1639,11 +1737,44 @@ static int _check_profile(struct cmd_context *cmd, struct profile *profile)
 	return r;
 }
 
-struct profile *add_profile(struct cmd_context *cmd, const char *profile_name)
+static int _get_profile_from_list(struct dm_list *list, const char *profile_name,
+				  config_source_t source, struct profile **profile_found)
+{
+	struct profile *profile;
+
+	dm_list_iterate_items(profile, list) {
+		if (!strcmp(profile->name, profile_name)) {
+			if (profile->source == source) {
+				*profile_found = profile;
+				return 1;
+			}
+			log_error(INTERNAL_ERROR "Profile %s already added as "
+				  "%s type, but requested type is %s.",
+				   profile_name,
+				   _config_source_names[profile->source],
+				   _config_source_names[source]);
+			return 0;
+		}
+	}
+
+	*profile_found = NULL;
+	return 1;
+}
+
+struct profile *add_profile(struct cmd_context *cmd, const char *profile_name, config_source_t source)
 {
 	struct profile *profile;
 
 	/* Do some sanity checks first. */
+	if (!_is_profile_based_config_source(source)) {
+		log_error(INTERNAL_ERROR "add_profile: incorrect configuration "
+			  "source, expected %s or %s but %s requested",
+			  _config_source_names[CONFIG_PROFILE_COMMAND],
+			  _config_source_names[CONFIG_PROFILE_METADATA],
+			  _config_source_names[source]);
+		return NULL;
+	}
+
 	if (!profile_name || !*profile_name) {
 		log_error("Undefined profile name.");
 		return NULL;
@@ -1654,14 +1785,29 @@ struct profile *add_profile(struct cmd_context *cmd, const char *profile_name)
 		return NULL;
 	}
 
-	/* Check if the profile is added already... */
-	dm_list_iterate_items(profile, &cmd->profile_params->profiles_to_load) {
-		if (!strcmp(profile->name, profile_name))
-			return profile;
-	}
-	dm_list_iterate_items(profile, &cmd->profile_params->profiles) {
-		if (!strcmp(profile->name, profile_name))
-			return profile;
+	/*
+	 * Check if the profile is on the list of profiles to be loaded or if
+	 * not found there, if it's on the list of already loaded profiles.
+	 */
+	if (!_get_profile_from_list(&cmd->profile_params->profiles_to_load,
+				    profile_name, source, &profile))
+		return_NULL;
+
+	if (profile)
+		profile->source = source;
+	else if (!_get_profile_from_list(&cmd->profile_params->profiles,
+					 profile_name, source, &profile))
+		return_NULL;
+
+	if (profile) {
+		if (profile->source != source) {
+			log_error(INTERNAL_ERROR "add_profile: loaded profile "
+				  "has incorrect type, expected %s but %s found",
+				   _config_source_names[source],
+				   _config_source_names[profile->source]);
+			return NULL;
+		}
+		return profile;
 	}
 
 	if (!(profile = dm_pool_zalloc(cmd->libmem, sizeof(*profile)))) {
@@ -1669,6 +1815,7 @@ struct profile *add_profile(struct cmd_context *cmd, const char *profile_name)
 		return NULL;
 	}
 
+	profile->source = source;
 	profile->name = dm_pool_strdup(cmd->libmem, profile_name);
 	dm_list_add(&cmd->profile_params->profiles_to_load, &profile->list);
 
@@ -1693,10 +1840,8 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 		return 0;
 	}
 
-	if (!(profile->cft = config_file_open_and_read(profile_path, CONFIG_PROFILE, cmd)))
+	if (!(profile->cft = config_file_open_and_read(profile_path, profile->source, cmd)))
 		return 0;
-
-	dm_list_move(&cmd->profile_params->profiles, &profile->list);
 
 	/*
 	 * *Profile must be valid* otherwise we'd end up with incorrect config!
@@ -1708,25 +1853,28 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 	 * for profiles!
 	 */
 	if (!_check_profile(cmd, profile)) {
-		log_error("Ignoring invalid configuration profile %s.", profile->name);
-		/* if invalid, cut the whole tree and leave it empty */
-		dm_pool_free(profile->cft->mem, profile->cft->root);
-		profile->cft->root = NULL;
+		log_error("Ignoring invalid %s %s.",
+			  _config_source_names[profile->source], profile->name);
+		config_destroy(profile->cft);
+		profile->cft = NULL;
+		return 0;
 	}
 
+	dm_list_move(&cmd->profile_params->profiles, &profile->list);
 	return 1;
 }
 
 int load_pending_profiles(struct cmd_context *cmd)
 {
 	struct profile *profile, *temp_profile;
+	int r = 1;
 
 	dm_list_iterate_items_safe(profile, temp_profile, &cmd->profile_params->profiles_to_load) {
 		if (!load_profile(cmd, profile))
-			return 0;
+			r = 0;
 	}
 
-	return 1;
+	return r;
 }
 
 const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct profile *profile)

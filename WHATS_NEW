@@ -1,5 +1,8 @@
 Version 2.02.107 - 
 ==================================
+  Exit immediately with error if command profile is found invalid.
+  Separate --profile cmd line arg into --commandprofile and --metadataprofile.
+  Strictly separate command profiles and per-VG/LV profiles referenced in mda.
   Fix dumpconfig --type diff when run as second and later cmd in lvm shell.
   Fix wrong profile reuse from previous run if another cmd is run in lvm shell.
   Move cache description from lvm(8) to lvmcache(7) man page.

@@ -33,6 +33,7 @@ xx(devtypes,
    PERMITTED_READ_ONLY,
    "devtypes" "\n"
    "\t[--aligned]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--nameprefixes]\n"
@@ -56,6 +57,7 @@ xx(dumpconfig,
    "Dump configuration",
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-f|--file filename] \n"
    "\t[--type {current|default|diff|missing|new|profilable} \n"
    "\t[--atversion version]] \n"
@@ -99,6 +101,7 @@ xx(lvchange,
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[--deltag Tag]\n"
    "\t[--detachprofile]\n"
@@ -114,9 +117,9 @@ xx(lvchange,
    "\t[--poll {y|n}]\n"
    "\t[--noudevsync]\n"
    "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
+   "\t[--metadataprofile ProfileName]\n"
    "\t[-P|--partial] " "\n"
    "\t[-p|--permission r|rw]\n"
-   "\t[--profile ProfileName\n"
    "\t[--[raid]minrecoveryrate Rate]\n"
    "\t[--[raid]maxrecoveryrate Rate]\n"
    "\t[--[raid]syncaction {check|repair}\n"
@@ -136,9 +139,9 @@ xx(lvchange,
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
    contiguous_ARG, deltag_ARG, discards_ARG, detachprofile_ARG, force_ARG,
    ignorelockingfailure_ARG, ignoremonitoring_ARG, ignoreactivationskip_ARG,
-   ignoreskippedcluster_ARG,
-   major_ARG, minor_ARG, monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG,
-   noudevsync_ARG, partial_ARG, permission_ARG, persistent_ARG, poll_ARG,
+   ignoreskippedcluster_ARG, major_ARG, metadataprofile_ARG, minor_ARG,
+   monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, noudevsync_ARG,
+   partial_ARG, permission_ARG, persistent_ARG, poll_ARG,
    raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, raidsyncaction_ARG,
    raidwritebehind_ARG, raidwritemostly_ARG, readahead_ARG, resync_ARG,
    refresh_ARG, setactivationskip_ARG, syncaction_ARG, sysinit_ARG, test_ARG,
@@ -155,6 +158,7 @@ xx(lvconvert,
    "\t[-R|--regionsize MirrorLogRegionSize]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-b|--background]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|-?|--help]\n"
@@ -169,10 +173,12 @@ xx(lvconvert,
    "lvconvert "
    "[--splitmirrors Images --trackchanges]\n"
    "[--splitmirrors Images --name SplitLogicalVolumeName]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\tLogicalVolume[Path] [SplittablePhysicalVolume[Path]...]\n\n"
 
    "lvconvert "
    "--splitsnapshot\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[--noudevsync]\n"
@@ -183,6 +189,7 @@ xx(lvconvert,
    "lvconvert "
    "[-s|--snapshot]\n"
    "\t[-c|--chunksize]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[--noudevsync]\n"
@@ -195,6 +202,7 @@ xx(lvconvert,
    "--merge\n"
    "\t[-b|--background]\n"
    "\t[-i|--interval seconds]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[-v|--verbose]\n"
@@ -212,6 +220,7 @@ xx(lvconvert,
    "\t[-T|--thin ExternalLogicalVolume[Path]\n"
    "\t [--originname NewExternalOriginVolumeName]]\n"
    "\t[-Z|--zero {y|n}]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] [-h|-?|--help] [-v|--verbose]\n\n"
 
    "lvconvert "
@@ -221,11 +230,13 @@ xx(lvconvert,
    "\t[--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
    "\t [--poolmetadatasize size]\n"
    "\t [--poolmetadataspare {y|n}]]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\tCacheDataLogicalVolume[Path]\n\n"
 
    "lvconvert "
    "--type cache\n"
    "\t--cachepool CachePoolLogicalVolume[Path]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\tLogicalVolume[Path]\n\n",
 
    alloc_ARG, background_ARG, cachemode_ARG, cachepool_ARG, chunksize_ARG,
@@ -246,6 +257,7 @@ xx(lvcreate,
    "\t[--alloc AllocationPolicy]\n"
    "\t[--cachemode CacheMode]\n"
    "\t[-C|--contiguous {y|n}]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[--ignoremonitoring]\n"
@@ -256,6 +268,7 @@ xx(lvcreate,
    "\t{-l|--extents LogicalExtentsNumber[%{VG|PVS|FREE}] |\n"
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
    "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
+   "\t[--metadataprofile ProfileName]\n"
    "\t[-m|--mirrors Mirrors [--nosync] [{--mirrorlog {disk|core|mirrored}|--corelog}]]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[--noudevsync]\n"
@@ -287,6 +300,7 @@ xx(lvcreate,
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous {y|n}]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[--discards {ignore|nopassdown|passdown}]\n"
    "\t[-h|-?|--help]\n"
@@ -299,6 +313,7 @@ xx(lvcreate,
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
    "\t[--poolmetadatasize MetadataVolumeSize[bBsSkKmMgG]]\n"
    "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
+   "\t[--metadataprofile ProfileName]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[--noudevsync]\n"
    "\t[-p|--permission {r|rw}]\n"
@@ -313,14 +328,13 @@ xx(lvcreate,
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
    cachemode_ARG, chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG,
    extents_ARG, ignoreactivationskip_ARG, ignoremonitoring_ARG, major_ARG,
-   minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG, minrecoveryrate_ARG,
-   maxrecoveryrate_ARG, name_ARG, nosync_ARG, noudevsync_ARG,
-   permission_ARG, persistent_ARG, poolmetadatasize_ARG, poolmetadataspare_ARG,
-   raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, readahead_ARG,
-   regionsize_ARG, setactivationskip_ARG, size_ARG, snapshot_ARG, stripes_ARG,
-   stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
-   type_ARG, virtualoriginsize_ARG, virtualsize_ARG,
-   wipesignatures_ARG, zero_ARG)
+   metadataprofile_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG,
+   minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
+   noudevsync_ARG, permission_ARG, persistent_ARG, poolmetadatasize_ARG,
+   poolmetadataspare_ARG, raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG,
+   readahead_ARG, regionsize_ARG, setactivationskip_ARG, size_ARG, snapshot_ARG,
+   stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, type_ARG,
+   virtualoriginsize_ARG, virtualsize_ARG, wipesignatures_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -328,6 +342,7 @@ xx(lvdisplay,
    "lvdisplay\n"
    "\t[-a|--all]\n"
    "\t[-c|--colon]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -344,6 +359,7 @@ xx(lvdisplay,
    "lvdisplay --columns|-C\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -373,6 +389,7 @@ xx(lvextend,
    "lvextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--alloc AllocationPolicy]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -401,6 +418,7 @@ xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
    0,
    "lvmchange\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-R|--reset]\n"
@@ -413,6 +431,7 @@ xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
    PERMITTED_READ_ONLY,
    "lvmdiskscan\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-l|--lvmpartition]\n"
@@ -425,6 +444,7 @@ xx(lvmsadc,
    "Collect activity data",
    0,
    "lvmsadc\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
@@ -435,6 +455,7 @@ xx(lvmsar,
    "Create activity report",
    0,
    "lvmsar\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--full]\n"
    "\t[-h|--help]\n"
@@ -450,6 +471,7 @@ xx(lvreduce,
    0,
    "lvreduce\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -472,6 +494,7 @@ xx(lvremove,
    0,
    "lvremove\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -488,6 +511,7 @@ xx(lvrename,
    0,
    "lvrename\n"
    "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|-?|--help] " "\n"
    "\t[--noudevsync]\n"
@@ -505,6 +529,7 @@ xx(lvresize,
    "lvresize\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--alloc AllocationPolicy]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -532,6 +557,7 @@ xx(lvs,
    "lvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -567,6 +593,7 @@ xx(lvscan,
    "lvscan " "\n"
    "\t[-a|--all]\n"
    "\t[-b|--blockdevice] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|-?|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
@@ -584,6 +611,7 @@ xx(pvchange,
    "pvchange\n"
    "\t[-a|--all]\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -604,6 +632,7 @@ xx(pvresize,
    "Resize physical volume(s)",
    0,
    "pvresize " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|-?|--help] " "\n"
    "\t[--setphysicalvolumesize PhysicalVolumeSize[bBsSkKmMgGtTpPeE]" "\n"
@@ -618,6 +647,7 @@ xx(pvck,
    "Check the consistency of physical volume(s)",
    0,
    "pvck "
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--labelsector sector] " "\n"
@@ -633,6 +663,7 @@ xx(pvcreate,
    "pvcreate " "\n"
    "\t[--norestorefile]\n"
    "\t[--restorefile file]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-f[f]|--force [--force]] " "\n"
    "\t[-h|-?|--help] " "\n"
@@ -663,6 +694,7 @@ xx(pvdata,
    0,
    "pvdata " "\n"
    "\t[-a|--all] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-E|--physicalextent] " "\n"
    "\t[-h|-?|--help]" "\n"
@@ -682,6 +714,7 @@ xx(pvdisplay,
    CACHE_VGMETADATA | PERMITTED_READ_ONLY,
    "pvdisplay\n"
    "\t[-c|--colon]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -698,6 +731,7 @@ xx(pvdisplay,
    "pvdisplay --columns|-C\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -727,6 +761,7 @@ xx(pvmove,
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-b|--background]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n "
    "\t[-h|-?|--help]\n"
    "\t[-i|--interval seconds]\n"
@@ -746,6 +781,7 @@ xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
    0,
    "pvremove " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-f[f]|--force [--force]] " "\n"
    "\t[-h|-?|--help] " "\n"
@@ -763,6 +799,7 @@ xx(pvs,
    "pvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|-?|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
@@ -796,6 +833,7 @@ xx(pvscan,
    "pvscan " "\n"
    "\t[-b|--background]\n"
    "\t[--cache [-a|--activate ay] [ DevicePath | --major major --minor minor]...]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n|--novolumegroup} " "\n"
    "\t[-h|-?|--help]" "\n"
@@ -825,6 +863,7 @@ xx(vgcfgbackup,
    "Backup volume group configuration(s)",
    PERMITTED_READ_ONLY,
    "vgcfgbackup " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
    "\t[-h|-?|--help] " "\n"
@@ -841,6 +880,7 @@ xx(vgcfgrestore,
    "Restore volume group configuration",
    0,
    "vgcfgrestore " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
    "\t[--force]\n"
@@ -861,6 +901,7 @@ xx(vgchange,
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
    "\t[-P|--partial] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[--detachprofile] " "\n"
    "\t[-h|--help] " "\n"
@@ -868,6 +909,7 @@ xx(vgchange,
    "\t[--ignoremonitoring]\n"
    "\t[--ignoreskippedcluster]\n"
    "\t[-K|--ignoreactivationskip] \n"
+   "\t[--metadataprofile ProfileName]\n"
    "\t[--monitor {y|n}]\n"
    "\t[--[vg]metadatacopies #copies] " "\n"
    "\t[--poll {y|n}]\n"
@@ -884,7 +926,6 @@ xx(vgchange,
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
    "\t -p|--maxphysicalvolumes MaxPhysicalVolumes |" "\n"
    "\t -s|--physicalextentsize PhysicalExtentSize[bBsSkKmMgGtTpPeE] |" "\n"
-   "\t[--profile ProfileName\n"
    "\t --addtag Tag |\n"
    "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
@@ -892,16 +933,16 @@ xx(vgchange,
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, activate_ARG,
    available_ARG, clustered_ARG, deltag_ARG, detachprofile_ARG,
    ignoreactivationskip_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
-   ignoreskippedcluster_ARG,
-   logicalvolume_ARG, maxphysicalvolumes_ARG, monitor_ARG, noudevsync_ARG,
-   metadatacopies_ARG, vgmetadatacopies_ARG, partial_ARG,
-   physicalextentsize_ARG, poll_ARG, refresh_ARG, resizeable_ARG,
-   resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
+   ignoreskippedcluster_ARG, logicalvolume_ARG, maxphysicalvolumes_ARG,
+   metadataprofile_ARG, monitor_ARG, noudevsync_ARG, metadatacopies_ARG,
+   vgmetadatacopies_ARG, partial_ARG, physicalextentsize_ARG, poll_ARG,
+   refresh_ARG, resizeable_ARG, resizable_ARG, sysinit_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
    0,
    "vgck "
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
@@ -912,6 +953,7 @@ xx(vgconvert,
    "Change volume group metadata format",
    0,
    "vgconvert  " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help] " "\n"
    "\t[--labelsector sector] " "\n"
@@ -936,9 +978,11 @@ xx(vgcreate,
    "\t[--addtag Tag] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
    "\t[-c|--clustered {y|n}] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
+   "\t[--metadataprofile ProfileName]\n"
    "\t[-M|--metadatatype 1|2] " "\n"
    "\t[--[vg]metadatacopies #copies] " "\n"
    "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
@@ -951,10 +995,10 @@ xx(vgcreate,
    "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, clustered_ARG, maxlogicalvolumes_ARG,
-   maxphysicalvolumes_ARG, metadatatype_ARG, physicalextentsize_ARG, test_ARG,
-   force_ARG, zero_ARG, labelsector_ARG, metadatasize_ARG,
-   pvmetadatacopies_ARG, metadatacopies_ARG, vgmetadatacopies_ARG,
-   dataalignment_ARG, dataalignmentoffset_ARG)
+   maxphysicalvolumes_ARG, metadataprofile_ARG, metadatatype_ARG,
+   physicalextentsize_ARG, test_ARG, force_ARG, zero_ARG, labelsector_ARG,
+   metadatasize_ARG, pvmetadatacopies_ARG, metadatacopies_ARG,
+   vgmetadatacopies_ARG, dataalignment_ARG, dataalignmentoffset_ARG)
 
 xx(vgdisplay,
    "Display volume group information",
@@ -962,6 +1006,7 @@ xx(vgdisplay,
    "vgdisplay " "\n"
    "\t[-A|--activevolumegroups]" "\n"
    "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]" "\n"
@@ -975,6 +1020,7 @@ xx(vgdisplay,
    "\n"
    "vgdisplay --columns|-C\n"
    "\t[--aligned]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]" "\n"
@@ -1002,6 +1048,7 @@ xx(vgexport,
    0,
    "vgexport " "\n"
    "\t[-a|--all] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help]" "\n"
    "\t[-v|--verbose] " "\n"
@@ -1016,6 +1063,7 @@ xx(vgextend,
    "vgextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--restoremissing]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -1037,6 +1085,7 @@ xx(vgimport,
    0,
    "vgimport " "\n"
    "\t[-a|--all]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--force] " "\n"
    "\t[-h|--help] " "\n"
@@ -1052,6 +1101,7 @@ xx(vgmerge,
    0,
    "vgmerge\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-l|--list]\n"
@@ -1066,6 +1116,7 @@ xx(vgmknodes,
    "Create the special files for volume group devices in /dev",
    0,
    "vgmknodes\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -1082,6 +1133,7 @@ xx(vgreduce,
    "vgreduce\n"
    "\t[-a|--all]\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--mirrorsonly]\n"
@@ -1100,6 +1152,7 @@ xx(vgremove,
    "Remove volume group(s)",
    0,
    "vgremove\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
@@ -1116,6 +1169,7 @@ xx(vgrename,
    0,
    "vgrename\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
@@ -1132,6 +1186,7 @@ xx(vgs,
    "vgs" "\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -1165,6 +1220,7 @@ xx(vgscan,
    PERMITTED_READ_ONLY,
    "vgscan "
    "\t[--cache]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -1182,6 +1238,7 @@ xx(vgsplit,
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
    "\t[-c|--clustered {y|n}] " "\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"

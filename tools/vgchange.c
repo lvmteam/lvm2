@@ -441,8 +441,11 @@ static int _vgchange_profile(struct cmd_context *cmd,
 		new_profile_name = "(no profile)";
 		vg->profile = NULL;
 	} else {
-		new_profile_name = arg_str_value(cmd, profile_ARG, NULL);
-		if (!(new_profile = add_profile(cmd, new_profile_name)))
+		if (arg_count(cmd, metadataprofile_ARG))
+			new_profile_name = arg_str_value(cmd, metadataprofile_ARG, NULL);
+		else
+			new_profile_name = arg_str_value(cmd, profile_ARG, NULL);
+		if (!(new_profile = add_profile(cmd, new_profile_name, CONFIG_PROFILE_METADATA)))
 			return_0;
 		vg->profile = new_profile;
 	}
@@ -473,6 +476,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ alloc_ARG, &_vgchange_alloc },
 		{ clustered_ARG, &_vgchange_clustered },
 		{ vgmetadatacopies_ARG, &_vgchange_metadata_copies },
+		{ metadataprofile_ARG, &_vgchange_profile },
 		{ profile_ARG, &_vgchange_profile},
 		{ detachprofile_ARG, &_vgchange_profile},
 	};
@@ -547,6 +551,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	int update_partial_safe =
 		arg_count(cmd, deltag_ARG) ||
 		arg_count(cmd, addtag_ARG) ||
+		arg_count(cmd, metadataprofile_ARG) ||
 		arg_count(cmd, profile_ARG) ||
 		arg_count(cmd, detachprofile_ARG);
 	int update_partial_unsafe =
@@ -572,8 +577,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, profile_ARG) && arg_count(cmd, detachprofile_ARG)) {
-		log_error("Only one of --profile and --detachprofile permitted.");
+	if ((arg_count(cmd, profile_ARG) || arg_count(cmd, metadataprofile_ARG)) &&
+	     arg_count(cmd, detachprofile_ARG)) {
+		log_error("Only one of --metadataprofile and --detachprofile permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
