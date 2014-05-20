@@ -110,7 +110,7 @@ lvremove -ff $vg
 lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
 lvcreate --type raid1 -L 2M -n meta $vg "$dev1" "$dev2"
 lvcreate --type raid1 -L 4M -n ${lv1}_pool $vg "$dev1" "$dev2"
-lvconvert --type cache-pool $vg/${lv1}_pool --poolmetadata $vg/meta
+lvconvert --yes --type cache-pool $vg/${lv1}_pool --poolmetadata $vg/meta
 lvcreate --type cache -n $lv1 -L 8M $vg/${lv1}_pool "$dev5"
 
 check lv_tree_on $vg ${lv1}_foo "$dev1"
@@ -142,7 +142,7 @@ lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
 # RAID for cachepool
 lvcreate --type raid1 -m 1 -L 2M -n meta $vg "$dev1" "$dev2"
 lvcreate --type raid1 -m 1 -L 4M -n cachepool $vg "$dev1" "$dev2"
-lvconvert --type cache-pool $vg/cachepool --poolmetadata $vg/meta
+lvconvert --yes --type cache-pool $vg/cachepool --poolmetadata $vg/meta
 # RAID for thin pool data LV
 lvcreate --type raid1 -m 1 -L 8 -n thinpool $vg "$dev3" "$dev4"
 # Convert thin pool data to a cached LV
@@ -150,7 +150,7 @@ lvconvert --type cache $vg/thinpool --cachepool $vg/cachepool
 # Create simple thin pool meta
 lvcreate -L 2M -n meta $vg "$dev1"
 # Use thin pool data LV to build a thin pool
-lvconvert --thinpool $vg/thinpool --poolmetadata $vg/meta
+lvconvert --yes --thinpool $vg/thinpool --poolmetadata $vg/meta
 # Create a thin lv for fun
 lvcreate -T $vg/thinpool -V 20 -n thin_lv
 
