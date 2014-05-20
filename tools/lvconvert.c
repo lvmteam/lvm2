@@ -1077,15 +1077,13 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 		return;
 
 	if (failed_log &&
-	    yes_no_prompt("Attempt to replace failed mirror log? [y/n]: ") == 'n') {
+	    yes_no_prompt("Attempt to replace failed mirror log? [y/n]: ") == 'n')
 		*replace_log = 0;
-	}
 
 	if (failed_mirrors &&
 	    yes_no_prompt("Attempt to replace failed mirror images "
-			  "(requires full device resync)? [y/n]: ") == 'n') {
+			  "(requires full device resync)? [y/n]: ") == 'n')
 		*replace_mirrors = 0;
-	}
 }
 
 /*
@@ -1677,14 +1675,12 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 		if (_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
 					   lp->mirrors, log_count))
 			break;
-		else {
-			if (lp->mirrors > 2)
-				-- lp->mirrors;
-			else if (log_count > 0)
-				-- log_count;
-			else
-				break; /* nowhere to go, anymore... */
-		}
+		if (lp->mirrors > 2)
+			--lp->mirrors;
+		else if (log_count > 0)
+			--log_count;
+		else
+			break; /* nowhere to go, anymore... */
 	}
 
 	if (replace_mimages && lv_mirror_count(lv) != original_mimages)
