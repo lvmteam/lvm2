@@ -413,14 +413,9 @@ disable_dev() {
 		min=$(($(stat -L --printf=0x%T "$dev")))
 		echo "Disabling device $dev ($maj:$min)"
 		dmsetup remove -f "$dev" 2>/dev/null || true
-	done
-	finish_udev_transaction
-
-	for dev in "$@"; do
-		maj=$(($(stat -L --printf=0x%t "$dev")))
-		min=$(($(stat -L --printf=0x%T "$dev")))
 		notify_lvmetad --major "$maj" --minor "$min"
 	done
+	finish_udev_transaction
 }
 
 enable_dev() {
