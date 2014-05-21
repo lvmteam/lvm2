@@ -3,6 +3,8 @@
 pvcreate \- initialize a disk or partition for use by LVM
 .SH SYNOPSIS
 .B pvcreate
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-t | \-\-test ]

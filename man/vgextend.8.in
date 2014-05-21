@@ -5,6 +5,8 @@ vgextend \- add physical volumes to a volume group
 .B vgextend
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-restoremissing ]

@@ -47,7 +47,7 @@ any of its Logical Volumes have different profiles defined, the profile
 defined for the Logical Volume is preferred. The metadata profile can be
 attached/detached by using the \fBlvchange\fP and \fBvgchange\fP commands
 and their \fB\-\-metadataprofile ProfileName\fP and
-\fB\-\-detachprofile ProfileName\fP options or the \fB\-\-metadataprofile\fP
+\fB\-\-detachprofile\fP options or the \fB\-\-metadataprofile\fP
 option during creation when using \fBvgcreate\fP or \fBlvcreate\fP command.
 The \fBvgs\fP and \fBlvs\fP reporting commands provide \fB-o vg_profile\fP
 and \fB-o lv_profile\fP output options to show the metadata profile
@@ -64,7 +64,7 @@ For this purpose, there's the \fBcommand_profile_template.profile\fP
 (for command profiles) and \fBmetadata_profile_template.profile\fP
 (for metadata profiles) which contain all settings that are customizable
 by profiles of certain type. Users are encouraged to copy these template
-profiles and edit it as needed. Alternatively, the
+profiles and edit them as needed. Alternatively, the
 \fBlvm dumpconfig --file <ProfileName.profile> --type profilable-command <section>\fP
 or \fBlvm dumpconfig --file <ProfileName.profile> --type profilable-metadata <section>\fP
 can be used to generate a configuration with profilable settings in either

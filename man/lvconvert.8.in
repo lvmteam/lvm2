@@ -15,6 +15,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-A | \-\-alloc
 .IR AllocationPolicy ]
 .RB [ \-b | \-\-background ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-f | \-\-force ]
 .RB [ \-i | \-\-interval
 .IR Seconds ]
@@ -31,6 +33,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
 .sp
 .B lvconvert \-\-splitmirrors \fIImages
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-\-name
 .IR SplitLogicalVolumeName ]
 .RB [ \-\-trackchanges ]
@@ -39,6 +43,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .sp
 .B lvconvert
 .BR \-\-splitsnapshot
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-noudevsync ]
 .RB [ \-v | \-\-verbose ]
@@ -47,6 +53,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .sp
 .B lvconvert
 .BR \-s | \-\-snapshot
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkK ]]
 .RB [ \-h | \-? | \-\-help ]
@@ -59,6 +67,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .IR SnapshotLogicalVolume [ Path ]
 .sp
 .B lvconvert \-\-merge
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-b | \-\-background ]
 .RB [ \-i | \-\-interval
 .IR Seconds ]
@@ -68,6 +78,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .IR LogicalVolume [ Path ]...
 .sp
 .B lvconvert \-\-repair
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-stripes
 .I Stripes
@@ -79,6 +91,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RI [ PhysicalVolume [ Path ]...]
 .sp
 .B lvconvert \-\-replace \fIPhysicalVolume
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
@@ -87,6 +101,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .sp
 .B lvconvert \-\-thinpool
 .IR ThinPoolLogicalVolume { Name | Path }
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-discards
@@ -114,6 +130,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-\-version ]
 .sp
 .B lvconvert \-\-type \fIcache-pool
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
@@ -133,6 +151,8 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .B \-\-cachepool
 .IR CachePoolLV { Name | Path }
 .IR LogicalVolume [ Path ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]

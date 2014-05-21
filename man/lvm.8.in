@@ -281,15 +281,25 @@ an allocation request but \fInormal\fP doesn't use them,
 \fIanywhere\fP will - even if that reduces performance by
 placing two stripes on the same Physical Volume.
 .TP
-.IR \fB\-\-profile \ ProfileName
-Selects the configuration profile to use when processing an LVM command.
-In addition to that, when creating a Volume Group or a Logical Volume,
-it causes the ProfileName to be stored in metadata for each Volume Group
-or Logical Volume. If the profile is stored in metadata, it is automatically
-applied next time the Volume Group or the Logical Volume is processed and the
-use of --profile is not necessary when running LVM commands further. See also
-\fBlvm.conf\fP(5) for more information about \fBprofile config\fP and the
+.IR \fB\-\-commandprofile \fIProfileName
+Selects the command configuration profile to use when processing an LVM command.
+See also \fBlvm.conf\fP(5) for more information about \fBcommand profile config\fP and
+the way it fits with other LVM configuration methods.
+.TP
+.IR \fB\-\-metadataprofile \fIProfileName
+Selects the metadata configuration profile to use when processing an LVM command.
+When using metadata profile during Volume Group or Logical Volume creation,
+the metadata profile name is saved in metadata. When such Volume Group or Logical
+Volume is processed next time, the metadata profile is automatically applied
+and the use of \-\-metadataprofile option is not necessary. See also
+\fBlvm.conf\fP(5) for more information about \fBmetadata profile config\fP and the
 way it fits with other LVM configuration methods.
+.TP
+.IR \fB\-\-profile \fIProfileName
+A short form of \fB\-\-metadataprofile\fP for \fBvgcreate\fP, \fBlvcreate\fP,
+\fBvgchange\fP and \fBlvchange\fP command and a short form of \fB\-\-commandprofile\fP
+for any other command (with the exception of \fBdumpconfig\fP command where the
+\-\-profile has special meaning, see \fBlvm dumpconfig\fP(8) for more information).
 .TP
 .IR \fB\-\-config \ ConfigurationString
 Uses the ConfigurationString as direct string representation of the configuration

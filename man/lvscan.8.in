@@ -5,6 +5,8 @@ lvscan \- scan (all disks) for Logical Volumes
 .B lvscan
 .RB [ \-a | \-\-all]
 .RB [ \-b | \-\-blockdevice ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]

@@ -4,6 +4,8 @@ pvdisplay \- display attributes of a physical volume
 .SH SYNOPSIS
 .B pvdisplay
 .RB [ \-c | \-\-colon ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
@@ -25,6 +27,8 @@ pvdisplay \- display attributes of a physical volume
 .BR \-C | \-\-columns
 .RB [ \-\-aligned ]
 .RB [ \-a | \-\-all ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]

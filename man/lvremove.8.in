@@ -5,6 +5,8 @@ lvremove \- remove a logical volume
 .B lvremove
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-t | \-\-test ]

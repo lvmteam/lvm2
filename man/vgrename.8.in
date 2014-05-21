@@ -5,6 +5,8 @@ vgrename \- rename a volume group
 .B vgrename
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-t | \-\-test ]

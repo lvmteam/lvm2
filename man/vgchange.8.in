@@ -20,11 +20,11 @@ vgchange \- change attributes of a volume group
 .RB [ \-c | \-\-clustered
 .RI { y | n }]
 .RB [ \-u | \-\-uuid ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-\-deltag
 .IR Tag ]
-.RB [ \-\-profile
-.IR ProfileName ]
 .RB [ \-\-detachprofile ]
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
@@ -36,6 +36,8 @@ vgchange \- change attributes of a volume group
 .IR MaxLogicalVolumes ]
 .RB [ -p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
+.RB [ \-\-metadataprofile
+.IR ProfileName ]
 .RB [ \-\- [ vg ] metadatacopies ]
 .IR NumberOfCopies | unmanaged | all ]
 .RB [ \-P | \-\-partial ]
@@ -99,9 +101,9 @@ particular time, you may still be able to use Volume Groups that
 are not marked as clustered.
 .TP
 .BR \-\-detachprofile
-Detach any configuration profiles attached to given Volume Groups.
-See also \fBlvm\fP(8) and \fBlvm.conf\fP(5) for more
-information about configuration profiles.
+Detach any metadata configuration profiles attached to given
+Volume Groups. See \fBlvm.conf\fP(5) for more information
+about \fBmetadata profiles\fP.
 .TP
 .BR \-u ", " \-\-uuid
 Generate new random UUID for specified Volume Groups.
@@ -168,6 +170,13 @@ there is then no limit.  If you have a large number of physical volumes in
 a volume group with metadata in lvm2 format, for tool performance reasons,
 you should consider some use of \fB--pvmetadatacopies 0\fP as described in
 \fBpvcreate(8)\fP, and/or use \fB--vgmetadatacopies\fP.
+.TP
+.BR \-\-metadataprofile " " \fIProfileName
+Uses and attaches ProfileName configuration profile to the volume group
+metadata. Whenever the volume group is processed next time, the profile
+is automatically applied. The profile is inherited by all logical volumes
+in the volume group unless the logical volume itself has its own profile
+attached. See \fBlvm.conf\fP(5) for more information about \fBmetadata profiles\fP.
 .TP
 .BR \-\- [ vg ] metadatacopies " " \fINumberOfCopies | \fIunmanaged | \fIall
 Sets the desired number of metadata copies in the volume group.  If set to

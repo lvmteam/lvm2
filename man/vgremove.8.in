@@ -3,6 +3,8 @@
 vgremove \- remove a volume group
 .SH SYNOPSIS
 .B vgremove
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-f | \-\-force ]
 .RB [ \-h | \-? | \-\-help ]

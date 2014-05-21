@@ -9,6 +9,8 @@ vgsplit \- split a volume group into two
 .RI { y | n }]
 .RB [ \-c | \-\-clustered
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes

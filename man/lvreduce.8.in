@@ -5,6 +5,8 @@ lvreduce \- reduce the size of a logical volume
 .B lvreduce
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-t | \-\-test ]

@@ -3,6 +3,8 @@
 pvck \- check physical volume metadata
 .SH SYNOPSIS
 .B pvck
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-v | \-\-verbose ]

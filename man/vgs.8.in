@@ -5,6 +5,8 @@ vgs \- report information about volume groups
 .B vgs
 .RB [ \-a | \-\-all ]
 .RB [ \-\-aligned ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]

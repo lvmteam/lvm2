@@ -4,6 +4,8 @@ vgexport \- make volume groups unknown to the system
 .SH SYNOPSIS
 .B vgexport
 .RB [ \-a | \-\-all ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]

@@ -11,12 +11,16 @@ vgcreate \- create a volume group
 .RI { y | n }]
 .RB [ \-c | \-\-clustered
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes
 .IR MaxLogicalVolumes ]
 .RB [ -M | \-\-metadatatype
 .IR type ]
+.RB [ \-\-metadataprofile
+.IR ProfileName ]
 .RB [ -p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
 .RB [ \-\- [ vg ] metadatacopies
@@ -90,6 +94,13 @@ The \fBvgmetadatacopies\fP option is useful for volume groups containing
 large numbers of physical volumes with metadata as it may be used to
 minimize metadata read and write overhead.
 The default value is \fIunmanaged\fP.
+.TP
+.BR \-\-metadataprofile " " \fIProfileName
+Uses and attaches the ProfileName configuration profile to the volume group
+metadata. Whenever the volume group is processed next time, the profile is
+automatically applied. The profile is inherited by all logical volumes in
+the volume group unless the logical volume itself has its own profile attached.
+See \fBlvm.conf\fP(5) for more information about \fBmetadata profiles\fP.
 .TP
 .BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize [ \fIbBsSkKmMgGtTpPeE ]
 Sets the physical extent size on physical volumes of this volume group.

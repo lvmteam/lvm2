@@ -7,6 +7,8 @@ pvmove \- move physical extents
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
 .RB [ \-b | \-\-background ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-i | \-\-interval

@@ -6,6 +6,8 @@ vgreduce \- reduce a volume group
 .RB [ \-a | \-\-all ]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-removemissing ]

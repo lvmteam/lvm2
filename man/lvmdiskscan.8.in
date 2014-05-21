@@ -3,6 +3,8 @@
 lvmdiskscan \- scan for all devices visible to LVM2
 .SH SYNOPSIS
 .B lvmdiskscan
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-l | \-\-lvmpartition ]

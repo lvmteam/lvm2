@@ -5,6 +5,8 @@ lvdisplay \- display attributes of a logical volume
 .B lvdisplay
 .RB [ \-a | \-\-all ]
 .RB [ \-c | \-\-colon ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
@@ -24,6 +26,8 @@ lvdisplay \- display attributes of a logical volume
 .BR \-C | \-\-columns
 .RB [ \-\-aligned ]
 .RB [ \-a | \-\-all ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]

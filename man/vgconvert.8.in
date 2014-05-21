@@ -3,6 +3,8 @@
 vgconvert \- convert volume group metadata format
 .SH SYNOPSIS
 .B vgconvert
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-t | \-\-test ]

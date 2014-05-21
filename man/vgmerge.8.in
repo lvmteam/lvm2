@@ -5,6 +5,8 @@ vgmerge \- merge two volume groups
 .B vgmerge
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-l | \-\-list ]

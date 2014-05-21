@@ -7,6 +7,8 @@ pvchange \- change attributes of a physical volume
 .IR Tag ]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-f | \-\-force ]
 .RB [ \-\-deltag

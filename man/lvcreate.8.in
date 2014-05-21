@@ -14,12 +14,16 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-C | \-\-contiguous
 .RI { y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-noudevsync ]
 .RB [ \-\-ignoremonitoring ]
+.RB [ \-\-metadataprofile
+.IR ProfileName ]
 .RB [ \-\-monitor
 .RI { y | n }]
 .RB [ \-\-[raid]maxrecoveryrate
@@ -92,8 +96,12 @@ lvcreate \- create a logical volume in an existing volume group
 .IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkK ]]
+.RB [ \-\-commandprofile
+.IR Profilename ]
 .RB [ \-\-noudevsync ]
 .RB [ \-\-ignoremonitoring ]
+.RB [ \-\-metadataProfile
+.IR ProfileName ]
 .RB [ \-\-monitor
 .RI { y | n }]
 .RB [ \-n | \-\-name
@@ -275,6 +283,13 @@ will create a persistent log that is itself mirrored.
 
 When the legacy "mirror" segment type is used, the optional argument
 \fB\-\-corelog\fP is equivalent to \fB\-\-mirrorlog\fP \fIcore\fP.
+.TP
+.BR \-\-metadataprofile \fIProfileName
+Uses and attaches the ProfileName configuration profile to the logical
+volume metadata. Whenever the logical volume is processed next time,
+the profile is automatically applied. If the volume group has another
+profile attached, the logical volume profile is preferred.
+See \fBlvm.conf\fP(5) for more information about \fBmetadata profiles\fP.
 .TP
 .IR \fB\-M ", " \fB\-\-persistent " {" y | n }
 Set to \fIy\fP to make the minor number specified persistent.

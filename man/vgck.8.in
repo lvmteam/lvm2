@@ -3,6 +3,8 @@
 vgck \- check volume group metadata
 .SH SYNOPSIS
 .B vgck
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]

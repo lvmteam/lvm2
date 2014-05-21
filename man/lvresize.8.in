@@ -5,6 +5,8 @@ lvresize \- resize a logical volume
 .B lvresize
 .RB [ \-\-alloc " " \fIAllocationPolicy ]
 .RB [ \-\-noudevsync ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-i | \-\-stripes " " \fIStripes
 .RB [ \-I | \-\-stripesize " " \fIStripeSize ]]
 .RB {[ \-l | \-\-extents

@@ -5,6 +5,8 @@ lvs \- report information about logical volumes
 .B lvs
 .RB [ \-\-aligned ]
 .RB [ \-a | \-\-all ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]

@@ -3,6 +3,8 @@
 vgscan \- scan all disks for volume groups and rebuild caches
 .SH SYNOPSIS
 .B vgscan
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]

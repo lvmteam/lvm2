@@ -3,6 +3,8 @@
 vgcfgrestore \- restore volume group descriptor area
 .SH SYNOPSIS
 .B vgcfgrestore
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-f | \-\-file
 .RI < filename >]

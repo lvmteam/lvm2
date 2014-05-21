@@ -3,6 +3,8 @@
 vgcfgbackup \- backup volume group descriptor area
 .SH SYNOPSIS
 .B vgcfgbackup
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-f | \-\-file
 .RI < filename >]

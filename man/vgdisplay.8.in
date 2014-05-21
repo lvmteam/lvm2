@@ -5,6 +5,8 @@ vgdisplay \- display attributes of volume groups
 .B vgdisplay
 .RB [ \-A | \-\-activevolumegroups ]
 .RB [ \-c | \-\-colon ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-s | \-\-short ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-d | \-\-debug ]
@@ -24,6 +26,8 @@ vgdisplay \- display attributes of volume groups
 .B vgdisplay
 .BR \-C | \-\-columns
 .RB [ \-\-aligned ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
