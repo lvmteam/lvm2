@@ -17,10 +17,13 @@
 
 DEV_SIZE=32
 
+# check we have thinp support compiled in
+aux have_thin 1 0 0 || skip
+
 aux prepare_profiles "thin-performance"
 
 # Create scsi debug dev with sector size of 4096B and 1MiB optimal_io_size
-aux prepare_scsi_debug_dev $DEV_SIZE sector_size=4096 opt_blks=256
+aux prepare_scsi_debug_dev $DEV_SIZE sector_size=4096 opt_blks=256 || skip
 aux prepare_pvs 1 $DEV_SIZE
 vgcreate $vg "$dev1"
 
