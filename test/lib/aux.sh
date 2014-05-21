@@ -413,9 +413,12 @@ disable_dev() {
 		min=$(($(stat -L --printf=0x%T "$dev")))
 		echo "Disabling device $dev ($maj:$min)"
 		dmsetup remove -f "$dev" 2>/dev/null || true
-		notify_lvmetad --major "$maj" --minor "$min"
 	done
 	finish_udev_transaction
+
+	for dev in "$@"; do
+		notify_lvmetad --major "$maj" --minor "$min"
+	done
 }
 
 enable_dev() {
@@ -429,9 +432,12 @@ enable_dev() {
 			dmsetup load "$name" "$name.table"
 		# using device name (since device path does not exists yes with udev)
 		dmsetup resume "$name"
-		notify_lvmetad "$dev"
 	done
 	finish_udev_transaction
+
+	for dev in "$@"; do
+		notify_lvmetad "$dev"
+	done
 }
 
 #
@@ -477,8 +483,8 @@ error_dev() {
 	fi
 	# using device name (since device path does not exists yet with udev)
 	dmsetup resume "$name"
-	notify_lvmetad "$dev"
 	finish_udev_transaction
+	notify_lvmetad "$dev"
 }
 
 backup_dev() {
