@@ -177,7 +177,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_count(cmd, all_ARG) && argc) {
-		log_error("Option a and PhysicalVolumePath are exclusive");
+		log_error("Option --all and PhysicalVolumePath are exclusive.");
 		return EINVALID_CMD_LINE;
 	}
 
