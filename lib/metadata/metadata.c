@@ -769,7 +769,7 @@ int vg_reduce(struct volume_group *vg, const char *pv_name)
 	}
 
 	log_error("Unable to remove physical volume '%s' from "
-				"volume group '%s'.", pv_name, vg->name);
+		  "volume group '%s'.", pv_name, vg->name);
 
 	return 0;
 }
