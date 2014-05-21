@@ -31,12 +31,22 @@ vgcfgbackup
 test -e etc/backup/$vg1
 test -e etc/backup/$vg2
 
+aux lvmconf "backup/archive = 1"
+
 vgcfgbackup -f "bak-%s" >out
 grep "Volume group \"$vg1\" successfully backed up." out
 grep "Volume group \"$vg2\" successfully backed up." out
 # increase seqno
 lvcreate -an -Zn -l1 $vg1
-vgcfgrestore -f "bak-$vg1" $vg1
+
+invalid vgcfgrestore -f "bak-$vg1" $vg1-inv@lid
+invalid vgcfgrestore -f "bak-$vg1" $vg1 $vg2
+
+vgcfgrestore -l $vg1 | tee out
+test $(grep Description out | wc -l) -eq 2
+
+vgcfgrestore -l -f "bak-$vg1" $vg1
+
 vgremove -ff $vg1 $vg2
 
 # vgcfgbackup correctly stores metadata with missing PVs
