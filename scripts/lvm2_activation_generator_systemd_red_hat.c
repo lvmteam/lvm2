@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
 {
 	const char *dir;
 	int r = EXIT_SUCCESS;
+	mode_t old_mask;
 
 	kmsg_fd = open(KMSG_DEV_PATH, O_WRONLY|O_NOCTTY);
 
@@ -184,10 +185,13 @@ int main(int argc, char *argv[])
 
 	dir = argv[1];
 
+	/* mark lvm2-activation.*.service as world-accessible */
+	old_mask = umask(0022);
 	if (!generate_unit(dir, UNIT_EARLY) ||
 	    !generate_unit(dir, UNIT_MAIN) ||
 	    !generate_unit(dir, UNIT_NET))
 		r = EXIT_FAILURE;
+	umask(old_mask);
 out:
 	if (r)
 		kmsg(LOG_ERR, "LVM: Activation generator failed.\n");
