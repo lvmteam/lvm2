@@ -57,7 +57,6 @@ xx(dumpconfig,
    "Dump configuration",
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
-   "\t[--commandprofile ProfileName]\n"
    "\t[-f|--file filename] \n"
    "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata} \n"
    "\t[--atversion version]] \n"
