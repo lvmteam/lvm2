@@ -23,11 +23,11 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
 		if (!validate_name(vg_name)) {
 			log_error("Volume group name \"%s\" is invalid", vg_name);
-			return ECMD_FAILED;
+			return EINVALID_CMD_LINE;
 		}
 	} else if (!(arg_count(cmd, list_ARG) && arg_count(cmd, file_ARG))) {
 		log_error("Please specify a *single* volume group to restore.");
-		return ECMD_FAILED;
+		return EINVALID_CMD_LINE;
 	}
 
 	/*
