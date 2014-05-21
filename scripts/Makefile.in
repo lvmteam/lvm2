@@ -115,7 +115,7 @@ endif
 ifneq ("@CLVMD@", "none")
 	$(INSTALL_DATA) lvm2_clvmd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-clvmd.service
 	$(INSTALL_DATA) lvm2_cluster_activation_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cluster-activation.service
-	$(INSTALL_DATA) lvm2_cluster_activation_red_hat.sh $(systemd_dir)/lvm2-cluster-activation
+	$(INSTALL_SCRIPT) lvm2_cluster_activation_red_hat.sh $(systemd_dir)/lvm2-cluster-activation
 endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
 	$(INSTALL_DATA) lvm2_cmirrord_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cmirrord.service
