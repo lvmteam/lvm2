@@ -1,28 +1,21 @@
-# This is a default profile for the LVM2 system.
-# It contains all configuration settings that are customizable by profiles.
+# This is a command profile template for the LVM2 system.
 #
-# To create a new profile, select the settings you want to customize
-# and put them in a new file named <profile_name>.profile. Then put this
-# file in a directory as defined by config/profile_dir setting found in
-# @DEFAULT_SYS_DIR@/lvm.conf file.
+# It contains all configuration settings that are customizable by command
+# profiles. To create a new command profile, select the settings you want
+# to customize and add them in a new file named <profile_name>.profile.
+# Then install the new profile in a directory as defined by config/profile_dir
+# setting found in @DEFAULT_SYS_DIR@/lvm.conf file.
 #
-# Refer to 'man lvm.conf' for further information about profiles and file layout.
-
-allocation {
-	thin_pool_zero=1
-	thin_pool_discards="passdown"
-	thin_pool_chunk_size_policy="generic"
-#	thin_pool_chunk_size=64
-}
+# Command profiles can be referenced by using the --commandprofile option then.
+#
+# Refer to 'man lvm.conf' for further information about profiles and
+# general configuration file layout.
+#
 global {
 	units="h"
 	si_unit_consistency=1
 	suffix=1
 	lvdisplay_shows_full_device_path=0
-}
-activation {
-	thin_pool_autoextend_threshold=100
-	thin_pool_autoextend_percent=20
 }
 report {
 	aligned=1
@@ -36,7 +29,7 @@ report {
 	devtypes_cols="devtype_name,devtype_max_partitions,devtype_description"
 	devtypes_cols_verbose="devtype_name,devtype_max_partitions,devtype_description"
 	lvs_sort="vg_name,lv_name"
-	lvs_cols="lv_name,vg_name,lv_attr,lv_size,pool_lv,origin,data_percent,move_pv,mirror_log,copy_percent,convert_lv"
+	lvs_cols="lv_name,vg_name,lv_attr,lv_size,pool_lv,origin,data_percent,metadata_percent,move_pv,mirror_log,copy_percent,convert_lv"
 	lvs_cols_verbose="lv_name,vg_name,seg_count,lv_attr,lv_size,lv_major,lv_minor,lv_kernel_major,lv_kernel_minor,pool_lv,origin,data_percent,metadata_percent,move_pv,copy_percent,mirror_log,convert_lv,lv_uuid,lv_profile"
 	vgs_sort="vg_name"
 	vgs_cols="vg_name,pv_count,lv_count,snap_count,vg_attr,vg_size,vg_free"

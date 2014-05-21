@@ -18,8 +18,8 @@ top_builddir = @top_builddir@
 CONFSRC=example.conf
 CONFDEST=lvm.conf
 
-DEFAULT_PROFILE=default.profile
-PROFILES=$(DEFAULT_PROFILE) $(srcdir)/thin-performance.profile
+PROFILE_TEMPLATES=command_profile_template.profile metadata_profile_template.profile
+PROFILES=$(PROFILE_TEMPLATES) $(srcdir)/thin-performance.profile
 
 include $(top_builddir)/make.tmpl
 
@@ -37,4 +37,4 @@ install_lvm2: install_conf install_profiles
 
 install: install_lvm2
 
-DISTCLEAN_TARGETS += $(CONFSRC) $(DEFAULT_PROFILE)
+DISTCLEAN_TARGETS += $(CONFSRC) $(PROFILE_TEMPLATES)
