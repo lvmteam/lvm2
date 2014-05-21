@@ -417,6 +417,8 @@ disable_dev() {
 	finish_udev_transaction
 
 	for dev in "$@"; do
+		maj=$(($(stat -L --printf=0x%t "$dev")))
+		min=$(($(stat -L --printf=0x%T "$dev")))
 		notify_lvmetad --major "$maj" --minor "$min"
 	done
 }
