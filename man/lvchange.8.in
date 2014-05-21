@@ -125,7 +125,7 @@ and copied to the others, so this can take a considerable amount of
 time - and during this time you are without a complete redundant copy
 of your data.
 .TP
-.B \-\-metadataprofile \fIProfileName
+.B \-\-metadataprofile " " \fIProfileName
 Uses and attaches ProfileName configuration profile to the logical
 volume metadata. Whenever the logical volume is processed next time,
 the profile is automatically applied. If the volume group has another

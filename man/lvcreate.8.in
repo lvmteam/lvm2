@@ -284,7 +284,7 @@ will create a persistent log that is itself mirrored.
 When the legacy "mirror" segment type is used, the optional argument
 \fB\-\-corelog\fP is equivalent to \fB\-\-mirrorlog\fP \fIcore\fP.
 .TP
-.BR \-\-metadataprofile \fIProfileName
+.BR \-\-metadataprofile " " \fIProfileName
 Uses and attaches the ProfileName configuration profile to the logical
 volume metadata. Whenever the logical volume is processed next time,
 the profile is automatically applied. If the volume group has another
