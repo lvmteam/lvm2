@@ -107,8 +107,10 @@ install_man5: $(MAN5)
 	$(INSTALL_DATA) $(MAN5) $(MAN5DIR)/
 
 install_man7: $(MAN7)
+ifdef MAN7
 	$(INSTALL) -d $(MAN7DIR)
 	$(INSTALL_DATA) $(MAN7) $(MAN7DIR)/
+endif
 
 install_man8: $(MAN8)
 	$(INSTALL) -d $(MAN8DIR)
@@ -117,15 +119,19 @@ install_man8: $(MAN8)
 install_lvm2: install_man5 install_man7 install_man8
 
 install_cluster: $(MAN8CLUSTER)
+ifdef MAN8CLUSTER
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8CLUSTER) $(MAN8DIR)/
+endif
 
 install_device-mapper: $(MAN8DM)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8DM) $(MAN8DIR)/
 
 install_systemd_generators: $(MAN8SYSTEMD_GENERATORS)
+ifdef MAN8SYSTEMD_GENERATORS
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8SYSTEMD_GENERATORS) $(MAN8DIR)/
+endif
 
 install: install_lvm2 install_device-mapper
