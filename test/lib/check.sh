@@ -282,6 +282,21 @@ vg_field() {
 		die "vg_field: vg=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
+vg_attr_bit() {
+	local actual=$(get vg_field "$2" vg_attr "${@:4}")
+	local offset=$1
+	case "$offset" in
+	  perm*) offset=0 ;;
+	  resiz*) offset=1 ;;
+	  export*) offset=2 ;;
+	  partial) offset=3 ;;
+	  alloc*) offset=4 ;;
+	  cluster*) offset=5 ;;
+	esac
+	test "${actual:$offset:1}" = "$3" || \
+		die "vg_attr_bit: vg=$2, ${offset} bit of \"$actual\" is \"${actual:$offset:1}\", but expected \"$3\""
+}
+
 lv_field() {
 	local actual=$(get lv_field "$1" "$2" "${@:4}")
 	test "$actual" = "$3" || \
