@@ -35,6 +35,13 @@ static lvm_t _lvm_init(const char *system_dir)
 	if (!udev_init_library_context())
 		stack;
 
+	/*
+	 * It's not necessary to use name mangling for LVM:
+	 *   - the character set used for VG-LV names is subset of udev character set
+	 *   - when we check other devices (e.g. _device_is_usable fn), we use major:minor, not dm names
+	 */
+	dm_set_name_mangling_mode(DM_STRING_MANGLING_NONE);
+
 	/* create context */
 	/* FIXME: split create_toolcontext */
 	/* FIXME: make all globals configurable */
