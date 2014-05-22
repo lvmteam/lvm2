@@ -12,6 +12,7 @@
 . lib/test
 
 which mkfs.ext3 || skip
+aux have_raid 1 1 0 || skip
 
 aux prepare_dmeventd
 aux prepare_vg 5
