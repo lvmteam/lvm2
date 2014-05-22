@@ -11,8 +11,8 @@
 
 . lib/test
 
-aux raid456_replace_works || skip
 aux have_raid 1 1 0 || skip
+aux raid456_replace_works || skip
 
 aux lvmconf 'allocation/maximise_cling = 0'
 aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
