@@ -2721,7 +2721,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 
 	if (!lp->yes &&
-	    yes_no_prompt("Do you really want to convert \"%s/%s\"? [y|n]: ",
+	    yes_no_prompt("Do you really want to convert \"%s/%s\"? [y/n]: ",
 			  pool_lv->vg->name, pool_lv->name) == 'n') {
 		log_error("Conversion aborted.");
 		return 0;
@@ -2839,7 +2839,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 
 		if (!lp->yes &&
-		    yes_no_prompt("Do you really want to convert \"%s/%s\"? [y|n]: ",
+		    yes_no_prompt("Do you really want to convert \"%s/%s\"? [y/n]: ",
 				  metadata_lv->vg->name, metadata_lv->name) == 'n') {
 			log_error("Conversion aborted.");
 			return 0;

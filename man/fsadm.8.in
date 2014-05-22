@@ -55,7 +55,7 @@ A status code of 1 is used for other failures.
 Resize the filesystem on logical volume /dev/vg/test to 1000 megabytes.
 If /dev/vg/test contains ext2/ext3/ext4
 filesystem it will be unmounted prior the resize.
-All [y|n] questions will be answered 'y'.
+All [y/n] questions will be answered 'y'.
 .sp
 .B fsadm \-e \-y resize /dev/vg/test 1000M
 .SH ENVIRONMENT VARIABLES
