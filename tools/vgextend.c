@@ -102,9 +102,9 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 		if (arg_count(cmd, metadataignore_ARG) &&
 		    (vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
-		    (pp.force == PROMPT) &&
+		    (pp.force == PROMPT) && !pp.yes &&
 		    yes_no_prompt("Override preferred number of copies "
-			  "of VG %s metadata? [y/n]: ",
+				  "of VG %s metadata? [y/n]: ",
 				  vg_name) == 'n') {
 			log_error("Volume group %s not changed", vg_name);
 			goto bad;
