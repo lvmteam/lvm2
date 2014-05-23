@@ -60,7 +60,7 @@ typedef enum {
 
 static uint64_t _v1_sb_offset(uint64_t size, md_minor_version_t minor_version)
 {
-	uint64_t uninitialized_var(sb_offset);
+	uint64_t sb_offset;
 
 	switch(minor_version) {
 	case MD_MINOR_V0:
@@ -72,6 +72,10 @@ static uint64_t _v1_sb_offset(uint64_t size, md_minor_version_t minor_version)
 	case MD_MINOR_V2:
 		sb_offset = 4 * 2;
 		break;
+	default:
+		log_warn(INTERNAL_ERROR "WARNING: Unknown minor version %d.",
+			 minor_version);
+		return 0;
 	}
 	sb_offset <<= SECTOR_SHIFT;
 
