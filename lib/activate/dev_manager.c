@@ -2436,6 +2436,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	return 1;
 }
 
+#if 0
 static int _set_udev_flags_for_children(struct dev_manager *dm,
 					struct volume_group *vg,
 					struct dm_tree_node *dnode)
@@ -2486,6 +2487,7 @@ static int _set_udev_flags_for_children(struct dev_manager *dm,
 
 	return 1;
 }
+#endif
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				struct logical_volume *lv, struct lv_activate_opts *laopts,
@@ -2648,8 +2650,11 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, laopts, NULL))
 				return_0;
 
+#if 0
+	/* Should not be needed, will be removed */
 	if (!_set_udev_flags_for_children(dm, lv->vg, dnode))
 		return_0;
+#endif
 
 	return 1;
 }
