@@ -4310,7 +4310,7 @@ int lv_resize_prepare(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lp->poolmetadatasize &&
 	    !_lvresize_poolmetadata_prepare(cmd, lp, lv))
-			return_0;
+		return_0;
 
 	return 1;
 }
