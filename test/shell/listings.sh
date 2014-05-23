@@ -94,6 +94,7 @@ pvscan -e
 pvscan -s
 pvscan --novolumegroup
 vgscan --mknodes
+vgmknodes --refresh
 lvscan
 lvmdiskscan
 
