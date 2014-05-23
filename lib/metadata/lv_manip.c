@@ -6116,7 +6116,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 */
 		log_error("Can't create %s without using "
 			  "device-mapper kernel driver.",
-			  seg_is_thin_pool(lp) ? "thin pool volume" :
 			  lp->segtype->name);
 		return NULL;
 	}
