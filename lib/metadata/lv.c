@@ -170,7 +170,7 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 
 	if (lv_is_cow(seg->lv))
 		size = (uint64_t) find_snapshot(seg->lv)->chunk_size;
-	else if (seg_is_thin_pool(seg) || seg_is_cache_pool(seg))
+	else if (seg_is_pool(seg))
 		size = (uint64_t) seg->chunk_size;
 	else
 		size = UINT64_C(0);

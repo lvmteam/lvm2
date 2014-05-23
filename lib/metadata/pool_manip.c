@@ -27,7 +27,7 @@
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 			    struct logical_volume *metadata_lv)
 {
-	if (!seg_is_thin_pool(pool_seg) && !seg_is_cache_pool(pool_seg)) {
+	if (!seg_is_pool(pool_seg)) {
 		log_error(INTERNAL_ERROR
 			  "Unable to attach pool metadata LV to %s segtype.",
 			  pool_seg->segtype->ops->name(pool_seg));
@@ -44,7 +44,7 @@ int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 int attach_pool_data_lv(struct lv_segment *pool_seg,
 			struct logical_volume *pool_data_lv)
 {
-	if (!seg_is_thin_pool(pool_seg) && !seg_is_cache_pool(pool_seg)) {
+	if (!seg_is_pool(pool_seg)) {
 		log_error(INTERNAL_ERROR
 			  "Unable to attach pool data LV to %s segtype.",
 			  pool_seg->segtype->ops->name(pool_seg));
@@ -199,8 +199,7 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 		return NULL;
 	}
 
-	if ((lv_is_thin_type(seg->lv) && !seg_is_thin_pool(pool_seg)) &&
-	    !seg_is_cache_pool(pool_seg)) {
+	if ((lv_is_thin_type(seg->lv) && !seg_is_pool(pool_seg))) {
 		log_error("%s on %s is not a %s pool segment",
 			  pool_seg->lv->name, seg->lv->name,
 			  lv_is_thin_type(seg->lv) ? "thin" : "cache");

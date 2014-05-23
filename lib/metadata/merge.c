@@ -191,7 +191,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 
 			}
-			if (seg_is_thin_pool(seg) || seg_is_cache_pool(seg)) {
+			if (seg_is_pool(seg)) {
 				if (seg->area_count != 1 ||
 				    seg_type(seg, 0) != AREA_LV) {
 					log_error("LV %s: %spool segment %u is missing a pool data LV",

@@ -6077,7 +6077,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
-	if (seg_is_thin_pool(lp) || seg_is_cache_pool(lp)) {
+	if (seg_is_pool(lp)) {
 		if (((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
 			log_error("Unable to create %s smaller than 1 chunk.",
 				  lp->segtype->name);
@@ -6107,8 +6107,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!activation() &&
 	    (seg_is_mirrored(lp) ||
 	     seg_is_raid(lp) ||
-	     seg_is_thin_pool(lp) ||
-	     seg_is_cache_pool(lp))) {
+	     seg_is_pool(lp))) {
 		/*
 		 * FIXME: For thin pool add some code to allow delayed
 		 * initialization of empty thin pool volume.
@@ -6208,8 +6207,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!lv_extend(lv, lp->segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
-		       (seg_is_thin_pool(lp) || seg_is_cache_pool(lp)) ?
-		       lp->poolmetadataextents : lp->region_size,
+		       seg_is_pool(lp) ? lp->poolmetadataextents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
 		       thin_name, lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
