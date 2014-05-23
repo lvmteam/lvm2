@@ -16,7 +16,7 @@
 # FIXME  update test to make something useful on <16T
 aux can_use_16T || skip
 
-aux have_raid 1 1 0 || skip
+aux have_raid 1 3 0 || skip
 
 aux prepare_vg 5
 

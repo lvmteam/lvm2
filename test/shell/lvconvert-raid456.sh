@@ -23,7 +23,7 @@ get_image_pvs() {
 # MAIN
 ########################################################
 aux raid456_replace_works || skip
-aux have_raid 1 2 0 || skip
+aux have_raid 1 3 0 || skip
 
 aux prepare_pvs 6
 vgcreate -s 256k $vg $(cat DEVICES)

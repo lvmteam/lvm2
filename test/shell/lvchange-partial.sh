@@ -15,7 +15,7 @@
 aux prepare_vg 4
 
 TYPE=raid1
-aux have_raid 1 1 0 || TYPE=mirror
+aux have_raid 1 3 0 || TYPE=mirror
 
 lvcreate -aey --type $TYPE -m 1 -l 2 -n $lv1 $vg
 lvchange -an $vg/$lv1

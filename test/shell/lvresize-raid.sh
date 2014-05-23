@@ -11,7 +11,7 @@
 
 . lib/test
 
-aux have_raid 1 1 0 || skip
+aux have_raid 1 3 0 || skip
 
 aux prepare_pvs 6 80
 
