@@ -243,6 +243,9 @@ Specify a one-line table directly on the command line.
 .TP
 .B \-\-udevcookie \fIcookie
 Use cookie for udev synchronisation.
+Note: Same cookie should be used for same type of operations i.e. creation of
+multiple different devices. It's not adviced to combine different
+operations on the single device.
 .TP
 .BR \-u | \-\-uuid
 Specify the uuid.
@@ -429,6 +432,9 @@ process to be killed. If an attempt to remove a device fails,
 perhaps because a process run from a quick udev rule
 temporarily opened the device, the \-\-retry option will cause
 the operation to be retried for a few seconds before failing.
+Do NOT combine \fB\-\-force\fP and \fB\-\-udevcookie\fP,
+as udev may start to process udev rules in the middle of error target
+replacement and result in nondeterministic result.
 .br
 .HP
 .B remove_all

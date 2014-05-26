@@ -1498,8 +1498,16 @@ error:
 
 static int _remove(CMD_ARGS)
 {
-	if (_switches[FORCE_ARG] && argc > 1)
+	if (_switches[FORCE_ARG] && argc > 1) {
+		/*
+		 * 'remove --force' option is doing 2 operations on the same device
+		 * this is not compatible with the use of --udevcookie/DM_UDEV_COOKIE.
+		 * Udevd collision could be partially avoided with --retry.
+		 */
+		if (_udev_cookie)
+			log_warn("WARNING: Use of cookie and --force is not compatible.");
 		(void) _error_device(cmd, argc, argv, NULL, 0);
+	}
 
 	return _simple(DM_DEVICE_REMOVE, argc > 1 ? argv[1] : NULL, 0, 0);
 }
