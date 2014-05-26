@@ -407,7 +407,6 @@ disable_dev() {
 	local dev
 
 	udev_wait
-	init_udev_transaction
 	for dev in "$@"; do
 		maj=$(($(stat -L --printf=0x%t "$dev")))
 		min=$(($(stat -L --printf=0x%T "$dev")))
@@ -415,7 +414,6 @@ disable_dev() {
 		dmsetup remove -f "$dev" 2>/dev/null || true
 		notify_lvmetad --major "$maj" --minor "$min"
 	done
-	finish_udev_transaction
 }
 
 enable_dev() {
@@ -699,7 +697,7 @@ raid456_replace_works() {
 	  3.6.*.fc18.i686*|3.6.*.fc18.x86_64) return 1 ;;
 	  3.9.*.fc19.i686*|3.9.*.fc19.x86_64) return 1 ;;
 	  3.1[0123].*.fc18.i686*|3.1[0123].*.fc18.x86_64) return 1 ;;
-	  3.1[0123].*.fc19.i686*|3.1[0123].*.fc19.x86_64) return 1 ;;
+	  3.1[01234].*.fc19.i686*|3.1[01234].*.fc19.x86_64) return 1 ;;
 	  3.13.*.fc20.i686*|3.13.*.fc20.x86_64) return 1 ;;
 	  3.14.*.fc21.i686*|3.14.*.fc21.x86_64) return 1 ;;
 	  3.15.*rc6*.fc21.i686*|3.15.*rc6*.fc21.x86_64) return 1 ;;
