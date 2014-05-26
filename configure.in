@@ -422,6 +422,10 @@ AC_ARG_WITH(thin-repair,
 	    AC_HELP_STRING([--with-thin-repair=PATH],
 			   [thin_repair tool: [[autodetect]]]),
 			   THIN_REPAIR_CMD=$withval, THIN_REPAIR_CMD="autodetect")
+AC_ARG_WITH(thin-restore,
+	    AC_HELP_STRING([--with-thin-restore=PATH],
+			   [thin_restore tool: [[autodetect]]]),
+			   THIN_RESTORE_CMD=$withval, THIN_RESTORE_CMD="autodetect")
 
 AC_MSG_RESULT($THIN)
 
@@ -484,6 +488,15 @@ case "$THIN" in
 			THIN_CONFIGURE_WARN=y
 		}
 	fi
+	# Empty means a config way to ignore thin checking
+	if test "$THIN_RESTORE_CMD" = "autodetect"; then
+		AC_PATH_TOOL(THIN_RESTORE_CMD, thin_restore)
+		test -z "$THIN_RESTORE_CMD" && {
+			AC_MSG_WARN(thin_restore not found in path $PATH)
+			THIN_RESTORE_CMD=/usr/sbin/thin_restore
+			THIN_CONFIGURE_WARN=y
+		}
+	fi
 	;;
 esac
 
@@ -501,6 +514,9 @@ AC_DEFINE_UNQUOTED([THIN_DUMP_CMD], ["$THIN_DUMP_CMD"],
 
 AC_DEFINE_UNQUOTED([THIN_REPAIR_CMD], ["$THIN_REPAIR_CMD"],
 		   [The path to 'thin_repair', if available.])
+
+AC_DEFINE_UNQUOTED([THIN_RESTORE_CMD], ["$THIN_RESTORE_CMD"],
+		   [The path to 'thin_restore', if available.])
 
 ################################################################################
 dnl -- cache inclusion type
@@ -1739,6 +1755,7 @@ AC_SUBST(THIN)
 AC_SUBST(THIN_CHECK_CMD)
 AC_SUBST(THIN_DUMP_CMD)
 AC_SUBST(THIN_REPAIR_CMD)
+AC_SUBST(THIN_RESTORE_CMD)
 AC_SUBST(UDEV_PC)
 AC_SUBST(UDEV_RULES)
 AC_SUBST(UDEV_SYNC)
