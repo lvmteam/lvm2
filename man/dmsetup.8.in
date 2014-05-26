@@ -426,11 +426,11 @@ that contain a version of device-mapper prior to 4.8.0.
 In this case the device will be deleted when its open_count
 drops to zero.  From version 4.8.0 onwards, if a device can't
 be removed because an uninterruptible process is waiting for
-I/O to return from it, adding \-\-force will replace the table
+I/O to return from it, adding \fB\-\-force\fP will replace the table
 with one that fails all I/O, which might allow the
 process to be killed. If an attempt to remove a device fails,
 perhaps because a process run from a quick udev rule
-temporarily opened the device, the \-\-retry option will cause
+temporarily opened the device, the \fB\-\-retry\fP option will cause
 the operation to be retried for a few seconds before failing.
 Do NOT combine \fB\-\-force\fP and \fB\-\-udevcookie\fP,
 as udev may start to process udev rules in the middle of error target
@@ -443,7 +443,7 @@ replacement and result in nondeterministic result.
 Attempts to remove all device definitions i.e. reset the driver.
 Use with care!  From version 4.8.0 onwards, if devices can't
 be removed because uninterruptible processes are waiting for
-I/O to return from them, adding \-\-force will replace the table
+I/O to return from them, adding \fB\-\-force\fP will replace the table
 with one that fails all I/O, which might allow the
 process to be killed.  This also runs \fBmknodes\fP afterwards.
 .br
@@ -494,7 +494,7 @@ Default subsystem is LVM.
 .RI [ device_name ]
 .br
 Outputs status information for each of the device's targets.
-With \-\-target, only information relating to the specified target type
+With \fB\-\-target\fP, only information relating to the specified target type
 any is displayed.  With \fB\-\-noflush\fP, the thin target (from version 1.3.0)
 doesn't commit any outstanding changes to disk before reporting its statistics.
 .br
