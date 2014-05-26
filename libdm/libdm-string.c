@@ -444,7 +444,7 @@ static int _close_enough(double d1, double d2)
 }
 
 uint64_t dm_units_to_factor(const char *units, char *unit_type,
-			    int strict, char **endptr)
+			    int strict, const char **endptr)
 {
 	char *ptr = NULL;
 	uint64_t v;

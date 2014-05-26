@@ -1496,7 +1496,7 @@ int dm_strncpy(char *dest, const char *src, size_t n);
  * Returns the unit factor or 0 if no unit is recognized.
  */
 uint64_t dm_units_to_factor(const char *units, char *unit_type,
-			    int strict, char **endptr);
+			    int strict, const char **endptr);
 
 /**************************
  * file/stream manipulation
