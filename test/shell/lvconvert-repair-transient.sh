@@ -14,12 +14,16 @@
 aux mirror_recovery_works || skip
 aux prepare_vg 5
 
+# ordinary mirrors
+
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg
-aux disable_dev "$dev2" "$dev4"
+aux disable_dev --error --silent "$dev2" "$dev4"
 mkfs.ext3 "$DM_DEV_DIR/$vg/4way" &
 sleep 1
-aux enable_dev "$dev2" "$dev4"
+dmsetup status
 echo n | lvconvert --repair $vg/4way 2>&1 | tee 4way.out
+aux enable_dev --silent "$dev2" "$dev4"
+
 lvs -a -o +devices | tee out
 not grep unknown out
 vgreduce --removemissing $vg
