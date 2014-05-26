@@ -154,6 +154,7 @@ struct metadata_area_ops {
 
 #define MDA_IGNORED      0x00000001
 #define MDA_INCONSISTENT 0x00000002
+#define MDA_FAILED       0x00000004
 
 struct metadata_area {
 	struct dm_list list;

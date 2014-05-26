@@ -2613,6 +2613,7 @@ int vg_write(struct volume_group *vg)
 	struct dm_list *mdah;
         struct pv_to_create *pv_to_create;
 	struct metadata_area *mda;
+	int revert = 0, wrote = 0;
 
 	if (!vg_validate(vg))
 		return_0;
@@ -2665,39 +2666,45 @@ int vg_write(struct volume_group *vg)
 		if (!mda->ops->vg_write) {
 			log_error("Format does not support writing volume"
 				  "group metadata areas");
-			/* Revert */
-			dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
-				mda = dm_list_item(mdah, struct metadata_area);
-
-				if (mda->ops->vg_revert &&
-				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
-					stack;
-				}
-			}
-			return 0;
+			revert = 1;
+			break;
 		}
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
-			stack;
-			/* Revert */
-			dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
-				mda = dm_list_item(mdah, struct metadata_area);
-
-				if (mda->ops->vg_revert &&
-				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
-					stack;
-				}
+			if (vg->cmd->handles_missing_pvs) {
+				log_warn("WARNING: Failed to write an MDA of VG %s.", vg->name);
+				mda->status |= MDA_FAILED;
+			} else {
+				stack;
+				revert = 1;
+				break;
 			}
-			return 0;
+		} else
+			++ wrote;
+	}
+
+	if (revert || !wrote) {
+		dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
+			mda = dm_list_item(mdah, struct metadata_area);
+
+			if (mda->ops->vg_revert &&
+			    !mda->ops->vg_revert(vg->fid, vg, mda)) {
+				stack;
+			}
 		}
+		return 0;
 	}
 
 	/* Now pre-commit each copy of the new metadata */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
+		if (mda->status & MDA_FAILED)
+			continue;
 		if (mda->ops->vg_precommit &&
 		    !mda->ops->vg_precommit(vg->fid, vg, mda)) {
 			stack;
 			/* Revert */
 			dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
+				if (mda->status & MDA_FAILED)
+					continue;
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 					stack;
@@ -2738,6 +2745,8 @@ static int _vg_commit_mdas(struct volume_group *vg)
 
 	/* Commit to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
+		if (mda->status & MDA_FAILED)
+			continue;
 		failed = 0;
 		if (mda->ops->vg_commit &&
 		    !mda->ops->vg_commit(vg->fid, vg, mda)) {
