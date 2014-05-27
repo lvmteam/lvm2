@@ -2426,7 +2426,8 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 	dmt->cookie_set = 1;
 
 	log_debug_activation("Udev cookie 0x%" PRIx32 " (semid %d) assigned to "
-			     "%s task(%d) with flags%s%s%s%s%s%s%s (0x%" PRIx16 ")", *cookie, semid, _task_type_disp(dmt->type), dmt->type, 
+			     "%s task(%d) with flags%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s (0x%" PRIx16 ")",
+			     *cookie, semid, _task_type_disp(dmt->type), dmt->type,
 			     (flags & DM_UDEV_DISABLE_DM_RULES_FLAG) ? " DISABLE_DM_RULES" : "",
 			     (flags & DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG) ? " DISABLE_SUBSYSTEM_RULES" : "",
 			     (flags & DM_UDEV_DISABLE_DISK_RULES_FLAG) ? " DISABLE_DISK_RULES" : "",
@@ -2434,6 +2435,14 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 			     (flags & DM_UDEV_LOW_PRIORITY_FLAG) ? " LOW_PRIORITY" : "",
 			     (flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK) ? " DISABLE_LIBRARY_FALLBACK" : "",
 			     (flags & DM_UDEV_PRIMARY_SOURCE_FLAG) ? " PRIMARY_SOURCE" : "",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG0) ? " SUBSYSTEM_0" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG1) ? " SUBSYSTEM_1" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG2) ? " SUBSYSTEM_2" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG3) ? " SUBSYSTEM_3" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG4) ? " SUBSYSTEM_4" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG5) ? " SUBSYSTEM_5" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG6) ? " SUBSYSTEM_6" : " ",
+			     (flags & DM_SUBSYSTEM_UDEV_FLAG7) ? " SUBSYSTEM_7" : " ",
 			     flags);
 
 	return 1;

@@ -1877,7 +1877,7 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
 #define DM_SUBSYSTEM_UDEV_FLAG4 0x1000
 #define DM_SUBSYSTEM_UDEV_FLAG5 0x2000
 #define DM_SUBSYSTEM_UDEV_FLAG6 0x4000
-#define DM_SUBSSYTEM_UDEV_FLAG7 0x8000
+#define DM_SUBSYSTEM_UDEV_FLAG7 0x8000
 
 int dm_cookie_supported(void);
 
