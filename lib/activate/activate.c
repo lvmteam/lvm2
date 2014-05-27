@@ -719,21 +719,20 @@ int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
-	while (open_count_check_retries--) {
-		if (info->open_count > 0) {
-			if (open_count_check_retries) {
-				usleep(OPEN_COUNT_CHECK_USLEEP_DELAY);
-				log_debug_activation("Retrying open_count check for %s/%s.",
-						     lv->vg->name, lv->name);
-				if (!lv_info(cmd, lv, 0, info, 1, 0))
-					return -1;
-				continue;
-			}
+	while (info->open_count > 0 && open_count_check_retries--) {
+		if (!open_count_check_retries) {
 			log_error("Logical volume %s/%s in use.",
 				  lv->vg->name, lv->name);
 			return 0;
-		} else
+		}
+
+		usleep(OPEN_COUNT_CHECK_USLEEP_DELAY * 4);
+		log_debug_activation("Retrying open_count check for %s/%s.",
+				     lv->vg->name, lv->name);
+		if (!lv_info(cmd, lv, 0, info, 1, 0)) {
+			stack; /* device dissappeared? */
 			break;
+		}
 	}
 
 	return 1;
