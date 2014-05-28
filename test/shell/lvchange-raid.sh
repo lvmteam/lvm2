@@ -157,22 +157,7 @@ run_syncaction_check() {
 
 	# Overwrite the last half of one of the PVs with crap
 	dd if=/dev/urandom of="$device" bs=1k count=$size seek=$seek
-
-	if [ -n "$THIN_POSTFIX" ]; then
-		#
-		# Seems to work fine on real devices,
-		# but can't make the system notice the bad blocks
-		# in the testsuite - especially when thin is layered
-		# on top of RAID.  In other cases, I can deactivate
-		# and reactivate and it works.  Here, even that doesn't
-		# work.
-		return 0
-		lvchange -an $vg/$2
-		lvchange -ay $vg/$2
-	else
-		lvchange -an $vg/$lv
-		lvchange -ay $vg/$lv
-	fi
+	sync
 
 	# "check" should find discrepancies but not change them
 	# 'lvs' should show results
