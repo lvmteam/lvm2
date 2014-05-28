@@ -1920,15 +1920,50 @@ static int _create_node(struct dm_tree_node *dnode)
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	if ((r = dm_task_run(dmt)))
-		r = dm_task_get_info(dmt, &dnode->info);
-
+	if ((r = dm_task_run(dmt))) {
+		if (!(r = dm_task_get_info(dmt, &dnode->info)))
+			/*
+			 * This should not be possible to occur.  However,
+			 * we print an error message anyway for the more
+			 * absurd cases (e.g. memory corruption) so there
+			 * is never any question as to which one failed.
+			 */
+			log_error(INTERNAL_ERROR
+				  "Unable to get DM task info for %s.",
+				  dnode->name);
+	}
 out:
 	dm_task_destroy(dmt);
 
 	return r;
 }
 
+/*
+ * _remove_node
+ *
+ * This function is only used to remove a DM device that has failed
+ * to load any table.
+ */
+static int _remove_node(struct dm_tree_node *dnode)
+{
+	if (!dnode->info.exists)
+		return 1;
+
+	if (dnode->info.live_table || dnode->info.inactive_table) {
+		log_error(INTERNAL_ERROR
+			  "_remove_node called on device with loaded table(s).");
+		return 0;
+	}
+
+	if (!_deactivate_node(dnode->name, dnode->info.major, dnode->info.minor,
+			      &dnode->dtree->cookie, dnode->udev_flags, 0)) {
+		log_error("Failed to clean-up device with no table: %s %u:%u",
+			  dnode->name ? dnode->name : "",
+			  dnode->info.major, dnode->info.minor);
+		return 0;
+	}
+	return 1;
+}
 
 static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *node)
 {
@@ -2662,7 +2697,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			     const char *uuid_prefix,
 			     size_t uuid_prefix_len)
 {
-	int r = 1;
+	int r = 1, node_created = 0;
 	void *handle = NULL;
 	struct dm_tree_node *child;
 	struct dm_info newinfo;
@@ -2684,13 +2719,25 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				return_0;
 
 		/* FIXME Cope if name exists with no uuid? */
-		if (!child->info.exists && !_create_node(child))
+		if (!child->info.exists && !(node_created = _create_node(child)))
 			return_0;
 
 		if (!child->info.inactive_table &&
 		    child->props.segment_count &&
-		    !_load_node(child))
+		    !_load_node(child)) {
+			/*
+			 * If the table load does not succeed, we remove the
+			 * device in the kernel that would otherwise have an
+			 * empty table.  This makes the create + load of the
+			 * device atomic.  However, if other dependencies have
+			 * already been created and loaded; this code is
+			 * insufficient to remove those - only the node
+			 * encountering the table load failure is removed.
+			 */
+			if (node_created && !_remove_node(child))
+				return_0;
 			return_0;
+		}
 
 		/* Propagate device size change change */
 		if (child->props.size_changed)
