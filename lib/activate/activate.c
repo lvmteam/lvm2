@@ -726,7 +726,7 @@ int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
-		usleep(OPEN_COUNT_CHECK_USLEEP_DELAY * 4);
+		usleep(OPEN_COUNT_CHECK_USLEEP_DELAY);
 		log_debug_activation("Retrying open_count check for %s/%s.",
 				     lv->vg->name, lv->name);
 		if (!lv_info(cmd, lv, 0, info, 1, 0)) {
