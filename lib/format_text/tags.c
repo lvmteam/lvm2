@@ -21,7 +21,7 @@
 
 char *alloc_printed_tags(struct dm_list *tagsl)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 	int first = 1;
 	size_t size = 0;
 	char *buffer, *buf;

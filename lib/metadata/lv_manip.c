@@ -5281,7 +5281,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	int r;
 	char *name;
 	size_t len;
-	struct str_list *sl;
+	struct dm_str_list *sl;
 	struct logical_volume *layer_lv;
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;

@@ -281,7 +281,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 			    struct logical_volume *log_lv, int in_sync,
 			    struct dm_list *tagsl, int remove_on_failure)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 	uint64_t orig_status = log_lv->status;
 	int was_active = 0;
 
@@ -420,7 +420,7 @@ static int _activate_lv_like_model(struct logical_volume *model,
 static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *lv)
 {
 	struct cmd_context *cmd = mirror_lv->vg->cmd;
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	/* Inherit tags - maybe needed for activation */
 	if (!str_list_match_list(&mirror_lv->tags, &lv->tags, NULL)) {

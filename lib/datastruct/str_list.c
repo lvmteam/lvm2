@@ -32,7 +32,7 @@ struct dm_list *str_list_create(struct dm_pool *mem)
 
 int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
 {
-	struct str_list *sln;
+	struct dm_str_list *sln;
 
 	if (!str)
 		return_0;
@@ -55,14 +55,14 @@ void str_list_del(struct dm_list *sll, const char *str)
 	struct dm_list *slh, *slht;
 
 	dm_list_iterate_safe(slh, slht, sll)
-		if (!strcmp(str, dm_list_item(slh, struct str_list)->str))
+		if (!strcmp(str, dm_list_item(slh, struct dm_str_list)->str))
 			 dm_list_del(slh);
 }
 
 int str_list_dup(struct dm_pool *mem, struct dm_list *sllnew,
 		 const struct dm_list *sllold)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	dm_list_init(sllnew);
 
@@ -79,7 +79,7 @@ int str_list_dup(struct dm_pool *mem, struct dm_list *sllnew,
  */
 int str_list_match_item(const struct dm_list *sll, const char *str)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	dm_list_iterate_items(sl, sll)
 	    if (!strcmp(str, sl->str))
@@ -94,7 +94,7 @@ int str_list_match_item(const struct dm_list *sll, const char *str)
  */
 int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2, const char **tag_matched)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	dm_list_iterate_items(sl, sll)
 		if (str_list_match_item(sll2, sl->str)) {
@@ -111,7 +111,7 @@ int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2, c
  */
 int str_list_lists_equal(const struct dm_list *sll, const struct dm_list *sll2)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	if (dm_list_size(sll) != dm_list_size(sll2))
 		return 0;

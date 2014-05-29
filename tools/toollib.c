@@ -293,7 +293,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 	struct dm_list *tags_arg;
 	struct dm_list *vgnames;	/* VGs to process */
-	struct str_list *sll, *strl;
+	struct dm_str_list *sll, *strl;
 	struct cmd_vg *cvl_vg;
 	struct dm_list cmd_vgs;
 	struct dm_list failed_lvnames;
@@ -621,7 +621,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	int opt = 0;
 	int ret_max = ECMD_PROCESSED;
 
-	struct str_list *sl;
+	struct dm_str_list *sl;
 	struct dm_list *vgnames, *vgids;
 	struct dm_list arg_vgnames, tagsl;
 
@@ -803,7 +803,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct physical_volume *pv;
 	struct dm_list *pvslist = NULL, *vgnames;
 	struct dm_list tagsl;
-	struct str_list *sll;
+	struct dm_str_list *sll;
 	char *at_sign, *tagname;
 	struct device *dev;
 

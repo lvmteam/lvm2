@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "lvm-types.h"
 #include "device.h"
 #include "metadata.h"
 #include "lvmcache.h"
@@ -591,7 +590,7 @@ static void _close(struct device *dev)
 	log_debug_devs("Closed %s", dev_name(dev));
 
 	if (dev->flags & DEV_ALLOCED) {
-		dm_free((void *) dm_list_item(dev->aliases.n, struct str_list)->
+		dm_free((void *) dm_list_item(dev->aliases.n, struct dm_str_list)->
 			 str);
 		dm_free(dev->aliases.n);
 		dm_free(dev);

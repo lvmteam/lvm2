@@ -23,7 +23,6 @@
 #include <assert.h>
 #include "libdevmapper.h"
 
-#include "lvm-types.h"
 #include "lvm-logging.h"
 #include "activate.h"
 #include "archiver.h"

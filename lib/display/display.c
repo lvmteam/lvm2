@@ -833,7 +833,7 @@ void display_segtypes(const struct cmd_context *cmd)
 
 void display_tags(const struct cmd_context *cmd)
 {
-	const struct str_list *sl;
+	const struct dm_str_list *sl;
 
 	dm_list_iterate_items(sl, &cmd->tags) {
 		log_print("%s", sl->str);

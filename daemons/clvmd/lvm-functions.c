@@ -17,7 +17,6 @@
 
 #include <pthread.h>
 
-#include "lvm-types.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"

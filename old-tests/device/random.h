@@ -21,8 +21,6 @@
 #ifndef _LVM_RANDOM_H
 #define _LVM_RANDOM_H
 
-#include "lvm-types.h"
-
 void rand_init(int32_t seed);
 int32_t rand_get(void);
 

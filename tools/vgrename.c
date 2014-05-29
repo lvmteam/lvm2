@@ -62,7 +62,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	int match = 0;
 	int found_id = 0;
 	struct dm_list *vgids;
-	struct str_list *sl;
+	struct dm_str_list *sl;
 	const char *vg_name_new;
 	const char *vgid = NULL, *vg_name, *vg_name_old;
 	char old_path[NAME_LEN], new_path[NAME_LEN];

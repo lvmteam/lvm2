@@ -615,7 +615,7 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 /* Read any additional config files */
 static int _init_tag_configs(struct cmd_context *cmd)
 {
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	/* Tag list may grow while inside this loop */
 	dm_list_iterate_items(sl, &cmd->tags) {

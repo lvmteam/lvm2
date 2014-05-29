@@ -14,7 +14,6 @@
 
 #include "lvm_prop.h"
 #include "libdevmapper.h"
-#include "lvm-types.h"
 #include "metadata.h"
 
 /* lv create parameters */

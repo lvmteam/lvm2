@@ -14,7 +14,6 @@
  */
 
 #include "tools.h"
-#include "lvm-types.h"
 
 /*
  * lvrename command implementation.

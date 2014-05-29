@@ -17,7 +17,6 @@
 #define _LVM_DEVICE_H
 
 #include "uuid.h"
-#include "lvm-types.h"
 
 #include <fcntl.h>
 
@@ -34,7 +33,7 @@
  * pointer comparisons are valid.
  */
 struct device {
-	struct dm_list aliases;	/* struct str_list from lvm-types.h */
+	struct dm_list aliases;	/* struct dm_str_list */
 	dev_t dev;
 
 	/* private */
@@ -96,7 +95,7 @@ int dev_set(struct device *dev, uint64_t offset, size_t len, int value);
 void dev_flush(struct device *dev);
 
 struct device *dev_create_file(const char *filename, struct device *dev,
-			       struct str_list *alias, int use_malloc);
+			       struct dm_str_list *alias, int use_malloc);
 
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);

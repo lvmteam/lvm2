@@ -54,7 +54,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f);
 // TODO
 struct device *dev_cache_get_by_devt(dev_t device, struct dev_filter *f);
 
-void dev_set_preferred_name(struct str_list *sl, struct device *dev);
+void dev_set_preferred_name(struct dm_str_list *sl, struct device *dev);
 
 /*
  * Object for iterating through the cache.

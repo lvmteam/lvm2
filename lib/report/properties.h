@@ -15,7 +15,6 @@
 #define _LVM_PROPERTIES_H
 
 #include "libdevmapper.h"
-#include "lvm-types.h"
 #include "metadata.h"
 #include "report.h"
 #include "prop_common.h"

@@ -16,7 +16,6 @@
 #ifndef DISK_REP_FORMAT1_H
 #define DISK_REP_FORMAT1_H
 
-#include "lvm-types.h"
 #include "metadata.h"
 #include "toolcontext.h"
 

@@ -40,7 +40,6 @@
 #  include "lvm-logging.h"
 #  include "lvm-globals.h"
 #  include "lvm-wrappers.h"
-#  include "lvm-types.h"
 #endif
 
 #include <unistd.h>

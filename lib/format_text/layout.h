@@ -17,7 +17,6 @@
 #define _LVM_TEXT_LAYOUT_H
 
 #include "config.h"
-#include "lvm-types.h"
 #include "metadata.h"
 #include "uuid.h"
 

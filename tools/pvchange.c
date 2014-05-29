@@ -161,7 +161,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	struct pv_list *pvl;
 	struct dm_list *vgnames;
-	struct str_list *sll;
+	struct dm_str_list *sll;
 
 	if (!(arg_count(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
 	    arg_is_set(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +

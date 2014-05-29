@@ -23,7 +23,7 @@
 
 static FILE *_log_file;
 static struct device _log_dev;
-static struct str_list _log_dev_alias;
+static struct dm_str_list _log_dev_alias;
 
 static int _syslog = 0;
 static int _log_to_file = 0;

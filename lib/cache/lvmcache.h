@@ -88,17 +88,17 @@ int lvmcache_vgname_is_locked(const char *vgname);
 
 void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd);
 
-/* Returns list of struct str_lists containing pool-allocated copy of vgnames */
+/* Returns list of struct dm_str_list containing pool-allocated copy of vgnames */
 /* If include_internal is not set, return only proper vg names. */
 struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd,
 				     int include_internal);
 
-/* Returns list of struct str_lists containing pool-allocated copy of vgids */
+/* Returns list of struct dm_str_list containing pool-allocated copy of vgids */
 /* If include_internal is not set, return only proper vg ids. */
 struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
 				   int include_internal);
 
-/* Returns list of struct str_lists containing pool-allocated copy of pvids */
+/* Returns list of struct dm_str_list containing pool-allocated copy of pvids */
 struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid);
 

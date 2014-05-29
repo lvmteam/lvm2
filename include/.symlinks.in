@@ -11,7 +11,6 @@
 @top_srcdir@/lib/config/config_settings.h
 @top_srcdir@/lib/config/defaults.h
 @top_srcdir@/lib/datastruct/btree.h
-@top_srcdir@/lib/datastruct/lvm-types.h
 @top_srcdir@/lib/datastruct/str_list.h
 @top_srcdir@/lib/device/dev-cache.h
 @top_srcdir@/lib/device/dev-type.h

@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 	struct device *dev;
 	struct dev_iter *iter;
 	struct list_head *tmp;
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s <dir>\n", argv[0]);
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 		printf("%s", dev->name);
 
 		list_for_each(tmp, &dev->aliases) {
-			sl = list_entry(tmp, struct str_list, list);
+			sl = list_entry(tmp, struct dm_str_list, list);
 			printf(", %s", sl->str);
 		}
 		printf("\n");

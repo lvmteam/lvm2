@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "lvm-types.h"
 #include "btree.h"
 #include "config.h"
 #include "toolcontext.h"
@@ -70,7 +69,7 @@ static void _dev_init(struct device *dev, int max_error_count)
 }
 
 struct device *dev_create_file(const char *filename, struct device *dev,
-			       struct str_list *alias, int use_malloc)
+			       struct dm_str_list *alias, int use_malloc)
 {
 	int allocate = !dev;
 
@@ -81,7 +80,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				return NULL;
 			}
 			if (!(alias = dm_zalloc(sizeof(*alias)))) {
-				log_error("struct str_list allocation failed");
+				log_error("struct dm_str_list allocation failed");
 				dm_free(dev);
 				return NULL;
 			}
@@ -97,7 +96,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				return NULL;
 			}
 			if (!(alias = _zalloc(sizeof(*alias)))) {
-				log_error("struct str_list allocation failed");
+				log_error("struct dm_str_list allocation failed");
 				_free(dev);
 				return NULL;
 			}
@@ -133,7 +132,7 @@ static struct device *_dev_create(dev_t d)
 	return dev;
 }
 
-void dev_set_preferred_name(struct str_list *sl, struct device *dev)
+void dev_set_preferred_name(struct dm_str_list *sl, struct device *dev)
 {
 	/*
 	 * Don't interfere with ordering specified in config file.
@@ -308,8 +307,8 @@ static int _compare_paths(const char *path0, const char *path1)
 
 static int _add_alias(struct device *dev, const char *path)
 {
-	struct str_list *sl = _zalloc(sizeof(*sl));
-	struct str_list *strl;
+	struct dm_str_list *sl = _zalloc(sizeof(*sl));
+	struct dm_str_list *strl;
 	const char *oldpath;
 	int prefer_old = 1;
 
@@ -327,7 +326,7 @@ static int _add_alias(struct device *dev, const char *path)
 	sl->str = path;
 
 	if (!dm_list_empty(&dev->aliases)) {
-		oldpath = dm_list_item(dev->aliases.n, struct str_list)->str;
+		oldpath = dm_list_item(dev->aliases.n, struct dm_str_list)->str;
 		prefer_old = _compare_paths(path, oldpath);
 		log_debug_devs("%s: Aliased to %s in device cache%s",
 			       path, oldpath, prefer_old ? "" : " (preferred name)");
@@ -889,7 +888,7 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 		return dev_name(dev);
 
 	while ((r = stat(name = dm_list_item(dev->aliases.n,
-					  struct str_list)->str, &buf)) ||
+					  struct dm_str_list)->str, &buf)) ||
 	       (buf.st_rdev != dev->dev)) {
 		if (r < 0) {
 			if (quiet)
@@ -1073,6 +1072,6 @@ int dev_fd(struct device *dev)
 
 const char *dev_name(const struct device *dev)
 {
-	return (dev && dev->aliases.n) ? dm_list_item(dev->aliases.n, struct str_list)->str :
+	return (dev && dev->aliases.n) ? dm_list_item(dev->aliases.n, struct dm_str_list)->str :
 	    "unknown device";
 }

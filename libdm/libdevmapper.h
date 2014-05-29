@@ -1179,6 +1179,14 @@ struct dm_list {
 };
 
 /*
+ * String list.
+ */
+struct dm_str_list {
+	struct dm_list list;
+	const char *str;
+};
+
+/*
  * Initialise a list before use.
  * The list head's next and previous pointers point back to itself.
  */

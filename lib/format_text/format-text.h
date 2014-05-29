@@ -16,7 +16,6 @@
 #ifndef _LVM_FORMAT_TEXT_H
 #define _LVM_FORMAT_TEXT_H
 
-#include "lvm-types.h"
 #include "metadata.h"
 
 #define FMT_TEXT_NAME "lvm2"

@@ -149,7 +149,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 {
 	int m, first = 1, rejected = 0;
 	struct rfilter *rf = (struct rfilter *) f->private;
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	dm_list_iterate_items(sl, &dev->aliases) {
 		m = dm_regex_match(rf->engine, sl->str);

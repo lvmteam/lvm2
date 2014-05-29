@@ -272,7 +272,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = dm_hash_lookup(pf->devices, dev_name(dev));
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	/* Cached BAD? */
 	if (l == PF_BAD_DEVICE) {

@@ -22,7 +22,7 @@ struct dm_list *tag_list_copy(struct dm_pool *p, struct dm_list *tag_list)
 {
 	struct dm_list *list;
 	lvm_str_list_t *lsl;
-	struct str_list *sl;
+	struct dm_str_list *sl;
 
 	if (!(list = dm_pool_zalloc(p, sizeof(*list)))) {
 		log_errno(ENOMEM, "Memory allocation fail for dm_list.");
