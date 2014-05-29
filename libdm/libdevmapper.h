@@ -1676,6 +1676,8 @@ int dm_report_set_output_field_name_prefix(struct dm_report *rh,
  */
 int dm_report_field_string(struct dm_report *rh, struct dm_report_field *field,
 			   const char *const *data);
+int dm_report_field_string_list(struct dm_report *rh, struct dm_report_field *field,
+				const struct dm_list *data, const char *delimiter);
 int dm_report_field_int32(struct dm_report *rh, struct dm_report_field *field,
 			  const int32_t *data);
 int dm_report_field_uint32(struct dm_report *rh, struct dm_report_field *field,
