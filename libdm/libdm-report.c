@@ -862,7 +862,8 @@ static int _row_compare(const void *a, const void *b)
 	for (cnt = 0; cnt < rowa->rh->keys_count; cnt++) {
 		sfa = (*rowa->sort_fields)[cnt];
 		sfb = (*rowb->sort_fields)[cnt];
-		if (sfa->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) {
+		if ((sfa->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ||
+		    (sfa->props->flags & DM_REPORT_FIELD_TYPE_SIZE)) {
 			const uint64_t numa =
 			    *(const uint64_t *) sfa->sort_value;
 			const uint64_t numb =
@@ -972,7 +973,8 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 		}
 	} else {
 		if (!(align = field->props->flags & DM_REPORT_FIELD_ALIGN_MASK))
-			align = (field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ? 
+			align = ((field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ||
+				 (field->props->flags & DM_REPORT_FIELD_TYPE_SIZE)) ? 
 				DM_REPORT_FIELD_ALIGN_RIGHT : DM_REPORT_FIELD_ALIGN_LEFT;
 
 		/* Including trailing '\0'! */

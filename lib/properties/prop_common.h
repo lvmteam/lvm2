@@ -122,6 +122,7 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 
 #define STR 1
 #define NUM 2
+#define SIZ 3
 
 #define FIELD_MODIFIABLE 0x00000001
 #define FIELD(type, strct, field_type, head, field, width, fn, id, desc, settable) \

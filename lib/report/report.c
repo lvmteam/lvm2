@@ -1202,6 +1202,7 @@ static const struct dm_report_object_type _devtypes_report_types[] = {
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
+#define SIZ DM_REPORT_FIELD_TYPE_SIZE
 #define FIELD(type, strct, sorttype, head, field, width, func, id, desc, writeable) \
 	{type, sorttype, offsetof(type_ ## strct, field), width, \
 	 #id, head, &_ ## func ## _disp, desc},
@@ -1227,6 +1228,7 @@ static const struct dm_report_field_type _devtypes_fields[] = {
 
 #undef STR
 #undef NUM
+#undef SIZ
 #undef FIELD
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
