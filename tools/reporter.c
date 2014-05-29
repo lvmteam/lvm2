@@ -358,7 +358,10 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		if ( (!strcasecmp(options, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
 		      !strcmp(options, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) ||
 		     (!strcasecmp(keys, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
-		      !strcmp(keys, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) )
+		      !strcmp(keys, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) ||
+		     (selection &&
+		      (!strcasecmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
+		       !strcmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))) )
 			return r;
 		return_ECMD_FAILED;
 	}

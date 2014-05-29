@@ -475,7 +475,7 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 /*
  * show help message
  */
-static void _display_fields(struct dm_report *rh)
+static void _display_fields(struct dm_report *rh, int display_all_fields_item)
 {
 	uint32_t f;
 	const struct dm_report_object_type *type;
@@ -503,9 +503,11 @@ static void _display_fields(struct dm_report *rh)
 			log_warn("%*.*s", (int) strlen(desc) + 7,
 				 (int) strlen(desc) + 7,
 				 "-------------------------------------------------------------------------------");
-			log_warn("  %sall%-*s - %s", type->prefix,
-				 (int) (id_len - 3 - strlen(type->prefix)), "",
-				 "All fields in this section.");
+			if (display_all_fields_item) {
+				log_warn("  %sall%-*s - %s", type->prefix,
+					 (int) (id_len - 3 - strlen(type->prefix)), "",
+					 "All fields in this section.");
+			}
 		}
 
 		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
@@ -768,7 +770,7 @@ static int _parse_fields(struct dm_report *rh, const char *format,
 			we++;
 
 		if (!_field_match(rh, ws, (size_t) (we - ws), report_type_only)) {
-			_display_fields(rh);
+			_display_fields(rh, 1);
 			log_warn(" ");
 			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
 			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
@@ -798,7 +800,7 @@ static int _parse_keys(struct dm_report *rh, const char *keys,
 		while (*we && *we != ',')
 			we++;
 		if (!_key_match(rh, ws, (size_t) (we - ws), report_type_only)) {
-			_display_fields(rh);
+			_display_fields(rh, 1);
 			log_warn(" ");
 			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
 			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
@@ -1835,6 +1837,34 @@ static struct selection_node *_alloc_selection_node(struct dm_pool *mem, uint32_
 	return sn;
 }
 
+static void _display_selection_help(struct dm_report *rh)
+{
+	struct op_def *t;
+
+	log_warn("Selection operands");
+	log_warn("------------------");
+	log_warn("  field               - Reporting field.");
+	log_warn("  number              - Non-negative integer value.");
+	log_warn("  size                - Floating point value with units, 'm' unit used by default if not specified.");
+	log_warn("  string              - Characters quoted by \' or \" or unquoted.");
+	log_warn("  string list         - Strings enclosed by [ ] and elements delimited by either");
+	log_warn("                        \"all items must match\" or \"at least one item must match\" operator.");
+	log_warn("  regular expression  - Characters quoted by \' or \" or unquoted.");
+	log_warn(" ");
+	log_warn("Selection operators");
+	log_warn("-------------------");
+	log_warn("  Comparison operators:");
+	t = _op_cmp;
+	for (; t->string; t++)
+		log_warn("    %4s  - %s", t->string, t->desc);
+	log_warn(" ");
+	log_warn("  Logical and grouping operators:");
+	t = _op_log;
+	for (; t->string; t++)
+		log_warn("    %4s  - %s", t->string, t->desc);
+	log_warn(" ");
+}
+
 static char _sel_syntax_error_at_msg[] = "Selection syntax error at '%s'.";
 
 /*
@@ -1884,6 +1914,8 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		c = we[0];
 		tmp = (char *) we;
 		tmp[0] = '\0';
+		_display_fields(rh, 0);
+		log_warn(" ");
 		log_error("Unrecognised selection field: %s", ws);
 		tmp[0] = c;
 		goto bad;
@@ -1893,10 +1925,12 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 
 	/* comparison operator */
 	if (!(flags = _tok_op_cmp(we, &last))) {
+		_display_selection_help(rh);
 		log_error("Unrecognised comparison operator: %s", we);
 		goto bad;
 	}
 	if (!last) {
+		_display_selection_help(rh);
 		log_error("Missing value after operator");
 		goto bad;
 	}
@@ -1905,6 +1939,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	if ((flags & FLD_CMP_NUMBER) &&
 	    (ft->flags != DM_REPORT_FIELD_TYPE_NUMBER) &&
 	    (ft->flags != DM_REPORT_FIELD_TYPE_SIZE)) {
+		_display_selection_help(rh);
 		log_error("Operator can be used only with numeric or size fields: %s", ws);
 		goto bad;
 	}
@@ -2082,6 +2117,15 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 	if (!selection || !selection[0]) {
 		rh->selection_root = NULL;
 		return rh;
+	}
+
+	if (!strcasecmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
+	    !strcmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) {
+		_display_fields(rh, 0);
+		log_warn(" ");
+		_display_selection_help(rh);
+		dm_report_free(rh);
+		return NULL;
 	}
 
 	if (!(root = _alloc_selection_node(rh->mem, SEL_OR)))
