@@ -1641,7 +1641,18 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 				 uint32_t output_flags,
 				 const char *sort_keys,
 				 void *private_data);
+struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
+						const struct dm_report_object_type *types,
+						const struct dm_report_field_type *fields,
+						const char *output_fields,
+						const char *output_separator,
+						uint32_t output_flags,
+						const char *sort_keys,
+						const char *selection,
+						void *private_data);
 int dm_report_object(struct dm_report *rh, void *object);
+int dm_report_set_output_selection(struct dm_report *rh, uint32_t *report_types,
+				   const char *selection);
 int dm_report_output(struct dm_report *rh);
 void dm_report_free(struct dm_report *rh);
 
