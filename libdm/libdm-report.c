@@ -68,6 +68,89 @@ struct field_properties {
 };
 
 /*
+ * Report selection
+ */
+struct op_def {
+	const char *string;
+	uint32_t flags;
+	const char *desc;
+};
+
+#define FLD_CMP_MASK	0x000FF000
+#define FLD_CMP_EQUAL	0x00001000
+#define FLD_CMP_NOT	0x00002000
+#define FLD_CMP_GT	0x00004000
+#define FLD_CMP_LT	0x00008000
+#define FLD_CMP_REGEX	0x00010000
+#define FLD_CMP_NUMBER  0x00020000
+/*
+ * #define FLD_CMP_STRING 0x00040000
+ * We could defined FLD_CMP_STRING here for completeness here,
+ * but it's not needed - we can check operator compatibility with
+ * field type by using FLD_CMP_REGEX and FLD_CMP_NUMBER flags only.
+ */
+
+/*
+ * When defining operators, always define longer one before
+ * shorter one if one is a prefix of another!
+ * (e.g. =~ comes before =)
+*/
+static struct op_def _op_cmp[] = {
+	{ "=~", FLD_CMP_REGEX, "Matching regular expression." },
+	{ "!~", FLD_CMP_REGEX|FLD_CMP_NOT, "Not matching regular expression." },
+	{ "=", FLD_CMP_EQUAL, "Equal to." },
+	{ "!=", FLD_CMP_NOT|FLD_CMP_EQUAL, "Not equal to." },
+	{ ">=", FLD_CMP_NUMBER|FLD_CMP_GT|FLD_CMP_EQUAL, "Greater than or equal to." },
+	{ ">", FLD_CMP_NUMBER|FLD_CMP_GT, "Greater than" },
+	{ "<=", FLD_CMP_NUMBER|FLD_CMP_LT|FLD_CMP_EQUAL, "Lesser than or equal to." },
+	{ "<", FLD_CMP_NUMBER|FLD_CMP_LT, "Lesser than." },
+	{ NULL, 0, NULL }
+};
+
+#define SEL_MASK		0x000000FF
+#define SEL_ITEM		0x00000001
+#define SEL_AND 		0x00000002
+#define SEL_OR			0x00000004
+
+#define SEL_MODIFIER_MASK	0x00000F00
+#define SEL_MODIFIER_NOT	0x00000100
+
+#define SEL_PRECEDENCE_MASK	0x0000F000
+#define SEL_PRECEDENCE_PS	0x00001000
+#define SEL_PRECEDENCE_PE	0x00002000
+
+static struct op_def _op_log[] = {
+        { "&&", SEL_AND, "All fields must match" },
+	{ ",", SEL_AND, "All fields must match" },
+        { "||", SEL_OR, "At least one field must match" },
+	{ "#", SEL_OR, "At least one field must match" },
+        { "!", SEL_MODIFIER_NOT, "Logical negation" },
+        { "(", SEL_PRECEDENCE_PS, "Left parenthesis" },
+        { ")", SEL_PRECEDENCE_PE, "Right parenthesis" },
+        { NULL,  0, NULL},
+};
+
+struct field_selection {
+	struct field_properties *fp;
+	uint32_t flags;
+	union {
+		const char *s;
+		uint64_t i;
+		double d;
+		struct dm_regex *r;
+	} v;
+};
+
+struct selection_node {
+	struct dm_list list;
+	uint32_t type;
+	union {
+		struct field_selection *item;
+		struct dm_list set;
+	} selection;
+};
+
+/*
  * Report data field
  */
 struct dm_report_field {
