@@ -1234,7 +1234,7 @@ static const struct dm_report_field_type _devtypes_fields[] = {
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
 		  int aligned, int buffered, int headings, int field_prefixes,
-		  int quoted, int columns_as_rows)
+		  int quoted, int columns_as_rows, const char *selection)
 {
 	uint32_t report_flags = 0;
 	int devtypes_report = *report_type & DEVTYPES ? 1 : 0;
@@ -1258,9 +1258,10 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	if (columns_as_rows)
 		report_flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
 
-	rh = dm_report_init(report_type, devtypes_report ? _devtypes_report_types : _report_types,
-			    devtypes_report ? _devtypes_fields : _fields, format,
-			    separator, report_flags, keys, cmd);
+	rh = dm_report_init_with_selection(report_type,
+		devtypes_report ? _devtypes_report_types : _report_types,
+		devtypes_report ? _devtypes_fields : _fields, format,
+		separator, report_flags, keys, selection, cmd);
 
 	if (rh && field_prefixes)
 		dm_report_set_output_field_name_prefix(rh, "lvm2_");

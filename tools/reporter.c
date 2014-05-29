@@ -235,7 +235,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	void *report_handle;
 	const char *opts;
 	char *str;
-	const char *keys = NULL, *options = NULL, *separator;
+	const char *keys = NULL, *options = NULL, *selection = NULL, *separator;
 	int r = ECMD_PROCESSED;
 	int aligned, buffered, headings, field_prefixes, quoted;
 	int columns_as_rows;
@@ -348,10 +348,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	if (arg_count(cmd, rows_ARG))
 		columns_as_rows = 1;
 
+	if (arg_count(cmd, select_ARG))
+		selection = arg_str_value(cmd, select_ARG, NULL);
+
 	if (!(report_handle = report_init(cmd, options, keys, &report_type,
 					  separator, aligned, buffered,
 					  headings, field_prefixes, quoted,
-					  columns_as_rows))) {
+					  columns_as_rows, selection))) {
 		if ( (!strcasecmp(options, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
 		      !strcmp(options, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) ||
 		     (!strcasecmp(keys, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
