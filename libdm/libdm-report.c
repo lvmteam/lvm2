@@ -1949,7 +1949,9 @@ static int _row_compare(const void *a, const void *b)
 			} else {	/* FLD_DESCENDING */
 				return (numa < numb) ? 1 : -1;
 			}
-		} else {	/* DM_REPORT_FIELD_TYPE_STRING */
+		} else {
+			/* DM_REPORT_FIELD_TYPE_STRING
+			 * DM_REPORT_FIELD_TYPE_STRING_LIST */
 			const char *stra = (const char *) sfa->sort_value;
 			const char *strb = (const char *) sfb->sort_value;
 			int cmp = strcmp(stra, strb);

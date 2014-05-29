@@ -343,6 +343,7 @@ struct lvm_property_type _properties[] = {
 #undef STR
 #undef NUM
 #undef SIZ
+#undef STR_LIST
 #undef FIELD
 
 int lvseg_get_property(const struct lv_segment *lvseg,

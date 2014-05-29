@@ -23,6 +23,7 @@
 #include "segtype.h"
 #include "lvmcache.h"
 #include "device-types.h"
+#include "str_list.h"
 
 #include <stddef.h> /* offsetof() */
 
@@ -126,17 +127,13 @@ static int _peranges_disp(struct dm_report *rh __attribute__((unused)), struct d
 	return _field_set_value(field, str, NULL);
 }
 
-static int _tags_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,
 		      struct dm_report_field *field,
 		      const void *data, void *private __attribute__((unused)))
 {
 	const struct dm_list *tagsl = (const struct dm_list *) data;
-	char *tags_str;
 
-	if (!(tags_str = tags_format_and_copy(mem, tagsl)))
-		return_0;
-
-	return _field_set_value(field, tags_str, NULL);
+	return dm_report_field_string_list(rh, field, tagsl, NULL);
 }
 
 static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -144,12 +141,17 @@ static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 			 const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	char *modules_str;
+	struct dm_list *modules;
 
-	if (!(modules_str = lv_modules_dup(mem, lv)))
+	if (!(modules = str_list_create(mem))) {
+		log_error("modules str_list allocation failed");
+		return 0;
+	}
+
+	if (!(list_lv_modules(mem, lv, modules)))
 		return_0;
 
-	return _field_set_value(field, modules_str, NULL);
+	return dm_report_field_string_list(rh, field, modules, NULL);
 }
 
 static int _lvprofile_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1203,6 +1205,7 @@ static const struct dm_report_object_type _devtypes_report_types[] = {
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
 #define SIZ DM_REPORT_FIELD_TYPE_SIZE
+#define STR_LIST DM_REPORT_FIELD_TYPE_STRING_LIST
 #define FIELD(type, strct, sorttype, head, field, width, func, id, desc, writeable) \
 	{type, sorttype, offsetof(type_ ## strct, field), width, \
 	 #id, head, &_ ## func ## _disp, desc},
@@ -1229,6 +1232,7 @@ static const struct dm_report_field_type _devtypes_fields[] = {
 #undef STR
 #undef NUM
 #undef SIZ
+#undef STR_LIST
 #undef FIELD
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
