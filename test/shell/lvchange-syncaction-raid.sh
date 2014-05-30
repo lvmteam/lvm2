@@ -13,7 +13,10 @@
 
 . lib/test
 
-aux have_raid 1 5 0 || skip
+# Proper mismatch count 1.5.2+ upstream, 1.3.5 < x < 1.4.0 in RHEL6
+aux have_raid 1 3 5 &&
+  ! aux have_raid 1 4 0 ||
+  aux have_raid 1 5 2 || skip
 aux prepare_vg 3
 
 lvcreate -n $lv1 $vg -l1 --type raid1
@@ -22,16 +25,7 @@ START=$(get pv_field "$dev2" pe_start --units 1k)
 METASIZE=$(get lv_field $vg/${lv1}_rmeta_1 size -a --units 1k)
 SEEK=$((${START%\.00k} + ${METASIZE%\.00k}))
 # Overwrite some portion of  _rimage_1
-dd if=/dev/urandom of="$dev2" bs=1K count=1 seek=$SEEK
-
-lvchange --syncaction check $vg/$lv1
-
-# hmmm it's still in 'dd' buffer and not on real disk ??
-# anyway skip over with 'should'
-should check lv_field $vg/$lv1 raid_mismatch_count "128"
-
-# Ensure it's all on disk now
-sync
+dd if=/dev/urandom of="$dev2" bs=1K count=1 seek=$SEEK oflag=direct
 
 lvchange --syncaction check $vg/$lv1
 check lv_field $vg/$lv1 raid_mismatch_count "128"
