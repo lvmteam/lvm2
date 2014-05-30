@@ -37,9 +37,32 @@ struct lvm_report_object {
 };
 
 static const uint64_t _hundred64 = UINT64_C(100);
-static const uint64_t _minusone64 = UINT64_C(-1);
-static const int32_t _minusone32 = INT32_C(-1);
 static const uint64_t _zero64 = UINT64_C(0);
+
+static const uint64_t _reserved_number_undef_64 = UINT64_C(-1);
+static const uint64_t _reserved_number_unmanaged_64 = UINT64_C(-2);
+static const uint64_t _reserved_size_auto_64 = UINT64_C(-1);
+
+/*
+ * 32 bit signed is casted to 64 bit unsigned in dm_report_field internally!
+ * So when stored in the struct, the _reserved_number_undef_32 is actually
+ * equal to _reserved_number_undef_64.
+ */
+static const int32_t _reserved_number_undef_32 = INT32_C(-1);
+
+static const char const *_reserved_number_undef_64_names[]={"-1", "undefined", "undef", "unknown", NULL};
+static const char const *_reserved_number_unmanaged_64_names[]={"unmanaged", NULL};
+static const char const *_reserved_size_auto_64_names[]={"auto", NULL};
+
+static const struct dm_report_reserved_value _report_reserved_values[] = {
+	{DM_REPORT_FIELD_TYPE_NUMBER, &_reserved_number_undef_64, _reserved_number_undef_64_names,
+		"Reserved value for undefined numeric value."},
+	{DM_REPORT_FIELD_TYPE_NUMBER, &_reserved_number_unmanaged_64, _reserved_number_unmanaged_64_names,
+		"Reserved value for unmanaged number of metadata copies in VG."},
+	{DM_REPORT_FIELD_TYPE_SIZE, &_reserved_size_auto_64, _reserved_size_auto_64_names,
+		"Reserved value for size that is automatically calculated."},
+	{0, NULL, NULL}
+};
 
 static int _field_set_value(struct dm_report_field *field, const void *data, const void *sort)
 {
@@ -56,7 +79,7 @@ static int _field_set_percent(struct dm_report_field *field,
 	uint64_t *sortval;
 
 	if (percent == PERCENT_INVALID)
-		return _field_set_value(field, "", &_minusone64);
+		return _field_set_value(field, "", &_reserved_number_undef_64);
 
 	if (!(repstr = dm_pool_alloc(mem, 8)) ||
 	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
@@ -203,7 +226,7 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 	if ((major = lv_kernel_major(lv)) >= 0)
 		return dm_report_field_int(rh, field, &major);
 
-	return dm_report_field_int32(rh, field, &_minusone32);
+	return dm_report_field_int32(rh, field, &_reserved_number_undef_32);
 }
 
 static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -216,7 +239,7 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 	if ((minor = lv_kernel_minor(lv)) >= 0)
 		return dm_report_field_int(rh, field, &minor);
 
-	return dm_report_field_int32(rh, field, &_minusone32);
+	return dm_report_field_int32(rh, field, &_reserved_number_undef_32);
 }
 
 static int _lvstatus_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
@@ -502,7 +525,7 @@ static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
 	if (lv->read_ahead == DM_READ_AHEAD_AUTO)
-		return _field_set_value(field, "auto", &_minusone64);
+		return _field_set_value(field, "auto", &_reserved_size_auto_64);
 
 	return _size32_disp(rh, mem, field, &lv->read_ahead, private);
 }
@@ -516,7 +539,7 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint32_t read_ahead = lv_kernel_read_ahead(lv);
 
 	if (read_ahead == UINT32_MAX)
-		return dm_report_field_int32(rh, field, &_minusone32);
+		return dm_report_field_int32(rh, field, &_reserved_number_undef_32);
 
 	return _size32_disp(rh, mem, field, &read_ahead, private);
 }
@@ -604,7 +627,7 @@ static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (seg_is_thin_pool(seg))
 		return _uint32_disp(rh, mem, field, &seg->zero_new_blocks, private);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -616,7 +639,7 @@ static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (seg_is_thin_pool(seg))
 		return dm_report_field_uint64(rh, field, &seg->transaction_id);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _thinid_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -628,7 +651,7 @@ static int _thinid_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (seg_is_thin_volume(seg))
 		return dm_report_field_uint32(rh, field, &seg->device_id);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _discards_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -794,7 +817,7 @@ static int _vgmdacopies_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint32_t count = vg_mda_copies(vg);
 
 	if (count == VGMETADATACOPIES_UNMANAGED)
-		return _field_set_value(field, "unmanaged", &_minusone64);
+		return _field_set_value(field, "unmanaged", &_reserved_number_unmanaged_64);
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
@@ -903,7 +926,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 		 */
 	}
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
@@ -923,7 +946,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
 		return _field_set_percent(field, mem, percent);
 	}
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _raidsyncaction_disp(struct dm_report *rh __attribute__((unused)),
@@ -953,7 +976,7 @@ static int _raidmismatchcount_disp(struct dm_report *rh __attribute__((unused)),
 	if (lv_is_raid(lv) && lv_raid_mismatch_count(lv, &mismatch_count))
 		return dm_report_field_uint64(rh, field, &mismatch_count);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _raidwritebehind_disp(struct dm_report *rh __attribute__((unused)),
@@ -967,7 +990,7 @@ static int _raidwritebehind_disp(struct dm_report *rh __attribute__((unused)),
 	if (lv_is_raid_type(lv) && first_seg(lv)->writebehind)
 		return dm_report_field_uint32(rh, field, &first_seg(lv)->writebehind);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _raidminrecoveryrate_disp(struct dm_report *rh __attribute__((unused)),
@@ -982,7 +1005,7 @@ static int _raidminrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 		return dm_report_field_uint32(rh, field,
 					      &first_seg(lv)->min_recovery_rate);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)),
@@ -997,7 +1020,7 @@ static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 		return dm_report_field_uint32(rh, field,
 					      &first_seg(lv)->max_recovery_rate);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 /* Called only with lv_is_thin_pool/volume */
@@ -1011,7 +1034,7 @@ static int _dtpercent_disp(int metadata, struct dm_pool *mem,
 	/* Suppress data percent if not using driver */
 	/* cannot use lv_is_active_locally - need to check for layer -tpool */
 	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
-		return _field_set_value(field, "",  &_minusone64);
+		return _field_set_value(field, "",  &_reserved_number_undef_64);
 
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, metadata, &percent))
@@ -1036,7 +1059,7 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
 		return _dtpercent_disp(0, mem, field, data, private);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _metadatapercent_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1048,7 +1071,7 @@ static int _metadatapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lv_is_thin_pool(lv))
 		return _dtpercent_disp(1, mem, field, data, private);
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _lvmetadatasize_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1063,7 +1086,7 @@ static int _lvmetadatasize_disp(struct dm_report *rh, struct dm_pool *mem,
 		return _size64_disp(rh, mem, field, &size, private);
 	}
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _thincount_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1078,7 +1101,7 @@ static int _thincount_disp(struct dm_report *rh, struct dm_pool *mem,
 		return _uint32_disp(rh, mem, field, &count, private);
 	}
 
-	return _field_set_value(field, "", &_minusone64);
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _lvtime_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1264,8 +1287,9 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 
 	rh = dm_report_init_with_selection(report_type,
 		devtypes_report ? _devtypes_report_types : _report_types,
-		devtypes_report ? _devtypes_fields : _fields, format,
-		separator, report_flags, keys, selection, cmd);
+		devtypes_report ? _devtypes_fields : _fields,
+		format, separator, report_flags, keys,
+		selection, _report_reserved_values, cmd);
 
 	if (rh && field_prefixes)
 		dm_report_set_output_field_name_prefix(rh, "lvm2_");

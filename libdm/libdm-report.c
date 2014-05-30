@@ -52,6 +52,8 @@ struct dm_report {
 	void *private;
 
 	struct selection_node *selection_root;
+	/* Null-terminated array of reserved values */
+	const struct dm_report_reserved_value *reserved_values;
 };
 
 /*
@@ -1412,6 +1414,102 @@ static const char *_tok_value_string(const char *s,
 }
 
 /*
+ * Used to replace a string representation of the reserved value
+ * found in selection with the exact reserved value of certain type.
+ */
+static const char *_get_reserved_value(struct dm_report *rh, unsigned type,
+				       const char *s, const char **begin, const char **end,
+				       const struct dm_report_reserved_value **reserved)
+{
+	const struct dm_report_reserved_value *iter = rh->reserved_values;
+	const char **name;
+
+	*reserved = NULL;
+
+	if (!iter)
+		return s;
+
+	while (iter->type) {
+		if (iter->type & type) {
+			name = iter->names;
+			while (*name) {
+				if (!strcmp(*name, s)) {
+					*begin = s;
+					*end = s += strlen(*name);
+					*reserved = iter;
+					return s;
+				}
+				name++;
+			}
+		}
+		iter++;
+	}
+
+	return s;
+}
+
+/*
+ * Used to check whether a value of certain type used in selection is reserved.
+ */
+static int _check_value_is_reserved(struct dm_report *rh, unsigned type, const void *value)
+{
+	const struct dm_report_reserved_value *iter = rh->reserved_values;
+
+	if (!iter)
+		return 0;
+
+	while (iter->type) {
+		if (iter->type & type) {
+			switch (type) {
+				case DM_REPORT_FIELD_TYPE_NUMBER:
+					if (*(uint64_t *)iter->value == *(uint64_t *)value)
+						return 1;
+					break;
+				case DM_REPORT_FIELD_TYPE_STRING:
+					if (!strcmp((const char *)iter->value, (const char *) value))
+						return 1;
+					break;
+				case DM_REPORT_FIELD_TYPE_SIZE:
+					if (_close_enough(*(double *)iter->value, *(double *) value))
+						return 1;
+					break;
+				case DM_REPORT_FIELD_TYPE_STRING_LIST:
+					// TODO: add comparison for string list
+					break;
+			}
+		}
+		iter++;
+	}
+
+	return 0;
+}
+
+/*
+ * Used to check whether the reserved_values definition passed to
+ * dm_report_init_with_selection contains only supported reserved value types.
+ */
+static int _check_reserved_values_supported(const struct dm_report_reserved_value reserved_values[])
+{
+	const struct dm_report_reserved_value *iter;
+	static uint32_t supported_reserved_types = DM_REPORT_FIELD_TYPE_NUMBER |
+						   DM_REPORT_FIELD_TYPE_SIZE |
+						   DM_REPORT_FIELD_TYPE_STRING;
+
+	if (!reserved_values)
+		return 1;
+
+	iter = reserved_values;
+
+	while (iter->type) {
+		if (!(iter->type & supported_reserved_types))
+			return 0;
+		iter++;
+	}
+
+	return 1;
+}
+
+/*
  * Input:
  *   ft              - field type for which the value is parsed
  *   s               - a pointer to the parsed string
@@ -1420,11 +1518,14 @@ static const char *_tok_value_string(const char *s,
  *   end             - a pointer to the end of the token + 1
  *   flags           - parsing flags
  */
-static const char *_tok_value_regex(const struct dm_report_field_type *ft,
+static const char *_tok_value_regex(struct dm_report *rh,
+				    const struct dm_report_field_type *ft,
 				    const char *s, const char **begin,
-				    const char **end, uint32_t *flags)
+				    const char **end, uint32_t *flags,
+				    const struct dm_report_reserved_value **reserved)
 {
 	char c;
+	*reserved = NULL;
 
 	s = _skip_space(s);
 
@@ -1628,9 +1729,11 @@ bad:
  *   custom          - custom data specific to token type
  *                     (e.g. size unit factor)
  */
-static const char *_tok_value(const struct dm_report_field_type *ft,
+static const char *_tok_value(struct dm_report *rh,
+			      const struct dm_report_field_type *ft,
 			      const char *s, const char **begin,
 			      const char **end, uint32_t *flags,
+			      const struct dm_report_reserved_value **reserved,
 			      struct dm_pool *mem, void *custom)
 {
 	int expected_type = ft->flags & DM_REPORT_FIELD_TYPE_MASK;
@@ -1640,6 +1743,12 @@ static const char *_tok_value(const struct dm_report_field_type *ft,
 	char c;
 
 	s = _skip_space(s);
+
+	s = _get_reserved_value(rh, expected_type, s, begin, end, reserved);
+	if (*reserved) {
+		*flags |= expected_type;
+		return s;
+	}
 
 	switch (expected_type) {
 
@@ -1728,6 +1837,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 						       const char *v,
 						       size_t len,
 						       uint32_t flags,
+						       const struct dm_report_reserved_value *reserved,
 						       void *custom)
 {
 	static const char *_out_of_range_msg = "Field selection value %s out of supported range for field %s.";
@@ -1798,29 +1908,58 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 
 		switch (flags & DM_REPORT_FIELD_TYPE_MASK) {
 			case DM_REPORT_FIELD_TYPE_STRING:
-				fs->v.s = s;
+				if (reserved) {
+					fs->v.s = (const char *) reserved->value;
+					dm_pool_free(rh->mem, s);
+				} else {
+					fs->v.s = s;
+					if (_check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_STRING, fs->v.s)) {
+						log_error("String value %s found in selection is reserved.", fs->v.s);
+						goto error;
+					}
+				}
 				break;
 			case DM_REPORT_FIELD_TYPE_NUMBER:
-				if (((fs->v.i = strtoull(s, NULL, 10)) == ULLONG_MAX) &&
-				    (errno == ERANGE)) {
-					log_error(_out_of_range_msg, s, field_id);
-					goto error;
+				if (reserved)
+					fs->v.i = *(uint64_t *) reserved->value;
+				else {
+					if (((fs->v.i = strtoull(s, NULL, 10)) == ULLONG_MAX) &&
+						 (errno == ERANGE)) {
+						log_error(_out_of_range_msg, s, field_id);
+						goto error;
+					}
+					if (_check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_NUMBER, &fs->v.i)) {
+						log_error("Numeric value %" PRIu64 " found in selection is reserved.", fs->v.i);
+						goto error;
+					}
 				}
 				dm_pool_free(rh->mem, s);
 				break;
 			case DM_REPORT_FIELD_TYPE_SIZE:
-				fs->v.d = strtod(s, NULL);
-				if (errno == ERANGE) {
-					log_error(_out_of_range_msg, s, field_id);
-					goto error;
+				if (reserved)
+					fs->v.d = (double) * (uint64_t *) reserved->value;
+				else {
+					fs->v.d = strtod(s, NULL);
+					if (errno == ERANGE) {
+						log_error(_out_of_range_msg, s, field_id);
+						goto error;
+					}
+					if (custom && (factor = *((uint64_t *)custom)))
+						fs->v.d *= factor;
+					fs->v.d /= 512; /* store size in sectors! */
+					if (_check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_SIZE, &fs->v.d)) {
+						log_error("Size value %f found in selection is reserved.", fs->v.d);
+						goto error;
+					}
 				}
-				if (custom && (factor = *((uint64_t *)custom)))
-					fs->v.d *= factor;
-				fs->v.d /= 512; /* store size in sectors! */
 				dm_pool_free(rh->mem, s);
 				break;
 			case DM_REPORT_FIELD_TYPE_STRING_LIST:
 				fs->v.l = *(struct selection_str_list **)custom;
+				if (_check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_STRING_LIST, fs->v.l)) {
+					log_error("String list value found in selection is reserved.");
+					goto error;
+				}
 				break;
 			default:
 				log_error(INTERNAL_ERROR "_create_field_selection: "
@@ -1854,7 +1993,12 @@ static struct selection_node *_alloc_selection_node(struct dm_pool *mem, uint32_
 
 static void _display_selection_help(struct dm_report *rh)
 {
+	static const char _grow_object_failed_msg[] = "_display_selection_help: dm_pool_grow_object failed";
 	struct op_def *t;
+	const struct dm_report_reserved_value *rv;
+	size_t len_all, len_final = 0;
+	const char **rvs;
+	char *rvs_all;
 
 	log_warn("Selection operands");
 	log_warn("------------------");
@@ -1866,6 +2010,42 @@ static void _display_selection_help(struct dm_report *rh)
 	log_warn("                        \"all items must match\" or \"at least one item must match\" operator.");
 	log_warn("  regular expression  - Characters quoted by \' or \" or unquoted.");
 	log_warn(" ");
+	if (rh->reserved_values) {
+		log_warn("Reserved values");
+		log_warn("---------------");
+
+		for (rv = rh->reserved_values; rv->type; rv++) {
+			for (len_all = 0, rvs = rv->names; *rvs; rvs++)
+				len_all += strlen(*rvs) + 2;
+			if (len_all > len_final)
+				len_final = len_all;
+		}
+
+		for (rv = rh->reserved_values; rv->type; rv++) {
+			if (!dm_pool_begin_object(rh->mem, 256)) {
+				log_error("_display_selection_help: dm_pool_begin_object failed");
+				break;
+			}
+			for (rvs = rv->names; *rvs; rvs++) {
+				if (((rvs != rv->names) && !dm_pool_grow_object(rh->mem, ", ", 2)) ||
+				    !dm_pool_grow_object(rh->mem, *rvs, strlen(*rvs))) {
+					log_error(_grow_object_failed_msg);
+					goto out_reserved_values;
+				}
+			}
+			if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+				log_error(_grow_object_failed_msg);
+				goto out_reserved_values;
+			}
+			rvs_all = dm_pool_end_object(rh->mem);
+
+			log_warn("  %-*s - %s [%s]", (int) len_final, rvs_all, rv->description,
+						     _get_field_type_name(rv->type));
+			dm_pool_free(rh->mem, rvs_all);
+		}
+		log_warn(" ");
+	}
+out_reserved_values:
 	log_warn("Selection operators");
 	log_warn("-------------------");
 	log_warn("  Comparison operators:");
@@ -1913,6 +2093,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	uint32_t flags, field_num;
 	const struct dm_report_field_type *ft;
 	struct selection_str_list *str_list;
+	const struct dm_report_reserved_value *reserved;
 	uint64_t factor;
 	void *custom;
 	char *tmp;
@@ -1961,7 +2142,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 
 	/* comparison value */
 	if (flags & FLD_CMP_REGEX) {
-		if (!(last = _tok_value_regex(ft, last, &vs, &ve, &flags)))
+		if (!(last = _tok_value_regex(rh, ft, last, &vs, &ve, &flags, &reserved)))
 			goto_bad;
 	} else {
 		if (ft->flags == DM_REPORT_FIELD_TYPE_SIZE ||
@@ -1971,14 +2152,14 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 			custom = &str_list;
 		else
 			custom = NULL;
-		if (!(last = _tok_value(ft, last, &vs, &ve, &flags, rh->mem, custom)))
+		if (!(last = _tok_value(rh, ft, last, &vs, &ve, &flags, &reserved, rh->mem, custom)))
 			goto_bad;
 	}
 
 	*next = _skip_space(last);
 
 	/* create selection */
-	if (!(fs = _create_field_selection(rh, field_num, vs, (size_t) (ve - vs), flags, custom)))
+	if (!(fs = _create_field_selection(rh, field_num, vs, (size_t) (ve - vs), flags, reserved, custom)))
 		return_NULL;
 
 	/* create selection node */
@@ -2119,6 +2300,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 						uint32_t output_flags,
 						const char *sort_keys,
 						const char *selection,
+						const struct dm_report_reserved_value reserved_values[],
 						void *private_data)
 {
 	struct dm_report *rh;
@@ -2133,6 +2315,14 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 		rh->selection_root = NULL;
 		return rh;
 	}
+
+	if (!_check_reserved_values_supported(reserved_values)) {
+		log_error(INTERNAL_ERROR "dm_report_init_with_selection: "
+			  "trying to register unsupported reserved value type, "
+			  "skipping report selection");
+		return rh;
+	}
+	rh->reserved_values = reserved_values;
 
 	if (!strcasecmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
 	    !strcmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) {

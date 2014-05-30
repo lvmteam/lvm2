@@ -2934,7 +2934,7 @@ static int _report_init(const struct command *cmd)
 
 	if (!(_report = dm_report_init_with_selection(&_report_type, _report_types,
 				_report_fields, options, separator, flags, keys,
-				selection, NULL)))
+				selection, NULL, NULL)))
 		goto out;
 
 	if ((_report_type & DR_TREE) && !_build_whole_deptree(cmd)) {

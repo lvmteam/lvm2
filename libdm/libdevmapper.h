@@ -1631,6 +1631,16 @@ struct dm_report_field_type {
 	const char *desc;	/* description of the field */
 };
 
+struct dm_report_reserved_value {
+	const unsigned type;		/* DM_REPORT_FIELD_TYPE_* */
+	const void const *value;	/* reserved value:
+						uint64_t for DM_REPORT_FIELD_TYPE_NUMBER
+						uint64_t for DM_REPORT_FIELD_TYPE_SIZE (number of 512-byte sectors)
+						const char * for DM_REPORT_FIELD_TYPE_STRING */
+	const char **names;		/* null-terminated array of names for this reserved value */
+	const char *description;	/* description of the reserved value */
+};
+
 /*
  * dm_report_init output_flags
  */
@@ -1658,6 +1668,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 						uint32_t output_flags,
 						const char *sort_keys,
 						const char *selection,
+						const struct dm_report_reserved_value reserved_values[],
 						void *private_data);
 int dm_report_object(struct dm_report *rh, void *object);
 int dm_report_set_output_selection(struct dm_report *rh, uint32_t *report_types,
