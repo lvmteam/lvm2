@@ -87,7 +87,7 @@ lvchange -an $vg1
 lvchange -ay $vg1
 check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
 
-# Test removal of opened (bug unmounted) snapshot (device busy) for a while
+# Test removal of opened (but unmounted) snapshot (device busy) for a while
 sleep 120 < "$DM_DEV_DIR/$vg1/$lv1" &
 SLEEP_PID=$!
 
