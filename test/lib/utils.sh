@@ -186,6 +186,14 @@ kernel_at_least() {
 	test "$minor2" -ge "$3" 2>/dev/null || return 1
 }
 
+get_devs() {
+	local IFS=$IFS_NL
+	DEVICES=( $(<DEVICES) )
+	export DEVICES
+#	local DEVS=( $(<DEVICES) )
+#	eval "$1"'=("${DEVS[@]}")'
+}
+
 prepare_test_vars() {
 	vg="${PREFIX}vg"
 	lv=LV
