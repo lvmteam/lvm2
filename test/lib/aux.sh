@@ -349,13 +349,13 @@ prepare_devs() {
 	fi
 
 	local size=$(($loopsz/$n))
-	devs=
-
+	local count=0
 	init_udev_transaction
 	for i in $(seq 1 $n); do
 		local name="${PREFIX}$pvname$i"
 		local dev="$DM_DEV_DIR/mapper/$name"
-		devs="$devs $dev"
+		DEVICES[$count]=$dev
+		count=$(( $count + 1 ))
 		echo 0 $size linear "$LOOP" $((($i-1)*$size)) > "$name.table"
 		dmsetup create -u "TEST-$name" "$name" "$name.table"
 	done
@@ -370,7 +370,8 @@ prepare_devs() {
 	#	dmsetup table $name
 	#done
 
-	echo $devs > DEVICES
+	printf "%s\n" "${DEVICES[@]}" > DEVICES
+#	( IFS=$'\n'; echo "${DEVICES[*]}" ) >DEVICES
 	echo "ok"
 }
 
@@ -502,14 +503,14 @@ restore_dev() {
 
 prepare_pvs() {
 	prepare_devs "$@"
-	pvcreate -ff $devs
+	pvcreate -ff "${DEVICES[@]}"
 }
 
 prepare_vg() {
 	teardown_devs
 
 	prepare_pvs "$@"
-	vgcreate -s 512K $vg $devs
+	vgcreate -s 512K $vg "${DEVICES[@]}"
 }
 
 extend_filter() {
