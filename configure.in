@@ -244,7 +244,7 @@ AC_ARG_WITH(default-name-mangling,
 	    MANGLING=$withval, MANGLING=auto)
 case "$MANGLING" in
  auto) mangling=DM_STRING_MANGLING_AUTO;;
- disabled) mangling=DM_STRING_MANGLING_NONE;;
+ none|disabled) mangling=DM_STRING_MANGLING_NONE;;
  hex) mangling=DM_STRING_MANGLING_HEX;;
  *) AC_MSG_ERROR([--with-default-name-mangling parameter invalid]);;
 esac
