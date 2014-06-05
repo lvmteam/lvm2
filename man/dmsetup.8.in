@@ -202,6 +202,9 @@ mangled, error on mixed; this is used by default).
 Character whitelist: 0-9, A-Z, a-z, #+-.:=@_. This whitelist is
 also supported by udev. Any character not on a whitelist is replaced
 with its hex value (two digits) prefixed by \\x.
+Mangling mode could be also set through
+.B DM_DEFAULT_NAME_MANGLING_MODE
+environment variable.
 .TP
 .BR \-j | \-\-major\ \fImajor
 Specify the major number.
@@ -712,7 +715,11 @@ Defaults to "/dev" and must be an absolute path.
 .TP
 .B DM_UDEV_COOKIE
 A cookie to use for all relevant commands to synchronize with udev processing.
-It is an alternative to using \-\-udevcookie option.
+It is an alternative to using \fB\-\-udevcookie\fP option.
+.TP
+.B DM_DEFAULT_NAME_MANGLING_MODE
+A default mangling mode. Defaults to "#DEFAULT_MANGLING#"
+and it is an alternative to using \fB\-\-manglename\fP option.
 
 .SH AUTHORS
 Original version: Joe Thornber (thornber@redhat.com)
