@@ -97,7 +97,7 @@ grep "WARNING: Maximum size" err
 
 lvremove -f $vg
 
-if test "$TSIZE" -eq 64T; then
+if test "$TSIZE" = 64T; then
 lvcreate -L24T -n $lv1 $vg
 # Warning about bigger then needed (24T data and 16G -> 128K chunk)
 lvconvert --yes -c 64 --thinpool $vg/$lv1 |& tee err
