@@ -28,15 +28,18 @@ trim_() {
 }
 
 pv_field() {
-	trim_ "$(pvs --config 'log{prefix=""}' --noheadings -o $2 ${@:3} $1)"
+	local r=$(pvs --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1")
+	trim_ "$r"
 }
 
 vg_field() {
-	trim_ "$(vgs --config 'log{prefix=""}' --noheadings -o $2 ${@:3} $1)"
+	local r=$(vgs --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1")
+	trim_ "$r"
 }
 
 lv_field() {
-	trim_ "$(lvs --config 'log{prefix=""}' --noheadings -o $2 ${@:3} $1)"
+	local r=$(lvs --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1")
+	trim_ "$r"
 }
 
 lv_devices() {
