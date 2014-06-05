@@ -159,7 +159,7 @@ teardown_udev_cookies() {
 }
 
 dm_info() {
-	should dmsetup info --mangle none --noheadings -c -o "$@"
+	should dmsetup info --noheadings -c -o "$@"
 }
 
 dm_table() {
