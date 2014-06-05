@@ -27,7 +27,7 @@ aux have_thin 1 0 0 || skip
 aux prepare_pvs 4 64
 
 # build one large PV
-vgcreate $vg1 $(cut -d ' ' -f -3 DEVICES)
+vgcreate $vg1 $(head -n 3 DEVICES)
 # 32bit linux kernels are fragille with device size >= 16T
 # maybe  uname -m    [ x86_64 | i686 ]
 TSIZE=64T
@@ -36,7 +36,7 @@ lvcreate -s -l 100%FREE -n $lv $vg1 --virtualsize $TSIZE
 aux extend_filter_LVMTEST
 
 pvcreate "$DM_DEV_DIR/$vg1/$lv"
-vgcreate $vg -s 64K $(cut -d ' ' -f 4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"
+vgcreate $vg -s 64K $(tail -n+4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"
 
 # create mirrored LVs for data and metadata volumes
 lvcreate -aey -L10M --type mirror -m1 --mirrorlog core -n $lv1 $vg

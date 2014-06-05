@@ -51,7 +51,7 @@ def rs(rand_len=10):
 def _get_allowed_devices():
 	rc = os.environ.get('PY_UNIT_PVS')
 	if rc is not None:
-		rc = rc.split(' ')
+		rc = rc.splitlines()
 		rc.sort()
 	return rc
 
