@@ -1762,4 +1762,4 @@ test -n "$THIN_CONFIGURE_WARN" && AC_MSG_WARN([Support for thin provisioning is 
 
 test -n "$THIN_CHECK_VERSION_WARN" && AC_MSG_WARN([You should also install thin_check vsn 0.3.2 (or later) to use lvm2 thin provisioning])
 
-test "$ODIRECT" != yes && AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])
+test "$ODIRECT" = yes || AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])
