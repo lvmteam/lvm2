@@ -37,4 +37,8 @@ int read_urandom(void *buf, size_t len);
  */
 unsigned lvm_even_rand(unsigned *seed, unsigned max);
 
+inline int clvmd_is_running(void);
+inline int cmirrord_is_running(void);
+
+
 #endif

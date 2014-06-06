@@ -497,7 +497,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 		 * otherwise, the kernel module will fail to make
 		 * contact.
 		 */
-		if (dm_daemon_is_running(CMIRRORD_PIDFILE)) {
+		if (cmirrord_is_running()) {
 			struct utsname uts;
 			unsigned kmaj, kmin, krel;
 			/*

@@ -139,3 +139,27 @@ unsigned lvm_even_rand(unsigned *seed, unsigned max)
 
 	return ret;
 }
+
+#ifdef CLVMD_PIDFILE
+inline int clvmd_is_running(void)
+{
+	return dm_daemon_is_running(CLVMD_PIDFILE);
+}
+#else
+inline int clvmd_is_running(void)
+{
+	return 0;
+}
+#endif
+
+#ifdef CMIRRORD_PIDFILE
+inline int cmirrord_is_running(void)
+{
+	return dm_daemon_is_running(CMIRRORD_PIDFILE);
+}
+#else
+inline int cmirrord_is_running(void)
+{
+	return 0;
+}
+#endif
