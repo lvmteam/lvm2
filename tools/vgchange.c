@@ -317,6 +317,21 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (clustered) {
+		if (!dm_daemon_is_running(CLVMD_PIDFILE)) {
+			if (yes_no_prompt("LVM cluster daemon (clvmd) is not"
+					  " running.\n"
+					  "Make volume group \"%s\" clustered"
+					  " anyway? [y/n]: ", vg->name) == 'n')
+				return 0;
+
+		} else if (!locking_is_clustered() &&
+			   (yes_no_prompt("LVM locking type is not clustered.\n"
+					  "Make volume group \"%s\" clustered"
+					  " anyway? [y/n]: ", vg->name) == 'n'))
+			return 0;
+	}
+
 	if (!vg_set_clustered(vg, clustered))
 		return_0;
 
