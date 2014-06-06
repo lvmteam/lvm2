@@ -304,6 +304,7 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 			       struct volume_group *vg)
 {
 	int clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+	int clvmd_daemon_running = 0;
 
 	if (clustered && (vg_is_clustered(vg))) {
 		log_error("Volume group \"%s\" is already clustered",
@@ -318,7 +319,10 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 	}
 
 	if (clustered && !arg_count(cmd, yes_ARG)) {
-		if (!dm_daemon_is_running(CLVMD_PIDFILE)) {
+#ifdef CLVMD_PIDFILE
+		clvmd_daemon_running = dm_daemon_is_running(CLVMD_PIDFILE);
+#endif
+		if (!clvmd_daemon_running) {
 			if (yes_no_prompt("LVM cluster daemon (clvmd) is not"
 					  " running.\n"
 					  "Make volume group \"%s\" clustered"
