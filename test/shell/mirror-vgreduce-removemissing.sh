@@ -12,7 +12,7 @@
 
 test_description="ensure that 'vgreduce --removemissing' works on mirrored LV"
 
-. lib/test
+. lib/inittest
 
 lv_is_on_ ()
 {

@@ -11,7 +11,7 @@
 
 # 'Test pvchange option values'
 
-. lib/test
+. lib/inittest
 
 check_changed_uuid_() {
 	test "$1" != "$(get pv_field "$2" uuid)" || die "UUID has not changed!"

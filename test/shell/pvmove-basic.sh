@@ -12,7 +12,7 @@
 
 test_description="ensure that pvmove works with basic options"
 
-. lib/test
+. lib/inittest
 
 which md5sum || skip
 

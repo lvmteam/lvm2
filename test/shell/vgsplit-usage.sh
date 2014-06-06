@@ -11,7 +11,7 @@
 
 # Test vgsplit command options for validity
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 5
 

@@ -11,7 +11,7 @@
 
 # test activation race for raid's --syncaction check
 
-. lib/test
+. lib/inittest
 
 # Proper mismatch count 1.5.2+ upstream, 1.3.5 < x < 1.4.0 in RHEL6
 aux have_raid 1 3 5 &&

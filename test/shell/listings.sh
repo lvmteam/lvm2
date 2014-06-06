@@ -13,7 +13,7 @@
 # tests functionality of lvs, pvs, vgs, *display tools
 #
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 5
 get_devs

@@ -11,7 +11,7 @@
 
 # test restore operation of thin pool metadata
 
-. lib/test
+. lib/inittest
 
 #
 # Main

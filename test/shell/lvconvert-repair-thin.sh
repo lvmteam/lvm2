@@ -12,7 +12,7 @@
 
 # Test repairing of broken thin pool metadata
 
-. lib/test
+. lib/inittest
 
 which mkfs.ext2 || skip
 

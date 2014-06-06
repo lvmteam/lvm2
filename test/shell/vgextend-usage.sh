@@ -13,7 +13,7 @@
 # Exercise various vgextend commands
 #
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 5
 

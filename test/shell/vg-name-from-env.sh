@@ -7,7 +7,7 @@
 
 test_description='Test the vg name for an lv from env var'
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 2
 

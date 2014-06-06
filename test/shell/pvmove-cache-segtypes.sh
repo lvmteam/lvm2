@@ -11,7 +11,7 @@
 
 test_description="ensure pvmove works with the cache segment types"
 
-. lib/test
+. lib/inittest
 
 # pvmove fails when a RAID LV is the origin of a cache LV
 # pvmoving cache types is currently disabled in tools/pvmove.c

@@ -11,7 +11,7 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 4
 aux pvcreate --metadatacopies 0 "$dev1"

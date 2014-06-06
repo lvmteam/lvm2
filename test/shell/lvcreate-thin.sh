@@ -13,7 +13,7 @@
 # test currently needs to drop
 # 'return NULL' in _lv_create_an_lv after log_error("Can't create %s without using "
 
-. lib/test
+. lib/inittest
 
 check_lv_field_modules_()
 {

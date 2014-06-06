@@ -11,7 +11,7 @@
 
 # 'Test for proper escaping of strings in metadata (bz431474)'
 
-. lib/test
+. lib/inittest
 
 # For udev impossible to create
 test "$LVM_TEST_DEVDIR" = "/dev" && skip

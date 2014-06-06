@@ -13,7 +13,7 @@
 # test thin profile functionality
 #
 
-. lib/test
+. lib/inittest
 
 DEV_SIZE=32
 

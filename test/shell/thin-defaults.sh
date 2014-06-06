@@ -11,7 +11,7 @@
 
 # test defaults entered through lvm.conf
 
-. lib/test
+. lib/inittest
 
 #
 # Main

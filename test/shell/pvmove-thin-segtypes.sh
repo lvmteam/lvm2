@@ -11,7 +11,7 @@
 
 test_description="ensure pvmove works with thin segment types"
 
-. lib/test
+. lib/inittest
 test -e LOCAL_CLVMD && skip
 which md5sum || skip
 

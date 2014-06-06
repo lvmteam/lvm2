@@ -12,7 +12,7 @@
 # Testing calculation of snapshot space
 # https://bugzilla.redhat.com/show_bug.cgi?id=1035871
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 1
 

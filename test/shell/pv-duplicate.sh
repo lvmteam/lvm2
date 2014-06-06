@@ -11,7 +11,7 @@
 
 # 'Exercise duplicate metadata diagnostics'
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 3
 

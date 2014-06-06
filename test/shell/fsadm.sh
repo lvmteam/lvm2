@@ -11,7 +11,7 @@
 
 test_description='Exercise fsadm filesystem resize'
 
-. lib/test
+. lib/inittest
 
 aux prepare_vg 1 100
 

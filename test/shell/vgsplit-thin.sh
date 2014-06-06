@@ -11,7 +11,7 @@
 
 # Test vgsplit command options for validity
 
-. lib/test
+. lib/inittest
 
 aux have_thin 1 0 0 || skip
 

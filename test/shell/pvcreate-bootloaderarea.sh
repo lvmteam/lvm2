@@ -11,7 +11,7 @@
 
 test_description='Test pvcreate bootloader area support'
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 1
 aux lvmconf 'global/suffix=0'

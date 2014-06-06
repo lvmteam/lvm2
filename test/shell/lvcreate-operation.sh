@@ -11,7 +11,7 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-. lib/test
+. lib/inittest
 
 cleanup_lvs() {
 	lvremove -ff $vg

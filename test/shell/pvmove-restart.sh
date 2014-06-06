@@ -11,7 +11,7 @@
 
 # Check pvmove behavior when it's progress and machine is rebooted
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 3 60
 

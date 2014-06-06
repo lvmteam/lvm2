@@ -12,7 +12,7 @@
 
 # Test various supported conversion of snapshot
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 1
 

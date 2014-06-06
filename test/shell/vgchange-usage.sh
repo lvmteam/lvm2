@@ -11,7 +11,7 @@
 
 test_description='Exercise some vgchange diagnostics'
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 4
 

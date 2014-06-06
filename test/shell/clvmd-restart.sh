@@ -13,7 +13,7 @@
 export LVM_CLVMD_BINARY=clvmd
 export LVM_BINARY=lvm
 
-. lib/test
+. lib/inittest
 
 # only clvmd based test, skip otherwise
 test -e LOCAL_CLVMD || skip

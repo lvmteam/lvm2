@@ -11,7 +11,7 @@
 
 test_description='Exercise toollib process_each_lv'
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 10
 

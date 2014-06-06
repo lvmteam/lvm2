@@ -13,7 +13,7 @@
 # test support for non-power-of-2 thin chunk size
 #
 
-. lib/test
+. lib/inittest
 
 #
 # Main

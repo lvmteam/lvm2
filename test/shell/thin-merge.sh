@@ -11,7 +11,7 @@
 
 # test merge of thin snapshot
 
-. lib/test
+. lib/inittest
 
 MKFS=mkfs.ext2
 which $MKFS  || skip

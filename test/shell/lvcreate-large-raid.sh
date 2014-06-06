@@ -11,7 +11,7 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-. lib/test
+. lib/inittest
 
 # FIXME  update test to make something useful on <16T
 aux can_use_16T || skip

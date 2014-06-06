@@ -11,7 +11,7 @@
 
 # 'Check extents percentage arguments'
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 2 128
 vgcreate $vg $(cat DEVICES)

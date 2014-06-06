@@ -11,7 +11,7 @@
 
 test_description="ensure pvmove works with all common segment types"
 
-. lib/test
+. lib/inittest
 
 which md5sum || skip
 

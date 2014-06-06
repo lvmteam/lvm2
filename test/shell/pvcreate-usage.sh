@@ -12,7 +12,7 @@
 test_description='Test pvcreate option values'
 PAGESIZE=$(getconf PAGESIZE)
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 4
 

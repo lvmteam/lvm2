@@ -15,7 +15,7 @@
 
 test_description='Test read-ahead functionality'
 
-. lib/test
+. lib/inittest
 
 aux prepare_vg 5
 

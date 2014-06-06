@@ -10,7 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # Check perfomance of activation and deactivation
-. lib/test
+. lib/inittest
 
 # FIXME: lvmetad fails with i.e. 1500 device on memory failure...
 

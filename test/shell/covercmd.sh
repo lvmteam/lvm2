@@ -14,7 +14,7 @@
 # to improve code coverage
 #
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 5
 get_devs

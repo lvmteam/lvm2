@@ -15,7 +15,7 @@
 # is triggered by kernel 3.14-rc[1..5]
 # http://www.redhat.com/archives/dm-devel/2014-March/msg00005.html
 #
-. lib/test
+. lib/inittest
 
 # Snapshot should remain unmodified
 check_s_() {

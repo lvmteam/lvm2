@@ -156,7 +156,7 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	mv $@-t $@
 
 LIB = lib/not lib/invalid lib/fail lib/should lib/harness \
-      lib/check lib/aux lib/test lib/utils lib/get lib/lvm-wrapper \
+      lib/check lib/aux lib/inittest lib/utils lib/get lib/lvm-wrapper \
       lib/paths
 
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)

@@ -11,7 +11,7 @@
 
 # Test vgsplit operation, including different LV types
 
-. lib/test
+. lib/inittest
 
 COMM() {
 	LAST_TEST="$@"

@@ -12,7 +12,7 @@
 
 # Test creation of thin snapshots using external origin
 
-. lib/test
+. lib/inittest
 
 which mkfs.ext2 || skip
 which fsck || skip

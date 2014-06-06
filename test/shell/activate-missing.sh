@@ -16,7 +16,7 @@
 #   instead lvconvert --repair them?)
 # - linear LVs with bits missing are not activated
 
-. lib/test
+. lib/inittest
 
 aux prepare_vg 4
 

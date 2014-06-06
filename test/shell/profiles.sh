@@ -13,7 +13,7 @@
 # test basic profile functionality
 #
 
-. lib/test
+. lib/inittest
 
 MSG_FAILED_TO_APPLY_CMD_PROFILE="Failed to apply command profile"
 MSG_IGNORING_INVALID_CMD_PROFILE="Ignoring invalid command profile"

@@ -10,7 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # Test autoextension of thin metadata volume
-. lib/test
+. lib/inittest
 
 meta_percent_() {
 	get lv_field $vg/pool metadata_percent | cut -d. -f1

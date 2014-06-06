@@ -12,7 +12,7 @@
 # Checks we are not reading our own devices
 # https://bugzilla.redhat.com/show_bug.cgi?id=1064374
 
-. lib/test
+. lib/inittest
 
 aux prepare_vg
 

@@ -11,7 +11,7 @@
 
 # no automatic extensions please
 
-. lib/test
+. lib/inittest
 
 which mkfs.ext2 || skip
 

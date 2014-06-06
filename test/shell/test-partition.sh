@@ -17,7 +17,7 @@
 
 LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
 
-. lib/test
+. lib/inittest
 
 which sfdisk || skip
 

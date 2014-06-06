@@ -11,7 +11,7 @@
 
 # 'Exercise signature wiping during lvcreate'
 
-. lib/test
+. lib/inittest
 
 init_lv_() {
 	mkswap "$DM_DEV_DIR/$vg/$lv1"

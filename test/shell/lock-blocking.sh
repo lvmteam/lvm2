@@ -11,7 +11,7 @@
 
 test_description='test some blocking / non-blocking multi-vg operations'
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 3
 test -e LOCAL_CLVMD && skip

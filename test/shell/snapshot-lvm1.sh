@@ -12,7 +12,7 @@
 # regression test for lvmetad reporting error:
 # Internal error: LV snap_with_lvm1_meta (00000000000000000000000000000001) missing from preload metadata
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 2
 

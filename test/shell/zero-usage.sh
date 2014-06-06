@@ -11,7 +11,7 @@
 
 # Basic usage of zero target
 
-. lib/test
+. lib/inittest
 
 which md5sum || skip
 

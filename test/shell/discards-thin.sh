@@ -13,7 +13,7 @@
 # test support of thin discards
 #
 
-. lib/test
+. lib/inittest
 
 #
 # Main

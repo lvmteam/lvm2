@@ -12,7 +12,7 @@
 
 test_description="check namings of mirrored LV"
 
-. lib/test
+. lib/inittest
 
 # ---------------------------------------------------------------------
 # Utilities

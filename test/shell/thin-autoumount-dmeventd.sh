@@ -16,7 +16,7 @@ is_dir_mounted_()
 	cat /proc/mounts | sed 's:\\040: :g' | grep "$1"
 }
 
-. lib/test
+. lib/inittest
 
 #
 # Main

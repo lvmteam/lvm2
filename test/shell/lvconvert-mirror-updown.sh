@@ -11,7 +11,7 @@
 
 # Demonstrate problem when upconverting and cutting leg in clvmd
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 3
 

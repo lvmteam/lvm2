@@ -11,7 +11,7 @@
 
 test_description='Exercise some vgcreate diagnostics'
 
-. lib/test
+. lib/inittest
 
 aux prepare_devs 3
 pvcreate "$dev1" "$dev2"

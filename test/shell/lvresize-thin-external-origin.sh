@@ -10,7 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # Test resize of thin volume with external origin
-. lib/test
+. lib/inittest
 
 aux have_thin 1 2 0 || skip
 

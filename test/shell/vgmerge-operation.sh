@@ -11,7 +11,7 @@
 
 test_description='Test vgmerge operation'
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 4 64
 
