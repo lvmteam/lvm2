@@ -317,7 +317,7 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (clustered) {
+	if (clustered && !arg_count(cmd, yes_ARG)) {
 		if (!dm_daemon_is_running(CLVMD_PIDFILE)) {
 			if (yes_no_prompt("LVM cluster daemon (clvmd) is not"
 					  " running.\n"
