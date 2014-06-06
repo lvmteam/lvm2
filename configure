@@ -9149,7 +9149,8 @@ $as_echo "yes" >&6; }
 	HAVE_SACKPT=yes
 fi
 
-	test "$HAVE_CPG" != yes &&
+	if test "$HAVE_CPG" != yes; then
+
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for CPG" >&5
 $as_echo_n "checking for CPG... " >&6; }
@@ -9240,6 +9241,7 @@ else
 $as_echo "yes" >&6; }
 
 fi
+	fi
 fi
 
 ################################################################################
