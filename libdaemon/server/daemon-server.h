@@ -70,6 +70,8 @@ typedef struct {
 	const char *name;
 } log_state;
 
+struct thread_state;
+
 typedef struct daemon_state {
 	/*
 	 * The maximal stack size for individual daemon threads. This is
@@ -95,8 +97,16 @@ typedef struct daemon_state {
 	int socket_fd;
 
 	log_state *log;
+	struct thread_state *threads;
 	void *private; /* the global daemon state */
 } daemon_state;
+
+typedef struct thread_state {
+	daemon_state s;
+	client_handle client;
+	struct thread_state *next;
+	volatile int active;
+} thread_state;
 
 /*
  * Start serving the requests. This does all the daemonisation, socket setup
