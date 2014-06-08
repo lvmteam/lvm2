@@ -18,7 +18,7 @@ vgcreate $vg1 $dev1 $dev2
 lvchange -ay $vg1 2>&1 | not grep "Failed to connect"
 kill $(cat LOCAL_LVMETAD)
 lvchange -ay $vg1 2>&1 | grep "Failed to connect"
-lvchange -ay $vg1 --sysinit 2>&1 | not grep "Failed to connect"
+lvchange -aay $vg1 --sysinit 2>&1 | not grep "Failed to connect"
 lvchange -ay $vg1 --config 'global { use_lvmetad = 0 }' 2>&1 | not grep "Failed to connect"
 aux lvmconf "global/use_lvmetad = 0"
 lvchange -ay $vg1 --config 'global { use_lvmetad = 1 }' 2>&1 | grep "Failed to connect"
