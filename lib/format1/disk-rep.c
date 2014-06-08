@@ -727,6 +727,9 @@ static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data,
 {
 	int r;
 
+	if (!data->dev)
+		return_0;
+
 	if (!dev_open(data->dev))
 		return_0;
 
