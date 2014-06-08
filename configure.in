@@ -69,6 +69,7 @@ dnl -- Checks for programs.
 AC_PROG_SED
 AC_PROG_AWK
 AC_PROG_CC
+AC_PROG_CXX
 
 dnl probably no longer needed in 2008, but...
 AC_PROG_GCC_TRADITIONAL
