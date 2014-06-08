@@ -28,4 +28,4 @@ lvcreate -l1 $vg1
 pvremove -ff -y $dev2
 vgchange -an $vg1
 not lvremove $vg1
-not vgremove $vg1
+not vgremove -ff -y $vg1
