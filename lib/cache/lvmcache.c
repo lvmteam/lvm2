@@ -1062,7 +1062,6 @@ static int _drop_vginfo(struct lvmcache_info *info, struct lvmcache_vginfo *vgin
 	return 1;
 }
 
-/* Unused
 void lvmcache_del(struct lvmcache_info *info)
 {
 	if (info->dev->pvid[0] && _pvid_hash)
@@ -1071,11 +1070,11 @@ void lvmcache_del(struct lvmcache_info *info)
 	_drop_vginfo(info, info->vginfo);
 
 	info->label->labeller->ops->destroy_label(info->label->labeller,
-						info->label);
+						  info->label);
 	dm_free(info);
 
 	return;
-} */
+}
 
 static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 {

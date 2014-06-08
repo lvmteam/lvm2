@@ -733,6 +733,7 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	            unsigned prompt)
 {
 	struct device *dev;
+	struct lvmcache_info *info;
 	int r = 0;
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
@@ -749,6 +750,8 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto out;
 	}
 
+	info = lvmcache_info_from_pvid(dev->pvid, 1);
+
 	if (!dev_test_excl(dev)) {
 		/* FIXME Detect whether device-mapper is still using the device */
 		log_error("Can't open %s exclusively - not removing. "
@@ -761,6 +764,9 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		log_error("Failed to wipe existing label(s) on %s", pv_name);
 		goto out;
 	}
+
+	if (info)
+		lvmcache_del(info);
 
 	if (!lvmetad_pv_gone_by_dev(dev, NULL))
 		goto_out;
