@@ -37,6 +37,8 @@ export LVM_TEST_CACHE_RESTORE_CMD?=@CACHE_RESTORE_CMD@
 
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
+CXXSOURCES = lib/runner.cpp
+CXXFLAGS = -std=c++11
 
 include $(top_builddir)/make.tmpl
 
@@ -141,6 +143,9 @@ lib/fail: lib/not
 	ln -sf not lib/fail
 
 
+lib/runner: lib/runner.o .lib-dir-stamp
+	$(CXX) $(LDFLAGS) -o $@ $<
+
 lib/%: lib/%.o .lib-dir-stamp
 	$(CC) $(LDFLAGS) -o $@ $<
 
@@ -174,7 +179,7 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 
 LIB = lib/not lib/invalid lib/fail lib/should lib/harness \
       lib/check lib/aux lib/inittest lib/utils lib/get lib/lvm-wrapper \
-      lib/paths
+      lib/paths lib/runner
 
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
 
