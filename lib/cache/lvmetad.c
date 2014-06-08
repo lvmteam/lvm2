@@ -101,6 +101,8 @@ int lvmetad_active(void)
 void lvmetad_set_active(int active)
 {
 	_lvmetad_use = active;
+	if (!active && lvmetad_active())
+		lvmetad_disconnect();
 }
 
 /*
