@@ -1628,15 +1628,16 @@ struct dm_report_field;
 /*
  * dm_report_field_type flags
  */
-#define DM_REPORT_FIELD_MASK			0x000000FF
+#define DM_REPORT_FIELD_MASK			0x00000FFF
 #define DM_REPORT_FIELD_ALIGN_MASK		0x0000000F
 #define DM_REPORT_FIELD_ALIGN_LEFT		0x00000001
 #define DM_REPORT_FIELD_ALIGN_RIGHT		0x00000002
-#define DM_REPORT_FIELD_TYPE_MASK		0x000000F0
+#define DM_REPORT_FIELD_TYPE_MASK		0x00000FF0
 #define DM_REPORT_FIELD_TYPE_STRING		0x00000010
 #define DM_REPORT_FIELD_TYPE_NUMBER		0x00000020
 #define DM_REPORT_FIELD_TYPE_SIZE		0x00000040
-#define DM_REPORT_FIELD_TYPE_STRING_LIST	0x00000080
+#define DM_REPORT_FIELD_TYPE_PERCENT		0x00000080
+#define DM_REPORT_FIELD_TYPE_STRING_LIST	0x00000100
 
 #define DM_REPORT_FIELD_TYPE_ID_LEN 32
 #define DM_REPORT_FIELD_TYPE_HEADING_LEN 32
@@ -1666,6 +1667,7 @@ struct dm_report_reserved_value {
 	const void const *value;	/* reserved value:
 						uint64_t for DM_REPORT_FIELD_TYPE_NUMBER
 						uint64_t for DM_REPORT_FIELD_TYPE_SIZE (number of 512-byte sectors)
+						uint64_t for DM_REPORT_FIELD_TYPE_PERCENT
 						const char * for DM_REPORT_FIELD_TYPE_STRING */
 	const char **names;		/* null-terminated array of names for this reserved value */
 	const char *description;	/* description of the reserved value */
