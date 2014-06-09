@@ -253,16 +253,16 @@ int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
 {
         return 0;
 }
-int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
+int lv_snapshot_percent(const struct logical_volume *lv, dm_percent_t *percent)
 {
 	return 0;
 }
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
-		      int wait, percent_t *percent, uint32_t *event_nr)
+		      int wait, dm_percent_t *percent, uint32_t *event_nr)
 {
 	return 0;
 }
-int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
+int lv_raid_percent(const struct logical_volume *lv, dm_percent_t *percent)
 {
 	return 0;
 }
@@ -295,12 +295,12 @@ int lv_cache_policy_info(struct logical_volume *lv,
 	return 0;
 }
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
-			 percent_t *percent)
+			 dm_percent_t *percent)
 {
 	return 0;
 }
 int lv_thin_percent(const struct logical_volume *lv, int mapped,
-		    percent_t *percent)
+		    dm_percent_t *percent)
 {
 	return 0;
 }
@@ -765,7 +765,7 @@ int lv_check_transient(struct logical_volume *lv)
 /*
  * Returns 1 if percent set, else 0 on failure.
  */
-int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
+int lv_snapshot_percent(const struct logical_volume *lv, dm_percent_t *percent)
 {
 	int r;
 	struct dev_manager *dm;
@@ -788,7 +788,7 @@ int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent)
 
 /* FIXME Merge with snapshot_percent */
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
-		      int wait, percent_t *percent, uint32_t *event_nr)
+		      int wait, dm_percent_t *percent, uint32_t *event_nr)
 {
 	int r;
 	struct dev_manager *dm;
@@ -796,7 +796,7 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	/* If mirrored LV is temporarily shrinked to 1 area (= linear),
 	 * it should be considered in-sync. */
 	if (dm_list_size(&lv->segments) == 1 && first_seg(lv)->area_count == 1) {
-		*percent = PERCENT_100;
+		*percent = DM_PERCENT_100;
 		return 1;
 	}
 
@@ -817,7 +817,7 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	return r;
 }
 
-int lv_raid_percent(const struct logical_volume *lv, percent_t *percent)
+int lv_raid_percent(const struct logical_volume *lv, dm_percent_t *percent)
 {
 	return lv_mirror_percent(lv->vg->cmd, lv, 0, percent, NULL);
 }
@@ -1145,7 +1145,7 @@ int lv_cache_policy_info(struct logical_volume *lv,
  * Returns 1 if percent set, else 0 on failure.
  */
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
-			 percent_t *percent)
+			 dm_percent_t *percent)
 {
 	int r;
 	struct dev_manager *dm;
@@ -1171,7 +1171,7 @@ int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
  * Returns 1 if percent set, else 0 on failure.
  */
 int lv_thin_percent(const struct logical_volume *lv,
-		    int mapped, percent_t *percent)
+		    int mapped, dm_percent_t *percent)
 {
 	int r;
 	struct dev_manager *dm;

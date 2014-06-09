@@ -112,10 +112,10 @@ int lv_check_transient(struct logical_volume *lv);
 /*
  * Returns 1 if percent has been set, else 0.
  */
-int lv_snapshot_percent(const struct logical_volume *lv, percent_t *percent);
+int lv_snapshot_percent(const struct logical_volume *lv, dm_percent_t *percent);
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
-		      int wait, percent_t *percent, uint32_t *event_nr);
-int lv_raid_percent(const struct logical_volume *lv, percent_t *percent);
+		      int wait, dm_percent_t *percent, uint32_t *event_nr);
+int lv_raid_percent(const struct logical_volume *lv, dm_percent_t *percent);
 int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health);
 int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt);
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action);
@@ -127,9 +127,9 @@ int lv_cache_policy_info(struct logical_volume *lv,
 			 const char **policy_name, int *policy_argc,
 			 const char ***policy_argv);
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
-			 percent_t *percent);
+			 dm_percent_t *percent);
 int lv_thin_percent(const struct logical_volume *lv, int mapped,
-		    percent_t *percent);
+		    dm_percent_t *percent);
 int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 				uint64_t *transaction_id);
 int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id);

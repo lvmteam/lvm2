@@ -112,7 +112,7 @@ struct segtype_handler {
 	int (*target_status_compatible) (const char *type);
 	int (*check_transient_status) (struct lv_segment *seg, char *params);
 	int (*target_percent) (void **target_state,
-			       percent_t *percent,
+			       dm_percent_t *percent,
 			       struct dm_pool * mem,
 			       struct cmd_context *cmd,
 			       struct lv_segment *seg, char *params,

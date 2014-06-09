@@ -575,7 +575,7 @@ static int _move_removable_mimages_to_end(struct logical_volume *lv,
 
 static int _mirrored_lv_in_sync(struct logical_volume *lv)
 {
-	percent_t sync_percent;
+	dm_percent_t sync_percent;
 
 	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &sync_percent,
 			       NULL)) {
@@ -590,7 +590,7 @@ static int _mirrored_lv_in_sync(struct logical_volume *lv)
 		return 0;
 	}
 
-	return (sync_percent == PERCENT_100) ? 1 : 0;
+	return (sync_percent == DM_PERCENT_100) ? 1 : 0;
 }
 
 /*
@@ -1701,7 +1701,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 		      struct dm_list *removable_pvs,
 		      int force)
 {
-	percent_t sync_percent;
+	dm_percent_t sync_percent;
 	struct volume_group *vg = lv->vg;
 
 	/* Unimplemented features */
@@ -1734,7 +1734,7 @@ int remove_mirror_log(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (sync_percent == PERCENT_100)
+	if (sync_percent == DM_PERCENT_100)
 		init_mirror_in_sync(1);
 	else {
 		/* A full resync will take place */
@@ -1896,7 +1896,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	struct alloc_handle *ah;
 	const struct segment_type *segtype;
 	struct dm_list *parallel_areas;
-	percent_t sync_percent;
+	dm_percent_t sync_percent;
 	int in_sync;
 	struct logical_volume *log_lv;
 	unsigned old_log_count;
@@ -1964,7 +1964,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	/* check sync status */
 	if (mirror_in_sync() ||
 	    (lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL) &&
-	     (sync_percent == PERCENT_100)))
+	     (sync_percent == DM_PERCENT_100)))
 		in_sync = 1;
 	else
 		in_sync = 0;

@@ -47,12 +47,12 @@
 #define GET_PVSEG_STR_PROPERTY_FN(NAME, VALUE) \
 	GET_STR_PROPERTY_FN(NAME, VALUE, pv_segment, pvseg)
 
-static percent_t _copy_percent(const struct logical_volume *lv)
+static dm_percent_t _copy_percent(const struct logical_volume *lv)
 {
-	percent_t percent;
+	dm_percent_t percent;
 
 	if (!lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))
-		percent = PERCENT_INVALID;
+		percent = DM_PERCENT_INVALID;
 
 	return percent;
 }
@@ -91,34 +91,34 @@ static uint32_t _raidmaxrecoveryrate(const struct logical_volume *lv)
 	return first_seg(lv)->max_recovery_rate;
 }
 
-static percent_t _snap_percent(const struct logical_volume *lv)
+static dm_percent_t _snap_percent(const struct logical_volume *lv)
 {
-	percent_t percent;
+	dm_percent_t percent;
 
 	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &percent))
-		percent = PERCENT_INVALID;
+		percent = DM_PERCENT_INVALID;
 
 	return percent;
 }
 
-static percent_t _data_percent(const struct logical_volume *lv)
+static dm_percent_t _data_percent(const struct logical_volume *lv)
 {
-	percent_t percent;
+	dm_percent_t percent;
 
 	if (lv_is_cow(lv))
 		return _snap_percent(lv);
 
 	if (lv_is_thin_volume(lv))
-		return lv_thin_percent(lv, 0, &percent) ? percent : PERCENT_INVALID;
+		return lv_thin_percent(lv, 0, &percent) ? percent : DM_PERCENT_INVALID;
 
-	return lv_thin_pool_percent(lv, 0, &percent) ? percent : PERCENT_INVALID;
+	return lv_thin_pool_percent(lv, 0, &percent) ? percent : DM_PERCENT_INVALID;
 }
 
-static percent_t _metadata_percent(const struct logical_volume *lv)
+static dm_percent_t _metadata_percent(const struct logical_volume *lv)
 {
-	percent_t percent;
+	dm_percent_t percent;
 
-	return lv_thin_pool_percent(lv, 1, &percent) ? percent : PERCENT_INVALID;
+	return lv_thin_pool_percent(lv, 1, &percent) ? percent : DM_PERCENT_INVALID;
 }
 
 /* PV */

@@ -1828,7 +1828,7 @@ uint64_t lvm_pv_get_free(const pv_t pv);
  * The memory allocated for a string property value is tied to the vg_t handle
  * and will be released when lvm_vg_close() is called. For "percent" values
  * (those obtained for copy_percent and snap_percent properties), please see
- * percent_range_t and lvm_percent_to_float().
+ * dm_percent_range_t and lvm_percent_to_float().
  *
  * Example:
  *      lvm_property_value value;
@@ -1957,24 +1957,13 @@ pv_t lvm_pv_from_uuid(vg_t vg, const char *uuid);
  */
 int lvm_pv_resize(const pv_t pv, uint64_t new_size);
 
-#ifndef _LVM_PERCENT_H
+#define PERCENT_0 DM_PERCENT_0
+#define PERCENT_1 DM_PERCENT_1
+#define PERCENT_100 DM_PERCENT_100
+#define PERCENT_INVALID DM_PERCENT_INVALID
+#define PERCENT_MERGE_FAILED DM_PERCENT_FAILED
 
-/**
- * This type defines a couple of special percent values. The PERCENT_0 and
- * PERCENT_100 constants designate *exact* percentages: values are never
- * rounded to either of these two.
- */
-typedef enum {
-	PERCENT_0 = 0,
-	PERCENT_1 = 1000000,
-	PERCENT_100 = 100 * PERCENT_1,
-	PERCENT_INVALID = -1,
-	PERCENT_MERGE_FAILED = -2
-} percent_range_t;
-
-typedef int32_t percent_t;
-
-#endif
+typedef dm_percent_t percent_t;
 
 /**
  * Convert a (fixed-point) value obtained from the percent-denominated

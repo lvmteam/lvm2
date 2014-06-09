@@ -799,28 +799,28 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 				       const char *name __attribute__((unused)),
 				       struct daemon_parms *parms)
 {
-	percent_t percent = PERCENT_0;
+	dm_percent_t percent = DM_PERCENT_0;
 
 	if (!lv_is_merging_origin(lv) ||
 	    !lv_snapshot_percent(lv, &percent)) {
 		log_error("%s: Failed query for merging percentage. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
-	} else if (percent == PERCENT_INVALID) {
+	} else if (percent == DM_PERCENT_INVALID) {
 		log_error("%s: Merging snapshot invalidated. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
-	} else if (percent == PERCENT_MERGE_FAILED) {
+	} else if (percent == LVM_PERCENT_MERGE_FAILED) {
 		log_error("%s: Merge failed. Retry merge or inspect manually.", lv->name);
 		return PROGRESS_CHECK_FAILED;
 	}
 
 	if (parms->progress_display)
 		log_print_unless_silent("%s: %s: %.1f%%", lv->name, parms->progress_title,
-					100.0 - percent_to_float(percent));
+					100.0 - dm_percent_to_float(percent));
 	else
 		log_verbose("%s: %s: %.1f%%", lv->name, parms->progress_title,
-			    100.0 - percent_to_float(percent));
+			    100.0 - dm_percent_to_float(percent));
 
-	if (percent == PERCENT_0)
+	if (percent == DM_PERCENT_0)
 		return PROGRESS_FINISHED_ALL;
 
 	return PROGRESS_UNFINISHED;
@@ -1836,7 +1836,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	struct dm_list *failed_pvs;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
-	percent_t sync_percent;
+	dm_percent_t sync_percent;
 
 	if (!arg_count(cmd, type_ARG))
 		lp->segtype = seg->segtype;
@@ -1911,7 +1911,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
-		if (sync_percent != PERCENT_100) {
+		if (sync_percent != DM_PERCENT_100) {
 			log_error("WARNING: %s/%s is not in-sync.",
 				  lv->vg->name, lv->name);
 			log_error("WARNING: Portions of the array may"
@@ -2106,7 +2106,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	struct logical_volume *origin = origin_from_cow(lv);
 	struct lv_segment *snap_seg = find_snapshot(lv);
 	struct lvinfo info;
-	percent_t snap_percent;
+	dm_percent_t snap_percent;
 
 	/* Check if merge is possible */
 	if (!lv_is_cow(lv)) {
@@ -2141,7 +2141,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)
 	    && info.exists && info.live_table &&
 	    (!lv_snapshot_percent(lv, &snap_percent) ||
-	     snap_percent == PERCENT_INVALID)) {
+	     snap_percent == DM_PERCENT_INVALID)) {
 		log_error("Unable to merge invalidated snapshot LV \"%s\".",
 			  lv->name);
 		return 0;

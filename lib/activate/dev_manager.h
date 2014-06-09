@@ -50,10 +50,10 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		     struct dm_info *info, uint32_t *read_ahead);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
-				 percent_t *percent);
+				 dm_percent_t *percent);
 int dev_manager_mirror_percent(struct dev_manager *dm,
 			       const struct logical_volume *lv, int wait,
-			       percent_t *percent, uint32_t *event_nr);
+			       dm_percent_t *percent, uint32_t *event_nr);
 int dev_manager_raid_status(struct dev_manager *dm,
 			    const struct logical_volume *lv,
 			    struct dm_status_raid **status);
@@ -69,10 +69,10 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 				 int noflush);
 int dev_manager_thin_pool_percent(struct dev_manager *dm,
 				  const struct logical_volume *lv,
-				  int metadata, percent_t *percent);
+				  int metadata, dm_percent_t *percent);
 int dev_manager_thin_percent(struct dev_manager *dm,
 			     const struct logical_volume *lv,
-			     int mapped, percent_t *percent);
+			     int mapped, dm_percent_t *percent);
 int dev_manager_thin_device_id(struct dev_manager *dm,
 			       const struct logical_volume *lv,
 			       uint32_t *device_id);

@@ -197,5 +197,5 @@ const char *lvm_vgname_from_device(lvm_t libh, const char *device)
  */
 float lvm_percent_to_float(percent_t v)
 {
-	return percent_to_float(v);
+	return dm_percent_to_float(v);
 }

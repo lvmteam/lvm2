@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
 	v = lvm_lv_get_property(lv, "snap_percent");
 	assert(v.is_valid);
-	assert(v.value.integer == (uint64_t) PERCENT_INVALID);
+	assert(v.value.integer == (uint64_t) DM_PERCENT_INVALID);
 
 	v = lvm_lv_get_property(lv, "origin");
 	assert(v.is_valid);

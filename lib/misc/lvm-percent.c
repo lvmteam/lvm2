@@ -15,30 +15,6 @@
 #include "lib.h"
 #include "lvm-percent.h"
 
-float percent_to_float(percent_t v)
-{
-    return (float)v / PERCENT_1;
-}
-
-percent_t make_percent(uint64_t numerator, uint64_t denominator)
-{
-    percent_t percent;
-    if (!denominator)
-        return PERCENT_100; /* FIXME? */
-    if (!numerator)
-        return PERCENT_0;
-    if (numerator == denominator)
-        return PERCENT_100;
-    switch (percent = PERCENT_100 * ((double) numerator / (double) denominator)) {
-    case PERCENT_100:
-        return PERCENT_100 - 1;
-    case PERCENT_0:
-        return PERCENT_0 + 1;
-    default:
-        return percent;
-    }
-}
-
 uint32_t percent_of_extents(uint32_t percents, uint32_t count, int roundup)
 {
 	return (uint32_t)(((uint64_t)percents * (uint64_t)count +

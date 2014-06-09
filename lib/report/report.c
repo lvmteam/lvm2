@@ -36,7 +36,6 @@ struct lvm_report_object {
 	struct label *label;
 };
 
-static const uint64_t _hundred64 = UINT64_C(100);
 static const uint64_t _zero64 = UINT64_C(0);
 
 static const uint64_t _reserved_number_undef_64 = UINT64_C(-1);
@@ -69,35 +68,6 @@ static int _field_set_value(struct dm_report_field *field, const void *data, con
 	dm_report_field_set_value(field, data, sort);
 
 	return 1;
-}
-
-static int _field_set_percent(struct dm_report_field *field,
-			      struct dm_pool *mem,
-			      percent_t percent)
-{
-	char *repstr;
-	uint64_t *sortval;
-
-	if (percent == PERCENT_INVALID)
-		return _field_set_value(field, "", &_reserved_number_undef_64);
-
-	if (!(repstr = dm_pool_alloc(mem, 8)) ||
-	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
-		if (repstr)
-			dm_pool_free(mem, repstr);
-		log_error("dm_pool_alloc failed.");
-		return 0;
-	}
-
-	if (dm_snprintf(repstr, 7, "%.2f", percent_to_float(percent)) < 0) {
-		dm_pool_free(mem, repstr);
-		log_error("Percentage too large.");
-		return 0;
-	}
-
-	*sortval = (uint64_t)(percent * 1000.f);
-
-	return _field_set_value(field, repstr, sortval);
 }
 
 /*
@@ -904,21 +874,23 @@ static int _snapcount_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _uint32_disp(rh, mem, field, &count, private);
 }
 
-static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _snpercent_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			   struct dm_report_field *field,
 			   const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	percent_t snap_percent;
+	dm_percent_t snap_percent;
 
 	if ((lv_is_cow(lv) || lv_is_merging_origin(lv)) &&
 	    lv_snapshot_percent(lv, &snap_percent)) {
-		if ((snap_percent != PERCENT_INVALID) &&
-		    (snap_percent != PERCENT_MERGE_FAILED))
-			return _field_set_percent(field, mem, snap_percent);
+		if ((snap_percent != DM_PERCENT_INVALID) &&
+		    (snap_percent != LVM_PERCENT_MERGE_FAILED))
+			return dm_report_field_percent(rh, field, &snap_percent);
 
-		if (!lv_is_merging_origin(lv))
-			return _field_set_value(field, "100.00", &_hundred64);
+		if (!lv_is_merging_origin(lv)) {
+			snap_percent = DM_PERCENT_100;
+			return dm_report_field_percent(rh, field, &snap_percent);
+		}
 
 		/*
 		 * on activate merge that hasn't started yet would
@@ -926,27 +898,28 @@ static int _snpercent_disp(struct dm_report *rh __attribute__((unused)), struct 
 		 */
 	}
 
-	return _field_set_value(field, "", &_reserved_number_undef_64);
+	snap_percent = DM_PERCENT_INVALID;
+	return dm_report_field_percent(rh, field, &snap_percent);
 }
 
-static int _copypercent_disp(struct dm_report *rh __attribute__((unused)),
-			     struct dm_pool *mem,
+static int _copypercent_disp(struct dm_report *rh,
+			     struct dm_pool *mem __attribute__((unused)),
 			     struct dm_report_field *field,
 			     const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	percent_t percent;
+	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (((lv_is_raid(lv) && lv_raid_percent(lv, &percent)) ||
 
 	    ((lv->status & (PVMOVE | MIRRORED)) &&
 	     lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
-	    (percent != PERCENT_INVALID)) {
+	    (percent != DM_PERCENT_INVALID)) {
 		percent = copy_percent(lv);
-		return _field_set_percent(field, mem, percent);
+		return dm_report_field_percent(rh, field, &percent);
 	}
 
-	return _field_set_value(field, "", &_reserved_number_undef_64);
+	return dm_report_field_percent(rh, field, &percent);
 }
 
 static int _raidsyncaction_disp(struct dm_report *rh __attribute__((unused)),
@@ -1024,17 +997,17 @@ static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 }
 
 /* Called only with lv_is_thin_pool/volume */
-static int _dtpercent_disp(int metadata, struct dm_pool *mem,
+static int _dtpercent_disp(int metadata, struct dm_report *rh,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	percent_t percent;
+	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	/* Suppress data percent if not using driver */
 	/* cannot use lv_is_active_locally - need to check for layer -tpool */
 	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
-		return _field_set_value(field, "",  &_reserved_number_undef_64);
+		return dm_report_field_percent(rh, field, &percent);
 
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, metadata, &percent))
@@ -1044,7 +1017,7 @@ static int _dtpercent_disp(int metadata, struct dm_pool *mem,
 			return_0;
 	}
 
-	return _field_set_percent(field, mem, percent);
+	return dm_report_field_percent(rh, field, &percent);
 }
 
 static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1052,24 +1025,26 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 			     const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
+	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (lv_is_cow(lv))
 		return _snpercent_disp(rh, mem, field, data, private);
 
 	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
-		return _dtpercent_disp(0, mem, field, data, private);
+		return _dtpercent_disp(0, rh, field, data, private);
 
-	return _field_set_value(field, "", &_reserved_number_undef_64);
+	return dm_report_field_percent(rh, field, &percent);
 }
 
-static int _metadatapercent_disp(struct dm_report *rh, struct dm_pool *mem,
+static int _metadatapercent_disp(struct dm_report *rh,
+				 struct dm_pool *mem __attribute__((unused)),
 				 struct dm_report_field *field,
 				 const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
 	if (lv_is_thin_pool(lv))
-		return _dtpercent_disp(1, mem, field, data, private);
+		return _dtpercent_disp(1, rh, field, data, private);
 
 	return _field_set_value(field, "", &_reserved_number_undef_64);
 }

@@ -231,8 +231,8 @@ int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 
 int pool_below_threshold(const struct lv_segment *pool_seg)
 {
-	percent_t percent;
-	int threshold = PERCENT_1 *
+	dm_percent_t percent;
+	int threshold = DM_PERCENT_1 *
 		find_config_tree_int(pool_seg->lv->vg->cmd, activation_thin_pool_autoextend_threshold_CFG,
 				     lv_config_profile(pool_seg->lv));
 

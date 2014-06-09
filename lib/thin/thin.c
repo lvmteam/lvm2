@@ -382,7 +382,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 }
 
 static int _thin_pool_target_percent(void **target_state __attribute__((unused)),
-				     percent_t *percent,
+				     dm_percent_t *percent,
 				     struct dm_pool *mem,
 				     struct cmd_context *cmd __attribute__((unused)),
 				     struct lv_segment *seg,
@@ -397,13 +397,13 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 
 	/* With 'seg' report metadata percent, otherwice data percent */
 	if (seg) {
-		*percent = make_percent(s->used_metadata_blocks,
-					s->total_metadata_blocks);
+		*percent = dm_make_percent(s->used_metadata_blocks,
+					   s->total_metadata_blocks);
 		*total_numerator += s->used_metadata_blocks;
 		*total_denominator += s->total_metadata_blocks;
 	} else {
-		*percent = make_percent(s->used_data_blocks,
-					s->total_data_blocks);
+		*percent = dm_make_percent(s->used_data_blocks,
+					   s->total_data_blocks);
 		*total_numerator += s->used_data_blocks;
 		*total_denominator += s->total_data_blocks;
 	}
@@ -603,7 +603,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 }
 
 static int _thin_target_percent(void **target_state __attribute__((unused)),
-				percent_t *percent,
+				dm_percent_t *percent,
 				struct dm_pool *mem,
 				struct cmd_context *cmd __attribute__((unused)),
 				struct lv_segment *seg,
@@ -618,11 +618,11 @@ static int _thin_target_percent(void **target_state __attribute__((unused)),
 		return_0;
 
 	if (seg) {
-		*percent = make_percent(s->mapped_sectors, seg->lv->size);
+		*percent = dm_make_percent(s->mapped_sectors, seg->lv->size);
 		*total_denominator += seg->lv->size;
 	} else {
 		/* No lv_segment info here */
-		*percent = PERCENT_INVALID;
+		*percent = DM_PERCENT_INVALID;
 		/* FIXME: Using denominator to pass the mapped info upward? */
 		*total_denominator += s->highest_mapped_sector;
 	}

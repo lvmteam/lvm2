@@ -719,28 +719,28 @@ int add_linear_area_to_dtree(struct dm_tree_node *node, uint64_t size, uint32_t 
 	return 1;
 }
 
-static percent_range_t _combine_percent(percent_t a, percent_t b,
-                                        uint32_t numerator, uint32_t denominator)
+static dm_percent_range_t _combine_percent(dm_percent_t a, dm_percent_t b,
+					   uint32_t numerator, uint32_t denominator)
 {
-	if (a == PERCENT_MERGE_FAILED || b == PERCENT_MERGE_FAILED)
-		return PERCENT_MERGE_FAILED;
+	if (a == LVM_PERCENT_MERGE_FAILED || b == LVM_PERCENT_MERGE_FAILED)
+		return LVM_PERCENT_MERGE_FAILED;
 
-	if (a == PERCENT_INVALID || b == PERCENT_INVALID)
-		return PERCENT_INVALID;
+	if (a == DM_PERCENT_INVALID || b == DM_PERCENT_INVALID)
+		return DM_PERCENT_INVALID;
 
-	if (a == PERCENT_100 && b == PERCENT_100)
-		return PERCENT_100;
+	if (a == DM_PERCENT_100 && b == DM_PERCENT_100)
+		return DM_PERCENT_100;
 
-	if (a == PERCENT_0 && b == PERCENT_0)
-		return PERCENT_0;
+	if (a == DM_PERCENT_0 && b == DM_PERCENT_0)
+		return DM_PERCENT_0;
 
-	return (percent_range_t) make_percent(numerator, denominator);
+	return (dm_percent_range_t) dm_make_percent(numerator, denominator);
 }
 
 static int _percent_run(struct dev_manager *dm, const char *name,
 			const char *dlid,
 			const char *target_type, int wait,
-			const struct logical_volume *lv, percent_t *overall_percent,
+			const struct logical_volume *lv, dm_percent_t *overall_percent,
 			uint32_t *event_nr, int fail_if_percent_unsupported)
 {
 	int r = 0;
@@ -754,7 +754,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
 	int first_time = 1;
-	percent_t percent = PERCENT_INVALID;
+	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	uint64_t total_numerator = 0, total_denominator = 0;
 
@@ -829,12 +829,12 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	if (first_time) {
 		/* above ->target_percent() was not executed! */
 		/* FIXME why return PERCENT_100 et. al. in this case? */
-		*overall_percent = PERCENT_100;
+		*overall_percent = DM_PERCENT_100;
 		if (fail_if_percent_unsupported)
 			goto_out;
 	}
 
-	log_debug_activation("LV percent: %f", percent_to_float(*overall_percent));
+	log_debug_activation("LV percent: %f", dm_percent_to_float(*overall_percent));
 	r = 1;
 
       out:
@@ -844,7 +844,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		    const char *target_type, int wait,
-		    const struct logical_volume *lv, percent_t *percent,
+		    const struct logical_volume *lv, dm_percent_t *percent,
 		    uint32_t *event_nr, int fail_if_percent_unsupported)
 {
 	if (dlid && *dlid) {
@@ -988,7 +988,7 @@ void dev_manager_exit(void)
 
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
-				 percent_t *percent)
+				 dm_percent_t *percent)
 {
 	const struct logical_volume *snap_lv;
 	char *name;
@@ -1041,7 +1041,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 /* FIXME Cope with more than one target */
 int dev_manager_mirror_percent(struct dev_manager *dm,
 			       const struct logical_volume *lv, int wait,
-			       percent_t *percent, uint32_t *event_nr)
+			       dm_percent_t *percent, uint32_t *event_nr)
 {
 	char *name;
 	const char *dlid;
@@ -1325,7 +1325,7 @@ out:
 
 int dev_manager_thin_pool_percent(struct dev_manager *dm,
 				  const struct logical_volume *lv,
-				  int metadata, percent_t *percent)
+				  int metadata, dm_percent_t *percent)
 {
 	char *name;
 	const char *dlid;
@@ -1348,7 +1348,7 @@ int dev_manager_thin_pool_percent(struct dev_manager *dm,
 
 int dev_manager_thin_percent(struct dev_manager *dm,
 			     const struct logical_volume *lv,
-			     int mapped, percent_t *percent)
+			     int mapped, dm_percent_t *percent)
 {
 	char *name;
 	const char *dlid;

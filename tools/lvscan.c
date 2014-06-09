@@ -20,7 +20,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct lvinfo info;
 	int inkernel, snap_active = 1;
-	percent_t snap_percent;     /* fused, fsize; */
+	dm_percent_t snap_percent;     /* fused, fsize; */
 
 	const char *active_str, *snapshot_str;
 
@@ -31,7 +31,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_cow(lv)) {
 		if (inkernel &&
 		    (snap_active = lv_snapshot_percent(lv, &snap_percent)))
-			if (snap_percent == PERCENT_INVALID)
+			if (snap_percent == DM_PERCENT_INVALID)
 				snap_active = 0;
 	}
 

@@ -269,7 +269,7 @@ static void _raid_destroy(struct segment_type *segtype)
 
 #ifdef DEVMAPPER_SUPPORT
 static int _raid_target_percent(void **target_state,
-				percent_t *percent,
+				dm_percent_t *percent,
 				struct dm_pool *mem,
 				struct cmd_context *cmd,
 				struct lv_segment *seg, char *params,
@@ -305,7 +305,7 @@ static int _raid_target_percent(void **target_state,
 	if (seg)
 		seg->extents_copied = seg->area_len * numerator / denominator;
 
-	*percent = make_percent(numerator, denominator);
+	*percent = dm_make_percent(numerator, denominator);
 
 	return 1;
 }

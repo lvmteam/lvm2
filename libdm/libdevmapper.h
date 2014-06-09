@@ -1582,6 +1582,36 @@ int dm_regex_match(struct dm_regex *regex, const char *s);
  */
 uint32_t dm_regex_fingerprint(struct dm_regex *regex);
 
+/******************
+ * percent handling
+ ******************/
+/*
+ * A fixed-point representation of percent values. One percent equals to
+ * DM_PERCENT_1 as defined below. Values that are not multiples of DM_PERCENT_1
+ * represent fractions, with precision of 1/1000000 of a percent. See
+ * dm_percent_to_float for a conversion to a floating-point representation.
+ *
+ * You should always use dm_make_percent when building dm_percent_t values. The
+ * implementation of dm_make_percent is biased towards the middle: it ensures that
+ * the result is DM_PERCENT_0 or DM_PERCENT_100 if and only if this is the actual
+ * value -- it never rounds any intermediate value (> 0 or < 100) to either 0
+ * or 100.
+*/
+#define DM_PERCENT_CHAR '%'
+
+typedef enum {
+	DM_PERCENT_0 = 0,
+	DM_PERCENT_1 = 1000000,
+	DM_PERCENT_100 = 100 * DM_PERCENT_1,
+	DM_PERCENT_INVALID = -1,
+	DM_PERCENT_FAILED = -2
+} dm_percent_range_t;
+
+typedef int32_t dm_percent_t;
+
+float dm_percent_to_float(dm_percent_t percent);
+dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator);
+
 /*********************
  * reporting functions
  *********************/
@@ -1698,6 +1728,8 @@ int dm_report_field_int(struct dm_report *rh, struct dm_report_field *field,
 			const int *data);
 int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
 			   const uint64_t *data);
+int dm_report_field_percent(struct dm_report *rh, struct dm_report_field *field,
+			    const dm_percent_t *data);
 
 /*
  * For custom fields, allocate the data in 'mem' and use

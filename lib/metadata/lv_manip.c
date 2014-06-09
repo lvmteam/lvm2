@@ -418,7 +418,7 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 	return i;
 }
 
-percent_t copy_percent(const struct logical_volume *lv)
+dm_percent_t copy_percent(const struct logical_volume *lv)
 {
 	uint32_t numerator = 0u, denominator = 0u;
 	struct lv_segment *seg;
@@ -434,7 +434,7 @@ percent_t copy_percent(const struct logical_volume *lv)
 			numerator += seg->area_len;
 	}
 
-	return denominator ? make_percent( numerator, denominator ) : 100.0;
+	return denominator ? dm_make_percent( numerator, denominator ) : 100.0;
 }
 
 /*
@@ -3157,7 +3157,7 @@ int lv_extend(struct logical_volume *lv,
 		if ((lv->le_count != extents) &&
 		    segtype_is_mirrored(segtype) &&
 		    (lv->status & LV_NOTSYNCED)) {
-			percent_t sync_percent = PERCENT_INVALID;
+			dm_percent_t sync_percent = DM_PERCENT_INVALID;
 
 			if (!lv_is_active_locally(lv)) {
 				log_error("%s/%s is not active locally."
@@ -3178,7 +3178,7 @@ int lv_extend(struct logical_volume *lv,
 				log_error("Failed to get sync percent for %s/%s",
 					  lv->vg->name, lv->name);
 				goto out;
-			} else if (sync_percent == PERCENT_100) {
+			} else if (sync_percent == DM_PERCENT_100) {
 				log_verbose("Skipping initial resync for "
 					    "extended portion of %s/%s",
 					    lv->vg->name, lv->name);
@@ -3576,32 +3576,32 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 static int _adjust_policy_params(struct cmd_context *cmd,
 				 struct logical_volume *lv, struct lvresize_params *lp)
 {
-	percent_t percent;
+	dm_percent_t percent;
 	int policy_threshold, policy_amount;
 
 	if (lv_is_thin_pool(lv)) {
 		policy_threshold =
 			find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
-					     lv_config_profile(lv)) * PERCENT_1;
+					     lv_config_profile(lv)) * DM_PERCENT_1;
 		policy_amount =
 			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
 					     lv_config_profile(lv));
-		if (!policy_amount && policy_threshold < PERCENT_100)
+		if (!policy_amount && policy_threshold < DM_PERCENT_100)
                         return 0;
 	} else {
 		policy_threshold =
-			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG, NULL) * PERCENT_1;
+			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG, NULL) * DM_PERCENT_1;
 		policy_amount =
 			find_config_tree_int(cmd, activation_snapshot_autoextend_percent_CFG, NULL);
 	}
 
-	if (policy_threshold >= PERCENT_100)
+	if (policy_threshold >= DM_PERCENT_100)
 		return 1; /* nothing to do */
 
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, 1, &percent))
 			return_0;
-		if ((PERCENT_0 < percent && percent <= PERCENT_100) &&
+		if ((DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) &&
 		    (percent > policy_threshold)) {
 			if (!thin_pool_feature_supported(lv, THIN_FEATURE_METADATA_RESIZE)) {
 				log_error_once("Online metadata resize for %s/%s is not supported.",
@@ -3615,14 +3615,14 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 
 		if (!lv_thin_pool_percent(lv, 0, &percent))
 			return_0;
-		if (!(PERCENT_0 < percent && percent <= PERCENT_100) ||
+		if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) ||
 		    percent <= policy_threshold)
 			return 1;
 	} else {
 		if (!lv_snapshot_percent(lv, &percent))
 			return_0;
-		if (!(PERCENT_0 < percent && percent <= PERCENT_100) || percent <= policy_threshold)
-			return 1; /* nothing to do */
+		if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) || percent <= policy_threshold)
+		return 1; /* nothing to do */
 	}
 
 	lp->extents = policy_amount;
@@ -4876,7 +4876,7 @@ static int _lv_remove_segs_using_this_lv(struct cmd_context *cmd, struct logical
 int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *lv,
 				const force_t force, unsigned level)
 {
-	percent_t snap_percent;
+	dm_percent_t snap_percent;
 	struct dm_list *snh, *snht;
 	struct lv_list *lvl;
 	struct lvinfo info;
@@ -4896,12 +4896,12 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 						  lv->name);
 					return 0;
 				}
-				if ((snap_percent != PERCENT_INVALID) &&
-				     (snap_percent != PERCENT_MERGE_FAILED)) {
+				if ((snap_percent != DM_PERCENT_INVALID) &&
+				     (snap_percent != LVM_PERCENT_MERGE_FAILED)) {
 					log_error("Can't remove merging snapshot logical volume \"%s\"",
 						  lv->name);
 					return 0;
-				} else if ((snap_percent == PERCENT_MERGE_FAILED) &&
+				} else if ((snap_percent == LVM_PERCENT_MERGE_FAILED) &&
 					 (force == PROMPT) &&
 					 yes_no_prompt("Removing snapshot \"%s\" that failed to merge may leave origin \"%s\" inconsistent. "
 						       "Proceed? [y/n]: ", lv->name, origin_from_cow(lv)->name) == 'n')

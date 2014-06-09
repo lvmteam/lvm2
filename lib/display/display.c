@@ -427,11 +427,11 @@ int lvdisplay_full(struct cmd_context *cmd,
 	struct lv_segment *snap_seg = NULL, *mirror_seg = NULL;
 	struct lv_segment *seg = NULL;
 	int lvm1compat;
-	percent_t snap_percent;
+	dm_percent_t snap_percent;
 	int thin_data_active = 0, thin_metadata_active = 0;
-	percent_t thin_data_percent, thin_metadata_percent;
+	dm_percent_t thin_data_percent, thin_metadata_percent;
 	int thin_active = 0;
-	percent_t thin_percent;
+	dm_percent_t thin_percent;
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid)))
 		return_0;
@@ -477,7 +477,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 			if (inkernel &&
 			    (snap_active = lv_snapshot_percent(snap_seg->cow,
 							       &snap_percent)))
-				if (snap_percent == PERCENT_INVALID)
+				if (snap_percent == DM_PERCENT_INVALID)
 					snap_active = 0;
 			if (lvm1compat)
 				log_print("                       %s%s/%s [%s]",
@@ -494,7 +494,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 		if (inkernel &&
 		    (snap_active = lv_snapshot_percent(snap_seg->cow,
 						       &snap_percent)))
-			if (snap_percent == PERCENT_INVALID)
+			if (snap_percent == DM_PERCENT_INVALID)
 				snap_active = 0;
 
 		if (lvm1compat)
@@ -555,15 +555,15 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 	if (thin_data_active)
 		log_print("Allocated pool data    %.2f%%",
-			  percent_to_float(thin_data_percent));
+			  dm_percent_to_float(thin_data_percent));
 
 	if (thin_metadata_active)
 		log_print("Allocated metadata     %.2f%%",
-			  percent_to_float(thin_metadata_percent));
+			  dm_percent_to_float(thin_metadata_percent));
 
 	if (thin_active)
 		log_print("Mapped size            %.2f%%",
-			  percent_to_float(thin_percent));
+			  dm_percent_to_float(thin_percent));
 
 	log_print("Current LE             %u",
 		  snap_seg ? snap_seg->origin->le_count : lv->le_count);
@@ -575,7 +575,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 		if (snap_active)
 			log_print("Allocated to snapshot  %.2f%%",
-				  percent_to_float(snap_percent));
+				  dm_percent_to_float(snap_percent));
 
 		log_print("Snapshot chunk size    %s",
 			  display_size(cmd, (uint64_t) snap_seg->chunk_size));

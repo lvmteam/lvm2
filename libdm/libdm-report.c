@@ -236,6 +236,41 @@ struct str_list_sort_value {
 	struct str_list_sort_value_item *items;
 };
 
+int dm_report_field_percent(struct dm_report *rh,
+			    struct dm_report_field *field,
+			    const dm_percent_t *data)
+{
+	char *repstr;
+	uint64_t *sortval;
+
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("dm_report_field_percent: dm_pool_alloc failed for sort_value.");
+		return 0;
+	}
+
+	*sortval = (uint64_t)(*data);
+
+	if (*data == DM_PERCENT_INVALID) {
+		dm_report_field_set_value(field, "", sortval);
+		return 1;
+	}
+
+	if (!(repstr = dm_pool_alloc(rh->mem, 8))) {
+		dm_pool_free(rh->mem, sortval);
+		log_error("dm_report_field_percent: dm_pool_alloc failed for percent report string.");
+		return 0;
+	}
+
+	if (dm_snprintf(repstr, 7, "%.2f", dm_percent_to_float(*data)) < 0) {
+		dm_pool_free(rh->mem, sortval);
+		log_error("dm_report_field_percent: percentage too large.");
+		return 0;
+	}
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
 int dm_report_field_string_list(struct dm_report *rh,
 				struct dm_report_field *field,
 				const struct dm_list *data,
@@ -1482,6 +1517,31 @@ static int _check_value_is_reserved(struct dm_report *rh, unsigned type, const v
 	}
 
 	return 0;
+}
+
+float dm_percent_to_float(dm_percent_t percent)
+{
+	return (float) percent / DM_PERCENT_1;
+}
+
+dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator)
+{
+	dm_percent_t percent;
+
+	if (!denominator)
+		return DM_PERCENT_100; /* FIXME? */
+	if (!numerator)
+		return DM_PERCENT_0;
+	if (numerator == denominator)
+		return DM_PERCENT_100;
+	switch (percent = DM_PERCENT_100 * ((double) numerator / (double) denominator)) {
+		case DM_PERCENT_100:
+			return DM_PERCENT_100 - 1;
+		case DM_PERCENT_0:
+			return DM_PERCENT_0 + 1;
+		default:
+			return percent;
+	}
 }
 
 /*

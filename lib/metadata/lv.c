@@ -392,7 +392,7 @@ uint64_t lv_size(const struct logical_volume *lv)
 
 static int _lv_mimage_in_sync(const struct logical_volume *lv)
 {
-	percent_t percent;
+	dm_percent_t percent;
 	struct lv_segment *seg = first_seg(lv);
 	struct lv_segment *mirror_seg;
 
@@ -406,13 +406,13 @@ static int _lv_mimage_in_sync(const struct logical_volume *lv)
 			       NULL))
 		return_0;
 
-	return (percent == PERCENT_100) ? 1 : 0;
+	return (percent == DM_PERCENT_100) ? 1 : 0;
 }
 
 static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 {
 	unsigned s;
-	percent_t percent;
+	dm_percent_t percent;
 	char *raid_health;
 	struct lv_segment *seg, *raid_seg = NULL;
 
@@ -444,7 +444,7 @@ static int _lv_raid_image_in_sync(const struct logical_volume *lv)
 	if (!lv_raid_percent(raid_seg->lv, &percent))
 		return_0;
 
-	if (percent == PERCENT_100)
+	if (percent == DM_PERCENT_100)
 		return 1;
 
 	/* Find out which sub-LV this is. */
@@ -537,7 +537,7 @@ static int _lv_raid_healthy(const struct logical_volume *lv)
 
 char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-	percent_t snap_percent;
+	dm_percent_t snap_percent;
 	struct lvinfo info;
 	struct lv_segment *seg;
 	char *repstr;
@@ -628,13 +628,13 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		/* Snapshot dropped? */
 		if (info.live_table && lv_is_cow(lv)) {
 			if (!lv_snapshot_percent(lv, &snap_percent) ||
-			    snap_percent == PERCENT_INVALID) {
+			    snap_percent == DM_PERCENT_INVALID) {
 				if (info.suspended)
 					repstr[4] = 'S'; /* Susp Inv snapshot */
 				else
 					repstr[4] = 'I'; /* Invalid snapshot */
 			}
-			else if (snap_percent == PERCENT_MERGE_FAILED) {
+			else if (snap_percent == LVM_PERCENT_MERGE_FAILED) {
 				if (info.suspended)
 					repstr[4] = 'M'; /* Susp snapshot merge failed */
 				else

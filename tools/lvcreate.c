@@ -331,7 +331,7 @@ static int _determine_cache_argument(struct volume_group *vg,
 /*
  * Update extents parameters based on other parameters which affect the size
  * calculation.
- * NOTE: We must do this here because of the percent_t typedef and because we
+ * NOTE: We must do this here because of the dm_percent_t typedef and because we
  * need the vg.
  */
 static int _update_extents_params(struct volume_group *vg,
