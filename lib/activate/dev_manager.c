@@ -2816,6 +2816,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 	/* Only process nodes with uuid of "LVM-" plus VG id. */
 	switch(action) {
 	case CLEAN:
+		if (retry_deactivation())
+			dm_tree_retry_remove(root);
 		/* Deactivate any unused non-toplevel nodes */
 		if (!_clean_tree(dm, root, laopts->origin_only ? dlid : NULL))
 			goto_out;

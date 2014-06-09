@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Use retry_deactivation also when cleaning orphan devices.
   Prompt when setting the VG cluster attr if the cluster is not setup.
   Allow --yes to skip prompt in vgextend (worked only with -f).
   Don't use name mangling for LVM - it never uses dm names with wrong char set.
