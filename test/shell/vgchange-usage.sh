@@ -88,15 +88,19 @@ vgcreate -cn $vg "$dev1" "$dev2" "$dev3"
 fail vgchange -cy |& tee out
 grep "y/n" out
 check vg_attr_bit cluster $vg "-"
-vgchange -cy $vg
-fail vgchange -cy $vg
 
 # check on cluster
 # either skipped as clustered (non-cluster), or already clustered (on cluster)
 if test -e LOCAL_CLVMD ; then
+	vgchange -cy $vg
+	fail vgchange -cy $vg
 	check vg_attr_bit cluster $vg "c"
 	vgchange -cn $vg
 else
+	# no clvmd is running
+	fail vgchange -cy $vg
+	vgchange --yes -cy $vg
+	fail vgchange --yes -cy $vg
 	fail vgs $vg |& tee out
 	grep "Skipping clustered volume group" out
 	vgs --ignoreskippedcluster $vg |& tee out
