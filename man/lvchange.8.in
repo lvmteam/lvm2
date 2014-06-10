@@ -256,5 +256,7 @@ Changes the permission on volume lvol1 in volume group vg00 to be read-only:
 .B lvchange -pr vg00/lvol1
 .SH SEE ALSO
 .BR lvm (8),
+.BR lvmcache (7),
+.BR lvmthin (7),
 .BR lvcreate (8),
 .BR vgchange (8)

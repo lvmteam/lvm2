@@ -235,6 +235,8 @@ or
 When converting a logical volume to a cache LV, the
 .B \-\-cachepool
 argument is required.
+See \fBlvmcache\fP(7) for more info about caching support
+and \fBlvmthin\fP(7) for thin provisioning support.
 .TP
 .BR \-i ", " \-\-interval " " \fISeconds
 Report progress as a percentage at regular intervals.
@@ -413,6 +415,7 @@ Switches logical volume into a thin pool's data volume.
 Content of converted volume is lost.
 Thin pool's metadata logical volume can be specified with the option
 \fB\-\-poolmetadata\fP or allocated with \fB\-\-poolmetadatasize\fP.
+See \fBlvmthin\fP(7) for more info about thin provisioning support.
 
 .SH Examples
 Converts the linear logical volume "vg00/lvol1" to a two-way mirror
@@ -528,6 +531,8 @@ cache pool LV.
 .SH SEE ALSO
 .BR lvm (8),
 .BR lvm.conf (5),
+.BR lvmcache (7),
+.BR lvmthin (7),
 .BR lvdisplay (8),
 .BR lvextend (8),
 .BR lvreduce (8),
