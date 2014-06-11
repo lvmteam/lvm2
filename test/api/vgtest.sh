@@ -13,7 +13,7 @@
 # tests lvm2app library
 #
 
-. lib/test
+. lib/inittest
 
 aux prepare_pvs 2
 
