@@ -1,6 +1,6 @@
 .TH LVEXTEND 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvextend \- extend the size of a logical volume
+lvextend \(em extend the size of a logical volume
 .SH SYNOPSIS
 .B lvextend
 .RB [ \-\-alloc
@@ -28,7 +28,7 @@ lvextend \- extend the size of a logical volume
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .I LogicalVolumePath
-.RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
+.RI [ PhysicalVolumePath [ :PE [ \-PE ]]...]
 .SH DESCRIPTION
 lvextend allows you to extend the size of a logical volume.
 Extension of snapshot logical volumes (see
@@ -108,18 +108,18 @@ Extends the size of the logical volume "vg01/lvol10" by 54MiB on physical
 volume /dev/sdk3. This is only possible if /dev/sdk3 is a member of
 volume group vg01 and there are enough free physical extents in it:
 .sp
-.B lvextend -L +54 /dev/vg01/lvol10 /dev/sdk3
+.B lvextend \-L +54 /dev/vg01/lvol10 /dev/sdk3
 
 Extends the size of logical volume "vg01/lvol01" by the amount of free
 space on physical volume /dev/sdk3. This is equivalent to specifying
-"-l +100%PVS" on the command line:
+"\-l +100%PVS" on the command line:
 .sp
 .B lvextend /dev/vg01/lvol01 /dev/sdk3
 
 Extends a logical volume "vg01/lvol01" by 16MiB using physical extents
-/dev/sda:8-9 and /dev/sdb:8-9 for allocation of extents:
+/dev/sda:8\-9 and /dev/sdb:8\-9 for allocation of extents:
 .sp
-.B lvextend -L+16M vg01/lvol01 /dev/sda:8-9 /dev/sdb:8-9
+.B lvextend -L+16M vg01/lvol01 /dev/sda:8\-9 /dev/sdb:8\-9
 
 .SH SEE ALSO
 .BR fsadm (8),

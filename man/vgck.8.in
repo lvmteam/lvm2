@@ -1,6 +1,6 @@
 .TH VGCK 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgck \- check volume group metadata
+vgck \(em check volume group metadata
 .SH SYNOPSIS
 .B vgck
 .RB [ \-\-commandprofile

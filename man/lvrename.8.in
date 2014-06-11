@@ -1,6 +1,6 @@
 .TH LVRENAME 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvrename \- rename a logical volume
+lvrename \(em rename a logical volume
 .SH SYNOPSIS
 .B lvrename
 .RB [ \-A | \-\-autobackup

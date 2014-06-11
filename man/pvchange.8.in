@@ -1,6 +1,6 @@
 .TH PVCHANGE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-pvchange \- change attributes of a physical volume
+pvchange \(em change attributes of a physical volume
 .SH SYNOPSIS
 .B pvchange
 .RB [ \-\-addtag
@@ -49,7 +49,7 @@ Disallows the allocation of physical extents on this physical volume
 (possibly because of disk errors, or because it will be removed after
 freeing it:
 .sp
-.B pvchange -x n /dev/sdk1
+.B pvchange \-x n /dev/sdk1
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvcreate (8)

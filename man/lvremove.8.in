@@ -1,6 +1,6 @@
 .TH LVREMOVE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvremove \- remove a logical volume
+lvremove \(em remove a logical volume
 .SH SYNOPSIS
 .B lvremove
 .RB [ \-A | \-\-autobackup

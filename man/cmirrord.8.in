@@ -1,6 +1,6 @@
 .TH CMIRRORD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .SH NAME
-cmirrord \- cluster mirror log daemon
+cmirrord \(em cluster mirror log daemon
 
 .SH SYNOPSIS
 .B cmirrord

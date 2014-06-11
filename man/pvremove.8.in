@@ -1,6 +1,6 @@
 .TH PVREMOVE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-pvremove \- remove a physical volume
+pvremove \(em remove a physical volume
 .SH SYNOPSIS
 .B pvremove
 .RB [ \-\-commandprofile

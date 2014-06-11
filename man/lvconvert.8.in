@@ -1,6 +1,6 @@
 .TH LVCONVERT 8 "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .SH NAME
-lvconvert \- convert a logical volume from linear to mirror or snapshot
+lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .SH SYNOPSIS
 .B lvconvert
 .BR \-m | \-\-mirrors
@@ -30,7 +30,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .RB [ \-y | \-\-yes ]
 .RB [ \-\-version ]
 .IR LogicalVolume [ Path ]
-.RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
+.RI [ PhysicalVolume [ Path ][ :PE [ \-PE ]]...]
 .sp
 .B lvconvert \-\-splitmirrors \fIImages
 .RB [ \-\-commandprofile
@@ -39,7 +39,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .IR SplitLogicalVolumeName ]
 .RB [ \-\-trackchanges ]
 .IR MirrorLogicalVolume [ Path ]
-.RI [ SplittablePhysicalVolume [ Path ][ :PE [ -PE ]]...]
+.RI [ SplittablePhysicalVolume [ Path ][ :PE [ \-PE ]]...]
 .sp
 .B lvconvert
 .BR \-\-splitsnapshot
@@ -124,7 +124,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .IR ExternalOriginLogicalVolume { Name | Path }
 .RB [ \-\-originname
 .IR NewExternalOriginVolumeName ]]
-.RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
+.RI [ PhysicalVolume [ Path ][ :PE [ \-PE ]]...]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
@@ -142,7 +142,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .B \-\-poolmetadatasize
 .IR CachePoolMetadataSize [ bBsSkKmMgG ]}]
 .IR LogicalVolume [ Path ]
-.RI [ PhysicalVolume [ Path ][ :PE [ -PE ]]...]
+.RI [ PhysicalVolume [ Path ][ :PE [ \-PE ]]...]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
@@ -198,7 +198,7 @@ For more information on cache pool LVs and cache LVs, see \fBlvm\fP(8).
 .TP
 .BR \-m ", " \-\-mirrors " " \fIMirrors
 Specifies the degree of the mirror you wish to create.
-For example, "\fB-m 1\fP" would convert the original logical
+For example, "\fB\-m 1\fP" would convert the original logical
 volume to a mirror volume with 2-sides; that is, a
 linear volume plus one copy.  There are two implementations of mirroring
 which correspond to the "raid1" and "mirror" segment types.  The default
@@ -451,10 +451,10 @@ Converts logical volume "vg00/lvol2" to snapshot of original volume
 .B lvconvert \-s vg00/lvol1 vg00/lvol2
 
 Converts linear logical volume "vg00/lvol1" to a two-way mirror,
-using physical extents /dev/sda:0-15 and /dev/sdb:0-15 for allocation
+using physical extents /dev/sda:0\-15 and /dev/sdb:0\-15 for allocation
 of new extents:
 .sp
-.B lvconvert \-m1 vg00/lvol1 /dev/sda:0-15 /dev/sdb:0-15
+.B lvconvert \-m1 vg00/lvol1 /dev/sda:0\-15 /dev/sdb:0\-15
 
 Converts mirror logical volume "vg00/lvmirror1" to linear, freeing physical
 extents from /dev/sda:
@@ -507,19 +507,19 @@ and convert "vg00/lv1" into a thin volume using this pool. Original "vg00/lv1"
 is used as an external read-only origin, where all writes to such volume
 are stored in the "vg00/lvpool".
 .sp
-.B lvconvert \-\-thinpool vg00/lvpool -c 128 -T lv1
+.B lvconvert \-\-thinpool vg00/lvpool \-c 128 \-T lv1
 
 Convert the logical volume "vg00/origin" into a thin volume from the thin pool
 "vg00/lvpool". This thin volume will use "vg00/origin" as an external origin
 volume for unprovisioned areas in this volume.
 For the read-only external origin use the new name "vg00/external".
 .sp
-.B lvconvert \-\-thinpool vg00/lvpool \-\-originname external -T vg00/origin
+.B lvconvert \-\-thinpool vg00/lvpool \-\-originname external \-T vg00/origin
 
 Convert an existing logical volume to a cache pool LV using the
 given cache metadata LV.
 .sp
-.B lvconvert --type cache-pool --poolmetadata vg00/lvx_meta vg00/lvx_data
+.B lvconvert \-\-type cache-pool \-\-poolmetadata vg00/lvx_meta vg00/lvx_data
 .br
 .B lvrename vg00/lvx_data vg00/lvx_cachepool
 

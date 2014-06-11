@@ -1,6 +1,6 @@
 .TH LVMCHANGE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvmchange \- change attributes of the logical volume manager
+lvmchange \(em change attributes of the logical volume manager
 .SH SYNOPSIS
 .B lvmchange
 .SH DESCRIPTION

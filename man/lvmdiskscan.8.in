@@ -1,6 +1,6 @@
 .TH LVMDISKSCAN 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvmdiskscan \- scan for all devices visible to LVM2
+lvmdiskscan \(em scan for all devices visible to LVM2
 .SH SYNOPSIS
 .B lvmdiskscan
 .RB [ \-\-commandprofile

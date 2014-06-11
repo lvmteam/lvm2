@@ -1,6 +1,6 @@
 .TH VGS 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgs \- report information about volume groups
+vgs \(em report information about volume groups
 .SH SYNOPSIS
 .B vgs
 .RB [ \-a | \-\-all ]

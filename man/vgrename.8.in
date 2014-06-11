@@ -1,6 +1,6 @@
 .TH VGRENAME 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgrename \- rename a volume group
+vgrename \(em rename a volume group
 .SH SYNOPSIS
 .B vgrename
 .RB [ \-A | \-\-autobackup
@@ -47,7 +47,7 @@ Changes the name of the Volume Group with UUID
 .br
 Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 to VolGroup00_tmp:
 .sp
-.B vgrename Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 VolGroup00_tmp
+.B vgrename Zvlifi\-Ep3t\-e0Ng\-U42h\-o0ye\-KHu1\-nl7Ns4 VolGroup00_tmp
 
 .SH SEE ALSO
 .BR lvm (8),

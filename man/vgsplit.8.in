@@ -1,6 +1,6 @@
 .TH VGSPLIT 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgsplit \- split a volume group into two
+vgsplit \(em split a volume group into two
 .SH SYNOPSIS
 .B vgsplit
 .RB [ \-\-alloc
@@ -15,9 +15,9 @@ vgsplit \- split a volume group into two
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes
 .IR MaxLogicalVolumes ]
-.RB [ -M | \-\-metadatatype
+.RB [ \-M | \-\-metadatatype
 .IR type ]
-.RB [ -p | \-\-maxphysicalvolumes
+.RB [ \-p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
 .RB [ \-\- [ vg ] metadatacopies
 .IR NumberOfCopies | unmanaged | all ]

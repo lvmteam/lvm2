@@ -1,9 +1,11 @@
 .TH DMEVENTD 8 "DM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .SH NAME
-dmeventd \- Device-mapper event daemon
+dmeventd \(em Device-mapper event daemon
 .SH SYNOPSIS
 .B dmeventd
-.RB [ \-d " [" -d " [" -d ]]]
+.RB [ \-d
+.RB [ \-d
+.RB [ \-d ]]]
 .RB [ \-f ]
 .RB [ \-h ]
 .RB [ \-R ]
@@ -36,7 +38,11 @@ See \fBlvm.conf\fP(5).
 .SH OPTIONS
 .TP
 .B \-d
-Repeat from 1 to 3 times (-d, -dd, -ddd) to increase the detail of
+Repeat from 1 to 3 times (
+.BR \-d ,
+.BR \-dd ,
+.BR \-ddd
+) to increase the detail of
 debug messages sent to syslog.
 Each extra d adds more debugging information.
 .TP

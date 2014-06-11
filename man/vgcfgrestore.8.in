@@ -1,6 +1,6 @@
 .TH VGCFGRESTORE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgcfgrestore \- restore volume group descriptor area
+vgcfgrestore \(em restore volume group descriptor area
 .SH SYNOPSIS
 .B vgcfgrestore
 .RB [ \-\-commandprofile

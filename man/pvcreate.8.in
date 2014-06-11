@@ -1,6 +1,6 @@
 .TH PVCREATE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-pvcreate \- initialize a disk or partition for use by LVM
+pvcreate \(em initialize a disk or partition for use by LVM
 .SH SYNOPSIS
 .B pvcreate
 .RB [ \-\-commandprofile
@@ -117,7 +117,7 @@ You should also specify an appropriate \fIPhysicalExtentSize\fP when creating
 the Volume Group with \fBvgcreate\fP.
 .sp
 To see the location of the first Physical Extent of an existing Physical Volume
-use \fBpvs -o +pe_start\fP .  It will be a multiple of the requested
+use \fBpvs \-o +pe_start\fP .  It will be a multiple of the requested
 alignment.  In addition it may be shifted by \fIalignment_offset\fP from
 \fIdata_alignment_offset_detection\fP (if enabled in \fBlvm.conf\fP(5)) or
 \fB\-\-dataalignmentoffset\fP.
@@ -149,7 +149,7 @@ area in case you need it in the future and to use this option to instruct
 LVM2 to ignore it.
 .TP
 .B \-\-restorefile \fIfile
-In conjunction with \fB--uuid\fP, this extracts the location and size
+In conjunction with \fB\-\-uuid\fP, this extracts the location and size
 of the data on the PV from the file (produced by \fBvgcfgbackup\fP)
 and ensures that the metadata that the program produces is consistent
 with the contents of the file i.e. the physical extents will be in
@@ -172,11 +172,11 @@ Create a separate bootloader area of specified size besides PV's data
 area. The bootloader area is an area of reserved space on the PV from
 which LVM2 will not allocate any extents and it's kept untouched. This is
 primarily aimed for use with bootloaders to embed their own data or metadata.
-The start of the bootloader area is always aligned, see also \fB--dataalignment\fP
-and \fB--dataalignmentoffset\fP. The bootloader area size may eventually
+The start of the bootloader area is always aligned, see also \fB\-\-dataalignment\fP
+and \fB\-\-dataalignmentoffset\fP. The bootloader area size may eventually
 end up increased due to the alignment, but it's never less than the
 size that is requested. To see the bootloader area start and size of
-an existing Physical Volume use \fBpvs -o +pv_ba_start,pv_ba_size\fP.
+an existing Physical Volume use \fBpvs \-o +pv_ba_start,pv_ba_size\fP.
 .TP
 .B \-\-setphysicalvolumesize \fIsize
 Overrides the automatically-detected size of the PV.  Use with care.

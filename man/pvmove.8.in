@@ -1,6 +1,6 @@
 .TH PVMOVE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-pvmove \- move physical extents
+pvmove \(em move physical extents
 .SH SYNOPSIS
 .B pvmove
 .RB [ \-\-abort ]
@@ -17,8 +17,8 @@ pvmove \- move physical extents
 .RB [ \-v | \-\-verbose ]
 .RB [ \-n | \-\-name
 .IR LogicalVolume ]
-.RI [ SourcePhysicalVolume [ :PE [ -PE ]...]
-.RI [ DestinationPhysicalVolume [ :PE [ -PE ]...]...]]
+.RI [ SourcePhysicalVolume [ :PE [ \-PE ]...]
+.RI [ DestinationPhysicalVolume [ :PE [ \-PE ]...]...]]
 .SH DESCRIPTION
 pvmove allows you to move the allocated physical extents (PEs) on
 .I SourcePhysicalVolume
@@ -35,7 +35,7 @@ is specified, the normal allocation rules for the Volume Group are used.
 If pvmove gets interrupted for any reason (e.g. the machine crashes)
 then run pvmove again without any PhysicalVolume arguments to
 restart any moves that were in progress from the last checkpoint.
-Alternatively use \fBpvmove --abort\fP at any time to abort them
+Alternatively use \fBpvmove \-\-abort\fP at any time to abort them
 at the last checkpoint.
 
 You can run more than one pvmove at once provided they are moving data
@@ -117,13 +117,13 @@ can be specified like this:
 To perform the action only on extents belonging to the single Logical Volume 
 lvol1 do this:
 .sp
-.B pvmove -n lvol1 /dev/sdb1 /dev/sdc1
+.B pvmove \-n lvol1 /dev/sdb1 /dev/sdc1
 .P
 Rather than moving the contents of the entire device, it is possible to
 move a range of Physical Extents - for example numbers 1000 to 1999
 inclusive on /dev/sdb1 - like this:
 .sp
-.B pvmove /dev/sdb1:1000-1999
+.B pvmove /dev/sdb1:1000\-1999
 .P
 A range can also be specified as start+length, so
 .sp
@@ -135,22 +135,22 @@ also refers to 1000 Physical Extents starting from Physical Extent number 1000.
 To move a range of Physical Extents to a specific location (which must have
 sufficient free extents) use the form:
 .sp
-.B pvmove /dev/sdb1:1000-1999 /dev/sdc1
+.B pvmove /dev/sdb1:1000\-1999 /dev/sdc1
 .sp
 or
 .sp
-.B pvmove /dev/sdb1:1000-1999 /dev/sdc1:0-999
+.B pvmove /dev/sdb1:1000\-1999 /dev/sdc1:0\-999
 .P
 If the source and destination are on the same disk, the 
 .B anywhere
 allocation policy would be needed, like this:
 .sp
-.B pvmove --alloc anywhere /dev/sdb1:1000-1999 /dev/sdb1:0-999
+.B pvmove \-\-alloc anywhere /dev/sdb1:1000\-1999 /dev/sdb1:0\-999
 .P
 The part of a specific Logical Volume present within in a range of Physical
 Extents can also be picked out and moved, like this:
 .sp
-.B pvmove -n lvol1 /dev/sdb1:1000-1999 /dev/sdc1
+.B pvmove \-n lvol1 /dev/sdb1:1000\-1999 /dev/sdc1
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgconvert (8)

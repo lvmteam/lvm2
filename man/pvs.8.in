@@ -1,6 +1,6 @@
 .TH PVS 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-pvs \- report information about physical volumes
+pvs \(em report information about physical volumes
 .SH SYNOPSIS
 .B pvs
 .RB [ \-a | \-\-all ]

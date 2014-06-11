@@ -1,6 +1,6 @@
 .TH "FSADM" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
 .SH "NAME"
-fsadm \- utility to resize or check filesystem on a device
+fsadm \(em utility to resize or check filesystem on a device
 .SH SYNOPSIS
 .B fsadm
 .RI [ options ]

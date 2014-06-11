@@ -1,6 +1,6 @@
 .TH LVMDUMP 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .SH NAME
-lvmdump - create lvm2 information dumps for diagnostic purposes
+lvmdump \(em create lvm2 information dumps for diagnostic purposes
 .SH SYNOPSIS
 .B lvmdump
 .RB [ \-a ]
@@ -83,10 +83,10 @@ of systemd journal for current boot.
 .TP
 .B \-u
 Gather udev info and context: /etc/udev/udev.conf file, udev daemon version
-(output of 'udevadm info --version' command), udev rules currently used in the system
+(output of 'udevadm info \-\-version' command), udev rules currently used in the system
 (content of /lib/udev/rules.d and /etc/udev/rules.d directory),
 list of files in /lib/udev directory and dump of current udev
-database content (the output of 'udevadm info --export-db' command).
+database content (the output of 'udevadm info \-\-export\-db' command).
 .SH ENVIRONMENT VARIABLES
 .TP
 \fBLVM_BINARY\fP

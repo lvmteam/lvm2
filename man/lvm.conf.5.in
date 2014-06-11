@@ -1,6 +1,6 @@
 .TH LVM.CONF 5 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvm.conf \- Configuration file for LVM2
+lvm.conf \(em Configuration file for LVM2
 .SH SYNOPSIS
 .B #DEFAULT_SYS_DIR#/lvm.conf
 .SH DESCRIPTION
@@ -65,8 +65,8 @@ For this purpose, there's the \fBcommand_profile_template.profile\fP
 (for metadata profiles) which contain all settings that are customizable
 by profiles of certain type. Users are encouraged to copy these template
 profiles and edit them as needed. Alternatively, the
-\fBlvm dumpconfig --file <ProfileName.profile> --type profilable-command <section>\fP
-or \fBlvm dumpconfig --file <ProfileName.profile> --type profilable-metadata <section>\fP
+\fBlvm dumpconfig \-\-file <ProfileName.profile> \-\-type profilable-command <section>\fP
+or \fBlvm dumpconfig \-\-file <ProfileName.profile> \-\-type profilable-metadata <section>\fP
 can be used to generate a configuration with profilable settings in either
 of the type for given section and save it to new ProfileName.profile
 (if the section is not specified, all profilable settings are reported).
@@ -249,7 +249,7 @@ start of the aligned data area of the Physical Volume will be shifted
 by the alignment_offset exposed in sysfs.
 .sp
 To see the location of the first Physical Extent of an existing Physical Volume
-use \fBpvs -o +pe_start\fP .  It will be a multiple of the requested
+use \fBpvs \-o +pe_start\fP .  It will be a multiple of the requested
 \fBdata_alignment\fP plus the alignment_offset from
 \fBdata_alignment_offset_detection\fP (if enabled) or the pvcreate
 commandline.
@@ -318,7 +318,7 @@ is invoked.  By default tools append messages to the log file.
 When set, display and reporting tools will still write the requested
 device properties to standard output, but messages confirming that
 something was or wasn't changed will be reduced to the 'verbose' level
-and not appear unless -v is supplied.
+and not appear unless \-v is supplied.
 .IP
 \fBsyslog\fP \(em Set to 1 (the default) to send log messages through syslog.
 Turn off by setting to 0.  If you set to an integer greater than one,
@@ -394,7 +394,7 @@ Interpreted as octal if the first digit is zero.
 Defaults to 077.
 Use 022 to allow other users to read the files by default.
 .IP
-\fBformat\fP \(em The default value of \fB--metadatatype\fP used
+\fBformat\fP \(em The default value of \fB\-\-metadatatype\fP used
 to determine which format of metadata to use when creating new
 physical volumes and volume groups. \fBlvm1\fP or \fBlvm2\fP.
 .IP
@@ -408,14 +408,14 @@ If an LVM2 tool is then run but unable to communicate
 with device-mapper, it will automatically invoke the equivalent LVM1
 version of the tool.  Note that for LVM1 tools to
 manipulate physical volumes and volume groups created by LVM2 you
-must use \fB--metadataformat lvm1\fP when creating them.
+must use \fB\-\-metadataformat lvm1\fP when creating them.
 .IP
 \fBlibrary_dir\fP \(em A directory searched for LVM2's shared libraries
 ahead of the places \fBdlopen\fP (3) searches.
 .IP
 \fBformat_libraries\fP \(em A list of shared libraries to load that contain
 code to process different formats of metadata. For example, liblvm2formatpool.so
-is needed to read GFS pool metadata if LVM2 was configured \fB--with-pool=shared\fP.
+is needed to read GFS pool metadata if LVM2 was configured \fB\-\-with-pool=shared\fP.
 .IP
 \fBlocking_type\fP \(em What type of locking to use.
 1 is the default, which use flocks on files in \fBlocking_dir\fP
@@ -424,7 +424,7 @@ avoid conflicting LVM2 commands running concurrently on a single
 machine. 0 disables locking and risks corrupting your metadata.
 If set to 2, the tools will load the external \fBlocking_library\fP
 (see below).
-If the tools were configured \fB--with-cluster=internal\fP
+If the tools were configured \fB\-\-with-cluster=internal\fP
 (the default) then 3 means to use built-in cluster-wide locking.
 Type 4 enforces read-only metadata and forbids any operations that
 might want to modify Volume Group metadata.
@@ -450,7 +450,7 @@ group metadata and PV state flags are obtained from the lvmetad instance and no
 scanning is done by the individual commands. In a setup with lvmetad, lvmetad
 udev rules \fBmust\fP be set up for LVM to work correctly. Without proper udev
 rules, all changes in block device configuration will be \fBignored\fP until a
-manual 'pvscan --cache' is performed.
+manual 'pvscan \-\-cache' is performed.
 .br
 If lvmetad has been running while use_lvmetad was 0, it \fBMUST\fP be stopped before
 changing use_lvmetad to 1 and started again afterwards.
@@ -487,7 +487,7 @@ These options are useful if you are replicating configuration files
 around a cluster.  Use of \fBhosttags = 1\fP means every machine
 can have static and identical local configuration files yet use
 different settings and activate different logical volumes by
-default.  See also \fBvolume_list\fP below and \fB--addtag\fP
+default.  See also \fBvolume_list\fP below and \fB\-\-addtag\fP
 in \fBlvm\fP (8).
 .TP
 \fBactivation\fP \(em Settings affecting device-mapper activation
@@ -564,7 +564,7 @@ to store on each physical volume.
 Currently it can be set to 0, 1 or 2.  The default is 1.
 If set to 2, one copy is placed at the beginning of the disk
 and the other is placed at the end.
-It can be overridden on the command line with \fB--pvmetadatacopies\fP
+It can be overridden on the command line with \fB\-\-pvmetadatacopies\fP
 (see \fBpvcreate\fP).
 If creating a volume group with just one physical volume, it's a
 good idea to have 2 copies.  If creating a large volume group with
@@ -590,12 +590,12 @@ metadata format, this states whether metadata areas should be ignored.
 The default is "n".  If metadata areas on a physical volume are ignored,
 LVM will not not store metadata in the metadata areas present on newly
 created Physical Volumes.  The option can be overridden on the command
-line with \fB--metadataignore\fP (See \fBpvcreate\fP and \fBpvchange\fP).
+line with \fB\-\-metadataignore\fP (See \fBpvcreate\fP and \fBpvchange\fP).
 Metadata areas cannot be created or extended after Logical Volumes have
 been allocated on the device.
 If you do not want to store metadata on this device, it is still wise
 always to allocate a metadata area (use a non-zero value for
-\fB--pvmetadatacopies\fP) in case you need it in the future and to use
+\fB\-\-pvmetadatacopies\fP) in case you need it in the future and to use
 this option to instruct LVM2 to ignore it.
 .IP
 \fBvgmetadatacopies\fP \(em When creating a volume group using the
@@ -603,17 +603,17 @@ LVM2 metadata format, this is the default number of copies of metadata
 desired across all the physical volumes in the volume group.  If set to
 a non-zero value, LVM will automatically set or clear the metadataignore
 flag on the physical volumes (see \fBpvcreate\fP and \fBpvchange\fP
-\fB--metadataignore\fP) in order to achieve the desired number of metadata
+\fB\-\-metadataignore\fP) in order to achieve the desired number of metadata
 copies.  An LVM command that adds or removes physical volumes (for example,
 \fBvgextend\fP, \fBvgreduce\fP, \fBvgsplit\fP, or \fBvgmerge\fP), may cause
 LVM to automatically set or clear the metadataignore flags.  Also, if
 physical volumes go missing or reappear, or a new number of copies is
-explicitly set (see \fBvgchange --vgmetadatacopies\fP), LVM may adjust
+explicitly set (see \fBvgchange \-\-vgmetadatacopies\fP), LVM may adjust
 the metadataignore flags.
 Set \fBvgmetadatacopies\fP to 0 instructs LVM not to set or clear the
 metadataignore flags automatically.  You may set a value larger than the
 sum of all metadata areas on all physical volumes.  The value can
-be overridden on the command line with \fB--vgmetadatacopies\fP for various
+be overridden on the command line with \fB\-\-vgmetadatacopies\fP for various
 commands (for example, \fBvgcreate\fP and \fBvgchange\fP), and can be
 queryied with the \fBvg_mda_copies\fP field of \fBvgs\fP.  This option
 is useful for volume groups containing large numbers of physical volumes

@@ -1,6 +1,6 @@
 .TH VGIMPORT 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgimport \- make exported volume groups known to the system
+vgimport \(em make exported volume groups known to the system
 .SH SYNOPSIS
 .B vgimport
 .RB [ \-a | \-\-all ]

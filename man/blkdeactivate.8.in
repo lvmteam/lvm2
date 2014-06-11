@@ -1,6 +1,6 @@
 .TH "BLKDEACTIVATE" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
 .SH "NAME"
-blkdeactivate \- utility to deactivate block devices
+blkdeactivate \(em utility to deactivate block devices
 .SH SYNOPSIS
 .B blkdeactivate
 .RI [ options ]
@@ -65,12 +65,12 @@ Deactivate all supported block devices found in the system. Retry deactivation
 of device-mapper devices in case the deactivation fails. Deactivate the whole
 Volume Group at once when processing an LVM Logical Volume.
 .sp
-.B blkdeactivate \-u -d retry -l wholevg
+.B blkdeactivate \-u \-d retry \-l wholevg
 
 Deactivate all supported block devices found in the system. Retry deactivation
 of device-mapper devices in case the deactivation fails and force removal.
 .sp
-.B blkdeactivate -d force,retry
+.B blkdeactivate \-d force,retry
 
 .SH SEE ALSO
 .BR lsblk (8)

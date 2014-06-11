@@ -1,6 +1,6 @@
 .TH LVSCAN 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvscan \- scan (all disks) for Logical Volumes
+lvscan \(em scan (all disks) for Logical Volumes
 .SH SYNOPSIS
 .B lvscan
 .RB [ \-a | \-\-all]

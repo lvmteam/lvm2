@@ -1,7 +1,7 @@
 .TH "LVMSADC" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
 
 .SH "NAME"
-lvmsadc \- LVM system activity data collector
+lvmsadc \(em LVM system activity data collector
 
 .SH "SYNOPSIS"
 .B lvmsadc

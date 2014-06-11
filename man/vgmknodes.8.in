@@ -1,6 +1,6 @@
 .TH VGMKNODES 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgmknodes \- recreate volume group directory and logical volume special files
+vgmknodes \(em recreate volume group directory and logical volume special files
 .SH SYNOPSIS
 .B vgmknodes
 .RB [ \-\-commandprofile

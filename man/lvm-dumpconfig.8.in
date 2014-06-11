@@ -1,9 +1,9 @@
 .TH "LVM-DUMPCONFIG" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
 .SH "NAME"
-lvm-dumpconfig \- dump LVM configuration
+lvm-dumpconfig \(em dump LVM configuration
 .SH SYNOPSIS
 .B lvm dumpconfig
-.RB [ \-f | \-\-file ]
+.RB [ \-f | \-\-file
 .IR filename ]
 .RB [ \-\-type
 .RI { current | default | diff | missing | new | profilable | profilable-command | profilable-metadata }

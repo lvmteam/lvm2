@@ -85,7 +85,7 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-Z | \-\-zero
 .RI { y | n }]
 .IR VolumeGroup { Name | Path }[/ ThinPoolLogicalVolumeName ]
-.RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
+.RI [ PhysicalVolumePath [ :PE [ \-PE ]]...]
 .br
 
 .B lvcreate
@@ -136,8 +136,8 @@ for common options.
 .IR \fB\-a ", " \fB\-\-activate " {" y | ay | n | ey | en | ly | ln }
 Controls the availability of the Logical Volumes for immediate use after
 the command finishes running.
-By default, new Logical Volumes are activated (\fB-a\fIy\fR).
-If it is possible technically, \fB-a\fIn\fR will leave the new Logical
+By default, new Logical Volumes are activated (\fB\-a\fIy\fR).
+If it is possible technically, \fB\-a\fIn\fR will leave the new Logical
 Volume inactive. But for example, snapshots can only be created
 in the active state so \fB\-a\fIn\fR cannot be used with \fB\-\-snapshot\fP.
 Normally the \fB\-\-zero\fP \fIn\fP argument has to be supplied too because
@@ -256,7 +256,7 @@ Default unit is megabytes.
 .BR \-m ", " \-\-mirrors " " \fIMirrors
 Creates a mirrored logical volume with \fIMirrors\fP copies.
 For example, specifying
-.BI -m 1
+.BI \-m 1
 would result in a mirror with two-sides; that is,
 a linear volume plus one copy.
 
@@ -507,9 +507,9 @@ under 100MiB of actual data on it:
 .B lvcreate \-\-virtualsize 1T \-\-size 100M \-\-snapshot \-\-name sparse vg1
 
 Creates a linear logical volume "vg00/lvol1" using physical extents
-/dev/sda:0-7 and /dev/sdb:0-7 for allocation of extents:
+/dev/sda:0\-7 and /dev/sdb:0\-7 for allocation of extents:
 .sp
-.B lvcreate \-L 64M -n lvol1 vg00 /dev/sda:0\-7 /dev/sdb:0\-7
+.B lvcreate \-L 64M \-n lvol1 vg00 /dev/sda:0\-7 /dev/sdb:0\-7
 
 Creates a 5GiB RAID5 logical volume "vg00/my_lv", with 3 stripes (plus
 a parity drive for a total of 4 devices) and a stripesize of 64KiB:
@@ -542,30 +542,30 @@ will share the same blocks within the thin pool.
 Note: the size MUST NOT be specified, otherwise the non-thin snapshot
 is created instead:
 .sp
-.B lvcreate -s vg00/thinvol --name thinsnap
+.B lvcreate \-s vg00/thinvol \-\-name thinsnap
 
 Creates a thin snapshot volume of read-only inactive volume "origin"
 which then becomes the thin external origin for the thin snapshot volume
 in vg00 that will use an existing thin pool "vg00/pool":
 .sp
-.B lvcreate -s --thinpool vg00/pool  origin
+.B lvcreate \-s \-\-thinpool vg00/pool  origin
 
 Create a cache pool LV that can later be used to cache one
 logical volume.
 .sp
-.B lvcreate --type cache-pool -L 1G -n my_lv_cachepool vg /dev/fast1
+.B lvcreate \-\-type cache-pool \-L 1G \-n my_lv_cachepool vg /dev/fast1
 
 If there is an existing cache pool LV, create the large slow
 device (i.e. the origin LV) and link it to the supplied cache pool LV,
 creating a cache LV.
 .sp
-.B lvcreate --type cache -L 100G -n my_lv vg/my_lv_cachepool /dev/slow1
+.B lvcreate \-\-type cache \-L 100G \-n my_lv vg/my_lv_cachepool /dev/slow1
 
 If there is an existing logical volume, create the small and fast
 cache pool LV and link it to the supplied existing logical
 volume (i.e. the origin LV), creating a cache LV.
 .sp
-.B lvcreate --type cache -L 1G -n my_lv_cachepool vg/my_lv /dev/fast1
+.B lvcreate \-\-type cache \-L 1G \-n my_lv_cachepool vg/my_lv /dev/fast1
 
 .SH SEE ALSO
 .BR lvm (8),

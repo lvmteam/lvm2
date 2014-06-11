@@ -1,6 +1,6 @@
 .TH PVSCAN 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-pvscan \- scan all disks for physical volumes
+pvscan \(em scan all disks for physical volumes
 .SH SYNOPSIS
 .B pvscan
 .RB [ \-\-commandprofile

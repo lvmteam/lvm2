@@ -1,9 +1,7 @@
 .TH "LVMCONF" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
 
 .SH "NAME"
-.B lvmconf
-\- LVM configuration modifier
-
+lvmconf \(em LVM configuration modifier
 .SH "SYNOPSIS"
 .B lvmconf
 .RB [ \-\-disable-cluster ]

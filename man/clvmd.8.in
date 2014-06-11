@@ -1,6 +1,6 @@
 .TH CLVMD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .SH NAME
-clvmd \- cluster LVM daemon
+clvmd \(em cluster LVM daemon
 .SH SYNOPSIS
 .B clvmd
 .RB [ \-d
@@ -54,7 +54,7 @@ enable cluster-wide logging then the command needs to be issued twice, eg:
 .br
 .B clvmd
 .br
-.B clvmd -d2
+.B clvmd \-d2
 .br
 .TP
 .BR \-E < "\fIlock uuid" >
@@ -68,7 +68,7 @@ Show help information.
 .TP
 .B \-I \fIcluster manager
 Selects the cluster manager to use for locking and internal communications,
-the available managers will be listed as part of the \fBclvmd -h\fP output.
+the available managers will be listed as part of the \fBclvmd \-h\fP output.
 clvmd will use the first cluster manager that succeeds, and it checks them
 in the order cman,corosync,openais. As it is quite possible to have
 (eg) corosync and cman available on the same system you might have to
@@ -107,7 +107,7 @@ The default is 0 (no timeout) and the value is in seconds. Don't set this too
 small or you will experience spurious errors. 10 or 20 seconds might be
 sensible.
 .br
-This timeout will be ignored if you start clvmd with the -d switch.
+This timeout will be ignored if you start clvmd with the \-d switch.
 .TP
 .B \-V
 Display the version of the cluster LVM daemon.

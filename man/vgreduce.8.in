@@ -1,6 +1,6 @@
 .TH VGREDUCE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgreduce \- reduce a volume group
+vgreduce \(em reduce a volume group
 .SH SYNOPSIS
 .B vgreduce
 .RB [ \-a | \-\-all ]
@@ -31,7 +31,7 @@ group (new logical volumes may again be created, changed and so on).
 
 If this is not possible (there are logical volumes referencing the missing
 physical volumes) and you cannot or do not want to remove them manually, you
-can run this option with \fB--force\fP to have \fBvgreduce\fP
+can run this option with \fB\-\-force\fP to have \fBvgreduce\fP
 remove any partial LVs.
 
 Any logical volumes and dependent snapshots that were partly on the 
@@ -40,7 +40,7 @@ that lie on disks that are still present.
 
 If your logical volumes spanned several disks including the ones that are
 lost, you might want to try to salvage data first by activating your
-logical volumes with \fB--partial\fP as described in \fBlvm\fP(8).
+logical volumes with \fB\-\-partial\fP as described in \fBlvm\fP(8).
 
 .SH SEE ALSO
 .BR lvm (8),

@@ -1,6 +1,6 @@
 .TH VGMERGE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgmerge \- merge two volume groups
+vgmerge \(em merge two volume groups
 .SH SYNOPSIS
 .B vgmerge
 .RB [ \-A | \-\-autobackup
@@ -24,7 +24,7 @@ fit into \fIDestinationVolumeGroupName\fP's limits.
 See \fBlvm\fP(8) for common options.
 .TP
 .BR \-l ", " \-\-list
-Display merged \fIDestinationVolumeGroupName\fP like \fBvgdisplay -v\fP.
+Display merged \fIDestinationVolumeGroupName\fP like \fBvgdisplay \-v\fP.
 .TP 
 .BR \-t ", " \-\-test
 Do a test run WITHOUT making any real changes.
@@ -33,7 +33,7 @@ Merge the inactive volume group named "my_vg"
 into the active or inactive volume group named "databases" giving verbose
 runtime information:
 .sp
-.B vgmerge -v databases my_vg
+.B vgmerge \-v databases my_vg
 .SH SEE ALSO
 .BR lvm (8),
 .BR vgcreate (8),

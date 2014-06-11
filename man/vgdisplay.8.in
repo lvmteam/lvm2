@@ -1,6 +1,6 @@
 .TH VGDISPLAY 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgdisplay \- display attributes of volume groups
+vgdisplay \(em display attributes of volume groups
 .SH SYNOPSIS
 .B vgdisplay
 .RB [ \-A | \-\-activevolumegroups ]
@@ -37,7 +37,7 @@ vgdisplay \- display attributes of volume groups
 .RB [ \-o|\-\-options
 .RI [ + ] Field1 [ ,Field2 ...]]
 .RB [ \-O | \-\-sort
-.RI [ + | - ] Key1 [ , [ + | - ] Key2 ...]]
+.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]
 .RB [ \-\-separator
 .IR Separator ]

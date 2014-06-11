@@ -1,6 +1,6 @@
 .TH LVM 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvm \- LVM2 tools
+lvm \(em LVM2 tools
 .SH SYNOPSIS
 .B lvm
 [command | file]

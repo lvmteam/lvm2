@@ -1,6 +1,6 @@
 .TH LVRESIZE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvresize \- resize a logical volume
+lvresize \(em resize a logical volume
 .SH SYNOPSIS
 .B lvresize
 .RB [ \-\-alloc " " \fIAllocationPolicy ]
@@ -19,7 +19,7 @@ lvresize \- resize a logical volume
 .RB [ \-n | \-\-nofsck ]
 .RB [ \-r | \-\-resizefs ]
 .IR LogicalVolume { Name | Path }
-.RI [ PhysicalVolumePath [ :PE [ -PE ]]...]
+.RI [ PhysicalVolumePath [ :PE [ \-PE ]]...]
 .SH DESCRIPTION
 lvresize allows you to resize a logical volume.
 Be careful when reducing a logical volume's size, because data in the reduced
@@ -30,7 +30,7 @@ Resizing snapshot logical volumes (see
 .BR lvcreate (8)
 for information about creating snapshots) is supported as well.
 But to change the number of copies in a mirrored logical
-volume use 
+volume use
 .BR lvconvert (8).
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
@@ -40,16 +40,16 @@ Force resize without prompting even when it may cause data loss.
 .TP
 .BR \-n ", " \-\-nofsck
 Do not perform fsck before resizing filesystem when filesystem
-requires it. You may need to use \fB--force\fR to proceed with 
+requires it. You may need to use \fB\-\-force\fR to proceed with
 this option.
 .TP
 .BR \-r ", " \-\-resizefs
-Resize underlying filesystem together with the logical volume using 
+Resize underlying filesystem together with the logical volume using
 \fBfsadm\fR(8).
 .TP
-.IR \fB\-l ", " \fB\-\-extents " [" + | - ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN }]
+.IR \fB\-l ", " \fB\-\-extents " [" + | \- ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN }]
 Change or set the logical volume size in units of logical extents.
-With the \fI+\fP or \fI-\fP sign the value is added to or subtracted from the actual size
+With the \fI+\fP or \fI\-\fP sign the value is added to or subtracted from the actual size
 of the logical volume and without it, the value is taken as an absolute one.
 The total number of physical extents affected will be
 greater than this if, for example, the volume is mirrored.
@@ -68,12 +68,12 @@ to be allocated or freed (including extents used by any mirrors, for example).
 The code may currently allocate or remove more space than you might otherwise
 expect.
 .TP
-.IR \fB\-L ", " \fB\-\-size " [" + | - ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
+.IR \fB\-L ", " \fB\-\-size " [" + | \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
 Change or set the logical volume size in units of megabytes.
 A size suffix of \fIM\fP for megabytes,
 \fIG\fP for gigabytes, \fIT\fP for terabytes, \fIP\fP for petabytes
 or \fIE\fP for exabytes is optional.
-With the \fI+\fP or \fI-\fP sign the value is added or subtracted
+With the \fI+\fP or \fI\-\fP sign the value is added or subtracted
 from the actual size of the logical volume and rounded
 to the full extent size and without it,
 the value is taken as an absolute one.
@@ -110,13 +110,13 @@ or has rules that ignore the devices LVM2 creates.
 .SH EXAMPLES
 .br
 Extend a logical volume vg1/lv1 by 16MB using physical extents
-/dev/sda:0-1 and /dev/sdb:0-1 for allocation of extents:
+/dev/sda:0\-1 and /dev/sdb:0\-1 for allocation of extents:
 .sp
-.B lvresize -L+16M vg1/lv1 /dev/sda:0-1 /dev/sdb:0-1
+.B lvresize \-L+16M vg1/lv1 /dev/sda:0\-1 /dev/sdb:0\-1
 .SH SEE ALSO
 .BR fsadm (8),
-.BR lvm (8), 
+.BR lvm (8),
 .BR lvconvert (8),
-.BR lvcreate (8), 
-.BR lvreduce (8), 
+.BR lvcreate (8),
+.BR lvreduce (8),
 .BR lvchange (8)

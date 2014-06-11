@@ -1,6 +1,6 @@
 .TH LVREDUCE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvreduce \- reduce the size of a logical volume
+lvreduce \(em reduce the size of a logical volume
 .SH SYNOPSIS
 .B lvreduce
 .RB [ \-A | \-\-autobackup

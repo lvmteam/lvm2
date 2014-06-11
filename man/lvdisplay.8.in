@@ -1,6 +1,6 @@
 .TH LVDISPLAY 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-lvdisplay \- display attributes of a logical volume
+lvdisplay \(em display attributes of a logical volume
 .SH SYNOPSIS
 .B lvdisplay
 .RB [ \-a | \-\-all ]
@@ -37,7 +37,7 @@ lvdisplay \- display attributes of a logical volume
 .RB [ \-o | \-\-options
 .RI [ + ] Field [ ,Field ...]]
 .RB [ \-O | \-\-sort
-.RI [ + | - ] Key1 [ , [ + | - ] Key2 ...]]
+.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]
 .RB [ \-\-segments ]
 .RB [ \-\-separator

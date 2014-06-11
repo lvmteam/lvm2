@@ -1,6 +1,6 @@
 .TH VGCREATE 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
 .SH NAME
-vgcreate \- create a volume group
+vgcreate \(em create a volume group
 .SH SYNOPSIS
 .B vgcreate
 .RB [ \-\-addtag
@@ -17,11 +17,11 @@ vgcreate \- create a volume group
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes
 .IR MaxLogicalVolumes ]
-.RB [ -M | \-\-metadatatype
+.RB [ \-M | \-\-metadatatype
 .IR type ]
 .RB [ \-\-metadataprofile
 .IR ProfileName ]
-.RB [ -p | \-\-maxphysicalvolumes
+.RB [ \-p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
 .RB [ \-\- [ vg ] metadatacopies
 .IR NumberOfCopies | unmanaged | all ]

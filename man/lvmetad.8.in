@@ -1,6 +1,6 @@
 .TH LVMETAD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .SH NAME
-lvmetad \- LVM metadata cache daemon
+lvmetad \(em LVM metadata cache daemon
 .SH SYNOPSIS
 .B lvmetad
 .RB [ \-l
@@ -22,7 +22,7 @@ consistent image of the volume groups available in the system.
 lvmetad is used by LVM only if it is enabled in \fBlvm.conf\fP(5) by specifying the
 \fBglobal/use_lvmetad\fP setting. If this is not defined in the LVM configuration
 explicitly then default setting is used instead (see the output of
-\fBlvm dumpconfig --type default global/use_lvmetad\fP command).
+\fBlvm dumpconfig \-\-type default global/use_lvmetad\fP command).
 .SH OPTIONS
 
 To run the daemon in a test environment both the pidfile_path and the
@@ -37,11 +37,11 @@ Show help information.
 .IR \fB\-l " {" all | wire | debug }
 Select the type of log messages to generate.
 Messages are logged by syslog.  
-Additionally, when -f is given they are also sent to standard error.
+Additionally, when \-f is given they are also sent to standard error.
 Since release 2.02.98, there are two classes of messages: wire and debug.
 Selecting 'all' supplies both and is equivalent to a comma-separated list
--l wire,debug.
-Prior to release 2.02.98, repeating -d from 1 to 3 times, viz. -d, -dd, -ddd,
+\-l wire,debug.
+Prior to release 2.02.98, repeating \-d from 1 to 3 times, viz. \-d, \-dd, \-ddd,
 increased the detail of messages.
 .TP
 .B \-p \fIpidfile_path

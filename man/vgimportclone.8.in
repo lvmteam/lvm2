@@ -1,6 +1,6 @@
 .TH VGIMPORTCLONE 8 "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .SH NAME
-vgimportclone \- import and rename duplicated volume group (e.g. a hardware snapshot)
+vgimportclone \(em import and rename duplicated volume group (e.g. a hardware snapshot)
 .SH SYNOPSIS
 .B vgimportclone
 .RB [ \-n | \-\-basevgname
@@ -38,7 +38,7 @@ To rename the VG associated with "/dev/sdc" and "/dev/sdd"
 from "vg00" to "vg00_snap"
 (and to change associated VG and PV UUIDs) do:
 .sp
-.B vgimportclone --basevgname vg00_snap /dev/sdc /dev/sdd
+.B vgimportclone \-\-basevgname vg00_snap /dev/sdc /dev/sdd
 
 .SH SEE ALSO
 .BR lvm (8),
