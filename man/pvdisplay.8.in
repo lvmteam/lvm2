@@ -71,17 +71,17 @@ N.B. \fBpvs\fP(8) provides considerably more control over the output.
 
 The values are:
 
-* physical volume device name
-* volume group name
-* physical volume size in sectors
-* internal physical volume number (obsolete)
-* physical volume status
-* physical volume (not) allocatable
-* current number of logical volumes on this physical volume
-* physical extent size in kilobytes
-* total number of physical extents
-* free number of physical extents
-* allocated number of physical extents
+\(bu physical volume device name
+\(bu volume group name
+\(bu physical volume size in sectors
+\(bu internal physical volume number (obsolete)
+\(bu physical volume status
+\(bu physical volume (not) allocatable
+\(bu current number of logical volumes on this physical volume
+\(bu physical extent size in kilobytes
+\(bu total number of physical extents
+\(bu free number of physical extents
+\(bu allocated number of physical extents
 
 .fi
 .TP
