@@ -1274,18 +1274,34 @@ int report_object(void *handle, struct volume_group *vg,
 		  struct lv_segment *seg, struct pv_segment *pvseg,
 		  struct label *label)
 {
-	struct lvm_report_object obj;
+	struct device dummy_device = { .dev = 0 };
+	struct label dummy_label = { .dev = &dummy_device };
+	struct lvm_report_object obj = {
+		.vg = vg,
+		.lv = lv,
+		.pv = pv,
+		.seg = seg,
+		.pvseg = pvseg,
+		.label = label ? : (pv ? pv_label(pv) : NULL)
+	};
+
+	/* FIXME workaround for pv_label going through cache; remove once struct
+	 * physical_volume gains a proper "label" pointer */
+	if (!obj.label) {
+		if (pv) {
+			if (pv->fmt)
+				dummy_label.labeller = pv->fmt->labeller;
+			if (pv->dev)
+				dummy_label.dev = pv->dev;
+			else
+				memcpy(dummy_device.pvid, &pv->id, ID_LEN);
+		}
+		obj.label = &dummy_label;
+	}
 
 	/* The two format fields might as well match. */
 	if (!vg && pv)
 		_dummy_fid.fmt = pv->fmt;
-
-	obj.vg = vg;
-	obj.lv = lv;
-	obj.pv = pv;
-	obj.seg = seg;
-	obj.pvseg = pvseg;
-	obj.label = label ? label : (pv ? pv_label(pv) : NULL);
 
 	return dm_report_object(handle, &obj);
 }

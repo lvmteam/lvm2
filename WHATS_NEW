@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Fix crash when reporting of empty labels on pvs.
   Use retry_deactivation also when cleaning orphan devices.
   Prompt when setting the VG cluster attr if the cluster is not setup.
   Allow --yes to skip prompt in vgextend (worked only with -f).
