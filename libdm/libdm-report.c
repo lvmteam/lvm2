@@ -703,6 +703,7 @@ int dm_report_object(struct dm_report *rh, void *object)
 	struct row *row;
 	struct dm_report_field *field;
 	void *data = NULL;
+	int len;
 
 	if (!rh) {
 		log_error(INTERNAL_ERROR "dm_report handler is NULL.");
@@ -750,8 +751,9 @@ int dm_report_object(struct dm_report *rh, void *object)
 			return 0;
 		}
 
-		if (((int) strlen(field->report_string) > field->props->width))
-			field->props->width = (int) strlen(field->report_string);
+		len = (int) strlen(field->report_string);
+		if (len > field->props->width)
+			field->props->width = len;
 
 		if ((rh->flags & RH_SORT_REQUIRED) &&
 		    (field->props->flags & FLD_SORT_KEY)) {
