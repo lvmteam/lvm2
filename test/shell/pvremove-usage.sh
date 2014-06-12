@@ -23,6 +23,10 @@ pvremove "$dev2"
 # failing, but still removing everything what can be removed
 # is somewhat odd as default, what do we have -f for?
 pvs | not grep "$dev2"
+pvs -a | grep "$dev2"
+# bz1108394 no crash on nonPV label listing
+pvs -a -o+devices
+
 pvcreate  --metadatacopies 0 "$dev2"
 
 # check pvremove refuses to remove pv in a vg
