@@ -738,9 +738,11 @@ int dm_report_object(struct dm_report *rh, void *object)
 		}
 		field->props = fp;
 
-		data = _report_get_field_data(rh, fp, object);
-		if (!data)
+		if (!(data = _report_get_field_data(rh, fp, object))) {
+			log_error("dm_report_object: no data for field %s",
+				  rh->fields[fp->field_num].id);
 			return 0;
+		}
 
 		if (!rh->fields[fp->field_num].report_fn(rh, rh->mem,
 							 field, data,
