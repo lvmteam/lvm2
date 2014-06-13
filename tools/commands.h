@@ -42,6 +42,7 @@ xx(devtypes,
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[--rows]\n"
+   "\t[-S|--select Selection]\n"
    "\t[--separator Separator]\n"
    "\t[--unbuffered]\n"
    "\t[--unquoted]\n"
@@ -50,7 +51,7 @@ xx(devtypes,
 
    aligned_ARG, nameprefixes_ARG,
    noheadings_ARG, nosuffix_ARG, options_ARG,
-   rows_ARG, separator_ARG, sort_ARG,
+   rows_ARG, select_ARG, separator_ARG, sort_ARG,
    unbuffered_ARG, unquoted_ARG)
 
 xx(dumpconfig,
