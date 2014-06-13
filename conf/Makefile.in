@@ -19,7 +19,7 @@ CONFSRC=example.conf
 CONFDEST=lvm.conf
 
 PROFILE_TEMPLATES=command_profile_template.profile metadata_profile_template.profile
-PROFILES=$(PROFILE_TEMPLATES) $(srcdir)/thin-performance.profile
+PROFILES=$(PROFILE_TEMPLATES) $(srcdir)/thin-generic.profile $(srcdir)/thin-performance.profile
 
 include $(top_builddir)/make.tmpl
 
