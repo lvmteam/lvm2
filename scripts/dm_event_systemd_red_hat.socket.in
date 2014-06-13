@@ -7,6 +7,7 @@ DefaultDependencies=no
 ListenFIFO=@DEFAULT_DM_RUN_DIR@/dmeventd-server
 ListenFIFO=@DEFAULT_DM_RUN_DIR@/dmeventd-client
 SocketMode=0600
+RemoveOnStop=true
 
 [Install]
 WantedBy=sockets.target

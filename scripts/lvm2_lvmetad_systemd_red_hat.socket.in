@@ -6,6 +6,7 @@ DefaultDependencies=no
 [Socket]
 ListenStream=@DEFAULT_RUN_DIR@/lvmetad.socket
 SocketMode=0600
+RemoveOnStop=true
 
 [Install]
 WantedBy=sysinit.target

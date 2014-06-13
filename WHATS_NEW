@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Use RemoveOnStop for lvm2-lvmetad.socket systemd unit.
   Add thin-generic configuration profile for generic thin settings.
   Fix crash when reporting of empty labels on pvs.
   Use retry_deactivation also when cleaning orphan devices.
