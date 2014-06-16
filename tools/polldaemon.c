@@ -152,6 +152,16 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 			return 0;
 		}
 
+		/*
+		 * If the LV is not active locally, the kernel cannot be
+		 * queried for its status.  We must exit in this case.
+		 */
+		if (!lv_is_active_locally(lv)) {
+			log_print_unless_silent("%s: Interrupted: No longer active.", name);
+			unlock_and_release_vg(cmd, vg, vg->name);
+			return 1;
+		}
+
 		if (!_check_lv_status(cmd, vg, lv, name, parms, &finished)) {
 			unlock_and_release_vg(cmd, vg, vg->name);
 			return_0;
