@@ -801,7 +801,8 @@ static progress_t _poll_merge_progress(struct cmd_context *cmd,
 {
 	percent_t percent = PERCENT_0;
 
-	if (!lv_snapshot_percent(lv, &percent)) {
+	if (!lv_is_merging_origin(lv) ||
+	    !lv_snapshot_percent(lv, &percent)) {
 		log_error("%s: Failed query for merging percentage. Aborting merge.", lv->name);
 		return PROGRESS_CHECK_FAILED;
 	} else if (percent == PERCENT_INVALID) {
