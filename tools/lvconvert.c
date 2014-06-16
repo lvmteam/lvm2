@@ -884,15 +884,13 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 	 *   the polldaemon, lvconvert, pvmove code that a comprehensive
 	 *   audit/rework is needed
 	 */
-	int len = strlen(lv->vg->name) + strlen(lv->name) + 2;
-	char *uuid = alloca(sizeof(lv->lvid));
-	char *lv_full_name = alloca(len);
+	char uuid[sizeof(lv->lvid)];
+	char lv_full_name[NAME_LEN];
 
-	if (!uuid || !lv_full_name)
-		return_0;
-
-	if (dm_snprintf(lv_full_name, len, "%s/%s", lv->vg->name, lv->name) < 0)
-		return_0;
+	if (dm_snprintf(lv_full_name, sizeof(lv_full_name), "%s/%s", lv->vg->name, lv->name) < 0) {
+		log_error(INTERNAL_ERROR "Name \"%s/%s\" is too long.", lv->vg->name, lv->name);
+		return 0;
+	}
 
 	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
 
