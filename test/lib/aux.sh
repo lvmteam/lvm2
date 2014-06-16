@@ -200,6 +200,9 @@ teardown_devs() {
 			for i in "${stray_loops[@]}" ; do losetup -d $i ; done
 		}
 	}
+
+	# Leave test when udev processed all removed devices
+	udev_wait
 }
 
 kill_sleep_kill_() {
