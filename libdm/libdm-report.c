@@ -472,10 +472,22 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 		log_warn(INTERNAL_ERROR "Using string as sort value for numerical field.");
 }
 
+static const char *_get_field_type_name(unsigned field_type)
+{
+	switch (field_type) {
+		case DM_REPORT_FIELD_TYPE_STRING: return "string";
+		case DM_REPORT_FIELD_TYPE_NUMBER: return "number";
+		case DM_REPORT_FIELD_TYPE_SIZE: return "size";
+		case DM_REPORT_FIELD_TYPE_STRING_LIST: return "string list";
+		default: return "unknown";
+	}
+}
+
 /*
  * show help message
  */
-static void _display_fields(struct dm_report *rh, int display_all_fields_item)
+static void _display_fields(struct dm_report *rh, int display_all_fields_item
+			    int display_field_types)
 {
 	uint32_t f;
 	const struct dm_report_object_type *type;
@@ -511,7 +523,10 @@ static void _display_fields(struct dm_report *rh, int display_all_fields_item)
 		}
 
 		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
-		log_warn("  %-*s - %s", (int) id_len, rh->fields[f].id, rh->fields[f].desc);
+		log_warn("  %-*s - %s%s%s%s", (int) id_len, rh->fields[f].id, rh->fields[f].desc,
+					      display_field_types ? " [" : "",
+					      display_field_types ? _get_field_type_name(rh->fields[f].flags & DM_REPORT_FIELD_TYPE_MASK) : "",
+					      display_field_types ? "]" : "");
 		last_desc = desc;
 	}
 }
@@ -770,7 +785,7 @@ static int _parse_fields(struct dm_report *rh, const char *format,
 			we++;
 
 		if (!_field_match(rh, ws, (size_t) (we - ws), report_type_only)) {
-			_display_fields(rh, 1);
+			_display_fields(rh, 1, 0);
 			log_warn(" ");
 			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
 			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
@@ -800,7 +815,7 @@ static int _parse_keys(struct dm_report *rh, const char *keys,
 		while (*we && *we != ',')
 			we++;
 		if (!_key_match(rh, ws, (size_t) (we - ws), report_type_only)) {
-			_display_fields(rh, 1);
+			_display_fields(rh, 1, 0);
 			log_warn(" ");
 			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
 			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
@@ -1914,7 +1929,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		c = we[0];
 		tmp = (char *) we;
 		tmp[0] = '\0';
-		_display_fields(rh, 0);
+		_display_fields(rh, 0, 1);
 		log_warn(" ");
 		log_error("Unrecognised selection field: %s", ws);
 		tmp[0] = c;
@@ -2121,7 +2136,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 
 	if (!strcasecmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
 	    !strcmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) {
-		_display_fields(rh, 0);
+		_display_fields(rh, 0, 1);
 		log_warn(" ");
 		_display_selection_help(rh);
 		dm_report_free(rh);
