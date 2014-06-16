@@ -43,6 +43,7 @@ fake_metadata_() {
 }
 
 test -n "$LVM_TEST_THIN_RESTORE_CMD" || LVM_TEST_THIN_RESTORE_CMD=$(which thin_restore) || skip
+"$LVM_TEST_THIN_RESTORE_CMD" -V || skip
 aux have_thin 1 10 0 || skip
 
 aux prepare_dmeventd
@@ -62,7 +63,7 @@ lvchange -an $vg/thin $vg/pool
 # Prepare some fake metadata with unmatching id
 # Transaction_id is lower by 1 and there are no message -> ERROR
 fake_metadata_ 10 0 >data
-$LVM_TEST_THIN_RESTORE_CMD -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
+"$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 not vgchange -ay $vg 2>&1 | tee out
 grep expected out
@@ -71,7 +72,7 @@ check inactive $vg pool_tmeta
 
 # Transaction_id is higher by 1
 fake_metadata_ 10 2 >data
-$LVM_TEST_THIN_RESTORE_CMD -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
+"$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 not vgchange -ay $vg 2>&1 | tee out
 grep expected out
@@ -80,7 +81,7 @@ check inactive $vg pool_tmeta
 
 # Prepare some fake metadata prefilled to ~81% (>70%)
 fake_metadata_ 400 1 >data
-$LVM_TEST_THIN_RESTORE_CMD -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
+"$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
