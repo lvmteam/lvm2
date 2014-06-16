@@ -164,18 +164,15 @@ out:
 static int _clear_dev_from_lvmetad_cache(dev_t devno, int32_t major, int32_t minor,
 					 activation_handler handler)
 {
-	char *buf;
+	char buf[24];
 
-	if (dm_asprintf(&buf, "%" PRIi32 ":%" PRIi32, major, minor) < 0)
-		stack;
-	if (!lvmetad_pv_gone(devno, buf ? : "", handler)) {
-		dm_free(buf);
-		return 0;
-	}
+	(void) dm_snprintf(buf, sizeof(buf), "%" PRIi32 ":%" PRIi32, major, minor);
+
+	if (!lvmetad_pv_gone(devno, buf, handler))
+		return_0;
 
 	log_print_unless_silent("Device %s not found. "
-				"Cleared from lvmetad cache.", buf ? : "");
-	dm_free(buf);
+				"Cleared from lvmetad cache.", buf);
 
 	return 1;
 }
