@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  When converting RAID origin to cache LV, properly rename sub-LVs.
   Use RemoveOnStop for lvm2-lvmetad.socket systemd unit.
   Add thin-generic configuration profile for generic thin settings.
   Fix crash when reporting of empty labels on pvs.
