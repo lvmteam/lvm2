@@ -141,8 +141,9 @@ int lv_is_merging_origin(const struct logical_volume *origin)
 
 int lv_is_merging_cow(const struct logical_volume *snapshot)
 {
+	struct lv_segment *snap_seg = find_snapshot(snapshot);
 	/* checks lv_segment's status to see if cow is merging */
-	return (find_snapshot(snapshot)->status & MERGING) ? 1 : 0;
+	return (snap_seg && (snap_seg->status & MERGING)) ? 1 : 0;
 }
 
 struct lv_segment *find_snapshot(const struct logical_volume *lv)
