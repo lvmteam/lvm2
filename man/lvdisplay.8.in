@@ -40,6 +40,8 @@ lvdisplay \(em display attributes of a logical volume
 .RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]
 .RB [ \-\-segments ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-\-separator
 .IR Separator ]
 .RB [ \-\-unbuffered ]
