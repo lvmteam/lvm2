@@ -1455,7 +1455,7 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	 * - fortunately: polldaemon will immediately shutdown if the
 	 *   origin doesn't have a status with a snapshot percentage
 	 */
-	if (background_polling() && lv_is_merging_origin(lv))
+	if (background_polling() && lv_is_merging_origin(lv) && lv_is_active_locally(lv))
 		lv_spawn_background_polling(cmd, lv);
 
 	return 1;
