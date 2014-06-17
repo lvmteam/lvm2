@@ -394,7 +394,9 @@ static int _update_extents_params(struct volume_group *vg,
 				log_error(INTERNAL_ERROR "Couldn't find origin volume.");
 				return 0;
 			}
-			extents = percent_of_extents(lp->extents, origin->le_count, 0);
+			/* Add whole metadata size estimation */
+			extents = cow_max_extents(origin, lp->chunk_size) - origin->le_count +
+				percent_of_extents(lp->extents, origin->le_count, 1);
 			break;
 		case PERCENT_NONE:
 			extents = lp->extents;

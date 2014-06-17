@@ -240,7 +240,8 @@ remaining free space in the Volume Group with the suffix \fI%FREE\fR, as a
 percentage of the remaining free space for the specified
 PhysicalVolume(s) with the suffix \fI%PVS\fR, or (for a snapshot) as a
 percentage of the total space in the Origin Logical Volume with the
-suffix \fI%ORIGIN\fR.  When expressed as a percentage, the number is treated
+suffix \fI%ORIGIN\fR (i.e. \fI100%ORIGIN\fR provides space for the whole origin).
+When expressed as a percentage, the number is treated
 as an approximate upper limit for the total number of physical extents
 to be allocated (including extents used by any mirrors, for example).
 .TP
@@ -492,14 +493,19 @@ This operation would require 2 devices - the log is "in-memory":
 .sp
 .B lvcreate \-m1 \-\-mirrorlog core \-L 500M vg00
 
-Creates a snapshot logical volume named /dev/vg00/snap which has access to the
-contents of the original logical volume named /dev/vg00/lvol1
+Creates a snapshot logical volume named "vg00/snap" which has access to the
+contents of the original logical volume named "vg00/lvol1"
 at snapshot logical volume creation time. If the original logical volume
 contains a file system, you can mount the snapshot logical volume on an
 arbitrary directory in order to access the contents of the filesystem to run
 a backup while the original filesystem continues to get updated:
 .sp
 .B lvcreate \-\-size 100m \-\-snapshot \-\-name snap /dev/vg00/lvol1
+
+Creates a snapshot logical volume named "vg00/snap" with size
+for overwriting 20% of the original logical volume named "vg00/lvol1".:
+.sp
+.B lvcreate \-s \-l 20%ORIGIN \-\-name snap vg00/lvol1
 
 Creates a sparse device named /dev/vg1/sparse of size 1TiB with space for just
 under 100MiB of actual data on it:
