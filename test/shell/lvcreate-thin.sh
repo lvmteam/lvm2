@@ -146,7 +146,7 @@ lvcreate --type snapshot $vg/lv1 --name lv4
 lvcreate --type snapshot $vg/lv1 --name $vg/lv5
 
 lvdisplay --maps $vg
-check_lv_field_modules_ thin-pool,thin lv1 snap_lv1 lv2 lv3 lv4 lv5 lv6
+check_lv_field_modules_ thin,thin-pool lv1 snap_lv1 lv2 lv3 lv4 lv5 lv6
 check vg_field $vg lv_count 8
 
 lvremove -ff $vg
