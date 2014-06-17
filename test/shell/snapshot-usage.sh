@@ -17,7 +17,8 @@ MKFS=mkfs.ext2
 which $MKFS || skip
 
 fill() {
-	dd if=/dev/zero of="$DM_DEV_DIR/$vg1/lvol0" bs=$1 count=1
+	dd if=/dev/zero of="$DM_DEV_DIR/${2:-$vg1/lvol0}" bs=$1 count=1 oflag=direct || \
+		die "Snapshot does not fit $1"
 }
 
 # Wait until device is opened
@@ -38,9 +39,6 @@ cleanup_tail()
 	vgremove -ff $vg
 	aux teardown
 }
-
-aux prepare_pvs 1
-vgcreate -s 4M $vg $(cat DEVICES)
 
 TSIZE=15P
 aux can_use_16T || TSIZE=15T
@@ -64,6 +62,21 @@ if aux target_at_least dm-snapshot 1 10 0 ; then
 	fi
 fi
 
+aux prepare_pvs 1
+vgcreate -s 4M $vg $(cat DEVICES)
+
+# Play with 1 extent
+lvcreate -aey -l1 -n $lv $vg
+# 100%LV is not supported for snapshot
+fail lvcreate -s -l 100%LV -n snap $vg/$lv |& tee out
+grep 'Please express size as %ORIGIN, %VG, %PVS, or %FREE' out
+# 100%ORIGIN needs to have enough space for all data and needs to round-up
+lvcreate -s -l 100%ORIGIN -n $lv1 $vg/$lv
+# everything needs to fit
+fill 4M $vg/$lv1
+lvremove -f $vg
+
+
 # Automatically activates exclusively in cluster
 lvcreate -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
@@ -75,6 +88,27 @@ aux lvmconf "activation/snapshot_autoextend_percent = 20" \
 pvcreate --setphysicalvolumesize 4T "$DM_DEV_DIR/$vg/$lv"
 trap 'cleanup_tail' EXIT
 vgcreate -s 1K $vg1 "$DM_DEV_DIR/$vg/$lv"
+
+
+# Play with small 1k 128 extents
+lvcreate -aey -L128K -n $lv $vg1
+# 100%ORIGIN needs to have enough space for all data
+lvcreate -s -l 100%ORIGIN -n snap100 $vg1/$lv
+# everything needs to fit
+fill 128k $vg1/snap100
+
+# 50%ORIGIN needs to have enough space for 50% of data
+lvcreate -s -l 50%ORIGIN -n snap50 $vg1/$lv
+fill 64k $vg1/snap50
+
+lvcreate -s -l 25%ORIGIN -n snap25 $vg1/$lv
+fill 32k $vg1/snap25
+
+# Check we do not provide too much extra space
+not fill 33k $vg1/snap25
+
+lvs -a $vg1
+lvremove -f $vg1
 
 # Test virtual snapshot over /dev/zero
 lvcreate -V50 -L10 -n $lv1 -s $vg1

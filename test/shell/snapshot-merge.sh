@@ -33,7 +33,7 @@ setup_merge_() {
 
     if [ $NUM_EXTRA_SNAPS -gt 0 ]; then
 	for i in $(seq 1 $NUM_EXTRA_SNAPS); do
-	    lvcreate -s -n ${BASE_SNAP_LV_NAME}_${i} -l 20%FREE ${VG_NAME}/${LV_NAME}
+	    lvcreate -s -n ${BASE_SNAP_LV_NAME}_${i} -l 20%ORIGIN ${VG_NAME}/${LV_NAME}
 	done
     fi
 }
