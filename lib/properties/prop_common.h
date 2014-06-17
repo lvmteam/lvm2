@@ -128,6 +128,6 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 
 #define FIELD_MODIFIABLE 0x00000001
 #define FIELD(type, strct, field_type, head, field, width, fn, id, desc, settable) \
-	{ type, #id, settable, field_type == STR, field_type == NUM, { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
+	{ type, #id, settable, field_type == STR, ((field_type == NUM) || (field_type == SIZ) || (field_type == PCT)), { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
 
 #endif

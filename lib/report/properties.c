@@ -343,6 +343,7 @@ struct lvm_property_type _properties[] = {
 #undef STR
 #undef NUM
 #undef SIZ
+#undef PCT
 #undef STR_LIST
 #undef FIELD
 
