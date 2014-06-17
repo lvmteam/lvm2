@@ -32,7 +32,7 @@ lvcreate --addtag 'lv_tag2.-+/=!:&#' --addtag "lv_tag1" -L8m -n "vol1" $vg1
 lvcreate --addtag "lv_tag1" -L4m -n "vol2" $vg1
 lvcreate --readahead 512 --addtag "lv_tag1" -L16m -n "abc" $vg2
 lvcreate --readahead 512 -My --minor 254 -L4m -n "xyz" $vg3
-lvcreate -L4m -n "orig" $vg3
+lvcreate -L4m -aey -n "orig" $vg3
 lvcreate -L4m -s "$vg3/orig" -n "snap"
 
 OUT_LOG_FILE="out"
