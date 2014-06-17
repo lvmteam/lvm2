@@ -380,8 +380,8 @@ static int _update_extents_params(struct volume_group *vg,
 				extents = percent_of_extents(lp->extents, vg->extent_count, 0);
 			break;
 		case PERCENT_LV:
-			log_error("Please express size as %%VG, %%PVS, or "
-				  "%%FREE.");
+			log_error("Please express size as %s%%VG, %%PVS, "
+				  "or %%FREE.", (lp->snapshot) ? "%ORIGIN, " : "");
 			return 0;
 		case PERCENT_ORIGIN:
 			if (lp->snapshot && lp->origin &&
