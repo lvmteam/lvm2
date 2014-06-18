@@ -150,7 +150,11 @@ lvs_sel 'size<=8m' "vol2 xyz vol1 orig snap"
 ###########################
 # PERCENT FIELD SELECTION #
 ###########################
-lvs_sel 'snap_percent=0' "snap"
+if aux target_at_least dm-snapshot 1 10 0; then
+	# Test zero percent only if snapshot can be zero.
+	# Before 1.10.0, the snap percent included metadata size.
+	lvs_sel 'snap_percent=0' "snap"
+fi
 dd if=/dev/zero of=$DM_DEV_DIR/$vg3/snap bs=1M count=1
 lvs_sel 'snap_percent<50' "snap"
 lvs_sel 'snap_percent>50'

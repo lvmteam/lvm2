@@ -1879,7 +1879,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	struct selection_str_list *ssl = NULL;
 	struct dm_str_list *item;
 	const char *begin_item, *end_item, *tmp;
-	uint32_t end_op_flags, end_op_flag_hit;
+	uint32_t end_op_flags, end_op_flag_hit = 0;
 	struct dm_str_list **arr;
 	size_t list_size;
 	unsigned int i;
@@ -2400,7 +2400,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	struct selection_str_list *str_list;
 	const struct dm_report_reserved_value *reserved;
 	uint64_t factor;
-	void *custom;
+	void *custom = NULL;
 	char *tmp;
 	char c;
 
