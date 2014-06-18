@@ -2708,22 +2708,24 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_thin_pool(pool_lv) && pool_is_active(pool_lv)) {
+	if (lv_is_thin_pool(pool_lv)) {
+		if (pool_is_active(pool_lv)) {
 		/* If any thin volume is also active - abort here */
-		log_error("Cannot convert pool %s/%s with active thin volumes.",
-			  pool_lv->vg->name, pool_lv->name);
-		return 0;
-	}
+			log_error("Cannot convert pool %s/%s with active thin volumes.",
+				  pool_lv->vg->name, pool_lv->name);
+			return 0;
+		}
+	} else {
+		log_warn("WARNING: Converting \"%s/%s\" logical volume to pool's data volume.",
+			 pool_lv->vg->name, pool_lv->name);
+		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 
-	log_warn("WARNING: Converting \"%s/%s\" logical volume to pool's data volume.",
-		 pool_lv->vg->name, pool_lv->name);
-	log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
-
-	if (!lp->yes &&
-	    yes_no_prompt("Do you really want to convert \"%s/%s\"? [y/n]: ",
-			  pool_lv->vg->name, pool_lv->name) == 'n') {
-		log_error("Conversion aborted.");
-		return 0;
+		if (!lp->yes &&
+		    yes_no_prompt("Do you really want to convert \"%s/%s\"? [y/n]: ",
+				  pool_lv->vg->name, pool_lv->name) == 'n') {
+			log_error("Conversion aborted.");
+			return 0;
+		}
 	}
 
 	if ((dm_snprintf(metadata_name, sizeof(metadata_name), "%s%s",
