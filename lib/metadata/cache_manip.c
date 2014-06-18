@@ -91,8 +91,6 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool,
 	struct cmd_context *cmd = pool->vg->cmd;
 	struct logical_volume *cache_lv;
 	struct lv_segment *seg;
-	int origin_name_len = strlen(origin->name);
-	char origin_name[origin_name_len + 7]; /* + "_corig" and NULL */
 
 	if (!lv_is_cache_pool(pool)) {
 		log_error(INTERNAL_ERROR
@@ -123,21 +121,6 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool,
 
 	if (!(segtype = get_segtype_from_string(cmd, "cache")))
 		return_NULL;
-
-	/*
-	 * insert_layer_for_lv does not rename the sub-LVs when adding
-	 * the suffix.  So, we rename everything here and then change
-	 * only the top-level LV back before adding the layer.
-	 */
-	sprintf(origin_name, "%s_corig", origin->name);
-	if (!lv_rename_update(cmd, origin, origin_name, 0)) {
-		log_error("Failed to rename origin LV, %s", origin->name);
-		return NULL;
-	}
-
-	origin_name[origin_name_len] = '\0';
-	if (!(origin->name = dm_pool_strdup(origin->vg->vgmem, origin_name)))
-		return_0;
 
 	cache_lv = origin;
 	if (!(origin = insert_layer_for_lv(cmd, cache_lv, CACHE, "_corig")))

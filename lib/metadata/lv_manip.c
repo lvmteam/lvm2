@@ -5384,6 +5384,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   uint64_t status,
 					   const char *layer_suffix)
 {
+	static char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
 	int r;
 	char *name;
 	size_t len;
@@ -5493,12 +5494,14 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	 *   currently supported only for thin data layer
 	 *   FIXME: without strcmp it breaks mirrors....
 	 */
-	if (strcmp(layer_suffix, "_tdata") == 0) {
-		lv_names.old = lv_where->name;
-		lv_names.new = layer_lv->name;
-		if (!for_each_sub_lv(layer_lv, _rename_cb, (void *) &lv_names))
-			return 0;
-	}
+	for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r)
+		if (strcmp(layer_suffix, _suffixes[r]) == 0) {
+			lv_names.old = lv_where->name;
+			lv_names.new = layer_lv->name;
+			if (!for_each_sub_lv(layer_lv, _rename_cb, (void *) &lv_names))
+				return 0;
+			break;
+		}
 
 	return layer_lv;
 }
