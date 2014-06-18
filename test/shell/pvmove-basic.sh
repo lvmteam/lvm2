@@ -71,7 +71,7 @@ check_and_cleanup_lvs_() {
 	vgchange -an $vg
 	lvremove -ff $vg
 	(dm_table | not grep $vg) || \
-	      die "ERROR: lvremove did leave some some mappings in DM behind!"
+	      die "ERROR: lvremove did leave some mappings in DM behind!"
 }
 
 # ---------------------------------------------------------------------
@@ -346,16 +346,13 @@ pvmove $mode "$dev1"
 #COMM "pvmove fails activating mirror, properly restores state before pvmove"
 dmsetup create $vg-pvmove0 --notable
 not pvmove $mode -i 1 "$dev2"
-echo BARF
-dmsetup ls
 dmsetup info --noheadings -c -o suspended $vg-$lv1
 test $(dmsetup info --noheadings -c -o suspended $vg-$lv1) = "Active"
-if [ -e /dev/mapper/$vg-pvmove0_mimage_0 ]; then
-        dmsetup remove $vg-pvmove0 /dev/mapper/$vg-pvmove0_mimage*
+if dmsetup info $vg-pvmove0_mimage_0 > /dev/null; then
+        dmsetup remove $vg-pvmove0 $vg-pvmove0_mimage_0 $vg-pvmove0_mimage_1
 else
         dmsetup remove $vg-pvmove0
 fi
-dmsetup ls
 
 lvremove -ff $vg
 done
