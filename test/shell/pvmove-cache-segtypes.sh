@@ -29,6 +29,8 @@ aux have_raid 1 4 2 || skip
 
 aux prepare_vg 5 80
 
+for mode in "--atomic" ""
+do
 # Each of the following tests does:
 # 1) Create two LVs - one linear and one other segment type
 #    The two LVs will share a PV.
@@ -42,14 +44,14 @@ lvcreate --type cache-pool -n ${lv1}_pool -l 4 $vg "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg ${lv1}_pool "$dev1"
 
-pvmove "$dev1" "$dev5" 2>&1 | tee out
+pvmove $mode "$dev1" "$dev5" 2>&1 | tee out
 grep "Skipping cache-pool LV, ${lv1}_pool" out
 grep "Skipping cache-related LV, ${lv1}_pool_cmeta" out
 grep "Skipping cache-related LV, ${lv1}_pool_cdata" out
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 not check lv_tree_on $vg ${lv1}_pool "$dev5"
 
-#pvmove -n ${lv1}_pool "$dev5" "$dev4"
+#pvmove $mode -n ${lv1}_pool "$dev5" "$dev4"
 #check lv_tree_on $vg ${lv1}_pool "$dev4"
 #check lv_tree_on $vg ${lv1}_foo "$dev5"
 
@@ -66,7 +68,7 @@ check lv_tree_on $vg ${lv1}_pool "$dev5"
 check lv_tree_on $vg ${lv1} "$dev1"
 
 aux mkdev_md5sum $vg $lv1
-pvmove "$dev1" "$dev3" 2>&1 | tee out
+pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
 grep "Skipping cache LV, ${lv1}" out
 check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
@@ -74,7 +76,7 @@ lvs -a -o name,attr,devices $vg
 not check lv_tree_on $vg ${lv1} "$dev3"
 #check dev_md5sum $vg $lv1
 
-#pvmove -n $lv1 "$dev3" "$dev1"
+#pvmove $mode -n $lv1 "$dev3" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
 #check lv_tree_on $vg ${lv1} "$dev1"
@@ -91,14 +93,14 @@ check lv_tree_on $vg ${lv1} "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1}_pool "$dev5"
 
 aux mkdev_md5sum $vg $lv1
-pvmove "$dev1" "$dev3" 2>&1 | tee out
+pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
 grep "Skipping cache LV, ${lv1}" out
 check lv_tree_on $vg ${lv1}_foo "$dev3"
 not check lv_tree_on $vg ${lv1} "$dev2" "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
 #check dev_md5sum $vg $lv1 -- THIS IS WHERE THINGS FAIL IF PVMOVE NOT DISALLOWED
 
-#pvmove -n $lv1 "$dev3" "$dev1"
+#pvmove $mode -n $lv1 "$dev3" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1} "$dev1" "$dev2"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
@@ -120,7 +122,7 @@ check lv_tree_on $vg ${lv1} "$dev5"
 aux mkdev_md5sum $vg $lv1
 # This will move ${lv1}_foo and the cache-pool data & meta
 #  LVs, both of which contain a RAID1 _rimage & _rmeta LV - 5 total LVs
-pvmove "$dev1" "$dev3" 2>&1 | tee out
+pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
 grep "Skipping cache-pool LV, ${lv1}_pool" out
 grep "Skipping cache-related LV, ${lv1}_pool_cmeta" out
 grep "Skipping cache-related LV, ${lv1}_pool_cdata" out
@@ -129,7 +131,7 @@ not check lv_tree_on $vg ${lv1}_pool "$dev2" "$dev3"
 #check lv_tree_on $vg ${lv1} "$dev5"
 #check dev_md5sum $vg $lv1
 
-#pvmove -n ${lv1}_pool "$dev3" "$dev1"
+#pvmove $mode -n ${lv1}_pool "$dev3" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev1" "$dev2"
 #check lv_tree_on $vg ${lv1} "$dev5"
@@ -161,17 +163,19 @@ check lv_tree_on $vg thinpool "$dev1" "$dev3" "$dev4"
 aux mkdev_md5sum $vg thin_lv
 lvs -a -o name,attr,devices $vg
 # Should move ${lv1}_foo and thinpool_tmeta from dev1 to dev5
-pvmove "$dev1" "$dev5" 2>&1 | tee out
+pvmove $mode "$dev1" "$dev5" 2>&1 | tee out
 lvs -a -o name,attr,devices $vg
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 not check lv_tree_on $vg cachepool "$dev5" "$dev2"
 check lv_tree_on $vg thinpool "$dev3" "$dev4" "$dev5" # Move non-cache tmeta
 #check dev_md5sum $vg/thin_lv
 
-#pvmove -n $vg/cachepool "$dev5" "$dev1"
+#pvmove $mode -n $vg/cachepool "$dev5" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev5"
 #check lv_tree_on $vg $vg/cachepool "$dev1" "$dev2"
 #check lv_tree_on $vg $vg/thinpool "$dev3" "$dev4"
 #check dev_md5sum $vg/thin_lv
 
 lvremove -ff $vg
+
+done

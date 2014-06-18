@@ -2712,6 +2712,112 @@ static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
 /*
  * Add new areas to mirrored segments
  */
+int lv_add_segmented_mirror_image(struct alloc_handle *ah,
+				  struct logical_volume *lv, uint32_t le,
+				  uint32_t region_size)
+{
+	char *image_name;
+	struct alloced_area *aa;
+	struct lv_segment *seg, *new_seg;
+	uint32_t current_le = le;
+	uint32_t s;
+	struct segment_type *segtype;
+	struct logical_volume *orig_lv, *copy_lv;
+
+	if (!(lv->status & PVMOVE)) {
+		log_error(INTERNAL_ERROR
+			  "Non-pvmove LV, %s, passed as argument", lv->name);
+		return 0;
+	}
+
+	if (seg_type(first_seg(lv), 0) != AREA_PV) {
+		log_error(INTERNAL_ERROR
+			  "Bad segment type for first segment area");
+		return 0;
+	}
+
+	/*
+	 * Perform any necessary segment splitting before creating
+	 * the mirror layer.
+	 */
+	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
+		if (!(seg = find_seg_by_le(lv, current_le))) {
+			log_error("Failed to find segment for %s extent %"
+				  PRIu32, lv->name, current_le);
+			return 0;
+		}
+
+		/* Allocator assures aa[0].len <= seg->area_len */
+		if (aa[0].len < seg->area_len) {
+			if (!lv_split_segment(lv, seg->le + aa[0].len)) {
+				log_error("Failed to split segment at %s "
+					  "extent %" PRIu32, lv->name, le);
+				return 0;
+			}
+		}
+		current_le += seg->area_len;
+	}
+	current_le = le;
+
+	if (!insert_layer_for_lv(lv->vg->cmd, lv, PVMOVE, "_mimage_0")) {
+		log_error("Failed to build pvmove LV-type mirror, %s",
+			  lv->name);
+		return 0;
+	}
+	orig_lv = seg_lv(first_seg(lv), 0);
+	if (!(image_name = dm_pool_strdup(lv->vg->vgmem, orig_lv->name)))
+		return_0;
+	image_name[strlen(image_name) - 1] = '1';
+
+	if (!(copy_lv = lv_create_empty(image_name, NULL,
+					orig_lv->status,
+					ALLOC_INHERIT, lv->vg)))
+		return_0;
+
+	if (!lv_add_mirror_lvs(lv, &copy_lv, 1, MIRROR_IMAGE, region_size))
+		return_0;
+
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped")))
+		return_0;
+
+	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
+		if (!(seg = find_seg_by_le(orig_lv, current_le))) {
+			log_error("Failed to find segment for %s extent %"
+				  PRIu32, lv->name, current_le);
+			return 0;
+		}
+
+		if (!(new_seg = alloc_lv_segment(segtype, copy_lv,
+						 seg->le, seg->len, PVMOVE, 0,
+						 NULL, NULL, 1, seg->len,
+						 0, 0, 0, NULL)))
+			return_0;
+
+		for (s = 0; s < ah->area_count; s++) {
+			if (!set_lv_segment_area_pv(new_seg, s,
+						    aa[s].pv, aa[s].pe))
+				return_0;
+		}
+
+		dm_list_add(&copy_lv->segments, &new_seg->list);
+
+		current_le += seg->area_len;
+		copy_lv->le_count += seg->area_len;
+	}
+	lv->status |= MIRRORED;
+
+	/* FIXME: add log */
+
+	if (lv->vg->fid->fmt->ops->lv_setup &&
+	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
+		return_0;
+
+	return 1;
+}
+
+/*
+ * Add new areas to mirrored segments
+ */
 int lv_add_mirror_areas(struct alloc_handle *ah,
 			struct logical_volume *lv, uint32_t le,
 			uint32_t region_size)
@@ -5116,7 +5222,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 					  layer_lv->name, lseg->le);
 				return 0;
 			}
-			if ((lseg->status & status_mask) != status_mask) {
+			if (((lseg->status & status_mask) != status_mask)) {
 				log_error("Layer status does not match: "
 					  "%s:%" PRIu32 " status: 0x%" PRIx64 "/0x%" PRIx64,
 					  layer_lv->name, lseg->le,

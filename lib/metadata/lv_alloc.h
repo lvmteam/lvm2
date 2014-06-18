@@ -68,6 +68,9 @@ int lv_add_segment(struct alloc_handle *ah,
 int lv_add_mirror_areas(struct alloc_handle *ah,
 			struct logical_volume *lv, uint32_t le,
 			uint32_t region_size);
+int lv_add_segmented_mirror_image(struct alloc_handle *ah,
+				  struct logical_volume *lv, uint32_t le,
+				  uint32_t region_size);
 int lv_add_mirror_lvs(struct logical_volume *lv,
 		      struct logical_volume **sub_lvs,
 		      uint32_t num_extra_areas,

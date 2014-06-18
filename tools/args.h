@@ -17,6 +17,7 @@
  * Put all long args that don't have a corresponding short option first.
  */
 /* *INDENT-OFF* */
+arg(atomic_ARG, '\0', "atomic", NULL, 0)
 arg(version_ARG, '\0', "version", NULL, 0)
 arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_mb_arg, 0)
 arg(ignorelockingfailure_ARG, '\0', "ignorelockingfailure", NULL, 0)

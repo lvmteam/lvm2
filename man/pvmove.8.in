@@ -6,6 +6,7 @@ pvmove \(em move physical extents
 .RB [ \-\-abort ]
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
+.RB [ \-\-atomic ]
 .RB [ \-b | \-\-background ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
@@ -35,8 +36,11 @@ is specified, the normal allocation rules for the Volume Group are used.
 If pvmove gets interrupted for any reason (e.g. the machine crashes)
 then run pvmove again without any PhysicalVolume arguments to
 restart any moves that were in progress from the last checkpoint.
-Alternatively use \fBpvmove \-\-abort\fP at any time to abort them
-at the last checkpoint.
+Alternatively use \fBpvmove \-\-abort\fP at any time to abort.  The
+resulting location of logical volumes after an abort is issued depends
+on whether the
+.B \-\-atomic
+option was used when starting the pvmove process.
 
 You can run more than one pvmove at once provided they are moving data
 off different SourcePhysicalVolumes, but additional pvmoves will ignore
@@ -77,11 +81,35 @@ is updated so that the Logical Volumes reflect the new data locations.
 Note that this new process cannot support the original LVM1
 type of on-disk metadata.  Metadata can be converted using \fBvgconvert\fP(8).
 
+If the
+.B \-\-atomic
+option is used, a slightly different approach is used for the move.  Again,
+a temporary 'pvmove' logical volume is created to store the details of all
+the data movements required.  This temporary LV contains all the segments of
+the various LVs that need to be moved.  However this time, an identical
+logical volume is allocated that contains the same number of segments and
+a mirror is created to copy the contents from the first temporary LV to the
+second.  When a complete copy is accomplished, the temporary logical volumes
+are removed, leaving behind the segments on the destination physical volume.
+If an abort is issued during the move, all logical volumes being moved will
+remain on the source physical volume.
+
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
 .B \-\-abort
-Abort any moves in progress.
+Abort any moves in progress.  If the
+.B \-\-atomic
+option was used to start the pvmove, all logical volumes will remain on
+the source physical volume.  Otherwise, those segments that have completed
+the move will stay on the destination physical volume, while those that
+have not will remain on the source physical volume.
+.TP
+.B \-\-atomic
+Make the entire operation atomic.  That is, ensure that all affected logical
+volumes are moved to the destination physical volume together; unless the move
+has been aborted.  If the move has been aborted, all logical volumes will
+remain on the source physical volume.
 .TP
 .B \-\-noudevsync
 Disable udev synchronisation. The

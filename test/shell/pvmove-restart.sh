@@ -17,6 +17,9 @@ aux prepare_pvs 3 60
 
 vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
 
+for mode in "--atomic" ""
+do
+
 # Create multisegment LV
 lvcreate -an -Zn -l5 -n $lv1 $vg "$dev1"
 lvextend -l+10 $vg/$lv1 "$dev2"
@@ -37,7 +40,7 @@ wait
 
 # Simulate reboot - forcibly remove related devices
 dmsetup remove $vg-$lv1
-dmsetup remove $vg-pvmove0
+dmsetup remove /dev/mapper/$vg-pvmove0*
 
 # Check we really have pvmove volume
 check lv_attr_bit type $vg/pvmove0 "p"
@@ -80,5 +83,8 @@ pvmove --abort
 aux delay_dev "$dev3"
 
 lvs -a -o+devices $vg
+
+lvremove -ff $vg
+done
 
 vgremove -ff $vg

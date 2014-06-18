@@ -38,9 +38,14 @@ static int _merge(struct lv_segment *first, struct lv_segment *second)
 int lv_merge_segments(struct logical_volume *lv)
 {
 	struct dm_list *segh, *t;
-	struct lv_segment *current, *prev = NULL;
+	struct lv_segment *seg, *current, *prev = NULL;
 
 	if (lv->status & LOCKED || lv->status & PVMOVE)
+		return 1;
+
+	if ((lv->status & MIRROR_IMAGE) &&
+	    (seg = get_only_segment_using_this_lv(lv)) &&
+	    (seg->lv->status & LOCKED || seg->lv->status & PVMOVE))
 		return 1;
 
 	dm_list_iterate_safe(segh, t, &lv->segments) {

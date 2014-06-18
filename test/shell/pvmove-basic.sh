@@ -80,6 +80,9 @@ check_and_cleanup_lvs_() {
 aux prepare_pvs 5 5
 create_vg_
 
+for mode in "--atomic" ""
+do
+
 #COMM "check environment setup/cleanup"
 prepare_lvs_
 check_and_cleanup_lvs_
@@ -92,7 +95,7 @@ check_and_cleanup_lvs_
 
 #COMM "only specified LV is moved: from pv2 to pv5 only for lv1"
 restore_lvs_
-pvmove -i1 -n $vg/$lv1 "$dev2" "$dev5"
+pvmove $mode -i1 -n $vg/$lv1 "$dev2" "$dev5"
 check lv_on $vg $lv1 "$dev1" "$dev5" "$dev3"
 lvs_not_changed_ $lv2 $lv3
 check_and_cleanup_lvs_
@@ -102,21 +105,21 @@ check_and_cleanup_lvs_
 
 #COMM "the 1st seg of 3-segs LV is moved: from pv1 of lv1 to pv4"
 restore_lvs_
-pvmove -i0 -n $vg/$lv1 "$dev1" "$dev4"
+pvmove $mode -i0 -n $vg/$lv1 "$dev1" "$dev4"
 check lv_on $vg $lv1 "$dev4" "$dev2" "$dev3"
 lvs_not_changed_ $lv2 $lv3
 check_and_cleanup_lvs_
 
 #COMM "the 2nd seg of 3-segs LV is moved: from pv2 of lv1 to pv4"
 restore_lvs_
-pvmove -i0 -n $vg/$lv1 "$dev2" "$dev4"
+pvmove $mode -i0 -n $vg/$lv1 "$dev2" "$dev4"
 check lv_on $vg $lv1 "$dev1" "$dev4" "$dev3"
 lvs_not_changed_ $lv2 $lv3
 check_and_cleanup_lvs_
 
 #COMM "the 3rd seg of 3-segs LV is moved: from pv3 of lv1 to pv4"
 restore_lvs_
-pvmove -i0 -n $vg/$lv1 "$dev3" "$dev4"
+pvmove $mode -i0 -n $vg/$lv1 "$dev3" "$dev4"
 check lv_on $vg $lv1 "$dev1" "$dev2" "$dev4"
 lvs_not_changed_ $lv2 $lv3
 check_and_cleanup_lvs_
@@ -126,14 +129,14 @@ check_and_cleanup_lvs_
 
 #COMM "1 out of 3 LVs is moved: from pv4 to pv5"
 restore_lvs_
-pvmove -i0 "$dev4" "$dev5"
+pvmove $mode -i0 "$dev4" "$dev5"
 check lv_on $vg $lv2 "$dev2" "$dev3" "$dev5"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 #COMM "2 out of 3 LVs are moved: from pv3 to pv5"
 restore_lvs_
-pvmove -i0 "$dev3" "$dev5"
+pvmove $mode -i0 "$dev3" "$dev5"
 check lv_on $vg $lv1 "$dev1" "$dev2" "$dev5"
 check lv_on $vg $lv2 "$dev2" "$dev5" "$dev4"
 lvs_not_changed_ $lv3
@@ -141,7 +144,7 @@ check_and_cleanup_lvs_
 
 #COMM "3 out of 3 LVs are moved: from pv2 to pv5"
 restore_lvs_
-pvmove -i0 "$dev2" "$dev5"
+pvmove $mode -i0 "$dev2" "$dev5"
 check lv_on $vg $lv1 "$dev1" "$dev5" "$dev3"
 check lv_on $vg $lv2 "$dev5" "$dev3" "$dev4"
 check lv_on $vg $lv3 "$dev5"
@@ -152,21 +155,21 @@ check_and_cleanup_lvs_
 
 #COMM "move the 1st stripe: from pv2 of lv2 to pv1"
 restore_lvs_
-pvmove -i0 -n $vg/$lv2 "$dev2" "$dev1"
+pvmove $mode -i0 -n $vg/$lv2 "$dev2" "$dev1"
 check lv_on $vg $lv2 "$dev1" "$dev3" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 #COMM "move the 2nd stripe: from pv3 of lv2 to pv1"
 restore_lvs_
-pvmove -i0 -n $vg/$lv2 "$dev3" "$dev1"
+pvmove $mode -i0 -n $vg/$lv2 "$dev3" "$dev1"
 check lv_on $vg $lv2 "$dev2" "$dev1" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 #COMM "move the 3rd stripe: from pv4 of lv2 to pv1"
 restore_lvs_
-pvmove -i0 -n $vg/$lv2 "$dev4" "$dev1"
+pvmove $mode -i0 -n $vg/$lv2 "$dev4" "$dev1"
 check lv_on $vg $lv2 "$dev2" "$dev3" "$dev1"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
@@ -176,21 +179,21 @@ check_and_cleanup_lvs_
 
 #COMM "match to the start of segment:from pv2:0-0 to pv5"
 restore_lvs_
-pvmove -i0 "$dev2":0-0 "$dev5"
+pvmove $mode -i0 "$dev2":0-0 "$dev5"
 check lv_on $vg $lv2 "$dev5" "$dev2" "$dev3" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 #exit 0
 #COMM "match to the middle of segment: from pv2:1-1 to pv5"
 restore_lvs_
-pvmove -i0 "$dev2":1-1 "$dev5"
+pvmove $mode -i0 "$dev2":1-1 "$dev5"
 check lv_on $vg $lv2 "$dev2" "$dev3" "$dev4" "$dev5"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 #COMM "match to the end of segment: from pv2:2-2 to pv5"
 restore_lvs_
-pvmove -i0 "$dev2":2-2 "$dev5"
+pvmove $mode -i0 "$dev2":2-2 "$dev5"
 check lv_on $vg $lv2 "$dev2" "$dev5" "$dev3" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
@@ -200,21 +203,21 @@ check_and_cleanup_lvs_
 
 #COMM "no destination split: from pv2:0-2 to pv5"
 restore_lvs_
-pvmove -i0 "$dev2":0-2 "$dev5"
+pvmove $mode -i0 "$dev2":0-2 "$dev5"
 check lv_on $vg $lv2 "$dev5" "$dev3" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 #COMM "destination split into 2: from pv2:0-2 to pv5:5-5 and pv4:5-6"
 restore_lvs_
-pvmove -i0 --alloc anywhere "$dev2":0-2 "$dev5":5-5 "$dev4":5-6
+pvmove $mode -i0 --alloc anywhere "$dev2":0-2 "$dev5":5-5 "$dev4":5-6
 check lv_on $vg $lv2 "$dev5" "$dev4" "$dev3"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
 
 #COMM "destination split into 3: from pv2:0-2 to {pv3,4,5}:5-5"
 restore_lvs_
-pvmove -i0 --alloc anywhere "$dev2":0-2 "$dev3":5-5 "$dev4":5-5 "$dev5":5-5
+pvmove $mode -i0 --alloc anywhere "$dev2":0-2 "$dev3":5-5 "$dev4":5-5 "$dev5":5-5
 check lv_on $vg $lv2 "$dev3" "$dev4" "$dev5"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
@@ -224,14 +227,14 @@ check_and_cleanup_lvs_
 
 #COMM "alloc normal on same PV for source and destination: from pv3:0-2 to pv3:5-7"
 restore_lvs_
-not pvmove -i0 "$dev3":0-2 "$dev3":5-7
+not pvmove $mode -i0 "$dev3":0-2 "$dev3":5-7
 # "(cleanup previous test)"
 lvs_not_changed_ $lv1 $lv2 $lv3
 check_and_cleanup_lvs_
 
 #COMM "alloc anywhere on same PV for source and destination: from pv3:0-2 to pv3:5-7"
 restore_lvs_
-pvmove -i0 --alloc anywhere "$dev3":0-2 "$dev3":5-7
+pvmove $mode -i0 --alloc anywhere "$dev3":0-2 "$dev3":5-7
 check lv_on $vg $lv2 "$dev2" "$dev3" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
@@ -241,7 +244,7 @@ restore_lvs_
 #lvs -a -o name,size,seg_pe_ranges $vg
 #LV2    1.12m @TESTDIR@/dev/mapper/@PREFIX@pv2:0-2 @TESTDIR@/dev/mapper/@PREFIX@pv3:0-2 @TESTDIR@/dev/mapper/@PREFIX@pv4:0-2
 
-pvmove -i0 --alloc anywhere "$dev3":0-2 "$dev3":5-7 "$dev5":5-6 "$dev4":5-5
+pvmove $mode -i0 --alloc anywhere "$dev3":0-2 "$dev3":5-7 "$dev5":5-6 "$dev4":5-5
 
 #lvs -a -o name,size,seg_pe_ranges $vg
 # Hmm is this correct ? - why pv2 is split
@@ -253,14 +256,14 @@ check_and_cleanup_lvs_
 
 #COMM "alloc contiguous but area not available: from pv2:0-2 to pv5:5-5 and pv4:5-6"
 restore_lvs_
-not pvmove -i0 --alloc contiguous "$dev2":0-2 "$dev5":5-5 "$dev4":5-6
+not pvmove $mode -i0 --alloc contiguous "$dev2":0-2 "$dev5":5-5 "$dev4":5-6
 # "(cleanup previous test)"
 lvs_not_changed_ $lv1 $lv2 $lv3
 check_and_cleanup_lvs_
 
 #COMM "alloc contiguous and contiguous area available: from pv2:0-2 to pv5:0-0,pv5:3-5 and pv4:5-6"
 restore_lvs_
-pvmove -i0 --alloc contiguous "$dev2":0-2 "$dev5":0-0 "$dev5":3-5 "$dev4":5-6
+pvmove $mode -i0 --alloc contiguous "$dev2":0-2 "$dev5":0-0 "$dev5":3-5 "$dev4":5-6
 check lv_on $vg $lv2 "$dev5" "$dev3" "$dev4"
 lvs_not_changed_ $lv1 $lv3
 check_and_cleanup_lvs_
@@ -270,7 +273,7 @@ check_and_cleanup_lvs_
 
 #COMM "multiple source LVs: from pv3 to pv5"
 restore_lvs_
-pvmove -i0 "$dev3" "$dev5"
+pvmove $mode -i0 "$dev3" "$dev5"
 check lv_on $vg $lv1 "$dev1" "$dev2" "$dev5"
 check lv_on $vg $lv2 "$dev2" "$dev5" "$dev4"
 lvs_not_changed_ $lv3
@@ -283,7 +286,7 @@ check_and_cleanup_lvs_
 restore_lvs_
 lvchange -an $vg/$lv1
 lvchange -an $vg/$lv3
-pvmove -i0 "$dev2" "$dev5"
+pvmove $mode -i0 "$dev2" "$dev5"
 check lv_on $vg $lv1 "$dev1" "$dev5" "$dev3"
 check lv_on $vg $lv2 "$dev5" "$dev3" "$dev4"
 check lv_on $vg $lv3 "$dev5"
@@ -294,8 +297,8 @@ check_and_cleanup_lvs_
 
 #COMM "no PEs to move: from pv3 to pv1"
 restore_lvs_
-pvmove -i0 "$dev3" "$dev1"
-not pvmove -i0 "$dev3" "$dev1"
+pvmove $mode -i0 "$dev3" "$dev1"
+not pvmove $mode -i0 "$dev3" "$dev1"
 # "(cleanup previous test)"
 check lv_on $vg $lv1 "$dev1" "$dev2" "$dev1"
 check lv_on $vg $lv2 "$dev2" "$dev1" "$dev4"
@@ -304,21 +307,21 @@ check_and_cleanup_lvs_
 
 #COMM "no space available: from pv2:0-0 to pv1:0-0"
 restore_lvs_
-not pvmove -i0 "$dev2":0-0 "$dev1":0-0
+not pvmove $mode -i0 "$dev2":0-0 "$dev1":0-0
 # "(cleanup previous test)"
 lvs_not_changed_ $lv1 $lv2 $lv3
 check_and_cleanup_lvs_
 
 #COMM 'same source and destination: from pv1 to pv1'
 restore_lvs_
-not pvmove -i0 "$dev1" "$dev1"
+not pvmove $mode -i0 "$dev1" "$dev1"
 #"(cleanup previous test)"
 lvs_not_changed_ $lv1 $lv2 $lv3
 check_and_cleanup_lvs_
 
 #COMM "sum of specified destination PEs is large enough, but it includes source PEs and the free PEs are not enough"
 restore_lvs_
-not pvmove --alloc anywhere "$dev1":0-2 "$dev1":0-2 "$dev5":0-0 2> err
+not pvmove $mode --alloc anywhere "$dev1":0-2 "$dev1":0-2 "$dev5":0-0 2> err
 #"(cleanup previous test)"
 grep "Insufficient free space" err
 lvs_not_changed_ $lv1 $lv2 $lv3
@@ -328,7 +331,7 @@ check_and_cleanup_lvs_
 
 #COMM "pvmove abort"
 restore_lvs_
-pvmove -i100 -b "$dev1" "$dev3"
+pvmove $mode -i100 -b "$dev1" "$dev3"
 pvmove --abort
 check_and_cleanup_lvs_
 
@@ -338,10 +341,21 @@ pvcreate $(cat DEVICES)
 pvcreate --metadatacopies 0 "$dev1" "$dev2"
 create_vg_
 lvcreate -l4 -n $lv1 $vg "$dev1"
-pvmove "$dev1"
+pvmove $mode "$dev1"
 
 #COMM "pvmove fails activating mirror, properly restores state before pvmove"
 dmsetup create $vg-pvmove0 --notable
-not pvmove -i 1 "$dev2"
+not pvmove $mode -i 1 "$dev2"
+echo BARF
+dmsetup ls
+dmsetup info --noheadings -c -o suspended $vg-$lv1
 test $(dmsetup info --noheadings -c -o suspended $vg-$lv1) = "Active"
-dmsetup remove $vg-pvmove0
+if [ -e /dev/mapper/$vg-pvmove0_mimage_0 ]; then
+        dmsetup remove $vg-pvmove0 /dev/mapper/$vg-pvmove0_mimage*
+else
+        dmsetup remove $vg-pvmove0
+fi
+dmsetup ls
+
+lvremove -ff $vg
+done

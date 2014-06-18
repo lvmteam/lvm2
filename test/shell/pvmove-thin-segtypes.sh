@@ -22,6 +22,9 @@ aux have_raid 1 3 5 || skip
 aux prepare_pvs 5 20
 vgcreate -c n -s 128k $vg $(cat DEVICES)
 
+for mode in "--atomic" ""
+do
+
 # Each of the following tests does:
 # 1) Create two LVs - one linear and one other segment type
 #    The two LVs will share a PV.
@@ -35,11 +38,11 @@ lvcreate -T $vg/${lv1}_pool -l 4 -V 8 -n $lv1 "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1"
 aux mkdev_md5sum $vg $lv1
-pvmove "$dev1" "$dev5"
+pvmove "$dev1" "$dev5" $mode
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check lv_tree_on $vg $lv1 "$dev5"
 check dev_md5sum $vg $lv1
-pvmove -n $lv1 "$dev5" "$dev4"
+pvmove -n $lv1 "$dev5" "$dev4" $mode
 check lv_tree_on $vg $lv1 "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg $lv1
@@ -55,14 +58,16 @@ lvcreate -T $vg/${lv1}_raid1_pool -V 8 -n $lv1
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2"
 aux mkdev_md5sum $vg $lv1
-pvmove "$dev1" "$dev5"
+pvmove "$dev1" "$dev5" $mode
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check lv_tree_on $vg $lv1 "$dev2" "$dev5"
 check dev_md5sum $vg $lv1
-pvmove -n $lv1 "$dev5" "$dev4"
+pvmove -n $lv1 "$dev5" "$dev4" $mode
 check lv_tree_on $vg $lv1 "$dev2" "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg $lv1
 lvremove -ff $vg
+
+done
 
 vgremove -ff $vg

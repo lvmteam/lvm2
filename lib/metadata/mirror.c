@@ -842,7 +842,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct logical_volume *sub_lv;
 	struct logical_volume *detached_log_lv = NULL;
 	struct logical_volume *temp_layer_lv = NULL;
-	struct lv_segment *mirrored_seg = first_seg(lv);
+	struct lv_segment *pvmove_seg, *mirrored_seg = first_seg(lv);
 	uint32_t old_area_count = mirrored_seg->area_count;
 	uint32_t new_area_count = mirrored_seg->area_count;
 	struct lv_list *lvl;
@@ -949,6 +949,10 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		mirrored_seg = first_seg(lv);
 		if (remove_log && !detached_log_lv)
 			detached_log_lv = detach_mirror_log(mirrored_seg);
+
+		if (lv->status & PVMOVE)
+			dm_list_iterate_items(pvmove_seg, &lv->segments)
+				pvmove_seg->status |= PVMOVE;
 	} else if (new_area_count == 0) {
 		log_very_verbose("All mimages of %s are gone", lv->name);
 
@@ -1557,7 +1561,9 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 
 		/* Check segment origins point to pvname */
 		dm_list_iterate_items(seg, &lv->segments) {
-			if (seg_type(seg, 0) != AREA_PV)
+			if (seg_type(seg, 0) == AREA_LV) /* Atomic pvmove */
+				seg = first_seg(seg_lv(seg, 0));
+			if (seg_type(seg, 0) != AREA_PV) /* Segment pvmove */
 				continue;
 			if (seg_dev(seg, 0) != dev)
 				continue;
@@ -1652,13 +1658,14 @@ int fixup_imported_mirrors(struct volume_group *vg)
 	return 1;
 }
 
-/*
- * Add mirrors to "linear" or "mirror" segments
- */
-int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
-			    uint32_t mirrors, uint32_t region_size,
-			    struct dm_list *allocatable_pvs, alloc_policy_t alloc)
+static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
+					       uint32_t flags,
+					       uint32_t mirrors,
+					       uint32_t region_size,
+					       struct dm_list *allocatable_pvs,
+					       alloc_policy_t alloc)
 {
+	struct cmd_context *cmd = lv->vg->cmd;
 	struct alloc_handle *ah;
 	const struct segment_type *segtype;
 	struct dm_list *parallel_areas;
@@ -1682,13 +1689,35 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lv_add_mirror_areas(ah, lv, 0, adjusted_region_size)) {
-		log_error("Failed to add mirror areas to %s", lv->name);
+	if (flags & MIRROR_BY_SEG) {
+		if (!lv_add_mirror_areas(ah, lv, 0, adjusted_region_size)) {
+			log_error("Failed to add mirror areas to %s", lv->name);
+			r = 0;
+		}
+	} else if (flags & MIRROR_BY_SEGMENTED_LV) {
+		if (!lv_add_segmented_mirror_image(ah, lv, 0,
+						   adjusted_region_size)) {
+			log_error("Failed to add mirror areas to %s", lv->name);
+			r = 0;
+		}
+	} else {
+		log_error(INTERNAL_ERROR "Unknown mirror flag");
 		r = 0;
 	}
-
 	alloc_destroy(ah);
 	return r;
+}
+
+/*
+ * Add mirrors to "linear" or "mirror" segments
+ */
+int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
+			    uint32_t mirrors, uint32_t region_size,
+			    struct dm_list *allocatable_pvs, alloc_policy_t alloc)
+{
+	return _add_mirrors_that_preserve_segments(lv, MIRROR_BY_SEG,
+						   mirrors, region_size,
+						   allocatable_pvs, alloc);
 }
 
 /*
@@ -2112,8 +2141,19 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
-		return add_mirrors_to_segments(cmd, lv, mirrors,
-					       region_size, pvs, alloc);
+		return _add_mirrors_that_preserve_segments(lv, MIRROR_BY_SEG,
+							   mirrors, region_size,
+							   pvs, alloc);
+	} else if (flags & MIRROR_BY_SEGMENTED_LV) {
+		if (stripes > 1) {
+			log_error("Striped-mirroring is not supported on "
+				  "segment-by-segment mirroring");
+			return 0;
+		}
+
+		return _add_mirrors_that_preserve_segments(lv, MIRROR_BY_SEGMENTED_LV,
+							   mirrors, region_size,
+							   pvs, alloc);
 	} else if (flags & MIRROR_BY_LV) {
 		if (!mirrors)
 			return add_mirror_log(cmd, lv, log_count,

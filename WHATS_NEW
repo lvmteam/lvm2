@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Add support for all-or-nothing (atomic) pvmove.
   Automatically add snapshot metadata size for -l %ORIGIN calculation.
   When converting RAID origin to cache LV, properly rename sub-LVs.
   Use RemoveOnStop for lvm2-lvmetad.socket systemd unit.
