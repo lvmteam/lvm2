@@ -7,6 +7,7 @@ Version 1.02.88 -
   Add dm_report_reserved_value to libdevmapper for reserved value definition.
   Also display field types when listing all fields in selection help.
   Recognize "help" keyword in selection string to show brief help for selection.
+  Always order items reported as string list field lexicographically.
   Add dm_report_field_string_list to libdevmapper for direct string list report.
   Add DM_REPORT_FIELD_TYPE_STRING_LIST: separate string and string list fields.
   Add dm_str_list to libdevmapper for string list type definition and its reuse.
