@@ -1,5 +1,6 @@
 Version 1.02.88 - 
 =================================
+  Make "help" and "?" reporting fields implicit.
   Recognize implicit "selected" field if using dm_report_init_with_selection.
   Add support for implicit reporting fields which are predefined in libdm.
   Add DM_REPORT_FIELD_TYPE_PERCENT: separate number and percent fields.

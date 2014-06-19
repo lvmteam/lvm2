@@ -354,17 +354,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	if (!(report_handle = report_init(cmd, options, keys, &report_type,
 					  separator, aligned, buffered,
 					  headings, field_prefixes, quoted,
-					  columns_as_rows, selection))) {
-		if ( (!strcasecmp(options, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
-		      !strcmp(options, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) ||
-		     (!strcasecmp(keys, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
-		      !strcmp(keys, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) ||
-		     (selection &&
-		      (!strcasecmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
-		       !strcmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))) )
-			return r;
+					  columns_as_rows, selection)))
 		return_ECMD_FAILED;
-	}
 
 	/* Ensure options selected are compatible */
 	if (report_type & SEGS)

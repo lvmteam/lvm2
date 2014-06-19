@@ -24,6 +24,7 @@
  */
 #define RH_SORT_REQUIRED	0x00000100
 #define RH_HEADINGS_PRINTED	0x00000200
+#define RH_ALREADY_REPORTED	0x00000400
 
 struct dm_report {
 	struct dm_pool *mem;
@@ -191,29 +192,24 @@ struct row {
 /*
  * Implicit report types and fields.
  */
-static const struct dm_report_object_type _implicit_void_report_types[] = {
-	{ 0, "", "", NULL }
-};
-
-static const struct dm_report_field_type _implicit_void_report_fields[] = {
-	{ 0, 0, 0, 0, "", "", 0, 0}
-};
-
-static const struct dm_report_object_type *_implicit_report_types = _implicit_void_report_types;
-static const struct dm_report_field_type *_implicit_report_fields = _implicit_void_report_fields;
-
 #define COMMON_REPORT_TYPE 0x80000000
 #define COMMON_FIELD_SELECTED_ID "selected"
+#define COMMON_FIELD_HELP_ID DM_REPORT_FIELD_RESERVED_NAME_HELP
+#define COMMON_FIELD_HELP_ALT_ID DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT
 
-static void *_null_returning_fn(void *obj)
+static void *_null_returning_fn(void *obj __attribute__((unused)))
 {
 	return NULL;
 }
 
-static const struct dm_report_object_type _implicit_common_report_types[] = {
-	{ COMMON_REPORT_TYPE, "Common", "common_", _null_returning_fn },
-	{ 0, "", "", NULL }
-};
+static int _no_report_fn(struct dm_report *rh __attribute__((unused)),
+			 struct dm_pool *mem __attribute__((unused)),
+			 struct dm_report_field *field __attribute__((unused)),
+			 const void *data __attribute__((unused)),
+			 void *private __attribute__((unused)))
+{
+	return 1;
+}
 
 static int _selected_disp(struct dm_report *rh,
 			  struct dm_pool *mem __attribute__((unused)),
@@ -225,10 +221,26 @@ static int _selected_disp(struct dm_report *rh,
 	return dm_report_field_int(rh, field, &row->selected);
 }
 
+static const struct dm_report_object_type _implicit_common_report_types[] = {
+	{ COMMON_REPORT_TYPE, "Common", "common_", _null_returning_fn },
+	{ 0, "", "", NULL }
+};
+
 static const struct dm_report_field_type _implicit_common_report_fields[] = {
-	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_SELECTED_ID, "Selected", _selected_disp, "Item passes selection criteria." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ID, "Help", _no_report_fn, "Show help." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ALT_ID, "Help", _no_report_fn, "Show help." },
 	{ 0, 0, 0, 0, "", "", 0, 0}
 };
+
+static const struct dm_report_field_type _implicit_common_report_fields_with_selection[] = {
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_SELECTED_ID, "Selected", _selected_disp, "Item passes selection criteria." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ID, "Help", _no_report_fn, "Show help." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ALT_ID, "Help", _no_report_fn, "Show help." },
+	{ 0, 0, 0, 0, "", "", 0, 0}
+};
+
+static const struct dm_report_object_type *_implicit_report_types = _implicit_common_report_types;
+static const struct dm_report_field_type *_implicit_report_fields = _implicit_common_report_fields;
 
 static const struct dm_report_object_type *_find_type(struct dm_report *rh,
 						      uint32_t report_type)
@@ -940,10 +952,7 @@ static int _parse_fields(struct dm_report *rh, const char *format,
 		if (!_field_match(rh, ws, (size_t) (we - ws), report_type_only)) {
 			_display_fields(rh, 1, 0);
 			log_warn(" ");
-			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
-			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
-				log_error("Unrecognised field: %.*s",
-					  (int) (we - ws), ws);
+			log_error("Unrecognised field: %.*s", (int) (we - ws), ws);
 			return 0;
 		}
 	}
@@ -970,10 +979,7 @@ static int _parse_keys(struct dm_report *rh, const char *keys,
 		if (!_key_match(rh, ws, (size_t) (we - ws), report_type_only)) {
 			_display_fields(rh, 1, 0);
 			log_warn(" ");
-			if (strcasecmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP) &&
-			    strcmp(ws, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT))
-				log_error("dm_report: Unrecognised field: %.*s",
-					  (int) (we - ws), ws);
+			log_error("dm_report: Unrecognised field: %.*s", (int) (we - ws), ws);
 			return 0;
 		}
 	}
@@ -1013,6 +1019,20 @@ static void _dm_report_init_update_types(struct dm_report *rh, uint32_t *report_
 	 */
 	for (type = _implicit_report_types; type->data_fn; type++)
 		*report_types &= ~type->id;
+}
+
+static int _help_requested(struct dm_report *rh)
+{
+	struct field_properties *fp;
+
+	dm_list_iterate_items(fp, &rh->field_props) {
+		if (fp->implicit &&
+		    (!strcmp(_implicit_report_fields[fp->field_num].id, COMMON_FIELD_HELP_ID) ||
+		     !strcmp(_implicit_report_fields[fp->field_num].id, COMMON_FIELD_HELP_ALT_ID)))
+			return 1;
+	}
+
+	return 0;
 }
 
 struct dm_report *dm_report_init(uint32_t *report_types,
@@ -1097,6 +1117,12 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	 * Return updated types value for further compatility check by caller.
 	 */
 	_dm_report_init_update_types(rh, report_types);
+
+	if (_help_requested(rh)) {
+		_display_fields(rh, 1, 0);
+		log_warn(" ");
+		rh->flags |= RH_ALREADY_REPORTED;
+	}
 
 	return rh;
 }
@@ -1405,6 +1431,9 @@ int dm_report_object(struct dm_report *rh, void *object)
 		log_error(INTERNAL_ERROR "dm_report handler is NULL.");
 		goto out;
 	}
+
+	if (rh->flags & RH_ALREADY_REPORTED)
+		return 1;
 
 	if (!(row = dm_pool_zalloc(rh->mem, sizeof(*row)))) {
 		log_error("dm_report_object: struct row allocation failed");
@@ -2615,8 +2644,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 	struct selection_node *root = NULL;
 	const char *fin, *next;
 
-	_implicit_report_types = _implicit_common_report_types;
-	_implicit_report_fields = _implicit_common_report_fields;
+	_implicit_report_fields = _implicit_common_report_fields_with_selection;
 
 	if (!(rh = dm_report_init(report_types, types, fields, output_fields,
 			output_separator, output_flags, sort_keys, private_data)))
@@ -2640,8 +2668,8 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 		_display_fields(rh, 0, 1);
 		log_warn(" ");
 		_display_selection_help(rh);
-		dm_report_free(rh);
-		return NULL;
+		rh->flags |= RH_ALREADY_REPORTED;
+		return rh;
 	}
 
 	if (!(root = _alloc_selection_node(rh->mem, SEL_OR)))
