@@ -347,7 +347,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
-		if (info.open_count) {
+		if (!lv_check_not_in_use(cmd, lv, &info)) {
 			log_error("Can't resync open logical volume \"%s\"",
 				  lv->name);
 			return 0;
@@ -362,9 +362,6 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 					  lv->name);
 				return 0;
 			}
-
-			if (sigint_caught())
-				return_0;
 
 			active = 1;
 			if (lv_is_active_exclusive_locally(lv))

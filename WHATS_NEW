@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Fix open_count test for lvchange --refresh or mirrors and raids.
   Update pvs,vgs,lvs and lvm man page for selection support.
   Add -S/--select to lvm devtypes for report selection.
   Add -S/--select to pvs,vgs,lvs and {pv,vg,lv}display -C for report selection.
