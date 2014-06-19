@@ -653,11 +653,12 @@ static void _display_fields(struct dm_report *rh, int display_all_fields_item,
 	if ((tmp = _get_longest_field_id_len(rh->fields)) > id_len)
 		id_len = tmp;
 
-	_display_fields_more(rh, _implicit_report_fields, id_len,
-			     display_all_fields_item, display_field_types);
-	log_warn(" ");
 	_display_fields_more(rh, rh->fields, id_len, display_all_fields_item,
 			     display_field_types);
+	log_warn(" ");
+	_display_fields_more(rh, _implicit_report_fields, id_len,
+			     display_all_fields_item, display_field_types);
+
 }
 
 /*
