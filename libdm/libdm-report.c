@@ -103,14 +103,14 @@ struct op_def {
  * (e.g. =~ comes before =)
 */
 static struct op_def _op_cmp[] = {
-	{ "=~", FLD_CMP_REGEX, "Matching regular expression." },
-	{ "!~", FLD_CMP_REGEX|FLD_CMP_NOT, "Not matching regular expression." },
-	{ "=", FLD_CMP_EQUAL, "Equal to." },
-	{ "!=", FLD_CMP_NOT|FLD_CMP_EQUAL, "Not equal to." },
-	{ ">=", FLD_CMP_NUMBER|FLD_CMP_GT|FLD_CMP_EQUAL, "Greater than or equal to." },
-	{ ">", FLD_CMP_NUMBER|FLD_CMP_GT, "Greater than" },
-	{ "<=", FLD_CMP_NUMBER|FLD_CMP_LT|FLD_CMP_EQUAL, "Less than or equal to." },
-	{ "<", FLD_CMP_NUMBER|FLD_CMP_LT, "Less than." },
+	{ "=~", FLD_CMP_REGEX, "Matching regular expression. [regex]" },
+	{ "!~", FLD_CMP_REGEX|FLD_CMP_NOT, "Not matching regular expression. [regex]" },
+	{ "=", FLD_CMP_EQUAL, "Equal to. [number, size, percent, string, string list]" },
+	{ "!=", FLD_CMP_NOT|FLD_CMP_EQUAL, "Not equal to. [number, size, percent, string, string_list]" },
+	{ ">=", FLD_CMP_NUMBER|FLD_CMP_GT|FLD_CMP_EQUAL, "Greater than or equal to. [number, size, percent]" },
+	{ ">", FLD_CMP_NUMBER|FLD_CMP_GT, "Greater than. [number, size, percent]" },
+	{ "<=", FLD_CMP_NUMBER|FLD_CMP_LT|FLD_CMP_EQUAL, "Less than or equal to. [number, size, percent]" },
+	{ "<", FLD_CMP_NUMBER|FLD_CMP_LT, "Less than. [number, size, percent]" },
 	{ NULL, 0, NULL }
 };
 
