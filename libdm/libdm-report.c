@@ -194,8 +194,8 @@ struct row {
  */
 #define COMMON_REPORT_TYPE 0x80000000
 #define COMMON_FIELD_SELECTED_ID "selected"
-#define COMMON_FIELD_HELP_ID DM_REPORT_FIELD_RESERVED_NAME_HELP
-#define COMMON_FIELD_HELP_ALT_ID DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT
+#define COMMON_FIELD_HELP_ID "help"
+#define COMMON_FIELD_HELP_ALT_ID "?"
 
 static void *_null_returning_fn(void *obj __attribute__((unused)))
 {
@@ -2663,8 +2663,8 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 	}
 	rh->reserved_values = reserved_values;
 
-	if (!strcasecmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP) ||
-	    !strcmp(selection, DM_REPORT_FIELD_RESERVED_NAME_HELP_ALT)) {
+	if (!strcasecmp(selection, COMMON_FIELD_HELP_ID) ||
+	    !strcmp(selection, COMMON_FIELD_HELP_ALT_ID)) {
 		_display_fields(rh, 0, 1);
 		log_warn(" ");
 		_display_selection_help(rh);
