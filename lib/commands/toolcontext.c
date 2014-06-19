@@ -629,25 +629,20 @@ static int _init_tag_configs(struct cmd_context *cmd)
 static int _init_profiles(struct cmd_context *cmd)
 {
 	const char *dir;
-	struct profile_params *pp;
-	int initialized = cmd->profile_params != NULL;
-
-	if (!initialized && !(pp = dm_pool_zalloc(cmd->libmem, sizeof(*pp)))) {
-		log_error("profile_params alloc failed");
-		return 0;
-	}
 
 	if (!(dir = find_config_tree_str(cmd, config_profile_dir_CFG, NULL)))
 		return_0;
 
-	if (initialized) {
-		dm_strncpy(cmd->profile_params->dir, dir, sizeof(pp->dir));
-	} else {
-		dm_strncpy(pp->dir, dir, sizeof(pp->dir));
-		dm_list_init(&pp->profiles_to_load);
-		dm_list_init(&pp->profiles);
-		cmd->profile_params = pp;
+	if (!cmd->profile_params) {
+		if (!(cmd->profile_params = dm_pool_zalloc(cmd->libmem, sizeof(*cmd->profile_params)))) {
+			log_error("profile_params alloc failed");
+			return 0;
+		}
+		dm_list_init(&cmd->profile_params->profiles_to_load);
+		dm_list_init(&cmd->profile_params->profiles);
 	}
+
+	dm_strncpy(cmd->profile_params->dir, dir, sizeof(cmd->profile_params->dir));
 
 	return 1;
 }
