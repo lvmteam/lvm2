@@ -520,30 +520,28 @@ static int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
 static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
 				      void *baton)
 {
-	uint32_t s = *((uint32_t *)baton);
+	uint32_t mimage_to_remove = *((uint32_t *)baton);
 	struct lv_segment *mirror_seg;
 
 	if (!(mirror_seg = get_only_segment_using_this_lv(mimage_lv))) {
-		log_error(INTERNAL_ERROR
-			  "%s is not a proper mirror image",
+		log_error(INTERNAL_ERROR "%s is not a proper mirror image",
 			  mimage_lv->name);
 		return 0;
 	}
 
 	if (seg_type(mirror_seg, 0) != AREA_LV) {
-		log_error(INTERNAL_ERROR
-			  "%s is not a pvmove mirror of LV-type",
+		log_error(INTERNAL_ERROR "%s is not a pvmove mirror of LV-type",
 			  mirror_seg->lv->name);
 		return 0;
 	}
 
-	if (s > mirror_seg->area_count) {
-		log_error(INTERNAL_ERROR
-			  "Invalid segment number");
+	if (mimage_to_remove > mirror_seg->area_count) {
+		log_error(INTERNAL_ERROR "Mirror image %" PRIu32 " not found in segment",
+			  mimage_to_remove);
 		return 0;
 	}
 
-	if (seg_lv(mirror_seg, s) == mimage_lv)
+	if (seg_lv(mirror_seg, mimage_to_remove) == mimage_lv)
 		return 1;
 
 	return 0;
@@ -552,7 +550,7 @@ static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
 static int _detach_pvmove_mirror(struct cmd_context *cmd,
 				 struct logical_volume *lv_mirr)
 {
-	uint32_t s = 0;
+	uint32_t mimage_to_remove = 0;
 	struct dm_list lvs_completed;
 	struct lv_list *lvl;
 
@@ -561,10 +559,9 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 
 	if (arg_is_set(cmd, abort_ARG) &&
 	    (seg_type(first_seg(lv_mirr), 0) == AREA_LV))
-		s = 1; /* remove the second mirror leg */
+		mimage_to_remove = 1; /* remove the second mirror leg */
 
-	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0,
-			       _is_pvmove_image_removable, &s, PVMOVE) ||
+	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, _is_pvmove_image_removable, &mimage_to_remove, PVMOVE) ||
 	    !remove_layers_for_segments_all(cmd, lv_mirr, PVMOVE,
 					    &lvs_completed)) {
 		return 0;

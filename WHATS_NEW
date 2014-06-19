@@ -6,7 +6,7 @@ Version 2.02.107 -
   Add -S/--select to pvs,vgs,lvs and {pv,vg,lv}display -C for report selection.
   Use dm_report_init_with_selection now, implicit "selected" field appears.
   Make use of libdm's DM_REPORT_FIELD_TYPE{SIZE,PERCENT,STRING_LIST} for fields.
-  Add support for all-or-nothing (atomic) pvmove.
+  Support all-or-nothing pvmove --atomic.
   Automatically add snapshot metadata size for -l %ORIGIN calculation.
   When converting RAID origin to cache LV, properly rename sub-LVs.
   Use RemoveOnStop for lvm2-lvmetad.socket systemd unit.

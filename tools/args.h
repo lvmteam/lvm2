@@ -17,7 +17,6 @@
  * Put all long args that don't have a corresponding short option first.
  */
 /* *INDENT-OFF* */
-arg(atomic_ARG, '\0', "atomic", NULL, 0)
 arg(version_ARG, '\0', "version", NULL, 0)
 arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_mb_arg, 0)
 arg(ignorelockingfailure_ARG, '\0', "ignorelockingfailure", NULL, 0)
@@ -108,6 +107,7 @@ arg(mergedconfig_ARG, '\0', "mergedconfig", NULL, 0)
 arg(ignoreskippedcluster_ARG, '\0', "ignoreskippedcluster", NULL, 0)
 arg(splitsnapshot_ARG, '\0', "splitsnapshot", NULL, 0)
 arg(readonly_ARG, '\0', "readonly", NULL, 0)
+arg(atomic_ARG, '\0', "atomic", NULL, 0)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg, 0)

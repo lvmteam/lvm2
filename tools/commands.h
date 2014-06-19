@@ -764,9 +764,9 @@ xx(pvmove,
    0,
    "pvmove " "\n"
    "\t[--abort]\n"
+   "\t[--alloc AllocationPolicy]\n"
    "\t[--atomic]\n"
    "\t[-A|--autobackup {y|n}]\n"
-   "\t[--alloc AllocationPolicy]\n"
    "\t[-b|--background]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n "
@@ -781,7 +781,7 @@ xx(pvmove,
    "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n"
    "\t[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
-   abort_ARG, atomic_ARG, alloc_ARG, autobackup_ARG, background_ARG,
+   abort_ARG, alloc_ARG, atomic_ARG, autobackup_ARG, background_ARG,
    interval_ARG, name_ARG, noudevsync_ARG, test_ARG)
 
 xx(pvremove,
