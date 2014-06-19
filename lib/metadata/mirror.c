@@ -1559,14 +1559,29 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 		if (!(lv->status & lv_type))
 			continue;
 
-		/* Check segment origins point to pvname */
+		/*
+		 * If this is an atomic pvmove, the first
+		 * segment will be a mirror containing
+		 * mimages (i.e. AREA_LVs)
+		 */
+		if (seg_type(first_seg(lv), 0) == AREA_LV) {
+			seg = first_seg(lv);            /* the mirror segment */
+			seg = first_seg(seg_lv(seg, 0)); /* mimage_0 segment0 */
+			if (seg_dev(seg, 0) != dev)
+				continue;
+			return lv;
+		}
+
+		/*
+		 * If this is a normal pvmove, check all the segments'
+		 * first areas for the requested device
+		 */
 		dm_list_iterate_items(seg, &lv->segments) {
-			if (seg_type(seg, 0) == AREA_LV) /* Atomic pvmove */
-				seg = first_seg(seg_lv(seg, 0));
-			if (seg_type(seg, 0) != AREA_PV) /* Segment pvmove */
+			if (seg_type(seg, 0) != AREA_PV)
 				continue;
 			if (seg_dev(seg, 0) != dev)
 				continue;
+
 			return lv;
 		}
 	}
