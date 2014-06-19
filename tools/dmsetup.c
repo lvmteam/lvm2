@@ -2948,9 +2948,6 @@ static int _report_init(const struct command *cmd)
 	r = 1;
 
 out:
-	if (!strcasecmp(options, "help") || !strcmp(options, "?"))
-		r = 1;
-
 	if (len)
 		dm_free(options);
 
