@@ -490,13 +490,13 @@ static int handle_connect(daemon_state s)
 	return 1;
 }
 
-static void reap(daemon_state s, int wait)
+static void reap(daemon_state s, int waiting)
 {
 	thread_state *last = s.threads, *ts = last->next;
 	void *rv;
 
 	while (ts) {
-		if (wait || !ts->active) {
+		if (waiting || !ts->active) {
 			pthread_join(ts->client.thread_id, &rv);
 			last->next = ts->next;
 			dm_free(ts);
