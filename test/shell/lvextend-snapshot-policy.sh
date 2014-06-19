@@ -27,7 +27,7 @@ percent() {
 	get lv_field $vg/snap snap_percent | cut -d. -f1
 }
 
-aux prepare_dmeventd
+# no dmeventd running in this test, testing --use-policies
 aux prepare_vg 2
 
 lvcreate -aey -L24 -n base $vg
