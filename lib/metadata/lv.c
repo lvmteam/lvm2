@@ -316,11 +316,26 @@ char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
+	struct logical_volume *mimage0_lv;
 	struct lv_segment *seg;
+	const struct device *dev;
 
-	dm_list_iterate_items(seg, &lv->segments)
-		if (seg->status & PVMOVE)
-			return dm_pool_strdup(mem, dev_name(seg_dev(seg, 0)));
+	dm_list_iterate_items(seg, &lv->segments) {
+		if (seg->status & PVMOVE) {
+			if (seg_type(seg, 0) == AREA_LV) { /* atomic pvmove */
+				mimage0_lv = seg_lv(seg, 0);
+				if (!lv_is_mirror_type(mimage0_lv)) {
+					log_error(INTERNAL_ERROR
+						  "Bad pvmove structure");
+					return NULL;
+				}
+				dev = seg_dev(first_seg(mimage0_lv), 0);
+			} else /* Segment pvmove */
+				dev = seg_dev(seg, 0);
+
+			return dm_pool_strdup(mem, dev_name(dev));
+		}
+	}
 
 	return NULL;
 }
