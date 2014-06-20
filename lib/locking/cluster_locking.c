@@ -425,6 +425,8 @@ static int _lock_resource(struct cmd_context *cmd, const char *resource,
 	assert(resource);
 
 	switch (flags & LCK_SCOPE_MASK) {
+	case LCK_ACTIVATION:
+		return 1;
 	case LCK_VG:
 		if (!strcmp(resource, VG_SYNC_NAMES)) {
 			log_very_verbose("Requesting sync names.");
