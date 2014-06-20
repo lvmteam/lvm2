@@ -777,7 +777,7 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)
 static int _lv_is_exclusive(struct logical_volume *lv)
 {
 	/* Some devices require exlusiveness */
-	return lv_is_is_raid(lv) ||
+	return lv_is_raid(lv) ||
 		lv_is_origin(lv) ||
 		lv_is_thin_type(lv) ||
 		lv_is_cache_type(lv);
