@@ -213,6 +213,12 @@ vgremove -ff $vg1
 # Can't test >= 16T devices on 32bit
 test "$TSIZE" = 15P || exit 0
 
+# synchronize with udev activity
+# FIXME - otherwise sequence of vgremove followed by vgcreate may fail...
+# as there could be still remaing links in /dev
+# Unusure if 'vgcreate' should do this type of detection in udev mode.
+aux udev_wait
+
 # Check usability with largest extent size
 pvcreate "$DM_DEV_DIR/$vg/$lv"
 vgcreate -s 4G $vg1 "$DM_DEV_DIR/$vg/$lv"
