@@ -100,8 +100,10 @@ static const char * const _blacklist_maps[] = {
 	"/libselinux.so.",	/* not using selinux during mlock */
 	"/libsepol.so.",	/* not using sepol during mlock */
 	"/libtinfo.so.",	/* not using tinfo during mlock */
-	"/libuuid.so.",	/* not using uuid during mlock (blkid) */
+	"/libudev.so.",		/* not using udev during mlock */
+	"/libuuid.so.",		/* not using uuid during mlock (blkid) */
 	"/libdl-",		/* not using dlopen,dlsym during mlock */
+	"/etc/selinux",		/* not using selinux during mlock */
 	/* "/libdevmapper-event.so" */
 };
 
