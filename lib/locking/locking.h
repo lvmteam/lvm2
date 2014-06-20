@@ -86,9 +86,10 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 /*
  * Lock scope
  */
-#define LCK_SCOPE_MASK	0x00000008U
-#define LCK_VG		0x00000000U
-#define LCK_LV		0x00000008U
+#define LCK_SCOPE_MASK	0x00001008U
+#define LCK_VG		0x00000000U	/* Volume Group */
+#define LCK_LV		0x00000008U	/* Logical Volume */
+#define LCK_ACTIVATION  0x00001000U	/* Activation */
 
 /*
  * Lock bits.
@@ -131,6 +132,9 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  */
 #define LCK_NONE		(LCK_VG | LCK_NULL)
 
+#define LCK_ACTIVATE_LOCK	(LCK_ACTIVATION | LCK_WRITE | LCK_HOLD)
+#define LCK_ACTIVATE_UNLOCK	(LCK_ACTIVATION | LCK_UNLOCK)
+
 #define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
@@ -161,6 +165,33 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 		 lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv), lv) :	\
 		0)
 
+/*
+ * Activation locks are wrapped around activation commands that have to
+ * be processed atomically one-at-a-time.
+ * If a VG WRITE lock is held, an activation lock is redundant.
+ *
+ * FIXME Test and support this for thin and cache types.
+ * FIXME Add cluster support.
+ */
+#define lv_supports_activation_locking(lv) (!vg_is_clustered((lv)->vg) && !lv_is_thin_type(lv) && !lv_is_cache_type(lv))
+#define lock_activation(cmd, lv)	(vg_write_lock_held() && lv_supports_activation_locking(lv) ? 1 : lock_vol(cmd, (lv)->lvid.s, LCK_ACTIVATE_LOCK, lv))
+#define unlock_activation(cmd, lv)	(vg_write_lock_held() && lv_supports_activation_locking(lv) ? 1 : lock_vol(cmd, (lv)->lvid.s, LCK_ACTIVATE_UNLOCK, lv))
+
+/*
+ * Place temporary exclusive 'activation' lock around an LV locking operation
+ * to serialise it.
+ */
+#define lock_lv_vol_serially(cmd, lv, flags) \
+({ \
+	int rr = 0; \
+\
+	if (lock_activation((cmd), (lv))) { \
+		rr = lock_lv_vol((cmd), (lv), (flags)); \
+		unlock_activation((cmd), (lv)); \
+	} \
+	rr; \
+})
+
 #define unlock_vg(cmd, vol)	\
 	do { \
 		if (is_real_vg(vol)) \
@@ -173,16 +204,28 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 		release_vg(vg); \
 	} while (0)
 
-#define resume_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME)
+#define resume_lv(cmd, lv)	\
+({ \
+	int rr = lock_lv_vol((cmd), (lv), LCK_LV_RESUME); \
+	unlock_activation((cmd), (lv)); \
+	rr; \
+})
 #define resume_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME | LCK_ORIGIN_ONLY)
-#define revert_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME | LCK_REVERT)
-#define suspend_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD)
+#define revert_lv(cmd, lv)	\
+({ \
+	int rr = lock_lv_vol((cmd), (lv), LCK_LV_RESUME | LCK_REVERT); \
+\
+	unlock_activation((cmd), (lv)); \
+	rr; \
+})
+#define suspend_lv(cmd, lv)	\
+	(lock_activation((cmd), (lv)) ? lock_lv_vol((cmd), (lv), LCK_LV_SUSPEND | LCK_HOLD) : 0)
 #define suspend_lv_origin(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD | LCK_ORIGIN_ONLY)
-#define deactivate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE)
+#define deactivate_lv(cmd, lv)	lock_lv_vol_serially(cmd, lv, LCK_LV_DEACTIVATE)
 
-#define activate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD)
+#define activate_lv(cmd, lv)	lock_lv_vol_serially(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD)
 #define activate_lv_excl_local(cmd, lv)	\
-				lock_lv_vol(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD | LCK_LOCAL)
+				lock_lv_vol_serially(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD | LCK_LOCAL)
 #define activate_lv_excl_remote(cmd, lv)	\
 				lock_lv_vol(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD | LCK_REMOTE)
 
@@ -190,9 +233,9 @@ struct logical_volume;
 int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv);
 
 #define activate_lv_local(cmd, lv)	\
-	lock_lv_vol(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
+	lock_lv_vol_serially(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
 #define deactivate_lv_local(cmd, lv)	\
-	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)
+	lock_lv_vol_serially(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)
 #define drop_cached_metadata(vg)	\
 	lock_vol((vg)->cmd, (vg)->name, LCK_VG_DROP_CACHE, NULL)
 #define remote_commit_cached_metadata(vg)	\

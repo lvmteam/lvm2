@@ -318,6 +318,8 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, struct lo
 	}
 
 	switch (flags & LCK_SCOPE_MASK) {
+	case LCK_ACTIVATION:
+		break;
 	case LCK_VG:
 		if (!_blocking_supported)
 			flags |= LCK_NONBLOCK;

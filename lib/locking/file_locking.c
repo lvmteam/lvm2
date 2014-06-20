@@ -49,6 +49,16 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	unsigned revert = (flags & LCK_REVERT) ? 1 : 0;
 
 	switch (flags & LCK_SCOPE_MASK) {
+	case LCK_ACTIVATION:
+		if (dm_snprintf(lockfile, sizeof(lockfile),
+				"%s/A_%s", _lock_dir, resource + 1) < 0) {
+			log_error("Too long locking filename %s/A_%s.", _lock_dir, resource + 1);
+			return 0;
+		}
+
+		if (!lock_file(lockfile, flags))
+			return_0;
+		break;
 	case LCK_VG:
 		/* Skip cache refresh for VG_GLOBAL - the caller handles it */
 		if (strcmp(resource, VG_GLOBAL))

@@ -1,5 +1,6 @@
 Version 2.02.107 - 
 ==================================
+  Introduce LCK_ACTIVATION to avoid concurrent activation of basic LV types.
   Fix open_count test for lvchange --refresh or mirrors and raids.
   Update pvs,vgs,lvs and lvm man page for selection support.
   Add -S/--select to lvm devtypes for report selection.

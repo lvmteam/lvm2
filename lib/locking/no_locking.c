@@ -37,6 +37,8 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 			     uint32_t flags, struct logical_volume *lv)
 {
 	switch (flags & LCK_SCOPE_MASK) {
+	case LCK_ACTIVATION:
+		break;
 	case LCK_VG:
 		if (!strcmp(resource, VG_SYNC_NAMES))
 			fs_unlock();
