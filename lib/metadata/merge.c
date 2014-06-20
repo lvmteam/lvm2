@@ -40,6 +40,11 @@ int lv_merge_segments(struct logical_volume *lv)
 	struct dm_list *segh, *t;
 	struct lv_segment *seg, *current, *prev = NULL;
 
+	/*
+	 * Don't interfere with pvmoves as they rely upon two LVs
+	 * having a matching segment structure.
+	 */
+
 	if (lv->status & LOCKED || lv->status & PVMOVE)
 		return 1;
 

@@ -2737,8 +2737,9 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	}
 
 	/*
-	 * Perform any necessary segment splitting before creating
-	 * the mirror layer.
+	 * If the allocator provided two or more PV allocations for any
+	 * single segment of the original LV, that LV segment must be
+	 * split up to match.
 	 */
 	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
 		if (!(seg = find_seg_by_le(lv, current_le))) {
@@ -2757,6 +2758,7 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 		}
 		current_le += seg->area_len;
 	}
+
 	current_le = le;
 
 	if (!insert_layer_for_lv(lv->vg->cmd, lv, PVMOVE, "_mimage_0")) {
@@ -5222,7 +5224,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 					  layer_lv->name, lseg->le);
 				return 0;
 			}
-			if (((lseg->status & status_mask) != status_mask)) {
+			if ((lseg->status & status_mask) != status_mask) {
 				log_error("Layer status does not match: "
 					  "%s:%" PRIu32 " status: 0x%" PRIx64 "/0x%" PRIx64,
 					  layer_lv->name, lseg->le,
