@@ -72,7 +72,18 @@ See \fBlvm\fP(8) for common options.
 Controls the availability of the logical volumes for use.
 Communicates with the kernel device-mapper driver via
 libdevmapper to activate (\-ay) or deactivate (\-an) the
-logical volumes. If autoactivation option is used (\-aay),
+logical volumes. 
+.IP
+Activation of a logical volume creates a symbolic link
+/dev/VolumeGroupName/LogicalVolumeName pointing to the device node.
+This link is removed on deactivation.
+All software and scripts should access the device through
+this symbolic link and present this as the name of the device.
+The location and name of the underlying device node may depend on 
+the distribution and configuration (e.g. udev) and might change 
+from release to release.
+.IP
+If autoactivation option is used (\-aay),
 the logical volume is activated only if it matches an item in
 the activation/auto_activation_volume_list set in lvm.conf.
 If this list is not set, then all volumes are considered for

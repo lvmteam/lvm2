@@ -502,7 +502,13 @@ Sets the device geometry to C/H/S.
 .RI [ subsystem ]
 .br
 Splits given device name into subsystem constituents.
-Default subsystem is LVM.
+The default subsystem is LVM.  
+LVM currently generates device names by concatenating the names of the Volume
+Group, Logical Volume and any internal Layer with a hyphen as separator.
+Any hyphens within the names are doubled to escape them.
+The precise encoding might change without notice in any future
+release, so we recommend you always decode using the current version of
+this command.
 .br
 .TP
 .B status
