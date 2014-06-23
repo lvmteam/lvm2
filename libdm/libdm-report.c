@@ -633,8 +633,9 @@ static void _display_fields_more(struct dm_report *rh,
 			}
 		}
 		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
-		log_warn("  %-*s - %s%s%s%s", (int) id_len, fields[f].id, fields[f].desc,
+		log_warn("  %-*s - %s%s%s%s%s", (int) id_len, fields[f].id, fields[f].desc,
 					      display_field_types ? " [" : "",
+					      display_field_types ? fields[f].flags & FLD_CMP_UNCOMPARABLE ? "unselectable " : "" : "",
 					      display_field_types ? _get_field_type_name(fields[f].flags & DM_REPORT_FIELD_TYPE_MASK) : "",
 					      display_field_types ? "]" : "");
 		last_desc = desc;
