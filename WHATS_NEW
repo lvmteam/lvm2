@@ -1,5 +1,5 @@
-Version 2.02.107 - 
-==================================
+Version 2.02.107 - 23rd June 2014
+=================================
   Introduce LCK_ACTIVATION to avoid concurrent activation of basic LV types.
   Fix open_count test for lvchange --refresh or mirrors and raids.
   Update pvs,vgs,lvs and lvm man page for selection support.
@@ -12,8 +12,12 @@ Version 2.02.107 -
   When converting RAID origin to cache LV, properly rename sub-LVs.
   Use RemoveOnStop for lvm2-lvmetad.socket systemd unit.
   Add thin-generic configuration profile for generic thin settings.
-  Fix crash when reporting of empty labels on pvs.
+  Fix crash when reporting empty labels on pvs.
   Use retry_deactivation also when cleaning orphan devices.
+  Wait for client threads when shutting down lvmetad.
+  Remove PV from cache on pvremove.
+  Avoid repeatedly reporting of failure to connect to lvmetad.
+  Introduce MDA_FAILED to permit metadata updates even if some mdas are missing.
   Prompt when setting the VG cluster attr if the cluster is not setup.
   Allow --yes to skip prompt in vgextend (worked only with -f).
   Don't use name mangling for LVM - it never uses dm names with wrong char set.
@@ -27,7 +31,7 @@ Version 2.02.107 -
   Strictly separate command profiles and per-VG/LV profiles referenced in mda.
   Fix dumpconfig --type diff when run as second and later cmd in lvm shell.
   Fix wrong profile reuse from previous run if another cmd is run in lvm shell.
-  Move cache description from lvm(8) to lvmcache(7) man page.
+  Move cache description from lvm(8) to new lvmcache(7) man page.
   Display skipped prompt in silent mode.
   Make reporting commands show help about possible sort keys on '-O help'.
   Add metadata_percent to lvs_cols.
