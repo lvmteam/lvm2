@@ -2396,7 +2396,8 @@ out_reserved_values:
 	log_warn(" ");
 }
 
-static char _sel_syntax_error_at_msg[] = "Selection syntax error at '%s'.";
+static const char _sel_syntax_error_at_msg[] = "Selection syntax error at '%s'.";
+static const char _sel_help_ref_msg[] = "Use \'help\' for selection to get more help.";
 
 /*
  * Selection parser
@@ -2460,6 +2461,8 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 			c = we[0];
 			tmp = (char *) we;
 			tmp[0] = '\0';
+			_display_fields(rh, 0, 1);
+			log_warn(" ");
 			log_error("Selection field is uncomparable: %s.", ws);
 			tmp[0] = c;
 			goto bad;
@@ -2522,6 +2525,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	return sn;
 bad:
 	log_error(_sel_syntax_error_at_msg, s);
+	log_error(_sel_help_ref_msg);
 	*next = s;
 	return NULL;
 }
@@ -2695,6 +2699,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 	if (*next) {
 		log_error("Expecting logical operator");
 		log_error(_sel_syntax_error_at_msg, next);
+		log_error(_sel_help_ref_msg);
 		goto error;
 	}
 
