@@ -84,13 +84,14 @@ struct op_def {
 	const char *desc;
 };
 
-#define FLD_CMP_MASK	0x00FF0000
-#define FLD_CMP_EQUAL	0x00010000
-#define FLD_CMP_NOT	0x00020000
-#define FLD_CMP_GT	0x00040000
-#define FLD_CMP_LT	0x00080000
-#define FLD_CMP_REGEX	0x00100000
-#define FLD_CMP_NUMBER  0x00200000
+#define FLD_CMP_MASK		0x00FF0000
+#define FLD_CMP_UNCOMPARABLE	0x00010000
+#define FLD_CMP_EQUAL		0x00020000
+#define FLD_CMP_NOT		0x00040000
+#define FLD_CMP_GT		0x00080000
+#define FLD_CMP_LT		0x00100000
+#define FLD_CMP_REGEX		0x00200000
+#define FLD_CMP_NUMBER		0x00400000
 /*
  * #define FLD_CMP_STRING 0x00400000
  * We could defined FLD_CMP_STRING here for completeness here,
@@ -227,15 +228,15 @@ static const struct dm_report_object_type _implicit_common_report_types[] = {
 };
 
 static const struct dm_report_field_type _implicit_common_report_fields[] = {
-	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ID, "Help", _no_report_fn, "Show help." },
-	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ALT_ID, "Help", _no_report_fn, "Show help." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER | FLD_CMP_UNCOMPARABLE, 0, 8, COMMON_FIELD_HELP_ID, "Help", _no_report_fn, "Show help." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER | FLD_CMP_UNCOMPARABLE, 0, 8, COMMON_FIELD_HELP_ALT_ID, "Help", _no_report_fn, "Show help." },
 	{ 0, 0, 0, 0, "", "", 0, 0}
 };
 
 static const struct dm_report_field_type _implicit_common_report_fields_with_selection[] = {
 	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_SELECTED_ID, "Selected", _selected_disp, "Item passes selection criteria." },
-	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ID, "Help", _no_report_fn, "Show help." },
-	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER, 0, 8, COMMON_FIELD_HELP_ALT_ID, "Help", _no_report_fn, "Show help." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER | FLD_CMP_UNCOMPARABLE, 0, 8, COMMON_FIELD_HELP_ID, "Help", _no_report_fn, "Show help." },
+	{ COMMON_REPORT_TYPE, DM_REPORT_FIELD_TYPE_NUMBER | FLD_CMP_UNCOMPARABLE, 0, 8, COMMON_FIELD_HELP_ALT_ID, "Help", _no_report_fn, "Show help." },
 	{ 0, 0, 0, 0, "", "", 0, 0}
 };
 
@@ -2452,8 +2453,18 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		goto bad;
 	}
 
-	ft = implicit ? &_implicit_report_fields[field_num]
-		      : &rh->fields[field_num];
+	if (implicit) {
+		ft = &_implicit_report_fields[field_num];
+		if (ft->flags & FLD_CMP_UNCOMPARABLE) {
+			c = we[0];
+			tmp = (char *) we;
+			tmp[0] = '\0';
+			log_error("Selection field is uncomparable: %s.", ws);
+			tmp[0] = c;
+			goto bad;
+		}
+	} else
+		ft = &rh->fields[field_num];
 
 	/* comparison operator */
 	if (!(flags = _tok_op_cmp(we, &last))) {
