@@ -1,3 +1,6 @@
+Version 2.02.108 -
+=================================
+
 Version 2.02.107 - 23rd June 2014
 =================================
   Introduce LCK_ACTIVATION to avoid concurrent activation of basic LV types.
