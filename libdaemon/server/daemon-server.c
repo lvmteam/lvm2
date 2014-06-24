@@ -497,7 +497,8 @@ static void reap(daemon_state s, int waiting)
 
 	while (ts) {
 		if (waiting || !ts->active) {
-			pthread_join(ts->client.thread_id, &rv);
+			if ((errno = pthread_join(ts->client.thread_id, &rv)))
+				ERROR(&s, "pthread_join failed: %s", strerror(errno));
 			last->next = ts->next;
 			dm_free(ts);
 		} else

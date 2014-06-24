@@ -642,7 +642,10 @@ static int _init_profiles(struct cmd_context *cmd)
 		dm_list_init(&cmd->profile_params->profiles);
 	}
 
-	dm_strncpy(cmd->profile_params->dir, dir, sizeof(cmd->profile_params->dir));
+	if (!(dm_strncpy(cmd->profile_params->dir, dir, sizeof(cmd->profile_params->dir)))) {
+		log_error("_init_profiles: dm_strncpy failed");
+		return 0;
+	}
 
 	return 1;
 }

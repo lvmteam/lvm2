@@ -110,12 +110,12 @@ static void _cluster_init_completed(void)
 	clvmd_cluster_init_completed();
 }
 
-static int _get_main_cluster_fd()
+static int _get_main_cluster_fd(void)
 {
 	return cman_get_fd(c_handle);
 }
 
-static int _get_num_nodes()
+static int _get_num_nodes(void)
 {
 	int i;
 	int nnodes = 0;
@@ -243,7 +243,7 @@ static void _add_up_node(const char *csid)
 	DEBUGLOG("Added new node %d to updown list\n", nodeid);
 }
 
-static void _cluster_closedown()
+static void _cluster_closedown(void)
 {
 	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
 	cman_finish(c_handle);
@@ -282,7 +282,7 @@ static void count_clvmds_running(void)
 }
 
 /* Get a list of active cluster members */
-static void get_members()
+static void get_members(void)
 {
 	int retnodes;
 	int status;
@@ -380,7 +380,7 @@ static int nodeid_from_csid(const char *csid)
 	return nodeid;
 }
 
-static int _is_quorate()
+static int _is_quorate(void)
 {
 	return cman_is_quorate(c_handle);
 }

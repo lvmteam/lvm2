@@ -370,7 +370,7 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	/* FIXME: handle tags */
 	if (!(pvl = find_pv_in_vg(vg_from, pv_name))) {
 		if (!enforce_pv_from_source &&
-		    (pvl = find_pv_in_vg(vg_to, pv_name)))
+		    find_pv_in_vg(vg_to, pv_name))
 			/*
 			 * PV has already been moved.  This can happen if an
 			 * LV is being moved that has multiple sub-LVs on the

@@ -865,7 +865,7 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 			    (first_seg(seg_metalv(seg, s))->segtype != error_segtype))
 				continue;
 
-			if (target_pvs && !dm_list_empty(target_pvs) &&
+			if (!dm_list_empty(target_pvs) &&
 			    (target_pvs != &lv->vg->pvs)) {
 				/*
 				 * User has supplied a list of PVs, but we

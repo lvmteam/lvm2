@@ -334,7 +334,7 @@ struct dm_config_tree *remove_config_tree_by_source(struct cmd_context *cmd,
 struct cft_check_handle *get_config_tree_check_handle(struct cmd_context *cmd,
 						      struct dm_config_tree *cft)
 {
-	struct config_source *cs = dm_config_get_custom(cft);
+	struct config_source *cs;
 
 	if (!(cs = dm_config_get_custom(cft)))
 		return NULL;
@@ -438,7 +438,6 @@ static int _override_config_tree_from_metadata_profile(struct cmd_context *cmd,
 	if (cs->type == CONFIG_PROFILE_COMMAND) {
 		cft_previous = cft;
 		cft = cft->cascade;
-		cs = dm_config_get_custom(cft);
 	}
 
 	cs = dm_config_get_custom(cft);

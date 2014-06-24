@@ -1050,13 +1050,13 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	struct dm_report *rh;
 	const struct dm_report_object_type *type;
 
+	if (_contains_reserved_report_type(types))
+		return_NULL;
+
 	if (!(rh = dm_zalloc(sizeof(*rh)))) {
 		log_error("dm_report_init: dm_malloc failed");
-		return 0;
+		return NULL;
 	}
-
-	if (_contains_reserved_report_type(types))
-		return_0;
 
 	/*
 	 * rh->report_types is updated in _parse_fields() and _parse_keys()
@@ -1432,7 +1432,7 @@ int dm_report_object(struct dm_report *rh, void *object)
 
 	if (!rh) {
 		log_error(INTERNAL_ERROR "dm_report handler is NULL.");
-		goto out;
+		return 0;
 	}
 
 	if (rh->flags & RH_ALREADY_REPORTED)
@@ -1440,7 +1440,7 @@ int dm_report_object(struct dm_report *rh, void *object)
 
 	if (!(row = dm_pool_zalloc(rh->mem, sizeof(*row)))) {
 		log_error("dm_report_object: struct row allocation failed");
-		goto out;
+		return 0;
 	}
 
 	row->rh = rh;
