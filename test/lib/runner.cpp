@@ -55,11 +55,12 @@
 
 pid_t kill_pid = 0;
 bool fatal_signal = false;
+bool interrupt = false;
 
 struct Options {
-	bool verbose, quiet, interactive;
+	bool verbose, quiet, interactive, cont;
 	std::string testdir, outdir;
-	Options() : verbose( false ), quiet( false ), interactive( false ) {}
+	Options() : verbose( false ), quiet( false ), interactive( false ), cont( false ) {}
 };
 
 struct TestProcess
@@ -114,6 +115,8 @@ struct TestCase {
 
 	time_t start, end;
 	Options options;
+
+	Journal *journal;
 
 	void pipe() {
 		int fds[2];
@@ -175,7 +178,7 @@ struct TestCase {
 	}
 
 	std::string tag( std::string n ) {
-		int pad = (8 - n.length());
+		int pad = (12 - n.length());
 		return "### " + std::string( pad, ' ' ) + n + ": ";
 	}
 
@@ -217,7 +220,9 @@ struct TestCase {
 				r = Journal::SKIPPED;
 			else
 				r = Journal::FAILED;
-		} else
+		} else if ( interrupt && WIFSIGNALED( status ) && WTERMSIG( status ) == SIGINT )
+			r = Journal::INTERRUPTED;
+		else
 			r = Journal::FAILED;
 
 		::close( io.fd );
@@ -228,6 +233,7 @@ struct TestCase {
 			close(fd_debuglog);
 		} */
 
+		journal->done( name, r );
 		progress( Last ) << tag( r ) << name << std::endl;
 	}
 
@@ -241,6 +247,7 @@ struct TestCase {
 			io.close();
 			child.exec();
 		} else {
+			journal->started( name );
 			progress( First ) << tag( "running" ) << name << std::flush;
 			if ( options.verbose || options.interactive )
 				progress() << std::endl;
@@ -249,8 +256,8 @@ struct TestCase {
 		}
 	}
 
-	TestCase( Options opt, std::string path, std::string name )
-		: timeout( false ), silent_ctr( 0 ), child( path ), name( name ), options( opt )
+	TestCase( Journal &j, Options opt, std::string path, std::string name )
+		: timeout( false ), silent_ctr( 0 ), child( path ), name( name ), options( opt ), journal( &j )
 	{
 		if ( opt.verbose )
 			io.sinks.push_back( new FdSink( 1 ) );
@@ -276,10 +283,12 @@ struct Main {
 				continue;
 			if ( i->substr( 0, 4 ) == "lib/" )
 				continue;
-			cases.push_back( TestCase( options, options.testdir + *i, *i ) );
+			cases.push_back( TestCase( journal, options, options.testdir + *i, *i ) );
 			cases.back().options = options;
 		}
 
+		if ( options.cont )
+			journal.read();
 	}
 
 	void run() {
@@ -288,6 +297,10 @@ struct Main {
 		std::cerr << "running " << cases.size() << " tests" << std::endl;
 
 		for ( Cases::iterator i = cases.begin(); i != cases.end(); ++i ) {
+
+			if ( options.cont && journal.done( i->name ) )
+				continue;
+
 			i->run();
 
 			if ( time(0) - start > 3 * 3600 ) {
@@ -304,14 +317,16 @@ struct Main {
 			exit( 1 );
 	}
 
-	Main( Options o ) : die( false ), options( o ) {}
+	Main( Options o ) : die( false ), options( o ), journal( o.outdir ) {}
 };
 
 static void handler( int sig ) {
-	signal( sig, SIG_DFL );
+	signal( sig, SIG_DFL ); /* die right away next time */
 	if ( kill_pid > 0 )
 		kill( -kill_pid, sig );
 	fatal_signal = true;
+	if ( sig == SIGINT )
+		interrupt = true;
 }
 
 void setup_handlers() {
@@ -377,6 +392,9 @@ int main(int argc, char **argv)
 {
 	Args args( argc, argv );
 	Options opt;
+
+	if ( args.has( "--continue" ) )
+		opt.cont = true;
 
 	if ( args.has( "--quiet" ) || getenv( "QUIET" ) ) {
 		opt.verbose = false;

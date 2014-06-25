@@ -1,7 +1,10 @@
 // -*- C++ -*-
 
 #include <map>
+#include <string>
 #include <iostream>
+#include <fstream>
+#include <iterator>
 
 #ifndef RUNNER_JOURNAL_H
 #define RUNNER_JOURNAL_H
@@ -9,6 +12,7 @@
 struct Journal {
 	enum R {
 		STARTED,
+		RETRIED,
 		UNKNOWN,
 		FAILED,
 		INTERRUPTED,
@@ -32,8 +36,58 @@ struct Journal {
 		}
 	}
 
+	friend std::istream &operator>>( std::istream &i, R &r ) {
+		std::string x;
+		i >> x;
+
+		r = UNKNOWN;
+		if ( x == "started" ) r = STARTED;
+		if ( x == "retried" ) r = RETRIED;
+		if ( x == "failed" ) r = FAILED;
+		if ( x == "interrupted" ) r = INTERRUPTED;
+		if ( x == "passed" ) r = PASSED;
+		if ( x == "skipped" ) r = SKIPPED;
+		if ( x == "timeout" ) r = TIMEOUT;
+		if ( x == "warnings" ) r = WARNED;
+		return i;
+	}
+
+	template< typename S, typename T >
+	friend std::istream &operator>>( std::istream &i, std::pair< S, T > &r ) {
+		return i >> r.first >> r.second;
+	}
+
 	typedef std::map< std::string, R > Status;
 	Status status;
+
+	std::string location_tmp, location;
+
+	void sync() {
+		std::ofstream of( location_tmp.c_str() );
+		for ( Status::iterator i = status.begin(); i != status.end(); ++i )
+			of << i->first << " " << i->second << std::endl;
+		of.close();
+		rename( location_tmp.c_str(), location.c_str() );
+	}
+
+	void started( std::string n ) {
+		if ( status.count( n ) && status[ n ] == STARTED )
+			status[ n ] = RETRIED;
+		else
+			status[ n ] = STARTED;
+		sync();
+	}
+
+	void done( std::string n, R r ) {
+		status[ n ] = r;
+		sync();
+	}
+
+	bool done( std::string n ) {
+		if ( !status.count( n ) )
+			return false;
+		return status[ n ] != STARTED && status[ n ] != INTERRUPTED;
+	}
 
 	int count( R r ) {
 		int c = 0;
@@ -53,6 +107,17 @@ struct Journal {
 			if ( i->second != PASSED )
 				std::cout << i->second << ": " << i->first << std::endl;
 	}
+
+	void read() {
+		std::ifstream ifs( location.c_str() );
+		typedef std::istream_iterator< std::pair< std::string, R > > It;
+		std::copy( It( ifs ), It(), std::inserter( status, status.begin() ) );
+	}
+
+	Journal( std::string dir )
+		: location( dir + "/journal" ),
+		  location_tmp( dir + "/journal.tmp" )
+	{}
 };
 
 #endif
