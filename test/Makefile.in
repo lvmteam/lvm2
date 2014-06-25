@@ -38,7 +38,6 @@ export LVM_TEST_CACHE_RESTORE_CMD?=@CACHE_RESTORE_CMD@
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
 CXXSOURCES = lib/runner.cpp
-CXXFLAGS = -std=c++11
 
 include $(top_builddir)/make.tmpl
 
@@ -137,9 +136,10 @@ lib/invalid: lib/not
 lib/fail: lib/not
 	ln -sf not lib/fail
 
-
 lib/runner: lib/runner.o .lib-dir-stamp
 	$(CXX) $(LDFLAGS) -o $@ $<
+
+lib/runner.o: $(wildcard $(srcdir)/lib/*.h)
 
 lib/%: lib/%.o .lib-dir-stamp
 	$(CC) $(LDFLAGS) -o $@ $<
