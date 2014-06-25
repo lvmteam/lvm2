@@ -62,11 +62,15 @@ struct Journal {
 
 	std::string location_tmp, location;
 
-	void sync() {
-		std::ofstream of( location_tmp.c_str() );
+	void write( std::string path ) {
+		std::ofstream of( path.c_str() );
 		for ( Status::iterator i = status.begin(); i != status.end(); ++i )
 			of << i->first << " " << i->second << std::endl;
 		of.close();
+	}
+
+	void sync() {
+		write( location_tmp );
 		rename( location_tmp.c_str(), location.c_str() );
 	}
 

@@ -315,6 +315,7 @@ struct Main {
 		}
 
 		journal.banner();
+		journal.write( options.outdir + "/list" );
 		if ( die || fatal_signal )
 			exit( 1 );
 	}
