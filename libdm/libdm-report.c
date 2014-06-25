@@ -1354,6 +1354,7 @@ static int _compare_selection_field(struct dm_report *rh,
 				 */
 				if (*(const uint64_t *) f->sort_value > DM_PERCENT_100)
 					return 0;
+				/* fall through */
 			case DM_REPORT_FIELD_TYPE_NUMBER:
 				r = _cmp_field_int(field_id, *(const uint64_t *) f->sort_value, fs->v.i, fs->flags);
 				break;
@@ -1839,7 +1840,7 @@ static const char *_tok_value_regex(struct dm_report *rh,
 		case '(': c = ')'; break;
 		case '{': c = '}'; break;
 		case '[': c = ']'; break;
-		case '"':
+		case '"': /* fall through */
 		case '\'': c = *s; break;
 		default:  c = 0;
 	}
@@ -2075,7 +2076,9 @@ static const char *_tok_value(struct dm_report *rh,
 			break;
 
 		case DM_REPORT_FIELD_TYPE_NUMBER:
+			/* fall through */
 		case DM_REPORT_FIELD_TYPE_SIZE:
+			/* fall through */
 		case DM_REPORT_FIELD_TYPE_PERCENT:
 			if (!(s = _tok_value_number(s, begin, end))) {
 				log_error("Failed to parse numeric value "
