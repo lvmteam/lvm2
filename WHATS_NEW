@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Always reevaluate filters just before creating PV.
 
 Version 2.02.107 - 23rd June 2014
 =================================

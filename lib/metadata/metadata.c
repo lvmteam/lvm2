@@ -1337,6 +1337,13 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
+	/*
+	 * Make sure we don't overwrite any existing signature
+	 * that may have been created after last time we did filtering.
+	 */
+	if (cmd->filter->wipe)
+		cmd->filter->wipe(cmd->filter);
+
 	/* Is there a pv here already? */
 	pv = find_pv_by_name(cmd, name, 1, 1);
 
