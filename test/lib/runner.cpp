@@ -75,6 +75,7 @@ struct TestProcess
 			close( STDIN_FILENO );
 			dup2( fd, STDOUT_FILENO );
 			dup2( fd, STDERR_FILENO );
+			close( fd );
 		}
 
 		environment();
@@ -225,7 +226,7 @@ struct TestCase {
 		else
 			r = Journal::FAILED;
 
-		::close( io.fd );
+		io.close();
 
 		/*
 		if ((fd_debuglog = open(testdirdebug, O_RDONLY)) != -1) {
@@ -247,6 +248,7 @@ struct TestCase {
 			io.close();
 			child.exec();
 		} else {
+			::close( child.fd );
 			journal->started( name );
 			progress( First ) << tag( "running" ) << name << std::flush;
 			if ( options.verbose || options.interactive )
