@@ -391,6 +391,15 @@ struct Args {
 	}
 };
 
+bool hasenv( const char *name ) {
+	const char *v = getenv( name );
+	if ( !v )
+		return false;
+	if ( strlen( v ) == 0 || !strcmp( v, "0" ) )
+		return false;
+	return true;
+}
+
 int main(int argc, char **argv)
 {
 	Args args( argc, argv );
@@ -399,17 +408,17 @@ int main(int argc, char **argv)
 	if ( args.has( "--continue" ) )
 		opt.cont = true;
 
-	if ( args.has( "--quiet" ) || getenv( "QUIET" ) ) {
+	if ( args.has( "--quiet" ) || hasenv( "QUIET" ) ) {
 		opt.verbose = false;
 		opt.quiet = true;
 	}
 
-	if ( args.has( "--verbose" ) || getenv( "VERBOSE" ) ) {
+	if ( args.has( "--verbose" ) || hasenv( "VERBOSE" ) ) {
 		opt.quiet = false;
 		opt.verbose = true;
 	}
 
-	if ( args.has( "--interactive" ) || getenv( "INTERACTIVE" ) ) {
+	if ( args.has( "--interactive" ) || hasenv( "INTERACTIVE" ) ) {
 		opt.verbose = false;
 		opt.quiet = false;
 		opt.interactive = true;
