@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Enhance private volumes UUIDs with suffixed for easier detection.
   Do not use reserved _[tc]meta volumes for temporary LVs.
   Leave backup pool metadata with _meta%d suffix instead of reserved _tmeta%d.
   Allow RAID repair to reuse PVs from same image that suffered a failure.

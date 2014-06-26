@@ -178,8 +178,24 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 {
 	const char *lvid = lv->lvid.s;
 
-	if (!layer && lv_is_thin_pool(lv))
-		layer = "pool";
+	if (!layer) {
+		/*
+		 * Mark internal LVs with layer suffix
+		 * so tools like blkid may immeditelly see it's
+		 * an internal LV they should not scan
+                 * Should also make internal detection simpler
+		 */
+		layer = lv_is_cache_pool_data(lv) ? "cdata" :
+			lv_is_cache_pool_metadata(lv) ? "cmeta" :
+			lv_is_mirror_image(lv) ? "mimage" :
+			lv_is_mirror_log(lv) ? "mlog" :
+			lv_is_raid_image(lv) ? "rimage" :
+			lv_is_raid_metadata(lv) ? "rmeta" :
+			lv_is_thin_pool(lv) ? "pool" :
+			lv_is_thin_pool_data(lv) ? "tdata" :
+			lv_is_thin_pool_metadata(lv) ? "tmeta" :
+			NULL;
+	}
 
 	return dm_build_dm_uuid(mem, UUID_PREFIX, lvid, layer);
 }
