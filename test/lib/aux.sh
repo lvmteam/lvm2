@@ -273,7 +273,7 @@ prepare_loop() {
 	echo -n .
 
 	local LOOPFILE="$PWD/test.img"
-	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=0 seek=$(($size-1)) 2> /dev/null
+	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=0 seek=$(($size)) 2> /dev/null
 	if LOOP=$(losetup -s -f "$LOOPFILE" 2>/dev/null); then
 		:
 	elif LOOP=$(losetup -f) && losetup "$LOOP" "$LOOPFILE"; then
@@ -295,7 +295,9 @@ prepare_loop() {
 		done
 	fi
 	test -n "$LOOP" # confirm or fail
+	BACKING_DEV="$LOOP"
 	echo "$LOOP" > LOOP
+	echo "$LOOP" > BACKING_DEV
 	echo "ok ($LOOP)"
 }
 
@@ -339,20 +341,24 @@ cleanup_scsi_debug_dev() {
 	rm -f SCSI_DEBUG_DEV LOOP
 }
 
+prepare_backing_dev() {
+	if test -b "$LVM_TEST_BACKING_DEVICE"; then
+		BACKING_DEV="$LVM_TEST_BACKING_DEVICE"
+		echo "$BACKING_DEV" > BACKING_DEV
+	else
+		prepare_loop "$@"
+	fi
+}
+
 prepare_devs() {
 	local n=${1:-3}
 	local devsize=${2:-34}
 	local pvname=${3:-pv}
-	local loopsz
 
-	prepare_loop $(($n*$devsize))
+	prepare_backing_dev $(($n*$devsize))
 	echo -n "## preparing $n devices..."
 
-	if ! loopsz=$(blockdev --getsz "$LOOP" 2>/dev/null); then
-		loopsz=$(blockdev --getsize "$LOOP" 2>/dev/null)
-	fi
-
-	local size=$(($loopsz/$n))
+	local size=$(($devsize*2048)) # sectors
 	local count=0
 	init_udev_transaction
 	for i in $(seq 1 $n); do
@@ -360,10 +366,15 @@ prepare_devs() {
 		local dev="$DM_DEV_DIR/mapper/$name"
 		DEVICES[$count]=$dev
 		count=$(( $count + 1 ))
-		echo 0 $size linear "$LOOP" $((($i-1)*$size)) > "$name.table"
+		echo 0 $size linear "$BACKING_DEV" $((($i-1)*$size)) > "$name.table"
 		dmsetup create -u "TEST-$name" "$name" "$name.table"
 	done
 	finish_udev_transaction
+
+	# non-ephemeral devices need to be cleared between tests
+	test -f LOOP || for d in ${DEVICES[@]}; do
+		dd if=/dev/zero of=$d bs=1M count=1
+	done
 
 	#for i in `seq 1 $n`; do
 	#	local name="${PREFIX}$pvname$i"
