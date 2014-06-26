@@ -270,6 +270,7 @@ struct TestCase {
 			exit(201);
 		} else if (pid == 0) {
 			io.close();
+			chdir( options.testdir.c_str() );
 			setenv("LVM_TEST_FLAVOUR", flavour.c_str(), 1);
 			child.exec();
 		} else {
