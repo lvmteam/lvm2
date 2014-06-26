@@ -53,6 +53,7 @@ struct Sink {
 	virtual void outline( bool ) {}
 	virtual void push( std::string x ) = 0;
 	virtual void sync() {}
+	virtual ~Sink() {}
 };
 
 struct BufSink : Sink {
@@ -241,10 +242,13 @@ struct IO : Sink {
 		return *this;
 	}
 
-	~IO() {
+	void clear() {
 		for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
 			delete *i;
+		sinks.clear();
 	}
+
+	~IO() { clear(); }
 
 };
 
