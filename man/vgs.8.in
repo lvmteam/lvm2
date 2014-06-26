@@ -85,7 +85,7 @@ E(x)ported
 (p)artial: one or more physical volumes belonging to the volume group
 are missing from the system
 .IP 5 3
-Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere, (i)nherited
+Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere
 .IP 6 3
 (c)lustered
 .RE
