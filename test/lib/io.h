@@ -55,6 +55,23 @@ struct Sink {
 	virtual void sync() {}
 };
 
+struct BufSink : Sink {
+	std::vector< char > data;
+	virtual void push( std::string x ) {
+		std::copy( x.begin(), x.end(), std::back_inserter( data ) );
+	}
+
+	void dump( std::ostream &o ) {
+		std::vector< char >::iterator b = data.begin(), e = data.begin();
+		o << std::endl;
+		while ( e != data.end() ) {
+			e = std::find( b, data.end(), '\n' );
+			o << "| " << std::string( b, e ) << std::endl;
+			b = (e == data.end() ? e : e + 1);
+		}
+	}
+};
+
 struct FdSink : Sink {
 	int fd;
 
