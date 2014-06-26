@@ -95,6 +95,8 @@ struct FdSink : Sink {
 	}
 
 	virtual void sync() {
+		if ( killed )
+			return;
 		while ( !stream.empty() )
 			outline( true );
 	}
@@ -105,6 +107,26 @@ struct FdSink : Sink {
 	}
 
 	FdSink( int _fd ) : fd( _fd ), killed( false ) {}
+};
+
+struct FileSink : FdSink {
+	std::string file;
+	FileSink( std::string n ) : FdSink( -1 ), file( n ) {}
+
+	void sync() {
+		if ( fd < 0 && !killed ) {
+			fd = open( file.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644 );
+			if ( fd < 0 )
+				killed = true;
+		}
+		FdSink::sync();
+	}
+	~FileSink() {
+		if ( fd >= 0 ) {
+			fsync( fd );
+			close( fd );
+		}
+	}
 };
 
 struct Observer : Sink {
