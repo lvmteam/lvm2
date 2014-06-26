@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Allow RAID repair to reuse PVs from same image that suffered a failure.
   New RAID images now avoid allocation on any PVs in the same parent RAID LV.
   Always reevaluate filters just before creating PV.
 

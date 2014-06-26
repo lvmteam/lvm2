@@ -27,7 +27,8 @@ lvconvert -m 0 $vg/$lv1
 # lvconvert --type raid1 -m 1 --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
 lvremove -ff $vg
 
-# Setup 2-way RAID1 LV to spread across 4 devices.
+
+# Setup 2-way RAID1 LV, spread across 4 devices.
 # For each image:
 #  - metadata LV + 1 image extent (2 total extents) on one PV
 #  - 2 image extents on the other PV
@@ -43,15 +44,28 @@ aux wait_for_sync $vg $lv1
 # Should not be enough non-overlapping space.
 not lvconvert -m +1 $vg/$lv1 \
     "$dev5:0-1" "$dev1" "$dev2" "$dev3" "$dev4"
-
 lvconvert -m +1 $vg/$lv1 "$dev5"
 lvconvert -m 0 $vg/$lv1
-
 # Should work due to '--alloc anywhere'
 # RAID conversion not honoring allocation policy!
 #lvconvert -m +1 --alloc anywhere $vg/$lv1 \
 #    "$dev5:0-1" "$dev1" "$dev2" "$dev3" "$dev4"
 lvremove -ff $vg
 
+
+# Setup 2-way RAID1 LV, spread across 4 devices
+#  - metadata LV + 1 image extent (2 total extents) on one PV
+#  - 2 image extents on the other PV
+# Kill one PV.  There should be enough space on the remaining
+# PV for that image to reallocate the entire image there and
+# still maintain redundancy.
+lvcreate --type raid1 -m 1 -l 3 -n $lv1 $vg \
+    "$dev1:0-1" "$dev2:0-1" "$dev3:0-1" "$dev4:0-1"
+aux wait_for_sync $vg $lv1
+aux disable_dev "$dev1"
+lvconvert --repair -y $vg/$lv1 "$dev1" "$dev2" "$dev3" "$dev4"
+#FIXME: ensure non-overlapping images (they should not share PVs)
+aux enable_dev "$dev1"
+lvremove -ff $vg
 
 vgremove -ff $vg
