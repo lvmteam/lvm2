@@ -207,18 +207,21 @@ prepare_test_vars() {
 	done
 }
 
-# check if $abs_top_builddir was already set via 'lib/paths'
-test -n "${abs_top_builddir+varset}" || . lib/paths || die "you must run make first"
+if test -z "${abs_top_builddir+varset}" && test -z "${installed_testsuite+varset}"; then
+    . lib/paths || die "something went wrong -- lib/paths is missing?"
+fi
 
-case "$PATH" in
-*"$abs_top_builddir/test/lib"*) ;;
-*)
-	PATH="$abs_top_builddir/test/lib":"$abs_top_builddir/test/api":$PATH
-	for i in `find $abs_top_builddir -name \*.so`; do
-		p=`dirname $i`
-		LD_LIBRARY_PATH="$p":$LD_LIBRARY_PATH
-	done
-        export PATH LD_LIBRARY_PATH ;;
-esac
+if test -z "${installed_testsuite+varset}"; then
+    case "$PATH" in
+    *"$abs_top_builddir/test/lib"*) ;;
+    *)
+	    PATH="$abs_top_builddir/test/lib":"$abs_top_builddir/test/api":$PATH
+	    for i in `find $abs_top_builddir -name \*.so`; do
+		    p=`dirname $i`
+		    LD_LIBRARY_PATH="$p":$LD_LIBRARY_PATH
+	    done
+            export PATH LD_LIBRARY_PATH ;;
+    esac
+fi
 
 test -z "$PREFIX" || prepare_test_vars
