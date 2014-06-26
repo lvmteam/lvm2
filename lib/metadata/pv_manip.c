@@ -246,8 +246,65 @@ int discard_pv_segment(struct pv_segment *peg, uint32_t discard_area_reduction)
 	return 1;
 }
 
+static int _merge_free_pv_segment(struct pv_segment *peg)
+{
+	struct dm_list *l;
+	struct pv_segment *merge_peg;
+
+	if (peg->lvseg) {
+		log_error(INTERNAL_ERROR
+			  "_merge_free_pv_seg called on a"
+			  " segment that is not free.");
+		return 0;
+	}
+
+	/*
+	 * FIXME:
+	 * Should we free the list element once it is deleted
+	 * from the list?  I think not.  It is likely part of
+	 * a mempool.
+	 */
+	/* Attempt to merge with Free space before */
+	if ((l = dm_list_prev(&peg->pv->segments, &peg->list))) {
+		merge_peg = dm_list_item(l, struct pv_segment);
+		if (!merge_peg->lvseg) {
+			merge_peg->len += peg->len;
+			dm_list_del(&peg->list);
+			peg = merge_peg;
+		}
+	}
+
+	/* Attempt to merge with Free space after */
+	if ((l = dm_list_next(&peg->pv->segments, &peg->list))) {
+		merge_peg = dm_list_item(l, struct pv_segment);
+		if (!merge_peg->lvseg) {
+			peg->len += merge_peg->len;
+			dm_list_del(&merge_peg->list);
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * release_pv_segment
+ * @peg
+ * @area_reduction
+ *
+ * WARNING: When release_pv_segment is called, the freed space may be
+ *          merged into the 'pv_segment's before and after it in the
+ *          list if they are also free.  Thus, any iterators of the
+ *          'pv->segments' list that call this function must be aware
+ *          that the list can change in a way that is unsafe even for
+ *          *_safe iterators.  Restart the iterator in these cases.
+ *
+ * Returns: 1 on success, 0 on failure
+ */
 int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
+	struct dm_list *l;
+	struct pv_segment *merge_peg;
+
 	if (!peg->lvseg) {
 		log_error("release_pv_segment with unallocated segment: "
 			  "%s PE %" PRIu32, pv_dev_name(peg->pv), peg->pe);
@@ -261,15 +318,19 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 		peg->lvseg = NULL;
 		peg->lv_area = 0;
 
-		/* FIXME merge free space */
-
-		return 1;
+		return _merge_free_pv_segment(peg);
 	}
 
 	if (!pv_split_segment(peg->lvseg->lv->vg->vgmem,
 			      peg->pv, peg->pe + peg->lvseg->area_len -
 			      area_reduction, NULL))
 		return_0;
+
+	/* The segment after 'peg' now holds free space, try to merge it */
+	if ((l = dm_list_next(&peg->pv->segments, &peg->list))) {
+		merge_peg = dm_list_item(l, struct pv_segment);
+		return _merge_free_pv_segment(merge_peg);
+	}
 
 	return 1;
 }
