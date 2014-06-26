@@ -86,6 +86,7 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 void alloc_destroy(struct alloc_handle *ah);
 
 struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
-					     unsigned use_pvmove_parent_lv);
+					     unsigned use_pvmove_parent_lv,
+					     unsigned create_single_list);
 
 #endif

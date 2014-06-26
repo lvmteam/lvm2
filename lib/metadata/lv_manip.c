@@ -4664,15 +4664,30 @@ static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
 }
 
 /*
- * Construct dm_list of segments of LVs showing which PVs they use.
- * For pvmove we use the *parent* LV so we can pick up stripes & existing mirrors etc.
+ * build_parallel_areas_from_lv
+ * @lv
+ * @use_pvmove_parent_lv
+ * @create_single_list
+ *
+ * For each segment in an LV, create a list of PVs used by the segment.
+ * Thus, the returned list is really a list of segments (seg_pvs)
+ * containing a list of PVs that are in use by that segment.
+ *
+ * use_pvmove_parent_lv:  For pvmove we use the *parent* LV so we can
+ *                        pick up stripes & existing mirrors etc.
+ * create_single_list  :  Instead of creating a list of segments that
+ *                        each contain a list of PVs, return a list
+ *                        containing just one segment (i.e. seg_pvs)
+ *                        that contains a list of all the PVs used by
+ *                        the entire LV and all it's segments.
  */
 struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
-					     unsigned use_pvmove_parent_lv)
+					     unsigned use_pvmove_parent_lv,
+					     unsigned create_single_list)
 {
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct dm_list *parallel_areas;
-	struct seg_pvs *spvs;
+	struct seg_pvs *spvs = NULL;
 	uint32_t current_le = 0;
 	uint32_t raid_multiple;
 	struct lv_segment *seg = first_seg(lv);
@@ -4685,19 +4700,20 @@ struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 	dm_list_init(parallel_areas);
 
 	do {
-		if (!(spvs = dm_pool_zalloc(cmd->mem, sizeof(*spvs)))) {
-			log_error("allocation failed");
-			return NULL;
+		if (!spvs || !create_single_list) {
+			if (!(spvs = dm_pool_zalloc(cmd->mem, sizeof(*spvs)))) {
+				log_error("allocation failed");
+				return NULL;
+			}
+
+			dm_list_init(&spvs->pvs);
+			dm_list_add(parallel_areas, &spvs->list);
 		}
-
-		dm_list_init(&spvs->pvs);
-
 		spvs->le = current_le;
 		spvs->len = lv->le_count - current_le;
 
-		dm_list_add(parallel_areas, &spvs->list);
-
-		if (use_pvmove_parent_lv && !(seg = find_seg_by_le(lv, current_le))) {
+		if (use_pvmove_parent_lv &&
+		    !(seg = find_seg_by_le(lv, current_le))) {
 			log_error("Failed to find segment for %s extent %" PRIu32,
 				  lv->name, current_le);
 			return 0;
@@ -4718,7 +4734,16 @@ struct dm_list *build_parallel_areas_from_lv(struct logical_volume *lv,
 			seg->area_count - seg->segtype->parity_devs : 1;
 	} while ((current_le * raid_multiple) < lv->le_count);
 
-	/* FIXME Merge adjacent segments with identical PV lists (avoids need for contiguous allocation attempts between successful allocations) */
+	if (create_single_list) {
+		spvs->le = 0;
+		spvs->len = lv->le_count;
+	}
+
+	/*
+	 * FIXME:  Merge adjacent segments with identical PV lists
+	 * (avoids need for contiguous allocation attempts between
+	 * successful allocations)
+	 */
 
 	return parallel_areas;
 }
@@ -5165,7 +5190,7 @@ int split_parent_segments_for_layer(struct cmd_context *cmd,
 	uint32_t s;
 	struct dm_list *parallel_areas;
 
-	if (!(parallel_areas = build_parallel_areas_from_lv(layer_lv, 0)))
+	if (!(parallel_areas = build_parallel_areas_from_lv(layer_lv, 0, 0)))
 		return_0;
 
 	/* Loop through all LVs except itself */

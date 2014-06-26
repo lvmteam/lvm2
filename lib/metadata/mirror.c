@@ -1687,7 +1687,7 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 	uint32_t adjusted_region_size;
 	int r = 1;
 
-	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 1)))
+	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 1, 0)))
 		return_0;
 
 	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
@@ -1971,7 +1971,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 		return 1;
 	}
 
-	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0)))
+	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))
 		return_0;
 
 	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
@@ -2044,7 +2044,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	 * allocate destination extents
 	 */
 
-	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0)))
+	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))
 		return_0;
 
 	if (!(segtype = get_segtype_from_string(cmd, "mirror")))

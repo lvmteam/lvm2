@@ -392,7 +392,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 	if (!lvl_array)
 		return_0;
 
-	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0)))
+	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 1)))
 		return_0;
 
 	if (seg_is_linear(seg))
