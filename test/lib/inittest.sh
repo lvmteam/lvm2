@@ -39,19 +39,23 @@ test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
 trap 'aux teardown' EXIT # don't forget to clean up
 
 cd "$TESTDIR"
+mkdir lib
+
+# Setting up symlink from $i to $TESTDIR/lib
+test -n "$abs_top_builddir" && \
+    find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
+    -exec ln -s -t lib "{}" +
+find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
+    -o -name '*~' \)  -exec ln -s -t lib "{}" +
 
 if test -n "$LVM_TEST_FLAVOUR"; then
-	touch flavour_overrides
-	env | grep ^${LVM_TEST_FLAVOUR} | while read var; do
-		(echo -n "export "; echo $var | sed -e s,^${LVM_TEST_FLAVOUR}_,,) >> flavour_overrides
-	done
-	. flavour_overrides
+	. lib/flavour-$LVM_TEST_FLAVOUR
 fi
 
 DM_DEFAULT_NAME_MANGLING_MODE=none
 DM_DEV_DIR="$TESTDIR/dev"
 LVM_SYSTEM_DIR="$TESTDIR/etc"
-mkdir "$LVM_SYSTEM_DIR" "$TESTDIR/lib" "$DM_DEV_DIR"
+mkdir "$LVM_SYSTEM_DIR" "$DM_DEV_DIR"
 if test -n "$LVM_TEST_DEVDIR" ; then
 	DM_DEV_DIR=$LVM_TEST_DEVDIR
 else
@@ -75,12 +79,6 @@ if which getenforce &>/dev/null ; then
 else
 	echo "Selinux mode is not installed."
 fi
-
-# Setting up symlink from $i to $TESTDIR/lib
-find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
-	-exec ln -s -t lib "{}" +
-find "$abs_top_builddir/test/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
-	-o -name '*~' \)  -exec ln -s -t lib "{}" +
 
 # Set vars from utils now that we have TESTDIR/PREFIX/...
 prepare_test_vars
