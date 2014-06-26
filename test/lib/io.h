@@ -114,7 +114,6 @@ struct Observer : Sink {
 
 struct KMsg {
 	int fd;
-	char buf[ 4096 ];
 
 	bool dev_kmsg() {
 		return fd >= 0;
@@ -136,6 +135,8 @@ struct KMsg {
 	void read( Sink *s ) {
 		int sz;
 
+		char buf[ 128 * 1024 ];
+
 		if ( dev_kmsg() ) {
 			while ( (sz = ::read(fd, buf, sizeof(buf) - 1)) > 0 )
 				s->push( std::string( buf, sz ) );
@@ -144,8 +145,7 @@ struct KMsg {
 				read( s );
 			}
 		} else {
-			sz = klogctl( SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1 );
-			if ( sz > 0 )
+			while ( (sz = klogctl( SYSLOG_ACTION_READ_CLEAR, buf, sizeof(buf) - 1 )) > 0 )
 				s->push( std::string( buf, sz ) );
 		}
 	}
@@ -160,7 +160,6 @@ struct IO : Sink {
 
 	KMsg kmsg;
 	int fd;
-	char buf[ 4096 ];
 
 	virtual void push( std::string x ) {
 		for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
@@ -169,6 +168,8 @@ struct IO : Sink {
 
 	void sync() {
 		ssize_t sz;
+		char buf[ 128 * 1024 ];
+
 		while ( (sz = read(fd, buf, sizeof(buf) - 1)) > 0 )
 			push( std::string( buf, sz ) );
 
