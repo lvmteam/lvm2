@@ -61,7 +61,7 @@ ifeq ("@UDEV_SYNC@", "yes")
 dm_udev_synchronisation = 1
 endif
 
-all: check
+all: .tests-stamp
 
 help:
 	@echo -e "\nAvailable targets:"
@@ -100,32 +100,55 @@ help:
 	@echo "  VERBOSE		Verbose output (1), timing (2)."
 
 check: .tests-stamp
-	VERBOSE=$(VERBOSE) ./lib/runner --testdir shell --outdir results
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--only $(T) --skip $(S)
 
 check_system: .tests-stamp
-	VERBOSE=$(VERBOSE) \
-	scluster_LVM_TEST_LOCKING=3 \
-	slvmetad_LVM_TEST_LVMETAD=1 \
-	snormal_LVM_TEST_DEVDIR=/dev \
-	scluster_LVM_TEST_DEVDIR=/dev \
-	slvmetad_LVM_TEST_DEVDIR=/dev \
-	./lib/harness $(patsubst %,snormal:%,$(RUN_BASE)) \
-		      $(patsubst %,scluster:%,$(RUN_BASE)) \
-		      $(patsubst %,slvmetad:%,$(LVMETAD_RUN_BASE))
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--only udev- --only $(T) --skip $(S)
 
 check_cluster: .tests-stamp
-	@echo Testing with locking_type 3
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=3 ./lib/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--only ndev-cluster --only $(T) --skip $(S)
 
 check_local: .tests-stamp
-	@echo Testing with locking_type 1
-	VERBOSE=$(VERBOSE) LVM_TEST_LOCKING=1 ./lib/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--only ndev- --only $(T) --skip $(S)
 
 ifeq ("@BUILD_LVMETAD@", "yes")
 check_lvmetad: .tests-stamp
-	@echo Testing with lvmetad on
-	VERBOSE=$(VERBOSE) LVM_TEST_LVMETAD=1 ./lib/harness $(RUN_BASE)
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--only ndev-lvmetad --only $(T) --skip $(S)
 endif
+
+DATADIR = $(datadir)/lvm2-testsuite
+EXECDIR = $(libexecdir)/lvm2-testsuite
+
+LIB_FLAVOURS = lib/flavour-ndev-vanilla lib/flavour-ndev-cluster lib/flavour-ndev-lvmetad \
+               lib/flavour-udev-vanilla lib/flavour-udev-cluster lib/flavour-udev-lvmetad
+
+LIB_LOCAL = lib/paths lib/runner
+LIB_EXEC  = lib/not lib/invalid lib/fail lib/should
+LIB_SHARED = lib/check lib/aux lib/inittest lib/utils lib/get lib/lvm-wrapper
+
+install: .tests-stamp lib/paths-installed
+	@echo $(srcdir)
+	@echo $(LIB_FLAVOURS)
+	$(INSTALL_DIR) $(DATADIR)/{shell,api,lib}
+	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell/
+	$(INSTALL_DATA) api/*.sh $(DATADIR)/api/
+	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
+	$(INSTALL_DATA) $(LIB_FLAVOURS) $(DATADIR)/lib/
+	$(INSTALL_SCRIPT) $(LIB_SHARED) $(DATADIR)/lib/
+
+	$(INSTALL_DIR) $(EXECDIR)
+	$(INSTALL_PROGRAM) $(LIB_EXEC) $(EXECDIR)
+	$(INSTALL_PROGRAM) -D lib/runner $(bindir)/lvm2-testsuite
 
 lib/should: lib/not
 	ln -sf not lib/should
@@ -148,13 +171,10 @@ lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@
 	chmod +x $@
 
-lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
-	$(RM) $@-t
-	echo 'top_srcdir="$(top_srcdir)"' >> $@-t
-	echo 'abs_top_builddir="$(abs_top_builddir)"' >> $@-t
-	echo 'abs_top_srcdir="$(abs_top_srcdir)"' >> $@-t
-	echo 'abs_srcdir="$(abs_srcdir)"' >> $@-t
-	echo 'abs_builddir="$(abs_builddir)"' >> $@-t
+lib/flavour-%: $(srcdir)/lib/flavour-% .lib-dir-stamp
+	cp $< $@
+
+lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
 	echo 'export THIN=@THIN@' >> $@-t
 	echo 'export RAID=@RAID@' >> $@-t
@@ -172,11 +192,25 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'export LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD:-@CACHE_RESTORE_CMD@}' >> $@-t
 	mv $@-t $@
 
-LIB = lib/not lib/invalid lib/fail lib/should lib/harness \
-      lib/check lib/aux lib/inittest lib/utils lib/get lib/lvm-wrapper \
-      lib/paths lib/runner
+lib/paths-installed: lib/paths-common
+	$(RM) $@-t
+	cat lib/paths-common > $@-t
+	echo 'installed_testsuite=1' >> $@-t
+	echo 'export PATH=@libexecdir@/lvm2-testsuite:@datadir@/lvm2-testsuite/lib:$$PATH' >> $@-t
+	mv $@-t $@
+
+lib/paths: lib/paths-common
+	$(RM) $@-t
+	cat lib/paths-common > $@-t
+	echo 'top_srcdir="$(top_srcdir)"' >> $@-t
+	echo 'abs_top_builddir="$(abs_top_builddir)"' >> $@-t
+	echo 'abs_top_srcdir="$(abs_top_srcdir)"' >> $@-t
+	echo 'abs_srcdir="$(abs_srcdir)"' >> $@-t
+	echo 'abs_builddir="$(abs_builddir)"' >> $@-t
+	mv $@-t $@
 
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
+LIB = $(LIB_SHARED) $(LIB_LOCAL) $(LIB_EXEC) $(LIB_FLAVOURS)
 
 .tests-stamp: $(ALL) $(LIB) $(SUBDIRS)
 	@if test "$(srcdir)" != . ; then \
