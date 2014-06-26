@@ -112,10 +112,9 @@ struct TestCase {
 	struct rusage usage;
 	int status;
 	bool timeout;
-	int silent_ctr;
 	pid_t pid;
 
-	time_t start, end;
+	time_t start, end, silent_start;
 	Options options;
 
 	Journal *journal;
@@ -148,11 +147,13 @@ struct TestCase {
 
 	bool monitor() {
 		end = time( 0 );
-		if ( wait4(pid, &status, WNOHANG, &usage) != 0 )
+		if ( wait4(pid, &status, WNOHANG, &usage) != 0 ) {
+			io.sync();
 			return false;
+		}
 
 		/* kill off tests after a minute of silence */
-		if ( silent_ctr > 2 * 60 ) {
+		if ( end - silent_start > 60 ) {
 			kill( pid, SIGINT );
 			sleep( 5 ); /* wait a bit for a reaction */
 			if ( waitpid( pid, &status, WNOHANG ) == 0 ) {
@@ -175,14 +176,10 @@ struct TestCase {
 		if ( !options.verbose && !options.interactive )
 			progress( Update ) << tag( "running" ) << pretty() << " " << end - start << std::flush;
 
-		if ( select( io.fd + 1, &set, NULL, NULL, &wait ) <= 0 )
-		{
-			silent_ctr++;
-			return true;
-		}
+		if ( select( io.fd + 1, &set, NULL, NULL, &wait ) > 0 )
+			silent_start = end; /* something happened */
 
 		io.sync();
-		silent_ctr = 0;
 
 		return true;
 	}
@@ -216,7 +213,10 @@ struct TestCase {
 		return null;
 	}
 
-	void parent() {
+	void parent()
+	{
+		silent_start = start = time( 0 );
+
 		while ( monitor() );
 
 		Journal::R r = Journal::UNKNOWN;
