@@ -48,6 +48,15 @@ struct dir {
 
 typedef std::vector< std::string > Listing;
 
+inline void fsync_name( std::string n )
+{
+	int fd = open( n.c_str(), O_WRONLY );
+	if ( fd >= 0 ) {
+		fsync( fd );
+		close( fd );
+	}
+}
+
 inline Listing listdir( std::string p, bool recurse = false, std::string prefix = "" )
 {
 	Listing r;

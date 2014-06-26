@@ -1,5 +1,7 @@
 // -*- C++ -*-
 
+#include "filesystem.h"
+
 #include <map>
 #include <string>
 #include <iostream>
@@ -26,6 +28,7 @@ struct Journal {
 	friend std::ostream &operator<<( std::ostream &o, R r ) {
 		switch ( r ) {
 			case STARTED: return o << "started";
+			case RETRIED: return o << "retried";
 			case FAILED: return o << "failed";
 			case INTERRUPTED: return o << "interrupted";
 			case PASSED: return o << "passed";
@@ -71,6 +74,7 @@ struct Journal {
 
 	void sync() {
 		write( location_tmp );
+		fsync_name( location_tmp );
 		rename( location_tmp.c_str(), location.c_str() );
 	}
 
@@ -112,10 +116,21 @@ struct Journal {
 				std::cout << i->second << ": " << i->first << std::endl;
 	}
 
-	void read() {
-		std::ifstream ifs( location.c_str() );
+	void read( std::string n ) {
+		std::ifstream ifs( n.c_str() );
 		typedef std::istream_iterator< std::pair< std::string, R > > It;
 		std::copy( It( ifs ), It(), std::inserter( status, status.begin() ) );
+	}
+
+	void read() {
+		struct stat64 stat;
+		if ( ::stat64( location.c_str(), &stat ) == 0 )
+			read( location );
+		/* on CIFS, rename might fail halfway through, with journal
+	         * already gone but journal.tmp not yet replacing it... in that
+	         * case, pick up journal.tmp */
+		else if ( ::stat64( location_tmp.c_str(), &stat ) == 0 )
+			read( location_tmp );
 	}
 
 	Journal( std::string dir )
