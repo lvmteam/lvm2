@@ -37,6 +37,9 @@ make install_initscripts DESTDIR=$RPM_BUILD_ROOT
 make install_systemd_units DESTDIR=$RPM_BUILD_ROOT
 make install_tmpfiles_configuration DESTDIR=$RPM_BUILD_ROOT
 %endif
+%if %{enable_testsuite}
+make -C test install DESTDIR=$RPM_BUILD_ROOT
+%endif
 
 # when building an src.rpm from freestanding specfiles
 test -e %{_sourcedir}/source.inc || cp source.inc build.inc packages.inc macros.inc %{_sourcedir}

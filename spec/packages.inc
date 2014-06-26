@@ -494,3 +494,18 @@ the device-mapper event library.
 %{_includedir}/libdevmapper-event.h
 %{_libdir}/pkgconfig/devmapper-event.pc
 
+%if %{enable_testsuite}
+%package testsuite
+Summary: LVM2 Testsuite
+License: LGPLv2
+Group: Development
+
+%description testsuite
+An extensive functional testsuite for LVM2.
+
+%files testsuite
+%defattr(-,root,root,-)
+%{_datadir}/lvm2-testsuite/
+%{_libexecdir}/lvm2-testsuite/
+%{_bindir}/lvm2-testsuite
+%endif

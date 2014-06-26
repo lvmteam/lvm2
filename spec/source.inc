@@ -4,6 +4,7 @@
 # Defaults (rawhide)... 
 
 %global enable_profiling 0
+%global enable_testsuite 0
 %global enable_udev 1
 %global enable_systemd 1
 %global enable_cmirror 1
