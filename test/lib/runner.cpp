@@ -108,6 +108,7 @@ struct TestCase {
 	TestProcess child;
 	std::string name, flavour;
 	IO io;
+	BufSink *iobuf;
 
 	struct rusage usage;
 	int status;
@@ -162,6 +163,7 @@ struct TestCase {
 				waitpid( pid, &status, 0 );
 			}
 			timeout = true;
+			io.sync();
 			return false;
 		}
 
@@ -179,6 +181,7 @@ struct TestCase {
 		if ( select( io.fd + 1, &set, NULL, NULL, &wait ) > 0 )
 			silent_start = end; /* something happened */
 
+		usleep(500000);
 		io.sync();
 
 		return true;
@@ -215,7 +218,15 @@ struct TestCase {
 
 	void parent()
 	{
+		::close( child.fd );
+		setupIO();
+
+		journal->started( id() );
 		silent_start = start = time( 0 );
+
+		progress( First ) << tag( "running" ) << pretty() << std::flush;
+		if ( options.verbose || options.interactive )
+			progress() << std::endl;
 
 		while ( monitor() );
 
@@ -243,8 +254,12 @@ struct TestCase {
 			close(fd_debuglog);
 		} */
 
+		if ( iobuf && r == Journal::FAILED || r == Journal::TIMEOUT )
+			iobuf->dump( std::cout );
+
 		journal->done( id(), r );
 		progress( Last ) << tag( r ) << pretty() << std::endl;
+		io.clear();
 	}
 
 	void run() {
@@ -258,21 +273,26 @@ struct TestCase {
 			setenv("LVM_TEST_FLAVOUR", flavour.c_str(), 1);
 			child.exec();
 		} else {
-			::close( child.fd );
-			journal->started( id() );
-			progress( First ) << tag( "running" ) << pretty() << std::flush;
-			if ( options.verbose || options.interactive )
-				progress() << std::endl;
-			start = time( 0 );
 			parent();
 		}
+	}
+
+	void setupIO() {
+		iobuf = 0;
+		if ( options.verbose )
+			io.sinks.push_back( new FdSink( 1 ) );
+		else
+			io.sinks.push_back( iobuf = new BufSink() );
+
+		std::string n = id();
+		std::replace( n.begin(), n.end(), '/', '_' );
+		std::string fn = options.outdir + "/" + n + ".txt";
+		io.sinks.push_back( new FileSink( fn ) );
 	}
 
 	TestCase( Journal &j, Options opt, std::string path, std::string name, std::string flavour )
 		: timeout( false ), child( path ), name( name ), flavour( flavour ), options( opt ), journal( &j )
 	{
-		if ( opt.verbose )
-			io.sinks.push_back( new FdSink( 1 ) );
 	}
 };
 
