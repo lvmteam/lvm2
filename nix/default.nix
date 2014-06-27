@@ -61,30 +61,58 @@ let
      builder = pkgs.writeScript "vm-test" ''
        #!${pkgs.bash}/bin/bash
        . $stdenv/setup
-       set -x
 
        export QEMU_OPTS="-drive file=/dev/shm/testdisk.img,if=virtio -m 256M"
-       export KERNEL_OPTS="log_buf_len=131072"
+       export KERNEL_OPTS="log_buf_len=131072 loglevel=1"
        export mountDisk=1
 
        mkdir -p $out/test-results $out/nix-support
        touch $out/nix-support/failed
 
-       # give it 9x 20 minutes, i.e. about 3 hours
-       for i in seq 1 9; do
+       monitor() {
+           set +e
+           counter=0
+           while true; do
+               cat xchg/results-ndev/journal* xchg/results-udev/journal* > j.current 2> /dev/null
+               cat xchg/results-ndev/timestamp xchg/results-udev/timestamp > t.current 2> /dev/null
+               # the journal didn't change for 10 minutes, kill the VM
+               if diff j.current j.last > /dev/null 2> /dev/null; then
+                   counter=$(($counter + 1));
+               else
+                   counter=0
+               fi
+               if test $counter -eq 10 || diff t.current t.last > /dev/null 2> /dev/null; then
+                   kill $1
+                   sleep 3600 # wait for the parent to kill us
+               fi
+               sleep 60
+               mv j.current j.last
+               mv t.current t.last
+           done
+       }
+
+       for i in seq 1 20; do # we allow up to 20 VM restarts
            ${vmtools.qemu}/bin/qemu-img create -f qcow2 /dev/shm/testdisk.img 4G
            setsid bash -e ${vmtools.vmRunCommand (vmtools.qemuCommandLinux kernel)} &
            pid=$!
-           ( sleep 1200 ; kill -- -$pid ) &
-           if wait $pid; then
-               rm -f $out/nix-support/failed
+           monitor $pid &
+           mon=$!
+
+           wait $pid || true
+           kill $mon
+
+           # if we have any new results, stash them
+           mv xchg/results-*'/'*.txt $out/test-results/ || true
+
+           if test -n "$(cat xchg/in-vm-exit)"; then # the VM is done
+               test 0 -eq "$(cat xchg/in-vm-exit)" && rm -f $out/nix-support/failed
                break
            fi
-           mv xchg/results-*'/'*.txt $out/test-results/
-           sleep 5
+
+           sleep 5 # wait for the VM to clean up before starting up a new one
        done
 
-       # use journals in case the lists weren't actually written yet
+       # (ab)use the journals in case the lists weren't actually written yet
        cat xchg/results-ndev/journal xchg/results-udev/journal > $out/test-results/list || true
      '';
   };
