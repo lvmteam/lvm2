@@ -30,6 +30,8 @@
 #include "filesystem.h"
 
 #include <iostream>
+#include <iomanip>
+
 #include <vector>
 #include <deque>
 #include <map>
@@ -198,6 +200,31 @@ struct TestCase {
 		}
 
 		return true;
+	}
+
+	std::string timefmt( time_t t ) {
+		std::stringstream ss;
+		ss << t / 60 << ":" << std::setw( 2 ) << std::setfill( '0' ) << t % 60;
+		return ss.str();
+	}
+
+	std::string rusage()
+	{
+		std::stringstream ss;
+		time_t wall = end - start, user = usage.ru_utime.tv_sec,
+		     system = usage.ru_stime.tv_sec;
+		size_t rss = usage.ru_maxrss / 1024,
+		       inb = usage.ru_inblock / 100,
+		      outb = usage.ru_oublock / 100;
+
+		size_t inb_10 = inb % 10, outb_10 = outb % 10;
+		inb /= 10; outb /= 10;
+
+		ss << timefmt( wall ) << " wall " << timefmt( user ) << " user "
+		   << timefmt( system ) << " sys   " << std::setw( 3 ) << rss << "M RSS | "
+		   << "IOPS: " << std::setw( 5 ) << inb << "." << inb_10 << "K in "
+		               << std::setw( 5 ) << outb << "." << outb_10 << "K out";
+		return ss.str();
 	}
 
 	std::string tag( std::string n ) {
@@ -400,25 +427,6 @@ static int64_t get_time_us(void)
        return (int64_t) tv.tv_sec * 1000000 + (int64_t) tv.tv_usec;
 }
 
-
-static const char *duration(time_t start, const struct rusage *usage)
-{
-	static char buf[100];
-	int t = (int)(time(NULL) - start);
-
-	int p = sprintf(buf, "%2d:%02d walltime", t / 60, t % 60);
-
-	if (usage)
-		sprintf(buf + p, "   %2ld:%02ld.%03ld u, %ld:%02ld.%03ld s, %5ldk rss, %8ld/%ld IO",
-			usage->ru_utime.tv_sec / 60, usage->ru_utime.tv_sec % 60,
-			usage->ru_utime.tv_usec / 1000,
-			usage->ru_stime.tv_sec / 60, usage->ru_stime.tv_sec % 60,
-			usage->ru_stime.tv_usec / 1000,
-			usage->ru_maxrss / 1024,
-			usage->ru_inblock, usage->ru_oublock);
-
-	return buf;
-}
 
 struct Args {
 	typedef std::vector< std::string > V;
