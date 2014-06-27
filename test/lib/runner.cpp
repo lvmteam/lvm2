@@ -58,10 +58,10 @@ bool fatal_signal = false;
 bool interrupt = false;
 
 struct Options {
-	bool verbose, quiet, interactive, cont;
+	bool verbose, batch, interactive, cont;
 	std::string testdir, outdir;
 	std::vector< std::string > flavours;
-	Options() : verbose( false ), quiet( false ), interactive( false ), cont( false ) {}
+	Options() : verbose( false ), batch( false ), interactive( false ), cont( false ) {}
 };
 
 struct TestProcess
@@ -175,7 +175,7 @@ struct TestCase {
 		wait.tv_sec = 0;
 		wait.tv_usec = 500000; /* timeout 0.5s */
 
-		if ( !options.verbose && !options.interactive )
+		if ( !options.verbose && !options.interactive && !options.batch )
 			progress( Update ) << tag( "running" ) << pretty() << " " << end - start << std::flush;
 
 		if ( select( io.fd + 1, &set, NULL, NULL, &wait ) > 0 )
@@ -445,19 +445,19 @@ int main(int argc, char **argv)
 	if ( args.has( "--continue" ) )
 		opt.cont = true;
 
-	if ( args.has( "--quiet" ) || hasenv( "QUIET" ) ) {
+	if ( args.has( "--batch" ) || hasenv( "BATCH" ) ) {
 		opt.verbose = false;
-		opt.quiet = true;
+		opt.batch = true;
 	}
 
 	if ( args.has( "--verbose" ) || hasenv( "VERBOSE" ) ) {
-		opt.quiet = false;
+		opt.batch = false;
 		opt.verbose = true;
 	}
 
 	if ( args.has( "--interactive" ) || hasenv( "INTERACTIVE" ) ) {
 		opt.verbose = false;
-		opt.quiet = false;
+		opt.batch = false;
 		opt.interactive = true;
 	}
 
