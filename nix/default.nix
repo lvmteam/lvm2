@@ -28,14 +28,14 @@ let
 
          export LVM_TEST_BACKING_DEVICE=/dev/vdb
          if ! test -e /tmp/xchg/results-ndev/list; then
-             lvm2-testsuite --outdir /tmp/xchg/results-ndev --continue \
+             lvm2-testsuite --batch --outdir /tmp/xchg/results-ndev --continue \
                  --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad
          fi
 
          if ! test -e /tmp/xchg/results-udev/list; then
              (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
                  find / -xdev -name \*udevd) &
-             lvm2-testsuite --outdir /tmp/xchg/results-udev --continue \
+             lvm2-testsuite --batch --outdir /tmp/xchg/results-udev --continue \
                  --flavours udev-vanilla,udev-cluster,udev-lvmetad
          fi
 
