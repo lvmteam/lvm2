@@ -123,6 +123,8 @@ struct TestCase {
 	Journal *journal;
 
 	std::string pretty() {
+		if ( options.batch )
+			return flavour + ": " + name;
 		return "[" + flavour + "] " + name;
 	}
 
@@ -228,6 +230,8 @@ struct TestCase {
 	}
 
 	std::string tag( std::string n ) {
+		if ( options.batch )
+			return "## ";
 		int pad = (12 - n.length());
 		return "### " + std::string( pad, ' ' ) + n + ": ";
 	}
@@ -245,7 +249,10 @@ struct TestCase {
 	        static struct : std::streambuf {} buf;
 		static std::ostream null(&buf);
 
-		if ( isatty( STDOUT_FILENO ) ) {
+		if ( options.batch && p == First )
+			return std::cout;
+
+		if ( isatty( STDOUT_FILENO ) && !options.batch ) {
 			if ( p != First )
 				return std::cout << "\r";
 			return std::cout;
@@ -253,6 +260,7 @@ struct TestCase {
 
 		if ( p == Last )
 			return std::cout;
+
 		return null;
 	}
 
@@ -298,7 +306,14 @@ struct TestCase {
 			iobuf->dump( std::cout );
 
 		journal->done( id(), r );
-		progress( Last ) << tag( r ) << pretty() << std::endl;
+
+		if ( options.batch ) {
+			int spaces = std::max( 64 - int(pretty().length()), 0 );
+			progress( Last ) << " " << std::string( spaces, '.' ) << " " << r << std::endl;
+			if ( r == Journal::PASSED )
+				progress( First ) << "   " << rusage() << std::endl;
+		} else
+			progress( Last ) << tag( r ) << pretty() << std::endl;
 		io.clear();
 	}
 
@@ -322,7 +337,7 @@ struct TestCase {
 		iobuf = 0;
 		if ( options.verbose )
 			io.sinks.push_back( new FdSink( 1 ) );
-		else
+		else if ( !options.batch )
 			io.sinks.push_back( iobuf = new BufSink() );
 
 		std::string n = id();
