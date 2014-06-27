@@ -115,7 +115,7 @@ struct TestCase {
 	bool timeout;
 	pid_t pid;
 
-	time_t start, end, silent_start;
+	time_t start, end, silent_start, last_update;
 	Options options;
 
 	Journal *journal;
@@ -175,13 +175,17 @@ struct TestCase {
 		wait.tv_sec = 0;
 		wait.tv_usec = 500000; /* timeout 0.5s */
 
-		if ( !options.verbose && !options.interactive && !options.batch )
-			progress( Update ) << tag( "running" ) << pretty() << " " << end - start << std::flush;
+		if ( !options.verbose && !options.interactive && !options.batch ) {
+			if ( end - last_update >= 1 ) {
+				progress( Update ) << tag( "running" ) << pretty() << " "
+						   << end - start << std::flush;
+				last_update = end;
+			}
+		}
 
 		if ( select( io.fd + 1, &set, NULL, NULL, &wait ) > 0 )
 			silent_start = end; /* something happened */
 
-		usleep(500000);
 		io.sync();
 
 		return true;
