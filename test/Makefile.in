@@ -171,7 +171,7 @@ lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@
 	chmod +x $@
 
-lib/flavour-%: $(srcdir)/lib/flavour-% .lib-dir-stamp
+lib/flavour-%: $(srcdir)/lib/flavour-%.sh .lib-dir-stamp
 	cp $< $@
 
 lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
