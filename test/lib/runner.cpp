@@ -188,6 +188,15 @@ struct TestCase {
 
 		io.sync();
 
+		/* heartbeat */
+		if ( time( 0 ) % 20 == 0 ) {
+			std::string stampfile( options.outdir + "/timestamp" );
+			std::ofstream stamp( stampfile.c_str() );
+			stamp << time( 0 );
+			stamp.close();
+			fsync_name( stampfile );
+		}
+
 		return true;
 	}
 
