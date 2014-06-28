@@ -382,6 +382,8 @@ struct Main {
 
 		if ( options.cont )
 			journal.read();
+		else
+			::unlink( journal.location.c_str() );
 	}
 
 	void run() {
@@ -406,8 +408,6 @@ struct Main {
 		}
 
 		journal.banner();
-		journal.write( options.outdir + "/list" );
-		fsync_name( options.outdir + "/list" );
 		if ( die || fatal_signal )
 			exit( 1 );
 	}

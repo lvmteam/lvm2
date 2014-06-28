@@ -61,9 +61,21 @@ struct Journal {
 	}
 
 	typedef std::map< std::string, R > Status;
-	Status status;
+	Status status, written;
 
-	std::string location_tmp, location;
+	std::string location, list;
+
+	void append( std::string path ) {
+		std::ofstream of( path.c_str(), std::fstream::app );
+		Status::iterator writ;
+		for ( Status::iterator i = status.begin(); i != status.end(); ++i ) {
+			writ = written.find( i->first );
+			if ( writ == written.end() || writ->second != i->second )
+				of << i->first << " " << i->second << std::endl;
+		}
+		written = status;
+		of.close();
+	}
 
 	void write( std::string path ) {
 		std::ofstream of( path.c_str() );
@@ -73,9 +85,10 @@ struct Journal {
 	}
 
 	void sync() {
-		write( location_tmp );
-		fsync_name( location_tmp );
-		rename( location_tmp.c_str(), location.c_str() );
+		append( location );
+		fsync_name( location );
+		write ( list );
+		fsync_name( list );
 	}
 
 	void started( std::string n ) {
@@ -122,20 +135,11 @@ struct Journal {
 		std::copy( It( ifs ), It(), std::inserter( status, status.begin() ) );
 	}
 
-	void read() {
-		struct stat64 stat;
-		if ( ::stat64( location.c_str(), &stat ) == 0 )
-			read( location );
-		/* on CIFS, rename might fail halfway through, with journal
-	         * already gone but journal.tmp not yet replacing it... in that
-	         * case, pick up journal.tmp */
-		else if ( ::stat64( location_tmp.c_str(), &stat ) == 0 )
-			read( location_tmp );
-	}
+	void read() { read( location ); }
 
 	Journal( std::string dir )
 		: location( dir + "/journal" ),
-		  location_tmp( dir + "/journal.tmp" )
+		  list( dir + "/list" )
 	{}
 };
 
