@@ -16,7 +16,7 @@ let
          #!/bin/bash
          export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
-	 # we always run in a fresh image, so need to install everything again
+         # we always run in a fresh image, so need to install everything again
          ls ${build}/rpms/*/*.rpm | grep -v sysvinit | xargs rpm -Uvh # */
          rpm -Uv ${pkgs.fetchurl {
             url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
@@ -72,8 +72,9 @@ let
        monitor() {
            set +e
            counter=0
+           rm -f j.current j.last t.current t.last
            while true; do
-               cat xchg/results-ndev/journal* xchg/results-udev/journal* > j.current 2> /dev/null
+               cat xchg/results-ndev/journal xchg/results-udev/journal > j.current 2> /dev/null
                cat xchg/results-ndev/timestamp xchg/results-udev/timestamp > t.current 2> /dev/null
                # the journal didn't change for 10 minutes, kill the VM
                if diff j.current j.last > /dev/null 2> /dev/null; then
@@ -95,6 +96,7 @@ let
            ${vmtools.qemu}/bin/qemu-img create -f qcow2 /dev/shm/testdisk.img 4G
            setsid bash -e ${vmtools.vmRunCommand (vmtools.qemuCommandLinux kernel)} &
            pid=$!
+           sleep 60 # give the VM some time to get up and running
            monitor $pid &
            mon=$!
 
@@ -112,8 +114,7 @@ let
            sleep 5 # wait for the VM to clean up before starting up a new one
        done
 
-       # (ab)use the journals in case the lists weren't actually written yet
-       cat xchg/results-ndev/journal xchg/results-udev/journal > $out/test-results/list || true
+       cat xchg/results-ndev/list xchg/results-udev/list > $out/test-results/list || true
      '';
   };
 
