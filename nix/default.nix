@@ -229,10 +229,11 @@ let
       };
     };
 
-  vm = pkgs: xmods: with lib; rec {
+  vm = { pkgs, xmods, dmmods ? false }: with lib; rec {
     tools = import "${nixpkgs}/pkgs/build-support/vm/default.nix" {
       inherit pkgs; rootModules = rootmods ++ xmods ++
-        [ "loop" "dm_mod" "dm_snapshot" "dm_mirror" "dm_zero" "dm_raid" "dm_thin_pool" ]; };
+        (if dmmods then [ "loop" "dm_mod" "dm_snapshot" "dm_mirror" "dm_zero" "dm_raid" "dm_thin_pool" ]
+                   else []); };
     release = import "${nixpkgs}/pkgs/build-support/release/default.nix" {
       pkgs = pkgs // { vmTools = tools; }; };
     imgs = tools.diskImageFuns //
@@ -262,11 +263,13 @@ let
       rawhide = fedora19;
     };
 
-  wrapper = fun: { arch, image, build ? {} }: with lib;
-    let use = vm (if eqStrings arch "i386" then pkgs.pkgsi686Linux else pkgs)
-                 (if image == "centos64" || image == "centos65" then [] else [ "9p" "9pnet_virtio" ]);
+  wrapper = fun: { arch, image, build ? {}, istest ? false }: with lib;
+    let use = vm { pkgs = if eqStrings arch "i386" then pkgs.pkgsi686Linux else pkgs;
+                   xmods = if istest && (image == "centos64" || image == "centos65")
+                              then [] else [ "9p" "9pnet_virtio" ];
+                   dmmods = istest; };
      in fun {
-           inherit build;
+           inherit build istest;
            VM = use.rpmbuild;
            diskFun = builtins.getAttr "${image}${arch}" use.imgs;
            extras = extra_rpms.common ++ builtins.getAttr image extra_rpms;
@@ -301,7 +304,8 @@ let
   };
 
   rpms = lib.mapAttrs (n: v: wrapper mkBuild v) configs;
-  tests = lib.mapAttrs (n: v: wrapper mkTest (v // { build = builtins.getAttr n rpms; })) configs;
+  tests = let make = n: v: wrapper mkTest (v // { build = builtins.getAttr n rpms; istest = true; });
+           in lib.mapAttrs make configs;
 
   jobs = tests // {
     tarball = pkgs.releaseTools.sourceTarball rec {
