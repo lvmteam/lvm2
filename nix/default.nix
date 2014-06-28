@@ -17,7 +17,7 @@ let
          export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
          # we always run in a fresh image, so need to install everything again
-         ls ${build}/rpms/*/*.rpm | grep -v sysvinit | xargs rpm -Uvh # */
+         ls ${build}/rpms/*/*.rpm | grep -v sysvinit | xargs rpm -Uv # */
          rpm -Uv ${pkgs.fetchurl {
             url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
             sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
