@@ -302,7 +302,7 @@ struct TestCase {
 			close(fd_debuglog);
 		} */
 
-		if ( iobuf && r == Journal::FAILED || r == Journal::TIMEOUT )
+		if ( iobuf && ( r == Journal::FAILED || r == Journal::TIMEOUT ) )
 			iobuf->dump( std::cout );
 
 		journal->done( id(), r );
