@@ -157,7 +157,8 @@ struct Journal {
 	void read( std::string n ) {
 		std::ifstream ifs( n.c_str() );
 		typedef std::istream_iterator< std::pair< std::string, R > > It;
-		std::copy( It( ifs ), It(), std::inserter( status, status.begin() ) );
+		for ( It i( ifs ); i != It(); ++i )
+			status[ i->first ] = i->second;
 	}
 
 	void read() { read( location ); }
