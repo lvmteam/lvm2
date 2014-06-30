@@ -1660,7 +1660,7 @@ struct dm_report_field_type {
 
 struct dm_report_reserved_value {
 	const unsigned type;		/* DM_REPORT_FIELD_TYPE_* */
-	const void const *value;	/* reserved value:
+	const void *value;		/* reserved value:
 						uint64_t for DM_REPORT_FIELD_TYPE_NUMBER
 						uint64_t for DM_REPORT_FIELD_TYPE_SIZE (number of 512-byte sectors)
 						uint64_t for DM_REPORT_FIELD_TYPE_PERCENT
