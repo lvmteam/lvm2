@@ -5887,7 +5887,7 @@ int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
 	    override_lv_skip_flag)
 		return 0;
 
-	log_verbose("ACTIVATON_SKIP flag set for LV %s/%s, skipping activation.",
+	log_verbose("ACTIVATION_SKIP flag set for LV %s/%s, skipping activation.",
 		    lv->vg->name, lv->name);
 	return 1;
 }
