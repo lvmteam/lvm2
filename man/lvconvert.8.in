@@ -380,7 +380,7 @@ Only inactive thin pool volumes can be repaired.
 There is no validation of metadata between kernel and lvm2.
 This requires further manual work.
 After successfull repair the old unmodified metadata are still
-available in \fB<pool>_tmeta<n>\fP LV.
+available in \fB<pool>_meta<n>\fP LV.
 .TP
 .B \-\-replace \fIPhysicalVolume
 Remove the specified device (\fIPhysicalVolume\fP) and replace it with one

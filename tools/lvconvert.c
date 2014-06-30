@@ -2468,8 +2468,8 @@ deactivate_pmslv:
 	if (!handle_pool_metadata_spare(pool_lv->vg, 0, NULL, 1))
 		stack;
 
-	if (dm_snprintf(meta_path, sizeof(meta_path), "%s%%d", mlv->name) < 0) {
-		log_error("Can't prepare new name for %s.", mlv->name);
+	if (dm_snprintf(meta_path, sizeof(meta_path), "%s_meta%%d", pool_lv->name) < 0) {
+		log_error("Can't prepare new metadata name for %s.", pool_lv->name);
 		return 0;
 	}
 
@@ -2488,7 +2488,7 @@ deactivate_pmslv:
 	if (!attach_pool_metadata_lv(first_seg(pool_lv), pmslv))
 		return_0;
 
-	/* Used _tmeta will become visible  _tmeta%d */
+	/* Used _tmeta will become visible  _meta%d */
 	if (!lv_rename_update(cmd, mlv, pms_path, 0))
 		return_0;
 
@@ -2499,7 +2499,7 @@ deactivate_pmslv:
 		 mlv->vg->name, mlv->name);
 
 	log_warn("WARNING: Use pvmove command to move \"%s/%s\" on the best fitting PV.",
-		 mlv->vg->name, first_seg(pool_lv)->metadata_lv->name);
+		 pool_lv->vg->name, first_seg(pool_lv)->metadata_lv->name);
 
 	return 1;
 }
