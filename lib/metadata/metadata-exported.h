@@ -473,7 +473,7 @@ struct pvcreate_params {
 };
 
 struct lvresize_params {
-	const char *vg_name;
+	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
 	const char *lv_name;
 
 	uint32_t stripes;
@@ -782,7 +782,7 @@ struct lvcreate_params {
 
 	const char *origin; /* snap */
 	const char *pool;   /* thin */
-	const char *vg_name; /* all */
+	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
 	const char *lv_name; /* all */
 
 	/* Keep args given by the user on command line */

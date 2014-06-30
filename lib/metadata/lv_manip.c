@@ -3658,8 +3658,8 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 	if (status)
 		*status = -1;
 
-	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", cmd->dev_dir, lp->vg_name,
-			lp->lv_name) < 0) {
+	if (dm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s", cmd->dev_dir,
+			vg->name, lp->lv_name) < 0) {
 		log_error("Couldn't create LV path for %s", lp->lv_name);
 		return 0;
 	}
@@ -3667,7 +3667,7 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 	argv[i++] = lv_path;
 
 	if (fcmd == FSADM_CMD_RESIZE) {
-		if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64 "K",
+		if (dm_snprintf(size_buf, sizeof(size_buf), "%" PRIu64 "K",
 				(uint64_t) lp->extents * (vg->extent_size / 2)) < 0) {
 			log_error("Couldn't generate new LV size string");
 			return 0;
@@ -3713,7 +3713,7 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		    (percent > policy_threshold)) {
 			if (!thin_pool_feature_supported(lv, THIN_FEATURE_METADATA_RESIZE)) {
 				log_error_once("Online metadata resize for %s/%s is not supported.",
-					       lp->vg_name, lp->lv_name);
+					       lv->vg->name, lv->name);
 				return 0;
 			}
 			lp->poolmetadatasize = (first_seg(lv)->metadata_lv->size *
@@ -6015,7 +6015,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", new_lv_name, lp->vg_name);
+			  "volume group \"%s\"", new_lv_name, vg->name);
 		return NULL;
 	}
 

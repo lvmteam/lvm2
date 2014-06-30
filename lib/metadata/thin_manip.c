@@ -559,7 +559,6 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.read_ahead = read_ahead,
 		.stripe_size = stripe_size,
 		.stripes = stripes,
-		.vg_name = pool_lv->vg->name,
 		.zero = 1,
 	};
 
@@ -600,7 +599,6 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		.pvh = pvh ? : &vg->pvs,
 		.read_ahead = DM_READ_AHEAD_AUTO,
 		.stripes = 1,
-		.vg_name = vg->name,
 		.zero = 1,
 		.temporary = 1,
 	};

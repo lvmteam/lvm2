@@ -194,7 +194,6 @@ static void _lv_set_default_params(struct lvcreate_params *lp,
 	lp->major = -1;
 	lp->minor = -1;
 	lp->activate = CHANGE_AY;
-	lp->vg_name = vg->name;
 	lp->lv_name = lvname; /* FIXME: check this for safety */
 	lp->pvh = &vg->pvs;
 
@@ -458,19 +457,16 @@ int lvm_lv_rename(lv_t lv, const char *new_name)
 int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	int rc = 0;
-	struct lvresize_params lp = { 0 };
-	struct saved_env e = { 0 };
-
-	lp.vg_name = lv->vg->name;
-	lp.lv_name = lv->name;
-	lp.sign = SIGN_NONE;
-	lp.percent = PERCENT_NONE;
-	lp.resize = LV_ANY;
-	lp.size = new_size >> SECTOR_SHIFT;
-	lp.ac_force = 1;	/* Assume the user has a good backup? */
-	lp.sizeargs = 1;
-
-	e = store_user_env(lv->vg->cmd);
+	struct lvresize_params lp = {
+		.lv_name = lv->name,
+		.sign = SIGN_NONE,
+		.percent = PERCENT_NONE,
+		.resize = LV_ANY,
+		.size = new_size >> SECTOR_SHIFT,
+		.ac_force = 1,	/* Assume the user has a good backup? */
+		.sizeargs = 1,
+	};
+	struct saved_env e = store_user_env(lv->vg->cmd);
 
 	if (!lv_resize_prepare(lv->vg->cmd, lv, &lp, &lv->vg->pvs) ||
 	    !lv_resize(lv->vg->cmd, lv, &lp, &lv->vg->pvs)) {

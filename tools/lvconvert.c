@@ -2522,7 +2522,6 @@ static int _lvconvert_thinpool_external(struct cmd_context *cmd,
 		.pvh = &vg->pvs,
 		.read_ahead = DM_READ_AHEAD_AUTO,
 		.stripes = 1,
-		.vg_name = vg->name,
 		.voriginextents = external_lv->le_count,
 		.voriginsize = external_lv->size,
 	};
