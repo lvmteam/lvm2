@@ -12,7 +12,7 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
-kill $(cat LOCAL_LVMETAD)
+kill $(< LOCAL_LVMETAD)
 rm LOCAL_LVMETAD
 
 aux prepare_devs 2

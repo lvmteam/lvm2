@@ -17,7 +17,7 @@ aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"
 lvchange -ay $vg1 2>&1 | not grep "Failed to connect"
 
-kill $(cat LOCAL_LVMETAD)
+kill $(< LOCAL_LVMETAD)
 lvchange -ay $vg1 2>&1 | grep "Failed to connect"
 lvchange -aay $vg1 --sysinit 2>&1 | tee sysinit.txt
 not grep "Failed to connect" sysinit.txt

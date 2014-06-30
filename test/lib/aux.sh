@@ -185,8 +185,8 @@ teardown_devs() {
 	if test -f SCSI_DEBUG_DEV; then
 		test "${LVM_TEST_PARALLEL:-0}" -eq 1 || modprobe -r scsi_debug
 	else
-		test ! -f LOOP || losetup -d $(cat LOOP) || true
-		test ! -f LOOPFILE || rm -f $(cat LOOPFILE)
+		test ! -f LOOP || losetup -d $(< LOOP) || true
+		test ! -f LOOPFILE || rm -f $(< LOOPFILE)
 	fi
 	rm -f DEVICES # devs is set in prepare_devs()
 	rm -f LOOP
@@ -207,9 +207,9 @@ teardown_devs() {
 
 kill_sleep_kill_() {
 	if test -s "$1" ; then
-		if kill -TERM "$(cat $1)" ; then
+		if kill -TERM "$(< $1)" ; then
 			if test "$2" -eq 0 ; then sleep .1 ; else sleep 1 ; fi
-			kill -KILL "$(cat $1)" 2>/dev/null || true
+			kill -KILL "$(< $1)" 2>/dev/null || true
 		fi
 	fi
 }
@@ -253,7 +253,7 @@ prepare_loop() {
 	local i
 	local slash
 
-	test -f LOOP && LOOP=$(cat LOOP)
+	test -f LOOP && LOOP=$(< LOOP)
 	echo -n "## preparing loop device..."
 
 	# skip if prepare_scsi_debug_dev() was used
@@ -598,8 +598,8 @@ generate_config() {
 	else
 	    LVM_VERIFY_UDEV=${LVM_VERIFY_UDEV:-1}
 	fi
-	test -f $config_values || {
-            cat > $config_values <<-EOF
+	test -f "$config_values" || {
+            cat > "$config_values" <<-EOF
 devices/dir = "$DM_DEV_DIR"
 devices/scan = "$DM_DEV_DIR"
 devices/filter = "a|.*|"
@@ -639,20 +639,19 @@ EOF
 
 	local v
 	for v in "$@"; do
-	    echo "$v" >> $config_values
-	done
+	    echo "$v"
+	done >> "$config_values"
 
-	rm -f $config
 	local s
-	for s in $(cat $config_values | cut -f1 -d/ | sort | uniq); do
-		echo "$s {" >> $config
+	for s in $(cut -f1 -d/ "$config_values" | sort | uniq); do
+		echo "$s {"
 		local k
-		for k in $(grep ^"$s"/ $config_values | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
-			grep "^$k" $config_values | tail -n 1 | sed -e "s,^$s/,	  ," >> $config
+		for k in $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
+			grep "^$k" "$config_values" | tail -n 1 | sed -e "s,^$s/,	  ,"
 		done
-		echo "}" >> $config
-		echo >> $config
-	done
+		echo "}"
+		echo
+	done | tee "$config"
 }
 
 lvmconf() {
@@ -666,7 +665,7 @@ profileconf() {
 	shift
 	generate_config "$@"
 	test -d etc/profile || mkdir etc/profile
-	mv -f PROFILE_$profile_name etc/profile/$profile_name.profile
+	mv -f "PROFILE_$profile_name" "etc/profile/$profile_name.profile"
 }
 
 prepare_profiles() {
@@ -690,7 +689,7 @@ api() {
 }
 
 mirror_recovery_works() {
-	case $(uname -r) in
+	case "$(uname -r)" in
 	  3.3.4-5.fc17.i686|3.3.4-5.fc17.x86_64) return 1 ;;
 	esac
 }
@@ -729,7 +728,7 @@ raid456_replace_works() {
 # http://www.redhat.com/archives/dm-devel/2014-March/msg00008.html
 # so we need to put here exlusion for kernes which do trace SLUB
 #
-	case $(uname -r) in
+	case "$(uname -r)" in
 	  3.6.*.fc18.i686*|3.6.*.fc18.x86_64) return 1 ;;
 	  3.9.*.fc19.i686*|3.9.*.fc19.x86_64) return 1 ;;
 	  3.1[0123].*.fc18.i686*|3.1[0123].*.fc18.x86_64) return 1 ;;
@@ -835,7 +834,7 @@ dmsetup_wrapped() {
 	dmsetup "$@"
 }
 
-test -f DEVICES && devs=$(cat DEVICES)
+test -f DEVICES && devs=$(< DEVICES)
 
 if test "$1" = dmsetup; then
     shift

@@ -53,7 +53,7 @@ if test -e LOCAL_CLVMD ; then
 	# as clvmd starts to abort on internal errors on various
 	# errors, based on the fact pvmove is killed -9
 	# Restart clvmd
-	kill $(cat LOCAL_CLVMD)
+	kill $(< LOCAL_CLVMD)
 	for i in $(seq 1 100) ; do
 		test $i -eq 100 && die "Shutdown of clvmd is too slow."
 		test -e "$CLVMD_PIDFILE" || break
@@ -64,7 +64,7 @@ fi
 
 if test -e LOCAL_LVMETAD ; then
 	# Restart lvmetad
-	kill $(cat LOCAL_LVMETAD)
+	kill $(< LOCAL_LVMETAD)
 	aux prepare_lvmetad
 fi
 
