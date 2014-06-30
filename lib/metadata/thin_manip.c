@@ -552,7 +552,6 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 	struct lvcreate_params lvc = {
 		.activate = CHANGE_ALY,
 		.alloc = alloc,
-		.lv_name = name,
 		.major = -1,
 		.minor = -1,
 		.permission = LVM_READ | LVM_WRITE,
@@ -576,6 +575,9 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 	/* FIXME: allocate properly space for metadata_lv */
 
 	if (!(metadata_lv = lv_create_single(pool_lv->vg, &lvc)))
+		return_0;
+
+	if (!lv_rename_update(pool_lv->vg->cmd, metadata_lv, name, 0))
 		return_0;
 
 	return metadata_lv;
