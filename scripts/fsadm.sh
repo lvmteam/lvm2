@@ -276,7 +276,7 @@ try_umount() {
 }
 
 validate_parsing() {
-	test -n "$BLOCKSIZE" -a -n "$BLOCKCOUNT" || error "Cannot parse $1 output"
+	test -n "$BLOCKSIZE" && test -n "$BLOCKCOUNT" || error "Cannot parse $1 output"
 }
 ####################################
 # Resize ext2/ext3/ext4 filesystem
@@ -459,12 +459,12 @@ trap "cleanup 2" 2
 test -n "$FSADM_RUNNING" && exit 0
 
 # test some prerequisities
-test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
-  -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
-  -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$DATE" -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "$XFS_REPAIR" \
-  -a -n "$LVM" \
-  || error "Required command definitions in the script are missing!"
+for i in "$TUNE_EXT" "$RESIZE_EXT" "$TUNE_REISER" "$RESIZE_REISER" \
+	"$TUNE_XFS" "$RESIZE_XFS" "$MOUNT" "$UMOUNT" "$MKDIR" \
+	"$RMDIR" "$BLOCKDEV" "$BLKID" "$GREP" "$READLINK" \
+	"$DATE" "$FSCK" "$XFS_CHECK" "$XFS_REPAIR" "$LVM" ; do
+	test -n "$i" || error "Required command definitions in the script are missing!"
+done
 
 "$LVM" version >"$NULL" 2>&1 || error "Could not run lvm binary \"$LVM\""
 $("$READLINK" -e / >"$NULL" 2>&1) || READLINK_E="-f"
