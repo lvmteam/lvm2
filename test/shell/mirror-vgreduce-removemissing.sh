@@ -75,9 +75,10 @@ rest_pvs_()
 	local num=$2
 	local rem=
 	local n
+	local dev
 
 	for n in $(seq 1 $(($index - 1))) $(seq $(($index + 1)) $num); do
-		eval local dev=$\dev$n
+		eval dev=$\dev$n
 		rem="$rem $dev"
 	done
 
@@ -223,6 +224,7 @@ done
 test_3way_mirror_plus_1_fail_3_()
 {
 	local index=$1
+	local dev
 
 	lvcreate -an -Zn -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev3" "$dev5":$BLOCKS
 	lvconvert -m+1 $vg/$lv1 "$dev4"
@@ -232,9 +234,9 @@ test_3way_mirror_plus_1_fail_3_()
 	aux disable_dev $(rest_pvs_ $index 4)
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
-	eval local dev=\$dev$n
+	eval dev=\$dev$n
 	check linear $vg $lv1
-        check lv_on $vg $lv1 "$dev"
+	check lv_on $vg $lv1 "$dev"
 }
 
 for n in $(seq 1 4); do
@@ -278,6 +280,7 @@ done
 test_2way_mirror_plus_2_fail_3_()
 {
 	local index=$1
+	local dev
 
 	lvcreate -an -Zn -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev5":$BLOCKS
 	lvconvert -m+2 $vg/$lv1 "$dev3" "$dev4"
@@ -286,7 +289,7 @@ test_2way_mirror_plus_2_fail_3_()
 	aux disable_dev $(rest_pvs_ $index 4)
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
-	eval local dev=\$dev$n
+	eval dev=\$dev$n
 	mimages_are_on_ $lv1 "$dev" || lv_is_on_ $lv1 "$dev"
 	not mirrorlog_is_on_ $lv1 "$dev5"
 }

@@ -25,7 +25,9 @@ setup_merge_() {
     local VG_NAME=$1
     local LV_NAME=$2
     local NUM_EXTRA_SNAPS=${3:-0}
-    local BASE_SNAP_LV_NAME=$(snap_lv_name_ $LV_NAME)
+    local BASE_SNAP_LV_NAME
+
+    BASE_SNAP_LV_NAME=$(snap_lv_name_ $LV_NAME)
 
     lvcreate -aey -n $LV_NAME -l 50%FREE $VG_NAME
     lvcreate -s -n $BASE_SNAP_LV_NAME -l 20%FREE ${VG_NAME}/${LV_NAME}

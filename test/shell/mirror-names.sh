@@ -22,7 +22,9 @@ lv_devices_() {
 	local lv=$1
 	shift
 	local devices=$@
-	local devs=$(get lv_field $lv devices -a | sed 's/([0-9]*)//g; s/ //g; s/,/ /g')
+	local devs
+
+	devs=$(get lv_devices "$lv")
 
 	for d in $devs; do
 		(echo "$devices" | grep $d) || return 1

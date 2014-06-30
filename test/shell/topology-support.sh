@@ -14,23 +14,17 @@
 which mkfs.ext3 || skip
 
 check_logical_block_size() {
-    local DEV_=$(cat SCSI_DEBUG_DEV)
     # Verify logical_block_size - requires Linux >= 2.6.31
-    SYSFS_LOGICAL_BLOCK_SIZE=$(echo /sys/block/$(basename $DEV_)/queue/logical_block_size)
-    if [ -f "$SYSFS_LOGICAL_BLOCK_SIZE" ] ; then
-	ACTUAL_LOGICAL_BLOCK_SIZE=$(cat $SYSFS_LOGICAL_BLOCK_SIZE)
-	test $ACTUAL_LOGICAL_BLOCK_SIZE = $1
-    fi
+    SYSFS_LOGICAL_BLOCK_SIZE="/sys/block/$(basename $(< SCSI_DEBUG_DEV))/queue/logical_block_size"
+    test -f "$SYSFS_LOGICAL_BLOCK_SIZE" || return 0
+    test "$(< $SYSFS_LOGICAL_BLOCK_SIZE)" -eq "$1" # ACTUAL_LOGICAL_BLOCK_SIZE
 }
 
 check_optimal_io_size() {
-    local DEV_=$(cat SCSI_DEBUG_DEV)
     # Verify optimal_io_size
-    SYSFS_OPTIMAL_IO_SIZE=$(echo /sys/block/$(basename $DEV_)/queue/optimal_io_size)
-    if [ -f "$SYSFS_OPTIMAL_IO_SIZE" ] ; then
-	ACTUAL_OPTIMAL_IO_SIZE=$(cat $SYSFS_OPTIMAL_IO_SIZE)
-	test $ACTUAL_OPTIMAL_IO_SIZE = $1
-    fi
+    SYSFS_OPTIMAL_IO_SIZE="/sys/block/$(basename $(< SCSI_DEBUG_DEV))/queue/optimal_io_size"
+    test -f "$SYSFS_OPTIMAL_IO_SIZE" || return 0
+    test "$(< $SYSFS_OPTIMAL_IO_SIZE)" -eq "$1" # ACTUAL_OPTIMAL_IO_SIZE
 }
 
 lvdev_() {
@@ -64,7 +58,7 @@ DEV_SIZE=$(($NUM_DEVS*$PER_DEV_SIZE))
 # Test that kernel supports topology
 aux prepare_scsi_debug_dev $DEV_SIZE || skip
 
-if [ ! -e /sys/block/$(basename $(cat SCSI_DEBUG_DEV))/alignment_offset ] ; then
+if [ ! -e /sys/block/$(basename $(< SCSI_DEBUG_DEV))/alignment_offset ] ; then
 	aux cleanup_scsi_debug_dev
 	skip
 fi
@@ -79,7 +73,9 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check_logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate $vg $(cat DEVICES)
+get_devs
+
+vgcreate $vg "${DEVICES[@]}"
 test_snapshot_mount
 vgremove $vg
 
@@ -94,7 +90,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check_logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate $vg $(cat DEVICES)
+vgcreate $vg "${DEVICES[@]}"
 test_snapshot_mount
 vgremove $vg
 
@@ -109,7 +105,7 @@ aux prepare_scsi_debug_dev $DEV_SIZE \
 check_logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
-vgcreate $vg $(cat DEVICES)
+vgcreate $vg "${DEVICES[@]}"
 test_snapshot_mount
 vgremove $vg
 
@@ -126,6 +122,6 @@ check_logical_block_size $LOGICAL_BLOCK_SIZE
 check_optimal_io_size 786432
 
 aux prepare_pvs 1 $PER_DEV_SIZE
-check pv_field $(cat DEVICES) pe_start 768.00k
+check pv_field "${DEVICES[@]}" pe_start 768.00k
 
 aux cleanup_scsi_debug_dev

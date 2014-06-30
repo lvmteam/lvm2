@@ -18,7 +18,8 @@ init_lv_() {
 }
 
 test_blkid_() {
-	local type=$(blkid -s TYPE -o value -c /dev/null "$DM_DEV_DIR/$vg/$lv1")
+	local type
+	type=$(blkid -s TYPE -o value -c /dev/null "$DM_DEV_DIR/$vg/$lv1")
 	test "$type" = "swap"
 }
 

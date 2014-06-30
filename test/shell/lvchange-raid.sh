@@ -29,9 +29,13 @@ aux prepare_vg 6
 run_writemostly_check() {
 	local vg=$1
 	local lv=${2}${THIN_POSTFIX}
-	local segtype=$(get lv_field $vg/$lv segtype -a)
-	local d0=$(get lv_devices $vg/${lv}_rimage_0)
-	local d1=$(get lv_devices $vg/${lv}_rimage_1)
+	local segtype=
+	local d0
+	local d1
+
+	segtype=$(get lv_field $vg/$lv segtype -a)
+	d0=$(get lv_devices $vg/${lv}_rimage_0)
+	d1=$(get lv_devices $vg/${lv}_rimage_1)
 
 	printf "#\n#\n#\n# %s/%s (%s): run_writemostly_check\n#\n#\n#\n" \
 		$vg $lv $segtype
