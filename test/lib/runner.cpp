@@ -62,7 +62,7 @@ bool interrupt = false;
 struct Options {
 	bool verbose, batch, interactive, cont;
 	std::string testdir, outdir;
-	std::vector< std::string > flavours;
+	std::vector< std::string > flavours, filter;
 	Options() : verbose( false ), batch( false ), interactive( false ), cont( false ) {}
 };
 
@@ -375,6 +375,15 @@ struct Main {
 					continue;
 				if ( i->substr( 0, 4 ) == "lib/" )
 					continue;
+				bool filter = !options.filter.empty();
+
+				for ( std::vector< std::string >::iterator filt = options.filter.begin();
+				      filt != options.filter.end(); ++filt ) {
+					if ( i->find( *filt ) != std::string::npos )
+						filter = false;
+				}
+				if ( filter )
+					continue;
 				cases.push_back( TestCase( journal, options, options.testdir + *i, *i, *flav ) );
 				cases.back().options = options;
 			}
@@ -473,6 +482,14 @@ bool hasenv( const char *name ) {
 	return true;
 }
 
+template< typename C >
+void split( std::string s, C &c ) {
+	std::stringstream ss( s );
+	std::string item;
+	while ( std::getline( ss, item, ',' ) )
+		c.push_back( item );
+}
+
 int main(int argc, char **argv)
 {
 	Args args( argc, argv );
@@ -480,6 +497,9 @@ int main(int argc, char **argv)
 
 	if ( args.has( "--continue" ) )
 		opt.cont = true;
+
+	if ( args.has( "--only" ) )
+		split( args.opt( "--only" ), opt.filter );
 
 	if ( args.has( "--batch" ) || hasenv( "BATCH" ) ) {
 		opt.verbose = false;
@@ -497,12 +517,9 @@ int main(int argc, char **argv)
 		opt.interactive = true;
 	}
 
-	if ( args.has( "--flavours" ) ) {
-		std::stringstream ss( args.opt( "--flavours" ) );
-		std::string item;
-		while ( std::getline( ss, item, ',' ) )
-			opt.flavours.push_back( item );
-	} else
+	if ( args.has( "--flavours" ) )
+		split( args.opt( "--flavours" ), opt.flavours );
+	else
 		opt.flavours.push_back( "vanilla" );
 
 	opt.outdir = args.opt( "--outdir" );
