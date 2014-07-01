@@ -472,7 +472,7 @@ uint64_t lv_size(const struct logical_volume *lv)
 	return lv->size;
 }
 
-static int _lv_mimage_in_sync(const struct logical_volume *lv)
+int lv_mirror_image_in_sync(const struct logical_volume *lv)
 {
 	dm_percent_t percent;
 	struct lv_segment *seg = first_seg(lv);
@@ -491,7 +491,7 @@ static int _lv_mimage_in_sync(const struct logical_volume *lv)
 	return (percent == DM_PERCENT_100) ? 1 : 0;
 }
 
-static int _lv_raid_image_in_sync(const struct logical_volume *lv)
+int lv_raid_image_in_sync(const struct logical_volume *lv)
 {
 	unsigned s;
 	dm_percent_t percent;
@@ -555,7 +555,7 @@ static int _lv_raid_image_in_sync(const struct logical_volume *lv)
  *
  * Returns: 1 if healthy, 0 if device is not health
  */
-static int _lv_raid_healthy(const struct logical_volume *lv)
+int lv_raid_healthy(const struct logical_volume *lv)
 {
 	unsigned s;
 	char *raid_health;
@@ -662,14 +662,14 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else if (lv_is_thin_pool_data(lv))
 		repstr[0] = 'T';
 	else if (lv->status & MIRROR_IMAGE)
-		repstr[0] = (_lv_mimage_in_sync(lv)) ? 'i' : 'I';
+		repstr[0] = (lv_mirror_image_in_sync(lv)) ? 'i' : 'I';
 	else if (lv->status & RAID_IMAGE)
 		/*
 		 * Visible RAID_IMAGES are sub-LVs that have been exposed for
 		 * top-level use by being split from the RAID array with
 		 * '--splitmirrors 1 --trackchanges'.  They always report 'I'.
 		 */
-		repstr[0] = (!lv_is_visible(lv) && _lv_raid_image_in_sync(lv)) ?
+		repstr[0] = (!lv_is_visible(lv) && lv_raid_image_in_sync(lv)) ?
 			'i' : 'I';
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
@@ -768,7 +768,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		uint64_t n;
 		if (!activation())
 			repstr[8] = 'X';	/* Unknown */
-		else if (!_lv_raid_healthy(lv))
+		else if (!lv_raid_healthy(lv))
 			repstr[8] = 'r';  /* RAID needs 'r'efresh */
 		else if (lv->status & RAID) {
 			if (lv_raid_mismatch_count(lv, &n) && n)
