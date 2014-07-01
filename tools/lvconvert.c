@@ -305,7 +305,8 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 		if (mirror_or_raid_type_requested(cmd, type_str)) {
-			log_error("--%spool and --mirrors/--type mirror/--type raid* are mutually exlusive.", cache_pool ? "type cache_" : "thin");
+			log_error("--%spool and --mirrors/--type mirror/--type raid* are mutually exlusive.",
+				  cache_pool ? "type cache_" : "thin");
 			return 0;
 		}
 		if (arg_count(cmd, repair_ARG)) {
@@ -314,11 +315,13 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 		if (snapshot_type_requested(cmd, type_str)) {
-			log_error("--%spool and --snapshot/--type snapshot are mutually exlusive.", cache_pool ? "type cache_" : "thin");
+			log_error("--%spool and --snapshot/--type snapshot are mutually exlusive.",
+				  cache_pool ? "type cache_" : "thin");
 			return 0;
 		}
 		if (arg_count(cmd, splitmirrors_ARG)) {
-			log_error("--%spool and --splitmirrors are mutually exlusive.", cache_pool ? "type cache_" : "thin");
+			log_error("--%spool and --splitmirrors are mutually exlusive.",
+				  cache_pool ? "type cache_" : "thin");
 			return 0;
 		}
 		if (!cache_pool)
