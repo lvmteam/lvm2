@@ -211,11 +211,13 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 }
 
 /* -s/--snapshot and --type snapshot are synonyms */
-#define snapshot_type_requested(cmd,type_str) (arg_count(cmd, snapshot_ARG) || \
-					       !strcmp(type_str, "snapshot"))
+static inline int snapshot_type_requested(struct cmd_context *cmd, const char *type_str) {
+	return (arg_count(cmd, snapshot_ARG) || !strcmp(type_str, "snapshot"));
+}
 /* mirror/raid* (1,10,4,5,6 and their variants) reshape */
-#define mirror_or_raid_type_requested(cmd,type_str) (arg_count(cmd, mirrors_ARG) || \
-						     !strncmp(type_str, "raid", 4))
+static inline int mirror_or_raid_type_requested(struct cmd_context *cmd, const char *type_str) {
+	return (arg_count(cmd, mirrors_ARG) || !strncmp(type_str, "raid", 4) || !strcmp(type_str, "mirror"));
+}
 
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
