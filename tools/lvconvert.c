@@ -2805,14 +2805,25 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 			if (!arg_count(cmd, chunksize_ARG))
 				lp->chunk_size = seg->chunk_size;
-			else if ((lp->chunk_size != seg->chunk_size) &&
-				 !lp->force &&
-				 yes_no_prompt("Do you really want to change chunk size %s to %s for %s/%s "
-					       "pool volume? [y/n]: ", display_size(cmd, seg->chunk_size),
-					       display_size(cmd, lp->chunk_size),
-					       pool_lv->vg->name, pool_lv->name) == 'n') {
-				log_error("Conversion aborted.");
-				return 0;
+			else if (lp->chunk_size != seg->chunk_size) {
+				if (lp->force == PROMPT) {
+					log_error("Chunk size can be only changed with --force. Conversion aborted.");
+					return 0;
+				}
+				/* Ok, user has likely some serious reason for this */
+				if (!lp->yes &&
+				    yes_no_prompt("Do you really want to change chunk size %s to %s "
+						  "for %s/%s pool volume? [y/n]: ",
+						  display_size(cmd, seg->chunk_size),
+						  display_size(cmd, lp->chunk_size),
+						  pool_lv->vg->name, pool_lv->name) == 'n') {
+					log_error("Conversion aborted.");
+					return 0;
+				}
+				log_warn("WARNING: Changing chunk size %s to %s for %s/%s pool volume.",
+					 display_size(cmd, seg->chunk_size),
+					 display_size(cmd, lp->chunk_size),
+					 pool_lv->vg->name, pool_lv->name);
 			}
 			if (!arg_count(cmd, discards_ARG))
 				lp->discards = seg->discards;

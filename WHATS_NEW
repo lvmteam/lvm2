@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Require --yes option to skip prompt to lvconvert thin pool chunksize.
   Support lvremove -ff to remove thin volumes from broken thin pools.
   Require --yes to skip raid repair prompt.
   Change makefile %.d generation to handle filename changes without make clean.
