@@ -117,7 +117,7 @@ struct TestCase {
 	bool timeout;
 	pid_t pid;
 
-	time_t start, end, silent_start, last_update;
+	time_t start, end, silent_start, last_update, last_heartbeat;
 	Options options;
 
 	Journal *journal;
@@ -152,6 +152,16 @@ struct TestCase {
 
 	bool monitor() {
 		end = time( 0 );
+
+		/* heartbeat */
+		if ( end - last_heartbeat >= 20 ) {
+			std::string stampfile( options.outdir + "/timestamp" );
+			std::ofstream stamp( stampfile.c_str() );
+			stamp << end;
+			stamp.close();
+			fsync_name( stampfile );
+		}
+
 		if ( wait4(pid, &status, WNOHANG, &usage) != 0 ) {
 			io.sync();
 			return false;
@@ -191,15 +201,6 @@ struct TestCase {
 			silent_start = end; /* something happened */
 
 		io.sync();
-
-		/* heartbeat */
-		if ( time( 0 ) % 20 == 0 ) {
-			std::string stampfile( options.outdir + "/timestamp" );
-			std::ofstream stamp( stampfile.c_str() );
-			stamp << time( 0 );
-			stamp.close();
-			fsync_name( stampfile );
-		}
 
 		return true;
 	}
@@ -347,7 +348,8 @@ struct TestCase {
 	}
 
 	TestCase( Journal &j, Options opt, std::string path, std::string name, std::string flavour )
-		: timeout( false ), child( path ), name( name ), flavour( flavour ), options( opt ), journal( &j )
+		: timeout( false ), child( path ), name( name ), flavour( flavour ), options( opt ), journal( &j ),
+		  last_update( 0 ), last_heartbeat( 0 )
 	{
 	}
 };
