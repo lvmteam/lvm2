@@ -446,7 +446,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				  "range 4K to 512K");
 			return 0;
 		}
-		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
+		log_verbose("Setting chunk size to %s.", display_size(cmd, lp->chunk_size));
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
 			return_0;
