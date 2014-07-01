@@ -362,7 +362,7 @@ $(TARGETS): $(OBJECTS)
 	$(CC) -c $(INCLUDES) $(DEFS) $(WFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
 %.pot: %.c Makefile
-	$(CC) -E $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
+	$(CC) -E $(INCLUDES) -include $(top_builddir)/include/pogen.h \
 		$(DEFS) $(WFLAGS) $(CFLAGS) $< > $@
 
 %.so: %.o
@@ -413,6 +413,8 @@ $(LIB_STATIC): $(OBJECTS)
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
 	$(CC) -MM $(INCLUDES) $(DEFS) -o $@ $<; \
 	sed -i "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" $@; \
+	DEPLIST=`sed 's/ \\\\//;s/.*://;' < $@`; \
+	echo $$DEPLIST | fmt -1 | sed 's/ //g;s/\(.*\)/\1:/' >> $@; \
 	[ -s $@ ] || $(RM) $@
 
 %.mo: %.po

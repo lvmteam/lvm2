@@ -19,10 +19,10 @@ LANGS=de
 
 TARGETS=$(LANGS:%=lvm2_%.mo) $(LANGS:%=dm_%.mo)
 
-DM_POSOURCES = $(top_srcdir)/dmsetup/*.pot $(top_srcdir)/libdm/*.pot \
-	       $(top_srcdir)/libdm/*/*.pot
+DM_POSOURCES = $(top_builddir)/tools/dmsetup.pot $(top_builddir)/libdm/*.pot \
+	       $(top_builddir)/libdm/*/*.pot
 
-LVM_POSOURCES = $(top_srcdir)/tools/*.pot $(top_srcdir)/lib/*/*.pot
+LVM_POSOURCES = $(top_builddir)/tools/*.pot $(top_builddir)/lib/*/*.pot
 
 include $(top_builddir)/make.tmpl
 
