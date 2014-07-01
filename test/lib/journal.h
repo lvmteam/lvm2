@@ -89,6 +89,7 @@ struct Journal {
 	Status status, written;
 
 	std::string location, list;
+	int timeouts;
 
 	void append( std::string path ) {
 		std::ofstream of( path.c_str(), std::fstream::app );
@@ -126,6 +127,10 @@ struct Journal {
 
 	void done( std::string n, R r ) {
 		status[ n ] = r;
+		if ( r == TIMEOUT )
+			++ timeouts;
+		else
+			timeouts = 0;
 		sync();
 	}
 
@@ -165,7 +170,8 @@ struct Journal {
 
 	Journal( std::string dir )
 		: location( dir + "/journal" ),
-		  list( dir + "/list" )
+		  list( dir + "/list" ),
+		  timeouts( 0 )
 	{}
 };
 

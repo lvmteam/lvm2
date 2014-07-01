@@ -60,10 +60,11 @@ bool fatal_signal = false;
 bool interrupt = false;
 
 struct Options {
-	bool verbose, batch, interactive, cont;
+	bool verbose, batch, interactive, cont, fatal_timeouts;
 	std::string testdir, outdir;
 	std::vector< std::string > flavours, filter;
-	Options() : verbose( false ), batch( false ), interactive( false ), cont( false ) {}
+	Options() : verbose( false ), batch( false ), interactive( false ),
+		    cont( false ), fatal_timeouts( false ) {}
 };
 
 struct TestProcess
@@ -409,6 +410,14 @@ struct Main {
 
 			i->run();
 
+			if ( options.fatal_timeouts && journal.timeouts >= 2 ) {
+				journal.started( i->id() ); // retry the test on --continue
+				std::cerr << "E: Hit 2 timeouts in a row with --fatal-timeouts" << std::endl;
+				std::cerr << "Suspending (please restart the VM)." << std::endl;
+				sleep( 3600 );
+				die = 1;
+			}
+
 			if ( time(0) - start > 3 * 3600 ) {
 				std::cerr << "3 hours passed, giving up..." << std::endl;
 				die = 1;
@@ -502,6 +511,9 @@ int main(int argc, char **argv)
 
 	if ( args.has( "--only" ) )
 		split( args.opt( "--only" ), opt.filter );
+
+	if ( args.has( "--fatal-timeouts" ) )
+		opt.fatal_timeouts = true;
 
 	if ( args.has( "--batch" ) || hasenv( "BATCH" ) ) {
 		opt.verbose = false;
