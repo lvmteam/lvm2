@@ -93,6 +93,15 @@ const char *get_percent_string(percent_type_t def)
 	return _percent_types[def];
 }
 
+const char *display_lvname(const struct logical_volume *lv)
+{
+	char buf[NAME_LEN * 2 + 2];
+
+	(void) snprintf(buf, sizeof(buf), "%s/%s", lv->vg->name, lv->name);
+
+	return dm_pool_strdup(lv->vg->cmd->mem, buf) ? : lv->name; /* at least LV name... */
+}
+
 #define BASE_UNKNOWN 0
 #define BASE_SHARED 1
 #define BASE_1024 8

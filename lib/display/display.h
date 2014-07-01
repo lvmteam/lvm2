@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+const char *display_lvname(const struct logical_volume *lv);
+
 /* Specify size in KB */
 const char *display_size(const struct cmd_context *cmd, uint64_t size);
 const char *display_size_long(const struct cmd_context *cmd, uint64_t size);
