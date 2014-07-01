@@ -1914,10 +1914,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		}
 
 		if (sync_percent != DM_PERCENT_100) {
-			log_error("WARNING: %s/%s is not in-sync.",
-				  lv->vg->name, lv->name);
-			log_error("WARNING: Portions of the array may"
-				  " be unrecoverable.");
+			log_warn("WARNING: %s/%s is not in-sync.",
+				 lv->vg->name, lv->name);
+			log_warn("WARNING: Portions of the array may be unrecoverable.");
 
 			/*
 			 * The kernel will not allow a device to be replaced
