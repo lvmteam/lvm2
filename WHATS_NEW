@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Support lvremove -ff to remove thin volumes from broken thin pools.
   Require --yes to skip raid repair prompt.
   Change makefile %.d generation to handle filename changes without make clean.
   Fix use of buildir in make pofile.
