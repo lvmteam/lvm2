@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Postpone thin pool lvconvert prompts (2.02.107).
   Require --yes option to skip prompt to lvconvert thin pool chunksize.
   Support lvremove -ff to remove thin volumes from broken thin pools.
   Require --yes to skip raid repair prompt.
