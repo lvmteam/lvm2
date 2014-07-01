@@ -1797,12 +1797,11 @@ static int _is_valid_raid_conversion(const struct segment_type *from_segtype,
 	return 1;
 }
 
-static void _lvconvert_raid_repair_ask(struct cmd_context *cmd, int *replace_dev)
+static void _lvconvert_raid_repair_ask(struct cmd_context *cmd,
+				       struct lvconvert_params *lp,
+				       int *replace_dev)
 {
-	const char *dev_policy = NULL;
-
-	int force = arg_count(cmd, force_ARG);
-	int yes = arg_count(cmd, yes_ARG);
+	const char *dev_policy;
 
 	*replace_dev = 1;
 
@@ -1818,15 +1817,8 @@ static void _lvconvert_raid_repair_ask(struct cmd_context *cmd, int *replace_dev
 		return;
 	}
 
-	if (force != PROMPT) {
-		*replace_dev = 0;
-		return;
-	}
-
-	if (yes)
-		return;
-
-	if (yes_no_prompt("Attempt to replace failed RAID images "
+	if (!lp->yes &&
+	    yes_no_prompt("Attempt to replace failed RAID images "
 			  "(requires full device resync)? [y/n]: ") == 'n') {
 		*replace_dev = 0;
 	}
@@ -1926,7 +1918,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			init_mirror_in_sync(1);
 		}
 
-		_lvconvert_raid_repair_ask(cmd, &replace);
+		_lvconvert_raid_repair_ask(cmd, lp, &replace);
 
 		if (replace) {
 			if (!(failed_pvs = _failed_pv_list(lv->vg)))

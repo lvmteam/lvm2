@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Require --yes to skip raid repair prompt.
   Change makefile %.d generation to handle filename changes without make clean.
   Fix use of buildir in make pofile.
   Enhance private volumes UUIDs with suffixed for easier detection.
