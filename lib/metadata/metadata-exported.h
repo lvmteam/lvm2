@@ -899,6 +899,14 @@ int get_pv_list_for_lv(struct dm_pool *mem,
 struct lv_segment *first_seg(const struct logical_volume *lv);
 struct lv_segment *last_seg(const struct logical_volume *lv);
 
+/* Human-readable LV type name. */
+const char *lv_type_name(const struct logical_volume *lv);
+
+/*
+ * Useful function to determine linear and striped volumes.
+ */
+int lv_is_linear(const struct logical_volume *lv);
+int lv_is_striped(const struct logical_volume *lv);
 
 /*
 * Useful functions for managing snapshots.
