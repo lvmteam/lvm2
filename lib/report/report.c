@@ -195,11 +195,10 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	int major;
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
 
-	if ((major = lv_kernel_major(lv)) >= 0)
-		return dm_report_field_int(rh, field, &major);
+	if (lvi->info && lvi->info->exists && lvi->info->major >= 0)
+		return dm_report_field_int(rh, field, &lvi->info->major);
 
 	return dm_report_field_int32(rh, field, &_reserved_number_undef_32);
 }
@@ -208,11 +207,10 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	int minor;
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
 
-	if ((minor = lv_kernel_minor(lv)) >= 0)
-		return dm_report_field_int(rh, field, &minor);
+	if (lvi->info && lvi->info->exists && lvi->info->minor >= 0)
+		return dm_report_field_int(rh, field, &lvi->info->minor);
 
 	return dm_report_field_int32(rh, field, &_reserved_number_undef_32);
 }
@@ -549,13 +547,12 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			      const void *data,
 			      void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	uint32_t read_ahead = lv_kernel_read_ahead(lv);
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
 
-	if (read_ahead == UINT32_MAX)
+	if (!lvi->info || !lvi->info->exists)
 		return dm_report_field_int32(rh, field, &_reserved_number_undef_32);
 
-	return _size32_disp(rh, mem, field, &read_ahead, private);
+	return _size32_disp(rh, mem, field, &lvi->info->read_ahead, private);
 }
 
 static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,
