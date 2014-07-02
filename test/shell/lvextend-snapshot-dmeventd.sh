@@ -17,6 +17,7 @@ extend() {
 
 write_() {
 	dd if=/dev/zero of="$DM_DEV_DIR/$vg/snap" bs=1k count=$2 seek=$1
+	sync
 }
 
 percent_() {
