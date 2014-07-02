@@ -67,7 +67,7 @@ static void _regex_print(struct rx_node *rx, int depth, unsigned show_nodes)
 			printf("[");
 		for (i = 0; i < 256; i++)
 			if (dm_bit(rx->charset, i)) {
-				if isprint(i)
+				if (isprint(i))
 					printf("%c", (char) i);
 				else if (i == HAT_CHAR)
 					printf("^");
