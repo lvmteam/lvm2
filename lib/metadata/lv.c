@@ -370,7 +370,8 @@ char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	char *repstr;
 	size_t len;
 
-	if (!*lv->vg->name)
+	/* Only for visible devices that get a link from /dev/vg */
+	if (!*lv->vg->name || !lv_is_visible(lv) || lv_is_thin_pool(lv))
 		return dm_pool_strdup(mem, "");
 
 	len = strlen(lv->vg->cmd->dev_dir) + strlen(lv->vg->name) +
