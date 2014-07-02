@@ -5,6 +5,7 @@ pvs \(em report information about physical volumes
 .B pvs
 .RB [ \-a | \-\-all ]
 .RB [ \-\-aligned ]
+.RB [ \-\-binary ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
@@ -44,6 +45,11 @@ initialized with \fBpvcreate\fP(8).
 .TP
 .B \-\-aligned
 Use with \fB\-\-separator\fP to align the output columns.
+.TP
+.B \-\-binary
+Use binary values "0" or "1" instead of descriptive literal values
+for columns that have exactly two valid values to report (not counting
+the "unknown" value which denotes that the value could not be determined).
 .TP
 .B \-\-nameprefixes
 Add an "LVM2_" prefix plus the field name to the output.  Useful

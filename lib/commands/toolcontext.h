@@ -88,6 +88,7 @@ struct cmd_context {
 	unsigned partial_activation:1;
 	unsigned auto_set_activation_skip:1;
 	unsigned si_unit_consistency:1;
+	unsigned report_binary_values_as_numeric:1;
 	unsigned metadata_read_only:1;
 	unsigned ignore_clustered_vgs:1;
 	unsigned threaded:1;		/* Set if running within a thread e.g. clvmd */

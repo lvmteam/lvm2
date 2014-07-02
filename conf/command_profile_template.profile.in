@@ -13,6 +13,7 @@
 #
 global {
 	units="h"
+	report_binary_values_as_numeric=0
 	si_unit_consistency=1
 	suffix=1
 	lvdisplay_shows_full_device_path=0

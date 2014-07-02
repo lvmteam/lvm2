@@ -1022,6 +1022,12 @@ activation {
     # Output each column as a row. If set, this also implies report/prefixes=1.
     # colums_as_rows=0
 
+    # Use binary values "0" or "1" instead of descriptive literal values for
+    # columns that have exactly two valid values to report (not counting the
+    # "unknown" value which denotes that the value could not be determined).
+    #
+    # binary_values_as_numeric = 0
+
     # Comma separated list of columns to sort by when reporting 'lvm devtypes' command.
     # See 'lvm devtypes -o help' for the list of possible fields.
     # devtypes_sort="devtype_name"

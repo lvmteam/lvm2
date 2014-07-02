@@ -43,6 +43,8 @@ struct lvm_report_object {
 
 static const uint64_t _zero64 = UINT64_C(0);
 static const uint64_t _one64 = UINT64_C(1);
+static const char * const _str_zero = "0";
+static const char * const _str_one = "1";
 
 static const uint64_t _reserved_number_undef_64 = UINT64_C(-1);
 static const uint64_t _reserved_number_unmanaged_64 = UINT64_C(-2);
@@ -1173,11 +1175,22 @@ static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
 
 /* PV/VG/LV Attributes */
 
+/*
+ * Display either "0"/"1" or ""/"word" based on bin_value,
+ * cmd->report_binary_values_as_numeric selects the mode to use.
+*/
 static int _binary_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field, int bin_value, const char *word,
 			void *private)
 {
-	return _field_set_value(field, bin_value ? word : "", bin_value ? &_one64 : &_zero64);
+	const struct cmd_context *cmd = (const struct cmd_context *) private;
+
+	if (cmd->report_binary_values_as_numeric)
+		/* "0"/"1" */
+		return _field_set_value(field, bin_value ? _str_one : _str_zero, bin_value ? &_one64 : &_zero64);
+	else
+		/* blank/"word" */
+		return _field_set_value(field, bin_value ? word : "", bin_value ? &_one64 : &_zero64);
 }
 
 static int _pvallocatable_disp(struct dm_report *rh, struct dm_pool *mem,

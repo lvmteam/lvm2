@@ -33,6 +33,7 @@ xx(devtypes,
    PERMITTED_READ_ONLY,
    "devtypes" "\n"
    "\t[--aligned]\n"
+   "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -49,7 +50,7 @@ xx(devtypes,
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n",
 
-   aligned_ARG, nameprefixes_ARG,
+   aligned_ARG, binary_ARG, nameprefixes_ARG,
    noheadings_ARG, nosuffix_ARG, options_ARG,
    rows_ARG, select_ARG, separator_ARG, sort_ARG,
    unbuffered_ARG, unquoted_ARG)
@@ -562,6 +563,7 @@ xx(lvs,
    "lvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
+   "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -586,11 +588,11 @@ xx(lvs,
    "\t[--version]" "\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-   aligned_ARG, all_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
-   nameprefixes_ARG, noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG,
-   partial_ARG, readonly_ARG, rows_ARG, segments_ARG, select_ARG,
-   separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG,
-   unquoted_ARG)
+   aligned_ARG, all_ARG, binary_ARG, ignorelockingfailure_ARG,
+   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
+   readonly_ARG, rows_ARG, segments_ARG, select_ARG, separator_ARG,
+   sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -806,6 +808,7 @@ xx(pvs,
    "pvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
+   "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|-?|--help] " "\n"
@@ -830,10 +833,11 @@ xx(pvs,
    "\t[--version]\n"
    "\t[PhysicalVolume [PhysicalVolume...]]\n",
 
-   aligned_ARG, all_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
-   nameprefixes_ARG, noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG,
-   partial_ARG, readonly_ARG, rows_ARG, segments_ARG, select_ARG, separator_ARG,
-   sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
+   aligned_ARG, all_ARG, binary_ARG, ignorelockingfailure_ARG,
+   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG, nolocking_ARG,
+   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, rows_ARG,
+   segments_ARG, select_ARG, separator_ARG, sort_ARG, trustcache_ARG,
+   unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(pvscan,
    "List all physical volumes",
@@ -1194,6 +1198,7 @@ xx(vgs,
    PERMITTED_READ_ONLY,
    "vgs" "\n"
    "\t[--aligned]\n"
+   "\t[--binary]\n"
    "\t[-a|--all]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
@@ -1218,9 +1223,10 @@ xx(vgs,
    "\t[--version]\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
-   aligned_ARG, all_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
-   nameprefixes_ARG, noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG,
-   partial_ARG, readonly_ARG, rows_ARG, select_ARG, separator_ARG, sort_ARG,
+   aligned_ARG, all_ARG, binary_ARG, ignorelockingfailure_ARG,
+   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
+   readonly_ARG, rows_ARG, select_ARG, separator_ARG, sort_ARG,
    trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(vgscan,

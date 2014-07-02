@@ -930,6 +930,9 @@ static int _get_settings(struct cmd_context *cmd)
 			return EINVALID_CMD_LINE;
 		}
 
+	if (arg_count(cmd, binary_ARG))
+		cmd->report_binary_values_as_numeric = 1;
+
 	if (arg_count(cmd, trustcache_ARG)) {
 		if (arg_count(cmd, all_ARG)) {
 			log_error("--trustcache is incompatible with --all");

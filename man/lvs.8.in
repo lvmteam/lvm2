@@ -4,6 +4,7 @@ lvs \(em report information about logical volumes
 .SH SYNOPSIS
 .B lvs
 .RB [ \-\-aligned ]
+.RB [ \-\-binary ]
 .RB [ \-a | \-\-all ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
@@ -43,6 +44,11 @@ for common options.
 .TP
 .B \-\-aligned
 Use with \fB\-\-separator\fP to align the output columns.
+.TP
+.B \-\-binary
+Use binary values "0" or "1" instead of descriptive literal values
+for columns that have exactly two valid values to report (not counting
+the "unknown" value which denotes that the value could not be determined).
 .TP
 .B \-\-all
 Include information in the output about internal Logical Volumes that

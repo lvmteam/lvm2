@@ -5,6 +5,7 @@ vgs \(em report information about volume groups
 .B vgs
 .RB [ \-a | \-\-all ]
 .RB [ \-\-aligned ]
+.RB [ \-\-binary ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
@@ -42,6 +43,11 @@ List all volume groups.  Equivalent to not specifying any volume groups.
 .TP
 .B \-\-aligned
 Use with \fB\-\-separator\fP to align the output columns.
+.TP
+.B \-\-binary
+Use binary values "0" or "1" instead of descriptive literal values
+for columns that have exactly two valid values to report (not counting
+the "unknown" value which denotes that the value could not be determined).
 .TP
 .B \-\-nameprefixes
 Add an "LVM2_" prefix plus the field name to the output.  Useful
