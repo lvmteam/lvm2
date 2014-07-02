@@ -42,6 +42,7 @@ struct lvm_report_object {
 };
 
 static const uint64_t _zero64 = UINT64_C(0);
+static const uint64_t _one64 = UINT64_C(1);
 
 static const uint64_t _reserved_number_undef_64 = UINT64_C(-1);
 static const uint64_t _reserved_number_unmanaged_64 = UINT64_C(-2);
@@ -67,6 +68,8 @@ static const struct dm_report_reserved_value _report_reserved_values[] = {
 		"Reserved value for size that is automatically calculated."},
 	{0, NULL, NULL}
 };
+
+static const char *_str_unknown = "unknown";
 
 static int _field_set_value(struct dm_report_field *field, const void *data, const void *sort)
 {
@@ -1168,6 +1171,334 @@ static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, repstr, NULL);
 }
 
+/* PV/VG/LV Attributes */
+
+static int _binary_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			struct dm_report_field *field, int bin_value, const char *word,
+			void *private)
+{
+	return _field_set_value(field, bin_value ? word : "", bin_value ? &_one64 : &_zero64);
+}
+
+static int _pvallocatable_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	int allocatable = (((const struct physical_volume *) data)->status & ALLOCATABLE_PV) != 0;
+	return _binary_disp(rh, mem, field, allocatable, "allocatable", private);
+}
+
+static int _pvexported_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	int exported = (((const struct physical_volume *) data)->status & EXPORTED_VG) != 0;
+	return _binary_disp(rh, mem, field, exported, "exported", private);
+}
+
+static int _pvmissing_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	int missing = (((const struct physical_volume *) data)->status & MISSING_PV) != 0;
+	return _binary_disp(rh, mem, field, missing, "missing", private);
+}
+
+static int _vgpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	const char *perms = ((const struct volume_group *) data)->status & LVM_WRITE ? "writeable" : "read-only";
+	return _string_disp(rh, mem, field, &perms, private);
+}
+
+static int _vgextendable_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	int extendable = (vg_is_resizeable((const struct volume_group *) data)) != 0;
+	return _binary_disp(rh, mem, field, extendable, "extendable", private);
+}
+
+static int _vgexported_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	int exported = (vg_is_exported((const struct volume_group *) data)) != 0;
+	return _binary_disp(rh, mem, field, exported, "exported", private);
+}
+
+static int _vgpartial_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	int partial = (vg_missing_pv_count((const struct volume_group *) data)) != 0;
+	return _binary_disp(rh, mem, field, partial, "partial", private);
+}
+
+static int _vgallocationpolicy_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const char *alloc_policy = get_alloc_string(((const struct volume_group *) data)->alloc) ? : _str_unknown;
+	return _string_disp(rh, mem, field, &alloc_policy, private);
+}
+
+static int _vgclustered_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	int clustered = (vg_is_clustered((const struct volume_group *) data)) != 0;
+	return _binary_disp(rh, mem, field, clustered, "clustered", private);
+}
+
+static int _lvvolumetype_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	const char *type = lv_type_name((const struct logical_volume *) data);
+	return _string_disp(rh, mem, field, &type, private);
+}
+
+static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int initial_image_sync;
+
+	if (lv_is_raid(lv) || lv_is_mirrored(lv))
+		initial_image_sync = (lv->status & LV_NOTSYNCED) == 0;
+	else
+		initial_image_sync = 0;
+
+	return _binary_disp(rh, mem, field, initial_image_sync, "initial image sync", private);
+}
+
+static int _lvimagesynced_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int image_synced;
+
+	if (lv_is_raid_image(lv))
+		image_synced = !lv_is_visible(lv) && lv_raid_image_in_sync(lv);
+	else if (lv_is_mirror_image(lv))
+		image_synced = lv_mirror_image_in_sync(lv);
+	else
+		image_synced = 0;
+
+	return _binary_disp(rh, mem, field, image_synced, "image synced", private);
+}
+
+static int _lvmerging_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int merging;
+
+	if (lv_is_origin(lv) || lv_is_external_origin(lv))
+		merging = lv_is_merging_origin(lv);
+	else if (lv_is_cow(lv))
+		merging = lv_is_merging_cow(lv);
+	else if (lv_is_thin_volume(lv))
+		merging = lv_is_merging_thin_snapshot(lv);
+	else
+		merging = 0;
+
+	return _binary_disp(rh, mem, field, merging, "merging", private);
+}
+
+static int _lvconverting_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	int converting = (((const struct logical_volume *) data)->status & CONVERTING) != 0;
+	return _binary_disp(rh, mem, field, converting, "converting", private);
+}
+
+static int _lvpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
+	const char *perms = "";
+
+	if (!(lvi->lv->status & PVMOVE)) {
+		if (lvi->lv->status & LVM_WRITE) {
+			if (lvi->info->read_only)
+				perms = "read-only-override";
+			else
+				perms = "writeable";
+		} else if (lvi->lv->status & LVM_READ)
+			perms = "read-only";
+		else
+			perms = _str_unknown;
+	}
+
+	return _string_disp(rh, mem, field, &perms, private);
+}
+
+static int _lvallocationpolicy_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const char *alloc_policy = get_alloc_string(((const struct logical_volume *) data)->alloc) ? : _str_unknown;
+	return _string_disp(rh, mem, field, &alloc_policy, private);
+}
+
+static int _lvallocationlocked_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	int alloc_locked = (((const struct logical_volume *) data)->status & LOCKED) != 0;
+	return _binary_disp(rh, mem, field, alloc_locked, "allocation locked", private);
+}
+
+static int _lvfixedminor_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	int fixed_minor = (((const struct logical_volume *) data)->status & FIXED_MINOR) != 0;
+	return _binary_disp(rh, mem, field, fixed_minor, "fixed minor", private);
+}
+
+static int _lvmergefailed_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	dm_percent_t snap_percent;
+	int merge_failed;
+
+	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &snap_percent))
+		return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+
+	merge_failed = snap_percent == LVM_PERCENT_MERGE_FAILED;
+	return _binary_disp(rh, mem, field, merge_failed, "merge failed", private);
+}
+
+static int _lvsnapshotinvalid_disp(struct dm_report *rh, struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	dm_percent_t snap_percent;
+	int snap_invalid;
+
+	if (!lv_is_cow(lv))
+		return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+
+	snap_invalid = !lv_snapshot_percent(lv, &snap_percent) || snap_percent == DM_PERCENT_INVALID;
+	return _binary_disp(rh, mem, field, snap_invalid, "snapshot invalid", private);
+}
+
+static int _lvsuspended_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
+
+	if (lvi->info->exists)
+		return _binary_disp(rh, mem, field, lvi->info->suspended, "suspended", private);
+
+	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+}
+
+static int _lvlivetable_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
+
+	if (lvi->info->exists)
+		return _binary_disp(rh, mem, field, lvi->info->live_table, "live table present", private);
+
+	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+}
+
+static int _lvinactivetable_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
+
+	if (lvi->info->exists)
+		return _binary_disp(rh, mem, field, lvi->info->inactive_table, "inactive table present", private);
+
+	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+}
+
+static int _lvdeviceopen_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
+
+	if (lvi->info->exists)
+		return _binary_disp(rh, mem, field, lvi->info->open_count, "open", private);
+
+	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+}
+
+static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *target_type = "unknown";
+
+	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
+		target_type = "thin";
+	else if (lv_is_cache_type(lv))
+		target_type = "cache";
+	else if (lv_is_raid_type(lv))
+		target_type = "raid";
+	else if (lv_is_mirror_type(lv))
+		target_type = "mirror";
+	else if (lv_is_cow(lv) || lv_is_origin(lv))
+		target_type = "snapshot";
+	else if (lv_is_virtual(lv))
+		target_type = "virtual";
+
+	return _string_disp(rh, mem, field, &target_type, private);
+}
+
+static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
+				struct dm_report_field *field,
+				const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *health = "";
+	uint64_t n;
+
+	if (lv->status & PARTIAL_LV)
+		health = "partial";
+	else if (lv_is_raid_type(lv)) {
+		if (!activation())
+			health = "unknown";
+		else if (!lv_raid_healthy(lv))
+			health = "refresh needed";
+		else if (lv_is_raid(lv)) {
+			if (lv_raid_mismatch_count(lv, &n) && n)
+				health = "mismatches exist";
+		} else if (lv->status & LV_WRITEMOSTLY)
+			health = "writemostly";
+	}
+
+	return _string_disp(rh, mem, field, &health, private);
+}
+
+static int _lvskipactivation_disp(struct dm_report *rh, struct dm_pool *mem,
+				  struct dm_report_field *field,
+				  const void *data, void *private)
+{
+	int skip_activation = (((const struct logical_volume *) data)->status & LV_ACTIVATION_SKIP) != 0;
+	return _binary_disp(rh, mem, field, skip_activation, "skip activation", private);
+}
+
 /* Report object types */
 
 /* necessary for displaying something for PVs not belonging to VG */
@@ -1249,6 +1580,7 @@ static const struct dm_report_object_type _devtypes_report_types[] = {
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
+#define BIN DM_REPORT_FIELD_TYPE_NUMBER
 #define SIZ DM_REPORT_FIELD_TYPE_SIZE
 #define PCT DM_REPORT_FIELD_TYPE_PERCENT
 #define STR_LIST DM_REPORT_FIELD_TYPE_STRING_LIST
@@ -1277,6 +1609,7 @@ static const struct dm_report_field_type _devtypes_fields[] = {
 
 #undef STR
 #undef NUM
+#undef BIN
 #undef SIZ
 #undef STR_LIST
 #undef FIELD

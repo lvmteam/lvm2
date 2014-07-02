@@ -159,6 +159,65 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_start, SECTOR_SIZE * pv->ba_start)
 GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _pv_ba_size_set prop_not_implemented_set
 
+#define _pv_allocatable_set prop_not_implemented_set
+#define _pv_allocatable_get prop_not_implemented_get
+#define _pv_exported_set prop_not_implemented_set
+#define _pv_exported_get prop_not_implemented_get
+#define _pv_missing_set prop_not_implemented_set
+#define _pv_missing_get prop_not_implemented_get
+
+#define _vg_permissions_set prop_not_implemented_set
+#define _vg_permissions_get prop_not_implemented_get
+#define _vg_extendable_set prop_not_implemented_set
+#define _vg_extendable_get prop_not_implemented_get
+#define _vg_exported_set prop_not_implemented_set
+#define _vg_exported_get prop_not_implemented_get
+#define _vg_partial_set prop_not_implemented_set
+#define _vg_partial_get prop_not_implemented_get
+#define _vg_allocation_policy_set prop_not_implemented_set
+#define _vg_allocation_policy_get prop_not_implemented_get
+#define _vg_clustered_set prop_not_implemented_set
+#define _vg_clustered_get prop_not_implemented_get
+
+#define _lv_volume_type_set prop_not_implemented_set
+#define _lv_volume_type_get prop_not_implemented_get
+#define _lv_initial_image_sync_set prop_not_implemented_set
+#define _lv_initial_image_sync_get prop_not_implemented_get
+#define _lv_image_synced_get prop_not_implemented_get
+#define _lv_image_synced_set prop_not_implemented_set
+#define _lv_image_synced_get prop_not_implemented_get
+#define _lv_merging_set prop_not_implemented_set
+#define _lv_merging_get prop_not_implemented_get
+#define _lv_converting_set prop_not_implemented_set
+#define _lv_converting_get prop_not_implemented_get
+#define _lv_permissions_set prop_not_implemented_set
+#define _lv_permissions_get prop_not_implemented_get
+#define _lv_allocation_policy_set prop_not_implemented_set
+#define _lv_allocation_policy_get prop_not_implemented_get
+#define _lv_allocation_locked_set prop_not_implemented_set
+#define _lv_allocation_locked_get prop_not_implemented_get
+#define _lv_fixed_minor_set prop_not_implemented_set
+#define _lv_fixed_minor_get prop_not_implemented_get
+#define _lv_merge_failed_set prop_not_implemented_set
+#define _lv_merge_failed_get prop_not_implemented_get
+#define _lv_snapshot_invalid_set prop_not_implemented_set
+#define _lv_snapshot_invalid_get prop_not_implemented_get
+#define _lv_suspended_set prop_not_implemented_set
+#define _lv_suspended_get prop_not_implemented_get
+#define _lv_live_table_set prop_not_implemented_set
+#define _lv_live_table_get prop_not_implemented_get
+#define _lv_inactive_table_set prop_not_implemented_set
+#define _lv_inactive_table_get prop_not_implemented_get
+#define _lv_device_open_set prop_not_implemented_set
+#define _lv_device_open_get prop_not_implemented_get
+#define _lv_target_type_set prop_not_implemented_set
+#define _lv_target_type_get prop_not_implemented_get
+#define _lv_health_status_set prop_not_implemented_set
+#define _lv_health_status_get prop_not_implemented_get
+#define _lv_target_type_get prop_not_implemented_get
+#define _lv_skip_activation_set prop_not_implemented_set
+#define _lv_skip_activation_get prop_not_implemented_get
+
 /* LV */
 GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
 #define _lv_uuid_set prop_not_implemented_set
@@ -348,6 +407,7 @@ struct lvm_property_type _properties[] = {
 
 #undef STR
 #undef NUM
+#undef BIN
 #undef SIZ
 #undef PCT
 #undef STR_LIST

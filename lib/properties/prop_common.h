@@ -122,12 +122,13 @@ static int _ ## NAME ## _get (const void *obj, struct lvm_property_type *prop) \
 
 #define STR 1
 #define NUM 2
-#define SIZ 3
-#define PCT 4
-#define STR_LIST 5
+#define BIN 3
+#define SIZ 4
+#define PCT 5
+#define STR_LIST 6
 
 #define FIELD_MODIFIABLE 0x00000001
 #define FIELD(type, strct, field_type, head, field, width, fn, id, desc, settable) \
-	{ type, #id, settable, field_type == STR, ((field_type == NUM) || (field_type == SIZ) || (field_type == PCT)), { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
+	{ type, #id, settable, field_type == STR, ((field_type == NUM) || (field_type == BIN) || (field_type == SIZ) || (field_type == PCT)), { .integer = 0 }, _ ## id ## _get, _ ## id ## _set },
 
 #endif
