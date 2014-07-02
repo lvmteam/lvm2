@@ -219,6 +219,18 @@ char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return dm_pool_strdup(mem, lv->name);
 }
 
+char *lv_fullname_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+        char lvfullname[NAME_LEN * 2 + 2];
+
+        if (dm_snprintf(lvfullname, sizeof(lvfullname), "%s/%s", lv->vg->name, lv->name) < 0) {
+                log_error("lvfullname snprintf failed");
+                return NULL;
+        }
+
+        return dm_pool_strdup(mem, lvfullname);
+}
+
 char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct dm_list *modules;
@@ -379,13 +391,42 @@ char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	if (!(repstr = dm_pool_zalloc(mem, len))) {
 		log_error("dm_pool_alloc failed");
-		return 0;
+		return NULL;
 	}
 
 	if (dm_snprintf(repstr, len, "%s%s/%s",
 			lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0) {
 		log_error("lvpath snprintf failed");
-		return 0;
+		return NULL;
+	}
+
+	return repstr;
+}
+
+char *lv_dmpath_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	char *name;
+	char *repstr;
+	size_t len;
+
+	if (!*lv->vg->name)
+		return dm_pool_strdup(mem, "");
+
+        if (!(name = dm_build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
+		log_error("dm_build_dm_name failed");
+		return NULL;
+	}
+
+	len = strlen(dm_dir()) + strlen(name) + 2;
+
+	if (!(repstr = dm_pool_zalloc(mem, len))) {
+		log_error("dm_pool_alloc failed");
+		return NULL;
+	}
+
+	if (dm_snprintf(repstr, len, "%s/%s", dm_dir(), name) < 0) {
+		log_error("lv_dmpath snprintf failed");
+		return NULL;
 	}
 
 	return repstr;

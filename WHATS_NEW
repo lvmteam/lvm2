@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Add lv_full_name and lv_dm_path fields to reports.
   Change lv_path field to suppress devices that never appear in /dev/vg.
   Postpone thin pool lvconvert prompts (2.02.107).
   Require --yes option to skip prompt to lvconvert thin pool chunksize.

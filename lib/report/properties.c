@@ -164,8 +164,12 @@ GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
 #define _lv_uuid_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_name, lv_name_dup(lv->vg->vgmem, lv))
 #define _lv_name_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(lv_full_name, lv_fullname_dup(lv->vg->vgmem, lv))
+#define _lv_full_name_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_path, lv_path_dup(lv->vg->vgmem, lv))
 #define _lv_path_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(lv_dm_path, lv_dmpath_dup(lv->vg->vgmem, lv))
+#define _lv_dm_path_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_attr, lv_attr_dup(lv->vg->vgmem, lv))
 #define _lv_attr_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(lv_major, lv->major)

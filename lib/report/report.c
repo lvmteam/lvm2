@@ -311,6 +311,19 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, repstr, lvname);
 }
 
+static int _lvfullname_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	char *repstr;
+
+	if (!(repstr = lv_fullname_dup(mem, lv)))
+		return_0;
+
+	return _field_set_value(field, repstr, NULL);
+}
+
 static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))
@@ -359,6 +372,19 @@ static int _lvpath_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr;
 
 	if (!(repstr = lv_path_dup(mem, lv)))
+		return_0;
+
+	return _field_set_value(field, repstr, NULL);
+}
+
+static int _lvdmpath_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	char *repstr;
+
+	if (!(repstr = lv_dmpath_dup(mem, lv)))
 		return_0;
 
 	return _field_set_value(field, repstr, NULL);

@@ -95,11 +95,8 @@ const char *get_percent_string(percent_type_t def)
 
 const char *display_lvname(const struct logical_volume *lv)
 {
-	char buf[NAME_LEN * 2 + 2];
-
-	(void) snprintf(buf, sizeof(buf), "%s/%s", lv->vg->name, lv->name);
-
-	return dm_pool_strdup(lv->vg->cmd->mem, buf) ? : lv->name; /* at least LV name... */
+	/* On allocation failure, just return the LV name. */
+	return lv_fullname_dup(lv->vg->cmd->mem, lv) ? : lv->name;
 }
 
 #define BASE_UNKNOWN 0
