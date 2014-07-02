@@ -211,11 +211,11 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 }
 
 /* -s/--snapshot and --type snapshot are synonyms */
-static inline int snapshot_type_requested(struct cmd_context *cmd, const char *type_str) {
+static int _snapshot_type_requested(struct cmd_context *cmd, const char *type_str) {
 	return (arg_count(cmd, snapshot_ARG) || !strcmp(type_str, "snapshot"));
 }
 /* mirror/raid* (1,10,4,5,6 and their variants) reshape */
-static inline int mirror_or_raid_type_requested(struct cmd_context *cmd, const char *type_str) {
+static int _mirror_or_raid_type_requested(struct cmd_context *cmd, const char *type_str) {
 	return (arg_count(cmd, mirrors_ARG) || !strncmp(type_str, "raid", 4) || !strcmp(type_str, "mirror"));
 }
 
@@ -239,8 +239,8 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, splitsnapshot_ARG))
 		lp->splitsnapshot = 1;
 
-	if ((snapshot_type_requested(cmd, type_str) || arg_count(cmd, merge_ARG)) &&
-	    (arg_count(cmd, mirrorlog_ARG) || mirror_or_raid_type_requested(cmd, type_str) ||
+	if ((_snapshot_type_requested(cmd, type_str) || arg_count(cmd, merge_ARG)) &&
+	    (arg_count(cmd, mirrorlog_ARG) || _mirror_or_raid_type_requested(cmd, type_str) ||
 	     arg_count(cmd, repair_ARG) || arg_count(cmd, thinpool_ARG))) {
 		log_error("--snapshot/--type snapshot or --merge argument "
 			  "cannot be mixed with --mirrors/--type mirror/--type raid*, "
@@ -249,7 +249,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	}
 
 	if ((arg_count(cmd, stripes_long_ARG) || arg_count(cmd, stripesize_ARG)) &&
-	    !(mirror_or_raid_type_requested(cmd, type_str) ||
+	    !(_mirror_or_raid_type_requested(cmd, type_str) ||
 	      arg_count(cmd, repair_ARG) ||
 	      arg_count(cmd, thinpool_ARG))) {
 		log_error("--stripes or --stripesize argument is only valid "
@@ -274,15 +274,15 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (!arg_count(cmd, background_ARG))
 		lp->wait_completion = 1;
 
-	if (snapshot_type_requested(cmd, type_str))
+	if (_snapshot_type_requested(cmd, type_str))
 		lp->snapshot = 1;
 
-	if (snapshot_type_requested(cmd, type_str) && arg_count(cmd, merge_ARG)) {
+	if (_snapshot_type_requested(cmd, type_str) && arg_count(cmd, merge_ARG)) {
 		log_error("--snapshot and --merge are mutually exclusive");
 		return 0;
 	}
 
-	if (arg_count(cmd, splitmirrors_ARG) && mirror_or_raid_type_requested(cmd, type_str)) {
+	if (arg_count(cmd, splitmirrors_ARG) && _mirror_or_raid_type_requested(cmd, type_str)) {
 		log_error("--mirrors/--type mirror/--type raid* and --splitmirrors are "
 			  "mutually exclusive");
 		return 0;
@@ -304,7 +304,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				  cache_pool ? "type cache_" : "thin");
 			return 0;
 		}
-		if (mirror_or_raid_type_requested(cmd, type_str)) {
+		if (_mirror_or_raid_type_requested(cmd, type_str)) {
 			log_error("--%spool and --mirrors/--type mirror/--type raid* are mutually exlusive.",
 				  cache_pool ? "type cache_" : "thin");
 			return 0;
@@ -314,7 +314,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				  cache_pool ? "type cache_" : "thin");
 			return 0;
 		}
-		if (snapshot_type_requested(cmd, type_str)) {
+		if (_snapshot_type_requested(cmd, type_str)) {
 			log_error("--%spool and --snapshot/--type snapshot are mutually exlusive.",
 				  cache_pool ? "type cache_" : "thin");
 			return 0;
