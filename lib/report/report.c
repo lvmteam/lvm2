@@ -27,9 +27,14 @@
 
 #include <stddef.h> /* offsetof() */
 
+struct lv_with_info {
+	struct logical_volume *lv;
+	struct lvinfo *info;
+};
+
 struct lvm_report_object {
 	struct volume_group *vg;
-	struct logical_volume *lv;
+	struct lv_with_info *lvi;
 	struct physical_volume *pv;
 	struct lv_segment *seg;
 	struct pv_segment *pvseg;
@@ -1192,7 +1197,12 @@ static void *_obj_get_vg(void *obj)
 
 static void *_obj_get_lv(void *obj)
 {
-	return ((struct lvm_report_object *)obj)->lv;
+	return ((struct lvm_report_object *)obj)->lvi->lv;
+}
+
+static void *_obj_get_lv_with_info(void *obj)
+{
+	return ((struct lvm_report_object *)obj)->lvi;
 }
 
 static void *_obj_get_pv(void *obj)
@@ -1223,6 +1233,7 @@ static void *_obj_get_devtypes(void *obj)
 static const struct dm_report_object_type _report_types[] = {
 	{ VGS, "Volume Group", "vg_", _obj_get_vg },
 	{ LVS, "Logical Volume", "lv_", _obj_get_lv },
+	{ LVSINFO, "Logical Volume Device", "lv_", _obj_get_lv_with_info },
 	{ PVS, "Physical Volume", "pv_", _obj_get_pv },
 	{ LABEL, "Physical Volume Label", "pv_", _obj_get_label },
 	{ SEGS, "Logical Volume Segment", "seg_", _obj_get_seg },
@@ -1318,13 +1329,14 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,
 		  struct lv_segment *seg, struct pv_segment *pvseg,
-		  struct label *label)
+		  struct lvinfo *lvinfo, struct label *label)
 {
 	struct device dummy_device = { .dev = 0 };
 	struct label dummy_label = { .dev = &dummy_device };
+	struct lv_with_info lvi = { .lv = lv, .info = lvinfo };
 	struct lvm_report_object obj = {
 		.vg = vg,
-		.lv = lv,
+		.lvi = &lvi,
 		.pv = pv,
 		.seg = seg,
 		.pvseg = pvseg,

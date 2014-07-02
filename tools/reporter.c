@@ -31,7 +31,7 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       void *handle)
 {
-	if (!report_object(handle, vg, NULL, NULL, NULL, NULL, NULL))
+	if (!report_object(handle, vg, NULL, NULL, NULL, NULL, NULL, NULL))
 		return_ECMD_FAILED;
 
 	check_current_backup(vg);
@@ -42,7 +42,21 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 		       void *handle)
 {
-	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, NULL))
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, NULL, NULL))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
+static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume *lv,
+				 void *handle)
+{
+	struct lvinfo lvinfo;
+
+	if (!lv_info(cmd, lv, 0, &lvinfo, 1, 1))
+		return_ECMD_FAILED;
+
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, &lvinfo, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -51,7 +65,7 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 static int _segs_single(struct cmd_context *cmd __attribute__((unused)),
 			struct lv_segment *seg, void *handle)
 {
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, NULL))
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, NULL, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -107,7 +121,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 	dm_list_init(&_free_logical_volume.snapshot_segs);
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
-			   seg ? : &_free_lv_segment, pvseg, pv_label(pvseg->pv))) {
+			   seg ? : &_free_lv_segment, pvseg, NULL, pv_label(pvseg->pv))) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}
@@ -177,7 +191,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		pv = pvl->pv;
 	}
 
-	if (!report_object(handle, vg, NULL, pv, NULL, NULL, NULL)) {
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL, NULL, NULL)) {
 		stack;
 		ret = ECMD_FAILED;
 	}
@@ -195,7 +209,7 @@ out:
 static int _label_single(struct cmd_context *cmd, struct label *label,
 		         void *handle)
 {
-	if (!report_object(handle, NULL, NULL, NULL, NULL, NULL, label))
+	if (!report_object(handle, NULL, NULL, NULL, NULL, NULL, NULL, label))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -378,6 +392,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type = PVS;
 	else if (report_type & SEGS)
 		report_type = SEGS;
+	else if (report_type & LVSINFO)
+		report_type = LVSINFO;
 	else if (report_type & LVS)
 		report_type = LVS;
 
@@ -388,6 +404,10 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	case LVS:
 		r = process_each_lv(cmd, argc, argv, 0, report_handle,
 				    &_lvs_single);
+		break;
+	case LVSINFO:
+		r = process_each_lv(cmd, argc, argv, 0, report_handle,
+				    &_lvs_with_info_single);
 		break;
 	case VGS:
 		r = process_each_vg(cmd, argc, argv, 0,
