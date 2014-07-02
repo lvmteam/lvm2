@@ -2759,13 +2759,12 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			return 0;
 		}
 		if (metadata_lv == pool_lv) {
-			log_error("Can't use same LV for thin pool data and metadata LV %s.",
-				  lp->pool_metadata_lv_name);
+			log_error("Can't use same LV for thin pool data and metadata LV %s/%s.",
+				  metadata_lv->vg->name, metadata_lv->name);
 			return 0;
 		}
 		if (lv_is_thin_type(metadata_lv)) {
-			log_error("Can't use thin pool logical volume %s/%s "
-				  "for thin pool metadata.",
+			log_error("Can't use thin type LV %s/%s for thin pool metadata.",
 				  metadata_lv->vg->name, metadata_lv->name);
 			return 0;
 		}
