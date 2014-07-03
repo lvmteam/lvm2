@@ -676,7 +676,7 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	 */
 	if (stat(path, &info) == -1) {
 		if (errno != ENOENT) {
-			log_sys_error("stat", path);
+			log_sys_debug("stat", path);
 			return 0;
 		}
 		if (!dev_get_primary_dev(dt, dev, &primary))
@@ -688,24 +688,23 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 
 		if (stat(path, &info) == -1) {
 			if (errno != ENOENT)
-				log_sys_error("stat", path);
+				log_sys_debug("stat", path);
 			return 0;
 		}
 	}
 
 	if (!(fp = fopen(path, "r"))) {
-		log_sys_error("fopen", path);
+		log_sys_debug("fopen", path);
 		return 0;
 	}
 
 	if (!fgets(buffer, sizeof(buffer), fp)) {
-		log_sys_error("fgets", path);
+		log_sys_debug("fgets", path);
 		goto out;
 	}
 
 	if (sscanf(buffer, "%lu", &result) != 1) {
-		log_error("sysfs file %s not in expected format: %s", path,
-			  buffer);
+		log_warn("sysfs file %s not in expected format: %s", path, buffer);
 		goto out;
 	}
 
@@ -714,7 +713,7 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 
 out:
 	if (fclose(fp))
-		log_sys_error("fclose", path);
+		log_sys_debug("fclose", path);
 
 	return result >> SECTOR_SHIFT;
 }
