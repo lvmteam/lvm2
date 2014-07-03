@@ -133,6 +133,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	dm_list_iterate_items(lvl1, &vg_from->lvs) {
 		lvl1->lv->vg = vg_to;
+		lvl1->lv->lvid.id[0] = lvl1->lv->vg->id;
 	}
 
 	while (!dm_list_empty(&vg_from->lvs)) {

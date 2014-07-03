@@ -2331,6 +2331,7 @@ int vg_validate(struct volume_group *vg)
 	struct lv_segment *seg;
 	struct dm_str_list *sl;
 	char uuid[64] __attribute__((aligned(8)));
+	char uuid2[64] __attribute__((aligned(8)));
 	int r = 1;
 	unsigned hidden_lv_count = 0, lv_count = 0, lv_visible_count = 0;
 	unsigned pv_count = 0;
@@ -2427,6 +2428,17 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
+		if (!id_equal(&lvl->lv->lvid.id[0], &lvl->lv->vg->id)) {
+			if (!id_write_format(&lvl->lv->lvid.id[0], uuid,
+					     sizeof(uuid)))
+				stack;
+			if (!id_write_format(&lvl->lv->vg->id, uuid2,
+					     sizeof(uuid2)))
+				stack;
+			log_error(INTERNAL_ERROR "LV %s has VG UUID %s but its VG %s has UUID %s",
+				  lvl->lv->name, uuid, lvl->lv->vg->name, uuid2);
+			r = 0;
+		}
 
 		if (lv_is_cow(lvl->lv))
 			num_snapshots++;
