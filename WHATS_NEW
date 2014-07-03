@@ -1,7 +1,7 @@
 Version 2.02.108 -
 =================================
   Fix VG component of lvid in vgsplit/vgmerge and check in vg_validate.
-  Add lv_full_name and lv_dm_path fields to reports.
+  Add lv_full_name, lv_parent and lv_dm_path fields to reports.
   Change lv_path field to suppress devices that never appear in /dev/vg.
   Postpone thin pool lvconvert prompts (2.02.107).
   Require --yes option to skip prompt to lvconvert thin pool chunksize.

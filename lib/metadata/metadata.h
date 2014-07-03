@@ -428,7 +428,7 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le);
  */
 int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
 int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
-struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
+struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *lv);
 
 int for_each_sub_lv(struct logical_volume *lv,
                     int (*fn)(struct logical_volume *lv, void *data),

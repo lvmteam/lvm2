@@ -342,7 +342,7 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv,
  *
  * In general, walk through lv->segs_using_this_lv.
  */
-struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv)
+struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *lv)
 {
 	struct seg_list *sl;
 
