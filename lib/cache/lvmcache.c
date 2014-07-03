@@ -1707,7 +1707,7 @@ static int _get_pv_if_in_vg(struct lvmcache_info *info,
 		 * lvmcache_label_scan() and drop cached
 		 * vginfo so make a local copy of string.
 		 */
-		strcpy(vgname, info->vginfo->vgname);
+		(void) dm_strncpy(vgname, info->vginfo->vgname, sizeof(vgname));
 		memcpy(vgid, info->vginfo->vgid, sizeof(vgid));
 
 		if (get_pv_from_vg_by_id(info->fmt, vgname, vgid,

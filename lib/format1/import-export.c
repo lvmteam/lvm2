@@ -347,7 +347,7 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	snprintf((char *)lvd->lv_name, sizeof(lvd->lv_name), "%s%s/%s",
 		 dev_dir, vg->name, lv->name);
 
-	strcpy((char *)lvd->vg_name, vg->name);
+	(void) dm_strncpy((char *)lvd->vg_name, vg->name, sizeof(lvd->vg_name));
 
 	if (lv->status & LVM_READ)
 		lvd->lv_access |= LV_READ;
