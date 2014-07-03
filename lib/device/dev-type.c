@@ -507,8 +507,10 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 	if (!_type_in_flag_list(type, types_no_prompt)) {
 		if (!yes && (force == PROMPT) &&
 		    yes_no_prompt("WARNING: %s signature detected on %s at offset %s. "
-				  "Wipe it? [y/n] ", type, name, offset) != 'y')
-			return_0;
+				  "Wipe it? [y/n]: ", type, name, offset) == 'n') {
+			log_error("Aborted wiping of %s.", type);
+			return 0;
+		}
 		log_print_unless_silent(_msg_wiping, type, name);
 	} else
 		log_verbose(_msg_wiping, type, name);
@@ -591,9 +593,11 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 
 	/* Specifying --yes => do not ask. */
 	if (!yes && (force == PROMPT) &&
-	    yes_no_prompt("WARNING: %s detected on %s. Wipe it? [y/n] ",
-			  type, name) != 'y')
-		return_0;
+	    yes_no_prompt("WARNING: %s detected on %s. Wipe it? [y/n]: ",
+			  type, name) == 'n') {
+		log_error("Aborted wiping of %s.", type);
+		return 0;
+	}
 
 	log_print_unless_silent("Wiping %s on %s.", type, name);
 	if (!dev_set(dev, offset_found, wipe_len, 0)) {
