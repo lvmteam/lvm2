@@ -1142,7 +1142,7 @@ const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int 
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	const struct dm_config_node *cn;
 
 	profile_applied = _apply_local_profile(cmd, profile);
@@ -1160,7 +1160,7 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	const char *str;
 
 	profile_applied = _apply_local_profile(cmd, profile);
@@ -1181,7 +1181,7 @@ const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, st
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	const char *str;
 
 	profile_applied = _apply_local_profile(cmd, profile);
@@ -1204,7 +1204,7 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	int i;
 
 	profile_applied = _apply_local_profile(cmd, profile);
@@ -1225,7 +1225,7 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	int i64;
 
 	profile_applied = _apply_local_profile(cmd, profile);
@@ -1246,7 +1246,7 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	float f;
 
 	profile_applied = _apply_local_profile(cmd, profile);
@@ -1267,7 +1267,7 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
-	int profile_applied = 0;
+	int profile_applied;
 	int b;
 
 	profile_applied = _apply_local_profile(cmd, profile);
