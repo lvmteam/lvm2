@@ -1633,6 +1633,7 @@ struct dm_report_field;
 #define DM_REPORT_FIELD_ALIGN_LEFT		0x00000001
 #define DM_REPORT_FIELD_ALIGN_RIGHT		0x00000002
 #define DM_REPORT_FIELD_TYPE_MASK		0x00000FF0
+#define DM_REPORT_FIELD_TYPE_NONE		0x00000000
 #define DM_REPORT_FIELD_TYPE_STRING		0x00000010
 #define DM_REPORT_FIELD_TYPE_NUMBER		0x00000020
 #define DM_REPORT_FIELD_TYPE_SIZE		0x00000040
@@ -1658,9 +1659,35 @@ struct dm_report_field_type {
 	const char *desc;	/* description of the field */
 };
 
+/*
+ * Per-field reserved value.
+ */
+struct dm_report_field_reserved_value {
+	/* field_num is the position of the field in 'fields'
+	   array passed to dm_report_init_with_selection */
+	uint32_t field_num;
+	/* the value is of the same type as the field
+	   identified by field_num */
+	const void *value;
+};
+
+/*
+ * Reserved value is a 'value' that is used directly if any of the 'names' is hit.
+ *
+ * If type is any of DM_REPORT_FIELD_TYPE_*, the reserved value is recognized
+ * for all fields of that type.
+ *
+ * If type is DM_REPORT_FIELD_TYPE_NONE, the reserved value is recognized
+ * for the exact field specified - hence the type of the value is automatically
+ * the same as the type of the field itself.
+ *
+ * The array of reserved values is used to initialize reporting with
+ * selection enabled (see also dm_report_init_with_selection function).
+ */
 struct dm_report_reserved_value {
 	const unsigned type;		/* DM_REPORT_FIELD_TYPE_* */
 	const void *value;		/* reserved value:
+						struct dm_report_field_reserved_value for DM_REPORT_FIELD_TYPE_NONE
 						uint64_t for DM_REPORT_FIELD_TYPE_NUMBER
 						uint64_t for DM_REPORT_FIELD_TYPE_SIZE (number of 512-byte sectors)
 						uint64_t for DM_REPORT_FIELD_TYPE_PERCENT

@@ -1599,6 +1599,18 @@ static int _tok_op_cmp(const char *s, const char **end)
 	return _tok_op(_op_cmp, s, end, 0);
 }
 
+static char _get_and_skip_quote_char(char const **s)
+{
+	char c = 0;
+
+	if (**s == '"' || **s == '\'') {
+		c = **s;
+		(*s)++;
+	}
+
+	return c;
+}
+
  /*
   *
   * Input:
@@ -1689,36 +1701,60 @@ static const char *_tok_value_string(const char *s,
 	return s;
 }
 
+static const char *_reserved_name(const char **names, const char *s, size_t len)
+{
+	const char **name = names;
+	while (*name) {
+		if ((strlen(*name) == len) && !strncmp(*name, s, len))
+			return *name;
+		name++;
+	}
+	return NULL;
+}
+
 /*
  * Used to replace a string representation of the reserved value
  * found in selection with the exact reserved value of certain type.
  */
-static const char *_get_reserved_value(struct dm_report *rh, unsigned type,
-				       const char *s, const char **begin, const char **end,
-				       const struct dm_report_reserved_value **reserved)
+static const char *_get_reserved(struct dm_report *rh, unsigned type,
+				 uint32_t field_num, int implicit,
+				 const char *s, const char **begin, const char **end,
+				 const struct dm_report_reserved_value **reserved)
 {
-	const struct dm_report_reserved_value *iter = rh->reserved_values;
-	const char **name;
+	const struct dm_report_reserved_value *iter = implicit ? NULL : rh->reserved_values;
+	const char *tmp_begin, *tmp_end, *tmp_s = s;
+	const char *name = NULL;
+	char c;
 
 	*reserved = NULL;
 
 	if (!iter)
 		return s;
 
-	while (iter->type) {
-		if (iter->type & type) {
-			name = iter->names;
-			while (*name) {
-				if (!strcmp(*name, s)) {
-					*begin = s;
-					*end = s += strlen(*name);
-					*reserved = iter;
-					return s;
-				}
-				name++;
-			}
+	c = _get_and_skip_quote_char(&tmp_s);
+	if (!(tmp_s = _tok_value_string(tmp_s, &tmp_begin, &tmp_end, c, SEL_AND | SEL_OR | SEL_PRECEDENCE_PE, NULL)))
+		return s;
+
+	while (iter->value) {
+		if (!iter->type) {
+			/* DM_REPORT_FIELD_TYPE_NONE - per-field reserved value */
+			if (((((const struct dm_report_field_reserved_value *) iter->value)->field_num) == field_num) &&
+			    (name = _reserved_name(iter->names, tmp_begin, tmp_end - tmp_begin)))
+				break;
+		} else if (iter->type & type) {
+			/* DM_REPORT_FIELD_TYPE_* - per-type reserved value */
+			if ((name = _reserved_name(iter->names, tmp_begin, tmp_end - tmp_begin)))
+				break;
 		}
 		iter++;
+	}
+
+	if (name) {
+		/* found! */
+		*begin = tmp_begin;
+		*end = tmp_end;
+		s = tmp_s;
+		*reserved = iter;
 	}
 
 	return s;
@@ -1880,18 +1916,6 @@ static int _add_item_to_string_list(struct dm_pool *mem, const char *begin,
 	return 1;
 }
 
-static char _get_and_skip_quote_char(char const **s)
-{
-	char c = 0;
-
-	if (**s == '"' || **s == '\'') {
-		c = **s;
-		(*s)++;
-	}
-
-	return c;
-}
-
 /*
  * Input:
  *   ft              - field type for which the value is parsed
@@ -2033,8 +2057,10 @@ bad:
  */
 static const char *_tok_value(struct dm_report *rh,
 			      const struct dm_report_field_type *ft,
-			      const char *s, const char **begin,
-			      const char **end, uint32_t *flags,
+			      uint32_t field_num, int implicit,
+			      const char *s,
+			      const char **begin, const char **end,
+			      uint32_t *flags,
 			      const struct dm_report_reserved_value **reserved,
 			      struct dm_pool *mem, void *custom)
 {
@@ -2046,7 +2072,7 @@ static const char *_tok_value(struct dm_report *rh,
 
 	s = _skip_space(s);
 
-	s = _get_reserved_value(rh, expected_type, s, begin, end, reserved);
+	s = _get_reserved(rh, expected_type, field_num, implicit, s, begin, end, reserved);
 	if (*reserved) {
 		*flags |= expected_type;
 		return s;
@@ -2149,6 +2175,14 @@ static const char *_tok_field_name(const char *s,
 	return s;
 }
 
+static const void *_get_reserved_value(const struct dm_report_reserved_value *reserved)
+{
+	if (reserved->type)
+		return reserved->value;
+	else
+		return ((const struct dm_report_field_reserved_value *) reserved->value)->value;
+}
+
 static struct field_selection *_create_field_selection(struct dm_report *rh,
 						       uint32_t field_num,
 						       int implicit,
@@ -2229,7 +2263,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 		switch (flags & DM_REPORT_FIELD_TYPE_MASK) {
 			case DM_REPORT_FIELD_TYPE_STRING:
 				if (reserved) {
-					fs->v.s = (const char *) reserved->value;
+					fs->v.s = (const char *) _get_reserved_value(reserved);
 					dm_pool_free(rh->mem, s);
 				} else {
 					fs->v.s = s;
@@ -2241,7 +2275,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 				break;
 			case DM_REPORT_FIELD_TYPE_NUMBER:
 				if (reserved)
-					fs->v.i = *(uint64_t *) reserved->value;
+					fs->v.i = *(uint64_t *) _get_reserved_value(reserved);
 				else {
 					if (((fs->v.i = strtoull(s, NULL, 10)) == ULLONG_MAX) &&
 						 (errno == ERANGE)) {
@@ -2257,7 +2291,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 				break;
 			case DM_REPORT_FIELD_TYPE_SIZE:
 				if (reserved)
-					fs->v.d = (double) * (uint64_t *) reserved->value;
+					fs->v.d = (double) * (uint64_t *) _get_reserved_value(reserved);
 				else {
 					fs->v.d = strtod(s, NULL);
 					if (errno == ERANGE) {
@@ -2276,7 +2310,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 				break;
 			case DM_REPORT_FIELD_TYPE_PERCENT:
 				if (reserved)
-					fs->v.i = *(uint64_t *) reserved->value;
+					fs->v.i = *(uint64_t *) _get_reserved_value(reserved);
 				else {
 					fs->v.d = strtod(s, NULL);
 					if ((errno == ERANGE) || (fs->v.d < 0) || (fs->v.d > 100)) {
@@ -2508,7 +2542,9 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 			custom = &str_list;
 		else
 			custom = NULL;
-		if (!(last = _tok_value(rh, ft, last, &vs, &ve, &flags, &reserved, rh->mem, custom)))
+		if (!(last = _tok_value(rh, ft, field_num, implicit,
+					last, &vs, &ve, &flags,
+					&reserved, rh->mem, custom)))
 			goto_bad;
 	}
 
