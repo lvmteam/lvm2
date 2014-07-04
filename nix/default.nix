@@ -31,12 +31,12 @@ let
          export LVM_TEST_BACKING_DEVICE=/dev/vdb
 
          lvm2-testsuite --batch --outdir /tmp/xchg/results-ndev --continue \
-             --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad
+             --fatal-timeouts --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad
 
          (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
              find / -xdev -name \*udevd) >& /tmp/udevd.log &
          lvm2-testsuite --batch --outdir /tmp/xchg/results-udev --continue \
-             --flavours udev-vanilla,udev-cluster,udev-lvmetad --watch /tmp/udevd.log
+             --fatal-timeouts --flavours udev-vanilla,udev-cluster,udev-lvmetad --watch /tmp/udevd.log
 
          # if we made it this far, all test results are in
 
