@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Add initial code to use cache tools (cache_check|dump|repair|restore).
   Add "degraded" activation mode and make it the default.
   Add separate lv_active_{locally,remotely,exclusively} LV reporting fields.
   Recognize "auto"/"unmanaged" values in selection for appropriate fields only.

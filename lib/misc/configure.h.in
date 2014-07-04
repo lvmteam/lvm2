@@ -3,8 +3,20 @@
 /* Define to 1 to use libblkid detection of signatures when wiping. */
 #undef BLKID_WIPING_SUPPORT
 
+/* The path to 'cache_check', if available. */
+#undef CACHE_CHECK_CMD
+
+/* The path to 'cache_dump', if available. */
+#undef CACHE_DUMP_CMD
+
 /* Define to 1 to include built-in support for cache. */
 #undef CACHE_INTERNAL
+
+/* The path to 'cache_repair', if available. */
+#undef CACHE_REPAIR_CMD
+
+/* The path to 'cache_restore', if available. */
+#undef CACHE_RESTORE_CMD
 
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #undef CLOSEDIR_VOID

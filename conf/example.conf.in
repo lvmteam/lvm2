@@ -744,6 +744,36 @@ global {
     #   external_origin_extend
     #
     # thin_disabled_features = [ "discards", "block_size" ]
+
+    # Full path of the utility called to check that a cache metadata device
+    # is in a state that allows it to be used.
+    # Each time a cached LV needs to be used or after it is deactivated
+    # this utility is executed. The activation will only proceed if the utility
+    # has an exit status of 0.
+    # Set to "" to skip this check.  (Not recommended.)
+    # The cache tools are available as part of the device-mapper-persistent-data
+    # package from https://github.com/jthornber/thin-provisioning-tools.
+    #
+    # cache_check_executable = "@CACHE_CHECK_CMD@"
+
+    # Array of string options passed with cache_check command. By default,
+    # option "-q" is for quiet output.
+    #
+    # cache_check_options = [ "-q" ]
+
+    # Full path of the utility called to repair a cache metadata device.
+    # Each time a cache metadata needs repair this utility is executed.
+    # See cache_check_executable how to obtain binaries.
+    #
+    # cache_repair_executable = "@CACHE_REPAIR_CMD@"
+
+    # Array of extra string options passed with cache_repair command.
+    # cache_repair_options = [ "" ]
+
+    # Full path of the utility called to dump cache metadata content.
+    # See cache_check_executable how to obtain binaries.
+    #
+    # cache_dump_executable = "@CACHE_DUMP_CMD@"
 }
 
 activation {
