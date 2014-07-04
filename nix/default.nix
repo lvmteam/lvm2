@@ -31,12 +31,15 @@ let
          export LVM_TEST_BACKING_DEVICE=/dev/vdb
 
          lvm2-testsuite --batch --outdir /tmp/xchg/results-ndev --continue \
-             --fatal-timeouts --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad
+             --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
+             --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad
 
          (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
              find / -xdev -name \*udevd) >& /tmp/udevd.log &
          lvm2-testsuite --batch --outdir /tmp/xchg/results-udev --continue \
-             --fatal-timeouts --flavours udev-vanilla,udev-cluster,udev-lvmetad --watch /tmp/udevd.log
+             --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
+             --flavours udev-vanilla,udev-cluster,udev-lvmetad \
+             --watch /tmp/udevd.log
 
          # if we made it this far, all test results are in
 
@@ -80,21 +83,21 @@ let
                fi
 
                cat xchg/results-ndev/journal xchg/results-udev/journal > j.current 2> /dev/null
-               cat xchg/results-ndev/timestamp xchg/results-udev/timestamp > t.current 2> /dev/null
+               cat xchg/heartbeat > hb.current 2> /dev/null
                if diff j.current j.last >& /dev/null; then
                    counter=$(($counter + 1));
                else
                    counter=0
                fi
-               if test $counter -eq 10 || diff t.current t.last >& /dev/null; then
+               if test $counter -eq 10 || test $(cat hb.current | wc -c) -eq $(cat hb.last | wc -c); then
                    echo
-                   echo "VM got stuck; timestamps: $(cat t.current) $(cat t.last), counter = $counter."
+                   echo "VM got stuck; heartbeat: $(cat hb.current | wc -c) $(cat hb.last | wc -c), counter = $counter."
                    echo "last journal entry: $(tail -n 1 j.current), previously $(tail -n 1 j.last)"
                    kill -- -$(cat pid)
                fi
                sleep 60
                mv j.current j.last >& /dev/null
-               mv t.current t.last >& /dev/null
+               mv hb.current hb.last >& /dev/null
            done
        }
 
