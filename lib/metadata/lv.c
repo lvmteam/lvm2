@@ -231,22 +231,29 @@ char *lv_fullname_dup(struct dm_pool *mem, const struct logical_volume *lv)
         return dm_pool_strdup(mem, lvfullname);
 }
 
-char *lv_parent_dup(struct dm_pool *mem, const struct logical_volume *lv)
+struct logical_volume *lv_parent(const struct logical_volume *lv)
 {
-	const char *parent = "";
+	struct logical_volume *parent_lv = NULL;
 
 	if (lv_is_visible(lv))
 		;
 	else if (lv_is_mirror_image(lv) || lv_is_mirror_log(lv))
-		parent = get_only_segment_using_this_lv(lv)->lv->name;
+		parent_lv = get_only_segment_using_this_lv(lv)->lv;
 	else if (lv_is_raid_image(lv) || lv_is_raid_metadata(lv))
-		parent = get_only_segment_using_this_lv(lv)->lv->name;
+		parent_lv = get_only_segment_using_this_lv(lv)->lv;
 	else if (lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv))
-		parent = get_only_segment_using_this_lv(lv)->lv->name;
+		parent_lv = get_only_segment_using_this_lv(lv)->lv;
 	else if (lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv))
-		parent = get_only_segment_using_this_lv(lv)->lv->name;
+		parent_lv = get_only_segment_using_this_lv(lv)->lv;
 
-	return dm_pool_strdup(mem, parent);
+	return parent_lv;
+}
+
+char *lv_parent_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	struct logical_volume *parent_lv = lv_parent(lv);
+
+	return dm_pool_strdup(mem, parent_lv ? parent_lv->name : "");
 }
 
 char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv)

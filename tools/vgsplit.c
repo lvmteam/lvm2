@@ -18,10 +18,10 @@
 
 static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 {
-	if (lv->vg == vg)
-		return 1;
+	if (!lv || lv->vg != vg)
+		return 0;
 
-	return 0;
+	return 1;
 }
 
 static int _move_one_lv(struct volume_group *vg_from,
@@ -29,9 +29,13 @@ static int _move_one_lv(struct volume_group *vg_from,
 			 struct dm_list *lvh)
 {
 	struct logical_volume *lv = dm_list_item(lvh, struct lv_list)->lv;
+	struct logical_volume *parent_lv;
 
 	if (lv_is_active(lv)) {
-		log_error("Logical volume \"%s\" must be inactive", lv->name);
+		if ((parent_lv = lv_parent(lv)))
+			log_error("Logical volume %s (part of %s) must be inactive.", display_lvname(lv), parent_lv->name);
+		else
+			log_error("Logical volume %s must be inactive.", display_lvname(lv));
 		return 0;
 	}
 
