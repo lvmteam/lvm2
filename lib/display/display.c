@@ -883,7 +883,7 @@ void display_name_error(name_error_t name_error)
  */
 char yes_no_prompt(const char *prompt, ...)
 {
-	int c = 0, ret = 0;
+	int c = 0, ret = 0, cb = 0;
 	va_list ap;
 
 	sigint_allow();
@@ -903,6 +903,7 @@ char yes_no_prompt(const char *prompt, ...)
 
 		if ((c = getchar()) == EOF) {
 			ret = 'n'; /* SIGINT */
+			cb = 1;
 			break;
 		}
 
@@ -917,6 +918,9 @@ char yes_no_prompt(const char *prompt, ...)
 	} while (ret < 1 || c != '\n');
 
 	sigint_restore();
+
+	if (cb && !sigint_caught())
+		fputc(ret, stderr);
 
 	if (c != '\n')
 		fputc('\n', stderr);
