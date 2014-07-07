@@ -474,15 +474,15 @@ int update_thin_pool_params(struct volume_group *vg, unsigned attr,
 	}
 
 	if (*pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
+		*pool_metadata_size = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
 		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
 			log_warn("WARNING: Maximum supported pool metadata size is %s.",
-				 display_size(cmd, 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE));
-		*pool_metadata_size = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
+				 display_size(cmd, *pool_metadata_size));
 	} else if (*pool_metadata_size < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
+		*pool_metadata_size = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
 		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
 			log_warn("WARNING: Minimum supported pool metadata size is %s.",
-				 display_size(cmd, 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE));
-		*pool_metadata_size = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
+				 display_size(cmd, *pool_metadata_size));
 	}
 
 	log_verbose("Setting pool metadata size to %s.",
