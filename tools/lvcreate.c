@@ -1033,6 +1033,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			lp->wipe_signatures = 0;
 	}
 
+	if (arg_count(cmd, chunksize_ARG) &&
+	    (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS)) {
+		log_error("Negative chunk size is invalid.");
+		return 0;
+	}
+
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
@@ -1047,10 +1053,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return_0;
 
 	if (lp->snapshot && (lp->extents || lcp->size)) {
-		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative chunk size is invalid.");
-			return 0;
-		}
 		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
 		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
 		    (lp->chunk_size & (lp->chunk_size - 1))) {
@@ -1063,7 +1065,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
 			return_0;
 	} else if (!lp->create_pool && arg_count(cmd, chunksize_ARG)) {
-		log_error("--chunksize is only available with snapshots and thin pools.");
+		log_error("--chunksize is only available with snapshots and pools.");
 		return 0;
 	}
 

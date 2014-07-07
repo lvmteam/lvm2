@@ -447,10 +447,12 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative chunk size is invalid");
+		if (arg_count(cmd, chunksize_ARG) &&
+		    (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS)) {
+			log_error("Negative chunk size is invalid.");
 			return 0;
 		}
+
 		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
 		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
 		    (lp->chunk_size & (lp->chunk_size - 1))) {
@@ -540,10 +542,15 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, cache_pool ? "cache-pool" : "thin-pool"));
 		if (!lp->segtype)
 			return_0;
+
+		if (arg_count(cmd, chunksize_ARG) &&
+		    (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS)) {
+			log_error("Negative chunk size is invalid.");
+			return 0;
+		}
 	} else { /* Mirrors (and some RAID functions) */
 		if (arg_count(cmd, chunksize_ARG)) {
-			log_error("--chunksize is only available with "
-				  "snapshots or thin pools.");
+			log_error("--chunksize is only available with snapshots or pools.");
 			return 0;
 		}
 
