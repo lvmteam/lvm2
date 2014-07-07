@@ -187,6 +187,8 @@
 #define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
 
 #define lv_is_virtual(lv)	(((lv)->status & (VIRTUAL)) ? 1 : 0)
+#define lv_is_pool(lv)		(((lv)->status & (CACHE_POOL | THIN_POOL)) ? 1 : 0)
+#define lv_is_pool_metadata(lv)		(((lv)->status & (CACHE_POOL_METADATA | THIN_POOL_METADATA)) ? 1 : 0)
 #define lv_is_pool_metadata_spare(lv)	(((lv)->status & (POOL_METADATA_SPARE)) ? 1 : 0)
 
 /* Ordered list - see lv_manip.c */
@@ -196,13 +198,11 @@ typedef enum {
 	AREA_LV
 } area_type_t;
 
-/*
- * Whether or not to force an operation.
- */
+/* Whether or not to force an operation */
 typedef enum {
 	PROMPT = 0, /* Issue yes/no prompt to confirm operation */
-	DONT_PROMPT = 1, /* Skip yes/no prompt */
-	DONT_PROMPT_OVERRIDE = 2 /* Skip prompt + override a second condition */
+	DONT_PROMPT = 1, /* Add more prompts */
+	DONT_PROMPT_OVERRIDE = 2 /* Add even more dangerous prompts */
 } force_t;
 
 typedef enum {
