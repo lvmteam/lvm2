@@ -25,6 +25,7 @@ lvcreate -L1 -s -n $lv3 $vg/$lv2
 
 lvcreate -l1 -n $lv4 $vg
 lvcreate -L1 -n $lv5 $vg
+lvcreate -L1 -n $lv6 $vg
 
 not lvconvert -s $vg/$lv1 $vg/not_exist
 
@@ -52,6 +53,7 @@ not lvconvert -s $vg/$lv2 $vg/$lv4 2>&1 | tee err
 grep "smaller" err
 
 # This should pass
-lvconvert -s $vg/$lv2 $vg/$lv5
+lvconvert --yes -s $vg/$lv2 $vg/$lv5
+lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv6
 
 vgremove -f $vg

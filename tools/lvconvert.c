@@ -2063,17 +2063,37 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lp->zero || !(lv->status & LVM_WRITE))
-		log_warn("WARNING: \"%s\" not zeroed", lv->name);
-	else if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1 })) {
-		log_error("Aborting. Failed to wipe snapshot "
-			  "exception store.");
+	log_warn("WARNING: Converting logical volume %s to snapshot exception store.",
+		 display_lvname(lv));
+	log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
+
+	if (!lp->yes &&
+	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
+			  display_lvname(lv)) == 'n') {
+		log_error("Conversion aborted.");
 		return 0;
 	}
 
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Couldn't deactivate LV %s.", lv->name);
 		return 0;
+	}
+
+	if (!lp->zero || !(lv->status & LVM_WRITE))
+		log_warn("WARNING: \"%s\" not zeroed", lv->name);
+	else {
+		lv->status |= LV_TEMPORARY;
+		if (!activate_lv_local(cmd, lv) ||
+		    !wipe_lv(lv, (struct wipe_params) { .do_zero = 1 })) {
+			log_error("Aborting. Failed to wipe snapshot exception store.");
+			return 0;
+		}
+		lv->status &= ~LV_TEMPORARY;
+		/* Deactivates cleared metadata LV */
+		if (!deactivate_lv_local(lv->vg->cmd, lv)) {
+			log_error("Failed to deactivate zeroed snapshot exception store.");
+			return 0;
+		}
 	}
 
 	if (!archive(lv->vg))

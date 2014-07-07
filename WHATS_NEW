@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Prompt for confirmation before change LV into a snapshot exception store.
   Return proper error codes for some failing lvconvert funtions.
   Add initial code to use cache tools (cache_check|dump|repair|restore).
   Add "degraded" activation mode and make it the default.
