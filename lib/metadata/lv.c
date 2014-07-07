@@ -640,14 +640,12 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	/* Origin takes precedence over mirror and thin volume */
 	else if (lv_is_origin(lv) || lv_is_external_origin(lv))
 		repstr[0] = (lv_is_merging_origin(lv)) ? 'O' : 'o';
-	else if (lv_is_cache_pool_metadata(lv))
+	else if (lv_is_pool_metadata(lv) ||
+		 lv_is_pool_metadata_spare(lv) ||
+		 lv_is_raid_metadata(lv))
 		repstr[0] = 'e';
 	else if (lv_is_cache_type(lv))
 		repstr[0] = 'C';
-	else if (lv_is_thin_pool_metadata(lv) ||
-		 lv_is_pool_metadata_spare(lv) ||
-		 (lv->status & RAID_META))
-		repstr[0] = 'e';
 	else if (lv->status & RAID)
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'R' : 'r';
 	else if (lv->status & MIRRORED)
@@ -739,7 +737,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
 		repstr[6] = 't';
-	else if (lv_is_cache_type(lv))
+	else if (lv_is_cache_pool(lv) || lv_is_cache(lv))
 		repstr[6] = 'C';
 	else if (lv_is_raid_type(lv))
 		repstr[6] = 'r';
