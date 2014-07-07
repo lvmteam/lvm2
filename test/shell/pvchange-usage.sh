@@ -19,6 +19,17 @@ check_changed_uuid_() {
 
 aux prepare_pvs 4
 
+# check 'allocatable' pv attribute
+pvcreate $dev1
+check pv_field "$dev1" pv_attr ---
+vgcreate $vg1 "$dev1"
+check pv_field "$dev1" pv_attr a--
+pvchange --allocatable n "$dev1"
+check pv_field "$dev1" pv_attr ---
+vgremove -ff $vg1
+not pvchange --allocatable y "$dev1"
+pvremove -ff "$dev1"
+
 for mda in 0 1 2
 do
 # "setup pv with metadatacopies = $mda"

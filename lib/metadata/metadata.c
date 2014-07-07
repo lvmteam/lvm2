@@ -1599,7 +1599,6 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 	}
 
 	pv->dev = dev;
-	pv->status = ALLOCATABLE_PV;
 
 	dm_list_init(&pv->tags);
 	dm_list_init(&pv->segments);
