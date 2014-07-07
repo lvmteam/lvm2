@@ -91,7 +91,7 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 {
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
-	struct lvinfo lvinfo = {.exists = 0};
+	struct lvinfo lvinfo;
 
 	struct volume_group _free_vg = {
 		.cmd = cmd,
@@ -136,7 +136,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	dm_list_init(&_free_logical_volume.segs_using_this_lv);
 	dm_list_init(&_free_logical_volume.snapshot_segs);
 
-	if (seg && !lv_info(cmd, seg->lv, 0, &lvinfo, 1, 1)) {
+	lvinfo.exists = 0;
+	if (seg && lv_info_needed && !lv_info(cmd, seg->lv, 0, &lvinfo, 1, 1)) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}
