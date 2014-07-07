@@ -1,5 +1,10 @@
 Version 2.02.108 -
 =================================
+  Recognize "auto"/"unmanaged" values in selection for appropriate fields only.
+  Add report/binary_values_as_numeric lvm.conf option for binary values as 0/1.
+  Add --binary arg to pvs,vgs,lvs and {pv,vg,lv}display -C for 0/1 on reports.
+  Add separate reporting fields for each each {pv,vg,lv}_attr bit.
+  Separate LV device status reporting fields out of LV fields.
   Fix regression causing PVs not in VGs to be marked as allocatable (2.02.59).
   Fix VG component of lvid in vgsplit/vgmerge and check in vg_validate.
   Add lv_full_name, lv_parent and lv_dm_path fields to reports.

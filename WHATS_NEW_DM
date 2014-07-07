@@ -1,5 +1,6 @@
 Version 1.02.87 -
 ================================
+  Add dm_report_field_reserved_value for per-field reserved value definition.
 
 Version 1.02.86 - 23rd June 2014
 ================================
