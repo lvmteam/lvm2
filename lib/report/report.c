@@ -192,6 +192,7 @@ static const struct dm_report_reserved_value _report_reserved_values[] = {
 };
 
 static const char *_str_unknown = "unknown";
+static const char *_str_minus_one = "-1";
 
 static int _field_set_value(struct dm_report_field *field, const void *data, const void *sort)
 {
@@ -1313,6 +1314,17 @@ static int _binary_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 		return _field_set_value(field, bin_value ? word : "", bin_value ? &_one64 : &_zero64);
 }
 
+static int _binary_undef_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			      struct dm_report_field *field, void *private)
+{
+	const struct cmd_context *cmd = (const struct cmd_context *) private;
+
+	if (cmd->report_binary_values_as_numeric)
+		return _field_set_value(field, _str_minus_one, &_reserved_number_undef_64);
+	else
+		return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+}
+
 static int _pvallocatable_disp(struct dm_report *rh, struct dm_pool *mem,
 			       struct dm_report_field *field,
 			       const void *data, void *private)
@@ -1537,7 +1549,7 @@ static int _lvsuspended_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lvi->info->exists)
 		return _binary_disp(rh, mem, field, lvi->info->suspended, "suspended", private);
 
-	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+	return _binary_undef_disp(rh, mem, field, private);
 }
 
 static int _lvlivetable_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1549,7 +1561,7 @@ static int _lvlivetable_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lvi->info->exists)
 		return _binary_disp(rh, mem, field, lvi->info->live_table, "live table present", private);
 
-	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+	return _binary_undef_disp(rh, mem, field, private);
 }
 
 static int _lvinactivetable_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1561,7 +1573,7 @@ static int _lvinactivetable_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lvi->info->exists)
 		return _binary_disp(rh, mem, field, lvi->info->inactive_table, "inactive table present", private);
 
-	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+	return _binary_undef_disp(rh, mem, field, private);
 }
 
 static int _lvdeviceopen_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1573,7 +1585,7 @@ static int _lvdeviceopen_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lvi->info->exists)
 		return _binary_disp(rh, mem, field, lvi->info->open_count, "open", private);
 
-	return _field_set_value(field, _str_unknown, &_reserved_number_undef_64);
+	return _binary_undef_disp(rh, mem, field, private);
 }
 
 static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
