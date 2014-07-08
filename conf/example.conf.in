@@ -53,10 +53,29 @@ devices {
     # same block device and the tools need to display a name for device,
     # all the pathnames are matched against each item in the following
     # list of regular expressions in turn and the first match is used.
-    preferred_names = [ ]
+
+    # By default no preferred names are defined.
+    # preferred_names = [ ]
 
     # Try to avoid using undescriptive /dev/dm-N names, if present.
     # preferred_names = [ "^/dev/mpath/", "^/dev/mapper/mpath", "^/dev/[hs]d" ]
+
+    # In case no prefererred name matches or if preferred_names are not
+    # defined at all, builtin rules are used to determine the preference.
+    #
+    # The first builtin rule checks path prefixes and it gives preference
+    # based on this ordering (where "dev" depends on devices/dev setting):
+    #   /dev/mapper > /dev/disk > /dev/dm-* > /dev/block
+    #
+    # If the ordering above cannot be applied, the path with fewer slashes
+    # gets preference then.
+    #
+    # If the number of slashes is the same, a symlink gets preference.
+    #
+    # Finally, if all the rules mentioned above are not applicable,
+    # lexicographical order is used over paths and the smallest one
+    # of all gets preference.
+
 
     # A filter that tells LVM2 to only use a restricted set of devices.
     # The filter consists of an array of regular expressions.  These
@@ -84,7 +103,7 @@ devices {
     # lvmetad is used" comment that is attached to global/use_lvmetad setting.
 
     # By default we accept every block device:
-    filter = [ "a/.*/" ]
+    # filter = [ "a/.*/" ]
 
     # Exclude the cdrom drive
     # filter = [ "r|/dev/cdrom|" ]
