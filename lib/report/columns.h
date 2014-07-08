@@ -27,6 +27,10 @@
  * Help text ends with a full stop.
  */
 
+/*
+ * FIELD(report_object_type, structure, sort_type, heading, structure_field, output width, reporting_function, field_id, description, settable_via_lib)
+ */
+
 /* *INDENT-OFF* */
 FIELD(LVS, lv, STR, "LV UUID", lvid.id[1], 38, uuid, lv_uuid, "Unique identifier.", 0)
 FIELD(LVS, lv, STR, "LV", lvid, 4, lvname, lv_name, "Name.  LVs created for internal use are enclosed in brackets.", 0)
