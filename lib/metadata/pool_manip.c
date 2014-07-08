@@ -23,6 +23,7 @@
 #include "segtype.h"
 #include "lv_alloc.h"
 #include "defaults.h"
+#include "display.h"
 
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 			    struct logical_volume *metadata_lv)
@@ -39,6 +40,26 @@ int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 	lv_set_hidden(metadata_lv);
 
 	return add_seg_to_segs_using_this_lv(metadata_lv, pool_seg);
+}
+
+int detach_pool_metadata_lv(struct lv_segment *pool_seg, struct logical_volume **metadata_lv)
+{
+	struct logical_volume *lv = pool_seg->metadata_lv;
+
+	if (!lv ||
+	    !lv_is_pool_metadata(lv) ||
+	    !remove_seg_from_segs_using_this_lv(lv, pool_seg)) {
+		log_error(INTERNAL_ERROR "Logical volume %s is not valid pool.",
+			  display_lvname(pool_seg->lv));
+		return 0;
+	}
+
+	lv_set_visible(lv);
+	lv->status &= ~(THIN_POOL_METADATA | CACHE_POOL_METADATA);
+	*metadata_lv = lv;
+	pool_seg->metadata_lv = NULL;
+
+	return 1;
 }
 
 int attach_pool_data_lv(struct lv_segment *pool_seg,
@@ -325,4 +346,216 @@ bad:
 	}
 
 	return 0;
+}
+
+struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
+					   const char *name, uint32_t read_ahead,
+					   uint32_t stripes, uint32_t stripe_size,
+					   uint64_t size, alloc_policy_t alloc,
+					   struct dm_list *pvh)
+{
+	struct logical_volume *metadata_lv;
+	/* FIXME: Make lvm2api usable */
+	struct lvcreate_params lvc = {
+		.activate = CHANGE_ALY,
+		.alloc = alloc,
+		.major = -1,
+		.minor = -1,
+		.permission = LVM_READ | LVM_WRITE,
+		.pvh = pvh,
+		.read_ahead = read_ahead,
+		.stripe_size = stripe_size,
+		.stripes = stripes,
+		.zero = 1,
+	};
+
+	dm_list_init(&lvc.tags);
+
+	if (!(lvc.extents = extents_from_size(pool_lv->vg->cmd, size,
+					      pool_lv->vg->extent_size)))
+		return_0;
+
+	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
+		return_0;
+
+	/* FIXME: allocate properly space for metadata_lv */
+
+	if (!(metadata_lv = lv_create_single(pool_lv->vg, &lvc)))
+		return_0;
+
+	if (!lv_rename_update(pool_lv->vg->cmd, metadata_lv, name, 0))
+		return_0;
+
+	return metadata_lv;
+}
+
+static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg,
+							 uint32_t extents,
+							 struct dm_list *pvh)
+{
+	struct logical_volume *lv;
+
+	/* FIXME: Make lvm2api usable */
+	struct lvcreate_params lp = {
+		.activate = CHANGE_ALY,
+		.alloc = ALLOC_INHERIT,
+		.extents = extents,
+		.major = -1,
+		.minor = -1,
+		.permission = LVM_READ | LVM_WRITE,
+		.pvh = pvh ? : &vg->pvs,
+		.read_ahead = DM_READ_AHEAD_AUTO,
+		.stripes = 1,
+		.zero = 1,
+		.temporary = 1,
+	};
+
+	dm_list_init(&lp.tags);
+
+	if (!(lp.segtype = get_segtype_from_string(vg->cmd, "striped")))
+		return_0;
+
+	/* FIXME: Maybe using silent mode ? */
+	if (!(lv = lv_create_single(vg, &lp)))
+		return_0;
+
+	/* Spare LV should not be active */
+	if (!deactivate_lv_local(vg->cmd, lv)) {
+		log_error("Unable to deactivate pool metadata spare LV. "
+			  "Manual intervention required.");
+		return 0;
+	}
+
+	if (!vg_set_pool_metadata_spare(lv))
+		return_0;
+
+	return lv;
+}
+
+/*
+ * Create/resize pool metadata spare LV
+ * Caller does vg_write(), vg_commit() with pool creation
+ * extents is 0, max size is determined
+ */
+int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
+			       struct dm_list *pvh, int poolmetadataspare)
+{
+	struct logical_volume *lv = vg->pool_metadata_spare_lv;
+	uint32_t seg_mirrors;
+	struct lv_segment *seg;
+	const struct lv_list *lvl;
+
+	if (!extents)
+		/* Find maximal size of metadata LV */
+		dm_list_iterate_items(lvl, &vg->lvs)
+			if (lv_is_pool_metadata(lvl->lv) &&
+			    (lvl->lv->le_count > extents))
+				extents = lvl->lv->le_count;
+
+	if (!poolmetadataspare) {
+		/* TODO: Not showing when lvm.conf would define 'n' ? */
+		if (DEFAULT_POOL_METADATA_SPARE && extents)
+			/* Warn if there would be any user */
+			log_warn("WARNING: recovery of pools without pool "
+				 "metadata spare LV is not automated.");
+		return 1;
+	}
+
+	if (!lv) {
+		if (!_alloc_pool_metadata_spare(vg, extents, pvh))
+			return_0;
+
+		return 1;
+	}
+
+	seg = last_seg(lv);
+	seg_mirrors = lv_mirror_count(lv);
+
+	/* Check spare LV is big enough and preserve segtype */
+	if ((lv->le_count < extents) && seg &&
+	    !lv_extend(lv, seg->segtype,
+		       seg->area_count / seg_mirrors,
+		       seg->stripe_size,
+		       seg_mirrors,
+		       seg->region_size,
+		       extents - lv->le_count, NULL,
+		       pvh, lv->alloc, 0))
+		return_0;
+
+	return 1;
+}
+
+int vg_set_pool_metadata_spare(struct logical_volume *lv)
+{
+	char new_name[NAME_LEN];
+	struct volume_group *vg = lv->vg;
+
+	if (vg->pool_metadata_spare_lv) {
+		if (vg->pool_metadata_spare_lv == lv)
+			return 1;
+		if (!vg_remove_pool_metadata_spare(vg))
+			return_0;
+	}
+
+	if (dm_snprintf(new_name, sizeof(new_name), "%s_pmspare", lv->name) < 0) {
+		log_error("Can't create pool metadata spare. Name of pool LV "
+			  "%s is too long.", lv->name);
+		return 0;
+	}
+
+	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
+		return_0;
+
+	lv_set_hidden(lv);
+	lv->status |= POOL_METADATA_SPARE;
+	vg->pool_metadata_spare_lv = lv;
+
+	return 1;
+}
+
+int vg_remove_pool_metadata_spare(struct volume_group *vg)
+{
+	char new_name[NAME_LEN];
+	char *c;
+
+	struct logical_volume *lv = vg->pool_metadata_spare_lv;
+
+	if (!(lv->status & POOL_METADATA_SPARE)) {
+		log_error(INTERNAL_ERROR "LV %s is not pool metadata spare.",
+			  lv->name);
+		return 0;
+	}
+
+	vg->pool_metadata_spare_lv = NULL;
+	lv->status &= ~POOL_METADATA_SPARE;
+	lv_set_visible(lv);
+
+	/* Cut off suffix _pmspare */
+	(void) dm_strncpy(new_name, lv->name, sizeof(new_name));
+	if (!(c = strchr(new_name, '_'))) {
+		log_error(INTERNAL_ERROR "LV %s has no suffix for pool metadata spare.",
+			  new_name);
+		return 0;
+	}
+	*c = 0;
+
+	/* If the name is in use, generate new lvol%d */
+	if (find_lv_in_vg(vg, new_name) &&
+	    !generate_lv_name(vg, "lvol%d", new_name, sizeof(new_name))) {
+		log_error("Failed to generate unique name for "
+			  "pool metadata spare logical volume.");
+		return 0;
+	}
+
+	log_print_unless_silent("Renaming existing pool metadata spare "
+				"logical volume \"%s/%s\" to \"%s/%s\".",
+                                vg->name, lv->name, vg->name, new_name);
+
+	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
+		return_0;
+
+	/* To display default warning */
+	(void) handle_pool_metadata_spare(vg, 0, 0, 0);
+
+	return 1;
 }
