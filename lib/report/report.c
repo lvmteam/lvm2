@@ -101,6 +101,9 @@ FIELD_RESERVED_VALUE(lv_merging, lv_merging, _one64, "merging")
 FIELD_RESERVED_VALUE(lv_converting, lv_converting, _one64, "converting")
 FIELD_RESERVED_VALUE(lv_allocation_locked, lv_allocation_locked, _one64, "allocation locked", "locked")
 FIELD_RESERVED_VALUE(lv_fixed_minor, lv_fixed_minor, _one64, "fixed minor", "fixed")
+FIELD_RESERVED_VALUE(lv_active_locally, lv_active_locally, _one64, "active locally", "active", "locally")
+FIELD_RESERVED_VALUE(lv_active_remotely, lv_active_remotely, _one64, "active remotely", "active", "remotely")
+FIELD_RESERVED_VALUE(lv_active_exclusively, lv_active_exclusively, _one64, "active exclusively", "active", "exclusively")
 FIELD_RESERVED_VALUE(lv_merge_failed, lv_merge_failed, _one64, "merge failed", "failed")
 FIELD_RESERVED_VALUE(lv_snapshot_invalid, lv_snapshot_invalid, _one64, "snapsot invalid", "invalid")
 FIELD_RESERVED_VALUE(lv_suspended, lv_suspended, _one64, "suspended")
@@ -139,6 +142,9 @@ static const struct dm_report_reserved_value _report_reserved_values[] = {
 	FIELD_RESERVED_VALUE_REG(lv_converting, "lv_converting reserved values")
 	FIELD_RESERVED_VALUE_REG(lv_allocation_locked, "lv_allocation_locked reserved values")
 	FIELD_RESERVED_VALUE_REG(lv_fixed_minor, "lv_fixed_minor reserved values")
+	FIELD_RESERVED_VALUE_REG(lv_active_locally, "lv_active_locally reserved values")
+	FIELD_RESERVED_VALUE_REG(lv_active_remotely, "lv_active_remotelly reserved values")
+	FIELD_RESERVED_VALUE_REG(lv_active_exclusively, "lv_active_exclusively reserved values")
 	FIELD_RESERVED_VALUE_REG(lv_merge_failed, "lv_merge_failed reserved values")
 	FIELD_RESERVED_VALUE_REG(lv_snapshot_invalid, "lv_snapshot_invalid reserved values")
 	FIELD_RESERVED_VALUE_REG(lv_suspended, "lv_suspended reserved values")
@@ -1469,6 +1475,54 @@ static int _lvfixedminor_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	int fixed_minor = (((const struct logical_volume *) data)->status & FIXED_MINOR) != 0;
 	return _binary_disp(rh, mem, field, fixed_minor, FIRST_NAME(lv_fixed_minor), private);
+}
+
+static int _lvactivelocally_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int active_locally;
+
+	if (vg_is_clustered(lv->vg)) {
+		lv = lv_lock_holder(lv);
+		active_locally = lv_is_active_locally(lv);
+	} else
+		active_locally = lv_is_active(lv);
+
+	return _binary_disp(rh, mem, field, active_locally, FIRST_NAME(lv_active_locally), private);
+}
+
+static int _lvactiveremotely_disp(struct dm_report *rh, struct dm_pool *mem,
+				  struct dm_report_field *field,
+				  const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int active_remotely;
+
+	if (vg_is_clustered(lv->vg)) {
+		lv = lv_lock_holder(lv);
+		active_remotely = lv_is_active_but_not_locally(lv);
+	} else
+		active_remotely = 0;
+
+	return _binary_disp(rh, mem, field, active_remotely, FIRST_NAME(lv_active_remotely), private);
+}
+
+static int _lvactiveexclusively_disp(struct dm_report *rh, struct dm_pool *mem,
+				     struct dm_report_field *field,
+				     const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int active_exclusively;
+
+	if (vg_is_clustered(lv->vg)) {
+		lv = lv_lock_holder(lv);
+		active_exclusively = lv_is_active_exclusive(lv);
+	} else
+		active_exclusively = lv_is_active(lv);
+
+	return _binary_disp(rh, mem, field, active_exclusively, FIRST_NAME(lv_active_exclusively), private);
 }
 
 static int _lvmergefailed_disp(struct dm_report *rh, struct dm_pool *mem,

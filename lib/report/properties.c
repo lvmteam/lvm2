@@ -196,6 +196,12 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _lv_allocation_policy_get prop_not_implemented_get
 #define _lv_allocation_locked_set prop_not_implemented_set
 #define _lv_allocation_locked_get prop_not_implemented_get
+#define _lv_active_locally_set prop_not_implemented_set
+#define _lv_active_locally_get prop_not_implemented_get
+#define _lv_active_remotely_set prop_not_implemented_set
+#define _lv_active_remotely_get prop_not_implemented_get
+#define _lv_active_exclusively_set prop_not_implemented_set
+#define _lv_active_exclusively_get prop_not_implemented_get
 #define _lv_fixed_minor_set prop_not_implemented_set
 #define _lv_fixed_minor_get prop_not_implemented_get
 #define _lv_merge_failed_set prop_not_implemented_set
