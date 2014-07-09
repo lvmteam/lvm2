@@ -215,6 +215,9 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 
 	activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
+	if (lv_is_cache_pool(lv))
+		return 1;
+
 	if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))
 		return 1;
 
@@ -949,11 +952,6 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("Only -a permitted with read-only volume "
 			  "group \"%s\"", lv->vg->name);
 		return EINVALID_CMD_LINE;
-	}
-
-	if (lv_is_cache_pool(lv)) {
-		log_error("Can't change cache pool logical volume.");
-		return ECMD_FAILED;
 	}
 
 	if (lv_is_origin(lv) && !lv_is_thin_volume(lv) &&
