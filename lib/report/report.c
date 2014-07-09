@@ -750,18 +750,6 @@ static int _chunksize_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &size, private);
 }
 
-static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
-			   struct dm_report_field *field,
-			   const void *data, void *private)
-{
-	const struct lv_segment *seg = (const struct lv_segment *) data;
-
-	if (seg_is_thin_pool(seg))
-		return _uint32_disp(rh, mem, field, &seg->zero_new_blocks, private);
-
-	return _field_set_value(field, "", &_reserved_number_undef_64);
-}
-
 static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
 				struct dm_report_field *field,
 				const void *data, void *private)
@@ -1275,20 +1263,6 @@ static int _lvhost_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, repstr, NULL);
 }
 
-static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
-			     struct dm_report_field *field,
-			     const void *data, void *private)
-{
-	char *repstr;
-
-	if (!(repstr = lv_active_dup(mem, (const struct logical_volume *) data))) {
-		log_error("Failed to allocate buffer for active.");
-		return 0;
-	}
-
-	return _field_set_value(field, repstr, NULL);
-}
-
 /* PV/VG/LV Attributes */
 
 static int _pvallocatable_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1477,6 +1451,20 @@ static int _lvfixedminor_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, fixed_minor, FIRST_NAME(lv_fixed_minor), private);
 }
 
+static int _lvactive_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	char *repstr;
+
+	if (!(repstr = lv_active_dup(mem, (const struct logical_volume *) data))) {
+		log_error("Failed to allocate buffer for active.");
+		return 0;
+	}
+
+	return _field_set_value(field, repstr, NULL);
+}
+
 static int _lvactivelocally_disp(struct dm_report *rh, struct dm_pool *mem,
 				 struct dm_report_field *field,
 				 const void *data, void *private)
@@ -1624,6 +1612,18 @@ static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
 		target_type = "virtual";
 
 	return _string_disp(rh, mem, field, &target_type, private);
+}
+
+static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_thin_pool(seg))
+		return _uint32_disp(rh, mem, field, &seg->zero_new_blocks, private);
+
+	return _field_set_value(field, "", &_reserved_number_undef_64);
 }
 
 static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
