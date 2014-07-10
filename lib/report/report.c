@@ -1590,6 +1590,10 @@ static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
 		target_type = "snapshot";
 	else if (lv_is_virtual(lv))
 		target_type = "virtual";
+	else if (lv_is_linear(lv))
+		target_type = "linear";
+	else if (lv_is_striped(lv))
+		target_type = "striped";
 
 	return _string_disp(rh, mem, field, &target_type, private);
 }
