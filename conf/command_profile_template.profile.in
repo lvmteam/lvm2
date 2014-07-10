@@ -13,7 +13,6 @@
 #
 global {
 	units="h"
-	report_binary_values_as_numeric=0
 	si_unit_consistency=1
 	suffix=1
 	lvdisplay_shows_full_device_path=0
@@ -26,6 +25,7 @@ report {
 	prefixes=0
 	quoted=1
 	colums_as_rows=0
+	binary_values_as_numeric=0
 	devtypes_sort="devtype_name"
 	devtypes_cols="devtype_name,devtype_max_partitions,devtype_description"
 	devtypes_cols_verbose="devtype_name,devtype_max_partitions,devtype_description"
