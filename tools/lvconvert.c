@@ -236,6 +236,18 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (!_check_conversion_type(cmd, type_str))
 		return_0;
 
+	if (arg_count(cmd, repair_ARG) &&
+	    !arg_is_only_set(cmd, "cannot be used with --repair",
+			    repair_ARG,
+			    stripes_long_ARG, stripesize_ARG,
+			    -1))
+		return_0;
+
+	if (arg_is_set(cmd, mirrorlog_ARG) && arg_is_set(cmd, corelog_ARG)) {
+		log_error("--mirrorlog and --corelog are incompatible.");
+		return 0;
+	}
+
 	if (arg_count(cmd, splitsnapshot_ARG))
 		lp->splitsnapshot = 1;
 
@@ -1271,19 +1283,6 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 		if (find_temporary_mirror(lv) || (lv->status & CONVERTING))
 			lp->need_polling = 1;
 		return 1;
-	}
-
-	if ((arg_count(cmd, mirrors_ARG) && repair) ||
-	    (arg_count(cmd, mirrorlog_ARG) && repair) ||
-	    (arg_count(cmd, corelog_ARG) && repair)) {
-		log_error("--repair cannot be used with --mirrors, --mirrorlog,"
-			  " or --corelog");
-		return 0;
-	}
-
-	if (arg_count(cmd, mirrorlog_ARG) && arg_count(cmd, corelog_ARG)) {
-		log_error("--mirrorlog and --corelog are incompatible");
-		return 0;
 	}
 
 	/*
