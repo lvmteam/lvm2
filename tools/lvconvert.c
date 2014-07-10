@@ -3163,20 +3163,20 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lp->splitsnapshot)
 		return _lvconvert_splitsnapshot(cmd, lv, lp);
 
-	if (arg_count(cmd, repair_ARG) && lv_is_pool(lv)) {
-		if (!_lvconvert_pool_repair(cmd, lv, lp))
-			return_ECMD_FAILED;
-		return ECMD_PROCESSED;
-	}
-
-	if (arg_count(cmd, repair_ARG) &&
-	    !(lv->status & MIRRORED) && !(lv->status & RAID)) {
-		if (arg_count(cmd, use_policies_ARG))
-			return ECMD_PROCESSED; /* nothing to be done here */
-		log_error("Can't repair LV \"%s\" of segtype %s.",
-			  lv->name,
-			  first_seg(lv)->segtype->ops->name(first_seg(lv)));
-		return ECMD_FAILED;
+	if (arg_count(cmd, repair_ARG)) {
+		if (lv_is_pool(lv)) {
+			if (!_lvconvert_pool_repair(cmd, lv, lp))
+				return_ECMD_FAILED;
+			return ECMD_PROCESSED;
+		}
+		if (!lv_is_mirrored(lv) && !lv_is_raid(lv)) {
+			if (arg_count(cmd, use_policies_ARG))
+				return ECMD_PROCESSED; /* nothing to be done here */
+			log_error("Can't repair LV \"%s\" of segtype %s.",
+				  lv->name,
+				  first_seg(lv)->segtype->ops->name(first_seg(lv)));
+			return ECMD_FAILED;
+		}
 	}
 
 	if (!lp->segtype) {
