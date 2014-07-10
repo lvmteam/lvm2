@@ -420,7 +420,7 @@ int dm_report_field_string_list(struct dm_report *rh,
 		 */
 		sort_value->items[i].pos = pos;
 		sort_value->items[i].len = len;
-		pos = i == list_size ? pos+len : pos+len+1;
+		pos = i == list_size ? pos+len : pos+len+delimiter_len;
 	}
 
 	if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
