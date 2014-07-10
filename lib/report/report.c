@@ -73,9 +73,9 @@ static const int32_t _reserved_number_undef_32 = INT32_C(-1);
  * All names listed are synonyms recognized in selection criteria.
  * For binary-based values we map all reserved names listed onto value 1, blank onto value 0.
  *
- * TYPE_RESERVED_VALUE(type, reserved_value_id, value, reserved name, ...)
- * FIELD_RESERVED_VALUE(field_id, reserved_value_id, value, reserved name, ...)
- * FIELD_RESERVED_BINARY_VALUE(field_id, reserved_value_id, value, reserved name for 1, ...)
+ * TYPE_RESERVED_VALUE(type, reserved_value_id, description, value, reserved name, ...)
+ * FIELD_RESERVED_VALUE(field_id, reserved_value_id, description, value, reserved name, ...)
+ * FIELD_RESERVED_BINARY_VALUE(field_id, reserved_value_id, description, reserved name for 1, ...)
  *
  * Note: FIELD_RESERVED_BINARY_VALUE creates:
  * 		- 'reserved_value_id_y' (for 1)
@@ -86,17 +86,17 @@ static const int32_t _reserved_number_undef_32 = INT32_C(-1);
 
 #define NUM uint64_t
 
-#define TYPE_RESERVED_VALUE(type, id, value, ...) \
+#define TYPE_RESERVED_VALUE(type, id, desc, value, ...) \
 	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__, NULL}; \
 	static const type _reserved_ ## id = value;
 
-#define FIELD_RESERVED_VALUE(field_id, id, value, ...) \
+#define FIELD_RESERVED_VALUE(field_id, id, desc, value, ...) \
 	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__ , NULL}; \
 	static const struct dm_report_field_reserved_value _reserved_ ## id = {field_ ## field_id, &value};
 
-#define FIELD_RESERVED_BINARY_VALUE(field_id, id, ...) \
-	FIELD_RESERVED_VALUE(field_id, id ## _y, _one64, __VA_ARGS__, _str_yes) \
-	FIELD_RESERVED_VALUE(field_id, id ## _n, _zero64, __VA_ARGS__, _str_no)
+#define FIELD_RESERVED_BINARY_VALUE(field_id, id, desc, ...) \
+	FIELD_RESERVED_VALUE(field_id, id ## _y, desc, _one64, __VA_ARGS__, _str_yes) \
+	FIELD_RESERVED_VALUE(field_id, id ## _n, desc, _zero64, __VA_ARGS__, _str_no)
 
 #include "values.h"
 
@@ -110,54 +110,20 @@ static const int32_t _reserved_number_undef_32 = INT32_C(-1);
  * dm_report_init_with_selection function that initializes report with
  * selection criteria. Selection code then recognizes these reserved values
  * when parsing selection criteria.
- *
- * TYPE_RESERVED_VALUE_REG(report_type, reserved_value_id, description)
- * FIELD_RESERVED_VALUE_REG(reserved_value_id, description)
- * FIELD_RESERVED_BINARY_BALUE_REG(reserved_value_id, description)
- */
+*/
 
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
 
-#define TYPE_RESERVED_VALUE_REG(type, id, description) {type, &_reserved_ ## id, _reserved_ ## id ## _names, description},
+#define TYPE_RESERVED_VALUE(type, id, desc, value, ...) {type, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
 
-#define FIELD_RESERVED_VALUE_REG(id, description) {DM_REPORT_FIELD_TYPE_NONE, &_reserved_ ## id, _reserved_ ## id ## _names, description},
+#define FIELD_RESERVED_VALUE(field_id, id, desc, value, ...) {DM_REPORT_FIELD_TYPE_NONE, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
 
-#define FIELD_RESERVED_BINARY_VALUE_REG(id, description) \
-	FIELD_RESERVED_VALUE_REG(id ## _y, description) \
-	FIELD_RESERVED_VALUE_REG(id ## _n, description)
+#define FIELD_RESERVED_BINARY_VALUE(field_id, id, desc, ...) \
+	FIELD_RESERVED_VALUE(field_id, id ## _y, desc, _one64, __VA_ARGS__) \
+	FIELD_RESERVED_VALUE(field_id, id ## _n, desc, _zero64, __VA_ARGS__)
 
 static const struct dm_report_reserved_value _report_reserved_values[] = {
-	TYPE_RESERVED_VALUE_REG(NUM, number_undef_64, "Reserved value for undefined numeric value.")
-	FIELD_RESERVED_BINARY_VALUE_REG(pv_allocatable, "pv_allocatable reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(pv_exported, "pv_exported reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(pv_missing, "pv_missing reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(vg_extendable, "vg_extendable reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(vg_exported, "vg_exported reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(vg_partial, "vg_partial reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(vg_clustered, "vg_clustered reserved values")
-	FIELD_RESERVED_VALUE_REG(vg_permissions_rw, "vg_permissions reserved values (writeable)")
-	FIELD_RESERVED_VALUE_REG(vg_permissions_r, "vg_permissions reserved values (read-only)")
-	FIELD_RESERVED_VALUE_REG(vg_mda_copies, "vg_mda_copies reserved values (unmanaged)")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_initial_image_sync, "lv_initial_image_sync reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_image_synced, "lv_image_synced reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_merging, "lv_merging reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_converting, "lv_converting reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_allocation_locked, "lv_allocation_locked reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_fixed_minor, "lv_fixed_minor reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_active_locally, "lv_active_locally reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_active_remotely, "lv_active_remotelly reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_active_exclusively, "lv_active_exclusively reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_merge_failed, "lv_merge_failed reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_snapshot_invalid, "lv_snapshot_invalid reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_suspended, "lv_suspended reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_live_table, "lv_live_table reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_inactive_table, "lv_inactive_table reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_device_open, "lv_device_open reserved values")
-	FIELD_RESERVED_BINARY_VALUE_REG(lv_skip_activation, "lv_inactive_table reserved values")
-	FIELD_RESERVED_VALUE_REG(lv_permissions_rw, "lv_permissions reserved values (writeable)")
-	FIELD_RESERVED_VALUE_REG(lv_permissions_r, "lv_permissions reserved values (read-only)")
-	FIELD_RESERVED_VALUE_REG(lv_permissions_r_override,  "lv_permissions reserved values (read-only-override)")
-	FIELD_RESERVED_VALUE_REG(lv_read_ahead, "lv_read_ahead reserved values (auto)")
+	#include "values.h"
 	{0, NULL, NULL}
 };
 
