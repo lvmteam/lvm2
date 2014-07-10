@@ -1057,6 +1057,9 @@ activation {
     # A separator to use on report after each field.
     # separator=" "
 
+    # A separator to use for list items when reported.
+    # list_item_separator=","
+
     # Use a field name prefix for each field reported.
     # prefixes=0
 

@@ -139,6 +139,13 @@ static int _field_set_value(struct dm_report_field *field, const void *data, con
 	return 1;
 }
 
+static int _field_set_string_list(struct dm_report *rh, struct dm_report_field *field,
+				  const struct dm_list *list, void *private)
+{
+	struct cmd_context *cmd = (struct cmd_context *) private;
+	return dm_report_field_string_list(rh, field, list, cmd->report_list_item_separator);
+}
+
 /*
  * Data-munging functions to prepare each data type for display and sorting
  */
@@ -221,11 +228,11 @@ static int _peranges_disp(struct dm_report *rh __attribute__((unused)), struct d
 
 static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,
 		      struct dm_report_field *field,
-		      const void *data, void *private __attribute__((unused)))
+		      const void *data, void *private)
 {
 	const struct dm_list *tagsl = (const struct dm_list *) data;
 
-	return dm_report_field_string_list(rh, field, tagsl, NULL);
+	return _field_set_string_list(rh, field, tagsl, private);
 }
 
 static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -243,7 +250,7 @@ static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!(list_lv_modules(mem, lv, modules)))
 		return_0;
 
-	return dm_report_field_string_list(rh, field, modules, NULL);
+	return _field_set_string_list(rh, field, modules, private);
 }
 
 static int _lvprofile_disp(struct dm_report *rh, struct dm_pool *mem,

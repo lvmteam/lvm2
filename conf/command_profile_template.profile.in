@@ -22,6 +22,7 @@ report {
 	buffered=1
 	headings=1
 	separator=" "
+	list_item_separator=","
 	prefixes=0
 	quoted=1
 	colums_as_rows=0

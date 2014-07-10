@@ -119,6 +119,7 @@ struct cmd_context {
 
 	/* List of defined tags */
 	struct dm_list tags;
+	const char *report_list_item_separator;
 	int hosttags;
 
 	const char *lib_dir;		/* Cache value global/library_dir */
