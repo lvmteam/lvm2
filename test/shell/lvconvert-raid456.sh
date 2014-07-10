@@ -25,7 +25,7 @@ get_image_pvs() {
 aux raid456_replace_works || skip
 aux have_raid 1 3 0 || skip
 
-aux prepare_pvs 6
+aux prepare_pvs 7  # 7 devices for 2 dev replacement of 5-dev RAID6
 vgcreate -s 256k $vg $(cat DEVICES)
 
 # RAID 4/5/6 (can replace up to 'parity' devices)
