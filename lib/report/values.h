@@ -19,21 +19,30 @@
  * uses the exact value defined whenever the reserved name is hit, for
  * example during selection criteria processing.
  *
- * FIELD_RESERVED_VALUE can be used for any field.
+ * TYPE_RESERVED_VALUE defines reserved value that is not bound to any field,
+ * but rather it's bound to a certain type. This can be used as a reserved
+ * value for all fields of that type then.
  *
- * FIELD_BINARY_RESERVED_VALUE is specifically designed for fields with
- * binary values where the reserved names given denote the value 1.
+ * FIELD_RESERVED_VALUE defines reserved value bound to a single field.
+ *
+ * FIELD_BINARY_RESERVED_VALUE is similar to FIELD_RESERVED_VALUE but it
+ * is specifically designed for defintion of reserved names for fields
+ * with binary values where the reserved names given denote value 1.
  * The first reserved_name given is also used for reporting,
- * others are synonyms.
+ * others are synonyms which are recognized in addition.
  *
  */
 
 /*
- * FIELD_RESERVED_VALUE(field_id, reserved_value_id, reserved_name, ...)
+ * TYPE_RESERVED_VALUE(type, id, value, reserved_name, ...)
+ * FIELD_RESERVED_VALUE(field_id, reserved_value_id, value, reserved_name, ...)
  * FIELD_BINARY_RESERVED_VALUE(field_id, reserved_value_id, reserved_name, ...)
  */
 
 /* *INDENT-OFF* */
+
+/* Per-type reserved values usable for all fields of certain type. */
+TYPE_RESERVED_VALUE(NUM, number_undef_64, UINT64_C(-1), "-1", "unknown", "undefined", "undef");
 
 /* Reserved values for PV fields */
 FIELD_RESERVED_BINARY_VALUE(pv_allocatable, pv_allocatable, "allocatable")
@@ -47,7 +56,7 @@ FIELD_RESERVED_BINARY_VALUE(vg_partial, vg_partial, "partial")
 FIELD_RESERVED_BINARY_VALUE(vg_clustered, vg_clustered, "clustered")
 FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_rw, FIRST_NAME(vg_permissions_rw), "writeable", "rw", "read-write")
 FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_r, FIRST_NAME(vg_permissions_r), "read-only", "r", "ro")
-FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies, _reserved_number_undef_64, "unmanaged")
+FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies, RESERVED(number_undef_64), "unmanaged")
 
 /* Reserved values for LV fields */
 FIELD_RESERVED_BINARY_VALUE(lv_initial_image_sync, lv_initial_image_sync, "initial image sync", "sync")
@@ -69,6 +78,6 @@ FIELD_RESERVED_BINARY_VALUE(lv_skip_activation, lv_skip_activation, "skip activa
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_rw, FIRST_NAME(lv_permissions_rw), "writeable", "rw", "read-write")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r, FIRST_NAME(lv_permissions_r), "read-only", "r", "ro")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r_override, FIRST_NAME(lv_permissions_r_override), "read-only-override", "ro-override", "r-override", "R")
-FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead, _reserved_number_undef_64, "auto")
+FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead, RESERVED(number_undef_64), "auto")
 
 /* *INDENT-ON* */
