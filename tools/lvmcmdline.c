@@ -68,6 +68,61 @@ unsigned arg_is_set(const struct cmd_context *cmd, int a)
 	return arg_count(cmd, a) ? 1 : 0;
 }
 
+int arg_is_any_set(const struct cmd_context *cmd, const char *err, ...)
+{
+	int arg;
+	va_list ap;
+
+	va_start(ap, err);
+	while ((arg = va_arg(ap, int)) != -1 && !arg_count(cmd, arg))
+		/* empty */;
+	va_end(ap);
+
+	if (arg != -1) {
+		log_error("%s %s.", arg_long_option_name(arg), err);
+		return 0;
+	}
+
+	return 1;
+}
+
+int arg_is_only_set(const struct cmd_context *cmd, const char *err, ...)
+{
+	int i, arg;
+	va_list ap;
+
+	for (i = 0; i < ARG_COUNT; ++i) {
+		switch (i) {
+		/* skip common options */
+		case commandprofile_ARG:
+		case config_ARG:
+		case debug_ARG:
+		case driverloaded_ARG:
+		case help2_ARG:
+		case help_ARG:
+		case profile_ARG:
+		case quiet_ARG:
+		case verbose_ARG:
+		case version_ARG:
+		case yes_ARG:
+			continue;
+		}
+		if (!arg_count(cmd, i))
+			continue; /* unset */
+		va_start(ap, err);
+		while (((arg = va_arg(ap, int)) != -1) && (arg != i))
+			/* empty */;
+		va_end(ap);
+
+		if (arg != i) {
+			log_error("Option %s %s.", arg_long_option_name(i), err);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 unsigned grouped_arg_is_set(const struct arg_values *av, int a)
 {
 	return grouped_arg_count(av, a) ? 1 : 0;

@@ -144,6 +144,8 @@ int major_minor_valid(const struct cmd_context * cmd, const struct format_type *
 /* we use the enums to access the switches */
 unsigned arg_count(const struct cmd_context *cmd, int a);
 unsigned arg_is_set(const struct cmd_context *cmd, int a);
+int arg_is_any_set(const struct cmd_context *cmd, const char *err, ...);
+int arg_is_only_set(const struct cmd_context *cmd, const char *err, ...);
 const char *arg_long_option_name(int a);
 const char *arg_value(struct cmd_context *cmd, int a);
 const char *arg_str_value(struct cmd_context *cmd, int a, const char *def);
