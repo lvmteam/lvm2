@@ -109,6 +109,8 @@ arg(ignoreskippedcluster_ARG, '\0', "ignoreskippedcluster", NULL, 0)
 arg(splitsnapshot_ARG, '\0', "splitsnapshot", NULL, 0)
 arg(readonly_ARG, '\0', "readonly", NULL, 0)
 arg(atomic_ARG, '\0', "atomic", NULL, 0)
+arg(activationmode_ARG, '\0', "activationmode", string_arg, 0)
+
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg, 0)

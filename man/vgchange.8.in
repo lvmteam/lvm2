@@ -12,6 +12,8 @@ vgchange \(em change attributes of a volume group
 .RB [ \-a | \-\-activate
 .RI [ a | e | l ]
 .RI { y | n }]
+.RB [ \-\-activationmode
+.IR { complete | degraded | partial } ]
 .RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-\-monitor
 .RI { y | n }]
@@ -97,6 +99,22 @@ exclusively on one node or 'l' to activate/deactivate only
 on the local node.
 Logical volumes with single-host snapshots are always activated
 exclusively because they can only be used on one node at once.
+.TP
+.BR \-\-activationmode " {" \fIcomplete | \fIdegraded | \fIpartial }
+The activation mode determines whether logical volumes are allowed to
+activate when there are physical volumes missing (e.g. due to a device
+failure).  \fIcomplete is the most restrictive; allowing only those
+logical volumes to be activated that are not affected by the missing
+PVs.  \fIdegraded allows RAID logical volumes to be activated even if
+they have PVs missing.  (Note that the "mirror" segment type is not
+considered a RAID logical volume.  The "raid1" segment type should
+be used instead.)  Finally, \fIpartial allows any logical volume to
+be activated even if portions are missing due to a missing or failed
+PV.  This last option should only be used when performing recovery or
+repair operations.  \fIdegraded is the default mode.  To change it, modify
+.B activation_mode
+in
+.BR lvm.conf (5).
 .TP
 .BR \-K ", " \-\-ignoreactivationskip
 Ignore the flag to skip Logical Volumes during activation.

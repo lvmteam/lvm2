@@ -9,6 +9,8 @@ lvchange \(em change attributes of a logical volume
 .RI { y | n }]
 .RB [ \-a | \-\-activate
 .RI [ a | e | l ]{ y | n }]
+.RB [ \-\-activationmode
+.IR { complete | degraded | partial } ]
 .RB [ \-k | \-\-setactivationskip { y | n } ]
 .RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-\-alloc
@@ -18,6 +20,7 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-C | \-\-contiguous
 .RI { y | n }]
 .RB [ \-d | \-\-debug ]
+.RB [ \-\-degraded ]
 .RB [ \-\-deltag
 .IR Tag ]
 .RB [ \-\-detachprofile ]
@@ -96,6 +99,22 @@ on one node and -aly will activate only on the local node.
 To deactivate only on the local node use -aln.
 Logical volumes with single-host snapshots are always activated
 exclusively because they can only be used on one node at once.
+.TP
+.BR \-\-activationmode " {" \fIcomplete | \fIdegraded | \fIpartial }
+The activation mode determines whether logical volumes are allowed to
+activate when there are physical volumes missing (e.g. due to a device
+failure).  \fIcomplete is the most restrictive; allowing only those
+logical volumes to be activated that are not affected by the missing
+PVs.  \fIdegraded allows RAID logical volumes to be activated even if
+they have PVs missing.  (Note that the "mirror" segment type is not
+considered a RAID logical volume.  The "raid1" segment type should
+be used instead.)  Finally, \fIpartial allows any logical volume to
+be activated even if portions are missing due to a missing or failed
+PV.  This last option should only be used when performing recovery or
+repair operations.  \fIdegraded is the default mode.  To change it, modify
+.B activation_mode
+in
+.BR lvm.conf (5).
 .TP
 .BR \-k ", " \-\-setactivationskip " {" \fIy | \fIn }
 Controls  whether Logical Volumes are persistently flagged to be

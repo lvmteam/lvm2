@@ -86,6 +86,7 @@ struct cmd_context {
 	unsigned handles_unknown_segments:1;
 	unsigned use_linear_target:1;
 	unsigned partial_activation:1;
+	unsigned degraded_activation:1;
 	unsigned auto_set_activation_skip:1;
 	unsigned si_unit_consistency:1;
 	unsigned report_binary_values_as_numeric:1;

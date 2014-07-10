@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Add "degraded" activation mode and make it the default.
   Add separate lv_active_{locally,remotely,exclusively} LV reporting fields.
   Recognize "auto"/"unmanaged" values in selection for appropriate fields only.
   Add report/binary_values_as_numeric lvm.conf option for binary values as 0/1.

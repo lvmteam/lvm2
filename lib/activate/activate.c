@@ -2203,6 +2203,111 @@ out:
 	return r;
 }
 
+static int _lv_raid_is_redundant(struct logical_volume *lv)
+{
+	struct lv_segment *raid_seg = first_seg(lv);
+	uint32_t copies;
+	uint32_t i, s, rebuilds_per_group = 0;
+	uint32_t failed_components = 0;
+
+	if (!(lv->status & PARTIAL_LV)) {
+		/*
+		 * Redundant, but this function shouldn't
+		 * be called in this case.
+		 */
+		log_error(INTERNAL_ERROR "%s is not a partial LV", lv->name);
+		return 1;
+	}
+
+	if (!lv_is_raid(lv))
+		return 0; /* Not RAID, not redundant */
+
+	if (!strcmp(raid_seg->segtype->name, "raid10")) {
+                /* FIXME: We only support 2-way mirrors in RAID10 currently */
+		copies = 2;
+                for (i = 0; i < raid_seg->area_count * copies; i++) {
+                        s = i % raid_seg->area_count;
+                        if (!(i % copies))
+                                rebuilds_per_group = 0;
+                        if ((seg_lv(raid_seg, s)->status & PARTIAL_LV) ||
+                            (seg_metalv(raid_seg, s)->status & PARTIAL_LV) ||
+                            lv_is_virtual(seg_lv(raid_seg, s)) ||
+                            lv_is_virtual(seg_metalv(raid_seg, s)))
+                                rebuilds_per_group++;
+                        if (rebuilds_per_group >= copies) {
+				log_debug("An entire mirror group "
+					  "has failed in %s", lv->name);
+                                return 0; /* Not redundant */
+			}
+                }
+		return 1; /* Redundant */
+        }
+
+	for (s = 0; s < raid_seg->area_count; s++) {
+		if ((seg_lv(raid_seg, s)->status & PARTIAL_LV) ||
+		    (seg_metalv(raid_seg, s)->status & PARTIAL_LV) ||
+		    lv_is_virtual(seg_lv(raid_seg, s)) ||
+		    lv_is_virtual(seg_metalv(raid_seg, s)))
+			failed_components++;
+	}
+        if (failed_components == raid_seg->area_count) {
+		log_debug("All components in %s have failed", lv->name);
+                return 0;
+        } else if (raid_seg->segtype->parity_devs &&
+                   (failed_components > raid_seg->segtype->parity_devs)) {
+                log_debug("More than %u components from (%s) %s/%s have failed",
+                          raid_seg->segtype->parity_devs,
+                          raid_seg->segtype->ops->name(raid_seg),
+                          lv->vg->name, lv->name);
+                return 0;
+        }
+
+	return 1;
+}
+
+static int _lv_is_not_degraded_capable(struct logical_volume *lv, void *data)
+{
+	int *not_capable = (int *)data;
+	uint32_t s;
+	struct lv_segment *seg;
+
+	if (!(lv->status & PARTIAL_LV))
+		return 1;
+
+	if (lv_is_raid(lv))
+		return _lv_raid_is_redundant(lv);
+
+	/* Ignore RAID sub-LVs. */
+	if (lv_is_raid_type(lv))
+		return 1;
+
+	dm_list_iterate_items(seg, &lv->segments)
+		for (s = 0; s < seg->area_count; s++)
+			if (seg_type(seg, s) != AREA_LV) {
+				log_debug("%s is not capable of degraded mode",
+					  lv->name);
+				*not_capable = 1;
+			}
+
+	return 1;
+}
+
+static int lv_is_degraded_capable(struct logical_volume *lv)
+{
+	int not_capable = 0;
+
+	if (!(lv->status & PARTIAL_LV))
+		return 1;
+
+	if (!_lv_is_not_degraded_capable(lv, &not_capable) || not_capable)
+		return 0;
+
+	if (!for_each_sub_lv(lv, _lv_is_not_degraded_capable, &not_capable))
+		log_error(INTERNAL_ERROR "for_each_sub_lv failure.");
+
+	return !not_capable;
+}
+
 static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 			struct lv_activate_opts *laopts, int filter,
 	                struct logical_volume *lv)
@@ -2225,9 +2330,18 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	if ((!lv->vg->cmd->partial_activation) && (lv->status & PARTIAL_LV)) {
-		log_error("Refusing activation of partial LV %s. Use --partial to override.",
-			  lv->name);
-		goto out;
+		if (!lv_is_degraded_capable(lv)) {
+			log_error("Refusing activation of partial LV %s.  "
+				  "Use '--activationmode partial' to override.",
+				  lv->name);
+			goto out;
+		} else if (!lv->vg->cmd->degraded_activation) {
+			log_error("Refusing activation of partial LV %s.  "
+				  "Try '--activationmode degraded'.",
+				  lv->name);
+			goto out;
+		}
+		log_print_unless_silent("Attempting activation of partial RAID LV, %s.", lv->name);
 	}
 
 	if (lv_has_unknown_segments(lv)) {

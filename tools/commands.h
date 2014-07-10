@@ -103,6 +103,7 @@ xx(lvchange,
    "lvchange\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-a|--activate [a|e|l]{y|n}]\n"
+   "\t[--activationmode {complete|degraded|partial}"
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous y|n]\n"
@@ -141,7 +142,8 @@ xx(lvchange,
    "\t[-Z|--zero {y|n}]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
+   activationmode_ARG, addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG,
+   available_ARG,
    contiguous_ARG, deltag_ARG, discards_ARG, detachprofile_ARG, force_ARG,
    ignorelockingfailure_ARG, ignoremonitoring_ARG, ignoreactivationskip_ARG,
    ignoreskippedcluster_ARG, major_ARG, metadataprofile_ARG, minor_ARG,
@@ -933,6 +935,7 @@ xx(vgchange,
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
    "\t{-a|--activate [a|e|l]{y|n}  |" "\n"
+   "\t[--activationmode {complete|degraded|partial}]" "\n"
    "\t -c|--clustered {y|n} |" "\n"
    "\t -x|--resizeable {y|n} |" "\n"
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
@@ -942,7 +945,8 @@ xx(vgchange,
    "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
 
-   addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, activate_ARG,
+   activationmode_ARG, addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG,
+   activate_ARG,
    available_ARG, clustered_ARG, deltag_ARG, detachprofile_ARG,
    ignoreactivationskip_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
    ignoreskippedcluster_ARG, logicalvolume_ARG, maxphysicalvolumes_ARG,

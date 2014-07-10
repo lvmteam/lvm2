@@ -2067,9 +2067,12 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		       stat(name, &info) < 0 || !S_ISBLK(info.st_mode))) ||
 		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s))) {
 			if (!seg->lv->vg->cmd->partial_activation) {
-				log_error("Aborting.  LV %s is now incomplete "
-					  "and --partial was not specified.", seg->lv->name);
-				return 0;
+				if (!seg->lv->vg->cmd->degraded_activation ||
+				    !lv_is_raid_type(seg->lv)) {
+					log_error("Aborting.  LV %s is now incomplete "
+						  "and '--activationmode partial' was not specified.", seg->lv->name);
+					return 0;
+				}
 			}
 			if (!_add_error_area(dm, node, seg, s))
 				return_0;

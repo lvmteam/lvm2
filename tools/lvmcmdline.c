@@ -866,6 +866,8 @@ int version(struct cmd_context *cmd __attribute__((unused)),
 
 static int _get_settings(struct cmd_context *cmd)
 {
+	const char *activation_mode;
+
 	cmd->current_settings = cmd->default_settings;
 
 	if (arg_count(cmd, debug_ARG))
@@ -903,10 +905,34 @@ static int _get_settings(struct cmd_context *cmd)
 	}
 
 	cmd->partial_activation = 0;
+	cmd->degraded_activation = 0;
+	activation_mode = find_config_tree_str(cmd, activation_mode_CFG, NULL);
+	if (!activation_mode)
+		activation_mode = DEFAULT_ACTIVATION_MODE;
 
-	if (arg_count(cmd, partial_ARG)) {
+	if (arg_count(cmd, activationmode_ARG)) {
+		activation_mode = arg_str_value(cmd, activationmode_ARG,
+						activation_mode);
+
+		/* complain only if the two arguments conflict */
+		if (arg_count(cmd, partial_ARG) &&
+		    strcmp(activation_mode, "partial")) {
+			log_error("--partial and --activationmode are mutually"
+				  " exclusive arguments");
+			return EINVALID_CMD_LINE;
+		}
+	} else if (arg_count(cmd, partial_ARG))
+		activation_mode = "partial";
+
+	if (!strcmp(activation_mode, "partial")) {
 		cmd->partial_activation = 1;
 		log_warn("PARTIAL MODE. Incomplete logical volumes will be processed.");
+	} else if (!strcmp(activation_mode, "degraded")) {
+		cmd->degraded_activation = 1;
+		log_debug("DEGRADED MODE. Incomplete RAID LVs will be processed.");
+	} else if (strcmp(activation_mode, "complete")) {
+		log_error("Invalid activation mode given.");
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(cmd, ignorelockingfailure_ARG) || arg_count(cmd, sysinit_ARG))

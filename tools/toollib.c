@@ -1431,7 +1431,8 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	if (!cmd->partial_activation && (lv->status & PARTIAL_LV)) {
-		log_error("Refusing refresh of partial LV %s. Use --partial to override.",
+		log_error("Refusing refresh of partial LV %s."
+			  " Use '--activationmode partial' to override.",
 			  lv->name);
 		return 0;
 	}
