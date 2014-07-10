@@ -1594,9 +1594,9 @@ static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
 	if (seg_is_thin_pool(seg))
-		return _uint32_disp(rh, mem, field, &seg->zero_new_blocks, private);
+		return _binary_disp(rh, mem, field, seg->zero_new_blocks, FIRST_NAME(zero_y), private);
 
-	return _field_set_value(field, "", &RESERVED(number_undef_64));
+	return _binary_undef_disp(rh, mem, field, private);
 }
 
 static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
