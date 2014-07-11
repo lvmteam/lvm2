@@ -1,5 +1,8 @@
 Version 2.02.108 -
 =================================
+  Add report/list_item_separator lvm.conf option.
+  Add lv_active_{locally,remotely,exclusively} LV reporting fields.
+  Comment out devices/{preferred_names,filter} in default lvm.conf file.
   Enhance lvconvert thin, thinpool, cache and cachepool command line support.
   Display 'C' only for cache and cache-pool target types in lvs.
   Prompt for confirmation before change LV into a snapshot exception store.
