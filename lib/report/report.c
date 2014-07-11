@@ -1394,7 +1394,9 @@ static int _lvpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (!(lvi->lv->status & PVMOVE)) {
 		if (lvi->lv->status & LVM_WRITE) {
-			if (lvi->info->read_only)
+			if (!lvi->info->exists)
+				perms = _str_unknown;
+			else if (lvi->info->read_only)
 				perms = FIRST_NAME(lv_permissions_r_override);
 			else
 				perms = FIRST_NAME(lv_permissions_rw);

@@ -48,14 +48,20 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 	return ECMD_PROCESSED;
 }
 
+static void _get_lv_info_for_report(struct cmd_context *cmd,
+				   struct logical_volume *lv,
+				   struct lvinfo *lvinfo)
+{
+	if (!lv_info(cmd, lv, 0, lvinfo, 1, 1))
+		lvinfo->exists = 0;
+}
+
 static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume *lv,
 				 void *handle)
 {
 	struct lvinfo lvinfo;
 
-	if (!lv_info(cmd, lv, 0, &lvinfo, 1, 1))
-		return_ECMD_FAILED;
-
+	_get_lv_info_for_report(cmd, lv, &lvinfo);
 	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, &lvinfo, NULL))
 		return_ECMD_FAILED;
 
@@ -76,8 +82,8 @@ static int _segs_with_lv_info_single(struct cmd_context *cmd __attribute__((unus
 {
 	struct lvinfo lvinfo;
 
-	if (!lv_info(cmd, seg->lv, 0, &lvinfo, 1, 1) ||
-	    !report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, &lvinfo, NULL))
+	_get_lv_info_for_report(cmd, seg->lv, &lvinfo);
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, &lvinfo, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -137,10 +143,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	dm_list_init(&_free_logical_volume.snapshot_segs);
 
 	lvinfo.exists = 0;
-	if (seg && lv_info_needed && !lv_info(cmd, seg->lv, 0, &lvinfo, 1, 1)) {
-		ret = ECMD_FAILED;
-		goto_out;
-	}
+	if (seg && lv_info_needed)
+	    _get_lv_info_for_report(cmd, seg->lv, &lvinfo);
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
 			   seg ? : &_free_lv_segment, pvseg, &lvinfo, pv_label(pvseg->pv))) {
