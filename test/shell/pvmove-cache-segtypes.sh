@@ -110,7 +110,7 @@ lvremove -ff $vg
 # Testing pvmove of a RAID cachepool (metadata and data)
 ########################################################
 lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate --type raid1 -L 2M -n meta $vg "$dev1" "$dev2"
+lvcreate --type raid1 -L 6M -n meta $vg "$dev1" "$dev2"
 lvcreate --type raid1 -L 4M -n ${lv1}_pool $vg "$dev1" "$dev2"
 lvconvert --yes --type cache-pool $vg/${lv1}_pool --poolmetadata $vg/meta
 lvcreate --type cache -n $lv1 -L 8M $vg/${lv1}_pool "$dev5"
@@ -142,7 +142,7 @@ lvremove -ff $vg
 #################################################
 lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
 # RAID for cachepool
-lvcreate --type raid1 -m 1 -L 2M -n meta $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -L 4M -n meta $vg "$dev1" "$dev2"
 lvcreate --type raid1 -m 1 -L 4M -n cachepool $vg "$dev1" "$dev2"
 lvconvert --yes --type cache-pool $vg/cachepool --poolmetadata $vg/meta
 # RAID for thin pool data LV

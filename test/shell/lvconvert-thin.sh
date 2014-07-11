@@ -80,7 +80,7 @@ fail lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too big chunk size fails
 fail lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # negative chunk size fails
-fail lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+invalid lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # non power of 2 fails
 fail lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
@@ -93,7 +93,7 @@ lvcreate -L1T -n $lv1 $vg
 lvcreate -L32G -n $lv2 $vg
 # Warning about bigger then needed
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err
-grep "WARNING: Maximum size" err
+grep "WARNING: Maximum" err
 
 lvremove -f $vg
 

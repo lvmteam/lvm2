@@ -23,8 +23,8 @@ lvcreate -aey --nosync -L8M --type raid1 -m1 -n $lv2 $vg
 lvchange -an $vg/$lv1
 
 # conversion fails for internal volumes
-fail lvconvert --thinpool $vg/${lv1}_rimage_0
-fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_rimage_0
+invalid lvconvert --thinpool $vg/${lv1}_rimage_0
+invalid lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_rimage_0
 
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
