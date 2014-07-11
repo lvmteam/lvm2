@@ -60,15 +60,18 @@ int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 	if (!*pool_metadata_size)
 		*pool_metadata_size = min_meta_size;
 
-	if (*pool_metadata_size < min_meta_size) {
-		*pool_metadata_size = min_meta_size;
-		log_print("Increasing metadata device size to %"
-			  PRIu64 " sectors", *pool_metadata_size);
-	}
 	if (*pool_metadata_size > (2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE)) {
 		*pool_metadata_size = 2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE;
-		log_print("Reducing metadata device size to %" PRIu64 " sectors",
-			  *pool_metadata_size);
+		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
+			log_warn("WARNING: Maximum supported pool metadata size is %s.",
+				 display_size(vg->cmd, *pool_metadata_size));
+	} else if (*pool_metadata_size < min_meta_size) {
+		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
+			log_warn("WARNING: Minimum supported pool metadata size is %s "
+				 "(needs extra %s).",
+				 display_size(vg->cmd, min_meta_size),
+				 display_size(vg->cmd, min_meta_size - *pool_metadata_size));
+		*pool_metadata_size = min_meta_size;
 	}
 
 	return 1;
