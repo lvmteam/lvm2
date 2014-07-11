@@ -910,6 +910,11 @@ char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	const char *s;
 
+	if (!activation()) {
+		s = "unknown";
+		goto out;
+	}
+
 	if (vg_is_clustered(lv->vg)) {
 		//const struct logical_volume *lvo = lv;
 		lv = lv_lock_holder(lv);
@@ -927,7 +932,7 @@ char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else /* locally active */
 		s = lv_is_active_but_not_locally(lv) ?
 			"remotely" : "locally";
-
+out:
 	return dm_pool_strdup(mem, s);
 }
 

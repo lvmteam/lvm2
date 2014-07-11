@@ -1454,6 +1454,9 @@ static int _lvactivelocally_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	int active_locally;
 
+	if (!activation())
+		return _binary_undef_disp(rh, mem, field, private);
+
 	if (vg_is_clustered(lv->vg)) {
 		lv = lv_lock_holder(lv);
 		active_locally = lv_is_active_locally(lv);
@@ -1470,6 +1473,9 @@ static int _lvactiveremotely_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	int active_remotely;
 
+	if (!activation())
+		return _binary_undef_disp(rh, mem, field, private);
+
 	if (vg_is_clustered(lv->vg)) {
 		lv = lv_lock_holder(lv);
 		active_remotely = lv_is_active_but_not_locally(lv);
@@ -1485,6 +1491,9 @@ static int _lvactiveexclusively_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	int active_exclusively;
+
+	if (!activation())
+		return _binary_undef_disp(rh, mem, field, private);
 
 	if (vg_is_clustered(lv->vg)) {
 		lv = lv_lock_holder(lv);
