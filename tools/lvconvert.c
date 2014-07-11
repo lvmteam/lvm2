@@ -165,7 +165,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	if ((ptr = strrchr(lp->lv_name_full, '/')))
 		lp->lv_name = ptr + 1;
 	else
-                lp->lv_name = lp->lv_name_full;
+		lp->lv_name = lp->lv_name_full;
 
 	if (!lp->merge_mirror &&
 	    !strstr(lp->lv_name, "_tdata") &&
@@ -173,8 +173,6 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	    !apply_lvname_restrictions(lp->lv_name))
 		return_0;
 
-	log_error("PAR  %d  t:%d  c:%d  m:%s d:%s  l:%s", *pargc, lp->thin,lp->cache,
-		  lp->pool_metadata_lv_name, lp->pool_data_lv_name, lp->lv_name);
 	if (*pargc) {
 		if (lp->snapshot) {
 			log_error("Too many arguments provided for snapshots.");
