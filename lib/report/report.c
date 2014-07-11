@@ -1478,7 +1478,28 @@ static int _lvactiveremotely_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (vg_is_clustered(lv->vg)) {
 		lv = lv_lock_holder(lv);
-		active_remotely = lv_is_active_but_not_locally(lv);
+		/* FIXME: It seems we have no way to get this info correctly
+		 * 	  with current interface - we'd need to check number
+		 * 	  of responses from the cluster:
+		 * 	    - if number of nodes that responded == 1
+		 * 	    - and LV is active on local node
+		 * 	  ..then we may say that LV is *not* active remotely.
+		 *
+		 * 	  Otherwise ((responses > 1 && LV active locally) ||
+		 * 	  (responses == 1 && LV not active locally)), it's
+		 * 	  active remotely.
+		 *
+		 * 	  We have this info, but hidden underneath the
+		 * 	  locking interface (locking_type.query_resource fn).
+		 *
+		 * 	  For now, let's use 'unknown' for remote status if
+		 * 	  the LV is found active locally until we find a way to
+		 * 	  smuggle the proper information out of the interface.
+		 */
+		if (lv_is_active_locally(lv))
+			return _binary_undef_disp(rh, mem, field, private);
+		else
+			active_remotely = lv_is_active_but_not_locally(lv);
 	} else
 		active_remotely = 0;
 
