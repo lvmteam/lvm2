@@ -109,7 +109,7 @@ lvchange -aey $vg
 lvs -a -o+origin_size,seg_size $vg
 
 # Chain external origins
-lvconvert --originname extorg1 --thinpool $vg/pool -T $vg/extorg
+lvconvert --type thin --originname extorg1 --thinpool $vg/pool $vg/extorg
 check inactive $vg extorg1
 
 lvconvert --originname extorg2 --thinpool $vg/pool -T $vg/extorg1

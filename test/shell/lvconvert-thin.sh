@@ -12,8 +12,7 @@
 
 . lib/inittest
 
-prepare_lvs()
-{
+prepare_lvs() {
 	lvremove -f $vg
 	lvcreate -L10M -n $lv1 $vg
 	lvcreate -L8M -n $lv2 $vg
@@ -38,6 +37,13 @@ aux extend_filter_LVMTEST
 pvcreate "$DM_DEV_DIR/$vg1/$lv"
 vgcreate $vg -s 64K $(tail -n+4 DEVICES) "$DM_DEV_DIR/$vg1/$lv"
 
+lvcreate -L1T -n $lv1 $vg
+invalid lvconvert --yes -c 8M --type thin --poolmetadatasize 1G $vg/$lv1
+
+# needs some --cachepool or --thinpool
+invalid lvconvert --yes --poolmetadatasize 1G $vg/$lv1
+lvremove -f $vg
+
 # create mirrored LVs for data and metadata volumes
 lvcreate -aey -L10M --type mirror -m1 --mirrorlog core -n $lv1 $vg
 lvcreate -aey -L10M -n $lv2 $vg
@@ -60,7 +66,7 @@ lvconvert --yes -c 64 --stripes 2 --thinpool $vg/$lv1 --readahead 48
 
 lvremove -f $vg
 lvcreate -L1T -n $lv1 $vg
-lvconvert --yes -c 8M --thinpool $vg/$lv1
+lvconvert --yes -c 8M --type thin-pool $vg/$lv1
 
 lvremove -f $vg
 # test with bigger sizes
