@@ -602,7 +602,7 @@ int vg_remove(struct volume_group *vg)
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", pv_dev_name(pv), vg->name);
 		pv->vg_name = vg->fid->fmt->orphan_vg_name;
-		pv->status = ALLOCATABLE_PV;
+		pv->status &= ~ALLOCATABLE_PV;
 
 		if (!dev_get_size(pv_dev(pv), &pv->size)) {
 			log_error("%s: Couldn't get size.", pv_dev_name(pv));
