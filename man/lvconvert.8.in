@@ -169,7 +169,9 @@ See \fBlvm\fP(8) for common options.
 .br
 Exactly one of
 .BR \-\-cache ,
+.BR \-\-corelog ,
 .BR \-\-merge ,
+.BR \-\-mirrorlog ,
 .BR \-\-mirrors ,
 .BR \-\-repair ,
 .BR \-\-replace ,
