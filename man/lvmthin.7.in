@@ -662,7 +662,10 @@ of an existing thin pool LV:
 .B lvchange \-\-monitor {y|n} VG/ThinPoolLV
 
 .BR lvm.conf (5)
-.B thin_pool_autoextend_threshold thin_pool_autoextend_percent
+.B thin_pool_autoextend_threshold
+.br
+.BR lvm.conf (5)
+.B thin_pool_autoextend_percent
 .br
 control the default autoextend behavior.
 
@@ -769,7 +772,10 @@ indicated by the "z" attribute displayed by lvs.  The option \-Z
 
 Command to set the zeroing mode when creating a thin pool LV:
 .br
-.B lvconvert \-Z{y|n} \-\-thinpool VG/ThinDataLV \-\-poolmetadata VG/ThinMetaLV
+.B lvconvert \-Z{y|n} \-\-thinpool VG/ThinDataLV
+.br
+.B "   "  \-\-poolmetadata VG/ThinMetaLV
+
 
 Command to change the zeroing mode of an existing thin pool LV:
 .br
@@ -987,7 +993,9 @@ and creates a thin LV in the new pool.
 .br
 \-V VirtualSize specifies the virtual size of the thin LV.
 
-.B lvcreate \-L LargeSize \-V VirtualSize \-n ThinLV \-\-thinpool VG/ThinPoolLV
+.B lvcreate \-L LargeSize \-V VirtualSize \-n ThinLV
+.br
+.B "   "  \-\-thinpool VG/ThinPoolLV
 
 Equivalent to:
 .br
