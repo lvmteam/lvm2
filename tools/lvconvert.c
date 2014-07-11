@@ -2958,7 +2958,8 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		/* Swap normal LV with pool's metadata LV ? */
 		if (lv_is_pool(pool_lv)) {
 			/* Swap names between old and new metadata LV */
-			if (!detach_pool_metadata_lv(first_seg(pool_lv), &pool_metadata_lv))
+			seg = first_seg(pool_lv);
+			if (!detach_pool_metadata_lv(seg, &pool_metadata_lv))
 				return_0;
 			old_name = metadata_lv->name;
 			if (!lv_rename_update(cmd, metadata_lv, "pvmove_tmeta", 0))
