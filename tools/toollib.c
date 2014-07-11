@@ -106,7 +106,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
  * Strip dev_dir if present
  */
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
-		   unsigned *dev_dir_found)
+			 unsigned *dev_dir_found)
 {
 	const char *dmdir = dm_dir();
 	size_t dmdir_len = strlen(dmdir), vglv_sz;
@@ -1773,7 +1773,7 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stri
 			return 0;
 		}
 
-		if(arg_uint64_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT * 2) {
+		if (arg_uint64_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT * 2) {
 			log_error("Stripe size cannot be larger than %s",
 				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
 			return 0;

@@ -553,9 +553,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		}
 
 		/*
-	 	 * --regionsize is only valid if converting an LV into a mirror.
-	 	 * Checked when we know the state of the LV being converted.
-	 	 */
+		 * --regionsize is only valid if converting an LV into a mirror.
+		 * Checked when we know the state of the LV being converted.
+		 */
 
 		if (arg_count(cmd, regionsize_ARG)) {
 			if (arg_sign_value(cmd, regionsize_ARG, SIGN_NONE) ==
@@ -715,7 +715,7 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
-	if (!(_reload_lv(cmd, vg, lv)))
+	if (!_reload_lv(cmd, vg, lv))
 		return_0;
 
 	log_print_unless_silent("Logical volume %s converted.", lv->name);
@@ -1026,7 +1026,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 		if (!is_missing_pv(pvl->pv))
 			continue;
 
-		/* 
+		/*
 		 * Finally, --repair will remove empty PVs.
 		 * But we only want remove these which are output of repair,
 		 * Do not count these which are already empty here.
@@ -1992,20 +1992,20 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return ECMD_FAILED;
 	}
 
-        if (lv_info(cmd, cow, 0, &info, 1, 0)) {
-                if (!lv_check_not_in_use(cmd, cow, &info))
+	if (lv_info(cmd, cow, 0, &info, 1, 0)) {
+		if (!lv_check_not_in_use(cmd, cow, &info))
 			return_ECMD_FAILED;
 
-                if ((lp->force == PROMPT) &&
-                    lv_is_visible(cow) &&
-                    lv_is_active(cow)) {
-                        if (yes_no_prompt("Do you really want to split off active "
-                                          "logical volume %s? [y/n]: ", cow->name) == 'n') {
-                                log_error("Logical volume %s not split.", cow->name);
-                                return ECMD_FAILED;
-                        }
-                }
-        }
+		if ((lp->force == PROMPT) &&
+		    lv_is_visible(cow) &&
+		    lv_is_active(cow)) {
+			if (yes_no_prompt("Do you really want to split off active "
+					  "logical volume %s? [y/n]: ", cow->name) == 'n') {
+				log_error("Logical volume %s not split.", cow->name);
+				return ECMD_FAILED;
+			}
+		}
+	}
 
 	if (!archive(vg))
 		return_ECMD_FAILED;
