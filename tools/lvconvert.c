@@ -391,9 +391,10 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	if (arg_count(cmd, repair_ARG) &&
 	    !arg_is_only_set(cmd, "cannot be used with --repair",
-			    repair_ARG,
-			    stripes_long_ARG, stripesize_ARG,
-			    -1))
+			     repair_ARG,
+			     use_policies_ARG,
+			     stripes_long_ARG, stripesize_ARG,
+			     -1))
 		return_0;
 
 	if (arg_is_set(cmd, mirrorlog_ARG) && arg_is_set(cmd, corelog_ARG)) {
@@ -617,6 +618,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				return_0;
 		}
 	} else if (_mirror_or_raid_type_requested(cmd, type_str) ||
+		   arg_is_set(cmd, repair_ARG) ||
 		   arg_is_set(cmd, mirrorlog_ARG) ||
 		   arg_is_set(cmd, corelog_ARG)) { /* Mirrors (and some RAID functions) */
 		if (arg_count(cmd, chunksize_ARG)) {
