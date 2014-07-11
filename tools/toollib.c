@@ -1661,17 +1661,8 @@ int get_pool_params(struct cmd_context *cmd,
 {
 	int cache_pool = 0;
 
-	if (!strcmp("cache-pool", arg_str_value(cmd, type_ARG, "none")))
+	if (!strcmp("cache-pool", arg_str_value(cmd, type_ARG, "")))
 		cache_pool = 1;
-
-	if (!cache_pool && !arg_count(cmd, thinpool_ARG)) {
-		/* Check for arguments that should only go with pools */
-		if (arg_count(cmd, poolmetadata_ARG)) {
-			log_error("'--poolmetadata' argument is only valid when"
-				  " converting to pool LVs.");
-			return_0;
-		}
-	}
 
 	*passed_args = 0;
 	if (!cache_pool && arg_count(cmd, zero_ARG)) {
@@ -1706,14 +1697,11 @@ int get_pool_params(struct cmd_context *cmd,
 		return_0;
 
 	if (arg_count(cmd, poolmetadatasize_ARG)) {
-		if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative pool metadata size is invalid.");
-			return 0;
-		}
 		*passed_args |= PASS_ARG_POOL_METADATA_SIZE;
-	}
-	*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG,
-					       UINT64_C(0));
+		*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG,
+						       UINT64_C(0));
+	} else if (arg_count(cmd, poolmetadata_ARG))
+		*passed_args |= PASS_ARG_POOL_METADATA_SIZE; /* fixed size */
 
 	return 1;
 }
