@@ -894,7 +894,7 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (dm_snprintf(lv_full_name, sizeof(lv_full_name), "%s/%s", lv->vg->name, lv->name) < 0) {
 		log_error(INTERNAL_ERROR "Name \"%s/%s\" is too long.", lv->vg->name, lv->name);
-		return 0;
+		return ECMD_FAILED;
 	}
 
 	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
@@ -1995,7 +1995,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 
         if (lv_info(cmd, cow, 0, &info, 1, 0)) {
                 if (!lv_check_not_in_use(cmd, cow, &info))
-                        return_0;
+			return_ECMD_FAILED;
 
                 if ((lp->force == PROMPT) &&
                     lv_is_visible(cow) &&
@@ -3047,8 +3047,11 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lp->splitsnapshot)
 		return _lvconvert_splitsnapshot(cmd, lv, lp);
 
-	if (arg_count(cmd, repair_ARG) && lv_is_thin_pool(lv))
-		return _lvconvert_thinpool_repair(cmd, lv, lp);
+	if (arg_count(cmd, repair_ARG) && lv_is_thin_pool(lv)) {
+		if (!_lvconvert_thinpool_repair(cmd, lv, lp))
+			return_ECMD_FAILED;
+		return ECMD_PROCESSED;
+	}
 
 	if (arg_count(cmd, repair_ARG) &&
 	    !(lv->status & MIRRORED) && !(lv->status & RAID)) {
@@ -3070,9 +3073,8 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		 * to consult the default.
 		 */
 		if (arg_count(cmd, mirrors_ARG) && !lv_is_mirrored(lv)) {
-			lp->segtype = get_segtype_from_string(cmd, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL));
-			if (!lp->segtype)
-				return_0;
+			if (!(lp->segtype = get_segtype_from_string(cmd, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL))))
+				return_ECMD_FAILED;
 		}
 	}
 	if (lp->merge) {
