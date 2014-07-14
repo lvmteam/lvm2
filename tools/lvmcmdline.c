@@ -935,10 +935,8 @@ static int _get_settings(struct cmd_context *cmd)
 	if (arg_count(cmd, quiet_ARG)) {
 		cmd->current_settings.debug = 0;
 		cmd->current_settings.verbose = 0;
+		cmd->current_settings.silent = (arg_count(cmd, quiet_ARG) > 1) ? 1 : 0;
 	}
-
-	if (arg_count(cmd, quiet_ARG) > 1)
-		cmd->current_settings.silent = 1;
 
 	if (arg_count(cmd, test_ARG))
 		cmd->current_settings.test = arg_count(cmd, test_ARG);
