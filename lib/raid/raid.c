@@ -30,6 +30,21 @@ static const char *_raid_name(const struct lv_segment *seg)
 	return seg->segtype->name;
 }
 
+static void _raid_display(const struct lv_segment *seg)
+{
+	unsigned s;
+
+	for (s = 0; s < seg->area_count; ++s) {
+		log_print("  Raid Data LV%2d", s);
+		display_stripe(seg, s, "    ");
+	}
+
+	for (s = 0; s < seg->area_count; ++s)
+		log_print("  Raid Metadata LV%2d\t%s", s, seg_metalv(seg, s)->name);
+
+	log_print(" ");
+}
+
 static int _raid_text_import_area_count(const struct dm_config_node *sn,
 					uint32_t *area_count)
 {
@@ -404,6 +419,7 @@ static int _raid_target_unmonitor_events(struct lv_segment *seg, int events)
 
 static struct segtype_handler _raid_ops = {
 	.name = _raid_name,
+	.display = _raid_display,
 	.text_import_area_count = _raid_text_import_area_count,
 	.text_import = _raid_text_import,
 	.text_export = _raid_text_export,
