@@ -329,6 +329,7 @@ static int _print_header(struct formatter *f,
 {
 	char *buf;
 	time_t t;
+	char com[PATH_MAX];
 
 	t = time(NULL);
 
@@ -344,9 +345,10 @@ static int _print_header(struct formatter *f,
 	}
 	outf(f, "description = \"%s\"", dm_escape_double_quotes(buf, desc));
 	outnl(f);
-	outf(f, "creation_host = \"%s\"\t# %s %s %s %s %s", _utsname.nodename,
-	     _utsname.sysname, _utsname.nodename, _utsname.release,
-	     _utsname.version, _utsname.machine);
+	(void) dm_snprintf(com, sizeof(com), "# %s %s %s %s %s",
+			   _utsname.sysname, _utsname.nodename, _utsname.release,
+			   _utsname.version, _utsname.machine);
+	outfc(f, com, "creation_host = \"%s\"", _utsname.nodename);
 	outf(f, "creation_time = %lu\t# %s", t, ctime(&t));
 
 	return 1;
@@ -396,7 +398,7 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	outf(f, "seqno = %u", vg->seqno);
 
 	if (vg->fid && vg->fid->fmt)
-		outf(f, "format = \"%s\" # informational", vg->fid->fmt->name);
+		outfc(f, "# informational", "format = \"%s\"", vg->fid->fmt->name);
 
 	if (!_print_flag_config(f, vg->status, VG_FLAGS))
 		return_0;

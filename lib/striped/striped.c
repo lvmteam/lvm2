@@ -94,8 +94,8 @@ static int _striped_text_import(struct lv_segment *seg, const struct dm_config_n
 static int _striped_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 
-	outf(f, "stripe_count = %u%s", seg->area_count,
-	     (seg->area_count == 1) ? "\t# linear" : "");
+	outfc(f, (seg->area_count == 1) ? "# linear" : NULL,
+	      "stripe_count = %u", seg->area_count);
 
 	if (seg->area_count > 1)
 		outsize(f, (uint64_t) seg->stripe_size,
