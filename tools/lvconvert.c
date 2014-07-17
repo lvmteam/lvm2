@@ -146,6 +146,9 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	if (!_lvconvert_vg_name(lp, cmd, &lp->origin_lv_name))
 		return_0;
 
+	if (!_lvconvert_vg_name(lp, cmd, &lp->lv_split_name))
+		return_0;
+
 	if (strchr(lp->lv_name_full, '/') &&
 	    (vg_name = extract_vgname(cmd, lp->lv_name_full)) &&
 	    lp->vg_name && strcmp(vg_name, lp->vg_name)) {
@@ -483,21 +486,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		lp->lv_split_name = arg_value(cmd, name_ARG);
-		if (lp->lv_split_name) {
-			if (strchr(lp->lv_split_name, '/')) {
-				if (!(lp->vg_name = extract_vgname(cmd, lp->lv_split_name)))
-					return_0;
-
-				/* Strip VG from lv_split_name */
-				if ((tmp_str = strrchr(lp->lv_split_name, '/')))
-					lp->lv_split_name = tmp_str + 1;
-			}
-
-			if (!apply_lvname_restrictions(lp->lv_split_name))
-				return_0;
-		}
-
+		lp->lv_split_name = arg_str_value(cmd, name_ARG, NULL);
 		lp->keep_mimages = 1;
 		lp->mirrors = arg_uint_value(cmd, splitmirrors_ARG, 0);
 		lp->mirrors_sign = SIGN_MINUS;
