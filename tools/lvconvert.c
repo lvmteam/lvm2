@@ -529,7 +529,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		;
 	else if (lp->snapshot) {	/* Snapshot creation from pre-existing cow */
 		if (!argc) {
-			log_error("Please provide logical volume path for snaphost origin.");
+			log_error("Please provide logical volume path for snapshot origin.");
 			return 0;
 		}
 		lp->origin_lv_name = argv[0];
