@@ -406,8 +406,14 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, splitsnapshot_ARG))
+	if (arg_is_set(cmd, splitsnapshot_ARG)) {
+		if (!arg_is_only_set(cmd, "cannot be used with --splitsnapshot",
+				     splitsnapshot_ARG,
+				     force_ARG, noudevsync_ARG, test_ARG,
+				     -1))
+			return_0;
 		lp->splitsnapshot = 1;
+	}
 
 	if ((_snapshot_type_requested(cmd, type_str) || arg_count(cmd, merge_ARG)) &&
 	    (arg_count(cmd, mirrorlog_ARG) || _mirror_or_raid_type_requested(cmd, type_str) ||
@@ -511,21 +517,6 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		 */
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0);
 		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, SIGN_NONE);
-	}
-
-	if (lp->splitsnapshot &&
-	    (lp->snapshot || lp->thin || lp->merge || lp->merge_mirror || arg_count(cmd, thinpool_ARG) ||
-	     arg_count(cmd, mirrors_ARG) || arg_count(cmd, repair_ARG) || arg_count(cmd, replace_ARG) ||
-	     arg_count(cmd, chunksize_ARG) || arg_count(cmd, zero_ARG) || arg_count(cmd, regionsize_ARG) ||
-	     arg_count(cmd, poolmetadata_ARG) || arg_count(cmd, poolmetadatasize_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, stripes_long_ARG) ||
-	     arg_count(cmd, stripesize_ARG) || arg_count(cmd, background_ARG) ||
-	     arg_count(cmd, interval_ARG) || arg_count(cmd, type_ARG) || arg_count(cmd, alloc_ARG) ||
-	     arg_count(cmd, corelog_ARG) || arg_count(cmd, mirrorlog_ARG) ||
-	     arg_count(cmd, splitmirrors_ARG) || arg_count(cmd, originname_ARG) ||
-	     arg_count(cmd, trackchanges_ARG) || arg_count(cmd, use_policies_ARG))) {
-		log_error("Incompatible arguments supplied with --splitsnapshot.");
-		return 0;
 	}
 
 	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
