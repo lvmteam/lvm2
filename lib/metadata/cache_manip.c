@@ -299,3 +299,17 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	return 1;
 }
+
+int get_cache_mode(const char *str, uint32_t *flags)
+{
+	if (!strcmp(str, "writethrough"))
+		*flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+	else if (!strcmp(str, "writeback"))
+		*flags |= DM_CACHE_FEATURE_WRITEBACK;
+	else {
+		log_error("Cache pool cachemode \"%s\" is unknown.", str);
+		return 0;
+	}
+
+	return 1;
+}

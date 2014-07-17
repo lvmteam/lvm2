@@ -74,11 +74,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	if (dm_config_has_node(sn, "cache_mode")) {
 		if (!(str = dm_config_find_str(sn, "cache_mode", NULL)))
 			return SEG_LOG_ERROR("cache_mode must be a string in");
-		if (!strcmp(str, "writethrough"))
-			seg->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
-		else if (!strcmp(str, "writeback"))
-			seg->feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
-		else
+		if (!get_cache_mode(str, &seg->feature_flags))
 			return SEG_LOG_ERROR("Unknown cache_mode in");
 	}
 

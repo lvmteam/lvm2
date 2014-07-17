@@ -713,17 +713,9 @@ static int _read_cache_pool_params(struct lvcreate_params *lp,
 	lp->chunk_size = arg_uint_value(cmd, chunksize_ARG,
 					DEFAULT_CACHE_POOL_CHUNK_SIZE * 2);
 
-	str_arg = arg_str_value(cmd, cachemode_ARG, NULL);
-	if (str_arg) {
-		if (!strcmp(str_arg, "writeback"))
-			lp->feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
-		else if (!strcmp(str_arg, "writethrough"))
-			lp->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
-		else {
-			log_error("Unknown cachemode argument");
-			return 0;
-		}
-	}
+	if ((str_arg = arg_str_value(cmd, cachemode_ARG, NULL)) &&
+	    !get_cache_mode(str_arg, &lp->feature_flags))
+		return_0;
 
 	return 1;
 }

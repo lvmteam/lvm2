@@ -289,16 +289,9 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 	}
 
 	if (cachepool) {
-		if ((tmp_str = arg_str_value(cmd, cachemode_ARG, NULL))) {
-			if (!strcmp(tmp_str, "writeback"))
-				lp->feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
-			else if (!strcmp(tmp_str, "writethrough"))
-				lp->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
-			else {
-				log_error("Unknown cachemode argument");
-				return 0;
-			}
-		}
+		if ((tmp_str = arg_str_value(cmd, cachemode_ARG, NULL)) &&
+		    !get_cache_mode(tmp_str, &lp->feature_flags))
+			return_0;
 	} else {
 		if (!arg_is_any_set(cmd, "is valid only with cache pools",
 				    cachemode_ARG, -1))
