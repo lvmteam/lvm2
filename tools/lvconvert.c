@@ -523,15 +523,12 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	/* There are six types of lvconvert. */
 	if (lp->merge) {	/* Snapshot merge */
-		if (arg_count(cmd, regionsize_ARG) || arg_count(cmd, chunksize_ARG) ||
-		    arg_count(cmd, zero_ARG) || arg_count(cmd, regionsize_ARG) ||
-		    arg_count(cmd, poolmetadata_ARG) || arg_count(cmd, poolmetadatasize_ARG) ||
-		    arg_count(cmd, readahead_ARG) ||
-		    arg_count(cmd, stripes_long_ARG) || arg_count(cmd, stripesize_ARG)) {
-			log_error("Only --background and --interval are valid "
-				  "arguments for snapshot merge");
-			return 0;
-		}
+		if (!arg_is_only_set(cmd, "cannot be used with --merge",
+				     merge_ARG,
+				     background_ARG, interval_ARG,
+				     force_ARG, noudevsync_ARG, test_ARG,
+				     -1))
+			return_0;
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
 			return_0;
