@@ -392,8 +392,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, repair_ARG) &&
 	    !arg_is_only_set(cmd, "cannot be used with --repair",
 			     repair_ARG,
-			     use_policies_ARG,
+			     alloc_ARG, use_policies_ARG,
 			     stripes_long_ARG, stripesize_ARG,
+			     force_ARG, noudevsync_ARG, test_ARG,
 			     -1))
 		return_0;
 
