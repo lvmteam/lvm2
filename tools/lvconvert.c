@@ -234,7 +234,7 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 	int cachepool = 0;
 	int thinpool = 0;
 
-	if (arg_count(cmd, cachepool_ARG)) {
+	if ((lp->pool_data_lv_name = arg_str_value(cmd, cachepool_ARG, NULL))) {
 		if (type_str[0] &&
 		    strcmp(type_str, "cache") &&
 		    strcmp(type_str, "cache-pool")) {
@@ -242,13 +242,11 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 				  " the cache or cache-pool segment type.");
 			return 0;
 		}
-		lp->pool_data_lv_name = arg_str_value(cmd, cachepool_ARG, NULL);
 		cachepool = 1;
 		type_str = "cache-pool";
 	} else if (!strcmp(type_str, "cache-pool"))
 		cachepool = 1;
-
-	if (arg_count(cmd, thinpool_ARG)) {
+	else if ((lp->pool_data_lv_name = arg_str_value(cmd, thinpool_ARG, NULL))) {
 		if (type_str[0] &&
 		    strcmp(type_str, "thin") &&
 		    strcmp(type_str, "thin-pool")) {
@@ -256,25 +254,10 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 				  " the thin or thin-pool segment type.");
 			return 0;
 		}
-		lp->pool_data_lv_name = arg_str_value(cmd, thinpool_ARG, NULL);
 		thinpool = 1;
 		type_str = "thin-pool";
 	} else if (!strcmp(type_str, "thin-pool"))
 		thinpool = 1;
-
-	if (thinpool) {
-		lp->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
-		lp->origin_lv_name = arg_str_value(cmd, originname_ARG, NULL);
-	} else {
-		if (arg_from_list_is_set(cmd, "is valid only with thin pools",
-					 discards_ARG, originname_ARG, zero_ARG,
-					 -1))
-			return_0;
-		if (lp->thin) {
-			log_error("--thin requires --thinpool.");
-			return 0;
-		}
-	}
 
 	if (cachepool) {
 		if ((tmp_str = arg_str_value(cmd, cachemode_ARG, NULL)) &&
@@ -282,10 +265,24 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 			return_0;
 	} else {
 		if (arg_from_list_is_set(cmd, "is valid only with cache pools",
-					 cachemode_ARG, -1))
+					 cachepool_ARG, cachemode_ARG, -1))
 			return_0;
 		if (lp->cache) {
 			log_error("--cache requires --cachepool.");
+			return 0;
+		}
+	}
+
+	if (thinpool) {
+		lp->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
+		lp->origin_lv_name = arg_str_value(cmd, originname_ARG, NULL);
+	} else {
+		if (arg_from_list_is_set(cmd, "is valid only with thin pools",
+					 discards_ARG, originname_ARG, thinpool_ARG,
+					 zero_ARG, -1))
+			return_0;
+		if (lp->thin) {
+			log_error("--thin requires --thinpool.");
 			return 0;
 		}
 	}
@@ -308,7 +305,7 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 			/* value is read in get_pool_params() */
 		}
 
-		if (arg_count(cmd, poolmetadata_ARG)) {
+		if ((lp->pool_metadata_lv_name = arg_str_value(cmd, poolmetadata_ARG, NULL))) {
 			if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
 				log_error("Can't use --stripes and --stripesize with --poolmetadata.");
 				return 0;
@@ -316,11 +313,6 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 
 			if (arg_count(cmd, readahead_ARG)) {
 				log_error("Can't use --readahead with --poolmetadata.");
-				return 0;
-			}
-
-			if (!(lp->pool_metadata_lv_name = arg_str_value(cmd, poolmetadata_ARG, NULL))) {
-				log_error("Missing --poolmetadata argument.");
 				return 0;
 			}
 		}
@@ -331,14 +323,13 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 			return 0;
 		}
 
-		if (!arg_count(cmd, cachepool_ARG) &&
-		    !arg_count(cmd, thinpool_ARG)) {
+		if (!lp->pool_data_lv_name) {
 			if (!*pargc) {
 				log_error("Please specify the pool data LV.");
 				return 0;
 			}
 			lp->pool_data_lv_name = (*pargv)[0];
-                        (*pargv)++, (*pargc)--;
+			(*pargv)++, (*pargc)--;
 		}
 
 		if (!lp->thin && !lp->cache)
