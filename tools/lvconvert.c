@@ -266,9 +266,9 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 		lp->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
 		lp->origin_lv_name = arg_str_value(cmd, originname_ARG, NULL);
 	} else {
-		if (!arg_is_any_set(cmd, "is valid only with thin pools",
-				    discards_ARG, originname_ARG, zero_ARG,
-				    -1))
+		if (arg_from_list_is_set(cmd, "is valid only with thin pools",
+					 discards_ARG, originname_ARG, zero_ARG,
+					 -1))
 			return_0;
 		if (lp->thin) {
 			log_error("--thin requires --thinpool.");
@@ -281,8 +281,8 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 		    !get_cache_mode(tmp_str, &lp->feature_flags))
 			return_0;
 	} else {
-		if (!arg_is_any_set(cmd, "is valid only with cache pools",
-				    cachemode_ARG, -1))
+		if (arg_from_list_is_set(cmd, "is valid only with cache pools",
+					 cachemode_ARG, -1))
 			return_0;
 		if (lp->cache) {
 			log_error("--cache requires --cachepool.");
@@ -291,9 +291,9 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 	}
 
 	if (thinpool || cachepool) {
-		if (!arg_is_any_set(cmd, "is invalid with pools",
-				    merge_ARG, mirrors_ARG, repair_ARG, snapshot_ARG,
-				    splitmirrors_ARG, -1))
+		if (arg_from_list_is_set(cmd, "is invalid with pools",
+					 merge_ARG, mirrors_ARG, repair_ARG, snapshot_ARG,
+					 splitmirrors_ARG, -1))
 			return_0;
 
 		if (arg_count(cmd, poolmetadatasize_ARG)) {
@@ -349,9 +349,9 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, type_str)))
 			return_0;
-	} else if (!arg_is_any_set(cmd, "is valid only with pools",
-				   poolmetadatasize_ARG, poolmetadataspare_ARG,
-				   -1))
+	} else if (arg_from_list_is_set(cmd, "is valid only with pools",
+					poolmetadatasize_ARG, poolmetadataspare_ARG,
+					-1))
 		return_0;
 
 	return 1;
@@ -374,12 +374,12 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return_0;
 
 	if (arg_count(cmd, repair_ARG) &&
-	    !arg_is_only_set(cmd, "cannot be used with --repair",
-			     repair_ARG,
-			     alloc_ARG, use_policies_ARG,
-			     stripes_long_ARG, stripesize_ARG,
-			     force_ARG, noudevsync_ARG, test_ARG,
-			     -1))
+	    arg_outside_list_is_set(cmd, "cannot be used with --repair",
+				    repair_ARG,
+				    alloc_ARG, use_policies_ARG,
+				    stripes_long_ARG, stripesize_ARG,
+				    force_ARG, noudevsync_ARG, test_ARG,
+				    -1))
 		return_0;
 
 	if (arg_is_set(cmd, mirrorlog_ARG) && arg_is_set(cmd, corelog_ARG)) {
@@ -388,10 +388,10 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	}
 
 	if (arg_is_set(cmd, splitsnapshot_ARG)) {
-		if (!arg_is_only_set(cmd, "cannot be used with --splitsnapshot",
-				     splitsnapshot_ARG,
-				     force_ARG, noudevsync_ARG, test_ARG,
-				     -1))
+		if (arg_outside_list_is_set(cmd, "cannot be used with --splitsnapshot",
+					    splitsnapshot_ARG,
+					    force_ARG, noudevsync_ARG, test_ARG,
+					    -1))
 			return_0;
 		lp->splitsnapshot = 1;
 	}
@@ -504,11 +504,11 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	/* There are six types of lvconvert. */
 	if (lp->merge) {	/* Snapshot merge */
-		if (!arg_is_only_set(cmd, "cannot be used with --merge",
-				     merge_ARG,
-				     background_ARG, interval_ARG,
-				     force_ARG, noudevsync_ARG, test_ARG,
-				     -1))
+		if (arg_outside_list_is_set(cmd, "cannot be used with --merge",
+					    merge_ARG,
+					    background_ARG, interval_ARG,
+					    force_ARG, noudevsync_ARG, test_ARG,
+					    -1))
 			return_0;
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
@@ -2796,9 +2796,9 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		lp->pool_data_lv = pool_lv;
 
 		if (!metadata_lv) {
-			if (!arg_is_any_set(cmd, "is invalid with existing pool",
-					    cachemode_ARG,chunksize_ARG, discards_ARG,
-					    zero_ARG, poolmetadatasize_ARG, -1))
+			if (arg_from_list_is_set(cmd, "is invalid with existing pool",
+						 cachemode_ARG,chunksize_ARG, discards_ARG,
+						 zero_ARG, poolmetadatasize_ARG, -1))
 				return_0;
 			return 1;
 		}
