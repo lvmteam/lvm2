@@ -28,7 +28,7 @@ let
 
          dmsetup targets
 
-         export LVM_TEST_BACKING_DEVICE=/dev/vdb
+         export LVM_TEST_BACKING_DEVICE=/dev/sdb
 
          lvm2-testsuite --batch --outdir /tmp/xchg/results-ndev --continue \
              --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
@@ -64,7 +64,8 @@ let
        #!${pkgs.bash}/bin/bash
        . $stdenv/setup
 
-       export QEMU_OPTS="-drive file=/dev/shm/testdisk.img,if=virtio -m 256M"
+       export QEMU_OPTS="-drive file=/dev/shm/testdisk.img,if=ide -m 256M"
+       export QEMU_DRIVE_OPTS=",if=ide"
        export KERNEL_OPTS="log_buf_len=131072 loglevel=1"
        export mountDisk=1
 
