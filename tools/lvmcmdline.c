@@ -982,7 +982,7 @@ static int _get_settings(struct cmd_context *cmd)
 		log_warn("PARTIAL MODE. Incomplete logical volumes will be processed.");
 	} else if (!strcmp(activation_mode, "degraded")) {
 		cmd->degraded_activation = 1;
-		log_debug("DEGRADED MODE. Incomplete RAID LVs will be processed.");
+		log_verbose("DEGRADED MODE. Incomplete RAID LVs will be processed.");
 	} else if (strcmp(activation_mode, "complete")) {
 		log_error("Invalid activation mode given.");
 		return EINVALID_CMD_LINE;
