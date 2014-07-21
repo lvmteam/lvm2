@@ -329,7 +329,6 @@ static int _print_header(struct formatter *f,
 {
 	char *buf;
 	time_t t;
-	char com[PATH_MAX];
 
 	t = time(NULL);
 
@@ -345,10 +344,9 @@ static int _print_header(struct formatter *f,
 	}
 	outf(f, "description = \"%s\"", dm_escape_double_quotes(buf, desc));
 	outnl(f);
-	(void) dm_snprintf(com, sizeof(com), "# %s %s %s %s %s",
-			   _utsname.sysname, _utsname.nodename, _utsname.release,
-			   _utsname.version, _utsname.machine);
-	outfc(f, com, "creation_host = \"%s\"", _utsname.nodename);
+	outf(f, "creation_host = \"%s\"\t# %s %s %s %s %s", _utsname.nodename,
+	     _utsname.sysname, _utsname.nodename, _utsname.release,
+	     _utsname.version, _utsname.machine);
 	outf(f, "creation_time = %lu\t# %s", t, ctime(&t));
 
 	return 1;
