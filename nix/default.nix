@@ -152,7 +152,8 @@ let
    };
 
   rootmods = [ "virtio_pci" "virtio_blk" "virtio_balloon" "ext4" "unix"
-               "cifs" "virtio_net" "unix" "hmac" "md4" "ecb" "des_generic" "sha256" ];
+               "cifs" "virtio_net" "unix" "hmac" "md4" "ecb" "des_generic" "sha256"
+               "ata_piix" "sd_mod" ];
 
   centos_url = ver: arch: if ver == "6.5"
        then "http://ftp.fi.muni.cz/pub/linux/centos/${ver}/os/${arch}/"
