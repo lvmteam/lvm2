@@ -15,6 +15,28 @@
 
 #include "tools.h"
 
+static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct pv_list *pvl;
+	struct dm_list pvs;
+
+	if (!lvmetad_used()) {
+		log_verbose("Ignoring lvscan --cache because lvmetad is not in use.");
+		return ECMD_PROCESSED;
+	}
+
+	dm_list_init(&pvs);
+
+	if (!get_pv_list_for_lv(lv->vg->vgmem, lv, &pvs))
+		return ECMD_FAILED;
+
+	dm_list_iterate_items(pvl, &pvs)
+		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL))
+			return ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
 static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 			 void *handle __attribute__((unused)))
 {
@@ -23,6 +45,9 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	dm_percent_t snap_percent;     /* fused, fsize; */
 
 	const char *active_str, *snapshot_str;
+
+	if (arg_count(cmd, cache_ARG))
+		return _lvscan_single_lvmetad(cmd, lv);
 
 	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
@@ -58,7 +83,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvscan(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (argc) {
+	if (argc && !arg_count(cmd, cache_ARG)) {
 		log_error("No additional command line arguments allowed");
 		return EINVALID_CMD_LINE;
 	}

@@ -581,6 +581,7 @@ xx(lvscan,
    "lvscan " "\n"
    "\t[-a|--all]\n"
    "\t[-b|--blockdevice] " "\n"
+   "\t[--cache]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|-?|--help] " "\n"
@@ -591,7 +592,7 @@ xx(lvscan,
    "\t[--version]\n",
 
    all_ARG, blockdevice_ARG, ignorelockingfailure_ARG, partial_ARG,
-   readonly_ARG)
+   readonly_ARG, cache_ARG)
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
