@@ -2203,6 +2203,7 @@ out:
 	return r;
 }
 
+/* FIXME Move this non-activation code elsewhere */
 static int _lv_raid_is_redundant(struct logical_volume *lv)
 {
 	struct lv_segment *raid_seg = first_seg(lv);

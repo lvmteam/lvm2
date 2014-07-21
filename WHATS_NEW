@@ -10,7 +10,8 @@ Version 2.02.108 -
   Prompt for confirmation before change LV into a snapshot exception store.
   Return proper error codes for some failing lvconvert funtions.
   Add initial code to use cache tools (cache_check|dump|repair|restore).
-  Add "degraded" activation mode and make it the default.
+  Support lvdisplay --maps for raid.
+  Add --activationmode degraded to activate degraded raid volumes by default.
   Add separate lv_active_{locally,remotely,exclusively} LV reporting fields.
   Recognize "auto"/"unmanaged" values in selection for appropriate fields only.
   Add report/binary_values_as_numeric lvm.conf option for binary values as 0/1.

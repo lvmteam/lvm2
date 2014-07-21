@@ -1042,26 +1042,24 @@ activation {
     # operation is complete.
     polling_interval = 15
 
-    # 'activation_mode' determines how logical volumes are activated if
-    # devices are missing.  Possible settings are:
+    # 'activation_mode' determines how Logical Volumes are activated if
+    # any devices are missing.  Possible settings are:
     #
-    #	"complete" -  Only allow activation of an LV if all of the PVs
-    #		      that it uses are available (i.e. the volume group
-    #		      is complete).  There may be a failed PV in the
-    #		      volume group; but if a particular LV is not on that
-    #		      PV, it is still allowed to activate in this mode.
+    #	"complete" -  Only allow activation of an LV if all of the Physical
+    #		      Volumes it uses are present.  Other PVs in the Volume
+    #		      Group may be missing.
     #
-    #	"degraded" -  Like "complete", except that RAID logical volumes of
-    #		      segment type "raid{1,4,5,6,10}" are activated if
-    #		      they have sufficient redundancy to present the entire
-    #		      addressable range of the logical volume.
+    #	"degraded" -  Like "complete", but additionally RAID Logical Volumes of
+    #		      segment type raid1, raid4, raid5, radid6 and raid10 will
+    #		      be activated if there is no data loss, i.e. they have
+    #		      sufficient redundancy to present the entire addressable
+    #		      range of the Logical Volume.
     #
-    #	"partial"  -  Allow activation for any logical volume - even if
-    #		      a missing or failed PV would cause a portion of the
-    #		      logical volume to be inaccessible.  (E.g. a stripe
-    #		      volume that has lost one of its members would be
-    #		      unable to access a portion of the logical volume.)
-    #		      This setting is not recommended for normal use.
+    #	"partial"  -  Allows the activation of any Logical Volume even if
+    #		      a missing or failed PV could cause data loss with a
+    #		      portion of the Logical Volume inaccessible.
+    #		      This setting should not normally be used, but may
+    #		      sometimes assist with data recovery.
     #
     # This setting was introduced in LVM version 2.02.108.  It corresponds
     # with the '--activationmode' option for lvchange and vgchange.
