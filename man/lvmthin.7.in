@@ -818,7 +818,9 @@ Command to set the discard mode when creating a thin pool LV:
 .br
 .B lvconvert \-\-discards {ignore|nopassdown|passdown}
 .br
-.B "   "  \-\-thinpool VG/ThinDataLV \-\-poolmetadata VG/ThinMetaLV
+.RS
+.B \-\-thinpool VG/ThinDataLV \-\-poolmetadata VG/ThinMetaLV
+.RE
 
 Command to change the discard mode of an existing thin pool LV:
 .br
@@ -933,7 +935,9 @@ name of ExampleLV.
 
 .B lvconvert \-\-type thin \-\-thinpool VG/ThinPoolLV
 .br
-.B "    " \-\-originname NewExternalOriginLV \-\-thin VG/ExampleLV
+.RS
+.B \-\-originname NewExternalOriginLV \-\-thin VG/ExampleLV
+.RE
 
 .I Example
 .br
