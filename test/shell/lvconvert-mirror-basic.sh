@@ -110,6 +110,8 @@ test_lvconvert() {
 	fi
 }
 
+# disable lvmetad logging as it bogs down test systems
+test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
 
 aux prepare_pvs 5 5
 vgcreate -s 32k $vg $(cat DEVICES)

@@ -11,6 +11,9 @@
 
 . lib/inittest
 
+# disable lvmetad logging as it bogs down test systems
+test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
+
 get_image_pvs() {
 	local d
 	local images
