@@ -1938,3 +1938,108 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 
 	return 1;
 }
+
+/* Return 1 if a partial raid LV can be activated redundantly */
+static int _partial_raid_lv_is_redundant(struct logical_volume *lv)
+{
+	struct lv_segment *raid_seg = first_seg(lv);
+	uint32_t copies;
+	uint32_t i, s, rebuilds_per_group = 0;
+	uint32_t failed_components = 0;
+
+	if (!strcmp(raid_seg->segtype->name, "raid10")) {
+                /* FIXME: We only support 2-way mirrors in RAID10 currently */
+		copies = 2;
+                for (i = 0; i < raid_seg->area_count * copies; i++) {
+                        s = i % raid_seg->area_count;
+
+                        if (!(i % copies))
+                                rebuilds_per_group = 0;
+
+                        if ((seg_lv(raid_seg, s)->status & PARTIAL_LV) ||
+                            (seg_metalv(raid_seg, s)->status & PARTIAL_LV) ||
+                            lv_is_virtual(seg_lv(raid_seg, s)) ||
+                            lv_is_virtual(seg_metalv(raid_seg, s)))
+                                rebuilds_per_group++;
+
+                        if (rebuilds_per_group >= copies) {
+				log_verbose("An entire mirror group has failed in %s",
+					    display_lvname(lv));
+                		return 0;	/* Insufficient redundancy to activate */
+			}
+                }
+
+		return 1; /* Redundant */
+        }
+
+	for (s = 0; s < raid_seg->area_count; s++) {
+		if ((seg_lv(raid_seg, s)->status & PARTIAL_LV) ||
+		    (seg_metalv(raid_seg, s)->status & PARTIAL_LV) ||
+		    lv_is_virtual(seg_lv(raid_seg, s)) ||
+		    lv_is_virtual(seg_metalv(raid_seg, s)))
+			failed_components++;
+	}
+
+        if (failed_components == raid_seg->area_count) {
+		log_verbose("All components of raid LV %s have failed",
+			    display_lvname(lv));
+                return 0;	/* Insufficient redundancy to activate */
+        } else if (raid_seg->segtype->parity_devs &&
+                   (failed_components > raid_seg->segtype->parity_devs)) {
+                log_verbose("More than %u components from %s %s have failed",
+			    raid_seg->segtype->parity_devs,
+                          raid_seg->segtype->ops->name(raid_seg),
+                          display_lvname(lv));
+                return 0;	/* Insufficient redundancy to activate */
+        }
+
+	return 1;
+}
+
+/* Sets *data to 1 if the LV cannot be activated without data loss */
+static int _lv_may_be_activated_in_degraded_mode(struct logical_volume *lv, void *data)
+{
+	int *not_capable = (int *)data;
+	uint32_t s;
+	struct lv_segment *seg;
+
+	if (*not_capable)
+		return 1;	/* No further checks needed */
+
+	if (!(lv->status & PARTIAL_LV))
+		return 1;
+
+	if (lv_is_raid(lv)) {
+		*not_capable = !_partial_raid_lv_is_redundant(lv);
+		return 1;
+	}
+
+	/* Ignore RAID sub-LVs. */
+	if (lv_is_raid_type(lv))
+		return 1;
+
+	dm_list_iterate_items(seg, &lv->segments)
+		for (s = 0; s < seg->area_count; s++)
+			if (seg_type(seg, s) != AREA_LV) {
+				log_verbose("%s contains a segment incapable of degraded activation",
+					    display_lvname(lv));
+				*not_capable = 1;
+			}
+
+	return 1;
+}
+
+int partial_raid_lv_supports_degraded_activation(struct logical_volume *lv)
+{
+	int not_capable = 0;
+
+	if (!_lv_may_be_activated_in_degraded_mode(lv, &not_capable) || not_capable)
+		return 0;
+
+	if (!for_each_sub_lv(lv, _lv_may_be_activated_in_degraded_mode, &not_capable)) {
+		log_error(INTERNAL_ERROR "for_each_sub_lv failure.");
+		return 0;
+	}
+
+	return !not_capable;
+}

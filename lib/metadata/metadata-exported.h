@@ -1038,6 +1038,7 @@ int lv_raid_reshape(struct logical_volume *lv,
 int lv_raid_replace(struct logical_volume *lv, struct dm_list *remove_pvs,
 		    struct dm_list *allocate_pvs);
 int lv_raid_remove_missing(struct logical_volume *lv);
+int partial_raid_lv_supports_degraded_activation(struct logical_volume *lv);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */

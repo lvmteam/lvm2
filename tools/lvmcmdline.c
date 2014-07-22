@@ -980,10 +980,9 @@ static int _get_settings(struct cmd_context *cmd)
 	if (!strcmp(activation_mode, "partial")) {
 		cmd->partial_activation = 1;
 		log_warn("PARTIAL MODE. Incomplete logical volumes will be processed.");
-	} else if (!strcmp(activation_mode, "degraded")) {
+	} else if (!strcmp(activation_mode, "degraded"))
 		cmd->degraded_activation = 1;
-		log_verbose("DEGRADED MODE. Incomplete RAID LVs will be processed.");
-	} else if (strcmp(activation_mode, "complete")) {
+	else if (strcmp(activation_mode, "complete")) {
 		log_error("Invalid activation mode given.");
 		return EINVALID_CMD_LINE;
 	}
@@ -1339,6 +1338,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((ret = _get_settings(cmd)))
 		goto_out;
 	_apply_settings(cmd);
+	if (cmd->degraded_activation)
+		log_verbose("DEGRADED MODE. Incomplete RAID LVs will be processed.");
 
 	if (!get_activation_monitoring_mode(cmd, &monitoring))
 		goto_out;
