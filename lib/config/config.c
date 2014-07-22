@@ -1988,9 +1988,9 @@ int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, str
 	}
 
 	if (!strcasecmp(str, "generic"))
-		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE;
+		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
 	else if (!strcasecmp(str, "performance"))
-		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE;
+		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2;
 	else {
 		log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
 		return 0;
@@ -2001,5 +2001,5 @@ int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, str
 
 int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile)
 {
-	return DEFAULT_CACHE_POOL_CHUNK_SIZE;
+	return DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
 }

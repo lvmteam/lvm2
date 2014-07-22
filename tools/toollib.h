@@ -125,12 +125,12 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 				   int *monitoring_mode);
 
 int get_pool_params(struct cmd_context *cmd,
-		    struct profile *profile,
+		    const struct segment_type *segtype,
 		    int *passed_args,
-		    int *chunk_size_calc_method,
+		    uint64_t *pool_metadata_size,
+		    int *pool_metadataspare,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
-		    uint64_t *pool_metadata_size,
 		    int *zero);
 
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,

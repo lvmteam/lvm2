@@ -23,13 +23,14 @@
 #include "defaults.h"
 
 int update_cache_pool_params(struct volume_group *vg, unsigned attr,
-			     int passed_args,
-			     uint32_t data_extents, uint32_t extent_size,
-			     int *chunk_size_calc_method, uint32_t *chunk_size,
-			     thin_discards_t *discards,
-			     uint64_t *pool_metadata_size, int *zero)
+			     int passed_args, uint32_t data_extents,
+			     uint64_t *pool_metadata_size,
+			     int *chunk_size_calc_method, uint32_t *chunk_size)
 {
 	uint64_t min_meta_size;
+
+	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
+		*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
 
 	if ((*chunk_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) ||
 	    (*chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE)) {

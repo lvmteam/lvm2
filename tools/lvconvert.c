@@ -290,38 +290,24 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 	if (thinpool || cachepool) {
 		if (arg_from_list_is_set(cmd, "is invalid with pools",
 					 merge_ARG, mirrors_ARG, repair_ARG, snapshot_ARG,
-					 splitmirrors_ARG, -1))
+					 splitmirrors_ARG, splitsnapshot_ARG, -1))
 			return_0;
 
-		if (arg_count(cmd, poolmetadatasize_ARG)) {
-			if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-				log_error("Negative pool metadata size is invalid.");
-				return 0;
-			}
-			if (arg_count(cmd, poolmetadata_ARG)) {
-				log_error("Please specify either metadata logical volume or its size.");
-				return 0;
-			}
-			/* value is read in get_pool_params() */
-		}
+		if (!(lp->segtype = get_segtype_from_string(cmd, type_str)))
+			return_0;
 
-		if ((lp->pool_metadata_lv_name = arg_str_value(cmd, poolmetadata_ARG, NULL))) {
-			if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
-				log_error("Can't use --stripes and --stripesize with --poolmetadata.");
-				return 0;
-			}
+		if (!get_pool_params(cmd, lp->segtype, &lp->passed_args,
+				     &lp->pool_metadata_size,
+				     &lp->poolmetadataspare,
+				     &lp->chunk_size, &lp->discards,
+				     &lp->zero))
+			return_0;
 
-			if (arg_count(cmd, readahead_ARG)) {
-				log_error("Can't use --readahead with --poolmetadata.");
-				return 0;
-			}
-		}
-
-		if (arg_count(cmd, chunksize_ARG) &&
-		    (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS)) {
-			log_error("Negative chunk size is invalid.");
-			return 0;
-		}
+		if ((lp->pool_metadata_lv_name = arg_str_value(cmd, poolmetadata_ARG, NULL)) &&
+		    arg_from_list_is_set(cmd, "is invalid with --poolmetadata",
+					 stripesize_ARG, stripes_long_ARG,
+					 readahead_ARG, -1))
+			return_0;
 
 		if (!lp->pool_data_lv_name) {
 			if (!*pargc) {
@@ -334,12 +320,11 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 
 		if (!lp->thin && !lp->cache)
 			lp->lv_name_full = lp->pool_data_lv_name;
+
 		/* Hmm _read_activation_params */
 		lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
 						cmd->default_settings.read_ahead);
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, type_str)))
-			return_0;
 	} else if (arg_from_list_is_set(cmd, "is valid only with pools",
 					poolmetadatasize_ARG, poolmetadataspare_ARG,
 					-1))
@@ -638,9 +623,6 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		} /* else segtype will default to current type */
 	}
 
-	/* TODO: default in lvm.conf ? */
-	lp->poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG,
-					      DEFAULT_POOL_METADATA_SPARE);
 	lp->force = arg_count(cmd, force_ARG);
 	lp->yes = arg_count(cmd, yes_ARG);
 
@@ -2663,26 +2645,16 @@ revert_new_lv:
 static int _lvconvert_update_pool_params(struct logical_volume *pool_lv,
 					 struct lvconvert_params *lp)
 {
-	if (seg_is_cache_pool(lp))
-		return update_cache_pool_params(pool_lv->vg, lp->target_attr,
-						lp->passed_args,
-						pool_lv->le_count,
-						pool_lv->vg->extent_size,
-						&lp->thin_chunk_size_calc_policy,
-						&lp->chunk_size,
-						&lp->discards,
-						&lp->pool_metadata_size,
-						&lp->zero);
-
-	return update_thin_pool_params(pool_lv->vg, lp->target_attr,
-				       lp->passed_args,
-				       pool_lv->le_count,
-				       pool_lv->vg->extent_size,
-				       &lp->thin_chunk_size_calc_policy,
-				       &lp->chunk_size,
-				       &lp->discards,
-				       &lp->pool_metadata_size,
-				       &lp->zero);
+	return update_pool_params(lp->segtype,
+				  pool_lv->vg,
+				  lp->target_attr,
+				  lp->passed_args,
+				  pool_lv->le_count,
+				  &lp->pool_metadata_size,
+				  &lp->thin_chunk_size_calc_policy,
+				  &lp->chunk_size,
+				  &lp->discards,
+				  &lp->zero);
 }
 
 /*
@@ -3156,12 +3128,6 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!_lvconvert_snapshot(cmd, lv, lp))
 			return_ECMD_FAILED;
 	} else if (segtype_is_pool(lp->segtype) || lp->thin || lp->cache) {
-		if (!get_pool_params(cmd, lv_config_profile(lv),
-				     &lp->passed_args, &lp->thin_chunk_size_calc_policy,
-				     &lp->chunk_size, &lp->discards,
-				     &lp->pool_metadata_size, &lp->zero))
-			return_ECMD_FAILED;
-
 		if (!_lvconvert_pool(cmd, lv, lp))
 			return_ECMD_FAILED;
 

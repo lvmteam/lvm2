@@ -23,7 +23,9 @@
 #include "segtype.h"
 #include "lv_alloc.h"
 #include "defaults.h"
+#include "dev-type.h"
 #include "display.h"
+#include "toolcontext.h"
 
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 			    struct logical_volume *metadata_lv)
@@ -228,6 +230,120 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 	}
 
 	return pool_seg;
+}
+
+/* Greatest common divisor */
+static unsigned long _gcd(unsigned long n1, unsigned long n2)
+{
+	unsigned long remainder;
+
+	do {
+		remainder = n1 % n2;
+		n1 = n2;
+		n2 = remainder;
+	} while (n2);
+
+	return n1;
+}
+
+/* Least common multiple */
+static unsigned long _lcm(unsigned long n1, unsigned long n2)
+{
+	if (!n1 || !n2)
+		return 0;
+	return (n1 * n2) / _gcd(n1, n2);
+}
+
+int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
+					       int passed_args,
+					       int chunk_size_calc_policy)
+{
+	struct logical_volume *pool_data_lv;
+	struct lv_segment *seg;
+	struct physical_volume *pv;
+	struct cmd_context *cmd = pool_lv->vg->cmd;
+	unsigned long previous_hint = 0, hint = 0;
+	uint32_t default_chunk_size;
+	uint32_t min_chunk_size, max_chunk_size;
+
+	if (passed_args & PASS_ARG_CHUNK_SIZE)
+		return 1;
+
+	if (lv_is_thin_pool(pool_lv)) {
+		if (find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, NULL))
+			return 1;
+		min_chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
+		max_chunk_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
+		default_chunk_size = get_default_allocation_thin_pool_chunk_size_CFG(cmd, NULL);
+	} else if (lv_is_cache_pool(pool_lv)) {
+		if (find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG, NULL))
+			return 1;
+		min_chunk_size = DM_CACHE_MIN_DATA_BLOCK_SIZE;
+		max_chunk_size = DM_CACHE_MAX_DATA_BLOCK_SIZE;
+		default_chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(cmd, NULL);
+	} else {
+		log_error(INTERNAL_ERROR "%s is not a pool logical volume.", display_lvname(pool_lv));
+		return 0;
+	}
+
+	pool_data_lv = seg_lv(first_seg(pool_lv), 0);
+	dm_list_iterate_items(seg, &pool_data_lv->segments) {
+		pv = seg_pv(seg, 0);
+		if (chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
+			hint = dev_optimal_io_size(cmd->dev_types, pv_dev(pv));
+		else
+			hint = dev_minimum_io_size(cmd->dev_types, pv_dev(pv));
+		if (!hint)
+			continue;
+		if (previous_hint)
+			hint = _lcm(previous_hint, hint);
+		previous_hint = hint;
+	}
+
+	if (!hint)
+		log_debug_alloc("No usable device hint found while recalculating "
+				"pool chunk size for %s.", display_lvname(pool_lv));
+	else if ((hint < min_chunk_size) || (hint > max_chunk_size))
+		log_debug_alloc("Calculated chunk size %s for pool %s "
+				"is out of allowed range (%s-%s).",
+				display_size(cmd, hint), display_lvname(pool_lv),
+				display_size(cmd, min_chunk_size),
+				display_size(cmd, max_chunk_size));
+	else
+		first_seg(pool_lv)->chunk_size =
+			(hint >= default_chunk_size) ? hint : default_chunk_size;
+
+	return 1;
+}
+
+int update_pool_params(const struct segment_type *segtype,
+		       struct volume_group *vg, unsigned target_attr,
+		       int passed_args, uint32_t data_extents,
+		       uint64_t *pool_metadata_size,
+		       int *chunk_size_calc_policy, uint32_t *chunk_size,
+		       thin_discards_t *discards, int *zero)
+{
+	if (segtype_is_cache_pool(segtype) || segtype_is_cache(segtype)) {
+		if (!update_cache_pool_params(vg, target_attr, passed_args,
+					      data_extents, pool_metadata_size,
+					      chunk_size_calc_policy, chunk_size))
+			return_0;
+	} else if (!update_thin_pool_params(vg, target_attr, passed_args,
+					    data_extents, pool_metadata_size,
+					    chunk_size_calc_policy, chunk_size,
+					    discards, zero)) /* thin-pool */
+			return_0;
+
+	if ((uint64_t) *chunk_size > (uint64_t) data_extents * vg->extent_size) {
+		log_error("Chunk size %s is bigger then pool data size.",
+			  display_size(vg->cmd, *chunk_size));
+		return 0;
+	}
+
+	log_verbose("Using pool metadata size %s.",
+		    display_size(vg->cmd, *pool_metadata_size));
+
+	return 1;
 }
 
 int create_pool(struct logical_volume *pool_lv,

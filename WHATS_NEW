@@ -1,5 +1,6 @@
 Version 2.02.108 -
 =================================
+  Improve code sharing for lvconvert and lvcreate and pools (cache & thin).
   Improve lvconvert --merge validation.
   Improve lvconvert --splitsnapshot validation.
   Add report/list_item_separator lvm.conf option.

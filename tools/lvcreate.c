@@ -267,20 +267,11 @@ static int _determine_snapshot_type(struct volume_group *vg,
 static int _lvcreate_update_pool_params(struct volume_group *vg,
 					struct lvcreate_params *lp)
 {
-	if (seg_is_cache_pool(lp))
-		return update_cache_pool_params(vg, lp->target_attr,
-						lp->passed_args,
-						lp->extents, vg->extent_size,
-						&lp->thin_chunk_size_calc_policy,
-						&lp->chunk_size, &lp->discards,
-						&lp->poolmetadatasize,
-						&lp->zero);
-
-	return update_thin_pool_params(vg, lp->target_attr, lp->passed_args,
-				       lp->extents, vg->extent_size,
-				       &lp->thin_chunk_size_calc_policy,
-				       &lp->chunk_size, &lp->discards,
-				       &lp->poolmetadatasize, &lp->zero);
+	return update_pool_params(lp->segtype, vg, lp->target_attr,
+				  lp->passed_args, lp->extents,
+				  &lp->poolmetadatasize,
+				  &lp->thin_chunk_size_calc_policy, &lp->chunk_size,
+				  &lp->discards, &lp->zero);
 }
 
 /*
@@ -320,9 +311,6 @@ static int _determine_cache_argument(struct volume_group *vg,
 	} else {
 		lp->pool = NULL;
 		lp->create_pool = 1;
-		lp->poolmetadataspare = arg_int_value(vg->cmd,
-						      poolmetadataspare_ARG,
-						      DEFAULT_POOL_METADATA_SPARE);
 	}
 
 	return 1;
@@ -505,7 +493,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 		lp->create_pool = 1;
 
 	if (!lp->create_pool && arg_count(cmd, poolmetadatasize_ARG)) {
-		log_error("--poolmetadatasize may only be specified when allocating the thin pool.");
+		log_error("--poolmetadatasize may only be specified when allocating the pool.");
 		return 0;
 	}
 
@@ -705,14 +693,6 @@ static int _read_cache_pool_params(struct lvcreate_params *lp,
 	if (!segtype_is_cache_pool(lp->segtype))
 		return 1;
 
-	if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Negative chunk size is invalid.");
-		return 0;
-	}
-
-	lp->chunk_size = arg_uint_value(cmd, chunksize_ARG,
-					DEFAULT_CACHE_POOL_CHUNK_SIZE * 2);
-
 	if ((str_arg = arg_str_value(cmd, cachemode_ARG, NULL)) &&
 	    !get_cache_mode(str_arg, &lp->feature_flags))
 		return_0;
@@ -884,6 +864,8 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		}
 	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG))
 		segtype_str = "thin";
+	else if (arg_count(cmd, cache_ARG) || arg_count(cmd, cachepool_ARG))
+		segtype_str = "cache";
 	else
 		segtype_str = "striped";
 
@@ -907,12 +889,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    (!seg_is_thin(lp) && arg_count(cmd, virtualsize_ARG)))
 		lp->snapshot = 1;
 
-	if (seg_is_cache_pool(lp))
-		lp->create_pool = 1;
-
-	if (seg_is_thin_pool(lp)) {
+	if (seg_is_pool(lp)) {
 		if (lp->snapshot) {
-			log_error("Snapshots are incompatible with thin_pool segment_type.");
+			log_error("Snapshots are incompatible with pool segment_type.");
 			return 0;
 		}
 		lp->create_pool = 1;
@@ -1035,10 +1014,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_size_params(lp, lcp, cmd) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
 	    (lp->create_pool &&
-	     !get_pool_params(cmd, NULL, &lp->passed_args,
-			      &lp->thin_chunk_size_calc_policy,
-			      &lp->chunk_size, &lp->discards,
-			      &lp->poolmetadatasize, &lp->zero)) ||
+	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
+			      &lp->poolmetadatasize, &lp->poolmetadataspare,
+			      &lp->chunk_size, &lp->discards, &lp->zero)) ||
 	    !_read_mirror_params(lp, cmd) ||
 	    !_read_raid_params(lp, cmd) ||
 	    !_read_cache_pool_params(lp, cmd))
@@ -1061,12 +1039,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (lp->create_pool) {
-		/* TODO: add lvm.conf default y|n */
-		lp->poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG,
-						      DEFAULT_POOL_METADATA_SPARE);
-	} else if (arg_count(cmd, poolmetadataspare_ARG)) {
-		log_error("--poolmetadataspare is only available with thin pool creation.");
+	if (!lp->create_pool &&
+	    arg_count(cmd, poolmetadataspare_ARG)) {
+		log_error("--poolmetadataspare is only available with pool creation.");
 		return 0;
 	}
 	/*

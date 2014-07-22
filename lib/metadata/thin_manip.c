@@ -348,11 +348,16 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	return 1;
 }
 
-int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
-				  int passed_args, int *chunk_size_calc_method,
-				  uint32_t *chunk_size, thin_discards_t *discards,
-				  int *zero)
+int update_thin_pool_params(struct volume_group *vg,
+			    unsigned attr, int passed_args, uint32_t data_extents,
+			    uint64_t *pool_metadata_size,
+			    int *chunk_size_calc_method, uint32_t *chunk_size,
+			    thin_discards_t *discards, int *zero)
 {
+	struct cmd_context *cmd = vg->cmd;
+	struct profile *profile = vg->profile;
+	uint32_t extent_size = vg->extent_size;
+	size_t estimate_chunk_size;
 	const char *str;
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
@@ -369,7 +374,8 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 				log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
 				return 0;
 			}
-			*chunk_size = get_default_allocation_thin_pool_chunk_size_CFG(cmd, profile) * 2;
+			if (!(*chunk_size = get_default_allocation_thin_pool_chunk_size_CFG(cmd, profile)))
+				return_0;
 		}
 	}
 
@@ -392,24 +398,6 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 
 	if (!(passed_args & PASS_ARG_ZERO))
 		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile);
-
-	return 1;
-}
-
-int update_thin_pool_params(struct volume_group *vg, unsigned attr,
-			    int passed_args,
-			    uint32_t data_extents, uint32_t extent_size,
-			    int *chunk_size_calc_method, uint32_t *chunk_size,
-			    thin_discards_t *discards,
-			    uint64_t *pool_metadata_size, int *zero)
-{
-	size_t estimate_chunk_size;
-	struct cmd_context *cmd = vg->cmd;
-
-	if (!update_profilable_pool_params(cmd, vg->profile, passed_args,
-					   chunk_size_calc_method, chunk_size,
-					   discards, zero))
-		return_0;
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (*chunk_size & (*chunk_size - 1))) {
@@ -435,11 +423,10 @@ int update_thin_pool_params(struct volume_group *vg, unsigned attr,
 			}
 			log_verbose("Setting chunk size to %s.",
 				    display_size(cmd, *chunk_size));
-		} else if (*pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
+		} else if (*pool_metadata_size > (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2)) {
 			/* Suggest bigger chunk size */
 			estimate_chunk_size = (uint64_t) data_extents * extent_size /
-				(2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE *
-				 (SECTOR_SIZE / UINT64_C(64)));
+				(DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2 * (SECTOR_SIZE / UINT64_C(64)));
 			log_warn("WARNING: Chunk size is too small for pool, suggested minimum is %s.",
 				 display_size(cmd, UINT64_C(1) << (ffs(estimate_chunk_size) + 1)));
 		}
@@ -448,29 +435,22 @@ int update_thin_pool_params(struct volume_group *vg, unsigned attr,
 		if (*pool_metadata_size % extent_size)
 			*pool_metadata_size += extent_size - *pool_metadata_size % extent_size;
 	} else {
-		estimate_chunk_size =  (uint64_t) data_extents * extent_size /
+		estimate_chunk_size = (uint64_t) data_extents * extent_size /
 			(*pool_metadata_size * (SECTOR_SIZE / UINT64_C(64)));
+		if (estimate_chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE)
+			estimate_chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
+		else if (estimate_chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)
+			estimate_chunk_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
+
 		/* Check to eventually use bigger chunk size */
 		if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
 			*chunk_size = estimate_chunk_size;
-
-			if (*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE)
-				*chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
-			else if (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)
-				*chunk_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
-
-			log_verbose("Setting chunk size %s.",
-				    display_size(cmd, *chunk_size));
+			log_verbose("Setting chunk size %s.", display_size(cmd, *chunk_size));
 		} else if (*chunk_size < estimate_chunk_size) {
 			/* Suggest bigger chunk size */
 			log_warn("WARNING: Chunk size is smaller then suggested minimum size %s.",
 				 display_size(cmd, estimate_chunk_size));
 		}
-	}
-
-	if ((uint64_t) *chunk_size > (uint64_t) data_extents * extent_size) {
-		log_error("Chunk size is bigger then pool data size.");
-		return 0;
 	}
 
 	if (*pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
@@ -484,9 +464,6 @@ int update_thin_pool_params(struct volume_group *vg, unsigned attr,
 			log_warn("WARNING: Minimum supported pool metadata size is %s.",
 				 display_size(cmd, *pool_metadata_size));
 	}
-
-	log_verbose("Setting pool metadata size to %s.",
-		    display_size(cmd, *pool_metadata_size));
 
 	return 1;
 }

@@ -703,17 +703,25 @@ struct logical_volume *find_pool_lv(const struct logical_volume *lv);
 int pool_is_active(const struct logical_volume *pool_lv);
 int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
 int thin_pool_feature_supported(const struct logical_volume *pool_lv, int feature);
+int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
+					       int passed_args,
+					       int chunk_size_calc_policy);
 int update_pool_lv(struct logical_volume *lv, int activate);
+int update_pool_params(const struct segment_type *segtype,
+		       struct volume_group *vg, unsigned target_attr,
+		       int passed_args, uint32_t data_extents,
+		       uint64_t *pool_metadata_size,
+		       int *chunk_size_calc_policy, uint32_t *chunk_size,
+		       thin_discards_t *discards, int *zero);
 int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
 				  int passed_args, int *chunk_size_calc_method,
 				  uint32_t *chunk_size, thin_discards_t *discards,
 				  int *zero);
 int update_thin_pool_params(struct volume_group *vg, unsigned attr,
-			    int passed_args,
-			    uint32_t data_extents, uint32_t extent_size,
+			    int passed_args, uint32_t data_extents,
+			    uint64_t *pool_metadata_size,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
-			    thin_discards_t *discards,
-			    uint64_t *pool_metadata_size, int *zero);
+			    thin_discards_t *discards, int *zero);
 int get_pool_discards(const char *str, thin_discards_t *discards);
 const char *get_pool_discards_name(thin_discards_t discards);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
@@ -1043,11 +1051,9 @@ int partial_raid_lv_supports_degraded_activation(struct logical_volume *lv);
 
 /* ++  metadata/cache_manip.c */
 int update_cache_pool_params(struct volume_group *vg, unsigned attr,
-			     int passed_args,
-			     uint32_t data_extents, uint32_t extent_size,
-			     int *chunk_size_calc_method, uint32_t *chunk_size,
-			     thin_discards_t *discards,
-			     uint64_t *pool_metadata_size, int *zero);
+			     int passed_args, uint32_t data_extents,
+			     uint64_t *pool_metadata_size,
+			     int *chunk_size_calc_method, uint32_t *chunk_size);
 struct logical_volume *lv_cache_create(struct logical_volume *pool,
 				       struct logical_volume *origin);
 int lv_cache_remove(struct logical_volume *cache_lv);
