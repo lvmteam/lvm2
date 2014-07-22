@@ -18,7 +18,7 @@ vgcreate -s 256k $vg $(cat DEVICES)
 
 # Start with linear on 2 PV and ensure that converting to
 # RAID is not allowed to reuse PVs for different images.  (Bug 1113180)
-lvcreate -l 4 -n $lv1 $vg "$dev1:0-1" "$dev2:0-1"
+lvcreate -aey -l 4 -n $lv1 $vg "$dev1:0-1" "$dev2:0-1"
 not lvconvert --type raid1 -m 1 $vg/$lv1 "$dev1" "$dev2"
 not lvconvert --type raid1 -m 1 $vg/$lv1 "$dev1" "$dev3:0-2"
 lvconvert --type raid1 -m 1 $vg/$lv1 "$dev3"
