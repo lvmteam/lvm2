@@ -26,14 +26,14 @@ for deactivate in true false; do
 
 	test $deactivate && lvchange -an $vg
 
-	lvresize --poolmetadata +2M $vg/pool
+	lvresize --poolmetadatasize +2M $vg/pool
 # Test it's been resized to 4M
 	check lv_field $vg/pool_tmeta size "4.00m"
 
-	lvresize --poolmetadata +256M $vg/pool
+	lvresize --poolmetadatasize +256M $vg/pool
 	check lv_field $vg/pool_tmeta size "260.00m"
 
-	lvresize --poolmetadata +3G $vg/pool
+	lvresize --poolmetadatasize +3G $vg/pool
 	check lv_field $vg/pool_tmeta size "3.25g"
 
 	vgchange -an $vg
