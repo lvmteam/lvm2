@@ -34,6 +34,15 @@ mimage_0, mimage_1, and mlog.
 .BR \-b ", " \-\-blockdevice
 This option is now ignored.  Instead, use \fBlvs\fP(8) or
 \fBlvdisplay\fP(8) to obtain the device number.
+.TP
+.IR \fB\-\-cache " " LogicalVolume
+Applicable only when \fBlvmetad\fP(8) is in use (see also \fBlvm.conf\fP(5),
+global/use_lvmetad). This command issues a rescan of physical volume labels and
+metadata areas of all PVs that the logical volume uses. In particular, this can
+be used when a RAID logical volume becomes degraded, to update information
+about physical volume availability. This is only necessary if the logical
+volume is \fBnot\fP being monitored by dmeventd (see \fBlvchange\fP(8), option
+\fB\-\-monitor\fP).
 .SH SEE ALSO
 .BR lvm (8),
 .BR lvcreate (8),
