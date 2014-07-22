@@ -1,5 +1,7 @@
 Version 2.02.108 -
 =================================
+  Add lvscan --cache which re-scans constituents of a particular LV.
+  Make dmeventd's RAID plugin re-scan failed PVs when lvmetad is in use.
   Improve code sharing for lvconvert and lvcreate and pools (cache & thin).
   Improve lvconvert --merge validation.
   Improve lvconvert --splitsnapshot validation.
