@@ -71,14 +71,14 @@ lvremove -f $vg/cache_pool
 
 # Bug 1110026
 # Create origin, then cache_pool and cache
-lvcreate -l 2 -n $lv1 $vg
+lvcreate -aey -l 2 -n $lv1 $vg
 lvcreate --type cache -l 1 $vg/$lv1
 #should dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 lvremove -ff $vg
 
 # Bug 1110026 & Bug 1095843
 # Create RAID1 origin, then cache_pool and cache
-lvcreate -l 2 -n $lv1 $vg
+lvcreate -aey -l 2 -n $lv1 $vg
 lvcreate --type cache -l 1 $vg/$lv1
 #should lvs -a $vg/${lv1}_corig_rimage_0        # ensure images are properly renamed
 #should dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
@@ -101,7 +101,7 @@ done
 ##############################
 
 # Attempt to create smaller cache than origin should fail
-lvcreate -l 1 -n $lv1 $vg
+lvcreate -aey -l 1 -n $lv1 $vg
 not lvcreate --type cache -l 2 $vg/$lv1
 
 
