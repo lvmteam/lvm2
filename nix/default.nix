@@ -32,14 +32,15 @@ let
 
          lvm2-testsuite --batch --outdir /tmp/xchg/results-ndev --continue \
              --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
-             --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad
+             --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad \
+             --kmsg
 
          (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
              find / -xdev -name \*udevd) >> /tmp/xchg/udevd.log 2>&1 &
          lvm2-testsuite --batch --outdir /tmp/xchg/results-udev --continue \
              --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
              --flavours udev-vanilla,udev-cluster,udev-lvmetad \
-             --watch /tmp/xchg/udevd.log
+             --watch /tmp/xchg/udevd.log --kmsg
 
          # if we made it this far, all test results are in
 
