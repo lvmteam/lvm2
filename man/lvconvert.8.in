@@ -118,6 +118,8 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-\-stripes \ \fIStripes
 .RB [ \-I | \-\-stripesize \  \fIStripeSize ]]]
+.RB [ \-\-poolmetadataspare
+.RI { y | n }]
 .RB [ \-Z | \-\-zero \ { \fIy | \fIn }]]
 .RI [[ ExternalOrigin | ThinPool ] LogicalVolume { Name | Path }]
 .RI [ PhysicalVolume [ Path ][ :PE
@@ -141,6 +143,8 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 |
 .B \-\-poolmetadatasize
 .IR CachePoolMetadataSize [ bBsSkKmMgG ]}]
+.RB [ \-\-poolmetadataspare
+.RI { y | n }]
 .IR LogicalVolume { Name | Path }
 .RI [ PhysicalVolume [ Path ][ :PE [ \-PE ]]...]
 .RB [ \-\-commandprofile
@@ -372,6 +376,13 @@ Supported value is in the range between 2MiB and 16GiB.
 The default value is estimated with this formula
 (Pool_LV_size / Pool_LV_chunk_size * 64b).
 Default unit is megabytes.
+.TP
+.IR \fB\-\-poolmetadataspare " {"  y | n }
+Controls creation and maintanence of pool metadata spare logical volume
+that will be used for automated pool recovery.
+Only one such volume is maintained within a volume group
+with the size of the biggest pool metadata volume.
+Default is \fIy\fPes.
 .TP
 .IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
 Sets read ahead sector count of thin pool metadata logical volume.

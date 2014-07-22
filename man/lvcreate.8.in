@@ -346,9 +346,9 @@ Default unit is megabytes.
 .TP
 .IR \fB\-\-poolmetadataspare " {"  y | n }
 Controls creation and maintanence of pool metadata spare logical volume
-that will be used for automated thin pool recovery.
+that will be used for automated pool recovery.
 Only one such volume is maintained within a volume group
-with the size of the biggest thin metadata volume.
+with the size of the biggest pool metadata volume.
 Default is \fIy\fPes.
 .TP
 .IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
