@@ -41,8 +41,8 @@ int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 	}
 
 	if (*chunk_size & (DM_CACHE_MIN_DATA_BLOCK_SIZE - 1)) {
-		log_error("Chunk size must be a multiple of %u sectors.",
-			  DM_CACHE_MIN_DATA_BLOCK_SIZE);
+		log_error("Chunk size must be a multiple of %s.",
+			  display_size(vg->cmd, DM_CACHE_MIN_DATA_BLOCK_SIZE));
 		return 0;
 	}
 
