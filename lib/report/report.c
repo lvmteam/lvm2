@@ -1603,6 +1603,7 @@ static int _lvdeviceopen_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_undef_disp(rh, mem, field, private);
 }
 
+/* FIXME Replace with something that provides a complete unique description for every combination.
 static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)
@@ -1629,6 +1630,7 @@ static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	return _string_disp(rh, mem, field, &target_type, private);
 }
+*/
 
 static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,

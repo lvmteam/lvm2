@@ -216,11 +216,10 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _lv_inactive_table_get prop_not_implemented_get
 #define _lv_device_open_set prop_not_implemented_set
 #define _lv_device_open_get prop_not_implemented_get
-#define _lv_target_type_set prop_not_implemented_set
-#define _lv_target_type_get prop_not_implemented_get
+//#define _lv_target_type_set prop_not_implemented_set
+//#define _lv_target_type_get prop_not_implemented_get
 #define _lv_health_status_set prop_not_implemented_set
 #define _lv_health_status_get prop_not_implemented_get
-#define _lv_target_type_get prop_not_implemented_get
 #define _lv_skip_activation_set prop_not_implemented_set
 #define _lv_skip_activation_get prop_not_implemented_get
 
