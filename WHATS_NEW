@@ -1,4 +1,4 @@
-Version 2.02.108 -
+Version 2.02.108 - 23rd July 2014
 =================================
   Add lvscan --cache which re-scans constituents of a particular LV.
   Make dmeventd's RAID plugin re-scan failed PVs when lvmetad is in use.
