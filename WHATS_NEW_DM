@@ -1,3 +1,6 @@
+Version 1.02.88 - 
+================================
+
 Version 1.02.87 - 23rd July 2014
 ================================
   Fix dm_report_field_string_list to handle delimiter with multiple chars.
