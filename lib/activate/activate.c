@@ -2224,8 +2224,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	if ((!lv->vg->cmd->partial_activation) && (lv->status & PARTIAL_LV) && lv_is_raid_type(lv)) {
-		if (!partial_raid_lv_supports_degraded_activation(lv)) {
+	if ((!lv->vg->cmd->partial_activation) && (lv->status & PARTIAL_LV)) {
+		if (!lv_is_raid_type(lv) || !partial_raid_lv_supports_degraded_activation(lv)) {
 			log_error("Refusing activation of partial LV %s.  "
 				  "Use '--activationmode partial' to override.",
 				  display_lvname(lv));
