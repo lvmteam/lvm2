@@ -9,9 +9,27 @@
 let
   pkgs = import nixpkgs {};
   lib = pkgs.lib;
-  mkTest = { build, diskFun, extras ? [], kernel, vmtools, ... }: pkgs.stdenv.mkDerivation rec {
+
+  mkTest = args: pkgs.stdenv.mkDerivation rec {
+     name = "lvm2-test-${(args.diskFun {}).name}";
+
+     builder = pkgs.writeScript "lvm2-collect-results" ''
+       #!${pkgs.bash}/bin/bash
+       . $stdenv/setup
+       mkdir -p $out/test-results
+       for i in ${lib.concatStringsSep " " buildInputs}; do
+         cat $i/test-results/list >> $out/test-results/list
+         cp $i/test-results'/'*.txt $out/test-results/
+       done
+     '';
+
+     buildInputs = map (x: runTest (args // { flavour = x; }))
+       [ "ndev-vanilla" "ndev-lvmetad" "ndev-cluster" "udev-vanilla" "udev-lvmetad" "udev-cluster" ];
+  };
+
+  runTest = { build, diskFun, extras ? [], kernel, vmtools, flavour, ... }: pkgs.stdenv.mkDerivation rec {
      diskImage = diskFun { extraPackages = extras; };
-     name = "lvm2-test-${diskImage.name}";
+     name = "lvm2-test-${diskImage.name}-${flavour}";
 
      # this is the builder that runs in the guest
      origBuilder = pkgs.writeScript "vm-test-guest" ''
@@ -24,25 +42,22 @@ let
             url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
             sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
 
-         mkdir -p /tmp/xchg/results-{udev,ndev}
+         mkdir -p /tmp/xchg/results
 
          dmsetup targets
 
          export LVM_TEST_BACKING_DEVICE=/dev/sdb
 
-         lvm2-testsuite --batch --outdir /tmp/xchg/results-ndev --continue \
-             --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
-             --flavours ndev-vanilla,ndev-cluster,ndev-lvmetad \
-             --kmsg
+         watch=
+         if echo ${flavour} | grep -q udev; then
+           (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
+            find / -xdev -name \*udevd) >> /tmp/xchg/udevd.log 2>&1 &
+           watch="--watch /tmp/xchg/udevd.log"
+         fi
 
-         (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
-             find / -xdev -name \*udevd) >> /tmp/xchg/udevd.log 2>&1 &
-         lvm2-testsuite --batch --outdir /tmp/xchg/results-udev --continue \
+         lvm2-testsuite --batch --outdir /tmp/xchg/results --continue \
              --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
-             --flavours udev-vanilla,udev-cluster,udev-lvmetad \
-             --watch /tmp/xchg/udevd.log --kmsg
-
-         # if we made it this far, all test results are in
+             --flavours ${flavour} $watch --kmsg ${if lib.eqStrings T "" then "" else "--only ${T}"}
 
          # TODO: coverage reports
          # make lcov || true
@@ -84,7 +99,7 @@ let
                    continue
                fi
 
-               cat xchg/results-ndev/journal xchg/results-udev/journal > j.current 2> /dev/null
+               cat xchg/results/journal > j.current 2> /dev/null
                cat xchg/heartbeat > hb.current 2> /dev/null
                if diff j.current j.last >& /dev/null; then
                    counter=$(($counter + 1));
@@ -116,7 +131,7 @@ let
            rm -f pid # disarm the monitor process
 
            # if we have any new results, stash them
-           mv xchg/results-*'/'*.txt $out/test-results/ || true
+           mv xchg/results'/'*.txt $out/test-results/ || true
 
            if test -n "$(cat xchg/in-vm-exit)"; then # the VM is done
                test 0 -eq "$(cat xchg/in-vm-exit)" && rm -f $out/nix-support/failed
@@ -126,7 +141,7 @@ let
            sleep 10 # wait for the VM to clean up before starting up a new one
        done
 
-       cat xchg/results-ndev/list xchg/results-udev/list > $out/test-results/list || true
+       cat xchg/results/list > $out/test-results/list || true
      '';
   };
 
