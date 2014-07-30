@@ -185,6 +185,7 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 		 * an internal LV they should not scan.
 		 * Should also make internal detection simpler.
 		 */
+		/* Suffixes used here MUST match lib/activate/dev_manager.c */
 		layer = lv_is_cache_pool_data(lv) ? "cdata" :
 			lv_is_cache_pool_metadata(lv) ? "cmeta" :
 			// FIXME: dm-tree needs fixes for mirrors/raids

@@ -41,6 +41,9 @@ typedef enum {
 	CLEAN
 } action_t;
 
+/* This list must match lib/misc/lvm-string.c:build_dm_uuid(). */
+const char *uuid_suffix_list[] = { "pool", "cdata", "cmeta", "tdata", "tmeta", NULL};
+
 struct dev_manager {
 	struct dm_pool *mem;
 
@@ -482,11 +485,31 @@ static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 		 struct dm_info *info, uint32_t *read_ahead)
 {
 	int r = 0;
+	char old_style_dlid[sizeof(UUID_PREFIX) + 2 * ID_LEN];
+	const char *suffix, *suffix_position;
+	unsigned i = 0;
 
+	/* Check for dlid */
 	if ((r = _info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
 			   with_read_ahead, 0, 0)) && info->exists)
 		return 1;
-	else if ((r = _info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
+
+	/* Check for original version of dlid before the suffixes got added in 2.02.106 */
+	if ((suffix_position = rindex(dlid, '-'))) {
+		while ((suffix = uuid_suffix_list[i++])) {
+			if (strcmp(suffix_position + 1, suffix))
+				continue;
+
+			(void) strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
+			old_style_dlid[sizeof(old_style_dlid) - 1] = '\0';
+			if ((r = _info_run(NULL, old_style_dlid, info, read_ahead, 0, with_open_count,
+					   with_read_ahead, 0, 0)) && info->exists)
+				return 1;
+		}
+	}
+
+	/* Check for dlid before UUID_PREFIX was added */
+	if ((r = _info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
 				read_ahead, 0, with_open_count,
 				with_read_ahead, 0, 0)) && info->exists)
 		return 1;
@@ -2011,6 +2034,8 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 		return NULL;
 	}
 
+	dm_tree_set_optional_uuid_suffixes(dtree, &uuid_suffix_list[0]);
+
 	if (!_add_lv_to_dtree(dm, dtree, lv, (lv_is_origin(lv) || lv_is_thin_volume(lv)) ? origin_only : 0))
 		goto_bad;
 
@@ -3000,6 +3025,8 @@ int dev_manager_device_uses_vg(struct device *dev,
 		log_error("partial dtree creation failed");
 		return r;
 	}
+
+	dm_tree_set_optional_uuid_suffixes(dtree, &uuid_suffix_list[0]);
 
 	if (!dm_tree_add_dev(dtree, (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev))) {
 		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to dtree",

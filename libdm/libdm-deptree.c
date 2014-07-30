@@ -16,6 +16,7 @@
 #include "libdm-targets.h"
 #include "libdm-common.h"
 #include "kdev_t.h"
+#include "dm-ioctl.h"
 
 #include <stdarg.h>
 #include <sys/param.h>
@@ -300,6 +301,7 @@ struct dm_tree {
 	int no_flush;			/* 1 sets noflush (mirrors/multipath) */
 	int retry_remove;		/* 1 retries remove if not successful */
 	uint32_t cookie;
+	const char **optional_uuid_suffixes;	/* uuid suffixes ignored when matching */
 };
 
 /*
@@ -325,6 +327,7 @@ struct dm_tree *dm_tree_create(void)
 	dtree->skip_lockfs = 0;
 	dtree->no_flush = 0;
 	dtree->mem = dmem;
+	dtree->optional_uuid_suffixes = NULL;
 
 	if (!(dtree->devs = dm_hash_create(8))) {
 		log_error("dtree hash creation failed");
@@ -539,23 +542,57 @@ static struct dm_tree_node *_find_dm_tree_node(struct dm_tree *dtree,
 				     sizeof(dev));
 }
 
+void dm_tree_set_optional_uuid_suffixes(struct dm_tree *dtree, const char **optional_uuid_suffixes)
+{
+	dtree->optional_uuid_suffixes = optional_uuid_suffixes;
+}
+
 static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 						       const char *uuid)
 {
 	struct dm_tree_node *node;
 	const char *default_uuid_prefix;
 	size_t default_uuid_prefix_len;
+	const char *suffix, *suffix_position;
+	char uuid_without_suffix[DM_UUID_LEN];
+	unsigned i = 0;
+	const char **suffix_list = dtree->optional_uuid_suffixes;
 
-	if ((node = dm_hash_lookup(dtree->uuids, uuid)))
+	if ((node = dm_hash_lookup(dtree->uuids, uuid))) {
+		log_debug("Matched uuid %s in deptree.", uuid);
 		return node;
+	}
 
 	default_uuid_prefix = dm_uuid_prefix();
 	default_uuid_prefix_len = strlen(default_uuid_prefix);
 
+	if (suffix_list && (suffix_position = rindex(uuid, '-'))) {
+		while ((suffix = suffix_list[i++])) {
+			if (strcmp(suffix_position + 1, suffix))
+				continue;
+
+			(void) strncpy(uuid_without_suffix, uuid, sizeof(uuid_without_suffix));
+			uuid_without_suffix[suffix_position - uuid] = '\0';
+
+			if ((node = dm_hash_lookup(dtree->uuids, uuid_without_suffix))) {
+				log_debug("Matched uuid %s (missing suffix -%s) in deptree.", uuid_without_suffix, suffix);
+				return node;
+			}
+
+			break;
+		};
+	}
+	
 	if (strncmp(uuid, default_uuid_prefix, default_uuid_prefix_len))
 		return NULL;
 
-	return dm_hash_lookup(dtree->uuids, uuid + default_uuid_prefix_len);
+	if ((node = dm_hash_lookup(dtree->uuids, uuid + default_uuid_prefix_len))) {
+		log_debug("Matched uuid %s (missing prefix) in deptree.", uuid + default_uuid_prefix_len);
+		return node;
+	}
+
+	log_debug("Not matched uuid %s in deptree.", uuid + default_uuid_prefix_len);
+	return NULL;
 }
 
 void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags)

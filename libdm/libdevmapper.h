@@ -526,6 +526,11 @@ struct dm_tree *dm_tree_create(void);
 void dm_tree_free(struct dm_tree *tree);
 
 /*
+ * List of suffixes to be ignored when matching uuids against existing devices.
+ */
+void dm_tree_set_optional_uuid_suffixes(struct dm_tree *dtree, const char **optional_uuid_suffixes);
+
+/*
  * Add nodes to the tree for a given device and all the devices it uses.
  */
 int dm_tree_add_dev(struct dm_tree *tree, uint32_t major, uint32_t minor);
