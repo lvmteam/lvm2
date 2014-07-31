@@ -4155,6 +4155,8 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 		if (lp->sign == SIGN_NONE && (lp->percent != PERCENT_LV && lp->percent != PERCENT_ORIGIN))
 			lp->approx_alloc = 1;
 		/* FIXME Adjust for parallel areas here before processing relative allocations */
+		if (lp->sign == SIGN_PLUS && lp->percent == PERCENT_FREE)
+			lp->approx_alloc = 1;
 	}
 
 	if (lp->sign == SIGN_PLUS) {
@@ -4456,6 +4458,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *lock_lv = NULL;
 	struct lv_segment *seg = NULL;
+	uint32_t old_extents;
 	int status;
 	alloc_policy_t alloc;
 
@@ -4500,10 +4503,11 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 	if (!archive(vg))
 		return_NULL;
 
-	log_print_unless_silent("%sing logical volume %s to %s",
-				(lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
-				lv->name,
-				display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
+	old_extents = lv->le_count;
+	log_verbose("%sing logical volume %s to %s%s",
+		    (lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
+		    display_lvname(lv), lp->approx_alloc ? "up to " : "",
+		    display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
 
 	if (lp->resize == LV_REDUCE) {
 		if (!lv_reduce(lv, lv->le_count - lp->extents))
@@ -4515,6 +4519,16 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 			      lp->extents - lv->le_count, NULL,
 			      pvh, alloc, lp->approx_alloc))
 		return_NULL;
+
+	if (old_extents == lv->le_count)
+		log_print_unless_silent("Size of logical volume %s unchanged from %s.",
+					display_lvname(lv),
+					display_size(cmd, (uint64_t) old_extents * vg->extent_size));
+	else
+		log_print_unless_silent("Size of logical volume %s changed from %s to %s.",
+					display_lvname(lv),
+					display_size(cmd, (uint64_t) old_extents * vg->extent_size),
+					display_size(cmd, (uint64_t) lv->le_count * vg->extent_size));
 
 	if (lock_lv) {
 		/* Update thin pool segment from the layered LV */
