@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+aux have_thin 1 0 0 || skip
+
 aux prepare_vg 3
 lvcreate -i2 -l2 -T $vg/pool2
 lvextend -l+2 $vg/pool2 $dev2 $dev3
