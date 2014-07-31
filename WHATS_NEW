@@ -1,5 +1,6 @@
 Version 2.02.109 - 
 =================================
+  Remove possible spurious "not found" message on PV create before wiping.
   Handle upgrade from 2.02.105 when an LV now gaining a uuid suffix is active.
 
 Version 2.02.108 - 23rd July 2014

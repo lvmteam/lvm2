@@ -685,8 +685,8 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = find_pv_by_name(vg->cmd, pv_name, 1, 1)))
-		stack;
+	pv = find_pv_by_name(vg->cmd, pv_name, 1, 1);
+
 	if (!pv && !pp) {
 		log_error("%s not identified as an existing "
 			  "physical volume", pv_name);
@@ -1858,7 +1858,8 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
-		log_error("Physical volume %s not found", pv_name);
+		if (!allow_unformatted)
+			log_error("Physical volume %s not found", pv_name);
 		return_NULL;
 	}
 
