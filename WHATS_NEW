@@ -1,5 +1,6 @@
 Version 2.02.109 - 
 =================================
+  Fix incorrect persistent .cache after vgcreate with PV creation. (2.02.108)
   Display actual size changed when resizing LV.
   Allow approximate allocation with +%FREE in lvextend.
   Remove possible spurious "not found" message on PV create before wiping.
