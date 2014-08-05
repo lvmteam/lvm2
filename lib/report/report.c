@@ -1318,6 +1318,7 @@ static int _vgclustered_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, clustered, FIRST_NAME(vg_clustered_y), private);
 }
 
+/* FIXME Replace with something that provides a complete unique description for every combination.
 static int _lvvolumetype_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)
@@ -1325,6 +1326,7 @@ static int _lvvolumetype_disp(struct dm_report *rh, struct dm_pool *mem,
 	const char *type = lv_type_name((const struct logical_volume *) data);
 	return _string_disp(rh, mem, field, &type, private);
 }
+*/
 
 static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,
 				    struct dm_report_field *field,

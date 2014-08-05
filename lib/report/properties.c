@@ -179,8 +179,8 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _vg_clustered_set prop_not_implemented_set
 #define _vg_clustered_get prop_not_implemented_get
 
-#define _lv_volume_type_set prop_not_implemented_set
-#define _lv_volume_type_get prop_not_implemented_get
+//#define _lv_volume_type_set prop_not_implemented_set
+//#define _lv_volume_type_get prop_not_implemented_get
 #define _lv_initial_image_sync_set prop_not_implemented_set
 #define _lv_initial_image_sync_get prop_not_implemented_get
 #define _lv_image_synced_get prop_not_implemented_get
