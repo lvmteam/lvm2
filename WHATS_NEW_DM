@@ -1,5 +1,5 @@
-Version 1.02.88 - 
-================================
+Version 1.02.88 - 5th August 2014
+=================================
   Add dm_tree_set_optional_uuid_suffixes to handle upgrades.
 
 Version 1.02.87 - 23rd July 2014

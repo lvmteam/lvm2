@@ -1,6 +1,7 @@
-Version 2.02.109 - 
-=================================
-  Fix a segfault in lvscan --cache when devices were already missing.
+Version 2.02.109 - 5th August 2014
+==================================
+  Remove lv_volume_type field from reports. (2.02.108)
+  Fix a segfault in lvscan --cache when devices were already missing. (2.02.108)
   Fix incorrect persistent .cache after vgcreate with PV creation. (2.02.108)
   Display actual size changed when resizing LV.
   Allow approximate allocation with +%FREE in lvextend.
