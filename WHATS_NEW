@@ -1,5 +1,6 @@
 Version 2.02.110 -
 ==================================
+  Remove spurious "Skipping mirror LV" message on pvmove of clustered mirror.
 
 Version 2.02.109 - 5th August 2014
 ==================================

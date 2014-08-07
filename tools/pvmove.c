@@ -319,12 +319,15 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 
 		/*
-		 * RAID, thin, mirror, and snapshot-related LVs are not
-		 * processed in a cluster, so we don't have to worry about
-		 * avoiding certain PVs in that context.
+		 * RAID, thin and snapshot-related LVs are not
+		 * processed in a cluster, so we don't have to
+		 * worry about avoiding certain PVs in that context.
 		 */
-		if (vg_is_clustered(lv->vg))
-			continue;
+		if (vg_is_clustered(lv->vg)) {
+			/* Allow clustered mirror, but not raid mirror. */
+			if (!lv_is_mirror_type(lv) || lv_is_raid(lv))
+				continue;
+		}
 
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
@@ -391,8 +394,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		 */
 		if (vg_is_clustered(vg) &&
 		    (lv_is_origin(lv) || lv_is_cow(lv) ||
-		     lv_is_thin_type(lv) || lv_is_raid_type(lv) ||
-		     lv_is_mirrored(lv))) {
+		     lv_is_thin_type(lv) || lv_is_raid_type(lv))) {
 			log_print_unless_silent("Skipping %s LV %s",
 						lv_is_origin(lv) ? "origin" :
 						lv_is_cow(lv) ?
@@ -405,11 +407,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						seg_is_raid(first_seg(lv)) ?
 						"RAID" :
 						lv_is_raid_type(lv) ?
-						"RAID-related" :
-						lv_is_mirrored(lv) ?
-						"mirror" :
-						lv_is_mirror_type(lv) ?
-						"mirror-related" : "",
+						"RAID-related" : "",
 						lv->name);
 			lv_skipped = 1;
 			continue;
