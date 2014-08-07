@@ -859,7 +859,7 @@ deactivate:
 			return_0;
 		break;
 	case CHANGE_ALN:
-		if (_lv_is_exclusive(lv)) {
+		if (vg_is_clustered(lv->vg) && _lv_is_exclusive(lv)) {
 			if (!lv_is_active_locally(lv)) {
 				log_error("Cannot deactivate remotely exclusive device locally.");
 				return 0;
