@@ -40,6 +40,34 @@ static const char *get_sysfs_name(struct device *dev)
 	return name;
 }
 
+static const char *get_sysfs_name_by_devt(const char *sysfs_dir, dev_t devno,
+					  char *buf, size_t buf_size)
+{
+	const char *name;
+	char path[PATH_MAX];
+	int size;
+
+	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d", sysfs_dir,
+			(int) MAJOR(devno), (int) MINOR(devno)) < 0) {
+		log_error("Sysfs path string is too long.");
+		return NULL;
+	}
+
+	if ((size = readlink(path, buf, buf_size - 1)) < 0) {
+		log_sys_error("readlink", path);
+		return NULL;
+	}
+	buf[size] = '\0';
+
+	if (!(name = strrchr(buf, '/'))) {
+		log_error("Cannot find device name in sysfs path.");
+		return NULL;
+	}
+	name++;
+
+	return name;
+}
+
 static int get_sysfs_string(const char *path, char *buffer, int max_size)
 {
 	FILE *fp;
@@ -116,7 +144,7 @@ static int get_parent_mpath(const char *dir, char *name, int max_size)
 static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
-	const char *name;
+	const char *part_name, *name;
 	char path[PATH_MAX+1];
 	char parent_name[PATH_MAX+1];
 	struct stat info;
@@ -136,30 +164,19 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 			return 0;
 		case 1:
 			/* The dev is already a primary dev. Just continue with the dev. */
+			if (!(name = get_sysfs_name(dev)))
+				return_0;
 			break;
 		case 2:
 			/* The dev is partition. */
-			name = dev_name(dev); /* name of original dev for log_debug msg */
-
-			/* Get primary dev from cache. */
-			if (!(dev = dev_cache_get_by_devt(primary_dev, NULL))) {
-				log_error("dev_is_mpath: failed to get device for %d:%d",
-					  major, minor);
-				return 0;
-			}
-
-			major = (int) MAJOR(primary_dev);
-			minor = (int) MINOR(primary_dev);
-
+			part_name = dev_name(dev); /* name of original dev for log_debug msg */
+			if (!(name = get_sysfs_name_by_devt(sysfs_dir, primary_dev, parent_name, PATH_MAX)))
+				return_0;
 			log_debug_devs("%s: Device is a partition, using primary "
 				       "device %s for mpath component detection",
-					name, dev_name(dev));
-
+					part_name, name);
 			break;
 	}
-
-	if (!(name = get_sysfs_name(dev)))
-		return_0;
 
 	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/holders", sysfs_dir, name) < 0) {
 		log_error("Sysfs path to check mpath is too long.");
