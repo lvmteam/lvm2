@@ -191,6 +191,9 @@
 #define lv_is_pool_metadata(lv)		(((lv)->status & (CACHE_POOL_METADATA | THIN_POOL_METADATA)) ? 1 : 0)
 #define lv_is_pool_metadata_spare(lv)	(((lv)->status & (POOL_METADATA_SPARE)) ? 1 : 0)
 
+int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
+		       struct dm_list **layout, struct dm_list **type);
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	AREA_UNASSIGNED,
@@ -911,17 +914,11 @@ struct lv_segment *last_seg(const struct logical_volume *lv);
 const char *lv_type_name(const struct logical_volume *lv);
 
 /*
- * Useful function to determine linear and striped volumes.
- */
-int lv_is_linear(const struct logical_volume *lv);
-int lv_is_striped(const struct logical_volume *lv);
-
-/*
 * Useful functions for managing snapshots.
 */
 int lv_is_origin(const struct logical_volume *lv);
 int lv_is_virtual_origin(const struct logical_volume *lv);
-int lv_is_thin_origin(const struct logical_volume *lv);
+int lv_is_thin_origin(const struct logical_volume *lv, unsigned *snapshot_count);
 int lv_is_cache_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
 int lv_is_merging_origin(const struct logical_volume *origin);

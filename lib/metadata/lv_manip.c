@@ -83,146 +83,395 @@ struct pv_and_int {
 	int *i;
 };
 
-typedef enum {
+enum {
 	LV_TYPE_UNKNOWN,
-	LV_TYPE_PVMOVE,
-	LV_TYPE_ORIGIN,
-	LV_TYPE_EXTERNAL_ORIGIN,
-	LV_TYPE_SNAPSHOT,
-	LV_TYPE_THIN,
-	LV_TYPE_THIN_SNAPSHOT,
-	LV_TYPE_THIN_POOL,
-	LV_TYPE_THIN_POOL_DATA,
-	LV_TYPE_THIN_POOL_METADATA,
-	LV_TYPE_CACHE,
-	LV_TYPE_CACHE_POOL,
-	LV_TYPE_CACHE_POOL_DATA,
-	LV_TYPE_CACHE_POOL_METADATA,
-	LV_TYPE_POOL_METADATA_SPARE,
-	LV_TYPE_VIRTUAL,
-	LV_TYPE_RAID,
-	LV_TYPE_RAID_IMAGE,
-	LV_TYPE_RAID_METADATA,
-	LV_TYPE_MIRROR,
-	LV_TYPE_MIRROR_IMAGE,
-	LV_TYPE_MIRROR_LOG,
 	LV_TYPE_LINEAR,
-	LV_TYPE_STRIPED
-} lv_type_t;
-
-static const char *_lv_type_names[] = {
-	[LV_TYPE_UNKNOWN] =                     "unknown",
-	[LV_TYPE_PVMOVE] =                      "pvmove",
-	[LV_TYPE_ORIGIN] =                      "origin",
-	[LV_TYPE_EXTERNAL_ORIGIN] =             "external-origin",
-	[LV_TYPE_SNAPSHOT] =                    "snapshot",
-	[LV_TYPE_THIN] =                        "thin",
-	[LV_TYPE_THIN_SNAPSHOT] =               "thin-snapshot",
-	[LV_TYPE_THIN_POOL] =                   "thin-pool",
-	[LV_TYPE_THIN_POOL_DATA] =              "thin-pool-data",
-	[LV_TYPE_THIN_POOL_METADATA] =          "thin-pool-metadata",
-	[LV_TYPE_CACHE] =                       "cache",
-	[LV_TYPE_CACHE_POOL] =                  "cache-pool",
-	[LV_TYPE_CACHE_POOL_DATA] =             "cache-pool-data",
-	[LV_TYPE_CACHE_POOL_METADATA] =         "cache-pool-metadata",
-	[LV_TYPE_POOL_METADATA_SPARE] =         "pool-metadata-spare",
-	[LV_TYPE_VIRTUAL] =                     "virtual",
-	[LV_TYPE_RAID] =                        "raid",
-	[LV_TYPE_RAID_IMAGE] =                  "raid-image",
-	[LV_TYPE_RAID_METADATA] =               "raid-metadata",
-	[LV_TYPE_MIRROR] =                      "mirror",
-	[LV_TYPE_MIRROR_IMAGE] =                "mirror-image",
-	[LV_TYPE_MIRROR_LOG] =                  "mirror-log",
-	[LV_TYPE_LINEAR] =                      "linear",
-	[LV_TYPE_STRIPED] =                     "striped"
+	LV_TYPE_STRIPED,
+	LV_TYPE_MIRROR,
+	LV_TYPE_RAID,
+	LV_TYPE_THIN,
+	LV_TYPE_CACHE,
+	LV_TYPE_ORIGIN,
+	LV_TYPE_MULTIPLE,
+	LV_TYPE_SNAPSHOT,
+	LV_TYPE_PVMOVE,
+	LV_TYPE_IMAGE,
+	LV_TYPE_LOG,
+	LV_TYPE_METADATA,
+	LV_TYPE_POOL,
+	LV_TYPE_DATA,
+	LV_TYPE_EXTERNAL,
+	LV_TYPE_SPARE,
+	LV_TYPE_VIRTUAL,
+	LV_TYPE_RAID_LEVEL1,
+	LV_TYPE_RAID_LEVEL10,
+	LV_TYPE_RAID_LEVEL4,
+	LV_TYPE_RAID_LEVEL5,
+	LV_TYPE_RAID_LEVEL6,
+	LV_TYPE_RAID_LEFT_ASYMMETRIC,
+	LV_TYPE_RAID_RIGHT_ASYMMETRIC,
+	LV_TYPE_RAID_LEFT_SYMMETRIC,
+	LV_TYPE_RAID_RIGHT_SYMMETRIC,
+	LV_TYPE_RAID_ZERO_RESTART,
+	LV_TYPE_RAID_N_RESTART,
+	LV_TYPE_RAID_N_CONTINUE,
 };
 
-static lv_type_t _get_lv_type(const struct logical_volume *lv)
+static const char *_lv_type_names[] = {
+	[LV_TYPE_UNKNOWN] =				"unknown",
+	[LV_TYPE_LINEAR] =				"linear",
+	[LV_TYPE_STRIPED] =				"striped",
+	[LV_TYPE_MIRROR] =				"mirror",
+	[LV_TYPE_RAID] =				"raid",
+	[LV_TYPE_THIN] =				"thin",
+	[LV_TYPE_CACHE] =				"cache",
+	[LV_TYPE_ORIGIN] =				"origin",
+	[LV_TYPE_MULTIPLE] =				"multiple",
+	[LV_TYPE_SNAPSHOT] =				"snapshot",
+	[LV_TYPE_PVMOVE] =				"pvmove",
+	[LV_TYPE_IMAGE] =				"image",
+	[LV_TYPE_LOG] =					"log",
+	[LV_TYPE_METADATA] =				"metadata",
+	[LV_TYPE_POOL] =				"pool",
+	[LV_TYPE_DATA] =				"data",
+	[LV_TYPE_EXTERNAL] =				"external",
+	[LV_TYPE_SPARE] =				"spare",
+	[LV_TYPE_VIRTUAL] =				"virtual",
+	[LV_TYPE_RAID_LEVEL1] =				"level1",
+	[LV_TYPE_RAID_LEVEL10] =			"level10",
+	[LV_TYPE_RAID_LEVEL4] =				"level4",
+	[LV_TYPE_RAID_LEVEL5] =				"level5",
+	[LV_TYPE_RAID_LEVEL6] =				"level6",
+	[LV_TYPE_RAID_LEFT_ASYMMETRIC] =		"left-asymmetric",
+	[LV_TYPE_RAID_RIGHT_ASYMMETRIC] =		"right-asymmetric",
+	[LV_TYPE_RAID_LEFT_SYMMETRIC] =			"left-symmetric",
+	[LV_TYPE_RAID_RIGHT_SYMMETRIC] =		"right-symmetric",
+	[LV_TYPE_RAID_ZERO_RESTART] =			"zero-restart",
+	[LV_TYPE_RAID_N_RESTART] =			"n-restart",
+	[LV_TYPE_RAID_N_CONTINUE] =			"n-continue",
+};
+
+const char *lv_type_name(const struct logical_volume *lv)
 {
-	lv_type_t type = LV_TYPE_UNKNOWN;
+	return " ";
+}
+
+static int _lv_type_list_mirror(struct dm_pool *mem,
+				const struct logical_volume *lv,
+				struct dm_list *layout,
+				struct dm_list *type)
+{
+	int top_level = 1;
+
+	if (lv_is_mirror_image(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_IMAGE]))
+			goto_bad;
+		top_level = 0;
+	} else if (lv_is_mirror_log(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_LOG]))
+			goto_bad;
+		top_level = 0;
+	} else if (lv->status & PVMOVE) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_PVMOVE]))
+			goto_bad;
+	}
+
+	if (top_level) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_MIRROR]))
+			goto_bad;
+	} else {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MIRROR]))
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	return 0;
+}
+
+static int _lv_type_list_raid(struct dm_pool *mem,
+			      const struct logical_volume *lv,
+			      struct dm_list *layout,
+			      struct dm_list *type)
+{
+	int top_level = 1;
+	const char *seg_name;
+
+	if (lv_is_raid_image(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_IMAGE]))
+			goto_bad;
+		top_level = 0;
+	} else if (lv_is_raid_metadata(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_METADATA]))
+			goto_bad;
+		top_level = 0;
+	} else if (!strcmp(first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID1)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEVEL1]))
+			goto_bad;
+	} else if (!strcmp(first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID10)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEVEL10]))
+			goto_bad;
+	} else if (!strcmp(first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID4)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEVEL4]))
+			goto_bad;
+	} else if (!strncmp(seg_name = first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID5, strlen(SEG_TYPE_NAME_RAID5))) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEVEL5]))
+			goto_bad;
+
+		if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_LA)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEFT_ASYMMETRIC]))
+				goto_bad;
+		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_RA)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_RIGHT_ASYMMETRIC]))
+				goto_bad;
+		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_LS)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEFT_SYMMETRIC]))
+				goto_bad;
+		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_RS)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_RIGHT_SYMMETRIC]))
+				goto_bad;
+		}
+	} else if (!strncmp(seg_name = first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID6, strlen(SEG_TYPE_NAME_RAID6))) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_LEVEL6]))
+			goto_bad;
+
+		if (!strcmp(seg_name, SEG_TYPE_NAME_RAID6_ZR)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_ZERO_RESTART]))
+				goto_bad;
+		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID6_NR)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_N_RESTART]))
+				goto_bad;
+		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID6_NC)) {
+			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID_N_CONTINUE]))
+				goto_bad;
+		}
+	}
+
+	if (top_level) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID]))
+			goto_bad;
+	} else {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_RAID]))
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	return 0;
+}
+
+static int _lv_type_list_thin(struct dm_pool *mem,
+			      const struct logical_volume *lv,
+			      struct dm_list *layout,
+			      struct dm_list *type)
+{
+	int top_level = 1;
+	unsigned snapshot_count;
+
+	if (lv_is_thin_pool(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
+			goto_bad;
+	} else if (lv_is_thin_pool_metadata(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_METADATA]))
+			goto_bad;
+		top_level = 0;
+	} else if (lv_is_thin_pool_data(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_DATA]))
+			goto_bad;
+		top_level = 0;
+	} else if (lv_is_thin_volume(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]))
+			goto_bad;
+		if (lv_is_thin_origin(lv, &snapshot_count) &&
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_ORIGIN]))
+				goto_bad;
+		if (snapshot_count > 1 &&
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MULTIPLE]))
+			goto_bad;
+		if (first_seg(lv)->origin)
+			if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_SNAPSHOT]))
+				goto_bad;
+	}
+
+	if (lv_is_external_origin(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_ORIGIN]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_EXTERNAL]))
+			goto_bad;
+		top_level = 0;
+	}
+
+	if (top_level) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_THIN]))
+			goto_bad;
+	} else {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]))
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	return 0;
+}
+
+static int _lv_type_list_cache(struct dm_pool *mem,
+			       const struct logical_volume *lv,
+			       struct dm_list *layout,
+			       struct dm_list *type)
+{
+	int top_level = 1;
+
+	if (lv_is_cache_pool(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_CACHE]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
+			goto_bad;
+	} else if (lv_is_cache_pool_metadata(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_METADATA]))
+			goto_bad;
+		top_level = 0;
+	} else if (lv_is_cache_pool_data(lv)) {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_DATA]))
+			goto_bad;
+		top_level = 0;
+	}
+
+	if (top_level) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
+			goto_bad;
+	} else {
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_CACHE]))
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	return 0;
+}
+
+int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
+		       struct dm_list **layout, struct dm_list **type) {
+	int linear, striped, unknown;
 	struct lv_segment *seg;
 
-	if (lv->status & PVMOVE)
-		type = LV_TYPE_PVMOVE;
-	else if (lv_is_origin(lv))
-		type = LV_TYPE_ORIGIN;
-	else if (lv_is_external_origin(lv))
-		type = LV_TYPE_EXTERNAL_ORIGIN;
-	else if (lv_is_cow(lv))
-		type = LV_TYPE_SNAPSHOT;
-	else if (lv_is_thin_volume(lv))
-		type = first_seg(lv)->origin ? LV_TYPE_THIN_SNAPSHOT : LV_TYPE_THIN;
-	else if (lv_is_thin_pool(lv))
-		type = LV_TYPE_THIN_POOL;
-	else if (lv_is_thin_pool_data(lv))
-		type = LV_TYPE_THIN_POOL_DATA;
-	else if (lv_is_thin_pool_metadata(lv))
-		type = LV_TYPE_THIN_POOL_METADATA;
-	else if (lv_is_pool_metadata_spare(lv))
-		type = LV_TYPE_POOL_METADATA_SPARE;
-	else if (lv_is_cache(lv))
-		type = LV_TYPE_CACHE;
-	else if (lv_is_cache_pool(lv))
-		type = LV_TYPE_CACHE_POOL;
-	else if (lv_is_cache_pool_data(lv))
-		type = LV_TYPE_CACHE_POOL_DATA;
-	else if (lv_is_cache_pool_metadata(lv))
-		type = LV_TYPE_CACHE_POOL_METADATA;
-	else if (lv_is_virtual(lv))
-		type = LV_TYPE_VIRTUAL;
-	else if (lv_is_raid(lv))
-		type = LV_TYPE_RAID;
-	else if (lv_is_raid_image(lv))
-		type = LV_TYPE_RAID_IMAGE;
-	else if (lv_is_raid_metadata(lv))
-		type = LV_TYPE_RAID_METADATA;
-	else if (lv_is_mirrored(lv))
-		type = LV_TYPE_MIRROR;
-	else if (lv_is_mirror_image(lv))
-		type = LV_TYPE_MIRROR_IMAGE;
-	else if (lv_is_mirror_log(lv))
-		type = LV_TYPE_MIRROR_LOG;
+	*layout = *type = NULL;
 
-	/* none of the above, check linear... */
-	if (type == LV_TYPE_UNKNOWN) {
-		type = LV_TYPE_LINEAR;
-		dm_list_iterate_items(seg, &lv->segments) {
-			if (!seg_is_linear(seg)) {
-				type = LV_TYPE_UNKNOWN;
-				break;
-			}
-		}
+	if (!(*layout = str_list_create(mem))) {
+		log_error("LV layout list allocation failed");
+		goto bad;
 	}
 
-	/* ...if not even linear, check striped... */
-	if (type == LV_TYPE_UNKNOWN) {
-		type = LV_TYPE_STRIPED;
-		dm_list_iterate_items(seg, &lv->segments) {
-			if (!seg_is_striped(seg)) {
-				type = LV_TYPE_UNKNOWN;
-				break;
-			}
-		}
+	if (!(*type = str_list_create(mem))) {
+		log_error("LV type list allocation failed");
+		goto bad;
 	}
 
-	return type;
-}
+	/* Mirrors and related */
+	if (lv_is_mirror_type(lv) && !lv_is_raid(lv) &&
+	    !_lv_type_list_mirror(mem, lv, *layout, *type))
+		goto_bad;
 
-const char *lv_type_name(const struct logical_volume *lv) {
-	lv_type_t type = _get_lv_type(lv);
-	return _lv_type_names[type];
-}
+	/* RAIDs and related */
+	if (lv_is_raid_type(lv) &&
+	    !_lv_type_list_raid(mem, lv, *layout, *type))
+		goto_bad;
 
-int lv_is_linear(const struct logical_volume *lv)
-{
-	lv_type_t type = _get_lv_type(lv);
-	return type == LV_TYPE_LINEAR;
-}
+	/* Thins and related */
+	if ((lv_is_thin_type(lv) || lv_is_external_origin(lv)) &&
+	    !_lv_type_list_thin(mem, lv, *layout, *type))
+		goto_bad;
 
-int lv_is_striped(const struct logical_volume *lv)
-{
-	lv_type_t type = _get_lv_type(lv);
-	return type == LV_TYPE_STRIPED;
+	/* Caches and related */
+	if (lv_is_cache_type(lv) &&
+	    !_lv_type_list_cache(mem, lv, *layout, *type))
+		goto_bad;
+
+	if (lv_is_cache_origin(lv)) {
+		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_CACHE]) ||
+		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]))
+			goto_bad;
+	}
+
+	/* Pool-specific */
+	if (lv_is_pool_metadata_spare(lv) &&
+	    (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_POOL]) ||
+	     !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_METADATA]) ||
+	     !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_SPARE])))
+		goto_bad;
+
+	/* Old-style origins/snapshots, virtual origins */
+	if (lv_is_origin(lv)) {
+		str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]);
+		if (lv_is_virtual(lv) &&
+		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_VIRTUAL]))
+			goto_bad;
+		if (lv->origin_count > 1 &&
+		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_MULTIPLE]))
+			goto_bad;
+	} else if (lv_is_cow(lv)) {
+		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_SNAPSHOT]))
+			goto_bad;
+	}
+
+	/*
+	 * If layout not yet determined, it must be either
+	 * linear or striped or mixture of these two.
+	 */
+	if (dm_list_empty(*layout)) {
+		linear = striped = unknown = 0;
+		dm_list_iterate_items(seg, &lv->segments) {
+			if (seg_is_linear(seg))
+				linear = 1;
+			else if (seg_is_striped(seg))
+				striped = 1;
+			else {
+				/*
+				 * This should not happen but if it does
+				 * we'll see that there's "unknown" layout
+				 * present. This means we forgot to detect
+				 * the type above and we need add proper
+				 * detection for such type!
+				 */
+				unknown = 1;
+				log_error(INTERNAL_ERROR "Failed to properly detect "
+					  "layout and type for for LV %s/%s",
+					  lv->vg->name, lv->name);
+			}
+		}
+
+		if (linear &&
+		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_LINEAR]))
+			goto_bad;
+
+		if (striped &&
+		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_STRIPED]))
+			goto_bad;
+
+		if (!linear && !striped &&
+		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_UNKNOWN]))
+			goto_bad;
+	}
+
+	/*
+	 * If type is not defined here yet, it means this is a pure top-level
+	 * device that is not combined with any other type. So just copy what
+	 * we have set for "layout" and use it for "type" too.
+	 */
+	if (dm_list_empty(*type))
+		str_list_dup(mem, *type, *layout);
+
+	return 1;
+bad:
+	if (*type)
+		dm_pool_free(mem, *type);
+	if (*layout)
+		dm_pool_free(mem, *layout);
+	return 0;
 }
 
 static int _lv_is_on_pv(struct logical_volume *lv, void *data)

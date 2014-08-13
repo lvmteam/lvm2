@@ -1318,15 +1318,37 @@ static int _vgclustered_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, clustered, FIRST_NAME(vg_clustered_y), private);
 }
 
-/* FIXME Replace with something that provides a complete unique description for every combination.
-static int _lvvolumetype_disp(struct dm_report *rh, struct dm_pool *mem,
+static int _lvlayout_disp(struct dm_report *rh, struct dm_pool *mem,
+				struct dm_report_field *field,
+				const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct dm_list *lv_layout;
+	struct dm_list *lv_type;
+
+	if (!lv_layout_and_type(mem, lv, &lv_layout, &lv_type)) {
+		log_error("Failed to display layout for LV %s/%s.", lv->vg->name, lv->name);
+		return 0;
+	}
+
+	return _field_set_string_list(rh, field, lv_layout, private);
+}
+
+static int _lvtype_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)
 {
-	const char *type = lv_type_name((const struct logical_volume *) data);
-	return _string_disp(rh, mem, field, &type, private);
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct dm_list *lv_layout;
+	struct dm_list *lv_type;
+
+	if (!lv_layout_and_type(mem, lv, &lv_layout, &lv_type)) {
+		log_error("Failed to display type for LV %s/%s.", lv->vg->name, lv->name);
+		return 0;
+	}
+
+	return _field_set_string_list(rh, field, lv_type, private);
 }
-*/
 
 static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,
 				    struct dm_report_field *field,
@@ -1604,35 +1626,6 @@ static int _lvdeviceopen_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	return _binary_undef_disp(rh, mem, field, private);
 }
-
-/* FIXME Replace with something that provides a complete unique description for every combination.
-static int _lvtargettype_disp(struct dm_report *rh, struct dm_pool *mem,
-			      struct dm_report_field *field,
-			      const void *data, void *private)
-{
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const char *target_type = "unknown";
-
-	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
-		target_type = "thin";
-	else if (lv_is_cache_type(lv))
-		target_type = "cache";
-	else if (lv_is_raid_type(lv))
-		target_type = "raid";
-	else if (lv_is_mirror_type(lv))
-		target_type = "mirror";
-	else if (lv_is_cow(lv) || lv_is_origin(lv))
-		target_type = "snapshot";
-	else if (lv_is_virtual(lv))
-		target_type = "virtual";
-	else if (lv_is_linear(lv))
-		target_type = "linear";
-	else if (lv_is_striped(lv))
-		target_type = "striped";
-
-	return _string_disp(rh, mem, field, &target_type, private);
-}
-*/
 
 static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,

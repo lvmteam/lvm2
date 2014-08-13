@@ -30,16 +30,12 @@ struct dm_list *str_list_create(struct dm_pool *mem)
 	return sl;
 }
 
-int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
+int str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, const char *str)
 {
 	struct dm_str_list *sln;
 
 	if (!str)
 		return_0;
-
-	/* Already in list? */
-	if (str_list_match_item(sll, str))
-		return 1;
 
 	if (!(sln = dm_pool_alloc(mem, sizeof(*sln))))
 		return_0;
@@ -48,6 +44,18 @@ int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
 	dm_list_add(sll, &sln->list);
 
 	return 1;
+}
+
+int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
+{
+	if (!str)
+		return_0;
+
+	/* Already in list? */
+	if (str_list_match_item(sll, str))
+		return 1;
+
+	return str_list_add_no_dup_check(mem, sll, str);
 }
 
 void str_list_del(struct dm_list *sll, const char *str)
