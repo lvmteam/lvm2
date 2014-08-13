@@ -1,5 +1,7 @@
 Version 1.02.89 -
 =================================
+  Add support for selection to match string list subset, recognize { } operator.
+  Fix string list selection with '[value]' to not match list that's superset.
   Fix string list selection to match whole words only, not prefixes.
 
 Version 1.02.88 - 5th August 2014
