@@ -348,9 +348,6 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	int pagesize = lvm_getpagesize();
 	const char *type_str = arg_str_value(cmd, type_ARG, "");
 
-	memset(lp, 0, sizeof(*lp));
-	lp->target_attr = ~0;
-
 	if (!_check_conversion_type(cmd, type_str))
 		return_0;
 
@@ -3315,7 +3312,9 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 {
-	struct lvconvert_params lp;
+	struct lvconvert_params lp = {
+		.target_attr = ~0,
+	};
 
 	if (!_read_params(&lp, cmd, argc, argv)) {
 		stack;
