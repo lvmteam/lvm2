@@ -106,7 +106,7 @@ lvs_sel "lv_name='vol1'" "vol1"
 ###############################
 # STRING LIST FIELD SELECTION #
 ###############################
-pvs_sel 'tags=["pv_tag1"]' "$dev1 $dev2"
+pvs_sel 'tags=["pv_tag1"]' ""
 # for one item, no need to use []
 pvs_sel 'tags="pv_tag1"' "$dev1 $dev2"
 # no match
@@ -115,7 +115,7 @@ pvs_sel 'tags=["pv_tag1" && "pv_tag2" && "pv_tag3"]' "$dev1"
 # check the order has no effect on selection result
 pvs_sel 'tags=["pv_tag3" && "pv_tag2" && "pv_tag1"]' "$dev1"
 pvs_sel 'tags=["pv_tag4" || "pv_tag3"]' "$dev1 $dev6"
-pvs_sel 'tags!=["pv_tag1"]' "$dev2 $dev3 $dev4 $dev5"
+pvs_sel 'tags!=["pv_tag1"]' "$dev1 $dev2 $dev3 $dev4 $dev5 $dev6"
 # check mixture of && and || - this is not allowed
 not pvs_sel 'tags=["pv_tag1" && "pv_tag2" || "pv_tag3"]'
 
