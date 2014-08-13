@@ -3218,7 +3218,7 @@ static int _poll_logical_volume(struct cmd_context *cmd, struct logical_volume *
 
 static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp)
 {
-	struct logical_volume *lv = NULL;
+	struct logical_volume *lv;
 	int ret = ECMD_FAILED;
 	int saved_ignore_suspended_devices = ignore_suspended_devices();
 
@@ -3265,8 +3265,8 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 				  void *handle)
 {
 	struct lvconvert_params *lp = handle;
-	const char *vg_name = NULL;
-	struct logical_volume *refreshed_lv = NULL;
+	const char *vg_name;
+	struct logical_volume *refreshed_lv;
 	int ret;
 
 	/*
