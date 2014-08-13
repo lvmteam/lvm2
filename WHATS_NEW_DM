@@ -1,5 +1,6 @@
 Version 1.02.89 -
 =================================
+  Fix string list selection to match whole words only, not prefixes.
 
 Version 1.02.88 - 5th August 2014
 =================================

@@ -1260,7 +1260,8 @@ static int _cmp_field_string_list_all(const struct str_list_sort_value *val,
 
 	/* both lists are sorted so they either match 1:1 or not */
 	dm_list_iterate_items(sel_item, sel->list) {
-		if (strncmp(sel_item->str, val->value + val->items[i].pos, val->items[i].len))
+		if ((strlen(sel_item->str) != val->items[i].len) ||
+		    strncmp(sel_item->str, val->value + val->items[i].pos, val->items[i].len))
 			return 0;
 		i++;
 	}
@@ -1285,7 +1286,8 @@ static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
 		 *       Make use of the fact that the lists are sorted!
 		 */
 		for (i = 1; i <= val->items[0].len; i++) {
-			if (!strncmp(sel_item->str, val->value + val->items[i].pos, val->items[i].len))
+			if ((strlen(sel_item->str) == val->items[i].len) &&
+			    !strncmp(sel_item->str, val->value + val->items[i].pos, val->items[i].len))
 				return 1;
 		}
 	}
