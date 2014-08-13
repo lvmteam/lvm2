@@ -110,8 +110,13 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	char *ptr;
 	const char *vg_name = NULL;
 
-	if (lp->merge)
+	if (lp->merge) {
+		if (!*pargc) {
+			log_error("Please specify a logical volume path.");
+			return 0;
+		}
 		return 1;
+	}
 
 	if (!*pargc) {
 		if (lp->cache) {
@@ -3317,14 +3322,9 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (lp.merge) {
-		if (!argc) {
-			log_error("Please provide logical volume path");
-			return EINVALID_CMD_LINE;
-		}
+	if (lp.merge)
 		return process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, &lp,
 				       &_lvconvert_merge_single);
-	}
 
 	return lvconvert_single(cmd, &lp);
 }
