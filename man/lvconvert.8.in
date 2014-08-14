@@ -100,7 +100,8 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .RI [ PhysicalVolume [ Path ]...]
 .sp
 .B lvconvert
-.RB [{ \-\-type \  \fIthin [ \fI\-pool ]| \-T | \-\-thin }
+.RB [{ \-\-type
+.BR \fIthin [ \fI\-pool ]| \-T | \-\-thin }
 .RB [ \-\-originname
 .IR NewExternalOriginVolumeName ]]
 .RB [ \-\-thinpool
@@ -131,7 +132,8 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .RB [ \-\-version ]
 .sp
 .B lvconvert
-.RB [ \-\-type \  \fIcache [ \fI\-pool ]| \-\-cache ]
+.RB [ \-\-type
+.BR \fIcache [ \fI\-pool ]| \-\-cache ]
 .RB [ \-\-cachepool
 .IR CachePoolLV { Name | Path }]
 .RB [ \-c | \-\-chunksize
