@@ -339,14 +339,15 @@ Path for the lvmetad pid file.
 .B LVM_LVMETAD_SOCKET
 Path for the lvmetad socket file.
 .SH VALID NAMES
-The following characters are valid for VG and LV names:
+The valid characters for VG and LV names are:
 .B a-z A-Z 0-9 + _ . -
 .LP
 VG and LV names cannot begin with a hyphen.
 There are also various reserved names that are used internally by lvm that can not be used as LV or VG names.
 A VG cannot be called anything that exists in /dev/ at the time of creation, nor can it be called '.' or '..'.
 A LV cannot be called '.' '..' 'snapshot' or 'pvmove'. The LV name may also not contain
-the strings '_mlog', '_mimage', '_rimage', '_tdata', '_tmeta'.
+the strings '_cdata', '_cmeta', '_mlog', '_mimage', '_pmspare',
+'_rimage', '_rlog', '_tdata', '_tmeta'.
 A directory bearing the name of each Volume Group is created under /dev when any of its Logical Volumes are activated.
 Each active Logical Volume is accessible from this directory as a symbolic link leading to a device node.
 Links or nodes in /dev/mapper are intended only for internal use and the precise format and escaping might change between releases and distributions.
