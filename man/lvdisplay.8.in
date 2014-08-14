@@ -18,8 +18,8 @@ lvdisplay \(em display attributes of a logical volume
 .IR hHbBsSkKmMgGtTpPeE ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RI [ LogicalVolumePath
-.RI [ LogicalVolumePath ...]]
+.RI [ VolumeGroupName | LogicalVolume { Name | Path }
+.RI [ VolumeGroupName | LogicalVolume { Name | Path }\ ...]]
 .br
 
 .B lvdisplay
@@ -50,8 +50,8 @@ lvdisplay \(em display attributes of a logical volume
 .IR hHbBsSkKmMgGtTpPeE ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RI [ LogicalVolumePath
-.RI [ LogicalVolumePath ...]]
+.RI [ VolumeGroupName | LogicalVolume { Name | Path }
+.RI [ VolumeGroupName | LogicalVolume { Name | Path }\ ...]]
 .SH DESCRIPTION
 lvdisplay allows you to see the attributes of a logical volume
 like size, read/write status, snapshot information etc.
@@ -111,12 +111,12 @@ logical volumes have been created for this original logical volume,
 this command shows a list of all snapshot logical volumes and their
 status (active or inactive) as well:
 .sp
-.B lvdisplay \-v /dev/vg00/lvol2
+.B lvdisplay \-v vg00/lvol2
 
 Shows the attributes of this snapshot logical volume and also which
 original logical volume it is associated with:
 .sp
-.B lvdisplay /dev/vg00/snapshot
+.B lvdisplay vg00/snapshot
 
 .SH SEE ALSO
 .BR lvm (8),
