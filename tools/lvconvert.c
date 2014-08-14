@@ -2216,7 +2216,8 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 			return_0;
 		r = 1;
 		log_print_unless_silent("Merging of snapshot %s will start "
-					"next activation.", lv->name);
+					"next activation of %s.",
+					display_lvname(lv), display_lvname(origin));
 		goto out;
 	}
 
@@ -2323,7 +2324,8 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 		return_0;
 
 	log_print_unless_silent("Merging of thin snapshot %s will occur on "
-				"next activation.", lv->name);
+				"next activation of %s.",
+				display_lvname(lv), display_lvname(origin));
 	r = 1;
 out:
 	backup(lv->vg);
