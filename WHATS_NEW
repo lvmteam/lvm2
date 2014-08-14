@@ -1,5 +1,6 @@
 Version 2.02.110 -
 ==================================
+  Fix pvcreate_check() to update cache correctly after signature wiping.
   Fix primary device lookup failure for partition when processing mpath filter.
   If LV inactive and non-clustered, do not issue "Cannot deactivate" on -aln.
   Remove spurious "Skipping mirror LV" message on pvmove of clustered mirror.

@@ -1329,11 +1329,14 @@ int vg_split_mdas(struct cmd_context *cmd __attribute__((unused)),
  * See if we may pvcreate on this device.
  * 0 indicates we may not.
  */
-static int pvcreate_check(struct cmd_context *cmd, const char *name,
-			  struct pvcreate_params *pp)
+static int _pvcreate_check(struct cmd_context *cmd, const char *name,
+			   struct pvcreate_params *pp)
 {
 	struct physical_volume *pv;
 	struct device *dev;
+	int r = 0;
+	int scan_needed = 0;
+	int filter_refresh_needed = 0;
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -1345,7 +1348,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	if (pv && !is_orphan(pv) && pp->force != DONT_PROMPT_OVERRIDE) {
 		log_error("Can't initialize physical volume \"%s\" of "
 			  "volume group \"%s\" without -ff", name, pv_vg_name(pv));
-		goto bad;
+		goto out;
 	}
 
 	/* prompt */
@@ -1353,28 +1356,29 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	    yes_no_prompt("Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ",
 			  name, pv_vg_name(pv)) == 'n') {
 		log_error("%s: physical volume not initialized", name);
-		goto bad;
+		goto out;
 	}
 
 	if (sigint_caught())
-		goto_bad;
+		goto_out;
 
 	dev = dev_cache_get(name, cmd->filter);
 
 	/* Is there an md superblock here? */
-	/* FIXME: still possible issues here - rescan cache? */
 	if (!dev && md_filtering()) {
 		if (!refresh_filters(cmd))
-			goto_bad;
+			goto_out;
 
 		init_md_filtering(0);
 		dev = dev_cache_get(name, cmd->filter);
 		init_md_filtering(1);
+
+		scan_needed = 1;
 	}
 
 	if (!dev) {
 		log_error("Device %s not found (or ignored by filtering).", name);
-		goto bad;
+		goto out;
 	}
 
 	/*
@@ -1384,33 +1388,39 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		/* FIXME Detect whether device-mapper itself is still using it */
 		log_error("Can't open %s exclusively.  Mounted filesystem?",
 			  name);
-		goto bad;
+		goto out;
 	}
 
 	if (!wipe_known_signatures(cmd, dev, name,
 				   TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
 				   0, pp->yes, pp->force)) {
 		log_error("Aborting pvcreate on %s.", name);
-		goto bad;
-	}
+		goto out;
+	} else
+		filter_refresh_needed = scan_needed = 1;
+	
 
 	if (sigint_caught())
-		goto_bad;
+		goto_out;
 
-	if (pv && !is_orphan(pv) && pp->force) {
+	if (pv && !is_orphan(pv) && pp->force)
 		log_warn("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
 			  pv_vg_name(pv),
 			  !is_orphan(pv) ? "\"" : "");
-	}
+
+	r = 1;
+
+out:
+	if (filter_refresh_needed)
+		refresh_filters(cmd);
+
+	if (scan_needed)
+		lvmcache_label_scan(cmd, 2);
 
 	free_pv_fid(pv);
-	return 1;
-
-bad:
-	free_pv_fid(pv);
-	return 0;
+	return r;
 }
 
 void pvcreate_params_set_defaults(struct pvcreate_params *pp)
@@ -1542,7 +1552,7 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 		}
 	}
 
-	if (!pvcreate_check(cmd, pv_name, pp))
+	if (!_pvcreate_check(cmd, pv_name, pp))
 		goto_bad;
 
 	if (sigint_caught())

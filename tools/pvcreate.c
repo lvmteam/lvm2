@@ -105,15 +105,6 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	/*
-	 * Make sure we don't overwrite any existing signature
-	 * that may have been created after last time we did filtering.
-	 */
-	if (!(refresh_filters(cmd))) {
-		log_error("Failed to refresh filters before pvcreate.");
-		return ECMD_FAILED;
-	}
-
 	for (i = 0; i < argc; i++) {
 		if (sigint_caught())
 			return_ECMD_FAILED;
