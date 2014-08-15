@@ -314,3 +314,16 @@ int get_cache_mode(const char *str, uint32_t *flags)
 
 	return 1;
 }
+
+int lv_is_cache_origin(const struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	/* Make sure there's exactly one segment in segs_using_this_lv! */
+	if (dm_list_empty(&lv->segs_using_this_lv) ||
+	    (dm_list_size(&lv->segs_using_this_lv) > 1))
+		return 0;
+
+	seg = get_only_segment_using_this_lv(lv);
+	return seg && lv_is_cache(seg->lv) && (seg_lv(seg, 0) == lv);
+}

@@ -499,3 +499,19 @@ const char *get_pool_discards_name(thin_discards_t discards)
 
 	return "unknown";
 }
+
+int lv_is_thin_origin(const struct logical_volume *lv)
+{
+	struct seg_list *segl;
+
+	if (!lv_is_thin_volume(lv) ||
+	    dm_list_empty(&lv->segs_using_this_lv))
+		return 0;
+
+	dm_list_iterate_items(segl, &lv->segs_using_this_lv) {
+		if (segl->seg->origin == lv)
+			return 1;
+	}
+
+	return 0;
+}

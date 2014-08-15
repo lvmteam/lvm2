@@ -921,6 +921,8 @@ int lv_is_striped(const struct logical_volume *lv);
 */
 int lv_is_origin(const struct logical_volume *lv);
 int lv_is_virtual_origin(const struct logical_volume *lv);
+int lv_is_thin_origin(const struct logical_volume *lv);
+int lv_is_cache_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
 int lv_is_merging_origin(const struct logical_volume *origin);
 int lv_is_merging_cow(const struct logical_volume *snapshot);
