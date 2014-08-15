@@ -993,7 +993,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	    !arg_count(cmd, setactivationskip_ARG))
 	    /* Rest can be changed for stacked thin pool meta/data volumes */
 	    ;
-	else if (!(lv_is_visible(lv)) && !lv_is_virtual_origin(lv)) {
+	else if (!lv_is_visible(lv) && !lv_is_virtual_origin(lv)) {
 		log_error("Unable to change internal LV %s directly",
 			  lv->name);
 		return ECMD_FAILED;
