@@ -158,6 +158,7 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 		return 0;
 
 	switch (dev_get_primary_dev(dt, dev, &primary_dev)) {
+		default:
 		case 0:
 			/* Error. */
 			log_error("Failed to get primary device for %d:%d.", major, minor);
