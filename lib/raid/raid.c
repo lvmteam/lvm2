@@ -443,18 +443,18 @@ static const struct raid_type {
 	unsigned parity;
 	int extra_flags;
 } _raid_types[] = {
-	{ "raid1",    0, SEG_AREAS_MIRRORED },
-	{ "raid10",   0, SEG_AREAS_MIRRORED },
-	{ "raid4",    1 },
-	{ "raid5",    1 },
-	{ "raid5_la", 1 },
-	{ "raid5_ls", 1 },
-	{ "raid5_ra", 1 },
-	{ "raid5_rs", 1 },
-	{ "raid6",    2 },
-	{ "raid6_nc", 2 },
-	{ "raid6_nr", 2 },
-	{ "raid6_zr", 2 }
+	{ SEG_TYPE_NAME_RAID1,    0, SEG_AREAS_MIRRORED },
+	{ SEG_TYPE_NAME_RAID10,   0, SEG_AREAS_MIRRORED },
+	{ SEG_TYPE_NAME_RAID4,    1 },
+	{ SEG_TYPE_NAME_RAID5,    1 },
+	{ SEG_TYPE_NAME_RAID5_LA, 1 },
+	{ SEG_TYPE_NAME_RAID5_LS, 1 },
+	{ SEG_TYPE_NAME_RAID5_RA, 1 },
+	{ SEG_TYPE_NAME_RAID5_RS, 1 },
+	{ SEG_TYPE_NAME_RAID6,    2 },
+	{ SEG_TYPE_NAME_RAID6_NC, 2 },
+	{ SEG_TYPE_NAME_RAID6_NR, 2 },
+	{ SEG_TYPE_NAME_RAID6_ZR, 2 }
 };
 
 static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,

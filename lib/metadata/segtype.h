@@ -150,6 +150,19 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
+#define SEG_TYPE_NAME_RAID1	"raid1"
+#define SEG_TYPE_NAME_RAID10	"raid10"
+#define SEG_TYPE_NAME_RAID4	"raid4"
+#define SEG_TYPE_NAME_RAID5	"raid5"
+#define SEG_TYPE_NAME_RAID5_LA	"raid5_la"
+#define SEG_TYPE_NAME_RAID5_LS	"raid5_ls"
+#define SEG_TYPE_NAME_RAID5_RA	"raid5_ra"
+#define SEG_TYPE_NAME_RAID5_RS	"raid5_rs"
+#define SEG_TYPE_NAME_RAID6	"raid6"
+#define SEG_TYPE_NAME_RAID6_NC	"raid6_nc"
+#define SEG_TYPE_NAME_RAID6_NR	"raid6_nr"
+#define SEG_TYPE_NAME_RAID6_ZR	"raid6_zr"
+
 #ifdef REPLICATOR_INTERNAL
 int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
