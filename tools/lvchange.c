@@ -1012,9 +1012,10 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 		if (!arg_count(cmd, yes_ARG) &&
 		    (yes_no_prompt("Change of snapshot %s will also change its "
-				   "origin %s%s. Proceed? [y/n]: ", lv->name,
-				   origin->name, snaps_msg) == 'n')) {
-			log_error("Logical volume %s not changed.", lv->name);
+				   "origin %s%s. Proceed? [y/n]: ",
+				   display_lvname(lv), display_lvname(origin),
+				   snaps_msg) == 'n')) {
+			log_error("Logical volume %s not changed.", display_lvname(lv));
 			return ECMD_FAILED;
 		}
 	}
