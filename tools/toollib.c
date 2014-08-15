@@ -230,8 +230,13 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 		    lv_is_cow(lvl->lv) && !lv_is_virtual_origin(origin_from_cow(lvl->lv)))
 			continue;
 
-		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG))
+		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG)) {
+			if (lvargs_supplied &&
+			    str_list_match_item(arg_lvnames, lvl->lv->name))
+				log_print_unless_silent("Ignoring virtual origin logical volume %s.",
+							display_lvname(lvl->lv));
 			continue;
+		}
 
 		/*
 		 * Only let hidden LVs through it --all was used or the LVs 
