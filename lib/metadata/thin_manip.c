@@ -500,13 +500,13 @@ const char *get_pool_discards_name(thin_discards_t discards)
 	return "unknown";
 }
 
-int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snapshot_count)
+int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snap_count)
 {
 	struct seg_list *segl;
 	int r = 0;
 
-	if (snapshot_count)
-		*snapshot_count = 0;
+	if (snap_count)
+		*snap_count = 0;
 
 	if (!lv_is_thin_volume(lv) ||
 	    dm_list_empty(&lv->segs_using_this_lv))
@@ -515,8 +515,8 @@ int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snapshot_co
 	dm_list_iterate_items(segl, &lv->segs_using_this_lv) {
 		if (segl->seg->origin == lv) {
 			r = 1;
-			if (snapshot_count)
-				(*snapshot_count)++;
+			if (snap_count)
+				(*snap_count)++;
 			else
 				/* not interested in number of snapshots */
 				break;
