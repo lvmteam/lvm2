@@ -266,7 +266,7 @@ static int _lv_type_list_thin(struct dm_pool *mem,
 			      struct dm_list *type)
 {
 	int top_level = 1;
-	unsigned snapshot_count;
+	unsigned snap_count;
 
 	if (lv_is_thin_pool(lv)) {
 		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]) ||
@@ -286,10 +286,10 @@ static int _lv_type_list_thin(struct dm_pool *mem,
 	} else if (lv_is_thin_volume(lv)) {
 		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]))
 			goto_bad;
-		if (lv_is_thin_origin(lv, &snapshot_count) &&
+		if (lv_is_thin_origin(lv, &snap_count) &&
 		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_ORIGIN]))
 				goto_bad;
-		if (snapshot_count > 1 &&
+		if (snap_count > 1 &&
 		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MULTIPLE]))
 			goto_bad;
 		if (first_seg(lv)->origin)
