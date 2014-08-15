@@ -1,2 +1,3 @@
 dm_log
 dm_log_with_errno
+dm_task_get_info

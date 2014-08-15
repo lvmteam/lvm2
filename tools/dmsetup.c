@@ -120,6 +120,7 @@ enum {
 	ADD_NODE_ON_RESUME_ARG,
 	CHECKS_ARG,
 	COLS_ARG,
+	DEFERRED_ARG,
 	SELECT_ARG,
 	EXEC_ARG,
 	FORCE_ARG,
@@ -468,9 +469,10 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 
 	printf("Name:              %s\n", dm_task_get_name(dmt));
 
-	printf("State:             %s%s\n",
+	printf("State:             %s%s%s\n",
 	       info->suspended ? "SUSPENDED" : "ACTIVE",
-	       info->read_only ? " (READ-ONLY)" : "");
+	       info->read_only ? " (READ-ONLY)" : "",
+	       info->deferred_remove ? " (DEFERRED REMOVE)" : "");
 
 	/* FIXME Old value is being printed when it's being changed. */
 	if (dm_task_get_read_ahead(dmt, &read_ahead))
@@ -1320,6 +1322,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 
 	if (_switches[RETRY_ARG] && task == DM_DEVICE_REMOVE)
 		dm_task_retry_remove(dmt);
+
+	if (_switches[DEFERRED_ARG] && (task == DM_DEVICE_REMOVE || task == DM_DEVICE_REMOVE_ALL))
+		dm_task_deferred_remove(dmt);
 
 	r = dm_task_run(dmt);
 
@@ -3071,7 +3076,7 @@ static struct command _commands[] = {
 	  "\t                  [-u|uuid <uuid>] [{--addnodeonresume|--addnodeoncreate}]\n"
 	  "\t                  [--notable | --table <table> | <table_file>]",
 	 1, 2,0,  _create},
-	{"remove", "[-f|--force] <device>", 0, -1, 1, _remove},
+	{"remove", "[-f|--force] [--deferred] <device>", 0, -1, 1, _remove},
 	{"remove_all", "[-f|--force]", 0, 0, 0,  _remove_all},
 	{"suspend", "[--noflush] <device>", 0, -1, 1, _suspend},
 	{"resume", "<device> [{--addnodeonresume|--addnodeoncreate}]", 0, -1, 1, _resume},
@@ -3521,6 +3526,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"readonly", 0, &ind, READ_ONLY},
 		{"checks", 0, &ind, CHECKS_ARG},
 		{"columns", 0, &ind, COLS_ARG},
+		{"deferred", 0, &ind, DEFERRED_ARG},
 		{"select", 1, &ind, SELECT_ARG},
 		{"exec", 1, &ind, EXEC_ARG},
 		{"force", 0, &ind, FORCE_ARG},
@@ -3694,6 +3700,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			/* FIXME Accept modes as per chmod */
 			_int_args[MODE_ARG] = (int) strtol(optarg, NULL, 8);
 		}
+		if (ind == DEFERRED_ARG)
+			_switches[DEFERRED_ARG]++;
 		if (ind == EXEC_ARG) {
 			_switches[EXEC_ARG]++;
 			_command = optarg;

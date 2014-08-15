@@ -65,6 +65,7 @@ struct dm_task {
 	int new_uuid;
 	int secure_data;
 	int retry_remove;
+	int deferred_remove;
 	int enable_checks;
 	int expected_errno;
 

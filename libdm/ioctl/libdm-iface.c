@@ -17,6 +17,7 @@
 #include "libdm-targets.h"
 #include "libdm-common.h"
 
+#include <stddef.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
@@ -654,6 +655,7 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	info->live_table = dmt->dmi.v4->flags & DM_ACTIVE_PRESENT_FLAG ? 1 : 0;
 	info->inactive_table = dmt->dmi.v4->flags & DM_INACTIVE_PRESENT_FLAG ?
 	    1 : 0;
+	info->deferred_remove = dmt->dmi.v4->flags & DM_DEFERRED_REMOVE;
 	info->target_count = dmt->dmi.v4->target_count;
 	info->open_count = dmt->dmi.v4->open_count;
 	info->event_nr = dmt->dmi.v4->event_nr;
@@ -858,6 +860,13 @@ int dm_task_secure_data(struct dm_task *dmt)
 int dm_task_retry_remove(struct dm_task *dmt)
 {
 	dmt->retry_remove = 1;
+
+	return 1;
+}
+
+int dm_task_deferred_remove(struct dm_task *dmt)
+{
+	dmt->deferred_remove = 1;
 
 	return 1;
 }
@@ -1137,6 +1146,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_READONLY_FLAG;
 	if (dmt->skip_lockfs)
 		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
+	if (dmt->deferred_remove && (dmt->type == DM_DEVICE_REMOVE || dmt->type == DM_DEVICE_REMOVE_ALL))
+		dmi->flags |= DM_DEFERRED_REMOVE;
+
 	if (dmt->secure_data) {
 		if (_dm_version_minor < 20)
 			log_verbose("Secure data flag unsupported by kernel. "
@@ -1732,7 +1744,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	}
 
 	log_debug_activation("dm %s %s%s %s%s%s %s%.0d%s%.0d%s"
-			     "%s%c%c%s%s%s%s%s%s %.0" PRIu64 " %s [%u] (*%u)",
+			     "%s%c%c%s%s%s%s%s%s%s %.0" PRIu64 " %s [%u] (*%u)",
 			     _cmd_data_v4[dmt->type].name,
 			     dmt->new_uuid ? "UUID " : "",
 			     dmi->name, dmi->uuid, dmt->newname ? " " : "",
@@ -1748,6 +1760,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			     dmt->read_only ? "R" : "",
 			     dmt->skip_lockfs ? "S " : "",
 			     dmt->retry_remove ? "T " : "",
+			     dmt->deferred_remove ? "D " : "",
 			     dmt->secure_data ? "W " : "",
 			     dmt->query_inactive_table ? "I " : "",
 			     dmt->enable_checks ? "C" : "",
@@ -2005,4 +2018,33 @@ void dm_lib_exit(void)
 	dm_dump_memory();
 	_version_ok = 1;
 	_version_checked = 0;
+}
+
+/*
+ * This following code is here to retain ABI compatibility after adding
+ * the field deferred_remove to struct dm_info in version 1.02.89.
+ *
+ * Binaries linked against version 1.02.88 of libdevmapper or earlier
+ * will use this function that returns dm_info without the
+ * deferred_remove field.
+ *
+ * Binaries compiled against version 1.02.89 onwards will use
+ * the new function dm_task_get_info_with_deferred_remove due to the
+ * #define.
+ *
+ * N.B. Keep this function at the end of the file to make sure that
+ * no code in this file accidentally calls it.
+ */
+#undef dm_task_get_info
+int dm_task_get_info(struct dm_task *dmt, struct dm_info *info);
+int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
+{
+	struct dm_info new_info;
+
+	if (!dm_task_get_info_with_deferred_remove(dmt, &new_info))
+		return 0;
+
+	memcpy(info, &new_info, offsetof(struct dm_info, deferred_remove));
+
+	return 1;
 }

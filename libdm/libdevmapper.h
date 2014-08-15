@@ -149,6 +149,8 @@ struct dm_info {
 	int read_only;		/* 0:read-write; 1:read-only */
 
 	int32_t target_count;
+
+	int deferred_remove;
 };
 
 struct dm_deps {
@@ -172,6 +174,8 @@ struct dm_versions {
 
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
+
+#define dm_task_get_info dm_task_get_info_with_deferred_remove
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 
 /*
@@ -222,6 +226,7 @@ int dm_task_query_inactive_table(struct dm_task *dmt);
 int dm_task_suppress_identical_reload(struct dm_task *dmt);
 int dm_task_secure_data(struct dm_task *dmt);
 int dm_task_retry_remove(struct dm_task *dmt);
+int dm_task_deferred_remove(struct dm_task *dmt);
 
 /*
  * Enable checks for common mistakes such as issuing ioctls in an unsafe order.
