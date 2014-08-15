@@ -1000,6 +1000,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (lv_is_cow(lv) && arg_count(cmd, activate_ARG)) {
+		origin = origin_from_cow(lv);
 		if (origin->origin_count < 2)
 			snaps_msg[0] = '\0';
 		else if (dm_snprintf(snaps_msg, sizeof(snaps_msg),
