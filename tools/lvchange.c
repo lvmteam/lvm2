@@ -964,26 +964,6 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin = origin_from_cow(lv)) &&
-	    arg_count(cmd, activate_ARG)) {
-		if (origin->origin_count < 2)
-			snaps_msg[0] = '\0';
-		else if (dm_snprintf(snaps_msg, sizeof(snaps_msg),
-				     " and %u other snapshot(s)",
-				     origin->origin_count - 1) < 0) {
-			log_error("Failed to prepare message.");
-			return ECMD_FAILED;
-		}
-
-		if (!arg_count(cmd, yes_ARG) &&
-		    (yes_no_prompt("Change of snapshot %s will also change its"
-				   " origin %s%s. Proceed? [y/n]: ", lv->name,
-				   origin->name, snaps_msg) == 'n')) {
-			log_error("Logical volume %s not changed.", lv->name);
-			return ECMD_FAILED;
-		}
-	}
-
 	if (lv->status & PVMOVE) {
 		log_error("Unable to change pvmove LV %s", lv->name);
 		if (arg_count(cmd, activate_ARG))
@@ -1017,6 +997,25 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("Unable to change internal LV %s directly",
 			  lv->name);
 		return ECMD_FAILED;
+	}
+
+	if (lv_is_cow(lv) && arg_count(cmd, activate_ARG)) {
+		if (origin->origin_count < 2)
+			snaps_msg[0] = '\0';
+		else if (dm_snprintf(snaps_msg, sizeof(snaps_msg),
+				     " and %u other snapshot(s)",
+				     origin->origin_count - 1) < 0) {
+			log_error("Failed to prepare message.");
+			return ECMD_FAILED;
+		}
+
+		if (!arg_count(cmd, yes_ARG) &&
+		    (yes_no_prompt("Change of snapshot %s will also change its "
+				   "origin %s%s. Proceed? [y/n]: ", lv->name,
+				   origin->name, snaps_msg) == 'n')) {
+			log_error("Logical volume %s not changed.", lv->name);
+			return ECMD_FAILED;
+		}
 	}
 
 	/*
