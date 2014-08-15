@@ -169,7 +169,7 @@ mapped (d)evice present without tables, mapped device present with (i)nactive ta
 .IP 6 3
 device (o)pen, (X) unknown
 .IP 7 3
-Target type: (m)irror, (r)aid, (s)napshot, (t)hin, (u)nknown, (v)irtual.
+Target type: (C)ache, (m)irror, (r)aid, (s)napshot, (t)hin, (u)nknown, (v)irtual.
 This groups logical volumes related to the same kernel target together.  So,
 for example, mirror images, mirror logs as well as mirrors themselves appear as
 (m) if they use the original device-mapper mirror kernel driver; whereas the raid
