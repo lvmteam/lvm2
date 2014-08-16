@@ -1,5 +1,6 @@
 Version 2.02.110 -
 ==================================
+  Cleanly error when creating RAID with stripe size < PAGE_SIZE.
   Print name of LV which on activation triggers delayed snapshot merge.
   Add lv_layout and lv_type LV reporting fields.
   Properly display lvs lv_attr volume type and target type bit for cache origin.

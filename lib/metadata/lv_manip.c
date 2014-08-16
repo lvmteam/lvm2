@@ -6364,6 +6364,21 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	if (lp->stripe_size > vg->extent_size) {
+		if (segtype_is_raid(lp->segtype) &&
+		    (vg->extent_size < STRIPE_SIZE_MIN)) {
+			/*
+			 * FIXME: RAID will simply fail to load the table if
+			 *        this is the case, but we should probably
+			 *        honor the stripe minimum for regular stripe
+			 *        volumes as well.  Avoiding doing that now
+			 *        only to minimize the change.
+			 */
+			log_error("The extent size in volume group %s is too"
+				  " small to support striped RAID volumes.",
+				  vg->name);
+			return NULL;
+		}
+
 		log_print_unless_silent("Reducing requested stripe size %s to maximum, "
 					"physical extent size %s.",
 					display_size(cmd, (uint64_t) lp->stripe_size),
