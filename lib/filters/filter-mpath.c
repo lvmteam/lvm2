@@ -158,25 +158,21 @@ static int dev_is_mpath(struct dev_filter *f, struct device *dev)
 		return 0;
 
 	switch (dev_get_primary_dev(dt, dev, &primary_dev)) {
-		default:
-		case 0:
-			/* Error. */
-			log_error("Failed to get primary device for %d:%d.", major, minor);
-			return 0;
-		case 1:
-			/* The dev is already a primary dev. Just continue with the dev. */
-			if (!(name = get_sysfs_name(dev)))
-				return_0;
-			break;
-		case 2:
-			/* The dev is partition. */
-			part_name = dev_name(dev); /* name of original dev for log_debug msg */
-			if (!(name = get_sysfs_name_by_devt(sysfs_dir, primary_dev, parent_name, PATH_MAX)))
-				return_0;
-			log_debug_devs("%s: Device is a partition, using primary "
-				       "device %s for mpath component detection",
-					part_name, name);
-			break;
+	case 2: /* The dev is partition. */
+		part_name = dev_name(dev); /* name of original dev for log_debug msg */
+		if (!(name = get_sysfs_name_by_devt(sysfs_dir, primary_dev, parent_name, sizeof(parent_name))))
+			return_0;
+		log_debug_devs("%s: Device is a partition, using primary "
+			       "device %s for mpath component detection",
+			       part_name, name);
+		break;
+	case 1: /* The dev is already a primary dev. Just continue with the dev. */
+		if (!(name = get_sysfs_name(dev)))
+			return_0;
+		break;
+	default: /* 0, error. */
+		log_error("Failed to get primary device for %d:%d.", major, minor);
+		return 0;
 	}
 
 	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/holders", sysfs_dir, name) < 0) {
