@@ -267,6 +267,7 @@ static int _lv_type_list_thin(struct dm_pool *mem,
 {
 	int top_level = 1;
 	unsigned snap_count;
+	struct lv_segment *seg;
 
 	if (lv_is_thin_pool(lv)) {
 		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]) ||
@@ -292,16 +293,9 @@ static int _lv_type_list_thin(struct dm_pool *mem,
 		if (snap_count > 1 &&
 		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MULTIPLE]))
 			goto_bad;
-		if (first_seg(lv)->origin)
+		if ((seg = first_seg(lv)) && (seg->origin || seg->external_lv))
 			if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_SNAPSHOT]))
 				goto_bad;
-	}
-
-	if (lv_is_external_origin(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_ORIGIN]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_EXTERNAL]))
-			goto_bad;
-		top_level = 0;
 	}
 
 	if (top_level) {
@@ -382,9 +376,18 @@ int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
 		goto_bad;
 
 	/* Thins and related */
-	if ((lv_is_thin_type(lv) || lv_is_external_origin(lv)) &&
+	if (lv_is_thin_type(lv) &&
 	    !_lv_type_list_thin(mem, lv, *layout, *type))
 		goto_bad;
+
+	if (lv_is_external_origin(lv)) {
+		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]) ||
+		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_EXTERNAL]))
+			goto_bad;
+		if (!lv_is_thin_volume(lv) &&
+		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_THIN]))
+			goto_bad;
+	}
 
 	/* Caches and related */
 	if (lv_is_cache_type(lv) &&
@@ -439,7 +442,7 @@ int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
 				 */
 				unknown = 1;
 				log_error(INTERNAL_ERROR "Failed to properly detect "
-					  "layout and type for for LV %s/%s",
+					  "layout and type for LV %s/%s",
 					  lv->vg->name, lv->name);
 			}
 		}
