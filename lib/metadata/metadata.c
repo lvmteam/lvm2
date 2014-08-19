@@ -1414,10 +1414,16 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 
 out:
 	if (filter_refresh_needed)
-		refresh_filters(cmd);
+		if (!refresh_filters(cmd)) {
+			stack;
+			r = 0;
+		}
 
 	if (scan_needed)
-		lvmcache_label_scan(cmd, 2);
+		if (!lvmcache_label_scan(cmd, 2)) {
+			stack;
+			r = 0;
+		}
 
 	free_pv_fid(pv);
 	return r;
