@@ -1649,8 +1649,8 @@ static void _unmangle_mountinfo_string(const char *src, char *buf)
 /* Parse one line of mountinfo and unmangled target line */
 static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min, char *buf)
 {
-	char root[PATH_MAX + 1];
-	char target[PATH_MAX + 1];
+	char root[PATH_MAX];
+	char target[PATH_MAX];
 
 	/* TODO: maybe detect availability of  %ms  glib support ? */
 	if (sscanf(line, "%*u %*u %u:%u %" DM_TO_STRING(PATH_MAX)

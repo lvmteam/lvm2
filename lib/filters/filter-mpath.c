@@ -145,9 +145,8 @@ static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
 	const char *part_name, *name;
-	char path[PATH_MAX+1];
-	char parent_name[PATH_MAX+1];
 	struct stat info;
+	char path[PATH_MAX], parent_name[PATH_MAX];
 	const char *sysfs_dir = dm_sysfs_dir();
 	int major = MAJOR(dev->dev);
 	int minor = MINOR(dev->dev);
@@ -175,7 +174,7 @@ static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
 		return 0;
 	}
 
-	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/holders", sysfs_dir, name) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%s/block/%s/holders", sysfs_dir, name) < 0) {
 		log_error("Sysfs path to check mpath is too long.");
 		return 0;
 	}

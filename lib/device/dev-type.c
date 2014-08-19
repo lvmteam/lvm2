@@ -348,8 +348,8 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	const char *sysfs_dir = dm_sysfs_dir();
 	int major = (int) MAJOR(dev->dev);
 	int minor = (int) MINOR(dev->dev);
-	char path[PATH_MAX+1];
-	char temp_path[PATH_MAX+1];
+	char path[PATH_MAX];
+	char temp_path[PATH_MAX];
 	char buffer[64];
 	struct stat info;
 	FILE *fp = NULL;
@@ -378,7 +378,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 */
 
 	/* check if dev is a partition */
-	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/partition",
+	if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d/partition",
 			sysfs_dir, major, minor) < 0) {
 		log_error("dm_snprintf partition failed");
 		goto out;
@@ -400,14 +400,14 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	 * - basename ../../block/md0/md0  = md0
 	 * Parent's 'dev' sysfs attribute  = /sys/block/md0/dev
 	 */
-	if ((size = readlink(dirname(path), temp_path, PATH_MAX)) < 0) {
+	if ((size = readlink(dirname(path), temp_path, sizeof(temp_path) - 1)) < 0) {
 		log_sys_error("readlink", path);
 		goto out;
 	}
 
 	temp_path[size] = '\0';
 
-	if (dm_snprintf(path, PATH_MAX, "%s/block/%s/dev",
+	if (dm_snprintf(path, sizeof(path), "%s/block/%s/dev",
 			sysfs_dir, basename(dirname(temp_path))) < 0) {
 		log_error("dm_snprintf dev failed");
 		goto out;
