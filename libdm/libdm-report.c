@@ -1278,7 +1278,7 @@ static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *v
 					     const struct selection_str_list *sel)
 {
 	struct dm_str_list *sel_item;
-	unsigned int i = 1, last_found = 1;;
+	unsigned int i, last_found = 1;;
 	int r = 0;
 
 	/* if value has no items and selection has at leas one, it's clear there's no match */

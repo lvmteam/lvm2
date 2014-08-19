@@ -93,7 +93,7 @@ void release_flocks(int unlock)
 
 static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock)
 {
-	int r = 1;
+	int r;
 	int old_errno;
 	struct stat buf1, buf2;
 

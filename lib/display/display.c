@@ -113,7 +113,7 @@ static const char *_display_size(const struct cmd_context *cmd,
 {
 	unsigned base = BASE_UNKNOWN;
 	unsigned s;
-	int suffix = 1, precision;
+	int suffix, precision;
 	uint64_t byte = UINT64_C(0);
 	uint64_t units = UINT64_C(1024);
 	char *size_buf = NULL;

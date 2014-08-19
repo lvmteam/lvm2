@@ -419,7 +419,7 @@ static int _lock_resource(struct cmd_context *cmd, const char *resource,
 	char lockname[PATH_MAX];
 	int clvmd_cmd = 0;
 	const char *lock_scope;
-	const char *lock_type = "";
+	const char *lock_type;
 
 	assert(strlen(resource) < sizeof(lockname));
 	assert(resource);

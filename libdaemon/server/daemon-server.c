@@ -205,7 +205,7 @@ out:
 
 static int _open_socket(daemon_state s)
 {
-	int fd = -1;
+	int fd;
 	int file_created = 0;
 	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 	struct stat buf;

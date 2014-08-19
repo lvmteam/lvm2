@@ -897,7 +897,7 @@ static int _setgeometry(CMD_ARGS)
 static int _splitname(CMD_ARGS)
 {
 	struct dmsetup_report_obj obj;
-	int r = 1;
+	int r;
 
 	obj.task = NULL;
 	obj.info = NULL;

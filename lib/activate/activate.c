@@ -2325,7 +2325,7 @@ int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exc
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
-	int r = 1;
+	int r;
 
 	if (!lv) {
 		r = dm_mknodes(NULL);
