@@ -172,7 +172,8 @@ static int _lv_type_list_mirror(struct dm_pool *mem,
 			goto_bad;
 		top_level = 0;
 	} else if (lv->status & PVMOVE) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_PVMOVE]))
+		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_PVMOVE]) ||
+		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
 	}
 
@@ -383,6 +384,9 @@ int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
 	if (lv_is_external_origin(lv)) {
 		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]) ||
 		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_EXTERNAL]))
+			goto_bad;
+		if (lv->external_count > 1 &&
+		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_MULTIPLE]))
 			goto_bad;
 		if (!lv_is_thin_volume(lv) &&
 		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_THIN]))
