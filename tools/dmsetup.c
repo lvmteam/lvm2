@@ -896,13 +896,9 @@ static int _setgeometry(CMD_ARGS)
 
 static int _splitname(CMD_ARGS)
 {
-	struct dmsetup_report_obj obj;
+	struct dmsetup_report_obj obj = { NULL };
 	int r;
 
-	obj.task = NULL;
-	obj.info = NULL;
-	obj.deps_task = NULL;
-	obj.tree_node = NULL;
 	if (!(obj.split_name = _get_split_name((argc == 3) ? argv[2] : "LVM",
 					       argv[1], '\0')))
                 return_0;
