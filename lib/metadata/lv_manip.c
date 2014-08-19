@@ -170,6 +170,9 @@ static int _lv_type_list_mirror(struct dm_pool *mem,
 	} else if (lv_is_mirror_log(lv)) {
 		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_LOG]))
 			goto_bad;
+		if (lv_is_mirrored(lv) &&
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_MIRROR]))
+			goto_bad;
 		top_level = 0;
 	} else if (lv->status & PVMOVE) {
 		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_PVMOVE]) ||
@@ -332,6 +335,9 @@ static int _lv_type_list_cache(struct dm_pool *mem,
 	} else if (lv_is_cache_pool_data(lv)) {
 		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
 		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_DATA]))
+			goto_bad;
+		if (lv_is_cache(lv) &&
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
 			goto_bad;
 		top_level = 0;
 	}
