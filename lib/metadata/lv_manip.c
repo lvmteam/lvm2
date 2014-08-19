@@ -151,11 +151,6 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_RAID_N_CONTINUE] =			"n-continue",
 };
 
-const char *lv_type_name(const struct logical_volume *lv)
-{
-	return " ";
-}
-
 static int _lv_type_list_mirror(struct dm_pool *mem,
 				const struct logical_volume *lv,
 				struct dm_list *layout,

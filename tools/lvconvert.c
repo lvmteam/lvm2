@@ -2718,8 +2718,8 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		}
 		if (lv_is_thin_type(metadata_lv) ||
 		    lv_is_cache_type(metadata_lv)) {
-			log_error("Can't use %s LV %s for pool metadata.",
-				  lv_type_name(metadata_lv), display_lvname(metadata_lv));
+			log_error("Can't use thin or cache type LV %s for pool metadata.",
+				  display_lvname(metadata_lv));
 			return 0;
 		}
 
@@ -2822,16 +2822,15 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 		if (!lp->yes &&
 		    yes_no_prompt("Do you want to swap metadata of %s "
-				  "pool with %s volume %s? [y/n]: ",
+				  "pool with metadata volume %s? [y/n]: ",
 				  display_lvname(pool_lv),
-				  lv_type_name(metadata_lv),
 				  display_lvname(metadata_lv)) == 'n') {
 			log_error("Conversion aborted.");
 			return 0;
 		}
 	} else if (lv_is_thin_type(pool_lv)) {
-		log_error("Can't use %s logical volume %s for thin pool data.",
-			  lv_type_name(pool_lv), display_lvname(pool_lv));
+		log_error("Can't use thin type logical volume %s for thin pool data.",
+			  display_lvname(pool_lv));
 		return 0;
 	} else {
 		log_warn("WARNING: Converting logical volume %s%s%s to pool's data%s.",
@@ -3047,8 +3046,8 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 	}
 
 	if (lv_is_pool(origin) || lv_is_cache_type(origin)) {
-		log_error("Can't cache %s volume %s.",
-			  lv_type_name(origin), display_lvname(origin));
+		log_error("Can't cache pool or cache type volume %s.",
+			  display_lvname(origin));
 		return 0;
 	}
 
