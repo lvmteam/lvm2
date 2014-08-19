@@ -470,8 +470,9 @@ int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
 	 * device that is not combined with any other type. So just copy what
 	 * we have set for "layout" and use it for "type" too.
 	 */
-	if (dm_list_empty(*type))
-		str_list_dup(mem, *type, *layout);
+	if (dm_list_empty(*type) &&
+	    !str_list_dup(mem, *type, *layout))
+                goto_bad;
 
 	return 1;
 bad:
