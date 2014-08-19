@@ -33,9 +33,11 @@ static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume
 
 	dm_list_iterate_items(pvl, &all_pvs) {
 		if (!pvl->pv->dev) {
-			id_write_format(&pvl->pv->id, pvid_s, sizeof(pvid_s));
-			log_warn("WARNING: Device for PV %s already missing, skipping.",
-				 pvid_s);
+			if (!id_write_format(&pvl->pv->id, pvid_s, sizeof(pvid_s)))
+				stack;
+			else
+				log_warn("WARNING: Device for PV %s already missing, skipping.",
+					 pvid_s);
 			continue;
 		}
 		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL))
