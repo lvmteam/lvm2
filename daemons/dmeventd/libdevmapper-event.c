@@ -297,13 +297,21 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 		FD_ZERO(&fds);
 		FD_SET(fifos->server, &fds);
 		ret = select(fifos->server + 1, &fds, NULL, NULL, &tval);
-		if ((ret < 0) && (errno != EINTR)) {
+		if (ret < 0) {
+			if (errno == EINTR)
+				continue;
 			log_error("Unable to talk to event daemon");
 			return 0;
 		}
 		if (ret == 0)
 			break;
 		ret = read(fifos->server, drainbuf, sizeof(drainbuf));
+		if (ret < 0) {
+			if ((errno == EINTR) || (errno == EAGAIN))
+				continue;
+			log_error("Unable to talk to event daemon");
+			return 0;
+		}
 	}
 
 	while (bytes < size) {
