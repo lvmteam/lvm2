@@ -39,8 +39,9 @@ kill -9 $PVMOVE
 wait
 
 # Simulate reboot - forcibly remove related devices
+dmsetup table
 dmsetup remove $vg-$lv1
-dmsetup remove /dev/mapper/$vg-pvmove0*
+dmsetup remove "$DM_DEV_DIR/mapper/$vg-pvmove0*"
 
 # Check we really have pvmove volume
 check lv_attr_bit type $vg/pvmove0 "p"
