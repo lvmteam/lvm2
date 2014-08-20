@@ -1,5 +1,6 @@
 Version 2.02.110 -
 ==================================
+  Allow conversion of raid1 LV into a snapshot LV or snapshot origin LV.
   Cleanly error when creating RAID with stripe size < PAGE_SIZE.
   Print name of LV which on activation triggers delayed snapshot merge.
   Add lv_layout and lv_type LV reporting fields.
