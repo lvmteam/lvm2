@@ -602,8 +602,10 @@ static int _cfg_def_make_path(char *buf, size_t buf_size, int id, cfg_def_item_t
 	int parent_id = item->parent;
 	int count, n;
 
-	if (id == parent_id)
+	if (id == parent_id) {
+		buf[0] = '\0';
 		return 0;
+	}
 
 	count = _cfg_def_make_path(buf, buf_size, parent_id, cfg_def_get_item_p(parent_id), xlate);
 	if ((n = dm_snprintf(buf + count, buf_size - count, "%s%s%s%s",
