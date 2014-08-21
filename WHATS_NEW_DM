@@ -1,5 +1,6 @@
 Version 1.02.89 -
 =================================
+  Add extra check for matching transation_id after message submitting.
   Add dm_report_field_string_list_unsorted for str. list report without sorting.
   Support --deferred with dmsetup remove to defer removal of open devices.
   Update dm-ioctl.h to include DM_DEFERRED_REMOVE flag.
