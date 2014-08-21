@@ -10,7 +10,7 @@ dmsetup \(em low level logical volume management
 .I device_name
 .RB [ \-u
 .IR uuid ]
-.RB [ \-\-notable | \-\-table
+.RB [ \-n | \-\-notable | \-\-table
 .RI < table >|
 .RS
 .IR table_file ]
@@ -219,14 +219,14 @@ Specify the major number.
 .BR \-m | \-\-minor\ \fIminor
 Specify the minor number.
 .TP
-.BR \-n | \-\-noheadings
+.BR \-n | \-\-notable
+When creating a device, don't load any table.
+.TP
+.BR \-\-noheadings
 Suppress the headings line when using columnar output.
 .TP
 .B \-\-noopencount
 Tell the kernel not to supply the open reference count for the device.
-.TP
-.B \-\-notable
-When creating a device, don't load any table.
 .TP
 .B \-\-noudevrules
 Do not allow udev to manage nodes for devices in device-mapper directory.
@@ -295,7 +295,7 @@ Destroys the table in the inactive table slot for device_name.
 .I device_name
 .RB [ \-u
 .IR uuid ]
-.RB [ \-\-notable | \-\-table
+.RB [ \-n | \-\-notable | \-\-table
 .RI < \fItable >| table_file ]
 .RB [{ \-\-addnodeoncreate | \-\-addnodeonresume }]
 .RB [ \-\-readahead
