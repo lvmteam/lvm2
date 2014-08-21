@@ -740,9 +740,8 @@ static int lvchange_writemostly(struct logical_volume *lv)
 	if (arg_count(cmd, writebehind_ARG))
 		raid_seg->writebehind = arg_uint_value(cmd, writebehind_ARG, 0);
 
-	if (arg_count(cmd, writemostly_ARG)) {
+	if ((pv_count = arg_count(cmd, writemostly_ARG))) {
 		/* writemostly can be specified more than once */
-		pv_count = arg_count(cmd, writemostly_ARG);
 		pv_names = dm_pool_alloc(lv->vg->vgmem, sizeof(char *) * pv_count);
 		if (!pv_names)
 			return_0;
