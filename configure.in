@@ -271,7 +271,7 @@ AC_ARG_WITH(lvm1,
 AC_MSG_RESULT($LVM1)
 
 case "$LVM1" in
-  none|share) ;;
+  none|shared) ;;
   internal) AC_DEFINE([LVM1_INTERNAL], 1,
 		      [Define to 1 to include built-in support for LVM1 metadata.]) ;;
   *) AC_MSG_ERROR([--with-lvm1 parameter invalid]) ;;
