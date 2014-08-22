@@ -7136,7 +7136,7 @@ fi
 $as_echo "$LVM1" >&6; }
 
 case "$LVM1" in
-  none|share) ;;
+  none|shared) ;;
   internal)
 $as_echo "#define LVM1_INTERNAL 1" >>confdefs.h
  ;;
