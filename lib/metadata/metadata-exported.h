@@ -494,6 +494,7 @@ struct lvresize_params {
 	sign_t poolmetadatasign;
 	uint32_t poolmetadataextents;
 	int approx_alloc;
+	int extents_are_pes;	/* Is 'extents' counting PEs or LEs? */
 	percent_type_t percent;
 
 	enum {
