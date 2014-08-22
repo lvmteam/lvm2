@@ -243,6 +243,11 @@ static int _determine_snapshot_type(struct volume_group *vg,
 		return 0;
 	}
 
+	if (lv_is_cache(lvl->lv)) {
+		log_error("Snapshot of cache LV is not yet supported.");
+		return 0;
+	}
+
 	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
 		if (seg_is_thin(lp)) {
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
