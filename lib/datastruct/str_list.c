@@ -30,7 +30,7 @@ struct dm_list *str_list_create(struct dm_pool *mem)
 	return sl;
 }
 
-int str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, const char *str)
+static int _str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, const char *str, int as_first)
 {
 	struct dm_str_list *sln;
 
@@ -41,9 +41,22 @@ int str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, const ch
 		return_0;
 
 	sln->str = str;
-	dm_list_add(sll, &sln->list);
+	if (as_first)
+		dm_list_add_h(sll, &sln->list);
+	else
+		dm_list_add(sll, &sln->list);
 
 	return 1;
+}
+
+int str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, const char *str)
+{
+	return _str_list_add_no_dup_check(mem, sll, str, 0);
+}
+
+int str_list_add_h_no_dup_check(struct dm_pool *mem, struct dm_list *sll, const char *str)
+{
+	return _str_list_add_no_dup_check(mem, sll, str, 1);
 }
 
 int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
