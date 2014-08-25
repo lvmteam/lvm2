@@ -181,8 +181,8 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 
 #define _lv_layout_set prop_not_implemented_set
 #define _lv_layout_get prop_not_implemented_get
-#define _lv_type_set prop_not_implemented_set
-#define _lv_type_get prop_not_implemented_get
+#define _lv_role_set prop_not_implemented_set
+#define _lv_role_get prop_not_implemented_get
 #define _lv_initial_image_sync_set prop_not_implemented_set
 #define _lv_initial_image_sync_get prop_not_implemented_get
 #define _lv_image_synced_get prop_not_implemented_get

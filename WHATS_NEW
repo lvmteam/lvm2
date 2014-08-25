@@ -5,7 +5,7 @@ Version 2.02.110 -
   Allow conversion of raid1 LV into a snapshot LV or snapshot origin LV.
   Cleanly error when creating RAID with stripe size < PAGE_SIZE.
   Print name of LV which on activation triggers delayed snapshot merge.
-  Add lv_layout and lv_type LV reporting fields.
+  Add lv_layout and lv_role LV reporting fields.
   Properly display lvs lv_attr volume type and target type bit for cache origin.
   Fix pvcreate_check() to update cache correctly after signature wiping.
   Fix primary device lookup failure for partition when processing mpath filter.

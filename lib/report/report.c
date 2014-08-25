@@ -1324,9 +1324,9 @@ static int _lvlayout_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct dm_list *lv_layout;
-	struct dm_list *lv_type;
+	struct dm_list *lv_role;
 
-	if (!lv_layout_and_type(mem, lv, &lv_layout, &lv_type)) {
+	if (!lv_layout_and_role(mem, lv, &lv_layout, &lv_role)) {
 		log_error("Failed to display layout for LV %s/%s.", lv->vg->name, lv->name);
 		return 0;
 	}
@@ -1334,20 +1334,20 @@ static int _lvlayout_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_string_list(rh, field, lv_layout, private);
 }
 
-static int _lvtype_disp(struct dm_report *rh, struct dm_pool *mem,
+static int _lvrole_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct dm_list *lv_layout;
-	struct dm_list *lv_type;
+	struct dm_list *lv_role;
 
-	if (!lv_layout_and_type(mem, lv, &lv_layout, &lv_type)) {
-		log_error("Failed to display type for LV %s/%s.", lv->vg->name, lv->name);
+	if (!lv_layout_and_role(mem, lv, &lv_layout, &lv_role)) {
+		log_error("Failed to display role for LV %s/%s.", lv->vg->name, lv->name);
 		return 0;
 	}
 
-	return _field_set_string_list(rh, field, lv_type, private);
+	return _field_set_string_list(rh, field, lv_role, private);
 }
 
 static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,

@@ -151,27 +151,27 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_RAID_N_CONTINUE] =			"n-continue",
 };
 
-static int _lv_type_list_mirror(struct dm_pool *mem,
-				const struct logical_volume *lv,
-				struct dm_list *layout,
-				struct dm_list *type)
+static int _lv_layout_and_role_mirror(struct dm_pool *mem,
+				      const struct logical_volume *lv,
+				      struct dm_list *layout,
+				      struct dm_list *role)
 {
 	int top_level = 1;
 
 	if (lv_is_mirror_image(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_IMAGE]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_IMAGE]))
 			goto_bad;
 		top_level = 0;
 	} else if (lv_is_mirror_log(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_LOG]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_LOG]))
 			goto_bad;
 		if (lv_is_mirrored(lv) &&
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
 		top_level = 0;
 	} else if (lv->status & PVMOVE) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_PVMOVE]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MIRROR]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_PVMOVE]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
 	}
 
@@ -179,7 +179,7 @@ static int _lv_type_list_mirror(struct dm_pool *mem,
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
 	} else {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MIRROR]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
 	}
 
@@ -188,20 +188,20 @@ bad:
 	return 0;
 }
 
-static int _lv_type_list_raid(struct dm_pool *mem,
-			      const struct logical_volume *lv,
-			      struct dm_list *layout,
-			      struct dm_list *type)
+static int _lv_layout_and_role_raid(struct dm_pool *mem,
+				    const struct logical_volume *lv,
+				    struct dm_list *layout,
+				    struct dm_list *role)
 {
 	int top_level = 1;
 	const char *seg_name;
 
 	if (lv_is_raid_image(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_IMAGE]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_IMAGE]))
 			goto_bad;
 		top_level = 0;
 	} else if (lv_is_raid_metadata(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_METADATA]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_METADATA]))
 			goto_bad;
 		top_level = 0;
 	} else if (!strcmp(first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID1)) {
@@ -250,7 +250,7 @@ static int _lv_type_list_raid(struct dm_pool *mem,
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID]))
 			goto_bad;
 	} else {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_RAID]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_RAID]))
 			goto_bad;
 	}
 
@@ -259,41 +259,41 @@ bad:
 	return 0;
 }
 
-static int _lv_type_list_thin(struct dm_pool *mem,
-			      const struct logical_volume *lv,
-			      struct dm_list *layout,
-			      struct dm_list *type)
+static int _lv_layout_and_role_thin(struct dm_pool *mem,
+				    const struct logical_volume *lv,
+				    struct dm_list *layout,
+				    struct dm_list *role)
 {
 	int top_level = 1;
 	unsigned snap_count;
 	struct lv_segment *seg;
 
 	if (lv_is_thin_pool(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_THIN]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
 			goto_bad;
 	} else if (lv_is_thin_pool_metadata(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_METADATA]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_METADATA]))
 			goto_bad;
 		top_level = 0;
 	} else if (lv_is_thin_pool_data(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_DATA]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_DATA]))
 			goto_bad;
 		top_level = 0;
 	} else if (lv_is_thin_volume(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_THIN]))
 			goto_bad;
 		if (lv_is_thin_origin(lv, &snap_count) &&
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_ORIGIN]))
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_ORIGIN]))
 				goto_bad;
 		if (snap_count > 1 &&
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_MULTIPLE]))
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_MULTIPLE]))
 			goto_bad;
 		if ((seg = first_seg(lv)) && (seg->origin || seg->external_lv))
-			if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_SNAPSHOT]))
+			if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_SNAPSHOT]))
 				goto_bad;
 	}
 
@@ -301,7 +301,7 @@ static int _lv_type_list_thin(struct dm_pool *mem,
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_THIN]))
 			goto_bad;
 	} else {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_THIN]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_THIN]))
 			goto_bad;
 	}
 
@@ -310,26 +310,26 @@ bad:
 	return 0;
 }
 
-static int _lv_type_list_cache(struct dm_pool *mem,
-			       const struct logical_volume *lv,
-			       struct dm_list *layout,
-			       struct dm_list *type)
+static int _lv_layout_and_role_cache(struct dm_pool *mem,
+				     const struct logical_volume *lv,
+				     struct dm_list *layout,
+				     struct dm_list *role)
 {
 	int top_level = 1;
 
 	if (lv_is_cache_pool(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_CACHE]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_CACHE]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_POOL]))
 			goto_bad;
 	} else if (lv_is_cache_pool_metadata(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_METADATA]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_METADATA]))
 			goto_bad;
 		top_level = 0;
 	} else if (lv_is_cache_pool_data(lv)) {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_POOL]) ||
-		    !str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_DATA]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_POOL]) ||
+		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_DATA]))
 			goto_bad;
 		if (lv_is_cache(lv) &&
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
@@ -341,7 +341,7 @@ static int _lv_type_list_cache(struct dm_pool *mem,
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_CACHE]))
 			goto_bad;
 	} else {
-		if (!str_list_add_no_dup_check(mem, type, _lv_type_names[LV_TYPE_CACHE]))
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_CACHE]))
 			goto_bad;
 	}
 
@@ -350,79 +350,79 @@ bad:
 	return 0;
 }
 
-int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
-		       struct dm_list **layout, struct dm_list **type) {
+int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
+		       struct dm_list **layout, struct dm_list **role) {
 	int linear, striped, unknown;
 	struct lv_segment *seg;
 
-	*layout = *type = NULL;
+	*layout = *role = NULL;
 
 	if (!(*layout = str_list_create(mem))) {
 		log_error("LV layout list allocation failed");
 		goto bad;
 	}
 
-	if (!(*type = str_list_create(mem))) {
-		log_error("LV type list allocation failed");
+	if (!(*role = str_list_create(mem))) {
+		log_error("LV role list allocation failed");
 		goto bad;
 	}
 
 	/* Mirrors and related */
 	if (lv_is_mirror_type(lv) && !lv_is_raid(lv) &&
-	    !_lv_type_list_mirror(mem, lv, *layout, *type))
+	    !_lv_layout_and_role_mirror(mem, lv, *layout, *role))
 		goto_bad;
 
 	/* RAIDs and related */
 	if (lv_is_raid_type(lv) &&
-	    !_lv_type_list_raid(mem, lv, *layout, *type))
+	    !_lv_layout_and_role_raid(mem, lv, *layout, *role))
 		goto_bad;
 
 	/* Thins and related */
 	if (lv_is_thin_type(lv) &&
-	    !_lv_type_list_thin(mem, lv, *layout, *type))
+	    !_lv_layout_and_role_thin(mem, lv, *layout, *role))
 		goto_bad;
 
 	if (lv_is_external_origin(lv)) {
-		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]) ||
-		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_EXTERNAL]))
+		if (!str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_ORIGIN]) ||
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_EXTERNAL]))
 			goto_bad;
 		if (lv->external_count > 1 &&
-		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_MULTIPLE]))
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_MULTIPLE]))
 			goto_bad;
 		if (!lv_is_thin_volume(lv) &&
-		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_THIN]))
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_THIN]))
 			goto_bad;
 	}
 
 	/* Caches and related */
 	if (lv_is_cache_type(lv) &&
-	    !_lv_type_list_cache(mem, lv, *layout, *type))
+	    !_lv_layout_and_role_cache(mem, lv, *layout, *role))
 		goto_bad;
 
 	if (lv_is_cache_origin(lv)) {
-		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_CACHE]) ||
-		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]))
+		if (!str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_CACHE]) ||
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_ORIGIN]))
 			goto_bad;
 	}
 
 	/* Pool-specific */
 	if (lv_is_pool_metadata_spare(lv) &&
-	    (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_POOL]) ||
-	     !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_METADATA]) ||
-	     !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_SPARE])))
+	    (!str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_POOL]) ||
+	     !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_METADATA]) ||
+	     !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_SPARE])))
 		goto_bad;
 
 	/* Old-style origins/snapshots, virtual origins */
 	if (lv_is_origin(lv)) {
-		str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_ORIGIN]);
+		str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_ORIGIN]);
 		if (lv_is_virtual(lv) &&
 		    !str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_VIRTUAL]))
 			goto_bad;
 		if (lv->origin_count > 1 &&
-		    !str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_MULTIPLE]))
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_MULTIPLE]))
 			goto_bad;
 	} else if (lv_is_cow(lv)) {
-		if (!str_list_add_no_dup_check(mem, *type, _lv_type_names[LV_TYPE_SNAPSHOT]))
+		if (!str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_SNAPSHOT]))
 			goto_bad;
 	}
 
@@ -442,12 +442,12 @@ int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
 				 * This should not happen but if it does
 				 * we'll see that there's "unknown" layout
 				 * present. This means we forgot to detect
-				 * the type above and we need add proper
-				 * detection for such type!
+				 * the role above and we need add proper
+				 * detection for such role!
 				 */
 				unknown = 1;
 				log_error(INTERNAL_ERROR "Failed to properly detect "
-					  "layout and type for LV %s/%s",
+					  "layout and role for LV %s/%s",
 					  lv->vg->name, lv->name);
 			}
 		}
@@ -466,18 +466,18 @@ int lv_layout_and_type(struct dm_pool *mem, const struct logical_volume *lv,
 	}
 
 	/*
-	 * If type is not defined here yet, it means this is a pure top-level
+	 * If role is not defined here yet, it means this is a pure top-level
 	 * device that is not combined with any other type. So just copy what
-	 * we have set for "layout" and use it for "type" too.
+	 * we have set for "layout" and use it for "role" too.
 	 */
-	if (dm_list_empty(*type) &&
-	    !str_list_dup(mem, *type, *layout))
+	if (dm_list_empty(*role) &&
+	    !str_list_dup(mem, *role, *layout))
                 goto_bad;
 
 	return 1;
 bad:
-	if (*type)
-		dm_pool_free(mem, *type);
+	if (*role)
+		dm_pool_free(mem, *role);
 	if (*layout)
 		dm_pool_free(mem, *layout);
 	return 0;
