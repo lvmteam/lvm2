@@ -117,9 +117,8 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool,
 		 * The origin under the origin would become *_corig_corig
 		 * before renaming the origin above to *_corig.
 		 */
-		log_error(INTERNAL_ERROR
-			  "The origin, %s, cannot be of cache type",
-			  origin->name);
+		log_error("Creating a cache LV from an existing cache LV is"
+			  "not yet supported.");
 		return NULL;
 	}
 
