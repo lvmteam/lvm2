@@ -140,10 +140,11 @@ static int _field_set_value(struct dm_report_field *field, const void *data, con
 }
 
 static int _field_set_string_list(struct dm_report *rh, struct dm_report_field *field,
-				  const struct dm_list *list, void *private)
+				  const struct dm_list *list, void *private, int sorted)
 {
 	struct cmd_context *cmd = (struct cmd_context *) private;
-	return dm_report_field_string_list(rh, field, list, cmd->report_list_item_separator);
+	return sorted ? dm_report_field_string_list(rh, field, list, cmd->report_list_item_separator)
+		      : dm_report_field_string_list_unsorted(rh, field, list, cmd->report_list_item_separator);
 }
 
 /*
@@ -232,7 +233,7 @@ static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct dm_list *tagsl = (const struct dm_list *) data;
 
-	return _field_set_string_list(rh, field, tagsl, private);
+	return _field_set_string_list(rh, field, tagsl, private, 1);
 }
 
 static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -250,7 +251,7 @@ static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!(list_lv_modules(mem, lv, modules)))
 		return_0;
 
-	return _field_set_string_list(rh, field, modules, private);
+	return _field_set_string_list(rh, field, modules, private, 1);
 }
 
 static int _lvprofile_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1331,7 +1332,7 @@ static int _lvlayout_disp(struct dm_report *rh, struct dm_pool *mem,
 		return 0;
 	}
 
-	return _field_set_string_list(rh, field, lv_layout, private);
+	return _field_set_string_list(rh, field, lv_layout, private, 0);
 }
 
 static int _lvrole_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1347,7 +1348,7 @@ static int _lvrole_disp(struct dm_report *rh, struct dm_pool *mem,
 		return 0;
 	}
 
-	return _field_set_string_list(rh, field, lv_role, private);
+	return _field_set_string_list(rh, field, lv_role, private, 0);
 }
 
 static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,
