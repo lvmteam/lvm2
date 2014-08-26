@@ -2330,7 +2330,7 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 						  &dm->target_state, seg,
 						  laopts, dnode,
 						  extent_size * seg->len,
-						  &dm-> pvmove_mirror_count);
+						  &dm->pvmove_mirror_count);
 }
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,

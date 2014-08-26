@@ -5698,6 +5698,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	if (lv_is_used_thin_pool(lv) &&
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
 		return_0;
+
 	if ((lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) &&
 	    lv->vg->pool_metadata_spare_lv) {
 		/* When removing last pool, also remove the spare */
