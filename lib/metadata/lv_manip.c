@@ -5522,11 +5522,11 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (pool_lv && !pool_has_message(first_seg(pool_lv), lv, 0) &&
 	    !update_pool_lv(pool_lv, 1)) {
 		if (force < DONT_PROMPT_OVERRIDE) {
-			log_error("Failed to update thin pool %s.", pool_lv->name);
+			log_error("Failed to update pool %s.", display_lvname(pool_lv));
 			return 0;
 		}
-		log_warn("WARNING: Forced to ignoring failure of pool metadata update %s.",
-			 pool_lv->name);
+		log_print_unless_silent("Ignoring update failure of pool %s.",
+					display_lvname(pool_lv));
 		pool_lv = NULL; /* Do not retry */
 	}
 
@@ -5565,8 +5565,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* Release unneeded blocks in thin pool */
 	/* TODO: defer when multiple LVs relased at once */
 	if (pool_lv && !update_pool_lv(pool_lv, 1)) {
-		log_error("Failed to update thin pool %s.", pool_lv->name);
-		return 0;
+		if (force < DONT_PROMPT_OVERRIDE) {
+			log_error("Failed to update pool %s.", display_lvname(pool_lv));
+			return 0;
+		}
+		log_print_unless_silent("Ignoring update failure of pool %s.",
+					display_lvname(pool_lv));
 	}
 
 	backup(vg);

@@ -1,5 +1,6 @@
 Version 2.02.110 -
 ==================================
+  Support lv/vgremove -ff to remove thin vols from broken/inactive thin pools.
   Fix typo breaking configure --with-lvm1=shared.
   Modify lvresize code to handle raid/mirrors and physical extents.
   Allow conversion of raid1 LV into a snapshot LV or snapshot origin LV.
