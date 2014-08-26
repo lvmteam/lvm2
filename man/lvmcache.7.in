@@ -214,16 +214,27 @@ pool sub-LVs redundant.
 # lvconvert \-\-type cache \-\-cachepool vg/cache1 vg/lv1
 .fi
 
-.SS Writethough caching
+.SS Cache mode
 
 \&
 
-Writethrough caching ensures that any data written will be stored both in
-the cache pool LV and on the origin LV.  The loss of a device associated
-with the cache pool LV in this case would not mean the loss of any data.
-When combining the cache data LV and the cache metadata LV to form the
-cache pool LV, properties of the cache can be specified - in this case,
-\fIwritethrough\fP vs. \fIwriteback\fP.
+The default cache mode is "writethrough".  Writethrough ensures that any
+data written will be stored both in the cache pool LV and on the origin
+LV.  The loss of a device associated with the cache pool LV in this case
+would not mean the loss of any data.
+
+A second cache mode is "writeback".  Writeback delays writing data blocks
+from the cache pool back to the origin LV.  This mode will increase
+performance, but the loss of a device associated with the cache pool LV
+can result in lost data.
+
+The cache mode can be specified with the --cachemode option when a cache
+pool LV is created.
+
+.BR lvm.conf (5)
+.B cache_pool_cachemode
+.br
+defines the default cache mode.
 
 .nf
 0. Create an origin LV we wish to cache (yours may already exist)
@@ -263,6 +274,30 @@ the same VG.
 .B lvcreate -n CacheDataLV -L CacheSize VG
 .br
 .B lvconvert --type cache\-pool VG/CacheDataLV
+
+.SS Create a new cache LV without an existing origin LV
+
+\&
+
+A cache LV can be created using an existing cache pool without an existing
+origin LV.  A new origin LV is created and linked to the cache pool in a
+single step.
+
+.B lvcreate \-\-type cache \-L LargeSize \-n CacheLV
+.RS
+.B \-\-cachepool VG/CachePoolLV SlowPVs
+.RE
+
+
+.SS Single step cache pool LV creation
+
+\&
+
+A cache pool LV can be created with a single lvcreate command, rather than
+using lvconvert on existing LVs.  This one command creates a cache data
+LV, a cache metadata LV, and combines the two into a cache pool LV.
+
+.B lvcreate \-\-type cache\-pool \-L CacheSize \-n CachePoolLV VG FastPVs
 
 
 .SH SEE ALSO
