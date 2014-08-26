@@ -1,9 +1,10 @@
-Version 2.02.110 -
-==================================
+Version 2.02.110 - 26th August 2014
+===================================
   Fix manipulation with thin-pools which are excluded via volume_list.
   Support lv/vgremove -ff to remove thin vols from broken/inactive thin pools.
   Fix typo breaking configure --with-lvm1=shared.
   Modify lvresize code to handle raid/mirrors and physical extents.
+  Don't allow pvcreate to proceed if scanning or filtering fails.
   Cleanly error when creating RAID with stripe size < PAGE_SIZE.
   Print name of LV which on activation triggers delayed snapshot merge.
   Add lv_layout and lv_role LV reporting fields.

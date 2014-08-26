@@ -2217,7 +2217,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		if (!vg_commit(lv->vg))
 			return_0;
 		r = 1;
-		log_print_unless_silent("Merging of snapshot %s will start "
+		log_print_unless_silent("Merging of snapshot %s will occur on "
 					"next activation of %s.",
 					display_lvname(lv), display_lvname(origin));
 		goto out;

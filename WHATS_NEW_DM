@@ -1,5 +1,6 @@
-Version 1.02.89 -
-=================================
+Version 1.02.89 - 26th August 2014
+==================================
+  Improve libdevmapper-event select() error handling.
   Add extra check for matching transation_id after message submitting.
   Add dm_report_field_string_list_unsorted for str. list report without sorting.
   Support --deferred with dmsetup remove to defer removal of open devices.

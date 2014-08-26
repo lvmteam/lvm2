@@ -6570,8 +6570,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			 *        volumes as well.  Avoiding doing that now
 			 *        only to minimize the change.
 			 */
-			log_error("The extent size in volume group %s is too"
-				  " small to support striped RAID volumes.",
+			log_error("The extent size in volume group %s is too "
+				  "small to support striped RAID volumes.",
 				  vg->name);
 			return NULL;
 		}
