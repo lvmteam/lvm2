@@ -99,7 +99,7 @@ not lvchange --resync --addtag foo $vg/$lv1
 # Play with tags and activation
 #
 TAG=$(uname -n)
-aux lvmconf 'activation/volume_list = [ "$vg/$lv2", "@mytag", "$vg2" ]'
+aux lvmconf "activation/volume_list = [ \"$vg/$lv2\", \"@mytag\" ]"
 
 lvchange -ay $vg/$lv1
 check inactive $vg $lv1
@@ -123,9 +123,11 @@ not lvcreate -Zy -L10 -n $lv3 $vg2
 lvcreate -Zn -L10 -n $lv3 $vg2
 check inactive $vg2 $lv3
 
-aux lvmconf 'activation/volume_list = [ "$vg2" ]'
+aux lvmconf "activation/volume_list = [ \"$vg2\" ]"
 vgchange -an $vg
 vgchange -ay $vg $vg2
 lvs -a -o+lv_active $vg $vg2
+
+aux lvmconf "activation/volume_list = [ \"$vg\", \"$vg2\" ]"
 
 vgremove -ff $vg $vg2
