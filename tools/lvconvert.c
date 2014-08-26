@@ -2041,7 +2041,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 {
 	struct logical_volume *org;
 
-	if ((lv->status & MIRRORED) && !lv_is_raid(lv)) {
+	if (lv->status & MIRRORED) {
 		log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 		return 0;
 	}
@@ -2066,9 +2066,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	if (!cow_has_min_chunks(lv->vg, lv->le_count, lp->chunk_size))
 		return_0;
 
-	if ((org->status & (LOCKED|PVMOVE)) ||
-	    ((org->status & MIRRORED) && !lv_is_raid(org)) ||
-	    lv_is_cow(org)) {
+	if (org->status & (LOCKED|PVMOVE|MIRRORED) || lv_is_cow(org)) {
 		log_error("Unable to convert an LV into a snapshot of a %s LV.",
 			  org->status & LOCKED ? "locked" :
 			  org->status & PVMOVE ? "pvmove" :
