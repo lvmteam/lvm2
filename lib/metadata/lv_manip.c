@@ -6816,15 +6816,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (lv_is_active_locally(lvl->lv) &&
-		    !pool_below_threshold(first_seg(lvl->lv))) {
-			log_error("Cannot create thin volume. Pool \"%s/%s\" "
-				  "is filled over the autoextend threshold.",
-				  lvl->lv->vg->name, lvl->lv->name);
-			return NULL;
-		}
-
-		if ((lv_is_active(lvl->lv) || is_change_activating(lp->activate)) &&
+		if ((pool_is_active(lvl->lv) || is_change_activating(lp->activate)) &&
 		    !update_pool_lv(lvl->lv, 1))
 			return_NULL;
 

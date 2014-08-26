@@ -307,9 +307,36 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 	return max_id;
 }
 
+static int _check_pool_create(const struct logical_volume *lv)
+{
+	const struct lv_thin_message *lmsg;
+	struct lvinfo info;
+
+	dm_list_iterate_items(lmsg, &first_seg(lv)->thin_messages) {
+		if (lmsg->type != DM_THIN_MESSAGE_CREATE_THIN)
+			continue;
+		/* When creating new thin LV, check for size would be needed */
+		if (!lv_info(lv->vg->cmd, lv, 1, &info, 0, 0) ||
+		    !info.exists) {
+			log_error("Pool %s needs to be locally active for threshold check.",
+				  display_lvname(lv));
+			return 0;
+		}
+		if (!pool_below_threshold(first_seg(lv))) {
+			log_error("Free space in pool %s is above threshold, new volumes are not allowed.",
+				  display_lvname(lv));
+			return 0;
+		}
+		break;
+	}
+
+	return 1;
+}
+
 int update_pool_lv(struct logical_volume *lv, int activate)
 {
 	int monitored;
+	int ret = 1;
 
 	if (!lv_is_thin_pool(lv)) {
 		log_error(INTERNAL_ERROR "Updated LV %s is not pool.", lv->name);
@@ -324,10 +351,24 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 		if (!lv_is_active(lv)) {
 			monitored = dmeventd_monitor_mode();
 			init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
-			if (!activate_lv_excl(lv->vg->cmd, lv))
+			if (!activate_lv_excl(lv->vg->cmd, lv)) {
+				init_dmeventd_monitor(monitored);
 				return_0;
-			if (!deactivate_lv(lv->vg->cmd, lv))
+			}
+			if (!lv_is_active(lv)) {
+				init_dmeventd_monitor(monitored);
+				log_error("Cannot activate thin pool %s, perhaps skipped in lvm.conf volume_list?",
+					  display_lvname(lv));
+				return 0;
+			}
+
+			if (!(ret = _check_pool_create(lv)))
+				stack;
+
+			if (!deactivate_lv(lv->vg->cmd, lv)) {
+				init_dmeventd_monitor(monitored);
 				return_0;
+			}
 			init_dmeventd_monitor(monitored);
 		}
 		/*
@@ -337,7 +378,8 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 		else if (!resume_lv_origin(lv->vg->cmd, lv)) {
 			log_error("Failed to resume %s.", lv->name);
 			return 0;
-		}
+		} else if (!(ret = _check_pool_create(lv)))
+			stack;
 	}
 
 	dm_list_init(&(first_seg(lv)->thin_messages));
@@ -345,7 +387,7 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
-	return 1;
+	return ret;
 }
 
 int update_thin_pool_params(struct volume_group *vg,
