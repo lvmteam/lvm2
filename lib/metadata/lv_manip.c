@@ -3670,6 +3670,8 @@ int lv_extend(struct logical_volume *lv,
 	int log_count = 0;
 	struct alloc_handle *ah;
 	uint32_t sub_lv_count;
+	uint32_t old_extents;
+	uint32_t new_extents;	/* Total logical size after extension. */
 
 	log_very_verbose("Adding segment of type %s to LV %s.", segtype->name, lv->name);
 
@@ -3695,9 +3697,9 @@ int lv_extend(struct logical_volume *lv,
 				    allocatable_pvs, alloc, approx_alloc, NULL)))
 		return_0;
 
-	extents = ah->new_extents;
+	new_extents = ah->new_extents;
 	if (segtype_is_raid(segtype))
-		extents -= ah->log_len * ah->area_multiple;
+		new_extents -= ah->log_len * ah->area_multiple;
 
 	if (segtype_is_thin_pool(segtype) || segtype_is_cache_pool(segtype)) {
 		if (lv->le_count) {
@@ -3723,6 +3725,8 @@ int lv_extend(struct logical_volume *lv,
 		else
 			sub_lv_count = mirrors;
 
+		old_extents = lv->le_count;
+
 		if (!lv->le_count &&
 		    !(r = _lv_insert_empty_sublvs(lv, segtype, stripe_size,
 						  region_size, sub_lv_count))) {
@@ -3730,7 +3734,7 @@ int lv_extend(struct logical_volume *lv,
 			goto out;
 		}
 
-		if (!(r = _lv_extend_layered_lv(ah, lv, extents - lv->le_count, 0,
+		if (!(r = _lv_extend_layered_lv(ah, lv, new_extents - lv->le_count, 0,
 						stripes, stripe_size)))
 			goto_out;
 
@@ -3739,7 +3743,7 @@ int lv_extend(struct logical_volume *lv,
 		 * resync of the extension if the LV is currently in-sync
 		 * and the LV has the LV_NOTSYNCED flag set.
 		 */
-		if ((lv->le_count != extents) &&
+		if (old_extents &&
 		    segtype_is_mirrored(segtype) &&
 		    (lv->status & LV_NOTSYNCED)) {
 			dm_percent_t sync_percent = DM_PERCENT_INVALID;
