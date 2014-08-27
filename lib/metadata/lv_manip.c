@@ -1655,8 +1655,10 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		ah->region_size = 0;
 		ah->mirror_logs_separate =
 			find_config_tree_bool(cmd, allocation_cache_pool_metadata_require_separate_pvs_CFG, NULL);
-		if (!ah->mirror_logs_separate)
+		if (!ah->mirror_logs_separate) {
 			ah->alloc_and_split_meta = 1;
+			total_extents += ah->log_len;
+		}
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
