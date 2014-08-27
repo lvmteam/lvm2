@@ -1,5 +1,6 @@
 Version 2.02.111 - 
 ===================================
+  Fix regression in cache pool allocation (2.02.110).
 
 Version 2.02.110 - 26th August 2014
 ===================================
