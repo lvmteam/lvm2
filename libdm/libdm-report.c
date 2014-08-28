@@ -1721,7 +1721,7 @@ static const char *_tok_value_number(const char *s,
 	int is_float = 0;
 
 	*begin = s;
-	while (*s && ((!is_float && *s=='.' && (is_float=1)) || isdigit(*s)))
+	while ((!is_float && (*s == '.') && ((is_float = 1))) || isdigit(*s))
 		s++;
 	*end = s;
 
