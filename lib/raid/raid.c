@@ -335,7 +335,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 		uint32_t min;
 		unsigned raid_feature;
 		const char *feature;
-	} const _features[] = {
+	} _features[] = {
 		{ 1, 3, RAID_FEATURE_RAID10, "raid10" },
 	};
 

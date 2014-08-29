@@ -642,7 +642,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 		uint32_t min;
 		unsigned thin_feature;
 		const char *feature;
-	} const _features[] = {
+	} _features[] = {
 		{ 1, 1, THIN_FEATURE_DISCARDS, "discards" },
 		{ 1, 1, THIN_FEATURE_EXTERNAL_ORIGIN, "external_origin" },
 		{ 1, 4, THIN_FEATURE_BLOCK_SIZE, "block_size" },

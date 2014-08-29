@@ -54,11 +54,11 @@ enum {
 
 static const uint64_t _zero64 = UINT64_C(0);
 static const uint64_t _one64 = UINT64_C(1);
-static const char const _str_zero[] = "0";
-static const char const _str_one[] = "1";
-static const char const _str_no[] = "no";
-static const char const _str_yes[] = "yes";
-static const char const _str_unknown[] = "unknown";
+static const char _str_zero[] = "0";
+static const char _str_one[] = "1";
+static const char _str_no[] = "no";
+static const char _str_yes[] = "yes";
+static const char _str_unknown[] = "unknown";
 
 /*
  * 32 bit signed is casted to 64 bit unsigned in dm_report_field internally!
