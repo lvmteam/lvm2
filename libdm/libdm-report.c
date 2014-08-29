@@ -2122,7 +2122,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	}
 
 	/* Store information whether [] or {} was used. */
-	if ((end_op_flag_expected == SEL_LIST_LE))
+	if (end_op_flag_expected == SEL_LIST_LE)
 		ssl->type |= SEL_LIST_LS;
 	else
 		ssl->type |= SEL_LIST_SUBSET_LS;

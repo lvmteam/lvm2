@@ -794,7 +794,7 @@ static int lvchange_writemostly(struct logical_volume *lv)
 				 * We don't bother checking the metadata area,
 				 * since writemostly only affects the data areas.
 				 */
-				if ((seg_type(raid_seg, s) == AREA_UNASSIGNED))
+				if (seg_type(raid_seg, s) == AREA_UNASSIGNED)
 					continue;
 
 				if (lv_is_on_pv(seg_lv(raid_seg, s), pvl->pv)) {
