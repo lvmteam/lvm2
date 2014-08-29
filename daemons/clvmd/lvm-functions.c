@@ -725,7 +725,7 @@ void do_lock_vg(unsigned char command, unsigned char lock_flags, char *resource)
 static int get_initial_state(struct dm_hash_table *excl_uuid)
 {
 	int lock_mode;
-	char lv[64], vg[64], flags[25], vg_flags[25];
+	char lv[65], vg[65], flags[26], vg_flags[26]; /* with space for '\0' */
 	char uuid[65];
 	char line[255];
 	char *lvs_cmd;
