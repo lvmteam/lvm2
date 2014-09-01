@@ -1,5 +1,5 @@
-Version 1.02.90 - 
-==================================
+Version 1.02.90 - 1st September 2014
+====================================
   Restore proper buffer size for parsing mountinfo line (1.02.89)
 
 Version 1.02.89 - 26th August 2014

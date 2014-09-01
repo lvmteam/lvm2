@@ -1,5 +1,5 @@
-Version 2.02.111 - 
-===================================
+Version 2.02.111 - 1st September 2014
+=====================================
   Pass properly sized char buffers for sscanf when initializing clvmd.
   Reinstate nosync logic when extending mirror. (2.02.110)
   Fix total area extent calculation when allocating cache pool. (2.02.110)
