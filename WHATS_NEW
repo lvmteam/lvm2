@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Make python bindings usable with python3 (and compatible with 2.6 & 2.7).
   Add lvmconfig -l|--list as shortcut for lvmconfig --type list --withsummary.
   Add lvmconfig --type list to display plain list of configuration settings.
   Introduce lvmconfig as the preferred form of 'lvm dumpconfig'.

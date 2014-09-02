@@ -18,6 +18,10 @@ import string
 import lvm
 import os
 import itertools
+import sys
+
+if sys.version_info[0] > 2:
+    long = int
 
 # Set of basic unit tests for the python bindings.
 #
@@ -56,18 +60,6 @@ def _get_allowed_devices():
 	return rc
 
 
-def compare_pv(right, left):
-	r_name = right.getName()
-	l_name = left.getName()
-
-	if r_name > l_name:
-		return 1
-	elif r_name == l_name:
-		return 0
-	else:
-		return -1
-
-
 class AllowedPVS(object):
 	"""
 	We are only allowed to muck with certain PV, filter to only
@@ -92,7 +84,7 @@ class AllowedPVS(object):
 					rc.append(p)
 
 		#Sort them consistently
-		rc.sort(compare_pv)
+		rc.sort(key=lambda x: x.getName())
 		return rc
 
 	def __exit__(self, t_type, value, traceback):

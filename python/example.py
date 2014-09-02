@@ -27,7 +27,7 @@ import lvm
 
 #Dump information about PV
 def print_pv(pv):
-    print 'PV name: ', pv.getName(), ' ID: ', pv.getUuid(), 'Size: ', pv.getSize()
+    print('PV name: ', pv.getName(), ' ID: ', pv.getUuid(), 'Size: ', pv.getSize())
 
 
 #Dump some information about a specific volume group
@@ -35,7 +35,7 @@ def print_vg(vg_name):
     #Open read only
     vg = lvm.vgOpen(vg_name, 'r')
 
-    print 'Volume group:', vg_name, 'Size: ', vg.getSize()
+    print('Volume group:', vg_name, 'Size: ', vg.getSize())
 
     #Retrieve a list of Physical volumes for this volume group
     pv_list = vg.listPVs()
@@ -48,9 +48,9 @@ def print_vg(vg_name):
     lv_list = vg.listLVs()
     if len(lv_list):
         for l in lv_list:
-            print 'LV name: ', l.getName(), ' ID: ', l.getUuid()
+            print('LV name: ', l.getName(), ' ID: ', l.getUuid())
     else:
-        print 'No logical volumes present!'
+        print('No logical volumes present!')
 
     vg.close()
 
@@ -75,14 +75,14 @@ def find_vg_with_free_space():
 def create_delete_logical_volume():
     vg_name = find_vg_with_free_space()
 
-    print 'Using volume group ', vg_name, ' for example'
+    print('Using volume group ', vg_name, ' for example')
 
     if vg_name:
         vg = lvm.vgOpen(vg_name, 'w')
         lv = vg.createLvLinear('python_lvm_ok_to_delete', vg.getFreeSize())
 
         if lv:
-            print 'New lv, id= ', lv.getUuid()
+            print('New lv, id= ', lv.getUuid())
 
             #Create a tag
             lv.addTag('Demo_tag')
@@ -97,16 +97,16 @@ def create_delete_logical_volume():
 
             #Try to rename
             lv.rename("python_lvm_renamed")
-            print 'LV name= ', lv.getName()
+            print('LV name= ', lv.getName())
             lv.remove()
 
         vg.close()
     else:
-        print 'No free space available to create demo lv!'
+        print('No free space available to create demo lv!')
 
 if __name__ == '__main__':
     #What version
-    print 'lvm version=', lvm.getVersion()
+    print('lvm version=', lvm.getVersion())
 
     #Get a list of volume group names
     vg_names = lvm.listVgNames()
