@@ -15,6 +15,9 @@
 #include "lib.h"
 #include "filter.h"
 #include "activate.h"
+#ifdef UDEV_SYNC_SUPPORT
+#include <libudev.h>
+#endif
 
 #ifdef __linux__
 
@@ -141,7 +144,33 @@ static int _get_parent_mpath(const char *dir, char *name, int max_size)
 	return r;
 }
 
-static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
+#ifdef UDEV_SYNC_SUPPORT
+static int _udev_dev_is_mpath(struct device *dev)
+{
+	const char *value;
+	struct dev_ext *ext;
+
+	if (!(ext = dev_ext_get(dev)))
+		return_0;
+
+	value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_FS_TYPE");
+	if (value && !strcmp(value, "mpath_member"))
+		return 1;
+
+	value = udev_device_get_property_value((struct udev_device *)ext->handle, "DM_MULTIPATH_DEVICE_PATH");
+	if (value && !strcmp(value, "1"))
+		return 1;
+
+	return 0;
+}
+#else
+static int _udev_dev_is_mpath(struct device *dev)
+{
+	return 0;
+}
+#endif
+
+static int _native_dev_is_mpath(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
 	const char *part_name, *name;
@@ -200,10 +229,25 @@ static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
 	return lvm_dm_prefix_check(major, minor, MPATH_PREFIX);
 }
 
+static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
+{
+	if (dev->ext.src == DEV_EXT_NONE)
+		return _native_dev_is_mpath(f, dev);
+
+	if (dev->ext.src == DEV_EXT_UDEV)
+		return _udev_dev_is_mpath(dev);
+
+	log_error(INTERNAL_ERROR "Missing hook for mpath recognition "
+		  "using external device info source %s", dev_ext_name(dev));
+
+	return 0;
+}
+
 static int _ignore_mpath(struct dev_filter *f, struct device *dev)
 {
 	if (_dev_is_mpath(f, dev) == 1) {
-		log_debug_devs("%s: Skipping mpath component device", dev_name(dev));
+		log_debug_devs("%s: Skipping mpath component device [%s:%p]",
+				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
 		return 0;
 	}
 
