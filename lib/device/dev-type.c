@@ -25,6 +25,10 @@
 #include <blkid.h>
 #endif
 
+#ifdef UDEV_SYNC_SUPPORT
+#include <libudev.h>
+#endif
+
 #include "device-types.h"
 
 struct dev_types *create_dev_types(const char *proc_dir,
@@ -324,8 +328,34 @@ static int _has_partition_table(struct device *dev)
 	return ret;
 }
 
-int dev_is_partitioned(struct dev_types *dt, struct device *dev)
+#ifdef UDEV_SYNC_SUPPORT
+static int _udev_dev_is_partitioned(struct device *dev)
 {
+	const char *value;
+	struct dev_ext *ext;
+
+	if (!(ext = dev_ext_get(dev)))
+		return_0;
+
+	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_PART_TABLE_TYPE")))
+		return 0;
+
+	if ((value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_PART_ENTRY_DISK")))
+		return 0;
+
+	return 1;
+}
+#else
+static int _udev_dev_is_partitioned(struct device *dev)
+{
+	return 0;
+}
+#endif
+
+static int _native_dev_is_partitioned(struct dev_types *dt, struct device *dev)
+{
+	int r;
+
 	if (!_is_partitionable(dt, dev))
 		return 0;
 
@@ -333,7 +363,32 @@ int dev_is_partitioned(struct dev_types *dt, struct device *dev)
 	if (MAJOR(dev->dev) == dt->dasd_major)
 		return 1;
 
-	return _has_partition_table(dev);
+	if (!dev_open_readonly_quiet(dev)) {
+		log_debug_devs("%s: failed to open device, considering device "
+			       "is partitioned", dev_name(dev));
+		return 1;
+	}
+
+	r = _has_partition_table(dev);
+
+	if (!dev_close(dev))
+		stack;
+
+	return r;
+}
+
+int dev_is_partitioned(struct dev_types *dt, struct device *dev)
+{
+	if (dev->ext.src == DEV_EXT_NONE)
+		return _native_dev_is_partitioned(dt, dev);
+
+	if (dev->ext.src == DEV_EXT_UDEV)
+		return _udev_dev_is_partitioned(dev);
+
+	log_error(INTERNAL_ERROR "Missing hook for partition table recognition "
+		  "using external device info source %s", dev_ext_name(dev));
+
+	return 0;
 }
 
 /*

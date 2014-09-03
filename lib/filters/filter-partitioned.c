@@ -15,28 +15,21 @@
 
 #include "lib.h"
 #include "filter.h"
+#ifdef UDEV_SYNC_SUPPORT
+#include <libudev.h>
+#endif
 
 static int _passes_partitioned_filter(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
-	int ret = 0;
 
-	if (!dev_open_readonly_quiet(dev)) {
-		log_debug_devs("%s: Skipping: open failed", dev_name(dev));
+	if (dev_is_partitioned(dt, dev)) {
+		log_debug_devs("%s: Skipping: Partition table signature found [%s:%p]",
+			       dev_name(dev), dev_ext_name(dev), dev->ext.handle);
 		return 0;
 	}
 
-	if (dev_is_partitioned(dt, dev)) {
-		log_debug_devs("%s: Skipping: Partition table signature found",
-			       dev_name(dev));
-		goto out;
-	}
-
-	ret = 1;
-out:
-	if (!dev_close(dev))
-		stack;
-	return ret;
+	return 1;
 }
 
 static void _partitioned_filter_destroy(struct dev_filter *f)
