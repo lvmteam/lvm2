@@ -160,6 +160,7 @@ ifeq ("@HAVE_PIE@", "yes")
 ifeq ("@HAVE_FULL_RELRO@", "yes")
   EXTRA_EXEC_CFLAGS += -fPIE -DPIE
   EXTRA_EXEC_LDFLAGS += -Wl,-z,relro,-z,now -pie
+  CLDFLAGS += -Wl,-z,relro
 endif
 endif
 endif
