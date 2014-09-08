@@ -3963,13 +3963,13 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (update_mda && !archive(vg))
-		return 0;
+		return_0;
 
 	/* rename sub LVs */
 	lv_names.old = lv->name;
 	lv_names.new = new_name;
 	if (!for_each_sub_lv(lv, _rename_cb, (void *) &lv_names))
-		return 0;
+		return_0;
 
 	/* rename main LV */
 	if (!(lv->name = dm_pool_strdup(cmd->mem, new_name))) {
