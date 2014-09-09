@@ -3966,12 +3966,16 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("Failed to allocate space for new name.");
 		return 0;
 	}
+
 	/* rename sub LVs */
 	if (!for_each_sub_lv(lv, _rename_cb, (void *) &lv_names))
 		return_0;
 
 	/* rename main LV */
 	lv->name = lv_names.new;
+
+	if (lv_is_cow(lv))
+		lv = origin_from_cow(lv);
 
 	if (update_mda && !lv_update_and_reload(lv))
 		return_0;
