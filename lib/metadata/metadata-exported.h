@@ -700,6 +700,10 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		     const char *new_name, int update_mda);
 
+/* Updates and reloads metadata for given lv */
+int lv_update_and_reload(struct logical_volume *lv);
+int lv_update_and_reload_origin(struct logical_volume *lv);
+
 uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 			   uint32_t extent_size);
 

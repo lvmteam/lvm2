@@ -1,5 +1,7 @@
 Version 2.02.112 - 
 =====================================
+  Introduce common code to modify metadate and reload updated LV.
+  Fix rename of active snapshot volume in cluster.
   Make sure shared libraries are built with RELRO option.
 
 Version 2.02.111 - 1st September 2014

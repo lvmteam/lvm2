@@ -3940,10 +3940,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		     const char *new_name, int update_mda)
 {
 	struct volume_group *vg = lv->vg;
-	struct lv_names lv_names;
-	DM_LIST_INIT(lvs_changed);
-	struct lv_list lvl, lvl2, *lvlp;
-	int r = 0;
+	struct lv_names lv_names = { .old = lv->name };
 
 	/* rename is not allowed on sub LVs */
 	if (!lv_is_visible(lv)) {
@@ -3965,51 +3962,21 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	if (update_mda && !archive(vg))
 		return_0;
 
+	if (!(lv_names.new = dm_pool_strdup(cmd->mem, new_name))) {
+		log_error("Failed to allocate space for new name.");
+		return 0;
+	}
 	/* rename sub LVs */
-	lv_names.old = lv->name;
-	lv_names.new = new_name;
 	if (!for_each_sub_lv(lv, _rename_cb, (void *) &lv_names))
 		return_0;
 
 	/* rename main LV */
-	if (!(lv->name = dm_pool_strdup(cmd->mem, new_name))) {
-		log_error("Failed to allocate space for new name");
-		return 0;
-	}
+	lv->name = lv_names.new;
 
-	if (!update_mda)
-		return 1;
+	if (update_mda && !lv_update_and_reload(lv))
+		return_0;
 
-	lvl.lv = lv;
-	dm_list_add(&lvs_changed, &lvl.list);
-
-	/* rename active virtual origin too */
-	if (lv_is_cow(lv) && lv_is_virtual_origin(lvl2.lv = origin_from_cow(lv)))
-		dm_list_add_h(&lvs_changed, &lvl2.list);
-
-	log_verbose("Writing out updated volume group");
-	if (!vg_write(vg))
-		return 0;
-
-	if (!suspend_lvs(cmd, &lvs_changed, vg))
-		goto_out;
-
-	if (!(r = vg_commit(vg)))
-		stack;
-
-	/*
-	 * FIXME: resume LVs in reverse order to prevent memory
-	 * lock imbalance when resuming virtual snapshot origin
-	 * (resume of snapshot resumes origin too)
-	 */
-	dm_list_iterate_back_items(lvlp, &lvs_changed)
-		if (!resume_lv(cmd, lvlp->lv)) {
-			r = 0;
-			stack;
-		}
-out:
-	backup(vg);
-	return r;
+	return 1;
 }
 
 /*
@@ -5737,6 +5704,51 @@ no_remove:
 	log_error("Logical volume \"%s\" not removed.", lv->name);
 
 	return 0;
+}
+
+static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
+{
+	struct volume_group *vg = lv->vg;
+	int do_backup = 0, r = 0;
+
+	log_very_verbose("Updating logical volume %s on disk(s).",
+			 display_lvname(lv));
+
+	if (!vg_write(vg))
+		return_0;
+
+	if (!(origin_only ? suspend_lv_origin(vg->cmd, lv) : suspend_lv(vg->cmd, lv))) {
+		log_error("Failed to lock logical volume %s.",
+			  display_lvname(lv));
+		vg_revert(vg);
+	} else if (!(r = vg_commit(vg)))
+		stack; /* !vg_commit() has implict vg_revert() */
+	else
+		do_backup = 1;
+
+	log_very_verbose("Updating logical volume %s in kernel.",
+			 display_lvname(lv));
+
+	if (!(origin_only ? resume_lv_origin(vg->cmd, lv) : resume_lv(vg->cmd, lv))) {
+		log_error("Problem reactivating logical volume %s.",
+			  display_lvname(lv));
+		r = 0;
+	}
+
+	if (do_backup)
+		backup(vg);
+
+	return r;
+}
+
+int lv_update_and_reload(struct logical_volume *lv)
+{
+        return _lv_update_and_reload(lv, 0);
+}
+
+int lv_update_and_reload_origin(struct logical_volume *lv)
+{
+        return _lv_update_and_reload(lv, 1);
 }
 
 /*
