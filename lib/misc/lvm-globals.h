@@ -24,6 +24,7 @@ void init_verbose(int level);
 void init_silent(int silent);
 void init_test(int level);
 void init_md_filtering(int level);
+void init_fwraid_filtering(int level);
 void init_pvmove(int level);
 void init_full_scan_done(int level);
 void init_external_device_info_source(unsigned src);
@@ -54,6 +55,7 @@ void set_sysfs_dir_path(const char *path);
 
 int test_mode(void);
 int md_filtering(void);
+int fwraid_filtering(void);
 int pvmove_mode(void);
 int full_scan_done(void);
 int obtain_device_list_from_udev(void);

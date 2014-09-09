@@ -178,6 +178,14 @@ devices {
     # 1 enables; 0 disables.
     md_component_detection = 1
 
+    # By default, LVM2 will not ignore devices used as components of
+    # firmware RAID devices. Set to 1 to enable this detection.
+    # N.B. LVM2 itself is not detecting firmware RAID - an
+    # auxiliary_device_status_source other than "native" must
+    # be used for this detection to be successful.
+    # 1 enables; 0 disables
+    fw_raid_component_detection = 0
+
     # By default, if a PV is placed directly upon an md device, LVM2
     # will align its data blocks with the md device's stripe-width.
     # 1 enables; 0 disables.

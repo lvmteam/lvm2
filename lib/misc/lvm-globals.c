@@ -26,6 +26,7 @@ static int _verbose_level = VERBOSE_BASE_LEVEL;
 static int _silent = 0;
 static int _test = 0;
 static int _md_filtering = 0;
+static int _fwraid_filtering = 0;
 static int _pvmove = 0;
 static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
 static int _obtain_device_list_from_udev = DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV;
@@ -73,6 +74,11 @@ void init_test(int level)
 void init_md_filtering(int level)
 {
 	_md_filtering = level;
+}
+
+void init_fwraid_filtering(int level)
+{
+	_fwraid_filtering = level;
 }
 
 void init_pvmove(int level)
@@ -219,6 +225,11 @@ int test_mode(void)
 int md_filtering(void)
 {
 	return _md_filtering;
+}
+
+int fwraid_filtering(void)
+{
+	return _fwraid_filtering;
 }
 
 int pvmove_mode(void)
