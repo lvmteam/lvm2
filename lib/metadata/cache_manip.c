@@ -175,7 +175,6 @@ static int _cleanup_orphan_lv(struct logical_volume *lv)
  */
 int lv_cache_remove(struct logical_volume *cache_lv)
 {
-	struct cmd_context *cmd = cache_lv->vg->cmd;
 	const char *policy_name;
 	uint64_t dirty_blocks;
 	struct lv_segment *cache_seg = first_seg(cache_lv);
@@ -225,14 +224,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		cache_seg->policy_argv = NULL;
 
 		/* update the kernel to put the cleaner policy in place */
-		if (!vg_write(cache_lv->vg))
-			return_0;
-		if (!suspend_lv(cmd, cache_lv))
-			return_0;
-		if (!vg_commit(cache_lv->vg))
-			return_0;
-		if (!resume_lv(cmd, cache_lv))
-			return_0;
+		if (lv_update_and_reload(cache_lv))
+                        return_0;
 	}
 
 	//FIXME: use polling to do this...
@@ -256,7 +249,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!remove_layer_from_lv(cache_lv, corigin_lv))
 			return_0;
 
-	if (!vg_write(cache_lv->vg))
+	if (!lv_update_and_reload(cache_lv))
 		return_0;
 
 	/*
@@ -264,20 +257,12 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 * - the top-level cache LV
 	 * - the origin
 	 * - the cache_pool _cdata and _cmeta
-	 */
-	if (!suspend_lv(cmd, cache_lv))
-		return_0;
-
-	if (!vg_commit(cache_lv->vg))
-		return_0;
-
-	/* resume_lv on this (former) cache LV will resume all */
-	/*
+	 *
+	 * resume_lv on this (former) cache LV will resume all
+	 *
 	 * FIXME: currently we can't easily avoid execution of
 	 * blkid on resumed error device
 	 */
-	if (!resume_lv(cmd, cache_lv))
-		return_0;
 
 	/*
 	 * cleanup orphan devices

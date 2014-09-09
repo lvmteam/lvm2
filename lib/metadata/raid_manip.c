@@ -502,7 +502,6 @@ static int _raid_add_images(struct logical_volume *lv,
 	uint32_t old_count = lv_raid_image_count(lv);
 	uint32_t count = new_count - old_count;
 	uint64_t status_mask = -1;
-	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list meta_lvs, data_lvs;
 	struct lv_list *lvl;
@@ -679,29 +678,8 @@ to be left for these sub-lvs.
 	dm_list_iterate_items(lvl, &data_lvs)
 		lv_set_hidden(lvl->lv);
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv_origin(cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!resume_lv_origin(cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
+	if (!lv_update_and_reload_origin(lv))
+		return_0;
 
 	/*
 	 * Now that the 'REBUILD' has made its way to the kernel, we must
@@ -1223,33 +1201,11 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
+	if (!lv_update_and_reload(lv))
+		return_0;
 
 	log_print_unless_silent("%s split from %s for read-only purposes.",
 				seg_lv(seg, s)->name, lv->name);
-
-	/* Resume original LV */
-	if (!resume_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
 
 	/* Activate the split (and tracking) LV */
 	if (!_activate_sublv_preserving_excl(lv, seg_lv(seg, s)))
@@ -1316,29 +1272,8 @@ int lv_raid_merge(struct logical_volume *image_lv)
 	image_lv->status |= (lv->status & LVM_WRITE);
 	image_lv->status |= RAID_IMAGE;
 
-	if (!vg_write(vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv(vg->cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, vg->name);
-		return 0;
-	}
-
-	if (!resume_lv(vg->cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  vg->name, lv->name);
-		return 0;
-	}
+	if (!lv_update_and_reload(lv))
+		return_0;
 
 	log_print_unless_silent("%s/%s successfully merged back into %s/%s",
 				vg->name, image_lv->name, vg->name, lv->name);
@@ -1439,29 +1374,8 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	lv->status |= RAID;
 	seg->status |= RAID;
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!resume_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
+	if (!lv_update_and_reload(lv))
+		return_0;
 
 	return 1;
 }
@@ -1806,29 +1720,8 @@ try_again:
 		}
 	}
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv_origin(lv->vg->cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!resume_lv_origin(lv->vg->cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
+	if (!lv_update_and_reload_origin(lv))
+		return_0;
 
 	dm_list_iterate_items(lvl, &old_lvs) {
 		if (!deactivate_lv(lv->vg->cmd, lvl->lv))
@@ -1848,29 +1741,8 @@ try_again:
 		}
 	}
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv_origin(lv->vg->cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!resume_lv_origin(lv->vg->cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
+	if (!lv_update_and_reload_origin(lv))
+		return_0;
 
 	return 1;
 }
@@ -1879,7 +1751,6 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 {
 	uint32_t s;
 	struct lv_segment *seg = first_seg(lv);
-	struct cmd_context *cmd = lv->vg->cmd;
 
 	if (!(lv->status & PARTIAL_LV)) {
 		log_error(INTERNAL_ERROR "%s/%s is not a partial LV",
@@ -1915,25 +1786,7 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 		}
 	}
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to suspend %s/%s before committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes to %s in %s",
-			  lv->name, lv->vg->name);
-		return 0;
-	}
-
-	if (!resume_lv(cmd, lv))
+	if (!lv_update_and_reload(lv))
 		return_0;
 
 	return 1;

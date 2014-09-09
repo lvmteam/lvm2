@@ -20,7 +20,6 @@ static int lvchange_permission(struct cmd_context *cmd,
 {
 	uint32_t lv_access;
 	struct lvinfo info;
-	int r = 0;
 
 	lv_access = arg_uint_value(cmd, permission_ARG, 0);
 
@@ -73,38 +72,15 @@ static int lvchange_permission(struct cmd_context *cmd,
 			    lv->name);
 	}
 
-	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg))
+	if (!lv_update_and_reload(lv))
 		return_0;
 
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to lock %s", lv->name);
-		vg_revert(lv->vg);
-		goto out;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, lv))
-			stack;
-		goto_out;
-	}
-
-	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		goto out;
-	}
-
-	r = 1;
-out:
-	backup(lv->vg);
-	return r;
+	return 1;
 }
 
 static int lvchange_pool_update(struct cmd_context *cmd,
 				struct logical_volume *lv)
 {
-	int r = 0;
 	int update = 0;
 	unsigned val;
 	thin_discards_t discards;
@@ -143,32 +119,10 @@ static int lvchange_pool_update(struct cmd_context *cmd,
 	if (!update)
 		return 0;
 
-	log_very_verbose("Updating logical volume \"%s\" on disk(s).", lv->name);
-	if (!vg_write(lv->vg))
+	if (!lv_update_and_reload_origin(lv))
 		return_0;
 
-	if (!suspend_lv_origin(cmd, lv)) {
-		log_error("Failed to update active %s/%s (deactivation is needed).",
-			  lv->vg->name, lv->name);
-		vg_revert(lv->vg);
-		goto out;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv_origin(cmd, lv))
-			stack;
-		goto_out;
-	}
-
-	if (!resume_lv_origin(cmd, lv)) {
-		log_error("Problem reactivating %s.", lv->name);
-		goto out;
-	}
-
-	r = 1;
-out:
-	backup(lv->vg);
-	return r;
+	return 1;
 }
 
 static int lvchange_monitoring(struct cmd_context *cmd,
@@ -555,7 +509,6 @@ static int lvchange_readahead(struct cmd_context *cmd,
 {
 	unsigned read_ahead = 0;
 	unsigned pagesize = (unsigned) lvm_getpagesize() >> SECTOR_SHIFT;
-	int r = 0;
 
 	read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
@@ -590,32 +543,10 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	log_verbose("Setting read ahead to %u for \"%s\"", read_ahead,
 		    lv->name);
 
-	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg))
+	if (!lv_update_and_reload(lv))
 		return_0;
 
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to lock %s", lv->name);
-		vg_revert(lv->vg);
-		goto out;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, lv))
-			stack;
-		goto_out;
-	}
-
-	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		goto out;
-	}
-
-	r = 1;
-out:
-	backup(lv->vg);
-	return r;
+	return 1;
 }
 
 static int lvchange_persistent(struct cmd_context *cmd,
@@ -814,25 +745,8 @@ static int lvchange_writemostly(struct logical_volume *lv)
 		}
 	}
 
-	if (!vg_write(lv->vg))
+	if (!lv_update_and_reload(lv))
 		return_0;
-
-	if (!suspend_lv(cmd, lv)) {
-		vg_revert(lv->vg);
-		return_0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, lv))
-			stack;
-		return_0;
-	}
-
-	log_very_verbose("Updating writemostly for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		return 0;
-	}
 
 	return 1;
 }
@@ -862,26 +776,8 @@ static int lvchange_recovery_rate(struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!vg_write(lv->vg))
+	if (!lv_update_and_reload(lv))
 		return_0;
-
-	if (!suspend_lv(cmd, lv)) {
-		vg_revert(lv->vg);
-		return_0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, lv))
-			stack;
-		return_0;
-	}
-
-	log_very_verbose("Updating recovery rate for \"%s\" in kernel",
-			 lv->name);
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		return 0;
-	}
 
 	return 1;
 }

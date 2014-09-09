@@ -5039,26 +5039,8 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg))
-		goto_out;
-
-	if (!suspend_lv(cmd, lock_lv)) {
-		log_error("Failed to suspend %s", lock_lv->name);
-		vg_revert(vg);
-		goto bad;
-	}
-
-	if (!vg_commit(vg)) {
-		stack;
-		if (!resume_lv(cmd, lock_lv))
-			stack;
-		goto bad;
-	}
-
-	if (!resume_lv(cmd, lock_lv)) {
-		log_error("Problem reactivating %s", lock_lv->name);
-		goto bad;
-	}
+	if (!lv_update_and_reload(lock_lv))
+		goto_bad;
 
 	if (lv_is_cow_covering_origin(lv))
 		if (!monitor_dev_for_events(cmd, lv, 0, 0))
@@ -5069,14 +5051,13 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!update_pool_lv(lock_lv, 0))
 			goto_bad;
 
+		backup(vg);
+
 		if (inactive && !deactivate_lv(cmd, lock_lv)) {
 			log_error("Problem deactivating %s.", lock_lv->name);
-			backup(vg);
 			return 0;
 		}
 	}
-
-	backup(vg);
 
 	log_print_unless_silent("Logical volume %s successfully resized", lp->lv_name);
 
@@ -5085,10 +5066,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	return 1;
-
 bad:
-	backup(vg);
-out:
 	if (inactive && !deactivate_lv(cmd, lock_lv))
 		log_error("Problem deactivating %s.", lock_lv->name);
 
@@ -6951,9 +6929,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			 *    I say that would be cleaner, but I'm not sure
 			 *    about the effects on thinpool yet...
 			 */
-			if (!vg_write(vg) || !suspend_lv(cmd, lv) ||
-			    !vg_commit(vg) || !resume_lv(cmd, lv))
+			if (!lv_update_and_reload(lv)) {
+				stack;
 				goto deactivate_and_revert_new_lv;
+			}
 
 			if (!(lvl = find_lv_in_vg(vg, lp->origin)))
 				goto deactivate_and_revert_new_lv;
