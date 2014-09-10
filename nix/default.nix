@@ -19,7 +19,7 @@ let
        mkdir -p $out/test-results
        for i in ${lib.concatStringsSep " " buildInputs}; do
          cat $i/test-results/list >> $out/test-results/list
-         cp $i/test-results'/'*.txt $out/test-results/
+         cp $i/test-results'/'*.txt $out/test-results/ || true
        done
      '';
 
