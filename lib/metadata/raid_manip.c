@@ -1261,8 +1261,13 @@ int lv_raid_merge(struct logical_volume *image_lv)
 	struct lv_segment *seg;
 	struct volume_group *vg = image_lv->vg;
 
-	lv_name = dm_pool_strdup(vg->vgmem, image_lv->name);
-	if (!lv_name)
+	if (image_lv->status & LVM_WRITE) {
+		log_error("%s is not read-only - refusing to merge.",
+			  display_lvname(image_lv));
+		return 0;
+	}
+
+	if (!(lv_name = dm_pool_strdup(vg->vgmem, image_lv->name)))
 		return_0;
 
 	if (!(p = strstr(lv_name, "_rimage_"))) {
@@ -1271,12 +1276,6 @@ int lv_raid_merge(struct logical_volume *image_lv)
 		return 0;
 	}
 	*p = '\0'; /* lv_name is now that of top-level RAID */
-
-	if (image_lv->status & LVM_WRITE) {
-		log_error("%s/%s is not read-only - refusing to merge",
-			  vg->name, image_lv->name);
-		return 0;
-	}
 
 	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
 		log_error("Unable to find containing RAID array for %s.",
