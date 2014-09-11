@@ -1290,8 +1290,12 @@ int lv_raid_merge(struct logical_volume *image_lv)
 		if (seg_lv(seg, s) == image_lv)
 			meta_lv = seg_metalv(seg, s);
 
-	if (!meta_lv)
-		return_0;
+	if (!meta_lv) {
+		log_error("Failed to find meta for %s in RAID array %s.",
+			  display_lvname(image_lv),
+			  display_lvname(lv));
+		return 0;
+	}
 
 	if (!deactivate_lv(vg->cmd, meta_lv)) {
 		log_error("Failed to deactivate %s before merging.",
@@ -1632,8 +1636,10 @@ int lv_raid_replace(struct logical_volume *lv,
 try_again:
 	if (!_alloc_image_components(lv, allocate_pvs, match_count,
 				     &new_meta_lvs, &new_data_lvs)) {
-		if (!(lv->status & PARTIAL_LV))
+		if (!(lv->status & PARTIAL_LV)) {
+			log_error("LV %s in not partial.", display_lvname(lv));
 			return 0;
+		}
 
 		/* This is a repair, so try to do better than all-or-nothing */
 		match_count--;
