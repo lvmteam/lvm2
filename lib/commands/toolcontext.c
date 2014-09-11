@@ -861,12 +861,13 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	}
 
 	/* regex filter. Optional. */
-	if ((cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL)) &&
-	    !(filters[nr_filt] = regex_filter_create(cn->v))) {
-		log_error("Failed to create global regex device filter");
-		goto bad;
-	} else
+	if ((cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL))) {
+		if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
+			log_error("Failed to create global regex device filter");
+			goto bad;
+		}
 		nr_filt++;
+	}
 
 	/* device type filter. Required. */
 	if (!(filters[nr_filt] = lvm_type_filter_create(cmd->dev_types))) {
