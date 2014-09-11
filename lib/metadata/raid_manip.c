@@ -13,6 +13,7 @@
  */
 
 #include "lib.h"
+#include "archiver.h"
 #include "metadata.h"
 #include "toolcontext.h"
 #include "segtype.h"
@@ -695,11 +696,13 @@ to be left for these sub-lvs.
 			rebuild_flag_cleared = 1;
 		}
 	}
-	if (rebuild_flag_cleared &&
-	    (!vg_write(lv->vg) || !vg_commit(lv->vg))) {
-		log_error("Failed to clear REBUILD flag for %s/%s components",
-			  lv->vg->name, lv->name);
-		return 0;
+	if (rebuild_flag_cleared) {
+		if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
+			log_error("Failed to clear REBUILD flag for %s/%s components",
+				  lv->vg->name, lv->name);
+			return 0;
+		}
+		backup(lv->vg);
 	}
 
 	return 1;
@@ -978,6 +981,8 @@ static int _raid_remove_images(struct logical_volume *lv,
 			return_0;
 	}
 
+	backup(lv->vg);
+
 	return 1;
 }
 
@@ -1148,6 +1153,8 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
+
+	backup(lv->vg);
 
 	return 1;
 }

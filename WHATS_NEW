@@ -1,5 +1,7 @@
 Version 2.02.112 - 
 =====================================
+  Add missing backup of lvm2 metadata after some raid modifications.
+  Use vg memory pool for extent allocation.
   Add allocation/physical_extent_size config option for default PE size of VGs.
   Introduce common code to modify metadate and reload updated LV.
   Fix rename of active snapshot volume in cluster.
