@@ -1238,7 +1238,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 
 	/* Activate the split (and tracking) LV */
 	if (!_activate_sublv_preserving_excl(lv, seg_lv(seg, s)))
-		return 0;
+		return_0;
 
 	log_print_unless_silent("Use 'lvconvert --merge %s/%s' to merge back into %s",
 				lv->vg->name, seg_lv(seg, s)->name, lv->name);
@@ -1907,7 +1907,7 @@ int partial_raid_lv_supports_degraded_activation(struct logical_volume *lv)
 	int not_capable = 0;
 
 	if (!_lv_may_be_activated_in_degraded_mode(lv, &not_capable) || not_capable)
-		return 0;
+		return_0;
 
 	if (!for_each_sub_lv(lv, _lv_may_be_activated_in_degraded_mode, &not_capable)) {
 		log_error(INTERNAL_ERROR "for_each_sub_lv failure.");
