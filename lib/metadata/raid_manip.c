@@ -938,6 +938,7 @@ static int _raid_remove_images(struct logical_volume *lv,
 	if (!suspend_lv(lv->vg->cmd, lv)) {
 		log_error("Failed to suspend %s/%s before committing changes",
 			  lv->vg->name, lv->name);
+		vg_revert(lv->vg);
 		return 0;
 	}
 
@@ -1113,6 +1114,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to suspend %s/%s before committing changes",
 			  lv->vg->name, lv->name);
+		vg_revert(lv->vg);
 		return 0;
 	}
 

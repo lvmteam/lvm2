@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Add missing vg_revert in suspend_lv() error path in raid target.
   Add missing backup of lvm2 metadata after some raid modifications.
   Use vg memory pool for extent allocation.
   Add allocation/physical_extent_size config option for default PE size of VGs.
