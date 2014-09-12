@@ -306,7 +306,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 /*
  * If require_module_loaded=0, caller is responsible to check
  * whether _dm_device_major or _dm_bitset is really set. If
- * it's not, it means
+ * it's not, it means the module is not loaded.
  */
 static int _create_dm_bitset(int require_module_loaded)
 {
