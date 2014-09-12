@@ -370,6 +370,9 @@ allocation {
     # first use.
     # N.B. zeroing larger thin pool chunk size degrades performance.
     # thin_pool_zero = 1
+
+    # Default physical extent size to use for newly created VGs (in KB).
+    # physical_extent_size = 4096
 }
 
 # This section that allows you to configure the nature of the

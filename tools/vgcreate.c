@@ -41,7 +41,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vgcreate_params_set_defaults(&vp_def, NULL);
+	if (!vgcreate_params_set_defaults(cmd, &vp_def, NULL))
+		return EINVALID_CMD_LINE;
 	vp_def.vg_name = vg_name;
 	if (!vgcreate_params_set_from_args(cmd, &vp_new, &vp_def))
 		return EINVALID_CMD_LINE;

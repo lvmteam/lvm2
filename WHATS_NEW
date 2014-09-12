@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Add allocation/physical_extent_size config option for default PE size of VGs.
   Introduce common code to modify metadate and reload updated LV.
   Fix rename of active snapshot volume in cluster.
   Make sure shared libraries are built with RELRO option.

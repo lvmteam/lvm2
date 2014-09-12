@@ -551,7 +551,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto_bad;
 	} else {
-		vgcreate_params_set_defaults(&vp_def, vg_from);
+		if (!vgcreate_params_set_defaults(cmd, &vp_def, vg_from)) {
+			r = EINVALID_CMD_LINE;
+			goto_bad;
+		}
 		vp_def.vg_name = vg_name_to;
 		if (!vgcreate_params_set_from_args(cmd, &vp_new, &vp_def)) {
 			r = EINVALID_CMD_LINE;

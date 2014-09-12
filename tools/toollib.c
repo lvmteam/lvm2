@@ -1305,9 +1305,14 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl)
 	return r;
 }
 
-void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
-				  struct volume_group *vg)
+const char _pe_size_may_not_be_negative_msg[] = "Physical extent size may not be negative";
+
+int vgcreate_params_set_defaults(struct cmd_context *cmd,
+				 struct vgcreate_params *vp_def,
+				 struct volume_group *vg)
 {
+	int64_t extent_size;
+
 	if (vg) {
 		vp_def->vg_name = NULL;
 		vp_def->extent_size = vg->extent_size;
@@ -1318,13 +1323,21 @@ void vgcreate_params_set_defaults(struct vgcreate_params *vp_def,
 		vp_def->vgmetadatacopies = vg->mda_copies;
 	} else {
 		vp_def->vg_name = NULL;
-		vp_def->extent_size = DEFAULT_EXTENT_SIZE * 2;
+		extent_size = find_config_tree_int64(cmd,
+				allocation_physical_extent_size_CFG, NULL) * 2;
+		if (extent_size < 0) {
+			log_error(_pe_size_may_not_be_negative_msg);
+			return 0;
+		}
+		vp_def->extent_size = (uint32_t) extent_size;
 		vp_def->max_pv = DEFAULT_MAX_PV;
 		vp_def->max_lv = DEFAULT_MAX_LV;
 		vp_def->alloc = DEFAULT_ALLOC_POLICY;
 		vp_def->clustered = DEFAULT_CLUSTERED;
 		vp_def->vgmetadatacopies = DEFAULT_VGMETADATACOPIES;
 	}
+
+	return 1;
 }
 
 /*
@@ -1357,7 +1370,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		vp_new->clustered = locking_is_clustered();
 
 	if (arg_sign_value(cmd, physicalextentsize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Physical extent size may not be negative");
+		log_error(_pe_size_may_not_be_negative_msg);
 		return 0;
 	}
 
