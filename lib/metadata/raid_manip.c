@@ -459,15 +459,17 @@ static int _alloc_image_components(struct logical_volume *lv,
 		 * from 's + count'.
 		 */
 		if (!(lvl_array[s + count].lv =
-		      _alloc_image_component(lv, NULL, ah, s + count, RAID_META)))
+		      _alloc_image_component(lv, NULL, ah, s + count, RAID_META))) {
+			alloc_destroy(ah);
 			return_0;
-
+		}
 		dm_list_add(new_meta_lvs, &(lvl_array[s + count].list));
 
 		if (!(lvl_array[s].lv =
-		      _alloc_image_component(lv, NULL, ah, s, RAID_IMAGE)))
+		      _alloc_image_component(lv, NULL, ah, s, RAID_IMAGE))) {
+			alloc_destroy(ah);
 			return_0;
-
+		}
 		dm_list_add(new_data_lvs, &(lvl_array[s].list));
 	}
 
@@ -517,8 +519,10 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 				    &allocatable_pvs, data_lv->alloc, 0, NULL)))
 		return_0;
 
-	if (!(*meta_lv = _alloc_image_component(data_lv, base_name, ah, 0, RAID_META)))
+	if (!(*meta_lv = _alloc_image_component(data_lv, base_name, ah, 0, RAID_META))) {
+		alloc_destroy(ah);
 		return_0;
+	}
 
 	alloc_destroy(ah);
 

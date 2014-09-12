@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Don't leak alloc_handle on raid target error path.
   Properly validate raid leg names.
   Archive metadata before starting their modification in raid target.
   Add missing vg_revert in suspend_lv() error path in raid target.
