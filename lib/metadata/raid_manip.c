@@ -362,7 +362,9 @@ static int _alloc_image_component(struct logical_volume *lv,
 		return 0;
 	}
 
-	segtype = get_segtype_from_string(lv->vg->cmd, "striped");
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped")))
+		return_0;
+
 	if (!lv_add_segment(ah, first_area, 1, tmp_lv, segtype, 0, status, 0)) {
 		log_error("Failed to add segment to LV, %s", img_name);
 		return 0;
@@ -833,7 +835,8 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 	if (!lvl_array)
 		return_0;
 
-	error_segtype = get_segtype_from_string(lv->vg->cmd, "error");
+	if (!(error_segtype = get_segtype_from_string(lv->vg->cmd, "error")))
+		return_0;
 
 	/*
 	 * We make two passes over the devices.
