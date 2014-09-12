@@ -492,7 +492,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 	struct dm_list allocatable_pvs;
 	struct alloc_handle *ah;
 	struct lv_segment *seg = first_seg(data_lv);
-	char *p, base_name[strlen(data_lv->name) + 1];
+	char *p, base_name[NAME_LEN];
 
 	dm_list_init(&allocatable_pvs);
 
@@ -502,7 +502,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
-	sprintf(base_name, "%s", data_lv->name);
+	(void) dm_strncpy(base_name, data_lv->name, sizeof(base_name));
 	if ((p = strstr(base_name, "_mimage_")))
 		*p = '\0';
 
