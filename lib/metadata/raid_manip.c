@@ -520,6 +520,9 @@ static int _raid_add_images(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (!archive(lv->vg))
+		return_0;
+
 	dm_list_init(&meta_lvs); /* For image addition */
 	dm_list_init(&data_lvs); /* For image addition */
 
@@ -908,6 +911,9 @@ static int _raid_remove_images(struct logical_volume *lv,
 {
 	struct dm_list removal_list;
 	struct lv_list *lvl;
+
+	if (!archive(lv->vg))
+		return_0;
 
 	dm_list_init(&removal_list);
 
@@ -1313,6 +1319,9 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (!archive(lv->vg))
+		return_0;
+
 	for (s = 0; s < seg->area_count; s++) {
 		log_debug_metadata("Allocating new metadata LV for %s",
 				   seg_lv(seg, s)->name);
@@ -1543,6 +1552,9 @@ int lv_raid_replace(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (!archive(lv->vg))
+		return_0;
+
 	/*
 	 * How many sub-LVs are being removed?
 	 */
@@ -1766,6 +1778,9 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 			  lv->vg->name, lv->name);
 		return 0;
 	}
+
+	if (!archive(lv->vg))
+		return_0;
 
 	log_debug("Attempting to remove missing devices from %s LV, %s",
 		  seg->segtype->ops->name(seg), lv->name);

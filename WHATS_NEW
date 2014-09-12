@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Archive metadata before starting their modification in raid target.
   Add missing vg_revert in suspend_lv() error path in raid target.
   Add missing backup of lvm2 metadata after some raid modifications.
   Use vg memory pool for extent allocation.
