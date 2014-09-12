@@ -349,29 +349,16 @@ static char *_generate_raid_name(struct logical_volume *lv,
  * Create an LV of specified type.  Set visible after creation.
  * This function does not make metadata changes.
  */
-static int _alloc_image_component(struct logical_volume *lv,
-				  const char *alt_base_name,
-				  struct alloc_handle *ah, uint32_t first_area,
-				  uint64_t type, struct logical_volume **new_lv)
+static struct logical_volume *_alloc_image_component(struct logical_volume *lv,
+						     const char *alt_base_name,
+						     struct alloc_handle *ah, uint32_t first_area,
+						     uint64_t type)
 {
 	uint64_t status;
-	size_t len = strlen(lv->name) + 32;
-	char img_name[len];
-	const char *base_name = (alt_base_name) ? alt_base_name : lv->name;
+	char img_name[NAME_LEN];
+	const char *type_suffix;
 	struct logical_volume *tmp_lv;
 	const struct segment_type *segtype;
-
-	if (type == RAID_META) {
-		if (dm_snprintf(img_name, len, "%s_rmeta_%%d", base_name) < 0)
-			return_0;
-	} else if (type == RAID_IMAGE) {
-		if (dm_snprintf(img_name, len, "%s_rimage_%%d", base_name) < 0)
-			return_0;
-	} else {
-		log_error(INTERNAL_ERROR
-			  "Bad type provided to _alloc_raid_component");
-		return 0;
-	}
 
 	if (!ah) {
 		log_error(INTERNAL_ERROR
@@ -379,6 +366,23 @@ static int _alloc_image_component(struct logical_volume *lv,
 			  (type == RAID_META) ? "metadata" : "data");
 		return 0;
 	}
+
+	switch (type) {
+	case RAID_META:
+		type_suffix = "rmeta";
+		break;
+	case RAID_IMAGE:
+		type_suffix = "rimage";
+		break;
+	default:
+		log_error(INTERNAL_ERROR
+			  "Bad type provided to _alloc_raid_component.");
+		return 0;
+	}
+
+	if (dm_snprintf(img_name, sizeof(img_name), "%s_%s_%%d",
+			(alt_base_name) ? : lv->name, type_suffix) < 0)
+		return_0;
 
 	status = LVM_READ | LVM_WRITE | LV_REBUILD | type;
 	if (!(tmp_lv = lv_create_empty(img_name, NULL, status, ALLOC_INHERIT, lv->vg))) {
@@ -395,8 +399,8 @@ static int _alloc_image_component(struct logical_volume *lv,
 	}
 
 	lv_set_visible(tmp_lv);
-	*new_lv = tmp_lv;
-	return 1;
+
+	return tmp_lv;
 }
 
 static int _alloc_image_components(struct logical_volume *lv,
@@ -411,7 +415,6 @@ static int _alloc_image_components(struct logical_volume *lv,
 	const struct segment_type *segtype;
 	struct alloc_handle *ah;
 	struct dm_list *parallel_areas;
-	struct logical_volume *tmp_lv;
 	struct lv_list *lvl_array;
 
 	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem,
@@ -455,16 +458,16 @@ static int _alloc_image_components(struct logical_volume *lv,
 		 * allocated areas.  Thus, the metadata areas are pulled
 		 * from 's + count'.
 		 */
-		if (!_alloc_image_component(lv, NULL, ah, s + count,
-					    RAID_META, &tmp_lv))
+		if (!(lvl_array[s + count].lv =
+		      _alloc_image_component(lv, NULL, ah, s + count, RAID_META)))
 			return_0;
-		lvl_array[s + count].lv = tmp_lv;
+
 		dm_list_add(new_meta_lvs, &(lvl_array[s + count].list));
 
-		if (!_alloc_image_component(lv, NULL, ah, s,
-					    RAID_IMAGE, &tmp_lv))
+		if (!(lvl_array[s].lv =
+		      _alloc_image_component(lv, NULL, ah, s, RAID_IMAGE)))
 			return_0;
-		lvl_array[s].lv = tmp_lv;
+
 		dm_list_add(new_data_lvs, &(lvl_array[s].list));
 	}
 
@@ -514,8 +517,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 				    &allocatable_pvs, data_lv->alloc, 0, NULL)))
 		return_0;
 
-	if (!_alloc_image_component(data_lv, base_name, ah, 0,
-				    RAID_META, meta_lv))
+	if (!(*meta_lv = _alloc_image_component(data_lv, base_name, ah, 0, RAID_META)))
 		return_0;
 
 	alloc_destroy(ah);
