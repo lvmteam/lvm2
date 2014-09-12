@@ -336,6 +336,17 @@ static int _create_dm_bitset(void)
 #endif
 }
 
+int dm_is_dm_major(uint32_t major)
+{
+	if (!_create_dm_bitset())
+		return 0;
+
+	if (_dm_multiple_major_support)
+		return dm_bit(_dm_bitset, major) ? 1 : 0;
+	else
+		return (major == _dm_device_major) ? 1 : 0;
+}
+
 static void _close_control_fd(void)
 {
 	if (_control_fd != -1) {
@@ -410,35 +421,6 @@ bad:
 #else
 	return 1;
 #endif
-}
-
-int dm_is_dm_major(uint32_t major)
-{
-	/*
-	 * If dm-mod module is not loaded yet during this call, we
-	 * can make it to load automatically in kernels >= 2.6.36
-	 * just by opening the dm control device. However, in older
-	 * kernels, there's nothing else we can do here - dm_is_dm_major
-	 * will fail as it can't determine this without the module
-	 * being loaded first - there's an error message issued for
-	 * this scenario deeper in this code.
-	 */
-	if (!_uname())
-		return 0;
-
-	if (KERNEL_VERSION(_kernel_major, _kernel_minor, _kernel_release) >=
-	    KERNEL_VERSION(2, 6, 36)) {
-		if (_control_fd == -1 && !_open_control())
-			return 0;
-	}
-
-	if (!_create_dm_bitset())
-		return 0;
-
-	if (_dm_multiple_major_support)
-		return dm_bit(_dm_bitset, major) ? 1 : 0;
-	else
-		return (major == _dm_device_major) ? 1 : 0;
 }
 
 static void _dm_zfree_string(char *string)

@@ -1,6 +1,5 @@
 Version 1.02.91 - 
 ====================================
-  Use dm-mod autoloading during dm_is_dm_major call if needed (kernels>=2.6.36).
 
 Version 1.02.90 - 1st September 2014
 ====================================
