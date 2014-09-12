@@ -1712,9 +1712,7 @@ try_again:
 	 */
 
 	for (s = 0; s < raid_seg->area_count; s++) {
-		tmp_names[s] = NULL;
 		sd = s + raid_seg->area_count;
-		tmp_names[sd] = NULL;
 
 		if ((seg_type(raid_seg, s) == AREA_UNASSIGNED) &&
 		    (seg_metatype(raid_seg, s) == AREA_UNASSIGNED)) {
@@ -1745,7 +1743,8 @@ try_again:
 				return 0;
 			}
 			lv_set_hidden(lvl->lv);
-		}
+		} else
+			tmp_names[s] = tmp_names[sd] = NULL;
 	}
 
 	if (!lv_update_and_reload_origin(lv))
