@@ -320,6 +320,35 @@ static int _shift_and_rename_image_components(struct lv_segment *seg)
 	return 1;
 }
 
+/* Generate raid subvolume name and validate it */
+static char *_generate_raid_name(struct logical_volume *lv,
+				 const char *suffix, int count)
+{
+	const char *format = (count >= 0) ? "%s_%s_%u" : "%s_%s";
+	size_t len = strlen(lv->name) + strlen(suffix) + ((count >= 0) ? 5 : 2);
+	char *name;
+
+	if (!(name = dm_pool_alloc(lv->vg->vgmem, len))) {
+		log_error("Failed to allocate new name.");
+		return NULL;
+	}
+
+	if (dm_snprintf(name, len, format, lv->name, suffix, count) < 0)
+		return_NULL;
+
+	if (!validate_name(name)) {
+		log_error("New logical volume name \"%s\" is not valid.", name);
+		return NULL;
+	}
+
+	if (find_lv_in_vg(lv->vg, name)) {
+		log_error("Logical volume %s already exists in volume group %s.",
+			  name, lv->vg->name);
+		return NULL;
+	}
+
+	return name;
+}
 /*
  * Create an LV of specified type.  Set visible after creation.
  * This function does not make metadata changes.
