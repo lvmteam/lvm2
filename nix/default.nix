@@ -42,7 +42,7 @@ let
             url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
             sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
 
-         mkdir -p /tmp/xchg/results
+         mkdir -p /xchg/results
 
          dmsetup targets
 
@@ -51,12 +51,12 @@ let
          watch=
          if echo ${flavour} | grep -q udev; then
            (/usr/lib/systemd/systemd-udevd || /usr/lib/udev/udevd || /sbin/udevd || \
-            find / -xdev -name \*udevd) >> /tmp/xchg/udevd.log 2>&1 &
-           watch="--watch /tmp/xchg/udevd.log"
+            find / -xdev -name \*udevd) >> /xchg/udevd.log 2>&1 &
+           watch="--watch /xchg/udevd.log"
          fi
 
-         lvm2-testsuite --batch --outdir /tmp/xchg/results --continue \
-             --fatal-timeouts --heartbeat /tmp/xchg/heartbeat \
+         lvm2-testsuite --batch --outdir /xchg/results --continue \
+             --fatal-timeouts --heartbeat /xchg/heartbeat \
              --flavours ${flavour} $watch --kmsg ${if lib.eqStrings T "" then "" else "--only ${T}"}
 
          # TODO: coverage reports
