@@ -126,12 +126,13 @@ static int v5_endian_to_network(struct clog_request *rq)
 
 	u_rq->error = xlate32(u_rq->error);
 	u_rq->seq = xlate32(u_rq->seq);
-	u_rq->request_type = xlate32(u_rq->request_type);
-	u_rq->data_size = xlate64(u_rq->data_size);
 
 	rq->originator = xlate32(rq->originator);
 
 	v5_data_endian_switch(rq, 1);
+
+	u_rq->request_type = xlate32(u_rq->request_type);
+	u_rq->data_size = xlate32(u_rq->data_size);
 
 	return size;
 }
@@ -167,7 +168,7 @@ static int v5_endian_from_network(struct clog_request *rq)
 	u_rq->error = xlate32(u_rq->error);
 	u_rq->seq = xlate32(u_rq->seq);
 	u_rq->request_type = xlate32(u_rq->request_type);
-	u_rq->data_size = xlate64(u_rq->data_size);
+	u_rq->data_size = xlate32(u_rq->data_size);
 
 	rq->originator = xlate32(rq->originator);
 
@@ -187,7 +188,7 @@ int clog_request_from_network(void *data, size_t data_len)
 
 	switch (version) {
 	case 5: /* Upstream */
-		if (version == unconverted_version)
+		if (version == vp[0])
 			return 0;
 		break;
 	case 4: /* RHEL 5.[45] */
