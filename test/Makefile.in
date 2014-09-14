@@ -102,28 +102,28 @@ help:
 check: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--only $(T) --skip $(S)
+		--flavours ndev-vanilla,ndev-cluster,ndev-lvmetad --only $(T) --skip $(S)
 
 check_system: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--only udev- --only $(T) --skip $(S)
+		--flavours udev-vanilla,udev-cluster,udev-lvmetad --only $(T) --skip $(S)
 
 check_cluster: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--only ndev-cluster --only $(T) --skip $(S)
+		--flavours ndev-cluster --only $(T) --skip $(S)
 
 check_local: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--only ndev- --only $(T) --skip $(S)
+		--flavours ndev-vanilla --only $(T) --skip $(S)
 
 ifeq ("@BUILD_LVMETAD@", "yes")
 check_lvmetad: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--only ndev-lvmetad --only $(T) --skip $(S)
+		--flavours ndev-lvmetad --only $(T) --skip $(S)
 endif
 
 DATADIR = $(datadir)/lvm2-testsuite
