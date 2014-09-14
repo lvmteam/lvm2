@@ -64,8 +64,9 @@
 #include <algorithm>
 #include <stdexcept>
 
-#ifdef __unix
 #include <dirent.h>
+
+#ifdef __unix
 #include <sys/stat.h>
 #include <sys/resource.h> /* rusage */
 #include <sys/select.h>
@@ -262,7 +263,10 @@ struct Journal {
 
     void banner() {
         std::cout << std::endl << "### " << status.size() << " tests: "
-                  << count( PASSED ) << " passed" << std::endl;
+                  << count( PASSED ) << " passed, "
+                  << count( SKIPPED ) << " skipped, "
+                  << count( TIMEOUT ) + count( WARNED ) << " broken, "
+                  << count( FAILED ) << " failed" << std::endl;
     }
 
     void details() {
@@ -442,7 +446,6 @@ struct FileSink : FdSink {
     }
 };
 
-#define BRICK_SYSLOG_ACTION_READ           2
 #define BRICK_SYSLOG_ACTION_READ_CLEAR     4
 #define BRICK_SYSLOG_ACTION_CLEAR          5
 
@@ -619,8 +622,10 @@ struct Options {
     std::string testdir, outdir, workdir, heartbeat;
     std::vector< std::string > flavours, filter, watch;
     std::string flavour_envvar;
+    int timeout;
     Options() : verbose( false ), batch( false ), interactive( false ),
-                cont( false ), fatal_timeouts( false ), kmsg( false ) {}
+                cont( false ), fatal_timeouts( false ), kmsg( false ),
+                timeout( 60 ) {}
 };
 
 struct TestProcess
@@ -718,7 +723,7 @@ struct TestCase {
 
         /* kill off tests after a minute of silence */
         if ( !options.interactive )
-            if ( end - silent_start > 60 ) {
+            if ( end - silent_start > options.timeout ) {
                 kill( pid, SIGINT );
                 sleep( 5 ); /* wait a bit for a reaction */
                 if ( waitpid( pid, &status, WNOHANG ) == 0 ) {
@@ -982,7 +987,7 @@ struct Main {
         if ( die || fatal_signal )
             return 1;
 
-        return 0;
+        return journal.count( Journal::FAILED ) ? 1 : 0;
     }
 
     Main( Options o ) : die( false ), journal( o.outdir ), options( o ) {}
@@ -1099,6 +1104,9 @@ int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVOUR" )
     if ( args.has( "--watch" ) )
         split( args.opt( "--watch" ), opt.watch );
 
+    if ( args.has( "--timeout" ) )
+        opt.timeout = atoi( args.opt( "--timeout" ).c_str() );
+
     if ( args.has( "--kmsg" ) )
         opt.kmsg = true;
 
@@ -1128,7 +1136,7 @@ int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVOUR" )
 #ifdef BRICK_DEMO
 
 int main( int argc, const char **argv ) {
-    brick::shelltest::run( argc, argv );
+    return brick::shelltest::run( argc, argv );
 }
 
 #endif
