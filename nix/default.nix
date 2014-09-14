@@ -21,6 +21,8 @@ let
          cat $i/test-results/list >> $out/test-results/list
          cp $i/test-results'/'*.txt $out/test-results/ || true
        done
+       mkdir -p $out/nix-support
+       grep '\<failed\>' $out/test-results/list && touch $out/nix-support/failed
      '';
 
      buildInputs = map (x: runTest (args // { flavour = x; }))
