@@ -259,8 +259,9 @@ lv_exists() {
 lv_not_exists() {
 	local vg=$1
 	if test $# -le 1 ; then
-		lvl $vg &>/dev/null || return
-		die "$vg expected to not exist but it does!"
+		if lvl $vg &>/dev/null ; then
+			die "$vg expected to not exist but it does!"
+		fi
 	else
 		while [ $# -gt 1 ]; do
 			shift
@@ -268,6 +269,7 @@ lv_not_exists() {
 			die "$vg/$1 expected to not exist but it does!"
 		done
 	fi
+	rm -f debug.log
 }
 
 pv_field() {
