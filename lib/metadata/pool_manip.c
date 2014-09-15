@@ -450,7 +450,8 @@ int create_pool(struct logical_volume *pool_lv,
 
 bad:
 	if (activation()) {
-		if (deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
+		if (lv_is_active_locally(pool_lv) &&
+		    deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
 			log_error("Aborting. Could not deactivate pool %s.",
 				  pool_lv->name);
 			return 0;

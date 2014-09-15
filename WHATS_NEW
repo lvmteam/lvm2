@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Avoid leaving linear logical volume when thin pool creation fails.
   Demote an error to a warning when devices known to lvmetad are filtered out.
   Re-order filter evaluation, making component filters global.
   Don't leak alloc_handle on raid target error path.
