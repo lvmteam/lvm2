@@ -190,9 +190,12 @@ static int _out_with_comment_raw(struct formatter *f,
 				 const char *fmt, va_list ap)
 {
 	int n;
+	va_list apc;
 
+	va_copy(apc, ap);
 	n = vsnprintf(f->data.buf.start + f->data.buf.used,
-		      f->data.buf.size - f->data.buf.used, fmt, ap);
+		      f->data.buf.size - f->data.buf.used, fmt, apc);
+	va_end(apc);
 
 	/* If metadata doesn't fit, extend buffer */
 	if (n < 0 || (n + f->data.buf.used + 2 > f->data.buf.size)) {

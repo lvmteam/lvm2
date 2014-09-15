@@ -129,12 +129,16 @@ daemon_reply daemon_send_simple_v(daemon_handle h, const char *id, va_list ap)
 	static const daemon_reply err = { .error = ENOMEM };
 	daemon_request rq = { .cft = NULL };
 	daemon_reply repl;
+	va_list apc;
 
+	va_copy(apc, ap);
 	if (!buffer_append_f(&rq.buffer, "request = %s", id, NULL) ||
-	    !buffer_append_vf(&rq.buffer, ap)) {
+	    !buffer_append_vf(&rq.buffer, apc)) {
+		va_end(apc);
 		buffer_destroy(&rq.buffer);
 		return err;
 	}
+	va_end(apc);
 
 	repl = daemon_send(h, rq);
 	buffer_destroy(&rq.buffer);
@@ -181,13 +185,17 @@ bad:
 
 int daemon_request_extend_v(daemon_request r, va_list ap)
 {
+	int res;
+	va_list apc;
+
 	if (!r.cft)
 		return 0;
 
-	if (!config_make_nodes_v(r.cft, NULL, r.cft->root, ap))
-		return 0;
+	va_copy(apc, ap);
+	res = config_make_nodes_v(r.cft, NULL, r.cft->root, apc) ? 1 : 0;
+	va_end(apc);
 
-	return 1;
+	return res;
 }
 
 int daemon_request_extend(daemon_request r, ...)
