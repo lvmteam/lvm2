@@ -655,23 +655,25 @@ static int _snprintf_attr(char *buf, size_t buf_size, const char *sysfs_dir,
 
 static unsigned long _dev_topology_attribute(struct dev_types *dt,
 					     const char *attribute,
-					     struct device *dev)
+					     struct device *dev,
+					     unsigned long default_value)
 {
 	const char *sysfs_dir = dm_sysfs_dir();
 	char path[PATH_MAX], buffer[64];
 	FILE *fp;
 	struct stat info;
 	dev_t uninitialized_var(primary);
-	unsigned long result = 0UL;
+	unsigned long result = default_value;
+	unsigned long value = 0UL;
 
 	if (!attribute || !*attribute)
-		return_0;
+		goto_out;
 
 	if (!sysfs_dir || !*sysfs_dir)
-		return_0;
+		goto_out;
 
 	if (!_snprintf_attr(path, sizeof(path), sysfs_dir, attribute, dev->dev))
-                return_0;
+                goto_out;
 
 	/*
 	 * check if the desired sysfs attribute exists
@@ -681,72 +683,79 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	if (stat(path, &info) == -1) {
 		if (errno != ENOENT) {
 			log_sys_debug("stat", path);
-			return 0;
+			goto out;
 		}
 		if (!dev_get_primary_dev(dt, dev, &primary))
-			return 0;
+			goto out;
 
 		/* get attribute from partition's primary device */
 		if (!_snprintf_attr(path, sizeof(path), sysfs_dir, attribute, primary))
-			return_0;
+			goto_out;
 
 		if (stat(path, &info) == -1) {
 			if (errno != ENOENT)
 				log_sys_debug("stat", path);
-			return 0;
+			goto out;
 		}
 	}
 
 	if (!(fp = fopen(path, "r"))) {
 		log_sys_debug("fopen", path);
-		return 0;
+		goto out;
 	}
 
 	if (!fgets(buffer, sizeof(buffer), fp)) {
 		log_sys_debug("fgets", path);
-		goto out;
+		goto out_close;
 	}
 
-	if (sscanf(buffer, "%lu", &result) != 1) {
+	if (sscanf(buffer, "%lu", &value) != 1) {
 		log_warn("sysfs file %s not in expected format: %s", path, buffer);
-		goto out;
+		goto out_close;
 	}
 
-	log_very_verbose("Device %s %s is %lu bytes.",
-			 dev_name(dev), attribute, result);
+	log_very_verbose("Device %s: %s is %lu%s.",
+			 dev_name(dev), attribute, result, default_value ? "" : " bytes");
 
-out:
+	result = value >> SECTOR_SHIFT;
+
+out_close:
 	if (fclose(fp))
 		log_sys_debug("fclose", path);
 
-	return result >> SECTOR_SHIFT;
+out:
+	return result;
 }
 
 unsigned long dev_alignment_offset(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "alignment_offset", dev);
+	return _dev_topology_attribute(dt, "alignment_offset", dev, 0UL);
 }
 
 unsigned long dev_minimum_io_size(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "queue/minimum_io_size", dev);
+	return _dev_topology_attribute(dt, "queue/minimum_io_size", dev, 0UL);
 }
 
 unsigned long dev_optimal_io_size(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "queue/optimal_io_size", dev);
+	return _dev_topology_attribute(dt, "queue/optimal_io_size", dev, 0UL);
 }
 
 unsigned long dev_discard_max_bytes(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "queue/discard_max_bytes", dev);
+	return _dev_topology_attribute(dt, "queue/discard_max_bytes", dev, 0UL);
 }
 
 unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev)
 {
-	return _dev_topology_attribute(dt, "queue/discard_granularity", dev);
+	return _dev_topology_attribute(dt, "queue/discard_granularity", dev, 0UL);
 }
 
+int dev_is_rotational(struct dev_types *dt, struct device *dev)
+{
+	return (int) _dev_topology_attribute(dt, "queue/rotational", dev, 1UL);
+}
 #else
 
 int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
@@ -779,4 +788,8 @@ unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev)
 	return 0UL;
 }
 
+int dev_is_rotational(struct dev_types *dt, struct device *dev)
+{
+	return 1;
+}
 #endif

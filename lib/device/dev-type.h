@@ -82,4 +82,6 @@ unsigned long dev_optimal_io_size(struct dev_types *dt, struct device *dev);
 unsigned long dev_discard_max_bytes(struct dev_types *dt, struct device *dev);
 unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev);
 
+int dev_is_rotational(struct dev_types *dt, struct device *dev);
+
 #endif
