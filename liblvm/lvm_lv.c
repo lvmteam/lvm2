@@ -295,13 +295,13 @@ static int _lvm_lv_activate(lv_t lv)
 		return -1;
 
 	/* FIXME: handle pvmove stuff later */
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Unable to activate locked LV");
 		return -1;
 	}
 
 	/* FIXME: handle lvconvert stuff later */
-	if (lv->status & CONVERTING) {
+	if (lv_is_converting(lv)) {
 		log_error("Unable to activate LV with in-progress lvconvert");
 		return -1;
 	}

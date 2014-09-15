@@ -111,9 +111,9 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		goto bad;
 	}
 
-	if (lvl->lv->status & (RAID_IMAGE | RAID_META)) {
+	if (lv_is_raid_image(lvl->lv) || lv_is_raid_metadata(lvl->lv)) {
 		log_error("Cannot rename a RAID %s directly",
-			  (lvl->lv->status & RAID_IMAGE) ? "image" :
+			  lv_is_raid_image(lvl->lv) ? "image" :
 			  "metadata area");
 		goto bad;
 	}

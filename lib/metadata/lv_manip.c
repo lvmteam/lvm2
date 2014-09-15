@@ -191,7 +191,7 @@ static int _lv_layout_and_role_mirror(struct dm_pool *mem,
 		if (lv_is_mirrored(lv) &&
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
-	} else if (lv->status & PVMOVE) {
+	} else if (lv_is_pvmove(lv)) {
 		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_PVMOVE]) ||
 		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_MIRROR]))
 			goto_bad;
@@ -464,7 +464,7 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	}
 
 	/* Mirrors and related */
-	if (lv_is_mirror_type(lv) && !lv_is_raid(lv) &&
+	if ((lv_is_mirror_type(lv) || lv_is_pvmove(lv)) && !lv_is_raid(lv) &&
 	    !_lv_layout_and_role_mirror(mem, lv, *layout, *role, &public_lv))
 		goto_bad;
 
@@ -1035,9 +1035,9 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		return 1;
 	}
 
-	if ((seg_lv(seg, s)->status & MIRROR_IMAGE) ||
-	    (seg_lv(seg, s)->status & THIN_POOL_DATA) ||
-	    (seg_lv(seg, s)->status & CACHE_POOL_DATA)) {
+	if (lv_is_mirror_image(seg_lv(seg, s)) ||
+	    lv_is_thin_pool_data(seg_lv(seg, s)) ||
+	    lv_is_cache_pool_data(seg_lv(seg, s))) {
 		if (!lv_reduce(seg_lv(seg, s), area_reduction))
 			return_0; /* FIXME: any upper level reporting */
 		return 1;
@@ -1052,7 +1052,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 			return_0;
 	}
 
-	if (seg_lv(seg, s)->status & RAID_IMAGE) {
+	if (lv_is_raid_image(seg_lv(seg, s))) {
 		/*
 		 * FIXME: Use lv_reduce not lv_remove
 		 *  We use lv_remove for now, because I haven't figured out
@@ -3203,7 +3203,7 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	struct segment_type *segtype;
 	struct logical_volume *orig_lv, *copy_lv;
 
-	if (!(lv->status & PVMOVE)) {
+	if (!lv_is_pvmove(lv)) {
 		log_error(INTERNAL_ERROR
 			  "Non-pvmove LV, %s, passed as argument", lv->name);
 		return 0;
@@ -3803,7 +3803,7 @@ static int _rename_single_lv(struct logical_volume *lv, char *new_name)
 		return 0;
 	}
 
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Cannot rename locked LV %s", lv->name);
 		return 0;
 	}
@@ -3954,7 +3954,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Cannot rename locked LV %s", lv->name);
 		return 0;
 	}
@@ -4316,7 +4316,7 @@ static int _lvresize_check_lv(struct cmd_context *cmd, struct logical_volume *lv
 		return 0;
 	}
 
-	if (lv->status & (RAID_IMAGE | RAID_META)) {
+	if (lv_is_raid_image(lv) || lv_is_raid_metadata(lv)) {
 		log_error("Cannot resize a RAID %s directly",
 			  (lv->status & RAID_IMAGE) ? "image" :
 			  "metadata area");
@@ -4356,12 +4356,12 @@ static int _lvresize_check_lv(struct cmd_context *cmd, struct logical_volume *lv
 		return 0;
 	}
 
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Can't resize locked LV %s", lv->name);
 		return 0;
 	}
 
-	if (lv->status & CONVERTING) {
+	if (lv_is_converting(lv)) {
 		log_error("Can't resize %s while lvconvert in progress", lv->name);
 		return 0;
 	}
@@ -5379,19 +5379,19 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (lv->status & MIRROR_IMAGE) {
+	if (lv_is_mirror_image(lv)) {
 		log_error("Can't remove logical volume %s used by a mirror",
 			  lv->name);
 		return 0;
 	}
 
-	if (lv->status & MIRROR_LOG) {
+	if (lv_is_mirror_log(lv)) {
 		log_error("Can't remove logical volume %s used as mirror log",
 			  lv->name);
 		return 0;
 	}
 
-	if (lv->status & (RAID_META | RAID_IMAGE)) {
+	if (lv_is_raid_metadata(lv) || lv_is_raid_image(lv)) {
 		log_error("Can't remove logical volume %s used as RAID device",
 			  lv->name);
 		return 0;
@@ -5405,7 +5405,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (lv_is_thin_volume(lv))
 		pool_lv = first_seg(lv)->pool_lv;
 
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Can't remove locked LV %s", lv->name);
 		return 0;
 	}
@@ -6615,7 +6615,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (pool_lv->status & LOCKED) {
+		if (lv_is_locked(pool_lv)) {
 			log_error("Caching locked devices is not supported.");
 			return NULL;
 		}
@@ -6641,7 +6641,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (org->status & LOCKED) {
+		if (lv_is_locked(org)) {
 			log_error("Caching locked devices is not supported.");
 			return NULL;
 		}
@@ -6670,7 +6670,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (org->status & LOCKED) {
+		if (lv_is_locked(org)) {
 			log_error("Snapshots of locked devices are not supported.");
 			return NULL;
 		}
@@ -6703,7 +6703,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					  "supported yet.");
 				return NULL;
 			}
-			if (org->status & LOCKED) {
+			if (lv_is_locked(org)) {
 				log_error("Snapshots of locked devices are not "
 					  "supported yet");
 				return NULL;

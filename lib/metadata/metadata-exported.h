@@ -42,62 +42,62 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-#define PARTIAL_VG		UINT64_C(0x00000001)	/* VG */
-#define EXPORTED_VG		UINT64_C(0x00000002)	/* VG PV */
-#define RESIZEABLE_VG		UINT64_C(0x00000004)	/* VG */
+#define PARTIAL_VG		UINT64_C(0x0000000000000001)	/* VG */
+#define EXPORTED_VG		UINT64_C(0x0000000000000002)	/* VG PV */
+#define RESIZEABLE_VG		UINT64_C(0x0000000000000004)	/* VG */
 
 /* May any free extents on this PV be used or must they be left free? */
-#define ALLOCATABLE_PV		UINT64_C(0x00000008)	/* PV */
+#define ALLOCATABLE_PV		UINT64_C(0x0000000000000008)	/* PV */
 #define ARCHIVED_VG		ALLOCATABLE_PV		/* VG, reuse same bit */
 
-//#define SPINDOWN_LV		UINT64_C(0x00000010)	/* LV */
-//#define BADBLOCK_ON		UINT64_C(0x00000020)	/* LV */
-#define VISIBLE_LV		UINT64_C(0x00000040)	/* LV */
-#define FIXED_MINOR		UINT64_C(0x00000080)	/* LV */
+//#define SPINDOWN_LV		UINT64_C(0x0000000000000010)	/* LV */
+//#define BADBLOCK_ON		UINT64_C(0x0000000000000020)	/* LV */
+#define VISIBLE_LV		UINT64_C(0x0000000000000040)	/* LV */
+#define FIXED_MINOR		UINT64_C(0x0000000000000080)	/* LV */
 
-#define LVM_READ		UINT64_C(0x00000100)	/* LV, VG */
-#define LVM_WRITE		UINT64_C(0x00000200)	/* LV, VG */
+#define LVM_READ		UINT64_C(0x0000000000000100)	/* LV, VG */
+#define LVM_WRITE		UINT64_C(0x0000000000000200)	/* LV, VG */
 
-#define CLUSTERED		UINT64_C(0x00000400)	/* VG */
-//#define SHARED		UINT64_C(0x00000800)	/* VG */
+#define CLUSTERED		UINT64_C(0x0000000000000400)	/* VG */
+//#define SHARED		UINT64_C(0x0000000000000800)	/* VG */
 
 /* FIXME Remove when metadata restructuring is completed */
-#define SNAPSHOT		UINT64_C(0x00001000)	/* LV - internal use only */
-#define PVMOVE			UINT64_C(0x00002000)	/* VG LV SEG */
-#define LOCKED			UINT64_C(0x00004000)	/* LV */
-#define MIRRORED		UINT64_C(0x00008000)	/* LV - internal use only */
-//#define VIRTUAL		UINT64_C(0x00010000)	/* LV - internal use only */
-#define MIRROR_LOG		UINT64_C(0x00020000)	/* LV */
-#define MIRROR_IMAGE		UINT64_C(0x00040000)	/* LV */
+#define SNAPSHOT		UINT64_C(0x0000000000001000)	/* LV - internal use only */
+#define PVMOVE			UINT64_C(0x0000000000002000)	/* VG LV SEG */
+#define LOCKED			UINT64_C(0x0000000000004000)	/* LV */
+#define MIRRORED		UINT64_C(0x0000000000008000)	/* LV - internal use only */
+//#define VIRTUAL		UINT64_C(0x0000000000010000)	/* LV - internal use only */
+#define MIRROR_LOG		UINT64_C(0x0000000000020000)	/* LV - Internal use only */
+#define MIRROR_IMAGE		UINT64_C(0x0000000000040000)	/* LV - Internal use only */
 
-#define LV_NOTSYNCED		UINT64_C(0x00080000)	/* LV */
-#define LV_REBUILD		UINT64_C(0x00100000)	/* LV */
-//#define PRECOMMITTED		UINT64_C(0x00200000)	/* VG - internal use only */
-#define CONVERTING		UINT64_C(0x00400000)	/* LV */
+#define LV_NOTSYNCED		UINT64_C(0x0000000000080000)	/* LV */
+#define LV_REBUILD		UINT64_C(0x0000000000100000)	/* LV */
+//#define PRECOMMITTED		UINT64_C(0x0000000000200000)	/* VG - internal use only */
+#define CONVERTING		UINT64_C(0x0000000000400000)	/* LV */
 
-#define MISSING_PV		UINT64_C(0x00800000)	/* PV */
-#define PARTIAL_LV		UINT64_C(0x01000000)	/* LV - derived flag, not
+#define MISSING_PV		UINT64_C(0x0000000000800000)	/* PV */
+#define PARTIAL_LV		UINT64_C(0x0000000001000000)	/* LV - derived flag, not
 							   written out in metadata*/
 
-//#define POSTORDER_FLAG	UINT64_C(0x02000000) /* Not real flags, reserved for
-//#define POSTORDER_OPEN_FLAG	UINT64_C(0x04000000)    temporary use inside vg_read_internal. */
-//#define VIRTUAL_ORIGIN	UINT64_C(0x08000000)	/* LV - internal use only */
+//#define POSTORDER_FLAG	UINT64_C(0x0000000002000000) /* Not real flags, reserved for
+//#define POSTORDER_OPEN_FLAG	UINT64_C(0x0000000004000000)    temporary use inside vg_read_internal. */
+//#define VIRTUAL_ORIGIN	UINT64_C(0x0000000008000000)	/* LV - internal use only */
 
-#define MERGING			UINT64_C(0x10000000)	/* LV SEG */
+#define MERGING			UINT64_C(0x0000000010000000)	/* LV SEG */
 
-#define REPLICATOR		UINT64_C(0x20000000)	/* LV -internal use only for replicator */
-#define REPLICATOR_LOG		UINT64_C(0x40000000)	/* LV -internal use only for replicator-dev */
-#define UNLABELLED_PV		UINT64_C(0x80000000)	/* PV -this PV had no label written yet */
+#define REPLICATOR		UINT64_C(0x0000000020000000)	/* LV -internal use only for replicator */
+#define REPLICATOR_LOG		UINT64_C(0x0000000040000000)	/* LV -internal use only for replicator-dev */
+#define UNLABELLED_PV		UINT64_C(0x0000000080000000)	/* PV -this PV had no label written yet */
 
-#define RAID			UINT64_C(0x0000000100000000)	/* LV */
-#define RAID_META		UINT64_C(0x0000000200000000)	/* LV */
-#define RAID_IMAGE		UINT64_C(0x0000000400000000)	/* LV */
+#define RAID			UINT64_C(0x0000000100000000)	/* LV - Internal use only */
+#define RAID_META		UINT64_C(0x0000000200000000)	/* LV - Internal use only */
+#define RAID_IMAGE		UINT64_C(0x0000000400000000)	/* LV - Internal use only */
 
-#define THIN_VOLUME		UINT64_C(0x0000001000000000)	/* LV */
-#define THIN_POOL		UINT64_C(0x0000002000000000)	/* LV */
-#define THIN_POOL_DATA		UINT64_C(0x0000004000000000)	/* LV */
-#define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV */
-#define POOL_METADATA_SPARE	UINT64_C(0x0000010000000000)	/* LV internal */
+#define THIN_VOLUME		UINT64_C(0x0000001000000000)	/* LV - Internal use only */
+#define THIN_POOL		UINT64_C(0x0000002000000000)	/* LV - Internal use only */
+#define THIN_POOL_DATA		UINT64_C(0x0000004000000000)	/* LV - Internal use only */
+#define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV - Internal use only */
+#define POOL_METADATA_SPARE	UINT64_C(0x0000010000000000)	/* LV - Internal use only */
 
 #define LV_WRITEMOSTLY		UINT64_C(0x0000020000000000)	/* LV (RAID1) */
 
@@ -110,10 +110,12 @@
 									this flag dropped during single
 									LVM command execution. */
 
-#define CACHE_POOL		UINT64_C(0x0000200000000000)    /* LV */
-#define CACHE_POOL_DATA		UINT64_C(0x0000400000000000)    /* LV */
-#define CACHE_POOL_METADATA	UINT64_C(0x0000800000000000)    /* LV */
-#define CACHE			UINT64_C(0x0001000000000000)    /* LV */
+#define CACHE_POOL		UINT64_C(0x0000200000000000)    /* LV - Internal use only */
+#define CACHE_POOL_DATA		UINT64_C(0x0000400000000000)    /* LV - Internal use only */
+#define CACHE_POOL_METADATA	UINT64_C(0x0000800000000000)    /* LV - Internal use only */
+#define CACHE			UINT64_C(0x0001000000000000)    /* LV - Internal use only */
+
+/* Next unused flag:		UINT64_C(0x0002000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -162,34 +164,43 @@
 
 #define vg_is_archived(vg)	(((vg)->status & ARCHIVED_VG) ? 1 : 0)
 
+#define lv_is_locked(lv)	(((lv)->status & LOCKED) ? 1 : 0)
+#define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
+#define lv_is_merging(lv)	(((lv)->status & MERGING) ? 1 : 0)
+#define lv_is_converting(lv)	(((lv)->status & CONVERTING) ? 1 : 0)
 #define lv_is_external_origin(lv)	(((lv)->external_count > 0) ? 1 : 0)
-#define lv_is_thin_volume(lv)	(((lv)->status & (THIN_VOLUME)) ? 1 : 0)
-#define lv_is_thin_pool(lv)	(((lv)->status & (THIN_POOL)) ? 1 : 0)
-#define lv_is_used_thin_pool(lv)	(lv_is_thin_pool(lv) && !dm_list_empty(&(lv)->segs_using_this_lv))
-#define lv_is_thin_pool_data(lv)	(((lv)->status & (THIN_POOL_DATA)) ? 1 : 0)
-#define lv_is_thin_pool_metadata(lv)	(((lv)->status & (THIN_POOL_METADATA)) ? 1 : 0)
-#define lv_is_mirrored(lv)	(((lv)->status & (MIRRORED)) ? 1 : 0)
-#define lv_is_rlog(lv)		(((lv)->status & (REPLICATOR_LOG)) ? 1 : 0)
 
+#define lv_is_thin_volume(lv)	(((lv)->status & THIN_VOLUME) ? 1 : 0)
+#define lv_is_thin_pool(lv)	(((lv)->status & THIN_POOL) ? 1 : 0)
+#define lv_is_used_thin_pool(lv)	(lv_is_thin_pool(lv) && !dm_list_empty(&(lv)->segs_using_this_lv))
+#define lv_is_thin_pool_data(lv)	(((lv)->status & THIN_POOL_DATA) ? 1 : 0)
+#define lv_is_thin_pool_metadata(lv)	(((lv)->status & THIN_POOL_METADATA) ? 1 : 0)
 #define lv_is_thin_type(lv)	(((lv)->status & (THIN_POOL | THIN_VOLUME | THIN_POOL_DATA | THIN_POOL_METADATA)) ? 1 : 0)
-#define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR_LOG | MIRROR_IMAGE | MIRRORED | PVMOVE)) ? 1 : 0)
-#define lv_is_mirror_image(lv)	(((lv)->status & (MIRROR_IMAGE)) ? 1 : 0)
-#define lv_is_mirror_log(lv)	(((lv)->status & (MIRROR_LOG)) ? 1 : 0)
-#define lv_is_raid(lv)		(((lv)->status & (RAID)) ? 1 : 0)
-#define lv_is_raid_image(lv)	(((lv)->status & (RAID_IMAGE)) ? 1 : 0)
-#define lv_is_raid_metadata(lv)	(((lv)->status & (RAID_META)) ? 1 : 0)
+
+#define lv_is_mirrored(lv)	(((lv)->status & MIRRORED) ? 1 : 0)
+
+#define lv_is_mirror_image(lv)	(((lv)->status & MIRROR_IMAGE) ? 1 : 0)
+#define lv_is_mirror_log(lv)	(((lv)->status & MIRROR_LOG) ? 1 : 0)
+#define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR_LOG | MIRROR_IMAGE | MIRRORED)) ? 1 : 0)
+
+#define lv_is_pvmove(lv)	(((lv)->status & PVMOVE) ? 1 : 0)
+
+#define lv_is_raid(lv)		(((lv)->status & RAID) ? 1 : 0)
+#define lv_is_raid_image(lv)	(((lv)->status & RAID_IMAGE) ? 1 : 0)
+#define lv_is_raid_metadata(lv)	(((lv)->status & RAID_META) ? 1 : 0)
 #define lv_is_raid_type(lv)	(((lv)->status & (RAID | RAID_IMAGE | RAID_META)) ? 1 : 0)
 
-#define lv_is_cache(lv)		(((lv)->status & (CACHE)) ? 1 : 0)
-#define lv_is_cache_pool(lv)	(((lv)->status & (CACHE_POOL)) ? 1 : 0)
-#define lv_is_cache_pool_data(lv)	(((lv)->status & (CACHE_POOL_DATA)) ? 1 : 0)
-#define lv_is_cache_pool_metadata(lv)	(((lv)->status & (CACHE_POOL_METADATA)) ? 1 : 0)
+#define lv_is_cache(lv)		(((lv)->status & CACHE) ? 1 : 0)
+#define lv_is_cache_pool(lv)	(((lv)->status & CACHE_POOL) ? 1 : 0)
+#define lv_is_cache_pool_data(lv)	(((lv)->status & CACHE_POOL_DATA) ? 1 : 0)
+#define lv_is_cache_pool_metadata(lv)	(((lv)->status & CACHE_POOL_METADATA) ? 1 : 0)
 #define lv_is_cache_type(lv)	(((lv)->status & (CACHE | CACHE_POOL | CACHE_POOL_DATA | CACHE_POOL_METADATA)) ? 1 : 0)
 
-#define lv_is_virtual(lv)	(((lv)->status & (VIRTUAL)) ? 1 : 0)
 #define lv_is_pool(lv)		(((lv)->status & (CACHE_POOL | THIN_POOL)) ? 1 : 0)
 #define lv_is_pool_metadata(lv)		(((lv)->status & (CACHE_POOL_METADATA | THIN_POOL_METADATA)) ? 1 : 0)
-#define lv_is_pool_metadata_spare(lv)	(((lv)->status & (POOL_METADATA_SPARE)) ? 1 : 0)
+#define lv_is_pool_metadata_spare(lv)	(((lv)->status & POOL_METADATA_SPARE) ? 1 : 0)
+
+#define lv_is_rlog(lv)		(((lv)->status & REPLICATOR_LOG) ? 1 : 0)
 
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role);

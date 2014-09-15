@@ -136,12 +136,13 @@ int lv_is_virtual_origin(const struct logical_volume *lv)
 
 int lv_is_merging_origin(const struct logical_volume *origin)
 {
-	return (origin->status & MERGING) ? 1 : 0;
+	return lv_is_merging(origin);
 }
 
 int lv_is_merging_cow(const struct logical_volume *snapshot)
 {
 	struct lv_segment *snap_seg = find_snapshot(snapshot);
+
 	/* checks lv_segment's status to see if cow is merging */
 	return (snap_seg && (snap_seg->status & MERGING)) ? 1 : 0;
 }

@@ -1042,9 +1042,8 @@ static int _copypercent_disp(struct dm_report *rh,
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (((lv_is_raid(lv) && lv_raid_percent(lv, &percent)) ||
-
-	    ((lv->status & (PVMOVE | MIRRORED)) &&
-	     lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
+	     ((lv_is_pvmove(lv) || lv_is_mirrored(lv)) &&
+	      lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
 	    (percent != DM_PERCENT_INVALID)) {
 		percent = copy_percent(lv);
 		return dm_report_field_percent(rh, field, &percent);
@@ -1406,7 +1405,8 @@ static int _lvconverting_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)
 {
-	int converting = (((const struct logical_volume *) data)->status & CONVERTING) != 0;
+	int converting = lv_is_converting((const struct logical_volume *) data);
+
 	return _binary_disp(rh, mem, field, converting, "converting", private);
 }
 
@@ -1417,7 +1417,7 @@ static int _lvpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_with_info *lvi = (const struct lv_with_info *) data;
 	const char *perms = "";
 
-	if (!(lvi->lv->status & PVMOVE)) {
+	if (!lv_is_pvmove(lvi->lv)) {
 		if (lvi->lv->status & LVM_WRITE) {
 			if (!lvi->info->exists)
 				perms = _str_unknown;
@@ -1447,6 +1447,7 @@ static int _lvallocationlocked_disp(struct dm_report *rh, struct dm_pool *mem,
 				    const void *data, void *private)
 {
 	int alloc_locked = (((const struct logical_volume *) data)->status & LOCKED) != 0;
+
 	return _binary_disp(rh, mem, field, alloc_locked, FIRST_NAME(lv_allocation_locked_y), private);
 }
 
@@ -1455,6 +1456,7 @@ static int _lvfixedminor_disp(struct dm_report *rh, struct dm_pool *mem,
 			      const void *data, void *private)
 {
 	int fixed_minor = (((const struct logical_volume *) data)->status & FIXED_MINOR) != 0;
+
 	return _binary_disp(rh, mem, field, fixed_minor, FIRST_NAME(lv_fixed_minor_y), private);
 }
 

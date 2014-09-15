@@ -45,12 +45,12 @@ int lv_merge_segments(struct logical_volume *lv)
 	 * having a matching segment structure.
 	 */
 
-	if (lv->status & LOCKED || lv->status & PVMOVE)
+	if (lv_is_locked(lv) || lv_is_pvmove(lv))
 		return 1;
 
-	if ((lv->status & MIRROR_IMAGE) &&
+	if (lv_is_mirror_image(lv) &&
 	    (seg = get_only_segment_using_this_lv(lv)) &&
-	    (seg->lv->status & LOCKED || seg->lv->status & PVMOVE))
+	    (lv_is_locked(seg->lv) || lv_is_pvmove(seg->lv)))
 		return 1;
 
 	dm_list_iterate_safe(segh, t, &lv->segments) {
@@ -159,7 +159,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		 * Check mirror log - which is attached to the mirrored seg
 		 */
 		if (complete_vg && seg->log_lv && seg_is_mirrored(seg)) {
-			if (!(seg->log_lv->status & MIRROR_LOG)) {
+			if (!lv_is_mirror_log(seg->log_lv)) {
 				log_error("LV %s: segment %u log LV %s is not "
 					  "a mirror log",
 					  lv->name, seg_count, seg->log_lv->name);
@@ -346,7 +346,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 
 				if (complete_vg && seg_lv(seg, s) &&
-				    (seg_lv(seg, s)->status & MIRROR_IMAGE) &&
+				    lv_is_mirror_image(seg_lv(seg, s)) &&
 				    (!(seg2 = find_seg_by_le(seg_lv(seg, s),
 							    seg_le(seg, s))) ||
 				     find_mirror_seg(seg2) != seg)) {

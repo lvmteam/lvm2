@@ -1273,7 +1273,7 @@ static int _lv_activate_lv(struct logical_volume *lv, struct lv_activate_opts *l
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
 		return_0;
 
 	if (!(r = dev_manager_activate(dm, lv, laopts)))
@@ -1290,7 +1290,7 @@ static int _lv_preload(struct logical_volume *lv, struct lv_activate_opts *laopt
 	struct dev_manager *dm;
 	int old_readonly = laopts->read_only;
 
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
 		goto_out;
 
 	laopts->read_only = _passes_readonly_filter(lv->vg->cmd, lv);
@@ -1332,7 +1332,7 @@ static int _lv_suspend_lv(struct logical_volume *lv, struct lv_activate_opts *la
 	 * When we are asked to manipulate (normally suspend/resume) the PVMOVE
 	 * device directly, we don't want to touch the devices that use it.
 	 */
-	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, (lv->status & PVMOVE) ? 0 : 1)))
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, !lv_is_pvmove(lv))))
 		return_0;
 
 	if (!(r = dev_manager_suspend(dm, lv, laopts, lockfs, flush_required)))
@@ -1872,8 +1872,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	 * tables for all the changed LVs here, as the relationships
 	 * are not found by walking the new metadata.
 	 */
-	if (!(incore_lv->status & LOCKED) &&
-	    (ondisk_lv->status & LOCKED) &&
+	if (!lv_is_locked(incore_lv) &&
+	    lv_is_locked(ondisk_lv) &&
 	    (pvmove_lv = find_pvmove_lv_in_lv(ondisk_lv))) {
 		/* Preload all the LVs above the PVMOVE LV */
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
@@ -1951,7 +1951,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
  	 * can be called separately for each LV safely.
  	 */
 	if ((incore_lv->vg->status & PRECOMMITTED) &&
-	    (incore_lv->status & LOCKED) && find_pvmove_lv_in_lv(incore_lv)) {
+	    lv_is_locked(incore_lv) && find_pvmove_lv_in_lv(incore_lv)) {
 		if (!_lv_suspend_lv(incore_lv, laopts, lockfs, flush_required)) {
 			critical_section_dec(cmd, "failed precommitted suspend");
 			if (pvmove_lv)

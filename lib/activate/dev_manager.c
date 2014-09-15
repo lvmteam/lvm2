@@ -1150,7 +1150,7 @@ int dev_manager_raid_message(struct dev_manager *dm,
 	struct dm_task *dmt;
 	const char *layer = lv_layer(lv);
 
-	if (!(lv->status & RAID)) {
+	if (!lv_is_raid(lv)) {
 		log_error(INTERNAL_ERROR "%s/%s is not a RAID logical volume",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -1978,7 +1978,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to. */
-	if (dm->track_pvmove_deps && lv->status & PVMOVE) {
+	if (dm->track_pvmove_deps && lv_is_pvmove(lv)) {
 		dm->track_pvmove_deps = 0;
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
 			if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
@@ -2729,7 +2729,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	dm_tree_node_set_read_ahead(dnode, read_ahead, read_ahead_flags);
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to */
-	if (dm->track_pvmove_deps && (lv->status & PVMOVE))
+	if (dm->track_pvmove_deps && lv_is_pvmove(lv))
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
 			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, laopts, NULL))
 				return_0;
@@ -2917,8 +2917,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
-		if (!dm->flush_required && !seg_is_raid(first_seg(lv)) &&
-		    (lv->status & MIRRORED) && !(lv->status & PVMOVE))
+		if (!dm->flush_required && !seg_is_raid(first_seg(lv)) && lv_is_mirrored(lv) && !lv_is_pvmove(lv))
 			dm_tree_use_no_flush_suspend(root);
 		/* Fall through */
 	case SUSPEND_WITH_LOCKFS:

@@ -587,10 +587,10 @@ int lvdisplay_full(struct cmd_context *cmd,
 			  display_size(cmd, (uint64_t) snap_seg->chunk_size));
 	}
 
-	if (lv->status & MIRRORED) {
+	if (lv_is_mirrored(lv)) {
 		mirror_seg = first_seg(lv);
 		log_print("Mirrored volumes       %" PRIu32, mirror_seg->area_count);
-		if (lv->status & CONVERTING)
+		if (lv_is_converting(lv))
 			log_print("LV type        Mirror undergoing conversion");
 	}
 

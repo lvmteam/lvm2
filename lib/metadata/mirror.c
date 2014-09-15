@@ -42,9 +42,7 @@
  */
 int is_temporary_mirror_layer(const struct logical_volume *lv)
 {
-	if (lv->status & MIRROR_IMAGE
-	    && lv->status & MIRRORED
-	    && !(lv->status & LOCKED))
+	if (lv_is_mirror_image(lv) && lv_is_mirrored(lv) && !lv_is_locked(lv))
 		return 1;
 
 	return 0;
@@ -58,7 +56,7 @@ struct logical_volume *find_temporary_mirror(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	if (!(lv->status & MIRRORED))
+	if (!lv_is_mirrored(lv))
 		return NULL;
 
 	seg = first_seg(lv);
@@ -109,7 +107,7 @@ uint32_t lv_mirror_count(const struct logical_volume *lv)
 	struct lv_segment *seg;
 	uint32_t s, mirrors;
 
-	if (!(lv->status & MIRRORED))
+	if (!lv_is_mirrored(lv))
 		return 1;
 
 	seg = first_seg(lv);
@@ -118,7 +116,7 @@ uint32_t lv_mirror_count(const struct logical_volume *lv)
 	if (!strcmp(seg->segtype->name, "raid10"))
 		return 2;
 
-	if (lv->status & PVMOVE)
+	if (lv_is_pvmove(lv))
 		return seg->area_count;
 
 	mirrors = 0;
@@ -612,7 +610,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct cmd_context *cmd = lv->vg->cmd;
 
-	if (!(lv->status & MIRRORED)) {
+	if (!lv_is_mirrored(lv)) {
 		log_error("Unable to split non-mirrored LV, %s",
 			  lv->name);
 		return 0;
@@ -950,7 +948,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		if (remove_log && !detached_log_lv)
 			detached_log_lv = detach_mirror_log(mirrored_seg);
 
-		if (lv->status & PVMOVE)
+		if (lv_is_pvmove(lv))
 			dm_list_iterate_items(pvmove_seg, &lv->segments)
 				pvmove_seg->status |= PVMOVE;
 	} else if (new_area_count == 0) {
@@ -1524,7 +1522,7 @@ struct logical_volume *find_pvmove_lv_in_lv(struct logical_volume *lv)
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
-			if (seg_lv(seg, s)->status & PVMOVE)
+			if (lv_is_pvmove(seg_lv(seg, s)))
 				return seg_lv(seg, s);
 		}
 	}
@@ -2116,7 +2114,7 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 	if (vg_is_clustered(lv->vg)) {
 		/* FIXME: move this test out of this function */
 		/* Skip test for pvmove mirrors, it can use local mirror */
-		if (!(lv->status & (PVMOVE | LOCKED)) &&
+		if (!lv_is_pvmove(lv) && !lv_is_locked(lv) &&
 		    lv_is_active(lv) &&
 		    !lv_is_active_exclusive_locally(lv) && /* lv_is_active_remotely */
 		    !_cluster_mirror_is_available(lv)) {
@@ -2251,7 +2249,7 @@ int lv_remove_mirrors(struct cmd_context *cmd __attribute__((unused)),
 
 	/* MIRROR_BY_LV */
 	if (seg_type(seg, 0) == AREA_LV &&
-	    seg_lv(seg, 0)->status & MIRROR_IMAGE)
+	    lv_is_mirror_image(seg_lv(seg, 0)))
 		return remove_mirror_images(lv, new_mirrors + 1,
 					    is_removable, removable_baton,
 					    log_count ? 1U : 0);

@@ -1440,7 +1440,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (background_polling() &&
 	    is_change_activating(activate) &&
-	    (lv->status & (PVMOVE|CONVERTING|MERGING)))
+	    (lv_is_pvmove(lv) || lv_is_converting(lv) || lv_is_merging(lv)))
 		lv_spawn_background_polling(cmd, lv);
 
 	return r;
@@ -1509,19 +1509,19 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 {
 	const char *pvname;
 
-	if ((lv->status & PVMOVE) &&
+	if (lv_is_pvmove(lv) &&
 	    (pvname = get_pvmove_pvname_from_lv_mirr(lv))) {
 		log_verbose("Spawning background pvmove process for %s",
 			    pvname);
 		pvmove_poll(cmd, pvname, 1);
-	} else if ((lv->status & LOCKED) &&
-	    (pvname = get_pvmove_pvname_from_lv(lv))) {
+	} else if (lv_is_locked(lv) &&
+		   (pvname = get_pvmove_pvname_from_lv(lv))) {
 		log_verbose("Spawning background pvmove process for %s",
 			    pvname);
 		pvmove_poll(cmd, pvname, 1);
 	}
 
-	if (lv->status & (CONVERTING|MERGING)) {
+	if (lv_is_converting(lv) || lv_is_merging(lv)) {
 		log_verbose("Spawning background lvconvert process for %s",
 			lv->name);
 		lvconvert_poll(cmd, lv, 1);

@@ -322,19 +322,18 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		 * RAID, thin and snapshot-related LVs are not
 		 * processed in a cluster, so we don't have to
 		 * worry about avoiding certain PVs in that context.
+		 *
+		 * Allow clustered mirror, but not raid mirror.
 		 */
-		if (vg_is_clustered(lv->vg)) {
-			/* Allow clustered mirror, but not raid mirror. */
-			if (!lv_is_mirror_type(lv) || lv_is_raid(lv))
-				continue;
-		}
+		if (vg_is_clustered(lv->vg) && (!lv_is_mirror_type(lv) || lv_is_raid(lv)))
+			continue;
 
 		if (!lv_is_on_pvs(lv, source_pvl))
 			continue;
 
-		if (lv->status & (CONVERTING | MERGING)) {
+		if (lv_is_converting(lv) || lv_is_merging(lv)) {
 			log_error("Unable to pvmove when %s volumes are present",
-				  (lv->status & CONVERTING) ?
+				  lv_is_converting(lv) ?
 				  "converting" : "merging");
 			return NULL;
 		}
@@ -423,7 +422,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 		}
 
-		if (lv->status & LOCKED) {
+		if (lv_is_locked(lv)) {
 			lv_skipped = 1;
 			log_print_unless_silent("Skipping locked LV %s", lv->name);
 			continue;

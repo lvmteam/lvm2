@@ -99,7 +99,7 @@ static int _is_converting(struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	if (lv->status & MIRRORED) {
+	if (lv_is_mirrored(lv)) {
 		seg = first_seg(lv);
 		/* Can't use is_temporary_mirror() because the metadata for
 		 * seg_lv may not be read in and flags may not be set yet. */

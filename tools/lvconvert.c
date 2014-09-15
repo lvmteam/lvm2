@@ -677,7 +677,7 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 				    struct logical_volume *lv,
 				    struct dm_list *lvs_changed __attribute__((unused)))
 {
-	if (!(lv->status & CONVERTING))
+	if (!lv_is_converting(lv))
 		return 1;
 
 	if (!collapse_mirrored_lv(lv)) {
@@ -968,7 +968,7 @@ static int _failed_logs_count(struct logical_volume *lv)
 	unsigned s;
 	struct logical_volume *log_lv = first_seg(lv)->log_lv;
 	if (log_lv && (log_lv->status & PARTIAL_LV)) {
-		if (log_lv->status & MIRRORED)
+		if (lv_is_mirrored(log_lv))
 			ret += _failed_mirrors_count(log_lv);
 		else
 			ret += 1;
@@ -1109,7 +1109,7 @@ static int _lv_update_mirrored_log(struct logical_volume *lv,
 		return 1;
 
 	log_lv = first_seg(_original_lv(lv))->log_lv;
-	if (!log_lv || !(log_lv->status & MIRRORED))
+	if (!log_lv || !lv_is_mirrored(log_lv))
 		return 1;
 
 	old_log_count = _get_log_count(lv);
@@ -1252,7 +1252,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 		*new_mimage_count = *old_mimage_count;
 		*new_log_count = *old_log_count;
 
-		if (find_temporary_mirror(lv) || (lv->status & CONVERTING))
+		if (find_temporary_mirror(lv) || lv_is_converting(lv))
 			lp->need_polling = 1;
 		return 1;
 	}
@@ -1337,7 +1337,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	/*
 	 * Region size must not change on existing mirrors
 	 */
-	if (arg_count(cmd, regionsize_ARG) && (lv->status & MIRRORED) &&
+	if (arg_count(cmd, regionsize_ARG) && lv_is_mirrored(lv) &&
 	    (lp->region_size != first_seg(lv)->region_size)) {
 		log_error("Mirror log region size cannot be changed on "
 			  "an existing mirror.");
@@ -1348,7 +1348,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	 * For the most part, we cannot handle multi-segment mirrors. Bail out
 	 * early if we have encountered one.
 	 */
-	if ((lv->status & MIRRORED) && dm_list_size(&lv->segments) != 1) {
+	if (lv_is_mirrored(lv) && dm_list_size(&lv->segments) != 1) {
 		log_error("Logical volume %s has multiple "
 			  "mirror segments.", lv->name);
 		return 0;
@@ -1378,7 +1378,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 	uint32_t old_mimage_count = lv_mirror_count(lv);
 	uint32_t old_log_count = _get_log_count(lv);
 
-	if ((lp->mirrors == 1) && !(lv->status & MIRRORED)) {
+	if ((lp->mirrors == 1) && !lv_is_mirrored(lv)) {
 		log_warn("Logical volume %s is already not mirrored.",
 			 lv->name);
 		return 1;
@@ -1396,7 +1396,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 	/*
 	 * Up-convert from linear to mirror
 	 */
-	if (!(lv->status & MIRRORED)) {
+	if (!lv_is_mirrored(lv)) {
 		/* FIXME Share code with lvcreate */
 
 		/*
@@ -1442,7 +1442,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		 * Is there already a convert in progress?  We do not
 		 * currently allow more than one.
 		 */
-		if (find_temporary_mirror(lv) || (lv->status & CONVERTING)) {
+		if (find_temporary_mirror(lv) || lv_is_converting(lv)) {
 			log_error("%s is already being converted.  Unable to start another conversion.",
 				  lv->name);
 			return 0;
@@ -1523,7 +1523,7 @@ out:
 	/*
 	 * Converting the log type
 	 */
-	if ((lv->status & MIRRORED) && (old_log_count != new_log_count)) {
+	if (lv_is_mirrored(lv) && (old_log_count != new_log_count)) {
 		if (!_lv_update_log_type(cmd, lp, lv,
 					 operable_pvs, new_log_count))
 			return_0;
@@ -1959,7 +1959,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 	if (!vg_check_status(vg, LVM_WRITE))
 		return_ECMD_FAILED;
 
-	if (lv_is_mirror_type(cow) || lv_is_raid_type(cow) || lv_is_thin_type(cow)) {
+	if (lv_is_pvmove(cow) || lv_is_mirror_type(cow) || lv_is_raid_type(cow) || lv_is_thin_type(cow)) {
 		log_error("LV %s/%s type is unsupported with --splitsnapshot.", vg->name, cow->name);
 		return ECMD_FAILED;
 	}
@@ -2000,7 +2000,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 {
 	struct logical_volume *org;
 
-	if (lv->status & MIRRORED) {
+	if (lv_is_mirrored(lv)) {
 		log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 		return 0;
 	}
@@ -2025,11 +2025,11 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	if (!cow_has_min_chunks(lv->vg, lv->le_count, lp->chunk_size))
 		return_0;
 
-	if (org->status & (LOCKED|PVMOVE|MIRRORED) || lv_is_cow(org)) {
+	if (lv_is_locked(org) || lv_is_pvmove(org) || lv_is_mirrored(org) || lv_is_cow(org)) {
 		log_error("Unable to convert an LV into a snapshot of a %s LV.",
-			  org->status & LOCKED ? "locked" :
-			  org->status & PVMOVE ? "pvmove" :
-			  org->status & MIRRORED ? "mirrored" :
+			  lv_is_locked(org) ? "locked" :
+			  lv_is_pvmove(org) ? "pvmove" :
+			  lv_is_mirrored(org) ? "mirrored" :
 			  "snapshot");
 		return 0;
 	}
@@ -2665,7 +2665,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			log_error("Try \"raid1\" segment type instead.");
 			return 0;
 		}
-		if (metadata_lv->status & LOCKED) {
+		if (lv_is_locked(metadata_lv)) {
 			log_error("Can't convert locked LV %s.",
 				  display_lvname(metadata_lv));
 			return 0;
@@ -3031,7 +3031,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lvconvert_params *lp = handle;
 	struct dm_list *failed_pvs;
 
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Cannot convert locked LV %s", lv->name);
 		return ECMD_FAILED;
 	}
@@ -3042,7 +3042,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lv->status & PVMOVE) {
+	if (lv_is_pvmove(lv)) {
 		log_error("Unable to convert pvmove LV %s", lv->name);
 		return ECMD_FAILED;
 	}
@@ -3112,7 +3112,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			_remove_missing_empty_pv(lv->vg, failed_pvs);
 	} else if (arg_count(cmd, mirrors_ARG) ||
 		   arg_count(cmd, splitmirrors_ARG) ||
-		   (lv->status & MIRRORED)) {
+		   lv_is_mirrored(lv)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 

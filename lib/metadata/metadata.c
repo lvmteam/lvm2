@@ -2586,7 +2586,7 @@ int vg_validate(struct volume_group *vg)
 	}
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!(lvl->lv->status & PVMOVE))
+		if (!lv_is_pvmove(lvl->lv))
 			continue;
 		dm_list_iterate_items(seg, &lvl->lv->segments) {
 			if (seg_is_mirrored(seg)) {

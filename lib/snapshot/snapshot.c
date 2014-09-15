@@ -92,6 +92,7 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "chunk_size = %u", seg->chunk_size);
 	outf(f, "origin = \"%s\"", seg->origin->name);
+
 	if (!(seg->status & MERGING))
 		outf(f, "cow_store = \"%s\"", seg->cow->name);
 	else

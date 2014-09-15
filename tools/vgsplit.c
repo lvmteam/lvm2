@@ -71,7 +71,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		if (lv_is_raid(lv))
 			continue;
 
-		if ((lv->status & MIRRORED))
+		if (lv_is_mirrored(lv))
 			continue;
 
 		if (lv_is_thin_pool(lv) ||
@@ -192,7 +192,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 		if (lv_is_raid(lv))
 			continue;
 
-		if (!(lv->status & MIRRORED))
+		if (!lv_is_mirrored(lv))
 			continue;
 
 		seg = first_seg(lv);

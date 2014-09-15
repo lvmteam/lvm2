@@ -563,8 +563,8 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 			}
 
 			/* RAID devices are laid-out in metadata/data pairs */
-			if (!(seg_lv(seg, s)->status & RAID_IMAGE) ||
-			    !(seg_metalv(seg, s)->status & RAID_META)) {
+			if (!lv_is_raid_image(seg_lv(seg, s)) ||
+			    !lv_is_raid_metadata(seg_metalv(seg, s))) {
 				log_error("RAID segment has non-RAID areas");
 				return 0;
 			}

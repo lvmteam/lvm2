@@ -41,7 +41,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if ((lv->status & MIRRORED) && (vg_is_clustered(lv->vg)) &&
+	if (lv_is_mirrored(lv) && vg_is_clustered(lv->vg) &&
 	    lv_info(cmd, lv, 0, &info, 0, 0) && info.exists) {
 		log_error("Cannot change permissions of mirror \"%s\" "
 			  "while active.", lv->name);
@@ -49,9 +49,9 @@ static int lvchange_permission(struct cmd_context *cmd,
 	}
 
 	/* Not allowed to change permissions on RAID sub-LVs directly */
-	if ((lv->status & RAID_META) || (lv->status & RAID_IMAGE)) {
+	if (lv_is_raid_metadata(lv) || lv_is_raid_image(lv)) {
 		log_error("Cannot change permissions of RAID %s \"%s\"",
-			  (lv->status & RAID_IMAGE) ? "image" :
+			  lv_is_raid_image(lv) ? "image" :
 			  "metadata area", lv->name);
 		return 0;
 	}
@@ -137,7 +137,7 @@ static int lvchange_monitoring(struct cmd_context *cmd,
 	}
 
 	/* do not monitor pvmove lv's */
-	if (lv->status & PVMOVE)
+	if (lv_is_pvmove(lv))
 		return 1;
 
 	if ((dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) &&
@@ -287,18 +287,18 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 
 	dm_list_init(&device_list);
 
-	if (!(lv->status & MIRRORED) && !seg_is_raid(seg)) {
+	if (lv_is_mirrored(lv) && !seg_is_raid(seg)) {
 		log_error("Unable to resync %s.  It is not RAID or mirrored.",
 			  lv->name);
 		return 0;
 	}
 
-	if (lv->status & PVMOVE) {
+	if (lv_is_pvmove(lv)) {
 		log_error("Unable to resync pvmove volume %s", lv->name);
 		return 0;
 	}
 
-	if (lv->status & LOCKED) {
+	if (lv_is_locked(lv)) {
 		log_error("Unable to resync locked volume %s", lv->name);
 		return 0;
 	}
@@ -859,19 +859,19 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lv->status & PVMOVE) {
+	if (lv_is_pvmove(lv)) {
 		log_error("Unable to change pvmove LV %s", lv->name);
 		if (arg_count(cmd, activate_ARG))
 			log_error("Use 'pvmove --abort' to abandon a pvmove");
 		return ECMD_FAILED;
 	}
 
-	if (lv->status & MIRROR_LOG) {
+	if (lv_is_mirror_log(lv)) {
 		log_error("Unable to change mirror log LV %s directly", lv->name);
 		return ECMD_FAILED;
 	}
 
-	if (lv->status & MIRROR_IMAGE) {
+	if (lv_is_mirror_image(lv)) {
 		log_error("Unable to change mirror image LV %s directly",
 			  lv->name);
 		return ECMD_FAILED;

@@ -95,13 +95,13 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				goto restart;
 			}
 
-			if (lv->status & MIRRORED) {
+			if (lv_is_mirrored(lv)) {
 				if (!mirror_remove_missing(cmd, lv, 1))
 					return_0;
 				goto restart;
 			}
 
-			if (arg_count(cmd, mirrorsonly_ARG) &&!(lv->status & MIRRORED)) {
+			if (arg_count(cmd, mirrorsonly_ARG) && !lv_is_mirrored(lv)) {
 				log_error("Non-mirror-image LV %s found: can't remove.", lv->name);
 				continue;
 			}

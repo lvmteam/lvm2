@@ -36,7 +36,7 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 		/*
 		 * FIXME: Need to consider all cases... PVMOVE, etc
 		 */
-		if (lv->status & PVMOVE)
+		if (lv_is_pvmove(lv))
 			continue;
 
 		if (!monitor_dev_for_events(cmd, lv, 0, reg)) {
@@ -67,7 +67,7 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 			lv_active = info.exists;
 
 		if (lv_active &&
-		    (lv->status & (PVMOVE|CONVERTING|MERGING))) {
+		    (lv_is_pvmove(lv) || lv_is_converting(lv) || lv_is_merging(lv))) {
 			lv_spawn_background_polling(cmd, lv);
 			count++;
 		}
@@ -121,7 +121,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		/* Can't deactivate a pvmove LV */
 		/* FIXME There needs to be a controlled way of doing this */
-		if ((lv->status & PVMOVE) && !is_change_activating(activate))
+		if (lv_is_pvmove(lv) && !is_change_activating(activate))
 			continue;
 
 		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))

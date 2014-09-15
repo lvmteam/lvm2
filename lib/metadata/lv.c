@@ -340,7 +340,7 @@ char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
-	if (lv->status & (CONVERTING|MIRRORED)) {
+	if (lv_is_converting(lv) || lv_is_mirrored(lv)) {
 		seg = first_seg(lv);
 
 		/* Temporary mirror is always area_num == 0 */
@@ -361,7 +361,7 @@ char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		if (seg->status & PVMOVE) {
 			if (seg_type(seg, 0) == AREA_LV) { /* atomic pvmove */
 				mimage0_lv = seg_lv(seg, 0);
-				if (!lv_is_mirror_type(mimage0_lv)) {
+				if (!lv_is_mirrored(mimage0_lv)) {
 					log_error(INTERNAL_ERROR
 						  "Bad pvmove structure");
 					return NULL;
@@ -505,7 +505,7 @@ int lv_raid_image_in_sync(const struct logical_volume *lv)
 	if (!lv_is_active_locally(lv))
 		return 0;  /* Assume not in-sync */
 
-	if (!(lv->status & RAID_IMAGE)) {
+	if (!lv_is_raid_image(lv)) {
 		log_error(INTERNAL_ERROR "%s is not a RAID image", lv->name);
 		return 0;
 	}
@@ -573,7 +573,7 @@ int lv_raid_healthy(const struct logical_volume *lv)
 		return 0;
 	}
 
-	if (lv->status & RAID)
+	if (lv_is_raid(lv))
 		raid_seg = first_seg(lv);
 	else if ((seg = first_seg(lv)))
 		raid_seg = get_only_segment_using_this_lv(seg->lv);
@@ -592,7 +592,7 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	if (!lv_raid_dev_health(raid_seg->lv, &raid_health))
 		return_0;
 
-	if (lv->status & RAID) {
+	if (lv_is_raid(lv)) {
 		if (strchr(raid_health, 'D'))
 			return 0;
 		else
@@ -601,8 +601,8 @@ int lv_raid_healthy(const struct logical_volume *lv)
 
 	/* Find out which sub-LV this is. */
 	for (s = 0; s < raid_seg->area_count; s++)
-		if (((lv->status & RAID_IMAGE) && (seg_lv(raid_seg, s) == lv)) ||
-		    ((lv->status & RAID_META) && (seg_metalv(raid_seg,s) == lv)))
+		if ((lv_is_raid_image(lv) && (seg_lv(raid_seg, s) == lv)) ||
+		    (lv_is_raid_metadata(lv) && (seg_metalv(raid_seg,s) == lv)))
 			break;
 	if (s == raid_seg->area_count) {
 		log_error(INTERNAL_ERROR
@@ -633,7 +633,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	if (!*lv->name)
 		goto out;
 
-	if (lv->status & PVMOVE)
+	if (lv_is_pvmove(lv))
 		repstr[0] = 'p';
 	else if (lv->status & CONVERTING)
 		repstr[0] = 'c';
@@ -646,22 +646,22 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		repstr[0] = 'e';
 	else if (lv_is_cache_type(lv))
 		repstr[0] = 'C';
-	else if (lv->status & RAID)
+	else if (lv_is_raid(lv))
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'R' : 'r';
-	else if (lv->status & MIRRORED)
+	else if (lv_is_mirrored(lv))
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'M' : 'm';
 	else if (lv_is_thin_volume(lv))
 		repstr[0] = lv_is_merging_origin(lv) ?
 			'O' : (lv_is_merging_thin_snapshot(lv) ? 'S' : 'V');
-	else if (lv->status & VIRTUAL)
+	else if (lv_is_virtual(lv))
 		repstr[0] = 'v';
 	else if (lv_is_thin_pool(lv))
 		repstr[0] = 't';
 	else if (lv_is_thin_pool_data(lv))
 		repstr[0] = 'T';
-	else if (lv->status & MIRROR_IMAGE)
+	else if (lv_is_mirror_image(lv))
 		repstr[0] = (lv_mirror_image_in_sync(lv)) ? 'i' : 'I';
-	else if (lv->status & RAID_IMAGE)
+	else if (lv_is_raid_image(lv))
 		/*
 		 * Visible RAID_IMAGES are sub-LVs that have been exposed for
 		 * top-level use by being split from the RAID array with
@@ -669,7 +669,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		 */
 		repstr[0] = (!lv_is_visible(lv) && lv_raid_image_in_sync(lv)) ?
 			'i' : 'I';
-	else if (lv->status & MIRROR_LOG)
+	else if (lv_is_mirror_log(lv))
 		repstr[0] = 'l';
 	else if (lv_is_cow(lv))
 		repstr[0] = (lv_is_merging_cow(lv)) ? 'S' : 's';
@@ -678,7 +678,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	else
 		repstr[0] = '-';
 
-	if (lv->status & PVMOVE)
+	if (lv_is_pvmove(lv))
 		repstr[1] = '-';
 	else if (lv->status & LVM_WRITE)
 		repstr[1] = 'w';
@@ -689,7 +689,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	repstr[2] = alloc_policy_char(lv->alloc);
 
-	if (lv->status & LOCKED)
+	if (lv_is_locked(lv))
 		repstr[2] = toupper(repstr[2]);
 
 	repstr[3] = (lv->status & FIXED_MINOR) ? 'm' : '-';
@@ -743,7 +743,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		repstr[6] = 'C';
 	else if (lv_is_raid_type(lv))
 		repstr[6] = 'r';
-	else if (lv_is_mirror_type(lv))
+	else if (lv_is_mirror_type(lv) || lv_is_pvmove(lv))
 		repstr[6] = 'm';
 	else if (lv_is_cow(lv) || lv_is_origin(lv))
 		repstr[6] = 's';
@@ -770,7 +770,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 			repstr[8] = 'X';	/* Unknown */
 		else if (!lv_raid_healthy(lv))
 			repstr[8] = 'r';  /* RAID needs 'r'efresh */
-		else if (lv->status & RAID) {
+		else if (lv_is_raid(lv)) {
 			if (lv_raid_mismatch_count(lv, &n) && n)
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 		} else if (lv->status & LV_WRITEMOSTLY)
