@@ -325,7 +325,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		 *
 		 * Allow clustered mirror, but not raid mirror.
 		 */
-		if (vg_is_clustered(lv->vg) && (!lv_is_mirror_type(lv) || lv_is_raid(lv)))
+		if (vg_is_clustered(lv->vg) && !lv_is_mirror_type(lv))
 			continue;
 
 		if (!lv_is_on_pvs(lv, source_pvl))

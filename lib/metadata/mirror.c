@@ -742,6 +742,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 		detached_log_lv = detach_mirror_log(mirrored_seg);
 		if (!remove_layer_from_lv(lv, sub_lv))
 			return_0;
+		lv->status &= ~MIRROR;
 		lv->status &= ~MIRRORED;
 		lv->status &= ~LV_NOTSYNCED;
 	}
@@ -941,6 +942,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
                  * mirror. Fix up the flags if we only have one image left.
                  */
                 if (lv_mirror_count(lv) == 1) {
+                    lv->status &= ~MIRROR;
                     lv->status &= ~MIRRORED;
                     lv->status &= ~LV_NOTSYNCED;
                 }
@@ -957,6 +959,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		/* All mirror images are gone.
 		 * It can happen for vgreduce --removemissing. */
 		detached_log_lv = detach_mirror_log(mirrored_seg);
+		lv->status &= ~MIRROR;
 		lv->status &= ~MIRRORED;
 		lv->status &= ~LV_NOTSYNCED;
 		if (!replace_lv_with_error_segment(lv))
@@ -1502,9 +1505,10 @@ const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 	dm_list_iterate_items(seg, &lv_mirr->segments) {
 		if (!seg_is_mirrored(seg))
 			continue;
-		if (seg_type(seg, 0) != AREA_PV)
-			continue;
-		return dev_name(seg_dev(seg, 0));
+		if (seg_type(seg, 0) == AREA_PV)
+			return dev_name(seg_dev(seg, 0));
+		if (seg_type(seg, 0) == AREA_LV)
+			return dev_name(seg_dev(first_seg(seg_lv(seg, 0)), 0));
 	}
 
 	return NULL;

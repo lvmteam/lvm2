@@ -231,6 +231,10 @@ static int _lv_layout_and_role_raid(struct dm_pool *mem,
 		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_RAID]) ||
 		    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_METADATA]))
 			goto_bad;
+	} else if (lv_is_pvmove(lv)) {
+		if (!str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_PVMOVE]) ||
+		    !str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID]))
+			goto_bad;
 	} else
 		top_level = 1;
 
@@ -464,7 +468,7 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	}
 
 	/* Mirrors and related */
-	if ((lv_is_mirror_type(lv) || lv_is_pvmove(lv)) && !lv_is_raid(lv) &&
+	if ((lv_is_mirror_type(lv) || lv_is_pvmove(lv)) &&
 	    !_lv_layout_and_role_mirror(mem, lv, *layout, *role, &public_lv))
 		goto_bad;
 
@@ -985,6 +989,12 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	if (log_lv && !attach_mirror_log(seg, log_lv))
 		return_NULL;
 
+	if (segtype_is_mirror(segtype))
+		lv->status |= MIRROR;
+
+	if (segtype_is_mirrored(segtype))
+		lv->status |= MIRRORED;
+
 	return seg;
 }
 
@@ -1347,9 +1357,10 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 	 * an error segment, we should also clear any flags
 	 * that suggest it is anything other than "error".
 	 */
-	lv->status &= ~(MIRRORED|PVMOVE|LOCKED);
+	/* FIXME Check for other flags that need removing */
+	lv->status &= ~(MIRROR|MIRRORED|PVMOVE|LOCKED);
 
-	/* FIXME: Should we bug if we find a log_lv attached? */
+	/* FIXME Check for any attached LVs that will become orphans e.g. mirror logs */
 
 	if (!lv_add_virtual_segment(lv, 0, len, get_segtype_from_string(lv->vg->cmd, "error"), NULL))
 		return_0;
@@ -1857,9 +1868,6 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	extents = aa[0].len * area_multiple;
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
-
-	if (segtype_is_mirrored(segtype))
-		lv->status |= MIRRORED;
 
 	return 1;
 }
@@ -6723,8 +6731,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return NULL;
 			}
 
-			if (lv_is_mirror_type(org) &&
-			    !seg_is_raid(first_seg(org))) {
+			if (lv_is_mirror_type(org)) {
 				log_warn("WARNING: Snapshots of mirrors can deadlock under rare device failures.");
 				log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
 				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");

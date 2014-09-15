@@ -287,7 +287,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 
 	dm_list_init(&device_list);
 
-	if (!lv_is_mirrored(lv) && !seg_is_raid(seg)) {
+	if (!seg_is_mirror(seg) && !seg_is_raid(seg)) {
 		log_error("Unable to resync %s.  It is not RAID or mirrored.",
 			  lv->name);
 		return 0;

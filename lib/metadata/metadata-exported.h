@@ -67,6 +67,7 @@
 #define LOCKED			UINT64_C(0x0000000000004000)	/* LV */
 #define MIRRORED		UINT64_C(0x0000000000008000)	/* LV - internal use only */
 //#define VIRTUAL		UINT64_C(0x0000000000010000)	/* LV - internal use only */
+#define MIRROR			UINT64_C(0x0002000000000000)    /* LV - Internal use only */
 #define MIRROR_LOG		UINT64_C(0x0000000000020000)	/* LV - Internal use only */
 #define MIRROR_IMAGE		UINT64_C(0x0000000000040000)	/* LV - Internal use only */
 
@@ -115,7 +116,7 @@
 #define CACHE_POOL_METADATA	UINT64_C(0x0000800000000000)    /* LV - Internal use only */
 #define CACHE			UINT64_C(0x0001000000000000)    /* LV - Internal use only */
 
-/* Next unused flag:		UINT64_C(0x0002000000000000)    */
+/* Next unused flag:		UINT64_C(0x0004000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -181,7 +182,8 @@
 
 #define lv_is_mirror_image(lv)	(((lv)->status & MIRROR_IMAGE) ? 1 : 0)
 #define lv_is_mirror_log(lv)	(((lv)->status & MIRROR_LOG) ? 1 : 0)
-#define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR_LOG | MIRROR_IMAGE | MIRRORED)) ? 1 : 0)
+#define lv_is_mirror(lv)	(((lv)->status & MIRROR) ? 1 : 0)
+#define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR | MIRROR_LOG | MIRROR_IMAGE)) ? 1 : 0)
 
 #define lv_is_pvmove(lv)	(((lv)->status & PVMOVE) ? 1 : 0)
 

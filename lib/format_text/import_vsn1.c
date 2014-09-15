@@ -386,6 +386,9 @@ static int _read_segment(struct logical_volume *lv, const struct dm_config_node 
 	 */
 	_insert_segment(lv, seg);
 
+	if (seg_is_mirror(seg))
+		lv->status |= MIRROR;
+
 	if (seg_is_mirrored(seg))
 		lv->status |= MIRRORED;
 

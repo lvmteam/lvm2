@@ -95,7 +95,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				goto restart;
 			}
 
-			if (lv_is_mirrored(lv)) {
+			if (lv_is_mirror(lv)) {
 				if (!mirror_remove_missing(cmd, lv, 1))
 					return_0;
 				goto restart;

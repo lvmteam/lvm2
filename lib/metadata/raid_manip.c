@@ -1403,6 +1403,7 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 
 	log_debug_metadata("Setting new segtype for %s", lv->name);
 	seg->segtype = new_segtype;
+	lv->status &= ~MIRROR;
 	lv->status &= ~MIRRORED;
 	lv->status |= RAID;
 	seg->status |= RAID;

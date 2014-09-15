@@ -1,5 +1,8 @@
 Version 2.02.112 - 
 =====================================
+  Review internal checks for mirror/raid/pvmove volumes.
+  Track mirror segment type with separate MIRROR flag.
+  Fix cmirror endian conversions.
   Introduce lv_is_pvmove/locked/converting/merging macros.
   Avoid leaving linear logical volume when thin pool creation fails.
   Demote an error to a warning when devices known to lvmetad are filtered out.

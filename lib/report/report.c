@@ -1042,8 +1042,7 @@ static int _copypercent_disp(struct dm_report *rh,
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (((lv_is_raid(lv) && lv_raid_percent(lv, &percent)) ||
-	     ((lv_is_pvmove(lv) || lv_is_mirrored(lv)) &&
-	      lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
+	     (lv_is_mirror(lv) && lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
 	    (percent != DM_PERCENT_INVALID)) {
 		percent = copy_percent(lv);
 		return dm_report_field_percent(rh, field, &percent);

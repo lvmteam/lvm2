@@ -361,7 +361,7 @@ char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		if (seg->status & PVMOVE) {
 			if (seg_type(seg, 0) == AREA_LV) { /* atomic pvmove */
 				mimage0_lv = seg_lv(seg, 0);
-				if (!lv_is_mirrored(mimage0_lv)) {
+				if (!lv_is_mirror_image(mimage0_lv)) {
 					log_error(INTERNAL_ERROR
 						  "Bad pvmove structure");
 					return NULL;
@@ -648,7 +648,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		repstr[0] = 'C';
 	else if (lv_is_raid(lv))
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'R' : 'r';
-	else if (lv_is_mirrored(lv))
+	else if (lv_is_mirror(lv))
 		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'M' : 'm';
 	else if (lv_is_thin_volume(lv))
 		repstr[0] = lv_is_merging_origin(lv) ?
