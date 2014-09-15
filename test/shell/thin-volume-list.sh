@@ -38,6 +38,11 @@ aux lvmconf "activation/volume_list = [ \"$vg1\" ]"
 # Pool is not active - so it cannot create thin volume
 not lvcreate -V10 -T $vg/pool
 
+# Cannot create even new pool
+# check there are not left devices (RHBZ #1140128)
+not lvcreate -L10 -T $vg/new_pool
+check lv_not_exists $vg/new_pool
+
 aux lvmconf "activation/volume_list = [ \"$vg\" ]"
 
 lvcreate -V10 -T $vg/pool
