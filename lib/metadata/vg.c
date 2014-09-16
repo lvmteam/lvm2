@@ -519,36 +519,24 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 	return 1;
 }
 
+/*
+ * We do not currently support switching the cluster attribute
+ * with any active logical volumes.
+ *
+ * FIXME: resolve logic with reacquiring proper top-level LV locks
+ *        and we likely can't giveup DLM locks for active LVs...
+ */
 int vg_set_clustered(struct volume_group *vg, int clustered)
 {
 	struct lv_list *lvl;
+	struct logical_volume *lv;
 
-	/*
-	 * We do not currently support switching the cluster attribute
-	 * on active mirrors, snapshots or RAID logical volumes.
-	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (lv_is_active(lvl->lv) &&
-		    (lv_is_mirrored(lvl->lv) || lv_is_raid_type(lvl->lv))) {
-			log_error("%s logical volumes must be inactive "
-				  "when changing the cluster attribute.",
-				  lv_is_raid_type(lvl->lv) ? "RAID" : "Mirror");
-			return 0;
-		}
-
-		if (clustered) {
-			if (lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) {
-				log_error("Volume group %s contains snapshots "
-					  "that are not yet supported.",
-					  vg->name);
-				return 0;
-			}
-		}
-
-		if ((lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) &&
-		    lv_is_active(lvl->lv)) {
-			log_error("Snapshot logical volumes must be inactive "
-				  "when changing the cluster attribute.");
+		/* For COW, check lock for origin */
+		lv = lv_is_cow(lvl->lv) ? origin_from_cow(lvl->lv) : lvl->lv;
+		if (lv_is_active(lv)) {
+			log_error("Can't change cluster attribute with active "
+				  "oogical volume %s.", display_lvname(lv));
 			return 0;
 		}
 	}
@@ -557,6 +545,10 @@ int vg_set_clustered(struct volume_group *vg, int clustered)
 		vg->status |= CLUSTERED;
 	else
 		vg->status &= ~CLUSTERED;
+
+	log_debug_metadata("Setting volume group %s as %sclustered.",
+			   vg->name, clustered ? "" : "not " );
+
 	return 1;
 }
 

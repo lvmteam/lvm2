@@ -89,16 +89,27 @@ fail vgchange -cy |& tee out
 grep "y/n" out
 check vg_attr_bit cluster $vg "-"
 
+lvcreate -l1 $vg
+
 # check on cluster
 # either skipped as clustered (non-cluster), or already clustered (on cluster)
 if test -e LOCAL_CLVMD ; then
+	# can't switch with active LV
+	not vgchange -cy $vg
+	lvchange -an $vg
 	vgchange -cy $vg
 	fail vgchange -cy $vg
 	check vg_attr_bit cluster $vg "c"
+	lvchange -ay $vg
+	not vgchange -cn $vg
+	lvchange -an $vg
 	vgchange -cn $vg
 else
 	# no clvmd is running
 	fail vgchange -cy $vg
+	# can't switch with active LV
+	not vgchange --yes -cy $vg
+	lvchange -an $vg
 	vgchange --yes -cy $vg
 	fail vgchange --yes -cy $vg
 	fail vgs $vg |& tee out
