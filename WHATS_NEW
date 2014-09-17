@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Ensure only supported volume types are used with cache segments.
   Fix inablility to specify cachemode when 'lvconvert'ing to cache-pool.
   Grab cluster lock for active LVs when setting clustered attribute.
   Use va_copy to properly pass va_list through functions.

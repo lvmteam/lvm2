@@ -1725,6 +1725,12 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (lv_is_cache_type(lv)) {
+		log_error("Mirrors are not yet supported on cache LVs %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	/* Adjust mimage and/or log count */
 	if (!_lvconvert_mirrors_parse_params(cmd, lv, lp,
 					     &old_mimage_count, &old_log_count,
@@ -2008,6 +2014,12 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	if (lv_is_origin(lv)) {
 		/* Unsupported stack */
 		log_error("Unable to convert origin \"%s\" into a snapshot.", lv->name);
+		return 0;
+	}
+
+	if (lv_is_cache_type(lv)) {
+		log_error("Snapshots are not yet supported with cache type LVs %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 
