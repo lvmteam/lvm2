@@ -214,6 +214,10 @@ endif
 #DEFS += -DDEBUG_ENFORCE_POOL_LOCKING
 #DEFS += -DBOUNDS_CHECK
 
+# LVM is not supposed to use mmap while devices are suspended.
+# This code causes a core dump if gets called.
+#DEFS += -DDEBUG_MEMLOCK
+
 #CFLAGS += -pg
 #LDFLAGS += -pg
 
