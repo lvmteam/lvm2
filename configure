@@ -1668,7 +1668,8 @@ Optional Packages:
   --with-thin-repair=PATH thin_repair tool: [[autodetect]]
   --with-thin-restore=PATH
                           thin_restore tool: [[autodetect]]
-  --with-cache=TYPE       cache support: internal/shared/none [[TYPE=none]]
+  --with-cache=TYPE       cache support: internal/shared/none
+                          [[TYPE=internal]]
   --with-cache-check=PATH cache_check tool: [[autodetect]]
   --with-cache-dump=PATH  cache_dump tool: [[autodetect]]
   --with-cache-repair=PATH
@@ -7830,7 +7831,7 @@ $as_echo_n "checking whether to include cache... " >&6; }
 if test "${with_cache+set}" = set; then :
   withval=$with_cache; CACHE=$withval
 else
-  CACHE="none"
+  CACHE="internal"
 fi
 
 

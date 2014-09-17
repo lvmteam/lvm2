@@ -500,8 +500,8 @@ dnl -- cache inclusion type
 AC_MSG_CHECKING(whether to include cache)
 AC_ARG_WITH(cache,
 	    AC_HELP_STRING([--with-cache=TYPE],
-			   [cache support: internal/shared/none [[TYPE=none]]]),
-			   CACHE=$withval, CACHE="none")
+			   [cache support: internal/shared/none [[TYPE=internal]]]),
+			   CACHE=$withval, CACHE="internal")
 AC_ARG_WITH(cache-check,
 	    AC_HELP_STRING([--with-cache-check=PATH],
 			   [cache_check tool: [[autodetect]]]),
