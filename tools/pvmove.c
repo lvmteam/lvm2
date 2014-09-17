@@ -16,7 +16,6 @@
 #include "tools.h"
 #include "polldaemon.h"
 #include "display.h"
-#include "metadata.h"  /* for 'get_only_segment_using_this_lv' */
 
 #define PVMOVE_FIRST_TIME   0x00000001      /* Called for first time */
 #define PVMOVE_EXCLUSIVE    0x00000002      /* Require exclusive LV */

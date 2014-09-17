@@ -341,10 +341,6 @@ unsigned long set_pe_align_offset(struct physical_volume *pv,
 
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
 
-int pvremove_single(struct cmd_context *cmd, const char *pv_name,
-			   void *handle __attribute__((unused)), unsigned force_count,
-			   unsigned prompt);
-
 struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_name,
                                      struct pvcreate_params *pp, int write_now);
 
@@ -428,7 +424,6 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le);
  */
 int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
 int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
-struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *lv);
 
 int for_each_sub_lv(struct logical_volume *lv,
                     int (*fn)(struct logical_volume *lv, void *data),

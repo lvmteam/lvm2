@@ -14,7 +14,6 @@
  */
 
 #include "tools.h"
-#include "metadata.h"  /* for 'get_only_segment_using_this_lv' */
 
 static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 {

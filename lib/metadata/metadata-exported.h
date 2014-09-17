@@ -615,6 +615,10 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  unsigned metadataignore,
 				  struct pvcreate_restorable_params *rp);
 
+int pvremove_single(struct cmd_context *cmd, const char *pv_name,
+		    void *handle __attribute__((unused)), unsigned force_count,
+		    unsigned prompt);
+
 int pv_resize_single(struct cmd_context *cmd,
 			     struct volume_group *vg,
 			     struct physical_volume *pv,
@@ -927,6 +931,7 @@ int get_pv_list_for_lv(struct dm_pool *mem,
 /* Find LV segment containing given LE */
 struct lv_segment *first_seg(const struct logical_volume *lv);
 struct lv_segment *last_seg(const struct logical_volume *lv);
+struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *lv);
 
 /*
 * Useful functions for managing snapshots.

@@ -14,7 +14,6 @@
  */
 
 #include "tools.h"
-#include "metadata.h"
 
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
