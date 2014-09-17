@@ -2659,7 +2659,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 				  display_lvname(metadata_lv));
 			return 0;
 		}
-		if (lv_is_mirrored(metadata_lv) && !lv_is_raid_type(metadata_lv)) {
+		if (lv_is_mirror(metadata_lv)) {
 			log_error("Mirror logical volumes cannot be used "
 				  "for pool metadata.");
 			log_error("Try \"raid1\" segment type instead.");
@@ -2699,7 +2699,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_mirrored(pool_lv) && !lv_is_raid_type(pool_lv)) {
+	if (lv_is_mirror(pool_lv)) {
 		log_error("Mirror logical volumes cannot be used as pools.\n"
 			  "Try \"raid1\" segment type instead.");
 		return 0;
