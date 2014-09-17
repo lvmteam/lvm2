@@ -3075,7 +3075,7 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 	if (lv_is_external_origin(origin) || lv_is_origin(origin) || lv_is_thin_type(origin) ||
 	    lv_is_mirror_type(origin) || lv_is_cache_origin(origin) || lv_is_virtual(origin) ||
 	    lv_is_cow(origin) || lv_is_merging_origin(origin) || lv_is_merging_cow(origin)) {
-		log_error("Cache is not supported with origin LV type.",
+		log_error("Cache is not supported with origin LV %s type.",
 			  display_lvname(origin));
 		return 0;
 	}
