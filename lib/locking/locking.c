@@ -492,6 +492,11 @@ int locking_is_clustered(void)
 	return (_locking.flags & LCK_CLUSTERED) ? 1 : 0;
 }
 
+int locking_supports_remote_queries(void)
+{
+	return (_locking.flags & LCK_SUPPORTS_REMOTE_QUERIES) ? 1 : 0;
+}
+
 int remote_lock_held(const char *vol, int *exclusive)
 {
 	int mode = LCK_NULL;

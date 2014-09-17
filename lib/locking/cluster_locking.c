@@ -611,7 +611,7 @@ int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd,
 	locking->query_resource = _query_resource;
 	locking->fin_locking = _locking_end;
 	locking->reset_locking = _reset_locking;
-	locking->flags = LCK_PRE_MEMLOCK | LCK_CLUSTERED;
+	locking->flags = LCK_PRE_MEMLOCK | LCK_CLUSTERED | LCK_SUPPORTS_REMOTE_QUERIES;
 
 	_clvmd_sock = _open_local_sock(suppress_messages);
 	if (_clvmd_sock == -1)
