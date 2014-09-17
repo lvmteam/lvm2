@@ -2674,6 +2674,18 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (arg_is_set(cmd, cachepool_ARG) && lv_is_thin_pool(pool_lv)) {
+		log_error("--cachepool requires a cache pool.  %s is a thin pool.",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
+	if (arg_is_set(cmd, thinpool_ARG) && lv_is_cache_pool(pool_lv)) {
+		log_error("--thinpool requires a thin pool.  %s is a cache pool.",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
 	if (lp->pool_metadata_lv_name) {
 		if (!(lp->pool_metadata_lv = find_lv(vg, lp->pool_metadata_lv_name))) {
 			log_error("Unknown pool metadata LV %s.", lp->pool_metadata_lv_name);
@@ -2762,18 +2774,6 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 	if (lv_is_pool(pool_lv)) {
 		lp->pool_data_lv = pool_lv;
-
-		if (arg_is_set(cmd, cachepool_ARG) && lv_is_thin_pool(pool_lv)) {
-			log_error("--cachepool requires a cache pool.  %s is a thin pool.",
-				  display_lvname(pool_lv));
-			return 0;
-		}
-
-		if (arg_is_set(cmd, thinpool_ARG) && lv_is_cache_pool(pool_lv)) {
-			log_error("--thinpool requires a thin pool.  %s is a cache pool.",
-				  display_lvname(pool_lv));
-			return 0;
-		}
 
 		if (!metadata_lv) {
 			if (arg_from_list_is_set(cmd, "is invalid with existing pool",
