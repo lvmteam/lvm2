@@ -66,7 +66,7 @@
 #define PVMOVE			UINT64_C(0x0000000000002000)	/* VG LV SEG */
 #define LOCKED			UINT64_C(0x0000000000004000)	/* LV */
 #define MIRRORED		UINT64_C(0x0000000000008000)	/* LV - internal use only */
-//#define VIRTUAL		UINT64_C(0x0000000000010000)	/* LV - internal use only */
+#define VIRTUAL			UINT64_C(0x0000000000010000)	/* LV - internal use only */
 #define MIRROR			UINT64_C(0x0002000000000000)    /* LV - Internal use only */
 #define MIRROR_LOG		UINT64_C(0x0000000000020000)	/* LV - Internal use only */
 #define MIRROR_IMAGE		UINT64_C(0x0000000000040000)	/* LV - Internal use only */

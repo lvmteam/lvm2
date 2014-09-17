@@ -2633,10 +2633,14 @@ static int _lvconvert_update_pool_params(struct logical_volume *pool_lv,
 }
 
 /*
+ * Converts a data lv and a metadata lv into a thin or cache pool lv.
+ *
  * Thin lvconvert version which
  *  rename metadata
  *  convert/layers thinpool over data
  *  attach metadata
+ *
+ * pool_lv might or might not already be a pool.
  */
 static int _lvconvert_pool(struct cmd_context *cmd,
 			   struct logical_volume *pool_lv,
@@ -2658,6 +2662,18 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/*
+	 * Only linear, striped and raid supported.
+	 * FIXME Tidy up all these type restrictions.
+	 */
+	if (!lv_is_pool(pool_lv) &&
+	    (lv_is_external_origin(pool_lv) || lv_is_origin(pool_lv) || lv_is_thin_type(pool_lv) ||
+	     lv_is_mirror_type(pool_lv) || lv_is_cache_type(pool_lv) || lv_is_virtual(pool_lv) ||
+	     lv_is_cache_origin(pool_lv) || lv_is_merging_origin(pool_lv) || lv_is_merging_cow(pool_lv))) {
+		log_error("Pool data LV %s is of an unsupported type.", display_lvname(pool_lv));
+		return 0;
+	}
+
 	if (lp->pool_metadata_lv_name) {
 		if (!(lp->pool_metadata_lv = find_lv(vg, lp->pool_metadata_lv_name))) {
 			log_error("Unknown pool metadata LV %s.", lp->pool_metadata_lv_name);
@@ -2671,25 +2687,39 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 				  display_lvname(metadata_lv));
 			return 0;
 		}
+
 		if (lv_is_mirror(metadata_lv)) {
 			log_error("Mirror logical volumes cannot be used "
 				  "for pool metadata.");
 			log_error("Try \"raid1\" segment type instead.");
 			return 0;
 		}
+
 		if (lv_is_locked(metadata_lv)) {
 			log_error("Can't convert locked LV %s.",
 				  display_lvname(metadata_lv));
 			return 0;
 		}
+
 		if (metadata_lv == pool_lv) {
 			log_error("Can't use same LV for pool data and metadata LV %s.",
 				  display_lvname(metadata_lv));
 			return 0;
 		}
+
 		if (lv_is_thin_type(metadata_lv) ||
 		    lv_is_cache_type(metadata_lv)) {
 			log_error("Can't use thin or cache type LV %s for pool metadata.",
+				  display_lvname(metadata_lv));
+			return 0;
+		}
+
+		/* FIXME Tidy up all these type restrictions. */
+		if (lv_is_external_origin(metadata_lv) || lv_is_virtual(metadata_lv) ||
+		    lv_is_origin(metadata_lv) || lv_is_thin_origin(metadata_lv, NULL) ||
+		    lv_is_cache_origin(metadata_lv) || lv_is_cow(metadata_lv) ||
+		    lv_is_merging_origin(metadata_lv) || lv_is_merging_cow(metadata_lv)) {
+			log_error("Pool metadata LV %s is of an unsupported type.",
 				  display_lvname(metadata_lv));
 			return 0;
 		}
@@ -3016,6 +3046,9 @@ revert_new_lv:
 #endif
 }
 
+/*
+ * Convert origin into a cache LV by attaching a cache pool.
+ */
 static int _lvconvert_cache(struct cmd_context *cmd,
 			    struct logical_volume *origin,
 			    struct lvconvert_params *lp)
@@ -3031,6 +3064,18 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 
 	if (lv_is_pool(origin) || lv_is_cache_type(origin)) {
 		log_error("Can't cache pool or cache type volume %s.",
+			  display_lvname(origin));
+		return 0;
+	}
+
+	/*
+	 * Only linear, striped or raid supported.
+	 * FIXME Tidy up all these type restrictions.
+	 */
+	if (lv_is_external_origin(origin) || lv_is_origin(origin) || lv_is_thin_type(origin) ||
+	    lv_is_mirror_type(origin) || lv_is_cache_origin(origin) || lv_is_virtual(origin) ||
+	    lv_is_cow(origin) || lv_is_merging_origin(origin) || lv_is_merging_cow(origin)) {
+		log_error("Cache is not supported with origin LV type.",
 			  display_lvname(origin));
 		return 0;
 	}

@@ -55,7 +55,7 @@
 
 #define SPINDOWN_LV          	UINT64_C(0x00000010)	/* LV */
 #define BADBLOCK_ON       	UINT64_C(0x00000020)	/* LV */
-#define VIRTUAL			UINT64_C(0x00010000)	/* LV - internal use only */
+//#define VIRTUAL			UINT64_C(0x00010000)	/* LV - internal use only */
 #define PRECOMMITTED		UINT64_C(0x00200000)	/* VG - internal use only */
 #define POSTORDER_FLAG		UINT64_C(0x02000000) /* Not real flags, reserved for  */
 #define POSTORDER_OPEN_FLAG	UINT64_C(0x04000000) /* temporary use inside vg_read_internal. */

@@ -193,7 +193,7 @@ void init_snapshot_merge(struct lv_segment *snap_seg,
 
 	if (seg_is_thin_volume(snap_seg)) {
 		snap_seg->merge_lv = origin;
-		/* Making thin LV inivisible with regular log */
+		/* Making thin LV invisible with regular log */
 		lv_set_hidden(snap_seg->lv);
 		return;
 	}
