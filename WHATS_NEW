@@ -1,7 +1,7 @@
 Version 2.02.112 - 
 =====================================
   Fix inablility to specify cachemode when 'lvconvert'ing to cache-pool.
-  Disable vgchange of clustered attribute with any active LV in VG.
+  Grab cluster lock for active LVs when setting clustered attribute.
   Use va_copy to properly pass va_list through functions.
   Add function to detect rotational devices.
   Review internal checks for mirror/raid/pvmove volumes.

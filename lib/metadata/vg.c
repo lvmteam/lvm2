@@ -520,7 +520,8 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 }
 
 /*
- * We do not currently support switching the cluster attribute
+ * Switching the cluster attribute make the active volume
+ * exclusively activate
  * with any active logical volumes.
  *
  * FIXME: resolve logic with reacquiring proper top-level LV locks
@@ -529,14 +530,32 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 int vg_set_clustered(struct volume_group *vg, int clustered)
 {
 	struct lv_list *lvl;
-	struct logical_volume *lv;
+	int fail = 0;
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		/* For COW, check lock for origin */
-		lv = lv_is_cow(lvl->lv) ? origin_from_cow(lvl->lv) : lvl->lv;
-		if (lv_is_active(lv)) {
-			log_error("Can't change cluster attribute with active "
-				  "oogical volume %s.", display_lvname(lv));
+	if (vg_is_clustered(vg) &&
+	    locking_is_clustered() &&
+	    locking_supports_remote_queries() &&
+	    !clustered) {
+		/*
+		 * If the volume is locally active but not exclusively
+		 * we cannot determine when other nodes also use
+		 * locally active (CR lock), so refuse conversion.
+		 */
+		dm_list_iterate_items(lvl, &vg->lvs)
+			if ((lv_lock_holder(lvl->lv) == lvl->lv) &&
+			    lv_is_active(lvl->lv) &&
+			    !lv_is_active_exclusive_locally(lvl->lv)) {
+				/* Show all non-local-exclusively active LVs
+				 * this includes i.e. clustered mirrors */
+				log_error("Can't change cluster attribute with "
+					  "active logical volume %s.",
+					  display_lvname(lvl->lv));
+				fail = 1;
+			}
+
+		if (fail) {
+			log_print_unless_silent("Conversion is supported only for "
+						"locally exclusive volumes.");
 			return 0;
 		}
 	}

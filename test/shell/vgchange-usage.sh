@@ -89,27 +89,28 @@ fail vgchange -cy |& tee out
 grep "y/n" out
 check vg_attr_bit cluster $vg "-"
 
-lvcreate -l1 $vg
+lvcreate -l1 -n $lv1 $vg
 
 # check on cluster
 # either skipped as clustered (non-cluster), or already clustered (on cluster)
 if test -e LOCAL_CLVMD ; then
-	# can't switch with active LV
-	not vgchange -cy $vg
-	lvchange -an $vg
+	# can switch with active LV
 	vgchange -cy $vg
 	fail vgchange -cy $vg
+	# check volume is active locally exclusively
+	check lv_field $vg/$lv1 lv_active "local exclusive"
 	check vg_attr_bit cluster $vg "c"
+	# check we do not support conversion of just locally active LVs
+	lvchange -an $vg
 	lvchange -ay $vg
 	not vgchange -cn $vg
 	lvchange -an $vg
+	lvchange -aey $vg
 	vgchange -cn $vg
 else
 	# no clvmd is running
 	fail vgchange -cy $vg
 	# can't switch with active LV
-	not vgchange --yes -cy $vg
-	lvchange -an $vg
 	vgchange --yes -cy $vg
 	fail vgchange --yes -cy $vg
 	fail vgs $vg |& tee out
@@ -117,7 +118,7 @@ else
 	vgs --ignoreskippedcluster $vg |& tee out
 	not grep "Skipping clustered volume group" out
 	# reset back to non-clustered VG with disabled locking
-	vgchange -cn --config 'global{locking_type=0}' $vg
+	vgchange -cn $vg --config 'global{locking_type=0}' $vg
 fi
 check vg_attr_bit cluster $vg "-"
 

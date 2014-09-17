@@ -479,7 +479,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   void *handle __attribute__((unused)))
 {
+	int ret = ECMD_PROCESSED;
 	unsigned i;
+	struct lv_list *lvl;
 
 	static const struct {
 		int arg;
@@ -534,6 +536,31 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		backup(vg);
 
 		log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
+
+		/* FIXME: fix clvmd bug and take DLM lock for non clustered VGs. */
+		if (arg_is_set(cmd, clustered_ARG) &&
+		    vg_is_clustered(vg) && /* just switched to clustered */
+		    locking_is_clustered() &&
+		    locking_supports_remote_queries())
+			dm_list_iterate_items(lvl, &vg->lvs) {
+				if ((lv_lock_holder(lvl->lv) != lvl->lv) ||
+				    !lv_is_active(lvl->lv))
+					continue;
+
+				if (!activate_lv_excl_local(cmd, lvl->lv) ||
+				    !lv_is_active_exclusive_locally(lvl->lv)) {
+					log_error("Can't reactive logical volume %s, "
+						  "please fix manually.",
+						  display_lvname(lvl->lv));
+					ret = ECMD_FAILED;
+				}
+
+				if (lv_is_mirror(lvl->lv))
+					/* Give hint for clustered mirroring */
+					log_print_unless_silent("For clustered mirroring of %s "
+								"deactivation and activation is needed.",
+								display_lvname(lvl->lv));
+			}
 	}
 
 	if (arg_count(cmd, activate_ARG)) {
@@ -561,7 +588,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		if (!_vgchange_background_polling(cmd, vg))
 			return_ECMD_FAILED;
 
-        return ECMD_PROCESSED;
+        return ret;
 }
 
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
