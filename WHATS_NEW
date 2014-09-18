@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Use -fPIE when linking -pie executables.
   Enable cache segment type by default.
   Ensure only supported volume types are used with cache segments.
   Fix inablility to specify cachemode when 'lvconvert'ing to cache-pool.
