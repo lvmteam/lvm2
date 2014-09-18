@@ -29,6 +29,7 @@
 #include "defaults.h"
 #include "lvm-exec.h"
 #include "lvm-signal.h"
+#include "memlock.h"
 
 typedef enum {
 	PREFERRED,
@@ -6876,6 +6877,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
 		       thin_name, lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
+
+	/* Unlock memory if possible */
+	memlock_unlock(vg->cmd);
 
 	if (seg_is_cache_pool(lp)) {
 		first_seg(lv)->chunk_size = lp->chunk_size;

@@ -15,6 +15,7 @@
 #include "lib.h"
 #include "activate.h"
 #include "locking.h"
+#include "memlock.h"
 #include "metadata.h"
 #include "segtype.h"
 #include "defaults.h"
@@ -370,6 +371,9 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 				return_0;
 			}
 			init_dmeventd_monitor(monitored);
+
+			/* Unlock memory if possible */
+			memlock_unlock(lv->vg->cmd);
 		}
 		/*
 		 * Resume active pool to send thin messages.
