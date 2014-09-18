@@ -346,21 +346,21 @@ static int _disable_mmap(void)
 		(void) mmap(NULL, -1, -1, -1, -1, -1);
 		plt = (unsigned char *)mmap;
 		if (plt[0] != 0xff || plt[1] != 0x25) {
-			log_error("Can't find jump entry for mmap remapping.");
-			_mmap_addr = NULL;
-			return 0;
-		}
+			log_debug("Can't find PLT jump entry assuming -fPIE linkage.");
+			_mmap_addr = plt;
+		} else {
 #ifdef __x86_64__
-		abs_addr = plt + 6 + *(int32_t *)(plt + 2);
+			abs_addr = plt + 6 + *(int32_t *)(plt + 2);
 #endif /* __x86_64__ */
 #ifdef __i386__
-		abs_addr = *(void **)(plt + 2);
+			abs_addr = *(void **)(plt + 2);
 #endif /* __i386__ */
-		_mmap_addr = *(void **)abs_addr;
+			_mmap_addr = *(void **)abs_addr;
+		}
 		if (mprotect((void *)((unsigned long)_mmap_addr & ~4095UL), 4096, PROT_READ|PROT_WRITE|PROT_EXEC)) {
 			log_sys_error("mprotect", "");
 			_mmap_addr = NULL;
-			return 1;
+			return 0;
 		}
 		_mmap_orig = *_mmap_addr;
 	}
@@ -407,11 +407,12 @@ static void _lock_mem(struct cmd_context *cmd)
 			log_sys_error("open", _procselfmaps);
 			return;
 		}
+
+		if (!_disable_mmap())
+			stack;
 	}
 
 	log_very_verbose("Locking memory");
-	if (!_disable_mmap())
-		stack;
 	if (!_memlock_maps(cmd, LVM_MLOCK, &_mstats))
 		stack;
 
@@ -433,8 +434,8 @@ static void _unlock_mem(struct cmd_context *cmd)
 	if (!_memlock_maps(cmd, LVM_MUNLOCK, &unlock_mstats))
 		stack;
 
-	_restore_mmap();
 	if (!_use_mlockall) {
+		_restore_mmap();
 		if (close(_maps_fd))
 			log_sys_error("close", _procselfmaps);
 		dm_free(_maps_buffer);
