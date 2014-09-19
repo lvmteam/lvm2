@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "memlock.h"
 
 static int lvchange_permission(struct cmd_context *cmd,
 			       struct logical_volume *lv)
@@ -416,7 +417,8 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	backup(lv->vg);
+	/* No backup for intermediate metadata, so just unlock memory */
+	memlock_unlock(lv->vg->cmd);
 
 	dm_list_iterate_items(lvl, &device_list) {
 		if (!activate_lv_excl_local(cmd, lvl->lv)) {
@@ -449,6 +451,8 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		}
 	}
 
+	sync_local_dev_names(lv->vg->cmd);  /* Wait until devices are away */
+
 	/* Put metadata sub-LVs back in place */
 	if (!attach_metadata_devices(seg, &device_list)) {
 		log_error("Failed to reattach %s device after clearing",
@@ -463,10 +467,13 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	if (!_reactivate_lv(lv, active, exclusive)) {
+		backup(lv->vg);
 		log_error("Failed to reactivate %s after resync",
 			  lv->name);
 		return 0;
 	}
+
+	backup(lv->vg);
 
 	return 1;
 }

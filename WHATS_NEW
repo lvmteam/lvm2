@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Backup final metadata after resync of mirror/raid.
   Unify handling of --persistent option for lvcreate and lvchange.
   Validate major and minor numbers stored in metadata.
   Use -fPIE when linking -pie executables.
