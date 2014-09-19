@@ -19,6 +19,7 @@
 #include "lvm-string.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
+#include "memlock.h"
 #include "toolcontext.h"
 #include "locking.h"
 
@@ -255,6 +256,9 @@ int backup_locally(struct volume_group *vg)
 
 int backup(struct volume_group *vg)
 {
+	/* Unlock memory if possible */
+	memlock_unlock(vg->cmd);
+
 	/* Don't back up orphan VGs. */
 	if (is_orphan_vg(vg->name))
 		return 1;
