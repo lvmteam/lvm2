@@ -607,11 +607,13 @@ int read_and_validate_major_minor(const struct cmd_context *cmd,
 			return 0;
 		}
 		*major = arg_int_value(cmd, major_ARG, -1);
-	} else if (arg_is_set(cmd, major_ARG)) {
-		log_warn("WARNING: Ignoring supplied major number - "
-			 "kernel assigns major numbers dynamically. "
-			 "Using major number %d instead.",
-			 cmd->dev_types->device_mapper_major);
+	} else {
+		if (arg_is_set(cmd, major_ARG)) {
+			log_warn("WARNING: Ignoring supplied major number - "
+				 "kernel assigns major numbers dynamically. "
+				 "Using major number %d instead.",
+				 cmd->dev_types->device_mapper_major);
+		}
 		*major = cmd->dev_types->device_mapper_major;
 	}
 

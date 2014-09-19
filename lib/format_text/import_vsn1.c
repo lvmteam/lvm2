@@ -678,16 +678,19 @@ static int _read_lvsegs(struct format_instance *fid,
 			return 0;
 		}
 
-		if (!_read_int32(lvn, "major", &lv->major)) {
-			log_error("Couldn't read major number for logical "
-				  "volume %s.", lv->name);
-			return 0;
+		if (!dm_config_has_node(lvn, "major"))
+			/* If major is missing, pick default */
+			lv->major = vg->cmd->dev_types->device_mapper_major;
+		else if (!_read_int32(lvn, "major", &lv->major)) {
+			log_warn("WARNING: Couldn't read major number for logical "
+				 "volume %s.", lv->name);
+			lv->major = vg->cmd->dev_types->device_mapper_major;
 		}
 
 		if (!validate_major_minor(vg->cmd, fid->fmt, lv->major, lv->minor)) {
-			log_error("Logical volume %s does not have a valid major, minor number.",
-				  lv->name);
-			return 0;
+			log_warn("WARNING: Ignoring invalid major, minor number for "
+				 "logical volume %s.", lv->name);
+			lv->major = lv->minor = -1;
 		}
 	}
 
