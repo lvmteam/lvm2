@@ -399,19 +399,8 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write intermediate VG metadata.");
-		if (!attach_metadata_devices(seg, &device_list))
-			stack;
-		if (!_reactivate_lv(lv, active, exclusive))
-			stack;
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit intermediate VG metadata.");
-		if (!attach_metadata_devices(seg, &device_list))
-			stack;
+	if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
+		log_error("Failed to update intermediate VG metadata on disk.");
 		if (!_reactivate_lv(lv, active, exclusive))
 			stack;
 		return 0;
@@ -427,10 +416,6 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 				  "metadata area" : "mirror log");
 			return 0;
 		}
-
-		log_very_verbose("Clearing %s device %s",
-				 (seg_is_raid(seg)) ? "metadata" : "log",
-				 lvl->lv->name);
 
 		if (!wipe_lv(lvl->lv, (struct wipe_params)
 			     { .do_zero = 1, .zero_sectors = lvl->lv->size })) {
@@ -460,7 +445,6 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg)) {
 		log_error("Failed to update metadata on disk.");
 		return 0;
