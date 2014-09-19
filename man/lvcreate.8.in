@@ -43,9 +43,11 @@ lvcreate \- create a logical volume in an existing volume group
 .BR \-V | \-\-virtualsize
 .IR VirtualSize [ bBsSkKmMgGtTpPeE ]}
 .RB [ \-M | \-\-persistent
-.RI { y | n }]
+.RI { y | n }
 .RB [ \-\-minor
 .IR minor ]
+.RB [ \-\-major
+.IR major ]]
 .RB [ \-m | \-\-mirrors
 .IR Mirrors
 .RB [ \-\-nosync ]
@@ -297,6 +299,11 @@ Set to \fIy\fP to make the minor number specified persistent.
 .TP
 .B \-\-minor \fIminor
 Sets the minor number.
+.TP
+.B \-\-major \fImajor
+Sets the major number. This option is supported only on older systems
+(kernel version 2.4) and is ignored on modern Linux systems where major
+numbers are dynamically assigned.
 .TP
 .BR \-\-monitor " {" \fIy | \fIn }
 Starts or avoids monitoring a mirrored, snapshot or thin pool logical volume with

@@ -50,9 +50,11 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-\-metadataprofile
 .IR ProfileName ]
 .RB [ \-M | \-\-persistent
-.RI { y | n }]
+.RI { y | n }
 .RB [ \-\-minor
 .IR minor ]
+.RB [ \-\-major
+.IR major ]]
 .RB [ \-P | \-\-partial ]
 .RB [ \-p | \-\-permission
 .RI { r | rw }]
@@ -164,6 +166,11 @@ See \fBlvm.conf\fP(5) for more information about \fBmetadata profiles\fP.
 .TP
 .B \-\-minor \fIminor
 Set the minor number.
+.TP
+.B \-\-major \fImajor
+Sets the major number. This option is supported only on older systems
+(kernel version 2.4) and is ignored on modern Linux systems where major
+numbers are dynamically assigned.
 .TP
 .BR \-\-monitor " {" \fIy | \fIn }
 Start or stop monitoring a mirrored or snapshot logical volume with
