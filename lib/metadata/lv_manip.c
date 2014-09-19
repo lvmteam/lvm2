@@ -6360,6 +6360,8 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		/* nothing to do */
 		return 1;
 
+	sync_local_dev_names(lv->vg->cmd);  /* Wait until devices are available */
+
 	if (!lv_is_active_locally(lv)) {
 		log_error("Volume \"%s/%s\" is not active locally.",
 			  lv->vg->name, lv->name);
@@ -6378,8 +6380,6 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		log_error("Name too long - device not cleared (%s)", lv->name);
 		return 0;
 	}
-
-	sync_local_dev_names(lv->vg->cmd);  /* Wait until devices are available */
 
 	if (!(dev = dev_cache_get(name, NULL))) {
 		log_error("%s: not found: device not cleared", name);
