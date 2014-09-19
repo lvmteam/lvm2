@@ -137,12 +137,12 @@ const char *arg_long_option_name(int a)
 	return _cmdline.arg_props[a].long_arg;
 }
 
-const char *arg_value(struct cmd_context *cmd, int a)
+const char *arg_value(const struct cmd_context *cmd, int a)
 {
 	return cmd->arg_values[a].value;
 }
 
-const char *arg_str_value(struct cmd_context *cmd, int a, const char *def)
+const char *arg_str_value(const struct cmd_context *cmd, int a, const char *def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].value : def;
 }
@@ -157,7 +157,7 @@ int32_t grouped_arg_int_value(const struct arg_values *av, int a, const int32_t 
 	return grouped_arg_count(av, a) ? av[a].i_value : def;
 }
 
-int32_t first_grouped_arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
+int32_t first_grouped_arg_int_value(const struct cmd_context *cmd, int a, const int32_t def)
 {
 	struct arg_value_group_list *current_group;
 	struct arg_values *av;
@@ -171,23 +171,23 @@ int32_t first_grouped_arg_int_value(struct cmd_context *cmd, int a, const int32_
 	return def;
 }
 
-int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
+int32_t arg_int_value(const struct cmd_context *cmd, int a, const int32_t def)
 {
 	return (_cmdline.arg_props[a].flags & ARG_GROUPABLE) ?
 		first_grouped_arg_int_value(cmd, a, def) : (arg_count(cmd, a) ? cmd->arg_values[a].i_value : def);
 }
 
-uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def)
+uint32_t arg_uint_value(const struct cmd_context *cmd, int a, const uint32_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].ui_value : def;
 }
 
-int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def)
+int64_t arg_int64_value(const struct cmd_context *cmd, int a, const int64_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].i64_value : def;
 }
 
-uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def)
+uint64_t arg_uint64_value(const struct cmd_context *cmd, int a, const uint64_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].ui64_value : def;
 }
@@ -199,12 +199,12 @@ const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def)
 }
 */
 
-sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def)
+sign_t arg_sign_value(const struct cmd_context *cmd, int a, const sign_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].sign : def;
 }
 
-percent_type_t arg_percent_value(struct cmd_context *cmd, int a, const percent_type_t def)
+percent_type_t arg_percent_value(const struct cmd_context *cmd, int a, const percent_type_t def)
 {
 	return arg_count(cmd, a) ? cmd->arg_values[a].percent : def;
 }
