@@ -888,7 +888,7 @@ deactivate:
 				return_0;
 		}
 		break;
-	case CHANGE_AE:
+	case CHANGE_AEY:
 exclusive:
 		log_verbose("Activating logical volume \"%s\" exclusively.",
 			    lv->name);

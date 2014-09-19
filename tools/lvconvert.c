@@ -2513,7 +2513,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 	struct logical_volume *torigin_lv, *pool_lv = lp->pool_data_lv;
 	struct volume_group *vg = pool_lv->vg;
 	struct lvcreate_params lvc = {
-		.activate = CHANGE_AE,
+		.activate = CHANGE_AEY,
 		.alloc = ALLOC_INHERIT,
 		.lv_name = lp->origin_lv_name,
 		.major = -1,
