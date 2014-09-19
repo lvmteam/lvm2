@@ -760,55 +760,18 @@ static int _read_activation_params(struct lvcreate_params *lp,
 		lp->wipe_signatures = 0;
 	}
 
-	if (arg_count(cmd, major_ARG) > 1) {
-		log_error("Option -j/--major may not be repeated.");
-		return 0;
-	}
-
-	if (arg_count(cmd, minor_ARG) > 1) {
-		log_error("Option --minor may not be repeated.");
-		return 0;
-	}
-
-	lp->minor = arg_int_value(cmd, minor_ARG, -1);
-	lp->major = arg_int_value(cmd, major_ARG, -1);
-
-	/* Persistent minor */
-	if (arg_count(cmd, persistent_ARG)) {
+	/* Persistent minor (and major) */
+	if (arg_is_set(cmd, persistent_ARG)) {
 		if (lp->create_pool && !lp->thin) {
 			log_error("--persistent is not permitted when creating a thin pool device.");
 			return 0;
 		}
-		if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "y")) {
-			if (lp->minor == -1) {
-				log_error("Please specify minor number with "
-					  "--minor when using -My");
-				return 0;
-			}
-			if (!strncmp(cmd->kernel_vsn, "2.4.", 4)) {
-				if (lp->major == -1) {
-					log_error("Please specify major number with "
-						  "--major when using -My");
-					return 0;
-				}
-			} else {
-				if (lp->major >= 0)
-					log_warn("Ignoring supplied major number - kernel assigns "
-						 "major numbers dynamically. Using major number %d instead.",
-						  cmd->dev_types->device_mapper_major);
-				lp->major = cmd->dev_types->device_mapper_major;
-			}
-			if (!major_minor_valid(cmd, vg->fid->fmt, lp->major, lp->minor))
-				return 0;
-		} else {
-			if ((lp->minor != -1) || (lp->major != -1)) {
-				log_error("--major and --minor incompatible "
-					  "with -Mn");
-				return 0;
-			}
-		}
-	} else if (arg_count(cmd, minor_ARG) || arg_count(cmd, major_ARG)) {
-		log_error("--major and --minor require -My");
+
+		if (!read_and_validate_major_minor(cmd, vg->fid->fmt,
+						   &lp->major, &lp->minor))
+                        return_0;
+	} else if (arg_is_set(cmd, major_ARG) || arg_is_set(cmd, minor_ARG)) {
+		log_error("--major and --minor require -My.");
 		return 0;
 	}
 
@@ -844,7 +807,6 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	const char *segtype_str;
 	const char *tag;
 
-	memset(lp, 0, sizeof(*lp));
 	memset(lcp, 0, sizeof(*lcp));
 	dm_list_init(&lp->tags);
 	lp->target_attr = ~0;
@@ -1248,7 +1210,10 @@ static int _validate_internal_thin_processing(const struct lvcreate_params *lp)
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int r = ECMD_FAILED;
-	struct lvcreate_params lp;
+	struct lvcreate_params lp = {
+                .major = -1,
+                .minor = -1,
+	};
 	struct lvcreate_cmdline_params lcp;
 	struct volume_group *vg;
 

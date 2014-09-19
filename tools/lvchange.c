@@ -552,85 +552,72 @@ static int lvchange_readahead(struct cmd_context *cmd,
 static int lvchange_persistent(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
-	struct lvinfo info;
-	int active = 0;
-	int32_t major, minor;
+	enum activation_change activate = CHANGE_AN;
 
-	if (!arg_uint_value(cmd, persistent_ARG, 0)) {
+	if (!read_and_validate_major_minor(cmd, lv->vg->fid->fmt,
+					   &lv->major, &lv->minor))
+		return_0;
+
+	if (lv->minor == -1) {
 		if (!(lv->status & FIXED_MINOR)) {
-			log_error("Minor number is already not persistent "
-				  "for \"%s\"", lv->name);
+			log_error("Minor number is already not persistent for %s.",
+				  display_lvname(lv));
 			return 0;
 		}
 		lv->status &= ~FIXED_MINOR;
-		lv->minor = -1;
-		lv->major = -1;
-		log_verbose("Disabling persistent device number for \"%s\"",
-			    lv->name);
+		log_verbose("Disabling persistent device number for %s.",
+			    display_lvname(lv));
 	} else {
-		if (!arg_count(cmd, minor_ARG) && lv->minor < 0) {
-			log_error("Minor number must be specified with -My");
-			return 0;
-		}
-		if (arg_count(cmd, major_ARG) > 1) {
-			log_error("Option -j/--major may not be repeated.");
-			return 0;
-		}
-		if (arg_count(cmd, minor_ARG) > 1) {
-			log_error("Option --minor may not be repeated.");
-			return 0;
-		}
-		if (!arg_count(cmd, major_ARG) && lv->major < 0) {
-			log_error("Major number must be specified with -My");
-			return 0;
-		}
-		if (lv_info(cmd, lv, 0, &info, 0, 0) && info.exists)
-			active = 1;
+		if (lv_is_active(lv)) {
+			if (!arg_count(cmd, force_ARG) &&
+			    !arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Logical volume %s will be "
+					  "deactivated temporarily. "
+					  "Continue? [y/n]: ", lv->name) == 'n') {
+				log_error("%s device number not changed.",
+					  display_lvname(lv));
+				return 0;
+			}
 
-		major = arg_int_value(cmd, major_ARG, lv->major);
-		minor = arg_int_value(cmd, minor_ARG, lv->minor);
-		if (!major_minor_valid(cmd, lv->vg->fid->fmt, major, minor))
-			return 0;
-
-		if (active && !arg_count(cmd, force_ARG) &&
-		    !arg_count(cmd, yes_ARG) &&
-		    yes_no_prompt("Logical volume %s will be "
-				  "deactivated temporarily. "
-				  "Continue? [y/n]: ", lv->name) == 'n') {
-			log_error("%s device number not changed.",
-				  lv->name);
-			return 0;
+			activate = CHANGE_AEY;
+			if (vg_is_clustered(lv->vg) &&
+			    locking_is_clustered() &&
+			    locking_supports_remote_queries() &&
+			    !lv_is_active_exclusive_locally(lv)) {
+				/* Reliable reactivate only locally */
+				log_print_unless_silent("Remotely active LV %s needs "
+							"individual reactivation.",
+							display_lvname(lv));
+				activate = CHANGE_ALY;
+			}
 		}
 
-		if (sigint_caught())
-			return_0;
-
-		log_verbose("Ensuring %s is inactive.", lv->name);
+		/* Ensuring LV is not active */
 		if (!deactivate_lv(cmd, lv)) {
-			log_error("%s: deactivation failed", lv->name);
+			log_error("Cannot deactivate %s.", display_lvname(lv));
 			return 0;
 		}
 		lv->status |= FIXED_MINOR;
-		lv->minor = minor;
-		lv->major = major;
-		log_verbose("Setting persistent device number to (%d, %d) "
-			    "for \"%s\"", lv->major, lv->minor, lv->name);
-
+		log_verbose("Setting persistent device number to (%d, %d) for %s.",
+			    lv->major, lv->minor, display_lvname(lv));
 	}
 
-	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+	log_very_verbose("Updating logical volume %s on disk(s).",
+			 display_lvname(lv));
+
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
-	backup(lv->vg);
-
-	if (active) {
-		log_verbose("Re-activating logical volume \"%s\"", lv->name);
-		if (!activate_lv(cmd, lv)) {
-			log_error("%s: reactivation failed", lv->name);
+	if (activate != CHANGE_AN) {
+		log_verbose("Re-activating logical volume %s", display_lvname(lv));
+		if (!lv_active_change(cmd, lv, activate)) {
+			log_error("%s: reactivation failed", display_lvname(lv));
+			backup(lv->vg);
 			return 0;
 		}
 	}
+
+	backup(lv->vg);
 
 	return 1;
 }

@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Unify handling of --persistent option for lvcreate and lvchange.
   Validate major and minor numbers stored in metadata.
   Use -fPIE when linking -pie executables.
   Enable cache segment type by default.
