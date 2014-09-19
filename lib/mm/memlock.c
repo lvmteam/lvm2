@@ -334,6 +334,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 #define _GNU_SOURCE
 #endif
 #include <dlfcn.h>
+static const unsigned char INSTRUCTION_HLT = 0x94;
 static char _mmap_orig;
 static unsigned char *_mmap_addr;
 #ifdef __i386__
@@ -358,7 +359,7 @@ static int _disable_mmap(void)
 #endif /* __i386__ */
 			_mmap_addr = *(void **)abs_addr;
 		} else
-			log_debug("Can't find PLT jump entry assuming -fPIE linkage.");
+			log_debug_mem("Can't find PLT jump entry assuming -fPIE linkage.");
 		if (mprotect((void *)((unsigned long)_mmap_addr & ~4095UL), 4096, PROT_READ|PROT_WRITE|PROT_EXEC)) {
 			log_sys_error("mprotect", "");
 			_mmap_addr = NULL;
@@ -366,8 +367,8 @@ static int _disable_mmap(void)
 		}
 		_mmap_orig = *_mmap_addr;
 	}
-	*_mmap_addr = 0xf4;
-	log_debug("Remapped mmap jump entry %x to %x.", _mmap_orig, *_mmap_addr);
+	log_debug_mem("Remapping mmap entry %02x to %02x.", _mmap_orig, INSTRUCTION_HLT);
+	*_mmap_addr = INSTRUCTION_HLT;
 
 #ifdef __i386__
 	if (!_mmap64_addr) {
@@ -375,8 +376,7 @@ static int _disable_mmap(void)
 		if (_mmap64_addr[0] == 0xff && _mmap64_addr[1] == 0x25) {
 			abs_addr = *(void **)(_mmap64_addr + 2);
 			_mmap64_addr = *(void **)abs_addr;
-		} else
-			log_debug("Can't find PLT jump entry assuming -fPIE linkage.");
+		} /* Can't find PLT jump entry assuming -fPIE linkage */
 		if (mprotect((void *)((unsigned long)_mmap64_addr & ~4095UL), 4096, PROT_READ|PROT_WRITE|PROT_EXEC)) {
 			log_sys_error("mprotect", "");
 			_mmap64_addr = NULL;
@@ -384,8 +384,7 @@ static int _disable_mmap(void)
 		}
 		_mmap64_orig = *_mmap64_addr;
 	}
-	*_mmap64_addr = 0xf4;
-	log_debug("Remapped mmap64 jump entry %x to %x.", _mmap64_orig, *_mmap64_addr);
+	*_mmap64_addr = INSTRUCTION_HLT;
 #endif /* __i386__ */
 #endif /* ARCH_X86 */
 	return 1;
@@ -394,16 +393,13 @@ static int _disable_mmap(void)
 static int _restore_mmap(void)
 {
 #ifdef ARCH_X86
-	if (_mmap_addr) {
-		log_debug("Restoring mmap jump entry.");
+	if (_mmap_addr)
 		*_mmap_addr = _mmap_orig;
-	}
 #ifdef __i386__
-	if (_mmap64_addr) {
-		log_debug("Restoring mmap64 jump entry.");
+	if (_mmap64_addr)
 		*_mmap64_addr = _mmap64_orig;
-	}
 #endif /* __i386__ */
+	log_debug_mem("Restored mmap entry.");
 #endif /* ARCH_X86 */
 	return 1;
 }
@@ -412,6 +408,9 @@ static int _restore_mmap(void)
 static void _lock_mem(struct cmd_context *cmd)
 {
 	_allocate_memory();
+	(void)strerror(0);		/* Force libc.mo load */
+	(void)dm_udev_get_sync_support(); /* udev is initialized */
+	log_very_verbose("Locking memory");
 
 	/*
 	 * For daemon we need to use mlockall()
@@ -439,10 +438,6 @@ static void _lock_mem(struct cmd_context *cmd)
 			stack;
 	}
 
-	(void)strerror(0);		/* Force libc.mo load */
-	(void)dm_udev_get_sync_support(); /* udev is initialized */
-
-	log_very_verbose("Locking memory");
 	if (!_memlock_maps(cmd, LVM_MLOCK, &_mstats))
 		stack;
 
