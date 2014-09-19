@@ -224,7 +224,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		cache_seg->policy_argv = NULL;
 
 		/* update the kernel to put the cleaner policy in place */
-		if (lv_update_and_reload(cache_lv))
+		if (!lv_update_and_reload(cache_lv))
                         return_0;
 	}
 
