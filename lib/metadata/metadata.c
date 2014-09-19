@@ -837,6 +837,49 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
 }
 
 /*
+ * Validates major and minor numbers.
+ * On >2.4 kernel we only support dynamic major number.
+ */
+int validate_major_minor(const struct cmd_context *cmd,
+			 const struct format_type *fmt,
+			 int32_t major, int32_t minor)
+{
+	int r = 1;
+
+	if (!strncmp(cmd->kernel_vsn, "2.4.", 4) ||
+	    (fmt->features & FMT_RESTRICTED_LVIDS)) {
+		if (major < 0 || major > 255) {
+			log_error("Major number %d outside range 0-255.", major);
+			r = 0;
+		}
+		if (minor < 0 || minor > 255) {
+			log_error("Minor number %d outside range 0-255.", minor);
+			r = 0;
+		}
+	} else {
+		/* 12 bits for major number */
+		if ((major != -1) &&
+		    (major != cmd->dev_types->device_mapper_major)) {
+			/* User supplied some major number */
+			if (major < 0 || major > 4095) {
+				log_error("Major number %d outside range 0-4095.", major);
+				r = 0;
+			} else
+				log_print_unless_silent("Ignoring supplied major %d number - "
+							"kernel assigns major numbers dynamically.",
+							major);
+		}
+		/* 20 bits for minor number */
+		if (minor < 0 || minor > 1048575) {
+			log_error("Minor number %d outside range 0-1048575.", minor);
+			r = 0;
+		}
+	}
+
+	return r;
+}
+
+/*
  * Validate parameters to vg_create() before calling.
  * FIXME: Move inside vg_create library function.
  * FIXME: Change vgcreate_params struct to individual gets/sets

@@ -1136,6 +1136,9 @@ struct vgcreate_params {
 	uint32_t vgmetadatacopies;
 };
 
+int validate_major_minor(const struct cmd_context *cmd,
+			 const struct format_type *fmt,
+			 int32_t major, int32_t minor);
 int vgcreate_params_validate(struct cmd_context *cmd,
 			     struct vgcreate_params *vp);
 

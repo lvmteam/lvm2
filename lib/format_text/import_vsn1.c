@@ -635,7 +635,7 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	return 1;
 }
 
-static int _read_lvsegs(struct format_instance *fid __attribute__((unused)),
+static int _read_lvsegs(struct format_instance *fid,
 			struct volume_group *vg, const struct dm_config_node *lvn,
 			const struct dm_config_node *vgn __attribute__((unused)),
 			struct dm_hash_table *pv_hash,
@@ -668,20 +668,27 @@ static int _read_lvsegs(struct format_instance *fid __attribute__((unused)),
 		return_0;
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
-
 	lv->minor = -1;
-	if ((lv->status & FIXED_MINOR) &&
-	    !_read_int32(lvn, "minor", &lv->minor)) {
-		log_error("Couldn't read minor number for logical "
-			  "volume %s.", lv->name);
-		return 0;
-	}
-
 	lv->major = -1;
-	if ((lv->status & FIXED_MINOR) &&
-	    !_read_int32(lvn, "major", &lv->major)) {
-		log_error("Couldn't read major number for logical "
-			  "volume %s.", lv->name);
+
+	if (lv->status & FIXED_MINOR) {
+		if (!_read_int32(lvn, "minor", &lv->minor)) {
+			log_error("Couldn't read minor number for logical "
+				  "volume %s.", lv->name);
+			return 0;
+		}
+
+		if (!_read_int32(lvn, "major", &lv->major)) {
+			log_error("Couldn't read major number for logical "
+				  "volume %s.", lv->name);
+			return 0;
+		}
+
+		if (!validate_major_minor(vg->cmd, fid->fmt, lv->major, lv->minor)) {
+			log_error("Logical volume %s does not have a valid major, minor number.",
+				  lv->name);
+			return 0;
+		}
 	}
 
 	return 1;
