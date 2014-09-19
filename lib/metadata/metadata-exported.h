@@ -797,8 +797,8 @@ struct lvcreate_params {
 	int create_pool; /* thin */
 	int zero; /* all */
 	int wipe_signatures; /* all */
-	int major; /* all */
-	int minor; /* all */
+	int32_t major; /* all */
+	int32_t minor; /* all */
 	int log_count; /* mirror */
 	int nosync; /* mirror */
 	int poolmetadataspare; /* thin pool */
