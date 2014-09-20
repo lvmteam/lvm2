@@ -114,7 +114,7 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 	const struct dm_config_value *cv;
 	const char *str;
 	static char config_path[PATH_MAX];
-	static char path[PATH_MAX];
+	size_t len = strlen(lv->vg->name);
 
 	config_def_get_path(config_path, sizeof(config_path), cfg_id);
 	log_verbose("%s configuration setting defined: "
@@ -161,21 +161,12 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 			else
 				continue;
 		}
-		if (!strchr(str, '/')) {
-			/* vgname supplied */
-			if (!strcmp(str, lv->vg->name))
-				return 1;
-			else
-				continue;
-		}
-		/* vgname/lvname */
-		if (dm_snprintf(path, sizeof(path), "%s/%s", lv->vg->name,
-				 lv->name) < 0) {
-			log_error("dm_snprintf error from %s/%s", lv->vg->name,
-				  lv->name);
-			continue;
-		}
-		if (!strcmp(path, str))
+
+		/* If supplied name is vgname[/lvname] */
+		if ((strncmp(str, lv->vg->name, len) == 0) &&
+		    (!str[len] ||
+		     ((str[len] == '/') &&
+		      !strcmp(str + len + 1, lv->name))))
 			return 1;
 	}
 
