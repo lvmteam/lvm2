@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2011-2012 Red Hat, Inc.
+# Copyright (C) 2011-2014 Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -13,6 +13,13 @@
 
 CMD=${0##*/}
 test "$CMD" != lvm || unset CMD
+
+# When needed to trace command from test suite use env var before program
+# and run program directly via shell in test dir i.e.:
+# sh shell/activate-mirror.sh
+# 'LVM_GDB=1 lvcreate -l1 $vg'
+# > run
+test -z "$LVM_GDB" || exec gdb --readnow --args "$abs_top_builddir/tools/lvm" $CMD "$@"
 
 # Multiple level of LVM_VALGRIND support
 # the higher level the more commands are traced
