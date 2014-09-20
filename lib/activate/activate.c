@@ -125,24 +125,23 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 		if (cv->type == DM_CFG_EMPTY_ARRAY)
 			goto out;
 		if (cv->type != DM_CFG_STRING) {
-			log_error("Ignoring invalid string in config file %s",
-				  config_path);
+			log_print_unless_silent("Ignoring invalid string in config file %s.",
+						config_path);
 			continue;
 		}
 		str = cv->v.str;
 		if (!*str) {
-			log_error("Ignoring empty string in config file %s",
-				  config_path);
+			log_print_unless_silent("Ignoring empty string in config file %s.",
+						config_path);
 			continue;
 		}
-
 
 		/* Tag? */
 		if (*str == '@') {
 			str++;
 			if (!*str) {
-				log_error("Ignoring empty tag in config file "
-					  "%s", config_path);
+				log_print_unless_silent("Ignoring empty tag in config file %s",
+							config_path);
 				continue;
 			}
 			/* If any host tag matches any LV or VG tag, activate */
