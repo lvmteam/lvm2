@@ -325,6 +325,7 @@ int vg_remove_snapshot(struct logical_volume *cow)
 	if (is_origin_active && !suspend_lv(origin->vg->cmd, origin)) {
 		log_error("Failed to refresh %s without snapshot.",
 			  origin->name);
+		vg_revert(origin->vg);
 		return 0;
 	}
 	if (!vg_commit(origin->vg))

@@ -24,7 +24,7 @@ Version 2.02.112 -
   Don't leak alloc_handle on raid target error path.
   Properly validate raid leg names.
   Archive metadata before starting their modification in raid target.
-  Add missing vg_revert in suspend_lv() error path in raid target.
+  Add missing vg_revert() in suspend_lv() raid and snapshot error path.
   Add missing backup of lvm2 metadata after some raid modifications.
   Use vg memory pool for extent allocation.
   Add allocation/physical_extent_size config option for default PE size of VGs.
