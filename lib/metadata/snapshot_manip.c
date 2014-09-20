@@ -283,9 +283,9 @@ int vg_remove_snapshot(struct logical_volume *cow)
 		clear_snapshot_merge(origin);
 		/*
 		 * preload origin IFF "snapshot-merge" target is active
-		 * - IMPORTANT: avoids preload if onactivate merge is pending
+		 * - IMPORTANT: avoids preload if inactivate merge is pending
 		 */
-		if (lv_has_target_type(origin->vg->cmd->mem, origin, NULL,
+		if (lv_has_target_type(origin->vg->vgmem, origin, NULL,
 				       "snapshot-merge")) {
 			/*
 			 * preload origin to:
