@@ -7124,22 +7124,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* store vg on disk(s) */
-		if (!vg_write(vg))
-			return_NULL;
-
-		if (!suspend_lv(cmd, org)) {
-			log_error("Failed to suspend origin %s", org->name);
-			vg_revert(vg);
-			return NULL;
-		}
-
-		if (!vg_commit(vg))
-			return_NULL;
-
-		if (!resume_lv(cmd, org)) {
-			log_error("Problem reactivating origin %s", org->name);
-			return NULL;
-		}
+		if (!lv_update_and_reload(org))
+			return_0;
 	}
 	/* FIXME out of sequence */
 	backup(vg);
