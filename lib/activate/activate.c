@@ -700,7 +700,7 @@ int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	unsigned int open_count_check_retries;
 
-	if (!info->exists)
+	if (!info->exists || !info->open_count)
 		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
