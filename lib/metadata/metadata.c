@@ -4813,10 +4813,10 @@ struct logical_volume *lv_ondisk(struct logical_volume *lv)
 	if (!lv)
 		return NULL;
 
-	vg = lv->vg;
+	if (!lv->vg->vg_ondisk)
+		return lv;
 
-	if (vg->vg_ondisk)
-		vg = vg->vg_ondisk;
+	vg = lv->vg->vg_ondisk;
 
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (!strncmp(lvl->lv->lvid.s, lv->lvid.s, sizeof(lv->lvid)))
