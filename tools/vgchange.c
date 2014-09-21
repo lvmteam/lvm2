@@ -234,8 +234,10 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (!_activate_lvs_in_vg(cmd, vg, activate))
+	if (!_activate_lvs_in_vg(cmd, vg, activate)) {
+		stack;
 		r = 0;
+	}
 
 	/* Print message only if there was not found a missing VG */
 	if (!vg->cmd_missing_vgs)
