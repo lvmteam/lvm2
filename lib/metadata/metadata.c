@@ -2492,6 +2492,19 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
+		if (lv_is_pool_metadata_spare(lvl->lv)) {
+			if (++spare_count > 1) {
+				log_error(INTERNAL_ERROR "LV %s is %u. pool metadata spare (>1).",
+					  lvl->lv->name, spare_count);
+				r = 0;
+			}
+			if (vg->pool_metadata_spare_lv != lvl->lv) {
+				log_error(INTERNAL_ERROR "LV %s is not vg pool metadata spare.",
+					  lvl->lv->name);
+				r = 0;
+			}
+		}
+
 		if (lv_is_cow(lvl->lv))
 			num_snapshots++;
 
@@ -2588,19 +2601,6 @@ int vg_validate(struct volume_group *vg)
 				  "%s detected for %s in %s.",
 				  uuid, lvl->lv->name, vg->name);
 			r = 0;
-		}
-
-		if (lv_is_pool_metadata_spare(lvl->lv)) {
-			if (++spare_count > 1) {
-				log_error(INTERNAL_ERROR "LV %s is %u. pool metadata spare (>1).",
-					  lvl->lv->name, spare_count);
-				r = 0;
-			}
-			if (vg->pool_metadata_spare_lv != lvl->lv) {
-				log_error(INTERNAL_ERROR "LV %s is not vg pool metadata spare.",
-					  lvl->lv->name);
-				r = 0;
-			}
 		}
 
 		if (!check_lv_segments(lvl->lv, 1)) {
