@@ -152,6 +152,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	sigint_restore();
+	sync_local_dev_names(vg->cmd);  /* Wait until devices are available */
 
 	if (expected_count)
 		log_verbose("%s %d logical volumes in volume group %s",
