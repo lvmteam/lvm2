@@ -4818,11 +4818,11 @@ const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
 
 	vg = lv->vg->vg_ondisk;
 
-	dm_list_iterate_items(lvl, &vg->lvs)
-		if (!strncmp(lvl->lv->lvid.s, lv->lvid.s, sizeof(lv->lvid)))
-			return lvl->lv;
+	if (!(lvl = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
+		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in ondisk metadata.",
+			  display_lvname(lv), lv->lvid.s);
+		return NULL;
+	}
 
-	log_error(INTERNAL_ERROR "LV %s/%s (UUID %s) not found in ondisk metadata.",
-		  lv->vg->name, lv->name, lv->lvid.s);
-	return NULL;
+	return lvl->lv;
 }
