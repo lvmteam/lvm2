@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Pools cannot be used as external origin.
   Use lv_update_and_reload() for snapshot reload.
   Don't print message in adjusted_mirror_region_size() in activation.
   Improve lv_update_and_reload() to find out proper lock holding LV.

@@ -2511,7 +2511,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 			   struct lvconvert_params *lp)
 {
 	struct logical_volume *torigin_lv, *pool_lv = lp->pool_data_lv;
-	struct volume_group *vg = pool_lv->vg;
+	struct volume_group *vg = lv->vg;
 	struct lvcreate_params lvc = {
 		.activate = CHANGE_AEY,
 		.alloc = ALLOC_INHERIT,
@@ -2533,7 +2533,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_thin_pool(lv)) {
+	if (lv_is_pool(lv)) {
 		log_error("Can't use pool %s as external origin.",
 			  display_lvname(lv));
 		return 0;
