@@ -2216,9 +2216,11 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	lp->lv_to_poll = origin;
 
 	r = 1;
-	log_print_unless_silent("Merging of volume %s started.", lv->name);
 out:
 	backup(lv->vg);
+
+	if (r)
+		log_print_unless_silent("Merging of volume %s started.", lv->name);
 
 	return r;
 }
@@ -2296,13 +2298,14 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
-	log_print_unless_silent("Merging of thin snapshot %s will occur on "
-				"next activation of %s.",
-				display_lvname(lv), display_lvname(origin));
 	r = 1;
 out:
 	backup(lv->vg);
 
+	if (r)
+		log_print_unless_silent("Merging of thin snapshot %s will occur on "
+					"next activation of %s.",
+					display_lvname(lv), display_lvname(origin));
 	return r;
 }
 
@@ -3017,17 +3020,17 @@ mda_write:
 		goto out;
 	}
 
-	log_print_unless_silent("Converted %s to %s pool.",
-				display_lvname(pool_lv),
-				(segtype_is_cache_pool(lp->segtype)) ?
-				"cache" : "thin");
-
 	r = 1;
-
 	lp->pool_data_lv = pool_lv;
 
 out:
 	backup(vg);
+
+	if (r)
+		log_print_unless_silent("Converted %s to %s pool.",
+					display_lvname(pool_lv),
+					(segtype_is_cache_pool(lp->segtype)) ?
+					"cache" : "thin");
 
 	return r;
 #if 0
