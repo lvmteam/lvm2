@@ -2572,8 +2572,6 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 				display_lvname(torigin_lv),
 				display_lvname(lv));
 
-	backup(vg);
-
 	return 1;
 
 deactivate_and_revert_new_lv:
