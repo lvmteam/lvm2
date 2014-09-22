@@ -3307,7 +3307,8 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 	}
 
 	lp->lv_to_poll = refreshed_lv;
-	ret = _lvconvert_single(cmd, refreshed_lv, lp);
+	if ((ret = _lvconvert_single(cmd, refreshed_lv, lp)) != ECMD_PROCESSED)
+		stack;
 
 	if (ret == ECMD_PROCESSED && lp->need_polling) {
 		/*
@@ -3316,8 +3317,9 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 		 */
 		unlock_vg(cmd, vg_name);
 
-		ret = _poll_logical_volume(cmd, lp->lv_to_poll,
-					  lp->wait_completion);
+		if (!(ret = _poll_logical_volume(cmd, lp->lv_to_poll,
+						 lp->wait_completion)) != ECMD_PROCESSED)
+			stack;
 
 		/* use LCK_VG_WRITE to match lvconvert()'s READ_FOR_UPDATE */
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
