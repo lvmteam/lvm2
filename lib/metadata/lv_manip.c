@@ -5701,16 +5701,17 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 {
 	struct volume_group *vg = lv->vg;
 	int do_backup = 0, r = 0;
+	const struct logical_volume *lock_lv = lv_lock_holder(lv);
 
 	log_very_verbose("Updating logical volume %s on disk(s).",
-			 display_lvname(lv));
+			 display_lvname(lock_lv));
 
 	if (!vg_write(vg))
 		return_0;
 
-	if (!(origin_only ? suspend_lv_origin(vg->cmd, lv) : suspend_lv(vg->cmd, lv))) {
+	if (!(origin_only ? suspend_lv_origin(vg->cmd, lock_lv) : suspend_lv(vg->cmd, lock_lv))) {
 		log_error("Failed to lock logical volume %s.",
-			  display_lvname(lv));
+			  display_lvname(lock_lv));
 		vg_revert(vg);
 	} else if (!(r = vg_commit(vg)))
 		stack; /* !vg_commit() has implict vg_revert() */
@@ -5718,11 +5719,11 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 		do_backup = 1;
 
 	log_very_verbose("Updating logical volume %s in kernel.",
-			 display_lvname(lv));
+			 display_lvname(lock_lv));
 
-	if (!(origin_only ? resume_lv_origin(vg->cmd, lv) : resume_lv(vg->cmd, lv))) {
+	if (!(origin_only ? resume_lv_origin(vg->cmd, lock_lv) : resume_lv(vg->cmd, lock_lv))) {
 		log_error("Problem reactivating logical volume %s.",
-			  display_lvname(lv));
+			  display_lvname(lock_lv));
 		r = 0;
 	}
 

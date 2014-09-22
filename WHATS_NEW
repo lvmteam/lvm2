@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Improve lv_update_and_reload() to find out proper lock holding LV.
   Improve search of LV in lv_ondisk().
   Do not scan sysfs in lv_check_not_in_use() when device is closed.
   Backup final metadata after resync of mirror/raid.
