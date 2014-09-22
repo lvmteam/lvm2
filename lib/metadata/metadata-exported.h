@@ -1065,7 +1065,7 @@ int lv_raid_reshape(struct logical_volume *lv,
 int lv_raid_replace(struct logical_volume *lv, struct dm_list *remove_pvs,
 		    struct dm_list *allocate_pvs);
 int lv_raid_remove_missing(struct logical_volume *lv);
-int partial_raid_lv_supports_degraded_activation(struct logical_volume *lv);
+int partial_raid_lv_supports_degraded_activation(const struct logical_volume *lv);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */
@@ -1087,10 +1087,10 @@ struct cmd_vg *cmd_vg_lookup(struct dm_list *cmd_vgs,
 int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs);
 void free_cmd_vgs(struct dm_list *cmd_vgs);
 
-int find_replicator_vgs(struct logical_volume *lv);
+int find_replicator_vgs(const struct logical_volume *lv);
 
-int lv_read_replicator_vgs(struct logical_volume *lv);
-void lv_release_replicator_vgs(struct logical_volume *lv);
+int lv_read_replicator_vgs(const struct logical_volume *lv);
+void lv_release_replicator_vgs(const struct logical_volume *lv);
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint64_t lv_type);
@@ -1099,9 +1099,9 @@ struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
 						  const char *name,
 						  const char *uuid,
 						  uint64_t lv_type);
-struct logical_volume *find_pvmove_lv_in_lv(struct logical_volume *lv);
-const char *get_pvmove_pvname_from_lv(struct logical_volume *lv);
-const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr);
+const struct logical_volume *find_pvmove_lv_in_lv(const struct logical_volume *lv);
+const char *get_pvmove_pvname_from_lv(const struct logical_volume *lv);
+const char *get_pvmove_pvname_from_lv_mirr(const struct logical_volume *lv_mirr);
 struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
 

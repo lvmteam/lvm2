@@ -26,7 +26,7 @@ struct dev_manager;
 struct dm_info;
 struct device;
 
-int read_only_lv(struct logical_volume *lv, struct lv_activate_opts *laopts);
+int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts);
 
 /*
  * Constructor and destructor.
@@ -76,14 +76,14 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 int dev_manager_thin_device_id(struct dev_manager *dm,
 			       const struct logical_volume *lv,
 			       uint32_t *device_id);
-int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_suspend(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int lockfs, int flush_required);
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,
 			 struct lv_activate_opts *laopts);
-int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_preload(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int *flush_required);
-int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
-int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv) __attribute__((nonnull(1, 2)));
+int dev_manager_deactivate(struct dev_manager *dm, const struct logical_volume *lv);
+int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *lv) __attribute__((nonnull(1, 2)));
 
 int dev_manager_mknodes(const struct logical_volume *lv);
 

@@ -30,7 +30,7 @@ static int (*_init_fn) (int type, struct dm_config_tree * cft,
 static int (*_lock_query_fn) (const char *resource, int *mode) = NULL;
 
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
-			  uint32_t flags, struct logical_volume *lv __attribute__((unused)))
+			  uint32_t flags, const struct logical_volume *lv __attribute__((unused)))
 {
 	if (!_lock_fn)
 		return 0;

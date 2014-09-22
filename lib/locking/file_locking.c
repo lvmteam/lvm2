@@ -42,7 +42,7 @@ static void _reset_file_locking(void)
 }
 
 static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
-			       uint32_t flags, struct logical_volume *lv)
+			       uint32_t flags, const struct logical_volume *lv)
 {
 	char lockfile[PATH_MAX];
 	unsigned origin_only = (flags & LCK_ORIGIN_ONLY) ? 1 : 0;

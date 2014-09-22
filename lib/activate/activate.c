@@ -108,7 +108,7 @@ int list_lv_modules(struct dm_pool *mem, const struct logical_volume *lv,
 	return 1;
 }
 
-static int _lv_passes_volumes_filter(struct cmd_context *cmd, struct logical_volume *lv,
+static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logical_volume *lv,
 				     const struct dm_config_node *cn, const int cfg_id)
 {
 	const struct dm_config_value *cv;
@@ -248,7 +248,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 {
 	return 0;
 }
-int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
+int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv,
 			struct lvinfo *info)
 {
         return 0;
@@ -328,35 +328,35 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 }
 *******/
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive,
-			 struct logical_volume *ondisk_lv, struct logical_volume *incore_lv)
+			 const struct logical_volume *ondisk_lv, const struct logical_volume *incore_lv)
 {
 	return 1;
 }
-int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv)
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, const struct logical_volume *lv)
 {
 	return 1;
 }
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
-			unsigned exclusive, unsigned revert, struct logical_volume *lv)
+			unsigned exclusive, unsigned revert, const struct logical_volume *lv)
 {
 	return 1;
 }
-int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv)
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logical_volume *lv)
 {
 	return 1;
 }
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv, struct logical_volume *lv)
+			 int *activate_lv, const struct logical_volume *lv)
 {
 	return 1;
 }
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive, int noscan,
-		int temporary, struct logical_volume *lv)
+		int temporary, const struct logical_volume *lv)
 {
 	return 1;
 }
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-			    int noscan, int temporary, struct logical_volume *lv)
+			    int noscan, int temporary, const struct logical_volume *lv)
 {
 	return 1;
 }
@@ -405,7 +405,7 @@ int lv_check_transient(struct logical_volume *lv)
 {
 	return 1;
 }
-int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
+int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume *lv,
 			   const struct lv_activate_opts *laopts, int monitor)
 {
 	return 1;
@@ -426,7 +426,7 @@ int device_is_usable(struct device *dev)
 {
         return 0;
 }
-int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
+int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 		       const char *layer, const char *target_type)
 {
         return 0;
@@ -458,7 +458,7 @@ int activation(void)
 }
 
 static int _passes_activation_filter(struct cmd_context *cmd,
-				     struct logical_volume *lv)
+				     const struct logical_volume *lv)
 {
 	const struct dm_config_node *cn;
 
@@ -487,7 +487,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 }
 
 static int _passes_readonly_filter(struct cmd_context *cmd,
-				   struct logical_volume *lv)
+				   const struct logical_volume *lv)
 {
 	const struct dm_config_node *cn;
 
@@ -695,7 +695,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 #define OPEN_COUNT_CHECK_RETRIES 25
 #define OPEN_COUNT_CHECK_USLEEP_DELAY 200000
 
-int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
+int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv,
 			struct lvinfo *info)
 {
 	unsigned int open_count_check_retries;
@@ -1256,7 +1256,7 @@ static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 	return info.exists;
 }
 
-static int _lv_open_count(struct cmd_context *cmd, struct logical_volume *lv)
+static int _lv_open_count(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	struct lvinfo info;
 
@@ -1268,7 +1268,7 @@ static int _lv_open_count(struct cmd_context *cmd, struct logical_volume *lv)
 	return info.open_count;
 }
 
-static int _lv_activate_lv(struct logical_volume *lv, struct lv_activate_opts *laopts)
+static int _lv_activate_lv(const struct logical_volume *lv, struct lv_activate_opts *laopts)
 {
 	int r;
 	struct dev_manager *dm;
@@ -1283,7 +1283,7 @@ static int _lv_activate_lv(struct logical_volume *lv, struct lv_activate_opts *l
 	return r;
 }
 
-static int _lv_preload(struct logical_volume *lv, struct lv_activate_opts *laopts,
+static int _lv_preload(const struct logical_volume *lv, struct lv_activate_opts *laopts,
 		       int *flush_required)
 {
 	int r = 0;
@@ -1305,7 +1305,7 @@ out:
 	return r;
 }
 
-static int _lv_deactivate(struct logical_volume *lv)
+static int _lv_deactivate(const struct logical_volume *lv)
 {
 	int r;
 	struct dev_manager *dm;
@@ -1320,7 +1320,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_suspend_lv(struct logical_volume *lv, struct lv_activate_opts *laopts,
+static int _lv_suspend_lv(const struct logical_volume *lv, struct lv_activate_opts *laopts,
 			  int lockfs, int flush_required)
 {
 	int r;
@@ -1538,7 +1538,7 @@ char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath)
 	return path;
 }
 
-static char *_build_target_uuid(struct cmd_context *cmd, struct logical_volume *lv)
+static char *_build_target_uuid(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	const char *layer;
 
@@ -1553,7 +1553,7 @@ static char *_build_target_uuid(struct cmd_context *cmd, struct logical_volume *
 }
 
 int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
-				    struct logical_volume *lv, int *pending)
+				    const struct logical_volume *lv, int *pending)
 {
 	char *uuid;
 	enum dm_event_mask evmask = 0;
@@ -1585,7 +1585,7 @@ int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
 	return evmask;
 }
 
-int target_register_events(struct cmd_context *cmd, const char *dso, struct logical_volume *lv,
+int target_register_events(struct cmd_context *cmd, const char *dso, const struct logical_volume *lv,
 			    int evmask __attribute__((unused)), int set, int timeout)
 {
 	char *uuid;
@@ -1621,7 +1621,7 @@ int target_register_events(struct cmd_context *cmd, const char *dso, struct logi
  * Returns 0 if an attempt to (un)monitor the device failed.
  * Returns 1 otherwise.
  */
-int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
+int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume *lv,
 			   const struct lv_activate_opts *laopts, int monitor)
 {
 #ifdef DMEVENTD
@@ -1796,7 +1796,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 struct detached_lv_data {
-	struct logical_volume *lv_pre;
+	const struct logical_volume *lv_pre;
 	struct lv_activate_opts *laopts;
 	int *flush_required;
 };
@@ -1817,9 +1817,11 @@ static int _preload_detached_lv(struct logical_volume *lv, void *data)
 
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		       struct lv_activate_opts *laopts, int error_if_not_suspended,
-	               struct logical_volume *ondisk_lv, struct logical_volume *incore_lv)
+	               const struct logical_volume *ondisk_lv, const struct logical_volume *incore_lv)
 {
-	struct logical_volume *pvmove_lv = NULL, *ondisk_lv_to_free = NULL, *incore_lv_to_free = NULL;
+	const struct logical_volume *pvmove_lv = NULL;
+	const struct logical_volume *ondisk_lv_to_free = NULL;
+	const struct logical_volume *incore_lv_to_free = NULL;
 	struct lv_list *lvl_pre;
 	struct seg_list *sl;
         struct lv_segment *snap_seg;
@@ -1903,7 +1905,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		detached.laopts = laopts;
 		detached.flush_required = &flush_required;
 
-		if (!for_each_sub_lv(ondisk_lv, &_preload_detached_lv, &detached))
+		if (!for_each_sub_lv((struct logical_volume *)ondisk_lv, &_preload_detached_lv, &detached))
 			goto_out;
 
 		/*
@@ -1986,7 +1988,8 @@ out:
  *
  * Returns success if the device is not active
  */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive, struct logical_volume *ondisk_lv, struct logical_volume *incore_lv)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive,
+			 const struct logical_volume *ondisk_lv, const struct logical_volume *incore_lv)
 {
 	struct lv_activate_opts laopts = {
 		.origin_only = origin_only,
@@ -2006,9 +2009,9 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
 
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		      struct lv_activate_opts *laopts, int error_if_not_active,
-	              struct logical_volume *lv)
+	              const struct logical_volume *lv)
 {
-	struct logical_volume *lv_to_free = NULL;
+	const struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	int r = 0;
 	int messages_only = 0;
@@ -2079,7 +2082,7 @@ out:
  */
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 			unsigned origin_only, unsigned exclusive,
-			unsigned revert, struct logical_volume *lv)
+			unsigned revert, const struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = {
 		.origin_only = origin_only,
@@ -2090,14 +2093,15 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
 	return _lv_resume(cmd, lvid_s, &laopts, 0, lv);
 }
 
-int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv)
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
+	      const struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { .origin_only = origin_only, };
 
 	return _lv_resume(cmd, lvid_s, &laopts, 1, lv);
 }
 
-static int _lv_has_open_snapshots(struct logical_volume *lv)
+static int _lv_has_open_snapshots(const struct logical_volume *lv)
 {
 	struct lv_segment *snap_seg;
 	struct lvinfo info;
@@ -2115,9 +2119,9 @@ static int _lv_has_open_snapshots(struct logical_volume *lv)
 	return r;
 }
 
-int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv)
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logical_volume *lv)
 {
-	struct logical_volume *lv_to_free = NULL;
+	const struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	static const struct lv_activate_opts laopts = { .skip_in_use = 1 };
 	int r = 0;
@@ -2176,9 +2180,9 @@ out:
 
 /* Test if LV passes filter */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv, struct logical_volume *lv)
+			 int *activate_lv, const struct logical_volume *lv)
 {
-	struct logical_volume *lv_to_free = NULL;
+	const struct logical_volume *lv_to_free = NULL;
 	int r = 0;
 
 	if (!activation()) {
@@ -2205,9 +2209,9 @@ out:
 
 static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 			struct lv_activate_opts *laopts, int filter,
-	                struct logical_volume *lv)
+	                const struct logical_volume *lv)
 {
-	struct logical_volume *lv_to_free = NULL;
+	const struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	int r = 0;
 
@@ -2297,7 +2301,7 @@ out:
 
 /* Activate LV */
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-		int noscan, int temporary, struct logical_volume *lv)
+		int noscan, int temporary, const struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { .exclusive = exclusive,
 					   .noscan = noscan,
@@ -2311,7 +2315,7 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive,
 
 /* Activate LV only if it passes filter */
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-			    int noscan, int temporary, struct logical_volume *lv)
+			    int noscan, int temporary, const struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { .exclusive = exclusive,
 					   .noscan = noscan,

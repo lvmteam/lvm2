@@ -74,15 +74,16 @@ void activation_release(void);
 void activation_exit(void);
 
 /* int lv_suspend(struct cmd_context *cmd, const char *lvid_s); */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive, struct logical_volume *lv_ondisk, struct logical_volume *lv_incore);
-int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, struct logical_volume *lv);
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive,
+			 const struct logical_volume *lv_ondisk, const struct logical_volume *lv_incore);
+int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, const struct logical_volume *lv);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s,
-			unsigned origin_only, unsigned exclusive, unsigned revert, struct logical_volume *lv);
+			unsigned origin_only, unsigned exclusive, unsigned revert, const struct logical_volume *lv);
 int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-		int noscan, int temporary, struct logical_volume *lv);
+		int noscan, int temporary, const struct logical_volume *lv);
 int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive,
-			    int noscan, int temporary, struct logical_volume *lv);
-int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, struct logical_volume *lv);
+			    int noscan, int temporary, const struct logical_volume *lv);
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logical_volume *lv);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 
@@ -94,14 +95,14 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
-int lv_check_not_in_use(struct cmd_context *cmd, struct logical_volume *lv,
+int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv,
 			struct lvinfo *info);
 
 /*
  * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
  */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-			 int *activate_lv, struct logical_volume *lv);
+			 int *activate_lv, const struct logical_volume *lv);
 /*
  * Checks against the auto_activation_volume_list and
  * returns 1 if the LV should be activated, 0 otherwise.
@@ -147,18 +148,18 @@ int lv_is_active_exclusive(const struct logical_volume *lv);
 int lv_is_active_exclusive_locally(const struct logical_volume *lv);
 int lv_is_active_exclusive_remotely(const struct logical_volume *lv);
 
-int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
+int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 		       const char *layer, const char *target_type);
 
-int monitor_dev_for_events(struct cmd_context *cmd, struct logical_volume *lv,
+int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume *lv,
 			   const struct lv_activate_opts *laopts, int do_reg);
 
 #ifdef DMEVENTD
 #  include "libdevmapper-event.h"
 char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath);
 int target_registered_with_dmeventd(struct cmd_context *cmd, const char *libpath,
-				    struct logical_volume *lv, int *pending);
-int target_register_events(struct cmd_context *cmd, const char *dso, struct logical_volume *lv,
+				    const struct logical_volume *lv, int *pending);
+int target_register_events(struct cmd_context *cmd, const char *dso, const struct logical_volume *lv,
 			    int evmask __attribute__((unused)), int set, int timeout);
 #endif
 

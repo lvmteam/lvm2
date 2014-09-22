@@ -1822,7 +1822,7 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 }
 
 /* Return 1 if a partial raid LV can be activated redundantly */
-static int _partial_raid_lv_is_redundant(struct logical_volume *lv)
+static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 {
 	struct lv_segment *raid_seg = first_seg(lv);
 	uint32_t copies;
@@ -1911,9 +1911,10 @@ static int _lv_may_be_activated_in_degraded_mode(struct logical_volume *lv, void
 	return 1;
 }
 
-int partial_raid_lv_supports_degraded_activation(struct logical_volume *lv)
+int partial_raid_lv_supports_degraded_activation(const struct logical_volume *clv)
 {
 	int not_capable = 0;
+	struct logical_volume * lv = (struct logical_volume *)clv; /* drop const */
 
 	if (!_lv_may_be_activated_in_degraded_mode(lv, &not_capable) || not_capable)
 		return_0;

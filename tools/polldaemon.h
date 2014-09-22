@@ -28,7 +28,7 @@ typedef enum {
 struct daemon_parms;
 
 struct poll_functions {
-	const char *(*get_copy_name_from_lv) (struct logical_volume *lv);
+	const char *(*get_copy_name_from_lv) (const struct logical_volume *lv);
 	struct volume_group *(*get_copy_vg) (struct cmd_context *cmd,
 					     const char *name,
 					     const char *uuid);

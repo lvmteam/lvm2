@@ -1504,7 +1504,7 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 	return 1;
 }
 
-const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
+const char *get_pvmove_pvname_from_lv_mirr(const struct logical_volume *lv_mirr)
 {
 	struct lv_segment *seg;
 
@@ -1523,9 +1523,9 @@ const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 /*
  * Find first pvmove LV referenced by a segment of an LV.
  */
-struct logical_volume *find_pvmove_lv_in_lv(struct logical_volume *lv)
+const struct logical_volume *find_pvmove_lv_in_lv(const struct logical_volume *lv)
 {
-	struct lv_segment *seg;
+	const struct lv_segment *seg;
 	uint32_t s;
 
 	dm_list_iterate_items(seg, &lv->segments) {
@@ -1540,9 +1540,9 @@ struct logical_volume *find_pvmove_lv_in_lv(struct logical_volume *lv)
 	return NULL;
 }
 
-const char *get_pvmove_pvname_from_lv(struct logical_volume *lv)
+const char *get_pvmove_pvname_from_lv(const struct logical_volume *lv)
 {
-	struct logical_volume *pvmove_lv;
+	const struct logical_volume *pvmove_lv;
 
 	pvmove_lv = find_pvmove_lv_in_lv(lv);
 

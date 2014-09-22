@@ -34,7 +34,7 @@ static void _no_reset_locking(void)
 }
 
 static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
-			     uint32_t flags, struct logical_volume *lv)
+			     uint32_t flags, const struct logical_volume *lv)
 {
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_ACTIVATION:
@@ -79,7 +79,7 @@ static int _no_query_resource(const char *resource, int *mode)
 
 static int _readonly_lock_resource(struct cmd_context *cmd,
 				   const char *resource,
-				   uint32_t flags, struct logical_volume *lv)
+				   uint32_t flags, const struct logical_volume *lv)
 {
 	if ((flags & LCK_TYPE_MASK) == LCK_WRITE &&
 	    (flags & LCK_SCOPE_MASK) == LCK_VG &&

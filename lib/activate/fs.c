@@ -468,8 +468,8 @@ int fs_del_lv_byname(const char *dev_dir, const char *vg_name,
 	return _fs_op(FS_DEL, dev_dir, vg_name, lv_name, "", "", check_udev);
 }
 
-int fs_rename_lv(struct logical_volume *lv, const char *dev, 
-		const char *old_vgname, const char *old_lvname)
+int fs_rename_lv(const struct logical_volume *lv, const char *dev,
+		 const char *old_vgname, const char *old_lvname)
 {
 	if (strcmp(old_vgname, lv->vg->name)) {
 		return

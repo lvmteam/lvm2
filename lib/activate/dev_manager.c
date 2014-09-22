@@ -60,11 +60,11 @@ struct dev_manager {
 };
 
 struct lv_layer {
-	struct logical_volume *lv;
+	const struct logical_volume *lv;
 	const char *old_name;
 };
 
-int read_only_lv(struct logical_volume *lv, struct lv_activate_opts *laopts)
+int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts)
 {
 	return (laopts->read_only || !(lv->status & LVM_WRITE));
 }
@@ -659,7 +659,7 @@ static int _status(const char *name, const char *uuid,
 }
 #endif
 
-int lv_has_target_type(struct dm_pool *mem, struct logical_volume *lv,
+int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 		       const char *layer, const char *target_type)
 {
 	int r = 0;
@@ -888,7 +888,7 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 }
 
 /* FIXME Merge with the percent function */
-int dev_manager_transient(struct dev_manager *dm, struct logical_volume *lv)
+int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *lv)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -1534,7 +1534,7 @@ static int _check_udev_fallback(struct cmd_context *cmd)
 
 #endif /* UDEV_SYNC_SUPPORT */
 
-static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *lv,
+static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_volume *lv,
 				const char *layer, int noscan, int temporary)
 {
 	uint16_t udev_flags = 0;
@@ -1597,7 +1597,7 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, struct logical_volume *l
 }
 
 static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-			     struct logical_volume *lv, const char *layer)
+			     const struct logical_volume *lv, const char *layer)
 {
 	char *dlid, *name;
 	struct dm_info info, info2;
@@ -1656,7 +1656,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
  */
 static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
 					    struct dm_tree *dtree,
-					    struct logical_volume *lv)
+					    const struct logical_volume *lv)
 {
 	struct logical_volume *rlv = first_seg(lv)->replicator;
 	struct replicator_device *rdev;
@@ -1881,7 +1881,7 @@ static int _pool_register_callback(struct dev_manager *dm,
  * Add LV and any known dependencies
  */
 static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-			    struct logical_volume *lv, int origin_only)
+			    const struct logical_volume *lv, int origin_only)
 {
 	uint32_t s;
 	struct seg_list *sl;
@@ -2025,7 +2025,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	return 1;
 }
 
-static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv, int origin_only)
+static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, const struct logical_volume *lv, int origin_only)
 {
 	struct dm_tree *dtree;
 
@@ -2217,7 +2217,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 
 static int _add_layer_target_to_dtree(struct dev_manager *dm,
 				      struct dm_tree_node *dnode,
-				      struct logical_volume *lv)
+				      const struct logical_volume *lv)
 {
 	const char *layer_dlid;
 
@@ -2235,8 +2235,8 @@ static int _add_layer_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_origin_target_to_dtree(struct dev_manager *dm,
-					 struct dm_tree_node *dnode,
-					 struct logical_volume *lv)
+				       struct dm_tree_node *dnode,
+				       const struct logical_volume *lv)
 {
 	const char *real_dlid;
 
@@ -2251,7 +2251,7 @@ static int _add_origin_target_to_dtree(struct dev_manager *dm,
 
 static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 					       struct dm_tree_node *dnode,
-					       struct logical_volume *lv)
+					       const struct logical_volume *lv)
 {
 	const char *origin_dlid, *cow_dlid, *merge_dlid;
 	struct lv_segment *merging_snap_seg = find_snapshot(lv);
@@ -2280,7 +2280,7 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 
 static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 					 struct dm_tree_node *dnode,
-					 struct logical_volume *lv,
+					 const struct logical_volume *lv,
 					 struct lv_activate_opts *laopts)
 {
 	const char *origin_dlid;
@@ -2334,7 +2334,7 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				struct logical_volume *lv,
+				const struct logical_volume *lv,
 				struct lv_activate_opts *laopts,
 				const char *layer);
 
@@ -2570,7 +2570,7 @@ static int _set_udev_flags_for_children(struct dev_manager *dm,
 #endif
 
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				struct logical_volume *lv, struct lv_activate_opts *laopts,
+				const struct logical_volume *lv, struct lv_activate_opts *laopts,
 				const char *layer)
 {
 	struct lv_segment *seg;
@@ -2866,7 +2866,7 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 	return 1;
 }
 
-static int _tree_action(struct dev_manager *dm, struct logical_volume *lv,
+static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, action_t action)
 {
 	const size_t DLID_SIZE = ID_LEN + sizeof(UUID_PREFIX) - 1;
@@ -2962,7 +2962,7 @@ out_no_root:
 }
 
 /* origin_only may only be set if we are resuming (not activating) an origin LV */
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,
 			 struct lv_activate_opts *laopts)
 {
 	laopts->send_messages = 1;
@@ -2976,7 +2976,7 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv,
 }
 
 /* origin_only may only be set if we are resuming (not activating) an origin LV */
-int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_preload(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int *flush_required)
 {
 	if (!_tree_action(dm, lv, laopts, PRELOAD))
@@ -2987,7 +2987,7 @@ int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv,
 	return 1;
 }
 
-int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
+int dev_manager_deactivate(struct dev_manager *dm, const struct logical_volume *lv)
 {
 	struct lv_activate_opts laopts = { 0 };
 
@@ -2997,7 +2997,7 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 	return 1;
 }
 
-int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_suspend(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int lockfs, int flush_required)
 {
 	dm->flush_required = flush_required;

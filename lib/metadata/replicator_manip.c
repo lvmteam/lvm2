@@ -600,7 +600,7 @@ void free_cmd_vgs(struct dm_list *cmd_vgs)
  * Find all needed remote VGs for processing given LV.
  * Missing VGs are added to VG's cmd_vg list and flag cmd_missing_vgs is set.
  */
-int find_replicator_vgs(struct logical_volume *lv)
+int find_replicator_vgs(const struct logical_volume *lv)
 {
 	struct replicator_site *rsite;
 	int ret = 1;
@@ -632,7 +632,7 @@ int find_replicator_vgs(struct logical_volume *lv)
  * Read all remote VGs from lv's replicator sites.
  * Function is used in activation context and needs all VGs already locked.
  */
-int lv_read_replicator_vgs(struct logical_volume *lv)
+int lv_read_replicator_vgs(const struct logical_volume *lv)
 {
 	struct replicator_device *rdev;
 	struct replicator_site *rsite;
@@ -670,7 +670,7 @@ bad:
  * Release all VG resources taken by lv's replicator sites.
  * Function is used in activation context and needs all VGs already locked.
  */
-void lv_release_replicator_vgs(struct logical_volume *lv)
+void lv_release_replicator_vgs(const struct logical_volume *lv)
 {
 	struct replicator_site *rsite;
 

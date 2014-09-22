@@ -4805,7 +4805,7 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl)
 	return dm_pool_end_object(mem);
 }
 
-struct logical_volume *lv_ondisk(struct logical_volume *lv)
+const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
 {
 	struct volume_group *vg;
 	struct lv_list *lvl;
