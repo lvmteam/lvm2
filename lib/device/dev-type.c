@@ -460,9 +460,9 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		       uint32_t types_to_exclude, uint32_t types_no_prompt,
 		       int yes, force_t force)
 {
-	static const char const _msg_failed_offset[] = "Failed to get offset of the %s signature on %s.";
-	static const char const _msg_failed_length[] = "Failed to get length of the %s signature on %s.";
-	static const char const _msg_wiping[] = "Wiping %s signature on %s.";
+	static const char _msg_failed_offset[] = "Failed to get offset of the %s signature on %s.";
+	static const char _msg_failed_length[] = "Failed to get length of the %s signature on %s.";
+	static const char _msg_wiping[] = "Wiping %s signature on %s.";
 	const char *offset = NULL, *type = NULL, *magic = NULL,
 		   *usage = NULL, *label = NULL, *uuid = NULL;
 	loff_t offset_value;
