@@ -6849,7 +6849,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 		lp->region_size = adjusted_mirror_region_size(vg->extent_size,
 							      lp->extents,
-							      lp->region_size);
+							      lp->region_size, 0);
 	}
 
 	if (!(lv = lv_create_empty(new_lv_name ? : "lvol%d", NULL,

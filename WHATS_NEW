@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Don't print message in adjusted_mirror_region_size() in activation.
   Improve lv_update_and_reload() to find out proper lock holding LV.
   Improve search of LV in lv_ondisk().
   Do not scan sysfs in lv_check_not_in_use() when device is closed.

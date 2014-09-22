@@ -440,7 +440,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	} else
 		region_size = adjusted_mirror_region_size(seg->lv->vg->extent_size,
 							  seg->area_len,
-							  mirr_state->default_region_size);
+							  mirr_state->default_region_size, 1);
 
 	if (!dm_tree_node_add_mirror_target(node, len))
 		return_0;

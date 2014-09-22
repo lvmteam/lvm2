@@ -156,9 +156,11 @@ struct lv_segment *find_mirror_seg(struct lv_segment *seg)
 /*
  * Reduce the region size if necessary to ensure
  * the volume size is a multiple of the region size.
+ *
+ * For internal use only log only in verbose mode
  */
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
-				     uint32_t region_size)
+				     uint32_t region_size, int internal)
 {
 	uint64_t region_max;
 
@@ -166,8 +168,12 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 
 	if (region_max < UINT32_MAX && region_size > region_max) {
 		region_size = (uint32_t) region_max;
-		log_print_unless_silent("Using reduced mirror region size of %" PRIu32
-					" sectors", region_size);
+		if (!internal)
+			log_print_unless_silent("Using reduced mirror region size of %"
+						PRIu32 " sectors.", region_size);
+                else
+			log_verbose("Using reduced mirror region size of %"
+				    PRIu32 " sectors.", region_size);
 	}
 
 	return region_size;
@@ -1697,7 +1703,7 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 
 	adjusted_region_size = adjusted_mirror_region_size(lv->vg->extent_size,
 							   lv->le_count,
-							   region_size);
+							   region_size, 1);
 
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1, mirrors, 0, 0,
 				    lv->le_count, allocatable_pvs, alloc, 0,
