@@ -279,7 +279,12 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 				goto_out;
 
 			tmp_dev->dev = log_dev;
-			if (device_is_suspended_or_blocking(tmp_dev))
+			if (device_is_usable(tmp_dev, (struct dev_usable_check_params)
+					     { .check_empty = 1,
+					       .check_blocked = 1,
+					       .check_suspended = ignore_suspended_devices(),
+					       .check_error_target = 1,
+					       .check_reserved = 0 }))
 				goto_out;
 		}
 	}
@@ -334,7 +339,7 @@ out:
 }
 
 /*
- * _device_is_usable
+ * device_is_usable
  * @dev
  * @check_lv_names
  *
@@ -345,12 +350,11 @@ out:
  *        a) the device is suspended
  *        b) it is a snapshot origin
  *     4) an error target
- * And optionally, if 'check_lv_names' is set
  *     5) the LV name is a reserved name.
  *
  * Returns: 1 if usable, 0 otherwise
  */
-static int _device_is_usable(struct device *dev, int check_lv_names)
+int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 {
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -385,18 +389,18 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 	name = dm_task_get_name(dmt);
 	uuid = dm_task_get_uuid(dmt);
 
-	if (!info.target_count) {
+	if (check.check_empty && !info.target_count) {
 		log_debug_activation("%s: Empty device %s not usable.", dev_name(dev), name);
 		goto out;
 	}
 
-	if (info.suspended && ignore_suspended_devices()) {
+	if (check.check_suspended && info.suspended) {
 		log_debug_activation("%s: Suspended device %s not usable.", dev_name(dev), name);
 		goto out;
 	}
 
 	/* Check internal lvm devices */
-	if (check_lv_names &&
+	if (check.check_reserved &&
 	    uuid && !strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
 		if (strlen(uuid) > (sizeof(UUID_PREFIX) + 2 * ID_LEN)) { /* 68 */
 			log_debug_activation("%s: Reserved uuid %s on internal LV device %s not usable.",
@@ -421,7 +425,7 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 
-		if (target_type && !strcmp(target_type, "mirror")) {
+		if (check.check_blocked && target_type && !strcmp(target_type, "mirror")) {
 			if (ignore_lvm_mirrors()) {
 				log_debug_activation("%s: Scanning mirror devices is disabled.", dev_name(dev));
 				goto out;
@@ -442,8 +446,7 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 		 * FIXME: rather than skipping origin, check if mirror is
 		 * underneath and if the mirror is blocking I/O.
 		 */
-		if (target_type && !strcmp(target_type, "snapshot-origin") &&
-		    ignore_suspended_devices()) {
+		if (check.check_suspended && target_type && !strcmp(target_type, "snapshot-origin")) {
 			log_debug_activation("%s: Snapshot-origin device %s not usable.",
 					     dev_name(dev), name);
 			goto out;
@@ -455,7 +458,7 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 
 	/* Skip devices consisting entirely of error targets. */
 	/* FIXME Deal with device stacked above error targets? */
-	if (only_error_target) {
+	if (check.check_error_target && only_error_target) {
 		log_debug_activation("%s: Error device %s not usable.",
 				     dev_name(dev), name);
 		goto out;
@@ -469,16 +472,6 @@ static int _device_is_usable(struct device *dev, int check_lv_names)
 	dm_free(vgname);
 	dm_task_destroy(dmt);
 	return r;
-}
-
-int device_is_usable(struct device *dev)
-{
-	return _device_is_usable(dev, 1);
-}
-
-int device_is_suspended_or_blocking(struct device *dev)
-{
-	return !_device_is_usable(dev, 0);
 }
 
 static int _info(const char *dlid, int with_open_count, int with_read_ahead,

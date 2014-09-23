@@ -172,18 +172,19 @@ int add_linear_area_to_dtree(struct dm_tree_node *node, uint64_t size,
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg);
 
+struct dev_usable_check_params {
+	unsigned int check_empty:1;
+	unsigned int check_blocked:1;
+	unsigned int check_suspended:1;
+	unsigned int check_error_target:1;
+	unsigned int check_reserved:1;
+};
+
 /*
  * Returns 1 if mapped device is not suspended, blocked or
  * is using a reserved name.
  */
-int device_is_usable(struct device *dev);
-
-/*
- * Returns 1 if the device is suspended or blocking.
- * (Does not perform check on the LV name of the device.)
- * N.B.  This is !device_is_usable() without the name check.
- */
-int device_is_suspended_or_blocking(struct device *dev);
+int device_is_usable(struct device *dev, struct dev_usable_check_params check);
 
 /*
  * Declaration moved here from fs.h to keep header fs.h hidden

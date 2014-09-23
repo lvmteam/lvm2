@@ -411,7 +411,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 {
         return 0;
 }
-int device_is_usable(struct device *dev)
+int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 {
         return 0;
 }
