@@ -2100,7 +2100,6 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 					 struct logical_volume *lv,
 					 struct lvconvert_params *lp)
 {
-	int r = 0;
 	int merge_on_activate = 0;
 	struct logical_volume *origin = origin_from_cow(lv);
 	struct lv_segment *snap_seg = find_snapshot(lv);
@@ -2146,6 +2145,13 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (snap_seg->segtype->ops->target_present &&
+	    !snap_seg->segtype->ops->target_present(cmd, snap_seg, NULL)) {
+		log_error("Can't initialize snapshot merge. "
+			  "Missing support in kernel?");
+		return 0;
+	}
+
 	if (!archive(lv->vg))
 		return_0;
 
@@ -2171,58 +2177,28 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 
 	init_snapshot_merge(snap_seg, origin);
 
-	if (snap_seg->segtype->ops->target_present &&
-	    !snap_seg->segtype->ops->target_present(snap_seg->lv->vg->cmd,
-						    snap_seg, NULL)) {
-		log_error("Can't initialize snapshot merge. "
-			  "Missing support in kernel?");
-		return 0;
+	if (merge_on_activate) {
+		/* Store and commit vg but skip starting the merge */
+		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+			return_0;
+		backup(lv->vg);
+	} else {
+		/* Perform merge */
+		if (!lv_update_and_reload(origin))
+			return_0;
+
+		lp->need_polling = 1;
+		lp->lv_to_poll = origin;
 	}
 
-	/* store vg on disk(s) */
-	if (!vg_write(lv->vg))
-		return_0;
-
-	if (merge_on_activate) {
-		/* commit vg but skip starting the merge */
-		if (!vg_commit(lv->vg))
-			return_0;
-		r = 1;
+	if (merge_on_activate)
 		log_print_unless_silent("Merging of snapshot %s will occur on "
 					"next activation of %s.",
 					display_lvname(lv), display_lvname(origin));
-		goto out;
-	}
-
-	/* Perform merge */
-	if (!suspend_lv(cmd, origin)) {
-		log_error("Failed to suspend origin %s.", origin->name);
-		vg_revert(lv->vg);
-		goto out;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		if (!resume_lv(cmd, origin))
-			stack;
-		goto_out;
-	}
-
-	if (!resume_lv(cmd, origin)) {
-		log_error("Failed to reactivate origin %s.", origin->name);
-		goto out;
-	}
-
-	lp->need_polling = 1;
-	lp->lv_to_poll = origin;
-
-	r = 1;
-out:
-	backup(lv->vg);
-
-	if (r)
+	else
 		log_print_unless_silent("Merging of volume %s started.", lv->name);
 
-	return r;
+	return 1;
 }
 
 static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
