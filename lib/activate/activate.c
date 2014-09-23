@@ -645,7 +645,7 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 
-	if (!dev_manager_info(lv->vg->cmd->mem, lv,
+	if (!dev_manager_info(cmd->mem, lv,
 			      (use_layer) ? lv_layer(lv) : NULL,
 			      with_open_count, with_read_ahead,
 			      &dminfo, (info) ? &info->read_ahead : NULL))
@@ -793,7 +793,6 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		return 0;
 
 	log_debug_activation("Checking mirror percent for LV %s/%s", lv->vg->name, lv->name);
-
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;

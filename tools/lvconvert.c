@@ -2135,7 +2135,8 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)
+	/* FIXME: test when snapshot is remotely active */
+	if (lv_info(cmd, lv, 0, &info, 1, 0)
 	    && info.exists && info.live_table &&
 	    (!lv_snapshot_percent(lv, &snap_percent) ||
 	     snap_percent == DM_PERCENT_INVALID)) {
