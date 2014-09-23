@@ -40,8 +40,9 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 		if (!monitor_dev_for_events(cmd, lv, 0, reg)) {
 			r = 0;
 			continue;
-		} else
-			(*count)++;
+		}
+
+		(*count)++;
 	}
 
 	return r;

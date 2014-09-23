@@ -583,17 +583,13 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 	int ret = 0;
 #ifdef MODPROBE_CMD
 	char module[128];
-	const char *argv[3];
+	const char *argv[] = { MODPROBE_CMD, module, NULL };
 
 	if (dm_snprintf(module, sizeof(module), "dm-%s", target_name) < 0) {
 		log_error("module_present module name too long: %s",
 			  target_name);
 		return 0;
 	}
-
-	argv[0] = MODPROBE_CMD;
-	argv[1] = module;
-	argv[2] = NULL;
 
 	ret = exec_cmd(cmd, argv, NULL, 0);
 #endif
