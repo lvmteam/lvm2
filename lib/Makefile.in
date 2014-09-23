@@ -72,6 +72,7 @@ SOURCES =\
 	filters/filter-mpath.c \
 	filters/filter-partitioned.c \
 	filters/filter-type.c \
+	filters/filter-usable.c \
 	format_text/archive.c \
 	format_text/archiver.c \
 	format_text/export.c \

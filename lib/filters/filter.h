@@ -40,6 +40,13 @@ struct dev_filter *sysfs_filter_create(void);
 
 struct dev_filter *regex_filter_create(const struct dm_config_value *patterns);
 
+typedef enum {
+	FILTER_MODE_NO_LVMETAD,
+	FILTER_MODE_PRE_LVMETAD,
+	FILTER_MODE_POST_LVMETAD
+} filter_mode_t;
+struct dev_filter *usable_filter_create(struct dev_types *dt, filter_mode_t mode);
+
 int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out);
 
 #endif 	/* _LVM_FILTER_H */
