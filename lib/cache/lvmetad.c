@@ -293,11 +293,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 		dev = dev_cache_get_by_devt(fallback, cmd->filter);
 
 	if (!dev) {
-		dev = dev_cache_get_by_devt(devt, cmd->lvmetad_filter);
-		if (!dev)
-			log_error("No device found for PV %s.", pvid_txt);
-		else
-			log_warn("WARNING: Device %s for PV %s rejected by a filter.", dev_name(dev), pvid_txt);
+		log_warn("WARNING: Device for PV %s not found or rejected by a filter.", pvid_txt);
 		return NULL;
 	}
 

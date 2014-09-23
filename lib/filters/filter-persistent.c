@@ -288,15 +288,6 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 					log_error("Failed to hash device to filter.");
 					return 0;
 				}
-		if (!device_is_usable(dev, (struct dev_usable_check_params)
-				      { .check_empty = 1,
-					.check_blocked = 1,
-					.check_suspended = ignore_suspended_devices(),
-					.check_error_target = 1,
-					.check_reserved = 1 })) {
-			log_debug_devs("%s: Skipping unusable device", dev_name(dev));
-			return 0;
-		}
 		return pf->real->passes_filter(pf->real, dev);
 	}
 
