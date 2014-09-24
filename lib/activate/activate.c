@@ -2160,8 +2160,12 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 	r = _lv_deactivate(lv);
 	critical_section_dec(cmd, "deactivated");
 
-	if (!lv_info(cmd, lv, 0, &info, 0, 0) || info.exists)
+	if (!lv_info(cmd, lv, 0, &info, 0, 0) || info.exists) {
+		/* Turn into log_error, but we do not log error */
+		log_debug_activation("Deactivated volume is still %s present.",
+				     display_lvname(lv));
 		r = 0;
+	}
 out:
 	if (lv_to_free) {
 		lv_release_replicator_vgs(lv_to_free);
