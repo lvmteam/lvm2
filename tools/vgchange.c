@@ -23,15 +23,13 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
-	struct lvinfo info;
 	int r = 1;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
 		if (!lv_info(cmd, lv, lv_is_thin_pool(lv) ? 1 : 0,
-			     &info, 0, 0) ||
-		    !info.exists)
+			     NULL, 0, 0))
 			continue;
 		/*
 		 * FIXME: Need to consider all cases... PVMOVE, etc
