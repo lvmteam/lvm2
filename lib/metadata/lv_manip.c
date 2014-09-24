@@ -5363,7 +5363,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		     force_t force, int suppress_remove_message)
 {
 	struct volume_group *vg;
-	struct lvinfo info;
 	struct logical_volume *format1_origin = NULL;
 	int format1_reload_required = 0;
 	int visible;
@@ -5422,9 +5421,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	/* FIXME Ensure not referred to by another existing LVs */
 	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG, NULL);
 
-	if (!lv_is_cache_pool(lv) &&
-	    lv_info(cmd, lv, 0, &info, 1, 0)) {
-		if (!lv_check_not_in_use(cmd, lv, &info))
+	if (!lv_is_cache_pool(lv) && lv_is_active_locally(lv)) {
+		if (!lv_check_not_in_use(lv))
 			return_0;
 
 		if ((force == PROMPT) &&

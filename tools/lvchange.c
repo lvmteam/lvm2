@@ -304,8 +304,8 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (lv_info(cmd, lv, 0, &info, 1, 0)) {
-		if (!lv_check_not_in_use(cmd, lv, &info)) {
+	if (lv_is_active_locally(lv)) {
+		if (!lv_check_not_in_use(lv)) {
 			log_error("Can't resync open logical volume \"%s\"",
 				  lv->name);
 			return 0;

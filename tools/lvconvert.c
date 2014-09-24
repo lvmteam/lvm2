@@ -1929,7 +1929,6 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volume *cow,
 				    struct lvconvert_params *lp)
 {
-	struct lvinfo info;
 	struct volume_group *vg = cow->vg;
 
 	if (!lv_is_cow(cow)) {
@@ -1970,8 +1969,8 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return ECMD_FAILED;
 	}
 
-	if (lv_info(cmd, cow, 0, &info, 1, 0)) {
-		if (!lv_check_not_in_use(cmd, cow, &info))
+	if (lv_is_active_locally(cow)) {
+		if (!lv_check_not_in_use(cow))
 			return_ECMD_FAILED;
 
 		if ((lp->force == PROMPT) &&
@@ -2165,13 +2164,17 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	 * constructor and DM should prevent appropriate devices from
 	 * being open.
 	 */
-	if (lv_info(cmd, origin, 0, &info, 1, 0) &&
-	    !lv_check_not_in_use(cmd, origin, &info)) {
-		log_print_unless_silent("Can't merge over open origin volume.");
-		merge_on_activate = 1;
-	} else if (lv_info(cmd, lv, 0, &info, 1, 0) &&
-		   !lv_check_not_in_use(cmd, lv, &info)) {
-		log_print_unless_silent("Can't merge when snapshot is open.");
+	if (lv_is_active_locally(origin)) {
+		if (!lv_check_not_in_use(origin)) {
+			log_print_unless_silent("Can't merge over open origin volume.");
+			merge_on_activate = 1;
+		} else if (!lv_check_not_in_use(lv)) {
+			log_print_unless_silent("Can't merge when snapshot is open.");
+			merge_on_activate = 1;
+		}
+	} else if (vg_is_clustered(origin->vg) && lv_is_active(origin)) {
+		/* When it's active somewhere else */
+		log_print_unless_silent("Can't check whether remotely active snapshot is open.");
 		merge_on_activate = 1;
 	}
 

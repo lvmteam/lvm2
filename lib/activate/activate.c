@@ -248,8 +248,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 {
 	return 0;
 }
-int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv,
-			struct lvinfo *info)
+int lv_check_not_in_use(const struct logical_volume *lv)
 {
         return 0;
 }
@@ -695,23 +694,23 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 #define OPEN_COUNT_CHECK_RETRIES 25
 #define OPEN_COUNT_CHECK_USLEEP_DELAY 200000
 
-int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv,
-			struct lvinfo *info)
+int lv_check_not_in_use(const struct logical_volume *lv)
 {
+	struct lvinfo info;
 	unsigned int open_count_check_retries;
 
-	if (!info->exists || !info->open_count)
+	if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) || !info.exists || !info.open_count)
 		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
 	if (dm_sysfs_dir()) {
-		if (dm_device_has_holders(info->major, info->minor)) {
+		if (dm_device_has_holders(info.major, info.minor)) {
 			log_error("Logical volume %s/%s is used by another device.",
 				  lv->vg->name, lv->name);
 			return 0;
 		}
 
-		if (dm_device_has_mounted_fs(info->major, info->minor)) {
+		if (dm_device_has_mounted_fs(info.major, info.minor)) {
 			log_error("Logical volume %s/%s contains a filesystem in use.",
 				  lv->vg->name, lv->name);
 			return 0;
@@ -719,7 +718,7 @@ int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv
 	}
 
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
-	while (info->open_count > 0 && open_count_check_retries--) {
+	while (info.open_count > 0 && open_count_check_retries--) {
 		if (!open_count_check_retries) {
 			log_error("Logical volume %s/%s in use.",
 				  lv->vg->name, lv->name);
@@ -729,7 +728,7 @@ int lv_check_not_in_use(struct cmd_context *cmd, const struct logical_volume *lv
 		usleep(OPEN_COUNT_CHECK_USLEEP_DELAY);
 		log_debug_activation("Retrying open_count check for %s/%s.",
 				     lv->vg->name, lv->name);
-		if (!lv_info(cmd, lv, 0, info, 1, 0)) {
+		if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)) {
 			stack; /* device dissappeared? */
 			break;
 		}
@@ -2104,12 +2103,10 @@ int lv_resume(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only,
 static int _lv_has_open_snapshots(const struct logical_volume *lv)
 {
 	struct lv_segment *snap_seg;
-	struct lvinfo info;
 	int r = 0;
 
 	dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list)
-		if (!lv_info(lv->vg->cmd, snap_seg->cow, 0, &info, 1, 0) ||
-		    !lv_check_not_in_use(lv->vg->cmd, snap_seg->cow, &info))
+		if (!lv_check_not_in_use(snap_seg->cow))
 			r++;
 
 	if (r)
@@ -2140,7 +2137,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 	log_debug_activation("Deactivating %s/%s.", lv->vg->name, lv->name);
 
-	if (!lv_info(cmd, lv, 0, &info, 1, 0))
+	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;
 
 	if (!info.exists) {
@@ -2150,7 +2147,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 	if (lv_is_visible(lv) || lv_is_virtual_origin(lv) ||
 	    lv_is_merging_thin_snapshot(lv)) {
-		if (!lv_check_not_in_use(cmd, lv, &info))
+		if (!lv_check_not_in_use(lv))
 			goto_out;
 
 		if (lv_is_origin(lv) && _lv_has_open_snapshots(lv))
