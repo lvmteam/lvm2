@@ -281,7 +281,6 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	int active = 0;
 	int exclusive = 0;
 	int monitored;
-	struct lvinfo info;
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list device_list;
 	struct lv_list *lvl;
@@ -311,20 +310,18 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 			return 0;
 		}
 
-		if (info.exists) {
-			if (!arg_count(cmd, yes_ARG) &&
-			    yes_no_prompt("Do you really want to deactivate "
-					  "logical volume %s to resync it? [y/n]: ",
-					  lv->name) == 'n') {
-				log_error("Logical volume \"%s\" not resynced",
-					  lv->name);
-				return 0;
-			}
-
-			active = 1;
-			if (lv_is_active_exclusive_locally(lv))
-				exclusive = 1;
+		if (!arg_count(cmd, yes_ARG) &&
+		    yes_no_prompt("Do you really want to deactivate "
+				  "logical volume %s to resync it? [y/n]: ",
+				  lv->name) == 'n') {
+			log_error("Logical volume \"%s\" not resynced",
+				  lv->name);
+			return 0;
 		}
+
+		active = 1;
+		if (lv_is_active_exclusive_locally(lv))
+			exclusive = 1;
 	}
 
 	if (seg_is_raid(seg) && active && !exclusive) {
