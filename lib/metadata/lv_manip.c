@@ -158,18 +158,18 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_DATA] =				"data",
 	[LV_TYPE_SPARE] =				"spare",
 	[LV_TYPE_VIRTUAL] =				"virtual",
-	[LV_TYPE_RAID1] =				"raid1",
-	[LV_TYPE_RAID10] =				"raid10",
-	[LV_TYPE_RAID4] =				"raid4",
-	[LV_TYPE_RAID5] =				"raid5",
-	[LV_TYPE_RAID5_LA] =				"raid5_la",
-	[LV_TYPE_RAID5_RA] =				"raid5_ra",
-	[LV_TYPE_RAID5_LS] =				"raid5_ls",
-	[LV_TYPE_RAID5_RS] =				"raid5_rs",
-	[LV_TYPE_RAID6] =				"raid6",
-	[LV_TYPE_RAID6_ZR] =				"raid6_zr",
-	[LV_TYPE_RAID6_NR] =				"raid6_nr",
-	[LV_TYPE_RAID6_NC] =				"raid6_nc",
+	[LV_TYPE_RAID1] =				SEG_TYPE_NAME_RAID1,
+	[LV_TYPE_RAID10] =				SEG_TYPE_NAME_RAID10,
+	[LV_TYPE_RAID4] =				SEG_TYPE_NAME_RAID4,
+	[LV_TYPE_RAID5] =				SEG_TYPE_NAME_RAID5,
+	[LV_TYPE_RAID5_LA] =				SEG_TYPE_NAME_RAID5_LA,
+	[LV_TYPE_RAID5_RA] =				SEG_TYPE_NAME_RAID5_RA,
+	[LV_TYPE_RAID5_LS] =				SEG_TYPE_NAME_RAID5_LS,
+	[LV_TYPE_RAID5_RS] =				SEG_TYPE_NAME_RAID5_RS,
+	[LV_TYPE_RAID6] =				SEG_TYPE_NAME_RAID6,
+	[LV_TYPE_RAID6_ZR] =				SEG_TYPE_NAME_RAID6_ZR,
+	[LV_TYPE_RAID6_NR] =				SEG_TYPE_NAME_RAID6_NR,
+	[LV_TYPE_RAID6_NC] =				SEG_TYPE_NAME_RAID6_NC,
 };
 
 static int _lv_layout_and_role_mirror(struct dm_pool *mem,
@@ -1476,7 +1476,7 @@ static uint32_t _calc_area_multiple(const struct segment_type *segtype,
 	 *          the 'stripes' argument will always need to
 	 *          be given.
 	 */
-	if (!strcmp(segtype->name, "raid10")) {
+	if (!strcmp(segtype->name, _lv_type_names[LV_TYPE_RAID10])) {
 		if (!stripes)
 			return area_count / 2;
 		return stripes;
@@ -4575,7 +4575,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			return 0;
 		}
 
-		if (!strcmp(mirr_seg->segtype->name, "raid10")) {
+		if (!strcmp(mirr_seg->segtype->name, _lv_type_names[LV_TYPE_RAID10])) {
 			/* FIXME Warn if command line values are being overridden? */
 			lp->stripes = mirr_seg->area_count / seg_mirrors;
 			lp->stripe_size = mirr_seg->stripe_size;
@@ -4588,7 +4588,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 				/* Allow through "striped" and RAID 4/5/6/10 */
 				if (!seg_is_striped(seg) &&
 				    (!seg_is_raid(seg) || seg_is_mirrored(seg)) &&
-				    strcmp(seg->segtype->name, "raid10"))
+				    strcmp(seg->segtype->name, _lv_type_names[LV_TYPE_RAID10]))
 					continue;
 	
 				sz = seg->stripe_size;

@@ -1720,8 +1720,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 
 	if (lv_is_thin_type(lv)) {
 		log_error("Mirror segment type cannot be used for thinpool%s.\n"
-			  "Try \"raid1\" segment type instead.",
-			  lv_is_thin_pool_data(lv) ? "s" : " metadata");
+			  "Try \"%s\" segment type instead.",
+			  lv_is_thin_pool_data(lv) ? "s" : " metadata",
+			  SEG_TYPE_NAME_RAID1);
 		return 0;
 	}
 
@@ -2667,7 +2668,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 	if (lv_is_mirror(pool_lv)) {
 		log_error("Mirror logical volumes cannot be used as pools.");
-		log_print_unless_silent("Try \"raid1\" segment type instead.");
+		log_print_unless_silent("Try \"%s\" segment type instead.", SEG_TYPE_NAME_RAID1);
 		return 0;
 	}
 
@@ -2713,7 +2714,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 		if (lv_is_mirror(metadata_lv)) {
 			log_error("Mirror logical volumes cannot be used for pool metadata.");
-			log_print_unless_silent("Try \"raid1\" segment type instead.");
+			log_print_unless_silent("Try \"%s\" segment type instead.", SEG_TYPE_NAME_RAID1);
 			return 0;
 		}
 

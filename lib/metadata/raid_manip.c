@@ -431,7 +431,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 
 	if (seg_is_raid(seg))
 		segtype = seg->segtype;
-	else if (!(segtype = get_segtype_from_string(lv->vg->cmd, "raid1")))
+	else if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
 		return_0;
 
 	/*
@@ -631,7 +631,7 @@ static int _raid_add_images(struct logical_volume *lv,
 			log_very_verbose("Setting RAID1 region_size to %uS",
 					 seg->region_size);
 		}
-		if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd, "raid1")))
+		if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
 			return_0;
 	}
 /*
@@ -1073,7 +1073,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	}
 
 	if (!seg_is_mirrored(first_seg(lv)) ||
-	    !strcmp(first_seg(lv)->segtype->name, "raid10")) {
+	    !strcmp(first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID10)) {
 		log_error("Unable to split logical volume of segment type, %s",
 			  first_seg(lv)->segtype->ops->name(first_seg(lv)));
 		return 0;
@@ -1440,7 +1440,7 @@ int lv_raid_reshape(struct logical_volume *lv,
 	}
 
 	if (!strcmp(seg->segtype->name, "mirror") &&
-	    (!strcmp(new_segtype->name, "raid1")))
+	    (!strcmp(new_segtype->name, SEG_TYPE_NAME_RAID1)))
 	    return _convert_mirror_to_raid1(lv, new_segtype);
 
 	log_error("Converting the segment type for %s/%s from %s to %s"
@@ -1604,7 +1604,7 @@ int lv_raid_replace(struct logical_volume *lv,
 			  raid_seg->segtype->ops->name(raid_seg),
 			  lv->vg->name, lv->name);
 		return 0;
-	} else if (!strcmp(raid_seg->segtype->name, "raid10")) {
+	} else if (!strcmp(raid_seg->segtype->name, SEG_TYPE_NAME_RAID10)) {
 		uint32_t i, rebuilds_per_group = 0;
 		/* FIXME: We only support 2-way mirrors in RAID10 currently */
 		uint32_t copies = 2;
@@ -1829,7 +1829,7 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 	uint32_t i, s, rebuilds_per_group = 0;
 	uint32_t failed_components = 0;
 
-	if (!strcmp(raid_seg->segtype->name, "raid10")) {
+	if (!strcmp(raid_seg->segtype->name, SEG_TYPE_NAME_RAID10)) {
 		/* FIXME: We only support 2-way mirrors in RAID10 currently */
 		copies = 2;
 		for (i = 0; i < raid_seg->area_count * copies; i++) {

@@ -625,7 +625,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (!strcmp(lp->segtype->name, "raid10") && (lp->stripes < 2)) {
+	if (!strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10) && (lp->stripes < 2)) {
 		if (arg_count(cmd, stripes_ARG)) {
 			/* User supplied the bad argument */
 			log_error("Segment type 'raid10' requires 2 or more stripes.");
@@ -651,7 +651,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	 */
 	if ((lp->stripes > 1) &&
 	    segtype_is_mirrored(lp->segtype) &&
-	    strcmp(lp->segtype->name, "raid10")) {
+	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
 		log_error("Stripe argument cannot be used with segment type, %s",
 			  lp->segtype->name);
 		return 0;
@@ -895,7 +895,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			log_print_unless_silent("Redundant mirrors argument: default is 0");
 		}
 
-		if ((lp->mirrors > 2) && !strcmp(lp->segtype->name, "raid10")) {
+		if ((lp->mirrors > 2) && !strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
 			/*
 			 * FIXME: When RAID10 is no longer limited to
 			 *        2-way mirror, 'lv_mirror_count()'
@@ -942,7 +942,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
-		if ((strcmp(lp->segtype->name, "raid10") == 0) &&
+		if (!strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10) &&
 		    !(lp->target_attr & RAID_FEATURE_RAID10)) {
 			log_error("RAID module does not support RAID10.");
 			return 0;
@@ -1154,7 +1154,7 @@ static int _check_raid_parameters(struct volume_group *vg,
 				  lp->segtype->name);
 			return 0;
 		}
-	} else if (!strcmp(lp->segtype->name, "raid10")) {
+	} else if (!strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
 		if (!arg_count(cmd, stripes_ARG))
 			lp->stripes = devs / lp->mirrors;
 		if (lp->stripes < 2) {
