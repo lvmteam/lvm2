@@ -954,52 +954,49 @@ bad:
 	return ECMD_FAILED;
 }
 
+static const char *_extract_vgname(struct cmd_context *cmd, const char *lv_name,
+				   const char **after)
+{
+	const char *vg_name = lv_name;
+	char *st, *pos;
+
+	/* Strip dev_dir (optional) */
+	if (!(vg_name = skip_dev_dir(cmd, vg_name, NULL)))
+		return_0;
+
+	/* Require exactly one set of consecutive slashes */
+	if ((st = pos = strchr(vg_name, '/')))
+		while (*st == '/')
+			st++;
+
+	if (!st || strchr(st, '/')) {
+		log_error("\"%s\": Invalid path for Logical Volume",
+			  lv_name);
+		return 0;
+	}
+
+	if (!(vg_name = dm_pool_strndup(cmd->mem, vg_name, pos - vg_name))) {
+		log_error("Allocation of vg_name failed.");
+		return 0;
+	}
+
+	if (after)
+		*after = st;
+
+	return vg_name;
+}
 /*
  * Determine volume group name from a logical volume name
  */
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 {
 	const char *vg_name = lv_name;
-	char *st;
-	char *dev_dir = cmd->dev_dir;
 
 	/* Path supplied? */
 	if (vg_name && strchr(vg_name, '/')) {
-		/* Strip dev_dir (optional) */
-		if (*vg_name == '/') {
-			while (*vg_name == '/')
-				vg_name++;
-			vg_name--;
-		}
-		if (!strncmp(vg_name, dev_dir, strlen(dev_dir))) {
-			vg_name += strlen(dev_dir);
-			while (*vg_name == '/')
-				vg_name++;
-		}
-		if (*vg_name == '/') {
-			log_error("\"%s\": Invalid path for Logical "
-				  "Volume", lv_name);
-			return 0;
-		}
+		if (!(vg_name = _extract_vgname(cmd, lv_name, NULL)))
+			return_NULL;
 
-		/* Require exactly one set of consecutive slashes */
-		if ((st = strchr(vg_name, '/')))
-			while (*st == '/')
-				st++;
-
-		if (!st || strchr(st, '/')) {
-			log_error("\"%s\": Invalid path for Logical Volume",
-				  lv_name);
-			return 0;
-		}
-
-		vg_name = dm_pool_strdup(cmd->mem, vg_name);
-		if (!vg_name) {
-			log_error("Allocation of vg_name failed");
-			return 0;
-		}
-
-		*strchr(vg_name, '/') = '\0';
 		return vg_name;
 	}
 
@@ -1007,7 +1004,7 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 		if (lv_name)
 			log_error("Path required for Logical Volume \"%s\"",
 				  lv_name);
-		return 0;
+		return NULL;
 	}
 
 	return vg_name;
