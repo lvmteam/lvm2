@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1894,4 +1894,58 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv, void *han
 	dev_iter_destroy(iter);
 
 	return ret_max;
+}
+
+int get_and_validate_major_minor(const struct cmd_context *cmd,
+				 const struct format_type *fmt,
+				 int32_t *major, int32_t *minor)
+{
+	if (strcmp(arg_str_value(cmd, persistent_ARG, "n"), "y")) {
+		if (arg_is_set(cmd, minor_ARG) || arg_is_set(cmd, major_ARG)) {
+			log_error("--major and --minor incompatible with -Mn");
+			return 0;
+		}
+		*major = *minor = -1;
+		return 1;
+	}
+
+	if (arg_count(cmd, minor_ARG) > 1) {
+		log_error("Option --minor may not be repeated.");
+		return 0;
+	}
+
+	if (arg_count(cmd, major_ARG) > 1) {
+		log_error("Option -j/--major may not be repeated.");
+		return 0;
+	}
+
+	if (!strncmp(cmd->kernel_vsn, "2.4.", 4)) {
+		/* Major is required for 2.4 */
+		if (!arg_is_set(cmd, major_ARG)) {
+			log_error("Please specify major number with "
+				  "--major when using -My");
+			return 0;
+		}
+		*major = arg_int_value(cmd, major_ARG, -1);
+	} else {
+		if (arg_is_set(cmd, major_ARG)) {
+			log_warn("WARNING: Ignoring supplied major number - "
+				 "kernel assigns major numbers dynamically. "
+				 "Using major number %d instead.",
+				 cmd->dev_types->device_mapper_major);
+		}
+		*major = cmd->dev_types->device_mapper_major;
+	}
+
+	if (!arg_is_set(cmd, minor_ARG)) {
+		log_error("Please specify minor number with --minor when using -My.");
+		return 0;
+	}
+
+	*minor = arg_int_value(cmd, minor_ARG, -1);
+
+	if (!validate_major_minor(cmd, fmt, *major, *minor))
+		return_0;
+
+	return 1;
 }

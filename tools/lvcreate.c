@@ -767,8 +767,8 @@ static int _read_activation_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
-		if (!read_and_validate_major_minor(cmd, vg->fid->fmt,
-						   &lp->major, &lp->minor))
+		if (!get_and_validate_major_minor(cmd, vg->fid->fmt,
+						  &lp->major, &lp->minor))
                         return_0;
 	} else if (arg_is_set(cmd, major_ARG) || arg_is_set(cmd, minor_ARG)) {
 		log_error("--major and --minor require -My.");

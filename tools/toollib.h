@@ -140,4 +140,8 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	       struct logical_volume *lv, struct physical_volume *pv, int arg);
 
+int get_and_validate_major_minor(const struct cmd_context *cmd,
+				 const struct format_type *fmt,
+				 int32_t *major, int32_t *minor);
+
 #endif

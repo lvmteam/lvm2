@@ -542,8 +542,8 @@ static int lvchange_persistent(struct cmd_context *cmd,
 {
 	enum activation_change activate = CHANGE_AN;
 
-	if (!read_and_validate_major_minor(cmd, lv->vg->fid->fmt,
-					   &lv->major, &lv->minor))
+	if (!get_and_validate_major_minor(cmd, lv->vg->fid->fmt,
+					  &lv->major, &lv->minor))
 		return_0;
 
 	if (lv->minor == -1) {
