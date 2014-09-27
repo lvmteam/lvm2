@@ -20,7 +20,6 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 {
 	const char *cmd_name;
 	char *st;
-	unsigned dev_dir_found = 0;
 	int use_policy = arg_count(cmd, use_policies_ARG);
 
 	lp->sign = SIGN_NONE;
@@ -106,7 +105,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	argv++;
 	argc--;
 
-	if (!(lp->lv_name = skip_dev_dir(cmd, lp->lv_name, &dev_dir_found)) ||
+	if (!(lp->lv_name = skip_dev_dir(cmd, lp->lv_name, NULL)) ||
 	    !(lp->vg_name = extract_vgname(cmd, lp->lv_name))) {
 		log_error("Please provide a volume group name");
 		return 0;
