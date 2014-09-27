@@ -132,6 +132,8 @@ static void _touch_memory(void *mem, size_t size)
 
 static void _allocate_memory(void)
 {
+#ifndef VALGRIND_POOL
+	/* With Valgrind don't waste time in with preallocating memory */
 	void *stack_mem, *temp_malloc_mem;
 	struct rlimit limit;
 
@@ -149,6 +151,7 @@ static void _allocate_memory(void)
 		_touch_memory(_malloc_mem, _size_malloc);
 
 	free(temp_malloc_mem);
+#endif
 }
 
 static void _release_memory(void)
