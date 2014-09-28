@@ -108,50 +108,50 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 			 unsigned *dev_dir_found)
 {
-	const char *dmdir = dm_dir();
+	size_t devdir_len = strlen(cmd->dev_dir);
+	const char *dmdir = dm_dir() + devdir_len;
 	size_t dmdir_len = strlen(dmdir), vglv_sz;
 	char *vgname, *lvname, *layer, *vglv;
 
 	/* FIXME Do this properly */
-	if (*vg_name == '/') {
-		while (*vg_name == '/')
+	if (*vg_name == '/')
+		while (vg_name[1] == '/')
 			vg_name++;
-		vg_name--;
-	}
 
-	/* Reformat string if /dev/mapper found */
-	if (!strncmp(vg_name, dmdir, dmdir_len) && vg_name[dmdir_len] == '/') {
+	if (strncmp(vg_name, cmd->dev_dir, devdir_len)) {
+		if (dev_dir_found)
+			*dev_dir_found = 0;
+	} else {
 		if (dev_dir_found)
 			*dev_dir_found = 1;
-		vg_name += dmdir_len;
+
+		vg_name += devdir_len;
 		while (*vg_name == '/')
 			vg_name++;
 
-		if (!dm_split_lvm_name(cmd->mem, vg_name, &vgname, &lvname, &layer) ||
-		    *layer) {
-			log_error("skip_dev_dir: Couldn't split up device name %s",
-				  vg_name);
-			return vg_name;
+		/* Reformat string if /dev/mapper found */
+		if (!strncmp(vg_name, dmdir, dmdir_len) && vg_name[dmdir_len + 1] == '/') {
+			vg_name += devdir_len + 1;
+			while (*vg_name == '/')
+				vg_name++;
+
+			if (!dm_split_lvm_name(cmd->mem, vg_name, &vgname, &lvname, &layer) ||
+			    *layer) {
+				log_error("skip_dev_dir: Couldn't split up device name %s",
+					  vg_name);
+				return vg_name;
+			}
+			vglv_sz = strlen(vgname) + strlen(lvname) + 2;
+			if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
+			    dm_snprintf(vglv, vglv_sz, "%s%s%s", vgname,
+					*lvname ? "/" : "",
+					lvname) < 0) {
+				log_error("vg/lv string alloc failed");
+				return vg_name;
+			}
+			return vglv;
 		}
-		vglv_sz = strlen(vgname) + strlen(lvname) + 2;
-		if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
-		    dm_snprintf(vglv, vglv_sz, "%s%s%s", vgname,
-				 *lvname ? "/" : "",
-				 lvname) < 0) {
-			log_error("vg/lv string alloc failed");
-			return vg_name;
-		}
-		return vglv;
 	}
-
-	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir))) {
-		if (dev_dir_found)
-			*dev_dir_found = 1;
-		vg_name += strlen(cmd->dev_dir);
-		while (*vg_name == '/')
-			vg_name++;
-	} else if (dev_dir_found)
-		*dev_dir_found = 0;
 
 	return vg_name;
 }
