@@ -72,37 +72,6 @@ struct lvconvert_params {
 	thin_discards_t discards;
 };
 
-static int _lvconvert_vg_name(struct lvconvert_params *lp,
-			      struct cmd_context *cmd,
-			      const char **lv_name)
-{
-	const char *vg_name;
-	const char *tmp_str;
-
-	if (!lv_name || !*lv_name)
-		return 1;
-
-	/* If contains VG name, extract it. */
-	if ((tmp_str = strchr(*lv_name, (int) '/'))) {
-		if (!(vg_name = extract_vgname(cmd, *lv_name)))
-			return_0;
-		if (!lp->vg_name)
-			lp->vg_name = vg_name;
-		else if (strcmp(vg_name, lp->vg_name)) {
-			log_error("Please use a single volume group name "
-				  "(\"%s\" or \"%s\")", vg_name, lp->vg_name);
-			return 0;
-		}
-		/* Strip VG from lv_name */
-		*lv_name = tmp_str + 1;
-	}
-
-	if (!apply_lvname_restrictions(*lv_name))
-		return_0;
-
-	return 1;
-}
-
 static int _lvconvert_name_params(struct lvconvert_params *lp,
 				  struct cmd_context *cmd,
 				  int *pargc, char ***pargv)
@@ -142,16 +111,16 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 		(*pargv)++, (*pargc)--;
 	}
 
-	if (!_lvconvert_vg_name(lp, cmd, &lp->pool_metadata_lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_metadata_lv_name))
 		return_0;
 
-	if (!_lvconvert_vg_name(lp, cmd, &lp->pool_data_lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_data_lv_name))
 		return_0;
 
-	if (!_lvconvert_vg_name(lp, cmd, &lp->origin_lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin_lv_name))
 		return_0;
 
-	if (!_lvconvert_vg_name(lp, cmd, &lp->lv_split_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->lv_split_name))
 		return_0;
 
 	if (strchr(lp->lv_name_full, '/') &&
