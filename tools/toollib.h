@@ -144,4 +144,7 @@ int get_and_validate_major_minor(const struct cmd_context *cmd,
 				 const struct format_type *fmt,
 				 int32_t *major, int32_t *minor);
 
+int validate_lvname_param(struct cmd_context *cmd, const char **vg_name,
+			  const char **lv_name);
+
 #endif

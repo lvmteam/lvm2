@@ -1949,3 +1949,40 @@ int get_and_validate_major_minor(const struct cmd_context *cmd,
 
 	return 1;
 }
+
+/*
+ * Validate lvname parameter
+ *
+ * If it contains vgname, it is extracted from lvname.
+ * If there is passed vgname, it is compared whether its the same name.
+ */
+int validate_lvname_param(struct cmd_context *cmd, const char **vg_name,
+			  const char **lv_name)
+{
+	const char *vgname;
+	const char *lvname;
+
+	if (!lv_name || !*lv_name)
+		return 1;  /* NULL lvname is ok */
+
+	/* If contains VG name, extract it. */
+	if (strchr(*lv_name, (int) '/')) {
+		if (!(vgname = _extract_vgname(cmd, *lv_name, &lvname)))
+			return_0;
+
+		if (!*vg_name)
+			*vg_name = vgname;
+		else if (strcmp(vgname, *vg_name)) {
+			log_error("Please use a single volume group name "
+				  "(\"%s\" or \"%s\")", vgname, *vg_name);
+			return 0;
+		}
+
+		*lv_name = lvname;
+	}
+
+	if (!apply_lvname_restrictions(*lv_name))
+		return_0;
+
+	return 1;
+}
