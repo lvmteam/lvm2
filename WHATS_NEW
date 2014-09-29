@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Option --cache has also shortcut -H (i.e. lvcreate -H).
   Refactor lvcreate code and better preserve --type argument.
   Refactor process_each_vg in toollib.
   Pools cannot be used as external origin.

@@ -46,7 +46,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		cmd->filter->wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1, 0);
 
-	if (arg_count(cmd, cache_ARG)) {
+	if (arg_count(cmd, cache_long_ARG)) {
 		if (lvmetad_active()) {
 			if (!lvmetad_pvscan_all_devs(cmd, NULL))
 				return ECMD_FAILED;

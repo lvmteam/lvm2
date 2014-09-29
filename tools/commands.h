@@ -592,7 +592,7 @@ xx(lvscan,
    "\t[--version]\n",
 
    all_ARG, blockdevice_ARG, ignorelockingfailure_ARG, partial_ARG,
-   readonly_ARG, cache_ARG)
+   readonly_ARG, cache_long_ARG)
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
@@ -839,7 +839,7 @@ xx(pvscan,
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   activate_ARG, available_ARG, backgroundfork_ARG, cache_ARG,
+   activate_ARG, available_ARG, backgroundfork_ARG, cache_long_ARG,
    exported_ARG, ignorelockingfailure_ARG, major_ARG, minor_ARG,
    novolumegroup_ARG, partial_ARG, readonly_ARG, short_ARG, uuid_ARG)
 
@@ -1227,7 +1227,7 @@ xx(vgscan,
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n",
 
-   cache_ARG, ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
+   cache_long_ARG, ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
 
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",

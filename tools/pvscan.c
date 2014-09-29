@@ -327,7 +327,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	uint64_t size_new = 0;
 	unsigned len;
 
-	if (arg_count(cmd, cache_ARG))
+	if (arg_count(cmd, cache_long_ARG))
 		return _pvscan_lvmetad(cmd, argc, argv);
 
 	if (argc) {
