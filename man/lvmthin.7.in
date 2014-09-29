@@ -1007,9 +1007,6 @@ and creates a thin LV in the new pool.
 .B \-n ThinLV \-\-thinpool VG/ThinPoolLV
 .RE
 
-./" FIXME: make this work
-./" lvcreate \-\-type thin\-pool \-V VirtualSize \-L LargeSize \-n ThinLV VG/ThinPoolLV
-
 Equivalent to:
 .br
 .B lvcreate \-\-type thin\-pool \-L LargeSize VG/ThinPoolLV
@@ -1020,9 +1017,6 @@ Equivalent to:
 .br
 .nf
 # lvcreate \-L8M \-V2G \-n thin1 \-\-thinpool vg/pool0
-
-./" FIXME: change to
-./" lvcreate \-\-type thin\-pool \-L8M \-V2G \-n thin1 vg/pool0
 
 # lvs \-a
   pool0           vg          twi-a-tz--   8.00m
