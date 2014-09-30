@@ -370,7 +370,13 @@ prepare_devs() {
 		DEVICES[$count]=$dev
 		count=$(( $count + 1 ))
 		echo 0 $size linear "$BACKING_DEV" $((($i-1)*$size)) > "$name.table"
-		dmsetup create -u "TEST-$name" "$name" "$name.table"
+		if not dmsetup create -u "TEST-$name" "$name" "$name.table" &&
+		   test -n "$LVM_TEST_BACKING_DEVICE";
+		then # maybe the backing device is too small for this test
+		    LVM_TEST_BACKING_DEVICE=
+		    prepare_devs "$@"
+		    return $?
+		fi
 	done
 	finish_udev_transaction
 
