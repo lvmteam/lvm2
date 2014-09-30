@@ -334,9 +334,9 @@ prepare_scsi_debug_dev() {
 	# Create symlink to scsi_debug device in $DM_DEV_DIR
 	SCSI_DEBUG_DEV="$DM_DEV_DIR/$(basename $DEBUG_DEV)"
 	echo "$SCSI_DEBUG_DEV" > SCSI_DEBUG_DEV
-	echo "$SCSI_DEBUG_DEV" > LOOP
+	echo "$SCSI_DEBUG_DEV" > BACKING_DEV
 	# Setting $LOOP provides means for prepare_devs() override
-	test "$LVM_TEST_DEVDIR" = "/dev" || ln -snf "$DEBUG_DEV" "$SCSI_DEBUG_DEV"
+	test "$DEBUG_DEV" = "$SCSI_DEBUG_DEV" || ln -snf "$DEBUG_DEV" "$SCSI_DEBUG_DEV"
 }
 
 cleanup_scsi_debug_dev() {
@@ -345,7 +345,9 @@ cleanup_scsi_debug_dev() {
 }
 
 prepare_backing_dev() {
-	if test -b "$LVM_TEST_BACKING_DEVICE"; then
+	if test -f BACKING_DEV; then 
+		BACKING_DEV=$(< BACKING_DEV)
+	elif test -b "$LVM_TEST_BACKING_DEVICE"; then
 		BACKING_DEV="$LVM_TEST_BACKING_DEVICE"
 		echo "$BACKING_DEV" > BACKING_DEV
 	else
@@ -374,6 +376,7 @@ prepare_devs() {
 		   test -n "$LVM_TEST_BACKING_DEVICE";
 		then # maybe the backing device is too small for this test
 		    LVM_TEST_BACKING_DEVICE=
+		    rm -f BACKING_DEV
 		    prepare_devs "$@"
 		    return $?
 		fi
