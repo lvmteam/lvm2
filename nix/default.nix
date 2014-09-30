@@ -4,7 +4,7 @@
   fc20_32_updates ? "", fc20_64_updates ? "",
   fc19_32_updates ? "", fc19_64_updates ? "",
   fc18_32_updates ? "", fc18_64_updates ? "",
-  T ? "" }:
+  T ? "", ENV ? "", timeout ? 60 }:
 
 let
   pkgs = import nixpkgs {};
@@ -58,8 +58,9 @@ let
            watch="--watch /xchg/udevd.log"
          fi
 
+         export ${ENV}
          lvm2-testsuite --batch --outdir /xchg/results --continue \
-             --fatal-timeouts --heartbeat /xchg/heartbeat \
+             --timeout ${toString timeout} --fatal-timeouts --heartbeat /xchg/heartbeat \
              --flavours ${flavour} $watch --kmsg ${if lib.eqStrings T "" then "" else "--only ${T}"}
 
          # TODO: coverage reports
