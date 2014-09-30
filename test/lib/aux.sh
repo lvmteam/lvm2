@@ -22,7 +22,7 @@ expect_failure() {
 }
 
 prepare_clvmd() {
-	rm -f debug.log
+	rm -f debug.log strace.log
 	test "${LVM_TEST_LOCKING:-0}" -ne 3 && return # not needed
 
 	if pgrep clvmd ; then
@@ -54,7 +54,7 @@ prepare_clvmd() {
 }
 
 prepare_dmeventd() {
-	rm -f debug.log
+	rm -f debug.log strace.log
 	if pgrep dmeventd ; then
 		echo "Cannot test dmeventd with real dmeventd ($(pgrep dmeventd)) running."
 		skip
@@ -81,7 +81,7 @@ prepare_dmeventd() {
 
 prepare_lvmetad() {
 	test $# -eq 0 && default_opts="-l wire,debug"
-	rm -f debug.log
+	rm -f debug.log strace.log
 	# skip if we don't have our own lvmetad...
 	(which lvmetad 2>/dev/null | grep "$abs_builddir") || skip
 
@@ -227,7 +227,7 @@ teardown() {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
 		vgremove -ff $cfg  \
-			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log
+			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log strace.log
 	}
 
 	kill_sleep_kill_ LOCAL_CLVMD ${LVM_VALGRIND_CLVMD:-0}
@@ -478,7 +478,7 @@ enable_dev() {
 	    shift
 	fi
 
-	rm -f debug.log
+	rm -f debug.log strace.log
 	init_udev_transaction
 	for dev in "$@"; do
 		local name=$(echo "$dev" | sed -e 's,.*/,,')
@@ -601,7 +601,7 @@ unhide_dev() {
 }
 
 mkdev_md5sum() {
-	rm -f debug.log
+	rm -f debug.log strace.log
 	mkfs.ext2 "$DM_DEV_DIR/$1/$2" || return 1
 	md5sum "$DM_DEV_DIR/$1/$2" > "md5.$1-$2"
 }
@@ -704,12 +704,12 @@ apitest() {
 	local t=$1
 	shift
 	test -x "$abs_top_builddir/test/api/$t.t" || skip
-	"$abs_top_builddir/test/api/$t.t" "$@" && rm -f debug.log
+	"$abs_top_builddir/test/api/$t.t" "$@" && rm -f debug.log strace.log
 }
 
 api() {
 	test -x "$abs_top_builddir/test/api/wrapper" || skip
-	"$abs_top_builddir/test/api/wrapper" "$@" && rm -f debug.log
+	"$abs_top_builddir/test/api/wrapper" "$@" && rm -f debug.log strace.log
 }
 
 mirror_recovery_works() {
@@ -820,7 +820,7 @@ version_at_least() {
 #
 # i.e.   dm_target_at_least  dm-thin-pool  1 0
 target_at_least() {
-	rm -f debug.log
+	rm -f debug.log strace.log
 	case "$1" in
 	  dm-*) modprobe "$1" || true ;;
 	esac

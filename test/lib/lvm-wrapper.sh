@@ -24,16 +24,21 @@ test -z "$LVM_GDB" || exec gdb --readnow --args "$abs_top_builddir/tools/lvm" $C
 # Multiple level of LVM_VALGRIND support
 # the higher level the more commands are traced
 if test -n "$LVM_VALGRIND"; then
-	RUN_VALGRIND="aux run_valgrind";
-	case "$CMD" in
-	  lvs|pvs|vgs|vgck|vgscan)
-		test "$LVM_VALGRIND" -gt 2 || unset RUN_VALGRIND ;;
-	  pvcreate|pvremove|lvremove|vgcreate|vgremove)
-		test "$LVM_VALGRIND" -gt 1 || unset RUN_VALGRIND ;;
-	  *)
-		test "$LVM_VALGRIND" -gt 0 || unset RUN_VALGRIND ;;
-	esac
+	RUN_DBG="aux run_valgrind";
 fi
+
+if test -n "$LVM_STRACE"; then
+	RUN_DBG="strace $LVM_STRACE -o strace.log"
+fi
+
+set -x
+
+case "$CMD" in
+  lvs|pvs|vgs|vgck|vgscan)
+	test ${LVM_DEBUG_LEVEL:-0} -lt 2 && RUN_DBG= ;;
+  pvcreate|pvremove|lvremove|vgcreate|vgremove)
+	test ${LVM_DEBUG_LEVEL:-0} -lt 1 && RUN_DBG= ;;
+esac
 
 # the exec is important, because otherwise fatal signals inside "not" go unnoticed
 if test -n "$abs_top_builddir"; then

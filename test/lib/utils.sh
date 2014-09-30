@@ -129,6 +129,7 @@ STACKTRACE() {
 
 	test -z "$LVM_TEST_NODEBUG" -a -f debug.log && {
 		sed -e "s,^,## DEBUG: ,;s,$top_srcdir/\?,," < debug.log
+		test -e strace.log && sed -e "s,^,## STRACE: ,;s,$top_srcdir/\?,," < strace.log
 	}
 
 	test -f SKIP_THIS_TEST && exit 200
