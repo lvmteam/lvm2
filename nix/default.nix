@@ -45,6 +45,7 @@ let
             sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
 
          mkdir -p /xchg/results
+         touch /xchg/booted
 
          dmsetup targets
 
@@ -123,11 +124,17 @@ let
        monitor &
 
        for i in `seq 1 20`; do # we allow up to 20 VM restarts
+           rm -f xchg/booted
            ${vmtools.qemu}/bin/qemu-img create -f qcow2 /dev/shm/testdisk.img 4G
            setsid bash -e ${vmtools.vmRunCommand (vmtools.qemuCommandLinux kernel)} &
            pid=$!
 
-           sleep 180 # give the VM some time to get up and running
+           # give the VM some time to get up and running
+           slept=0
+           while test $slept -le 180 && test ! -e xchg/booted; do
+               sleep 10
+               slept=$(($slept + 10))
+           done
            echo $pid > pid # monitor go
            wait $pid || true
            rm -f pid # disarm the monitor process
