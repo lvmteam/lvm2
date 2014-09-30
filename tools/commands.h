@@ -241,7 +241,10 @@ xx(lvcreate,
    "\t[-a|--activate [a|e|l]{y|n}]\n"
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
-   "\t[--cachemode CacheMode]\n"
+   "\t[-H|--cache\n"
+   "\t  [-c|--chunksize ChunkSize]\n"
+   "\t  [--cachemode {writeback|writethrough}]\n"
+   "\t[--cachepool CachePoolLogicalVolume{Name|Path}]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
@@ -263,10 +266,11 @@ xx(lvcreate,
    "\t[--[raid]maxrecoveryrate Rate]\n"
    "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
    "\t[-R|--regionsize MirrorLogRegionSize]\n"
-   "\t[-T|--thin  [-c|--chunksize  ChunkSize]\n"
+   "\t[-T|--thin\n"
+   "\t  [-c|--chunksize ChunkSize]\n"
    "\t  [--discards {ignore|nopassdown|passdown}]\n"
-   "\t  [--poolmetadatasize MetadataSize[bBsSkKmMgG]]]\n"
-   "\t  [--poolmetadataspare {y|n}]\n"
+   "\t  [--poolmetadatasize MetadataSize[bBsSkKmMgG]]\n"
+   "\t  [--poolmetadataspare {y|n}]]\n"
    "\t[--thinpool ThinPoolLogicalVolume{Name|Path}]\n"
    "\t[-t|--test]\n"
    "\t[--type VolumeType]\n"
@@ -312,7 +316,8 @@ xx(lvcreate,
    "\t[PhysicalVolumePath...]\n\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG, available_ARG,
-   cachemode_ARG, chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG,
+   cache_ARG, cachemode_ARG, cachepool_ARG,
+   chunksize_ARG, contiguous_ARG, corelog_ARG, discards_ARG,
    extents_ARG, ignoreactivationskip_ARG, ignoremonitoring_ARG, major_ARG,
    metadataprofile_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG,
    minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
