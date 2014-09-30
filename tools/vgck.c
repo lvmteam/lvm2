@@ -37,7 +37,7 @@ static int vgck_single(struct cmd_context *cmd __attribute__((unused)),
 
 int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
-	lvmetad_set_active(0);
+	lvmetad_set_active(cmd, 0);
 	return process_each_vg(cmd, argc, argv, 0, NULL,
 			       &vgck_single);
 }

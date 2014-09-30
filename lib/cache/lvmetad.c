@@ -98,11 +98,13 @@ int lvmetad_active(void)
 	return _lvmetad_connected;
 }
 
-void lvmetad_set_active(int active)
+void lvmetad_set_active(struct cmd_context *cmd, int active)
 {
 	_lvmetad_use = active;
 	if (!active && lvmetad_active())
 		lvmetad_disconnect();
+	if (cmd && !refresh_filters(cmd))
+		stack;
 }
 
 /*

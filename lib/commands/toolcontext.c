@@ -463,9 +463,9 @@ static int _process_config(struct cmd_context *cmd)
 	    find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
 		log_warn("WARNING: configuration setting use_lvmetad overridden to 0 due to locking_type 3. "
 			 "Clustered environment not supported by lvmetad yet.");
-		lvmetad_set_active(0);
+		lvmetad_set_active(NULL, 0);
 	} else
-		lvmetad_set_active(find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL));
+		lvmetad_set_active(NULL, find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL));
 
 	lvmetad_init(cmd);
 
@@ -972,8 +972,10 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 			log_verbose("Failed to create usable device filter.");
 			goto bad;
 		}
-	} else
+	} else {
 		filter_components[0] = cmd->lvmetad_filter;
+		cmd->lvmetad_filter = NULL;
+	}
 
 	/* filter component 1 */
 	if ((cn = find_config_tree_node(cmd, devices_filter_CFG, NULL))) {
@@ -1036,7 +1038,7 @@ bad:
 	}
 
 	/* if lvmetad is used, the cmd->lvmetad_filter is separate */
-	if (lvmetad_used() && cmd->lvmetad_filter)
+	if (cmd->lvmetad_filter)
 		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
 
 	return 0;
@@ -1659,7 +1661,7 @@ static void _destroy_filters(struct cmd_context *cmd)
 	* is actually a part of cmd->filter and as such, it
 	* will be destroyed together with cmd->filter.
 	*/
-	if (lvmetad_used() && cmd->lvmetad_filter) {
+	if (cmd->lvmetad_filter) {
 		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
 		cmd->lvmetad_filter = NULL;
 	}
@@ -1826,7 +1828,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	* is actually a part of cmd->filter and as such, it
 	* will be destroyed together with cmd->filter.
 	*/
-	if (lvmetad_used() && cmd->lvmetad_filter)
+	if (cmd->lvmetad_filter)
 		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
 	if (cmd->filter)
 		cmd->filter->destroy(cmd->filter);

@@ -1131,7 +1131,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 			 * direct activation instead of autoactivation.
 			*/
 			log_warn("lvmetad is not active yet, using direct activation during sysinit");
-			lvmetad_set_active(0);
+			lvmetad_set_active(cmd, 0);
 		} else if (lvmetad_active()) {
 			/*
 			 * If lvmetad is active already, we want

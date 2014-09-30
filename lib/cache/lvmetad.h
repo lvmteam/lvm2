@@ -37,7 +37,7 @@ void lvmetad_init(struct cmd_context *);
 /*
  * Override the use of lvmetad for retrieving scan results and metadata.
  */
-void lvmetad_set_active(int);
+void lvmetad_set_active(struct cmd_context *, int);
 
 /*
  * Configure the socket that lvmetad_init will use to connect to the daemon.
@@ -161,7 +161,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 
 #    define lvmetad_init(cmd)	do { } while (0)
 #    define lvmetad_disconnect()	do { } while (0)
-#    define lvmetad_set_active(a)	do { } while (0)
+#    define lvmetad_set_active(cmd, a)	do { } while (0)
 #    define lvmetad_set_socket(a)	do { } while (0)
 #    define lvmetad_used()	(0)
 #    define lvmetad_socket_present()	(0)

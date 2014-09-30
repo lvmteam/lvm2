@@ -1342,7 +1342,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, readonly_ARG)) {
 		locking_type = 5;
 		if (lvmetad_used()) {
-			lvmetad_set_active(0);
+			lvmetad_set_active(cmd, 0);
 			log_verbose("Disabling use of lvmetad because read-only is set.");
 		}
 	} else if (arg_count(cmd, nolocking_ARG))
