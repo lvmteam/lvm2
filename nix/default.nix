@@ -285,6 +285,7 @@ let
   extra_rpms = rec {
       common = [ "libselinux-devel" "libsepol-devel" "ncurses-devel" "readline-devel"
                  "corosynclib-devel"
+                 "valgrind" "strace" "gdb"
                  "redhat-rpm-config" # needed for rpmbuild of lvm
                  "which" "e2fsprogs" # needed for fsadm
                  "perl-GD" # for lcov
