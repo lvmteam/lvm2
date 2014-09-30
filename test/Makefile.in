@@ -145,6 +145,7 @@ install: .tests-stamp lib/paths-installed
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	$(INSTALL_DATA) $(LIB_FLAVOURS) $(DATADIR)/lib/
 	$(INSTALL_SCRIPT) $(LIB_SHARED) $(DATADIR)/lib/
+	for i in $(CMDS); do (cd $(DATADIR)/lib && ln -fs lvm-wrapper $$i); done
 
 	$(INSTALL_DIR) $(EXECDIR)
 	$(INSTALL_PROGRAM) $(LIB_EXEC) $(EXECDIR)

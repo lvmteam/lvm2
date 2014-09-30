@@ -36,4 +36,9 @@ if test -n "$LVM_VALGRIND"; then
 fi
 
 # the exec is important, because otherwise fatal signals inside "not" go unnoticed
-exec $RUN_VALGRIND "$abs_top_builddir/tools/lvm" $CMD "$@"
+if test -n "$abs_top_builddir"; then
+    exec $RUN_DBG "$abs_top_builddir/tools/lvm" $CMD "$@"
+else # we are testing the lvm on $PATH
+    PATH=`echo $PATH | sed -e s,[^:]*lvm2-testsuite[^:]*:,,g`
+    exec $RUN_DBG lvm $CMD "$@"
+fi
