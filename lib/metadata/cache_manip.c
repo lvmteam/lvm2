@@ -315,8 +315,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 *
 	 * FIXME:
 	 * fix _add_dev() to support this case better
-	 * since the should be handled interanlly by resume_lv()
-	 * which should autoremove any orhpans
+	 * since that should be handled internally by resume_lv()
+	 * which should autoremove any orphans
 	 */
 	if (!_cleanup_orphan_lv(corigin_lv))  /* _corig */
 		return_0;
