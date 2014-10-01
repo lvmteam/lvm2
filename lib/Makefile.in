@@ -222,7 +222,7 @@ CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 
 include $(top_builddir)/make.tmpl
 
-CFLAGS += $(BLKID_CFLAGS) $(UDEV_CFLAGS)
+CFLAGS += $(BLKID_CFLAGS) $(UDEV_CFLAGS) $(VALGRIND_CFLAGS)
 
 $(SUBDIRS): $(LIB_STATIC)
 

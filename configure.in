@@ -1023,12 +1023,18 @@ AC_ARG_ENABLE(valgrind_pool,
 	      VALGRIND_POOL=$enableval, VALGRIND_POOL=no)
 AC_MSG_RESULT($VALGRIND_POOL)
 
-if test "$VALGRIND_POOL" = yes; then
-	pkg_config_init
-	PKG_CHECK_MODULES(VALGRIND, valgrind, [], [AC_MSG_ERROR(bailing out)])
+pkg_config_init
+PKG_CHECK_MODULES(VALGRIND, valgrind, [HAVE_VALGRIND=yes], [if test x$VALGRIND_POOL = xyes; then AC_MSG_ERROR(bailing out); fi])
+AC_SUBST(VALGRIND_CFLAGS)
+
+if test x$HAVE_VALGRIND = xyes; then
+	AC_DEFINE([HAVE_VALGRIND], 1, [valgrind.h found])
+	AC_SUBST(HAVE_VALGRIND)
+fi
+
+if test x$VALGRIND_POOL = xyes; then
 	AC_DEFINE([VALGRIND_POOL], 1, [Enable a valgrind aware build of pool])
 	AC_SUBST(VALGRIND_POOL)
-	AC_SUBST(VALGRIND_CFLAGS)
 fi
 
 ################################################################################
