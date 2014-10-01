@@ -210,11 +210,18 @@ teardown_devs() {
 }
 
 kill_sleep_kill_() {
-	if test -s "$1" ; then
-		if kill -TERM "$(< $1)" ; then
-			if test "$2" -eq 0 ; then sleep .1 ; else sleep 1 ; fi
-			kill -KILL "$(< $1)" 2>/dev/null || true
-		fi
+	pidfile=$1
+	slow=$2
+	if test -s $pidfile ; then
+		pid=$(< $pidfile)
+		kill -TERM $pid
+		if test $slow -eq 0 ; then sleep .1 ; else sleep 1 ; fi
+		kill -KILL $pid 2>/dev/null || true
+		wait=0
+		while ps $pid > /dev/null && test $wait -le 10; do
+			sleep .5
+			wait=$(($wait + 1))
+		done
 	fi
 }
 

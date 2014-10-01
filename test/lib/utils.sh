@@ -112,7 +112,7 @@ STACKTRACE() {
 
 	test "${LVM_TEST_PARALLEL:-0}" -eq 1 -o -n "$RUNNING_DMEVENTD" -o -f LOCAL_DMEVENTD || {
 		pgrep dmeventd &>/dev/null && \
-			die "** During test dmeventd has been started!"
+			die "ERROR: The test started dmeventd unexpectedly."
 	}
 
 	# Get backtraces from coredumps
