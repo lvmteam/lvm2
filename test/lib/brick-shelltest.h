@@ -600,11 +600,11 @@ struct IO : Sink {
     Observer &observer() { return *_observer; }
 
     IO() {
-        sinks.push_back( _observer = new Observer );
+        clear();
     }
 
     /* a stealing copy constructor */
-    IO( const IO &io ) : sinks( io.sinks ), sources( io.sources )
+    IO( const IO &io ) : sinks( io.sinks ), sources( io.sources ), _observer( io._observer )
     {
         io.sinks.clear();
         io.sources.clear();
@@ -619,6 +619,7 @@ struct IO : Sink {
         for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
             delete *i;
         sinks.clear();
+        sinks.push_back( _observer = new Observer );
     }
 
     ~IO() { close(); clear(); }
