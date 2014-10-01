@@ -14,7 +14,7 @@
 run_valgrind() {
 	# Execute script which may use $TESTNAME for creating individual
 	# log files for each execute command
-	exec "${VALGRIND:-valg}" "$@"
+	exec "${VALGRIND:-valgrind}" "$@"
 }
 
 expect_failure() {

@@ -24,7 +24,7 @@ test -z "$LVM_GDB" || exec gdb --readnow --args "$abs_top_builddir/tools/lvm" $C
 # Multiple level of LVM_VALGRIND support
 # the higher level the more commands are traced
 if test -n "$LVM_VALGRIND"; then
-	RUN_DBG="aux run_valgrind";
+	RUN_DBG="${VALGRIND:-valgrind}";
 fi
 
 if test -n "$LVM_STRACE"; then
