@@ -543,8 +543,22 @@ struct KMsg : Source {
 };
 
 struct Observer : Sink {
-    Observer() {}
-    void push( std::string ) {}
+    TimedBuffer stream;
+
+    bool warnings;
+    Observer() : warnings( false ) {}
+
+    void push( std::string s ) {
+        stream.push( s );
+    }
+
+    void sync( bool force ) {
+        while ( !stream.empty( force ) ) {
+            TimedBuffer::Line line = stream.shift( force );
+            if ( line.second.find( "TEST WARNING" ) != std::string::npos )
+                warnings = true;
+        }
+    }
 };
 
 struct IO : Sink {
@@ -849,6 +863,9 @@ struct TestCase {
             r = Journal::INTERRUPTED;
         else
             r = Journal::FAILED;
+
+        if ( r == Journal::PASSED && io.observer().warnings )
+            r = Journal::WARNED;
 
         io.close();
 
