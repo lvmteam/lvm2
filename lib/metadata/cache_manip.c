@@ -22,6 +22,17 @@
 #include "activate.h"
 #include "defaults.h"
 
+const char *get_cachepool_cachemode_name(const struct lv_segment *seg)
+{
+	if (seg->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
+		return "writeback";
+
+	if (seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH)
+		return "writethrough";
+
+	return "unknown";
+}
+
 int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 			     int passed_args, uint32_t data_extents,
 			     uint64_t *pool_metadata_size,

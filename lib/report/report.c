@@ -773,6 +773,24 @@ static int _discards_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, "", NULL);
 }
 
+static int _cachemode_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const char *cachemode_str;
+
+	if (seg_is_cache(seg))
+		seg = first_seg(seg->pool_lv);
+
+	if (seg_is_cache_pool(seg)) {
+		cachemode_str = get_cachepool_cachemode_name(seg);
+		return dm_report_field_string(rh, field, &cachemode_str);
+	}
+
+	return _field_set_value(field, "", NULL);
+}
+
 static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			    struct dm_report_field *field,
 			    const void *data, void *private)

@@ -299,6 +299,15 @@ they are situated and these two PV tags are selected for use with this
 allocation policy:
 .IP
 cling_tag_list = [ "@site1", "@site2" ]
+.IP
+\fBcache_pool_cachemode\fP \(em Cache mode for new cache pools.
+.IP
+This is the default cache mode a new cache pool will be given.
+Valid cache modes are:
+\fBwritethrough\fP - Data blocks are immediately written from the
+cache to disk.
+\fBwriteback\fP - Data blocks are written from the cache
+back to disk after some delay to improve performance.
 .TP
 \fBlog\fP \(em Default log settings
 .IP

@@ -1069,6 +1069,7 @@ int partial_raid_lv_supports_degraded_activation(const struct logical_volume *lv
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */
+const char *get_cachepool_cachemode_name(const struct lv_segment *seg);
 int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 			     int passed_args, uint32_t data_extents,
 			     uint64_t *pool_metadata_size,

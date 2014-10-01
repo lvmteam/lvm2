@@ -204,7 +204,6 @@ static int _mirror_or_raid_type_requested(struct cmd_context *cmd, const char *t
 static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			     const char *type_str, int *pargc, char ***pargv)
 {
-	const char *tmp_str;
 	int cachepool = 0;
 	int thinpool = 0;
 
@@ -234,8 +233,11 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 		thinpool = 1;
 
 	if (cachepool) {
-		if ((tmp_str = arg_str_value(cmd, cachemode_ARG, NULL)) &&
-		    !get_cache_mode(tmp_str, &lp->feature_flags))
+		const char *cachemode = arg_str_value(cmd, cachemode_ARG, NULL);
+		if (!cachemode)
+			cachemode = find_config_tree_str(cmd, allocation_cache_pool_cachemode_CFG, NULL);
+
+		if (!get_cache_mode(cachemode, &lp->feature_flags))
 			return_0;
 	} else {
 		if (arg_from_list_is_set(cmd, "is valid only with cache pools",

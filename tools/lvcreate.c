@@ -693,13 +693,16 @@ static int _read_raid_params(struct lvcreate_params *lp,
 static int _read_cache_pool_params(struct lvcreate_params *lp,
 				  struct cmd_context *cmd)
 {
-	const char *str_arg;
+	const char *cachemode;
 
 	if (!segtype_is_cache_pool(lp->segtype))
 		return 1;
 
-	if ((str_arg = arg_str_value(cmd, cachemode_ARG, NULL)) &&
-	    !get_cache_mode(str_arg, &lp->feature_flags))
+	cachemode = arg_str_value(cmd, cachemode_ARG, NULL);
+	if (!cachemode)
+		cachemode = find_config_tree_str(cmd, allocation_cache_pool_cachemode_CFG, NULL);
+
+	if (!get_cache_mode(cachemode, &lp->feature_flags))
 		return_0;
 
 	return 1;

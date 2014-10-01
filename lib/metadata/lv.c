@@ -128,6 +128,11 @@ char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	return  dm_pool_strdup(mem, get_pool_discards_name(seg->discards));
 }
 
+char *lvseg_cachemode_dup(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	return dm_pool_strdup(mem, get_cachepool_cachemode_name(seg));
+}
+
 #ifdef DMEVENTD
 #  include "libdevmapper-event.h"
 #endif

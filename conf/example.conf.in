@@ -335,6 +335,15 @@ allocation {
     # range from 32(kiB) to 1048576 in multiples of 32.
     # cache_pool_chunk_size = 64
 
+    # Specify the default cache mode used for new cache pools.
+    # Possible options are:
+    # "writethrough"    - Data blocks are immediately written from
+    #                     the cache to disk.
+    # "writeback"       - Data blocks are written from the cache
+    #                     back to disk after some delay to improve
+    #                     performance.
+    # cache_pool_cachemode = "writethrough"
+
     # Set to 1 to guarantee that thin pool metadata will always
     # be placed on different PVs from the pool data.
     thin_pool_metadata_require_separate_pvs = 0
