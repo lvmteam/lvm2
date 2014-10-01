@@ -324,7 +324,7 @@ xx(lvcreate,
 
 xx(lvdisplay,
    "Display information about a logical volume",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "lvdisplay\n"
    "\t[-a|--all]\n"
    "\t[-c|--colon]\n"
@@ -540,7 +540,7 @@ xx(lvresize,
 
 xx(lvs,
    "Display information about logical volumes",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "lvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
@@ -577,7 +577,7 @@ xx(lvs,
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "lvscan " "\n"
    "\t[-a|--all]\n"
    "\t[-b|--blockdevice] " "\n"
@@ -745,7 +745,7 @@ xx(pvdisplay,
 
 xx(pvmove,
    "Move extents from one physical volume to another",
-   0,
+   ALL_VGS_IS_DEFAULT,	/* For polldaemon to find pvmoves in-progress using process_each_vg. */
    "pvmove " "\n"
    "\t[--abort]\n"
    "\t[--alloc AllocationPolicy]\n"
@@ -786,7 +786,7 @@ xx(pvremove,
 
 xx(pvs,
    "Display information about physical volumes",
-   CACHE_VGMETADATA | PERMITTED_READ_ONLY,
+   CACHE_VGMETADATA | PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "pvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
@@ -855,7 +855,7 @@ xx(tags,
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "vgcfgbackup " "\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug] " "\n"
@@ -890,7 +890,7 @@ xx(vgcfgrestore,
 
 xx(vgchange,
    "Change volume group attributes",
-   CACHE_VGMETADATA | PERMITTED_READ_ONLY,
+   CACHE_VGMETADATA | PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "vgchange" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
@@ -936,7 +936,7 @@ xx(vgchange,
 
 xx(vgck,
    "Check the consistency of volume group(s)",
-   0,
+   ALL_VGS_IS_DEFAULT,
    "vgck "
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
@@ -998,7 +998,7 @@ xx(vgcreate,
 
 xx(vgdisplay,
    "Display volume group information",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "vgdisplay " "\n"
    "\t[-A|--activevolumegroups]" "\n"
    "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
@@ -1042,7 +1042,7 @@ xx(vgdisplay,
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
-   0,
+   ALL_VGS_IS_DEFAULT,
    "vgexport " "\n"
    "\t[-a|--all] " "\n"
    "\t[--commandprofile ProfileName]\n"
@@ -1079,7 +1079,7 @@ xx(vgextend,
 
 xx(vgimport,
    "Register exported volume group with system",
-   0,
+   ALL_VGS_IS_DEFAULT,
    "vgimport " "\n"
    "\t[-a|--all]\n"
    "\t[--commandprofile ProfileName]\n"
@@ -1111,7 +1111,7 @@ xx(vgmerge,
 
 xx(vgmknodes,
    "Create the special files for volume group devices in /dev",
-   0,
+   ALL_VGS_IS_DEFAULT,
    "vgmknodes\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
@@ -1179,7 +1179,7 @@ xx(vgrename,
 
 xx(vgs,
    "Display information about volume groups",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "vgs" "\n"
    "\t[--aligned]\n"
    "\t[--binary]\n"
@@ -1215,7 +1215,7 @@ xx(vgs,
 
 xx(vgscan,
    "Search for all volume groups",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
    "vgscan "
    "\t[--cache]\n"
    "\t[--commandprofile ProfileName]\n"
