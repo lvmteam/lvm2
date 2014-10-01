@@ -27,6 +27,10 @@
 #include <sys/resource.h>
 #include <malloc.h>
 
+#ifdef HAVE_VALGRIND
+#include <valgrind.h>
+#endif
+
 #ifndef DEVMAPPER_SUPPORT
 
 void memlock_inc_daemon(struct cmd_context *cmd)
@@ -254,12 +258,13 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 		}
 	}
 
-#ifdef VALGRIND_POOL
+#ifdef HAVE_VALGRIND
 	/*
 	 * Valgrind is continually eating memory while executing code
 	 * so we need to deactivate check of locked memory size
          */
-	sz -= sz; /* = 0, but avoids getting warning about dead assigment */
+	if (RUNNING_ON_VALGRIND)
+		sz -= sz; /* = 0, but avoids getting warning about dead assigment */
 
 #endif
 	*mstats += sz;
