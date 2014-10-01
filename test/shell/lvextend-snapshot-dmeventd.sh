@@ -26,7 +26,7 @@ percent_() {
 
 wait_for_change_() {
 	# dmeventd only checks every 10 seconds :(
-	for i in $(seq 1 15) ; do
+	for i in $(seq 1 25) ; do
 		test "$(percent_)" != "$1" && return
 		sleep 1
 	done
