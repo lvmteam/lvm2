@@ -16,6 +16,9 @@ test_description="ensure that pvmove works with basic options"
 
 which md5sum || skip
 
+# disable lvmetad logging as it bogs down test systems
+test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
+
 # ---------------------------------------------------------------------
 # Utilities
 

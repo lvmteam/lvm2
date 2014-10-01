@@ -14,6 +14,9 @@ test_description="ensure that 'vgreduce --removemissing' works on mirrored LV"
 
 . lib/inittest
 
+# disable lvmetad logging as it bogs down test systems
+test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
+
 lv_is_on_ ()
 {
 	local lv=$vg/$1
