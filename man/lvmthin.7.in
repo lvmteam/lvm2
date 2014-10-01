@@ -152,7 +152,8 @@ Create a new thin LV from the thin pool LV.
 The thin LV is created with a virtual size.
 Multiple new thin LVs may be created in the thin pool.
 Thin LV names must be unique in the VG.
-The thinpool argument specifies which thin pool will
+The '--type thin' option is inferred from the virtual size option.
+The --thinpool argument specifies which thin pool will
 contain the ThinLV.
 .fi
 
@@ -225,6 +226,10 @@ or vgchange to activate thin snapshots with the "k" attribute.
 
 .SH Thin Topics
 
+.B Alternate syntax for specifying type thin\-pool
+.br
+.B Automatic pool metadata LV
+.br
 .B Specify devices for data and metadata LVs
 .br
 .B Tolerate device failures using raid
@@ -232,8 +237,6 @@ or vgchange to activate thin snapshots with the "k" attribute.
 .B Spare metadata LV
 .br
 .B Metadata check and repair
-.br
-.B Automatic pool metadata LV
 .br
 .B Activation of thin snapshots
 .br
@@ -272,6 +275,50 @@ or vgchange to activate thin snapshots with the "k" attribute.
 .B XFS on snapshots
 
 \&
+
+.SS Alternate syntax for specifying type thin\-pool
+
+\&
+
+The fully specified syntax for creating a thin pool LV shown above is:
+
+.B lvconvert \-\-type thin-pool \-\-poolmetadata VG/ThinMetaLV VG/ThinDataLV
+
+An existing LV is converted to a thin pool by changing its type to
+thin-pool.  An alternate syntax may be used for the same operation:
+
+.B lvconvert \-\-thinpool VG/ThinDataLV \-\-poolmetadata VG/ThinMetaLV
+
+The thin-pool type is inferred by lvm; the --thinpool option is not an
+alias for --type thin-pool.  The use of the --thinpool option here is
+different from the use of the --thinpool option when creating a thin LV,
+where it specifies the pool in which the thin LV is created.
+
+
+.SS Automatic pool metadata LV
+
+\&
+
+A thin data LV can be converted to a thin pool LV without specifying a
+thin pool metadata LV.  LVM automatically creates a metadata LV from the
+same VG.
+
+.B lvcreate \-n ThinDataLV \-L LargeSize VG
+.br
+.B lvconvert \-\-type thin\-pool VG/ThinDataLV
+
+.I Example
+.br
+.nf
+# lvcreate \-n pool0 \-L 10G vg
+# lvconvert \-\-type thin\-pool vg/pool0
+
+# lvs \-a
+  pool0           vg          twi-a-tz--  10.00g
+  [pool0_tdata]   vg          Twi-ao----  10.00g
+  [pool0_tmeta]   vg          ewi-ao----  16.00m
+.fi
+
 
 .SS Specify devices for data and metadata LVs
 
@@ -418,31 +465,6 @@ the pool metadata LV can be manually swapped with another LV
 containing new metadata:
 
 .B lvconvert \-\-thinpool VG/ThinPoolLV \-\-poolmetadata VG/NewThinMetaLV
-
-
-.SS Automatic pool metadata LV
-
-\&
-
-A thin data LV can be converted to a thin pool LV without
-specifying a thin pool metadata LV.  LVM will automatically
-create a metadata LV from the same VG.
-
-.B lvcreate \-n ThinDataLV \-L LargeSize VG
-.br
-.B lvconvert \-\-type thin\-pool VG/ThinDataLV
-
-.I Example
-.br
-.nf
-# lvcreate \-n pool0 \-L 10G vg
-# lvconvert \-\-type thin\-pool vg/pool0
-
-# lvs \-a
-  pool0           vg          twi-a-tz--  10.00g
-  [pool0_tdata]   vg          Twi-ao----  10.00g
-  [pool0_tmeta]   vg          ewi-ao----  16.00m
-.fi
 
 
 .SS Activation of thin snapshots
