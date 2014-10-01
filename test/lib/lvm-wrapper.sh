@@ -31,8 +31,6 @@ if test -n "$LVM_STRACE"; then
 	RUN_DBG="strace $LVM_STRACE -o strace.log"
 fi
 
-set -x
-
 case "$CMD" in
   lvs|pvs|vgs|vgck|vgscan)
 	test ${LVM_DEBUG_LEVEL:-0} -lt 2 && RUN_DBG= ;;
