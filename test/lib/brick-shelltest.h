@@ -339,7 +339,7 @@ struct TimedBuffer {
 struct Sink {
     virtual void outline( bool ) {}
     virtual void push( std::string x ) = 0;
-    virtual void sync() {}
+    virtual void sync( bool ) {}
     virtual ~Sink() {}
 };
 
@@ -410,11 +410,11 @@ struct FdSink : Sink {
         write( fd, out.c_str(), out.length() );
     }
 
-    virtual void sync() {
+    virtual void sync( bool force ) {
         if ( killed )
             return;
-        while ( !stream.empty( true ) )
-            outline( true );
+        while ( !stream.empty( force ) )
+            outline( force );
     }
 
     virtual void push( std::string x ) {
@@ -429,13 +429,13 @@ struct FileSink : FdSink {
     std::string file;
     FileSink( std::string n ) : FdSink( -1 ), file( n ) {}
 
-    void sync() {
+    void sync( bool force ) {
         if ( fd < 0 && !killed ) {
             fd = open( file.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644 );
             if ( fd < 0 )
                 killed = true;
         }
-        FdSink::sync();
+        FdSink::sync( force );
     }
 
     ~FileSink() {
@@ -561,12 +561,12 @@ struct IO : Sink {
             (*i)->push( x );
     }
 
-    void sync() {
+    void sync( bool force ) {
         for ( Sources::iterator i = sources.begin(); i != sources.end(); ++i )
             (*i)->sync( this );
 
         for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
-            (*i)->sync();
+            (*i)->sync( force );
     }
 
     void close() {
@@ -717,7 +717,7 @@ struct TestCase {
         }
 
         if ( wait4(pid, &status, WNOHANG, &usage) != 0 ) {
-            io.sync();
+            io.sync( true );
             return false;
         }
 
@@ -732,7 +732,7 @@ struct TestCase {
                     waitpid( pid, &status, 0 );
                 }
                 timeout = true;
-                io.sync();
+                io.sync( true );
                 return false;
             }
 
@@ -755,7 +755,7 @@ struct TestCase {
         if ( select( nfds, &set, NULL, NULL, &wait ) > 0 )
             silent_start = end; /* something happened */
 
-        io.sync();
+        io.sync( false );
 
         return true;
     }
