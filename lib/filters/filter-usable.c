@@ -19,7 +19,7 @@
 static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
 {
 	filter_mode_t mode = *((filter_mode_t *) f->private);
-	struct dev_usable_check_params ucp;
+	struct dev_usable_check_params ucp = {0};
 	int r;
 
 	/* filter only device-mapper devices */
