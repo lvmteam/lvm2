@@ -97,8 +97,23 @@ struct cmd_context {
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 
 	struct dev_types *dev_types;
-	struct dev_filter *filter;
+
+	/*
+	 * Use of filters depends on whether lvmetad is used or not:
+	 *
+	 *   - if lvmetad is used:
+	 *   	- cmd->lvmetad_filter used when scanning devices for lvmetad
+	 *   	- cmd->filter used when processing lvmetad responses
+	 *   	- cmd->full_filter used for remaining situations
+	 *
+	 *   - if lvmetad is not used:
+	 *   	- cmd->lvmetad_filter is NULL
+	 *   	- cmd->filter == cmd->full_filter used for all situations
+	 *
+	 */
 	struct dev_filter *lvmetad_filter;
+	struct dev_filter *filter;
+	struct dev_filter *full_filter;
 	int dump_filter;	/* Dump filter when exiting? */
 
 	struct dm_list config_files; /* master lvm config + any existing tag configs */

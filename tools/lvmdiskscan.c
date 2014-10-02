@@ -111,9 +111,9 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	if (arg_count(cmd, lvmpartition_ARG))
 		log_warn("WARNING: only considering LVM devices");
 
-	max_len = _get_max_dev_name_len(cmd->filter);
+	max_len = _get_max_dev_name_len(cmd->full_filter);
 
-	if (!(iter = dev_iter_create(cmd->filter, 0))) {
+	if (!(iter = dev_iter_create(cmd->full_filter, 0))) {
 		log_error("dev_iter_create failed");
 		return ECMD_FAILED;
 	}

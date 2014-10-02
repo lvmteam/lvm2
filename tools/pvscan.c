@@ -360,8 +360,8 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (cmd->filter->wipe)
-		cmd->filter->wipe(cmd->filter);
+	if (cmd->full_filter->wipe)
+		cmd->full_filter->wipe(cmd->full_filter);
 	lvmcache_destroy(cmd, 1, 0);
 
 	/* populate lvmcache */

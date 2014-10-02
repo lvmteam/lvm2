@@ -1405,7 +1405,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 	if (sigint_caught())
 		goto_out;
 
-	dev = dev_cache_get(name, cmd->filter);
+	dev = dev_cache_get(name, cmd->full_filter);
 
 	/* Is there an md superblock here? */
 	if (!dev && md_filtering()) {
@@ -1413,7 +1413,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 			goto_out;
 
 		init_md_filtering(0);
-		dev = dev_cache_get(name, cmd->filter);
+		dev = dev_cache_get(name, cmd->full_filter);
 		init_md_filtering(1);
 
 		scan_needed = 1;
@@ -1591,7 +1591,7 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 
 	if (pp->rp.idp) {
 		if ((dev = lvmcache_device_from_pvid(cmd, pp->rp.idp, NULL, NULL)) &&
-		    (dev != dev_cache_get(pv_name, cmd->filter))) {
+		    (dev != dev_cache_get(pv_name, cmd->full_filter))) {
 			if (!id_write_format((const struct id*)&pp->rp.idp->uuid,
 			    buffer, sizeof(buffer)))
 				goto_bad;
@@ -1607,7 +1607,7 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 	if (sigint_caught())
 		goto_bad;
 
-	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
+	if (!(dev = dev_cache_get(pv_name, cmd->full_filter))) {
 		log_error("%s: Couldn't find device.  Check your filters?",
 			  pv_name);
 		goto bad;

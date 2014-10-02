@@ -920,22 +920,25 @@ bad:
 /*
  * The way the filtering is initialized depends on whether lvmetad is uesd or not.
  *
- * If lvmetad is used, there are two filter chains:
+ * If lvmetad is used, there are three filter chains:
  *
- *   - the lvmetad filter chain used when scanning devs for lvmetad update:
+ *   - cmd->lvmetad_filter - the lvmetad filter chain used when scanning devs for lvmetad update:
  *     sysfs filter -> global regex filter -> type filter ->
  *     usable device filter(FILTER_MODE_PRE_LVMETAD) ->
  *     mpath component filter -> partitioned filter ->
  *     md component filter
  *
- *   - the filter chain used for lvmetad responses:
+ *   - cmd->filter - the filter chain used for lvmetad responses:
  *     persistent filter -> usable device filter(FILTER_MODE_POST_LVMETAD) ->
  *     regex filter
  *
+ *   - cmd->full_filter - the filter chain used for all the remaining situations:
+ *     lvmetad_filter -> filter
  *
  * If lvmetad isnot used, there's just one filter chain:
  *
- *   - persistent filter -> regex filter -> sysfs filter ->
+ *   - cmd->filter == cmd->full_filter:
+ *     persistent filter -> regex filter -> sysfs filter ->
  *     global regex filter -> type filter ->
  *     usable device filter(FILTER_MODE_NO_LVMETAD) ->
  *     mpath component filter -> partitioned filter ->
@@ -997,6 +1000,14 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	}
 
 	cmd->filter = filter;
+
+	if (lvmetad_used()) {
+		filter_components[0] = cmd->lvmetad_filter;
+		filter_components[1] = cmd->filter;
+		if (!(cmd->full_filter = composite_filter_create(2, filter_components)))
+			goto_bad;
+	} else
+		cmd->full_filter = filter;
 
 	/* Should we ever dump persistent filter state? */
 	if (find_config_tree_bool(cmd, devices_write_cache_state_CFG, NULL))
@@ -1653,21 +1664,9 @@ static void _destroy_dev_types(struct cmd_context *cmd)
 
 static void _destroy_filters(struct cmd_context *cmd)
 {
-	/*
-	* If lvmetad is used, the cmd->lvmetad_filter is
-	* a separate filter chain than cmd->filter so
-	* we need to destroy it separately.
-	* Otherwise, if lvmetad is not used, cmd->lvmetad_filter
-	* is actually a part of cmd->filter and as such, it
-	* will be destroyed together with cmd->filter.
-	*/
-	if (cmd->lvmetad_filter) {
-		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
-		cmd->lvmetad_filter = NULL;
-	}
-	if (cmd->filter) {
-		cmd->filter->destroy(cmd->filter);
-		cmd->filter = NULL;
+	if (cmd->full_filter) {
+		cmd->full_filter->destroy(cmd->full_filter);
+		cmd->lvmetad_filter = cmd->filter = cmd->full_filter = NULL;
 	}
 }
 
@@ -1819,19 +1818,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(cmd, &cmd->formats);
-
-	/*
-	* If lvmetad is used, the cmd->lvmetad_filter is
-	* a separate filter chain than cmd->filter so
-	* we need to destroy it separately.
-	* Otherwise, if lvmetad is not used, cmd->lvmetad_filter
-	* is actually a part of cmd->filter and as such, it
-	* will be destroyed together with cmd->filter.
-	*/
-	if (cmd->lvmetad_filter)
-		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
-	if (cmd->filter)
-		cmd->filter->destroy(cmd->filter);
+	_destroy_filters(cmd);
 	if (cmd->mem)
 		dm_pool_destroy(cmd->mem);
 	dev_cache_exit();

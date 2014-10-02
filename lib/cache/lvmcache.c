@@ -693,10 +693,10 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		goto out;
 	}
 
-	if (full_scan == 2 && (cmd->filter && !cmd->filter->use_count) && !refresh_filters(cmd))
+	if (full_scan == 2 && (cmd->full_filter && !cmd->full_filter->use_count) && !refresh_filters(cmd))
 		goto_out;
 
-	if (!cmd->filter || !(iter = dev_iter_create(cmd->filter, (full_scan == 2) ? 1 : 0))) {
+	if (!cmd->full_filter || !(iter = dev_iter_create(cmd->full_filter, (full_scan == 2) ? 1 : 0))) {
 		log_error("dev_iter creation failed");
 		goto out;
 	}
@@ -719,8 +719,8 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	 * device cache for the benefit of short-lived processes.
 	 */
 	if (full_scan == 2 && cmd->is_long_lived &&
-	    cmd->dump_filter && cmd->filter && cmd->filter->dump &&
-	    !cmd->filter->dump(cmd->filter, 0))
+	    cmd->dump_filter && cmd->full_filter && cmd->full_filter->dump &&
+	    !cmd->full_filter->dump(cmd->full_filter, 0))
 		stack;
 
 	r = 1;
