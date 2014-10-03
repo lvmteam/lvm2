@@ -229,11 +229,16 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		return 0;
 	}
 
-	/* Active volume is needed (writeback only?) */
-	if (!lv_is_active_locally(cache_lv) &&
-	    !activate_lv_excl_local(cache_lv->vg->cmd, cache_lv)) {
-		log_error("Failed to active cache locally %s.", cache_lv->name);
-		return 0;
+	/* Localy active volume is needed (writeback only?) */
+	if (!lv_is_active_locally(cache_lv)) {
+		cache_lv->status |= LV_TEMPORARY;
+		if (!activate_lv_excl_local(cache_lv->vg->cmd, cache_lv) ||
+		    !lv_is_active_locally(cache_lv)) {
+			log_error("Failed to active cache locally %s.",
+				  display_lvname(cache_lv));
+			return 0;
+		}
+		cache_lv->status &= ~LV_TEMPORARY;
 	}
 
 	/*
