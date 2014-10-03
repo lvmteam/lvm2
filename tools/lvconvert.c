@@ -3168,50 +3168,19 @@ revert_new_lv:
  * Convert origin into a cache LV by attaching a cache pool.
  */
 static int _lvconvert_cache(struct cmd_context *cmd,
-			    struct logical_volume *origin,
+			    struct logical_volume *origin_lv,
 			    struct lvconvert_params *lp)
 {
 	struct logical_volume *pool_lv = lp->pool_data_lv;
 	struct logical_volume *cache_lv;
 
-	if (origin == pool_lv) {
-		log_error("Can't use same LV %s for cache pool and cache volume.",
-			  display_lvname(pool_lv));
-		return 0;
-	}
-
-	if (lv_is_pool(origin) || lv_is_cache_type(origin)) {
-		log_error("Can't cache pool or cache type volume %s.",
-			  display_lvname(origin));
-		return 0;
-	}
-
-	/* We support conversion of _tdata */
-	if (!lv_is_visible(origin) && !lv_is_thin_pool_data(origin)) {
-		log_error("Can't convert internal LV %s.", display_lvname(origin));
-		return 0;
-	}
-
-	/*
-	 * Only linear, striped or raid supported.
-	 * FIXME Tidy up all these type restrictions.
-	 */
-	if (lv_is_cache_origin(origin) ||
-	    lv_is_mirror_type(origin) ||
-	    lv_is_thin_volume(origin) || lv_is_thin_pool_metadata(origin) ||
-	    lv_is_origin(origin) || lv_is_merging_origin(origin) ||
-	    lv_is_cow(origin) || lv_is_merging_cow(origin) ||
-	    lv_is_external_origin(origin) ||
-	    lv_is_virtual(origin)) {
-		log_error("Cache is not supported with origin LV %s type.",
-			  display_lvname(origin));
-		return 0;
-	}
-
-	if (!archive(origin->vg))
+	if (!validate_lv_cache_create(pool_lv, origin_lv))
 		return_0;
 
-	if (!(cache_lv = lv_cache_create(pool_lv, origin)))
+	if (!archive(origin_lv->vg))
+		return_0;
+
+	if (!(cache_lv = lv_cache_create(pool_lv, origin_lv)))
 		return_0;
 
 	if (!lv_update_and_reload(cache_lv))
