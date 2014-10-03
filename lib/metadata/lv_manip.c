@@ -7031,6 +7031,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				stack;
 				goto revert_new_lv;
 			}
+
+			backup(vg);
 		}
 		if (is_change_activating(lp->activate)) {
 			/* Send message so that table preload knows new thin */
@@ -7038,6 +7040,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				stack;
 				goto revert_new_lv;
 			}
+
+			backup(vg);
+
 			if (!lv_active_change(cmd, lv, lp->activate)) {
 				log_error("Failed to activate thin %s.", lv->name);
 				goto deactivate_and_revert_new_lv;
@@ -7125,8 +7130,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!lv_update_and_reload(org))
 			return_0;
 	}
-	/* FIXME out of sequence */
-	backup(vg);
 
 out:
 	return lv;
