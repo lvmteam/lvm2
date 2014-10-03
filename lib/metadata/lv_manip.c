@@ -1272,6 +1272,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	struct lv_segment *seg;
 	uint32_t count = extents;
 	uint32_t reduction;
+	struct logical_volume *pool_lv;
 
 	if (lv_is_merging_origin(lv)) {
 		log_debug_metadata("Dropping snapshot merge of %s to removed origin %s.",
@@ -1302,8 +1303,13 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 			if (delete && seg_is_cache(seg) && !lv_remove(seg_lv(seg, 0)))
 				return_0;
 
-			if (seg->pool_lv && !detach_pool_lv(seg))
-				return_0;
+			if ((pool_lv = seg->pool_lv)) {
+				if (!detach_pool_lv(seg))
+					return_0;
+				/* When removing cached LV, remove pool as well */
+				if (seg_is_cache(seg) && !lv_remove(pool_lv))
+					return_0;
+			}
 
 			dm_list_del(&seg->list);
 			reduction = seg->len;
@@ -5453,6 +5459,19 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!archive(vg))
 		return 0;
+
+	if (lv_is_cache(lv)) {
+		if (!lv_remove_single(cmd, first_seg(lv)->pool_lv, force,
+				      suppress_remove_message)) {
+			if (force < DONT_PROMPT_OVERRIDE) {
+				log_error("Failed to uncache %s.", display_lvname(lv));
+				return 0;
+			}
+			/* Proceed with -ff */
+			log_print_unless_silent("Ignoring uncache failure of %s.",
+						display_lvname(lv));
+		}
+	}
 
 	if (lv_is_cow(lv)) {
 		/* Old format1 code */
