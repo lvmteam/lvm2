@@ -6557,7 +6557,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	uint64_t status = UINT64_C(0);
 	struct logical_volume *lv, *org = NULL;
 	struct logical_volume *pool_lv;
-	struct lv_list *lvl;
+	struct logical_volume *tmp_lv;
 	const char *thin_name = NULL;
 
 	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
@@ -6638,11 +6638,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	status |= lp->permission | VISIBLE_LV;
 
-	if (segtype_is_cache(lp->segtype) && lp->pool) {
+	if (seg_is_cache(lp)) {
+		if (!lp->pool) {
+			log_error(INTERNAL_ERROR "Cannot create cached volume without cache pool.");
+                        return NULL;
+		}
 		/* We have the cache_pool, create the origin with cache */
 		if (!(pool_lv = find_lv(vg, lp->pool))) {
-			log_error("Couldn't find origin volume '%s'.",
-				  lp->pool);
+			log_error("Couldn't find cache pool volume %s in "
+				  "volume group %s.", lp->pool, vg->name);
 			return NULL;
 		}
 
@@ -6652,43 +6656,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		if (!lp->extents) {
-			log_error("No size given for new cache origin LV");
-			return NULL;
-		}
-
-		if (lp->extents < pool_lv->le_count) {
-			log_error("Origin size cannot be smaller than"
-				  " the cache_pool");
+			log_error("No size given for new cache origin LV.");
 			return NULL;
 		}
 
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "striped")))
-			return_0;
-	} else if (segtype_is_cache(lp->segtype) && lp->origin) {
-		/* We have the origin, create the cache_pool and cache */
-		if (!(org = find_lv(vg, lp->origin))) {
-			log_error("Couldn't find origin volume '%s'.",
-				  lp->origin);
-			return NULL;
-		}
-
-		if (lv_is_locked(org)) {
-			log_error("Caching locked devices is not supported.");
-			return NULL;
-		}
-
-		if (!lp->extents) {
-			log_error("No size given for new cache_pool LV");
-			return NULL;
-		}
-
-		if (lp->extents > org->le_count) {
-			log_error("cache-pool size cannot be larger than"
-				  " the origin");
-			return NULL;
-		}
-		if (!(lp->segtype = get_segtype_from_string(vg->cmd,
-							    "cache-pool")))
 			return_0;
 	} else if (seg_is_thin(lp) && lp->snapshot) {
 		if (!lp->origin) {
@@ -6840,14 +6812,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (!(lvl = find_lv_in_vg(vg, lp->pool))) {
+		if (!(pool_lv = find_lv(vg, lp->pool))) {
 			log_error("Unable to find existing pool LV %s in VG %s.",
 				  lp->pool, vg->name);
 			return NULL;
 		}
 
-		if ((pool_is_active(lvl->lv) || is_change_activating(lp->activate)) &&
-		    !update_pool_lv(lvl->lv, 1))
+		if ((pool_is_active(pool_lv) || is_change_activating(lp->activate)) &&
+		    !update_pool_lv(pool_lv, 1))
 			return_NULL;
 
 		/* For thin snapshot we must have matching pool */
@@ -6951,43 +6923,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
 	}
 
-	if (lp->cache) {
-		struct logical_volume *tmp_lv;
-
-		if (lp->origin) {
-			/*
-			 * FIXME:  At this point, create_pool has created
-			 * the pool and added the data and metadata sub-LVs,
-			 * but only the metadata sub-LV is in the kernel -
-			 * a suspend/resume cycle is still necessary on the
-			 * cache_pool to actualize it in the kernel.
-			 *
-			 * Should the suspend/resume be added to create_pool?
-			 *    I say that would be cleaner, but I'm not sure
-			 *    about the effects on thinpool yet...
-			 */
-			if (!lv_update_and_reload(lv)) {
-				stack;
-				goto deactivate_and_revert_new_lv;
-			}
-
-			if (!(lvl = find_lv_in_vg(vg, lp->origin)))
-				goto deactivate_and_revert_new_lv;
-			org = lvl->lv;
-			pool_lv = lv;
-		} else {
-			if (!(lvl = find_lv_in_vg(vg, lp->pool)))
-				goto deactivate_and_revert_new_lv;
-			pool_lv = lvl->lv;
-			org = lv;
-		}
-
-		if (!(tmp_lv = lv_cache_create(pool_lv, org)))
-			goto deactivate_and_revert_new_lv;
-
-		lv = tmp_lv;
-	}
-
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */
 	if (lp->log_count &&
 	    !seg_is_raid(first_seg(lv)) && seg_is_mirrored(first_seg(lv))) {
@@ -7012,6 +6947,56 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE))
 		lp->activate = CHANGE_AN;
+
+	/*
+	 * Check if this is conversion inside lvcreate
+	 * Either we have origin or pool and created cache origin LV
+	 */
+	if (lp->cache &&
+	    (lp->origin || (lp->pool && !lv_is_cache_pool(lv)))) {
+		if (lp->origin) {
+			if (!(org = find_lv(vg, lp->origin)))
+				goto deactivate_and_revert_new_lv;
+			pool_lv = lv; /* Cache pool is created */
+		} else if (lp->pool) {
+			if (!(pool_lv = find_lv(vg, lp->pool)))
+				goto deactivate_and_revert_new_lv;
+			org = lv; /* Cached origin is created */
+		}
+
+		if (!(tmp_lv = lv_cache_create(pool_lv, org)))
+			goto deactivate_and_revert_new_lv;
+
+		/* From here we cannot deactive_and_revert! */
+		lv = tmp_lv;
+
+		/*
+		 * We need to check if origin is active and in
+		 * that case reload cached LV.
+		 * There is no such problem with cache pool
+		 * since it cannot be activated.
+		 */
+		if (lp->origin && lv_is_active(lv)) {
+			if (!is_change_activating(lp->activate)) {
+				/* User requested to create inactive cached volume */
+				if (deactivate_lv(cmd, lv)) {
+					log_error("Failed to deactivate %s.", display_lvname(lv));
+					return NULL;
+				}
+			} else if (vg_is_clustered(lv->vg) &&
+				   locking_is_clustered() &&
+				   locking_supports_remote_queries() &&
+				   !lv_is_active_exclusive(lv)) {
+				log_error("Only exclusively active %s could be converted.", display_lvname(lv));
+				return NULL;
+			} else {
+				/* With exclusively active origin just reload */
+				if (!lv_update_and_reload(lv))
+					return_NULL;
+				goto out; /* converted */
+			}
+		}
+	}
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg))
@@ -7180,26 +7165,50 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 {
 	struct logical_volume *lv;
 
-	/* Create thin pool first if necessary */
-	if (lp->create_pool && !seg_is_cache_pool(lp) && !seg_is_cache(lp)) {
-		if (!seg_is_thin_pool(lp) &&
-		    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
-			return_0;
+	/* Create pool first if necessary */
+	if (lp->create_pool) {
+		if (seg_is_thin(lp)) {
+			if (!seg_is_thin_pool(lp) &&
+			    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
+				return_NULL;
 
-		if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
-			return_0;
+			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
+				return_NULL;
 
-		if (!lp->thin && !lp->snapshot)
-			goto out;
+			if (!lp->thin && !lp->snapshot)
+				goto out;
 
-		lp->pool = lv->name;
+			lp->pool = lv->name;
 
-		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
-			return_0;
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
+				return_NULL;
+		} else if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
+                        if (!seg_is_cache_pool(lp) &&
+			    !(lp->segtype = get_segtype_from_string(vg->cmd,
+								    "cache-pool")))
+				return_NULL;
+
+			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
+				return_NULL;
+
+			if (lv_is_cache(lv)) {
+				/* Here it's been converted via lvcreate */
+				log_print_unless_silent("Logical volume %s is now cached.",
+							display_lvname(lv));
+				return lv;
+			}
+
+			if (!lp->cache)
+				goto out;
+
+			lp->pool = lv->name;
+			log_error("Creation of cache pool and cached volume in one command is not yet supported.");
+			return NULL;
+		}
 	}
 
 	if (!(lv = _lv_create_an_lv(vg, lp, lp->lv_name)))
-		return_0;
+		return_NULL;
 
 out:
 	log_print_unless_silent("Logical volume \"%s\" created", lv->name);

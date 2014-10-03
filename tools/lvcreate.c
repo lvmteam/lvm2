@@ -47,7 +47,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 				 int *pargc, char ***pargv)
 {
 	int argc = *pargc;
-	char **argv = *pargv, *ptr;
+	char **argv = *pargv;
 	const char *vg_name;
 
 	lp->lv_name = arg_str_value(cmd, name_ARG, NULL);
@@ -61,28 +61,54 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 
 	if (seg_is_cache(lp)) {
 		/*
-		 * We are looking for the origin or cache_pool LV.
-		 * Could be in the form 'lv' or 'vg/lv'
+		 * We allowed somewhat hard to 'parse' syntax
+		 * (usage of lvcreate to convert LV to a cached LV).
+		 * So let's try to do our best to avoid wrong steps.
 		 *
-		 * We store the lv name in 'lp->origin' for now, but
+		 * We are looking for the vgname or cache pool or cache origin LV.
+		 *
+		 * We store the lv name in 'lp->pool', but
 		 * it must be accessed later (when we can look-up the
-		 * LV in the VG) whether it is truly the origin that
-		 * was specified, or whether it is the cache_pool.
+		 * LV in the VG) whether it is truly the cache pool
+		 * or whether it is the origin for cached LV.
 		 */
 		if (!argc) {
-			log_error("Please specify a logical volume to act as "
-				  "the origin or cache_pool.");
-			return 0;
-		}
+			if (!lp->pool) {
+				/* Don't advertise we could handle cache origin */
+				log_error("Please specify a logical volume to act as the cache pool.");
+				return 0;
+			}
+		} else {
+			vg_name = skip_dev_dir(cmd, argv[0], NULL);
+			if (!strchr(vg_name, '/')) {
+				/* Lucky part - only vgname is here */
+				if (!_set_vg_name(lp, vg_name))
+					return_0;
+			} else {
+				/* Lets pretend it's cache origin for now */
+				lp->origin = vg_name;
+				if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin))
+					return_0;
 
-		lp->origin = skip_dev_dir(cmd, argv[0], NULL);
-		if (strrchr(lp->origin, '/')) {
-			if (!_set_vg_name(lp, extract_vgname(cmd, lp->origin)))
-				return_0;
-
-			/* Strip the volume group from the origin */
-			if ((ptr = strrchr(lp->origin, (int) '/')))
-				lp->origin = ptr + 1;
+				if (lp->pool) {
+					if (strcmp(lp->pool, lp->origin)) {
+						log_error("Unsupported syntax, cannot use cache origin %s and --cachepool %s.",
+							  lp->origin, lp->pool);
+						/* Stop here, only older form remains supported */
+						return 0;
+					}
+					lp->origin = NULL;
+				} else {
+					/*
+					 * Gambling here, could be cache pool or cache origin,
+					 * detection is possible after openning vg,
+					 * yet we need to parse pool args
+					 */
+					lp->pool = lp->origin;
+					lp->create_pool = 1;
+				}
+			}
+			(*pargv)++, (*pargc)--;
 		}
 
 		if (!lp->vg_name &&
@@ -90,13 +116,18 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			return_0;
 
 		if (!lp->vg_name) {
-			log_error("The origin or cache_pool name should include"
-				  " the volume group.");
+			log_error("The cache pool or cache origin name should "
+				  "include the volume group.");
+			return 0;
+		}
+
+		if (!lp->pool) {
+			log_error("Creation of cached volume and cache pool "
+				  "in one command is not yet supported.");
 			return 0;
 		}
 
 		lp->cache = 1;
-		(*pargv)++, (*pargc)--;
 	} else if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
 		/* argv[0] might be [vg/]origin */
 		if (!argc) {
@@ -268,15 +299,15 @@ static int _lvcreate_update_pool_params(struct volume_group *vg,
  * @vg
  * @lp
  *
- * 'lp->origin' is set with an LV that could be either the origin
- * or the cache_pool of the cached LV which is being created.  This
+ * 'lp->pool' is set with an LV that could be either the cache_pool
+ * or the origin of the cached LV which is being created.  This
  * function determines which it is and sets 'lp->origin' or
  * 'lp->pool' appropriately.
  */
 static int _determine_cache_argument(struct volume_group *vg,
 				     struct lvcreate_params *lp)
 {
-	struct lv_list *lvl;
+	struct logical_volume *lv;
 
 	if (!seg_is_cache(lp)) {
 		log_error(INTERNAL_ERROR
@@ -284,22 +315,25 @@ static int _determine_cache_argument(struct volume_group *vg,
 			  lp->segtype->name);
 		return 0;
 	}
-	if (!lp->origin) {
-		log_error(INTERNAL_ERROR "Origin LV is not defined.");
-		return 0;
-	}
-	if (!(lvl = find_lv_in_vg(vg, lp->origin))) {
-		log_error("LV %s not found in Volume group %s.",
-			  lp->origin, vg->name);
-		return 0;
-	}
 
-	if (lv_is_cache_pool(lvl->lv)) {
-		lp->pool = lp->origin;
-		lp->origin = NULL;
-	} else {
-		lp->pool = NULL;
-		lp->create_pool = 1;
+	if (!lp->pool) {
+		lp->pool = lp->lv_name;
+	} else if (lp->pool == lp->origin) {
+		if (!(lv = find_lv(vg, lp->pool))) {
+			/* Cache pool nor origin volume exists */
+			lp->cache = 0;
+			lp->origin = NULL;
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
+				return_0;
+		} else if (!lv_is_cache_pool(lv)) {
+			/* Name arg in this case is for pool name */
+			lp->pool = lp->lv_name;
+			/* We were given origin for caching */
+		} else {
+			/* FIXME error on pool args */
+			lp->create_pool = 0;
+			lp->origin = NULL;
+		}
 	}
 
 	return 1;
@@ -1246,7 +1280,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 						lp.pvh, lp.poolmetadataspare))
 			goto_out;
 
-		log_verbose("Making thin pool %s in VG %s using segtype %s",
+		log_verbose("Making pool %s in VG %s using segtype %s",
 			    lp.pool ? : "with generated name", lp.vg_name, lp.segtype->name);
 	}
 
