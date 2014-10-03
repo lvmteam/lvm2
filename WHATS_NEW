@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Check cluster-wide (not local) active status before removing LV.
   Properly check if activation of removed cached LV really activated.
   Lvremoving cached LV removes cachepool (keep with lvconvert --splitcache).
   Always remove spare LV with last removed pool volume.
