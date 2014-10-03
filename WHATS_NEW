@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Always remove spare LV with last removed pool volume.
   Support lvconvert --splitcache and --uncache of cached LV.
   Option --cache has also shortcut -H (i.e. lvcreate -H).
   Refactor lvcreate code and better preserve --type argument.

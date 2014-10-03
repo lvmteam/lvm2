@@ -5369,6 +5369,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *pool_lv = NULL;
 	struct lv_segment *cache_seg = NULL;
 	int ask_discard;
+	struct lv_list *lvl;
+	int is_last_pool;
 
 	vg = lv->vg;
 
@@ -5461,6 +5463,27 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		/* vg_remove_snapshot() will preload origin/former snapshots */
 		if (!vg_remove_snapshot(lv))
 			return_0;
+	}
+
+	if (lv_is_pool(lv) && lv->vg->pool_metadata_spare_lv) {
+		/* When removing last pool, also remove the spare */
+		is_last_pool = 1;
+		dm_list_iterate_items(lvl, &lv->vg->lvs)
+			if (lv_is_pool(lvl->lv) &&
+			    lvl->lv != lv) {
+				is_last_pool = 0;
+				break;
+			}
+		if (is_last_pool) {
+			/* This is purely internal LV volume, no question */
+			if (!deactivate_lv(cmd, lv->vg->pool_metadata_spare_lv)) {
+				log_error("Unable to deactivate logical volume %s",
+					  display_lvname(lv->vg->pool_metadata_spare_lv));
+				return 0;
+			}
+			if (!lv_remove(lv->vg->pool_metadata_spare_lv))
+				return_0;
+		}
 	}
 
 	if (lv_is_cache_pool(lv)) {
@@ -5580,10 +5603,8 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 {
 	dm_percent_t snap_percent;
 	struct dm_list *snh, *snht;
-	struct lv_list *lvl;
 	struct lvinfo info;
 	struct logical_volume *origin;
-	int is_last_pool;
 
 	if (lv_is_cow(lv)) {
 		/*
@@ -5660,24 +5681,6 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	if (lv_is_used_thin_pool(lv) &&
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
 		return_0;
-
-	if ((lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) &&
-	    lv->vg->pool_metadata_spare_lv) {
-		/* When removing last pool, also remove the spare */
-		is_last_pool = 1;
-		dm_list_iterate_items(lvl, &lv->vg->lvs)
-			if ((lv_is_thin_pool(lvl->lv) ||
-			     lv_is_cache_pool(lvl->lv)) &&
-			    lvl->lv != lv) {
-				is_last_pool = 0;
-				break;
-			}
-
-		if (is_last_pool &&
-		    !lv_remove_with_dependencies(cmd, lv->vg->pool_metadata_spare_lv,
-						 DONT_PROMPT, level + 1))
-			return_0;
-	}
 
 	if (lv_is_pool_metadata_spare(lv) &&
 	    (force == PROMPT) &&
