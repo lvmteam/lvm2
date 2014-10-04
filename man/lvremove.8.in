@@ -31,6 +31,8 @@ See \fBlvm\fP(8) for common options.
 .TP
 .BR \-f ", " \-\-force
 Remove active logical volumes without confirmation.
+Tool will try to deactivate \fIunused\fP volume.
+To proceed with damaged pools use \-ff
 .TP
 .B \-\-noudevsync
 Disable udev synchronisation. The

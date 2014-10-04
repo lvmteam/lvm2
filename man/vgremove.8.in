@@ -28,6 +28,7 @@ See \fBlvm\fP(8) for common options.
 .BR \-f ", " \-\-force
 Force the removal of any logical volumes on the volume group
 without confirmation.
+To remove also damaged pool volumes use \-ff.
 .TP
 .BR \-\-noudevsync
 Disable udev synchronisation. The
