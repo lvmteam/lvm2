@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,7 +18,15 @@
 static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle __attribute__((unused)))
 {
-	if (!lv_remove_with_dependencies(cmd, lv, (force_t) arg_count(cmd, force_ARG), 0))
+	/*
+	 * Single force is equivalent to sinle --yes
+	 * Even multiple --yes are equivalent to single --force
+	 * When we require -ff it cannot be replaces with -f -y
+	 */
+	force_t force = (force_t) arg_count(cmd, force_ARG)
+		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
+
+	if (!lv_remove_with_dependencies(cmd, lv, force, 0))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
