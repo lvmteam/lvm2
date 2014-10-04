@@ -1257,6 +1257,10 @@ int get_pool_params(struct cmd_context *cmd,
 
 		*passed_args |= PASS_ARG_CHUNK_SIZE;
 		*chunk_size = arg_uint_value(cmd, chunksize_ARG, 0);
+
+		if (!validate_pool_chunk_size(cmd, segtype, *chunk_size))
+			return_0;
+
 		log_very_verbose("Setting pool chunk size: %s",
 				 display_size(cmd, *chunk_size));
 	}
