@@ -184,7 +184,23 @@ xx(lvconvert,
    "--splitsnapshot\n"
    COMMON_OPTS
    "\tSnapshotLogicalVolume[Path]\n\n"
-   
+
+   "lvconvert "
+   "--splitcache\n"
+   COMMON_OPTS
+   "\tCacheLogicalVolume[Path]\n\n"
+
+   "lvconvert "
+   "--split\n"
+   "\t[--name SplitLogicalVolumeName]\n"
+   COMMON_OPTS
+   "\tSplitableLogicalVolume[Path]\n\n"
+
+   "lvconvert "
+   "--uncache\n"
+   COMMON_OPTS
+   "\tCacheLogicalVolume[Path]\n\n"
+
    "lvconvert "
    "[--type snapshot|-s|--snapshot]\n"
    "\t[-c|--chunksize]\n"
@@ -229,9 +245,10 @@ xx(lvconvert,
    corelog_ARG, discards_ARG, force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG,
    mirrors_ARG, name_ARG, noudevsync_ARG, originname_ARG, poolmetadata_ARG,
    poolmetadatasize_ARG, poolmetadataspare_ARG, readahead_ARG, regionsize_ARG,
-   repair_ARG, replace_ARG, snapshot_ARG, splitmirrors_ARG, splitsnapshot_ARG,
+   repair_ARG, replace_ARG, snapshot_ARG,
+   split_ARG, splitcache_ARG, splitmirrors_ARG, splitsnapshot_ARG,
    stripes_long_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
-   trackchanges_ARG, type_ARG, use_policies_ARG, zero_ARG)
+   trackchanges_ARG, type_ARG, uncache_ARG, use_policies_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
