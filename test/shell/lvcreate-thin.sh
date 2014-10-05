@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -48,6 +48,30 @@ lvcreate -l1 --type thin-pool --thinpool pool9 $vg
 
 lvremove -ff $vg/pool1 $vg/pool2 $vg/pool3 $vg/pool4 $vg/pool5 $vg/pool6 $vg/pool7 $vg/pool8 $vg/pool9
 check vg_field $vg lv_count 0
+
+
+# Let's pretend pool is like normal LV when using --type thin-pool support --name
+# Reject ambigous thin pool names
+invalid lvcreate --type thin-pool -l1 --name pool1 $vg/pool2
+invalid lvcreate --type thin-pool -l1 --name pool3 --thinpool pool4 $vg
+invalid lvcreate --type thin-pool -l1 --name pool5 --thinpool pool6 $vg/pool7
+invalid lvcreate --type thin-pool -l1 --name pool8 --thinpool pool8 $vg/pool9
+check vg_field $vg lv_count 0
+
+lvcreate --type thin-pool -l1 --name pool1 $vg
+lvcreate --type thin-pool -l1 --name $vg/pool2
+# If the thin pool name is unambigous let it proceed
+lvcreate --type thin-pool -l1 --name pool3 $vg/pool3
+lvcreate --type thin-pool -l1 --name pool4 --thinpool $vg/pool4
+lvcreate --type thin-pool -l1 --name pool5 --thinpool $vg/pool5 $vg/pool5
+
+check lv_field $vg/pool1 segtype "thin-pool"
+check lv_field $vg/pool2 segtype "thin-pool"
+check lv_field $vg/pool3 segtype "thin-pool"
+check lv_field $vg/pool4 segtype "thin-pool"
+check lv_field $vg/pool5 segtype "thin-pool"
+
+lvremove -ff $vg
 
 
 # Create default pool name
