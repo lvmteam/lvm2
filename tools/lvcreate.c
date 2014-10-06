@@ -1240,8 +1240,8 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int r = ECMD_FAILED;
 	struct lvcreate_params lp = {
-                .major = -1,
-                .minor = -1,
+		.major = -1,
+		.minor = -1,
 	};
 	struct lvcreate_cmdline_params lcp;
 	struct volume_group *vg;
