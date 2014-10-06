@@ -224,13 +224,9 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 					inc_error_count;
 				}
 
-				if ((seg_is_thin_pool(seg) &&
-				     ((seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
-				     (seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE))) ||
-				    (seg_is_cache_pool(seg) &&
-				     ((seg->chunk_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) ||
-				     (seg->chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE)))) {
-					log_error("LV %s: %s segment %u has chunk size %u out of range.",
+				if (seg_is_pool(seg) &&
+				    !validate_pool_chunk_size(lv->vg->cmd, seg->segtype, seg->chunk_size)) {
+					log_error("LV %s: %s segment %u has invalid chunk size %u.",
 						  lv->name, seg->segtype->name, seg_count, seg->chunk_size);
 					inc_error_count;
 				}
