@@ -276,6 +276,7 @@ the same VG.
 .br
 .B lvconvert --type cache\-pool VG/CacheDataLV
 
+
 .SS Create a new cache LV without an existing origin LV
 
 \&
@@ -286,7 +287,7 @@ single step.
 
 .B lvcreate \-\-type cache \-L LargeSize \-n CacheLV
 .RS
-.B \-\-cachepool VG/CachePoolLV SlowPVs
+.B \-\-cachepool VG/CachePoolLV VG SlowPVs
 .RE
 
 
@@ -299,6 +300,32 @@ using lvconvert on existing LVs.  This one command creates a cache data
 LV, a cache metadata LV, and combines the two into a cache pool LV.
 
 .B lvcreate \-\-type cache\-pool \-L CacheSize \-n CachePoolLV VG FastPVs
+
+
+.SS Convert existing LVs to cache types
+
+\&
+
+When an existing origin LV is converted to a cache LV, the specified cache
+pool may be a normal LV, rather than a cache pool LV.  In this case, lvm
+will first convert the normal LV to a cache pool LV.  A pool metadata LV
+may optionally be specified.
+
+.B lvcreate -n OriginLV -L LargeSize VG
+.br
+.B lvcreate -n CacheDataLV -L CacheSize VG
+.br
+.B lvconvert --type cache --cachepool VG/CataDataLV VG/OriginLV
+
+This is equivalent to:
+
+.B lvcreate -n OriginLV -L LargeSize VG
+.br
+.B lvcreate -n CacheDataLV -L CacheSize VG
+.br
+.B lvconvert --type cache-pool VG/CacheDataLV
+.br
+.B lvconvert --type cache --cachepool VG/CachePoolLV VG/OriginLV
 
 
 .SH SEE ALSO
