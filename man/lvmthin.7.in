@@ -989,16 +989,12 @@ rather than using lvconvert on existing LVs.
 This one command creates a thin data LV, a thin metadata LV,
 and combines the two into a thin pool LV.
 
-.B lvcreate \-\-type thin\-pool \-L LargeSize VG/ThinPoolLV
-
-./" FIXME: make this work
-./" or using standard form of lvcreate:
-./" .B lvcreate \-\-type thin\-pool \-L LargeSize \-n ThinPoolLV VG
+.B lvcreate \-\-type thin\-pool \-L LargeSize \-n ThinPoolLV VG
 
 .I Example
 .br
 .nf
-# lvcreate \-\-type thin\-pool \-L8M vg/pool0
+# lvcreate \-\-type thin\-pool \-L8M -n pool0 vg
 
 # lvs vg/pool0
   LV    VG  Attr       LSize Pool Origin Data%
