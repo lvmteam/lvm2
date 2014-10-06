@@ -743,7 +743,8 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 				  int passed_args, int *chunk_size_calc_method,
 				  uint32_t *chunk_size, thin_discards_t *discards,
 				  int *zero);
-int update_thin_pool_params(struct volume_group *vg, unsigned attr,
+int update_thin_pool_params(const struct segment_type *segtype,
+			    struct volume_group *vg, unsigned attr,
 			    int passed_args, uint32_t data_extents,
 			    uint64_t *pool_metadata_size,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
@@ -1071,7 +1072,8 @@ int partial_raid_lv_supports_degraded_activation(const struct logical_volume *lv
 
 /* ++  metadata/cache_manip.c */
 const char *get_cachepool_cachemode_name(const struct lv_segment *seg);
-int update_cache_pool_params(struct volume_group *vg, unsigned attr,
+int update_cache_pool_params(const struct segment_type *segtype,
+			     struct volume_group *vg, unsigned attr,
 			     int passed_args, uint32_t data_extents,
 			     uint64_t *pool_metadata_size,
 			     int *chunk_size_calc_method, uint32_t *chunk_size);

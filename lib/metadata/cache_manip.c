@@ -39,7 +39,8 @@ const char *get_cachepool_cachemode_name(const struct lv_segment *seg)
 	return "unknown";
 }
 
-int update_cache_pool_params(struct volume_group *vg, unsigned attr,
+int update_cache_pool_params(const struct segment_type *segtype,
+			     struct volume_group *vg, unsigned attr,
 			     int passed_args, uint32_t data_extents,
 			     uint64_t *pool_metadata_size,
 			     int *chunk_size_calc_method, uint32_t *chunk_size)
@@ -50,19 +51,8 @@ int update_cache_pool_params(struct volume_group *vg, unsigned attr,
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
 		*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
 
-	if ((*chunk_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) ||
-	    (*chunk_size > DM_CACHE_MAX_DATA_BLOCK_SIZE)) {
-		log_error("Chunk size must be in the range %s to %s.",
-			  display_size(vg->cmd, DM_CACHE_MIN_DATA_BLOCK_SIZE),
-			  display_size(vg->cmd, DM_CACHE_MAX_DATA_BLOCK_SIZE));
-		return 0;
-	}
-
-	if (*chunk_size & (DM_CACHE_MIN_DATA_BLOCK_SIZE - 1)) {
-		log_error("Chunk size must be a multiple of %s.",
-			  display_size(vg->cmd, DM_CACHE_MIN_DATA_BLOCK_SIZE));
-		return 0;
-	}
+	if (!validate_pool_chunk_size(vg->cmd, segtype, *chunk_size))
+		return_0;
 
 	/*
 	 * Default meta size is:

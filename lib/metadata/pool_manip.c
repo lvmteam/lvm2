@@ -364,11 +364,11 @@ int update_pool_params(const struct segment_type *segtype,
 		       thin_discards_t *discards, int *zero)
 {
 	if (segtype_is_cache_pool(segtype) || segtype_is_cache(segtype)) {
-		if (!update_cache_pool_params(vg, target_attr, passed_args,
+		if (!update_cache_pool_params(segtype, vg, target_attr, passed_args,
 					      data_extents, pool_metadata_size,
 					      chunk_size_calc_policy, chunk_size))
 			return_0;
-	} else if (!update_thin_pool_params(vg, target_attr, passed_args,
+	} else if (!update_thin_pool_params(segtype, vg, target_attr, passed_args,
 					    data_extents, pool_metadata_size,
 					    chunk_size_calc_policy, chunk_size,
 					    discards, zero)) /* thin-pool */

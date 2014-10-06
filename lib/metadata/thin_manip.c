@@ -394,7 +394,8 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	return ret;
 }
 
-int update_thin_pool_params(struct volume_group *vg,
+int update_thin_pool_params(const struct segment_type *segtype,
+			    struct volume_group *vg,
 			    unsigned attr, int passed_args, uint32_t data_extents,
 			    uint64_t *pool_metadata_size,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
@@ -425,13 +426,8 @@ int update_thin_pool_params(struct volume_group *vg,
 		}
 	}
 
-	if ((*chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
-	    (*chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)) {
-		log_error("Chunk size must be in the range %s to %s.",
-			  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE),
-			  display_size(cmd, DM_THIN_MAX_DATA_BLOCK_SIZE));
-		return 0;
-	}
+	if (!validate_pool_chunk_size(cmd, segtype, *chunk_size))
+		return_0;
 
 	if (!(passed_args & PASS_ARG_DISCARDS)) {
 		if (!(str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile))) {
@@ -448,10 +444,6 @@ int update_thin_pool_params(struct volume_group *vg,
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (*chunk_size & (*chunk_size - 1))) {
 		log_error("Chunk size must be a power of 2 for this thin target version.");
-		return 0;
-	} else if (*chunk_size & (DM_THIN_MIN_DATA_BLOCK_SIZE - 1)) {
-		log_error("Chunk size must be multiple of %s.",
-			  display_size(cmd, DM_THIN_MIN_DATA_BLOCK_SIZE));
 		return 0;
 	}
 
