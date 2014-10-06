@@ -125,15 +125,17 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			    struct physical_volume *pv,
 			    void *handle __attribute__((unused)))
 {
-	int r = vgreduce_single(cmd, vg, pv, 1);
+	int r;
 
+	if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG))
+		return ECMD_FAILED;
+
+	r = vgreduce_single(cmd, vg, pv, 1);
 	if (!r)
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;
 }
-
-
 
 int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 {
@@ -181,12 +183,17 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 	argc--;
 
+	if (!repairing)
+		/* FIXME: Pass private struct through to all these functions */
+		/* and update in batch afterwards? */
+		return process_each_pv(cmd, argc, argv, vg_name,
+				       READ_FOR_UPDATE, NULL,
+				      _vgreduce_single);
+
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
-	if (repairing) {
-		init_ignore_suspended_devices(1);
-		cmd->handles_missing_pvs = 1;
-	}
+	init_ignore_suspended_devices(1);
+	cmd->handles_missing_pvs = 1;
 
 	vg = vg_read_for_update(cmd, vg_name, NULL, READ_ALLOW_EXPORTED);
 	if (vg_read_error(vg) == FAILED_ALLOCATION ||
@@ -194,65 +201,54 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 
 	/* FIXME We want to allow read-only VGs to be changed here? */
-	if (vg_read_error(vg) && vg_read_error(vg) != FAILED_READ_ONLY
-	    && !arg_count(cmd, removemissing_ARG))
+	if (vg_read_error(vg) &&
+	    (vg_read_error(vg) != FAILED_READ_ONLY) &&
+	    !arg_count(cmd, removemissing_ARG))
 		goto_out;
 
 	locked = !vg_read_error(vg);
 
-	if (repairing) {
-		if (!vg_read_error(vg) && !vg_missing_pv_count(vg)) {
-			log_error("Volume group \"%s\" is already consistent",
-				  vg_name);
-			ret = ECMD_PROCESSED;
-			goto out;
-		}
-
-		release_vg(vg);
-		log_verbose("Trying to open VG %s for recovery...", vg_name);
-
-		vg = vg_read_for_update(cmd, vg_name, NULL,
-					READ_ALLOW_INCONSISTENT
-					| READ_ALLOW_EXPORTED);
-
-		locked |= !vg_read_error(vg);
-		if (vg_read_error(vg) && vg_read_error(vg) != FAILED_READ_ONLY
-		    && vg_read_error(vg) != FAILED_INCONSISTENT)
-			goto_out;
-
-		if (!archive(vg))
-			goto_out;
-
-		if (arg_count(cmd, force_ARG)) {
-			if (!_make_vg_consistent(cmd, vg))
-				goto_out;
-		} else
-			fixed = _consolidate_vg(cmd, vg);
-
-		if (!vg_write(vg) || !vg_commit(vg)) {
-			log_error("Failed to write out a consistent VG for %s",
-				  vg_name);
-			goto out;
-		}
-		backup(vg);
-
-		if (fixed) {
-			log_print_unless_silent("Wrote out consistent volume group %s",
-						vg_name);
-			ret = ECMD_PROCESSED;
-		} else
-			ret = ECMD_FAILED;
-
-	} else {
-		if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG))
-			goto_out;
-
-		/* FIXME: Pass private struct through to all these functions */
-		/* and update in batch here? */
-		ret = process_each_pv(cmd, argc, argv, vg, READ_FOR_UPDATE, NULL,
-				      _vgreduce_single);
-
+	if (!vg_read_error(vg) && !vg_missing_pv_count(vg)) {
+		log_error("Volume group \"%s\" is already consistent", vg_name);
+		ret = ECMD_PROCESSED;
+		goto out;
 	}
+
+	release_vg(vg);
+	log_verbose("Trying to open VG %s for recovery...", vg_name);
+
+	vg = vg_read_for_update(cmd, vg_name, NULL,
+				READ_ALLOW_INCONSISTENT | READ_ALLOW_EXPORTED);
+
+	locked |= !vg_read_error(vg);
+
+	if (vg_read_error(vg) &&
+	    (vg_read_error(vg) != FAILED_READ_ONLY) &&
+	    (vg_read_error(vg) != FAILED_INCONSISTENT))
+		goto_out;
+
+	if (!archive(vg))
+		goto_out;
+
+	if (arg_count(cmd, force_ARG)) {
+		if (!_make_vg_consistent(cmd, vg))
+			goto_out;
+	} else
+		fixed = _consolidate_vg(cmd, vg);
+
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		log_error("Failed to write out a consistent VG for %s", vg_name);
+		goto out;
+	}
+
+	backup(vg);
+
+	if (fixed) {
+		log_print_unless_silent("Wrote out consistent volume group %s", vg_name);
+		ret = ECMD_PROCESSED;
+	} else
+		ret = ECMD_FAILED;
+
 out:
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
 	if (locked)
@@ -265,16 +261,14 @@ out:
 /******* FIXME
 	log_error ("no empty physical volumes found in volume group \"%s\"", vg_name);
 
-	log_verbose
-	    ("volume group \"%s\" will be reduced by %d physical volume%s",
-	     vg_name, np, np > 1 ? "s" : "");
-	log_verbose ("reducing volume group \"%s\" by physical volume \"%s\"",
-		     vg_name, pv_names[p]);
+	log_verbose("volume group \"%s\" will be reduced by %d physical volume%s",
+		    vg_name, np, np > 1 ? "s" : "");
+	log_verbose("reducing volume group \"%s\" by physical volume \"%s\"",
+		    vg_name, pv_names[p]);
 
-	log_print
-	    ("volume group \"%s\" %ssuccessfully reduced by physical volume%s:",
-	     vg_name, error > 0 ? "NOT " : "", p > 1 ? "s" : "");
-		log_print("%s", pv_this[p]->pv_name);
+	log_print("volume group \"%s\" %ssuccessfully reduced by physical volume%s:",
+		  vg_name, error > 0 ? "NOT " : "", p > 1 ? "s" : "");
+	log_print("%s", pv_this[p]->pv_name);
 ********/
 
 }
