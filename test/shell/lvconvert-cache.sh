@@ -81,4 +81,18 @@ lvs -a $vg/${lv1}_corig_rimage_0        # ensure images are properly renamed
 dmsetup table ${vg}-$lv1 | grep cache   # ensure it is loaded in kernel
 lvremove -ff $vg
 
+lvcreate -n corigin -l 10 $vg
+lvcreate -n pool -l 10 $vg
+lvs -a -o +devices
+echo n | not lvconvert --type cache --cachepool $vg/pool $vg/corigin
+lvconvert -y --type cache --cachepool $vg/pool $vg/corigin
+
+lvremove -ff $vg
+
+# TODO: creating a cache on top of active RAID appears to be broken
+lvcreate -n corigin -m 1 --type raid1 -l 10 $vg
+lvcreate -n cpool --type cache $vg/corigin -l 10
+lvchange --refresh $vg # fix up DM tables
+lvconvert --splitmirrors 1 --name split $vg/corigin $dev1
+
 vgremove -f $vg

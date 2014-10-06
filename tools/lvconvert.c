@@ -3064,6 +3064,7 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			     void *handle)
 {
+	struct logical_volume *origin = NULL;
 	struct lvconvert_params *lp = handle;
 	struct dm_list *failed_pvs;
 
@@ -3100,6 +3101,15 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 				  first_seg(lv)->segtype->ops->name(first_seg(lv)));
 			return ECMD_FAILED;
 		}
+	}
+
+	/* forward splitmirror operations to the cache origin, which may be raid
+	 * or old-style mirror */
+	if (arg_count(cmd, splitmirrors_ARG) && lv_is_cache_type(lv)
+	    && (origin = seg_lv(first_seg(lv), 0)) && lv_is_cache_origin(origin)) {
+		log_warn("WARNING: Selected operation does not work with cache-type LVs.");
+		log_warn("Proceeding using the cache origin LV %s instead", origin->name);
+		lv = origin;
 	}
 
 	if (!lp->segtype) {
