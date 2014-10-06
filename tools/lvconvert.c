@@ -2002,7 +2002,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		if (!lv_check_not_in_use(cow))
 			return_ECMD_FAILED;
 
-		if ((lp->force == PROMPT) &&
+		if ((lp->force == PROMPT) && !lp->yes &&
 		    lv_is_visible(cow) &&
 		    lv_is_active(cow)) {
 			if (yes_no_prompt("Do you really want to split off active "

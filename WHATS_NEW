@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Support --yes with lvconvert --splitsnapshot.
   Fix detection of unsupported thin external lvconversions.
   Fix detection of unsupported cache and thin pool lvconversions.
   Fix detection of unsupported lvconversion of cache to snapshot.
