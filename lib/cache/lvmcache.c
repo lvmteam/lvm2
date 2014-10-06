@@ -367,10 +367,10 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute__((unuse
 	if (!dm_hash_insert(_lock_hash, vgname, (void *) 1))
 		log_error("Cache locking failure for %s", vgname);
 
-	_update_cache_lock_state(vgname, 1);
-
-	if (strcmp(vgname, VG_GLOBAL))
+	if (strcmp(vgname, VG_GLOBAL)) {
+		_update_cache_lock_state(vgname, 1);
 		_vgs_locked++;
+	}
 }
 
 int lvmcache_vgname_is_locked(const char *vgname)
@@ -387,7 +387,8 @@ void lvmcache_unlock_vgname(const char *vgname)
 		log_error(INTERNAL_ERROR "Attempt to unlock unlocked VG %s.",
 			  vgname);
 
-	_update_cache_lock_state(vgname, 0);
+	if (strcmp(vgname, VG_GLOBAL))
+		_update_cache_lock_state(vgname, 0);
 
 	dm_hash_remove(_lock_hash, vgname);
 
