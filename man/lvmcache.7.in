@@ -138,14 +138,29 @@ OriginLV is renamed OriginLV_corig and becomes hidden.
 
 .SH Cache Removal
 
+.SS Split a cache pool LV off of a cache LV
+
+\&
+
+A cache pool LV can be disconnected from a cache LV, leaving an
+unused cache pool LV, and an uncached origin LV.  This command
+writes back data from the cache pool to the origin LV when necessary.
+
+.B lvconvert --splitcache VG/CacheLV
+
 .SS Removing a cache pool LV without removing its linked origin LV
 
 \&
 
 This writes back data from the cache pool to the origin LV when necessary,
-then removes the cache pool LV, leaving the un-cached origin LV.
+then removes the cache pool LV, leaving the uncached origin LV.
 
 .B lvremove VG/CachePoolLV
+
+An alternative command that also disconnects the cache pool from the cache
+LV, and deletes the cache pool:
+
+.B lvconvert --uncache VG/CacheLV
 
 .I Example
 .nf
@@ -161,28 +176,14 @@ then removes the cache pool LV, leaving the un-cached origin LV.
   lvol0 vg   -wi-a----- 100.00g
 .fi
 
-.SS Removing an origin LV without removing its linked cache pool LV
+.SS Removing a cache LV: both origin LV and the cache pool LV
 
 \&
 
-This removes the origin LV, leaving the cache pool LV which can be linked
-to another origin LV.
+Removing a cache LV removes both the origin LV and the linked cache pool
+LV.
 
 .B lvremove VG/CacheLV
-
-.I Example
-.nf
-# lvs vg
-  LV     VG   Attr       LSize   Pool   Origin
-  cache0 vg   Cwi---C---  10.00g
-  lvol0  vg   Cwi-a-C--- 100.00g cache0 [lvol0_corig]
-
-# lvremove vg/lvol0
-
-# lvs vg
-  LV     VG   Attr       LSize  Pool Origin
-  cache0 vg   Cwi---C--- 10.00g
-.fi
 
 
 .SH Cache Topics
