@@ -2664,8 +2664,13 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_pool(lv)) {
-		log_error("Can't use pool %s as external origin.",
+	if (lv_is_cache_type(lv) ||
+	    lv_is_cow(lv) ||
+	    lv_is_pool(lv) ||
+	    lv_is_thin_pool_data(lv) ||
+	    lv_is_thin_pool_metadata(lv)) {
+		log_error("Can't use %s %s as external origin.",
+			  first_seg(lv)->segtype->name,
 			  display_lvname(lv));
 		return 0;
 	}
