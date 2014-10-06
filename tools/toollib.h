@@ -20,15 +20,7 @@
 
 int become_daemon(struct cmd_context *cmd, int skip_lvm);
 
-int autobackup_set(void);
-int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
-		    int autobackup);
-int autobackup(struct volume_group *vg);
-
 int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *ret);
-
-struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
-				uint32_t lock_type);
 
 typedef int (*process_single_vg_fn_t) (struct cmd_context * cmd,
 				       const char *vg_name,
@@ -91,7 +83,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 			  void *handle,
 			  process_single_lv_fn_t process_single_lv);
 
-char *default_vgname(struct cmd_context *cmd);
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 			 unsigned *dev_dir_found);

@@ -541,34 +541,9 @@ static const char *_extract_vgname(struct cmd_context *cmd, const char *lv_name,
 	return vg_name;
 }
 /*
- * Determine volume group name from a logical volume name
- */
-const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
-{
-	const char *vg_name = lv_name;
-
-	/* Path supplied? */
-	if (vg_name && strchr(vg_name, '/')) {
-		if (!(vg_name = _extract_vgname(cmd, lv_name, NULL)))
-			return_NULL;
-
-		return vg_name;
-	}
-
-	if (!(vg_name = default_vgname(cmd))) {
-		if (lv_name)
-			log_error("Path required for Logical Volume \"%s\"",
-				  lv_name);
-		return NULL;
-	}
-
-	return vg_name;
-}
-
-/*
  * Extract default volume group name from environment
  */
-char *default_vgname(struct cmd_context *cmd)
+static const char *_default_vgname(struct cmd_context *cmd)
 {
 	const char *vg_path;
 
@@ -586,6 +561,31 @@ char *default_vgname(struct cmd_context *cmd)
 	}
 
 	return dm_pool_strdup(cmd->mem, vg_path);
+}
+
+/*
+ * Determine volume group name from a logical volume name
+ */
+const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
+{
+	const char *vg_name = lv_name;
+
+	/* Path supplied? */
+	if (vg_name && strchr(vg_name, '/')) {
+		if (!(vg_name = _extract_vgname(cmd, lv_name, NULL)))
+			return_NULL;
+
+		return vg_name;
+	}
+
+	if (!(vg_name = _default_vgname(cmd))) {
+		if (lv_name)
+			log_error("Path required for Logical Volume \"%s\"",
+				  lv_name);
+		return NULL;
+	}
+
+	return vg_name;
 }
 
 /*
@@ -1907,7 +1907,7 @@ static int _get_arg_lvnames(struct cmd_context *cmd,
 	const char *vgname;
 	const char *lv_name;
 	const char *tmp_lv_name;
-	char *vgname_def;
+	const char *vgname_def;
 	unsigned dev_dir_found;
 
 	log_verbose("Using logical volume(s) on command line");
@@ -1956,7 +1956,7 @@ static int _get_arg_lvnames(struct cmd_context *cmd,
 				continue;
 			}
 		} else if (!dev_dir_found &&
-			   (vgname_def = default_vgname(cmd)))
+			   (vgname_def = _default_vgname(cmd)))
 			vgname = vgname_def;
 		else
 			lv_name = NULL;
