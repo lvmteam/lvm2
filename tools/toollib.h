@@ -50,8 +50,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    struct volume_group *vg, uint32_t lock_type,
-		    int scan_label_only, void *handle,
-		    process_single_pv_fn_t process_single_pv);
+		    void *handle, process_single_pv_fn_t process_single_pv);
 
 int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		       void *handle, process_single_label_fn_t process_single_label);
@@ -72,8 +71,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 			       process_single_seg_fn_t process_single_seg);
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  const struct dm_list *tagsl, void *handle,
-			  process_single_pv_fn_t process_single_pv);
+			  void *handle, process_single_pv_fn_t process_single_pv);
 
 
 int process_each_lv_in_vg(struct cmd_context *cmd,

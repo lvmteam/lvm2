@@ -615,30 +615,11 @@ int pv_resize_single(struct cmd_context *cmd,
 		     struct physical_volume *pv,
 		     const uint64_t new_size)
 {
-	struct pv_list *pvl;
 	uint64_t size = 0;
 	int r = 0;
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = pv->vg_name;
-	struct volume_group *old_vg = vg;
 	int vg_needs_pv_write = 0;
-
-	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
-
-	if (vg_read_error(vg)) {
-		release_vg(vg);
-		log_error("Unable to read volume group \"%s\".",
-			  vg_name);
-		return 0;
-	}
-
-	if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-		log_error("Unable to find \"%s\" in volume group \"%s\"",
-			  pv_name, vg->name);
-		goto out;
-	}
-
-	pv = pvl->pv;
 
 	if (!archive(vg))
 		goto out;
@@ -698,9 +679,6 @@ out:
 	if (!r && vg_needs_pv_write)
 		log_error("Use pvcreate and vgcfgrestore "
 			  "to repair from archived metadata.");
-	unlock_vg(cmd, vg_name);
-	if (!old_vg)
-		release_vg(vg);
 	return r;
 }
 

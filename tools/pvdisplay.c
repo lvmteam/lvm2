@@ -19,36 +19,9 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 			     struct volume_group *vg,
 			     struct physical_volume *pv, void *handle)
 {
-	struct pv_list *pvl;
+	const char *pv_name = pv_dev_name(pv);
 	int ret = ECMD_PROCESSED;
 	uint64_t size;
-	struct volume_group *old_vg = vg;
-
-	const char *pv_name = pv_dev_name(pv);
-	const char *vg_name = NULL;
-
-	if (!is_orphan(pv) && !vg) {
-		vg_name = pv_vg_name(pv);
-		vg = vg_read(cmd, vg_name, (char *)&pv->vgid, 0);
-		if (ignore_vg(vg, vg_name, 0, &ret)) {
-			release_vg(vg);
-			stack;
-			return ret;
-		}
-
-		/*
-		 * Replace possibly incomplete PV structure with new one
-		 * allocated in vg_read_internal() path.
-		 */
-		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			log_error("Unable to find \"%s\" in volume group \"%s\"",
-				  pv_name, vg->name);
-			ret = ECMD_FAILED;
-			goto out;
-		}
-
-		pv = pvl->pv;
-	}
 
 	if (is_orphan(pv))
 		size = pv_size(pv);
@@ -81,16 +54,14 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		pvdisplay_segments(pv);
 
 out:
-	if (vg_name)
-		unlock_vg(cmd, vg_name);
-	if (!old_vg)
-		release_vg(vg);
-
 	return ret;
 }
 
 int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
+	int lock_global = 0;
+	int ret;
+
 	if (arg_count(cmd, columns_ARG)) {
 		if (arg_count(cmd, colon_ARG) || arg_count(cmd, maps_ARG) ||
 		    arg_count(cmd, short_ARG)) {
@@ -122,6 +93,24 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_pv(cmd, argc, argv, NULL, 0, 0, NULL,
-			       _pvdisplay_single);
+	/*
+	 * If the lock_type is LCK_VG_READ (used only in reporting commands),
+	 * we lock VG_GLOBAL to enable use of metadata cache.
+	 * This can pause alongide pvscan or vgscan process for a while.
+	 */
+	if (!lvmetad_active()) {
+		lock_global = 1;
+		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
+			log_error("Unable to obtain global lock.");
+			return ECMD_FAILED;
+		}
+	}
+
+	ret = process_each_pv(cmd, argc, argv, NULL, 0, NULL,
+			      _pvdisplay_single);
+
+	if (lock_global)
+		unlock_vg(cmd, VG_GLOBAL);
+
+	return ret;
 }

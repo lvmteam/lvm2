@@ -272,7 +272,7 @@ static int _vgfmt_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
 
-	if (vg->fid)
+	if (vg->fid && vg->fid->fmt)
 		return _string_disp(rh, mem, field, &vg->fid->fmt->name, private);
 
 	return _field_set_value(field, "", NULL);
@@ -1880,8 +1880,12 @@ int report_object(void *handle, struct volume_group *vg,
 		obj.label = &dummy_label;
 	}
 
+	/* Never report orphan VGs. */
+	if (vg && is_orphan_vg(vg->name))
+		obj.vg = NULL;
+
 	/* The two format fields might as well match. */
-	if (!vg && pv)
+	if (!obj.vg && pv)
 		_dummy_fid.fmt = pv->fmt;
 
 	return dm_report_object(handle, &obj);
