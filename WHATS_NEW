@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Fix detection of unsupported cache and thin pool lvconversions.
   Fix detection of unsupported lvconversion of cache to snapshot.
   Improve code for creation of cache and cache pool volumes.
   Check cluster-wide (not local) active status before removing LV.

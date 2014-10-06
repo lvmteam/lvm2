@@ -2802,13 +2802,18 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 	}
 
 	if (lv_is_thin_pool(pool_lv) && (segtype_is_cache_pool(lp->segtype) || lp->cache)) {
-		log_error("Cannot convert thin pool volume %s as cache pool data volume.",
+		log_error("Can't convert thin pool LV %s.", display_lvname(pool_lv));
+		return 0;
+	}
+
+	if (lv_is_cache(pool_lv) && !segtype_is_thin_pool(lp->segtype)) {
+		log_error("Cached LV %s could be only converted into a thin pool volume.",
 			  display_lvname(pool_lv));
 		return 0;
 	}
 
 	if (lv_is_cache_pool(pool_lv) && (segtype_is_thin_pool(lp->segtype) || lp->thin)) {
-		log_error("Cannot convert cache pool %s as thin pool data volume.",
+		log_error("Cannot convert cache pool %s as pool data volume.",
 			  display_lvname(pool_lv));
 		return 0;
 	}
@@ -3248,6 +3253,25 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!_lvconvert_uncache(cmd, lv, lp))
 			return_ECMD_FAILED;
 		return ECMD_PROCESSED;
+	}
+
+	if (lp->cache) {
+		if (lv_is_thin_pool(lv))
+			lv = seg_lv(first_seg(lv), 0); /* cache _tdata */
+		if (!validate_lv_cache_create(NULL, lv))
+			return_ECMD_FAILED;
+	}
+
+	if (lp->thin) {
+		if (lv_is_cache_type(lv) ||
+		    lv_is_pool(lv) ||
+		    lv_is_thin_pool_data(lv) ||
+		    lv_is_thin_pool_metadata(lv)) {
+			log_error("Can't convert %s %s to external origin.",
+				  first_seg(lv)->segtype->name,
+				  display_lvname(lv));
+			return ECMD_FAILED;
+		}
 	}
 
 	if (arg_count(cmd, repair_ARG)) {
