@@ -66,7 +66,7 @@ check lv_field $vg/pool7 segtype "cache-pool"
 
 lvremove -f $vg
 
-# Validate ambiguos pool name is detected
+# Validate ambiguous pool name is detected
 invalid lvcreate -l 1 --type cache-pool --cachepool pool1 $vg/pool2
 invalid lvcreate -l 1 --type cache-pool --name pool3 --cachepool pool4 $vg
 invalid lvcreate -l 1 --type cache-pool --name pool6 --cachepool pool6 $vg/pool7

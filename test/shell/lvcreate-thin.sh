@@ -51,7 +51,7 @@ check vg_field $vg lv_count 0
 
 
 # Let's pretend pool is like normal LV when using --type thin-pool support --name
-# Reject ambigous thin pool names
+# Reject ambiguous thin pool names
 invalid lvcreate --type thin-pool -l1 --name pool1 $vg/pool2
 invalid lvcreate --type thin-pool -l1 --name pool3 --thinpool pool4 $vg
 invalid lvcreate --type thin-pool -l1 --name pool5 --thinpool pool6 $vg/pool7
@@ -60,7 +60,7 @@ check vg_field $vg lv_count 0
 
 lvcreate --type thin-pool -l1 --name pool1 $vg
 lvcreate --type thin-pool -l1 --name $vg/pool2
-# If the thin pool name is unambigous let it proceed
+# If the thin pool name is unambiguous let it proceed
 lvcreate --type thin-pool -l1 --name pool3 $vg/pool3
 lvcreate --type thin-pool -l1 --name pool4 --thinpool $vg/pool4
 lvcreate --type thin-pool -l1 --name pool5 --thinpool $vg/pool5 $vg/pool5
