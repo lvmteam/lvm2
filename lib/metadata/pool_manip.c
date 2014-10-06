@@ -232,6 +232,46 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 	return pool_seg;
 }
 
+int validate_pool_chunk_size(struct cmd_context *cmd,
+			     const struct segment_type *segtype,
+			     uint32_t chunk_size)
+{
+	uint32_t min_size, max_size;
+	const char *name;
+	int r = 1;
+
+	if (segtype_is_cache(segtype) || segtype_is_cache_pool(segtype)) {
+		min_size = DM_CACHE_MIN_DATA_BLOCK_SIZE;
+		max_size = DM_CACHE_MAX_DATA_BLOCK_SIZE;
+		name = "Cache";
+	} else if (segtype_is_thin(segtype)) {
+		min_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
+		max_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
+		name = "Thin";
+	} else {
+		log_error(INTERNAL_ERROR "Cannot validate chunk size of "
+			  "%s segtype.", segtype->name);
+		return 0;
+	}
+
+	if ((chunk_size < min_size) || (chunk_size > max_size)) {
+		log_error("%s pool chunk size %s is not in the range %s to %s.",
+			  name, display_size(cmd, chunk_size),
+			  display_size(cmd, min_size),
+			  display_size(cmd, max_size));
+		r = 0;
+	}
+
+	if (chunk_size & (min_size - 1)) {
+		log_error("%s pool chunk size %s must be a multiple of %s.",
+			  name, display_size(cmd, chunk_size),
+			  display_size(cmd, min_size));
+		r = 0;
+	}
+
+	return r;
+}
+
 /* Greatest common divisor */
 static unsigned long _gcd(unsigned long n1, unsigned long n2)
 {

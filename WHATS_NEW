@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Introduce single validation routine for pool chunk size.
   Support --yes like --force in vg/lvremove to skip y|n prompt.
   Support --yes with lvconvert --splitsnapshot.
   Fix detection of unsupported thin external lvconversions.
