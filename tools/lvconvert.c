@@ -2139,6 +2139,12 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 {
 	struct logical_volume *org;
 
+	if (lv_is_cache_type(lv)) {
+		log_error("Snapshots are not yet supported with cache type LVs %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	if (lv_is_mirrored(lv)) {
 		log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 		return 0;
@@ -2150,14 +2156,15 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_cache_type(lv)) {
-		log_error("Snapshots are not yet supported with cache type LVs %s.",
+	if (lv_is_pool(lv)) {
+		log_error("Unable to convert pool LVs %s into a snapshot.",
 			  display_lvname(lv));
 		return 0;
 	}
 
 	if (!(org = find_lv(lv->vg, lp->origin_lv_name))) {
-		log_error("Couldn't find origin volume %s.", lp->origin_lv_name);
+		log_error("Couldn't find origin volume %s in Volume group %s.",
+			  lp->origin_lv_name, lv->vg->name);
 		return 0;
 	}
 
@@ -2170,9 +2177,16 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	if (!cow_has_min_chunks(lv->vg, lv->le_count, lp->chunk_size))
 		return_0;
 
-	if (lv_is_locked(org) || lv_is_pvmove(org) || lv_is_mirrored(org) || lv_is_cow(org)) {
+	if (lv_is_locked(org) ||
+	    lv_is_cache_type(org) ||
+	    lv_is_thin_type(org) ||
+	    lv_is_pvmove(org) ||
+	    lv_is_mirrored(org) ||
+	    lv_is_cow(org)) {
 		log_error("Unable to convert an LV into a snapshot of a %s LV.",
 			  lv_is_locked(org) ? "locked" :
+			  lv_is_cache_type(org) ? "cache type" :
+			  lv_is_thin_type(org) ? "thin type" :
 			  lv_is_pvmove(org) ? "pvmove" :
 			  lv_is_mirrored(org) ? "mirrored" :
 			  "snapshot");
