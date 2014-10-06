@@ -1059,8 +1059,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_params *lp,
 				  struct lvcreate_cmdline_params *lcp)
 {
-	struct lv_list *lvl;
-	unsigned i;
+	struct logical_volume *pool_lv = NULL;
 
 	if (!lp->thin && !lp->create_pool && !lp->snapshot) {
 		log_error("Please specify device size(s).");
@@ -1072,26 +1071,22 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 		return 0;
 	}
 
-	if (!lp->create_pool) {
-		static const int _argname[] = {
-			alloc_ARG,
-			chunksize_ARG,
-			contiguous_ARG,
-			discards_ARG,
-			poolmetadatasize_ARG,
-			poolmetadataspare_ARG,
-			stripes_ARG,
-			stripesize_ARG,
-			zero_ARG
-		};
+	if (lp->pool)
+		pool_lv = find_lv(vg, lp->pool);
 
-		for (i = 0; i < DM_ARRAY_SIZE(_argname); ++i) {
-			if (arg_count(vg->cmd, _argname[i])) {
-				log_error("%s is only available for thin pool creation.",
-					  arg_long_option_name(_argname[i]));
-				return 0;
-			}
-		}
+	if (!lp->create_pool) {
+		if (arg_from_list_is_set(vg->cmd, "is only available with thin pool creation",
+					 alloc_ARG,
+					 chunksize_ARG,
+					 contiguous_ARG,
+					 discards_ARG,
+					 poolmetadatasize_ARG,
+					 poolmetadataspare_ARG,
+					 stripes_ARG,
+					 stripesize_ARG,
+					 zero_ARG,
+					 -1))
+			return_0;
 
 		if (lcp->pv_count) {
 			log_error("Only specify Physical volumes when allocating the thin pool.");
@@ -1103,17 +1098,17 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 			return 0;
 		}
 
-		if (!(lvl = find_lv_in_vg(vg, lp->pool))) {
+		if (!pool_lv) {
 			log_error("Thin pool %s not found in Volume group %s.", lp->pool, vg->name);
 			return 0;
 		}
 
-		if (!lv_is_thin_pool(lvl->lv)) {
-			log_error("Logical volume %s is not a thin pool.", lp->pool);
+		if (!lv_is_thin_pool(pool_lv)) {
+			log_error("Logical volume %s is not a thin pool.", display_lvname(pool_lv));
 			return 0;
 		}
-	} else if (lp->pool && find_lv_in_vg(vg, lp->pool)) {
-		log_error("Thin pool %s already exists in Volume group %s.", lp->pool, vg->name);
+	} else if (pool_lv) {
+		log_error("Logical volume %s already exists in Volume group %s.", lp->pool, vg->name);
 		return 0;
 	}
 
