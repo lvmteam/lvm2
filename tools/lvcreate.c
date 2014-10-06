@@ -506,20 +506,26 @@ static int _read_size_params(struct lvcreate_params *lp,
 
 	if (arg_count(cmd, extents_ARG)) {
 		if (arg_sign_value(cmd, extents_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative number of extents is invalid");
+			log_error("Negative number of extents is invalid.");
 			return 0;
 		}
-		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
+		if (!(lp->extents = arg_uint_value(cmd, extents_ARG, 0))) {
+			log_error("Number of extents may not be zero.");
+			return 0;
+		}
 		lcp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
 	}
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG)) {
 		if (arg_sign_value(cmd, size_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative size is invalid");
+			log_error("Negative size is invalid.");
 			return 0;
 		}
-		lcp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
+		if (!(lcp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)))) {
+			log_error("Size may not be zero.");
+			return 0;
+		}
 		lcp->percent = PERCENT_NONE;
 	}
 
