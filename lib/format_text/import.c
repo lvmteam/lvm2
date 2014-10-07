@@ -51,8 +51,10 @@ const char *text_vgname_import(const struct format_type *fmt,
 
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
-					 offset2, size2, checksum_fn, checksum)))
-		goto_out;
+					 offset2, size2, checksum_fn, checksum))) {
+		log_error("Couldn't read volume group metadata.");
+		goto out;
+	}
 
 	/*
 	 * Find a set of version functions that can read this file
@@ -97,10 +99,8 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
-					 offset2, size2, checksum_fn, checksum))) {
-		log_error("Couldn't read volume group metadata.");
+					 offset2, size2, checksum_fn, checksum)))
 		goto out;
-	}
 
 	/*
 	 * Find a set of version functions that can read this file

@@ -144,6 +144,7 @@
 #define READ_ALLOW_INCONSISTENT	0x00010000U
 #define READ_ALLOW_EXPORTED	0x00020000U
 #define READ_WITHOUT_LOCK	0x00040000U
+#define READ_WARN_INCONSISTENT	0x00080000U
 
 /* A meta-flag, useful with toollib for_each_* functions. */
 #define READ_FOR_UPDATE		0x00100000U
@@ -544,13 +545,19 @@ int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 void pvcreate_params_set_defaults(struct pvcreate_params *pp);
 
 /*
+ * Flags that indicate which warnings a library function should issue.
+ */ 
+#define WARN_PV_READ      0x00000001
+#define WARN_INCONSISTENT 0x00000002
+
+/*
 * Utility functions
 */
 int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
 void vg_revert(struct volume_group *vg);
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_name,
-				      const char *vgid, int warnings, int *consistent);
+				      const char *vgid, uint32_t warn_flags, int *consistent);
 
 #define get_pvs( cmd ) get_pvs_internal((cmd), NULL, NULL)
 #define get_pvs_perserve_vg( cmd, pv_list, vg_list ) get_pvs_internal((cmd), (pv_list), (vg_list))
@@ -568,7 +575,7 @@ void lv_set_hidden(struct logical_volume *lv);
 
 struct dm_list *get_vgnames(struct cmd_context *cmd, int include_internal);
 struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal);
-int scan_vgs_for_pvs(struct cmd_context *cmd, int warnings);
+int scan_vgs_for_pvs(struct cmd_context *cmd, uint32_t warn_flags);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv, int allow_non_orphan);
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,

@@ -2136,7 +2136,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 		ret = 0;
 		skip = 0;
 
-		vg = vg_read(cmd, vg_name, vg_uuid, flags);
+		vg = vg_read(cmd, vg_name, vg_uuid, flags | READ_WARN_INCONSISTENT);
 		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &ret)) {
 			if (ret > ret_max)
 				ret_max = ret;
