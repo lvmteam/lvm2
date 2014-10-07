@@ -99,6 +99,22 @@ lvconvert --splitmirrors 1 --name split $vg/corigin $dev1
 
 lvremove -f $vg
 
+lvcreate -n cpool_meta -m 1 --type raid1 -l 10 $vg
+lvcreate -n cpool -m 1 --type raid1 -l 10 $vg
+lvconvert --yes --type cache-pool --poolmetadata $vg/cpool_meta $vg/cpool
+lvcreate -n corigin --type cache --cachepool $vg/cpool -l 10
+
+lvconvert --repair -y $vg/cpool_cmeta
+lvconvert --repair -y $vg/cpool_cdata
+
+# do not allow reserved names for *new* LVs
+not lvconvert --splitmirrors 1 --name split_cmeta $vg/cpool_cmeta $dev1
+not lvconvert --splitmirrors 1 --name split_cdata $vg/cpool_cdata $dev1
+
+# but allow manipulating existing LVs with reserved names
+lvconvert --splitmirrors 1 --name split_meta $vg/cpool_cmeta $dev1
+lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata $dev1
+
 #######################
 # Invalid conversions #
 #######################

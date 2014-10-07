@@ -160,6 +160,8 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 		lp->lv_name = lp->lv_name_full;
 
 	if (!lp->merge_mirror &&
+	    !arg_count(cmd, repair_ARG) &&
+	    !arg_count(cmd, splitmirrors_ARG) &&
 	    !strstr(lp->lv_name, "_tdata") &&
 	    !strstr(lp->lv_name, "_tmeta") &&
 	    !apply_lvname_restrictions(lp->lv_name))
