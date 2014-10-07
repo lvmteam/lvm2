@@ -177,4 +177,5 @@ int mirror_remove_missing(struct cmd_context *cmd,
 
 int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		       activation_change_t activate);
+
 #endif

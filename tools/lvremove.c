@@ -15,23 +15,6 @@
 
 #include "tools.h"
 
-static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
-			   void *handle __attribute__((unused)))
-{
-	/*
-	 * Single force is equivalent to sinle --yes
-	 * Even multiple --yes are equivalent to single --force
-	 * When we require -ff it cannot be replaces with -f -y
-	 */
-	force_t force = (force_t) arg_count(cmd, force_ARG)
-		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
-
-	if (!lv_remove_with_dependencies(cmd, lv, force, 0))
-		return_ECMD_FAILED;
-
-	return ECMD_PROCESSED;
-}
-
 int lvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!argc) {

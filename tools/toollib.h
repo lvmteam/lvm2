@@ -74,11 +74,9 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  void *handle, process_single_pv_fn_t process_single_pv);
 
 
-int process_each_lv_in_vg(struct cmd_context *cmd,
-			  struct volume_group *vg,
-			  struct dm_list *arg_lvnames,
-			  const struct dm_list *tagsl,
-			  void *handle,
+int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  struct dm_list *arg_lvnames, const struct dm_list *tagsl,
+			  int stop_on_error, void *handle,
 			  process_single_lv_fn_t process_single_lv);
 
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
@@ -134,5 +132,8 @@ int get_and_validate_major_minor(const struct cmd_context *cmd,
 
 int validate_lvname_param(struct cmd_context *cmd, const char **vg_name,
 			  const char **lv_name);
+
+int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
+                    void *handle __attribute__((unused)));
 
 #endif

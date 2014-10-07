@@ -27,6 +27,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	force_t force = (force_t) arg_count(cmd, force_ARG)
 		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
 	unsigned lv_count, missing;
+	int ret;
 
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return_ECMD_FAILED;
@@ -46,8 +47,11 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 				return ECMD_FAILED;
 			}
 		}
-		if (!remove_lvs_in_vg(cmd, vg, force))
-			return_ECMD_FAILED;
+		if ((ret = process_each_lv_in_vg(cmd, vg, NULL, NULL, 1, NULL,
+						 (process_single_lv_fn_t)lvremove_single)) != ECMD_PROCESSED) {
+			stack;
+			return ret;
+		}
 	}
 
 	if (!force && !vg_remove_check(vg))

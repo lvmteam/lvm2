@@ -1569,6 +1569,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct dm_list *arg_lvnames, const struct dm_list *tags_in,
+			  int stop_on_error,
 			  void *handle, process_single_lv_fn_t process_single_lv)
 {
 	int ret_max = ECMD_PROCESSED;
@@ -1640,6 +1641,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (ret > ret_max)
 			ret_max = ret;
+
+		if (stop_on_error && ret != ECMD_PROCESSED)
+			return ret_max;
 	}
 
 	if (lvargs_supplied) {
@@ -1826,7 +1830,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 			continue;
 		}
 
-		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg,
+		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg, 0,
 					    handle, process_single_lv);
 		unlock_and_release_vg(cmd, vg, vg_name);
 
@@ -2253,4 +2257,21 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	return ret_max;
+}
+
+int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
+		    void *handle __attribute__((unused)))
+{
+	/*
+	 * Single force is equivalent to single --yes
+	 * Even multiple --yes are equivalent to single --force
+	 * When we require -ff it cannot be replaced with -f -y
+	 */
+	force_t force = (force_t) arg_count(cmd, force_ARG)
+		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
+
+	if (!lv_remove_with_dependencies(cmd, lv, force, 0))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
 }
