@@ -1,5 +1,8 @@
 Version 2.02.112 - 
 =====================================
+  Introduce WARN_ flags to control some metadata warning messages.
+  Use process_each_pv in vgreduce.
+  Refactor process_each_pv in toollib.
   Introduce single validation routine for pool chunk size.
   Support --yes like --force in vg/lvremove to skip y|n prompt.
   Support --yes with lvconvert --splitsnapshot.
@@ -14,6 +17,7 @@ Version 2.02.112 -
   Support lvconvert --splitcache and --uncache of cached LV.
   Option --cache has also shortcut -H (i.e. lvcreate -H).
   Refactor lvcreate code and better preserve --type argument.
+  Refactor process_each_lv in toollib.
   Refactor process_each_vg in toollib.
   Pools cannot be used as external origin.
   Use lv_update_and_reload() for snapshot reload.
