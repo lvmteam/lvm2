@@ -54,6 +54,9 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->lv_name))
 		return_0;
 
+	if (lp->lv_name && !apply_lvname_restrictions(lp->lv_name))
+		return_0;
+
 	lp->pool_name = arg_str_value(cmd, thinpool_ARG, NULL)
 		? : arg_str_value(cmd, cachepool_ARG, NULL);
 	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_name))

@@ -1300,9 +1300,6 @@ int validate_lvname_param(struct cmd_context *cmd, const char **vg_name,
 		*lv_name = lvname;
 	}
 
-	if (!apply_lvname_restrictions(*lv_name))
-		return_0;
-
 	if (!validate_name(*lv_name)) {
 		log_error("Logical volume name \"%s\" is invalid.",
 			  *lv_name);

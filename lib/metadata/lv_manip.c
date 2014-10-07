@@ -7172,6 +7172,9 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
 				return_NULL;
 
+			if (lp->pool_name && !apply_lvname_restrictions(lp->pool_name))
+				return_NULL;
+
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
 
@@ -7186,6 +7189,9 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
                         if (!seg_is_cache_pool(lp) &&
 			    !(lp->segtype = get_segtype_from_string(vg->cmd,
 								    "cache-pool")))
+				return_NULL;
+
+			if (lp->pool_name && !apply_lvname_restrictions(lp->pool_name))
 				return_NULL;
 
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
