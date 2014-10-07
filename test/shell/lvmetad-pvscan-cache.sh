@@ -15,7 +15,7 @@ test -e LOCAL_LVMETAD || skip
 
 aux prepare_pvs 2
 
-vgcreate $vg1 $dev1 $dev2
+vgcreate $vg1 "$dev1" "$dev2"
 vgs | grep $vg1
 
 pvscan --cache

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -15,13 +15,11 @@ test_description='Test process_each_pv with zero mda'
 
 aux prepare_devs 2
 
-pvcreate $dev1 --metadatacopies 0
-pvcreate $dev2
+pvcreate "$dev1" --metadatacopies 0
+pvcreate "$dev2"
 
 vgcreate $vg1 "$dev1" "$dev2"
 
-pvdisplay -a -C >err
-cat err
-grep $dev1 err
-grep $dev2 err
-
+pvdisplay -a -C | tee err
+grep "$dev1" err
+grep "$dev2" err

@@ -13,7 +13,7 @@
 test -e LOCAL_LVMETAD || skip
 
 aux prepare_pvs 2
-vgcreate $vg1 $dev1 $dev2
+vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n bar -l 1 $vg1
 
 (echo | aux lvmetad_talk) || skip

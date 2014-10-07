@@ -16,19 +16,19 @@ test_description='Test process_each_pv with zero mda'
 aux prepare_devs 14
 
 # for vg1
-pvcreate $dev10
+pvcreate "$dev10"
 
 # for vg2
-pvcreate $dev2 --metadatacopies 0
-pvcreate $dev3
-pvcreate $dev4
-pvcreate $dev5
+pvcreate "$dev2" --metadatacopies 0
+pvcreate "$dev3"
+pvcreate "$dev4"
+pvcreate "$dev5"
 
 # for vg3
-pvcreate $dev6 --metadatacopies 0
-pvcreate $dev7 --metadatacopies 0
-pvcreate $dev8 --metadatacopies 0
-pvcreate $dev9
+pvcreate "$dev6" --metadatacopies 0
+pvcreate "$dev7" --metadatacopies 0
+pvcreate "$dev8" --metadatacopies 0
+pvcreate "$dev9"
 
 # orphan with mda
 pvcreate "$dev11"
@@ -43,18 +43,18 @@ vgcreate $vg1 "$dev10"
 vgcreate $vg2 "$dev2" "$dev3" "$dev4" "$dev5"
 vgcreate $vg3 "$dev6" "$dev7" "$dev8" "$dev9"
 
-pvs -a >err
-grep $dev10 err
-grep $dev2 err
-grep $dev3 err
-grep $dev4 err
-grep $dev5 err
-grep $dev6 err
-grep $dev7 err
-grep $dev8 err
-grep $dev9 err
-grep $dev11 err
-grep $dev12 err
-grep $dev13 err
-grep $dev14 err
+pvs -a | tee err
+grep "$dev10" err
+grep "$dev2" err
+grep "$dev3" err
+grep "$dev4" err
+grep "$dev5" err
+grep "$dev6" err
+grep "$dev7" err
+grep "$dev8" err
+grep "$dev9" err
+grep "$dev11" err
+grep "$dev12" err
+grep "$dev13" err
+grep "$dev14" err
 

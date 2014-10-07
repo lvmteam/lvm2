@@ -73,5 +73,5 @@ not pvscan --cache "$dev1" 2>&1 | grep "not found"
 not pvscan --cache "$dev2" 2>&1 | grep "not found"
 
 pvs | grep $lvmdev
-pvs | not grep $dev1
-pvs | not grep $dev2
+pvs | not grep "$dev1"
+pvs | not grep "$dev2"

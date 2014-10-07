@@ -27,8 +27,8 @@ lv_devices_() {
 	devs=$(get lv_devices "$lv")
 
 	for d in $devs; do
-		(echo "$devices" | grep $d) || return 1
-		devices=$(echo $devices | sed "s/$d//")
+		(echo "$devices" | grep "$d") || return 1
+		devices=$(echo "$devices" | sed "s/$d//")
 	done
 
 	test -z "$(echo $devices | sed 's/ //g')"

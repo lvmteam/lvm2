@@ -15,7 +15,7 @@ test -e LOCAL_LVMETAD || skip
 
 aux prepare_pvs 2
 
-vgcreate $vg1 $dev1 $dev2
+vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n testlv -m 1 -l 1 $vg1
 vgs | grep $vg1
 
@@ -23,7 +23,7 @@ lvscan --cache $vg1/testlv
 
 vgs | grep $vg1
 
-aux disable_dev $dev2
+aux disable_dev "$dev2"
 
 # pvscan --cache already ran for the disabled device above, this should be a
 # no-op (but should not segfault!)

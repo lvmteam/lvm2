@@ -19,13 +19,13 @@ aux prepare_pvs 6 16
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # create $VGS with assorted tags
-vgcreate $vg1 --vgmetadatacopies 2 --addtag "vg_tag3" --addtag "vg_tag2" -s 4m $dev1 $dev2 $dev3
-vgcreate $vg2 --addtag "vg_tag2" -s 4m $dev4 $dev5
-vgcreate $vg3 --addtag "vg_tag1" -s 4m $dev6
+vgcreate $vg1 --vgmetadatacopies 2 --addtag "vg_tag3" --addtag "vg_tag2" -s 4m "$dev1" "$dev2" "$dev3"
+vgcreate $vg2 --addtag "vg_tag2" -s 4m "$dev4" "$dev5"
+vgcreate $vg3 --addtag "vg_tag1" -s 4m "$dev6"
 
 # add PV assorted tags
-pvchange --addtag "pv_tag3" --addtag "pv_tag1" --addtag "pv_tag2" $dev1
-pvchange --addtag "pv_tag1" --addtag "pv_tag4" $dev6
+pvchange --addtag "pv_tag3" --addtag "pv_tag1" --addtag "pv_tag2" "$dev1"
+pvchange --addtag "pv_tag1" --addtag "pv_tag4" "$dev6"
 
 # create $LVS with assorted tags and various sizes
 lvcreate --addtag 'lv_tag2.-+/=!:&#' --addtag "lv_tag1" -L8m -n "vol1" $vg1
