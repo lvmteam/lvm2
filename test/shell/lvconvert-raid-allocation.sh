@@ -63,7 +63,7 @@ lvcreate --type raid1 -m 1 -l 3 -n $lv1 $vg \
     "$dev1:0-1" "$dev2:0-1" "$dev3:0-1" "$dev4:0-1"
 aux wait_for_sync $vg $lv1
 aux disable_dev "$dev1"
-lvconvert --repair -y $vg/$lv1 "$dev1" "$dev2" "$dev3" "$dev4"
+lvconvert --repair -y $vg/$lv1 "$dev2" "$dev3" "$dev4"
 #FIXME: ensure non-overlapping images (they should not share PVs)
 aux enable_dev "$dev1"
 lvremove -ff $vg
