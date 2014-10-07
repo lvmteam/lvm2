@@ -134,9 +134,9 @@ lvcreate -L32 -n $lv1 $vg
 lvcreate -L16 -n $lv2 $vg
 lvconvert --yes --thinpool $vg/$lv1
 
-fail lvconvert --yes --type cache-pool $vg/$lv1
+not aux have_cache 1 3 0 || fail lvconvert --yes --type cache-pool $vg/$lv1
 fail lvconvert --yes --type mirror -m1 $vg/$lv1
-fail lvconvert --yes --type raid1 -m1 $vg/$lv1
+not aux have_raid 1 0 0 || fail lvconvert --yes --type raid1 -m1 $vg/$lv1
 fail lvconvert --yes --type snapshot $vg/$lv1 $vg/$lv2
 fail lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv1
 fail lvconvert --yes --type thin-pool $vg/$lv1

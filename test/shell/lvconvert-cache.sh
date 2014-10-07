@@ -121,10 +121,10 @@ fail lvconvert --yes --type cache $vg/$lv2 --cachepool $vg/$lv1
 fail lvconvert --yes --type cache $vg/$lv1 --cachepool $vg/$lv2
 fail lvconvert --yes --type cache-pool $vg/$lv1
 fail lvconvert --yes --type mirror -m1 $vg/$lv1
-fail lvconvert --yes --type raid1 -m1 $vg/$lv1
+not aux have_raid 1 0 0 || fail lvconvert --yes --type raid1 -m1 $vg/$lv1
 fail lvconvert --yes --type snapshot $vg/$lv1 $vg/$lv2
 fail lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv1
-fail lvconvert --yes -T --thinpool $vg/$lv2 $vg/$lv1
+not aux have_thin 1 0 0 || fail lvconvert --yes -T --thinpool $vg/$lv2 $vg/$lv1
 
 lvremove -f $vg
 
