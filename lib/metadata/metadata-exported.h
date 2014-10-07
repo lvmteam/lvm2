@@ -811,7 +811,7 @@ struct lvcreate_params {
 	int32_t minor; /* all */
 	int log_count; /* mirror */
 	int nosync; /* mirror */
-	int poolmetadataspare; /* thin pool */
+	int pool_metadata_spare; /* pools */
 	int temporary; /* temporary LV */
 #define ACTIVATION_SKIP_SET		0x01 /* request to set LV activation skip flag state */
 #define ACTIVATION_SKIP_SET_ENABLED	0x02 /* set the LV activation skip flag state to 'enabled' */
@@ -823,10 +823,10 @@ struct lvcreate_params {
 #define THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE 0x02
 	int thin_chunk_size_calc_policy;
 
-	const char *origin; /* snap */
-	const char *pool;   /* thin */
 	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
 	const char *lv_name; /* all */
+	const char *origin_name; /* snap */
+	const char *pool_name;   /* thin */
 
 	/* Keep args given by the user on command line */
 	/* FIXME: create some more universal solution here */
@@ -855,8 +855,8 @@ struct lvcreate_params {
 	uint32_t extents; /* all */
 	uint32_t voriginextents; /* snapshot */
 	uint64_t voriginsize; /* snapshot */
-	uint32_t poolmetadataextents; /* thin pool */
-	uint64_t poolmetadatasize; /* thin pool */
+	uint32_t pool_metadata_extents; /* pools */
+	uint64_t pool_metadata_size; /* pools */
 	struct dm_list *pvh; /* all */
 
 	uint32_t permission; /* all */

@@ -496,35 +496,35 @@ lv_t lvm_lv_snapshot(const lv_t lv, const char *snap_name,
 
 /* Set defaults for thin pool specific LV parameters */
 static int _lv_set_pool_params(struct lvcreate_params *lp,
-				vg_t vg, const char *pool,
+				vg_t vg, const char *pool_name,
 				uint64_t extents, uint64_t meta_size)
 {
 	_lv_set_default_params(lp, vg, NULL, extents);
 
-	lp->pool = pool;
+	lp->pool_name = pool_name;
 
 	lp->create_pool = 1;
 	lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool");
 	lp->stripes = 1;
 
 	if (!meta_size) {
-		lp->poolmetadatasize = extents * vg->extent_size /
+		lp->pool_metadata_size = extents * vg->extent_size /
 			(lp->chunk_size * (SECTOR_SIZE / 64));
-		while ((lp->poolmetadatasize >
+		while ((lp->pool_metadata_size >
 			(2 * DEFAULT_THIN_POOL_OPTIMAL_SIZE / SECTOR_SIZE)) &&
 		       lp->chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE) {
 			lp->chunk_size <<= 1;
-			lp->poolmetadatasize >>= 1;
+			lp->pool_metadata_size >>= 1;
 	         }
 	} else
-		lp->poolmetadatasize = meta_size;
+		lp->pool_metadata_size = meta_size;
 
-	if (lp->poolmetadatasize % vg->extent_size)
-		lp->poolmetadatasize +=
-			vg->extent_size - lp->poolmetadatasize % vg->extent_size;
+	if (lp->pool_metadata_size % vg->extent_size)
+		lp->pool_metadata_size +=
+			vg->extent_size - lp->pool_metadata_size % vg->extent_size;
 
-	if (!(lp->poolmetadataextents =
-	      extents_from_size(vg->cmd, lp->poolmetadatasize / SECTOR_SIZE,
+	if (!(lp->pool_metadata_extents =
+	      extents_from_size(vg->cmd, lp->pool_metadata_size / SECTOR_SIZE,
 				vg->extent_size)))
 		return_0;
 
@@ -605,14 +605,14 @@ lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
 
 /* Set defaults for thin LV specific parameters */
 static int _lv_set_thin_params(struct lvcreate_params *lp,
-				vg_t vg, const char *pool,
+				vg_t vg, const char *pool_name,
 				const char *lvname,
 				uint64_t extents)
 {
 	_lv_set_default_params(lp, vg, lvname, extents);
 
 	lp->thin = 1;
-	lp->pool = pool;
+	lp->pool_name = pool_name;
 	lp->segtype = get_segtype_from_string(vg->cmd, "thin");
 
 	lp->voriginsize = extents * vg->extent_size;
@@ -674,11 +674,11 @@ static lv_create_params_t _lvm_lv_params_create_snapshot(const lv_t lv,
 				return NULL;
 			}
 
-			lvcp->lvp.pool = first_seg(lv)->pool_lv->name;
+			lvcp->lvp.pool_name = first_seg(lv)->pool_lv->name;
 		}
 
 		lvcp->lvp.stripes = 1;
-		lvcp->lvp.origin = lv->name;
+		lvcp->lvp.origin_name = lv->name;
 
 		lvcp->magic = LV_CREATE_PARAMS_MAGIC;
 	}
@@ -797,7 +797,7 @@ static lv_t _lvm_lv_create(lv_create_params_t params)
 		 * pool is.
 		 */
 		if (!(lvl = find_lv_in_vg(params->vg,
-				(params->lvp.lv_name) ? params->lvp.lv_name : params->lvp.pool)))
+				(params->lvp.lv_name) ? params->lvp.lv_name : params->lvp.pool_name)))
 			return_NULL;
 		return (lv_t) lvl->lv;
 	}

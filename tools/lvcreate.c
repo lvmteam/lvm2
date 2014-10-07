@@ -54,9 +54,9 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->lv_name))
 		return_0;
 
-	lp->pool = arg_str_value(cmd, thinpool_ARG, NULL)
+	lp->pool_name = arg_str_value(cmd, thinpool_ARG, NULL)
 		? : arg_str_value(cmd, cachepool_ARG, NULL);
-	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_name))
 		return_0;
 
 	if (seg_is_cache(lp)) {
@@ -73,7 +73,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 		 * or whether it is the origin for cached LV.
 		 */
 		if (!argc) {
-			if (!lp->pool) {
+			if (!lp->pool_name) {
 				/* Don't advertise we could handle cache origin */
 				log_error("Please specify a logical volume to act as the cache pool.");
 				return 0;
@@ -86,25 +86,25 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 					return_0;
 			} else {
 				/* Lets pretend it's cache origin for now */
-				lp->origin = vg_name;
-				if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin))
+				lp->origin_name = vg_name;
+				if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin_name))
 					return_0;
 
-				if (lp->pool) {
-					if (strcmp(lp->pool, lp->origin)) {
+				if (lp->pool_name) {
+					if (strcmp(lp->pool_name, lp->origin_name)) {
 						log_error("Unsupported syntax, cannot use cache origin %s and --cachepool %s.",
-							  lp->origin, lp->pool);
+							  lp->origin_name, lp->pool_name);
 						/* Stop here, only older form remains supported */
 						return 0;
 					}
-					lp->origin = NULL;
+					lp->origin_name = NULL;
 				} else {
 					/*
 					 * Gambling here, could be cache pool or cache origin,
 					 * detection is possible after openning vg,
 					 * yet we need to parse pool args
 					 */
-					lp->pool = lp->origin;
+					lp->pool_name = lp->origin_name;
 					lp->create_pool = 1;
 				}
 			}
@@ -121,7 +121,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
-		if (!lp->pool) {
+		if (!lp->pool_name) {
 			log_error("Creation of cached volume and cache pool "
 				  "in one command is not yet supported.");
 			return 0;
@@ -136,8 +136,8 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
-		lp->origin = argv[0];
-		if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin))
+		lp->origin_name = argv[0];
+		if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin_name))
 			return_0;
 
 		if (!lp->vg_name &&
@@ -162,13 +162,13 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			if (!validate_lvname_param(cmd, &lp->vg_name, &vg_name))
 				return_0;
 
-			if (lp->pool &&
-			    (strcmp(vg_name, lp->pool) != 0)) {
+			if (lp->pool_name &&
+			    (strcmp(vg_name, lp->pool_name) != 0)) {
 				log_error("Ambiguous %s name specified, %s and %s.",
-					  lp->segtype->name, vg_name, lp->pool);
+					  lp->segtype->name, vg_name, lp->pool_name);
 				return 0;
 			}
-			lp->pool = vg_name;
+			lp->pool_name = vg_name;
 
 			if (!lp->vg_name &&
 			    !_set_vg_name(lp, extract_vgname(cmd, NULL)))
@@ -207,16 +207,16 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 
 	/* support --name & --type {thin|cache}-pool */
 	if (seg_is_pool(lp) && lp->lv_name) {
-		if (lp->pool && (strcmp(lp->lv_name, lp->pool) != 0)) {
+		if (lp->pool_name && (strcmp(lp->lv_name, lp->pool_name) != 0)) {
 			log_error("Ambiguous %s name specified, %s and %s.",
-				  lp->segtype->name, lp->lv_name, lp->pool);
+				  lp->segtype->name, lp->lv_name, lp->pool_name);
 			return 0;
 		}
-		lp->pool = lp->lv_name;
+		lp->pool_name = lp->lv_name;
 		lp->lv_name = NULL;
 	}
 
-	if (lp->pool && lp->lv_name && !strcmp(lp->pool, lp->lv_name)) {
+	if (lp->pool_name && lp->lv_name && !strcmp(lp->pool_name, lp->lv_name)) {
 		log_error("Logical volume name %s and pool name must be different.",
 			  lp->lv_name);
 		return 0;
@@ -239,9 +239,9 @@ static int _determine_snapshot_type(struct volume_group *vg,
 {
 	struct logical_volume *lv, *pool_lv = NULL;
 
-	if (!(lv = find_lv(vg, lp->origin))) {
+	if (!(lv = find_lv(vg, lp->origin_name))) {
 		log_error("Snapshot origin LV %s not found in Volume group %s.",
-			  lp->origin, vg->name);
+			  lp->origin_name, vg->name);
 		return 0;
 	}
 
@@ -250,10 +250,10 @@ static int _determine_snapshot_type(struct volume_group *vg,
 		return 0;
 	}
 
-	if (lp->pool) {
-		if (!(pool_lv = find_lv(vg, lp->pool))) {
+	if (lp->pool_name) {
+		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
 			log_error("Thin pool volume %s not found in Volume group %s.",
-				  lp->pool, vg->name);
+				  lp->pool_name, vg->name);
 			return 0;
 		}
 
@@ -265,10 +265,10 @@ static int _determine_snapshot_type(struct volume_group *vg,
 	}
 
 	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
-		if (lv_is_thin_volume(lv) && !lp->pool)
-			lp->pool = first_seg(lv)->pool_lv->name;
+		if (lv_is_thin_volume(lv) && !lp->pool_name)
+			lp->pool_name = first_seg(lv)->pool_lv->name;
 
-		if (seg_is_thin(lp) || lp->pool) {
+		if (seg_is_thin(lp) || lp->pool_name) {
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 				return_0;
 			return 1;
@@ -276,7 +276,7 @@ static int _determine_snapshot_type(struct volume_group *vg,
 
 		log_error("Please specify either size or extents with snapshots.");
 		return 0;
-	} else if (lp->pool) {
+	} else if (lp->pool_name) {
 		log_error("Cannot specify size with thin pool snapshot.");
 		return 0;
 	}
@@ -289,7 +289,7 @@ static int _lvcreate_update_pool_params(struct volume_group *vg,
 {
 	return update_pool_params(lp->segtype, vg, lp->target_attr,
 				  lp->passed_args, lp->extents,
-				  &lp->poolmetadatasize,
+				  &lp->pool_metadata_size,
 				  &lp->thin_chunk_size_calc_policy, &lp->chunk_size,
 				  &lp->discards, &lp->zero);
 }
@@ -316,23 +316,23 @@ static int _determine_cache_argument(struct volume_group *vg,
 		return 0;
 	}
 
-	if (!lp->pool) {
-		lp->pool = lp->lv_name;
-	} else if (lp->pool == lp->origin) {
-		if (!(lv = find_lv(vg, lp->pool))) {
+	if (!lp->pool_name) {
+		lp->pool_name = lp->lv_name;
+	} else if (lp->pool_name == lp->origin_name) {
+		if (!(lv = find_lv(vg, lp->pool_name))) {
 			/* Cache pool nor origin volume exists */
 			lp->cache = 0;
-			lp->origin = NULL;
+			lp->origin_name = NULL;
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
 				return_0;
 		} else if (!lv_is_cache_pool(lv)) {
 			/* Name arg in this case is for pool name */
-			lp->pool = lp->lv_name;
+			lp->pool_name = lp->lv_name;
 			/* We were given origin for caching */
 		} else {
 			/* FIXME error on pool args */
 			lp->create_pool = 0;
-			lp->origin = NULL;
+			lp->origin_name = NULL;
 		}
 	}
 
@@ -350,7 +350,7 @@ static int _update_extents_params(struct volume_group *vg,
 				  struct lvcreate_cmdline_params *lcp)
 {
 	uint32_t pv_extent_count;
-	struct logical_volume *origin = NULL;
+	struct logical_volume *origin_lv = NULL;
 	uint32_t size_rest;
 	uint32_t stripesize_extents;
 	uint32_t extents;
@@ -395,19 +395,19 @@ static int _update_extents_params(struct volume_group *vg,
 				  "or %%FREE.", (lp->snapshot) ? "%ORIGIN, " : "");
 			return 0;
 		case PERCENT_ORIGIN:
-			if (lp->snapshot && lp->origin &&
-			    !(origin = find_lv(vg, lp->origin))) {
+			if (lp->snapshot && lp->origin_name &&
+			    !(origin_lv = find_lv(vg, lp->origin_name))) {
 				log_error("Couldn't find origin volume '%s'.",
-					  lp->origin);
+					  lp->origin_name);
 				return 0;
 			}
-			if (!origin) {
+			if (!origin_lv) {
 				log_error(INTERNAL_ERROR "Couldn't find origin volume.");
 				return 0;
 			}
 			/* Add whole metadata size estimation */
-			extents = cow_max_extents(origin, lp->chunk_size) - origin->le_count +
-				percent_of_extents(lp->extents, origin->le_count, 1);
+			extents = cow_max_extents(origin_lv, lp->chunk_size) - origin_lv->le_count +
+				percent_of_extents(lp->extents, origin_lv->le_count, 1);
 			break;
 		case PERCENT_NONE:
 			extents = lp->extents;
@@ -424,19 +424,19 @@ static int _update_extents_params(struct volume_group *vg,
 		lp->extents = extents;
 	}
 
-	if (lp->snapshot && lp->origin && lp->extents) {
+	if (lp->snapshot && lp->origin_name && lp->extents) {
 		if (!lp->chunk_size) {
 			log_error(INTERNAL_ERROR "Missing snapshot chunk size.");
 			return 0;
 		}
 
-		if (!origin && !(origin = find_lv(vg, lp->origin))) {
+		if (!origin_lv && !(origin_lv = find_lv(vg, lp->origin_name))) {
 			log_error("Couldn't find origin volume '%s'.",
-				  lp->origin);
+				  lp->origin_name);
 			return 0;
 		}
 
-		extents = cow_max_extents(origin, lp->chunk_size);
+		extents = cow_max_extents(origin_lv, lp->chunk_size);
 
 		if (extents < lp->extents) {
 			log_print_unless_silent("Reducing COW size %s down to maximum usable size %s.",
@@ -462,16 +462,16 @@ static int _update_extents_params(struct volume_group *vg,
 		if (!_lvcreate_update_pool_params(vg, lp))
 			return_0;
 
-		if (!(lp->poolmetadataextents =
-		      extents_from_size(vg->cmd, lp->poolmetadatasize, vg->extent_size)))
+		if (!(lp->pool_metadata_extents =
+		      extents_from_size(vg->cmd, lp->pool_metadata_size, vg->extent_size)))
 			return_0;
 		if (lcp->percent == PERCENT_FREE) {
-			if (lp->extents <= (2 * lp->poolmetadataextents)) {
+			if (lp->extents <= (2 * lp->pool_metadata_extents)) {
 				log_error("Not enough space for thin pool creation.");
 				return 0;
 			}
 			/* FIXME: persistent hidden space in VG wanted */
-			lp->extents -= (2 * lp->poolmetadataextents);
+			lp->extents -= (2 * lp->pool_metadata_extents);
 		}
 	}
 
@@ -1016,7 +1016,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
 	    (lp->create_pool &&
 	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
-			      &lp->poolmetadatasize, &lp->poolmetadataspare,
+			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
 			      &lp->chunk_size, &lp->discards, &lp->zero)) ||
 	    !_read_mirror_params(lp, cmd) ||
 	    !_read_raid_params(lp, cmd) ||
@@ -1095,8 +1095,8 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 		return 0;
 	}
 
-	if (lp->pool)
-		pool_lv = find_lv(vg, lp->pool);
+	if (lp->pool_name)
+		pool_lv = find_lv(vg, lp->pool_name);
 
 	if (!lp->create_pool) {
 		if (arg_from_list_is_set(vg->cmd, "is only available with thin pool creation",
@@ -1117,13 +1117,13 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 			return 0;
 		}
 
-		if (!lp->pool) {
+		if (!lp->pool_name) {
 			log_error("Please specify name of existing thin pool.");
 			return 0;
 		}
 
 		if (!pool_lv) {
-			log_error("Thin pool %s not found in Volume group %s.", lp->pool, vg->name);
+			log_error("Thin pool %s not found in Volume group %s.", lp->pool_name, vg->name);
 			return 0;
 		}
 
@@ -1132,7 +1132,7 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 			return 0;
 		}
 	} else if (pool_lv) {
-		log_error("Logical volume %s already exists in Volume group %s.", lp->pool, vg->name);
+		log_error("Logical volume %s already exists in Volume group %s.", lp->pool_name, vg->name);
 		return 0;
 	}
 
@@ -1213,12 +1213,12 @@ static int _validate_internal_thin_processing(const struct lvcreate_params *lp)
 	     1        0           1         1      y      - create thin snapshot of existing thin LV
 	*/
 
-	if (!lp->create_pool && !lp->pool) {
+	if (!lp->create_pool && !lp->pool_name) {
 		log_error(INTERNAL_ERROR "--thinpool not identified.");
 		r = 0;
 	}
 
-	if ((lp->snapshot && !lp->origin) || (!lp->snapshot && lp->origin)) {
+	if ((lp->snapshot && !lp->origin_name) || (!lp->snapshot && lp->origin_name)) {
 		log_error(INTERNAL_ERROR "Inconsistent snapshot and origin parameters identified.");
 		r = 0;
 	}
@@ -1256,7 +1256,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	}
 
-	if (lp.snapshot && lp.origin && !_determine_snapshot_type(vg, &lp))
+	if (lp.snapshot && lp.origin_name && !_determine_snapshot_type(vg, &lp))
 		goto_out;
 
 	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp))
@@ -1282,20 +1282,20 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 
 	if (lp.create_pool) {
-		if (!handle_pool_metadata_spare(vg, lp.poolmetadataextents,
-						lp.pvh, lp.poolmetadataspare))
+		if (!handle_pool_metadata_spare(vg, lp.pool_metadata_extents,
+						lp.pvh, lp.pool_metadata_spare))
 			goto_out;
 
 		log_verbose("Making pool %s in VG %s using segtype %s",
-			    lp.pool ? : "with generated name", lp.vg_name, lp.segtype->name);
+			    lp.pool_name ? : "with generated name", lp.vg_name, lp.segtype->name);
 	}
 
 	if (lp.thin)
 		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
 			    lp.lv_name ? : "with generated name",
-			    lp.pool ? : "with generated name", lp.vg_name,
+			    lp.pool_name ? : "with generated name", lp.vg_name,
 			    lp.snapshot ? " as snapshot of " : "",
-			    lp.snapshot ? lp.origin : "", lp.segtype->name);
+			    lp.snapshot ? lp.origin_name : "", lp.segtype->name);
 
 	if (!lv_create_single(vg, &lp))
 		goto_out;

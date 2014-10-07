@@ -67,10 +67,10 @@ struct lvconvert_params {
 
 	int passed_args;
 	uint64_t pool_metadata_size;
-	const char *origin_lv_name;
-	const char *pool_data_lv_name;
+	const char *origin_name;
+	const char *pool_data_name;
 	struct logical_volume *pool_data_lv;
-	const char *pool_metadata_lv_name;
+	const char *pool_metadata_name;
 	struct logical_volume *pool_metadata_lv;
 	thin_discards_t discards;
 };
@@ -126,13 +126,13 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 		(*pargv)++, (*pargc)--;
 	}
 
-	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_metadata_lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_metadata_name))
 		return_0;
 
-	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_data_lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->pool_data_name))
 		return_0;
 
-	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin_lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin_name))
 		return_0;
 
 	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->lv_split_name))
@@ -188,7 +188,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 			log_error("Too many arguments provided with --uncache.");
 			return 0;
 		}
-		if (lp->pool_data_lv_name && lp->pool_metadata_lv_name) {
+		if (lp->pool_data_name && lp->pool_metadata_name) {
 			log_error("Too many arguments provided for pool.");
 			return 0;
 		}
@@ -236,7 +236,7 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 	int cachepool = 0;
 	int thinpool = 0;
 
-	if ((lp->pool_data_lv_name = arg_str_value(cmd, cachepool_ARG, NULL))) {
+	if ((lp->pool_data_name = arg_str_value(cmd, cachepool_ARG, NULL))) {
 		if (type_str[0] &&
 		    strcmp(type_str, "cache") &&
 		    strcmp(type_str, "cache-pool")) {
@@ -248,7 +248,7 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 		type_str = "cache-pool";
 	} else if (!strcmp(type_str, "cache-pool"))
 		cachepool = 1;
-	else if ((lp->pool_data_lv_name = arg_str_value(cmd, thinpool_ARG, NULL))) {
+	else if ((lp->pool_data_name = arg_str_value(cmd, thinpool_ARG, NULL))) {
 		if (type_str[0] &&
 		    strcmp(type_str, "thin") &&
 		    strcmp(type_str, "thin-pool")) {
@@ -280,7 +280,7 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 
 	if (thinpool) {
 		lp->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
-		lp->origin_lv_name = arg_str_value(cmd, originname_ARG, NULL);
+		lp->origin_name = arg_str_value(cmd, originname_ARG, NULL);
 	} else {
 		if (arg_from_list_is_set(cmd, "is valid only with thin pools",
 					 discards_ARG, originname_ARG, thinpool_ARG,
@@ -308,23 +308,23 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 				     &lp->zero))
 			return_0;
 
-		if ((lp->pool_metadata_lv_name = arg_str_value(cmd, poolmetadata_ARG, NULL)) &&
+		if ((lp->pool_metadata_name = arg_str_value(cmd, poolmetadata_ARG, NULL)) &&
 		    arg_from_list_is_set(cmd, "is invalid with --poolmetadata",
 					 stripesize_ARG, stripes_long_ARG,
 					 readahead_ARG, -1))
 			return_0;
 
-		if (!lp->pool_data_lv_name) {
+		if (!lp->pool_data_name) {
 			if (!*pargc) {
 				log_error("Please specify the pool data LV.");
 				return 0;
 			}
-			lp->pool_data_lv_name = (*pargv)[0];
+			lp->pool_data_name = (*pargv)[0];
 			(*pargv)++, (*pargc)--;
 		}
 
 		if (!lp->thin && !lp->cache)
-			lp->lv_name_full = lp->pool_data_lv_name;
+			lp->lv_name_full = lp->pool_data_name;
 
 		/* Hmm _read_activation_params */
 		lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
@@ -528,7 +528,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			log_error("Please provide logical volume path for snapshot origin.");
 			return 0;
 		}
-		lp->origin_lv_name = argv[0];
+		lp->origin_name = argv[0];
 		argv++, argc--;
 
 		if (arg_count(cmd, regionsize_ARG)) {
@@ -2164,9 +2164,9 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(org = find_lv(lv->vg, lp->origin_lv_name))) {
+	if (!(org = find_lv(lv->vg, lp->origin_name))) {
 		log_error("Couldn't find origin volume %s in Volume group %s.",
-			  lp->origin_lv_name, lv->vg->name);
+			  lp->origin_name, lv->vg->name);
 		return 0;
 	}
 
@@ -2648,11 +2648,11 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 	struct lvcreate_params lvc = {
 		.activate = CHANGE_AEY,
 		.alloc = ALLOC_INHERIT,
-		.lv_name = lp->origin_lv_name,
+		.lv_name = lp->origin_name,
 		.major = -1,
 		.minor = -1,
 		.permission = LVM_READ,
-		.pool = pool_lv->name,
+		.pool_name = pool_lv->name,
 		.pvh = &vg->pvs,
 		.read_ahead = DM_READ_AHEAD_AUTO,
 		.stripes = 1,
@@ -2792,9 +2792,9 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 	char metadata_name[NAME_LEN], data_name[NAME_LEN];
 	int activate_pool;
 
-	if (lp->pool_data_lv_name &&
-	    !(pool_lv = find_lv(vg, lp->pool_data_lv_name))) {
-		log_error("Unknown pool data LV %s.", lp->pool_data_lv_name);
+	if (lp->pool_data_name &&
+	    !(pool_lv = find_lv(vg, lp->pool_data_name))) {
+		log_error("Unknown pool data LV %s.", lp->pool_data_name);
 		return 0;
 	}
 
@@ -2845,9 +2845,9 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lp->pool_metadata_lv_name) {
-		if (!(lp->pool_metadata_lv = find_lv(vg, lp->pool_metadata_lv_name))) {
-			log_error("Unknown pool metadata LV %s.", lp->pool_metadata_lv_name);
+	if (lp->pool_metadata_name) {
+		if (!(lp->pool_metadata_lv = find_lv(vg, lp->pool_metadata_name))) {
+			log_error("Unknown pool metadata LV %s.", lp->pool_metadata_name);
 			return 0;
 		}
 		lp->pool_metadata_size = lp->pool_metadata_lv->size;
@@ -3127,7 +3127,7 @@ mda_write:
 
 	/* Rename deactivated metadata LV to have _tmeta suffix */
 	/* Implicit checks if metadata_lv is visible */
-	if (lp->pool_metadata_lv_name &&
+	if (lp->pool_metadata_name &&
 	    !lv_rename_update(cmd, metadata_lv, metadata_name, 0))
 		return_0;
 

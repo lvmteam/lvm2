@@ -6555,7 +6555,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct cmd_context *cmd = vg->cmd;
 	uint32_t size_rest;
 	uint64_t status = UINT64_C(0);
-	struct logical_volume *lv, *org = NULL;
+	struct logical_volume *lv, *origin_lv = NULL;
 	struct logical_volume *pool_lv;
 	struct logical_volume *tmp_lv;
 	const char *thin_name = NULL;
@@ -6639,14 +6639,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	status |= lp->permission | VISIBLE_LV;
 
 	if (seg_is_cache(lp)) {
-		if (!lp->pool) {
+		if (!lp->pool_name) {
 			log_error(INTERNAL_ERROR "Cannot create cached volume without cache pool.");
                         return NULL;
 		}
 		/* We have the cache_pool, create the origin with cache */
-		if (!(pool_lv = find_lv(vg, lp->pool))) {
+		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
 			log_error("Couldn't find cache pool volume %s in "
-				  "volume group %s.", lp->pool, vg->name);
+				  "volume group %s.", lp->pool_name, vg->name);
 			return NULL;
 		}
 
@@ -6663,22 +6663,22 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "striped")))
 			return_0;
 	} else if (seg_is_thin(lp) && lp->snapshot) {
-		if (!lp->origin) {
+		if (!lp->origin_name) {
 			log_error(INTERNAL_ERROR "Origin LV is not defined.");
 			return 0;
 		}
-		if (!(org = find_lv(vg, lp->origin))) {
+		if (!(origin_lv = find_lv(vg, lp->origin_name))) {
 			log_error("Couldn't find origin volume '%s'.",
-				  lp->origin);
+				  lp->origin_name);
 			return NULL;
 		}
 
-		if (lv_is_locked(org)) {
+		if (lv_is_locked(origin_lv)) {
 			log_error("Snapshots of locked devices are not supported.");
 			return NULL;
 		}
 
-		lp->voriginextents = org->le_count;
+		lp->voriginextents = origin_lv->le_count;
 	} else if (lp->snapshot) {
 		if (!activation()) {
 			log_error("Can't create snapshot without using "
@@ -6691,51 +6691,51 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 		if (!lp->voriginsize) {
 
-			if (!(org = find_lv(vg, lp->origin))) {
+			if (!(origin_lv = find_lv(vg, lp->origin_name))) {
 				log_error("Couldn't find origin volume '%s'.",
-					  lp->origin);
+					  lp->origin_name);
 				return NULL;
 			}
-			if (lv_is_virtual_origin(org)) {
+			if (lv_is_virtual_origin(origin_lv)) {
 				log_error("Can't share virtual origins. "
 					  "Use --virtualsize.");
 				return NULL;
 			}
-			if (lv_is_cow(org)) {
+			if (lv_is_cow(origin_lv)) {
 				log_error("Snapshots of snapshots are not "
 					  "supported yet.");
 				return NULL;
 			}
-			if (lv_is_locked(org)) {
+			if (lv_is_locked(origin_lv)) {
 				log_error("Snapshots of locked devices are not "
 					  "supported yet");
 				return NULL;
 			}
-			if (lv_is_merging_origin(org)) {
+			if (lv_is_merging_origin(origin_lv)) {
 				log_error("Snapshots of an origin that has a "
 					  "merging snapshot is not supported");
 				return NULL;
 			}
 
-			if (lv_is_thin_type(org) && !lv_is_thin_volume(org)) {
+			if (lv_is_thin_type(origin_lv) && !lv_is_thin_volume(origin_lv)) {
 				log_error("Snapshots of thin pool %sdevices "
 					  "are not supported.",
-					  lv_is_thin_pool_data(org) ? "data " :
-					  lv_is_thin_pool_metadata(org) ?
+					  lv_is_thin_pool_data(origin_lv) ? "data " :
+					  lv_is_thin_pool_metadata(origin_lv) ?
 					  "metadata " : "");
 				return NULL;
 			}
 
-			if (lv_is_mirror_type(org)) {
+			if (lv_is_mirror_type(origin_lv)) {
 				log_warn("WARNING: Snapshots of mirrors can deadlock under rare device failures.");
 				log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
 				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
 			}
 
-			if (vg_is_clustered(vg) && lv_is_active(org) &&
-			    !lv_is_active_exclusive_locally(org)) {
+			if (vg_is_clustered(vg) && lv_is_active(origin_lv) &&
+			    !lv_is_active_exclusive_locally(origin_lv)) {
 				log_error("%s must be active exclusively to"
-					  " create snapshot", org->name);
+					  " create snapshot", origin_lv->name);
 				return NULL;
 			}
 		}
@@ -6807,14 +6807,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_thin_volume(lp)) {
 		/* Ensure all stacked messages are submitted */
-		if (!lp->pool) {
+		if (!lp->pool_name) {
 			log_error(INTERNAL_ERROR "Undefined pool for thin volume segment.");
 			return NULL;
 		}
 
-		if (!(pool_lv = find_lv(vg, lp->pool))) {
+		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
 			log_error("Unable to find existing pool LV %s in VG %s.",
-				  lp->pool, vg->name);
+				  lp->pool_name, vg->name);
 			return NULL;
 		}
 
@@ -6823,11 +6823,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return_NULL;
 
 		/* For thin snapshot we must have matching pool */
-		if (org && lv_is_thin_volume(org) && (!lp->pool ||
-		    (strcmp(first_seg(org)->pool_lv->name, lp->pool) == 0)))
-			thin_name = org->name;
+		if (origin_lv && lv_is_thin_volume(origin_lv) && (!lp->pool_name ||
+		    (strcmp(first_seg(origin_lv)->pool_lv->name, lp->pool_name) == 0)))
+			thin_name = origin_lv->name;
 		else
-			thin_name = lp->pool;
+			thin_name = lp->pool_name;
 	}
 
 	if (segtype_is_mirrored(lp->segtype) || segtype_is_raid(lp->segtype)) {
@@ -6867,7 +6867,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!lv_extend(lv, lp->segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
-		       seg_is_pool(lp) ? lp->poolmetadataextents : lp->region_size,
+		       seg_is_pool(lp) ? lp->pool_metadata_extents : lp->region_size,
 		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
 		       thin_name, lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
@@ -6900,18 +6900,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * Check if using 'external origin' or the 'normal' snapshot
 		 * within the same thin pool
 		 */
-		if (lp->snapshot && (first_seg(org)->pool_lv != pool_lv)) {
-			if (!pool_supports_external_origin(first_seg(pool_lv), org))
+		if (lp->snapshot && (first_seg(origin_lv)->pool_lv != pool_lv)) {
+			if (!pool_supports_external_origin(first_seg(pool_lv), origin_lv))
 				return_0;
-			if (org->status & LVM_WRITE) {
+			if (origin_lv->status & LVM_WRITE) {
 				log_error("Cannot use writable LV as the external origin.");
 				return 0; // TODO conversion for inactive
 			}
-			if (lv_is_active(org) && !lv_is_external_origin(org)) {
+			if (lv_is_active(origin_lv) && !lv_is_external_origin(origin_lv)) {
 				log_error("Cannot use active LV for the external origin.");
 				return 0; // We can't be sure device is read-only
 			}
-			if (!attach_thin_external_origin(first_seg(lv), org))
+			if (!attach_thin_external_origin(first_seg(lv), origin_lv))
 				return_NULL;
 		}
 
@@ -6953,18 +6953,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	 * Either we have origin or pool and created cache origin LV
 	 */
 	if (lp->cache &&
-	    (lp->origin || (lp->pool && !lv_is_cache_pool(lv)))) {
-		if (lp->origin) {
-			if (!(org = find_lv(vg, lp->origin)))
+	    (lp->origin_name || (lp->pool_name && !lv_is_cache_pool(lv)))) {
+		if (lp->origin_name) {
+			if (!(origin_lv = find_lv(vg, lp->origin_name)))
 				goto deactivate_and_revert_new_lv;
 			pool_lv = lv; /* Cache pool is created */
-		} else if (lp->pool) {
-			if (!(pool_lv = find_lv(vg, lp->pool)))
+		} else if (lp->pool_name) {
+			if (!(pool_lv = find_lv(vg, lp->pool_name)))
 				goto deactivate_and_revert_new_lv;
-			org = lv; /* Cached origin is created */
+			origin_lv = lv; /* Cached origin is created */
 		}
 
-		if (!(tmp_lv = lv_cache_create(pool_lv, org)))
+		if (!(tmp_lv = lv_cache_create(pool_lv, origin_lv)))
 			goto deactivate_and_revert_new_lv;
 
 		/* From here we cannot deactive_and_revert! */
@@ -6976,7 +6976,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * There is no such problem with cache pool
 		 * since it cannot be activated.
 		 */
-		if (lp->origin && lv_is_active(lv)) {
+		if (lp->origin_name && lv_is_active(lv)) {
 			if (!is_change_activating(lp->activate)) {
 				/* User requested to create inactive cached volume */
 				if (deactivate_lv(cmd, lv)) {
@@ -7023,19 +7023,19 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (lv_is_thin_volume(lv)) {
 		/* For snapshot, suspend active thin origin first */
-		if (org && lv_is_active(org) && lv_is_thin_volume(org)) {
-			if (!suspend_lv_origin(cmd, org)) {
+		if (origin_lv && lv_is_active(origin_lv) && lv_is_thin_volume(origin_lv)) {
+			if (!suspend_lv_origin(cmd, origin_lv)) {
 				log_error("Failed to suspend thin snapshot origin %s/%s.",
-					  org->vg->name, org->name);
+					  origin_lv->vg->name, origin_lv->name);
 				goto revert_new_lv;
 			}
-			if (!resume_lv_origin(cmd, org)) { /* deptree updates thin-pool */
+			if (!resume_lv_origin(cmd, origin_lv)) { /* deptree updates thin-pool */
 				log_error("Failed to resume thin snapshot origin %s/%s.",
-					  org->vg->name, org->name);
+					  origin_lv->vg->name, origin_lv->name);
 				goto revert_new_lv;
 			}
 			/* At this point remove pool messages, snapshot is active */
-			if (!update_pool_lv(first_seg(org)->pool_lv, 0)) {
+			if (!update_pool_lv(first_seg(origin_lv)->pool_lv, 0)) {
 				stack;
 				goto revert_new_lv;
 			}
@@ -7104,7 +7104,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * if origin is real (not virtual) inactive device.
 		 */
 		if ((vg_is_clustered(vg) ||
-		     (!lp->voriginsize && !lv_is_active(org))) &&
+		     (!lp->voriginsize && !lv_is_active(origin_lv))) &&
 		    !deactivate_lv(cmd, lv)) {
 			log_error("Aborting. Couldn't deactivate snapshot "
 				  "COW area. Manual intervention required.");
@@ -7113,13 +7113,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 		/* A virtual origin must be activated explicitly. */
 		if (lp->voriginsize &&
-		    (!(org = _create_virtual_origin(cmd, vg, lv->name,
+		    (!(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
 						    lp->permission,
 						    lp->voriginextents)) ||
-		     !activate_lv_excl(cmd, org))) {
+		     !activate_lv_excl(cmd, origin_lv))) {
 			log_error("Couldn't create virtual origin for LV %s",
 				  lv->name);
-			if (org && !lv_remove(org))
+			if (origin_lv && !lv_remove(origin_lv))
 				stack;
 			goto deactivate_and_revert_new_lv;
 		}
@@ -7128,14 +7128,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * COW LV is activated via implicit activation of origin LV
 		 * Only the snapshot origin holds the LV lock in cluster
 		 */
-		if (!vg_add_snapshot(org, lv, NULL,
-				     org->le_count, lp->chunk_size)) {
+		if (!vg_add_snapshot(origin_lv, lv, NULL,
+				     origin_lv->le_count, lp->chunk_size)) {
 			log_error("Couldn't create snapshot.");
 			goto deactivate_and_revert_new_lv;
 		}
 
 		/* store vg on disk(s) */
-		if (!lv_update_and_reload(org))
+		if (!lv_update_and_reload(origin_lv))
 			return_0;
 	}
 
@@ -7172,13 +7172,13 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
 				return_NULL;
 
-			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
+			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
 
 			if (!lp->thin && !lp->snapshot)
 				goto out;
 
-			lp->pool = lv->name;
+			lp->pool_name = lv->name;
 
 			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
 				return_NULL;
@@ -7188,7 +7188,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 								    "cache-pool")))
 				return_NULL;
 
-			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool)))
+			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
 
 			if (lv_is_cache(lv)) {
@@ -7201,7 +7201,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!lp->cache)
 				goto out;
 
-			lp->pool = lv->name;
+			lp->pool_name = lv->name;
 			log_error("Creation of cache pool and cached volume in one command is not yet supported.");
 			return NULL;
 		}
