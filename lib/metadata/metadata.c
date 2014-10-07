@@ -1778,10 +1778,34 @@ struct pv_list *find_pv_in_vg(const struct volume_group *vg,
 			       const char *pv_name)
 {
 	struct pv_list *pvl;
+	struct device *pv_dev, *cached_dev;
 
-	dm_list_iterate_items(pvl, &vg->pvs)
-		if (pvl->pv->dev == dev_cache_get(pv_name, vg->cmd->filter))
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		pv_dev = pvl->pv->dev;
+		cached_dev = dev_cache_get(pv_name, vg->cmd->filter);
+		if (!pv_dev) {
+			/*
+			 * pv_dev can't be NULL here!
+			 * We have to catch this situation earlier in the
+			 * code if this internal error is hit. Otherwise,
+			 * there's a possibility that pv_dev will match
+			 * cached_dev in case both are NULL.
+			 *
+			 * NULL cached_dev may happen in case this device
+			 * is filtered and NULL pv_dev may happen if the
+			 * device is missing!
+			 *
+			 * If such incorrect match was hit, simply incorrect
+			 * PV would be processed. This really needs to be
+			 * handled earlier in the code in that case.
+			 */
+			log_error(INTERNAL_ERROR "find_pv_in_vg: PV that is not "
+				  "bound to any existing device found");
+			return NULL;
+		}
+		if (pv_dev == cached_dev)
 			return pvl;
+	}
 
 	return NULL;
 }
