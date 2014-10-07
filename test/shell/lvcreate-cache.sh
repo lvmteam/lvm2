@@ -156,13 +156,10 @@ grep "is bigger" out
 # --poolmetadatasize
 # --poolmetadataspare
 
-# TODO: creating a cache on top of active RAID appears to be broken
 lvremove -f $vg
 lvcreate -n corigin -m 1 --type raid1 -l 10 $vg
 lvcreate -n cpool --type cache $vg/corigin -l 10
-should check active $vg corigin_corig
-dmsetup table | grep ^$PREFIX | should grep corigin_corig
-lvchange --refresh $vg
+check active $vg corigin_corig
 dmsetup table | grep ^$PREFIX | grep corigin_corig
 
 vgremove -ff $vg

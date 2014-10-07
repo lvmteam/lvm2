@@ -90,11 +90,8 @@ fail lvconvert --type cache --cachepool $vg/pool $vg/corigin
 lvconvert --yes --cache --cachepool $vg/pool $vg/corigin
 lvremove -ff $vg
 
-
-# TODO: creating a cache on top of active RAID appears to be broken
 lvcreate -n corigin -m 1 --type raid1 -l 10 $vg
 lvcreate -n cpool --type cache $vg/corigin -l 10
-lvchange --refresh $vg # fix up DM tables
 lvconvert --splitmirrors 1 --name split $vg/corigin $dev1
 
 lvremove -f $vg
