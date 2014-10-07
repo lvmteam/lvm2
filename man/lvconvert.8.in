@@ -153,8 +153,11 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .B lvconvert
 .RB [ \-\-type
 .BR \fIcache [ \fI\-pool ]| \-H | \-\-cache ]
-.RB [ \-\-cachepool
+.RB [{ \-\-cachepool
 .IR CachePoolLogicalVolume { Name | Path }]
+|
+.B \-\-pooldatasize
+.IR CachePoolMetadataSize [ bBsSkKmMgGtTpPeE ]}]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
@@ -304,13 +307,13 @@ Separates \fISplitableLogicalVolume\fP.
 Option is agregating various split commands and tries to detect necessary split
 operation from its arguments.
 .TP
-.BR \-\-splitcache ", " \-\-uncache
+.BR \-\-splitcache
 Separates \fICacheLogicalVolume\fP from cache pool.
-Before volume becomes uncached, cache is flushed.
-With \-\-split the cache pool volume is then left unused and 
-could be i.e. used for caching other volumes.
-The inverse of \-\-cache is \-\-uncache where the cache pool 
-component volumes are automatically removed.
+Before the logical volume becomes uncached, cache is flushed.
+The cache pool volume is then left unused and
+could be used e.g. to caching another volume.
+See also the option \fB\-\-uncache\fP for uncaching and removing
+cache pool with one command.
 .TP
 .B \-\-splitsnapshot
 Separates \fISnapshotLogicalVolume\fP from its origin.
@@ -347,6 +350,7 @@ until thin target version 1.5.)
 .BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
 Specifies whether or not discards will be processed by the thin layer in the
 kernel and passed down to the Physical Volume.
+Options is currently supported only with thin pools.
 Default is \fIpassdown\fP.
 .TP
 .BR \-Z ", " \-\-zero " {" \fIy | \fIn }
@@ -381,6 +385,10 @@ Without this option a default name of "lvol<n>" will be generated where
 <n> is the LVM internal number of the logical volume.
 This volume will be read-only and cannot be further modified as long,
 as it is being used as the external origin.
+.TP
+.IR \fB\-\-pooldatasize " " PoolDataVolumeSize [ bBsSkKmMgGtTpPeE ]
+Sets the size of pool's data logical volume.
+The option \fB\-\-size\fP could be still used with thin pools.
 .TP
 .BR \-\-poolmetadata " " \fIPoolMetadataLogicalVolume { \fIName | \fIPath }
 Specifies cache or thin pool metadata logical volume.
@@ -450,7 +458,7 @@ available in "<pool>_meta<n>" LV.
 Remove the specified device (\fIPhysicalVolume\fP) and replace it with one
 that is available in the volume group or from the specific list provided.
 This option is only available to RAID segment types
-(e.g. 
+(e.g.
 .IR raid1 ,
 .IR raid5 ,
 etc).
@@ -483,6 +491,12 @@ Content of converted volume is lost.
 Thin pool's metadata logical volume can be specified with the option
 \fB\-\-poolmetadata\fP or allocated with \fB\-\-poolmetadatasize\fP.
 See \fBlvmthin\fP(7) for more info about thin provisioning support.
+.TP
+.BR \-\-uncache
+Uncaches \fICacheLogicalVolume\fP.
+Before the volume becomes uncached, cache is flushed.
+Unlike with \fB\-\-splitcache\fP the cache pool volume is removed.
+This option could seen as an inverse of \fB\-\-cache\fP.
 
 .SH Examples
 Converts the linear logical volume "vg00/lvol1" to a two-way mirror
@@ -593,7 +607,7 @@ given cache metadata LV.
 Convert an existing logical volume to a cache LV using the given
 cache pool LV and chunk size 128KiB.
 .sp
-.B lvconvert \-\-cache  \-\-cachepool vg00/lvx_cachepool -c 128 vg00/lvx
+.B lvconvert \-\-cache \-\-cachepool vg00/lvx_cachepool -c 128 vg00/lvx
 .sp
 Detach cache pool from an existing cached logical volume "vg00/lvol1" and
 leave cache pool unused.
