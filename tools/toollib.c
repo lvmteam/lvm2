@@ -1309,6 +1309,25 @@ int validate_lvname_param(struct cmd_context *cmd, const char **vg_name,
 	return 1;
 }
 
+/*
+ * Validate lvname parameter
+ * This name must follow restriction rules on prefixes and suffixes.
+ *
+ * If it contains vgname, it is extracted from lvname.
+ * If there is passed vgname, it is compared whether its the same name.
+ */
+int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_name,
+				     const char **lv_name)
+{
+	if (!validate_lvname_param(cmd, vg_name, lv_name))
+		return_0;
+
+	if (lv_name && *lv_name && !apply_lvname_restrictions(*lv_name))
+		return_0;
+
+	return -1;
+}
+
 struct vgnameid_list {
 	struct dm_list list;
 	const char *vg_name;

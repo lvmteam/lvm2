@@ -132,6 +132,8 @@ int get_and_validate_major_minor(const struct cmd_context *cmd,
 
 int validate_lvname_param(struct cmd_context *cmd, const char **vg_name,
 			  const char **lv_name);
+int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_name,
+				     const char **lv_name);
 
 int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
                     void *handle __attribute__((unused)));
