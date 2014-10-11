@@ -564,7 +564,13 @@ int alloc_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values
 
 int segtype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return get_segtype_from_string(cmd, av->value) ? 1 : 0;
+	struct segment_type *segtype;
+	const char *str = (!strcmp(av->value, "linear")) ? "striped" : av->value;
+
+	if (!(segtype = get_segtype_from_string(cmd, str)))
+		return_0;
+
+	return (!segtype_is_unknown(segtype)) ? 1 : 0;
 }
 
 /*

@@ -714,6 +714,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	struct arg_value_group_list *current_group;
 	const char *segtype_str;
 	const char *tag;
+	int only_linear = 0;
 
 	memset(lcp, 0, sizeof(*lcp));
 	dm_list_init(&lp->tags);
@@ -745,6 +746,10 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		segtype_str = "striped";
 
 	segtype_str = arg_str_value(cmd, type_ARG, segtype_str);
+	if (!strcmp(segtype_str, "linear")) {
+		segtype_str = "striped";
+		only_linear = 1; /* User requested linear only target */
+	}
 
 	if (!(lp->segtype = get_segtype_from_string(cmd, segtype_str)))
 		return_0;
@@ -910,6 +915,11 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	    !_read_raid_params(lp, cmd) ||
 	    !_read_cache_pool_params(lp, cmd))
 		return_0;
+
+	if (only_linear && lp->stripes > 1) {
+		log_error("Cannot use stripes with linear type.");
+		return 0;
+	}
 
 	if (lp->snapshot && (lp->extents || lcp->size)) {
 		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
