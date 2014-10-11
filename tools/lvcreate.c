@@ -985,13 +985,13 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Should we zero/wipe signatures on the lv.
 	 */
-	lp->zero = (!(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) &&
-		    (strcmp(arg_str_value(cmd, zero_ARG, "y"), "y") == 0)) ? 1 : 0;
+	lp->zero = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED)
+		? 0 : arg_int_value(cmd, zero_ARG, 1);
 
 	if (arg_count(cmd, wipesignatures_ARG)) {
 		/* If -W/--wipesignatures is given on command line directly, respect it. */
-		lp->wipe_signatures =(!(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) &&
-				      (strcmp(arg_str_value(cmd, wipesignatures_ARG, "y"), "y") == 0)) ? 1 : 0;
+		lp->wipe_signatures = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED)
+			? 0 : arg_int_value(cmd, wipesignatures_ARG, 1);
 	} else {
 		/*
 		 * If -W/--wipesignatures is not given on command line,
@@ -1047,7 +1047,7 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	/*
 	 * Allocation parameters
 	 */
-	contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
+	contiguous = arg_int_value(cmd, contiguous_ARG, 0);
 
 	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
 

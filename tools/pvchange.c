@@ -22,18 +22,9 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	const char *pv_name = pv_dev_name(pv);
 	char uuid[64] __attribute__((aligned(8)));
 
-	int allocatable = 0;
-	int tagargs = 0;
-	int mda_ignore = 0;
-
-	tagargs = arg_count(cmd, addtag_ARG) + arg_count(cmd, deltag_ARG);
-
-	if (arg_count(cmd, allocatable_ARG))
-		allocatable = !strcmp(arg_str_value(cmd, allocatable_ARG, "n"),
-				      "y");
-	if (arg_count(cmd, metadataignore_ARG))
-		mda_ignore = !strcmp(arg_str_value(cmd, metadataignore_ARG, "n"),
-				      "y");
+	int allocatable = arg_int_value(cmd, allocatable_ARG, 0);
+	int mda_ignore = arg_int_value(cmd, metadataignore_ARG, 0);
+	int tagargs = arg_count(cmd, addtag_ARG) + arg_count(cmd, deltag_ARG);
 
 	/* If in a VG, must change using volume group. */
 	if (!is_orphan(pv)) {

@@ -278,7 +278,7 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 static int _vgchange_resizeable(struct cmd_context *cmd,
 				struct volume_group *vg)
 {
-	int resizeable = !strcmp(arg_str_value(cmd, resizeable_ARG, "n"), "y");
+	int resizeable = arg_int_value(cmd, resizeable_ARG, 0);
 
 	if (resizeable && vg_is_resizeable(vg)) {
 		log_error("Volume group \"%s\" is already resizeable",
@@ -303,7 +303,7 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 static int _vgchange_clustered(struct cmd_context *cmd,
 			       struct volume_group *vg)
 {
-	int clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+	int clustered = arg_int_value(cmd, clustered_ARG, 0);
 
 	if (clustered && (vg_is_clustered(vg))) {
 		log_error("Volume group \"%s\" is already clustered",

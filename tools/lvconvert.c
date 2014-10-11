@@ -559,10 +559,8 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
 			return_0;
 
-		lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
-						(lp->segtype->flags &
-						 SEG_CANNOT_BE_ZEROED) ?
-						"n" : "y"), "n");
+		lp->zero = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED)
+			? 0 : arg_int_value(cmd, zero_ARG, 1);
 
 	} else if (arg_count(cmd, replace_ARG)) { /* RAID device replacement */
 		lp->replace_pv_count = arg_count(cmd, replace_ARG);

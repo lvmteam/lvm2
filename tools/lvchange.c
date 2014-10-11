@@ -461,12 +461,10 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 
 static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	int want_contiguous = 0;
-	alloc_policy_t alloc;
-
-	want_contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
-	alloc = want_contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
-	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, alloc);
+	int want_contiguous = arg_int_value(cmd, contiguous_ARG, 0);
+	alloc_policy_t alloc = (alloc_policy_t)
+		arg_uint_value(cmd, alloc_ARG, (want_contiguous)
+			       ? ALLOC_CONTIGUOUS : ALLOC_INHERIT);
 
 	if (alloc == lv->alloc) {
 		log_error("Allocation policy of logical volume \"%s\" is "

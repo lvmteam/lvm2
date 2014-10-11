@@ -643,9 +643,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	    arg_uint_value(cmd, physicalextentsize_ARG, vp_def->extent_size);
 
 	if (arg_count(cmd, clustered_ARG))
-		vp_new->clustered =
-			!strcmp(arg_str_value(cmd, clustered_ARG,
-					      vp_def->clustered ? "y":"n"), "y");
+		vp_new->clustered = arg_int_value(cmd, clustered_ARG, vp_def->clustered);
 	else
 		/* Default depends on current locking type */
 		vp_new->clustered = locking_is_clustered();
@@ -866,8 +864,7 @@ int pvcreate_params_validate(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, zero_ARG))
-		pp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
+	pp->zero = arg_int_value(cmd, zero_ARG, 1);
 
 	if (arg_sign_value(cmd, dataalignment_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume data alignment may not be negative");
@@ -966,7 +963,7 @@ int get_pool_params(struct cmd_context *cmd,
 	if (segtype_is_thin_pool(segtype) || segtype_is_thin(segtype)) {
 		if (arg_count(cmd, zero_ARG)) {
 			*passed_args |= PASS_ARG_ZERO;
-			*zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
+			*zero = arg_int_value(cmd, zero_ARG, 1);
 			log_very_verbose("Setting pool zeroing: %u", *zero);
 		}
 
@@ -1188,7 +1185,7 @@ int get_and_validate_major_minor(const struct cmd_context *cmd,
 				 const struct format_type *fmt,
 				 int32_t *major, int32_t *minor)
 {
-	if (strcmp(arg_str_value(cmd, persistent_ARG, "n"), "y")) {
+	if (!arg_int_value(cmd, persistent_ARG, 0)) {
 		if (arg_is_set(cmd, minor_ARG) || arg_is_set(cmd, major_ARG)) {
 			log_error("--major and --minor incompatible with -Mn");
 			return 0;
