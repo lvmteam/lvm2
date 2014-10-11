@@ -1218,7 +1218,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 		init_striped_segtype,
 		init_zero_segtype,
 		init_error_segtype,
-		init_free_segtype,
+		/* disabled until needed init_free_segtype, */
 #ifdef SNAPSHOT_INTERNAL
 		init_snapshot_segtype,
 #endif
