@@ -49,6 +49,9 @@ lvcreate -n cpool -m 1 --type raid1 -l 10 $vg
 lvconvert --yes --type cache-pool --poolmetadata $vg/cpool_meta $vg/cpool
 lvcreate -n corigin --type cache --cachepool $vg/cpool -l 10
 
+lvchange --syncaction repair $vg/cpool_cmeta
+lvchange --syncaction repair $vg/cpool_cdata
+
 lvconvert --repair -y $vg/cpool_cmeta
 lvconvert --repair -y $vg/cpool_cdata
 
@@ -59,6 +62,5 @@ not lvconvert --splitmirrors 1 --name split_cdata $vg/cpool_cdata "$dev1"
 # but allow manipulating existing LVs with reserved names
 lvconvert --splitmirrors 1 --name split_meta $vg/cpool_cmeta "$dev1"
 lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
-
 
 vgremove -f $vg

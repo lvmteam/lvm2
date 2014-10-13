@@ -857,7 +857,8 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	    lv_is_virtual_origin(origin = origin_from_cow(lv)))
 		lv = origin;
 
-	if ((lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv)) &&
+	if ((lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv) ||
+	     lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) &&
 	    !arg_count(cmd, activate_ARG) &&
 	    !arg_count(cmd, permission_ARG) &&
 	    !arg_count(cmd, setactivationskip_ARG))
