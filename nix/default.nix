@@ -39,7 +39,7 @@ let
          export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
          # we always run in a fresh image, so need to install everything again
-         ls ${build}/rpms/*/*.rpm | grep -v sysvinit | xargs rpm -Uv # */
+         ls ${build}/rpms/*/*.rpm | grep -v sysvinit | xargs rpm -Uv --oldpackage # */
          rpm -Uv ${pkgs.fetchurl {
             url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
             sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
@@ -181,7 +181,7 @@ let
                "cifs" "virtio_net" "unix" "hmac" "md4" "ecb" "des_generic" "sha256"
                "ata_piix" "sd_mod" ];
 
-  centos_url = ver: arch: if ver == "6.5"
+  centos_url = ver: arch: if ver == "6.5" || ver == "7"
        then "http://ftp.fi.muni.cz/pub/linux/centos/${ver}/os/${arch}/"
        else "http://vault.centos.org/${ver}/os/${arch}/";
   fedora_url = ver: arch: if lib.eqStrings ver "rawhide" || lib.eqStrings ver "19"
@@ -267,6 +267,11 @@ let
         version="6.5"; arch="x86_64";
         sha="3353e378f5cb4bb6c3b3dd2ca266c6d68a1e29c36cf99f76aea3d8e158626024";
       };
+
+      centos70x86_64 = centos {
+        version="7"; arch="x86_64";
+        sha="1a7dd0d315b39ad504f54ea88676ab502a48064cb2d875ae3ae29431e175861c";
+      };
     };
 
   vm = { pkgs, xmods, dmmods ? false }: with lib; rec {
@@ -306,6 +311,8 @@ let
 
       fedora20 = fedora19;
       fedora20u = fedora20;
+
+      centos70 = fedora20;
 
       rawhide = fedora20;
     };
@@ -347,6 +354,8 @@ let
     centos64_x86_64 = { arch = "x86_64" ; image = "centos64"; };
     centos65_i386   = { arch = "i386"  ; image = "centos65"; };
     centos65_x86_64 = { arch = "x86_64" ; image = "centos65"; };
+
+    centos70_x86_64 = { arch = "x86_64" ; image = "centos70"; };
 
     rawhide_i386   = { arch = "i386"  ; image = "rawhide"; };
     rawhide_x86_64 = { arch = "x86_64" ; image = "rawhide"; };
