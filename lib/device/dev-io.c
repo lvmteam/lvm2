@@ -154,7 +154,7 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 		}
 		log_debug_devs("%s: physical block size is %u bytes", name, dev->phys_block_size);
 	}
-#elif BLKSSZGET
+#elif defined (BLKSSZGET)
 	/* if we can't get physical block size, just use logical block size instead */
 	if (dev->phys_block_size == -1) {
 		if (ioctl(dev_fd(dev), BLKSSZGET, &dev->phys_block_size) < 0) {
