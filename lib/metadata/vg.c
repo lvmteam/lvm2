@@ -278,18 +278,18 @@ char *vg_profile_dup(const struct volume_group *vg)
 }
 
 static int _recalc_extents(uint32_t *extents, const char *desc1,
-			   const char *desc2, uint32_t old_size,
-			   uint32_t new_size)
+			   const char *desc2, uint32_t old_extent_size,
+			   uint32_t new_extent_size)
 {
-	uint64_t size = (uint64_t) old_size * (*extents);
+	uint64_t size = (uint64_t) old_extent_size * (*extents);
 
-	if (size % new_size) {
+	if (size % new_extent_size) {
 		log_error("New size %" PRIu64 " for %s%s not an exact number "
 			  "of new extents.", size, desc1, desc2);
 		return 0;
 	}
 
-	size /= new_size;
+	size /= new_extent_size;
 
 	if (size > MAX_EXTENT_COUNT) {
 		log_error("New extent count %" PRIu64 " for %s%s exceeds "
@@ -302,9 +302,48 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 	return 1;
 }
 
-int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
+int vg_check_new_extent_size(const struct format_type *fmt, uint32_t new_extent_size)
 {
-	uint32_t old_size = vg->extent_size;
+	if (!new_extent_size) {
+		log_error("Physical extent size may not be zero");
+		return 0;
+	}
+
+	if ((fmt->features & FMT_NON_POWER2_EXTENTS)) {
+		if ((new_extent_size & (new_extent_size - 1)) &&
+		    (new_extent_size % MIN_NON_POWER2_EXTENT_SIZE)) {
+			log_error("Physical Extent size must be a multiple of %s when not a power of 2.",
+				  display_size(fmt->cmd, (uint64_t) MIN_NON_POWER2_EXTENT_SIZE));
+			return 0;
+		}
+		return 1;
+	}
+
+	/* Apply original format1 restrictions */
+	if ((new_extent_size & (new_extent_size - 1))) {
+		log_error("Metadata format only supports Physical Extent sizes that are powers of 2.");
+		return 0;
+	}
+
+	if (new_extent_size > MAX_PE_SIZE || new_extent_size < MIN_PE_SIZE) {
+		log_error("Extent size must be between %s and %s",
+			  display_size(fmt->cmd, (uint64_t) MIN_PE_SIZE),
+			  display_size(fmt->cmd, (uint64_t) MAX_PE_SIZE));
+		return 0;
+	}
+
+	if (new_extent_size % MIN_PE_SIZE) {
+		log_error("Extent size must be multiple of %s",
+			  display_size(fmt->cmd, (uint64_t) MIN_PE_SIZE));
+		return 0;
+	}
+
+ 	return 1;
+}
+
+int vg_set_extent_size(struct volume_group *vg, uint32_t new_extent_size)
+{
+	uint32_t old_extent_size = vg->extent_size;
 	struct pv_list *pvl;
 	struct lv_list *lvl;
 	struct physical_volume *pv;
@@ -319,52 +358,45 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 		return 0;
 	}
 
-	if (!new_size) {
-		log_error("Physical extent size may not be zero");
-		return 0;
-	}
-
-	if (new_size == vg->extent_size)
+	if (new_extent_size == vg->extent_size)
 		return 1;
 
-	if (new_size & (new_size - 1)) {
-		log_error("Physical extent size must be a power of 2.");
-		return 0;
-	}
+	if (!vg_check_new_extent_size(vg->fid->fmt, new_extent_size))
+		return_0;
 
-	if (new_size > vg->extent_size) {
-		if ((uint64_t) vg_size(vg) % new_size) {
+	if (new_extent_size > vg->extent_size) {
+		if ((uint64_t) vg_size(vg) % new_extent_size) {
 			/* FIXME Adjust used PV sizes instead */
 			log_error("New extent size is not a perfect fit");
 			return 0;
 		}
 	}
 
-	vg->extent_size = new_size;
+	vg->extent_size = new_extent_size;
 
 	if (vg->fid->fmt->ops->vg_setup &&
 	    !vg->fid->fmt->ops->vg_setup(vg->fid, vg))
 		return_0;
 
-	if (!_recalc_extents(&vg->extent_count, vg->name, "", old_size,
-			     new_size))
+	if (!_recalc_extents(&vg->extent_count, vg->name, "", old_extent_size,
+			     new_extent_size))
 		return_0;
 
 	if (!_recalc_extents(&vg->free_count, vg->name, " free space",
-			     old_size, new_size))
+			     old_extent_size, new_extent_size))
 		return_0;
 
 	/* foreach PV */
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 
-		pv->pe_size = new_size;
+		pv->pe_size = new_extent_size;
 		if (!_recalc_extents(&pv->pe_count, pv_dev_name(pv), "",
-				     old_size, new_size))
+				     old_extent_size, new_extent_size))
 			return_0;
 
 		if (!_recalc_extents(&pv->pe_alloc_count, pv_dev_name(pv),
-				     " allocated space", old_size, new_size))
+				     " allocated space", old_extent_size, new_extent_size))
 			return_0;
 
 		/* foreach free PV Segment */
@@ -373,12 +405,12 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 				continue;
 
 			if (!_recalc_extents(&pvseg->pe, pv_dev_name(pv),
-					     " PV segment start", old_size,
-					     new_size))
+					     " PV segment start", old_extent_size,
+					     new_extent_size))
 				return_0;
 			if (!_recalc_extents(&pvseg->len, pv_dev_name(pv),
-					     " PV segment length", old_size,
-					     new_size))
+					     " PV segment length", old_extent_size,
+					     new_extent_size))
 				return_0;
 		}
 	}
@@ -387,29 +419,29 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (!_recalc_extents(&lv->le_count, lv->name, "", old_size,
-				     new_size))
+		if (!_recalc_extents(&lv->le_count, lv->name, "", old_extent_size,
+				     new_extent_size))
 			return_0;
 
 		dm_list_iterate_items(seg, &lv->segments) {
 			if (!_recalc_extents(&seg->le, lv->name,
-					     " segment start", old_size,
-					     new_size))
+					     " segment start", old_extent_size,
+					     new_extent_size))
 				return_0;
 
 			if (!_recalc_extents(&seg->len, lv->name,
-					     " segment length", old_size,
-					     new_size))
+					     " segment length", old_extent_size,
+					     new_extent_size))
 				return_0;
 
 			if (!_recalc_extents(&seg->area_len, lv->name,
-					     " area length", old_size,
-					     new_size))
+					     " area length", old_extent_size,
+					     new_extent_size))
 				return_0;
 
 			if (!_recalc_extents(&seg->extents_copied, lv->name,
-					     " extents moved", old_size,
-					     new_size))
+					     " extents moved", old_extent_size,
+					     new_extent_size))
 				return_0;
 
 			/* foreach area */
@@ -419,21 +451,21 @@ int vg_set_extent_size(struct volume_group *vg, uint32_t new_size)
 					if (!_recalc_extents
 					    (&seg_pe(seg, s),
 					     lv->name,
-					     " pvseg start", old_size,
-					     new_size))
+					     " pvseg start", old_extent_size,
+					     new_extent_size))
 						return_0;
 					if (!_recalc_extents
 					    (&seg_pvseg(seg, s)->len,
 					     lv->name,
-					     " pvseg length", old_size,
-					     new_size))
+					     " pvseg length", old_extent_size,
+					     new_extent_size))
 						return_0;
 					break;
 				case AREA_LV:
 					if (!_recalc_extents
 					    (&seg_le(seg, s), lv->name,
-					     " area start", old_size,
-					     new_size))
+					     " area start", old_extent_size,
+					     new_extent_size))
 						return_0;
 					break;
 				case AREA_UNASSIGNED:

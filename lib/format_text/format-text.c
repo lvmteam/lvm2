@@ -72,13 +72,14 @@ void rlocn_set_ignored(struct raw_locn *rlocn, unsigned mda_ignored)
  * NOTE: Currently there can be only one vg per text file.
  */
 
-static int _text_vg_setup(struct format_instance *fid __attribute__((unused)),
+/*
+ * Only used by vgcreate.
+ */
+static int _text_vg_setup(struct format_instance *fid,
 			  struct volume_group *vg)
 {
-	if (vg->extent_size & (vg->extent_size - 1)) {
-		log_error("Extent size must be power of 2");
-		return 0;
-	}
+	if (!vg_check_new_extent_size(vg->fid->fmt, vg->extent_size))
+		return_0;
 
 	return 1;
 }
@@ -2440,7 +2441,8 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->orphan_vg_name = ORPHAN_VG_NAME(FMT_TEXT_NAME);
 	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS | FMT_PRECOMMIT |
 			FMT_UNLIMITED_VOLS | FMT_RESIZE_PV |
-			FMT_UNLIMITED_STRIPESIZE | FMT_BAS | FMT_CONFIG_PROFILE;
+			FMT_UNLIMITED_STRIPESIZE | FMT_BAS | FMT_CONFIG_PROFILE |
+			FMT_NON_POWER2_EXTENTS;
 
 	if (!(mda_lists = dm_malloc(sizeof(struct mda_lists)))) {
 		log_error("Failed to allocate dir_list");

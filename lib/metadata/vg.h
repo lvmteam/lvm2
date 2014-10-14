@@ -147,6 +147,7 @@ int vg_set_clustered(struct volume_group *vg, int clustered);
 uint64_t vg_size(const struct volume_group *vg);
 uint64_t vg_free(const struct volume_group *vg);
 uint64_t vg_extent_size(const struct volume_group *vg);
+int vg_check_new_extent_size(const struct format_type *fmt, uint32_t new_extent_size);
 int vg_set_extent_size(struct volume_group *vg, uint32_t new_extent_size);
 uint64_t vg_extent_count(const struct volume_group *vg);
 uint64_t vg_free_count(const struct volume_group *vg);

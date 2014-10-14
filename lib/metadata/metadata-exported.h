@@ -35,6 +35,7 @@
 #define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
 #define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 #define MAX_EXTENT_SIZE ((uint32_t) -1)
+#define MIN_NON_POWER2_EXTENT_SIZE (128U * 2U)	/* 128KB in sectors */
 
 /* Layer suffix */
 #define MIRROR_SYNC_LAYER "_mimagetmp"
@@ -132,6 +133,7 @@
 #define FMT_BAS			0x000000400U	/* Supports bootloader areas? */
 #define FMT_CONFIG_PROFILE	0x000000800U	/* Supports configuration profiles? */
 #define FMT_OBSOLETE		0x000001000U	/* Obsolete format? */
+#define FMT_NON_POWER2_EXTENTS	0x000002000U	/* Non-power-of-2 extent sizes? */
 
 /* Mirror conversion type flags */
 #define MIRROR_BY_SEG		0x00000001U	/* segment-by-segment mirror */

@@ -105,10 +105,11 @@ See \fBlvm.conf\fP(5) for more information about \fBmetadata profiles\fP.
 .BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize [ \fIbBsSkKmMgGtTpPeE ]
 Sets the physical extent size on physical volumes of this volume group.
 A size suffix (k for kilobytes up to t for terabytes) is optional, megabytes
-is the default if no suffix is present. The value must be at least 1 sector
-for LVM2 format (where the sector size is the largest sector size of the
-PVs currently used in the VG) or 8KiB for LVM1 format and it must be a
-power of 2. The default is 4 MiB.
+is the default if no suffix is present. For LVM2 format, the value must be a
+power of 2 of at least 1 sector (where the sector size is the largest sector
+size of the PVs currently used in the VG) or, if not a power of 2, at least
+128KiB.  For the older LVM1 format, it must be a power of 2 of at least 8KiB.
+The default is 4 MiB.
 
 Once this value has been set, it is difficult to change it without recreating
 the volume group which would involve backing up and restoring data on any

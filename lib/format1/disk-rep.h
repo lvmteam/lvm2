@@ -26,8 +26,6 @@
 #define LVM_BLK_MAJOR 58
 
 #define MAX_PV_SIZE	((uint32_t) -1)	/* 2TB in sectors - 1 */
-#define MIN_PE_SIZE	(8192L >> SECTOR_SHIFT)	/* 8 KB in sectors */
-#define MAX_PE_SIZE	(16L * 1024L * (1024L >> SECTOR_SHIFT) * 1024L)
 #define PE_SIZE_PV_SIZE_REL 5	/* PV size must be at least 5 times PE size */
 #define	MAX_LE_TOTAL	65534	/* 2^16 - 2 */
 #define	MAX_PE_TOTAL	((uint32_t) -2)

@@ -66,6 +66,9 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		rp.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, UINT64_C(0));
 	}
 
+	if (!vg_check_new_extent_size(cmd->fmt, vg->extent_size))
+		return_ECMD_FAILED;
+
 	if (!archive(vg)) {
 		log_error("Archive of \"%s\" metadata failed.", vg_name);
 		return ECMD_FAILED;

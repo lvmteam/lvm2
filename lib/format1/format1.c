@@ -493,25 +493,8 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 	if (!vg->max_pv || vg->max_pv >= MAX_PV)
 		vg->max_pv = MAX_PV - 1;
 
-	if (vg->extent_size > MAX_PE_SIZE || vg->extent_size < MIN_PE_SIZE) {
-		log_error("Extent size must be between %s and %s",
-			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE),
-			  display_size(fid->fmt->cmd, (uint64_t) MAX_PE_SIZE));
-
-		return 0;
-	}
-
-	if (vg->extent_size % MIN_PE_SIZE) {
-		log_error("Extent size must be multiple of %s",
-			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE));
-		return 0;
-	}
-
-	/* Redundant? */
-	if (vg->extent_size & (vg->extent_size - 1)) {
-		log_error("Extent size must be power of 2");
-		return 0;
-	}
+	if (!vg_check_new_extent_size(vg->fid->fmt, vg->extent_size))
+		return_0;
 
 	return 1;
 }
