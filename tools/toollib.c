@@ -192,41 +192,15 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 {
 	struct pv_segment *pvseg;
 	struct pv_list *pvl;
-	const char *vg_name = NULL;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
-	struct volume_group *old_vg = vg;
 	struct pv_segment _free_pv_segment = { .pv = pv };
-
-	if (is_pv(pv) && !vg && !is_orphan(pv)) {
-		vg_name = pv_vg_name(pv);
-
-		vg = vg_read(cmd, vg_name, NULL, 0);
-		if (ignore_vg(vg, vg_name, 0, &ret_max)) {
-			release_vg(vg);
-			stack;
-			return ret_max;
-		}
-
-		/*
-		 * Replace possibly incomplete PV structure with new one
-		 * allocated in vg_read_internal() path.
-		 */
-		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
-			 log_error("Unable to find %s in volume group %s",
-				   pv_dev_name(pv), vg_name);
-			 unlock_and_release_vg(cmd, vg, vg_name);
-			 return ECMD_FAILED;
-		}
-
-		pv = pvl->pv;
-	}
 
 	if (dm_list_empty(&pv->segments)) {
 		ret = process_single_pvseg(cmd, NULL, &_free_pv_segment, handle);
 		if (ret > ret_max)
 			ret_max = ret;
-	} else
+	} else {
 		dm_list_iterate_items(pvseg, &pv->segments) {
 			if (sigint_caught()) {
 				ret_max = ECMD_FAILED;
@@ -237,11 +211,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 			if (ret > ret_max)
 				ret_max = ret;
 		}
-
-	if (vg_name)
-		unlock_vg(cmd, vg_name);
-	if (!old_vg)
-		release_vg(vg);
+	}
 
 	return ret_max;
 }
