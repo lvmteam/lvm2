@@ -127,6 +127,41 @@ int arg_outside_list_is_set(const struct cmd_context *cmd, const char *err_found
 	return 0;
 }
 
+int arg_from_list_is_negative(const struct cmd_context *cmd, const char *err_found, ...)
+{
+	int arg, ret = 0;
+	va_list ap;
+
+	va_start(ap, err_found);
+	while ((arg = va_arg(ap, int)) != -1)
+		if (arg_sign_value(cmd, arg, SIGN_NONE) == SIGN_MINUS) {
+			if (err_found)
+				log_error("%s %s.", arg_long_option_name(arg), err_found);
+			ret = 1;
+		}
+	va_end(ap);
+
+	return ret;
+}
+
+int arg_from_list_is_zero(const struct cmd_context *cmd, const char *err_found, ...)
+{
+	int arg, ret = 0;
+	va_list ap;
+
+	va_start(ap, err_found);
+	while ((arg = va_arg(ap, int)) != -1)
+		if (arg_is_set(cmd, arg) &&
+		    !arg_int_value(cmd, arg, 0)) {
+			if (err_found)
+				log_error("%s %s.", arg_long_option_name(arg), err_found);
+			ret = 1;
+		}
+	va_end(ap);
+
+	return ret;
+}
+
 unsigned grouped_arg_is_set(const struct arg_values *av, int a)
 {
 	return grouped_arg_count(av, a) ? 1 : 0;

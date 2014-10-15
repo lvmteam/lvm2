@@ -148,6 +148,8 @@ unsigned arg_count(const struct cmd_context *cmd, int a);
 unsigned arg_is_set(const struct cmd_context *cmd, int a);
 int arg_from_list_is_set(const struct cmd_context *cmd, const char *err_found, ...);
 int arg_outside_list_is_set(const struct cmd_context *cmd, const char *err_found, ...);
+int arg_from_list_is_negative(const struct cmd_context *cmd, const char *err_found, ...);
+int arg_from_list_is_zero(const struct cmd_context *cmd, const char *err_found, ...);
 const char *arg_long_option_name(int a);
 const char *arg_value(const struct cmd_context *cmd, int a);
 const char *arg_str_value(const struct cmd_context *cmd, int a, const char *def);
