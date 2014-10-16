@@ -191,7 +191,6 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 			       process_single_pvseg_fn_t process_single_pvseg)
 {
 	struct pv_segment *pvseg;
-	struct pv_list *pvl;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	struct pv_segment _free_pv_segment = { .pv = pv };
