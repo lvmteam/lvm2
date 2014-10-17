@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Fix liblvm2cmd and lvm shell to respect quotes around args in cmd line string.
   Permit extent sizes > 128KB that are not power of 2 with lvm2 format.
   Remove workaround for lvm2-monitor.service hang on stop if lvmetad stopped.
   Change vgremove to use process_each_lv_in_vg.

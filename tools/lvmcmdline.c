@@ -1407,6 +1407,7 @@ int lvm_split(char *str, int *argc, char **argv, int max)
 {
 	char *b = str, *e;
 	*argc = 0;
+	char quote = 0;
 
 	while (*b) {
 		while (*b && isspace(*b))
@@ -1415,14 +1416,20 @@ int lvm_split(char *str, int *argc, char **argv, int max)
 		if ((!*b) || (*b == '#'))
 			break;
 
+		if (*b == '\'' || *b == '"') {
+			quote = *b;
+			b++;
+		}
+
 		e = b;
-		while (*e && !isspace(*e))
+		while (*e && (quote ? *e != quote : !isspace(*e)))
 			e++;
 
 		argv[(*argc)++] = b;
 		if (!*e)
 			break;
 		*e++ = '\0';
+		quote = 0;
 		b = e;
 		if (*argc == max)
 			break;
