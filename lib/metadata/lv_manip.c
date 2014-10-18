@@ -6032,7 +6032,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 		return_0;
 
 	/* Replace the empty layer with error segment */
-	segtype = get_segtype_from_string(lv->vg->cmd, "error");
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "error")))
+		return_0;
 	if (!lv_add_virtual_segment(layer_lv, 0, parent->le_count, segtype, NULL))
 		return_0;
 
@@ -6050,7 +6051,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   uint64_t status,
 					   const char *layer_suffix)
 {
-	static char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
+	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
 	int r;
 	char *name;
 	size_t len;
@@ -6129,7 +6130,6 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		/* Remove the temporary tags */
 		dm_list_iterate_items(sl, &lv_where->tags)
 			str_list_del(&layer_lv->tags, sl->str);
-
 	}
 
 	log_very_verbose("Inserting layer %s for %s",
@@ -6166,7 +6166,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 			lv_names.old = lv_where->name;
 			lv_names.new = layer_lv->name;
 			if (!for_each_sub_lv(layer_lv, _rename_cb, (void *) &lv_names))
-				return 0;
+				return_NULL;
 			break;
 		}
 
@@ -6635,8 +6635,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	if (lp->stripe_size > vg->extent_size) {
-		if (segtype_is_raid(lp->segtype) &&
-		    (vg->extent_size < STRIPE_SIZE_MIN)) {
+		if (seg_is_raid(lp) && (vg->extent_size < STRIPE_SIZE_MIN)) {
 			/*
 			 * FIXME: RAID will simply fail to load the table if
 			 *        this is the case, but we should probably
@@ -6677,13 +6676,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_cache(lp)) {
 		if (!lp->pool_name) {
-			log_error(INTERNAL_ERROR "Cannot create cached volume without cache pool.");
-                        return NULL;
+			log_error(INTERNAL_ERROR "Cannot create thin volume without thin pool.");
+			return NULL;
 		}
-		/* We have the cache_pool, create the origin with cache */
 		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
-			log_error("Couldn't find cache pool volume %s in "
-				  "volume group %s.", lp->pool_name, vg->name);
+			log_error("Couldn't find volume %s in Volume group %s.",
+				  lp->pool_name, vg->name);
 			return NULL;
 		}
 
@@ -6744,8 +6742,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return NULL;
 			}
 			if (lv_is_locked(origin_lv)) {
-				log_error("Snapshots of locked devices are not "
-					  "supported yet");
+				log_error("Snapshots of locked devices are not supported.");
 				return NULL;
 			}
 			if (lv_is_merging_origin(origin_lv)) {
@@ -6871,16 +6868,16 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return_NULL;
 
 	if (lp->read_ahead != lv->read_ahead) {
-		log_verbose("Setting read ahead sectors");
 		lv->read_ahead = lp->read_ahead;
+		log_debug_metadata("Setting read ahead sectors %u.", lv->read_ahead);
 	}
 
 	if (!seg_is_thin_pool(lp) && lp->minor >= 0) {
 		lv->major = lp->major;
 		lv->minor = lp->minor;
 		lv->status |= FIXED_MINOR;
-		log_verbose("Setting device number to (%d, %d)", lv->major,
-			    lv->minor);
+		log_debug_metadata("Setting device number to (%d, %d).",
+				   lv->major, lv->minor);
 	}
 
 	dm_list_splice(&lv->tags, &lp->tags);
@@ -6963,8 +6960,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	 * it just as if CHANGE_AY was used, CHANGE_AN otherwise.
 	 */
 	if (lp->activate == CHANGE_AAY)
-		lp->activate = lv_passes_auto_activation_filter(cmd, lv) ?
-				CHANGE_ALY : CHANGE_ALN;
+		lp->activate = lv_passes_auto_activation_filter(cmd, lv)
+			? CHANGE_ALY : CHANGE_ALN;
 
 	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE))
 		lp->activate = CHANGE_AN;
@@ -7100,9 +7097,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				     .yes = lp->yes,
 				     .force = lp->force
 			     })) {
-			log_error("Aborting. Failed to wipe %s.",
-				  lp->snapshot ? "snapshot exception store" :
-						 "start of new LV");
+			log_error("Aborting. Failed to wipe %s.", lp->snapshot
+				  ? "snapshot exception store" : "start of new LV");
 			goto deactivate_and_revert_new_lv;
 		}
 	}
@@ -7120,8 +7116,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if ((vg_is_clustered(vg) ||
 		     (!lp->voriginsize && !lv_is_active(origin_lv))) &&
 		    !deactivate_lv(cmd, lv)) {
-			log_error("Aborting. Couldn't deactivate snapshot "
-				  "COW area. Manual intervention required.");
+			log_error("Aborting. Couldn't deactivate snapshot COW area. "
+				  "Manual intervention required.");
 			return NULL;
 		}
 
@@ -7150,9 +7146,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 		/* store vg on disk(s) */
 		if (!lv_update_and_reload(origin_lv))
-			return_0;
+			return_NULL;
 	}
-
 out:
 	return lv;
 

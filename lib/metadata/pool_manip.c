@@ -433,7 +433,7 @@ int create_pool(struct logical_volume *pool_lv,
 		 */
 		pool_lv->status |= LV_TEMPORARY;
 		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv) ||
-		    /* Clear 4KB of metadata device for new thin-pool. */
+		    /* Clear 4KB of pool metadata device. */
 		    !wipe_lv(pool_lv, (struct wipe_params) { .do_zero = 1 })) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  pool_lv->name);

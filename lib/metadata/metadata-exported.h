@@ -783,7 +783,7 @@ int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
 typedef enum activation_change {
 	CHANGE_AY = 0,  /* activate */
 	CHANGE_AN = 1,  /* deactivate */
-	CHANGE_AEY = 2,  /* activate exclusively */
+	CHANGE_AEY = 2, /* activate exclusively */
 	CHANGE_ALY = 3, /* activate locally */
 	CHANGE_ALN = 4, /* deactivate locally */
 	CHANGE_AAY = 5  /* automatic activation */
@@ -801,7 +801,7 @@ struct lvcreate_params {
 	int cache;
 	int snapshot; /* snap */
 	int thin; /* thin */
-	int create_pool; /* thin */
+	int create_pool; /* pools */
 	int zero; /* all */
 	int wipe_signatures; /* all */
 	int32_t major; /* all */

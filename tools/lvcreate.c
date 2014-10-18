@@ -390,8 +390,8 @@ static int _update_extents_params(struct volume_group *vg,
 				extents = percent_of_extents(lp->extents, vg->extent_count, 0);
 			break;
 		case PERCENT_LV:
-			log_error("Please express size as %s%%VG, %%PVS, "
-				  "or %%FREE.", (lp->snapshot) ? "%ORIGIN, " : "");
+			log_error("Please express size as %%FREE%s, %%PVS or %%VG.",
+				  (lp->snapshot) ? ", %ORIGIN" : "");
 			return 0;
 		case PERCENT_ORIGIN:
 			if (lp->snapshot && lp->origin_name &&
@@ -667,8 +667,7 @@ static int _read_raid_params(struct lvcreate_params *lp,
 	/*
 	 * RAID1 does not take a stripe arg
 	 */
-	if ((lp->stripes > 1) &&
-	    segtype_is_mirrored(lp->segtype) &&
+	if ((lp->stripes > 1) && seg_is_mirrored(lp) &&
 	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
 		log_error("Stripe argument cannot be used with segment type, %s",
 			  lp->segtype->name);
@@ -713,11 +712,10 @@ static int _read_cache_pool_params(struct lvcreate_params *lp,
 {
 	const char *cachemode;
 
-	if (!segtype_is_cache_pool(lp->segtype))
+	if (!seg_is_cache(lp) && !seg_is_cache_pool(lp))
 		return 1;
 
-	cachemode = arg_str_value(cmd, cachemode_ARG, NULL);
-	if (!cachemode)
+	if (!(cachemode = arg_str_value(cmd, cachemode_ARG, NULL)))
 		cachemode = find_config_tree_str(cmd, allocation_cache_pool_cachemode_CFG, NULL);
 
 	if (!get_cache_mode(cachemode, &lp->feature_flags))
@@ -748,9 +746,7 @@ static int _read_activation_params(struct lvcreate_params *lp,
 		lp->zero = 0;
 	}
 
-	/*
-	 * Read ahead.
-	 */
+	/* Read ahead */
 	lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
 					cmd->default_settings.read_ahead);
 	pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
@@ -765,9 +761,7 @@ static int _read_activation_params(struct lvcreate_params *lp,
 			 "of %uK page size.", lp->read_ahead, pagesize >> 1);
 	}
 
-	/*
-	 * Permissions.
-	 */
+	/* Permissions */
 	lp->permission = arg_uint_value(cmd, permission_ARG,
 					LVM_READ | LVM_WRITE);
 
@@ -790,7 +784,7 @@ static int _read_activation_params(struct lvcreate_params *lp,
 
 		if (!get_and_validate_major_minor(cmd, vg->fid->fmt,
 						  &lp->major, &lp->minor))
-                        return_0;
+			return_0;
 	} else if (arg_is_set(cmd, major_ARG) || arg_is_set(cmd, minor_ARG)) {
 		log_error("--major and --minor require -My.");
 		return 0;
@@ -1048,13 +1042,11 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	 * Allocation parameters
 	 */
 	contiguous = arg_int_value(cmd, contiguous_ARG, 0);
-
 	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
-
 	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
 
 	if (contiguous && (lp->alloc != ALLOC_CONTIGUOUS)) {
-		log_error("Conflicting contiguous and alloc arguments");
+		log_error("Conflicting contiguous and alloc arguments.");
 		return 0;
 	}
 
@@ -1063,12 +1055,12 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			continue;
 
 		if (!(tag = grouped_arg_str_value(current_group->arg_values, addtag_ARG, NULL))) {
-			log_error("Failed to get tag");
+			log_error("Failed to get tag.");
 			return 0;
 		}
 
 		if (!str_list_add(cmd->mem, &lp->tags, tag)) {
-			log_error("Unable to allocate memory for tag %s", tag);
+			log_error("Unable to allocate memory for tag %s.", tag);
 			return 0;
 		}
 	}
