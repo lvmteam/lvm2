@@ -6573,7 +6573,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 {
 	struct cmd_context *cmd = vg->cmd;
 	uint32_t size_rest;
-	uint64_t status = UINT64_C(0);
+	uint64_t status = lp->permission | VISIBLE_LV;
 	struct logical_volume *lv, *origin_lv = NULL;
 	struct logical_volume *pool_lv;
 	struct logical_volume *tmp_lv;
@@ -6671,8 +6671,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					lp->extents - size_rest + lp->stripes);
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
-
-	status |= lp->permission | VISIBLE_LV;
 
 	if (seg_is_cache(lp)) {
 		if (!lp->pool_name) {
@@ -6900,6 +6898,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!recalculate_pool_chunk_size_with_dev_hints(lv, lp->passed_args,
 								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC))
 			return_NULL;
+	} else if (seg_is_raid(lp)) {
+		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
+		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
 	} else if (seg_is_thin_pool(lp)) {
 		first_seg(lv)->chunk_size = lp->chunk_size;
 		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
@@ -6936,9 +6937,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!attach_pool_message(first_seg(pool_lv),
 					 DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
 			return_NULL;
-	} else if (seg_is_raid(lp)) {
-		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
-		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
 	}
 
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */

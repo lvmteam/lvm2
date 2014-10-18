@@ -806,9 +806,6 @@ static int _read_activation_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	lp->yes = arg_count(cmd, yes_ARG);
-	lp->force = (force_t) arg_count(cmd, force_ARG);
-
 	return 1;
 }
 
@@ -825,6 +822,8 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 	memset(lcp, 0, sizeof(*lcp));
 	dm_list_init(&lp->tags);
 	lp->target_attr = ~0;
+	lp->yes = arg_count(cmd, yes_ARG);
+	lp->force = (force_t) arg_count(cmd, force_ARG);
 
 	/* Set default segtype - remember, '-m 0' implies stripe. */
 	if (arg_count(cmd, mirrors_ARG) &&
