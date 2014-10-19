@@ -2664,12 +2664,16 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (lv_is_cache_type(lv) ||
+	if (lv_is_locked(lv) ||
+	    !lv_is_visible(lv) ||
+	    lv_is_cache_type(lv) ||
 	    lv_is_cow(lv) ||
 	    lv_is_pool(lv) ||
-	    lv_is_thin_pool_data(lv) ||
-	    lv_is_thin_pool_metadata(lv)) {
-		log_error("Can't use %s %s as external origin.",
+	    lv_is_pool_data(lv) ||
+	    lv_is_pool_metadata(lv)) {
+		log_error("Can't use%s%s %s %s as external origin.",
+			  lv_is_locked(lv) ? " locked" : "",
+			  lv_is_visible(lv) ? "" : " hidden",
 			  lvseg_name(first_seg(lv)),
 			  display_lvname(lv));
 		return 0;
