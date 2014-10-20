@@ -7217,7 +7217,10 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 		return_NULL;
 
 out:
-	log_print_unless_silent("Logical volume \"%s\" created", lv->name);
+	if (lp->temporary)
+		log_verbose("Temporary logical volume \"%s\" created.", lv->name);
+	else
+		log_print_unless_silent("Logical volume \"%s\" created.", lv->name);
 
 	return lv;
 }
