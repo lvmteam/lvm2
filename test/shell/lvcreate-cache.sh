@@ -12,7 +12,7 @@
 # Exercise creation of cache and cache pool volumes
 
 # Full CLI uses  --type
-# Shorthand CLI uses --cache | -H
+# Shorthand CLI uses -H | --cache
 
 . lib/inittest
 
@@ -21,57 +21,74 @@ aux have_cache 1 3 0 || skip
 # FIXME: parallel cache metadata allocator is crashing when used value 8000!
 aux prepare_vg 5 80000
 
+
 #######################
 # Cache_Pool creation #
 #######################
-
-# FIXME: Unsupported yet creation of cache pool and cached volume at once
-# needs some policy to determine cache pool size
+# TODO: Unsupported yet creation of cache pool and cached volume at once
+# TODO: Introduce  --pooldatasize
+# TODO: Policy to determine cache pool size and cache pool name
 invalid lvcreate -H -l 1 $vg
-invalid lvcreate --cache -l 1 $vg
-invalid lvcreate --type cache -l 1 $vg
+invalid lvcreate -H -l 1 --name $lv1 $vg
+invalid lvcreate -l 1 --cache $vg
+# Only cached volume could be created
+invalid lvcreate -l 1 --type cache $vg
+# Fails as it needs to see VG content
+fail lvcreate -l 1 --type cache --cachepool $vg/pool1
+fail lvcreate -l 1 --type cache --cachepool pool2 $vg
+fail lvcreate -l 1 --cache $vg/pool3
+fail lvcreate -l 1 -H --cachepool pool4 $vg
+fail lvcreate -l 1 -H --name $lv2 $vg/pool5
+fail lvcreate -l 1 -H --name $lv3 --cachepool $vg/pool6
+fail lvcreate -l 1 -H --name $vg/$lv4 --cachepool pool7
 
-# Unlike in thin pool case - cache pool and cached volume both need size arg.
+# Unlike in thin pool case - cache pool and cache volume both need size arg.
 # So we require cache pool to exist and need to fail when it's missing.
 #
-# FIXME: introduce  --poolsize to make this command possible to pass
-fail lvcreate -l 1 -H --cachepool $vg/pool3
-fail lvcreate -l 1 -H --cachepool pool4 $vg
-fail lvcreate -l 1 --type cache --cachepool $vg/pool5
-fail lvcreate -l 1 --type cache --cachepool pool6 $vg
-# --cachpool bring implicit --cache
-fail lvcreate -l 1 --cachepool pool7 $vg
+# --cachepool gives implicit --cache
+fail lvcreate -l 1 --cachepool pool8 $vg
+
+# no size specified
+invalid lvcreate --cachepool pool $vg |& tee err
+grep "specify either size or extents" err
 
 # Check nothing has been created yet
 check vg_field $vg lv_count 0
 
-# If the cache pool volume doesn't yet exist -> cache pool creation
-lvcreate -l 1 -H $vg/pool1
-lvcreate -l 1 --type cache $vg/pool2
 
-# With cache-pool we are clear what has to be created
-lvcreate -l 1 --type cache-pool $vg/pool3
-lvcreate -l 1 --type cache-pool --cachepool $vg/pool4
-lvcreate -l 1 --type cache-pool --cachepool pool5 $vg
-lvcreate -l 1 --type cache-pool --name pool6 $vg
-lvcreate -l 1 --type cache-pool --name $vg/pool7
-
+# With --type cache-pool we are clear which segtype has to be created
+lvcreate -l 1 --type cache-pool $vg/pool1
 check lv_field $vg/pool1 segtype "cache-pool"
+lvcreate -l 1 --type cache-pool --name $vg/pool2 $vg
 check lv_field $vg/pool2 segtype "cache-pool"
+lvcreate -l 1 --type cache-pool --cachepool $vg/pool3 $vg
 check lv_field $vg/pool3 segtype "cache-pool"
+lvcreate -l 1 --type cache-pool --cachepool $vg/pool4
 check lv_field $vg/pool4 segtype "cache-pool"
+lvcreate -l 1 --type cache-pool --cachepool pool5 $vg
 check lv_field $vg/pool5 segtype "cache-pool"
+lvcreate -l 1 --type cache-pool --name pool6 $vg
 check lv_field $vg/pool6 segtype "cache-pool"
+lvcreate -l 1 --type cache-pool --name $vg/pool7
 check lv_field $vg/pool7 segtype "cache-pool"
 
 lvremove -f $vg
+
 
 # Validate ambiguous pool name is detected
 invalid lvcreate -l 1 --type cache-pool --cachepool pool1 $vg/pool2
 invalid lvcreate -l 1 --type cache-pool --name pool3 --cachepool pool4 $vg
 invalid lvcreate -l 1 --type cache-pool --name pool6 --cachepool pool6 $vg/pool7
 invalid lvcreate -l 1 --type cache-pool --name pool8 $vg/pool9
+
+# Unsupported with cache & cache pool
+invalid lvcreate --type cache-pool --discards passdown -l1 $vg
+invalid lvcreate -H --discards passdown -l1 $vg
+invalid lvcreate --type cache-pool --virtualsize 1T -l1 $vg
+invalid lvcreate -H --virtualsize 1T -l1 $vg
+
 check vg_field $vg lv_count 0
+
 
 for mode in "" "--cachemode writethrough"
 do
@@ -114,6 +131,7 @@ lvremove -f $vg
 
 done
 
+
 # Conversion through lvcreate case
 # Bug 1110026
 # Create origin, then cache pool and cache the origin
@@ -141,14 +159,60 @@ grep "WARNING: Maximum" out
 
 lvremove -f $vg
 
+########################################
+# Cache conversion and r/w permissions #
+########################################
+
+# writeable origin and 'default' => writable cache + origin
+lvcreate -an -l1 -n $vg/$lv1
+lvcreate -H -l1 -n cpool1 $vg/$lv1
+check lv_attr_bit perm $vg/cpool1 "w"
+check lv_attr_bit perm $vg/${lv1}_corig "w"
+check lv_attr_bit perm $vg/$lv1 "w"
+
+# writeable origin and -pr => conversion is not supported
+lvcreate -an -l1 -n $vg/$lv2
+fail lvcreate -H -l1 -pr -n cpool2 $vg/$lv2
+
+# read-only origin and -pr => read-only cache + origin
+lvcreate -an -pr -l1 -n $vg/$lv3
+lvcreate -an -H -l1 -pr -n cpool3 $vg/$lv3
+check lv_attr_bit perm $vg/cpool3 "w"
+check lv_attr_bit perm $vg/${lv3}_corig "r"
+check lv_attr_bit perm $vg/$lv3 "r"
+check inactive $vg $lv3
+check inactive $vg cpool3
+
+# read-only origin and 'default' => read-only cache + origin
+lvcreate -an -pr -l1 -n $vg/$lv4
+lvcreate -H -l1 -n cpool4 $vg/$lv4
+check lv_attr_bit perm $vg/cpool4 "w"
+check lv_attr_bit perm $vg/${lv4}_corig "r"
+check lv_attr_bit perm $vg/$lv4 "r"
+
+# read-only origin and -prw => conversion unsupported
+lvcreate -an -pr -l1 -n $vg/$lv5
+fail lvcreate -H -l1 -prw -n cpool5 $vg/$lv5
+
+# cached volume respects permissions
+lvcreate --type cache-pool -l1 -n $vg/cpool
+lvcreate -H -l1 -pr -n $lv6 $vg/cpool
+check lv_attr_bit perm $vg/cpool "w"
+check lv_attr_bit perm $vg/$lv6 "r"
+
+lvremove -f $vg
+
 
 ##############################
 # Test things that should fail
 ##############################
 
+# Creation of read-only cache pool is not supported
+invalid lvcreate -pr --type cache-pool -l1 -n $vg/cpool
+
 # Atempt to use bigger chunk size then cache pool data size
 fail lvcreate -l 1 --type cache-pool --chunksize 16M $vg 2>out
-grep "is bigger" out
+grep "chunk size" out
 
 # Option testing
 # --chunksize
@@ -158,7 +222,7 @@ grep "is bigger" out
 
 lvremove -f $vg
 lvcreate -n corigin -m 1 --type raid1 -l 10 $vg
-lvcreate -n cpool --type cache $vg/corigin -l 10
+lvcreate -n cpool -H $vg/corigin -l 10
 check active $vg corigin_corig
 dmsetup table | grep ^$PREFIX | grep corigin_corig
 

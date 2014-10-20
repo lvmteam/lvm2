@@ -39,14 +39,14 @@ vgcreate $vg -s 64K $(cat DEVICES)
 lvcreate -l1 -T $vg/pool1
 lvcreate -l1 -T --thinpool $vg/pool2
 lvcreate -l1 -T --thinpool pool3 $vg
-lvcreate -l1 --type thin $vg/pool4
-lvcreate -l1 --type thin --thinpool $vg/pool5
-lvcreate -l1 --type thin --thinpool pool6 $vg
+invalid lvcreate -l1 --type thin $vg/pool4
+invalid lvcreate -l1 --type thin --thinpool $vg/pool5
+invalid lvcreate -l1 --type thin --thinpool pool6 $vg
 lvcreate -l1 --type thin-pool $vg/pool7
 lvcreate -l1 --type thin-pool --thinpool $vg/pool8
 lvcreate -l1 --type thin-pool --thinpool pool9 $vg
 
-lvremove -ff $vg/pool1 $vg/pool2 $vg/pool3 $vg/pool4 $vg/pool5 $vg/pool6 $vg/pool7 $vg/pool8 $vg/pool9
+lvremove -ff $vg/pool1 $vg/pool2 $vg/pool3 $vg/pool7 $vg/pool8 $vg/pool9
 check vg_field $vg lv_count 0
 
 
@@ -56,6 +56,10 @@ invalid lvcreate --type thin-pool -l1 --name pool1 $vg/pool2
 invalid lvcreate --type thin-pool -l1 --name pool3 --thinpool pool4 $vg
 invalid lvcreate --type thin-pool -l1 --name pool5 --thinpool pool6 $vg/pool7
 invalid lvcreate --type thin-pool -l1 --name pool8 --thinpool pool8 $vg/pool9
+
+# no size specified and no origin name give for snapshot
+invalid lvcreate --thinpool pool $vg
+
 check vg_field $vg lv_count 0
 
 lvcreate --type thin-pool -l1 --name pool1 $vg
@@ -76,7 +80,7 @@ lvremove -ff $vg
 
 # Create default pool name
 lvcreate -l1 -T $vg
-lvcreate -l1 --type thin $vg
+invalid lvcreate -l1 --type thin $vg
 lvcreate -l1 --type thin-pool $vg
 
 lvremove -ff $vg
@@ -98,7 +102,7 @@ lvcreate -L4M -V2G --name lvo4 --type thin $vg/pool4
 lvcreate -L4M -V2G --name lvo5 --type thin --thinpool $vg/pool5
 lvcreate -L4M -V2G --name lvo6 --type thin --thinpool pool6 $vg
 
-check lv_exists $vg lvo1 lvo2 lvo3 lvo4 lvo5 lvo6
+check lv_exists $vg lvo1 lvo2 lvo3
 lvremove -ff $vg
 
 
@@ -165,13 +169,13 @@ lvcreate -K -s $vg/lv1 --name snap_lv1
 fsck -n "$DM_DEV_DIR/$vg/snap_lv1"
 lvcreate -s $vg/lv1 --name lv2
 lvcreate -s $vg/lv1 --name $vg/lv3
-lvcreate --type snapshot $vg/lv1 --name lv6
-lvcreate --type snapshot $vg/lv1 --name lv4
-lvcreate --type snapshot $vg/lv1 --name $vg/lv5
+invalid lvcreate --type snapshot $vg/lv1 --name lv6
+invalid lvcreate --type snapshot $vg/lv1 --name lv4
+invalid lvcreate --type snapshot $vg/lv1 --name $vg/lv5
 
 lvdisplay --maps $vg
-check_lv_field_modules_ thin,thin-pool lv1 snap_lv1 lv2 lv3 lv4 lv5 lv6
-check vg_field $vg lv_count 8
+check_lv_field_modules_ thin,thin-pool lv1 snap_lv1 lv2 lv3
+check vg_field $vg lv_count 5
 
 lvremove -ff $vg
 

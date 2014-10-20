@@ -41,9 +41,16 @@ lvcreate -K -s $vg/$lv1 -pr --name snap
 fsck -n "$DM_DEV_DIR/$vg/snap"
 lvcreate -K -s $vg/$lv1 --name $lv2
 lvcreate -K -s $vg/$lv1 --name $vg/$lv3
-lvcreate --type snapshot $vg/$lv1
-lvcreate --type snapshot $vg/$lv1 --name $lv4
-lvcreate --type snapshot $vg/$lv1 --name $vg/$lv5
+# old-snapshot without known size is invalid
+invalid lvcreate --type snapshot $vg/$lv1
+invalid lvcreate --type snapshot $vg/$lv1 --name $lv4
+invalid lvcreate --type snapshot $vg/$lv1 --name $vg/$lv5
+# some other ways how to take a thin snapshot
+lvcreate -T $vg/$lv1
+lvcreate --thin $vg/$lv1 --name $lv4
+lvcreate --type thin $vg/$lv1 --name $vg/$lv5
+# virtual size needs thin pool
+fail lvcreate --type thin $vg/$lv1 -V20
 
 # create old-style snapshot
 lvcreate -s -L10M --name oldsnap1 $vg/$lv2
