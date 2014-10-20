@@ -7052,8 +7052,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				stack;
 				goto revert_new_lv;
 			}
-
-			backup(vg);
+			/* When change is activating, don't duplicate backup call */
+			if (!is_change_activating(lp->activate))
+				backup(vg);
 		}
 		if (is_change_activating(lp->activate)) {
 			/* Send message so that table preload knows new thin */
