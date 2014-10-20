@@ -371,8 +371,8 @@ int update_pool_params(const struct segment_type *segtype,
 			return_0;
 
 	if ((uint64_t) *chunk_size > (uint64_t) data_extents * vg->extent_size) {
-		log_error("Chunk size %s is bigger then pool data size.",
-			  display_size(vg->cmd, *chunk_size));
+		log_error("Size of %s data volume cannot be smaller then chunk size %s.",
+			  segtype->name, display_size(vg->cmd, *chunk_size));
 		return 0;
 	}
 
@@ -569,6 +569,7 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		return_0;
 
 	/* FIXME: Maybe using silent mode ? */
+	log_verbose("Preparing pool metadata spare volume for Volume group %s.", vg->name);
 	if (!(lv = lv_create_single(vg, &lp)))
 		return_0;
 
@@ -656,6 +657,7 @@ int vg_set_pool_metadata_spare(struct logical_volume *lv)
 		return 0;
 	}
 
+	log_verbose("Renaming %s as pool metadata spare volume %s.", lv->name, new_name);
 	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
 		return_0;
 
