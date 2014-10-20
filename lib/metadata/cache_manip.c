@@ -104,6 +104,12 @@ int validate_lv_cache_create(const struct logical_volume *pool_lv,
 			return 0;
 		}
 
+		if (lv_is_locked(pool_lv)) {
+			log_error("Cannot use locked cache pool %s.",
+				  display_lvname(pool_lv));
+			return 0;
+		}
+
 		if (origin_lv == pool_lv) {
 			log_error("Can't use same LV %s for cache pool and cache volume.",
 				  display_lvname(pool_lv));
@@ -117,6 +123,12 @@ int validate_lv_cache_create(const struct logical_volume *pool_lv,
 				  seg ? display_lvname(seg->lv) : "another LV");
 			return 0;
 		}
+	}
+
+	if (lv_is_locked(origin_lv)) {
+		log_error("Cannot use locked origin volume %s.",
+			  display_lvname(origin_lv));
+		return 0;
 	}
 
 	/* For now we only support conversion of thin pool data volume */

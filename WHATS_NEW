@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Add extra validate for locked lv within validate_lv_cache_create().
   Add internal lvseg_name() function.
   Skip trying to file lock virtual internal vg name.
   Fix selection on {vg,lv}_permissions fields to properly match selection criteria.
