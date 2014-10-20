@@ -25,11 +25,6 @@
 #include "metadata.h"
 #include "lv_alloc.h"
 
-static const char *_raid_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static void _raid_display(const struct lv_segment *seg)
 {
 	unsigned s;
@@ -243,7 +238,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	if (mirror_in_sync())
 		flags = DM_NOSYNC;
 
-	params.raid_type = _raid_name(seg);
+	params.raid_type = lvseg_name(seg);
 	if (seg->segtype->parity_devs) {
 		/* RAID 4/5/6 */
 		params.mirrors = 1;
@@ -418,7 +413,6 @@ static int _raid_target_unmonitor_events(struct lv_segment *seg, int events)
 #endif /* DEVMAPPER_SUPPORT */
 
 static struct segtype_handler _raid_ops = {
-	.name = _raid_name,
 	.display = _raid_display,
 	.text_import_area_count = _raid_text_import_area_count,
 	.text_import = _raid_text_import,

@@ -21,11 +21,6 @@
 #include "activate.h"
 #include "str_list.h"
 
-static const char *_errseg_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static int _errseg_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {
 	seg1->len += seg2->len;
@@ -83,7 +78,6 @@ static void _errseg_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _error_ops = {
-	.name = _errseg_name,
 	.merge_segments = _errseg_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _errseg_add_target_line,

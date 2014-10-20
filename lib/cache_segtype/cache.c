@@ -31,11 +31,6 @@
                   dm_config_parent_name(sn), seg->lv->name), 0;
 
 
-static const char *_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static int _cache_pool_text_import(struct lv_segment *seg,
 				   const struct dm_config_node *sn,
 				   struct dm_hash_table *pv_hash __attribute__((unused)))
@@ -262,7 +257,6 @@ static int _modules_needed(struct dm_pool *mem,
 #endif /* DEVMAPPER_SUPPORT */
 
 static struct segtype_handler _cache_pool_ops = {
-	.name = _name,
 	.text_import = _cache_pool_text_import,
 	.text_import_area_count = _cache_pool_text_import_area_count,
 	.text_export = _cache_pool_text_export,
@@ -365,7 +359,6 @@ static int _cache_add_target_line(struct dev_manager *dm,
 #endif /* DEVMAPPER_SUPPORT */
 
 static struct segtype_handler _cache_ops = {
-	.name = _name,
 	.text_import = _cache_text_import,
 	.text_import_area_count = _cache_text_import_area_count,
 	.text_export = _cache_text_export,

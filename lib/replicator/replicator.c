@@ -39,10 +39,6 @@
 /*
  *  Replicator target
  */
-static const char *_replicator_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
 
 /* FIXME: missing implementation */
 static void _replicator_display(const struct lv_segment *seg)
@@ -410,7 +406,6 @@ static void _replicator_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _replicator_ops = {
-	.name = _replicator_name,
 	.display = _replicator_display,
 	.text_import = _replicator_text_import,
 	.text_export = _replicator_text_export,
@@ -739,7 +734,6 @@ static int _replicator_dev_target_present(struct cmd_context *cmd,
 #endif
 
 static struct segtype_handler _replicator_dev_ops = {
-	.name = _replicator_name,
 	.display = _replicator_dev_display,
 	.text_import = _replicator_dev_text_import,
 	.text_export = _replicator_dev_text_export,

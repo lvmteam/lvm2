@@ -25,18 +25,13 @@
 	log_error(t " segment %s of logical volume %s.", ## p, \
 		  dm_config_parent_name(sn), seg->lv->name), 0;
 
-static const char *_snap_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static const char *_snap_target_name(const struct lv_segment *seg,
 				     const struct lv_activate_opts *laopts)
 {
 	if (!laopts->no_merging && (seg->status & MERGING))
 		return "snapshot-merge";
 
-	return _snap_name(seg);
+	return lvseg_name(seg);
 }
 
 static int _snap_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
@@ -234,7 +229,6 @@ static void _snap_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _snapshot_ops = {
-	.name = _snap_name,
 	.target_name = _snap_target_name,
 	.text_import = _snap_text_import,
 	.text_export = _snap_text_export,

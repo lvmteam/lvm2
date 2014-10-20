@@ -38,11 +38,6 @@ struct mirror_state {
 	uint32_t default_region_size;
 };
 
-static const char *_mirrored_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static void _mirrored_display(const struct lv_segment *seg)
 {
 	const char *size;
@@ -592,7 +587,6 @@ static void _mirrored_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _mirrored_ops = {
-	.name = _mirrored_name,
 	.display = _mirrored_display,
 	.text_import_area_count = _mirrored_text_import_area_count,
 	.text_import = _mirrored_text_import,

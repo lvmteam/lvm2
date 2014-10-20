@@ -18,12 +18,6 @@
 #include "text_export.h"
 #include "config.h"
 
-static const char *_unknown_name(const struct lv_segment *seg)
-{
-
-	return seg->segtype->name;
-}
-
 static int _unknown_text_import(struct lv_segment *seg, const struct dm_config_node *sn,
 				struct dm_hash_table *pv_hash)
 {
@@ -59,7 +53,6 @@ static void _unknown_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _unknown_ops = {
-	.name = _unknown_name,
 	.text_import = _unknown_text_import,
 	.text_export = _unknown_text_export,
 	.destroy = _unknown_destroy,

@@ -36,11 +36,6 @@ static const char _thin_module[] = "thin";
 /* TODO: using static field here, maybe should be a part of segment_type */
 static unsigned _feature_mask;
 
-static const char *_thin_pool_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static void _thin_pool_display(const struct lv_segment *seg)
 {
 	log_print("  Chunk size\t\t%s",
@@ -449,11 +444,6 @@ static int _target_unregister_events(struct lv_segment *seg,
 #  endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
 
-static const char *_thin_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static void _thin_display(const struct lv_segment *seg)
 {
 	log_print("  Device ID\t\t%u", seg->device_id);
@@ -720,7 +710,6 @@ static void _thin_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _thin_pool_ops = {
-	.name = _thin_pool_name,
 	.display = _thin_pool_display,
 	.text_import = _thin_pool_text_import,
 	.text_import_area_count = _thin_pool_text_import_area_count,
@@ -740,7 +729,6 @@ static struct segtype_handler _thin_pool_ops = {
 };
 
 static struct segtype_handler _thin_ops = {
-	.name = _thin_name,
 	.display = _thin_display,
 	.text_import = _thin_text_import,
 	.text_export = _thin_text_export,

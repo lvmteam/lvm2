@@ -19,11 +19,6 @@
 #include "str_list.h"
 #include "activate.h"
 
-static const char *_zero_name(const struct lv_segment *seg)
-{
-	return seg->segtype->name;
-}
-
 static int _zero_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {
 	seg1->len += seg2->len;
@@ -79,7 +74,6 @@ static void _zero_destroy(struct segment_type *segtype)
 }
 
 static struct segtype_handler _zero_ops = {
-	.name = _zero_name,
 	.merge_segments = _zero_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
 	.add_target_line = _zero_add_target_line,
