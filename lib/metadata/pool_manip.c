@@ -415,7 +415,7 @@ int create_pool(struct logical_volume *pool_lv,
 	if (!activation())
 		log_warn("WARNING: Pool %s is created without initialization.",
 			 pool_lv->name);
-	else {
+	else if (!test_mode()) {
 		if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 			return_0;
 
