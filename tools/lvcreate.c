@@ -61,21 +61,21 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 
 	if (seg_is_cache(lp)) {
 		/*
-		 * We allowed somewhat hard to 'parse' syntax
-		 * (usage of lvcreate to convert LV to a cached LV).
-		 * So let's try to do our best to avoid wrong steps.
+		 * 2 ways of cache usage for lvcreate -H -l1 vg/lv
+		 *
+		 * vg/lv is existing cache pool:
+		 *       cached LV is created using this cache pool
+		 * vg/lv is not cache pool so it is cache origin
+		 *       origin is cached with created cache pool
 		 *
 		 * We are looking for the vgname or cache pool or cache origin LV.
 		 *
-		 * We store the lv name in 'lp->pool', but
-		 * it must be accessed later (when we can look-up the
-		 * LV in the VG) whether it is truly the cache pool
-		 * or whether it is the origin for cached LV.
+		 * lv name is stored in origin_name and pool_name and
+		 * later with opened VG it's decided what should happen.
 		 */
 		if (!argc) {
 			if (!lp->pool_name) {
-				/* Don't advertise we could handle cache origin */
-				log_error("Please specify a logical volume to act as the cache pool.");
+				log_error("Please specify a logical volume to act as the cache pool or origin.");
 				return 0;
 			}
 		} else {
@@ -85,7 +85,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 				if (!_set_vg_name(lp, vg_name))
 					return_0;
 			} else {
-				/* Lets pretend it's cache origin for now */
+				/* Assume it's cache origin for now */
 				lp->origin_name = vg_name;
 				if (!validate_lvname_param(cmd, &lp->vg_name, &lp->origin_name))
 					return_0;
@@ -94,7 +94,6 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 					if (strcmp(lp->pool_name, lp->origin_name)) {
 						log_error("Unsupported syntax, cannot use cache origin %s and --cachepool %s.",
 							  lp->origin_name, lp->pool_name);
-						/* Stop here, only older form remains supported */
 						return 0;
 					}
 					lp->origin_name = NULL;

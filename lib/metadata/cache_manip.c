@@ -148,8 +148,8 @@ int validate_lv_cache_create(const struct logical_volume *pool_lv,
 	    lv_is_cow(origin_lv) || lv_is_merging_cow(origin_lv) ||
 	    lv_is_external_origin(origin_lv) ||
 	    lv_is_virtual(origin_lv)) {
-		log_error("Cache is not supported with origin LV %s type.",
-			  display_lvname(origin_lv));
+		log_error("Cache is not supported with %s segment type of the original logical volume %s.",
+			  first_seg(origin_lv)->segtype->name, display_lvname(origin_lv));
 		return 0;
 	}
 
