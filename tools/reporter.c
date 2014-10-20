@@ -31,7 +31,7 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 		       const char *vg_name, struct volume_group *vg,
 		       void *handle)
 {
-	if (!report_object(handle, vg, NULL, NULL, NULL, NULL, NULL, NULL))
+	if (!report_object(handle, vg, NULL, NULL, NULL, NULL, NULL, NULL, NULL))
 		return_ECMD_FAILED;
 
 	check_current_backup(vg);
@@ -42,7 +42,7 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 		       void *handle)
 {
-	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, NULL, NULL))
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, NULL, NULL, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -62,7 +62,7 @@ static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume 
 	struct lvinfo lvinfo;
 
 	_get_lv_info_for_report(cmd, lv, &lvinfo);
-	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, &lvinfo, NULL))
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, &lvinfo, NULL, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -71,7 +71,7 @@ static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume 
 static int _segs_single(struct cmd_context *cmd __attribute__((unused)),
 			struct lv_segment *seg, void *handle)
 {
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, NULL, NULL))
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, NULL, NULL, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -83,7 +83,7 @@ static int _segs_with_lv_info_single(struct cmd_context *cmd __attribute__((unus
 	struct lvinfo lvinfo;
 
 	_get_lv_info_for_report(cmd, seg->lv, &lvinfo);
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, &lvinfo, NULL))
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, &lvinfo, NULL, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -93,11 +93,13 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 				 struct volume_group *vg,
 				 struct pv_segment *pvseg,
 				 int lv_info_needed,
+				 int lv_seg_status_needed,
 				 void *handle)
 {
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
 	struct lvinfo lvinfo = { .exists = 0 };
+	struct lv_seg_status lv_seg_status;
 
 	struct segment_type _freeseg_type = {
 		.name = "free",
@@ -136,7 +138,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	    _get_lv_info_for_report(cmd, seg->lv, &lvinfo);
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
-			   seg ? : &_free_lv_segment, pvseg, &lvinfo, pv_label(pvseg->pv))) {
+			   seg ? : &_free_lv_segment, pvseg, &lvinfo, &lv_seg_status,
+			   pv_label(pvseg->pv))) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}
@@ -149,7 +152,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd,
 			      struct volume_group *vg,
 			      struct pv_segment *pvseg, void *handle)
 {
-	return _do_pvsegs_sub_single(cmd, vg, pvseg, 0, handle);
+	return _do_pvsegs_sub_single(cmd, vg, pvseg, 0, 0, handle);
 }
 
 static int _pvsegs_with_lv_info_sub_single(struct cmd_context *cmd,
@@ -157,7 +160,7 @@ static int _pvsegs_with_lv_info_sub_single(struct cmd_context *cmd,
 					   struct pv_segment *pvseg,
 					   void *handle)
 {
-	return _do_pvsegs_sub_single(cmd, vg, pvseg, 1, handle);
+	return _do_pvsegs_sub_single(cmd, vg, pvseg, 1, 0, handle);
 }
 
 static int _lvsegs_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -198,7 +201,7 @@ static int _pvsegs_with_lv_info_single(struct cmd_context *cmd,
 static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		       struct physical_volume *pv, void *handle)
 {
-	if (!report_object(handle, vg, NULL, pv, NULL, NULL, NULL, NULL))
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL, NULL, NULL, NULL))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -207,7 +210,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 static int _label_single(struct cmd_context *cmd, struct label *label,
 		         void *handle)
 {
-	if (!report_object(handle, NULL, NULL, NULL, NULL, NULL, NULL, label))
+	if (!report_object(handle, NULL, NULL, NULL, NULL, NULL, NULL, NULL, label))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;

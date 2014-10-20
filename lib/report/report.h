@@ -45,7 +45,8 @@ void report_free(void *handle);
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,
 		  struct lv_segment *seg, struct pv_segment *pvseg,
-		  struct lvinfo *lvinfo, struct label *label);
+		  struct lvinfo *lvinfo, struct lv_seg_status *lv_seg_status,
+		  struct label *label);
 int report_devtypes(void *handle);
 int report_output(void *handle);
 

@@ -30,6 +30,29 @@ struct lvinfo {
 	uint32_t read_ahead;
 };
 
+typedef enum {
+	SEG_STATUS_NONE,
+	SEG_STATUS_CACHE,
+	SEG_STATUS_RAID,
+	SEG_STATUS_SNAPSHOT,
+	SEG_STATUS_THIN,
+	SEG_STATUS_THIN_POOL
+} lv_seg_status_type_t;
+
+struct lv_seg_status {
+	struct dm_pool *mem;			/* input */
+	struct lv_segment *seg;			/* input */
+	lv_seg_status_type_t type;		/* output */
+	void *status; /* struct dm_status_* */	/* output */
+};
+
+struct lv_with_info_and_seg_status {
+	struct logical_volume *lv;		/* input */
+	struct lvinfo *info;			/* output */
+	int seg_part_of_lv;			/* output */
+	struct lv_seg_status *seg_status;	/* input/output, see lv_seg_status */
+};
+
 struct lv_activate_opts {
 	int exclusive;
 	int origin_only;
