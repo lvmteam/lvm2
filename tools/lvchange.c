@@ -355,7 +355,7 @@ static int lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 			 vg_is_clustered(lv->vg) ? "clustered " : "",
 			 (seg->log_lv) ? "disk-logged " :
 			 seg_is_raid(seg) ? "" : "core-logged ",
-			 seg->segtype->ops->name(seg), lv->name);
+			 lvseg_name(seg), lv->name);
 
 	/*
 	 * If this mirror has a core log (i.e. !seg->log_lv),

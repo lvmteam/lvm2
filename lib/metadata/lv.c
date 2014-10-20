@@ -120,7 +120,7 @@ char *lvseg_tags_dup(const struct lv_segment *seg)
 
 char *lvseg_segtype_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return dm_pool_strdup(mem, seg->segtype->ops->name(seg));
+	return dm_pool_strdup(mem, lvseg_name(seg));
 }
 
 char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
@@ -181,6 +181,16 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 		size = UINT64_C(0);
 
 	return size;
+}
+
+const char *lvseg_name(const struct lv_segment *seg)
+{
+	/* Support even segtypes without 'ops' */
+	if (seg->segtype->ops &&
+	    seg->segtype->ops->name)
+		return seg->segtype->ops->name(seg);
+
+	return seg->segtype->name;
 }
 
 uint64_t lvseg_start(const struct lv_segment *seg)

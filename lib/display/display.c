@@ -667,7 +667,7 @@ int lvdisplay_segments(const struct logical_volume *lv)
 			  lv_is_virtual(lv) ? "Virtual" : "Logical",
 			  seg->le, seg->le + seg->len - 1);
 
-		log_print("  Type\t\t%s", seg->segtype->ops->name(seg));
+		log_print("  Type\t\t%s", lvseg_name(seg));
 
 		if (seg->segtype->ops->target_monitored)
 			log_print("  Monitoring\t\t%s",

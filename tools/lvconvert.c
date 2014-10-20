@@ -1850,7 +1850,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (arg_count(cmd, mirrors_ARG) &&
 	    !seg_is_mirrored(seg) && !seg_is_linear(seg)) {
 		log_error("'--mirrors/-m' is not compatible with %s",
-			  seg->segtype->ops->name(seg));
+			  lvseg_name(seg));
 		return 0;
 	}
 
@@ -1860,7 +1860,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (!_is_valid_raid_conversion(seg->segtype, lp->segtype)) {
 		log_error("Unable to convert %s/%s from %s to %s",
 			  lv->vg->name, lv->name,
-			  seg->segtype->ops->name(seg), lp->segtype->name);
+			  lvseg_name(seg), lp->segtype->name);
 		return 0;
 	}
 
@@ -2672,7 +2672,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 	    lv_is_thin_pool_data(lv) ||
 	    lv_is_thin_pool_metadata(lv)) {
 		log_error("Can't use %s %s as external origin.",
-			  first_seg(lv)->segtype->name,
+			  lvseg_name(first_seg(lv)),
 			  display_lvname(lv));
 		return 0;
 	}
@@ -3294,8 +3294,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			if (arg_count(cmd, use_policies_ARG))
 				return ECMD_PROCESSED; /* nothing to be done here */
 			log_error("Can't repair LV \"%s\" of segtype %s.",
-				  lv->name,
-				  first_seg(lv)->segtype->ops->name(first_seg(lv)));
+				  lv->name, lvseg_name(first_seg(lv)));
 			return ECMD_FAILED;
 		}
 	}

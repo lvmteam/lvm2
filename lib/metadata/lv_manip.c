@@ -4617,7 +4617,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			else if (seg_is_raid(first_seg(lv)) &&
 				 (lp->stripes != seg_stripes)) {
 				log_error("Unable to extend \"%s\" segment type with different number of stripes.",
-					  first_seg(lv)->segtype->ops->name(first_seg(lv)));
+					  lvseg_name(first_seg(lv)));
 				return 0;
 			}
 	

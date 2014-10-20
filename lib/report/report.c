@@ -366,7 +366,7 @@ static int _segtype_disp(struct dm_report *rh __attribute__((unused)),
 	char *name;
 
 	if (!(name = lvseg_segtype_dup(mem, seg))) {
-		log_error("Failed to get segtype.");
+		log_error("Failed to get segtype name.");
 		return 0;
 	}
 

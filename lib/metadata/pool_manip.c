@@ -33,7 +33,7 @@ int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 	if (!seg_is_pool(pool_seg)) {
 		log_error(INTERNAL_ERROR
 			  "Unable to attach pool metadata LV to %s segtype.",
-			  pool_seg->segtype->ops->name(pool_seg));
+			  lvseg_name(pool_seg));
 		return 0;
 	}
 	pool_seg->metadata_lv = metadata_lv;
@@ -70,7 +70,7 @@ int attach_pool_data_lv(struct lv_segment *pool_seg,
 	if (!seg_is_pool(pool_seg)) {
 		log_error(INTERNAL_ERROR
 			  "Unable to attach pool data LV to %s segtype.",
-			  pool_seg->segtype->ops->name(pool_seg));
+			  lvseg_name(pool_seg));
 		return 0;
 	}
 
@@ -129,7 +129,7 @@ int detach_pool_lv(struct lv_segment *seg)
 	if (!seg->pool_lv) {
 		log_error(INTERNAL_ERROR
 			  "No pool associated with %s LV, %s.",
-			  seg->segtype->ops->name(seg), seg->lv->name);
+			  lvseg_name(seg), seg->lv->name);
 		return 0;
 	}
 
