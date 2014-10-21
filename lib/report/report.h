@@ -23,12 +23,14 @@
 typedef enum {
 	LVS		= 1,
 	LVSINFO		= 2,
-	PVS		= 4,
-	VGS		= 8,
-	SEGS		= 16,
-	PVSEGS		= 32,
-	LABEL		= 64,
-	DEVTYPES	= 128
+	LVSSTATUS	= 4,
+	PVS		= 8,
+	VGS		= 16,
+	SEGS		= 32,
+	SEGSSTATUS	= 64,
+	PVSEGS		= 128,
+	LABEL		= 256,
+	DEVTYPES	= 512
 } report_type_t;
 
 struct field;
