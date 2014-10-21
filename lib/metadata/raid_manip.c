@@ -1555,7 +1555,7 @@ int lv_raid_replace(struct logical_volume *lv,
 	if (lv->status & PARTIAL_LV)
 		lv->vg->cmd->partial_activation = 1;
 
-	if (!lv_is_active_exclusive_locally(lv)) {
+	if (!lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
 		log_error("%s/%s must be active %sto perform this operation.",
 			  lv->vg->name, lv->name,
 			  vg_is_clustered(lv->vg) ? "exclusive locally " : "");

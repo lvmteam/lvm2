@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Query lock holding LV when replacing and converting raid volumes.
   Add extra validate for locked lv within validate_lv_cache_create().
   Add internal lvseg_name() function.
   Skip trying to file lock virtual internal vg name.
