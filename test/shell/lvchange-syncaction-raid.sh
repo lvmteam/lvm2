@@ -37,7 +37,7 @@ lvchange -an $vg/$lv1
 aux delay_dev "$dev2" 0 100
 lvchange -ay $vg/$lv1
 # noone has it open and target is read & running
-dmsetup info -c
+dmsetup info -c | grep $vg
 
 #sleep 10 < "$DM_DEV_DIR/$vg/$lv1" &
 # "check" should find discrepancies but not change them
@@ -49,7 +49,7 @@ dmsetup info -c
 # For now it fails with:
 # device-mapper: message ioctl on  failed: Device or resource busy
 #
-lvchange --syncaction check $vg/$lv1
+should lvchange --syncaction check $vg/$lv1
 
 aux enable_dev "$dev2"
 lvs -o+raid_mismatch_count -a $vg
