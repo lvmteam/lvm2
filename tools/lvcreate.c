@@ -790,13 +790,13 @@ static int _read_activation_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (arg_count(cmd, setactivationskip_ARG)) {
+	if (arg_is_set(cmd, setactivationskip_ARG)) {
 		lp->activation_skip |= ACTIVATION_SKIP_SET;
 		if (arg_int_value(cmd, setactivationskip_ARG, 0))
 			lp->activation_skip |= ACTIVATION_SKIP_SET_ENABLED;
 	}
 
-	if (arg_count(cmd, ignoreactivationskip_ARG))
+	if (arg_is_set(cmd, ignoreactivationskip_ARG))
 		lp->activation_skip |= ACTIVATION_SKIP_IGNORE;
 
 	if (lp->zero && (lp->activation_skip & ACTIVATION_SKIP_SET_ENABLED)
