@@ -6590,6 +6590,31 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
+	if (!activation()) {
+		if (seg_is_cache(lp) ||
+		    seg_is_mirror(lp) ||
+		    seg_is_raid(lp) ||
+		    seg_is_thin(lp) ||
+		    lp->snapshot) {
+			/*
+			 * FIXME: For thin pool add some code to allow delayed
+			 * initialization of empty thin pool volume.
+			 * i.e. using some LV flag, fake message,...
+			 * and testing for metadata pool header signature?
+			 */
+			log_error("Can't create %s without using "
+				  "device-mapper kernel driver.",
+				  lp->segtype->name);
+			return NULL;
+		}
+		/* Does LV need to be zeroed? */
+		if (lp->zero && !seg_is_thin(lp)) {
+			log_error("Can't wipe start of new LV without using "
+				  "device-mapper kernel driver.");
+			return NULL;
+		}
+	}
+
 	if (lp->stripe_size > vg->extent_size) {
 		if (segtype_is_raid(lp->segtype) &&
 		    (vg->extent_size < STRIPE_SIZE_MIN)) {
@@ -6627,13 +6652,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					"size (%d extents).", lp->extents,
 					lp->extents - size_rest + lp->stripes);
 		lp->extents = lp->extents - size_rest + lp->stripes;
-	}
-
-	/* Does LV need to be zeroed?  Thin handles this as a per-pool in-kernel setting. */
-	if (lp->zero && !segtype_is_thin(lp->segtype) && !activation()) {
-		log_error("Can't wipe start of new LV without using "
-			  "device-mapper kernel driver");
-		return NULL;
 	}
 
 	status |= lp->permission | VISIBLE_LV;
@@ -6770,22 +6788,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_error("Number of stripes (%u) must not exceed "
 			  "number of physical volumes (%d)", lp->stripes,
 			  dm_list_size(lp->pvh));
-		return NULL;
-	}
-
-	if (!activation() &&
-	    (seg_is_mirrored(lp) ||
-	     seg_is_raid(lp) ||
-	     seg_is_pool(lp))) {
-		/*
-		 * FIXME: For thin pool add some code to allow delayed
-		 * initialization of empty thin pool volume.
-		 * i.e. using some LV flag, fake message,...
-		 * and testing for metadata pool header signature?
-		 */
-		log_error("Can't create %s without using "
-			  "device-mapper kernel driver.",
-			  lp->segtype->name);
 		return NULL;
 	}
 
