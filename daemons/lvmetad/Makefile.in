@@ -18,7 +18,7 @@ top_builddir = @top_builddir@
 SOURCES = lvmetad-core.c
 SOURCES2 = testclient.c
 
-TARGETS = lvmetad
+TARGETS = lvmetad lvmetactl
 
 .PHONY: install_lvmetad
 
@@ -40,6 +40,10 @@ CFLAGS += $(EXTRA_EXEC_CFLAGS)
 lvmetad: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
 		    $(top_builddir)/libdaemon/server/libdaemonserver.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LVMLIBS) $(LIBS)
+
+lvmetactl: lvmetactl.o $(top_builddir)/libdaemon/client/libdaemonclient.a \
+	$(top_builddir)/libdaemon/server/libdaemonserver.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmetactl.o $(LVMLIBS)
 
 # TODO: No idea. No idea how to test either.
 #ifneq ("$(CFLOW_CMD)", "")
