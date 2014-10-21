@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Skip trying to file lock virtual internal vg name.
   Fix selection on {vg,lv}_permissions fields to properly match selection criteria.
   Fix lv_permissions reporting to display read-only{-override} instead of blank.
   Fix liblvm2cmd and lvm shell to respect quotes around args in cmd line string.
