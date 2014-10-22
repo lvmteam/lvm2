@@ -1,5 +1,6 @@
 Version 1.02.91 - 
 ====================================
+  Add DM_LIST_HEAD_INIT macro to libdevmapper.h
   Fix dm_is_dm_major to not issue error about missing /proc lines for dm module.
 
 Version 1.02.90 - 1st September 2014

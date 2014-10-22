@@ -1200,7 +1200,8 @@ struct dm_str_list {
  * Initialise a list before use.
  * The list head's next and previous pointers point back to itself.
  */
-#define DM_LIST_INIT(name)	struct dm_list name = { &(name), &(name) }
+#define DM_LIST_HEAD_INIT(name)	 { &(name), &(name) }
+#define DM_LIST_INIT(name)	struct dm_list name = DM_LIST_HEAD_INIT(name)
 void dm_list_init(struct dm_list *head);
 
 /*
