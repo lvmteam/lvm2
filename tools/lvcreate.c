@@ -1051,6 +1051,8 @@ static int _determine_cache_argument(struct volume_group *vg,
 	if (!lp->pool_name) {
 		lp->pool_name = lp->lv_name;
 	} else if ((lv = find_lv(vg, lp->pool_name)) && lv_is_cache_pool(lv)) {
+		if (!validate_lv_cache_create_pool(lv))
+			return_0;
 		/* Pool exists, create cache volume */
 		lp->create_pool = 0;
 		lp->origin_name = NULL;

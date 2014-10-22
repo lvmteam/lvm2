@@ -92,39 +92,35 @@ int update_cache_pool_params(const struct segment_type *segtype,
  *
  * Always validates origin_lv, and when it is known also cache pool_lv
  */
-int validate_lv_cache_create(const struct logical_volume *pool_lv,
-			     const struct logical_volume *origin_lv)
+int validate_lv_cache_create_pool(const struct logical_volume *pool_lv)
 {
 	struct lv_segment *seg;
 
-	if (pool_lv) {
-		if (!lv_is_cache_pool(pool_lv)) {
-			log_error("Logical volume %s is not a cache pool.",
-				  display_lvname(pool_lv));
-			return 0;
-		}
-
-		if (lv_is_locked(pool_lv)) {
-			log_error("Cannot use locked cache pool %s.",
-				  display_lvname(pool_lv));
-			return 0;
-		}
-
-		if (origin_lv == pool_lv) {
-			log_error("Can't use same LV %s for cache pool and cache volume.",
-				  display_lvname(pool_lv));
-			return 0;
-		}
-
-		if (!dm_list_empty(&pool_lv->segs_using_this_lv)) {
-			seg = get_only_segment_using_this_lv(pool_lv);
-			log_error("Logical volume %s is already in use by %s",
-				  display_lvname(pool_lv),
-				  seg ? display_lvname(seg->lv) : "another LV");
-			return 0;
-		}
+	if (!lv_is_cache_pool(pool_lv)) {
+		log_error("Logical volume %s is not a cache pool.",
+			  display_lvname(pool_lv));
+		return 0;
 	}
 
+	if (lv_is_locked(pool_lv)) {
+		log_error("Cannot use locked cache pool %s.",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
+	if (!dm_list_empty(&pool_lv->segs_using_this_lv)) {
+		seg = get_only_segment_using_this_lv(pool_lv);
+		log_error("Logical volume %s is already in use by %s",
+			  display_lvname(pool_lv),
+			  seg ? display_lvname(seg->lv) : "another LV");
+		return 0;
+	}
+
+	return 1;
+}
+
+int validate_lv_cache_create_origin(const struct logical_volume *origin_lv)
+{
 	if (lv_is_locked(origin_lv)) {
 		log_error("Cannot use locked origin volume %s.",
 			  display_lvname(origin_lv));
@@ -174,7 +170,8 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 	struct logical_volume *cache_lv = origin_lv;
 	struct lv_segment *seg;
 
-	if (!validate_lv_cache_create(pool_lv, origin_lv))
+	if (!validate_lv_cache_create_pool(pool_lv) ||
+	    !validate_lv_cache_create_origin(origin_lv))
 		return_NULL;
 
 	if (!(segtype = get_segtype_from_string(cmd, "cache")))

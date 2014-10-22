@@ -6711,7 +6711,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (!validate_lv_cache_create(NULL, origin_lv))
+		if (!validate_lv_cache_create_origin(origin_lv))
 			return_NULL;
 
 		/* Validate cache origin is exclusively active */

@@ -1083,8 +1083,8 @@ int update_cache_pool_params(const struct segment_type *segtype,
 			     int passed_args, uint32_t data_extents,
 			     uint64_t *pool_metadata_size,
 			     int *chunk_size_calc_method, uint32_t *chunk_size);
-int validate_lv_cache_create(const struct logical_volume *pool_lv,
-			     const struct logical_volume *origin_lv);
+int validate_lv_cache_create_pool(const struct logical_volume *pool_lv);
+int validate_lv_cache_create_origin(const struct logical_volume *origin_lv);
 struct logical_volume *lv_cache_create(struct logical_volume *pool,
 				       struct logical_volume *origin);
 int lv_cache_remove(struct logical_volume *cache_lv);

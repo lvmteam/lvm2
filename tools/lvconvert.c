@@ -3202,7 +3202,8 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 	struct logical_volume *pool_lv = lp->pool_data_lv;
 	struct logical_volume *cache_lv;
 
-	if (!validate_lv_cache_create(pool_lv, origin_lv))
+	if (!validate_lv_cache_create_pool(pool_lv) ||
+	    !validate_lv_cache_create_origin(origin_lv))
 		return_0;
 
 	if (!archive(origin_lv->vg))
@@ -3270,7 +3271,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lp->cache) {
 		if (lv_is_thin_pool(lv))
 			lv = seg_lv(first_seg(lv), 0); /* cache _tdata */
-		if (!validate_lv_cache_create(NULL, lv))
+		if (!validate_lv_cache_create_origin(lv))
 			return_ECMD_FAILED;
 	}
 
