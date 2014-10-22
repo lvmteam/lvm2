@@ -1696,17 +1696,17 @@ static int _lvskipactivation_disp(struct dm_report *rh, struct dm_pool *mem,
 
 /* necessary for displaying something for PVs not belonging to VG */
 static struct format_instance _dummy_fid = {
-	.metadata_areas_in_use = { &(_dummy_fid.metadata_areas_in_use), &(_dummy_fid.metadata_areas_in_use) },
-	.metadata_areas_ignored = { &(_dummy_fid.metadata_areas_ignored), &(_dummy_fid.metadata_areas_ignored) },
+	.metadata_areas_in_use = DM_LIST_HEAD_INIT(_dummy_fid.metadata_areas_in_use),
+	.metadata_areas_ignored = DM_LIST_HEAD_INIT(_dummy_fid.metadata_areas_ignored),
 };
 
 static struct volume_group _dummy_vg = {
 	.fid = &_dummy_fid,
 	.name = "",
 	.system_id = (char *) "",
-	.pvs = { &(_dummy_vg.pvs), &(_dummy_vg.pvs) },
-	.lvs = { &(_dummy_vg.lvs), &(_dummy_vg.lvs) },
-	.tags = { &(_dummy_vg.tags), &(_dummy_vg.tags) },
+	.pvs = DM_LIST_HEAD_INIT(_dummy_vg.pvs),
+	.lvs = DM_LIST_HEAD_INIT(_dummy_vg.lvs),
+	.tags = DM_LIST_HEAD_INIT(_dummy_vg.tags),
 };
 
 static void *_obj_get_vg(void *obj)

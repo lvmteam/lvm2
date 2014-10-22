@@ -97,52 +97,42 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 {
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
-	struct lvinfo lvinfo;
+	struct lvinfo lvinfo = { .exists = 0 };
+
+	struct segment_type _freeseg_type = {
+		.cmd = cmd,
+		.name = "free",
+		.flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED,
+	};
 
 	struct volume_group _free_vg = {
 		.cmd = cmd,
 		.name = "",
-		.vgmem = NULL,
+		.pvs = DM_LIST_HEAD_INIT(_free_vg.pvs),
+		.lvs = DM_LIST_HEAD_INIT(_free_vg.lvs),
+		.tags = DM_LIST_HEAD_INIT(_free_vg.tags),
 	};
 
 	struct logical_volume _free_logical_volume = {
 		.vg = vg ?: &_free_vg,
 		.name = "",
-		.snapshot = NULL,
 		.status = VISIBLE_LV,
 		.major = -1,
 		.minor = -1,
+		.tags = DM_LIST_HEAD_INIT(_free_logical_volume.tags),
+		.segments = DM_LIST_HEAD_INIT(_free_logical_volume.segments),
+		.segs_using_this_lv = DM_LIST_HEAD_INIT(_free_logical_volume.segs_using_this_lv),
+		.snapshot_segs = DM_LIST_HEAD_INIT(_free_logical_volume.snapshot_segs),
 	};
 
 	struct lv_segment _free_lv_segment = {
 		.lv = &_free_logical_volume,
-		.le = 0,
-		.status = 0,
-		.stripe_size = 0,
-		.area_count = 0,
-		.area_len = 0,
-		.origin = NULL,
-		.cow = NULL,
-		.chunk_size = 0,
-		.region_size = 0,
-		.extents_copied = 0,
-		.log_lv = NULL,
-		.areas = NULL,
+		.segtype = &_freeseg_type,
+		.len = pvseg->len,
+		.tags = DM_LIST_HEAD_INIT(_free_lv_segment.tags),
+		.origin_list = DM_LIST_HEAD_INIT(_free_lv_segment.origin_list),
 	};
 
-	_free_lv_segment.segtype = get_segtype_from_string(cmd, "free");
-	_free_lv_segment.len = pvseg->len;
-	dm_list_init(&_free_vg.pvs);
-	dm_list_init(&_free_vg.lvs);
-	dm_list_init(&_free_vg.tags);
-	dm_list_init(&_free_lv_segment.tags);
-	dm_list_init(&_free_lv_segment.origin_list);
-	dm_list_init(&_free_logical_volume.tags);
-	dm_list_init(&_free_logical_volume.segments);
-	dm_list_init(&_free_logical_volume.segs_using_this_lv);
-	dm_list_init(&_free_logical_volume.snapshot_segs);
-
-	lvinfo.exists = 0;
 	if (seg && lv_info_needed)
 	    _get_lv_info_for_report(cmd, seg->lv, &lvinfo);
 
