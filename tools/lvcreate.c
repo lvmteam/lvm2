@@ -231,104 +231,6 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 }
 
 /*
- * Normal snapshot or thinly-provisioned snapshot?
- */
-static int _determine_snapshot_type(struct volume_group *vg,
-				    struct lvcreate_params *lp)
-{
-	struct logical_volume *lv, *pool_lv = NULL;
-
-	if (!(lv = find_lv(vg, lp->origin_name))) {
-		log_error("Snapshot origin LV %s not found in Volume group %s.",
-			  lp->origin_name, vg->name);
-		return 0;
-	}
-
-	if (lv_is_cache(lv)) {
-		log_error("Snapshot of cache LV is not yet supported.");
-		return 0;
-	}
-
-	if (lp->pool_name) {
-		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
-			log_error("Thin pool volume %s not found in Volume group %s.",
-				  lp->pool_name, vg->name);
-			return 0;
-		}
-
-		if (!lv_is_thin_pool(pool_lv)) {
-			log_error("Logical volume %s is not a thin pool volume.",
-				  display_lvname(pool_lv));
-			return 0;
-		}
-	}
-
-	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
-		if (lv_is_thin_volume(lv) && !lp->pool_name)
-			lp->pool_name = first_seg(lv)->pool_lv->name;
-
-		if (seg_is_thin(lp) || lp->pool_name) {
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
-				return_0;
-			return 1;
-		}
-
-		log_error("Please specify either size or extents with snapshots.");
-		return 0;
-	} else if (lp->pool_name) {
-		log_error("Cannot specify size with thin pool snapshot.");
-		return 0;
-	}
-
-	return 1;
-}
-
-/*
- * _determine_cache_argument
- * @vg
- * @lp
- *
- * 'lp->pool' is set with an LV that could be either the cache_pool
- * or the origin of the cached LV which is being created.  This
- * function determines which it is and sets 'lp->origin' or
- * 'lp->pool' appropriately.
- */
-static int _determine_cache_argument(struct volume_group *vg,
-				     struct lvcreate_params *lp)
-{
-	struct logical_volume *lv;
-
-	if (!seg_is_cache(lp)) {
-		log_error(INTERNAL_ERROR
-			  "Unable to determine cache argument on %s segtype",
-			  lp->segtype->name);
-		return 0;
-	}
-
-	if (!lp->pool_name) {
-		lp->pool_name = lp->lv_name;
-	} else if (lp->pool_name == lp->origin_name) {
-		if (!(lv = find_lv(vg, lp->pool_name))) {
-			/* Cache pool nor origin volume exists */
-			lp->cache = 0;
-			lp->origin_name = NULL;
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
-				return_0;
-		} else if (!lv_is_cache_pool(lv)) {
-			/* Name arg in this case is for pool name */
-			lp->pool_name = lp->lv_name;
-			/* We were given origin for caching */
-		} else {
-			/* FIXME error on pool args */
-			lp->create_pool = 0;
-			lp->origin_name = NULL;
-		}
-	}
-
-	return 1;
-}
-
-/*
  * Update extents parameters based on other parameters which affect the size
  * calculation.
  * NOTE: We must do this here because of the dm_percent_t typedef and because we
@@ -1060,6 +962,104 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 
 	lcp->pv_count = argc;
 	lcp->pvs = argv;
+
+	return 1;
+}
+
+/*
+ * _determine_cache_argument
+ * @vg
+ * @lp
+ *
+ * 'lp->pool_name' is set with an LV that could be either the cache_pool name
+ * or the origin name of the cached LV which is being created.
+ * This function determines which it is and sets 'lp->origin_name' or
+ * 'lp->pool_name' appropriately.
+ */
+static int _determine_cache_argument(struct volume_group *vg,
+				     struct lvcreate_params *lp)
+{
+	struct logical_volume *lv;
+
+	if (!seg_is_cache(lp)) {
+		log_error(INTERNAL_ERROR
+			  "Unable to determine cache argument on %s segtype",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	if (!lp->pool_name) {
+		lp->pool_name = lp->lv_name;
+	} else if (lp->pool_name == lp->origin_name) {
+		if (!(lv = find_lv(vg, lp->pool_name))) {
+			/* Cache pool nor origin volume exists */
+			lp->cache = 0;
+			lp->origin_name = NULL;
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
+				return_0;
+		} else if (!lv_is_cache_pool(lv)) {
+			/* Name arg in this case is for pool name */
+			lp->pool_name = lp->lv_name;
+			/* We were given origin for caching */
+		} else {
+			/* FIXME error on pool args */
+			lp->create_pool = 0;
+			lp->origin_name = NULL;
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * Normal snapshot or thinly-provisioned snapshot?
+ */
+static int _determine_snapshot_type(struct volume_group *vg,
+				    struct lvcreate_params *lp)
+{
+	struct logical_volume *lv, *pool_lv = NULL;
+
+	if (!(lv = find_lv(vg, lp->origin_name))) {
+		log_error("Snapshot origin LV %s not found in Volume group %s.",
+			  lp->origin_name, vg->name);
+		return 0;
+	}
+
+	if (lv_is_cache(lv)) {
+		log_error("Snapshot of cache LV is not yet supported.");
+		return 0;
+	}
+
+	if (lp->pool_name) {
+		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
+			log_error("Thin pool volume %s not found in Volume group %s.",
+				  lp->pool_name, vg->name);
+			return 0;
+		}
+
+		if (!lv_is_thin_pool(pool_lv)) {
+			log_error("Logical volume %s is not a thin pool volume.",
+				  display_lvname(pool_lv));
+			return 0;
+		}
+	}
+
+	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
+		if (lv_is_thin_volume(lv) && !lp->pool_name)
+			lp->pool_name = first_seg(lv)->pool_lv->name;
+
+		if (seg_is_thin(lp) || lp->pool_name) {
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
+				return_0;
+			return 1;
+		}
+
+		log_error("Please specify either size or extents with snapshots.");
+		return 0;
+	} else if (lp->pool_name) {
+		log_error("Cannot specify size with thin pool snapshot.");
+		return 0;
+	}
 
 	return 1;
 }
