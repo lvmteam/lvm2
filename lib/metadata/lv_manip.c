@@ -7113,16 +7113,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* A virtual origin must be activated explicitly. */
-		if (lp->voriginsize &&
-		    (!(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
-						    lp->permission,
-						    lp->voriginextents)) ||
-		     !activate_lv_excl(cmd, origin_lv))) {
-			log_error("Couldn't create virtual origin for LV %s",
-				  lv->name);
-			if (origin_lv && !lv_remove(origin_lv))
+		if (lp->voriginsize) {
+			if (!(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
+								 lp->permission,
+								 lp->voriginextents))) {
 				stack;
-			goto deactivate_and_revert_new_lv;
+				goto deactivate_and_revert_new_lv;
+			}
+			if (!activate_lv_excl(cmd, origin_lv)) {
+				log_error("Couldn't get exclusive lock for virtual origin LV %s",
+					  lv->name);
+				if (!lv_remove(origin_lv))
+					stack;
+				goto deactivate_and_revert_new_lv;
+			}
 		}
 
 		/*
