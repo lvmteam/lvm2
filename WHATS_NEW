@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Improve _should_wipe_lv() to warn with message.
   Inform about temporarily created volumes only in verbose mode.
   Better support for --test mode with pool creation.
   Query lock holding LV when replacing and converting raid volumes.

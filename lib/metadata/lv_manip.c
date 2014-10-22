@@ -6530,14 +6530,31 @@ int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
 	return 1;
 }
 
-static int _should_wipe_lv(struct lvcreate_params *lp, struct logical_volume *lv) {
-	int r = lp->zero | lp->wipe_signatures;
+static int _should_wipe_lv(struct lvcreate_params *lp,
+			   struct logical_volume *lv, int warn)
+{
+	/* Unzeroable segment */
+	if (first_seg(lv)->segtype->flags & SEG_CANNOT_BE_ZEROED)
+		return 0;
 
-	if (!seg_is_thin(lp) && !seg_is_cache_pool(lp))
-		return r;
+	/* Thin snapshot need not to be zeroed */
+	/* Thin pool with zeroing doesn't need zeroing or wiping */
+	if (lv_is_thin_volume(lv) &&
+	    (first_seg(lv)->origin ||
+	     first_seg(first_seg(lv)->pool_lv)->zero_new_blocks))
+		return 0;
 
-	if (lv_is_thin_volume(lv))
-		return r && !lp->snapshot && !first_seg(first_seg(lv)->pool_lv)->zero_new_blocks;
+	/* Cannot zero read-only volume */
+	if ((lv->status & LVM_WRITE) &&
+	    (lp->zero || lp->wipe_signatures))
+		return 1;
+
+	if (warn && (!lp->zero || !(lv->status & LVM_WRITE)))
+		log_warn("WARNING: Logical volume %s not zeroed.",
+			 display_lvname(lv));
+	if (warn && (!lp->wipe_signatures || !(lv->status & LVM_WRITE)))
+		log_verbose("Signature wiping on logical volume %s not requested.",
+			    display_lvname(lv));
 
 	return 0;
 }
@@ -7017,7 +7034,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	}
 
 	/* Do not scan this LV until properly zeroed/wiped. */
-	if (_should_wipe_lv(lp, lv))
+	if (_should_wipe_lv(lp, lv, 0))
 		lv->status |= LV_NOSCAN;
 
 	if (lp->temporary)
@@ -7073,14 +7090,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
-	if (!seg_is_thin(lp) && !lp->snapshot) {
-		if (!lp->zero)
-			log_warn("WARNING: \"%s/%s\" not zeroed", lv->vg->name, lv->name);
-		if (!lp->wipe_signatures)
-			log_verbose("Signature wiping on \"%s/%s\" not requested", lv->vg->name, lv->name);
-	}
-
-	if (_should_wipe_lv(lp, lv)) {
+	if (_should_wipe_lv(lp, lv, 1)) {
 		if (!wipe_lv(lv, (struct wipe_params)
 			     {
 				     .do_zero = lp->zero,
