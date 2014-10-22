@@ -1265,7 +1265,6 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 					   uint32_t *new_log_count)
 {
 	int repair = arg_count(cmd, repair_ARG);
-	const char *mirrorlog;
 	*old_mimage_count = lv_mirror_count(lv);
 	*old_log_count = _get_log_count(lv);
 
@@ -1334,33 +1333,19 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	if (!arg_count(cmd, corelog_ARG) && !arg_count(cmd, mirrorlog_ARG))
 		return 1;
 
-	if (arg_count(cmd, corelog_ARG))
-		*new_log_count = 0;
-
-	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
-				  !*new_log_count ? "core" : DEFAULT_MIRRORLOG);
-
-	if (!strcmp("mirrored", mirrorlog))
-		*new_log_count = 2;
-	else if (!strcmp("disk", mirrorlog))
-		*new_log_count = 1;
-	else if (!strcmp("core", mirrorlog))
-		*new_log_count = 0;
-	else {
-		log_error("Unknown mirrorlog type: %s", mirrorlog);
-		return 0;
-	}
+	*new_log_count = arg_int_value(cmd, mirrorlog_ARG,
+				       arg_is_set(cmd, corelog_ARG) ? MIRROR_LOG_CORE : DEFAULT_MIRRORLOG);
 
 	/*
 	 * No mirrored logs for cluster mirrors until
 	 * log daemon is multi-threaded.
 	 */
-	if ((*new_log_count == 2) && vg_is_clustered(lv->vg)) {
+	if ((*new_log_count == MIRROR_LOG_MIRRORED) && vg_is_clustered(lv->vg)) {
 		log_error("Log type, \"mirrored\", is unavailable to cluster mirrors");
 		return 0;
 	}
 
-	log_verbose("Setting logging type to %s", mirrorlog);
+	log_verbose("Setting logging type to %s", get_mirror_log_name(*new_log_count));
 
 	/*
 	 * Region size must not change on existing mirrors

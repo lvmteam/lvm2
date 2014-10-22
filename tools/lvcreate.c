@@ -428,27 +428,16 @@ static int _read_size_params(struct cmd_context *cmd,
 static int _read_mirror_params(struct cmd_context *cmd,
 			       struct lvcreate_params *lp)
 {
-	int corelog = arg_count(cmd, corelog_ARG);
-	const char *mirrorlog = arg_str_value(cmd, mirrorlog_ARG, corelog
-					      ? "core" : DEFAULT_MIRRORLOG);
+	int corelog = arg_is_set(cmd, corelog_ARG);
 
-	if (!strcmp("mirrored", mirrorlog))
-		lp->log_count = 2;
-	else if (!strcmp("disk", mirrorlog))
-		lp->log_count = 1;
-	else if (!strcmp("core", mirrorlog)) {
-		lp->log_count = 0;
-	} else {
-		log_error("Unknown mirrorlog type: %s", mirrorlog);
-		return 0;
-	}
+	lp->log_count = arg_int_value(cmd, mirrorlog_ARG, corelog ? 0 : DEFAULT_MIRRORLOG);
 
 	if (corelog && (lp->log_count != 0)) {
 		log_error("Please use only one of --corelog or --mirrorlog.");
 		return 0;
 	}
 
-	log_verbose("Setting logging type to %s", mirrorlog);
+	log_verbose("Setting logging type to %s", get_mirror_log_name(lp->log_count));
 
 	return 1;
 }

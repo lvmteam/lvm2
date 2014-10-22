@@ -225,6 +225,12 @@ typedef enum {
 	DONT_PROMPT_OVERRIDE = 2 /* Add even more dangerous prompts */
 } force_t;
 
+enum {
+	MIRROR_LOG_CORE,
+	MIRROR_LOG_DISK,
+	MIRROR_LOG_MIRRORED,
+};
+
 typedef enum {
 	THIN_DISCARDS_IGNORE,
 	THIN_DISCARDS_NO_PASSDOWN,
@@ -1003,6 +1009,8 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count,
 		      int (*is_removable)(struct logical_volume *, void *),
 		      void *removable_baton, uint64_t status_mask);
+int get_mirror_log_count(const char *mirrorlog, int *log_count);
+const char *get_mirror_log_name(int log_count);
 
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);

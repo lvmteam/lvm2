@@ -327,6 +327,19 @@ int discards_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_val
 	return 1;
 }
 
+int mirrorlog_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
+{
+	int log_count;
+
+	if (!get_mirror_log_count(av->value, &log_count))
+		return_0;
+
+	av->i_value = log_count;
+	av->ui_value = log_count;
+
+	return 1;
+}
+
 int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	return get_format_by_name(cmd, av->value) ? 1 : 0;
