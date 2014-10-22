@@ -283,16 +283,6 @@ static int _determine_snapshot_type(struct volume_group *vg,
 	return 1;
 }
 
-static int _lvcreate_update_pool_params(struct volume_group *vg,
-					struct lvcreate_params *lp)
-{
-	return update_pool_params(lp->segtype, vg, lp->target_attr,
-				  lp->passed_args, lp->extents,
-				  &lp->pool_metadata_size,
-				  &lp->thin_chunk_size_calc_policy, &lp->chunk_size,
-				  &lp->discards, &lp->zero);
-}
-
 /*
  * _determine_cache_argument
  * @vg
@@ -458,7 +448,11 @@ static int _update_extents_params(struct volume_group *vg,
 	}
 
 	if (lp->create_pool) {
-		if (!_lvcreate_update_pool_params(vg, lp))
+		if (!update_pool_params(lp->segtype, vg, lp->target_attr,
+					lp->passed_args, lp->extents,
+					&lp->pool_metadata_size,
+					&lp->thin_chunk_size_calc_policy, &lp->chunk_size,
+					&lp->discards, &lp->zero))
 			return_0;
 
 		if (!(lp->pool_metadata_extents =
