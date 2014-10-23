@@ -6075,7 +6075,9 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(layer_lv = lv_create_empty(name, NULL, LVM_READ | LVM_WRITE,
+	if (!(layer_lv = lv_create_empty(name, NULL,
+					 /* Preserve read-only flag */
+					 LVM_READ | (lv_where->status & LVM_WRITE),
 					 ALLOC_INHERIT, lv_where->vg))) {
 		log_error("Creation of layer LV failed");
 		return NULL;
