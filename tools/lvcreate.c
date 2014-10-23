@@ -623,20 +623,9 @@ static int _read_activation_params(struct cmd_context *cmd,
 		lp->wipe_signatures = 0;
 	}
 
-	/* Persistent minor (and major) */
-	if (arg_is_set(cmd, persistent_ARG)) {
-		if (lp->create_pool && !seg_is_thin_volume(lp)) {
-			log_error("--persistent is not permitted when creating a thin pool device.");
-			return 0;
-		}
-
-		if (!get_and_validate_major_minor(cmd, vg->fid->fmt,
-						  &lp->major, &lp->minor))
-			return_0;
-	} else if (arg_is_set(cmd, major_ARG) || arg_is_set(cmd, minor_ARG)) {
-		log_error("--major and --minor require -My.");
-		return 0;
-	}
+	/* Persistent minor (and major), default 'n' */
+	if (!get_and_validate_major_minor(cmd, vg->fid->fmt, &lp->major, &lp->minor))
+		return_0;
 
 	if (arg_is_set(cmd, setactivationskip_ARG)) {
 		lp->activation_skip |= ACTIVATION_SKIP_SET;
@@ -1316,10 +1305,14 @@ static int _check_pool_parameters(struct cmd_context *cmd,
 				return 0;
 			}
 		}
-		/* When creating just pool the pool_name needs to be in lv_name */
-		if (seg_is_pool(lp))
+		if (seg_is_pool(lp)) {
+			if (lp->major != -1 || lp->minor != -1) {
+				log_error("Persistent major and minor numbers are unsupported with pools.");
+				return 0;
+			}
+			/* When creating just pool the pool_name needs to be in lv_name */
 			lp->lv_name = lp->pool_name;
-
+		}
 		return 1;
 	}
 	/* Not creating new pool, but existing pool is needed */
@@ -1416,6 +1409,9 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	}
 
+	if (!_read_activation_params(cmd, vg, &lp))
+		goto_out;
+
 	/* Resolve segment types with opened VG */
 	if (lp.snapshot && lp.origin_name && !_determine_snapshot_type(vg, &lp, &lcp))
 		goto_out;
@@ -1431,13 +1427,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 
 	if (!_check_pool_parameters(cmd, vg, &lp, &lcp))
-		goto_out;
-
-	/*
-	 * Check activation parameters to support inactive thin snapshot creation
-	 * FIXME: anything else needs to be moved past _determine_snapshot_type()?
-	 */
-	if (!_read_activation_params(cmd, vg, &lp))
 		goto_out;
 
 	if (!_update_extents_params(vg, &lp, &lcp))

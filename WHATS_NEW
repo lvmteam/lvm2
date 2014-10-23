@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Better support for persistent major and minor options with lvcreate.
   Refactor lvcreate towards more complete validation of all supported options.
   Support lvcreate --type linear.
   Improve _should_wipe_lv() to warn with message.
