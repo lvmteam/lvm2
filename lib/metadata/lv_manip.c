@@ -3717,11 +3717,6 @@ int lv_extend(struct logical_volume *lv,
 		new_extents -= ah->log_len * ah->area_multiple;
 
 	if (segtype_is_thin_pool(segtype) || segtype_is_cache_pool(segtype)) {
-		if (lv->le_count) {
-			/* lv_resize abstracts properly _tdata */
-			log_error(INTERNAL_ERROR "Cannot lv_extend() the existing %s segment.", segtype->name);
-			return 0;
-		}
 		if (!(r = create_pool(lv, segtype, ah, stripes, stripe_size)))
 			stack;
 	} else if (!segtype_is_mirrored(segtype) && !segtype_is_raid(segtype)) {
