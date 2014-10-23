@@ -92,11 +92,11 @@ static const int32_t _reserved_number_undef_32 = INT32_C(-1);
 
 #define FIELD_RESERVED_VALUE(field_id, id, desc, value, ...) \
 	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__ , NULL}; \
-	static const struct dm_report_field_reserved_value _reserved_ ## id = {field_ ## field_id, &value};
+	static const struct dm_report_field_reserved_value _reserved_ ## id = {field_ ## field_id, value};
 
 #define FIELD_RESERVED_BINARY_VALUE(field_id, id, desc, ...) \
-	FIELD_RESERVED_VALUE(field_id, id ## _y, desc, _one64, __VA_ARGS__, _str_yes) \
-	FIELD_RESERVED_VALUE(field_id, id ## _n, desc, _zero64, __VA_ARGS__, _str_no)
+	FIELD_RESERVED_VALUE(field_id, id ## _y, desc, &_one64, __VA_ARGS__, _str_yes) \
+	FIELD_RESERVED_VALUE(field_id, id ## _n, desc, &_zero64, __VA_ARGS__, _str_no)
 
 #include "values.h"
 
@@ -119,8 +119,8 @@ static const int32_t _reserved_number_undef_32 = INT32_C(-1);
 #define FIELD_RESERVED_VALUE(field_id, id, desc, value, ...) {DM_REPORT_FIELD_TYPE_NONE, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
 
 #define FIELD_RESERVED_BINARY_VALUE(field_id, id, desc, ...) \
-	FIELD_RESERVED_VALUE(field_id, id ## _y, desc, _one64, __VA_ARGS__) \
-	FIELD_RESERVED_VALUE(field_id, id ## _n, desc, _zero64, __VA_ARGS__)
+	FIELD_RESERVED_VALUE(field_id, id ## _y, desc, &_one64, __VA_ARGS__) \
+	FIELD_RESERVED_VALUE(field_id, id ## _n, desc, &_zero64, __VA_ARGS__)
 
 static const struct dm_report_reserved_value _report_reserved_values[] = {
 	#include "values.h"
