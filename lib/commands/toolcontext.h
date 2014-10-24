@@ -71,6 +71,7 @@ struct cmd_context {
 
 	struct dm_list formats;	/* Available formats */
 	struct dm_list segtypes;	/* Available segment types */
+	const char *system_id;
 	const char *hostname;
 	const char *kernel_vsn;
 
@@ -95,6 +96,8 @@ struct cmd_context {
 	unsigned threaded:1;		/* Set if running within a thread e.g. clvmd */
 
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
+	unsigned unknown_system_id:1;
+	unsigned include_foreign_vgs:1;
 
 	struct dev_types *dev_types;
 
@@ -159,5 +162,8 @@ int config_files_changed(struct cmd_context *cmd);
 int init_lvmcache_orphans(struct cmd_context *cmd);
 
 struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format);
+
+char *system_id_from_source(struct cmd_context *cmd, const char *system_id_source);
+char *system_id_from_string(struct cmd_context *cmd, const char *system_id_string);
 
 #endif

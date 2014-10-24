@@ -332,6 +332,11 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 		}
 	}
 
+	if (clustered)
+		vg->system_id = NULL;
+	else if (cmd->system_id && cmd->system_id[0])
+		vg->system_id = dm_pool_strdup(cmd->mem, cmd->system_id);
+
 	if (!vg_set_clustered(vg, clustered))
 		return_0;
 
@@ -471,6 +476,38 @@ static int _vgchange_profile(struct cmd_context *cmd,
 	return 1;
 }
 
+/*
+ * This function will not be called unless the local host is allowed to use the
+ * VG.  Either the VG has no system_id, or the VG and host have matching
+ * system_ids, or the host has the VG's current system_id in its
+ * allow_system_id list.  This function is not allowed to change the system_id
+ * of a foreign VG (VG owned by another host).
+ */
+
+static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
+{
+	const char *arg_str = arg_str_value(cmd, systemid_ARG, NULL);
+	char *system_id;
+
+	if (!arg_str)
+		return 0;
+
+	system_id = system_id_from_string(cmd, arg_str);
+
+	if (system_id && cmd->system_id && strcmp(system_id, cmd->system_id)) {
+		log_warn("VG \"%s\" system id \"%s\" does not match local system id \"%s\"",
+			 vg->name, system_id, cmd->system_id);
+
+		if (yes_no_prompt("Change system id? [y/n]: ") == 'n') {
+			log_error("Volume group \"%s\" not changed.", vg->name);
+			return 0;
+		}
+	}
+
+	vg->system_id = system_id;
+	return 1;
+}
+
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   struct processing_handle *handle __attribute__((unused)))
@@ -494,8 +531,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ clustered_ARG, &_vgchange_clustered },
 		{ vgmetadatacopies_ARG, &_vgchange_metadata_copies },
 		{ metadataprofile_ARG, &_vgchange_profile },
-		{ profile_ARG, &_vgchange_profile},
-		{ detachprofile_ARG, &_vgchange_profile},
+		{ profile_ARG, &_vgchange_profile },
+		{ detachprofile_ARG, &_vgchange_profile },
+		{ systemid_ARG, &_vgchange_system_id },
 	};
 
 	if (vg_is_exported(vg)) {
@@ -589,13 +627,19 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
-	/* Update commands that can be combined */
+	int noupdate =
+		arg_count(cmd, activate_ARG) ||
+		arg_count(cmd, monitor_ARG) ||
+		arg_count(cmd, poll_ARG) ||
+		arg_count(cmd, refresh_ARG);
+
 	int update_partial_safe =
 		arg_count(cmd, deltag_ARG) ||
 		arg_count(cmd, addtag_ARG) ||
 		arg_count(cmd, metadataprofile_ARG) ||
 		arg_count(cmd, profile_ARG) ||
 		arg_count(cmd, detachprofile_ARG);
+
 	int update_partial_unsafe =
 		arg_count(cmd, logicalvolume_ARG) ||
 		arg_count(cmd, maxphysicalvolumes_ARG) ||
@@ -604,18 +648,13 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, physicalextentsize_ARG) ||
 		arg_count(cmd, clustered_ARG) ||
 		arg_count(cmd, alloc_ARG) ||
-		arg_count(cmd, vgmetadatacopies_ARG);
+		arg_count(cmd, vgmetadatacopies_ARG) ||
+		arg_count(cmd, systemid_ARG);
+
 	int update = update_partial_safe || update_partial_unsafe;
 
-	if (!update &&
-	    !arg_count(cmd, activate_ARG) &&
-	    !arg_count(cmd, monitor_ARG) &&
-	    !arg_count(cmd, poll_ARG) &&
-	    !arg_count(cmd, refresh_ARG)) {
-		log_error("Need 1 or more of -a, -c, -l, -p, -s, -x, "
-			  "--refresh, --uuid, --alloc, --addtag, --deltag, "
-			  "--monitor, --poll, --vgmetadatacopies or "
-			  "--metadatacopies");
+	if (!update && !noupdate) {
+		log_error("Need one or more command options.");
 		return EINVALID_CMD_LINE;
 	}
 

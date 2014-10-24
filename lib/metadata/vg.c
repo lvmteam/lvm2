@@ -601,6 +601,22 @@ int vg_set_clustered(struct volume_group *vg, int clustered)
 	return 1;
 }
 
+/* The input string has already been validated. */
+
+int vg_set_system_id(struct volume_group *vg, const char *system_id)
+{
+	if (!system_id) {
+		vg->system_id = NULL;
+		return 1;
+	}
+
+	if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
+		log_error("vg_set_system_id no mem");
+		return 0;
+	}
+	return 1;
+}
+
 char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 {
 	char *repstr;

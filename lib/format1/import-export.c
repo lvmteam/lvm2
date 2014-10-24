@@ -125,6 +125,7 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	return 1;
 }
 
+#if 0
 static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
 {
 
@@ -136,6 +137,7 @@ static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
 
 	return 1;
 }
+#endif
 
 int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused)),
 	      struct volume_group *vg,
@@ -156,11 +158,14 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	}
 
 	/* Preserve existing system_id if it exists */
+#if 0
 	if (vg && *vg->system_id)
 		strncpy((char *)pvd->system_id, vg->system_id, sizeof(pvd->system_id));
+#endif
 
 	/* Is VG already exported or being exported? */
 	if (vg && vg_is_exported(vg)) {
+#if 0
 		/* Does system_id need setting? */
 		if (!*vg->system_id ||
 		    strncmp(vg->system_id, EXPORTED_TAG,
@@ -168,6 +173,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 			if (!_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
 				return_0;
 		}
+#endif
 		if (strlen((char *)pvd->vg_name) + sizeof(EXPORTED_TAG) >
 		    sizeof(pvd->vg_name)) {
 			log_error("Volume group name %s too long to export",
@@ -177,6 +183,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 		strcat((char *)pvd->vg_name, EXPORTED_TAG);
 	}
 
+#if 0
 	/* Is VG being imported? */
 	if (vg && !vg_is_exported(vg) && *vg->system_id &&
 	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
@@ -194,6 +201,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	    (!*vg->system_id ||
 	     strncmp(vg->system_id, (char *)pvd->system_id, sizeof(pvd->system_id))))
 		    strncpy(vg->system_id, (char *)pvd->system_id, NAME_LEN);
+#endif
 
 	//pvd->pv_major = MAJOR(pv->dev);
 

@@ -32,6 +32,7 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 		goto_bad;
 
 	vg->status |= EXPORTED_VG;
+	vg->system_id = NULL;
 
 	dm_list_iterate_items(pvl, &vg->pvs)
 		pvl->pv->status |= EXPORTED_VG;

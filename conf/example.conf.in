@@ -834,6 +834,19 @@ global {
     # See cache_check_executable how to obtain binaries.
     #
     # cache_dump_executable = "@CACHE_DUMP_CMD@"
+
+    # Defines the method lvm will use to find the local system_id.
+    # The options are: none, machineid, uname, lvmlocal, or file.
+    # Unset, or set to an empty string is equivalent to "none".
+    # See lvmsystemid(7) for more information.
+    #
+    # system_id_source = ""
+
+    # Specifies the path to a file containing the local system_id.
+    # It is only used when system_id_source = "file".
+    # See lvmsystemid(7) for more information.
+    #
+    # system_id_file = ""
 }
 
 activation {

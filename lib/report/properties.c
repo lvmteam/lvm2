@@ -362,6 +362,8 @@ GET_VG_NUM_PROPERTY_FN(vg_free, (SECTOR_SIZE * vg_free(vg)))
 #define _vg_free_set prop_not_implemented_set
 GET_VG_STR_PROPERTY_FN(vg_sysid, vg_system_id_dup(vg))
 #define _vg_sysid_set prop_not_implemented_set
+GET_VG_STR_PROPERTY_FN(vg_systemid, vg_system_id_dup(vg))
+#define _vg_systemid_set prop_not_implemented_set
 GET_VG_NUM_PROPERTY_FN(vg_extent_size, (SECTOR_SIZE * vg->extent_size))
 #define _vg_extent_size_set prop_not_implemented_set
 GET_VG_NUM_PROPERTY_FN(vg_extent_count, vg->extent_count)

@@ -1,0 +1,33 @@
+# This is an example local configuration file for the LVM2 system.
+# It contains the default settings that would be used if there was no
+# @DEFAULT_SYS_DIR@/lvmlocal.conf file.
+#
+# Refer to 'man lvm.conf' for further information including the file layout.
+#
+# To put this file in a different directory and override @DEFAULT_SYS_DIR@ set
+# the environment variable LVM_SYSTEM_DIR before running the tools.
+#
+# N.B. Take care that each setting only appears once if uncommenting
+# example settings in this file.
+#
+# The lvmlocal.conf file should contain only the "local { }" section
+# which contains settings that should not be shared or repeated among
+# different hosts.
+#
+# This file should not be copied among hosts.
+
+local {
+    # This defines the system_id of the local host.  It is
+    # only used if lvm.conf system_id_source = "lvmlocal".
+    # When used, it should be set to a unique value.
+    # See lvmsystemid(7) for more information.
+    #
+    # system_id = ""
+
+    # This defines system_id's other than the local system_id
+    # that the local host is allowed to access.
+    # See lvmsystemid(7) for more information.
+    #
+    # allow_system_id = []
+}
+

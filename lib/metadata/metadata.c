@@ -4285,6 +4285,122 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	return (struct volume_group *)vg;
 }
 
+static int allow_system_id(struct cmd_context *cmd, const char *system_id)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	const char *str;
+
+	if (!(cn = find_config_tree_node(cmd, local_allow_system_id_CFG, NULL)))
+		return 0;
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type == DM_CFG_EMPTY_ARRAY)
+			break;
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Ignoring invalid string in allow_system_id list");
+			continue;
+		}
+		str = cv->v.str;
+		if (!*str) {
+			log_error("Ignoring empty string in config file");
+			continue;
+		}
+
+		if (!strcmp(str, system_id))
+			return 1;
+	}
+
+	return 0;
+}
+
+static int _access_vg_clustered(struct cmd_context *cmd, struct volume_group *vg)
+{
+	if (vg_is_clustered(vg) && !locking_is_clustered()) {
+		if (!cmd->ignore_clustered_vgs)
+			log_error("Skipping clustered volume group %s", vg->name);
+		else
+			log_verbose("Skipping clustered volume group %s", vg->name);
+		return 0;
+	}
+	return 1;
+}
+
+static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
+{
+	/*
+	 * A VG without a system_id can be accessed by anyone.
+	 */
+	if (!vg->system_id || !vg->system_id[0])
+		return 1;
+
+	/*
+	 * We sometimes want to report foreign vgs.
+	 */
+	if (cmd->include_foreign_vgs)
+		return 1;
+
+	/*
+	 * Allow VG access if the local host has active LVs in it.
+	 */
+	if (lvs_in_vg_activated(vg)) {
+		log_error("LVs should not be active in VG %s with foreign system id \"%s\"",
+			  vg->name, vg->system_id);
+		return 1;
+	}
+
+	/*
+	 * A host without a system_id cannot access a VG with a system_id.
+	 */
+	if (!cmd->system_id || cmd->unknown_system_id) {
+		log_warn("Cannot access VG %s with system id \"%s\" with unknown local system id.",
+			 vg->name, vg->system_id);
+		return 0;
+	}
+
+	/*
+	 * A host can access a VG with a matching system_id.
+	 */
+	if (!strcmp(vg->system_id, cmd->system_id))
+		return 1;
+
+	/*
+	 * A host can access a VG if the VG's system_id is in the allow list.
+	 */
+	if (allow_system_id(cmd, vg->system_id))
+		return 1;
+
+	/*
+	 * Silently ignore foreign VGs.  They will only cause the
+	 * command to fail if they were named as explicit command
+	 * args, in which case the command will fail indicating the
+	 * VG was not found.
+	 */
+
+	return 0;
+}
+
+/*
+ * FIXME: move _vg_bad_status_bits() checks in here.
+ */
+static int _access_vg(struct cmd_context *cmd, struct volume_group *vg, uint32_t *failure)
+{
+	if (!is_real_vg(vg->name))
+		return 1;
+
+	if (!_access_vg_clustered(cmd, vg)) {
+		*failure |= FAILED_CLUSTERED;
+		return 0;
+	}
+
+	if (!_access_vg_systemid(cmd, vg)) {
+		*failure |= FAILED_SYSTEMID;
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Consolidated locking, reading, and status flag checking.
  *
@@ -4344,14 +4460,8 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		goto bad;
 	}
 
-	if (vg_is_clustered(vg) && !locking_is_clustered()) {
-		if (!cmd->ignore_clustered_vgs)
-			log_error("Skipping clustered volume group %s", vg->name);
-		else
-			log_verbose("Skipping clustered volume group %s", vg->name);
-		failure |= FAILED_CLUSTERED;
+	if (!_access_vg(cmd, vg, &failure))
 		goto bad;
-	}
 
 	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */
 	if (!consistent && !failure) {

@@ -44,6 +44,8 @@ int validate_name(const char *n);
 name_error_t validate_name_detailed(const char *n);
 int validate_tag(const char *n);
 
+void copy_valid_chars(const char *src, char *dst);
+
 int apply_lvname_restrictions(const char *name);
 int is_reserved_lvname(const char *name);
 

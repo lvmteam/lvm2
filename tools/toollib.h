@@ -21,8 +21,6 @@
 
 int become_daemon(struct cmd_context *cmd, int skip_lvm);
 
-int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *skip);
-
 /*
  * The "struct processing_handle" is used as a handle for processing
  * functions (process_each_* and related).

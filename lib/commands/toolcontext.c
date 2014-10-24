@@ -55,6 +55,89 @@
 
 static const size_t linebuffer_size = 4096;
 
+
+/* Copy the input string, removing invalid characters. */
+
+char *system_id_from_string(struct cmd_context *cmd, const char *str)
+{
+	char *system_id;
+
+	if (!(system_id = dm_pool_zalloc(cmd->mem, strlen(str) + 1)))
+		return NULL;
+
+	copy_valid_chars(str, system_id);
+
+	if (!system_id[0])
+		return NULL;
+
+	return system_id;
+}
+
+static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file)
+{
+	char line[NAME_LEN + 1];
+	FILE *fp;
+
+	if (!file || !strlen(file) || !file[0])
+		return NULL;
+
+	fp = fopen(file, "r");
+	if (!fp)
+		return NULL;
+
+	memset(line, 0, sizeof(line));
+
+	while (fgets(line, NAME_LEN, fp)) {
+		if (line[0] == '#' || line[0] == '\n')
+			continue;
+
+		fclose(fp);
+		return system_id_from_string(cmd, line);
+	}
+
+	fclose(fp);
+	return NULL;
+}
+
+char *system_id_from_source(struct cmd_context *cmd, const char *source)
+{
+	struct utsname uts;
+	char filebuf[PATH_MAX];
+	const char *file;
+	const char *etc_str;
+	const char *str;
+	char *system_id = NULL;
+
+	if (!strcmp(source, "uname")) {
+		if (!uname(&uts) && strncmp(uts.nodename, "localhost", 9))
+			system_id = system_id_from_string(cmd, uts.nodename);
+		goto out;
+	}
+
+	/* lvm.conf and lvmlocal.conf are merged into one config tree */
+	if (!strcmp(source, "lvmlocal")) {
+		if ((str = find_config_tree_str(cmd, local_system_id_CFG, NULL)))
+			system_id = system_id_from_string(cmd, str);
+		goto out;
+	}
+
+	if (!strcmp(source, "machineid")) {
+		memset(filebuf, 0, sizeof(filebuf));
+		etc_str = find_config_tree_str(cmd, global_etc_CFG, NULL);
+		if (dm_snprintf(filebuf, sizeof(filebuf), "%s/machine-id", etc_str) >= 0)
+			system_id = _read_system_id_from_file(cmd, filebuf);
+		goto out;
+	}
+
+	if (!strcmp(source, "file")) {
+		file = find_config_tree_str(cmd, global_system_id_file_CFG, NULL);
+		system_id = _read_system_id_from_file(cmd, file);
+		goto out;
+	}
+out:
+	return system_id;
+}
+
 static int _get_env_vars(struct cmd_context *cmd)
 {
 	const char *e;
@@ -572,7 +655,7 @@ static int _init_tags(struct cmd_context *cmd, struct dm_config_tree *cft)
 	return 1;
 }
 
-static int _load_config_file(struct cmd_context *cmd, const char *tag)
+static int _load_config_file(struct cmd_context *cmd, const char *tag, int local)
 {
 	static char config_file[PATH_MAX] = "";
 	const char *filler = "";
@@ -580,6 +663,10 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 
 	if (*tag)
 		filler = "_";
+	else if (local) {
+		filler = "";
+		tag = "local";
+	}
 
 	if (dm_snprintf(config_file, sizeof(config_file), "%s/lvm%s%s.conf",
 			 cmd->system_dir, filler, tag) < 0) {
@@ -607,7 +694,10 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 	return 1;
 }
 
-/* Find and read first config file */
+/*
+ * Find and read lvm.conf and lvmlocal.conf.
+ */
+
 static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
@@ -619,8 +709,10 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 		return 1;
 	}
 
-	if (!_load_config_file(cmd, ""))
+	if (!_load_config_file(cmd, "", 0))
 		return_0;
+
+	_load_config_file(cmd, "", 1);
 
 	return 1;
 }
@@ -632,7 +724,7 @@ static int _init_tag_configs(struct cmd_context *cmd)
 
 	/* Tag list may grow while inside this loop */
 	dm_list_iterate_items(sl, &cmd->tags) {
-		if (!_load_config_file(cmd, sl->str))
+		if (!_load_config_file(cmd, sl->str, 0))
 			return_0;
 	}
 
@@ -1352,6 +1444,39 @@ static int _init_hostname(struct cmd_context *cmd)
 	return 1;
 }
 
+static int _init_system_id(struct cmd_context *cmd)
+{
+	const char *source;
+	int local_set;
+
+	cmd->system_id = NULL;
+
+	local_set = !!find_config_tree_str(cmd, local_system_id_CFG, NULL);
+
+	source = find_config_tree_str(cmd, global_system_id_source_CFG, NULL);
+	if (!source)
+		source = "none";
+
+	/* Defining local system_id but not using it is probably a config mistake. */
+	if (local_set && strcmp(source, "lvmlocal"))
+		log_warn("Local system_id is not used by system_id_source %s.", source);
+
+	if (!strcmp(source, "none"))
+		return 1;
+
+	if ((cmd->system_id = system_id_from_source(cmd, source)))
+		return 1;
+
+	/*
+	 * The source failed to resolve a system_id.  In this case allow
+	 * VGs with no system_id to be accessed, but not VGs with a system_id.
+	 */
+
+	log_warn("No system_id found from system_id_source %s.", source);
+	cmd->unknown_system_id = 1;
+	return 1;
+}
+
 static int _init_backup(struct cmd_context *cmd)
 {
 	uint32_t days, min;
@@ -1578,6 +1703,9 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		goto_out;
 
 	if (!_init_profiles(cmd))
+		goto_out;
+
+	if (!_init_system_id(cmd))
 		goto_out;
 
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,

@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <sys/utsname.h>
 
 struct device_id_list {
 	struct dm_list list;
@@ -175,7 +176,8 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
  *
  * Case c covers the other errors returned when reading the VG.
  */
-int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *skip)
+static int ignore_vg(struct volume_group *vg, const char *vg_name,
+		     struct dm_list *arg_vgnames, int allow_inconsistent, int *skip)
 {
 	uint32_t read_error = vg_read_error(vg);
 	*skip = 0;
@@ -187,6 +189,25 @@ int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsiste
 		read_error &= ~FAILED_CLUSTERED; /* Check for other errors */
 		log_verbose("Skipping volume group %s", vg_name);
 		*skip = 1;
+	}
+
+	/*
+	 * Commands that operate on "all vgs" shouldn't be bothered by
+	 * skipping a foreign VG, and the command shouldn't fail when
+	 * one is skipped.  But, if the command explicitly asked to
+	 * operate on a foreign VG and it's skipped, then the command
+	 * would expect to fail.
+	 */
+	if (read_error & FAILED_SYSTEMID) {
+		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
+			log_error("Skipping volume group %s with system id %s",
+				  vg->name, vg->system_id);
+			return 1;
+		} else {
+			read_error &= ~FAILED_SYSTEMID; /* Check for other errors */
+			log_verbose("Skipping volume group %s", vg_name);
+			*skip = 1;
+		}
 	}
 
 	if (read_error != SUCCESS) {
@@ -653,6 +674,7 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		vp_def->alloc = vg->alloc;
 		vp_def->clustered = vg_is_clustered(vg);
 		vp_def->vgmetadatacopies = vg->mda_copies;
+		vp_def->system_id = vg->system_id ? dm_pool_strdup(cmd->mem, vg->system_id) : NULL;
 	} else {
 		vp_def->vg_name = NULL;
 		extent_size = find_config_tree_int64(cmd,
@@ -667,6 +689,7 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		vp_def->alloc = DEFAULT_ALLOC_POLICY;
 		vp_def->clustered = DEFAULT_CLUSTERED;
 		vp_def->vgmetadatacopies = DEFAULT_VGMETADATACOPIES;
+		vp_def->system_id = cmd->system_id ? dm_pool_strdup(cmd->mem, cmd->system_id) : NULL;
 	}
 
 	return 1;
@@ -682,6 +705,8 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 				  struct vgcreate_params *vp_new,
 				  struct vgcreate_params *vp_def)
 {
+	const char *arg_str;
+
 	vp_new->vg_name = skip_dev_dir(cmd, vp_def->vg_name, NULL);
 	vp_new->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG,
 					vp_def->max_lv);
@@ -729,6 +754,27 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	} else {
 		vp_new->vgmetadatacopies = find_config_tree_int(cmd, metadata_vgmetadatacopies_CFG, NULL);
 	}
+
+	if ((arg_str = arg_str_value(cmd, systemid_ARG, NULL))) {
+		vp_new->system_id = system_id_from_string(cmd, arg_str);
+	} else {
+		vp_new->system_id = vp_def->system_id;
+	}
+
+	if (arg_str) {
+		if (!vp_new->system_id)
+			log_warn("No local system id found, VG will not have a system id.");
+
+		if (vp_new->system_id && cmd->system_id &&
+		    strcmp(vp_new->system_id, cmd->system_id)) {
+			log_warn("VG system id \"%s\" will not be accessible to local system id \"%s\"",
+				 vp_new->system_id, cmd->system_id);
+		}
+	}
+
+	/* A clustered vg has no system_id. */
+	if (vp_new->clustered)
+		vp_new->system_id = NULL;
 
 	return 1;
 }
@@ -1744,7 +1790,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		skip = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags);
-		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			release_vg(vg);
@@ -2184,7 +2230,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		}
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags);
-		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			release_vg(vg);
@@ -2658,7 +2704,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 		skip = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags | READ_WARN_INCONSISTENT);
-		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (ignore_vg(vg, vg_name, NULL, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			release_vg(vg);

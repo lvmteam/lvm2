@@ -101,6 +101,41 @@ int validate_name(const char *n)
 	return (_validate_name(n) == NAME_VALID) ? 1 : 0;
 }
 
+/*
+ * Copy valid characters from source to destination.
+ * Invalid characters are skipped.  Copying is stopped
+ * when NAME_LEN characters have been copied.
+ */
+
+void copy_valid_chars(const char *src, char *dst)
+{
+	const char *s = src;
+	char *d = dst;
+	int len = 0;
+	int i;
+	char c;
+
+	if (!s || !*s)
+		return;
+
+	for (i = 0; i < strlen(src); i++) {
+		c = *s;
+
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+') {
+			s++;
+			continue;
+		}
+
+		*d = *s;
+		d++;
+		s++;
+		len++;
+
+		if (len == NAME_LEN)
+			break;
+	}
+}
+
 static const char *_lvname_has_reserved_prefix(const char *lvname)
 {
 	static const char _prefixes[][12] = {

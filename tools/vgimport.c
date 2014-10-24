@@ -37,6 +37,7 @@ static int vgimport_single(struct cmd_context *cmd __attribute__((unused)),
 		goto_bad;
 
 	vg->status &= ~EXPORTED_VG;
+	vg->system_id = cmd->system_id ? dm_pool_strdup(cmd->mem, cmd->system_id) : NULL;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
@@ -82,6 +83,17 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		 */
 		log_warn("WARNING: Volume groups with missing PVs will be imported with --force.");
 		cmd->handles_missing_pvs = 1;
+	}
+
+	/*
+	 * Rescan devices and update lvmetad.  lvmetad may hold a copy of the
+	 * VG from before it was exported, if it was exported by another host.
+	 * We need to reread it to see that it's been exported before we can
+	 * import it.
+	 */
+	if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL)) {
+		log_error("Failed to scan devices.");
+		return ECMD_FAILED;
 	}
 
 	return process_each_vg(cmd, argc, argv,
