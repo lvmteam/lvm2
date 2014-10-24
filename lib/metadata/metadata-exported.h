@@ -798,9 +798,7 @@ static inline int is_change_activating(activation_change_t change)
 /* FIXME: refactor and reduce the size of this struct! */
 struct lvcreate_params {
 	/* flags */
-	int cache;
 	int snapshot; /* snap */
-	int thin; /* thin */
 	int create_pool; /* pools */
 	int zero; /* all */
 	int wipe_signatures; /* all */
@@ -809,6 +807,7 @@ struct lvcreate_params {
 	int log_count; /* mirror */
 	int nosync; /* mirror */
 	int pool_metadata_spare; /* pools */
+	int type;   /* type arg is given */
 	int temporary; /* temporary LV */
 #define ACTIVATION_SKIP_SET		0x01 /* request to set LV activation skip flag state */
 #define ACTIVATION_SKIP_SET_ENABLED	0x02 /* set the LV activation skip flag state to 'enabled' */

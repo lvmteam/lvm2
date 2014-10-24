@@ -6604,6 +6604,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct cmd_context *cmd = vg->cmd;
 	uint32_t size_rest;
 	uint64_t status = lp->permission | VISIBLE_LV;
+	const struct segment_type *create_segtype = lp->segtype;
 	struct logical_volume *lv, *origin_lv = NULL;
 	struct logical_volume *pool_lv;
 	struct logical_volume *tmp_lv;
@@ -6672,7 +6673,58 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
-	if (seg_is_cache(lp)) {
+	if (!lp->extents && !seg_is_thin_volume(lp)) {
+		log_error(INTERNAL_ERROR "Unable to create new logical volume with no extents.");
+		return_NULL;
+	}
+
+	if (seg_is_pool(lp) &&
+	    ((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
+		log_error("Unable to create %s smaller than 1 chunk.",
+			  lp->segtype->name);
+		return NULL;
+	}
+
+	if (!seg_is_virtual(lp) && !lp->approx_alloc &&
+	    (vg->free_count < lp->extents)) {
+		log_error("Volume group \"%s\" has insufficient free space "
+			  "(%u extents): %u required.",
+			  vg->name, vg->free_count, lp->extents);
+		return NULL;
+	}
+
+	if ((lp->alloc != ALLOC_ANYWHERE) && (lp->stripes > dm_list_size(lp->pvh))) {
+		log_error("Number of stripes (%u) must not exceed "
+			  "number of physical volumes (%d)", lp->stripes,
+			  dm_list_size(lp->pvh));
+		return NULL;
+	}
+
+	if (seg_is_pool(lp))
+		status |= LVM_WRITE; /* Pool is always writable */
+
+	if (seg_is_cache_pool(lp) && lp->origin_name) {
+		/* Converting exiting origin and creating cache pool */
+		if (!(origin_lv = find_lv(vg, lp->origin_name))) {
+			log_error("Cache origin volume %s not found in Volume group %s.",
+				  lp->origin_name, vg->name);
+			return NULL;
+		}
+
+		if (!validate_lv_cache_create(NULL, origin_lv))
+			return_NULL;
+
+		/* Validate cache origin is exclusively active */
+		if (vg_is_clustered(origin_lv->vg) &&
+		    locking_is_clustered() &&
+		    locking_supports_remote_queries() &&
+		    lv_is_active(origin_lv) &&
+		    !lv_is_active_exclusive(origin_lv)) {
+			log_error("Cannot cache not exclusively active origin volume %s.",
+				  display_lvname(origin_lv));
+			return NULL;
+		}
+	} else if (seg_is_cache(lp)) {
 		if (!lp->pool_name) {
 			log_error(INTERNAL_ERROR "Cannot create thin volume without thin pool.");
 			return NULL;
@@ -6683,47 +6735,83 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
+		if (!lv_is_cache_pool(pool_lv)) {
+			log_error("Logical volume %s is not a cache pool.",
+				  display_lvname(pool_lv));
+			return NULL;
+		}
+
 		if (lv_is_locked(pool_lv)) {
-			log_error("Caching locked devices is not supported.");
+			log_error("Cannot use locked cache pool %s.",
+				  display_lvname(pool_lv));
 			return NULL;
 		}
 
-		if (!lp->extents) {
-			log_error("No size given for new cache origin LV.");
-			return NULL;
-		}
-
-		if (!(lp->segtype = get_segtype_from_string(vg->cmd, "striped")))
+		/* Create cache origin for cache pool */
+		/* TODO: eventually support raid/mirrors with -m */
+		if (!(create_segtype = get_segtype_from_string(vg->cmd, "striped")))
 			return_0;
-	} else if (seg_is_thin(lp) && lp->snapshot) {
-		if (!lp->origin_name) {
-			log_error(INTERNAL_ERROR "Origin LV is not defined.");
-			return 0;
+	} else if (seg_is_mirrored(lp) || seg_is_raid(lp)) {
+		/* FIXME: this will not pass cluster lock! */
+		init_mirror_in_sync(lp->nosync);
+
+		if (lp->nosync) {
+			log_warn("WARNING: New %s won't be synchronised. "
+				 "Don't read what you didn't write!",
+				 lp->segtype->name);
+			status |= LV_NOTSYNCED;
 		}
-		if (!(origin_lv = find_lv(vg, lp->origin_name))) {
-			log_error("Couldn't find origin volume '%s'.",
-				  lp->origin_name);
+
+		lp->region_size = adjusted_mirror_region_size(vg->extent_size,
+							      lp->extents,
+							      lp->region_size, 0);
+	} else if (seg_is_thin_volume(lp)) {
+		if (!lp->pool_name) {
+			log_error(INTERNAL_ERROR "Cannot create thin volume without thin pool.");
 			return NULL;
 		}
 
-		if (lv_is_locked(origin_lv)) {
-			log_error("Snapshots of locked devices are not supported.");
+		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
+			log_error("Unable to find existing pool LV %s in VG %s.",
+				  lp->pool_name, vg->name);
 			return NULL;
 		}
 
-		lp->voriginextents = origin_lv->le_count;
+		if (!lv_is_thin_pool(pool_lv)) {
+			log_error("Logical volume %s is not a thin pool.",
+				  display_lvname(pool_lv));
+			return NULL;
+		}
+
+		if (lv_is_locked(pool_lv)) {
+			log_error("Cannot use locked thin pool %s.",
+				  display_lvname(pool_lv));
+			return NULL;
+		}
+
+		thin_name = lp->pool_name;
+
+		if (lp->origin_name) {
+			if (!(origin_lv = find_lv(vg, lp->origin_name))) {
+				log_error("Couldn't find origin volume '%s'.",
+					  lp->origin_name);
+				return NULL;
+			}
+
+			if (lv_is_locked(origin_lv)) {
+				log_error("Snapshots of locked devices are not supported.");
+				return NULL;
+			}
+
+			/* For thin snapshot we must have matching pool */
+			if (lv_is_thin_volume(origin_lv) &&
+			    (strcmp(first_seg(origin_lv)->pool_lv->name, lp->pool_name) == 0))
+				thin_name = origin_lv->name;
+
+			lp->voriginextents = origin_lv->le_count;
+		}
 	} else if (lp->snapshot) {
-		if (!activation()) {
-			log_error("Can't create snapshot without using "
-				  "device-mapper kernel driver");
-			return NULL;
-		}
-
-		/* Must zero cow */
-		status |= LVM_WRITE;
-
 		if (!lp->voriginsize) {
-
 			if (!(origin_lv = find_lv(vg, lp->origin_name))) {
 				log_error("Couldn't find origin volume '%s'.",
 					  lp->origin_name);
@@ -6771,86 +6859,28 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return NULL;
 			}
 		}
+
+		if (!cow_has_min_chunks(vg, lp->extents, lp->chunk_size))
+			return_NULL;
+
+		/* The snapshot segment gets created later */
+		if (!(create_segtype = get_segtype_from_string(cmd, "striped")))
+			return_NULL;
+
+		/* Must zero cow */
+		status |= LVM_WRITE;
+		lp->zero = 1;
+		lp->wipe_signatures = 0;
 	}
-
-	if (!seg_is_thin_volume(lp) && !lp->extents) {
-		log_error("Unable to create new logical volume with no extents");
-		return NULL;
-	}
-
-	if (seg_is_pool(lp)) {
-		if (((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
-			log_error("Unable to create %s smaller than 1 chunk.",
-				  lp->segtype->name);
-			return NULL;
-		}
-	}
-
-	if (lp->snapshot && !seg_is_thin(lp) &&
-	    !cow_has_min_chunks(vg, lp->extents, lp->chunk_size))
-                return NULL;
-
-	if (!seg_is_virtual(lp) &&
-	    vg->free_count < lp->extents && !lp->approx_alloc) {
-		log_error("Volume group \"%s\" has insufficient free space "
-			  "(%u extents): %u required.",
-			  vg->name, vg->free_count, lp->extents);
-		return NULL;
-	}
-
-	if (lp->stripes > dm_list_size(lp->pvh) && lp->alloc != ALLOC_ANYWHERE) {
-		log_error("Number of stripes (%u) must not exceed "
-			  "number of physical volumes (%d)", lp->stripes,
-			  dm_list_size(lp->pvh));
-		return NULL;
-	}
-
-	/* The snapshot segment gets created later */
-	if (lp->snapshot && !seg_is_thin(lp) &&
-	    !(lp->segtype = get_segtype_from_string(cmd, "striped")))
-		return_NULL;
 
 	if (!archive(vg))
 		return_NULL;
 
 	if (seg_is_thin_volume(lp)) {
 		/* Ensure all stacked messages are submitted */
-		if (!lp->pool_name) {
-			log_error(INTERNAL_ERROR "Undefined pool for thin volume segment.");
-			return NULL;
-		}
-
-		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
-			log_error("Unable to find existing pool LV %s in VG %s.",
-				  lp->pool_name, vg->name);
-			return NULL;
-		}
-
 		if ((pool_is_active(pool_lv) || is_change_activating(lp->activate)) &&
 		    !update_pool_lv(pool_lv, 1))
 			return_NULL;
-
-		/* For thin snapshot we must have matching pool */
-		if (origin_lv && lv_is_thin_volume(origin_lv) && (!lp->pool_name ||
-		    (strcmp(first_seg(origin_lv)->pool_lv->name, lp->pool_name) == 0)))
-			thin_name = origin_lv->name;
-		else
-			thin_name = lp->pool_name;
-	}
-
-	if (segtype_is_mirrored(lp->segtype) || segtype_is_raid(lp->segtype)) {
-		init_mirror_in_sync(lp->nosync);
-
-		if (lp->nosync) {
-			log_warn("WARNING: New %s won't be synchronised. "
-				 "Don't read what you didn't write!",
-				 lp->segtype->name);
-			status |= LV_NOTSYNCED;
-		}
-
-		lp->region_size = adjusted_mirror_region_size(vg->extent_size,
-							      lp->extents,
-							      lp->region_size, 0);
 	}
 
 	if (!(lv = lv_create_empty(new_lv_name ? : "lvol%d", NULL,
@@ -6862,7 +6892,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_debug_metadata("Setting read ahead sectors %u.", lv->read_ahead);
 	}
 
-	if (!seg_is_thin_pool(lp) && lp->minor >= 0) {
+	if (!seg_is_pool(lp) && lp->minor >= 0) {
 		lv->major = lp->major;
 		lv->minor = lp->minor;
 		lv->status |= FIXED_MINOR;
@@ -6872,7 +6902,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	dm_list_splice(&lv->tags, &lp->tags);
 
-	if (!lv_extend(lv, lp->segtype,
+	if (!lv_extend(lv, create_segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
 		       seg_is_pool(lp) ? lp->pool_metadata_extents : lp->region_size,
@@ -6915,7 +6945,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * Check if using 'external origin' or the 'normal' snapshot
 		 * within the same thin pool
 		 */
-		if (lp->snapshot && (first_seg(origin_lv)->pool_lv != pool_lv)) {
+		if (origin_lv && (first_seg(origin_lv)->pool_lv != pool_lv)) {
 			if (!pool_supports_external_origin(first_seg(pool_lv), origin_lv))
 				return_0;
 			if (origin_lv->status & LVM_WRITE) {
@@ -6960,56 +6990,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (lv_activation_skip(lv, lp->activate, lp->activation_skip & ACTIVATION_SKIP_IGNORE))
 		lp->activate = CHANGE_AN;
 
-	/*
-	 * Check if this is conversion inside lvcreate
-	 * Either we have origin or pool and created cache origin LV
-	 */
-	if (lp->cache &&
-	    (lp->origin_name || (lp->pool_name && !lv_is_cache_pool(lv)))) {
-		if (lp->origin_name) {
-			if (!(origin_lv = find_lv(vg, lp->origin_name)))
-				goto deactivate_and_revert_new_lv;
-			pool_lv = lv; /* Cache pool is created */
-		} else if (lp->pool_name) {
-			if (!(pool_lv = find_lv(vg, lp->pool_name)))
-				goto deactivate_and_revert_new_lv;
-			origin_lv = lv; /* Cached origin is created */
-		}
-
-		if (!(tmp_lv = lv_cache_create(pool_lv, origin_lv)))
-			goto deactivate_and_revert_new_lv;
-
-		/* From here we cannot deactive_and_revert! */
-		lv = tmp_lv;
-
-		/*
-		 * We need to check if origin is active and in
-		 * that case reload cached LV.
-		 * There is no such problem with cache pool
-		 * since it cannot be activated.
-		 */
-		if (lp->origin_name && lv_is_active(lv)) {
-			if (!is_change_activating(lp->activate)) {
-				/* User requested to create inactive cached volume */
-				if (deactivate_lv(cmd, lv)) {
-					log_error("Failed to deactivate %s.", display_lvname(lv));
-					return NULL;
-				}
-			} else if (vg_is_clustered(lv->vg) &&
-				   locking_is_clustered() &&
-				   locking_supports_remote_queries() &&
-				   !lv_is_active_exclusive(lv)) {
-				log_error("Only exclusively active %s could be converted.", display_lvname(lv));
-				return NULL;
-			} else {
-				/* With exclusively active origin just reload */
-				if (!lv_update_and_reload(lv))
-					return_NULL;
-				goto out; /* converted */
-			}
-		}
-	}
-
 	/* store vg on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		if (seg_is_pool(lp)) {
@@ -7027,11 +7007,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		goto out;
 	}
 
-	if (lv_is_cache_pool(lv)) {
-		log_verbose("Cache pool is prepared.");
-		goto out;
-	}
-
 	/* Do not scan this LV until properly zeroed/wiped. */
 	if (_should_wipe_lv(lp, lv, 0))
 		lv->status |= LV_NOSCAN;
@@ -7039,7 +7014,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (lp->temporary)
 		lv->status |= LV_TEMPORARY;
 
-	if (lv_is_thin_volume(lv)) {
+	if (seg_is_cache(lp)) {
+		/* TODO: support remote exclusive activation? */
+		if (is_change_activating(lp->activate) &&
+		    !activate_lv_excl_local(cmd, lv)) {
+			log_error("Aborting. Failed to activate LV %s locally exclusively.",
+				  display_lvname(lv));
+			goto revert_new_lv;
+		}
+	} else if (lv_is_cache_pool(lv)) {
+		/* Cache pool cannot be actived and zeroed */
+		log_very_verbose("Cache pool is prepared.");
+	} else if (lv_is_thin_volume(lv)) {
 		/* For snapshot, suspend active thin origin first */
 		if (origin_lv && lv_is_active(origin_lv) && lv_is_thin_volume(origin_lv)) {
 			if (!suspend_lv_origin(cmd, origin_lv)) {
@@ -7083,11 +7069,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	} else if (!lv_active_change(cmd, lv, lp->activate)) {
 		log_error("Failed to activate new LV.");
-		if (lp->zero || lp->wipe_signatures ||
-		    lv_is_thin_pool(lv) ||
-		    lv_is_cache_type(lv))
-			goto deactivate_and_revert_new_lv;
-		return NULL;
+		goto deactivate_and_revert_new_lv;
 	}
 
 	if (_should_wipe_lv(lp, lv, 1)) {
@@ -7104,7 +7086,30 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	}
 
-	if (lp->snapshot && !seg_is_thin(lp)) {
+	if (seg_is_cache(lp) || (origin_lv && lv_is_cache_pool(lv))) {
+		/* Finish cache conversion magic */
+		if (origin_lv) {
+			/* Convert origin to cached LV */
+			if (!(tmp_lv = lv_cache_create(lv, origin_lv))) {
+				/* TODO: do a better revert */
+				log_error("Aborting. Leaving cache pool %s and uncached origin volume %s.",
+					  display_lvname(lv), display_lvname(origin_lv));
+				return NULL;
+			}
+		} else {
+			if (!(tmp_lv = lv_cache_create(pool_lv, lv))) {
+				/* 'lv' still keeps created new LV */
+				stack;
+				goto deactivate_and_revert_new_lv;
+			}
+		}
+		lv = tmp_lv;
+		if (!lv_update_and_reload(lv)) {
+			/* TODO: do a better revert */
+			log_error("Aborting. Manual intervention required.");
+			return NULL; /* FIXME: revert */
+		}
+	} else if (lp->snapshot) {
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
@@ -7177,35 +7182,26 @@ revert_new_lv:
 struct logical_volume *lv_create_single(struct volume_group *vg,
 					struct lvcreate_params *lp)
 {
+	const struct segment_type *segtype;
 	struct logical_volume *lv;
 
 	/* Create pool first if necessary */
-	if (lp->create_pool) {
-		if (seg_is_thin(lp)) {
-			if (!seg_is_thin_pool(lp) &&
-			    !(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
-				return_NULL;
-
-			if (lp->pool_name && !apply_lvname_restrictions(lp->pool_name))
+	if (lp->create_pool && !seg_is_pool(lp)) {
+		segtype = lp->segtype;
+		if (seg_is_thin_volume(lp)) {
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
 				return_NULL;
 
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
-
-			if (!lp->thin && !lp->snapshot)
-				goto out;
-
-			lp->pool_name = lv->name;
-
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
-				return_NULL;
-		} else if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
-                        if (!seg_is_cache_pool(lp) &&
-			    !(lp->segtype = get_segtype_from_string(vg->cmd,
-								    "cache-pool")))
-				return_NULL;
-
-			if (lp->pool_name && !apply_lvname_restrictions(lp->pool_name))
+		} else if (seg_is_cache(lp)) {
+			if (!lp->origin_name) {
+				/* Until we have --pooldatasize we are lost */
+				log_error(INTERNAL_ERROR "Unsupported creation of cache and cache pool volume.");
+				return NULL;
+			}
+			/* origin_name is defined -> creates cache LV with new cache pool */
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
 				return_NULL;
 
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
@@ -7218,19 +7214,21 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 				return lv;
 			}
 
-			if (!lp->cache)
-				goto out;
-
-			lp->pool_name = lv->name;
-			log_error("Creation of cache pool and cached volume in one command is not yet supported.");
+			log_error(INTERNAL_ERROR "Logical volume is not cache %s.",
+				  display_lvname(lv));
+			return NULL;
+		} else {
+			log_error(INTERNAL_ERROR "Creation of pool for unsupported segment type %s.",
+				  lp->segtype->name);
 			return NULL;
 		}
+		lp->pool_name = lv->name;
+		lp->segtype = segtype;
 	}
 
 	if (!(lv = _lv_create_an_lv(vg, lp, lp->lv_name)))
 		return_NULL;
 
-out:
 	if (lp->temporary)
 		log_verbose("Temporary logical volume \"%s\" created.", lv->name);
 	else

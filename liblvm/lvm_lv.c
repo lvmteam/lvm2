@@ -611,7 +611,6 @@ static int _lv_set_thin_params(struct lvcreate_params *lp,
 {
 	_lv_set_default_params(lp, vg, lvname, extents);
 
-	lp->thin = 1;
 	lp->pool_name = pool_name;
 	lp->segtype = get_segtype_from_string(vg->cmd, "thin");
 

@@ -42,9 +42,9 @@ static int _set_vg_name(struct lvcreate_params *lp, const char *vg_name)
 	return 1;
 }
 
-static int _lvcreate_name_params(struct lvcreate_params *lp,
-				 struct cmd_context *cmd,
-				 int *pargc, char ***pargv)
+static int _lvcreate_name_params(struct cmd_context *cmd,
+				 int *pargc, char ***pargv,
+				 struct lvcreate_params *lp)
 {
 	int argc = *pargc;
 	char **argv = *pargv;
@@ -125,8 +125,6 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 				  "in one command is not yet supported.");
 			return 0;
 		}
-
-		lp->cache = 1;
 	} else if (lp->snapshot && !arg_count(cmd, virtualsize_ARG)) {
 		/* argv[0] might be [vg/]origin */
 		if (!argc) {
@@ -379,79 +377,168 @@ static int _update_extents_params(struct volume_group *vg,
  * Note: at this place all volume types needs to be already
  *       identified, do not change them here.
  */
-static int _read_size_params(struct lvcreate_params *lp,
-			     struct lvcreate_cmdline_params *lcp,
-			     struct cmd_context *cmd)
+static int _read_size_params(struct cmd_context *cmd,
+			     struct lvcreate_params *lp,
+			     struct lvcreate_cmdline_params *lcp)
 {
-	if (arg_count(cmd, extents_ARG) && arg_count(cmd, size_ARG)) {
-		log_error("Please specify either size or extents (not both)");
-		return 0;
-	}
+	if (arg_from_list_is_negative(cmd, "may not be negative",
+				      chunksize_ARG, extents_ARG,
+				      mirrors_ARG,
+				      maxrecoveryrate_ARG,
+				      minrecoveryrate_ARG,
+				      regionsize_ARG,
+				      size_ARG,
+				      stripes_ARG, stripesize_ARG,
+				      virtualsize_ARG,
+				      -1))
+		return_0;
 
-	if (!lp->thin && !lp->snapshot && !arg_count(cmd, extents_ARG) && !arg_count(cmd, size_ARG)) {
-		log_error("Please specify either size or extents");
-		return 0;
-	}
+	if (arg_from_list_is_zero(cmd, "may not be zero",
+				  chunksize_ARG, extents_ARG,
+				  regionsize_ARG,
+				  size_ARG,
+				  stripes_ARG, stripesize_ARG,
+				  virtualsize_ARG,
+				  -1))
+		return_0;
 
-	/* poolmetadatasize_ARG is parsed in get_pool_params() */
-	if (!lp->create_pool && arg_count(cmd, poolmetadatasize_ARG)) {
-		log_error("--poolmetadatasize may only be specified when creating pools.");
-		return 0;
-	}
+	lp->voriginsize = arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0));
 
 	if (arg_count(cmd, extents_ARG)) {
-		if (arg_sign_value(cmd, extents_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative number of extents is invalid.");
+		if (arg_count(cmd, size_ARG)) {
+			log_error("Please specify either size or extents (not both).");
 			return 0;
 		}
-		if (!(lp->extents = arg_uint_value(cmd, extents_ARG, 0))) {
-			log_error("Number of extents may not be zero.");
-			return 0;
-		}
+		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
 		lcp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
-	}
-
-	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(cmd, size_ARG)) {
-		if (arg_sign_value(cmd, size_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative size is invalid.");
-			return 0;
-		}
-		if (!(lcp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)))) {
-			log_error("Size may not be zero.");
-			return 0;
-		}
+	} else if (arg_count(cmd, size_ARG)) {
+		lcp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
 		lcp->percent = PERCENT_NONE;
-	}
-
-	if (arg_count(cmd, virtualsize_ARG)) {
-		if (!lp->thin && !lp->snapshot) {
-			log_error("--virtualsize may only be specified when creating thins or virtual snapshots.");
-			return 0;
-		}
-		if (arg_sign_value(cmd, virtualsize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative virtual origin size is invalid.");
-			return 0;
-		}
-		/* Size returned in kilobyte units; held in sectors */
-		if (!(lp->voriginsize = arg_uint64_value(cmd, virtualsize_ARG,
-							 UINT64_C(0)))) {
-			log_error("Virtual origin size may not be zero.");
-			return 0;
-		}
+	} else if (!lp->snapshot && !seg_is_thin_volume(lp)) {
+		log_error("Please specify either size or extents.");
+		return 0;
 	}
 
 	return 1;
 }
 
 /*
- * Generic mirror parameter checks.
- * FIXME: Should eventually be moved into lvm library.
+ * Read parameters related to mirrors
  */
-static int _validate_mirror_params(const struct cmd_context *cmd __attribute__((unused)),
-				   const struct lvcreate_params *lp)
+static int _read_mirror_params(struct cmd_context *cmd,
+			       struct lvcreate_params *lp)
+{
+	int corelog = arg_count(cmd, corelog_ARG);
+	const char *mirrorlog = arg_str_value(cmd, mirrorlog_ARG, corelog
+					      ? "core" : DEFAULT_MIRRORLOG);
+
+	if (!strcmp("mirrored", mirrorlog))
+		lp->log_count = 2;
+	else if (!strcmp("disk", mirrorlog))
+		lp->log_count = 1;
+	else if (!strcmp("core", mirrorlog)) {
+		lp->log_count = 0;
+	} else {
+		log_error("Unknown mirrorlog type: %s", mirrorlog);
+		return 0;
+	}
+
+	if (corelog && (lp->log_count != 0)) {
+		log_error("Please use only one of --corelog or --mirrorlog.");
+		return 0;
+	}
+
+	log_verbose("Setting logging type to %s", mirrorlog);
+
+	return 1;
+}
+
+/*
+ * Read parameters related to raids
+ */
+static int _read_raid_params(struct cmd_context *cmd,
+			     struct lvcreate_params *lp)
+{
+	if ((lp->stripes < 2) && !strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+		if (arg_count(cmd, stripes_ARG)) {
+			/* User supplied the bad argument */
+			log_error("Segment type 'raid10' requires 2 or more stripes.");
+			return 0;
+		}
+		/* No stripe argument was given - default to 2 */
+		lp->stripes = 2;
+		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
+	}
+
+	/*
+	 * RAID1 does not take a stripe arg
+	 */
+	if ((lp->stripes > 1) && seg_is_mirrored(lp) &&
+	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+		log_error("Stripe argument cannot be used with segment type, %s",
+			  lp->segtype->name);
+		return 0;
+	}
+
+	/* Rates are recorded in kiB/sec/disk, not sectors/sec/disk */
+	lp->min_recovery_rate = arg_uint_value(cmd, minrecoveryrate_ARG, 0) / 2;
+	lp->max_recovery_rate = arg_uint_value(cmd, maxrecoveryrate_ARG, 0) / 2;
+
+	if (lp->min_recovery_rate > lp->max_recovery_rate) {
+		log_error("Minimum recovery rate cannot be higher than maximum.");
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Read parameters related to mirrors and raids
+ */
+static int _read_mirror_and_raid_params(struct cmd_context *cmd,
+					struct lvcreate_params *lp)
 {
 	int pagesize = lvm_getpagesize();
+
+	/* Common mirror and raid params */
+	if (arg_count(cmd, mirrors_ARG)) {
+		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
+
+		if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
+			log_error("Only up to " DM_TO_STRING(DEFAULT_MIRROR_MAX_IMAGES)
+				  " images in mirror supported currently.");
+			return 0;
+		}
+
+		if ((lp->mirrors > 2) && !strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+			/*
+			 * FIXME: When RAID10 is no longer limited to
+			 *        2-way mirror, 'lv_mirror_count()'
+			 *        must also change for RAID10.
+			 */
+			log_error("RAID10 currently supports "
+				  "only 2-way mirroring (i.e. '-m 1')");
+			return 0;
+		}
+
+		if (lp->mirrors == 1) {
+			if (seg_is_mirrored(lp)) {
+				log_error("--mirrors must be at least 1 with segment type %s.", lp->segtype->name);
+				return 0;
+			}
+			log_print_unless_silent("Redundant mirrors argument: default is 0");
+		}
+	} else
+		/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
+		lp->mirrors = seg_is_mirrored(lp) ? 2 : 1;
+
+	lp->nosync = arg_is_set(cmd, nosync_ARG);
+
+	if (!(lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0)) &&
+	    ((lp->region_size = get_default_region_size(cmd)) <= 0)) {
+		log_error("regionsize in configuration file is invalid.");
+		return 0;
+	}
 
 	if (lp->region_size & (lp->region_size - 1)) {
 		log_error("Region size (%" PRIu32 ") must be a power of 2",
@@ -466,145 +553,17 @@ static int _validate_mirror_params(const struct cmd_context *cmd __attribute__((
 		return 0;
 	}
 
-	if (!lp->region_size) {
-		log_error("Non-zero region size must be supplied.");
-		return 0;
-	}
+	if (seg_is_mirror(lp) && !_read_mirror_params(cmd, lp))
+                return_0;
+
+	if (seg_is_raid(lp) && !_read_raid_params(cmd, lp))
+		return_0;
 
 	return 1;
 }
 
-static int _read_mirror_params(struct lvcreate_params *lp,
-			       struct cmd_context *cmd)
-{
-	int region_size;
-	const char *mirrorlog;
-	int corelog = arg_count(cmd, corelog_ARG);
-
-	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
-				  corelog ? "core" : DEFAULT_MIRRORLOG);
-
-	if (strcmp("core", mirrorlog) && corelog) {
-		log_error("Please use only one of --mirrorlog or --corelog");
-		return 0;
-	}
-
-	if (!strcmp("mirrored", mirrorlog)) {
-		lp->log_count = 2;
-	} else if (!strcmp("disk", mirrorlog)) {
-		lp->log_count = 1;
-	} else if (!strcmp("core", mirrorlog))
-		lp->log_count = 0;
-	else {
-		log_error("Unknown mirrorlog type: %s", mirrorlog);
-		return 0;
-	}
-
-	log_verbose("Setting logging type to %s", mirrorlog);
-
-	lp->nosync = arg_is_set(cmd, nosync_ARG);
-
-	if (arg_count(cmd, regionsize_ARG)) {
-		if (arg_sign_value(cmd, regionsize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative regionsize is invalid");
-			return 0;
-		}
-		lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
-	} else {
-		region_size = get_default_region_size(cmd);
-		if (region_size < 0) {
-			log_error("Negative regionsize in configuration file "
-				  "is invalid");
-			return 0;
-		}
-		lp->region_size = region_size;
-	}
-
-	if (!_validate_mirror_params(cmd, lp))
-		return 0;
-
-	return 1;
-}
-
-static int _read_raid_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd)
-{
-	if (!segtype_is_raid(lp->segtype))
-		return 1;
-
-	if (arg_count(cmd, corelog_ARG) ||
-	    arg_count(cmd, mirrorlog_ARG)) {
-		log_error("Log options not applicable to %s segtype",
-			  lp->segtype->name);
-		return 0;
-	}
-
-	if (!strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10) && (lp->stripes < 2)) {
-		if (arg_count(cmd, stripes_ARG)) {
-			/* User supplied the bad argument */
-			log_error("Segment type 'raid10' requires 2 or more stripes.");
-			return 0;
-		}
-		/* No stripe argument was given - default to 2 */
-		lp->stripes = 2;
-		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
-	}
-
-	/*
-	 * RAID types without a mirror component do not take '-m' arg
-	 */
-	if (!segtype_is_mirrored(lp->segtype) &&
-	    arg_count(cmd, mirrors_ARG)) {
-		log_error("Mirror argument cannot be used with segment type, %s",
-			  lp->segtype->name);
-		return 0;
-	}
-
-	/*
-	 * RAID1 does not take a stripe arg
-	 */
-	if ((lp->stripes > 1) && seg_is_mirrored(lp) &&
-	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
-		log_error("Stripe argument cannot be used with segment type, %s",
-			  lp->segtype->name);
-		return 0;
-	}
-
-	/*
-	 * _read_mirror_params is called before _read_raid_params
-	 * and already sets:
-	 *   lp->nosync
-	 *   lp->region_size
-	 *
-	 * But let's ensure that programmers don't reorder
-	 * that by checking and warning if they aren't set.
-	 */
-	if (!lp->region_size) {
-		log_error(INTERNAL_ERROR "region_size not set.");
-		return 0;
-	}
-
-	if (arg_count(cmd, minrecoveryrate_ARG))
-		lp->min_recovery_rate = arg_uint_value(cmd,
-						       minrecoveryrate_ARG, 0);
-	if (arg_count(cmd, maxrecoveryrate_ARG))
-		lp->max_recovery_rate = arg_uint_value(cmd,
-						       maxrecoveryrate_ARG, 0);
-
-	/* Rates are recorded in kiB/sec/disk, not sectors/sec/disk */
-	lp->min_recovery_rate /= 2;
-	lp->max_recovery_rate /= 2;
-
-	if (lp->max_recovery_rate &&
-	    (lp->max_recovery_rate < lp->min_recovery_rate)) {
-		log_error("Minimum recovery rate cannot be higher than maximum.");
-		return 0;
-	}
-	return 1;
-}
-
-static int _read_cache_pool_params(struct lvcreate_params *lp,
-				  struct cmd_context *cmd)
+static int _read_cache_params(struct cmd_context *cmd,
+			      struct lvcreate_params *lp)
 {
 	const char *cachemode;
 
@@ -620,9 +579,9 @@ static int _read_cache_pool_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-static int _read_activation_params(struct lvcreate_params *lp,
-				   struct cmd_context *cmd,
-				   struct volume_group *vg)
+static int _read_activation_params(struct cmd_context *cmd,
+                                   struct volume_group *vg,
+				   struct lvcreate_params *lp)
 {
 	unsigned pagesize;
 
@@ -658,14 +617,7 @@ static int _read_activation_params(struct lvcreate_params *lp,
 	}
 
 	/* Permissions */
-	lp->permission = arg_uint_value(cmd, permission_ARG,
-					LVM_READ | LVM_WRITE);
-
-	if (lp->snapshot) {
-		/* Snapshot has to zero COW header */
-		lp->zero = 1;
-		lp->wipe_signatures = 0;
-	} else if (!(lp->permission & LVM_WRITE)) {
+	if (!(lp->permission & LVM_WRITE)) {
 		/* Must not zero/wipe read only volume */
 		lp->zero = 0;
 		lp->wipe_signatures = 0;
@@ -673,7 +625,7 @@ static int _read_activation_params(struct lvcreate_params *lp,
 
 	/* Persistent minor (and major) */
 	if (arg_is_set(cmd, persistent_ARG)) {
-		if (lp->create_pool && !lp->thin) {
+		if (lp->create_pool && !seg_is_thin_volume(lp)) {
 			log_error("--persistent is not permitted when creating a thin pool device.");
 			return 0;
 		}
@@ -705,51 +657,57 @@ static int _read_activation_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-static int _lvcreate_params(struct lvcreate_params *lp,
-			    struct lvcreate_cmdline_params *lcp,
-			    struct cmd_context *cmd,
-			    int argc, char **argv)
+static int _lvcreate_params(struct cmd_context *cmd,
+			    int argc, char **argv,
+			    struct lvcreate_params *lp,
+			    struct lvcreate_cmdline_params *lcp)
 {
 	int contiguous;
 	struct arg_value_group_list *current_group;
 	const char *segtype_str;
 	const char *tag;
 	int only_linear = 0;
+	int mirror_default_cfg;
 
 	memset(lcp, 0, sizeof(*lcp));
 	dm_list_init(&lp->tags);
 	lp->target_attr = ~0;
 	lp->yes = arg_count(cmd, yes_ARG);
 	lp->force = (force_t) arg_count(cmd, force_ARG);
+	lp->permission = arg_uint_value(cmd, permission_ARG,
+					LVM_READ | LVM_WRITE);
 
-	/* Set default segtype - remember, '-m 0' implies stripe. */
-	if (arg_count(cmd, mirrors_ARG) &&
-	    arg_uint_value(cmd, mirrors_ARG, 0))
-		if (arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ?
-				   stripes_long_ARG : stripes_ARG, 1) > 1) {
-			segtype_str = find_config_tree_str(cmd, global_raid10_segtype_default_CFG, NULL);;
-		} else {
-			segtype_str = find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL);
+	/*
+	 * --type is the top most rule
+	 *
+	 * Ordering of following type tests is IMPORTANT
+	 */
+	if ((segtype_str = arg_str_value(cmd, type_ARG, NULL))) {
+		lp->type = 1;
+		if (!strcmp(segtype_str, "linear")) {
+			segtype_str = "striped";
+			only_linear = 1; /* User requested linear only target */
 		}
-	else if (arg_count(cmd, snapshot_ARG))
-		segtype_str = "snapshot";
-	else if (arg_count(cmd, cache_ARG))
+		if (arg_from_list_is_set(cmd, "is conflicting with option --type",
+					 cache_ARG, thin_ARG, snapshot_ARG,
+					 -1))
+			return_0;
+	/* More estimations from options after shortcuts */
+	} else if (arg_is_set(cmd, snapshot_ARG))
+		/* Snapshot has higher priority then thin */
+		segtype_str = "snapshot"; /* --thinpool makes thin volume */
+	else if (arg_is_set(cmd, cache_ARG) || arg_count(cmd, cachepool_ARG))
 		segtype_str = "cache";
-	else if (arg_count(cmd, thin_ARG))
+	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG) ||
+		 arg_is_set(cmd, virtualsize_ARG))
 		segtype_str = "thin";
-	/* estimations after valid shortcuts */
-	else if (arg_count(cmd, cachepool_ARG))
-		segtype_str = "cache";
-	else if (arg_count(cmd, thinpool_ARG))
-		segtype_str = "thin";
-	else
+	else if (arg_uint_value(cmd, mirrors_ARG, 0)) {
+		/* Remember, '-m 0' implies stripe */
+		mirror_default_cfg = (arg_uint_value(cmd, stripes_ARG, 1) > 1)
+			? global_raid10_segtype_default_CFG : global_mirror_segtype_default_CFG;
+		segtype_str = find_config_tree_str(cmd, mirror_default_cfg, NULL);
+	} else
 		segtype_str = "striped";
-
-	segtype_str = arg_str_value(cmd, type_ARG, segtype_str);
-	if (!strcmp(segtype_str, "linear")) {
-		segtype_str = "striped";
-		only_linear = 1; /* User requested linear only target */
-	}
 
 	if (!(lp->segtype = get_segtype_from_string(cmd, segtype_str)))
 		return_0;
@@ -759,108 +717,269 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (seg_is_snapshot(lp) ||
-	    (!seg_is_thin(lp) && arg_count(cmd, virtualsize_ARG))) {
-		if (arg_from_list_is_set(cmd, "is unsupported with snapshots",
-					 cache_ARG, cachepool_ARG,
-					 mirrors_ARG,
-					 thin_ARG,
-					 zero_ARG,
-					 -1))
-			return_0;
+	/* Starts basic option validation for every segment type */
 
-		if (seg_is_pool(lp)) {
-			log_error("Snapshots are incompatible with pool segment types.");
+	/* TODO: Use these ARGS macros also in commands.h ? */
+	/* ARGS are disjoint! sets of options */
+#define LVCREATE_ARGS \
+	activate_ARG,\
+	addtag_ARG,\
+	alloc_ARG,\
+	autobackup_ARG,\
+	available_ARG,\
+	contiguous_ARG,\
+	ignoreactivationskip_ARG,\
+	ignoremonitoring_ARG,\
+	name_ARG,\
+	noudevsync_ARG,\
+	permission_ARG,\
+	setactivationskip_ARG,\
+	test_ARG,\
+	type_ARG
+
+#define CACHE_POOL_ARGS \
+	cachemode_ARG,\
+	cachepool_ARG
+
+#define MIRROR_ARGS \
+	corelog_ARG,\
+	mirrorlog_ARG
+
+#define MIRROR_RAID_ARGS \
+	mirrors_ARG,\
+	nosync_ARG,\
+	regionsize_ARG
+
+#define PERSISTENT_ARGS \
+	major_ARG,\
+	minor_ARG,\
+	persistent_ARG
+
+#define POOL_ARGS \
+	pooldatasize_ARG,\
+	poolmetadatasize_ARG,\
+	poolmetadataspare_ARG
+
+#define RAID_ARGS \
+	maxrecoveryrate_ARG,\
+	minrecoveryrate_ARG,\
+	raidmaxrecoveryrate_ARG,\
+	raidminrecoveryrate_ARG
+
+#define SIZE_ARGS \
+	extents_ARG,\
+	size_ARG,\
+	stripes_ARG,\
+	stripesize_ARG
+
+#define THIN_POOL_ARGS \
+	discards_ARG,\
+	thinpool_ARG
+
+	/* Cache and cache-pool segment type */
+	if (seg_is_cache(lp)) {
+		/* Only supported with --type cache, -H, --cache */
+		if (arg_outside_list_is_set(cmd, "is unsupported with cache",
+					    CACHE_POOL_ARGS,
+					    LVCREATE_ARGS,
+					    PERSISTENT_ARGS,
+					    POOL_ARGS,
+					    SIZE_ARGS,
+					    cache_ARG,
+					    chunksize_ARG,
+					    wipesignatures_ARG, zero_ARG,
+					    -1))
+			return_0;
+		lp->create_pool = 1; /* Confirmed when opened VG */
+	} else if (seg_is_cache_pool(lp)) {
+		if (arg_outside_list_is_set(cmd, "is unsupported with cache pools",
+					    CACHE_POOL_ARGS,
+					    LVCREATE_ARGS,
+					    POOL_ARGS,
+					    SIZE_ARGS,
+					    chunksize_ARG,
+					    -1))
+			return_0;
+		if (!(lp->permission & LVM_WRITE)) {
+			log_error("Cannot create read-only cache pool.");
 			return 0;
 		}
-
-		if (arg_is_set(cmd, thinpool_ARG) &&
-		    (arg_is_set(cmd, extents_ARG) || arg_is_set(cmd, size_ARG))) {
-			log_error("Cannot specify snapshot size and thin pool.");
-			return 0;
-		}
-
-		lp->snapshot = 1;
-	}
-
-	if (seg_is_thin_volume(lp)) {
-		if (arg_is_set(cmd, virtualsize_ARG))
-			lp->thin = 1;
-		else if (arg_is_set(cmd, name_ARG)) {
-			log_error("Missing --virtualsize when specified --name of thin volume.");
-			return 0;
-		/* When no virtual size -> create thin-pool only */
-		} else if (!(lp->segtype = get_segtype_from_string(cmd, "thin-pool")))
-			return_0;
-
-		/* If size/extents given with thin, then we are creating a thin pool */
-		if (arg_count(cmd, size_ARG) || arg_count(cmd, extents_ARG)) {
-			if (lp->snapshot &&
-			    (arg_is_set(cmd, cachepool_ARG) || arg_is_set(cmd, thinpool_ARG))) {
-				log_error("Size or extents cannot be specified with pool name.");
-				return 0;
-			}
-			lp->create_pool = 1;
-		}
-	} else if (seg_is_pool(lp)) {
-		if (arg_from_list_is_set(cmd, "is unsupported with pool segment type",
-					 cache_ARG, mirrors_ARG, snapshot_ARG, thin_ARG,
-					 virtualsize_ARG,
-					 -1))
-			return_0;
 		lp->create_pool = 1;
-	}
-
-	if (seg_is_mirrored(lp) || seg_is_raid(lp)) {
-		/* Note: snapshots have snapshot_ARG or virtualsize_ARG */
-		if (arg_from_list_is_set(cmd, "is unsupported with mirrored segment type",
-					 cache_ARG, cachepool_ARG,
-					 snapshot_ARG,
-					 thin_ARG, thinpool_ARG,
-					 virtualsize_ARG,
-					 -1))
-			return_0;
-	} else if (arg_from_list_is_set(cmd, "is unsupported without mirrored segment type",
-					corelog_ARG, mirrorlog_ARG, nosync_ARG,
+	} else if (arg_from_list_is_set(cmd, "is supported only with cache",
+					cache_ARG, CACHE_POOL_ARGS,
 					-1))
 		return_0;
 
-	/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
-	lp->mirrors = segtype_is_mirrored(lp->segtype) ? 2 : 1;
+	/* Snapshot segment type */
+	if (seg_is_snapshot(lp)) {
+		/* Only supported with --type snapshot, -s, --snapshot */
+		if (arg_outside_list_is_set(cmd, "is unsupported with snapshots",
+					    LVCREATE_ARGS,
+					    PERSISTENT_ARGS,
+					    SIZE_ARGS,
+					    chunksize_ARG,
+					    snapshot_ARG,
+					    thinpool_ARG,
+					    virtualoriginsize_ARG,
+					    virtualsize_ARG,
+					    -1))
+			return_0;
 
-	if (arg_count(cmd, mirrors_ARG)) {
-		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Mirrors argument may not be negative");
-			return 0;
-		}
-
-		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
-
-		if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
-			log_error("Only up to " DM_TO_STRING(DEFAULT_MIRROR_MAX_IMAGES)
-				  " images in mirror supported currently.");
-			return 0;
-		}
-
-		if (lp->mirrors == 1) {
-			if (segtype_is_mirrored(lp->segtype)) {
-				log_error("--mirrors must be at least 1 with segment type %s.", lp->segtype->name);
+		/* TODO: resolve this ambiguous case with --pooldatasize  */
+		if (arg_is_set(cmd, thinpool_ARG)) {
+			if (lp->type) {
+				/* Unsupported with --type snapshot */
+				log_error("Snapshot segment type is incompatible with thin pools.");
 				return 0;
 			}
-			log_print_unless_silent("Redundant mirrors argument: default is 0");
+
+			if (arg_from_list_is_set(cmd, "is unsupported with snapshots and --thinpool",
+						 SIZE_ARGS,
+						 chunksize_ARG,
+						 virtualoriginsize_ARG,
+						 virtualsize_ARG,
+						 -1))
+				return_0;
 		}
 
-		if ((lp->mirrors > 2) && !strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
-			/*
-			 * FIXME: When RAID10 is no longer limited to
-			 *        2-way mirror, 'lv_mirror_count()'
-			 *        must also change for RAID10.
-			 */
-			log_error("RAID10 currently supports "
-				  "only 2-way mirroring (i.e. '-m 1')");
+		/* Snapshot segment type needs size/extents */
+		if (lp->type && !arg_is_set(cmd, size_ARG) && !arg_is_set(cmd, extents_ARG)) {
+			log_error("Snapshot segment type requires size or extents.");
+			return 0;
+		}
+
+		lp->snapshot = 1; /* Free arg is snapshot origin */
+	} else if (arg_from_list_is_set(cmd, "is supported only with sparse snapshots",
+					virtualoriginsize_ARG,
+					-1))
+		return_0;
+
+	/* Mirror segment type */
+	if (seg_is_mirror(lp)) {
+		if (arg_outside_list_is_set(cmd, "is unsupported with mirrors",
+					    LVCREATE_ARGS,
+					    MIRROR_ARGS,
+					    MIRROR_RAID_ARGS,
+					    PERSISTENT_ARGS,
+					    SIZE_ARGS,
+					    wipesignatures_ARG, zero_ARG,
+					    -1))
+			return_0;
+	} else if (arg_from_list_is_set(cmd, "is supported only with mirrors",
+					MIRROR_ARGS,
+					-1))
+		return_0;
+
+	/* Raid segment type */
+	if (seg_is_raid(lp)) {
+		if (arg_outside_list_is_set(cmd, "is unsupported with raids",
+					    LVCREATE_ARGS,
+					    MIRROR_RAID_ARGS,
+					    PERSISTENT_ARGS,
+					    RAID_ARGS,
+					    SIZE_ARGS,
+					    wipesignatures_ARG, zero_ARG,
+					    -1))
+			return_0;
+	} else if (arg_from_list_is_set(cmd, "is supported only with raids",
+					RAID_ARGS,
+					-1))
+		return_0;
+
+	/* Thin and thin-pool segment type */
+	if (seg_is_thin_volume(lp)) {
+		/* Only supported with --type thin, -T, --thin, -V */
+		if (arg_outside_list_is_set(cmd, "is unsupported with thins",
+					    LVCREATE_ARGS,
+					    PERSISTENT_ARGS,
+					    POOL_ARGS,
+					    SIZE_ARGS,
+					    THIN_POOL_ARGS,
+					    chunksize_ARG,
+					    thin_ARG,
+					    virtualsize_ARG,
+					    wipesignatures_ARG, zero_ARG,
+					    -1))
+			return_0;
+
+		/* If size/extents given with thin, then we are also creating a thin-pool */
+		if (arg_is_set(cmd, size_ARG) || arg_is_set(cmd, extents_ARG)) {
+			if (arg_is_set(cmd, pooldatasize_ARG)) {
+				log_error("Please specify either size or pooldatasize.");
+				return 0;
+			}
+			lp->create_pool = 1;
+		} else if (arg_from_list_is_set(cmd, "is supported only with thin pool creation",
+						POOL_ARGS,
+						SIZE_ARGS,
+						chunksize_ARG,
+						discards_ARG,
+						zero_ARG,
+						-1))
+			return_0;
+
+		if (!arg_is_set(cmd, virtualsize_ARG)) {
+			/* Without virtual size could be creation of thin-pool or snapshot */
+			if (lp->create_pool) {
+				if (lp->type) {
+					log_error("Thin segment type requires --virtualsize.");
+					return 0;
+				}
+
+				log_debug_metadata("Switching from thin to thin pool segment type.");
+				if (!(lp->segtype = get_segtype_from_string(cmd, "thin-pool")))
+					return_0;
+			} else	/* Parse free arg as snapshot origin */
+				lp->snapshot = 1;
+		}
+	} else if (seg_is_thin_pool(lp)) {
+		if (arg_outside_list_is_set(cmd, "is unsupported with thin pools",
+					    LVCREATE_ARGS,
+					    POOL_ARGS,
+					    SIZE_ARGS,
+					    THIN_POOL_ARGS,
+					    chunksize_ARG,
+					    zero_ARG,
+					    -1))
+			return_0;
+		if (!(lp->permission & LVM_WRITE)) {
+			log_error("Cannot create read-only thin pool.");
+			return 0;
+		}
+		lp->create_pool = 1;
+	} else if (!lp->snapshot &&
+		   arg_from_list_is_set(cmd, "is supported only with thins",
+					thin_ARG, THIN_POOL_ARGS,
+					-1))
+		return_0;
+
+	/* Check options shared between more segment types */
+	if (!seg_is_mirror(lp) && !seg_is_raid(lp)) {
+		if (arg_from_list_is_set(cmd, "is supported only with mirrors or raids",
+					 nosync_ARG,
+					 regionsize_ARG,
+					 -1))
+			return_0;
+		/* Let -m0 pass */
+		if (arg_int_value(cmd, mirrors_ARG, 0)) {
+			log_error("--mirrors is supported only with mirrors or raids");
 			return 0;
 		}
 	}
+
+	if (!lp->create_pool && !lp->snapshot &&
+	    arg_from_list_is_set(cmd, "is supported only with pools and snapshots",
+				 chunksize_ARG,
+				 -1))
+		return_0;
+
+	if (!lp->snapshot && !seg_is_thin_volume(lp) &&
+	    arg_from_list_is_set(cmd, "is supported only with sparse snapshots and thins",
+				 virtualsize_ARG,
+				 -1))
+		return_0;
+
+	/* Basic segment type validation finished here */
 
 	if (activation() && lp->segtype->ops->target_present) {
 		if (!lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
@@ -898,22 +1017,15 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			lp->wipe_signatures = 0;
 	}
 
-	if (arg_count(cmd, chunksize_ARG) &&
-	    (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS)) {
-		log_error("Negative chunk size is invalid.");
-		return 0;
-	}
-
-	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
-	    !_read_size_params(lp, lcp, cmd) ||
+	if (!_lvcreate_name_params(cmd, &argc, &argv, lp) ||
+	    !_read_size_params(cmd, lp, lcp) ||
 	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
 	    (lp->create_pool &&
 	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
 			      &lp->chunk_size, &lp->discards, &lp->zero)) ||
-	    !_read_mirror_params(lp, cmd) ||
-	    !_read_raid_params(lp, cmd) ||
-	    !_read_cache_pool_params(lp, cmd))
+	    !_read_cache_params(cmd, lp) ||
+	    !_read_mirror_and_raid_params(cmd, lp))
 		return_0;
 
 	if (only_linear && lp->stripes > 1) {
@@ -930,22 +1042,9 @@ static int _lvcreate_params(struct lvcreate_params *lp,
 			return 0;
 		}
 		log_verbose("Setting chunksize to %s.", display_size(cmd, lp->chunk_size));
-
-		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
-			return_0;
-	} else if (!lp->create_pool && arg_count(cmd, chunksize_ARG)) {
-		log_error("--chunksize is only available with snapshots and pools.");
-		return 0;
 	}
 
-	if (!lp->create_pool &&
-	    arg_count(cmd, poolmetadataspare_ARG)) {
-		log_error("--poolmetadataspare is only available with pool creation.");
-		return 0;
-	}
-	/*
-	 * Allocation parameters
-	 */
+	/* Allocation parameters */
 	contiguous = arg_int_value(cmd, contiguous_ARG, 0);
 	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
 	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
@@ -991,31 +1090,59 @@ static int _determine_cache_argument(struct volume_group *vg,
 {
 	struct logical_volume *lv;
 
-	if (!seg_is_cache(lp)) {
-		log_error(INTERNAL_ERROR
-			  "Unable to determine cache argument on %s segtype",
-			  lp->segtype->name);
-		return 0;
-	}
-
 	if (!lp->pool_name) {
 		lp->pool_name = lp->lv_name;
-	} else if (lp->pool_name == lp->origin_name) {
-		if (!(lv = find_lv(vg, lp->pool_name))) {
-			/* Cache pool nor origin volume exists */
-			lp->cache = 0;
-			lp->origin_name = NULL;
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
-				return_0;
-		} else if (!lv_is_cache_pool(lv)) {
-			/* Name arg in this case is for pool name */
-			lp->pool_name = lp->lv_name;
-			/* We were given origin for caching */
-		} else {
-			/* FIXME error on pool args */
-			lp->create_pool = 0;
-			lp->origin_name = NULL;
+	} else if ((lv = find_lv(vg, lp->pool_name)) && lv_is_cache_pool(lv)) {
+		/* Pool exists, create cache volume */
+		lp->create_pool = 0;
+		lp->origin_name = NULL;
+	} else if (lv) {
+		/* Origin exists, create cache pool volume */
+		if (!validate_lv_cache_create_origin(lv))
+			return_0;
+
+		if (arg_is_set(vg->cmd, permission_ARG) &&
+		    ((lp->permission & LVM_WRITE) != (lv->status & LVM_WRITE))) {
+			/* Reverting permissions on all error path is very complicated */
+			log_error("Change of volume permission is unsupported with cache conversion, use lvchange.");
+			return 0;
 		}
+		/* FIXME: how to handle skip flag */
+		if (arg_from_list_is_set(vg->cmd, "is unsupported with cache conversion",
+					 setactivationskip_ARG,
+					 ignoreactivationskip_ARG,
+					 -1))
+			return_0; /* TODO FIX THIS */
+
+		/* Put origin into resulting activation state first */
+		if (is_change_activating(lp->activate)) {
+			if ((lp->activate == CHANGE_AAY) &&
+			    !lv_passes_auto_activation_filter(vg->cmd, lv)) {
+				log_verbose("Skipping activation of cache origin %s.",
+					    display_lvname(lv));
+				return 1;
+			} else if (!activate_lv_excl_local(vg->cmd, lv)) {
+				log_error("Cannot activate cache origin %s.",
+					  display_lvname(lv));
+				return 0;
+			}
+		} else if (!deactivate_lv(vg->cmd, lv)) {
+			log_error("Cannot deactivate activate cache origin %s.",
+				  display_lvname(lv));
+			return 0;
+		}
+
+		/* lp->origin_name is already equal to lp->pool_name */
+		lp->pool_name = lp->lv_name; /* --name is cache pool name */
+		/*  No zeroing of an existing origin! */
+		lp->zero = lp->wipe_signatures = 0;
+	} else {
+		/* Cache pool and cache volume needs to be created */
+		lp->origin_name = NULL;
+		/* --pooldatasize is needed here */
+		log_error("Ambiguous syntax, please create --type cache-pool %s separately.",
+			  lp->pool_name);
+		return 0;
 	}
 
 	return 1;
@@ -1025,21 +1152,20 @@ static int _determine_cache_argument(struct volume_group *vg,
  * Normal snapshot or thinly-provisioned snapshot?
  */
 static int _determine_snapshot_type(struct volume_group *vg,
-				    struct lvcreate_params *lp)
+				    struct lvcreate_params *lp,
+				    struct lvcreate_cmdline_params *lcp)
 {
-	struct logical_volume *lv, *pool_lv = NULL;
+	struct logical_volume *origin_lv, *pool_lv = NULL;
 
-	if (!(lv = find_lv(vg, lp->origin_name))) {
+	if (!(origin_lv = find_lv(vg, lp->origin_name))) {
 		log_error("Snapshot origin LV %s not found in Volume group %s.",
 			  lp->origin_name, vg->name);
 		return 0;
 	}
+	if (lp->extents || lcp->size)
+		return 1; /* Size specified */
 
-	if (lv_is_cache(lv)) {
-		log_error("Snapshot of cache LV is not yet supported.");
-		return 0;
-	}
-
+	/* Check if we could make thin snapshot */
 	if (lp->pool_name) {
 		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
 			log_error("Thin pool volume %s not found in Volume group %s.",
@@ -1052,102 +1178,24 @@ static int _determine_snapshot_type(struct volume_group *vg,
 				  display_lvname(pool_lv));
 			return 0;
 		}
+	} else {
+		if (!lv_is_thin_volume(origin_lv)) {
+			if (!seg_is_thin(lp))
+				log_error("Please specify either size or extents with snapshots.");
+			else
+				log_error("Logical volume %s is not a thin volume. "
+					  "Thin snapshot supports only thin origins.",
+					  display_lvname(origin_lv));
+			return 0;
+		}
+		/* Origin thin volume without size makes thin segment */
+		lp->pool_name = first_seg(origin_lv)->pool_lv->name;
 	}
 
-	if (!arg_count(vg->cmd, extents_ARG) && !arg_count(vg->cmd, size_ARG)) {
-		if (lv_is_thin_volume(lv) && !lp->pool_name)
-			lp->pool_name = first_seg(lv)->pool_lv->name;
-
-		if (seg_is_thin(lp) || lp->pool_name) {
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
-				return_0;
-			return 1;
-		}
-
-		log_error("Please specify either size or extents with snapshots.");
-		return 0;
-	} else if (lp->pool_name) {
-		log_error("Cannot specify size with thin pool snapshot.");
-		return 0;
-	}
-
-	return 1;
-}
-
-static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_params *lp,
-				  struct lvcreate_cmdline_params *lcp)
-{
-	struct logical_volume *pool_lv = NULL;
-
-	if (!lp->thin && !lp->create_pool && !lp->snapshot) {
-		log_error("Please specify device size(s).");
-		return 0;
-	}
-
-	if (lp->thin && lp->snapshot) {
-		log_error("Please either create snapshot or thin volume.");
-		return 0;
-	}
-
-	if (lp->pool_name)
-		pool_lv = find_lv(vg, lp->pool_name);
-
-	if (!lp->create_pool) {
-		if (arg_from_list_is_set(vg->cmd, "is only available with thin pool creation",
-					 alloc_ARG,
-					 chunksize_ARG,
-					 contiguous_ARG,
-					 discards_ARG,
-					 poolmetadatasize_ARG,
-					 poolmetadataspare_ARG,
-					 stripes_ARG,
-					 stripesize_ARG,
-					 zero_ARG,
-					 -1))
-			return_0;
-
-		if (lcp->pv_count) {
-			log_error("Only specify Physical volumes when allocating the thin pool.");
-			return 0;
-		}
-
-		if (!lp->pool_name) {
-			log_error("Please specify name of existing thin pool.");
-			return 0;
-		}
-
-		if (!pool_lv) {
-			log_error("Thin pool %s not found in Volume group %s.", lp->pool_name, vg->name);
-			return 0;
-		}
-
-		if (!lv_is_thin_pool(pool_lv)) {
-			log_error("Logical volume %s is not a thin pool.", display_lvname(pool_lv));
-			return 0;
-		}
-	} else if (pool_lv) {
-		log_error("Logical volume %s already exists in Volume group %s.", lp->pool_name, vg->name);
-		return 0;
-	}
-
-	if (!lp->thin && !lp->snapshot) {
-		if (lp->lv_name) {
-			log_error("--name may only be given when creating a new thin Logical volume or snapshot.");
-			return 0;
-		}
-		if (arg_count(vg->cmd, readahead_ARG)) {
-			log_error("--readhead may only be given when creating a new thin Logical volume or snapshot.");
-			return 0;
-		}
-		if (arg_count(vg->cmd, permission_ARG)) {
-			log_error("--permission may only be given when creating a new thin Logical volume or snapshot.");
-			return 0;
-		}
-		if (arg_count(vg->cmd, persistent_ARG)) {
-			log_error("--persistent may only be given when creating a new thin Logical volume or snapshot.");
-			return 0;
-		}
-	}
+	log_debug_metadata("Switching from snapshot to thin segment type.");
+	if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
+		return_0;
+	lp->snapshot = 0;
 
 	return 1;
 }
@@ -1191,6 +1239,121 @@ static int _check_raid_parameters(struct volume_group *vg,
 	return 1;
 }
 
+static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_params *lp,
+				  struct lvcreate_cmdline_params *lcp)
+{
+	if (seg_is_thin_volume(lp) && lp->snapshot) {
+		log_error("Please either create snapshot or thin volume.");
+		return 0;
+	}
+
+	if (!seg_is_thin_volume(lp) && !lp->snapshot) {
+		/* Not creating thin volume nor snapshot */
+		if (arg_from_list_is_set(vg->cmd, "may only be given when creating a new thin Logical volume or snapshot",
+					 permission_ARG,
+					 persistent_ARG,
+					 readahead_ARG,
+					 -1))
+			return_0;
+		if (!lp->create_pool) {
+			/* Not even creating thin pool? */
+			log_error("Please specify device size(s).");
+			return 0;
+		}
+	} else if (!lp->create_pool) {
+		if (arg_from_list_is_set(vg->cmd, "is only available when creating thin pool",
+					 alloc_ARG,
+					 chunksize_ARG,
+					 contiguous_ARG,
+					 stripes_ARG,
+					 zero_ARG,
+					 -1))
+			return_0;
+
+		if (lcp->pv_count) {
+			log_error("Only specify Physical volumes when allocating thin pool.");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _check_pool_parameters(struct cmd_context *cmd,
+				  struct volume_group *vg,
+				  struct lvcreate_params *lp,
+				  struct lvcreate_cmdline_params *lcp)
+{
+	struct logical_volume *pool_lv;
+
+	if (!lp->create_pool &&
+	    arg_from_list_is_set(cmd, "is only available with pools",
+				 POOL_ARGS,
+				 discards_ARG,
+				 -1))
+		return_0;
+
+	if (!seg_is_cache(lp) &&
+	    !seg_is_thin_volume(lp) &&
+	    !seg_is_pool(lp)) {
+		if (lp->pool_name && !lp->snapshot) {
+			log_error("Segment type %s cannot use pool %s.",
+				  lp->segtype->name, lp->pool_name);
+			return 0;
+		}
+		return 1; /* Pool unrelated types */
+	}
+
+	if (lp->create_pool) {
+		/* Given pool name needs to follow restrictions for created LV */
+		if (lp->pool_name) {
+			if (!apply_lvname_restrictions(lp->pool_name))
+				return_0;
+			/* We could check existance only when we have vg */
+			if (vg && find_lv(vg, lp->pool_name)) {
+				log_error("Logical volume %s already exists in Volume group %s.",
+					  lp->pool_name, vg->name);
+				return 0;
+			}
+		}
+		/* When creating just pool the pool_name needs to be in lv_name */
+		if (seg_is_pool(lp))
+			lp->lv_name = lp->pool_name;
+
+		return 1;
+	}
+	/* Not creating new pool, but existing pool is needed */
+	if (!lp->pool_name) {
+		if (lp->snapshot)
+			/* Taking snapshot via 'lvcreate -T vg/origin' */
+			return 1;
+		log_error("Please specify name of existing pool.");
+		return 0;
+	}
+
+	if (vg) {
+		/* Validate pool has matching type */
+		if (!(pool_lv = find_lv(vg, lp->pool_name))) {
+			log_error("Pool %s not found in Volume group %s.",
+				  lp->pool_name, vg->name);
+			return 0;
+		}
+		if (seg_is_cache(lp) && !lv_is_cache_pool(pool_lv)) {
+			log_error("Logical volume %s is not a cache pool.",
+				  display_lvname(pool_lv));
+			return 0;
+		}
+		if (seg_is_thin_volume(lp) && !lv_is_thin_pool(pool_lv)) {
+			log_error("Logical volume %s is not a thin pool.",
+				  display_lvname(pool_lv));
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+
 /*
  * Ensure the set of thin parameters extracted from the command line is consistent.
  */
@@ -1212,18 +1375,14 @@ static int _validate_internal_thin_processing(const struct lvcreate_params *lp)
 		r = 0;
 	}
 
-	if ((lp->snapshot && !lp->origin_name) || (!lp->snapshot && lp->origin_name)) {
+	if ((!lp->origin_name && lp->snapshot) ||
+	    (lp->origin_name && !lp->snapshot && !seg_is_thin_volume(lp))) {
 		log_error(INTERNAL_ERROR "Inconsistent snapshot and origin parameters identified.");
 		r = 0;
 	}
 
-	if (!lp->thin && !lp->create_pool && !lp->snapshot) {
+	if (!lp->create_pool && !lp->snapshot && !seg_is_thin_volume(lp)) {
 		log_error(INTERNAL_ERROR "Failed to identify what type of thin target to use.");
-		r = 0;
-	}
-
-	if (seg_is_thin_pool(lp) && lp->thin) {
-		log_error(INTERNAL_ERROR "Thin volume cannot be created with thin pool segment type.");
 		r = 0;
 	}
 
@@ -1240,8 +1399,15 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	struct lvcreate_cmdline_params lcp;
 	struct volume_group *vg;
 
-	if (!_lvcreate_params(&lp, &lcp, cmd, argc, argv))
+	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
+		stack;
 		return EINVALID_CMD_LINE;
+	}
+
+	if (!_check_pool_parameters(cmd, NULL, &lp, &lcp)) {
+		stack;
+		return EINVALID_CMD_LINE;
+	}
 
 	log_verbose("Finding volume group \"%s\"", lp.vg_name);
 	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0);
@@ -1250,23 +1416,28 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 	}
 
-	if (lp.snapshot && lp.origin_name && !_determine_snapshot_type(vg, &lp))
-		goto_out;
-
-	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp))
+	/* Resolve segment types with opened VG */
+	if (lp.snapshot && lp.origin_name && !_determine_snapshot_type(vg, &lp, &lcp))
 		goto_out;
 
 	if (seg_is_cache(&lp) && !_determine_cache_argument(vg, &lp))
 		goto_out;
 
+	/* All types resolved at this point, now only validation steps */
 	if (seg_is_raid(&lp) && !_check_raid_parameters(vg, &lp, &lcp))
+		goto_out;
+
+	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp))
+		goto_out;
+
+	if (!_check_pool_parameters(cmd, vg, &lp, &lcp))
 		goto_out;
 
 	/*
 	 * Check activation parameters to support inactive thin snapshot creation
 	 * FIXME: anything else needs to be moved past _determine_snapshot_type()?
 	 */
-	if (!_read_activation_params(&lp, cmd, vg))
+	if (!_read_activation_params(cmd, vg, &lp))
 		goto_out;
 
 	if (!_update_extents_params(vg, &lp, &lcp))
@@ -1284,7 +1455,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 			    lp.pool_name ? : "with generated name", lp.vg_name, lp.segtype->name);
 	}
 
-	if (lp.thin)
+	if (seg_is_thin_volume(&lp))
 		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
 			    lp.lv_name ? : "with generated name",
 			    lp.pool_name ? : "with generated name", lp.vg_name,
