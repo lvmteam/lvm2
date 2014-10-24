@@ -1686,6 +1686,31 @@ static int _lvskipactivation_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, skip_activation, "skip activation", private);
 }
 
+/*
+ * Macro to generate '_cache_<cache_status_field_name>_disp' reporting function.
+ * The 'cache_status_field_name' is field name from struct dm_cache_status.
+ */
+#define GENERATE_CACHE_STATUS_DISP_FN(cache_status_field_name) \
+static int _cache_ ## cache_status_field_name ## _disp (struct dm_report *rh, \
+							struct dm_pool *mem, \
+							struct dm_report_field *field, \
+							const void *data, \
+							void *private) \
+{ \
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data; \
+	if (lvdm->seg_status->type != SEG_STATUS_CACHE) \
+		return _field_set_value(field, "", &RESERVED(number_undef_64)); \
+	return dm_report_field_uint64(rh, field, (void *) ((char *) lvdm->seg_status->status + offsetof(struct dm_status_cache, cache_status_field_name))); \
+}
+
+GENERATE_CACHE_STATUS_DISP_FN(total_blocks)
+GENERATE_CACHE_STATUS_DISP_FN(used_blocks)
+GENERATE_CACHE_STATUS_DISP_FN(dirty_blocks)
+GENERATE_CACHE_STATUS_DISP_FN(read_hits)
+GENERATE_CACHE_STATUS_DISP_FN(read_misses)
+GENERATE_CACHE_STATUS_DISP_FN(write_hits)
+GENERATE_CACHE_STATUS_DISP_FN(write_misses)
+
 /* Report object types */
 
 /* necessary for displaying something for PVs not belonging to VG */

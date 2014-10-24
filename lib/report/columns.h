@@ -95,6 +95,14 @@ FIELD(LVSINFO, lv, BIN, "LiveTable", lvid, 20, lvlivetable, lv_live_table, "Set 
 FIELD(LVSINFO, lv, BIN, "InactiveTable", lvid, 20, lvinactivetable, lv_inactive_table, "Set if LV has inactive table present.", 0)
 FIELD(LVSINFO, lv, BIN, "DevOpen", lvid, 10, lvdeviceopen, lv_device_open, "Set if LV device is open.", 0)
 
+FIELD(LVSSTATUS, lv, NUM, "CacheTotalBlocks", lvid, 16, cache_total_blocks, cache_total_blocks, "Total cache blocks.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheUsedBlocks", lvid, 16, cache_used_blocks, cache_used_blocks, "Used cache blocks.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheDirtyBlocks", lvid, 16, cache_dirty_blocks, cache_dirty_blocks, "Dirty cache blocks.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheReadHits", lvid, 16, cache_read_hits, cache_read_hits, "Cache read hits.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheReadMisses", lvid, 16, cache_read_misses, cache_read_misses, "Cache read misses.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheWriteHits", lvid, 16, cache_write_hits, cache_write_hits, "Cache write hits.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheWriteMisses", lvid, 16, cache_write_misses, cache_write_misses, "Cache write misses.", 0)
+
 FIELD(LABEL, label, STR, "Fmt", type, 3, pvfmt, pv_fmt, "Type of metadata.", 0)
 FIELD(LABEL, label, STR, "PV UUID", type, 38, pvuuid, pv_uuid, "Unique identifier.", 0)
 FIELD(LABEL, label, SIZ, "DevSize", dev, 7, devsize, dev_size, "Size of underlying device in current units.", 0)

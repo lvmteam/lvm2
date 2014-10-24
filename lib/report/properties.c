@@ -248,6 +248,21 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _lv_skip_activation_set prop_not_implemented_set
 #define _lv_skip_activation_get prop_not_implemented_get
 
+#define _cache_total_blocks_set prop_not_implemented_set
+#define _cache_total_blocks_get prop_not_implemented_get
+#define _cache_used_blocks_set prop_not_implemented_set
+#define _cache_used_blocks_get prop_not_implemented_get
+#define _cache_dirty_blocks_set prop_not_implemented_set
+#define _cache_dirty_blocks_get prop_not_implemented_get
+#define _cache_read_hits_set prop_not_implemented_set
+#define _cache_read_hits_get prop_not_implemented_get
+#define _cache_read_misses_set prop_not_implemented_set
+#define _cache_read_misses_get prop_not_implemented_get
+#define _cache_write_hits_set prop_not_implemented_set
+#define _cache_write_hits_get prop_not_implemented_get
+#define _cache_write_misses_set prop_not_implemented_set
+#define _cache_write_misses_get prop_not_implemented_get
+
 /* LV */
 GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
 #define _lv_uuid_set prop_not_implemented_set

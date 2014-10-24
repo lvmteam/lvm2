@@ -1,5 +1,7 @@
 Version 2.02.112 - 
 =====================================
+  Add cache_{read_write}_{hits,misses} reporting fields.
+  Add cache_{total,used,dirty}_blocks reporting fields.
   Add _corig as reserved suffix.
   Reduce vg write and vg commits when creating spare volumes.
   When remove_layer_from_lv() removes layer, restore subLV names.
