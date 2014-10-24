@@ -856,7 +856,7 @@ struct lvcreate_params {
 	uint64_t pool_metadata_size; /* pools */
 	struct dm_list *pvh; /* all */
 
-	uint32_t permission; /* all */
+	uint64_t permission; /* all */
 	uint32_t read_ahead; /* all */
 	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */
