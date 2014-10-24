@@ -390,6 +390,7 @@ int create_pool(struct logical_volume *pool_lv,
 	struct logical_volume *meta_lv, *data_lv;
 	struct lv_segment *seg;
 	char name[NAME_LEN];
+	int r;
 
 	if (pool_lv->le_count) {
 		log_error(INTERNAL_ERROR "Pool %s already has extents.",
@@ -397,14 +398,22 @@ int create_pool(struct logical_volume *pool_lv,
 		return 0;
 	}
 
+	if (dm_snprintf(name, sizeof(name), "%s_%s", pool_lv->name,
+			(segtype_is_cache_pool(segtype)) ?
+			"cmeta" : "tmeta") < 0) {
+		log_error("Name of logical volume %s is too long to be a pool name.",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
 	/* LV is not yet a pool, so it's extension from lvcreate */
 	if (!(striped = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
 		return_0;
 
-	if (activation() && segtype->ops->target_present &&
-	    !segtype->ops->target_present(pool_lv->vg->cmd, NULL, NULL)) {
+	if (activation() && striped->ops->target_present &&
+	    !striped->ops->target_present(pool_lv->vg->cmd, NULL, NULL)) {
 		log_error("%s: Required device-mapper target(s) not "
-			  "detected in your kernel.", segtype->name);
+			  "detected in your kernel.", striped->name);
 		return 0;
 	}
 
@@ -432,24 +441,25 @@ int create_pool(struct logical_volume *pool_lv,
 		 * or directly converted to invisible device via suspend/resume
 		 */
 		pool_lv->status |= LV_TEMPORARY;
-		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv) ||
-		    /* Clear 4KB of pool metadata device. */
-		    !wipe_lv(pool_lv, (struct wipe_params) { .do_zero = 1 })) {
-			log_error("Aborting. Failed to wipe pool metadata %s.",
-				  pool_lv->name);
+		if (!activate_lv_local(pool_lv->vg->cmd, pool_lv)) {
+			log_error("Aborting. Failed to activate pool metadata %s.",
+				  display_lvname(pool_lv));
 			goto bad;
+		}
+		/* Clear 4KB of pool metadata device. */
+		if (!(r = wipe_lv(pool_lv, (struct wipe_params) { .do_zero = 1 }))) {
+			log_error("Aborting. Failed to wipe pool metadata %s.",
+				  display_lvname(pool_lv));
 		}
 		pool_lv->status &= ~LV_TEMPORARY;
 		/* Deactivates cleared metadata LV */
-		if (!deactivate_lv_local(pool_lv->vg->cmd, pool_lv))
-			goto_bad;
-	}
-
-	if (dm_snprintf(name, sizeof(name), "%s_%s", pool_lv->name,
-			(segtype_is_cache_pool(segtype)) ?
-			"cmeta" : "tmeta") < 0) {
-		log_error("Name is too long to be a pool name.");
-		goto bad;
+		if (!deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
+			log_error("Aborting. Could not deactivate pool metadata %s.",
+				  display_lvname(pool_lv));
+			return 0;
+		}
+		if (!r)
+			goto bad;
 	}
 
 	if (!(meta_lv = lv_create_empty(name, NULL, LVM_READ | LVM_WRITE,
@@ -486,12 +496,7 @@ int create_pool(struct logical_volume *pool_lv,
 
 bad:
 	if (activation()) {
-		if (lv_is_active_locally(pool_lv) &&
-		    deactivate_lv_local(pool_lv->vg->cmd, pool_lv)) {
-			log_error("Aborting. Could not deactivate pool %s.",
-				  pool_lv->name);
-			return 0;
-		}
+		/* Without activation there was no intermediate commit */
 		if (!lv_remove(pool_lv) ||
 		    !vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 			log_error("Manual intervention may be required to "
@@ -520,6 +525,7 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.stripe_size = stripe_size,
 		.stripes = stripes,
 		.zero = 1,
+		.temporary = 1,
 	};
 
 	dm_list_init(&lvc.tags);
