@@ -4256,7 +4256,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 
 	already_locked = lvmcache_vgname_is_locked(vg_name);
 
-	if (!already_locked && !(misc_flags & READ_WITHOUT_LOCK) &&
+	if (!already_locked &&
 	    !lock_vol(cmd, vg_name, lock_flags, NULL)) {
 		log_error("Can't get lock for %s", vg_name);
 		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
@@ -4330,7 +4330,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	return _vg_make_handle(cmd, vg, failure);
 
 bad:
-	if (!already_locked && !(misc_flags & READ_WITHOUT_LOCK))
+	if (!already_locked)
 		unlock_vg(cmd, vg_name);
 
 bad_no_unlock:
