@@ -6053,8 +6053,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 {
 	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
 	int r;
-	char *name;
-	size_t len;
+	char name[NAME_LEN];
 	struct dm_str_list *sl;
 	struct logical_volume *layer_lv;
 	struct segment_type *segtype;
@@ -6063,16 +6062,8 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	unsigned exclusive = 0;
 
 	/* create an empty layer LV */
-	len = strlen(lv_where->name) + 32;
-	if (!(name = alloca(len))) {
-		log_error("layer name allocation failed. "
-			  "Remove new LV and retry.");
-		return NULL;
-	}
-
-	if (dm_snprintf(name, len, "%s%s", lv_where->name, layer_suffix) < 0) {
-		log_error("layer name allocation failed. "
-			  "Remove new LV and retry.");
+	if (dm_snprintf(name, sizeof(name), "%s%s", lv_where->name, layer_suffix) < 0) {
+		log_error("Layered name is too long. Please use shorter LV name.");
 		return NULL;
 	}
 
@@ -6453,8 +6444,7 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 						     uint64_t voriginextents)
 {
 	const struct segment_type *segtype;
-	size_t len;
-	char *vorigin_name;
+	char vorigin_name[NAME_LEN];
 	struct logical_volume *lv;
 
 	if (!(segtype = get_segtype_from_string(cmd, "zero"))) {
@@ -6462,10 +6452,8 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	len = strlen(lv_name) + 32;
-	if (!(vorigin_name = alloca(len)) ||
-	    dm_snprintf(vorigin_name, len, "%s_vorigin", lv_name) < 0) {
-		log_error("Virtual origin name allocation failed.");
+	if (dm_snprintf(vorigin_name, sizeof(vorigin_name), "%s_vorigin", lv_name) < 0) {
+		log_error("Virtual origin name is too long.");
 		return NULL;
 	}
 
