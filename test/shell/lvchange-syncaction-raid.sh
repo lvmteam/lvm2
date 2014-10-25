@@ -21,12 +21,15 @@ aux prepare_vg 3
 
 lvcreate -n $lv1 $vg -l1 --type raid1
 
+aux wait_for_sync $vg $lv1
+
 START=$(get pv_field "$dev2" pe_start --units 1k)
 METASIZE=$(get lv_field $vg/${lv1}_rmeta_1 size -a --units 1k)
 SEEK=$((${START%\.00k} + ${METASIZE%\.00k}))
 # Overwrite some portion of  _rimage_1
 dd if=/dev/urandom of="$dev2" bs=1K count=1 seek=$SEEK oflag=direct
 
+aux wait_for_sync $vg $lv1
 lvchange --syncaction check $vg/$lv1
 check lv_field $vg/$lv1 raid_mismatch_count "128"
 
@@ -34,7 +37,7 @@ check lv_field $vg/$lv1 raid_mismatch_count "128"
 lvchange -an $vg/$lv1
 
 # Slow down write by 100ms
-aux delay_dev "$dev2" 0 100
+aux delay_dev "$dev2" 0 50
 lvchange -ay $vg/$lv1
 # noone has it open and target is read & running
 dmsetup info -c | grep $vg
@@ -49,9 +52,12 @@ dmsetup info -c | grep $vg
 # For now it fails with:
 # device-mapper: message ioctl on  failed: Device or resource busy
 #
+# As solution for now - user needs to run --synaction on synchronous raid array
+#
+aux wait_for_sync $vg $lv1
 should lvchange --syncaction check $vg/$lv1
 
 aux enable_dev "$dev2"
-lvs -o+raid_mismatch_count -a $vg
+check lv_field $vg/$lv1 raid_mismatch_count "0"
 
 vgremove -ff $vg
