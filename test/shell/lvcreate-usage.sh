@@ -114,10 +114,10 @@ lvremove -f $vg
 # - nonzero (bz186013)
 # - a power of 2 and a multiple of page size
 # - <= size of LV
-invalid lvcreate -m 1 -L 32m -n $lv -R 0 $vg 2>err
+invalid lvcreate --type mirror -m 1 -L 32m -n $lv -R 0 $vg 2>err
 grep "may not be zero" err
-invalid lvcreate -m 1 -L 32m -n $lv -R 11k $vg
-invalid lvcreate -m 1 -L 32m -n $lv -R 1k $vg
+invalid lvcreate --type mirror -m 1 -L 32m -n $lv -R 11k $vg
+invalid lvcreate --type mirror -m 1 -L 32m -n $lv -R 1k $vg
 lvcreate -aey -L 32m -n $lv --regionsize 128m  --type mirror -m 1 $vg
 check lv_field $vg/$lv regionsize "32.00m"
 lvremove -f $vg
