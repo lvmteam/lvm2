@@ -1035,6 +1035,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 static int _determine_cache_argument(struct volume_group *vg,
 				     struct lvcreate_params *lp)
 {
+	struct cmd_context *cmd = vg->cmd;
 	struct logical_volume *lv;
 
 	if (!lp->pool_name) {
@@ -1045,19 +1046,24 @@ static int _determine_cache_argument(struct volume_group *vg,
 		/* Pool exists, create cache volume */
 		lp->create_pool = 0;
 		lp->origin_name = NULL;
+		/* If cache args not given, use those from cache pool */
+		if (!arg_is_set(cmd, chunksize_ARG))
+			lp->chunk_size = first_seg(lv)->chunk_size;
+		if (!arg_is_set(cmd, cachemode_ARG))
+			lp->feature_flags = first_seg(lv)->feature_flags;
 	} else if (lv) {
 		/* Origin exists, create cache pool volume */
 		if (!validate_lv_cache_create_origin(lv))
 			return_0;
 
-		if (arg_is_set(vg->cmd, permission_ARG) &&
+		if (arg_is_set(cmd, permission_ARG) &&
 		    ((lp->permission & LVM_WRITE) != (lv->status & LVM_WRITE))) {
 			/* Reverting permissions on all error path is very complicated */
 			log_error("Change of volume permission is unsupported with cache conversion, use lvchange.");
 			return 0;
 		}
 		/* FIXME: how to handle skip flag */
-		if (arg_from_list_is_set(vg->cmd, "is unsupported with cache conversion",
+		if (arg_from_list_is_set(cmd, "is unsupported with cache conversion",
 					 setactivationskip_ARG,
 					 ignoreactivationskip_ARG,
 					 -1))
@@ -1066,16 +1072,16 @@ static int _determine_cache_argument(struct volume_group *vg,
 		/* Put origin into resulting activation state first */
 		if (is_change_activating(lp->activate)) {
 			if ((lp->activate == CHANGE_AAY) &&
-			    !lv_passes_auto_activation_filter(vg->cmd, lv)) {
+			    !lv_passes_auto_activation_filter(cmd, lv)) {
 				log_verbose("Skipping activation of cache origin %s.",
 					    display_lvname(lv));
 				return 1;
-			} else if (!activate_lv_excl_local(vg->cmd, lv)) {
+			} else if (!activate_lv_excl_local(cmd, lv)) {
 				log_error("Cannot activate cache origin %s.",
 					  display_lvname(lv));
 				return 0;
 			}
-		} else if (!deactivate_lv(vg->cmd, lv)) {
+		} else if (!deactivate_lv(cmd, lv)) {
 			log_error("Cannot deactivate activate cache origin %s.",
 				  display_lvname(lv));
 			return 0;

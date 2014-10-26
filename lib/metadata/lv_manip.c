@@ -6629,7 +6629,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return_NULL;
 	}
 
-	if (seg_is_pool(lp) &&
+	if ((seg_is_pool(lp) || seg_is_cache(lp)) &&
 	    ((uint64_t)lp->extents * vg->extent_size < lp->chunk_size)) {
 		log_error("Unable to create %s smaller than 1 chunk.",
 			  lp->segtype->name);
@@ -6876,11 +6876,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
 
-	if (seg_is_cache_pool(lp)) {
-		first_seg(lv)->chunk_size = lp->chunk_size;
-		first_seg(lv)->feature_flags = lp->feature_flags;
+	if (seg_is_cache_pool(lp) || seg_is_cache(lp)) {
+		pool_lv = pool_lv ? : lv;
+		first_seg(pool_lv)->chunk_size = lp->chunk_size;
+		first_seg(pool_lv)->feature_flags = lp->feature_flags;
 		/* TODO: some calc_policy solution for cache ? */
-		if (!recalculate_pool_chunk_size_with_dev_hints(lv, lp->passed_args,
+		if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, lp->passed_args,
 								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC)) {
 			stack;
 			goto revert_new_lv;
