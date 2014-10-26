@@ -226,7 +226,7 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 		len = _area_length(lvm, le);
 
 		if (!(seg = alloc_lv_segment(segtype, lvm->lv, le, len, 0, 0,
-					     NULL, NULL, 1, len, 0, 0, 0, NULL))) {
+					     NULL, 1, len, 0, 0, 0, NULL))) {
 			log_error("Failed to allocate linear segment.");
 			return 0;
 		}
@@ -298,7 +298,7 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 		if (!(seg = alloc_lv_segment(segtype, lvm->lv,
 					     lvm->stripes * first_area_le,
 					     lvm->stripes * area_len,
-					     0, lvm->stripe_size, NULL, NULL,
+					     0, lvm->stripe_size, NULL,
 					     lvm->stripes,
 					     area_len, 0, 0, 0, NULL))) {
 			log_error("Failed to allocate striped segment.");

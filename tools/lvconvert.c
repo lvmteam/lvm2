@@ -3088,7 +3088,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 	/* Allocate a new pool segment */
 	if (!(seg = alloc_lv_segment(lp->segtype, pool_lv, 0, data_lv->le_count,
-				     pool_lv->status, 0, NULL, NULL, 1,
+				     pool_lv->status, 0, NULL, 1,
 				     data_lv->le_count, 0, 0, 0, NULL)))
 		return_0;
 

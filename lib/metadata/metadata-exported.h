@@ -709,7 +709,7 @@ int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t region_size,
-	      uint32_t extents, const char *thin_pool_name,
+	      uint32_t extents,
 	      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
 	      int approx_alloc);
 
