@@ -6636,14 +6636,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return NULL;
 	}
 
-	if (!seg_is_virtual(lp) && !lp->approx_alloc &&
-	    (vg->free_count < lp->extents)) {
-		log_error("Volume group \"%s\" has insufficient free space "
-			  "(%u extents): %u required.",
-			  vg->name, vg->free_count, lp->extents);
-		return NULL;
-	}
-
 	if ((lp->alloc != ALLOC_ANYWHERE) && (lp->stripes > dm_list_size(lp->pvh))) {
 		log_error("Number of stripes (%u) must not exceed "
 			  "number of physical volumes (%d)", lp->stripes,
@@ -6834,6 +6826,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		status |= LVM_WRITE;
 		lp->zero = 1;
 		lp->wipe_signatures = 0;
+	}
+
+	if (!seg_is_virtual(lp) && !lp->approx_alloc &&
+	    (vg->free_count < lp->extents)) {
+		log_error("Volume group \"%s\" has insufficient free space "
+			  "(%u extents): %u required.",
+			  vg->name, vg->free_count, lp->extents);
+		return NULL;
 	}
 
 	if (!archive(vg))
