@@ -21,6 +21,9 @@
 # thus it needs dmeventd
 #
 
+# Example of using 'gdb' with python:
+# gdb -ex r --args python FULL_PATH/lvm2/test/api/python_lvm_unit.py -v TestLvm.test_lv_active_inactive
+
 #Locate the python binding library to use.
 python_lib=$(find $abs_top_builddir -name lvm.so)
 # Unable to test python bindings if library not available

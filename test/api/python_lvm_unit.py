@@ -132,7 +132,7 @@ class TestLvm(unittest.TestCase):
 			vg.extend(d)
 
 		vg.createLvThinpool(pool_name, vg.getSize()/2, 0, 0,
-							lvm.THIN_DISCARDS_PASSDOWN, 1)
+				    lvm.THIN_DISCARDS_PASSDOWN, 1)
 		return vg
 
 	@staticmethod
