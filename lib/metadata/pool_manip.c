@@ -324,16 +324,25 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 
 	pool_data_lv = seg_lv(first_seg(pool_lv), 0);
 	dm_list_iterate_items(seg, &pool_data_lv->segments) {
-		pv = seg_pv(seg, 0);
-		if (chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
-			hint = dev_optimal_io_size(cmd->dev_types, pv_dev(pv));
-		else
-			hint = dev_minimum_io_size(cmd->dev_types, pv_dev(pv));
-		if (!hint)
-			continue;
-		if (previous_hint)
-			hint = _lcm(previous_hint, hint);
-		previous_hint = hint;
+		switch (seg_type(seg, 0)) {
+		case AREA_PV:
+			pv = seg_pv(seg, 0);
+			if (chunk_size_calc_policy == THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE)
+				hint = dev_optimal_io_size(cmd->dev_types, pv_dev(pv));
+			else
+				hint = dev_minimum_io_size(cmd->dev_types, pv_dev(pv));
+			if (!hint)
+				continue;
+
+			if (previous_hint)
+				hint = _lcm(previous_hint, hint);
+			previous_hint = hint;
+			break;
+		case AREA_LV:
+			/* FIXME: hint for stacked (raid) LVs - estimate geometry from LV ?? */
+		default:
+			break;
+		}
 	}
 
 	if (!hint)

@@ -46,6 +46,7 @@ lvremove -f $vg
 
 lvcreate -n cpool_meta -m 1 --type raid1 -l 10 $vg
 lvcreate -n cpool -m 1 --type raid1 -l 10 $vg
+lvs -a -o+seg_pe_ranges $vg
 lvconvert --yes --type cache-pool --poolmetadata $vg/cpool_meta $vg/cpool
 lvcreate -n corigin --type cache --cachepool $vg/cpool -l 10
 
