@@ -3017,7 +3017,6 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 	struct lv_segment *seg;
 	struct logical_volume *thin_pool_lv = NULL;
 	struct lv_list *lvl;
-	uint32_t size;
 
 	if (thin_pool_name) {
 		if (!(lvl = find_lv_in_vg(lv->vg, thin_pool_name))) {
@@ -3026,17 +3025,6 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 			return 0;
 		}
 		thin_pool_lv = lvl->lv;
-		size = first_seg(thin_pool_lv)->chunk_size;
-		if (lv->vg->extent_size < size) {
-			/* Align extents on chunk boundary size */
-			size = ((uint64_t)lv->vg->extent_size * extents + size - 1) /
-				size * size / lv->vg->extent_size;
-			if (size != extents) {
-				log_print_unless_silent("Rounding size (%d extents) up to chunk boundary "
-							"size (%d extents).", extents, size);
-				extents = size;
-			}
-		}
 	}
 
 	if (!dm_list_empty(&lv->segments) &&
@@ -6721,6 +6709,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			log_error("Cannot use locked pool volume %s.",
 				  display_lvname(pool_lv));
 			return NULL;
+		}
+
+		/* Validate volume size to to aling on chunk for small extents */
+		/* Cache chunk size is always set */
+		size = seg_is_cache(lp) ? lp->chunk_size : first_seg(pool_lv)->chunk_size;
+		if (size > vg->extent_size) {
+			/* Align extents on chunk boundary size */
+			size = ((uint64_t)vg->extent_size * lp->extents + size - 1) /
+				size * size / vg->extent_size;
+			if (size != lp->extents) {
+				log_print_unless_silent("Rounding size (%d extents) up to chunk boundary "
+							"size (%d extents).", lp->extents, size);
+				lp->extents = size;
+			}
 		}
 	}
 
