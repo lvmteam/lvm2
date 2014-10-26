@@ -611,7 +611,10 @@ static PyObject *_liblvm_lvm_vg_close(vgobject *self)
 {
 	/* if already closed, don't reclose it */
 	if (self->vg) {
-		lvm_vg_close(self->vg);
+		if (lvm_vg_close(self->vg) == -1) {
+			PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
+			return NULL;
+		}
 		self->vg = NULL;
 		self->libh_copy = NULL;
 	}
@@ -647,14 +650,7 @@ static PyObject *_liblvm_lvm_vg_remove(vgobject *self)
 		goto error;
 
 	/* Not much you can do with a vg that is removed so close it */
-	if (lvm_vg_close(self->vg) == -1)
-		goto error;
-
-	self->vg = NULL;
-
-	Py_INCREF(Py_None);
-
-	return Py_None;
+	return _liblvm_lvm_vg_close(self);
 
 error:
 	PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
