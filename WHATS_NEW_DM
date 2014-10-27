@@ -1,5 +1,6 @@
 Version 1.02.91 - 
 ====================================
+  Fix selection criteria to not match reserved values when using >, <, >=, <.
   Add DM_LIST_HEAD_INIT macro to libdevmapper.h
   Fix dm_is_dm_major to not issue error about missing /proc lines for dm module.
 

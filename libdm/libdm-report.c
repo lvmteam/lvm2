@@ -1234,7 +1234,49 @@ static void *_report_get_implicit_field_data(struct dm_report *rh __attribute__(
 	return NULL;
 }
 
-static int _cmp_field_int(const char *field_id, uint64_t a, uint64_t b, uint32_t flags)
+static int _close_enough(double d1, double d2)
+{
+	return fabs(d1 - d2) < DBL_EPSILON;
+}
+
+/*
+ * Used to check whether a value of certain type used in selection is reserved.
+ */
+static int _check_value_is_reserved(struct dm_report *rh, unsigned type, const void *value)
+{
+	const struct dm_report_reserved_value *iter = rh->reserved_values;
+
+	if (!iter)
+		return 0;
+
+	while (iter->type) {
+		if (iter->type & type) {
+			switch (type) {
+				case DM_REPORT_FIELD_TYPE_NUMBER:
+					if (*(uint64_t *)iter->value == *(uint64_t *)value)
+						return 1;
+					break;
+				case DM_REPORT_FIELD_TYPE_STRING:
+					if (!strcmp((const char *)iter->value, (const char *) value))
+						return 1;
+					break;
+				case DM_REPORT_FIELD_TYPE_SIZE:
+					if (_close_enough(*(double *)iter->value, *(double *) value))
+						return 1;
+					break;
+				case DM_REPORT_FIELD_TYPE_STRING_LIST:
+					// TODO: add comparison for string list
+					break;
+			}
+		}
+		iter++;
+	}
+
+	return 0;
+}
+
+static int _cmp_field_int(struct dm_report *rh, const char *field_id,
+			  uint64_t a, uint64_t b, uint32_t flags)
 {
 	switch(flags & FLD_CMP_MASK) {
 		case FLD_CMP_EQUAL:
@@ -1242,13 +1284,13 @@ static int _cmp_field_int(const char *field_id, uint64_t a, uint64_t b, uint32_t
 		case FLD_CMP_NOT|FLD_CMP_EQUAL:
 			return a != b;
 		case FLD_CMP_NUMBER|FLD_CMP_GT:
-			return a > b;
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_NUMBER, &a) ? 0 : a > b;
 		case FLD_CMP_NUMBER|FLD_CMP_GT|FLD_CMP_EQUAL:
-			return a >= b;
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_NUMBER, &a) ? 0 : a >= b;
 		case FLD_CMP_NUMBER|FLD_CMP_LT:
-			return a < b;
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_NUMBER, &a) ? 0 : a < b;
 		case FLD_CMP_NUMBER|FLD_CMP_LT|FLD_CMP_EQUAL:
-			return a <= b;
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_NUMBER, &a) ? 0 : a <= b;
 		default:
 			log_error(INTERNAL_ERROR "_cmp_field_int: unsupported number "
 				  "comparison type for field %s", field_id);
@@ -1257,12 +1299,8 @@ static int _cmp_field_int(const char *field_id, uint64_t a, uint64_t b, uint32_t
 	return 0;
 }
 
-static int _close_enough(double d1, double d2)
-{
-	return fabs(d1 - d2) < DBL_EPSILON;
-}
-
-static int _cmp_field_double(const char *field_id, double a, double b, uint32_t flags)
+static int _cmp_field_double(struct dm_report *rh, const char *field_id,
+			     double a, double b, uint32_t flags)
 {
 	switch(flags & FLD_CMP_MASK) {
 		case FLD_CMP_EQUAL:
@@ -1270,13 +1308,13 @@ static int _cmp_field_double(const char *field_id, double a, double b, uint32_t 
 		case FLD_CMP_NOT|FLD_CMP_EQUAL:
 			return !_close_enough(a, b);
 		case FLD_CMP_NUMBER|FLD_CMP_GT:
-			return (a > b) && !_close_enough(a, b);
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_SIZE, &a) ? 0 : (a > b) && !_close_enough(a, b);
 		case FLD_CMP_NUMBER|FLD_CMP_GT|FLD_CMP_EQUAL:
-			return (a > b) || _close_enough(a, b);
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_SIZE, &a) ? 0 : (a > b) || _close_enough(a, b);
 		case FLD_CMP_NUMBER|FLD_CMP_LT:
-			return (a < b) && !_close_enough(a, b);
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_SIZE, &a) ? 0 : (a < b) && !_close_enough(a, b);
 		case FLD_CMP_NUMBER|FLD_CMP_LT|FLD_CMP_EQUAL:
-			return a < b || _close_enough(a, b);
+			return _check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_SIZE, &a) ? 0 : a < b || _close_enough(a, b);
 		default:
 			log_error(INTERNAL_ERROR "_cmp_field_double: unsupported number "
 				  "comparison type for selection field %s", field_id);
@@ -1285,7 +1323,8 @@ static int _cmp_field_double(const char *field_id, double a, double b, uint32_t 
 	return 0;
 }
 
-static int _cmp_field_string(const char *field_id, const char *a, const char *b, uint32_t flags)
+static int _cmp_field_string(struct dm_report *rh __attribute__((unused)), const char *field_id,
+			     const char *a, const char *b, uint32_t flags)
 {
 	switch (flags & FLD_CMP_MASK) {
 		case FLD_CMP_EQUAL:
@@ -1377,7 +1416,8 @@ static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
 	return 0;
 }
 
-static int _cmp_field_string_list(const char *field_id,
+static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
+				  const char *field_id,
 				  const struct str_list_sort_value *value,
 				  const struct selection_str_list *selection, uint32_t flags)
 {
@@ -1447,16 +1487,16 @@ static int _compare_selection_field(struct dm_report *rh,
 					return 0;
 				/* fall through */
 			case DM_REPORT_FIELD_TYPE_NUMBER:
-				r = _cmp_field_int(field_id, *(const uint64_t *) f->sort_value, fs->v.i, fs->flags);
+				r = _cmp_field_int(rh, field_id, *(const uint64_t *) f->sort_value, fs->v.i, fs->flags);
 				break;
 			case DM_REPORT_FIELD_TYPE_SIZE:
-				r = _cmp_field_double(field_id, *(const uint64_t *) f->sort_value, fs->v.d, fs->flags);
+				r = _cmp_field_double(rh, field_id, *(const uint64_t *) f->sort_value, fs->v.d, fs->flags);
 				break;
 			case DM_REPORT_FIELD_TYPE_STRING:
-				r = _cmp_field_string(field_id, (const char *) f->sort_value, fs->v.s, fs->flags);
+				r = _cmp_field_string(rh, field_id, (const char *) f->sort_value, fs->v.s, fs->flags);
 				break;
 			case DM_REPORT_FIELD_TYPE_STRING_LIST:
-				r = _cmp_field_string_list(field_id, (const struct str_list_sort_value *) f->sort_value,
+				r = _cmp_field_string_list(rh, field_id, (const struct str_list_sort_value *) f->sort_value,
 							   fs->v.l, fs->flags);
 				break;
 			default:
@@ -1849,42 +1889,6 @@ static const char *_get_reserved(struct dm_report *rh, unsigned type,
 	}
 
 	return s;
-}
-
-/*
- * Used to check whether a value of certain type used in selection is reserved.
- */
-static int _check_value_is_reserved(struct dm_report *rh, unsigned type, const void *value)
-{
-	const struct dm_report_reserved_value *iter = rh->reserved_values;
-
-	if (!iter)
-		return 0;
-
-	while (iter->type) {
-		if (iter->type & type) {
-			switch (type) {
-				case DM_REPORT_FIELD_TYPE_NUMBER:
-					if (*(uint64_t *)iter->value == *(uint64_t *)value)
-						return 1;
-					break;
-				case DM_REPORT_FIELD_TYPE_STRING:
-					if (!strcmp((const char *)iter->value, (const char *) value))
-						return 1;
-					break;
-				case DM_REPORT_FIELD_TYPE_SIZE:
-					if (_close_enough(*(double *)iter->value, *(double *) value))
-						return 1;
-					break;
-				case DM_REPORT_FIELD_TYPE_STRING_LIST:
-					// TODO: add comparison for string list
-					break;
-			}
-		}
-		iter++;
-	}
-
-	return 0;
 }
 
 float dm_percent_to_float(dm_percent_t percent)
