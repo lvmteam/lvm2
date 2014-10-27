@@ -462,7 +462,7 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 			  rt->name);
 		return NULL;
 	}
-	segtype->cmd = cmd;
+
 	segtype->ops = &_raid_ops;
 	segtype->name = rt->name;
 	segtype->flags = SEG_RAID | rt->extra_flags | monitored;

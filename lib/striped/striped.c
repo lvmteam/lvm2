@@ -228,10 +228,8 @@ struct segment_type *init_striped_segtype(struct cmd_context *cmd)
 	if (!segtype)
 		return_NULL;
 
-	segtype->cmd = cmd;
 	segtype->ops = &_striped_ops;
 	segtype->name = "striped";
-	segtype->private = NULL;
 	segtype->flags =
 	    SEG_CAN_SPLIT | SEG_AREAS_STRIPED | SEG_FORMAT1_SUPPORT;
 

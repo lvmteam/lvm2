@@ -32,10 +32,8 @@ struct segment_type *init_free_segtype(struct cmd_context *cmd)
 	if (!segtype)
 		return_NULL;
 
-	segtype->cmd = cmd;
 	segtype->ops = &_freeseg_ops;
 	segtype->name = "free";
-	segtype->private = NULL;
 	segtype->flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);

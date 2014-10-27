@@ -388,12 +388,10 @@ int init_cache_segtypes(struct cmd_context *cmd,
 		log_error("Failed to allocate memory for cache_pool segtype");
 		return 0;
 	}
-	segtype->cmd = cmd;
 
 	segtype->name = "cache-pool";
 	segtype->flags = SEG_CACHE_POOL | SEG_CANNOT_BE_ZEROED;
 	segtype->ops = &_cache_pool_ops;
-	segtype->private = NULL;
 
 	if (!lvm_register_segtype(seglib, segtype))
 		return_0;
@@ -404,12 +402,10 @@ int init_cache_segtypes(struct cmd_context *cmd,
 		log_error("Failed to allocate memory for cache segtype");
 		return 0;
 	}
-	segtype->cmd = cmd;
 
 	segtype->name = "cache";
 	segtype->flags = SEG_CACHE;
 	segtype->ops = &_cache_ops;
-	segtype->private = NULL;
 
 	if (!lvm_register_segtype(seglib, segtype))
 		return_0;

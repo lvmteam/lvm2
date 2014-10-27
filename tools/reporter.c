@@ -100,7 +100,6 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	struct lvinfo lvinfo = { .exists = 0 };
 
 	struct segment_type _freeseg_type = {
-		.cmd = cmd,
 		.name = "free",
 		.flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED,
 	};

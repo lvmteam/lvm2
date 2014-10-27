@@ -1174,7 +1174,6 @@ int lvm_register_segtype(struct segtype_library *seglib,
 	struct segment_type *segtype2;
 
 	segtype->library = seglib->lib;
-	segtype->cmd = seglib->cmd;
 
 	dm_list_iterate_items(segtype2, &seglib->cmd->segtypes) {
 		if (strcmp(segtype2->name, segtype->name))

@@ -258,10 +258,8 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	if (!segtype)
 		return_NULL;
 
-	segtype->cmd = cmd;
 	segtype->ops = &_snapshot_ops;
 	segtype->name = "snapshot";
-	segtype->private = NULL;
 	segtype->flags = SEG_SNAPSHOT | SEG_CANNOT_BE_ZEROED;
 
 #ifdef DEVMAPPER_SUPPORT

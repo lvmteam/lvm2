@@ -81,7 +81,6 @@ struct dev_manager;
 
 struct segment_type {
 	struct dm_list list;		/* Internal */
-	struct cmd_context *cmd;	/* lvm_register_segtype() sets this. */
 
 	uint32_t flags;
 	uint32_t parity_devs;           /* Parity drives required by segtype */
