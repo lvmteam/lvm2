@@ -183,6 +183,11 @@ lvs_sel 'name="vol1"' "vol1"
 # check reserved values are accepted for certain fields as well as usual values
 vgs_sel 'vg_mda_copies=unmanaged' "$vg2 $vg3"
 vgs_sel 'vg_mda_copies=2' "$vg1"
+# also, we must match only vg1, not including vg2 and vg3
+# when comparing ranges - unamanged is mapped onto 2^64 - 1 internally,
+# so we need to skip this internal value if it matches with selection criteria!
+vgs_sel 'vg_mda_copies>=2' "$vg1"
+not vgs_sel 'vg_mda_copies=18446744073709551615'
 
 lvs_sel 'lv_read_ahead=auto' "vol1 vol2 orig snap"
 lvs_sel 'lv_read_ahead=256k' "abc xyz"
