@@ -27,6 +27,7 @@
 #include <sys/resource.h>
 #include <dirent.h>
 #include <paths.h>
+#include <locale.h>
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -413,6 +414,17 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 		return 0;
 
 	v = strtod(val, &ptr);
+
+	if (*ptr == '.') {
+		/*
+		 * Maybe user has non-C locale with different decimal point ?
+		 * Lets be toleran and retry with standard C locales
+		 */
+		if (setlocale(LC_ALL, "C")) {
+			v = strtod(val, &ptr);
+			setlocale(LC_ALL, "");
+		}
+	}
 
 	if (ptr == val)
 		return 0;

@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Add extra support for '.' as decimal point in size args.
   Configurable support for creation of sparse volumes with thin-pools.
   Update and correct lvcreate and lvcovert man pages.
   Mark pools and snapshots as unzeroable volumes.
