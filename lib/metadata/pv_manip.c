@@ -374,6 +374,10 @@ uint32_t pv_list_extents_free(const struct dm_list *pvh)
 	struct pv_segment *pvseg;
 
 	dm_list_iterate_items(pvl, pvh) {
+		if (!pvl->pe_ranges) {
+			log_warn(INTERNAL_ERROR "WARNING: PV %s is without initialized PE ranges.", dev_name(pvl->pv->dev));
+			continue;
+		}
 		dm_list_iterate_items(per, pvl->pe_ranges) {
 			dm_list_iterate_items(pvseg, &pvl->pv->segments) {
 				if (!pvseg_is_allocated(pvseg))
