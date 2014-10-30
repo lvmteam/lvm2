@@ -130,8 +130,16 @@ grep "Redundant" err
 check lv_field $vg/$lv1 segtype "linear"
 lvremove -ff $vg
 
-# Snapshot with virtual origin works
+# Old --type snapshot works with -s
+lvcreate --type snapshot -s -V64 -L32 -n $lv1 $vg
+check lv_field $vg/$lv1 segtype "linear"
+lvcreate --type snapshot -V64 -L32 -n $lv2 $vg
+check lv_field $vg/$lv2 segtype "linear"
+lvremove -ff $vg
+
+# --virtualoriginsize  always makes old snapshot
 lvcreate -s --virtualoriginsize 64m -L 32m -n $lv1 $vg
+check lv_field $vg/$lv1 segtype "linear"
 lvrename $vg/$lv1 $vg/$lv2
 lvcreate -s --virtualoriginsize 64m -L 32m -n $lv1 $vg
 lvchange -a n $vg/$lv1
