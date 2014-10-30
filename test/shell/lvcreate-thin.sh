@@ -239,7 +239,9 @@ aux teardown_devs
 aux prepare_pvs 10 16500
 vgcreate $vg -s 64K $(cat DEVICES)
 
-lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out
+# Size 0 is not valid
+invalid lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out
+lvcreate -L4M --chunksize 128 --poolmetadatasize 16k -T $vg/pool1 2>out
 grep "WARNING: Minimum" out
 # FIXME: metadata allocation fails, if PV doesn't have at least 16GB
 # i.e. pool metadata device cannot be multisegment
