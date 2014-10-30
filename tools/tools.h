@@ -129,6 +129,7 @@ int discards_arg(struct cmd_context *cmd, struct arg_values *av);
 int mirrorlog_arg(struct cmd_context *cmd, struct arg_values *av);
 int size_kb_arg(struct cmd_context *cmd, struct arg_values *av);
 int size_mb_arg(struct cmd_context *cmd, struct arg_values *av);
+int size_mb_arg_with_percent(struct cmd_context *cmd, struct arg_values *av);
 int int_arg(struct cmd_context *cmd, struct arg_values *av);
 int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av);
 int int_arg_with_sign_and_percent(struct cmd_context *cmd, struct arg_values *av);

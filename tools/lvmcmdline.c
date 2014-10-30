@@ -384,8 +384,32 @@ static int _get_int_arg(struct arg_values *av, char **ptr)
 	return 1;
 }
 
+static int _get_percent_arg(struct arg_values *av, const char *ptr)
+{
+	if (!strcasecmp(ptr, "V") || !strcasecmp(ptr, "VG"))
+		av->percent = PERCENT_VG;
+	else if (!strcasecmp(ptr, "L") || !strcasecmp(ptr, "LV"))
+		av->percent = PERCENT_LV;
+	else if (!strcasecmp(ptr, "P") || !strcasecmp(ptr, "PV") ||
+		 !strcasecmp(ptr, "PVS"))
+		av->percent = PERCENT_PVS;
+	else if (!strcasecmp(ptr, "F") || !strcasecmp(ptr, "FR") ||
+		 !strcasecmp(ptr, "FREE"))
+		av->percent = PERCENT_FREE;
+	else if (!strcasecmp(ptr, "O") || !strcasecmp(ptr, "OR") ||
+		 !strcasecmp(ptr, "ORIGIN"))
+		av->percent = PERCENT_ORIGIN;
+	else {
+		log_error("Specified %%%s is unknown.", ptr);
+		return 0;
+	}
+
+	return 1;
+}
+
 /* Size stored in sectors */
-static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av, int factor)
+static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
+		     struct arg_values *av, int factor, int percent)
 {
 	char *ptr;
 	int i;
@@ -429,7 +453,14 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 	if (ptr == val)
 		return 0;
 
-	if (*ptr) {
+	if (percent && *ptr == '%') {
+		if (!_get_percent_arg(av, ++ptr))
+			return_0;
+		if ((uint64_t) v >= UINT32_MAX) {
+			log_error("Percentage is too big (>=%d%%).", UINT32_MAX);
+			return 0;
+		}
+	} else if (*ptr) {
 		for (i = strlen(suffixes) - 1; i >= 0; i--)
 			if (suffixes[i] == tolower((int) *ptr))
 				break;
@@ -474,12 +505,17 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)), struct arg
 
 int size_kb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return _size_arg(cmd, av, 2);
+	return _size_arg(cmd, av, 2, 0);
 }
 
 int size_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return _size_arg(cmd, av, 2048);
+	return _size_arg(cmd, av, 2048, 0);
+}
+
+int size_mb_arg_with_percent(struct cmd_context *cmd, struct arg_values *av)
+{
+	return _size_arg(cmd, av, 2048, 1);
 }
 
 int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
@@ -516,21 +552,13 @@ int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute__((unused)
 	if (*ptr++ != '%')
 		return 0;
 
-	if (!strcasecmp(ptr, "V") || !strcasecmp(ptr, "VG"))
-		av->percent = PERCENT_VG;
-	else if (!strcasecmp(ptr, "L") || !strcasecmp(ptr, "LV"))
-		av->percent = PERCENT_LV;
-	else if (!strcasecmp(ptr, "P") || !strcasecmp(ptr, "PV") ||
-		 !strcasecmp(ptr, "PVS"))
-		av->percent = PERCENT_PVS;
-	else if (!strcasecmp(ptr, "F") || !strcasecmp(ptr, "FR") ||
-		 !strcasecmp(ptr, "FREE"))
-		av->percent = PERCENT_FREE;
-	else if (!strcasecmp(ptr, "O") || !strcasecmp(ptr, "OR") ||
-		 !strcasecmp(ptr, "ORIGIN"))
-		av->percent = PERCENT_ORIGIN;
-	else
+	if (!_get_percent_arg(av, ptr))
+		return_0;
+
+	if (av->ui64_value >= UINT32_MAX) {
+		log_error("Percentage is too big (>=%d%%).", UINT32_MAX);
 		return 0;
+	}
 
 	return 1;
 }
@@ -613,7 +641,7 @@ int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_va
 		return 1;
 	}
 
-	if (!_size_arg(cmd, av, 1))
+	if (!_size_arg(cmd, av, 1, 0))
 		return 0;
 
 	if (av->sign == SIGN_MINUS)
