@@ -153,6 +153,8 @@ static int _lvcreate_name_params(struct cmd_context *cmd,
 
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
 		if (!strchr(vg_name, '/')) {
+			if (lp->snapshot && arg_is_set(cmd, virtualsize_ARG))
+				lp->snapshot = 0 ; /* Sparse volume via thin-pool */
 			if (!_set_vg_name(lp, vg_name))
 				return_0;
 		} else {
@@ -639,10 +641,6 @@ static int _lvcreate_params(struct cmd_context *cmd,
 			segtype_str = "striped";
 			only_linear = 1; /* User requested linear only target */
 		}
-		if (arg_from_list_is_set(cmd, "is conflicting with option --type",
-					 cache_ARG, thin_ARG, snapshot_ARG,
-					 -1))
-			return_0;
 	/* More estimations from options after shortcuts */
 	} else if (arg_is_set(cmd, snapshot_ARG) &&
 		   (arg_is_set(cmd, virtualoriginsize_ARG) ||
@@ -754,6 +752,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					    LVCREATE_ARGS,
 					    POOL_ARGS,
 					    SIZE_ARGS,
+					    cache_ARG,
 					    chunksize_ARG,
 					    -1))
 			return_0;
@@ -853,6 +852,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					    SIZE_ARGS,
 					    THIN_POOL_ARGS,
 					    chunksize_ARG,
+					    snapshot_ARG,
 					    thin_ARG,
 					    virtualsize_ARG,
 					    wipesignatures_ARG, zero_ARG,
@@ -888,7 +888,8 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					return_0;
 			} else	/* Parse free arg as snapshot origin */
 				lp->snapshot = 1;
-		}
+		} else if (arg_is_set(cmd, snapshot_ARG))
+			lp->snapshot = 1;
 	} else if (seg_is_thin_pool(lp)) {
 		if (arg_outside_list_is_set(cmd, "is unsupported with thin pools",
 					    LVCREATE_ARGS,
