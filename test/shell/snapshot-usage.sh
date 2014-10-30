@@ -111,7 +111,7 @@ lvs -a $vg1
 lvremove -f $vg1
 
 # Test virtual snapshot over /dev/zero
-lvcreate -V50 -L10 -n $lv1 -s $vg1
+lvcreate --type snapshot -V50 -L10 -n $lv1 -s $vg1
 CHECK_ACTIVE="active"
 test ! -e LOCAL_CLVMD || CHECK_ACTIVE="local exclusive"
 check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
@@ -228,7 +228,7 @@ lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1
 check lv_field $vg1/$lv2 size "7.50p"
 lvremove -ff $vg1
 
-lvcreate -V15E -l1 -n $lv1 -s $vg1
+lvcreate --type snapshot -V15E -l1 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 origin_size "15.00e"
 
 vgremove -ff $vg1
