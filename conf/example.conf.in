@@ -646,7 +646,7 @@ global {
     #
     # Specify the '--type <mirror|raid1>' option to override this default
     # setting.
-    mirror_segtype_default = "raid1"
+    mirror_segtype_default = "@DEFAULT_MIRROR_SEGTYPE@"
 
     # 'raid10_segtype_default' determines the segment types used by default
     # when the '--stripes/-i' and '--mirrors/-m' arguments are both specified
@@ -663,7 +663,25 @@ global {
     #            this setting is not advised.
     # Specify the '--type <raid10|mirror>' option to override this default
     # setting.
-    raid10_segtype_default = "raid10"
+    raid10_segtype_default = "@DEFAULT_RAID10_SEGTYPE@"
+
+    # 'sparse_segtype_default' defines which segtype will be used when the
+    # shorthand '-V and -L' option is used for sparse volume creation.
+    #
+    # "snapshot" - The original snapshot implementation provided by LVM2/DM.
+    #		   It is using old snashot that mixes data and metadata within
+    #		   a single COW storage volume and has poor performs when
+    #		   the size of stored data passes hundereds of MB.
+    #
+    # "thin"     - Newer implementation leverages thin provisioning target.
+    #		   It has bigger minimal chunk size (64KiB) and uses separate volume
+    #		   for metadata. It has better performance especially in case of
+    #		   bigger data uses. This device type has also full snapshot support.
+    #
+    # Specify the '--type <snapshot|thin>' option to override this default
+    # setting.
+    sparse_segtype_default = "@DEFAULT_SPARSE_SEGTYPE@"
+
 
     # The default format for displaying LV names in lvdisplay was changed 
     # in version 2.02.89 to show the LV name and path separately.

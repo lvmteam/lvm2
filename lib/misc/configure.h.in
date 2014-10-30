@@ -68,17 +68,26 @@
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 
+/* Default segtype used for mirror volumes. */
+#undef DEFAULT_MIRROR_SEGTYPE
+
 /* Default directory to keep PID files in. */
 #undef DEFAULT_PID_DIR
 
 /* Name of default configuration profile subdirectory. */
 #undef DEFAULT_PROFILE_SUBDIR
 
+/* Default segtype used for raid10 volumes. */
+#undef DEFAULT_RAID10_SEGTYPE
+
 /* Default LVM run directory. */
 #undef DEFAULT_RUN_DIR
 
 /* Define to 0 to reinstate the pre-2.02.54 handling of unit suffixes. */
 #undef DEFAULT_SI_UNIT_CONSISTENCY
+
+/* Default segtype used for sparse volumes. */
+#undef DEFAULT_SPARSE_SEGTYPE
 
 /* Path to LVM system directory. */
 #undef DEFAULT_SYS_DIR

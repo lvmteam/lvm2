@@ -349,12 +349,28 @@ AC_ARG_WITH(raid,
 	    RAID=$withval, RAID=internal)
 AC_MSG_RESULT($RAID)
 
+AC_ARG_WITH(default-mirror-segtype,
+	    AC_HELP_STRING([--with-default-mirror-segtype=TYPE],
+			   [default mirror segtype: raid1/mirror [raid1]]),
+			   DEFAULT_MIRROR_SEGTYPE=$withval, DEFAULT_MIRROR_SEGTYPE="raid1")
+AC_ARG_WITH(default-raid10r-segtype,
+	    AC_HELP_STRING([--with-default-raid10-segtype=TYPE],
+			   [default mirror segtype: raid10/mirror [raid10]]),
+			   DEFAULT_RAID10_SEGTYPE=$withval, DEFAULT_RAID10_SEGTYPE="raid10")
 case "$RAID" in
-  none|shared) ;;
+  none)  test "$DEFAULT_MIRROR_SEGTYPE" = "raid1" && DEFAULT_MIRROR_SEGTYPE="mirror"
+	test "$DEFAULT_RAID10_SEGTYPE" = "raid10" && DEFAULT_RAID10_SEGTYPE="mirror" ;;
+  shared) ;;
   internal) AC_DEFINE([RAID_INTERNAL], 1,
 		      [Define to 1 to include built-in support for raid.]) ;;
   *) AC_MSG_ERROR([--with-raid parameter invalid]) ;;
 esac
+
+AC_DEFINE_UNQUOTED([DEFAULT_MIRROR_SEGTYPE], ["$DEFAULT_MIRROR_SEGTYPE"],
+		   [Default segtype used for mirror volumes.])
+
+AC_DEFINE_UNQUOTED([DEFAULT_RAID10_SEGTYPE], ["$DEFAULT_RAID10_SEGTYPE"],
+		   [Default segtype used for raid10 volumes.])
 
 ################################################################################
 dnl -- asynchronous volume replicator inclusion type
@@ -371,6 +387,12 @@ case "$REPLICATORS" in
 		[Define to 1 to include built-in support for replicators.]) ;;
   *) AC_MSG_ERROR([--with-replicators parameter invalid ($REPLICATORS)]) ;;
 esac
+
+
+AC_ARG_WITH(default-sparse-segtype,
+	    AC_HELP_STRING([--with-default-sparse-segtype=TYPE],
+			   [default sparse segtype: thin/snapshot [thin]]),
+			   DEFAULT_SPARSE_SEGTYPE=$withval, DEFAULT_SPARSE_SEGTYPE="thin")
 
 ################################################################################
 dnl -- thin provisioning
@@ -399,11 +421,15 @@ AC_ARG_WITH(thin-restore,
 AC_MSG_RESULT($THIN)
 
 case "$THIN" in
-  none|shared) ;;
+  none)  test "$DEFAULT_SPARSE_SEGTYPE" = "thin" && DEFAULT_SPARSE_SEGTYPE="snapshot" ;;
+  shared) ;;
   internal) AC_DEFINE([THIN_INTERNAL], 1,
 		      [Define to 1 to include built-in support for thin provisioning.]) ;;
   *) AC_MSG_ERROR([--with-thin parameter invalid ($THIN)]) ;;
 esac
+
+AC_DEFINE_UNQUOTED([DEFAULT_SPARSE_SEGTYPE], ["$DEFAULT_SPARSE_SEGTYPE"],
+		   [Default segtype used for sparse volumes.])
 
 dnl -- thin_check needs-check flag
 AC_ARG_ENABLE(thin_check_needs_check,
@@ -466,14 +492,15 @@ case "$THIN" in
 			THIN_CONFIGURE_WARN=y
 		}
 	fi
+
+	AC_MSG_CHECKING([whether thin_check supports the needs-check flag])
+	AC_MSG_RESULT([$THIN_CHECK_NEEDS_CHECK])
+	if test "$THIN_CHECK_NEEDS_CHECK" = yes; then
+		AC_DEFINE([THIN_CHECK_NEEDS_CHECK], 1, [Define to 1 if the external 'thin_check' tool requires the --clear-needs-check-flag option])
+	fi
+
 	;;
 esac
-
-AC_MSG_CHECKING([whether thin_check supports the needs-check flag])
-AC_MSG_RESULT([$THIN_CHECK_NEEDS_CHECK])
-if test "$THIN_CHECK_NEEDS_CHECK" = yes; then
-	AC_DEFINE([THIN_CHECK_NEEDS_CHECK], 1, [Define to 1 if the external 'thin_check' tool requires the --clear-needs-check-flag option])
-fi
 
 AC_DEFINE_UNQUOTED([THIN_CHECK_CMD], ["$THIN_CHECK_CMD"],
 		   [The path to 'thin_check', if available.])
@@ -1645,16 +1672,19 @@ AC_SUBST(CPG_CFLAGS)
 AC_SUBST(CPG_LIBS)
 AC_SUBST(CSCOPE_CMD)
 AC_SUBST(DEBUG)
-AC_SUBST(DEFAULT_SYS_DIR)
 AC_SUBST(DEFAULT_ARCHIVE_SUBDIR)
 AC_SUBST(DEFAULT_BACKUP_SUBDIR)
 AC_SUBST(DEFAULT_CACHE_SUBDIR)
-AC_SUBST(DEFAULT_PROFILE_SUBDIR)
 AC_SUBST(DEFAULT_DATA_ALIGNMENT)
-AC_SUBST(DEFAULT_LOCK_DIR)
 AC_SUBST(DEFAULT_DM_RUN_DIR)
+AC_SUBST(DEFAULT_LOCK_DIR)
+AC_SUBST(DEFAULT_MIRROR_SEGTYPE)
 AC_SUBST(DEFAULT_PID_DIR)
+AC_SUBST(DEFAULT_PROFILE_SUBDIR)
+AC_SUBST(DEFAULT_RAID10_SEGTYPE)
 AC_SUBST(DEFAULT_RUN_DIR)
+AC_SUBST(DEFAULT_SPARSE_SEGTYPE)
+AC_SUBST(DEFAULT_SYS_DIR)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(DLM_CFLAGS)
 AC_SUBST(DLM_LIBS)

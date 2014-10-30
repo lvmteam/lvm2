@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Configurable support for creation of sparse volumes with thin-pools.
   Update and correct lvcreate and lvcovert man pages.
   Mark pools and snapshots as unzeroable volumes.
   Check for zeroing of volume after segment type is fully detected.

@@ -644,15 +644,21 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					 -1))
 			return_0;
 	/* More estimations from options after shortcuts */
-	} else if (arg_is_set(cmd, snapshot_ARG))
+	} else if (arg_is_set(cmd, snapshot_ARG) &&
+		   (arg_is_set(cmd, virtualoriginsize_ARG) ||
+		   !arg_is_set(cmd, virtualsize_ARG)))
 		/* Snapshot has higher priority then thin */
 		segtype_str = "snapshot"; /* --thinpool makes thin volume */
-	else if (arg_is_set(cmd, cache_ARG) || arg_count(cmd, cachepool_ARG))
+	else if (arg_is_set(cmd, cache_ARG) || arg_is_set(cmd, cachepool_ARG))
 		segtype_str = "cache";
-	else if (arg_count(cmd, thin_ARG) || arg_count(cmd, thinpool_ARG) ||
-		 arg_is_set(cmd, virtualsize_ARG))
+	else if (arg_is_set(cmd, thin_ARG) || arg_is_set(cmd, thinpool_ARG))
 		segtype_str = "thin";
-	else if (arg_uint_value(cmd, mirrors_ARG, 0)) {
+	else if (arg_is_set(cmd, virtualsize_ARG)) {
+		if (arg_is_set(cmd, virtualoriginsize_ARG))
+			segtype_str = "snapshot";
+		else
+			segtype_str = find_config_tree_str(cmd, global_sparse_segtype_default_CFG, NULL);
+	} else if (arg_uint_value(cmd, mirrors_ARG, 0)) {
 		/* Remember, '-m 0' implies stripe */
 		mirror_default_cfg = (arg_uint_value(cmd, stripes_ARG, 1) > 1)
 			? global_raid10_segtype_default_CFG : global_mirror_segtype_default_CFG;
