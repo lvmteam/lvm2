@@ -733,6 +733,9 @@ int lv_update_and_reload_origin(struct logical_volume *lv);
 
 uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 			   uint32_t extent_size);
+uint32_t extents_from_percent_size(struct volume_group *vg, const struct dm_list *pvh,
+				   uint32_t extents, int roundup,
+				   percent_type_t percent, uint64_t size);
 
 struct logical_volume *find_pool_lv(const struct logical_volume *lv);
 int pool_is_active(const struct logical_volume *pool_lv);

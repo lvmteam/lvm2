@@ -1097,6 +1097,67 @@ uint64_t extents_from_size(struct cmd_context *cmd, uint64_t size,
 	return size / extent_size;
 }
 
+/*
+ * Converts size according to percentage with specified rounding to extents
+ *
+ * For PERCENT_NONE size is in standard sector units.
+ * For all other percent type is in DM_PERCENT_1 base unit (supports decimal point)
+ *
+ * Return value of 0 extents is an error.
+ */
+uint32_t extents_from_percent_size(struct volume_group *vg, const struct dm_list *pvh,
+				   uint32_t extents, int roundup,
+				   percent_type_t percent, uint64_t size)
+{
+	uint32_t count;
+
+	switch (percent) {
+	case PERCENT_NONE:
+		if (!roundup && (size % vg->extent_size)) {
+			if (!(size -= size % vg->extent_size)) {
+				log_error("Specified size is smaller then physical extent boundary.");
+				return 0;
+			}
+			log_print_unless_silent("Rounding size to boundary between physical extents: %s.",
+						display_size(vg->cmd, size));
+		}
+		return extents_from_size(vg->cmd, size, vg->extent_size);
+	case PERCENT_LV:
+		break;	/* Base extents already passed in. */
+	case PERCENT_VG:
+		extents = vg->extent_count;
+		break;
+	case PERCENT_PVS:
+		if (pvh != &vg->pvs) {
+			/* Physical volumes are specified on cmdline */
+			if (!(extents = pv_list_extents_free(pvh))) {
+				log_error("No free extents in the list of physical volumes.");
+				return 0;
+			}
+			break;
+		}
+		/* Fall back to use all PVs in VG like %FREE */
+	case PERCENT_FREE:
+		if (!(extents = vg->free_count)) {
+			log_error("No free extents in Volume group %s.", vg->name);
+			return 0;
+		}
+		break;
+	default:
+		log_error(INTERNAL_ERROR "Unsupported percent type %u.", percent);
+		return 0;
+	}
+
+	if (!(count = percent_of_extents(size, extents, roundup)))
+		log_error("Converted  %.2f%%%s into 0 extents.",
+			  (double) size / DM_PERCENT_1, get_percent_string(percent));
+	else
+		log_verbose("Converted %.2f%%%s into %" PRIu32 " extents.",
+			    (double) size / DM_PERCENT_1, get_percent_string(percent), count);
+
+	return count;
+}
+
 static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bits,
 					    uint32_t num_set_bits, unsigned *seed)
 {
