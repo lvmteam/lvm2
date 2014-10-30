@@ -4600,21 +4600,21 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 	/* If reducing, find stripes, stripesize & size of last segment */
 	if (reducing) {
 		if (lp->stripes || lp->stripe_size || lp->mirrors)
-			log_error("Ignoring stripes, stripesize and mirrors "
-				  "arguments when reducing");
+			log_print_unless_silent("Ignoring stripes, stripesize and mirrors "
+						"arguments when reducing.");
 
 		if (lp->sign == SIGN_MINUS) 
 			if (lp->extents_are_pes) {
 				if (lp->extents >= existing_physical_extents) {
 					log_error("Unable to reduce %s below 1 extent.", lp->lv_name);
-					return_0;
+					return 0;
 				}
 				new_extents = existing_physical_extents - lp->extents;
 			} else {
 				new_extents = existing_logical_extents - lp->extents;
 				if (lp->extents >= existing_logical_extents) {
 					log_error("Unable to reduce %s below 1 extent.", lp->lv_name);
-					return_0;
+					return 0;
 				}
 			}
 		else
@@ -4843,7 +4843,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 
 	if (lv_is_thin_pool(lv)) {
 		if (lp->resizefs) {
-			log_warn("Thin pool volumes do not have filesystem.");
+			log_print_unless_silent("Ignoring --resizefs as thin pool volumes do not have filesystem.");
 			lp->resizefs = 0;
 		}
 		lock_lv = lv;
@@ -4854,7 +4854,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 	alloc = lp->ac_alloc ?: lv->alloc;
 
 	if ((lp->resize == LV_REDUCE) && lp->argc)
-		log_warn("Ignoring PVs on command line when reducing");
+		log_print_unless_silent("Ignoring PVs on command line when reducing.");
 
 	/* Request confirmation before operations that are often mistakes. */
 	if ((lp->resizefs || (lp->resize == LV_REDUCE)) &&
