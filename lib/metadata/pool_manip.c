@@ -533,11 +533,10 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.read_ahead = read_ahead,
 		.stripe_size = stripe_size,
 		.stripes = stripes,
-		.zero = 1,
+		.tags = DM_LIST_HEAD_INIT(lvc.tags),
 		.temporary = 1,
+		.zero = 1,
 	};
-
-	dm_list_init(&lvc.tags);
 
 	if (!(lvc.extents = extents_from_size(pool_lv->vg->cmd, size,
 					      pool_lv->vg->extent_size)))
@@ -574,11 +573,10 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		.pvh = pvh ? : &vg->pvs,
 		.read_ahead = DM_READ_AHEAD_AUTO,
 		.stripes = 1,
-		.zero = 1,
+		.tags = DM_LIST_HEAD_INIT(lp.tags),
 		.temporary = 1,
+		.zero = 1,
 	};
-
-	dm_list_init(&lp.tags);
 
 	if (!(lp.segtype = get_segtype_from_string(vg->cmd, "striped")))
 		return_0;
