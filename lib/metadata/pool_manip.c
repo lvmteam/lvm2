@@ -363,30 +363,30 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 
 int update_pool_params(const struct segment_type *segtype,
 		       struct volume_group *vg, unsigned target_attr,
-		       int passed_args, uint32_t data_extents,
-		       uint64_t *pool_metadata_size,
+		       int passed_args, uint32_t pool_data_extents,
+		       uint32_t *pool_metadata_extents,
 		       int *chunk_size_calc_policy, uint32_t *chunk_size,
 		       thin_discards_t *discards, int *zero)
 {
 	if (segtype_is_cache_pool(segtype) || segtype_is_cache(segtype)) {
 		if (!update_cache_pool_params(segtype, vg, target_attr, passed_args,
-					      data_extents, pool_metadata_size,
+					      pool_data_extents, pool_metadata_extents,
 					      chunk_size_calc_policy, chunk_size))
 			return_0;
 	} else if (!update_thin_pool_params(segtype, vg, target_attr, passed_args,
-					    data_extents, pool_metadata_size,
+					    pool_data_extents, pool_metadata_extents,
 					    chunk_size_calc_policy, chunk_size,
 					    discards, zero)) /* thin-pool */
 			return_0;
 
-	if ((uint64_t) *chunk_size > (uint64_t) data_extents * vg->extent_size) {
+	if ((uint64_t) *chunk_size > (uint64_t) pool_data_extents * vg->extent_size) {
 		log_error("Size of %s data volume cannot be smaller then chunk size %s.",
 			  segtype->name, display_size(vg->cmd, *chunk_size));
 		return 0;
 	}
 
 	log_verbose("Using pool metadata size %s.",
-		    display_size(vg->cmd, *pool_metadata_size));
+		    display_size(vg->cmd, (uint64_t)*pool_metadata_extents * vg->extent_size));
 
 	return 1;
 }
@@ -518,7 +518,7 @@ bad:
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   const char *name, uint32_t read_ahead,
 					   uint32_t stripes, uint32_t stripe_size,
-					   uint64_t size, alloc_policy_t alloc,
+					   uint32_t extents, alloc_policy_t alloc,
 					   struct dm_list *pvh)
 {
 	struct logical_volume *metadata_lv;
@@ -526,6 +526,7 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 	struct lvcreate_params lvc = {
 		.activate = CHANGE_ALY,
 		.alloc = alloc,
+		.extents = extents,
 		.major = -1,
 		.minor = -1,
 		.permission = LVM_READ | LVM_WRITE,
@@ -537,10 +538,6 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.temporary = 1,
 		.zero = 1,
 	};
-
-	if (!(lvc.extents = extents_from_size(pool_lv->vg->cmd, size,
-					      pool_lv->vg->extent_size)))
-		return_0;
 
 	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
 		return_0;

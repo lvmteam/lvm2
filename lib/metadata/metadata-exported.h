@@ -748,8 +748,8 @@ int validate_pool_chunk_size(struct cmd_context *cmd, const struct segment_type 
 int update_pool_lv(struct logical_volume *lv, int activate);
 int update_pool_params(const struct segment_type *segtype,
 		       struct volume_group *vg, unsigned target_attr,
-		       int passed_args, uint32_t data_extents,
-		       uint64_t *pool_metadata_size,
+		       int passed_args, uint32_t pool_data_extents,
+		       uint32_t *pool_metadata_extents,
 		       int *chunk_size_calc_policy, uint32_t *chunk_size,
 		       thin_discards_t *discards, int *zero);
 int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
@@ -758,8 +758,8 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 				  int *zero);
 int update_thin_pool_params(const struct segment_type *segtype,
 			    struct volume_group *vg, unsigned attr,
-			    int passed_args, uint32_t data_extents,
-			    uint64_t *pool_metadata_size,
+			    int passed_args, uint32_t pool_data_extents,
+			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, int *zero);
 int get_pool_discards(const char *str, thin_discards_t *discards);
@@ -767,7 +767,7 @@ const char *get_pool_discards_name(thin_discards_t discards);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   const char *name, uint32_t read_ahead,
 					   uint32_t stripes, uint32_t stripe_size,
-					   uint64_t size, alloc_policy_t alloc,
+					   uint32_t extents, alloc_policy_t alloc,
 					   struct dm_list *pvh);
 int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 			       struct dm_list *pvh, int poolmetadataspare);
@@ -1090,8 +1090,8 @@ int partial_raid_lv_supports_degraded_activation(const struct logical_volume *lv
 const char *get_cachepool_cachemode_name(const struct lv_segment *seg);
 int update_cache_pool_params(const struct segment_type *segtype,
 			     struct volume_group *vg, unsigned attr,
-			     int passed_args, uint32_t data_extents,
-			     uint64_t *pool_metadata_size,
+			     int passed_args, uint32_t pool_data_extents,
+			     uint32_t *pool_metadata_extents,
 			     int *chunk_size_calc_method, uint32_t *chunk_size);
 int validate_lv_cache_create_pool(const struct logical_volume *pool_lv);
 int validate_lv_cache_create_origin(const struct logical_volume *origin_lv);

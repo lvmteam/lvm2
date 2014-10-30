@@ -396,14 +396,16 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 
 int update_thin_pool_params(const struct segment_type *segtype,
 			    struct volume_group *vg,
-			    unsigned attr, int passed_args, uint32_t data_extents,
-			    uint64_t *pool_metadata_size,
+			    unsigned attr, int passed_args,
+			    uint32_t pool_data_extents,
+			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, int *zero)
 {
 	struct cmd_context *cmd = vg->cmd;
 	struct profile *profile = vg->profile;
 	uint32_t extent_size = vg->extent_size;
+	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
 	size_t estimate_chunk_size;
 	const char *str;
 
@@ -447,34 +449,34 @@ int update_thin_pool_params(const struct segment_type *segtype,
 		return 0;
 	}
 
-	if (!*pool_metadata_size) {
+	if (!pool_metadata_size) {
 		/* Defaults to nr_pool_blocks * 64b converted to size in sectors */
-		*pool_metadata_size = (uint64_t) data_extents * extent_size /
+		pool_metadata_size = (uint64_t) pool_data_extents * extent_size /
 			(*chunk_size * (SECTOR_SIZE / UINT64_C(64)));
 		/* Check if we could eventually use bigger chunk size */
 		if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
-			while ((*pool_metadata_size >
+			while ((pool_metadata_size >
 				(DEFAULT_THIN_POOL_OPTIMAL_SIZE / SECTOR_SIZE)) &&
 			       (*chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE)) {
 				*chunk_size <<= 1;
-				*pool_metadata_size >>= 1;
+				pool_metadata_size >>= 1;
 			}
 			log_verbose("Setting chunk size to %s.",
 				    display_size(cmd, *chunk_size));
-		} else if (*pool_metadata_size > (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2)) {
+		} else if (pool_metadata_size > (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2)) {
 			/* Suggest bigger chunk size */
-			estimate_chunk_size = (uint64_t) data_extents * extent_size /
+			estimate_chunk_size = (uint64_t) pool_data_extents * extent_size /
 				(DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2 * (SECTOR_SIZE / UINT64_C(64)));
 			log_warn("WARNING: Chunk size is too small for pool, suggested minimum is %s.",
 				 display_size(cmd, UINT64_C(1) << (ffs(estimate_chunk_size) + 1)));
 		}
 
-		/* Round up to extent size */
-		if (*pool_metadata_size % extent_size)
-			*pool_metadata_size += extent_size - *pool_metadata_size % extent_size;
+		/* Round up to extent size silently */
+		if (pool_metadata_size % extent_size)
+			pool_metadata_size += extent_size - pool_metadata_size % extent_size;
 	} else {
-		estimate_chunk_size = (uint64_t) data_extents * extent_size /
-			(*pool_metadata_size * (SECTOR_SIZE / UINT64_C(64)));
+		estimate_chunk_size = (uint64_t) pool_data_extents * extent_size /
+			(pool_metadata_size * (SECTOR_SIZE / UINT64_C(64)));
 		if (estimate_chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE)
 			estimate_chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
 		else if (estimate_chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)
@@ -491,17 +493,21 @@ int update_thin_pool_params(const struct segment_type *segtype,
 		}
 	}
 
-	if (*pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
-		*pool_metadata_size = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
+	if (pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
+		pool_metadata_size = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
 		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
 			log_warn("WARNING: Maximum supported pool metadata size is %s.",
-				 display_size(cmd, *pool_metadata_size));
-	} else if (*pool_metadata_size < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
-		*pool_metadata_size = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
+				 display_size(cmd, pool_metadata_size));
+	} else if (pool_metadata_size < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
+		pool_metadata_size = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
 		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
 			log_warn("WARNING: Minimum supported pool metadata size is %s.",
-				 display_size(cmd, *pool_metadata_size));
+				 display_size(cmd, pool_metadata_size));
 	}
+
+	if (!(*pool_metadata_extents =
+	      extents_from_size(vg->cmd, pool_metadata_size, extent_size)))
+		return_0;
 
 	return 1;
 }

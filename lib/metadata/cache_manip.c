@@ -41,12 +41,13 @@ const char *get_cachepool_cachemode_name(const struct lv_segment *seg)
 
 int update_cache_pool_params(const struct segment_type *segtype,
 			     struct volume_group *vg, unsigned attr,
-			     int passed_args, uint32_t data_extents,
-			     uint64_t *pool_metadata_size,
+			     int passed_args, uint32_t pool_data_extents,
+			     uint32_t *pool_metadata_extents,
 			     int *chunk_size_calc_method, uint32_t *chunk_size)
 {
 	uint64_t min_meta_size;
 	uint32_t extent_size = vg->extent_size;
+	uint64_t pool_metadata_size = *pool_metadata_extents * vg->extent_size;
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
 		*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
@@ -58,7 +59,7 @@ int update_cache_pool_params(const struct segment_type *segtype,
 	 * Default meta size is:
 	 * (Overhead + mapping size + hint size)
 	 */
-	min_meta_size = (uint64_t) data_extents * extent_size / *chunk_size;	/* nr_chunks */
+	min_meta_size = (uint64_t) pool_data_extents * extent_size / *chunk_size;	/* nr_chunks */
 	min_meta_size *= (DM_BYTES_PER_BLOCK + DM_MAX_HINT_WIDTH + DM_HINT_OVERHEAD_PER_BLOCK);
 	min_meta_size = (min_meta_size + (SECTOR_SIZE - 1)) >> SECTOR_SHIFT;	/* in sectors */
 	min_meta_size += DM_TRANSACTION_OVERHEAD * (1024 >> SECTOR_SHIFT);
@@ -67,22 +68,26 @@ int update_cache_pool_params(const struct segment_type *segtype,
 	if (min_meta_size % extent_size)
 		min_meta_size += extent_size - min_meta_size % extent_size;
 
-	if (!*pool_metadata_size)
-		*pool_metadata_size = min_meta_size;
+	if (!pool_metadata_size)
+		pool_metadata_size = min_meta_size;
 
-	if (*pool_metadata_size > (2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE)) {
-		*pool_metadata_size = 2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE;
+	if (pool_metadata_size > (2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE)) {
+		pool_metadata_size = 2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE;
 		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
 			log_warn("WARNING: Maximum supported pool metadata size is %s.",
-				 display_size(vg->cmd, *pool_metadata_size));
-	} else if (*pool_metadata_size < min_meta_size) {
+				 display_size(vg->cmd, pool_metadata_size));
+	} else if (pool_metadata_size < min_meta_size) {
 		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
 			log_warn("WARNING: Minimum required pool metadata size is %s "
 				 "(needs extra %s).",
 				 display_size(vg->cmd, min_meta_size),
-				 display_size(vg->cmd, min_meta_size - *pool_metadata_size));
-		*pool_metadata_size = min_meta_size;
+				 display_size(vg->cmd, min_meta_size - pool_metadata_size));
+		pool_metadata_size = min_meta_size;
 	}
+
+	if (!(*pool_metadata_extents =
+	      extents_from_size(vg->cmd, pool_metadata_size, extent_size)))
+		return_0;
 
 	return 1;
 }

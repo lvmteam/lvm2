@@ -65,6 +65,7 @@ struct lvconvert_params {
 
 	struct logical_volume *lv_to_poll;
 
+	uint32_t pool_metadata_extents;
 	int passed_args;
 	uint64_t pool_metadata_size;
 	const char *origin_name;
@@ -2743,12 +2744,17 @@ revert_new_lv:
 static int _lvconvert_update_pool_params(struct logical_volume *pool_lv,
 					 struct lvconvert_params *lp)
 {
+	if (lp->pool_metadata_size &&
+	    !(lp->pool_metadata_extents =
+	      extents_from_size(pool_lv->vg->cmd, lp->pool_metadata_size, pool_lv->vg->extent_size)))
+		return_0;
+
 	return update_pool_params(lp->segtype,
 				  pool_lv->vg,
 				  lp->target_attr,
 				  lp->passed_args,
 				  pool_lv->le_count,
-				  &lp->pool_metadata_size,
+				  &lp->pool_metadata_extents,
 				  &lp->thin_chunk_size_calc_policy,
 				  &lp->chunk_size,
 				  &lp->discards,
@@ -3014,7 +3020,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		if (!(metadata_lv = alloc_pool_metadata(pool_lv, metadata_name,
 							lp->read_ahead, lp->stripes,
 							lp->stripe_size,
-							lp->pool_metadata_size,
+							lp->pool_metadata_extents,
 							lp->alloc, lp->pvh)))
 			return_0;
 	} else {

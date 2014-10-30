@@ -350,16 +350,18 @@ static int _update_extents_params(struct volume_group *vg,
 	}
 
 	if (lp->create_pool) {
+		if (lp->pool_metadata_size &&
+		    !(lp->pool_metadata_extents =
+		      extents_from_size(vg->cmd, lp->pool_metadata_size, vg->extent_size)))
+			return_0;
+
 		if (!update_pool_params(lp->segtype, vg, lp->target_attr,
 					lp->passed_args, lp->extents,
-					&lp->pool_metadata_size,
+					&lp->pool_metadata_extents,
 					&lp->thin_chunk_size_calc_policy, &lp->chunk_size,
 					&lp->discards, &lp->zero))
 			return_0;
 
-		if (!(lp->pool_metadata_extents =
-		      extents_from_size(vg->cmd, lp->pool_metadata_size, vg->extent_size)))
-			return_0;
 		if (lcp->percent == PERCENT_FREE) {
 			if (lp->extents <= (2 * lp->pool_metadata_extents)) {
 				log_error("Not enough space for thin pool creation.");
