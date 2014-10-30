@@ -50,6 +50,7 @@ lvs -a -o+seg_pe_ranges $vg
 lvconvert --yes --type cache-pool --poolmetadata $vg/cpool_meta $vg/cpool
 lvcreate -n corigin --type cache --cachepool $vg/cpool -l 10
 
+aux wait_for_sync $vg cpool
 lvchange --syncaction repair $vg/cpool_cmeta
 lvchange --syncaction repair $vg/cpool_cdata
 
@@ -61,6 +62,7 @@ not lvconvert --splitmirrors 1 --name split_cmeta $vg/cpool_cmeta "$dev1"
 not lvconvert --splitmirrors 1 --name split_cdata $vg/cpool_cdata "$dev1"
 
 # but allow manipulating existing LVs with reserved names
+aux wait_for_sync $vg cpool
 lvconvert --splitmirrors 1 --name split_meta $vg/cpool_cmeta "$dev1"
 lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
 
