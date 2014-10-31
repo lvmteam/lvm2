@@ -544,7 +544,7 @@ static int _check_version(char *version, size_t size, int log_suppress)
  */
 int dm_check_version(void)
 {
-	char libversion[64], dmversion[64];
+	char libversion[64] = "", dmversion[64] = "";
 	const char *compat = "";
 
 	if (_version_checked)
