@@ -193,7 +193,7 @@ static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 	if (!dm_hash_get_num_entries(pf->devices)) {
 		log_very_verbose("Internal persistent device cache empty "
 				 "- not writing to %s", pf->file);
-		return 0;
+		return 1;
 	}
 	if (!dev_cache_has_scanned()) {
 		log_very_verbose("Device cache incomplete - not writing "
