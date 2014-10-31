@@ -498,6 +498,8 @@ static int _lv_set_pool_params(struct lvcreate_params *lp,
 				vg_t vg, const char *pool_name,
 				uint64_t extents, uint64_t meta_size)
 {
+	uint64_t pool_metadata_size;
+
 	_lv_set_default_params(lp, vg, pool_name, extents);
 
 	lp->create_pool = 1;
@@ -505,23 +507,23 @@ static int _lv_set_pool_params(struct lvcreate_params *lp,
 	lp->stripes = 1;
 
 	if (!meta_size) {
-		lp->pool_metadata_size = extents * vg->extent_size /
+		pool_metadata_size = extents * vg->extent_size /
 			(lp->chunk_size * (SECTOR_SIZE / 64));
-		while ((lp->pool_metadata_size >
+		while ((pool_metadata_size >
 			(2 * DEFAULT_THIN_POOL_OPTIMAL_SIZE / SECTOR_SIZE)) &&
 		       lp->chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE) {
 			lp->chunk_size <<= 1;
-			lp->pool_metadata_size >>= 1;
+			pool_metadata_size >>= 1;
 	         }
 	} else
-		lp->pool_metadata_size = meta_size;
+		pool_metadata_size = meta_size;
 
-	if (lp->pool_metadata_size % vg->extent_size)
-		lp->pool_metadata_size +=
-			vg->extent_size - lp->pool_metadata_size % vg->extent_size;
+	if (pool_metadata_size % vg->extent_size)
+		pool_metadata_size +=
+			vg->extent_size - pool_metadata_size % vg->extent_size;
 
 	if (!(lp->pool_metadata_extents =
-	      extents_from_size(vg->cmd, lp->pool_metadata_size / SECTOR_SIZE,
+	      extents_from_size(vg->cmd, pool_metadata_size / SECTOR_SIZE,
 				vg->extent_size)))
 		return_0;
 
@@ -602,20 +604,15 @@ lv_create_params_t lvm_lv_params_create_thin_pool(vg_t vg,
 
 /* Set defaults for thin LV specific parameters */
 static int _lv_set_thin_params(struct lvcreate_params *lp,
-				vg_t vg, const char *pool_name,
-				const char *lvname,
-				uint64_t extents)
+			       vg_t vg, const char *pool_name,
+			       const char *lvname,
+			       uint32_t extents)
 {
-	_lv_set_default_params(lp, vg, lvname, extents);
+	_lv_set_default_params(lp, vg, lvname, 0);
 
 	lp->pool_name = pool_name;
 	lp->segtype = get_segtype_from_string(vg->cmd, "thin");
-
-	lp->voriginsize = extents * vg->extent_size;
-	if (!(lp->voriginextents = extents_from_size(vg->cmd, lp->voriginsize,
-						     vg->extent_size)))
-		return_0;
-
+	lp->virtual_extents = extents;
 	lp->stripes = 1;
 
 	return 1;
@@ -698,7 +695,7 @@ static lv_create_params_t _lvm_lv_params_create_thin(const vg_t vg,
 									const char *lvname, uint64_t size)
 {
 	struct lvm_lv_create_params *lvcp = NULL;
-	uint64_t extents = 0;
+	uint32_t extents = 0;
 
 	/* precondition checks */
 	if (vg_read_error(vg))

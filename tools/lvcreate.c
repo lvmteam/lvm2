@@ -20,6 +20,7 @@
 struct lvcreate_cmdline_params {
 	percent_type_t percent;
 	uint64_t size;
+	uint64_t virtual_size; /* snapshot, thin */
 	char **pvs;
 	uint32_t pv_count;
 };
@@ -251,8 +252,8 @@ static int _update_extents_params(struct volume_group *vg,
 					       vg->extent_size)))
 		return_0;
 
-	if (lp->voriginsize &&
-	    !(lp->voriginextents = extents_from_size(vg->cmd, lp->voriginsize,
+	if (lcp->virtual_size &&
+	    !(lp->virtual_extents = extents_from_size(vg->cmd, lcp->virtual_size,
 						      vg->extent_size)))
 		return_0;
 
@@ -406,7 +407,7 @@ static int _read_size_params(struct cmd_context *cmd,
 				  -1))
 		return_0;
 
-	lp->voriginsize = arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0));
+	lcp->virtual_size = arg_uint64_value(cmd, virtualsize_ARG, UINT64_C(0));
 
 	if (arg_count(cmd, extents_ARG)) {
 		if (arg_count(cmd, size_ARG)) {

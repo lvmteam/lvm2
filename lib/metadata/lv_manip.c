@@ -6745,7 +6745,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return NULL;
 			}
 
-			lp->voriginextents = origin_lv->le_count;
+			lp->virtual_extents = origin_lv->le_count;
 
 			/*
 			 * Check if using 'external origin' or the 'normal' snapshot
@@ -6765,7 +6765,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 		}
 	} else if (lp->snapshot) {
-		if (!lp->voriginsize) {
+		if (!lp->virtual_extents) {
 			if (!origin_lv) {
 				log_error("Couldn't find origin volume '%s'.",
 					  lp->origin_name);
@@ -6868,7 +6868,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
 		       seg_is_pool(lp) ? lp->pool_metadata_extents : lp->region_size,
-		       seg_is_thin_volume(lp) ? lp->voriginextents : lp->extents,
+		       seg_is_thin_volume(lp) ? lp->virtual_extents : lp->extents,
 		       lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
 
@@ -7080,7 +7080,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		 * if origin is real (not virtual) inactive device.
 		 */
 		if ((vg_is_clustered(vg) ||
-		     (!lp->voriginsize && !lv_is_active(origin_lv))) &&
+		     (!lp->virtual_extents && !lv_is_active(origin_lv))) &&
 		    !deactivate_lv(cmd, lv)) {
 			log_error("Aborting. Couldn't deactivate snapshot COW area. "
 				  "Manual intervention required.");
@@ -7088,10 +7088,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* A virtual origin must be activated explicitly. */
-		if (lp->voriginsize) {
+		if (lp->virtual_extents) {
 			if (!(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
 								 lp->permission,
-								 lp->voriginextents))) {
+								 lp->virtual_extents))) {
 				stack;
 				goto deactivate_and_revert_new_lv;
 			}

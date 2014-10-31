@@ -857,12 +857,11 @@ struct lvcreate_params {
 
 	/* size */
 	uint32_t extents; /* all */
-	uint32_t voriginextents; /* snapshot */
-	uint64_t voriginsize; /* snapshot */
 	uint32_t pool_metadata_extents; /* pools */
 	uint64_t pool_metadata_size; /* pools */
 	uint32_t pool_data_extents; /* pools */
 	uint64_t pool_data_size; /* pools */
+	uint32_t virtual_extents; /* snapshots, thins */
 	struct dm_list *pvh; /* all */
 
 	uint64_t permission; /* all */

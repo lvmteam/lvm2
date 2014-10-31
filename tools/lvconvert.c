@@ -2640,8 +2640,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 		.pvh = &vg->pvs,
 		.read_ahead = DM_READ_AHEAD_AUTO,
 		.stripes = 1,
-		.voriginextents = lv->le_count,
-		.voriginsize = lv->size,
+		.virtual_extents = lv->le_count,
 	};
 
 	if (lv == pool_lv) {
