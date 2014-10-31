@@ -978,13 +978,12 @@ int get_pool_params(struct cmd_context *cmd,
 	*passed_args = 0;
 
 	if (segtype_is_thin_pool(segtype) || segtype_is_thin(segtype)) {
-		if (arg_count(cmd, zero_ARG)) {
+		if (arg_is_set(cmd, zero_ARG)) {
 			*passed_args |= PASS_ARG_ZERO;
 			*zero = arg_int_value(cmd, zero_ARG, 1);
 			log_very_verbose("Setting pool zeroing: %u", *zero);
 		}
-
-		if (arg_count(cmd, discards_ARG)) {
+		if (arg_is_set(cmd, discards_ARG)) {
 			*passed_args |= PASS_ARG_DISCARDS;
 			*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 			log_very_verbose("Setting pool discards: %s",
