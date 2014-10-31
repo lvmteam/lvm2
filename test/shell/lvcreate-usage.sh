@@ -22,7 +22,7 @@ grep "Invalid argument for --type" err
 invalid lvcreate --type $RANDOM -l1 -n $lv1 $vg
 invalid lvcreate --type unknown -l1 -n $lv1 $vg
 
-lvcreate --type linear -aey -l1 -n $lv1 $vg
+lvcreate --type linear -aey -m0 -l1 -n $lv1 $vg
 lvcreate --type snapshot -l1 -n $lv2 $vg/$lv1
 
 # Reject repeated invocation (run 2 times) (bz178216)

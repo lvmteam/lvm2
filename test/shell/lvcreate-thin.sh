@@ -200,6 +200,23 @@ not lvcreate --chunksize 256 -l1 -T $vg/pool1
 not lvcreate --chunksize 32 -l1 -T $vg/pool1
 # Too large chunk size (max is 1GB)
 not lvcreate -L4M --chunksize 2G -T $vg/pool1
+# Cannot specify --minor with pool
+fail lvcreate -L10M --minor 100 -T $vg/pool_minor
+
+# FIXME: Currently ambigous - is it for thin, thin-pool, both ?
+fail lvcreate -L4M -Mn -m0 -T --readahead 32 -V20 -n $lv $vg/pool_normal
+
+# Check read-ahead setting will also pass with -Mn -m0
+lvcreate -L4M -Mn -m0 -T --readahead 64k $vg/pool_readahead
+lvcreate -V20M -Mn -m0 -T --readahead 128k -n thin_readahead $vg/pool_readahead
+check lv_field $vg/pool_readahead lv_read_ahead "64.00k"
+check lv_field $vg/thin_readahead lv_read_ahead "128.00k"
+
+if test ! -d /sys/block/dm-2345; then
+# Check some unused minor and support for --minor with thins
+	lvcreate --minor 2345 -T -V20M -n thin_minor $vg/pool_readahead
+	check lv_field $vg/thin_minor lv_minor "2345"
+fi
 
 # Test creation of inactive pool
 lvcreate -an -L4M -T $vg/pool1
