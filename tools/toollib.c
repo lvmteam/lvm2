@@ -975,12 +975,21 @@ int get_pool_params(struct cmd_context *cmd,
 		}
 	}
 
-	if (arg_count(cmd, chunksize_ARG)) {
-		if (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative chunk size is invalid.");
-			return 0;
-		}
+	if (arg_from_list_is_negative(cmd, "may not be negative",
+				      chunksize_ARG,
+				      pooldatasize_ARG,
+				      poolmetadatasize_ARG,
+				      -1))
+		return_0;
 
+	if (arg_from_list_is_zero(cmd, "may not be zero",
+				  chunksize_ARG,
+				  pooldatasize_ARG,
+				  poolmetadatasize_ARG,
+				  -1))
+		return_0;
+
+	if (arg_is_set(cmd, chunksize_ARG)) {
 		*passed_args |= PASS_ARG_CHUNK_SIZE;
 		*chunk_size = arg_uint_value(cmd, chunksize_ARG, 0);
 
