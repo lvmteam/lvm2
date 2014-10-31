@@ -653,7 +653,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 		segtype_str = "thin";
 	else if (arg_is_set(cmd, virtualsize_ARG)) {
 		if (arg_is_set(cmd, virtualoriginsize_ARG))
-			segtype_str = "snapshot";
+			segtype_str = "snapshot"; /* --virtualoriginsize incompatible with pools */
 		else
 			segtype_str = find_config_tree_str(cmd, global_sparse_segtype_default_CFG, NULL);
 	} else if (arg_uint_value(cmd, mirrors_ARG, 0)) {
@@ -685,9 +685,12 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	contiguous_ARG,\
 	ignoreactivationskip_ARG,\
 	ignoremonitoring_ARG,\
+	mirrors_ARG,\
 	name_ARG,\
 	noudevsync_ARG,\
 	permission_ARG,\
+	persistent_ARG,\
+	readahead_ARG,\
 	setactivationskip_ARG,\
 	test_ARG,\
 	type_ARG
@@ -701,14 +704,12 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	mirrorlog_ARG
 
 #define MIRROR_RAID_ARGS \
-	mirrors_ARG,\
 	nosync_ARG,\
 	regionsize_ARG
 
 #define PERSISTENT_ARGS \
 	major_ARG,\
-	minor_ARG,\
-	persistent_ARG
+	minor_ARG
 
 #define POOL_ARGS \
 	pooldatasize_ARG,\
@@ -1210,13 +1211,6 @@ static int _check_thin_parameters(struct volume_group *vg, struct lvcreate_param
 	}
 
 	if (!seg_is_thin_volume(lp) && !lp->snapshot) {
-		/* Not creating thin volume nor snapshot */
-		if (arg_from_list_is_set(vg->cmd, "may only be given when creating a new thin Logical volume or snapshot",
-					 permission_ARG,
-					 persistent_ARG,
-					 readahead_ARG,
-					 -1))
-			return_0;
 		if (!lp->create_pool) {
 			/* Not even creating thin pool? */
 			log_error("Please specify device size(s).");
@@ -1285,7 +1279,14 @@ static int _check_pool_parameters(struct cmd_context *cmd,
 			}
 			/* When creating just pool the pool_name needs to be in lv_name */
 			lp->lv_name = lp->pool_name;
+		} else if (vg) {
+			/* FIXME: what better to do with --readahead and pools? */
+			if (arg_is_set(cmd, readahead_ARG)) {
+				log_error("Ambigous --readahead parameter specified. Please use either with pool or volume.");
+				return 0;
+			}
 		}
+
 		return 1;
 	}
 	/* Not creating new pool, but existing pool is needed */
