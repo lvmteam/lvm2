@@ -577,7 +577,7 @@ static int _read_activation_params(struct cmd_context *cmd,
                                    struct volume_group *vg,
 				   struct lvcreate_params *lp)
 {
-	unsigned pagesize;
+	unsigned pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
 
 	lp->activate = (activation_change_t)
 		arg_uint_value(cmd, activate_ARG, CHANGE_AY);
@@ -585,7 +585,6 @@ static int _read_activation_params(struct cmd_context *cmd,
 	/* Read ahead */
 	lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
 					cmd->default_settings.read_ahead);
-	pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
 	if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
 	    lp->read_ahead != DM_READ_AHEAD_NONE &&
 	    lp->read_ahead % pagesize) {
