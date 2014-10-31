@@ -115,7 +115,7 @@ int get_pool_params(struct cmd_context *cmd,
 		    const struct segment_type *segtype,
 		    int *passed_args,
 		    uint64_t *pool_metadata_size,
-		    int *pool_metadataspare,
+		    int *pool_metadata_spare,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    int *zero);
