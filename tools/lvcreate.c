@@ -346,7 +346,7 @@ static int _update_extents_params(struct volume_group *vg,
 	    (vg->free_count < lp->extents - size_rest + (lp->stripes * stripesize_extents))) {
 		log_print_unless_silent("Rounding size (%d extents) down to stripe boundary "
 					"size (%d extents)", lp->extents,
-			  lp->extents - size_rest);
+					lp->extents - size_rest);
 		lp->extents = lp->extents - size_rest;
 	}
 
@@ -625,7 +625,6 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	int only_linear = 0;
 	int mirror_default_cfg;
 
-	memset(lcp, 0, sizeof(*lcp));
 	dm_list_init(&lp->tags);
 	lp->target_attr = ~0;
 	lp->yes = arg_count(cmd, yes_ARG);
@@ -1413,7 +1412,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		.major = -1,
 		.minor = -1,
 	};
-	struct lvcreate_cmdline_params lcp;
+	struct lvcreate_cmdline_params lcp = { 0 };
 	struct volume_group *vg;
 
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
