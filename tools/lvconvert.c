@@ -231,8 +231,8 @@ static int _mirror_or_raid_type_requested(struct cmd_context *cmd, const char *t
 	return (arg_count(cmd, mirrors_ARG) || !strncmp(type_str, "raid", 4) || !strcmp(type_str, "mirror"));
 }
 
-static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cmd,
-			     const char *type_str, int *pargc, char ***pargv)
+static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
+			     const char *type_str, struct lvconvert_params *lp)
 {
 	int cachepool = 0;
 	int thinpool = 0;
@@ -339,8 +339,8 @@ static int _read_pool_params(struct lvconvert_params *lp, struct cmd_context *cm
 	return 1;
 }
 
-static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
-			int argc, char **argv)
+static int _read_params(struct cmd_context *cmd, int argc, char **argv,
+			struct lvconvert_params *lp)
 {
 	int i;
 	const char *tmp_str;
@@ -447,7 +447,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		type_str = "thin";
 	}
 
-	if (!_read_pool_params(lp, cmd, type_str, &argc, &argv))
+	if (!_read_pool_params(cmd, &argc, &argv, type_str, lp))
 		return_0;
 
 	if (!arg_count(cmd, background_ARG))
@@ -3509,7 +3509,7 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		.target_attr = ~0,
 	};
 
-	if (!_read_params(&lp, cmd, argc, argv)) {
+	if (!_read_params(cmd, argc, argv, &lp)) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
