@@ -6678,6 +6678,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				lp->extents = size;
 			}
 		}
+
+		if (seg_is_cache(lp) &&
+		    !wipe_cache_pool(pool_lv))
+			return_NULL;
 	}
 
 	/* Resolve origin volume */
