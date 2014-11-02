@@ -171,8 +171,11 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 	struct lv_segment *seg;
 
 	if (!validate_lv_cache_create_pool(pool_lv) ||
-	    !validate_lv_cache_create_origin(origin_lv))
+	    !validate_lv_cache_create_origin(cache_lv))
 		return_NULL;
+
+	if (lv_is_thin_pool(cache_lv))
+		cache_lv = seg_lv(first_seg(cache_lv), 0); /* cache _tdata */
 
 	if (!(segtype = get_segtype_from_string(cmd, "cache")))
 		return_NULL;
