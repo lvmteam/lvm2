@@ -369,3 +369,44 @@ int lv_is_cache_origin(const struct logical_volume *lv)
 	seg = get_only_segment_using_this_lv(lv);
 	return seg && lv_is_cache(seg->lv) && (seg_lv(seg, 0) == lv);
 }
+
+/*
+ * Wipe cache pool metadata area before use.
+ *
+ * Activates metadata volume as 'cache-pool' so regular wiping
+ * of existing visible volume may proceed.
+ */
+int wipe_cache_pool(struct logical_volume *cache_pool_lv)
+{
+	int r;
+
+	/* Only unused cache-pool could be activated and wiped */
+	if (!lv_is_cache_pool(cache_pool_lv) ||
+	    !dm_list_empty(&cache_pool_lv->segs_using_this_lv)) {
+		log_error(INTERNAL_ERROR "Failed to wipe cache pool for volume %s.",
+			  display_lvname(cache_pool_lv));
+		return 0;
+	}
+
+	cache_pool_lv->status |= LV_TEMPORARY;
+	if (!activate_lv_local(cache_pool_lv->vg->cmd, cache_pool_lv)) {
+		log_error("Aborting. Failed to activate cache pool %s.",
+			  display_lvname(cache_pool_lv));
+		return 0;
+	}
+	cache_pool_lv->status &= ~LV_TEMPORARY;
+	if (!(r = wipe_lv(cache_pool_lv, (struct wipe_params) { .do_zero = 1 }))) {
+		log_error("Aborting. Failed to wipe cache pool %s.",
+			  display_lvname(cache_pool_lv));
+		/* Delay return of error after deactivation */
+	}
+
+	/* Deactivate cleared cache-pool metadata */
+	if (!deactivate_lv(cache_pool_lv->vg->cmd, cache_pool_lv)) {
+		log_error("Aborting. Could not deactivate cache pool %s.",
+			  display_lvname(cache_pool_lv));
+		r = 0;
+	}
+
+	return r;
+}
