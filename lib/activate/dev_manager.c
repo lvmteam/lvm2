@@ -74,7 +74,8 @@ int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts 
  */
 static struct dm_task *_setup_task(const char *name, const char *uuid,
 				   uint32_t *event_nr, int task,
-				   uint32_t major, uint32_t minor)
+				   uint32_t major, uint32_t minor,
+				   int with_open_count)
 {
 	struct dm_task *dmt;
 
@@ -95,7 +96,10 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 
 	if (activation_checks() && !dm_task_enable_checks(dmt))
 		goto_out;
-		
+
+	if (!with_open_count && !dm_task_no_open_count(dmt))
+		log_warn("WARNING: Failed to disable open_count.");
+
 	return dmt;
       out:
 	dm_task_destroy(dmt);
@@ -112,12 +116,9 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 
 	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
 
-	if (!(dmt = _setup_task(mknodes ? name : NULL, dlid, 0, dmtask, major, minor)))
+	if (!(dmt = _setup_task(mknodes ? name : NULL, dlid, 0, dmtask, major, minor,
+				with_open_count)))
 		return_0;
-
-	if (!with_open_count &&
-	    !dm_task_no_open_count(dmt))
-		log_warn("WARNING: Failed to disable open_count.");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -586,11 +587,8 @@ static int _status_run(const char *name, const char *uuid,
 	char *type = NULL;
 	char *params = NULL;
 
-	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_STATUS, 0, 0)))
+	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -667,12 +665,8 @@ int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 	if (!(dlid = build_dm_uuid(mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0,
-				DM_DEVICE_STATUS, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
 		goto_bad;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -777,11 +771,8 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	*overall_percent = percent;
 
 	if (!(dmt = _setup_task(name, dlid, event_nr,
-				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0)))
+				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -898,11 +889,8 @@ int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *l
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0)))
+	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -1044,7 +1032,6 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/*
 	 * Try and get some info on this device.
 	 */
-	log_debug_activation("Getting device status percentage for %s", name);
 	if (!_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
 		      NULL, fail_if_percent_unsupported))
 		return_0;
@@ -1100,13 +1087,8 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	log_debug_activation("Getting raid device status for %s.", lv->name);
-
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count.");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -1164,11 +1146,8 @@ int dev_manager_raid_message(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TARGET_MSG, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TARGET_MSG, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count.");
 
 	if (!dm_task_set_message(dmt, msg))
 		goto_out;
@@ -1199,13 +1178,8 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	log_debug_activation("Getting cache device status for %s.", lv->name);
-
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count.");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -1308,13 +1282,8 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
-	log_debug_activation("Getting thin pool device status for %s.", lv->name);
-
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
-
-	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count.");
 
 	if (noflush && !dm_task_no_flush(dmt))
 		log_warn("Can't set no_flush.");
@@ -1400,9 +1369,7 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
-	log_debug_activation("Getting device id for %s.", dlid);
-
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0)))
 		return_0;
 
 	if (!dm_task_run(dmt))
