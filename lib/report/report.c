@@ -447,7 +447,7 @@ static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 			const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ? first_seg(lv) : NULL;
+	const struct lv_segment *seg = (lv_is_pool(lv)) ? first_seg(lv) : NULL;
 
 	if (seg)
 		return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
@@ -460,7 +460,7 @@ static int _metadatalv_disp(struct dm_report *rh, struct dm_pool *mem __attribut
 			    const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ? first_seg(lv) : NULL;
+	const struct lv_segment *seg = (lv_is_pool(lv)) ? first_seg(lv) : NULL;
 
 	if (seg)
 		return _lvname_disp(rh, mem, field, seg->metadata_lv, private);
