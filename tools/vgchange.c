@@ -97,10 +97,6 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!lv_is_visible(lv))
 			continue;
 
-		/* Cache pool cannot be activated */
-		if (lv_is_cache_pool(lv))
-			continue;
-
 		/* If LV is sparse, activate origin instead */
 		if (lv_is_cow(lv) && lv_is_virtual_origin(origin_from_cow(lv)))
 			lv = origin_from_cow(lv);

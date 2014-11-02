@@ -688,6 +688,23 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	int r = 1;
 
+	if (lv_is_cache_pool(lv)) {
+		if (is_change_activating(activate)) {
+			log_verbose("Skipping activation of cache pool %s.",
+				    display_lvname(lv));
+			return 1;
+		}
+		if (!dm_list_empty(&lv->segs_using_this_lv)) {
+			log_verbose("Skipping deactivation of used cache pool %s.",
+				    display_lvname(lv));
+			return 1;
+		}
+		/*
+		 * Allow to pass only deactivation of unused cache pool.
+		 * Useful only for recovery of failed zeroing of metadata LV.
+		 */
+	}
+
 	if (lv_is_merging_origin(lv)) {
 		/*
 		 * For merging origin, its snapshot must be inactive.
