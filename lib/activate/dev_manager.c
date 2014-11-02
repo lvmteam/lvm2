@@ -1867,12 +1867,15 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	const char *uuid;
 
 	if (lv_is_cache_pool(lv)) {
-		/* origin_only is ignored */
-		/* cache pool is 'meta' LV and does not have a real device node */
-		if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), 0))
-			return_0;
-		if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->metadata_lv, 0))
-			return_0;
+		if (!dm_list_empty(&lv->segs_using_this_lv)) {
+			/* origin_only is ignored */
+			/* cache pool is 'meta' LV and does not have a real device node */
+			if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), 0))
+				return_0;
+			if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->metadata_lv, 0))
+				return_0;
+		} else if (!_add_dev_to_dtree(dm, dtree, lv, NULL))
+			return_0; /* For internal use - empty pool makes meta visible */
 		return 1;
 	}
 
@@ -2560,7 +2563,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t read_ahead = lv->read_ahead;
 	uint32_t read_ahead_flags = UINT32_C(0);
 
-	if (lv_is_cache_pool(lv)) {
+	if (lv_is_cache_pool(lv) &&
+	    !dm_list_empty(&lv->segs_using_this_lv)) {
 		/* cache pool is 'meta' LV and does not have a real device node */
 		if (!_add_new_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), laopts, NULL))
 			return_0;
@@ -2636,6 +2640,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* Create table */
 	dm->pvmove_mirror_count = 0u;
+
+	/* This is unused cache-pool - make metadata accessible */
+	if (lv_is_cache_pool(lv))
+		lv = first_seg(lv)->metadata_lv;
 
 	/* If this is a snapshot origin, add real LV */
 	/* If this is a snapshot origin + merging snapshot, add cow + real LV */
@@ -2853,7 +2861,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 
 	/* Some LV can be used for top level tree */
 	/* TODO: add more.... */
-	if (lv_is_cache_pool(lv)) {
+	if (lv_is_cache_pool(lv) && !dm_list_empty(&lv->segs_using_this_lv)) {
 		log_error(INTERNAL_ERROR "Cannot create tree for %s.", lv->name);
 		return 0;
 	}
