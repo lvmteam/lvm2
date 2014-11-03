@@ -241,7 +241,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	struct lv_status_cache *status;
 
 	if (!lv_is_cache(cache_lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not cached.", cache_lv->name);
+		log_error(INTERNAL_ERROR "LV %s is not cache volume.",
+			  display_lvname(cache_lv));
 		return 0;
 	}
 
@@ -291,7 +292,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 		/* update the kernel to put the cleaner policy in place */
 		if (!lv_update_and_reload(cache_lv))
-                        return_0;
+			return_0;
 	}
 
 	//FIXME: use polling to do this...

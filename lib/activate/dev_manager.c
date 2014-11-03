@@ -558,7 +558,7 @@ static const struct dm_info *_cached_info(struct dm_pool *mem,
 	}
 
 	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid)))
-		goto out;
+		goto_out;
 
 	if (!(dinfo = dm_tree_node_get_info(dnode))) {
 		log_error("Failed to get info from tree node for %s.", lv->name);
@@ -1099,7 +1099,7 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
 	if (!type || strcmp(type, "raid")) {
-		log_debug("Expected raid segment type but got %s instead",
+		log_error("Expected raid segment type but got %s instead",
 			  type ? type : "NULL");
 		goto out;
 	}
@@ -1193,7 +1193,7 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
 	if (!type || strcmp(type, "cache")) {
-		log_debug("Expected cache segment type but got %s instead",
+		log_error("Expected cache segment type but got %s instead",
 			  type ? type : "NULL");
 		goto out;
 	}
