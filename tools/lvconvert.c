@@ -2923,7 +2923,8 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 		/* Normally do NOT change chunk size when swapping */
 		if (arg_count(cmd, chunksize_ARG) &&
-		    (lp->chunk_size != seg->chunk_size)) {
+		    (lp->chunk_size != seg->chunk_size) &&
+		    !dm_list_empty(&pool_lv->segs_using_this_lv)) {
 			if (lp->force == PROMPT) {
 				log_error("Chunk size can be only changed with --force. Conversion aborted.");
 				return 0;
