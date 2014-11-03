@@ -968,158 +968,39 @@ out:
 	return r;
 }
 
-int lv_cache_block_info(struct logical_volume *lv,
-			uint32_t *chunk_size, uint64_t *dirty_count,
-			uint64_t *used_count, uint64_t *total_count)
+/*
+ * Return dm_status_cache for cache volume, accept also cache pool
+ *
+ * As there are too many variable for cache volumes, and it hard
+ * to make good API - so let's obtain dm_status_cache and return
+ * all info we have - user just has to release struct after its use.
+ */
+int lv_cache_status(const struct logical_volume *cache_lv,
+		    struct lv_status_cache **status)
 {
-	struct lv_segment *cache_seg;
-	struct logical_volume *cache_lv;
 	struct dev_manager *dm;
-	struct dm_status_cache *status;
+	struct lv_segment *cache_seg;
 
-	/* The user is free to choose which args they are interested in */
-	if (chunk_size)
-		*chunk_size = 0;
-	if (dirty_count)
-		*dirty_count = 0;
-	if (used_count)
-		*used_count = 0;
-	if (total_count)
-		*total_count = 0;
-
-	if (lv_is_cache(lv))
-		cache_lv = lv;
-	else if (lv_is_cache_pool(lv)) {
-		if (dm_list_empty(&lv->segs_using_this_lv)) {
-			//FIXME: Ok to return value not sourced from kernel?
-			//       This could be valuable - esp for 'lvs' output
-			log_error(INTERNAL_ERROR "Unable to get block info"
-				  " of unlinked cache_pool, %s", lv->name);
-			//FIXME: ... because we could do this:
-			if (chunk_size)
-				*chunk_size = first_seg(lv)->chunk_size;
-			/* Unlinked cache_pools have 0 dirty & used blocks */
-			if (total_count) {
-				*total_count = lv->size; /* in sectors */
-				*total_count /= first_seg(lv)->chunk_size;
-			}
-
-			return 1;
-		}
-		if (!(cache_seg = get_only_segment_using_this_lv(lv)))
+	if (lv_is_cache_pool(cache_lv) && !dm_list_empty(&cache_lv->segs_using_this_lv)) {
+		if (!(cache_seg = get_only_segment_using_this_lv(cache_lv)))
 			return_0;
 		cache_lv = cache_seg->lv;
-	} else {
-		log_error(INTERNAL_ERROR
-			  "Unable to get block info of non-cache LV, %s",
-			  lv->name);
-		return 0;
 	}
 
 	if (!lv_info(cache_lv->vg->cmd, cache_lv, 0, NULL, 0, 0))
-		return_0;
+		return 0;
 
-	log_debug_activation("Checking cache block info for LV %s/%s",
-			     cache_lv->vg->name, cache_lv->name);
+	log_debug_activation("Checking cache status for LV %s.",
+			     display_lvname(cache_lv));
 
 	if (!(dm = dev_manager_create(cache_lv->vg->cmd, cache_lv->vg->name, 1)))
 		return_0;
 
-	if (!dev_manager_cache_status(dm, cache_lv, &status)) {
+	if (!dev_manager_cache_status(dm, cache_lv, status)) {
 		dev_manager_destroy(dm);
 		return_0;
 	}
-
-	if (chunk_size)
-		*chunk_size = status->block_size;
-	if (dirty_count)
-		*dirty_count = status->dirty_blocks;
-	if (used_count)
-		*used_count = status->used_blocks;
-	if (total_count)
-		*total_count = status->total_blocks;
-
-	dev_manager_destroy(dm);
-
-	return 1;
-}
-
-int lv_cache_policy_info(struct logical_volume *lv,
-			 const char **policy_name, int *policy_argc,
-			 const char ***policy_argv)
-{
-	int i;
-	struct lv_segment *cache_seg;
-	struct logical_volume *cache_lv;
-	struct dev_manager *dm;
-	struct dm_status_cache *status;
-	struct dm_pool *mem = lv->vg->cmd->mem;
-
-	/* The user is free to choose which args they are interested in */
-	if (policy_name)
-		*policy_name = NULL;
-	if (policy_argc)
-		*policy_argc = 0;
-	if (policy_argv)
-		*policy_argv = NULL;
-
-	if (lv_is_cache(lv))
-		cache_lv = lv;
-	else if (lv_is_cache_pool(lv)) {
-		if (dm_list_empty(&lv->segs_using_this_lv)) {
-			//FIXME: Ok to return value not sourced from kernel?
-			log_error(INTERNAL_ERROR "Unable to get policy info"
-				  " of unlinked cache_pool, %s", lv->name);
-			//FIXME: ... because we could do this:
-			if (policy_name)
-				*policy_name = first_seg(lv)->policy_name;
-			if (policy_argc)
-				*policy_argc = first_seg(lv)->policy_argc;
-			if (policy_argv)
-				*policy_argv = first_seg(lv)->policy_argv;
-
-			return 1;
-		}
-		if (!(cache_seg = get_only_segment_using_this_lv(lv)))
-			return_0;
-		cache_lv = cache_seg->lv;
-	} else {
-		log_error(INTERNAL_ERROR
-			  "Unable to get policy info of non-cache LV, %s",
-			  lv->name);
-		return 0;
-	}
-
-	if (!lv_info(cache_lv->vg->cmd, cache_lv, 0, NULL, 0, 0))
-		return_0;
-
-	log_debug_activation("Checking cache policy for LV %s/%s",
-			     cache_lv->vg->name, cache_lv->name);
-
-	if (!(dm = dev_manager_create(cache_lv->vg->cmd, cache_lv->vg->name, 1)))
-		return_0;
-
-	if (!dev_manager_cache_status(dm, cache_lv, &status)) {
-		dev_manager_destroy(dm);
-		return_0;
-	}
-
-	if (policy_name &&
-	    !(*policy_name = dm_pool_strdup(mem, status->policy_name)))
-		return_0;
-	if (policy_argc)
-		*policy_argc = status->policy_argc;
-	if (policy_argv) {
-		if (!(*policy_argv =
-		      dm_pool_zalloc(mem, sizeof(char *) * status->policy_argc)))
-			return_0;
-		for (i = 0; i < status->policy_argc; ++i)
-			if (!((*policy_argv)[i] =
-			      dm_pool_strdup(mem, status->policy_argv[i])))
-				return_0;
-	}
-
-	dev_manager_destroy(dm);
+	/* User has to call dm_pool_destroy(status->mem)! */
 
 	return 1;
 }

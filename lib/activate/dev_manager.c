@@ -1164,7 +1164,7 @@ out:
 
 int dev_manager_cache_status(struct dev_manager *dm,
 			     const struct logical_volume *lv,
-			     struct dm_status_cache **status)
+			     struct lv_status_cache **status)
 {
 	int r = 0;
 	const char *dlid;
@@ -1173,9 +1173,12 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
-	const char *layer = lv_layer(lv);
+	struct dm_status_cache *c;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
+	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
+		return_0;
+
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_cache))))
 		return_0;
 
 	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
@@ -1195,9 +1198,22 @@ int dev_manager_cache_status(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (!dm_get_status_cache(dm->mem, params, status))
+	/*
+	 * FIXME:
+	 * ->target_percent() API is able to transfer only a single value.
+	 * Needs to be able to pass whole structure.
+	 */
+	if (!dm_get_status_cache(dm->mem, params, &((*status)->cache)))
 		goto_out;
 
+	c = (*status)->cache;
+	(*status)->mem = dm->mem; /* User can destroy this mem pool later */
+	(*status)->data_usage = dm_make_percent(c->used_blocks,
+						c->total_blocks);
+	(*status)->metadata_usage = dm_make_percent(c->metadata_used_blocks,
+						    c->metadata_total_blocks);
+	(*status)->dirty_usage = dm_make_percent(c->dirty_blocks,
+						 c->used_blocks);
 	r = 1;
 out:
 	dm_task_destroy(dmt);

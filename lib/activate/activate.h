@@ -120,12 +120,8 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health);
 int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt);
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action);
 int lv_raid_message(const struct logical_volume *lv, const char *msg);
-int lv_cache_block_info(struct logical_volume *lv,
-			uint32_t *chunk_size, uint64_t *dirty_count,
-			uint64_t *used_count, uint64_t *total_count);
-int lv_cache_policy_info(struct logical_volume *lv,
-			 const char **policy_name, int *policy_argc,
-			 const char ***policy_argv);
+int lv_cache_status(const struct logical_volume *lv,
+		    struct lv_status_cache **status);
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 			 dm_percent_t *percent);
 int lv_thin_percent(const struct logical_volume *lv, int mapped,

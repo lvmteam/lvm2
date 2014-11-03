@@ -233,11 +233,12 @@ static int _cleanup_orphan_lv(struct logical_volume *lv)
  */
 int lv_cache_remove(struct logical_volume *cache_lv)
 {
-	const char *policy_name;
+	int is_cleaner;
 	uint64_t dirty_blocks;
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
 	struct logical_volume *cache_pool_lv;
+	struct lv_status_cache *status;
 
 	if (!lv_is_cache(cache_lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not cached.", cache_lv->name);
@@ -271,10 +272,12 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 * remove the cache_pool then without waiting for the flush to
 	 * complete.
 	 */
-	if (!lv_cache_policy_info(cache_lv, &policy_name, NULL, NULL))
+	if (!lv_cache_status(cache_lv, &status))
 		return_0;
+	is_cleaner = !strcmp(status->cache->policy_name, "cleaner");
+	dm_pool_destroy(status->mem);
 
-	if (strcmp(policy_name, "cleaner")) {
+	if (!is_cleaner) {
 		/* We must swap in the cleaner to flush the cache */
 		log_print_unless_silent("Flushing cache for %s.", cache_lv->name);
 
@@ -293,13 +296,15 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	//FIXME: use polling to do this...
 	do {
-		if (!lv_cache_block_info(cache_lv, NULL,
-					 &dirty_blocks, NULL, NULL))
+		if (!lv_cache_status(cache_lv, &status))
 			return_0;
-		log_print_unless_silent("%" PRIu64 " blocks must still be flushed.",
-					dirty_blocks);
-		if (dirty_blocks)
+		dirty_blocks = status->cache->dirty_blocks;
+		dm_pool_destroy(status->mem);
+		if (dirty_blocks) {
+			log_print_unless_silent("%" PRIu64 " blocks must still be flushed.",
+						dirty_blocks);
 			sleep(1);
+		}
 	} while (dirty_blocks);
 
 	cache_pool_lv = cache_seg->pool_lv;
