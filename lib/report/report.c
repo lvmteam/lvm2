@@ -1143,30 +1143,6 @@ static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 	return _field_set_value(field, "", &RESERVED(number_undef_64));
 }
 
-/* Called only with lv_is_thin_pool/volume */
-static int _dtpercent_disp(int metadata, struct dm_report *rh,
-			   struct dm_report_field *field,
-			   const void *data, void *private)
-{
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	dm_percent_t percent = DM_PERCENT_INVALID;
-
-	/* Suppress data percent if not using driver */
-	/* cannot use lv_is_active_locally - need to check for layer -tpool */
-	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
-		return dm_report_field_percent(rh, field, &percent);
-
-	if (lv_is_thin_pool(lv)) {
-		if (!lv_thin_pool_percent(lv, metadata, &percent))
-			return_0;
-	} else { /* thin_volume */
-		if (!lv_thin_percent(lv, 0, &percent))
-			return_0;
-	}
-
-	return dm_report_field_percent(rh, field, &percent);
-}
-
 static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)
@@ -1176,9 +1152,10 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (lv_is_cow(lv))
 		return _snpercent_disp(rh, mem, field, data, private);
-
-	if (lv_is_thin_pool(lv) || lv_is_thin_volume(lv))
-		return _dtpercent_disp(0, rh, field, data, private);
+	else if (lv_is_thin_pool(lv))
+		(void) lv_thin_pool_percent(lv, 0, &percent);
+	else if (lv_is_thin_volume(lv))
+		(void) lv_thin_percent(lv, 0, &percent);
 
 	return dm_report_field_percent(rh, field, &percent);
 }
@@ -1189,11 +1166,14 @@ static int _metadatapercent_disp(struct dm_report *rh,
 				 const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
+	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (lv_is_thin_pool(lv))
-		return _dtpercent_disp(1, rh, field, data, private);
+		(void) lv_thin_pool_percent(lv, 1, &percent);
+	else if (lv_is_thin_volume(lv))
+		(void) lv_thin_percent(lv, 1, &percent);
 
-	return _field_set_value(field, "", &RESERVED(number_undef_64));
+	return dm_report_field_percent(rh, field, &percent);
 }
 
 static int _lvmetadatasize_disp(struct dm_report *rh, struct dm_pool *mem,

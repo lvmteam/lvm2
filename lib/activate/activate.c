@@ -1134,7 +1134,7 @@ int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 	int r;
 	struct dev_manager *dm;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking thin %sdata percent for LV %s/%s",
@@ -1160,7 +1160,7 @@ int lv_thin_percent(const struct logical_volume *lv,
 	int r;
 	struct dev_manager *dm;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking thin percent for LV %s/%s",
@@ -1187,7 +1187,7 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	struct dev_manager *dm;
 	struct dm_status_thin_pool *status;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking thin percent for LV %s/%s",
@@ -1211,7 +1211,7 @@ int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
 	int r;
 	struct dev_manager *dm;
 
-	if (!activation())
+	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
 	log_debug_activation("Checking device id for LV %s/%s",
