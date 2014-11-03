@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1057,13 +1057,18 @@ static int _copypercent_disp(struct dm_report *rh,
 			     const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct lv_status_cache *status;
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (((lv_is_raid(lv) && lv_raid_percent(lv, &percent)) ||
 	     (lv_is_mirror(lv) && lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
 	    (percent != DM_PERCENT_INVALID)) {
 		percent = copy_percent(lv);
-		return dm_report_field_percent(rh, field, &percent);
+	} else if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+		if (lv_cache_status(lv, &status)) {
+			percent = status->dirty_usage;
+			dm_pool_destroy(status->mem);
+		}
 	}
 
 	return dm_report_field_percent(rh, field, &percent);
@@ -1149,6 +1154,7 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	dm_percent_t percent = DM_PERCENT_INVALID;
+	struct lv_status_cache *status;
 
 	if (lv_is_cow(lv))
 		return _snpercent_disp(rh, mem, field, data, private);
@@ -1156,6 +1162,12 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 		(void) lv_thin_pool_percent(lv, 0, &percent);
 	else if (lv_is_thin_volume(lv))
 		(void) lv_thin_percent(lv, 0, &percent);
+	else if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+		if (lv_cache_status(lv, &status)) {
+			percent = status->data_usage;
+			dm_pool_destroy(status->mem);
+		}
+	}
 
 	return dm_report_field_percent(rh, field, &percent);
 }
@@ -1167,11 +1179,18 @@ static int _metadatapercent_disp(struct dm_report *rh,
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	dm_percent_t percent = DM_PERCENT_INVALID;
+	struct lv_status_cache *status;
 
 	if (lv_is_thin_pool(lv))
 		(void) lv_thin_pool_percent(lv, 1, &percent);
 	else if (lv_is_thin_volume(lv))
 		(void) lv_thin_percent(lv, 1, &percent);
+	else if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+		if (lv_cache_status(lv, &status)) {
+			percent = status->metadata_usage;
+			dm_pool_destroy(status->mem);
+		}
+	}
 
 	return dm_report_field_percent(rh, field, &percent);
 }

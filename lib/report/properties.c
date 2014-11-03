@@ -104,9 +104,20 @@ static dm_percent_t _snap_percent(const struct logical_volume *lv)
 static dm_percent_t _data_percent(const struct logical_volume *lv)
 {
 	dm_percent_t percent;
+	struct lv_status_cache *status;
 
 	if (lv_is_cow(lv))
 		return _snap_percent(lv);
+
+	if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+		if (!lv_cache_status(lv, &status)) {
+			stack;
+			return DM_PERCENT_INVALID;
+		}
+		percent = status->dirty_usage;
+		dm_pool_destroy(status->mem);
+		return percent;
+	}
 
 	if (lv_is_thin_volume(lv))
 		return lv_thin_percent(lv, 0, &percent) ? percent : DM_PERCENT_INVALID;
@@ -117,8 +128,22 @@ static dm_percent_t _data_percent(const struct logical_volume *lv)
 static dm_percent_t _metadata_percent(const struct logical_volume *lv)
 {
 	dm_percent_t percent;
+	struct lv_status_cache *status;
 
-	return lv_thin_pool_percent(lv, 1, &percent) ? percent : DM_PERCENT_INVALID;
+	if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+		if (!lv_cache_status(lv, &status)) {
+			stack;
+			return DM_PERCENT_INVALID;
+		}
+		percent = status->dirty_usage;
+		dm_pool_destroy(status->mem);
+		return percent;
+	}
+
+	if (lv_is_thin_pool(lv))
+		return lv_thin_pool_percent(lv, 1, &percent) ? percent : DM_PERCENT_INVALID;
+
+	return DM_PERCENT_INVALID;
 }
 
 /* PV */
