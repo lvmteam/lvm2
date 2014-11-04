@@ -25,6 +25,7 @@ struct cmd_context;
 struct dev_manager;
 struct dm_info;
 struct device;
+struct lv_seg_status;
 
 int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts *laopts);
 
@@ -47,7 +48,8 @@ void dev_manager_exit(void);
 int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		     const char *layer,
 		     int with_open_count, int with_read_ahead,
-		     struct dm_info *info, uint32_t *read_ahead);
+		     struct dm_info *dminfo, uint32_t *read_ahead,
+		     struct lv_seg_status *seg_status);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
 				 dm_percent_t *percent);

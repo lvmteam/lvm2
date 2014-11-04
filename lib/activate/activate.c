@@ -617,17 +617,12 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 	return target_version(target_name, &maj, &min, &patchlevel);
 }
 
-/*
- * Returns 1 if info structure populated, else 0 on failure.
- * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
- */
-int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
-	    struct lvinfo *info, int with_open_count, int with_read_ahead)
+static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
+		    int use_layer, struct lvinfo *info, struct lv_seg_status *seg_status,
+		    int with_open_count, int with_read_ahead)
 {
 	struct dm_info dminfo;
 
-	if (!activation())
-		return 0;
 	/*
 	 * If open_count info is requested and we have to be sure our own udev
 	 * transactions are finished
@@ -648,7 +643,8 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 	if (!dev_manager_info(cmd->mem, lv,
 			      (use_layer) ? lv_layer(lv) : NULL,
 			      with_open_count, with_read_ahead,
-			      &dminfo, (info) ? &info->read_ahead : NULL))
+			      &dminfo, (info) ? &info->read_ahead : NULL,
+			      seg_status))
 		return_0;
 
 	if (!info)
@@ -666,6 +662,19 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 	return 1;
 }
 
+/*
+ * Returns 1 if info structure populated, else 0 on failure.
+ * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
+ */
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
+	    struct lvinfo *info, int with_open_count, int with_read_ahead)
+{
+	if (!activation())
+		return 0;
+
+	return _lv_info(cmd, lv, use_layer, info, NULL, with_open_count, with_read_ahead);
+}
+
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead)
 {
@@ -679,6 +688,21 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 	release_vg(lv->vg);
 
 	return r;
+}
+
+int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
+			   const struct lv_segment *lv_seg, int use_layer,
+			   struct lv_with_info_and_seg_status *lvdm,
+			   int with_open_count, int with_read_ahead)
+{
+	if (!activation())
+		return 0;
+
+	if (!_lv_info(cmd, lv, use_layer, lvdm->info, lvdm->seg_status,
+		      with_open_count, with_read_ahead))
+		return 0;
+
+	return 1;
 }
 
 #define OPEN_COUNT_CHECK_RETRIES 25

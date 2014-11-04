@@ -106,31 +106,121 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 	return NULL;
 }
 
-static int _info_run(const char *name, const char *dlid, struct dm_info *info,
-		     uint32_t *read_ahead, int mknodes, int with_open_count,
-		     int with_read_ahead, uint32_t major, uint32_t minor)
+static int _get_segment_status_from_target_params(const char *target_name,
+						  const char *params,
+						  struct lv_seg_status *seg_status)
+{
+	struct segment_type *segtype;
+
+	/* FIXME: linear is also represented as striped with stripe count 1.
+		  We're not reporting linear or striped status anyway, so
+		  just skip the error here till this is properly resolved.*/
+	if (!strcmp(target_name, "linear") || !strcmp(target_name, "striped"))
+		return 1;
+
+	segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name);
+
+	if (segtype != seg_status->seg->segtype) {
+		log_error(INTERNAL_ERROR "_get_segment_status_from_target_params: "
+			  "segment type %s found does not match expected segment type %s",
+			   segtype->name, seg_status->seg->segtype->name);
+		return 0;
+	}
+
+	if (!strcmp(segtype->name, "cache")) {
+		if (!dm_get_status_cache(seg_status->mem, params,
+			(struct dm_status_cache **) &seg_status->status))
+				return_0;
+			seg_status->type = SEG_STATUS_CACHE;
+	} else if (!strcmp(segtype->name, "raid")) {
+		if (!dm_get_status_raid(seg_status->mem, params,
+			(struct dm_status_raid **) &seg_status->status))
+				return_0;
+			seg_status->type = SEG_STATUS_RAID;
+	} else if (!strcmp(segtype->name, "thin")) {
+		if (!dm_get_status_thin(seg_status->mem, params,
+			(struct dm_status_thin **) &seg_status->status))
+				return_0;
+			seg_status->type = SEG_STATUS_THIN;
+	} else if (!strcmp(segtype->name, "thin-pool")) {
+		if (!dm_get_status_thin_pool(seg_status->mem, params,
+			(struct dm_status_thin_pool **) &seg_status->status))
+				return_0;
+			seg_status->type = SEG_STATUS_THIN_POOL;
+	} else if (!strcmp(segtype->name, "snapshot")) {
+		if (!dm_get_status_snapshot(seg_status->mem, params,
+			(struct dm_status_snapshot **) &seg_status->status))
+				return_0;
+		seg_status->type = SEG_STATUS_SNAPSHOT;
+	}
+
+	return 1;
+}
+
+typedef enum {
+	INFO,	/* DM_DEVICE_INFO ioctl */
+	STATUS, /* DM_DEVICE_STATUS ioctl */
+	MKNODES
+} info_type_t;
+
+static int _info_run(info_type_t type, const char *name, const char *dlid,
+		     struct dm_info *dminfo, uint32_t *read_ahead,
+		     struct lv_seg_status *seg_status,
+		     int with_open_count, int with_read_ahead,
+		     uint32_t major, uint32_t minor)
 {
 	int r = 0;
 	struct dm_task *dmt;
 	int dmtask;
+	void *target = NULL;
+	uint64_t target_start, target_length;
+	char *target_name, *target_params, *params_to_process = NULL;
+	uint32_t extent_size;
 
-	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
+	switch (type) {
+		case INFO:
+			dmtask = DM_DEVICE_INFO;
+			break;
+		case STATUS:
+			dmtask = DM_DEVICE_STATUS;
+			break;
+		case MKNODES:
+			dmtask = DM_DEVICE_MKNODES;
+			break;
+	}
 
-	if (!(dmt = _setup_task(mknodes ? name : NULL, dlid, 0, dmtask, major, minor,
-				with_open_count)))
+	if (!(dmt = _setup_task(type != MKNODES ? name : NULL, dlid, 0, dmtask,
+				major, minor, with_open_count)))
 		return_0;
 
 	if (!dm_task_run(dmt))
 		goto_out;
 
-	if (!dm_task_get_info(dmt, info))
+	if (!dm_task_get_info(dmt, dminfo))
 		goto_out;
 
-	if (with_read_ahead && info->exists) {
+	if (with_read_ahead && dminfo->exists) {
 		if (!dm_task_get_read_ahead(dmt, read_ahead))
 			goto_out;
 	} else if (read_ahead)
 		*read_ahead = DM_READ_AHEAD_NONE;
+
+	if (type == STATUS) {
+		extent_size = seg_status->seg->lv->vg->extent_size;
+		do {
+			target = dm_get_next_target(dmt, target, &target_start,
+						    &target_length, &target_name, &target_params);
+			if ((seg_status->seg->le * extent_size == target_start) &&
+			    (seg_status->seg->len * extent_size == target_length)) {
+				params_to_process = target_params;
+				break;
+			}
+		} while (target);
+
+		if (params_to_process &&
+		    !_get_segment_status_from_target_params(target_name, params_to_process, seg_status))
+			goto_out;
+	}
 
 	r = 1;
 
@@ -476,7 +566,8 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 }
 
 static int _info(const char *dlid, int with_open_count, int with_read_ahead,
-		 struct dm_info *info, uint32_t *read_ahead)
+		 struct dm_info *dminfo, uint32_t *read_ahead,
+		 struct lv_seg_status *seg_status)
 {
 	int r = 0;
 	char old_style_dlid[sizeof(UUID_PREFIX) + 2 * ID_LEN];
@@ -484,8 +575,8 @@ static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 	unsigned i = 0;
 
 	/* Check for dlid */
-	if ((r = _info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
-			   with_read_ahead, 0, 0)) && info->exists)
+	if ((r = _info_run(seg_status ? STATUS : INFO, NULL, dlid, dminfo, read_ahead,
+			   seg_status, with_open_count, with_read_ahead, 0, 0)) && dminfo->exists)
 		return 1;
 
 	/* Check for original version of dlid before the suffixes got added in 2.02.106 */
@@ -496,16 +587,17 @@ static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 
 			(void) strncpy(old_style_dlid, dlid, sizeof(old_style_dlid));
 			old_style_dlid[sizeof(old_style_dlid) - 1] = '\0';
-			if ((r = _info_run(NULL, old_style_dlid, info, read_ahead, 0, with_open_count,
-					   with_read_ahead, 0, 0)) && info->exists)
+			if ((r = _info_run(seg_status ? STATUS : INFO, NULL, old_style_dlid, dminfo,
+					   read_ahead, seg_status, with_open_count,
+					   with_read_ahead, 0, 0)) && dminfo->exists)
 				return 1;
 		}
 	}
 
 	/* Check for dlid before UUID_PREFIX was added */
-	if ((r = _info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
-				read_ahead, 0, with_open_count,
-				with_read_ahead, 0, 0)) && info->exists)
+	if ((r = _info_run(seg_status ? STATUS : INFO, NULL, dlid + sizeof(UUID_PREFIX) - 1,
+				dminfo, read_ahead, seg_status, with_open_count,
+				with_read_ahead, 0, 0)) && dminfo->exists)
 		return 1;
 
 	return r;
@@ -513,13 +605,14 @@ static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 
 static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 {
-	return _info_run(NULL, NULL, info, NULL, 0, 0, 0, major, minor);
+	return _info_run(INFO, NULL, NULL, info, NULL, 0, 0, 0, major, minor);
 }
 
 int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 		     const char *layer,
 		     int with_open_count, int with_read_ahead,
-		     struct dm_info *info, uint32_t *read_ahead)
+		     struct dm_info *dminfo, uint32_t *read_ahead,
+		     struct lv_seg_status *seg_status)
 {
 	char *dlid, *name;
 	int r;
@@ -536,7 +629,8 @@ int dev_manager_info(struct dm_pool *mem, const struct logical_volume *lv,
 	}
 
 	log_debug_activation("Getting device info for %s [%s]", name, dlid);
-	r = _info(dlid, with_open_count, with_read_ahead, info, read_ahead);
+	r = _info(dlid, with_open_count, with_read_ahead,
+		  dminfo, read_ahead, seg_status);
 out:
 	dm_pool_free(mem, name);
 
@@ -1447,7 +1541,7 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 	if (!(name = dm_build_dm_name(lv->vg->cmd->mem, lv->vg->name, lv->name, NULL)))
 		return_0;
 
-	if ((r = _info_run(name, NULL, &dminfo, NULL, 1, 0, 0, 0, 0))) {
+	if ((r = _info_run(MKNODES, name, NULL, &dminfo, NULL, NULL, 0, 0, 0, 0))) {
 		if (dminfo.exists) {
 			if (lv_is_visible(lv))
 				r = _dev_manager_lv_mknodes(lv);
@@ -1589,7 +1683,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
 	log_debug_activation("Getting device info for %s [%s]", name, dlid);
-	if (!_info(dlid, 1, 0, &info, NULL)) {
+	if (!_info(dlid, 1, 0, &info, NULL, NULL)) {
 		log_error("Failed to get info for %s [%s].", name, dlid);
 		return 0;
 	}
@@ -2078,7 +2172,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 		return_NULL;
 
 	log_debug_activation("Getting device info for %s [%s]", name, dlid);
-	if (!_info(dlid, 1, 0, &info, NULL)) {
+	if (!_info(dlid, 1, 0, &info, NULL, NULL)) {
 		log_error("Failed to get info for %s [%s].", name, dlid);
 		return 0;
 	}

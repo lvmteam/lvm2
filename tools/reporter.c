@@ -59,6 +59,8 @@ static void _get_lv_info_for_report(struct cmd_context *cmd,
 static void _get_lv_info_with_segment_status_for_report(struct cmd_context *cmd,
 							struct lv_with_info_and_seg_status *lvdm)
 {
+	if (!lv_info_with_seg_status(cmd, lvdm->seg_status->seg->lv, lvdm->seg_status->seg, 0, lvdm, 1, 1))
+		lvdm->info->exists = 0;
 }
 
 static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume *lv,

@@ -118,6 +118,11 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
+int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
+			    const struct lv_segment *lv_seg, int use_layer,
+			    struct lv_with_info_and_seg_status *lvdm,
+			    int with_open_count, int with_read_ahead);
+
 int lv_check_not_in_use(const struct logical_volume *lv);
 
 /*
