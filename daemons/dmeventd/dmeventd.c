@@ -1177,6 +1177,18 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	if (hit && !next)
 		goto reg;
 
+	/*
+	 * If we didn't get a match, try the threads waiting to be deleted.
+	 * FIXME Do something similar if 'next' is set.
+	 */
+	if (!hit && !next)
+		dm_list_iterate_items(thread, &_thread_registry_unused)
+			if (_want_registered_device(message_data->dso_name,
+						    message_data->device_uuid, thread)) {
+				hit = thread;
+				goto reg;
+			}
+
 	if (!hit)
 		goto out;
 
