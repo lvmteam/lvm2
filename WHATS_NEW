@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Inital support for external users of thin pools based on transaction_id.
   Report some basic percentage info for cache pools.
   Introduce size_mb_arg_with_percent() for advanced size arg reading.
   Add extra support for '.' as decimal point in size args.
