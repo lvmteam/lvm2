@@ -569,3 +569,55 @@ int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snap_count)
 
 	return r;
 }
+
+/*
+ * Explict check of new thin pool for usability
+ *
+ * Allow use of thin pools by external apps. When lvm2 metadata has
+ * transaction_id == 0 for a new thin pool, it will explicitely validate
+ * the pool is still unused.
+ *
+ * To prevent lvm2 to create thin volumes in externally used thin pools
+ * simply increment its transaction_id.
+ */
+int check_new_thin_pool(const struct logical_volume *pool_lv)
+{
+	struct cmd_context *cmd = pool_lv->vg->cmd;
+	uint64_t transaction_id;
+
+	/* For transaction_id check LOCAL activation is required */
+	if (!activate_lv_excl_local(cmd, pool_lv)) {
+		log_error("Aborting. Failed to locally activate thin pool %s.",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
+	/* With volume lists, check pool really is locally active */
+	if (!lv_thin_pool_transaction_id(pool_lv, &transaction_id)) {
+		log_error("Cannot read thin pool %s transaction id locally, perhaps skipped in lvm.conf volume_list?",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
+	/* Require pool to have same transaction_id as new  */
+	if (first_seg(pool_lv)->transaction_id != transaction_id) {
+		log_error("Cannot use thin pool %s with transaction id "
+			  "%" PRIu64 " for thin volumes. "
+			  "Expected transaction id %" PRIu64 ".",
+			  display_lvname(pool_lv), transaction_id,
+			  first_seg(pool_lv)->transaction_id);
+		return 0;
+	}
+
+	log_verbose("Deactivating public thin pool %s",
+		    display_lvname(pool_lv));
+
+	/* Prevent any 'race' with in-use thin pool and always deactivate */
+	if (!deactivate_lv(pool_lv->vg->cmd, pool_lv)) {
+		log_error("Aborting. Could not deactivate thin pool %s.",
+			  display_lvname(pool_lv));
+		return 0;
+	}
+
+	return 1;
+}

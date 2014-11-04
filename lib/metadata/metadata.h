@@ -389,6 +389,9 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg);
 /* Find some unused device_id for thin pool LV segment. */
 uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg);
 
+/* Check if the new thin-pool could be used for lvm2 thin volumes */
+int check_new_thin_pool(const struct logical_volume *pool_lv);
+
 /*
  * Remove a dev_dir if present.
  */
