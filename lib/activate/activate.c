@@ -641,6 +641,10 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 			fs_unlock(); /* For non clustered - wait if there are non-delete ops */
 	}
 
+	/* New thin-pool has no layer, but -tpool suffix needs to be queried */
+	if (!use_layer && lv_is_new_thin_pool(lv))
+		use_layer = 1;
+
 	if (!dev_manager_info(cmd->mem, lv,
 			      (use_layer) ? lv_layer(lv) : NULL,
 			      with_open_count, with_read_ahead,

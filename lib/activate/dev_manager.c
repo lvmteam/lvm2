@@ -1527,7 +1527,11 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_vol
 	 * If not, create just the /dev/mapper content.
 	 */
 	/* FIXME: add target's method for this */
-	if (layer || !lv_is_visible(lv) || lv_is_thin_pool(lv))
+	if (lv_is_new_thin_pool(lv))
+		/* New thin-pool is regular LV with -tpool UUID suffix. */
+		udev_flags |= DM_UDEV_DISABLE_DISK_RULES_FLAG |
+		              DM_UDEV_DISABLE_OTHER_RULES_FLAG;
+	else if (layer || !lv_is_visible(lv) || lv_is_thin_pool(lv))
 		udev_flags |= DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG |
 			      DM_UDEV_DISABLE_DISK_RULES_FLAG |
 			      DM_UDEV_DISABLE_OTHER_RULES_FLAG;
@@ -2604,6 +2608,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
+        /* Even unused thin-pool still needs to get layered  UUID -suffix */
+	if (!layer && lv_is_new_thin_pool(lv))
+		layer = lv_layer(lv);
+
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
@@ -2679,8 +2687,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 		if (!_add_snapshot_target_to_dtree(dm, dnode, lv, laopts))
 			return_0;
-	} else if ((lv_is_external_origin(lv) || lv_is_thin_pool(lv)) && !layer) {
-		/* External origin or Thin pool is using layer */
+	} else if (!layer && ((lv_is_thin_pool(lv) && !lv_is_new_thin_pool(lv)) ||
+			      lv_is_external_origin(lv))) {
+		/* External origin or 'used' Thin pool is using layer */
 		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, lv_layer(lv)))
 			return_0;
 		if (!_add_layer_target_to_dtree(dm, dnode, lv))
