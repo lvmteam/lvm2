@@ -1136,26 +1136,20 @@ static int _registered_device(struct message_data *message_data,
 }
 
 static int _want_registered_device(char *dso_name, char *device_uuid,
-				  struct thread_status *thread)
+				   struct thread_status *thread)
 {
 	/* If DSO names and device paths are equal. */
 	if (dso_name && device_uuid)
 		return !strcmp(dso_name, thread->dso_data->dso_name) &&
-		    !strcmp(device_uuid, thread->device.uuid) &&
-			(thread->status == DM_THREAD_RUNNING ||
-			 (thread->events & DM_EVENT_REGISTRATION_PENDING));
+		    !strcmp(device_uuid, thread->device.uuid);
 
 	/* If DSO names are equal. */
 	if (dso_name)
-		return !strcmp(dso_name, thread->dso_data->dso_name) &&
-			(thread->status == DM_THREAD_RUNNING ||
-			 (thread->events & DM_EVENT_REGISTRATION_PENDING));
+		return !strcmp(dso_name, thread->dso_data->dso_name);
 
 	/* If device paths are equal. */
 	if (device_uuid)
-		return !strcmp(device_uuid, thread->device.uuid) &&
-			(thread->status == DM_THREAD_RUNNING ||
-			 (thread->events & DM_EVENT_REGISTRATION_PENDING));
+		return !strcmp(device_uuid, thread->device.uuid);
 
 	return 1;
 }
