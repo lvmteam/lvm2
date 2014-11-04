@@ -2842,7 +2842,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			log_error("Unknown pool metadata LV %s.", lp->pool_metadata_name);
 			return 0;
 		}
-		lp->pool_metadata_size = lp->pool_metadata_lv->size;
+		lp->pool_metadata_extents = lp->pool_metadata_lv->le_count;
 		metadata_lv = lp->pool_metadata_lv;
 
 		if (metadata_lv == pool_lv) {
@@ -2885,7 +2885,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			if (!_lvconvert_update_pool_params(pool_lv, lp))
 				return_0;
 
-			if (lp->pool_metadata_size > metadata_lv->size) {
+			if (lp->pool_metadata_extents > metadata_lv->le_count) {
 				log_error("Logical volume %s is too small for metadata.",
 					  display_lvname(metadata_lv));
 				return 0;
@@ -2953,7 +2953,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		if (!_lvconvert_update_pool_params(pool_lv, lp))
 			return_0;
 
-		if (metadata_lv->size < lp->pool_metadata_size)
+		if (metadata_lv->le_count < lp->pool_metadata_extents)
 			log_print_unless_silent("Continuing with swap...");
 
 		if (!arg_count(cmd, discards_ARG))
