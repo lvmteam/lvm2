@@ -17,6 +17,14 @@ aux have_cache 1 3 0 || skip
 
 aux prepare_vg 5 80
 
+lvcreate --type cache-pool -an -v -L 2 -n cpool $vg
+lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
+
+fail lvcreate -s -L2 $vg/corigin
+fail lvcreate -s -L2 $vg/cpool
+fail lvcreate -s -L2 $vg/cpool_cdata
+fail lvcreate -s -L2 $vg/cpool_cmeta
+
 ###########################
 # Check regular converion #
 ###########################
