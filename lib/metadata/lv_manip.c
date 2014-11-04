@@ -826,24 +826,25 @@ struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *l
 		return NULL;
 	}
 
-	if (dm_list_size(&lv->segs_using_this_lv) != 1) {
-		log_error("%s is expected to have only one segment using it, "
-			  "while it has %d", lv->name,
-			  dm_list_size(&lv->segs_using_this_lv));
-		return NULL;
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
+		/* Needs to be he only item in list */
+		if (!dm_list_end(&lv->segs_using_this_lv, &sl->list))
+			break;
+
+		if (sl->count != 1) {
+			log_error("%s is expected to have only one segment using it, "
+				  "while %s:%" PRIu32 " uses it %d times.",
+				  display_lvname(lv), sl->seg->lv->name, sl->seg->le, sl->count);
+			return NULL;
+		}
+
+		return sl->seg;
 	}
 
-	dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-		break; /* first item */
+	log_error("%s is expected to have only one segment using it, while it has %d.",
+		  display_lvname(lv), dm_list_size(&lv->segs_using_this_lv));
 
-	if (sl->count != 1) {
-		log_error("%s is expected to have only one segment using it, "
-			  "while %s:%" PRIu32 " uses it %d times",
-			  lv->name, sl->seg->lv->name, sl->seg->le, sl->count);
-		return NULL;
-	}
-
-	return sl->seg;
+	return NULL;
 }
 
 /*
