@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Add basic thread debugging messages to dmeventd.
   Include threads being shutdown in dmeventd device registration responses.
   Inital support for external users of thin pools based on transaction_id.
   Report some basic percentage info for cache pools.
