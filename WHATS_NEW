@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Properly report error when taking snapshot of any cache type LV.
   Add basic thread debugging messages to dmeventd.
   Include threads being shutdown in dmeventd device registration responses.
   Inital support for external users of thin pools based on transaction_id.
