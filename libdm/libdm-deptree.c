@@ -3757,7 +3757,8 @@ int dm_tree_node_add_thin_pool_target(struct dm_tree_node *node,
 	seg->metadata->props.delay_resume_if_new = 0;
 	seg->pool->props.delay_resume_if_new = 0;
 
-	node->props.send_messages = 1;
+	/* Validate only transaction_id > 0 when activating thin-pool */
+	node->props.send_messages = transaction_id ? 1 : 0;
 	seg->transaction_id = transaction_id;
 	seg->low_water_mark = low_water_mark;
 	seg->data_block_size = data_block_size;
@@ -3826,6 +3827,7 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 
 	tm->message.type = type;
 	dm_list_add(&seg->thin_messages, &tm->list);
+	node->props.send_messages = 1;
 
 	return 1;
 }
