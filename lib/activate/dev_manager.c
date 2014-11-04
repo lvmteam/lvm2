@@ -1815,12 +1815,15 @@ static int _pool_register_callback(struct dev_manager *dm,
 {
 	struct pool_cb_data *data;
 
+	/* Do not skip metadata of testing even for unused thin pools */
+#if 0
 	/* Skip metadata testing for unused thin pool. */
 	if (lv_is_thin_pool(lv) &&
 	    (!first_seg(lv)->transaction_id ||
 	     ((first_seg(lv)->transaction_id == 1) &&
 	      pool_has_message(first_seg(lv), NULL, 0))))
 		return 1;
+#endif
 
 	if (!(data = dm_pool_zalloc(dm->mem, sizeof(*data)))) {
 		log_error("Failed to allocated path for callback.");
