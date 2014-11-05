@@ -414,6 +414,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	case DEVTYPES:
 		r = _process_each_devtype(cmd, argc, report_handle);
 		break;
+	case LVSINFO:
+		/* fall through */
 	case LVS:
 		r = process_each_lv(cmd, argc, argv, 0, report_handle,
 				    lv_info_needed ? &_lvs_with_info_single
