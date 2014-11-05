@@ -394,9 +394,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type = PVS;
 	else if (report_type & SEGS)
 		report_type = SEGS;
-	else if (report_type & LVSINFO)
-		report_type = LVSINFO;
-	else if (report_type & LVS)
+	else if (report_type & (LVS | LVSINFO))
 		report_type = LVS;
 
 	/*
@@ -418,11 +416,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		break;
 	case LVS:
 		r = process_each_lv(cmd, argc, argv, 0, report_handle,
-				    &_lvs_single);
-		break;
-	case LVSINFO:
-		r = process_each_lv(cmd, argc, argv, 0, report_handle,
-				    &_lvs_with_info_single);
+				    lv_info_needed ? &_lvs_with_info_single
+						   : &_lvs_single);
 		break;
 	case VGS:
 		r = process_each_vg(cmd, argc, argv, 0,
