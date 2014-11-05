@@ -866,7 +866,7 @@ static int _lv_is_exclusive(struct logical_volume *lv)
 }
 
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
-		     enum activation_change activate)
+		     enum activation_change activate, int needs_exclusive)
 {
 	switch (activate) {
 	case CHANGE_AN:
@@ -876,7 +876,7 @@ deactivate:
 			return_0;
 		break;
 	case CHANGE_ALN:
-		if (vg_is_clustered(lv->vg) && _lv_is_exclusive(lv)) {
+		if (vg_is_clustered(lv->vg) && (needs_exclusive || _lv_is_exclusive(lv))) {
 			if (!lv_is_active_locally(lv)) {
 				log_error("Cannot deactivate remotely exclusive device locally.");
 				return 0;
@@ -891,7 +891,7 @@ deactivate:
 		break;
 	case CHANGE_ALY:
 	case CHANGE_AAY:
-		if (_lv_is_exclusive(lv)) {
+		if (needs_exclusive || _lv_is_exclusive(lv)) {
 			log_verbose("Activating logical volume \"%s\" exclusively locally.",
 				    lv->name);
 			if (!activate_lv_excl_local(cmd, lv))
@@ -911,7 +911,7 @@ exclusive:
 			return_0;
 		break;
 	default: /* CHANGE_AY */
-		if (_lv_is_exclusive(lv))
+		if (needs_exclusive || _lv_is_exclusive(lv))
 			goto exclusive;
 		log_verbose("Activating logical volume \"%s\".", lv->name);
 		if (!activate_lv(cmd, lv))

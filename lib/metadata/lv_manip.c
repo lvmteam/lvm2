@@ -7051,7 +7051,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 			backup(vg);
 
-			if (!lv_active_change(cmd, lv, lp->activate)) {
+			if (!lv_active_change(cmd, lv, lp->activate, 0)) {
 				log_error("Failed to activate thin %s.", lv->name);
 				goto deactivate_and_revert_new_lv;
 			}
@@ -7070,7 +7070,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				  "exception store.");
 			goto revert_new_lv;
 		}
-	} else if (!lv_active_change(cmd, lv, lp->activate)) {
+	} else if (!lv_active_change(cmd, lv, lp->activate, 0)) {
 		log_error("Failed to activate new LV.");
 		goto deactivate_and_revert_new_lv;
 	}

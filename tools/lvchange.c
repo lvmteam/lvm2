@@ -593,7 +593,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 
 	if (activate != CHANGE_AN) {
 		log_verbose("Re-activating logical volume %s", display_lvname(lv));
-		if (!lv_active_change(cmd, lv, activate)) {
+		if (!lv_active_change(cmd, lv, activate, 0)) {
 			log_error("%s: reactivation failed", display_lvname(lv));
 			backup(lv->vg);
 			return 0;
