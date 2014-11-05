@@ -6434,12 +6434,6 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 		       NULL, ALLOC_INHERIT, 0))
 		return_NULL;
 
-	/* store vg on disk(s) */
-	if (!vg_write(vg) || !vg_commit(vg))
-		return_NULL;
-
-	backup(vg);
-
 	return lv;
 }
 
@@ -7084,11 +7078,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 		}
 	} else if (lp->snapshot) {
+		lv->status |= LV_TEMPORARY;
 		if (!activate_lv_local(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "
 				  "exception store.");
 			goto revert_new_lv;
 		}
+		lv->status &= ~LV_TEMPORARY;
 	} else if (!lv_active_change(cmd, lv, lp->activate, 0)) {
 		log_error("Failed to activate new LV.");
 		goto deactivate_and_revert_new_lv;
@@ -7132,39 +7128,23 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL; /* FIXME: revert */
 		}
 	} else if (lp->snapshot) {
+		/* Deactivate zeroed COW, avoid any race usage */
+		if (!deactivate_lv(cmd, lv)) {
+			log_error("Aborting. Couldn't deactivate snapshot COW area %s.",
+				  display_lvname(lv));
+			goto deactivate_and_revert_new_lv; /* Let's retry on error path */
+		}
+
+		/* Create zero origin volume for spare snapshot */
+		if (lp->virtual_extents &&
+		    !(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
+							 lp->permission,
+							 lp->virtual_extents)))
+			goto revert_new_lv;
+
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
-
-		/*
-		 * For clustered VG deactivate zeroed COW to not keep
-		 * the LV lock. For non-clustered VG, deactivate
-		 * if origin is real (not virtual) inactive device.
-		 */
-		if ((vg_is_clustered(vg) ||
-		     (!lp->virtual_extents && !lv_is_active(origin_lv))) &&
-		    !deactivate_lv(cmd, lv)) {
-			log_error("Aborting. Couldn't deactivate snapshot COW area. "
-				  "Manual intervention required.");
-			return NULL;
-		}
-
-		/* A virtual origin must be activated explicitly. */
-		if (lp->virtual_extents) {
-			if (!(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
-								 lp->permission,
-								 lp->virtual_extents))) {
-				stack;
-				goto deactivate_and_revert_new_lv;
-			}
-			if (!activate_lv_excl(cmd, origin_lv)) {
-				log_error("Couldn't get exclusive lock for virtual origin LV %s",
-					  lv->name);
-				if (!lv_remove(origin_lv))
-					stack;
-				goto deactivate_and_revert_new_lv;
-			}
-		}
 
 		/*
 		 * COW LV is activated via implicit activation of origin LV
@@ -7176,17 +7156,38 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			goto deactivate_and_revert_new_lv;
 		}
 
-		/* store vg on disk(s) */
-		if (!lv_update_and_reload(origin_lv))
-			return_NULL;
+		if (lp->virtual_extents) {
+			/* Store vg on disk(s) */
+			if (!vg_write(vg) || !vg_commit(vg))
+				return_NULL; /* Metadata update fails, deep troubles */
+
+			backup(vg);
+			/*
+			 * TODO:
+			 *   We do not actually need snapshot-origin as an active device,
+			 *   as virtual origin is already 'hidden' private device without
+			 *   vg/lv links. As such it is not supposed to be used by any user.
+			 *   Also it would save one dm table entry, but it needs quite a few
+			 *   changes in the libdm/lvm2 code base to support it.
+			 */
+			/* Activate spare snapshot once it is a complete LV */
+			if (!lv_active_change(cmd, origin_lv, lp->activate, 1)) {
+				log_error("Failed to activate sparce volume %s.",
+					  display_lvname(origin_lv));
+				return NULL;
+			}
+		} else if (!lv_update_and_reload(origin_lv)) {
+			log_error("Aborting. Manual intervention required.");
+			return NULL; /* FIXME: revert */
+		}
 	}
 out:
 	return lv;
 
 deactivate_and_revert_new_lv:
 	if (!deactivate_lv(cmd, lv)) {
-		log_error("Unable to deactivate failed new LV \"%s/%s\". "
-			  "Manual intervention required.", lv->vg->name, lv->name);
+		log_error("Unable to deactivate failed new LV %s. "
+			  "Manual intervention required.",  display_lvname(lv));
 		return NULL;
 	}
 
