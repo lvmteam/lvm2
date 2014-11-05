@@ -6971,14 +6971,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lp->activate = CHANGE_AN;
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		if (seg_is_pool(lp)) {
-			/* Pool volumes have already created metadata LV */
-			stack;
-			goto revert_new_lv;
-		}
+	if (!vg_write(vg) || !vg_commit(vg))
+		/* Pool created metadata LV, but better avoid recover when vg_write/commit fails */
 		return_NULL;
-	}
 
 	backup(vg);
 
