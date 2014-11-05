@@ -2002,6 +2002,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 	const struct logical_volume *lv_to_free = NULL;
 	struct lvinfo info;
 	static const struct lv_activate_opts laopts = { .skip_in_use = 1 };
+	struct dm_list *snh;
 	int r = 0;
 
 	if (!activation())
@@ -2023,7 +2024,19 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 	if (!info.exists) {
 		r = 1;
-		goto out;
+		/* Check attached snapshot segments are also inactive */
+		dm_list_iterate(snh, &lv->snapshot_segs) {
+			if (!lv_info(cmd, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow,
+				     0, &info, 0, 0))
+				goto_out;
+			if (info.exists) {
+				r = 0; /* Snapshot left in table? */
+				break;
+			}
+		}
+
+		if (r)
+			goto out;
 	}
 
 	if (lv_is_visible(lv) || lv_is_virtual_origin(lv) ||

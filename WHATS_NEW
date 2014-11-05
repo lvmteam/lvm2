@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Deactivation of snapshot origin detects and deactivates left-over snapshots.
   Properly report error when taking snapshot of any cache type LV.
   Add basic thread debugging messages to dmeventd.
   Include threads being shutdown in dmeventd device registration responses.
