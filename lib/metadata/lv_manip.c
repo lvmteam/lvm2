@@ -7018,6 +7018,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_cache(lp)) {
 		/* TODO: support remote exclusive activation? */
+		/* Not yet 'cache' LV, it is stripe volume for wiping */
 		if (is_change_activating(lp->activate) &&
 		    !activate_lv_excl_local(cmd, lv)) {
 			log_error("Aborting. Failed to activate LV %s locally exclusively.",

@@ -1207,7 +1207,7 @@ int dev_manager_cache_status(struct dev_manager *dm,
 		goto_out;
 
 	c = (*status)->cache;
-	(*status)->mem = dm->mem; /* User can destroy this mem pool later */
+	(*status)->mem = dm->mem; /* User has to destroy this mem pool later */
 	(*status)->data_usage = dm_make_percent(c->used_blocks,
 						c->total_blocks);
 	(*status)->metadata_usage = dm_make_percent(c->metadata_used_blocks,

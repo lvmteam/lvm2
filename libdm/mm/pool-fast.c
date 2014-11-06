@@ -107,7 +107,7 @@ void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment)
 			       needed : p->chunk_size);
 
 		if (!c)
-			return NULL;
+			return_NULL;
 
 		_align_chunk(c, alignment);
 	}

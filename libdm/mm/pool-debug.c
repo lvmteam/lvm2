@@ -170,7 +170,7 @@ void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment)
 	struct block *b = _new_block(s, alignment);
 
 	if (!b)
-		return NULL;
+		return_NULL;
 
 	_append_block(p, b);
 

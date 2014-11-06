@@ -1687,7 +1687,8 @@ static int _preload_detached_lv(struct logical_volume *lv, void *data)
 	struct lv_list *lvl_pre;
 
 	if ((lvl_pre = find_lv_in_vg(detached->lv_pre->vg, lv->name))) {
-		if (lv_is_visible(lvl_pre->lv) && lv_is_active(lv) && (!lv_is_cow(lv) || !lv_is_cow(lvl_pre->lv)) &&
+		if (lv_is_visible(lvl_pre->lv) && lv_is_active(lv) &&
+		    (!lv_is_cow(lv) || !lv_is_cow(lvl_pre->lv)) &&
 		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
 			return_0;
 	}
