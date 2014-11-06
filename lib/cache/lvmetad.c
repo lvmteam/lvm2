@@ -34,6 +34,8 @@ static char *_lvmetad_token = NULL;
 static const char *_lvmetad_socket = NULL;
 static struct cmd_context *_lvmetad_cmd = NULL;
 
+static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg);
+
 void lvmetad_disconnect(void)
 {
 	if (_lvmetad_connected)
@@ -417,6 +419,7 @@ static int _pv_update_struct_pv(struct physical_volume *pv, struct format_instan
 struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgname, const char *vgid)
 {
 	struct volume_group *vg = NULL;
+	struct volume_group *vg2 = NULL;
 	daemon_reply reply;
 	int found;
 	char uuid[64];
@@ -485,6 +488,18 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		top->key = name;
 		if (!(vg = import_vg_from_lvmetad_config_tree(reply.cft, fid)))
 			goto_out;
+
+		/*
+		 * locking may have detected a newer vg version and
+		 * invalidated the cached vg.
+		 */
+		if (dm_config_find_node(reply.cft->root, "vg_invalid")) {
+			log_debug_lvmetad("Update invalid lvmetad cache for VG %s", vgname);
+			vg2 = lvmetad_pvscan_vg(cmd, vg);
+			release_vg(vg);
+			vg = vg2;
+			fid = vg->fid;
+		}
 
 		dm_list_iterate_items(pvl, &vg->pvs) {
 			if (!_pv_update_struct_pv(pvl->pv, fid)) {
@@ -1010,6 +1025,97 @@ static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
 		release_vg(this);
 
 	return 1;
+}
+
+/*
+ * The lock manager may detect that the vg cached in lvmetad is out of date,
+ * due to something like an lvcreate from another host.
+ * This is limited to changes that only affect the vg (not global state like
+ * orphan PVs), so we only need to reread mdas on the vg's existing pvs.
+ */
+
+static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct volume_group *vg_ret = NULL;
+	struct dm_config_tree *vgmeta_ret = NULL;
+	struct dm_config_tree *vgmeta;
+	struct pv_list *pvl;
+	struct lvmcache_info *info;
+	struct format_instance *fid;
+	struct format_instance_ctx fic = { .type = 0 };
+	struct _lvmetad_pvscan_baton baton;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		/* missing pv */
+		if (!pvl->pv->dev)
+			continue;
+
+		info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0);
+
+		baton.vg = NULL;
+		baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info), &fic);
+
+		if (!baton.fid)
+			return NULL;
+
+		if (baton.fid->fmt->features & FMT_OBSOLETE) {
+			log_error("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
+			  	baton.fid->fmt->name, dev_name(pvl->pv->dev));
+			lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+			return NULL;
+		}
+
+		lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
+
+		if (!baton.vg) {
+			lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+			return NULL;
+		}
+
+		if (!(vgmeta = export_vg_to_config_tree(baton.vg))) {
+			log_error("VG export to config tree failed");
+			release_vg(baton.vg);
+			return NULL;
+		}
+
+		if (!vgmeta_ret) {
+			vgmeta_ret = vgmeta;
+		} else {
+			if (!compare_config(vgmeta_ret->root, vgmeta->root)) {
+				log_error("VG metadata comparison failed");
+				dm_config_destroy(vgmeta);
+				dm_config_destroy(vgmeta_ret);
+				release_vg(baton.vg);
+				return NULL;
+			}
+			dm_config_destroy(vgmeta);
+		}
+
+		release_vg(baton.vg);
+	}
+
+	if (vgmeta_ret) {
+		fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info), &fic);
+		if (!(vg_ret = import_vg_from_config_tree(vgmeta_ret, fid))) {
+			log_error("VG import from config tree failed");
+			lvmcache_fmt(info)->ops->destroy_instance(fid);
+			goto out;
+		}
+
+		/*
+		 * Update lvmetad with the newly read version of the VG.
+		 * The "precommitted" name is a misnomer in this case,
+		 * but that is the field which lvmetad_vg_update() uses
+		 * to send the metadata cft to lvmetad.
+		 */
+		vg_ret->cft_precommitted = vgmeta_ret;
+		if (!lvmetad_vg_update(vg_ret))
+			log_error("Failed to update lvmetad with new VG meta");
+		vg_ret->cft_precommitted = NULL;
+		dm_config_destroy(vgmeta_ret);
+	}
+out:
+	return vg_ret;
 }
 
 int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
