@@ -332,16 +332,13 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		return_0;
 
 	if (!dm_tree_node_add_cache_target(node, len,
+					   cache_pool_seg->feature_flags,
 					   metadata_uuid,
 					   data_uuid,
 					   origin_uuid,
-					   cache_pool_seg->chunk_size,
-					   cache_pool_seg->feature_flags,
-					   cache_pool_seg->core_argc,
-					   cache_pool_seg->core_argv,
+					   NULL,
 					   cache_pool_seg->policy_name,
-					   cache_pool_seg->policy_argc,
-					   cache_pool_seg->policy_argv))
+					   cache_pool_seg->chunk_size))
 		return_0;
 
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);

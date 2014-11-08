@@ -320,7 +320,7 @@ struct dm_status_cache {
 	uint64_t demotions;
 	uint64_t promotions;
 
-	uint32_t feature_flags;
+	uint64_t feature_flags;
 
 	int core_argc;
 	char **core_argv;
@@ -774,19 +774,35 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 /* Cache feature_flags */
 #define DM_CACHE_FEATURE_WRITEBACK    0x00000001
 #define DM_CACHE_FEATURE_WRITETHROUGH 0x00000002
+#define DM_CACHE_FEATURE_PASSTHROUGH  0x00000004
 
+struct dm_config_node;
+/*
+ * Use for passing cache policy and all its args e.g.:
+ *
+ *   mq {
+ *	migration_threshold=2048
+ *	sequention_threashold=100
+ *	...
+ *   }
+ *
+ * For policy without any parameters simply specify policy_name.
+ */
 int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint64_t size,
+				  uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
 				  const char *metadata_uuid,
 				  const char *data_uuid,
 				  const char *origin_uuid,
-				  uint32_t chunk_size,
-				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
-				  unsigned core_argc,
-				  const char *const *core_argv,
+				  const struct dm_config_node *policy,
 				  const char *policy_name,
-				  unsigned policy_argc,
-				  const char *const *policy_argv);
+				  uint32_t chunk_size);
+
+/*
+ * TODO: Add individual cache policy pairs  <key> = value, like:
+ *int dm_tree_node_add_cache_policy_arg(struct dm_tree_node *dnode,
+ *				      const char *key, uint64_t value);
+ */
 
 /*
  * Replicator operation mode

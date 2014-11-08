@@ -1,5 +1,6 @@
 Version 1.02.91 - 
 ====================================
+  Update API for cache creation and dm_config_node to pass policy.
   Allow activation of any thin-pool with passed transaction_id == 0.
   Don't print uninitialized stack bytes when non-root uses dm_check_version().
   Fix selection criteria to not match reserved values when using >, <, >=, <.

@@ -171,11 +171,9 @@ struct load_segment {
 	uint32_t flags;			/* Mirror + raid + Cache */
 	char *uuid;			/* Clustered mirror log */
 
-	unsigned core_argc;		/* Cache */
-	const char *const *core_argv;	/* Cache */
 	const char *policy_name;	/* Cache */
 	unsigned policy_argc;		/* Cache */
-	const char *const *policy_argv;	/* Cache */
+	struct dm_config_node *policy;	/* Cache */
 
 	const char *cipher;		/* Crypt */
 	const char *chainmode;		/* Crypt */
@@ -2366,25 +2364,23 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 				    char *params, size_t paramsize)
 {
 	int pos = 0;
-	unsigned i = 0;
-	unsigned feature_count;
-	struct seg_area *area;
+	/* unsigned feature_count; */
 	char data[DM_FORMAT_DEV_BUFSIZE];
 	char metadata[DM_FORMAT_DEV_BUFSIZE];
 	char origin[DM_FORMAT_DEV_BUFSIZE];
+	const char *name;
+	struct dm_config_node *cn;
+
+	/* Cache Dev */
+	if (!_build_dev_string(data, sizeof(data), seg->pool))
+		return_0;
 
 	/* Metadata Dev */
 	if (!_build_dev_string(metadata, sizeof(metadata), seg->metadata))
 		return_0;
 
-	/* Cache Dev */
-	if (!_build_dev_string(data, sizeof(origin), seg->pool))
-		return_0;
-
 	/* Origin Dev */
-	dm_list_iterate_items(area, &seg->areas)
-		break; /* There is only ever 1 area */
-	if (!_build_dev_string(origin, sizeof(data), area->dev_node))
+	if (!_build_dev_string(origin, sizeof(origin), seg->origin))
 		return_0;
 
 	EMIT_PARAMS(pos, " %s %s %s", metadata, data, origin);
@@ -2393,34 +2389,24 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	EMIT_PARAMS(pos, " %u", seg->chunk_size);
 
 	/* Features */
-	feature_count = hweight32(seg->flags);
-	EMIT_PARAMS(pos, " %u", feature_count);
-	if (seg->flags & DM_CACHE_FEATURE_WRITETHROUGH)
-		EMIT_PARAMS(pos, " writethrough");
+	/* feature_count = hweight32(seg->flags); */
+	/* EMIT_PARAMS(pos, " %u", feature_count); */
+	if (seg->flags & DM_CACHE_FEATURE_PASSTHROUGH)
+		EMIT_PARAMS(pos, " 1 passthrough");
+	else if (seg->flags & DM_CACHE_FEATURE_WRITETHROUGH)
+		EMIT_PARAMS(pos, " 1 writethrough");
 	else if (seg->flags & DM_CACHE_FEATURE_WRITEBACK)
-		EMIT_PARAMS(pos, " writeback");
-
-	/* Core Arguments (like 'migration_threshold') */
-	if (seg->core_argc) {
-		EMIT_PARAMS(pos, " %u", seg->core_argc);
-		for (i = 0; i < seg->core_argc; i++)
-			EMIT_PARAMS(pos, " %s", seg->core_argv[i]);
-	}
+		EMIT_PARAMS(pos, " 1 writeback");
 
 	/* Cache Policy */
-	if (!seg->policy_name)
-		EMIT_PARAMS(pos, " default 0");
-	else {
-		EMIT_PARAMS(pos, " %s %u", seg->policy_name, seg->policy_argc);
-		if (seg->policy_argc % 2) {
-			log_error(INTERNAL_ERROR
-				  "Cache policy arguments must be in "
-				  "<key> <value> pairs");
-			return 0;
-		}
-		for (i = 0; i < seg->policy_argc; i++)
-			EMIT_PARAMS(pos, " %s", seg->policy_argv[i]);
-	}
+	name = seg->policy_name ? : seg->policy ? seg->policy->key : "default";
+
+	EMIT_PARAMS(pos, " %s", name);
+
+	EMIT_PARAMS(pos, " %u", seg->policy_argc * 2);
+	if (seg->policy)
+		for (cn = seg->policy->child; cn; cn = cn->sib)
+			EMIT_PARAMS(pos, " %s %" PRIu64, cn->key, cn->v->v.i);
 
 	return 1;
 }
@@ -3313,17 +3299,15 @@ bad:
 
 int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint64_t size,
+				  uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
 				  const char *metadata_uuid,
 				  const char *data_uuid,
 				  const char *origin_uuid,
-				  uint32_t chunk_size,
-				  uint32_t feature_flags, /* DM_CACHE_FEATURE_* */
-				  unsigned core_argc,
-				  const char *const *core_argv,
+				  const struct dm_config_node *policy,
 				  const char *policy_name,
-				  unsigned policy_argc,
-				  const char *const *policy_argv)
+				  uint32_t chunk_size)
 {
+	struct dm_config_node *cn;
 	struct load_segment *seg;
 
 	if (!(seg = _add_segment(node, SEG_CACHE, size)))
@@ -3347,18 +3331,35 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, seg->metadata))
 		return_0;
 
+
+	if (!(seg->origin = dm_tree_find_node_by_uuid(node->dtree,
+						      origin_uuid))) {
+		log_error("Missing cache's origin uuid %s.",
+			  metadata_uuid);
+		return 0;
+	}
+	if (!_link_tree_nodes(node, seg->origin))
+		return_0;
+
 	seg->chunk_size = chunk_size;
-
 	seg->flags = feature_flags;
-
-	/* FIXME: validation missing */
-
-	seg->core_argc = core_argc;
-	seg->core_argv = core_argv;
-
 	seg->policy_name = policy_name;
-	seg->policy_argc = policy_argc;
-	seg->policy_argv = policy_argv;
+
+	/* FIXME: better validation missing */
+	if (policy) {
+		if (!(seg->policy = dm_config_clone_node_with_mem(node->dtree->mem, policy, 0)))
+			return_0;
+
+		for (cn = seg->policy->child; cn; cn = cn->sib) {
+			if (!cn->v || (cn->v->type != DM_CFG_INT)) {
+				/* For now only  <key> = <int>  pairs are supported */
+				log_error("Cache policy parameter %s is without integer value.", cn->key);
+				return 0;
+			}
+			seg->policy_argc++;
+		}
+	}
+
 
 	return 1;
 }
