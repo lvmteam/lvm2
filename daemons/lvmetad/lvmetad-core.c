@@ -1035,7 +1035,7 @@ static void _dump_pairs(struct buffer *buf, struct dm_hash_table *ht, const char
 			   *val = dm_hash_get_data(ht, n);
 		buffer_append(buf, "    ");
 		if (int_key)
-			(void) dm_asprintf(&append, "%d = \"%s\"", *(int*)key, val);
+			(void) dm_asprintf(&append, "%d = \"%s\"", *(const int*)key, val);
 		else
 			(void) dm_asprintf(&append, "%s = \"%s\"", key, val);
 		if (append)

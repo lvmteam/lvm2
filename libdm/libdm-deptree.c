@@ -3176,7 +3176,7 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 					     uint64_t size,
 					     struct dm_tree_node_raid_params *p)
 {
-	int i;
+	unsigned i;
 	struct load_segment *seg = NULL;
 
 	for (i = 0; i < DM_ARRAY_SIZE(_dm_segtypes) && !seg; ++i)

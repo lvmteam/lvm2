@@ -1500,8 +1500,8 @@ int lvm_return_code(int ret)
 int lvm_split(char *str, int *argc, char **argv, int max)
 {
 	char *b = str, *e;
-	*argc = 0;
 	char quote = 0;
+	*argc = 0;
 
 	while (*b) {
 		while (*b && isspace(*b))

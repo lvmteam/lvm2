@@ -1986,6 +1986,7 @@ static void _liblvm_cleanup(void)
 	}
 }
 
+PyMODINIT_FUNC initlvm(void);
 PyMODINIT_FUNC initlvm(void)
 {
 	PyObject *m;
@@ -2020,7 +2021,7 @@ PyMODINIT_FUNC initlvm(void)
 				    LVM_THIN_DISCARDS_PASSDOWN) < 0)
 		return;
 
-	if ((_LibLVMError = PyErr_NewException("lvm.LibLVMError", NULL, NULL))) {
+	if ((_LibLVMError = PyErr_NewException((char*)"lvm.LibLVMError", NULL, NULL))) {
 		/* Each call to PyModule_AddObject decrefs it; compensate: */
 		Py_INCREF(_LibLVMError);
 		Py_INCREF(_LibLVMError);
