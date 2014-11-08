@@ -436,7 +436,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 			log_error(INTERNAL_ERROR "Could not find configuration.");
 			return 0;
 		}
-		if (!get_pool_discards(str, discards))
+		if (!set_pool_discards(discards, str))
 			return_0;
 	}
 
@@ -512,7 +512,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 	return 1;
 }
 
-int get_pool_discards(const char *str, thin_discards_t *discards)
+int set_pool_discards(thin_discards_t *discards, const char *str)
 {
 	if (!strcasecmp(str, "passdown"))
 		*discards = THIN_DISCARDS_PASSDOWN;

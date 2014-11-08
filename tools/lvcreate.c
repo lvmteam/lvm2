@@ -567,7 +567,7 @@ static int _read_cache_params(struct cmd_context *cmd,
 	if (!(cachemode = arg_str_value(cmd, cachemode_ARG, NULL)))
 		cachemode = find_config_tree_str(cmd, allocation_cache_pool_cachemode_CFG, NULL);
 
-	if (!get_cache_mode(cachemode, &lp->feature_flags))
+	if (!set_cache_pool_feature(&lp->feature_flags, cachemode))
 		return_0;
 
 	return 1;

@@ -267,7 +267,7 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 		if (!cachemode)
 			cachemode = find_config_tree_str(cmd, allocation_cache_pool_cachemode_CFG, NULL);
 
-		if (!get_cache_mode(cachemode, &lp->feature_flags))
+		if (!set_cache_pool_feature(&lp->feature_flags, cachemode))
 			return_0;
 	} else {
 		if (arg_from_list_is_set(cmd, "is valid only with cache pools",

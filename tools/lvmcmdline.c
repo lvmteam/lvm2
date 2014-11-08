@@ -319,7 +319,7 @@ int discards_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_val
 {
 	thin_discards_t discards;
 
-	if (!get_pool_discards(av->value, &discards))
+	if (!set_pool_discards(&discards, av->value))
 		return_0;
 
 	av->i_value = discards;
@@ -332,7 +332,7 @@ int mirrorlog_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_va
 {
 	int log_count;
 
-	if (!get_mirror_log_count(av->value, &log_count))
+	if (!set_mirror_log_count(&log_count, av->value))
 		return_0;
 
 	av->i_value = log_count;

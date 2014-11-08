@@ -115,7 +115,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 
 	if (!discards_str)
 		seg->discards = THIN_DISCARDS_IGNORE;
-	else if (!get_pool_discards(discards_str, &seg->discards))
+	else if (!set_pool_discards(&seg->discards, discards_str))
 		return SEG_LOG_ERROR("Discards option unsupported for");
 
 	if (dm_config_has_node(sn, "low_water_mark") &&

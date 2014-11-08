@@ -2273,7 +2273,7 @@ int lv_remove_mirrors(struct cmd_context *cmd __attribute__((unused)),
 	return remove_mirrors_from_segments(lv, new_mirrors, status_mask);
 }
 
-int get_mirror_log_count(const char *mirrorlog, int *log_count)
+int set_mirror_log_count(int *log_count, const char *mirrorlog)
 {
 	if (!strcmp("core", mirrorlog))
 		*log_count = MIRROR_LOG_CORE;
@@ -2297,6 +2297,6 @@ const char *get_mirror_log_name(int log_count)
 	case MIRROR_LOG_MIRRORED: return "mirrored";
 	default:
 		log_error(INTERNAL_ERROR "Unknown mirror log count %d.", log_count);
-		return "unknown";
+		return NULL;
 	}
 }

@@ -763,8 +763,8 @@ int update_thin_pool_params(const struct segment_type *segtype,
 			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, int *zero);
-int get_pool_discards(const char *str, thin_discards_t *discards);
 const char *get_pool_discards_name(thin_discards_t discards);
+int set_pool_discards(thin_discards_t *discards, const char *str);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 					   const char *name, uint32_t read_ahead,
 					   uint32_t stripes, uint32_t stripe_size,
@@ -1011,8 +1011,8 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count,
 		      int (*is_removable)(struct logical_volume *, void *),
 		      void *removable_baton, uint64_t status_mask);
-int get_mirror_log_count(const char *mirrorlog, int *log_count);
 const char *get_mirror_log_name(int log_count);
+int set_mirror_log_count(int *log_count, const char *mirrorlog);
 
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
