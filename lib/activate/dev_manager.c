@@ -2903,11 +2903,17 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, action_t action)
 {
+	static const char const _action_names[][24] = {
+		"PRELOAD", "ACTIVATE", "DEACTIVATE", "SUSPEND", "SUSPEND_WITH_LOCKFS", "CLEAN"
+	};
 	const size_t DLID_SIZE = ID_LEN + sizeof(UUID_PREFIX) - 1;
 	struct dm_tree *dtree;
 	struct dm_tree_node *root;
 	char *dlid;
 	int r = 0;
+
+	if (action < DM_ARRAY_SIZE(_action_names))
+		log_debug_activation("Creating %s tree for %s.", _action_names[action], lv->name);
 
 	/* Some LV can be used for top level tree */
 	/* TODO: add more.... */
@@ -2980,7 +2986,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 
 		break;
 	default:
-		log_error("_tree_action: Action %u not supported.", action);
+		log_error(INTERNAL_ERROR "_tree_action: Action %u not supported.", action);
 		goto out;
 	}
 
