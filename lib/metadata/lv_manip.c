@@ -5404,9 +5404,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!archive(vg))
-		return 0;
-
 	if (lv_is_cache(lv)) {
 		if (!lv_remove_single(cmd, first_seg(lv)->pool_lv, force,
 				      suppress_remove_message)) {
@@ -5419,6 +5416,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 						display_lvname(lv));
 		}
 	}
+
+	if (!archive(vg))
+		return 0;
 
 	if (lv_is_cow(lv)) {
 		/* Old format1 code */
