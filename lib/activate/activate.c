@@ -1649,7 +1649,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 		/* Check [un]monitor results */
 		/* Try a couple times if pending, but not forever... */
-		for (i = 0; i < 10; i++) {
+		for (i = 0; i < 40; i++) {
 			pending = 0;
 			monitored = seg->segtype->ops->target_monitored(seg, &pending);
 			if (pending ||
@@ -1659,7 +1659,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 						 lv->vg->name, lv->name, monitor ? "" : "un");
 			else
 				break;
-			sleep(1);
+			usleep(10000 * i);
 		}
 
 		if (r)
