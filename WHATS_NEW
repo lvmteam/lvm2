@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  Don't prompt for removal of _pmspare in VG without pool metadata LV.
   Deactivation of snapshot origin detects and deactivates left-over snapshots.
   Properly report error when taking snapshot of any cache type LV.
   Add basic thread debugging messages to dmeventd.

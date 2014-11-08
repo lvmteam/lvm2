@@ -5570,6 +5570,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	dm_percent_t snap_percent;
 	struct dm_list *snh, *snht;
 	struct lvinfo info;
+	struct lv_list *lvl;
 	struct logical_volume *origin;
 
 	if (lv_is_cow(lv)) {
@@ -5649,12 +5650,17 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 		return_0;
 
 	if (lv_is_pool_metadata_spare(lv) &&
-	    (force == PROMPT) &&
-	    (yes_no_prompt("Removal of pool metadata spare logical volume"
-			   " \"%s\" disables automatic recovery attempts"
-			   " after damage to a thin or cache pool."
-			   " Proceed? [y/n]: ", lv->name) == 'n'))
-		goto no_remove;
+	    (force == PROMPT)) {
+		dm_list_iterate_items(lvl, &lv->vg->lvs)
+			if (lv_is_pool_metadata(lvl->lv)) {
+				if (yes_no_prompt("Removal of pool metadata spare logical volume"
+						  " \"%s\" disables automatic recovery attempts"
+						  " after damage to a thin or cache pool."
+						  " Proceed? [y/n]: ", lv->name) == 'n')
+					goto no_remove;
+				break;
+			}
+	}
 
 	return lv_remove_single(cmd, lv, force, 0);
 
