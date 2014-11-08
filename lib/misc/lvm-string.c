@@ -121,6 +121,7 @@ static const char *_lvname_has_reserved_string(const char *lvname)
 	static const char _strings[][12] = {
 		"_cdata",
 		"_cmeta",
+		"_corig",
 		"_mimage",
 		"_mlog",
 		"_pmspare",
