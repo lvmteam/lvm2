@@ -16,7 +16,7 @@ dmsetup \(em low level logical volume management
 .IR table_file ]
 .RB [{ \-\-addnodeoncreate | \-\-addnodeonresume }]
 .RB [ \-\-readahead
-.RI [ \+ ]< sectors >| auto | none ]
+.RI [ + ]< sectors >| auto | none ]
 .RE
 .br
 .B dmsetup deps
@@ -101,7 +101,7 @@ dmsetup \(em low level logical volume management
 .RB [{ \-\-addnodeoncreate | \-\-addnodeonresume }]
 .RS
 .RB [ \-\-readahead
-.RI [ \+ ]< sectors >| auto | none ]
+.RI [ + ]< sectors >| auto | none ]
 .RE
 .br
 .B dmsetup setgeometry
@@ -237,10 +237,10 @@ Do not synchronise with udev when creating, renaming or removing devices.
 .BR \-o | \-\-options
 Specify which fields to display.
 .TP
-.IR \fB\-\-readahead \ [ \+ ]< sectors >| auto | none
+.IR \fB\-\-readahead \ [ + ]< sectors >| auto | none
 Specify read ahead size in units of sectors.
 The default value is \fIauto\fP which allows the kernel to choose
-a suitable value automatically.  The \fI\+\fP prefix lets you
+a suitable value automatically.  The \fI+\fP prefix lets you
 specify a minimum value which will not be used if it is
 smaller than the value chosen by the kernel.
 The value \fInone\fP is equivalent to specifying zero.
