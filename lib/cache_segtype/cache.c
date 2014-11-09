@@ -35,7 +35,6 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 				   const struct dm_config_node *sn,
 				   struct dm_hash_table *pv_hash __attribute__((unused)))
 {
-	uint32_t chunk_size;
 	struct logical_volume *data_lv, *meta_lv;
 	const char *str = NULL;
 	struct dm_pool *mem = seg->lv->vg->vgmem;
@@ -56,7 +55,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		return SEG_LOG_ERROR("Unknown logical volume %s specified for "
 			  "cache metadata in", str);
 
-	if (!dm_config_get_uint32(sn, "chunk_size", &chunk_size))
+	if (!dm_config_get_uint32(sn, "chunk_size", &seg->chunk_size))
 		return SEG_LOG_ERROR("Couldn't read cache chunk_size in");
 
 	/*
@@ -102,7 +101,6 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 		return_0;
 	if (!attach_pool_metadata_lv(seg, meta_lv))
 		return_0;
-	seg->chunk_size = chunk_size;
 
 	return 1;
 }
