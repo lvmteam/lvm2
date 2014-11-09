@@ -102,6 +102,9 @@ int attach_pool_lv(struct lv_segment *seg,
 	seg->origin = origin;
 	seg->lv->status |= seg_is_cache(seg) ? CACHE : THIN_VOLUME;
 
+	if (seg_is_cache(seg))
+		lv_set_hidden(pool_lv); /* Used cache-pool is hidden */
+
 	if (origin && !add_seg_to_segs_using_this_lv(origin, seg))
 		return_0;
 
@@ -137,6 +140,7 @@ int detach_pool_lv(struct lv_segment *seg)
 		if (!remove_seg_from_segs_using_this_lv(seg->pool_lv, seg))
 			return_0;
 		seg->lv->status &= ~CACHE;
+		lv_set_visible(seg->pool_lv);
 		seg->pool_lv = NULL;
 		return 1;
 	}
