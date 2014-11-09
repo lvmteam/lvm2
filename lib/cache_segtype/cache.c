@@ -69,7 +69,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	if (dm_config_has_node(sn, "cache_mode")) {
 		if (!(str = dm_config_find_str(sn, "cache_mode", NULL)))
 			return SEG_LOG_ERROR("cache_mode must be a string in");
-		if (!get_cache_mode(str, &seg->feature_flags))
+		if (!set_cache_pool_feature(&seg->feature_flags, str))
 			return SEG_LOG_ERROR("Unknown cache_mode in");
 	}
 
@@ -167,25 +167,15 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 {
 	unsigned i;
 	char buf[256]; //FIXME: IS THERE AN 'outf' THAT DOESN'T DO NEWLINE?!?
-	uint32_t feature_flags = seg->feature_flags;
+	const char *cache_mode;
+
+	if (!(cache_mode = get_cache_pool_cachemode_name(seg)))
+		return_0;
 
 	outf(f, "data = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "chunk_size = %" PRIu32, seg->chunk_size);
-
-	if (feature_flags) {
-		if (feature_flags & DM_CACHE_FEATURE_WRITETHROUGH) {
-			outf(f, "cache_mode = \"writethrough\"");
-			feature_flags &= ~DM_CACHE_FEATURE_WRITETHROUGH;
-		} else if (feature_flags & DM_CACHE_FEATURE_WRITEBACK) {
-			outf(f, "cache_mode = \"writeback\"");
-			feature_flags &= ~DM_CACHE_FEATURE_WRITEBACK;
-		} else {
-			log_error(INTERNAL_ERROR "Unknown feature flags "
-				  "in cache_pool segment for %s", seg->lv->name);
-			return 0;
-		}
-	}
+	outf(f, "cache_mode = \"%s\"", cache_mode);
 
 	if (seg->core_argc) {
 		outf(f, "core_argc = %u", seg->core_argc);

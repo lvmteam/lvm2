@@ -28,7 +28,7 @@
 #define DM_HINT_OVERHEAD_PER_BLOCK	8  /* bytes */
 #define DM_MAX_HINT_WIDTH		(4+16)  /* bytes,  TODO: configurable ?? */
 
-const char *get_cachepool_cachemode_name(const struct lv_segment *seg)
+const char *get_cache_pool_cachemode_name(const struct lv_segment *seg)
 {
 	if (seg->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
 		return "writeback";
@@ -36,7 +36,29 @@ const char *get_cachepool_cachemode_name(const struct lv_segment *seg)
 	if (seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH)
 		return "writethrough";
 
-	return "unknown";
+	if (seg->feature_flags & DM_CACHE_FEATURE_PASSTHROUGH)
+		return "passthrough";
+
+	log_error("LV %s has uknown feature flags %" PRIu64,
+		  display_lvname(seg->lv), seg->feature_flags);
+
+	return NULL;
+}
+
+int set_cache_pool_feature(uint64_t *feature_flags, const char *str)
+{
+	if (!strcmp(str, "writeback"))
+		*feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
+	else if (!strcmp(str, "writethrough"))
+		*feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+	else if (!strcmp(str, "passhrough"))
+		*feature_flags |= DM_CACHE_FEATURE_PASSTHROUGH;
+	else {
+		log_error("Cache pool feature \"%s\" is unknown.", str);
+		return 0;
+	}
+
+	return 1;
 }
 
 int update_cache_pool_params(const struct segment_type *segtype,
@@ -350,20 +372,6 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	if (!lv_remove(corigin_lv))
 		return_0;
-
-	return 1;
-}
-
-int get_cache_mode(const char *str, uint32_t *flags)
-{
-	if (!strcmp(str, "writethrough"))
-		*flags |= DM_CACHE_FEATURE_WRITETHROUGH;
-	else if (!strcmp(str, "writeback"))
-		*flags |= DM_CACHE_FEATURE_WRITEBACK;
-	else {
-		log_error("Cache pool cachemode \"%s\" is unknown.", str);
-		return 0;
-	}
 
 	return 1;
 }

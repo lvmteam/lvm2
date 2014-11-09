@@ -1095,7 +1095,8 @@ struct lv_status_cache {
 	dm_percent_t dirty_usage;
 };
 
-const char *get_cachepool_cachemode_name(const struct lv_segment *seg);
+const char *get_cache_pool_cachemode_name(const struct lv_segment *seg);
+int set_cache_pool_feature(uint64_t *feature_flags, const char *str);
 int update_cache_pool_params(const struct segment_type *segtype,
 			     struct volume_group *vg, unsigned attr,
 			     int passed_args, uint32_t pool_data_extents,
@@ -1106,7 +1107,6 @@ int validate_lv_cache_create_origin(const struct logical_volume *origin_lv);
 struct logical_volume *lv_cache_create(struct logical_volume *pool,
 				       struct logical_volume *origin);
 int lv_cache_remove(struct logical_volume *cache_lv);
-int get_cache_mode(const char *str, uint32_t *flags);
 int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 /* --  metadata/cache_manip.c */
 
