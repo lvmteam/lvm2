@@ -5948,9 +5948,12 @@ int move_lv_segments(struct logical_volume *lv_to,
 int remove_layer_from_lv(struct logical_volume *lv,
 			 struct logical_volume *layer_lv)
 {
-	struct logical_volume *parent;
+	static const char _suffixes[][8] = { "_tdata", "_cdata", "_corig" };
+	struct logical_volume *parent_lv;
 	struct lv_segment *parent_seg;
 	struct segment_type *segtype;
+	struct lv_names lv_names;
+	int r;
 
 	log_very_verbose("Removing layer %s for %s", layer_lv->name, lv->name);
 
@@ -5959,8 +5962,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 			  layer_lv->name, lv->name);
 		return 0;
 	}
-	parent = parent_seg->lv;
-	if (parent != lv) {
+	parent_lv = parent_seg->lv;
+	if (parent_lv != lv) {
 		log_error(INTERNAL_ERROR "Wrong layer %s in %s",
 			  layer_lv->name, lv->name);
 		return 0;
@@ -5970,24 +5973,38 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	 * Before removal, the layer should be cleaned up,
 	 * i.e. additional segments and areas should have been removed.
 	 */
-	if (dm_list_size(&parent->segments) != 1 ||
+	if (dm_list_size(&parent_lv->segments) != 1 ||
 	    parent_seg->area_count != 1 ||
 	    seg_type(parent_seg, 0) != AREA_LV ||
 	    layer_lv != seg_lv(parent_seg, 0) ||
-	    parent->le_count != layer_lv->le_count)
+	    parent_lv->le_count != layer_lv->le_count)
 		return_0;
 
-	if (!lv_empty(parent))
+	if (!lv_empty(parent_lv))
 		return_0;
 
-	if (!move_lv_segments(parent, layer_lv, 0, 0))
+	if (!move_lv_segments(parent_lv, layer_lv, 0, 0))
 		return_0;
 
 	/* Replace the empty layer with error segment */
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "error")))
 		return_0;
-	if (!lv_add_virtual_segment(layer_lv, 0, parent->le_count, segtype))
+	if (!lv_add_virtual_segment(layer_lv, 0, parent_lv->le_count, segtype))
 		return_0;
+
+	/*
+	 * recuresively rename sub LVs
+	 *   currently supported only for thin data layer
+	 *   FIXME: without strcmp it breaks mirrors....
+	 */
+	for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r)
+		if (strstr(layer_lv->name, _suffixes[r]) == 0) {
+			lv_names.old = layer_lv->name;
+			lv_names.new = parent_lv->name;
+			if (!for_each_sub_lv(parent_lv, _rename_cb, (void *) &lv_names))
+				return_0;
+			break;
+		}
 
 	return 1;
 }

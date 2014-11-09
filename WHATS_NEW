@@ -1,5 +1,6 @@
 Version 2.02.112 - 
 =====================================
+  When remove_layer_from_lv() removes layer, restore subLV names.
   Cache-pool in use becomes invisible LV.
   Don't prompt for removal of _pmspare in VG without pool metadata LV.
   Deactivation of snapshot origin detects and deactivates left-over snapshots.
