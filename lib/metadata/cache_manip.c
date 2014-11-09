@@ -301,19 +301,11 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	dm_pool_destroy(status->mem);
 
 	if (!is_cleaner) {
-		/* We must swap in the cleaner to flush the cache */
+		/* Switch to cleaner policy to flush the cache */
 		log_print_unless_silent("Flushing cache for %s.", cache_lv->name);
-
-		/*
-		 * Is there are clean way to free the memory for the name
-		 * and argv when changing the policy?
-		 */
-		cache_seg->policy_name = "cleaner";
-		cache_seg->policy_argc = 0;
-		cache_seg->policy_argv = NULL;
-
+		cache_seg->cleaner_policy = 1;
 		/* update the kernel to put the cleaner policy in place */
-		if (!lv_update_and_reload(cache_lv))
+		if (!lv_update_and_reload_origin(cache_lv))
 			return_0;
 	}
 

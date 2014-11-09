@@ -425,15 +425,12 @@ struct lv_segment {
 	thin_discards_t discards;		/* For thin_pool */
 	struct dm_list thin_messages;		/* For thin_pool */
 	struct logical_volume *external_lv;	/* For thin */
-	struct logical_volume *pool_lv;		/* For thin */
+	struct logical_volume *pool_lv;		/* For thin, cache */
 	uint32_t device_id;			/* For thin, 24bit */
 
-	uint32_t feature_flags;			/* For cache */
-	unsigned core_argc;			/* For cache */
-	const char **core_argv;			/* For cache */
-	const char *policy_name;		/* For cache */
-	unsigned policy_argc;			/* For cache */
-	const char **policy_argv;		/* For cache */
+	uint64_t feature_flags;			/* For cache_pool */
+	struct dm_config_node *policy_args;	/* For cache_pool  (-> policy_name) */
+	unsigned cleaner_policy;		/* For cache */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */
 	struct logical_volume *rlog_lv;	/* For replicators */
@@ -851,7 +848,7 @@ struct lvcreate_params {
 	uint32_t min_recovery_rate; /* RAID */
 	uint32_t max_recovery_rate; /* RAID */
 
-	uint32_t feature_flags; /* cache */
+	uint64_t feature_flags; /* cache */
 
 	const struct segment_type *segtype; /* all */
 	unsigned target_attr; /* all */

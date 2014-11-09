@@ -48,7 +48,7 @@ struct lvconvert_params {
 	uint32_t stripes;
 	uint32_t stripe_size;
 	uint32_t read_ahead;
-	uint32_t feature_flags; /* cache_pool */
+	uint64_t feature_flags; /* cache_pool */
 
 	const struct segment_type *segtype;
 	unsigned target_attr;
