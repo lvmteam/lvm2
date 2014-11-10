@@ -61,13 +61,14 @@ struct config_output {
 static void _get_token(struct parser *p, int tok_prev);
 static void _eat_space(struct parser *p);
 static struct dm_config_node *_file(struct parser *p);
-static struct dm_config_node *_section(struct parser *p);
+static struct dm_config_node *_section(struct parser *p, struct dm_config_node *parent);
 static struct dm_config_value *_value(struct parser *p);
 static struct dm_config_value *_type(struct parser *p);
 static int _match_aux(struct parser *p, int t);
 static struct dm_config_value *_create_value(struct dm_pool *mem);
 static struct dm_config_node *_create_node(struct dm_pool *mem);
 static char *_dup_tok(struct parser *p);
+static char *_dup_token(struct dm_pool *mem, const char *b, const char *e);
 
 static const int sep = '/';
 
@@ -419,71 +420,121 @@ static char *_dup_string_tok(struct parser *p)
 
 static struct dm_config_node *_file(struct parser *p)
 {
-	struct dm_config_node *root = NULL, *n, *l = NULL;
-	while (p->t != TOK_EOF) {
-		if (!(n = _section(p)))
-			return_NULL;
+	struct dm_config_node root = { 0 };
+	root.key = "<root>";
 
-		if (!root)
-			root = n;
-		else
-			l->sib = n;
-		n->parent = root;
-		l = n;
-	}
-	return root;
+	while (p->t != TOK_EOF)
+		if (!_section(p, &root))
+			return_NULL;
+	return root.child;
 }
 
-static struct dm_config_node *_section(struct parser *p)
+static struct dm_config_node *_make_node(struct dm_pool *mem,
+					 const char *key_b, const char *key_e,
+					 struct dm_config_node *parent)
+{
+	struct dm_config_node *n;
+
+	if (!(n = _create_node(mem)))
+		return_NULL;
+
+	n->key = _dup_token(mem, key_b, key_e);
+	if (parent) {
+		n->parent = parent;
+		n->sib = parent->child;
+		parent->child = n;
+	}
+	return n;
+}
+
+/* when mem is not NULL, we create the path if it doesn't exist yet */
+static struct dm_config_node *_find_or_make_node(struct dm_pool *mem,
+						 struct dm_config_node *parent,
+						 const char *path)
+{
+	const char *e;
+	struct dm_config_node *cn = parent ? parent->child : NULL;
+	struct dm_config_node *cn_found = NULL;
+
+	while (cn || mem) {
+		/* trim any leading slashes */
+		while (*path && (*path == sep))
+			path++;
+
+		/* find the end of this segment */
+		for (e = path; *e && (*e != sep); e++) ;
+
+		/* hunt for the node */
+		cn_found = NULL;
+
+		while (cn) {
+			if (_tok_match(cn->key, path, e)) {
+				/* Inefficient */
+				if (!cn_found)
+					cn_found = cn;
+				else
+					log_warn("WARNING: Ignoring duplicate"
+						 " config node: %s ("
+						 "seeking %s)", cn->key, path);
+			}
+
+			cn = cn->sib;
+		}
+
+		if (!cn_found && mem) {
+			if (!(cn_found = _make_node(mem, path, e, parent)))
+				return_NULL;
+		}
+
+		if (cn_found && *e) {
+			parent = cn_found;
+			cn = cn_found->child;
+		} else
+			return cn_found;
+		path = e;
+	}
+
+	return NULL;
+}
+
+static struct dm_config_node *_section(struct parser *p, struct dm_config_node *parent)
 {
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 
 	struct dm_config_node *root, *n, *l = NULL;
 	char *str;
 
-	if (!(root = _create_node(p->mem))) {
-		log_error("Failed to allocate section node");
-		return NULL;
-	}
-
 	if (p->t == TOK_STRING_ESCAPED) {
 		if (!(str = _dup_string_tok(p)))
 			return_NULL;
 		dm_unescape_double_quotes(str);
-		root->key = str;
 
 		match(TOK_STRING_ESCAPED);
 	} else if (p->t == TOK_STRING) {
 		if (!(str = _dup_string_tok(p)))
 			return_NULL;
-		root->key = str;
 
 		match(TOK_STRING);
 	} else {
-		if (!(root->key = _dup_tok(p)))
+		if (!(str = _dup_tok(p)))
 			return_NULL;
 
 		match(TOK_IDENTIFIER);
 	}
 
-	if (!strlen(root->key)) {
+	if (!strlen(str)) {
 		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): empty section identifier",
 			  p->tb - p->fb + 1, p->line);
 		return NULL;
 	}
 
+	root = _find_or_make_node(p->mem, parent, str);
+
 	if (p->t == TOK_SECTION_B) {
 		match(TOK_SECTION_B);
 		while (p->t != TOK_SECTION_E) {
-			if (!(n = _section(p)))
+			if (!(n = _section(p, root)))
 				return_NULL;
-
-			if (!l)
-				root->child = n;
-			else
-				l->sib = n;
-			n->parent = root;
-			l = n;
 		}
 		match(TOK_SECTION_E);
 	} else {
@@ -751,17 +802,22 @@ static struct dm_config_node *_create_node(struct dm_pool *mem)
 	return dm_pool_zalloc(mem, sizeof(struct dm_config_node));
 }
 
-static char *_dup_tok(struct parser *p)
+static char *_dup_token(struct dm_pool *mem, const char *b, const char *e)
 {
-	size_t len = p->te - p->tb;
-	char *str = dm_pool_alloc(p->mem, len + 1);
+	size_t len = e - b;
+	char *str = dm_pool_alloc(mem, len + 1);
 	if (!str) {
 		log_error("Failed to duplicate token.");
 		return 0;
 	}
-	memcpy(str, p->tb, len);
+	memcpy(str, b, len);
 	str[len] = '\0';
 	return str;
+}
+
+static char *_dup_tok(struct parser *p)
+{
+	return _dup_token(p->mem, p->tb, p->te);
 }
 
 /*
@@ -778,46 +834,9 @@ static char *_dup_tok(struct parser *p)
  */
 typedef const struct dm_config_node *node_lookup_fn(const void *start, const char *path);
 
-static const struct dm_config_node *_find_config_node(const void *start,
-						      const char *path)
-{
-	const char *e;
-	const struct dm_config_node *cn = start;
-	const struct dm_config_node *cn_found = NULL;
-
-	while (cn) {
-		/* trim any leading slashes */
-		while (*path && (*path == sep))
-			path++;
-
-		/* find the end of this segment */
-		for (e = path; *e && (*e != sep); e++) ;
-
-		/* hunt for the node */
-		cn_found = NULL;
-		while (cn) {
-			if (_tok_match(cn->key, path, e)) {
-				/* Inefficient */
-				if (!cn_found)
-					cn_found = cn;
-				else
-					log_warn("WARNING: Ignoring duplicate"
-						 " config node: %s ("
-						 "seeking %s)", cn->key, path);
-			}
-
-			cn = cn->sib;
-		}
-
-		if (cn_found && *e)
-			cn = cn_found->child;
-		else
-			return cn_found;
-
-		path = e;
-	}
-
-	return NULL;
+static const struct dm_config_node *_find_config_node(const void *start, const char *path) {
+	struct dm_config_node dummy = { .child = (void *) start };
+	return _find_or_make_node(NULL, &dummy, path);
 }
 
 static const struct dm_config_node *_find_first_config_node(const void *start, const char *path)
