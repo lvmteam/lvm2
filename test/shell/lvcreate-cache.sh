@@ -206,14 +206,17 @@ lvremove -f $vg
 # Validate args are properly preserved #
 ########################################
 lvcreate --type cache-pool -L10 --chunksize 256 --cachemode writeback $vg/cpool1
-lvcreate -H -L10 $vg/cpool1
 check lv_field $vg/cpool1 chunksize "256.00k"
 check lv_field $vg/cpool1 cachemode "writeback"
+lvcreate -H -L10 -n $lv1 $vg/cpool1
+lvs -a -o+cachemode,chunksize $vg
+check lv_field $vg/$lv1 chunksize "256.00k"
+check lv_field $vg/$lv1 cachemode "writeback"
 
 lvcreate --type cache-pool -L10 --chunksize 256 --cachemode writethrough $vg/cpool2
-lvcreate -H -L10 --chunksize 512 --cachemode writeback $vg/cpool2
-check lv_field $vg/cpool2 chunksize "512.00k"
-check lv_field $vg/cpool2 cachemode "writeback"
+lvcreate -H -L10 --chunksize 512 --cachemode writeback -n $lv2 $vg/cpool2
+check lv_field $vg/$lv2 chunksize "512.00k"
+check lv_field $vg/$lv2 cachemode "writeback"
 
 # Chunk bigger then pool size
 fail lvcreate --type cache-pool -l1 --chunksize 1G $vg/cpool3
