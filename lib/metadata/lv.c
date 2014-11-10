@@ -990,6 +990,8 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 		if (lv_is_external_origin(lv) &&
 		    lv_is_thin_volume(sl->seg->lv))
 			continue; /* Skip external origin */
+		if (lv_is_pending_delete(sl->seg->lv))
+			continue; /* Skip deleted LVs */
 		return lv_lock_holder(sl->seg->lv);
 	}
 

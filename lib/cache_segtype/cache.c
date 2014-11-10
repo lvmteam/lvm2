@@ -227,6 +227,8 @@ static int _cache_text_import(struct lv_segment *seg,
 	    !dm_config_get_uint32(sn, "cleaner", &seg->cleaner_policy))
 		return SEG_LOG_ERROR("Could not read cache cleaner in");
 
+	seg->lv->status |= strstr(seg->lv->name, "_corig") ? LV_PENDING_DELETE : 0;
+
 	if (!attach_pool_lv(seg, pool_lv, NULL, NULL))
 		return_0;
 

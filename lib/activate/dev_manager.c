@@ -1941,8 +1941,14 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		}
 	}
 
-	if (!origin_only && lv_is_cache(lv)) {
-		if (!dm->activation) {
+	if (lv_is_cache(lv)) {
+		if (lv_is_pending_delete(lv)) {
+			if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->pool_lv, 1)) /* stack */
+				return_0;
+			/* Orhan cache LV exits here */
+			return 1;
+		}
+		if (!origin_only && !dm->activation) {
 			/* Setup callback for non-activation partial tree */
 			/* Activation gets own callback when needed */
 			/* TODO: extend _cached_dm_info() to return dnode */
@@ -1970,6 +1976,14 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
 				return_0;
 		dm->track_pvmove_deps = 1;
+	}
+
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
+		if (lv_is_pending_delete(sl->seg->lv) && lv_is_cache(sl->seg->lv)) {
+			if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
+				return_0;
+			break;
+		}
 	}
 
 	/* Adding LV head of replicator adds all other related devs */
@@ -2652,6 +2666,30 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	/* Create table */
 	dm->pvmove_mirror_count = 0u;
 
+	if (lv_is_pending_delete(lv)) {
+		/* Handle LVs with pending delete */
+		if (lv_is_cache(lv)) {
+			/* Use 'error' for cache, metadata and data volumes */
+			seg = first_seg(lv);
+			if (!dm_tree_node_add_error_target(dnode, seg_lv(seg, 0)->size))
+				return_0;
+			seg = first_seg(seg->pool_lv);
+			if (!(dlid = build_dm_uuid(dm->mem, seg->metadata_lv, NULL)))
+				return_0;
+			if ((dnode = dm_tree_find_node_by_uuid(dtree, dlid)) &&
+			    !dm_tree_node_get_context(dnode) &&
+			    !dm_tree_node_add_error_target(dnode, seg->metadata_lv->size))
+				return_0;
+			if (!(dlid = build_dm_uuid(dm->mem, seg_lv(seg, 0), NULL)))
+				return_0;
+			if ((dnode = dm_tree_find_node_by_uuid(dtree, dlid)) &&
+			    !dm_tree_node_get_context(dnode) &&
+			    !dm_tree_node_add_error_target(dnode, seg_lv(seg, 0)->size))
+				return_0;
+		}
+		return 1;
+	}
+
 	/* This is unused cache-pool - make metadata accessible */
 	if (lv_is_cache_pool(lv))
 		lv = first_seg(lv)->metadata_lv;
@@ -2848,7 +2886,7 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 		}
 
 		/* Not meant to be top level? */
-		if (!*layer)
+		if (!*layer && (!(layer = strchr(uuid + 4, '-')) || strstr(layer, "-pool") || strstr(layer, "-tpool")))
 			continue;
 
 		/* If operation was performed on a partial tree, don't remove it */

@@ -21,6 +21,7 @@
 #include "segtype.h"
 #include "activate.h"
 #include "defaults.h"
+#include "lv_alloc.h"
 
 /* https://github.com/jthornber/thin-provisioning-tools/blob/master/caching/cache_metadata_size.cc */
 #define DM_TRANSACTION_OVERHEAD		4096  /* KiB */
@@ -220,29 +221,6 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 }
 
 /*
- * Cleanup orphan device in the table with temporary activation
- * since in the suspend() we can't deactivate unused nodes
- * and the resume() phase mishandles orphan nodes.
- *
- * TODO: improve libdm to handle this case automatically
- */
-static int _cleanup_orphan_lv(struct logical_volume *lv)
-{
-	lv->status |= LV_TEMPORARY;
-	if (!activate_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to activate temporary %s", lv->name);
-		return 0;
-	}
-	if (!deactivate_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to deactivate temporary %s", lv->name);
-		return 0;
-	}
-	lv->status &= ~LV_TEMPORARY;
-
-	return 1;
-}
-
-/*
  * lv_cache_remove
  * @cache_lv
  *
@@ -267,6 +245,9 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 			  display_lvname(cache_lv));
 		return 0;
 	}
+
+	if (lv_is_pending_delete(cache_lv))
+		goto remove;  /* Already dropped */
 
 	/* Localy active volume is needed for writeback */
 	if (!lv_is_active_locally(cache_lv)) {
@@ -348,43 +329,50 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!detach_pool_lv(cache_seg))
 		return_0;
 
-	/* Regular LV which user may remove if there are problems */
+	/*
+	 * Drop layer from cache LV and make _corigin to appear again as regular LV
+	 * And use 'existing' _corigin  volume to keep reference on cache-pool
+	 * This way we still have a way to reference _corigin in dm table and we
+	 * know it's been 'cache' LV  and we can drop all needed table entries via
+	 * activation and deactivation of it.
+	 *
+	 * This 'cache' LV without origin is temporary LV, which still could be
+	 * easily operated by lvm2 commands - it could be activate/deactivated/removed.
+	 * However in the dm-table it will use 'error' target for _corigin volume.
+	 */
 	corigin_lv = seg_lv(cache_seg, 0);
 	lv_set_visible(corigin_lv);
 	if (!remove_layer_from_lv(cache_lv, corigin_lv))
 			return_0;
 
+	/* Replace 'error' with 'cache' segtype */
+	cache_seg = first_seg(corigin_lv);
+	if (!(cache_seg->segtype = get_segtype_from_string(corigin_lv->vg->cmd, "cache")))
+		return_0;
+
+	if (!(cache_seg->areas = dm_pool_zalloc(cache_lv->vg->vgmem, sizeof(*cache_seg->areas))))
+		return_0;
+	if (!set_lv_segment_area_lv(cache_seg, 0, cache_lv, 0, 0))
+		return_0;
+
+	cache_seg->area_count = 1;
+	corigin_lv->le_count = cache_lv->le_count;
+	corigin_lv->size = cache_lv->size;
+	corigin_lv->status |= LV_PENDING_DELETE;
+
+	/* Reattach cache pool */
+	if (!attach_pool_lv(cache_seg, cache_pool_lv, NULL, NULL))
+		return_0;
+
+	/* Suspend/resume also deactivates deleted LV via support of LV_PENDING_DELETE */
 	if (!lv_update_and_reload(cache_lv))
 		return_0;
-
-	/*
-	 * suspend_lv on this cache LV suspends all components:
-	 * - the top-level cache LV
-	 * - the origin
-	 * - the cache_pool _cdata and _cmeta
-	 *
-	 * resume_lv on this (former) cache LV will resume all
-	 *
-	 * FIXME: currently we can't easily avoid execution of
-	 * blkid on resumed error device
-	 */
-
-	/*
-	 * cleanup orphan devices
-	 *
-	 * FIXME:
-	 * fix _add_dev() to support this case better
-	 * since that should be handled internally by resume_lv()
-	 * which should autoremove any orphans
-	 */
-	if (!_cleanup_orphan_lv(corigin_lv))  /* _corig */
-		return_0;
-	if (!_cleanup_orphan_lv(seg_lv(first_seg(cache_pool_lv), 0))) /* _cdata */
-		return_0;
-	if (!_cleanup_orphan_lv(first_seg(cache_pool_lv)->metadata_lv)) /* _cmeta */
+	cache_lv = corigin_lv;
+remove:
+	if (!detach_pool_lv(cache_seg))
 		return_0;
 
-	if (!lv_remove(corigin_lv))
+	if (!lv_remove(cache_lv)) /* Will use LV_PENDING_DELETE */
 		return_0;
 
 	return 1;
@@ -400,7 +388,7 @@ int lv_is_cache_origin(const struct logical_volume *lv)
 		return 0;
 
 	seg = get_only_segment_using_this_lv(lv);
-	return seg && lv_is_cache(seg->lv) && (seg_lv(seg, 0) == lv);
+	return seg && lv_is_cache(seg->lv) && !lv_is_pending_delete(seg->lv) && (seg_lv(seg, 0) == lv);
 }
 
 /*

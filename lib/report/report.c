@@ -518,7 +518,7 @@ static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (lv_is_cow(lv))
 		return _lvname_disp(rh, mem, field, origin_from_cow(lv), private);
 
-	if (lv_is_cache(lv))
+	if (lv_is_cache(lv) && !lv_is_pending_delete(lv))
 		return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
 
 	if (lv_is_thin_volume(lv) && first_seg(lv)->origin)

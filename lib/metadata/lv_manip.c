@@ -1280,7 +1280,8 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 				return_0;
 
 			/* Remove cache origin only when removing (not on lv_empty()) */
-			if (delete && seg_is_cache(seg) && !lv_remove(seg_lv(seg, 0)))
+			if (delete && seg_is_cache(seg) &&
+			    !lv_is_pending_delete(seg->lv) && !lv_remove(seg_lv(seg, 0)))
 				return_0;
 
 			if ((pool_lv = seg->pool_lv)) {
@@ -5322,6 +5323,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_segment *cache_seg = NULL;
 	int ask_discard;
 	struct lv_list *lvl;
+	struct seg_list *sl;
 	int is_last_pool;
 
 	vg = lv->vg;
@@ -5419,6 +5421,14 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!archive(vg))
 		return 0;
+
+	/* When referenced by the LV with pending delete flag, remove this deleted LV first */
+	dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+		if (lv_is_pending_delete(sl->seg->lv) && !lv_remove(sl->seg->lv)) {
+			log_error("Error releasing logical volume %s with pending delete.",
+				  display_lvname(sl->seg->lv));
+			return 0;
+		}
 
 	if (lv_is_cow(lv)) {
 		/* Old format1 code */

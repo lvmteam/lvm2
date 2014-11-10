@@ -117,7 +117,9 @@
 #define CACHE_POOL_METADATA	UINT64_C(0x0000800000000000)    /* LV - Internal use only */
 #define CACHE			UINT64_C(0x0001000000000000)    /* LV - Internal use only */
 
-/* Next unused flag:		UINT64_C(0x0004000000000000)    */
+#define LV_PENDING_DELETE	UINT64_C(0x0004000000000000)    /* LV - Internal use only */
+
+/* Next unused flag:		UINT64_C(0x0008000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -188,6 +190,7 @@
 #define lv_is_mirror(lv)	(((lv)->status & MIRROR) ? 1 : 0)
 #define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR | MIRROR_LOG | MIRROR_IMAGE)) ? 1 : 0)
 
+#define lv_is_pending_delete(lv) (((lv)->status & LV_PENDING_DELETE) ? 1 : 0)
 #define lv_is_pvmove(lv)	(((lv)->status & PVMOVE) ? 1 : 0)
 
 #define lv_is_raid(lv)		(((lv)->status & RAID) ? 1 : 0)
