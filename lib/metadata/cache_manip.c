@@ -268,8 +268,27 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		return 0;
 	}
 
-	/* Localy active volume is needed (writeback only?) */
+	/* Localy active volume is needed for writeback */
 	if (!lv_is_active_locally(cache_lv)) {
+		/* Give up any remote locks */
+		if (!deactivate_lv(cache_lv->vg->cmd, cache_lv)) {
+			log_error("Cannot deactivate remotely active cache lv.");
+			return 0;
+		}
+		/* For inactive writethrough just drop cache layer */
+		if (first_seg(cache_seg->pool_lv)->feature_flags &
+		    DM_CACHE_FEATURE_WRITETHROUGH) {
+			corigin_lv = seg_lv(cache_seg, 0);
+			if (!detach_pool_lv(cache_seg))
+				return_0;
+			if (!remove_layer_from_lv(cache_lv, corigin_lv))
+				return_0;
+			if (!lv_remove(corigin_lv))
+				return_0;
+			return 1;
+		}
+
+		/* Otherwise localy active volume is need to sync dirty blocks */
 		cache_lv->status |= LV_TEMPORARY;
 		if (!activate_lv_excl_local(cache_lv->vg->cmd, cache_lv) ||
 		    !lv_is_active_locally(cache_lv)) {
@@ -297,10 +316,13 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 */
 	if (!lv_cache_status(cache_lv, &status))
 		return_0;
+	dirty_blocks = status->cache->dirty_blocks;
+	if (!(status->cache->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH))
+		dirty_blocks++; /* Not writethrough - always dirty */
 	is_cleaner = !strcmp(status->cache->policy_name, "cleaner");
 	dm_pool_destroy(status->mem);
 
-	if (!is_cleaner) {
+	if (dirty_blocks && !is_cleaner) {
 		/* Switch to cleaner policy to flush the cache */
 		log_print_unless_silent("Flushing cache for %s.", cache_lv->name);
 		cache_seg->cleaner_policy = 1;
@@ -310,7 +332,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	}
 
 	//FIXME: use polling to do this...
-	do {
+	while (dirty_blocks) {
 		if (!lv_cache_status(cache_lv, &status))
 			return_0;
 		dirty_blocks = status->cache->dirty_blocks;
@@ -320,7 +342,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 						dirty_blocks);
 			sleep(1);
 		}
-	} while (dirty_blocks);
+	}
 
 	cache_pool_lv = cache_seg->pool_lv;
 	if (!detach_pool_lv(cache_seg))
