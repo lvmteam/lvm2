@@ -780,13 +780,13 @@ struct dm_config_node;
 /*
  * Use for passing cache policy and all its args e.g.:
  *
- *   mq {
- *	migration_threshold=2048
- *	sequention_threashold=100
- *	...
- *   }
+ * policy_settings {
+ *    migration_threshold=2048
+ *    sequention_threashold=100
+ *    ...
+ * }
  *
- * For policy without any parameters simply specify policy_name.
+ * For policy without any parameters use NULL.
  */
 int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint64_t size,
@@ -794,8 +794,8 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *metadata_uuid,
 				  const char *data_uuid,
 				  const char *origin_uuid,
-				  const struct dm_config_node *policy,
 				  const char *policy_name,
+				  const struct dm_config_node *policy_settings,
 				  uint32_t chunk_size);
 
 /*

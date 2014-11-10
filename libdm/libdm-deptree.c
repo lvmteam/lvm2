@@ -173,7 +173,7 @@ struct load_segment {
 
 	const char *policy_name;	/* Cache */
 	unsigned policy_argc;		/* Cache */
-	struct dm_config_node *policy;	/* Cache */
+	struct dm_config_node *policy_settings;	/* Cache */
 
 	const char *cipher;		/* Crypt */
 	const char *chainmode;		/* Crypt */
@@ -2399,13 +2399,13 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 		EMIT_PARAMS(pos, " 1 writeback");
 
 	/* Cache Policy */
-	name = seg->policy_name ? : seg->policy ? seg->policy->key : "default";
+	name = seg->policy_name ? : "default";
 
 	EMIT_PARAMS(pos, " %s", name);
 
 	EMIT_PARAMS(pos, " %u", seg->policy_argc * 2);
-	if (seg->policy)
-		for (cn = seg->policy->child; cn; cn = cn->sib)
+	if (seg->policy_settings)
+		for (cn = seg->policy_settings->child; cn; cn = cn->sib)
 			EMIT_PARAMS(pos, " %s %" PRIu64, cn->key, cn->v->v.i);
 
 	return 1;
@@ -3303,8 +3303,8 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *metadata_uuid,
 				  const char *data_uuid,
 				  const char *origin_uuid,
-				  const struct dm_config_node *policy,
 				  const char *policy_name,
+				  const struct dm_config_node *policy_settings,
 				  uint32_t chunk_size)
 {
 	struct dm_config_node *cn;
@@ -3346,11 +3346,11 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	seg->policy_name = policy_name;
 
 	/* FIXME: better validation missing */
-	if (policy) {
-		if (!(seg->policy = dm_config_clone_node_with_mem(node->dtree->mem, policy, 0)))
+	if (policy_settings) {
+		if (!(seg->policy_settings = dm_config_clone_node_with_mem(node->dtree->mem, policy_settings, 0)))
 			return_0;
 
-		for (cn = seg->policy->child; cn; cn = cn->sib) {
+		for (cn = seg->policy_settings->child; cn; cn = cn->sib) {
 			if (!cn->v || (cn->v->type != DM_CFG_INT)) {
 				/* For now only  <key> = <int>  pairs are supported */
 				log_error("Cache policy parameter %s is without integer value.", cn->key);

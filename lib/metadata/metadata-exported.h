@@ -432,7 +432,8 @@ struct lv_segment {
 	uint32_t device_id;			/* For thin, 24bit */
 
 	uint64_t feature_flags;			/* For cache_pool */
-	struct dm_config_node *policy_args;	/* For cache_pool  (-> policy_name) */
+	const char *policy_name;		/* For cache_pool */
+	struct dm_config_node *policy_settings;	/* For cache_pool */
 	unsigned cleaner_policy;		/* For cache */
 
 	struct logical_volume *replicator;/* For replicator-devs - link to replicator LV */

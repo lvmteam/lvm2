@@ -71,9 +71,18 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("Unknown cache_mode in");
 	}
 
+	if (dm_config_has_node(sn, "policy")) {
+		if (!(str = dm_config_find_str(sn, "policy", NULL)))
+			return SEG_LOG_ERROR("policy must be a string in");
+		if (!(seg->policy_name = dm_pool_strdup(mem, str)))
+			return SEG_LOG_ERROR("Failed to duplicate policy in");
+	} else
+		/* Cannot use 'just' default, so pick one */
+		seg->policy_name = DEFAULT_CACHE_POOL_POLICY; /* TODO: configurable default */
+
 	/*
 	 * Read in policy args:
-	 *   mq {
+	 *   policy_settings {
 	 *	migration_threshold=2048
 	 *	sequention_threashold=100
 	 *	random_threashold=200
@@ -88,14 +97,13 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	 *
 	 *   If the policy is not present, default policy is used.
 	 */
-	for (; sn; sn = sn->sib)
-		if (!sn->v) {
-			if (seg->policy_args)
-				return SEG_LOG_ERROR("only a singly policy is supported for");
+	if ((sn = dm_config_find_node(sn, "policy_settings"))) {
+		if (sn->v)
+			return SEG_LOG_ERROR("policy_settings must be a section in");
 
-			if (!(seg->policy_args = dm_config_clone_node_with_mem(mem, sn, 0)))
-				return_0;
-		}
+		if (!(seg->policy_settings = dm_config_clone_node_with_mem(mem, sn, 0)))
+			return_0;
+	}
 
 	if (!attach_pool_data_lv(seg, data_lv))
 		return_0;
@@ -126,8 +134,17 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 	outf(f, "chunk_size = %" PRIu32, seg->chunk_size);
 	outf(f, "cache_mode = \"%s\"", cache_mode);
 
-	if (seg->policy_args)
-		out_config_node(f, seg->policy_args);
+	if (seg->policy_name)
+		outf(f, "policy = \"%s\"", seg->policy_name);
+
+	if (seg->policy_settings) {
+		if (strcmp(seg->policy_settings->key, "policy_settings")) {
+			log_error(INTERNAL_ERROR "Incorrect policy_settings tree, %s.",
+				  seg->policy_settings->key);
+			return 0;
+		}
+		out_config_node(f, seg->policy_settings);
+	}
 
 	return 1;
 }
@@ -266,8 +283,6 @@ static int _cache_add_target_line(struct dev_manager *dm,
 {
 	struct lv_segment *cache_pool_seg = first_seg(seg->pool_lv);
 	char *metadata_uuid, *data_uuid, *origin_uuid;
-	const char *policy_name = seg->cleaner_policy ? "cleaner" :
-		cache_pool_seg->policy_args ? cache_pool_seg->policy_args->key : NULL;
 
 	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
 		return_0;
@@ -283,8 +298,8 @@ static int _cache_add_target_line(struct dev_manager *dm,
 					   metadata_uuid,
 					   data_uuid,
 					   origin_uuid,
-					   seg->cleaner_policy ? NULL : cache_pool_seg->policy_args,
-					   policy_name,
+					   seg->cleaner_policy ? "cleaner" : cache_pool_seg->policy_name,
+					   seg->cleaner_policy ? NULL : cache_pool_seg->policy_settings,
 					   cache_pool_seg->chunk_size))
 		return_0;
 
