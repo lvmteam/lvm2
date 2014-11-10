@@ -1136,7 +1136,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		return 0;
 	}
 
-	if (!suspend_lv(cmd, lv)) {
+	if (!suspend_lv(cmd, lv_lock_holder(lv))) {
 		log_error("Failed to suspend %s/%s before committing changes",
 			  lv->vg->name, lv->name);
 		vg_revert(lv->vg);
@@ -1146,6 +1146,12 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	if (!vg_commit(lv->vg)) {
 		log_error("Failed to commit changes to %s in %s",
 			  lv->name, lv->vg->name);
+		return 0;
+	}
+
+	if (!resume_lv(lv->vg->cmd, lv_lock_holder(lv))) {
+		log_error("Failed to resume %s/%s after committing changes",
+			  lv->vg->name, lv->name);
 		return 0;
 	}
 
@@ -1162,11 +1168,6 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		if (!activate_lv_excl_local(cmd, lvl->lv))
 			return_0;
 
-	if (!resume_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to resume %s/%s after committing changes",
-			  lv->vg->name, lv->name);
-		return 0;
-	}
 
 	/*
 	 * Eliminate the residual LVs
