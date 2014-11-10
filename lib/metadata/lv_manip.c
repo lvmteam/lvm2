@@ -6007,14 +6007,15 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	 *   currently supported only for thin data layer
 	 *   FIXME: without strcmp it breaks mirrors....
 	 */
-	for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r)
-		if (strstr(layer_lv->name, _suffixes[r]) == 0) {
-			lv_names.old = layer_lv->name;
-			lv_names.new = parent_lv->name;
-			if (!for_each_sub_lv(parent_lv, _rename_cb, (void *) &lv_names))
-				return_0;
-			break;
-		}
+	if (!strstr(layer_lv->name, "_mimage"))
+		for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r)
+			if (strstr(layer_lv->name, _suffixes[r]) == 0) {
+				lv_names.old = layer_lv->name;
+				lv_names.new = parent_lv->name;
+				if (!for_each_sub_lv(parent_lv, _rename_cb, (void *) &lv_names))
+					return_0;
+				break;
+			}
 
 	return 1;
 }
