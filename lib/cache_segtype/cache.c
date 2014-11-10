@@ -390,7 +390,7 @@ int init_cache_segtypes(struct cmd_context *cmd,
 	}
 
 	segtype->name = "cache-pool";
-	segtype->flags = SEG_CACHE_POOL | SEG_CANNOT_BE_ZEROED;
+	segtype->flags = SEG_CACHE_POOL | SEG_CANNOT_BE_ZEROED | SEG_ONLY_EXCLUSIVE;
 	segtype->ops = &_cache_pool_ops;
 
 	if (!lvm_register_segtype(seglib, segtype))
@@ -404,7 +404,7 @@ int init_cache_segtypes(struct cmd_context *cmd,
 	}
 
 	segtype->name = "cache";
-	segtype->flags = SEG_CACHE;
+	segtype->flags = SEG_CACHE | SEG_ONLY_EXCLUSIVE;
 	segtype->ops = &_cache_ops;
 
 	if (!lvm_register_segtype(seglib, segtype))

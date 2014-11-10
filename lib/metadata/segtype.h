@@ -44,6 +44,7 @@ struct dev_manager;
 #define SEG_CACHE		0x00002000U
 #define SEG_CACHE_POOL		0x00004000U
 #define SEG_MIRROR		0x00008000U
+#define SEG_ONLY_EXCLUSIVE	0x00010000U /* In cluster only exlusive activation */
 #define SEG_UNKNOWN		0x80000000U
 
 #define segtype_is_cache(segtype)	((segtype)->flags & SEG_CACHE ? 1 : 0)
@@ -78,6 +79,7 @@ struct dev_manager;
 #define seg_can_split(seg)	((seg)->segtype->flags & SEG_CAN_SPLIT ? 1 : 0)
 #define seg_cannot_be_zeroed(seg) ((seg)->segtype->flags & SEG_CANNOT_BE_ZEROED ? 1 : 0)
 #define seg_monitored(seg)	((seg)->segtype->flags & SEG_MONITORED ? 1 : 0)
+#define seg_only_exclusive(seg)	((seg)->segtype->flags & SEG_ONLY_EXCLUSIVE ? 1 : 0)
 
 struct segment_type {
 	struct dm_list list;		/* Internal */

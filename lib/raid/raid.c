@@ -465,7 +465,7 @@ static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 
 	segtype->ops = &_raid_ops;
 	segtype->name = rt->name;
-	segtype->flags = SEG_RAID | rt->extra_flags | monitored;
+	segtype->flags = SEG_RAID | SEG_ONLY_EXCLUSIVE | rt->extra_flags | monitored;
 	segtype->parity_devs = rt->parity;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
