@@ -2889,6 +2889,10 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 		if (!*layer && (!(layer = strchr(uuid + 4, '-')) || strstr(layer, "-pool") || strstr(layer, "-tpool")))
 			continue;
 
+		/* FIXME: we still occasionally need to activate these at top-level */
+		if (strstr(lvname, "_tmeta") || strstr(lvname, "_tdata"))
+			continue;
+
 		/* If operation was performed on a partial tree, don't remove it */
 		if (non_toplevel_tree_dlid && !strcmp(non_toplevel_tree_dlid, uuid))
 			continue;
