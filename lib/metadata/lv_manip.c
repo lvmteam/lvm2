@@ -1280,9 +1280,19 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 				return_0;
 
 			/* Remove cache origin only when removing (not on lv_empty()) */
-			if (delete && seg_is_cache(seg) &&
-			    !lv_is_pending_delete(seg->lv) && !lv_remove(seg_lv(seg, 0)))
-				return_0;
+			if (delete && seg_is_cache(seg)) {
+				if (lv_is_pending_delete(seg->lv)) {
+					/* Just dropping reference on origin when pending delete */
+					if (!remove_seg_from_segs_using_this_lv(seg_lv(seg, 0), seg))
+						return_0;
+					seg_lv(seg, 0) = NULL;
+					seg_le(seg, 0) = 0;
+					seg_type(seg, 0) = AREA_UNASSIGNED;
+					if (seg->pool_lv && !detach_pool_lv(seg))
+						return_0;
+				} else if (!lv_remove(seg_lv(seg, 0)))
+					return_0;
+			}
 
 			if ((pool_lv = seg->pool_lv)) {
 				if (!detach_pool_lv(seg))
@@ -5383,6 +5393,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_0;
 
 		if ((force == PROMPT) &&
+		    !lv_is_pending_delete(lv) &&
 		    lv_is_visible(lv) &&
 		    lv_is_active(lv)) {
 			if (yes_no_prompt("Do you really want to remove%s active "
@@ -5406,7 +5417,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (lv_is_cache(lv)) {
+	if (lv_is_cache(lv) && !lv_is_pending_delete(lv)) {
 		if (!lv_remove_single(cmd, first_seg(lv)->pool_lv, force,
 				      suppress_remove_message)) {
 			if (force < DONT_PROMPT_OVERRIDE) {

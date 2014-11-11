@@ -1969,15 +1969,14 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	if (lv_is_cache_pool(lv)) {
 		if (!dm_list_empty(&lv->segs_using_this_lv)) {
-			/* origin_only is ignored */
-			/* cache pool is 'meta' LV and does not have a real device node */
 			if (!_add_lv_to_dtree(dm, dtree, seg_lv(first_seg(lv), 0), 0))
 				return_0;
 			if (!_add_lv_to_dtree(dm, dtree, first_seg(lv)->metadata_lv, 0))
 				return_0;
-		} else if (!_add_dev_to_dtree(dm, dtree, lv, NULL))
-			return_0; /* For internal use - empty pool makes meta visible */
-		return 1;
+			/* Cache pool does not have a real device node */
+			return 1;
+		}
+		/* Unused cache pool is activated as metadata */
 	}
 
 	if (!origin_only && !_add_dev_to_dtree(dm, dtree, lv, NULL))
@@ -2988,14 +2987,19 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 			continue;
 
 		/* FIXME: we still occasionally need to activate these at top-level */
-		if (strstr(lvname, "_tmeta") || strstr(lvname, "_tdata"))
+		if (((name = strstr(lvname, "_tmeta")) && !name[6]) ||
+		    ((name = strstr(lvname, "_tdata")) && !name[6]))
 			continue;
 
 		/* If operation was performed on a partial tree, don't remove it */
 		if (non_toplevel_tree_dlid && !strcmp(non_toplevel_tree_dlid, uuid))
 			continue;
 
-		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
+		if ((name = strstr(lvname, "_corig")) && !name[6]) {
+			/* FIXME: for now just for _corig deactivate LVM subtree, should be generic */
+			if (!dm_tree_deactivate_children(root, "LVM-", 4))
+				return_0;
+		} else if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
 			return_0;
 	}
 

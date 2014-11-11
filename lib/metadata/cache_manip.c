@@ -246,8 +246,11 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		return 0;
 	}
 
-	if (lv_is_pending_delete(cache_lv))
+	if (lv_is_pending_delete(cache_lv)) {
+		log_error(INTERNAL_ERROR "LV %s is already dropped cache volume.",
+			  display_lvname(cache_lv));
 		goto remove;  /* Already dropped */
+	}
 
 	/* Localy active volume is needed for writeback */
 	if (!lv_is_active_locally(cache_lv)) {

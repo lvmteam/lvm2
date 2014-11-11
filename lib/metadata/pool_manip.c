@@ -217,10 +217,23 @@ int detach_pool_lv(struct lv_segment *seg)
 
 struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 {
-	struct lv_segment *pool_seg;
+	struct lv_segment *pool_seg = NULL;
+	struct seg_list *sl;
 
-	if (!(pool_seg = get_only_segment_using_this_lv(seg->lv)))
-		return_NULL;
+	dm_list_iterate_items(sl, &seg->lv->segs_using_this_lv) {
+		/* Needs to be he only item in list */
+		if (lv_is_pending_delete(sl->seg->lv))
+			continue;
+
+		if (pool_seg) {
+			log_error("%s is referenced by more then one segments (%s, %s).",
+				  display_lvname(seg->lv), display_lvname(pool_seg->lv),
+				  display_lvname(sl->seg->lv));
+			return NULL; /* More then one segment */
+		}
+
+		pool_seg = sl->seg;
+	}
 
 	if ((lv_is_thin_type(seg->lv) && !seg_is_pool(pool_seg))) {
 		log_error("%s on %s is not a %s pool segment",
