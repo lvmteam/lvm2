@@ -112,10 +112,14 @@ static int _get_segment_status_from_target_params(const char *target_name,
 {
 	struct segment_type *segtype;
 
-	/* FIXME: linear is also represented as striped with stripe count 1.
-		  We're not reporting linear or striped status anyway, so
-		  just skip the error here till this is properly resolved.*/
-	if (!strcmp(target_name, "linear") || !strcmp(target_name, "striped"))
+	/*
+	 * TODO: Add support for other segment types too!
+	 * The segment to report status for must be properly
+	 * selected for all the other types - mainly make sure
+	 * linear/striped, old snapshots and raids have proper
+	 * segment selected for status!
+	 */
+	if (strcmp(target_name, "cache"))
 		return 1;
 
 	segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name);
