@@ -23,8 +23,8 @@ typedef int (*query_resource_fn) (const char *resource, int *mode);
 typedef void (*fin_lock_fn) (void);
 typedef void (*reset_lock_fn) (void);
 
-#define LCK_PRE_MEMLOCK	0x00000001	/* Is memlock() needed before calls? */
-#define LCK_CLUSTERED	0x00000002
+#define LCK_PRE_MEMLOCK			0x00000001	/* Is memlock() needed before calls? */
+#define LCK_CLUSTERED			0x00000002
 #define LCK_SUPPORTS_REMOTE_QUERIES	0x00000004
 
 struct locking_type {

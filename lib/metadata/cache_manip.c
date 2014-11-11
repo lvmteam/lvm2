@@ -27,7 +27,7 @@
 #define DM_TRANSACTION_OVERHEAD		4096  /* KiB */
 #define DM_BYTES_PER_BLOCK		16 /* bytes */
 #define DM_HINT_OVERHEAD_PER_BLOCK	8  /* bytes */
-#define DM_MAX_HINT_WIDTH		(4+16)  /* bytes,  TODO: configurable ?? */
+#define DM_MAX_HINT_WIDTH		(4+16)  /* bytes.  FIXME Configurable? */
 
 const char *get_cache_pool_cachemode_name(const struct lv_segment *seg)
 {

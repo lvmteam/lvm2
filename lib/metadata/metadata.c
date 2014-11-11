@@ -2547,12 +2547,12 @@ int vg_validate(struct volume_group *vg)
 
 		if (lv_is_pool_metadata_spare(lvl->lv)) {
 			if (++spare_count > 1) {
-				log_error(INTERNAL_ERROR "LV %s is %u. pool metadata spare (>1).",
+				log_error(INTERNAL_ERROR "LV %s is extra pool metadata spare volume. %u found but only 1 allowed.",
 					  lvl->lv->name, spare_count);
 				r = 0;
 			}
 			if (vg->pool_metadata_spare_lv != lvl->lv) {
-				log_error(INTERNAL_ERROR "LV %s is not vg pool metadata spare.",
+				log_error(INTERNAL_ERROR "LV %s is not the VG's pool metadata spare volume.",
 					  lvl->lv->name);
 				r = 0;
 			}

@@ -1,9 +1,9 @@
-Version 2.02.112 - 
+Version 2.02.112 - 11th November 2014
 =====================================
   Add cache_{read,write}_{hits,misses} reporting fields.
   Add cache_{total,used,dirty}_blocks reporting fields.
   Add _corig as reserved suffix.
-  Reduce vg write and vg commits when creating spare volumes.
+  Reduce number of VG writes and commits when creating spare volumes.
   When remove_layer_from_lv() removes layer, restore subLV names.
   Cache-pool in use becomes invisible LV.
   Don't prompt for removal of _pmspare in VG without pool metadata LV.
@@ -15,7 +15,8 @@ Version 2.02.112 -
   Report some basic percentage info for cache pools.
   Introduce size_mb_arg_with_percent() for advanced size arg reading.
   Add extra support for '.' as decimal point in size args.
-  Configurable support for creation of sparse volumes with thin-pools.
+  Add configure parameters for default segment type choices.
+  Add global/sparse_segtype_default setting to use thin for --type sparse.
   Update and correct lvcreate and lvcovert man pages.
   Mark pools and snapshots as unzeroable volumes.
   Check for zeroing of volume after segment type is fully detected.
@@ -28,13 +29,14 @@ Version 2.02.112 -
   Query lock holding LV when replacing and converting raid volumes.
   Add extra validate for locked lv within validate_lv_cache_create().
   Add internal lvseg_name() function.
-  Skip trying to file lock virtual internal vg name.
+  Skip use of lock files for virtual internal VG names.
   Fix selection on {vg,lv}_permissions fields to properly match selection criteria.
   Fix lv_permissions reporting to display read-only{-override} instead of blank.
   Fix liblvm2cmd and lvm shell to respect quotes around args in cmd line string.
   Permit extent sizes > 128KB that are not power of 2 with lvm2 format.
   Remove workaround for lvm2-monitor.service hang on stop if lvmetad stopped.
   Change vgremove to use process_each_lv_in_vg.
+  Allow lvconvert --repair and --splitmirrors on internal LVs.
   Introduce WARN_ flags to control some metadata warning messages.
   Use process_each_pv in vgreduce.
   Refactor process_each_pv in toollib.
@@ -47,11 +49,12 @@ Version 2.02.112 -
   Improve code for creation of cache and cache pool volumes.
   Check cluster-wide (not local) active status before removing LV.
   Properly check if activation of removed cached LV really activated.
-  Lvremoving cached LV removes cachepool (keep with lvconvert --splitcache).
+  lvremove cached LV removes cachepool (keep with lvconvert --splitcache).
   Always remove spare LV with last removed pool volume.
   Support lvconvert --splitcache and --uncache of cached LV.
   Option --cache has also shortcut -H (i.e. lvcreate -H).
   Refactor lvcreate code and better preserve --type argument.
+  Refactor filter processing around lvmetad.
   Refactor process_each_lv in toollib.
   Refactor process_each_vg in toollib.
   Pools cannot be used as external origin.
@@ -64,6 +67,7 @@ Version 2.02.112 -
   Unify handling of --persistent option for lvcreate and lvchange.
   Validate major and minor numbers stored in metadata.
   Use -fPIE when linking -pie executables.
+  Support DEBUG_MEMLOCK to trap unsupported mmap usage.
   Enable cache segment type by default.
   Ensure only supported volume types are used with cache segments.
   Fix inablility to specify cachemode when 'lvconvert'ing to cache-pool.
@@ -75,8 +79,6 @@ Version 2.02.112 -
   Fix cmirror endian conversions.
   Introduce lv_is_pvmove/locked/converting/merging macros.
   Avoid leaving linear logical volume when thin pool creation fails.
-  Demote an error to a warning when devices known to lvmetad are filtered out.
-  Re-order filter evaluation, making component filters global.
   Don't leak alloc_handle on raid target error path.
   Properly validate raid leg names.
   Archive metadata before starting their modification in raid target.
@@ -84,7 +86,10 @@ Version 2.02.112 -
   Add missing backup of lvm2 metadata after some raid modifications.
   Use vg memory pool for extent allocation.
   Add allocation/physical_extent_size config option for default PE size of VGs.
-  Introduce common code to modify metadate and reload updated LV.
+  Demote an error to a warning when devices known to lvmetad are filtered out.
+  Re-order filter evaluation, making component filters global.
+  Fix logic that checks for full scan before iterating through devices.
+  Introduce common code to modify metadata and reload updated LV.
   Fix rename of active snapshot volume in cluster.
   Make sure shared libraries are built with RELRO option.
 

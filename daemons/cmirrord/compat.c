@@ -183,7 +183,6 @@ int clog_request_from_network(void *data, size_t data_len)
 {
 	uint64_t *vp = data;
 	uint64_t version = xlate64(vp[0]);
-	uint64_t unconverted_version = vp[1];
 	struct clog_request *rq = data;
 
 	switch (version) {

@@ -552,9 +552,7 @@ int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc)
 }
 
 /*
- * Switching the cluster attribute make the active volume
- * exclusively activate
- * with any active logical volumes.
+ * Setting the cluster attribute marks active volumes exclusive.
  *
  * FIXME: resolve logic with reacquiring proper top-level LV locks
  *        and we likely can't giveup DLM locks for active LVs...

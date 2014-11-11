@@ -675,7 +675,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 	/* Starts basic option validation for every segment type */
 
-	/* TODO: Use these ARGS macros also in commands.h ? */
+	/* FIXME Use these ARGS macros also in commands.h? */
 	/* ARGS are disjoint! sets of options */
 #define LVCREATE_ARGS \
 	activate_ARG,\
@@ -783,7 +783,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					    -1))
 			return_0;
 
-		/* TODO: resolve this ambiguous case with --pooldatasize  */
+		/* FIXME Resolve this ambiguous case with --pooldatasize  */
 		if (arg_is_set(cmd, thinpool_ARG)) {
 			if (lp->type) {
 				/* Unsupported with --type snapshot */
@@ -1071,12 +1071,12 @@ static int _determine_cache_argument(struct volume_group *vg,
 			log_error("Change of volume permission is unsupported with cache conversion, use lvchange.");
 			return 0;
 		}
-		/* FIXME: how to handle skip flag */
+		/* FIXME How to handle skip flag? */
 		if (arg_from_list_is_set(cmd, "is unsupported with cache conversion",
 					 setactivationskip_ARG,
 					 ignoreactivationskip_ARG,
 					 -1))
-			return_0; /* TODO FIX THIS */
+			return_0; /* FIXME */
 
 		/* Put origin into resulting activation state first */
 		if (is_change_activating(lp->activate)) {

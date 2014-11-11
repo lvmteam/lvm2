@@ -799,8 +799,8 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint32_t chunk_size);
 
 /*
- * TODO: Add individual cache policy pairs  <key> = value, like:
- *int dm_tree_node_add_cache_policy_arg(struct dm_tree_node *dnode,
+ * FIXME Add individual cache policy pairs  <key> = value, like:
+ * int dm_tree_node_add_cache_policy_arg(struct dm_tree_node *dnode,
  *				      const char *key, uint64_t value);
  */
 

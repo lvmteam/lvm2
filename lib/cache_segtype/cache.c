@@ -78,7 +78,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("Failed to duplicate policy in");
 	} else
 		/* Cannot use 'just' default, so pick one */
-		seg->policy_name = DEFAULT_CACHE_POOL_POLICY; /* TODO: configurable default */
+		seg->policy_name = DEFAULT_CACHE_POOL_POLICY; /* FIXME make configurable */
 
 	/*
 	 * Read in policy args:

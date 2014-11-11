@@ -88,7 +88,7 @@ static const struct flag _lv_flags[] = {
 	{CACHE_POOL, NULL, 0},
 	{CACHE_POOL_DATA, NULL, 0},
 	{CACHE_POOL_METADATA, NULL, 0},
-	{LV_PENDING_DELETE, NULL, 0}, /* TODO: print as COMPATIBLE_FLAG */
+	{LV_PENDING_DELETE, NULL, 0}, /* FIXME Display like COMPATIBLE_FLAG */
 	{0, NULL, 0}
 };
 

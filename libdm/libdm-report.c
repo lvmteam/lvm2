@@ -1265,7 +1265,7 @@ static int _check_value_is_reserved(struct dm_report *rh, unsigned type, const v
 						return 1;
 					break;
 				case DM_REPORT_FIELD_TYPE_STRING_LIST:
-					// TODO: add comparison for string list
+					/* FIXME Add comparison for string list */
 					break;
 			}
 		}

@@ -6768,11 +6768,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 		/* Create cache origin for cache pool */
-		/* TODO: eventually support raid/mirrors with -m */
+		/* FIXME Eventually support raid/mirrors with -m */
 		if (!(create_segtype = get_segtype_from_string(vg->cmd, "striped")))
 			return_0;
 	} else if (seg_is_mirrored(lp) || seg_is_raid(lp)) {
-		/* FIXME: this will not pass cluster lock! */
+		/* FIXME This will not pass cluster lock! */
 		init_mirror_in_sync(lp->nosync);
 
 		if (lp->nosync) {
@@ -6809,11 +6809,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					return_NULL;
 				if (origin_lv->status & LVM_WRITE) {
 					log_error("Cannot use writable LV as the external origin.");
-					return NULL; // TODO conversion for inactive
+					return NULL; /* FIXME conversion for inactive */
 				}
 				if (lv_is_active(origin_lv) && !lv_is_external_origin(origin_lv)) {
 					log_error("Cannot use active LV for the external origin.");
-					return NULL; // We can't be sure device is read-only
+					return NULL; /* We can't be sure device is read-only */
 				}
 			}
 		}
@@ -7029,7 +7029,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lv->status |= LV_TEMPORARY;
 
 	if (seg_is_cache(lp)) {
-		/* TODO: support remote exclusive activation? */
+		/* FIXME Support remote exclusive activation? */
 		/* Not yet 'cache' LV, it is stripe volume for wiping */
 		if (is_change_activating(lp->activate) &&
 		    !activate_lv_excl_local(cmd, lv)) {
@@ -7132,7 +7132,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (origin_lv) {
 			/* Convert origin to cached LV */
 			if (!(tmp_lv = lv_cache_create(lv, origin_lv))) {
-				/* TODO: do a better revert */
+				/* FIXME Do a better revert */
 				log_error("Aborting. Leaving cache pool %s and uncached origin volume %s.",
 					  display_lvname(lv), display_lvname(origin_lv));
 				return NULL;
@@ -7146,7 +7146,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		lv = tmp_lv;
 		if (!lv_update_and_reload(lv)) {
-			/* TODO: do a better revert */
+			/* FIXME Do a better revert */
 			log_error("Aborting. Manual intervention required.");
 			return NULL; /* FIXME: revert */
 		}
@@ -7186,13 +7186,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 			backup(vg);
 			/*
-			 * TODO:
-			 *   We do not actually need snapshot-origin as an active device,
-			 *   as virtual origin is already 'hidden' private device without
-			 *   vg/lv links. As such it is not supposed to be used by any user.
-			 *   Also it would save one dm table entry, but it needs quite a few
-			 *   changes in the libdm/lvm2 code base to support it.
+			 * FIXME We do not actually need snapshot-origin as an active device,
+			 * as virtual origin is already 'hidden' private device without
+			 * vg/lv links. As such it is not supposed to be used by any user.
+			 * Also it would save one dm table entry, but it needs quite a few
+			 * changes in the libdm/lvm2 code base to support it.
 			 */
+
 			/* Activate spare snapshot once it is a complete LV */
 			if (!lv_active_change(cmd, origin_lv, lp->activate, 1)) {
 				log_error("Failed to activate sparce volume %s.",

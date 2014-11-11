@@ -863,7 +863,7 @@ static int _lv_is_exclusive(struct logical_volume *lv)
 	struct lv_segment *seg;
 
 	/* Some seg types require exclusive activation */
-	/* TODO: deep-scan of every segtype in use */
+	/* FIXME Scan recursively */
 	dm_list_iterate_items(seg, &lv->segments)
 		if (seg_only_exclusive(seg))
 			return 1;
