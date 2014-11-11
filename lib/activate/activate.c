@@ -1015,6 +1015,9 @@ int lv_cache_status(const struct logical_volume *cache_lv,
 		cache_lv = cache_seg->lv;
 	}
 
+	if (lv_is_pending_delete(cache_lv))
+		return 0;
+
 	if (!lv_info(cache_lv->vg->cmd, cache_lv, 0, NULL, 0, 0))
 		return 0;
 
