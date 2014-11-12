@@ -416,7 +416,7 @@ and
 Sets the size of cache or thin pool's metadata logical volume,
 if the pool metadata volume is undefined.
 Pool is specified with the option
-\B\-\-cachepool\P or \fB\-\-thinpool\fP.
+\fB\-\-cachepool\fP or \fB\-\-thinpool\fP.
 For thin pool supported value is in the range between 2MiB and 16GiB.
 The default value is estimated with this formula
 (Pool_LV_size / Pool_LV_chunk_size * 64b).
