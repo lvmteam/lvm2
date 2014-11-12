@@ -1977,6 +1977,7 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 	struct dev_iter *iter;
 	struct device *dev;
 	struct device_list *devl;
+	int r = ECMD_FAILED;
 
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
@@ -1988,16 +1989,17 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 	while ((dev = dev_iter_get(iter))) {
 		if (!(devl = dm_pool_alloc(cmd->mem, sizeof(*devl)))) {
 			log_error("device_list alloc failed");
-			return ECMD_FAILED;
+			goto out;
 		}
 
 		devl->dev = dev;
 		dm_list_add(all_devices, &devl->list);
 	}
 
+	r = ECMD_PROCESSED;
+out:
 	dev_iter_destroy(iter);
-
-	return ECMD_PROCESSED;
+	return r;
 }
 
 static int _device_list_remove(struct dm_list *all_devices, struct device *dev)

@@ -86,6 +86,7 @@ struct dev_filter *usable_filter_create(struct dev_types *dt __attribute__((unus
 	f->use_count = 0;
 	if (!(f->private = dm_zalloc(sizeof(filter_mode_t)))) {
 		log_error("Usable device filter mode allocation failed");
+		dm_free(f);
 		return NULL;
 	}
 	*((filter_mode_t *) f->private) = mode;
