@@ -235,6 +235,11 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 		pool_seg = sl->seg;
 	}
 
+	if (!pool_seg) {
+		log_error("Pool segment not found for %s.", display_lvname(seg->lv));
+		return NULL;
+	}
+
 	if ((lv_is_thin_type(seg->lv) && !seg_is_pool(pool_seg))) {
 		log_error("%s on %s is not a %s pool segment",
 			  pool_seg->lv->name, seg->lv->name,
