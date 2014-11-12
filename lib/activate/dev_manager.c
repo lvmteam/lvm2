@@ -3001,11 +3001,12 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, char *
 		if (non_toplevel_tree_dlid && !strcmp(non_toplevel_tree_dlid, uuid))
 			continue;
 
-		if ((name = strstr(lvname, "_corig")) && !name[6]) {
-			/* FIXME: for now just for _corig deactivate LVM subtree, should be generic */
-			if (!dm_tree_deactivate_children(root, "LVM-", 4))
-				return_0;
-		} else if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
+		if ((name = strstr(lvname, "_corig")) && !name[6] &&
+		    /* FIXME: for now just for _corig deactivate LVM subtree, should be generic */
+		    !dm_tree_deactivate_children(child, "LVM-", 4))
+			return_0;
+
+		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
 			return_0;
 	}
 
