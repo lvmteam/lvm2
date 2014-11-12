@@ -217,8 +217,8 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,
 						    &target_length, &target_name, &target_params);
-			if ((seg_status->seg->le * extent_size == target_start) &&
-			    (seg_status->seg->len * extent_size == target_length)) {
+			if (((uint64_t) seg_status->seg->le * extent_size == target_start) &&
+			    ((uint64_t) seg_status->seg->len * extent_size == target_length)) {
 				params_to_process = target_params;
 				break;
 			}

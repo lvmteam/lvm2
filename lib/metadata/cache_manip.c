@@ -70,7 +70,7 @@ int update_cache_pool_params(const struct segment_type *segtype,
 {
 	uint64_t min_meta_size;
 	uint32_t extent_size = vg->extent_size;
-	uint64_t pool_metadata_size = *pool_metadata_extents * vg->extent_size;
+	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * vg->extent_size;
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
 		*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
