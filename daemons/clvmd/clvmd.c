@@ -1128,7 +1128,7 @@ static void dump_message(char *buf, int len)
 		row[j] = buf[i];
 		str[j] = (isprint(buf[i])) ? buf[i] : ' ';
 
-		if ((j == 8) || (i + 1 == len)) {
+		if (i + 1 == len) {
 			for (;j < 8; ++j) {
 				row[j] = 0;
 				str[j] = ' ';
