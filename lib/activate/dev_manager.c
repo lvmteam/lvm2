@@ -191,6 +191,9 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 		case MKNODES:
 			dmtask = DM_DEVICE_MKNODES;
 			break;
+		default:
+			log_error(INTERNAL_ERROR "_info_run: unhandled info type");
+			return 0;
 	}
 
 	if (!(dmt = _setup_task(type != MKNODES ? name : NULL, dlid, 0, dmtask,
