@@ -470,6 +470,9 @@ static int handle_connect(daemon_state s)
 	if (client.socket_fd < 0)
 		return 0;
 
+	 if (fcntl(client.socket_fd, F_SETFD, FD_CLOEXEC))
+		WARN(&s, "setting CLOEXEC on client socket fd %d failed", client.socket_fd);
+
 	if (!(ts = dm_malloc(sizeof(thread_state)))) {
 		if (close(client.socket_fd))
 			perror("close");
