@@ -40,7 +40,7 @@ const char *get_cache_pool_cachemode_name(const struct lv_segment *seg)
 	if (seg->feature_flags & DM_CACHE_FEATURE_PASSTHROUGH)
 		return "passthrough";
 
-	log_error("LV %s has uknown feature flags %" PRIu64,
+	log_error(INTERNAL_ERROR "LV %s has uknown feature flags %" PRIu64 ".",
 		  display_lvname(seg->lv), seg->feature_flags);
 
 	return NULL;
