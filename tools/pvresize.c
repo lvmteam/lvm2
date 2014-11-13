@@ -30,6 +30,10 @@ static int _pvresize_single(struct cmd_context *cmd,
 {
 	struct pvresize_params *params = (struct pvresize_params *) handle;
 
+	if (!params) {
+		log_error(INTERNAL_ERROR "Invalid resize params.");
+		return ECMD_FAILED;
+	}
 	params->total++;
 
 	if (!pv_resize_single(cmd, vg, pv, params->new_size))

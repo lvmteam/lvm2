@@ -779,7 +779,9 @@ static int _cachemode_disp(struct dm_report *rh, struct dm_pool *mem,
 		seg = first_seg(seg->pool_lv);
 
 	if (seg_is_cache_pool(seg)) {
-		cachemode_str = get_cache_pool_cachemode_name(seg);
+		if (!(cachemode_str = get_cache_pool_cachemode_name(seg)))
+			return_0;
+
 		return dm_report_field_string(rh, field, &cachemode_str);
 	}
 

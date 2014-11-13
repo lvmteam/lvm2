@@ -131,7 +131,8 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	if (strcmp(target_name, "cache"))
 		return 1;
 
-	segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name);
+	if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name)))
+		return_0;
 
 	if (segtype != seg_status->seg->segtype) {
 		log_error(INTERNAL_ERROR "_get_segment_status_from_target_params: "

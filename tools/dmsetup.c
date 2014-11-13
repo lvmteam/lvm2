@@ -3824,13 +3824,15 @@ int main(int argc, char **argv)
 	}
 
 	if (_switches[HELP_ARG]) {
-		cmd = _find_command("help");
-		goto doit;
+		if ((cmd = _find_command("help")))
+			goto doit;
+		goto unknown;
 	}
 
 	if (_switches[VERSION_ARG]) {
-		cmd = _find_command("version");
-		goto doit;
+		if ((cmd = _find_command("version")))
+			goto doit;
+		goto unknown;
 	}
 
 	if (argc == 0) {
@@ -3839,6 +3841,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!(cmd = _find_command(argv[0]))) {
+unknown:
 		fprintf(stderr, "Unknown command\n");
 		_usage(stderr);
 		goto out;
