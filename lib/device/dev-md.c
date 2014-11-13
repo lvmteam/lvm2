@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "dev-type.h"
-#include "metadata.h"
 #include "xlate.h"
 
 #ifdef __linux__

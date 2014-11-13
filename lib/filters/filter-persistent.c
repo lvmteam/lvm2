@@ -17,7 +17,6 @@
 #include "filter.h"
 #include "config.h"
 #include "lvm-file.h"
-#include "activate.h"
 
 struct pfilter {
 	char *file;

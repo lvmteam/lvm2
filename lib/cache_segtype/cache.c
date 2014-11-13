@@ -19,7 +19,6 @@
 #include "text_export.h"
 #include "config.h"
 #include "str_list.h"
-#include "targets.h"
 #include "lvm-string.h"
 #include "activate.h"
 #include "metadata.h"

@@ -14,8 +14,6 @@
 
 #include "lib.h"
 #include "segtype.h"
-#include "display.h"
-#include "config.h"
 #include "str_list.h"
 #include "activate.h"
 
