@@ -1318,6 +1318,11 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	if (!delete)
 		return 1;
 
+	if (lv == lv->vg->pool_metadata_spare_lv) {
+		lv->status &= ~POOL_METADATA_SPARE;
+		lv->vg->pool_metadata_spare_lv = NULL;
+	}
+
 	/* Remove the LV if it is now empty */
 	if (!lv->le_count && !unlink_lv_from_vg(lv))
 		return_0;
@@ -5334,7 +5339,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int ask_discard;
 	struct lv_list *lvl;
 	struct seg_list *sl;
-	int is_last_pool;
+	int is_last_pool = lv_is_pool(lv);
 
 	vg = lv->vg;
 
@@ -5428,10 +5433,33 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_print_unless_silent("Ignoring uncache failure of %s.",
 						display_lvname(lv));
 		}
+		is_last_pool = 1;
+	}
+
+	/* Used cache pool or COW cannot be activated */
+	if ((!lv_is_cache_pool(lv) || dm_list_empty(&lv->segs_using_this_lv)) &&
+	    !lv_is_cow(lv) &&
+	    !deactivate_lv(cmd, lv)) {
+		/* FIXME Review and fix the snapshot error paths! */
+		log_error("Unable to deactivate logical volume %s.",
+			  display_lvname(lv));
+		return 0;
 	}
 
 	if (!archive(vg))
 		return 0;
+
+	/* Clear thin pool stacked messages */
+	if (pool_lv && !pool_has_message(first_seg(pool_lv), lv, 0) &&
+	    !update_pool_lv(pool_lv, 1)) {
+		if (force < DONT_PROMPT_OVERRIDE) {
+			log_error("Failed to update pool %s.", display_lvname(pool_lv));
+			return 0;
+		}
+		log_print_unless_silent("Ignoring update failure of pool %s.",
+					display_lvname(pool_lv));
+		pool_lv = NULL; /* Do not retry */
+	}
 
 	/* When referenced by the LV with pending delete flag, remove this deleted LV first */
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv)
@@ -5450,26 +5478,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		/* vg_remove_snapshot() will preload origin/former snapshots */
 		if (!vg_remove_snapshot(lv))
 			return_0;
-	}
 
-	if (lv_is_pool(lv) && lv->vg->pool_metadata_spare_lv) {
-		/* When removing last pool, also remove the spare */
-		is_last_pool = 1;
-		dm_list_iterate_items(lvl, &lv->vg->lvs)
-			if (lv_is_pool(lvl->lv) &&
-			    lvl->lv != lv) {
-				is_last_pool = 0;
-				break;
-			}
-		if (is_last_pool) {
-			/* This is purely internal LV volume, no question */
-			if (!deactivate_lv(cmd, lv->vg->pool_metadata_spare_lv)) {
-				log_error("Unable to deactivate logical volume %s",
-					  display_lvname(lv->vg->pool_metadata_spare_lv));
-				return 0;
-			}
-			if (!lv_remove(lv->vg->pool_metadata_spare_lv))
-				return_0;
+		if (!deactivate_lv(cmd, lv)) {
+			/* FIXME Review and fix the snapshot error paths! */
+			log_error("Unable to deactivate logical volume %s.",
+				  display_lvname(lv));
+			return 0;
 		}
 	}
 
@@ -5483,23 +5497,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			if (!lv_cache_remove(cache_seg->lv))
 				return_0;
 		}
-	} else if (!deactivate_lv(cmd, lv)) {
-		/* FIXME Review and fix the snapshot error paths! */
-		log_error("Unable to deactivate logical volume \"%s\"",
-			  lv->name);
-		return 0;
-	}
-
-	/* Clear thin pool stacked messages */
-	if (pool_lv && !pool_has_message(first_seg(pool_lv), lv, 0) &&
-	    !update_pool_lv(pool_lv, 1)) {
-		if (force < DONT_PROMPT_OVERRIDE) {
-			log_error("Failed to update pool %s.", display_lvname(pool_lv));
-			return 0;
-		}
-		log_print_unless_silent("Ignoring update failure of pool %s.",
-					display_lvname(pool_lv));
-		pool_lv = NULL; /* Do not retry */
 	}
 
 	visible = lv_is_visible(lv);
@@ -5508,6 +5505,25 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!lv_remove(lv)) {
 		log_error("Error releasing logical volume \"%s\"", lv->name);
 		return 0;
+	}
+
+	if (is_last_pool && vg->pool_metadata_spare_lv) {
+		/* When removed last pool, also remove the spare */
+		dm_list_iterate_items(lvl, &vg->lvs)
+			if (lv_is_pool_metadata(lvl->lv)) {
+				is_last_pool = 0;
+				break;
+			}
+		if (is_last_pool) {
+			/* This is purely internal LV volume, no question */
+			if (!deactivate_lv(cmd, vg->pool_metadata_spare_lv)) {
+				log_error("Unable to deactivate spare logical volume %s.",
+					  display_lvname(vg->pool_metadata_spare_lv));
+				return 0;
+			}
+			if (!lv_remove(vg->pool_metadata_spare_lv))
+				return_0;
+		}
 	}
 
 	/*

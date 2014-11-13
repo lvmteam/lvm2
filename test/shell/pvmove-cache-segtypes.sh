@@ -56,6 +56,7 @@ not check lv_tree_on $vg ${lv1}_pool "$dev5"
 #check lv_tree_on $vg ${lv1}_foo "$dev5"
 
 lvremove -ff $vg
+dmsetup info -c | not grep $vg
 
 # Testing pvmove of origin LV
 #############################
@@ -82,6 +83,7 @@ not check lv_tree_on $vg ${lv1} "$dev3"
 #check lv_tree_on $vg ${lv1} "$dev1"
 #check dev_md5sum $vg $lv1
 lvremove -ff $vg
+dmsetup info -c | not grep $vg
 
 # Testing pvmove of a RAID origin LV
 ####################################
@@ -106,6 +108,7 @@ not check lv_tree_on $vg ${lv1} "$dev2" "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
 #check dev_md5sum $vg $lv1
 lvremove -ff $vg
+dmsetup info -c | not grep $vg
 
 # Testing pvmove of a RAID cachepool (metadata and data)
 ########################################################
@@ -137,6 +140,7 @@ not check lv_tree_on $vg ${lv1}_pool "$dev2" "$dev3"
 #check lv_tree_on $vg ${lv1} "$dev5"
 #check dev_md5sum $vg $lv1
 lvremove -ff $vg
+dmsetup info -c | not grep $vg
 
 # Testing pvmove of Thin-pool on cache LV on RAID
 #################################################
@@ -177,5 +181,6 @@ check lv_tree_on $vg thinpool "$dev3" "$dev4" "$dev5" # Move non-cache tmeta
 #check dev_md5sum $vg/thin_lv
 
 lvremove -ff $vg
+dmsetup info -c | not grep $vg
 
 done
