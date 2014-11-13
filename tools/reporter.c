@@ -223,7 +223,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
 	struct lvinfo lvinfo = { .exists = 0 };
-	struct lv_seg_status lv_seg_status = { .type = SEG_STATUS_NONE };
+	struct lv_seg_status lv_seg_status = { .type = SEG_STATUS_NONE,
+					       .status = NULL };
 
 	struct segment_type _freeseg_type = {
 		.name = "free",
@@ -269,6 +270,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	}
 
  out:
+	if (seg && lv_seg_status.status)
+		dm_pool_free(lv_seg_status.mem, lv_seg_status.status);
 	return ret;
 }
 
