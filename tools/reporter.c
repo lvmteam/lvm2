@@ -553,6 +553,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		lock_global = 1;
 		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 			log_error("Unable to obtain global lock.");
+			dm_report_free(report_handle);
 			return ECMD_FAILED;
 		}
 	}
