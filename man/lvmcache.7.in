@@ -89,7 +89,6 @@ CacheDataLV is renamed CachePoolLV_cdata and becomes hidden.
 CacheMetaLV is renamed CachePoolLV_cmeta and becomes hidden.
 
 .B lvconvert \-\-type cache-pool \-\-poolmetadata VG/CacheMetaLV
-.br
 .RS
 .B VG/CacheDataLV
 .RE
