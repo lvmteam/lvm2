@@ -324,9 +324,10 @@ static PyObject *_liblvm_lvm_pv_remove(PyObject *self, PyObject *arg)
 static int _set_pv_numeric_prop(pv_create_params_t pv_params, const char *name,
 								unsigned long long value)
 {
-	struct lvm_property_value prop_value;
-	prop_value.is_integer = 1;
-	prop_value.value.integer = value;
+	struct lvm_property_value prop_value = {
+		.is_integer = 1,
+		.value.integer = value,
+	};
 
 	return lvm_pv_params_set_property(pv_params, name, &prop_value);
 }
