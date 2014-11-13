@@ -57,10 +57,13 @@ static void _get_lv_info_for_report(struct cmd_context *cmd,
 }
 
 static void _get_lv_info_with_segment_status_for_report(struct cmd_context *cmd,
-							struct lv_with_info_and_seg_status *lvdm)
+							struct logical_volume *lv,
+							struct lvinfo *lvinfo,
+							struct lv_segment *lv_seg,
+							struct lv_seg_status *lv_seg_status)
 {
-	if (!lv_info_with_seg_status(cmd, lvdm->seg_status->seg->lv, lvdm->seg_status->seg, 0, lvdm, 1, 1))
-		lvdm->info->exists = 0;
+	if (!lv_info_with_seg_status(cmd, lv, lv_seg, 0, lvinfo, lv_seg_status, 1, 1))
+		lvinfo->exists = 0;
 }
 
 static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -75,7 +78,7 @@ static int _lvs_with_info_single(struct cmd_context *cmd, struct logical_volume 
 	return ECMD_PROCESSED;
 }
 
-static void _choose_lv_segment_for_status_report(struct lv_with_info_and_seg_status *lvdm)
+static void _choose_lv_segment_for_status_report(struct logical_volume *lv, struct lv_segment **lv_seg)
 {
 	/*
 	 * By default, take the first LV segment to report status for.
@@ -84,46 +87,29 @@ static void _choose_lv_segment_for_status_report(struct lv_with_info_and_seg_sta
 	 * to lvdm->seg_status->seg. This is the segment whose
 	 * status line will be used for report exactly.
 	 */
-	lvdm->seg_status->seg = first_seg(lvdm->lv);
+	*lv_seg = first_seg(lv);
 }
 
 static int _lvs_with_status_single(struct cmd_context *cmd, struct logical_volume *lv,
 				   void *handle)
 {
 	struct lvinfo lvinfo;
+	struct lv_segment *lv_seg;
 	struct lv_seg_status lv_seg_status = { .mem = lv->vg->vgmem,
 					       .type = SEG_STATUS_NONE,
 					       .status = NULL };
-	struct lv_with_info_and_seg_status lvdm = { .lv = lv,
-						    .seg_status = &lv_seg_status };
 	int r = ECMD_FAILED;
 
-	_choose_lv_segment_for_status_report(&lvdm);
+	_choose_lv_segment_for_status_report(lv, &lv_seg);
+	_get_lv_info_with_segment_status_for_report(cmd, lv, &lvinfo, lv_seg, &lv_seg_status);
 
-	if (lvdm.seg_status->seg->lv != lv) {
-		/*
-		 * If the info is requested on one LV and segment
-		 * status on another LV, we need to call these separately.
-		 */
-		_get_lv_info_for_report(cmd, lv, &lvinfo);
-		lvdm.info = NULL;
-		_get_lv_info_with_segment_status_for_report(cmd, &lvdm);
-	} else {
-		/*
-		 * If the info is requested on the same LV as status,
-		 * we can get info and status in one go!
-		 */
-		lvdm.info = &lvinfo;
-		_get_lv_info_with_segment_status_for_report(cmd, &lvdm);
-	}
-
-	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, &lvinfo, lvdm.seg_status, NULL))
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL, &lvinfo, &lv_seg_status, NULL))
 		goto out;
 
 	r = ECMD_PROCESSED;
 out:
-	if (lvdm.seg_status->status)
-		dm_pool_free(lvdm.seg_status->mem, lvdm.seg_status->status);
+	if (lv_seg_status.status)
+		dm_pool_free(lv_seg_status.mem, lv_seg_status.status);
 	return r;
 }
 
@@ -152,23 +138,19 @@ static int _segs_with_lv_status_single(struct cmd_context *cmd __attribute__((un
 				       struct lv_segment *seg, void *handle)
 {
 	struct lvinfo lvinfo;
-	struct lv_seg_status lv_seg_status = { .seg = seg,
-					       .mem = seg->lv->vg->vgmem,
+	struct lv_seg_status lv_seg_status = { .mem = seg->lv->vg->vgmem,
 					       .type = SEG_STATUS_NONE,
 					       .status = NULL };
-	struct lv_with_info_and_seg_status lvdm = { .lv = seg->lv,
-						    .info = &lvinfo,
-						    .seg_status = &lv_seg_status };
 	int r = ECMD_FAILED;
 
-	_get_lv_info_with_segment_status_for_report(cmd, &lvdm);
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, lvdm.info, lvdm.seg_status, NULL))
+	_get_lv_info_with_segment_status_for_report(cmd, seg->lv, &lvinfo, seg, &lv_seg_status);
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL, &lvinfo, &lv_seg_status, NULL))
 		goto_out;
 
 	r = ECMD_PROCESSED;
 out:
-	if (lvdm.seg_status->status)
-		dm_pool_free(lvdm.seg_status->mem, lvdm.seg_status->status);
+	if (lv_seg_status.status)
+		dm_pool_free(lv_seg_status.mem, lv_seg_status.status);
 	return r;
 }
 

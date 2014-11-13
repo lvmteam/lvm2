@@ -111,16 +111,31 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 
 /*
- * Returns 1 if info structure has been populated, else 0.
+ * Returns 1 if info structure has been populated, else 0 on failure.
+ * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
  */
 int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
 	    struct lvinfo *info, int with_open_count, int with_read_ahead);
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
+/*
+ * Returns 1 if lv_seg_status structure has been populated,
+ * else 0 on failure or if device not active locally.
+ */
+int lv_status(struct cmd_context *cmd, struct lv_segment *lv_seg,
+	      struct lv_seg_status *lv_seg_status);
+
+/*
+ * Returns 1 if lv_info_and_seg_status structure has been populated,
+ * else 0 on failure or if device not active locally.
+ *
+ * lv_info_with_seg_status is the same as calling lv_info and then lv_seg_status,
+ * but this fn tries to do that with one ioctl if possible.
+ */
 int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
-			    const struct lv_segment *lv_seg, int use_layer,
-			    struct lv_with_info_and_seg_status *lvdm,
+			    struct lv_segment *lv_seg, int use_layer,
+			    struct lvinfo *lvinfo, struct lv_seg_status *lv_seg_status,
 			    int with_open_count, int with_read_ahead);
 
 int lv_check_not_in_use(const struct logical_volume *lv);
