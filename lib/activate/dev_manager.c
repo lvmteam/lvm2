@@ -3028,7 +3028,7 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root, const 
 static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, action_t action)
 {
-	static const char const _action_names[][24] = {
+	static const char _action_names[][24] = {
 		"PRELOAD", "ACTIVATE", "DEACTIVATE", "SUSPEND", "SUSPEND_WITH_LOCKFS", "CLEAN"
 	};
 	const size_t DLID_SIZE = ID_LEN + sizeof(UUID_PREFIX) - 1;
