@@ -18,9 +18,11 @@
 int pvck(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i;
+	int ret_max = ECMD_PROCESSED;
 
 	/* FIXME: validate cmdline options */
 	/* FIXME: what does the cmdline look like? */
+
 	/*
 	 * Use what's on the cmdline directly, and avoid calling into
 	 * some of the other infrastructure functions, so as to avoid
@@ -32,10 +34,12 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Scanning %s", argv[i]);
 
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
-		pv_analyze(cmd, argv[i],
-			   arg_uint64_value(cmd, labelsector_ARG,
-					   UINT64_C(0)));
+		if (!pv_analyze(cmd, argv[i],
+				arg_uint64_value(cmd, labelsector_ARG, UINT64_C(0)))) {
+			stack;
+			ret_max = ECMD_FAILED;
+		}
 	}
 
-	return ECMD_PROCESSED;
+	return ret_max;
 }

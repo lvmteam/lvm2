@@ -1,5 +1,6 @@
 Version 2.02.113 - 
 =====================================
+  Exit with non-zero status code when pvck encounters a problem.
   Fix clean_tree after activation/resume for cache target (2.02.112).
 
 Version 2.02.112 - 11th November 2014
