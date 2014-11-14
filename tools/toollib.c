@@ -980,7 +980,7 @@ int get_pool_params(struct cmd_context *cmd,
 		if (arg_is_set(cmd, zero_ARG)) {
 			*passed_args |= PASS_ARG_ZERO;
 			*zero = arg_int_value(cmd, zero_ARG, 1);
-			log_very_verbose("Setting pool zeroing: %u", *zero);
+			log_very_verbose("%s pool zeroing.", *zero ? "Enabling" : "Disabling");
 		}
 		if (arg_is_set(cmd, discards_ARG)) {
 			*passed_args |= PASS_ARG_DISCARDS;
