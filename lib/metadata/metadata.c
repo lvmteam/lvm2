@@ -3567,8 +3567,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		/* Don't touch if vgids didn't match */
 		if (inconsistent_vgid) {
-			log_error("Inconsistent metadata UUIDs found for "
-				  "volume group %s", vgname);
+			log_warn("WARNING: Inconsistent metadata UUIDs found for "
+				 "volume group %s.", vgname);
 			*consistent = 0;
 			_free_pv_list(&all_pvs);
 			return correct_vg;
@@ -3600,8 +3600,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				release_vg(correct_vg);
 				return_NULL;
 			}
-			log_error("Removing PV %s (%s) that no longer belongs to VG %s",
-				  pv_dev_name(pvl->pv), uuid, correct_vg->name);
+			log_warn("WARNING: Removing PV %s (%s) that no longer belongs to VG %s",
+				 pv_dev_name(pvl->pv), uuid, correct_vg->name);
 			if (!pv_write_orphan(cmd, pvl->pv)) {
 				_free_pv_list(&all_pvs);
 				release_vg(correct_vg);
@@ -3624,10 +3624,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	if ((correct_vg->status & PVMOVE) && !pvmove_mode()) {
-		log_error("WARNING: Interrupted pvmove detected in "
-			  "volume group %s", correct_vg->name);
-		log_error("Please restore the metadata by running "
-			  "vgcfgrestore.");
+		log_error("Interrupted pvmove detected in volume group %s.",
+			  correct_vg->name);
+		log_print("Please restore the metadata by running vgcfgrestore.");
 		release_vg(correct_vg);
 		return NULL;
 	}
