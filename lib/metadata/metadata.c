@@ -4359,7 +4359,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		if (!(vg = _recover_vg(cmd, vg_name, vgid))) {
 			log_error("Recovery of volume group \"%s\" failed.",
 				  vg_name);
-			failure |= FAILED_INCONSISTENT;
+			failure |= FAILED_RECOVERY;
 			goto bad_no_unlock;
 		}
 	}
