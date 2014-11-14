@@ -1569,7 +1569,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 	if (dm_list_empty(&arg_vgnames) && dm_list_empty(&vgnameids_on_system)) {
 		/* FIXME Should be log_print, but suppressed for reporting cmds */
-		log_error("No volume groups found");
+		log_verbose("No volume groups found.");
 		return ECMD_PROCESSED;
 	}
 
@@ -1909,7 +1909,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t fla
 
 	if (dm_list_empty(&arg_vgnames) && dm_list_empty(&vgnameids_on_system)) {
 		/* FIXME Should be log_print, but suppressed for reporting cmds */
-		log_error("No volume groups found");
+		log_verbose("No volume groups found.");
 		return ECMD_PROCESSED;
 	}
 
