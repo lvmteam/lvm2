@@ -3677,7 +3677,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 
 out:
 	if (!*consistent && (warn_flags & WARN_INCONSISTENT))
-		log_warn("WARNING: Volume Group %s is not consistent", vgname);
+		log_warn("WARNING: Volume Group %s is not consistent.", vgname);
 
 	return vg;
 }
