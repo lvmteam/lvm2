@@ -361,12 +361,13 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 		      struct volume_group *vg,
 		      void *handle)
 {
-	int ret = ECMD_PROCESSED;
+	int skip;
 
-	if (ignore_vg(vg, vg_name, 0, &ret)) {
-		stack;
-		return ret;
-	}
+	if (ignore_vg(vg, vg_name, 0, &skip))
+		return_ECMD_FAILED;
+
+	if (skip)
+		return ECMD_PROCESSED;
 
 	return process_each_pv_in_vg(cmd, vg, handle, &_pvs_single);
 }
@@ -375,12 +376,13 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 			 struct volume_group *vg,
 			 void *handle)
 {
-	int ret = ECMD_PROCESSED;
+	int skip;
 
-	if (ignore_vg(vg, vg_name, 0, &ret)) {
-		stack;
-		return ret;
-	}
+	if (ignore_vg(vg, vg_name, 0, &skip))
+		return_ECMD_FAILED;
+
+	if (skip)
+		return ECMD_PROCESSED;
 
 	return process_each_pv_in_vg(cmd, vg, handle, &_pvsegs_single);
 }

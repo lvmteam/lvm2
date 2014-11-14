@@ -159,26 +159,26 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 /*
  * Returns 1 if VG should be ignored.
  */
-int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *ret)
+int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *skip)
 {
 	uint32_t read_error = vg_read_error(vg);
+	*skip = 0;
 
-	if (!read_error)
-		return 0;
+	if ((read_error & FAILED_INCONSISTENT) && allow_inconsistent)
+		read_error &= ~FAILED_INCONSISTENT; /* Check for other errors */
 
-	if ((read_error == FAILED_INCONSISTENT) && allow_inconsistent)
-		return 0;
-
-	if (read_error == FAILED_NOTFOUND)
-		*ret = ECMD_FAILED;
-	else if (read_error == FAILED_CLUSTERED && vg->cmd->ignore_clustered_vgs)
+	if ((read_error & FAILED_CLUSTERED) && vg->cmd->ignore_clustered_vgs) {
+		read_error &= ~FAILED_CLUSTERED; /* Check for other errors */
 		log_verbose("Skipping volume group %s", vg_name);
-	else {
-		log_error("Skipping volume group %s", vg_name);
-		*ret = ECMD_FAILED;
+		*skip = 1;
 	}
 
-	return 1;
+	if (read_error != SUCCESS) {
+		log_error("Cannot process volume group %s", vg_name);
+		return 1;
+	}
+
+	return 0;
 }
 
 /*
@@ -195,22 +195,17 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	int ret;
 	struct pv_segment _free_pv_segment = { .pv = pv };
 
-	if (dm_list_empty(&pv->segments)) {
-		ret = process_single_pvseg(cmd, NULL, &_free_pv_segment, handle);
-		if (ret > ret_max)
-			ret_max = ret;
-	} else {
+	if (!dm_list_empty(&pv->segments)) {
 		dm_list_iterate_items(pvseg, &pv->segments) {
-			if (sigint_caught()) {
-				ret_max = ECMD_FAILED;
+			if (sigint_caught())
+				return_ECMD_FAILED;
+			if ((ret = process_single_pvseg(cmd, vg, pvseg, handle)) != ECMD_PROCESSED)
 				stack;
-				break;
-			}
-			ret = process_single_pvseg(cmd, vg, pvseg, handle);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
-	}
+	} else if ((ret_max = process_single_pvseg(cmd, NULL, &_free_pv_segment, handle)) != ECMD_PROCESSED)
+			stack;
 
 	return ret_max;
 }
@@ -225,9 +220,13 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 	int ret;
 
 	dm_list_iterate_items(seg, &lv->segments) {
-		if (sigint_caught())
-			return_ECMD_FAILED;
-		ret = process_single_seg(cmd, seg, handle);
+		if (sigint_caught()) {
+			stack;
+			ret_max = ECMD_FAILED;
+			break;
+		}
+		if ((ret = process_single_seg(cmd, seg, handle)) != ECMD_PROCESSED)
+			stack;
 		if (ret > ret_max)
 			ret_max = ret;
 	}
@@ -1459,7 +1458,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 	const char *vg_name;
 	const char *vg_uuid;
 	int ret_max = ECMD_PROCESSED;
-	int ret;
+	int ret, skip;
 	int process_all = 0;
 
 	/*
@@ -1469,34 +1468,32 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		process_all = 1;
 
 	dm_list_iterate_items(vgnl, vgnameids_to_process) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		vg_name = vgnl->vg_name;
 		vg_uuid = vgnl->vgid;
-		ret = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags);
-		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &ret)) {
-			if (ret > ret_max)
-				ret_max = ret;
-			release_vg(vg);
+		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
-			continue;
-		}
-
-		/* Process this VG? */
-		if (process_all ||
-		    (!dm_list_empty(arg_vgnames) && str_list_match_item(arg_vgnames, vg_name)) ||
-		    (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL)))
-			ret = process_single_vg(cmd, vg_name, vg, handle);
-
-		if (vg_read_error(vg))
+			ret = ECMD_FAILED;
 			release_vg(vg);
-		else
+		} else {
+			/* Process this VG? */
+			if (!skip &&
+			    (process_all ||
+			     (!dm_list_empty(arg_vgnames) && str_list_match_item(arg_vgnames, vg_name)) ||
+			     (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL)))) {
+				if ((ret = process_single_vg(cmd, vg_name, vg, handle)) != ECMD_PROCESSED)
+					stack;
+			} else
+				ret = ECMD_PROCESSED;
 			unlock_and_release_vg(cmd, vg, vg_name);
+		}
 
 		if (ret > ret_max)
 			ret_max = ret;
-		if (sigint_caught())
-			break;
 	}
 
 	return ret_max;
@@ -1624,6 +1621,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	 * but it works since entries are allocated from vg mem pool.
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		if (lvl->lv->status & SNAPSHOT)
 			continue;
 
@@ -1656,12 +1656,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			 (!tags_supplied || !str_list_match_list(tags_in, &lvl->lv->tags, NULL)))
 			continue;
 
-		if (sigint_caught())
-			return_ECMD_FAILED;
-
 		log_very_verbose("Processing LV %s in VG %s", lvl->lv->name, vg->name);
 
-		ret = process_single_lv(cmd, lvl->lv, handle);
+		if ((ret = process_single_lv(cmd, lvl->lv, handle)) != ECMD_PROCESSED)
+			stack;
 
 		if (ret > ret_max)
 			ret_max = ret;
@@ -1809,11 +1807,14 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 	const char *lvn;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
+	int skip;
 
 	dm_list_iterate_items(vgnl, vgnameids_to_process) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		vg_name = vgnl->vg_name;
 		vg_uuid = vgnl->vgid;
-		ret = 0;
 
 		/*
 		 * arg_lvnames contains some elements that are just "vgname"
@@ -1846,23 +1847,21 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		}
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags);
-		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &ret)) {
-			if (ret > ret_max)
-				ret_max = ret;
-			release_vg(vg);
+		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
-			continue;
+			ret = ECMD_FAILED;
+			release_vg(vg);
+		} else {
+			if (skip)
+				ret = ECMD_PROCESSED;
+			else if ((ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg, 0,
+							      handle, process_single_lv)) != ECMD_PROCESSED)
+				stack;
+			unlock_and_release_vg(cmd, vg, vg_name);
 		}
-
-		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg, 0,
-					    handle, process_single_lv);
-		unlock_and_release_vg(cmd, vg, vg_name);
 
 		if (ret > ret_max)
 			ret_max = ret;
-
-		if (sigint_caught())
-			break;
 	}
 
 	return ret_max;
@@ -2030,6 +2029,9 @@ static int _process_device_list(struct cmd_context *cmd, struct dm_list *all_dev
 	 * FIXME Formalise this extension or find an alternative.
 	 */
 	dm_list_iterate_items(devl, all_devices) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		memset(&pv_dummy, 0, sizeof(pv_dummy));
 		dm_list_init(&pv_dummy.tags);
 		dm_list_init(&pv_dummy.segments);
@@ -2042,9 +2044,6 @@ static int _process_device_list(struct cmd_context *cmd, struct dm_list *all_dev
 
 		if (ret > ret_max)
 			ret_max = ret;
-
-		if (sigint_caught())
-			return_ECMD_FAILED;
 	}
 
 	return ECMD_PROCESSED;
@@ -2069,6 +2068,9 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	int ret = 0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		pv = pvl->pv;
 		pv_name = pv_dev_name(pv);
 
@@ -2107,15 +2109,14 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 				continue;
 			}
 
-			if (!skip)
-				ret = process_single_pv(cmd, vg, pv, handle);
+			if (!skip) {
+				if ((ret = process_single_pv(cmd, vg, pv, handle)) != ECMD_PROCESSED)
+					stack;
 
-			if (ret > ret_max)
-				ret_max = ret;
+				if (ret > ret_max)
+					ret_max = ret;
+			}
 		}
-
-		if (sigint_caught())
-			return_ECMD_FAILED;
 
 		/*
 		 * When processing only specific PV names, we can quit
@@ -2158,31 +2159,27 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 	int ret;
 
 	dm_list_iterate_items(vgnl, all_vgnameids) {
+		if (sigint_caught())
+			return_ECMD_FAILED;
+
 		vg_name = vgnl->vg_name;
 		vg_uuid = vgnl->vgid;
-		ret = 0;
-		skip = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags | READ_WARN_INCONSISTENT);
-		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &ret)) {
-			if (ret > ret_max)
-				ret_max = ret;
-			skip = 1;
+		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+			stack;
+			ret = ECMD_FAILED;
+			release_vg(vg);
+		} else {
+			if ((ret = _process_pvs_in_vg(cmd, vg, all_devices, arg_pvnames, arg_tags,
+						      process_all, skip, handle,
+						      process_single_pv)) != ECMD_PROCESSED)
+				stack;
+			unlock_and_release_vg(cmd, vg, vg->name);
 		}
-
-		ret = _process_pvs_in_vg(cmd, vg, all_devices, arg_pvnames, arg_tags,
-					 process_all, skip, handle, process_single_pv);
 
 		if (ret > ret_max)
 			ret_max = ret;
-
-		if (skip)
-			release_vg(vg);
-		else
-			unlock_and_release_vg(cmd, vg, vg->name);
-
-		if (sigint_caught())
-			return_ECMD_FAILED;
 
 		/* Quit early when possible. */
 		if (!process_all && dm_list_empty(arg_tags) && dm_list_empty(arg_pvnames))
@@ -2248,21 +2245,19 @@ int process_each_pv(struct cmd_context *cmd,
 		return ret;
 	}
 
-	ret = _process_pvs_in_vgs(cmd, flags, &all_vgnameids, &all_devices,
-				  &arg_pvnames, &arg_tags, process_all_pvs,
-				  handle, process_single_pv);
-	if (ret > ret_max)
-		ret_max = ret;
+	if ((ret_max = _process_pvs_in_vgs(cmd, flags, &all_vgnameids, &all_devices,
+					   &arg_pvnames, &arg_tags, process_all_pvs,
+					   handle, process_single_pv)) != ECMD_PROCESSED)
+		stack;
 
-	if (sigint_caught())
-		return_ECMD_FAILED;
+	if (process_all_devices) {
+		if ((ret = _process_device_list(cmd, &all_devices, handle,
+						process_single_pv)) != ECMD_PROCESSED)
+			stack;
 
-	if (!process_all_devices)
-		goto_out;
-
-	ret = _process_device_list(cmd, &all_devices, handle, process_single_pv);
-	if (ret > ret_max)
-		ret_max = ret;
+		if (ret > ret_max)
+			ret_max = ret;
+	}
 
 out:
 	return ret_max;
