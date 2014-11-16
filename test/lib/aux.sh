@@ -753,7 +753,7 @@ udev_wait() {
 # wait_for_sync <VG/LV>
 wait_for_sync() {
 	local i
-	for i in {1..3000} ; do
+	for i in {1..100} ; do
 		check in_sync $1 $2 && return
 		sleep .2
 	done
