@@ -30,6 +30,11 @@ export LVM_TEST_THIN_DUMP_CMD?=@THIN_DUMP_CMD@
 export LVM_TEST_THIN_REPAIR_CMD?=@THIN_REPAIR_CMD@
 export LVM_TEST_THIN_RESTORE_CMD?=@THIN_RESTORE_CMD@
 
+export LVM_TEST_CACHE_CHECK_CMD?=@CACHE_CHECK_CMD@
+export LVM_TEST_CACHE_DUMP_CMD?=@CACHE_DUMP_CMD@
+export LVM_TEST_CACHE_REPAIR_CMD?=@CACHE_REPAIR_CMD@
+export LVM_TEST_CACHE_RESTORE_CMD?=@CACHE_RESTORE_CMD@
+
 SUBDIRS = api unit
 SOURCES = lib/not.c lib/harness.c
 
@@ -79,6 +84,10 @@ help:
 	@echo "  LVM_TEST_THIN_DUMP_CMD    Command for thin_dump    [$(LVM_TEST_THIN_DUMP_CMD)]."
 	@echo "  LVM_TEST_THIN_REPAIR_CMD  Command for thin_repair  [$(LVM_TEST_THIN_REPAIR_CMD)]."
 	@echo "  LVM_TEST_THIN_RESTORE_CMD Command for thin_restore [$(LVM_TEST_THIN_RESTORE_CMD)]."
+	@echo "  LVM_TEST_CACHE_CHECK_CMD   Command for cache_check   [$(LVM_TEST_CACHE_CHECK_CMD)]."
+	@echo "  LVM_TEST_CACHE_DUMP_CMD    Command for cache_dump    [$(LVM_TEST_CACHE_DUMP_CMD)]."
+	@echo "  LVM_TEST_CACHE_REPAIR_CMD  Command for cache_repair  [$(LVM_TEST_CACHE_REPAIR_CMD)]."
+	@echo "  LVM_TEST_CACHE_RESTORE_CMD Command for cache_restore [$(LVM_TEST_CACHE_RESTORE_CMD)]."
 	@echo "  LVM_TEST_UNLIMITED	Set to get unlimited test log (>32MB)"
 	@echo "  LVM_VALGRIND		Enable valgrind testing (1,2,3) execs $$"VALGRIND
 	@echo "  LVM_VALGRIND_CLVMD	Enable valgrind testing of clvmd (1)."
@@ -153,6 +162,14 @@ lib/paths: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'export LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
 	echo 'export DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
 	echo 'export CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
+	echo 'export LVM_TEST_THIN_CHECK_CMD=$${LVM_TEST_THIN_CHECK_CMD:-@THIN_CHECK_CMD@}' >> $@-t
+	echo 'export LVM_TEST_THIN_DUMP_CMD=$${LVM_TEST_THIN_DUMP_CMD:-@THIN_DUMP_CMD@}' >> $@-t
+	echo 'export LVM_TEST_THIN_REPAIR_CMD=$${LVM_TEST_THIN_REPAIR_CMD:-@THIN_REPAIR_CMD@}' >> $@-t
+	echo 'export LVM_TEST_THIN_RESTORE_CMD=$${LVM_TEST_THIN_RESTORE_CMD:-@THIN_RESTORE_CMD@}' >> $@-t
+	echo 'export LVM_TEST_CACHE_CHECK_CMD=$${LVM_TEST_CACHE_CHECK_CMD:-@CACHE_CHECK_CMD@}' >> $@-t
+	echo 'export LVM_TEST_CACHE_DUMP_CMD=$${LVM_TEST_CACHE_DUMP_CMD:-@CACHE_DUMP_CMD@}' >> $@-t
+	echo 'export LVM_TEST_CACHE_REPAIR_CMD=$${LVM_TEST_CACHE_REPAIR_CMD:-@CACHE_REPAIR_CMD@}' >> $@-t
+	echo 'export LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD:-@CACHE_RESTORE_CMD@}' >> $@-t
 	mv $@-t $@
 
 LIB = lib/not lib/invalid lib/fail lib/should lib/harness \

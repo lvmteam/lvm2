@@ -15,9 +15,6 @@
 
 aux have_thin 1 0 0 || skip
 
-# disable thin_check if not present in system
-which thin_check || aux lvmconf 'global/thin_check_executable = ""'
-
 aux prepare_devs 2
 
 vgcreate -s 64k $vg $(cat DEVICES)

@@ -767,6 +767,27 @@ can_use_16T() {
 	test "$(getconf LONG_BIT)" -eq 64
 }
 
+# Check if major.minor.revision' string is 'at_least'
+version_at_least() {
+	local major
+	local minor
+	local revision
+	IFS=. read -r major minor revision <<< "$1"
+	shift
+
+	test -z "$1" && return 0
+	test -n "$major" || return 1
+	test "$major" -gt "$1" && return 0
+	test "$major" -eq "$1" || return 1
+
+	test -z "$2" && return 0
+	test -n "$minor" || return 1
+	test "$minor" -gt "$2" && return 0
+	test "$minor" -eq "$2" || return 1
+
+	test -z "$3" && return 0
+	test "$revision" -ge "$3" 2>/dev/null || return 1
+}
 #
 # Check wheter kernel [dm module] target exist
 # at least in expected version
@@ -790,21 +811,7 @@ target_at_least() {
 	version=${version##* v}
 	shift
 
-	local major=$(echo "$version" | cut -d. -f1)
-	test -z "$1" && return 0
-	test -n "$major" || return 1
-	test "$major" -gt "$1" && return 0
-	test "$major" -eq "$1" || return 1
-
-	test -z "$2" && return 0
-	local minor=$(echo "$version" | cut -d. -f2)
-	test -n "$minor" || return 1
-	test "$minor" -gt "$2" && return 0
-	test "$minor" -eq "$2" || return 1
-
-	test -z "$3" && return 0
-	local revision=$(echo "$version" | cut -d. -f3)
-	test "$revision" -ge "$3" 2>/dev/null || return 1
+	version_at_least "$version" "$@"
 }
 
 have_thin() {
@@ -812,7 +819,12 @@ have_thin() {
 	target_at_least dm-thin-pool "$@" || return 1
 
 	# disable thin_check if not present in system
-	which thin_check || lvmconf 'global/thin_check_executable = ""'
+	test -x "$LVM_TEST_THIN_CHECK_CMD" || LVM_TEST_THIN_CHECK_CMD=""
+	test -x "$LVM_TEST_THIN_DUMP_CMD" || LVM_TEST_THIN_DUMP_CMD=""
+	test -x "$LVM_TEST_THIN_REPAIR_CMD" || LVM_TEST_THIN_REPAIR_CMD=""
+	lvmconf "global/thin_check_executable = \"$LVM_TEST_THIN_CHECK_CMD\"" \
+		"global/thin_dump_executable = \"$LVM_TEST_THIN_DUMP_CMD\"" \
+		"global/thin_repair_executable = \"$LVM_TEST_THIN_REPAIR_CMD\""
 }
 
 have_raid() {
@@ -823,6 +835,21 @@ have_raid() {
 have_cache() {
 	test "$CACHE" = shared -o "$CACHE" = internal || return 1
 	target_at_least dm-cache "$@"
+
+	test -x "$LVM_TEST_CACHE_CHECK_CMD" || LVM_TEST_CACHE_CHECK_CMD=""
+	test -x "$LVM_TEST_CACHE_DUMP_CMD" || LVM_TEST_CACHE_DUMP_CMD=""
+	test -x "$LVM_TEST_CACHE_REPAIR_CMD" || LVM_TEST_CACHE_REPAIR_CMD=""
+	lvmconf "global/cache_check_executable = \"$LVM_TEST_CACHE_CHECK_CMD\"" \
+		"global/cache_dump_executable = \"$LVM_TEST_CACHE_DUMP_CMD\"" \
+		"global/cache_repair_executable = \"$LVM_TEST_CACHE_REPAIR_CMD\""
+}
+
+have_tool_at_least() {
+	local version=$($1 -V 2>/dev/null)
+	version=${version%%-*}
+	shift
+
+	version_at_least "$version" "$@"
 }
 
 # check if lvm shell is build-in  (needs readline)
