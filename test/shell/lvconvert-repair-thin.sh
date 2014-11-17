@@ -70,6 +70,8 @@ not "$LVM_TEST_THIN_DUMP_CMD" "$DM_DEV_DIR/$vg/repair" | tee dump
 
 "$LVM_TEST_THIN_CHECK_CMD" "$DM_DEV_DIR/$vg/fixed"
 
+lvchange -an $vg
+
 # Swap repaired metadata back
 lvconvert -y -f --poolmetadata $vg/fixed --thinpool $vg/pool
 
