@@ -134,11 +134,10 @@ static void _touch_memory(void *mem, size_t size)
 static void _allocate_memory(void)
 {
 #ifndef VALGRIND_POOL
-	void *stack_mem, *temp_malloc_mem;
+	void *stack_mem;
 	struct rlimit limit;
 	int i, area = 0, missing = _size_malloc_tmp, max_areas = 32, hblks;
 	char *areas[max_areas];
-
 
 	/* Check if we could preallocate requested stack */
 	if ((getrlimit (RLIMIT_STACK, &limit) == 0) &&
