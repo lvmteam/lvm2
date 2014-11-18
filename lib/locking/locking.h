@@ -114,7 +114,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_DMEVENTD_MONITOR_MODE	0x04	/* Register with dmeventd */
 
 /* Not yet used. */
-#define LCK_CONVERT			0x08	/* Convert existing lock */
+#define LCK_CONVERT_MODE		0x08	/* Convert existing lock */
 
 #define LCK_TEST_MODE			0x10    /* Test mode: No activation */
 #define LCK_ORIGIN_ONLY_MODE		0x20	/* Same as above */
