@@ -2200,25 +2200,26 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 		vg = vg_read(cmd, vg_name, vg_uuid, flags | READ_WARN_INCONSISTENT);
 		if (ignore_vg(vg, vg_name, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
-			ret = ECMD_FAILED;
-			skip = 1;
-
-			/* Only continue if no vg was returned. */
-			if (!vg)
-				continue;
+			ret_max = ECMD_FAILED;
+			continue;
 		}
+		
+		/*
+		 * Don't continue when skip is set, because we need to remove
+		 * vg->pvs entries from devices list.
+		 */
 		
 		ret = _process_pvs_in_vg(cmd, vg, all_devices, arg_pvnames, arg_tags,
 					 process_all, skip, handle, process_single_pv);
 		if (ret != ECMD_PROCESSED)
 			stack;
-		 if (ret > ret_max)
+		if (ret > ret_max)
 			ret_max = ret;
 
-		 if (skip)
-			 release_vg(vg);
-		 else
-			 unlock_and_release_vg(cmd, vg, vg->name);
+		if (skip)
+			release_vg(vg);
+		else
+			unlock_and_release_vg(cmd, vg, vg->name);
 
 		/* Quit early when possible. */
 		if (!process_all && dm_list_empty(arg_tags) && dm_list_empty(arg_pvnames))
