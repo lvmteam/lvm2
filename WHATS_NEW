@@ -1,5 +1,6 @@
 Version 2.02.113 - 
 =====================================
+  Default to configure --enable-udev-systemd-background-jobs for systemd>=205.
   Fix ignore_vg() to properly react on various vg_read errors (2.02.112).
   Failed recovery returns FAILED_RECOVERY status flag for vg_read().
   Exit with non-zero status code when pvck encounters a problem.

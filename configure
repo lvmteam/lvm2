@@ -736,6 +736,8 @@ LVM2CMD_LIB
 LVM2APP_LIB
 UDEV_LIBS
 UDEV_CFLAGS
+SYSTEMD_LIBS
+SYSTEMD_CFLAGS
 BLKID_LIBS
 BLKID_CFLAGS
 VALGRIND_POOL
@@ -984,6 +986,8 @@ VALGRIND_CFLAGS
 VALGRIND_LIBS
 BLKID_CFLAGS
 BLKID_LIBS
+SYSTEMD_CFLAGS
+SYSTEMD_LIBS
 UDEV_CFLAGS
 UDEV_LIBS'
 
@@ -1791,6 +1795,10 @@ Some influential environment variables:
   BLKID_CFLAGS
               C compiler flags for BLKID, overriding pkg-config
   BLKID_LIBS  linker flags for BLKID, overriding pkg-config
+  SYSTEMD_CFLAGS
+              C compiler flags for SYSTEMD, overriding pkg-config
+  SYSTEMD_LIBS
+              linker flags for SYSTEMD, overriding pkg-config
   UDEV_CFLAGS C compiler flags for UDEV, overriding pkg-config
   UDEV_LIBS   linker flags for UDEV, overriding pkg-config
 
@@ -10601,11 +10609,94 @@ $as_echo_n "checking whether to use udev-systemd protocol for jobs in background
 if test "${enable_udev_systemd_background_jobs+set}" = set; then :
   enableval=$enable_udev_systemd_background_jobs; UDEV_SYSTEMD_BACKGROUND_JOBS=$enableval
 else
-  UDEV_SYSTEMD_BACKGROUND_JOBS=yes
+  UDEV_SYSTEMD_BACKGROUND_JOBS=maybe
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $UDEV_SYSTEMD_BACKGROUND_JOBS" >&5
 $as_echo "$UDEV_SYSTEMD_BACKGROUND_JOBS" >&6; }
+
+if test "$UDEV_SYSTEMD_BACKGROUND_JOBS" != no; then
+	pkg_config_init
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SYSTEMD" >&5
+$as_echo_n "checking for SYSTEMD... " >&6; }
+
+if test -n "$SYSTEMD_CFLAGS"; then
+    pkg_cv_SYSTEMD_CFLAGS="$SYSTEMD_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 205\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "systemd >= 205") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_SYSTEMD_CFLAGS=`$PKG_CONFIG --cflags "systemd >= 205" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$SYSTEMD_LIBS"; then
+    pkg_cv_SYSTEMD_LIBS="$SYSTEMD_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 205\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "systemd >= 205") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_SYSTEMD_LIBS=`$PKG_CONFIG --libs "systemd >= 205" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        SYSTEMD_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "systemd >= 205" 2>&1`
+        else
+	        SYSTEMD_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "systemd >= 205" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$SYSTEMD_PKG_ERRORS" >&5
+
+	if test "$UDEV_SYSTEMD_BACKGROUND_JOBS" = maybe; then
+				UDEV_SYSTEMD_BACKGROUND_JOBS=no
+			   else
+				as_fn_error $? "bailing out... systemd >= 205 is required" "$LINENO" 5
+			   fi
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	if test "$UDEV_SYSTEMD_BACKGROUND_JOBS" = maybe; then
+				UDEV_SYSTEMD_BACKGROUND_JOBS=no
+			   else
+				as_fn_error $? "bailing out... systemd >= 205 is required" "$LINENO" 5
+			   fi
+else
+	SYSTEMD_CFLAGS=$pkg_cv_SYSTEMD_CFLAGS
+	SYSTEMD_LIBS=$pkg_cv_SYSTEMD_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	test "UDEV_SYSTEMD_BACKGROUND_JOBS" = maybe && UDEV_SYSTEMD_BACKGROUND_JOBS=yes
+fi
+fi
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable synchronisation with udev processing" >&5
