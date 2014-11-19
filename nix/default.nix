@@ -50,6 +50,7 @@ let
          dmsetup targets
 
          export LVM_TEST_BACKING_DEVICE=/dev/sdb
+         ulimit -c unlimited
 
          watch=
          if echo ${flavour} | grep -q udev; then
