@@ -8441,7 +8441,7 @@ $as_echo "$OCF" >&6; }
 if test "${with_ocfdir+set}" = set; then :
   withval=$with_ocfdir; OCFDIR=$withval
 else
-  OCFDIR='${prefix}/lib/ocf/resource.d/lvm2'
+  OCFDIR="${prefix}/lib/ocf/resource.d/lvm2"
 fi
 
 
@@ -11935,7 +11935,7 @@ fi
 if test "${with_localedir+set}" = set; then :
   withval=$with_localedir; LOCALEDIR=$withval
 else
-  LOCALEDIR='${prefix}/share/locale'
+  LOCALEDIR="${prefix}/share/locale"
 fi
 
 fi
@@ -11955,7 +11955,7 @@ fi
 if test "${with_staticdir+set}" = set; then :
   withval=$with_staticdir; STATICDIR=$withval
 else
-  STATICDIR='${exec_prefix}/sbin'
+  STATICDIR="${exec_prefix}/sbin"
 fi
 
 
@@ -11964,7 +11964,7 @@ fi
 if test "${with_usrlibdir+set}" = set; then :
   withval=$with_usrlibdir; usrlibdir=$withval
 else
-  usrlibdir='${prefix}/lib'
+  usrlibdir="${prefix}/lib"
 fi
 
 
@@ -11973,7 +11973,7 @@ fi
 if test "${with_usrsbindir+set}" = set; then :
   withval=$with_usrsbindir; usrsbindir=$withval
 else
-  usrsbindir='${prefix}/sbin'
+  usrsbindir="${prefix}/sbin"
 fi
 
 
@@ -11983,7 +11983,7 @@ fi
 if test "${with_udev_prefix+set}" = set; then :
   withval=$with_udev_prefix; udev_prefix=$withval
 else
-  udev_prefix='${exec_prefix}'
+  udev_prefix="${exec_prefix}"
 fi
 
 
@@ -12019,7 +12019,7 @@ test -z "$systemdutildir" && systemdutildir='${exec_prefix}/lib/systemd';
 if test "${with_tmpfilesdir+set}" = set; then :
   withval=$with_tmpfilesdir; tmpfilesdir=$withval
 else
-  tmpfilesdir='${prefix}/lib/tmpfiles.d'
+  tmpfilesdir="${prefix}/lib/tmpfiles.d"
 fi
 
 ################################################################################
