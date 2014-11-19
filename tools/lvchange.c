@@ -605,6 +605,30 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	return 1;
 }
 
+static int lvchange_cachepolicy(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct dm_config_tree *policy = NULL;
+	int r = 0;
+
+	if (!lv_is_cache(lv) && !lv_is_cache_pool(lv)) {
+		log_error("LV %s is not a cache LV.", lv->name);
+		log_error("Only cache or cache pool devices can have --cachepolicy set.");
+		goto_out;
+	}
+
+	if (!(policy = get_cachepolicy_params(cmd)))
+		goto_out;
+	if (!lv_cache_setpolicy(lv, policy))
+		goto_out;
+	if (!lv_update_and_reload(lv))
+		goto_out;
+	r = 1;
+out:
+	if (policy)
+		dm_config_destroy(policy);
+	return r;
+}
+
 static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv, int arg)
 {
 	if (!change_tag(cmd, NULL, lv, NULL, arg))
@@ -990,6 +1014,13 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
+	if (arg_count(cmd, cachepolicy_ARG)) {
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+		doit += lvchange_cachepolicy(cmd, lv);
+		docmds++;
+	}
+
 	if (doit)
 		log_print_unless_silent("Logical volume \"%s\" changed.", lv->name);
 
@@ -1049,6 +1080,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, maxrecoveryrate_ARG) ||
 		arg_count(cmd, resync_ARG) ||
 		arg_count(cmd, syncaction_ARG) ||
+		arg_count(cmd, cachepolicy_ARG) ||
 		arg_count(cmd, writebehind_ARG) ||
 		arg_count(cmd, writemostly_ARG) ||
 		arg_count(cmd, zero_ARG);
