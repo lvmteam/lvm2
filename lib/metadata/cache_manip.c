@@ -395,6 +395,24 @@ int lv_is_cache_origin(const struct logical_volume *lv)
 	return seg && lv_is_cache(seg->lv) && !lv_is_pending_delete(seg->lv) && (seg_lv(seg, 0) == lv);
 }
 
+int lv_cache_setpolicy(struct logical_volume *lv, struct dm_config_tree *policy)
+{
+	struct lv_segment *seg = first_seg(lv);
+	const char *name;
+
+	if (lv_is_cache(lv))
+		seg = first_seg(seg->pool_lv);
+
+	if (!(seg->policy_settings = dm_config_clone_node_with_mem(lv->vg->vgmem, policy->root, 0)))
+		return_0;
+
+	if ((name = dm_config_find_str(policy->root, "policy", NULL)) &&
+	    !(seg->policy_name = dm_pool_strdup(lv->vg->vgmem, name)))
+		return_0;
+
+	return 1;
+}
+
 /*
  * Wipe cache pool metadata area before use.
  *
