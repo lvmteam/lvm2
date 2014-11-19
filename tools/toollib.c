@@ -1116,6 +1116,75 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stri
 	return _validate_stripe_params(cmd, stripes, stripe_size);
 }
 
+static int _validate_cachepool_params(struct dm_config_tree *tree)
+{
+	return 1;
+}
+
+struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
+{
+	const char *str;
+	struct arg_value_group_list *group;
+	struct dm_config_tree *result = NULL, *prev = NULL, *current = NULL;
+	struct dm_config_node *cn, *last = NULL;
+
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, cachepolicy_ARG))
+			continue;
+
+		current = dm_config_create();
+		if (!current)
+			goto_bad;
+		if (prev)
+			current->cascade = prev;
+		prev = current;
+
+		if (!(str = grouped_arg_str_value(group->arg_values,
+						  cachepolicy_ARG,
+						  NULL)))
+			goto_bad;
+
+		if (!dm_config_parse(current, str, str + strlen(str)))
+			goto_bad;
+	}
+
+	result = dm_config_flatten(current);
+	if (!(cn = dm_config_create_node(result, "policy_settings"))) {
+		dm_config_destroy(result);
+		result = NULL;
+	}
+	cn->child = result->root;
+	result->root = cn;
+	cn = cn->child;
+
+	while (cn) {
+		if (!strcmp(cn->key, "policy")) {
+			if (last)
+				last->sib = cn->sib;
+			else
+				result->root->child = cn->sib;
+			cn->parent = NULL;
+			cn->sib = NULL;
+			result->root->sib = cn;
+		}
+		last = cn;
+		cn = cn->sib;
+	}
+
+	if (!_validate_cachepool_params(current)) {
+		dm_config_destroy(result);
+		result = NULL;
+	}
+
+bad:
+	while (prev) {
+		current = prev->cascade;
+		dm_config_destroy(prev);
+		prev = current;
+	}
+	return result;
+}
+
 /* FIXME move to lib */
 static int _pv_change_tag(struct physical_volume *pv, const char *tag, int addtag)
 {

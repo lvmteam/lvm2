@@ -123,6 +123,8 @@ int get_pool_params(struct cmd_context *cmd,
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
 
+struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd);
+
 int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	       struct logical_volume *lv, struct physical_volume *pv, int arg);
 
