@@ -7085,8 +7085,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				if (thin_pool_was_active < 0)
 					thin_pool_was_active = 0;
 				if (!activate_lv_excl(cmd, pool_lv)) {
-					log_error("Failed to activate thin pool %s/%s.",
-						  origin_lv->vg->name, origin_lv->name);
+					log_error("Failed to activate thin pool %s.",
+						  display_lvname(pool_lv));
 					goto revert_new_lv;
 				}
 				if (!lv_is_active(pool_lv)) {
