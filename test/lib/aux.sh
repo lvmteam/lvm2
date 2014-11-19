@@ -35,6 +35,7 @@ prepare_clvmd() {
 	# lvs is executed from clvmd - use our version
 	export LVM_BINARY=$(which lvm)
 
+	test -e "$DM_DEV_DIR/control" || dmsetup table # create control node
 	# skip if singlenode is not compiled in
 	(clvmd --help 2>&1 | grep "Available cluster managers" | grep "singlenode") || skip
 
