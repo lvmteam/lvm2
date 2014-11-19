@@ -1315,3 +1315,56 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft)
 {
 	return cft->mem;
 }
+
+static int _override_path(const char *path, struct dm_config_node *node, void *baton)
+{
+	struct dm_config_tree *cft = baton;
+	struct dm_config_node dummy, *target;
+	dummy.child = cft->root;
+	if (!(target = _find_or_make_node(cft->mem, &dummy, path)))
+		return_0;
+	if (!(target->v = _clone_config_value(cft->mem, node->v)))
+		return_0;
+	cft->root = dummy.child;
+	return 1;
+}
+
+static int _enumerate(const char *path, struct dm_config_node *cn, int (*cb)(const char *, struct dm_config_node *, void *), void *baton)
+{
+	char *sub = NULL;
+
+	while (cn) {
+		if (dm_asprintf(&sub, "%s/%s", path, cn->key) < 0)
+			return_0;
+		if (cn->child) {
+			if (!_enumerate(sub, cn->child, cb, baton))
+				goto_bad;
+		} else
+			if (!cb(sub, cn, baton))
+				goto_bad;
+		dm_free(sub);
+		cn = cn->sib;
+	}
+	return 1;
+bad:
+	dm_free(sub);
+	return 0;
+}
+
+struct dm_config_tree *dm_config_flatten(struct dm_config_tree *cft)
+{
+	struct dm_config_tree *res = dm_config_create(), *done = NULL, *current = NULL;
+
+	if (!res)
+		return_NULL;
+
+	while (done != cft) {
+		current = cft;
+		while (current->cascade != done)
+			current = current->cascade;
+		_enumerate("", current->root, _override_path, res);
+		done = current;
+	}
+
+	return res;
+}

@@ -1848,6 +1848,11 @@ struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *fir
  */
 struct dm_config_tree *dm_config_remove_cascaded_tree(struct dm_config_tree *cft);
 
+/*
+ * Create a new, uncascaded config tree equivalent to the input cascade.
+ */
+struct dm_config_tree *dm_config_flatten(struct dm_config_tree *cft);
+
 void dm_config_destroy(struct dm_config_tree *cft);
 
 /* Simple output line by line. */
