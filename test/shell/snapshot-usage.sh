@@ -78,7 +78,7 @@ lvremove -f $vg
 
 
 # Automatically activates exclusively in cluster
-lvcreate -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
+lvcreate --type snapshot -s -l 100%FREE -n $lv $vg --virtualsize $TSIZE
 
 aux extend_filter_LVMTEST
 aux lvmconf "activation/snapshot_autoextend_percent = 20" \
