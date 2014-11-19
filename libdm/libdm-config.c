@@ -30,6 +30,7 @@ enum {
 	TOK_FLOAT,
 	TOK_STRING,		/* Single quotes */
 	TOK_STRING_ESCAPED,	/* Double quotes */
+	TOK_STRING_BARE,	/* No quotes */
 	TOK_EQ,
 	TOK_SECTION_B,
 	TOK_SECTION_E,
@@ -638,6 +639,15 @@ static struct dm_config_value *_type(struct parser *p)
 		match(TOK_STRING);
 		break;
 
+	case TOK_STRING_BARE:
+		v->type = DM_CFG_STRING;
+
+		if (!(v->v.str = _dup_tok(p)))
+			return_NULL;
+
+		match(TOK_STRING_BARE);
+		break;
+
 	case TOK_STRING_ESCAPED:
 		v->type = DM_CFG_STRING;
 
@@ -783,6 +793,8 @@ static void _get_token(struct parser *p, int tok_prev)
 		       (*te != SECTION_B_CHAR) &&
 		       (*te != SECTION_E_CHAR))
 			te++;
+		if (values_allowed)
+			p->t = TOK_STRING_BARE;
 		break;
 	}
 
