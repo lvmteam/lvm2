@@ -47,4 +47,14 @@ dmsetup status | grep $vg-corigin | grep 'migration_threshold 2048'
 dmsetup status | grep $vg-corigin | grep 'sequential_threshold 13'
 dmsetup status | grep $vg-corigin | grep 'random_threshold 4'
 
+lvchange --cachesettings migration_threshold=233 --cachesettings sequential_threshold=13 --cachesettings random_threshold=1 $vg/corigin
+dmsetup status | grep $vg-corigin | grep 'migration_threshold 233 '
+dmsetup status | grep $vg-corigin | grep 'sequential_threshold 13 '
+dmsetup status | grep $vg-corigin | grep 'random_threshold 1 '
+
+lvchange --cachesettings random_threshold=default --cachesettings migration_threshold=default $vg/corigin
+dmsetup status | grep $vg-corigin | grep 'migration_threshold 2048 '
+dmsetup status | grep $vg-corigin | grep 'sequential_threshold 13 '
+dmsetup status | grep $vg-corigin | grep 'random_threshold 4 '
+
 vgremove -f $vg
