@@ -523,6 +523,7 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 
 	struct dm_config_node *root, *n, *l = NULL;
+	struct dm_config_value *value;
 	char *str;
 
 	if (p->t == TOK_STRING_ESCAPED) {
@@ -560,8 +561,12 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 		match(TOK_SECTION_E);
 	} else {
 		match(TOK_EQ);
-		if (!(root->v = _value(p)))
+		if (!(value = _value(p)))
 			return_NULL;
+		if (root->v)
+			log_warn("WARNING: Ignoring duplicate"
+				 " config value: %s", str);
+		root->v = value;
 	}
 
 	return root;
