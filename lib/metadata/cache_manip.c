@@ -399,18 +399,52 @@ int lv_cache_setpolicy(struct logical_volume *lv, struct dm_config_tree *policy)
 {
 	struct lv_segment *seg = first_seg(lv);
 	const char *name;
+	struct dm_config_node *cn;
+	struct dm_config_tree *old = NULL, *new = NULL, *tmp = NULL;
+	int r = 0;
 
 	if (lv_is_cache(lv))
 		seg = first_seg(seg->pool_lv);
 
+	if (seg->policy_settings) {
+		if (!(old = dm_config_create()))
+			goto_out;
+		if (!(new = dm_config_create()))
+			goto_out;
+		new->root = policy->root;
+		old->root = seg->policy_settings;
+		new->cascade = old;
+		if (!(tmp = policy = dm_config_flatten(new)))
+			goto_out;
+	}
+
 	if (!(seg->policy_settings = dm_config_clone_node_with_mem(lv->vg->vgmem, policy->root, 0)))
-		return_0;
+		goto_out;
 
 	if ((name = dm_config_find_str(policy->root, "policy", NULL)) &&
 	    !(seg->policy_name = dm_pool_strdup(lv->vg->vgmem, name)))
-		return_0;
+		goto_out;
 
-	return 1;
+restart: /* remove any 'default" nodes */
+	cn = seg->policy_settings->child;
+	while (cn) {
+		if (cn->v->type == DM_CFG_STRING && !strcmp(cn->v->v.str, "default")) {
+			dm_config_remove_node(seg->policy_settings, cn);
+			goto restart;
+		}
+		cn = cn->sib;
+	}
+
+	r = 1;
+
+out:
+	if (old)
+		dm_config_destroy(old);
+	if (new)
+		dm_config_destroy(new);
+	if (tmp)
+		dm_config_destroy(tmp);
+	return r;
 }
 
 /*
