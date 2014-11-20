@@ -130,7 +130,12 @@ char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
 
 char *lvseg_cachemode_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return dm_pool_strdup(mem, get_cache_pool_cachemode_name(seg));
+	const char *name = get_cache_pool_cachemode_name(seg);
+
+	if (!name)
+		return_NULL;
+
+	return dm_pool_strdup(mem, name);
 }
 
 #ifdef DMEVENTD
