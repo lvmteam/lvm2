@@ -1126,7 +1126,7 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 	const char *str;
 	struct arg_value_group_list *group;
 	struct dm_config_tree *result = NULL, *prev = NULL, *current = NULL;
-	struct dm_config_node *cn, *last = NULL;
+	struct dm_config_node *cn;
 	int ok = 0;
 
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {

@@ -522,7 +522,7 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 {
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 
-	struct dm_config_node *root, *n, *l = NULL;
+	struct dm_config_node *root, *n;
 	struct dm_config_value *value;
 	char *str;
 
