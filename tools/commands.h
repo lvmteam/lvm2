@@ -106,7 +106,7 @@ xx(lvchange,
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-C|--contiguous y|n]\n"
-   "\t[--cachepolicy policy=type] [--cachepolicy parameter=value]\n"
+   "\t[--cachepolicy policyname] [--cachesettings parameter=value]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[--deltag Tag]\n"
@@ -144,7 +144,7 @@ xx(lvchange,
 
    activationmode_ARG, addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG,
    available_ARG,
-   cachepolicy_ARG, contiguous_ARG, deltag_ARG, discards_ARG, detachprofile_ARG, force_ARG,
+   cachepolicy_ARG, cachesettings_ARG, contiguous_ARG, deltag_ARG, discards_ARG, detachprofile_ARG, force_ARG,
    ignorelockingfailure_ARG, ignoremonitoring_ARG, ignoreactivationskip_ARG,
    ignoreskippedcluster_ARG, major_ARG, metadataprofile_ARG, minor_ARG,
    monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, noudevsync_ARG,

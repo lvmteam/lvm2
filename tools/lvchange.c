@@ -1014,7 +1014,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
-	if (arg_count(cmd, cachepolicy_ARG)) {
+	if (arg_count(cmd, cachepolicy_ARG) || arg_count(cmd, cachesettings_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += lvchange_cachepolicy(cmd, lv);
@@ -1081,6 +1081,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, resync_ARG) ||
 		arg_count(cmd, syncaction_ARG) ||
 		arg_count(cmd, cachepolicy_ARG) ||
+		arg_count(cmd, cachesettings_ARG) ||
 		arg_count(cmd, writebehind_ARG) ||
 		arg_count(cmd, writemostly_ARG) ||
 		arg_count(cmd, zero_ARG);

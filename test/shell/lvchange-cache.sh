@@ -18,9 +18,10 @@ lvcreate --type cache-pool -an -v -L 2 -n cpool $vg
 lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
 lvcreate -n noncache -l 1 $vg
 
-not lvchange --cachepolicy policy=mq $vg/noncache
+not lvchange --cachepolicy mq $vg/noncache
+not lvchange --cachesettings foo=bar $vg/noncache
 
-lvchange --cachepolicy policy=mq --cachepolicy migration_threshold=333 $vg/corigin
+lvchange --cachepolicy mq --cachesettings migration_threshold=333 $vg/corigin
 dmsetup status | grep $vg-corigin | grep 'migration_threshold 333'
 lvchange --refresh $vg/corigin
 dmsetup status | grep $vg-corigin | grep 'migration_threshold 333'
@@ -28,7 +29,7 @@ lvchange -an $vg
 lvchange -ay $vg
 dmsetup status | grep $vg-corigin | grep 'migration_threshold 333'
 
-lvchange --cachepolicy 'migration_threshold = 233 sequential_threshold = 13' $vg/corigin
+lvchange --cachesettings 'migration_threshold = 233 sequential_threshold = 13' $vg/corigin
 dmsetup status | grep $vg-corigin | grep 'migration_threshold 233'
 dmsetup status | grep $vg-corigin | grep 'sequential_threshold 13'
 

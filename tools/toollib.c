@@ -1127,56 +1127,57 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 	struct arg_value_group_list *group;
 	struct dm_config_tree *result = NULL, *prev = NULL, *current = NULL;
 	struct dm_config_node *cn, *last = NULL;
+	int ok = 0;
 
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {
-		if (!grouped_arg_is_set(group->arg_values, cachepolicy_ARG))
+		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))
 			continue;
 
 		current = dm_config_create();
 		if (!current)
-			goto_bad;
+			goto_out;
 		if (prev)
 			current->cascade = prev;
 		prev = current;
 
 		if (!(str = grouped_arg_str_value(group->arg_values,
-						  cachepolicy_ARG,
+						  cachesettings_ARG,
 						  NULL)))
-			goto_bad;
+			goto_out;
 
 		if (!dm_config_parse(current, str, str + strlen(str)))
-			goto_bad;
+			goto_out;
 	}
 
 	result = dm_config_flatten(current);
-	if (!(cn = dm_config_create_node(result, "policy_settings"))) {
-		dm_config_destroy(result);
-		result = NULL;
-	}
+
+	if (!(cn = dm_config_create_node(result, "policy_settings")))
+		goto_out;
+
 	cn->child = result->root;
 	result->root = cn;
-	cn = cn->child;
 
-	while (cn) {
-		if (!strcmp(cn->key, "policy")) {
-			if (last)
-				last->sib = cn->sib;
-			else
-				result->root->child = cn->sib;
-			cn->parent = NULL;
-			cn->sib = NULL;
-			result->root->sib = cn;
-		}
-		last = cn;
-		cn = cn->sib;
+	if (arg_count(cmd, cachepolicy_ARG)) {
+		if (!(cn = dm_config_create_node(result, "policy")))
+			goto_out;
+
+		result->root->sib = cn;
+		if (!(cn->v = dm_config_create_value(result)))
+			goto_out;
+
+		cn->v->v.str = arg_str_value(cmd, cachepolicy_ARG, NULL);
 	}
 
-	if (!_validate_cachepool_params(current)) {
+	if (!_validate_cachepool_params(result))
+		goto_out;
+
+	ok = 1;
+
+out:
+	if (!ok) {
 		dm_config_destroy(result);
 		result = NULL;
 	}
-
-bad:
 	while (prev) {
 		current = prev->cascade;
 		dm_config_destroy(prev);
