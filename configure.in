@@ -628,7 +628,7 @@ AC_MSG_RESULT($OCF)
 AC_ARG_WITH(ocfdir,
 	    AC_HELP_STRING([--with-ocfdir=DIR],
 			   [install OCF files in [PREFIX/lib/ocf/resource.d/lvm2]]),
-	    OCFDIR=$withval, OCFDIR="${prefix}/lib/ocf/resource.d/lvm2")
+	    OCFDIR=$withval, OCFDIR='${prefix}/lib/ocf/resource.d/lvm2')
 
 ################################################################################
 dnl -- Init pkg-config with dummy invokation:
@@ -1438,7 +1438,7 @@ if test "$INTL" = yes; then
 	AC_ARG_WITH(localedir,
 		    AC_HELP_STRING([--with-localedir=DIR],
 				   [translation files in DIR [PREFIX/share/locale]]),
-		    LOCALEDIR=$withval, LOCALEDIR="${prefix}/share/locale")
+		    LOCALEDIR=$withval, LOCALEDIR='${prefix}/share/locale')
 fi
 
 ################################################################################
@@ -1451,23 +1451,23 @@ AC_ARG_WITH(confdir,
 AC_ARG_WITH(staticdir,
 	    AC_HELP_STRING([--with-staticdir=DIR],
 			   [static binaries in DIR [EPREFIX/sbin]]),
-	    STATICDIR=$withval, STATICDIR="${exec_prefix}/sbin")
+	    STATICDIR=$withval, STATICDIR='${exec_prefix}/sbin')
 
 AC_ARG_WITH(usrlibdir,
 	    AC_HELP_STRING([--with-usrlibdir=DIR],
 			   [usrlib in DIR [PREFIX/lib]]),
-	    usrlibdir=$withval, usrlibdir="${prefix}/lib")
+	    usrlibdir=$withval, usrlibdir='${prefix}/lib')
 
 AC_ARG_WITH(usrsbindir,
 	    AC_HELP_STRING([--with-usrsbindir=DIR],
 			   [usrsbin executables in DIR [PREFIX/sbin]]),
-	    usrsbindir=$withval, usrsbindir="${prefix}/sbin")
+	    usrsbindir=$withval, usrsbindir='${prefix}/sbin')
 
 ################################################################################
 AC_ARG_WITH(udev_prefix,
 	    AC_HELP_STRING([--with-udev-prefix=UPREFIX],
 			   [install udev rule files in UPREFIX [EPREFIX]]),
-	    udev_prefix=$withval, udev_prefix="${exec_prefix}")
+	    udev_prefix=$withval, udev_prefix='${exec_prefix}')
 
 AC_ARG_WITH(udevdir,
 	    AC_HELP_STRING([--with-udevdir=DIR],
@@ -1494,7 +1494,7 @@ test -z "$systemdutildir" && systemdutildir='${exec_prefix}/lib/systemd';
 AC_ARG_WITH(tmpfilesdir,
 	    AC_HELP_STRING([--with-tmpfilesdir=DIR],
 			   [install configuration files for management of volatile files and directories in DIR [PREFIX/lib/tmpfiles.d]]),
-			   tmpfilesdir=$withval, tmpfilesdir="${prefix}/lib/tmpfiles.d")
+			   tmpfilesdir=$withval, tmpfilesdir='${prefix}/lib/tmpfiles.d')
 ################################################################################
 dnl -- Ensure additional headers required
 if test "$READLINE" = yes; then

@@ -9,7 +9,7 @@ Conflicts=shutdown.target
 
 [Service]
 Type=forking
-ExecStart=@usrsbindir@/cmirrord
+ExecStart=@sbindir@/cmirrord
 PIDFile=@CMIRRORD_PIDFILE@
 Restart=on-abort
 
