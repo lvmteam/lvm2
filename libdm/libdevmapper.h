@@ -1879,6 +1879,7 @@ int dm_config_write_one_node_out(const struct dm_config_node *cn, const struct d
 
 struct dm_config_node *dm_config_find_node(const struct dm_config_node *cn, const char *path);
 int dm_config_has_node(const struct dm_config_node *cn, const char *path);
+int dm_config_remove_node(struct dm_config_node *parent, struct dm_config_node *remove);
 const char *dm_config_find_str(const struct dm_config_node *cn, const char *path, const char *fail);
 const char *dm_config_find_str_allow_empty(const struct dm_config_node *cn, const char *path, const char *fail);
 int dm_config_find_int(const struct dm_config_node *cn, const char *path, int fail);
