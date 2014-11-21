@@ -206,7 +206,7 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 			return 0;
 	}
 
-	if (!(dmt = _setup_task(type != MKNODES ? name : NULL, dlid, 0, dmtask,
+	if (!(dmt = _setup_task((type == MKNODES) ? name : NULL, dlid, 0, dmtask,
 				major, minor, with_open_count)))
 		return_0;
 

@@ -1,5 +1,6 @@
 Version 2.02.113 - 
 =====================================
+  Fix regression in vgscan --mknodes usage (2.02.112).
   Respect --prefix when setting CLMVD_PATH configure (2.02.89).
   Default to configure --enable-udev-systemd-background-jobs for systemd>=205.
   Fix ignore_vg() to properly react on various vg_read errors (2.02.112).
