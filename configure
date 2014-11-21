@@ -12433,8 +12433,8 @@ _ACEOF
 
 if  test "$CLVMD" != none; then
 	clvmd_prefix=$ac_default_prefix
-	CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
 	test "$prefix" != NONE && clvmd_prefix=$prefix
+	CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
 
 cat >>confdefs.h <<_ACEOF
 #define CLVMD_PATH "$CLVMD_PATH"

@@ -1545,8 +1545,8 @@ AC_DEFINE_UNQUOTED(LVM_PATH, ["$LVM_PATH"], [Path to lvm binary.])
 
 if  test "$CLVMD" != none; then
 	clvmd_prefix=$ac_default_prefix
-	CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
 	test "$prefix" != NONE && clvmd_prefix=$prefix
+	CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
 	AC_DEFINE_UNQUOTED(CLVMD_PATH, ["$CLVMD_PATH"], [Path to clvmd binary.])
 fi
 
