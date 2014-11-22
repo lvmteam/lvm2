@@ -2849,24 +2849,24 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 	}
 
 	if (!(root = _alloc_selection_node(rh->mem, SEL_OR)))
-		return_0;
+		goto_bad;
 
 	if (!_parse_or_ex(rh, selection, &fin, root))
-		goto error;
+		goto_bad;
 
 	next = _skip_space(fin);
 	if (*next) {
 		log_error("Expecting logical operator");
 		log_error(_sel_syntax_error_at_msg, next);
 		log_error(_sel_help_ref_msg);
-		goto error;
+		goto bad;
 	}
 
 	_dm_report_init_update_types(rh, report_types);
 
 	rh->selection_root = root;
 	return rh;
-error:	
+bad:
 	dm_report_free(rh);
 	return NULL;
 }
