@@ -1,5 +1,6 @@
 Version 1.02.92 - 
 ====================================
+  Fix memory corruption with sorting empty string lists (1.02.86).
   Fix man dmsetup.8 syntax warning of Groff
 
 Version 1.02.91 - 11th November 2014
