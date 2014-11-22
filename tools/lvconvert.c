@@ -2784,10 +2784,17 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 	char metadata_name[NAME_LEN], data_name[NAME_LEN];
 	int activate_pool;
 
-	if (lp->pool_data_name &&
-	    !(pool_lv = find_lv(vg, lp->pool_data_name))) {
-		log_error("Unknown pool data LV %s.", lp->pool_data_name);
-		return 0;
+	if (lp->pool_data_name) {
+		if ((lp->thin || lp->cache) &&
+		    !strcmp(lp->pool_data_name, pool_lv->name)) {
+			log_error("Converted volume %s and pool volume must differ.",
+				  display_lvname(pool_lv));
+			return 0;
+		}
+		if (!(pool_lv = find_lv(vg, lp->pool_data_name))) {
+			log_error("Unknown pool data LV %s.", lp->pool_data_name);
+			return 0;
+		}
 	}
 
 	if (!lv_is_visible(pool_lv)) {
