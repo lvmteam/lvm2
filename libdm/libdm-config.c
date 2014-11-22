@@ -1386,11 +1386,11 @@ struct dm_config_tree *dm_config_flatten(struct dm_config_tree *cft)
 	return res;
 }
 
-int dm_config_remove_node(struct dm_config_node *parent, struct dm_config_node *remove)
+int dm_config_remove_node(struct dm_config_node *parent, struct dm_config_node *rem_node)
 {
 	struct dm_config_node *cn = parent->child, *last = NULL;
 	while (cn) {
-		if (cn == remove) {
+		if (cn == rem_node) {
 			if (last)
 				last->sib = cn->sib;
 			else
