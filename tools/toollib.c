@@ -1149,7 +1149,8 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 			goto_out;
 	}
 
-	result = dm_config_flatten(current);
+	if (!(result = dm_config_flatten(current)))
+		goto_out;
 
 	if (!(cn = dm_config_create_node(result, "policy_settings")))
 		goto_out;
