@@ -36,15 +36,13 @@ lvcreate -L2 -n fixed $vg
 lvs -a -o+seg_pe_ranges $vg
 #aux error_dev "$dev2" 2050:1
 
-vgchange -an $vg
-
-lvconvert --repair $vg/pool
-
-lvs -a $vg
+lvchange -an $vg/$lv2 $vg/$lv1 $vg/pool $vg/repair
 
 # Manual repair steps:
 # Test swapping - swap out thin-pool's metadata with our repair volume
 lvconvert -y -f --poolmetadata $vg/repair --thinpool $vg/pool
+
+lvchange -ay $vg/repair
 
 #
 # To continue this test - we need real tools available
@@ -54,8 +52,6 @@ lvconvert -y -f --poolmetadata $vg/repair --thinpool $vg/pool
 aux have_tool_at_least "$LVM_TEST_THIN_CHECK_CMD" 0 3 1 || skip
 aux have_tool_at_least "$LVM_TEST_THIN_DUMP_CMD" 0 3 1 || skip
 aux have_tool_at_least "$LVM_TEST_THIN_REPAIR_CMD" 0 3 1 || skip
-
-lvchange -aey $vg/repair $vg/fixed
 
 # Make some 'repairable' damage??
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/repair" bs=1 seek=40960 count=1
@@ -89,10 +85,10 @@ lvconvert -v --repair $vg/pool
 # Check repaired pool could be activated
 lvchange -ay $vg/pool
 
-lvchange -an $vg
+vgchange -an $vg
 
 # Restore damaged metadata
-lvconvert -y -f --poolmetadata $vg/pool_meta1 --thinpool $vg/pool
+lvconvert -y -f --poolmetadata $vg/pool_meta0 --thinpool $vg/pool
 
 # Check lvremove -ff works even with damaged pool
 lvremove -ff $vg
