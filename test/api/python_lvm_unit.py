@@ -103,7 +103,7 @@ class AllowedPVS(object):
 
 class TestLvm(unittest.TestCase):
 
-	VG_P = 'py_unit_test_'
+	VG_P = os.environ.get('PREFIX')
 
 	@staticmethod
 	def _get_pv_device_names():
