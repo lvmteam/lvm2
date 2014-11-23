@@ -53,7 +53,7 @@ lvchange -an $vg/$lv1
 # conversion fails for mirror segment type
 fail lvconvert --thinpool $vg/$lv1
 # cannot use same LV
-fail lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
+invalid lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
 
 prepare_lvs
 
@@ -104,7 +104,7 @@ invalid lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 invalid lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
 # cannot use same LV for pool and convertion
-fail lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
+invalid lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
 
 # Warning about smaller then suggested
 lvconvert --yes -c 256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 |& tee err

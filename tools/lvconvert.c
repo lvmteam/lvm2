@@ -76,6 +76,28 @@ struct lvconvert_params {
 	thin_discards_t discards;
 };
 
+static int _lvconvert_validate_names(struct lvconvert_params *lp)
+{
+	int i, j;
+	const char *names[] = {
+		(lp->lv_name == lp->pool_data_name) ? NULL : lp->lv_name, "converted",
+		lp->pool_data_name, "pool",
+		lp->pool_metadata_name, "pool metadata",
+		lp->origin_name, "origin",
+	};
+
+	for (i = 0; i < DM_ARRAY_SIZE(names); i += 2)
+		if (names[i])
+			for (j = i + 2; j < DM_ARRAY_SIZE(names); j += 2)
+				if (names[j] && !strcmp(names[i], names[j])) {
+					log_error("Can't use same name %s for %s and %s volume.",
+						  names[i], names[i + 1], names[j + 1]);
+					return 0;
+				}
+
+	return 1;
+}
+
 static int _lvconvert_name_params(struct lvconvert_params *lp,
 				  struct cmd_context *cmd,
 				  int *pargc, char ***pargv)
@@ -194,6 +216,9 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 			return 0;
 		}
 	}
+
+	if (!_lvconvert_validate_names(lp))
+		return_0;
 
 	return 1;
 }
