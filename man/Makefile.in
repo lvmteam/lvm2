@@ -77,14 +77,10 @@ MAN8DIR=$(mandir)/man8
 
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
-CLEAN_TARGETS=$(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(MAN8DM)
-DISTCLEAN_TARGETS=fsadm.8 clvmd.8 cmirrord.8 dmeventd.8 lvmcache.7 lvmthin.7 blkdeactivate.8
-
 include $(top_builddir)/make.tmpl
 
-ifneq ("@CLVMD@", "none")
-  install: install_cluster
-endif
+CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS) $(MAN8DM)
+DISTCLEAN_TARGETS+=fsadm.8 clvmd.8 cmirrord.8 dmeventd.8 lvmcache.7 lvmthin.7 blkdeactivate.8
 
 all: man device-mapper
 
@@ -92,7 +88,7 @@ all: man device-mapper
 
 device-mapper: $(MAN8DM)
 
-man: $(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER)
+man: $(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS)
 
 $(MAN5) $(MAN7) $(MAN8) $(MAN8DM) $(MAN8CLUSTER):	Makefile
 
@@ -134,4 +130,4 @@ ifdef MAN8SYSTEMD_GENERATORS
 	$(INSTALL_DATA) $(MAN8SYSTEMD_GENERATORS) $(MAN8DIR)/
 endif
 
-install: install_lvm2 install_device-mapper
+install: install_lvm2 install_device-mapper install_cluster
