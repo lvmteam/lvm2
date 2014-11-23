@@ -16,6 +16,10 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-\-alloc
 .IR AllocationPolicy ]
+.RB [ \-\-cachepolicy
+.IR policy ]
+.RB [ \-\-cachesettings
+.IR key=value ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
 .RB [ \-C | \-\-contiguous
@@ -130,6 +134,11 @@ of the flag is reported within \fBlv_attr\fP bits.
 .TP
 .BR \-K ", " \-\-ignoreactivationskip
 Ignore the flag to skip Logical Volumes during activation.
+.TP
+.BR  \-\-cachepolicy " " policy ", " \-\-cachesettings " " key=value
+Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
+the cache policy and its associated tunable settings. In most use-cases,
+default values should be adequate.
 .TP
 .BR \-C ", " \-\-contiguous " {" \fIy | \fIn }
 Tries to set or reset the contiguous allocation policy for
