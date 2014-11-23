@@ -114,7 +114,9 @@ A value can either be a new section, or an assignment.
 .TP
 .BR section " = " identifier " '" { "' " value "* '" } '
 .br
-A section is groups associated values together.
+A section groups associated values together. If the same section is
+encountered multiple times, the contents of all instances are concatenated
+together in the order of appearance.
 .br
 It is denoted by a name and delimited by curly brackets.
 .br
@@ -126,9 +128,13 @@ e.g.	backup {
 .TP
 .BR assignment " = " identifier " '" = "' ( " array " | " type " )"
 .br
-An assignment associates a type with an identifier.
+An assignment associates a type with an identifier. If the identifier contains
+forward slashes, those are interpreted as path delimiters. The statement
+\fBsection/key = value\fP is equivalent to \fBsection { key = value }\fP. If
+multiple instances of the same key are encountered, only the last value is used
+(and a warning is issued).
 .br
-e.g.	level = 7
+e.g.	\fBlevel = 7\fP
 .br
 .TP
 .BR array " =  '" [ "' ( " type " '" , "')* " type " '" ] "' | '" [ "' '" ] '
@@ -146,7 +152,8 @@ An empty array is acceptable.
 .br
 .B string \fR= '\fB"\fR'.*'\fB"\fR'
 .IP
-Strings must be enclosed in double quotes.
+Strings with spaces must be enclosed in double quotes, single words that start
+with a letter can be left unquoted.
 
 .SH SECTIONS
 .LP
