@@ -1761,7 +1761,17 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 						const char *selection,
 						const struct dm_report_reserved_value reserved_values[],
 						void *private_data);
+/*
+ * Report an object, pass it through the selection criteria if they
+ * are present and display the result on output if it passes the criteria.
+ */
 int dm_report_object(struct dm_report *rh, void *object);
+/*
+ * The same as dm_report_object, but display the result on output only if
+ * 'do_output' arg is set. Also, save the result of selection in 'selected'
+ * arg if it's not NULL (either 1 if the object passes, otherwise 0).
+ */
+int dm_report_object_is_selected(struct dm_report *rh, void *object, int do_output, int *selected);
 
 /*
  * Compact report output so that if field value is empty for all rows in
