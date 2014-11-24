@@ -368,6 +368,21 @@ static int _report_field_string_list(struct dm_report *rh,
 	 * position and length for each list element withing the report_string.
 	 * The first element stores number of elements in 'len' (therefore
 	 * list_size + 1 is used below for the extra element).
+	 * For example, with this input:
+	 *   sort = 0;  (we don't want to report sorted)
+	 *   report_string = "abc,xy,defgh";  (this is reported)
+	 *
+	 * ...we end up with:
+	 *   sort_value->value = report_string; (we'll use the original report_string for indices)
+	 *   sort_value->items[0] = {0,3};  (we have 3 items)
+	 *   sort_value->items[1] = {0,3};  ("abc")
+	 *   sort_value->items[2] = {7,4};  ("defgh")
+	 *   sort_value->items[3] = {4,2};  ("xy")
+	 *
+	 *   The items alone are always sorted while in report_string they can be
+	 *   sorted or not (based on "sort" arg) - it depends on how we prefer to
+	 *   display the list. Having items sorted internally helps with searching
+	 *   through them.
 	 */
 	if (!(sort_value->items = dm_pool_zalloc(rh->mem, (list_size + 1) * sizeof(struct str_list_sort_value_item)))) {
 		log_error("dm_report_fiel_string_list: dm_pool_zalloc failed for sort value items");
