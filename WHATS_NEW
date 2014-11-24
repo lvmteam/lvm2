@@ -1,6 +1,7 @@
-Version 2.02.113 - 
+Version 2.02.113 - 24th November 2014
 =====================================
-  Validate converted volume and specified pool volume differ.
+  Add --cachepolicy and --cachesettings options to lvchange.
+  Validate that converted volume and specified pool volume differ in lvconvert.
   Fix regression in vgscan --mknodes usage (2.02.112).
   Respect --prefix when setting CLMVD_PATH configure (2.02.89).
   Default to configure --enable-udev-systemd-background-jobs for systemd>=205.
@@ -8,7 +9,6 @@ Version 2.02.113 -
   Failed recovery returns FAILED_RECOVERY status flag for vg_read().
   Exit with non-zero status code when pvck encounters a problem.
   Fix clean_tree after activation/resume for cache target (2.02.112).
-  Add --cachepolicy and --cachesettings options to lvchange.
 
 Version 2.02.112 - 11th November 2014
 =====================================
