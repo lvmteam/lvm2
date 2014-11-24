@@ -79,6 +79,13 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  int stop_on_error, void *handle,
 			  process_single_lv_fn_t process_single_lv);
 
+int select_match_vg(struct cmd_context *cmd, struct volume_group *vg,
+		    int *selected);
+int select_match_lv(struct cmd_context *cmd, struct volume_group *vg,
+		    struct logical_volume *lv, int *selected);
+int select_match_pv(struct cmd_context *cmd, struct volume_group *vg,
+		    struct physical_volume *pv, int *selected);
+
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 			 unsigned *dev_dir_found);
