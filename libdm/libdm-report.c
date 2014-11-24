@@ -393,8 +393,6 @@ static int _report_field_string_list(struct dm_report *rh,
 	/* zero items */
 	if (!list_size) {
 		sort_value->value = field->report_string = "";
-		sort_value->items[0].pos = 0;
-		sort_value->items[0].len = 0;
 		field->sort_value = sort_value;
 		return 1;
 	}
