@@ -119,21 +119,21 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .RI [ PhysicalVolume [ Path ]...]
 .sp
 .B lvconvert
-.RB [{ \-\-type
-.BR \fIthin [ \fI\-pool ]| \-T | \-\-thin }
+.B \-\-type
+.BR \fIthin [ \fI\-pool ]| \-T | \-\-thin
 .RB [ \-\-originname
-.IR NewExternalOriginVolumeName ]]
+.IR NewExternalOriginVolumeName ]
 .RB [ \-\-thinpool
 .IR ThinPoolLogicalVolume { Name | Path }
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
-.RB [{ \-\-poolmetadata
+.RB [ \-\-poolmetadata
 .IR ThinPoolMetadataLogicalVolume { Name | Path }
 |
 .B \-\-poolmetadatasize
-.IR ThinPoolMetadataSize [ bBsSkKmMgG ]}]
+.IR ThinPoolMetadataSize [ bBsSkKmMgG ]]
 .RB [ \-r | \-\-readahead
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-\-stripes \ \fIStripes
@@ -148,25 +148,25 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .RB [ \-\-version ]
 .RI [[ ExternalOrigin | ThinPool ] LogicalVolume { Name | Path }]
 .RI [ PhysicalVolume [ Path ][ :PE
-.RI [ \-PE ]]...]
+.RI [ \-PE ]]\ \.\|\.\|\.
 .sp
 .B lvconvert
-.RB [ \-\-type
-.BR \fIcache [ \fI\-pool ]| \-H | \-\-cache ]
-.RB [{ \-\-cachepool
-.IR CachePoolLogicalVolume { Name | Path }]
+.B \-\-type
+.BR \fIcache [ \fI\-pool ]| \-H | \-\-cache
+.RB [ \-\-cachepool
+.IR CachePoolLogicalVolume { Name | Path }
 |
 .B \-\-pooldatasize
-.IR CachePoolMetadataSize [ bBsSkKmMgGtTpPeE ]}]
+.IR CachePoolMetadataSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
 .RI { writeback | writethrough }]
-.RB [{ \-\-poolmetadata
+.RB [ \-\-poolmetadata
 .IR CachePoolMetadataLogicalVolume { Name | Path }
 |
 .B \-\-poolmetadatasize
-.IR CachePoolMetadataSize [ bBsSkKmMgG ]}]
+.IR CachePoolMetadataSize [ bBsSkKmMgG ]]
 .RB [ \-\-poolmetadataspare
 .RI { y | n }]
 .RB [ \-\-commandprofile

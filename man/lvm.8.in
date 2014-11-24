@@ -308,36 +308,12 @@ A short form of \fB\-\-metadataprofile\fP for \fBvgcreate\fP, \fBlvcreate\fP,
 for any other command (with the exception of \fBdumpconfig\fP command where the
 \-\-profile has special meaning, see \fBlvm dumpconfig\fP(8) for more information).
 .TP
-.IR \fB\-\-config \ ConfigurationString
+.IR \fB\-\-config " " \fIConfigurationString
 Uses the ConfigurationString as direct string representation of the configuration
 to override the existing configuration. The ConfigurationString is of exactly
 the same format as used in any LVM configuration file. See \fBlvm.conf\fP(5)
 for more information about \fBdirect config override on command line\fP and the
 way it fits with other LVM configuration methods.
-.SH ENVIRONMENT VARIABLES
-.TP
-.B HOME
-Directory containing \fI.lvm_history\fP if the internal readline
-shell is invoked.
-.TP
-.B LVM_SYSTEM_DIR
-Directory containing \fBlvm.conf\fP(5) and other LVM system files.
-Defaults to "#DEFAULT_SYS_DIR#".
-.TP
-.B LVM_SUPPRESS_FD_WARNINGS
-Suppress warnings about openned file descriptors, when lvm command
-is executed.
-.TP
-.B LVM_VG_NAME
-The Volume Group name that is assumed for
-any reference to a Logical Volume that doesn't specify a path.
-Not set by default.
-.TP
-.B LVM_LVMETAD_PIDFILE
-Path for the lvmetad pid file.
-.TP
-.B LVM_LVMETAD_SOCKET
-Path for the lvmetad socket file.
 .SH VALID NAMES
 The valid characters for VG and LV names are:
 .B a-z A-Z 0-9 + _ . -
@@ -498,6 +474,30 @@ For scalar types: number (integer), size (floating point number with size unit s
 
 .SH DIAGNOSTICS
 All tools return a status code of zero on success or non-zero on failure.
+.SH ENVIRONMENT VARIABLES
+.TP
+.B HOME
+Directory containing \fI.lvm_history\fP if the internal readline
+shell is invoked.
+.TP
+.B LVM_SYSTEM_DIR
+Directory containing \fBlvm.conf\fP(5) and other LVM system files.
+Defaults to "#DEFAULT_SYS_DIR#".
+.TP
+.B LVM_SUPPRESS_FD_WARNINGS
+Suppress warnings about openned file descriptors, when lvm command
+is executed.
+.TP
+.B LVM_VG_NAME
+The Volume Group name that is assumed for
+any reference to a Logical Volume that doesn't specify a path.
+Not set by default.
+.TP
+.B LVM_LVMETAD_PIDFILE
+Path for the lvmetad pid file.
+.TP
+.B LVM_LVMETAD_SOCKET
+Path for the lvmetad socket file.
 .SH FILES
 .I #DEFAULT_SYS_DIR#/lvm.conf
 .br
