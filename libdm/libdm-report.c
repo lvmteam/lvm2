@@ -376,7 +376,7 @@ static int _report_field_string_list(struct dm_report *rh,
 	 *   sort_value->value = report_string; (we'll use the original report_string for indices)
 	 *   sort_value->items[0] = {0,3};  (we have 3 items)
 	 *   sort_value->items[1] = {0,3};  ("abc")
-	 *   sort_value->items[2] = {7,4};  ("defgh")
+	 *   sort_value->items[2] = {7,5};  ("defgh")
 	 *   sort_value->items[3] = {4,2};  ("xy")
 	 *
 	 *   The items alone are always sorted while in report_string they can be
