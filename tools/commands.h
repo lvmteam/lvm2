@@ -281,7 +281,7 @@ xx(lvcreate,
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[--noudevsync]\n"
    "\t[-p|--permission {r|rw}]\n"
-   "\t[--pooldatasize DataSize[bBsSkKmMgGtTpPeE]]\n"
+   //"\t[--pooldatasize DataSize[bBsSkKmMgGtTpPeE]]\n"
    "\t[--poolmetadatasize MetadataSize[bBsSkKmMgG]]\n"
    "\t[--poolmetadataspare {y|n}]]\n"
    "\t[--[raid]minrecoveryrate Rate]\n"
@@ -321,7 +321,7 @@ xx(lvcreate,
    "\t[-K|--ignoreactivationskip]\n"
    "\t{-l|--extents LogicalExtentsNumber[%{VG|FREE|ORIGIN}] |\n"
    "\t -L|--size LogicalVolumeSize[bBsSkKmMgGtTpPeE]}\n"
-   "\t[--pooldatasize DataVolumeSize[bBsSkKmMgGtTpPeE]]\n"
+   //"\t[--pooldatasize DataVolumeSize[bBsSkKmMgGtTpPeE]]\n"
    "\t[--poolmetadatasize MetadataVolumeSize[bBsSkKmMgG]]\n"
    "\t[-M|--persistent {y|n}] [-j|--major major] [--minor minor]\n"
    "\t[--metadataprofile ProfileName]\n"
@@ -343,7 +343,8 @@ xx(lvcreate,
    metadataprofile_ARG, minor_ARG, mirrorlog_ARG, mirrors_ARG, monitor_ARG,
    minrecoveryrate_ARG, maxrecoveryrate_ARG, name_ARG, nosync_ARG,
    noudevsync_ARG, permission_ARG, persistent_ARG,
-   pooldatasize_ARG, poolmetadatasize_ARG, poolmetadataspare_ARG,
+   //pooldatasize_ARG,
+   poolmetadatasize_ARG, poolmetadataspare_ARG,
    raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG,
    readahead_ARG, regionsize_ARG, setactivationskip_ARG, size_ARG, snapshot_ARG,
    stripes_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG, type_ARG,

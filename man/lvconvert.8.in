@@ -154,10 +154,10 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .B \-\-type
 .BR \fIcache [ \fI\-pool ]| \-H | \-\-cache
 .RB [ \-\-cachepool
-.IR CachePoolLogicalVolume { Name | Path }
-|
-.B \-\-pooldatasize
-.IR CachePoolMetadataSize [ bBsSkKmMgGtTpPeE ]]
+.IR CachePoolLogicalVolume { Name | Path }]
+.\" |
+.\" .B \-\-pooldatasize
+.\" .IR CachePoolMetadataSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
@@ -386,10 +386,10 @@ Without this option a default name of "lvol<n>" will be generated where
 This volume will be read-only and cannot be further modified as long,
 as it is being used as the external origin.
 .TP
-.IR \fB\-\-pooldatasize " " PoolDataVolumeSize [ bBsSkKmMgGtTpPeE ]
-Sets the size of pool's data logical volume.
-The option \fB\-\-size\fP could be still used with thin pools.
-.TP
+.\" .IR \fB\-\-pooldatasize " " PoolDataVolumeSize [ bBsSkKmMgGtTpPeE ]
+.\" Sets the size of pool's data logical volume.
+.\" The option \fB\-\-size\fP could be still used with thin pools.
+.\" .TP
 .BR \-\-poolmetadata " " \fIPoolMetadataLogicalVolume { \fIName | \fIPath }
 Specifies cache or thin pool metadata logical volume.
 The size should be in between 2MiB and 16GiB.

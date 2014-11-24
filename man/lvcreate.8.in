@@ -60,9 +60,9 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-p | \-\-permission
 .RI { r | rw }]
 .RB [ \-M | \-\-persistent
-.RI { y | n }
-.RB [ \-\-pooldatasize
-.IR DataVolumeSize [ bBsSkKmMgGtTpPeE ]]
+.RI { y | n }]
+.\" .RB [ \-\-pooldatasize
+.\" .IR DataVolumeSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-\-poolmetadatasize
 .IR MetadataVolumeSize [ bBsSkKmMgG ]]
 .RB [ \-\-poolmetadataspare
@@ -100,7 +100,8 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-l | \-\-extents
 .IR LogicalExtentsNumber [ % { FREE | ORIGIN | PVS | VG }]
 |
-.BR \-L | \-\-size | \-\-pooldatasize
+.BR \-L | \-\-size
+.\" | \-\-pooldatasize
 .IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
@@ -168,8 +169,8 @@ will activate only on the local node.
 Creates cache or cache pool logical volume or both.
 Specifying the optional argument \fB\-\-size\fP will cause the creation of
 the cache logical volume.
-Specifying the optional argument \fB\-\-pooldatasize\fP will cause
-the creation of the cache pool logical volume.
+.\" Specifying the optional argument \fB\-\-pooldatasize\fP will cause
+.\" the creation of the cache pool logical volume.
 Specifying both arguments will cause the creation of cache with its
 cache pool volume.
 When the Volume group name is specified together with existing logical volume
@@ -350,11 +351,11 @@ Pool volumes cannot have persistent major and minor numbers.
 Defaults to \fIy\fPes only when major or minor number is specified.
 Otherwise it is \fIn\fPo.
 .TP
-.IR \fB\-\-pooldatasize " " PoolDataVolumeSize [ bBsSkKmMgGtTpPeE ]
-Sets the size of pool's data logical volume.
-For thin pools you may also specify the size
-with the option \fB\-\-size\fP.
-.TP
+.\" .IR \fB\-\-pooldatasize " " PoolDataVolumeSize [ bBsSkKmMgGtTpPeE ]
+.\" Sets the size of pool's data logical volume.
+.\" For thin pools you may also specify the size
+.\" with the option \fB\-\-size\fP.
+.\" .TP
 .IR \fB\-\-poolmetadatasize " " MetadataVolumeSize [ bBsSkKmMgG ]
 Sets the size of pool's metadata logical volume.
 Supported values are in range between 2MiB and 16GiB for thin pool,
@@ -675,9 +676,9 @@ volume (i.e. the origin LV), creating a cache LV.
 .sp
 .B lvcreate \-\-type cache \-L 1G \-n my_lv_cachepool vg/my_lv /dev/fast1
 
-Create a 1G cached LV "lvol1" with  10M cache pool "vg00/pool".
-.sp
-.B lvcreate \-\-cache \-L 1G \-n lv --pooldatasize 10M vg00/pool
+.\" Create a 1G cached LV "lvol1" with  10M cache pool "vg00/pool".
+.\" .sp
+.\" .B lvcreate \-\-cache \-L 1G \-n lv --pooldatasize 10M vg00/pool
 
 .SH SEE ALSO
 .BR lvm (8),
