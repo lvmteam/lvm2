@@ -38,7 +38,7 @@ CLVMDOPTS="-T30"
 # allow up to $CLVMD_STOP_TIMEOUT seconds to clvmd to complete exit operations
 # default to 10 seconds
 
-[ -z $CLMVD_STOP_TIMEOUT ] && CLVMD_STOP_TIMEOUT=10
+[ -z $CLVMD_STOP_TIMEOUT ] && CLVMD_STOP_TIMEOUT=10
 
 LOCK_FILE="/var/lock/subsys/$DAEMON"
 
