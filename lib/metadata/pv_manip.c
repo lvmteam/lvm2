@@ -650,7 +650,7 @@ int pv_resize_single(struct cmd_context *cmd,
 	}
 
 	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
-		    pv_name, pv_size(pv));
+		    pv_name, size);
 
 	if (!pv_resize(pv, vg, size))
 		goto_out;

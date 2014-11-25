@@ -1,5 +1,6 @@
 Version 2.02.114 - 
 =====================================
+  Fix size in pvresize "Resizing to ..." verbose msg to show proper result size.
 
 Version 2.02.113 - 24th November 2014
 =====================================
