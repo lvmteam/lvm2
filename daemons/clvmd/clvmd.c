@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt_long(argc, argv, "vVhfd:t:RST:CI:E:",
+	while ((opt = getopt_long(argc, argv, "Vhfd:t:RST:CI:E:",
 				  longopts, NULL)) != -1) {
 		switch (opt) {
 		case 'h':
