@@ -543,9 +543,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	if ((report_type & PVSEGS) ||
 	    ((report_type & (PVS | LABEL)) && (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))))
 		report_type = PVSEGS;
-	else if ((report_type & LABEL) && (report_type & VGS))
-		report_type = PVS;
-	else if (report_type & PVS)
+	else if ((report_type & PVS) ||
+		 ((report_type & LABEL) && (report_type & VGS)))
 		report_type = PVS;
 	else if (report_type & (SEGS | SEGSSTATUS))
 		report_type = SEGS;
