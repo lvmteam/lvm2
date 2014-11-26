@@ -68,6 +68,11 @@ test $(lvs --noheadings $vg | wc -l) -eq 2
 test $(lvs -a --noheadings $vg | wc -l) -eq 6
 dmsetup ls | grep "$PREFIX" | grep -v "LVMTEST.*pv."
 
+# Check we parse /dev/mapper/vg-lv
+lvdisplay "$DM_DEV_DIR/mapper/$vg-$lv3"
+# Check we parse /dev/vg/lv
+lvdisplay "$DM_DEV_DIR/$vg/$lv3"
+
 lvcreate -l2 -s $vg/$lv3
 lvcreate -l1 -s -n inval $vg/$lv3
 lvcreate -l4 -I4 -i2 -n stripe $vg

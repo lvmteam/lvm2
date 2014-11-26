@@ -130,8 +130,8 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 			vg_name++;
 
 		/* Reformat string if /dev/mapper found */
-		if (!strncmp(vg_name, dmdir, dmdir_len) && vg_name[dmdir_len + 1] == '/') {
-			vg_name += devdir_len + 1;
+		if (!strncmp(vg_name, dmdir, dmdir_len) && vg_name[dmdir_len] == '/') {
+			vg_name += dmdir_len + 1;
 			while (*vg_name == '/')
 				vg_name++;
 
