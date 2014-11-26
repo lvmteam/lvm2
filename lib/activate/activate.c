@@ -719,15 +719,13 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 			   struct lvinfo *lvinfo, struct lv_seg_status *lv_seg_status,
 			   int with_open_count, int with_read_ahead)
 {
-	int r = 0;
-
 	if (!activation())
 		return 0;
 
 	if (lv == lv_seg->lv) {
 		r = _lv_info(cmd, lv, use_layer, lvinfo, lv_seg, lv_seg_status,
 			     with_open_count, with_read_ahead);
-		goto out;
+		return 0;
 	}
 
 	/*
@@ -737,10 +735,6 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 	 */
 	return _lv_info(cmd, lv, use_layer, lvinfo, NULL, NULL, with_open_count, with_read_ahead) &&
 	       _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, lv_seg_status, 0, 0);
-
-	r = 1;
-out:
-	return r;
 }
 
 #define OPEN_COUNT_CHECK_RETRIES 25
