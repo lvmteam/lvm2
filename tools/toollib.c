@@ -1175,7 +1175,7 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 	ok = 1;
 
 out:
-	if (!ok) {
+	if (!ok && result) {
 		dm_config_destroy(result);
 		result = NULL;
 	}
