@@ -722,11 +722,9 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 	if (!activation())
 		return 0;
 
-	if (lv == lv_seg->lv) {
-		r = _lv_info(cmd, lv, use_layer, lvinfo, lv_seg, lv_seg_status,
-			     with_open_count, with_read_ahead);
-		return 0;
-	}
+	if (lv == lv_seg->lv)
+		return _lv_info(cmd, lv, use_layer, lvinfo, lv_seg, lv_seg_status,
+				with_open_count, with_read_ahead);
 
 	/*
 	 * If the info is requested for an LV and segment
