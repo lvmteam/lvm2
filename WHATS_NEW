@@ -1,5 +1,6 @@
 Version 2.02.114 - 
 =====================================
+  Fix missing rounding to 64KB when estimating optimal thin pool chunk size.
   Fix typo in clvmd initscript causing CLVMD_STOP_TIMEOUT variable to be ignored.
   Fix size in pvresize "Resizing to ..." verbose msg to show proper result size.
 

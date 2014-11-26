@@ -394,6 +394,33 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	return ret;
 }
 
+/* Estimate thin pool chunk size from data and metadata size (in sector units) */
+static size_t _estimate_chunk_size(uint64_t data_size, uint64_t metadata_size, int attr)
+{
+	/*
+	 * nr_pool_blocks = data_size / metadata_size
+	 * chunk_size = nr_pool_blocks * 64b / sector_size
+	 */
+	size_t chunk_size = data_size / (metadata_size * (SECTOR_SIZE / 64));
+
+	if (attr & THIN_FEATURE_BLOCK_SIZE) {
+		/* Round up to 64KB */
+		chunk_size += DM_THIN_MIN_DATA_BLOCK_SIZE - 1;
+		chunk_size &= ~(size_t)(DM_THIN_MIN_DATA_BLOCK_SIZE - 1);
+	} else {
+		/* Round up to nearest power of 2 */
+		chunk_size--;
+		chunk_size |= chunk_size >> 1;
+		chunk_size |= chunk_size >> 2;
+		chunk_size |= chunk_size >> 4;
+		chunk_size |= chunk_size >> 8;
+		chunk_size |= chunk_size >> 16;
+		chunk_size++;
+	}
+
+	return chunk_size;
+}
+
 int update_thin_pool_params(const struct segment_type *segtype,
 			    struct volume_group *vg,
 			    unsigned attr, int passed_args,
@@ -465,18 +492,20 @@ int update_thin_pool_params(const struct segment_type *segtype,
 				    display_size(cmd, *chunk_size));
 		} else if (pool_metadata_size > (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2)) {
 			/* Suggest bigger chunk size */
-			estimate_chunk_size = (uint64_t) pool_data_extents * extent_size /
-				(DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2 * (SECTOR_SIZE / UINT64_C(64)));
+			estimate_chunk_size =
+				_estimate_chunk_size((uint64_t) pool_data_extents * extent_size,
+						     (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2), attr);
 			log_warn("WARNING: Chunk size is too small for pool, suggested minimum is %s.",
-				 display_size(cmd, UINT64_C(1) << (ffs(estimate_chunk_size) + 1)));
+				 display_size(cmd, estimate_chunk_size));
 		}
 
 		/* Round up to extent size silently */
 		if (pool_metadata_size % extent_size)
 			pool_metadata_size += extent_size - pool_metadata_size % extent_size;
 	} else {
-		estimate_chunk_size = (uint64_t) pool_data_extents * extent_size /
-			(pool_metadata_size * (SECTOR_SIZE / UINT64_C(64)));
+		estimate_chunk_size =
+			_estimate_chunk_size((uint64_t) pool_data_extents * extent_size,
+					     pool_metadata_size, attr);
 		if (estimate_chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE)
 			estimate_chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
 		else if (estimate_chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE)
