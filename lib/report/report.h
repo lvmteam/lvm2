@@ -34,6 +34,31 @@ typedef enum {
 	DEVTYPES	= 1024
 } report_type_t;
 
+/*
+ * The "struct selection_handle" is used only for selection
+ * of items that should be processed further (not for display!).
+ *
+ * It consists of selection reporting handle "selection_rh"
+ * used for the selection itself (not for display on output!).
+ * The items are reported directly in memory to a buffer and
+ * then compared against selection criteria. Once we know the
+ * result of the selection, the buffer is dropped!
+ *
+ * The "orig_report_type" is the original requested report type.
+ * The "report_type" is the reporting type actually used which
+ * also counts with report types of the fields used in selection
+ * criteria.
+ *
+ * The "selected" variable is used for propagating the result
+ * of the selection.
+ */
+struct selection_handle {
+	struct dm_report *selection_rh;
+	report_type_t orig_report_type;
+	report_type_t report_type;
+	int selected;
+};
+
 struct field;
 struct report_handle;
 

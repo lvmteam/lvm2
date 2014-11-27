@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int _lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
-			     void *handle)
+			     struct processing_handle *handle __attribute__ ((unused)))
 {
 	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
@@ -24,7 +24,7 @@ static int _lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (arg_count(cmd, colon_ARG))
 		lvdisplay_colons(lv);
 	else {
-		lvdisplay_full(cmd, lv, handle);
+		lvdisplay_full(cmd, lv, NULL);
 		if (arg_count(cmd, maps_ARG))
 			lvdisplay_segments(lv);
 	}

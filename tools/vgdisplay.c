@@ -17,7 +17,7 @@
 
 static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
-			    void *handle __attribute__((unused)))
+			    struct processing_handle *handle __attribute__((unused)))
 {
 	if (arg_count(cmd, activevolumegroups_ARG) && !lvs_in_vg_activated(vg))
 		return ECMD_PROCESSED;

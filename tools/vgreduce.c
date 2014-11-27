@@ -123,7 +123,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 /* Or take pv_name instead? */
 static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			    struct physical_volume *pv,
-			    void *handle __attribute__((unused)))
+			    struct processing_handle *handle __attribute__((unused)))
 {
 	int r;
 

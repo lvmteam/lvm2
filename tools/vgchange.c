@@ -473,7 +473,7 @@ static int _vgchange_profile(struct cmd_context *cmd,
 
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
-			   void *handle __attribute__((unused)))
+			   struct processing_handle *handle __attribute__((unused)))
 {
 	int ret = ECMD_PROCESSED;
 	unsigned i;

@@ -49,9 +49,9 @@ static char *_expand_filename(const char *template, const char *vg_name,
 
 static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
-			    void *handle)
+			    struct processing_handle *handle)
 {
-	char **last_filename = (char **)handle;
+	char **last_filename = (char **)handle->custom_handle;
 	char *filename;
 
 	if (arg_count(cmd, file_ARG)) {
@@ -83,11 +83,14 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 	char *last_filename = NULL;
+	struct processing_handle handle = { .internal_report_for_select = 1,
+					    .selection_handle = NULL,
+					    .custom_handle = &last_filename };
 
 	init_pvmove(1);
 
 	ret = process_each_vg(cmd, argc, argv, READ_ALLOW_INCONSISTENT,
-			      &last_filename, &vg_backup_single);
+			      &handle, &vg_backup_single);
 
 	dm_free(last_filename);
 

@@ -18,7 +18,7 @@
 static int vgimport_single(struct cmd_context *cmd __attribute__((unused)),
 			   const char *vg_name,
 			   struct volume_group *vg,
-			   void *handle __attribute__((unused)))
+			   struct processing_handle *handle __attribute__((unused)))
 {
 	struct pv_list *pvl;
 	struct physical_volume *pv;

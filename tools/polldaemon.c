@@ -189,9 +189,9 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 }
 
 static int _poll_vg(struct cmd_context *cmd, const char *vgname,
-		    struct volume_group *vg, void *handle)
+		    struct volume_group *vg, struct processing_handle *handle)
 {
-	struct daemon_parms *parms = (struct daemon_parms *) handle;
+	struct daemon_parms *parms = (struct daemon_parms *) handle->custom_handle;
 	struct lv_list *lvl;
 	struct logical_volume *lv;
 	const char *name;
@@ -229,9 +229,13 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 static void _poll_for_all_vgs(struct cmd_context *cmd,
 			      struct daemon_parms *parms)
 {
+	struct processing_handle handle = { .internal_report_for_select = 1,
+					    .selection_handle = NULL,
+					    .custom_handle = parms };
+
 	while (1) {
 		parms->outstanding_count = 0;
-		process_each_vg(cmd, 0, NULL, READ_FOR_UPDATE, parms, _poll_vg);
+		process_each_vg(cmd, 0, NULL, READ_FOR_UPDATE, &handle, _poll_vg);
 		if (!parms->outstanding_count)
 			break;
 		sleep(parms->interval);

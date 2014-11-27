@@ -17,66 +17,124 @@
 #define _LVM_TOOLLIB_H
 
 #include "metadata-exported.h"
+#include "report.h"
 
 int become_daemon(struct cmd_context *cmd, int skip_lvm);
 
 int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsistent, int *skip);
 
+/*
+ * The "struct processing_handle" is used as a handle for processing
+ * functions (process_each_* and related).
+ *
+ * The "custom_handle" is any handle used to pass custom data into
+ * process_each_* and related functions.
+ *
+ * The "internal_report_for_select=0" makes processing function to
+ * skip checking the report/selection criteria (if given on cmd line)
+ * before executing the action on the item.
+ *
+ * The "selection_handle" is only used if "internal_report_for_select=1".
+ *
+ * Some important notes about selection:
+ * =====================================
+ * In case we're processing for display, the selection is directly
+ * a part of reporting for the display on output so we don't need to
+ * report the item in memory to get the selection result, then dropping
+ * the report and then reporting the same thing again for it to be
+ * displayed on output.
+ * For example, compare these code paths:
+ *
+ *   - when reporting for display on output:
+ *      _report -> process_each_* -> ... -> dm_report_object
+ *      (Here the dm_report_object does both selection and
+ *       reporting for display on output.)
+ *
+ *   - for any other processing and reporting for selection:
+ *      process_each_* -> _select_match_* -> ... -> dm_report_object_is_selected
+ *                                                            |
+ *                                                            --> (selection result) --> ...
+ *      (Here the dm_report_object_is_selected just gets
+ *       the selection result and it drops reporting buffer
+ *       immediately. Then based on the selection result,
+ *       the process_each_* action on the item is executed
+ *       or not...)
+ *
+ * Simply, we want to avoid this double reporting when reporting
+ * for display on output:
+ *     _report -> process_each_* -> _select_match_* -> ... -> dm_report_object_is_selected
+ *                                                                      |
+ *                                                                      --> (selection result) -> dm_report_object
+ *
+ * So whenever the processing action is "to display item on output", use
+ * "internal_report_for_select=0" as report/selection is already
+ * a part of that reporting for display (dm_report_object).
+ */
+struct processing_handle {
+	int internal_report_for_select;
+	struct selection_handle *selection_handle;
+	void *custom_handle;
+};
+
 typedef int (*process_single_vg_fn_t) (struct cmd_context * cmd,
 				       const char *vg_name,
 				       struct volume_group * vg,
-				       void *handle);
+				       struct processing_handle *handle);
 typedef int (*process_single_pv_fn_t) (struct cmd_context *cmd,
 				  struct volume_group *vg,
 				  struct physical_volume *pv,
-				  void *handle);
+				  struct processing_handle *handle);
 typedef int (*process_single_label_fn_t) (struct cmd_context *cmd,
 					  struct label *label,
-					  void *handle);
+					  struct processing_handle *handle);
 typedef int (*process_single_lv_fn_t) (struct cmd_context *cmd,
 				  struct logical_volume *lv,
-				  void *handle);
+				  struct processing_handle *handle);
 typedef int (*process_single_seg_fn_t) (struct cmd_context * cmd,
 					struct lv_segment * seg,
-					void *handle);
+					struct processing_handle *handle);
 typedef int (*process_single_pvseg_fn_t) (struct cmd_context * cmd,
 					  struct volume_group * vg,
 					  struct pv_segment * pvseg,
-					  void *handle);
+					  struct processing_handle *handle);
 
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t flags, void *handle,
+		    uint32_t flags, struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg);
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    const char *vg_name, uint32_t lock_type,
-		    void *handle, process_single_pv_fn_t process_single_pv);
+		    struct processing_handle *handle,
+		    process_single_pv_fn_t process_single_pv);
 
 int process_each_label(struct cmd_context *cmd, int argc, char **argv,
-		       void *handle, process_single_label_fn_t process_single_label);
+		       struct processing_handle *handle,
+		       process_single_label_fn_t process_single_label);
 
 int process_each_segment_in_pv(struct cmd_context *cmd,
 			       struct volume_group *vg,
 			       struct physical_volume *pv,
-			       void *handle,
+			       struct processing_handle *handle,
 			       process_single_pvseg_fn_t process_single_pvseg);
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t flags, void *handle,
+		    uint32_t flags, struct processing_handle *handle,
 		    process_single_lv_fn_t process_single_lv);
 
 
 int process_each_segment_in_lv(struct cmd_context *cmd,
-			       struct logical_volume *lv, void *handle,
+			       struct logical_volume *lv,
+			       struct processing_handle *handle,
 			       process_single_seg_fn_t process_single_seg);
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  void *handle, process_single_pv_fn_t process_single_pv);
+			  struct processing_handle *handle,
+			  process_single_pv_fn_t process_single_pv);
 
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct dm_list *arg_lvnames, const struct dm_list *tagsl,
-			  int stop_on_error, void *handle,
+			  int stop_on_error, struct processing_handle *handle,
 			  process_single_lv_fn_t process_single_lv);
 
 int select_match_vg(struct cmd_context *cmd, struct volume_group *vg,
@@ -145,6 +203,6 @@ int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_na
 				     const char **lv_name);
 
 int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
-                    void *handle __attribute__((unused)));
+                    struct processing_handle *handle __attribute__((unused)));
 
 #endif

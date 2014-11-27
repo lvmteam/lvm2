@@ -48,7 +48,7 @@ static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume
 }
 
 static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
-			 void *handle __attribute__((unused)))
+			 struct processing_handle *handle __attribute__((unused)))
 {
 	struct lvinfo info;
 	int inkernel, snap_active = 1;

@@ -17,7 +17,8 @@
 
 static int _pvdisplay_single(struct cmd_context *cmd,
 			     struct volume_group *vg,
-			     struct physical_volume *pv, void *handle)
+			     struct physical_volume *pv,
+			     struct processing_handle *handle __attribute__((unused)))
 {
 	const char *pv_name = pv_dev_name(pv);
 	int ret = ECMD_PROCESSED;
@@ -48,7 +49,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		goto out;
 	}
 
-	pvdisplay_full(cmd, pv, handle);
+	pvdisplay_full(cmd, pv, NULL);
 
 	if (arg_count(cmd, maps_ARG))
 		pvdisplay_segments(pv);

@@ -203,7 +203,7 @@ int ignore_vg(struct volume_group *vg, const char *vg_name, int allow_inconsiste
 int process_each_segment_in_pv(struct cmd_context *cmd,
 			       struct volume_group *vg,
 			       struct physical_volume *pv,
-			       void *handle,
+			       struct processing_handle *handle,
 			       process_single_pvseg_fn_t process_single_pvseg)
 {
 	struct pv_segment *pvseg;
@@ -235,7 +235,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 
 int process_each_segment_in_lv(struct cmd_context *cmd,
 			       struct logical_volume *lv,
-			       void *handle,
+			       struct processing_handle *handle,
 			       process_single_seg_fn_t process_single_seg)
 {
 	struct lv_segment *seg;
@@ -1236,7 +1236,8 @@ int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-int process_each_label(struct cmd_context *cmd, int argc, char **argv, void *handle,
+int process_each_label(struct cmd_context *cmd, int argc, char **argv,
+		       struct processing_handle *handle,
 		       process_single_label_fn_t process_single_label)
 {
 	struct label *label;
@@ -1564,7 +1565,8 @@ int select_match_pv(struct cmd_context *cmd, struct volume_group *vg,
 static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 				  struct dm_list *vgnameids_to_process,
 				  struct dm_list *arg_vgnames,
-				  struct dm_list *arg_tags, void *handle,
+				  struct dm_list *arg_tags,
+				  struct processing_handle *handle,
 				  process_single_vg_fn_t process_single_vg)
 {
 	struct volume_group *vg;
@@ -1657,7 +1659,7 @@ static int _copy_str_to_vgnameid_list(struct cmd_context *cmd, struct dm_list *s
  * Call process_single_vg() for each VG selected by the command line arguments.
  */
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t flags, void *handle,
+		    uint32_t flags, struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg)
 {
 	struct dm_list arg_tags;		/* str_list */
@@ -1716,7 +1718,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct dm_list *arg_lvnames, const struct dm_list *tags_in,
 			  int stop_on_error,
-			  void *handle, process_single_lv_fn_t process_single_lv)
+			  struct processing_handle *handle,
+			  process_single_lv_fn_t process_single_lv)
 {
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
@@ -1939,7 +1942,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 				     struct dm_list *arg_vgnames,
 				     struct dm_list *arg_lvnames,
 				     struct dm_list *arg_tags,
-				     void *handle,
+				     struct processing_handle *handle,
 				     process_single_lv_fn_t process_single_lv)
 {
 	struct volume_group *vg;
@@ -2023,7 +2026,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
  * Call process_single_lv() for each LV selected by the command line arguments.
  */
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t flags,
-		    void *handle, process_single_lv_fn_t process_single_lv)
+		    struct processing_handle *handle, process_single_lv_fn_t process_single_lv)
 {
 	struct dm_list arg_tags;		/* str_list */
 	struct dm_list arg_vgnames;		/* str_list */
@@ -2219,7 +2222,8 @@ static struct device_id_list *_device_list_find_pvid(struct dm_list *devices, st
 }
 
 static int _process_device_list(struct cmd_context *cmd, struct dm_list *all_devices,
-				void *handle, process_single_pv_fn_t process_single_pv)
+				struct processing_handle *handle,
+				process_single_pv_fn_t process_single_pv)
 {
 	struct physical_volume pv_dummy;
 	struct physical_volume *pv;
@@ -2260,7 +2264,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			      int process_all_pvs,
 			      int process_all_devices,
 			      int skip,
-			      void *handle,
+			      struct processing_handle *handle,
 			      process_single_pv_fn_t process_single_pv)
 {
 	struct physical_volume *pv;
@@ -2423,7 +2427,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 			       struct dm_list *arg_tags,
 			       int process_all_pvs,
 			       int process_all_devices,
-			       void *handle,
+			       struct processing_handle *handle,
 			       process_single_pv_fn_t process_single_pv)
 {
 	struct volume_group *vg;
@@ -2480,7 +2484,7 @@ int process_each_pv(struct cmd_context *cmd,
 		    int argc, char **argv,
 		    const char *only_this_vgname,
 		    uint32_t flags,
-		    void *handle,
+		    struct processing_handle *handle,
 		    process_single_pv_fn_t process_single_pv)
 {
 	struct dm_list arg_tags;	/* str_list */
@@ -2570,7 +2574,8 @@ out:
 }
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  void *handle, process_single_pv_fn_t process_single_pv)
+			  struct processing_handle *handle,
+			  process_single_pv_fn_t process_single_pv)
 {
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -2591,7 +2596,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
-		    void *handle __attribute__((unused)))
+		    struct processing_handle *handle __attribute__((unused)))
 {
 	/*
 	 * Single force is equivalent to single --yes

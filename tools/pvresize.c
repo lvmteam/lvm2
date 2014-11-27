@@ -26,9 +26,9 @@ struct pvresize_params {
 static int _pvresize_single(struct cmd_context *cmd,
 			    struct volume_group *vg,
 			    struct physical_volume *pv,
-			    void *handle)
+			    struct processing_handle *handle)
 {
-	struct pvresize_params *params = (struct pvresize_params *) handle;
+	struct pvresize_params *params = (struct pvresize_params *) handle->custom_handle;
 
 	if (!params) {
 		log_error(INTERNAL_ERROR "Invalid resize params.");
@@ -47,6 +47,9 @@ static int _pvresize_single(struct cmd_context *cmd,
 int pvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct pvresize_params params;
+	struct processing_handle handle = { .internal_report_for_select = 1,
+					    .selection_handle = NULL,
+					    .custom_handle = &params };
 	int ret;
 
 	if (!argc) {
@@ -65,7 +68,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	params.done = 0;
 	params.total = 0;
 
-	ret = process_each_pv(cmd, argc, argv, NULL, READ_FOR_UPDATE, &params,
+	ret = process_each_pv(cmd, argc, argv, NULL, READ_FOR_UPDATE, &handle,
 			      _pvresize_single);
 
 	log_print_unless_silent("%d physical volume(s) resized / %d physical volume(s) "

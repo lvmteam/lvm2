@@ -848,7 +848,7 @@ static int lvchange_activation_skip(struct logical_volume *lv)
 
 
 static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
-			   void *handle __attribute__((unused)))
+			   struct processing_handle *handle __attribute__((unused)))
 {
 	int doit = 0, docmds = 0;
 	struct logical_volume *origin;
