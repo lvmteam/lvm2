@@ -6,7 +6,7 @@ cmirrord \(em cluster mirror log daemon
 \fBcmirrord\fR [\fB\-f\fR] [\fB\-h\fR]
 
 .SH DESCRIPTION
-cmirrord is the daemon that tracks mirror log information in a cluster.
+\fBcmirrord\fP is the daemon that tracks mirror log information in a cluster.
 It is specific to device-mapper based mirrors (and by extension, LVM
 cluster mirrors).  Cluster mirrors are not possible without this daemon
 running.
@@ -14,15 +14,16 @@ running.
 This daemon relies on the cluster infrastructure provided by the
 Cluster MANager (CMAN), which must be set up and running in order for
 cmirrord to function.  (The cluster infrastructure is also required for
-clvmd.)
+\fBclvmd\fP(8).)
 
-Output is logged via syslog.  The USR1 signal can be issued to cmirrord
-to gather current status information for debugging purposes.
+Output is logged via \fBsyslog\fP(3). The \fBSIGUSR1 signal\fP(7) can be
+issued to \fBcmirrord\fP to gather current status information for debugging
+purposes.
 
-Once started, cmirrord will run until it is shutdown via INT signal.  If
-there are still active cluster mirrors, however, the signal will be
-ignored.  Active cluster mirrors should be shutdown before stopping the
-cluster mirror log daemon.
+Once started, \fBcmirrord\fP will run until it is shutdown via \fBSIGINT\fP
+signal. If there are still active cluster mirrors, however, the signal will be
+ignored. Active cluster mirrors should be shutdown before stopping the cluster
+mirror log daemon.
 
 .SH OPTIONS
 .IP "\fB\-f\fR, \fB\-\-foreground\fR" 4
@@ -31,6 +32,8 @@ Do not fork and log to the terminal.
 Print usage.
 
 .SH SEE ALSO
+.BR syslog (3),
+.BR cluster.conf (5),
+.BR signal (7),
+.BR clvmd (8),
 .BR lvm (8)
-.BR clvmd (8)
-.BR cluster.conf (5)
