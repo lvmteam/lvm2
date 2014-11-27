@@ -7143,6 +7143,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 	}
 
+	if (lv_is_cache_pool(lv) && !origin_lv) {
+		if (lp->cache_policy && !lv_cache_setpolicy(lv, lp->cache_policy))
+			return NULL; /* revert? */
+		if (!lv_update_and_reload(lv))
+			return NULL; /* FIXME: revert */
+	}
+
 	if (seg_is_cache(lp) || (origin_lv && lv_is_cache_pool(lv))) {
 		/* Finish cache conversion magic */
 		if (origin_lv) {
@@ -7161,6 +7168,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 		}
 		lv = tmp_lv;
+
+		if (lp->cache_policy && !lv_cache_setpolicy(lv, lp->cache_policy))
+			return NULL; /* revert? */
+
 		if (!lv_update_and_reload(lv)) {
 			/* FIXME Do a better revert */
 			log_error("Aborting. Manual intervention required.");

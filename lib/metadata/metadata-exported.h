@@ -854,6 +854,7 @@ struct lvcreate_params {
 	uint32_t max_recovery_rate; /* RAID */
 
 	uint64_t feature_flags; /* cache */
+	struct dm_config_tree *cache_policy; /* cache */
 
 	const struct segment_type *segtype; /* all */
 	unsigned target_attr; /* all */
