@@ -1166,6 +1166,7 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 		if (!(cn->v = dm_config_create_value(result)))
 			goto_out;
 
+		cn->v->type = DM_CFG_STRING;
 		cn->v->v.str = arg_str_value(cmd, cachepolicy_ARG, NULL);
 	}
 
