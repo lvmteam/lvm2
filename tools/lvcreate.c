@@ -698,7 +698,9 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 #define CACHE_POOL_ARGS \
 	cachemode_ARG,\
-	cachepool_ARG
+	cachepool_ARG,\
+	cachepolicy_ARG,\
+	cachesettings_ARG
 
 #define MIRROR_ARGS \
 	corelog_ARG,\
@@ -1007,6 +1009,13 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 	if (contiguous && (lp->alloc != ALLOC_CONTIGUOUS)) {
 		log_error("Conflicting contiguous and alloc arguments.");
+		return 0;
+	}
+
+	if ((arg_count(cmd, cachepolicy_ARG) || arg_count(cmd, cachesettings_ARG)) &&
+	    !(lp->cache_policy = get_cachepolicy_params(cmd)))
+	{
+		log_error("Failed to parse cache policy and/or settings.");
 		return 0;
 	}
 
@@ -1404,6 +1413,13 @@ static int _validate_internal_thin_processing(const struct lvcreate_params *lp)
 	return r;
 }
 
+static void _destroy_lvcreate_params(struct lvcreate_params *lp)
+{
+	if (lp->cache_policy)
+		dm_config_destroy(lp->cache_policy);
+	lp->cache_policy = NULL;
+}
+
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int r = ECMD_FAILED;
@@ -1482,6 +1498,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	r = ECMD_PROCESSED;
 out:
+	_destroy_lvcreate_params(&lp);
 	unlock_and_release_vg(cmd, vg, lp.vg_name);
 	return r;
 }
