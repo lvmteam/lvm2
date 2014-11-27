@@ -1,5 +1,6 @@
 Version 2.02.114 - 
 =====================================
+  Add --cachepolicy and --cachesettings to lvcreate.
   Fix regression when parsing /dev/mapper dir (2.02.112).
   Fix missing rounding to 64KB when estimating optimal thin pool chunk size.
   Fix typo in clvmd initscript causing CLVMD_STOP_TIMEOUT variable to be ignored.
