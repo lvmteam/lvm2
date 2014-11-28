@@ -1542,6 +1542,59 @@ static int _get_vgnameids_on_system(struct cmd_context *cmd,
 	return ECMD_PROCESSED;
 }
 
+struct processing_handle *init_processing_handle(struct cmd_context *cmd)
+{
+	struct processing_handle *handle;
+
+	if (!(handle = dm_pool_zalloc(cmd->mem, sizeof(struct processing_handle)))) {
+		log_error("_init_processing_handle: failed to allocate memory for processing handle");
+		return NULL;
+	}
+
+	/*
+	 * For any reporting tool, the internal_report_for_select is reset to 0
+	 * automatically because the internal reporting/selection is simply not
+	 * needed - the reporting/selection is already a part of the code path
+	 * used there.
+	 *
+	 * *The internal report for select is only needed for non-reporting tools!*
+	 */
+	handle->internal_report_for_select = arg_is_set(cmd, select_ARG);
+
+	return handle;
+}
+
+int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle)
+{
+	struct selection_handle *sh;
+
+	if (!(sh = dm_pool_zalloc(cmd->mem, sizeof(struct selection_handle)))) {
+		log_error("_init_selection_handle: failed to allocate memory for selection handle");
+		return 0;
+	}
+
+	if (!(sh->selection_rh = report_init_for_selection(cmd, &sh->report_type,
+					arg_str_value(cmd, select_ARG, NULL)))) {
+		dm_pool_free(cmd->mem, sh);
+		return_0;
+	}
+
+	handle->selection_handle = sh;
+	return 1;
+}
+
+void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle,
+			       int deallocate_handle_root)
+{
+	if (handle) {
+		if (handle->selection_handle && handle->selection_handle->selection_rh)
+			dm_report_free(handle->selection_handle->selection_rh);
+		if (deallocate_handle_root)
+			dm_pool_free(cmd->mem, handle);
+	}
+}
+
+
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, int *selected)
 {

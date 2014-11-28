@@ -137,6 +137,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  int stop_on_error, struct processing_handle *handle,
 			  process_single_lv_fn_t process_single_lv);
 
+struct processing_handle *init_processing_handle(struct cmd_context *cmd);
+int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle);
+void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle,
+			       int deallocate_handle_root);
+
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, int *selected);
 int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
