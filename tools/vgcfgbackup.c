@@ -96,5 +96,6 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 
 	init_pvmove(0);
 
+	destroy_processing_handle(cmd, &handle, 0);
 	return ret;
 }

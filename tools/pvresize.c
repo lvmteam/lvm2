@@ -50,16 +50,18 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct processing_handle handle = { .internal_report_for_select = 1,
 					    .selection_handle = NULL,
 					    .custom_handle = &params };
-	int ret;
+	int ret = ECMD_PROCESSED;
 
 	if (!argc) {
 		log_error("Please supply physical volume(s)");
-		return EINVALID_CMD_LINE;
+		ret = EINVALID_CMD_LINE;
+		goto out;
 	}
 
 	if (arg_sign_value(cmd, physicalvolumesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume size may not be negative");
-		return EINVALID_CMD_LINE;
+		ret = EINVALID_CMD_LINE;
+		goto out;
 	}
 
 	params.new_size = arg_uint64_value(cmd, physicalvolumesize_ARG,
@@ -73,6 +75,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print_unless_silent("%d physical volume(s) resized / %d physical volume(s) "
 				"not resized", params.done, params.total - params.done);
-
+out:
+	destroy_processing_handle(cmd, &handle, 0);
 	return ret;
 }

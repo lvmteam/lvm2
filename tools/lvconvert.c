@@ -3538,6 +3538,7 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 {
+	int ret = ECMD_PROCESSED;
 	struct lvconvert_params lp = {
 		.target_attr = ~0,
 	};
@@ -3547,13 +3548,16 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 					    .custom_handle = &lp };
 
 	if (!_read_params(cmd, argc, argv, &lp)) {
-		stack;
-		return EINVALID_CMD_LINE;
+		ret = EINVALID_CMD_LINE;
+		goto_out;
 	}
 
 	if (lp.merge)
-		return process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, &handle,
-				       &_lvconvert_merge_single);
-
-	return lvconvert_single(cmd, &lp);
+		ret = process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, &handle,
+				    &_lvconvert_merge_single);
+	else
+		ret = lvconvert_single(cmd, &lp);
+out:
+	destroy_processing_handle(cmd, &handle, 0);
+	return ret;
 }

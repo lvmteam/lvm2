@@ -240,6 +240,8 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 			break;
 		sleep(parms->interval);
 	}
+
+	destroy_processing_handle(cmd, &handle, 0);
 }
 
 /*
