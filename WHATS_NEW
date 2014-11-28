@@ -1,3 +1,6 @@
+Version 2.02.115 -
+=====================================
+
 Version 2.02.114 - 28th November 2014
 =====================================
   Release socket in daemon_close and protocol string in daemon_open error path.

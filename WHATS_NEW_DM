@@ -1,3 +1,6 @@
+Version 1.02.93 -
+====================================
+
 Version 1.02.92 - 24th November 2014
 ====================================
   Fix memory corruption with sorting empty string lists (1.02.86).
