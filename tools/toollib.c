@@ -1542,22 +1542,38 @@ static int _get_vgnameids_on_system(struct cmd_context *cmd,
 	return ECMD_PROCESSED;
 }
 
-int select_match_vg(struct cmd_context *cmd, struct volume_group *vg, int *selected)
+int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
+		    struct volume_group *vg, int *selected)
 {
+	if (!handle->internal_report_for_select) {
+		*selected = 1;
+		return 1;
+	}
+
 	*selected = 1;
 	return 1;
 }
 
-int select_match_lv(struct cmd_context *cmd, struct volume_group *vg,
-		    struct logical_volume *lv, int *selected)
+int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
+		    struct volume_group *vg, struct logical_volume *lv, int *selected)
 {
+	if (!handle->internal_report_for_select) {
+		*selected = 1;
+		return 1;
+	}
+
 	*selected = 1;
 	return 1;
 }
 
-int select_match_pv(struct cmd_context *cmd, struct volume_group *vg,
-		    struct physical_volume *pv, int *selected)
+int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
+		    struct volume_group *vg, struct physical_volume *pv, int *selected)
 {
+	if (!handle->internal_report_for_select) {
+		*selected = 1;
+		return 1;
+	}
+
 	*selected = 1;
 	return 1;
 }
@@ -1609,7 +1625,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		if ((process_all ||
 		    (!dm_list_empty(arg_vgnames) && str_list_match_item(arg_vgnames, vg_name)) ||
 		    (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL))) &&
-		    select_match_vg(cmd, vg, &selected) && selected) {
+		    select_match_vg(cmd, handle, vg, &selected) && selected) {
 			ret = process_single_vg(cmd, vg_name, vg, handle);
 			if (ret != ECMD_PROCESSED)
 				stack;
@@ -1797,7 +1813,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!process_lv && tags_supplied && str_list_match_list(tags_in, &lvl->lv->tags, NULL))
 			process_lv = 1;
 
-		process_lv = process_lv && select_match_lv(cmd, vg, lvl->lv, &selected) && selected;
+		process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv, &selected) && selected;
 
 		if (sigint_caught())
 			return_ECMD_FAILED;
@@ -2307,7 +2323,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		    str_list_match_list(arg_tags, &pv->tags, NULL))
 			process_pv = 1;
 
-		process_pv = process_pv && select_match_pv(cmd, vg, pv, &selected) && selected;
+		process_pv = process_pv && select_match_pv(cmd, handle, vg, pv, &selected) && selected;
 
 		if (process_pv) {
 			if (skip)
