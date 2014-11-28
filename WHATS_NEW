@@ -1,10 +1,10 @@
-Version 2.02.114 - 
+Version 2.02.114 - 28th November 2014
 =====================================
-  Release socket in daemon_close and protocol string in a daemon_open error path.
+  Release socket in daemon_close and protocol string in daemon_open error path.
   Add --cachepolicy and --cachesettings to lvcreate.
   Fix regression when parsing /dev/mapper dir (2.02.112).
   Fix missing rounding to 64KB when estimating optimal thin pool chunk size.
-  Fix typo in clvmd initscript causing CLVMD_STOP_TIMEOUT variable to be ignored.
+  Fix typo in clvmd initscript causing CLVMD_STOP_TIMEOUT var to be ignored.
   Fix size in pvresize "Resizing to ..." verbose msg to show proper result size.
 
 Version 2.02.113 - 24th November 2014
