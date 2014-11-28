@@ -105,6 +105,7 @@ void _dump_vg(daemon_handle h, const char *uuid)
 
 int main(int argc, char **argv) {
 	daemon_handle h = lvmetad_open();
+	/* FIXME Missing error path */
 
 	if (argc > 1) {
 		int i;
@@ -114,6 +115,7 @@ int main(int argc, char **argv) {
 			scan(h, argv[i]);
 		}
 		destroy_toolcontext(cmd);
+		/* FIXME Missing lvmetad_close() */
 		return 0;
 	}
 
@@ -122,6 +124,6 @@ int main(int argc, char **argv) {
 	_dump_vg(h, vgid);
 	_pv_add(h, uuid3, NULL);
 
-	daemon_close(h);
+	daemon_close(h);	/* FIXME lvmetad_close? */
 	return 0;
 }

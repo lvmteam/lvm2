@@ -26,7 +26,11 @@
 
 daemon_handle daemon_open(daemon_info i)
 {
-	daemon_handle h = { .protocol_version = 0, .error = 0 };
+	daemon_handle h = {
+		.protocol = NULL,
+		.protocol_version = 0,
+		.error = 0
+	};
 	daemon_reply r = { 0 };
 	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 
@@ -79,12 +83,16 @@ daemon_handle daemon_open(daemon_info i)
 	return h;
 
 error:
-	if (h.socket_fd >= 0)
-		if (close(h.socket_fd))
-			log_sys_error("close", "daemon_open");
+	if (h.socket_fd >= 0 && close(h.socket_fd))
+		log_sys_error("close", "daemon_open");
+	h.socket_fd = -1;
+
 	if (r.cft)
 		daemon_reply_destroy(r);
-	h.socket_fd = -1;
+
+	dm_free((char *)h.protocol);
+	h.protocol = NULL;
+
 	return h;
 }
 
@@ -118,7 +126,8 @@ daemon_reply daemon_send(daemon_handle h, daemon_request rq)
 	return reply;
 }
 
-void daemon_reply_destroy(daemon_reply r) {
+void daemon_reply_destroy(daemon_reply r)
+{
 	if (r.cft)
 		dm_config_destroy(r.cft);
 	buffer_destroy(&r.buffer);
@@ -160,6 +169,12 @@ daemon_reply daemon_send_simple(daemon_handle h, const char *id, ...)
 
 void daemon_close(daemon_handle h)
 {
+	if (h.socket_fd >= 0) {
+		log_debug("Closing daemon socket (fd %d).", h.socket_fd);
+ 		if (close(h.socket_fd))
+			log_sys_error("close", "daemon_close");
+	}
+
 	dm_free((char *)h.protocol);
 }
 
@@ -210,7 +225,8 @@ int daemon_request_extend(daemon_request r, ...)
 	return res;
 }
 
-void daemon_request_destroy(daemon_request r) {
+void daemon_request_destroy(daemon_request r)
+{
 	if (r.cft)
 		dm_config_destroy(r.cft);
 	buffer_destroy(&r.buffer);
