@@ -452,7 +452,101 @@ int report_for_selection(struct selection_handle *sh,
 			 struct volume_group *vg,
 			 struct logical_volume *lv)
 {
-	return 1;
+	static const char *incorrect_report_type_msg = "report_for_selection: incorrect report type";
+	int args_are_pvs = sh->orig_report_type == PVS;
+	int do_lv_info, do_lv_seg_status;
+	struct processing_handle handle = { .internal_report = 0,
+					    .selection_handle = sh,
+					    .custom_handle = NULL };
+	int r = 0;
+
+	if (!_get_final_report_type(args_are_pvs,
+				    sh->orig_report_type | sh->report_type,
+				    &do_lv_info,
+				    &do_lv_seg_status,
+				    &sh->report_type))
+		return_0;
+
+	/*
+	 * Remember:
+	 *   sh->orig_report_type is the original report type requested
+	 *   sh->report_type is the report type actually used (it counts with all types of fields used in selection)
+	 */
+	switch (sh->orig_report_type) {
+		case LVS:
+			switch (sh->report_type) {
+				case LVS:
+					r = _do_lvs_with_info_and_status_single(vg->cmd, lv, do_lv_info, do_lv_seg_status, &handle);
+					break;
+				case SEGS:
+					r = process_each_segment_in_lv(vg->cmd, lv, &handle,
+								       do_lv_info && !do_lv_seg_status ? &_segs_with_info_single :
+								       !do_lv_info && do_lv_seg_status ? &_segs_with_status_single :
+								       do_lv_info && do_lv_seg_status ? &_segs_with_info_and_status_single :
+													&_segs_single);
+					break;
+				default:
+					log_error(INTERNAL_ERROR "%s for LVS", incorrect_report_type_msg);
+					break;
+			}
+			break;
+		case VGS:
+			switch (sh->report_type) {
+				case VGS:
+					r = _vgs_single(vg->cmd, vg->name, vg, &handle);
+					break;
+				case LVS:
+					r = process_each_lv_in_vg(vg->cmd, vg, NULL, NULL, 0, &handle,
+								  do_lv_info && !do_lv_seg_status ? &_lvs_with_info_single :
+								  !do_lv_info && do_lv_seg_status ? &_lvs_with_status_single :
+								  do_lv_info && do_lv_seg_status ? &_lvs_with_info_and_status_single :
+												   &_lvs_single);
+					break;
+				case SEGS:
+					r = process_each_lv_in_vg(vg->cmd, vg, NULL, NULL, 0, &handle,
+								  do_lv_info && !do_lv_seg_status ? &_lvsegs_with_info_single :
+								  !do_lv_info && do_lv_seg_status ? &_lvsegs_with_status_single :
+								  do_lv_info && do_lv_seg_status ? &_lvsegs_with_info_and_status_single :
+												   &_lvsegs_single);
+					break;
+				case PVS:
+					r = process_each_pv_in_vg(vg->cmd, vg, &handle, &_pvs_single);
+					break;
+				case PVSEGS:
+					r = process_each_pv_in_vg(vg->cmd, vg, &handle,
+								  do_lv_info && !do_lv_seg_status ? &_pvsegs_with_lv_info_single :
+								  !do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_status_single :
+								  do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_info_and_status_single :
+												   &_pvsegs_single);
+					break;
+				default:
+					log_error(INTERNAL_ERROR "%s for VGS", incorrect_report_type_msg);
+					break;
+			}
+			break;
+		case PVS:
+			switch (sh->report_type) {
+				case PVS:
+					r = _pvs_single(vg->cmd, vg, pv, &handle);
+					break;
+				case PVSEGS:
+					r = process_each_segment_in_pv(vg->cmd, vg, pv, &handle,
+								       do_lv_info && !do_lv_seg_status ? &_pvsegs_with_lv_info_sub_single :
+								       !do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_status_sub_single :
+								       do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_info_and_status_sub_single :
+													&_pvsegs_sub_single);
+					break;
+				default:
+					log_error(INTERNAL_ERROR "%s for PVS", incorrect_report_type_msg);
+					break;
+			}
+			break;
+		default:
+			log_error(INTERNAL_ERROR "%s", incorrect_report_type_msg);
+			break;
+	}
+
+	return r;
 }
 
 static int _report(struct cmd_context *cmd, int argc, char **argv,
