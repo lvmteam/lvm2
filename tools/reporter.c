@@ -408,6 +408,45 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 	return process_each_pv_in_vg(cmd, vg, handle, &_pvsegs_single);
 }
 
+static int _get_final_report_type(int args_are_pvs,
+				  report_type_t report_type,
+				  int *lv_info_needed,
+				  int *lv_segment_status_needed,
+				  report_type_t *final_report_type)
+{
+	/* Do we need to acquire LV device info in addition? */
+	*lv_info_needed = (report_type & (LVSINFO | LVSINFOSTATUS)) ? 1 : 0;
+
+	/* Do we need to acquire LV device status in addition? */
+	*lv_segment_status_needed = (report_type & (SEGSSTATUS | LVSSTATUS | LVSINFOSTATUS)) ? 1 : 0;
+
+	/* Ensure options selected are compatible */
+	if (report_type & (SEGS | SEGSSTATUS))
+		report_type |= LVS;
+	if (report_type & PVSEGS)
+		report_type |= PVS;
+	if ((report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS)) &&
+	    (report_type & (PVS | LABEL)) && !args_are_pvs) {
+		log_error("Can't report LV and PV fields at the same time");
+		return 0;
+	}
+
+	/* Change report type if fields specified makes this necessary */
+	if ((report_type & PVSEGS) ||
+	    ((report_type & (PVS | LABEL)) && (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))))
+		report_type = PVSEGS;
+	else if ((report_type & PVS) ||
+		 ((report_type & LABEL) && (report_type & VGS)))
+		report_type = PVS;
+	else if (report_type & (SEGS | SEGSSTATUS))
+		report_type = SEGS;
+	else if (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))
+		report_type = LVS;
+
+	*final_report_type = report_type;
+	return 1;
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {
@@ -419,7 +458,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	int r = ECMD_PROCESSED;
 	int aligned, buffered, headings, field_prefixes, quoted;
 	int columns_as_rows;
-	unsigned args_are_pvs, lv_info_needed, lv_segment_status_needed;
+	unsigned args_are_pvs;
+	int lv_info_needed, lv_segment_status_needed;
 	int lock_global = 0;
 
 	aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
@@ -538,34 +578,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 					  columns_as_rows, selection)))
 		return_ECMD_FAILED;
 
-	/* Do we need to acquire LV device info in addition? */
-	lv_info_needed = (report_type & (LVSINFO | LVSINFOSTATUS)) ? 1 : 0;
-
-	/* Do we need to acquire LV device status in addition? */
-	lv_segment_status_needed = (report_type & (SEGSSTATUS | LVSSTATUS | LVSINFOSTATUS)) ? 1 : 0;
-
-	/* Ensure options selected are compatible */
-	if (report_type & (SEGS | SEGSSTATUS))
-		report_type |= LVS;
-	if (report_type & PVSEGS)
-		report_type |= PVS;
-	if ((report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS)) && (report_type & (PVS | LABEL)) && !args_are_pvs) {
-		log_error("Can't report LV and PV fields at the same time");
+	if (!_get_final_report_type(args_are_pvs,
+				    report_type, &lv_info_needed,
+				    &lv_segment_status_needed,
+				    &report_type)) {
 		dm_report_free(report_handle);
 		return ECMD_FAILED;
 	}
-
-	/* Change report type if fields specified makes this necessary */
-	if ((report_type & PVSEGS) ||
-	    ((report_type & (PVS | LABEL)) && (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))))
-		report_type = PVSEGS;
-	else if ((report_type & PVS) ||
-		 ((report_type & LABEL) && (report_type & VGS)))
-		report_type = PVS;
-	else if (report_type & (SEGS | SEGSSTATUS))
-		report_type = SEGS;
-	else if (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))
-		report_type = LVS;
 
 	/*
 	 * We lock VG_GLOBAL to enable use of metadata cache.
