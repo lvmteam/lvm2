@@ -71,6 +71,10 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  int quoted, int columns_as_rows, const char *selection);
 void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_type,
 				const char *selection);
+int report_for_selection(struct selection_handle *sh,
+			 struct physical_volume *pv,
+			 struct volume_group *vg,
+			 struct logical_volume *lv);
 void report_free(void *handle);
 int report_object(void *handle, int selection_only, const struct volume_group *vg,
 		  const struct logical_volume *lv, const struct physical_volume *pv,

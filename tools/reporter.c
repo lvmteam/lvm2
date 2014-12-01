@@ -447,6 +447,14 @@ static int _get_final_report_type(int args_are_pvs,
 	return 1;
 }
 
+int report_for_selection(struct selection_handle *sh,
+			 struct physical_volume *pv,
+			 struct volume_group *vg,
+			 struct logical_volume *lv)
+{
+	return 1;
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {

@@ -1628,36 +1628,63 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, int *selected)
 {
+	struct selection_handle *sh = handle->selection_handle;
+
 	if (!handle->internal_report_for_select) {
 		*selected = 1;
 		return 1;
 	}
 
-	*selected = 1;
+	sh->orig_report_type = VGS;
+
+	if (!report_for_selection(sh, NULL, vg, NULL))
+		return_0;
+
+	sh->orig_report_type = 0;
+	*selected = sh->selected;
+
 	return 1;
 }
 
 int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, struct logical_volume *lv, int *selected)
 {
+	struct selection_handle *sh = handle->selection_handle;
+
 	if (!handle->internal_report_for_select) {
 		*selected = 1;
 		return 1;
 	}
 
-	*selected = 1;
+	sh->orig_report_type = LVS;
+
+	if (!report_for_selection(sh, NULL, vg, lv))
+		return_0;
+
+	sh->orig_report_type = 0;
+	*selected = sh->selected;
+
 	return 1;
 }
 
 int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, struct physical_volume *pv, int *selected)
 {
+	struct selection_handle *sh = handle->selection_handle;
+
 	if (!handle->internal_report_for_select) {
 		*selected = 1;
 		return 1;
 	}
 
-	*selected = 1;
+	sh->orig_report_type = PVS;
+
+	if (!report_for_selection(sh, pv, vg, NULL))
+		return_0;
+
+	sh->orig_report_type = 0;
+	*selected = sh->selected;
+
 	return 1;
 }
 
