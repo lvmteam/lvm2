@@ -2009,15 +2009,28 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	return rh;
 }
 
+void *report_init_for_selection(struct cmd_context *cmd,
+				report_type_t *report_type,
+				const char *selection_criteria)
+{
+	return dm_report_init_with_selection(report_type, _report_types, _fields,
+					     "", DEFAULT_REP_SEPARATOR,
+					     DM_REPORT_OUTPUT_FIELD_UNQUOTED,
+					     "", selection_criteria,
+					     _report_reserved_values,
+					     cmd);
+}
+
 /*
  * Create a row of data for an object
  */
-int report_object(void *handle, const struct volume_group *vg,
+int report_object(void *handle, int selection_only, const struct volume_group *vg,
 		  const struct logical_volume *lv, const struct physical_volume *pv,
 		  const struct lv_segment *seg, const struct pv_segment *pvseg,
 		  const struct lv_with_info_and_seg_status *lvdm,
 		  const struct label *label)
 {
+	struct selection_handle *sh = selection_only ? (struct selection_handle *) handle : NULL;
 	struct device dummy_device = { .dev = 0 };
 	struct label dummy_label = { .dev = &dummy_device };
 	struct lvm_report_object obj = {
@@ -2051,7 +2064,8 @@ int report_object(void *handle, const struct volume_group *vg,
 	if (!obj.vg && pv)
 		_dummy_fid.fmt = pv->fmt;
 
-	return dm_report_object(handle, &obj);
+	return sh ? dm_report_object_is_selected(sh->selection_rh, &obj, 0, &sh->selected)
+		  : dm_report_object(handle, &obj);
 }
 
 static int _report_devtype_single(void *handle, const dev_known_type_t *devtype)
