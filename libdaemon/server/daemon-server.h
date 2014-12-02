@@ -107,6 +107,7 @@ typedef struct daemon_state {
 	handle_request handler;
 	int (*daemon_init)(struct daemon_state *st);
 	int (*daemon_fini)(struct daemon_state *st);
+	int (*daemon_main)(struct daemon_state *st);
 
 	/* Global runtime info maintained by the framework. */
 	int socket_fd;

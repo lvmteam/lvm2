@@ -604,6 +604,12 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		kill(getppid(), SIGTERM);
 
+	if (s.daemon_main) {
+		if (!s.daemon_main(&s))
+			failed = 1;
+		goto out;
+	}
+
 	if (s.daemon_init)
 		if (!s.daemon_init(&s))
 			failed = 1;
@@ -635,7 +641,7 @@ void daemon_start(daemon_state s)
 
 	INFO(&s, "%s waiting for client threads to finish", s.name);
 	reap(s, 1);
-
+out:
 	/* If activated by systemd, do not unlink the socket - systemd takes care of that! */
 	if (!_systemd_activation && s.socket_fd >= 0)
 		if (unlink(s.socket_path))
