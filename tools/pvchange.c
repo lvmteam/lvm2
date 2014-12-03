@@ -177,7 +177,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!(arg_count(cmd, all_ARG)) && !argc && !handle->internal_report_for_select) {
-		log_error("Please give a physical volume path");
+		log_error("Please give a physical volume path "
+			  "or use -S for selection.");
 		r = EINVALID_CMD_LINE;
 		goto out;
 	}
