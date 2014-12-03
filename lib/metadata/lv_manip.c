@@ -731,7 +731,7 @@ int get_pv_list_for_lv(struct dm_pool *mem,
  *
  * Returns: default region_size in sectors
  */
-int get_default_region_size(struct cmd_context *cmd)
+static int _get_default_region_size(struct cmd_context *cmd)
 {
 	int mrs, rrs;
 
@@ -757,6 +757,35 @@ int get_default_region_size(struct cmd_context *cmd)
 			    rrs / 2);
 
 	return rrs;
+}
+
+static int _round_down_pow2(int r)
+{
+	/* Set all bits to the right of the leftmost set bit */
+	r |= (r >> 1);
+	r |= (r >> 2);
+	r |= (r >> 4);
+	r |= (r >> 8);
+	r |= (r >> 16);
+
+	/* Pull out the leftmost set bit */
+	return r & ~(r >> 1);
+}
+
+int get_default_region_size(struct cmd_context *cmd)
+{
+	int region_size = _get_default_region_size(cmd);
+
+	if (region_size > INT32_MAX)
+		region_size = INT32_MAX;
+
+	if (region_size & (region_size - 1)) {
+		region_size = _round_down_pow2(region_size);
+		log_verbose("Reducing mirror region size to %u kiB (power of 2).",
+			    region_size / 2);
+	}
+
+	return region_size;
 }
 
 int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
