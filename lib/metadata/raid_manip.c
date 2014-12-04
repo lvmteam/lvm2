@@ -1164,6 +1164,22 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	if (!activate_lv_excl_local(cmd, lvl->lv))
 		return_0;
 
+	/*
+	 * Since newly split LV is typically already active - we need to call
+	 * suspend() and resume() to also rename it.
+	 *
+	 * TODO: activate should recognize it and avoid these 2 calls
+	 */
+	if (!suspend_lv(cmd, lvl->lv)) {
+		log_error("Failed to suspend %s.", lvl->lv->name);
+		return 0;
+	}
+
+	if (!resume_lv(cmd, lvl->lv)) {
+		log_error("Failed to reactivate %s.", lvl->lv->name);
+		return 0;
+	}
+
 	dm_list_iterate_items(lvl, &removal_list)
 		if (!activate_lv_excl_local(cmd, lvl->lv))
 			return_0;

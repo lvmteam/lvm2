@@ -107,6 +107,7 @@ aux wait_for_sync $vg $lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg $lv2
+check active $vg $lv2
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 
@@ -116,6 +117,7 @@ aux wait_for_sync $vg $lv1
 lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
 check linear $vg $lv1
 check linear $vg $lv2
+check active $vg $lv2
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 
