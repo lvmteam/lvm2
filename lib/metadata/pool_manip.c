@@ -402,7 +402,7 @@ int update_pool_params(const struct segment_type *segtype,
 			return_0;
 
 	if ((uint64_t) *chunk_size > (uint64_t) pool_data_extents * vg->extent_size) {
-		log_error("Size of %s data volume cannot be smaller then chunk size %s.",
+		log_error("Size of %s data volume cannot be smaller than chunk size %s.",
 			  segtype->name, display_size(vg->cmd, *chunk_size));
 		return 0;
 	}
