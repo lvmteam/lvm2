@@ -1753,6 +1753,13 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 						const struct dm_report_reserved_value reserved_values[],
 						void *private_data);
 int dm_report_object(struct dm_report *rh, void *object);
+
+/*
+ * Compact report output so that if field value is empty for all rows in
+ * the report, drop the field from output completely (including headers).
+ */
+int dm_report_compact_fields(struct dm_report *rh);
+
 int dm_report_output(struct dm_report *rh);
 void dm_report_free(struct dm_report *rh);
 

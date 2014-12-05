@@ -64,6 +64,7 @@ struct dm_report {
 #define FLD_SORT_KEY	0x00002000
 #define FLD_ASCENDING	0x00004000
 #define FLD_DESCENDING	0x00008000
+#define FLD_COMPACTED	0x00010000
 
 struct field_properties {
 	struct dm_list list;
@@ -84,16 +85,16 @@ struct op_def {
 	const char *desc;
 };
 
-#define FLD_CMP_MASK		0x00FF0000
-#define FLD_CMP_UNCOMPARABLE	0x00010000
-#define FLD_CMP_EQUAL		0x00020000
-#define FLD_CMP_NOT		0x00040000
-#define FLD_CMP_GT		0x00080000
-#define FLD_CMP_LT		0x00100000
-#define FLD_CMP_REGEX		0x00200000
-#define FLD_CMP_NUMBER		0x00400000
+#define FLD_CMP_MASK		0x0FF00000
+#define FLD_CMP_UNCOMPARABLE	0x00100000
+#define FLD_CMP_EQUAL		0x00200000
+#define FLD_CMP_NOT		0x00400000
+#define FLD_CMP_GT		0x00800000
+#define FLD_CMP_LT		0x01000000
+#define FLD_CMP_REGEX		0x02000000
+#define FLD_CMP_NUMBER		0x04000000
 /*
- * #define FLD_CMP_STRING 0x00400000
+ * #define FLD_CMP_STRING 0x08000000
  * We could defined FLD_CMP_STRING here for completeness here,
  * but it's not needed - we can check operator compatibility with
  * field type by using FLD_CMP_REGEX and FLD_CMP_NUMBER flags only.
@@ -1687,6 +1688,54 @@ out:
 	if (!r)
 		dm_pool_free(rh->mem, row);
 	return r;
+}
+
+int dm_report_compact_fields(struct dm_report *rh)
+{
+	struct dm_report_field *field;
+	struct field_properties *fp;
+	struct row *row;
+
+	if (!rh || dm_list_empty(&rh->rows)) {
+		log_error("dm_report_enable_compact_output: no report fields to compact");
+		return 0;
+	}
+
+	/*
+	 * At first, mark all fields with FLD_HIDDEN flag.
+	 * Also, mark field with FLD_COMPACTED flag, but only
+	 * the ones that didn't have FLD_HIDDEN set before.
+	 * This prevents losing the original FLD_HIDDEN flag
+	 * in next step...
+	 */
+	dm_list_iterate_items(fp, &rh->field_props) {
+		if (!(fp->flags & FLD_HIDDEN))
+			fp->flags |= (FLD_COMPACTED | FLD_HIDDEN);
+	}
+
+	/*
+	 * ...check each field in a row and if its report value
+	 * is not empty, drop the FLD_COMPACTED and FLD_HIDDEN
+	 * flag if FLD_COMPACTED flag is set. It's important
+	 * to keep FLD_HIDDEN flag for the fields that were
+	 * already marked with FLD_HIDDEN before - these don't
+	 * have FLD_COMPACTED set - check this condition!
+	 */
+	dm_list_iterate_items(row, &rh->rows) {
+		dm_list_iterate_items(field, &row->fields) {
+			if ((field->report_string && *field->report_string) &&
+			     field->props->flags & FLD_COMPACTED)
+					field->props->flags &= ~(FLD_COMPACTED | FLD_HIDDEN);
+			}
+	}
+
+	/*
+	 * The fields left with FLD_COMPACTED and FLD_HIDDEN flag are
+	 * the ones which have blank value in all rows. The FLD_HIDDEN
+	 * will cause such field to not be reported on output at all.
+	 */
+
+	return 1;
 }
 
 /*
