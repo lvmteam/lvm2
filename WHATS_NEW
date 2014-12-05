@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Add report/compact_output to lvm.conf to enable/disable compact report output.
   Still restrict mirror region size to power of 2 when VG extent size is not.
 
 Version 2.02.114 - 28th November 2014

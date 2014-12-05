@@ -1104,6 +1104,10 @@ activation {
 # Report settings.
 #
 # report {
+    # If compact output is enabled, fields which don't have value
+    # set for any of the rows reported are skipped on output.
+    # compact_output=0
+
     # Align columns on report output.
     # aligned=1
 

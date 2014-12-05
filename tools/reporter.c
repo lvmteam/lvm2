@@ -410,6 +410,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	args_are_pvs = (report_type == PVS ||
 			report_type == LABEL ||
+
 			report_type == PVSEGS) ? 1 : 0;
 
 	/*
@@ -613,6 +614,10 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 					    report_handle, &_pvsegs_in_vg);
 		break;
 	}
+
+	if (find_config_tree_bool(cmd, report_compact_output_CFG, NULL) &&
+	    !dm_report_compact_fields(report_handle))
+		log_error("Failed to compact report output.");
 
 	dm_report_output(report_handle);
 
