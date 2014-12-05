@@ -1753,8 +1753,6 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 						const struct dm_report_reserved_value reserved_values[],
 						void *private_data);
 int dm_report_object(struct dm_report *rh, void *object);
-int dm_report_set_output_selection(struct dm_report *rh, uint32_t *report_types,
-				   const char *selection);
 int dm_report_output(struct dm_report *rh);
 void dm_report_free(struct dm_report *rh);
 

@@ -1,5 +1,6 @@
 Version 1.02.93 -
 ====================================
+  Remove unimplemented dm_report_set_output_selection from libdevmapper.h.
 
 Version 1.02.92 - 24th November 2014
 ====================================
