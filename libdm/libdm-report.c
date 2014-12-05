@@ -1696,6 +1696,9 @@ int dm_report_compact_fields(struct dm_report *rh)
 	struct field_properties *fp;
 	struct row *row;
 
+	if (!(rh->flags & DM_REPORT_OUTPUT_BUFFERED))
+		return 1;
+
 	if (!rh || dm_list_empty(&rh->rows)) {
 		log_error("dm_report_enable_compact_output: no report fields to compact");
 		return 0;

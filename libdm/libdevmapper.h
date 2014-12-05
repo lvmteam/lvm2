@@ -1757,6 +1757,8 @@ int dm_report_object(struct dm_report *rh, void *object);
 /*
  * Compact report output so that if field value is empty for all rows in
  * the report, drop the field from output completely (including headers).
+ * Compact output is applicable only if report is buffered, otherwise
+ * this function has no effect.
  */
 int dm_report_compact_fields(struct dm_report *rh);
 

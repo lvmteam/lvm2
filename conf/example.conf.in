@@ -1105,7 +1105,8 @@ activation {
 #
 # report {
     # If compact output is enabled, fields which don't have value
-    # set for any of the rows reported are skipped on output.
+    # set for any of the rows reported are skipped on output. Compact
+    # output is applicable only if report is buffered (report/buffered=1).
     # compact_output=0
 
     # Align columns on report output.
