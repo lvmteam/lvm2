@@ -115,6 +115,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 			}
 			if (!(alias->str = _strdup(filename))) {
 				log_error("filename strdup failed");
+				_free(dev);
 				return NULL;
 			}
 		}
