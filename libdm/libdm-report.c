@@ -26,6 +26,11 @@
 #define RH_HEADINGS_PRINTED	0x00000200
 #define RH_ALREADY_REPORTED	0x00000400
 
+struct selection {
+	struct dm_pool *mem;
+	struct selection_node *selection_root;
+};
+
 struct dm_report {
 	struct dm_pool *mem;
 
@@ -52,7 +57,9 @@ struct dm_report {
 	/* To store caller private data */
 	void *private;
 
-	struct selection_node *selection_root;
+	/* Selection handle */
+	struct selection *selection;
+
 	/* Null-terminated array of reserved values */
 	const struct dm_report_reserved_value *reserved_values;
 };
@@ -1193,6 +1200,8 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 void dm_report_free(struct dm_report *rh)
 {
+	if (rh->selection)
+		dm_pool_destroy(rh->selection->mem);
 	dm_pool_destroy(rh->mem);
 	dm_free(rh);
 }
@@ -1560,10 +1569,10 @@ static int _check_selection(struct dm_report *rh, struct selection_node *sn,
 
 static int _check_report_selection(struct dm_report *rh, struct dm_list *fields)
 {
-	if (!rh->selection_root)
+	if (!rh->selection)
 		return 1;
 
-	return _check_selection(rh, rh->selection_root, fields);
+	return _check_selection(rh, rh->selection->selection_root, fields);
 }
 
 int dm_report_object(struct dm_report *rh, void *object)
@@ -2410,7 +2419,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	}
 
 	/* set up selection */
-	if (!(fs = dm_pool_zalloc(rh->mem, sizeof(struct field_selection)))) {
+	if (!(fs = dm_pool_zalloc(rh->selection->mem, sizeof(struct field_selection)))) {
 		log_error("dm_report: struct field_selection "
 			  "allocation failed for selection field %s", field_id);
 		return NULL;
@@ -2429,7 +2438,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 		memcpy(s, v, len);
 		s[len] = '\0';
 
-		fs->v.r = dm_regex_create(rh->mem, (const char **) &s, 1);
+		fs->v.r = dm_regex_create(rh->selection->mem, (const char **) &s, 1);
 		dm_free(s);
 		if (!fs->v.r) {
 			log_error("dm_report: failed to create regex "
@@ -2438,7 +2447,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 		}
 	} else {
 		/* STRING, NUMBER, SIZE or STRING_LIST */
-		if (!(s = dm_pool_alloc(rh->mem, len + 1))) {
+		if (!(s = dm_pool_alloc(rh->selection->mem, len + 1))) {
 			log_error("dm_report: dm_pool_alloc failed to store "
 				  "value for selection field %s", field_id);
 			goto error;
@@ -2450,7 +2459,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 			case DM_REPORT_FIELD_TYPE_STRING:
 				if (reserved) {
 					fs->v.s = (const char *) _get_reserved_value(reserved);
-					dm_pool_free(rh->mem, s);
+					dm_pool_free(rh->selection->mem, s);
 				} else {
 					fs->v.s = s;
 					if (_check_value_is_reserved(rh, DM_REPORT_FIELD_TYPE_STRING, fs->v.s)) {
@@ -2473,7 +2482,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 						goto error;
 					}
 				}
-				dm_pool_free(rh->mem, s);
+				dm_pool_free(rh->selection->mem, s);
 				break;
 			case DM_REPORT_FIELD_TYPE_SIZE:
 				if (reserved)
@@ -2492,7 +2501,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 						goto error;
 					}
 				}
-				dm_pool_free(rh->mem, s);
+				dm_pool_free(rh->selection->mem, s);
 				break;
 			case DM_REPORT_FIELD_TYPE_PERCENT:
 				if (reserved)
@@ -2528,7 +2537,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 
 	return fs;
 error:
-	dm_pool_free(rh->mem, fs);
+	dm_pool_free(rh->selection->mem, fs);
 	return NULL;
 }
 
@@ -2730,7 +2739,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 			custom = NULL;
 		if (!(last = _tok_value(rh, ft, field_num, implicit,
 					last, &vs, &ve, &flags,
-					&reserved, rh->mem, custom)))
+					&reserved, rh->selection->mem, custom)))
 			goto_bad;
 	}
 
@@ -2741,7 +2750,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		return_NULL;
 
 	/* create selection node */
-	if (!(sn = _alloc_selection_node(rh->mem, SEL_ITEM)))
+	if (!(sn = _alloc_selection_node(rh->selection->mem, SEL_ITEM)))
 		return_NULL;
 
 	/* add selection to selection node */
@@ -2828,7 +2837,7 @@ static struct selection_node *_parse_and_ex(struct dm_report *rh,
 	}
 
 	if (!and_sn) {
-		if (!(and_sn = _alloc_selection_node(rh->mem, SEL_AND)))
+		if (!(and_sn = _alloc_selection_node(rh->selection->mem, SEL_AND)))
 			goto error;
 	}
 	dm_list_add(&and_sn->selection.set, &n->list);
@@ -2860,7 +2869,7 @@ static struct selection_node *_parse_or_ex(struct dm_report *rh,
 	}
 
 	if (!or_sn) {
-		if (!(or_sn = _alloc_selection_node(rh->mem, SEL_OR)))
+		if (!(or_sn = _alloc_selection_node(rh->selection->mem, SEL_OR)))
 			goto error;
 	}
 	dm_list_add(&or_sn->selection.set, &n->list);
@@ -2893,7 +2902,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 		return NULL;
 
 	if (!selection || !selection[0]) {
-		rh->selection_root = NULL;
+		rh->selection = NULL;
 		return rh;
 	}
 
@@ -2914,7 +2923,13 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 		return rh;
 	}
 
-	if (!(root = _alloc_selection_node(rh->mem, SEL_OR)))
+	if (!(rh->selection = dm_pool_zalloc(rh->mem, sizeof(struct selection))) ||
+	    !(rh->selection->mem = dm_pool_create("report selection", 10 * 1024))) {
+		log_error("Failed to allocate report selection structure.");
+		goto bad;
+	}
+
+	if (!(root = _alloc_selection_node(rh->selection->mem, SEL_OR)))
 		goto_bad;
 
 	if (!_parse_or_ex(rh, selection, &fin, root))
@@ -2930,7 +2945,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 
 	_dm_report_init_update_types(rh, report_types);
 
-	rh->selection_root = root;
+	rh->selection->selection_root = root;
 	return rh;
 bad:
 	dm_report_free(rh);
