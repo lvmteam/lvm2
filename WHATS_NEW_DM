@@ -1,5 +1,6 @@
 Version 1.02.93 -
 ====================================
+  Fix segfault while using selection with regex and unbuffered reporting.
   Add dm_report_compact_fields to remove empty fields from report output.
   Remove unimplemented dm_report_set_output_selection from libdevmapper.h.
 
