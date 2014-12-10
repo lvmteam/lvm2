@@ -363,6 +363,15 @@ fi
 ### the device nodes we need are straight
 if [ ${CHANGES_MADE} -eq 1 ]
 then
+    # get global/use_lvmetad config and if set also notify lvmetad about changes
+    # since we were running LVM commands above with use_lvmetad=0
+    eval $(${LVM} dumpconfig ${LVM_OPTS} global/use_lvmetad)
+    if [ "$use_lvmetad" = "1" ]
+    then
+      echo "Notifying lvmetad about changes since it was disabled temporarily."
+      LVM_OPTS="${LVM_OPTS} --cache"
+    fi
+
     "$LVM" vgscan ${LVM_OPTS} --mknodes
 fi
 
