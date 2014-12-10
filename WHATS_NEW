@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Fix vgimportclone to properly override config if it is missing in lvm.conf.
   Fix automatic use of configure --enable-udev-systemd-background-jobs.
   Correctly rename active split LV with -splitmirrors for raid1.
   Add report/compact_output to lvm.conf to enable/disable compact report output.

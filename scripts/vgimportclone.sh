@@ -242,17 +242,17 @@ export FILTER="filter=[ ${FILTER} \"r|.*|\" ]"
 
 LVMCONF=${TMP_LVM_SYSTEM_DIR}/lvm.conf
 
-# FIXME convert to cmdline override
-"$LVM" dumpconfig ${LVM_OPTS} | \
-"$AWK" -v DEV=${TMP_LVM_SYSTEM_DIR} -v CACHE=${TMP_LVM_SYSTEM_DIR}/.cache \
-    -v CACHE_DIR=${TMP_LVM_SYSTEM_DIR}/cache \
-    '/^[ \t]*filter[ \t]*=/{print ENVIRON["FILTER"];next} \
-     /^[ \t]*scan[ \t]*=/{print "scan = [ \"" DEV "\" ]";next} \
-     /^[ \t]*cache[ \t]*=/{print "cache = \"" CACHE "\"";next} \
-     /^[ \t]*use_lvmetad[ \t]*=/{print "use_lvmetad = 0";next} \
-     /^[ \t]*global_filter[ \t]*=/{print "global_filter = [ \"a|.*|\" ]";next} \
-     /^[ \t]*cache_dir[ \t]*=/{print "cache_dir = \"" CACHE_DIR "\"";next} \
-     {print $0}' > ${LVMCONF}
+CMD_CONFIG_LINE="devices { \
+                   scan = [ \"${TMP_LVM_SYSTEM_DIR}\" ] \
+                   cache_dir = \"$TMP_LVM_SYSTEM_DIR}/cache\"
+                   global_filter = [ \"a|.*|\" ] \
+                   ${FILTER}
+                 } \
+                 global { \
+                   use_lvmetad = 0 \
+                 }"
+
+$LVM dumpconfig ${LVM_OPTS} --file ${LVMCONF} --mergedconfig --config "${CMD_CONFIG_LINE}"
 
 checkvalue $? "Failed to generate ${LVMCONF}"
 # Only keep TMP_LVM_SYSTEM_DIR if it contains something worth keeping
