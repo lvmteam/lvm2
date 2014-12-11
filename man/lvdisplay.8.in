@@ -25,7 +25,6 @@ lvdisplay \(em display attributes of a logical volume
 .B lvdisplay
 .BR \-C | \-\-columns
 .RB [ \-\-aligned ]
-.RB [ \-\-binary ]
 .RB [ \-a | \-\-all ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]

@@ -26,7 +26,6 @@ pvdisplay \- display attributes of a physical volume
 .B pvdisplay
 .BR \-C | \-\-columns
 .RB [ \-\-aligned ]
-.RB [ \-\-binary ]
 .RB [ \-a | \-\-all ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
