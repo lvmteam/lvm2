@@ -73,6 +73,7 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, aligned_ARG) ||
 	    arg_count(cmd, all_ARG) ||
+	    arg_count(cmd, binary_ARG) ||
 	    arg_count(cmd, noheadings_ARG) ||
 	    arg_count(cmd, options_ARG) ||
 	    arg_count(cmd, select_ARG) ||

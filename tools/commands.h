@@ -374,6 +374,7 @@ xx(lvdisplay,
    "lvdisplay --columns|-C\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
+   "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -394,10 +395,11 @@ xx(lvdisplay,
    "\t[--version]\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-    aligned_ARG, all_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG,
-    ignoreskippedcluster_ARG, maps_ARG, noheadings_ARG, nosuffix_ARG,
-    options_ARG, sort_ARG, partial_ARG, readonly_ARG, segments_ARG,
-    select_ARG, separator_ARG, unbuffered_ARG, units_ARG)
+    aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG,
+    ignorelockingfailure_ARG, ignoreskippedcluster_ARG, maps_ARG,
+    noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG, partial_ARG,
+    readonly_ARG, segments_ARG, select_ARG, separator_ARG,
+    unbuffered_ARG, units_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -749,6 +751,7 @@ xx(pvdisplay,
    "pvdisplay --columns|-C\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
+   "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -767,10 +770,11 @@ xx(pvdisplay,
    "\t[--version]\n"
    "\t[PhysicalVolumePath [PhysicalVolumePath...]]\n",
 
-   aligned_ARG, all_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG,
-   ignoreskippedcluster_ARG, maps_ARG, noheadings_ARG, nosuffix_ARG,
-   options_ARG, readonly_ARG, select_ARG, separator_ARG, short_ARG, sort_ARG,
-   unbuffered_ARG, units_ARG)
+   aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG,
+   ignorelockingfailure_ARG, ignoreskippedcluster_ARG, maps_ARG,
+   noheadings_ARG, nosuffix_ARG, options_ARG, readonly_ARG,
+   select_ARG, separator_ARG, short_ARG, sort_ARG, unbuffered_ARG,
+   units_ARG)
 
 xx(pvmove,
    "Move extents from one physical volume to another",
@@ -1045,6 +1049,7 @@ xx(vgdisplay,
    "\n"
    "vgdisplay --columns|-C\n"
    "\t[--aligned]\n"
+   "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -1064,7 +1069,7 @@ xx(vgdisplay,
    "\t[--version]\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
-   activevolumegroups_ARG, aligned_ARG, colon_ARG, columns_ARG,
+   activevolumegroups_ARG, aligned_ARG, binary_ARG, colon_ARG, columns_ARG,
    ignorelockingfailure_ARG, ignoreskippedcluster_ARG, noheadings_ARG,
    nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, select_ARG,
    short_ARG, separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)

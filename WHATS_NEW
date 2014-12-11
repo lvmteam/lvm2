@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Add missing recognition for --binary option with {pv,vg,lv}display -C.
   Fix vgimportclone to notify lvmetad about changes done if lvmetad is used.
   Fix vgimportclone to properly override config if it is missing in lvm.conf.
   Fix automatic use of configure --enable-udev-systemd-background-jobs.
