@@ -1091,11 +1091,12 @@ xx(vgexport,
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
+   "\t[-S|--select Selection]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
    "\tVolumeGroupName [VolumeGroupName...]\n",
 
-   all_ARG, test_ARG)
+   all_ARG, select_ARG, test_ARG)
 
 xx(vgextend,
    "Add physical volumes to a volume group",
@@ -1129,12 +1130,13 @@ xx(vgimport,
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
+   "\t[-S|--select Selection]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
    "\tVolumeGroupName...\n",
 
-   all_ARG, force_ARG, test_ARG)
+   all_ARG, force_ARG, select_ARG, test_ARG)
 
 xx(vgmerge,
    "Merge volume groups",

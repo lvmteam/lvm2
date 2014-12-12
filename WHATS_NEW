@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Add support for -S/--select to vgexport and vgimport.
   Add support for -S/--select to vgdisplay, lvdisplay and pvdisplay without -C.
   Add support for -S/--select to vgremove and lvremove.
   Add support for -S/--select to vgchange,lvchange and pvchange.
