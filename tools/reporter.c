@@ -455,7 +455,7 @@ int report_for_selection(struct selection_handle *sh,
 	static const char *incorrect_report_type_msg = "report_for_selection: incorrect report type";
 	int args_are_pvs = sh->orig_report_type == PVS;
 	int do_lv_info, do_lv_seg_status;
-	struct processing_handle handle = { .internal_report = 0,
+	struct processing_handle handle = { .internal_report_for_select = 0,
 					    .selection_handle = sh,
 					    .custom_handle = NULL };
 	int r = 0;

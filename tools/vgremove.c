@@ -69,8 +69,9 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 
-	if (!argc) {
-		log_error("Please enter one or more volume group paths");
+	if (!argc && !arg_is_set(cmd, select_ARG)) {
+		log_error("Please enter one or more volume group paths "
+			  "or use -S for selection.");
 		return EINVALID_CMD_LINE;
 	}
 

@@ -512,7 +512,7 @@ xx(lvreduce,
 
 xx(lvremove,
    "Remove logical volume(s) from the system",
-   0,
+   ALL_VGS_IS_DEFAULT, /* all VGs only with --select */
    "lvremove\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--commandprofile ProfileName]\n"
@@ -520,12 +520,13 @@ xx(lvremove,
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--noudevsync]\n"
+   "\t[-S|--select Selection]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, force_ARG, noudevsync_ARG, test_ARG)
+   autobackup_ARG, force_ARG, noudevsync_ARG, select_ARG, test_ARG)
 
 xx(lvrename,
    "Rename a logical volume",
@@ -1186,19 +1187,20 @@ xx(vgreduce,
 
 xx(vgremove,
    "Remove volume group(s)",
-   0,
+   ALL_VGS_IS_DEFAULT, /* all VGs only with select */
    "vgremove\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--noudevsync]\n"
+   "\t[-S|--select Selection]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
    "\tVolumeGroupName [VolumeGroupName...]\n",
 
-   force_ARG, noudevsync_ARG, test_ARG)
+   force_ARG, noudevsync_ARG, select_ARG, test_ARG)
 
 xx(vgrename,
    "Rename a volume group",
