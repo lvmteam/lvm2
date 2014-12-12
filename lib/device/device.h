@@ -29,6 +29,23 @@
 #define DEV_O_DIRECT_TESTED	0x00000040	/* DEV_O_DIRECT is reliable */
 
 /*
+ * Support for external device info.
+ * Any new external device info source needs to be
+ * registered using EXT_REGISTER macro in dev-ext.c.
+ */
+typedef enum {
+	DEV_EXT_NONE,
+	DEV_EXT_UDEV,
+	DEV_EXT_NUM
+} dev_ext_t;
+
+struct dev_ext {
+	int enabled;
+	dev_ext_t src;
+	void *handle;
+};
+
+/*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.
  */
@@ -47,6 +64,7 @@ struct device {
 	uint32_t flags;
 	uint64_t end;
 	struct dm_list open_list;
+	struct dev_ext ext;
 
 	char pvid[ID_LEN + 1];
 	char _padding[7];
@@ -62,6 +80,15 @@ struct device_area {
 	uint64_t start;		/* Bytes */
 	uint64_t size;		/* Bytes */
 };
+
+/*
+ * Support for external device info.
+ */
+const char *dev_ext_name(struct device *dev);
+int dev_ext_enable(struct device *dev, dev_ext_t src);
+int dev_ext_disable(struct device *dev);
+struct dev_ext *dev_ext_get(struct device *dev);
+int dev_ext_release(struct device *dev);
 
 /*
  * All io should use these routines.

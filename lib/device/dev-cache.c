@@ -64,6 +64,9 @@ static void _dev_init(struct device *dev, int max_error_count)
 	dev->read_ahead = -1;
 	dev->max_error_count = max_error_count;
 
+	dev->ext.enabled = 0;
+	dev->ext.src = DEV_EXT_NONE;
+
 	dm_list_init(&dev->aliases);
 	dm_list_init(&dev->open_list);
 }
