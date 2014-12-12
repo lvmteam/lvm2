@@ -77,7 +77,6 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 	    arg_count(cmd, binary_ARG) ||
 	    arg_count(cmd, noheadings_ARG) ||
 	    arg_count(cmd, options_ARG) ||
-	    arg_count(cmd, select_ARG) ||
 	    arg_count(cmd, separator_ARG) ||
 	    arg_count(cmd, sort_ARG) ||
 	    arg_count(cmd, unbuffered_ARG)) {
