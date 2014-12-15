@@ -230,6 +230,9 @@ lvcreate --type cache-pool -L10 $vg/cpool
 lvcreate --type cache -l 1 --cachepool $vg/cpool -n corigin $vg --cachepolicy mq --cachesettings migration_threshold=233
 dmsetup status | grep $vg
 dmsetup status | grep $vg-corigin | grep 'migration_threshold 233'
+lvchange -an $vg
+lvchange -ay $vg
+dmsetup status | grep $vg-corigin | grep 'migration_threshold 233'
 
 lvremove -f $vg
 

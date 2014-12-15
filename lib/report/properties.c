@@ -440,6 +440,11 @@ GET_LVSEG_STR_PROPERTY_FN(devices, lvseg_devices(lvseg->lv->vg->vgmem, lvseg))
 GET_LVSEG_STR_PROPERTY_FN(seg_monitor, lvseg_monitor_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _seg_monitor_set prop_not_implemented_set
 
+#define _cache_policy_get prop_not_implemented_get
+#define _cache_policy_set prop_not_implemented_set
+#define _cache_settings_get prop_not_implemented_get
+#define _cache_settings_set prop_not_implemented_set
+
 /* PVSEG */
 GET_PVSEG_NUM_PROPERTY_FN(pvseg_start, pvseg->pe)
 #define _pvseg_start_set prop_not_implemented_set

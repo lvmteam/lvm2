@@ -231,6 +231,74 @@ static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_string_list(rh, field, tagsl, private, 1);
 }
 
+struct _str_list_append_baton {
+	struct dm_pool *mem;
+	struct dm_list *result;
+};
+
+static int _str_list_append(const char *line, void *baton)
+{
+	struct _str_list_append_baton *b = baton;
+	const char *dup = dm_pool_strdup(b->mem, line);
+	if (!dup)
+		return_0;
+	if (!str_list_add(b->mem, b->result, dup))
+		return_0;
+	return 1;
+}
+
+static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
+				struct dm_report_field *field,
+				const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const struct dm_config_node *settings;
+	struct dm_list *result;
+	struct _str_list_append_baton baton;
+
+	if (seg_is_cache(seg))
+		seg = first_seg(seg->pool_lv);
+	else
+		return _field_set_value(field, "", NULL /* TODO: FIRST_NAME(cache_settings_undef) */);
+
+	if (seg->policy_settings)
+		settings = seg->policy_settings->child;
+	else
+		return _field_set_value(field, "", NULL /* TODO: FIRST_NAME(cache_settings_default) */);
+
+	if (!(result = str_list_create(mem)))
+		return_0;
+
+	baton.mem = mem;
+	baton.result = result;
+
+	while (settings) {
+		dm_config_write_one_node(settings, _str_list_append, &baton);
+		settings = settings->sib;
+	};
+
+	return _field_set_string_list(rh, field, result, private, 0);
+}
+
+static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg_is_cache(seg))
+		seg = first_seg(seg->pool_lv);
+	else
+		return _field_set_value(field, "", FIRST_NAME(cache_policy_undef));
+
+	if (seg->policy_name)
+		return _field_set_value(field, seg->policy_name, NULL);
+	else {
+		log_error(INTERNAL_ERROR "unexpected NULL policy name");
+		return_0;
+	}
+}
+
 static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field,
 			 const void *data, void *private)
