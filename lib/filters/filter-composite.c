@@ -31,7 +31,7 @@ static int _and_p_with_dev_ext_info(struct dev_filter *f, struct device *dev)
 {
 	int r;
 
-	dev_ext_enable(dev, DEV_EXT_NONE);
+	dev_ext_enable(dev, external_device_info_source());
 	r = _and_p(f, dev);
 	dev_ext_disable(dev);
 

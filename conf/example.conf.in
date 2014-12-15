@@ -39,6 +39,22 @@ devices {
     # to use with LVM2.
     scan = [ "/dev" ]
 
+    # Select external device information source to use for further and more
+    # detailed device determination. Some information may already be available
+    # in the system and LVM2 can use this information to determine the exact
+    # type or use of the device it processes. Using existing external device
+    # information source can speed up device processing as LVM2 does not need
+    # to run its own native routines to acquire this information. For example,
+    # such information is used to drive LVM2 filtering like MD component
+    # detection, multipath component detection, partition detection and others.
+    # Possible options are:
+    # "none"        - No external device information source is used.
+    #
+    # "udev"        - Reuse existing udev database records. Applicable
+    #                 only if LVM is compiled with udev support.
+    #
+    external_device_info_source = "none"
+
     # If set, the cache of block device nodes with all associated symlinks
     # will be constructed out of the existing udev database content.
     # This avoids using and opening any inapplicable non-block devices or

@@ -307,6 +307,7 @@ int process_profilable_config(struct cmd_context *cmd) {
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
+	const char *dev_ext_info_src;
 	const char *read_ahead;
 	struct stat st;
 	const struct dm_config_node *cn;
@@ -339,6 +340,16 @@ static int _process_config(struct cmd_context *cmd)
 	if (!dm_set_uuid_prefix("LVM-"))
 		return_0;
 #endif
+
+	dev_ext_info_src = find_config_tree_str(cmd, devices_external_device_info_source_CFG, NULL);
+	if (!strcmp(dev_ext_info_src, "none"))
+		init_external_device_info_source(DEV_EXT_NONE);
+	else if (!strcmp(dev_ext_info_src, "udev"))
+		init_external_device_info_source(DEV_EXT_UDEV);
+	else {
+		log_error("Invalid external device info source specification.");
+		return 0;
+	}
 
 	/* proc dir */
 	if (dm_snprintf(cmd->proc_dir, sizeof(cmd->proc_dir), "%s",
