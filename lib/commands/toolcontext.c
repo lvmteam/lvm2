@@ -905,7 +905,7 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 			nr_filt++;
 	}
 
-	if (!(composite = composite_filter_create(nr_filt, filters)))
+	if (!(composite = composite_filter_create(nr_filt, 1, filters)))
 		goto_bad;
 
 	return composite;
@@ -985,7 +985,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		if (!(filter_components[1] = regex_filter_create(cn->v)))
 			goto_bad;
 		/* we have two filter components - create composite filter */
-		if (!(filter = composite_filter_create(2, filter_components)))
+		if (!(filter = composite_filter_create(2, 0, filter_components)))
 			goto_bad;
 	} else
 		/* we have only one filter component - no need to create composite filter */
@@ -1004,7 +1004,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	if (lvmetad_used()) {
 		filter_components[0] = cmd->lvmetad_filter;
 		filter_components[1] = cmd->filter;
-		if (!(cmd->full_filter = composite_filter_create(2, filter_components)))
+		if (!(cmd->full_filter = composite_filter_create(2, 0, filter_components)))
 			goto_bad;
 	} else
 		cmd->full_filter = filter;

@@ -27,6 +27,17 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 	return 1;
 }
 
+static int _and_p_with_dev_ext_info(struct dev_filter *f, struct device *dev)
+{
+	int r;
+
+	dev_ext_enable(dev, DEV_EXT_NONE);
+	r = _and_p(f, dev);
+	dev_ext_disable(dev);
+
+	return r;
+}
+
 static void _composite_destroy(struct dev_filter *f)
 {
 	struct dev_filter **filters;
@@ -62,7 +73,7 @@ static void _wipe(struct dev_filter *f)
 			(*filters)->wipe(*filters);
 }
 
-struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
+struct dev_filter *composite_filter_create(int n, int use_dev_ext_info, struct dev_filter **filters)
 {
 	struct dev_filter **filters_copy, *cft;
 
@@ -83,7 +94,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 		return NULL;
 	}
 
-	cft->passes_filter = _and_p;
+	cft->passes_filter = use_dev_ext_info ? _and_p_with_dev_ext_info : _and_p;
 	cft->destroy = _composite_destroy;
 	cft->dump = _dump;
 	cft->wipe = _wipe;
