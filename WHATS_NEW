@@ -1,6 +1,6 @@
 Version 2.02.115 -
 =====================================
-  Add cache_policy and cache_settings output fields in lvs.
+  Add cache_policy and cache_settings reporting fields.
   Add missing recognition for --binary option with {pv,vg,lv}display -C.
   Fix vgimportclone to notify lvmetad about changes done if lvmetad is used.
   Fix vgimportclone to properly override config if it is missing in lvm.conf.
