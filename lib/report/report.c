@@ -256,16 +256,27 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct dm_config_node *settings;
 	struct dm_list *result;
 	struct _str_list_append_baton baton;
+	struct dm_list dummy_list; /* dummy list to display "nothing" */
 
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
-	else
-		return _field_set_value(field, "", NULL /* TODO: GET_FIRST_RESERVED_NAME(cache_settings_undef) */);
+	else {
+		dm_list_init(&dummy_list);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0);
+		/* TODO: once we have support for STR_LIST reserved values, replace with:
+		 * return _field_set_value(field,  GET_FIRST_RESERVED_NAME(cache_settings_undef), GET_FIELD_RESERVED_VALUE(cache_settings_undef));
+		 */
+	}
 
 	if (seg->policy_settings)
 		settings = seg->policy_settings->child;
-	else
-		return _field_set_value(field, "", NULL /* TODO: GET_FIRST_RESERVED_NAME(cache_settings_default) */);
+	else {
+		dm_list_init(&dummy_list);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0);
+		/* TODO: once we have support for STR_LIST reserved values, replace with:
+		 * return _field_set_value(field,  GET_FIRST_RESERVED_NAME(cache_settings_undef), GET_FIELD_RESERVED_VALUE(cache_settings_undef));
+		 */
+	}
 
 	if (!(result = str_list_create(mem)))
 		return_0;

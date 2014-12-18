@@ -58,6 +58,9 @@ lvs -o +cache_policy -S 'cache_policy=mq' | not grep foo
 lvs -o +cache_policy -S 'cache_policy=undefined' | not grep corigin
 lvs -o +cache_policy -S 'cache_policy=undefined' | grep foo
 lvs -o +cache_policy -O cache_policy
+lvs -o +cache_settings -S 'cache_settings={migration_threshold=233}' | grep corigin
+lvs -o +cache_settings -S 'cache_settings!={migration_threshold=233}' | grep foo
+lvs -o +cache_policy -O cache_settings
 
 lvremove -f $vg
 
