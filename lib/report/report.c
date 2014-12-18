@@ -285,15 +285,20 @@ static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 			      const void *data, void *private)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const char *cache_policy_name;
 
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
 	else
 		return _field_set_value(field, "", FIRST_NAME(cache_policy_undef));
 
-	if (seg->policy_name)
-		return _field_set_value(field, seg->policy_name, NULL);
-	else {
+	if (seg->policy_name) {
+		if (!(cache_policy_name = dm_pool_strdup(mem, seg->policy_name))) {
+			log_error("dm_pool_strdup failed");
+			return 0;
+		}
+		return _field_set_value(field, cache_policy_name, NULL);
+	} else {
 		log_error(INTERNAL_ERROR "unexpected NULL policy name");
 		return_0;
 	}
