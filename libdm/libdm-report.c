@@ -1995,9 +1995,12 @@ dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator)
  * Used to check whether the reserved_values definition passed to
  * dm_report_init_with_selection contains only supported reserved value types.
  */
-static int _check_reserved_values_supported(const struct dm_report_reserved_value reserved_values[])
+static int _check_reserved_values_supported(const struct dm_report_field_type fields[],
+					    const struct dm_report_reserved_value reserved_values[])
 {
 	const struct dm_report_reserved_value *iter;
+	const struct dm_report_field_reserved_value *field_res;
+	const struct dm_report_field_type *field;
 	static uint32_t supported_reserved_types = DM_REPORT_FIELD_TYPE_NUMBER |
 						   DM_REPORT_FIELD_TYPE_SIZE |
 						   DM_REPORT_FIELD_TYPE_PERCENT |
@@ -2008,9 +2011,25 @@ static int _check_reserved_values_supported(const struct dm_report_reserved_valu
 
 	iter = reserved_values;
 
-	while (iter->type) {
-		if (!(iter->type & supported_reserved_types))
-			return 0;
+	while (iter->value) {
+		if (iter->type) {
+			if (!(iter->type & supported_reserved_types)) {
+				log_error(INTERNAL_ERROR "_check_reserved_values_supported: "
+					  "global reserved value for type 0x%x not supported",
+					   iter->type);
+				return 0;
+			}
+		} else {
+			field_res = (const struct dm_report_field_reserved_value *) iter->value;
+			field = &fields[field_res->field_num];
+			if (!(field->flags & supported_reserved_types)) {
+				log_error(INTERNAL_ERROR "_check_reserved_values_supported: "
+					  "field-specific reserved value of type 0x%x for "
+					  "field %s not supported",
+					   field->flags & DM_REPORT_FIELD_TYPE_MASK, field->id);
+				return 0;
+			}
+		}
 		iter++;
 	}
 
@@ -2906,7 +2925,7 @@ struct dm_report *dm_report_init_with_selection(uint32_t *report_types,
 		return rh;
 	}
 
-	if (!_check_reserved_values_supported(reserved_values)) {
+	if (!_check_reserved_values_supported(fields, reserved_values)) {
 		log_error(INTERNAL_ERROR "dm_report_init_with_selection: "
 			  "trying to register unsupported reserved value type, "
 			  "skipping report selection");
