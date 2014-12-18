@@ -56,7 +56,7 @@ FIELD_RESERVED_BINARY_VALUE(vg_partial, vg_partial, "", "partial")
 FIELD_RESERVED_BINARY_VALUE(vg_clustered, vg_clustered, "", "clustered")
 FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
 FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_r, "", "read-only", "read-only", "r", "ro")
-FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies, "", &RESERVED(number_undef_64), "unmanaged")
+FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies, "", &GET_TYPE_RESERVED_VALUE(number_undef_64), "unmanaged")
 
 /* Reserved values for LV fields */
 FIELD_RESERVED_BINARY_VALUE(lv_initial_image_sync, lv_initial_image_sync, "", "initial image sync", "sync")
@@ -79,7 +79,7 @@ FIELD_RESERVED_BINARY_VALUE(zero, zero, "", "zero")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r, "", "read-only", "read-only", "r", "ro")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r_override, "", "read-only-override", "read-only-override", "ro-override", "r-override", "R")
-FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead, "", &RESERVED(number_undef_64), "auto")
+FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead, "", &GET_TYPE_RESERVED_VALUE(number_undef_64), "auto")
 
 /* Reserved values for SEG fields */
 FIELD_RESERVED_VALUE(cache_policy, cache_policy_undef, "", "undefined", "undefined")
