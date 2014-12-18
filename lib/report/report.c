@@ -291,7 +291,8 @@ static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
 	else
-		return _field_set_value(field, "", GET_FIRST_RESERVED_NAME(cache_policy_undef));
+		return _field_set_value(field, GET_FIRST_RESERVED_NAME(cache_policy_undef),
+					GET_FIELD_RESERVED_VALUE(cache_policy_undef));
 
 	if (seg->policy_name) {
 		if (!(cache_policy_name = dm_pool_strdup(mem, seg->policy_name))) {
