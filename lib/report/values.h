@@ -21,9 +21,13 @@
  *
  * TYPE_RESERVED_VALUE defines reserved value that is not bound to any field,
  * but rather it's bound to a certain type. This can be used as a reserved
- * value for all fields of that type then.
+ * value for all fields of that type then. When naming type reserved value,
+ * please follow this naming scheme:
+ *   <report type name in lowercase>_<reserved_value_name>
  *
  * FIELD_RESERVED_VALUE defines reserved value bound to a single field.
+ * When naming reserved value for the field, please follow this naming scheme:
+ *   <field_name>_<reserved_value_name>
  *
  * FIELD_BINARY_RESERVED_VALUE is similar to FIELD_RESERVED_VALUE but it
  * is specifically designed for defintion of reserved names for fields
@@ -42,7 +46,7 @@
 /* *INDENT-OFF* */
 
 /* Per-type reserved values usable for all fields of certain type. */
-TYPE_RESERVED_VALUE(NUM, number_undef_64, "Reserved value for undefined numeric value.", UINT64_C(-1), "-1", "unknown", "undefined", "undef")
+TYPE_RESERVED_VALUE(NUM, num_undef_64, "Reserved value for undefined numeric value.", UINT64_C(-1), "-1", "unknown", "undefined", "undef")
 
 /* Reserved values for PV fields */
 FIELD_RESERVED_BINARY_VALUE(pv_allocatable, pv_allocatable, "", "allocatable")
@@ -56,7 +60,7 @@ FIELD_RESERVED_BINARY_VALUE(vg_partial, vg_partial, "", "partial")
 FIELD_RESERVED_BINARY_VALUE(vg_clustered, vg_clustered, "", "clustered")
 FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
 FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_r, "", "read-only", "read-only", "r", "ro")
-FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies, "", &GET_TYPE_RESERVED_VALUE(number_undef_64), "unmanaged")
+FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies_unmanaged, "", &GET_TYPE_RESERVED_VALUE(num_undef_64), "unmanaged")
 
 /* Reserved values for LV fields */
 FIELD_RESERVED_BINARY_VALUE(lv_initial_image_sync, lv_initial_image_sync, "", "initial image sync", "sync")
@@ -79,7 +83,7 @@ FIELD_RESERVED_BINARY_VALUE(zero, zero, "", "zero")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r, "", "read-only", "read-only", "r", "ro")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r_override, "", "read-only-override", "read-only-override", "ro-override", "r-override", "R")
-FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead, "", &GET_TYPE_RESERVED_VALUE(number_undef_64), "auto")
+FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead_auto, "", &GET_TYPE_RESERVED_VALUE(num_undef_64), "auto")
 
 /* Reserved values for SEG fields */
 FIELD_RESERVED_VALUE(cache_policy, cache_policy_undef, "", "undefined", "undefined")

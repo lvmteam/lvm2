@@ -57,10 +57,10 @@ static const char _str_unknown[] = "unknown";
 
 /*
  * 32 bit signed is casted to 64 bit unsigned in dm_report_field internally!
- * So when stored in the struct, the _reserved_number_undef_32 is actually
- * equal to _reserved_number_undef_64.
+ * So when stored in the struct, the _reserved_num_undef_32 is actually
+ * equal to _reserved_num_undef_64.
  */
-static const int32_t _reserved_number_undef_32 = INT32_C(-1);
+static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 
 /*
  * Reserved values and their assigned names.
@@ -171,9 +171,9 @@ static int _binary_undef_disp(struct dm_report *rh, struct dm_pool *mem __attrib
 	const struct cmd_context *cmd = (const struct cmd_context *) private;
 
 	if (cmd->report_binary_values_as_numeric)
-		return _field_set_value(field, GET_FIRST_RESERVED_NAME(number_undef_64), &GET_TYPE_RESERVED_VALUE(number_undef_64));
+		return _field_set_value(field, GET_FIRST_RESERVED_NAME(num_undef_64), &GET_TYPE_RESERVED_VALUE(num_undef_64));
 	else
-		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(number_undef_64));
+		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -371,7 +371,7 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 	if (lvdm->info && lvdm->info->exists && lvdm->info->major >= 0)
 		return dm_report_field_int(rh, field, &lvdm->info->major);
 
-	return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(number_undef_32));
+	return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 }
 
 static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -383,7 +383,7 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 	if (lvdm->info && lvdm->info->exists && lvdm->info->minor >= 0)
 		return dm_report_field_int(rh, field, &lvdm->info->minor);
 
-	return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(number_undef_32));
+	return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 }
 
 static int _lvstatus_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
@@ -708,7 +708,8 @@ static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
 	if (lv->read_ahead == DM_READ_AHEAD_AUTO)
-		return _field_set_value(field, "auto", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+		return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_read_ahead_auto),
+					&GET_FIELD_RESERVED_VALUE(lv_read_ahead_auto));
 
 	return _size32_disp(rh, mem, field, &lv->read_ahead, private);
 }
@@ -721,7 +722,7 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
 	if (!lvdm->info || !lvdm->info->exists)
-		return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(number_undef_32));
+		return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 
 	return _size32_disp(rh, mem, field, &lvdm->info->read_ahead, private);
 }
@@ -809,7 +810,7 @@ static int _transactionid_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (seg_is_thin_pool(seg))
 		return dm_report_field_uint64(rh, field, &seg->transaction_id);
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _thinid_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -821,7 +822,7 @@ static int _thinid_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (seg_is_thin_volume(seg))
 		return dm_report_field_uint32(rh, field, &seg->device_id);
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _discards_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1007,7 +1008,8 @@ static int _vgmdacopies_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint32_t count = vg_mda_copies(vg);
 
 	if (count == VGMETADATACOPIES_UNMANAGED)
-		return _field_set_value(field, "unmanaged", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+		return _field_set_value(field, GET_FIRST_RESERVED_NAME(vg_mda_copies_unmanaged),
+					&GET_FIELD_RESERVED_VALUE(vg_mda_copies_unmanaged));
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
@@ -1172,7 +1174,7 @@ static int _raidmismatchcount_disp(struct dm_report *rh __attribute__((unused)),
 	if (lv_is_raid(lv) && lv_raid_mismatch_count(lv, &mismatch_count))
 		return dm_report_field_uint64(rh, field, &mismatch_count);
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _raidwritebehind_disp(struct dm_report *rh __attribute__((unused)),
@@ -1186,7 +1188,7 @@ static int _raidwritebehind_disp(struct dm_report *rh __attribute__((unused)),
 	if (lv_is_raid_type(lv) && first_seg(lv)->writebehind)
 		return dm_report_field_uint32(rh, field, &first_seg(lv)->writebehind);
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _raidminrecoveryrate_disp(struct dm_report *rh __attribute__((unused)),
@@ -1201,7 +1203,7 @@ static int _raidminrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 		return dm_report_field_uint32(rh, field,
 					      &first_seg(lv)->min_recovery_rate);
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)),
@@ -1216,7 +1218,7 @@ static int _raidmaxrecoveryrate_disp(struct dm_report *rh __attribute__((unused)
 		return dm_report_field_uint32(rh, field,
 					      &first_seg(lv)->max_recovery_rate);
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1278,7 +1280,7 @@ static int _lvmetadatasize_disp(struct dm_report *rh, struct dm_pool *mem,
 		return _size64_disp(rh, mem, field, &size, private);
 	}
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _thincount_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1293,7 +1295,7 @@ static int _thincount_disp(struct dm_report *rh, struct dm_pool *mem,
 		return _uint32_disp(rh, mem, field, &count, private);
 	}
 
-	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64));
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _lvtime_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1648,7 +1650,7 @@ static int _lvmergefailed_disp(struct dm_report *rh, struct dm_pool *mem,
 	int merge_failed;
 
 	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &snap_percent))
-		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(number_undef_64));
+		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
 
 	merge_failed = snap_percent == LVM_PERCENT_MERGE_FAILED;
 	return _binary_disp(rh, mem, field, merge_failed, GET_FIRST_RESERVED_NAME(lv_merge_failed_y), private);
@@ -1663,7 +1665,7 @@ static int _lvsnapshotinvalid_disp(struct dm_report *rh, struct dm_pool *mem,
 	int snap_invalid;
 
 	if (!lv_is_cow(lv))
-		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(number_undef_64));
+		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
 
 	snap_invalid = !lv_snapshot_percent(lv, &snap_percent) || snap_percent == DM_PERCENT_INVALID;
 	return _binary_disp(rh, mem, field, snap_invalid, GET_FIRST_RESERVED_NAME(lv_snapshot_invalid_y), private);
@@ -1775,7 +1777,7 @@ static int _cache_ ## cache_status_field_name ## _disp (struct dm_report *rh, \
 { \
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data; \
 	if (lvdm->seg_status->type != SEG_STATUS_CACHE) \
-		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(number_undef_64)); \
+		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
 	return dm_report_field_uint64(rh, field, (void *) ((char *) lvdm->seg_status->status + offsetof(struct dm_status_cache, cache_status_field_name))); \
 }
 
