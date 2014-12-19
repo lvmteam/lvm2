@@ -63,6 +63,23 @@ static const char _str_unknown[] = "unknown";
 static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 
 /*
+ * Get type reserved value - the value returned is the direct value of that type.
+ */
+#define GET_TYPE_RESERVED_VALUE(id) _reserved_ ## id
+
+/*
+ * Get field reserved value - the value returned is always a pointer (const void *).
+ */
+#define GET_FIELD_RESERVED_VALUE(id) _reserved_ ## id.value
+
+/*
+ * Get first name assigned to the reserved value - this is the one that
+ * should be reported/displayed. All the other names assigned for the reserved
+ * value are synonyms recognized in selection criteria.
+ */
+#define GET_FIRST_RESERVED_NAME(id) _reserved_ ## id ## _names[0]
+
+/*
  * Reserved values and their assigned names.
  * The first name is the one that is also used for reporting.
  * All names listed are synonyms recognized in selection criteria.
@@ -76,10 +93,6 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
  * 		- 'reserved_value_id_y' (for 1)
  * 		- 'reserved_value_id_n' (for 0)
  */
-#define GET_TYPE_RESERVED_VALUE(id) _reserved_ ## id
-#define GET_FIELD_RESERVED_VALUE(id) _reserved_ ## id.value
-#define GET_FIRST_RESERVED_NAME(id) _reserved_ ## id ## _names[0]
-
 #define NUM uint64_t
 
 #define TYPE_RESERVED_VALUE(type, id, desc, value, ...) \
@@ -721,7 +734,7 @@ static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (lv->read_ahead == DM_READ_AHEAD_AUTO)
 		return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_read_ahead_auto),
-					&GET_FIELD_RESERVED_VALUE(lv_read_ahead_auto));
+					GET_FIELD_RESERVED_VALUE(lv_read_ahead_auto));
 
 	return _size32_disp(rh, mem, field, &lv->read_ahead, private);
 }
@@ -1021,7 +1034,7 @@ static int _vgmdacopies_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (count == VGMETADATACOPIES_UNMANAGED)
 		return _field_set_value(field, GET_FIRST_RESERVED_NAME(vg_mda_copies_unmanaged),
-					&GET_FIELD_RESERVED_VALUE(vg_mda_copies_unmanaged));
+					GET_FIELD_RESERVED_VALUE(vg_mda_copies_unmanaged));
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
