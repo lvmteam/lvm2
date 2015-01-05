@@ -78,10 +78,9 @@ struct logical_volume *find_temporary_mirror(const struct logical_volume *lv)
  *
  * Returns: 1 if available, 0 otherwise
  */
-static int _cluster_mirror_is_available(struct logical_volume *lv)
+int cluster_mirror_is_available(struct cmd_context *cmd)
 {
        unsigned attr = 0;
-       struct cmd_context *cmd = lv->vg->cmd;
        const struct segment_type *segtype;
 
        if (!(segtype = get_segtype_from_string(cmd, "mirror")))
@@ -90,7 +89,7 @@ static int _cluster_mirror_is_available(struct logical_volume *lv)
        if (!segtype->ops->target_present)
                return_0;
 
-       if (!segtype->ops->target_present(lv->vg->cmd, NULL, &attr))
+       if (!segtype->ops->target_present(cmd, NULL, &attr))
                return_0;
 
        if (!(attr & MIRROR_LOG_CLUSTERED))
@@ -2127,7 +2126,7 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!lv_is_pvmove(lv) && !lv_is_locked(lv) &&
 		    lv_is_active(lv) &&
 		    !lv_is_active_exclusive_locally(lv) && /* lv_is_active_remotely */
-		    !_cluster_mirror_is_available(lv)) {
+		    !cluster_mirror_is_available(lv->vg->cmd)) {
 			log_error("Shared cluster mirrors are not available.");
 			return 0;
 		}

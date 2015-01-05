@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Check for cmirror availability during cluster mirror creation and activation.
   Add cache_policy and cache_settings reporting fields.
   Add missing recognition for --binary option with {pv,vg,lv}display -C.
   Fix vgimportclone to notify lvmetad about changes done if lvmetad is used.

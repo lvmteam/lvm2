@@ -1017,6 +1017,7 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 const char *get_mirror_log_name(int log_count);
 int set_mirror_log_count(int *log_count, const char *mirrorlog);
 
+int cluster_mirror_is_available(struct cmd_context *cmd);
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
 uint32_t lv_mirror_count(const struct logical_volume *lv);

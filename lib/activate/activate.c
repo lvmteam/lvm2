@@ -2203,6 +2203,16 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
+	/*
+	 * Check if cmirord is running for clustered mirrors.
+	 */
+	if (!laopts->exclusive && vg_is_clustered(lv->vg) &&
+	    lv_is_mirror(lv) && !lv_is_raid(lv) &&
+	    !cluster_mirror_is_available(lv->vg->cmd)) {
+		log_error("Shared cluster mirrors are not available.");
+		goto out;
+	}
+
 	if (test_mode()) {
 		_skip("Activating '%s'.", lv->name);
 		r = 1;
