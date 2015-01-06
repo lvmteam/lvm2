@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Avoid excessive re-reading of metadata and related error messages in pvremove.
   Check for cmirror availability during cluster mirror creation and activation.
   Add cache_policy and cache_settings reporting fields.
   Add missing recognition for --binary option with {pv,vg,lv}display -C.

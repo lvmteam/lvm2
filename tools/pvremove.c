@@ -18,9 +18,9 @@
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i;
-	int ret = ECMD_PROCESSED;
 	unsigned force_count;
 	unsigned prompt;
+	struct dm_list pv_names;
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
@@ -30,15 +30,16 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	force_count = arg_count(cmd, force_ARG);
 	prompt = arg_count(cmd, yes_ARG);
 
+	dm_list_init(&pv_names);
+
 	for (i = 0; i < argc; i++) {
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
-		if (!pvremove_single(cmd, argv[i], NULL, force_count, prompt)) {
-			stack;
-			ret = ECMD_FAILED;
-		}
-		if (sigint_caught())
+		if (!str_list_add(cmd->mem, &pv_names, argv[i]))
 			return_ECMD_FAILED;
 	}
 
-	return ret;
+	if (!pvremove_many(cmd, &pv_names, force_count, prompt))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
 }

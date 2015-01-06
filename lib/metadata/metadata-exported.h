@@ -635,7 +635,9 @@ struct physical_volume *pv_create(const struct cmd_context *cmd,
 
 int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		    void *handle __attribute__((unused)), unsigned force_count,
-		    unsigned prompt);
+		    unsigned prompt, struct dm_list *pvslist);
+int pvremove_many(struct cmd_context *cmd, struct dm_list *pv_names,
+		  unsigned force_count, unsigned prompt);
 
 int pv_resize_single(struct cmd_context *cmd,
 			     struct volume_group *vg,

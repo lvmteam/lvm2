@@ -16,6 +16,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "lvm-string.h"
+#include "str_list.h"
 #include "lvm_misc.h"
 #include "lvm2app.h"
 #include "locking.h"
@@ -118,8 +119,14 @@ int lvm_pv_remove(lvm_t libh, const char *pv_name)
 	int rc = 0;
 	struct cmd_context *cmd = (struct cmd_context *)libh;
 	struct saved_env e = store_user_env(cmd);
+	struct dm_list pv_names;
 
-	if (!pvremove_single(cmd, pv_name, NULL, 0, 0))
+	dm_list_init(&pv_names);
+
+	if (!str_list_add(cmd->mem, &pv_names, pv_name))
+		rc = -1;
+
+	if (rc >= 0 && !pvremove_many(cmd, &pv_names, 0, 0))
 		rc = -1;
 
 	restore_user_env(&e);
