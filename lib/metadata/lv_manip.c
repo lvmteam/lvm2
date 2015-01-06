@@ -6817,8 +6817,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!(create_segtype = get_segtype_from_string(vg->cmd, "striped")))
 			return_0;
 	} else if (seg_is_mirrored(lp) || seg_is_raid(lp)) {
-		if (lp->activate != CHANGE_AEY && vg_is_clustered(vg) &&
-		    seg_is_mirrored(lp) && !seg_is_raid(lp) &&
+		if (is_change_activating(lp->activate) && (lp->activate != CHANGE_AEY) &&
+		    vg_is_clustered(vg) && seg_is_mirrored(lp) && !seg_is_raid(lp) &&
 		    !cluster_mirror_is_available(vg->cmd)) {
 			log_error("Shared cluster mirrors are not available.");
 			return NULL;
