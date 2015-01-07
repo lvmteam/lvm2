@@ -420,7 +420,8 @@ static int _activate_lv_like_model(struct logical_volume *model,
 /*
  * Delete independent/orphan LV, it must acquire lock.
  */
-static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *lv)
+static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *lv,
+		      int reactivate)
 {
 	struct cmd_context *cmd = mirror_lv->vg->cmd;
 	struct dm_str_list *sl;
@@ -440,15 +441,17 @@ static int _delete_lv(struct logical_volume *mirror_lv, struct logical_volume *l
 		}
 	}
 
-	/* FIXME: the 'model' should be 'mirror_lv' not 'lv', I think. */
-	if (!_activate_lv_like_model(lv, lv))
-		return_0;
+	if (reactivate) {
+		/* FIXME: the 'model' should be 'mirror_lv' not 'lv', I think. */
+		if (!_activate_lv_like_model(lv, lv))
+			return_0;
 
-	/* FIXME Is this superfluous now? */
-	sync_local_dev_names(cmd);
+		/* FIXME Is this superfluous now? */
+		sync_local_dev_names(cmd);
 
-	if (!deactivate_lv(cmd, lv))
-		return_0;
+		if (!deactivate_lv(cmd, lv))
+			return_0;
+	}
 
 	if (!lv_remove(lv))
 		return_0;
@@ -799,11 +802,11 @@ static int _split_mirror_images(struct logical_volume *lv,
 	}
 
 	/* Remove original mirror layer if it has been converted to linear */
-	if (sub_lv && !_delete_lv(lv, sub_lv))
+	if (sub_lv && !_delete_lv(lv, sub_lv, 1))
 		return_0;
 
 	/* Remove the log if it has been converted to linear */
-	if (detached_log_lv && !_delete_lv(lv, detached_log_lv))
+	if (detached_log_lv && !_delete_lv(lv, detached_log_lv, 1))
 		return_0;
 
 	return 1;
@@ -852,6 +855,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct dm_list tmp_orphan_lvs;
 	uint32_t orig_removed = num_removed;
+	int reactivate;
 
 	if (removed)
 		*removed = 0;
@@ -864,6 +868,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	if (collapse && (old_area_count - num_removed != 1)) {
 		log_error("Incompatible parameters to _remove_mirror_images");
 		return 0;
+
 	}
 
 	num_removed = 0;
@@ -1093,16 +1098,17 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	}
 
 	/* Save or delete the 'orphan' LVs */
+	reactivate = lv_is_active(lv_lock_holder(lv));
 	if (!collapse) {
 		dm_list_iterate_items(lvl, &tmp_orphan_lvs)
-			if (!_delete_lv(lv, lvl->lv))
+			if (!_delete_lv(lv, lvl->lv, reactivate))
 				return_0;
 	}
 
-	if (temp_layer_lv && !_delete_lv(lv, temp_layer_lv))
+	if (temp_layer_lv && !_delete_lv(lv, temp_layer_lv, reactivate))
 		return_0;
 
-	if (detached_log_lv && !_delete_lv(lv, detached_log_lv))
+	if (detached_log_lv && !_delete_lv(lv, detached_log_lv, reactivate))
 		return_0;
 
 	/* Mirror with only 1 area is 'in sync'. */
