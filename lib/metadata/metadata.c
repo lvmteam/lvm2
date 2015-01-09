@@ -2795,7 +2795,7 @@ int vg_write(struct volume_group *vg)
 		}
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
 			if (vg->cmd->handles_missing_pvs) {
-				log_warn("WARNING: Failed to write an MDA of VG %s.", vg->name);
+				log_error("Failed to write an MDA of VG %s.", vg->name);
 				mda->status |= MDA_FAILED;
 			} else {
 				stack;
