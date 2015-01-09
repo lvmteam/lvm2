@@ -1539,7 +1539,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 			//else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
 				 //dm_is_dm_major(MAJOR(dev->dev)))
 				 //
-			else if (!strcmp(pvid_s, existing->dev->pvid)) 
+			else if (!strcmp(pvid_s, existing->dev->pvid))
 				log_error("Found duplicate PV %s: using %s not "
 					  "%s", pvid, dev_name(dev),
 					  dev_name(existing->dev));
