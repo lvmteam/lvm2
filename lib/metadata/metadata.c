@@ -2795,7 +2795,7 @@ int vg_write(struct volume_group *vg)
 		}
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
 			if (vg->cmd->handles_missing_pvs) {
-				log_error("Failed to write an MDA of VG %s.", vg->name);
+				log_warn("WARNING: Failed to write an MDA of VG %s.", vg->name);
 				mda->status |= MDA_FAILED;
 			} else {
 				stack;
@@ -2807,6 +2807,7 @@ int vg_write(struct volume_group *vg)
 	}
 
 	if (revert || !wrote) {
+		log_error("Failed to write VG %s.", vg->name);
 		dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
 			mda = dm_list_item(mdah, struct metadata_area);
 
