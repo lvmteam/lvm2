@@ -7,16 +7,8 @@ lvm_vgscan=${sbindir}/vgscan
 lvm_vgs=${sbindir}/vgs
 lvm_lvm=${sbindir}/lvm
 
-parse_clustered_vgs() {
-	while read -r name attrs;
-	do
-		test "${attrs:5:1}" == 'c' && echo -n "$name "
-	done
-}
-
-# NOTE: replace this with vgs, once display filter per attr is implemented.
 clustered_vgs() {
-	${lvm_vgs} -o vg_name,vg_attr --noheadings | parse_clustered_vgs
+	${lvm_vgs} --noheadings -o vg_name -S 'vg_clustered=1' 2>/dev/null
 }
 
 activate() {

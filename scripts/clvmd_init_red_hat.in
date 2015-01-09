@@ -24,9 +24,9 @@ exec_prefix=@exec_prefix@
 sbindir=@sbindir@
 
 lvm_vgchange=${sbindir}/vgchange
-lvm_vgdisplay=${sbindir}/vgdisplay
+lvm_vgs=${sbindir}/vgs
 lvm_vgscan=${sbindir}/vgscan
-lvm_lvdisplay=${sbindir}/lvdisplay
+lvm_lvs=${sbindir}/lvs
 
 CLVMDOPTS="-T30"
 
@@ -42,17 +42,12 @@ CLVMDOPTS="-T30"
 
 LOCK_FILE="/var/lock/subsys/$DAEMON"
 
-# NOTE: replace this with vgs, once display filter per attr is implemented.
 clustered_vgs() {
-	${lvm_vgdisplay} 2>/dev/null | \
-		awk 'BEGIN {RS="VG Name"} {if (/Clustered/) print $1;}'
+	${lvm_vgs} --noheadings -o vg_name -S 'vg_clustered=1' 2>/dev/null
 }
 
 clustered_active_lvs() {
-	for i in $(clustered_vgs); do
-		${lvm_lvdisplay} $i 2>/dev/null | \
-		awk 'BEGIN {RS="LV Name"} {if (/[^N^O^T] available/) print $1;}'
-	done
+	${lvm_lvs} --noheadings -o lv_name -S 'vg_clustered=1 && lv_active!=""' 2>/dev/null
 }
 
 rh_status() {

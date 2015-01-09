@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Use LVM's own selection instead of awk expressions in clvmd startup scripts.
   Do not filter out snapshot origin LVs as unusable devices for an LVM stack.
   Fix incorrect rimage names when converting from mirror to raid1 LV (2.02.112).
   Avoid excessive re-reading of metadata and related error messages in pvremove.
