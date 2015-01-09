@@ -547,18 +547,22 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		}
 
 		/*
-		 * Snapshot origin could be sitting on top of a mirror which
-		 * could be blocking I/O.  Skip snapshot origins entirely for
-		 * now.
-		 *
-		 * FIXME: rather than skipping origin, check if mirror is
-		 * underneath and if the mirror is blocking I/O.
+		 * FIXME: Snapshot origin could be sitting on top of a mirror
+		 * which could be blocking I/O. We should add a check for the
+		 * stack here and see if there's blocked mirror underneath.
+		 * Currently, mirrors used as origin or snapshot is not
+		 * supported anymore and in general using mirrors in a stack
+		 * is disabled by default (with a warning that if enabled,
+		 * it could cause various deadlocks).
+		 * This is former check used, but it's not correct as it
+		 * disables snapshot-origins to be used in a stack in
+		 * general, not just over mirrors!
 		 */
-		if (check.check_suspended && target_type && !strcmp(target_type, "snapshot-origin")) {
+		/*if (check.check_suspended && target_type && !strcmp(target_type, "snapshot-origin")) {
 			log_debug_activation("%s: Snapshot-origin device %s not usable.",
 					     dev_name(dev), name);
 			goto out;
-		}
+		}*/
 
 		if (target_type && strcmp(target_type, "error"))
 			only_error_target = 0;
