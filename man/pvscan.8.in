@@ -69,8 +69,12 @@ If lvmetad has not yet cached any metadata or the filters have recently been
 changed, then all devices may be scanned, effectively ignoring the rest of
 the command line.  Otherwise, if all the devices referenced on the command line
 contain metadata in the default lvm2 format, other devices are not accessed.
-If metadata written using the obsolete GFS pool format is encountered, this is
-ignored and so lvmetad should not be used.
+If metadata written using the obsolete GFS pool or lvm1 format is encountered,
+this is ignored and so lvmetad should not be used.
+To notify lvmetad about a device that is not present in the system anymore,
+\fB\-\-major\fP and \fB\-\-minor\fP pair of that device must be always supplied,
+not \fBDevicePath\fP as pvscan is not able to translate the \fBDevicePath\fP
+into major and minor pair which lvmetad requires.
 .SH SEE ALSO
 .BR lvm (8),
 .BR lvmetad (8),

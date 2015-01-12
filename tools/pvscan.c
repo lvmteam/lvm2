@@ -239,8 +239,17 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		if (pv_name[0] == '/') {
 			/* device path */
 			if (!(dev = dev_cache_get(pv_name, cmd->lvmetad_filter))) {
-				log_error("Physical Volume %s not found.", pv_name);
-				ret = ECMD_FAILED;
+				if ((dev = dev_cache_get(pv_name, NULL))) {
+					if (!_clear_dev_from_lvmetad_cache(dev->dev, MAJOR(dev->dev), MINOR(dev->dev), handler)) {
+						stack;
+						ret = ECMD_FAILED;
+						break;
+					}
+				} else {
+					log_error("Physical Volume %s not found.", pv_name);
+					ret = ECMD_FAILED;
+					break;
+				}
 				continue;
 			}
 		}
