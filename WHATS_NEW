@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Filter out partitioned device-mapper devices as unsuitable for use as PVs.
   Also notify lvmetad about filtered device if using pvscan --cache DevicePath.
   Use LVM's own selection instead of awk expressions in clvmd startup scripts.
   Do not filter out snapshot origin LVs as unusable devices for an LVM stack.

@@ -272,6 +272,9 @@ static int _is_partitionable(struct dev_types *dt, struct device *dev)
 {
 	int parts = major_max_partitions(dt, MAJOR(dev->dev));
 
+	if (MAJOR(dev->dev) == dt->device_mapper_major)
+		return 1;
+
 	/* All MD devices are partitionable via blkext (as of 2.6.28) */
 	if (MAJOR(dev->dev) == dt->md_major)
 		return 1;
