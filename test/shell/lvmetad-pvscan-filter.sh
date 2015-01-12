@@ -18,8 +18,10 @@ aux prepare_pvs 2
 maj=$(($(stat -L --printf=0x%t "$dev2")))
 min=$(($(stat -L --printf=0x%T "$dev2")))
 
+# Filter out device, pvscan should trigger
+# clearing of the device from lvmetad cache.
 aux hide_dev "$dev2"
-not pvscan --cache "$dev2" 2>&1 | grep "not found"
+pvscan --cache "$dev2" 2>&1 | grep "not found"
 # pvscan with --major/--minor does not fail: lvmetad needs to
 # be notified about device removal on REMOVE uevent, hence
 # this should not fail so udev does not grab a "failed" state

@@ -69,8 +69,8 @@ pvcreate $lvmdev
 pvscan --cache "$lvmdev"
 
 # ensure that lvmetad can only see the toplevel MD device
-not pvscan --cache "$dev1" 2>&1 | grep "not found"
-not pvscan --cache "$dev2" 2>&1 | grep "not found"
+pvscan --cache "$dev1" 2>&1 | grep "not found"
+pvscan --cache "$dev2" 2>&1 | grep "not found"
 
 pvs | grep $lvmdev
 pvs | not grep "$dev1"
