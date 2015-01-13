@@ -210,6 +210,11 @@ uint64_t lvseg_size(const struct lv_segment *seg)
 	return (uint64_t) seg->len * seg->lv->vg->extent_size;
 }
 
+uint32_t lv_error_when_full(const struct logical_volume *lv)
+{
+	return (lv_is_thin_pool(lv) && (lv->status & LV_ERROR_WHEN_FULL)) ? 1 : 0;
+}
+
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv)
 {
 	struct lvinfo info;
@@ -644,6 +649,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	dm_percent_t snap_percent;
 	struct lvinfo info;
 	struct lv_segment *seg;
+	struct lv_seg_status seg_status;
 	char *repstr;
 
 	if (!(repstr = dm_pool_zalloc(mem, 11))) {
@@ -797,6 +803,16 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
+	} else if (lv_is_thin_pool(lv)) {
+		seg_status.mem = lv->vg->cmd->mem;
+		if (!lv_status(lv->vg->cmd, first_seg(lv), &seg_status))
+			repstr[8] = 'X'; /* Unknown */
+		else if (((struct dm_status_thin_pool *)seg_status.status)->fail)
+			repstr[8] = 'F';
+		else if (((struct dm_status_thin_pool *)seg_status.status)->out_of_data_space)
+			repstr[8] = 'D';
+		else if (((struct dm_status_thin_pool *)seg_status.status)->read_only)
+			repstr[8] = 'M';
 	}
 
 	if (lv->status & LV_ACTIVATION_SKIP)

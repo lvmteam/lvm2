@@ -7010,6 +7010,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			stack;
 			goto revert_new_lv;
 		}
+		if (lp->error_when_full)
+			lv->status |= LV_ERROR_WHEN_FULL;
 	} else if (pool_lv && seg_is_thin_volume(lp)) {
 		seg = first_seg(lv);
 		pool_seg = first_seg(pool_lv);

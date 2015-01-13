@@ -204,6 +204,7 @@ struct load_segment {
 	unsigned skip_block_zeroing;	/* Thin_pool */
 	unsigned ignore_discard;	/* Thin_pool target vsn 1.1 */
 	unsigned no_discard_passdown;	/* Thin_pool target vsn 1.1 */
+	unsigned error_if_no_space;	/* Thin pool target vsn 1.10 */
 	uint32_t device_id;		/* Thin */
 
 };
@@ -2417,9 +2418,10 @@ static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 {
 	int pos = 0;
 	char pool[DM_FORMAT_DEV_BUFSIZE], metadata[DM_FORMAT_DEV_BUFSIZE];
-	int features = (seg->skip_block_zeroing ? 1 : 0) +
-			(seg->ignore_discard ? 1 : 0) +
-			(seg->no_discard_passdown ? 1 : 0);
+	int features = (seg->error_if_no_space ? 1 : 0) +
+		 (seg->ignore_discard ? 1 : 0) +
+		 (seg->no_discard_passdown ? 1 : 0) +
+		 (seg->skip_block_zeroing ? 1 : 0);
 
 	if (!_build_dev_string(metadata, sizeof(metadata), seg->metadata))
 		return_0;
@@ -2427,8 +2429,9 @@ static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 	if (!_build_dev_string(pool, sizeof(pool), seg->pool))
 		return_0;
 
-	EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %d%s%s%s", metadata, pool,
+	EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %d%s%s%s%s", metadata, pool,
 		    seg->data_block_size, seg->low_water_mark, features,
+		    seg->error_if_no_space ? " error_if_no_space" : "",
 		    seg->skip_block_zeroing ? " skip_block_zeroing" : "",
 		    seg->ignore_discard ? " ignore_discard" : "",
 		    seg->no_discard_passdown ? " no_discard_passdown" : ""
@@ -3848,6 +3851,19 @@ int dm_tree_node_set_thin_pool_discard(struct dm_tree_node *node,
 	return 1;
 }
 
+int dm_tree_node_set_thin_pool_error_if_no_space(struct dm_tree_node *node,
+						 unsigned error_if_no_space)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _get_single_load_segment(node, SEG_THIN_POOL)))
+		return_0;
+
+	seg->error_if_no_space = error_if_no_space;
+
+	return 1;
+}
+
 int dm_tree_node_add_thin_target(struct dm_tree_node *node,
 				 uint64_t size,
 				 const char *pool_uuid,
@@ -3936,7 +3952,15 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 	else /* default discard_passdown */
 		s->discards = DM_THIN_DISCARDS_PASSDOWN;
 
-	s->read_only = (strstr(params + pos, "ro ")) ? 1 : 0;
+	if (strstr(params + pos, "ro "))
+		s->read_only = 1;
+	else if (strstr(params + pos, "fail"))
+		s->fail = 1;
+	else if (strstr(params + pos, "out_of_data_space"))
+		s->out_of_data_space = 1;
+
+	if (strstr(params + pos, "error_if_no_space"))
+		s->error_if_no_space = 1;
 
 	*status = s;
 

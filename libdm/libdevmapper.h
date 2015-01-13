@@ -366,8 +366,12 @@ struct dm_status_thin_pool {
 	uint64_t used_data_blocks;
 	uint64_t total_data_blocks;
 	uint64_t held_metadata_root;
-	uint32_t read_only;
+	uint32_t read_only;		/* metadata may not be changed */
 	dm_thin_discards_t discards;
+	uint32_t fail : 1;		/* all I/O fails */
+	uint32_t error_if_no_space : 1;	/* otherwise queue_if_no_space */
+	uint32_t out_of_data_space : 1;	/* metadata may be changed, but data may not be allocated */
+	uint32_t reserved : 29;
 };
 
 int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
@@ -886,7 +890,11 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 int dm_tree_node_set_thin_pool_discard(struct dm_tree_node *node,
 				       unsigned ignore,
 				       unsigned no_passdown);
-
+/*
+ * Set error if no space, instead of queueing for thin pool.
+ */
+int dm_tree_node_set_thin_pool_error_if_no_space(struct dm_tree_node *node,
+						 unsigned error_if_no_space);
 /*
  * FIXME: Defines bellow are based on kernel's dm-thin.c defines
  * MAX_DEV_ID ((1 << 24) - 1)

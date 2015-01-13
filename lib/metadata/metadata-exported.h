@@ -118,8 +118,9 @@
 #define CACHE			UINT64_C(0x0001000000000000)    /* LV - Internal use only */
 
 #define LV_PENDING_DELETE	UINT64_C(0x0004000000000000)    /* LV - Internal use only */
+#define LV_ERROR_WHEN_FULL	UINT64_C(0x0008000000000000)    /* LV - error when full */
 
-/* Next unused flag:		UINT64_C(0x0008000000000000)    */
+/* Next unused flag:		UINT64_C(0x0010000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -871,6 +872,7 @@ struct lvcreate_params {
 	struct dm_list *pvh; /* all */
 
 	uint64_t permission; /* all */
+	unsigned error_when_full; /* when segment supports it */
 	uint32_t read_ahead; /* all */
 	int approx_alloc;     /* all */
 	alloc_policy_t alloc; /* all */

@@ -259,6 +259,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				      uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	static int _no_discards = 0;
+	static int _no_error_if_no_space = 0;
 	char *metadata_dlid, *pool_dlid;
 	const struct lv_thin_message *lmsg;
 	const struct logical_volume *origin;
@@ -313,6 +314,12 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	} else if (seg->discards != THIN_DISCARDS_IGNORE)
 		log_warn_suppress(_no_discards++, "WARNING: Thin pool target does "
 				  "not support discards (needs kernel >= 3.4).");
+
+	if (attr & THIN_FEATURE_ERROR_IF_NO_SPACE)
+		dm_tree_node_set_thin_pool_error_if_no_space(node, (seg->lv->status & LV_ERROR_WHEN_FULL) ? 1 : 0);
+	else if (seg->lv->status & LV_ERROR_WHEN_FULL)
+		log_warn_suppress(_no_error_if_no_space++, "WARNING: Thin pool target does "
+				  "not support error if no space (needs version >= 1.10).");
 
 	/*
 	 * Add messages only for activation tree.
@@ -639,6 +646,7 @@ static int _thin_target_present(struct cmd_context *cmd,
 		{ 1, 5, THIN_FEATURE_DISCARDS_NON_POWER_2, "discards_non_power_2" },
 		{ 1, 10, THIN_FEATURE_METADATA_RESIZE, "metadata_resize" },
 		{ 9, 11, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND, "external_origin_extend" },
+		{ 1, 10, THIN_FEATURE_ERROR_IF_NO_SPACE, "error_if_no_space" },
 	};
 
 	static const char _lvmconf[] = "global/thin_disabled_features";
@@ -753,7 +761,8 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 		const char name[16];
 		uint32_t flags;
 	} reg_segtypes[] = {
-		{ &_thin_pool_ops, "thin-pool", SEG_THIN_POOL | SEG_CANNOT_BE_ZEROED | SEG_ONLY_EXCLUSIVE },
+		{ &_thin_pool_ops, "thin-pool", SEG_THIN_POOL | SEG_CANNOT_BE_ZEROED |
+		SEG_ONLY_EXCLUSIVE | SEG_CAN_ERROR_WHEN_FULL },
 		/* FIXME Maybe use SEG_THIN_VOLUME instead of SEG_VIRTUAL */
 		{ &_thin_ops, "thin", SEG_THIN_VOLUME | SEG_VIRTUAL | SEG_ONLY_EXCLUSIVE }
 	};

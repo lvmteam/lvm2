@@ -726,6 +726,16 @@ static int _int32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((
 	return dm_report_field_int32(rh, field, data);
 }
 
+static int _lverrorwhenfull_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+
+	return _binary_disp(rh, mem, field, lv_error_when_full(lv),
+			    GET_FIRST_RESERVED_NAME(lv_error_when_full_y), private);
+}
+
 static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private __attribute__((unused)))
@@ -1761,6 +1771,7 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 				const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct lv_seg_status seg_status;
 	const char *health = "";
 	uint64_t n;
 
@@ -1776,6 +1787,16 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 				health = "mismatches exist";
 		} else if (lv->status & LV_WRITEMOSTLY)
 			health = "writemostly";
+	} else if (lv_is_thin_pool(lv)) {
+		seg_status.mem = lv->vg->cmd->mem;
+		if (!lv_status(lv->vg->cmd, first_seg(lv), &seg_status))
+			health = "unknown";
+		else if (((struct dm_status_thin_pool *)seg_status.status)->fail)
+			health = "failed";
+		else if (((struct dm_status_thin_pool *)seg_status.status)->out_of_data_space)
+			health = "out_of_data";
+		else if (((struct dm_status_thin_pool *)seg_status.status)->read_only)
+			health = "metadata_read_only";
 	}
 
 	return _string_disp(rh, mem, field, &health, private);

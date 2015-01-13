@@ -582,6 +582,14 @@ static int _read_activation_params(struct cmd_context *cmd,
 	lp->activate = (activation_change_t)
 		arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
+	/* Error when full */
+	if (arg_is_set(cmd, errorwhenfull_ARG)) {
+		lp->error_when_full = arg_uint_value(cmd, errorwhenfull_ARG, 0);
+	} else
+		lp->error_when_full =
+			seg_can_error_when_full(lp) &&
+			find_config_tree_bool(cmd, activation_error_when_full_CFG, NULL);
+
 	/* Read ahead */
 	lp->read_ahead = arg_uint_value(cmd, readahead_ARG,
 					cmd->default_settings.read_ahead);
@@ -856,6 +864,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					    SIZE_ARGS,
 					    THIN_POOL_ARGS,
 					    chunksize_ARG,
+					    errorwhenfull_ARG,
 					    snapshot_ARG,
 					    thin_ARG,
 					    virtualsize_ARG,
@@ -875,6 +884,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 						SIZE_ARGS,
 						chunksize_ARG,
 						discards_ARG,
+						errorwhenfull_ARG,
 						zero_ARG,
 						-1))
 			return_0;
@@ -940,6 +950,11 @@ static int _lvcreate_params(struct cmd_context *cmd,
 				 virtualsize_ARG,
 				 -1))
 		return_0;
+
+	if (!seg_can_error_when_full(lp) && arg_is_set(cmd, errorwhenfull_ARG)) {
+		log_error("Segment type %s does not support --errorwhenfull.", lp->segtype->name);
+		return 0;
+	}
 
 	/* Basic segment type validation finished here */
 
