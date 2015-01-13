@@ -1467,6 +1467,27 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	return 1;
 }
 
+/*
+ * Replace pv->dev with dev so that dev will appear for reporting.
+ */
+
+void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
+			  struct device *dev)
+{
+	struct lvmcache_info *info;
+	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+
+	strncpy(pvid_s, (char *) &pv->id, sizeof(pvid_s) - 1);
+	pvid_s[sizeof(pvid_s) - 1] = '\0';
+
+	if (!(info = lvmcache_info_from_pvid(pvid_s, 0)))
+		return;
+
+	info->dev = dev;
+	info->label->dev = dev;
+	pv->dev = dev;
+}
+
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   struct device *dev,
 				   const char *vgname, const char *vgid,

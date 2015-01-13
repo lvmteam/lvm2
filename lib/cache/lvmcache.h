@@ -157,4 +157,7 @@ unsigned lvmcache_mda_count(struct lvmcache_info *info);
 int lvmcache_vgid_is_cached(const char *vgid);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
+void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
+			struct device *dev);
+
 #endif

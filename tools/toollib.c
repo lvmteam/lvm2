@@ -2221,6 +2221,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 	struct device_id_list *dil;
+	struct device *dev_orig;
 	const char *pv_name;
 	int process_pv;
 	int dev_found;
@@ -2298,11 +2299,14 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 					_device_list_remove(arg_devices, dil->dev);
 
 					/*
-					 * This will simply display the same PV
-					 * multiple times.  Further changes would
-					 * be needed to make this display the details
-					 * of dil->dev instead of pv->dev.
+					 * Replace pv->dev with this dil->dev
+					 * in lvmcache so the duplicate dev
+					 * info will be reported.  FIXME: it
+					 * would be nicer to override pv->dev
+					 * without munging lvmcache content.
 					 */
+					dev_orig = pv->dev;
+					lvmcache_replace_dev(cmd, pv, dil->dev);
 
 					log_very_verbose("Processing PV %s device %s in VG %s.",
 							 pv_name, dev_name(dil->dev), vg->name);
@@ -2312,6 +2316,9 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 						stack;
 					if (ret > ret_max)
 						ret_max = ret;
+
+					/* Put the cache state back as it was. */
+					lvmcache_replace_dev(cmd, pv, dev_orig);
 				}
 			}
 		}
