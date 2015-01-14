@@ -1545,6 +1545,28 @@ has_enough_space:
 	return 1;
 }
 
+static int _avoid_pvs_of_lv(struct logical_volume *lv, void *data)
+{
+	struct dm_list *allocate_pvs = (struct dm_list *) data;
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, allocate_pvs)
+		if (!(lv->status & PARTIAL_LV) &&
+		    lv_is_on_pv(lv, pvl->pv))
+			pvl->pv->status &= ~ALLOCATABLE_PV;
+
+	return 1;
+ }
+
+/*
+ * Prevent any PVs holding other image components of @lv from being used for allocation,
+ * I.e. reset ALLOCATABLE_PV on respective PVs listed on @allocatable_pvs
+ */
+static void _avoid_pvs_with_other_images_of_lv(struct logical_volume *lv, struct dm_list *allocate_pvs)
+{
+	for_each_sub_lv(lv, _avoid_pvs_of_lv, allocate_pvs);
+}
+
 /*
  * lv_raid_replace
  * @lv
@@ -1642,6 +1664,9 @@ int lv_raid_replace(struct logical_volume *lv,
 			}
 		}
 	}
+
+	/* Prevent any PVs holding image components from being used for allocation */
+	_avoid_pvs_with_other_images_of_lv(lv, allocate_pvs);
 
 	/*
 	 * Allocate the new image components first

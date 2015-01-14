@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Fix lvconvert --repair to honour resilience requirement for segmented RAID LV.
   Filter out partitioned device-mapper devices as unsuitable for use as PVs.
   Also notify lvmetad about filtered device if using pvscan --cache DevicePath.
   Use LVM's own selection instead of awk expressions in clvmd startup scripts.
