@@ -293,13 +293,12 @@ let
 
   install_rpms = rec {
       common = [ "libselinux-devel" "libsepol-devel" "ncurses-devel" "readline-devel"
-                 "corosynclib-devel"
-                 "valgrind" "valgrind-devel" "gdb" "strace"
+                 "valgrind" "gdb" "strace"
                  "redhat-rpm-config" # needed for rpmbuild of lvm
                  "which" "e2fsprogs" # needed for fsadm
                  "perl-GD" # for lcov
                ];
-      centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" ];
+      centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "valgrind-devel" ];
       centos64 = centos63;
       centos65 = centos64;
       fedora16 = [ "clusterlib-devel" "openaislib-devel" "cman" "systemd-devel" "libudev-devel" ];
@@ -310,7 +309,7 @@ let
                    "dlm" "systemd-devel" "perl-Digest-MD5" ];
       fedora18u = fedora18;
 
-      fedora19 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel" "procps-ng" ];
+      fedora19 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel" "procps-ng" "valgrind-devel" ];
       fedora19u = fedora19;
 
       fedora20 = fedora19;
