@@ -705,7 +705,7 @@ int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
 	if (!activation())
 		return 0;
 
-	return _lv_info(cmd, lv_seg->lv, 0, NULL, lv_seg, lv_seg_status, 0, 0);
+	return _lv_info(cmd, lv_seg->lv, 1, NULL, lv_seg, lv_seg_status, 0, 0);
 }
 
 /*
