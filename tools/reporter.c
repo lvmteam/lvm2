@@ -39,7 +39,7 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 	return ECMD_PROCESSED;
 }
 
-static void _choose_lv_segment_for_status_report(struct logical_volume *lv, struct lv_segment **lv_seg)
+static void _choose_lv_segment_for_status_report(const struct logical_volume *lv, const struct lv_segment **lv_seg)
 {
 	/*
 	 * By default, take the first LV segment to report status for.
@@ -51,58 +51,61 @@ static void _choose_lv_segment_for_status_report(struct logical_volume *lv, stru
 	*lv_seg = first_seg(lv);
 }
 
-static void _do_info_and_status(struct cmd_context *cmd,
-			       struct logical_volume *lv,
-			       struct lvinfo *lvinfo,
-			       struct lv_segment *lv_seg,
-			       struct lv_seg_status *lv_seg_status,
-			       int do_info, int do_status)
+static int _do_info_and_status(struct cmd_context *cmd,
+				const struct logical_volume *lv,
+				const struct lv_segment *lv_seg,
+				struct lv_with_info_and_seg_status *status,
+				int do_info, int do_status)
 {
-	if (lv_seg_status) {
-		lv_seg_status->mem = lv->vg->vgmem;
-		lv_seg_status->type = SEG_STATUS_NONE;
-		lv_seg_status->status = NULL;
+	status->seg_status.mem = NULL;
+
+	if (do_status) {
+		if (!(status->seg_status.mem = dm_pool_create("reporter_pool", 1024)))
+			return_0;
+		if (!lv_seg)
+			_choose_lv_segment_for_status_report(lv, &lv_seg);
+		if (do_info) {
+			/* both info and status */
+			if (!lv_info_with_seg_status(cmd, lv, lv_seg, 0, status, 1, 1))
+				status->info.exists = 0;
+		} else {
+			/* status only */
+			if (!lv_status(cmd, lv_seg, &status->seg_status))
+				status->info.exists = 0;
+		}
+	} else if (do_info) {
+		/* info only */
+		if (!lv_info(cmd, lv, 0, &status->info, 1, 1))
+			status->info.exists = 0;
 	}
 
-	if (do_info && !do_status) {
-		/* info only */
-		if (!lv_info(cmd, lv, 0, lvinfo, 1, 1))
-			lvinfo->exists = 0;
-	} else if (!do_info && do_status) {
-		/* status only */
-		if (!lv_seg)
-			_choose_lv_segment_for_status_report(lv, &lv_seg);
-		if (!lv_status(cmd, lv_seg, lv_seg_status))
-			lvinfo->exists = 0;
-	} else if (do_info && do_status) {
-		/* both info and status */
-		if (!lv_seg)
-			_choose_lv_segment_for_status_report(lv, &lv_seg);
-		if (!lv_info_with_seg_status(cmd, lv, lv_seg, 0, lvinfo, lv_seg_status, 1, 1))
-			lvinfo->exists = 0;
-	}
+	return 1;
 }
 
 static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
-					       struct logical_volume *lv,
+					       const struct logical_volume *lv,
 					       int do_info, int do_status,
 					       void *handle)
 {
-	struct lvinfo lvinfo;
-	struct lv_seg_status lv_seg_status;
+	struct lv_with_info_and_seg_status status;
 	int r = ECMD_FAILED;
 
-	_do_info_and_status(cmd, lv, &lvinfo, NULL, &lv_seg_status, do_info, do_status);
+	if (!_do_info_and_status(cmd, lv, NULL, &status, do_info, do_status)) {
+		stack;
+		return r;
+	}
+
 	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL,
-			   do_info ? &lvinfo : NULL,
-			   do_status ? &lv_seg_status : NULL,
+			   do_info ? &status.info : NULL,
+			   do_status ? &status.seg_status : NULL,
 			   NULL))
-		goto out;
+		goto_out;
 
 	r = ECMD_PROCESSED;
 out:
-	if (lv_seg_status.status)
-		dm_pool_free(lv_seg_status.mem, lv_seg_status.status);
+	if (status.seg_status.mem)
+		dm_pool_destroy(status.seg_status.mem);
+
 	return r;
 }
 
@@ -131,25 +134,29 @@ static int _lvs_with_info_and_status_single(struct cmd_context *cmd, struct logi
 }
 
 static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
-						struct lv_segment *seg,
+						const struct lv_segment *seg,
 						int do_info, int do_status,
 						void *handle)
 {
-	struct lvinfo lvinfo;
-	struct lv_seg_status lv_seg_status;
+	struct lv_with_info_and_seg_status status;
 	int r = ECMD_FAILED;
 
-	_do_info_and_status(cmd, seg->lv, &lvinfo, seg, &lv_seg_status, do_info, do_status);
+	if (!_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status)) {
+		stack;
+		return r;
+	}
+
 	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL,
-			   do_info ? &lvinfo : NULL,
-			   do_status ? &lv_seg_status : NULL,
+			   do_info ? &status.info : NULL,
+			   do_status ? &status.seg_status : NULL,
 			   NULL))
-		goto out;
+		goto_out;
 
 	r = ECMD_PROCESSED;
 out:
-	if (lv_seg_status.status)
-		dm_pool_free(lv_seg_status.mem, lv_seg_status.status);
+	if (status.seg_status.mem)
+		dm_pool_destroy(status.seg_status.mem);
+
 	return r;
 }
 
@@ -222,9 +229,9 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 {
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
-	struct lvinfo lvinfo = { .exists = 0 };
-	struct lv_seg_status lv_seg_status = { .type = SEG_STATUS_NONE,
-					       .status = NULL };
+	struct lv_with_info_and_seg_status status = {
+		.seg_status.type = SEG_STATUS_NONE
+	};
 
 	struct segment_type _freeseg_type = {
 		.name = "free",
@@ -260,18 +267,19 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	};
 
 	if (seg)
-		_do_info_and_status(cmd, seg->lv, &lvinfo, seg, &lv_seg_status, do_info, do_status);
+		_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status);
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
-			   seg ? : &_free_lv_segment, pvseg, &lvinfo, &lv_seg_status,
+			   seg ? : &_free_lv_segment, pvseg, &status.info, &status.seg_status,
 			   pv_label(pvseg->pv))) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}
 
  out:
-	if (seg && lv_seg_status.status)
-		dm_pool_free(lv_seg_status.mem, lv_seg_status.status);
+	if (status.seg_status.mem)
+		dm_pool_destroy(status.seg_status.mem);
+
 	return ret;
 }
 

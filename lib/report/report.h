@@ -44,11 +44,11 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  int aligned, int buffered, int headings, int field_prefixes,
 		  int quoted, int columns_as_rows, const char *selection);
 void report_free(void *handle);
-int report_object(void *handle, struct volume_group *vg,
-		  struct logical_volume *lv, struct physical_volume *pv,
-		  struct lv_segment *seg, struct pv_segment *pvseg,
-		  struct lvinfo *lvinfo, struct lv_seg_status *lv_seg_status,
-		  struct label *label);
+int report_object(void *handle, const struct volume_group *vg,
+		  const struct logical_volume *lv, const struct physical_volume *pv,
+		  const struct lv_segment *seg, const struct pv_segment *pvseg,
+		  const struct lvinfo *lvinfo, const struct lv_seg_status *lv_seg_status,
+		  const struct label *label);
 int report_devtypes(void *handle);
 int report_output(void *handle);
 

@@ -1647,6 +1647,7 @@ struct dm_report_object_type {
 	uint32_t id;			/* Powers of 2 */
 	const char *desc;
 	const char *prefix;		/* field id string prefix (optional) */
+	/* FIXME: convert to proper usage of const pointers here */
 	void *(*data_fn)(void *object);	/* callback from report_object() */
 };
 

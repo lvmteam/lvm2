@@ -393,8 +393,8 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lvdm->info && lvdm->info->exists && lvdm->info->major >= 0)
-		return dm_report_field_int(rh, field, &lvdm->info->major);
+	if (lvdm->info.exists && lvdm->info.major >= 0)
+		return dm_report_field_int(rh, field, &lvdm->info.major);
 
 	return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 }
@@ -405,8 +405,8 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lvdm->info && lvdm->info->exists && lvdm->info->minor >= 0)
-		return dm_report_field_int(rh, field, &lvdm->info->minor);
+	if (lvdm->info.exists && lvdm->info.minor >= 0)
+		return dm_report_field_int(rh, field, &lvdm->info.minor);
 
 	return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 }
@@ -746,10 +746,10 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (!lvdm->info || !lvdm->info->exists)
+	if (!lvdm->info.exists)
 		return dm_report_field_int32(rh, field, &GET_TYPE_RESERVED_VALUE(num_undef_32));
 
-	return _size32_disp(rh, mem, field, &lvdm->info->read_ahead, private);
+	return _size32_disp(rh, mem, field, &lvdm->info.read_ahead, private);
 }
 
 static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1533,9 +1533,9 @@ static int _lvpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (!lv_is_pvmove(lvdm->lv)) {
 		if (lvdm->lv->status & LVM_WRITE) {
-			if (!lvdm->info->exists)
+			if (!lvdm->info.exists)
 				perms = _str_unknown;
-			else if (lvdm->info->read_only)
+			else if (lvdm->info.read_only)
 				perms = GET_FIRST_RESERVED_NAME(lv_permissions_r_override);
 			else
 				perms = GET_FIRST_RESERVED_NAME(lv_permissions_rw);
@@ -1702,8 +1702,8 @@ static int _lvsuspended_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lvdm->info->exists)
-		return _binary_disp(rh, mem, field, lvdm->info->suspended, GET_FIRST_RESERVED_NAME(lv_suspended_y), private);
+	if (lvdm->info.exists)
+		return _binary_disp(rh, mem, field, lvdm->info.suspended, GET_FIRST_RESERVED_NAME(lv_suspended_y), private);
 
 	return _binary_undef_disp(rh, mem, field, private);
 }
@@ -1714,8 +1714,8 @@ static int _lvlivetable_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lvdm->info->exists)
-		return _binary_disp(rh, mem, field, lvdm->info->live_table, GET_FIRST_RESERVED_NAME(lv_live_table_y), private);
+	if (lvdm->info.exists)
+		return _binary_disp(rh, mem, field, lvdm->info.live_table, GET_FIRST_RESERVED_NAME(lv_live_table_y), private);
 
 	return _binary_undef_disp(rh, mem, field, private);
 }
@@ -1726,8 +1726,8 @@ static int _lvinactivetable_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lvdm->info->exists)
-		return _binary_disp(rh, mem, field, lvdm->info->inactive_table, GET_FIRST_RESERVED_NAME(lv_inactive_table_y), private);
+	if (lvdm->info.exists)
+		return _binary_disp(rh, mem, field, lvdm->info.inactive_table, GET_FIRST_RESERVED_NAME(lv_inactive_table_y), private);
 
 	return _binary_undef_disp(rh, mem, field, private);
 }
@@ -1738,8 +1738,8 @@ static int _lvdeviceopen_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lvdm->info->exists)
-		return _binary_disp(rh, mem, field, lvdm->info->open_count, GET_FIRST_RESERVED_NAME(lv_device_open_y), private);
+	if (lvdm->info.exists)
+		return _binary_disp(rh, mem, field, lvdm->info.open_count, GET_FIRST_RESERVED_NAME(lv_device_open_y), private);
 
 	return _binary_undef_disp(rh, mem, field, private);
 }
@@ -1801,9 +1801,9 @@ static int _cache_ ## cache_status_field_name ## _disp (struct dm_report *rh, \
 							void *private) \
 { \
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data; \
-	if (lvdm->seg_status->type != SEG_STATUS_CACHE) \
+	if (lvdm->seg_status.type != SEG_STATUS_CACHE) \
 		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
-	return dm_report_field_uint64(rh, field, (void *) ((char *) lvdm->seg_status->status + offsetof(struct dm_status_cache, cache_status_field_name))); \
+	return dm_report_field_uint64(rh, field, (void *) ((char *) lvdm->seg_status.status + offsetof(struct dm_status_cache, cache_status_field_name))); \
 }
 
 GENERATE_CACHE_STATUS_DISP_FN(total_blocks)
@@ -1840,7 +1840,7 @@ static void *_obj_get_vg(void *obj)
 
 static void *_obj_get_lv(void *obj)
 {
-	return ((struct lvm_report_object *)obj)->lvdm->lv;
+	return (struct logical_volume *)((struct lvm_report_object *)obj)->lvdm->lv;
 }
 
 static void *_obj_get_lv_with_info_and_seg_status(void *obj)
@@ -1973,23 +1973,29 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 /*
  * Create a row of data for an object
  */
-int report_object(void *handle, struct volume_group *vg,
-		  struct logical_volume *lv, struct physical_volume *pv,
-		  struct lv_segment *seg, struct pv_segment *pvseg,
-		  struct lvinfo *lvinfo,  struct lv_seg_status *lv_seg_status,
-		  struct label *label)
+int report_object(void *handle, const struct volume_group *vg,
+		  const struct logical_volume *lv, const struct physical_volume *pv,
+		  const struct lv_segment *seg, const struct pv_segment *pvseg,
+		  const struct lvinfo *lvinfo,  const struct lv_seg_status *lv_seg_status,
+		  const struct label *label)
 {
 	struct device dummy_device = { .dev = 0 };
 	struct label dummy_label = { .dev = &dummy_device };
-	struct lv_with_info_and_seg_status lvdm = { .lv = lv, .info = lvinfo, .seg_status = lv_seg_status};
+	struct lv_with_info_and_seg_status lvdm = { .lv = lv };
 	struct lvm_report_object obj = {
-		.vg = vg,
+		.vg = (struct volume_group *) vg,
 		.lvdm = &lvdm,
-		.pv = pv,
-		.seg = seg,
-		.pvseg = pvseg,
-		.label = label ? : (pv ? pv_label(pv) : NULL)
+		.pv = (struct physical_volume *) pv,
+		.seg = (struct lv_segment *) seg,
+		.pvseg = (struct pv_segment *) pvseg,
+		.label = (struct label *) (label ? : (pv ? pv_label(pv) : NULL))
 	};
+
+	if (lvinfo)
+		lvdm.info = *lvinfo;
+
+	if (lv_seg_status)
+		lvdm.seg_status = *lv_seg_status;
 
 	/* FIXME workaround for pv_label going through cache; remove once struct
 	 * physical_volume gains a proper "label" pointer */

@@ -619,7 +619,8 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 
 static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 		    int use_layer, struct lvinfo *info,
-		    struct lv_segment *seg, struct lv_seg_status *seg_status,
+		    const struct lv_segment *seg,
+		    struct lv_seg_status *seg_status,
 		    int with_open_count, int with_read_ahead)
 {
 	struct dm_info dminfo;
@@ -698,7 +699,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
  * Returns 1 if lv_seg_status structure populated,
  * else 0 on failure or if device not active locally.
  */
-int lv_status(struct cmd_context *cmd, struct lv_segment *lv_seg,
+int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
 	      struct lv_seg_status *lv_seg_status)
 {
 	if (!activation())
@@ -712,18 +713,18 @@ int lv_status(struct cmd_context *cmd, struct lv_segment *lv_seg,
  * else 0 on failure or if device not active locally.
  *
  * This is the same as calling lv_info and lv_status,
- * but* it's done in one go with one ioctl if possible!
+ * but* it's done in one go with one ioctl if possible!                                                             ]
  */
 int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
-			   struct lv_segment *lv_seg, int use_layer,
-			   struct lvinfo *lvinfo, struct lv_seg_status *lv_seg_status,
-			   int with_open_count, int with_read_ahead)
+			    const struct lv_segment *lv_seg, int use_layer,
+			    struct lv_with_info_and_seg_status *status,
+			    int with_open_count, int with_read_ahead)
 {
 	if (!activation())
 		return 0;
 
 	if (lv == lv_seg->lv)
-		return _lv_info(cmd, lv, use_layer, lvinfo, lv_seg, lv_seg_status,
+		return _lv_info(cmd, lv, use_layer, &status->info, lv_seg, &status->seg_status,
 				with_open_count, with_read_ahead);
 
 	/*
@@ -731,8 +732,9 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 	 * status for segment that belong to another LV,
 	 * we need to acquire info and status separately!
 	 */
-	return _lv_info(cmd, lv, use_layer, lvinfo, NULL, NULL, with_open_count, with_read_ahead) &&
-	       _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, lv_seg_status, 0, 0);
+	return _lv_info(cmd, lv, use_layer, &status->info, NULL, NULL, with_open_count, with_read_ahead) &&
+	       _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg,
+			&status->seg_status, 0, 0);
 }
 
 #define OPEN_COUNT_CHECK_RETRIES 25
