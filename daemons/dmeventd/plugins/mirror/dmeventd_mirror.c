@@ -136,10 +136,20 @@ static int _remove_failed_devices(const char *device)
 	char cmd_str[CMD_SIZE];
 
 	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
+				   "lvscan --cache", device))
+		return -1;
+
+	r = dmeventd_lvm2_run(cmd_str);
+
+	if (!r)
+		syslog(LOG_INFO, "Re-scan of mirror device %s failed.", device);
+
+	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
 				  "lvconvert --config devices{ignore_suspended_devices=1} "
 				  "--repair --use-policies", device))
 		return -ENAMETOOLONG; /* FIXME Replace with generic error return - reason for failure has already got logged */
 
+	/* if repair goes OK, report success even if lvscan has failed */
 	r = dmeventd_lvm2_run(cmd_str);
 
 	syslog(LOG_INFO, "Repair of mirrored device %s %s.", device,
