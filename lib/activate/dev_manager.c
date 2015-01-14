@@ -145,26 +145,26 @@ static int _get_segment_status_from_target_params(const char *target_name,
 		if (!dm_get_status_cache(seg_status->mem, params,
 			(struct dm_status_cache **) &seg_status->status))
 				return_0;
-			seg_status->type = SEG_STATUS_CACHE;
+		seg_status->type = SEG_STATUS_CACHE;
 	} else if (!strcmp(segtype->name, "raid")) {
 		if (!dm_get_status_raid(seg_status->mem, params,
-			(struct dm_status_raid **) &seg_status->status))
-				return_0;
-			seg_status->type = SEG_STATUS_RAID;
+					(struct dm_status_raid **) &seg_status->status))
+			return_0;
+		seg_status->type = SEG_STATUS_RAID;
 	} else if (!strcmp(segtype->name, "thin")) {
 		if (!dm_get_status_thin(seg_status->mem, params,
-			(struct dm_status_thin **) &seg_status->status))
-				return_0;
-			seg_status->type = SEG_STATUS_THIN;
+					(struct dm_status_thin **) &seg_status->status))
+			return_0;
+		seg_status->type = SEG_STATUS_THIN;
 	} else if (!strcmp(segtype->name, "thin-pool")) {
 		if (!dm_get_status_thin_pool(seg_status->mem, params,
-			(struct dm_status_thin_pool **) &seg_status->status))
-				return_0;
-			seg_status->type = SEG_STATUS_THIN_POOL;
+					     (struct dm_status_thin_pool **) &seg_status->status))
+			return_0;
+		seg_status->type = SEG_STATUS_THIN_POOL;
 	} else if (!strcmp(segtype->name, "snapshot")) {
 		if (!dm_get_status_snapshot(seg_status->mem, params,
-			(struct dm_status_snapshot **) &seg_status->status))
-				return_0;
+					    (struct dm_status_snapshot **) &seg_status->status))
+			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
 	}
 
