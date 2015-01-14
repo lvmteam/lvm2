@@ -1,5 +1,6 @@
 Version 2.02.115 -
 =====================================
+  Improve the processing and reporting of duplicate PVs.
   Report lv_health_status and health attribute also for thin pool.
   Add lv_error_when_full reporting field.
   Add support for lvcreate --errorwhenfull y|n for thin pools.
