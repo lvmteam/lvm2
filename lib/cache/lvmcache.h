@@ -160,4 +160,6 @@ uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
 			struct device *dev);
 
+int lvmcache_found_duplicate_pvs(void);
+
 #endif

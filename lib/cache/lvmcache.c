@@ -76,6 +76,7 @@ static int _scanning_in_progress = 0;
 static int _has_scanned = 0;
 static int _vgs_locked = 0;
 static int _vg_global_lock_held = 0;	/* Global lock held when cache wiped? */
+static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
 
 int lvmcache_init(void)
 {
@@ -400,6 +401,16 @@ void lvmcache_unlock_vgname(const char *vgname)
 int lvmcache_vgs_locked(void)
 {
 	return _vgs_locked;
+}
+
+/*
+ * When lvmcache sees a duplicate PV, this is set.
+ * process_each_pv() can avoid searching for duplicates
+ * by checking this and seeing that no duplicate PVs exist.
+ */
+int lvmcache_found_duplicate_pvs(void)
+{
+	return _found_duplicate_pvs;
 }
 
 static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
@@ -1560,10 +1571,12 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 			//else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
 				 //dm_is_dm_major(MAJOR(dev->dev)))
 				 //
-			else if (!strcmp(pvid_s, existing->dev->pvid))
+			else if (!strcmp(pvid_s, existing->dev->pvid)) {
 				log_error("Found duplicate PV %s: using %s not "
 					  "%s", pvid, dev_name(dev),
 					  dev_name(existing->dev));
+				_found_duplicate_pvs = 1;
+			}
 		}
 		if (strcmp(pvid_s, existing->dev->pvid)) 
 			log_debug_cache("Updating pvid cache to %s (%s) from %s (%s)",

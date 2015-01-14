@@ -2329,11 +2329,9 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			 * duplicate devices are being displayed by pvs -a, and
 			 * we want each of them to be displayed in the context
 			 * of this VG, so that this VG name appears next to it.
-			 * FIXME: the repeated search through all devices is a
-			 * high cost to pay for a very rare benefit.
 			 */
 
-			if (process_all_devices) {
+			if (process_all_devices && lvmcache_found_duplicate_pvs()) {
 				while ((dil = _device_list_find_pvid(all_devices, pv))) {
 					_device_list_remove(all_devices, dil->dev);
 
