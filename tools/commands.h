@@ -111,6 +111,7 @@ xx(lvchange,
    "\t[-d|--debug]\n"
    "\t[--deltag Tag]\n"
    "\t[--detachprofile]\n"
+   "\t[--errorwhenfull {y|n}]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--discards {ignore|nopassdown|passdown}]\n"
@@ -144,7 +145,8 @@ xx(lvchange,
 
    activationmode_ARG, addtag_ARG, alloc_ARG, autobackup_ARG, activate_ARG,
    available_ARG,
-   cachepolicy_ARG, cachesettings_ARG, contiguous_ARG, deltag_ARG, discards_ARG, detachprofile_ARG, force_ARG,
+   cachepolicy_ARG, cachesettings_ARG, contiguous_ARG, deltag_ARG, discards_ARG,
+   detachprofile_ARG, errorwhenfull_ARG, force_ARG,
    ignorelockingfailure_ARG, ignoremonitoring_ARG, ignoreactivationskip_ARG,
    ignoreskippedcluster_ARG, major_ARG, metadataprofile_ARG, minor_ARG,
    monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, noudevsync_ARG,

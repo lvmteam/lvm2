@@ -487,6 +487,28 @@ static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 	return 1;
 }
 
+static int lvchange_errorwhenfull(struct cmd_context *cmd,
+				  struct logical_volume *lv)
+{
+	unsigned ewf = arg_int_value(cmd, errorwhenfull_ARG, 0);
+
+	if (ewf == lv_is_error_when_full(lv)) {
+		log_error("Error when full is already %sset for %s.",
+			  (ewf) ? "" : "un", display_lvname(lv));
+		return 0;
+	}
+
+	if (ewf)
+		lv->status |= LV_ERROR_WHEN_FULL;
+	else
+		lv->status &= ~LV_ERROR_WHEN_FULL;
+
+	if (!lv_update_and_reload(lv))
+		return_0;
+
+	return 1;
+}
+
 static int lvchange_readahead(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
@@ -910,6 +932,11 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
+	if (arg_is_set(cmd, errorwhenfull_ARG) && !lv_is_thin_pool(lv)) {
+		log_error("Option --errorwhenfull is only supported with thin pools.");
+		return ECMD_FAILED;
+	}
+
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".
 	 * If --poll is explicitly provided use it; otherwise polling
@@ -936,6 +963,14 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += lvchange_alloc(cmd, lv);
+		docmds++;
+	}
+
+	/* error when full change */
+	if (arg_count(cmd, errorwhenfull_ARG)) {
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+		doit += lvchange_errorwhenfull(cmd, lv);
 		docmds++;
 	}
 
@@ -1076,6 +1111,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	int update_partial_unsafe =
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, discards_ARG) ||
+		arg_count(cmd, errorwhenfull_ARG) ||
 		arg_count(cmd, minrecoveryrate_ARG) ||
 		arg_count(cmd, maxrecoveryrate_ARG) ||
 		arg_count(cmd, resync_ARG) ||
