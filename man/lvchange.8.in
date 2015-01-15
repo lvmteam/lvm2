@@ -31,6 +31,8 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-\-detachprofile ]
 .RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
+.RB [ \-\-errorwhenfull
+.RI { y | n }]
 .RB [ \-\-resync ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
@@ -82,15 +84,15 @@ See \fBlvm\fP(8) for common options.
 Controls the availability of the logical volumes for use.
 Communicates with the kernel device-mapper driver via
 libdevmapper to activate (\-ay) or deactivate (\-an) the
-logical volumes. 
+logical volumes.
 .IP
 Activation of a logical volume creates a symbolic link
 /dev/VolumeGroupName/LogicalVolumeName pointing to the device node.
 This link is removed on deactivation.
 All software and scripts should access the device through
 this symbolic link and present this as the name of the device.
-The location and name of the underlying device node may depend on 
-the distribution and configuration (e.g. udev) and might change 
+The location and name of the underlying device node may depend on
+the distribution and configuration (e.g. udev) and might change
 from release to release.
 .IP
 If autoactivation option is used (\-aay),
@@ -156,8 +158,13 @@ Set this to \fIignore\fP to ignore any discards received by a
 thin pool Logical Volume.  Set to \fInopassdown\fP to process such
 discards within the thin pool itself and allow the no-longer-needed
 extents to be overwritten by new data.  Set to \fIpassdown\fP (the
-default) to process them both within the thin pool itself and to 
+default) to process them both within the thin pool itself and to
 pass them down the underlying device.
+.TP
+.BR \-\-errorwhenfull " {" \fIy | \fIn }
+Sets thin pool behavior when data space is exhaused. See
+.BR lvcreate (8)
+for information.
 .TP
 .B \-\-resync
 Forces the complete resynchronization of a mirror.  In normal

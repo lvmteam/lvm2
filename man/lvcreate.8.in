@@ -25,6 +25,8 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-d | \-\-debug ]
 .RB [ \-\-discards
 .RI { ignore | nopassdown | passdown }]
+.RB [ \-\-errorwhenfull
+.RI { y | n }]
 .RB [{ \-l | \-\-extents
 .IR LogicalExtentsNumber [ % { FREE | PVS | VG }]
 |
@@ -229,6 +231,15 @@ This is shortcut for option \fB\-\-mirrorlog\fP \fIcore\fP.
 .BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
 Sets discards behavior for thin pool.
 Default is \fIpassdown\fP.
+.TP
+.BR \-\-errorwhenfull " {" \fIy |\fIn }
+Configures thin pool behaviour when data space is exhausted.
+Default is \fIn\fPo.
+Device will queue I/O operations until target timeout
+(see dm-thin-pool kernel module option \fIno_space_timeout\fP)
+expires. Thus configured system has a time to i.e. extend
+the size of thin pool data device.
+When set to \fIy\fPes, the I/O operation is immeditelly errored.
 .TP
 .BR \-K ", " \-\-ignoreactivationskip
 Ignore the flag to skip Logical Volumes during activation.
