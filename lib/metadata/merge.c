@@ -147,7 +147,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			inc_error_count;
 		}
 
-		if ((lv->status & LV_ERROR_WHEN_FULL) &&
+		if (lv_is_error_when_full(lv) &&
 		    !seg_can_error_when_full(seg)) {
 			log_error("LV %s: segment %u (%s) does not support flag "
 				  "ERROR_WHEN_FULL.", lv->name, seg_count, seg->segtype->name);

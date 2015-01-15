@@ -195,6 +195,7 @@
 #define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR | MIRROR_LOG | MIRROR_IMAGE)) ? 1 : 0)
 
 #define lv_is_pending_delete(lv) (((lv)->status & LV_PENDING_DELETE) ? 1 : 0)
+#define lv_is_error_when_full(lv) (((lv)->status & LV_ERROR_WHEN_FULL) ? 1 : 0)
 #define lv_is_pvmove(lv)	(((lv)->status & PVMOVE) ? 1 : 0)
 
 #define lv_is_raid(lv)		(((lv)->status & RAID) ? 1 : 0)

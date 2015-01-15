@@ -316,8 +316,8 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				  "not support discards (needs kernel >= 3.4).");
 
 	if (attr & THIN_FEATURE_ERROR_IF_NO_SPACE)
-		dm_tree_node_set_thin_pool_error_if_no_space(node, (seg->lv->status & LV_ERROR_WHEN_FULL) ? 1 : 0);
-	else if (seg->lv->status & LV_ERROR_WHEN_FULL)
+		dm_tree_node_set_thin_pool_error_if_no_space(node, lv_is_error_when_full(seg->lv));
+	else if (lv_is_error_when_full(seg->lv))
 		log_warn_suppress(_no_error_if_no_space++, "WARNING: Thin pool target does "
 				  "not support error if no space (needs version >= 1.10).");
 
