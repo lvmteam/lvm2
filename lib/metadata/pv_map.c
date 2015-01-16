@@ -133,8 +133,11 @@ static int _create_maps(struct dm_pool *mem, struct dm_list *pvs, struct dm_list
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, pvs) {
-		if (!(pvl->pv->status & ALLOCATABLE_PV))
+		if (!(pvl->pv->status & ALLOCATABLE_PV) ||
+		    (pvl->pv->status & PV_ALLOCATION_PROHIBITED)) {
+		    	pvl->pv->status &= ~PV_ALLOCATION_PROHIBITED;
 			continue;
+		}
 		if (is_missing_pv(pvl->pv))
 			continue;
 		assert(pvl->pv->dev);

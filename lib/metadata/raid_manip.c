@@ -1553,14 +1553,15 @@ static int _avoid_pvs_of_lv(struct logical_volume *lv, void *data)
 	dm_list_iterate_items(pvl, allocate_pvs)
 		if (!(lv->status & PARTIAL_LV) &&
 		    lv_is_on_pv(lv, pvl->pv))
-			pvl->pv->status &= ~ALLOCATABLE_PV;
+			pvl->pv->status |= PV_ALLOCATION_PROHIBITED;
 
 	return 1;
  }
 
 /*
- * Prevent any PVs holding other image components of @lv from being used for allocation,
- * I.e. reset ALLOCATABLE_PV on respective PVs listed on @allocatable_pvs
+ * Prevent any PVs holding other image components of @lv from being used for allocation
+ * by setting the internal PV_ALLOCATION_PROHIBITED flag to use it to avoid generating
+ * pv maps for those PVs.
  */
 static void _avoid_pvs_with_other_images_of_lv(struct logical_volume *lv, struct dm_list *allocate_pvs)
 {
