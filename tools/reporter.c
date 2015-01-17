@@ -418,7 +418,6 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	args_are_pvs = (report_type == PVS ||
 			report_type == LABEL ||
-
 			report_type == PVSEGS) ? 1 : 0;
 
 	/*
