@@ -369,6 +369,7 @@ then
     if [ "$use_lvmetad" = "1" ]
     then
       echo "Notifying lvmetad about changes since it was disabled temporarily."
+      echo "(This resolves any WARNING message about restarting lvmetad that appears above.)"
       LVM_OPTS="${LVM_OPTS} --cache"
     fi
 
