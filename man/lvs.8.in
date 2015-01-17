@@ -134,7 +134,6 @@ stripe_size,
 sync_percent,
 thin_count,
 transaction_id,
-writebehind,
 zero.
 .IP
 With \fB\-\-segments\fP, any "seg_" prefixes are optional;
