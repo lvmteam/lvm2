@@ -44,7 +44,13 @@ struct lv_seg_status {
 	struct dm_pool *mem;			/* input */
 	const struct lv_segment *seg;		/* input */
 	lv_seg_status_type_t type;		/* output */
-	const void *status; /* struct dm_status_* */	/* output */
+	union {
+		struct dm_status_cache *cache;
+		struct dm_status_raid *raid;
+		struct dm_status_snapshot *snapshot;
+		struct dm_status_thin *thin;
+		struct dm_status_thin_pool *thin_pool;
+	};
 };
 
 struct lv_with_info_and_seg_status {

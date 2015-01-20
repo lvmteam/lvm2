@@ -415,10 +415,10 @@ static int _lvstatus_disp(struct dm_report *rh __attribute__((unused)), struct d
 			  struct dm_report_field *field,
 			  const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 	char *repstr;
 
-	if (!(repstr = lv_attr_dup(mem, lv)))
+	if (!(repstr = lv_attr_dup_with_info_and_seg_status(mem, lvdm)))
 		return_0;
 
 	return _field_set_value(field, repstr, NULL);
@@ -1770,8 +1770,8 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 				struct dm_report_field *field,
 				const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lv_seg_status seg_status;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+	const struct logical_volume *lv = lvdm->lv;
 	const char *health = "";
 	uint64_t n;
 
@@ -1787,15 +1787,15 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 				health = "mismatches exist";
 		} else if (lv->status & LV_WRITEMOSTLY)
 			health = "writemostly";
-	} else if (lv_is_thin_pool(lv)) {
-		seg_status.mem = lv->vg->cmd->mem;
-		if (!lv_status(lv->vg->cmd, first_seg(lv), &seg_status))
-			health = "unknown";
-		else if (((struct dm_status_thin_pool *)seg_status.status)->fail)
+	} else if (lv_is_thin_pool(lv) && (lvdm->seg_status.type != SEG_STATUS_NONE)) {
+		if (lvdm->seg_status.type != SEG_STATUS_THIN_POOL)
+			return _field_set_value(field, GET_FIRST_RESERVED_NAME(health_undef),
+						GET_FIELD_RESERVED_VALUE(health_undef));
+		else if (lvdm->seg_status.thin_pool->fail)
 			health = "failed";
-		else if (((struct dm_status_thin_pool *)seg_status.status)->out_of_data_space)
+		else if (lvdm->seg_status.thin_pool->out_of_data_space)
 			health = "out_of_data";
-		else if (((struct dm_status_thin_pool *)seg_status.status)->read_only)
+		else if (lvdm->seg_status.thin_pool->read_only)
 			health = "metadata_read_only";
 	}
 
@@ -1824,7 +1824,7 @@ static int _cache_ ## cache_status_field_name ## _disp (struct dm_report *rh, \
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data; \
 	if (lvdm->seg_status.type != SEG_STATUS_CACHE) \
 		return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64)); \
-	return dm_report_field_uint64(rh, field, (void *) ((char *) lvdm->seg_status.status + offsetof(struct dm_status_cache, cache_status_field_name))); \
+	return dm_report_field_uint64(rh, field, &lvdm->seg_status.cache->cache_status_field_name); \
 }
 
 GENERATE_CACHE_STATUS_DISP_FN(total_blocks)
@@ -1997,26 +1997,19 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 int report_object(void *handle, const struct volume_group *vg,
 		  const struct logical_volume *lv, const struct physical_volume *pv,
 		  const struct lv_segment *seg, const struct pv_segment *pvseg,
-		  const struct lvinfo *lvinfo,  const struct lv_seg_status *lv_seg_status,
+		  const struct lv_with_info_and_seg_status *lvdm,
 		  const struct label *label)
 {
 	struct device dummy_device = { .dev = 0 };
 	struct label dummy_label = { .dev = &dummy_device };
-	struct lv_with_info_and_seg_status lvdm = { .lv = lv };
 	struct lvm_report_object obj = {
 		.vg = (struct volume_group *) vg,
-		.lvdm = &lvdm,
+		.lvdm = (struct lv_with_info_and_seg_status *) lvdm,
 		.pv = (struct physical_volume *) pv,
 		.seg = (struct lv_segment *) seg,
 		.pvseg = (struct pv_segment *) pvseg,
 		.label = (struct label *) (label ? : (pv ? pv_label(pv) : NULL))
 	};
-
-	if (lvinfo)
-		lvdm.info = *lvinfo;
-
-	if (lv_seg_status)
-		lvdm.seg_status = *lv_seg_status;
 
 	/* FIXME workaround for pv_label going through cache; remove once struct
 	 * physical_volume gains a proper "label" pointer */

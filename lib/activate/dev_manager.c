@@ -121,6 +121,7 @@ static int _get_segment_status_from_target_params(const char *target_name,
 {
 	struct segment_type *segtype;
 
+	seg_status->type = SEG_STATUS_UNKNOWN;
 	/*
 	 * TODO: Add support for other segment types too!
 	 * The segment to report status for must be properly
@@ -142,30 +143,28 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	}
 
 	if (!strcmp(segtype->name, "cache")) {
-		if (!dm_get_status_cache(seg_status->mem, params,
-			(struct dm_status_cache **) &seg_status->status))
-				return_0;
+		if (!dm_get_status_cache(seg_status->mem, params, &(seg_status->cache)))
+			return_0;
 		seg_status->type = SEG_STATUS_CACHE;
 	} else if (!strcmp(segtype->name, "raid")) {
-		if (!dm_get_status_raid(seg_status->mem, params,
-					(struct dm_status_raid **) &seg_status->status))
+		if (!dm_get_status_raid(seg_status->mem, params, &seg_status->raid))
 			return_0;
 		seg_status->type = SEG_STATUS_RAID;
 	} else if (!strcmp(segtype->name, "thin")) {
-		if (!dm_get_status_thin(seg_status->mem, params,
-					(struct dm_status_thin **) &seg_status->status))
+		if (!dm_get_status_thin(seg_status->mem, params, &seg_status->thin))
 			return_0;
 		seg_status->type = SEG_STATUS_THIN;
 	} else if (!strcmp(segtype->name, "thin-pool")) {
-		if (!dm_get_status_thin_pool(seg_status->mem, params,
-					     (struct dm_status_thin_pool **) &seg_status->status))
+		if (!dm_get_status_thin_pool(seg_status->mem, params, &seg_status->thin_pool))
 			return_0;
 		seg_status->type = SEG_STATUS_THIN_POOL;
 	} else if (!strcmp(segtype->name, "snapshot")) {
-		if (!dm_get_status_snapshot(seg_status->mem, params,
-					    (struct dm_status_snapshot **) &seg_status->status))
+		if (!dm_get_status_snapshot(seg_status->mem, params, &seg_status->snapshot))
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
+	} else {
+		log_error(INTERNAL_ERROR "Unsupported segment type %s.", segtype->name);
+		return 0;
 	}
 
 	return 1;

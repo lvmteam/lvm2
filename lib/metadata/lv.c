@@ -644,12 +644,11 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	return 1;
 }
 
-char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
+char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm)
 {
 	dm_percent_t snap_percent;
-	struct lvinfo info;
+	const struct logical_volume *lv = lvdm->lv;
 	struct lv_segment *seg;
-	struct lv_seg_status seg_status;
 	char *repstr;
 
 	if (!(repstr = dm_pool_zalloc(mem, 11))) {
@@ -722,30 +721,30 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	repstr[3] = (lv->status & FIXED_MINOR) ? 'm' : '-';
 
-	if (!activation() || !lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)) {
+	if (!activation() || !lvdm->info_ok) {
 		repstr[4] = 'X';		/* Unknown */
 		repstr[5] = 'X';		/* Unknown */
-	} else if (info.exists) {
-		if (info.suspended)
+	} else if (lvdm->info.exists) {
+		if (lvdm->info.suspended)
 			repstr[4] = 's';	/* Suspended */
-		else if (info.live_table)
+		else if (lvdm->info.live_table)
 			repstr[4] = 'a';	/* Active */
-		else if (info.inactive_table)
+		else if (lvdm->info.inactive_table)
 			repstr[4] = 'i';	/* Inactive with table */
 		else
 			repstr[4] = 'd';	/* Inactive without table */
 
 		/* Snapshot dropped? */
-		if (info.live_table && lv_is_cow(lv)) {
+		if (lvdm->info.live_table && lv_is_cow(lv)) {
 			if (!lv_snapshot_percent(lv, &snap_percent) ||
 			    snap_percent == DM_PERCENT_INVALID) {
-				if (info.suspended)
+				if (lvdm->info.suspended)
 					repstr[4] = 'S'; /* Susp Inv snapshot */
 				else
 					repstr[4] = 'I'; /* Invalid snapshot */
 			}
 			else if (snap_percent == LVM_PERCENT_MERGE_FAILED) {
-				if (info.suspended)
+				if (lvdm->info.suspended)
 					repstr[4] = 'M'; /* Susp snapshot merge failed */
 				else
 					repstr[4] = 'm'; /* snapshot merge failed */
@@ -756,10 +755,10 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 		 * 'R' indicates read-only activation of a device that
 		 * does not have metadata flagging it as read-only.
 		 */
-		if (repstr[1] != 'r' && info.read_only)
+		if (repstr[1] != 'r' && lvdm->info.read_only)
 			repstr[1] = 'R';
 
-		repstr[5] = (info.open_count) ? 'o' : '-';
+		repstr[5] = (lvdm->info.open_count) ? 'o' : '-';
 	} else {
 		repstr[4] = '-';
 		repstr[5] = '-';
@@ -803,15 +802,15 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
-	} else if (lv_is_thin_pool(lv)) {
-		seg_status.mem = lv->vg->cmd->mem;
-		if (!lv_status(lv->vg->cmd, first_seg(lv), &seg_status))
+	} else if (lv_is_thin_pool(lv) &&
+		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
+		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
 			repstr[8] = 'X'; /* Unknown */
-		else if (((struct dm_status_thin_pool *)seg_status.status)->fail)
+		else if (lvdm->seg_status.thin_pool->fail)
 			repstr[8] = 'F';
-		else if (((struct dm_status_thin_pool *)seg_status.status)->out_of_data_space)
+		else if (lvdm->seg_status.thin_pool->out_of_data_space)
 			repstr[8] = 'D';
-		else if (((struct dm_status_thin_pool *)seg_status.status)->read_only)
+		else if (lvdm->seg_status.thin_pool->read_only)
 			repstr[8] = 'M';
 	}
 
@@ -822,6 +821,19 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 out:
 	return repstr;
+}
+
+/* backward compatible internal API for lvm2api, TODO improve it */
+char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	struct lv_with_info_and_seg_status status = {
+		.seg_status.type = SEG_STATUS_NONE
+	};
+
+	if (!lv_info_with_seg_status(lv->vg->cmd, lv, first_seg(lv), 1, &status, 1, 1))
+		return_NULL;
+
+	return lv_attr_dup_with_info_and_seg_status(mem, &status);
 }
 
 int lv_set_creation(struct logical_volume *lv,
