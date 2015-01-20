@@ -776,9 +776,14 @@ static int _segmonitor_disp(struct dm_report *rh, struct dm_pool *mem,
 			    struct dm_report_field *field,
 			    const void *data, void *private)
 {
+	const struct lv_segment *seg = (const struct lv_segment *)data;
 	char *str;
 
-	if (!(str = lvseg_monitor_dup(mem, (const struct lv_segment *)data)))
+	if (!seg->segtype->ops || !seg->segtype->ops->target_monitored)
+		return _field_set_value(field, GET_FIRST_RESERVED_NAME(seg_monitor_undef),
+					GET_FIELD_RESERVED_VALUE(seg_monitor_undef));
+
+	if (!(str = lvseg_monitor_dup(mem, seg)))
 		return_0;
 
 	return _field_set_value(field, str, NULL);
