@@ -36,7 +36,8 @@ typedef enum {
 	SEG_STATUS_RAID,
 	SEG_STATUS_SNAPSHOT,
 	SEG_STATUS_THIN,
-	SEG_STATUS_THIN_POOL
+	SEG_STATUS_THIN_POOL,
+	SEG_STATUS_UNKNOWN
 } lv_seg_status_type_t;
 
 struct lv_seg_status {
@@ -48,6 +49,7 @@ struct lv_seg_status {
 
 struct lv_with_info_and_seg_status {
 	const struct logical_volume *lv;	/* input */
+	int info_ok;
 	struct lvinfo info;			/* output */
 	int seg_part_of_lv;			/* output */
 	struct lv_seg_status seg_status;	/* input/output, see lv_seg_status */

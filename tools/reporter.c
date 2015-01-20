@@ -57,27 +57,23 @@ static int _do_info_and_status(struct cmd_context *cmd,
 				struct lv_with_info_and_seg_status *status,
 				int do_info, int do_status)
 {
-	status->seg_status.mem = NULL;
+	unsigned use_layer = lv_is_thin_pool(lv) ? 1 : 0;
 
+	status->lv = lv;
 	if (do_status) {
 		if (!(status->seg_status.mem = dm_pool_create("reporter_pool", 1024)))
 			return_0;
 		if (!lv_seg)
 			_choose_lv_segment_for_status_report(lv, &lv_seg);
-		if (do_info) {
+		if (do_info)
 			/* both info and status */
-			if (!lv_info_with_seg_status(cmd, lv, lv_seg, 0, status, 1, 1))
-				status->info.exists = 0;
-		} else {
+			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, use_layer, status, 1, 1);
+		else
 			/* status only */
-			if (!lv_status(cmd, lv_seg, &status->seg_status))
-				status->info.exists = 0;
-		}
-	} else if (do_info) {
+			status->info_ok = lv_status(cmd, lv_seg, use_layer, &status->seg_status);
+	} else if (do_info)
 		/* info only */
-		if (!lv_info(cmd, lv, 0, &status->info, 1, 1))
-			status->info.exists = 0;
-	}
+		status->info_ok = lv_info(cmd, lv, use_layer, &status->info, 1, 1);
 
 	return 1;
 }
