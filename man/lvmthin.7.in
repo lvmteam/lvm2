@@ -398,10 +398,10 @@ explicitly.
 # lvconvert \-\-type thin\-pool \-\-poolmetadata vg/pool0meta vg/pool0
 
 # lvs \-a
-  [lvol0_pmspare] vg          ewi-------  10.00g
-  pool0           vg          twi---tz--  10.00g
-  [pool0_tdata]   vg          Twi-------  10.00g
-  [pool0_tmeta]   vg          ewi-------   1.00g
+  [lvol0_pmspare] vg          ewi-------
+  pool0           vg          twi---tz--
+  [pool0_tdata]   vg          Twi-------
+  [pool0_tmeta]   vg          ewi-------
 .fi
 
 The "Metadata check and repair" section describes the use of
@@ -715,8 +715,47 @@ For a 1G pool, using 700M will trigger a resize to 1.2G. When the usage exceeds
 
 \&
 
-If thin pool data space is exhausted, writes to thin LVs will be queued
-until the the data space is extended.  Reading is still possible.
+When properly managed, thin pool data space should be extended before it
+is exhausted (see previous section).  But, if thin pool data space is
+exhausted, the thin pool behavior is configurable with the --errorwhenfull
+y|n option to lvcreate or lvchange.  The errorwhenfull setting applies
+only to writes; reading thin LVs can continue even when data space is
+exhausted.
+
+Command to change the handling of data space exhaustion of an existing
+thin pool LV:
+
+.B lvchange --errorwhenfull {y|n} VG/ThinPoolLV
+
+The current setting can be displayed with the lvs -o+error_when_full
+command.
+
+.B errorwhenfull n
+
+This is the default.  Writes to thin LVs are accepted and queued, with the
+expectation that pool data space will be extended soon.  Once data space
+is extended, the queued writes will be processed, and the thin pool will
+return to normal operation.
+
+While waiting to be extended, the thin pool will queue writes for up to 60
+seconds.  If data space has not been extended after this time, the queued
+writes will return an error to the caller, e.g. the file system.  This can
+result in file system corruption that may require fsck to repair.
+
+The 60 second timeout can be changed or disabled with the dm\-thin\-pool
+kernel module option
+.B no_space_timeout.
+This option sets the number of seconds that thin pools will queue writes.
+If set to 0, writes will not time out.  Disabling timeouts may result in
+the system exhausting memory if too many writes are queued.
+
+.B errorwhenfull y
+
+Writes to thin LVs immediately return an error, and no writes are queued.
+In the case of a file system, this can result in corruption that may
+require fsck to repair (the specific consequences depend on the thin LV
+user.)
+
 
 When data space is exhausted, the lvs command displays 100 under Data% for
 the thin pool LV:
