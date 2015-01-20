@@ -253,11 +253,14 @@ struct _str_list_append_baton {
 static int _str_list_append(const char *line, void *baton)
 {
 	struct _str_list_append_baton *b = baton;
-	const char *dup = dm_pool_strdup(b->mem, line);
-	if (!dup)
+	const char *line2 = dm_pool_strdup(b->mem, line);
+
+	if (!line2)
 		return_0;
-	if (!str_list_add(b->mem, b->result, dup))
+
+	if (!str_list_add(b->mem, b->result, line2))
 		return_0;
+
 	return 1;
 }
 
