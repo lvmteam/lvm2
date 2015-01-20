@@ -132,7 +132,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
  * else 0 on failure or if device not active locally.
  */
 int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
-	      struct lv_seg_status *lv_seg_status);
+	      int use_layer, struct lv_seg_status *lv_seg_status);
 
 /*
  * Returns 1 if lv_info_and_seg_status structure has been populated,
