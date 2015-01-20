@@ -827,14 +827,23 @@ out:
 /* backward compatible internal API for lvm2api, TODO improve it */
 char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
+	char *ret = NULL;
 	struct lv_with_info_and_seg_status status = {
-		.seg_status.type = SEG_STATUS_NONE
+		.seg_status.type = SEG_STATUS_NONE,
+		.lv = lv
 	};
 
-	if (!lv_info_with_seg_status(lv->vg->cmd, lv, first_seg(lv), 1, &status, 1, 1))
-		return_NULL;
+	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024)))
+		return_0;
 
-	return lv_attr_dup_with_info_and_seg_status(mem, &status);
+	if (!lv_info_with_seg_status(lv->vg->cmd, lv, first_seg(lv), 1, &status, 1, 1))
+		goto_bad;
+
+	ret = lv_attr_dup_with_info_and_seg_status(mem, &status);
+bad:
+	dm_pool_destroy(status.seg_status.mem);
+
+	return ret;
 }
 
 int lv_set_creation(struct logical_volume *lv,
