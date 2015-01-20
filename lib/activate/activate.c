@@ -749,8 +749,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 	 * we need to acquire info and status separately!
 	 */
 	return _lv_info(cmd, lv, use_layer, &status->info, NULL, NULL, with_open_count, with_read_ahead) &&
-	       _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg,
-			&status->seg_status, 0, 0);
+	       _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, &status->seg_status, 0, 0);
 }
 
 #define OPEN_COUNT_CHECK_RETRIES 25
