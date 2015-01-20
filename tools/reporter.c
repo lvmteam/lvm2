@@ -523,17 +523,17 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		return_ECMD_FAILED;
 
 	/* Do we need to acquire LV device info in addition? */
-	lv_info_needed = (report_type & LVSINFO) ? 1 : 0;
+	lv_info_needed = (report_type & (LVSINFO | LVSINFOSTATUS)) ? 1 : 0;
 
 	/* Do we need to acquire LV device status in addition? */
-	lv_segment_status_needed = (report_type & (SEGSSTATUS | LVSSTATUS)) ? 1 : 0;
+	lv_segment_status_needed = (report_type & (SEGSSTATUS | LVSSTATUS | LVSINFOSTATUS)) ? 1 : 0;
 
 	/* Ensure options selected are compatible */
 	if (report_type & (SEGS | SEGSSTATUS))
 		report_type |= LVS;
 	if (report_type & PVSEGS)
 		report_type |= PVS;
-	if ((report_type & (LVS | LVSINFO | LVSSTATUS)) && (report_type & (PVS | LABEL)) && !args_are_pvs) {
+	if ((report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS)) && (report_type & (PVS | LABEL)) && !args_are_pvs) {
 		log_error("Can't report LV and PV fields at the same time");
 		dm_report_free(report_handle);
 		return ECMD_FAILED;
@@ -541,7 +541,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	/* Change report type if fields specified makes this necessary */
 	if ((report_type & PVSEGS) ||
-	    ((report_type & (PVS | LABEL)) && (report_type & (LVS | LVSINFO | LVSSTATUS))))
+	    ((report_type & (PVS | LABEL)) && (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))))
 		report_type = PVSEGS;
 	else if ((report_type & LABEL) && (report_type & VGS))
 		report_type = PVS;
@@ -549,7 +549,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type = PVS;
 	else if (report_type & (SEGS | SEGSSTATUS))
 		report_type = SEGS;
-	else if (report_type & (LVS | LVSINFO | LVSSTATUS))
+	else if (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))
 		report_type = LVS;
 
 	/*
@@ -573,6 +573,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	case LVSINFO:
 		/* fall through */
 	case LVSSTATUS:
+		/* fall through */
+	case LVSINFOSTATUS:
 		/* fall through */
 	case LVS:
 		r = process_each_lv(cmd, argc, argv, 0, report_handle,
