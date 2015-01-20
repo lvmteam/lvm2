@@ -951,7 +951,8 @@ static int _lvcreate_params(struct cmd_context *cmd,
 				 -1))
 		return_0;
 
-	if (!seg_can_error_when_full(lp) && arg_is_set(cmd, errorwhenfull_ARG)) {
+	if (!seg_can_error_when_full(lp) && !lp->create_pool &&
+	    arg_is_set(cmd, errorwhenfull_ARG)) {
 		log_error("Segment type %s does not support --errorwhenfull.", lp->segtype->name);
 		return 0;
 	}
