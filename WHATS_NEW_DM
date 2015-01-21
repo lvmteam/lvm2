@@ -1,5 +1,6 @@
 Version 1.02.93 -
 ====================================
+  Report 'unknown version' when incompatible version numbers were not obtained.
   Report more info from thin pool status (out of data, metadata-ro, fail).
   Support error_if_no_space for thin pool target.
   Fix segfault while using selection with regex and unbuffered reporting.
