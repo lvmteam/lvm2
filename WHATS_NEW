@@ -1,5 +1,5 @@
-Version 2.02.115 -
-=====================================
+Version 2.02.115 - 21st January 2015
+====================================
   Report segment types without monitoring support as undefined.
   Support lvchange --errorwhenfull for thin pools.
   Improve the processing and reporting of duplicate PVs.
@@ -12,7 +12,7 @@ Version 2.02.115 -
   Use LVM's own selection instead of awk expressions in clvmd startup scripts.
   Do not filter out snapshot origin LVs as unusable devices for an LVM stack.
   Fix incorrect rimage names when converting from mirror to raid1 LV (2.02.112).
-  Avoid excessive re-reading of metadata and related error messages in pvremove.
+  Introduce pvremove_many to avoid excessive metadata re-reading and messages.
   Check for cmirror availability during cluster mirror creation and activation.
   Add cache_policy and cache_settings reporting fields.
   Add missing recognition for --binary option with {pv,vg,lv}display -C.

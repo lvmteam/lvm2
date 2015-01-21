@@ -1,5 +1,5 @@
-Version 1.02.93 -
-====================================
+Version 1.02.93 - 21st January 2015
+===================================
   Reduce severity of ioctl error message when dmeventd waitevent is interrupted.
   Report 'unknown version' when incompatible version numbers were not obtained.
   Report more info from thin pool status (out of data, metadata-ro, fail).
