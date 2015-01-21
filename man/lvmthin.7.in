@@ -727,8 +727,7 @@ thin pool LV:
 
 .B lvchange --errorwhenfull {y|n} VG/ThinPoolLV
 
-The current setting can be displayed with the lvs -o+error_when_full
-command.
+The current setting can be displayed with the lvs -o+lv_when_full command.
 
 .B errorwhenfull n
 
