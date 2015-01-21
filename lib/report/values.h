@@ -68,7 +68,6 @@ FIELD_RESERVED_BINARY_VALUE(lv_image_synced, lv_image_synced, "", "image synced"
 FIELD_RESERVED_BINARY_VALUE(lv_merging, lv_merging, "", "merging")
 FIELD_RESERVED_BINARY_VALUE(lv_converting, lv_converting, "", "converting")
 FIELD_RESERVED_BINARY_VALUE(lv_allocation_locked, lv_allocation_locked, "", "allocation locked", "locked")
-FIELD_RESERVED_BINARY_VALUE(lv_error_when_full, lv_error_when_full, "", "error when full", "error if no space", "error")
 FIELD_RESERVED_BINARY_VALUE(lv_fixed_minor, lv_fixed_minor, "", "fixed minor", "fixed")
 FIELD_RESERVED_BINARY_VALUE(lv_active_locally, lv_active_locally, "", "active locally", "active", "locally")
 FIELD_RESERVED_BINARY_VALUE(lv_active_remotely, lv_active_remotely, "", "active remotely", "active", "remotely")
@@ -85,6 +84,9 @@ FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_rw, "", "writeable", "writea
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r, "", "read-only", "read-only", "r", "ro")
 FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r_override, "", "read-only-override", "read-only-override", "ro-override", "r-override", "R")
 FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead_auto, "", &GET_TYPE_RESERVED_VALUE(num_undef_64), "auto")
+FIELD_RESERVED_VALUE(lv_when_full, lv_when_full_error, "", "error", "error", "error when full", "error if no space")
+FIELD_RESERVED_VALUE(lv_when_full, lv_when_full_queue, "", "queue", "queue", "queue when full", "queue if no space")
+FIELD_RESERVED_VALUE(lv_when_full, lv_when_full_undef, "", "", "", "undefined")
 
 /* Reserved values for SEG fields */
 FIELD_RESERVED_VALUE(cache_policy, cache_policy_undef, "", "", "", "undefined")

@@ -729,14 +729,23 @@ static int _int32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((
 	return dm_report_field_int32(rh, field, data);
 }
 
-static int _lverrorwhenfull_disp(struct dm_report *rh, struct dm_pool *mem,
-				 struct dm_report_field *field,
-				 const void *data, void *private __attribute__((unused)))
+static int _lvwhenfull_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private __attribute__((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
-	return _binary_disp(rh, mem, field, lv_error_when_full(lv),
-			    GET_FIRST_RESERVED_NAME(lv_error_when_full_y), private);
+	if (lv_is_thin_pool(lv)) {
+		if (lv->status & LV_ERROR_WHEN_FULL)
+			return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_error),
+						GET_FIELD_RESERVED_VALUE(lv_when_full_error));
+		else
+			return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_queue),
+						GET_FIELD_RESERVED_VALUE(lv_when_full_queue));
+	}
+
+	return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_undef),
+				GET_FIELD_RESERVED_VALUE(lv_when_full_undef));
 }
 
 static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,

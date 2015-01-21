@@ -211,11 +211,6 @@ uint64_t lvseg_size(const struct lv_segment *seg)
 	return (uint64_t) seg->len * seg->lv->vg->extent_size;
 }
 
-uint32_t lv_error_when_full(const struct logical_volume *lv)
-{
-	return (lv_is_thin_pool(lv) && (lv->status & LV_ERROR_WHEN_FULL)) ? 1 : 0;
-}
-
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv)
 {
 	struct lvinfo info;

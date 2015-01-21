@@ -4,7 +4,7 @@ Version 2.02.115 -
   Support lvchange --errorwhenfull for thin pools.
   Improve the processing and reporting of duplicate PVs.
   Report lv_health_status and health attribute also for thin pool.
-  Add lv_error_when_full reporting field.
+  Add lv_when_full reporting field.
   Add support for lvcreate --errorwhenfull y|n for thin pools.
   Fix lvconvert --repair to honour resilience requirement for segmented RAID LV.
   Filter out partitioned device-mapper devices as unsuitable for use as PVs.
