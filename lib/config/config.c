@@ -790,6 +790,11 @@ static int _config_def_check_node_single_value(struct cft_check_handle *handle,
 			} else if  (!(def->type & CFG_TYPE_STRING)) {
 				_log_type_error(rp, CFG_TYPE_STRING, def->type, handle->suppress_messages);
 				return 0;
+			} else if (!(def->flags & CFG_ALLOW_EMPTY) && !*v->v.str) {
+				log_warn_suppress(handle->suppress_messages,
+						  "Configuration setting \"%s\" invalid. "
+						  "It cannot be set to an empty value.", rp);
+				return 0;
 			}
 			break;
 		default: ;

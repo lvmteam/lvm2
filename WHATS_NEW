@@ -1,5 +1,6 @@
 Version 2.02.116 - 
 ====================================
+  Improve config validation to check if setting with string value can be empty.
 
 Version 2.02.115 - 21st January 2015
 ====================================
