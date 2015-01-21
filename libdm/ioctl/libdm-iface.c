@@ -1801,7 +1801,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				       (dmt->type == DM_DEVICE_STATUS)))
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 		else {
-			if (_log_suppress)
+			if (_log_suppress || errno == EINTR)
 				log_verbose("device-mapper: %s ioctl "
 					    "failed: %s",
 				    	    _cmd_data_v4[dmt->type].name,
