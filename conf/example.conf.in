@@ -938,8 +938,11 @@ activation {
     # enables or disables this automatic setting of the flag while LVs are created.
     # auto_set_activation_skip = 1
 
-    # Control error behavior when provisioned device becomes full.
-    # Set to 1 to instant error when there is missing free space in device.
+    # Control error behavior when provisioned device becomes full.  This
+    # determines the default --errorwhenfull setting of new thin pools.
+    # The command line option --errorwhenfull takes precedence over this
+    # setting.  error_when_full 0 means --errorwhenfull n.
+    #
     # error_when_full = 0
 
     # For RAID or 'mirror' segment types, 'raid_region_size' is the
