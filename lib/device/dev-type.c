@@ -112,6 +112,10 @@ struct dev_types *create_dev_types(const char *proc_dir,
 		if (!strncmp("drbd", line + i, 4) && isspace(*(line + i + 4)))
 			dt->drbd_major = line_maj;
 
+		/* Look for DASD */
+		if (!strncmp("dasd", line + i, 4) && isspace(*(line + i + 4)))
+			dt->dasd_major = line_maj;
+
 		/* Look for EMC powerpath */
 		if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
 			dt->emcpower_major = line_maj;
@@ -203,6 +207,9 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 	if (MAJOR(dev->dev) == dt->emcpower_major)
 		return 1;
 
+	if (MAJOR(dev->dev) == dt->dasd_major)
+		return 1;
+
 	if (MAJOR(dev->dev) == dt->power2_major)
 		return 1;
 
@@ -221,6 +228,9 @@ const char *dev_subsystem_name(struct dev_types *dt, struct device *dev)
 
 	if (MAJOR(dev->dev) == dt->drbd_major)
 		return "DRBD";
+
+	if (MAJOR(dev->dev) == dt->dasd_major)
+		return "DASD";
 
 	if (MAJOR(dev->dev) == dt->emcpower_major)
 		return "EMCPOWER";
@@ -321,6 +331,10 @@ int dev_is_partitioned(struct dev_types *dt, struct device *dev)
 {
 	if (!_is_partitionable(dt, dev))
 		return 0;
+
+	/* Unpartitioned DASD devices are not supported. */
+	if (MAJOR(dev->dev) == dt->dasd_major)
+		return 1;
 
 	return _has_partition_table(dev);
 }

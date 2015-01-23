@@ -44,6 +44,7 @@ struct dev_types {
 	int device_mapper_major;
 	int emcpower_major;
 	int power2_major;
+	int dasd_major;
 	struct dev_type_def dev_type_array[NUMBER_OF_MAJORS];
 };
 
