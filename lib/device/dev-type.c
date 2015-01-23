@@ -207,9 +207,6 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 	if (MAJOR(dev->dev) == dt->emcpower_major)
 		return 1;
 
-	if (MAJOR(dev->dev) == dt->dasd_major)
-		return 1;
-
 	if (MAJOR(dev->dev) == dt->power2_major)
 		return 1;
 
