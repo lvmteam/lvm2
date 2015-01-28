@@ -1,5 +1,6 @@
 Version 2.02.116 - 
 ====================================
+  Preserve chunk size with repair and metadata swap of a thin pool.
   Fix raid --splitmirror 1 functionality (2.02.112).
   Fix tree preload to handle splitting raid images.
   Do not support unpartitioned DASD devices.

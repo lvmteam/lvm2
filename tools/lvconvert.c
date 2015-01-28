@@ -2956,6 +2956,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			return 0;
 		}
 
+		lp->passed_args |= PASS_ARG_CHUNK_SIZE | PASS_ARG_DISCARDS | PASS_ARG_ZERO;
 		seg = first_seg(pool_lv);
 
 		/* Normally do NOT change chunk size when swapping */

@@ -24,7 +24,9 @@ aux have_thin 1 0 0 || skip
 aux prepare_vg 4
 
 # Create LV
-lvcreate -T -L20 -V10 -n $lv1 $vg/pool  "$dev1" "$dev2"
+# TODO: investigate problem with --zero n and my repairable damage trick
+#lvcreate -T -L20 -V10 -n $lv1 $vg/pool --discards ignore --zero n --chunksize 128 "$dev1" "$dev2"
+lvcreate -T -L20 -V10 -n $lv1 $vg/pool --chunksize 128 --discards ignore "$dev1" "$dev2"
 lvcreate -T -V10 -n $lv2 $vg/pool
 
 mkfs.ext2 "$DM_DEV_DIR/$vg/$lv1"
@@ -70,6 +72,11 @@ lvchange -an $vg
 
 # Swap repaired metadata back
 lvconvert -y -f --poolmetadata $vg/fixed --thinpool $vg/pool
+
+# Check pool still preserves its original settings
+check lv_field $vg/pool chunksize "128.00k"
+check lv_field $vg/pool discards "ignore"
+check lv_field $vg/pool zero "zero"
 
 # Activate pool - this should now work
 vgchange -ay $vg
