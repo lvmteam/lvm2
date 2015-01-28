@@ -1018,6 +1018,10 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 				return sl->seg->lv;
 			}
 
+	/* RAID changes visibility of splitted LVs but references them still as leg/meta */
+	if ((lv_is_raid_image(lv) || lv_is_raid_metadata(lv)) && lv_is_visible(lv))
+		return lv;
+
 	/* For other types, by default look for the first user */
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
 		/* FIXME: complete this exception list */
