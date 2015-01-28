@@ -1,5 +1,6 @@
 Version 2.02.116 - 
 ====================================
+  Fix tree preload to handle splitting raid images.
   Do not support unpartitioned DASD devices.
   Improve config validation to check if setting with string value can be empty.
 
