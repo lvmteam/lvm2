@@ -2295,7 +2295,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 			 * is used in the CTR table.
 			 */
 			if ((seg_type(seg, s) == AREA_UNASSIGNED) ||
-			    ((seg_lv(seg, s)->status & VISIBLE_LV) &&
+			    (lv_is_visible(seg_lv(seg, s)) &&
 			     !(seg_lv(seg, s)->status & LVM_WRITE))) {
 				/* One each for metadata area and data area */
 				if (!dm_tree_node_add_null_area(node, 0) ||
