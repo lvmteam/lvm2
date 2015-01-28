@@ -1760,18 +1760,15 @@ static int _preload_detached_lv(struct logical_volume *lv, void *data)
 	struct detached_lv_data *detached = data;
 	struct lv_list *lvl_pre;
 
-        /* Check and preload removed raid image leg */
+	/* Check and preload removed raid image leg or metadata */
 	if (lv_is_raid_image(lv)) {
 		if ((lvl_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_raid_image(lvl_pre->lv) &&
+		    !lv_is_raid_image(lvl_pre->lv) && lv_is_active(lv) &&
 		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
 			return_0;
-	}
-
-        /* Check and preload removed of raid metadata */
-	if (lv_is_raid_metadata(lv)) {
+	} else if (lv_is_raid_metadata(lv)) {
 		if ((lvl_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_raid_metadata(lvl_pre->lv) &&
+		    !lv_is_raid_metadata(lvl_pre->lv) && lv_is_active(lv) &&
 		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
 			return_0;
 	}
