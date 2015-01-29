@@ -19,39 +19,23 @@
 static int _passes_partitioned_filter(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
-	const char *name = dev_name(dev);
 	int ret = 0;
-	uint64_t size;
 
-	/* Check it's accessible */
 	if (!dev_open_readonly_quiet(dev)) {
-		log_debug_devs("%s: Skipping: open failed", name);
+		log_debug_devs("%s: Skipping: open failed", dev_name(dev));
 		return 0;
-	}
-
-	/* Check it's not too small */
-	if (!dev_get_size(dev, &size)) {
-		log_debug_devs("%s: Skipping: dev_get_size failed", name);
-		goto out;
-	}
-
-	if (size < pv_min_size()) {
-		log_debug_devs("%s: Skipping: Too small to hold a PV", name);
-		goto out;
 	}
 
 	if (dev_is_partitioned(dt, dev)) {
 		log_debug_devs("%s: Skipping: Partition table signature found",
-			       name);
+			       dev_name(dev));
 		goto out;
 	}
 
 	ret = 1;
-
-      out:
+out:
 	if (!dev_close(dev))
 		stack;
-
 	return ret;
 }
 
