@@ -13,6 +13,7 @@
 @top_srcdir@/lib/datastruct/btree.h
 @top_srcdir@/lib/datastruct/str_list.h
 @top_srcdir@/lib/device/dev-cache.h
+@top_srcdir@/lib/device/dev-ext-udev-constants.h
 @top_srcdir@/lib/device/dev-type.h
 @top_srcdir@/lib/device/device.h
 @top_srcdir@/lib/device/device-types.h

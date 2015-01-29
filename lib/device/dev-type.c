@@ -27,6 +27,7 @@
 
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
+#include "dev-ext-udev-constants.h"
 #endif
 
 #include "device-types.h"
@@ -337,10 +338,10 @@ static int _udev_dev_is_partitioned(struct device *dev)
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_PART_TABLE_TYPE")))
+	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE)))
 		return 0;
 
-	if ((value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_PART_ENTRY_DISK")))
+	if ((value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_ENTRY_DISK)))
 		return 0;
 
 	return 1;

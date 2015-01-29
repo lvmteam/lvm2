@@ -17,6 +17,7 @@
 
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
+#include "dev-ext-udev-constants.h"
 #endif
 
 #ifdef __linux__
@@ -26,8 +27,8 @@ static int _udev_dev_is_fwraid(struct device *dev)
 {
 	const char *value;
 
-	value = udev_device_get_property_value((struct udev_device *)dev->ext.handle, "ID_FS_TYPE");
-	if (value && strcmp(value, "linux_raid_member") && strstr(value, "_raid_member"))
+	value = udev_device_get_property_value((struct udev_device *)dev->ext.handle, DEV_EXT_UDEV_BLKID_TYPE);
+	if (value && strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_SW_RAID) && strstr(value, DEV_EXT_UDEV_BLKID_TYPE_RAID_SUFFIX))
 		return 1;
 
 	return 0;

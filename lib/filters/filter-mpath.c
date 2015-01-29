@@ -17,6 +17,7 @@
 #include "activate.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
+#include "dev-ext-udev-constants.h"
 #endif
 
 #ifdef __linux__
@@ -153,11 +154,11 @@ static int _udev_dev_is_mpath(struct device *dev)
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_FS_TYPE");
-	if (value && !strcmp(value, "mpath_member"))
+	value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_TYPE);
+	if (value && !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_MPATH))
 		return 1;
 
-	value = udev_device_get_property_value((struct udev_device *)ext->handle, "DM_MULTIPATH_DEVICE_PATH");
+	value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_MPATH_DEVICE_PATH);
 	if (value && !strcmp(value, "1"))
 		return 1;
 

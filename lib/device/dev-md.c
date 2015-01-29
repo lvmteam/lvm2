@@ -18,6 +18,7 @@
 #include "xlate.h"
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h> /* for MD detection using udev db records */
+#include "dev-ext-udev-constants.h"
 #endif
 
 #ifdef __linux__
@@ -93,10 +94,10 @@ static int _udev_dev_is_md(struct device *dev)
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, "ID_FS_TYPE")))
+	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_TYPE)))
 		return 0;
 
-	return !strcmp(value, "linux_raid_member");
+	return !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_SW_RAID);
 }
 #else
 static int _udev_dev_is_md(struct device *dev)

@@ -17,6 +17,7 @@
 #include "activate.h" /* device_is_usable */
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
+#include "dev-ext-udev-constants.h"
 #endif
 
 static const char *_too_small_to_hold_pv_msg = "Too small to hold a PV";
@@ -66,7 +67,7 @@ static int _udev_check_pv_min_size(struct device *dev)
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	if (!(size_str = udev_device_get_sysattr_value((struct udev_device *)ext->handle, "size"))) {
+	if (!(size_str = udev_device_get_sysattr_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_SYSFS_ATTR_SIZE))) {
 		log_debug_devs("%s: Skipping: failed to get size from sysfs [%s:%p]",
 				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
 		return 0;
