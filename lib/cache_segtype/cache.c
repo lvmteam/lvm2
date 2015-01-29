@@ -68,7 +68,9 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("cache_mode must be a string in");
 		if (!set_cache_pool_feature(&seg->feature_flags, str))
 			return SEG_LOG_ERROR("Unknown cache_mode in");
-	}
+	} else
+		/* When missed in metadata, it's an old stuff - use writethrough */
+		seg->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
 
 	if (dm_config_has_node(sn, "policy")) {
 		if (!(str = dm_config_find_str(sn, "policy", NULL)))

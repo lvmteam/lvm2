@@ -1,5 +1,6 @@
 Version 2.02.116 - 
 ====================================
+  Set default cache_mode to writehrough when missing in metadata.
   Preserve chunk size with repair and metadata swap of a thin pool.
   Fix raid --splitmirror 1 functionality (2.02.112).
   Fix tree preload to handle splitting raid images.
