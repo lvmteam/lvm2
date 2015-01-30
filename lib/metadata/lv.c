@@ -831,7 +831,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024)))
 		return_0;
 
-	if (!lv_info_with_seg_status(lv->vg->cmd, lv, first_seg(lv), 1, &status, 1, 1))
+	if (!(status.info_ok = lv_info_with_seg_status(lv->vg->cmd, lv, first_seg(lv), 1, &status, 1, 1)))
 		goto_bad;
 
 	ret = lv_attr_dup_with_info_and_seg_status(mem, &status);
