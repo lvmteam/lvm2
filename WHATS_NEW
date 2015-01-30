@@ -1,3 +1,6 @@
+Version 2.02.117 - 
+====================================
+
 Version 2.02.116 - 30th January 2015
 ====================================
   Deactivate unused thin pools activated with lvm2 pre-2.02.112 versions.
