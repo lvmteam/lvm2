@@ -1,5 +1,8 @@
 Version 2.02.116 - 
 ====================================
+  Support "udev" ext. dev. info for filters: PV min size, mpath, md, partition.
+  Add fw_raid_component_detection lvm.conf option to enable FW raid detection.
+  Add devices/external_device_info_source lvm.conf option ("none" by default).
   Scan pools in for_each_sub_lv() and add for_each_sub_lv_except_pools().
   Fix lvm2app lvm_lv_get_property return value for fields with info/status ioctl.
   Fix lvm2app regression in lvm_lv_get_attr causing unknown values (2.02.115).
