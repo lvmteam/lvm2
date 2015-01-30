@@ -1040,8 +1040,8 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 	/*
 	 * LV must be either in-active or exclusively active
 	 */
-	if (lv_is_active(lv) && vg_is_clustered(lv->vg) &&
-	    !lv_is_active_exclusive_locally(lv)) {
+	if (lv_is_active(lv_lock_holder(lv)) && vg_is_clustered(lv->vg) &&
+	    !lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
 		log_error("%s/%s must be active exclusive locally to"
 			  " perform this operation.", lv->vg->name, lv->name);
 		return 0;
