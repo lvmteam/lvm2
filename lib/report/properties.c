@@ -476,7 +476,7 @@ int lvseg_get_property(const struct lv_segment *lvseg,
 int lv_get_property(const struct logical_volume *lv,
 		    struct lvm_property_type *prop)
 {
-	return prop_get_property(_properties, lv, prop, LVS);
+	return prop_get_property(_properties, lv, prop, LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS);
 }
 
 int vg_get_property(const struct volume_group *vg,
@@ -500,7 +500,7 @@ int pv_get_property(const struct physical_volume *pv,
 int lv_set_property(struct logical_volume *lv,
 		    struct lvm_property_type *prop)
 {
-	return prop_set_property(_properties, lv, prop, LVS);
+	return prop_set_property(_properties, lv, prop, LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS);
 }
 
 int vg_set_property(struct volume_group *vg,
