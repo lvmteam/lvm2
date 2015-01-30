@@ -1876,11 +1876,6 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		if (!for_each_sub_lv((struct logical_volume *)ondisk_lv, &_preload_detached_lv, &detached))
 			goto_out;
 
-		/* ATM cache/thin pool is not scanned in  'for_each_sub_lv()', TODO explore better way */
-		if (lv_is_cache(ondisk_lv) &&
-		    !for_each_sub_lv(first_seg(ondisk_lv)->pool_lv, &_preload_detached_lv, &detached))
-			goto_out;
-
 		/*
 		 * Preload any snapshots that are being removed.
 		 */
