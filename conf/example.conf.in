@@ -181,8 +181,8 @@ devices {
     # By default, LVM2 will not ignore devices used as components of
     # firmware RAID devices. Set to 1 to enable this detection.
     # N.B. LVM2 itself is not detecting firmware RAID - an
-    # auxiliary_device_status_source other than "native" must
-    # be used for this detection to be successful.
+    # external_device_info_source other than "none" must
+    # be used for this detection to execute.
     # 1 enables; 0 disables
     fw_raid_component_detection = 0
 
