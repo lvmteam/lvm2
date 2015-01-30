@@ -65,10 +65,14 @@ static int _do_info_and_status(struct cmd_context *cmd,
 			return_0;
 		if (!lv_seg)
 			_choose_lv_segment_for_status_report(lv, &lv_seg);
-		if (do_info)
+		if (do_info) {
 			/* both info and status */
 			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, use_layer, status, 1, 1);
-		else
+			/* for inactive thin-pools reset lv info struct */
+			if (use_layer && status->info_ok &&
+			    !lv_info(cmd, lv, 0, NULL, 0, 0))
+				memset(&status->info,  0, sizeof(status->info));
+		} else
 			/* status only */
 			status->info_ok = lv_status(cmd, lv_seg, use_layer, &status->seg_status);
 	} else if (do_info)
