@@ -3883,9 +3883,9 @@ static int _rename_cb(struct logical_volume *lv, void *data)
  * Loop down sub LVs and call fn for each.
  * fn is responsible to log necessary information on failure.
  */
-int for_each_sub_lv(struct logical_volume *lv,
-		    int (*fn)(struct logical_volume *lv, void *data),
-		    void *data)
+static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
+			    int (*fn)(struct logical_volume *lv, void *data),
+			    void *data)
 {
 	struct logical_volume *org;
 	struct lv_segment *seg;
@@ -3913,6 +3913,13 @@ int for_each_sub_lv(struct logical_volume *lv,
 				return_0;
 		}
 
+		if (seg->pool_lv && !skip_pools) {
+			if (!fn(seg->pool_lv, data))
+				return_0;
+			if (!for_each_sub_lv(seg->pool_lv, fn, data))
+				return_0;
+		}
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
 				continue;
@@ -3937,6 +3944,20 @@ int for_each_sub_lv(struct logical_volume *lv,
 	}
 
 	return 1;
+}
+
+int for_each_sub_lv(struct logical_volume *lv,
+		    int (*fn)(struct logical_volume *lv, void *data),
+		    void *data)
+{
+	return _for_each_sub_lv(lv, 0, fn, data);
+}
+
+int for_each_sub_lv_except_pools(struct logical_volume *lv,
+				 int (*fn)(struct logical_volume *lv, void *data),
+				 void *data)
+{
+	return _for_each_sub_lv(lv, 1, fn, data);
 }
 
 /*
@@ -3975,7 +3996,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* rename sub LVs */
-	if (!for_each_sub_lv(lv, _rename_cb, (void *) &lv_names))
+	if (!for_each_sub_lv_except_pools(lv, _rename_cb, (void *) &lv_names))
 		return_0;
 
 	/* rename main LV */
