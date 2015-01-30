@@ -221,9 +221,7 @@ static int _open_socket(daemon_state s)
 		goto error;
 	}
 
-	/* Set Close-on-exec & non-blocking */
-	if (fcntl(fd, F_SETFD, 1))
-		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", fd, strerror(errno));
+	/* Set non-blocking */
 	if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK))
 		fprintf(stderr, "setting O_NONBLOCK on socket fd %d failed: %s\n", fd, strerror(errno));
 
@@ -571,6 +569,10 @@ void daemon_start(daemon_state s)
 		if (s.socket_fd < 0)
 			failed = 1;
 	}
+
+	/* Set Close-on-exec */
+	if (fcntl(s.socket_fd, F_SETFD, 1))
+		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", s.socket_fd, strerror(errno));
 
 	/* Signal parent, letting them know we are ready to go. */
 	if (!s.foreground)
