@@ -655,8 +655,13 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 	}
 
 	/* New thin-pool has no layer, but -tpool suffix needs to be queried */
-	if (!use_layer && lv_is_new_thin_pool(lv))
-		use_layer = 1;
+	if (!use_layer && lv_is_new_thin_pool(lv)) {
+		/* Check if there isn't existing old thin pool mapping in the table */
+		if (!dev_manager_info(cmd->mem, lv, NULL, 0, 0, &dminfo, NULL, NULL))
+			return_0;
+		if (!dminfo.exists)
+			use_layer = 1;
+	}
 
 	if (seg_status)
 		seg_status->seg = seg;
