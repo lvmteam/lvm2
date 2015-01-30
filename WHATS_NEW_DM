@@ -1,6 +1,3 @@
-Version 1.02.94 - 
-===================================
-
 Version 1.02.93 - 21st January 2015
 ===================================
   Reduce severity of ioctl error message when dmeventd waitevent is interrupted.

@@ -1,8 +1,8 @@
-Version 2.02.116 - 
+Version 2.02.116 - 30th January 2015
 ====================================
-  Deactivate unused thin pools activated with lvm2 pre 2.02.112 version.
+  Deactivate unused thin pools activated with lvm2 pre-2.02.112 versions.
   Check lock holding LV when lvconverting stacked raid LV in cluster.
-  Support "udev" ext. dev. info for filters: PV min size, mpath, md, partition.
+  Support udev external dev info for filters: PV min size, mpath, md, partition.
   Add fw_raid_component_detection lvm.conf option to enable FW raid detection.
   Add devices/external_device_info_source lvm.conf option ("none" by default).
   Scan pools in for_each_sub_lv() and add for_each_sub_lv_except_pools().
