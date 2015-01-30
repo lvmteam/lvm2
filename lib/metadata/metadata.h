@@ -434,8 +434,9 @@ int for_each_sub_lv_except_pools(struct logical_volume *lv,
 				 int (*fn)(struct logical_volume *lv, void *data),
 				 void *data);
 int for_each_sub_lv(struct logical_volume *lv,
-                    int (*fn)(struct logical_volume *lv, void *data),
-                    void *data);
+		    int (*fn)(struct logical_volume *lv, void *data),
+		    void *data);
+
 int move_lv_segments(struct logical_volume *lv_to,
 		     struct logical_volume *lv_from,
 		     uint64_t set_status, uint64_t reset_status);
