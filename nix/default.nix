@@ -207,8 +207,7 @@ let
         };
         urlPrefix = centos_url version arch;
         archs = ["noarch" arch] ++ (if eqStrings arch "i386" then ["i586" "i686"] else []);
-        packages = filter (n: !(eqStrings n "fedora-release")) pkgs.vmTools.commonFedoraPackages ++
-                     [ "centos-release" ];
+        packages = [ "centos-release" ] ++ pkgs.vmTools.commonFedoraPackages;
       };
       fedora = { version, sha, arch }: rec {
         name = "fedora-${version}-${arch}";
@@ -219,7 +218,7 @@ let
         };
         urlPrefix = fedora_url version arch;
         archs = ["noarch" arch] ++ (if eqStrings arch "i386" then ["i586" "i686"] else []);
-        packages = pkgs.vmTools.commonFedoraPackages;
+        packages = [ "fedora-release" ] ++ pkgs.vmTools.commonFedoraPackages;
         unifiedSystemDir = true;
       };
       rawhide = version: arch: repodata: import (pkgs.runCommand "rawhide-${version}-${arch}.nix" {} ''
