@@ -11,6 +11,11 @@ let
   pkgs = import nixpkgs {};
   lib = pkgs.lib;
   over = overrides { inherit pkgs; };
+  install_lcov = ''
+     rpm -Uv ${pkgs.fetchurl {
+        url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
+        sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
+  '';
 
   mkTest = args: pkgs.stdenv.mkDerivation rec {
      name = "lvm2-test-${(args.diskFun {}).name}";
@@ -42,9 +47,7 @@ let
 
          # we always run in a fresh image, so need to install everything again
          ls ${build}/rpms/*/*.rpm | grep -v sysvinit | xargs rpm -Uv --oldpackage # */
-         rpm -Uv ${pkgs.fetchurl {
-            url = "http://archives.fedoraproject.org/pub/archive/fedora/linux/updates/16/i386/lcov-1.9-2.fc16.noarch.rpm";
-            sha256 = "0ycdh5mb7p5ll76mqk0p6gpnjskvxxgh3a3bfr1crh94nvpwhp4z"; }}
+         ${install_lcov}
 
          mkdir -p /xchg/results
          touch /xchg/booted
@@ -167,6 +170,8 @@ let
      diskImage = diskFun { extraPackages = extras; };
      memSize = 512;
      checkPhase = ":";
+
+     preConfigure = install_lcov;
 
      postInstall = ''
       mkdir -p $out/nix-support
