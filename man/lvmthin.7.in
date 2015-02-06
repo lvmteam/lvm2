@@ -431,8 +431,13 @@ This is not recommended.
 controls the command options used for the thin_check command.
 
 If the thin_check command finds a problem with the metadata,
-the thin pool LV is not activated, and the thin pool metadata should
-be repaired.
+the thin pool LV is not activated, and the thin pool metadata needs
+to be repaired.
+
+Simple repair commands are not always successful.  Advanced repair may
+require editing thin pool metadata and lvm metadata.  Newer versions of
+the kernel and lvm tools may be more successful at repair.  Report the
+details of damaged thin metadata to get the best advice on recovery.
 
 Command to repair a thin pool:
 .br
@@ -785,7 +790,9 @@ return to normal operation.
 While waiting to be extended, the thin pool will queue writes for up to 60
 seconds (the default).  If data space has not been extended after this
 time, the queued writes will return an error to the caller, e.g. the file
-system.  This can result in file system corruption that may require fsck.
+system.  This can result in file system corruption for non-journaled file
+systems that may require fsck.  When a thin pool returns errors for writes
+to a thin LV, any file system is subject to losing unsynced user data.
 
 The 60 second timeout can be changed or disabled with the dm\-thin\-pool
 kernel module option
