@@ -291,7 +291,9 @@ placing two stripes on the same Physical Volume.
 .IR \fB\-\-commandprofile " " \fIProfileName
 Selects the command configuration profile to use when processing an LVM command.
 See also \fBlvm.conf\fP(5) for more information about \fBcommand profile config\fP and
-the way it fits with other LVM configuration methods.
+the way it fits with other LVM configuration methods. Using \fB\-\-commandprofile\fP
+option overrides any command profile specified via \fBLVM_COMMAND_PROFILE\fP
+environment variable.
 .TP
 .IR \fB\-\-metadataprofile " " \fIProfileName
 Selects the metadata configuration profile to use when processing an LVM command.
@@ -479,6 +481,10 @@ All tools return a status code of zero on success or non-zero on failure.
 .B HOME
 Directory containing \fI.lvm_history\fP if the internal readline
 shell is invoked.
+.TP
+.B LVM_COMMAND_PROFILE
+Name of default command profile to use for LVM commands. This profile
+is overriden by direct use of \fB\-\-commandprofile\fP command line option.
 .TP
 .B LVM_SYSTEM_DIR
 Directory containing \fBlvm.conf\fP(5) and other LVM system files.

@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Add LVM_COMMAND_PROFILE env var to set default command profile name to use.
   set CLOEXEC flag on file descriptors originating in libdaemon
 
 Version 2.02.116 - 30th January 2015

@@ -1232,16 +1232,38 @@ static const char *_copy_command_line(struct cmd_context *cmd, int argc, char **
 
 static int _prepare_profiles(struct cmd_context *cmd)
 {
+	static const char COMMAND_PROFILE_ENV_VAR_NAME[] = "LVM_COMMAND_PROFILE";
+	static const char _cmd_profile_arg_preferred_over_env_var_msg[] = "Giving "
+				"preference to command profile specified on command "
+				"line over the one specified via environment variable.";
 	static const char _failed_to_add_profile_msg[] = "Failed to add %s %s.";
 	static const char _failed_to_apply_profile_msg[] = "Failed to apply %s %s.";
 	static const char _command_profile_source_name[] = "command profile";
 	static const char _metadata_profile_source_name[] = "metadata profile";
 	static const char _setting_global_profile_msg[] = "Setting global %s \"%s\".";
 
+	const char *env_cmd_profile_name = NULL;
 	const char *name;
 	struct profile *profile;
 	config_source_t source;
 	const char *source_name;
+
+	/* Check whether default global command profile is set via env. var. */
+	if ((env_cmd_profile_name = getenv(COMMAND_PROFILE_ENV_VAR_NAME))) {
+		if (!*env_cmd_profile_name)
+			env_cmd_profile_name = NULL;
+		else
+			log_debug("Command profile '%s' requested via "
+				  "environment variable.",
+				   env_cmd_profile_name);
+	}
+
+	if (!arg_count(cmd, profile_ARG) &&
+	    !arg_count(cmd, commandprofile_ARG) &&
+	    !arg_count(cmd, metadataprofile_ARG) &&
+	    !env_cmd_profile_name)
+		/* nothing to do */
+		return 1;
 
 	if (arg_count(cmd, profile_ARG)) {
 		/*
@@ -1274,6 +1296,15 @@ static int _prepare_profiles(struct cmd_context *cmd)
 					  "--commandprofile allowed.");
 				return 0;
 			}
+			/*
+			 * Prefer command profile specified on command
+			 * line over the profile specified via
+			 * COMMAND_PROFILE_ENV_VAR_NAME env. var.
+			 */
+			if (env_cmd_profile_name) {
+				log_debug(_cmd_profile_arg_preferred_over_env_var_msg);
+				env_cmd_profile_name = NULL;
+			}
 			source = CONFIG_PROFILE_COMMAND;
 			source_name = _command_profile_source_name;
 		}
@@ -1301,8 +1332,18 @@ static int _prepare_profiles(struct cmd_context *cmd)
 
 	}
 
-	if (arg_count(cmd, commandprofile_ARG)) {
-		name = arg_str_value(cmd, commandprofile_ARG, NULL);
+	if (arg_count(cmd, commandprofile_ARG) || env_cmd_profile_name) {
+		if (arg_count(cmd, commandprofile_ARG)) {
+			/*
+			 * Prefer command profile specified on command
+			 * line over the profile specified via
+			 * COMMAND_PROFILE_ENV_VAR_NAME env. var.
+			 */
+			if (env_cmd_profile_name)
+				log_debug(_cmd_profile_arg_preferred_over_env_var_msg);
+			name = arg_str_value(cmd, commandprofile_ARG, NULL);
+		} else
+			name = env_cmd_profile_name;
 		source_name = _command_profile_source_name;
 
 		if (!(profile = add_profile(cmd, name, CONFIG_PROFILE_COMMAND))) {
@@ -1394,12 +1435,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (arg_count(cmd, profile_ARG) ||
-	    arg_count(cmd, commandprofile_ARG) ||
-	    arg_count(cmd, metadataprofile_ARG)) {
-		if (!_prepare_profiles(cmd))
-			return_ECMD_FAILED;
-	}
+	if (!_prepare_profiles(cmd))
+		return_ECMD_FAILED;
 
 	if (arg_count(cmd, readonly_ARG))
 		cmd->metadata_read_only = 1;
