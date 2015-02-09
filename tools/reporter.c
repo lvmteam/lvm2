@@ -92,10 +92,8 @@ static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 	};
 	int r = ECMD_FAILED;
 
-	if (!_do_info_and_status(cmd, lv, NULL, &status, do_info, do_status)) {
-		stack;
-		return r;
-	}
+	if (!_do_info_and_status(cmd, lv, NULL, &status, do_info, do_status))
+		goto_out;
 
 	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL,
 			   &status, NULL))
@@ -143,10 +141,8 @@ static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
 	};
 	int r = ECMD_FAILED;
 
-	if (!_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status)) {
-		stack;
-		return r;
-	}
+	if (!_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status))
+		goto_out;
 
 	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL,
 			   &status, NULL))
@@ -268,8 +264,8 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 		.lv = &_free_logical_volume
 	};
 
-	if (seg)
-		_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status);
+	if (seg && !_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status))
+		goto_out;
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
 			   seg ? : &_free_lv_segment, pvseg, &status,
