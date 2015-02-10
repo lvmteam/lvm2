@@ -431,7 +431,13 @@ struct FileSink : FdSink {
 
     void sync( bool force ) {
         if ( fd < 0 && !killed ) {
+#ifdef O_CLOEXEC
             fd = open( file.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644 );
+#else
+            fd = open( file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644 );
+            if ( fcntl( fd, F_SETFD, FD_CLOEXEC ) < 0 )
+                perror("failed to set FD_CLOEXEC on file");
+#endif
             if ( fd < 0 )
                 killed = true;
         }
@@ -463,7 +469,7 @@ struct Source {
 
     virtual void reset() {}
 
-    virtual int fd_set( fd_set *set ) {
+    virtual int fd_set_( fd_set *set ) {
         if ( fd >= 0 ) {
             FD_SET( fd, set );
             return fd;
@@ -482,10 +488,16 @@ struct FileSource : Source {
     std::string file;
     FileSource( std::string n ) : Source( -1 ), file( n ) {}
 
-    int fd_set( ::fd_set * ) { return -1; } /* reading a file is always non-blocking */
+    int fd_set_( ::fd_set * ) { return -1; } /* reading a file is always non-blocking */
     void sync( Sink *s ) {
         if ( fd < 0 ) {
+#ifdef O_CLOEXEC
             fd = open( file.c_str(), O_RDONLY | O_CLOEXEC | O_NONBLOCK );
+#else
+            fd = open( file.c_str(), O_RDONLY | O_NONBLOCK );
+            if ( fcntl( fd, F_SETFD, FD_CLOEXEC ) < 0 )
+                perror("failed to set FD_CLOEXEC on file");
+#endif
             if ( fd >= 0 )
                 lseek( fd, 0, SEEK_END );
         }
@@ -505,8 +517,6 @@ struct KMsg : Source {
 
     void reset() {
 #ifdef __unix
-        int sz;
-
         if ( dev_kmsg() ) {
             if ( (fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0 ) {
                 if (errno != ENOENT) /* Older kernels (<3.5) do not support /dev/kmsg */
@@ -589,11 +599,11 @@ struct IO : Sink {
         sources.clear();
     }
 
-    int fd_set( fd_set *set ) {
+    int fd_set_( fd_set *set ) {
         int max = -1;
 
         for ( Sources::iterator i = sources.begin(); i != sources.end(); ++i )
-            max = std::max( (*i)->fd_set( set ), max );
+            max = std::max( (*i)->fd_set_( set ), max );
         return max + 1;
     }
 
@@ -755,7 +765,7 @@ struct TestCase {
         fd_set set;
 
         FD_ZERO( &set );
-        int nfds = io.fd_set( &set );
+        int nfds = io.fd_set_( &set );
         wait.tv_sec = 0;
         wait.tv_usec = 500000; /* timeout 0.5s */
 
