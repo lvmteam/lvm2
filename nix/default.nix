@@ -303,25 +303,24 @@ let
                  "perl-GD" # for lcov
                  "kernel"
                ];
+      fedora_common = [ "fedora-release" "dlm-devel" "corosynclib-devel" ];
       centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "valgrind-devel" ];
       centos64 = centos63;
       centos65 = centos64;
-      fedora16 = [ "clusterlib-devel" "openaislib-devel" "cman" "systemd-devel" "libudev-devel" ];
-      fedora17 = [ "dlm-devel" "corosynclib-devel" "device-mapper-persistent-data"
-                   "dlm" "systemd-devel" "perl-Digest-MD5" "libudev-devel" ];
+      centos70 = fedora20;
 
-      fedora18 = [ "dlm-devel" "corosynclib-devel" "device-mapper-persistent-data"
+      fedora17 = fedora18 ++ [ "libudev-devel" ];
+
+      fedora18 = [ "fedora-release" "dlm-devel" "corosynclib-devel" "device-mapper-persistent-data"
                    "dlm" "systemd-devel" "perl-Digest-MD5" ];
       fedora18u = fedora18;
 
-      fedora19 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel" "procps-ng"
-                   "valgrind-devel" ];
+      fedora19 = [ "fedora-release" "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel"
+                   "procps-ng" "valgrind-devel" ];
       fedora19u = fedora19;
 
       fedora20 = fedora19;
       fedora20u = fedora20;
-
-      centos70 = fedora20;
 
       rawhide = fedora20;
     } // over.install_rpms;
