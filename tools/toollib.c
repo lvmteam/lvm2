@@ -1594,7 +1594,8 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd)
 	return handle;
 }
 
-int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle)
+int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle,
+			  report_type_t initial_report_type)
 {
 	struct selection_handle *sh;
 
@@ -1603,6 +1604,7 @@ int init_selection_handle(struct cmd_context *cmd, struct processing_handle *han
 		return 0;
 	}
 
+	sh->report_type = initial_report_type;
 	if (!(sh->selection_rh = report_init_for_selection(cmd, &sh->report_type,
 					arg_str_value(cmd, select_ARG, NULL)))) {
 		dm_pool_free(cmd->mem, sh);
@@ -1841,7 +1843,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		goto_out;
 
 	if (handle->internal_report_for_select && !handle->selection_handle &&
-	    !init_selection_handle(cmd, handle))
+	    !init_selection_handle(cmd, handle, VGS))
 		goto_out;
 
 	ret = _process_vgnameid_list(cmd, flags, &vgnameids_to_process,
@@ -1887,7 +1889,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (handle->internal_report_for_select && !handle->selection_handle &&
-	    !init_selection_handle(cmd, handle)) {
+	    !init_selection_handle(cmd, handle, LVS)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -2216,7 +2218,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t fla
 		goto_out;
 
 	if (handle->internal_report_for_select && !handle->selection_handle &&
-	    !init_selection_handle(cmd, handle))
+	    !init_selection_handle(cmd, handle, LVS))
 		goto_out;
 
 	/*
@@ -2455,7 +2457,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	}
 
 	if (handle->internal_report_for_select && !handle->selection_handle &&
-	    !init_selection_handle(cmd, handle)) {
+	    !init_selection_handle(cmd, handle, PVS)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}

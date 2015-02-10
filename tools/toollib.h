@@ -138,7 +138,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  process_single_lv_fn_t process_single_lv);
 
 struct processing_handle *init_processing_handle(struct cmd_context *cmd);
-int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle);
+int init_selection_handle(struct cmd_context *cmd, struct processing_handle *handle,
+			  report_type_t initial_report_type);
 void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle,
 			       int deallocate_handle_root);
 

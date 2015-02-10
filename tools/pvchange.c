@@ -170,7 +170,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	/* FIXME: use process_each_pv for pvchange. */
 
 	if (!(handle = init_processing_handle(cmd)) ||
-	    (handle->internal_report_for_select && !init_selection_handle(cmd, handle))) {
+	    (handle->internal_report_for_select && !init_selection_handle(cmd, handle, PVS))) {
 		log_error("Failed to initialize processing handle.");
 		r = ECMD_FAILED;
 		goto out;
