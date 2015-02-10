@@ -348,8 +348,6 @@ let
     fc18_i386   = { arch = "i386"  ; image = "fedora18"; };
     fc17_x86_64 = { arch = "x86_64"; image = "fedora17"; };
     fc17_i386   = { arch = "i386"  ; image = "fedora17"; };
-    fc16_x86_64 = { arch = "x86_64"; image = "fedora16"; };
-    fc16_i386   = { arch = "i386"  ; image = "fedora16"; };
 
     fc18u_x86_64 = { arch = "x86_64"; image = "fedora18u"; };
     fc18u_i386   = { arch = "i386"; image = "fedora18u"; };
