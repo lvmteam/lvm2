@@ -18,6 +18,7 @@ global {
 	lvdisplay_shows_full_device_path=0
 }
 report {
+	compact_output=0
 	aligned=1
 	buffered=1
 	headings=1

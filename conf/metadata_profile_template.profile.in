@@ -16,7 +16,7 @@ allocation {
 	thin_pool_zero=1
 	thin_pool_discards="passdown"
 	thin_pool_chunk_size_policy="generic"
-#	thin_pool_chunk_size=64
+#	thin_pool_chunk_size=128
 }
 activation {
 	thin_pool_autoextend_threshold=100
