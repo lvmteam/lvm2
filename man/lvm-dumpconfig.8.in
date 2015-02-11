@@ -103,7 +103,8 @@ See also \fBlvm.conf\fP(5) for more info about \fBconfig cascade\fP.
 .BI \-\-commandprofile " ProfileName"
 Use \fBProfileName\fP to override existing configuration.
 This configuration is then applied for dumpconfig command itself.
-See also \fBlvm.conf\fP(5) for more info about \fBconfig cascade\fP.
+See also \fB\-\-mergedconfig\fP option and \fBlvm.conf\fP(5) for
+more info about \fBconfig cascade\fP.
 
 .TP
 .BI \-\-profile " ProfileName"
@@ -115,12 +116,14 @@ applied for dumpconfig command itself.
 Use \fBProfileName\fP to override existing configuration.
 The configuration defined in metadata profile has no effect for
 dumpconfig command itself, the dumpconfig dumps the configuration only.
-See also \fBlvm.conf\fP(5) for more info about \fBconfig cascade\fP.
+See also \fB\-\-mergedconfig\fP option and \fBlvm.conf\fP(5) for more
+info about \fBconfig cascade\fP.
 
 .TP
 .B \-\-mergedconfig
 When the dumpconfig command is run with the \fB\-\-config\fP option
-and/or \fB\-\-commandprofile\fP, \fB\-\-profile\fP, \fB\-\-metadataprofile\fP
+and/or \fB\-\-commandprofile\fP (or using \fBLVM_COMMAND_PROFILE\fP
+environment variable), \fB\-\-profile\fP, \fB\-\-metadataprofile\fP
 option, merge all the contents of the \fBconfig cascade\fP before dumping it.
 Without the \fB\-\-mergeconfig\fP option used, only the configuration at
 the front of the cascade is dumped. See also \fBlvm.conf\fP(5) for more
