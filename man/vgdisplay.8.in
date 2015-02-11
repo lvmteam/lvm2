@@ -8,6 +8,8 @@ vgdisplay \(em display attributes of volume groups
 .RB [ \-\-commandprofile
 .IR ProfileName ]
 .RB [ \-s | \-\-short ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
@@ -18,8 +20,7 @@ vgdisplay \(em display attributes of volume groups
 .RB [ \-\-units
 .IR hHbBsSkKmMgGtTpPeE ]
 .RB [ \-\-version ]
-.RI [ VolumeGroupName
-.RI [ VolumeGroupName ...]]
+.RI [ VolumeGroupName ...]
 .br
 
 .br
@@ -49,8 +50,7 @@ vgdisplay \(em display attributes of volume groups
 .IR hHbBsSkKmMgGtTpPeE ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RI [ VolumeGroupName
-.RI [ VolumeGroupName ...]]
+.RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 vgdisplay allows you to see the attributes of
 .I VolumeGroupName

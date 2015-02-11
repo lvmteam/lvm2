@@ -6,8 +6,9 @@ vgimport \(em make exported volume groups known to the system
 .RB [ \-a | \-\-all ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-v | \-\-verbose ]
-.I VolumeGroupName
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 vgimport allows you to make a Volume Group that was previously

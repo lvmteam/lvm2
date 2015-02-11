@@ -68,11 +68,12 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-r | \-\-readahead
 .RI { ReadAheadSectors | auto | none }]
 .RB [ \-\-refresh ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-Z | \-\-zero
 .RI { y | n }]
-.I LogicalVolumePath
 .RI [ LogicalVolumePath ...]
 .SH DESCRIPTION
 lvchange allows you to change the attributes of a logical volume

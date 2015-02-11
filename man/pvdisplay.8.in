@@ -13,13 +13,14 @@ pvdisplay \- display attributes of a physical volume
 .RB [ \-\-maps ]
 .RB [ \-\-nosuffix ]
 .RB [ \-s | \-\-short ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-\-units
 .IR hsbkmgtHKMGT ]
 .RB [ \-v [ v ]| \-\-verbose
 .RB [ \-\-verbose ]]
 .RB [ \-\-version ]
-.RI [ PhysicalVolumePath
-.RI [ PhysicalVolumePath ...]]
+.RI [ PhysicalVolumePath ...]
 .br
 
 .br
@@ -50,8 +51,7 @@ pvdisplay \- display attributes of a physical volume
 .RB [ \-v [ v ]| \-\-verbose
 .RB [ \-\-verbose ]]
 .RB [ \-\-version ]
-.RI [ PhysicalVolumePath
-.RI [ PhysicalVolumePath ...]]
+.RI [ PhysicalVolumePath ...]
 .SH DESCRIPTION
 pvdisplay allows you to see the attributes of one or more physical volumes
 like size, physical extent size, space used for the volume group descriptor

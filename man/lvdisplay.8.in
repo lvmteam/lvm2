@@ -14,12 +14,13 @@ lvdisplay \(em display attributes of a logical volume
 .RB [ \-\-maps ]
 .RB [ \-\-nosuffix ]
 .RB [ \-P | \-\-partial ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-\-units
 .IR hHbBsSkKmMgGtTpPeE ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RI [ VolumeGroupName | LogicalVolume { Name | Path }
-.RI [ VolumeGroupName | LogicalVolume { Name | Path }\ ...]]
+.RI [ VolumeGroupName | LogicalVolume { Name | Path }\ ...]
 .br
 
 .B lvdisplay
@@ -50,8 +51,7 @@ lvdisplay \(em display attributes of a logical volume
 .IR hHbBsSkKmMgGtTpPeE ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RI [ VolumeGroupName | LogicalVolume { Name | Path }
-.RI [ VolumeGroupName | LogicalVolume { Name | Path }\ ...]]
+.RI [ VolumeGroupName | LogicalVolume { Name | Path }\ ...]
 .SH DESCRIPTION
 lvdisplay allows you to see the attributes of a logical volume
 like size, read/write status, snapshot information etc.

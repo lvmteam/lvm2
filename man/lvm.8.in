@@ -210,8 +210,9 @@ match the original followed by \fBvgcfgrestore\fP(8).
 .BR \-S ", " \-\-select " " \fISelection
 For reporting commands, display only rows that match selection criteria.
 All rows are displayed with the additional "selected" column (\fB-o selected\fP)
-showing 1 if the row matches the Selection and 0 otherwise.
-See \fBSELECTION CRITERIA\fP section of this man page for more
+showing 1 if the row matches the Selection and 0 otherwise. For non-reporting
+commands which process LVM entities, the selection can be used to match items
+to process. See \fBSELECTION CRITERIA\fP section of this man page for more
 information about the way the selection criteria are constructed.
 .TP
 .BR \-M ", " \-\-metadatatype " " \fIType

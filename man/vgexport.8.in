@@ -8,8 +8,9 @@ vgexport \- make volume groups unknown to the system
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-v | \-\-verbose ]
-.I VolumeGroupName
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 vgexport allows you to make the inactive

@@ -16,6 +16,8 @@ pvchange \(em change attributes of a physical volume
 .RB [ \-\-metadataignore
 .RI { y | n }]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-a | \-\-all ]

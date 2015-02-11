@@ -9,12 +9,13 @@ lvremove \(em remove a logical volume
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
 .RB [ \-f | \-\-force ]
 .RB [ \-\-noudevsync ]
-.IR LogicalVolume { Name |  Path }
 .RI [ LogicalVolume { Name | Path }...]
 .SH DESCRIPTION
 lvremove removes one or more logical volumes.

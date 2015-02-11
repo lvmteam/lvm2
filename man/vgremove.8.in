@@ -9,9 +9,10 @@ vgremove \(em remove a volume group
 .RB [ \-f | \-\-force ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-noudevsync ]
+.RB [ \-S | \-\-select
+.IR Selection ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
-.I VolumeGroupName
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 vgremove allows you to remove one or more volume groups.
