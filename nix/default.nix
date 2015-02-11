@@ -207,7 +207,7 @@ let
         };
         urlPrefix = centos_url version arch;
         archs = ["noarch" arch] ++ (if eqStrings arch "i386" then ["i586" "i686"] else []);
-        packages = [ "centos-release" ] ++ pkgs.vmTools.commonFedoraPackages;
+        packages = pkgs.vmTools.commonCentOSPackages;
       };
       fedora = { version, sha, arch }: rec {
         name = "fedora-${version}-${arch}";
@@ -218,7 +218,7 @@ let
         };
         urlPrefix = fedora_url version arch;
         archs = ["noarch" arch] ++ (if eqStrings arch "i386" then ["i586" "i686"] else []);
-        packages = [ "fedora-release" ] ++ pkgs.vmTools.commonFedoraPackages;
+        packages = pkgs.vmTools.commonFedoraPackages;
         unifiedSystemDir = true;
       };
       rawhide = version: arch: repodata: import (pkgs.runCommand "rawhide-${version}-${arch}.nix" {} ''
@@ -303,20 +303,19 @@ let
                  "perl-GD" # for lcov
                  "kernel"
                ];
-      fedora_common = [ "fedora-release" "dlm-devel" "corosynclib-devel" ];
       centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "valgrind-devel" ];
       centos64 = centos63;
       centos65 = centos64;
-      centos70 = fedora20;
+      centos70 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel"
+                   "procps-ng" "valgrind-devel" ];
 
       fedora17 = fedora18 ++ [ "libudev-devel" ];
 
-      fedora18 = [ "fedora-release" "dlm-devel" "corosynclib-devel" "device-mapper-persistent-data"
-                   "dlm" "systemd-devel" "perl-Digest-MD5" ];
+      fedora18 = [ "dlm-devel" "corosynclib-devel" "device-mapper-persistent-data"
+                   "dlm" "systemd-devel" "perl-Digest-MD5" "kernel-modules-extra" ];
       fedora18u = fedora18;
 
-      fedora19 = [ "fedora-release" "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel"
-                   "procps-ng" "valgrind-devel" ];
+      fedora19 = centos70 + [ "kernel-modules-extra" ];
       fedora19u = fedora19;
 
       fedora20 = fedora19;
