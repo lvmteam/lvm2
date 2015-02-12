@@ -2339,7 +2339,7 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
-	if (!(iter = dev_iter_create(cmd->filter, 1))) {
+	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
 		log_error("dev_iter creation failed.");
 		return ECMD_FAILED;
 	}
