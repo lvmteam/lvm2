@@ -17,6 +17,7 @@ aux prepare_vg 5
 # ordinary mirrors
 
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg
+aux wait_for_sync $vg 4way
 aux disable_dev --error --silent "$dev2" "$dev4"
 mkfs.ext3 "$DM_DEV_DIR/$vg/4way" &
 sleep 1
