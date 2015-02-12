@@ -459,6 +459,9 @@
 /* Define to 1 if you have the <utmpx.h> header file. */
 #undef HAVE_UTMPX_H
 
+/* valgrind.h found */
+#undef HAVE_VALGRIND
+
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK
 
