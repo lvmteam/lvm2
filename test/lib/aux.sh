@@ -193,6 +193,7 @@ teardown_devs() {
 		test ! -f LOOPFILE || rm -f $(< LOOPFILE)
 	fi
 	rm -f DEVICES # devs is set in prepare_devs()
+	not diff LOOP BACKING_DEV || rm -f BACKING_DEV
 	rm -f LOOP
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
@@ -392,7 +393,7 @@ prepare_devs() {
 
 	# non-ephemeral devices need to be cleared between tests
 	test -f LOOP || for d in ${DEVICES[@]}; do
-		dd if=/dev/zero of=$d bs=1M count=1
+		dd if=/dev/zero of=$d bs=64K count=1
 	done
 
 	#for i in `seq 1 $n`; do
