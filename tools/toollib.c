@@ -2330,7 +2330,8 @@ static int _get_arg_devices(struct cmd_context *cmd,
 	return ret_max;
 }
 
-static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices)
+static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices,
+			    int use_full_filter)
 {
 	struct dev_iter *iter;
 	struct device *dev;
@@ -2339,7 +2340,7 @@ static int _get_all_devices(struct cmd_context *cmd, struct dm_list *all_devices
 
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
-	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
+	if (!(iter = dev_iter_create(use_full_filter ? cmd->full_filter : cmd->filter, 1))) {
 		log_error("dev_iter creation failed.");
 		return ECMD_FAILED;
 	}
@@ -2736,8 +2737,7 @@ int process_each_pv(struct cmd_context *cmd,
 	 * from all VGs are processed first, removing them from all_devices.  Then
 	 * any devs remaining in all_devices are processed.
 	 */
-	if (process_all_devices &&
-	    (ret = _get_all_devices(cmd, &all_devices) != ECMD_PROCESSED)) {
+	if ((ret = _get_all_devices(cmd, &all_devices, process_all_devices) != ECMD_PROCESSED)) {
 		stack;
 		return ret;
 	}
