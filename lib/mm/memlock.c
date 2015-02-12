@@ -262,8 +262,10 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 	/*
 	 * Valgrind is continually eating memory while executing code
 	 * so we need to deactivate check of locked memory size
-         */
+	 */
+#ifndef VALGRIND_POOL
 	if (RUNNING_ON_VALGRIND)
+#endif
 		sz -= sz; /* = 0, but avoids getting warning about dead assigment */
 
 #endif
