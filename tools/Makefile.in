@@ -133,6 +133,7 @@ dmsetup.static: dmsetup.o $(interfacebuilddir)/libdevmapper.a
 all: device-mapper
 
 CFLAGS_lvm.o += $(EXTRA_EXEC_CFLAGS)
+CFLAGS_lvmcmdline.o += $(VALGRIND_CFLAGS)
 
 lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $(OBJECTS) lvm.o \

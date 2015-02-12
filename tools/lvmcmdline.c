@@ -29,6 +29,10 @@
 #include <paths.h>
 #include <locale.h>
 
+#ifdef HAVE_VALGRIND
+#include <valgrind.h>
+#endif
+
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
 #  define GETOPTLONG_FN(a, b, c, d, e) getopt_long((a), (b), (c), (d), (e))
@@ -1680,6 +1684,13 @@ static int _close_stray_fds(const char *command)
 	static const char _fd_dir[] = DEFAULT_PROC_DIR "/self/fd";
 	struct dirent *dirent;
 	DIR *d;
+
+#ifdef HAVE_VALGRIND
+	if (RUNNING_ON_VALGRIND) {
+		log_debug("Skipping close of descriptors within valgrind execution.");
+		return 1;
+	}
+#endif
 
 	if (getenv("LVM_SUPPRESS_FD_WARNINGS"))
 		suppress_warnings = 1;
