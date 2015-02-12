@@ -29,6 +29,6 @@
 
 int main(int argc, const char **argv)
 {
-	brick::shelltest::run( argc, argv, "LVM_TEST_FLAVOUR" );
+	return brick::shelltest::run( argc, argv, "LVM_TEST_FLAVOUR" );
 }
 
