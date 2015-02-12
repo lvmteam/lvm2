@@ -958,7 +958,7 @@ struct Main {
               flav != options.flavours.end(); ++flav ) {
 
             for ( Listing::iterator i = l.begin(); i != l.end(); ++i ) {
-                if ( i->substr( i->length() - 3, i->length() ) != ".sh" )
+                if ( ( i->length() < 3 ) || ( i->substr( i->length() - 3, i->length() ) != ".sh" ) )
                     continue;
                 if ( i->substr( 0, 4 ) == "lib/" )
                     continue;
