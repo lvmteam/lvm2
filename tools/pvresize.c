@@ -47,9 +47,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 int pvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct pvresize_params params;
-	struct processing_handle handle = { .internal_report_for_select = 1,
-					    .selection_handle = NULL,
-					    .custom_handle = &params };
+	struct processing_handle *handle = NULL;
 	int ret = ECMD_PROCESSED;
 
 	if (!argc) {
@@ -70,12 +68,20 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	params.done = 0;
 	params.total = 0;
 
-	ret = process_each_pv(cmd, argc, argv, NULL, READ_FOR_UPDATE, &handle,
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		ret = ECMD_FAILED;
+		goto out;
+	}
+
+	handle->custom_handle = &params;
+
+	ret = process_each_pv(cmd, argc, argv, NULL, READ_FOR_UPDATE, handle,
 			      _pvresize_single);
 
 	log_print_unless_silent("%d physical volume(s) resized / %d physical volume(s) "
 				"not resized", params.done, params.total - params.done);
 out:
-	destroy_processing_handle(cmd, &handle, 0);
+	destroy_processing_handle(cmd, handle, 1);
 	return ret;
 }

@@ -1639,7 +1639,7 @@ int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
 
 	sh->orig_report_type = VGS;
 
-	if (!report_for_selection(sh, NULL, vg, NULL)) {
+	if (!report_for_selection(cmd, sh, NULL, vg, NULL)) {
 		log_error("Selection failed for VG %s.", vg->name);
 		return 0;
 	}
@@ -1662,7 +1662,7 @@ int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
 
 	sh->orig_report_type = LVS;
 
-	if (!report_for_selection(sh, NULL, vg, lv)) {
+	if (!report_for_selection(cmd, sh, NULL, vg, lv)) {
 		log_error("Selection failed for LV %s.", lv->name);
 		return 0;
 	}
@@ -1685,7 +1685,7 @@ int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
 
 	sh->orig_report_type = PVS;
 
-	if (!report_for_selection(sh, pv, vg, NULL)) {
+	if (!report_for_selection(cmd, sh, pv, vg, NULL)) {
 		log_error("Selection failed for PV %s.", dev_name(pv->dev));
 		return 0;
 	}

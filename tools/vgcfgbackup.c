@@ -83,19 +83,24 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 	char *last_filename = NULL;
-	struct processing_handle handle = { .internal_report_for_select = 1,
-					    .selection_handle = NULL,
-					    .custom_handle = &last_filename };
+	struct processing_handle *handle = NULL;
+
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &last_filename;
 
 	init_pvmove(1);
 
 	ret = process_each_vg(cmd, argc, argv, READ_ALLOW_INCONSISTENT,
-			      &handle, &vg_backup_single);
+			      handle, &vg_backup_single);
 
 	dm_free(last_filename);
 
 	init_pvmove(0);
 
-	destroy_processing_handle(cmd, &handle, 0);
+	destroy_processing_handle(cmd, handle, 1);
 	return ret;
 }

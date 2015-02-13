@@ -447,7 +447,8 @@ static int _get_final_report_type(int args_are_pvs,
 	return 1;
 }
 
-int report_for_selection(struct selection_handle *sh,
+int report_for_selection(struct cmd_context *cmd,
+			 struct selection_handle *sh,
 			 struct physical_volume *pv,
 			 struct volume_group *vg,
 			 struct logical_volume *lv)
@@ -455,9 +456,7 @@ int report_for_selection(struct selection_handle *sh,
 	static const char *incorrect_report_type_msg = "report_for_selection: incorrect report type";
 	int args_are_pvs = sh->orig_report_type == PVS;
 	int do_lv_info, do_lv_seg_status;
-	struct processing_handle handle = { .internal_report_for_select = 0,
-					    .selection_handle = sh,
-					    .custom_handle = NULL };
+	struct processing_handle *handle;
 	int r = 0;
 
 	if (!_get_final_report_type(args_are_pvs,
@@ -467,19 +466,46 @@ int report_for_selection(struct selection_handle *sh,
 				    &sh->report_type))
 		return_0;
 
+	if (!(handle = init_processing_handle(cmd)))
+		return_0;
+
+	/*
+	 * We're already reporting for select so override
+	 * internal_report_for_select to 0 as we can call
+	 * process_each_* functions again and we could
+	 * end up in an infinite loop if we didn't stop
+	 * internal reporting for select right here.
+	 *
+	 * So the overall call trace from top to bottom looks like this:
+	 *
+	 * process_each_* (top-level one, using processing_handle with internal reporting enabled and selection_handle) ->
+	 *   select_match_*(processing_handle with selection_handle) ->
+	 *     report for selection ->
+	 *     	 (creating new processing_handle here with internal reporting disabled!!!)
+	 *       reporting_fn OR process_each_* (using *new* processing_handle with original selection_handle) 
+	 *
+	 * The selection_handle is still reused so we can track
+	 * whether any of the items the top-level one is composed
+	 * of are still selected or not unerneath. Do not destroy
+	 * this selection handle - it needs to be passed to upper
+	 * layers to check the overall selection status.
+	 */
+	handle->internal_report_for_select = 0;
+	handle->selection_handle = sh;
+
 	/*
 	 * Remember:
-	 *   sh->orig_report_type is the original report type requested
-	 *   sh->report_type is the report type actually used (it counts with all types of fields used in selection)
+	 *   sh->orig_report_type is the original report type requested (what are we selecting? PV/VG/LV?)
+	 *   sh->report_type is the report type actually used (it counts with all types of fields used in selection criteria)
 	 */
 	switch (sh->orig_report_type) {
 		case LVS:
 			switch (sh->report_type) {
 				case LVS:
-					r = _do_lvs_with_info_and_status_single(vg->cmd, lv, do_lv_info, do_lv_seg_status, &handle);
+					r = _do_lvs_with_info_and_status_single(vg->cmd, lv, do_lv_info, do_lv_seg_status, handle);
 					break;
 				case SEGS:
-					r = process_each_segment_in_lv(vg->cmd, lv, &handle,
+					r = process_each_segment_in_lv(vg->cmd, lv, handle,
 								       do_lv_info && !do_lv_seg_status ? &_segs_with_info_single :
 								       !do_lv_info && do_lv_seg_status ? &_segs_with_status_single :
 								       do_lv_info && do_lv_seg_status ? &_segs_with_info_and_status_single :
@@ -493,27 +519,27 @@ int report_for_selection(struct selection_handle *sh,
 		case VGS:
 			switch (sh->report_type) {
 				case VGS:
-					r = _vgs_single(vg->cmd, vg->name, vg, &handle);
+					r = _vgs_single(vg->cmd, vg->name, vg, handle);
 					break;
 				case LVS:
-					r = process_each_lv_in_vg(vg->cmd, vg, NULL, NULL, 0, &handle,
+					r = process_each_lv_in_vg(vg->cmd, vg, NULL, NULL, 0, handle,
 								  do_lv_info && !do_lv_seg_status ? &_lvs_with_info_single :
 								  !do_lv_info && do_lv_seg_status ? &_lvs_with_status_single :
 								  do_lv_info && do_lv_seg_status ? &_lvs_with_info_and_status_single :
 												   &_lvs_single);
 					break;
 				case SEGS:
-					r = process_each_lv_in_vg(vg->cmd, vg, NULL, NULL, 0, &handle,
+					r = process_each_lv_in_vg(vg->cmd, vg, NULL, NULL, 0, handle,
 								  do_lv_info && !do_lv_seg_status ? &_lvsegs_with_info_single :
 								  !do_lv_info && do_lv_seg_status ? &_lvsegs_with_status_single :
 								  do_lv_info && do_lv_seg_status ? &_lvsegs_with_info_and_status_single :
 												   &_lvsegs_single);
 					break;
 				case PVS:
-					r = process_each_pv_in_vg(vg->cmd, vg, &handle, &_pvs_single);
+					r = process_each_pv_in_vg(vg->cmd, vg, handle, &_pvs_single);
 					break;
 				case PVSEGS:
-					r = process_each_pv_in_vg(vg->cmd, vg, &handle,
+					r = process_each_pv_in_vg(vg->cmd, vg, handle,
 								  do_lv_info && !do_lv_seg_status ? &_pvsegs_with_lv_info_single :
 								  !do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_status_single :
 								  do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_info_and_status_single :
@@ -527,10 +553,10 @@ int report_for_selection(struct selection_handle *sh,
 		case PVS:
 			switch (sh->report_type) {
 				case PVS:
-					r = _pvs_single(vg->cmd, vg, pv, &handle);
+					r = _pvs_single(vg->cmd, vg, pv, handle);
 					break;
 				case PVSEGS:
-					r = process_each_segment_in_pv(vg->cmd, vg, pv, &handle,
+					r = process_each_segment_in_pv(vg->cmd, vg, pv, handle,
 								       do_lv_info && !do_lv_seg_status ? &_pvsegs_with_lv_info_sub_single :
 								       !do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_status_sub_single :
 								       do_lv_info && do_lv_seg_status ? &_pvsegs_with_lv_info_and_status_sub_single :
@@ -546,6 +572,13 @@ int report_for_selection(struct selection_handle *sh,
 			break;
 	}
 
+	/*
+	 * Keep the selection handle provided from the caller -
+	 * do not destroy it - the caller will still use it to
+	 * pass the result through it to layers above.
+	 */
+	handle->selection_handle = NULL;
+	destroy_processing_handle(cmd, handle, 1);
 	return r;
 }
 

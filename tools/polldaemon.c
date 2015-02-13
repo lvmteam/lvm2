@@ -227,21 +227,17 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 }
 
 static void _poll_for_all_vgs(struct cmd_context *cmd,
-			      struct daemon_parms *parms)
+			      struct processing_handle *handle)
 {
-	struct processing_handle handle = { .internal_report_for_select = 1,
-					    .selection_handle = NULL,
-					    .custom_handle = parms };
+	struct daemon_parms *parms = (struct daemon_parms *) handle->custom_handle;
 
 	while (1) {
 		parms->outstanding_count = 0;
-		process_each_vg(cmd, 0, NULL, READ_FOR_UPDATE, &handle, _poll_vg);
+		process_each_vg(cmd, 0, NULL, READ_FOR_UPDATE, handle, _poll_vg);
 		if (!parms->outstanding_count)
 			break;
 		sleep(parms->interval);
 	}
-
-	destroy_processing_handle(cmd, &handle, 0);
 }
 
 /*
@@ -255,6 +251,7 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 		uint64_t lv_type, struct poll_functions *poll_fns,
 		const char *progress_title)
 {
+	struct processing_handle *handle = NULL;
 	struct daemon_parms parms;
 	int daemon_mode = 0;
 	int ret = ECMD_PROCESSED;
@@ -306,10 +303,18 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 			stack;
 			ret = ECMD_FAILED;
 		}
-	} else
-		_poll_for_all_vgs(cmd, &parms);
+	} else {
+		if (!(handle = init_processing_handle(cmd))) {
+			log_error("Failed to initialize processing handle.");
+			ret = ECMD_FAILED;
+		} else {
+			handle->custom_handle = &parms;
+			_poll_for_all_vgs(cmd, handle);
+		}
+	}
 
 	if (parms.background && daemon_mode == 1) {
+		destroy_processing_handle(cmd, handle, 1);
 		/*
 		 * child was successfully forked:
 		 * background polldaemon must not return to the caller
@@ -320,5 +325,6 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 		_exit(lvm_return_code(ret));
 	}
 
+	destroy_processing_handle(cmd, handle, 1);
 	return ret;
 }

@@ -3542,10 +3542,15 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	struct lvconvert_params lp = {
 		.target_attr = ~0,
 	};
+	struct processing_handle *handle = NULL;
 
-	struct processing_handle handle = { .internal_report_for_select = 1,
-					    .selection_handle = NULL,
-					    .custom_handle = &lp };
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		ret = ECMD_FAILED;
+		goto out;
+	}
+
+	handle->custom_handle = &lp;
 
 	if (!_read_params(cmd, argc, argv, &lp)) {
 		ret = EINVALID_CMD_LINE;
@@ -3553,11 +3558,11 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	}
 
 	if (lp.merge)
-		ret = process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, &handle,
+		ret = process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, handle,
 				    &_lvconvert_merge_single);
 	else
 		ret = lvconvert_single(cmd, &lp);
 out:
-	destroy_processing_handle(cmd, &handle, 0);
+	destroy_processing_handle(cmd, handle, 1);
 	return ret;
 }
