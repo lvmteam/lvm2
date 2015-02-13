@@ -236,9 +236,8 @@ not check pv_field $dev3 pv_tags 305
 not check pv_field $dev4 pv_tags 305
 pvchange -a --deltag 305
 
-# intersection between selection
-# result and supplied VG name/tag
-
+# if PV name or tag is supplied together with the
+# selection, the result is an intersection of both
 pvchange --addtag 306 -S "pv_name=$dev1" $dev2
 not check pv_field $dev1 pv_tags 306
 not check pv_field $dev2 pv_tags 306
