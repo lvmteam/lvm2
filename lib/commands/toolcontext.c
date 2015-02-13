@@ -81,9 +81,10 @@ static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file
 	if (!file || !strlen(file) || !file[0])
 		return NULL;
 
-	fp = fopen(file, "r");
-	if (!fp)
+	if (!(fp = fopen(file, "r"))) {
+		log_warn("WARNING: Error %d opening system_id_file %s", errno, file);
 		return NULL;
+	}
 
 	memset(line, 0, sizeof(line));
 
@@ -91,11 +92,13 @@ static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file
 		if (line[0] == '#' || line[0] == '\n')
 			continue;
 
-		fclose(fp);
+		if (fclose(fp))
+			stack;
 		return system_id_from_string(cmd, line);
 	}
 
-	fclose(fp);
+	if (fclose(fp))
+		stack;
 	return NULL;
 }
 
