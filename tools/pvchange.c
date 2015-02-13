@@ -172,8 +172,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (!(handle = init_processing_handle(cmd)) ||
-	    (handle->internal_report_for_select && !init_selection_handle(cmd, handle, PVS))) {
+	if (!(handle = init_processing_handle(cmd))) {
 		log_error("Failed to initialize processing handle.");
 		ret = ECMD_FAILED;
 		goto out;
