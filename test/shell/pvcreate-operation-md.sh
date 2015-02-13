@@ -132,9 +132,13 @@ EOF
     fi
 fi
 
+# make sure we're clean for another test
+test -b "$mddev" && cleanup_md
+dd if=/dev/zero of="$dev1" bs=512 count=1
+dd if=/dev/zero of="$dev2" bs=512 count=1
+
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if kernel_at_least 2 6 33 ; then
-    cleanup_md
     pvcreate -f "$dev1"
     pvcreate -f "$dev2"
 
