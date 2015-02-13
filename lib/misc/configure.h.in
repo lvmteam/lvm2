@@ -65,6 +65,9 @@
 /* Default DM run directory. */
 #undef DEFAULT_DM_RUN_DIR
 
+/* Default system configuration directory. */
+#undef DEFAULT_ETC_DIR
+
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 

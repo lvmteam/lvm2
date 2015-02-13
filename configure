@@ -12260,6 +12260,11 @@ else
 fi
 
 
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_ETC_DIR "$CONFDIR"
+_ACEOF
+
+
 
 # Check whether --with-staticdir was given.
 if test "${with_staticdir+set}" = set; then :

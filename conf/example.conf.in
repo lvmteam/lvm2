@@ -565,6 +565,9 @@ global {
     # Defaults to "lvm2".
     # format = "lvm2"
 
+    # Location of /etc system configuration directory.
+    etc = "@CONFDIR@"
+
     # Location of proc filesystem
     proc = "/proc"
 

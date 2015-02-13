@@ -1452,6 +1452,8 @@ AC_ARG_WITH(confdir,
 	    AC_HELP_STRING([--with-confdir=DIR],
 			   [configuration files in DIR [/etc]]),
 	    CONFDIR=$withval, CONFDIR='/etc')
+AC_DEFINE_UNQUOTED(DEFAULT_ETC_DIR, ["$CONFDIR"],
+		   [Default system configuration directory.])
 
 AC_ARG_WITH(staticdir,
 	    AC_HELP_STRING([--with-staticdir=DIR],
