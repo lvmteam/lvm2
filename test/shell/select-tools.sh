@@ -196,17 +196,6 @@ lvchange --deltag 210 --deltag tag $vg1 $vg2
 # exercise process_each_pv with selection #
 ###########################################
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# WARNING: pvchange doesn't use process_each_pv yet
-#          but add the tests anyway as this transition
-#          will happen soon - all these tests should
-#          just work (for now, there's a workaround done
-#          in pvchange code to work with the selection).
-#          Let's use {vg,lv,pv}change to exercise all this
-#          selection support so the tests remain readable
-#          and consistent.
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 # select contains VGS field
 pvchange --addtag 301 -S "vg_name=$vg1"
 check pv_field $dev1 pv_tags 301
@@ -250,30 +239,28 @@ pvchange -a --deltag 305
 # intersection between selection
 # result and supplied VG name/tag
 
-# ENABLE TESTS BELOW ONCE process_each_pv is used for pvchange
-
-#pvchange --addtag 306 -S "pv_name=$dev1" $dev2
-#not check pv_field $dev1 pv_tags 306
-#not check pv_field $dev2 pv_tags 306
-#not check pv_field $dev3 pv_tags 306
-#not check pv_field $dev4 pv_tags 306
-#pvchange -a --deltag 306
-#pvchange --addtag 307 -S "pv_name=$dev1" $dev1
-#check pv_field $dev1 pv_tags 307
-#not check pv_field $dev2 pv_tags 307
-#not check pv_field $dev3 pv_tags 307
-#not check pv_field $dev4 pv_tags 307
-#pvchange -a --deltag 307
-#pvchange --addtag "tag" $dev1
-#pvchange --addtag 308 -S "pv_name=$dev2" @tag
-#not check pv_field $dev1 pv_tags "308,tag"
-#not check pv_field $dev2 pv_tags "308,tag"
-#not check pv_field $dev3 pv_tags "308,tag"
-#not check pv_field $dev4 pv_tags "308,tag"
-#pvchange --deltag 308 $dev1
-#pvchange --addtag 309 -S "pv_name=$dev1" @tag
-#check pv_field $dev1 pv_tags "309,tag"
-#not check pv_field $dev2 pv_tags "309,tag"
-#not check pv_field $dev3 pv_tags "309,tag"
-#not check pv_field $dev4 pv_tags "309,tag"
-#pvchange -a --deltag 210 --deltag tag
+pvchange --addtag 306 -S "pv_name=$dev1" $dev2
+not check pv_field $dev1 pv_tags 306
+not check pv_field $dev2 pv_tags 306
+not check pv_field $dev3 pv_tags 306
+not check pv_field $dev4 pv_tags 306
+pvchange -a --deltag 306
+pvchange --addtag 307 -S "pv_name=$dev1" $dev1
+check pv_field $dev1 pv_tags 307
+not check pv_field $dev2 pv_tags 307
+not check pv_field $dev3 pv_tags 307
+not check pv_field $dev4 pv_tags 307
+pvchange -a --deltag 307
+pvchange --addtag "tag" $dev1
+pvchange --addtag 308 -S "pv_name=$dev2" @tag
+not check pv_field $dev1 pv_tags "308,tag"
+not check pv_field $dev2 pv_tags "308,tag"
+not check pv_field $dev3 pv_tags "308,tag"
+not check pv_field $dev4 pv_tags "308,tag"
+pvchange --deltag 308 $dev1
+pvchange --addtag 309 -S "pv_name=$dev1" @tag
+check pv_field $dev1 pv_tags "309,tag"
+not check pv_field $dev2 pv_tags "309,tag"
+not check pv_field $dev3 pv_tags "309,tag"
+not check pv_field $dev4 pv_tags "309,tag"
+pvchange -a --deltag 309 --deltag tag
