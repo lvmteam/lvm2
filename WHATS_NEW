@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Add support for VG system_id to control host access to VGs.
   Update vgextend to use process_each_vg.
   Add --ignoreskippedcluster to pvchange.
   Allow pvchange to modify several properties at once.
