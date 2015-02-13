@@ -176,8 +176,8 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
  *
  * Case c covers the other errors returned when reading the VG.
  */
-static int ignore_vg(struct volume_group *vg, const char *vg_name,
-		     struct dm_list *arg_vgnames, int allow_inconsistent, int *skip)
+static int _ignore_vg(struct volume_group *vg, const char *vg_name,
+		      struct dm_list *arg_vgnames, int allow_inconsistent, int *skip)
 {
 	uint32_t read_error = vg_read_error(vg);
 	*skip = 0;
@@ -1790,7 +1790,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		skip = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags);
-		if (ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (_ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			release_vg(vg);
@@ -2230,7 +2230,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		}
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags);
-		if (ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (_ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			release_vg(vg);
@@ -2704,7 +2704,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 		skip = 0;
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags | READ_WARN_INCONSISTENT);
-		if (ignore_vg(vg, vg_name, NULL, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (_ignore_vg(vg, vg_name, NULL, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			release_vg(vg);
