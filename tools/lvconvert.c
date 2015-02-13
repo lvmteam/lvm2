@@ -3563,6 +3563,6 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	else
 		ret = lvconvert_single(cmd, &lp);
 out:
-	destroy_processing_handle(cmd, handle, 1);
+	destroy_processing_handle(cmd, handle);
 	return ret;
 }

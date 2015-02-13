@@ -314,7 +314,7 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 	}
 
 	if (parms.background && daemon_mode == 1) {
-		destroy_processing_handle(cmd, handle, 1);
+		destroy_processing_handle(cmd, handle);
 		/*
 		 * child was successfully forked:
 		 * background polldaemon must not return to the caller
@@ -325,6 +325,6 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 		_exit(lvm_return_code(ret));
 	}
 
-	destroy_processing_handle(cmd, handle, 1);
+	destroy_processing_handle(cmd, handle);
 	return ret;
 }

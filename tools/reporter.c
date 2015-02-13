@@ -578,7 +578,7 @@ int report_for_selection(struct cmd_context *cmd,
 	 * pass the result through it to layers above.
 	 */
 	handle->selection_handle = NULL;
-	destroy_processing_handle(cmd, handle, 1);
+	destroy_processing_handle(cmd, handle);
 	return r;
 }
 

@@ -82,6 +82,6 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	log_print_unless_silent("%d physical volume(s) resized / %d physical volume(s) "
 				"not resized", params.done, params.total - params.done);
 out:
-	destroy_processing_handle(cmd, handle, 1);
+	destroy_processing_handle(cmd, handle);
 	return ret;
 }

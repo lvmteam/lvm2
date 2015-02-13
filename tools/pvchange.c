@@ -216,6 +216,6 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 				params.total - params.done, (params.total - params.done) == 1 ? "" : "s");
 
 out:
-	destroy_processing_handle(cmd, handle, 1);
+	destroy_processing_handle(cmd, handle);
 	return ret;
 }

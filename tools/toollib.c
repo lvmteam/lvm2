@@ -1615,14 +1615,12 @@ int init_selection_handle(struct cmd_context *cmd, struct processing_handle *han
 	return 1;
 }
 
-void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle,
-			       int deallocate_handle_root)
+void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle)
 {
 	if (handle) {
 		if (handle->selection_handle && handle->selection_handle->selection_rh)
 			dm_report_free(handle->selection_handle->selection_rh);
-		if (deallocate_handle_root)
-			dm_pool_free(cmd->mem, handle);
+		dm_pool_free(cmd->mem, handle);
 	}
 }
 
@@ -1856,7 +1854,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				     &arg_vgnames, &arg_tags, handle, process_single_vg);
 out:
 	if (!handle_supplied)
-		destroy_processing_handle(cmd, handle, 1);
+		destroy_processing_handle(cmd, handle);
 	return ret;
 }
 
@@ -1997,7 +1995,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 out:
 	if (!handle_supplied)
-		destroy_processing_handle(cmd, handle, 1);
+		destroy_processing_handle(cmd, handle);
 	else
 		_set_final_selection_result(handle, whole_selected);
 	return ret_max;
@@ -2257,7 +2255,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t fla
 					&arg_tags, handle, process_single_lv);
 out:
 	if (!handle_supplied)
-		destroy_processing_handle(cmd, handle, 1);
+		destroy_processing_handle(cmd, handle);
 	return ret;
 }
 
@@ -2600,7 +2598,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	}
 out:
 	if (!handle_supplied)
-		destroy_processing_handle(cmd, handle, 1);
+		destroy_processing_handle(cmd, handle);
 	return ret_max;
 }
 
