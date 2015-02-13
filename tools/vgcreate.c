@@ -37,7 +37,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 
 	pvcreate_params_set_defaults(&pp);
-	if (!pvcreate_params_validate(cmd, argc, argv, &pp)) {
+	if (!pvcreate_params_validate(cmd, argc, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
 

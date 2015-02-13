@@ -102,10 +102,12 @@ struct arg_value_group_list {
 
 #define CACHE_VGMETADATA	0x00000001
 #define PERMITTED_READ_ONLY 	0x00000002
-/* Process all vgs if none specified on the command line. */
+/* Process all VGs if none specified on the command line. */
 #define ALL_VGS_IS_DEFAULT	0x00000004
 /* Process all devices with --all if none are specified on the command line. */
 #define ENABLE_ALL_DEVS		0x00000008	
+/* Exactly one VG name argument required. */
+#define ONE_VGNAME_ARG		0x00000010
  
 /* a register of the lvm commands */
 struct command {

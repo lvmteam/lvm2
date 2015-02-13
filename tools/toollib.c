@@ -881,8 +881,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
  * Output arguments:
  * pp: structure allocated by caller, fields written / validated here
  */
-int pvcreate_params_validate(struct cmd_context *cmd,
-			     int argc, char **argv,
+int pvcreate_params_validate(struct cmd_context *cmd, int argc,
 			     struct pvcreate_params *pp)
 {
 	if (!argc) {
@@ -1468,6 +1467,7 @@ struct vgnameid_list {
  */
 static int _get_arg_vgnames(struct cmd_context *cmd,
 			    int argc, char **argv,
+			    unsigned one_vgname_arg,
 			    struct dm_list *arg_vgnames,
 			    struct dm_list *arg_tags)
 {
@@ -1479,18 +1479,26 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 
 	for (; opt < argc; opt++) {
 		vg_name = argv[opt];
+
 		if (*vg_name == '@') {
+			if (one_vgname_arg) {
+				log_error("This command does not yet support a tag to identify a Volume Group.");
+				return EINVALID_CMD_LINE;
+			}
+
 			if (!validate_tag(vg_name + 1)) {
 				log_error("Skipping invalid tag: %s", vg_name);
 				if (ret_max < EINVALID_CMD_LINE)
 					ret_max = EINVALID_CMD_LINE;
 				continue;
 			}
+
 			if (!str_list_add(cmd->mem, arg_tags,
 					  dm_pool_strdup(cmd->mem, vg_name + 1))) {
 				log_error("strlist allocation failed.");
 				return ECMD_FAILED;
 			}
+
 			continue;
 		}
 
@@ -1499,13 +1507,19 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 			log_error("Invalid volume group name %s.", vg_name);
 			if (ret_max < EINVALID_CMD_LINE)
 				ret_max = EINVALID_CMD_LINE;
+			if (one_vgname_arg)
+				break;
 			continue;
 		}
+
 		if (!str_list_add(cmd->mem, arg_vgnames,
 				  dm_pool_strdup(cmd->mem, vg_name))) {
 			log_error("strlist allocation failed.");
 			return ECMD_FAILED;
 		}
+
+		if (one_vgname_arg)
+			break;
 	}
 
 	return ret_max;
@@ -1718,6 +1732,9 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 	if (dm_list_empty(arg_vgnames) && dm_list_empty(arg_tags))
 		process_all = 1;
 
+	/*
+	 * FIXME If one_vgname_arg, only proceed if exactly one VG matches tags or selection.
+	 */
 	dm_list_iterate_items(vgnl, vgnameids_to_process) {
 		if (sigint_caught())
 			return_ECMD_FAILED;
@@ -1805,6 +1822,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list vgnameids_to_process;	/* vgnameid_list */
 
 	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
+	unsigned one_vgname_arg = (flags & ONE_VGNAME_ARG);
 	int ret;
 
 	dm_list_init(&arg_tags);
@@ -1815,7 +1833,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	/*
 	 * Find any VGs or tags explicitly provided on the command line.
 	 */
-	if ((ret = _get_arg_vgnames(cmd, argc, argv, &arg_vgnames, &arg_tags)) != ECMD_PROCESSED)
+	if ((ret = _get_arg_vgnames(cmd, argc, argv, one_vgname_arg, &arg_vgnames, &arg_tags)) != ECMD_PROCESSED)
 		goto_out;
 
 	/*
@@ -1855,6 +1873,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 out:
 	if (!handle_supplied)
 		destroy_processing_handle(cmd, handle);
+
 	return ret;
 }
 

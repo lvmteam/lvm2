@@ -109,6 +109,8 @@
 
 #define return_0	do { stack; return 0; } while (0)
 #define return_NULL	do { stack; return NULL; } while (0)
+#define return_EINVALID_CMD_LINE \
+			do { stack; return EINVALID_CMD_LINE; } while (0)
 #define return_ECMD_FAILED do { stack; return ECMD_FAILED; } while (0)
 #define goto_out	do { stack; goto out; } while (0)
 #define goto_bad	do { stack; goto bad; } while (0)

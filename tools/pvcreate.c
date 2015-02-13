@@ -101,7 +101,7 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!pvcreate_restore_params_validate(cmd, argc, argv, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
-	if (!pvcreate_params_validate(cmd, argc, argv, &pp)) {
+	if (!pvcreate_params_validate(cmd, argc, &pp)) {
 		return EINVALID_CMD_LINE;
 	}
 
