@@ -118,6 +118,14 @@ void copy_valid_chars(const char *src, char *dst)
 	if (!s || !*s)
 		return;
 
+	/* Omit leading hypens. */
+	for (i = 0; i < strlen(src); i++) {
+		c = *s;
+		if (c != '-')
+			break;
+		s++;
+	}
+
 	for (i = 0; i < strlen(src); i++) {
 		c = *s;
 
