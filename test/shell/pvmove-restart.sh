@@ -29,8 +29,6 @@ lvextend -l+10 $vg/$lv1 "$dev2"
 # Slowdown writes
 aux delay_dev "$dev3" 0 100
 
-lvs -o+devices $vg
-
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
@@ -39,8 +37,10 @@ kill -9 $PVMOVE
 wait
 
 # Simulate reboot - forcibly remove related devices
-dmsetup table
-dmsetup ls --exec echo | egrep "$vg-$lv1|$vg-pvmove0" | xargs -r -n 1 dmsetup remove
+
+# First take down $lv1 then it's pvmove0
+dmsetup ls --exec echo | grep "${vg}-$lv1" | xargs -r dmsetup remove
+dmsetup ls --exec echo | grep "${vg}-pvmove0" | xargs -r dmsetup remove
 
 # Check we really have pvmove volume
 check lv_attr_bit type $vg/pvmove0 "p"
