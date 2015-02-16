@@ -1423,6 +1423,20 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 	int r = 0;
 	int scan_needed = 0;
 	int filter_refresh_needed = 0;
+	dev_ext_t dev_ext_src = external_device_info_source();
+
+	if (dev_ext_src == DEV_EXT_UDEV)
+		/*
+		 * wipe_known_signatures called later fires WATCH event
+		 * to update udev database. But at the moment, we have
+		 * no way to synchronize with such event - we may end
+		 * up still seeing the old info in udev db and pvcreate
+		 * can fail to proceed because of the device still
+		 * being filtered (because of the stale info in udev db).
+		 * Disable udev dev-ext source temporarily here for
+		 * this reason.
+		 */
+		init_external_device_info_source(DEV_EXT_NONE);
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -1512,6 +1526,7 @@ out:
 		}
 
 	free_pv_fid(pv);
+	init_external_device_info_source(dev_ext_src);
 	return r;
 }
 
