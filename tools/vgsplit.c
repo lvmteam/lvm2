@@ -350,7 +350,7 @@ static int _move_cache(struct volume_group *vg_from,
 			data = seg_lv(first_seg(seg->pool_lv), 0);
 			meta = first_seg(seg->pool_lv)->metadata_lv;
 			/* Ensure all components are coming along */
-			is_moving = !!_lv_is_in_vg(vg_to, orig);
+			is_moving = _lv_is_in_vg(vg_to, orig);
 		} else {
 			if (!dm_list_empty(&seg->lv->segs_using_this_lv) &&
 			    !(cache_seg = get_only_segment_using_this_lv(seg->lv)))
@@ -364,20 +364,20 @@ static int _move_cache(struct volume_group *vg_from,
 				is_moving = 1;
 		}
 
-		if (orig && (!!_lv_is_in_vg(vg_to, orig) != is_moving)) {
+		if (orig && (_lv_is_in_vg(vg_to, orig) != is_moving)) {
 			log_error("Can't split %s and its origin (%s)"
 				  " into separate VGs", lv->name, orig->name);
 			return 0;
 		}
 
-		if (data && (!!_lv_is_in_vg(vg_to, data) != is_moving)) {
+		if (data && (_lv_is_in_vg(vg_to, data) != is_moving)) {
 			log_error("Can't split %s and its cache pool"
 				  " data LV (%s) into separate VGs",
 				  lv->name, data->name);
 			return 0;
 		}
 
-		if (meta && (!!_lv_is_in_vg(vg_to, meta) != is_moving)) {
+		if (meta && (_lv_is_in_vg(vg_to, meta) != is_moving)) {
 			log_error("Can't split %s and its cache pool"
 				  " metadata LV (%s) into separate VGs",
 				  lv->name, meta->name);
