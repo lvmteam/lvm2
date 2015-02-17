@@ -193,7 +193,7 @@ teardown_devs() {
 		test ! -f LOOPFILE || rm -f $(< LOOPFILE)
 	fi
 	rm -f DEVICES # devs is set in prepare_devs()
-	not diff LOOP BACKING_DEV || rm -f BACKING_DEV
+	not diff LOOP BACKING_DEV >/dev/null 2>&1 || rm -f BACKING_DEV
 	rm -f LOOP
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
