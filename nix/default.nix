@@ -326,7 +326,7 @@ let
                    "dlm" "systemd-devel" "perl-Digest-MD5" "kernel-modules-extra" ];
       fedora18u = fedora18;
 
-      fedora19 = centos70 + [ "kernel-modules-extra" ];
+      fedora19 = centos70 ++ [ "kernel-modules-extra" ];
       fedora19u = fedora19;
 
       fedora20 = fedora19;
