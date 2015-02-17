@@ -51,10 +51,7 @@ int buffer_read(int fd, struct buffer *buffer) {
 			return 0; /* we should never encounter EOF here */
 		} else if (result < 0 && ( errno == EAGAIN || errno == EWOULDBLOCK ||
 					   errno == EINTR || errno == EIO)) {
-			struct timeval tval;
 			fd_set in;
-			tval.tv_sec = 1;
-			tval.tv_usec = 0;
 			FD_ZERO(&in);
 			FD_SET(fd, &in);
 			/* ignore the result, this is just a glorified sleep */
@@ -83,10 +80,7 @@ int buffer_write(int fd, const struct buffer *buffer) {
 				written += result;
 			else if (result < 0 && ( errno == EAGAIN || errno == EWOULDBLOCK ||
 						 errno == EINTR || errno == EIO)) {
-				struct timeval tval;
 				fd_set out;
-				tval.tv_sec = 1;
-				tval.tv_usec = 0;
 				FD_ZERO(&out);
 				FD_SET(fd, &out);
 				/* ignore the result, this is just a glorified sleep */
