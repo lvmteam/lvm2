@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Do not refresh filters/rescan if no signature is wiped during pvcreate.
   Enforce none external dev info for wiping during pvcreate to avoid races.
   Add support for VG system_id to control host access to VGs.
   Update vgextend to use process_each_vg.

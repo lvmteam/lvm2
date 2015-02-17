@@ -1421,22 +1421,10 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 	struct physical_volume *pv;
 	struct device *dev;
 	int r = 0;
+	int wiped;
 	int scan_needed = 0;
 	int filter_refresh_needed = 0;
 	dev_ext_t dev_ext_src = external_device_info_source();
-
-	if (dev_ext_src == DEV_EXT_UDEV)
-		/*
-		 * wipe_known_signatures called later fires WATCH event
-		 * to update udev database. But at the moment, we have
-		 * no way to synchronize with such event - we may end
-		 * up still seeing the old info in udev db and pvcreate
-		 * can fail to proceed because of the device still
-		 * being filtered (because of the stale info in udev db).
-		 * Disable udev dev-ext source temporarily here for
-		 * this reason.
-		 */
-		init_external_device_info_source(DEV_EXT_NONE);
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -1493,12 +1481,26 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 
 	if (!wipe_known_signatures(cmd, dev, name,
 				   TYPE_LVM1_MEMBER | TYPE_LVM2_MEMBER,
-				   0, pp->yes, pp->force)) {
+				   0, pp->yes, pp->force, &wiped)) {
 		log_error("Aborting pvcreate on %s.", name);
 		goto out;
-	} else
+	}
+
+	if (wiped) {
+		if (dev_ext_src == DEV_EXT_UDEV)
+			/*
+			 * wipe_known_signatures called later fires WATCH event
+			 * to update udev database. But at the moment, we have
+			 * no way to synchronize with such event - we may end
+			 * up still seeing the old info in udev db and pvcreate
+			 * can fail to proceed because of the device still
+			 * being filtered (because of the stale info in udev db).
+			 * Disable udev dev-ext source temporarily here for
+			 * this reason.
+			 */
+			init_external_device_info_source(DEV_EXT_NONE);
 		filter_refresh_needed = scan_needed = 1;
-	
+	}
 
 	if (sigint_caught())
 		goto_out;

@@ -596,11 +596,15 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 static int _wipe_known_signatures_with_blkid(struct device *dev, const char *name,
 					     uint32_t types_to_exclude,
 					     uint32_t types_no_prompt,
-					     int yes, force_t force)
+					     int yes, force_t force, int *wiped)
 {
 	blkid_probe probe = NULL;
-	int found = 0, wiped = 0, left = 0;
+	int found = 0, left = 0, wiped_tmp;
 	int r = 0;
+
+	if (!wiped)
+		wiped = &wiped_tmp;
+	*wiped = 0;
 
 	/* TODO: Should we check for valid dev - _dev_is_valid(dev)? */
 
@@ -624,13 +628,13 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 	while (!blkid_do_probe(probe)) {
 		found++;
 		if (_blkid_wipe(probe, dev, name, types_to_exclude, types_no_prompt, yes, force))
-			wiped++;
+			(*wiped)++;
 	}
 
 	if (!found)
 		r = 1;
 
-	left = found - wiped;
+	left = found - *wiped;
 	if (!left)
 		r = 1;
 	else
@@ -645,7 +649,7 @@ out:
 #endif /* BLKID_WIPING_SUPPORT */
 
 static int _wipe_signature(struct device *dev, const char *type, const char *name,
-			   int wipe_len, int yes, force_t force,
+			   int wipe_len, int yes, force_t force, int *wiped,
 			   int (*signature_detection_fn)(struct device *dev, uint64_t *offset_found))
 {
 	int wipe;
@@ -675,17 +679,24 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 		return 0;
 	}
 
+	(*wiped)++;
 	return 1;
 }
 
 static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
 					   uint32_t types_to_exclude __attribute__((unused)),
 					   uint32_t types_no_prompt __attribute__((unused)),
-					   int yes, force_t force)
+					   int yes, force_t force, int *wiped)
 {
-	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, dev_is_md) ||
-	    !_wipe_signature(dev, "swap signature", name, 10, yes, force, dev_is_swap) ||
-	    !_wipe_signature(dev, "LUKS signature", name, 8, yes, force, dev_is_luks))
+	int wiped_tmp;
+
+	if (!wiped)
+		wiped = &wiped_tmp;
+	*wiped = 0;
+
+	if (!_wipe_signature(dev, "software RAID md superblock", name, 4, yes, force, wiped, dev_is_md) ||
+	    !_wipe_signature(dev, "swap signature", name, 10, yes, force, wiped, dev_is_swap) ||
+	    !_wipe_signature(dev, "LUKS signature", name, 8, yes, force, wiped, dev_is_luks))
 		return 0;
 
 	return 1;
@@ -693,19 +704,20 @@ static int _wipe_known_signatures_with_lvm(struct device *dev, const char *name,
 
 int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
 			  const char *name, uint32_t types_to_exclude,
-			  uint32_t types_no_prompt, int yes, force_t force)
+			  uint32_t types_no_prompt, int yes, force_t force,
+			  int *wiped)
 {
 #ifdef BLKID_WIPING_SUPPORT
 	if (find_config_tree_bool(cmd, allocation_use_blkid_wiping_CFG, NULL))
 		return _wipe_known_signatures_with_blkid(dev, name,
 							 types_to_exclude,
 							 types_no_prompt,
-							 yes, force);
+							 yes, force, wiped);
 #endif
 	return _wipe_known_signatures_with_lvm(dev, name,
 					       types_to_exclude,
 					       types_no_prompt,
-					       yes, force);
+					       yes, force, wiped);
 }
 
 #ifdef __linux__
