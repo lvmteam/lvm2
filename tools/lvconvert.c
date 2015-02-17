@@ -3519,7 +3519,7 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 		 */
 		unlock_vg(cmd, vg_name);
 
-		if (!(ret = _poll_logical_volume(cmd, lp->lv_to_poll,
+		if ((ret = _poll_logical_volume(cmd, lp->lv_to_poll,
 						 lp->wait_completion)) != ECMD_PROCESSED)
 			stack;
 
