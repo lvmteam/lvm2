@@ -15,7 +15,9 @@
 
 aux prepare_pvs 3 60
 
-vgcreate -s 128k $vg "$dev1" "$dev2" "$dev3"
+vgcreate -s 128k $vg "$dev1" "$dev2"
+pvcreate --metadatacopies 0 "$dev3"
+vgextend $vg "$dev3"
 
 for mode in "--atomic" ""
 do
@@ -32,7 +34,7 @@ aux delay_dev "$dev3" 0 100
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
-sleep 1
+while not dmsetup status "$vg-pvmove0"; do sleep .1; done
 kill -9 $PVMOVE
 wait
 
