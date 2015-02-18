@@ -899,8 +899,10 @@ static void main_loop(int cmd_timeout)
 					ret = thisfd->callback(thisfd, buf, sizeof(buf),
 							       csid, &newfd);
 					/* Ignore EAGAIN */
-					if (ret < 0 && (errno == EAGAIN || errno == EINTR))
+					if (ret < 0 && (errno == EAGAIN || errno == EINTR)) {
+						lastfd = thisfd;
 						continue;
+                                        }
 
 					/* Got error or EOF: Remove it from the list safely */
 					if (ret <= 0) {
