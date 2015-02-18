@@ -39,8 +39,8 @@ wait
 # Simulate reboot - forcibly remove related devices
 
 # First take down $lv1 then it's pvmove0
-dmsetup ls --exec echo | grep "${vg}-$lv1" | xargs -r dmsetup remove
-dmsetup ls --exec echo | grep "${vg}-pvmove0" | xargs -r dmsetup remove
+while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
+while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
 
 # Check we really have pvmove volume
 check lv_attr_bit type $vg/pvmove0 "p"
