@@ -354,7 +354,7 @@ AC_ARG_WITH(default-mirror-segtype,
 	    AC_HELP_STRING([--with-default-mirror-segtype=TYPE],
 			   [default mirror segtype: raid1/mirror [raid1]]),
 			   DEFAULT_MIRROR_SEGTYPE=$withval, DEFAULT_MIRROR_SEGTYPE="raid1")
-AC_ARG_WITH(default-raid10r-segtype,
+AC_ARG_WITH(default-raid10-segtype,
 	    AC_HELP_STRING([--with-default-raid10-segtype=TYPE],
 			   [default mirror segtype: raid10/mirror [raid10]]),
 			   DEFAULT_RAID10_SEGTYPE=$withval, DEFAULT_RAID10_SEGTYPE="raid10")

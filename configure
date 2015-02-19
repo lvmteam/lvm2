@@ -880,7 +880,7 @@ with_snapshots
 with_mirrors
 with_raid
 with_default_mirror_segtype
-with_default_raid10r_segtype
+with_default_raid10_segtype
 with_replicators
 with_default_sparse_segtype
 with_thin
@@ -7572,9 +7572,9 @@ else
 fi
 
 
-# Check whether --with-default-raid10r-segtype was given.
-if test "${with_default_raid10r_segtype+set}" = set; then :
-  withval=$with_default_raid10r_segtype; DEFAULT_RAID10_SEGTYPE=$withval
+# Check whether --with-default-raid10-segtype was given.
+if test "${with_default_raid10_segtype+set}" = set; then :
+  withval=$with_default_raid10_segtype; DEFAULT_RAID10_SEGTYPE=$withval
 else
   DEFAULT_RAID10_SEGTYPE="raid10"
 fi
