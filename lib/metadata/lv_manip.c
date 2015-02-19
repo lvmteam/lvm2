@@ -460,7 +460,7 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 
 	if (!(*layout = str_list_create(mem))) {
 		log_error("LV layout list allocation failed");
-		goto bad;
+		return 0;
 	}
 
 	if (!(*role = str_list_create(mem))) {
@@ -549,10 +549,8 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 
 	return 1;
 bad:
-	if (*role)
-		dm_pool_free(mem, *role);
-	if (*layout)
-		dm_pool_free(mem, *layout);
+	dm_pool_free(mem, *layout);
+
 	return 0;
 }
 
