@@ -47,6 +47,10 @@ lvchange --monitor y $vg/snap
 
 write_ 1000 1700
 pre=$(percent_)
+# Normally the usage should be ~66% here, however on slower systems
+# dmeventd could be actually 'fast' enough to have COW already resized now
+# so mark test skipped if we are bellow 50% by now
+test $pre -gt 50 || skip
 wait_for_change_ $pre
 test $pre -gt $(percent_)
 
@@ -56,6 +60,8 @@ test $pre -gt $(percent_)
 
 write_ 2700 2000
 pre=$(percent_)
+# Mark test as skipped if already resized...
+test $pre -gt 70 || skip
 wait_for_change_ $pre
 test $pre -gt $(percent_)
 
