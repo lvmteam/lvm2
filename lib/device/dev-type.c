@@ -540,7 +540,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 
 	if (!blkid_probe_lookup_value(probe, "TYPE", &type, NULL)) {
 		if (_type_in_flag_list(type, types_to_exclude))
-			return 1;
+			return 2;
 		if (blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL)) {
 			log_error(_msg_failed_offset, type, name);
 			return 0;
@@ -600,6 +600,7 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 {
 	blkid_probe probe = NULL;
 	int found = 0, left = 0, wiped_tmp;
+	int r_wipe;
 	int r = 0;
 
 	if (!wiped)
@@ -626,9 +627,11 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 						 BLKID_SUBLKS_BADCSUM);
 
 	while (!blkid_do_probe(probe)) {
-		found++;
-		if (_blkid_wipe(probe, dev, name, types_to_exclude, types_no_prompt, yes, force))
+		if ((r_wipe = _blkid_wipe(probe, dev, name, types_to_exclude, types_no_prompt, yes, force)) == 1)
 			(*wiped)++;
+		/* do not count excluded types */
+		if (r_wipe != 2)
+			found++;
 	}
 
 	if (!found)
