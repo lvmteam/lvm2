@@ -587,10 +587,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	 * to their own VGs.  We also want to override the default
 	 * behavior which skips over foreign VGs.
 	 */
-	if (arg_is_set(cmd, foreign_ARG) && lvmetad_used()) {
+	cmd->include_foreign_vgs = arg_is_set(cmd, foreign_ARG);
+	if (cmd->include_foreign_vgs && lvmetad_used())
 		lvmetad_pvscan_all_devs(cmd, NULL);
-		cmd->include_foreign_vgs = 1;
-	}
 
 	aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
 	buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);

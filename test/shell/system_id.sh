@@ -13,9 +13,6 @@ test_description='Test system_id'
 
 . lib/inittest
 
-# FIXME: vgs --foreign is not seeing foreign vg when lvmetad is not used
-test -e LOCAL_LVMETAD || skip
-
 aux prepare_devs 1
 
 # create vg with system_id using each source
