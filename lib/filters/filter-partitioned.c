@@ -15,9 +15,6 @@
 
 #include "lib.h"
 #include "filter.h"
-#ifdef UDEV_SYNC_SUPPORT
-#include <libudev.h>
-#endif
 
 static int _passes_partitioned_filter(struct dev_filter *f, struct device *dev)
 {
