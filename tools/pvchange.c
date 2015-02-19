@@ -160,8 +160,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct pvchange_params params = { 0 };
 	struct processing_handle *handle = NULL;
-
-	int ret = ECMD_PROCESSED;
+	int ret;
 
 	if (!(arg_count(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
 	    arg_is_set(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +

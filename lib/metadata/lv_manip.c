@@ -452,7 +452,7 @@ bad:
 
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role) {
-	int linear, striped, unknown;
+	int linear, striped;
 	struct lv_segment *seg;
 	int public_lv = 1;
 
@@ -505,7 +505,7 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	 * linear or striped or mixture of these two.
 	 */
 	if (dm_list_empty(*layout)) {
-		linear = striped = unknown = 0;
+		linear = striped = 0;
 		dm_list_iterate_items(seg, &lv->segments) {
 			if (seg_is_linear(seg))
 				linear = 1;
@@ -519,10 +519,9 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 				 * the role above and we need add proper
 				 * detection for such role!
 				 */
-				unknown = 1;
-				log_error(INTERNAL_ERROR "Failed to properly detect "
-					  "layout and role for LV %s/%s",
-					  lv->vg->name, lv->name);
+				log_warn(INTERNAL_ERROR "WARNING: Failed to properly detect "
+					 "layout and role for LV %s/%s.",
+					 lv->vg->name, lv->name);
 			}
 		}
 

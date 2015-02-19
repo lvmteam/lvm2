@@ -332,16 +332,15 @@ static int _has_partition_table(struct device *dev)
 #ifdef UDEV_SYNC_SUPPORT
 static int _udev_dev_is_partitioned(struct device *dev)
 {
-	const char *value;
 	struct dev_ext *ext;
 
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	if (!(value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE)))
+	if (!udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE))
 		return 0;
 
-	if ((value = udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_ENTRY_DISK)))
+	if (udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_ENTRY_DISK))
 		return 0;
 
 	return 1;

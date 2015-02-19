@@ -48,7 +48,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct pvresize_params params;
 	struct processing_handle *handle = NULL;
-	int ret = ECMD_PROCESSED;
+	int ret;
 
 	if (!argc) {
 		log_error("Please supply physical volume(s)");

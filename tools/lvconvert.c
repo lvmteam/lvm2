@@ -3538,7 +3538,7 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 {
-	int ret = ECMD_PROCESSED;
+	int ret;
 	struct lvconvert_params lp = {
 		.target_attr = ~0,
 	};
