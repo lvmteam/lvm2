@@ -27,16 +27,14 @@ vgremove $vg1
 
 ## machineid
 
-if [ ! -e /etc/machine-id ]; then
-  echo "49e0eef929d541a0b8b56128441b2d60" > /etc/machine-id
-fi
+if [ -e /etc/machine-id ]; then
 SID=$(cat /etc/machine-id)
 aux lvmconf "global/system_id_source = machineid"
 vgcreate $vg1 "$dev1"
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 vgremove $vg1
-# FIXME: remove file if created
+fi
 
 ## uname
 
