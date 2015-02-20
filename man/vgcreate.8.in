@@ -27,6 +27,8 @@ vgcreate \(em create a volume group
 .IR NumberOfCopies | unmanaged | all ]
 .RB [ \-s | \-\-physicalextentsize
 .IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
+.RB [ \-\-systemid
+.IR SystemID ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
@@ -110,7 +112,6 @@ power of 2 of at least 1 sector (where the sector size is the largest sector
 size of the PVs currently used in the VG) or, if not a power of 2, at least
 128KiB.  For the older LVM1 format, it must be a power of 2 of at least 8KiB.
 The default is 4 MiB.
-
 Once this value has been set, it is difficult to change it without recreating
 the volume group which would involve backing up and restoring data on any
 logical volumes.  However, if no extents need moving for the new
@@ -125,6 +126,16 @@ but having a large number of extents will slow down the tools but have no
 impact on I/O performance to the logical volume.  The smallest PE is 1KiB
 
 The 2.4 kernel has a limitation of 2TiB per block device.
+
+.TP
+.BR \-\-systemid " " \fISystemID
+Specifies the system ID that will be given to the new VG, overriding the
+system ID of the host running the command.  A VG is normally created
+without this option, in which case the new VG is given the system ID of
+the host creating it.  Using this option requires caution because the
+system ID of the new VG may not match the system ID of the host running
+the command, leaving the VG inaccessible to the host.  See
+.BR lvmsystemid (7).
 
 .SH PHYSICAL DEVICE OPTIONS
 The following options are available for initializing physical devices in the

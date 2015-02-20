@@ -47,6 +47,8 @@ vgchange \(em change attributes of a volume group
 .IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
 .RB [ \-S | \-\-select
 .IR Selection ]
+.RB [ \-\-systemid
+.IR SystemID ]
 .RB [ \-\-refresh ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
@@ -242,6 +244,12 @@ but having a large number of extents will slow down the tools but have no
 impact on I/O performance to the logical volume.  The smallest PE is 1KiB.
 
 The 2.4 kernel has a limitation of 2TiB per block device.
+.TP
+.BR \-\-systemid " " \fISystemID
+Changes the system ID of the VG.  Using this option requires caution
+because the VG may become foreign to the host running the command,
+leaving the host unable to access it.  See
+.BR lvmsystemid (7).
 .TP
 .BR \-\-refresh
 If any logical volume in the volume group is active, reload its metadata.
