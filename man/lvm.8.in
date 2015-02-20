@@ -243,6 +243,12 @@ will be made to communicate with the device-mapper kernel driver, so
 this option is unable to report whether or not Logical Volumes are 
 actually in use.
 .TP
+.B \-\-foreign
+Cause the command to access foreign VGs, that would otherwise be skipped.
+It can be used to report or display a VG that is owned by another host.
+This option can cause a command to perform poorly because lvmetad caching
+is not used and metadata is read from disks.
+.TP
 .B \-\-addtag \fITag
 Add the tag \fITag\fP to a PV, VG or LV.
 Supply this argument multiple times to add more than one tag at once.
