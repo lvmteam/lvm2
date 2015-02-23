@@ -424,12 +424,15 @@ int process_profilable_config(struct cmd_context *cmd)
 
 static int _init_system_id(struct cmd_context *cmd)
 {
-	const char *source;
-	int local_set;
+	const char *source, *system_id;
+	int local_set = 0;
 
 	cmd->system_id = NULL;
+	cmd->unknown_system_id = 0;
 
-	local_set = !!find_config_tree_str(cmd, local_system_id_CFG, NULL);
+	system_id = find_config_tree_str_allow_empty(cmd, local_system_id_CFG, NULL);
+	if (system_id && *system_id)
+		local_set = 1;
 
 	source = find_config_tree_str(cmd, global_system_id_source_CFG, NULL);
 	if (!source)
