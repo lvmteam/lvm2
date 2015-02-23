@@ -374,7 +374,8 @@ static int _check_config(struct cmd_context *cmd)
 	return 1;
 }
 
-int process_profilable_config(struct cmd_context *cmd) {
+int process_profilable_config(struct cmd_context *cmd)
+{
 	if (!(cmd->default_settings.unit_factor =
 	      dm_units_to_factor(find_config_tree_str(cmd, global_units_CFG, NULL),
 				 &cmd->default_settings.unit_type, 1, NULL))) {
@@ -699,9 +700,8 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag, int local
 }
 
 /*
- * Find and read lvm.conf and lvmlocal.conf.
+ * Find and read lvm.conf.
  */
-
 static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
@@ -715,8 +715,6 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 
 	if (!_load_config_file(cmd, "", 0))
 		return_0;
-
-	_load_config_file(cmd, "", 1);
 
 	return 1;
 }
@@ -1697,6 +1695,10 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (!_init_tags(cmd, cmd->cft))
 		goto_out;
 
+	/* Load lvmlocal.conf */
+	if (*cmd->system_dir && !_load_config_file(cmd, "", 1))
+		return_0;
+
 	if (!_init_tag_configs(cmd))
 		goto_out;
 
@@ -1902,6 +1904,10 @@ int refresh_toolcontext(struct cmd_context *cmd)
 
 	/* Init tags from lvm.conf. */
 	if (!_init_tags(cmd, cft_tmp))
+		return_0;
+
+	/* Load lvmlocal.conf */
+	if (*cmd->system_dir && !_load_config_file(cmd, "", 1))
 		return_0;
 
 	/* Doesn't change cmd->cft */
