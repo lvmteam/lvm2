@@ -855,7 +855,7 @@ void display_name_error(name_error_t name_error)
 	case NAME_INVALID_EMPTY:
 		log_error("Name is zero length.");
 		break;
-	case NAME_INVALID_HYPEN:
+	case NAME_INVALID_HYPHEN:
 		log_error("Name cannot start with hyphen.");
 		break;
 	case NAME_INVALID_DOTS:

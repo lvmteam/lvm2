@@ -75,7 +75,7 @@ static name_error_t _validate_name(const char *n)
 
 	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
 	if (*n == '-')
-		return NAME_INVALID_HYPEN;
+		return NAME_INVALID_HYPHEN;
 
 	if ((*n == '.') && (!n[1] || (n[1] == '.' && !n[2]))) /* ".", ".." */
 		return NAME_INVALID_DOTS;
