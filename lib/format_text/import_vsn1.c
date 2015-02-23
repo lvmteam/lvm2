@@ -737,6 +737,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	unsigned scan_done_once = use_cached_pvs;
+	char *system_id;
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib)
@@ -750,8 +751,9 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (!(vg = alloc_vg("read_vg", fid->fmt->cmd, vgn->key)))
 		return_NULL;
 
-	if (!(vg->system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
+	if (!(system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
 		goto_bad;
+	vg->system_id = system_id;
 
 	/*
 	 * The pv hash memorises the pv section names -> pv
@@ -773,9 +775,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	vgn = vgn->child;
 
-	if (dm_config_get_str(vgn, "system_id", &str)) {
-		strncpy(vg->system_id, str, NAME_LEN);
-	}
+	if (dm_config_get_str(vgn, "system_id", &str))
+		strncpy(system_id, str, NAME_LEN);
 
 	if (!_read_id(&vg->id, vgn, "id")) {
 		log_error("Couldn't read uuid for volume group %s.", vg->name);

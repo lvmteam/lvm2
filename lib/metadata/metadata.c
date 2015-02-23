@@ -4338,7 +4338,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	return (struct volume_group *)vg;
 }
 
-static int allow_system_id(struct cmd_context *cmd, const char *system_id)
+static int _allow_system_id(struct cmd_context *cmd, const char *system_id)
 {
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
@@ -4395,16 +4395,28 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 		return 1;
 
 	/*
-	 * We sometimes want to report foreign vgs.
+	 * A few commands allow read-only access to foreign VGs.
 	 */
 	if (cmd->include_foreign_vgs)
+		return 1;
+
+	/*
+	 * A host can access a VG with a matching system_id.
+	 */
+	if (cmd->system_id && !strcmp(vg->system_id, cmd->system_id))
+		return 1;
+
+	/*
+	 * A host can access a VG if the VG's system_id is in extra_system_ids list.
+	 */
+	if (cmd->system_id && _allow_system_id(cmd, vg->system_id))
 		return 1;
 
 	/*
 	 * Allow VG access if the local host has active LVs in it.
 	 */
 	if (lvs_in_vg_activated(vg)) {
-		log_error("LVs should not be active in VG %s with foreign system id \"%s\"",
+		log_warn("WARNING: Found LVs active in VG %s with foreign system ID \"%s\".  Possible data corruption.",
 			  vg->name, vg->system_id);
 		return 1;
 	}
@@ -4413,29 +4425,13 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	 * A host without a system_id cannot access a VG with a system_id.
 	 */
 	if (!cmd->system_id || cmd->unknown_system_id) {
-		log_warn("Cannot access VG %s with system id \"%s\" with unknown local system id.",
-			 vg->name, vg->system_id);
+		log_error("Cannot access VG %s with system id \"%s\" with unknown local system ID.",
+			  vg->name, vg->system_id);
 		return 0;
 	}
 
-	/*
-	 * A host can access a VG with a matching system_id.
-	 */
-	if (!strcmp(vg->system_id, cmd->system_id))
-		return 1;
-
-	/*
-	 * A host can access a VG if the VG's system_id is in the allow list.
-	 */
-	if (allow_system_id(cmd, vg->system_id))
-		return 1;
-
-	/*
-	 * Silently ignore foreign VGs.  They will only cause the
-	 * command to fail if they were named as explicit command
-	 * args, in which case the command will fail indicating the
-	 * VG was not found.
-	 */
+	log_error("Cannot access VG %s with system id \"%s\" with local system ID %s.",
+		  vg->name, vg->system_id, cmd->system_id);
 
 	return 0;
 }
@@ -4443,7 +4439,7 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 /*
  * FIXME: move _vg_bad_status_bits() checks in here.
  */
-static int _access_vg(struct cmd_context *cmd, struct volume_group *vg, uint32_t *failure)
+static int _vg_access_permitted(struct cmd_context *cmd, struct volume_group *vg, uint32_t *failure)
 {
 	if (!is_real_vg(vg->name)) {
 		/* Disallow use of LVM1 orphans when a host system ID is set. */
@@ -4526,7 +4522,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		goto bad;
 	}
 
-	if (!_access_vg(cmd, vg, &failure))
+	if (!_vg_access_permitted(cmd, vg, &failure))
 		goto bad;
 
 	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */

@@ -301,41 +301,47 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 {
 	int clustered = arg_int_value(cmd, clustered_ARG, 0);
 
-	if (clustered && (vg_is_clustered(vg))) {
-		log_error("Volume group \"%s\" is already clustered",
-			  vg->name);
-		return 0;
+	if (clustered && vg_is_clustered(vg)) {
+		if (vg->system_id && *vg->system_id)
+			log_warn("WARNING: Clearing invalid system ID %s from volume group %s.",
+				 vg->system_id, vg->name);
+		else {
+			log_error("Volume group \"%s\" is already clustered", vg->name);
+			return 0;
+		}
 	}
 
-	if (!clustered && !(vg_is_clustered(vg))) {
-		log_error("Volume group \"%s\" is already not clustered",
-			  vg->name);
-		return 0;
+	if (!clustered && !vg_is_clustered(vg)) {
+		if ((!vg->system_id || !*vg->system_id) && cmd->system_id && *cmd->system_id)
+			log_warn("Setting missing system ID on Volume Group %s to %s.",
+				 vg->name, cmd->system_id);
+		else {
+			log_error("Volume group \"%s\" is already not clustered",
+				  vg->name);
+			return 0;
+		}
 	}
 
 	if (clustered && !arg_count(cmd, yes_ARG)) {
 		if (!clvmd_is_running()) {
-			if (yes_no_prompt("LVM cluster daemon (clvmd) is not"
-					  " running.\n"
-					  "Make volume group \"%s\" clustered"
-					  " anyway? [y/n]: ", vg->name) == 'n') {
+			if (yes_no_prompt("LVM cluster daemon (clvmd) is not running. "
+					  "Make volume group \"%s\" clustered "
+					  "anyway? [y/n]: ", vg->name) == 'n') {
 				log_error("No volume groups changed.");
 				return 0;
 			}
 
 		} else if (!locking_is_clustered() &&
-			   (yes_no_prompt("LVM locking type is not clustered.\n"
-					  "Make volume group \"%s\" clustered"
-					  " anyway? [y/n]: ", vg->name) == 'n')) {
+			   (yes_no_prompt("LVM locking type is not clustered. "
+					  "Make volume group \"%s\" clustered "
+					  "anyway? [y/n]: ", vg->name) == 'n')) {
 			log_error("No volume groups changed.");
 			return 0;
 		}
 	}
 
-	if (clustered)
-		vg->system_id = NULL;
-	else if (cmd->system_id && cmd->system_id[0])
-		vg->system_id = dm_pool_strdup(cmd->mem, cmd->system_id);
+	if (!vg_set_system_id(vg, clustered ? NULL : cmd->system_id))
+		return_0;
 
 	if (!vg_set_clustered(vg, clustered))
 		return_0;
@@ -483,28 +489,49 @@ static int _vgchange_profile(struct cmd_context *cmd,
  * extra_system_ids list.  This function is not allowed to change the system_id
  * of a foreign VG (VG owned by another host).
  */
-
 static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 {
-	const char *arg_str = arg_str_value(cmd, systemid_ARG, NULL);
-	char *system_id;
+	const char *system_id;
+	const char *system_id_arg_str = arg_str_value(cmd, systemid_ARG, NULL);
 
-	if (!arg_str)
+	if (!system_id_arg_str || !*system_id_arg_str) {
+		log_error("Invalid system ID supplied: %s", system_id_arg_str);
 		return 0;
+	}
 
-	system_id = system_id_from_string(cmd, arg_str);
+	if (!(system_id = system_id_from_string(cmd, system_id_arg_str)))
+		return_0;
 
-	if (system_id && cmd->system_id && strcmp(system_id, cmd->system_id)) {
-		log_warn("VG \"%s\" system id \"%s\" does not match local system id \"%s\"",
-			 vg->name, system_id, cmd->system_id);
+	if (!strcmp(vg->system_id, system_id)) {
+		log_error("Volume Group system ID is already \"%s\"", vg->system_id);
+		return 0;
+	}
 
-		if (yes_no_prompt("Change system id? [y/n]: ") == 'n') {
-			log_error("Volume group \"%s\" not changed.", vg->name);
+	if (cmd->system_id && strcmp(system_id, cmd->system_id)) {
+		if (lvs_in_vg_activated(vg)) {
+			log_error("Logical Volumes in VG %s must be deactivated before system ID can be changed.",
+				  vg->name);
+			return 0;
+		}
+
+		log_warn("WARNING: Requested system ID \"%s\" does not match local system ID \"%s\"",
+			 system_id, cmd->system_id);
+		log_warn("WARNING: Volume group %s might become inaccessible from this machine.",
+			 vg->name);
+
+		if (!arg_count(cmd, yes_ARG) &&
+		    yes_no_prompt("Set foreign system ID %s on volume group %s? [y/n]: ",
+				  system_id, vg->name) == 'n') {
+			log_error("Volume group \"%s\" system ID not changed.", vg->name);
 			return 0;
 		}
 	}
 
+	log_verbose("Changing system ID for VG %s: %s -> %s.",
+		    vg->name, vg->system_id, system_id);
+
 	vg->system_id = system_id;
+
 	return 1;
 }
 

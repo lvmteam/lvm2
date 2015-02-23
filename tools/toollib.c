@@ -200,12 +200,12 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	 */
 	if (read_error & FAILED_SYSTEMID) {
 		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Skipping volume group %s with system id %s",
-				  vg->name, vg->system_id);
+			log_error("Skipping volume group %s with system ID %s",
+				  vg->name, vg->system_id ? : vg->lvm1_system_id ? : "");
 			return 1;
 		} else {
 			read_error &= ~FAILED_SYSTEMID; /* Check for other errors */
-			log_verbose("Skipping volume group %s", vg_name);
+			log_verbose("Skipping foreign volume group %s", vg_name);
 			*skip = 1;
 		}
 	}
@@ -666,6 +666,7 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 {
 	int64_t extent_size;
 
+	/* Only vgsplit sets vg */
 	if (vg) {
 		vp_def->vg_name = NULL;
 		vp_def->extent_size = vg->extent_size;
@@ -674,7 +675,7 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		vp_def->alloc = vg->alloc;
 		vp_def->clustered = vg_is_clustered(vg);
 		vp_def->vgmetadatacopies = vg->mda_copies;
-		vp_def->system_id = vg->system_id ? dm_pool_strdup(cmd->mem, vg->system_id) : NULL;
+		vp_def->system_id = vg->system_id;	/* No need to clone this */
 	} else {
 		vp_def->vg_name = NULL;
 		extent_size = find_config_tree_int64(cmd,
@@ -689,7 +690,7 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		vp_def->alloc = DEFAULT_ALLOC_POLICY;
 		vp_def->clustered = DEFAULT_CLUSTERED;
 		vp_def->vgmetadatacopies = DEFAULT_VGMETADATACOPIES;
-		vp_def->system_id = cmd->system_id ? dm_pool_strdup(cmd->mem, cmd->system_id) : NULL;
+		vp_def->system_id = cmd->system_id;
 	}
 
 	return 1;
@@ -705,7 +706,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 				  struct vgcreate_params *vp_new,
 				  struct vgcreate_params *vp_def)
 {
-	const char *arg_str;
+	const char *system_id_arg_str;
 
 	vp_new->vg_name = skip_dev_dir(cmd, vp_def->vg_name, NULL);
 	vp_new->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG,
@@ -745,36 +746,34 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, metadatacopies_ARG)) {
+	if (arg_count(cmd, metadatacopies_ARG))
 		vp_new->vgmetadatacopies = arg_int_value(cmd, metadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
-	} else if (arg_count(cmd, vgmetadatacopies_ARG)) {
+	else if (arg_count(cmd, vgmetadatacopies_ARG))
 		vp_new->vgmetadatacopies = arg_int_value(cmd, vgmetadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
-	} else {
+	else
 		vp_new->vgmetadatacopies = find_config_tree_int(cmd, metadata_vgmetadatacopies_CFG, NULL);
-	}
 
-	if ((arg_str = arg_str_value(cmd, systemid_ARG, NULL))) {
-		vp_new->system_id = system_id_from_string(cmd, arg_str);
-	} else {
-		vp_new->system_id = vp_def->system_id;
-	}
-
-	if (arg_str) {
-		if (!vp_new->system_id)
-			log_warn("No local system id found, VG will not have a system id.");
-
-		if (vp_new->system_id && cmd->system_id &&
-		    strcmp(vp_new->system_id, cmd->system_id)) {
-			log_warn("VG system id \"%s\" will not be accessible to local system id \"%s\"",
-				 vp_new->system_id, cmd->system_id);
+	/* A clustered VG has no system ID. */
+	if (vp_new->clustered) {
+		if (arg_is_set(cmd, systemid_ARG)) {
+			log_error("System ID cannot be set on clustered Volume Groups.");
+			return 0;
 		}
-	}
-
-	/* A clustered vg has no system_id. */
-	if (vp_new->clustered)
 		vp_new->system_id = NULL;
+	} else if (!(system_id_arg_str = arg_str_value(cmd, systemid_ARG, NULL)))
+		vp_new->system_id = vp_def->system_id;
+	else {
+		if (!(vp_new->system_id = system_id_from_string(cmd, system_id_arg_str)))
+			return_0;
+
+		/* FIXME Take local/extra_system_ids into account */
+		if (vp_new->system_id && cmd->system_id &&
+		    strcmp(vp_new->system_id, cmd->system_id))
+			log_warn("VG with system ID \"%s\" might become inaccessible as local system ID is \"%s\"",
+				 vp_new->system_id, cmd->system_id);
+	}
 
 	return 1;
 }
