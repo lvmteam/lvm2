@@ -649,8 +649,8 @@ static void _log_type_error(const char *path, cfg_def_type_t actual,
 	_get_type_name(actual_type_name, sizeof(actual_type_name), actual);
 	_get_type_name(expected_type_name, sizeof(expected_type_name), expected);
 
-	log_warn_suppress(suppress_messages, "Configuration setting \"%s\" has invalid type. "
-					     "Found%s, expected%s.", path,
+	log_warn_suppress(suppress_messages, "WARNING: Configuration setting \"%s\" has invalid type. "
+					     "Found%s but expected%s.", path,
 					     actual_type_name, expected_type_name);
 }
 
@@ -1145,6 +1145,19 @@ static int _apply_local_profile(struct cmd_context *cmd, struct profile *profile
 	return override_config_tree_from_profile(cmd, profile);
 }
 
+const struct dm_config_node *find_config_node(struct cmd_context *cmd, struct dm_config_tree *cft, int id)
+{
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	char path[CFG_PATH_MAX_LEN];
+	const struct dm_config_node *cn;
+
+	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
+
+	cn = dm_config_tree_find_node(cft, path);
+
+	return cn;
+}
+
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
@@ -1268,6 +1281,22 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return f;
+}
+
+int find_config_bool(struct cmd_context *cmd, struct dm_config_tree *cft, int id)
+{
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	char path[CFG_PATH_MAX_LEN];
+	int b;
+
+	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
+
+	if (item->type != CFG_TYPE_BOOL)
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as boolean.", path);
+
+	b = dm_config_tree_find_bool(cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_BOOL, NULL));
+
+	return b;
 }
 
 int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profile)

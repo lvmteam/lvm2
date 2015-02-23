@@ -231,6 +231,12 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 		      struct dm_config_tree *newdata, config_merge_t);
 
 /*
+ * The next two do not check config overrides and must only be used for the tags section.
+ */
+const struct dm_config_node *find_config_node(struct cmd_context *cmd, struct dm_config_tree *cft, int id);
+int find_config_bool(struct cmd_context *cmd, struct dm_config_tree *cft, int id);
+
+/*
  * These versions check an override tree, if present, first.
  */
 const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id, struct profile *profile);

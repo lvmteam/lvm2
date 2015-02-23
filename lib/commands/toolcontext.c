@@ -623,11 +623,12 @@ static int _init_tags(struct cmd_context *cmd, struct dm_config_tree *cft)
 	const char *tag;
 	int passes;
 
-	if (!(tn = find_config_tree_node(cmd, tags_CFG_SECTION, NULL)) || !tn->child)
+	/* Access tags section directly */
+	if (!(tn = find_config_node(cmd, cft, tags_CFG_SECTION)) || !tn->child)
 		return 1;
 
 	/* NB hosttags 0 when already 1 intentionally does not delete the tag */
-	if (!cmd->hosttags && find_config_tree_bool(cmd, tags_hosttags_CFG, NULL)) {
+	if (!cmd->hosttags && find_config_bool(cmd, cft, tags_hosttags_CFG)) {
 		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
 		if (!_set_tag(cmd, cmd->hostname))
 			return_0;
