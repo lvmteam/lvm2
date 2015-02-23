@@ -102,7 +102,7 @@ static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file
 	return NULL;
 }
 
-char *system_id_from_source(struct cmd_context *cmd, const char *source)
+static char *_system_id_from_source(struct cmd_context *cmd, const char *source)
 {
 	struct utsname uts;
 	char filebuf[PATH_MAX];
@@ -391,6 +391,39 @@ int process_profilable_config(struct cmd_context *cmd)
 	return 1;
 }
 
+static int _init_system_id(struct cmd_context *cmd)
+{
+	const char *source;
+	int local_set;
+
+	cmd->system_id = NULL;
+
+	local_set = !!find_config_tree_str(cmd, local_system_id_CFG, NULL);
+
+	source = find_config_tree_str(cmd, global_system_id_source_CFG, NULL);
+	if (!source)
+		source = "none";
+
+	/* Defining local system_id but not using it is probably a config mistake. */
+	if (local_set && strcmp(source, "lvmlocal"))
+		log_warn("WARNING: local/system_id is set, so should global/system_id_source be \"lvmlocal\" not \"%s\"?", source);
+
+	if (!strcmp(source, "none"))
+		return 1;
+
+	if ((cmd->system_id = _system_id_from_source(cmd, source)))
+		return 1;
+
+	/*
+	 * The source failed to resolve a system_id.  In this case allow
+	 * VGs with no system_id to be accessed, but not VGs with a system_id.
+	 */
+	log_warn("WARNING: No system ID found from system_id_source \"%s\".", source);
+	cmd->unknown_system_id = 1;
+
+	return 1;
+}
+
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
@@ -566,6 +599,9 @@ static int _process_config(struct cmd_context *cmd)
 		lvmetad_set_active(NULL, find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL));
 
 	lvmetad_init(cmd);
+
+	if (!_init_system_id(cmd))
+		return_0;
 
 	return 1;
 }
@@ -1446,39 +1482,6 @@ static int _init_hostname(struct cmd_context *cmd)
 	return 1;
 }
 
-static int _init_system_id(struct cmd_context *cmd)
-{
-	const char *source;
-	int local_set;
-
-	cmd->system_id = NULL;
-
-	local_set = !!find_config_tree_str(cmd, local_system_id_CFG, NULL);
-
-	source = find_config_tree_str(cmd, global_system_id_source_CFG, NULL);
-	if (!source)
-		source = "none";
-
-	/* Defining local system_id but not using it is probably a config mistake. */
-	if (local_set && strcmp(source, "lvmlocal"))
-		log_warn("Local system_id is not used by system_id_source %s.", source);
-
-	if (!strcmp(source, "none"))
-		return 1;
-
-	if ((cmd->system_id = system_id_from_source(cmd, source)))
-		return 1;
-
-	/*
-	 * The source failed to resolve a system_id.  In this case allow
-	 * VGs with no system_id to be accessed, but not VGs with a system_id.
-	 */
-
-	log_warn("No system_id found from system_id_source %s.", source);
-	cmd->unknown_system_id = 1;
-	return 1;
-}
-
 static int _init_backup(struct cmd_context *cmd)
 {
 	uint32_t days, min;
@@ -1709,9 +1712,6 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		goto_out;
 
 	if (!_init_profiles(cmd))
-		goto_out;
-
-	if (!_init_system_id(cmd))
 		goto_out;
 
 	if (!(cmd->dev_types = create_dev_types(cmd->proc_dir,
