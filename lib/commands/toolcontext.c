@@ -65,7 +65,7 @@ char *system_id_from_string(struct cmd_context *cmd, const char *str)
 	if (!(system_id = dm_pool_zalloc(cmd->mem, strlen(str) + 1)))
 		return NULL;
 
-	copy_valid_chars(str, system_id);
+	copy_systemid_chars(str, system_id);
 
 	if (!system_id[0])
 		return NULL;

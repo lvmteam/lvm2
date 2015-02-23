@@ -102,46 +102,36 @@ int validate_name(const char *n)
 }
 
 /*
- * Copy valid characters from source to destination.
+ * Copy valid systemid characters from source to destination.
  * Invalid characters are skipped.  Copying is stopped
  * when NAME_LEN characters have been copied.
+ * A terminating NUL is appended.
  */
-
-void copy_valid_chars(const char *src, char *dst)
+void copy_systemid_chars(const char *src, char *dst)
 {
 	const char *s = src;
 	char *d = dst;
 	int len = 0;
-	int i;
 	char c;
 
 	if (!s || !*s)
 		return;
 
-	/* Omit leading hypens. */
-	for (i = 0; i < strlen(src); i++) {
-		c = *s;
-		if (c != '-')
-			break;
+	/* Skip non-alphanumeric starting characters */
+	while (*s && !isalnum(*s))
 		s++;
-	}
 
-	for (i = 0; i < strlen(src); i++) {
-		c = *s;
-
-		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+') {
-			s++;
+	while ((c = *s++)) {
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
 			continue;
-		}
 
-		*d = *s;
-		d++;
-		s++;
-		len++;
+		*d++ = c;
 
-		if (len == NAME_LEN)
+		if (++len >= NAME_LEN)
 			break;
 	}
+
+	*d = '\0';
 }
 
 static const char *_lvname_has_reserved_prefix(const char *lvname)
