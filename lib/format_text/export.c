@@ -21,6 +21,7 @@
 #include "segtype.h"
 #include "text_export.h"
 #include "lvm-version.h"
+#include "toolcontext.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -327,7 +328,7 @@ int out_config_node(struct formatter *f, const struct dm_config_node *cn)
 	return dm_config_write_node(cn, _out_line, f);
 }
 
-static int _print_header(struct formatter *f,
+static int _print_header(struct cmd_context *cmd, struct formatter *f,
 			 const char *desc)
 {
 	char *buf;
@@ -350,6 +351,8 @@ static int _print_header(struct formatter *f,
 	outf(f, "creation_host = \"%s\"\t# %s %s %s %s %s", _utsname.nodename,
 	     _utsname.sysname, _utsname.nodename, _utsname.release,
 	     _utsname.version, _utsname.machine);
+	if (cmd->system_id && *cmd->system_id)
+		outf(f, "creation_host_system_id = \"%s\"", dm_escape_double_quotes(buf, cmd->system_id));
 	outf(f, "creation_time = %lu\t# %s", t, ctime(&t));
 
 	return 1;
@@ -744,7 +747,7 @@ static int _text_vg_export(struct formatter *f,
 	if (!_build_pv_names(f, vg))
 		goto_out;
 
-	if (f->header && !_print_header(f, desc))
+	if (f->header && !_print_header(vg->cmd, f, desc))
 		goto_out;
 
 	if (!out_text(f, "%s {", vg->name))
@@ -767,7 +770,7 @@ static int _text_vg_export(struct formatter *f,
 	if (!out_text(f, "}"))
 		goto_out;
 
-	if (!f->header && !_print_header(f, desc))
+	if (!f->header && !_print_header(vg->cmd, f, desc))
 		goto_out;
 
 	r = 1;
