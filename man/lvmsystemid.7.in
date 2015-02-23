@@ -197,24 +197,24 @@ global {
 
 Changing system_id_source will often cause the system_id to change, which
 may prevent the host from using VGs that it previously used (see
-allow_system_id below to handle this.)
+extra_system_ids below to handle this.)
 
 If a system_id_source other than none fails to resolve a system_id, the
 host will be allowed to access VGs with no system_id, but will not be
 allowed to access VGs with a defined system_id.
 
-.SS allow_system_id
+.SS extra_system_ids
 
 In some cases, it may be useful for a host to access VGs with different
 system_id's, e.g. if a host's system_id changes, and it wants to use VGs
 that it created with its old system_id.  To allow a host to access VGs
 with other system_id's, those other system_id's can be listed in
-lvmlocal.conf local/allow_system_id.
+lvmlocal.conf local/extra_system_ids.
 
 .I lvmlocal.conf
 .nf
 local {
-    allow_system_id = [ "my_other_name" ]
+    extra_system_ids = [ "my_other_name" ]
 }
 .fi
 

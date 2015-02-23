@@ -480,7 +480,7 @@ static int _vgchange_profile(struct cmd_context *cmd,
  * This function will not be called unless the local host is allowed to use the
  * VG.  Either the VG has no system_id, or the VG and host have matching
  * system_ids, or the host has the VG's current system_id in its
- * allow_system_id list.  This function is not allowed to change the system_id
+ * extra_system_ids list.  This function is not allowed to change the system_id
  * of a foreign VG (VG owned by another host).
  */
 

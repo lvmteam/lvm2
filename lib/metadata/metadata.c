@@ -4344,21 +4344,18 @@ static int allow_system_id(struct cmd_context *cmd, const char *system_id)
 	const struct dm_config_value *cv;
 	const char *str;
 
-	if (!(cn = find_config_tree_node(cmd, local_allow_system_id_CFG, NULL)))
+	if (!(cn = find_config_tree_node(cmd, local_extra_system_ids_CFG, NULL)))
 		return 0;
 
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type == DM_CFG_EMPTY_ARRAY)
 			break;
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Ignoring invalid string in allow_system_id list");
+		/* Ignore invalid data: Warning message already issued by config.c */
+		if (cv->type != DM_CFG_STRING)
 			continue;
-		}
 		str = cv->v.str;
-		if (!*str) {
-			log_error("Ignoring empty string in config file");
+		if (!*str)
 			continue;
-		}
 
 		if (!strcmp(str, system_id))
 			return 1;
@@ -4376,6 +4373,7 @@ static int _access_vg_clustered(struct cmd_context *cmd, struct volume_group *vg
 			log_verbose("Skipping clustered volume group %s", vg->name);
 		return 0;
 	}
+
 	return 1;
 }
 

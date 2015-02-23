@@ -838,18 +838,39 @@ global {
     #
     # cache_dump_executable = "@CACHE_DUMP_CMD@"
 
-    # Defines the method lvm will use to find the local system_id.
-    # The options are: none, machineid, uname, lvmlocal, or file.
-    # Unset, or set to an empty string is equivalent to "none".
-    # See lvmsystemid(7) for more information.
+    # The method, if any, used to define a local system ID on this host.
+    # By placing the same system ID on a Volume Group you can prevent
+    # other co-operating hosts in a cluster (each with a different
+    # system ID) from accessing the same Volume Group.
     #
-    # system_id_source = ""
-
-    # Specifies the path to a file containing the local system_id.
-    # It is only used when system_id_source = "file".
-    # See lvmsystemid(7) for more information.
+    # Set this to one of: none, machineid, uname, lvmlocal, or file.
     #
-    # system_id_file = ""
+    # N.B. Do not use this feature without reading 'man lvmsystemid' to
+    # understand the correct ways to use it and its limitations.
+    #
+    # system_id_source = "none"
+    #
+    # Obtain the system ID from the "system_id" setting in the "local"
+    # section of a configuration file such as @DEFAULT_SYS_DIR@/lvmlocal.conf.
+    #
+    # system_id_source = "lvmlocal"
+    #
+    # Set the system ID from the hostname of the system.
+    # System IDs beginning "localhost" are not permitted.
+    #
+    # system_id_source = "uname"
+    #
+    # Use the contents of the file @DEFAULT_SYS_DIR@/machine-id
+    # to set the system ID.
+    # Comments starting with the character # are ignored.
+    #
+    # system_id_source = "machineid"
+    #
+    # Use the contents of an alternative file to set the system ID.
+    # Comments starting with the character # are ignored.
+    #
+    # system_id_source = "file"
+    # system_id_file = "/etc/systemid"
 }
 
 activation {

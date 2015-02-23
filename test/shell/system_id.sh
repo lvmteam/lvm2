@@ -386,7 +386,7 @@ rm -f $SIDFILE
 # lvs --foreign: lvs in a foreign vg are reported
 # TODO
 
-# use allow_system_id to read a foreign VG
+# use extra_system_ids to read a foreign VG
 # TODO
 
 
