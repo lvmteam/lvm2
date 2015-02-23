@@ -84,31 +84,52 @@ char *system_id_from_string(struct cmd_context *cmd, const char *str)
 
 static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file)
 {
-	char line[NAME_LEN + 1];
+	char *line = NULL;
+	size_t line_size;
+	char *start, *end;
+	char *system_id = NULL;
 	FILE *fp;
 
 	if (!file || !strlen(file) || !file[0])
-		return NULL;
+		return_NULL;
 
 	if (!(fp = fopen(file, "r"))) {
-		log_warn("WARNING: Error %d opening system_id_file %s", errno, file);
+		log_warn("WARNING: %s: fopen failed: %s", file, strerror(errno));
 		return NULL;
 	}
 
-	memset(line, 0, sizeof(line));
+	while (getline(&line, &line_size, fp) > 0) {
+		start = line;
 
-	while (fgets(line, NAME_LEN, fp)) {
-		if (line[0] == '#' || line[0] == '\n')
+		/* Ignore leading whitespace */
+		while (*start && isspace(*start))
+			start++;
+
+		/* Ignore rest of line after # */
+		if (!*start || *start == '#')
 			continue;
 
-		if (fclose(fp))
-			stack;
-		return system_id_from_string(cmd, line);
+		if (system_id) {
+			log_warn("WARNING: Ignoring extra line(s) in system ID file %s.", file);
+			break;
+		}
+
+		/* Remove any comments from end of line */
+		for (end = start; *end; start++)
+			if (*end == '#') {
+				*end = '\0';
+				break;
+			}
+
+		system_id = system_id_from_string(cmd, start);
 	}
+
+	free(line);
 
 	if (fclose(fp))
 		stack;
-	return NULL;
+
+	return system_id;
 }
 
 static char *_system_id_from_source(struct cmd_context *cmd, const char *source)
