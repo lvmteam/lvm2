@@ -56,6 +56,8 @@ loading \fBlvm.conf\fP(5) and any other configuration files.
 .TP
 \fBsegtypes\fP \(em Display recognised Logical Volume segment types.
 .TP
+\fBsystemid\fP \(em Display the system ID, if any, currently set on this host.
+.TP
 \fBtags\fP \(em Display any tags defined on this host.
 .TP
 \fBversion\fP \(em Display version information.

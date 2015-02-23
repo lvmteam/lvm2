@@ -890,6 +890,11 @@ xx(segtypes,
    PERMITTED_READ_ONLY,
    "segtypes\n")
 
+xx(systemid,
+   "Display the system ID, if any, currently set on this host",
+   PERMITTED_READ_ONLY,
+   "systemid\n")
+
 xx(tags,
    "List tags defined on this host",
    PERMITTED_READ_ONLY,
