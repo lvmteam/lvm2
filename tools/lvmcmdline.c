@@ -1074,7 +1074,9 @@ static int _get_settings(struct cmd_context *cmd)
 	else
 		init_ignorelockingfailure(0);
 
-	cmd->ignore_clustered_vgs = arg_count(cmd, ignoreskippedcluster_ARG) ? 1 : 0;
+	cmd->ignore_clustered_vgs = arg_is_set(cmd, ignoreskippedcluster_ARG);
+	cmd->include_foreign_vgs =
+	     ((cmd->command->flags & NEEDS_FOREIGN_VGS) || arg_is_set(cmd, foreign_ARG)) ? 1 : 0;
 
 	if (!arg_count(cmd, sysinit_ARG))
 		lvmetad_connect_or_warn();
@@ -1500,6 +1502,19 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 	}
 
+	/*
+	 * Other hosts might have changed foreign VGs so enforce a rescan
+	 * before processing any command using them.
+	 */
+	if (cmd->include_foreign_vgs && lvmetad_used() &&
+	    !lvmetad_pvscan_foreign_vgs(cmd, NULL)) {
+		log_error("Failed to scan devices.");
+		return ECMD_FAILED;
+	}
+
+	/*
+	 * FIXME Break up into multiple functions.
+	 */
 	ret = cmd->command->fn(cmd, argc, argv);
 
 	fin_locking();

@@ -108,6 +108,8 @@ struct arg_value_group_list {
 #define ENABLE_ALL_DEVS		0x00000008	
 /* Exactly one VG name argument required. */
 #define ONE_VGNAME_ARG		0x00000010
+/* Processes foreign VGs by default */
+#define NEEDS_FOREIGN_VGS	0x00000020
  
 /* a register of the lvm commands */
 struct command {

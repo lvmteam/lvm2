@@ -362,6 +362,7 @@ xx(lvdisplay,
    "\t[-c|--colon]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -381,6 +382,7 @@ xx(lvdisplay,
    "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -399,7 +401,7 @@ xx(lvdisplay,
    "\t[--version]\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-    aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG,
+    aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG, foreign_ARG,
     ignorelockingfailure_ARG, ignoreskippedcluster_ARG, maps_ARG,
     noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG, partial_ARG,
     readonly_ARG, segments_ARG, select_ARG, separator_ARG,
@@ -583,6 +585,7 @@ xx(lvs,
    "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -605,7 +608,7 @@ xx(lvs,
    "\t[--version]\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-   aligned_ARG, all_ARG, binary_ARG, ignorelockingfailure_ARG,
+   aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
    ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
    readonly_ARG, rows_ARG, segments_ARG, select_ARG, separator_ARG,
@@ -744,6 +747,7 @@ xx(pvdisplay,
    "\t[-c|--colon]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -763,6 +767,7 @@ xx(pvdisplay,
    "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -779,7 +784,7 @@ xx(pvdisplay,
    "\t[--version]\n"
    "\t[PhysicalVolumePath [PhysicalVolumePath...]]\n",
 
-   aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG,
+   aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG, foreign_ARG,
    ignorelockingfailure_ARG, ignoreskippedcluster_ARG, maps_ARG,
    noheadings_ARG, nosuffix_ARG, options_ARG, readonly_ARG,
    select_ARG, separator_ARG, short_ARG, sort_ARG, unbuffered_ARG,
@@ -835,6 +840,7 @@ xx(pvs,
    "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|-?|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -857,7 +863,7 @@ xx(pvs,
    "\t[--version]\n"
    "\t[PhysicalVolume [PhysicalVolume...]]\n",
 
-   aligned_ARG, all_ARG, binary_ARG, ignorelockingfailure_ARG,
+   aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
    ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG, nolocking_ARG,
    nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, rows_ARG,
    segments_ARG, select_ARG, separator_ARG, sort_ARG, trustcache_ARG,
@@ -907,6 +913,7 @@ xx(vgcfgbackup,
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
    "\t[-f|--file filename]\n"
+   "\t[--foreign]\n"
    "\t[-h|-?|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-P|--partial]\n"
@@ -915,7 +922,7 @@ xx(vgcfgbackup,
    "\t[--version]\n"
    "\t[VolumeGroupName...]\n",
 
-   file_ARG, ignorelockingfailure_ARG, partial_ARG, readonly_ARG)
+   file_ARG, foreign_ARG, ignorelockingfailure_ARG, partial_ARG, readonly_ARG)
 
 xx(vgcfgrestore,
    "Restore volume group configuration",
@@ -955,11 +962,10 @@ xx(vgchange,
    "\t[--[vg]metadatacopies #copies]\n"
    "\t[--poll {y|n}]\n"
    "\t[--noudevsync]\n"
-   "\t[--systemid SystemID]\n"
    "\t[--refresh]\n"
    "\t[-S|--select Selection]\n"
-   "\t[--systemid SystemID]\n"
    "\t[--sysinit]\n"
+   "\t[--systemid SystemID]\n"
    "\t[-t|--test]\n"
    "\t[-u|--uuid]\n"
    "\t[-v|--verbose]\n"
@@ -1033,6 +1039,7 @@ xx(vgcreate,
    "\t[--[vg]metadatacopies #copies]\n"
    "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes]\n"
    "\t[-s|--physicalextentsize PhysicalExtentSize[bBsSkKmMgGtTpPeE]]\n"
+   "\t[--systemid SystemID]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
@@ -1055,6 +1062,7 @@ xx(vgdisplay,
    "\t[-c|--colon | -s|--short | -v|--verbose]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -1071,6 +1079,7 @@ xx(vgdisplay,
    "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -1089,9 +1098,9 @@ xx(vgdisplay,
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
    activevolumegroups_ARG, aligned_ARG, binary_ARG, colon_ARG, columns_ARG,
-   ignorelockingfailure_ARG, ignoreskippedcluster_ARG, noheadings_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, select_ARG,
-   short_ARG, separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
+   foreign_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
+   noheadings_ARG, nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG,
+   select_ARG, short_ARG, separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
@@ -1133,7 +1142,7 @@ xx(vgextend,
 
 xx(vgimport,
    "Register exported volume group with system",
-   ALL_VGS_IS_DEFAULT,
+   ALL_VGS_IS_DEFAULT | NEEDS_FOREIGN_VGS,
    "vgimport\n"
    "\t[-a|--all]\n"
    "\t[--commandprofile ProfileName]\n"
@@ -1242,6 +1251,7 @@ xx(vgs,
    "\t[-a|--all]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
@@ -1263,11 +1273,11 @@ xx(vgs,
    "\t[--version]\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
-   aligned_ARG, all_ARG, binary_ARG, ignorelockingfailure_ARG,
+   aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
    ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
    readonly_ARG, rows_ARG, select_ARG, separator_ARG, sort_ARG,
-   trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG, foreign_ARG)
+   trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(vgscan,
    "Search for all volume groups",

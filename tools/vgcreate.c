@@ -124,8 +124,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg);
 
-	log_print_unless_silent("%s%colume group \"%s\" successfully created",
-				clustered_message, *clustered_message ? 'v' : 'V', vg->name);
+	log_print_unless_silent("%s%colume group \"%s\" successfully created%s%s",
+				clustered_message, *clustered_message ? 'v' : 'V', vg->name,
+				vg->system_id ? " with system ID " : "", vg->system_id ? : "");
 
 	release_vg(vg);
 	return ECMD_PROCESSED;

@@ -1,5 +1,7 @@
 Version 2.02.117 - 
 ====================================
+  Add NEEDS_FOREIGN_VGS flag to vgimport so --foreign is always supplied.
+  Add --foreign to the 6 display and reporting tools and vgcfgbackup.
   Install /etc/lvm/lvmlocal.conf template with local section for systemid.
   Record creation_host_system_id in lvm2 metadata.
   Reinstate recursive config file tag section processing. (2.02.99)
@@ -7,6 +9,8 @@ Version 2.02.117 -
   Fix configure to properly recognize --with-default-raid10-segtype option.
   Do not refresh filters/rescan if no signature is wiped during pvcreate.
   Enforce none external dev info for wiping during pvcreate to avoid races.
+  Add global/system_id_source and system_id_file to lvm.conf.
+  Add --systemid to vgcreate and vchange to set / change a system ID.
   Add support for VG system_id to control host access to VGs.
   Update vgextend to use process_each_vg.
   Add --ignoreskippedcluster to pvchange.

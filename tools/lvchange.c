@@ -1178,6 +1178,11 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!update && !arg_count(cmd, refresh_ARG) && !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG) &&
+	     arg_count(cmd, activate_ARG) &&
+	     !is_change_activating((activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+		cmd->include_foreign_vgs = 1;
+
 	/*
 	 * If --sysinit -aay is used and at the same time lvmetad is used,
 	 * we want to rely on autoactivation to take place. Also, we
