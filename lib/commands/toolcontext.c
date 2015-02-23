@@ -55,20 +55,29 @@
 
 static const size_t linebuffer_size = 4096;
 
-
-/* Copy the input string, removing invalid characters. */
-
+/*
+ * Copy the input string, removing invalid characters.
+ */
 char *system_id_from_string(struct cmd_context *cmd, const char *str)
 {
 	char *system_id;
 
-	if (!(system_id = dm_pool_zalloc(cmd->mem, strlen(str) + 1)))
+	if (!(system_id = dm_pool_zalloc(cmd->mem, strlen(str) + 1))) {
+		log_warn("WARNING: Failed to allocate system ID.");
 		return NULL;
+	}
 
 	copy_systemid_chars(str, system_id);
 
-	if (!system_id[0])
+	if (!*system_id) {
+		log_warn("WARNING: Invalid system ID format: %s", str);
 		return NULL;
+	}
+
+	if (!strncmp(system_id, "localhost", 9)) {
+		log_warn("WARNING: System ID may not begin with the string \"localhost\".");
+		return NULL;
+	}
 
 	return system_id;
 }
@@ -104,39 +113,40 @@ static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file
 
 static char *_system_id_from_source(struct cmd_context *cmd, const char *source)
 {
-	struct utsname uts;
 	char filebuf[PATH_MAX];
 	const char *file;
 	const char *etc_str;
 	const char *str;
 	char *system_id = NULL;
 
-	if (!strcmp(source, "uname")) {
-		if (!uname(&uts) && strncmp(uts.nodename, "localhost", 9))
-			system_id = system_id_from_string(cmd, uts.nodename);
+	if (!strcasecmp(source, "uname")) {
+		if (cmd->hostname)
+			system_id = system_id_from_string(cmd, cmd->hostname);
 		goto out;
 	}
 
 	/* lvm.conf and lvmlocal.conf are merged into one config tree */
-	if (!strcmp(source, "lvmlocal")) {
+	if (!strcasecmp(source, "lvmlocal")) {
 		if ((str = find_config_tree_str(cmd, local_system_id_CFG, NULL)))
 			system_id = system_id_from_string(cmd, str);
 		goto out;
 	}
 
-	if (!strcmp(source, "machineid")) {
-		memset(filebuf, 0, sizeof(filebuf));
+	if (!strcasecmp(source, "machineid") || !strcasecmp(source, "machine-id")) {
 		etc_str = find_config_tree_str(cmd, global_etc_CFG, NULL);
-		if (dm_snprintf(filebuf, sizeof(filebuf), "%s/machine-id", etc_str) >= 0)
+		if (dm_snprintf(filebuf, sizeof(filebuf), "%s/machine-id", etc_str) != -1)
 			system_id = _read_system_id_from_file(cmd, filebuf);
 		goto out;
 	}
 
-	if (!strcmp(source, "file")) {
+	if (!strcasecmp(source, "file")) {
 		file = find_config_tree_str(cmd, global_system_id_file_CFG, NULL);
 		system_id = _read_system_id_from_file(cmd, file);
 		goto out;
 	}
+
+	log_warn("WARNING: Unrecognised system_id_source \"%s\".", source);
+
 out:
 	return system_id;
 }

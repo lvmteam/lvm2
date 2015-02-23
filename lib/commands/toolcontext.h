@@ -163,7 +163,6 @@ int init_lvmcache_orphans(struct cmd_context *cmd);
 
 struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format);
 
-char *system_id_from_source(struct cmd_context *cmd, const char *system_id_source);
 char *system_id_from_string(struct cmd_context *cmd, const char *system_id_string);
 
 #endif
