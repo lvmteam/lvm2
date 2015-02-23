@@ -1031,3 +1031,11 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	return r;
 }
 
+/* 
+ * FIXME Implement this function, skipping PVs known to belong to local or clustered,
+ * non-exported VGs.
+ */
+int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handler)
+{
+	return lvmetad_pvscan_all_devs(cmd, handler);
+}

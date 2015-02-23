@@ -156,6 +156,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			  activation_handler handler);
 
 int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler);
+int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handler);
 
 #  else		/* LVMETAD_SUPPORT */
 
@@ -181,6 +182,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
 #    define lvmetad_pvscan_single(cmd, dev, handler)	(0)
 #    define lvmetad_pvscan_all_devs(cmd, handler)	(0)
+#    define lvmetad_pvscan_foreign_vgs(cmd, handler)	(0)
 
 #  endif	/* LVMETAD_SUPPORT */
 
