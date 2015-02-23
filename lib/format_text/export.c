@@ -352,7 +352,7 @@ static int _print_header(struct cmd_context *cmd, struct formatter *f,
 	     _utsname.sysname, _utsname.nodename, _utsname.release,
 	     _utsname.version, _utsname.machine);
 	if (cmd->system_id && *cmd->system_id)
-		outf(f, "creation_host_system_id = \"%s\"", dm_escape_double_quotes(buf, cmd->system_id));
+		outf(f, "creation_host_system_id = \"%s\"", cmd->system_id);
 	outf(f, "creation_time = %lu\t# %s", t, ctime(&t));
 
 	return 1;
