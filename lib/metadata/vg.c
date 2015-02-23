@@ -121,7 +121,7 @@ char *vg_name_dup(const struct volume_group *vg)
 
 char *vg_system_id_dup(const struct volume_group *vg)
 {
-	return dm_pool_strdup(vg->vgmem, vg->system_id);
+	return dm_pool_strdup(vg->vgmem, vg->system_id ? : vg->lvm1_system_id ? : "");
 }
 
 char *vg_uuid_dup(const struct volume_group *vg)
@@ -605,15 +605,22 @@ int vg_set_clustered(struct volume_group *vg, int clustered)
 
 int vg_set_system_id(struct volume_group *vg, const char *system_id)
 {
-	if (!system_id) {
+	if (!system_id || !*system_id) {
 		vg->system_id = NULL;
 		return 1;
 	}
 
-	if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
-		log_error("vg_set_system_id no mem");
+	if (systemid_on_pvs(vg)) {
+		log_error("Metadata format %s does not support this type of system id.",
+			  vg->fid->fmt->name);
 		return 0;
 	}
+
+	if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
+		log_error("Failed to allocate memory for system_id in vg_set_system_id.");
+		return 0;
+	}
+
 	return 1;
 }
 

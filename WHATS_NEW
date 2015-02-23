@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Install /etc/lvm/lvmlocal.conf template with local section for systemid.
   Record creation_host_system_id in lvm2 metadata.
   Reinstate recursive config file tag section processing. (2.02.99)
   Add 'lvm systemid' to display the current system ID.

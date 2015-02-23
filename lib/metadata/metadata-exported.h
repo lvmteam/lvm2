@@ -139,6 +139,9 @@
 #define FMT_CONFIG_PROFILE	0x000000800U	/* Supports configuration profiles? */
 #define FMT_OBSOLETE		0x000001000U	/* Obsolete format? */
 #define FMT_NON_POWER2_EXTENTS	0x000002000U	/* Non-power-of-2 extent sizes? */
+#define FMT_SYSTEMID_ON_PVS	0x000004000U	/* System ID is stored on PVs not VG */
+
+#define systemid_on_pvs(vg)	((vg)->fid->fmt->features & FMT_SYSTEMID_ON_PVS)
 
 /* Mirror conversion type flags */
 #define MIRROR_BY_SEG		0x00000001U	/* segment-by-segment mirror */

@@ -1045,10 +1045,10 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	}
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
-	if (!(vg->system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
+	vg->system_id = NULL;
+	if (!(vg->lvm1_system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
 		goto_bad;
 
-	*vg->system_id = '\0';
 	vg->extent_size = DEFAULT_EXTENT_SIZE * 2;
 	vg->max_lv = DEFAULT_MAX_LV;
 	vg->max_pv = DEFAULT_MAX_PV;
@@ -4380,6 +4380,15 @@ static int _access_vg_clustered(struct cmd_context *cmd, struct volume_group *vg
 static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 {
 	/*
+	 * LVM1 VGs must not be accessed if a new-style LVM2 system ID is set.
+	 */
+	if (cmd->system_id && systemid_on_pvs(vg)) {
+		log_error("Cannot access VG %s with LVM1 system ID \"%s\" when host system ID is set.",
+			  vg->name, vg->lvm1_system_id);
+		return 0;
+	}
+
+	/*
 	 * A VG without a system_id can be accessed by anyone.
 	 */
 	if (!vg->system_id || !vg->system_id[0])
@@ -4436,8 +4445,14 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
  */
 static int _access_vg(struct cmd_context *cmd, struct volume_group *vg, uint32_t *failure)
 {
-	if (!is_real_vg(vg->name))
+	if (!is_real_vg(vg->name)) {
+		/* Disallow use of LVM1 orphans when a host system ID is set. */
+		if (cmd->system_id && *cmd->system_id && systemid_on_pvs(vg)) {
+			*failure |= FAILED_SYSTEMID;
+			return_0;
+		}
 		return 1;
+	}
 
 	if (!_access_vg_clustered(cmd, vg)) {
 		*failure |= FAILED_CLUSTERED;

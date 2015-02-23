@@ -984,6 +984,16 @@ static int _vgfree_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
 
+static int _vgsystemid_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	const char *repstr = vg->system_id ? : vg->lvm1_system_id ? : "";
+
+	return _string_disp(rh, mem, field, &repstr, private);
+}
+
 static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 		      struct dm_report_field *field,
 		      const void *data, void *private __attribute__((unused)))
@@ -1864,6 +1874,7 @@ static struct volume_group _dummy_vg = {
 	.fid = &_dummy_fid,
 	.name = "",
 	.system_id = (char *) "",
+	.lvm1_system_id = (char *) "",
 	.pvs = DM_LIST_HEAD_INIT(_dummy_vg.pvs),
 	.lvs = DM_LIST_HEAD_INIT(_dummy_vg.lvs),
 	.tags = DM_LIST_HEAD_INIT(_dummy_vg.tags),

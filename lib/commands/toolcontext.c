@@ -58,7 +58,7 @@ static const size_t linebuffer_size = 4096;
 /*
  * Copy the input string, removing invalid characters.
  */
-char *system_id_from_string(struct cmd_context *cmd, const char *str)
+const char *system_id_from_string(struct cmd_context *cmd, const char *str)
 {
 	char *system_id;
 
@@ -82,12 +82,12 @@ char *system_id_from_string(struct cmd_context *cmd, const char *str)
 	return system_id;
 }
 
-static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file)
+static const char *_read_system_id_from_file(struct cmd_context *cmd, const char *file)
 {
 	char *line = NULL;
 	size_t line_size;
 	char *start, *end;
-	char *system_id = NULL;
+	const char *system_id = NULL;
 	FILE *fp;
 
 	if (!file || !strlen(file) || !file[0])
@@ -132,13 +132,13 @@ static char *_read_system_id_from_file(struct cmd_context *cmd, const char *file
 	return system_id;
 }
 
-static char *_system_id_from_source(struct cmd_context *cmd, const char *source)
+static const char *_system_id_from_source(struct cmd_context *cmd, const char *source)
 {
 	char filebuf[PATH_MAX];
 	const char *file;
 	const char *etc_str;
 	const char *str;
-	char *system_id = NULL;
+	const char *system_id = NULL;
 
 	if (!strcasecmp(source, "uname")) {
 		if (cmd->hostname)

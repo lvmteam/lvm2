@@ -69,14 +69,14 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	memcpy(&pv->vgid, vgd->vg_uuid, sizeof(vg->id));
 
 	/* Store system_id from first PV if PV belongs to a VG */
-	if (vg && !*vg->system_id)
-		strncpy(vg->system_id, (char *)pvd->system_id, NAME_LEN);
+	if (vg && !*vg->lvm1_system_id)
+		strncpy(vg->lvm1_system_id, (char *)pvd->system_id, NAME_LEN);
 
 	if (vg &&
-	    strncmp(vg->system_id, (char *)pvd->system_id, sizeof(pvd->system_id)))
+	    strncmp(vg->lvm1_system_id, (char *)pvd->system_id, sizeof(pvd->system_id)))
 		    log_very_verbose("System ID %s on %s differs from %s for "
 				     "volume group", pvd->system_id,
-				     pv_dev_name(pv), vg->system_id);
+				     pv_dev_name(pv), vg->lvm1_system_id);
 
 	/*
 	 * If exported, we still need to flag in pv->status too because
@@ -125,19 +125,17 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	return 1;
 }
 
-#if 0
-static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
+static int _lvm1_system_id(struct cmd_context *cmd, char *s, const char *prefix)
 {
 
 	if (dm_snprintf(s, NAME_LEN, "%s%s%lu",
 			 prefix, cmd->hostname, time(NULL)) < 0) {
-		log_error("Generated system_id too long");
+		log_error("Generated LVM1 format system_id too long");
 		return 0;
 	}
 
 	return 1;
 }
-#endif
 
 int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused)),
 	      struct volume_group *vg,
@@ -158,22 +156,18 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	}
 
 	/* Preserve existing system_id if it exists */
-#if 0
-	if (vg && *vg->system_id)
-		strncpy((char *)pvd->system_id, vg->system_id, sizeof(pvd->system_id));
-#endif
+	if (vg && *vg->lvm1_system_id)
+		strncpy((char *)pvd->system_id, vg->lvm1_system_id, sizeof(pvd->system_id));
 
 	/* Is VG already exported or being exported? */
 	if (vg && vg_is_exported(vg)) {
-#if 0
 		/* Does system_id need setting? */
-		if (!*vg->system_id ||
-		    strncmp(vg->system_id, EXPORTED_TAG,
+		if (!*vg->lvm1_system_id ||
+		    strncmp(vg->lvm1_system_id, EXPORTED_TAG,
 			    sizeof(EXPORTED_TAG) - 1)) {
-			if (!_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
+			if (!_lvm1_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
 				return_0;
 		}
-#endif
 		if (strlen((char *)pvd->vg_name) + sizeof(EXPORTED_TAG) >
 		    sizeof(pvd->vg_name)) {
 			log_error("Volume group name %s too long to export",
@@ -183,25 +177,23 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 		strcat((char *)pvd->vg_name, EXPORTED_TAG);
 	}
 
-#if 0
 	/* Is VG being imported? */
-	if (vg && !vg_is_exported(vg) && *vg->system_id &&
-	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
-		if (!_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
+	if (vg && !vg_is_exported(vg) && *vg->lvm1_system_id &&
+	    !strncmp(vg->lvm1_system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
+		if (!_lvm1_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
 			return_0;
 	}
 
 	/* Generate system_id if PV is in VG */
 	if (!pvd->system_id[0])
-		if (!_system_id(cmd, (char *)pvd->system_id, ""))
+		if (!_lvm1_system_id(cmd, (char *)pvd->system_id, ""))
 			return_0;
 
 	/* Update internal system_id if we changed it */
 	if (vg &&
-	    (!*vg->system_id ||
-	     strncmp(vg->system_id, (char *)pvd->system_id, sizeof(pvd->system_id))))
-		    strncpy(vg->system_id, (char *)pvd->system_id, NAME_LEN);
-#endif
+	    (!*vg->lvm1_system_id ||
+	     strncmp(vg->lvm1_system_id, (char *)pvd->system_id, sizeof(pvd->system_id))))
+		    strncpy(vg->lvm1_system_id, (char *)pvd->system_id, NAME_LEN);
 
 	//pvd->pv_major = MAJOR(pv->dev);
 
@@ -233,10 +225,8 @@ int import_vg(struct dm_pool *mem,
 	if (!(vg->name = dm_pool_strdup(mem, (char *)dl->pvd.vg_name)))
 		return_0;
 
-	if (!(vg->system_id = dm_pool_zalloc(mem, NAME_LEN + 1)))
+	if (!(vg->lvm1_system_id = dm_pool_zalloc(mem, NAME_LEN + 1)))
 		return_0;
-
-	*vg->system_id = '\0';
 
 	if (vgd->vg_status & VG_EXPORTED)
 		vg->status |= EXPORTED_VG;

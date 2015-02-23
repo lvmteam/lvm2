@@ -67,7 +67,8 @@ struct volume_group {
 	struct id id;
 	const char *name;
 	const char *old_name;		/* Set during vgrename and vgcfgrestore */
-	char *system_id;
+	const char *system_id;
+	char *lvm1_system_id;
 
 	uint32_t extent_size;
 	uint32_t extent_count;
