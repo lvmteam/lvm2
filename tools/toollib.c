@@ -1232,17 +1232,20 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 	if (!(result = dm_config_flatten(current)))
 		goto_out;
 
-	if (!(cn = dm_config_create_node(result, "policy_settings")))
-		goto_out;
+	if (result->root) {
+		if (!(cn = dm_config_create_node(result, "policy_settings")))
+			goto_out;
 
-	cn->child = result->root;
-	result->root = cn;
+		cn->child = result->root;
+		result->root = cn;
+	}
 
 	if (arg_count(cmd, cachepolicy_ARG)) {
 		if (!(cn = dm_config_create_node(result, "policy")))
 			goto_out;
 
-		result->root->sib = cn;
+		cn->sib = result->root;
+		result->root = cn;
 		if (!(cn->v = dm_config_create_value(result)))
 			goto_out;
 

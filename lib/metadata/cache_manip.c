@@ -418,7 +418,8 @@ int lv_cache_setpolicy(struct logical_volume *lv, struct dm_config_tree *policy)
 			goto_out;
 	}
 
-	if (!(seg->policy_settings = dm_config_clone_node_with_mem(lv->vg->vgmem, policy->root, 0)))
+	if ((cn = dm_config_find_node(policy->root, "policy_settings")) &&
+	    !(seg->policy_settings = dm_config_clone_node_with_mem(lv->vg->vgmem, cn, 0)))
 		goto_out;
 
 	if ((name = dm_config_find_str(policy->root, "policy", NULL)) &&
@@ -426,7 +427,7 @@ int lv_cache_setpolicy(struct logical_volume *lv, struct dm_config_tree *policy)
 		goto_out;
 
 restart: /* remove any 'default" nodes */
-	cn = seg->policy_settings->child;
+	cn = seg->policy_settings ? seg->policy_settings->child : NULL;
 	while (cn) {
 		if (cn->v->type == DM_CFG_STRING && !strcmp(cn->v->v.str, "default")) {
 			dm_config_remove_node(seg->policy_settings, cn);
