@@ -14,6 +14,10 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-H | \-\-cache ]
 .RB [ \-\-cachemode
 .RI { writeback | writethrough }]
+.RB [ \-\-cachepolicy
+.IR policy ]
+.RB [ \-\-cachesettings
+.IR key=value ]
 .RB [ \-\-cachepool
 .IR CachePoolLogicalVolume { Name | Path }
 .RB [ \-c | \-\-chunksize
@@ -245,6 +249,11 @@ When set to \fIy\fPes, the I/O operation is immeditelly errored.
 Ignore the flag to skip Logical Volumes during activation.
 Use \fB\-\-setactivationskip\fP option to set or reset
 activation skipping flag persistently for logical volume.
+.TP
+.BR  \-\-cachepolicy " " policy ", " \-\-cachesettings " " key=value
+Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
+the cache policy and its associated tunable settings. In most use-cases,
+default values should be adequate.
 .TP
 .B \-\-ignoremonitoring
 Make no attempt to interact with dmeventd unless \fB\-\-monitor\fP
