@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Rescan devices before vgimport with lvmetad so exported VG is seen.
   Fix hang by adjusting cluster mirror regionsize, avoiding CPG msg limit.
   Do not crash when --cachepolicy is given without --cachesettings.
   Add NEEDS_FOREIGN_VGS flag to vgimport so --foreign is always supplied.
