@@ -4430,8 +4430,19 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 	}
 
-	log_error("Cannot access VG %s with system id \"%s\" with local system ID %s.",
-		  vg->name, vg->system_id, cmd->system_id);
+	/*
+	 * Some commands always produce an error when accessing foreign VG.
+	 */
+	if (cmd->error_foreign_vgs) {
+		log_error("Cannot access VG %s with system id \"%s\" with local system ID %s.",
+			  vg->name, vg->system_id, cmd->system_id);
+		return 0;
+	}
+
+	/*
+	 * When include_foreign_vgs is 0 and error_foreign_vgs is 0,
+	 * the result is to silently ignore foreign vgs.
+	 */
 
 	return 0;
 }

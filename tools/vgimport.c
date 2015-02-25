@@ -85,6 +85,17 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		cmd->handles_missing_pvs = 1;
 	}
 
+	/*
+	 * Rescan devices and update lvmetad.  lvmetad may hold a copy of the
+	 * VG from before it was exported, if it was exported by another host.
+	 * We need to reread it to see that it's been exported before we can
+	 * import it.
+	 */
+	if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL)) {
+		log_error("Failed to scan devices.");
+		return ECMD_FAILED;
+	}
+
 	return process_each_vg(cmd, argc, argv,
 			       READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
 			       NULL,
