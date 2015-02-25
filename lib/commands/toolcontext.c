@@ -1741,7 +1741,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 
 	/* Load lvmlocal.conf */
 	if (*cmd->system_dir && !_load_config_file(cmd, "", 1))
-		return_0;
+		goto_out;
 
 	if (!_init_tag_configs(cmd))
 		goto_out;
