@@ -300,6 +300,8 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 			       struct volume_group *vg)
 {
 	int clustered = arg_int_value(cmd, clustered_ARG, 0);
+	struct lv_list *lvl;
+	struct lv_segment *mirror_seg;
 
 	if (clustered && vg_is_clustered(vg)) {
 		if (vg->system_id && *vg->system_id)
@@ -338,6 +340,20 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 			log_error("No volume groups changed.");
 			return 0;
 		}
+#ifdef CMIRROR_REGION_COUNT_LIMIT
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			if (!lv_is_mirror(lvl->lv))
+				continue;
+			mirror_seg = first_seg(lvl->lv);
+			if ((lvl->lv->size / mirror_seg->region_size) >
+			    CMIRROR_REGION_COUNT_LIMIT) {
+				log_error("Unable to convert %s to clustered mode:"
+					  " Mirror region size of %s is too small.",
+					  vg->name, lvl->lv->name);
+				return 0;
+			}
+		}
+#endif
 	}
 
 	if (!vg_set_system_id(vg, clustered ? NULL : cmd->system_id))

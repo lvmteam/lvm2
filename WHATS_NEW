@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Fix hang by adjusting cluster mirror regionsize, avoiding CPG msg limit.
   Do not crash when --cachepolicy is given without --cachesettings.
   Add NEEDS_FOREIGN_VGS flag to vgimport so --foreign is always supplied.
   Add --foreign to the 6 display and reporting tools and vgcfgbackup.

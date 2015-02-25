@@ -159,9 +159,10 @@ struct lv_segment *find_mirror_seg(struct lv_segment *seg)
  * For internal use only log only in verbose mode
  */
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
-				     uint32_t region_size, int internal)
+				     uint32_t region_size, int internal, int clustered)
 {
 	uint64_t region_max;
+	uint64_t region_min, region_min_pow2;
 
 	region_max = (1 << (ffs((int)extents) - 1)) * (uint64_t) (1 << (ffs((int)extent_size) - 1));
 
@@ -174,6 +175,44 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 			log_verbose("Using reduced mirror region size of %"
 				    PRIu32 " sectors.", region_size);
 	}
+
+#ifdef CMIRROR_REGION_COUNT_LIMIT
+	if (clustered) {
+		/*
+		 * The CPG code used by cluster mirrors can only handle a
+		 * payload of < 1MB currently.  (This deficiency is tracked by
+		 * http://bugzilla.redhat.com/682771.)  The region size for cluster
+		 * mirrors must be restricted in such a way as to limit the
+		 * size of the bitmap to < 512kB, because there are two bitmaps
+		 * which get sent around during checkpointing while a cluster
+		 * mirror starts up.  Ergo, the number of regions must not
+		 * exceed 512k * 8.  We also need some room for the other
+		 * checkpointing structures as well, so we reduce by another
+		 * factor of two.
+		 *
+		 * This code should be removed when the CPG restriction is
+		 * lifted.
+		 */
+		region_min = extents;
+		region_min *= extent_size;
+		region_min /= CMIRROR_REGION_COUNT_LIMIT;
+		region_min_pow2 = 1;
+		while (region_min_pow2 < region_min)
+			region_min_pow2 *= 2;
+
+		if (region_size < region_min_pow2) {
+			if (internal)
+				log_print_unless_silent("Increasing mirror region size from %"
+							PRIu32 " to %" PRIu32 " sectors.",
+							region_size, region_min_pow2);
+			else
+				log_verbose("Increasing mirror region size from %"
+					    PRIu32 " to %" PRIu32 " sectors.",
+					    region_size, region_min_pow2);
+			region_size = region_min_pow2;
+		}
+	}
+#endif /* CMIRROR_REGION_COUNT_LIMIT */
 
 	return region_size;
 }
@@ -1708,7 +1747,8 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 
 	adjusted_region_size = adjusted_mirror_region_size(lv->vg->extent_size,
 							   lv->le_count,
-							   region_size, 1);
+							   region_size, 1,
+							   vg_is_clustered(lv->vg));
 
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1, mirrors, 0, 0,
 				    lv->le_count, allocatable_pvs, alloc, 0,
