@@ -170,6 +170,18 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 
 	activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
+	/*
+	 * We can get here in the odd case where an LV is already active in
+	 * a foreign VG, which allows the VG to be accessed by lvchange -a
+	 * so the LV can be deactivated.
+	 */
+	if (lv->vg->system_id && cmd->system_id &&
+	    strcmp(lv->vg->system_id, cmd->system_id) &&
+	    is_change_activating(activate)) {
+		log_error("Cannot activate LVs in a foreign VG.");
+		return ECMD_FAILED;
+	}
+
 	if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))
 		return 1;
 
@@ -1178,11 +1190,6 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!update && !arg_count(cmd, refresh_ARG) && !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG) &&
-	     arg_count(cmd, activate_ARG) &&
-	     !is_change_activating((activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
-		cmd->include_foreign_vgs = 1;
-
 	/*
 	 * If --sysinit -aay is used and at the same time lvmetad is used,
 	 * we want to rely on autoactivation to take place. Also, we
@@ -1211,6 +1218,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_PROCESSED;
 		}
 	}
+
+	if (arg_is_set(cmd, activate_ARG))
+		cmd->include_active_foreign_vgs = 1;
 
 	return process_each_lv(cmd, argc, argv,
 			       update ? READ_FOR_UPDATE : 0, NULL,

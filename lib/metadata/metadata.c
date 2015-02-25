@@ -4418,7 +4418,9 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	if (lvs_in_vg_activated(vg)) {
 		log_warn("WARNING: Found LVs active in VG %s with foreign system ID \"%s\".  Possible data corruption.",
 			  vg->name, vg->system_id);
-		return 1;
+		if (cmd->include_active_foreign_vgs)
+			return 1;
+		return 0;
 	}
 
 	/*

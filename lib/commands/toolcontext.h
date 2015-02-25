@@ -98,6 +98,7 @@ struct cmd_context {
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 	unsigned unknown_system_id:1;
 	unsigned include_foreign_vgs:1;
+	unsigned include_active_foreign_vgs:1;
 	unsigned error_foreign_vgs:1;
 
 	struct dev_types *dev_types;
