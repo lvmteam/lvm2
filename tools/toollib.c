@@ -775,7 +775,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 				log_warn("VG with system ID \"%s\" might become inaccessible as local system ID is \"%s\"",
 					 vp_new->system_id, cmd->system_id);
 			else
-				log_warn("WARNING: A VG without a system ID allows concurrent access from other hosts.");
+				log_warn("WARNING: A VG without a system ID allows unsafe access from other hosts.");
 		}
 	}
 

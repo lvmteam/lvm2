@@ -506,7 +506,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 
 	if (cmd->system_id && strcmp(system_id, cmd->system_id)) {
 		if (!*system_id) {
-			log_warn("WARNING: Removing the system ID allows concurrent access from other hosts.");
+			log_warn("WARNING: Removing the system ID allows unsafe access from other hosts.");
 
 			if (!arg_count(cmd, yes_ARG) &&
 			    yes_no_prompt("Remove system ID %s on volume group %s? [y/n]: ",
