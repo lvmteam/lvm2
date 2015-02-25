@@ -298,15 +298,15 @@ grep $SID1 err
 vgremove $vg1
 rm -f $SIDFILE
 
-# Test max system_id length (127) and invalid system_id characters.
-# The 127 length limit is imposed before invalid characters are omitted.
+# Test max system_id length (128) and invalid system_id characters.
+# The 128 length limit is imposed before invalid characters are omitted.
 
 SIDFILE=etc/lvm_test.conf
 
-# 120 numbers followed by 7 letters (max len)
-SID1=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefg
-# 120 numbers followed by 8 letters (too long by 1 character, the last is omitted)
-SID2=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefgh
+# 120 numbers followed by 8 letters (max len)
+SID1=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefgh
+# 120 numbers followed by 9 letters (too long by 1 character, the last is omitted)
+SID2=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefghi
 
 # max len system_id should appear normally
 rm -f $SIDFILE
@@ -339,11 +339,11 @@ rm -f $SIDFILE
 
 # max len system_id containing an invalid character should appear without
 # the invalid character
-# 120 numbers followed by invalid '#' character followed by 7 letters (too long by 1 character)
-SID1=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789#abcdefg
+# 120 numbers followed by invalid '%' character followed by 8 letters (too long by 1 character)
+SID1=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789%abcdefgh
 # After the invalid character is omitted from SID1
-# The string is truncated to max length (127) before the invalid character is omitted
-SID2=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdef
+# The string is truncated to max length (128) before the invalid character is omitted
+SID2=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefg
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
 aux lvmconf "global/system_id_source = file"
@@ -359,7 +359,7 @@ vgremove $vg1
 rm -f $SIDFILE
 
 # contains a bunch of invalid characters
-SID1="?#$&A.@1]"
+SID1="?%$&A.@1]"
 # SID1 without the invalid characters
 SID2=A.1
 

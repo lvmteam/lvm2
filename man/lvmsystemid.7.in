@@ -36,7 +36,7 @@ Valid system_id characters are the same as valid VG name characters.  If a
 system_id contains invalid characters, those characters are omitted and
 remaining characters are used.  If a system_id is longer than the maximum
 name length, the characters up to the maximum length are used.  The
-maximum length of a system_id is 127 characters.
+maximum length of a system_id is 128 characters.
 
 .SS Limitations and warnings
 
