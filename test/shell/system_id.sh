@@ -443,9 +443,114 @@ lvremove $vg1/$lv1
 vgremove $vg1
 rm -f $SIDFILE
 
-
 # use extra_system_ids to read a foreign VG
-# TODO
+
+SID1=sidfoofile1
+SID2=sidfoofile2
+SIDFILE=etc/lvm_test.conf
+LVMLOCAL=etc/lvmlocal.conf
+rm -f $LVMLOCAL
+rm -f $SIDFILE
+echo "$SID1" > $SIDFILE
+aux lvmconf "global/system_id_source = file"
+aux lvmconf "global/system_id_file = $SIDFILE"
+# create a vg
+vgcreate $vg1 "$dev1"
+# normal vgs sees the vg
+vgs >err
+grep $vg1 err
+# change the local system_id, making the vg foreign
+echo "$SID2" > $SIDFILE
+# normal vgs doesn't see the vg
+vgs >err
+not grep $vg1 err
+# using --foreign we can see the vg
+vgs --foreign >err
+grep $vg1 err
+# add the first system_id to extra_system_ids so we can see the vg
+echo "local {" > $LVMLOCAL
+echo "  extra_system_ids = [ $SID1" ] >> $LVMLOCAL
+echo "}" >> $LVMLOCAL
+vgs >err
+grep $vg1 err
+vgremove $vg1
+rm -f $SIDFILE
+rm -f $LVMLOCAL
+
+# vgcreate --systemid "" creates a vg without a system_id even if source is set
+SID1=sidfoofile1
+SIDFILE=etc/lvm_test.conf
+rm -f $SIDFILE
+echo "$SID1" > $SIDFILE
+aux lvmconf "global/system_id_source = file"
+aux lvmconf "global/system_id_file = $SIDFILE"
+# create a vg
+vgcreate --systemid "" $vg1 "$dev1"
+# normal vgs sees the vg
+vgs >err
+grep $vg1 err
+# our system_id is not displayed for the vg
+vgs -o+systemid >err
+not grep $SID1 err
+vgremove $vg1
+rm -f $SIDFILE
+
+# vgchange --systemid "" clears the system_id on owned vg
+SID1=sidfoofile1
+SIDFILE=etc/lvm_test.conf
+rm -f $SIDFILE
+echo "$SID1" > $SIDFILE
+aux lvmconf "global/system_id_source = file"
+aux lvmconf "global/system_id_file = $SIDFILE"
+# create a vg
+vgcreate $vg1 "$dev1"
+# normal vgs sees the vg
+vgs >err
+grep $vg1 err
+# the vg has our system_id
+vgs -o+systemid >err
+grep $SID1 err
+# clear the system_id
+vgchange --yes --systemid "" $vg1
+# normal vgs sees the vg
+vgs >err
+grep $vg1 err
+# the vg does not have our system_id
+vgs -o+systemid >err
+not grep $SID1 err
+vgremove $vg1
+rm -f $SIDFILE
+
+# vgchange --systemid does not set the system_id on foreign vg
+SID1=sidfoofile1
+SID2=sidfoofile2
+SIDFILE=etc/lvm_test.conf
+rm -f $LVMLOCAL
+rm -f $SIDFILE
+echo "$SID1" > $SIDFILE
+aux lvmconf "global/system_id_source = file"
+aux lvmconf "global/system_id_file = $SIDFILE"
+# create a vg
+vgcreate $vg1 "$dev1"
+# normal vgs sees the vg
+vgs >err
+grep $vg1 err
+# change the local system_id, making the vg foreign
+echo "$SID2" > $SIDFILE
+# normal vgs doesn't see the vg
+vgs >err
+not grep $vg1 err
+# using --foreign we can see the vg
+vgs --foreign >err
+grep $vg1 err
+# cannot clear the system_id of the foreign vg
+not vgchange --yes --systemid "" $vg1
+# cannot set the system_id of the foreign vg
+not vgchange --yes --systemid foo $vg1
+# change our system_id back so we can remove the vg
+echo "$SID1" > $SIDFILE
+vgremove $vg1
+rm -f $SIDFILE
 
 
 # Test handling of bad system_id source configurations
@@ -473,10 +578,8 @@ rm -f $SIDFILE
 #   correct output
 # . Using vgimport should see that the VG is no longer foreign,
 #   but has been exported.
-# TODO
-
-
-# --systemid "" equals none
+# . pvscan --cache, vgscan --cache should cause the latest
+#   version of a foreign VG to be cached in lvmetad.
 # TODO
 
 
