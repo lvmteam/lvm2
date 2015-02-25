@@ -41,7 +41,7 @@ maximum length of a system_id is 128 characters.
 .SS Limitations and warnings
 
 To benefit fully from system_id, all hosts must have system_id set, and
-VGs must have system_id set.  A VG on shared storage can be corrupted or
+VGs must have system_id set.  A VG on shared storage can be damaged or
 destroyed in the following cases which the user must be careful to avoid:
 
 .IP \[bu] 2
@@ -220,8 +220,8 @@ local {
 
 .SS vgcreate
 
-In vgcreate, a host sets its own system_id in the VG metadata.
-To override this and set another system_id:
+In vgcreate, the host running the command assigns its own system_id to the
+new VG.  To override this and set another system_id:
 
 .B vgcreate --systemid
 .I SystemID VG Devices
@@ -230,6 +230,9 @@ Overriding the system_id makes it possible for a host to create a VG that
 it may not be able to use.  Another host with a system_id matching the one
 specified may not recognize the new VG without manually rescanning
 devices.
+
+If the --systemid argument is an empty string (""), the VG is created with
+no system_id, making it accessible to other hosts (see warnings above.)
 
 .SS report/display
 
@@ -271,6 +274,10 @@ confirmation because the host may lose access to the VG being changed:
 
 .B vgchange --systemid
 .I SystemID VG
+
+The system_id can be removed from a VG by specifying an empty string ("")
+as the new system_id.  This makes the VG accessible to other hosts (see
+warnings above.)
 
 A host cannot directly change the system_id of a foreign VG.
 
