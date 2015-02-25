@@ -254,6 +254,38 @@ defines the default cache mode.
 # lvconvert \-\-type cache \-\-cachepool vg/cache1 vg/lv1
 .fi
 
+.SS Cache policy & policy settings
+
+\&
+
+The cache subsystem has an additional per-LV parameter, namely the cache policy
+to use, and possibly the tunable parameters of the said cache policy. In the
+current implementation, two policies are available, "mq" which is the default
+policy and "cleaner" which is used to force the cache to write back (flush) all
+cached writes to the origin LV. Moreover, the "mq" policy has a number of
+tunable parameters: the defaults are chosen to be suitable for the vast
+majority of systems. However, under special circumstances, changing the tunable
+settings of the cache policy can improve performance.
+
+On an existing cache LV, the policy can be set (to "mq") and the cache settings
+can be changed using commands like these:
+
+.I Example
+
+.nf
+# lvchange \-\-cachepolicy mq vg/lv1
+# lvchange \-\-cachesettings 'migration_threshold=2048 random_threshold=4' \\
+     vg/lv1
+.fi
+
+Both commands can be combined, setting both cache policy and its settings
+together. Moreover, when creating a cache LV for the first time (using
+lvcreate), the \-\-cachepolicy and \-\-cachesettings parameters can be used as
+well. The current policy and the policy settings can be listed using the lvs
+command, using 'cache_policy' and 'cache_settings' fields:
+
+# lvs -o +cache_policy,cache_settings
+
 .SS Spare metadata LV
 
 \&
