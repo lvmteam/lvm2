@@ -494,13 +494,10 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 	const char *system_id;
 	const char *system_id_arg_str = arg_str_value(cmd, systemid_ARG, NULL);
 
-	if (!system_id_arg_str || !*system_id_arg_str) {
-		log_error("Invalid system ID supplied: %s", system_id_arg_str);
+	if (!(system_id = system_id_from_string(cmd, system_id_arg_str))) {
+		log_error("Unable to set system ID.");
 		return 0;
 	}
-
-	if (!(system_id = system_id_from_string(cmd, system_id_arg_str)))
-		return_0;
 
 	if (!strcmp(vg->system_id, system_id)) {
 		log_error("Volume Group system ID is already \"%s\"", vg->system_id);
@@ -508,22 +505,33 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	if (cmd->system_id && strcmp(system_id, cmd->system_id)) {
-		if (lvs_in_vg_activated(vg)) {
-			log_error("Logical Volumes in VG %s must be deactivated before system ID can be changed.",
-				  vg->name);
-			return 0;
-		}
+		if (!*system_id) {
+			log_warn("WARNING: Removing the system ID allows concurrent access from other hosts.");
 
-		log_warn("WARNING: Requested system ID \"%s\" does not match local system ID \"%s\"",
-			 system_id, cmd->system_id);
-		log_warn("WARNING: Volume group %s might become inaccessible from this machine.",
-			 vg->name);
+			if (!arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Remove system ID %s on volume group %s? [y/n]: ",
+					  vg->system_id, vg->name) == 'n') {
+				log_error("Volume group \"%s\" system ID not changed.", vg->name);
+				return 0;
+			}
+		} else {
+			if (lvs_in_vg_activated(vg)) {
+				log_error("Logical Volumes in VG %s must be deactivated before system ID can be changed.",
+					  vg->name);
+				return 0;
+			}
 
-		if (!arg_count(cmd, yes_ARG) &&
-		    yes_no_prompt("Set foreign system ID %s on volume group %s? [y/n]: ",
-				  system_id, vg->name) == 'n') {
-			log_error("Volume group \"%s\" system ID not changed.", vg->name);
-			return 0;
+			log_warn("WARNING: Requested system ID \"%s\" does not match local system ID \"%s\"",
+				 system_id, cmd->system_id);
+			log_warn("WARNING: Volume group %s might become inaccessible from this machine.",
+				 vg->name);
+
+			if (!arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Set foreign system ID %s on volume group %s? [y/n]: ",
+					  system_id, vg->name) == 'n') {
+				log_error("Volume group \"%s\" system ID not changed.", vg->name);
+				return 0;
+			}
 		}
 	}
 

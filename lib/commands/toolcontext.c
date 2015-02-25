@@ -62,6 +62,11 @@ const char *system_id_from_string(struct cmd_context *cmd, const char *str)
 {
 	char *system_id;
 
+	if (!str || !*str) {
+		log_warn("WARNING: Empty system ID supplied.");
+		return "";
+	}
+
 	if (!(system_id = dm_pool_zalloc(cmd->mem, strlen(str) + 1))) {
 		log_warn("WARNING: Failed to allocate system ID.");
 		return NULL;
@@ -109,13 +114,13 @@ static const char *_read_system_id_from_file(struct cmd_context *cmd, const char
 		if (!*start || *start == '#')
 			continue;
 
-		if (system_id) {
+		if (system_id && *system_id) {
 			log_warn("WARNING: Ignoring extra line(s) in system ID file %s.", file);
 			break;
 		}
 
 		/* Remove any comments from end of line */
-		for (end = start; *end; start++)
+		for (end = start; *end; end++)
 			if (*end == '#') {
 				*end = '\0';
 				break;
@@ -445,8 +450,10 @@ static int _init_system_id(struct cmd_context *cmd)
 	if (!strcmp(source, "none"))
 		return 1;
 
-	if ((cmd->system_id = _system_id_from_source(cmd, source)))
+	if ((system_id = _system_id_from_source(cmd, source)) && *system_id) {
+		cmd->system_id = system_id;
 		return 1;
+	}
 
 	/*
 	 * The source failed to resolve a system_id.  In this case allow
