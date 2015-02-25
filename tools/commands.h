@@ -908,7 +908,7 @@ xx(tags,
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
-   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT,
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | ENABLE_FOREIGN_VGS,
    "vgcfgbackup\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
