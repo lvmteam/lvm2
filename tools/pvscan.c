@@ -189,6 +189,8 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	dev_t devno;
 	activation_handler handler = NULL;
 
+	cmd->include_foreign_vgs = 1;
+
 	/*
 	 * Return here immediately if lvmetad is not used.
 	 * Also return if locking_type=3 (clustered) as we

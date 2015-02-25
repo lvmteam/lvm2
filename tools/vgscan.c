@@ -47,6 +47,8 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 	lvmcache_destroy(cmd, 1, 0);
 
 	if (arg_count(cmd, cache_long_ARG)) {
+		cmd->include_foreign_vgs = 1;
+
 		if (lvmetad_active()) {
 			if (!lvmetad_pvscan_all_devs(cmd, NULL))
 				return ECMD_FAILED;
