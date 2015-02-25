@@ -380,11 +380,69 @@ rm -f $SIDFILE
 
 # pvs: pv in a foreign vg not reported
 # pvs --foreign: pv in a foreign vg is reported
-# TODO
+
+SID1=sidfoofile1
+SID2=sidfoofile2
+SIDFILE=etc/lvm_test.conf
+rm -f $SIDFILE
+echo "$SID1" > $SIDFILE
+aux lvmconf "global/system_id_source = file"
+aux lvmconf "global/system_id_file = $SIDFILE"
+# create a vg
+vgcreate $vg1 "$dev1"
+# normal pvs sees the vg and pv
+pvs >err
+grep $vg1 err
+grep $dev1 err
+# change the local system_id, making the vg foreign
+echo "$SID2" > $SIDFILE
+# normal pvs does not see the vg or pv
+pvs >err
+not grep $vg1 err
+not grep $dev1 err
+# pvs --foreign does see the vg and pv
+pvs --foreign >err
+grep $vg1 err
+grep $dev1 err
+# change the local system_id back so the vg can be removed
+echo "$SID1" > $SIDFILE
+vgremove $vg1
+rm -f $SIDFILE
 
 # lvs: lvs in a foreign vg not reported
 # lvs --foreign: lvs in a foreign vg are reported
-# TODO
+
+SID1=sidfoofile1
+SID2=sidfoofile2
+SIDFILE=etc/lvm_test.conf
+rm -f $SIDFILE
+echo "$SID1" > $SIDFILE
+aux lvmconf "global/system_id_source = file"
+aux lvmconf "global/system_id_file = $SIDFILE"
+# create a vg
+vgcreate $vg1 "$dev1"
+lvcreate -n $lv1 -l 2 $vg1
+lvchange -an $vg1/$lv1
+# normal lvs sees the vg and lv
+lvs >err
+grep $vg1 err
+grep $lv1 err
+# change the local system_id, making the vg foreign
+echo "$SID2" > $SIDFILE
+# normal lvs does not see the vg or lv
+lvs >err
+not grep $vg1 err
+not grep $lv1 err
+# lvs --foreign does see the vg and lv
+lvs --foreign >err
+grep $vg1 err
+grep $lv1 err
+# change the local system_id back so the vg can be removed
+echo "$SID1" > $SIDFILE
+lvremove $vg1/$lv1
+vgremove $vg1
+rm -f $SIDFILE
+
 
 # use extra_system_ids to read a foreign VG
 # TODO
@@ -416,5 +474,14 @@ rm -f $SIDFILE
 # . Using vgimport should see that the VG is no longer foreign,
 #   but has been exported.
 # TODO
+
+
+# --systemid "" equals none
+# TODO
+
+
+# vgcfgbackup --foreign vg
+# TODO
+
 
 
