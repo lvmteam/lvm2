@@ -840,8 +840,8 @@ global {
 
     # The method, if any, used to define a local system ID on this host.
     # By placing the same system ID on a Volume Group you can prevent
-    # other co-operating hosts in a cluster (each with a different
-    # system ID) from accessing the same Volume Group.
+    # other co-operating hosts that see the same storage devices (each 
+    # with a different system ID) from accessing the same Volume Group.
     #
     # Set this to one of: none, machineid, uname, lvmlocal, or file.
     #
@@ -861,8 +861,8 @@ global {
     # system_id_source = "uname"
     #
     # Use the contents of the file @DEFAULT_SYS_DIR@/machine-id
-    # to set the system ID.
-    # Comments starting with the character # are ignored.
+    # to set the system ID.  Some systems create this file at
+    # installation time - see 'man machine-id'.
     #
     # system_id_source = "machineid"
     #
