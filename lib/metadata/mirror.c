@@ -193,7 +193,7 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 		 * This code should be removed when the CPG restriction is
 		 * lifted.
 		 */
-		region_min = extents * extent_size / CMIRROR_REGION_COUNT_LIMIT;
+		region_min = (uint64_t) extents * extent_size / CMIRROR_REGION_COUNT_LIMIT;
 		region_min_pow2 = 1;
 		while (region_min_pow2 < region_min)
 			region_min_pow2 *= 2;
