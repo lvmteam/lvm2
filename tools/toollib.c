@@ -200,8 +200,8 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	 */
 	if (read_error & FAILED_SYSTEMID) {
 		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Skipping volume group %s with system ID %s",
-				  vg->name, vg->system_id ? : vg->lvm1_system_id ? : "");
+			log_error("Cannot access VG %s with system id \"%s\" with local system ID %s.",
+				  vg->name, vg->system_id, vg->cmd->system_id);
 			return 1;
 		} else {
 			read_error &= ~FAILED_SYSTEMID; /* Check for other errors */
@@ -1877,6 +1877,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	unsigned one_vgname_arg = (flags & ONE_VGNAME_ARG);
 	int ret;
 
+	cmd->error_foreign_vgs = 0;
+
 	dm_list_init(&arg_tags);
 	dm_list_init(&arg_vgnames);
 	dm_list_init(&vgnameids_on_system);
@@ -2276,6 +2278,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t fla
 
 	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
 	int ret;
+
+	cmd->error_foreign_vgs = 0;
 
 	dm_list_init(&arg_tags);
 	dm_list_init(&arg_vgnames);
@@ -2760,6 +2764,8 @@ int process_each_pv(struct cmd_context *cmd,
 	int process_all_devices;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
+
+	cmd->error_foreign_vgs = 0;
 
 	dm_list_init(&arg_tags);
 	dm_list_init(&arg_pvnames);
