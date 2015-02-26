@@ -193,9 +193,7 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 		 * This code should be removed when the CPG restriction is
 		 * lifted.
 		 */
-		region_min = extents;
-		region_min *= extent_size;
-		region_min /= CMIRROR_REGION_COUNT_LIMIT;
+		region_min = extents * extent_size / CMIRROR_REGION_COUNT_LIMIT;
 		region_min_pow2 = 1;
 		while (region_min_pow2 < region_min)
 			region_min_pow2 *= 2;
@@ -203,11 +201,11 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 		if (region_size < region_min_pow2) {
 			if (internal)
 				log_print_unless_silent("Increasing mirror region size from %"
-							PRIu32 " to %" PRIu32 " sectors.",
+							PRIu32 " to %" PRIu64 " sectors.",
 							region_size, region_min_pow2);
 			else
 				log_verbose("Increasing mirror region size from %"
-					    PRIu32 " to %" PRIu32 " sectors.",
+					    PRIu32 " to %" PRIu64 " sectors.",
 					    region_size, region_min_pow2);
 			region_size = region_min_pow2;
 		}
