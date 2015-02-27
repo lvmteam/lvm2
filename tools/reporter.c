@@ -585,6 +585,10 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 				rescan_done = 1;
 			}
 			if (*argv[i] == '@') {
+				/*
+				 * Tags are metadata related, not label
+				 * related, change report type accordingly!
+				 */
 				if (*report_type == LABEL)
 					*report_type = PVS;
 				/*
