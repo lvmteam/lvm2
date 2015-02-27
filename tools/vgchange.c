@@ -516,7 +516,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	if (!strcmp(vg->system_id, system_id)) {
-		log_error("Volume Group system ID is already \"%s\"", vg->system_id);
+		log_error("Volume Group system ID is already %s", vg->system_id);
 		return 0;
 	}
 
@@ -527,7 +527,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 			if (!arg_count(cmd, yes_ARG) &&
 			    yes_no_prompt("Remove system ID %s on volume group %s? [y/n]: ",
 					  vg->system_id, vg->name) == 'n') {
-				log_error("Volume group \"%s\" system ID not changed.", vg->name);
+				log_error("Volume group %s system ID not changed.", vg->name);
 				return 0;
 			}
 		} else {
@@ -537,7 +537,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 				return 0;
 			}
 
-			log_warn("WARNING: Requested system ID \"%s\" does not match local system ID \"%s\"",
+			log_warn("WARNING: Requested system ID %s does not match local system ID %s",
 				 system_id, cmd->system_id);
 			log_warn("WARNING: Volume group %s might become inaccessible from this machine.",
 				 vg->name);
@@ -545,13 +545,13 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 			if (!arg_count(cmd, yes_ARG) &&
 			    yes_no_prompt("Set foreign system ID %s on volume group %s? [y/n]: ",
 					  system_id, vg->name) == 'n') {
-				log_error("Volume group \"%s\" system ID not changed.", vg->name);
+				log_error("Volume group %s system ID not changed.", vg->name);
 				return 0;
 			}
 		}
 	}
 
-	log_verbose("Changing system ID for VG %s: %s -> %s.",
+	log_verbose("Changing system ID for VG %s from %s to %s.",
 		    vg->name, vg->system_id, system_id);
 
 	vg->system_id = system_id;

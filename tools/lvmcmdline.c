@@ -981,7 +981,7 @@ int systemid(struct cmd_context *cmd __attribute__((unused)),
 	     int argc __attribute__((unused)),
 	     char **argv __attribute__((unused)))
 {
-	log_print("System ID: %s", cmd->system_id ? : "");
+	log_print("system ID: %s", cmd->system_id ? : "");
 
 	return ECMD_PROCESSED;
 }
@@ -1468,7 +1468,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	init_dmeventd_monitor(monitoring);
 
 	log_debug("Processing: %s", cmd->cmd_line);
-	log_debug("System ID: %s", cmd->system_id ? : "");
+	log_debug("system ID: %s", cmd->system_id ? : "");
 
 #ifdef O_DIRECT_SUPPORT
 	log_debug("O_DIRECT will be used");

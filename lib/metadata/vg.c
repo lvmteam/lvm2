@@ -611,7 +611,7 @@ int vg_set_system_id(struct volume_group *vg, const char *system_id)
 	}
 
 	if (systemid_on_pvs(vg)) {
-		log_error("Metadata format %s does not support this type of system id.",
+		log_error("Metadata format %s does not support this type of system ID.",
 			  vg->fid->fmt->name);
 		return 0;
 	}

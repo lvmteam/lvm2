@@ -43,7 +43,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		/* pv_show(pv); */
 
 		/* FIXME - Moved to Volume Group structure */
-		/* log_print("System Id             %s", pv->vg->system_id); */
+		/* log_print("system ID             %s", pv->vg->system_id); */
 
 		/* log_print(" "); */
 		/* return; */

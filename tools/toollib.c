@@ -200,7 +200,7 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	 */
 	if (read_error & FAILED_SYSTEMID) {
 		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Cannot access VG %s with system id \"%s\" with local system ID %s.",
+			log_error("Cannot access VG %s with system ID %s with local system ID %s.",
 				  vg->name, vg->system_id, vg->cmd->system_id);
 			return 1;
 		} else {
@@ -758,7 +758,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	/* A clustered VG has no system ID. */
 	if (vp_new->clustered) {
 		if (arg_is_set(cmd, systemid_ARG)) {
-			log_error("System ID cannot be set on clustered Volume Groups.");
+			log_error("system ID cannot be set on clustered Volume Groups.");
 			return 0;
 		}
 		vp_new->system_id = NULL;
@@ -772,7 +772,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		if (vp_new->system_id && cmd->system_id &&
 		    strcmp(vp_new->system_id, cmd->system_id)) {
 			if (*vp_new->system_id)
-				log_warn("VG with system ID \"%s\" might become inaccessible as local system ID is \"%s\"",
+				log_warn("VG with system ID %s might become inaccessible as local system ID is %s",
 					 vp_new->system_id, cmd->system_id);
 			else
 				log_warn("WARNING: A VG without a system ID allows unsafe access from other hosts.");

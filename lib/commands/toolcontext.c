@@ -80,7 +80,7 @@ const char *system_id_from_string(struct cmd_context *cmd, const char *str)
 	}
 
 	if (!strncmp(system_id, "localhost", 9)) {
-		log_warn("WARNING: System ID may not begin with the string \"localhost\".");
+		log_warn("WARNING: system ID may not begin with the string \"localhost\".");
 		return NULL;
 	}
 
@@ -459,7 +459,7 @@ static int _init_system_id(struct cmd_context *cmd)
 	 * The source failed to resolve a system_id.  In this case allow
 	 * VGs with no system_id to be accessed, but not VGs with a system_id.
 	 */
-	log_warn("WARNING: No system ID found from system_id_source \"%s\".", source);
+	log_warn("WARNING: No system ID found from system_id_source %s.", source);
 	cmd->unknown_system_id = 1;
 
 	return 1;

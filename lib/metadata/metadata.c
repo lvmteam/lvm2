@@ -4383,7 +4383,7 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	 * LVM1 VGs must not be accessed if a new-style LVM2 system ID is set.
 	 */
 	if (cmd->system_id && systemid_on_pvs(vg)) {
-		log_error("Cannot access VG %s with LVM1 system ID \"%s\" when host system ID is set.",
+		log_error("Cannot access VG %s with LVM1 system ID %s when host system ID is set.",
 			  vg->name, vg->lvm1_system_id);
 		return 0;
 	}
@@ -4416,7 +4416,7 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	 * Allow VG access if the local host has active LVs in it.
 	 */
 	if (lvs_in_vg_activated(vg)) {
-		log_warn("WARNING: Found LVs active in VG %s with foreign system ID \"%s\".  Possible data corruption.",
+		log_warn("WARNING: Found LVs active in VG %s with foreign system ID %s.  Possible data corruption.",
 			  vg->name, vg->system_id);
 		if (cmd->include_active_foreign_vgs)
 			return 1;
@@ -4427,7 +4427,7 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	 * A host without a system_id cannot access a VG with a system_id.
 	 */
 	if (!cmd->system_id || cmd->unknown_system_id) {
-		log_error("Cannot access VG %s with system id \"%s\" with unknown local system ID.",
+		log_error("Cannot access VG %s with system ID %s with unknown local system ID.",
 			  vg->name, vg->system_id);
 		return 0;
 	}
@@ -4436,7 +4436,7 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	 * Some commands always produce an error when accessing foreign VG.
 	 */
 	if (cmd->error_foreign_vgs) {
-		log_error("Cannot access VG %s with system id \"%s\" with local system ID %s.",
+		log_error("Cannot access VG %s with system ID %s with local system ID %s.",
 			  vg->name, vg->system_id, cmd->system_id);
 		return 0;
 	}
