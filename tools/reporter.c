@@ -578,7 +578,7 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 
 	if (args_are_pvs && argc) {
 		for (i = 0; i < argc; i++) {
-			if (!dev_cache_get(argv[i], cmd->full_filter) && !rescan_done) {
+			if (!rescan_done && !dev_cache_get(argv[i], cmd->full_filter)) {
 				cmd->filter->wipe(cmd->filter);
 				/* FIXME scan only one device */
 				lvmcache_label_scan(cmd, 0);
