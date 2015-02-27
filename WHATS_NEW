@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Implement status action for lvm2-monitor initscript to display monitored LVs.
   Allow lvchange -p to change kernel state only if metadata state differs.
   Fix incorrect persistent .cache after report with label fields only (2.02.106).
   Reinstate PV tag recognition for pvs if reporting label fields only (2.02.105).

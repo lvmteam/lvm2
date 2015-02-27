@@ -32,18 +32,28 @@
 . /etc/init.d/functions
 
 DAEMON=lvm2-monitor
+DMEVENTD_DAEMON=dmeventd
 
 exec_prefix=@exec_prefix@
 sbindir=@sbindir@
 
 VGCHANGE=${sbindir}/vgchange
 VGS=${sbindir}/vgs
+LVS=${sbindir}/lvs
 
 LOCK_FILE="/var/lock/subsys/$DAEMON"
+PID_FILE="/var/run/dmeventd.pid"
 
 WARN=1
 export LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES=1
 
+rh_status() {
+	status -p $PID_FILE $DMEVENTD_DAEMON
+}
+
+rh_status_q() {
+	rh_status >/dev/null 2>&1
+}
 start()
 {
 	ret=0
@@ -79,12 +89,14 @@ rtrn=1
 # See how we were called.
 case "$1" in
   start)
+	rh_status_q && exit 0
 	start
 	rtrn=$?
 	[ $rtrn = 0 ] && touch $LOCK_FILE
 	;;
 
   force-stop)
+	rh_status_q || exit 0
 	WARN=0
 	stop
 	rtrn=$?
@@ -92,6 +104,7 @@ case "$1" in
 	;;
 
   stop)
+	rh_status_q || exit 0
 	test "$runlevel" = "0" && WARN=0
 	test "$runlevel" = "6" && WARN=0
 	stop
@@ -109,7 +122,9 @@ case "$1" in
 	;;
 
   status)
-	# TODO anyone with an idea how to dump monitored volumes?
+	rh_status
+	rtrn=$?
+	[ $rtrn = 0 ] && $LVS -S 'seg_monitor=monitored' -o lv_full_name,seg_monitor
 	;;
 
   *)
