@@ -42,7 +42,7 @@ VGS=${sbindir}/vgs
 LVS=${sbindir}/lvs
 
 LOCK_FILE="/var/lock/subsys/$DAEMON"
-PID_FILE="/var/run/dmeventd.pid"
+PID_FILE="@DMEVENTD_PIDFILE@"
 
 WARN=1
 export LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES=1
