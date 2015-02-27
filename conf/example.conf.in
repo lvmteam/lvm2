@@ -330,13 +330,28 @@ allocation {
     # to be recognized, it can take more time to complete the signature scan.
     use_blkid_wiping = 1
 
-    # Set to 1 to wipe any signatures found on newly-created Logical Volumes
-    # automatically in addition to zeroing of the first KB on the LV
-    # (controlled by the -Z/--zero y option).
-    # The command line option -W/--wipesignatures takes precedence over this
-    # setting.
-    # The default is to wipe signatures when zeroing.
+    # Set to 1 to detect any signatures found on newly-created Logical Volume
+    # whenever zeroing of the LV is done (zeroing is controlled by -Z/--zero
+    # option and if not specified, zeroing is used by default if possible).
     #
+    # While zeroing simply overwrites first 4 KiB of the LV with zeroes without
+    # doing any signature detection, signature wiping goes beyond that and it
+    # can detect exact type and position of signature within the whole LV.
+    # As such, it provides cleaner LV for use after creation as all known
+    # signatures are wiped so that the LV is not claimed by other tools
+    # incorrectly by the existence of old signature from any previous use.
+    # The number of signatures that LVM can detect depends on detection
+    # code that is selected - see also use_blkid_wiping option.
+    #
+    # Wiping of each detected signature must be confirmed.
+    #
+    # The default is to wipe signatures when zeroing. The command line
+    # option -W/--wipesignatures takes precedence over this setting.
+    #
+    # Without this option set, signatures on newly-created Logical Volumes
+    # are never detected and wiped and you always need to use
+    # -W/--wipesignatures y option directly to enable this feature
+    # no matter whether zeroing is used or not.
     wipe_signatures_when_zeroing_new_lvs = 1
 
     # Set to 1 to guarantee that mirror logs will always be placed on 
