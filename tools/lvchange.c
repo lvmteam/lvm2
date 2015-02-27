@@ -32,6 +32,13 @@ static int _lvchange_permission(struct cmd_context *cmd,
 	}
 
 	if (!(lv_access & LVM_WRITE) && !(lv->status & LVM_WRITE)) {
+		/* Refresh if it's read-only in metadata but read-write in kernel */
+		if (lv_info(cmd, lv, 0, &info, 0, 0) &&
+		    (info_obtained = 1, info.exists) && !info.read_only) {
+			log_print_unless_silent("Logical volume \"%s\" is already read-only.  Refreshing kernel state.",
+						lv->name);
+			return lv_refresh(cmd, lv);
+		}
 		log_error("Logical volume \"%s\" is already read only",
 			  lv->name);
 		return 0;

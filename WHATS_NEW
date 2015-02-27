@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Allow lvchange -p to change kernel state only if metadata state differs.
   Fix incorrect persistent .cache after report with label fields only (2.02.106).
   Reinstate PV tag recognition for pvs if reporting label fields only (2.02.105).
   Rescan devices before vgimport with lvmetad so exported VG is seen.
