@@ -566,6 +566,39 @@ int report_for_selection(struct cmd_context *cmd,
 	return r;
 }
 
+static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
+			   report_type_t *report_type, unsigned *args_are_pvs)
+{
+	unsigned i;
+	int rescan_done = 0;
+
+	*args_are_pvs = (*report_type == PVS ||
+			 *report_type == LABEL ||
+			 *report_type == PVSEGS) ? 1 : 0;
+
+	if (args_are_pvs && argc) {
+		for (i = 0; i < argc; i++) {
+			if (!dev_cache_get(argv[i], cmd->full_filter) && !rescan_done) {
+				cmd->filter->wipe(cmd->filter);
+				/* FIXME scan only one device */
+				lvmcache_label_scan(cmd, 0);
+				rescan_done = 1;
+			}
+			if (*argv[i] == '@') {
+				if (*report_type == LABEL)
+					*report_type = PVS;
+				/*
+				 * If we changed the report_type and we did rescan,
+				 * no need to iterate over dev list further - nothing
+				 * else would change.
+				 */
+				if (rescan_done)
+					break;
+			}
+		}
+	}
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {
@@ -589,15 +622,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
 	columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG, NULL);
 
-	args_are_pvs = (report_type == PVS ||
-			report_type == LABEL ||
-			report_type == PVSEGS) ? 1 : 0;
-
-	/*
-	 * FIXME Trigger scans based on unrecognised listed devices instead.
-	 */
-	if (args_are_pvs && argc)
-		cmd->filter->wipe(cmd->filter);
+	/* Check PV specifics and do extra changes/actions if needed. */
+	_check_pv_list(cmd, argc, argv, &report_type, &args_are_pvs);
 
 	switch (report_type) {
 	case DEVTYPES:

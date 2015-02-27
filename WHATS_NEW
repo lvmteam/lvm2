@@ -1,5 +1,7 @@
 Version 2.02.117 - 
 ====================================
+  Fix incorrect persistent .cache after report with label fields only (2.02.106).
+  Reinstate PV tag recognition for pvs if reporting label fields only (2.02.105).
   Rescan devices before vgimport with lvmetad so exported VG is seen.
   Fix hang by adjusting cluster mirror regionsize, avoiding CPG msg limit.
   Do not crash when --cachepolicy is given without --cachesettings.
