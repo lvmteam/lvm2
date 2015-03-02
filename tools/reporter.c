@@ -576,7 +576,7 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 			 *report_type == LABEL ||
 			 *report_type == PVSEGS) ? 1 : 0;
 
-	if (args_are_pvs && argc) {
+	if (*args_are_pvs && argc) {
 		for (i = 0; i < argc; i++) {
 			if (!rescan_done && !dev_cache_get(argv[i], cmd->full_filter)) {
 				cmd->filter->wipe(cmd->filter);
