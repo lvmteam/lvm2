@@ -57,6 +57,12 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	dm_list_init(&vg->tags);
 	dm_list_init(&vg->removed_pvs);
 
+	if (!(vg->lvm1_system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1))) {
+		log_error("Failed to allocate VG systemd id.");
+		dm_pool_destroy(vgmem);
+		return NULL;
+	}
+
 	log_debug_mem("Allocated VG %s at %p.", vg->name, vg);
 
 	return vg;
