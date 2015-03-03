@@ -965,7 +965,7 @@ static int _devsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field,
 			 const void *data, void *private)
 {
-	const struct device *dev = *(const struct device * const *) data;
+	struct device *dev = *(struct device * const *) data;
 	uint64_t size;
 
 	if (!dev || !dev->dev || !dev_get_size(dev, &size))

@@ -94,7 +94,7 @@ int dev_ext_release(struct device *dev);
  * All io should use these routines.
  */
 int dev_get_block_size(struct device *dev, unsigned int *phys_block_size, unsigned int *block_size);
-int dev_get_size(const struct device *dev, uint64_t *size);
+int dev_get_size(struct device *dev, uint64_t *size);
 int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead);
 int dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64_t size_bytes);
 
