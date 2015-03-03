@@ -191,7 +191,8 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	 * a foreign VG, which allows the VG to be accessed by lvchange -a
 	 * so the LV can be deactivated.
 	 */
-	if (lv->vg->system_id && cmd->system_id &&
+	if (lv->vg->system_id && lv->vg->system_id[0] &&
+	    cmd->system_id && cmd->system_id[0] &&
 	    strcmp(lv->vg->system_id, cmd->system_id) &&
 	    is_change_activating(activate)) {
 		log_error("Cannot activate LVs in a foreign VG.");
