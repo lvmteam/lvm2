@@ -197,6 +197,18 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	int do_activate = is_change_activating(activate);
 
 	/*
+	 * We can get here in the odd case where an LV is already active in
+	 * a foreign VG, which allows the VG to be accessed by vgchange -a
+	 * so the LV can be deactivated.
+	 */
+	if (vg->system_id && cmd->system_id &&
+	    strcmp(vg->system_id, cmd->system_id) &&
+	    is_change_activating(activate)) {
+		log_error("Cannot activate LVs in a foreign VG.");
+		return ECMD_FAILED;
+	}
+
+	/*
 	 * Safe, since we never write out new metadata here. Required for
 	 * partial activation to work.
 	 */
@@ -794,6 +806,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!update || !update_partial_unsafe)
 		cmd->handles_missing_pvs = 1;
+
+	if (arg_is_set(cmd, activate_ARG))
+		cmd->include_active_foreign_vgs = 1;
 
 	return process_each_vg(cmd, argc, argv, update ? READ_FOR_UPDATE : 0,
 			       NULL, &vgchange_single);
