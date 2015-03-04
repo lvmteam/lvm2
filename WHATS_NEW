@@ -1,5 +1,6 @@
-Version 2.02.117 - 
-====================================
+Version 2.02.117 - 4th March 2015
+=================================
+  Add CFG_DISABLED for new system ID config settings that must not yet be used.
   Set ACCESS_NEEDS_SYSTEM_ID VG status flag while system_id is set.
   Preserve original format type field when processing backup files.
   Implement status action for lvm2-monitor initscript to display monitored LVs.
@@ -12,14 +13,13 @@ Version 2.02.117 -
   Add NEEDS_FOREIGN_VGS flag to vgimport so --foreign is always supplied.
   Add --foreign to the 6 display and reporting tools and vgcfgbackup.
   Install /etc/lvm/lvmlocal.conf template with local section for systemid.
-  Record creation_host_system_id in lvm2 metadata.
+  Record creation_host_system_id in lvm2 metadata (never set yet).
   Reinstate recursive config file tag section processing. (2.02.99)
-  Add 'lvm systemid' to display the current system ID.
+  Add 'lvm systemid' to display the current system ID (never set yet).
   Fix configure to properly recognize --with-default-raid10-segtype option.
   Do not refresh filters/rescan if no signature is wiped during pvcreate.
   Enforce none external dev info for wiping during pvcreate to avoid races.
-  Add global/system_id_source and system_id_file to lvm.conf.
-  Add --systemid to vgcreate and vchange to set / change a system ID.
+  Add global/system_id_source and system_id_file to lvm.conf (disabled).
   Add support for VG system_id to control host access to VGs.
   Update vgextend to use process_each_vg.
   Add --ignoreskippedcluster to pvchange.
@@ -33,7 +33,7 @@ Version 2.02.117 -
   Add support for -S/--select to vgchange,lvchange and pvchange.
   Add infrastructure to support selection for non-reporting tools.
   Add LVM_COMMAND_PROFILE env var to set default command profile name to use.
-  set CLOEXEC flag on file descriptors originating in libdaemon
+  Set CLOEXEC flag on file descriptors originating in libdaemon.
 
 Version 2.02.116 - 30th January 2015
 ====================================
