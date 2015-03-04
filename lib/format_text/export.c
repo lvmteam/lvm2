@@ -393,6 +393,7 @@ static int _out_tags(struct formatter *f, struct dm_list *tagsl)
 static int _print_vg(struct formatter *f, struct volume_group *vg)
 {
 	char buffer[4096];
+	const struct format_type *fmt = NULL;
 
 	if (!id_write_format(&vg->id, buffer, sizeof(buffer)))
 		return_0;
@@ -401,8 +402,12 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 
 	outf(f, "seqno = %u", vg->seqno);
 
-	if (vg->fid && vg->fid->fmt)
-		outfc(f, "# informational", "format = \"%s\"", vg->fid->fmt->name);
+	if (vg->original_fmt)
+		fmt = vg->original_fmt;
+	else if (vg->fid)
+		fmt = vg->fid->fmt;
+	if (fmt)
+		outfc(f, "# informational", "format = \"%s\"", fmt->name);
 
 	if (!_print_flag_config(f, vg->status, VG_FLAGS))
 		return_0;

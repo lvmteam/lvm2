@@ -733,7 +733,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 {
 	const struct dm_config_node *vgn;
 	const struct dm_config_value *cv;
-	const char *str;
+	const char *str, *format_str;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	unsigned scan_done_once = use_cached_pvs;
@@ -774,6 +774,13 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	vgn = vgn->child;
+
+	/* A backup file might be a backup of a different format */
+	if (dm_config_get_str(vgn, "format", &format_str) &&
+	    !(vg->original_fmt = get_format_by_name(fid->fmt->cmd, format_str))) {
+		log_error("Unrecognised format %s for volume group %s.", format_str, vg->name);
+		goto bad;
+	}
 
 	if (dm_config_get_str(vgn, "system_id", &str))
 		strncpy(system_id, str, NAME_LEN);
