@@ -90,24 +90,27 @@ typedef union {
 
 /* configuration definition item flags: */
 
+
 /* whether the configuration item name is variable */
-#define CFG_NAME_VARIABLE	0x01
+#define CFG_NAME_VARIABLE	0x001
 /* whether empty value is allowed */
-#define CFG_ALLOW_EMPTY		0x02
+#define CFG_ALLOW_EMPTY		0x002
 /* whether the configuration item is for advanced use only */
-#define CFG_ADVANCED		0x04
+#define CFG_ADVANCED		0x004
 /* whether the configuration item is not officially supported */
-#define CFG_UNSUPPORTED		0x08
+#define CFG_UNSUPPORTED		0x008
 /* whether the configuration item is customizable by a profile */
-#define CFG_PROFILABLE		0x10
+#define CFG_PROFILABLE		0x010
 /* whether the configuration item is customizable by a profile */
 /* and whether it can be attached to VG/LV metadata at the same time
  * The CFG_PROFILABLE_METADATA flag incorporates CFG_PROFILABLE flag!!! */
-#define CFG_PROFILABLE_METADATA 0x30
+#define CFG_PROFILABLE_METADATA 0x030
 /* whether the default value is undefned */
-#define CFG_DEFAULT_UNDEFINED	0x40
-/* whether the defualt value is calculated during run time */
-#define CFG_DEFAULT_RUN_TIME	0x80
+#define CFG_DEFAULT_UNDEFINED	0x040
+/* whether the default value is calculated during run time */
+#define CFG_DEFAULT_RUN_TIME	0x080
+/* whether the configuration setting is disabled (and hence defaults always used) */
+#define CFG_DISABLED		0x100
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
