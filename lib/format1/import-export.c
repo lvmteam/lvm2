@@ -125,7 +125,7 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	return 1;
 }
 
-static int _lvm1_system_id(struct cmd_context *cmd, char *s, const char *prefix)
+int generate_lvm1_system_id(struct cmd_context *cmd, char *s, const char *prefix)
 {
 
 	if (dm_snprintf(s, NAME_LEN, "%s%s%lu",
@@ -165,7 +165,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 		if (!*vg->lvm1_system_id ||
 		    strncmp(vg->lvm1_system_id, EXPORTED_TAG,
 			    sizeof(EXPORTED_TAG) - 1)) {
-			if (!_lvm1_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
+			if (!generate_lvm1_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
 				return_0;
 		}
 		if (strlen((char *)pvd->vg_name) + sizeof(EXPORTED_TAG) >
@@ -180,13 +180,13 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	/* Is VG being imported? */
 	if (vg && !vg_is_exported(vg) && *vg->lvm1_system_id &&
 	    !strncmp(vg->lvm1_system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
-		if (!_lvm1_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
+		if (!generate_lvm1_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
 			return_0;
 	}
 
 	/* Generate system_id if PV is in VG */
 	if (!pvd->system_id[0])
-		if (!_lvm1_system_id(cmd, (char *)pvd->system_id, ""))
+		if (!generate_lvm1_system_id(cmd, (char *)pvd->system_id, ""))
 			return_0;
 
 	/* Update internal system_id if we changed it */

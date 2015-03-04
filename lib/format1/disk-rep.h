@@ -245,4 +245,6 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 int export_vg_number(struct format_instance *fid, struct dm_list *pvds,
 		     const char *vg_name, struct dev_filter *filter);
 
+int generate_lvm1_system_id(struct cmd_context *cmd, char *s, const char *prefix);
+
 #endif

@@ -496,6 +496,11 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 	if (!vg_check_new_extent_size(vg->fid->fmt, vg->extent_size))
 		return_0;
 
+        /* Generate lvm1_system_id if not yet set */
+        if (!*vg->lvm1_system_id &&
+            !generate_lvm1_system_id(vg->cmd, vg->lvm1_system_id, ""))
+		return_0;
+
 	return 1;
 }
 
