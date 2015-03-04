@@ -122,7 +122,8 @@
 #define PV_ALLOCATION_PROHIBITED	UINT64_C(0x0010000000000000)	/* PV - internal use only - allocation prohibited
 									e.g. to prohibit allocation of a RAID image
 									on a PV already holing an image of the RAID set */
-/* Next unused flag:		UINT64_C(0x0020000000000000)    */
+#define LVM_WRITE_LOCKED	UINT64_C(0x0020000000000000)    /* VG, LV */
+/* Next unused flag:		UINT64_C(0x0040000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -170,6 +171,7 @@
 #define FAILED_EXIST		0x00000100U
 #define FAILED_RECOVERY		0x00000200U
 #define FAILED_SYSTEMID		0x00000400U
+#define FAILED_LOCK_TYPE	0x00000800U
 #define SUCCESS			0x00000000U
 
 #define VGMETADATACOPIES_ALL UINT32_MAX
@@ -1167,6 +1169,7 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore);
 
 
+int vg_flag_write_locked(struct volume_group *vg);
 int vg_check_write_mode(struct volume_group *vg);
 #define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 #define vg_is_exported(vg) (vg_status((vg)) & EXPORTED_VG)

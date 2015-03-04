@@ -4257,6 +4257,37 @@ int vg_check_write_mode(struct volume_group *vg)
 }
 
 /*
+ * Return 1 if the VG metadata should be written
+ * *without* the WRITE flag in the status line, and
+ * *with* the WRITE_LOCKED flag in the flags line.
+ *
+ * If this is done for a VG, it forces previous versions
+ * of lvm (before the WRITE_LOCKED flag was added), to view
+ * the VG and its LVs as read-only (because the WRITE flag
+ * is missing).  Versions of lvm that understand the
+ * WRITE_LOCKED flag know to check the other methods of
+ * access control for the VG, specifically system_id and lock_type.
+ *
+ * So, if a VG has a system_id or lock_type, then the
+ * system_id and lock_type control access to the VG in
+ * addition to its basic writable status.  Because previous
+ * lvm versions do not know about system_id or lock_type,
+ * VGs depending on either of these should have WRITE_LOCKED
+ * instead of WRITE to prevent the previous lvm versions from
+ * assuming they can write the VG and its LVs.
+ */
+int vg_flag_write_locked(struct volume_group *vg)
+{
+	if (vg->system_id && vg->system_id[0])
+		return 1;
+
+	if (vg->lock_type && vg->lock_type[0] && strcmp(vg->lock_type, "none"))
+		return 1;
+
+	return 0;
+}
+
+/*
  * Performs a set of checks against a VG according to bits set in status
  * and returns FAILED_* bits for those that aren't acceptable.
  *
@@ -4377,6 +4408,23 @@ static int _access_vg_clustered(struct cmd_context *cmd, struct volume_group *vg
 	return 1;
 }
 
+static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg)
+{
+	if (!is_real_vg(vg->name))
+		return 1;
+
+	/*
+	 * Until lock_type support is added, reject any VG that has a lock_type.
+	 */
+	if (vg->lock_type && vg->lock_type[0] && strcmp(vg->lock_type, "none")) {
+		log_error("Cannot access VG %s with unsupported lock_type %s.",
+			  vg->name, vg->lock_type);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 {
 	/*
@@ -4465,6 +4513,11 @@ static int _vg_access_permitted(struct cmd_context *cmd, struct volume_group *vg
 
 	if (!_access_vg_clustered(cmd, vg)) {
 		*failure |= FAILED_CLUSTERED;
+		return 0;
+	}
+
+	if (!_access_vg_lock_type(cmd, vg)) {
+		*failure |= FAILED_LOCK_TYPE;
 		return 0;
 	}
 

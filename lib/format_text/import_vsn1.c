@@ -550,6 +550,11 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 		return 0;
 	}
 
+	if (lv->status & LVM_WRITE_LOCKED) {
+		lv->status |= LVM_WRITE;
+		lv->status &= ~LVM_WRITE_LOCKED;
+	}
+
 	if (dm_config_has_node(lvn, "creation_time")) {
 		if (!_read_uint64(lvn, "creation_time", &timestamp)) {
 			log_error("Invalid creation_time for logical volume %s.",
@@ -785,6 +790,11 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (dm_config_get_str(vgn, "system_id", &str))
 		strncpy(system_id, str, NAME_LEN);
 
+	if (dm_config_get_str(vgn, "lock_type", &str)) {
+		if (!(vg->lock_type = dm_pool_strdup(vg->vgmem, str)))
+			goto bad;
+	}
+
 	if (!_read_id(&vg->id, vgn, "id")) {
 		log_error("Couldn't read uuid for volume group %s.", vg->name);
 		goto bad;
@@ -800,6 +810,11 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		log_error("Error reading flags of volume group %s.",
 			  vg->name);
 		goto bad;
+	}
+
+	if (vg->status & LVM_WRITE_LOCKED) {
+		vg->status |= LVM_WRITE;
+		vg->status &= ~LVM_WRITE_LOCKED;
 	}
 
 	if (!_read_int32(vgn, "extent_size", &vg->extent_size)) {

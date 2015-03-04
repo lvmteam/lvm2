@@ -242,6 +242,9 @@ int import_vg(struct dm_pool *mem,
 	if (vgd->vg_access & VG_WRITE)
 		vg->status |= LVM_WRITE;
 
+	if (vgd->vg_access & VG_WRITE_LOCKED)
+		vg->status |= LVM_WRITE;
+
 	if (vgd->vg_access & VG_CLUSTERED)
 		vg->status |= CLUSTERED;
 
@@ -266,8 +269,11 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	if (vg->status & LVM_READ)
 		vgd->vg_access |= VG_READ;
 
-	if (vg->status & LVM_WRITE)
+	if ((vg->status & LVM_WRITE) && !vg_flag_write_locked(vg))
 		vgd->vg_access |= VG_WRITE;
+
+	if ((vg->status & LVM_WRITE) && vg_flag_write_locked(vg))
+		vgd->vg_access |= VG_WRITE_LOCKED;
 
 	if (vg_is_clustered(vg))
 		vgd->vg_access |= VG_CLUSTERED;
@@ -320,6 +326,9 @@ int import_lv(struct cmd_context *cmd, struct dm_pool *mem,
 	if (lvd->lv_access & LV_WRITE)
 		lv->status |= LVM_WRITE;
 
+	if (lvd->lv_access & LV_WRITE_LOCKED)
+		lv->status |= LVM_WRITE;
+
 	if (lvd->lv_badblock)
 		lv->status |= BADBLOCK_ON;
 
@@ -352,8 +361,11 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	if (lv->status & LVM_READ)
 		lvd->lv_access |= LV_READ;
 
-	if (lv->status & LVM_WRITE)
+	if ((lv->status & LVM_WRITE) && !vg_flag_write_locked(vg))
 		lvd->lv_access |= LV_WRITE;
+
+	if ((lv->status & LVM_WRITE) && vg_flag_write_locked(vg))
+		lvd->lv_access |= LV_WRITE_LOCKED;
 
 	if (lv->status & SPINDOWN_LV)
 		lvd->lv_status |= LV_SPINDOWN;

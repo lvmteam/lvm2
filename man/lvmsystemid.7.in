@@ -46,8 +46,9 @@ destroyed in the following cases which the user must be careful to avoid:
 
 .IP \[bu] 2
 A host using an old version of lvm without the system_id feature will not
-recognize the system_id of other hosts' VGs and will not be stopped from
-using them.
+recognize the system_id of other hosts' VGs.  VGs with a new system_id
+are nominally protected from old versions of lvm by appearing to be
+read-only to the old versions.
 
 .IP \[bu] 2
 A VG without a system_id can be used without restriction from any host,
