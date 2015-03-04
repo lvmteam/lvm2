@@ -1182,7 +1182,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		cmd->handles_missing_pvs = 1;
 
 	if (!argc && !arg_is_set(cmd, select_ARG)) {
-		log_error("Please give logical volume path(s) or use -S for selection.");
+		log_error("Please give logical volume path(s) or use --select for selection.");
 		return EINVALID_CMD_LINE;
 	}
 

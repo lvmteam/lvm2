@@ -53,7 +53,7 @@ bad:
 int vgexport(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!argc && !arg_count(cmd, all_ARG) && !arg_is_set(cmd, select_ARG)) {
-		log_error("Please supply volume groups or use -S for selection or use -a for all.");
+		log_error("Please supply volume groups or use --select for selection or use -a for all.");
 		return EINVALID_CMD_LINE;
 	}
 

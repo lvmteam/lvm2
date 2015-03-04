@@ -19,7 +19,7 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!argc && !arg_is_set(cmd, select_ARG)) {
 		log_error("Please enter one or more logical volume paths "
-			  "or use -S for selection.");
+			  "or use --select for selection.");
 		return EINVALID_CMD_LINE;
 	}
 
