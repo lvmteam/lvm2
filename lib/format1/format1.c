@@ -501,8 +501,6 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
             !generate_lvm1_system_id(vg->cmd, vg->lvm1_system_id, ""))
 		return_0;
 
-	vg->status &= ~ACCESS_NEEDS_SYSTEM_ID;
-
 	return 1;
 }
 

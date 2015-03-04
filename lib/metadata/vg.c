@@ -615,7 +615,6 @@ int vg_set_system_id(struct volume_group *vg, const char *system_id)
 {
 	if (!system_id || !*system_id) {
 		vg->system_id = NULL;
-		vg->status &= ~ACCESS_NEEDS_SYSTEM_ID;
 		return 1;
 	}
 
@@ -632,8 +631,6 @@ int vg_set_system_id(struct volume_group *vg, const char *system_id)
 
 	if (vg->lvm1_system_id)
 		*vg->lvm1_system_id = '\0';
-
-	vg->status |= ACCESS_NEEDS_SYSTEM_ID;
 
 	return 1;
 }
