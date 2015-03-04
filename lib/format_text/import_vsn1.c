@@ -883,8 +883,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	dm_hash_destroy(pv_hash);
 	dm_hash_destroy(lv_hash);
 
-	/* FIXME Determine format type from file contents */
-	/* eg Set to instance of fmt1 here if reading a format1 backup? */
 	vg_set_fid(vg, fid);
 
 	/*

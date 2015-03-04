@@ -156,8 +156,10 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	}
 
 	/* Preserve existing system_id if it exists */
-	if (vg && *vg->lvm1_system_id)
+	if (vg && vg->lvm1_system_id && *vg->lvm1_system_id)
 		strncpy((char *)pvd->system_id, vg->lvm1_system_id, sizeof(pvd->system_id));
+	else if (vg && vg->system_id && *vg->system_id)
+		strncpy((char *)pvd->system_id, vg->system_id, sizeof(pvd->system_id));
 
 	/* Is VG already exported or being exported? */
 	if (vg && vg_is_exported(vg)) {

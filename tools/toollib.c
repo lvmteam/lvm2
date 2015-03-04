@@ -200,8 +200,9 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	 */
 	if (read_error & FAILED_SYSTEMID) {
 		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Cannot access VG %s with system ID %s with local system ID %s.",
-				  vg->name, vg->system_id, vg->cmd->system_id);
+			log_error("Cannot access VG %s with system ID %s with %slocal system ID%s%s.",
+				  vg->name, vg->system_id, vg->cmd->system_id ? "" : "unknown ",
+				  vg->cmd->system_id ? " " : "", vg->cmd->system_id ? vg->cmd->system_id : "");
 			return 1;
 		} else {
 			read_error &= ~FAILED_SYSTEMID; /* Check for other errors */

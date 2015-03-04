@@ -575,6 +575,9 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 		    vg->name, vg->system_id, system_id);
 
 	vg->system_id = system_id;
+	
+	if (vg->lvm1_system_id)
+		*vg->lvm1_system_id = '\0';
 
 	return 1;
 }

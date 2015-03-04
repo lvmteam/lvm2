@@ -989,7 +989,7 @@ static int _vgsystemid_disp(struct dm_report *rh, struct dm_pool *mem,
 			    const void *data, void *private)
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
-	const char *repstr = vg->system_id ? : vg->lvm1_system_id ? : "";
+	const char *repstr = (vg->system_id && *vg->system_id) ? vg->system_id : vg->lvm1_system_id ? : "";
 
 	return _string_disp(rh, mem, field, &repstr, private);
 }

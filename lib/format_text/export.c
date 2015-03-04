@@ -414,9 +414,11 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 
 	if (!_out_tags(f, &vg->tags))
 		return_0;
-
+ 
 	if (vg->system_id && *vg->system_id)
 		outf(f, "system_id = \"%s\"", vg->system_id);
+	else if (vg->lvm1_system_id && *vg->lvm1_system_id)
+		outf(f, "system_id = \"%s\"", vg->lvm1_system_id);
 
 	outsize(f, (uint64_t) vg->extent_size, "extent_size = %u",
 		vg->extent_size);

@@ -47,6 +47,8 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 		return NULL;
 	}
 
+	vg->system_id = "";
+
 	vg->cmd = cmd;
 	vg->vgmem = vgmem;
 	vg->alloc = ALLOC_NORMAL;
@@ -626,6 +628,9 @@ int vg_set_system_id(struct volume_group *vg, const char *system_id)
 		log_error("Failed to allocate memory for system_id in vg_set_system_id.");
 		return 0;
 	}
+
+	if (vg->lvm1_system_id)
+		*vg->lvm1_system_id = '\0';
 
 	return 1;
 }
