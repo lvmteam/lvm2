@@ -20,6 +20,19 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			   struct processing_handle *handle __attribute__((unused)))
 {
 	/*
+	 * Though vgremove operates per VG by definition, internally, it
+	 * actually means iterating over each LV it contains to do the remove.
+	 *
+	 * Use processing handle with void_handle.internal_report_for_select=0
+	 * for the process_each_lv_in_vg that is called later in this fn.
+	 * We need to disable internal selection for process_each_lv_in_vg
+	 * here as selection is already done by process_each_vg which calls
+	 * vgremove_single. Otherwise selection would be done per-LV and
+	 * not per-VG as we intend!
+	 */
+	struct processing_handle void_handle = {0};
+
+	/*
 	 * Single force is equivalent to sinle --yes
 	 * Even multiple --yes are equivalent to single --force
 	 * When we require -ff it cannot be replaces with -f -y
@@ -47,7 +60,8 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 				return ECMD_FAILED;
 			}
 		}
-		if ((ret = process_each_lv_in_vg(cmd, vg, NULL, NULL, 1, NULL,
+
+		if ((ret = process_each_lv_in_vg(cmd, vg, NULL, NULL, 1, &void_handle,
 						 (process_single_lv_fn_t)lvremove_single)) != ECMD_PROCESSED) {
 			stack;
 			return ret;

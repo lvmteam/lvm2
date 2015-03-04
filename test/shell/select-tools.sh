@@ -263,3 +263,13 @@ not check pv_field $dev2 pv_tags "309,tag"
 not check pv_field $dev3 pv_tags "309,tag"
 not check pv_field $dev4 pv_tags "309,tag"
 pvchange -a --deltag 309 --deltag tag
+
+#########################
+# special cases to test #
+#########################
+
+# if calling vgremove, make sure we're doing selection per-VG, not per-LV
+# (vgremove calls process_each_vg with vgremove_single which itself
+# iterates over LVs with process_each_lv_in_vg - so internally it actually
+# operates per-LV, but we still need the selection to be done per-VG)
+vgremove --yes -S 'lv_name=lv2' # should remove whole vg1, not just the lv2
