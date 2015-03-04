@@ -733,11 +733,10 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 {
 	const struct dm_config_node *vgn;
 	const struct dm_config_value *cv;
-	const char *str, *format_str;
+	const char *str, *system_id, *format_str;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	unsigned scan_done_once = use_cached_pvs;
-	char *system_id;
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib)
@@ -751,9 +750,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (!(vg = alloc_vg("read_vg", fid->fmt->cmd, vgn->key)))
 		return_NULL;
 
-	if (!(system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
-		goto_bad;
-	vg->system_id = system_id;
 
 	/*
 	 * The pv hash memorises the pv section names -> pv
@@ -782,9 +778,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (dm_config_get_str(vgn, "system_id", &str))
-		strncpy(system_id, str, NAME_LEN);
-
 	if (!_read_id(&vg->id, vgn, "id")) {
 		log_error("Couldn't read uuid for volume group %s.", vg->name);
 		goto bad;
@@ -800,6 +793,17 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		log_error("Error reading flags of volume group %s.",
 			  vg->name);
 		goto bad;
+	}
+
+	if (dm_config_get_str(vgn, "system_id", &system_id)) {
+		if (!(vg->status & ACCESS_NEEDS_SYSTEM_ID)) {
+			if (!(vg->lvm1_system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
+				goto_bad;
+			strncpy(vg->lvm1_system_id, system_id, NAME_LEN);
+		} else if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
+			log_error("Failed to allocate memory for system_id in vg_set_system_id.");
+			goto bad;
+		}
 	}
 
 	if (!_read_int32(vgn, "extent_size", &vg->extent_size)) {

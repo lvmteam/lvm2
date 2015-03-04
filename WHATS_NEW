@@ -1,5 +1,6 @@
 Version 2.02.117 - 
 ====================================
+  Set ACCESS_NEEDS_SYSTEM_ID VG status flag while system_id is set.
   Preserve original format type field when processing backup files.
   Implement status action for lvm2-monitor initscript to display monitored LVs.
   Allow lvchange -p to change kernel state only if metadata state differs.

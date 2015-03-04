@@ -60,6 +60,7 @@
 #define LVM_WRITE		UINT64_C(0x0000000000000200)	/* LV, VG */
 
 #define CLUSTERED		UINT64_C(0x0000000000000400)	/* VG */
+#define ACCESS_NEEDS_SYSTEM_ID	UINT64_C(0x0020000000000000)    /* VG */
 //#define SHARED		UINT64_C(0x0000000000000800)	/* VG */
 
 /* FIXME Remove when metadata restructuring is completed */
@@ -122,7 +123,7 @@
 #define PV_ALLOCATION_PROHIBITED	UINT64_C(0x0010000000000000)	/* PV - internal use only - allocation prohibited
 									e.g. to prohibit allocation of a RAID image
 									on a PV already holing an image of the RAID set */
-/* Next unused flag:		UINT64_C(0x0020000000000000)    */
+/* Next unused flag:		UINT64_C(0x0040000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */

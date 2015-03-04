@@ -69,8 +69,10 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	memcpy(&pv->vgid, vgd->vg_uuid, sizeof(vg->id));
 
 	/* Store system_id from first PV if PV belongs to a VG */
-	if (vg && !*vg->lvm1_system_id)
+	if (vg && !*vg->lvm1_system_id) {
 		strncpy(vg->lvm1_system_id, (char *)pvd->system_id, NAME_LEN);
+		vg->status &= ~ACCESS_NEEDS_SYSTEM_ID;
+	}
 
 	if (vg &&
 	    strncmp(vg->lvm1_system_id, (char *)pvd->system_id, sizeof(pvd->system_id)))
