@@ -152,8 +152,6 @@ char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 
 	if (lv_is_cow(seg->lv) && !lv_is_merging_cow(seg->lv))
 		segm = first_seg(seg->lv->snapshot->lv);
-	else if (seg->log_lv)
-		segm = first_seg(seg->log_lv);
 
 	// log_debug("Query LV:%s mon:%s segm:%s tgtm:%p  segmon:%d statusm:%d", seg->lv->name, segm->lv->name, segm->segtype->name, segm->segtype->ops->target_monitored, seg_monitored(segm), (int)(segm->status & PVMOVE));
 	if ((dmeventd_monitor_mode() != 1) ||

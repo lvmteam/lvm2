@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Fix seg_monitor field to report status also for mirrors and thick snapshots.
 
 Version 2.02.117 - 4th March 2015
 =================================
