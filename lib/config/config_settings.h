@@ -831,6 +831,27 @@ cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, 0, CFG_TYPE_BOOL,
 	"LVM prints warnings and ignores lvmetad if this combination\n"
 	"is seen.\n")
 
+cfg(global_use_lvmlockd_CFG, "use_lvmlockd", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
+	"Use lvmlockd for locking among hosts using LVM on shared storage.\n")
+
+cfg(global_lock_retries_CFG, "lock_retries", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_LOCK_RETRIES, vsn(2, 2, 124), NULL, 0, NULL,
+	"Retry lvmlockd lock requests this many times.\n")
+
+cfg(global_sanlock_lv_extend_CFG, "sanlock_lv_extend", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_SANLOCK_LV_EXTEND_MB, vsn(2, 2, 124), NULL, 0, NULL,
+	"Size in MiB to extend the internal LV holding sanlock locks.\n"
+	"The internal LV holds locks for each LV in the VG, and after\n"
+	"enough LVs have been created, the internal LV needs to be extended.\n"
+	"lvcreate will automatically extend the internal LV when needed by\n"
+	"the amount specified here.  Setting this to 0 disables the\n"
+	"automatic extension and can cause lvcreate to fail.\n")
+
+cfg(global_allow_override_lock_modes_CFG, "allow_override_lock_modes", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
+	"Allow command options to override normal locking.\n")
+
+cfg(global_read_only_lock_modes_CFG, "read_only_lock_modes", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
+	"Limit commands to actions that use read locks.\n"
+	"This disallows any actions that require a write (exclusive) lock.\n")
+
 cfg(global_thin_check_executable_CFG, "thin_check_executable", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, THIN_CHECK_CMD, vsn(2, 2, 94), "@THIN_CHECK_CMD@", 0, NULL,
 	"The full path to the thin_check command.\n"
 	"LVM uses this command to check that a thin metadata\n"
@@ -1256,6 +1277,14 @@ cfg(activation_mode_CFG, "activation_mode", activation_CFG_SECTION, 0, CFG_TYPE_
 	"sometimes assist with data recovery.\n"
 	"The '--activationmode' option overrides this setting.\n")
 
+cfg_array(activation_lock_start_list_CFG, "lock_start_list", activation_CFG_SECTION, CFG_ALLOW_EMPTY|CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 124), NULL, 0, NULL,
+	"Locking is started only for VGs selected by this list.\n"
+	"The rules are the same as those for LVs in volume_list.\n")
+
+cfg_array(activation_auto_lock_start_list_CFG, "auto_lock_start_list", activation_CFG_SECTION, CFG_ALLOW_EMPTY|CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 124), NULL, 0, NULL,
+	"Locking is auto-started only for VGs selected by this list.\n"
+	"The rules are the same as those for LVs in auto_activation_volume_list.\n")
+
 cfg(metadata_pvmetadatacopies_CFG, "pvmetadatacopies", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PVMETADATACOPIES, vsn(1, 0, 0), NULL, 0, NULL,
 	"Number of copies of metadata to store on each PV.\n"
 	"Possible options are: 0, 1, 2.\n"
@@ -1579,5 +1608,10 @@ cfg_array(local_extra_system_ids_CFG, "extra_system_ids", local_CFG_SECTION, CFG
 	"local host, which is determined by system_id_source.)\n"
 	"Use this only after consulting 'man lvmsystemid'\n"
 	"to be certain of correct usage and possible dangers.\n")
+
+cfg(local_host_id_CFG, "host_id", local_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, 0, vsn(2, 2, 124), NULL, 0, NULL,
+	"The lvmlockd sanlock host_id.\n"
+	"This must be a unique among all hosts,\n"
+	"and must be between 1 and 2000.\n")
 
 cfg(CFG_COUNT, NULL, root_CFG_SECTION, 0, CFG_TYPE_INT, 0, vsn(0, 0, 0), NULL, 0, NULL, NULL)

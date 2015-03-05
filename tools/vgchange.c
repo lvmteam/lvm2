@@ -313,8 +313,17 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 			       struct volume_group *vg)
 {
 	int clustered = arg_int_value(cmd, clustered_ARG, 0);
+	const char *lock_type = arg_str_value(cmd, locktype_ARG, NULL);
 	struct lv_list *lvl;
 	struct lv_segment *mirror_seg;
+
+	if (find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL)) {
+		log_error("lvmlockd requires using the vgchange --lock-type option.");
+		return 0;
+	}
+
+	if (lock_type && !strcmp(lock_type, "clvm"))
+		clustered = 1;
 
 	if (clustered && vg_is_clustered(vg)) {
 		if (vg->system_id && *vg->system_id)
@@ -511,6 +520,216 @@ static int _vgchange_profile(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _vgchange_locktype(struct cmd_context *cmd,
+			      struct volume_group *vg)
+{
+	const char *lock_type = arg_str_value(cmd, locktype_ARG, NULL);
+	struct lv_list *lvl;
+	struct logical_volume *lv;
+
+	/*
+	 * This is a special/forced exception to change the lock type to none.
+	 * It's needed for recovery cases and skips the normal steps of undoing
+	 * the current lock type.  It's a way to forcibly get access to a VG
+	 * when the normal locking mechanisms are not working.
+	 *
+	 * It ignores: the current lvm locking config, lvmlockd, the state of
+	 * the vg on other hosts, etc.  It is meant to just remove any locking
+	 * related metadata from the VG (cluster/lock_type flags, lock_type,
+	 * lock_args).
+	 *
+	 * This can be necessary when manually recovering from certain failures.
+	 * e.g. when a pv is lost containing the lvmlock lv (holding sanlock
+	 * leases), the vg lock_type needs to be changed to none, and then
+	 * back to sanlock, which recreates the lvmlock lv and leases.
+	 */
+	if (!strcmp(lock_type, "none") && arg_is_set(cmd, force_ARG)) {
+		if (yes_no_prompt("Forcibly change VG %s lock type to none? [y/n]: ", vg->name) == 'n') {
+			log_error("VG lock type not changed.");
+			return 0;
+		}
+
+		vg->status &= ~CLUSTERED;
+		vg->lock_type = "none";
+		vg->lock_args = NULL;
+
+		dm_list_iterate_items(lvl, &vg->lvs)
+			lvl->lv->lock_args = NULL;
+
+		return 1;
+	}
+
+	if (!vg->lock_type) {
+		if (vg_is_clustered(vg))
+			vg->lock_type = "clvm";
+		else
+			vg->lock_type = "none";
+	}
+
+	if (!strcmp(vg->lock_type, lock_type)) {
+		log_warn("New lock_type %s matches the current lock_type %s.",
+			 lock_type, vg->lock_type);
+		return 1;
+	}
+
+	/*
+	 * When lvm is currently using clvm, this function is just an alternative
+	 * to vgchange -c{y,n}, and can:
+	 * - change none to clvm
+	 * - change clvm to none
+	 * - it CANNOT change to or from a lockd type
+	 */
+	if (locking_is_clustered()) {
+		if (is_lockd_type(lock_type)) {
+			log_error("Changing to lock type %s requires lvmlockd.", lock_type);
+			return 0;
+		}
+
+		return _vgchange_clustered(cmd, vg);
+	}
+
+	/*
+	 * When lvm is currently using lvmlockd, this function can:
+	 * - change none to lockd type
+	 * - change none to clvm (with warning about not being able to use it)
+	 * - change lockd type to none
+	 * - change lockd type to clvm (with warning about not being able to use it)
+	 * - change clvm to none
+	 * - change clvm to lockd type
+	 */
+
+	if (lvs_in_vg_activated(vg)) {
+		log_error("Changing VG %s lock type not allowed with active LVs",
+			  vg->name);
+		return 0;
+	}
+
+	/*
+	 * Check if there are any LV types in the VG that cannot be handled
+	 * with the new lock type.  Remove this once all LV types can be
+	 * handled.
+	 */
+	if (is_lockd_type(lock_type)) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			lv = lvl->lv;
+
+			if ((lv->status & SNAPSHOT) || lv_is_cow(lv)) {
+				log_error("Changing to lock type %s is not allowed with cow snapshot LV %s/%s",
+					  lock_type, vg->name, lv->name);
+				return 0;
+			}
+		}
+	}
+
+	/* none to clvm */
+	if (!strcmp(vg->lock_type, "none") && !strcmp(lock_type, "clvm")) {
+		log_warn("New clvm lock type will not be usable with lvmlockd.");
+		vg->status |= CLUSTERED;
+		vg->lock_type = "clvm"; /* this is optional */
+		return 1;
+	}
+
+	/* clvm to none */
+	if (!strcmp(vg->lock_type, "clvm") && !strcmp(lock_type, "none")) {
+		vg->status &= ~CLUSTERED;
+		vg->lock_type = "none";
+		return 1;
+	}
+
+	/* clvm to ..., first undo clvm */
+	if (!strcmp(vg->lock_type, "clvm")) {
+		vg->status &= ~CLUSTERED;
+	}
+
+	/*
+	 * lockd type to ..., first undo lockd type
+	 *
+	 * To allow this, we need to do:
+	 * lockd_stop_vg();
+	 * lockd_free_vg_before();
+	 * lockd_free_vg_after();
+	 */
+	if (is_lockd_type(vg->lock_type)) {
+		/* FIXME: implement full undoing of the lock_type */
+		log_error("Changing VG %s from lock type %s not yet allowed.",
+			  vg->name, vg->lock_type);
+		return 0;
+	}
+
+	/* ... to clvm */
+	if (!strcmp(lock_type, "clvm")) {
+		log_warn("New clvm lock type will not be usable with lvmlockd.");
+		vg->status |= CLUSTERED;
+		vg->lock_type = "clvm"; /* this is optional */
+		vg->system_id = NULL;
+		return 1;
+	}
+
+	/* ... to lockd type */
+	if (is_lockd_type(lock_type)) {
+		/*
+		 * For lock_type dlm, lockd_init_vg() will do a single
+		 * vg_write() that sets lock_type, sets lock_args, clears
+		 * system_id, and sets all LV lock_args to dlm.
+		 */
+		if (!strcmp(lock_type, "dlm")) {
+			dm_list_iterate_items(lvl, &vg->lvs) {
+				lv = lvl->lv;
+				if (lockd_lv_uses_lock(lv))
+					lv->lock_args = "dlm";
+			}
+		}
+
+		/*
+		 * See below.  We cannot set valid LV lock_args until stage 1
+		 * of the change is done, so we need to skip the validation of
+		 * the lock_args during stage 1.
+		 */
+		if (!strcmp(lock_type, "sanlock"))
+			vg->skip_validate_lock_args = 1;
+
+		vg->system_id = NULL;
+
+		if (!lockd_init_vg(cmd, vg, lock_type)) {
+			log_error("Failed to initialize lock args for lock type %s", lock_type);
+			return 0;
+		}
+
+		/*
+		 * For lock_type sanlock, there must be multiple steps
+		 * because the VG needs an active lvmlock LV before
+		 * LV lock areas can be allocated, which must be done
+		 * before LV lock_args are written.  So, the LV lock_args
+		 * remain unset during the first stage of the conversion.
+		 *
+		 * Stage 1:
+		 * lockd_init_vg() creates and activates the lvmlock LV,
+		 * then sets lock_type, sets lock_args, and clears system_id.
+		 *
+		 * Stage 2:
+		 * We get here, and can now set LV lock_args.  This uses
+		 * the standard code path for allocating LV locks in
+		 * vg_write() by setting LV lock_args to "pending",
+		 * which tells vg_write() to call lockd_init_lv()
+		 * and sets the lv->lock_args value before writing the VG.
+		 */
+		if (!strcmp(lock_type, "sanlock")) {
+			dm_list_iterate_items(lvl, &vg->lvs) {
+				lv = lvl->lv;
+				if (lockd_lv_uses_lock(lv))
+					lv->lock_args = "pending";
+			}
+
+			vg->skip_validate_lock_args = 0;
+		}
+
+		return 1;
+	}
+
+	log_error("Unknown lock type");
+	return 0;
+}
+
 /*
  * This function will not be called unless the local host is allowed to use the
  * VG.  Either the VG has no system_id, or the VG and host have matching
@@ -582,7 +801,81 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 	if (vg->lvm1_system_id)
 		*vg->lvm1_system_id = '\0';
 
+	/* update system_id in lvmlockd's record for this vg */
+	if (!lockd_start_vg(cmd, vg))
+		log_debug("Failed to update lvmlockd.");
+
 	return 1;
+}
+
+static int _passes_lock_start_filter(struct cmd_context *cmd,
+				     struct volume_group *vg,
+				     const int cfg_id)
+{
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	const char *str;
+
+	/* undefined list means no restrictions, all vg names pass */
+
+	cn = find_config_tree_node(cmd, cfg_id, NULL);
+	if (!cn)
+		return 1;
+
+	/* with a defined list, the vg name must be included to pass */
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type == DM_CFG_EMPTY_ARRAY)
+			break;
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Ignoring invalid string in lock_start list");
+			continue;
+		}
+		str = cv->v.str;
+		if (!*str) {
+			log_error("Ignoring empty string in config file");
+			continue;
+		}
+
+		/* ignoring tags for now */
+
+		if (!strcmp(str, vg->name))
+			return 1;
+	}
+
+	return 0;
+}
+
+static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg)
+{
+	const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
+	int auto_opt = 0;
+
+	if (!start_opt || arg_is_set(cmd, force_ARG))
+		goto do_start;
+
+	if (!strcmp(start_opt, "auto") || !strcmp(start_opt, "autowait"))
+		auto_opt = 1;
+
+	if (!_passes_lock_start_filter(cmd, vg, activation_lock_start_list_CFG)) {
+		log_verbose("Not starting %s since it does not pass lock_start_list", vg->name);
+		return 1;
+	}
+
+	if (auto_opt && !_passes_lock_start_filter(cmd, vg, activation_auto_lock_start_list_CFG)) {
+		log_verbose("Not starting %s since it does not pass auto_lock_start_list", vg->name);
+		return 1;
+	}
+
+do_start:
+	return lockd_start_vg(cmd, vg);
+}
+
+static int _vgchange_lock_stop(struct cmd_context *cmd, struct volume_group *vg)
+{
+	/* Disable the unlock in toollib because it's pointless after the stop. */
+	cmd->lockd_vg_disable = 1;
+	return lockd_stop_vg(cmd, vg);
 }
 
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
@@ -610,6 +903,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ metadataprofile_ARG, &_vgchange_profile },
 		{ profile_ARG, &_vgchange_profile },
 		{ detachprofile_ARG, &_vgchange_profile },
+		{ locktype_ARG, &_vgchange_locktype },
 		{ systemid_ARG, &_vgchange_system_id },
 	};
 
@@ -699,13 +993,90 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		if (!_vgchange_background_polling(cmd, vg))
 			return_ECMD_FAILED;
 
+	if (arg_is_set(cmd, lockstart_ARG)) {
+		if (!_vgchange_lock_start(cmd, vg))
+			return_ECMD_FAILED;
+	} else if (arg_is_set(cmd, lockstop_ARG)) {
+		if (!_vgchange_lock_stop(cmd, vg))
+			return_ECMD_FAILED;
+	}
+
         return ret;
+}
+
+/*
+ * vgchange can do different things that require different
+ * locking, so look at each of those things here.
+ *
+ * Set up overrides for the default VG locking for various special cases.
+ * The VG lock will be acquired in process_each_vg.
+ *
+ * Acquire the gl lock according to which kind of vgchange command this is.
+ */
+
+static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
+{
+	/* The default vg lock mode is ex, but these options only need sh. */
+
+	if (arg_is_set(cmd, activate_ARG) || arg_is_set(cmd, refresh_ARG))
+		cmd->lockd_vg_default_sh = 1;
+
+	/* Starting a vg lockspace means there are no locks available yet. */
+
+	if (arg_is_set(cmd, lockstart_ARG))
+		cmd->lockd_vg_disable = 1;
+
+	/*
+	 * In most cases, lockd_vg does not apply when changing lock type.
+	 * (We don't generally allow changing *from* lockd type yet.)
+	 * lockd_vg could be called within _vgchange_locktype as needed.
+	 */
+
+	if (arg_is_set(cmd, locktype_ARG))
+		cmd->lockd_vg_disable = 1;
+
+	/*
+	 * Changing system_id or lock_type must only be done on explicitly
+	 * named vgs.
+	 */
+
+	if (arg_is_set(cmd, systemid_ARG) || arg_is_set(cmd, locktype_ARG))
+		cmd->command->flags &= ~ALL_VGS_IS_DEFAULT;
+
+	if (arg_is_set(cmd, lockstart_ARG)) {
+		/*
+		 * The lockstart condition takes the global lock to serialize
+		 * with any other host that tries to remove the VG while this
+		 * tries to start it.  (Zero argc means all VGs, in wich case
+		 * process_each_vg will acquire the global lock.)
+		 */
+		if (argc && !lockd_gl(cmd, "sh", 0))
+			return_ECMD_FAILED;
+
+	} else if (arg_is_set(cmd, systemid_ARG) || arg_is_set(cmd, locktype_ARG)) {
+		/*
+		 * This is a special case where taking the global lock is
+		 * not needed to protect global state, because the change is
+		 * only to an existing VG.  But, taking the global lock ex is
+		 * helpful in this case to trigger a global cache validation
+		 * on other hosts, to cause them to see the new system_id or
+		 * lock_type.
+		 */
+		if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
+			return_ECMD_FAILED;
+	}
+
+	return 1;
 }
 
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
+	int ret;
+
 	int noupdate =
 		arg_count(cmd, activate_ARG) ||
+		arg_count(cmd, lockstart_ARG) ||
+		arg_count(cmd, lockstop_ARG) ||
 		arg_count(cmd, monitor_ARG) ||
 		arg_count(cmd, poll_ARG) ||
 		arg_count(cmd, refresh_ARG);
@@ -726,6 +1097,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_count(cmd, clustered_ARG) ||
 		arg_count(cmd, alloc_ARG) ||
 		arg_count(cmd, vgmetadatacopies_ARG) ||
+		arg_count(cmd, locktype_ARG) ||
 		arg_count(cmd, systemid_ARG);
 
 	int update = update_partial_safe || update_partial_unsafe;
@@ -821,9 +1193,35 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (!update || !update_partial_unsafe)
 		cmd->handles_missing_pvs = 1;
 
+	/*
+	 * Include foreign VGs that contain active LVs.
+	 * That shouldn't happen in general, but if it does by some
+	 * mistake, then we want to allow those LVs to be deactivated.
+	 */
 	if (arg_is_set(cmd, activate_ARG))
 		cmd->include_active_foreign_vgs = 1;
 
-	return process_each_vg(cmd, argc, argv, update ? READ_FOR_UPDATE : 0,
-			       NULL, &vgchange_single);
+	if (!_lockd_vgchange(cmd, argc, argv))
+		return_ECMD_FAILED;
+
+	ret = process_each_vg(cmd, argc, argv, update ? READ_FOR_UPDATE : 0,
+			      NULL, &vgchange_single);
+
+	/* Wait for lock-start ops that were initiated in vgchange_lockstart. */
+
+	if (arg_is_set(cmd, lockstart_ARG)) {
+		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
+
+		lockd_gl(cmd, "un", 0);
+
+		if (!start_opt || !strcmp(start_opt, "wait") || !strcmp(start_opt, "autowait")) {
+			log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
+			lockd_start_wait(cmd);
+
+		} else if (!strcmp(start_opt, "nowait")) {
+			log_print_unless_silent("Starting locking.  VG is read-only until locks are ready.");
+		}
+	}
+
+	return ret;
 }

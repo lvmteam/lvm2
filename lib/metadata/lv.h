@@ -51,7 +51,9 @@ struct logical_volume {
 	struct dm_list segs_using_this_lv;
 
 	uint64_t timestamp;
+	unsigned new_lock_args:1;
 	const char *hostname;
+	const char *lock_args;
 };
 
 struct lv_with_info_and_seg_status;
@@ -103,6 +105,7 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv);
 const struct logical_volume *lv_ondisk(const struct logical_volume *lv);
 struct profile *lv_config_profile(const struct logical_volume *lv);
 char *lv_profile_dup(struct dm_pool *mem, const struct logical_volume *lv);
+char *lv_lock_args_dup(struct dm_pool *mem, const struct logical_volume *lv);
 int lv_mirror_image_in_sync(const struct logical_volume *lv);
 int lv_raid_image_in_sync(const struct logical_volume *lv);
 int lv_raid_healthy(const struct logical_volume *lv);

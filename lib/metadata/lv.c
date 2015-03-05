@@ -20,6 +20,7 @@
 #include "toolcontext.h"
 #include "segtype.h"
 #include "str_list.h"
+#include "lvmlockd.h"
 
 #include <time.h>
 #include <sys/utsname.h>
@@ -910,6 +911,19 @@ static int _lv_is_exclusive(struct logical_volume *lv)
 int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 		     enum activation_change activate, int needs_exclusive)
 {
+	const char *ay_with_mode = NULL;
+
+	if (activate == CHANGE_ASY)
+		ay_with_mode = "sh";
+	if (activate == CHANGE_AEY)
+		ay_with_mode = "ex";
+	
+	if (is_change_activating(activate) &&
+	    !lockd_lv(cmd, lv, ay_with_mode, LDLV_PERSISTENT)) {
+		log_error("Failed to lock logical volume %s/%s", lv->vg->name, lv->name);
+		return 0;
+	}
+
 	switch (activate) {
 	case CHANGE_AN:
 deactivate:
@@ -962,6 +976,10 @@ exclusive:
 			return_0;
 	}
 
+	if (!is_change_activating(activate) &&
+	    !lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
+		log_error("Failed to unlock logical volume %s/%s", lv->vg->name, lv->name);
+
 	return 1;
 }
 
@@ -999,6 +1017,12 @@ char *lv_profile_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
 	const char *profile_name = lv->profile ? lv->profile->name : "";
 	return dm_pool_strdup(mem, profile_name);
+}
+
+char *lv_lock_args_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	const char *lock_args = lv->lock_args ? lv->lock_args : "";
+	return dm_pool_strdup(mem, lock_args);
 }
 
 /* For given LV find recursively the LV which holds lock for it */

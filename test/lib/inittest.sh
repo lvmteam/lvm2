@@ -106,6 +106,13 @@ test -n "$LVM_TEST_LVMPOLLD" && {
 	aux prepare_lvmpolld
 }
 
+if test -n "$LVM_TEST_LVMLOCKD" ; then
+	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
+		aux lvmconf 'local/host_id = 1'
+	fi
+	export SHARED="--shared"
+fi
+
 echo "<======== Processing test: \"$TESTNAME\" ========>"
 
 set -vx

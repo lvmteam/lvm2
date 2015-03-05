@@ -27,6 +27,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *st;
 	struct volume_group *vg;
 	struct lv_list *lvl;
+	uint32_t lockd_state;
 	int r = ECMD_FAILED;
 
 	if (argc == 3) {
@@ -98,8 +99,11 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!lockd_vg(cmd, vg_name, "ex", 0, &lockd_state))
+		return_ECMD_FAILED;
+
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
-	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
+	vg = vg_read_for_update(cmd, vg_name, NULL, 0, lockd_state);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		return_ECMD_FAILED;

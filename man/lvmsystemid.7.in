@@ -83,9 +83,10 @@ version without the system_id feature.
 .P
 
 .SS Types of VG access
-A "local VG" is meant to be used by a single host.
+
+A local VG is mean to be used by a single host.
 .br
-A "shared VG" is meant to be used by multiple hosts.
+A shared or clustered VG is meant to be used by multiple hosts.
 .br
 These can be further distinguished as:
 
@@ -107,9 +108,15 @@ A local VG that has been exported with vgexport and has no system_id.
 This VG type can only be accessed by vgimport which will change it to
 owned.
 
+.B Shared:
+A shared or "lockd" VG has lock_type set and no system_id.
+A shared VG is meant to be used on shared storage from multiple hosts,
+and is only accessible to hosts using lvmlockd.
+
 .B Clustered:
-A shared VG with the clustered flag set, and no system_id.  This VG type
-is only accessible to hosts using clvmd.
+A clustered or "clvm" VG has the clustered flag set and no system_id.
+A clustered VG is meant to be used on shared storage from multiple hosts,
+and is only accessible to hosts using clvmd.
 
 .SS system_id_source
 
@@ -297,10 +304,16 @@ system_id to its allow_system_id list, change the system_id of the foreign
 VG to its own, and remove the foreign system_id from its allow_system_id
 list.
 
+.SS shared VGs
+
+A shared/lockd VG has no system_id set, allowing multiple hosts to
+use it via lvmlockd.  Changing a VG to a lockd type will clear the
+existing system_id.
+
 .SS clustered VGs
 
-A "clustered" VG should have no system_id set, allowing multiple hosts to
-use it via clvm.  Changing a VG to clustered will clear the existing
+A clustered/clvm VG has no system_id set, allowing multiple hosts to
+use it via clvmd.  Changing a VG to clustered will clear the existing
 system_id.  Changing a VG to not clustered will set the system_id to the
 host running the vgchange command.
 

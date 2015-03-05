@@ -96,6 +96,10 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	int ret = ECMD_PROCESSED;
 	struct pvcreate_params pp;
 
+	/* Needed to change the set of orphan PVs. */
+	if (!lockd_gl(cmd, "ex", 0))
+		return_ECMD_FAILED;
+
 	pvcreate_params_set_defaults(&pp);
 
 	if (!pvcreate_restore_params_validate(cmd, argc, argv, &pp)) {

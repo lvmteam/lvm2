@@ -57,6 +57,8 @@ mkdtemp() {
 	destdir=$1
 	template=$2
 
+        test -d "$destdir" || die "DIR ('$destdir') does not exist."
+
 	case "$template" in
 		*XXXX) ;;
 		*) die "Invalid template: $template (must have a suffix of at least 4 X's)";;

@@ -367,6 +367,7 @@ let
       centos66 = centos65;
       centos70 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel"
                    "socat" # used by test suite lvmpolld
+                   "sanlock" # used by test suite lvmlockd
                    "procps-ng" ];
 
       fedora17_18 = [ "dlm-devel" "corosynclib-devel" "libblkid" "libblkid-devel"

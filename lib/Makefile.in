@@ -200,6 +200,11 @@ ifeq ("@BUILD_LVMPOLLD@", "yes")
 	lvmpolld/lvmpolld-client.c
 endif
 
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+  SOURCES +=\
+	locking/lvmlockd.c
+endif
+
 ifeq ("@DMEVENTD@", "yes")
   CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
   LIBS += -ldevmapper-event

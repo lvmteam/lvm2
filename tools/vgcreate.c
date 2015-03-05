@@ -50,6 +50,13 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!vgcreate_params_validate(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
+	/*
+	 * Needed to change the global VG namespace,
+	 * and to change the set of orphan PVs.
+	 */
+	if (!lockd_gl_create(cmd, "ex", vp_new.lock_type))
+		return ECMD_FAILED;
+
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	/* Create the new VG */
@@ -119,6 +126,19 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_bad;
 
+	/*
+	 * The VG is initially written without lock_type set, i.e. it starts as
+	 * a local VG.  lockd_init_vg() then writes the VG a second time with
+	 * both lock_type and lock_args set.
+	 */
+	if (!lockd_init_vg(cmd, vg, vp_new.lock_type)) {
+		log_error("Failed to initialize lock args for lock type %s",
+			  vp_new.lock_type);
+		vg_remove_pvs(vg);
+		vg_remove_direct(vg);
+		goto_bad;
+	}
+
 	unlock_vg(cmd, VG_ORPHANS);
 	unlock_vg(cmd, vp_new.vg_name);
 
@@ -128,6 +148,33 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 				clustered_message, *clustered_message ? 'v' : 'V', vg->name,
 				vg->system_id ? " with system ID " : "", vg->system_id ? : "");
 
+	/*
+	 * Start the VG lockspace because it will likely be used right away.
+	 * Optionally wait for the start to complete so the VG can be fully
+	 * used after this command completes (otherwise, the VG can only be
+	 * read without locks until the lockspace is done starting.)
+	 */
+	if (is_lockd_type(vg->lock_type)) {
+		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
+
+		if (!lockd_start_vg(cmd, vg)) {
+			log_error("Failed to start locking");
+			goto out;
+		}
+
+		lockd_gl(cmd, "un", 0);
+
+		if (!start_opt || !strcmp(start_opt, "wait")) {
+			/* It is OK if the user does Ctrl-C to cancel the wait. */
+			log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
+			lockd_start_wait(cmd);
+
+		} else if (!strcmp(start_opt, "nowait")) {
+			log_print_unless_silent("Starting locking.  VG is read-only until locks are ready.");
+		}
+
+	}
+out:
 	release_vg(vg);
 	return ECMD_PROCESSED;
 

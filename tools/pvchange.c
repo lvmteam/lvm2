@@ -82,6 +82,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
+	/*
+	 * Needed to change a property on an orphan PV.
+	 * i.e. the global lock is only needed for orphans.
+	 * Convert sh to ex.
+	 */
+	if (is_orphan(pv) && !lockd_gl(cmd, "ex", 0))
+		return_ECMD_FAILED;
+
 	if (tagargs) {
 		/* tag or deltag */
 		if (arg_count(cmd, addtag_ARG) && !change_tag(cmd, NULL, NULL, pv, addtag_ARG))

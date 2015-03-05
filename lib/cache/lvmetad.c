@@ -22,6 +22,7 @@
 #include "format-text.h" // TODO for disk_locn, used as a DA representation
 #include "crc.h"
 #include "lvm-signal.h"
+#include "lvmlockd.h"
 
 #define SCAN_TIMEOUT_SECONDS	80
 #define MAX_RESCANS		10	/* Maximum number of times to scan all PVs and retry if the daemon returns a token mismatch error */
@@ -1494,8 +1495,15 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	dm_list_init(&pvc_before);
 	dm_list_init(&pvc_after);
 
+	if (!lvmlockd_use()) {
+		log_error(INTERNAL_ERROR "validate global cache without lvmlockd");
+		return;
+	}
+
 	if (!lvmetad_used())
 		return;
+
+	log_debug_lvmetad("Validating global lvmetad cache");
 
 	if (force)
 		goto do_scan;

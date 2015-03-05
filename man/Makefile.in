@@ -46,6 +46,12 @@ else
 LVMPOLLD =
 endif
 
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+LVMLOCKD = lvmlockd.8
+else
+LVMLOCKD =
+endif
+
 MAN5=lvm.conf.5
 MAN7=lvmsystemid.7
 MAN8=lvm-config.8 lvm-dumpconfig.8 lvm-lvpoll.8 \
@@ -56,7 +62,8 @@ MAN8=lvm-config.8 lvm-dumpconfig.8 lvm-lvpoll.8 \
 	pvresize.8 pvs.8 pvscan.8 vgcfgbackup.8 vgcfgrestore.8 vgchange.8 \
 	vgck.8 vgcreate.8 vgconvert.8 vgdisplay.8 vgexport.8 vgextend.8 \
 	vgimport.8 vgimportclone.8 vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 \
-	vgrename.8 vgs.8 vgscan.8 vgsplit.8 $(FSADMMAN) $(LVMETAD) $(LVMPOLLD)
+	vgrename.8 vgs.8 vgscan.8 vgsplit.8 $(FSADMMAN) $(LVMETAD) $(LVMPOLLD) \
+	$(LVMLOCKD)
 
 ifneq ("@CLVMD@", "none")
   MAN8CLUSTER=clvmd.8

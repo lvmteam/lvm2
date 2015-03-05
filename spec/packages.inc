@@ -86,6 +86,10 @@ fi
 %if %{have_service lvmpolld}
  %{_sbindir}/lvmpolld
 %endif
+%if %{have_service lvmlockd}
+ %{_sbindir}/lvmlockd
+ %{_sbindir}/lvmlockctl
+%endif
 %if %{have_with cache}
   %{_mandir}/man7/lvmcache.7.gz
 %endif
@@ -156,6 +160,9 @@ fi
   %{_mandir}/man8/lvmpolld.8.gz
   %{_mandir}/man8/lvm-lvpoll.8.gz
 %endif
+%if %{have_service lvmlockd}
+  %{_mandir}/man8/lvmlockd.8.gz
+%endif
 %dir %{_sysconfdir}/lvm
 %ghost %{_sysconfdir}/lvm/cache/.cache
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvm.conf
@@ -182,6 +189,11 @@ fi
   %{_unitdir}/lvm2-lvmpolld.service
   %{_unitdir}/lvm2-lvmpolld.socket
  %endif
+ %if %{have_service lvmlockd}
+  %{_unitdir}/lvm2-lvmlockd.service
+  %{_unitdir}/lvm2-lvmlocking.service
+  #%{_unitdir}/lvm2-lvmlockd.socket
+ %endif
 %else
  %{_sysconfdir}/rc.d/init.d/lvm2-monitor
  %{_sysconfdir}/rc.d/init.d/blk-availability
@@ -191,6 +203,9 @@ fi
  %if %{have_service lvmpolld}
   %{_sysconfdir}/rc.d/init.d/lvm2-lvmpolld
  %endif
+ #%if %{have_service lvmlockd}
+ # %{_sysconfdir}/rc.d/init.d/lvm2-lvmlockd
+ #%endif
 %endif
 
 ##############################################################################

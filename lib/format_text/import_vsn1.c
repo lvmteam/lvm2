@@ -20,6 +20,7 @@
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
+#include "lvmlockd.h"
 #include "lv_alloc.h"
 #include "pv_alloc.h"
 #include "segtype.h"
@@ -599,6 +600,11 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 		return 0;
 	}
 
+	if (dm_config_get_str(lvn, "lock_args", &str)) {
+		if (!(lv->lock_args = dm_pool_strdup(mem, str)))
+			return_0;
+	}
+
 	lv->alloc = ALLOC_INHERIT;
 	if (dm_config_get_str(lvn, "allocation_policy", &str)) {
 		lv->alloc = get_alloc_from_string(str);
@@ -662,6 +668,12 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 				   lv->name);
 		lv->status |= POOL_METADATA_SPARE;
 		vg->pool_metadata_spare_lv = lv;
+	}
+
+	if (!lv_is_visible(lv) && !strcmp(lv->name, LOCKD_SANLOCK_LV_NAME)) {
+		log_debug_metadata("Logical volume %s is sanlock lv.", lv->name);
+		lv->status |= LOCKD_SANLOCK_LV;
+		vg->sanlock_lv = lv;
 	}
 
 	return 1;
@@ -813,6 +825,11 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	if (dm_config_get_str(vgn, "lock_type", &str)) {
 		if (!(vg->lock_type = dm_pool_strdup(vg->vgmem, str)))
+			goto bad;
+	}
+
+	if (dm_config_get_str(vgn, "lock_args", &str)) {
+		if (!(vg->lock_args = dm_pool_strdup(vg->vgmem, str)))
 			goto bad;
 	}
 

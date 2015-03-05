@@ -138,14 +138,20 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	int finished = 0;
+	uint32_t lockd_state;
 
 	/* Poll for completion */
 	while (!finished) {
 		if (parms->wait_before_testing)
 			_sleep_and_rescan_devices(parms);
 
+		if (!lockd_vg(cmd, id->vg_name, "sh", 0, &lockd_state)) {
+			log_error("ABORTING: Can't lock VG for %s.", id->display_name);
+			return 0;
+		}
+
 		/* Locks the (possibly renamed) VG again */
-		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE);
+		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state);
 		if (vg_read_error(vg)) {
 			release_vg(vg);
 			log_error("ABORTING: Can't reread VG for %s.", id->display_name);
@@ -188,6 +194,8 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		}
 
 		unlock_and_release_vg(cmd, vg, vg->name);
+
+		lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state);
 
 		/*
 		 * FIXME Sleeping after testing, while preferred, also works around
@@ -360,12 +368,32 @@ static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
+	uint32_t lockd_state;
+	int ret;
 
-	vg = vg_read(cmd, id->vg_name, NULL, 0);
+	/*
+	 * FIXME: we don't really need to take the vg lock here,
+	 * because we only report the progress on the same host
+	 * where the pvmove/lvconvert is happening.  This means
+	 * that the local pvmove/lvconvert/lvpoll commands are
+	 * updating the local lvmetad with the latest info they
+	 * have, and we just need to read the latest info that
+	 * they have put into lvmetad about their progress.
+	 * No VG lock is needed to protect anything here
+	 * (we're just reading the VG), and no VG lock is
+	 * needed to force a VG read from disk to get changes
+	 * from other hosts, because the only change to the VG
+	 * we're interested in is the change done locally.
+	 */
+	if (!lockd_vg(cmd, id->vg_name, "sh", 0, &lockd_state))
+		return 0;
+
+	vg = vg_read(cmd, id->vg_name, NULL, 0, lockd_state);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		log_error("Can't reread VG for %s", id->display_name);
-		return 0;
+		ret = 0;
+		goto out_ret;
 	}
 
 	lv = find_lv(vg, id->lv_name);
@@ -382,23 +410,28 @@ static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id
 		else
 			log_verbose("Can't find LV in %s for %s. Already finished or removed.",
 				    vg->name, id->display_name);
+		ret = 1;
 		goto out;
 	}
 
 	if (!lv_is_active_locally(lv)) {
 		log_verbose("%s: Interrupted: No longer active.", id->display_name);
+		ret = 1;
 		goto out;
 	}
 
 	if (parms->poll_fns->poll_progress(cmd, lv, id->display_name, parms) == PROGRESS_CHECK_FAILED) {
-		unlock_and_release_vg(cmd, vg, vg->name);
-		return_0;
+		ret = 0;
+		goto out;
 	}
+
+	ret = 1;
 
 out:
 	unlock_and_release_vg(cmd, vg, vg->name);
-
-	return 1;
+out_ret:
+	lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state);
+	return ret;
 }
 
 static int _lvmpolld_init_poll_vg(struct cmd_context *cmd, const char *vgname,

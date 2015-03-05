@@ -1453,6 +1453,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
 	struct volume_group *vg;
+	uint32_t lockd_state;
 
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
 		stack;
@@ -1464,8 +1465,11 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!lockd_vg(cmd, lp.vg_name, "ex", 0, &lockd_state))
+		return_ECMD_FAILED;
+
 	log_verbose("Finding volume group \"%s\"", lp.vg_name);
-	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0);
+	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0, lockd_state);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		return_ECMD_FAILED;
@@ -1510,12 +1514,22 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 			    lp.pool_name ? : "with generated name", lp.vg_name, lp.segtype->name);
 	}
 
+	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+		if (!handle_sanlock_lv(cmd, vg)) {
+			log_error("No space for sanlock lock, extend the internal lvmlock LV.");
+			goto_out;
+		}
+	}
+
 	if (seg_is_thin_volume(&lp))
 		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
 			    lp.lv_name ? : "with generated name",
 			    lp.pool_name ? : "with generated name", lp.vg_name,
 			    lp.snapshot ? " as snapshot of " : "",
 			    lp.snapshot ? lp.origin_name : "", lp.segtype->name);
+
+	if (is_lockd_type(vg->lock_type))
+		lp.needs_lockd_init = 1;
 
 	if (!lv_create_single(vg, &lp))
 		goto_out;

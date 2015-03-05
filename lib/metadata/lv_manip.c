@@ -30,6 +30,7 @@
 #include "lvm-exec.h"
 #include "lvm-signal.h"
 #include "memlock.h"
+#include "lvmlockd.h"
 
 typedef enum {
 	PREFERRED,
@@ -4588,7 +4589,9 @@ static int _lvresize_check_lv(struct cmd_context *cmd, struct logical_volume *lv
 		return 0;
 	}
 
-	if (!lv_is_visible(lv) && !lv_is_thin_pool_metadata(lv)) {
+	/* FIXME: use a status flag instead of the name "lvmlock". */
+
+	if (!lv_is_visible(lv) && !lv_is_thin_pool_metadata(lv) && strcmp(lv->name, "lvmlock")) {
 		log_error("Can't resize internal logical volume %s", lv->name);
 		return 0;
 	}
@@ -5238,6 +5241,13 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	/*
+	 * If the LV is locked from activation, this lock call is a no-op.
+	 * Otherwise, this acquires a transient lock on the lv (not PERSISTENT).
+	 */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_0;
+
 	if (lp->sizeargs &&
 	    !(lock_lv = _lvresize_volume(cmd, lv, lp, pvh)))
 		return_0;
@@ -5586,6 +5596,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int format1_reload_required = 0;
 	int visible;
 	struct logical_volume *pool_lv = NULL;
+	struct logical_volume *lock_lv = lv;
 	struct lv_segment *cache_seg = NULL;
 	int ask_discard;
 	struct lv_list *lvl;
@@ -5632,13 +5643,18 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("Can't remove logical volume %s used by a pool.",
 			  lv->name);
 		return 0;
-	} else if (lv_is_thin_volume(lv))
+	} else if (lv_is_thin_volume(lv)) {
 		pool_lv = first_seg(lv)->pool_lv;
+		lock_lv = pool_lv;
+	}
 
 	if (lv_is_locked(lv)) {
 		log_error("Can't remove locked LV %s", lv->name);
 		return 0;
 	}
+
+	if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
+		return_0;
 
 	/* FIXME Ensure not referred to by another existing LVs */
 	ask_discard = find_config_tree_bool(cmd, devices_issue_discards_CFG, NULL);
@@ -5813,6 +5829,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	backup(vg);
+
+	lockd_lv(cmd, lock_lv, "un", LDLV_PERSISTENT);
+	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
 	if (!suppress_remove_message && visible)
 		log_print_unless_silent("Logical volume \"%s\" successfully removed", lv->name);
@@ -7201,6 +7220,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				   lv->major, lv->minor);
 	}
 
+	/*
+	 * The specific LV may not use a lock.  lockd_init_lv() sets
+	 * lv->lock_args to NULL if this LV does not use its own lock.
+	 */
+
+	if (!lockd_init_lv(vg->cmd, vg, lv, lp))
+		return_NULL;
+
 	dm_list_splice(&lv->tags, &lp->tags);
 
 	if (!lv_extend(lv, create_segtype,
@@ -7515,6 +7542,8 @@ deactivate_and_revert_new_lv:
 	}
 
 revert_new_lv:
+	lockd_free_lv(vg->cmd, vg, lp->lv_name, &lv->lvid.id[1], lp->lock_args);
+
 	/* FIXME Better to revert to backup of metadata? */
 	if (!lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "

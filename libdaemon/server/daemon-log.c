@@ -1,7 +1,6 @@
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include <syslog.h>
-#include <assert.h>
 
 struct backend {
 	int id;
@@ -129,7 +128,9 @@ void daemon_log_multi(log_state *s, int type, const char *prefix, const char *ms
 
 void daemon_log_enable(log_state *s, int outlet, int type, int enable)
 {
-	assert(type < 32);
+	if (type >= 32)
+		return;
+
 	if (enable)
 		s->log_config[type] |= outlet;
 	else

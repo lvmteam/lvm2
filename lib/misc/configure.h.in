@@ -105,6 +105,9 @@
 /* Use lvmetad by default. */
 #undef DEFAULT_USE_LVMETAD
 
+/* Use lvmlockd by default. */
+#undef DEFAULT_USE_LVMLOCKD
+
 /* Use lvmpolld by default. */
 #undef DEFAULT_USE_LVMPOLLD
 
@@ -533,6 +536,12 @@
 
 /* Define to 1 to include code that uses lvmetad. */
 #undef LVMETAD_SUPPORT
+
+/* Path to lvmlockd pidfile. */
+#undef LVMLOCKD_PIDFILE
+
+/* Define to 1 to include code that uses lvmlockd. */
+#undef LVMLOCKD_SUPPORT
 
 /* Path to lvmpolld pidfile. */
 #undef LVMPOLLD_PIDFILE

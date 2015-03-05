@@ -636,6 +636,7 @@ kerneldir
 interface
 CMIRRORD_PIDFILE
 CLVMD_PIDFILE
+LVMLOCKD_PIDFILE
 LVMPOLLD_PIDFILE
 LVMETAD_PIDFILE
 DMEVENTD_PIDFILE
@@ -693,6 +694,7 @@ DMEVENTD_PATH
 DMEVENTD
 DL_LIBS
 DEVMAPPER
+DEFAULT_USE_LVMLOCKD
 DEFAULT_USE_LVMPOLLD
 DEFAULT_USE_LVMETAD
 DEFAULT_USE_BLKID_WIPING
@@ -722,6 +724,7 @@ CLDWHOLEARCHIVE
 CLDNOWHOLEARCHIVE
 CLDFLAGS
 CACHE
+BUILD_LVMLOCKD
 BUILD_LVMPOLLD
 BUILD_LVMETAD
 BUILD_DMEVENTD
@@ -740,6 +743,10 @@ SYSTEMD_LIBS
 SYSTEMD_CFLAGS
 BLKID_LIBS
 BLKID_CFLAGS
+LOCKD_DLM_LIBS
+LOCKD_DLM_CFLAGS
+LOCKD_SANLOCK_LIBS
+LOCKD_SANLOCK_CFLAGS
 VALGRIND_LIBS
 VALGRIND_CFLAGS
 CUNIT_LIBS
@@ -916,6 +923,9 @@ with_lvmetad_pidfile
 enable_lvmpolld
 enable_use_lvmpolld
 with_lvmpolld_pidfile
+enable_lvmlockd
+enable_use_lvmlockd
+with_lvmlockd_pidfile
 enable_blkid_wiping
 enable_udev_systemd_background_jobs
 enable_udev_sync
@@ -994,6 +1004,10 @@ CUNIT_CFLAGS
 CUNIT_LIBS
 VALGRIND_CFLAGS
 VALGRIND_LIBS
+LOCKD_SANLOCK_CFLAGS
+LOCKD_SANLOCK_LIBS
+LOCKD_DLM_CFLAGS
+LOCKD_DLM_LIBS
 BLKID_CFLAGS
 BLKID_LIBS
 SYSTEMD_CFLAGS
@@ -1632,6 +1646,8 @@ Optional Features:
   --disable-use-lvmetad   disable usage of LVM Metadata Daemon
   --enable-lvmpolld       enable the LVM Polling Daemon
   --disable-use-lvmpolld  disable usage of LVM Poll Daemon
+  --enable-lvmlockd       enable the LVM lock daemon
+  --disable-use-lvmlockd  disable usage of LVM lock daemon
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
   --disable-udev-systemd-background-jobs
@@ -1725,6 +1741,8 @@ Optional Packages:
                           lvmetad pidfile [PID_DIR/lvmetad.pid]
   --with-lvmpolld-pidfile=PATH
                           lvmpolld pidfile [PID_DIR/lvmpolld.pid]
+  --with-lvmlockd-pidfile=PATH
+                          lvmlockd pidfile [PID_DIR/lvmlockd.pid]
   --with-localedir=DIR    locale-dependent data [DATAROOTDIR/locale]
   --with-confdir=DIR      configuration files in DIR [/etc]
   --with-staticdir=DIR    static binaries in DIR [EPREFIX/sbin]
@@ -1809,6 +1827,14 @@ Some influential environment variables:
               C compiler flags for VALGRIND, overriding pkg-config
   VALGRIND_LIBS
               linker flags for VALGRIND, overriding pkg-config
+  LOCKD_SANLOCK_CFLAGS
+              C compiler flags for LOCKD_SANLOCK, overriding pkg-config
+  LOCKD_SANLOCK_LIBS
+              linker flags for LOCKD_SANLOCK, overriding pkg-config
+  LOCKD_DLM_CFLAGS
+              C compiler flags for LOCKD_DLM, overriding pkg-config
+  LOCKD_DLM_LIBS
+              linker flags for LOCKD_DLM, overriding pkg-config
   BLKID_CFLAGS
               C compiler flags for BLKID, overriding pkg-config
   BLKID_LIBS  linker flags for BLKID, overriding pkg-config
@@ -3042,6 +3068,7 @@ case "$host_os" in
 		DEVMAPPER=yes
 		LVMETAD=no
 		LVMPOLLD=no
+		LVMLOCKD=no
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
@@ -10966,6 +10993,207 @@ _ACEOF
 
 
 ################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmlockd" >&5
+$as_echo_n "checking whether to build lvmlockd... " >&6; }
+# Check whether --enable-lvmlockd was given.
+if test "${enable_lvmlockd+set}" = set; then :
+  enableval=$enable_lvmlockd; LVMLOCKD=$enableval
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $LVMLOCKD" >&5
+$as_echo "$LVMLOCKD" >&6; }
+
+BUILD_LVMLOCKD=$LVMLOCKD
+
+if test "$BUILD_LVMLOCKD" = yes; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking defaults for use_lvmlockd" >&5
+$as_echo_n "checking defaults for use_lvmlockd... " >&6; }
+	# Check whether --enable-use_lvmlockd was given.
+if test "${enable_use_lvmlockd+set}" = set; then :
+  enableval=$enable_use_lvmlockd; case ${enableval} in
+		       yes) DEFAULT_USE_LVMLOCKD=1 ;;
+		       *) DEFAULT_USE_LVMLOCKD=0 ;;
+		       esac
+else
+  DEFAULT_USE_LVMLOCKD=1
+fi
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DEFAULT_USE_LVMLOCKD" >&5
+$as_echo "$DEFAULT_USE_LVMLOCKD" >&6; }
+
+$as_echo "#define LVMLOCKD_SUPPORT 1" >>confdefs.h
+
+
+
+# Check whether --with-lvmlockd-pidfile was given.
+if test "${with_lvmlockd_pidfile+set}" = set; then :
+  withval=$with_lvmlockd_pidfile; LVMLOCKD_PIDFILE=$withval
+else
+  LVMLOCKD_PIDFILE="$DEFAULT_PID_DIR/lvmlockd.pid"
+fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define LVMLOCKD_PIDFILE "$LVMLOCKD_PIDFILE"
+_ACEOF
+
+else
+	DEFAULT_USE_LVMLOCKD=0
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_USE_LVMLOCKD $DEFAULT_USE_LVMLOCKD
+_ACEOF
+
+
+################################################################################
+if test "$BUILD_LVMLOCKD" = yes; then
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LOCKD_SANLOCK" >&5
+$as_echo_n "checking for LOCKD_SANLOCK... " >&6; }
+
+if test -n "$LOCKD_SANLOCK_CFLAGS"; then
+    pkg_cv_LOCKD_SANLOCK_CFLAGS="$LOCKD_SANLOCK_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsanlock_client") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LOCKD_SANLOCK_CFLAGS=`$PKG_CONFIG --cflags "libsanlock_client" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LOCKD_SANLOCK_LIBS"; then
+    pkg_cv_LOCKD_SANLOCK_LIBS="$LOCKD_SANLOCK_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsanlock_client") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LOCKD_SANLOCK_LIBS=`$PKG_CONFIG --libs "libsanlock_client" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LOCKD_SANLOCK_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libsanlock_client" 2>&1`
+        else
+	        LOCKD_SANLOCK_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libsanlock_client" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LOCKD_SANLOCK_PKG_ERRORS" >&5
+
+	$bailout
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	$bailout
+else
+	LOCKD_SANLOCK_CFLAGS=$pkg_cv_LOCKD_SANLOCK_CFLAGS
+	LOCKD_SANLOCK_LIBS=$pkg_cv_LOCKD_SANLOCK_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	HAVE_LOCKD_SANLOCK=yes
+fi
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LOCKD_DLM" >&5
+$as_echo_n "checking for LOCKD_DLM... " >&6; }
+
+if test -n "$LOCKD_DLM_CFLAGS"; then
+    pkg_cv_LOCKD_DLM_CFLAGS="$LOCKD_DLM_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libdlm\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libdlm") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LOCKD_DLM_CFLAGS=`$PKG_CONFIG --cflags "libdlm" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LOCKD_DLM_LIBS"; then
+    pkg_cv_LOCKD_DLM_LIBS="$LOCKD_DLM_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libdlm\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libdlm") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LOCKD_DLM_LIBS=`$PKG_CONFIG --libs "libdlm" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LOCKD_DLM_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libdlm" 2>&1`
+        else
+	        LOCKD_DLM_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libdlm" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LOCKD_DLM_PKG_ERRORS" >&5
+
+	$bailout
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	$bailout
+else
+	LOCKD_DLM_CFLAGS=$pkg_cv_LOCKD_DLM_CFLAGS
+	LOCKD_DLM_LIBS=$pkg_cv_LOCKD_DLM_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	HAVE_LOCKD_DLM=yes
+fi
+fi
+
+################################################################################
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
 $as_echo_n "checking whether to enable libblkid detection of signatures when wiping... " >&6; }
 # Check whether --enable-blkid_wiping was given.
@@ -13286,8 +13514,11 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 
 
+
+
+
 ################################################################################
-ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/lvmetad/Makefile daemons/lvmpolld/Makefile conf/Makefile conf/example.conf conf/lvmlocal.conf conf/command_profile_template.profile conf/metadata_profile_template.profile include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/replicator/Makefile lib/misc/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile lib/cache_segtype/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile python/Makefile python/setup.py scripts/blkdeactivate.sh scripts/blk_availability_init_red_hat scripts/blk_availability_systemd_red_hat.service scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/dm_event_systemd_red_hat.service scripts/dm_event_systemd_red_hat.socket scripts/lvm2_cluster_activation_red_hat.sh scripts/lvm2_cluster_activation_systemd_red_hat.service scripts/lvm2_clvmd_systemd_red_hat.service scripts/lvm2_cmirrord_systemd_red_hat.service scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmpolld_init_red_hat scripts/lvm2_lvmpolld_systemd_red_hat.service scripts/lvm2_lvmpolld_systemd_red_hat.socket scripts/lvm2_monitoring_init_red_hat scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_pvscan_systemd_red_hat@.service scripts/lvm2_tmpfiles_red_hat.conf scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile unit-tests/datastruct/Makefile unit-tests/regex/Makefile unit-tests/mm/Makefile"
+ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile daemons/cmirrord/Makefile daemons/dmeventd/Makefile daemons/dmeventd/libdevmapper-event.pc daemons/dmeventd/plugins/Makefile daemons/dmeventd/plugins/lvm2/Makefile daemons/dmeventd/plugins/raid/Makefile daemons/dmeventd/plugins/mirror/Makefile daemons/dmeventd/plugins/snapshot/Makefile daemons/dmeventd/plugins/thin/Makefile daemons/lvmetad/Makefile daemons/lvmpolld/Makefile daemons/lvmlockd/Makefile conf/Makefile conf/example.conf conf/lvmlocal.conf conf/command_profile_template.profile conf/metadata_profile_template.profile include/.symlinks include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/replicator/Makefile lib/misc/lvm-version.h lib/raid/Makefile lib/snapshot/Makefile lib/thin/Makefile lib/cache_segtype/Makefile libdaemon/Makefile libdaemon/client/Makefile libdaemon/server/Makefile libdm/Makefile libdm/libdevmapper.pc liblvm/Makefile liblvm/liblvm2app.pc man/Makefile po/Makefile python/Makefile python/setup.py scripts/blkdeactivate.sh scripts/blk_availability_init_red_hat scripts/blk_availability_systemd_red_hat.service scripts/clvmd_init_red_hat scripts/cmirrord_init_red_hat scripts/dm_event_systemd_red_hat.service scripts/dm_event_systemd_red_hat.socket scripts/lvm2_cluster_activation_red_hat.sh scripts/lvm2_cluster_activation_systemd_red_hat.service scripts/lvm2_clvmd_systemd_red_hat.service scripts/lvm2_cmirrord_systemd_red_hat.service scripts/lvm2_lvmetad_init_red_hat scripts/lvm2_lvmetad_systemd_red_hat.service scripts/lvm2_lvmetad_systemd_red_hat.socket scripts/lvm2_lvmpolld_init_red_hat scripts/lvm2_lvmpolld_systemd_red_hat.service scripts/lvm2_lvmpolld_systemd_red_hat.socket scripts/lvm2_lvmlockd_systemd_red_hat.service scripts/lvm2_lvmlocking_systemd_red_hat.service scripts/lvm2_monitoring_init_red_hat scripts/lvm2_monitoring_systemd_red_hat.service scripts/lvm2_pvscan_systemd_red_hat@.service scripts/lvm2_tmpfiles_red_hat.conf scripts/Makefile test/Makefile test/api/Makefile test/unit/Makefile tools/Makefile udev/Makefile unit-tests/datastruct/Makefile unit-tests/regex/Makefile unit-tests/mm/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -13997,6 +14228,7 @@ do
     "daemons/dmeventd/plugins/thin/Makefile") CONFIG_FILES="$CONFIG_FILES daemons/dmeventd/plugins/thin/Makefile" ;;
     "daemons/lvmetad/Makefile") CONFIG_FILES="$CONFIG_FILES daemons/lvmetad/Makefile" ;;
     "daemons/lvmpolld/Makefile") CONFIG_FILES="$CONFIG_FILES daemons/lvmpolld/Makefile" ;;
+    "daemons/lvmlockd/Makefile") CONFIG_FILES="$CONFIG_FILES daemons/lvmlockd/Makefile" ;;
     "conf/Makefile") CONFIG_FILES="$CONFIG_FILES conf/Makefile" ;;
     "conf/example.conf") CONFIG_FILES="$CONFIG_FILES conf/example.conf" ;;
     "conf/lvmlocal.conf") CONFIG_FILES="$CONFIG_FILES conf/lvmlocal.conf" ;;
@@ -14043,6 +14275,8 @@ do
     "scripts/lvm2_lvmpolld_init_red_hat") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_lvmpolld_init_red_hat" ;;
     "scripts/lvm2_lvmpolld_systemd_red_hat.service") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_lvmpolld_systemd_red_hat.service" ;;
     "scripts/lvm2_lvmpolld_systemd_red_hat.socket") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_lvmpolld_systemd_red_hat.socket" ;;
+    "scripts/lvm2_lvmlockd_systemd_red_hat.service") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_lvmlockd_systemd_red_hat.service" ;;
+    "scripts/lvm2_lvmlocking_systemd_red_hat.service") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_lvmlocking_systemd_red_hat.service" ;;
     "scripts/lvm2_monitoring_init_red_hat") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_monitoring_init_red_hat" ;;
     "scripts/lvm2_monitoring_systemd_red_hat.service") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_monitoring_systemd_red_hat.service" ;;
     "scripts/lvm2_pvscan_systemd_red_hat@.service") CONFIG_FILES="$CONFIG_FILES scripts/lvm2_pvscan_systemd_red_hat@.service" ;;
@@ -14667,4 +14901,14 @@ fi
 if test "$ODIRECT" != yes; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: O_DIRECT disabled: low-memory pvmove may lock up" >&5
 $as_echo "$as_me: WARNING: O_DIRECT disabled: low-memory pvmove may lock up" >&2;}
+fi
+
+if test "$BUILD_LVMLOCKD" == yes && test "$BUILD_LVMPOLLD" == no; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: lvmlockd requires lvmpolld" >&5
+$as_echo "$as_me: WARNING: lvmlockd requires lvmpolld" >&2;}
+fi
+
+if test "$BUILD_LVMLOCKD" == yes && test "$BUILD_LVMETAD" == no; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: lvmlockd requires lvmetad" >&5
+$as_echo "$as_me: WARNING: lvmlockd requires lvmetad" >&2;}
 fi

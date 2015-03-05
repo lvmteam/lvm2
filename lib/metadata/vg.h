@@ -49,6 +49,7 @@ struct volume_group {
 	struct dm_list *cmd_vgs;/* List of wanted/locked and opened VGs */
 	uint32_t cmd_missing_vgs;/* Flag marks missing VG */
 	uint32_t seqno;		/* Metadata sequence number */
+	unsigned skip_validate_lock_args : 1;
 
 	/*
 	 * The parsed on-disk copy of this VG; is NULL if this is the on-disk
@@ -71,6 +72,7 @@ struct volume_group {
 	const char *system_id;
 	char *lvm1_system_id;
 	const char *lock_type;
+	const char *lock_args;
 
 	uint32_t extent_size;
 	uint32_t extent_count;
@@ -151,6 +153,7 @@ struct volume_group {
 
 	struct dm_hash_table *hostnames; /* map of creation hostnames */
 	struct logical_volume *pool_metadata_spare_lv; /* one per VG */
+	struct logical_volume *sanlock_lv; /* one per VG */
 };
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
@@ -166,11 +169,14 @@ void free_orphan_vg(struct volume_group *vg);
 char *vg_fmt_dup(const struct volume_group *vg);
 char *vg_name_dup(const struct volume_group *vg);
 char *vg_system_id_dup(const struct volume_group *vg);
+char *vg_lock_type_dup(const struct volume_group *vg);
+char *vg_lock_args_dup(const struct volume_group *vg);
 uint32_t vg_seqno(const struct volume_group *vg);
 uint64_t vg_status(const struct volume_group *vg);
 int vg_set_alloc_policy(struct volume_group *vg, alloc_policy_t alloc);
 int vg_set_clustered(struct volume_group *vg, int clustered);
 int vg_set_system_id(struct volume_group *vg, const char *system_id);
+int vg_set_lock_type(struct volume_group *vg, const char *lock_type);
 uint64_t vg_size(const struct volume_group *vg);
 uint64_t vg_free(const struct volume_group *vg);
 uint64_t vg_extent_size(const struct volume_group *vg);

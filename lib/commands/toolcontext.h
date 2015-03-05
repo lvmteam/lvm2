@@ -99,9 +99,14 @@ struct cmd_context {
 
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 	unsigned unknown_system_id:1;
-	unsigned include_foreign_vgs:1;
-	unsigned include_active_foreign_vgs:1;
-	unsigned error_foreign_vgs:1;
+	unsigned include_foreign_vgs:1; /* report/display cmds can reveal foreign VGs */
+	unsigned include_shared_vgs:1;  /* report/display cmds can reveal lockd VGs */
+	unsigned include_active_foreign_vgs:1; /* cmd should process foreign VGs with active LVs */
+	unsigned vg_read_print_access_error:1; /* print access errors from vg_read */
+	unsigned lockd_gl_disable:1;
+	unsigned lockd_vg_disable:1;
+	unsigned lockd_lv_disable:1;
+	unsigned lockd_vg_default_sh:1;
 
 	struct dev_types *dev_types;
 
@@ -143,6 +148,11 @@ struct cmd_context {
 	struct dm_list tags;
 	const char *report_list_item_separator;
 	int hosttags;
+
+	/* Locking */
+	const char *lock_gl_mode; /* gl mode, from --lock-gl */
+	const char *lock_vg_mode; /* vg mode, from --lock-vg */
+	const char *lock_lv_mode; /* lv mode, from --lock-lv */
 
 	const char *lib_dir;		/* Cache value global/library_dir */
 	char system_dir[PATH_MAX];

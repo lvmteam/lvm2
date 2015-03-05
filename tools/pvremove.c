@@ -32,6 +32,10 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 
 	dm_list_init(&pv_names);
 
+	/* Needed to change the set of orphan PVs. */
+	if (!lockd_gl(cmd, "ex", 0))
+		return_ECMD_FAILED;
+
 	for (i = 0; i < argc; i++) {
 		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
 		if (!str_list_add(cmd->mem, &pv_names, argv[i]))

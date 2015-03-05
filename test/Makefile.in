@@ -70,6 +70,8 @@ help:
 	@echo "  check_cluster		Run tests with cluster daemon."
 	@echo "  check_lvmetad		Run tests with lvmetad daemon."
 	@echo "  check_lvmpolld         Run tests with lvmpolld daemon."
+	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
+	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
 	@echo -e "\nSupported variables:"
@@ -138,6 +140,32 @@ check_lvmpolld: .tests-stamp
 		--flavours ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpolld --only $(T) --skip $(S)
 endif
 
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+check_lvmlockd_sanlock: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-sanlock --only shell/sanlock-prepare.sh
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-sanlock --only $(T) --skip $(S)
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-sanlock --only shell/sanlock-remove.sh
+endif
+
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+check_lvmlockd_dlm: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-dlm --only shell/dlm-prepare.sh
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-dlm --only $(T) --skip $(S)
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmlockd-dlm --only shell/dlm-remove.sh
+endif
+
 DATADIR = $(datadir)/lvm2-testsuite
 EXECDIR = $(libexecdir)/lvm2-testsuite
 
@@ -153,6 +181,8 @@ LIB_FLAVOURS = \
  lib/flavour-udev-lvmetad-lvmpolld\
  lib/flavour-udev-lvmetad\
  lib/flavour-udev-lvmpolld\
+ lib/flavour-udev-lvmlockd-sanlock\
+ lib/flavour-udev-lvmlockd-dlm\
  lib/flavour-udev-vanilla
 
 LIB_LOCAL = lib/paths lib/runner

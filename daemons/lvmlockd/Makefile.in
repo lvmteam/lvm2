@@ -1,0 +1,53 @@
+#
+# Copyright (C) 2014-2015 Red Hat, Inc.
+#
+# This file is part of LVM2.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU Lesser General Public License v.2.1.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
+
+SOURCES = \
+	lvmlockd-core.c \
+	lvmlockd-sanlock.c \
+	lvmlockd-dlm.c
+
+TARGETS = lvmlockd lvmlockctl
+
+.PHONY: install_lvmlockd
+
+include $(top_builddir)/make.tmpl
+
+INCLUDES += -I$(top_srcdir)/libdaemon/server
+LVMLIBS = -ldaemonserver $(LVMINTERNAL_LIBS) -ldevmapper
+
+LIBS += $(PTHREAD_LIBS) -ldlm_lt -lsanlock_client -lrt
+
+LDFLAGS += -L$(top_builddir)/libdaemon/server
+CLDFLAGS += -L$(top_builddir)/libdaemon/server
+
+lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
+		    $(top_builddir)/libdaemon/server/libdaemonserver.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LVMLIBS) $(LIBS)
+
+lvmlockctl: lvmlockctl.o $(top_builddir)/libdaemon/client/libdaemonclient.a \
+		    $(top_builddir)/libdaemon/server/libdaemonserver.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o $(LVMLIBS)
+
+install_lvmlockd: lvmlockd
+	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+
+install_lvmlockctl: lvmlockctl
+	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+
+install_lvm2: install_lvmlockd install_lvmlockctl
+
+install: install_lvm2

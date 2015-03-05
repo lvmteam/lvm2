@@ -28,6 +28,7 @@
 #include "archiver.h"
 #include "lvmcache.h"
 #include "lvmetad.h"
+#include "lvmlockd.h"
 #include "lvm-version.h"
 #include "config.h"
 #include "defaults.h"
@@ -108,8 +109,8 @@ struct arg_value_group_list {
 #define ENABLE_ALL_DEVS		0x00000008	
 /* Exactly one VG name argument required. */
 #define ONE_VGNAME_ARG		0x00000010
-/* Command is allowed to read foreign VGs. */
-#define ENABLE_FOREIGN_VGS	0x00000020
+/* Command needs a shared lock on a VG; it only reads the VG. */
+#define LOCKD_VG_SH		0x00000020
  
 /* a register of the lvm commands */
 struct command {
@@ -146,6 +147,7 @@ int metadatatype_arg(struct cmd_context *cmd, struct arg_values *av);
 int units_arg(struct cmd_context *cmd, struct arg_values *av);
 int segtype_arg(struct cmd_context *cmd, struct arg_values *av);
 int alloc_arg(struct cmd_context *cmd, struct arg_values *av);
+int locktype_arg(struct cmd_context *cmd, struct arg_values *av);
 int readahead_arg(struct cmd_context *cmd, struct arg_values *av);
 int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 

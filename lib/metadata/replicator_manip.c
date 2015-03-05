@@ -566,7 +566,7 @@ int cmd_vg_read(struct cmd_context *cmd, struct dm_list *cmd_vgs)
 
 	/* Iterate through alphabeticaly ordered cmd_vg list */
 	dm_list_iterate_items(cvl, cmd_vgs) {
-		cvl->vg = vg_read(cmd, cvl->vg_name, cvl->vgid, cvl->flags);
+		cvl->vg = vg_read(cmd, cvl->vg_name, cvl->vgid, cvl->flags, 0);
 		if (vg_read_error(cvl->vg)) {
 			log_debug_metadata("Failed to vg_read %s", cvl->vg_name);
 			return 0;
@@ -644,7 +644,7 @@ int lv_read_replicator_vgs(const struct logical_volume *lv)
 	dm_list_iterate_items(rsite, &first_seg(lv)->replicator->rsites) {
 		if (!rsite->vg_name)
 			continue;
-		vg = vg_read(lv->vg->cmd, rsite->vg_name, 0, 0); // READ_WITHOUT_LOCK
+		vg = vg_read(lv->vg->cmd, rsite->vg_name, 0, 0, 0); // READ_WITHOUT_LOCK
 		if (vg_read_error(vg)) {
 			log_error("Unable to read volume group %s",
 				  rsite->vg_name);

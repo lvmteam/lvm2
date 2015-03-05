@@ -84,7 +84,8 @@ FIELD(LVS, lv, STR, "Meta", lvid, 4, metadatalv, metadata_lv, "For thin and cach
 FIELD(LVS, lv, STR, "Pool", lvid, 4, poollv, pool_lv, "For thin volumes, the thin pool LV for this volume.", 0)
 FIELD(LVS, lv, STR_LIST, "LV Tags", tags, 7, tags, lv_tags, "Tags, if any.", 0)
 FIELD(LVS, lv, STR, "LProfile", lvid, 8, lvprofile, lv_profile, "Configuration profile attached to this LV.", 0)
-FIELD(LVS, lv, TIM, "Time", lvid, 26, lvtime, lv_time, "Creation time of the LV, if known", 0)
+FIELD(LVS, lv, STR, "Lock Args", lvid, 9, lvlockargs, lv_lockargs, "Lock args of the LV used by lvmlockd.", 0)
+FIELD(LVS, lv, STR, "Time", lvid, 26, lvtime, lv_time, "Creation time of the LV, if known", 0)
 FIELD(LVS, lv, STR, "Host", lvid, 10, lvhost, lv_host, "Creation host of the LV, if known.", 0)
 FIELD(LVS, lv, STR_LIST, "Modules", lvid, 7, modules, lv_modules, "Kernel device-mapper modules required for this LV.", 0)
 
@@ -143,6 +144,8 @@ FIELD(VGS, vg, SIZ, "VSize", cmd, 5, vgsize, vg_size, "Total size of VG in curre
 FIELD(VGS, vg, SIZ, "VFree", cmd, 5, vgfree, vg_free, "Total amount of free space in current units.", 0)
 FIELD(VGS, vg, STR, "SYS ID", cmd, 6, vgsystemid, vg_sysid, "System ID of the VG indicating which host owns it.", 0)
 FIELD(VGS, vg, STR, "System ID", cmd, 9, vgsystemid, vg_systemid, "System ID of the VG indicating which host owns it.", 0)
+FIELD(VGS, vg, STR, "Lock Type", cmd, 9, vglocktype, vg_locktype, "Lock type of the VG used by lvmlockd.", 0)
+FIELD(VGS, vg, STR, "Lock Args", cmd, 9, vglockargs, vg_lockargs, "Lock args of the VG used by lvmlockd.", 0)
 FIELD(VGS, vg, SIZ, "Ext", extent_size, 3, size32, vg_extent_size, "Size of Physical Extents in current units.", 0)
 FIELD(VGS, vg, NUM, "#Ext", extent_count, 4, uint32, vg_extent_count, "Total number of Physical Extents.", 0)
 FIELD(VGS, vg, NUM, "Free", free_count, 4, uint32, vg_free_count, "Total number of unallocated Physical Extents.", 0)

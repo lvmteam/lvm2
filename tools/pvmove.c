@@ -17,6 +17,7 @@
 #include "polldaemon.h"
 #include "display.h"
 #include "pvmove_poll.h"
+#include "lvmpolld-client.h"
 
 #define PVMOVE_FIRST_TIME   0x00000001      /* Called for first time */
 
@@ -598,6 +599,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	struct dm_list *lvs_changed;
 	struct physical_volume *pv;
 	struct logical_volume *lv_mirr;
+	uint32_t lockd_state;
 	unsigned flags = PVMOVE_FIRST_TIME;
 	unsigned exclusive;
 	int r = ECMD_FAILED;
@@ -631,10 +633,13 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	/* Read VG */
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
-	vg = vg_read(cmd, vg_name, NULL, READ_FOR_UPDATE);
+	if (!lockd_vg(cmd, vg_name, "ex", 0, &lockd_state))
+		return_ECMD_FAILED;
+
+	vg = vg_read(cmd, vg_name, NULL, READ_FOR_UPDATE, lockd_state);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
-		return_ECMD_FAILED;
+		goto out_ret;
 	}
 
 	exclusive = _pvmove_is_exclusive(cmd, vg);
@@ -700,6 +705,14 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 out:
 	free_pv_fid(pv);
 	unlock_and_release_vg(cmd, vg, vg_name);
+out_ret:
+	/*
+	 * Release explicitly because the command may continue running
+	 * for some time monitoring the progress, and we don not want
+	 * or need the lockd lock held over that.
+	 */
+	lockd_vg(cmd, vg_name, "un", 0, &lockd_state);
+
 	return r;
 }
 
@@ -712,6 +725,7 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 	struct logical_volume *lv;
 	struct physical_volume *pv;
 	struct volume_group *vg;
+	uint32_t lockd_state;
 
 	if (!pv_name) {
 		log_error(INTERNAL_ERROR "Invalid PV name parameter.");
@@ -723,13 +737,16 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 
 	vg_name = pv_vg_name(pv);
 
+	if (!lockd_vg(cmd, vg_name, "sh", 0, &lockd_state))
+		return_0;
+
 	/* need read-only access */
-	vg = vg_read(cmd, vg_name, NULL, 0);
+	vg = vg_read(cmd, vg_name, NULL, 0, lockd_state);
 	if (vg_read_error(vg)) {
 		log_error("ABORTING: Can't read VG for %s.", pv_name);
 		release_vg(vg);
-		free_pv_fid(pv);
-		return 0;
+		ret = 0;
+		goto out;
 	}
 
 	if (!(lv = find_pvmove_lv(vg, pv_dev(pv), PVMOVE))) {
@@ -743,6 +760,8 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 	}
 
 	unlock_and_release_vg(cmd, vg, vg_name);
+out:
+	lockd_vg(cmd, vg_name, "un", 0, &lockd_state);
 	free_pv_fid(pv);
 	return ret;
 }
@@ -828,6 +847,24 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (lvmlockd_use() && !lvmpolld_use()) {
+		/*
+		 * Don't want to spend the time making lvmlockd
+		 * work without lvmpolld.
+		 */
+		log_error("Enable lvmpolld when using lvmlockd.");
+		return ECMD_FAILED;
+	}
+
+	if (lvmlockd_use() && !argc) {
+		/*
+		 * FIXME: move process_each_vg from polldaemon up to here,
+		 * then we can remove this limitation.
+		 */
+		log_error("Specify pvmove args when using lvmlockd.");
+		return ECMD_FAILED;
+	}
+
 	if (argc) {
 		if (!(lvid = dm_pool_alloc(cmd->mem, sizeof(*lvid)))) {
 			log_error("Failed to allocate lvid.");
@@ -845,6 +882,15 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		if (colon)
 			*colon = '\0';
 
+		/*
+		 * To do a reverse mapping from PV name to VG name, we need the
+		 * correct global mapping of PVs to VGs.
+		 */
+		if (!lockd_gl(cmd, "sh", 0)) {
+			stack;
+			return ECMD_FAILED;
+		}
+
 		if (!arg_count(cmd, abort_ARG)) {
 			if ((ret = _set_up_pvmove(cmd, pv_name, argc, argv, lvid, &vg_name, &lv_name)) != ECMD_PROCESSED) {
 				stack;
@@ -857,6 +903,13 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 			if (!in_progress)
 				return ECMD_PROCESSED;
 		}
+
+		/*
+		 * The command may sit and report progress for some time,
+		 * and we do not want or need the lockd locks held during
+		 * that time.
+		 */
+		lockd_gl(cmd, "un", 0);
 	}
 
 	return pvmove_poll(cmd, pv_name, lvid ? lvid->s : NULL, vg_name, lv_name,

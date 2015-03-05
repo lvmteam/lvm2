@@ -13,8 +13,6 @@ test_description='Exercise toollib process_each_vg'
 
 . lib/inittest
 
-test -e LOCAL_LVMPOLLD && skip
-
 aux prepare_devs 6
 
 #
@@ -28,16 +26,16 @@ aux prepare_devs 6
 #
 # set up four vgs that we will remove
 #
-vgcreate $vg1 "$dev1"
-vgcreate $vg2 "$dev2"
-vgcreate $vg3 "$dev3"
-vgcreate $vg4 "$dev4"
+vgcreate $SHARED $vg1 "$dev1"
+vgcreate $SHARED $vg2 "$dev2"
+vgcreate $SHARED $vg3 "$dev3"
+vgcreate $SHARED $vg4 "$dev4"
 
 # these two vgs will not be removed
-vgcreate $vg5 "$dev5"
+vgcreate $SHARED $vg5 "$dev5"
 vgchange --addtag tagvg5 $vg5
 lvcreate -l 4 -n $lv1 $vg5
-vgcreate $vg6 "$dev6"
+vgcreate $SHARED $vg6 "$dev6"
 lvcreate -l 4 -n $lv2 $vg6
 
 # should fail without any arg
@@ -67,10 +65,10 @@ not vgs $vg4
 #
 # set up four vgs that we will remove
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 # should do nothing and fail
@@ -95,10 +93,10 @@ not vgs $vg4
 #
 # set up four vgs that we will remove
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 vgremove @tagfoo
@@ -113,10 +111,10 @@ not vgs $vg4
 #
 # set up four vgs that we will remove
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 vgremove $vg1 @tagfoo2
@@ -131,10 +129,10 @@ not vgs $vg4
 #
 # set up four vgs that we will remove
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 vgremove @foo @tagfoo2 $vg1 $vg2
@@ -147,10 +145,10 @@ not vgs $vg4
 #
 # set up four vgs that we will remove
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 vgremove @tagfoo $vg1 @tagfoo @tagfoo2 $vg3 @tagbar
@@ -163,10 +161,10 @@ not vgs $vg4
 #
 # set up four vgs that we will remove
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 not vgremove garbage $vg1
@@ -198,10 +196,10 @@ not vgs $vg6
 #
 # set up four vgs that we will report
 #
-vgcreate --addtag tagfoo $vg1 "$dev1"
-vgcreate --addtag tagfoo $vg2 "$dev2"
-vgcreate --addtag tagfoo2 $vg3 "$dev3"
-vgcreate --addtag tagbar $vg4 "$dev4"
+vgcreate $SHARED --addtag tagfoo $vg1 "$dev1"
+vgcreate $SHARED --addtag tagfoo $vg2 "$dev2"
+vgcreate $SHARED --addtag tagfoo2 $vg3 "$dev3"
+vgcreate $SHARED --addtag tagbar $vg4 "$dev4"
 vgchange --addtag foo $vg4
 
 vgs >err
@@ -263,4 +261,6 @@ grep $vg4 err
 not grep $vg1 err
 not grep $vg2 err
 not grep $vg3 err
+
+vgremove -f $vg1 $vg2 $vg3 $vg4
 

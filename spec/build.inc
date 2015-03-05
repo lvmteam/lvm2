@@ -6,6 +6,8 @@
 %enableif %{enable_lvmetad} lvmetad
 %global enable_lvmpolld %(if echo %{services} | grep -q lvmpolld; then echo 1; else echo 0; fi)
 %enableif %{enable_lvmpolld} lvmpolld
+%global enable_lvmlockd %(if echo %{services} | grep -q lvmlockd; then echo 1; else echo 0; fi)
+%enableif %{enable_lvmlockd} lvmlockd
 
 %build
 %configure \

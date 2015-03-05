@@ -626,6 +626,14 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
 	columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG, NULL);
 
+	/*
+	 * Include foreign VGs that contain active LVs.
+	 * That shouldn't happen in general, but if it does by some
+	 * mistake, then we want to display those VGs and allow the
+	 * LVs to be deactivated.
+	 */
+	cmd->include_active_foreign_vgs = 1;
+
 	/* Check PV specifics and do extra changes/actions if needed. */
 	_check_pv_list(cmd, argc, argv, &report_type, &args_are_pvs);
 

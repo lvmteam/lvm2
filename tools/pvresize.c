@@ -36,6 +36,14 @@ static int _pvresize_single(struct cmd_context *cmd,
 	}
 	params->total++;
 
+	/*
+	 * Needed to change a property on an orphan PV.
+	 * i.e. the global lock is only needed for orphans.
+	 * Convert sh to ex.
+	 */
+	if (is_orphan(pv) && !lockd_gl(cmd, "ex", 0))
+		return_ECMD_FAILED;
+
 	if (!pv_resize_single(cmd, vg, pv, params->new_size))
 		return_ECMD_FAILED;
 

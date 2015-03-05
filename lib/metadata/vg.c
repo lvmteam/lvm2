@@ -20,6 +20,7 @@
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "archiver.h"
+#include "lvmlockd.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 			      const char *vg_name)
@@ -132,6 +133,16 @@ char *vg_name_dup(const struct volume_group *vg)
 char *vg_system_id_dup(const struct volume_group *vg)
 {
 	return dm_pool_strdup(vg->vgmem, vg->system_id ? : vg->lvm1_system_id ? : "");
+}
+
+char *vg_lock_type_dup(const struct volume_group *vg)
+{
+	return dm_pool_strdup(vg->vgmem, vg->lock_type ? : vg->lock_type ? : "");
+}
+
+char *vg_lock_args_dup(const struct volume_group *vg)
+{
+	return dm_pool_strdup(vg->vgmem, vg->lock_args ? : vg->lock_args ? : "");
 }
 
 char *vg_uuid_dup(const struct volume_group *vg)
@@ -637,6 +648,19 @@ int vg_set_system_id(struct volume_group *vg, const char *system_id)
 	return 1;
 }
 
+int vg_set_lock_type(struct volume_group *vg, const char *lock_type)
+{
+	if (!lock_type)
+		lock_type = "none";
+
+	if (!(vg->lock_type = dm_pool_strdup(vg->vgmem, lock_type))) {
+		log_error("vg_set_lock_type %s no mem", lock_type);
+		return 0;
+	}
+
+	return 1;
+}
+
 char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 {
 	char *repstr;
@@ -651,7 +675,14 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 	repstr[2] = (vg_is_exported(vg)) ? 'x' : '-';
 	repstr[3] = (vg_missing_pv_count(vg)) ? 'p' : '-';
 	repstr[4] = alloc_policy_char(vg->alloc);
-	repstr[5] = (vg_is_clustered(vg)) ? 'c' : '-';
+
+	if (vg_is_clustered(vg))
+		repstr[5] = 'c';
+	else if (is_lockd_type(vg->lock_type))
+		repstr[5] = 's';
+	else
+		repstr[5] = '-';
+
 	return repstr;
 }
 
@@ -706,7 +737,7 @@ int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->extent_count -= pv_pe_count(pv);
 
 	orphan_vg = vg_read_for_update(cmd, vg->fid->fmt->orphan_vg_name,
-				       NULL, 0);
+				       NULL, 0, 0);
 
 	if (vg_read_error(orphan_vg))
 		goto bad;

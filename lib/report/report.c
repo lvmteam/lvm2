@@ -377,6 +377,16 @@ static int _lvprofile_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, "", NULL);
 }
 
+static int _lvlockargs_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *repstr = lv->lock_args ? lv->lock_args : "";
+
+	return _string_disp(rh, mem, field, &repstr, private);
+}
+
 static int _vgfmt_disp(struct dm_report *rh, struct dm_pool *mem,
 		       struct dm_report_field *field,
 		       const void *data, void *private)
@@ -1104,6 +1114,26 @@ static int _vgsystemid_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
 	const char *repstr = (vg->system_id && *vg->system_id) ? vg->system_id : vg->lvm1_system_id ? : "";
+
+	return _string_disp(rh, mem, field, &repstr, private);
+}
+
+static int _vglocktype_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	const char *repstr = vg->lock_type ? vg->lock_type : "";
+
+	return _string_disp(rh, mem, field, &repstr, private);
+}
+
+static int _vglockargs_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	const char *repstr = vg->lock_args ? vg->lock_args : "";
 
 	return _string_disp(rh, mem, field, &repstr, private);
 }

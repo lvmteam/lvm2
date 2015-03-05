@@ -121,6 +121,10 @@ ifeq ("@BUILD_LVMPOLLD@", "yes")
 	$(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.socket $(systemd_unit_dir)/lvm2-lvmpolld.socket
 	$(INSTALL_DATA) lvm2_lvmpolld_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmpolld.service
 endif
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+	$(INSTALL_DATA) lvm2_lvmlockd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmlockd.service
+	$(INSTALL_DATA) lvm2_lvmlocking_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmlocking.service
+endif
 ifneq ("@CLVMD@", "none")
 	$(INSTALL_DATA) lvm2_clvmd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-clvmd.service
 	$(INSTALL_DATA) lvm2_cluster_activation_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cluster-activation.service
@@ -151,6 +155,8 @@ DISTCLEAN_TARGETS += \
 	lvm2_lvmetad_systemd_red_hat.socket \
 	lvm2_lvmpolld_systemd_red_hat.service \
 	lvm2_lvmpolld_systemd_red_hat.socket \
+	lvm2_lvmlockd_systemd_red_hat.service \
+	lvm2_lvmlocking_systemd_red_hat.service \
 	lvm2_monitoring_init_red_hat \
 	lvm2_monitoring_systemd_red_hat.service \
 	lvm2_pvscan_systemd_red_hat@.service \

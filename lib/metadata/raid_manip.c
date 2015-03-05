@@ -21,6 +21,7 @@
 #include "activate.h"
 #include "lv_alloc.h"
 #include "lvm-string.h"
+#include "lvmlockd.h"
 
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 				     struct logical_volume **tracking)
@@ -1086,6 +1087,12 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 
 	dm_list_init(&removal_list);
 	dm_list_init(&data_list);
+
+	if (is_lockd_type(lv->vg->lock_type)) {
+		log_error("Splitting raid image is not allowed with lock_type %s",
+			  lv->vg->lock_type);
+		return 0;
+	}
 
 	if ((old_count - new_count) != 1) {
 		log_error("Unable to split more than one image from %s/%s",

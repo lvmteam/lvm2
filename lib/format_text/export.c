@@ -472,8 +472,11 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	else if (vg->lvm1_system_id && *vg->lvm1_system_id)
 		outf(f, "system_id = \"%s\"", vg->lvm1_system_id);
 
-	if (vg->lock_type)
+	if (vg->lock_type) {
 		outf(f, "lock_type = \"%s\"", vg->lock_type);
+		if (vg->lock_args)
+			outf(f, "lock_args = \"%s\"", vg->lock_args);
+	}
 
 	outsize(f, (uint64_t) vg->extent_size, "extent_size = %u",
 		vg->extent_size);
@@ -698,6 +701,9 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 		outfc(f, buffer, "creation_time = %" PRIu64,
 		      lv->timestamp);
 	}
+
+	if (lv->lock_args)
+		outf(f, "lock_args = \"%s\"", lv->lock_args);
 
 	if (lv->alloc != ALLOC_INHERIT)
 		outf(f, "allocation_policy = \"%s\"",
