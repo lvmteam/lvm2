@@ -394,6 +394,7 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 {
 	char buffer[4096];
 	const struct format_type *fmt = NULL;
+	uint64_t status = vg->status;
 
 	if (!id_write_format(&vg->id, buffer, sizeof(buffer)))
 		return_0;
@@ -413,18 +414,13 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	 * Removing WRITE and adding WRITE_LOCKED makes it read-only
 	 * to old versions of lvm that only look for WRITE.
 	 */
-	if ((vg->status & LVM_WRITE) && vg_flag_write_locked(vg)) {
-		vg->status &= ~LVM_WRITE;
-		vg->status |= LVM_WRITE_LOCKED;
+	if ((status & LVM_WRITE) && vg_flag_write_locked(vg)) {
+		status &= ~LVM_WRITE;
+		status |= LVM_WRITE_LOCKED;
 	}
 
-	if (!_print_flag_config(f, vg->status, VG_FLAGS))
+	if (!_print_flag_config(f, status, VG_FLAGS))
 		return_0;
-
-	if (vg->status & LVM_WRITE_LOCKED) {
-		vg->status |= LVM_WRITE;
-		vg->status &= ~LVM_WRITE_LOCKED;
-	}
 
 	if (!_out_tags(f, &vg->tags))
 		return_0;
@@ -621,6 +617,7 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 	int seg_count;
 	struct tm *local_tm;
 	time_t ts;
+	uint64_t status = lv->status;
 
 	outnl(f);
 	outf(f, "%s {", lv->name);
@@ -636,18 +633,13 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 	 * Removing WRITE and adding WRITE_LOCKED makes it read-only
 	 * to old versions of lvm that only look for WRITE.
 	 */
-	if ((lv->status & LVM_WRITE) && vg_flag_write_locked(lv->vg)) {
-		lv->status &= ~LVM_WRITE;
-		lv->status |= LVM_WRITE_LOCKED;
+	if ((status & LVM_WRITE) && vg_flag_write_locked(lv->vg)) {
+		status &= ~LVM_WRITE;
+		status |= LVM_WRITE_LOCKED;
 	}
 
-	if (!_print_flag_config(f, lv->status, LV_FLAGS))
+	if (!_print_flag_config(f, status, LV_FLAGS))
 		return_0;
-
-	 if (lv->status & LVM_WRITE_LOCKED) {
-		lv->status |= LVM_WRITE;
-		lv->status &= ~LVM_WRITE_LOCKED;
-	 }
 
 	if (!_out_tags(f, &lv->tags))
 		return_0;
