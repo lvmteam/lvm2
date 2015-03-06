@@ -1009,7 +1009,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 		.context.vg_ref.vg_name = vg_name
 	};
 	struct format_instance *fid;
-	int consistent = 0;
 	uint32_t rc;
 
 	if (!validate_name(vg_name)) {
@@ -1022,15 +1021,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 	if (rc != SUCCESS)
 		/* NOTE: let caller decide - this may be check for existence */
 		return _vg_make_handle(cmd, NULL, rc);
-
-	/* FIXME: Is this vg_read_internal necessary? Move it inside
-	   vg_lock_newname? */
-	/* is this vg name already in use ? */
-	if ((vg = vg_read_internal(cmd, vg_name, NULL, WARN_PV_READ, &consistent))) {
-		log_error("A volume group called '%s' already exists.", vg_name);
-		unlock_and_release_vg(cmd, vg, vg_name);
-		return _vg_make_handle(cmd, NULL, FAILED_EXIST);
-	}
 
 	/* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, cmd->dev_dir);

@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Don't do a full read of VG when creating a new VG with an existing name.
   Reduce number of VG metadata parsing when looking for vgname on a PV.
   Avoid reparsing same metadata when reading same metadata from multiple PVs.
   Save extra device open/close when scanning device for size.
