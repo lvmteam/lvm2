@@ -100,7 +100,9 @@ struct mda_context {
 
 const char *vgname_from_mda(const struct format_type *fmt,
 			    struct mda_header *mdah,
-			    struct device_area *dev_area, struct id *vgid,
+			    struct device_area *dev_area,
+			    uint32_t *mda_checksum, size_t *mda_size,
+			    const char *vgname, struct id *vgid,
 			    uint64_t *vgstatus, char **creation_host,
 			    uint64_t *mda_free_sectors);
 

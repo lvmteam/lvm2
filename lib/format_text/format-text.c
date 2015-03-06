@@ -1124,14 +1124,14 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 }
 
 const char *vgname_from_mda(const struct format_type *fmt,
-			    struct mda_header *mdah,
-			    struct device_area *dev_area, struct id *vgid,
+			    struct mda_header *mdah, struct device_area *dev_area,
+			    uint32_t *mda_checksum, size_t *mda_size,
+			    const char *vgname, struct id *vgid,
 			    uint64_t *vgstatus, char **creation_host,
 			    uint64_t *mda_free_sectors)
 {
 	struct raw_locn *rlocn;
 	uint32_t wrap = 0;
-	const char *vgname = NULL;
 	unsigned int len = 0;
 	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
 	char uuid[64] __attribute__((aligned(8)));
@@ -1182,6 +1182,10 @@ const char *vgname_from_mda(const struct format_type *fmt,
 		return NULL;
 	}
 
+	/* Check if it could be the same VG */
+	if ((rlocn->checksum != *mda_checksum) || (rlocn->size != *mda_size))
+		vgname = NULL; /* nope, reset to NULL */
+
 	/* FIXME 64-bit */
 	if (!(vgname = text_vgname_import(fmt, dev_area->dev,
 					  (off_t) (dev_area->start +
@@ -1190,6 +1194,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 					  (off_t) (dev_area->start +
 						   MDA_HEADER_SIZE),
 					  wrap, calc_crc, rlocn->checksum,
+					  vgname,
 					  vgid, vgstatus, creation_host)))
 		return_NULL;
 
@@ -1217,6 +1222,9 @@ const char *vgname_from_mda(const struct format_type *fmt,
 			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
 	}
 
+	*mda_checksum = rlocn->checksum;
+	*mda_size = rlocn->size;
+
 	return vgname;
 }
 
@@ -1230,6 +1238,8 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 	struct id vgid;
 	uint64_t vgstatus;
 	struct mda_header *mdah;
+	uint32_t mda_checksum = 0;
+	size_t mda_size = 0;
 
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 
@@ -1249,9 +1259,12 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 			goto close_dev;
 		}
 
+		/* TODO: caching as in vgname_from_mda() (trigger this code?) */
 		if ((scanned_vgname = vgname_from_mda(fmt, mdah,
-					      &rl->dev_area, &vgid, &vgstatus,
-					      NULL, NULL))) {
+						      &rl->dev_area,
+						      &mda_checksum, &mda_size, NULL,
+						      &vgid, &vgstatus,
+						      NULL, NULL))) {
 			vg = _vg_read_raw_area(&fid, scanned_vgname, &rl->dev_area, 0, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);

@@ -79,10 +79,11 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       time_t *when, char **desc);
 const char *text_vgname_import(const struct format_type *fmt,
 			       struct device *dev,
-                               off_t offset, uint32_t size,
-                               off_t offset2, uint32_t size2,
-                               checksum_fn_t checksum_fn, uint32_t checksum,
-                               struct id *vgid, uint64_t *vgstatus,
+			       off_t offset, uint32_t size,
+			       off_t offset2, uint32_t size2,
+			       checksum_fn_t checksum_fn, uint32_t checksum,
+			       const char *vgname,
+			       struct id *vgid, uint64_t *vgstatus,
 			       char **creation_host);
 
 #endif

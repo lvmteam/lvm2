@@ -32,17 +32,22 @@ static void _init_text_import(void)
 	_text_import_initialised = 1;
 }
 
+/*
+ * Find out vgname on a given device.
+ * If the checksum and metadata size is matching the vgname discovered in last read
+ * (multi PVs VG) could be passed back and it may skip parsing of such metadata.
+ */
 const char *text_vgname_import(const struct format_type *fmt,
 			       struct device *dev,
 			       off_t offset, uint32_t size,
 			       off_t offset2, uint32_t size2,
 			       checksum_fn_t checksum_fn, uint32_t checksum,
+			       const char *vgname,
 			       struct id *vgid, uint64_t *vgstatus,
 			       char **creation_host)
 {
 	struct dm_config_tree *cft;
 	struct text_vg_version_ops **vsn;
-	const char *vgname = NULL;
 
 	_init_text_import();
 
@@ -51,10 +56,14 @@ const char *text_vgname_import(const struct format_type *fmt,
 
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
-					 offset2, size2, checksum_fn, checksum, 0))) {
+					 offset2, size2, checksum_fn, checksum,
+					 (vgname != NULL)))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
 	}
+
+	if (vgname)
+		goto out; /* Everything is matching from the last call */
 
 	/*
 	 * Find a set of version functions that can read this file
