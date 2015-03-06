@@ -38,12 +38,13 @@ fi
 
 ## uname
 
-SID=$(uname -n)
-if [ -n $SID ]; then
+SID1=$(uname -n)
+if [ -n $SID1 ]; then
 aux lvmconf "global/system_id_source = uname"
+SID2=$(lvm systemid | awk '{ print $3 }')
 vgcreate $vg1 "$dev1"
 vgs -o+systemid $vg1
-check vg_field $vg1 systemid $SID
+check vg_field $vg1 systemid $SID2
 vgremove $vg1
 fi
 
