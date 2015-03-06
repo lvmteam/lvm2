@@ -1142,7 +1142,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 
 	if (!mdah) {
 		log_error(INTERNAL_ERROR "vgname_from_mda called with NULL pointer for mda_header");
-		goto_out;
+		return NULL;
 	}
 
 	/* FIXME Cope with returning a list */
@@ -1151,13 +1151,16 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	/*
 	 * If no valid offset, do not try to search for vgname
 	 */
-	if (!rlocn->offset)
-		goto out;
+	if (!rlocn->offset) {
+		log_debug("%s: found metadata with offset 0.",
+			  dev_name(dev_area->dev));
+		return NULL;
+	}
 
 	/* Do quick check for a vgname */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
 		      NAME_LEN, buf))
-		goto_out;
+		return_NULL;
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
 	       len < (NAME_LEN - 1))
@@ -1167,7 +1170,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 
 	/* Ignore this entry if the characters aren't permissible */
 	if (!validate_name(buf))
-		goto_out;
+		return_NULL;
 
 	/* We found a VG - now check the metadata */
 	if (rlocn->offset + rlocn->size > mdah->size)
@@ -1176,7 +1179,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	if (wrap > rlocn->offset) {
 		log_error("%s: metadata too large for circular buffer",
 			  dev_name(dev_area->dev));
-		goto out;
+		return NULL;
 	}
 
 	/* FIXME 64-bit */
@@ -1188,18 +1191,14 @@ const char *vgname_from_mda(const struct format_type *fmt,
 						   MDA_HEADER_SIZE),
 					  wrap, calc_crc, rlocn->checksum,
 					  vgid, vgstatus, creation_host)))
-		goto_out;
+		return_NULL;
 
 	/* Ignore this entry if the characters aren't permissible */
-	if (!validate_name(vgname)) {
-		vgname = NULL;
-		goto_out;
-	}
+	if (!validate_name(vgname))
+		return_NULL;
 
-	if (!id_write_format(vgid, uuid, sizeof(uuid))) {
-		vgname = NULL;
-		goto_out;
-	}
+	if (!id_write_format(vgid, uuid, sizeof(uuid)))
+		return_NULL;
 
 	log_debug_metadata("%s: Found metadata at %" PRIu64 " size %" PRIu64
 			   " (in area at %" PRIu64 " size %" PRIu64
@@ -1218,7 +1217,6 @@ const char *vgname_from_mda(const struct format_type *fmt,
 			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
 	}
 
-      out:
 	return vgname;
 }
 
