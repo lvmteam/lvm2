@@ -576,7 +576,7 @@ prepare_pvs() {
 prepare_vg() {
 	teardown_devs
 
-	prepare_pvs "$@"
+	prepare_devs "$@"
 	vgcreate -s 512K $vg "${DEVICES[@]}"
 }
 
