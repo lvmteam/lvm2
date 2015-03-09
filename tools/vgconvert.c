@@ -94,6 +94,13 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 				return ECMD_FAILED;
 			}
 
+	/* New-style system ID supported? */ 
+	if (vg->system_id && *vg->system_id && (cmd->fmt->features & FMT_SYSTEMID_ON_PVS)) {
+		log_error("Unable to convert VG %s while it has a system ID set (%s).", vg->name,
+			  vg->system_id);
+		return ECMD_FAILED;
+	}
+
 	/* Attempt to change any LVIDs that are too big */
 	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
 		dm_list_iterate_items(lvl, &vg->lvs) {
