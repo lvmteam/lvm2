@@ -385,7 +385,7 @@ int pvdisplay_short(const struct cmd_context *cmd __attribute__((unused)),
 	char uuid[64] __attribute__((aligned(8)));
 
 	if (!pv)
-		return 0;
+		return_0;
 
 	if (!id_write_format(&pv->id, uuid, sizeof(uuid)))
 		return_0;
@@ -399,7 +399,8 @@ int pvdisplay_short(const struct cmd_context *cmd __attribute__((unused)),
 		  pv->pe_count, pv->pe_count - pv->pe_alloc_count);
 
 	log_print(" ");
-	return 0;
+
+	return 1; /* ECMD_PROCESSED */
 }
 
 void lvdisplay_colons(const struct logical_volume *lv)
@@ -623,7 +624,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 
 	log_print(" ");
 
-	return 0;
+	return 1; /* ECMD_PROCESSED */
 }
 
 void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
