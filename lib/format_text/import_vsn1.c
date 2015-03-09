@@ -812,6 +812,14 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
+	/*
+	 * A system id without WRITE_LOCKED is an old lvm1 system id.
+	 */
+	if (!(vg->status & LVM_WRITE_LOCKED) && system_id[0]) {
+		memcpy(vg->lvm1_system_id, system_id, NAME_LEN + 1);
+		memset(system_id, 0, NAME_LEN + 1);
+	}
+
 	if (vg->status & LVM_WRITE_LOCKED) {
 		vg->status |= LVM_WRITE;
 		vg->status &= ~LVM_WRITE_LOCKED;
