@@ -531,7 +531,7 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	const char *str;
 	const struct dm_config_value *cv;
 	const char *hostname;
-	uint64_t timestamp = 0;
+	uint64_t timestamp = 0, lvstatus;
 
 	if (!(lv = alloc_lv(mem)))
 		return_0;
@@ -544,16 +544,17 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 		return 0;
 	}
 
-	if (!_read_flag_config(lvn, &lv->status, LV_FLAGS)) {
+	if (!_read_flag_config(lvn, &lvstatus, LV_FLAGS)) {
 		log_error("Couldn't read status flags for logical volume %s.",
 			  lv->name);
 		return 0;
 	}
 
-	if (lv->status & LVM_WRITE_LOCKED) {
-		lv->status |= LVM_WRITE;
-		lv->status &= ~LVM_WRITE_LOCKED;
+	if (lvstatus & LVM_WRITE_LOCKED) {
+		lvstatus |= LVM_WRITE;
+		lvstatus &= ~LVM_WRITE_LOCKED;
 	}
+	lv->status = lvstatus;
 
 	if (dm_config_has_node(lvn, "creation_time")) {
 		if (!_read_uint64(lvn, "creation_time", &timestamp)) {
@@ -743,6 +744,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	unsigned scan_done_once = use_cached_pvs;
 	char *system_id;
+	uint64_t vgstatus;
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib)
@@ -806,7 +808,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (!_read_flag_config(vgn, &vg->status, VG_FLAGS)) {
+	if (!_read_flag_config(vgn, &vgstatus, VG_FLAGS)) {
 		log_error("Error reading flags of volume group %s.",
 			  vg->name);
 		goto bad;
@@ -815,15 +817,16 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	/*
 	 * A system id without WRITE_LOCKED is an old lvm1 system id.
 	 */
-	if (!(vg->status & LVM_WRITE_LOCKED) && system_id[0]) {
+	if (!(vgstatus & LVM_WRITE_LOCKED) && system_id[0]) {
 		memcpy(vg->lvm1_system_id, system_id, NAME_LEN + 1);
 		memset(system_id, 0, NAME_LEN + 1);
 	}
 
-	if (vg->status & LVM_WRITE_LOCKED) {
-		vg->status |= LVM_WRITE;
-		vg->status &= ~LVM_WRITE_LOCKED;
+	if (vgstatus & LVM_WRITE_LOCKED) {
+		vgstatus |= LVM_WRITE;
+		vgstatus &= ~LVM_WRITE_LOCKED;
 	}
+	vg->status = vgstatus;
 
 	if (!_read_int32(vgn, "extent_size", &vg->extent_size)) {
 		log_error("Couldn't read extent size for volume group %s.",
