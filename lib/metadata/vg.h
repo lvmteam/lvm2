@@ -32,7 +32,7 @@ typedef enum {
 	ALLOC_INHERIT
 } alloc_policy_t;
 
-struct pv_to_create {
+struct pv_to_write {
 	struct dm_list list;
 	struct physical_volume *pv;
 	struct pvcreate_params *pp;
@@ -90,7 +90,7 @@ struct volume_group {
 	 * a PV label yet. They need to be pvcreate'd at vg_write time.
 	 */
 
-	struct dm_list pvs_to_create;
+	struct dm_list pvs_to_write;
 
 	/*
 	 * List of physical volumes that carry outdated metadata that belongs

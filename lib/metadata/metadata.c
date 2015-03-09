@@ -179,7 +179,7 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		 struct physical_volume *pv, struct pvcreate_params *pp)
 {
-	struct pv_to_create *pvc;
+	struct pv_to_write *pvw;
 	struct pv_list *pvl;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = vg->vgmem;
@@ -279,13 +279,13 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		}
 
 	if (pv->status & UNLABELLED_PV) {
-		if (!(pvc = dm_pool_zalloc(mem, sizeof(*pvc)))) {
-			log_error("pv_to_create allocation for '%s' failed", pv_name);
+		if (!(pvw = dm_pool_zalloc(mem, sizeof(*pvw)))) {
+			log_error("pv_to_write allocation for '%s' failed", pv_name);
 			return 0;
 		}
-		pvc->pv = pv;
-		pvc->pp = pp;
-		dm_list_add(&vg->pvs_to_create, &pvc->list);
+		pvw->pv = pv;
+		pvw->pp = pp;
+		dm_list_add(&vg->pvs_to_write, &pvw->list);
 	}
 
 	return 1;
@@ -1608,10 +1608,10 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 }
 
 
-static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_create *pvc)
+static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 {
-	int zero = pvc->pp->zero;
-	struct physical_volume *pv = pvc->pv;
+	int zero = pvw->pp->zero;
+	struct physical_volume *pv = pvw->pv;
 	struct device *dev = pv->dev;
 	const char *pv_name = dev_name(dev);
 
@@ -1762,10 +1762,10 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 
 	pv->status |= UNLABELLED_PV;
 	if (write_now) {
-		struct pv_to_create pvc;
-		pvc.pp = pp;
-		pvc.pv = pv;
-		if (!_pvcreate_write(cmd, &pvc))
+		struct pv_to_write pvw;
+		pvw.pp = pp;
+		pvw.pv = pv;
+		if (!_pvcreate_write(cmd, &pvw))
 			goto bad;
 	}
 
@@ -3047,7 +3047,7 @@ out:
 int vg_write(struct volume_group *vg)
 {
 	struct dm_list *mdah;
-	struct pv_to_create *pv_to_create, *pv_to_create_safe;
+        struct pv_to_write *pv_to_write, *pv_to_write_safe;
 	struct metadata_area *mda;
 	struct lv_list *lvl;
 	int revert = 0, wrote = 0;
@@ -3103,10 +3103,10 @@ int vg_write(struct volume_group *vg)
 	memlock_unlock(vg->cmd);
 	vg->seqno++;
 
-	dm_list_iterate_items_safe(pv_to_create, pv_to_create_safe, &vg->pvs_to_create) {
-		if (!_pvcreate_write(vg->cmd, pv_to_create))
-			return 0;
-		dm_list_del(&pv_to_create->list);
+        dm_list_iterate_items_safe(pv_to_write, pv_to_write_safe, &vg->pvs_to_write) {
+		if (!_pvcreate_write(vg->cmd, pv_to_write))
+			return_0;
+		dm_list_del(&pv_to_write->list);
 	}
 
 	/* Write to each copy of the metadata area */
