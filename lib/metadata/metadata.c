@@ -2495,6 +2495,12 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
+	if (vg->status & LVM_WRITE_LOCKED) {
+		log_error(INTERNAL_ERROR "VG %s has external flag LVM_WRITE_LOCKED set internally.",
+			  vg->name);
+		r = 0;
+	}
+
 	/* FIXME Also check there's no data/metadata overlap */
 	if (!(vhash.pvid = dm_hash_create(vg->pv_count))) {
 		log_error("Failed to allocate pvid hash.");
@@ -2567,6 +2573,12 @@ int vg_validate(struct volume_group *vg)
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv_count++;
+
+		if (lvl->lv->status & LVM_WRITE_LOCKED) {
+			log_error(INTERNAL_ERROR "LV %s has external flag LVM_WRITE_LOCKED set internally.",
+				  vg->name);
+			r = 0;
+		}
 
 		dev_name_len = strlen(lvl->lv->name) + vg_name_len + 3;
 		if (dev_name_len >= NAME_LEN) {
