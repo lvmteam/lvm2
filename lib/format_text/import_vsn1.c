@@ -739,11 +739,10 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 {
 	const struct dm_config_node *vgn;
 	const struct dm_config_value *cv;
-	const char *str, *format_str;
+	const char *str, *format_str, *system_id;
 	struct volume_group *vg;
 	struct dm_hash_table *pv_hash = NULL, *lv_hash = NULL;
 	unsigned scan_done_once = use_cached_pvs;
-	char *system_id;
 	uint64_t vgstatus;
 
 	/* skip any top-level values */
@@ -757,10 +756,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	if (!(vg = alloc_vg("read_vg", fid->fmt->cmd, vgn->key)))
 		return_NULL;
-
-	if (!(system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
-		goto_bad;
-	vg->system_id = system_id;
 
 	/*
 	 * The pv hash memorises the pv section names -> pv
@@ -789,9 +784,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (dm_config_get_str(vgn, "system_id", &str))
-		strncpy(system_id, str, NAME_LEN);
-
 	if (dm_config_get_str(vgn, "lock_type", &str)) {
 		if (!(vg->lock_type = dm_pool_strdup(vg->vgmem, str)))
 			goto bad;
@@ -817,9 +809,15 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	/*
 	 * A system id without WRITE_LOCKED is an old lvm1 system id.
 	 */
-	if (!(vgstatus & LVM_WRITE_LOCKED) && system_id[0]) {
-		memcpy(vg->lvm1_system_id, system_id, NAME_LEN + 1);
-		memset(system_id, 0, NAME_LEN + 1);
+	if (dm_config_get_str(vgn, "system_id", &system_id)) {
+		if (!(vgstatus & LVM_WRITE_LOCKED)) {
+			if (!(vg->lvm1_system_id = dm_pool_zalloc(vg->vgmem, NAME_LEN + 1)))
+				goto_bad;
+			strncpy(vg->lvm1_system_id, system_id, NAME_LEN);
+		} else if (!(vg->system_id = dm_pool_strdup(vg->vgmem, system_id))) {
+			log_error("Failed to allocate memory for system_id in _read_vg.");
+			goto bad;
+		}
 	}
 
 	if (vgstatus & LVM_WRITE_LOCKED) {
