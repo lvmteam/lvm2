@@ -411,8 +411,8 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 		outfc(f, "# informational", "format = \"%s\"", fmt->name);
 
 	/*
-	 * Removing WRITE and adding WRITE_LOCKED makes it read-only
-	 * to old versions of lvm that only look for WRITE.
+	 * Removing WRITE and adding LVM_WRITE_LOCKED makes it read-only
+	 * to old versions of lvm that only look for LVM_WRITE.
 	 */
 	if ((status & LVM_WRITE) && vg_flag_write_locked(vg)) {
 		status &= ~LVM_WRITE;
@@ -630,8 +630,8 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 	outf(f, "id = \"%s\"", buffer);
 
 	/*
-	 * Removing WRITE and adding WRITE_LOCKED makes it read-only
-	 * to old versions of lvm that only look for WRITE.
+	 * Removing WRITE and adding LVM_WRITE_LOCKED makes it read-only
+	 * to old versions of lvm that only look for LVM_WRITE.
 	 */
 	if ((status & LVM_WRITE) && vg_flag_write_locked(lv->vg)) {
 		status &= ~LVM_WRITE;

@@ -4249,22 +4249,22 @@ int vg_check_write_mode(struct volume_group *vg)
 
 /*
  * Return 1 if the VG metadata should be written
- * *without* the WRITE flag in the status line, and
- * *with* the WRITE_LOCKED flag in the flags line.
+ * *without* the LVM_WRITE flag in the status line, and
+ * *with* the LVM_WRITE_LOCKED flag in the flags line.
  *
  * If this is done for a VG, it forces previous versions
- * of lvm (before the WRITE_LOCKED flag was added), to view
- * the VG and its LVs as read-only (because the WRITE flag
+ * of lvm (before the LVM_WRITE_LOCKED flag was added), to view
+ * the VG and its LVs as read-only (because the LVM_WRITE flag
  * is missing).  Versions of lvm that understand the
- * WRITE_LOCKED flag know to check the other methods of
+ * LVM_WRITE_LOCKED flag know to check the other methods of
  * access control for the VG, specifically system_id and lock_type.
  *
  * So, if a VG has a system_id or lock_type, then the
  * system_id and lock_type control access to the VG in
  * addition to its basic writable status.  Because previous
  * lvm versions do not know about system_id or lock_type,
- * VGs depending on either of these should have WRITE_LOCKED
- * instead of WRITE to prevent the previous lvm versions from
+ * VGs depending on either of these should have LVM_WRITE_LOCKED
+ * instead of LVM_WRITE to prevent the previous lvm versions from
  * assuming they can write the VG and its LVs.
  */
 int vg_flag_write_locked(struct volume_group *vg)

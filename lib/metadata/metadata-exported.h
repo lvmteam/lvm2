@@ -58,6 +58,7 @@
 
 #define LVM_READ		UINT64_C(0x0000000000000100)	/* LV, VG */
 #define LVM_WRITE		UINT64_C(0x0000000000000200)	/* LV, VG */
+#define LVM_WRITE_LOCKED	UINT64_C(0x0020000000000000)    /* LV, VG */
 
 #define CLUSTERED		UINT64_C(0x0000000000000400)	/* VG */
 //#define SHARED		UINT64_C(0x0000000000000800)	/* VG */
@@ -122,7 +123,6 @@
 #define PV_ALLOCATION_PROHIBITED	UINT64_C(0x0010000000000000)	/* PV - internal use only - allocation prohibited
 									e.g. to prohibit allocation of a RAID image
 									on a PV already holing an image of the RAID set */
-#define LVM_WRITE_LOCKED	UINT64_C(0x0020000000000000)    /* VG, LV */
 /* Next unused flag:		UINT64_C(0x0040000000000000)    */
 
 /* Format features flags */
