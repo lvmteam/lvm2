@@ -156,6 +156,9 @@ int lvmcache_add_mda(struct lvmcache_info *info, struct device *dev,
 int lvmcache_add_da(struct lvmcache_info *info, uint64_t start, uint64_t size);
 int lvmcache_add_ba(struct lvmcache_info *info, uint64_t start, uint64_t size);
 
+void lvmcache_set_ext_flags(struct lvmcache_info *info, uint32_t flags);
+uint32_t lvmcache_ext_flags(struct lvmcache_info *info);
+
 const struct format_type *lvmcache_fmt(struct lvmcache_info *info);
 struct label *lvmcache_get_label(struct lvmcache_info *info);
 

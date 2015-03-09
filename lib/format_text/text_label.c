@@ -124,7 +124,7 @@ static int _text_write(struct label *label, void *buf)
 	 */
 	pvhdr_ext = (struct pv_header_extension *) ((char *) baton.pvh_dlocn_xl);
 	pvhdr_ext->version = xlate32(PV_HEADER_EXTENSION_VSN);
-	pvhdr_ext->flags = 0; /* no flags yet */
+	pvhdr_ext->flags = xlate32(lvmcache_ext_flags(info));
 
 	/* List of bootloader area locations */
 	baton.pvh_dlocn_xl = &pvhdr_ext->bootloader_areas_xl[0];
@@ -420,6 +420,9 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 
 	log_debug_metadata("%s: PV header extension version %" PRIu32 " found",
 			   dev_name(dev), ext_version);
+
+	/* Extension flags */
+	lvmcache_set_ext_flags(info, xlate32(pvhdr_ext->flags));
 
 	/* Bootloader areas */
 	dlocn_xl = pvhdr_ext->bootloader_areas_xl;
