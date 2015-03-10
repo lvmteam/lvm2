@@ -36,6 +36,7 @@ struct pv_to_write {
 	struct dm_list list;
 	struct physical_volume *pv;
 	struct pvcreate_params *pp;
+	int new_pv;
 };
 
 #define MAX_EXTENT_COUNT  (UINT32_MAX)

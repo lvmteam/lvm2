@@ -297,6 +297,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		}
 		pvw->pv = pv;
 		pvw->pp = new_pv ? pp : NULL;
+		pvw->new_pv = new_pv;
 		dm_list_add(&vg->pvs_to_write, &pvw->list);
 	}
 
@@ -1672,7 +1673,11 @@ static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 		return 0;
 	}
 
-	log_print_unless_silent("Physical volume \"%s\" successfully created", pv_name);
+	if (pvw->new_pv)
+		log_print_unless_silent("Physical volume \"%s\" successfully created", pv_name);
+	else
+		log_verbose("Physical volume \"%s\" successfully written", pv_name);
+
 	return 1;
 }
 
@@ -1791,6 +1796,7 @@ struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_nam
 		struct pv_to_write pvw;
 		pvw.pp = pp;
 		pvw.pv = pv;
+		pvw.new_pv = 1;
 		if (!_pvcreate_write(cmd, &pvw))
 			goto bad;
 	}
