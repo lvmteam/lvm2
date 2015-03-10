@@ -153,7 +153,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
  * Scan a single device and update lvmetad with the result(s).
  */
 int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
-			  activation_handler handler);
+			  activation_handler handler, int ignore_obsolete);
 
 int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler);
 int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handler);
@@ -180,7 +180,7 @@ int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handl
 #    define lvmetad_pv_lookup_by_dev(cmd, dev, found)	(0)
 #    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
-#    define lvmetad_pvscan_single(cmd, dev, handler)	(0)
+#    define lvmetad_pvscan_single(cmd, dev, handler, ignore_obsolete)	(0)
 #    define lvmetad_pvscan_all_devs(cmd, handler)	(0)
 #    define lvmetad_pvscan_foreign_vgs(cmd, handler)	(0)
 

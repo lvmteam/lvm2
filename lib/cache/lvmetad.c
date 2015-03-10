@@ -136,6 +136,9 @@ void lvmetad_set_socket(const char *sock)
 	_lvmetad_socket = sock;
 }
 
+static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler,
+				    int ignore_obsolete);
+
 static daemon_reply _lvmetad_send(const char *id, ...)
 {
 	va_list ap;
@@ -183,7 +186,7 @@ retry:
 				max_remaining_sleep_times--;	/* Sleep once before rescanning the first time, then 5 times each time after that. */
 		} else {
 			/* If the re-scan fails here, we try again later. */
-			(void) lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL);
+			(void) _lvmetad_pvscan_all_devs(_lvmetad_cmd, NULL, 0);
 			num_rescans++;
 			max_remaining_sleep_times = 5;
 		}
@@ -904,7 +907,7 @@ static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
 }
 
 int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
-			  activation_handler handler)
+			  activation_handler handler, int ignore_obsolete)
 {
 	struct label *label;
 	struct lvmcache_info *info;
@@ -933,9 +936,16 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 		goto_bad;
 
 	if (baton.fid->fmt->features & FMT_OBSOLETE) {
-		log_error("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
-			  baton.fid->fmt->name, dev_name(dev));
+		if (ignore_obsolete)
+			log_warn("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
+				  baton.fid->fmt->name, dev_name(dev));
+		else
+			log_error("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
+				  baton.fid->fmt->name, dev_name(dev));
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+
+		if (ignore_obsolete)
+			return 1;
 		return 0;
 	}
 
@@ -974,7 +984,8 @@ bad:
 	return 0;
 }
 
-int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
+static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler,
+				    int ignore_obsolete)
 {
 	struct dev_iter *iter;
 	struct device *dev;
@@ -1016,7 +1027,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 			stack;
 			break;
 		}
-		if (!lvmetad_pvscan_single(cmd, dev, handler))
+		if (!lvmetad_pvscan_single(cmd, dev, handler, ignore_obsolete))
 			r = 0;
 	}
 
@@ -1031,11 +1042,16 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
 	return r;
 }
 
+int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler)
+{
+	return _lvmetad_pvscan_all_devs(cmd, handler, 0);
+}
+
 /* 
  * FIXME Implement this function, skipping PVs known to belong to local or clustered,
  * non-exported VGs.
  */
 int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handler)
 {
-	return lvmetad_pvscan_all_devs(cmd, handler);
+	return _lvmetad_pvscan_all_devs(cmd, handler, 1);
 }

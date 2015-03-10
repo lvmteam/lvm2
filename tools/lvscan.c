@@ -40,7 +40,7 @@ static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume
 					 pvid_s);
 			continue;
 		}
-		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL))
+		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL, 0))
 			return ECMD_FAILED;
 	}
 

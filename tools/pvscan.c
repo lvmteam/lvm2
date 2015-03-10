@@ -277,7 +277,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 			break;
 		}
-		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
+		if (!lvmetad_pvscan_single(cmd, dev, handler, 0)) {
 			ret = ECMD_FAILED;
 			stack;
 			break;
@@ -310,7 +310,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 			break;
 		}
-		if (!lvmetad_pvscan_single(cmd, dev, handler)) {
+		if (!lvmetad_pvscan_single(cmd, dev, handler, 0)) {
 			ret = ECMD_FAILED;
 			stack;
 			break;
