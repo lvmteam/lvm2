@@ -214,6 +214,11 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_is_set(cmd, metadatatype_ARG) && lvmetad_used()) {
+		log_error("lvmetad must be disabled to change metadata types.");
+		return EINVALID_CMD_LINE;
+	}
+
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
 		log_error("labelsector must be less than %lu",
 			  LABEL_SCAN_SECTORS);
