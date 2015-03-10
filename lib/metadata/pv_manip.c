@@ -697,11 +697,12 @@ const char _really_wipe[] =
 static int pvremove_check(struct cmd_context *cmd, const char *name,
 			  unsigned force_count, unsigned prompt, struct dm_list *pvslist)
 {
+	static const char pvremove_force_hint_msg[] = "(If you are certain you need pvremove, then confirm by using --force twice.)";
 	struct device *dev;
 	struct label *label;
 	struct pv_list *pvl;
-
 	struct physical_volume *pv = NULL;
+	int used;
 	int r = 0;
 
 	/* FIXME Check partition type is LVM unless --force is given */
@@ -731,6 +732,16 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 	}
 
 	if (is_orphan(pv)) {
+		if ((used = is_used_pv(pv)) < 0)
+			goto_out;
+
+		if (used && force_count < 2) {
+			log_error("PV '%s' is marked as belonging to a VG "
+				  "but its metadata is missing.", name);
+			log_error("%s", pvremove_force_hint_msg);
+			goto out;
+		}
+
 		r = 1;
 		goto out;
 	}
@@ -738,7 +749,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 	/* we must have -ff to overwrite a non orphan */
 	if (force_count < 2) {
 		log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", name, pv_vg_name(pv));
-		log_error("(If you are certain you need pvremove, then confirm by using --force twice.)");
+		log_error("%s", pvremove_force_hint_msg);
 		goto out;
 	}
 

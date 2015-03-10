@@ -185,6 +185,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = vg->vgmem;
 	char uuid[64] __attribute__((aligned(8)));
+	int used;
 
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
 		    pv_name, vg->name);
@@ -198,6 +199,15 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		log_error("Physical volume '%s' is already in volume group "
 			  "'%s'", pv_name, pv->vg_name);
 		return 0;
+	} else if (!new_pv) {
+		if ((used = is_used_pv(pv)) < 0)
+			return_0;
+
+		if (used) {
+			log_error("Physical volume '%s' is marked as belonging to a VG "
+				  "but its metadata is missing.", pv_name);
+			return 0;
+		}
 	}
 
 	if (pv->fmt != fid->fmt) {
@@ -1464,6 +1474,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 	int r = 0;
 	int scan_needed = 0;
 	int filter_refresh_needed = 0;
+	int used;
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -1474,10 +1485,21 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* We must have -ff to overwrite a non orphan */
-	if (pv && !is_orphan(pv) && pp->force != DONT_PROMPT_OVERRIDE) {
-		log_error("Can't initialize physical volume \"%s\" of "
-			  "volume group \"%s\" without -ff", name, pv_vg_name(pv));
-		goto out;
+	if (pv) {
+		if (!is_orphan(pv) && pp->force != DONT_PROMPT_OVERRIDE) {
+			log_error("Can't initialize physical volume \"%s\" of "
+				  "volume group \"%s\" without -ff.", name, pv_vg_name(pv));
+			goto out;
+		}
+
+		if ((used = is_used_pv(pv)) < 0)
+			goto_out;
+
+		if (used && pp->force != DONT_PROMPT_OVERRIDE) {
+			log_error("PV '%s' is marked as belonging to a VG but its metadata is missing.", name);
+			log_error("Can't initialize PV '%s' without -ff.", name);
+			goto out;
+		}
 	}
 
 	/* prompt */
