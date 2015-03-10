@@ -2866,6 +2866,19 @@ static int _pvmissing_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, missing, GET_FIRST_RESERVED_NAME(pv_missing_y), private);
 }
 
+static int _pvinuse_disp(struct dm_report *rh, struct dm_pool *mem,
+			 struct dm_report_field *field,
+			 const void *data, void *private)
+{
+	const struct physical_volume *pv = (const struct physical_volume *) data;
+	int used = is_used_pv(pv);
+
+	if (used < 0)
+		return _binary_undef_disp(rh, mem, field, private);
+
+	return _binary_disp(rh, mem, field, used, GET_FIRST_RESERVED_NAME(pv_in_use_y), private);
+}
+
 static int _vgpermissions_disp(struct dm_report *rh, struct dm_pool *mem,
 			       struct dm_report_field *field,
 			       const void *data, void *private)
