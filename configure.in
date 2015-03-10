@@ -962,6 +962,8 @@ AC_TRY_CCFLAG([-Wjump-misses-init], [HAVE_WJUMP], [], [])
 AC_SUBST(HAVE_WJUMP)
 AC_TRY_CCFLAG([-Wclobbered], [HAVE_WCLOBBERED], [], [])
 AC_SUBST(HAVE_WCLOBBERED)
+AC_TRY_CCFLAG([-Wsync-nand], [HAVE_WSYNCNAND], [], [])
+AC_SUBST(HAVE_WSYNCNAND)
 
 ################################################################################
 dnl -- Override optimisation

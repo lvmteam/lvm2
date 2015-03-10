@@ -156,7 +156,11 @@ endif
 ifeq ("@HAVE_WCLOBBERED@", "yes")
 WFLAGS += -Wclobbered -Wempty-body -Wignored-qualifiers \
  -Wmissing-parameter-type -Wold-style-declaration -Woverride-init \
- -Wtype-limits -Wsync-nand -Wlogical-op
+ -Wtype-limits -Wlogical-op
+endif
+
+ifeq ("@HAVE_WSYNCNAND@", "yes")
+WFLAGS += -Wsync-nand
 endif
 
 ifneq ("@STATIC_LINK@", "yes")
