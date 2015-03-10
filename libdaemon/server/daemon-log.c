@@ -20,6 +20,7 @@ static void log_syslog(log_state *s, void **state, int type, const char *message
 	switch (type) {
 	case DAEMON_LOG_INFO: prio = LOG_INFO; break;
 	case DAEMON_LOG_WARN: prio = LOG_WARNING; break;
+	case DAEMON_LOG_ERROR: prio = LOG_ERR; break;
 	case DAEMON_LOG_FATAL: prio = LOG_CRIT; break;
 	default: prio = LOG_DEBUG; break;
 	}
