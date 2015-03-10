@@ -57,6 +57,9 @@ check pv_field "$dev3" pe_start $pv_align
 
 pvs --units k -o name,pe_start,vg_mda_size,vg_name $(cat DEVICES)
 
+# vgconvert -M does not work with lvmetad
+test -e LOCAL_LVMETAD && exit 0
+
 # upgrade from v1 to v2 metadata
 vgconvert -M2 $vg
 
