@@ -650,7 +650,7 @@ struct Options {
     int timeout;
     Options() : verbose( false ), batch( false ), interactive( false ),
                 cont( false ), fatal_timeouts( false ), kmsg( false ),
-                timeout( 60 ) {}
+                timeout( 180 ) {}
 };
 
 struct TestProcess
