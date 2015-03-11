@@ -463,6 +463,19 @@ struct Source {
         char buf[ 128 * 1024 ];
         if ( (sz = read(fd, buf, sizeof(buf) - 1)) > 0 )
             sink->push( std::string( buf, sz ) );
+
+        /*
+         * On RHEL5 box this code busy-loops here, while
+         * parent process no longer writes anything.
+         *
+         * Unclear why 'select()' is anouncing available
+         * data, while we read 0 bytes with errno == 0.
+         *
+         * Temporarily resolved with usleep() instead of loop.
+         */
+        if (!sz && (!errno || errno == EINTR))
+            usleep(50000);
+
         if ( sz < 0 && errno != EAGAIN )
             throw syserr( "reading pipe" );
     }
@@ -625,11 +638,11 @@ struct IO : Sink {
         return *new (this) IO( io );
     }
 
-    void clear(int push = 1) {
+    void clear( int to_push = 1 ) {
         for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
             delete *i;
         sinks.clear();
-        if (push)
+        if ( to_push )
             sinks.push_back( _observer = new Observer );
     }
 
