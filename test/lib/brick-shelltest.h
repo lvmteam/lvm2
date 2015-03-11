@@ -649,7 +649,7 @@ struct Options {
     std::string flavour_envvar;
     int timeout;
     Options() : verbose( false ), batch( false ), interactive( false ),
-                cont( false ), fatal_timeouts( false ), kmsg( false ),
+                cont( false ), fatal_timeouts( false ), kmsg( true ),
                 timeout( 180 ) {}
 };
 
@@ -1135,8 +1135,8 @@ int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVOUR" )
     if ( args.has( "--timeout" ) )
         opt.timeout = atoi( args.opt( "--timeout" ).c_str() );
 
-    if ( args.has( "--kmsg" ) )
-        opt.kmsg = true;
+    if ( args.has( "--nokmsg" ) )
+        opt.kmsg = false;
 
     opt.outdir = args.opt( "--outdir" );
     opt.testdir = args.opt( "--testdir" );
