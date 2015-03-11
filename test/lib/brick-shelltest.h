@@ -625,14 +625,15 @@ struct IO : Sink {
         return *new (this) IO( io );
     }
 
-    void clear() {
+    void clear(int push = 1) {
         for ( Sinks::iterator i = sinks.begin(); i != sinks.end(); ++i )
             delete *i;
         sinks.clear();
-        sinks.push_back( _observer = new Observer );
+        if (push)
+            sinks.push_back( _observer = new Observer );
     }
 
-    ~IO() { close(); clear(); }
+    ~IO() { close(); clear(0); }
 
 };
 
@@ -659,7 +660,7 @@ struct TestProcess
     bool interactive;
     int fd;
 
-    void exec() {
+    void exec() __attribute__ ((noreturn)) {
         assert( fd >= 0 );
         if ( !interactive ) {
             int devnull = ::open( "/dev/null", O_RDONLY );
@@ -858,7 +859,8 @@ struct TestCase {
         if ( options.verbose || options.interactive )
             progress() << std::endl;
 
-        while ( monitor() );
+        while ( monitor() )
+            /* empty */ ;
 
         Journal::R r = Journal::UNKNOWN;
 
