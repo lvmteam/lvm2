@@ -29,6 +29,12 @@
 
 int main(int argc, const char **argv)
 {
-	return brick::shelltest::run( argc, argv, "LVM_TEST_FLAVOUR" );
+    try {
+        return brick::shelltest::run( argc, argv, "LVM_TEST_FLAVOUR" );
+    } catch (std::exception const& e) {
+        std::cout << "Exception: " << e.what() << "\n";
+    }
+
+    return 1;
 }
 
