@@ -258,7 +258,10 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 
 	if (read_error != SUCCESS) {
 		*skip = 0;
-		log_error("Cannot process volume group %s", vg_name);
+		if (is_orphan_vg(vg_name))
+			log_error("Cannot process standalone physical volumes");
+		else
+			log_error("Cannot process volume group %s", vg_name);
 		return 1;
 	}
 
