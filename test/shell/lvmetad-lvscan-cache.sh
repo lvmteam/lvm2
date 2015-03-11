@@ -16,7 +16,7 @@ test -e LOCAL_LVMETAD || skip
 aux prepare_pvs 2
 
 vgcreate $vg1 "$dev1" "$dev2"
-lvcreate -n testlv -m 1 -l 1 $vg1
+lvcreate -n testlv --type mirror -m 1 -l 1 $vg1
 vgs | grep $vg1
 
 lvscan --cache $vg1/testlv
