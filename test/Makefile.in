@@ -102,28 +102,28 @@ help:
 
 check: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-vanilla,ndev-cluster,ndev-lvmetad --only $(T) --skip $(S)
 
 check_system: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours udev-vanilla,udev-cluster,udev-lvmetad --only $(T) --skip $(S)
 
 check_cluster: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-cluster --only $(T) --skip $(S)
 
 check_local: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-vanilla --only $(T) --skip $(S)
 
 ifeq ("@BUILD_LVMETAD@", "yes")
 check_lvmetad: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-lvmetad --only $(T) --skip $(S)
 endif
 
@@ -237,13 +237,16 @@ LIB = $(LIB_SHARED) $(LIB_LOCAL) $(LIB_EXEC) $(LIB_FLAVOURS)
 	ln -fs $(abs_top_srcdir)/conf/thin-performance.profile lib/thin-performance.profile
 	touch $@
 
-clean:
+cleantest:
 	test "$(srcdir)" = . || $(RM) $(RUN_BASE)
 	$(RM) -r $(LVM_TEST_RESULTS)
 
+clean: cleantest
+distclean: cleantest
+
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone \
-	lib/thin-performance.profile
+	lib/thin-performance.profile lib/paths-common
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
