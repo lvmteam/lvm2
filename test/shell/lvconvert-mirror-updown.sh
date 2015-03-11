@@ -31,6 +31,6 @@ lvs -a $vg
 #
 # It fails so use 'should' and -vvvv for now
 #
-should lvconvert -vvvv -m-1 $vg/$lv1 "$dev2"
+lvconvert -m-1 $vg/$lv1 "$dev2"
 
 vgremove -f $vg
