@@ -148,7 +148,6 @@ WFLAGS +=\
  -Wfloat-equal\
  -Wformat-security\
  -Winline\
- -Wmissing-declarations\
  -Wmissing-format-attribute\
  -Wmissing-include-dirs\
  -Wmissing-noreturn\
@@ -156,14 +155,15 @@ WFLAGS +=\
  -Wredundant-decls\
  -Wshadow\
  -Wundef\
- -Wuninitialized\
  -Wwrite-strings
 
 WCFLAGS +=\
+ -Wmissing-declarations\
  -Wmissing-prototypes\
  -Wnested-externs\
  -Wold-style-definition\
- -Wstrict-prototypes
+ -Wstrict-prototypes\
+ -Wuninitialized
 
 ifeq ("@HAVE_WJUMP@", "yes")
 WCFLAGS += -Wjump-misses-init
