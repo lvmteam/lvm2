@@ -1637,32 +1637,33 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 
 static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 {
-	int zero = pvw->pp ? pvw->pp->zero : 1;
 	struct physical_volume *pv = pvw->pv;
 	struct device *dev = pv->dev;
 	const char *pv_name = dev_name(dev);
 
-	/* Wipe existing label first */
-	if (!label_remove(pv_dev(pv))) {
-		log_error("Failed to wipe existing label on %s", pv_name);
-		return 0;
-	}
-
-	if (zero) {
-		log_verbose("Zeroing start of device %s", pv_name);
-		if (!dev_open_quiet(dev)) {
-			log_error("%s not opened: device not zeroed", pv_name);
+	if (pvw->new_pv) {
+		/* Wipe existing label first */
+		if (!label_remove(pv_dev(pv))) {
+			log_error("Failed to wipe existing label on %s", pv_name);
 			return 0;
 		}
 
-		if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
-			log_error("%s not wiped: aborting", pv_name);
+		if (pvw->pp->zero) {
+			log_verbose("Zeroing start of device %s", pv_name);
+			if (!dev_open_quiet(dev)) {
+				log_error("%s not opened: device not zeroed", pv_name);
+				return 0;
+			}
+
+			if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
+				log_error("%s not wiped: aborting", pv_name);
+				if (!dev_close(dev))
+					stack;
+				return 0;
+			}
 			if (!dev_close(dev))
 				stack;
-			return 0;
 		}
-		if (!dev_close(dev))
-			stack;
 	}
 
 	log_verbose("Writing physical volume data to disk \"%s\"",
