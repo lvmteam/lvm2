@@ -279,7 +279,8 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 			break;
 		}
 
-	if (pv->status & UNLABELLED_PV) {
+	if ((pv->fmt->features & FMT_PV_FLAGS) ||
+	    (pv->status & UNLABELLED_PV)) {
 		if (!(pvw = dm_pool_zalloc(mem, sizeof(*pvw)))) {
 			log_error("pv_to_write allocation for '%s' failed", pv_name);
 			return 0;

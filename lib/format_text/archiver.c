@@ -335,6 +335,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg, int drop
 	struct pv_list *pvl;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
+	struct pv_to_write *pvw;
 	uint32_t tmp;
 
 	/*
@@ -363,6 +364,15 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg, int drop
 
 	/* Add any metadata areas on the PVs */
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (pvl->pv->fmt->features & FMT_PV_FLAGS) {
+			if (!(pvw = dm_pool_zalloc(vg->vgmem, sizeof(*pvw)))) {
+				log_error("pv_to_write allocation for '%s' failed", pv_dev_name(pvl->pv));
+				return 0;
+			}
+			pvw->pv = pvl->pv;
+			dm_list_add(&vg->pvs_to_write, &pvw->list);
+		}
+
 		tmp = vg->extent_size;
 		vg->extent_size = 0;
 		if (!vg->fid->fmt->ops->pv_setup(vg->fid->fmt, pvl->pv, vg)) {
