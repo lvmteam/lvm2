@@ -177,7 +177,8 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
  * FIXME: remove pv_name - obtain safely from pv
  */
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
-		 struct physical_volume *pv, struct pvcreate_params *pp)
+		 struct physical_volume *pv, struct pvcreate_params *pp,
+		 int new_pv)
 {
 	struct pv_to_write *pvw;
 	struct pv_list *pvl;
@@ -284,7 +285,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 			return 0;
 		}
 		pvw->pv = pv;
-		pvw->pp = pp;
+		pvw->pp = new_pv ? pp : NULL;
 		dm_list_add(&vg->pvs_to_write, &pvw->list);
 	}
 
@@ -710,6 +711,7 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 			       unsigned int *max_phys_block_size)
 {
 	struct physical_volume *pv;
+	int new_pv = 0;
 
 	pv = find_pv_by_name(vg->cmd, pv_name, 1, 1);
 
@@ -720,13 +722,14 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 	} else if (!pv && pp) {
 		if (!(pv = pvcreate_vol(vg->cmd, pv_name, pp, 0)))
 			return_0;
+		new_pv = 1;
 	}
 
 	if (!(check_dev_block_size_for_vg(pv->dev, (const struct volume_group *) vg,
 					  max_phys_block_size)))
 		goto_bad;
 
-	if (!add_pv_to_vg(vg, pv_name, pv, pp))
+	if (!add_pv_to_vg(vg, pv_name, pv, pp, new_pv))
 		goto_bad;
 
 	return 1;
@@ -1610,7 +1613,7 @@ void pvcreate_params_set_defaults(struct pvcreate_params *pp)
 
 static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)
 {
-	int zero = pvw->pp->zero;
+	int zero = pvw->pp ? pvw->pp->zero : 1;
 	struct physical_volume *pv = pvw->pv;
 	struct device *dev = pv->dev;
 	const char *pv_name = dev_name(dev);

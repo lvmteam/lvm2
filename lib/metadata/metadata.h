@@ -496,7 +496,8 @@ const struct format_type *pv_format_type(const struct physical_volume *pv);
 struct id pv_vgid(const struct physical_volume *pv);
 
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
-		 struct physical_volume *pv, struct pvcreate_params *pp);
+		 struct physical_volume *pv, struct pvcreate_params *pp,
+		 int new_pv);
 
 uint64_t find_min_mda_size(struct dm_list *mdas);
 char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl);
