@@ -38,6 +38,7 @@ SOURCES =\
 	pvcreate.c \
 	pvdisplay.c \
 	pvmove.c \
+	pvmove_poll.c \
 	pvremove.c \
 	pvresize.c \
 	pvscan.c \
