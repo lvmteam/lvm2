@@ -21,6 +21,7 @@ SOURCES =\
 	formats.c \
 	lvchange.c \
 	lvconvert.c \
+	lvconvert_poll.c \
 	lvcreate.c \
 	lvdisplay.c \
 	lvextend.c \
