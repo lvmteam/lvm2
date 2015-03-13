@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Add After=iscsi-shutdown.service to blk-availability.service systemd unit.
   Disallow vgconvert from changing metadata format when lvmetad is used.
   Don't do a full read of VG when creating a new VG with an existing name.
   Reduce number of VG metadata parsing when looking for vgname on a PV.
