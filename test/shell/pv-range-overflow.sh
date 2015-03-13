@@ -15,7 +15,7 @@
 
 aux prepare_vg 2
 
-lvcreate -L4 -n"$lv" $vg
+lvcreate -L4 -n $lv $vg
 
 # Test for the bogus diagnostic reported in BZ 284771
 # http://bugzilla.redhat.com/284771.
