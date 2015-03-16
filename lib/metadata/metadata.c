@@ -3348,8 +3348,20 @@ static int _check_or_repair_orphan_pv_ext(struct physical_volume *pv,
 					  struct lvmcache_info *info,
 					  struct _vg_read_orphan_baton *b)
 {
+	uint32_t ext_version = lvmcache_ext_version(info);
 	uint32_t ext_flags = lvmcache_ext_flags(info);
 	int at_least_one_mda_used;
+
+	/*
+	 * Nothing to do if PV header extension < 2:
+	 *  - version 0 is PV header without any extensions,
+	 *  - version 1 has bootloader area support only and
+	 *    we're not checking anything for that one here.
+	 */
+	if (ext_version < 2) {
+		b->consistent = 1;
+		return 1;
+	}
 
 	if (ext_flags & PV_EXT_USED) {
 		if (lvmcache_mda_count(info)) {
