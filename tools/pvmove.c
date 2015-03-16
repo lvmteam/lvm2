@@ -18,6 +18,45 @@
 #include "display.h"
 #include "pvmove_poll.h"
 
+#define PVMOVE_FIRST_TIME   0x00000001      /* Called for first time */
+
+static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
+{
+	const struct segment_type *segtype;
+	unsigned attr = 0;
+	int found = 1;
+	static int _clustered_found = -1;
+
+	if (clustered && _clustered_found >= 0)
+		return _clustered_found;
+
+	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+		return_0;
+
+	if (activation() && segtype->ops->target_present &&
+	    !segtype->ops->target_present(cmd, NULL, clustered ? &attr : NULL))
+		found = 0;
+
+	if (activation() && clustered) {
+		if (found && (attr & MIRROR_LOG_CLUSTERED))
+			_clustered_found = found = 1;
+		else
+			_clustered_found = found = 0;
+	}
+
+	return found;
+}
+
+static unsigned _pvmove_is_exclusive(struct cmd_context *cmd,
+				     struct volume_group *vg)
+{
+	if (vg_is_clustered(vg))
+		if (!_pvmove_target_present(cmd, 1))
+			return 1;
+
+	return 0;
+}
+
 /* Allow /dev/vgname/lvname, vgname/lvname or lvname */
 static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
 				   const char *arg)
@@ -451,6 +490,86 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	return lv_mirr;
 }
 
+static int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
+			unsigned exclusive)
+{
+	int r = 0;
+
+	if (exclusive || lv_is_active_exclusive(lv_mirr))
+		r = activate_lv_excl(cmd, lv_mirr);
+	else
+		r = activate_lv(cmd, lv_mirr);
+
+	if (!r)
+		stack;
+
+	return r;
+}
+
+/*
+ * Called to set up initial pvmove LV only.
+ * (Not called after first or any other section completes.)
+ */
+static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
+			    struct logical_volume *lv_mirr,
+			    struct dm_list *lvs_changed, unsigned exclusive)
+{
+	int r = 0;
+
+	log_verbose("Updating volume group metadata for the first time.");
+	if (!vg_write(vg)) {
+		log_error("ABORTING: Volume group metadata update failed.");
+		return 0;
+	}
+
+	if (!suspend_lvs(cmd, lvs_changed, vg)) {
+		log_error("ABORTING: Temporary pvmove mirror activation failed.");
+		/* FIXME Add a recovery path for first time too. */
+		return 0;
+	}
+
+	/* Commit on-disk metadata */
+	if (!vg_commit(vg)) {
+		log_error("ABORTING: First volume group metadata update failed.");
+		if (!resume_lvs(cmd, lvs_changed)) {
+			log_error("Unable to resume logical volumes.");
+			return 0;
+		}
+	}
+
+	/* Activate the temporary mirror LV */
+	/* Only the first mirror segment gets activated as a mirror */
+	/* FIXME: Add option to use a log */
+	if (!exclusive && _pvmove_is_exclusive(cmd, vg))
+		exclusive = 1;
+
+	if (!_activate_lv(cmd, lv_mirr, exclusive)) {
+		if (test_mode()) {
+			r = 1;
+			goto out;
+		}
+
+		/*
+		 * FIXME Run --abort internally here.
+		 */
+		log_error("ABORTING: Temporary pvmove mirror activation failed. Run pvmove --abort.");
+		goto out;
+	}
+
+	r = 1;
+
+out:
+	if (!resume_lvs(cmd, lvs_changed)) {
+		log_error("Unable to resume logical volumes.");
+		r = 0;
+	}
+
+	if (r)
+		backup(vg);
+
+	return r;
+}
+
 static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			  int argc, char **argv)
 {
@@ -501,7 +620,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		return_ECMD_FAILED;
 	}
 
-	exclusive = pvmove_is_exclusive(cmd, vg);
+	exclusive = _pvmove_is_exclusive(cmd, vg);
 
 	if ((lv_mirr = find_pvmove_lv(vg, pv_dev(pv), PVMOVE))) {
 		log_print_unless_silent("Detected pvmove in progress for %s", pv_name);
@@ -552,13 +671,9 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	/* init_pvmove(1); */
 	/* vg->status |= PVMOVE; */
 
-	if (flags & PVMOVE_FIRST_TIME) {
-		if (exclusive)
-			flags |= PVMOVE_EXCLUSIVE;
-		if (!pvmove_update_metadata
-		    (cmd, vg, lv_mirr, lvs_changed, flags))
+	if (flags & PVMOVE_FIRST_TIME)
+		if (!_update_metadata(cmd, vg, lv_mirr, lvs_changed, exclusive))
 			goto_out;
-	}
 
 	/* LVs are all in status LOCKED */
 	r = ECMD_PROCESSED;
@@ -594,7 +709,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	int ret;
 
 	/* dm raid1 target must be present in every case */
-	if (!pvmove_target_present(cmd, 0)) {
+	if (!_pvmove_target_present(cmd, 0)) {
 		log_error("Required device-mapper target(s) not "
 			  "detected in your kernel");
 		return ECMD_FAILED;

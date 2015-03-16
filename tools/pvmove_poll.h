@@ -15,22 +15,12 @@
 #ifndef _LVM_PVMOVE_H
 #define _LVM_PVMOVE_H
 
-#define PVMOVE_FIRST_TIME   0x00000001      /* Called for first time */
-#define PVMOVE_EXCLUSIVE    0x00000002      /* Require exclusive LV */
-
 struct cmd_context;
 struct dm_list;
 struct logical_volume;
 struct volume_group;
 
-int pvmove_target_present(struct cmd_context *cmd, int clustered);
-
-unsigned pvmove_is_exclusive(struct cmd_context *cmd, struct volume_group *vg);
-
 struct volume_group *get_vg(struct cmd_context *cmd, const char *vgname);
-
-int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
-		 unsigned exclusive);
 
 int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			   struct logical_volume *lv_mirr,

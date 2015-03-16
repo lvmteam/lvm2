@@ -15,63 +15,11 @@
 #include "pvmove_poll.h"
 #include "tools.h"
 
-int pvmove_target_present(struct cmd_context *cmd, int clustered)
-{
-	const struct segment_type *segtype;
-	unsigned attr = 0;
-	int found = 1;
-	static int _clustered_found = -1;
-
-	if (clustered && _clustered_found >= 0)
-		return _clustered_found;
-
-	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
-		return_0;
-
-	if (activation() && segtype->ops->target_present &&
-	    !segtype->ops->target_present(cmd, NULL, clustered ? &attr : NULL))
-		found = 0;
-
-	if (activation() && clustered) {
-		if (found && (attr & MIRROR_LOG_CLUSTERED))
-			_clustered_found = found = 1;
-		else
-			_clustered_found = found = 0;
-	}
-
-	return found;
-}
-
-unsigned pvmove_is_exclusive(struct cmd_context *cmd, struct volume_group *vg)
-{
-	if (vg_is_clustered(vg))
-		if (!pvmove_target_present(cmd, 1))
-			return 1;
-
-	return 0;
-}
-
 struct volume_group *get_vg(struct cmd_context *cmd, const char *vgname)
 {
 	dev_close_all();
 
 	return vg_read_for_update(cmd, vgname, NULL, 0);
-}
-
-int _activate_lv(struct cmd_context *cmd, struct logical_volume *lv_mirr,
-		 unsigned exclusive)
-{
-	int r = 0;
-
-	if (exclusive || lv_is_active_exclusive(lv_mirr))
-		r = activate_lv_excl(cmd, lv_mirr);
-	else
-		r = activate_lv(cmd, lv_mirr);
-
-	if (!r)
-		stack;
-
-	return r;
 }
 
 static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
@@ -131,73 +79,26 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _suspend_lvs(struct cmd_context *cmd, unsigned first_time,
-			struct logical_volume *lv_mirr,
-			struct dm_list *lvs_changed,
-			struct volume_group *vg_to_revert)
-{
-	/*
-	 * Suspend lvs_changed the first time.
-	 * Suspend mirrors on subsequent calls.
-	 */
-	if (first_time) {
-		if (!suspend_lvs(cmd, lvs_changed, vg_to_revert))
-			return_0;
-	} else if (!suspend_lv(cmd, lv_mirr)) {
-		if (vg_to_revert)
-			vg_revert(vg_to_revert);
-		return_0;
-	}
-
-	return 1;
-}
-
-static int _resume_lvs(struct cmd_context *cmd, unsigned first_time,
-		       struct logical_volume *lv_mirr,
-		       struct dm_list *lvs_changed)
-{
-	/*
-	 * Suspend lvs_changed the first time.
-	 * Suspend mirrors on subsequent calls.
-	 */
-
-	if (first_time) {
-		if (!resume_lvs(cmd, lvs_changed)) {
-			log_error("Unable to resume logical volumes");
-			return 0;
-		}
-	} else if (!resume_lv(cmd, lv_mirr)) {
-		log_error("Unable to reactivate logical volume \"%s\"",
-			  lv_mirr->name);
-		return 0;
-	}
-
-	return 1;
-}
-
 /*
- * Called to set up initial pvmove LV and to advance the mirror
- * to successive sections of it.
- * (Not called after the last section completes.)
+ * Called to advance the mirror to successive sections of it.
+ * (Not called first time or after the last section completes.)
  */
 int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			   struct logical_volume *lv_mirr,
-			   struct dm_list *lvs_changed, unsigned flags)
+			   struct dm_list *lvs_changed __attribute__((unused)),
+			   unsigned flags __attribute__((unused)))
 {
-	unsigned exclusive = (flags & PVMOVE_EXCLUSIVE) ? 1 : 0;
-	unsigned first_time = (flags & PVMOVE_FIRST_TIME) ? 1 : 0;
-	int r = 0;
-
-	log_verbose("Updating volume group metadata");
+	log_verbose("Updating volume group metadata.");
 	if (!vg_write(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
 		return 0;
 	}
 
-	if (!_suspend_lvs(cmd, first_time, lv_mirr, lvs_changed, vg)) {
-		log_error("ABORTING: Temporary pvmove mirror %s failed.", first_time ? "activation" : "reload");
-		/* FIXME Add a recovery path for first time too. */
-		if (!first_time && !revert_lv(cmd, lv_mirr))
+	if (!suspend_lv(cmd, lv_mirr)) {
+		if (vg)
+			vg_revert(vg);
+		log_error("ABORTING: Temporary pvmove mirror reload failed.");
+		if (!revert_lv(cmd, lv_mirr))
 			stack;
 		return 0;
 	}
@@ -205,44 +106,23 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
-		if (!_resume_lvs(cmd, first_time, lv_mirr, lvs_changed))
-			stack;
-		if (!first_time && !revert_lv(cmd, lv_mirr))
+		if (!resume_lv(cmd, lv_mirr))
+			log_error("Unable to reactivate logical volume \"%s\".",
+				  lv_mirr->name);
+		if (!revert_lv(cmd, lv_mirr))
 			stack;
 		return 0;
 	}
 
-	/* Activate the temporary mirror LV */
-	/* Only the first mirror segment gets activated as a mirror */
-	/* FIXME: Add option to use a log */
-	if (first_time) {
-		if (!exclusive && pvmove_is_exclusive(cmd, vg))
-			exclusive = 1;
-
-		if (!_activate_lv(cmd, lv_mirr, exclusive)) {
-			if (test_mode()) {
-				r = 1;
-				goto out;
-			}
-
-			/*
-			 * FIXME Run --abort internally here.
-			 */
-			log_error("ABORTING: Temporary pvmove mirror activation failed. Run pvmove --abort.");
-			goto out;
-		}
+	if (!resume_lv(cmd, lv_mirr)) {
+		log_error("Unable to reactivate logical volume \"%s\".",
+			  lv_mirr->name);
+		return 0;
 	}
 
-	r = 1;
+	backup(vg);
 
-out:
-	if (!_resume_lvs(cmd, first_time, lv_mirr, lvs_changed))
-		r = 0;
-
-	if (r)
-		backup(vg);
-
-	return r;
+	return 1;
 }
 
 int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
