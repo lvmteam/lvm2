@@ -5338,6 +5338,7 @@ int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv)
 	lvl->lv = lv;
 	lv->vg = vg;
 	dm_list_add(&vg->lvs, &lvl->list);
+	lv->status &= ~LV_REMOVED;
 
 	return 1;
 }
@@ -5350,6 +5351,7 @@ int unlink_lv_from_vg(struct logical_volume *lv)
 		return_0;
 
 	dm_list_del(&lvl->list);
+	lv->status |= LV_REMOVED;
 
 	return 1;
 }

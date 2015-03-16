@@ -1957,6 +1957,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	unsigned lvargs_supplied = 0;
 	struct lv_list *lvl;
 	struct dm_str_list *sl;
+	struct dm_list final_lvs;
+	struct lv_list *final_lvl;
+
+	dm_list_init(&final_lvs);
 
 	if (!vg_check_status(vg, EXPORTED_VG)) {
 		ret_max = ECMD_FAILED;
@@ -1986,10 +1990,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	    (tags_supplied && str_list_match_list(tags_in, &vg->tags, NULL)))
 		process_all = 1;
 
-	/*
-	 * FIXME: In case of remove it goes through deleted entries,
-	 * but it works since entries are allocated from vg mem pool.
-	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
@@ -2047,6 +2047,21 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		}
 
 		if (!process_lv)
+			continue;
+
+		log_very_verbose("Adding %s/%s to the list of LVs to be processed.", vg->name, lvl->lv->name);
+
+		if (!(final_lvl = dm_pool_zalloc(vg->vgmem, sizeof(struct lv_list)))) {
+			log_error("Failed to allocate final LV list item.");
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
+		final_lvl->lv = lvl->lv;
+		dm_list_add(&final_lvs, &final_lvl->list);
+	}
+
+	dm_list_iterate_items(lvl, &final_lvs) {
+		if (lv_is_removed(lvl->lv))
 			continue;
 
 		log_very_verbose("Processing LV %s in VG %s.", lvl->lv->name, vg->name);
