@@ -22,4 +22,17 @@ pvscan --cache
 
 vgs | grep $vg1
 
+# When MDA is ignored on PV, do not read any VG
+# metadata from such PV as it may contain old
+# metadata which hasn't been updated for some
+# time and also since the MDA is marked as ignored,
+# it should really be *ignored*!
+pvchange --metadataignore y "$dev1"
+aux disable_dev "$dev2"
+pvscan --cache
+check pv_field "$dev1" vg_name ""
+aux enable_dev "$dev2"
+pvscan --cache
+check pv_field "$dev1" vg_name "$vg1"
+
 vgremove -ff $vg1
