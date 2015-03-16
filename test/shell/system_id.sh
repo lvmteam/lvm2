@@ -394,17 +394,17 @@ vgcreate $vg1 "$dev1"
 # normal pvs sees the vg and pv
 pvs >err
 grep $vg1 err
-grep $dev1 err
+grep "$dev1" err
 # change the local system_id, making the vg foreign
 echo "$SID2" > $SIDFILE
 # normal pvs does not see the vg or pv
 pvs >err
 not grep $vg1 err
-not grep $dev1 err
+not grep "$dev1" err
 # pvs --foreign does see the vg and pv
 pvs --foreign >err
 grep $vg1 err
-grep $dev1 err
+grep "$dev1" err
 # change the local system_id back so the vg can be removed
 echo "$SID1" > $SIDFILE
 vgremove $vg1
