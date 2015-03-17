@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -275,10 +275,10 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
  * - 'background' is advisory so a child polldaemon may not be used even
  *   if it was requested.
  */
-int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
-		unsigned background,
-		uint64_t lv_type, struct poll_functions *poll_fns,
-		const char *progress_title)
+static int _poll_daemon(struct cmd_context *cmd, const char *name,
+			const char *uuid, unsigned background, uint64_t lv_type,
+			struct poll_functions *poll_fns,
+			const char *progress_title)
 {
 	struct processing_handle *handle = NULL;
 	struct daemon_parms parms;
@@ -356,4 +356,12 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 
 	destroy_processing_handle(cmd, handle);
 	return ret;
+}
+
+int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
+		unsigned background,
+		uint64_t lv_type, struct poll_functions *poll_fns,
+		const char *progress_title)
+{
+	return _poll_daemon(cmd, name, uuid, background, lv_type, poll_fns, progress_title);
 }
