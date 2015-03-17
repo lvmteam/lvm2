@@ -966,6 +966,11 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (arg_count(cmd, persistent_ARG) && lv_is_pool(lv)) {
+		log_error("Persistent major and minor numbers are not supported with pools.");
+		return ECMD_FAILED;
+	}
+
 	/*
 	 * FIXME: DEFAULT_BACKGROUND_POLLING should be "unspecified".
 	 * If --poll is explicitly provided use it; otherwise polling

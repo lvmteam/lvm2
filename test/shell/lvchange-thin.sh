@@ -54,8 +54,9 @@ lvchange -r auto $vg/$lv1
 lvchange --yes -M y --minor 234 --major 253 $vg/$lv1
 lvchange -M n $vg/$lv1
 
-lvchange --yes -M y --minor 235 --major 253 $vg/pool
-lvchange -M n $vg/pool
+# cannot change major minor for pools
+not lvchange --yes -M y --minor 235 --major 253 $vg/pool
+not lvchange -M n $vg/pool
 
 # addtag_ARG
 lvchange --addtag foo $vg/$lv1

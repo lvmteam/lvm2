@@ -18,6 +18,10 @@ lvcreate --type cache-pool -an -v -L 2 -n cpool $vg
 lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
 lvcreate -n noncache -l 1 $vg
 
+# cannot change major minor for pools
+not lvchange --yes -M y --minor 235 --major 253 $vg/cpool
+not lvchange -M n $vg/cpool
+
 not lvchange --cachepolicy mq $vg/noncache
 not lvchange --cachesettings foo=bar $vg/noncache
 
