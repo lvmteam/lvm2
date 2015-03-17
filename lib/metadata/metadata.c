@@ -2576,7 +2576,7 @@ int vg_validate(struct volume_group *vg)
 
 		if (lvl->lv->status & LVM_WRITE_LOCKED) {
 			log_error(INTERNAL_ERROR "LV %s has external flag LVM_WRITE_LOCKED set internally.",
-				  vg->name);
+				  lvl->lv->name);
 			r = 0;
 		}
 
