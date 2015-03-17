@@ -282,14 +282,6 @@ static int _poll_daemon(struct cmd_context *cmd, const char *name,
 	int daemon_mode = 0;
 	int ret = ECMD_PROCESSED;
 
-	if (!parms->interval) {
-		parms->progress_display = 0;
-
-		/* FIXME Disabled multiple-copy wait_event */
-		if (!name)
-			parms->interval = find_config_tree_int(cmd, activation_polling_interval_CFG, NULL);
-	}
-
 	if (parms->background) {
 		daemon_mode = become_daemon(cmd, 0);
 		if (daemon_mode == 0)
@@ -309,6 +301,8 @@ static int _poll_daemon(struct cmd_context *cmd, const char *name,
 			ret = ECMD_FAILED;
 		}
 	} else {
+		if (!parms->interval)
+			parms->interval = find_config_tree_int(cmd, activation_polling_interval_CFG, NULL);
 		if (!(handle = init_processing_handle(cmd))) {
 			log_error("Failed to initialize processing handle.");
 			ret = ECMD_FAILED;
@@ -350,7 +344,6 @@ static int _daemon_parms_init(struct cmd_context *cmd, struct daemon_parms *parm
 	parms->interval = arg_uint_value(cmd, interval_ARG,
 					 find_config_tree_int(cmd, activation_polling_interval_CFG, NULL));
 	parms->wait_before_testing = (interval_sign == SIGN_PLUS);
-	parms->progress_display = 1;
 	parms->progress_title = progress_title;
 	parms->lv_type = lv_type;
 	parms->poll_fns = poll_fns;
@@ -359,6 +352,8 @@ static int _daemon_parms_init(struct cmd_context *cmd, struct daemon_parms *parm
 		log_verbose("Checking progress %s waiting every %u seconds.",
 			    (parms->wait_before_testing ? "after" : "before"),
 			    parms->interval);
+
+	parms->progress_display = parms->interval ? 1 : 0;
 
 	return 1;
 }
