@@ -2554,6 +2554,23 @@ static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
 
+static int _pvextvsn_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
+{
+	const struct label *label = (const struct label *) data;
+	struct lvmcache_info *info = label->info;
+	uint32_t ext_version;
+
+	if (info) {
+		ext_version = lvmcache_ext_version(info);
+		return _uint32_disp(rh, mem, field, &ext_version, private);
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+
 static int _vgmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
