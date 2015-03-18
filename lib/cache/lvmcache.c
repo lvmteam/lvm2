@@ -285,6 +285,9 @@ void lvmcache_commit_metadata(const char *vgname)
 
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 {
+	if (lvmcache_vgname_is_locked(VG_GLOBAL))
+		return;
+
 	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
 	if (!strcmp(vgname, VG_ORPHANS)) {
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME, 0);
@@ -293,7 +296,7 @@ void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 
 		/* Indicate that PVs could now be missing from the cache */
 		init_full_scan_done(0);
-	} else if (!lvmcache_vgname_is_locked(VG_GLOBAL))
+	} else
 		_drop_metadata(vgname, drop_precommitted);
 }
 

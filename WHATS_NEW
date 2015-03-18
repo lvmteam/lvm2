@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Don't invalidate cached orphan information while global lock is held.
   Avoid rescan of all devices when requested pvscan for removed device.
   Measure configuration timestamps with nanoseconds when available.
   Disable lvchange of major and minor of pool LVs.
