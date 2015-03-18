@@ -986,12 +986,31 @@ static struct device *_dev_cache_seek_devt(dev_t dev)
  */
 struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 {
+	char path[PATH_MAX];
+	const char *sysfs_dir;
+	struct stat info;
 	struct device *d = _dev_cache_seek_devt(dev);
 
 	if (d && (d->flags & DEV_REGULAR))
 		return d;
 
 	if (!d) {
+		sysfs_dir = dm_sysfs_dir();
+		if (sysfs_dir && *sysfs_dir) {
+			/* First check if dev is sysfs to avoid useless scan */
+			if (dm_snprintf(path, sizeof(path), "%s/dev/block/%d:%d",
+					sysfs_dir, (int)MAJOR(dev), (int)MINOR(dev)) < 0) {
+				log_error("dm_snprintf partition failed.");
+				return NULL;
+			}
+
+			if (lstat(path, &info)) {
+				log_debug("No sysfs entry for %d:%d.",
+					  (int)MAJOR(dev), (int)MINOR(dev));
+				return NULL;
+			}
+		}
+
 		_full_scan(0);
 		d = _dev_cache_seek_devt(dev);
 	}
