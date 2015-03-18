@@ -67,7 +67,7 @@ const char *system_id_from_string(struct cmd_context *cmd, const char *str)
 		return "";
 	}
 
-	if (!(system_id = dm_pool_zalloc(cmd->mem, strlen(str) + 1))) {
+	if (!(system_id = dm_pool_zalloc(cmd->libmem, strlen(str) + 1))) {
 		log_warn("WARNING: Failed to allocate system ID.");
 		return NULL;
 	}
