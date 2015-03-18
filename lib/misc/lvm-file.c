@@ -21,6 +21,7 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/time.h>
 
 /*
  * Creates a temporary filename, and opens a descriptor to the
@@ -272,4 +273,14 @@ int lvm_fclose(FILE *fp, const char *filename)
 		log_sys_error("write error", filename);
 
 	return EOF;
+}
+
+void lvm_stat_ctim(struct timespec *ctim, const struct stat *buf)
+{
+#ifdef HAVE_STAT_ST_CTIM
+	*ctim = buf->st_ctim;
+#else
+	ctim->tv_sec = buf->st_ctime;
+	ctim->tv_nsec = 0;
+#endif
 }
