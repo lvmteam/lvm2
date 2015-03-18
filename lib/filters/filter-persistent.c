@@ -22,7 +22,7 @@ struct pfilter {
 	char *file;
 	struct dm_hash_table *devices;
 	struct dev_filter *real;
-	time_t ctime;
+	struct timespec ctime;
 	struct dev_types *dt;
 };
 
@@ -106,7 +106,7 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 	}
 
 	if (!stat(pf->file, &info))
-		pf->ctime = info.st_ctime;
+		lvm_stat_ctim(&pf->ctime, &info);
 	else {
 		log_very_verbose("%s: stat failed: %s", pf->file,
 				 strerror(errno));
@@ -177,6 +177,7 @@ static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 	struct pfilter *pf;
 	char *tmp_file;
 	struct stat info, info2;
+	struct timespec ts;
 	struct dm_config_tree *cft = NULL;
 	FILE *fp;
 	int lockfd;
@@ -227,7 +228,8 @@ static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 	/*
 	 * If file contents changed since we loaded it, merge new contents
 	 */
-	if (merge_existing && info.st_ctime != pf->ctime)
+	lvm_stat_ctim(&ts, &info);
+	if (merge_existing && timespeccmp(&ts, &pf->ctime, !=))
 		/* Keep cft open to avoid losing lock */
 		persistent_filter_load(f, &cft);
 
@@ -352,7 +354,7 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt,
 
 	/* Only merge cache file before dumping it if it changed externally. */
 	if (!stat(pf->file, &info))
-		pf->ctime = info.st_ctime;
+		lvm_stat_ctim(&pf->ctime, &info);
 
 	f->passes_filter = _lookup_p;
 	f->destroy = _persistent_destroy;

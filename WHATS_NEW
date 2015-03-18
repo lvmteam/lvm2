@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Measure configuration timestamps with nanoseconds when available.
   Disable lvchange of major and minor of pool LVs.
   Fix pvscan --cache to not scan and read ignored metadata areas on PVs.
   Add After=iscsi-shutdown.service to blk-availability.service systemd unit.

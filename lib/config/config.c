@@ -53,7 +53,7 @@ struct config_file {
 
 struct config_source {
 	config_source_t type;
-	time_t timestamp;
+	struct timespec timestamp;
 	union {
 		struct config_file *file;
 		struct config_file *profile;
@@ -173,7 +173,7 @@ int config_file_check(struct dm_config_tree *cft, const char **filename, struct 
 		return 0;
 	}
 
-	cs->timestamp = info->st_ctime;
+	lvm_stat_ctim(&cs->timestamp, info);
 	cf->exists = 1;
 	cf->st_size = info->st_size;
 
@@ -193,6 +193,7 @@ int config_file_changed(struct dm_config_tree *cft)
 	struct config_source *cs = dm_config_get_custom(cft);
 	struct config_file *cf;
 	struct stat info;
+	struct timespec ts;
 
 	if (cs->type != CONFIG_FILE) {
 		log_error(INTERNAL_ERROR "config_file_changed: expected file config source, "
@@ -226,7 +227,9 @@ int config_file_changed(struct dm_config_tree *cft)
 	}
 
 	/* Unchanged? */
-	if (cs->timestamp == info.st_ctime && cf->st_size == info.st_size)
+	lvm_stat_ctim(&ts, &info);
+	if ((timespeccmp(&cs->timestamp, &ts, ==)) &&
+	    cf->st_size == info.st_size)
 		return 0;
 
       reload:
@@ -594,7 +597,7 @@ int config_file_read(struct dm_config_tree *cft)
 	return r;
 }
 
-time_t config_file_timestamp(struct dm_config_tree *cft)
+struct timespec config_file_timestamp(struct dm_config_tree *cft)
 {
 	struct config_source *cs = dm_config_get_custom(cft);
 	return cs->timestamp;
@@ -1473,7 +1476,7 @@ int merge_config_tree(struct cmd_context *cmd, struct dm_config_tree *cft,
 	cs = dm_config_get_custom(cft);
 	csn = dm_config_get_custom(newdata);
 
-	if (cs && csn && (cs->timestamp < csn->timestamp))
+	if (cs && csn && timespeccmp(&cs->timestamp, &csn->timestamp, <))
 		cs->timestamp = csn->timestamp;
 
 	return 1;

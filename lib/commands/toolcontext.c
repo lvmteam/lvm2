@@ -1140,6 +1140,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	struct dev_filter *filter = NULL, *filter_components[2] = {0};
 	struct stat st;
 	const struct dm_config_node *cn;
+	struct timespec ts, cts;
 
 	cmd->dump_filter = 0;
 
@@ -1212,11 +1213,14 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	 */
 	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL) &&
 	    load_persistent_cache && !cmd->is_long_lived &&
-	    !stat(dev_cache, &st) &&
-	    (st.st_ctime > config_file_timestamp(cmd->cft)) &&
-	    !persistent_filter_load(cmd->filter, NULL))
-		log_verbose("Failed to load existing device cache from %s",
-			    dev_cache);
+	    !stat(dev_cache, &st)) {
+		lvm_stat_ctim(&ts, &st);
+		cts = config_file_timestamp(cmd->cft);
+		if (timespeccmp(&ts, &cts, >) &&
+		    !persistent_filter_load(cmd->filter, NULL))
+			log_verbose("Failed to load existing device cache from %s",
+				    dev_cache);
+	}
 
 	return 1;
 bad:

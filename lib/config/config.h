@@ -215,7 +215,7 @@ int config_write(struct dm_config_tree *cft, struct config_def_tree_spec *tree_s
 struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec);
 void config_destroy(struct dm_config_tree *cft);
 
-time_t config_file_timestamp(struct dm_config_tree *cft);
+struct timespec config_file_timestamp(struct dm_config_tree *cft);
 int config_file_changed(struct dm_config_tree *cft);
 int config_file_check(struct dm_config_tree *cft, const char **filename, struct stat *info);
 
