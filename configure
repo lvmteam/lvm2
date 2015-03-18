@@ -11958,6 +11958,40 @@ $as_echo "$as_me: WARNING: Disabling realtime clock" >&2;}
 	fi
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for struct stat has st_ctim." >&5
+$as_echo_n "checking for struct stat has st_ctim.... " >&6; }
+if ${ac_cv_stat_st_ctim+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <sys/stat.h>
+long bar(void) { struct stat s; return (long)(s.st_ctim.tv_sec + s.st_ctim.tv_nsec);}
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_stat_st_ctim=yes
+else
+  ac_cv_stat_st_ctim=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_stat_st_ctim" >&5
+$as_echo "$ac_cv_stat_st_ctim" >&6; }
+
+if test $ac_cv_stat_st_ctim = yes; then :
+
+$as_echo "#define HAVE_STAT_ST_CTIM 1" >>confdefs.h
+
+fi
+
 ################################################################################
 for ac_header in getopt.h
 do :

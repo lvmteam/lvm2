@@ -1379,6 +1379,18 @@ if test "$REALTIME" = yes; then
 	fi
 fi
 
+dnl Check if the system has struct stat st_ctim.
+AC_CACHE_CHECK([for struct stat has st_ctim.],
+	[ac_cv_stat_st_ctim],
+	[AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+[#include <sys/stat.h>
+long bar(void) { struct stat s; return (long)(s.st_ctim.tv_sec + s.st_ctim.tv_nsec);}]
+	 )], [ac_cv_stat_st_ctim=yes], [ac_cv_stat_st_ctim=no])])
+
+AC_IF_YES(ac_cv_stat_st_ctim,
+	  AC_DEFINE(HAVE_STAT_ST_CTIM, 1,
+		    [Define if struct stat has a field st_ctim with timespec for ctime]))
+
 ################################################################################
 dnl -- Check for getopt
 AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getopt_long is available.]))

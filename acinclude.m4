@@ -37,6 +37,10 @@ AC_DEFUN([AC_TRY_CCFLAG],
     fi
 ])
 
+dnl AC_IF_YES([TEST-FOR-YES], [ACTION-IF-TRUE], [ACTION-IF-FALSE])
+dnl AS_IF() abstraction, checks shell variable for 'yes'
+AC_DEFUN([AC_IF_YES], [AS_IF([test $$1 = yes], [$2], [$3])])
+
 dnl AC_TRY_LDFLAGS([LDFLAGS], [VAR], [ACTION-IF-WORKS], [ACTION-IF-FAILS])
 dnl check if $CC supports given ld flags
 
