@@ -175,6 +175,7 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
  *   and the command option has been used to ignore clustered vgs.
  *
  * Case c covers the other errors returned when reading the VG.
+ *   If *skip is 1, it's OK for the caller to read the list of PVs in the VG.
  */
 static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 		      struct dm_list *arg_vgnames, int allow_inconsistent, int *skip)
@@ -211,7 +212,14 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 		}
 	}
 
+	if ((read_error == FAILED_CLUSTERED)) {
+		*skip = 1;
+		stack;	/* Error already logged */
+		return 1;
+	}
+
 	if (read_error != SUCCESS) {
+		*skip = 0;
 		log_error("Cannot process volume group %s", vg_name);
 		return 1;
 	}
@@ -2718,8 +2726,11 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 		if (_ignore_vg(vg, vg_name, NULL, flags & READ_ALLOW_INCONSISTENT, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
-			release_vg(vg);
-			continue;
+			if (!skip) {
+				release_vg(vg);
+				continue;
+			}
+			/* Drop through to eliminate a clustered VG's PVs from the devices list */
 		}
 		
 		/*
