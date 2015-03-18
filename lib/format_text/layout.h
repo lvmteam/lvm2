@@ -18,6 +18,7 @@
 
 #include "config.h"
 #include "metadata.h"
+#include "lvmcache.h"
 #include "uuid.h"
 
 /* disk_locn and data_area_list are defined in format-text.h */
@@ -97,13 +98,8 @@ struct mda_context {
 #define LVM2_LABEL "LVM2 001"
 #define MDA_SIZE_MIN (8 * (unsigned) lvm_getpagesize())
 
-
-const char *vgname_from_mda(const struct format_type *fmt,
-			    struct mda_header *mdah,
-			    struct device_area *dev_area,
-			    uint32_t *mda_checksum, size_t *mda_size,
-			    const char *vgname, struct id *vgid,
-			    uint64_t *vgstatus, char **creation_host,
-			    uint64_t *mda_free_sectors);
+int vgname_from_mda(const struct format_type *fmt, struct mda_header *mdah,
+		    struct device_area *dev_area, struct lvmcache_vgsummary *vgsummary,
+		    uint64_t *mda_free_sectors);
 
 #endif

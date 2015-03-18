@@ -18,6 +18,7 @@
 
 #include "config.h"
 #include "metadata.h"
+#include "lvmcache.h"
 
 #include <stdio.h>
 
@@ -49,10 +50,9 @@ struct text_vg_version_ops {
 					 unsigned use_cached_pvs);
 	void (*read_desc) (struct dm_pool * mem, const struct dm_config_tree *cf,
 			   time_t *when, char **desc);
-	const char *(*read_vgname) (const struct format_type *fmt,
-				    const struct dm_config_tree *cft,
-				    struct id *vgid, uint64_t *vgstatus,
-				    char **creation_host);
+	int (*read_vgname) (const struct format_type *fmt,
+			    const struct dm_config_tree *cft,
+			    struct lvmcache_vgsummary *vgsummary);
 };
 
 struct text_vg_version_ops *text_vg_vsn1_init(void);
@@ -70,6 +70,8 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 time_t *when, char **desc);
 struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       const char *file,
+				       struct cached_vg_fmtdata **vg_fmtdata,
+				       unsigned *use_previous_vg,
 				       int single_device,
 				       struct device *dev,
 				       off_t offset, uint32_t size,
@@ -77,13 +79,13 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       checksum_fn_t checksum_fn,
 				       uint32_t checksum,
 				       time_t *when, char **desc);
-const char *text_vgname_import(const struct format_type *fmt,
-			       struct device *dev,
-			       off_t offset, uint32_t size,
-			       off_t offset2, uint32_t size2,
-			       checksum_fn_t checksum_fn, uint32_t checksum,
-			       const char *vgname,
-			       struct id *vgid, uint64_t *vgstatus,
-			       char **creation_host);
+
+int text_vgname_import(const struct format_type *fmt,
+		       struct device *dev,
+		       off_t offset, uint32_t size,
+		       off_t offset2, uint32_t size2,
+		       checksum_fn_t checksum_fn,
+		       int checksum_only,
+		       struct lvmcache_vgsummary *vgsummary);
 
 #endif

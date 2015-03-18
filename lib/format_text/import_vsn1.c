@@ -941,19 +941,16 @@ static void _read_desc(struct dm_pool *mem,
 	*when = u;
 }
 
-static const char *_read_vgname(const struct format_type *fmt,
-				const struct dm_config_tree *cft, struct id *vgid,
-				uint64_t *vgstatus, char **creation_host)
+static int _read_vgname(const struct format_type *fmt, const struct dm_config_tree *cft, 
+			struct lvmcache_vgsummary *vgsummary)
 {
 	const struct dm_config_node *vgn;
 	struct dm_pool *mem = fmt->cmd->mem;
-	char *vgname;
 	int old_suppress;
 
 	old_suppress = log_suppress(2);
-	*creation_host = dm_pool_strdup(mem,
-					dm_config_find_str_allow_empty(cft->root,
-							"creation_host", ""));
+	vgsummary->creation_host =
+	    dm_pool_strdup(mem, dm_config_find_str_allow_empty(cft->root, "creation_host", ""));
 	log_suppress(old_suppress);
 
 	/* skip any top-level values */
@@ -964,23 +961,23 @@ static const char *_read_vgname(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (!(vgname = dm_pool_strdup(mem, vgn->key)))
+	if (!(vgsummary->vgname = dm_pool_strdup(mem, vgn->key)))
 		return_0;
 
 	vgn = vgn->child;
 
-	if (!_read_id(vgid, vgn, "id")) {
-		log_error("Couldn't read uuid for volume group %s.", vgname);
+	if (!_read_id(&vgsummary->vgid, vgn, "id")) {
+		log_error("Couldn't read uuid for volume group %s.", vgsummary->vgname);
 		return 0;
 	}
 
-	if (!_read_flag_config(vgn, vgstatus, VG_FLAGS)) {
+	if (!_read_flag_config(vgn, &vgsummary->vgstatus, VG_FLAGS)) {
 		log_error("Couldn't find status flags for volume group %s.",
-			  vgname);
+			  vgsummary->vgname);
 		return 0;
 	}
 
-	return vgname;
+	return 1;
 }
 
 static struct text_vg_version_ops _vsn1_ops = {

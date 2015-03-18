@@ -1,5 +1,6 @@
 Version 2.02.118 - 
 =================================
+  Store metadata size + checksum in lvmcache and add struct lvmcache_vgsummary.
   Remove inaccessible clustered PVs from 'pvs -a'.
   Don't invalidate cached orphan information while global lock is held.
   Avoid rescan of all devices when requested pvscan for removed device.
@@ -9,7 +10,7 @@ Version 2.02.118 -
   Add After=iscsi-shutdown.service to blk-availability.service systemd unit.
   Disallow vgconvert from changing metadata format when lvmetad is used.
   Don't do a full read of VG when creating a new VG with an existing name.
-  Reduce number of VG metadata parsing when looking for vgname on a PV.
+  Reduce amount of VG metadata parsing when looking for vgname on a PV.
   Avoid reparsing same metadata when reading same metadata from multiple PVs.
   Save extra device open/close when scanning device for size.
   Fix seg_monitor field to report status also for mirrors and thick snapshots.

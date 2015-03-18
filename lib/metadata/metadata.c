@@ -3248,6 +3248,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	char uuid[64] __attribute__((aligned(8)));
 	unsigned seqno = 0;
 	int reappeared = 0;
+	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
+	unsigned use_previous_vg;
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
@@ -3334,12 +3336,20 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	/* Ensure contents of all metadata areas match - else do recovery */
 	inconsistent_mda_count=0;
 	dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
+		use_previous_vg = 0;
 
 		if ((use_precommitted &&
-		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
+		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda, &vg_fmtdata, &use_previous_vg)) && !use_previous_vg) ||
 		    (!use_precommitted &&
-		     !(vg = mda->ops->vg_read(fid, vgname, mda, 0)))) {
+		     !(vg = mda->ops->vg_read(fid, vgname, mda, &vg_fmtdata, &use_previous_vg, 0)) && !use_previous_vg)) {
 			inconsistent = 1;
+			vg_fmtdata = NULL;
+			continue;
+		}
+
+		/* Use previous VG because checksum matches */
+		if (!vg) {
+			vg = correct_vg;
 			continue;
 		}
 
@@ -3366,9 +3376,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			}
 		}
 
-		if (vg != correct_vg)
-			/* NOTE: tied to fid->vg logic in text_vg_import_fd() */
+		if (vg != correct_vg) {
 			release_vg(vg);
+			vg_fmtdata = NULL;
+		}
 	}
 	fid->ref_count--;
 
@@ -3484,6 +3495,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		 * but we failed to do so (so there's a dangling fid now).
 		 */
 		_destroy_fid(&fid);
+		vg_fmtdata = NULL;
 
 		inconsistent = 0;
 
@@ -3514,14 +3526,23 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		/* Ensure contents of all metadata areas match - else recover */
 		inconsistent_mda_count=0;
 		dm_list_iterate_items(mda, &fid->metadata_areas_in_use) {
+			use_previous_vg = 0;
+
 			if ((use_precommitted &&
-			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
-								mda))) ||
+			     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda, &vg_fmtdata, &use_previous_vg)) && !use_previous_vg) ||
 			    (!use_precommitted &&
-			     !(vg = mda->ops->vg_read(fid, vgname, mda, 0)))) {
+			     !(vg = mda->ops->vg_read(fid, vgname, mda, &vg_fmtdata, &use_previous_vg, 0)) && !use_previous_vg)) {
 				inconsistent = 1;
+				vg_fmtdata = NULL;
 				continue;
 			}
+
+			/* Use previous VG because checksum matches */
+			if (!vg) {
+				vg = correct_vg;
+				continue;
+			}
+
 			if (!correct_vg) {
 				correct_vg = vg;
 				if (!_update_pv_list(cmd->mem, &all_pvs, correct_vg)) {
@@ -3564,8 +3585,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				}
 			}
 
-			if (vg != correct_vg)
+			if (vg != correct_vg) {
 				release_vg(vg);
+				vg_fmtdata = NULL;
+			}
 		}
 		fid->ref_count--;
 

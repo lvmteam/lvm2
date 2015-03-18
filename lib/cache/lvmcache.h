@@ -39,6 +39,15 @@ struct disk_locn;
 
 struct lvmcache_vginfo;
 
+struct lvmcache_vgsummary {
+	const char *vgname;
+	struct id vgid;
+	uint64_t vgstatus;
+	char *creation_host;
+	uint32_t mda_checksum;
+	size_t mda_size;
+};
+
 int lvmcache_init(void);
 void lvmcache_allow_reads_with_lvmetad(void);
 
@@ -58,8 +67,7 @@ void lvmcache_del(struct lvmcache_info *info);
 
 /* Update things */
 int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
-				  const char *vgname, const char *vgid,
-				  uint32_t vgstatus, const char *hostname);
+				  struct lvmcache_vgsummary *vgsummary);
 int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);
@@ -68,6 +76,7 @@ int lvmcache_verify_lock_order(const char *vgname);
 
 /* Queries */
 const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd, const char *vgname, const char *vgid, unsigned revalidate_labels);
+int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary);
 
 /* Decrement and test if there are still vg holders in vginfo. */
 int lvmcache_vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo);

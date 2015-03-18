@@ -324,11 +324,6 @@ struct format_instance {
 	struct dm_list metadata_areas_ignored;
 	struct dm_hash_table *metadata_areas_index;
 
-	/* Remember last vg to avoid parsing same mda content for multiple PVs */
-	struct volume_group *vg;
-	uint32_t mda_checksum;
-	size_t mda_size;
-
 	void *private;
 };
 

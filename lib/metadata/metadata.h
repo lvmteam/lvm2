@@ -72,6 +72,7 @@ struct dm_config_tree;
 struct metadata_area;
 struct alloc_handle;
 struct lvmcache_info;
+struct cached_vg_fmtdata;
 
 /* Per-format per-metadata area operations */
 struct metadata_area_ops {
@@ -79,10 +80,14 @@ struct metadata_area_ops {
 	struct volume_group *(*vg_read) (struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda,
+					 struct cached_vg_fmtdata **vg_fmtdata,
+					 unsigned *use_previous_vg,
 					 int single_device);
 	struct volume_group *(*vg_read_precommit) (struct format_instance * fi,
 					 const char *vg_name,
-					 struct metadata_area * mda);
+					 struct metadata_area * mda,
+					 struct cached_vg_fmtdata **vg_fmtdata,
+					 unsigned *use_previous_vg);
 	/*
 	 * Write out complete VG metadata.  You must ensure internal
 	 * consistency before calling. eg. PEs can't refer to PVs not

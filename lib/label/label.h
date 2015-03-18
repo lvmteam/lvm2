@@ -89,14 +89,6 @@ struct label_ops {
 struct labeller {
 	struct label_ops *ops;
 	const struct format_type *fmt;
-
-	/* Caching info */
-	const char *vgname;
-	struct id vgid;
-	uint64_t vgstatus;
-	char *creation_host;
-	uint32_t mda_checksum;
-	size_t mda_size;
 };
 
 int label_init(void);

@@ -34,36 +34,38 @@ static void _init_text_import(void)
 
 /*
  * Find out vgname on a given device.
- * If the checksum and metadata size is matching the vgname discovered in last read
- * (multi PVs VG) could be passed back and it may skip parsing of such metadata.
  */
-const char *text_vgname_import(const struct format_type *fmt,
-			       struct device *dev,
-			       off_t offset, uint32_t size,
-			       off_t offset2, uint32_t size2,
-			       checksum_fn_t checksum_fn, uint32_t checksum,
-			       const char *vgname,
-			       struct id *vgid, uint64_t *vgstatus,
-			       char **creation_host)
+int text_vgname_import(const struct format_type *fmt,
+		       struct device *dev,
+		       off_t offset, uint32_t size,
+		       off_t offset2, uint32_t size2,
+		       checksum_fn_t checksum_fn,
+		       int checksum_only,
+		       struct lvmcache_vgsummary *vgsummary)
 {
 	struct dm_config_tree *cft;
 	struct text_vg_version_ops **vsn;
+	int r = 0;
 
 	_init_text_import();
 
 	if (!(cft = config_open(CONFIG_FILE_SPECIAL, NULL, 0)))
-		return_NULL;
+		return_0;
 
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
-					 offset2, size2, checksum_fn, checksum,
-					 (vgname != NULL)))) {
+					 offset2, size2, checksum_fn,
+					 vgsummary->mda_checksum,
+					 checksum_only))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
 	}
 
-	if (vgname)
-		goto out; /* Everything is matching from the last call */
+	if (checksum_only) {
+		/* Checksum matches already-cached content - no need to reparse. */
+		r = 1;
+		goto out;
+	}
 
 	/*
 	 * Find a set of version functions that can read this file
@@ -72,20 +74,27 @@ const char *text_vgname_import(const struct format_type *fmt,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vgname = (*vsn)->read_vgname(fmt, cft, vgid, vgstatus,
-						   creation_host)))
+		if (!(*vsn)->read_vgname(fmt, cft, vgsummary))
 			goto_out;
 
+		r = 1;
 		break;
 	}
 
       out:
 	config_destroy(cft);
-	return vgname;
+	return r;
 }
+
+struct cached_vg_fmtdata {
+        uint32_t cached_mda_checksum;
+        size_t cached_mda_size;
+};
 
 struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       const char *file,
+				       struct cached_vg_fmtdata **vg_fmtdata,
+				       unsigned *use_previous_vg,
 				       int single_device,
 				       struct device *dev,
 				       off_t offset, uint32_t size,
@@ -99,6 +108,12 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	struct text_vg_version_ops **vsn;
 	int skip_parse;
 
+	if (vg_fmtdata && !*vg_fmtdata &&
+	    !(*vg_fmtdata = dm_pool_zalloc(fid->mem, sizeof(**vg_fmtdata)))) {
+		log_error("Failed to allocate VG fmtdata for text format.");
+		return NULL;
+	}
+
 	_init_text_import();
 
 	*desc = NULL;
@@ -107,8 +122,10 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	if (!(cft = config_open(CONFIG_FILE_SPECIAL, file, 0)))
 		return_NULL;
 
-	skip_parse = fid->vg && (fid->mda_checksum == checksum) &&
-		(fid->mda_size == (size + size2));
+	/* Does the metadata match the already-cached VG? */
+	skip_parse = vg_fmtdata && 
+		     ((*vg_fmtdata)->cached_mda_checksum == checksum) &&
+		     ((*vg_fmtdata)->cached_mda_size == (size + size2));
 
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
@@ -117,7 +134,8 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		goto_out;
 
 	if (skip_parse) {
-		vg = fid->vg;
+		if (use_previous_vg)
+			*use_previous_vg = 1;
 		goto out;
 	}
 
@@ -135,15 +153,13 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		break;
 	}
 
-	if (vg && (!fid->vg || (vg->seqno > fid->vg->seqno))) {
-		/*
-		 * Remember vg pointer to newest VG for reuse.
-		 * NOTE: _vg_read() will not release same VG
-		 */
-		fid->vg = vg;
-		fid->mda_size = (size + size2);
-		fid->mda_checksum = checksum;
+	if (vg && vg_fmtdata && *vg_fmtdata) {
+		(*vg_fmtdata)->cached_mda_size = (size + size2);
+		(*vg_fmtdata)->cached_mda_checksum = checksum;
 	}
+
+	if (use_previous_vg)
+		*use_previous_vg = 0;
 
       out:
 	config_destroy(cft);
@@ -154,7 +170,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 const char *file,
 					 time_t *when, char **desc)
 {
-	return text_vg_import_fd(fid, file, 0, NULL, (off_t)0, 0, (off_t)0, 0, NULL, 0,
+	return text_vg_import_fd(fid, file, NULL, NULL, 0, NULL, (off_t)0, 0, (off_t)0, 0, NULL, 0,
 				 when, desc);
 }
 

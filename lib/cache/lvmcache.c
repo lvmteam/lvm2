@@ -56,6 +56,8 @@ struct lvmcache_vginfo {
 	char _padding[7];
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
+	uint32_t mda_checksum;
+	size_t mda_size;
 	size_t vgmetadata_size;
 	char *vgmetadata;	/* Copy of VG metadata as format_text string */
 	struct dm_config_tree *cft; /* Config tree created from vgmetadata */
@@ -1406,6 +1408,26 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 	return 1;
 }
 
+static int _lvmcache_update_vg_mda_info(struct lvmcache_info *info, uint32_t mda_checksum,
+					size_t mda_size)
+{
+	if (!info || !info->vginfo || !mda_size)
+		return 1;
+
+	if (info->vginfo->mda_checksum == mda_checksum || info->vginfo->mda_size == mda_size) 
+		return 1;
+
+	info->vginfo->mda_checksum = mda_checksum;
+	info->vginfo->mda_size = mda_size;
+
+	/* FIXME Add checksum index */
+
+	log_debug_cache("lvmcache: %s: VG %s: Stored metadata checksum %" PRIu32 " with size %" PRIsize_t ".",
+			dev_name(info->dev), info->vginfo->vgname, mda_checksum, mda_size);
+
+	return 1;
+}
+
 int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 {
 	if (!_lock_hash && !lvmcache_init()) {
@@ -1416,10 +1438,11 @@ int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt)
 	return _lvmcache_update_vgname(NULL, vgname, vgname, 0, "", fmt);
 }
 
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
-				  const char *vgname, const char *vgid,
-				  uint32_t vgstatus, const char *creation_host)
+int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vgsummary *vgsummary)
 {
+	const char *vgname = vgsummary->vgname;
+	const char *vgid = (char *)&vgsummary->vgid;
+
 	if (!vgname && !info->vginfo) {
 		log_error(INTERNAL_ERROR "NULL vgname handed to cache");
 		/* FIXME Remove this */
@@ -1447,10 +1470,11 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 	if (!is_orphan_vg(vgname))
 		info->status &= ~CACHE_INVALID;
 
-	if (!_lvmcache_update_vgname(info, vgname, vgid, vgstatus,
-				     creation_host, info->fmt) ||
+	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus,
+				     vgsummary->creation_host, info->fmt) ||
 	    !_lvmcache_update_vgid(info, info->vginfo, vgid) ||
-	    !_lvmcache_update_vgstatus(info, vgstatus, creation_host))
+	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host) ||
+	    !_lvmcache_update_vg_mda_info(info, vgsummary->mda_checksum, vgsummary->mda_size))
 		return_0;
 
 	return 1;
@@ -1461,6 +1485,11 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
 	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+	struct lvmcache_vgsummary vgsummary = {
+		.vgname = vg->name,
+		.vgstatus = vg->status,
+		.vgid = vg->id
+	};
 
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
 
@@ -1468,9 +1497,7 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 		strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s) - 1);
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
 		if ((info = lvmcache_info_from_pvid(pvid_s, 0)) &&
-		    !lvmcache_update_vgname_and_id(info, vg->name,
-						   (char *) &vg->id,
-						   vg->status, NULL))
+		    !lvmcache_update_vgname_and_id(info, &vgsummary))
 			return_0;
 	}
 
@@ -1512,6 +1539,13 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 	struct label *label;
 	struct lvmcache_info *existing, *info;
 	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
+	struct lvmcache_vgsummary vgsummary = {
+		.vgname = vgname,
+		.vgstatus = vgstatus,
+	};
+
+	if (vgid)
+		strncpy((char *)&vgsummary.vgid, vgid, sizeof(vgsummary.vgid));
 
 	if (!_vgname_hash && !lvmcache_init()) {
 		log_error("Internal cache initialisation failed");
@@ -1610,7 +1644,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!lvmcache_update_vgname_and_id(info, vgname, vgid, vgstatus, NULL)) {
+	if (!lvmcache_update_vgname_and_id(info, &vgsummary)) {
 		if (!existing) {
 			dm_hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");
@@ -2018,4 +2052,28 @@ uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info)
 
 const struct format_type *lvmcache_fmt(struct lvmcache_info *info) {
 	return info->fmt;
+}
+
+int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!vgsummary->mda_size)
+		return 0;
+
+	/* FIXME Index the checksums */
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (vgsummary->mda_checksum == vginfo->mda_checksum &&
+		    vgsummary->mda_size == vginfo->mda_size &&
+		    !is_orphan_vg(vginfo->vgname)) {
+			vgsummary->vgname = vginfo->vgname;
+			vgsummary->creation_host = vginfo->creation_host;
+			vgsummary->vgstatus = vginfo->status;
+			memcpy((char *)&vgsummary->vgid, vginfo->vgid, sizeof(vginfo->vgid));
+
+			return 1;
+		}
+	}
+
+	return 0;
 }

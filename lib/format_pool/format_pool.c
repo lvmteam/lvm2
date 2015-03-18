@@ -101,6 +101,8 @@ static int _check_usp(const char *vgname, struct user_subpool *usp, int sp_count
 static struct volume_group *_pool_vg_read(struct format_instance *fid,
 					  const char *vg_name,
 					  struct metadata_area *mda __attribute__((unused)),
+					  struct cached_vg_fmtdata **vg_fmtdata __attribute__((unused)),
+					  unsigned *use_previous_vg __attribute__((unused)),
 					  int single_device __attribute__((unused)))
 {
 	struct volume_group *vg;

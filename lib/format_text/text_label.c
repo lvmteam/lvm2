@@ -319,7 +319,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	const struct format_type *fmt = p->label->labeller->fmt;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
-	struct labeller *l = p->label->labeller;
+	struct lvmcache_vgsummary vgsummary = { 0 };
 
 	/*
 	 * Using the labeller struct to preserve info about
@@ -350,13 +350,9 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	if ((l->vgname = vgname_from_mda(fmt, mdah, &mdac->area,
-					 &l->mda_checksum, &l->mda_size, l->vgname,
-					 &l->vgid, &l->vgstatus, &l->creation_host,
-					 &mdac->free_sectors)) &&
-	    !lvmcache_update_vgname_and_id(p->info, l->vgname,
-					   (char *) &l->vgid, l->vgstatus,
-					   l->creation_host)) {
+	if (vgname_from_mda(fmt, mdah, &mdac->area, &vgsummary,
+			     &mdac->free_sectors) &&
+	    !lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
 		if (!dev_close(mdac->area.dev))
 			stack;
 		return_0;

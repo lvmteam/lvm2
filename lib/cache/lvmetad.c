@@ -897,7 +897,7 @@ static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
 	struct _lvmetad_pvscan_baton *b = baton;
 	struct volume_group *this;
 
-	this = mda_is_ignored(mda) ? NULL : mda->ops->vg_read(b->fid, "", mda, 1);
+	this = mda_is_ignored(mda) ? NULL : mda->ops->vg_read(b->fid, "", mda, NULL, NULL, 1);
 
 	/* FIXME Also ensure contents match etc. */
 	if (!b->vg || this->seqno > b->vg->seqno)
@@ -960,7 +960,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	 * can scan further devices.
 	 */
 	if (!baton.vg && !(baton.fid->fmt->features & FMT_MDAS))
-		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, 1);
+		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, NULL, NULL, 1);
 
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
