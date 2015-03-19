@@ -3569,6 +3569,52 @@ static int _check_reappeared_pv(struct volume_group *correct_vg,
 	return rv;
 }
 
+static int _check_or_repair_pv_ext(struct cmd_context *cmd,
+				   struct physical_volume *pv,
+				   int repair, int *inconsistent_pvs)
+{
+	struct lvmcache_info *info;
+	uint32_t ext_version, ext_flags;
+
+	/* Missing PV - nothing to do. */
+	if (!pv->dev)
+		return 1;
+
+	if (!(info = lvmcache_info_from_pvid(pv->dev->pvid, 0))) {
+		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
+		return 0;
+	}
+
+	ext_version = lvmcache_ext_version(info);
+	if (ext_version < 2) {
+		*inconsistent_pvs = 0;
+		return 1;
+	}
+
+	ext_flags = lvmcache_ext_flags(info);
+	if (!(ext_flags & PV_EXT_USED)) {
+		if (!repair) {
+			*inconsistent_pvs = 1;
+			return 1;
+		}
+
+		log_warn("WARNING: Repairing Physical Volume %s that is "
+			 "in Volume Group %s but not marked as used.",
+			  pv_dev_name(pv), pv->vg->name);
+
+		/* pv write will set correct ext_flags */
+		if (!pv_write(cmd, pv, 1)) {
+			*inconsistent_pvs = 1;
+			log_error("Failed to repair physical volume \"%s\".",
+				  pv_dev_name(pv));
+			return 0;
+		}
+	}
+
+	*inconsistent_pvs = 0;
+	return 1;
+}
+
 static int _repair_inconsistent_vg(struct volume_group *vg)
 {
 	unsigned saved_handles_missing_pvs = vg->cmd->handles_missing_pvs;
@@ -3872,6 +3918,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 					inconsistent_pvs = 1;
 					break;
 				}
+
 				if (lvmcache_mda_count(info)) {
 					if (!lvmcache_fid_add_mdas_pv(info, fid)) {
 						release_vg(correct_vg);
@@ -4149,7 +4196,15 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	*consistent = 1;
+	/* We have the VG now finally, check if PV ext info is in sync with VG metadata. */
+	dm_list_iterate_items(pvl, &correct_vg->pvs) {
+		if (!_check_or_repair_pv_ext(cmd, pvl->pv, *consistent, &inconsistent_pvs)) {
+			release_vg(correct_vg);
+			return_NULL;
+		}
+	}
+
+	*consistent = !inconsistent_pvs;
 	return correct_vg;
 }
 
