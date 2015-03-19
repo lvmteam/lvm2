@@ -551,7 +551,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 				   dev_name(area->dev),
 				   area->start + rlocn->offset, rlocn->size);
 
-	if (precommitted)
+	if (vg && precommitted)
 		vg->status |= PRECOMMITTED;
 
       out:
