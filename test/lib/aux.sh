@@ -43,7 +43,7 @@ prepare_clvmd() {
 	local run_valgrind=
 	test "${LVM_VALGRIND_CLVMD:-0}" -eq 0 || run_valgrind="run_valgrind"
 	rm -f "$CLVMD_PIDFILE"
-	$run_valgrind lib/clvmd -Isinglenode -d 1 -f &
+	$run_valgrind clvmd -Isinglenode -d 1 -f &
 	echo $! > LOCAL_CLVMD
 
 	for i in $(seq 1 100) ; do
