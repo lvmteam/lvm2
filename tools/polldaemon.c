@@ -192,7 +192,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		    struct volume_group *vg, struct processing_handle *handle)
 {
 	struct daemon_parms *parms = (struct daemon_parms *) handle->custom_handle;
-	struct lv_list *lvl;
+	struct lv_list *lvl, *tmp_lvl;
 	struct logical_volume *lv;
 	const char *name;
 	int finished;
@@ -202,7 +202,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		return ECMD_FAILED;
 	}
 
-	dm_list_iterate_items(lvl, &vg->lvs) {
+	dm_list_iterate_items_safe(lvl, tmp_lvl, &vg->lvs) {
 		lv = lvl->lv;
 		if (!(lv->status & parms->lv_type))
 			continue;
