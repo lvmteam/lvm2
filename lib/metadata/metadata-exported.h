@@ -125,6 +125,8 @@
 								   be referenced on internal lists of LVs.
 								   Any remaining references should check for
 								   this flag and ignore the LV is set.
+								   FIXME: Remove this flag once we have indexed
+									  vg->removed_lvs for quick lookup.
 								*/
 #define LV_ERROR_WHEN_FULL	UINT64_C(0x0008000000000000)    /* LV - error when full */
 #define PV_ALLOCATION_PROHIBITED	UINT64_C(0x0010000000000000)	/* PV - internal use only - allocation prohibited

@@ -2568,11 +2568,25 @@ int vg_validate(struct volume_group *vg)
 		r = 0;
 	}
 
+	dm_list_iterate_items(lvl, &vg->removed_lvs) {
+		if (!(lvl->lv->status & LV_REMOVED)) {
+			log_error(INTERNAL_ERROR "LV %s is not marked as removed while it's part "
+				  "of removed LV list for VG %s", lvl->lv->name, vg->name);
+			r = 0;
+		}
+	}
+
 	/*
 	 * Count all non-snapshot invisible LVs
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv_count++;
+
+		if (lvl->lv->status & LV_REMOVED) {
+			log_error(INTERNAL_ERROR "LV %s is marked as removed while it's "
+				  "still part of the VG %s", lvl->lv->name, vg->name);
+			r = 0;
+		}
 
 		if (lvl->lv->status & LVM_WRITE_LOCKED) {
 			log_error(INTERNAL_ERROR "LV %s has external flag LVM_WRITE_LOCKED set internally.",

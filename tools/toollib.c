@@ -2061,6 +2061,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	dm_list_iterate_items(lvl, &final_lvs) {
+		/*
+		 *  FIXME: Once we have index over vg->removed_lvs, check directly
+		 *         LV presence there and remove LV_REMOVE flag/lv_is_removed fn
+		 *         as they won't be needed anymore.
+		 */
 		if (lv_is_removed(lvl->lv))
 			continue;
 

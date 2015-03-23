@@ -5350,7 +5350,7 @@ int unlink_lv_from_vg(struct logical_volume *lv)
 	if (!(lvl = find_lv_in_vg(lv->vg, lv->name)))
 		return_0;
 
-	dm_list_del(&lvl->list);
+	dm_list_move(&lv->vg->removed_lvs, &lvl->list);
 	lv->status |= LV_REMOVED;
 
 	return 1;
