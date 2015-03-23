@@ -31,7 +31,7 @@ lvextend -l+10 $vg/$lv1 "$dev2"
 # Slowdown writes
 aux delay_dev "$dev3" 0 100
 
-pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" &
+pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
 while not dmsetup status "$vg-pvmove0"; do sleep .1; done
