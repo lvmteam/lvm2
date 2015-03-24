@@ -1,3 +1,6 @@
+Version 2.02.119 - 
+==================================
+
 Version 2.02.118 - 23rd March 2015
 ==================================
   Store metadata size + checksum in lvmcache and add struct lvmcache_vgsummary.
