@@ -1,5 +1,5 @@
-Version 2.02.118 - 
-=================================
+Version 2.02.118 - 23rd March 2015
+==================================
   Store metadata size + checksum in lvmcache and add struct lvmcache_vgsummary.
   Remove inaccessible clustered PVs from 'pvs -a'.
   Don't invalidate cached orphan information while global lock is held.
@@ -14,11 +14,13 @@ Version 2.02.118 -
   Avoid reparsing same metadata when reading same metadata from multiple PVs.
   Save extra device open/close when scanning device for size.
   Fix seg_monitor field to report status also for mirrors and thick snapshots.
+  Replace LVM_WRITE with LVM_WRITE_LOCKED flags in metadata if system ID is set.
+  Remove ACCESS_NEEDS_SYSTEM_ID VG status flag. (2.02.117)
+  Enable system ID features.
 
 Version 2.02.117 - 4th March 2015
 =================================
   Add CFG_DISABLED for new system ID config settings that must not yet be used.
-  Set ACCESS_NEEDS_SYSTEM_ID VG status flag while system_id is set.
   Preserve original format type field when processing backup files.
   Implement status action for lvm2-monitor initscript to display monitored LVs.
   Allow lvchange -p to change kernel state only if metadata state differs.
