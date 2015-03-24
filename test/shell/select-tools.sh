@@ -273,18 +273,3 @@ pvchange -a --deltag 309 --deltag tag
 # iterates over LVs with process_each_lv_in_vg - so internally it actually
 # operates per-LV, but we still need the selection to be done per-VG)
 vgremove --yes -S 'lv_name=lv2' # should remove whole vg1, not just the lv2
-
-# if calling lvremove and an LV is removed that is related to other LV
-# and we're doing selection based on this relation, check if we're
-# selecting on initial state (here, thin origin LV thin_orig is removed
-# first, but thin snap should be still selectable based on origin=thin_orig
-# condition even though thin_orig has just been removed)
-vgcreate -s 4m $vg1 $dev1 $dev2
-lvcreate -l100%FREE -T $vg1/pool
-lvcreate -V4m -T $vg1/pool -n thin_orig
-lvcreate -s $vg1/thin_orig -n thin_snap
-lvremove -ff -S 'lv_name=thin_orig || origin=thin_orig' > out
-grep "Logical volume \"thin_orig\" successfully removed" out
-grep "Logical volume \"thin_snap\" successfully removed" out
-not lvs $vg1/thin_orig
-not lvs $vg1/thin_snap
