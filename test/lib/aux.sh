@@ -284,7 +284,8 @@ prepare_loop() {
 	echo -n .
 
 	local LOOPFILE="$PWD/test.img"
-	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=0 seek=$(($size)) 2> /dev/null
+	rm -f "$LOOPFILE"
+	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=0 seek=$(($size + 1)) 2> /dev/null
 	if LOOP=$(losetup -s -f "$LOOPFILE" 2>/dev/null); then
 		:
 	elif LOOP=$(losetup -f) && losetup "$LOOP" "$LOOPFILE"; then
@@ -367,8 +368,11 @@ prepare_devs() {
 	local n=${1:-3}
 	local devsize=${2:-34}
 	local pvname=${3:-pv}
+	local shift=0
 
 	prepare_backing_dev $(($n*$devsize))
+	# shift start of PV devices on /dev/loopXX by 1M
+	not diff LOOP BACKING_DEV >/dev/null 2>&1 || shift=2048
 	echo -n "## preparing $n devices..."
 
 	local size=$(($devsize*2048)) # sectors
@@ -379,7 +383,7 @@ prepare_devs() {
 		local dev="$DM_DEV_DIR/mapper/$name"
 		DEVICES[$count]=$dev
 		count=$(( $count + 1 ))
-		echo 0 $size linear "$BACKING_DEV" $((($i-1)*$size)) > "$name.table"
+		echo 0 $size linear "$BACKING_DEV" $((($i-1)*$size + $shift)) > "$name.table"
 		if not dmsetup create -u "TEST-$name" "$name" "$name.table" &&
 		   test -n "$LVM_TEST_BACKING_DEVICE";
 		then # maybe the backing device is too small for this test
@@ -408,6 +412,10 @@ prepare_devs() {
 	printf "%s\n" "${DEVICES[@]}" > DEVICES
 #	( IFS=$'\n'; echo "${DEVICES[*]}" ) >DEVICES
 	echo "ok"
+
+	for dev in "${DEVICES[@]}"; do
+		notify_lvmetad "$dev"
+	done
 }
 
 # Replace linear PV device with its 'delayed' version
@@ -893,6 +901,8 @@ dmsetup_wrapped() {
 	udev_wait
 	dmsetup "$@"
 }
+
+test -z "$LVM_TEST_AUX_TRACE" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)
 
