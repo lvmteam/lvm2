@@ -11,9 +11,10 @@
 
 . lib/inittest
 
+# 15 extents
 aux prepare_pvs 3 22
 
-vgcreate -s 32K $vg "$dev1" "$dev2" "$dev3"
+vgcreate -s 32K $vg $(cat DEVICES)
 
 lvcreate -an -Zn -l4 -i3 -I64 $vg
 
@@ -31,7 +32,9 @@ lvresize -l+64 -i3 -I128 $vg/$lv1
 vgremove -f $vg
 
 # 15 extents
+LVM_TEST_AUX_TRACE=yes
 aux prepare_vg 3 22
+unset LVM_TEST_AUX_TRACE
 
 # Block some extents
 lvcreate -an -Zn -l4 -i3 $vg
