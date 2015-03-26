@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -12,6 +12,9 @@
 test_description='Test system_id'
 
 . lib/inittest
+
+# Should 'system_id' be usable in cluster ??
+test -e LOCAL_CLVMD && skip
 
 aux prepare_devs 1
 
