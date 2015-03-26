@@ -1976,7 +1976,10 @@ static int _is_same_pv(struct pv_match *pvmatch __attribute((unused)), struct pv
  * Does PV area have a tag listed in allocation/cling_tag_list that 
  * matches a tag of the PV of the existing segment?
  */
-static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn, struct physical_volume *pv1, struct physical_volume *pv2)
+static int _match_pv_tags(const struct dm_config_node *cling_tag_list_cn,
+			  struct physical_volume *pv1,
+			  struct physical_volume *pv2,
+			  unsigned validate_only)
 {
 	const struct dm_config_value *cv;
 	const char *str;
@@ -1984,30 +1987,37 @@ static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn
 
 	for (cv = cling_tag_list_cn->v; cv; cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {
-			log_error("Ignoring invalid string in config file entry "
-				  "allocation/cling_tag_list");
+			if (validate_only)
+				log_warn("WARNING: Ignoring invalid string in config file entry "
+					 "allocation/cling_tag_list");
 			continue;
 		}
 		str = cv->v.str;
 		if (!*str) {
-			log_error("Ignoring empty string in config file entry "
-				  "allocation/cling_tag_list");
+			if (validate_only)
+				log_warn("WARNING: Ignoring empty string in config file entry "
+					 "allocation/cling_tag_list");
 			continue;
 		}
 
 		if (*str != '@') {
-			log_error("Ignoring string not starting with @ in config file entry "
-				  "allocation/cling_tag_list: %s", str);
+			if (validate_only)
+				log_warn("WARNING: Ignoring string not starting with @ in config file entry "
+					 "allocation/cling_tag_list: %s", str);
 			continue;
 		}
 
 		str++;
 
 		if (!*str) {
-			log_error("Ignoring empty tag in config file entry "
-				  "allocation/cling_tag_list");
+			if (validate_only)
+				log_warn("WARNING: Ignoring empty tag in config file entry "
+					 "allocation/cling_tag_list");
 			continue;
 		}
+
+		if (validate_only)
+			continue;
 
 		/* Wildcard matches any tag against any tag. */
 		if (!strcmp(str, "*")) {
@@ -2031,6 +2041,21 @@ static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn
 	}
 
 	return 0;
+}
+
+static int _validate_tag_list(const struct dm_config_node *cling_tag_list_cn)
+{
+	return _match_pv_tags(cling_tag_list_cn, NULL, NULL, 1);
+}
+
+/*
+ * Does PV area have a tag listed in allocation/cling_tag_list that 
+ * matches a tag of the PV of the existing segment?
+ */
+static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn,
+				  struct physical_volume *pv1, struct physical_volume *pv2)
+{
+	return _match_pv_tags(cling_tag_list_cn, pv1, pv2, 0);
 }
 
 static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
@@ -3043,7 +3068,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	ah->parallel_areas = parallel_areas;
 
-	ah->cling_tag_list_cn = find_config_tree_node(cmd, allocation_cling_tag_list_CFG, NULL);
+	if ((ah->cling_tag_list_cn = find_config_tree_node(cmd, allocation_cling_tag_list_CFG, NULL)))
+		(void) _validate_tag_list(ah->cling_tag_list_cn);
 
 	ah->maximise_cling = find_config_tree_bool(cmd, allocation_maximise_cling_CFG, NULL);
 
