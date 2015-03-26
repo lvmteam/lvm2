@@ -273,3 +273,4 @@ pvchange -a --deltag 309 --deltag tag
 # iterates over LVs with process_each_lv_in_vg - so internally it actually
 # operates per-LV, but we still need the selection to be done per-VG)
 vgremove --yes -S 'lv_name=lv2' # should remove whole vg1, not just the lv2
+vgremove --yes $vg2
