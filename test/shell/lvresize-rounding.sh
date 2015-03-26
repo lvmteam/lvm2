@@ -11,7 +11,6 @@
 
 . lib/inittest
 
-# 15 extents
 aux prepare_pvs 3 22
 
 vgcreate -s 32K $vg $(cat DEVICES)

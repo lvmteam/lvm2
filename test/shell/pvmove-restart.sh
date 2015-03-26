@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2013-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -29,12 +29,16 @@ lvextend -l+5 $vg/$lv1 "$dev1"
 lvextend -l+10 $vg/$lv1 "$dev2"
 
 # Slowdown writes
-aux delay_dev "$dev3" 0 100
+aux delay_dev "$dev3" 0 200
 
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
-while not dmsetup status "$vg-pvmove0"; do sleep .1; done
+while : ; do
+	dmsetup info -c -o tables_loaded "$vg-pvmove0" > out || true;
+	not grep Live out || break
+	sleep .1
+done
 kill -9 $PVMOVE
 wait
 
