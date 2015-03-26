@@ -71,6 +71,21 @@ int str_list_add(struct dm_pool *mem, struct dm_list *sll, const char *str)
 	return str_list_add_no_dup_check(mem, sll, str);
 }
 
+/* Add contents of sll2 to sll */
+int str_list_add_list(struct dm_pool *mem, struct dm_list *sll, struct dm_list *sll2)
+{
+	struct dm_str_list *sl;
+
+	if (!sll2)
+		return_0;
+
+	dm_list_iterate_items(sl, sll2)
+		if (!str_list_add(mem, sll, sl->str))
+			return_0;
+
+	return 1;
+}
+
 void str_list_del(struct dm_list *sll, const char *str)
 {
 	struct dm_list *slh, *slht;

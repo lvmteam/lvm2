@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Add str_list_add_list() to combine two lists.
   Fix LV processing with selection to always do the selection on initial state.
 
 Version 2.02.118 - 23rd March 2015
