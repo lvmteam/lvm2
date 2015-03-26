@@ -48,7 +48,7 @@ if test -n "$abs_top_builddir"; then
 fi
 
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
-pgrep dmeventd >LOCAL_DMEVENTD
+pgrep -o dmeventd >LOCAL_DMEVENTD
 not grep 'already monitored' lvchange.out
 
 vgremove -ff $vg
