@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Log relevant PV tags when using cling allocation.
   Add str_list_add_list() to combine two lists.
   Fix LV processing with selection to always do the selection on initial state.
 
