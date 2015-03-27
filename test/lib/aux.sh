@@ -902,6 +902,18 @@ dmsetup_wrapped() {
 	dmsetup "$@"
 }
 
+wait_pvmove_lv_ready() {
+	# given sleep .1 this is about 60 secs of waiting
+	local retries=${2:-600}
+	while : ; do
+		test $retries -le 0 && die "Waiting for pvmove LV to get activated has timed out"
+		dmsetup info -c -o tables_loaded $1 > out || true;
+		not grep Live out || break
+		sleep .1
+		retries=$((retries-1))
+	done
+}
+
 test -z "$LVM_TEST_AUX_TRACE" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)

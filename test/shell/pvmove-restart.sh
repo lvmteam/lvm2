@@ -34,11 +34,8 @@ aux delay_dev "$dev3" 0 200
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
-while : ; do
-	dmsetup info -c -o tables_loaded "$vg-pvmove0" > out || true;
-	not grep Live out || break
-	sleep .1
-done
+aux wait_pvmove_lv_ready "$vg-pvmove0" 300
+
 kill -9 $PVMOVE
 wait
 
