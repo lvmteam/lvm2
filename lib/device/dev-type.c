@@ -799,7 +799,7 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 	}
 
 	log_very_verbose("Device %s: %s is %lu%s.",
-			 dev_name(dev), attribute, result, default_value ? "" : " bytes");
+			 dev_name(dev), attribute, value, default_value ? "" : " bytes");
 
 	result = value >> SECTOR_SHIFT;
 
