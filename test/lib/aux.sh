@@ -324,9 +324,6 @@ prepare_scsi_debug_dev() {
 	test -z "$LOOP"
 	test -n "$DM_DEV_DIR"
 
-	# Skip test if awk isn't available (required for get_sd_devs_)
-	which awk || skip
-
 	# Skip test if scsi_debug module is unavailable or is already in use
 	modprobe --dry-run scsi_debug || skip
 	lsmod | not grep -q scsi_debug || skip
