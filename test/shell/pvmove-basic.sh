@@ -69,8 +69,8 @@ check_and_cleanup_lvs_() {
 	check dev_md5sum $vg $lv1
 	check dev_md5sum $vg $lv2
 	check dev_md5sum $vg $lv3
-	get lv_field $vg name >out
-	not grep ^pvmove out
+	get lv_field $vg name -a >out
+	not grep "^\[pvmove" out
 	vgchange -an $vg
 	lvremove -ff $vg
 	(dm_table | not grep $vg) || \
