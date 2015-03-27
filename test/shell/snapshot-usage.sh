@@ -208,27 +208,3 @@ fsck -n "$DM_DEV_DIR/$vg1/snap"
 check lv_field $vg1/snap data_percent "$EXPECT4"
 
 vgremove -ff $vg1
-
-
-# Can't test >= 16T devices on 32bit
-test "$TSIZE" = 15P || exit 0
-
-# synchronize with udev activity
-# FIXME - otherwise sequence of vgremove followed by vgcreate may fail...
-# as there could be still remaing links in /dev
-# Unusure if 'vgcreate' should do this type of detection in udev mode.
-aux udev_wait
-
-# Check usability with largest extent size
-pvcreate "$DM_DEV_DIR/$vg/$lv"
-vgcreate -s 4G $vg1 "$DM_DEV_DIR/$vg/$lv"
-
-lvcreate -an -Zn -l50%FREE -n $lv1 $vg1
-lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1
-check lv_field $vg1/$lv2 size "7.50p"
-lvremove -ff $vg1
-
-lvcreate --type snapshot -V15E -l1 -n $lv1 -s $vg1
-check lv_field $vg1/$lv1 origin_size "15.00e"
-
-vgremove -ff $vg1
