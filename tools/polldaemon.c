@@ -192,7 +192,9 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		    struct volume_group *vg, struct processing_handle *handle)
 {
 	struct daemon_parms *parms = (struct daemon_parms *) handle->custom_handle;
-	struct lv_list *lvl, *tmp_lvl;
+	struct lv_list *lvl;
+	struct dm_list *sls;
+	struct dm_str_list *sl;
 	struct logical_volume *lv;
 	const char *name;
 	int finished;
@@ -202,7 +204,18 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		return ECMD_FAILED;
 	}
 
-	dm_list_iterate_items_safe(lvl, tmp_lvl, &vg->lvs) {
+	if (!(sls = str_list_create(cmd->mem)))
+		return ECMD_FAILED;
+
+	log_verbose("Looking for pvmove LVs in VG: %s.", vg->name);
+
+	/*
+	 * _check_lv_status must not be called from within any
+	 * dm_list_iterate_ routine with vg->lvs as list head.
+	 * It may remove more than one LV in the process thus
+	 * even "*_safe" variant won't help.
+	 */
+	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 		if (!(lv->status & parms->lv_type))
 			continue;
@@ -217,13 +230,30 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 			continue;
 		}
 
-		if (_check_lv_status(cmd, vg, lv, name, parms, &finished) &&
-		    !finished)
-			parms->outstanding_count++;
+		if (!str_list_add(cmd->mem, sls, dm_pool_strdup(cmd->mem, name)))
+		{
+			log_error("Failed to clone pvname");
+			goto err;
+		}
+
+		log_verbose("Found LV: %s/%s. It belongs to pvmove task on PV %s.", lv->vg->name, lv->name, name);
 	}
 
-	return ECMD_PROCESSED;
+	dm_list_iterate_items(sl, sls) {
+		lv = parms->poll_fns->get_copy_lv(cmd, vg, sl->str, NULL, parms->lv_type);
+		if (lv) {
+			log_verbose("About to call _check_lv_status on LV: %s/%s, name: %s",
+				    lv->vg->name, lv->name, sl->str);
+			if (_check_lv_status(cmd, vg, lv, sl->str, parms, &finished) &&
+			    !finished)
+				parms->outstanding_count++;
+		}
+	}
 
+err:
+	dm_pool_free(cmd->mem, sls);
+
+	return ECMD_PROCESSED;
 }
 
 static void _poll_for_all_vgs(struct cmd_context *cmd,
