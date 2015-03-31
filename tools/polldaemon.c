@@ -191,7 +191,7 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		    struct volume_group *vg, struct processing_handle *handle)
 {
-	struct daemon_parms *parms = (struct daemon_parms *) handle->custom_handle;
+	struct daemon_parms *parms;
 	struct lv_list *lvl;
 	struct dm_list *sls;
 	struct dm_str_list *sl;
@@ -199,7 +199,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	const char *name;
 	int finished;
 
-	if (!parms) {
+	if (!handle || !(parms = (struct daemon_parms *) handle->custom_handle)) {
 		log_error(INTERNAL_ERROR "Handle is undefined.");
 		return ECMD_FAILED;
 	}
