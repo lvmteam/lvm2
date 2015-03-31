@@ -230,8 +230,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 			continue;
 		}
 
-		if (!str_list_add(cmd->mem, sls, dm_pool_strdup(cmd->mem, name)))
-		{
+		if (!str_list_add(cmd->mem, sls, dm_pool_strdup(cmd->mem, name))) {
 			log_error("Failed to clone pvname");
 			goto err;
 		}
