@@ -13,10 +13,27 @@ test_description='Test system_id'
 
 . lib/inittest
 
-# Should 'system_id' be usable in cluster ??
-test -e LOCAL_CLVMD && skip
-
 aux prepare_devs 1
+
+# with clvm enabled, vgcreate with no -c option creates a clustered vg,
+# which should have no system id
+
+if [ -e LOCAL_CLVMD ]; then
+SID1=sidfoolocal
+SID2=""
+LVMLOCAL=etc/lvmlocal.conf
+rm -f $LVMLOCAL
+echo "local {" > $LVMLOCAL
+echo "  system_id = $SID1" >> $LVMLOCAL
+echo "}" >> $LVMLOCAL
+aux lvmconf "global/system_id_source = lvmlocal"
+vgcreate $vg1 "$dev1"
+vgs -o+systemid $vg1
+check vg_field $vg1 systemid $SID2
+vgremove $vg1
+rm -f $LVMLOCAL
+exit 0
+fi
 
 # create vg with system_id using each source
 
