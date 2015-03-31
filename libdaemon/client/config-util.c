@@ -132,9 +132,9 @@ int set_flag(struct dm_config_tree *cft, struct dm_config_node *parent,
 	return 1;
 }
 
-static void chain_node(struct dm_config_node *cn,
-		       struct dm_config_node *parent,
-		       struct dm_config_node *pre_sib)
+void chain_node(struct dm_config_node *cn,
+                struct dm_config_node *parent,
+                struct dm_config_node *pre_sib)
 {
 	cn->parent = parent;
 	cn->sib = NULL;
