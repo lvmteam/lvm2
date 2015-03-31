@@ -269,13 +269,14 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 						   struct dm_config_node *cn,
 						   struct format_type *fmt, dev_t fallback)
 {
-	struct device *dev;
+	struct device *dev, *dev_alternate;
 	struct id pvid, vgid;
 	char mda_id[32];
 	char da_id[32];
 	int i = 0;
-	struct dm_config_node *mda = NULL;
-	struct dm_config_node *da = NULL;
+	struct dm_config_node *mda, *da;
+	struct dm_config_node *alt_devices = dm_config_find_node(cn->child, "devices_alternate");
+	struct dm_config_value *alt_device = NULL;
 	uint64_t offset, size;
 	struct lvmcache_info *info;
 	const char *pvid_txt = dm_config_find_str(cn->child, "id", NULL),
@@ -297,6 +298,20 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 	dev = dev_cache_get_by_devt(devt, cmd->filter);
 	if (!dev && fallback)
 		dev = dev_cache_get_by_devt(fallback, cmd->filter);
+
+	if (alt_devices)
+		alt_device = alt_devices->v;
+
+	while (alt_device) {
+		dev_alternate = dev_cache_get_by_devt(alt_device->v.i, cmd->filter);
+		if (dev_alternate)
+			log_warn("Found duplicate of PV %s on device %s.",
+				 pvid_txt, dev_name(dev_alternate));
+		else
+			log_warn("Duplicate of PV %s exists on unknown device %"PRId64 ":%" PRId64,
+				 pvid_txt, MAJOR(alt_device->v.i), MINOR(alt_device->v.i));
+		alt_device = alt_device->next;
+	}
 
 	if (!dev) {
 		log_warn("WARNING: Device for PV %s not found or rejected by a filter.", pvid_txt);
