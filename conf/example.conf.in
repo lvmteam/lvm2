@@ -997,7 +997,7 @@ activation {
     # auto_activation_volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 
     # If read_only_volume_list is defined, each LV that is to be activated 
-    # is checked against the list, and if it matches, it as activated
+    # is checked against the list, and if it matches, it is activated
     # in read-only mode.  (This overrides '--permission rw' stored in the
     # metadata.)
     #
