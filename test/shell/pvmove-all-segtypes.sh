@@ -58,7 +58,7 @@ lvremove -ff $vg
 
 if test -e LOCAL_CLVMD ; then
 #FIXME these tests currently fail end require cmirrord
-echo "TEST WARNING, FIXME!!! pvmove in clustered VG not fully supported!"
+echo "$(should false)FIXME!!! pvmove in clustered VG not fully supported!"
 else
 
 # Testing pvmove of mirror LV
