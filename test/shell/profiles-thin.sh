@@ -24,7 +24,15 @@ aux prepare_profiles "thin-performance"
 
 # Create scsi debug dev with sector size of 4096B and 1MiB optimal_io_size
 aux prepare_scsi_debug_dev $DEV_SIZE sector_size=4096 opt_blks=256 || skip
+EXPECT=1048576
+check sysfs_queue "$(basename $(< SCSI_DEBUG_DEV))" optimal_io_size "$EXPECT"
 aux prepare_pvs 1 $DEV_SIZE
+
+# Check we are not running on buggy kernel (broken lcm())
+# If so, turn chunk_size test into  'should'
+MINOR=$(stat -c %T "$dev1")
+check sysfs_queue "dm-$MINOR" optimal_io_size "$EXPECT" || SHOULD=should
+
 vgcreate $vg "$dev1"
 
 # By default, "generic" policy is used to
@@ -43,7 +51,7 @@ check lv_field $vg/pool_generic zero "zero"
 # under "thin-perforance" profile.
 lvcreate --profile thin-performance -L8m -T $vg/pool_performance
 check lv_field $vg/pool_performance profile "thin-performance"
-check lv_field $vg/pool_performance chunk_size 1.00m
+$SHOULD check lv_field $vg/pool_performance chunk_size 1.00m
 check lv_field $vg/pool_performance zero ""
 
 vgremove -ff $vg
@@ -55,5 +63,5 @@ lvcreate -L8m -T $vg/pool_performance_inherited
 # ...the LV does not have the profile attached, but VG does!
 check vg_field $vg profile "thin-performance"
 check lv_field $vg/pool_performance_inherited profile ""
-check lv_field $vg/pool_performance_inherited chunk_size 1.00m
+$SHOULD check lv_field $vg/pool_performance_inherited chunk_size 1.00m
 check lv_field $vg/pool_performance_inherited zero ""
