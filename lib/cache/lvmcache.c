@@ -287,7 +287,7 @@ void lvmcache_commit_metadata(const char *vgname)
 
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted)
 {
-	if (lvmcache_vgname_is_locked(VG_GLOBAL))
+	if (lvmcache_vgname_is_locked(VG_GLOBAL) && !vg_write_lock_held())
 		return;
 
 	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
