@@ -365,6 +365,14 @@ dev_md5sum() {
 		 die "LV $1/$2 has different MD5 check sum!")
 }
 
+sysfs_queue() {
+	# Verify optimal_io_size
+	local P="/sys/block/$1/queue/$2"
+	test -f "$P" || return 0
+	test "$(< $P)" -eq "$3" || \
+		die "$P = $(< $P) differs from expected value $3!"
+}
+
 #set -x
 unset LVM_VALGRIND
 "$@"
