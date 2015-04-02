@@ -36,6 +36,9 @@ aux wait_pvmove_lv_ready "$vg-pvmove0" 300
 pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode &
 aux wait_pvmove_lv_ready "$vg-pvmove1" 300
 
+# Slow things even more for very slow machines....
+aux delay_dev "$dev3" 0 1000
+
 # remove specific device
 pvmove --abort "$dev1"
 
