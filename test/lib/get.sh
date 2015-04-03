@@ -87,6 +87,10 @@ lv_tree_devices() {
 	lv_tree_devices_ "$@" | sort | uniq
 }
 
+first_extent_sector() {
+	pv_field "$@" pe_start --units s --nosuffix
+}
+
 #set -x
 unset LVM_VALGRIND
 "$@"
