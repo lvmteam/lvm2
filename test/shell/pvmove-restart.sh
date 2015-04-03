@@ -29,7 +29,8 @@ lvextend -l+5 $vg/$lv1 "$dev1"
 lvextend -l+10 $vg/$lv1 "$dev2"
 
 # Slowdown writes
-aux delay_dev "$dev3" 0 200
+# (FIXME: generates interesting race when not used)
+aux delay_dev "$dev3" 100 100 $(get first_extent_sector "$dev3"):
 
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
@@ -44,6 +45,8 @@ wait
 # First take down $lv1 then it's pvmove0
 while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
 while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
+while dmsetup status "$vg-pvmove0_mimage_1"; do dmsetup remove "$vg-pvmove0_mimage_1" || true; done
+dmsetup table
 
 # Check we really have pvmove volume
 check lv_attr_bit type $vg/pvmove0 "p"
@@ -77,8 +80,10 @@ dmsetup table
 # Restart pvmove
 # use exclusive activation to have usable pvmove without cmirrord
 vgchange -aey $vg
-#sleep 2
-#pvmove
+aux wait_pvmove_lv_ready "$vg-pvmove0" 300
+dmsetup table
+
+pvmove --abort
 
 pvmove --abort
 
