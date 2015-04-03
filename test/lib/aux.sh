@@ -351,7 +351,7 @@ cleanup_scsi_debug_dev() {
 }
 
 prepare_backing_dev() {
-	if test -f BACKING_DEV; then 
+	if test -f BACKING_DEV; then
 		BACKING_DEV=$(< BACKING_DEV)
 	elif test -b "$LVM_TEST_BACKING_DEVICE"; then
 		BACKING_DEV="$LVM_TEST_BACKING_DEVICE"
@@ -415,16 +415,28 @@ prepare_devs() {
 	done
 }
 
-# Replace linear PV device with its 'delayed' version
-# Could be used to more deterministicaly hit some problems.
-# Parameters: {device path} [read delay ms] [write delay ms]
-# Original device is restored when both delay params are 0 (or missing).
-# i.e.  delay_dev "$dev1" 0 200
-delay_dev() {
-	target_at_least dm-delay 1 2 0 || skip
-	local name=$(echo "$1" | sed -e 's,.*/,,')
-	local read_ms=${2:-0}
-	local write_ms=${3:-0}
+
+common_dev_() {
+	local tgtype=$1
+	local name=${2##*/}
+	local offsets
+	local read_ms
+	local write_ms
+
+	case "$tgtype" in
+	delay)
+		read_ms=${3:-0}
+		write_ms=${4:-0}
+		offsets=${@:5}
+		if test "$read_ms" -eq 0 -a "$write_ms" -eq 0 ; then
+			offsets=
+		else
+			test ${#offsets[@]} -eq 0 && offsets="0:"
+		fi ;;
+	error)  offsets=${@:3}
+		test ${#offsets[@]} -eq 0 && offsets="0:" ;;
+	esac
+
 	local pos
 	local size
 	local type
@@ -433,15 +445,44 @@ delay_dev() {
 
 	read pos size type pvdev offset < "$name.table"
 
+	for fromlen in ${offsets[@]}; do
+		from=${fromlen%%:*}
+		len=${fromlen##*:}
+		test -n "$len" || len=$(($size - $from))
+		diff=$(($from - $pos))
+		if test $diff -gt 0 ; then
+			echo "$pos $diff $type $pvdev $(($pos + $offset))"
+			pos=$(($pos + $diff))
+		elif test $diff -lt 0 ; then
+			die "Position error"
+		fi
+
+		case "$tgtype" in
+		delay)
+			echo "$from $len delay $pvdev $(($pos + $offset)) $read_ms $pvdev $(($pos + $offset)) $write_ms" ;;
+		error)
+			echo "$from $len error" ;;
+		esac
+		pos=$(($pos + $len))
+	done > "$name.devtable"
+	diff=$(($size - $pos))
+	test "$diff" -gt 0 && echo "$pos $diff $type $pvdev $(($pos + $offset))" >>"$name.devtable"
+
 	init_udev_transaction
-	if test $read_ms -ne 0 -o $write_ms -ne 0 ; then
-		echo "0 $size delay $pvdev $offset $read_ms $pvdev $offset $write_ms" | \
-			dmsetup load "$name"
-	else
-		dmsetup load "$name" "$name.table"
-	fi
+	dmsetup load "$name" "$name.devtable"
 	dmsetup resume "$name"
 	finish_udev_transaction
+}
+
+# Replace linear PV device with its 'delayed' version
+# Could be used to more deterministicaly hit some problems.
+# Parameters: {device path} [read delay ms] [write delay ms] [offset:size]...
+# Original device is restored when both delay params are 0 (or missing).
+# If the size is missing, the remaing portion of device is taken
+# i.e.  delay_dev "$dev1" 0 200 256:
+delay_dev() {
+	target_at_least dm-delay 1 2 0 || skip
+	common_dev_ delay "$@"
 }
 
 disable_dev() {
@@ -513,46 +554,7 @@ enable_dev() {
 # Original device table is replace with multiple lines
 # i.e.  error_dev "$dev1" 8:32 96:8
 error_dev() {
-	local dev=$1
-	local name=$(echo "$dev" | sed -e 's,.*/,,')
-	local fromlen
-	local pos
-	local size
-	local type
-	local pvdev
-	local offset
-	local silent
-
-	read pos size type pvdev offset < $name.table
-
-	shift
-	rm -f $name.errtable
-	for fromlen in "$@"; do
-		from=${fromlen%%:*}
-		len=${fromlen##*:}
-		diff=$(($from - $pos))
-		if test $diff -gt 0 ; then
-			echo "$pos $diff $type $pvdev $(($pos + $offset))" >>$name.errtable
-			pos=$(($pos + $diff))
-		elif test $diff -lt 0 ; then
-			die "Position error"
-		fi
-		echo "$from $len error" >>$name.errtable
-		pos=$(($pos + $len))
-	done
-	diff=$(($size - $pos))
-	test $diff -gt 0 && echo "$pos $diff $type $pvdev $(($pos + $offset))" >>$name.errtable
-
-	init_udev_transaction
-	if dmsetup table $name ; then
-		dmsetup load "$name" "$name.errtable"
-	else
-		dmsetup create -u "TEST-$name" "$name" "$name.errtable"
-	fi
-	# using device name (since device path does not exists yet with udev)
-	dmsetup resume "$name"
-	finish_udev_transaction
-	test -n "$silent" || notify_lvmetad "$dev"
+	common_dev_ error "$@"
 }
 
 backup_dev() {
