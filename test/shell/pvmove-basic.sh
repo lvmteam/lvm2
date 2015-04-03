@@ -334,7 +334,9 @@ check_and_cleanup_lvs_
 
 #COMM "pvmove abort"
 restore_lvs_
-pvmove $mode -i100 -b "$dev1" "$dev3"
+cmd=$(echo -n pvmove $mode -i100 -b "$dev1" "$dev3")
+$cmd
+aux add_to_kill_list "$cmd" "-P 1"
 pvmove --abort
 check_and_cleanup_lvs_
 

@@ -37,9 +37,11 @@ lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 lvcreate -an -Zn -l30 -n $lv1 $vg1 "$dev4"
 lvextend -l+30 -n $vg1/$lv1 "$dev5"
 
-pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode &
+cmd1=$(echo pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode)
+$cmd1 &
 aux wait_pvmove_lv_ready "$vg-pvmove0"
-pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode &
+cmd2=$(echo pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode)
+$cmd2 &
 aux wait_pvmove_lv_ready "$vg-pvmove1"
 
 pvmove -i1 $backgroundarg -n $vg1/$lv1 "$dev4" "$dev6" $mode &
@@ -57,6 +59,8 @@ not grep "^\[pvmove" out
 lvremove -ff $vg $vg1
 
 wait
+aux add_to_kill_list "$cmd1" "-P 1"
+aux add_to_kill_list "$cmd2" "-P 1"
 done
 done
 
