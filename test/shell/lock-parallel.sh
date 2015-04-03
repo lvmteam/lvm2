@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -15,6 +15,7 @@
 . lib/inittest
 
 which mkfs.ext3 || skip
+which fsck || skip
 
 aux prepare_vg
 
@@ -23,12 +24,15 @@ lvcreate -l1 -n $lv2 $vg
 mkfs.ext3 "$DM_DEV_DIR/$vg/$lv1"
 
 # Slowdown PV for resized LV
-aux delay_dev "$dev1" 20 20
+aux delay_dev "$dev1" 50 50 $(get first_extent_sector "$dev1"):
 
 lvresize -L-5 -r $vg/$lv1 &
 
 # Let's wait till resize starts
-sleep 2
+for i in $(seq 1 300); do
+        pgrep fsck && break
+        sleep .1
+done
 
 lvremove -f $vg/$lv2
 
