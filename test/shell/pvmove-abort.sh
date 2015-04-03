@@ -19,6 +19,9 @@ vgcreate -s 128k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
 
+# Slowdown read/writes
+aux delay_dev "$dev3" 100 100 $(get first_extent_sector "$dev3"):
+
 for mode in "--atomic" "" ;
 do
 for backgroundarg in "-b" "" ;
@@ -27,9 +30,6 @@ do
 # Create multisegment LV
 lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
 lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
-
-# Slowdown writes
-aux delay_dev "$dev3" 0 200
 
 pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode &
 aux wait_pvmove_lv_ready "$vg-pvmove0" 300
@@ -47,9 +47,6 @@ get lv_field $vg name -a | tee out
 not grep "^\[pvmove0\]" out
 grep "^\[pvmove1\]" out
 
-# Restore delayed device back
-aux enable_dev "$dev3"
-
 # remove any remaining pvmoves in progress
 pvmove --abort
 
@@ -58,5 +55,8 @@ lvremove -ff $vg
 wait
 done
 done
+
+# Restore delayed device back
+aux enable_dev "$dev3"
 
 vgremove -ff $vg

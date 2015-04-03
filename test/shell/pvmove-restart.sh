@@ -19,6 +19,10 @@ vgcreate -s 128k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
 
+# Slowdown writes
+# (FIXME: generates interesting race when not used)
+aux delay_dev "$dev3" 100 100 $(get first_extent_sector "$dev3"):
+
 for mode in "--atomic" ""
 do
 
@@ -27,10 +31,6 @@ lvcreate -an -Zn -l5 -n $lv1 $vg "$dev1"
 lvextend -l+10 $vg/$lv1 "$dev2"
 lvextend -l+5 $vg/$lv1 "$dev1"
 lvextend -l+10 $vg/$lv1 "$dev2"
-
-# Slowdown writes
-# (FIXME: generates interesting race when not used)
-aux delay_dev "$dev3" 100 100 $(get first_extent_sector "$dev3"):
 
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
@@ -87,12 +87,12 @@ pvmove --abort
 
 pvmove --abort
 
-# Restore delayed device back
-aux delay_dev "$dev3"
-
 lvs -a -o+devices $vg
 
 lvremove -ff $vg
 done
+
+# Restore delayed device back
+aux delay_dev "$dev3"
 
 vgremove -ff $vg
