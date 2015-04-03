@@ -431,10 +431,10 @@ common_dev_() {
 		if test "$read_ms" -eq 0 -a "$write_ms" -eq 0 ; then
 			offsets=
 		else
-			test ${#offsets[@]} -eq 0 && offsets="0:"
+			test -z "${offsets[@]}" && offsets="0:"
 		fi ;;
 	error)  offsets=${@:3}
-		test ${#offsets[@]} -eq 0 && offsets="0:" ;;
+		test -z "${offsets[@]}" && offsets="0:" ;;
 	esac
 
 	local pos
