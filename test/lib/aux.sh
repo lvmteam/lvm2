@@ -906,8 +906,8 @@ wait_pvmove_lv_ready() {
 	local retries=${2:-600}
 	while : ; do
 		test $retries -le 0 && die "Waiting for pvmove LV to get activated has timed out"
-		dmsetup info -c -o tables_loaded $1 > out || true;
-		not grep Live out || break
+		dmsetup info -c -o tables_loaded $1 > out 2>/dev/null|| true;
+		not grep Live out >/dev/null || break
 		sleep .1
 		retries=$((retries-1))
 	done
