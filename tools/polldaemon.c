@@ -223,6 +223,12 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		if (!name && !parms->aborting)
 			continue;
 
+		if (!name) {
+			log_error("Device name for LV %s not found in metadata. "
+				  "(unfinished pvmove mirror removal?)", display_lvname(lv));
+			goto err;
+		}
+
 		/* FIXME Need to do the activation from _set_up_pvmove here
 		 *       if it's not running and we're not aborting. */
 		if (!lv_is_active(lv)) {
