@@ -38,12 +38,12 @@ lvcreate -an -Zn -l30 -n $lv1 $vg1 "$dev4"
 lvextend -l+30 -n $vg1/$lv1 "$dev5"
 
 pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode &
-aux wait_pvmove_lv_ready "$vg-pvmove0" 300
+aux wait_pvmove_lv_ready "$vg-pvmove0"
 pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode &
-aux wait_pvmove_lv_ready "$vg-pvmove1" 300
+aux wait_pvmove_lv_ready "$vg-pvmove1"
 
 pvmove -i1 $backgroundarg -n $vg1/$lv1 "$dev4" "$dev6" $mode &
-aux wait_pvmove_lv_ready "$vg1-pvmove0" 300
+aux wait_pvmove_lv_ready "$vg1-pvmove0"
 
 # test removal of all pvmove LVs
 pvmove  --abort

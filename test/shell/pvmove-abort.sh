@@ -32,12 +32,9 @@ lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
 lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 
 pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode &
-aux wait_pvmove_lv_ready "$vg-pvmove0" 300
+aux wait_pvmove_lv_ready "$vg-pvmove0"
 pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode &
-aux wait_pvmove_lv_ready "$vg-pvmove1" 300
-
-# Slow things even more for very slow machines....
-aux delay_dev "$dev3" 0 1000
+aux wait_pvmove_lv_ready "$vg-pvmove1"
 
 # remove specific device
 pvmove --abort "$dev1"

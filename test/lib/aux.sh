@@ -470,6 +470,7 @@ common_dev_() {
 
 	init_udev_transaction
 	dmsetup load "$name" "$name.devtable"
+	# TODO: add support for resume without udev rescan
 	dmsetup resume "$name"
 	finish_udev_transaction
 }
@@ -903,7 +904,7 @@ dmsetup_wrapped() {
 
 wait_pvmove_lv_ready() {
 	# given sleep .1 this is about 60 secs of waiting
-	local retries=${2:-600}
+	local retries=${2:-300}
 	while : ; do
 		test $retries -le 0 && die "Waiting for pvmove LV to get activated has timed out"
 		dmsetup info -c -o tables_loaded $1 > out 2>/dev/null|| true;

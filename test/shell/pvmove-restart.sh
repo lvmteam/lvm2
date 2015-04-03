@@ -35,7 +35,7 @@ lvextend -l+10 $vg/$lv1 "$dev2"
 pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
-aux wait_pvmove_lv_ready "$vg-pvmove0" 300
+aux wait_pvmove_lv_ready "$vg-pvmove0"
 
 kill -9 $PVMOVE
 wait
@@ -80,7 +80,7 @@ dmsetup table
 # Restart pvmove
 # use exclusive activation to have usable pvmove without cmirrord
 vgchange -aey $vg
-aux wait_pvmove_lv_ready "$vg-pvmove0" 300
+aux wait_pvmove_lv_ready "$vg-pvmove0"
 dmsetup table
 
 pvmove --abort
