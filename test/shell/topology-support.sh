@@ -56,8 +56,7 @@ aux cleanup_scsi_debug_dev
 LOGICAL_BLOCK_SIZE=512
 aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3
-check sysfs_queue "$(basename $(< SCSI_DEBUG_DEV))" logical_block_size $LOGICAL_BLOCK_SIZE
-
+check sysfs_queue "$(< SCSI_DEBUG_DEV)" logical_block_size $LOGICAL_BLOCK_SIZE
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
 get_devs
 
@@ -73,7 +72,7 @@ aux cleanup_scsi_debug_dev
 LOGICAL_BLOCK_SIZE=512
 aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3 lowest_aligned=7
-check sysfs_queue "$(basename $(< SCSI_DEBUG_DEV))" logical_block_size $LOGICAL_BLOCK_SIZE
+check sysfs_queue "$(< SCSI_DEBUG_DEV)" logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
 vgcreate $vg "${DEVICES[@]}"
@@ -88,7 +87,7 @@ aux cleanup_scsi_debug_dev
 LOGICAL_BLOCK_SIZE=4096
 aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE
-check sysfs_queue "$(basename $(< SCSI_DEBUG_DEV))" logical_block_size $LOGICAL_BLOCK_SIZE
+check sysfs_queue "$(< SCSI_DEBUG_DEV)" logical_block_size $LOGICAL_BLOCK_SIZE
 
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
 vgcreate $vg "${DEVICES[@]}"
@@ -105,16 +104,14 @@ LOGICAL_BLOCK_SIZE=512
 aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE opt_blks=1536
 
-TDEV="$(basename $(< SCSI_DEBUG_DEV))"
-check sysfs_queue "$TDEV" logical_block_size $LOGICAL_BLOCK_SIZE
-check sysfs_queue "$TDEV" optimal_io_size 786432
+check sysfs_queue "$(< SCSI_DEBUG_DEV)" logical_block_size $LOGICAL_BLOCK_SIZE
+check sysfs_queue "$(< SCSI_DEBUG_DEV)" optimal_io_size 786432
 
 aux prepare_pvs 1 $PER_DEV_SIZE
 
 # Kernel (3.19) could provide wrong results - in this case skip
 # test with incorrect result - lvm2 can't figure out good values.
-MINOR=$(stat -c %T "$dev1")
-check sysfs_queue "dm-$MINOR" optimal_io_size 786432 || SHOULD=should
+check sysfs_queue "$dev1" optimal_io_size 786432 || SHOULD=should
 $SHOULD check pv_field "${DEVICES[@]}" pe_start 768.00k
 
 aux cleanup_scsi_debug_dev

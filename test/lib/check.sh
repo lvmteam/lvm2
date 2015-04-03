@@ -366,11 +366,13 @@ dev_md5sum() {
 }
 
 sysfs_queue() {
-	# Verify optimal_io_size
-	local P="/sys/block/$1/queue/$2"
-	test -f "$P" || return 0
-	test "$(< $P)" -eq "$3" || \
-		die "$P = $(< $P) differs from expected value $3!"
+	# read maj min and also convert hex to decimal
+	local maj=$(($(stat -L --printf=0x%t "$1")))
+	local min=$(($(stat -L --printf=0x%T "$1")))
+	local P="/sys/dev/block/$maj:$min/queue/$2"
+	local val=$(< "$P") || return 0 # no sysfs ?
+	test "$val" -eq "$3" || \
+		die "$1: $P = $val differs from expected value $3!"
 }
 
 #set -x
