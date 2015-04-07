@@ -474,6 +474,14 @@ static int _read_raid_params(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (arg_count(cmd, mirrors_ARG) && segtype_is_raid(lp->segtype) &&
+	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID1) &&
+	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+		log_error("Mirror argument cannot be used with segment type, %s",
+			  lp->segtype->name);
+		return 0;
+	}
+
 	/* Rates are recorded in kiB/sec/disk, not sectors/sec/disk */
 	lp->min_recovery_rate = arg_uint_value(cmd, minrecoveryrate_ARG, 0) / 2;
 	lp->max_recovery_rate = arg_uint_value(cmd, maxrecoveryrate_ARG, 0) / 2;
