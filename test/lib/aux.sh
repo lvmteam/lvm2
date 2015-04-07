@@ -320,6 +320,7 @@ prepare_scsi_debug_dev() {
 	local DEV_SIZE=$1
 	local SCSI_DEBUG_PARAMS=${@:2}
 
+	rm -f debug.log strace.log
 	test ! -f "SCSI_DEBUG_DEV" || return 0
 	test -z "$LOOP"
 	test -n "$DM_DEV_DIR"
@@ -331,6 +332,7 @@ prepare_scsi_debug_dev() {
 	# Create the scsi_debug device and determine the new scsi device's name
 	# NOTE: it will _never_ make sense to pass num_tgts param;
 	# last param wins.. so num_tgts=1 is imposed
+	touch SCSI_DEBUG_DEV
 	modprobe scsi_debug dev_size_mb=$DEV_SIZE $SCSI_DEBUG_PARAMS num_tgts=1 || skip
 	sleep 2 # allow for async Linux SCSI device registration
 

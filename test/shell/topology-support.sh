@@ -96,6 +96,9 @@ vgremove $vg
 
 aux cleanup_scsi_debug_dev
 
+# scsi_debug option opt_blks appeared in Oct 2010
+aux kernel_at_least 2 6 37 || exit 0
+
 # ---------------------------------------------
 # Create "enterprise-class" 512 drive w/ HW raid stripe_size = 768K
 # (logical_block_size=512, physical_block_size=512, alignment_offset=0):
