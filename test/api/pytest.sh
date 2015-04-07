@@ -45,6 +45,7 @@ export PY_UNIT_PVS=$(cat DEVICES)
 #python_lvm_unit.py -v -f
 
 # Run individual tests for shorter error trace
+python_lvm_unit.py -v TestLvm.test_lv_persistence
 python_lvm_unit.py -v TestLvm.test_config_find_bool
 python_lvm_unit.py -v TestLvm.test_config_override
 python_lvm_unit.py -v TestLvm.test_config_reload

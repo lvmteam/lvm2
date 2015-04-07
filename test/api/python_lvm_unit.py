@@ -368,6 +368,100 @@ class TestLvm(unittest.TestCase):
 		lv.rename(current_name)
 		vg.close()
 
+	def test_lv_persistence(self):
+		# Make changes to the lv, close the vg and re-open to make sure that
+		# the changes persist
+		lv_name = 'lv_test_persist'
+		TestLvm._create_thick_lv(TestLvm._get_pv_device_names(), lv_name)
+
+		# Test rename
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		current_name = lv.getName()
+		new_name = rs()
+		lv.rename(new_name)
+
+		vg.close()
+		vg = None
+
+		lv, vg = TestLvm._get_lv(None, new_name)
+
+		self.assertTrue(lv is not None)
+
+		if lv and vg:
+			lv.rename(lv_name)
+			vg.close()
+			vg = None
+
+		# Test lv tag add
+		tag = 'hello_world'
+
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		lv.addTag(tag)
+		vg.close()
+		vg = None
+
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		tags = lv.getTags()
+
+		self.assertTrue(tag in tags)
+		vg.close()
+		vg = None
+
+		# Test lv tag delete
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		self.assertTrue(lv is not None and vg is not None)
+
+		if lv and vg:
+			tags = lv.getTags()
+
+			for t in tags:
+				lv.removeTag(t)
+
+			vg.close()
+			vg = None
+
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		self.assertTrue(lv is not None and vg is not None)
+
+		if lv and vg:
+			tags = lv.getTags()
+
+			if tags:
+				self.assertEqual(len(tags), 0)
+			vg.close()
+			vg = None
+
+		# Test lv deactivate
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		self.assertTrue(lv is not None and vg is not None)
+
+		if lv and vg:
+			lv.deactivate()
+			vg.close()
+			vg = None
+
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		self.assertTrue(lv is not None and vg is not None)
+		if lv and vg:
+			self.assertFalse(lv.isActive())
+			vg.close()
+			vg = None
+
+		# Test lv activate
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		self.assertTrue(lv is not None and vg is not None)
+		if lv and vg:
+			lv.activate()
+			vg.close()
+			vg = None
+
+		lv, vg = TestLvm._get_lv(None, lv_name)
+		self.assertTrue(lv is not None and vg is not None)
+		if lv and vg:
+			self.assertTrue(lv.isActive())
+			vg.close()
+			vg = None
+
 	def test_lv_snapshot(self):
 
 		thin_lv = 'thin_lv'

@@ -1444,13 +1444,18 @@ static PyObject *_liblvm_lvm_lv_add_tag(lvobject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &tag))
 		return NULL;
 
-	if (lvm_lv_add_tag(self->lv, tag) == -1) {
-		PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
-		return NULL;
-	}
+	if (lvm_lv_add_tag(self->lv, tag) == -1)
+        goto error;
+
+    if (lvm_vg_write(self->parent_vgobj->vg) == -1)
+		goto error;
 
 	Py_INCREF(Py_None);
 	return Py_None;
+
+error:
+	PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
+	return NULL;
 }
 
 static PyObject *_liblvm_lvm_lv_remove_tag(lvobject *self, PyObject *args)
@@ -1462,14 +1467,18 @@ static PyObject *_liblvm_lvm_lv_remove_tag(lvobject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &tag))
 		return NULL;
 
-	if (lvm_lv_remove_tag(self->lv, tag) == -1) {
-		PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
-		return NULL;
-	}
+	if (lvm_lv_remove_tag(self->lv, tag) == -1)
+        goto error;
+
+    if (lvm_vg_write(self->parent_vgobj->vg) == -1)
+        goto error;
 
 	Py_INCREF(Py_None);
-
 	return Py_None;
+
+error:
+	PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
+	return NULL;
 }
 
 static PyObject *_liblvm_lvm_lv_get_tags(lvobject *self)
