@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  More efficient clvmd singlenode locking emulation.
   Don't skip invalidation of cached orphans if vg write lck is held (2.02.118).
   Log relevant PV tags when using cling allocation.
   Add str_list_add_list() to combine two lists.

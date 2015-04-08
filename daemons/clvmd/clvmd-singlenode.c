@@ -208,8 +208,6 @@ static int _lock_resource(const char *resource, int mode, int flags, int *lockid
 	pthread_mutex_lock(&_lock_mutex);
 
 retry:
-	pthread_cond_broadcast(&_lock_cond); /* to wakeup waiters */
-
 	if (!(head = dm_hash_lookup(_locks, resource))) {
 		if (flags & LCKF_CONVERT) {
 			/* In real DLM, lock is identified only by lockid, resource is not used */
@@ -269,12 +267,14 @@ retry:
 		dm_list_add(head, &lck->list);
 	}
 out:
+	pthread_cond_broadcast(&_lock_cond); /* to wakeup waiters */
 	pthread_mutex_unlock(&_lock_mutex);
 	DEBUGLOG("Locked resource %s, lockid=%d, mode=%s\n",
 		 resource, lck->lockid, _get_mode(lck->mode));
 
 	return 0;
 bad:
+	pthread_cond_broadcast(&_lock_cond); /* to wakeup waiters */
 	pthread_mutex_unlock(&_lock_mutex);
 	DEBUGLOG("Failed to lock resource %s\n", resource);
 
