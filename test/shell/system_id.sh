@@ -89,8 +89,8 @@ SID=sidfoofile
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 vgcreate $vg1 "$dev1"
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
@@ -104,8 +104,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg, overriding the local system_id so the vg looks foreign
 vgcreate --systemid $SID2 $vg1 "$dev1"
 # normal vgs is not an error and does not see the vg
@@ -136,8 +136,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -165,8 +165,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -196,8 +196,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l 2 $vg1
@@ -229,8 +229,8 @@ SID1=sidfoofile1
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 aux lvmconf "global/system_id_source = none"
@@ -255,8 +255,8 @@ vgcreate $vg1 "$dev1"
 check vg_field $vg1 systemid ""
 # set a local system_id
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # check we can see and use the vg with no system_id
 vgs >err
 grep $vg1 err
@@ -271,8 +271,8 @@ SID1=sidfoofile1
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -298,8 +298,8 @@ SID1=sidfoofile1
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -332,8 +332,8 @@ SID2=012345678901234567890123456789012345678901234567890123456789012345678901234
 # max len system_id should appear normally
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -346,8 +346,8 @@ rm -f $SIDFILE
 # max+1 len system_id should be missing the last character
 rm -f $SIDFILE
 echo "$SID2" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -367,8 +367,8 @@ SID1=012345678901234567890123456789012345678901234567890123456789012345678901234
 SID2=012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789abcdefg
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -386,8 +386,8 @@ SID2=A.1
 
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -407,8 +407,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal pvs sees the vg and pv
@@ -438,8 +438,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l 2 $vg1
@@ -473,8 +473,8 @@ LVMLOCAL=etc/lvmlocal.conf
 rm -f $LVMLOCAL
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -503,8 +503,8 @@ SID1=sidfoofile1
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate --systemid "" $vg1 "$dev1"
 # normal vgs sees the vg
@@ -521,8 +521,8 @@ SID1=sidfoofile1
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -549,8 +549,8 @@ SIDFILE=etc/lvm_test.conf
 rm -f $LVMLOCAL
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -580,8 +580,8 @@ SIDFILE=etc/lvm_test.conf
 rm -f $LVMLOCAL
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg
 vgcreate $vg1 "$dev1"
 # normal vgs sees the vg
@@ -677,8 +677,8 @@ rm -f $SIDFILE
 SID=""
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 vgcreate $vg1 "$dev1" |& tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
@@ -700,8 +700,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg with an lv
 vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l 2 -an $vg1
@@ -741,8 +741,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg with an lv
 vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l 2 -an $vg1
@@ -781,8 +781,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg with an lv
 vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l 2 -an $vg1
@@ -833,8 +833,8 @@ SID2=sidfoofile2
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 echo "$SID1" > $SIDFILE
-aux lvmconf "global/system_id_source = file"
-aux lvmconf "global/system_id_file = $SIDFILE"
+aux lvmconf "global/system_id_source = file" \
+	    "global/system_id_file = \"$SIDFILE\""
 # create a vg with an lv
 vgcreate $vg1 "$dev1"
 lvcreate -n $lv1 -l 2 -an $vg1

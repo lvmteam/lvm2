@@ -85,8 +85,8 @@ prepare_lvmetad() {
 	# skip if we don't have our own lvmetad...
 	(which lvmetad 2>/dev/null | grep "$abs_builddir") || skip
 
-	lvmconf "global/use_lvmetad = 1"
-	lvmconf "devices/md_component_detection = 0"
+	lvmconf "global/use_lvmetad = 1" \
+		"devices/md_component_detection = 0"
 
 	local run_valgrind=
 	test "${LVM_VALGRIND_LVMETAD:-0}" -eq 0 || run_valgrind="run_valgrind"

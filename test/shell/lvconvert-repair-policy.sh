@@ -12,8 +12,8 @@
 . lib/inittest
 
 aux prepare_vg 4
-aux lvmconf 'allocation/maximise_cling = 0'
-aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
+aux lvmconf 'allocation/maximise_cling = 0' \
+	    'allocation/mirror_logs_require_separate_pvs = 1'
 
 # Clean-up and create a 2-way mirror, where the the
 # leg devices are always on $dev[12] and the log

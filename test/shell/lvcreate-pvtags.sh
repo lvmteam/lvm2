@@ -12,8 +12,8 @@
 . lib/inittest
 
 aux prepare_pvs 3
-aux lvmconf 'allocation/maximise_cling = 0'
-aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
+aux lvmconf 'allocation/maximise_cling = 0' \
+	    'allocation/mirror_logs_require_separate_pvs = 1'
 
 # not required, just testing
 aux pvcreate --metadatacopies 0 "$dev1"

@@ -14,8 +14,7 @@ test_description='Test pvcreate bootloader area support'
 . lib/inittest
 
 aux prepare_devs 1
-aux lvmconf 'global/suffix=0'
-aux lvmconf 'global/units="b"'
+aux lvmconf 'global/suffix=0' 'global/units="b"'
 
 #COMM 'pvcreate sets/aligns bootloader area correctly'
 pvcreate --dataalignment 262144b --bootloaderareasize 614400b "$dev1"
