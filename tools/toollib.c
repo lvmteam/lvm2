@@ -843,11 +843,6 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!lv_active_change(cmd, lv, activate, 0))
 		return_0;
 
-	if (background_polling() &&
-	    is_change_activating(activate) &&
-	    (lv_is_pvmove(lv) || lv_is_converting(lv) || lv_is_merging(lv)))
-		lv_spawn_background_polling(cmd, lv);
-
 	return r;
 }
 

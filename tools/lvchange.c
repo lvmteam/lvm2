@@ -212,6 +212,19 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	if (!lv_change_activate(cmd, lv, activate))
 		return_0;
 
+	/*
+	 * FIXME: lvchange should defer background polling in a similar
+	 * 	  way as vgchange does. First activate all relevant LVs
+	 * 	  initate background polling later (for all actually
+	 * 	  activated LVs). So we can avoid duplicate background
+	 * 	  polling for pvmove (2 or more locked LVs on single pvmove
+	 * 	  LV)
+	 */
+	if (background_polling() && is_change_activating(activate) &&
+	    (lv_is_pvmove(lv) || lv_is_locked(lv) || lv_is_converting(lv) ||
+	     lv_is_merging(lv)))
+		lv_spawn_background_polling(cmd, lv);
+
 	return 1;
 }
 
