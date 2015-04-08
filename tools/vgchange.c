@@ -114,11 +114,6 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (lv_is_replicator_dev(lv) && (lv != first_replicator_dev(lv)))
 			continue;
 
-		/* Can't deactivate a pvmove LV */
-		/* FIXME There needs to be a controlled way of doing this */
-		if (lv_is_pvmove(lv) && !is_change_activating(activate))
-			continue;
-
 		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))
 			continue;
 
