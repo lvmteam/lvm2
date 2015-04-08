@@ -513,8 +513,8 @@ disable_dev() {
 		echo "Disabling device $dev ($maj:$min)"
 		notify="$notify $maj:$min"
 		if test -n "$error"; then
-		    echo 0 10000000 error | dmsetup load $dev
-		    dmsetup resume $dev
+		    echo 0 10000000 error | dmsetup load "$dev"
+		    dmsetup resume "$dev"
 		else
 		    dmsetup remove -f "$dev" 2>/dev/null || true
 		fi
