@@ -2612,7 +2612,7 @@ static void _display_selection_help(struct dm_report *rh)
 	log_warn("  size                - Floating point value with units, 'm' unit used by default if not specified.");
 	log_warn("  percent             - Non-negative integer with or without %% suffix.");
 	log_warn("  string              - Characters quoted by \' or \" or unquoted.");
-	log_warn("  string list         - Strings enclosed by [ ] and elements delimited by either");
+	log_warn("  string list         - Strings enclosed by [ ] or { } and elements delimited by either");
 	log_warn("                        \"all items must match\" or \"at least one item must match\" operator.");
 	log_warn("  regular expression  - Characters quoted by \' or \" or unquoted.");
 	log_warn(" ");

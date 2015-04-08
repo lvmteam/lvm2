@@ -470,6 +470,10 @@ that can be used in selection, see the output of \fB<lvm reporting command> -S h
 \fB[\fP  \(em List start
 .IP
 \fB]\fP  \(em List end
+.IP
+\fB{\fP  \(em List subset start
+.IP
+\fB}\fP  \(em List subset end
 .LP
 \fBInformal grammar specification\fP:
 .IP
@@ -477,7 +481,11 @@ that can be used in selection, see the output of \fB<lvm reporting command> -S h
 .IP
 .BR VALUE " = " [VALUE " log_op " VALUE]
 .br
-For list-based types: string list. The log_op must always be of one type within the whole list value.
+For list-based types: string list. Matches strictly. The log_op must always be of one type within the whole list value.
+.IP
+.BR VALUE " = " {VALUE " log_op " VALUE}
+.br
+For list-based types: string list. Matches a subset. The log_op must always be of one type within the whole list value.
 .IP
 .BR VALUE " = " value
 .br
