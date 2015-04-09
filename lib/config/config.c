@@ -1488,6 +1488,36 @@ struct out_baton {
 	struct dm_pool *mem;
 };
 
+#define MAX_COMMENT_LINE 512
+
+static int _copy_one_line(const char *comment, char *line, int *pos, int len)
+{
+	int p;
+	int i = 0;
+	char c;
+
+	if (*pos >= len)
+		return 0;
+
+	memset(line, 0, MAX_COMMENT_LINE+1);
+
+	for (p = *pos; ; p++) {
+		c = comment[p];
+
+		(*pos)++;
+
+		if (c == '\n' || c == '\0')
+			break;
+
+		line[i++] = c;
+
+		if (i == MAX_COMMENT_LINE)
+		       break;
+	}
+
+	return i;
+}
+
 static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, void *baton)
 {
 	struct out_baton *out = baton;
@@ -1495,7 +1525,7 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 	char version[9]; /* 8+1 chars for max version of 7.15.511 */
 	const char *node_type_name = cn->v ? "option" : "section";
 	char path[CFG_PATH_MAX_LEN];
-
+	char commentline[MAX_COMMENT_LINE+1];
 
 	if (cn->id < 0)
 		return 1;
@@ -1513,10 +1543,14 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 
 	if (out->tree_spec->withcomments) {
 		_cfg_def_make_path(path, sizeof(path), cfg_def->id, cfg_def, 1);
+		fprintf(out->fp, "\n");
 		fprintf(out->fp, "%s# Configuration %s %s.\n", line, node_type_name, path);
 
-		if (cfg_def->comment)
-			fprintf(out->fp, "%s# %s\n", line, cfg_def->comment);
+		if (cfg_def->comment) {
+			int pos = 0;
+			while (_copy_one_line(cfg_def->comment, commentline, &pos, strlen(cfg_def->comment)))
+				fprintf(out->fp, "%s# %s\n", line, commentline);
+		}
 
 		if (cfg_def->flags & CFG_ADVANCED)
 			fprintf(out->fp, "%s# This configuration %s is advanced.\n", line, node_type_name);
