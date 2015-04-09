@@ -100,6 +100,11 @@ mkdtemp() {
 	die "$err"
 }
 
+# Like grep, just always print 1st. line
+grep1_() {
+	awk -v pattern="${1}" 'NR==1 || $0~pattern' "${@:2}"
+}
+
 STACKTRACE() {
 	trap - ERR
 	local i=0
@@ -129,9 +134,11 @@ STACKTRACE() {
 
 	test -z "$LVM_TEST_NODEBUG" -a -f debug.log && {
 		sed -e "s,^,## DEBUG: ,;s,$top_srcdir/\?,," < debug.log
+		echo "========= CLVMD debug log ========="
+		test -e clvmddebug.log && sed -e "s,^,## CLVMD: ,;s,$top_srcdir/\?,," < clvmddebug.log
 		test -e strace.log && sed -e "s,^,## STRACE: ,;s,$top_srcdir/\?,," < strace.log
 		echo "========= Info ==========="
-		dmsetup info -c | grep "$PREFIX"
+		dmsetup info -c | grep1_ "$PREFIX"
 		echo "========= Active table ==========="
 		dmsetup table | grep "$PREFIX"
 		echo "======== Inactive table =========="
@@ -141,9 +148,9 @@ STACKTRACE() {
 		echo "======== Tree =========="
 		dmsetup ls --tree
 		echo "======== Recursive list of $DM_DEV_DIR =========="
-		ls -Rla "$DM_DEV_DIR"
-		for i in "/sys/block/dm-* /sys/block/loop*" ; do
-			udevadm info --export-db "$i" || true
+		ls -Rl --hide=shm --hide=bus --hide=snd --hide=input "$DM_DEV_DIR"
+		for i in /sys/block/dm-* /sys/block/loop* ; do
+			udevadm info -p "$i" || true
 		done
 	}
 

@@ -38,6 +38,9 @@ case "$CMD" in
 	test ${LVM_DEBUG_LEVEL:-0} -lt 1 && RUN_DBG= ;;
 esac
 
+# Capture parallel users of debug.log file
+test -z "$(fuser debug.log 2>/dev/null)" || { echo "Test suite problem: \"debug.log\" is still in use!" >&2 ; return 1 ; }
+
 # the exec is important, because otherwise fatal signals inside "not" go unnoticed
 if test -n "$abs_top_builddir"; then
     exec $RUN_DBG "$abs_top_builddir/tools/lvm" $CMD "$@"

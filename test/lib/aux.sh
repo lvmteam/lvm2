@@ -48,9 +48,11 @@ prepare_clvmd() {
 
 	for i in $(seq 1 100) ; do
 		test $i -eq 100 && die "Startup of clvmd is too slow."
-		test -e "$CLVMD_PIDFILE" && break
+		test -e "$CLVMD_PIDFILE" -a -e debug.log && break
 		sleep .2
 	done
+	# Keep log of clvmd in separate debug file
+	mv debug.log clvmddebug.log
 }
 
 prepare_dmeventd() {
