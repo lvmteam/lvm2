@@ -23,8 +23,8 @@ pvcreate --metadatacopies 0 "$dev6"
 vgextend $vg1 "$dev6"
 
 # Slowdown writes
-aux delay_dev "$dev3" 100 100 $(get first_extent_sector "$dev3"):
-aux delay_dev "$dev6" 100 100 $(get first_extent_sector "$dev6"):
+aux delay_dev "$dev3" 0 400 $(get first_extent_sector "$dev3"):
+aux delay_dev "$dev6" 0 400 $(get first_extent_sector "$dev6"):
 
 for mode in "--atomic" "" ;
 do
@@ -61,7 +61,6 @@ done
 done
 
 # Restore delayed device back
-aux enable_dev "$dev3"
-aux enable_dev "$dev6"
+aux enable_dev "$dev3" "$dev6"
 
 vgremove -ff $vg $vg1
