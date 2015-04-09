@@ -1318,7 +1318,7 @@ static int _write_single_mda(struct metadata_area *mda, void *baton)
 	return 1;
 }
 
-/* Only for orphans */
+/* Only for orphans - FIXME That's not true any more */
 static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv)
 {
 	struct format_instance *fid = pv->fid;
@@ -1332,7 +1332,8 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	/* Add a new cache entry with PV info or update existing one. */
 	if (!(info = lvmcache_add(fmt->labeller, (const char *) &pv->id,
-				  pv->dev, pv->vg_name, NULL, 0)))
+				  pv->dev, pv->vg_name,
+				  is_orphan_vg(pv->vg_name) ? pv->vg_name : pv->vg ? &pv->vg->id : NULL, 0)))
 		return_0;
 
 	label = lvmcache_get_label(info);

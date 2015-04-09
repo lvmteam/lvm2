@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Set correct vgid when updating cache when writing PV metadata.
   More efficient clvmd singlenode locking emulation.
   Don't skip invalidation of cached orphans if vg write lck is held (2.02.118).
   Log relevant PV tags when using cling allocation.

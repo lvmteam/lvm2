@@ -1544,6 +1544,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		.vgstatus = vgstatus,
 	};
 
+	/* N.B. vgid is not NUL-terminated when called from _text_pv_write */
 	if (vgid)
 		strncpy((char *)&vgsummary.vgid, vgid, sizeof(vgsummary.vgid));
 
