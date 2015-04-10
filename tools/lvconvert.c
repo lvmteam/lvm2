@@ -701,21 +701,21 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 
 static struct poll_functions _lvconvert_mirror_fns = {
 	.get_copy_vg = poll_get_copy_vg,
-	.get_copy_lv = lvconvert_get_copy_lv,
+	.get_copy_lv = poll_get_copy_lv,
 	.poll_progress = poll_mirror_progress,
 	.finish_copy = lvconvert_mirror_finish,
 };
 
 static struct poll_functions _lvconvert_merge_fns = {
 	.get_copy_vg = poll_get_copy_vg,
-	.get_copy_lv = lvconvert_get_copy_lv,
+	.get_copy_lv = poll_get_copy_lv,
 	.poll_progress = poll_merge_progress,
 	.finish_copy = lvconvert_merge_finish,
 };
 
 static struct poll_functions _lvconvert_thin_merge_fns = {
 	.get_copy_vg = poll_get_copy_vg,
-	.get_copy_lv = lvconvert_get_copy_lv,
+	.get_copy_lv = poll_get_copy_lv,
 	.poll_progress = poll_thin_merge_progress,
 	.finish_copy = lvconvert_merge_finish,
 };
@@ -3225,7 +3225,7 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 		return_NULL;
 	}
 
-	if (!(lv = lvconvert_get_copy_lv(cmd, vg, lv_name, NULL, 0))) {
+	if (!(lv = poll_get_copy_lv(cmd, vg, lv_name, NULL, 0))) {
 		log_error("Can't find LV %s in VG %s", lv_name, vg_name);
 		unlock_and_release_vg(cmd, vg, vg_name);
 		return NULL;

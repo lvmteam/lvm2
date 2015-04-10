@@ -75,4 +75,9 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 struct volume_group *poll_get_copy_vg(struct cmd_context *cmd, const char *name,
 				      const char *uuid);
 
+struct logical_volume *poll_get_copy_lv(struct cmd_context *cmd,
+					struct volume_group *vg,
+					const char *name, const char *uuid,
+					uint64_t lv_type);
+
 #endif

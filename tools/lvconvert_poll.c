@@ -16,20 +16,6 @@
 #include "lvconvert_poll.h"
 #include "tools.h"
 
-struct logical_volume *lvconvert_get_copy_lv(struct cmd_context *cmd __attribute__((unused)),
-					     struct volume_group *vg,
-					     const char *name,
-					     const char *uuid,
-					     uint64_t lv_type __attribute__((unused)))
-{
-	struct logical_volume *lv = find_lv(vg, name);
-
-	if (!lv || (uuid && strcmp(uuid, (char *)&lv->lvid)))
-		return NULL;
-
-	return lv;
-}
-
 int lvconvert_mirror_finish(struct cmd_context *cmd,
 			    struct volume_group *vg,
 			    struct logical_volume *lv,
