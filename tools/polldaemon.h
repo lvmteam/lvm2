@@ -87,4 +87,7 @@ struct logical_volume *poll_get_copy_lv(struct cmd_context *cmd,
 					const char *name, const char *uuid,
 					uint64_t lv_type);
 
+int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
+		       struct daemon_parms *parms);
+
 #endif

@@ -158,8 +158,8 @@ static void _sleep_and_rescan_devices(struct daemon_parms *parms)
 	}
 }
 
-static int _wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
-			       struct daemon_parms *parms)
+int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
+		       struct daemon_parms *parms)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -392,7 +392,7 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	 * Process one specific task or all incomplete tasks?
 	 */
 	if (id) {
-		if (!_wait_for_single_lv(cmd, id, parms)) {
+		if (!wait_for_single_lv(cmd, id, parms)) {
 			stack;
 			ret = ECMD_FAILED;
 		}
