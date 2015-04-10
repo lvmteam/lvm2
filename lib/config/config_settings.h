@@ -66,6 +66,8 @@
  * since_version:	the version this configuration node first appeared in (be sure
  *			that parent nodes are consistent with versioning, no check done
  *			if parent node is older or the same age as any child node!)
+ *			Use "vsn" macro to translate the "major.minor.release" version
+ *			into a single number that is being stored internally in memory.
  */
 #include "defaults.h"
 
