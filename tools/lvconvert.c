@@ -720,37 +720,68 @@ static struct poll_functions _lvconvert_thin_merge_fns = {
 	.finish_copy = lvconvert_merge_finish,
 };
 
+static void _destroy_id(struct cmd_context *cmd, struct poll_operation_id *id)
+{
+	if (!id)
+		return;
+
+	dm_pool_free(cmd->mem, (void *)id);
+}
+
+static struct poll_operation_id *_create_id(struct cmd_context *cmd,
+					    const char *vg_name,
+					    const char *lv_name,
+					    const char *uuid)
+{
+	char lv_full_name[NAME_LEN];
+	struct poll_operation_id *id = dm_pool_alloc(cmd->mem, sizeof(struct poll_operation_id));
+	if (!id) {
+		log_error("Poll operation ID allocation failed.");
+		return NULL;
+	}
+
+	if (dm_snprintf(lv_full_name, sizeof(lv_full_name), "%s/%s", vg_name, lv_name) < 0) {
+		log_error(INTERNAL_ERROR "Name \"%s/%s\" is too long.", vg_name, lv_name);
+		_destroy_id(cmd, id);
+		return NULL;
+	}
+
+	id->display_name = dm_pool_strdup(cmd->mem, lv_full_name);
+	id->vg_name = vg_name ? dm_pool_strdup(cmd->mem, vg_name) : NULL;
+	id->lv_name = id->display_name ? strchr(id->display_name, '/') + 1 : NULL;
+	id->uuid = uuid ? dm_pool_strdup(cmd->mem, uuid) : NULL;
+
+	if (!id->vg_name || !id->lv_name || !id->display_name || !id->uuid) {
+		log_error("Failed to copy one or more poll operation ID members.");
+		_destroy_id(cmd, id);
+		id = NULL;
+	}
+
+	return id;
+}
+
 int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 		   unsigned background)
 {
-	/*
-	 * FIXME allocate an "object key" structure with split
-	 * out members (vg_name, lv_name, uuid, etc) and pass that
-	 * around the lvconvert and polldaemon code
-	 * - will avoid needless work, e.g. extract_vgname()
-	 * - unfortunately there are enough overloaded "name" dragons in
-	 *   the polldaemon, lvconvert, pvmove code that a comprehensive
-	 *   audit/rework is needed
-	 */
-	char uuid[sizeof(lv->lvid)];
-	char lv_full_name[NAME_LEN];
 	int is_thin, r;
+	struct poll_operation_id *id = _create_id(cmd, lv->vg->name, lv->name, lv->lvid.s);
 
-	if (dm_snprintf(lv_full_name, sizeof(lv_full_name), "%s/%s", lv->vg->name, lv->name) < 0) {
-		log_error(INTERNAL_ERROR "Name \"%s/%s\" is too long.", lv->vg->name, lv->name);
+	if (!id) {
+		log_error("Failed to allocate poll identifier for lvconvert.");
 		return ECMD_FAILED;
 	}
 
-	memcpy(uuid, &lv->lvid, sizeof(lv->lvid));
-
 	if (lv_is_merging_origin(lv)) {
 		is_thin = seg_is_thin_volume(find_snapshot(lv));
-		r = poll_daemon(cmd, lv_full_name, uuid, background, 0,
+		r = poll_daemon(cmd, background,
+				(MERGING | (is_thin ? THIN_VOLUME : SNAPSHOT)),
 				is_thin ? &_lvconvert_thin_merge_fns : &_lvconvert_merge_fns,
-				"Merged");
+				"Merged", id);
 	} else
-		r = poll_daemon(cmd, lv_full_name, uuid, background, 0,
-				&_lvconvert_mirror_fns, "Converted");
+		r = poll_daemon(cmd, background, CONVERTING,
+				&_lvconvert_mirror_fns, "Converted", id);
+
+	_destroy_id(cmd, id);
 
 	return r;
 }

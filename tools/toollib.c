@@ -921,7 +921,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 	    (pvname = get_pvmove_pvname_from_lv_mirr(lv_mirr))) {
 		log_verbose("Spawning background pvmove process for %s.",
 			    pvname);
-		pvmove_poll(cmd, pvname, 1);
+		pvmove_poll(cmd, pvname, lv_mirr->lvid.s, lv_mirr->vg->name, lv_mirr->name, 1);
 	}
 
 	if (lv_is_converting(lv) || lv_is_merging(lv)) {

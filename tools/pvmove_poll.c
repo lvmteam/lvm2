@@ -16,13 +16,6 @@
 #include "pvmove_poll.h"
 #include "tools.h"
 
-struct volume_group *get_vg(struct cmd_context *cmd, const char *vgname)
-{
-	dev_close_all();
-
-	return vg_read_for_update(cmd, vgname, NULL, 0);
-}
-
 static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
 				      void *baton)
 {
@@ -200,24 +193,4 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 	backup(vg);
 
 	return r;
-}
-
-struct volume_group *pvmove_get_copy_vg(struct cmd_context *cmd, const char *name,
-					const char *uuid __attribute__((unused)),
-					uint32_t flags __attribute__((unused)))
-{
-	struct physical_volume *pv;
-	struct volume_group *vg;
-
-	/* Reread all metadata in case it got changed */
-	if (!(pv = find_pv_by_name(cmd, name, 0, 0))) {
-		log_error("ABORTING: Can't reread PV %s", name);
-		/* What more could we do here? */
-		return NULL;
-	}
-
-	vg = get_vg(cmd, pv_vg_name(pv));
-	free_pv_fid(pv);
-
-	return vg;
 }

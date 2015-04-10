@@ -52,6 +52,13 @@ struct poll_functions {
 			    struct dm_list *lvs_changed);
 };
 
+struct poll_operation_id {
+	const char *vg_name;
+	const char *lv_name;
+	const char *display_name;
+	const char *uuid;
+};
+
 struct daemon_parms {
 	unsigned interval;
 	unsigned wait_before_testing;
@@ -64,10 +71,9 @@ struct daemon_parms {
 	struct poll_functions *poll_fns;
 };
 
-int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
-		unsigned background,
+int poll_daemon(struct cmd_context *cmd, unsigned background,
 		uint64_t lv_type, struct poll_functions *poll_fns,
-		const char *progress_title);
+		const char *progress_title, struct poll_operation_id *id);
 
 progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct logical_volume *lv, const char *name,

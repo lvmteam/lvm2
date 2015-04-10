@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -176,7 +176,8 @@ int32_t grouped_arg_int_value(const struct arg_values *av, int a, const int32_t 
 
 const char *command_name(struct cmd_context *cmd);
 
-int pvmove_poll(struct cmd_context *cmd, const char *pv, unsigned background);
+int pvmove_poll(struct cmd_context *cmd, const char *pv_name, const char *uuid,
+		const char *vg_name, const char *lv_name, unsigned background);
 int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv, unsigned background);
 
 int mirror_remove_missing(struct cmd_context *cmd,
