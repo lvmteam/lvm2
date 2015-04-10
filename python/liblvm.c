@@ -1445,9 +1445,9 @@ static PyObject *_liblvm_lvm_lv_add_tag(lvobject *self, PyObject *args)
 		return NULL;
 
 	if (lvm_lv_add_tag(self->lv, tag) == -1)
-        goto error;
+		goto error;
 
-    if (lvm_vg_write(self->parent_vgobj->vg) == -1)
+	if (lvm_vg_write(self->parent_vgobj->vg) == -1)
 		goto error;
 
 	Py_INCREF(Py_None);
@@ -1468,10 +1468,10 @@ static PyObject *_liblvm_lvm_lv_remove_tag(lvobject *self, PyObject *args)
 		return NULL;
 
 	if (lvm_lv_remove_tag(self->lv, tag) == -1)
-        goto error;
+		goto error;
 
-    if (lvm_vg_write(self->parent_vgobj->vg) == -1)
-        goto error;
+	if (lvm_vg_write(self->parent_vgobj->vg) == -1)
+		goto error;
 
 	Py_INCREF(Py_None);
 	return Py_None;
