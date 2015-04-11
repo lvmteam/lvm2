@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Respect allocation/cling_tag_list during intial contiguous allocation.
   Add A_PARTITION_BY_TAGS set when allocated areas should not share tags.
   Set correct vgid when updating cache when writing PV metadata.
   More efficient clvmd singlenode locking emulation.

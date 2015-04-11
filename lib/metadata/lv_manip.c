@@ -2125,6 +2125,17 @@ static const char *_tags_list_str(struct alloc_handle *ah, struct physical_volum
 }
 
 /*
+ * Does PV area have a tag listed in allocation/cling_tag_list that
+ * matches a tag in the pv_tags list?
+ */
+static int _pv_has_matching_tag(const struct dm_config_node *cling_tag_list_cn,
+				struct physical_volume *pv1, uint32_t pv1_start_pe, uint32_t area_num,
+				struct dm_list *pv_tags)
+{
+	return _match_pv_tags(cling_tag_list_cn, pv1, pv1_start_pe, area_num, NULL, pv_tags, 0, NULL, NULL);
+}
+
+/*
  * Does PV area have a tag listed in allocation/cling_tag_list that 
  * matches a tag of the PV of the existing segment?
  */
@@ -2501,6 +2512,38 @@ static void _report_needed_allocation_space(struct alloc_handle *ah,
 			(metadata_count == 1) ? "" : "s",
 			metadata_size);
 }
+
+/* Work through the array, removing any entries with tags already used by previous areas. */
+static int _limit_to_one_area_per_tag(struct alloc_handle *ah, struct alloc_state *alloc_state,
+				      uint32_t ix_log_offset, unsigned *ix)
+{
+	uint32_t	s = 0, u = 0;
+	DM_LIST_INIT(pv_tags);
+
+	while (s < alloc_state->areas_size && alloc_state->areas[s].pva) {
+		/* Start again with an empty tag list when we reach the log devices */
+		if (u == ix_log_offset)
+			dm_list_init(&pv_tags);
+		if (!_pv_has_matching_tag(ah->cling_tag_list_cn, alloc_state->areas[s].pva->map->pv, alloc_state->areas[s].pva->start, s, &pv_tags)) {
+			/* The comparison fn will ignore any non-cling tags so just add everything */
+			if (!str_list_add_list(ah->mem, &pv_tags, &alloc_state->areas[s].pva->map->pv->tags))
+				return_0;
+
+			if (s != u)
+				alloc_state->areas[u] = alloc_state->areas[s];
+
+			u++;
+		} else
+			(*ix)--;	/* One area removed */
+
+		s++;
+	}
+
+	alloc_state->areas[u].pva = NULL;
+
+	return 1;
+}
+
 /*
  * Returns 1 regardless of whether any space was found, except on error.
  */
@@ -2720,6 +2763,43 @@ static int _find_some_parallel_space(struct alloc_handle *ah,
 	    (alloc_state->log_area_count_still_needed ? alloc_state->log_area_count_still_needed +
 				    too_small_for_log_count : 0))
 		return 1;
+
+	/*
+	 * FIXME We should change the code to do separate calls for the log allocation 
+	 * and the data allocation so that _limit_to_one_area_per_tag doesn't have to guess
+	 * where the split is going to occur.
+	 */
+
+	/*
+	 * This code covers the initial allocation - after that there is something to 'cling' to
+	 * and we shouldn't get this far.
+	 * ix_offset is assumed to be 0 with A_PARTITION_BY_TAGS.
+	 *
+	 * FIXME Consider a second attempt with A_PARTITION_BY_TAGS if, for example, the largest area
+	 * had all the tags set, but other areas don't.
+	 */
+	if ((alloc_parms->flags & A_PARTITION_BY_TAGS) && !ix_offset) {
+		if (!_limit_to_one_area_per_tag(ah, alloc_state, ix_log_offset, &ix))
+			return_0;
+
+		/* Recalculate log position because we might have removed some areas from consideration */
+		if (alloc_state->log_area_count_still_needed) {
+			/* How many areas are too small for the log? */
+			too_small_for_log_count = 0;
+			while (too_small_for_log_count < ix &&
+			       (*(alloc_state->areas + ix - 1 - too_small_for_log_count)).pva &&
+			       (*(alloc_state->areas + ix - 1 - too_small_for_log_count)).used < ah->log_len)
+				too_small_for_log_count++;
+			if (ix < too_small_for_log_count + ah->log_area_count)
+				return 1;
+			ix_log_offset = ix - too_small_for_log_count - ah->log_area_count;
+		}
+
+		if (ix < devices_needed +
+		    (alloc_state->log_area_count_still_needed ? alloc_state->log_area_count_still_needed +
+					    too_small_for_log_count : 0))
+			return 1;
+	}
 
 	/*
 	 * Finally add the space identified to the list of areas to be used.
