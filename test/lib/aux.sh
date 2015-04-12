@@ -83,7 +83,7 @@ prepare_dmeventd() {
 }
 
 prepare_lvmetad() {
-	test $# -eq 0 && default_opts="-l wire,debug"
+	test $# -eq 0 && default_opts="-l all"
 	rm -f debug.log strace.log
 	# skip if we don't have our own lvmetad...
 	(which lvmetad 2>/dev/null | grep "$abs_builddir") || skip
