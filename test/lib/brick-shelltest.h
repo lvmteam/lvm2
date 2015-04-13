@@ -345,18 +345,23 @@ struct Sink {
 
 struct Substitute {
     typedef std::map< std::string, std::string > Map;
-    Map _map;
+    std::string testdir; // replace testdir first
+    std::string prefix;
 
     std::string map( std::string line ) {
         if ( std::string( line, 0, 9 ) == "@TESTDIR=" )
-            _map[ "@TESTDIR@" ] = std::string( line, 9, std::string::npos );
+            testdir = std::string( line, 9, line.length() - 10 ); // skip \n
         else if ( std::string( line, 0, 8 ) == "@PREFIX=" )
-            _map[ "@PREFIX@" ] = std::string( line, 8, std::string::npos );
+            prefix = std::string( line, 8, line.length() - 9 );  // skip \n
         else {
             size_t off;
-            for ( Map::iterator s = _map.begin(); s != _map.end(); ++s )
-                while ( (off = line.find( s->first )) != std::string::npos )
-                    line.replace( off, s->first.length(), s->second );
+            if (!testdir.empty())
+                while ( (off = line.find( testdir )) != std::string::npos )
+                    line.replace( off, testdir.length(), "@TESTDIR@" );
+
+            if (!prefix.empty())
+                while ( (off = line.find( prefix )) != std::string::npos )
+                    line.replace( off, prefix.length(), "@PREFIX@" );
         }
         return line;
     }
@@ -406,6 +411,13 @@ struct FdSink : Sink {
     virtual void outline( bool force )
     {
         TimedBuffer::Line line = stream.shift( force );
+        if (line.second.c_str()[0] == '#') {
+            /* Disable timing between  STACKTRACE & teardown keywords */
+            if (strstr(line.second.c_str() + 1, "# 0 STACKTRACE"))
+                fmt.stamp = false;
+            else if (strstr(line.second.c_str() + 1, "# teardown"))
+                fmt.stamp = true;
+        }
         std::string out = fmt.format( line );
         write( fd, out.c_str(), out.length() );
     }
