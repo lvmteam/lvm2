@@ -6,12 +6,17 @@ lvmconf \(em LVM configuration modifier
 .B lvmconf
 .RB [ \-\-disable-cluster ]
 .RB [ \-\-enable-cluster ]
+.RB [ \-\---enable-halvm ]
+.RB [ \-\---disable-halvm ]
 .RB [ \-\-file
 .RI < configfile >]
 .RB [ \-\-lockinglib
 .RI < lib >]
 .RB [ \-\-lockinglibdir
 .RI < dir >]
+.RB [ \-\-services ]
+.RB [ \-\-mirrorservice ]
+.RB [ \-\-startstopservices ]
 
 .SH "DESCRIPTION"
 lvmconf is a script that modifies the locking configuration in
@@ -27,6 +32,14 @@ lvmetad use to its default.
 Set \fBlocking_type\fR to the default clustered type on this system.
 Also disable lvmetad use as it is not yet supported in clustered environment.
 .TP
+.BR \-\-disable-halvm
+Set \fBlocking_type\fR to the default non-clustered type. Also reset
+lvmetad use to its default.
+.TP
+.BR \-\-enable-halvm
+Set \fBlocking_type\fR suitable for HA LVM use.
+Also disable lvmetad use as it is not yet supported in HA LVM environment.
+.TP
 .BR \-\-file " <" \fIconfigfile >
 Apply the changes to \fIconfigfile\fP instead of the default
 \fI#DEFAULT_SYS_DIR#/lvm.conf\fP.
@@ -35,6 +48,17 @@ Apply the changes to \fIconfigfile\fP instead of the default
 Set external \fBlocking_library\fR locking library to load if an external locking type is used.
 .TP
 .BR \-\-lockinglibdir " <" \fIdir >
+.TP
+.BR \-\-services
+In addition to setting the lvm configuration, also enable or disable related Systemd or SysV
+clvmd and lvmetad services.
+.TP
+.BR \-\-mirrorservice
+Also enable or disable optional cmirrord service when handling services (applicable only with \-\-services).
+.TP
+.BR \-\-startstopservices
+In addition to enabling or disabling related services, start or stop them immediately
+(applicable only with \-\-services).
 .SH FILES
 .I #DEFAULT_SYS_DIR#/lvm.conf
 
