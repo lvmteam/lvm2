@@ -2239,7 +2239,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	/*
-	 * Check if cmirord is running for clustered mirrors.
+	 * Check if cmirrord is running for clustered mirrors.
 	 */
 	if (!laopts->exclusive && vg_is_clustered(lv->vg) &&
 	    lv_is_mirror(lv) && !lv_is_raid(lv) &&
