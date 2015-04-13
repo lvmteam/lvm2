@@ -31,13 +31,13 @@ prepare_clvmd() {
 	fi
 
 	# skip if we don't have our own clvmd...
-	(which clvmd 2>/dev/null | grep "$abs_builddir") || skip
+	(which clvmd 2>/dev/null | grep -q "$abs_builddir") || skip
 	# lvs is executed from clvmd - use our version
 	export LVM_BINARY=$(which lvm)
 
-	test -e "$DM_DEV_DIR/control" || dmsetup table # create control node
+	test -e "$DM_DEV_DIR/control" || dmsetup table >/dev/null # create control node
 	# skip if singlenode is not compiled in
-	(clvmd --help 2>&1 | grep "Available cluster managers" | grep "singlenode") || skip
+	(clvmd --help 2>&1 | grep "Available cluster managers" | grep -q "singlenode") || skip
 
 #	lvmconf "activation/monitoring = 1"
 	local run_valgrind=
