@@ -97,5 +97,6 @@ test -n "$LVM_TEST_LVMETAD" && {
 # Vars for harness
 echo "@TESTDIR=$TESTDIR"
 echo "@PREFIX=$PREFIX"
+echo "<======== Processing test: \"$TESTNAME\" ========>"
 
 set -vx

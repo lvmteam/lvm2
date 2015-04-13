@@ -43,6 +43,7 @@ prepare_clvmd() {
 	local run_valgrind=
 	test "${LVM_VALGRIND_CLVMD:-0}" -eq 0 || run_valgrind="run_valgrind"
 	rm -f "$CLVMD_PIDFILE"
+	echo "<======== Starting CLVMD ========>"
 	$run_valgrind clvmd -Isinglenode -d 1 -f &
 	echo $! > LOCAL_CLVMD
 
@@ -695,7 +696,7 @@ EOF
 		done
 		echo "}"
 		echo
-	done | tee "$config"
+	done | tee "$config" | sed -e "s,^,## LVMCONF: ,"
 }
 
 lvmconf() {

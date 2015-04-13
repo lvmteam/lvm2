@@ -133,25 +133,40 @@ STACKTRACE() {
 	fi
 
 	test -z "$LVM_TEST_NODEBUG" -a -f debug.log && {
-		sed -e "s,^,## DEBUG: ,;s,$top_srcdir/\?,," < debug.log
-		echo "========= CLVMD debug log ========="
-		test -e clvmddebug.log && sed -e "s,^,## CLVMD: ,;s,$top_srcdir/\?,," < clvmddebug.log
-		test -e strace.log && sed -e "s,^,## STRACE: ,;s,$top_srcdir/\?,," < strace.log
-		echo "========= Info ==========="
-		dmsetup info -c | grep1_ "$PREFIX"
-		echo "========= Active table ==========="
-		dmsetup table | grep "$PREFIX"
-		echo "======== Inactive table =========="
-		dmsetup table --inactive  | grep "$PREFIX"
-		echo "======== Status =========="
-		dmsetup status | grep "$PREFIX"
-		echo "======== Tree =========="
-		dmsetup ls --tree
-		echo "======== Recursive list of $DM_DEV_DIR =========="
-		ls -Rl --hide=shm --hide=bus --hide=snd --hide=input "$DM_DEV_DIR"
-		for i in /sys/block/dm-* /sys/block/loop* ; do
-			udevadm info -p "$i" || true
+		IDX=
+		for i in debug.log* ; do
+			echo "<======== Last traced lvm2 command $i ========>"
+			sed -e "s,^,## DEBUG${IDX}: ," $i
+			IDX=$(($IDX + 1))
 		done
+		test -e clvmddebug.log && {
+			echo "<======== CLVMD debug log ========>"
+			sed -e "s,^,## CLVMD: ," clvmddebug.log
+		}
+		test -e strace.log && {
+			echo "<======== Strace debug log ========>"
+			sed -e "s,^,## STRACE: ," strace.log
+		}
+		echo "<======== Info ========>"
+		dmsetup info -c | grep1_ "$PREFIX" | sed -e "s,^,## DMINFO:   ,"
+		echo "<======== Active table ========>"
+		dmsetup table | grep "$PREFIX" | sed -e "s,^,## DMTABLE:  ,"
+		echo "<======== Inactive table ========>"
+		dmsetup table --inactive  | grep "$PREFIX" | sed -e "s,^,## DMITABLE: ,"
+		echo "<======== Status ========>"
+		dmsetup status | grep "$PREFIX" | sed -e "s,^,## DMSTATUS: ,"
+		echo "<======== Tree ========>"
+		dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
+		echo "<======== Recursive list of $DM_DEV_DIR ========>"
+		ls -Rl --hide=shm --hide=bus --hide=snd --hide=input --hide=dri \
+		       --hide=net --hide=hugepages --hide=mqueue --hide=pts \
+		       "$DM_DEV_DIR" | sed -e "s,^,## LSLR:     ,"
+		echo "<======== Udev DB content ========>"
+		for i in /sys/block/dm-* /sys/block/loop* ; do
+			udevadm info --path "$i" || true
+		done | sed -e "s,^,## UDEV:     ,"
+		echo "<======== Script file \"$(< TESTNAME)\" ========>"
+		awk '{print "## Line:", NR, "\t", $0}' "$TESTOLDPWD/$0"
 	}
 
 	test -f SKIP_THIS_TEST && exit 200
