@@ -39,7 +39,10 @@ case "$CMD" in
 esac
 
 # Capture parallel users of debug.log file
-test -z "$(fuser debug.log 2>/dev/null)" || { echo "Test suite problem: \"debug.log\" is still in use!" >&2 ; return 1 ; }
+test -z "$(fuser debug.log 2>/dev/null)" || {
+	echo "TEST WARNING: \"debug.log\" is still in use while running $CMD $@" >&2
+	fuser -v debug.log >&2
+}
 
 # the exec is important, because otherwise fatal signals inside "not" go unnoticed
 if test -n "$abs_top_builddir"; then
