@@ -299,12 +299,12 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		va_start(ap, format);
 		switch (level) {
 		case _LOG_DEBUG:
-			if ((verbose_level() == level) &&
-			    (strcmp("<backtrace>", format) == 0))
-				break;
 			if (verbose_level() < _LOG_DEBUG)
 				break;
 			if (!debug_class_is_logged(dm_errno_or_class))
+				break;
+			if ((verbose_level() == level) &&
+			    (strcmp("<backtrace>", format) == 0))
 				break;
 			/* fall through */
 		default:
@@ -333,7 +333,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		vfprintf(_log_file, trformat, ap);
 		va_end(ap);
 
-		fprintf(_log_file, "\n");
+		fputc('\n', _log_file);
 		fflush(_log_file);
 	}
 
