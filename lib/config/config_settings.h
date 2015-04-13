@@ -196,7 +196,7 @@ cfg_array(devices_filter_CFG, "filter", devices_CFG_SECTION, CFG_DEFAULT_UNDEFIN
 	"See the use_lvmetad comment for a special case regarding filters.\n"
 	"Example:\n"
 	"Accept every block device.\n"
-	"filter = [ \"a|.*/|" ]\n"
+	"filter = [ \"a|.*/|\" ]\n"
 	"Example:\n"
 	"Reject the cdrom drive.\n"
 	"filter = [ \"r|/dev/cdrom|\" ]\n"
@@ -208,7 +208,7 @@ cfg_array(devices_filter_CFG, "filter", devices_CFG_SECTION, CFG_DEFAULT_UNDEFIN
 	"filter =[ \"a|loop|\", \"r|/dev/hdc|\", \"a|/dev/ide|\", \"r|.*|\" ]\n"
 	"Example:\n"
 	"Use anchors to be very specific.\n"
-	"filter = [ \"a|^/dev/hda8$|\", \"r|.*/|" ]\n")
+	"filter = [ \"a|^/dev/hda8$|\", \"r|.*/|\" ]\n")
 
 cfg_array(devices_global_filter_CFG, "global_filter", devices_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 98),
 	"Since filter is often overridden from the command line,\n"
