@@ -1,5 +1,6 @@
 Version 1.02.96 - 
 =================================
+  Install blkdeactivate script and its man page with make install_device-mapper.
 
 Version 1.02.95 - 15th March 2015
 =================================
