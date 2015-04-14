@@ -33,14 +33,15 @@ ifeq ("@DMEVENTD@", "yes")
 	LVMLIBS += -ldevmapper-event
 endif
 
-SCRIPTS = lvmdump.sh lvmconf.sh vgimportclone.sh
+LVM_SCRIPTS = lvmdump.sh lvmconf.sh vgimportclone.sh
+DM_SCRIPTS =
 
 ifeq ("@FSADM@", "yes")
-	SCRIPTS += fsadm.sh
+	LVM_SCRIPTS += fsadm.sh
 endif
 
 ifeq ("@BLKDEACTIVATE@", "yes")
-	SCRIPTS += blkdeactivate.sh
+	DM_SCRIPTS += blkdeactivate.sh
 endif
 
 OCF_SCRIPTS =
@@ -58,11 +59,12 @@ vpath %.ocf $(srcdir)
 	$(INSTALL_DIR) $(ocf_scriptdir)
 	$(INSTALL_SCRIPT) $< $(ocf_scriptdir)/$(basename $(<F))
 
-install_lvm2: $(SCRIPTS:.sh=_install)
+install_lvm2: $(LVM_SCRIPTS:.sh=_install)
+install_device-mapper: $(DM_SCRIPTS:.sh=_install)
 
 install_ocf: $(OCF_SCRIPTS:.ocf=_install)
 
-install: install_lvm2 install_ocf
+install: install_lvm2 install_ocf install_device-mapper
 
 # FIXME Customise for other distributions
 install_initscripts:
