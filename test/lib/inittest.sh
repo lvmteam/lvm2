@@ -86,13 +86,15 @@ prepare_test_vars
 
 test -n "$BASH" && set -eE -o pipefail
 
-aux lvmconf
-aux prepare_clvmd
-test -n "$LVM_TEST_LVMETAD" && {
+if test -n "$LVM_TEST_LVMETAD" ; then
 	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
 	aux prepare_lvmetad
-}
+else
+	# lvmetad prepares its own lvmconf
+	aux lvmconf
+	aux prepare_clvmd
+fi
 
 # Vars for harness
 echo "@TESTDIR=$TESTDIR"
