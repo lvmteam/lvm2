@@ -37,9 +37,10 @@ lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 lvcreate -an -Zn -l30 -n $lv1 $vg1 "$dev4"
 lvextend -l+30 -n $vg1/$lv1 "$dev5"
 
-cmd1=$(echo pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode)
-cmd2=$(echo pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode)
-cmd3=$(echo pvmove -i1 $backgroundarg -n $vg1/$lv1 "$dev4" "$dev6" $mode)
+cmd1="pvmove -i1 $backgroundarg \"$dev1\" \"$dev3\" $mode"
+cmd2="pvmove -i1 $backgroundarg \"$dev2\" \"$dev3\" $mode"
+cmd3="pvmove -i1 $backgroundarg -n $vg1/$lv1 \"$dev4\" \"$dev6\" $mode"
+
 if test -z "$backgroundarg" ; then
 	$cmd1 &
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
