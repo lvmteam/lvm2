@@ -132,6 +132,8 @@ STACKTRACE() {
 		done
 	fi
 
+	test -f SKIP_THIS_TEST && exit 200
+
 	test -z "$LVM_TEST_NODEBUG" -a -f debug.log && {
 		IDX=
 		for i in debug.log* ; do
@@ -139,39 +141,40 @@ STACKTRACE() {
 			sed -e "s,^,## DEBUG${IDX}: ," $i
 			IDX=$(($IDX + 1))
 		done
-		test -e clvmddebug.log && {
+		if test -e clvmddebug.log ; then
 			echo "<======== CLVMD debug log ========>"
 			sed -e "s,^,## CLVMD: ," clvmddebug.log
-		}
-		test -e strace.log && {
+		fi
+		if test -e strace.log ; then
 			echo "<======== Strace debug log ========>"
 			sed -e "s,^,## STRACE: ," strace.log
-		}
-		echo "<======== Info ========>"
-		dmsetup info -c | grep1_ "$PREFIX" | sed -e "s,^,## DMINFO:   ,"
-		echo "<======== Active table ========>"
-		dmsetup table | grep "$PREFIX" | sed -e "s,^,## DMTABLE:  ,"
-		echo "<======== Inactive table ========>"
-		dmsetup table --inactive  | grep "$PREFIX" | sed -e "s,^,## DMITABLE: ,"
-		echo "<======== Status ========>"
-		dmsetup status | grep "$PREFIX" | sed -e "s,^,## DMSTATUS: ,"
-		echo "<======== Tree ========>"
-		dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
-		echo "<======== Recursive list of $DM_DEV_DIR ========>"
-		ls -Rl --hide=shm --hide=bus --hide=snd --hide=input --hide=dri \
-		       --hide=net --hide=hugepages --hide=mqueue --hide=pts \
-		       "$DM_DEV_DIR" | sed -e "s,^,## LSLR:     ,"
-		echo "<======== Udev DB content ========>"
-		for i in /sys/block/dm-* /sys/block/loop* ; do
-			udevadm info --path "$i" || true
-		done | sed -e "s,^,## UDEV:     ,"
+		fi
+		dmsetup info -c | grep1_ "$PREFIX" > out
+		if test $(wc -l < out) -gt 1 ; then
+			echo "<======== Info ========>"
+			sed -e "s,^,## DMINFO:   ," out
+			echo "<======== Active table ========>"
+			dmsetup table | grep "$PREFIX" | sed -e "s,^,## DMTABLE:  ,"
+			echo "<======== Inactive table ========>"
+			dmsetup table --inactive  | grep "$PREFIX" | sed -e "s,^,## DMITABLE: ,"
+			echo "<======== Status ========>"
+			dmsetup status | grep "$PREFIX" | sed -e "s,^,## DMSTATUS: ,"
+			echo "<======== Tree ========>"
+			dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
+			echo "<======== Recursive list of $DM_DEV_DIR ========>"
+			ls -Rl --hide=shm --hide=bus --hide=snd --hide=input --hide=dri \
+			       --hide=net --hide=hugepages --hide=mqueue --hide=pts \
+			       "$DM_DEV_DIR" | sed -e "s,^,## LSLR:	,"
+			echo "<======== Udev DB content ========>"
+			for i in /sys/block/dm-* /sys/block/loop* ; do
+				udevadm info --query=all --path "$i" || true
+			done | sed -e "s,^,## UDEV:	,"
+		fi
 		echo "<======== Script file \"$(< TESTNAME)\" ========>"
 		local script=$0
 		test -f "$script" || script="$TESTOLDPWD/$0"
 		awk '{print "## Line:", NR, "\t", $0}' "$script"
 	}
-
-	test -f SKIP_THIS_TEST && exit 200
 }
 
 init_udev_transaction() {
