@@ -917,7 +917,7 @@ struct TestCase {
         if ( options.batch ) {
             int spaces = std::max( 64 - int(pretty().length()), 0 );
             progress( Last ) << " " << std::string( spaces, '.' ) << " " << r;
-            if ( r == Journal::PASSED )
+            if ( r != Journal::SKIPPED )
                 progress( First ) << "   " << rusage();
             progress( Last ) << std::endl;
         } else
