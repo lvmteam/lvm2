@@ -232,25 +232,29 @@ kill_sleep_kill_() {
 # $1 cmd line
 # $2 optional parms for pgrep
 add_to_kill_list() {
-	local p=$(pgrep $2 -f "$1" 2>/dev/null)
-	test -z $p || echo $p:$1 >> kill_list
+	local p=$(pgrep ${@:2} -f "$1" 2>/dev/null)
+	test -z "$p" || echo "$p:$1" >> kill_list
 }
 
-kill_remaining_processes() {
-	local line
-	while read line; do
-		local pid=$(echo $line | awk -F':' '{ print $1 }')
-		local cmd=$(echo $line | awk -F':' '{ print $2 }')
+kill_listed_processes() {
+	local tmp
+	local pid
+	local cmd
+	test -f kill_list || return 0
+	while read tmp; do
+		pid=${tmp%%:*}
+		cmd=${tmp##*:}
 		for tmp in $(pgrep -f "$cmd" -d ' '); do
-			test $tmp = $pid && kill -9 $tmp
+			test "$tmp" = "$pid" && kill -9 "$tmp"
 		done
-	done
+	done < kill_list
+	rm -f kill_list
 }
 
 teardown() {
 	echo -n "## teardown..."
 
-	test -f kill_list && kill_remaining_processes < kill_list
+	kill_listed_processes
 
 	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
 

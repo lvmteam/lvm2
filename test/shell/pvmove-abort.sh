@@ -32,11 +32,18 @@ lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
 lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 
 cmd1=$(echo pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode)
-$cmd1 &
-aux wait_pvmove_lv_ready "$vg-pvmove0"
 cmd2=$(echo pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode)
-$cmd2 &
-aux wait_pvmove_lv_ready "$vg-pvmove1"
+if test -z "$backgroundarg" ; then
+	$cmd1 &
+	aux wait_pvmove_lv_ready "$vg-pvmove0"
+	$cmd2 &
+	aux wait_pvmove_lv_ready "$vg-pvmove1"
+else
+	$cmd1
+	aux add_to_kill_list "$cmd1" -P 1
+	$cmd2
+	aux add_to_kill_list "$cmd2" -P 1
+fi
 
 # remove specific device
 pvmove --abort "$dev1"
@@ -52,8 +59,7 @@ pvmove --abort
 lvremove -ff $vg
 
 wait
-aux add_to_kill_list "$cmd1" "-P 1"
-aux add_to_kill_list "$cmd2" "-P 1"
+aux kill_listed_processes
 done
 done
 

@@ -38,17 +38,26 @@ lvcreate -an -Zn -l30 -n $lv1 $vg1 "$dev4"
 lvextend -l+30 -n $vg1/$lv1 "$dev5"
 
 cmd1=$(echo pvmove -i1 $backgroundarg "$dev1" "$dev3" $mode)
-$cmd1 &
-aux wait_pvmove_lv_ready "$vg-pvmove0"
 cmd2=$(echo pvmove -i1 $backgroundarg "$dev2" "$dev3" $mode)
-$cmd2 &
-aux wait_pvmove_lv_ready "$vg-pvmove1"
-
-pvmove -i1 $backgroundarg -n $vg1/$lv1 "$dev4" "$dev6" $mode &
-aux wait_pvmove_lv_ready "$vg1-pvmove0"
+cmd3=$(echo pvmove -i1 $backgroundarg -n $vg1/$lv1 "$dev4" "$dev6" $mode)
+if test -z "$backgroundarg" ; then
+	$cmd1 &
+	aux wait_pvmove_lv_ready "$vg-pvmove0"
+	$cmd2 &
+	aux wait_pvmove_lv_ready "$vg-pvmove1"
+	$cmd3 &
+	aux wait_pvmove_lv_ready "$vg1-pvmove0"
+else
+	$cmd1
+	aux add_to_kill_list "$cmd1" -P 1
+	$cmd2
+	aux add_to_kill_list "$cmd2" -P 1
+	$cmd3
+	aux add_to_kill_list "$cmd3" -P 1
+fi
 
 # test removal of all pvmove LVs
-pvmove  --abort
+pvmove --abort
 
 # check if proper pvmove was canceled
 get lv_field $vg name -a | tee out
@@ -59,8 +68,7 @@ not grep "^\[pvmove" out
 lvremove -ff $vg $vg1
 
 wait
-aux add_to_kill_list "$cmd1" "-P 1"
-aux add_to_kill_list "$cmd2" "-P 1"
+aux kill_listed_processes
 done
 done
 
