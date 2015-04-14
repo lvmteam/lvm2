@@ -20,7 +20,9 @@ lvmconf \(em LVM configuration modifier
 
 .SH "DESCRIPTION"
 lvmconf is a script that modifies the locking configuration in
-an lvm configuration file. See \fBlvm.conf\fP(5).
+an lvm configuration file. See \fBlvm.conf\fP(5). In addition
+to that, it can also set Systemd or SysV services according to
+changes in the lvm configuration if needed.
 
 .SH "OPTIONS"
 .TP
@@ -51,7 +53,8 @@ Set external \fBlocking_library\fR locking library to load if an external lockin
 .TP
 .BR \-\-services
 In addition to setting the lvm configuration, also enable or disable related Systemd or SysV
-clvmd and lvmetad services.
+clvmd and lvmetad services. This script does not configure services provided by cluster resource
+agents.
 .TP
 .BR \-\-mirrorservice
 Also enable or disable optional cmirrord service when handling services (applicable only with \-\-services).
