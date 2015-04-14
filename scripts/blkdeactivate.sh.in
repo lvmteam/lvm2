@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2012-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -18,8 +18,10 @@
 #
 # Requires:
 #   bash >= 4.0 (associative array support)
-#   lsblk >= 2.22 (lsblk -s support)
-#   umount
+#   util-linux {
+#       lsblk >= 2.22 (lsblk -s support)
+#       umount
+#   }
 #   dmsetup >= 1.02.68 (--retry option support)
 #   lvm >= 2.2.89 (activation/retry_deactivation config support)
 #
@@ -212,6 +214,11 @@ deactivate_lvm () {
 	test -z ${SKIP_VG_LIST["$DM_VG_NAME"]} || return 1
 
 	if test $LVM_DO_WHOLE_VG -eq 0; then
+		# Skip LVM device deactivation if LVM tools missing.
+		test $LVM_AVAILABLE -eq 0 && {
+			add_device_to_skip_list
+			return 1
+		}
 		# Deactivating only the LV specified
 		deactivate_holders "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || {
 			add_device_to_skip_list
@@ -227,6 +234,11 @@ deactivate_lvm () {
 		fi
 
 	else
+		# Skip LVM VG deactivation if LVM tools missing.
+		test $LVM_AVAILABLE -eq 0 && {
+			add_vg_to_skip_list
+			return 1
+		}
 		# Deactivating the whole VG the LV is part of
 		lv_list=$(eval $LVM vgs --config "$LVM_CONFIG" --noheadings --rows -o lv_name $DM_VG_NAME $ERR)
 		for lv in $lv_list; do
@@ -382,6 +394,12 @@ set_env() {
 		LVM_OPTS+="-vvvv"
 	else
 		OUT="1>$DEV_DIR/null"
+	fi
+
+	if test -f $LVM; then
+		LVM_AVAILABLE=1
+	else
+		LVM_AVAILABLE=0
 	fi
 }
 
