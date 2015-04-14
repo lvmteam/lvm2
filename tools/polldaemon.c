@@ -207,13 +207,9 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	if (!(sls = str_list_create(cmd->mem)))
 		return ECMD_FAILED;
 
-	log_verbose("Looking for pvmove LVs in VG: %s.", vg->name);
-
 	/*
-	 * _check_lv_status must not be called from within any
-	 * dm_list_iterate_ routine with vg->lvs as list head.
-	 * It may remove more than one LV in the process thus
-	 * even "*_safe" variant won't help.
+	 * first iterate all LVs in a VG and collect LVs suitable
+	 * for polling (or an abort) which takes place below
 	 */
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
@@ -240,19 +236,13 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 			log_error("Failed to clone pvname");
 			goto err;
 		}
-
-		log_verbose("Found LV: %s/%s. It belongs to pvmove task on PV %s.", lv->vg->name, lv->name, name);
 	}
 
+	/* perform the poll operation on LVs collected in previous cycle */
 	dm_list_iterate_items(sl, sls) {
 		lv = parms->poll_fns->get_copy_lv(cmd, vg, sl->str, NULL, parms->lv_type);
-		if (lv) {
-			log_verbose("About to call _check_lv_status on LV: %s/%s, name: %s",
-				    lv->vg->name, lv->name, sl->str);
-			if (_check_lv_status(cmd, vg, lv, sl->str, parms, &finished) &&
-			    !finished)
-				parms->outstanding_count++;
-		}
+		if (lv && _check_lv_status(cmd, vg, lv, sl->str, parms, &finished) && !finished)
+			parms->outstanding_count++;
 	}
 
 err:
