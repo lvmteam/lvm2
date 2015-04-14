@@ -166,7 +166,9 @@ STACKTRACE() {
 			udevadm info --path "$i" || true
 		done | sed -e "s,^,## UDEV:     ,"
 		echo "<======== Script file \"$(< TESTNAME)\" ========>"
-		awk '{print "## Line:", NR, "\t", $0}' "$TESTOLDPWD/$0"
+		local script=$0
+		test -f "$script" || script="$TESTOLDPWD/$0"
+		awk '{print "## Line:", NR, "\t", $0}' "$script"
 	}
 
 	test -f SKIP_THIS_TEST && exit 200
