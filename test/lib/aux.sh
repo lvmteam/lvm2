@@ -218,7 +218,7 @@ kill_sleep_kill_() {
 	slow=$2
 	if test -s $pidfile ; then
 		pid=$(< $pidfile)
-		kill -TERM $pid || return 0
+		kill -TERM $pid 2>/dev/null || return 0
 		if test $slow -eq 0 ; then sleep .1 ; else sleep 1 ; fi
 		kill -KILL $pid 2>/dev/null || true
 		wait=0
