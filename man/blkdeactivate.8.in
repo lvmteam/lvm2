@@ -9,9 +9,7 @@ blkdeactivate \(em utility to deactivate block devices
 .RB [ \-l \  \fIlvm_options\fP ]
 .RB [ \-u ]
 .RB [ \-v ]
-.RS
 .RI [ device ]
-.RE
 .SH DESCRIPTION
 blkdeactivate utility deactivates block devices. If a device
 is mounted, the utility can unmount it automatically before
@@ -57,7 +55,7 @@ Unmount a mounted device before trying to deactivate it.
 Without this option used, a device that is mounted is not deactivated.
 .TP
 .BR \-v ", " \-\-verbose
-Run in verbose mode.
+Run in verbose mode. Use \-\-vv for even more verbose mode.
 .SH EXAMPLES
 .sp
 Deactivate all supported block devices found in the system. If a device
