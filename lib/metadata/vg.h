@@ -91,6 +91,13 @@ struct volume_group {
 	struct dm_list pvs_to_create;
 
 	/*
+	 * List of physical volumes that carry outdated metadata that belongs
+	 * to this VG. Currently only populated when lvmetad is in use.
+	 */
+
+	struct dm_list pvs_outdated;
+
+	/*
 	 * logical volumes
 	 * The following relationship should always hold:
 	 * dm_list_size(lvs) = user visible lv_count + snapshot_count + other invisible LVs
