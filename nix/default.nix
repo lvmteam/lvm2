@@ -362,7 +362,7 @@ let
       centos65 = centos64;
       centos66 = centos65;
       centos70 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel"
-                   "procps-ng" "valgrind-devel" ];
+                   "device-mapper-persistent-data" "procps-ng" "valgrind-devel" ];
 
       fedora17 = fedora18 ++ [ "libudev-devel" ];
 
