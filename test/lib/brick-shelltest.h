@@ -296,6 +296,7 @@ struct TimedBuffer {
 
     std::deque< Line > data;
     Line incomplete;
+    bool stamp;
 
     Line shift( bool force = false ) {
         Line result = std::make_pair( 0, "" );
@@ -309,7 +310,7 @@ struct TimedBuffer {
     }
 
     void push( std::string buf ) {
-        time_t now = time( 0 );
+        time_t now = stamp ? time( 0 ) : 0;
         std::string::iterator b = buf.begin(), e = buf.begin();
 
         while ( e != buf.end() )
@@ -323,6 +324,16 @@ struct TimedBuffer {
             if ( e != buf.end() ) {
                 incomplete.second += "\n";
                 data.push_back( incomplete );
+                if (incomplete.second[0] == '#') {
+                    /* Disable timing between '## 0 STACKTRACE' & '## teardown' keywords */
+                    if (incomplete.second.find("# 0 STACKTRACE", 1) != std::string::npos) {
+                        stamp = false;
+                        now = 0;
+                    } else if (incomplete.second.find("# teardown", 1) != std::string::npos) {
+                        stamp = true;
+                        now = time( 0 );
+                    }
+                }
                 incomplete = std::make_pair( now, "" );
             }
             b = (e == buf.end() ? e : e + 1);
@@ -334,6 +345,8 @@ struct TimedBuffer {
             return false;
         return data.empty();
     }
+
+    TimedBuffer() : stamp(true) {}
 };
 
 struct Sink {
@@ -369,12 +382,11 @@ struct Substitute {
 
 struct Format {
     time_t start;
-    bool stamp;
     Substitute subst;
 
     std::string format( TimedBuffer::Line l ) {
         std::stringstream result;
-        if ( stamp ) {
+        if ( l.first >= start ) {
             time_t rel = l.first - start;
             result << "[" << std::setw( 2 ) << std::setfill( ' ' ) << rel / 60
                    << ":" << std::setw( 2 ) << std::setfill( '0' ) << rel % 60 << "] ";
@@ -383,7 +395,7 @@ struct Format {
         return result.str();
     }
 
-    Format() : start( time( 0 ) ), stamp( true ) {}
+    Format() : start( time( 0 ) ) {}
 };
 
 struct BufSink : Sink {
@@ -411,13 +423,6 @@ struct FdSink : Sink {
     virtual void outline( bool force )
     {
         TimedBuffer::Line line = stream.shift( force );
-        if (line.second.c_str()[0] == '#') {
-            /* Disable timing between  STACKTRACE & teardown keywords */
-            if (strstr(line.second.c_str() + 1, "# 0 STACKTRACE"))
-                fmt.stamp = false;
-            else if (strstr(line.second.c_str() + 1, "# teardown"))
-                fmt.stamp = true;
-        }
         std::string out = fmt.format( line );
         write( fd, out.c_str(), out.length() );
     }
