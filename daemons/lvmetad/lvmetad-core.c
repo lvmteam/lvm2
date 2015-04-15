@@ -470,8 +470,13 @@ static void mark_outdated_pv(lvmetad_state *s, const char *vgid, const char *pvi
 	list->v = v;
 }
 
-static void chain_outdated_pvs(lvmetad_state *s, const char *vgid, struct dm_config_tree *metadata)
+static void chain_outdated_pvs(lvmetad_state *s, const char *vgid, struct dm_config_tree *metadata, struct dm_config_node *last)
 {
+	struct dm_config_tree *cft = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid);
+	if (!cft)
+		return; /* nothing to chain in */
+	last->sib = dm_config_clone_node(metadata, dm_config_find_node(cft->root, "outdated_pvs/pv_list"), 0);
+	last->sib->key = "outdated_pvs";
 }
 
 static response vg_lookup(lvmetad_state *s, request r)
@@ -540,7 +545,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 	unlock_vg(s, uuid);
 
 	update_pv_status(s, res.cft, n, 1); /* FIXME report errors */
-	chain_outdated_pvs(s, uuid, res.cft);
+	chain_outdated_pvs(s, uuid, res.cft, n);
 
 	return res;
 bad:
