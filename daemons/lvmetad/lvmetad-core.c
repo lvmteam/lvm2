@@ -61,6 +61,9 @@ static void destroy_metadata_hashes(lvmetad_state *s)
 	dm_hash_iterate(n, s->vgid_to_metadata)
 		dm_config_destroy(dm_hash_get_data(s->vgid_to_metadata, n));
 
+	dm_hash_iterate(n, s->vgid_to_outdated_pvs)
+		dm_config_destroy(dm_hash_get_data(s->vgid_to_outdated_pvs, n));
+
 	dm_hash_iterate(n, s->pvid_to_pvmeta)
 		dm_config_destroy(dm_hash_get_data(s->pvid_to_pvmeta, n));
 
