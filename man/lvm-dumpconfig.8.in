@@ -22,6 +22,7 @@ lvm-dumpconfig \(em dump LVM configuration
 .RB [ \-\-mergedconfig ]
 .RB [ \-\-validate ]
 .RB [ \-\-withcomments ]
+.RB [ \-\-withfullcomments ]
 .RB [ \-\-withversions ]
 .RB [ ConfigurationNode... ]
 
@@ -140,7 +141,11 @@ option is disabled.
 
 .TP
 .B \-\-withcomments
-Also dump comments for each configuration node.
+Dump a one line comment for each configuration node.
+
+.TP
+.B \-\-withfullcomments
+Dump a full comment for each configuration node.
 
 .TP
 .B \-\-withversions

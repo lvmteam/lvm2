@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Add --withfullcomments option to dumpconfig to print full comment.
   Check for lvm binary in blkdeactivate and skip LVM processing if not present.
   Add --enable-halvm and --disable-halvm options to lvmconf script.
   Add --services, --mirrorservice and --startstopservices option to lvmconf.

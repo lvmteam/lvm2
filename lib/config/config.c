@@ -1541,15 +1541,19 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 
 	cfg_def = cfg_def_get_item_p(cn->id);
 
-	if (out->tree_spec->withcomments) {
+	if (out->tree_spec->withcomments || out->tree_spec->withfullcomments) {
 		_cfg_def_make_path(path, sizeof(path), cfg_def->id, cfg_def, 1);
 		fprintf(out->fp, "\n");
 		fprintf(out->fp, "%s# Configuration %s %s.\n", line, node_type_name, path);
 
 		if (cfg_def->comment) {
 			int pos = 0;
-			while (_copy_one_line(cfg_def->comment, commentline, &pos, strlen(cfg_def->comment)))
+			while (_copy_one_line(cfg_def->comment, commentline, &pos, strlen(cfg_def->comment))) {
 				fprintf(out->fp, "%s# %s\n", line, commentline);
+				/* withcomments prints only the first comment line. */
+				if (!out->tree_spec->withfullcomments)
+					break;
+			}
 		}
 
 		if (cfg_def->flags & CFG_ADVANCED)
