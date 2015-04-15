@@ -282,6 +282,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
+.PHONY: $(SUBDIRS.generate) generate
 
 SUBDIRS.device-mapper := $(SUBDIRS:=.device-mapper)
 SUBDIRS.install := $(SUBDIRS:=.install)
@@ -341,6 +342,9 @@ pofile: $(SUBDIRS.pofile) $(POTFILES)
 $(SUBDIRS.pofile):
 	$(MAKE) -C $(@:.pofile=) pofile
 endif
+
+$(SUBDIRS.generate):
+	$(MAKE) -C $(@:.generate=) generate
 
 ifneq ("$(CFLOW_LIST_TARGET)", "")
 CLEAN_CFLOW += $(CFLOW_LIST_TARGET)

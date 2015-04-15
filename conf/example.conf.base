@@ -1,0 +1,12 @@
+# This is an example configuration file for the LVM2 system.
+# It contains the default settings that would be used if there was no
+# @DEFAULT_SYS_DIR@/lvm.conf file.
+#
+# Refer to 'man lvm.conf' for further information including the file layout.
+#
+# To put this file in a different directory and override @DEFAULT_SYS_DIR@ set
+# the environment variable LVM_SYSTEM_DIR before running the tools.
+#
+# N.B. Take care that each setting only appears once if uncommenting
+# example settings in this file.
+

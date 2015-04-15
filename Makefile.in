@@ -95,6 +95,11 @@ DISTCLEAN_TARGETS += cscope.out
 check check_system check_cluster check_local check_lvmetad unit: all
 	$(MAKE) -C test $(@)
 
+conf.generate: tools
+
+generate: conf.generate
+	$(MAKE) -C conf generate
+
 install_system_dirs:
 	$(INSTALL_DIR) $(DESTDIR)$(DEFAULT_SYS_DIR)
 	$(INSTALL_ROOT_DIR) $(DESTDIR)$(DEFAULT_ARCHIVE_DIR)
