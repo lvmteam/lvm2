@@ -86,6 +86,10 @@ prepare_test_vars
 
 test -n "$BASH" && set -eE -o pipefail
 
+# Vars for harness
+echo "@TESTDIR=$TESTDIR"
+echo "@PREFIX=$PREFIX"
+
 if test -n "$LVM_TEST_LVMETAD" ; then
 	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
@@ -96,9 +100,6 @@ else
 	aux prepare_clvmd
 fi
 
-# Vars for harness
-echo "@TESTDIR=$TESTDIR"
-echo "@PREFIX=$PREFIX"
 echo "<======== Processing test: \"$TESTNAME\" ========>"
 
 set -vx
