@@ -37,24 +37,25 @@ lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 lvcreate -an -Zn -l30 -n $lv1 $vg1 "$dev4"
 lvextend -l+30 -n $vg1/$lv1 "$dev5"
 
-cmd1="pvmove -i1 $backgroundarg \"$dev1\" \"$dev3\" $mode"
-cmd2="pvmove -i1 $backgroundarg \"$dev2\" \"$dev3\" $mode"
-cmd3="pvmove -i1 $backgroundarg -n $vg1/$lv1 \"$dev4\" \"$dev6\" $mode"
+cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
+cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
+cmd3=(pvmove -i1 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
 
 if test -z "$backgroundarg" ; then
-	$cmd1 &
+	"${cmd1[@]}" &
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
-	$cmd2 &
+	"${cmd2[@]}" &
 	aux wait_pvmove_lv_ready "$vg-pvmove1"
-	$cmd3 &
+	"${cmd3[@]}" &
 	aux wait_pvmove_lv_ready "$vg1-pvmove0"
+        lvs -a $vg $vg1
 else
-	$cmd1
-	aux add_to_kill_list "$cmd1" -P 1
-	$cmd2
-	aux add_to_kill_list "$cmd2" -P 1
-	$cmd3
-	aux add_to_kill_list "$cmd3" -P 1
+	"${cmd1[@]}"
+	aux add_to_kill_list ${cmd1[*]} -P 1
+	"${cmd2[@]}"
+	aux add_to_kill_list ${cmd2[*]} -P 1
+	"${cmd3[@]}"
+	aux add_to_kill_list ${cmd3[*]} -P 1
 fi
 
 # test removal of all pvmove LVs

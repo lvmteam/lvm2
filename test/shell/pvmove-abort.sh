@@ -31,19 +31,19 @@ do
 lvcreate -an -Zn -l30 -n $lv1 $vg "$dev1"
 lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 
-cmd1="pvmove -i1 $backgroundarg \"$dev1\" \"$dev3\" $mode"
-cmd2="pvmove -i1 $backgroundarg \"$dev2\" \"$dev3\" $mode"
+cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
+cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
 
 if test -z "$backgroundarg" ; then
-	$cmd1 &
+	"${cmd1[@]}" &
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
-	$cmd2 &
+	"${cmd2[@]}" &
 	aux wait_pvmove_lv_ready "$vg-pvmove1"
 else
-	$cmd1
-	aux add_to_kill_list "$cmd1" -P 1
-	$cmd2
-	aux add_to_kill_list "$cmd2" -P 1
+	"${cmd1[@]}"
+	aux add_to_kill_list ${cmd1[*]} -P 1
+	"${cmd2[@]}"
+	aux add_to_kill_list ${cmd2[*]} -P 1
 fi
 
 # remove specific device
