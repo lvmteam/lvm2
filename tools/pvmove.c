@@ -531,10 +531,9 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: First volume group metadata update failed.");
-		if (!resume_lvs(cmd, lvs_changed)) {
+		if (!resume_lvs(cmd, lvs_changed))
 			log_error("Unable to resume logical volumes.");
-			return 0;
-		}
+		return 0;
 	}
 
 	/* Activate the temporary mirror LV */
