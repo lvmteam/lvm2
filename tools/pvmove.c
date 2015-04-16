@@ -516,7 +516,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int r = 0;
 
-	log_verbose("Updating volume group metadata for the first time.");
+	log_verbose("Setting up pvmove in on-disk volume group metadata.");
 	if (!vg_write(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
 		return 0;
@@ -530,7 +530,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
-		log_error("ABORTING: First volume group metadata update failed.");
+		log_error("ABORTING: Volume group metadata update failed.");
 		if (!resume_lvs(cmd, lvs_changed))
 			log_error("Unable to resume logical volumes.");
 		return 0;
