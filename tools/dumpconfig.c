@@ -221,6 +221,8 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		tree_spec.withcomments = 1;
 	if (arg_count(cmd, withfullcomments_ARG))
 		tree_spec.withfullcomments = 1;
+	if (arg_count(cmd, unconfigured_ARG))
+		tree_spec.unconfigured = 1;
 
 	if (arg_count(cmd, withversions_ARG))
 		tree_spec.withversions = 1;

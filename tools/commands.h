@@ -71,11 +71,12 @@ xx(dumpconfig,
    "\t[--validate]\n"
    "\t[--withcomments]\n"
    "\t[--withfullcomments]\n"
+   "\t[--unconfigured]\n"
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   validate_ARG, withcomments_ARG, withfullcomments_ARG, withversions_ARG)
+   validate_ARG, withcomments_ARG, withfullcomments_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(formats,
    "List available metadata formats",
