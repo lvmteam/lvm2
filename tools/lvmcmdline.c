@@ -1561,6 +1561,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 int lvm_return_code(int ret)
 {
+	unlink_log_file(ret);
+
 	return (ret == ECMD_PROCESSED ? 0 : ret);
 }
 

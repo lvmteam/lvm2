@@ -40,6 +40,7 @@ void init_indent(int indent);
 void init_msg_prefix(const char *prefix);
 
 void init_log_file(const char *log_file, int append);
+void unlink_log_file(int ret);
 void init_log_direct(const char *log_file, int append);
 void init_log_while_suspended(int log_while_suspended);
 void init_abort_on_internal_errors(int fatal);
