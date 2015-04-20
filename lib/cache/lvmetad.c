@@ -299,20 +299,6 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 	if (!dev && fallback)
 		dev = dev_cache_get_by_devt(fallback, cmd->filter);
 
-	if (alt_devices)
-		alt_device = alt_devices->v;
-
-	while (alt_device) {
-		dev_alternate = dev_cache_get_by_devt(alt_device->v.i, cmd->filter);
-		if (dev_alternate)
-			log_warn("Found duplicate of PV %s on device %s.",
-				 pvid_txt, dev_name(dev_alternate));
-		else
-			log_warn("Duplicate of PV %s exists on unknown device %"PRId64 ":%" PRId64,
-				 pvid_txt, MAJOR(alt_device->v.i), MINOR(alt_device->v.i));
-		alt_device = alt_device->next;
-	}
-
 	if (!dev) {
 		log_warn("WARNING: Device for PV %s not found or rejected by a filter.", pvid_txt);
 		return NULL;
@@ -374,6 +360,20 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 		}
 		++i;
 	} while (da);
+
+	if (alt_devices)
+		alt_device = alt_devices->v;
+
+	while (alt_device) {
+		dev_alternate = dev_cache_get_by_devt(alt_device->v.i, cmd->filter);
+		if (dev_alternate)
+			lvmcache_add(fmt->labeller, (const char *)&pvid, dev_alternate,
+				     vgname, (const char *)&vgid, 0);
+		else
+			log_warn("Duplicate of PV %s dev %s exists on unknown device %"PRId64 ":%" PRId64,
+				 pvid_txt, dev_name(dev), MAJOR(alt_device->v.i), MINOR(alt_device->v.i));
+		alt_device = alt_device->next;
+	}
 
 	return info;
 }
