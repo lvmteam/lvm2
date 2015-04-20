@@ -2821,6 +2821,16 @@ int process_each_pv(struct cmd_context *cmd,
 			      arg_count(cmd, all_ARG);
 
 	/*
+	 * Read all the vgs here because this has the effect of initializing
+	 * device/lvmcache info so that dev->pvid is available when creating
+	 * a list of devices.
+	 */
+	if ((ret = _get_vgnameids_on_system(cmd, &all_vgnameids, only_this_vgname, 1) != ECMD_PROCESSED)) {
+		stack;
+		return ret;
+	}
+
+	/*
 	 * If the caller wants to process all devices (not just PVs), then all PVs
 	 * from all VGs are processed first, removing them from all_devices.  Then
 	 * any devs remaining in all_devices are processed.
@@ -2833,15 +2843,6 @@ int process_each_pv(struct cmd_context *cmd,
 	if ((ret = _get_arg_devices(cmd, &arg_pvnames, &arg_devices) != ECMD_PROCESSED))
 		/* get_arg_devices reports the error for any PV names not found. */
 		ret_max = ECMD_FAILED;
-
-	/*
-	 * Read all the vgs first because this has the effect of initializing
-	 * other device/lvmcache info that is needed when creating device lists.
-	 */
-	if ((ret = _get_vgnameids_on_system(cmd, &all_vgnameids, only_this_vgname, 1) != ECMD_PROCESSED)) {
-		stack;
-		return ret;
-	}
 
 	ret = _process_pvs_in_vgs(cmd, flags, &all_vgnameids, &all_devices,
 				  &arg_devices, &arg_tags,
