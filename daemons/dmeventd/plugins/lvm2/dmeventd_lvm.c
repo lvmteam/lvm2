@@ -102,7 +102,8 @@ int dmeventd_lvm2_init(void)
 		goto out;
 
 	if (!_lvm_handle) {
-		lvm2_log_fn(_temporary_log_fn);
+		if (!getenv("LVM_LOG_FILE_EPOCH"))
+			lvm2_log_fn(_temporary_log_fn);
 		if (!(_lvm_handle = lvm2_init())) {
 			dm_pool_destroy(_mem_pool);
 			_mem_pool = NULL;
