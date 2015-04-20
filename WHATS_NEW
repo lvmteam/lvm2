@@ -1,5 +1,9 @@
 Version 2.02.119 - 
 ==================================
+  Close connection to lvmetad after fork.
+  Make lvchange able to resume background pvmove polling again.
+  Split pvmove update metadata fn in an initial one and a subsequent one.
+  Refactor shared pvmove and lvconvert code into new _poll files.
   Add --unconfigured option to dumpconfig to print strings unconfigured.
   Add --withfullcomments option to dumpconfig to print full comment.
   Check for lvm binary in blkdeactivate and skip LVM processing if not present.
