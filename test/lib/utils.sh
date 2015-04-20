@@ -134,17 +134,16 @@ STACKTRACE() {
 
 	test -f SKIP_THIS_TEST && exit 200
 
-	test -z "$LVM_TEST_NODEBUG" -a -f debug.log && {
-		IDX=
+	test -z "$LVM_TEST_NODEBUG" && {
+		local name
+		local idx
 		for i in debug.log* ; do
-			echo "<======== Last traced lvm2 command $i ========>"
-			sed -e "s,^,## DEBUG${IDX}: ," $i
-			IDX=$(($IDX + 1))
+			name=${i##debug.log_}
+			name=${name%%_*}
+			test "$name" = "DEBUG" && { name="$name$idx" ; idx=$(($idx + 1)) ; }
+			echo "<======== Debug log $i ========>"
+			sed -e "s,^,## $name: ," $i
 		done
-		if test -e clvmddebug.log ; then
-			echo "<======== CLVMD debug log ========>"
-			sed -e "s,^,## CLVMD: ," clvmddebug.log
-		fi
 		if test -e strace.log ; then
 			echo "<======== Strace debug log ========>"
 			sed -e "s,^,## STRACE: ," strace.log
