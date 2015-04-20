@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <syslog.h>
+#include <ctype.h>
 
 static FILE *_log_file;
 static char _log_file_path[PATH_MAX];
@@ -56,11 +57,12 @@ void init_log_fn(lvm2_log_fn_t log_fn)
 
 /*
  * Support envvar LVM_LOG_FILE_EPOCH and allow to attach
- * extra keyword to openned log file. After this word pid
- * and starttime (in kernel units, read from /proc/self/stat
+ * extra keyword (consist of upto 32 alpha chars) to
+ * opened log file. After this 'epoch' word pid and starttime
+ * (in kernel units, read from /proc/self/stat)
  * is automatically attached.
  * If command/daemon forks multiple times, it could create multiple
- * log files ensure, there are no overwrites.
+ * log files ensuring, there are no overwrites.
  */
 void init_log_file(const char *log_file, int append)
 {
@@ -69,9 +71,18 @@ void init_log_file(const char *log_file, int append)
 	int pid;
 	long long starttime;
 	FILE *st;
+	int i = 0;
 
 	_log_file_path[0] = '\0';
 	if ((env = getenv("LVM_LOG_FILE_EPOCH"))) {
+		while (isalpha(env[i]) && i < 32) /* Up to 32 alphas */
+			i++;
+		if (env[i]) {
+			if (i)
+				log_warn("WARNING: Ignoring invalid LVM_LOG_FILE_EPOCH envvar \"%s\".", env);
+			goto no_epoch;
+		}
+
 		if (!(st = fopen(statfile, "r")))
 			log_sys_error("fopen", statfile);
 		else if (fscanf(st, "%d %*s %*c %*d %*d %*d %*d " /* tty_nr */
@@ -94,7 +105,7 @@ void init_log_file(const char *log_file, int append)
 			}
 		}
 	}
-
+no_epoch:
 	if (!(_log_file = fopen(log_file, append ? "a" : "w"))) {
 		log_sys_error("fopen", log_file);
 		return;
@@ -106,21 +117,21 @@ void init_log_file(const char *log_file, int append)
 /*
  * Unlink the log file depeding on command's return value
  *
- * When envvar LVM_LOG_FILE_UNLINK_STATUS is set, compare
+ * When envvar LVM_EXPECTED_EXIT_STATUS is set, compare
  * resulting status with this string.
  *
  * It's possible to specify 2 variants - having it equal to
  * a single number or having it different from a single number.
  *
- * i.e.  LVM_LOG_FILE_UNLINK_STATUS="!1"  # delete when ret != 1.
+ * i.e.  LVM_EXPECTED_EXIT_STATUS=">1"  # delete when ret > 1.
  */
 void unlink_log_file(int ret)
 {
 	const char *env;
 
 	if (_log_file_path[0] &&
-	    (env = getenv("LVM_LOG_FILE_UNLINK_STATUS")) &&
-	    ((env[0] == '!' && atoi(env + 1) != ret) ||
+	    (env = getenv("LVM_EXPECTED_EXIT_STATUS")) &&
+	    ((env[0] == '>' && ret > atoi(env + 1)) ||
 	     (atoi(env) == ret))) {
 		if (unlink(_log_file_path))
 			log_sys_error("unlink", _log_file_path);
