@@ -36,7 +36,7 @@ RUNNING_DMEVENTD=$(pgrep dmeventd) || true
 
 export TESTOLDPWD TESTDIR COMMON_PREFIX PREFIX RUNNING_DMEVENTD
 export LVM_LOG_FILE_EPOCH=DEBUG
-export LVM_LOG_FILE_UNLINK_STATUS=1
+export LVM_EXPECTED_EXIT_STATUS=1
 
 test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
 trap 'aux teardown' EXIT # don't forget to clean up
