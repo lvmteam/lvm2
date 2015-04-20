@@ -326,10 +326,12 @@ struct TimedBuffer {
                 data.push_back( incomplete );
                 if (incomplete.second[0] == '#') {
                     /* Disable timing between '## 0 STACKTRACE' & '## teardown' keywords */
-                    if (incomplete.second.find("# 0 STACKTRACE", 1) != std::string::npos) {
+                    if (incomplete.second.find("# 0 STACKTRACE", 1) != std::string::npos ||
+                        incomplete.second.find("# timing off", 1) != std::string::npos) {
                         stamp = false;
                         now = 0;
-                    } else if (incomplete.second.find("# teardown", 1) != std::string::npos) {
+                    } else if (incomplete.second.find("# teardown", 1) != std::string::npos ||
+                               incomplete.second.find("# timing on", 1) != std::string::npos) {
                         stamp = true;
                         now = time( 0 );
                     }
