@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Add --ignorelocal option to dumpconfig to ignore the local section.
   Close connection to lvmetad after fork.
   Make lvchange able to resume background pvmove polling again.
   Split pvmove update metadata fn in an initial one and a subsequent one.

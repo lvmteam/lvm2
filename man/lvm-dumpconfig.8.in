@@ -11,6 +11,7 @@ lvm-dumpconfig \(em dump LVM configuration
 .IR version ]
 .RB [ \-\-ignoreadvanced ]
 .RB [ \-\-ignoreunsupported ]
+.RB [ \-\-ignorelocal ]
 .RB [ \-\-config
 .IR ConfigurationString ]
 .RB [ \-\-commandprofile
@@ -93,6 +94,10 @@ Ignore advanced configuration settings on dump.
 Ignore unsupported configuration settings on dump. These settings are
 either used for debugging purposes only or their support is not yet
 complete and they are not meant to be used in production.
+
+.TP
+.B \-\-ignorelocal
+Ignore local section.
 
 .TP
 .BI \-\-config " ConfigurationString"

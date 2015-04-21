@@ -113,6 +113,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, ignoreunsupported_ARG))
 		tree_spec.ignoreunsupported = 1;
 
+	if (arg_count(cmd, ignorelocal_ARG))
+		tree_spec.ignorelocal = 1;
+
 	if (!strcmp(type, "current")) {
 		if (arg_count(cmd, atversion_ARG)) {
 			log_error("--atversion has no effect with --type current");

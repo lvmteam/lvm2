@@ -63,6 +63,7 @@ xx(dumpconfig,
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
+   "\t[--ignorelocal]\n"
    "\t[--config ConfigurationString]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[--profile ProfileName]\n"
@@ -75,7 +76,7 @@ xx(dumpconfig,
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
-   ignoreunsupported_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   ignoreunsupported_ARG, ignorelocal_ARG, mergedconfig_ARG, metadataprofile_ARG,
    validate_ARG, withcomments_ARG, withfullcomments_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(formats,

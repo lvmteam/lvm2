@@ -1817,6 +1817,9 @@ struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec)
 		if (cfg_def_get_item_p(id)->parent != root_CFG_SECTION)
 			continue;
 
+		if (spec->ignorelocal && (id == local_CFG_SECTION))
+			continue;
+
 		if ((tmp = _add_def_section_subtree(cft, spec, root, relay, id))) {
 			relay = tmp;
 			if (!root)
