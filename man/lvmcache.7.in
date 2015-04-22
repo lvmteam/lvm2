@@ -274,7 +274,7 @@ can be changed using commands like these:
 
 .nf
 # lvchange \-\-cachepolicy mq vg/lv1
-# lvchange \-\-cachesettings 'migration_threshold=2048 random_threshold=4' \\
+# lvchange \-\-cachesettings \(aqmigration_threshold=2048 random_threshold=4\(aq \\
      vg/lv1
 .fi
 
