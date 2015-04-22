@@ -254,6 +254,8 @@ kill_listed_processes() {
 teardown() {
 	echo -n "## teardown..."
 
+	if test -f TESTNAME ; then
+
 	kill_listed_processes
 
 	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
@@ -276,6 +278,8 @@ teardown() {
 	test -d "$DM_DEV_DIR/mapper" && teardown_devs
 
 	echo -n .
+
+	fi
 
 	test -n "$TESTDIR" && {
 		cd "$TESTOLDPWD"

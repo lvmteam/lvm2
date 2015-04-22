@@ -134,7 +134,7 @@ STACKTRACE() {
 
 	test -f SKIP_THIS_TEST && exit 200
 
-	test -z "$LVM_TEST_NODEBUG" && {
+	test -z "$LVM_TEST_NODEBUG" -a -f TESTNAME && {
 		local name
 		local idx
 		for i in debug.log* ; do
