@@ -220,11 +220,11 @@ Run the daemon in the background.
 .BR \-H ", " \-\-cache ", " \-\-type\ \fIcache
 Converts logical volume to a cached LV with the use of cache pool
 specified with \fB\-\-cachepool\fP.
-For more information on cache pool LVs and cache LVs, see \fBlvmcache\fP(8).
+For more information on cache pool LVs and cache LVs, see \fBlvmcache\fP(7).
 .TP
 .BR \-\-cachepool " " \fICachePoolLV
 This argument is necessary when converting a logical volume to a cache LV.
-For more information on cache pool LVs and cache LVs, see \fBlvmcache\fP(8).
+For more information on cache pool LVs and cache LVs, see \fBlvmcache\fP(7).
 .TP
 .BR \-m ", " \-\-mirrors " " \fIMirrors
 Specifies the degree of the mirror you wish to create.
