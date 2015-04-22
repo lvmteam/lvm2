@@ -124,7 +124,9 @@ lvmetad_dump() {
 
 notify_lvmetad() {
 	if test -e LOCAL_LVMETAD; then
-		LVM_LOG_FILE_EPOCH= pvscan --cache "$@" || rm -f debug.log
+		# Ignore results here...
+		LVM_LOG_FILE_EPOCH= pvscan --cache "$@" || true
+		rm -f debug.log
 	fi
 }
 
