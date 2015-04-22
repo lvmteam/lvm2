@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2012-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -45,43 +45,48 @@ export PY_UNIT_PVS=$(cat DEVICES)
 #python_lvm_unit.py -v -f
 
 # Run individual tests for shorter error trace
-python_lvm_unit.py -v TestLvm.test_lv_persistence
-python_lvm_unit.py -v TestLvm.test_config_find_bool
-python_lvm_unit.py -v TestLvm.test_config_override
-python_lvm_unit.py -v TestLvm.test_config_reload
-python_lvm_unit.py -v TestLvm.test_dupe_lv_create
-python_lvm_unit.py -v TestLvm.test_get_set_extend_size
-python_lvm_unit.py -v TestLvm.test_lv_active_inactive
-python_lvm_unit.py -v TestLvm.test_lv_property
-python_lvm_unit.py -v TestLvm.test_lv_rename
-python_lvm_unit.py -v TestLvm.test_lv_resize
-python_lvm_unit.py -v TestLvm.test_lv_seg
-python_lvm_unit.py -v TestLvm.test_lv_size
-python_lvm_unit.py -v TestLvm.test_lv_snapshot
-python_lvm_unit.py -v TestLvm.test_lv_suspend
-python_lvm_unit.py -v TestLvm.test_lv_tags
-python_lvm_unit.py -v TestLvm.test_percent_to_float
-python_lvm_unit.py -v TestLvm.test_pv_create
-python_lvm_unit.py -v TestLvm.test_pv_empty_listing
-python_lvm_unit.py -v TestLvm.test_pv_getters
-python_lvm_unit.py -v TestLvm.test_pv_life_cycle
-python_lvm_unit.py -v TestLvm.test_pv_lookup_from_vg
-python_lvm_unit.py -v TestLvm.test_pv_property
-python_lvm_unit.py -v TestLvm.test_pv_resize
-python_lvm_unit.py -v TestLvm.test_pv_segs
-python_lvm_unit.py -v TestLvm.test_scan
-python_lvm_unit.py -v TestLvm.test_version
-python_lvm_unit.py -v TestLvm.test_vg_from_pv_lookups
-python_lvm_unit.py -v TestLvm.test_vg_getters
-python_lvm_unit.py -v TestLvm.test_vg_get_name
-python_lvm_unit.py -v TestLvm.test_vg_get_set_prop
-python_lvm_unit.py -v TestLvm.test_vg_get_uuid
-python_lvm_unit.py -v TestLvm.test_vg_lv_name_validate
-python_lvm_unit.py -v TestLvm.test_vg_names
-python_lvm_unit.py -v TestLvm.test_vg_reduce
-python_lvm_unit.py -v TestLvm.test_vg_remove_restore
-python_lvm_unit.py -v TestLvm.test_vg_tags
-python_lvm_unit.py -v TestLvm.test_vg_uuids
+for i in \
+ lv_persistence \
+ config_find_bool \
+ config_override \
+ config_reload  \
+ dupe_lv_create \
+ get_set_extend_size \
+ lv_active_inactive \
+ lv_property \
+ lv_rename \
+ lv_resize \
+ lv_seg \
+ lv_size \
+ lv_snapshot \
+ lv_suspend \
+ lv_tags \
+ percent_to_float \
+ pv_create \
+ pv_empty_listing \
+ pv_getters \
+ pv_life_cycle \
+ pv_lookup_from_vg \
+ pv_property \
+ pv_resize \
+ pv_segs \
+ scan \
+ version \
+ vg_from_pv_lookups \
+ vg_getters \
+ vg_get_name \
+ vg_get_set_prop \
+ vg_get_uuid \
+ vg_lv_name_validate \
+ vg_names \
+ vg_reduce \
+ vg_remove_restore \
+ vg_tags \
+ vg_uuids
+do
+	python_lvm_unit.py -v TestLvm.test_$i
+	rm -f debug.log_DEBUG*
+done
 
 # CHECKME: not for testing?
 #python_lvm_unit.py -v TestLvm.test_listing
