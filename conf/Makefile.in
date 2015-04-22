@@ -29,10 +29,10 @@ include $(top_builddir)/make.tmpl
 generate:
 	LD_LIBRARY_PATH=$(top_builddir)/libdm:$(LD_LIBRARY_PATH) $(top_builddir)/tools/lvm dumpconfig --type default --unconfigured --withfullcomments --ignorelocal > example.conf.gen
 	cat example.conf.base example.conf.gen > example.conf.in
-	rm example.conf.gen
+	$(RM) example.conf.gen
 	LD_LIBRARY_PATH=$(top_builddir)/libdm:$(LD_LIBRARY_PATH) $(top_builddir)/tools/lvm dumpconfig --type default --unconfigured --withfullcomments local > lvmlocal.conf.gen
 	cat lvmlocal.conf.base lvmlocal.conf.gen > lvmlocal.conf.in
-	rm lvmlocal.conf.gen
+	$(RM) lvmlocal.conf.gen
 
 install_conf: $(CONFSRC)
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
@@ -54,4 +54,4 @@ install_lvm2: install_conf install_localconf install_profiles
 
 install: install_lvm2
 
-DISTCLEAN_TARGETS += $(CONFSRC) $(CONFLOCAL) $(PROFILE_TEMPLATES)
+DISTCLEAN_TARGETS += $(CONFSRC) $(CONFLOCAL) $(PROFILE_TEMPLATES) $(CONFSRC).gen $(CONFLOCAL).gen
