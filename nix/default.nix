@@ -116,9 +116,9 @@ let
                else
                    counter=0
                fi
-               if test $counter -eq 10 || test $(cat hb.current | wc -c) -eq $(cat hb.last | wc -c); then
+               if test $counter -eq 10 || test $(wc -c <hb.current) -eq $(wc -c <hb.last); then
                    echo
-                   echo "VM got stuck; heartbeat: $(cat hb.current | wc -c) $(cat hb.last | wc -c), counter = $counter."
+                   echo "VM got stuck; heartbeat: $(wc -c <hb.current) $(wc -c <hb.last), counter = $counter."
                    echo "last journal entry: $(tail -n 1 j.current), previously $(tail -n 1 j.last)"
                    kill -- -$(cat pid)
                fi
@@ -355,6 +355,7 @@ let
                  "redhat-rpm-config" # needed for rpmbuild of lvm
                  "which" "e2fsprogs" # needed for fsadm
                  "perl-GD" # for lcov
+                 "mdadm" # for tests with lvm2 and mdadm
                  "kernel"
                ];
       centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "valgrind-devel" "procps" ];
