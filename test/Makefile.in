@@ -147,8 +147,10 @@ install: .tests-stamp lib/paths-installed
 	$(INSTALL_DIR) $(DATADIR)/{shell,api,lib}
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell/
 	$(INSTALL_DATA) api/*.sh $(DATADIR)/api/
+	$(INSTALL_PROGRAM) api/*.{t,py} $(DATADIR)/api/
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	$(INSTALL_DATA) $(LIB_FLAVOURS) $(DATADIR)/lib/
+	$(INSTALL_DATA) $(abs_top_srcdir)/conf/thin-performance.profile $(DATADIR)/lib/thin-performance.profile
 	$(INSTALL_SCRIPT) $(LIB_SHARED) $(DATADIR)/lib/
 	for i in $(CMDS); do (cd $(DATADIR)/lib && ln -fs lvm-wrapper $$i); done
 
@@ -250,7 +252,9 @@ distclean: cleantest
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone \
-	lib/thin-performance.profile lib/paths-common
+	lib/thin-performance.profile lib/harness \
+	lib/paths-installed lib/paths-installed-t \
+	lib/paths-common lib/paths-common-t
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
