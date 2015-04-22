@@ -24,7 +24,7 @@ aux prepare_pvs 1 16
 # selecting on initial state (here, thin origin LV thin_orig is removed
 # first, but thin snap should be still selectable based on origin=thin_orig
 # condition even though thin_orig has just been removed)
-vgcreate -s 4m $vg1 $dev1
+vgcreate -s 4m $vg1 "$dev1"
 lvcreate -l100%FREE -T $vg1/pool
 lvcreate -V4m -T $vg1/pool -n thin_orig
 lvcreate -s $vg1/thin_orig -n thin_snap
