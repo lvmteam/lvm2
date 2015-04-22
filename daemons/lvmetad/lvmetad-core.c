@@ -936,12 +936,29 @@ static response pv_found(lvmetad_state *s, request r)
 			altdev = dm_config_clone_node(cft, altdev, 0);
 			chain_node(altdev, cft->root, 0);
 		} else
-			altdev = make_config_node(cft, "devices_alternate", cft->root, 0);
-		if (!altdev || !(altdev_v = dm_config_create_value(cft)))
-			goto out_of_mem;
-		altdev_v->next = altdev->v;
-		altdev->v = altdev_v;
-		altdev->v->v.i = device_old_pvid;
+			if (!(altdev = make_config_node(cft, "devices_alternate", cft->root, 0)))
+				goto out_of_mem;
+                altdev_v = altdev->v;
+                while (1) {
+			if (altdev_v && altdev_v->v.i == device_old_pvid)
+				break;
+			if (altdev_v)
+				altdev_v = altdev_v->next;
+			if (!altdev_v) {
+				if (!(altdev_v = dm_config_create_value(cft)))
+					goto out_of_mem;
+				altdev_v->next = altdev->v;
+				altdev->v = altdev_v;
+				altdev->v->v.i = device_old_pvid;
+				break;
+			}
+		};
+		altdev_v = altdev->v;
+		while (altdev_v) {
+			if (altdev_v->next && altdev_v->next->v.i == device)
+				altdev_v->next = altdev_v->next->next;
+			altdev_v = altdev_v->next;
+		}
 		changed |= 1;
 	}
 
