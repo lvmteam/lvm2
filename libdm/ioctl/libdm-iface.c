@@ -1802,15 +1802,29 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 		else {
 			if (_log_suppress || errno == EINTR)
-				log_verbose("device-mapper: %s ioctl "
+				log_verbose("device-mapper: %s ioctl on %s%s%s%.0d%s%.0d%s%s "
 					    "failed: %s",
 				    	    _cmd_data_v4[dmt->type].name,
+					    dmi->name, dmi->uuid, 
+					    dmt->major > 0 ? "(" : "",
+					    dmt->major > 0 ? dmt->major : 0,
+					    dmt->major > 0 ? ":" : "",
+					    dmt->minor > 0 ? dmt->minor : 0,
+					    dmt->major > 0 && dmt->minor == 0 ? "0" : "",
+					    dmt->major > 0 ? ")" : "",
 					    strerror(errno));
 			else
-				log_error("device-mapper: %s ioctl on %s "
+				log_error("device-mapper: %s ioctl on %s%s%s%.0d%s%.0d%s%s "
 					  "failed: %s",
 					  _cmd_data_v4[dmt->type].name,
-					  dmi->name, strerror(errno));
+					  dmi->name, dmi->uuid, 
+					  dmt->major > 0 ? "(" : "",
+					  dmt->major > 0 ? dmt->major : 0,
+					  dmt->major > 0 ? ":" : "",
+					  dmt->minor > 0 ? dmt->minor : 0,
+					  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
+					  dmt->major > 0 ? ")" : "",
+					  strerror(errno));
 
 			/*
 			 * It's sometimes worth retrying after EBUSY in case

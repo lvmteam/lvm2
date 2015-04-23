@@ -1,5 +1,6 @@
 Version 1.02.96 - 
 =================================
+  Include uuid or device number in log message after ioctl failure.
   Add DM_INTERNAL_SUSPEND_FLAG to dm-ioctl.h.
   Install blkdeactivate script and its man page with make install_device-mapper.
 
