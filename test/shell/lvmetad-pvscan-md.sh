@@ -38,6 +38,8 @@ cleanup_md() {
     # see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
     aux udev_wait
     mdadm --stop "$mddev" || true
+    # also remove singnatures
+    mdadm --zero-superblock "$dev1" "$dev2" || true
     aux udev_wait
     if [ -b "$mddev" ]; then
         # mdadm doesn't always cleanup the device node
@@ -53,25 +55,29 @@ cleanup_md_and_teardown() {
 
 # create 2 disk MD raid0 array (stripe_width=128K)
 test -b "$mddev" && skip
-mdadm --create --metadata=1.0 "$mddev" --auto=md --level 0 --raid-devices=2 --chunk 64 "$dev1" "$dev2"
 trap 'cleanup_md_and_teardown' EXIT # cleanup this MD device at the end of the test
+mdadm --create --metadata=1.0 "$mddev" --auto=md --level 0 --raid-devices=2 --chunk 64 "$dev1" "$dev2"
 test -b "$mddev" || skip
-cp -LR "$mddev" "$DM_DEV_DIR" # so that LVM/DM can see the device
-lvmdev="$DM_DEV_DIR/md_lvm_test0"
-
+if test "$DM_DEV_DIR" != "/dev" ; then
+	cp -LR "$mddev" "$DM_DEV_DIR" # so that LVM/DM can see the device
+	pvdev="$DM_DEV_DIR/md_lvm_test0"
+else
+	pvdev=$(readlink -f "$mddev")
+fi
 # TODO end MD-creation code
 
 # maj=$(($(stat -L --printf=0x%t "$dev2")))
 # min=$(($(stat -L --printf=0x%T "$dev2")))
 
-pvcreate $lvmdev
+pvcreate "$pvdev"
 
-pvscan --cache "$lvmdev"
+pvscan --cache "$pvdev"
 
 # ensure that lvmetad can only see the toplevel MD device
 pvscan --cache "$dev1" 2>&1 | grep "not found"
 pvscan --cache "$dev2" 2>&1 | grep "not found"
 
-pvs | grep $lvmdev
+pvs | tee out
+grep "$pvdev" out
 pvs | not grep "$dev1"
 pvs | not grep "$dev2"

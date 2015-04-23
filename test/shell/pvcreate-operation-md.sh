@@ -40,6 +40,7 @@ cleanup_md() {
     # see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
     aux udev_wait
     mdadm --stop "$mddev" || true
+    mdadm --zero-superblock "$dev1" "$dev2" || true
     aux udev_wait
     if [ -b "$mddev" ]; then
         # mdadm doesn't always cleanup the device node
@@ -55,10 +56,10 @@ cleanup_md_and_teardown() {
 
 # create 2 disk MD raid0 array (stripe_width=128K)
 test -b "$mddev" && skip
-mdadm --create --metadata=1.0 "$mddev" --auto=md --level 0 --raid-devices=2 --chunk 64 "$dev1" "$dev2"
 trap 'cleanup_md_and_teardown' EXIT # cleanup this MD device at the end of the test
+mdadm --create --metadata=1.0 "$mddev" --auto=md --level 0 --raid-devices=2 --chunk 64 "$dev1" "$dev2"
 test -b "$mddev" || skip
-cp -LR "$mddev" "$DM_DEV_DIR" # so that LVM/DM can see the device
+test "$DM_DEV_DIR" != "/dev" && cp -LR "$mddev" "$DM_DEV_DIR" # so that LVM/DM can see the device
 lvmdev="$DM_DEV_DIR/md_lvm_test0"
 
 # Test alignment of PV on MD without any MD-aware or topology-aware detection
@@ -113,7 +114,7 @@ EOF
     # wait here for created device node on tmpfs
     aux udev_wait "$mddev_p"
     test -b "$mddev_p" || skip
-    cp -LR "$mddev_p" "$DM_DEV_DIR"
+    test "$DM_DEV_DIR" != "/dev" && cp -LR "$mddev_p" "$DM_DEV_DIR"
     lvmdev_p="$DM_DEV_DIR/$base_mddev_p"
 
     # Checking for 'alignment_offset' in sysfs implies Linux >= 2.6.31
@@ -132,13 +133,14 @@ EOF
     fi
 fi
 
-# make sure we're clean for another test
-test -b "$mddev" && cleanup_md
-dd if=/dev/zero of="$dev1" bs=512 count=1
-dd if=/dev/zero of="$dev2" bs=512 count=1
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
 if kernel_at_least 2 6 33 ; then
+    # make sure we're clean for another test
+    test -b "$mddev" && cleanup_md
+    dd if=/dev/zero of="$dev1" bs=512 count=1
+    dd if=/dev/zero of="$dev2" bs=512 count=1
+
     pvcreate -f "$dev1"
     pvcreate -f "$dev2"
 
