@@ -76,9 +76,11 @@
 #endif
 
 #ifdef THIN_CHECK_NEEDS_CHECK
-#  define DEFAULT_THIN_CHECK_OPTIONS "-q --clear-needs-check-flag"
+#  define DEFAULT_THIN_CHECK_OPTION1 "-q"
+#  define DEFAULT_THIN_CHECK_OPTION2 "--clear-needs-check-flag"
 #else
-#  define DEFAULT_THIN_CHECK_OPTIONS "-q"
+#  define DEFAULT_THIN_CHECK_OPTION1 "-q"
+#  define DEFAULT_THIN_CHECK_OPTION2 ""
 #endif
 
 #define DEFAULT_THIN_REPAIR_OPTIONS ""
@@ -93,7 +95,7 @@
 #define DEFAULT_THIN_POOL_ZERO 1
 #define DEFAULT_POOL_METADATA_SPARE 1 /* thin + cache */
 
-#define DEFAULT_CACHE_CHECK_OPTIONS "-q"
+#define DEFAULT_CACHE_CHECK_OPTION1 "-q"
 #define DEFAULT_CACHE_REPAIR_OPTIONS ""
 #define DEFAULT_CACHE_POOL_METADATA_REQUIRE_SEPARATE_PVS 0
 #define DEFAULT_CACHE_POOL_CHUNK_SIZE 64 /* KB */

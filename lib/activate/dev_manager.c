@@ -1965,14 +1965,14 @@ static int _pool_register_callback(struct dev_manager *dm,
 		data->skip_zero = 1;
 		data->exec = global_thin_check_executable_CFG;
 		data->opts = global_thin_check_options_CFG;
-		data->defaults = DEFAULT_THIN_CHECK_OPTIONS;
+		data->defaults = DEFAULT_THIN_CHECK_OPTION1 " " DEFAULT_THIN_CHECK_OPTION2;
 		data->global = "thin";
 	} else if (lv_is_cache(lv)) { /* cache pool */
 		data->pool_lv = first_seg(lv)->pool_lv;
 		data->skip_zero = dm->activation;
 		data->exec = global_cache_check_executable_CFG;
 		data->opts = global_cache_check_options_CFG;
-		data->defaults = DEFAULT_CACHE_CHECK_OPTIONS;
+		data->defaults = DEFAULT_CACHE_CHECK_OPTION1;
 		data->global = "cache";
 	} else {
 		log_error(INTERNAL_ERROR "Registering unsupported pool callback.");
