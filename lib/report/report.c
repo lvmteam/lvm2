@@ -659,7 +659,7 @@ static int _find_ancestors(struct _str_list_append_baton *ancestors,
 	return 1;
 }
 
-static int _ancestors_disp(struct dm_report *rh, struct dm_pool *mem,
+static int _lvancestors_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
@@ -714,7 +714,7 @@ static int _find_descendants(struct _str_list_append_baton *descendants,
 	return 1;
 }
 
-static int _descendants_disp(struct dm_report *rh, struct dm_pool *mem,
+static int _lvdescendants_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)
 {

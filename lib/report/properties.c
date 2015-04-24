@@ -300,10 +300,10 @@ GET_LV_STR_PROPERTY_FN(origin, lv_origin_dup(lv->vg->vgmem, lv))
 #define _origin_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(origin_size, (SECTOR_SIZE * lv_origin_size(lv)))
 #define _origin_size_set prop_not_implemented_set
-#define _ancestors_set prop_not_implemented_set
-#define _ancestors_get prop_not_implemented_get
-#define _descendants_set prop_not_implemented_set
-#define _descendants_get prop_not_implemented_get
+#define _lv_ancestors_set prop_not_implemented_set
+#define _lv_ancestors_get prop_not_implemented_get
+#define _lv_descendants_set prop_not_implemented_set
+#define _lv_descendants_get prop_not_implemented_get
 GET_LV_NUM_PROPERTY_FN(snap_percent, _snap_percent(lv))
 #define _snap_percent_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(copy_percent, _copy_percent(lv))
