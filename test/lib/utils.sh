@@ -209,6 +209,7 @@ dm_table() {
 }
 
 skip() {
+	test "$#" -eq 0 || echo "TEST SKIPPED: $@"
 	touch SKIP_THIS_TEST
 	exit 200
 }
