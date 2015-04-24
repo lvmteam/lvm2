@@ -365,11 +365,11 @@ dev_md5sum() {
 		 die "LV $1/$2 has different MD5 check sum!")
 }
 
-sysfs_queue() {
+sysfs() {
 	# read maj min and also convert hex to decimal
 	local maj=$(($(stat -L --printf=0x%t "$1")))
 	local min=$(($(stat -L --printf=0x%T "$1")))
-	local P="/sys/dev/block/$maj:$min/queue/$2"
+	local P="/sys/dev/block/$maj:$min/$2"
 	local val=$(< "$P") || return 0 # no sysfs ?
 	test "$val" -eq "$3" || \
 		die "$1: $P = $val differs from expected value $3!"
