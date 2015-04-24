@@ -1,5 +1,6 @@
 Version 2.02.119 - 
 ==================================
+  Add lv_ancestors and lv_descendants reporting fields.
   Add --ignorelocal option to dumpconfig to ignore the local section.
   Close connection to lvmetad after fork.
   Make lvchange able to resume background pvmove polling again.
