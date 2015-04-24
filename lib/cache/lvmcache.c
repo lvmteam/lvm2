@@ -1529,6 +1529,64 @@ void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
 	pv->dev = dev;
 }
 
+/*
+ * We can see multiple different devices with the
+ * same pvid, i.e. duplicates.
+ *
+ * There may be different reasons for seeing two
+ * devices with the same pvid:
+ * - multipath showing two paths to the same thing
+ * - one device copied to another, e.g. with dd,
+ *   also referred to as cloned devices.
+ * - a "subsystem" taking a device and creating
+ *   another device of its own that represents the
+ *   underlying device it is using, e.g. using dm
+ *   to create an identity mapping of a PV.
+ *
+ * Given duplicate devices, we have to choose one
+ * of them to be the "preferred" dev, i.e. the one
+ * that will be referenced in lvmcache, by pv->dev.
+ * We can keep the existing dev, that's currently
+ * used in lvmcache, or we can replace the existing
+ * dev with the new duplicate.
+ *
+ * Regardless of which device is preferred, we need
+ * to print messages explaining which devices were
+ * found so that a user can sort out for themselves
+ * what has happened if the preferred device is not
+ * the one they are interested in.
+ *
+ * If a user wants to use the non-preferred device,
+ * they will need to filter out the device that
+ * lvm is preferring.
+ *
+ * The dev_subsystem calls check if the major number
+ * of the dev is part of a subsystem like DM/MD/DRBD.
+ * A dev that's part of a subsystem is preferred over a
+ * duplicate of that dev that is not part of a
+ * subsystem.
+ *
+ * The has_holders calls check if the device is being
+ * used by another, and prefers one that's being used.
+ *
+ * FIXME: why do we prefer a device without holders
+ * over a device with holders?  We should understand
+ * the reason for that choice.
+ *
+ * FIXME: there may be other reasons to prefer one
+ * device over another:
+ *
+ * . are there other use/open counts we could check
+ *   beyond the holders?
+ *
+ * . check if either is bad/usable and prefer
+ *   the good one?
+ *
+ * . prefer the one with smaller minor number?
+ *   Might avoid disturbing things due to a new
+ *   transient duplicate?
+ */
+
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   struct device *dev,
 				   const char *vgname, const char *vgid,
@@ -1576,54 +1634,156 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		lvmcache_del_bas(info);
 	} else {
 		if (existing->dev != dev) {
-			/* Is the existing entry a duplicate pvid e.g. md ? */
-			if (dev_subsystem_part_major(dt, existing->dev) &&
-			    !dev_subsystem_part_major(dt, dev)) {
-				log_very_verbose("Ignoring duplicate PV %s on "
-						 "%s - using %s %s",
-						 pvid, dev_name(dev),
-						 dev_subsystem_name(dt, existing->dev),
-						 dev_name(existing->dev));
-				return NULL;
-			} else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
-				   !dm_is_dm_major(MAJOR(dev->dev))) {
-				log_very_verbose("Ignoring duplicate PV %s on "
-						 "%s - using dm %s",
-						 pvid, dev_name(dev),
-						 dev_name(existing->dev));
-				return NULL;
-			} else if (!dev_subsystem_part_major(dt, existing->dev) &&
-				   dev_subsystem_part_major(dt, dev))
-				log_very_verbose("Duplicate PV %s on %s - "
-						 "using %s %s", pvid,
-						 dev_name(existing->dev),
-						 dev_subsystem_name(dt, existing->dev),
-						 dev_name(dev));
-			else if (!dm_is_dm_major(MAJOR(existing->dev->dev)) &&
-				 dm_is_dm_major(MAJOR(dev->dev)))
-				log_very_verbose("Duplicate PV %s on %s - "
-						 "using dm %s", pvid,
-						 dev_name(existing->dev),
-						 dev_name(dev));
-			/* FIXME If both dm, check dependencies */
-			//else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
-				 //dm_is_dm_major(MAJOR(dev->dev)))
-				 //
-			else if (!strcmp(pvid_s, existing->dev->pvid)) {
-				log_error("Found duplicate PV %s: using %s not %s",
-					  pvid_s,
-					  dev_name(existing->dev),
-					  dev_name(dev));
-				strncpy(dev->pvid, pvid_s, sizeof(dev->pvid));
-				_found_duplicate_pvs = 1;
-				return NULL;
+			int old_in_subsystem = 0;
+			int new_in_subsystem = 0;
+			int old_is_dm = 0;
+			int new_is_dm = 0;
+			int old_has_holders = 0;
+			int new_has_holders = 0;
+
+			/*
+			 * Here are different devices with the same pvid:
+			 * duplicates.  See comment above.
+			 */
+
+			/*
+			 * This flag tells the process_each_pv code to search
+			 * the devices list for duplicates, so that devices
+			 * can be processed together with their duplicates
+			 * (while processing the VG, rather than reporting
+			 * pv->dev under the VG, and its duplicate outside
+			 * the VG context.)
+			 */
+			_found_duplicate_pvs = 1;
+
+			/*
+			 * The new dev may not have pvid set.
+			 * The process_each_pv code needs to have the pvid
+			 * set in each device to detect that the devices
+			 * are duplicates.
+			 */
+			strncpy(dev->pvid, pvid_s, sizeof(dev->pvid));
+
+			/*
+			 * Now decide if we are going to ignore the new
+			 * device, or replace the existing/old device in
+			 * lvmcache with the new one.
+			 */
+			old_in_subsystem = dev_subsystem_part_major(dt, existing->dev);
+			new_in_subsystem = dev_subsystem_part_major(dt, dev);
+
+			old_is_dm = dm_is_dm_major(MAJOR(existing->dev->dev));
+			new_is_dm = dm_is_dm_major(MAJOR(dev->dev));
+
+			old_has_holders = dm_device_has_holders(MAJOR(existing->dev->dev), MINOR(existing->dev->dev));
+			new_has_holders = dm_device_has_holders(MAJOR(dev->dev), MINOR(dev->dev));
+
+			if (old_has_holders && new_has_holders) {
+				/*
+				 * This is not a selection of old or new, but
+				 * just a warning to be aware of.
+				 */
+				log_warn("WARNING: duplicate PV %s is being used from both devices %s and %s",
+					 pvid_s,
+					 dev_name(existing->dev),
+					 dev_name(dev));
 			}
+
+			if (old_in_subsystem && !new_in_subsystem) {
+				/* Use old, ignore new. */
+				log_warn("Found duplicate PV %s: using %s not %s",
+					 pvid_s,
+					 dev_name(existing->dev),
+					 dev_name(dev));
+				log_warn("Using duplicate PV %s from subsystem %s, ignoring %s",
+					 dev_name(existing->dev),
+					 dev_subsystem_name(dt, existing->dev),
+					 dev_name(dev));
+				return NULL;
+
+			} else if (!old_in_subsystem && new_in_subsystem) {
+				/* Use new, replace old. */
+				log_warn("Found duplicate PV %s: using %s not %s",
+					 pvid_s,
+					 dev_name(dev),
+					 dev_name(existing->dev));
+				log_warn("Using duplicate PV %s from subsystem %s, replacing %s",
+					 dev_name(dev),
+					 dev_subsystem_name(dt, dev),
+					 dev_name(existing->dev));
+
+			} else if (old_has_holders && !new_has_holders) {
+				/* Use new, replace old. */
+				/* FIXME: why choose the one without olders? */
+				log_warn("Found duplicate PV %s: using %s not %s",
+					 pvid_s,
+					 dev_name(dev),
+					 dev_name(existing->dev));
+				log_warn("Using duplicate PV %s without holders, replacing %s",
+					 dev_name(dev),
+					 dev_name(existing->dev));
+
+			} else if (!old_has_holders && new_has_holders) {
+				/* Use old, ignore new. */
+				log_warn("Found duplicate PV %s: using %s not %s",
+					 pvid_s,
+					 dev_name(existing->dev),
+					 dev_name(dev));
+				log_warn("Using duplicate PV %s without holders, ignoring %s",
+					 dev_name(existing->dev),
+					 dev_name(dev));
+				return NULL;
+
+			} else if (old_is_dm && new_is_dm) {
+				/* Use new, replace old. */
+				/* FIXME: why choose the new instead of the old? */
+				log_warn("Found duplicate PV %s: using %s not %s",
+					 pvid_s,
+					 dev_name(dev),
+					 dev_name(existing->dev));
+				log_warn("Using duplicate PV %s which is more recent, replacing %s",
+					 dev_name(dev),
+					 dev_name(existing->dev));
+
+			} else if (!strcmp(pvid_s, existing->dev->pvid)) {
+				/* No criteria to use for preferring old or new. */
+				/* FIXME: why choose the new instead of the old? */
+				/* FIXME: a transient duplicate would be a reason
+				 * to select the old instead of the new. */
+				log_warn("Found duplicate PV %s: using %s not %s",
+					 pvid_s,
+					 dev_name(dev),
+					 dev_name(existing->dev));
+				log_warn("Using duplicate PV %s which is more recent, replacing %s",
+					 dev_name(dev),
+					 dev_name(existing->dev));
+			}
+		} else {
+			/*
+			 * The new dev is the same as the existing dev.
+			 *
+			 * FIXME: Why can't we just return NULL here if the
+			 * device already exists?  Things don't seem to work
+			 * if we do that for some reason.
+			 */
+			log_verbose("Found same device %s with same pvid %s",
+				    dev_name(existing->dev), pvid_s);
 		}
-		if (strcmp(pvid_s, existing->dev->pvid)) 
-			log_debug_cache("Updating pvid cache to %s (%s) from %s (%s)",
-					pvid_s, dev_name(dev),
-					existing->dev->pvid, dev_name(existing->dev));
-		/* Switch over to new preferred device */
+
+		/*
+		 * FIXME: when could this ever happen?
+		 * If this does happen, identify when/why here, and
+		 * if not, remove this code.
+		 */
+		if (strcmp(pvid_s, existing->dev->pvid))  {
+			log_warn("Replacing dev %s pvid %s with dev %s pvid %s",
+				 dev_name(existing->dev), existing->dev->pvid,
+				 dev_name(dev), pvid_s);
+		}
+
+		/*
+		 * Switch over to new preferred device.
+		 */
 		existing->dev = dev;
 		info = existing;
 		/* Has labeller changed? */

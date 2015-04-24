@@ -366,10 +366,19 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 
 	while (alt_device) {
 		dev_alternate = dev_cache_get_by_devt(alt_device->v.i, cmd->filter);
-		if (dev_alternate)
-			lvmcache_add(fmt->labeller, (const char *)&pvid, dev_alternate,
-				     vgname, (const char *)&vgid, 0);
-		else
+		if (dev_alternate) {
+			if ((info = lvmcache_add(fmt->labeller, (const char *)&pvid, dev_alternate,
+						 vgname, (const char *)&vgid, 0))) {
+				/*
+				 * FIXME: when lvmcache_add returns non-NULL,
+				 * it means that it has made dev_alternate
+				 * the preferred device in lvmcache.
+				 * I think that means it should be followed
+				 * by the same steps done above?
+				 */
+				log_warn("lvmcache only partially updated for alternate device %s", dev_name(dev));
+			}
+		} else
 			log_warn("Duplicate of PV %s dev %s exists on unknown device %"PRId64 ":%" PRId64,
 				 pvid_txt, dev_name(dev), MAJOR(alt_device->v.i), MINOR(alt_device->v.i));
 		alt_device = alt_device->next;

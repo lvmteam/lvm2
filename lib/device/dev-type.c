@@ -225,6 +225,9 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 
 const char *dev_subsystem_name(struct dev_types *dt, struct device *dev)
 {
+	if (MAJOR(dev->dev) == dt->device_mapper_major)
+		return "DM";
+
 	if (MAJOR(dev->dev) == dt->md_major)
 		return "MD";
 
