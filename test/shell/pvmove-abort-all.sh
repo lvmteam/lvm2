@@ -51,11 +51,11 @@ if test -z "$backgroundarg" ; then
         lvs -a $vg $vg1
 else
 	"${cmd1[@]}"
-	aux add_to_kill_list ${cmd1[*]} -P 1
+	aux add_to_kill_list "${cmd1[*]}" -P 1
 	"${cmd2[@]}"
-	aux add_to_kill_list ${cmd2[*]} -P 1
+	aux add_to_kill_list "${cmd2[*]}" -P 1
 	"${cmd3[@]}"
-	aux add_to_kill_list ${cmd3[*]} -P 1
+	aux add_to_kill_list "${cmd3[*]}" -P 1
 fi
 
 # test removal of all pvmove LVs

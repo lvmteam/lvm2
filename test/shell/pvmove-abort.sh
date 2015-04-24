@@ -41,9 +41,9 @@ if test -z "$backgroundarg" ; then
 	aux wait_pvmove_lv_ready "$vg-pvmove1"
 else
 	"${cmd1[@]}"
-	aux add_to_kill_list ${cmd1[*]} -P 1
+	aux add_to_kill_list "${cmd1[*]}" -P 1
 	"${cmd2[@]}"
-	aux add_to_kill_list ${cmd2[*]} -P 1
+	aux add_to_kill_list "${cmd2[*]}" -P 1
 fi
 
 # remove specific device
