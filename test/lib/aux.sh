@@ -431,7 +431,8 @@ prepare_devs() {
 
 	# non-ephemeral devices need to be cleared between tests
 	test -f LOOP || for d in ${DEVICES[@]}; do
-		dd if=/dev/zero of=$d bs=64K count=1
+		blkdiscard "$d" 2>/dev/null || true
+		wipefs -a "$d" 2>/dev/null || dd if=/dev/zero of="$d" bs=64K count=1
 	done
 
 	#for i in `seq 1 $n`; do
