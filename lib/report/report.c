@@ -26,6 +26,7 @@
 #include "str_list.h"
 
 #include <stddef.h> /* offsetof() */
+#include <float.h> /* DBL_MAX */
 
 struct lvm_report_object {
 	struct volume_group *vg;
@@ -54,6 +55,7 @@ static const char _str_one[] = "1";
 static const char _str_no[] = "no";
 static const char _str_yes[] = "yes";
 static const char _str_unknown[] = "unknown";
+static const double _siz_max = DBL_MAX;
 
 /*
  * 32 bit signed is casted to 64 bit unsigned in dm_report_field internally!
@@ -94,6 +96,7 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
  * 		- 'reserved_value_id_n' (for 0)
  */
 #define NUM uint64_t
+#define SIZ double
 
 #define TYPE_RESERVED_VALUE(type, id, desc, value, ...) \
 	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__, NULL}; \
@@ -110,6 +113,7 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 #include "values.h"
 
 #undef NUM
+#undef SIZ
 #undef TYPE_RESERVED_VALUE
 #undef FIELD_RESERVED_VALUE
 #undef FIELD_RESERVED_BINARY_VALUE
@@ -122,6 +126,7 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 */
 
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
+#define SIZ DM_REPORT_FIELD_TYPE_SIZE
 
 #define TYPE_RESERVED_VALUE(type, id, desc, value, ...) {type, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
 
@@ -133,10 +138,11 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 
 static const struct dm_report_reserved_value _report_reserved_values[] = {
 	#include "values.h"
-	{0, NULL, NULL}
+	{0, NULL, NULL, NULL}
 };
 
 #undef NUM
+#undef SIZ
 #undef TYPE_RESERVED_VALUE
 #undef FIELD_RESERVED_VALUE
 #undef FIELD_RESERVED_BINARY_VALUE
@@ -659,7 +665,7 @@ static int _size32_disp(struct dm_report *rh __attribute__((unused)), struct dm_
 {
 	const uint32_t size = *(const uint32_t *) data;
 	const char *disp, *repstr;
-	uint64_t *sortval;
+	double *sortval;
 
 	if (!*(disp = display_size_units(private, (uint64_t) size)))
 		return_0;
@@ -674,7 +680,7 @@ static int _size32_disp(struct dm_report *rh __attribute__((unused)), struct dm_
 		return 0;
 	}
 
-	*sortval = (uint64_t) size;
+	*sortval = (double) size;
 
 	return _field_set_value(field, repstr, sortval);
 }
@@ -686,7 +692,7 @@ static int _size64_disp(struct dm_report *rh __attribute__((unused)),
 {
 	const uint64_t size = *(const uint64_t *) data;
 	const char *disp, *repstr;
-	uint64_t *sortval;
+	double *sortval;
 
 	if (!*(disp = display_size_units(private, size)))
 		return_0;
@@ -696,12 +702,12 @@ static int _size64_disp(struct dm_report *rh __attribute__((unused)),
 		return 0;
 	}
 
-	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
+	if (!(sortval = dm_pool_alloc(mem, sizeof(double)))) {
 		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
-	*sortval = size;
+	*sortval = (double) size;
 
 	return _field_set_value(field, repstr, sortval);
 }

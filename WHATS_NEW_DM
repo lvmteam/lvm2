@@ -1,5 +1,7 @@
 Version 1.02.96 - 
 =================================
+  Fix selection to not match if using reserved value in criteria with >,<,>=,<.
+  Fix selection to not match reserved values for size fields if using >,<,>=,<.
   Include uuid or device number in log message after ioctl failure.
   Add DM_INTERNAL_SUSPEND_FLAG to dm-ioctl.h.
   Install blkdeactivate script and its man page with make install_device-mapper.
