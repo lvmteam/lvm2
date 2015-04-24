@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -12,72 +12,25 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
-which mdadm || skip
 
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 	modprobe raid0 || skip
+
+aux prepare_devs 2
+
+# create 2 disk MD raid0 array (stripe_width=128K)
+aux prepare_md_dev 0 64 2 "$dev1" "$dev2"
 
 aux lvmconf 'devices/md_component_detection = 1'
 aux extend_filter_LVMTEST
 aux extend_filter "a|/dev/md.*|"
 
-aux prepare_devs 2
-
-# TODO factor out the following MD-creation code into lib/
-
-# Have MD use a non-standard name to avoid colliding with an existing MD device
-# - mdadm >= 3.0 requires that non-standard device names be in /dev/md/
-# - newer mdadm _completely_ defers to udev to create the associated device node
-mdadm_maj=$(mdadm --version 2>&1 | perl -pi -e 's|.* v(\d+).*|\1|')
-[ $mdadm_maj -ge 3 ] && \
-    mddev=/dev/md/md_lvm_test0 || \
-    mddev=/dev/md_lvm_test0
-
-cleanup_md() {
-    # sleeps offer hack to defeat: 'md: md127 still in use'
-    # see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
-    aux udev_wait
-    mdadm --stop "$mddev" || true
-    # also remove singnatures
-    mdadm --zero-superblock "$dev1" "$dev2" || true
-    aux udev_wait
-    if [ -b "$mddev" ]; then
-        # mdadm doesn't always cleanup the device node
-	sleep 2
-	rm -f "$mddev"
-    fi
-}
-
-cleanup_md_and_teardown() {
-    cleanup_md
-    aux teardown
-}
-
-# create 2 disk MD raid0 array (stripe_width=128K)
-test -b "$mddev" && skip
-trap 'cleanup_md_and_teardown' EXIT # cleanup this MD device at the end of the test
-mdadm --create --metadata=1.0 "$mddev" --auto=md --level 0 --raid-devices=2 --chunk 64 "$dev1" "$dev2"
-test -b "$mddev" || skip
-if test "$DM_DEV_DIR" != "/dev" ; then
-	cp -LR "$mddev" "$DM_DEV_DIR" # so that LVM/DM can see the device
-	pvdev="$DM_DEV_DIR/md_lvm_test0"
-else
-	pvdev=$(readlink -f "$mddev")
-fi
-# TODO end MD-creation code
-
-# maj=$(($(stat -L --printf=0x%t "$dev2")))
-# min=$(($(stat -L --printf=0x%T "$dev2")))
+pvdev=$(< MD_DEV_PV)
 
 pvcreate "$pvdev"
 
-pvscan --cache "$pvdev"
-
 # ensure that lvmetad can only see the toplevel MD device
-pvscan --cache "$dev1" 2>&1 | grep "not found"
-pvscan --cache "$dev2" 2>&1 | grep "not found"
-
 pvs | tee out
 grep "$pvdev" out
-pvs | not grep "$dev1"
-pvs | not grep "$dev2"
+not grep "$dev1" out
+not grep "$dev2" out
