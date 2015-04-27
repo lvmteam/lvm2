@@ -222,7 +222,7 @@ cfg_array(devices_global_filter_CFG, "global_filter", devices_CFG_SECTION, CFG_D
 	"Devices rejected by global_filter are not opened by LVM.\n")
 
 cfg_runtime(devices_cache_CFG, "cache", devices_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 0, 0), NULL,
-	"This has been replaced by the devices/cache_dir setting.\n")
+	"The path can be set using the devices/cache_dir setting.\n")
 
 cfg_runtime(devices_cache_dir_CFG, "cache_dir", devices_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 2, 19), "@DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@",
 	"Directory in which to store the device cache file.\n"
@@ -537,11 +537,11 @@ cfg_runtime(backup_backup_dir_CFG, "backup_dir", backup_CFG_SECTION, 0, CFG_TYPE
 	"Location of the metadata backup files.\n"
 	"Remember to back up this directory regularly!\n")
 
-cfg(backup_archive_CFG, "archive", backup_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_ARCHIVE_ENABLED, vsn(1, 0, 0), "@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@",
+cfg(backup_archive_CFG, "archive", backup_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_ARCHIVE_ENABLED, vsn(1, 0, 0), NULL,
 	"Maintain an archive of old metadata configurations.\n"
 	"Think very hard before turning this off.\n")
 
-cfg_runtime(backup_archive_dir_CFG, "archive_dir", backup_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 0, 0), NULL,
+cfg_runtime(backup_archive_dir_CFG, "archive_dir", backup_CFG_SECTION, 0, CFG_TYPE_STRING, vsn(1, 0, 0), "@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@",
 	"Location of the metdata archive files.\n"
 	"Remember to back up this directory regularly!\n")
 
