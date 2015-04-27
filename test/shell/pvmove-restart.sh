@@ -79,7 +79,7 @@ dmsetup table
 
 # Restart pvmove
 # use exclusive activation to have usable pvmove without cmirrord
-vgchange -aey $vg
+LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey $vg
 aux wait_pvmove_lv_ready "$vg-pvmove0"
 dmsetup table
 
@@ -90,6 +90,7 @@ pvmove --abort
 lvs -a -o+devices $vg
 
 lvremove -ff $vg
+aux kill_listed_processes
 done
 
 # Restore delayed device back

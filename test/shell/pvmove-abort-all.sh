@@ -50,12 +50,9 @@ if test -z "$backgroundarg" ; then
 	aux wait_pvmove_lv_ready "$vg1-pvmove0"
         lvs -a $vg $vg1
 else
-	"${cmd1[@]}"
-	aux add_to_kill_list "${cmd1[*]}" -P 1
-	"${cmd2[@]}"
-	aux add_to_kill_list "${cmd2[*]}" -P 1
-	"${cmd3[@]}"
-	aux add_to_kill_list "${cmd3[*]}" -P 1
+	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd1[@]}"
+	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd2[@]}"
+	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd3[@]}"
 fi
 
 # test removal of all pvmove LVs

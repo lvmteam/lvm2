@@ -233,26 +233,18 @@ kill_sleep_kill_() {
 	fi
 }
 
-# $1 cmd line
-# $2 optional parms for pgrep
-add_to_kill_list() {
-	local p=$(pgrep ${@:2} -f "$1" 2>/dev/null)
-	test -z "$p" || echo "$p:$1" >> kill_list
+print_procs_by_tag_() {
+	ps -o pid=,args= ehax 2>/dev/null | grep -weLVM_TEST_TAG=${1:-kill_me_$PREFIX} 2>/dev/null || true
+}
+
+count_processes_with_tag() {
+	print_procs_by_tag_ | wc -l
 }
 
 kill_listed_processes() {
-	local tmp
-	local pid
-	local cmd
-	test -f kill_list || return 0
-	while read tmp; do
-		pid=${tmp%%:*}
-		cmd=${tmp##*:}
-		for tmp in $(pgrep -f "$cmd" -d ' '); do
-			test "$tmp" = "$pid" && kill -9 "$tmp"
-		done
-	done < kill_list
-	rm -f kill_list
+	while read pid b; do
+		test -z "$pid" || kill -9 $pid
+	done <<< $(print_procs_by_tag_ $@)
 }
 
 teardown() {
