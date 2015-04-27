@@ -144,7 +144,7 @@ devices {
 #	global_filter=[]
 
 	# Configuration option devices/cache.
-	# This has been replaced by the devices/cache_dir setting.
+	# The path can be set using the devices/cache_dir setting.
 	cache="/etc/lvm/cache/.cache"
 
 	# Configuration option devices/cache_dir.
@@ -540,7 +540,7 @@ backup {
 	# Configuration option backup/archive_dir.
 	# Location of the metdata archive files.
 	# Remember to back up this directory regularly!
-	archive_dir="/etc/lvm/archive"
+	archive_dir="@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@"
 
 	# Configuration option backup/retain_min.
 	# Minimum number of archives to keep.
@@ -863,7 +863,7 @@ global {
 	# ignorable errors and fix them later.
 	# With thin_check version 3.2 or newer you should add
 	# --clear-needs-check-flag.
-	thin_check_options="-q --clear-needs-check-flag"
+	thin_check_options=["-q", "--clear-needs-check-flag"]
 
 	# Configuration option global/thin_repair_options.
 	# String of options passed to the thin_repair command.
@@ -879,7 +879,8 @@ global {
 	# error_if_no_space.
 	# Example:
 	# thin_disabled_features = [ "discards", "block_size" ]
-	thin_disabled_features=[]
+	# This configuration option does not have a default value defined.
+#	thin_disabled_features=[]
 
 	# Configuration option global/cache_check_executable.
 	# The full path to the cache_check command.
