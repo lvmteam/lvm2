@@ -75,7 +75,6 @@ EOF
 	test "$DM_DEV_DIR" != "/dev" && cp -LR "${mddev}p1" "$DM_DEV_DIR"
 
 	pvcreate --metadatasize 128k "${pvdev}p1"
-	check sysfs "${pvdev}p1" alignment_offset 0
 
 	maj=$(($(stat -L --printf=0x%t "${mddev}p1")))
 	min=$(($(stat -L --printf=0x%T "${mddev}p1")))
