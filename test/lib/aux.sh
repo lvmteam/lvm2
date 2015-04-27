@@ -951,14 +951,19 @@ target_at_least() {
 
 	local version=$(dmsetup targets 2>/dev/null | grep "${1##dm-} " 2>/dev/null)
 	version=${version##* v}
-	shift
 
-	version_at_least "$version" "$@"
+	version_at_least "$version" "${@:2}" || {
+		echo "Found $1 version $version, but requested ${*:2}." >&2
+		return 1
+	}
 }
 
 have_thin() {
-	test "$THIN" = shared -o "$THIN" = internal || return 1
-	target_at_least dm-thin-pool "$@" || return 1
+	test "$THIN" = shared -o "$THIN" = internal || {
+		echo "Thin is not built-in." >&2
+		return 1;
+	}
+	target_at_least dm-thin-pool "$@"
 
 	declare -a CONF
 	# disable thin_check if not present in system
@@ -978,12 +983,18 @@ have_thin() {
 }
 
 have_raid() {
-	test "$RAID" = shared -o "$RAID" = internal || return 1
+	test "$RAID" = shared -o "$RAID" = internal || {
+		echo "Raid is not built-in." >&2
+		return 1;
+	}
 	target_at_least dm-raid "$@"
 }
 
 have_cache() {
-	test "$CACHE" = shared -o "$CACHE" = internal || return 1
+	test "$CACHE" = shared -o "$CACHE" = internal || {
+		echo "Cache is not built-in." >&2
+		return 1;
+	}
 	target_at_least dm-cache "$@"
 
 	declare -a CONF
