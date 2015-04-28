@@ -65,11 +65,11 @@ struct config_source {
  * Map each ID to respective definition of the configuration item.
  */
 static struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
-#define cfg_section(id, name, parent, flags, since_version, unconfigured_path, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, flags, since_version, unconfigured_path, comment},
-#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_path, comment) {id, parent, name, type, {.v_##type = default_value}, flags, since_version, unconfigured_path, comment},
-#define cfg_runtime(id, name, parent, flags, type, since_version, unconfigured_path, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, unconfigured_path, comment},
-#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_path, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.v_CFG_TYPE_STRING = default_value}, flags, since_version, unconfigured_path, comment},
-#define cfg_array_runtime(id, name, parent, flags, types, since_version, unconfigured_path, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.fn_CFG_TYPE_STRING = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, unconfigured_path, comment},
+#define cfg_section(id, name, parent, flags, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, flags, since_version, unconfigured_value, comment},
+#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, comment) {id, parent, name, type, {.v_##type = default_value}, flags, since_version, unconfigured_value, comment},
+#define cfg_runtime(id, name, parent, flags, type, since_version, unconfigured_value, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, unconfigured_value, comment},
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.v_CFG_TYPE_STRING = default_value}, flags, since_version, unconfigured_value, comment},
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.fn_CFG_TYPE_STRING = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, unconfigured_value, comment},
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
@@ -1698,8 +1698,8 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 					str = "";
 				cn->v->v.str = str;
 
-				if (spec->unconfigured && def->unconfigured_path)
-					cn->v->v.str = def->unconfigured_path;
+				if (spec->unconfigured && def->unconfigured_value)
+					cn->v->v.str = def->unconfigured_value;
 				break;
 			default:
 				log_error(INTERNAL_ERROR "_add_def_node: unknown type");

@@ -121,7 +121,7 @@ typedef struct cfg_def_item {
 	cfg_def_value_t default_value;	/* default value (only for settings) */
 	uint16_t flags;			/* configuration item definition flags */
 	uint16_t since_version;		/* version this item appeared in */
-	const char *unconfigured_path;	/* path in terms of @FOO@, pre-configured */
+	const char *unconfigured_value;	/* value in terms of @FOO@, pre-configured */
 	const char *comment;		/* brief comment */
 } cfg_def_item_t;
 
@@ -165,11 +165,11 @@ struct config_def_tree_spec {
  * Register ID for each possible item in the configuration tree.
  */
 enum {
-#define cfg_section(id, name, parent, flags, since_version, unconfigured_path, comment) id,
-#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_path, comment) id,
-#define cfg_runtime(id, name, parent, flags, type, since_version, unconfigured_path, comment) id,
-#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_path, comment) id,
-#define cfg_array_runtime(id, name, parent, flags, types, since_version, unconfigured_path, comment) id,
+#define cfg_section(id, name, parent, flags, since_version, unconfigured_value, comment) id,
+#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, comment) id,
+#define cfg_runtime(id, name, parent, flags, type, since_version, unconfigured_value, comment) id,
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, comment) id,
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, unconfigured_value, comment) id,
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
