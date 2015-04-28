@@ -99,7 +99,7 @@ lvremove -ff $vg
 lvcreate -aey -l5 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0"
 check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
-lvconvert -m+1 -b $vg/$lv1 "$dev4"
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 
 # Next convert should fail b/c we can't have 2 at once
 should not lvconvert -m+1 $vg/$lv1 "$dev5"
@@ -156,7 +156,7 @@ lvremove -ff $vg
 
 # "remove newly added mirror"
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
-lvconvert -m+1 -b $vg/$lv1 "$dev4"
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 lvconvert -m-1 $vg/$lv1 "$dev4"
 lvconvert $vg/$lv1 # wait
 
@@ -167,7 +167,7 @@ lvremove -ff $vg
 
 # "remove one of newly added mirrors"
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
-lvconvert -m+2 -b $vg/$lv1 "$dev4" "$dev5"
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+2 -b $vg/$lv1 "$dev4" "$dev5"
 lvconvert -m-1 $vg/$lv1 "$dev4"
 lvconvert $vg/$lv1 # wait
 
@@ -178,7 +178,7 @@ lvremove -ff $vg
 
 # "remove from original mirror (the original is still mirror)"
 lvcreate -aey -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev5" "$dev3:$DEVRANGE"
-lvconvert -m+1 -b $vg/$lv1 "$dev4"
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
 # lvconvert-mirror-updown.sh tests this errornous case separately
@@ -193,7 +193,7 @@ lvremove -ff $vg
 
 # "remove from original mirror (the original becomes linear)"
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
-lvconvert -m+1 -b $vg/$lv1 "$dev4"
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
 # lvconvert-mirror-updown.sh tests this errornous case separately

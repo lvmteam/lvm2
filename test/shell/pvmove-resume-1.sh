@@ -44,13 +44,6 @@ test_pvmove_resume() {
 	kill -9 $PVMOVE
 
 	if test -e LOCAL_LVMPOLLD ; then
-		# inforestart lvmpolld
-		kill $(< LOCAL_LVMPOLLD)
-		for i in $(seq 1 100) ; do
-			test $i -eq 100 && die "Shutdown of lvmpolld is too slow."
-			test -e "$LVM_LVMPOLLD_PIDFILE" || break
-			sleep .1
-		done # wait for the pid removal
 		aux prepare_lvmpolld
 	fi
 
@@ -81,14 +74,7 @@ test_pvmove_resume() {
 		aux prepare_clvmd
 	fi
 
-	if test -e LOCAL_LVMETAD ; then
-		# Restart lvmetad
-		kill $(< LOCAL_LVMETAD)
-		aux prepare_lvmetad
-	fi
-
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	aux notify_lvmetad "$dev1" "$dev2" "$dev3" "$dev4"
 
 	# call resume function (see below)
 	# with expected number of spawned
@@ -112,47 +98,45 @@ test_pvmove_resume() {
 		i=$((i + 1))
 	done
 
+	aux kill_listed_processes
+
 	lvremove -ff $vg $vg1
 }
 
 lvchange_single() {
-	lvchange -aey $vg/$lv1
-	lvchange -aey $vg1/$lv1
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv1
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg1/$lv1
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq $1
+	test $(aux count_processes_with_tag) -eq $1
 }
 
 lvchange_all() {
-	lvchange -aey $vg/$lv1 $vg1/$lv1
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv1 $vg1/$lv1
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq $1
+	test $(aux count_processes_with_tag) -eq $1
 }
 
 vgchange_single() {
-	vgchange -aey $vg
-	vgchange -aey $vg1
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange -aey $vg
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange -aey $vg1
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq $1
+	test $(aux count_processes_with_tag) -eq $1
 }
 
 vgchange_all()  {
-	vgchange -aey $vg $vg1
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange -aey $vg $vg1
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq $1
+	test $(aux count_processes_with_tag) -eq $1
 }
 
 pvmove_fg() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg $vg1
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg $vg1
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes...
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 	get lv_field $vg1 name -a | grep "^\[pvmove0\]"
 
@@ -161,31 +145,31 @@ pvmove_fg() {
 	aux enable_dev "$dev3"
 	aux enable_dev "$dev4"
 
-	pvmove -i0
+	pvmove
 }
 
 pvmove_bg() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg $vg1
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg $vg1
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes...
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 	get lv_field $vg1 name -a | grep "^\[pvmove0\]"
 
-	pvmove -b -i0
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b -i0
 }
 
 pvmove_fg_single() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes...
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 	get lv_field $vg1 name -a | grep "^\[pvmove0\]"
 
@@ -194,23 +178,23 @@ pvmove_fg_single() {
 	aux enable_dev "$dev3"
 	aux enable_dev "$dev4"
 
-	pvmove -i0 "$dev1"
-	pvmove -i0 "$dev2"
+	pvmove "$dev1"
+	pvmove "$dev2"
 }
 
 pvmove_bg_single() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes...
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 	get lv_field $vg1 name -a | grep "^\[pvmove0\]"
 
-	pvmove -i0 -b "$dev1"
-	pvmove -i0 -b "$dev2"
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev1"
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev2"
 }
 
 test -e LOCAL_CLVMD && skip

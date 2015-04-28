@@ -16,7 +16,7 @@
 
 . lib/inittest
 
-aux prepare_pvs 9 30
+aux prepare_pvs 2 30
 
 vgcreate -s 128k $vg "$dev1"
 pvcreate --metadatacopies 0 "$dev2"
@@ -35,13 +35,6 @@ test_pvmove_resume() {
 	kill -9 $PVMOVE
 
 	if test -e LOCAL_LVMPOLLD ; then
-		# inforestart lvmpolld
-		kill $(< LOCAL_LVMPOLLD)
-		for i in $(seq 1 100) ; do
-			test $i -eq 100 && die "Shutdown of lvmpolld is too slow."
-			test -e "$LVM_LVMPOLLD_PIDFILE" || break
-			sleep .1
-		done # wait for the pid removal
 		aux prepare_lvmpolld
 	fi
 
@@ -70,14 +63,7 @@ test_pvmove_resume() {
 		aux prepare_clvmd
 	fi
 
-	if test -e LOCAL_LVMETAD ; then
-		# Restart lvmetad
-		kill $(< LOCAL_LVMETAD)
-		aux prepare_lvmetad
-	fi
-
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	aux notify_lvmetad "$dev1" "$dev2"
 
 	# call resume function (see below)
 	# with expected number of spawned
@@ -94,83 +80,84 @@ test_pvmove_resume() {
 		i=$((i + 1))
 	done
 
+	aux kill_listed_processes
+
 	lvremove -ff $vg
 }
 
 lvchange_single() {
-	lvchange -aey $vg/$lv1
-	lvchange -aey $vg/$lv2
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv1
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv2
 }
 
 lvchange_all() {
-	lvchange -aey $vg/$lv1 $vg/$lv2
+	# remove -vvvv
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -vvvv -aey $vg/$lv1 $vg/$lv2
 
 	# we don't want to spawn more than $1 background pollings
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq $1 || should false
+	test $(aux count_processes_with_tag) -eq $1 || should false
 }
 
 vgchange_single() {
-	vgchange -aey $vg
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange -aey $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq $1
+	test $(aux count_processes_with_tag) -eq $1
 }
 
 pvmove_fg() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 
 	aux enable_dev "$dev2"
 
-	pvmove -i0
+	pvmove
 }
 
 pvmove_bg() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 
-	pvmove -b -i0
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b
 }
 
 pvmove_fg_single() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 
 	aux enable_dev "$dev2"
 
-	pvmove -i0 "$dev1"
+	pvmove "$dev1"
 }
 
 pvmove_bg_single() {
-	# pvmove resume requires LVs active
-	vgchange -aey --poll n $vg
+	# pvmove resume requires LVs active...
+	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
-	ps h -C lvm | tee out || true
-	test $(wc -l < out) -eq 0
+	# ...also vgchange --poll n must not spawn any bg processes...
+	test $(aux count_processes_with_tag) -eq 0
 
-	# vgchange must not spawn (thus finish) background polling
+	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
 
-	pvmove -i0 -b "$dev1"
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev1"
 }
 
 test -e LOCAL_CLVMD && skip
