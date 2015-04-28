@@ -497,6 +497,8 @@ prepare_devs() {
 	# non-ephemeral devices need to be cleared between tests
 	test -f LOOP || for d in ${DEVICES[@]}; do
 		blkdiscard "$d" 2>/dev/null || true
+		# ensure disk header is always zeroed
+		dd if=/dev/zero of="$d" bs=4096 count=1
 		wipefs -a "$d" 2>/dev/null || dd if=/dev/zero of="$d" bs=64K count=1
 	done
 
