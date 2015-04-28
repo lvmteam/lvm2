@@ -43,10 +43,11 @@ path of \fBlvm\fP.
 The following commands are built into lvm without links normally
 being created in the filesystem for them.
 .TP
-\fBdumpconfig\fP \(em Display the configuration information after
-loading \fBlvm.conf\fP(5) and any other configuration files.
+\fBconfig\fP \(em The same as \fBlvmconfig\fP(8) below.
 .TP
 \fBdevtypes\fP \(em Display the recognised built-in block device types.
+.TP
+\fBdumpconfig\fP \(em The same as \fBlvmconfig\fP(8) below.
 .TP
 \fBformats\fP \(em Display recognised metadata formats.
 .TP
@@ -135,6 +136,9 @@ Volumes.
 \fBlvextend\fP \(em Extend the size of a Logical Volume.
 .TP
 \fBlvmchange\fP \(em Change attributes of the Logical Volume Manager.
+.TP
+\fBlvmconfig\fP \(em Display the configuration information after
+loading \fBlvm.conf\fP(5) and any other configuration files.
 .TP
 \fBlvmdiskscan\fP \(em Scan for all devices visible to LVM2.
 .TP
@@ -316,8 +320,8 @@ way it fits with other LVM configuration methods.
 .IR \fB\-\-profile " " \fIProfileName
 A short form of \fB\-\-metadataprofile\fP for \fBvgcreate\fP, \fBlvcreate\fP,
 \fBvgchange\fP and \fBlvchange\fP command and a short form of \fB\-\-commandprofile\fP
-for any other command (with the exception of \fBdumpconfig\fP command where the
-\-\-profile has special meaning, see \fBlvm dumpconfig\fP(8) for more information).
+for any other command (with the exception of \fBlvmconfig\fP command where the
+\-\-profile has special meaning, see \fBlvm lvmconfig\fP(8) for more information).
 .TP
 .IR \fB\-\-config " " \fIConfigurationString
 Uses the ConfigurationString as direct string representation of the configuration
@@ -529,7 +533,6 @@ Path for the lvmetad socket file.
 .BR lvm.conf (5),
 .BR lvmcache (7),
 .BR lvmthin (7),
-.BR lvm\ dumpconfig (8),
 .BR clvmd (8),
 .BR dmsetup (8),
 .BR lvchange (8),
@@ -537,6 +540,7 @@ Path for the lvmetad socket file.
 .BR lvdisplay (8),
 .BR lvextend (8),
 .BR lvmchange (8),
+.BR lvmconfig (8),
 .BR lvmdiskscan (8),
 .BR lvreduce (8),
 .BR lvremove (8),

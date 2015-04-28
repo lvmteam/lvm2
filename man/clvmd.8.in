@@ -118,7 +118,7 @@ Display the version of the cluster LVM daemon.
 .SH ENVIRONMENT VARIABLES
 .TP
 .B LVM_CLVMD_BINARY
-The CLVMD binary to use when \fBclmvd\fP restart is requested.
+The CLVMD binary to use when \fBclvmd\fP restart is requested.
 Defaults to #CLVMD_PATH#.
 .TP
 .B LVM_BINARY

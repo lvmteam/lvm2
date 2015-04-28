@@ -1286,7 +1286,9 @@ static int _prepare_profiles(struct cmd_context *cmd)
 		 * If --profile is used with dumpconfig, it's used
 		 * to dump the profile without the profile being applied.
 		 */
-		if (!strcmp(cmd->command->name, "dumpconfig"))
+		if (!strcmp(cmd->command->name, "dumpconfig") ||
+		    !strcmp(cmd->command->name, "lvmconfig") ||
+		    !strcmp(cmd->command->name, "config"))
 			return 1;
 
 		/*

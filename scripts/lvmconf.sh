@@ -33,7 +33,7 @@ START_STOP_SERVICES=0
 
 function usage
 {
-    echo "usage: $0 <command>"
+    echo "Usage: $0 <command>"
     echo ""
     echo "Commands:"
     echo "Enable clvm:  --enable-cluster [--lockinglibdir <dir>] [--lockinglib <lib>]"
@@ -46,6 +46,7 @@ function usage
     echo "Config file location: --file <configfile>"
     echo "Set services: --services [--mirrorservice] [--startstopservices]"
     echo ""
+    echo "Use the separate command 'lvmconfig' to display configuration information"
 }
 
 function set_default_use_lvmetad_var

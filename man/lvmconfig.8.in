@@ -1,0 +1,166 @@
+.TH "LVMCONFIG" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.SH "NAME"
+lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration 
+.SH SYNOPSIS
+.B lvmconfig
+.RB [ \-f | \-\-file
+.IR filename ]
+.RB [ \-\-type
+.RI { current | default | diff | missing | new | profilable | profilable-command | profilable-metadata }
+.RB [ \-\-atversion
+.IR version ]
+.RB [ \-\-ignoreadvanced ]
+.RB [ \-\-ignoreunsupported ]
+.RB [ \-\-ignorelocal ]
+.RB [ \-\-config
+.IR ConfigurationString ]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
+.RB [ \-\-profile
+.IR ProfileName ]
+.RB [ \-\-metadataprofile
+.IR ProfileName ]
+.RB [ \-\-mergedconfig ]
+.RB [ \-\-validate ]
+.RB [ \-\-withcomments ]
+.RB [ \-\-withfullcomments ]
+.RB [ \-\-withversions ]
+.RB [ ConfigurationNode... ]
+
+.SH DESCRIPTION
+lvmconfig produces formatted output from the LVM configuration tree.
+The command was added in release 2.02.119 and has an identical longer form 
+\fBlvm dumpconfig\fP.
+
+.SH OPTIONS
+.TP
+.BR \-f ", " \-\-file " \fIfilename"
+Send output to a file named 'filename'.
+
+.TP
+.IR \fB\-\-type " {" current | default | diff | missing | new | profilable }
+Select the type of configuration to display. The configuration settings
+displayed have either default values or currently-used values assigned based on
+the type selected. If no type is selected, \fB\-\-type current\fP is used
+by default. Whenever a configuration setting with a default value is
+commented out, it means the setting does not have any concrete default
+value defined. Output can be saved and used as a proper \fBlvm.conf\fP(5)
+file.
+.RS
+.IP current 3
+Display the current \fBlvm.conf\fP configuration merged with any \fBtag
+config\fP if used. See also \fBlvm.conf\fP(5) for more info about LVM
+configuration methods.
+.IP default 3
+Display all possible configuration settings with default values assigned.
+.IP diff 3
+Display all configuration settings for which the values used differ from defaults.
+The value assigned for each configuration setting is the value currently used.
+This is actually minimal LVM configuration which can be used without
+a change to current configured behaviour.
+.IP missing 3
+Display all configuration settings with default values assigned which are
+missing in the configuration currently used and for which LVM automatically
+fallbacks to using these default values.
+.IP new 3
+Display all new configuration settings introduced in current LVM version
+or specific version as defined by \fB\-\-atversion\fP option.
+.IP profilable 3
+Display all profilable configuration settings with default values assigned.
+See \fBlvm.conf\fP(5) for more info about \fBprofile config\fP method.
+.IP profilable-command 3
+Display all profilable configuration settings with default values assigned
+that can be used in command profile. This is a subset of settings displayed
+by \fB\-\-type \-\-profilable\fP.
+.IP profilable-metadata 3
+Display all profilable configuration settings with default values assigned
+that can be used in metadata profile. This is a subset of settings displayed
+by \fB\-\-type \-\-profilable\fP.
+.RE
+
+.TP
+.BI \-\-atversion " version"
+Specify an LVM version in x.y.z format where x is the major version,
+the y is the minor version and z is the patchlevel (e.g. 2.2.106).
+When configuration is displayed, the configuration settings recognized
+at this LVM version will be considered only. This can be used
+to display a configuration that a certain LVM version understands and
+which does not contain any newer settings for which LVM would
+issue a warning message when checking the configuration.
+
+.TP
+.B \-\-ignoreadvanced
+Exclude advanced configuration settings from the output.
+
+.TP
+.B \-\-ignoreunsupported
+Exclude unsupported configuration settings from the output. These settings are
+either used for debugging purposes only or their support is not yet
+complete and they are not meant to be used in production.
+
+.TP
+.B \-\-ignorelocal
+Ignore local section.
+
+.TP
+.BI \-\-config " ConfigurationString"
+Use \fBConfigurationString\fP to override existing configuration.
+This configuration is then applied for the lvmconfig command itself.
+See also \fBlvm.conf\fP(5) for more info about \fBconfig cascade\fP.
+
+.TP
+.BI \-\-commandprofile " ProfileName"
+Use \fBProfileName\fP to override existing configuration.
+This configuration is then applied for the lvmconfig command itself.
+See also \fB\-\-mergedconfig\fP option and \fBlvm.conf\fP(5) for
+more info about \fBconfig cascade\fP.
+
+.TP
+.BI \-\-profile " ProfileName"
+The same as using \fB\-\-commandprofile\fP but the configuration is not
+applied for the lvmconfig command itself.
+
+.TP
+.BI \-\-metadataprofile " ProfileName"
+Use \fBProfileName\fP to override existing configuration.
+The configuration defined in metadata profile has no effect for
+the lvmconfig command itself. lvmconfig displays the configuration only.
+See also \fB\-\-mergedconfig\fP option and \fBlvm.conf\fP(5) for more
+info about \fBconfig cascade\fP.
+
+.TP
+.B \-\-mergedconfig
+When the lvmconfig command is run with the \fB\-\-config\fP option
+and/or \fB\-\-commandprofile\fP (or using \fBLVM_COMMAND_PROFILE\fP
+environment variable), \fB\-\-profile\fP, \fB\-\-metadataprofile\fP
+option, merge all the contents of the \fBconfig cascade\fP before displaying it.
+Without the \fB\-\-mergeconfig\fP option used, only the configuration at
+the front of the cascade is displayed. See also \fBlvm.conf\fP(5) for more
+info about \fBconfig cascade\fP.
+
+.TP
+.B \-\-validate
+Validate current configuration used and exit with appropriate
+return code. The validation is done only for the configuration
+at the front of the \fBconfig cascade\fP. To validate the whole
+merged configuration tree, use also the \fB\-\-mergedconfig\fP option.
+The validation is done even if \fBconfig/checks\fP \fBlvm.conf\fP(5)
+option is disabled.
+
+.TP
+.B \-\-withcomments
+Display a one line comment for each configuration node.
+
+.TP
+.B \-\-withfullcomments
+Display a full comment for each configuration node.
+
+.TP
+.B \-\-withversions
+Also display a comment containing the version of introduction for
+each configuration node.
+
+.SH SEE ALSO
+.BR lvm (8)
+.BR lvmconf (8)
+.BR lvm.conf (5)

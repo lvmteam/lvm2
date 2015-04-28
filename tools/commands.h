@@ -28,6 +28,31 @@ xx(e2fsadm,
     extents_ARG, size_ARG, nofsck_ARG, test_ARG)
 *********/
 
+xx(config,
+   "Display and manipulate configuration information",
+   PERMITTED_READ_ONLY,
+   "config\n"
+   "\t[-f|--file filename]\n"
+   "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--atversion version]]\n"
+   "\t[--ignoreadvanced]\n"
+   "\t[--ignoreunsupported]\n"
+   "\t[--ignorelocal]\n"
+   "\t[--config ConfigurationString]\n"
+   "\t[--commandprofile ProfileName]\n"
+   "\t[--profile ProfileName]\n"
+   "\t[--metadataprofile ProfileName]\n"
+   "\t[--mergedconfig]\n"
+   "\t[--validate]\n"
+   "\t[--withcomments]\n"
+   "\t[--withfullcomments]\n"
+   "\t[--unconfigured]\n"
+   "\t[--withversions]\n"
+   "\t[ConfigurationNode...]\n",
+   atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
+   ignoreunsupported_ARG, ignorelocal_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   validate_ARG, withcomments_ARG, withfullcomments_ARG, unconfigured_ARG, withversions_ARG)
+
 xx(devtypes,
    "Display recognised built-in block device types",
    PERMITTED_READ_ONLY,
@@ -55,7 +80,7 @@ xx(devtypes,
    unbuffered_ARG, unquoted_ARG)
 
 xx(dumpconfig,
-   "Dump configuration",
+   "Display and manipulate configuration information",
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
    "\t[-f|--file filename]\n"
@@ -453,6 +478,31 @@ xx(lvmchange,
    "\t[--version]\n",
 
     reset_ARG)
+
+xx(lvmconfig,
+   "Display and manipulate configuration information",
+   PERMITTED_READ_ONLY,
+   "lvmconfig\n"
+   "\t[-f|--file filename]\n"
+   "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--atversion version]]\n"
+   "\t[--ignoreadvanced]\n"
+   "\t[--ignoreunsupported]\n"
+   "\t[--ignorelocal]\n"
+   "\t[--config ConfigurationString]\n"
+   "\t[--commandprofile ProfileName]\n"
+   "\t[--profile ProfileName]\n"
+   "\t[--metadataprofile ProfileName]\n"
+   "\t[--mergedconfig]\n"
+   "\t[--validate]\n"
+   "\t[--withcomments]\n"
+   "\t[--withfullcomments]\n"
+   "\t[--unconfigured]\n"
+   "\t[--withversions]\n"
+   "\t[ConfigurationNode...]\n",
+   atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
+   ignoreunsupported_ARG, ignorelocal_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   validate_ARG, withcomments_ARG, withfullcomments_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",

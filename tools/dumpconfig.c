@@ -257,3 +257,13 @@ out:
 
 	return r;
 }
+
+int config(struct cmd_context *cmd, int argc, char **argv)
+{
+	return dumpconfig(cmd, argc, argv);
+}
+
+int lvmconfig(struct cmd_context *cmd, int argc, char **argv)
+{
+	return dumpconfig(cmd, argc, argv);
+}
