@@ -65,11 +65,11 @@ struct config_source {
  * Map each ID to respective definition of the configuration item.
  */
 static struct cfg_def_item _cfg_def_items[CFG_COUNT + 1] = {
-#define cfg_section(id, name, parent, flags, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, flags, since_version, unconfigured_value, comment},
-#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, comment) {id, parent, name, type, {.v_##type = default_value}, flags, since_version, unconfigured_value, comment},
-#define cfg_runtime(id, name, parent, flags, type, since_version, unconfigured_value, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, unconfigured_value, comment},
-#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.v_CFG_TYPE_STRING = default_value}, flags, since_version, unconfigured_value, comment},
-#define cfg_array_runtime(id, name, parent, flags, types, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.fn_CFG_TYPE_STRING = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, unconfigured_value, comment},
+#define cfg_section(id, name, parent, flags, since_version, comment) {id, parent, name, CFG_TYPE_SECTION, {0}, flags, since_version, {0}, comment},
+#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, comment) {id, parent, name, type, {.v_##type = default_value}, flags, since_version, {.v_UNCONFIGURED = unconfigured_value}, comment},
+#define cfg_runtime(id, name, parent, flags, type, since_version, comment) {id, parent, name, type, {.fn_##type = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, {.fn_UNCONFIGURED = get_default_unconfigured_##id}, comment},
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.v_CFG_TYPE_STRING = default_value}, flags, since_version, {.v_UNCONFIGURED = unconfigured_value}, comment},
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, comment) {id, parent, name, CFG_TYPE_ARRAY | types, {.fn_CFG_TYPE_STRING = get_default_##id}, flags | CFG_DEFAULT_RUN_TIME, since_version, {.fn_UNCONFIGURED = get_default_unconfigured_##id}, comment},
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
@@ -604,6 +604,7 @@ struct timespec config_file_timestamp(struct dm_config_tree *cft)
 }
 
 #define cfg_def_get_item_p(id) (&_cfg_def_items[id])
+#define cfg_def_get_default_unconfigured_value_hint(cmd,item) ((item->flags & CFG_DEFAULT_RUN_TIME) ? item->default_unconfigured_value.fn_UNCONFIGURED(cmd) : item->default_unconfigured_value.v_UNCONFIGURED)
 #define cfg_def_get_default_value_hint(cmd,item,type,profile) ((item->flags & CFG_DEFAULT_RUN_TIME) ? item->default_value.fn_##type(cmd,profile) : item->default_value.v_##type)
 #define cfg_def_get_default_value(cmd,item,type,profile) (item->flags & CFG_DEFAULT_UNDEFINED ? 0 : cfg_def_get_default_value_hint(cmd,item,type,profile))
 
@@ -1675,9 +1676,9 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 
 	cn->id = def->id;
 
-	if (spec->unconfigured && def->unconfigured_value) {
+	if (spec->unconfigured && def->default_unconfigured_value.v_UNCONFIGURED) {
 		cn->v->type = DM_CFG_STRING;
-		cn->v->v.str = def->unconfigured_value;
+		cn->v->v.str = cfg_def_get_default_unconfigured_value_hint(spec->cmd, def);
 	} else if (!(def->type & CFG_TYPE_ARRAY)) {
 		switch (def->type) {
 			case CFG_TYPE_SECTION:
@@ -2007,6 +2008,11 @@ const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct pr
 	return dm_pool_strdup(cmd->mem, buf);
 }
 
+const char *get_default_unconfigured_devices_cache_dir_CFG(struct cmd_context *cmd)
+{
+	return "@DEFAULT_SYS_DIR@/@DEFAULT_CACHE_SUBDIR@";
+}
+
 const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profile *profile)
 {
 	const char *cache_dir = NULL, *cache_file_prefix = NULL;
@@ -2041,6 +2047,24 @@ const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profil
 	return dm_pool_strdup(cmd->mem, buf);
 }
 
+const char *get_default_unconfigured_devices_cache_CFG(struct cmd_context *cmd)
+{
+	const char *cache_file_prefix = NULL;
+	static char buf[PATH_MAX];
+
+	if (find_config_tree_node(cmd, devices_cache_file_prefix_CFG, NULL))
+		cache_file_prefix = find_config_tree_str_allow_empty(cmd, devices_cache_file_prefix_CFG, NULL);
+
+	if (dm_snprintf(buf, sizeof(buf), "%s/%s.cache",
+			get_default_unconfigured_devices_cache_dir_CFG(cmd),
+			cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
+		log_error("Persistent cache filename too long.");
+		return NULL;
+	}
+
+	return dm_pool_strdup(cmd->mem, buf);
+}
+
 const char *get_default_backup_backup_dir_CFG(struct cmd_context *cmd, struct profile *profile)
 {
 	static char buf[PATH_MAX];
@@ -2052,6 +2076,11 @@ const char *get_default_backup_backup_dir_CFG(struct cmd_context *cmd, struct pr
 	}
 
 	return dm_pool_strdup(cmd->mem, buf);
+}
+
+const char *get_default_unconfigured_backup_backup_dir_CFG(struct cmd_context *cmd)
+{
+	return "@DEFAULT_SYS_DIR@/@DEFAULT_BACKUP_SUBDIR@";
 }
 
 const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct profile *profile)
@@ -2067,6 +2096,11 @@ const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct p
 	return dm_pool_strdup(cmd->mem, buf);
 }
 
+const char *get_default_unconfigured_backup_archive_dir_CFG(struct cmd_context *cmd)
+{
+	return "@DEFAULT_SYS_DIR@/@DEFAULT_ARCHIVE_SUBDIR@";
+}
+
 const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct profile *profile)
 {
 	static char buf[PATH_MAX];
@@ -2078,6 +2112,11 @@ const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct p
 	}
 
 	return dm_pool_strdup(cmd->mem, buf);
+}
+
+const char *get_default_unconfigured_config_profile_dir_CFG(struct cmd_context *cmd)
+{
+	return "@DEFAULT_SYS_DIR@/@DEFAULT_PROFILE_SUBDIR@";
 }
 
 const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_context *cmd, struct profile *profile)

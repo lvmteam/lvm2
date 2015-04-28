@@ -72,6 +72,7 @@ typedef int (*t_fn_CFG_TYPE_INT) (struct cmd_context *cmd, struct profile *profi
 typedef float (*t_fn_CFG_TYPE_FLOAT) (struct cmd_context *cmd, struct profile *profile);
 typedef const char* (*t_fn_CFG_TYPE_STRING) (struct cmd_context *cmd, struct profile *profile);
 typedef const char* (*t_fn_CFG_TYPE_ARRAY) (struct cmd_context *cmd, struct profile *profile);
+typedef const char* (*t_fn_UNCONFIGURED) (struct cmd_context *cmd);
 
 /* configuration definition item value (for item's default value) */
 typedef union {
@@ -87,6 +88,11 @@ typedef union {
 	t_fn_CFG_TYPE_STRING fn_CFG_TYPE_STRING;
 	t_fn_CFG_TYPE_ARRAY fn_CFG_TYPE_ARRAY;
 } cfg_def_value_t;
+
+typedef union {
+	const char *v_UNCONFIGURED;
+	t_fn_UNCONFIGURED fn_UNCONFIGURED;
+} cfg_def_unconfigured_value_t;
 
 /* configuration definition item flags: */
 
@@ -114,15 +120,15 @@ typedef union {
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
-	int id;				/* ID of this item */
-	int parent;			/* ID of parent item */
-	const char *name;		/* name of the item in configuration tree */
-	int type;			/* configuration item type (bits of cfg_def_type_t) */
-	cfg_def_value_t default_value;	/* default value (only for settings) */
-	uint16_t flags;			/* configuration item definition flags */
-	uint16_t since_version;		/* version this item appeared in */
-	const char *unconfigured_value;	/* value in terms of @FOO@, pre-configured */
-	const char *comment;		/* brief comment */
+	int id;								/* ID of this item */
+	int parent;							/* ID of parent item */
+	const char *name;						/* name of the item in configuration tree */
+	int type;							/* configuration item type (bits of cfg_def_type_t) */
+	cfg_def_value_t default_value;					/* default value (only for settings) */
+	uint16_t flags;							/* configuration item definition flags */
+	uint16_t since_version;						/* version this item appeared in */
+	cfg_def_unconfigured_value_t default_unconfigured_value;	/* default value in terms of @FOO@, pre-configured (only for settings) */
+	const char *comment;						/* comment */
 } cfg_def_item_t;
 
 /* configuration definition tree types */
@@ -165,11 +171,11 @@ struct config_def_tree_spec {
  * Register ID for each possible item in the configuration tree.
  */
 enum {
-#define cfg_section(id, name, parent, flags, since_version, unconfigured_value, comment) id,
+#define cfg_section(id, name, parent, flags, since_version, comment) id,
 #define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, comment) id,
-#define cfg_runtime(id, name, parent, flags, type, since_version, unconfigured_value, comment) id,
+#define cfg_runtime(id, name, parent, flags, type, since_version, comment) id,
 #define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, comment) id,
-#define cfg_array_runtime(id, name, parent, flags, types, since_version, unconfigured_value, comment) id,
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, comment) id,
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
@@ -260,12 +266,20 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
  * value is evaluated at runtime based on command context.
  */
 const char *get_default_devices_cache_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_unconfigured_devices_cache_dir_CFG(struct cmd_context *cmd);
 const char *get_default_devices_cache_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_unconfigured_devices_cache_CFG(struct cmd_context *cmd);
 const char *get_default_backup_backup_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_unconfigured_backup_backup_dir_CFG(struct cmd_context *cmd);
 const char *get_default_backup_archive_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_unconfigured_backup_archive_dir_CFG(struct cmd_context *cmd);
 const char *get_default_config_profile_dir_CFG(struct cmd_context *cmd, struct profile *profile);
+const char *get_default_unconfigured_config_profile_dir_CFG(struct cmd_context *cmd);
 const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_context *cmd, struct profile *profile);
+#define get_default_unconfigured_activation_mirror_image_fault_policy_CFG NULL
 int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile);
+#define get_default_unconfigured_allocation_thin_pool_chunk_size_CFG NULL
 int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile);
+#define get_default_unconfigured_allocation_cache_pool_chunk_size_CFG NULL
 
 #endif
