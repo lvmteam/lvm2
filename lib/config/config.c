@@ -1675,7 +1675,10 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 
 	cn->id = def->id;
 
-	if (!(def->type & CFG_TYPE_ARRAY)) {
+	if (spec->unconfigured && def->unconfigured_value) {
+		cn->v->type = DM_CFG_STRING;
+		cn->v->v.str = def->unconfigured_value;
+	} else if (!(def->type & CFG_TYPE_ARRAY)) {
 		switch (def->type) {
 			case CFG_TYPE_SECTION:
 				cn->v = NULL;
@@ -1697,9 +1700,6 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 				if (!(str = cfg_def_get_default_value_hint(spec->cmd, def, CFG_TYPE_STRING, NULL)))
 					str = "";
 				cn->v->v.str = str;
-
-				if (spec->unconfigured && def->unconfigured_value)
-					cn->v->v.str = def->unconfigured_value;
 				break;
 			default:
 				log_error(INTERNAL_ERROR "_add_def_node: unknown type");
