@@ -321,7 +321,7 @@ way it fits with other LVM configuration methods.
 A short form of \fB\-\-metadataprofile\fP for \fBvgcreate\fP, \fBlvcreate\fP,
 \fBvgchange\fP and \fBlvchange\fP command and a short form of \fB\-\-commandprofile\fP
 for any other command (with the exception of \fBlvmconfig\fP command where the
-\-\-profile has special meaning, see \fBlvm lvmconfig\fP(8) for more information).
+\-\-profile has special meaning, see \fBlvm config\fP(8) for more information).
 .TP
 .IR \fB\-\-config " " \fIConfigurationString
 Uses the ConfigurationString as direct string representation of the configuration
