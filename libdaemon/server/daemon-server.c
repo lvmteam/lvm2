@@ -80,6 +80,29 @@ static void _exit_handler(int sig __attribute__((unused)))
 
 #  include <stdio.h>
 
+static int _is_idle(daemon_state s)
+{
+	return _systemd_activation && s.idle && s.idle->is_idle && !s.threads->next;
+}
+
+static struct timeval *_get_timeout(daemon_state s)
+{
+	return (_systemd_activation && s.idle) ? s.idle->ptimeout : NULL;
+}
+
+static void _reset_timeout(daemon_state s)
+{
+	if (s.idle) {
+		s.idle->ptimeout->tv_sec = 1;
+		s.idle->ptimeout->tv_usec = 0;
+	}
+}
+
+static unsigned _get_max_timeouts(daemon_state s)
+{
+	return s.idle ? s.idle->max_timeouts : 0;
+}
+
 static int _set_oom_adj(const char *oom_adj_path, int val)
 {
 	FILE *fp;
@@ -513,6 +536,7 @@ void daemon_start(daemon_state s)
 	int failed = 0;
 	log_state _log = { { 0 } };
 	thread_state _threads = { .next = NULL };
+	unsigned timeout_count = 0;
 
 	/*
 	 * Switch to C locale to avoid reading large locale-archive file used by
@@ -583,15 +607,28 @@ void daemon_start(daemon_state s)
 			failed = 1;
 
 	while (!_shutdown_requested && !failed) {
+		_reset_timeout(s);
 		fd_set in;
 		FD_ZERO(&in);
 		FD_SET(s.socket_fd, &in);
-		if (select(FD_SETSIZE, &in, NULL, NULL, NULL) < 0 && errno != EINTR)
+		if (select(FD_SETSIZE, &in, NULL, NULL, _get_timeout(s)) < 0 && errno != EINTR)
 			perror("select error");
-		if (FD_ISSET(s.socket_fd, &in))
+		if (FD_ISSET(s.socket_fd, &in)) {
+			timeout_count = 0;
 			if (!_shutdown_requested && !handle_connect(s))
 				ERROR(&s, "Failed to handle a client connection.");
+		}
+
 		reap(s, 0);
+
+		/* s.idle == NULL equals no shutdown on timeout */
+		if (_is_idle(s)) {
+			DEBUGLOG(&s, "timeout occured");
+			if (++timeout_count >= _get_max_timeouts(s)) {
+				INFO(&s, "Inactive for %d seconds. Exiting.", timeout_count);
+				break;
+			}
+		}
 	}
 
 	INFO(&s, "%s waiting for client threads to finish", s.name);

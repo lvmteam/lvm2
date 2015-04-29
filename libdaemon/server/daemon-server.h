@@ -35,6 +35,21 @@ typedef struct {
 	struct buffer buffer;
 } response;
 
+struct timeval;
+
+/*
+ * is_idle:	 daemon implementation sets it to true when no background task
+ *		 is running
+ * max_timeouts: how many seconds do daemon allow to be idle before it shutdowns
+ * ptimeout:	 internal variable passed to select(). has to be reset to 1 second
+ *		 before each select
+ */
+typedef struct {
+	volatile unsigned is_idle;
+	unsigned max_timeouts;
+	struct timeval *ptimeout;
+} daemon_idle;
+
 struct daemon_state;
 
 /*
@@ -98,6 +113,10 @@ typedef struct daemon_state {
 
 	log_state *log;
 	struct thread_state *threads;
+
+	/* suport for shutdown on idle */
+	daemon_idle *idle;
+
 	void *private; /* the global daemon state */
 } daemon_state;
 
