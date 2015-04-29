@@ -140,6 +140,8 @@ teardown_devs_prefixed() {
 	local IFS=$IFS_NL
 	local dm
 
+	rm -rf "$TESTDIR/dev/$prefix"*
+
 	# Resume suspended devices first
 	for dm in $(dm_info suspended,name | grep "^Suspended:.*$prefix"); do
 		echo "dmsetup resume \"${dm#Suspended:}\""
@@ -180,16 +182,16 @@ teardown_devs_prefixed() {
 			num_remaining_devs=$num_devs
 		done
 	fi
+
+	udev_wait
 }
 
 teardown_devs() {
 	# Delete any remaining dm/udev semaphores
 	teardown_udev_cookies
 
-	test -z "$PREFIX" || {
-		rm -rf "$TESTDIR/dev/$PREFIX"*
-		teardown_devs_prefixed "$PREFIX"
-	}
+	test ! -f MD_DEV || cleanup_md_dev
+	test ! -f DEVICES || teardown_devs_prefixed "$PREFIX"
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
 	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
@@ -199,22 +201,21 @@ teardown_devs() {
 		test ! -f LOOP || losetup -d $(< LOOP) || true
 		test ! -f LOOPFILE || rm -f $(< LOOPFILE)
 	fi
-	rm -f DEVICES # devs is set in prepare_devs()
+
 	not diff LOOP BACKING_DEV >/dev/null 2>&1 || rm -f BACKING_DEV
-	rm -f LOOP
+	rm -f DEVICES LOOP
 
 	# Attempt to remove any loop devices that failed to get torn down if earlier tests aborted
 	test "${LVM_TEST_PARALLEL:-0}" -eq 1 -o -z "$COMMON_PREFIX" || {
-		teardown_devs_prefixed "$COMMON_PREFIX" 1
 		local stray_loops=( $(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1) )
 		test ${#stray_loops[@]} -eq 0 || {
+			teardown_devs_prefixed "$COMMON_PREFIX" 1
 			echo "Removing stray loop devices containing $COMMON_PREFIX: ${stray_loops[@]}"
 			for i in "${stray_loops[@]}" ; do losetup -d $i ; done
+			# Leave test when udev processed all removed devices
+			udev_wait
 		}
 	}
-
-	# Leave test when udev processed all removed devices
-	udev_wait
 }
 
 kill_sleep_kill_() {
@@ -248,9 +249,8 @@ kill_listed_processes() {
 }
 
 teardown() {
-	test -f MD_DEV && cleanup_md_dev
-
 	echo -n "## teardown..."
+	unset LVM_LOG_FILE_EPOCH
 
 	if test -f TESTNAME ; then
 
@@ -461,6 +461,7 @@ prepare_devs() {
 	local pvname=${3:-pv}
 	local shift=0
 
+	touch DEVICES
 	prepare_backing_dev $(($n*$devsize))
 	# shift start of PV devices on /dev/loopXX by 1M
 	not diff LOOP BACKING_DEV >/dev/null 2>&1 || shift=2048

@@ -32,7 +32,7 @@ PREFIX="${COMMON_PREFIX}$$"
 if test -z "$LVM_TEST_DIR"; then LVM_TEST_DIR=$TMPDIR; fi
 TESTDIR=$(mkdtemp "${LVM_TEST_DIR:-/tmp}" "$PREFIX.XXXXXXXXXX") || \
 	die "failed to create temporary directory in ${LVM_TEST_DIR:-$TESTOLDPWD}"
-RUNNING_DMEVENTD=$(pgrep dmeventd) || true
+RUNNING_DMEVENTD=$(pgrep dmeventd || true)
 
 export TESTOLDPWD TESTDIR COMMON_PREFIX PREFIX RUNNING_DMEVENTD
 export LVM_LOG_FILE_EPOCH=DEBUG
@@ -62,7 +62,7 @@ mkdir "$LVM_SYSTEM_DIR" "$DM_DEV_DIR"
 if test -n "$LVM_TEST_DEVDIR" ; then
 	DM_DEV_DIR=$LVM_TEST_DEVDIR
 else
-	mknod "$DM_DEV_DIR/testnull" c 1 3 || die "mknod failed";
+	mknod "$DM_DEV_DIR/testnull" c 1 3 || die "mknod failed"
 	echo >"$DM_DEV_DIR/testnull" || \
 		die "Filesystem does support devices in $DM_DEV_DIR (mounted with nodev?)"
 	mkdir "$DM_DEV_DIR/mapper"
@@ -77,11 +77,7 @@ echo "$TESTNAME" >TESTNAME
 
 echo "Kernel is $(uname -a)"
 # Report SELinux mode
-if which getenforce &>/dev/null ; then
-	echo "Selinux mode is \"$(getenforce 2>/dev/null)\"."
-else
-	echo "Selinux mode is not installed."
-fi
+echo "Selinux mode is $(getenforce 2>/dev/null || echo not installed)."
 
 # Set vars from utils now that we have TESTDIR/PREFIX/...
 prepare_test_vars
