@@ -44,6 +44,7 @@ xx(config,
    "\t[--profile ProfileName]\n"
    "\t[--metadataprofile ProfileName]\n"
    "\t[--mergedconfig]\n"
+   "\t[--showunsupported]\n"
    "\t[--validate]\n"
    "\t[--withsummary]\n"
    "\t[--withcomments]\n"
@@ -52,7 +53,8 @@ xx(config,
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG, withversions_ARG)
+   showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG,
+   withversions_ARG)
 
 xx(devtypes,
    "Display recognised built-in block device types",
@@ -96,6 +98,7 @@ xx(dumpconfig,
    "\t[--profile ProfileName]\n"
    "\t[--metadataprofile ProfileName]\n"
    "\t[--mergedconfig]\n"
+   "\t[--showunsupported]\n"
    "\t[--validate]\n"
    "\t[--withsummary]\n"
    "\t[--withcomments]\n"
@@ -104,7 +107,8 @@ xx(dumpconfig,
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG, withversions_ARG)
+   showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG,
+   withversions_ARG)
 
 xx(formats,
    "List available metadata formats",
@@ -497,6 +501,7 @@ xx(lvmconfig,
    "\t[--profile ProfileName]\n"
    "\t[--metadataprofile ProfileName]\n"
    "\t[--mergedconfig]\n"
+   "\t[--showunsupported]\n"
    "\t[--validate]\n"
    "\t[--withsummary]\n"
    "\t[--withcomments]\n"
@@ -505,7 +510,8 @@ xx(lvmconfig,
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG, withversions_ARG)
+   showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG,
+   withversions_ARG)
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",

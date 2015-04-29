@@ -22,6 +22,7 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RB [ \-\-metadataprofile
 .IR ProfileName ]
 .RB [ \-\-mergedconfig ]
+.RB [ \-\-showunsupported ]
 .RB [ \-\-validate ]
 .RB [ \-\-withsummary ]
 .RB [ \-\-withcomments ]
@@ -103,8 +104,10 @@ Exclude advanced configuration settings from the output.
 .TP
 .B \-\-ignoreunsupported
 Exclude unsupported configuration settings from the output. These settings are
-either used for debugging purposes only or their support is not yet
-complete and they are not meant to be used in production.
+either used for debugging and development purposes only or their support is not
+yet complete and they are not meant to be used in production. The \fBcurrent\fP
+and \fBdiff\fP types include unsupported settings in their output by default,
+all the other types ignore unsupported settings.
 
 .TP
 .B \-\-ignorelocal
@@ -145,6 +148,14 @@ option, merge all the contents of the \fBconfig cascade\fP before displaying it.
 Without the \fB\-\-mergeconfig\fP option used, only the configuration at
 the front of the cascade is displayed. See also \fBlvm.conf\fP(5) for more
 info about \fBconfig cascade\fP.
+
+.TP
+.B \-\-showunsupported
+Include unsupported configuration settings to the output. These settings
+are either used for debugging or development purposes only or their support
+is not yet complete and they are not meant to be used in production. The
+\fBcurrent\fP and \fBdiff\fP types include unsupported settings in their
+output by default, all the other types ignore unsupported settings.
 
 .TP
 .B \-\-validate

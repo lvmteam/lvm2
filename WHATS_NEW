@@ -1,5 +1,8 @@
 Version 2.02.119 - 
 ==================================
+  Add --showunsupported to lvmconfig to also display unsupported settings.
+  Display unsupported settings for lvmconfig --type current,diff only by default.
+  Honour lvmconfig --ignoreunsupported and --ignoreadvanced for all --type.
   Make python bindings usable with python3 (and compatible with 2.6 & 2.7).
   Add lvmconfig -l|--list as shortcut for lvmconfig --type list --withsummary.
   Add lvmconfig --type list to display plain list of configuration settings.

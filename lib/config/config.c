@@ -826,6 +826,12 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 	float f;
 	const char *str;
 
+	if ((handle->ignoreunsupported && (def->flags & CFG_UNSUPPORTED)) ||
+	    (handle->ignoreadvanced && (def->flags & CFG_ADVANCED))) {
+		diff = 0;
+		goto out;
+	}
+
 	/* if default value is undefined, the value used differs from default */
 	if (def->flags & CFG_DEFAULT_UNDEFINED) {
 		diff = 1;
@@ -1598,7 +1604,7 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 static int _out_line_fn(const struct dm_config_node *cn, const char *line, void *baton)
 {
 	struct out_baton *out = baton;
-	struct cfg_def_item *cfg_def = cfg_def_get_item_p(cn->id);
+	struct cfg_def_item *cfg_def;
 	char config_path[CFG_PATH_MAX_LEN];
 	char summary[MAX_COMMENT_LINE+1];
 	char version[9];
@@ -1607,6 +1613,8 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
 	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
 		return 1;
+
+	cfg_def = cfg_def_get_item_p(cn->id);
 
 	if (out->tree_spec->type == CFG_DEF_TREE_LIST) {
 		/* List view with node paths and summary. */

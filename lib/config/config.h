@@ -198,6 +198,8 @@ struct cft_check_handle {
 	unsigned skip_if_checked:1;	/* skip the check if already done before - return last state */
 	unsigned suppress_messages:1;	/* suppress messages during the check if config item is found invalid */
 	unsigned check_diff:1;		/* check if the value used differs from default one */
+	unsigned ignoreadvanced:1;	/* do not include advnced configs */
+	unsigned ignoreunsupported:1;	/* do not include unsupported configs */
 	uint8_t status[CFG_COUNT];	/* flags for each configuration item - the result of the check */
 };
 

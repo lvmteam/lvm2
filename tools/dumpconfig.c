@@ -50,6 +50,9 @@ static int _do_def_check(struct config_def_tree_spec *spec,
 		handle->check_diff = 0;
 	}
 
+	handle->ignoreunsupported = spec->ignoreunsupported;
+	handle->ignoreadvanced = spec->ignoreadvanced;
+
 	config_def_check(handle);
 	*cft_check_handle = handle;
 
@@ -116,8 +119,22 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, ignoreadvanced_ARG))
 		tree_spec.ignoreadvanced = 1;
 
-	if (arg_count(cmd, ignoreunsupported_ARG))
+	if (arg_count(cmd, ignoreunsupported_ARG)) {
+		if (arg_count(cmd, showunsupported_ARG)) {
+			log_error("Only one of --ignoreunsupported and --showunsupported permitted.");
+			return EINVALID_CMD_LINE;
+		}
 		tree_spec.ignoreunsupported = 1;
+	} else if (arg_count(cmd, showunsupported_ARG)) {
+		tree_spec.ignoreunsupported = 0;
+	} else if (strcmp(type, "current") && strcmp(type, "diff")) {
+		/*
+		 * By default hide unsupported settings
+		 * for all display types except "current"
+		 * and "diff".
+		 */
+		tree_spec.ignoreunsupported = 1;
+	}
 
 	if (arg_count(cmd, ignorelocal_ARG))
 		tree_spec.ignorelocal = 1;
@@ -128,7 +145,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 
-		if ((tree_spec.ignoreadvanced || tree_spec.ignoreunsupported)) {
+		if (arg_count(cmd, ignoreunsupported_ARG) ||
+		    arg_count(cmd, ignoreadvanced_ARG)) {
+			/* FIXME: allow these even for --type current */
 			log_error("--ignoreadvanced and --ignoreunsupported has "
 				  "no effect with --type current");
 			return EINVALID_CMD_LINE;
