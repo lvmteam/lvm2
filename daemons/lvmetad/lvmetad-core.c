@@ -470,13 +470,29 @@ static void mark_outdated_pv(lvmetad_state *s, const char *vgid, const char *pvi
 	list->v = v;
 }
 
-static void chain_outdated_pvs(lvmetad_state *s, const char *vgid, struct dm_config_tree *metadata, struct dm_config_node *last)
+static void chain_outdated_pvs(lvmetad_state *s, const char *vgid, struct dm_config_tree *metadata_cft, struct dm_config_node *metadata)
 {
-	struct dm_config_tree *cft = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid);
-	if (!cft)
-		return; /* nothing to chain in */
-	last->sib = dm_config_clone_node(metadata, dm_config_find_node(cft->root, "outdated_pvs/pv_list"), 0);
-	last->sib->key = "outdated_pvs";
+	struct dm_config_tree *cft = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid), *pvmeta;
+	struct dm_config_node *pv, *res, *pvs = cft ? dm_config_find_node(cft->root, "outdated_pvs/pv_list") : NULL;
+	struct dm_config_value *pvs_v = pvs ? pvs->v : NULL;
+	if (!pvs_v)
+		return;
+	if (!(res = make_config_node(metadata_cft, "outdated_pvs", metadata_cft->root, 0)))
+		return; /* oops */
+	res->sib = metadata->child;
+	metadata->child = res;
+	for (; pvs_v && pvs_v->type != DM_CFG_EMPTY_ARRAY; pvs_v = pvs_v->next) {
+		pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvs_v->v.str);
+		if (!pvmeta) {
+			WARN(s, "metadata for PV %s not found", pvs_v->v.str);
+			continue;
+		}
+		if (!(pv = dm_config_clone_node(metadata_cft, pvmeta->root, 0)))
+			continue;
+		pv->key = dm_config_find_str(pv, "pvmeta/id", NULL);
+		pv->sib = res->child;
+		res->child = pv;
+	}
 }
 
 static response vg_lookup(lvmetad_state *s, request r)
