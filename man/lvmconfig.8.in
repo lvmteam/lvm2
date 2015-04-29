@@ -151,7 +151,7 @@ info about \fBconfig cascade\fP.
 
 .TP
 .B \-\-showunsupported
-Include unsupported configuration settings to the output. These settings
+Include unsupported configuration settings in the output. These settings
 are either used for debugging or development purposes only or their support
 is not yet complete and they are not meant to be used in production. The
 \fBcurrent\fP and \fBdiff\fP types include unsupported settings in their
