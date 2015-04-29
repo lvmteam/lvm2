@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -910,14 +910,15 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 				 struct logical_volume *lv)
 {
 	const char *pvname;
+	const struct logical_volume *lv_mirr = NULL;
 
-	if (lv_is_pvmove(lv) &&
-	    (pvname = get_pvmove_pvname_from_lv_mirr(lv))) {
-		log_verbose("Spawning background pvmove process for %s.",
-			    pvname);
-		pvmove_poll(cmd, pvname, 1);
-	} else if (lv_is_locked(lv) &&
-		   (pvname = get_pvmove_pvname_from_lv(lv))) {
+	if (lv_is_pvmove(lv))
+		lv_mirr = lv;
+	else if (lv_is_locked(lv))
+		lv_mirr = find_pvmove_lv_in_lv(lv);
+
+	if (lv_mirr &&
+	    (pvname = get_pvmove_pvname_from_lv_mirr(lv_mirr))) {
 		log_verbose("Spawning background pvmove process for %s.",
 			    pvname);
 		pvmove_poll(cmd, pvname, 1);
@@ -925,7 +926,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 
 	if (lv_is_converting(lv) || lv_is_merging(lv)) {
 		log_verbose("Spawning background lvconvert process for %s.",
-			lv->name);
+			    lv->name);
 		lvconvert_poll(cmd, lv, 1);
 	}
 }
