@@ -785,16 +785,29 @@ EOF
 	    echo "$v"
 	done >> "$config_values"
 
-	local s
-	for s in $(cut -f1 -d/ "$config_values" | sort | uniq); do
-		echo "$s {"
-		local k
-		for k in $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
-			grep "^$k" "$config_values" | tail -n 1 | sed -e "s,^$s/,	  ,"
-		done
-		echo "}"
-		echo
-	done | tee "$config" | sed -e "s,^,## LVMCONF: ,"
+	declare -A CONF
+	local sec
+	local last_sec
+
+	# read sequential list and put into associative array
+	while IFS=$IFS_NL read -r v; do
+		# trim white-space-chars via echo when inserting
+		CONF[$(echo ${v%%=*})]=${v##*=}
+	done < "$config_values"
+
+	# sort by section and iterate through them
+	printf "%s\n" ${!CONF[@]} | sort | while read -r v ; do
+		sec=${v%%/*} # split on section'/'param_name
+		test "$sec" = "$last_sec" || {
+			test -z "$last_sec" || echo "}"
+			echo "$sec {"
+			last_sec=$sec
+		}
+		echo "	${v#*/} =${CONF[$v]}"
+	done > "$config"
+	echo "}" >> "$config"
+
+	sed -e "s,^,## LVMCONF: ," "$config"
 }
 
 lvmconf() {
