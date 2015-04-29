@@ -65,8 +65,8 @@ For this purpose, there's the \fBcommand_profile_template.profile\fP
 (for metadata profiles) which contain all settings that are customizable
 by profiles of certain type. Users are encouraged to copy these template
 profiles and edit them as needed. Alternatively, the
-\fBlvm config \-\-file <ProfileName.profile> \-\-type profilable-command <section>\fP
-or \fBlvm config \-\-file <ProfileName.profile> \-\-type profilable-metadata <section>\fP
+\fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable-command <section>\fP
+or \fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable-metadata <section>\fP
 can be used to generate a configuration with profilable settings in either
 of the type for given section and save it to new ProfileName.profile
 (if the section is not specified, all profilable settings are reported).
