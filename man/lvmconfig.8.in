@@ -22,8 +22,8 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .IR ProfileName ]
 .RB [ \-\-mergedconfig ]
 .RB [ \-\-validate ]
+.RB [ \-\-withsummary ]
 .RB [ \-\-withcomments ]
-.RB [ \-\-withfullcomments ]
 .RB [ \-\-withversions ]
 .RB [ ConfigurationNode... ]
 
@@ -148,11 +148,11 @@ The validation is done even if \fBconfig/checks\fP \fBlvm.conf\fP(5)
 option is disabled.
 
 .TP
-.B \-\-withcomments
+.B \-\-withsummary
 Display a one line comment for each configuration node.
 
 .TP
-.B \-\-withfullcomments
+.B \-\-withcomments
 Display a full comment for each configuration node.
 
 .TP

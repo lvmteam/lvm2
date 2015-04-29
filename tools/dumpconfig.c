@@ -220,10 +220,10 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
+	if (arg_count(cmd, withsummary_ARG))
+		tree_spec.withsummary = 1;
 	if (arg_count(cmd, withcomments_ARG))
 		tree_spec.withcomments = 1;
-	if (arg_count(cmd, withfullcomments_ARG))
-		tree_spec.withfullcomments = 1;
 	if (arg_count(cmd, unconfigured_ARG))
 		tree_spec.unconfigured = 1;
 

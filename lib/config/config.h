@@ -149,13 +149,13 @@ struct config_def_tree_spec {
 	struct cmd_context *cmd;	/* command context (for run-time defaults */
 	cfg_def_tree_t type;		/* tree type */
 	uint16_t version;		/* tree at this LVM2 version */
-	unsigned ignoreadvanced:1;		/* do not include advanced configs */
+	unsigned ignoreadvanced:1;	/* do not include advanced configs */
 	unsigned ignoreunsupported:1;	/* do not include unsupported configs */
 	unsigned ignorelocal:1;		/* do not include the local section */
-	unsigned withcomments:1;		/* include first line of comment */
-	unsigned withfullcomments:1;		/* include all comment lines */
-	unsigned withversions:1;		/* include versions */
-	unsigned unconfigured:1;		/* use unconfigured path strings */
+	unsigned withsummary:1;		/* include first line of comments - a summary */
+	unsigned withcomments:1;	/* include all comment lines */
+	unsigned withversions:1;	/* include versions */
+	unsigned unconfigured:1;	/* use unconfigured path strings */
 	uint8_t *check_status;		/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };
 

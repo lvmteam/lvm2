@@ -8,7 +8,7 @@ Version 2.02.119 -
   Split pvmove update metadata fn in an initial one and a subsequent one.
   Refactor shared pvmove and lvconvert code into new _poll files.
   Add --unconfigured option to dumpconfig to print strings unconfigured.
-  Add --withfullcomments option to dumpconfig to print full comment.
+  Add --withsummary option to dumpconfig to print first line - summary comment.
   Check for lvm binary in blkdeactivate and skip LVM processing if not present.
   Add --enable-halvm and --disable-halvm options to lvmconf script.
   Add --services, --mirrorservice and --startstopservices option to lvmconf.
