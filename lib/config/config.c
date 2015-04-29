@@ -1519,6 +1519,19 @@ static int _copy_one_line(const char *comment, char *line, int *pos, int len)
 	return i;
 }
 
+static int _get_config_node_version(char *version, struct cfg_def_item *cfg_def)
+{
+	if (dm_snprintf(version, 9, "%u.%u.%u",
+			(cfg_def->since_version & 0xE000) >> 13,
+			(cfg_def->since_version & 0x1E00) >> 9,
+			(cfg_def->since_version & 0x1FF)) == -1) {
+		log_error("_get_config_node_version: couldn't create version string");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, void *baton)
 {
 	struct out_baton *out = baton;
@@ -1535,6 +1548,9 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 		log_error(INTERNAL_ERROR "Configuration node %s has invalid id.", cn->key);
 		return 0;
 	}
+
+	if (out->tree_spec->type == CFG_DEF_TREE_LIST)
+		return 1;
 
 	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
 	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
@@ -1571,13 +1587,8 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 	}
 
 	if (out->tree_spec->withversions) {
-		if (dm_snprintf(version, 9, "%u.%u.%u",
-				(cfg_def->since_version & 0xE000) >> 13,
-				(cfg_def->since_version & 0x1E00) >> 9,
-				(cfg_def->since_version & 0x1FF)) == -1) {
-			log_error("_out_prefix_fn: couldn't create version string");
-			return 0;
-		}
+		if (!_get_config_node_version(version, cfg_def))
+			return_0;
 		fprintf(out->fp, "%s# Since version %s.\n", line, version);
 	}
 
@@ -1588,14 +1599,42 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 {
 	struct out_baton *out = baton;
 	struct cfg_def_item *cfg_def = cfg_def_get_item_p(cn->id);
+	char config_path[CFG_PATH_MAX_LEN];
+	char summary[MAX_COMMENT_LINE+1];
+	char version[9];
+	int pos = 0;
 
 	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
 	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
 		return 1;
 
+	if (out->tree_spec->type == CFG_DEF_TREE_LIST) {
+		/* List view with node paths and summary. */
+		if (cfg_def->type & CFG_TYPE_SECTION)
+			return 1;
+		if (!_cfg_def_make_path(config_path, CFG_PATH_MAX_LEN, cfg_def->id, cfg_def, 1))
+			return_0;
+		if (out->tree_spec->withsummary) {
+			summary[0] = '\0';
+			if (cfg_def->comment)
+				_copy_one_line(cfg_def->comment, summary, &pos, strlen(cfg_def->comment));
+			if (out->tree_spec->withversions && !_get_config_node_version(version, cfg_def))
+				return_0;
+			fprintf(out->fp, "%s - %s%s%s%s\n", config_path, summary,
+				out->tree_spec->withversions ? " [" : "",
+				out->tree_spec->withversions ? version : "",
+				out->tree_spec->withversions ? "]" : "");
+		} else
+			fprintf(out->fp, "%s\n", config_path);
+
+		return 1;
+	}
+
+	/* Usual tree view with nodes and their values. */
 	fprintf(out->fp, "%s%s\n", (out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
 				   (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
 				   (cfg_def->flags & CFG_DEFAULT_UNDEFINED) ? "#" : "", line);
+
 	return 1;
 }
 

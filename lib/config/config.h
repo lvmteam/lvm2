@@ -142,6 +142,7 @@ typedef enum {
 	CFG_DEF_TREE_PROFILABLE_CMD,	/* tree of all nodes that are customizable by command profiles (subset of PROFILABLE) */
 	CFG_DEF_TREE_PROFILABLE_MDA,	/* tree of all nodes that are customizable by metadata profiles (subset of PROFILABLE) */
 	CFG_DEF_TREE_DIFF,		/* tree of all nodes that differ from defaults */
+	CFG_DEF_TREE_LIST,		/* list all nodes */
 } cfg_def_tree_t;
 
 /* configuration definition tree specification */

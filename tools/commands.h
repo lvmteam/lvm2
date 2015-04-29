@@ -33,11 +33,12 @@ xx(config,
    PERMITTED_READ_ONLY,
    "config\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--type {current|default|diff|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
    "\t[--ignorelocal]\n"
+   "\t[-l|--list]\n"
    "\t[--config ConfigurationString]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[--profile ProfileName]\n"
@@ -50,7 +51,7 @@ xx(config,
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
-   ignoreunsupported_ARG, ignorelocal_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
    validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(devtypes,
@@ -84,11 +85,12 @@ xx(dumpconfig,
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--type {current|default|diff|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
    "\t[--ignorelocal]\n"
+   "\t[-l|--list]\n"
    "\t[--config ConfigurationString]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[--profile ProfileName]\n"
@@ -101,7 +103,7 @@ xx(dumpconfig,
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
-   ignoreunsupported_ARG, ignorelocal_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
    validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(formats,
@@ -484,11 +486,12 @@ xx(lvmconfig,
    PERMITTED_READ_ONLY,
    "lvmconfig\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--type {current|default|diff|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
    "\t[--ignorelocal]\n"
+   "\t[-l|--list]\n"
    "\t[--config ConfigurationString]\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[--profile ProfileName]\n"
@@ -501,7 +504,7 @@ xx(lvmconfig,
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
-   ignoreunsupported_ARG, ignorelocal_ARG, mergedconfig_ARG, metadataprofile_ARG,
+   ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
    validate_ARG, withsummary_ARG, withcomments_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(lvmdiskscan,

@@ -12,6 +12,7 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RB [ \-\-ignoreadvanced ]
 .RB [ \-\-ignoreunsupported ]
 .RB [ \-\-ignorelocal ]
+.RB [ \-l | \-\-list ]
 .RB [ \-\-config
 .IR ConfigurationString ]
 .RB [ \-\-commandprofile
@@ -38,6 +39,11 @@ The command was added in release 2.02.119 and has an identical longer form
 Send output to a file named 'filename'.
 
 .TP
+.BR \-l ", " \-\-list
+List configuration settings with summarizing comment. This is the same as using
+\fBlvmconfig --type list --withsummary\fP.
+
+.TP
 .IR \fB\-\-type " {" current | default | diff | missing | new | profilable }
 Select the type of configuration to display. The configuration settings
 displayed have either default values or currently-used values assigned based on
@@ -58,6 +64,8 @@ Display all configuration settings for which the values used differ from default
 The value assigned for each configuration setting is the value currently used.
 This is actually minimal LVM configuration which can be used without
 a change to current configured behaviour.
+.IP list 3
+Display plain list of configuration settings.
 .IP missing 3
 Display all configuration settings with default values assigned which are
 missing in the configuration currently used and for which LVM automatically

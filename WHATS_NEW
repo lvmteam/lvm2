@@ -1,5 +1,7 @@
 Version 2.02.119 - 
 ==================================
+  Add lvmconfig -l|--list as shortcut for lvmconfig --type list --withsummary.
+  Add lvmconfig --type list to display plain list of configuration settings.
   Introduce lvmconfig as the preferred form of 'lvm dumpconfig'.
   Add lv_ancestors and lv_descendants reporting fields.
   Add --ignorelocal option to dumpconfig to ignore the local section.
