@@ -809,8 +809,7 @@ static response pv_gone(lvmetad_state *s, request r)
 	int64_t device = daemon_request_int(r, "device", 0);
 	int64_t alt_device = 0;
 	struct dm_config_tree *pvmeta;
-	struct dm_config_node *pvmeta_tmp;
-	char *pvid_old, *vgid;
+	char *vgid;
 
 	DEBUGLOG(s, "pv_gone: %s / %" PRIu64, pvid, device);
 
@@ -825,7 +824,6 @@ static response pv_gone(lvmetad_state *s, request r)
 	DEBUGLOG(s, "pv_gone (updated): %s / %" PRIu64, pvid, device);
 
 	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
-	pvid_old = dm_hash_lookup_binary(s->device_to_pvid, &device, sizeof(device));
 	vgid = dm_hash_lookup(s->pvid_to_vgid, pvid);
 
 	dm_hash_remove_binary(s->device_to_pvid, &device, sizeof(device));
