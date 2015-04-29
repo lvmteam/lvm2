@@ -77,6 +77,7 @@ fi
 %{_sbindir}/vgs
 %{_sbindir}/vgscan
 %{_sbindir}/vgsplit
+%{_sbindir}/lvmconfig
 %{_sbindir}/lvmconf
 %{_sbindir}/blkdeactivate
 %if %{have_service lvmetad}
@@ -139,6 +140,8 @@ fi
 %{_mandir}/man8/vgsplit.8.gz
 %{_mandir}/man8/blkdeactivate.8.gz
 %{_mandir}/man8/lvm-dumpconfig.8.gz
+%{_mandir}/man8/lvm-config.8.gz
+%{_mandir}/man8/lvmconfig.8.gz
 %if %{enable_udev}
  %{_udevdir}/11-dm-lvm.rules
  %if %{have_service lvmetad}
