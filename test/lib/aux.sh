@@ -34,8 +34,6 @@ prepare_clvmd() {
 	if test -z "${installed_testsuite+varset}"; then
 		(which clvmd 2>/dev/null | grep -q "$abs_builddir") || skip
 	fi
-	# lvs is executed from clvmd - use our version
-	export LVM_BINARY=$(which lvm)
 
 	test -e "$DM_DEV_DIR/control" || dmsetup table >/dev/null # create control node
 	# skip if singlenode is not compiled in
@@ -46,7 +44,8 @@ prepare_clvmd() {
 	test "${LVM_VALGRIND_CLVMD:-0}" -eq 0 || run_valgrind="run_valgrind"
 	rm -f "$CLVMD_PIDFILE"
 	echo "<======== Starting CLVMD ========>"
-	LVM_LOG_FILE_EPOCH=CLVMD $run_valgrind clvmd -Isinglenode -d 1 -f &
+	# lvs is executed from clvmd - use our version
+	LVM_LOG_FILE_EPOCH=CLVMD LVM_BINARY=$(which lvm) $run_valgrind clvmd -Isinglenode -d 1 -f &
 	echo $! > LOCAL_CLVMD
 
 	for i in $(seq 1 100) ; do
@@ -422,7 +421,7 @@ prepare_md_dev() {
 		mddev=/dev/md_lvm_test0
 
 	mdadm --create --metadata=1.0 "$mddev" --auto=md --level $level --chunk $rchunk --raid-devices=$rdevs "${@:4}"
-	test -b "$mddev" || skip "mdadm has not create device!"
+	test -b "$mddev" || skip "mdadm has not created device!"
 
 	# LVM/DM will see this device
 	case "$DM_DEV_DIR" in
@@ -467,7 +466,7 @@ prepare_backing_dev() {
 	if test -f BACKING_DEV; then
 		BACKING_DEV=$(< BACKING_DEV)
 	elif test -b "$LVM_TEST_BACKING_DEVICE"; then
-		BACKING_DEV="$LVM_TEST_BACKING_DEVICE"
+		BACKING_DEV=$LVM_TEST_BACKING_DEVICE
 		echo "$BACKING_DEV" > BACKING_DEV
 	else
 		prepare_loop "$@"

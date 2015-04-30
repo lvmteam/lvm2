@@ -14,8 +14,7 @@ aux prepare_devs 2
 pvcreate "$dev1"
 pvcreate "$dev2"
 
-aux disable_dev "$dev1"
-aux disable_dev "$dev2"
+aux disable_dev "$dev1" "$dev2"
 
 aux enable_dev "$dev1"
 vgscan
@@ -35,8 +34,7 @@ vgscan
 pvs "$dev1"
 pvs "$dev2"
 
-vgs -o+vg_uuid >err
-cat err
+vgs -o+vg_uuid | tee err
 grep $UUID1 err
 grep $UUID2 err
 
@@ -45,18 +43,15 @@ grep $UUID2 err
 # grep $UUID1 err
 
 aux disable_dev "$dev2"
-vgs -o+vg_uuid >err
-cat err
+vgs -o+vg_uuid | tee err
 grep $UUID1 err
 not grep $UUID2 err
 aux enable_dev "$dev2"
 vgscan
 
 aux disable_dev "$dev1"
-vgs -o+vg_uuid >err
-cat err
+vgs -o+vg_uuid | tee err
 grep $UUID2 err
 not grep $UUID1 err
 aux enable_dev "$dev1"
 vgscan
-

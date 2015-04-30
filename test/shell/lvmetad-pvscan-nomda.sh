@@ -23,13 +23,11 @@ vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n foo -l 1 -an --zero n $vg1
 
 # start lvmetad but make sure it doesn't know about $dev1 or $dev2
-aux disable_dev "$dev1"
-aux disable_dev "$dev2"
+aux disable_dev "$dev1" "$dev2"
 aux prepare_lvmetad
 lvs
 mv LOCAL_LVMETAD XXX
-aux enable_dev "$dev2"
-aux enable_dev "$dev1"
+aux enable_dev "$dev2" "$dev1"
 mv XXX LOCAL_LVMETAD
 
 aux lvmconf 'global/use_lvmetad = 0'

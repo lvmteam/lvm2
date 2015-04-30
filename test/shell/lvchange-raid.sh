@@ -209,7 +209,7 @@ run_refresh_check() {
 
 	# Disable dev2 and do some I/O to make the kernel notice
 	aux disable_dev "$dev2"
-	dd if=/dev/urandom of=$DM_DEV_DIR/$sizelv bs=1k count=$size
+	dd if=/dev/urandom of="$DM_DEV_DIR/$sizelv" bs=1k count=$size
 	sync
 
 	# Check for 'p'artial flag
