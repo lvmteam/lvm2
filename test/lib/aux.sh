@@ -597,7 +597,10 @@ common_dev_() {
 # If the size is missing, the remaing portion of device is taken
 # i.e.  delay_dev "$dev1" 0 200 256:
 delay_dev() {
-	target_at_least dm-delay 1 2 0 || skip
+	if test ! -f HAVE_DM_DELAY ; then
+		target_at_least dm-delay 1 1 0 || skip
+	fi
+	touch HAVE_DM_DELAY
 	common_dev_ delay "$@"
 }
 
