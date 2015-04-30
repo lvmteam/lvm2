@@ -175,7 +175,7 @@ fail lvcreate -Mn --major 234 -l1 $vg
 fail lvcreate --persistent n --minor 234 -l1 $vg
 # out-of-range minor value
 fail lvcreate --minor 9999999 -l1 $vg
-if kernel_at_least 2 4 0; then
+if aux kernel_at_least 2 4 0; then
 # On >2.4 we ignore --major
 lvcreate --major 234 -l1 $vg |& tee err;
 grep "Ignoring" err

@@ -936,7 +936,7 @@ version_at_least() {
 	local major
 	local minor
 	local revision
-	IFS=. read -r major minor revision <<< "$1"
+	IFS=".-" read -r major minor revision <<< "$1"
 	shift
 
 	test -z "$1" && return 0
@@ -1071,6 +1071,10 @@ total_mem() {
 	while IFS=":" read -r a b ; do
 		case "$a" in MemTotal*) echo ${b%% kB} ; break ;; esac
 	done < /proc/meminfo
+}
+
+kernel_at_least() {
+	version_at_least "$(uname -r)" "$@"
 }
 
 test -z "$LVM_TEST_AUX_TRACE" || set -x

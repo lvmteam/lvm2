@@ -67,7 +67,7 @@ check mirror $vg mirror2
 vgs $vg
 vgremove -ff $vg
 
-if kernel_at_least 3 0 0; then
+if aux kernel_at_least 3 0 0; then
 	# 2-way, mirrored log
 	# Double log failure, full replace
 	vgcreate $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"

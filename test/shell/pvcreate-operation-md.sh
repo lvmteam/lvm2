@@ -45,7 +45,7 @@ check pv_field "$pvdev" pe_start "1.00m"
 
 # Test newer topology-aware alignment detection
 # - first added to 2.6.31 but not "reliable" until 2.6.33
-if kernel_at_least 2 6 33 ; then
+if aux kernel_at_least 2 6 33 ; then
     # optimal_io_size=131072, minimum_io_size=65536
     pvcreate --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' "$pvdev"
@@ -53,7 +53,7 @@ if kernel_at_least 2 6 33 ; then
 fi
 
 # partition MD array directly, depends on blkext in Linux >= 2.6.28
-if kernel_at_least 2 6 28 ; then
+if aux kernel_at_least 2 6 28 ; then
     # create one partition
     sfdisk "$mddev" <<EOF
 ,,83
@@ -69,7 +69,7 @@ EOF
 
     # Checking for 'alignment_offset' in sysfs implies Linux >= 2.6.31
     # but reliable alignment_offset support requires kernel.org Linux >= 2.6.33
-    if kernel_at_least 2 6 33 ; then
+    if aux kernel_at_least 2 6 33 ; then
 	# in case the system is running without devtmpfs /dev
 	# wait here for created device node on tmpfs
 	test "$DM_DEV_DIR" != "/dev" && cp -LR "${mddev}p1" "$DM_DEV_DIR"
@@ -94,7 +94,7 @@ EOF
 fi
 
 # Test newer topology-aware alignment detection w/ --dataalignment override
-if kernel_at_least 2 6 33 ; then
+if aux kernel_at_least 2 6 33 ; then
     # make sure we're clean for another test
     dd if=/dev/zero of="$mddev" bs=512 count=1
     aux prepare_md_dev 0 1024 2 "$dev1" "$dev2"

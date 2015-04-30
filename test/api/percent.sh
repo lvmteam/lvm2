@@ -13,7 +13,7 @@
 
 . lib/inittest
 
-kernel_at_least 2 6 33 || skip
+aux kernel_at_least 2 6 33 || skip
 
 aux prepare_pvs 2
 
