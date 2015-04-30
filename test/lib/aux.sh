@@ -786,7 +786,7 @@ EOF
 	    echo "$v"
 	done >> "$config_values"
 
-	declare -A CONF || {
+	declare -A CONF 2>/dev/null || {
 		# Associative arrays is not available
 		local s
 		for s in $(cut -f1 -d/ "$config_values" | sort | uniq); do
