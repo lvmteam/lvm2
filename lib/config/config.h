@@ -113,10 +113,12 @@ typedef union {
 #define CFG_PROFILABLE_METADATA 0x030
 /* whether the default value is undefned */
 #define CFG_DEFAULT_UNDEFINED	0x040
+/* whether the default value is commented out on output */
+#define CFG_DEFAULT_COMMENTED	0x080
 /* whether the default value is calculated during run time */
-#define CFG_DEFAULT_RUN_TIME	0x080
+#define CFG_DEFAULT_RUN_TIME	0x100
 /* whether the configuration setting is disabled (and hence defaults always used) */
-#define CFG_DISABLED		0x100
+#define CFG_DISABLED		0x200
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {

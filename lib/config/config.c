@@ -1664,7 +1664,7 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	/* Usual tree view with nodes and their values. */
 	if ((out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
 	    (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
-	    (cfg_def->flags & CFG_DEFAULT_UNDEFINED)) {
+	    (cfg_def->flags & (CFG_DEFAULT_UNDEFINED | CFG_DEFAULT_COMMENTED))) {
 		space_prefix = ((len = strspn(line, "\t "))) ? dm_pool_strndup(out->mem, line, len) : NULL;
 		fprintf(out->fp, "%s%s%s\n", space_prefix ? : "", "# ", line + len);
 		if (space_prefix)

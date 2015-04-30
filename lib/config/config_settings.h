@@ -48,6 +48,7 @@
  *                                 CFG_PROFILABLE - this node is customizable by a profile
  *                                 CFG_PROFILABLE_METADATA - profilable and attachable to VG/LV metadata
  *                                 CFG_DEFAULT_UNDEFINED - node's default value is undefined
+ *                                 CFG_DEFAULT_COMMENTED - node's default value is commented out on output
  *                                 CFG_DISABLED - configuration is disabled (defaults always used)
  *
  * type:		       Allowed type for the value of simple configuation setting, one of:
