@@ -67,7 +67,7 @@ not grep "^\[pvmove" out
 lvremove -ff $vg $vg1
 
 wait
-aux kill_listed_processes
+aux kill_tagged_processes
 done
 done
 

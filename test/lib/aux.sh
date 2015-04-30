@@ -233,17 +233,36 @@ kill_sleep_kill_() {
 }
 
 print_procs_by_tag_() {
-	ps -o pid=,args= ehax 2>/dev/null | grep -weLVM_TEST_TAG=${1:-kill_me_$PREFIX} 2>/dev/null || true
+	(ps -o pid,args ehax | grep -we"LVM_TEST_TAG=${1:-kill_me_$PREFIX}") || true
 }
 
 count_processes_with_tag() {
 	print_procs_by_tag_ | wc -l
 }
 
-kill_listed_processes() {
-	while read pid b; do
-		test -z "$pid" || kill -9 $pid
-	done <<< $(print_procs_by_tag_ $@)
+kill_tagged_processes() {
+	local pid
+	local pids
+	local wait
+
+	# read uses all vars within pipe subshell
+	print_procs_by_tag_ "$@" | while read -r pid wait; do
+		if test -n "$pid" ; then
+			echo "Killing tagged process: $pid ${wait:0:120}..."
+			kill -TERM $pid 2>/dev/null || true
+		fi
+		pids="$pids $pid"
+	done
+
+	# wait if process exited and eventually -KILL
+	wait=0
+	for pid in $pids ; do
+		while ps $pid > /dev/null && test $wait -le 10; do
+			sleep .2
+			wait=$(($wait + 1))
+		done
+		test $wait -le 10 || kill -KILL $pid 2>/dev/null || true
+	done
 }
 
 teardown() {
@@ -252,7 +271,7 @@ teardown() {
 
 	if test -f TESTNAME ; then
 
-	kill_listed_processes
+	kill_tagged_processes
 
 	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
 

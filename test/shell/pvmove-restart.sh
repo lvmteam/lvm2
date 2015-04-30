@@ -90,7 +90,7 @@ pvmove --abort
 lvs -a -o+devices $vg
 
 lvremove -ff $vg
-aux kill_listed_processes
+aux kill_tagged_processes
 done
 
 # Restore delayed device back

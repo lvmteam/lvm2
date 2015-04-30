@@ -58,7 +58,7 @@ pvmove --abort
 lvremove -ff $vg
 
 wait
-aux kill_listed_processes
+aux kill_tagged_processes
 done
 done
 

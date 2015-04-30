@@ -92,7 +92,7 @@ test_pvmove_resume() {
 		i=$((i + 1))
 	done
 
-	aux kill_listed_processes
+	aux kill_tagged_processes
 
 	lvremove -ff $vg
 }
