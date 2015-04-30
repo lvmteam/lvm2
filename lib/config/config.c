@@ -1609,6 +1609,8 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	char summary[MAX_COMMENT_LINE+1];
 	char version[9];
 	int pos = 0;
+	size_t len;
+	char *space_prefix;
 
 	if ((out->tree_spec->type == CFG_DEF_TREE_DIFF) &&
 	    (!(out->tree_spec->check_status[cn->id] & CFG_DIFF)))
@@ -1639,9 +1641,15 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	}
 
 	/* Usual tree view with nodes and their values. */
-	fprintf(out->fp, "%s%s\n", (out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
-				   (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
-				   (cfg_def->flags & CFG_DEFAULT_UNDEFINED) ? "#" : "", line);
+	if ((out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
+	    (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
+	    (cfg_def->flags & CFG_DEFAULT_UNDEFINED)) {
+		space_prefix = ((len = strspn(line, "\t "))) ? dm_pool_strndup(out->mem, line, len) : NULL;
+		fprintf(out->fp, "%s%s%s\n", space_prefix ? : "", "# ", line + len);
+		if (space_prefix)
+			dm_pool_free(out->mem, space_prefix);
+	} else
+		fprintf(out->fp, "%s\n", line);
 
 	return 1;
 }
