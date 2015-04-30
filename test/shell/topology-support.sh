@@ -24,9 +24,11 @@ test_snapshot_mount() {
     mount "$(lvdev_ $vg $lv1)" test_mnt
     lvcreate -L4M -n $lv2 -s $vg/$lv1
     umount test_mnt
+    aux udev_wait
     # mount the origin
     mount "$(lvdev_ $vg $lv1)" test_mnt
     umount test_mnt
+    aux udev_wait
     # mount the snapshot
     mount "$(lvdev_ $vg $lv2)" test_mnt
     umount test_mnt
