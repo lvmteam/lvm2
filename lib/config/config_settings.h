@@ -23,10 +23,7 @@
  * - define a configuration array of one or more types:
  *   cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_default_value, comment)
  *
- * The unconfigured_default_value is used as a default value which is
- * in "@...@" form and which is then substitued with concrete value while
- * running configure (see also 'lvmconfig --type default --unconfigured').
- *
+*
  * If default value can't be assigned statically because it depends on some
  * run-time checks or if it depends on other settings already defined,
  * the configuration setting  or array can be defined with the
@@ -36,42 +33,59 @@
  *
  *
  * VARIABLES:
- * id:			unique identifier
- * name:		configuration node name
- * parent:		id of parent configuration node
- * flags:		configuration item flags:
- * 				CFG_NAME_VARIABLE - configuration node name is variable
- * 				CFG_ALLOW_EMPTY - node value can be emtpy
- * 				CFG_ADVANCED - this node belongs to advanced config set
- * 				CFG_UNSUPPORTED - this node is not officially supported and it's used primarily by developers
- * 				CFG_PROFILABLE - this node is customizable by a profile
- * 				CFG_PROFILABLE_METADATA - profilable and attachable to VG/LV metadata
- * 				CFG_DEFAULT_UNDEFINED - node's default value is undefined
- * 				CFG_DISABLED - configuration is disabled (defaults always used)
- * type:		allowed type for the value of simple configuation setting, one of:
- * 				CFG_TYPE_BOOL
- * 				CFG_TYPE_INT
- * 				CFG_TYPE_FLOAT
- * 				CFG_TYPE_STRING
- * types:		allowed types for the values of array configuration setting
- * 			(use logical "OR" to define more than one allowed type,
- * 			 e.g. CFG_TYPE_STRING | CFG_TYPE_INT)
- * default_value:	default value of type 'type' for the configuration node,
- * 			if this is an array with several 'types' defined then
- * 			default value is a string where each string representation
- * 			of each value is prefixed by '#X' where X is one of:
- *				'B' for boolean value
- * 				'I' for integer value
- * 				'F' for float value
- * 				'S' for string value
- * 				'#' for the '#' character itself
- * 			For example, "#Sfd#I16" means default value [ "fd", 16 ].
- * comment:		brief comment used in configuration dumps
- * since_version:	the version this configuration node first appeared in (be sure
- *			that parent nodes are consistent with versioning, no check done
- *			if parent node is older or the same age as any child node!)
- *			Use "vsn" macro to translate the "major.minor.release" version
- *			into a single number that is being stored internally in memory.
+ * 
+ * id:                         Unique identifier.
+ *
+ * name:                       Configuration node name.
+ *
+ * parent:                     Id of parent configuration node.
+ *
+ * flags:                      Configuration item flags:
+ *                                 CFG_NAME_VARIABLE - configuration node name is variable
+ *                                 CFG_ALLOW_EMPTY - node value can be emtpy
+ *                                 CFG_ADVANCED - this node belongs to advanced config set
+ *                                 CFG_UNSUPPORTED - this node is not officially supported and it's used primarily by developers
+ *                                 CFG_PROFILABLE - this node is customizable by a profile
+ *                                 CFG_PROFILABLE_METADATA - profilable and attachable to VG/LV metadata
+ *                                 CFG_DEFAULT_UNDEFINED - node's default value is undefined
+ *                                 CFG_DISABLED - configuration is disabled (defaults always used)
+ *
+ * type:		       Allowed type for the value of simple configuation setting, one of:
+ *                                 CFG_TYPE_BOOL
+ *                                 CFG_TYPE_INT
+ *                                 CFG_TYPE_FLOAT
+ *                                 CFG_TYPE_STRING
+ *
+ * types:                      Allowed types for the values of array configuration setting
+ *                             (use logical "OR" to define more than one allowed type,
+ *                             e.g. CFG_TYPE_STRING | CFG_TYPE_INT).
+ *
+ * default_value:              Default value of type 'type' for the configuration node,
+ *                             if this is an array with several 'types' defined then
+ *                             default value is a string where each string representation
+ *                             of each value is prefixed by '#X' where X is one of:
+ *                                 'B' for boolean value
+ *                                 'I' for integer value
+ *                                 'F' for float value
+ *                                 'S' for string value
+ *                                 '#' for the '#' character itself
+ *                             For example, "#Sfd#I16" means default value [ "fd", 16 ].
+ *
+ * since_version:              The version this configuration node first appeared in (be sure
+ *                             that parent nodes are consistent with versioning, no check done
+ *                             if parent node is older or the same age as any child node!)
+ *                             Use "vsn" macro to translate the "major.minor.release" version
+ *                             into a single number that is being stored internally in memory.
+ *                             (see also lvmconfig ... --withversions)
+ *
+ * unconfigured_default_value: Unconfigured default value used as a default value which is
+ *                             in "@...@" form and which is then substitued with concrete value
+ *                             while running configure.
+ *                             (see also 'lvmconfig --type default --unconfigured')
+ *
+ * comment:                    Comment used in configuration dumps. The very first line is the
+ *                             summarizing comment.
+ *                             (see also lvmconfig ... --withcomments and --withsummary)
  */
 #include "defaults.h"
 
