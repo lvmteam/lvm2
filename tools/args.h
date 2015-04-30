@@ -98,6 +98,7 @@ arg(split_ARG, '\0', "split", NULL, 0)
 arg(splitcache_ARG, '\0', "splitcache", NULL, 0)
 arg(splitmirrors_ARG, '\0', "splitmirrors", int_arg, 0)
 arg(splitsnapshot_ARG, '\0', "splitsnapshot", NULL, 0)
+arg(showdeprecated_ARG, '\0', "showdeprecated", NULL, 0)
 arg(showunsupported_ARG, '\0', "showunsupported", NULL, 0)
 arg(stripes_long_ARG, '\0', "stripes", int_arg, 0)
 arg(syncaction_ARG, '\0', "syncaction", string_arg, 0)	/* FIXME Use custom validation fn */

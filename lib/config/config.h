@@ -154,6 +154,7 @@ struct config_def_tree_spec {
 	uint16_t version;		/* tree at this LVM2 version */
 	unsigned ignoreadvanced:1;	/* do not include advanced configs */
 	unsigned ignoreunsupported:1;	/* do not include unsupported configs */
+	unsigned ignoredeprecated:1;	/* do not include deprecated configs */
 	unsigned ignorelocal:1;		/* do not include the local section */
 	unsigned withsummary:1;		/* include first line of comments - a summary */
 	unsigned withcomments:1;	/* include all comment lines */

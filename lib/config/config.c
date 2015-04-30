@@ -1525,17 +1525,23 @@ static int _copy_one_line(const char *comment, char *line, int *pos, int len)
 	return i;
 }
 
-static int _get_config_node_version(char *version, struct cfg_def_item *cfg_def)
+static int _get_config_node_version(uint16_t version_enc, char *version)
 {
 	if (dm_snprintf(version, 9, "%u.%u.%u",
-			(cfg_def->since_version & 0xE000) >> 13,
-			(cfg_def->since_version & 0x1E00) >> 9,
-			(cfg_def->since_version & 0x1FF)) == -1) {
+			(version_enc & 0xE000) >> 13,
+			(version_enc & 0x1E00) >> 9,
+			(version_enc & 0x1FF)) == -1) {
 		log_error("_get_config_node_version: couldn't create version string");
 		return 0;
 	}
 
 	return 1;
+}
+
+static int _def_node_is_deprecated(cfg_def_item_t *def, struct config_def_tree_spec *spec)
+{
+	return def->deprecated_since_version &&
+	       (spec->version >= def->deprecated_since_version);
 }
 
 static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, void *baton)
@@ -1569,6 +1575,10 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 		fprintf(out->fp, "\n");
 		fprintf(out->fp, "%s# Configuration %s %s.\n", line, node_type_name, path);
 
+		if (out->tree_spec->withcomments &&
+		    _def_node_is_deprecated(cfg_def, out->tree_spec))
+			fprintf(out->fp, "%s# %s", line, cfg_def->deprecation_comment);
+
 		if (cfg_def->comment) {
 			int pos = 0;
 			while (_copy_one_line(cfg_def->comment, commentline, &pos, strlen(cfg_def->comment))) {
@@ -1578,6 +1588,9 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 					break;
 			}
 		}
+
+		if (_def_node_is_deprecated(cfg_def, out->tree_spec))
+			fprintf(out->fp, "%s# This configuration %s is deprecated.\n", line, node_type_name);
 
 		if (cfg_def->flags & CFG_ADVANCED)
 			fprintf(out->fp, "%s# This configuration %s is advanced.\n", line, node_type_name);
@@ -1593,9 +1606,15 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 	}
 
 	if (out->tree_spec->withversions) {
-		if (!_get_config_node_version(version, cfg_def))
+		if (!_get_config_node_version(cfg_def->since_version, version))
 			return_0;
-		fprintf(out->fp, "%s# Since version %s.\n", line, version);
+		fprintf(out->fp, "%s# Available since version %s.\n", line, version);
+
+		if (_def_node_is_deprecated(cfg_def, out->tree_spec)) {
+			if (!_get_config_node_version(cfg_def->deprecated_since_version, version))
+				return_0;
+			fprintf(out->fp, "%s# Deprecated since version %s.\n", line, version);
+		}
 	}
 
 	return 1;
@@ -1624,7 +1643,7 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 			return 1;
 		if (!_cfg_def_make_path(config_path, CFG_PATH_MAX_LEN, cfg_def->id, cfg_def, 1))
 			return_0;
-		if (out->tree_spec->withversions && !_get_config_node_version(version, cfg_def))
+		if (out->tree_spec->withversions && !_get_config_node_version(cfg_def->since_version, version))
 			return_0;
 
 		summary[0] = '\0';
@@ -1781,6 +1800,11 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 	return cn;
 }
 
+static int _should_skip_deprecated_def_node(cfg_def_item_t *def, struct config_def_tree_spec *spec)
+{
+	return spec->ignoredeprecated && _def_node_is_deprecated(def, spec);
+}
+
 static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_id, int id)
 {
 	cfg_def_item_t *def = cfg_def_get_item_p(id);
@@ -1800,18 +1824,21 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 			}
 			if ((spec->check_status[id] & CFG_USED) ||
 			    (def->flags & CFG_NAME_VARIABLE) ||
-			    (def->since_version > spec->version))
+			    (def->since_version > spec->version) ||
+			    _should_skip_deprecated_def_node(def, spec))
 				return 1;
 			break;
 		case CFG_DEF_TREE_NEW:
-			if (def->since_version != spec->version)
+			if ((def->since_version != spec->version) ||
+			    _should_skip_deprecated_def_node(def, spec))
 				return 1;
 			break;
 		case CFG_DEF_TREE_PROFILABLE:
 		case CFG_DEF_TREE_PROFILABLE_CMD:
 		case CFG_DEF_TREE_PROFILABLE_MDA:
 			if (!(def->flags & CFG_PROFILABLE) ||
-			    (def->since_version > spec->version))
+			    (def->since_version > spec->version) ||
+			    _should_skip_deprecated_def_node(def, spec))
 				return 1;
 			flags = def->flags & ~CFG_PROFILABLE;
 			if (spec->type == CFG_DEF_TREE_PROFILABLE_CMD) {
@@ -1823,7 +1850,8 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 			}
 			break;
 		default:
-			if (def->since_version > spec->version)
+			if ((def->since_version > spec->version) ||
+			    _should_skip_deprecated_def_node(def, spec))
 				return 1;
 			break;
 	}

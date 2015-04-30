@@ -22,6 +22,7 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RB [ \-\-metadataprofile
 .IR ProfileName ]
 .RB [ \-\-mergedconfig ]
+.RB [ \-\-showdeprecated ]
 .RB [ \-\-showunsupported ]
 .RB [ \-\-validate ]
 .RB [ \-\-withsummary ]
@@ -150,6 +151,15 @@ the front of the cascade is displayed. See also \fBlvm.conf\fP(5) for more
 info about \fBconfig cascade\fP.
 
 .TP
+.B \-\-showdeprecated
+Include deprecated configuration settings in the output. These settings
+are always deprecated since certain version. If concrete version is specified
+with \fB--atversion\fP option, deprecated settings are automatically included
+if specified version is lower that the version in which the settings were
+deprecated. The \fBcurrent\fP and \fBdiff\fP types include deprecated settings
+int their output by default, all the other types ignore deprecated settings.
+
+.TP
 .B \-\-showunsupported
 Include unsupported configuration settings in the output. These settings
 are either used for debugging or development purposes only or their support
@@ -172,12 +182,14 @@ Display a one line comment for each configuration node.
 
 .TP
 .B \-\-withcomments
-Display a full comment for each configuration node.
+Display a full comment for each configuration node. For deprecated
+settings, also display comments about deprecation in addition.
 
 .TP
 .B \-\-withversions
 Also display a comment containing the version of introduction for
-each configuration node.
+each configuration node. If the setting is deprecated, also display
+the version since which it is deprecated.
 
 .SH SEE ALSO
 .BR lvm (8)

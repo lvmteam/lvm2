@@ -136,6 +136,21 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		tree_spec.ignoreunsupported = 1;
 	}
 
+	if (strcmp(type, "current") && strcmp(type, "diff")) {
+		/*
+		 * By default hide deprecated settings
+		 * for all display types except "current"
+		 * and "diff" unless --showdeprecated is set.
+		 *
+		 * N.B. Deprecated settings are visible if
+		 * --atversion is used with a version that
+		 * is lower than the version in which the
+		 * setting was deprecated.
+		 */
+		if (!arg_count(cmd, showdeprecated_ARG))
+			tree_spec.ignoredeprecated = 1;
+	}
+
 	if (arg_count(cmd, ignorelocal_ARG))
 		tree_spec.ignorelocal = 1;
 

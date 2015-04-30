@@ -1,5 +1,9 @@
 Version 2.02.119 - 
 ==================================
+  Also display deprecation info for deprecated config in lvmconfig --withcomments.
+  Display version since which config is deprecated in lvmconfig --withversions.
+  Add --showdeprecated to lvmconfig to also display deprecated settings.
+  Hide deprecated settings in lvmconfig output for all types except current,diff.
   Introduce support for exit on idle feature in libdaemon
   Add --showunsupported to lvmconfig to also display unsupported settings.
   Display unsupported settings for lvmconfig --type current,diff only by default.
