@@ -1624,18 +1624,20 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 			return 1;
 		if (!_cfg_def_make_path(config_path, CFG_PATH_MAX_LEN, cfg_def->id, cfg_def, 1))
 			return_0;
-		if (out->tree_spec->withsummary) {
-			summary[0] = '\0';
-			if (cfg_def->comment)
-				_copy_one_line(cfg_def->comment, summary, &pos, strlen(cfg_def->comment));
-			if (out->tree_spec->withversions && !_get_config_node_version(version, cfg_def))
-				return_0;
-			fprintf(out->fp, "%s - %s%s%s%s\n", config_path, summary,
-				out->tree_spec->withversions ? " [" : "",
-				out->tree_spec->withversions ? version : "",
-				out->tree_spec->withversions ? "]" : "");
-		} else
-			fprintf(out->fp, "%s\n", config_path);
+		if (out->tree_spec->withversions && !_get_config_node_version(version, cfg_def))
+			return_0;
+
+		summary[0] = '\0';
+		if (out->tree_spec->withsummary && cfg_def->comment)
+			_copy_one_line(cfg_def->comment, summary, &pos, strlen(cfg_def->comment));
+
+		fprintf(out->fp, "%s%s%s%s%s%s%s\n", config_path,
+			*summary || out->tree_spec->withversions ? " - ": "",
+			*summary ? summary : "",
+			*summary ? " " : "",
+			out->tree_spec->withversions ? "[" : "",
+			out->tree_spec->withversions ? version : "",
+			out->tree_spec->withversions ? "]" : "");
 
 		return 1;
 	}
