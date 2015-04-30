@@ -18,10 +18,14 @@
  *   cfg_section(id, name, parent, flags, since_version, comment)
  *
  * - define a configuration setting of simple type:
- *   cfg(id, name, parent, flags, type, default_value, since_version, comment)
+ *   cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_default_value, comment)
  *
  * - define a configuration array of one or more types:
- *   cfg_array(id, name, parent, flags, types, default_value, since_version, comment)
+ *   cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_default_value, comment)
+ *
+ * The unconfigured_default_value is used as a default value which is
+ * in "@...@" form and which is then substitued with concrete value while
+ * running configure (see also 'lvmconfig --type default --unconfigured').
  *
  * If default value can't be assigned statically because it depends on some
  * run-time checks or if it depends on other settings already defined,
