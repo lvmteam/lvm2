@@ -90,8 +90,6 @@ prepare_lvmetad() {
 	if test -z "${installed_testsuite+varset}"; then
 		(which lvmetad 2>/dev/null | grep -q "$abs_builddir") || skip
 	fi
-	lvmconf "global/use_lvmetad = 1" \
-		"devices/md_component_detection = 0"
 
 	local run_valgrind=
 	test "${LVM_VALGRIND_LVMETAD:-0}" -eq 0 || run_valgrind="run_valgrind"
