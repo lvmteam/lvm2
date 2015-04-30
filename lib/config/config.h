@@ -128,6 +128,8 @@ typedef struct cfg_def_item {
 	uint16_t flags;							/* configuration item definition flags */
 	uint16_t since_version;						/* version this item appeared in */
 	cfg_def_unconfigured_value_t default_unconfigured_value;	/* default value in terms of @FOO@, pre-configured (only for settings) */
+	uint16_t deprecated_since_version;				/* version since this item is deprecated */
+	const char *deprecation_comment;				/* comment about reasons for deprecation and settings that supersede this one */
 	const char *comment;						/* comment */
 } cfg_def_item_t;
 
@@ -172,11 +174,11 @@ struct config_def_tree_spec {
  * Register ID for each possible item in the configuration tree.
  */
 enum {
-#define cfg_section(id, name, parent, flags, since_version, comment) id,
-#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, comment) id,
-#define cfg_runtime(id, name, parent, flags, type, since_version, comment) id,
-#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, comment) id,
-#define cfg_array_runtime(id, name, parent, flags, types, since_version, comment) id,
+#define cfg_section(id, name, parent, flags, since_version, deprecated_since_version, deprecation_comment, comment) id,
+#define cfg(id, name, parent, flags, type, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment) id,
+#define cfg_runtime(id, name, parent, flags, type, since_version, deprecated_since_version, deprecation_comment, comment) id,
+#define cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_value, deprecated_since_version, deprecation_comment, comment) id,
+#define cfg_array_runtime(id, name, parent, flags, types, since_version, deprecated_since_version, deprecation_comment, comment) id,
 #include "config_settings.h"
 #undef cfg_section
 #undef cfg
