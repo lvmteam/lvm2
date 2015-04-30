@@ -6,7 +6,7 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RB [ \-f | \-\-file
 .IR filename ]
 .RB [ \-\-type
-.RI { current | default | diff | missing | new | profilable | profilable-command | profilable-metadata }
+.RI { current | default | diff | list | missing | new | profilable | profilable-command | profilable-metadata }
 .RB [ \-\-atversion
 .IR version ]
 .RB [ \-\-ignoreadvanced ]
