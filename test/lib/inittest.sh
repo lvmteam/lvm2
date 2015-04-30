@@ -78,6 +78,7 @@ echo "$TESTNAME" >TESTNAME
 echo "Kernel is $(uname -a)"
 # Report SELinux mode
 echo "Selinux mode is $(getenforce 2>/dev/null || echo not installed)."
+free -h
 
 # Set vars from utils now that we have TESTDIR/PREFIX/...
 prepare_test_vars

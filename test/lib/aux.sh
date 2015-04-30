@@ -1066,6 +1066,13 @@ wait_pvmove_lv_ready() {
 	done
 }
 
+# return total memory size in kB units
+total_mem() {
+	while IFS=":" read -r a b ; do
+		case "$a" in MemTotal*) echo ${b%% kB} ; break ;; esac
+	done < /proc/meminfo
+}
+
 test -z "$LVM_TEST_AUX_TRACE" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)

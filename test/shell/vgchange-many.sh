@@ -16,6 +16,8 @@
 
 # Number of LVs to create
 DEVICES=1000
+# On low-memory boxes let's not stress too much
+test "$(aux total_mem)" -gt 524288 || DEVICES=256
 
 aux prepare_pvs 1 400
 
