@@ -37,7 +37,7 @@ local {
 	# Set the system_id to the string 'host1'.
 	# system_id = "host1"
 	# This configuration option does not have a default value defined.
-#	system_id=""
+	# system_id=""
 
 	# Configuration option local/extra_system_ids.
 	# A list of extra VG system IDs the local host can access.
@@ -49,5 +49,5 @@ local {
 	# Use this only after consulting 'man lvmsystemid'
 	# to be certain of correct usage and possible dangers.
 	# This configuration option does not have a default value defined.
-#	extra_system_ids=[]
+	# extra_system_ids=[]
 }
