@@ -43,10 +43,17 @@ wait
 # Simulate reboot - forcibly remove related devices
 
 # First take down $lv1 then it's pvmove0
-while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
-while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
-while dmsetup status "$vg-pvmove0_mimage_1"; do dmsetup remove "$vg-pvmove0_mimage_1" || true; done
-dmsetup table
+j=0
+for i in $lv1 pvmove0 pvmove0_mimage_1 pvmove0_mimage_0 ; do
+	while dmsetup status "$vg-$i"; do
+		dmsetup remove "$vg-$i" || {
+			j=$(($j + 1))
+			test $j -le 100 || die "Cannot take down devices."
+			sleep .1;
+		}
+	done
+done
+dmsetup table | grep $PREFIX
 
 # Check we really have pvmove volume
 check lv_attr_bit type $vg/pvmove0 "p"
