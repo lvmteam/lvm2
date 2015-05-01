@@ -870,8 +870,8 @@ prepare_profiles() {
 }
 
 apitest() {
-	test -x "api/$1.t" || skip
-	"api/$1.t" "${@:2}" && rm -f debug.log strace.log
+	test -x "$TESTOLDPWD/api/$1.t" || skip
+	"$TESTOLDPWD/api/$1.t" "${@:2}" && rm -f debug.log strace.log
 }
 
 mirror_recovery_works() {
