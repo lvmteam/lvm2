@@ -11,10 +11,10 @@
 
 # Test vgsplit operation, including different LV types
 
-. lib/inittest
-
 # disable lvmetad logging as it bogs down test systems
-test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
+export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
+
+. lib/inittest
 
 COMM() {
 	LAST_TEST="$@"

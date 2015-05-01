@@ -84,7 +84,6 @@ prepare_dmeventd() {
 }
 
 prepare_lvmetad() {
-	test $# -eq 0 && default_opts="-l all"
 	rm -f debug.log strace.log
 	# skip if we don't have our own lvmetad...
 	if test -z "${installed_testsuite+varset}"; then
@@ -96,8 +95,11 @@ prepare_lvmetad() {
 
 	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
 
+        # Default debug is "-l all" and could be override
+        # by setting LVM_TEST_LVMETAD_DEBUG_OPTS before calling inittest.
 	echo "preparing lvmetad..."
-	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" $default_opts "$@" &
+	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" \
+		${LVM_TEST_LVMETAD_DEBUG_OPTS--l all} "$@" &
 	echo $! > LOCAL_LVMETAD
 	while ! test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait for the socket
 	echo ok

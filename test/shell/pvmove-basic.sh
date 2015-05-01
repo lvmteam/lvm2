@@ -12,12 +12,12 @@
 
 test_description="ensure that pvmove works with basic options"
 
+# disable lvmetad logging as it bogs down test systems
+export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
+
 . lib/inittest
 
 which md5sum || skip
-
-# disable lvmetad logging as it bogs down test systems
-test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
 
 # ---------------------------------------------------------------------
 # Utilities

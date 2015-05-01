@@ -9,6 +9,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+# disable lvmetad logging as it bogs down test systems
+export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
+
 . lib/inittest
 
 log_name_to_count() {
@@ -109,9 +112,6 @@ test_lvconvert() {
 		check mirror_legs $vg $lv1 $finish_count_p1
 	fi
 }
-
-# disable lvmetad logging as it bogs down test systems
-test -e LOCAL_LVMETAD && aux prepare_lvmetad ""
 
 aux prepare_pvs 5 5
 vgcreate -s 32k $vg $(cat DEVICES)
