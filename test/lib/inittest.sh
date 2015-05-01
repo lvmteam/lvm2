@@ -92,7 +92,6 @@ echo "@PREFIX=$PREFIX"
 if test -n "$LVM_TEST_LVMETAD" ; then
 	export LVM_LVMETAD_SOCKET="$TESTDIR/lvmetad.socket"
 	export LVM_LVMETAD_PIDFILE="$TESTDIR/lvmetad.pid"
-	aux lvmconf "global/use_lvmetad = 1" "devices/md_component_detection = 0"
 	aux prepare_lvmetad
 else
 	# lvmetad prepares its own lvmconf
