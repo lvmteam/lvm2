@@ -1,3 +1,6 @@
+Version 2.02.120 -
+===============================
+
 Version 2.02.119 - 2nd May 2015
 ===============================
   New LVM_LOG_FILE_EPOCH, LVM_EXPECTED_EXIT_STATUS env vars. Man page to follow.

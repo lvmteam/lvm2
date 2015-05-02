@@ -1,3 +1,6 @@
+Version 1.02.97 - 
+==============================
+
 Version 1.02.96 - 2nd May 2015
 ==============================
   Fix selection to not match if using reserved value in criteria with >,<,>=,<.
