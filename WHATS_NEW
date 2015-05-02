@@ -1,5 +1,6 @@
 Version 2.02.120 -
 ===============================
+  Configure detects /run or /var/run.
   Add missing newline in clvmd --help output.
 
 Version 2.02.119 - 2nd May 2015

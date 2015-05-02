@@ -1698,11 +1698,11 @@ Optional Packages:
   --with-ocfdir=DIR       install OCF files in
                           [PREFIX/lib/ocf/resource.d/lvm2]
   --with-default-pid-dir=PID_DIR
-                          Default directory to keep PID files in. [/var/run]
+                          Default directory to keep PID files in. [autodetect]
   --with-default-dm-run-dir=DM_RUN_DIR
-                          Default DM run directory. [/var/run]
+                          Default DM run directory. [autodetect]
   --with-default-run-dir=RUN_DIR
-                          Default LVM run directory. [/var/run/lvm]
+                          Default LVM run directory. [autodetect_run_dir/lvm]
   --with-clvmd=TYPE       build cluster LVM Daemon
                           The following cluster manager combinations are valid:
                            * cman                  (RHEL5 or equivalent)
@@ -8951,13 +8951,19 @@ fi
 }
 
 ################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for default run directory" >&5
+$as_echo_n "checking for default run directory... " >&6; }
+RUN_DIR="/run"
+test -d "/run" || RUN_DIR="/var/run"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $RUN_DIR" >&5
+$as_echo "$RUN_DIR" >&6; }
 
 
 # Check whether --with-default-pid-dir was given.
 if test "${with_default_pid_dir+set}" = set; then :
   withval=$with_default_pid_dir; DEFAULT_PID_DIR="$withval"
 else
-  DEFAULT_PID_DIR="/var/run"
+  DEFAULT_PID_DIR=$RUN_DIR
 fi
 
 
@@ -8972,7 +8978,7 @@ _ACEOF
 if test "${with_default_dm_run_dir+set}" = set; then :
   withval=$with_default_dm_run_dir; DEFAULT_DM_RUN_DIR="$withval"
 else
-  DEFAULT_DM_RUN_DIR="/var/run"
+  DEFAULT_DM_RUN_DIR=$RUN_DIR
 fi
 
 
@@ -8987,7 +8993,7 @@ _ACEOF
 if test "${with_default_run_dir+set}" = set; then :
   withval=$with_default_run_dir; DEFAULT_RUN_DIR="$withval"
 else
-  DEFAULT_RUN_DIR="/var/run/lvm"
+  DEFAULT_RUN_DIR="$RUN_DIR/lvm"
 fi
 
 
