@@ -21,7 +21,7 @@ vgextend $vg "$dev3"
 
 # Slowdown writes
 # (FIXME: generates interesting race when not used)
-aux delay_dev "$dev3" 100 100 $(get first_extent_sector "$dev3"):
+aux delay_dev "$dev3" 0 800 $(get first_extent_sector "$dev3"):
 
 for mode in "--atomic" ""
 do
@@ -44,7 +44,7 @@ wait
 
 # First take down $lv1 then it's pvmove0
 j=0
-for i in $lv1 pvmove0 pvmove0_mimage_1 pvmove0_mimage_0 ; do
+for i in $lv1 pvmove0 pvmove0_mimage_0 pvmove0_mimage_1 ; do
 	while dmsetup status "$vg-$i"; do
 		dmsetup remove "$vg-$i" || {
 			j=$(($j + 1))
@@ -76,8 +76,7 @@ if test -e LOCAL_CLVMD ; then
 fi
 
 if test -e LOCAL_LVMETAD ; then
-	# Restart lvmetad
-	kill $(< LOCAL_LVMETAD)
+	# Restart lvmetad (kill is built-in)
 	aux prepare_lvmetad
 fi
 
@@ -89,8 +88,6 @@ dmsetup table
 LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey $vg
 aux wait_pvmove_lv_ready "$vg-pvmove0"
 dmsetup table
-
-pvmove --abort
 
 pvmove --abort
 
