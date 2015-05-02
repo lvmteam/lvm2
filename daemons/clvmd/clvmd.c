@@ -172,6 +172,7 @@ static void usage(const char *prog, FILE *file)
 #ifdef USE_SINGLENODE
 		"singlenode "
 #endif
+		"\n"
 		"   -R       Tell all running clvmds in the cluster to reload their device cache\n"
 		"   -S       Restart clvmd, preserving exclusive locks\n"
 		"   -t<secs> Command timeout (default: 60 seconds)\n"
