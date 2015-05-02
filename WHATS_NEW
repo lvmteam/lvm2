@@ -1,5 +1,7 @@
-Version 2.02.119 - 
-==================================
+Version 2.02.119 - 2nd May 2015
+===============================
+  New LVM_LOG_FILE_EPOCH, LVM_EXPECTED_EXIT_STATUS env vars. Man page to follow.
+  Remove detailed content from lvm.conf man page: use lvmconfig instead.
   Generate complete config files with lvmconfig or 'make generate'.
   Also display info on deprecated config with lvmconfig --withcomments.
   Display version since which config is deprecated in lvmconfig --withversions.
@@ -21,18 +23,25 @@ Version 2.02.119 -
   Refactor shared pvmove and lvconvert code into new _poll files.
   Add --unconfigured option to dumpconfig to print strings unconfigured.
   Add --withsummary option to dumpconfig to print first line - summary comment.
+  Use number of device holders to help choose between duplicate PVs.
+  Try to make lvmetad and non-lvmetad duplicate PV handling as similar as poss.
+  Issue warnings about duplicate PVs discovered by lvmetad.
+  Track alternative devices with matching PVIDs in lvmetad.
   Check for lvm binary in blkdeactivate and skip LVM processing if not present.
   Add --enable-halvm and --disable-halvm options to lvmconf script.
   Add --services, --mirrorservice and --startstopservices option to lvmconf.
   Use proper default value of global/use_lvmetad when processing lvmconf script.
   Respect allocation/cling_tag_list during intial contiguous allocation.
   Add A_PARTITION_BY_TAGS set when allocated areas should not share tags.
+  Make changes persist with python addTag/removeTag.
   Set correct vgid when updating cache when writing PV metadata.
   More efficient clvmd singlenode locking emulation.
+  Reject lvcreate -m with raid4/5/6 to avoid unexpected layout.
   Don't skip invalidation of cached orphans if vg write lck is held (2.02.118).
   Log relevant PV tags when using cling allocation.
   Add str_list_add_list() to combine two lists.
   Fix LV processing with selection to always do the selection on initial state.
+  Add internal LV_REMOVED LV status flag.
 
 Version 2.02.118 - 23rd March 2015
 ==================================

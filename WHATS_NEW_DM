@@ -1,5 +1,5 @@
-Version 1.02.96 - 
-=================================
+Version 1.02.96 - 2nd May 2015
+==============================
   Fix selection to not match if using reserved value in criteria with >,<,>=,<.
   Fix selection to not match reserved values for size fields if using >,<,>=,<.
   Include uuid or device number in log message after ioctl failure.
