@@ -32,8 +32,8 @@ mkdir "$mntdir"
 mount "$DM_DEV_DIR/mapper/$vg-snap" "$mntdir"
 mount
 cat /proc/mounts | grep "$mntdir"
-dd if=/dev/zero of="$mntdir/file$1" bs=1M count=5
-sync
+dd if=/dev/zero of="$mntdir/file$1" bs=1M count=5 oflag=direct
+
 #dmeventd only checks every 10 seconds :(
 for i in {1..10}; do
 	cat /proc/mounts | grep "$mntdir" || break
