@@ -1,5 +1,6 @@
 Version 2.02.120 -
 ===============================
+  lvm2app closes locking on lvm_quit().
   Configure detects /run or /var/run.
   Add missing newline in clvmd --help output.
 

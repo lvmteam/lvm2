@@ -96,6 +96,7 @@ lvm_t lvm_init(const char *system_dir)
 void lvm_quit(lvm_t libh)
 {
 	struct saved_env e = store_user_env((struct cmd_context *)libh);
+	fin_locking();
 	destroy_toolcontext((struct cmd_context *)libh);
 	udev_fin_library_context();
 	restore_user_env(&e);
