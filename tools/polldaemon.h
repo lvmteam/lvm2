@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -71,5 +71,8 @@ int poll_daemon(struct cmd_context *cmd, const char *name, const char *uuid,
 progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct logical_volume *lv, const char *name,
 				struct daemon_parms *parms);
+
+struct volume_group *poll_get_copy_vg(struct cmd_context *cmd, const char *name,
+				      const char *uuid);
 
 #endif

@@ -16,20 +16,6 @@
 #include "lvconvert_poll.h"
 #include "tools.h"
 
-struct volume_group *lvconvert_get_copy_vg(struct cmd_context *cmd,
-					   const char *name,
-					   const char *uuid __attribute__((unused)))
-{
-	dev_close_all();
-
-	if (name && !strchr(name, '/'))
-		return vg_read_for_update(cmd, name, NULL, 0);
-
-	/* 'name' is the full LV name; must extract_vgname() */
-	return vg_read_for_update(cmd, extract_vgname(cmd, name),
-				  NULL, 0);
-}
-
 struct logical_volume *lvconvert_get_copy_lv(struct cmd_context *cmd __attribute__((unused)),
 					     struct volume_group *vg,
 					     const char *name,

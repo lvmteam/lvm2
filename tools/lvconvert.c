@@ -700,21 +700,21 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 }
 
 static struct poll_functions _lvconvert_mirror_fns = {
-	.get_copy_vg = lvconvert_get_copy_vg,
+	.get_copy_vg = poll_get_copy_vg,
 	.get_copy_lv = lvconvert_get_copy_lv,
 	.poll_progress = poll_mirror_progress,
 	.finish_copy = lvconvert_mirror_finish,
 };
 
 static struct poll_functions _lvconvert_merge_fns = {
-	.get_copy_vg = lvconvert_get_copy_vg,
+	.get_copy_vg = poll_get_copy_vg,
 	.get_copy_lv = lvconvert_get_copy_lv,
 	.poll_progress = poll_merge_progress,
 	.finish_copy = lvconvert_merge_finish,
 };
 
 static struct poll_functions _lvconvert_thin_merge_fns = {
-	.get_copy_vg = lvconvert_get_copy_vg,
+	.get_copy_vg = poll_get_copy_vg,
 	.get_copy_lv = lvconvert_get_copy_lv,
 	.poll_progress = poll_thin_merge_progress,
 	.finish_copy = lvconvert_merge_finish,
@@ -3219,7 +3219,7 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 	struct volume_group *vg;
 	struct logical_volume* lv = NULL;
 
-	vg = lvconvert_get_copy_vg(cmd, vg_name, NULL);
+	vg = poll_get_copy_vg(cmd, vg_name, NULL);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		return_NULL;

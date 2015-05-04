@@ -21,10 +21,6 @@ struct cmd_context;
 struct logical_volume;
 struct volume_group;
 
-struct volume_group *lvconvert_get_copy_vg(struct cmd_context *cmd,
-					   const char *name,
-					   const char *uuid __attribute__((unused)));
-
 struct logical_volume *lvconvert_get_copy_lv(struct cmd_context *cmd __attribute__((unused)),
 					     struct volume_group *vg,
 					     const char *name,

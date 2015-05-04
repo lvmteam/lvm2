@@ -49,6 +49,19 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 	return PROGRESS_FINISHED_SEGMENT;
 }
 
+struct volume_group *poll_get_copy_vg(struct cmd_context *cmd,
+				      const char *name,
+				      const char *uuid __attribute__((unused)))
+{
+	dev_close_all();
+
+	if (name && !strchr(name, '/'))
+		return vg_read_for_update(cmd, name, NULL, 0);
+
+	/* 'name' is the full LV name; must extract_vgname() */
+	return vg_read_for_update(cmd, extract_vgname(cmd, name), NULL, 0);
+}
+
 static int _check_lv_status(struct cmd_context *cmd,
 			    struct volume_group *vg,
 			    struct logical_volume *lv,
