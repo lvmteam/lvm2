@@ -870,10 +870,15 @@ static PyObject *get_property(struct lvm_property_value *prop)
 	if (!(pytuple = PyTuple_New(2)))
 		return NULL;
 
-	if (prop->is_integer)
-		PyTuple_SET_ITEM(pytuple, 0, Py_BuildValue("K", prop->value.integer));
-	else
+	if (prop->is_integer) {
+		if (prop->is_signed) {
+			PyTuple_SET_ITEM(pytuple, 0, Py_BuildValue("L", prop->value.signed_integer));
+		} else {
+			PyTuple_SET_ITEM(pytuple, 0, Py_BuildValue("K", prop->value.integer));
+		}
+	} else {
 		PyTuple_SET_ITEM(pytuple, 0, PYSTRTYPE_FROMSTRING(prop->value.string));
+	}
 
 	if (prop->is_settable)
 		setable = Py_True;
