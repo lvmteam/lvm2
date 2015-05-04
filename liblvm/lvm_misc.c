@@ -88,6 +88,7 @@ struct lvm_property_value get_property(const pv_t pv, const vg_t vg,
 	v.is_settable = prop.is_settable;
 	v.is_string = prop.is_string;
 	v.is_integer = prop.is_integer;
+	v.is_signed = prop.is_signed;
 	if (v.is_string)
 		v.value.string = prop.value.string;
 	if (v.is_integer)

@@ -462,7 +462,7 @@ GET_PVSEG_NUM_PROPERTY_FN(pvseg_size, (SECTOR_SIZE * pvseg->len))
 
 struct lvm_property_type _properties[] = {
 #include "columns.h"
-	{ 0, "", 0, 0, 0, { .integer = 0 }, prop_not_implemented_get, prop_not_implemented_set },
+	{ 0, "", 0, 0, 0, 0, { .integer = 0 }, prop_not_implemented_get, prop_not_implemented_set },
 };
 
 #undef STR
@@ -471,6 +471,7 @@ struct lvm_property_type _properties[] = {
 #undef SIZ
 #undef PCT
 #undef STR_LIST
+#undef SNUM
 #undef FIELD
 
 int lvseg_get_property(const struct lv_segment *lvseg,

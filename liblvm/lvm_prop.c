@@ -41,7 +41,7 @@ SET_PVCREATEPARAMS_NUM_PROPERTY_FN(zero, pvcp->zero)
 
 struct lvm_property_type _lib_properties[] = {
 #include "lvm_prop_fields.h"
-	{ 0, "", 0, 0, 0, { .integer = 0 }, prop_not_implemented_get,
+	{ 0, "", 0, 0, 0, 0, { .integer = 0 }, prop_not_implemented_get,
 			prop_not_implemented_set },
 };
 

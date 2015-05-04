@@ -231,10 +231,12 @@ typedef struct lvm_property_value {
 	uint32_t is_string:1;
 	uint32_t is_integer:1;
 	uint32_t is_valid:1;
-	uint32_t padding:28;
+	uint32_t is_signed:1;
+	uint32_t padding:27;
 	union {
 		const char *string;
 		uint64_t integer;
+		int64_t signed_integer;
 	} value;
 } lvm_property_value_t;
 
