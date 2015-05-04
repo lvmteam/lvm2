@@ -877,7 +877,11 @@ static PyObject *get_property(struct lvm_property_value *prop)
 			PyTuple_SET_ITEM(pytuple, 0, Py_BuildValue("K", prop->value.integer));
 		}
 	} else {
-		PyTuple_SET_ITEM(pytuple, 0, PYSTRTYPE_FROMSTRING(prop->value.string));
+		if ( prop->value.string ) {
+			PyTuple_SET_ITEM(pytuple, 0, PYSTRTYPE_FROMSTRING(prop->value.string));
+		} else {
+			PyTuple_SET_ITEM(pytuple, 0, Py_None);
+		}
 	}
 
 	if (prop->is_settable)
