@@ -93,6 +93,20 @@ static int _raid_in_sync(struct logical_volume *lv)
 			  lv->vg->name, lv->name);
 		return 0;
 	}
+	if (sync_percent == DM_PERCENT_0) {
+		/*
+		 * Repeat read of status once more - since buggy kernel target
+		 * sometimes reports 0 even though the array is in 100% sync
+		 */
+		if (!lv_raid_percent(lv, &sync_percent)) {
+			log_error("Unable to determine sync status of %s/%s.",
+				  lv->vg->name, lv->name);
+			return 0;
+		}
+		if (sync_percent == DM_PERCENT_100)
+			log_warn("WARNING: Sync status for %s is inconsistent.",
+				 display_lvname(lv));
+	}
 
 	return (sync_percent == DM_PERCENT_100) ? 1 : 0;
 }
