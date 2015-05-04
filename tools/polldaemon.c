@@ -66,11 +66,11 @@ struct logical_volume *poll_get_copy_lv(struct cmd_context *cmd __attribute__((u
 					struct volume_group *vg,
 					const char *name,
 					const char *uuid,
-					uint64_t lv_type __attribute__((unused)))
+					uint64_t lv_type)
 {
 	struct logical_volume *lv = find_lv(vg, name);
 
-	if (!lv || (uuid && strcmp(uuid, (char *)&lv->lvid)))
+	if (!lv || (uuid && strcmp(uuid, (char *)&lv->lvid)) || (lv_type && !(lv->status & lv_type)))
 		return NULL;
 
 	return lv;
