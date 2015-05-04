@@ -50,6 +50,7 @@ if aux kernel_at_least 2 6 33 ; then
     pvcreate --metadatasize 128k \
 	--config 'devices { md_chunk_alignment=0 }' "$pvdev"
     check pv_field "$pvdev" pe_start "1.00m"
+    pvremove "$pvdev"
 fi
 
 # partition MD array directly, depends on blkext in Linux >= 2.6.28
@@ -58,6 +59,12 @@ if aux kernel_at_least 2 6 28 ; then
     sfdisk "$mddev" <<EOF
 ,,83
 EOF
+    # Wait till all partition links in udev are created
+    aux udev_wait
+
+    # Skip test if udev rule has not created proper links for partitions
+    test -b "${mddev}p1" || { ls -laR /dev ; skip "Missing partition link" ; }
+
     pvscan
     # make sure partition on MD is _not_ removed
     # - tests partition -> parent lookup via sysfs paths

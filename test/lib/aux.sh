@@ -427,7 +427,19 @@ prepare_md_dev() {
 		mddev=/dev/md/md_lvm_test0 || \
 		mddev=/dev/md_lvm_test0
 
-	mdadm --create --metadata=1.0 "$mddev" --auto=md --level $level --chunk $rchunk --raid-devices=$rdevs "${@:4}"
+	mdadm --create --metadata=1.0 "$mddev" --auto=md --level $level --chunk $rchunk --raid-devices=$rdevs "${@:4}" || {
+		# Some older 'mdadm' version managed to open and close devices internaly
+		# and reporting non-exclusive access on such device
+		# let's just skip the test if this happens.
+		# Note: It's pretty complex to get rid of consequences
+		#       the following sequence avoid leaks on f19
+		# TODO: maybe try here to recreate few times....
+		mdadm --stop "$mddev" || true
+		udev_wait
+		mdadm --zero-superblock "${@:4}" || true
+		udev_wait
+		skip "Test skipped, unreliable mdadm detected!"
+	}
 	test -b "$mddev" || skip "mdadm has not created device!"
 
 	# LVM/DM will see this device
