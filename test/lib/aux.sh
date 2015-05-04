@@ -48,7 +48,7 @@ prepare_clvmd() {
 	LVM_LOG_FILE_EPOCH=CLVMD LVM_BINARY=$(which lvm) $run_valgrind clvmd -Isinglenode -d 1 -f &
 	echo $! > LOCAL_CLVMD
 
-	for i in $(seq 1 100) ; do
+	for i in {1..100} ; do
 		test $i -eq 100 && die "Startup of clvmd is too slow."
 		test -e "$CLVMD_PIDFILE" && break
 		sleep .2
@@ -74,7 +74,7 @@ prepare_dmeventd() {
 	echo $! > LOCAL_DMEVENTD
 
 	# FIXME wait for pipe in /var/run instead
-	for i in $(seq 1 100) ; do
+	for i in {1..100} ; do
 		test $i -eq 100 && die "Startup of dmeventd is too slow."
 		test -e "${DMEVENTD_PIDFILE}" && break
 		sleep .2
@@ -369,6 +369,7 @@ prepare_loop() {
 prepare_scsi_debug_dev() {
 	local DEV_SIZE=$1
 	local SCSI_DEBUG_PARAMS=${@:2}
+	local DEBUG_DEV
 
 	rm -f debug.log strace.log
 	test ! -f "SCSI_DEBUG_DEV" || return 0
@@ -384,9 +385,12 @@ prepare_scsi_debug_dev() {
 	# last param wins.. so num_tgts=1 is imposed
 	touch SCSI_DEBUG_DEV
 	modprobe scsi_debug dev_size_mb=$DEV_SIZE $SCSI_DEBUG_PARAMS num_tgts=1 || skip
-	sleep 2 # allow for async Linux SCSI device registration
-
-	local DEBUG_DEV="/dev/$(grep -H scsi_debug /sys/block/*/device/model | cut -f4 -d /)"
+	
+	for i in {1..20} ; do
+		DEBUG_DEV="/dev/$(grep -H scsi_debug /sys/block/*/device/model | cut -f4 -d /)"
+		test -b "$DEBUG_DEV" && break
+		sleep .1 # allow for async Linux SCSI device registration
+        done
 	test -b "$DEBUG_DEV" || return 1 # should not happen
 
 	# Create symlink to scsi_debug device in $DM_DEV_DIR
