@@ -60,6 +60,7 @@ DM_DEV_DIR="$TESTDIR/dev"
 LVM_SYSTEM_DIR="$TESTDIR/etc"
 mkdir "$LVM_SYSTEM_DIR" "$DM_DEV_DIR"
 if test -n "$LVM_TEST_DEVDIR" ; then
+	test -d "$LVM_TEST_DEVDIR" || die "Test device directory LVM_TEST_DEVDIR=\"$LVM_TEST_DEVDIR\" is not valid."
 	DM_DEV_DIR=$LVM_TEST_DEVDIR
 else
 	mknod "$DM_DEV_DIR/testnull" c 1 3 || die "mknod failed"
