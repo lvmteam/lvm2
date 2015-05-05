@@ -905,6 +905,37 @@ int lvmcache_vginfo_holders_dec_and_test_for_zero(struct lvmcache_vginfo *vginfo
 }
 // #endif
 
+int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
+			   struct dm_list *vgnameids)
+{
+	struct vgnameid_list *vgnl;
+	struct lvmcache_vginfo *vginfo;
+
+	lvmcache_label_scan(cmd, 0);
+
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (!include_internal && is_orphan_vg(vginfo->vgname))
+			continue;
+
+		if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
+			log_error("vgnameid_list allocation failed.");
+			return 0;
+		}
+
+		vgnl->vgid = dm_pool_strdup(cmd->mem, vginfo->vgid);
+		vgnl->vg_name = dm_pool_strdup(cmd->mem, vginfo->vgname);
+
+		if (!vgnl->vgid || !vgnl->vg_name) {
+			log_error("vgnameid_list member allocation failed.");
+			return 0;
+		}
+
+		dm_list_add(vgnameids, &vgnl->list);
+	}
+
+	return 1;
+}
+
 struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
 				   int include_internal)
 {

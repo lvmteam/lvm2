@@ -143,6 +143,12 @@ int lvmetad_pv_lookup_by_dev(struct cmd_context *cmd, struct device *dev, int *f
 int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd);
 
 /*
+ * Request a list of vgid/vgname pairs for all VGs known to lvmetad.
+ * Does not do vg_lookup's on each VG, and does not populate lvmcache.
+ */
+int lvmetad_get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids);
+
+/*
  * Find a VG by its ID or its name in the lvmetad cache. Gives NULL if the VG is
  * not found.
  */

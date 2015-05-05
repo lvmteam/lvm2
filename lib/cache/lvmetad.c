@@ -673,6 +673,56 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 	return 1;
 }
 
+int lvmetad_get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids)
+{
+	struct vgnameid_list *vgnl;
+	struct id vgid;
+	const char *vgid_txt;
+	const char *vg_name;
+	daemon_reply reply;
+	struct dm_config_node *cn;
+
+	log_debug_lvmetad("Asking lvmetad for complete list of known VG ids/names");
+	reply = _lvmetad_send("vg_list", NULL);
+	if (!_lvmetad_handle_reply(reply, "list VGs", "", NULL)) {
+		daemon_reply_destroy(reply);
+		return_0;
+	}
+
+	if ((cn = dm_config_find_node(reply.cft->root, "volume_groups"))) {
+		for (cn = cn->child; cn; cn = cn->sib) {
+			vgid_txt = cn->key;
+			if (!id_read_format(&vgid, vgid_txt)) {
+				stack;
+				continue;
+			}
+
+			if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
+				log_error("vgnameid_list allocation failed.");
+				return 0;
+			}
+
+			if (!(vg_name = dm_config_find_str(cn->child, "name", NULL))) {
+				log_error("vg_list no name found.");
+				return 0;
+			}
+
+			vgnl->vgid = dm_pool_strdup(cmd->mem, (char *)&vgid);
+			vgnl->vg_name = dm_pool_strdup(cmd->mem, vg_name);
+
+			if (!vgnl->vgid || !vgnl->vg_name) {
+				log_error("vgnameid_list member allocation failed.");
+				return 0;
+			}
+
+			dm_list_add(vgnameids, &vgnl->list);
+		}
+	}
+
+	daemon_reply_destroy(reply);
+	return 1;
+}
+
 int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 {
 	struct volume_group *tmp;

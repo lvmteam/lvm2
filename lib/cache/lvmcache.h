@@ -107,6 +107,9 @@ struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd,
 struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
 				   int include_internal);
 
+int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
+                          struct dm_list *vgnameids);
+
 /* Returns list of struct dm_str_list containing pool-allocated copy of pvids */
 struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid);

@@ -1515,12 +1515,6 @@ int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_na
 	return -1;
 }
 
-struct vgnameid_list {
-	struct dm_list list;
-	const char *vg_name;
-	const char *vgid;
-};
-
 /*
  * Extract list of VG names and list of tags from command line arguments.
  */
@@ -1582,67 +1576,6 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 	}
 
 	return ret_max;
-}
-
-/*
- * FIXME Add arg to include (or not) entries with duplicate vg names?
- *
- * Obtain complete list of VG name/vgid pairs known on the system.
- */
-static int _get_vgnameids_on_system(struct cmd_context *cmd,
-				    struct dm_list *vgnameids_on_system,
-				    const char *only_this_vgname, int include_internal)
-{
-	struct vgnameid_list *vgnl;
-	struct dm_list *vgids;
-	struct dm_str_list *sl;
-	const char *vgid;
-
-	if (only_this_vgname) {
-		vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl));
-		if (!vgnl) {
-			log_error("name_id_list allocation failed.");
-			return ECMD_FAILED;
-		}
-
-		vgnl->vg_name = dm_pool_strdup(cmd->mem, only_this_vgname);
-		vgnl->vgid = NULL;
-
-		dm_list_add(vgnameids_on_system, &vgnl->list);
-		return ECMD_PROCESSED;
-	}
-
-	log_verbose("Finding all volume groups.");
-
-	if (!lvmetad_vg_list_to_lvmcache(cmd))
-		stack;
-
-	/*
-	 * Start with complete vgid list because multiple VGs might have same name.
-	 */
-	vgids = get_vgids(cmd, include_internal);
-	if (!vgids || dm_list_empty(vgids)) {
-		stack;
-		return ECMD_PROCESSED;
-	}
-
-	/* FIXME get_vgids() should provide these pairings directly */
-	dm_list_iterate_items(sl, vgids) {
-		if (!(vgid = sl->str))
-			continue;
-
-		if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
-			log_error("vgnameid_list allocation failed.");
-			return ECMD_FAILED;
-		}
-
-		vgnl->vgid = dm_pool_strdup(cmd->mem, vgid);
-		vgnl->vg_name = lvmcache_vgname_from_vgid(cmd->mem, vgid);
-
-		dm_list_add(vgnameids_on_system, &vgnl->list);
-	}
-
-	return ECMD_PROCESSED;
 }
 
 struct processing_handle *init_processing_handle(struct cmd_context *cmd)
@@ -1903,7 +1836,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	 *   no VG names were given and the command defaults to processing all VGs.
 	 */
 	if (((dm_list_empty(&arg_vgnames) && enable_all_vgs) || !dm_list_empty(&arg_tags)) &&
-	    ((ret = _get_vgnameids_on_system(cmd, &vgnameids_on_system, NULL, 0)) != ECMD_PROCESSED))
+	    !get_vgnameids(cmd, &vgnameids_on_system, NULL, 0))
 		goto_out;
 
 	if (dm_list_empty(&arg_vgnames) && dm_list_empty(&vgnameids_on_system)) {
@@ -2304,6 +2237,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t fla
 	struct dm_list vgnameids_to_process;	/* vgnameid_list */
 
 	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
+	int need_vgnameids = 0;
 	int ret;
 
 	cmd->error_foreign_vgs = 0;
@@ -2330,11 +2264,17 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t fla
 	/*
 	 * Obtain the complete list of VGs present on the system if it is needed because:
 	 *   any tags were supplied and need resolving; or
+	 *   no VG names were given and the select option needs resolving; or
 	 *   no VG names were given and the command defaults to processing all VGs.
 	*/
-	if (((dm_list_empty(&arg_vgnames) && (enable_all_vgs ||
-	      handle->internal_report_for_select)) || !dm_list_empty(&arg_tags)) &&
-	    (ret = _get_vgnameids_on_system(cmd, &vgnameids_on_system, NULL, 0) != ECMD_PROCESSED))
+	if (!dm_list_empty(&arg_tags))
+		need_vgnameids = 1;
+	else if (dm_list_empty(&arg_vgnames) && enable_all_vgs)
+		need_vgnameids = 1;
+	else if (dm_list_empty(&arg_vgnames) && handle->internal_report_for_select)
+		need_vgnameids = 1;
+
+	if (need_vgnameids && !get_vgnameids(cmd, &vgnameids_on_system, NULL, 0))
 		goto_out;
 
 	if (dm_list_empty(&arg_vgnames) && dm_list_empty(&vgnameids_on_system)) {
@@ -2822,11 +2762,12 @@ int process_each_pv(struct cmd_context *cmd,
 			      arg_count(cmd, all_ARG);
 
 	/*
-	 * Read all the vgs here because this has the effect of initializing
-	 * device/lvmcache info so that dev->pvid is available when creating
-	 * a list of devices.
+	 * Need pvid's set on all PVs before processing so that pvid's
+	 * can be compared to find duplicates while processing.
 	 */
-	if ((ret = _get_vgnameids_on_system(cmd, &all_vgnameids, only_this_vgname, 1) != ECMD_PROCESSED)) {
+	lvmcache_seed_infos_from_lvmetad(cmd);
+
+	if (!get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
 		stack;
 		return ret;
 	}

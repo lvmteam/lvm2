@@ -494,6 +494,12 @@ struct vg_list {
 	struct volume_group *vg;
 };
 
+struct vgnameid_list {
+	struct dm_list list;
+	const char *vg_name;
+	const char *vgid;
+};
+
 #define PV_PE_START_CALC ((uint64_t) -1) /* Calculate pe_start value */
 
 struct pvcreate_restorable_params {
@@ -606,6 +612,8 @@ void lv_set_hidden(struct logical_volume *lv);
 
 struct dm_list *get_vgnames(struct cmd_context *cmd, int include_internal);
 struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal);
+int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
+		  const char *only_this_vgname, int include_internal);
 int scan_vgs_for_pvs(struct cmd_context *cmd, uint32_t warn_flags);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv, int allow_non_orphan);

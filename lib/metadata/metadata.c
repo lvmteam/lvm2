@@ -4017,6 +4017,54 @@ struct dm_list *get_vgids(struct cmd_context *cmd, int include_internal)
 	return lvmcache_get_vgids(cmd, include_internal);
 }
 
+int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
+		  const char *only_this_vgname, int include_internal)
+{
+	struct vgnameid_list *vgnl;
+	struct format_type *fmt;
+
+	if (only_this_vgname) {
+		if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
+			log_error("vgnameid_list allocation failed.");
+			return 0;
+		}
+
+		vgnl->vg_name = dm_pool_strdup(cmd->mem, only_this_vgname);
+		vgnl->vgid = NULL;
+		dm_list_add(vgnameids, &vgnl->list);
+		return 1;
+	}
+
+	if (lvmetad_active()) {
+		/*
+		 * This just gets the list of names/ids from lvmetad
+		 * and does not populate lvmcache.
+		 */
+		lvmetad_get_vgnameids(cmd, vgnameids);
+
+		if (include_internal) {
+			dm_list_iterate_items(fmt, &cmd->formats) {
+				if (!(vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl)))) {
+					log_error("vgnameid_list allocation failed.");
+					return 0;
+				}
+
+				vgnl->vg_name = dm_pool_strdup(cmd->mem, fmt->orphan_vg_name);
+				vgnl->vgid = NULL;
+				dm_list_add(vgnameids, &vgnl->list);
+			}
+		}
+	} else {
+		/*
+		 * The non-lvmetad case. This function begins by calling
+		 * lvmcache_label_scan() to populate lvmcache.
+		 */
+		lvmcache_get_vgnameids(cmd, include_internal, vgnameids);
+	}
+
+	return 1;
+}
+
 static int _get_pvs(struct cmd_context *cmd, uint32_t warn_flags,
 		struct dm_list *pvslist, struct dm_list *vgslist)
 {
