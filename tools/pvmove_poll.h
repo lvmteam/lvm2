@@ -15,6 +15,9 @@
 #ifndef _LVM_PVMOVE_H
 #define _LVM_PVMOVE_H
 
+/* FIXME: remove it after refactoring completes */
+#include <stdint.h>
+
 struct cmd_context;
 struct dm_list;
 struct logical_volume;
@@ -30,6 +33,7 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		  struct logical_volume *lv_mirr, struct dm_list *lvs_changed);
 
 struct volume_group *pvmove_get_copy_vg(struct cmd_context *cmd,
-					const char *name, const char *uuid);
+					const char *name, const char *uuid,
+					uint32_t flags);
 
 #endif  /* _LVM_PVMOVE_H */

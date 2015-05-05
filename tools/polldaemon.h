@@ -31,7 +31,8 @@ struct poll_functions {
 	const char *(*get_copy_name_from_lv) (const struct logical_volume *lv);
 	struct volume_group *(*get_copy_vg) (struct cmd_context *cmd,
 					     const char *name,
-					     const char *uuid);
+					     const char *uuid,
+					     uint32_t flags);
 	struct logical_volume *(*get_copy_lv) (struct cmd_context *cmd,
 					       struct volume_group *vg,
 					       const char *name,
@@ -73,7 +74,7 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct daemon_parms *parms);
 
 struct volume_group *poll_get_copy_vg(struct cmd_context *cmd, const char *name,
-				      const char *uuid);
+				      const char *uuid, uint32_t flags);
 
 struct logical_volume *poll_get_copy_lv(struct cmd_context *cmd,
 					struct volume_group *vg,

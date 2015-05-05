@@ -203,7 +203,8 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 struct volume_group *pvmove_get_copy_vg(struct cmd_context *cmd, const char *name,
-					const char *uuid __attribute__((unused)))
+					const char *uuid __attribute__((unused)),
+					uint32_t flags __attribute__((unused)))
 {
 	struct physical_volume *pv;
 	struct volume_group *vg;

@@ -51,15 +51,16 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 
 struct volume_group *poll_get_copy_vg(struct cmd_context *cmd,
 				      const char *name,
-				      const char *uuid __attribute__((unused)))
+				      const char *uuid __attribute__((unused)),
+				      uint32_t flags)
 {
 	dev_close_all();
 
 	if (name && !strchr(name, '/'))
-		return vg_read_for_update(cmd, name, NULL, 0);
+		return vg_read(cmd, name, NULL, flags);
 
 	/* 'name' is the full LV name; must extract_vgname() */
-	return vg_read_for_update(cmd, extract_vgname(cmd, name), NULL, 0);
+	return vg_read(cmd, extract_vgname(cmd, name), NULL, flags);
 }
 
 struct logical_volume *poll_get_copy_lv(struct cmd_context *cmd __attribute__((unused)),
@@ -155,7 +156,7 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 			_sleep_and_rescan_devices(parms);
 
 		/* Locks the (possibly renamed) VG again */
-		vg = parms->poll_fns->get_copy_vg(cmd, name, uuid);
+		vg = parms->poll_fns->get_copy_vg(cmd, name, uuid, READ_FOR_UPDATE);
 		if (vg_read_error(vg)) {
 			release_vg(vg);
 			log_error("ABORTING: Can't reread VG for %s", name);

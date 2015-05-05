@@ -3222,7 +3222,7 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 	struct volume_group *vg;
 	struct logical_volume* lv = NULL;
 
-	vg = poll_get_copy_vg(cmd, vg_name, NULL);
+	vg = poll_get_copy_vg(cmd, vg_name, NULL, READ_FOR_UPDATE);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		return_NULL;
