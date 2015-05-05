@@ -1,5 +1,7 @@
 Version 2.02.120 -
 ===============================
+  Refactor polldaemon interfaces to poll every operation by VG/LV couple
+  Skip wait after testing in _wait_for_single_lv when polling finished
   lvm2app closes locking on lvm_quit().
   Configure detects /run or /var/run.
   Add missing newline in clvmd --help output.
