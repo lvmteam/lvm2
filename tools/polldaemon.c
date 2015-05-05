@@ -209,7 +209,7 @@ static int _wait_for_single_lv(struct cmd_context *cmd, const char *name, const 
 		 * polldaemon(s) are polling.  These other polldaemon(s) can then
 		 * continue polling an LV that doesn't have a "status".
 		 */
-		if (!parms->wait_before_testing)
+		if (!parms->wait_before_testing && !finished)
 			_sleep_and_rescan_devices(parms);
 	}
 
