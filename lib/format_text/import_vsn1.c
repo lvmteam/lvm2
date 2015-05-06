@@ -25,6 +25,7 @@
 #include "segtype.h"
 #include "text_import.h"
 #include "defaults.h"
+#include "str_list.h"
 
 typedef int (*section_fn) (struct format_instance * fid,
 			   struct volume_group * vg, const struct dm_config_node * pvn,
@@ -153,6 +154,26 @@ static int _read_flag_config(const struct dm_config_node *n, uint64_t *status, i
 	return 1;
 }
 
+static int _read_str_list(struct dm_pool *mem, struct dm_list *list, const struct dm_config_value *cv)
+{
+	if (cv->type == DM_CFG_EMPTY_ARRAY)
+		return 1;
+
+	while (cv) {
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Found an item that is not a string");
+			return 0;
+		}
+
+		if (!str_list_add(mem, list, dm_pool_strdup(mem, cv->v.str)))
+			return_0;
+
+		cv = cv->next;
+	}
+
+	return 1;
+}
+
 static int _read_pv(struct format_instance *fid,
 		    struct volume_group *vg, const struct dm_config_node *pvn,
 		    const struct dm_config_node *vgn __attribute__((unused)),
@@ -269,7 +290,7 @@ static int _read_pv(struct format_instance *fid,
 
 	/* Optional tags */
 	if (dm_config_get_list(pvn, "tags", &cv) &&
-	    !(read_tags(mem, &pv->tags, cv))) {
+	    !(_read_str_list(mem, &pv->tags, cv))) {
 		log_error("Couldn't read tags for physical volume %s in %s.",
 			  pv_dev_name(pv), vg->name);
 		return 0;
@@ -380,7 +401,7 @@ static int _read_segment(struct logical_volume *lv, const struct dm_config_node 
 
 	/* Optional tags */
 	if (dm_config_get_list(sn_child, "tags", &cv) &&
-	    !(read_tags(mem, &seg->tags, cv))) {
+	    !(_read_str_list(mem, &seg->tags, cv))) {
 		log_error("Couldn't read tags for a segment of %s/%s.",
 			  lv->vg->name, lv->name);
 		return 0;
@@ -616,7 +637,7 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 
 	/* Optional tags */
 	if (dm_config_get_list(lvn, "tags", &cv) &&
-	    !(read_tags(mem, &lv->tags, cv))) {
+	    !(_read_str_list(mem, &lv->tags, cv))) {
 		log_error("Couldn't read tags for logical volume %s/%s.",
 			  vg->name, lv->name);
 		return 0;
@@ -891,7 +912,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	/* Optional tags */
 	if (dm_config_get_list(vgn, "tags", &cv) &&
-	    !(read_tags(vg->vgmem, &vg->tags, cv))) {
+	    !(_read_str_list(vg->vgmem, &vg->tags, cv))) {
 		log_error("Couldn't read tags for volume group %s.", vg->name);
 		goto bad;
 	}

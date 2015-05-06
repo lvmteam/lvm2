@@ -60,23 +60,3 @@ bad:
 	dm_free(buffer);
 	return_NULL;
 }
-
-int read_tags(struct dm_pool *mem, struct dm_list *tagsl, const struct dm_config_value *cv)
-{
-	if (cv->type == DM_CFG_EMPTY_ARRAY)
-		return 1;
-
-	while (cv) {
-		if (cv->type != DM_CFG_STRING) {
-			log_error("Found a tag that is not a string");
-			return 0;
-		}
-
-		if (!str_list_add(mem, tagsl, dm_pool_strdup(mem, cv->v.str)))
-			return_0;
-
-		cv = cv->next;
-	}
-
-	return 1;
-}
