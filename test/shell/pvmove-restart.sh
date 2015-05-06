@@ -75,10 +75,7 @@ if test -e LOCAL_CLVMD ; then
 	aux prepare_clvmd
 fi
 
-if test -e LOCAL_LVMETAD ; then
-	# Restart lvmetad (kill is built-in)
-	aux prepare_lvmetad
-fi
+aux notify_lvmetad "$dev1" "$dev2" "$dev3"
 
 # Only PVs should be left in table...
 dmsetup table
