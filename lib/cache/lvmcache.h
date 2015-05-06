@@ -171,4 +171,6 @@ void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
 
 int lvmcache_found_duplicate_pvs(void);
 
+void lvmcache_set_preferred_duplicates(const char *vgid);
+
 #endif

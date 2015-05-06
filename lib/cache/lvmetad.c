@@ -265,9 +265,9 @@ static int _read_mda(struct lvmcache_info *info,
 	return 0;
 }
 
-static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
-						   struct dm_config_node *cn,
-						   struct format_type *fmt, dev_t fallback)
+static int _pv_populate_lvmcache(struct cmd_context *cmd,
+				 struct dm_config_node *cn,
+				 struct format_type *fmt, dev_t fallback)
 {
 	struct device *dev, *dev_alternate, *dev_alternate_cache = NULL;
 	struct label *label;
@@ -293,7 +293,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 
 	if (!fmt) {
 		log_error("PV %s not recognised. Is the device missing?", pvid_txt);
-		return NULL;
+		return 0;
 	}
 
 	dev = dev_cache_get_by_devt(devt, cmd->filter);
@@ -302,17 +302,17 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 
 	if (!dev) {
 		log_warn("WARNING: Device for PV %s not found or rejected by a filter.", pvid_txt);
-		return NULL;
+		return 0;
 	}
 
 	if (!pvid_txt || !id_read_format(&pvid, pvid_txt)) {
 		log_error("Missing or ill-formatted PVID for PV: %s.", pvid_txt);
-		return NULL;
+		return 0;
 	}
 
 	if (vgid_txt) {
 		if (!id_read_format(&vgid, vgid_txt))
-			return_NULL;
+			return_0;
 	} else
 		strcpy((char*)&vgid, fmt->orphan_vg_name);
 
@@ -321,7 +321,7 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 
 	if (!(info = lvmcache_add(fmt->labeller, (const char *)&pvid, dev,
 				  vgname, (const char *)&vgid, 0)))
-		return_NULL;
+		return_0;
 
 	lvmcache_get_label(info)->sector = label_sector;
 	lvmcache_get_label(info)->dev = dev;
@@ -390,7 +390,8 @@ static struct lvmcache_info *_pv_populate_lvmcache(struct cmd_context *cmd,
 		}
 	}
 
-	return info;
+	lvmcache_set_preferred_duplicates((const char *)&vgid);
+	return 1;
 }
 
 struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgname, const char *vgid)

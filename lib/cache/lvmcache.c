@@ -67,6 +67,7 @@ struct lvmcache_vginfo {
 	unsigned vg_use_count;	/* Counter of vg reusage */
 	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
 	unsigned cached_vg_invalidated;	/* Signal to regenerate cached_vg */
+	unsigned preferred_duplicates; /* preferred duplicate pvs have been set */
 };
 
 static struct dm_hash_table *_pvid_hash = NULL;
@@ -113,6 +114,47 @@ int lvmcache_init(void)
 	}
 
 	return 1;
+}
+
+/*
+ * Once PV info has been populated in lvmcache and
+ * lvmcache has chosen preferred duplicate devices,
+ * set this flag so that lvmcache will not try to
+ * compare and choose preferred duplicate devices
+ * again (which may result in different preferred
+ * devices.)  PV info can be populated in lvmcache
+ * multiple times, each time causing lvmcache to
+ * compare the duplicate devices, so we need to
+ * record that the comparison/preferences have
+ * already been done, so the preferrences from the
+ * first time through are not changed.
+ *
+ * This is something of a hack to work around the
+ * fact that the code isn't really designed to
+ * handle duplicate PVs, and the fact that lvmetad
+ * has its own way of picking a preferred duplicate
+ * and lvmcache has another way based on having
+ * more information than lvmetad does.
+ *
+ * If we come up with a better overall method to
+ * handle duplicate PVs, then this can probably be
+ * removed.
+ *
+ * FIXME: if we want to make lvmetad work with clvmd,
+ * then this may need to be changed to set
+ * preferred_duplicates back to 0.
+ */
+
+void lvmcache_set_preferred_duplicates(const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = lvmcache_vginfo_from_vgid(vgid))) {
+		stack;
+		return;
+	}
+
+	vginfo->preferred_duplicates = 1;
 }
 
 void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
@@ -1689,6 +1731,18 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 					 dev_name(dev));
 			}
 
+			if (existing->vginfo->preferred_duplicates) {
+				/*
+				 * The preferred duplicate devs have already
+				 * been chosen during a previous populating of
+				 * lvmcache, so just use the existing preferences.
+				 */
+				log_verbose("Found duplicate PV %s: using existing dev %s",
+					    pvid_s,
+					    dev_name(existing->dev));
+				return NULL;
+			}
+
 			if (old_in_subsystem && !new_in_subsystem) {
 				/* Use old, ignore new. */
 				log_warn("Found duplicate PV %s: using %s not %s",
@@ -1741,7 +1795,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 					 pvid_s,
 					 dev_name(dev),
 					 dev_name(existing->dev));
-				log_warn("Using duplicate PV %s which is more recent, replacing %s",
+				log_warn("Using duplicate PV %s which is last seen, replacing %s",
 					 dev_name(dev),
 					 dev_name(existing->dev));
 
@@ -1754,7 +1808,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 					 pvid_s,
 					 dev_name(dev),
 					 dev_name(existing->dev));
-				log_warn("Using duplicate PV %s which is more recent, replacing %s",
+				log_warn("Using duplicate PV %s which is last seen, replacing %s",
 					 dev_name(dev),
 					 dev_name(existing->dev));
 			}
