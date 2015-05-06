@@ -61,8 +61,6 @@ struct text_vg_version_ops *text_vg_vsn1_init(void);
 int print_flags(uint64_t status, int type, char *buffer, size_t size);
 int read_flags(uint64_t *status, int type, const struct dm_config_value *cv);
 
-char *alloc_printed_tags(struct dm_list *tags);
-
 int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp);
 size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf);
 struct volume_group *text_vg_import_file(struct format_instance *fid,

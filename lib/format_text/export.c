@@ -372,13 +372,54 @@ static int _print_flag_config(struct formatter *f, uint64_t status, int type)
 	return 1;
 }
 
+static char *_alloc_printed_str_list(struct dm_list *list)
+{
+	struct dm_str_list *sl;
+	int first = 1;
+	size_t size = 0;
+	char *buffer, *buf;
+
+	dm_list_iterate_items(sl, list)
+		/* '"' + item + '"' + ',' + ' ' */
+		size += strlen(sl->str) + 4;
+	/* '[' + ']' + '\0' */
+	size += 3;
+
+	if (!(buffer = buf = dm_malloc(size))) {
+		log_error("Could not allocate memory for string list buffer.");
+		return NULL;
+	}
+
+	if (!emit_to_buffer(&buf, &size, "["))
+		goto_bad;
+
+	dm_list_iterate_items(sl, list) {
+		if (!first) {
+			if (!emit_to_buffer(&buf, &size, ", "))
+				goto_bad;
+		} else
+			first = 0;
+
+		if (!emit_to_buffer(&buf, &size, "\"%s\"", sl->str))
+			goto_bad;
+	}
+
+	if (!emit_to_buffer(&buf, &size, "]"))
+		goto_bad;
+
+	return buffer;
+
+bad:
+	dm_free(buffer);
+	return_NULL;
+}
 
 static int _out_tags(struct formatter *f, struct dm_list *tagsl)
 {
 	char *tag_buffer;
 
 	if (!dm_list_empty(tagsl)) {
-		if (!(tag_buffer = alloc_printed_tags(tagsl)))
+		if (!(tag_buffer = _alloc_printed_str_list(tagsl)))
 			return_0;
 		if (!out_text(f, "tags = %s", tag_buffer)) {
 			dm_free(tag_buffer);
