@@ -199,10 +199,10 @@ retry_fcntl:
 
 fail_close_unlink:
 	if (unlink(lockfile))
-		stack;
+		log_sys_debug("unlink", lockfile);
 fail_close:
 	if (close(fd))
-		stack;
+		log_sys_debug("close", lockfile);
 
 	return 0;
 }
