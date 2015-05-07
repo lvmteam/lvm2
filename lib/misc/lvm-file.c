@@ -21,7 +21,6 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <sys/time.h>
 
 /*
  * Creates a temporary filename, and opens a descriptor to the
