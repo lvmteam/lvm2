@@ -1,5 +1,6 @@
 Version 2.02.120 -
 ===============================
+  Properly validate PV size for pvcreate --restorefile.
   Fix check if pvcreate wiped device (2.02.117).
   Fix storing of vgid when caching metadata (2.02.118).
   Fix recursive lvm-config man page. (2.02.119)

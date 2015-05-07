@@ -1603,9 +1603,9 @@ static int _text_pv_initialise(const struct format_type *fmt,
 	if (rp->extent_count)
 		pv->pe_count = rp->extent_count;
 
-	if ((pv->pe_start + pv->pe_count * pv->pe_size - 1) > (pv->size << SECTOR_SHIFT)) {
+	if ((pv->pe_start + pv->pe_count * (uint64_t)pv->pe_size - 1) > pv->size) {
 		log_error("Physical extents end beyond end of device %s.",
-			   pv_dev_name(pv));
+			  pv_dev_name(pv));
 		return 0;
 	}
 
@@ -2172,7 +2172,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		 * LABEL_SCAN_SIZE.
 		 */
 		pe_end = pv->pe_count ? (pv->pe_start +
-					 pv->pe_count * pv->pe_size - 1) << SECTOR_SHIFT
+					 pv->pe_count * (uint64_t)pv->pe_size - 1) << SECTOR_SHIFT
 				      : 0;
 
 		if (pe_start || pe_start_locked) {
