@@ -1504,7 +1504,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 		goto out;
 	}
 
-	if (wiped)
+	if (*wiped)
 		filter_refresh_needed = scan_needed = 1;
 
 	if (sigint_caught())
