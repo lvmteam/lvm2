@@ -1,5 +1,6 @@
 Version 2.02.120 -
 ===============================
+  Fix storing of vgid when caching metadata (2.02.118).
   Fix recursive lvm-config man page. (2.02.119)
   Refactor polldaemon interfaces to poll every operation by VG/LV couple
   Skip wait after testing in _wait_for_single_lv when polling finished

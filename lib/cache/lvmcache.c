@@ -2233,7 +2233,8 @@ int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary)
 			vgsummary->vgname = vginfo->vgname;
 			vgsummary->creation_host = vginfo->creation_host;
 			vgsummary->vgstatus = vginfo->status;
-			memcpy((char *)&vgsummary->vgid, vginfo->vgid, sizeof(vginfo->vgid));
+			/* vginfo->vgid has 1 extra byte then vgsummary->vgid */
+			memcpy(&vgsummary->vgid, vginfo->vgid, sizeof(vgsummary->vgid));
 
 			return 1;
 		}
