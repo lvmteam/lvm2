@@ -180,7 +180,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	}
 
 	/* Is VG being imported? */
-	if (vg && !vg_is_exported(vg) && *vg->lvm1_system_id &&
+	if (vg && !vg_is_exported(vg) && vg->lvm1_system_id && *vg->lvm1_system_id &&
 	    !strncmp(vg->lvm1_system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
 		if (!generate_lvm1_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
 			return_0;
@@ -192,7 +192,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 			return_0;
 
 	/* Update internal system_id if we changed it */
-	if (vg &&
+	if (vg && vg->lvm1_system_id &&
 	    (!*vg->lvm1_system_id ||
 	     strncmp(vg->lvm1_system_id, (char *)pvd->system_id, sizeof(pvd->system_id))))
 		    strncpy(vg->lvm1_system_id, (char *)pvd->system_id, NAME_LEN);
