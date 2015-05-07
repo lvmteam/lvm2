@@ -1270,7 +1270,7 @@ static int _do_check_value_is_reserved(unsigned type, const void *reserved_value
 			if ((*(uint64_t *)value1 == *(uint64_t *) reserved_value) ||
 			    (value2 && (*(uint64_t *)value2 == *(uint64_t *) reserved_value)))
 				return 1;
-				break;
+			break;
 		case DM_REPORT_FIELD_TYPE_STRING:
 			if ((!strcmp((const char *)value1, (const char *) reserved_value)) ||
 			    (value2 && (!strcmp((const char *)value2, (const char *) reserved_value))))
