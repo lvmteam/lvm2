@@ -282,8 +282,15 @@ static int _cache_add_target_line(struct dev_manager *dm,
 				 struct dm_tree_node *node, uint64_t len,
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
-	struct lv_segment *cache_pool_seg = first_seg(seg->pool_lv);
+	struct lv_segment *cache_pool_seg;
 	char *metadata_uuid, *data_uuid, *origin_uuid;
+
+	if (!seg->pool_lv || !seg_is_cache(seg)) {
+		log_error(INTERNAL_ERROR "Passed segment is not cache.");
+		return 0;
+	}
+
+	cache_pool_seg = first_seg(seg->pool_lv);
 
 	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
 		return_0;
