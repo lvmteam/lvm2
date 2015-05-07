@@ -1904,7 +1904,7 @@ static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 	}
 
 	if (!_create_mimage_lvs(ah, mirrors, stripes, stripe_size, lv, img_lvs, log))
-		return 0;
+		return_0;
 
 	if (!lv_add_mirror_lvs(lv, img_lvs, mirrors,
 			       MIRROR_IMAGE | (lv->status & LOCKED),
