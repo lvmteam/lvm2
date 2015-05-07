@@ -774,9 +774,6 @@ int get_default_region_size(struct cmd_context *cmd)
 {
 	int region_size = _get_default_region_size(cmd);
 
-	if (region_size > INT32_MAX)
-		region_size = INT32_MAX;
-
 	if (region_size & (region_size - 1)) {
 		region_size = _round_down_pow2(region_size);
 		log_verbose("Reducing mirror region size to %u kiB (power of 2).",
