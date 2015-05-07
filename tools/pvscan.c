@@ -262,7 +262,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 				ret = ECMD_FAILED;
 				continue;
 			}
-			devno = MKDEV((dev_t)major, minor);
+			devno = MKDEV((dev_t)major, (dev_t)minor);
 			if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
 				if (!(_clear_dev_from_lvmetad_cache(devno, major, minor, handler))) {
 					stack;
@@ -295,7 +295,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		if (major < 0 || minor < 0)
 			continue;
 
-		devno = MKDEV((dev_t)major, minor);
+		devno = MKDEV((dev_t)major, (dev_t)minor);
 
 		if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
 			if (!(_clear_dev_from_lvmetad_cache(devno, major, minor, handler))) {
