@@ -541,24 +541,20 @@ struct FileSource : Source {
 struct KMsg : Source {
     bool can_clear;
 
-    KMsg() : can_clear( true ) {}
+    KMsg() : can_clear( strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0") ) {
+#ifdef __unix
+        if ( (fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0 ) {
+            if (errno != ENOENT) /* Older kernels (<3.5) do not support /dev/kmsg */
+                perror("opening /dev/kmsg");
+            if ( klogctl( BRICK_SYSLOG_ACTION_CLEAR, 0, 0 ) < 0 )
+                can_clear = false;
+        } else if (lseek(fd, 0L, SEEK_END) == (off_t) -1)
+            perror("lseek /dev/kmsg");
+#endif
+    }
 
     bool dev_kmsg() {
         return fd >= 0;
-    }
-
-    void reset() {
-#ifdef __unix
-        if ( dev_kmsg() ) {
-            if ( (fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0 ) {
-                if (errno != ENOENT) /* Older kernels (<3.5) do not support /dev/kmsg */
-                    perror("opening /dev/kmsg");
-            } else if (lseek(fd, 0L, SEEK_END) == (off_t) -1)
-                perror("lseek /dev/kmsg");
-        } else
-            if ( klogctl( BRICK_SYSLOG_ACTION_CLEAR, 0, 0 ) < 0 )
-                can_clear = false;
-#endif
     }
 
     void sync( Sink *s ) {
@@ -569,10 +565,6 @@ struct KMsg : Source {
         if ( dev_kmsg() ) {
             while ( (sz = ::read(fd, buf, sizeof(buf) - 1)) > 0 )
                 s->push( std::string( buf, sz ) );
-            if ( sz < 0 ) {
-                fd = -1;
-                sync( s );
-            }
         } else if ( can_clear ) {
             while ( (sz = klogctl( BRICK_SYSLOG_ACTION_READ_CLEAR, buf,
                                    sizeof(buf) - 1 )) > 0 )
