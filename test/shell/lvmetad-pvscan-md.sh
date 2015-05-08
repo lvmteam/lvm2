@@ -12,6 +12,7 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
 
 test -f /proc/mdstat && grep -q raid0 /proc/mdstat || \
 	modprobe raid0 || skip

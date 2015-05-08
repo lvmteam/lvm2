@@ -100,6 +100,13 @@ else
 	aux prepare_clvmd
 fi
 
+echo "LVM_TEST_LVMPOLLD=$LVM_TEST_LVMPOLLD"
+test -n "$LVM_TEST_LVMPOLLD" && {
+	export LVM_LVMPOLLD_SOCKET="$TESTDIR/lvmpolld.socket"
+	export LVM_LVMPOLLD_PIDFILE="$TESTDIR/lvmpolld.pid"
+	aux prepare_lvmpolld
+}
+
 echo "<======== Processing test: \"$TESTNAME\" ========>"
 
 set -vx

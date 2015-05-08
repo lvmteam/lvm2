@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 # FIXME RESYNC doesn't work in cluster with exclusive activation
 # seriously broken!
 test -e LOCAL_CLVMD && skip

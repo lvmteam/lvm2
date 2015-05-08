@@ -56,6 +56,11 @@ LVMETAD_NDEV_FLAVOUR = ,ndev-lvmetad
 LVMETAD_UDEV_FLAVOUR = ,udev-lvmetad
 endif
 
+ifeq ("@BUILD_LVMPOLLD@", "yes")
+LVMPOLLD_RUN_BASE = $(RUN_BASE)
+LVMPOLLD_NDEV_FLAVOUR = ,ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpolld
+LVMPOLLD_UDEV_FLAVOUR = ,udev-lvmpolld,udev-cluster-lvmpolld,udev-lvmetad-lvmpolld
+endif
 
 # Shell quote;
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
@@ -73,6 +78,7 @@ help:
 	@echo "  check_local		Run tests without clvmd and lvmetad."
 	@echo "  check_cluster		Run tests with cluster daemon."
 	@echo "  check_lvmetad		Run tests with lvmetad daemon."
+	@echo "  check_lvmpolld         Run tests with lvmpolld daemon."
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
 	@echo -e "\nSupported variables:"
@@ -83,6 +89,7 @@ help:
 	@echo "  LVM_TEST_LOCKING	Normal (1), Cluster (3)."
 	@echo "  LVM_TEST_LVMETAD	Start lvmetad (1)."
 	@echo "  LVM_TEST_LVMETAD_DEBUG_OPTS  Allows to override debug opts [-l all]."
+	@echo "  LVM_TEST_LVMPOLLD	Start lvmpolld"
 	@echo "  LVM_TEST_NODEBUG	Do not debug lvm commands."
 	@echo "  LVM_TEST_PARALLEL	May skip agresive wipe of LVMTEST resources."
 	@echo "  LVM_TEST_RESULTS	Where to create result files [results]."
@@ -109,12 +116,12 @@ help:
 check: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours ndev-vanilla,ndev-cluster$(LVMETAD_NDEV_FLAVOUR) --only $(T) --skip $(S)
+		--flavours ndev-vanilla,ndev-cluster$(LVMETAD_NDEV_FLAVOUR)$(LVMPOLLD_NDEV_FLAVOUR) --only $(T) --skip $(S)
 
 check_system: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours udev-vanilla,udev-cluster$(LVMETAD_UDEV_FLAVOUR) --only $(T) --skip $(S)
+		--flavours udev-vanilla,udev-cluster$(LVMETAD_UDEV_FLAVOUR)$(LVMPOLLD_UDEV_FLAVOUR) --only $(T) --skip $(S)
 
 check_cluster: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
@@ -133,11 +140,21 @@ check_lvmetad: .tests-stamp
 		--flavours ndev-lvmetad --only $(T) --skip $(S)
 endif
 
+ifeq ("@BUILD_LVMPOLLD@", "yes")
+check_lvmpolld: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours udev-lvmpolld,udev-cluster-lvmpolld,udev-lvmetad-lvmpolld --only $(T) --skip $(S)
+endif
+
 DATADIR = $(datadir)/lvm2-testsuite
 EXECDIR = $(libexecdir)/lvm2-testsuite
 
 LIB_FLAVOURS = lib/flavour-ndev-vanilla lib/flavour-ndev-cluster lib/flavour-ndev-lvmetad \
-               lib/flavour-udev-vanilla lib/flavour-udev-cluster lib/flavour-udev-lvmetad
+               lib/flavour-udev-vanilla lib/flavour-udev-cluster lib/flavour-udev-lvmetad \
+	       lib/flavour-udev-lvmpolld lib/flavour-ndev-lvmpolld lib/flavour-ndev-cluster-lvmpolld \
+	       lib/flavour-ndev-lvmetad-lvmpolld lib/flavour-udev-lvmpolld lib/flavour-udev-cluster-lvmpolld \
+	       lib/flavour-udev-lvmetad-lvmpolld
 
 LIB_LOCAL = lib/paths lib/runner
 LIB_EXEC  = lib/not lib/invalid lib/fail lib/should
@@ -190,6 +207,7 @@ lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
 	echo 'export RAID=@RAID@' >> $@-t
 	echo 'export CACHE=@CACHE@' >> $@-t
 	echo 'export LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
+	echo 'export LVMPOLLD_PIDFILE="@LVMPOLLD_PIDFILE@"' >> $@-t
 	echo 'export DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
 	echo 'export CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
 	echo 'export LVM_TEST_THIN_CHECK_CMD=$${LVM_TEST_THIN_CHECK_CMD-@THIN_CHECK_CMD@}' >> $@-t
@@ -240,6 +258,7 @@ LIB = $(LIB_SHARED) $(LIB_LOCAL) $(LIB_EXEC) $(LIB_FLAVOURS)
 	ln -fs $(abs_top_builddir)/daemons/clvmd/clvmd lib/clvmd
 	ln -fs $(abs_top_builddir)/daemons/dmeventd/dmeventd lib/dmeventd
 	ln -fs $(abs_top_builddir)/daemons/lvmetad/lvmetad lib/lvmetad
+	ln -fs $(abs_top_builddir)/daemons/lvmpolld/lvmpolld lib/lvmpolld
 	ln -fs $(abs_top_srcdir)/scripts/vgimportclone.sh lib/vgimportclone
 	ln -fs $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
 	ln -fs $(abs_top_srcdir)/conf/thin-performance.profile lib/thin-performance.profile
@@ -256,7 +275,8 @@ CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone \
 	lib/thin-performance.profile lib/harness \
 	lib/paths-installed lib/paths-installed-t \
-	lib/paths-common lib/paths-common-t
+	lib/paths-common lib/paths-common-t \
+	lib/lvmpolld
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

@@ -525,6 +525,12 @@ Path for the lvmetad pid file.
 .TP
 .B LVM_LVMETAD_SOCKET
 Path for the lvmetad socket file.
+.TP
+.B LVM_LVMPOLLD_PIDFILE
+Path for the lvmpolld pid file.
+.TP
+.B LVM_LVMPOLLD_SOCKET
+Path for the lvmpolld socket file.
 .SH FILES
 .I #DEFAULT_SYS_DIR#/lvm.conf
 .br

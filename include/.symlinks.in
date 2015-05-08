@@ -1,6 +1,8 @@
 @top_srcdir@/daemons/clvmd/clvm.h
 @top_srcdir@/daemons/dmeventd/libdevmapper-event.h
 @top_srcdir@/daemons/lvmetad/lvmetad-client.h
+@top_srcdir@/daemons/lvmpolld/lvmpolld-protocol.h
+@top_srcdir@/daemons/lvmpolld/polling_ops.h
 @top_srcdir@/liblvm/lvm2app.h
 @top_srcdir@/lib/activate/activate.h
 @top_srcdir@/lib/activate/targets.h
@@ -29,6 +31,8 @@
 @top_srcdir@/lib/locking/locking.h
 @top_srcdir@/lib/log/log.h
 @top_srcdir@/lib/log/lvm-logging.h
+@top_srcdir@/lib/lvmpolld/lvmpolld-client.h
+@top_srcdir@/lib/lvmpolld/polldaemon.h
 @top_srcdir@/lib/metadata/lv.h
 @top_srcdir@/lib/metadata/lv_alloc.h
 @top_srcdir@/lib/metadata/metadata.h

@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux have_raid 1 3 2 || skip
 
 aux prepare_vg 4

@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 3
 
 vgcreate --metadatasize 128k $vg1 "$dev1" "$dev2" "$dev3"

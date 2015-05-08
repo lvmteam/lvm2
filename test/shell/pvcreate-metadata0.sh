@@ -17,6 +17,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 2 128
 
 #lv_snap=$lv2

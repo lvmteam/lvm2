@@ -10,6 +10,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 2
 pvcreate "$dev1" "$dev2"
 pvremove "$dev1" "$dev2" 2>&1 | tee pvremove.txt

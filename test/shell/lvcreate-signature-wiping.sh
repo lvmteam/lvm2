@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 init_lv_() {
 	mkswap "$DM_DEV_DIR/$vg/$lv1"
 }

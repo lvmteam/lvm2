@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 check_changed_uuid_() {
 	test "$1" != "$(get pv_field "$2" uuid)" || die "UUID has not changed!"
 }

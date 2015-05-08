@@ -13,6 +13,8 @@ test_description='Exercise some vgchange diagnostics'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_pvs 4
 
 pvcreate --metadatacopies 0 "$dev1"

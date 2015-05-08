@@ -18,6 +18,8 @@ is_dir_mounted_()
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 #
 # Main
 #

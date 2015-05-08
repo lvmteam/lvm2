@@ -13,6 +13,8 @@ test_description='Test pvcreate bootloader area support'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 1
 aux lvmconf 'global/suffix=0' 'global/units="b"'
 

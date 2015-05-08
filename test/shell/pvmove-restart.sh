@@ -32,12 +32,16 @@ lvextend -l+10 $vg/$lv1 "$dev2"
 lvextend -l+5 $vg/$lv1 "$dev1"
 lvextend -l+10 $vg/$lv1 "$dev2"
 
-pvmove -i0 -n $vg/$lv1 "$dev1" "$dev3" $mode &
+pvmove -i10 -n $vg/$lv1 "$dev1" "$dev3" $mode &
 PVMOVE=$!
 # Let's wait a bit till pvmove starts and kill it
 aux wait_pvmove_lv_ready "$vg-pvmove0"
-
 kill -9 $PVMOVE
+
+if test -e LOCAL_LVMPOLLD; then
+	aux prepare_lvmpolld
+fi
+
 wait
 
 # Simulate reboot - forcibly remove related devices

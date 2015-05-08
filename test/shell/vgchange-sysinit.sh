@@ -12,6 +12,7 @@
 . lib/inittest
 
 test -e LOCAL_CLVMD && skip
+test -e LOCAL_LVMPOLLD && skip
 
 which mkfs.ext3 || skip
 

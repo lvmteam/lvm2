@@ -18,6 +18,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 2
 
 lvcreate -l100%FREE -n span $vg

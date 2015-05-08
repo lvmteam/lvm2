@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux have_thin 1 10 0 || skip
 
 aux prepare_pvs 3 1256

@@ -12,6 +12,8 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_pvs 2
 
 vgcreate $vg1 "$dev1" "$dev2"

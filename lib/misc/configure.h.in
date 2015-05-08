@@ -500,6 +500,12 @@
 /* Define to 1 to include code that uses lvmetad. */
 #undef LVMETAD_SUPPORT
 
+/* Path to lvmpolld pidfile. */
+#undef LVMPOLLD_PIDFILE
+
+/* Define to 1 to include code that uses lvmpolld. */
+#undef LVMPOLLD_SUPPORT
+
 /* Path to lvm binary. */
 #undef LVM_PATH
 

@@ -12,6 +12,8 @@
 # Test autoextension of thin metadata volume
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 meta_percent_() {
 	get lv_field $vg/pool metadata_percent | cut -d. -f1
 }

@@ -12,6 +12,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 check_lv_field_modules_()
 {
 	mod=$1

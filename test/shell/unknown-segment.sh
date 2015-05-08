@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 4
 
 lvcreate -an -Zn -l 1 -n $lv1 $vg

@@ -11,5 +11,7 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 2
 vgreduce $vg "$dev1" 2>&1 | not grep -i 'parse error'

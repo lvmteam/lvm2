@@ -15,6 +15,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 #
 # Main
 #

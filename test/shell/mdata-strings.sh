@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 # For udev impossible to create
 test "$LVM_TEST_DEVDIR" = "/dev" && skip
 

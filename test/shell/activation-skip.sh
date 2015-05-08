@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 # Test skip activation flag  -k|--setactivationskip
 
 aux prepare_vg

@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 which mkfs.ext2 || skip
 
 aux lvmconf "activation/snapshot_autoextend_percent = 0" \

@@ -15,6 +15,7 @@
 # so skip duplicate CLMVD and lvmetad test
 test -e LOCAL_CLVMD && skip
 test -e LOCAL_LVMETAD && skip
+test -e LOCAL_LVMPOLLD && skip
 
 CHARACTER_WHITELIST="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#+-.:=@_"
 FAIL_MIXED_STR="contains mixed mangled and unmangled characters"

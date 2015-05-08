@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 check_() {
 	# vgscan needs --cache option for direct scan if lvmetad is used
 	test -e LOCAL_LVMETAD && cache="--cache"

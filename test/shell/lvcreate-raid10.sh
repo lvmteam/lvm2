@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 lv_devices() {
 	test $3 -eq $(get lv_devices $1/$2 | wc -w)
 }

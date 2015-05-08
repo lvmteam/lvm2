@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 lvm version
 
 test -n "$abs_top_builddir" || skip

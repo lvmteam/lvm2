@@ -18,6 +18,7 @@
 #include "tools.h"
 #include "polldaemon.h"
 #include "lvm2cmdline.h"
+#include "lvmpolld-client.h"
 
 #define WAIT_AT_LEAST_NANOSECS 100000
 
@@ -182,7 +183,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		lv = parms->poll_fns->get_copy_lv(cmd, vg, id->lv_name, id->uuid, parms->lv_type);
 
 		if (!lv && parms->lv_type == PVMOVE) {
-			log_print_unless_silent("%s: no pvmove in progress - already finished or aborted.",
+			log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
 						id->display_name);
 			unlock_and_release_vg(cmd, vg, vg->name);
 			return 1;
@@ -365,6 +366,174 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 	}
 }
 
+#ifdef LVMPOLLD_SUPPORT
+typedef struct {
+	struct daemon_parms *parms;
+	struct dm_list idls;
+} lvmpolld_parms_t;
+
+static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id,
+			   struct daemon_parms *parms)
+{
+	struct volume_group *vg;
+	struct logical_volume *lv;
+
+	vg = parms->poll_fns->get_copy_vg(cmd, id->vg_name, NULL, 0);
+	if (vg_read_error(vg)) {
+		release_vg(vg);
+		log_error("Can't reread VG for %s", id->display_name);
+		return 0;
+	}
+
+	lv = parms->poll_fns->get_copy_lv(cmd, vg, id->lv_name, id->uuid, parms->lv_type);
+	if (!lv && parms->lv_type == PVMOVE) {
+		log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
+					id->display_name);
+		unlock_and_release_vg(cmd, vg, vg->name);
+		return 1;
+	}
+
+	if (!lv) {
+		log_warn("Can't find LV in %s for %s. Already finished or removed.",
+			  vg->name, id->display_name);
+		unlock_and_release_vg(cmd, vg, vg->name);
+		return 1;
+	}
+
+	if (!lv_is_active_locally(lv)) {
+		log_print_unless_silent("%s: Interrupted: No longer active.", id->display_name);
+		unlock_and_release_vg(cmd, vg, vg->name);
+		return 1;
+	}
+
+	if (parms->poll_fns->poll_progress(cmd, lv, id->display_name, parms) == PROGRESS_CHECK_FAILED) {
+		unlock_and_release_vg(cmd, vg, vg->name);
+		return_0;
+	}
+
+	unlock_and_release_vg(cmd, vg, vg->name);
+
+	return 1;
+}
+
+static int _lvmpolld_init_poll_vg(struct cmd_context *cmd, const char *vgname,
+			          struct volume_group *vg, struct processing_handle *handle)
+{
+	int r;
+	struct lv_list *lvl;
+	struct logical_volume *lv;
+	struct poll_id_list *idl;
+	struct poll_operation_id id;
+	lvmpolld_parms_t *lpdp = (lvmpolld_parms_t *) handle->custom_handle;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
+		if (!(lv->status & lpdp->parms->lv_type))
+			continue;
+
+		id.display_name = lpdp->parms->poll_fns->get_copy_name_from_lv(lv);
+		if (!id.display_name && !lpdp->parms->aborting)
+			continue;
+
+		if (!lv->lvid.s) {
+			log_print_unless_silent("Missing LV uuid within: %s/%s", id.vg_name, id.lv_name);
+			continue;
+		}
+
+		id.vg_name = lv->vg->name;
+		id.lv_name = lv->name;
+		id.uuid = lv->lvid.s;
+
+		r = lvmpolld_poll_init(cmd, &id, lpdp->parms);
+
+		if (r && !lpdp->parms->background) {
+			if (!(idl = poll_id_list_create(cmd->mem, &id)))
+				return ECMD_FAILED;
+
+			dm_list_add(&lpdp->idls, &idl->list);
+		}
+	}
+
+	return ECMD_PROCESSED;
+}
+
+static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
+				       struct daemon_parms *parms,
+				       struct processing_handle *handle)
+{
+	int r;
+	struct dm_list *first;
+	struct poll_id_list *idl, *tlv;
+	unsigned finished;
+	lvmpolld_parms_t lpdp = {
+		.parms = parms
+	};
+
+	dm_list_init(&lpdp.idls);
+
+	handle->custom_handle = &lpdp;
+
+	process_each_vg(cmd, 0, NULL, 0, handle, _lvmpolld_init_poll_vg);
+
+	first = dm_list_first(&lpdp.idls);
+
+	while (!dm_list_empty(&lpdp.idls)) {
+		dm_list_iterate_items_safe(idl, tlv, &lpdp.idls) {
+			r = lvmpolld_request_info(idl->id, lpdp.parms,
+						  &finished);
+			if (!r || finished)
+				dm_list_del(&idl->list);
+			else if (!parms->aborting)
+				report_progress(cmd, idl->id, lpdp.parms);
+		}
+
+		_nanosleep(lpdp.parms->interval, 0);
+	}
+
+	if (first)
+		dm_pool_free(cmd->mem, dm_list_item(first, struct poll_id_list));
+}
+
+static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
+			   struct daemon_parms *parms)
+{
+	int r;
+	struct processing_handle *handle = NULL;
+	unsigned finished = 0;
+
+	if (parms->aborting)
+		parms->interval = 0;
+
+	if (id) {
+		r = lvmpolld_poll_init(cmd, id, parms);
+		if (r && !parms->background) {
+			while (1) {
+				if (!(r = lvmpolld_request_info(id, parms, &finished)) ||
+				    finished ||
+				    (!parms->aborting && !(r = report_progress(cmd, id, parms))))
+					break;
+
+				_nanosleep(parms->interval, 0);
+			}
+		}
+
+		return r ? ECMD_PROCESSED : ECMD_FAILED;
+	} else {
+		/* process all in-flight operations */
+		if (!(handle = init_processing_handle(cmd))) {
+			log_error("Failed to initialize processing handle.");
+			return ECMD_FAILED;
+		} else {
+			_lvmpolld_poll_for_all_vgs(cmd, parms, handle);
+			destroy_processing_handle(cmd, handle);
+			return ECMD_PROCESSED;
+		}
+	}
+}
+#else
+#	define _lvmpoll_daemon(cmd, id, parms) (ECMD_FAILED)
+#endif /* LVMPOLLD_SUPPORT */
+
 /*
  * Only allow *one* return from poll_daemon() (the parent).
  * If there is a child it must exit (ignoring the memory leak messages).
@@ -463,7 +632,11 @@ int poll_daemon(struct cmd_context *cmd, unsigned background,
 	if (!_daemon_parms_init(cmd, &parms, background, poll_fns, progress_title, lv_type))
 		return_EINVALID_CMD_LINE;
 
-	/* classical polling allows only PMVOVE or 0 values */
-	parms.lv_type &= PVMOVE;
-	return _poll_daemon(cmd, id, &parms);
+	if (lvmpolld_use())
+		return _lvmpoll_daemon(cmd, id, &parms);
+	else {
+		/* classical polling allows only PMVOVE or 0 values */
+		parms.lv_type &= PVMOVE;
+		return _poll_daemon(cmd, id, &parms);
+	}
 }

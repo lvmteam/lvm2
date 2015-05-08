@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 9
 
 lvcreate -aey --nosync -i2 -l2 --type mirror -m1 --mirrorlog core -n $lv1 $vg 2>&1 | tee log

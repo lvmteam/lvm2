@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 which mkfs.ext3 || skip
 
 lvdev_() {

@@ -14,6 +14,8 @@ PAGESIZE=$(getconf PAGESIZE)
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 4
 
 #COMM 'pvcreate rejects negative setphysicalvolumesize'

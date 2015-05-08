@@ -196,6 +196,11 @@ ifeq ("@BUILD_LVMETAD@", "yes")
 	cache/lvmetad.c
 endif
 
+ifeq ("@BUILD_LVMPOLLD@", "yes")
+  SOURCES +=\
+	lvmpolld/lvmpolld-client.c
+endif
+
 ifeq ("@DMEVENTD@", "yes")
   CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
   LIBS += -ldevmapper-event

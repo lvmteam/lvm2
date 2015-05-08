@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 6
 
 echo Make sure we can ignore / un-ignore mdas on a per-PV basis

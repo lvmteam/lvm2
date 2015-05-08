@@ -1,7 +1,7 @@
 #!/bin/bash
 # We use some bash-isms (getopts?)
 
-# Copyright (C) 2007-2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -41,6 +41,7 @@ NC=nc
 LVM=${LVM_BINARY-lvm}
 DMSETUP=${DMSETUP_BINARY-dmsetup}
 LVMETAD_SOCKET=${LVM_LVMETAD_SOCKET-/var/run/lvm/lvmetad.socket}
+LVMPOLLD_SOCKET=${LVM_LVMPOLLD_SOCKET-/var/run/lvm/lvmpolld.socket}
 
 die() {
     code=$1; shift
@@ -59,6 +60,7 @@ function usage {
 	echo "    -c if running clvmd, gather cluster data as well"
 	echo "    -d <directory> dump into a directory instead of tarball"
 	echo "    -l gather lvmetad state if running"
+	echo "    -p gather lvmpolld state if running"
 	echo "    -m gather LVM metadata from the PVs"
 	echo "    -s gather system info and context"
 	echo "    -u gather udev info and context"
@@ -72,13 +74,14 @@ clustered=0
 metadata=0
 sysreport=0
 udev=0
-while getopts :acd:hlmus opt; do
+while getopts :acd:hlpmus opt; do
 	case $opt in 
 		a)	advanced=1 ;;
 		c)	clustered=1 ;;
 		d)	userdir=$OPTARG ;;
 		h)	usage ;;
 		l)	lvmetad=1 ;;
+		p)	lvmpolld=1 ;;
 		m)	metadata=1 ;;
 		s)      sysreport=1 ;;
 		u)	udev=1 ;;
@@ -236,6 +239,7 @@ if (( $metadata )); then
 	done
 fi
 
+# FIXME: add lvmpolld.service here
 if (( $sysreport )); then
 	myecho "Gathering system info..."
 
@@ -294,6 +298,22 @@ if (( $lvmetad )); then
 	    return 1
 	fi
     } > "$dir/lvmetad.txt"
+fi
+
+if (( $lvmpolld )); then
+    (echo 'request="dump"'; echo '##') | {
+	if type -p $SOCAT >& /dev/null; then
+	    echo "$SOCAT unix-connect:$LVMPOLLD_SOCKET -" >> "$log"
+	    $SOCAT "unix-connect:$LVMPOLLD_SOCKET" - 2>> "$log"
+	elif echo | $NC -U "$LVMPOLLD_SOCKET"; then
+	    echo "$NC -U $LVMPOLLD_SOCKET" >> "$log"
+	    $NC -U "$LVMPOLLD_SOCKET" 2>> "$log"
+	else
+	    myecho "WARNING: Neither socat nor nc -U seems to be available." 1>&2
+	    echo "# DUMP FAILED"
+	    return 1
+	fi
+    } > "$dir/lvmpolld.txt"
 fi
 
 if test -z "$userdir"; then

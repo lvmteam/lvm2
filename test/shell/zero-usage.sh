@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 which md5sum || skip
 
 aux prepare_pvs 1

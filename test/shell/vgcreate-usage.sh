@@ -13,6 +13,8 @@ test_description='Exercise some vgcreate diagnostics'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 3
 pvcreate "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"

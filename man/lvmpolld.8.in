@@ -1,0 +1,86 @@
+.TH LVMETAD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.SH NAME
+lvmpolld \(em LVM poll daemon
+.SH SYNOPSIS
+.B lvmpolld
+.RB [ \-l
+.RI { all | wire | debug }]
+.RB [ \-p
+.IR pidfile_path ]
+.RB [ \-s
+.IR socket_path ]
+.RB [ \-B
+.IR lvm_binary_path ]
+.RB [ \-t
+.IR timeout_value ]
+.RB [ \-f ]
+.RB [ \-h ]
+.RB [ \-V ]
+.RB [ \-? ]
+.SH DESCRIPTION
+lvmpolld is polling daemon for LVM. The daemon receives requests for polling
+of already initialised operations originating in LVM2 command line tool.
+The requests for polling originates in \fBlvconvert\fP, \fBpvmove\fP,
+\fBlvchange\fP or \fBvgchange\fP LVM2 command.
+
+The purpose of lvmpolld is to reduce the number of spawned background processes
+per otherwise unique polling operation. There should be only one. It also eliminates
+the possibility of unsolicited termination of background process by external factors.
+
+lvmpolld is used by LVM only if it is enabled in \fBlvm.conf\fP(5) by specifying the
+\fBglobal/use_lvmpolld\fP setting. If this is not defined in the LVM configuration
+explicitly then default setting is used instead (see the output of
+\fBlvmconfig \-\-type default global/use_lvmpolld\fP command).
+.SH OPTIONS
+
+To run the daemon in a test environment both the pidfile_path and the
+socket_path should be changed from the defaults.
+.TP
+.B \-f
+Don't fork, but run in the foreground.
+.TP
+.BR \-h ", " \-?
+Show help information.
+.TP
+.IR \fB\-l " {" all | wire | debug }
+Select the type of log messages to generate.
+Messages are logged by syslog.
+Additionally, when \-f is given they are also sent to standard error.
+There are two classes of messages: wire and debug. Selecting 'all' supplies both
+and is equivalent to a comma-separated list \-l wire,debug.
+.TP
+.B \-p \fIpidfile_path
+Path to the pidfile. This overrides both the built-in default
+(#DEFAULT_PID_DIR#/lvmpolld.pid) and the environment variable
+\fBLVM_LVMPOLLD_PIDFILE\fP.  This file is used to prevent more
+than one instance of the daemon running simultaneously.
+.TP
+.B \-s \fIsocket_path
+Path to the socket file. This overrides both the built-in default
+(#DEFAULT_RUN_DIR#/lvmpolld.socket) and the environment variable
+\fBLVM_LVMPOLLD_SOCKET\fP.
+.TP
+.B \-t \fItimeout_value
+When runs as native systemd service daemon may shutdown after being
+idle for the given time (in seconds). When the option is omitted or
+the value given is zero the daemon never shutdowns on idle. When
+the daemon doesn't run as native systemd service the timeout is
+ignored and never shutdowns on idle.
+.TP
+.B \-B \fIlvm_binary_path
+Optional path to alternative LVM binary (default: #LVM_PATH#). Use for
+testing purposes only.
+.TP
+.B \-V
+Display the version of lvmpolld daemon.
+.SH ENVIRONMENT VARIABLES
+.TP
+.B LVM_LVMPOLLD_PIDFILE
+Path for the pid file.
+.TP
+.B LVM_LVMPOLLD_SOCKET
+Path for the socket file.
+
+.SH SEE ALSO
+.BR lvm (8),
+.BR lvm.conf (5)

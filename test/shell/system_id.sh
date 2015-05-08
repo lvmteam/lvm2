@@ -13,6 +13,8 @@ test_description='Test system_id'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 1
 
 # with clvm enabled, vgcreate with no -c option creates a clustered vg,

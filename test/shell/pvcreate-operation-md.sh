@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 # skip this test if mdadm or sfdisk (or others) aren't available
 which sfdisk || skip
 

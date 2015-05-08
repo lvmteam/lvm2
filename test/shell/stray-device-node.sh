@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 3
 cp -r "$dev1" "$DM_DEV_DIR/stray"
 

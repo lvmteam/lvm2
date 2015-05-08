@@ -17,6 +17,8 @@ test_description='Test read-ahead functionality'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 5
 
 #COMM "test various read ahead settings (bz450922)"

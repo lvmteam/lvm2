@@ -13,6 +13,7 @@
 
 # lvmetad does not handle pool labels so skip test.
 test ! -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
 
 env printf "" || skip # skip if printf is not available
 

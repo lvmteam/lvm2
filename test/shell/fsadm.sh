@@ -13,6 +13,8 @@ test_description='Exercise fsadm filesystem resize'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 1 100
 
 # set to "skip" to avoid testing given fs and test warning result

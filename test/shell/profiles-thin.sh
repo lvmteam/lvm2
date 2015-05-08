@@ -15,6 +15,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 DEV_SIZE=32
 
 # check we have thinp support compiled in

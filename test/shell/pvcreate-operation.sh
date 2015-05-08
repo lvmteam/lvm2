@@ -10,6 +10,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux lvmconf 'devices/md_component_detection = 1'
 
 aux prepare_devs 4

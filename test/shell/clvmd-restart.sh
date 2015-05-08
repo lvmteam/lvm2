@@ -16,6 +16,7 @@ export LVM_BINARY=lvm
 . lib/inittest
 
 # only clvmd based test, skip otherwise
+test -e LOCAL_LVMPOLLD && skip
 test -e LOCAL_CLVMD || skip
 read LOCAL_CLVMD < LOCAL_CLVMD
 

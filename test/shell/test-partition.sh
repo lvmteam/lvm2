@@ -19,6 +19,8 @@ LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 which sfdisk || skip
 
 aux prepare_pvs 1 30

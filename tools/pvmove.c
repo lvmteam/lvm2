@@ -728,7 +728,7 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 	}
 
 	if (!(lv = find_pvmove_lv(vg, pv_dev(pv), PVMOVE))) {
-		log_print_unless_silent("%s: no pvmove in progress - already finished or aborted.",
+		log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
 					pv_name);
 		ret = 1;
 		*in_progress = 0;

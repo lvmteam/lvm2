@@ -938,6 +938,16 @@ global {
 	# Comments starting with the character # are ignored.
 	# This configuration option does not have a default value defined.
 	# system_id_file = ""
+
+	# Indicates whether to use lvmpolld instead of classical polldaemon (a process
+	# forked off an initiating lvm command) or not. When set to 1 and native systemd
+	# service is installed in the system lvm starts using lvmpolld. lvmpolld gets
+	# auto-activated by systemd when a message lands on the respective lvmpolld socket.
+	# All commands that would require polling of in-progress operation are therefore
+	# spawned in lvmpolld's service cgroup.
+	#
+	# When set to 0 lvm falls back to classical polling.
+	use_lvmpolld = 0
 }
 
 # Configuration section activation.

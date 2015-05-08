@@ -14,6 +14,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_pvs 1
 
 vgcreate -s 1K $vg $(cat DEVICES)

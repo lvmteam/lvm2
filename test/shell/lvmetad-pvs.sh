@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_pvs 1 20000
 pvs $(cat DEVICES) | grep "$dev1"
 

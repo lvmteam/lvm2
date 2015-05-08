@@ -14,6 +14,7 @@
 # Just skip this test if minor is already in use...
 dmsetup info | tee info
 egrep "^Major, minor: *[0-9]+, 123" info && skip
+test -e LOCAL_LVMPOLLD && skip
 
 aux prepare_vg 2
 lvcreate -a n --zero n -l 1 -n foo $vg

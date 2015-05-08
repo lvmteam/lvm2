@@ -9,6 +9,8 @@ test_description='Test vgs with duplicate vg names'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 2
 
 pvcreate "$dev1"

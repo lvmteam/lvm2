@@ -15,6 +15,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 MSG_FAILED_TO_APPLY_CMD_PROFILE="Failed to apply command profile"
 MSG_IGNORING_INVALID_CMD_PROFILE="Ignoring invalid command profile"
 MSG_FAILED_TO_APPLY_MDA_PROFILE="Failed to apply metadata profile"

@@ -12,6 +12,8 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
+
 kill $(< LOCAL_LVMETAD)
 while test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait for the socket close
 test ! -e "$LVM_LVMETAD_PIDFILE"

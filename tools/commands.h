@@ -880,6 +880,22 @@ xx(pvmove,
    abort_ARG, alloc_ARG, atomic_ARG, autobackup_ARG, background_ARG,
    interval_ARG, name_ARG, noudevsync_ARG, test_ARG)
 
+xx(lvpoll,
+   "Continue already initiated poll operation on a logical volume",
+   0,
+   "\t[--abort]\n"
+   "\t[--handlemissingpvs]\n"
+   "\t[--polloperation\n"
+   "\t[-d|--debug]\n "
+   "\t[-h|-?|--help]\n"
+   "\t[-i|--interval seconds]\n"
+   "\t[-t|--test]\n "
+   "\t[-v|--verbose]\n "
+   "\t[--version]\n",
+
+   abort_ARG, handlemissingpvs_ARG, interval_ARG, polloperation_ARG,
+   test_ARG)
+
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
    0,

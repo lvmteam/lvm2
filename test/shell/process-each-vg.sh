@@ -13,6 +13,8 @@ test_description='Exercise toollib process_each_vg'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 6
 
 #

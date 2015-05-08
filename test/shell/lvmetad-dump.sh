@@ -10,7 +10,9 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 . lib/inittest
+
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
 
 aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"

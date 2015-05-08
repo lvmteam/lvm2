@@ -12,6 +12,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 prepare_lvs() {
 	lvremove -f $vg
 	lvcreate -L10M -n $lv1 $vg

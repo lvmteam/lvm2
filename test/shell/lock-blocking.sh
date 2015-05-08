@@ -13,8 +13,10 @@ test_description='test some blocking / non-blocking multi-vg operations'
 
 . lib/inittest
 
-aux prepare_devs 3
+test -e LOCAL_LVMPOLLD && skip
 test -e LOCAL_CLVMD && skip
+
+aux prepare_devs 3
 pvcreate "$dev1" "$dev2"
 vgcreate $vg "$dev1" "$dev2"
 

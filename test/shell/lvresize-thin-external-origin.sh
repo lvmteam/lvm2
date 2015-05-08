@@ -12,6 +12,8 @@
 # Test resize of thin volume with external origin
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux have_thin 1 2 0 || skip
 
 # Pretend we miss the external_origin_extend feature

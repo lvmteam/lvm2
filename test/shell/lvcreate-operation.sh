@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 cleanup_lvs() {
 	lvremove -ff $vg
 	(dm_table | not grep $vg) || \

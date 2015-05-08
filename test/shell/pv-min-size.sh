@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 # use small default size  - 512KB
 aux lvmconf 'devices/pv_min_size = 512'
 

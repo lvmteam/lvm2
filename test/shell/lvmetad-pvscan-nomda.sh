@@ -12,6 +12,8 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
+
 kill $(< LOCAL_LVMETAD)
 rm LOCAL_LVMETAD
 

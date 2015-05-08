@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_pvs 4 12
 
 vgcreate -s 4m $vg1 "$dev1" "$dev2"

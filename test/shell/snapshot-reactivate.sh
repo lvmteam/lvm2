@@ -17,6 +17,8 @@
 #
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 # Snapshot should remain unmodified
 check_s_() {
 	check dev_md5sum $vg s

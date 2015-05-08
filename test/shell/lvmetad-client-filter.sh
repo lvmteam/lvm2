@@ -12,6 +12,8 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_pvs 2
 
 pvs --config 'devices { filter = [ "r%.*%" ] }' 2>&1 | grep rejected

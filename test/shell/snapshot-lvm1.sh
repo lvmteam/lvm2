@@ -14,6 +14,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 2
 
 vgcreate --metadatatype 1 $vg $(cat DEVICES)

@@ -9,6 +9,8 @@ test_description='Test the vg name for an lv from env var'
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 2
 
 pvcreate "$dev1"

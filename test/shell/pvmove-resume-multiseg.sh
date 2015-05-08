@@ -106,13 +106,25 @@ lvchange_all() {
 	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv1 $vg/$lv2
 
 	# we don't want to spawn more than $1 background pollings
-	test $(aux count_processes_with_tag) -eq $1
+	if test -e LOCAL_LVMPOLLD; then
+		aux lvmpolld_dump | tee lvmpolld_dump.txt
+		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0"
+		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove1"
+	else
+		test $(aux count_processes_with_tag) -eq $1
+	fi
 }
 
 vgchange_single() {
 	LVM_TEST_TAG="kill_me_$PREFIX" vgchange -aey $vg
 
-	test $(aux count_processes_with_tag) -eq $1
+	if test -e LOCAL_LVMPOLLD; then
+		aux lvmpolld_dump | tee lvmpolld_dump.txt
+		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0"
+		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove1"
+	else
+		test $(aux count_processes_with_tag) -eq $1
+	fi
 }
 
 pvmove_fg() {
@@ -120,7 +132,13 @@ pvmove_fg() {
 	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
 	# ...also vgchange --poll n must not spawn any bg processes...
-	test $(aux count_processes_with_tag) -eq 0
+	if test -e LOCAL_LVMPOLLD; then
+		aux lvmpolld_dump | tee lvmpolld_dump.txt
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove1"
+	else
+		test $(aux count_processes_with_tag) -eq 0
+	fi
 
 	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
@@ -139,7 +157,13 @@ pvmove_bg() {
 	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
 	# ...also vgchange --poll n must not spawn any bg processes...
-	test $(aux count_processes_with_tag) -eq 0
+	if test -e LOCAL_LVMPOLLD; then
+		aux lvmpolld_dump | tee lvmpolld_dump.txt
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove1"
+	else
+		test $(aux count_processes_with_tag) -eq 0
+	fi
 
 	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
@@ -153,7 +177,13 @@ pvmove_fg_single() {
 	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
 	# ...also vgchange --poll n must not spawn any bg processes...
-	test $(aux count_processes_with_tag) -eq 0
+	if test -e LOCAL_LVMPOLLD; then
+		aux lvmpolld_dump | tee lvmpolld_dump.txt
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove1"
+	else
+		test $(aux count_processes_with_tag) -eq 0
+	fi
 
 	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"
@@ -173,7 +203,13 @@ pvmove_bg_single() {
 	LVM_TEST_TAG="kill_me_$PREFIX" vgchange --config 'activation{polling_interval=10}' -aey --poll n $vg
 
 	# ...also vgchange --poll n must not spawn any bg processes...
-	test $(aux count_processes_with_tag) -eq 0
+	if test -e LOCAL_LVMPOLLD; then
+		aux lvmpolld_dump | tee lvmpolld_dump.txt
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
+		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove1"
+	else
+		test $(aux count_processes_with_tag) -eq 0
+	fi
 
 	# ...thus finish polling
 	get lv_field $vg name -a | grep "^\[pvmove0\]"

@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_dmeventd
 aux mirror_recovery_works || skip
 aux prepare_vg 5

@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 2 80
 
 lvcreate -L 10M -n lv -i2 $vg

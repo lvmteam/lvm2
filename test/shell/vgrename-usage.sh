@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 4
 pvcreate "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3" "$dev4"

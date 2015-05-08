@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 3
 
 lvcreate -aey --type mirror -m 1 -l 1 --nosync -n mirror $vg

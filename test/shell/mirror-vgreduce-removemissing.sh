@@ -17,6 +17,8 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 lv_is_on_ ()
 {
 	local lv=$vg/$1

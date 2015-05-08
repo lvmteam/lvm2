@@ -12,6 +12,8 @@
 . lib/inittest
 
 test -e LOCAL_LVMETAD || skip
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_devs 2
 pvcreate --metadatatype 1 "$dev1"
 should vgscan --cache

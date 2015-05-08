@@ -13,6 +13,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 MKFS=mkfs.ext2
 which $MKFS || skip
 

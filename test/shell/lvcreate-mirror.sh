@@ -10,6 +10,9 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 . lib/inittest
+
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 5 80
 aux lvmconf 'allocation/maximise_cling = 0' \
 	    'allocation/mirror_logs_require_separate_pvs = 1'

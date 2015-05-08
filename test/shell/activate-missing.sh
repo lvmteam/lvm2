@@ -18,6 +18,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux prepare_vg 4
 
 lvcreate -l1 -n linear1 $vg "$dev1"

@@ -16,6 +16,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux have_cache 1 3 0 || skip
 aux prepare_vg 5 8000
 

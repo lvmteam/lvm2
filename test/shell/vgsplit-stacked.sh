@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 aux extend_filter_LVMTEST
 aux prepare_pvs 3
 

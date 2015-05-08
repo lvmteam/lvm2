@@ -1,0 +1,17 @@
+[Unit]
+Description=LVM2 poll daemon
+Documentation=man:lvmpolld(8)
+Requires=lvm2-lvmpolld.socket
+After=lvm2-lvmpolld.socket
+DefaultDependencies=no
+Conflicts=shutdown.target
+
+[Service]
+Type=simple
+NonBlocking=true
+ExecStart=@sbindir@/lvmpolld -t 60 -f
+Environment=SD_ACTIVATION=1
+PIDFile=@LVMPOLLD_PIDFILE@
+
+[Install]
+WantedBy=sysinit.target

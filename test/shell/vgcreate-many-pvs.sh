@@ -11,6 +11,8 @@
 
 . lib/inittest
 
+test -e LOCAL_LVMPOLLD && skip
+
 #
 # Test to exercise larger number of PVs in a VG
 # Related to https://bugzilla.redhat.com/show_bug.cgi?id=736027

@@ -1,5 +1,7 @@
 Version 2.02.120 -
 ===============================
+  Add lvpoll for cmdline communication with lvmpolld.
+  Add lvmpolld acting as a free-standing version of polldaemon.
   Properly validate PV size for pvcreate --restorefile.
   Fix check if pvcreate wiped device (2.02.117).
   Fix storing of vgid when caching metadata (2.02.118).
