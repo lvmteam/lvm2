@@ -1880,7 +1880,6 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 			info->label->info = info;
 		}
 		label = info->label;
-		label->dev = dev;
 	}
 
 	info->fmt = labeller->fmt;

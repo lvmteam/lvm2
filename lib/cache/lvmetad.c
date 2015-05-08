@@ -372,6 +372,7 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 							   vgname, (const char *)&vgid, 0))) {
 				dev_alternate_cache = dev_alternate;
 				info = info_alternate;
+				lvmcache_get_label(info)->dev = dev_alternate;
 			}
 		} else {
 			log_warn("Duplicate of PV %s dev %s exists on unknown device %"PRId64 ":%" PRId64,
