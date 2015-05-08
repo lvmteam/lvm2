@@ -25,7 +25,7 @@ dmsetup status
 echo n | lvconvert --repair $vg/4way 2>&1 | tee 4way.out
 aux enable_dev --silent "$dev2" "$dev4"
 
-lvs -a -o +devices | tee out
+lvs -a -o +devices $vg | tee out
 not grep unknown out
 vgreduce --removemissing $vg
 check mirror $vg 4way
