@@ -214,7 +214,7 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 		}
 	}
 
-	if ((read_error == FAILED_CLUSTERED)) {
+	if (read_error == FAILED_CLUSTERED) {
 		*skip = 1;
 		stack;	/* Error already logged */
 		return 1;
