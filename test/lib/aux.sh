@@ -95,7 +95,7 @@ prepare_lvmetad() {
 	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
 
 	# Avoid reconfiguring, if already set to use_lvmetad
-	(grep use_lvmetad CONFIG_VALUES 2>/dev/null | tail -1 | grep -q 1) || \
+	(grep use_lvmetad CONFIG_VALUES 2>/dev/null | tail -n 1 | grep -q 1) || \
 		aux lvmconf "global/use_lvmetad = 1" "devices/md_component_detection = 0"
 	# Default debug is "-l all" and could be override
 	# by setting LVM_TEST_LVMETAD_DEBUG_OPTS before calling inittest.
@@ -735,7 +735,7 @@ extend_filter() {
 }
 
 extend_filter_LVMTEST() {
-	extend_filter "a|$DM_DEV_DIR/LVMTEST|"
+	extend_filter "a|$DM_DEV_DIR/$PREFIX|"
 }
 
 hide_dev() {

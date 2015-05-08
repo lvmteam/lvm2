@@ -166,7 +166,7 @@ STACKTRACE() {
 			       "$DM_DEV_DIR" | sed -e "s,^,## LSLR:	,"
 			echo "<======== Udev DB content ========>"
 			for i in /sys/block/dm-* /sys/block/loop* ; do
-				udevadm info --query=all --path "$i" || true
+				udevadm info --query=all --path "$i" 2>/dev/null || true
 			done | sed -e "s,^,## UDEV:	,"
 		fi
 		echo "<======== Script file \"$(< TESTNAME)\" ========>"
