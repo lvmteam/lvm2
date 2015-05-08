@@ -89,8 +89,7 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!suspend_lv(cmd, lv_mirr)) {
-		if (vg)
-			vg_revert(vg);
+		vg_revert(vg);
 		log_error("ABORTING: Temporary pvmove mirror reload failed.");
 		if (!revert_lv(cmd, lv_mirr))
 			stack;
