@@ -112,7 +112,7 @@ lvchange_single() {
 		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0"
 		aux check_lvmpolld_init_rq_count 1 "$vg1/pvmove0"
 	else
-		check_spawned_bg_procs_count $1
+		test $(aux count_processes_with_tag) -eq $1
 	fi
 }
 
