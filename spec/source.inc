@@ -72,12 +72,12 @@
 # Do not reset Release to 1 unless both lvm2 and device-mapper
 # versions are increased together.
 
-%define device_mapper_version 1.02.75
+%define device_mapper_version 1.02.97
 
 Summary: Userland logical volume management tools
 Name: lvm2
-Version: 2.02.96
-Release: 4%{?dist}
+Version: 2.02.120
+Release: 1%{?dist}
 License: GPLv2
 Group: System Environment/Base
 URL: http://sources.redhat.com/lvm2
