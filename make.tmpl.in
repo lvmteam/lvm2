@@ -116,6 +116,7 @@ vpath %.exported_symbols $(srcdir)
 
 interface = @interface@
 interfacebuilddir = $(top_builddir)/libdm/$(interface)
+rpmbuilddir = build
 
 # The number of jobs to run, if blank, defaults to the make standard
 ifndef MAKEFLAGS
@@ -465,6 +466,7 @@ $(LIB_STATIC): $(OBJECTS)
 	$(MSGFMT) -o $@ $<
 
 cleandir:
+	test -z "$(CLEAN_DIRS)" || $(RM) -r $(CLEAN_DIRS)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(CLEAN_CFLOW) $(LDDEPS) \
 	  $(POTFILES) $(SOURCES:%.c=%.d) $(SOURCES:%.c=%.gcno) $(SOURCES:%.c=%.gcda) \
 	  $(SOURCES2:%.c=%.o) $(SOURCES2:%.c=%.d) $(SOURCES2:%.c=%.gcno) $(SOURCES2:%.c=%.gcda) \

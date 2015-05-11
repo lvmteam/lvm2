@@ -1,5 +1,6 @@
 Version 2.02.120 -
 ===============================
+  Provide make dist and make rpm targets
   Configure lvm.conf for use_lvmetad and use_lvmpolld.
   Add lvpoll for cmdline communication with lvmpolld.
   Add lvmpolld acting as a free-standing version of polldaemon.
