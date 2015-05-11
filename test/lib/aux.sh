@@ -137,7 +137,6 @@ notify_lvmetad() {
 }
 
 prepare_lvmpolld() {
-	set -x
 	rm -f debug.log
 	# skip if we don't have our own lvmpolld...
 	(which lvmpolld 2>/dev/null | grep "$abs_builddir") || skip
