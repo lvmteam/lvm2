@@ -194,7 +194,7 @@ let
        echo "* `date +"%a %b %d %Y"` Petr Rockai <prockai@redhat.com> - $version";
        echo "- AUTOMATED BUILD BY Hydra") >> spec/lvm2.spec
 
-      mv spec/* . && rmdir spec # */ # RPM needs the spec file in the source root
+      cp spec/* . # */ # RPM needs the spec file in the source root
 
       # make a tarball
       mkdir ../LVM2.$version
