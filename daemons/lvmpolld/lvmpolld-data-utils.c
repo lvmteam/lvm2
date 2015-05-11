@@ -203,6 +203,7 @@ struct lvmpolld_store *pdst_init(const char *name)
 		goto err_mutex;
 
 	pdst->name = name;
+	pdst->active_polling_count = 0;
 
 	return pdst;
 
