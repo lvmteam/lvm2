@@ -239,7 +239,6 @@ if (( $metadata )); then
 	done
 fi
 
-# FIXME: add lvmpolld.service here
 if (( $sysreport )); then
 	myecho "Gathering system info..."
 
@@ -259,6 +258,7 @@ if (( $sysreport )); then
 		log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise dm-event.socket dm-event.service \
 						   lvm2-monitor.service \
 						   lvm2-lvmetad.socket lvm2-lvmetad.service \
+						   lvm2-lvmpolld.socket lvm2-lvmpolld.service \
 						   lvm2-cluster-activation.service \
 						   lvm2-clvmd.service \
 						   lvm2-cmirrord.service \
