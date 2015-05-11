@@ -886,6 +886,7 @@ xx(lvpoll,
    "\t[--abort]\n"
    "\t[--handlemissingpvs]\n"
    "\t[--polloperation\n"
+   "\t[-A|--autobackup {y|n}]\n"
    "\t[-d|--debug]\n "
    "\t[-h|-?|--help]\n"
    "\t[-i|--interval seconds]\n"
@@ -893,7 +894,7 @@ xx(lvpoll,
    "\t[-v|--verbose]\n "
    "\t[--version]\n",
 
-   abort_ARG, handlemissingpvs_ARG, interval_ARG, polloperation_ARG,
+   abort_ARG, autobackup_ARG, handlemissingpvs_ARG, interval_ARG, polloperation_ARG,
    test_ARG)
 
 xx(pvremove,

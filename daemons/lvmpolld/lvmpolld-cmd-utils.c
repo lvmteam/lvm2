@@ -86,6 +86,10 @@ const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary,
 	if (!add_to_cmd_arr(&cmd_argv, pdlv->lvname, &i))
 		goto err;
 
+	/* disable metadata backup */
+	if (!add_to_cmd_arr(&cmd_argv, "-An", &i))
+		goto err;
+
 	/* terminating NULL */
 	if (!add_to_cmd_arr(&cmd_argv, NULL, &i))
 		goto err;
