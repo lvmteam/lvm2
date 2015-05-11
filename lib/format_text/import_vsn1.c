@@ -251,7 +251,7 @@ static int _read_pv(struct format_instance *fid,
 	_read_uint64(pvn, "ba_start", &ba_start);
 	_read_uint64(pvn, "ba_size", &size);
 	if (ba_start && size) {
-		log_debug("Found bootloader area specification for PV %s "
+		log_debug_metadata("Found bootloader area specification for PV %s "
 			  "in metadata: ba_start=%" PRIu64 ", ba_size=%" PRIu64 ".",
 			  pv_dev_name(pv), ba_start, size);
 		pv->ba_start = ba_start;

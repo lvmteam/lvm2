@@ -418,8 +418,8 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	if (!(ext_version = xlate32(pvhdr_ext->version)))
 		goto out;
 
-	log_debug("%s: PV header extension version %" PRIu32 " found",
-		  dev_name(dev), ext_version);
+	log_debug_metadata("%s: PV header extension version %" PRIu32 " found",
+			   dev_name(dev), ext_version);
 
 	/* Bootloader areas */
 	dlocn_xl = pvhdr_ext->bootloader_areas_xl;
