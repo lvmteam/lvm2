@@ -1067,6 +1067,15 @@ AC_MSG_RESULT($LVMETAD)
 BUILD_LVMETAD=$LVMETAD
 
 if test "$BUILD_LVMETAD" = yes; then
+	AC_MSG_CHECKING([defaults for use_lvmetad])
+	AC_ARG_ENABLE(use_lvmetad,
+		      AC_HELP_STRING([--disable-use-lvmetad],
+				     [disable usage of LVM Metadata Daemon]),
+		      [case ${enableval} in
+		       yes) DEFAULT_USE_LVMETAD=1 ;;
+		       *) DEFAULT_USE_LVMETAD=0 ;;
+		       esac], DEFAULT_USE_LVMETAD=1)
+	AC_MSG_RESULT($DEFAULT_USE_LVMETAD)
 	AC_DEFINE([LVMETAD_SUPPORT], 1, [Define to 1 to include code that uses lvmetad.])
 
 	AC_ARG_WITH(lvmetad-pidfile,
@@ -1076,7 +1085,11 @@ if test "$BUILD_LVMETAD" = yes; then
 		    LVMETAD_PIDFILE="$DEFAULT_PID_DIR/lvmetad.pid")
 	AC_DEFINE_UNQUOTED(LVMETAD_PIDFILE, ["$LVMETAD_PIDFILE"],
 			   [Path to lvmetad pidfile.])
+else
+	DEFAULT_USE_LVMETAD=0
 fi
+AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMETAD, [$DEFAULT_USE_LVMETAD],
+		   [Use lvmetad by default.])
 
 ################################################################################
 dnl -- Build lvmpolld
@@ -1090,6 +1103,15 @@ AC_MSG_RESULT($LVMPOLLD)
 BUILD_LVMPOLLD=$LVMPOLLD
 
 if test "$BUILD_LVMPOLLD" = yes; then
+	AC_MSG_CHECKING([defaults for use_lvmpolld])
+	AC_ARG_ENABLE(use_lvmpolld,
+		      AC_HELP_STRING([--disable-use-lvmpolld],
+				     [disable usage of LVM Poll Daemon]),
+		      [case ${enableval} in
+		       yes) DEFAULT_USE_LVMPOLLD=1 ;;
+		       *) DEFAULT_USE_LVMPOLLD=0 ;;
+		       esac], DEFAULT_USE_LVMPOLLD=1)
+	AC_MSG_RESULT($DEFAULT_USE_LVMPOLLD)
 	AC_DEFINE([LVMPOLLD_SUPPORT], 1, [Define to 1 to include code that uses lvmpolld.])
 
 	AC_ARG_WITH(lvmpolld-pidfile,
@@ -1099,7 +1121,11 @@ if test "$BUILD_LVMPOLLD" = yes; then
 		    LVMPOLLD_PIDFILE="$DEFAULT_PID_DIR/lvmpolld.pid")
 	AC_DEFINE_UNQUOTED(LVMPOLLD_PIDFILE, ["$LVMPOLLD_PIDFILE"],
 			   [Path to lvmpolld pidfile.])
+else
+	DEFAULT_USE_LVMPOLLD=0
 fi
+AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMPOLLD, [$DEFAULT_USE_LVMPOLLD],
+		   [Use lvmpolld by default.])
 
 ################################################################################
 dnl -- Enable blkid wiping functionality
@@ -1748,6 +1774,8 @@ AC_SUBST(DEFAULT_RAID10_SEGTYPE)
 AC_SUBST(DEFAULT_RUN_DIR)
 AC_SUBST(DEFAULT_SPARSE_SEGTYPE)
 AC_SUBST(DEFAULT_SYS_DIR)
+AC_SUBST(DEFAULT_USE_LVMETAD)
+AC_SUBST(DEFAULT_USE_LVMPOLLD)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(DLM_CFLAGS)
 AC_SUBST(DLM_LIBS)

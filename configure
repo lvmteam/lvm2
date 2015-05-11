@@ -700,6 +700,8 @@ DMEVENTD_PATH
 DMEVENTD
 DL_LIBS
 DEVMAPPER
+DEFAULT_USE_LVMPOLLD
+DEFAULT_USE_LVMETAD
 DEFAULT_SYS_DIR
 DEFAULT_SPARSE_SEGTYPE
 DEFAULT_RUN_DIR
@@ -915,8 +917,10 @@ enable_testing
 enable_valgrind_pool
 enable_devmapper
 enable_lvmetad
+enable_use_lvmetad
 with_lvmetad_pidfile
 enable_lvmpolld
+enable_use_lvmpolld
 with_lvmpolld_pidfile
 enable_blkid_wiping
 enable_udev_systemd_background_jobs
@@ -1631,7 +1635,9 @@ Optional Features:
   --enable-valgrind-pool  enable valgrind awareness of pools
   --disable-devmapper     disable LVM2 device-mapper interaction
   --enable-lvmetad        enable the LVM Metadata Daemon
+  --disable-use-lvmetad   disable usage of LVM Metadata Daemon
   --enable-lvmpolld       enable the LVM Polling Daemon
+  --disable-use-lvmpolld  disable usage of LVM Poll Daemon
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
   --disable-udev-systemd-background-jobs
@@ -10844,6 +10850,20 @@ $as_echo "$LVMETAD" >&6; }
 BUILD_LVMETAD=$LVMETAD
 
 if test "$BUILD_LVMETAD" = yes; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking defaults for use_lvmetad" >&5
+$as_echo_n "checking defaults for use_lvmetad... " >&6; }
+	# Check whether --enable-use_lvmetad was given.
+if test "${enable_use_lvmetad+set}" = set; then :
+  enableval=$enable_use_lvmetad; case ${enableval} in
+		       yes) DEFAULT_USE_LVMETAD=1 ;;
+		       *) DEFAULT_USE_LVMETAD=0 ;;
+		       esac
+else
+  DEFAULT_USE_LVMETAD=1
+fi
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DEFAULT_USE_LVMETAD" >&5
+$as_echo "$DEFAULT_USE_LVMETAD" >&6; }
 
 $as_echo "#define LVMETAD_SUPPORT 1" >>confdefs.h
 
@@ -10861,7 +10881,14 @@ cat >>confdefs.h <<_ACEOF
 #define LVMETAD_PIDFILE "$LVMETAD_PIDFILE"
 _ACEOF
 
+else
+	DEFAULT_USE_LVMETAD=0
 fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_USE_LVMETAD $DEFAULT_USE_LVMETAD
+_ACEOF
+
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmpolld" >&5
@@ -10877,6 +10904,20 @@ $as_echo "$LVMPOLLD" >&6; }
 BUILD_LVMPOLLD=$LVMPOLLD
 
 if test "$BUILD_LVMPOLLD" = yes; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking defaults for use_lvmpolld" >&5
+$as_echo_n "checking defaults for use_lvmpolld... " >&6; }
+	# Check whether --enable-use_lvmpolld was given.
+if test "${enable_use_lvmpolld+set}" = set; then :
+  enableval=$enable_use_lvmpolld; case ${enableval} in
+		       yes) DEFAULT_USE_LVMPOLLD=1 ;;
+		       *) DEFAULT_USE_LVMPOLLD=0 ;;
+		       esac
+else
+  DEFAULT_USE_LVMPOLLD=1
+fi
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DEFAULT_USE_LVMPOLLD" >&5
+$as_echo "$DEFAULT_USE_LVMPOLLD" >&6; }
 
 $as_echo "#define LVMPOLLD_SUPPORT 1" >>confdefs.h
 
@@ -10894,7 +10935,14 @@ cat >>confdefs.h <<_ACEOF
 #define LVMPOLLD_PIDFILE "$LVMPOLLD_PIDFILE"
 _ACEOF
 
+else
+	DEFAULT_USE_LVMPOLLD=0
 fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_USE_LVMPOLLD $DEFAULT_USE_LVMPOLLD
+_ACEOF
+
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
@@ -13048,6 +13096,8 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
+
 
 
 

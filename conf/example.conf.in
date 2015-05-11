@@ -820,7 +820,7 @@ global {
 	# lvmetad is not compatible with locking_type 3 (clustering).
 	# LVM prints warnings and ignores lvmetad if this combination
 	# is seen.
-	use_lvmetad = 0
+	use_lvmetad = @DEFAULT_USE_LVMETAD@
 
 	# Configuration option global/thin_check_executable.
 	# The full path to the thin_check command.
@@ -947,7 +947,7 @@ global {
 	# spawned in lvmpolld's service cgroup.
 	#
 	# When set to 0 lvm falls back to classical polling.
-	use_lvmpolld = 0
+	use_lvmpolld = @DEFAULT_USE_LVMPOLLD@
 }
 
 # Configuration section activation.

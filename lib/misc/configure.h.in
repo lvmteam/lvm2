@@ -95,6 +95,12 @@
 /* Path to LVM system directory. */
 #undef DEFAULT_SYS_DIR
 
+/* Use lvmetad by default. */
+#undef DEFAULT_USE_LVMETAD
+
+/* Use lvmpolld by default. */
+#undef DEFAULT_USE_LVMPOLLD
+
 /* Define to 1 to enable LVM2 device-mapper interaction. */
 #undef DEVMAPPER_SUPPORT
 

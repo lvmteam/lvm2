@@ -780,7 +780,7 @@ cfg(global_lvdisplay_shows_full_device_path_CFG, "lvdisplay_shows_full_device_pa
 	"was never a valid path in the /dev filesystem.\n"
 	"Enable this option to reinstate the previous format.\n")
 
-cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 93), NULL, 0, NULL,
+cfg(global_use_lvmetad_CFG, "use_lvmetad", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_USE_LVMETAD, vsn(2, 2, 93), NULL, 0, NULL,
 	"Use lvmetad to cache metadata and reduce disk scanning.\n"
 	"When enabled (and running), lvmetad provides LVM commands\n"
 	"with VG metadata and PV state.  LVM commands then avoid\n"
@@ -920,7 +920,7 @@ cfg(activation_checks_CFG, "checks", activation_CFG_SECTION, 0, CFG_TYPE_BOOL, D
 	"Some of the checks may be expensive, so it's best to use\n"
 	"this only when there seems to be a problem.\n")
 
-cfg(global_use_lvmpolld_CFG, "use_lvmpolld", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 120), NULL, 0, NULL,
+cfg(global_use_lvmpolld_CFG, "use_lvmpolld", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_USE_LVMPOLLD, vsn(2, 2, 120), NULL, 0, NULL,
 	"Indicates whether to use lvmpolld instead of classical polldaemon (a process\n"
 	"forked off an initiating lvm command) or not. When set to 1 and native systemd\n"
 	"service is installed in the system lvm starts using lvmpolld. lvmpolld gets\n"
