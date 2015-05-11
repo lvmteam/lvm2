@@ -150,11 +150,19 @@ endif
 DATADIR = $(datadir)/lvm2-testsuite
 EXECDIR = $(libexecdir)/lvm2-testsuite
 
-LIB_FLAVOURS = lib/flavour-ndev-vanilla lib/flavour-ndev-cluster lib/flavour-ndev-lvmetad \
-               lib/flavour-udev-vanilla lib/flavour-udev-cluster lib/flavour-udev-lvmetad \
-	       lib/flavour-udev-lvmpolld lib/flavour-ndev-lvmpolld lib/flavour-ndev-cluster-lvmpolld \
-	       lib/flavour-ndev-lvmetad-lvmpolld lib/flavour-udev-lvmpolld lib/flavour-udev-cluster-lvmpolld \
-	       lib/flavour-udev-lvmetad-lvmpolld
+LIB_FLAVOURS = \
+ lib/flavour-ndev-cluster-lvmpolld\
+ lib/flavour-ndev-cluster\
+ lib/flavour-ndev-lvmetad-lvmpolld\
+ lib/flavour-ndev-lvmetad\
+ lib/flavour-ndev-lvmpolld\
+ lib/flavour-ndev-vanilla\
+ lib/flavour-udev-cluster-lvmpolld\
+ lib/flavour-udev-cluster\
+ lib/flavour-udev-lvmetad-lvmpolld\
+ lib/flavour-udev-lvmetad\
+ lib/flavour-udev-lvmpolld\
+ lib/flavour-udev-vanilla
 
 LIB_LOCAL = lib/paths lib/runner
 LIB_EXEC  = lib/not lib/invalid lib/fail lib/should
