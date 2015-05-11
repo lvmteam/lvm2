@@ -49,8 +49,6 @@ tools.distclean: test.distclean
 endif
 DISTCLEAN_DIRS += lcov_reports*
 DISTCLEAN_TARGETS += config.cache config.log config.status make.tmpl
-clean:
-	$(RM) -r build
 
 include make.tmpl
 
@@ -103,6 +101,8 @@ conf.generate: tools
 
 VER = LVM2.@LVM_MAJOR@.@LVM_MINOR@.@LVM_PATCHLEVEL@
 CLEAN_TARGETS += $(VER).tgz
+clean:
+	$(RM) -r build
 
 dist:
 	@echo "Generating $(VER).tgz";\
