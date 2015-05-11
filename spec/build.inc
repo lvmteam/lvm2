@@ -24,6 +24,7 @@
   --enable-applib \
   --enable-cmdlib \
   --enable-dmeventd \
+  --enable-write_install \
   %{configure_flags}
 
 make %{?_smp_mflags}
