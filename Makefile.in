@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -15,6 +15,8 @@
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+abs_top_srcdir = @abs_top_srcdir@
 
 SUBDIRS = conf daemons include lib libdaemon libdm man scripts tools
 
@@ -96,6 +98,22 @@ check check_system check_cluster check_local check_lvmetad unit: all
 	$(MAKE) -C test $(@)
 
 conf.generate: tools
+
+VER = LVM2.@LVM_MAJOR@.@LVM_MINOR@.@LVM_PATCHLEVEL@
+
+dist:
+	@echo "Generating $(VER).tgz";\
+	git ls-tree -r HEAD --name-only | xargs tar --transform "s,^,$(VER)/," -zcf $(VER).tgz
+
+rpm: dist
+	$(MKDIR_P) build/SPECS build/SOURCES
+	ln -sf $(abs_top_srcdir)/spec/lvm2.spec build/SPECS
+	ln -sf $(abs_top_srcdir)/spec/build.inc build/SOURCES
+	ln -sf $(abs_top_srcdir)/spec/macros.inc build/SOURCES
+	ln -sf $(abs_top_srcdir)/spec/packages.inc build/SOURCES
+	ln -sf $(abs_top_srcdir)/spec/source.inc build/SOURCES
+	ln -sf $(abs_top_builddir)/$(VER).tgz build/SOURCES
+	rpmbuild -v --define "_topdir $(abs_top_builddir)/build" -ba build/SPECS/lvm2.spec
 
 generate: conf.generate
 	$(MAKE) -C conf generate
