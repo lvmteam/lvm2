@@ -144,7 +144,7 @@ ifeq ("@BUILD_LVMPOLLD@", "yes")
 check_lvmpolld: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--flavours udev-lvmpolld,udev-cluster-lvmpolld,udev-lvmetad-lvmpolld --only $(T) --skip $(S)
+		--flavours ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpolld --only $(T) --skip $(S)
 endif
 
 DATADIR = $(datadir)/lvm2-testsuite
