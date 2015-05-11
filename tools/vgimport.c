@@ -91,7 +91,7 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 	 * We need to reread it to see that it's been exported before we can
 	 * import it.
 	 */
-	if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL)) {
+	if (lvmetad_active() && !lvmetad_pvscan_all_devs(cmd, NULL)) {
 		log_error("Failed to scan devices.");
 		return ECMD_FAILED;
 	}
