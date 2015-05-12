@@ -713,7 +713,7 @@ static response dump_state(client_handle h, struct lvmpolld_state *ls, request r
 	buffer_append(b, "# Registered abort operations\n\n");
 	buffer_append(b, "abort {\n");
 	pdst_locked_dump(ls->id_to_pdlv_abort, b);
-	buffer_append(b, "}\n\n");
+	buffer_append(b, "}");
 
 	lvmpolld_global_unlock(ls);
 
