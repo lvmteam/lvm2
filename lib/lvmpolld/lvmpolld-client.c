@@ -263,18 +263,22 @@ int lvmpolld_poll_init(const struct cmd_context *cmd, const struct poll_operatio
 	}
 
 	if (parms->lv_type & PVMOVE) {
-		log_verbose("lvmpolld: Requesting pvmove%s", parms->aborting ? " abort." : ".");
+		log_debug_lvmpolld("Asking lvmpolld for pvmove%s on %s/%s.",
+				   parms->aborting ? " abort" : "", id->vg_name, id->lv_name);
 		r =  _process_poll_init(cmd, LVMPD_REQ_PVMOVE, id, parms);
 	} else if (parms->lv_type & CONVERTING) {
-		log_verbose("lvmpolld: Requesting convert mirror.");
+		log_debug_lvmpolld("Asking lvmpolld for mirror conversion on %s/%s.",
+				   id->vg_name, id->lv_name);
 		r =  _process_poll_init(cmd, LVMPD_REQ_CONVERT, id, parms);
 	} else if (parms->lv_type & MERGING) {
 		if (parms->lv_type & SNAPSHOT) {
-			log_verbose("lvmpolld: Requesting snapshot merge.");
+			log_debug_lvmpolld("Asking lvmpolld for snapshot merge on %s/%s.",
+					   id->vg_name, id->lv_name);
 			r =  _process_poll_init(cmd, LVMPD_REQ_MERGE, id, parms);
 		}
 		else if (parms->lv_type & THIN_VOLUME) {
-			log_verbose("lvmpolld: Thin snapshot merge.");
+			log_debug_lvmpolld("Asking lvmpolld for thin snapshot merge on %s/%s.",
+					   id->vg_name, id->lv_name);
 			r = _process_poll_init(cmd, LVMPD_REQ_MERGE_THIN, id, parms);
 		}
 		else {
