@@ -351,23 +351,25 @@ let
 
   install_rpms = rec {
       common = [ "libselinux-devel" "libsepol-devel" "ncurses-devel" "readline-devel"
-                 "valgrind" "gdb" "strace"
+                 "valgrind" "valgrind-devel" "gdb" "strace"
                  "redhat-rpm-config" # needed for rpmbuild of lvm
                  "which" "e2fsprogs" # needed for fsadm
                  "perl-GD" # for lcov
                  "mdadm" # for tests with lvm2 and mdadm
+                 "device-mapper-persistent-data" # thin and cache
+                 "sockat # used by test suite lvmpolld
                  "kernel"
                ];
-      centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "valgrind-devel" "procps" ];
+      centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "procps" ];
       centos64 = centos63 ++ [ "corosynclib-devel" ];
       centos65 = centos64;
       centos66 = centos65;
       centos70 = [ "dlm-devel" "dlm" "corosynclib-devel" "perl-Digest-MD5" "systemd-devel"
-                   "device-mapper-persistent-data" "procps-ng" "valgrind-devel" ];
+                   "procps-ng" ];
 
       fedora17 = fedora18 ++ [ "libudev-devel" ];
 
-      fedora18 = [ "dlm-devel" "corosynclib-devel" "device-mapper-persistent-data"
+      fedora18 = [ "dlm-devel" "corosynclib-devel"
                    "dlm" "systemd-devel" "perl-Digest-MD5" "kernel-modules-extra" ];
       fedora18u = fedora18;
 
