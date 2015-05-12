@@ -1944,7 +1944,6 @@ scripts/lvm2_monitoring_systemd_red_hat.service
 scripts/lvm2_pvscan_systemd_red_hat@.service
 scripts/lvm2_tmpfiles_red_hat.conf
 scripts/Makefile
-spec/source.inc
 test/Makefile
 test/api/Makefile
 test/unit/Makefile
