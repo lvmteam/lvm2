@@ -34,7 +34,7 @@ static const char* _lvmpolld_socket;
 
 static daemon_handle _lvmpolld = { .error = 0 };
 
-static daemon_handle _lvmpolld_connect(const char *socket)
+static daemon_handle _lvmpolld_open(const char *socket)
 {
 	daemon_info lvmpolld_info = {
 		.path = "lvmpolld",
@@ -56,15 +56,26 @@ void lvmpolld_set_socket(const char *socket)
 	_lvmpolld_socket = socket;
 }
 
+static void _lvmpolld_connect_or_warn(void)
+{
+	if (!_lvmpolld_connected && !_lvmpolld.error) {
+		_lvmpolld = _lvmpolld_open(_lvmpolld_socket);
+		if ( _lvmpolld.socket_fd >= 0 && !_lvmpolld.error) {
+			log_debug_lvmpolld("Sucessfully connected to lvmpolld on fd %d.", _lvmpolld.socket_fd);
+			_lvmpolld_connected = 1;
+		} else {
+			log_warn("WARNING: Failed to connect to lvmpolld. Proceeding with polling without using lvmpolld.");
+			log_warn("WARNING: Check global/use_lvmpolld in lvm.conf or the lvmpolld daemon state.");
+		}
+	}
+}
+
 int lvmpolld_use(void)
 {
-	if (!_lvmpolld_use)
+	if (!_lvmpolld_use || !_lvmpolld_socket)
 		return 0;
 
-	if (!_lvmpolld_connected && !_lvmpolld.error) {
-		_lvmpolld = _lvmpolld_connect(_lvmpolld_socket);
-		_lvmpolld_connected = _lvmpolld.socket_fd >= 0;
-	}
+	_lvmpolld_connect_or_warn();
 
 	return _lvmpolld_connected;
 }
