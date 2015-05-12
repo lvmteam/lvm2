@@ -82,12 +82,12 @@ static void _exit_handler(int sig __attribute__((unused)))
 
 static int _is_idle(daemon_state s)
 {
-	return _systemd_activation && s.idle && s.idle->is_idle && !s.threads->next;
+	return s.idle && s.idle->is_idle && !s.threads->next;
 }
 
 static struct timeval *_get_timeout(daemon_state s)
 {
-	return (_systemd_activation && s.idle) ? s.idle->ptimeout : NULL;
+	return s.idle ? s.idle->ptimeout : NULL;
 }
 
 static void _reset_timeout(daemon_state s)
