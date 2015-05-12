@@ -1955,10 +1955,14 @@ unit-tests/mm/Makefile
 ])
 AC_OUTPUT
 
-test -n "$THIN_CONFIGURE_WARN" && AC_MSG_WARN([Support for thin provisioning is limited since some thin provisioning tools are missing!])
+AS_IF([test -n "$THIN_CONFIGURE_WARN"],
+      [AC_MSG_WARN([Support for thin provisioning is limited since some thin provisioning tools are missing!])])
 
-test -n "$THIN_CHECK_VERSION_WARN" && AC_MSG_WARN([You should also install thin_check vsn 0.3.2 (or later) to use lvm2 thin provisioning])
+AS_IF([test -n "$THIN_CHECK_VERSION_WARN"],
+      [AC_MSG_WARN([You should also install thin_check vsn 0.3.2 (or later) to use lvm2 thin provisioning])])
 
-test -n "$CACHE_CONFIGURE_WARN" && AC_MSG_WARN([Support for cache is limited since some cache tools are missing!])
+AS_IF([test -n "$CACHE_CONFIGURE_WARN"],
+      [AC_MSG_WARN([Support for cache is limited since some cache tools are missing!])])
 
-test "$ODIRECT" = yes || AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])
+AS_IF([test "$ODIRECT" != yes],
+      [AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])])
