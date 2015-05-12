@@ -91,8 +91,7 @@ lvchange_single() {
 }
 
 lvchange_all() {
-	# remove -vvvv
-	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -vvvv -aey $vg/$lv1 $vg/$lv2
+	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv1 $vg/$lv2
 
 	# we don't want to spawn more than $1 background pollings
 	if test -e LOCAL_LVMPOLLD; then
