@@ -67,6 +67,7 @@
 #define LOG_CLASS_METADATA	0x0020	/* "metadata" */
 #define LOG_CLASS_CACHE		0x0040	/* "cache" */
 #define LOG_CLASS_LOCKING	0x0080	/* "locking" */
+#define LOG_CLASS_LVMPOLLD	0x0100	/* "lvmpolld" */
 
 #define log_debug(x...) LOG_LINE(_LOG_DEBUG, x)
 #define log_debug_mem(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_MEM, x)
@@ -77,6 +78,7 @@
 #define log_debug_metadata(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_METADATA, x)
 #define log_debug_cache(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_CACHE, x)
 #define log_debug_locking(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_LOCKING, x)
+#define log_debug_lvmpolld(x...) LOG_LINE_WITH_CLASS(_LOG_DEBUG, LOG_CLASS_LVMPOLLD, x)
 
 #define log_info(x...) LOG_LINE(_LOG_INFO, x)
 #define log_notice(x...) LOG_LINE(_LOG_NOTICE, x)

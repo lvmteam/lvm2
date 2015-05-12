@@ -500,10 +500,10 @@ log {
 	# and only appear in debug output if the class is
 	# listed here.  Classes currently available:
 	# memory, devices, activation, allocation,
-	# lvmetad, metadata, cache, locking.
+	# lvmetad, metadata, cache, locking, lvmpolld.
 	# Use "all" to see everything.
 	debug_classes = ["memory", "devices", "activation", "allocation",
-			 "lvmetad", "metadata", "cache", "locking"]
+			 "lvmetad", "metadata", "cache", "locking", "lvmpolld"]
 }
 
 # Configuration section backup.

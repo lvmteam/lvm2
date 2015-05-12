@@ -274,6 +274,8 @@ static int _parse_debug_classes(struct cmd_context *cmd)
 			debug_classes |= LOG_CLASS_CACHE;
 		else if (!strcasecmp(cv->v.str, "locking"))
 			debug_classes |= LOG_CLASS_LOCKING;
+		else if (!strcasecmp(cv->v.str, "lvmpolld"))
+			debug_classes |= LOG_CLASS_LVMPOLLD;
 		else
 			log_verbose("Unrecognised value for log/debug_classes: %s", cv->v.str);
 	}
