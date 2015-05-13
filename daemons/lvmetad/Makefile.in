@@ -18,7 +18,7 @@ top_builddir = @top_builddir@
 SOURCES = lvmetad-core.c
 SOURCES2 = testclient.c
 
-TARGETS = lvmetad lvmetad-testclient
+TARGETS = lvmetad
 
 .PHONY: install_lvmetad
 
