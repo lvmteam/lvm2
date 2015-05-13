@@ -261,12 +261,12 @@ static int _open_socket(daemon_state s)
 		}
 
 		/* Socket already exists. If it's stale, remove it. */
-		if (stat(sockaddr.sun_path, &buf)) {
+		if (lstat(sockaddr.sun_path, &buf)) {
 			perror("stat failed");
 			goto error;
 		}
 
-		if (S_ISSOCK(buf.st_mode)) {
+		if (!S_ISSOCK(buf.st_mode)) {
 			fprintf(stderr, "%s: not a socket\n", sockaddr.sun_path);
 			goto error;
 		}
@@ -595,7 +595,7 @@ void daemon_start(daemon_state s)
 	}
 
 	/* Set Close-on-exec */
-	if (fcntl(s.socket_fd, F_SETFD, 1))
+	if (!failed && fcntl(s.socket_fd, F_SETFD, 1))
 		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", s.socket_fd, strerror(errno));
 
 	/* Signal parent, letting them know we are ready to go. */
