@@ -357,7 +357,7 @@ let
                  "perl-GD" # for lcov
                  "mdadm" # for tests with lvm2 and mdadm
                  "device-mapper-persistent-data" # thin and cache
-                 "sockat # used by test suite lvmpolld
+                 "socat" # used by test suite lvmpolld
                  "kernel"
                ];
       centos63 = [ "clusterlib-devel" "openaislib-devel" "cman" "libudev-devel" "procps" ];
