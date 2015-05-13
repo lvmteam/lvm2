@@ -398,8 +398,6 @@ cflow: $(CFLOW_TARGET).cflow $(CFLOW_TARGET).tree $(CFLOW_TARGET).rxref $(CFLOW_
 endif
 endif
 
-$(TARGETS): $(OBJECTS)
-
 %.o: %.c
 	$(CC) -c $(INCLUDES) $(DEFS) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
