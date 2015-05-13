@@ -33,8 +33,7 @@ SOURCES =\
 	regex/ttree.c \
 	$(interface)/libdm-iface.c
 
-INCLUDES = -I$(srcdir)/$(interface) -I$(srcdir)
-CFLAGS += $(UDEV_CFLAGS) $(VALGRIND_CFLAGS)
+INCLUDES = -I$(srcdir)/$(interface)
 
 ifeq ("@STATIC_LINK@", "yes")
 LIB_STATIC = $(interface)/libdevmapper.a
@@ -42,7 +41,7 @@ endif
 
 LIB_SHARED = $(interface)/libdevmapper.$(LIB_SUFFIX)
 LIB_VERSION = $(LIB_VERSION_DM)
-TARGETS += libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
+TARGETS = libdevmapper.$(LIB_SUFFIX) libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
 
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = libdevmapper.cflow
@@ -51,6 +50,8 @@ EXPORTED_HEADER = $(srcdir)/libdevmapper.h
 EXPORTED_FN_PREFIX = dm
 
 include $(top_builddir)/make.tmpl
+
+CFLAGS += $(UDEV_CFLAGS) $(VALGRIND_CFLAGS)
 
 DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
 	-DDM_DEVICE_MODE=@DM_DEVICE_MODE@
