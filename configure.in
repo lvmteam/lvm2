@@ -26,10 +26,9 @@ AC_CONFIG_AUX_DIR(autoconf)
 dnl -- Get system type
 AC_CANONICAL_TARGET([])
 
+AS_IF([test -z "$CFLAGS"], [COPTIMISE_FLAG="-O2"])
 case "$host_os" in
 	linux*)
-		CFLAGS="$CFLAGS"
-		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS -Wl,--version-script,.export.sym"
 		ELDFLAGS="-Wl,--export-dynamic"
 		# FIXME Generate list and use --dynamic-list=.dlopen.sym
@@ -49,7 +48,6 @@ case "$host_os" in
 		;;
 	darwin*)
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
-		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS"
 		ELDFLAGS=
 		CLDWHOLEARCHIVE="-all_load"
