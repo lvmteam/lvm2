@@ -46,11 +46,11 @@ LIBS = @LIBS@
 STATIC_LIBS = $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS)
 DEFS += @DEFS@
 # FIXME set this only where it's needed, not globally?
-CFLAGS += @CFLAGS@
+CFLAGS ?= @COPTIMISE_FLAG@ @CFLAGS@
+LDFLAGS ?= @COPTIMISE_FLAG@ @LDFLAGS@
 CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
-LDFLAGS += @LDFLAGS@
 LIB_SUFFIX = @LIB_SUFFIX@
 LVMINTERNAL_LIBS = -llvm-internal $(DAEMON_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
 DL_LIBS = @DL_LIBS@
@@ -204,8 +204,13 @@ endif
 #WFLAGS += -pedantic -std=gnu99
 #DEFS += -DDEBUG_CRC32
 
-CFLAGS += -fPIC  @COPTIMISE_FLAG@
-LDFLAGS += @COPTIMISE_FLAG@
+#
+# Avoid recursive extension of CFLAGS
+# by checking whether CFLAGS already has fPIC string
+#
+ifeq (,$(findstring fPIC,$(CFLAGS)))
+
+CFLAGS += -fPIC
 
 ifeq ("@DEBUG@", "yes")
   CFLAGS += -g -fno-omit-frame-pointer
@@ -215,6 +220,10 @@ ifeq ("@DEBUG@", "yes")
     DEFS += -DDEBUG_MEM
   endif
 endif
+
+# end of fPIC protection
+endif
+
 
 ifeq ("@INTL@", "yes")
   DEFS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
