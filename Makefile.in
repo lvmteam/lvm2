@@ -93,6 +93,7 @@ cscope.out:
 all: cscope.out
 endif
 DISTCLEAN_TARGETS += cscope.out
+CLEAN_DIRS += autom4te.cache
 
 check check_system check_cluster check_local check_lvmetad unit: all
 	$(MAKE) -C test $(@)
@@ -125,7 +126,7 @@ rpm: dist
 	    -e "s,^\(Version:[^0-9%]*\)[0-9.]*$$,\1 $(LVM_VER)," \
 	    -e "s,^\(Release:[^0-9%]*\)[0-9.]\+,\1 $$GIT_VER," \
 	    $(top_srcdir)/spec/source.inc >$(rpmbuilddir)/SOURCES/source.inc
-	rpmbuild -v --define "_topdir $(abs_top_builddir)/$(rpmbuilddir)" -ba $(top_srcdir)/spec/lvm2.spec
+	rpmbuild -v --define "_topdir $(rpmbuilddir)" -ba $(top_srcdir)/spec/lvm2.spec
 
 generate: conf.generate
 	$(MAKE) -C conf generate

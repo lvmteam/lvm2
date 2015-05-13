@@ -116,7 +116,7 @@ vpath %.exported_symbols $(srcdir)
 
 interface = @interface@
 interfacebuilddir = $(top_builddir)/libdm/$(interface)
-rpmbuilddir = build
+rpmbuilddir = $(abs_top_builddir)/build
 
 # The number of jobs to run, if blank, defaults to the make standard
 ifndef MAKEFLAGS
