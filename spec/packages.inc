@@ -83,6 +83,9 @@ fi
 %if %{have_service lvmetad}
  %{_sbindir}/lvmetad
 %endif
+%if %{have_service lvmpolld}
+ %{_sbindir}/lvmpolld
+%endif
 %if %{have_with cache}
   %{_mandir}/man7/lvmcache.7.gz
 %endif
@@ -149,6 +152,9 @@ fi
   %{_udevdir}/69-dm-lvm-metad.rules
  %endif
 %endif
+%if %{have_service lvmetad}
+  %{_mandir}/man8/lvmpolld.8.gz
+%endif
 %dir %{_sysconfdir}/lvm
 %ghost %{_sysconfdir}/lvm/cache/.cache
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvm.conf
@@ -170,6 +176,10 @@ fi
   %{_unitdir}/lvm2-lvmetad.service
   %{_unitdir}/lvm2-pvscan@.service
   %{_unitdir}/blk-availability.service
+ %endif
+ %if %{have_service lvmpolld}
+  %{_unitdir}/lvm2-lvmpolld.service
+  %{_unitdir}/lvm2-lvmpolld.socket
  %endif
 %else
  %{_sysconfdir}/rc.d/init.d/lvm2-monitor
@@ -272,11 +282,12 @@ fi
 %defattr(-,root,root,-)
 %attr(755,root,root) /usr/sbin/clvmd
 %{_mandir}/man8/clvmd.8.gz
-%{_sysconfdir}/rc.d/init.d/clvmd
 %if %{enable_systemd}
   %{_unitdir}/lvm2-clvmd.service
   %{_unitdir}/lvm2-cluster-activation.service
   %{_unitdir}/../lvm2-cluster-activation
+%else
+  %{_sysconfdir}/rc.d/init.d/clvmd
 %endif
 
 %endif
@@ -309,33 +320,10 @@ fi
 %defattr(-,root,root,-)
 %attr(755,root,root) /usr/sbin/cmirrord
 %{_mandir}/man8/cmirrord.8.gz
-%{_sysconfdir}/rc.d/init.d/cmirrord
 %if %{enable_systemd}
   %{_unitdir}/lvm2-cmirrord.service
-%endif
-
-%endif
-
-##############################################################################
-# Legacy SysV init subpackage
-##############################################################################
-%if %{enable_systemd}
-
-%package sysvinit
-Summary: SysV style init script for LVM2.
-Group: System Environment/Base
-Requires: %{name} = %{version}-%{release}
-Requires: initscripts
-
-%description sysvinit
-SysV style init script for LVM2. It needs to be installed only if systemd
-is not used as the system init process.
-
-%files sysvinit
-%{_sysconfdir}/rc.d/init.d/lvm2-monitor
-%{_sysconfdir}/rc.d/init.d/blk-availability
-%if %{have_service lvmetad}
-%{_sysconfdir}/rc.d/init.d/lvm2-lvmetad
+%else
+  %{_sysconfdir}/rc.d/init.d/cmirrord
 %endif
 
 %endif

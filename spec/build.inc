@@ -4,6 +4,8 @@
 %enableif %{enable_profiling} profiling
 %global enable_lvmetad %(if echo %{services} | grep -q lvmetad; then echo 1; else echo 0; fi)
 %enableif %{enable_lvmetad} lvmetad
+%global enable_lvmpolld %(if echo %{services} | grep -q lvmpolld; then echo 1; else echo 0; fi)
+%enableif %{enable_lvmpolld} lvmpolld
 
 %build
 %configure \
@@ -33,10 +35,11 @@ make %{?_smp_mflags}
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
 make install_system_dirs DESTDIR=$RPM_BUILD_ROOT
-make install_initscripts DESTDIR=$RPM_BUILD_ROOT
 %if %{enable_systemd}
 make install_systemd_units DESTDIR=$RPM_BUILD_ROOT
 make install_tmpfiles_configuration DESTDIR=$RPM_BUILD_ROOT
+%else
+make install_initscripts DESTDIR=$RPM_BUILD_ROOT
 %endif
 %if %{enable_testsuite}
 make -C test install DESTDIR=$RPM_BUILD_ROOT
