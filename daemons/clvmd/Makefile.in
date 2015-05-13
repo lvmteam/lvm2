@@ -36,10 +36,6 @@ SOURCES = \
 	lvm-functions.c  \
 	refresh_clvmd.c
 
-ifeq ("@DEBUG@", "yes")
-	DEFS += -DDEBUG
-endif
-
 ifneq (,$(findstring cman,, "@CLVMD@,"))
 	SOURCES += clvmd-cman.c
 	LMLIBS += $(CMAN_LIBS) $(CONFDB_LIBS) $(DLM_LIBS)
