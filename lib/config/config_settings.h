@@ -903,7 +903,7 @@ cfg(global_system_id_source_CFG, "system_id_source", global_CFG_SECTION, 0, CFG_
 	"'local' section of an lvm configuration file, e.g. lvmlocal.conf.\n"
 	"uname - Set the system ID from the hostname (uname) of the system.\n"
 	"System IDs beginning localhost are not permitted.\n"
-	"machineid - Use the contents of the file " DEFAULT_ETC_DIR "/machine-id to set the\n"
+	"machineid - Use the contents of the machine-id file to set the\n"
 	"system ID.  Some systems create this file at installation time.\n"
 	"See 'man machine-id'.\n"
 	"file - Use the contents of another file (system_id_file) to set\n"
