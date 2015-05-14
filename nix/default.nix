@@ -354,6 +354,8 @@ let
                  "valgrind" "valgrind-devel" "gdb" "strace"
                  "redhat-rpm-config" # needed for rpmbuild of lvm
                  "which" "e2fsprogs" # needed for fsadm
+                 "e2fsprogs-libs" "e2fsprogs-devel"
+                 "util-linux"
                  "perl-GD" # for lcov
                  "mdadm" # for tests with lvm2 and mdadm
                  "device-mapper-persistent-data" # thin and cache
@@ -370,7 +372,7 @@ let
 
       fedora17 = fedora18 ++ [ "libudev-devel" ];
 
-      fedora18 = [ "dlm-devel" "corosynclib-devel" "nc"
+      fedora18 = [ "dlm-devel" "corosynclib-devel" "nc" "libblkid" "libblkid-devel"
                    "dlm" "systemd-devel" "perl-Digest-MD5" "kernel-modules-extra" ];
       fedora18u = fedora18;
 
