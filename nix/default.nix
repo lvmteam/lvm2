@@ -369,10 +369,11 @@ let
                    "socat" # used by test suite lvmpolld
                    "procps-ng" ];
 
-      fedora17 = fedora18 ++ [ "libudev-devel" ];
+      fedora17_18 = [ "dlm-devel" "corosynclib-devel" "libblkid" "libblkid-devel"
+                      "dlm" "systemd-devel" "perl-Digest-MD5" "kernel-modules-extra" ];
+      fedora17 = fedora17_18 ++ [ "libudev-devel" "nc" ];
 
-      fedora18 = [ "dlm-devel" "corosynclib-devel" "nc" "libblkid" "libblkid-devel"
-                   "dlm" "systemd-devel" "perl-Digest-MD5" "kernel-modules-extra" ];
+      fedora18 = fedora17_18 ++ [ "socat" ];
       fedora18u = fedora18;
 
       fedora19 = centos70 ++ [ "kernel-modules-extra" ];
