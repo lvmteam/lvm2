@@ -397,11 +397,11 @@ static void *fork_and_poll(void *args)
 
 		if ((dup2(outfd, STDOUT_FILENO ) != STDOUT_FILENO) ||
 		    (dup2(errfd, STDERR_FILENO ) != STDERR_FILENO))
-			_exit(100);
+			_exit(LVMPD_RET_DUP_FAILED);
 
 		execve(*(pdlv->cmdargv), (char *const *)pdlv->cmdargv, (char *const *)pdlv->cmdenvp);
 
-		_exit(101);
+		_exit(LVMPD_RET_EXC_FAILED);
 	} else {
 		/* parent */
 		if (r == -1) {

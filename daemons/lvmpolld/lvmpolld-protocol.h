@@ -46,4 +46,7 @@
 #define LVMPD_REAS_RETCODE	"retcode" /* lvm cmd ret code */
 #define LVMPD_REAS_SIGNAL	"signal" /* lvm cmd terminating singal */
 
+#define LVMPD_RET_DUP_FAILED	100
+#define LVMPD_RET_EXC_FAILED	101
+
 #endif /* _LVM_LVMPOLLD_PROTOCOL_H */
