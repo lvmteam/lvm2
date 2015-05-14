@@ -355,7 +355,6 @@ let
                  "redhat-rpm-config" # needed for rpmbuild of lvm
                  "which" "e2fsprogs" # needed for fsadm
                  "e2fsprogs-libs" "e2fsprogs-devel"
-                 "util-linux"
                  "perl-GD" # for lcov
                  "mdadm" # for tests with lvm2 and mdadm
                  "device-mapper-persistent-data" # thin and cache
