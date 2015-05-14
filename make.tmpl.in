@@ -274,7 +274,7 @@ LIB_VERSION_DM := $(shell $(AWK) -F '.' '{printf "%s.%s",$$1,$$2}' $(top_srcdir)
 
 LIB_VERSION_APP := $(shell $(AWK) -F '[(). ]' '{printf "%s.%s",$$1,$$4}' $(top_srcdir)/VERSION)
 
-INCLUDES += -I. -I$(top_builddir)/include
+INCLUDES += -I$(srcdir) -I$(top_builddir)/include
 
 INC_LNS = $(top_builddir)/include/.symlinks_created
 
@@ -414,7 +414,7 @@ endif
 	$(CXX) -c $(INCLUDES) $(DEFS) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
 %.pot: %.c Makefile
-	$(CC) -E $(INCLUDES) -include $(top_builddir)/include/pogen.h \
+	$(CC) -E $(INCLUDES) $(BLKID_CFLAGS) $(VALGRIND_CFLAGS) $(UDEV_CFLAGS) -include $(top_builddir)/include/pogen.h \
 		$(DEFS) $(WFLAGS) $(CFLAGS) $< > $@
 
 %.so: %.o
