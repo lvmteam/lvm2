@@ -884,12 +884,13 @@ xx(lvpoll,
    "Continue already initiated poll operation on a logical volume",
    0,
    "\t[--abort]\n"
-   "\t[--handlemissingpvs]\n"
-   "\t[--polloperation\n"
    "\t[-A|--autobackup {y|n}]\n"
+   "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n "
    "\t[-h|-?|--help]\n"
+   "\t[--handlemissingpvs]\n"
    "\t[-i|--interval seconds]\n"
+   "\t[--polloperation]\n"
    "\t[-t|--test]\n "
    "\t[-v|--verbose]\n "
    "\t[--version]\n",
