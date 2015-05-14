@@ -51,7 +51,7 @@ fail lvcreate -l 1 -H --name $vg/$lv4 --cachepool pool7
 fail lvcreate -l 1 --cachepool pool8 $vg
 
 # no size specified
-invalid lvcreate --cachepool pool $vg |& tee err
+invalid lvcreate --cachepool pool $vg 2>&1 | tee err
 grep "specify either size or extents" err
 
 # Check nothing has been created yet

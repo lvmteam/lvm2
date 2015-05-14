@@ -612,7 +612,7 @@ rm -f $SIDFILE
 if [ ! -e /etc/machine-id ]; then
 SID=""
 aux lvmconf "global/system_id_source = machineid"
-vgcreate $vg1 "$dev1" |& tee err
+vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 grep "No system ID found from system_id_source" err
@@ -626,7 +626,7 @@ fi
 SID=""
 rm -f $LVMLOCAL
 aux lvmconf "global/system_id_source = lvmlocal"
-vgcreate $vg1 "$dev1" |& tee err
+vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 grep "No system ID found from system_id_source" err
@@ -641,7 +641,7 @@ echo "local {" > $LVMLOCAL
 # echo "  system_id = $SID" >> $LVMLOCAL
 echo "}" >> $LVMLOCAL
 aux lvmconf "global/system_id_source = lvmlocal"
-vgcreate $vg1 "$dev1" |& tee err
+vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 grep "No system ID found from system_id_source" err
@@ -656,7 +656,7 @@ echo "local {" > $LVMLOCAL
 echo "  system_id = \"\"" >> $LVMLOCAL
 echo "}" >> $LVMLOCAL
 aux lvmconf "global/system_id_source = lvmlocal"
-vgcreate $vg1 "$dev1" |& tee err
+vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 grep "No system ID found from system_id_source" err
@@ -668,7 +668,7 @@ SID=""
 SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 aux lvmconf "global/system_id_source = file"
-vgcreate $vg1 "$dev1" |& tee err
+vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 grep "No system ID found from system_id_source" err
@@ -681,7 +681,7 @@ SIDFILE=etc/lvm_test.conf
 rm -f $SIDFILE
 aux lvmconf "global/system_id_source = file" \
 	    "global/system_id_file = \"$SIDFILE\""
-vgcreate $vg1 "$dev1" |& tee err
+vgcreate $vg1 "$dev1" 2>&1 | tee err
 vgs -o+systemid $vg1
 check vg_field $vg1 systemid $SID
 grep "No system ID found from system_id_source" err

@@ -125,7 +125,7 @@ lvcreate -aey -L 32m -n $lv --regionsize 4m --type mirror -m 1 $vg
 check lv_field $vg/$lv regionsize "4.00m"
 
 # -m0 is creating non-mirrored segment and give info about redundant option
-lvcreate -m 0 -l1 -n $lv1 $vg |& tee err
+lvcreate -m 0 -l1 -n $lv1 $vg 2>&1 | tee err
 grep "Redundant" err
 check lv_field $vg/$lv1 segtype "linear"
 lvremove -ff $vg
@@ -177,7 +177,7 @@ fail lvcreate --persistent n --minor 234 -l1 $vg
 fail lvcreate --minor 9999999 -l1 $vg
 if aux kernel_at_least 2 4 0; then
 # On >2.4 we ignore --major
-lvcreate --major 234 -l1 $vg |& tee err;
+lvcreate --major 234 -l1 $vg 2>&1 | tee err;
 grep "Ignoring" err
 # Try some bigger possibly unused minor
 if test ! -d /sys/block/dm-2345; then

@@ -70,7 +70,7 @@ vgcreate -s 4M $vg $(cat DEVICES)
 # Play with 1 extent
 lvcreate -aey -l1 -n $lv $vg
 # 100%LV is not supported for snapshot
-fail lvcreate -s -l 100%LV -n snap $vg/$lv |& tee out
+fail lvcreate -s -l 100%LV -n snap $vg/$lv 2>&1 | tee out
 grep 'Please express size as %FREE, %ORIGIN, %PVS or %VG' out
 # 100%ORIGIN needs to have enough space for all data and needs to round-up
 lvcreate -s -l 100%ORIGIN -n $lv1 $vg/$lv

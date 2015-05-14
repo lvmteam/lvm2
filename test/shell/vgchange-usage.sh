@@ -87,7 +87,7 @@ vgremove -ff $vg
 # set cluster bit
 vgcreate -cn $vg "$dev1" "$dev2" "$dev3"
 # check prompt to change cluster bit without giving explicit vg name
-fail vgchange -cy |& tee out
+fail vgchange -cy 2>&1 | tee out
 grep "y/n" out
 check vg_attr_bit cluster $vg "-"
 
@@ -115,9 +115,9 @@ else
 	# can't switch with active LV
 	vgchange --yes -cy $vg
 	fail vgchange --yes -cy $vg
-	fail vgs $vg |& tee out
+	fail vgs $vg 2>&1 | tee out
 	grep "Skipping clustered volume group" out
-	vgs --ignoreskippedcluster $vg |& tee out
+	vgs --ignoreskippedcluster $vg 2>&1 | tee out
 	not grep "Skipping clustered volume group" out
 	# reset back to non-clustered VG with disabled locking
 	vgchange -cn $vg --config 'global{locking_type=0}' $vg
