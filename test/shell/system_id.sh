@@ -47,10 +47,12 @@ vgcreate $vg1 "$dev1"
 check vg_field $vg1 systemid $SID
 vgremove $vg1
 
-## machineid
+# FIXME - print 'life' config data
+eval $(lvmconfig global/etc 2>/dev/null || lvmconfig --type default global/etc)
 
-if [ -e /etc/machine-id ]; then
-SID=$(cat /etc/machine-id)
+## machineid
+if [ -e $etc/machine-id ]; then
+SID=$(cat $etc/machine-id)
 aux lvmconf "global/system_id_source = machineid"
 vgcreate $vg1 "$dev1"
 vgs -o+systemid $vg1
@@ -608,8 +610,8 @@ rm -f $SIDFILE
 # The commands should proceed without a system_id.
 # Look at the warning/error messages.
 
-# vgcreate with source machineid, where no /etc/machine-id file exists
-if [ ! -e /etc/machine-id ]; then
+# vgcreate with source machineid, where no $etc/machine-id file exists
+if [ ! -e $etc/machine-id ]; then
 SID=""
 aux lvmconf "global/system_id_source = machineid"
 vgcreate $vg1 "$dev1" 2>&1 | tee err
