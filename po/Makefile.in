@@ -17,7 +17,7 @@ top_builddir = @top_builddir@
 
 LANGS=de
 
-TARGETS=$(LANGS:%=lvm2_%.mo) $(LANGS:%=dm_%.mo)
+#TARGETS=$(LANGS:%=lvm2_%.mo) $(LANGS:%=dm_%.mo)
 
 DM_POSOURCES = $(top_builddir)/tools/dmsetup.pot $(top_builddir)/libdm/*.pot \
 	       $(top_builddir)/libdm/*/*.pot
