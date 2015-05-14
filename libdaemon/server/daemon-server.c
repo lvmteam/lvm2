@@ -598,7 +598,7 @@ void daemon_start(daemon_state s)
 
 	/* Set Close-on-exec */
 	if (!failed && fcntl(s.socket_fd, F_SETFD, 1))
-		fprintf(stderr, "setting CLOEXEC on socket fd %d failed: %s\n", s.socket_fd, strerror(errno));
+		ERROR(&s, "setting CLOEXEC on socket fd %d failed: %s\n", s.socket_fd, strerror(errno));
 
 	/* Signal parent, letting them know we are ready to go. */
 	if (!s.foreground)
