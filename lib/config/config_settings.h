@@ -905,7 +905,7 @@ cfg(global_system_id_source_CFG, "system_id_source", global_CFG_SECTION, 0, CFG_
 	"System IDs beginning localhost are not permitted.\n"
 	"machineid - Use the contents of the machine-id file to set the\n"
 	"system ID.  Some systems create this file at installation time.\n"
-	"See 'man machine-id'.\n"
+	"See 'man machine-id' and global/etc.\n"
 	"file - Use the contents of another file (system_id_file) to set\n"
 	"the system ID.\n")
 
