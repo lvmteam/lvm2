@@ -568,8 +568,10 @@ void daemon_start(daemon_state s)
 		 * NB. Take care to not keep stale locks around. Best not exit(...)
 		 * after this point.
 		 */
-		if (dm_create_lockfile(s.pidfile) == 0)
+		if (dm_create_lockfile(s.pidfile) == 0) {
+			ERROR(&s, "Failed to acquire lock on %s. Already running?\n", s.pidfile);
 			exit(EXIT_ALREADYRUNNING);
+		}
 
 		(void) dm_prepare_selinux_context(NULL, 0);
 	}
