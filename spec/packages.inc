@@ -187,6 +187,9 @@ fi
  %if %{have_service lvmetad}
   %{_sysconfdir}/rc.d/init.d/lvm2-lvmetad
  %endif
+ %if %{have_service lvmpolld}
+  %{_sysconfdir}/rc.d/init.d/lvm2-lvmpolld
+ %endif
 %endif
 
 ##############################################################################
