@@ -925,7 +925,7 @@ global {
 	# 'local' section of an lvm configuration file, e.g. lvmlocal.conf.
 	# uname - Set the system ID from the hostname (uname) of the system.
 	# System IDs beginning localhost are not permitted.
-	# machineid - Use the contents of the file /etc/machine-id to set the
+	# machineid - Use the contents of the file @CONFDIR@/machine-id to set the
 	# system ID.  Some systems create this file at installation time.
 	# See 'man machine-id'.
 	# file - Use the contents of another file (system_id_file) to set
