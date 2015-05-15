@@ -52,7 +52,7 @@ static int _set_daemon_parms(struct cmd_context *cmd, struct daemon_parms *parms
 	const char *poll_oper = arg_str_value(cmd, polloperation_ARG, "");
 
 	parms->interval = arg_uint_value(cmd, interval_ARG, 0);
-	parms->aborting = arg_count(cmd, abort_ARG);
+	parms->aborting = arg_is_set(cmd, abort_ARG);
 	parms->progress_display = 1;
 	parms->wait_before_testing = (arg_sign_value(cmd, interval_ARG, SIGN_NONE) == SIGN_PLUS);
 
@@ -74,7 +74,7 @@ static int _set_daemon_parms(struct cmd_context *cmd, struct daemon_parms *parms
 		return 0;
 	}
 
-	cmd->handles_missing_pvs = arg_count(cmd, handlemissingpvs_ARG);
+	cmd->handles_missing_pvs = arg_is_set(cmd, handlemissingpvs_ARG);
 
 	return 1;
 }
@@ -96,7 +96,7 @@ static int poll_lv(struct cmd_context *cmd, const char *lv_name)
 
 int lvpoll(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (!arg_count(cmd, polloperation_ARG)) {
+	if (!arg_is_set(cmd, polloperation_ARG)) {
 		log_error("--polloperation parameter is mandatory");
 		return EINVALID_CMD_LINE;
 	}
