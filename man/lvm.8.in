@@ -53,6 +53,8 @@ being created in the filesystem for them.
 .TP
 \fBhelp\fP \(em Display the help text.
 .TP
+\fBlvpoll\fP \(em Internal command used by lvmpolld to complete some Logical Volume operations.
+.TP
 \fBpvdata\fP \(em Not implemented in LVM2.
 .TP
 \fBsegtypes\fP \(em Display recognised Logical Volume segment types.
