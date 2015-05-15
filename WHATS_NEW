@@ -1,18 +1,25 @@
-Version 2.02.120 -
-===============================
-  add lvmpolld client mode for querying running server instance for status info.
+Version 2.02.120 - 15th May 2015
+================================
+  Make various adjustments to Makefile compilation flags.
+  Add lvmpolld debug message class.
+  Add lvmpolld client mode for querying running server instance for status info.
   Fix some libdaemon socket creation and reuse error paths.
   Daemons (libdaemon) support exit on idle also in non-systemd environment.
   Provide make dist and make rpm targets
   Configure lvm.conf for use_lvmetad and use_lvmpolld.
   Add lvpoll for cmdline communication with lvmpolld.
   Add lvmpolld acting as a free-standing version of polldaemon.
+  Avoid repeated identical lvmetad VG lookups in commands processing all VGs.
+  Handle switches to alternative duplicate PVs efficiently with lvmetad.
   Properly validate PV size for pvcreate --restorefile.
   Fix check if pvcreate wiped device (2.02.117).
   Fix storing of vgid when caching metadata (2.02.118).
   Fix recursive lvm-config man page. (2.02.119)
   Refactor polldaemon interfaces to poll every operation by VG/LV couple
   Skip wait after testing in _wait_for_single_lv when polling finished
+  Return 'None' in python for empty string properties instead of crashing.
+  Distinguish signed numerical property type in reports for lvm2app library.
+  Reread raid completion status immediately when progress appears to be zero.
   lvm2app closes locking on lvm_quit().
   Configure detects /run or /var/run.
   Add missing newline in clvmd --help output.

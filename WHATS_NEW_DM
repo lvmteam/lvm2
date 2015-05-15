@@ -1,5 +1,5 @@
-Version 1.02.97 - 
-==============================
+Version 1.02.97 - 15th May 2015
+===============================
   New dm_task_get_info(DM_1_02_97) supports internal_suspend state.
   New symbols are versioned and comes with versioned symbol name (DM_1_02_97).
 

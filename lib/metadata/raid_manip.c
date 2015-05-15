@@ -95,8 +95,10 @@ static int _raid_in_sync(struct logical_volume *lv)
 	}
 	if (sync_percent == DM_PERCENT_0) {
 		/*
-		 * Repeat read of status once more - since buggy kernel target
-		 * sometimes reports 0 even though the array is in 100% sync
+		 * FIXME We repeat the status read here to workaround an
+		 * unresolved kernel bug when we see 0 even though the 
+		 * the array is 100% in sync.
+		 * https://bugzilla.redhat.com/1210637
 		 */
 		if (!lv_raid_percent(lv, &sync_percent)) {
 			log_error("Unable to determine sync status of %s/%s.",
