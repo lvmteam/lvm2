@@ -1,0 +1,89 @@
+.TH "LVPOLL" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
+.SH NAME
+lvpoll \(em Internal command used by lvmpolld to complete some Logical Volume operations.
+
+.SH SYNOPSIS
+.B lvm lvpoll
+.BR \-\-polloperation
+.RI { pvmove | convert | merge | merge_thin }
+.RB [ \-\-abort ]
+.RB [ \-A | \-\-autobackup
+.RI { y | n }]
+.RB [ \-\-commandprofile
+.IR ProfileName ]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-handlemissingpvs ]
+.RB [ \-i | \-\-interval
+.IR Seconds ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.IR LogicalVolume [ Path ]
+.SH DESCRIPTION
+\fBlvpoll\fP is an internal command used by \fBlvmpolld\fP(8) to monitor and
+complete \fBlvconvert\fP(8) and \fBpvmove\fP(8) operations.
+\fBlvpoll\fP itself does not initiate these operations and
+you should never normally need to invoke it directly.
+
+.I LogicalVolume
+The Logical Volume undergoing conversion or, in the case of pvmove, the name of
+the internal pvmove Logical Volume (see \fBEXAMPLES\fP).
+.SH OPTIONS
+See \fBlvm\fP(8) for common options.
+.TP
+.BR \-\-polloperation " {" \fIconvert | \fImerge | \fImerge_thin | \fIpvmove }
+Mandatory option.
+\fIpvmove\fP refers to a pvmove operation that is moving data.
+\fIconvert\fP refers to an operation that is increasing the number of redundant copies of data maintained by a mirror.
+\fImerge\fP indicates a merge operation that doesn't involve thin volumes.
+\fImerge_thin\fP indicates a merge operation involving thin snapshots.
+\fBpvmove\fP(8) and \fBlvconvert\fP(8) describe how to initiate these operations.
+.TP
+.B \-\-abort
+Abort pvmove in progress.  See \fBpvmove\fP(8).
+.TP
+.B \-\-handlemissingpvs
+Used when the polling operation needs to handle missing PVs to be able to
+continue. This can happen when \fBlvconvert\fP(8) is repairing a mirror
+with one or more faulty devices.
+.TP
+.BR \-i ", " \-\-interval " "\fISeconds
+Report progress at regular intervals
+
+.SH EXAMPLES
+Resume polling of a pvmove operation identified by the Logical Volume vg00/pvmove0:
+.sp
+.B lvm lvpoll --polloperation pvmove vg00/pvmove0
+.P
+Abort the same pvmove operation:
+.sp
+.B lvm lvpoll --polloperation pvmove --abort vg00/pvmove0
+.P
+To find out the name of the pvmove Logical Volume resulting from an original
+\fBpvmove /dev/sda1\fP command you may use the following \fBlvs\fP command.
+(Remove the parentheses from the LV name.)
+.sp
+.B lvs -a -S move_pv=/dev/sda1
+.P
+Resume polling of mirror conversion vg00/lvmirror:
+.sp
+.B lvm lvpoll --polloperation convert vg00/lvmirror
+.P
+Complete mirror repair:
+.sp
+.B lvm lvpoll --polloperation convert vg/damaged_mirror --handlemissingpvs
+.P
+Process snapshot merge:
+.sp
+.B lvm lvpoll --polloperation merge vg/snapshot_old
+.P
+Finish thin snapshot merge:
+.sp
+.B lvm lvpoll --polloperation merge_thin vg/thin_snapshot
+.SH SEE ALSO
+.BR lvconvert (8),
+.BR lvm (8),
+.BR lvmpolld (8),
+.BR lvs (8),
+.BR pvmove (8)
