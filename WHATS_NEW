@@ -1,5 +1,6 @@
 Version 2.02.120 -
 ===============================
+  add lvmpolld client mode for querying running server instance for status info.
   Fix some libdaemon socket creation and reuse error paths.
   Daemons (libdaemon) support exit on idle also in non-systemd environment.
   Provide make dist and make rpm targets
