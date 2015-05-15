@@ -666,7 +666,13 @@ int dm_format_dev(char *buf, int bufsize, uint32_t dev_major,
 	return 1;
 }
 
+#if defined(__GNUC__)
+int dm_task_get_info_v1_02_97(struct dm_task *dmt, struct dm_info *info);
+DM_EXPORTED_SYMBOL(dm_task_get_info, 1_02_97);
+int dm_task_get_info_v1_02_97(struct dm_task *dmt, struct dm_info *info)
+#else
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
+#endif
 {
 	if (!dmt->dmi.v4)
 		return 0;
@@ -683,6 +689,7 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	info->inactive_table = dmt->dmi.v4->flags & DM_INACTIVE_PRESENT_FLAG ?
 	    1 : 0;
 	info->deferred_remove = dmt->dmi.v4->flags & DM_DEFERRED_REMOVE;
+	info->internal_suspend = (dmt->dmi.v4->flags & DM_INTERNAL_SUSPEND_FLAG) ? 1 : 0;
 	info->target_count = dmt->dmi.v4->target_count;
 	info->open_count = dmt->dmi.v4->open_count;
 	info->event_nr = dmt->dmi.v4->event_nr;
@@ -2061,6 +2068,12 @@ void dm_lib_exit(void)
 	_version_checked = 0;
 }
 
+#if defined(__GNUC__)
+/*
+ * Maintain binary backward compatibility.
+ * Version script mechanism works with 'gcc' compatible compilers only.
+ */
+
 /*
  * This following code is here to retain ABI compatibility after adding
  * the field deferred_remove to struct dm_info in version 1.02.89.
@@ -2076,16 +2089,31 @@ void dm_lib_exit(void)
  * N.B. Keep this function at the end of the file to make sure that
  * no code in this file accidentally calls it.
  */
-#undef dm_task_get_info
-int dm_task_get_info(struct dm_task *dmt, struct dm_info *info);
-int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
+
+int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info);
+DM_EXPORTED_SYMBOL_BASE(dm_task_get_info);
+int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info)
 {
 	struct dm_info new_info;
 
-	if (!dm_task_get_info_with_deferred_remove(dmt, &new_info))
+	if (!dm_task_get_info_v1_02_97(dmt, &new_info))
 		return 0;
 
 	memcpy(info, &new_info, offsetof(struct dm_info, deferred_remove));
 
 	return 1;
 }
+
+int dm_task_get_info_with_deferred_remove(struct dm_task *dmt, struct dm_info *info);
+int dm_task_get_info_with_deferred_remove(struct dm_task *dmt, struct dm_info *info)
+{
+	struct dm_info new_info;
+
+	if (!dm_task_get_info_v1_02_97(dmt, &new_info))
+		return 0;
+
+	memcpy(info, &new_info, offsetof(struct dm_info, internal_suspend));
+
+	return 1;
+}
+#endif

@@ -151,6 +151,7 @@ struct dm_info {
 	int32_t target_count;
 
 	int deferred_remove;
+	int internal_suspend;
 };
 
 struct dm_deps {
@@ -174,8 +175,6 @@ struct dm_versions {
 
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
-
-#define dm_task_get_info dm_task_get_info_with_deferred_remove
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 
 /*

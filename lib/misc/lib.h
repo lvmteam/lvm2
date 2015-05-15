@@ -30,6 +30,17 @@
 #define PRIptrdiff_t "td"
 #define PRIpid_t PRId32
 
+#if defined(__GNUC__)
+#define DM_EXPORTED_SYMBOL(func, ver) \
+	__asm__(".symver " #func "_v" #ver ", " #func "@@DM_" #ver )
+#define DM_EXPORTED_SYMBOL_BASE(func) \
+	__asm__(".symver " #func "_base, " #func "@Base" )
+#else
+#define DM_EXPORTED_SYMBOL(func, ver)
+#define DM_EXPORTED_SYMBOL_BASE(func)
+#endif
+
+
 #include "intl.h"
 #include "libdevmapper.h"
 #include "util.h"
