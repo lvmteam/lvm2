@@ -914,7 +914,7 @@ int main(int argc, char *argv[])
 		.socket_path = getenv("LVM_LVMPOLLD_SOCKET") ?: LVMPOLLD_SOCKET,
 	};
 
-	while ((opt = getopt_long(argc, argv, "?fhVl:p:s:B:t:", long_options, &option_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "fhVl:p:s:B:t:", long_options, &option_index)) != -1) {
 		switch (opt) {
 		case 0 :
 			if (action < ACTION_MAX) {
@@ -928,7 +928,7 @@ int main(int argc, char *argv[])
 			break;
 		case '?':
 			_usage(argv[0], stderr);
-			exit(EXIT_SUCCESS);
+			exit(EXIT_FAILURE);
 		case 'B': /* --binary */
 			ls.lvm_binary = optarg;
 			server = 1;
