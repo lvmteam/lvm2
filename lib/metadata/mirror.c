@@ -164,7 +164,7 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 	uint64_t region_max;
 	uint64_t region_min, region_min_pow2;
 
-	region_max = (1UL << (ffs((int)extents) - 1)) * (1UL << (ffs((int)extent_size) - 1));
+	region_max = (UINT64_C(1) << (ffs((int)extents) - 1)) * (UINT64_C(1) << (ffs((int)extent_size) - 1));
 
 	if (region_max < UINT32_MAX && region_size > region_max) {
 		region_size = (uint32_t) region_max;
