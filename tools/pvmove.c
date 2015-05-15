@@ -686,12 +686,12 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	/* init_pvmove(1); */
 	/* vg->status |= PVMOVE; */
 
+	if (!_copy_id_components(cmd, lv_mirr, vg_name, lv_mirr_name, lvid))
+		goto out;
+
 	if (flags & PVMOVE_FIRST_TIME)
 		if (!_update_metadata(cmd, vg, lv_mirr, lvs_changed, exclusive))
 			goto_out;
-
-	if (!_copy_id_components(cmd, lv_mirr, vg_name, lv_mirr_name, lvid))
-		goto out;
 
 	/* LVs are all in status LOCKED */
 	r = ECMD_PROCESSED;
