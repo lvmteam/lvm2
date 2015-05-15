@@ -937,13 +937,16 @@ cfg(activation_checks_CFG, "checks", activation_CFG_SECTION, 0, CFG_TYPE_BOOL, D
 	"this only when there seems to be a problem.\n")
 
 cfg(global_use_lvmpolld_CFG, "use_lvmpolld", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_USE_LVMPOLLD, vsn(2, 2, 120), NULL, 0, NULL,
-	"Indicates whether to use lvmpolld instead of classical polldaemon (a process\n"
-	"forked off an initiating lvm command) or not. When set to 1 and native systemd\n"
-	"service is installed in the system lvm starts using lvmpolld. lvmpolld gets\n"
-	"auto-activated by systemd when a message lands on the respective lvmpolld socket.\n"
-	"All commands that would require polling of in-progress operation are therefore\n"
-	"spawned in lvmpolld's service cgroup.\n"
-	"When set to 0 lvm falls back to classical polling.\n")
+	"Use lvmpolld to supervise long running LVM commands.\n"
+	"When enabled, control of long running LVM commands is transferred\n"
+	"from the original LVM command to the lvmpolld daemon.  This allows\n"
+	"the operation to continue independent of the original LVM command.\n"
+	"After lvmpolld takes over, the LVM command displays the progress\n"
+	"of the ongoing operation.  lvmpolld itself runs LVM commands to manage\n"
+	"the progress of ongoing operations.  lvmpolld can be used as a native\n"
+	"systemd service, which allows it to be started on demand, and to use\n"
+	"its own control group.  When this option is disabled, LVM commands will\n"
+	"supervise long running operations by forking themselves.\n")
 
 cfg(activation_udev_sync_CFG, "udev_sync", activation_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_UDEV_SYNC, vsn(2, 2, 51), NULL, 0, NULL,
 	"Use udev notifications to synchronize udev and LVM.\n"
