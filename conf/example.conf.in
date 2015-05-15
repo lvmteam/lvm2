@@ -939,14 +939,16 @@ global {
 	# This configuration option does not have a default value defined.
 	# system_id_file = ""
 
-	# Indicates whether to use lvmpolld instead of classical polldaemon (a process
-	# forked off an initiating lvm command) or not. When set to 1 and native systemd
-	# service is installed in the system lvm starts using lvmpolld. lvmpolld gets
-	# auto-activated by systemd when a message lands on the respective lvmpolld socket.
-	# All commands that would require polling of in-progress operation are therefore
-	# spawned in lvmpolld's service cgroup.
-	#
-	# When set to 0 lvm falls back to classical polling.
+	# Use lvmpolld to supervise long running LVM commands.
+	# When enabled, control of long running LVM commands is transferred
+	# from the original LVM command to the lvmpolld daemon. This allows
+	# the operation to continue independent of the original LVM command.
+	# After lvmpolld takes over, the LVM command displays the progress
+	# of the ongoing operation. lvmpolld itself runs LVM commands to manage
+	# the progress of ongoing operations. lvmpolld can be used as a native
+	# systemd service, which allows it to be started on demand, and to use
+	# its own control group. When this option is disabled, LVM commands will
+	# supervise long running operations by forking themselves.
 	use_lvmpolld = @DEFAULT_USE_LVMPOLLD@
 }
 
