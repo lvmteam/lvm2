@@ -83,10 +83,16 @@ static int poll_lv(struct cmd_context *cmd, const char *lv_name)
 {
 	struct daemon_parms parms = { 0 };
 	struct poll_operation_id id = {
-		.vg_name = extract_vgname(cmd, lv_name),
-		.lv_name = strchr(lv_name, '/') + 1,
-		.display_name = lv_name
+		.display_name = skip_dev_dir(cmd, lv_name, NULL)
 	};
+
+	if (!id.display_name)
+		return_EINVALID_CMD_LINE;
+
+	id.lv_name = id.display_name;
+
+	if (!validate_lvname_param(cmd, &id.vg_name, &id.lv_name))
+		return_EINVALID_CMD_LINE;
 
 	if (!_set_daemon_parms(cmd, &parms))
 		return_EINVALID_CMD_LINE;
@@ -106,8 +112,8 @@ int lvpoll(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!argc || !strchr(argv[0], '/')) {
-		log_error("Provide full VG/LV name");
+	if (!argc) {
+		log_error("Provide LV name");
 		return EINVALID_CMD_LINE;
 	}
 
