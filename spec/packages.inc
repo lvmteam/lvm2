@@ -152,8 +152,9 @@ fi
   %{_udevdir}/69-dm-lvm-metad.rules
  %endif
 %endif
-%if %{have_service lvmetad}
+%if %{have_service lvmpolld}
   %{_mandir}/man8/lvmpolld.8.gz
+  %{_mandir}/man8/lvm-lvpoll.8.gz
 %endif
 %dir %{_sysconfdir}/lvm
 %ghost %{_sysconfdir}/lvm/cache/.cache
