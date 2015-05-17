@@ -9,6 +9,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
+
 . lib/inittest
 
 test -e LOCAL_LVMPOLLD && skip
@@ -35,3 +37,5 @@ grep "Logical volume \"thin_orig\" successfully removed" out
 grep "Logical volume \"thin_snap\" successfully removed" out
 not lvs $vg1/thin_orig
 not lvs $vg1/thin_snap
+
+vgremove -ff $vg1

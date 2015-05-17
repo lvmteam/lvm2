@@ -13,6 +13,8 @@
 # test support for non-power-of-2 thin chunk size
 #
 
+export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
+
 . lib/inittest
 
 test -e LOCAL_LVMPOLLD && skip

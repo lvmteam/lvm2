@@ -11,6 +11,8 @@
 
 # no automatic extensions, just umount
 
+export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
+
 is_dir_mounted_()
 {
 	cat /proc/mounts | sed 's:\\040: :g' | grep "$1"
