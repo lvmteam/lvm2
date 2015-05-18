@@ -1516,10 +1516,11 @@ if test "$INTL" = yes; then
 
 	AC_ARG_WITH(localedir,
 		    AC_HELP_STRING([--with-localedir=DIR],
-				   [translation files in DIR [PREFIX/share/locale]]),
-		    LOCALEDIR=$withval, LOCALEDIR="${prefix}/share/locale")
+				   [locale-dependent data [DATAROOTDIR/locale]]),
+		    localedir=$withval, localedir=${localedir-'${datarootdir}/locale'})
 	AC_DEFINE_UNQUOTED([INTL_PACKAGE], ["$INTL_PACKAGE"], [Internalization package])
-	AC_DEFINE_UNQUOTED([LOCALEDIR], ["$LOCALEDIR"], [Location of translation files])
+	# double eval needed ${datarootdir} -> ${prefix}/share -> real path
+	AC_DEFINE_UNQUOTED([LOCALEDIR], ["$(eval echo $(eval echo $localedir))"], [Locale-dependent data])
 fi
 
 ################################################################################
@@ -1813,6 +1814,7 @@ AC_SUBST(LVM_PATCHLEVEL)
 AC_SUBST(LVM_PATH)
 AC_SUBST(LVM_RELEASE)
 AC_SUBST(LVM_RELEASE_DATE)
+AC_SUBST(localedir)
 AC_SUBST(MANGLING)
 AC_SUBST(MIRRORS)
 AC_SUBST(MSGFMT)

@@ -507,7 +507,7 @@
 /* Internalization package */
 #undef INTL_PACKAGE
 
-/* Location of translation files */
+/* Locale-dependent data */
 #undef LOCALEDIR
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing

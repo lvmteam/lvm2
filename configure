@@ -1724,7 +1724,7 @@ Optional Packages:
                           lvmetad pidfile [PID_DIR/lvmetad.pid]
   --with-lvmpolld-pidfile=PATH
                           lvmpolld pidfile [PID_DIR/lvmpolld.pid]
-  --with-localedir=DIR    translation files in DIR [PREFIX/share/locale]
+  --with-localedir=DIR    locale-dependent data [DATAROOTDIR/locale]
   --with-confdir=DIR      configuration files in DIR [/etc]
   --with-staticdir=DIR    static binaries in DIR [EPREFIX/sbin]
   --with-usrlibdir=DIR    usrlib in DIR [PREFIX/lib]
@@ -12432,9 +12432,9 @@ fi
 
 # Check whether --with-localedir was given.
 if test "${with_localedir+set}" = set; then :
-  withval=$with_localedir; LOCALEDIR=$withval
+  withval=$with_localedir; localedir=$withval
 else
-  LOCALEDIR="${prefix}/share/locale"
+  localedir=${localedir-'${datarootdir}/locale'}
 fi
 
 
@@ -12442,9 +12442,10 @@ cat >>confdefs.h <<_ACEOF
 #define INTL_PACKAGE "$INTL_PACKAGE"
 _ACEOF
 
+	# double eval needed ${datarootdir} -> ${prefix}/share -> real path
 
 cat >>confdefs.h <<_ACEOF
-#define LOCALEDIR "$LOCALEDIR"
+#define LOCALEDIR "$(eval echo $(eval echo $localedir))"
 _ACEOF
 
 fi
@@ -13127,6 +13128,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
