@@ -224,11 +224,6 @@ endif
 # end of fPIC protection
 endif
 
-
-ifeq ("@INTL@", "yes")
-  DEFS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
-endif
-
 LDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 CLDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 
@@ -239,14 +234,6 @@ CLDFLAGS += -L$(top_builddir)/libdaemon/client
 ifeq ("@DMEVENTD@", "yes")
   LDFLAGS += -L$(top_builddir)/daemons/dmeventd
   CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
-endif
-
-ifeq ("@DM_COMPAT@", "yes")
-  DEFS += -DDM_COMPAT
-endif
-
-ifeq ("@DM_IOCTLS@", "yes")
-  DEFS += -DDM_IOCTLS
 endif
 
 # Combination of DEBUG_POOL and DEBUG_ENFORCE_POOL_LOCKING is not suppored.

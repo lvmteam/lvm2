@@ -677,11 +677,9 @@ LVM_LIBAPI
 LVM_VERSION
 LVM1_FALLBACK
 LVM1
-LOCALEDIR
 LIB_SUFFIX
 LDDEPS
 JOBS
-INTL_PACKAGE
 INTL
 HAVE_VALGRIND
 HAVE_REALTIME
@@ -691,11 +689,6 @@ FSADM
 ELDFLAGS
 DM_LIB_PATCHLEVEL
 DM_LIB_VERSION
-DM_IOCTLS
-DM_DEVICE_UID
-DM_DEVICE_MODE
-DM_DEVICE_GID
-DM_COMPAT
 DMEVENTD_PATH
 DMEVENTD
 DL_LIBS
@@ -7363,6 +7356,11 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DM_DEVICE_UID" >&5
 $as_echo "$DM_DEVICE_UID" >&6; }
 
+cat >>confdefs.h <<_ACEOF
+#define DM_DEVICE_UID $DM_DEVICE_UID
+_ACEOF
+
+
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking device node gid" >&5
 $as_echo_n "checking device node gid... " >&6; }
@@ -7378,6 +7376,11 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DM_DEVICE_GID" >&5
 $as_echo "$DM_DEVICE_GID" >&6; }
 
+cat >>confdefs.h <<_ACEOF
+#define DM_DEVICE_GID $DM_DEVICE_GID
+_ACEOF
+
+
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking device node mode" >&5
 $as_echo_n "checking device node mode... " >&6; }
@@ -7392,6 +7395,11 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DM_DEVICE_MODE" >&5
 $as_echo "$DM_DEVICE_MODE" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define DM_DEVICE_MODE $DM_DEVICE_MODE
+_ACEOF
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking when to create device nodes" >&5
 $as_echo_n "checking when to create device nodes... " >&6; }
@@ -11303,8 +11311,11 @@ else
 fi
 
 
-if test "$DM_COMPAT" = yes; then
-	as_fn_error $? "--enable-compat is not currently supported.
+if test "$DM_COMPAT" = yes; then :
+
+$as_echo "#define DM_COMPAT 1" >>confdefs.h
+
+      as_fn_error $? "--enable-compat is not currently supported.
 Since device-mapper version 1.02.66, only one version (4) of the device-mapper
 ioctl protocol is supported." "$LINENO" 5
 fi
@@ -11330,6 +11341,11 @@ if test "${enable_ioctl+set}" = set; then :
   enableval=$enable_ioctl; DM_IOCTLS=$enableval
 fi
 
+if test "$DM_IOCTLS" = yes; then :
+
+$as_echo "#define DM_IOCTLS 1" >>confdefs.h
+
+fi
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable O_DIRECT" >&5
@@ -12408,9 +12424,10 @@ else
   MSGFMT="$ac_cv_path_MSGFMT"
 fi
 
-	if [ -z "$MSGFMT" ]; then
-		as_fn_error $? "msgfmt not found in path $PATH" "$LINENO" 5
-	fi
+
+	if test -z "$MSGFMT"]; then :
+  as_fn_error $? "msgfmt not found in path $PATH" "$LINENO" 5
+fi
 
 
 # Check whether --with-localedir was given.
@@ -12419,6 +12436,16 @@ if test "${with_localedir+set}" = set; then :
 else
   LOCALEDIR='${prefix}/share/locale'
 fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define INTL_PACKAGE "$INTL_PACKAGE"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define LOCALEDIR "$LOCALEDIR"
+_ACEOF
 
 fi
 
@@ -13100,13 +13127,6 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
-
-
-
-
-
-
-
 
 
 

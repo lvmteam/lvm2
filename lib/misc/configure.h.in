@@ -113,6 +113,21 @@
 /* Path to dmeventd pidfile. */
 #undef DMEVENTD_PIDFILE
 
+/* Define to enable compat protocol */
+#undef DM_COMPAT
+
+/* Define default group for device node */
+#undef DM_DEVICE_GID
+
+/* Define default mode for device node */
+#undef DM_DEVICE_MODE
+
+/* Define default owner for device node */
+#undef DM_DEVICE_UID
+
+/* Define to enable ioctls calls to kernel */
+#undef DM_IOCTLS
+
 /* Library version */
 #undef DM_LIB_VERSION
 
@@ -488,6 +503,12 @@
 
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
+
+/* Internalization package */
+#undef INTL_PACKAGE
+
+/* Location of transaltion files */
+#undef LOCALEDIR
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
