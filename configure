@@ -12434,7 +12434,7 @@ fi
 if test "${with_localedir+set}" = set; then :
   withval=$with_localedir; LOCALEDIR=$withval
 else
-  LOCALEDIR='${prefix}/share/locale'
+  LOCALEDIR="${prefix}/share/locale"
 fi
 
 
