@@ -81,4 +81,4 @@ liblvm.cflow: $(SOURCES)
 
 cflow: liblvm.cflow
 
-DISTCLEAN_TARGETS += $(LIB_NAME).pc .exported_symbols_generated
+DISTCLEAN_TARGETS += $(LIB_NAME).pc

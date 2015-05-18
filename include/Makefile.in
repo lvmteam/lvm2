@@ -20,8 +20,12 @@ include $(top_builddir)/make.tmpl
 
 all: .symlinks_created
 
-.symlinks_created: .symlinks 
-	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
+LINKS := $(shell find . -maxdepth 1 -type l)
+
+.symlinks_created: .symlinks
+ifneq (,$(firstword $(LINKS)))
+	$(RM) $(LINKS)
+endif
 	for i in `cat $<`; do $(LN_S) $$i ; done
 	touch $@
 
@@ -31,5 +35,5 @@ device-mapper: all
 
 cflow: all
 
-DISTCLEAN_TARGETS += $(shell find . -maxdepth 1 -type l)
-DISTCLEAN_TARGETS += .include_symlinks .symlinks_created .symlinks
+DISTCLEAN_TARGETS += .symlinks
+CLEAN_TARGETS += $(LINKS) .include_symlinks .symlinks_created

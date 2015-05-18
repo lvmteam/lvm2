@@ -263,12 +263,10 @@ LIB = $(LIB_SHARED) $(LIB_LOCAL) $(LIB_EXEC) $(LIB_FLAVOURS)
 	$(LN_S) -f $(abs_top_srcdir)/conf/thin-performance.profile lib/thin-performance.profile
 	touch $@
 
-cleantest:
-	test "$(srcdir)" = . || $(RM) $(RUN_BASE)
-	$(RM) -r $(LVM_TEST_RESULTS)
-
-clean: cleantest
-distclean: cleantest
+CLEAN_DIRS += $(LVM_TEST_RESULTS)
+ifneq (.,$(firstword $(srcdir)))
+CLEAN_TARGETS += $(RUN_BASE)
+endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,$(CMDS)) \
 	lib/clvmd lib/dmeventd lib/dmsetup lib/lvmetad lib/fsadm lib/vgimportclone \
