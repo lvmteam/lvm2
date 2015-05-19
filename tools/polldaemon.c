@@ -160,18 +160,16 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		if (lv && parms->lv_type && !(lv->status & parms->lv_type))
 			lv = NULL;
 
-		if (!lv && parms->lv_type == PVMOVE) {
-			log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
-						id->display_name);
+		if (!lv) {
+			if (parms->lv_type == PVMOVE)
+				log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
+							id->display_name);
+			else
+				log_print_unless_silent("Can't find LV in %s for %s.",
+							vg->name, id->display_name);
+
 			unlock_and_release_vg(cmd, vg, vg->name);
 			return 1;
-		}
-
-		if (!lv) {
-			log_error("ABORTING: Can't find LV in %s for %s.",
-				  vg->name, id->display_name);
-			unlock_and_release_vg(cmd, vg, vg->name);
-			return 0;
 		}
 
 		/*
