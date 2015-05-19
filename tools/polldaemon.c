@@ -59,8 +59,6 @@ struct volume_group *poll_get_copy_vg(struct cmd_context *cmd,
 				      const char *uuid __attribute__((unused)),
 				      uint32_t flags)
 {
-	dev_close_all();
-
 	if (name && !strchr(name, '/'))
 		return vg_read(cmd, name, NULL, flags);
 
@@ -153,6 +151,7 @@ static void _nanosleep(unsigned secs, unsigned allow_zero_time)
 static void _sleep_and_rescan_devices(struct daemon_parms *parms)
 {
 	if (parms->interval && !parms->aborting) {
+		dev_close_all();
 		_nanosleep(parms->interval, 1);
 		/* Devices might have changed while we slept */
 		init_full_scan_done(0);
@@ -362,6 +361,8 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 		process_each_vg(cmd, 0, NULL, READ_FOR_UPDATE, handle, _poll_vg);
 		if (!parms->outstanding_count)
 			break;
+		if (parms->interval)
+			dev_close_all();
 		_nanosleep(parms->interval, 1);
 	}
 }
@@ -487,6 +488,9 @@ static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 				report_progress(cmd, idl->id, lpdp.parms);
 		}
 
+		if (lpdp.parms->interval)
+			dev_close_all();
+
 		_nanosleep(lpdp.parms->interval, 0);
 	}
 
@@ -512,6 +516,9 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
 				    finished ||
 				    (!parms->aborting && !(r = report_progress(cmd, id, parms))))
 					break;
+
+				if (parms->interval)
+					dev_close_all();
 
 				_nanosleep(parms->interval, 0);
 			}
