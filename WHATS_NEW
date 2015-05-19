@@ -1,5 +1,8 @@
 Version 2.02.121 - 
 ================================
+  Do not fail polling when poll LV not found (already finished or removed).
+  Replace poll_get_copy_vg/lv fns with vg_read() and find_lv() in polldaemon.
+  Close all device fds only in before sleep call in polldaemon.
 
 Version 2.02.120 - 15th May 2015
 ================================
