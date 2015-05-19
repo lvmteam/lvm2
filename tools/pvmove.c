@@ -744,8 +744,6 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 
 static struct poll_functions _pvmove_fns = {
 	.get_copy_name_from_lv = get_pvmove_pvname_from_lv_mirr,
-	.get_copy_vg = poll_get_copy_vg,
-	.get_copy_lv = poll_get_copy_lv,
 	.poll_progress = poll_mirror_progress,
 	.update_metadata = pvmove_update_metadata,
 	.finish_copy = pvmove_finish,
