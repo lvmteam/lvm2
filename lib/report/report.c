@@ -99,6 +99,8 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 #define NOFLAG 0
 #define NAMED DM_REPORT_FIELD_RESERVED_VALUE_NAMED
 #define RANGE DM_REPORT_FIELD_RESERVED_VALUE_RANGE
+#define FUZZY DM_REPORT_FIELD_RESERVED_VALUE_FUZZY_NAMES
+#define DYNAMIC DM_REPORT_FIELD_RESERVED_VALUE_DYNAMIC_VALUE
 
 #define TYPE_RESERVED_VALUE(type, flags, id, desc, value, ...) \
 	static const char *_reserved_ ## id ## _names[] = { __VA_ARGS__, NULL}; \
@@ -121,6 +123,8 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 #undef TYPE_RESERVED_VALUE
 #undef FIELD_RESERVED_VALUE
 #undef FIELD_RESERVED_BINARY_VALUE
+#undef FUZZY
+#undef DYNAMIC
 
 /*
  * Create array of reserved values to be registered with reporting code via
@@ -133,6 +137,8 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 #define NOFLAG 0
 #define NAMED DM_REPORT_FIELD_RESERVED_VALUE_NAMED
 #define RANGE DM_REPORT_FIELD_RESERVED_VALUE_RANGE
+#define FUZZY DM_REPORT_FIELD_RESERVED_VALUE_FUZZY_NAMES
+#define DYNAMIC DM_REPORT_FIELD_RESERVED_VALUE_DYNAMIC_VALUE
 
 #define TYPE_RESERVED_VALUE(type, flags, id, desc, value, ...) {type | flags, &_reserved_ ## id, _reserved_ ## id ## _names, desc},
 
@@ -151,6 +157,8 @@ static const struct dm_report_reserved_value _report_reserved_values[] = {
 #undef NOFLAG
 #undef NAMED
 #undef RANGE
+#undef FUZZY
+#undef DYNAMIC
 #undef TYPE_RESERVED_VALUE
 #undef FIELD_RESERVED_VALUE
 #undef FIELD_RESERVED_BINARY_VALUE

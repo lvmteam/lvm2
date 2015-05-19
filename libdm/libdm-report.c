@@ -63,6 +63,7 @@ struct dm_report {
 
 	/* Null-terminated array of reserved values */
 	const struct dm_report_reserved_value *reserved_values;
+	struct dm_hash_table *value_cache;
 };
 
 /*
@@ -1222,6 +1223,8 @@ void dm_report_free(struct dm_report *rh)
 {
 	if (rh->selection)
 		dm_pool_destroy(rh->selection->mem);
+	if (rh->value_cache)
+		dm_hash_destroy(rh->value_cache);
 	dm_pool_destroy(rh->mem);
 	dm_free(rh);
 }
@@ -2203,6 +2206,21 @@ dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator)
 		default:
 			return percent;
 	}
+}
+
+int dm_report_value_cache_set(struct dm_report *rh, const char *name, const void *data)
+{
+	if (!rh->value_cache && (!(rh->value_cache = dm_hash_create(64)))) {
+		log_error("Failed to create cache for values used during reporting.");
+		return 0;
+	}
+
+	return dm_hash_insert(rh->value_cache, name, (void *) data);
+}
+
+const void *dm_report_value_cache_get(struct dm_report *rh, const char *name)
+{
+	return (rh->value_cache) ? dm_hash_lookup(rh->value_cache, name) : NULL;
 }
 
 /*
