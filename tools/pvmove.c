@@ -629,7 +629,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	/* Read VG */
 	log_verbose("Finding volume group \"%s\"", pv_vg_name(pv));
 
-	vg = poll_get_copy_vg(cmd, pv_vg_name(pv), NULL, READ_FOR_UPDATE);
+	vg = vg_read(cmd, pv_vg_name(pv), NULL, READ_FOR_UPDATE);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		return_ECMD_FAILED;
@@ -719,7 +719,7 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 		return_0;
 
 	/* need read-only access */
-	vg = poll_get_copy_vg(cmd, pv_vg_name(pv), NULL, 0);
+	vg = vg_read(cmd, pv_vg_name(pv), NULL, 0);
 	if (vg_read_error(vg)) {
 		log_error("ABORTING: Can't read VG for %s.", pv_name);
 		release_vg(vg);
