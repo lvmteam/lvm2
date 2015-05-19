@@ -171,7 +171,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 			_sleep_and_rescan_devices(parms);
 
 		/* Locks the (possibly renamed) VG again */
-		vg = parms->poll_fns->get_copy_vg(cmd, id->vg_name, NULL, READ_FOR_UPDATE);
+		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE);
 		if (vg_read_error(vg)) {
 			release_vg(vg);
 			log_error("ABORTING: Can't reread VG for %s.", id->display_name);
@@ -379,7 +379,7 @@ static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id
 	struct volume_group *vg;
 	struct logical_volume *lv;
 
-	vg = parms->poll_fns->get_copy_vg(cmd, id->vg_name, NULL, 0);
+	vg = vg_read(cmd, id->vg_name, NULL, 0);
 	if (vg_read_error(vg)) {
 		release_vg(vg);
 		log_error("Can't reread VG for %s", id->display_name);
