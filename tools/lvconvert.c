@@ -3259,7 +3259,7 @@ static struct logical_volume *get_vg_lock_and_logical_volume(struct cmd_context 
 		return_NULL;
 	}
 
-	if (!(lv = poll_get_copy_lv(cmd, vg, lv_name, NULL, 0))) {
+	if (!(lv = find_lv(vg, lv_name))) {
 		log_error("Can't find LV %s in VG %s", lv_name, vg_name);
 		unlock_and_release_vg(cmd, vg, vg_name);
 		return NULL;
