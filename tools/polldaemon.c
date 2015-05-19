@@ -179,7 +179,12 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 			return 0;
 		}
 
-		lv = parms->poll_fns->get_copy_lv(cmd, vg, id->lv_name, id->uuid, parms->lv_type);
+		lv = find_lv(vg, id->lv_name);
+
+		if (lv && id->uuid && strcmp(id->uuid, (char *)&lv->lvid))
+			lv = NULL;
+		if (lv && parms->lv_type && !(lv->status & parms->lv_type))
+			lv = NULL;
 
 		if (!lv && parms->lv_type == PVMOVE) {
 			log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
@@ -339,8 +344,13 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 
 	/* perform the poll operation on LVs collected in previous cycle */
 	dm_list_iterate_items(idl, &idls) {
-		lv = parms->poll_fns->get_copy_lv(cmd, vg, idl->id->lv_name, idl->id->uuid, parms->lv_type);
-		if (lv && _check_lv_status(cmd, vg, lv, idl->id->display_name, parms, &finished) && !finished)
+		if (!(lv = find_lv(vg, idl->id->lv_name)))
+			continue;
+		if (idl->id->uuid && strcmp(idl->id->uuid, (char *)&lv->lvid))
+			continue;
+		if (parms->lv_type && !(lv->status & parms->lv_type))
+			continue;
+		if (_check_lv_status(cmd, vg, lv, idl->id->display_name, parms, &finished) && !finished)
 			parms->outstanding_count++;
 	}
 
@@ -386,7 +396,13 @@ static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id
 		return 0;
 	}
 
-	lv = parms->poll_fns->get_copy_lv(cmd, vg, id->lv_name, id->uuid, parms->lv_type);
+	lv = find_lv(vg, id->lv_name);
+
+	if (lv && id->uuid && strcmp(id->uuid, (char *)&lv->lvid))
+		lv = NULL;
+	if (lv && parms->lv_type && !(lv->status & parms->lv_type))
+		lv = NULL;
+
 	if (!lv && parms->lv_type == PVMOVE) {
 		log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
 					id->display_name);
