@@ -12425,7 +12425,7 @@ else
 fi
 
 
-	if test -z "$MSGFMT"]; then :
+	if test -z "$MSGFMT"; then :
   as_fn_error $? "msgfmt not found in path $PATH" "$LINENO" 5
 fi
 

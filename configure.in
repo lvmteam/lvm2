@@ -1512,7 +1512,7 @@ if test "$INTL" = yes; then
 	INTL_PACKAGE="lvm2"
 	AC_PATH_TOOL(MSGFMT, msgfmt)
 
-	AS_IF(test -z "$MSGFMT"], [AC_MSG_ERROR([msgfmt not found in path $PATH])])
+	AS_IF([test -z "$MSGFMT"], [AC_MSG_ERROR([msgfmt not found in path $PATH])])
 
 	AC_ARG_WITH(localedir,
 		    AC_HELP_STRING([--with-localedir=DIR],
