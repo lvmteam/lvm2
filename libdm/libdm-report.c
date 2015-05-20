@@ -2123,14 +2123,48 @@ static const char *_tok_value_string(const char *s,
 	return s;
 }
 
-static const char *_reserved_name(const char **names, const char *s, size_t len)
+static const char *_reserved_name(struct dm_report *rh,
+				  const struct dm_report_reserved_value *reserved,
+				  const struct dm_report_field_reserved_value *frv,
+				  uint32_t field_num, const char *s, size_t len)
 {
-	const char **name = names;
+	dm_report_reserved_handler handler;
+	const char *canonical_name;
+	const char **name;
+	char *tmp_s;
+	char c;
+	int r;
+
+	name = reserved->names;
 	while (*name) {
 		if ((strlen(*name) == len) && !strncmp(*name, s, len))
 			return *name;
 		name++;
 	}
+
+	if (reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_FUZZY_NAMES) {
+		handler = (dm_report_reserved_handler) frv ? frv->value : reserved->value;
+		c = s[len];
+		tmp_s = (char *) s;
+		tmp_s[len] = '\0';
+		if ((r = handler(rh, rh->selection->mem, field_num,
+				 DM_REPORT_RESERVED_PARSE_FUZZY_NAME,
+				 tmp_s, (const void **) &canonical_name)) <= 0) {
+			if (r == -1)
+				log_error(INTERNAL_ERROR "%s reserved value handler for field %s has missing "
+					  "implementation of DM_REPORT_RESERVED_PARSE_FUZZY_NAME action",
+					  (reserved->type & DM_REPORT_FIELD_TYPE_MASK) ? "type-specific" : "field-specific",
+					   rh->fields[field_num].id);
+			else
+				log_error("Error occured while processing %s reserved value handler for field %s",
+					  (reserved->type & DM_REPORT_FIELD_TYPE_MASK) ? "type-specific" : "field-specific",
+					   rh->fields[field_num].id);
+		}
+		tmp_s[len] = c;
+		if (r && canonical_name)
+			return canonical_name;
+	}
+
 	return NULL;
 }
 
@@ -2144,6 +2178,7 @@ static const char *_get_reserved(struct dm_report *rh, unsigned type,
 				 struct reserved_value_wrapper *rvw)
 {
 	const struct dm_report_reserved_value *iter = implicit ? NULL : rh->reserved_values;
+	const struct dm_report_field_reserved_value *frv;
 	const char *tmp_begin, *tmp_end, *tmp_s = s;
 	const char *name = NULL;
 	char c;
@@ -2160,12 +2195,14 @@ static const char *_get_reserved(struct dm_report *rh, unsigned type,
 	while (iter->value) {
 		if (!(iter->type & DM_REPORT_FIELD_TYPE_MASK)) {
 			/* DM_REPORT_FIELD_TYPE_NONE - per-field reserved value */
-			if (((((const struct dm_report_field_reserved_value *) iter->value)->field_num) == field_num) &&
-			    (name = _reserved_name(iter->names, tmp_begin, tmp_end - tmp_begin)))
+			frv = (const struct dm_report_field_reserved_value *) iter->value;
+			if ((frv->field_num == field_num) && (name = _reserved_name(rh, iter, frv, field_num,
+										    tmp_begin, tmp_end - tmp_begin)))
 				break;
 		} else if (iter->type & type) {
 			/* DM_REPORT_FIELD_TYPE_* - per-type reserved value */
-			if ((name = _reserved_name(iter->names, tmp_begin, tmp_end - tmp_begin)))
+			if ((name = _reserved_name(rh, iter, NULL, field_num,
+						   tmp_begin, tmp_end - tmp_begin)))
 				break;
 		}
 		iter++;
@@ -3115,6 +3152,8 @@ static int _get_reserved_value(struct dm_report *rh, uint32_t field_num,
 			       struct reserved_value_wrapper *rvw)
 {
 	const void *tmp_value;
+	dm_report_reserved_handler handler;
+	int r;
 
 	if (!rvw->reserved) {
 		rvw->value = NULL;
@@ -3122,9 +3161,29 @@ static int _get_reserved_value(struct dm_report *rh, uint32_t field_num,
 	}
 
 	if (rvw->reserved->type & DM_REPORT_FIELD_TYPE_MASK)
+		/* type reserved value */
 		tmp_value = rvw->reserved->value;
 	else
+		/* per-field reserved value */
 		tmp_value = ((const struct dm_report_field_reserved_value *) rvw->reserved->value)->value;
+
+	if (rvw->reserved->type & (DM_REPORT_FIELD_RESERVED_VALUE_DYNAMIC_VALUE | DM_REPORT_FIELD_RESERVED_VALUE_FUZZY_NAMES)) {
+		handler = (dm_report_reserved_handler) tmp_value;
+		if ((r = handler(rh, rh->selection->mem, field_num,
+				 DM_REPORT_RESERVED_GET_DYNAMIC_VALUE,
+				 rvw->matched_name, &tmp_value) <= 0)) {
+			if (r == -1)
+				log_error(INTERNAL_ERROR "%s reserved value handler for field %s has missing"
+					  "implementation of DM_REPORT_RESERVED_GET_DYNAMIC_VALUE action",
+					  (rvw->reserved->type) & DM_REPORT_FIELD_TYPE_MASK ? "type-specific" : "field-specific",
+					  rh->fields[field_num].id);
+			else
+				log_error("Error occured while processing %s reserved value handler for field %s",
+					  (rvw->reserved->type) & DM_REPORT_FIELD_TYPE_MASK ? "type-specific" : "field-specific",
+					  rh->fields[field_num].id);
+			return 0;
+		}
+	}
 
 	rvw->value = tmp_value;
 	return 1;

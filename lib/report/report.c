@@ -96,6 +96,8 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
  * 		- 'reserved_value_id_n' (for 0)
  */
 #define NUM uint64_t
+#define NUM_HND dm_report_reserved_handler
+#define HND (dm_report_reserved_handler)
 #define NOFLAG 0
 #define NAMED DM_REPORT_FIELD_RESERVED_VALUE_NAMED
 #define RANGE DM_REPORT_FIELD_RESERVED_VALUE_RANGE
@@ -117,6 +119,8 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 #include "values.h"
 
 #undef NUM
+#undef NUM_HND
+#undef HND
 #undef NOFLAG
 #undef NAMED
 #undef RANGE
@@ -134,6 +138,8 @@ static const int32_t _reserved_num_undef_32 = INT32_C(-1);
 */
 
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
+#define NUM_HND DM_REPORT_FIELD_TYPE_NUMBER
+#define HND 0
 #define NOFLAG 0
 #define NAMED DM_REPORT_FIELD_RESERVED_VALUE_NAMED
 #define RANGE DM_REPORT_FIELD_RESERVED_VALUE_RANGE
@@ -154,6 +160,8 @@ static const struct dm_report_reserved_value _report_reserved_values[] = {
 };
 
 #undef NUM
+#undef NUM_HND
+#undef HND
 #undef NOFLAG
 #undef NAMED
 #undef RANGE
