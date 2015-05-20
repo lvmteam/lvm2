@@ -499,7 +499,7 @@ ifeq (,$(firstword $(EXPORTED_SYMBOLS)))
 		 echo "	local:"; echo "		*;"; echo "};") > $@
 else
 	set -e;\
-	R=$(shell sort $^ | uniq -u);\
+	R=$$(sort $^ | uniq -u);\
 	test -z "$$R" || { echo "Mismatch between symbols in shared library and lists in .exported_symbols.* files: $$R"; false; } ;\
 	for i in $(EXPORTED_SYMBOLS); do\
 		echo "$${i##*.} {"; echo "	global:";\
