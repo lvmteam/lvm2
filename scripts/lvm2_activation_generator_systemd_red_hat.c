@@ -24,8 +24,9 @@
 #include "lvm2app.h"
 #include "configure.h"		/* for LVM_PATH */
 
-#define KMSG_DEV_PATH        "/dev/kmsg"
-#define LVM_CONF_USE_LVMETAD "global/use_lvmetad"
+#define KMSG_DEV_PATH		"/dev/kmsg"
+#define LVM_CONF_USE_LVMETAD	"global/use_lvmetad"
+#define LVM_CONF_USE_LVMPOLLD	"global/use_lvmpolld"
 
 #define UNIT_TARGET_LOCAL_FS  "local-fs.target"
 #define UNIT_TARGET_REMOTE_FS "remote-fs.target"
@@ -66,19 +67,18 @@ static void kmsg(int log_level, const char *format, ...)
 	(void) write(kmsg_fd, message, n + 4);
 }
 
-static int lvm_uses_lvmetad(void)
+static void lvm_get_use_lvmetad_and_lvmpolld(int *use_lvmetad, int *use_lvmpolld)
 {
 	lvm_t lvm;
-	int r;
 
+	*use_lvmetad = *use_lvmpolld = 0;
 	if (!(lvm = lvm_init(NULL))) {
 		kmsg(LOG_ERR, "LVM: Failed to initialize library context for activation generator.\n");
-		return 0;
+		return;
 	}
-	r = lvm_config_find_bool(lvm, LVM_CONF_USE_LVMETAD, 0);
+	*use_lvmetad = lvm_config_find_bool(lvm, LVM_CONF_USE_LVMETAD, 0);
+	*use_lvmpolld = lvm_config_find_bool(lvm, LVM_CONF_USE_LVMPOLLD, 0);
 	lvm_quit(lvm);
-
-	return r;
 }
 
 static int register_unit_with_target(const char *dir, const char *unit, const char *target)
@@ -107,7 +107,7 @@ out:
 	return r;
 }
 
-static int generate_unit(const char *dir, int unit)
+static int generate_unit(const char *dir, int unit, int sysinit_needed)
 {
 	FILE *f;
 	const char *unit_name = unit_names[unit];
@@ -150,8 +150,10 @@ static int generate_unit(const char *dir, int unit)
 		      "[Service]\n", f);
 	}
 
-	fputs("ExecStart=" LVM_PATH " vgchange -aay --sysinit --ignoreskippedcluster\n"
-	      "Type=oneshot\n", f);
+	fputs("ExecStart=" LVM_PATH " vgchange -aay --ignoreskippedcluster", f);
+	if (sysinit_needed)
+		fputs (" --sysinit", f);
+	fputs("\nType=oneshot\n", f);
 
 	if (fclose(f) < 0) {
 		kmsg(LOG_ERR, "LVM: Failed to write unit file %s: %m.\n", unit_name);
@@ -168,6 +170,7 @@ static int generate_unit(const char *dir, int unit)
 
 int main(int argc, char *argv[])
 {
+	int use_lvmetad, use_lvmpolld, sysinit_needed;
 	const char *dir;
 	int r = EXIT_SUCCESS;
 	mode_t old_mask;
@@ -180,16 +183,20 @@ int main(int argc, char *argv[])
 	}
 
 	/* If lvmetad used, rely on autoactivation instead of direct activation. */
-	if (lvm_uses_lvmetad())
+	lvm_get_use_lvmetad_and_lvmpolld(&use_lvmetad, &use_lvmpolld);
+	if (use_lvmetad)
 		goto out;
 
 	dir = argv[1];
 
 	/* mark lvm2-activation.*.service as world-accessible */
 	old_mask = umask(0022);
-	if (!generate_unit(dir, UNIT_EARLY) ||
-	    !generate_unit(dir, UNIT_MAIN) ||
-	    !generate_unit(dir, UNIT_NET))
+
+	sysinit_needed = !use_lvmpolld;
+
+	if (!generate_unit(dir, UNIT_EARLY, sysinit_needed) ||
+	    !generate_unit(dir, UNIT_MAIN, sysinit_needed) ||
+	    !generate_unit(dir, UNIT_NET, sysinit_needed))
 		r = EXIT_FAILURE;
 	umask(old_mask);
 out:
