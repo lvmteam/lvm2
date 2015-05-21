@@ -1,5 +1,7 @@
 Version 1.02.100 - 
 ================================
+  Add since, after, until and before time operators to be used in selection.
+  Add support for time in reports and selection: DM_REPORT_FIELD_TYPE_TIME.
   Support report reserved value ranges: DM_REPORT_FIELD_RESERVED_VALUE_RANGE.
   Support report reserved value names: DM_REPORT_FIELD_RESERVED_VALUE_NAMED.
   Add DM_CONFIG_VALUE_FMT_{INT_OCTAL,STRING_NO_QUOTES} config value format flag.
