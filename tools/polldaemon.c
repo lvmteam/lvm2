@@ -375,24 +375,19 @@ static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id
 	if (lv && parms->lv_type && !(lv->status & parms->lv_type))
 		lv = NULL;
 
-	if (!lv && parms->lv_type == PVMOVE) {
-		log_print_unless_silent("%s: No pvmove in progress - already finished or aborted.",
-					id->display_name);
-		unlock_and_release_vg(cmd, vg, vg->name);
-		return 1;
-	}
-
 	if (!lv) {
-		log_warn("Can't find LV in %s for %s. Already finished or removed.",
-			  vg->name, id->display_name);
-		unlock_and_release_vg(cmd, vg, vg->name);
-		return 1;
+		if (parms->lv_type == PVMOVE)
+			log_verbose("%s: No pvmove in progress - already finished or aborted.",
+				    id->display_name);
+		else
+			log_verbose("Can't find LV in %s for %s. Already finished or removed.",
+				    vg->name, id->display_name);
+		goto out;
 	}
 
 	if (!lv_is_active_locally(lv)) {
-		log_print_unless_silent("%s: Interrupted: No longer active.", id->display_name);
-		unlock_and_release_vg(cmd, vg, vg->name);
-		return 1;
+		log_verbose("%s: Interrupted: No longer active.", id->display_name);
+		goto out;
 	}
 
 	if (parms->poll_fns->poll_progress(cmd, lv, id->display_name, parms) == PROGRESS_CHECK_FAILED) {
@@ -400,6 +395,7 @@ static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id
 		return_0;
 	}
 
+out:
 	unlock_and_release_vg(cmd, vg, vg->name);
 
 	return 1;
