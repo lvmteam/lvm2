@@ -330,6 +330,8 @@ int lvmpolld_request_info(const struct poll_operation_id *id, const struct daemo
 		return 0;
 	}
 
+	log_debug_lvmpolld("Asking lvmpolld for progress status of an operation on %s/%s.",
+			   id->vg_name, id->lv_name);
 	info = _request_progress_info(id->uuid, parms->aborting);
 	*finished = info.finished;
 
