@@ -46,6 +46,10 @@ void lvmetad_init(struct cmd_context *cmd)
 	if (!_lvmetad_use && !access(getenv("LVM_LVMETAD_PIDFILE") ? : LVMETAD_PIDFILE, F_OK))
 		log_warn("WARNING: lvmetad is running but disabled."
 			 " Restart lvmetad before enabling it!");
+
+	if (_lvmetad_connected)
+		log_debug(INTERNAL_ERROR "Refreshing lvmetad global handle while connection with the daemon is active");
+
 	_lvmetad_cmd = cmd;
 }
 
