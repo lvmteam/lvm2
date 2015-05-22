@@ -39,7 +39,6 @@ void lvmetad_disconnect(void)
 	if (_lvmetad_connected)
 		daemon_close(_lvmetad);
 	_lvmetad_connected = 0;
-	_lvmetad_cmd = NULL;
 }
 
 void lvmetad_init(struct cmd_context *cmd)
