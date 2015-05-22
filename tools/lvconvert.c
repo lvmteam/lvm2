@@ -839,10 +839,10 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 					ret += _failed_mirrors_count(seg_lv(lvseg, s));
 				else if (seg_lv(lvseg, s)->status & PARTIAL_LV)
 					++ ret;
-				else if (seg_type(lvseg, s) == AREA_PV &&
-					 is_missing_pv(seg_pv(lvseg, s)))
-					++ret;
 			}
+		   	else if (seg_type(lvseg, s) == AREA_PV &&
+				 is_missing_pv(seg_pv(lvseg, s)))
+				++ret;
 		}
 	}
 
