@@ -29,8 +29,7 @@ typedef int (*activation_handler) (struct cmd_context *cmd,
 
 #ifdef LVMETAD_SUPPORT
 /*
- * Initialise the communication with lvmetad. Normally called by
- * lvmcache_init. Sets up a global handle for our process.
+ * Sets up a global handle for our process.
  */
 void lvmetad_init(struct cmd_context *);
 
@@ -59,7 +58,9 @@ int lvmetad_socket_present(void);
 
 /*
  * Check whether lvmetad is active (where active means both that it is running
- * and that we have a working connection with it).
+ * and that we have a working connection with it). It opens new connection
+ * with lvmetad in the process when lvmetad is supposed to be used and the
+ * connection is not open yet.
  */
 int lvmetad_active(void);
 
@@ -70,8 +71,9 @@ int lvmetad_active(void);
 void lvmetad_connect_or_warn(void);
 
 /*
- * Drop connection to lvmetad. A subsequent lvmetad_init() will re-establish
- * the connection (possibly at a different socket path).
+ * Drop connection to lvmetad. A subsequent lvmetad_connect_or_warn or
+ * lvmetad_active will re-establish the connection (possibly at a
+ * different socket path).
  */
 void lvmetad_disconnect(void);
 
