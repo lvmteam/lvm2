@@ -473,8 +473,8 @@ static void mark_outdated_pv(lvmetad_state *s, const char *vgid, const char *pvi
 static void chain_outdated_pvs(lvmetad_state *s, const char *vgid, struct dm_config_tree *metadata_cft, struct dm_config_node *metadata)
 {
 	struct dm_config_tree *cft = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid), *pvmeta;
-	struct dm_config_node *pv, *res, *pvs = cft ? dm_config_find_node(cft->root, "outdated_pvs/pv_list") : NULL;
-	struct dm_config_value *pvs_v = pvs ? pvs->v : NULL;
+	struct dm_config_node *pv, *res, *out_pvs = cft ? dm_config_find_node(cft->root, "outdated_pvs/pv_list") : NULL;
+	struct dm_config_value *pvs_v = out_pvs ? out_pvs->v : NULL;
 	if (!pvs_v)
 		return;
 	if (!(res = make_config_node(metadata_cft, "outdated_pvs", metadata_cft->root, 0)))
