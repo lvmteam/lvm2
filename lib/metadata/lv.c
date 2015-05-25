@@ -873,17 +873,16 @@ int lv_set_creation(struct logical_volume *lv,
 	return 1;
 }
 
-char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv)
+char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode)
 {
 	char buffer[50];
 	struct tm *local_tm;
 	time_t ts = (time_t)lv->timestamp;
+	const char *format = iso_mode ? DEFAULT_TIME_FORMAT : lv->vg->cmd->time_format;
 
 	if (!ts ||
 	    !(local_tm = localtime(&ts)) ||
-	    /* FIXME: make this lvm.conf configurable */
-	    !strftime(buffer, sizeof(buffer),
-		      "%Y-%m-%d %T %z", local_tm))
+	    !strftime(buffer, sizeof(buffer), format, local_tm))
 		buffer[0] = 0;
 
 	return dm_pool_strdup(mem, buffer);

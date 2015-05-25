@@ -1,5 +1,6 @@
 Version 2.02.123 - 
 =================================
+  Add report/time_format lvm.conf option to define time format for report.
   Fix makefile shell compare == when building lvmetad lvmpolld (2.02.120).
   Add --type full to lvmconfig for full configuration tree view.
   Add undocumented environment variables to lvm man page. (2.02.119)

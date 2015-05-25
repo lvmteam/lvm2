@@ -413,6 +413,57 @@ static int _check_config(struct cmd_context *cmd)
 	return 1;
 }
 
+static const char *_set_time_format(struct cmd_context *cmd)
+{
+	/* Compared to strftime, we do not allow "newline" character - the %n in format. */
+	static const char *allowed_format_chars = "aAbBcCdDeFGghHIjklmMpPrRsStTuUVwWxXyYzZ%";
+	static const char *allowed_alternative_format_chars_e = "cCxXyY";
+	static const char *allowed_alternative_format_chars_o = "deHImMSuUVwWy";
+	static const char *chars_to_check;
+	const char *tf = find_config_tree_str(cmd, report_time_format_CFG, NULL);
+	const char *p_fmt;
+	size_t i;
+	char c;
+
+	if (!*tf) {
+		log_error("Configured time format is empty string.");
+		goto bad;
+	} else {
+		p_fmt = tf;
+		while ((c = *p_fmt)) {
+			if (c == '%') {
+				c = *++p_fmt;
+				if (c == 'E') {
+					c = *++p_fmt;
+					chars_to_check = allowed_alternative_format_chars_e;
+				} else if (c == 'O') {
+					c = *++p_fmt;
+					chars_to_check = allowed_alternative_format_chars_o;
+				} else
+					chars_to_check = allowed_format_chars;
+
+				for (i = 0; chars_to_check[i]; i++) {
+					if (c == allowed_format_chars[i])
+						break;
+				}
+				if (!allowed_format_chars[i])
+					goto_bad;
+			}
+			else if (isprint(c))
+				p_fmt++;
+			else {
+				log_error("Configured time format contains non-printable characters.");
+				goto bad;
+			}
+		}
+	}
+
+	return tf;
+bad:
+	log_error("Incorrect time format specified. Using default time format instead.");
+	return DEFAULT_TIME_FORMAT;
+}
+
 int process_profilable_config(struct cmd_context *cmd)
 {
 	if (!(cmd->default_settings.unit_factor =
@@ -426,6 +477,7 @@ int process_profilable_config(struct cmd_context *cmd)
 	cmd->report_binary_values_as_numeric = find_config_tree_bool(cmd, report_binary_values_as_numeric_CFG, NULL);
 	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG, NULL);
 	cmd->report_list_item_separator = find_config_tree_str(cmd, report_list_item_separator_CFG, NULL);
+	cmd->time_format = _set_time_format(cmd);
 
 	return 1;
 }

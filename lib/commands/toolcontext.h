@@ -95,6 +95,8 @@ struct cmd_context {
 	unsigned ignore_clustered_vgs:1;
 	unsigned threaded:1;		/* Set if running within a thread e.g. clvmd */
 
+	const char *time_format;
+
 	unsigned independent_metadata_areas:1;	/* Active formats have MDAs outside PVs */
 	unsigned unknown_system_id:1;
 	unsigned include_foreign_vgs:1;

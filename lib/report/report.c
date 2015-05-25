@@ -1474,7 +1474,7 @@ static int _lvtime_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr;
 	uint64_t *sortval;
 
-	if (!(repstr = lv_time_dup(mem, lv)) ||
+	if (!(repstr = lv_time_dup(mem, lv, 0)) ||
 	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
 		log_error("Failed to allocate buffer for time.");
 		return 0;
