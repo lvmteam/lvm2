@@ -393,6 +393,11 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 int dm_task_run(struct dm_task *dmt);
 
 /*
+ * The errno from the last device-mapper ioctl performed by dm_task_run.
+ */
+int dm_task_get_errno(struct dm_task *dmt);
+
+/*
  * Call this to make or remove the device nodes associated with previously
  * issued commands.
  */

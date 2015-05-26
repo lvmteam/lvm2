@@ -710,6 +710,7 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 	int ret = DM_WAIT_RETRY;
 	struct dm_task *dmt;
 	struct dm_info info;
+	int ioctl_errno;
 
 	*task = 0;
 
@@ -739,25 +740,27 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 	 * either for a timeout event, or to cancel the thread.
 	 */
 	set = _unblock_sigalrm();
-	errno = 0;
 	if (dm_task_run(dmt)) {
 		thread->current_events |= DM_EVENT_DEVICE_ERROR;
 		ret = DM_WAIT_INTR;
 
 		if ((ret = dm_task_get_info(dmt, &info)))
 			thread->event_nr = info.event_nr;
-	} else if (thread->events & DM_EVENT_TIMEOUT && errno == EINTR) {
-		thread->current_events |= DM_EVENT_TIMEOUT;
-		ret = DM_WAIT_INTR;
-	} else if (thread->status == DM_THREAD_SHUTDOWN && errno == EINTR) {
-		ret = DM_WAIT_FATAL;
 	} else {
-		syslog(LOG_NOTICE, "dm_task_run failed, errno = %d, %s",
-		       errno, strerror(errno));
-		if (errno == ENXIO) {
-			syslog(LOG_ERR, "%s disappeared, detaching",
-			       thread->device.name);
+		ioctl_errno = dm_task_get_errno(dmt);
+		if (thread->events & DM_EVENT_TIMEOUT && ioctl_errno == EINTR) {
+			thread->current_events |= DM_EVENT_TIMEOUT;
+			ret = DM_WAIT_INTR;
+		} else if (thread->status == DM_THREAD_SHUTDOWN && ioctl_errno == EINTR)
 			ret = DM_WAIT_FATAL;
+		else {
+			syslog(LOG_NOTICE, "dm_task_run failed, errno = %d, %s",
+			       ioctl_errno, strerror(ioctl_errno));
+			if (ioctl_errno == ENXIO) {
+				syslog(LOG_ERR, "%s disappeared, detaching",
+				       thread->device.name);
+				ret = DM_WAIT_FATAL;
+			}
 		}
 	}
 	DEBUGLOG("Completed waitevent task for %s", thread->device.uuid);

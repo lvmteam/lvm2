@@ -68,6 +68,7 @@ struct dm_task {
 	int deferred_remove;
 	int enable_checks;
 	int expected_errno;
+	int ioctl_errno;
 
 	char *uuid;
 	char *mangled_uuid;

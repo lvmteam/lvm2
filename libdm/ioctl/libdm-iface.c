@@ -1717,6 +1717,8 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	struct dm_ioctl *dmi;
 	int ioctl_with_uevent;
 
+	dmt->ioctl_errno = 0;
+
 	dmi = _flatten(dmt, buffer_repeat_count);
 	if (!dmi) {
 		log_error("Couldn't create ioctl argument.");
@@ -1803,12 +1805,13 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 #ifdef DM_IOCTLS
 	if (ioctl(_control_fd, command, dmi) < 0 &&
 	    dmt->expected_errno != errno) {
-		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
-				       (dmt->type == DM_DEVICE_MKNODES) ||
-				       (dmt->type == DM_DEVICE_STATUS)))
+		dmt->ioctl_errno = errno;
+		if (dmt->ioctl_errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
+						  (dmt->type == DM_DEVICE_MKNODES) ||
+						  (dmt->type == DM_DEVICE_STATUS)))
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 		else {
-			if (_log_suppress || errno == EINTR)
+			if (_log_suppress || dmt->ioctl_errno == EINTR)
 				log_verbose("device-mapper: %s ioctl on %s%s%s%.0d%s%.0d%s%s "
 					    "failed: %s",
 				    	    _cmd_data_v4[dmt->type].name,
@@ -1819,7 +1822,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 					    dmt->minor > 0 ? dmt->minor : 0,
 					    dmt->major > 0 && dmt->minor == 0 ? "0" : "",
 					    dmt->major > 0 ? ")" : "",
-					    strerror(errno));
+					    strerror(dmt->ioctl_errno));
 			else
 				log_error("device-mapper: %s ioctl on %s%s%s%.0d%s%.0d%s%s "
 					  "failed: %s",
@@ -1831,14 +1834,14 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 					  dmt->minor > 0 ? dmt->minor : 0,
 					  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
 					  dmt->major > 0 ? ")" : "",
-					  strerror(errno));
+					  strerror(dmt->ioctl_errno));
 
 			/*
 			 * It's sometimes worth retrying after EBUSY in case
 			 * it's a transient failure caused by an asynchronous
 			 * process quickly scanning the device.
 			 */
-			*retryable = errno == EBUSY;
+			*retryable = dmt->ioctl_errno == EBUSY;
 
 			goto error;
 		}
@@ -1875,6 +1878,11 @@ void dm_task_update_nodes(void)
 
 #define DM_IOCTL_RETRIES 25
 #define DM_RETRY_USLEEP_DELAY 200000
+
+int dm_task_get_errno(struct dm_task *dmt)
+{
+	return dmt->ioctl_errno;
+}
 
 int dm_task_run(struct dm_task *dmt)
 {
