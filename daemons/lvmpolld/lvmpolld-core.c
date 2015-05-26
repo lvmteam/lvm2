@@ -749,6 +749,7 @@ static int process_timeout_arg(const char *str, unsigned *max_timeouts)
 	char *endptr;
 	unsigned long l;
 
+	errno = 0;
 	l = strtoul(str, &endptr, 10);
 	if (errno || *endptr || l >= UINT_MAX)
 		return 0;
