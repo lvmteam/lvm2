@@ -914,6 +914,7 @@ static uint32_t _get_cookie_value(const char *str_value)
 	unsigned long int value;
 	char *p;
 
+	errno = 0;
 	if (!(value = strtoul(str_value, &p, 0)) ||
 	    *p ||
 	    (value == ULONG_MAX && errno == ERANGE) ||
