@@ -957,7 +957,7 @@ int main(int argc, char *argv[])
 			break;
 		case 't': /* --timeout in seconds */
 			if (!process_timeout_arg(optarg, &di.max_timeouts)) {
-				fprintf(stderr, "Invalid value of timeout parameter");
+				fprintf(stderr, "Invalid value of timeout parameter.\n");
 				exit(EXIT_FAILURE);
 			}
 			/* 0 equals to wait indefinitely */
