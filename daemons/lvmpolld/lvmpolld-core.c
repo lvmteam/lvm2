@@ -852,7 +852,7 @@ enum action_index {
 	ACTION_MAX /* keep at the end */
 };
 
-static const action_fn_t const actions[] = { [ACTION_DUMP] = action_dump };
+static const action_fn_t actions[ACTION_MAX] = { [ACTION_DUMP] = action_dump };
 
 static int _make_action(enum action_index idx, void *args)
 {
