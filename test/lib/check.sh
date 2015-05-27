@@ -202,6 +202,10 @@ in_sync() {
 		# 6th argument is the sync ratio for RAID
 		idx=6
 		type=${a[3]}
+		if [ ${a[$(($idx + 1))]} != "idle" ]; then
+			echo "$lvm_name ($type$snap) is not in-sync"
+			return 1
+		fi
 	elif [ ${a[2]} = "mirror" ]; then
 		# 4th Arg tells us how far to the sync ratio
 		idx=$((${a[3]} + 4))
@@ -212,7 +216,7 @@ in_sync() {
 
 	b=( $(echo ${a[$idx]} | sed s:/:' ':) )
 
-	if [ ${a[$(($idx + 1))]} != "idle" -o ${b[0]} -eq 0 -o ${b[0]} != ${b[1]} ]; then
+	if [ ${b[0]} -eq 0 -o ${b[0]} != ${b[1]} ]; then
 		echo "$lvm_name ($type$snap) is not in-sync"
 		return 1
 	fi
@@ -222,7 +226,6 @@ in_sync() {
 	fi
 
 	echo "$lvm_name ($type$snap) is in-sync"
-	return 0
 }
 
 active() {
