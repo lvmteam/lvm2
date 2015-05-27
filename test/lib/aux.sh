@@ -50,7 +50,7 @@ prepare_clvmd() {
 
 	for i in {1..100} ; do
 		test $i -eq 100 && die "Startup of clvmd is too slow."
-		test -e "$CLVMD_PIDFILE" && break
+		test -e "$CLVMD_PIDFILE" -a -e "${CLVMD_PIDFILE%/*}/lvm/clvmd.sock" && break
 		sleep .2
 	done
 }
@@ -572,8 +572,8 @@ prepare_devs() {
 	test -f LOOP || for d in ${DEVICES[@]}; do
 		blkdiscard "$d" 2>/dev/null || true
 		# ensure disk header is always zeroed
-		dd if=/dev/zero of="$d" bs=4096 count=1
-		wipefs -a "$d" 2>/dev/null || dd if=/dev/zero of="$d" bs=64K count=1
+		dd if=/dev/zero of="$d" bs=32k count=1
+		wipefs -a "$d" 2>/dev/null || true
 	done
 
 	#for i in `seq 1 $n`; do
