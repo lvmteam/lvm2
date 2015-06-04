@@ -1506,11 +1506,13 @@ static int _thin_pool_node_message(struct dm_tree_node *dnode, struct thin_messa
 	if (!dm_task_set_message(dmt, buf))
 		goto_out;
 
-        /* Internal functionality of dm_task */
+	/* Internal functionality of dm_task */
 	dmt->expected_errno = tm->expected_errno;
 
-	if (!dm_task_run(dmt))
-		goto_out;
+	if (!dm_task_run(dmt)) {
+		log_error("Failed to process thin pool message \"%s\".", buf);
+		goto out;
+	}
 
 	r = 1;
 out:

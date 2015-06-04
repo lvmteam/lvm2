@@ -1,5 +1,6 @@
 Version 1.02.99 - 
 ================================
+  Enhance error message when thin-pool message fails.
 
 Version 1.02.98 - 12th June 2015
 ================================
