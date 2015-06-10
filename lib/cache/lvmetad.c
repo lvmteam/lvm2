@@ -483,7 +483,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 				_pv_populate_lvmcache(cmd, pvcn, fmt, 0);
 
 		top->key = name;
-		if (!(vg = import_vg_from_config_tree(reply.cft, fid)))
+		if (!(vg = import_vg_from_lvmetad_config_tree(reply.cft, fid)))
 			goto_out;
 
 		dm_list_iterate_items(pvl, &vg->pvs) {

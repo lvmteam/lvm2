@@ -460,6 +460,8 @@ struct volume_group *import_vg_from_buffer(const char *buf,
 					   struct format_instance *fid);
 struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
 						struct format_instance *fid);
+struct volume_group *import_vg_from_lvmetad_config_tree(const struct dm_config_tree *cft,
+							struct format_instance *fid);
 
 /*
  * Mirroring functions

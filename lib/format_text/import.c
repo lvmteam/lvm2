@@ -146,7 +146,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vg = (*vsn)->read_vg(fid, cft, single_device)))
+		if (!(vg = (*vsn)->read_vg(fid, cft, single_device, 0)))
 			goto_out;
 
 		(*vsn)->read_desc(vg->vgmem, cft, when, desc);
@@ -174,8 +174,9 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 				 when, desc);
 }
 
-struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
-						struct format_instance *fid)
+static struct volume_group *_import_vg_from_config_tree(const struct dm_config_tree *cft,
+							struct format_instance *fid,
+							unsigned allow_lvmetad_extensions)
 {
 	struct volume_group *vg = NULL;
 	struct text_vg_version_ops **vsn;
@@ -190,7 +191,7 @@ struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft
 		 * The only path to this point uses cached vgmetadata,
 		 * so it can use cached PV state too.
 		 */
-		if (!(vg = (*vsn)->read_vg(fid, cft, 1)))
+		if (!(vg = (*vsn)->read_vg(fid, cft, 1, allow_lvmetad_extensions)))
 			stack;
 		else if ((vg_missing = vg_missing_pv_count(vg))) {
 			log_verbose("There are %d physical volumes missing.",
@@ -202,4 +203,16 @@ struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft
 	}
 
 	return vg;
+}
+
+struct volume_group *import_vg_from_config_tree(const struct dm_config_tree *cft,
+						struct format_instance *fid)
+{
+	return _import_vg_from_config_tree(cft, fid, 0);
+}
+
+struct volume_group *import_vg_from_lvmetad_config_tree(const struct dm_config_tree *cft,
+							struct format_instance *fid)
+{
+	return _import_vg_from_config_tree(cft, fid, 1);
 }

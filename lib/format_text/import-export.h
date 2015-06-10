@@ -47,7 +47,8 @@ struct text_vg_version_ops {
 	int (*check_version) (const struct dm_config_tree * cf);
 	struct volume_group *(*read_vg) (struct format_instance * fid,
 					 const struct dm_config_tree *cf,
-					 unsigned use_cached_pvs);
+					 unsigned use_cached_pvs,
+					 unsigned allow_lvmetad_extensions);
 	void (*read_desc) (struct dm_pool * mem, const struct dm_config_tree *cf,
 			   time_t *when, char **desc);
 	int (*read_vgname) (const struct format_type *fmt,

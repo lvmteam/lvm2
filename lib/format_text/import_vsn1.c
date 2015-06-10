@@ -740,7 +740,8 @@ static int _read_sections(struct format_instance *fid,
 
 static struct volume_group *_read_vg(struct format_instance *fid,
 				     const struct dm_config_tree *cft,
-				     unsigned use_cached_pvs)
+				     unsigned use_cached_pvs,
+				     unsigned allow_lvmetad_extensions)
 {
 	const struct dm_config_node *vgn;
 	const struct dm_config_value *cv;
@@ -882,8 +883,11 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	_read_sections(fid, "outdated_pvs", _read_pv, vg,
-		       vgn, pv_hash, lv_hash, 1, &scan_done_once);
+	if (allow_lvmetad_extensions)
+		_read_sections(fid, "outdated_pvs", _read_pv, vg,
+			       vgn, pv_hash, lv_hash, 1, &scan_done_once);
+	else if (dm_config_has_node(vgn, "outdated_pvs"))
+		log_error(INTERNAL_ERROR "Unexpected outdated_pvs section in metadata of VG %s.", vg->name);
 
 	/* Optional tags */
 	if (dm_config_get_list(vgn, "tags", &cv) &&
