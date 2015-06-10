@@ -1161,3 +1161,19 @@ int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handl
 {
 	return _lvmetad_pvscan_all_devs(cmd, handler, 1);
 }
+
+int lvmetad_vg_clear_outdated_pvs(struct volume_group *vg)
+{
+	char uuid[64];
+	daemon_reply reply;
+	int result;
+
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
+		return_0;
+
+	reply = _lvmetad_send("vg_clear_outdated_pvs", "vgid = %s", uuid, NULL);
+	result = _lvmetad_handle_reply(reply, "clear the list of outdated PVs", vg->name, NULL);
+	daemon_reply_destroy(reply);
+
+	return result;
+}

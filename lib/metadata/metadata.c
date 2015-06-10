@@ -3307,9 +3307,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				*consistent = _repair_inconsistent_vg(correct_vg);
 			else
 				*consistent = !reappeared;
-			if (_wipe_outdated_pvs(cmd, correct_vg, &correct_vg->pvs_outdated))
+			if (_wipe_outdated_pvs(cmd, correct_vg, &correct_vg->pvs_outdated)) {
 				/* clear the list */
 				dm_list_init(&correct_vg->pvs_outdated);
+				lvmetad_vg_clear_outdated_pvs(correct_vg);
+                        }
 		}
 		return correct_vg;
 	}
