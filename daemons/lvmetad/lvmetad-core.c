@@ -1131,6 +1131,21 @@ out_of_mem:
 				   NULL);
 }
 
+static response vg_clear_outdated_pvs(lvmetad_state *s, request r)
+{
+	struct dm_config_tree *outdated_pvs;
+	const char *vgid = daemon_request_str(r, "vgid", NULL);
+
+	if (!vgid)
+		return reply_fail("need VG UUID");
+
+	if ((outdated_pvs = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid))) {
+		dm_config_destroy(outdated_pvs);
+		dm_hash_remove(s->vgid_to_outdated_pvs, vgid);
+	}
+	return daemon_reply_simple("OK", NULL);
+}
+
 static response vg_update(lvmetad_state *s, request r)
 {
 	struct dm_config_node *metadata = dm_config_find_node(r.cft->root, "metadata");
@@ -1288,6 +1303,9 @@ static response handler(daemon_state s, client_handle h, request r)
 
 	if (!strcmp(rq, "vg_update"))
 		return vg_update(state, r);
+
+	if (!strcmp(rq, "vg_clear_outdated_pvs"))
+		return vg_clear_outdated_pvs(state, r);
 
 	if (!strcmp(rq, "vg_remove"))
 		return vg_remove(state, r);
