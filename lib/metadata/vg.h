@@ -92,7 +92,18 @@ struct volume_group {
 
 	/*
 	 * List of physical volumes that carry outdated metadata that belongs
-	 * to this VG. Currently only populated when lvmetad is in use.
+	 * to this VG. Currently only populated when lvmetad is in use. The PVs
+	 * on this list could still belong to the VG (but their MDA carries an
+	 * out-of-date copy of the VG metadata) or they could no longer belong
+	 * to the VG. With lvmetad, this list is populated with all PVs that
+	 * have a VGID matching ours, but seqno that is smaller than the
+	 * current seqno for the VG. The MDAs on still-in-VG PVs are updated as
+	 * part of the normal vg_write/vg_commit process. The MDAs on PVs that
+	 * no longer belong to the VG are wiped during vg_read.
+	 *
+	 * However, even though still-in-VG PVs *may* be on the list, this is
+	 * not guaranteed. The in-lvmetad list is cleared whenever out-of-VG
+	 * outdated PVs are wiped during vg_read.
 	 */
 
 	struct dm_list pvs_outdated;
