@@ -1,13 +1,18 @@
-Version 2.02.121 - 
-================================
+Version 2.02.121 - 12th June 2015
+=================================
+  Distinguish between on-disk and lvmetad versions of text metadata.
+  Remove DL_LIBS from Makefiles for daemons that don't need them.
   Zero errno in before strtoul call in dmsetup if tested after the call.
   Zero errno in before strtoul call in lvmpolld.
   Fix a segfault in pvscan --cache --background command.
   Fix test for AREA_PV when checking for failed mirrors.
   Do not use --sysinit in lvm2-activation{-early,-net}.service if lvmpolld used.
+  Maintain outdated PV info in lvmetad till all old metadata is gone from disk.
   Do not fail polling when poll LV not found (already finished or removed).
   Replace poll_get_copy_vg/lv fns with vg_read() and find_lv() in polldaemon.
   Close all device fds only in before sleep call in polldaemon.
+  Simplify Makefile targets that generate exported symbols.
+  Move various -D settings from Makefiles to configure.h.
 
 Version 2.02.120 - 15th May 2015
 ================================
