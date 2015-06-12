@@ -1,3 +1,6 @@
+Version 1.02.99 - 
+================================
+
 Version 1.02.98 - 12th June 2015
 ================================
   Add dm_task_get_errno() to return any unexpected errno from a dm ioctl call.
