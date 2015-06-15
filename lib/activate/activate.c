@@ -2010,7 +2010,9 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 
 	log_debug_activation("Resuming LV %s/%s%s%s%s.", lv->vg->name, lv->name,
 			     error_if_not_active ? "" : " if active",
-			     laopts->origin_only ? " without snapshots" : "",
+			     laopts->origin_only ?
+			     (lv_is_thin_pool(lv) ? " pool only" :
+			      lv_is_thin_volume(lv) ? " thin only" : " without snapshots") : "",
 			     laopts->revert ? " (reverting)" : "");
 
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
@@ -2272,6 +2274,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (info.exists && !info.suspended && info.live_table &&
 	    (info.read_only == read_only_lv(lv, laopts))) {
 		r = 1;
+		log_debug_activation("Volume is already active.");
 		goto out;
 	}
 

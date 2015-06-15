@@ -3042,7 +3042,10 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	int r = 0;
 
 	if (action < DM_ARRAY_SIZE(_action_names))
-		log_debug_activation("Creating %s tree for %s.", _action_names[action], lv->name);
+		log_debug_activation("Creating %s%s tree for %s.",
+				     _action_names[action],
+				     (laopts->origin_only) ? " origin-only" : "",
+				     display_lvname(lv));
 
 	/* Some LV can be used for top level tree */
 	/* TODO: add more.... */
