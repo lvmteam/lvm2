@@ -133,51 +133,20 @@ void debuglog(const char *fmt, ...)
 
 static const char *decode_cmd(uint32_t cmd)
 {
-	static char buf[128];
-	const char *command;
-
 	switch (cmd) {
-	case DM_EVENT_CMD_ACTIVE:
-		command = "ACTIVE";
-		break;
-	case DM_EVENT_CMD_REGISTER_FOR_EVENT:
-		command = "REGISTER_FOR_EVENT";
-		break;
-	case DM_EVENT_CMD_UNREGISTER_FOR_EVENT:
-		command = "UNREGISTER_FOR_EVENT";
-		break;
-	case DM_EVENT_CMD_GET_REGISTERED_DEVICE:
-		command = "GET_REGISTERED_DEVICE";
-		break;
-	case DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE:
-		command = "GET_NEXT_REGISTERED_DEVICE";
-		break;
-	case DM_EVENT_CMD_SET_TIMEOUT:
-		command = "SET_TIMEOUT";
-		break;
-	case DM_EVENT_CMD_GET_TIMEOUT:
-		command = "GET_TIMEOUT";
-		break;
-	case DM_EVENT_CMD_HELLO:
-		command = "HELLO";
-		break;
-	case DM_EVENT_CMD_DIE:
-		command = "DIE";
-		break;
-	case DM_EVENT_CMD_GET_STATUS:
-		command = "GET_STATUS";
-		break;
-	case DM_EVENT_CMD_GET_PARAMETERS:
-		command = "GET_PARAMETERS";
-		break;
-	default:
-		command = "unknown";
-		break;
+	case DM_EVENT_CMD_ACTIVE:			return "ACTIVE";
+	case DM_EVENT_CMD_REGISTER_FOR_EVENT:		return "REGISTER_FOR_EVENT";
+	case DM_EVENT_CMD_UNREGISTER_FOR_EVENT:		return "UNREGISTER_FOR_EVENT";
+	case DM_EVENT_CMD_GET_REGISTERED_DEVICE:	return "GET_REGISTERED_DEVICE";
+	case DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE:	return "GET_NEXT_REGISTERED_DEVICE";
+	case DM_EVENT_CMD_SET_TIMEOUT:			return "SET_TIMEOUT";
+	case DM_EVENT_CMD_GET_TIMEOUT:			return "GET_TIMEOUT";
+	case DM_EVENT_CMD_HELLO:			return "HELLO";
+	case DM_EVENT_CMD_DIE:				return "DIE";
+	case DM_EVENT_CMD_GET_STATUS:			return "GET_STATUS";
+	case DM_EVENT_CMD_GET_PARAMETERS:		return "GET_PARAMETERS";
+	default:					return "unknown";
 	}
-
-	snprintf(buf, sizeof(buf), "%s (0x%x)", command, cmd);
-
-	return buf;
 }
 
 #else
@@ -1609,7 +1578,8 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_read(fifos, &msg))
 		return;
 
-	DEBUGLOG("%s processing...", cmd = decode_cmd(msg.cmd));
+	DEBUGLOG("%s (0x%x) processing...", decode_cmd(msg.cmd), msg.cmd);
+
 	die = (msg.cmd == DM_EVENT_CMD_DIE) ? 1 : 0;
 
 	/* _do_process_request fills in msg (if memory allows for
@@ -1621,7 +1591,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 
 	dm_free(msg.data);
 
-	DEBUGLOG("%s completed.", cmd);
+	DEBUGLOG("%s (0x%x) completed.", decode_cmd(msg.cmd), msg.cmd);
 
 	if (die) {
 		if (unlink(DMEVENTD_PIDFILE))
