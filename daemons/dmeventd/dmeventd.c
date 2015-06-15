@@ -1706,8 +1706,7 @@ static void _cleanup_unused_threads(void)
 
 static void _sig_alarm(int signum __attribute__((unused)))
 {
-	DEBUGLOG("Received SIGALRM.");
-	pthread_testcancel();
+	/* empty SIG_IGN */;
 }
 
 /* Init thread signal handling. */
