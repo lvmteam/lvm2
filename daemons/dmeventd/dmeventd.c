@@ -1671,10 +1671,8 @@ static void _cleanup_unused_threads(void)
 				if (ret == ESRCH) {
 					thread->status = DM_THREAD_DONE;
 				} else if (ret) {
-					syslog(LOG_ERR,
-					       "Unable to terminate thread: %s\n",
-					       strerror(-ret));
-					stack;
+					syslog(LOG_ERR, "Unable to terminate thread: %s",
+					       strerror(ret));
 				}
 				break;
 			}
