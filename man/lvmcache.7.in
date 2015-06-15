@@ -254,6 +254,11 @@ defines the default cache mode.
 # lvconvert \-\-type cache \-\-cachepool vg/cache1 vg/lv1
 .fi
 
+The cache mode can be changed on an existing LV with the command:
+
+.B lvconvert --cachemode writethrough|writeback VG/CacheLV
+
+
 .SS Cache policy & policy settings
 
 \&
