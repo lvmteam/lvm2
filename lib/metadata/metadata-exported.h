@@ -738,6 +738,8 @@ int lv_empty(struct logical_volume *lv);
 /* Empty an LV and add error segment */
 int replace_lv_with_error_segment(struct logical_volume *lv);
 
+int lv_refresh_suspend_resume(struct cmd_context *cmd, struct logical_volume *lv);
+
 /* Entry point for all LV extent allocations */
 int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,

@@ -850,22 +850,8 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	if (!cmd->partial_activation && (lv->status & PARTIAL_LV)) {
-		log_error("Refusing refresh of partial LV %s."
-			  " Use '--activationmode partial' to override.",
-			  lv->name);
-		return 0;
-	}
-
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to suspend %s.", lv->name);
-		return 0;
-	}
-
-	if (!resume_lv(cmd, lv)) {
-		log_error("Failed to reactivate %s.", lv->name);
-		return 0;
-	}
+	if (!lv_refresh_suspend_resume(cmd, lv))
+		return_0;
 
 	/*
 	 * check if snapshot merge should be polled
