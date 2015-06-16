@@ -193,6 +193,11 @@ void set_cmd_name(const char *cmd)
 	_cmd_name[sizeof(_cmd_name) - 1] = '\0';
 }
 
+const char *get_cmd_name(void)
+{
+	return _cmd_name;
+}
+
 void set_sysfs_dir_path(const char *path)
 {
 	strncpy(_sysfs_dir_path, path, sizeof(_sysfs_dir_path) - 1);

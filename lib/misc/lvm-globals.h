@@ -51,6 +51,7 @@ void init_detect_internal_vg_cache_corruption(int detect);
 void init_retry_deactivation(int retry);
 
 void set_cmd_name(const char *cmd_name);
+const char *get_cmd_name(void);
 void set_sysfs_dir_path(const char *path);
 
 int test_mode(void);
