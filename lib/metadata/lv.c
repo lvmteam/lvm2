@@ -953,7 +953,9 @@ exclusive:
 		if (!activate_lv_excl(cmd, lv))
 			return_0;
 		break;
-	default: /* CHANGE_AY */
+	case CHANGE_ASY:
+	case CHANGE_AY:
+	default:
 		if (needs_exclusive || _lv_is_exclusive(lv))
 			goto exclusive;
 		log_verbose("Activating logical volume \"%s\".", lv->name);

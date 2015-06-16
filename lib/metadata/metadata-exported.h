@@ -828,7 +828,8 @@ typedef enum activation_change {
 	CHANGE_AEY = 2, /* activate exclusively */
 	CHANGE_ALY = 3, /* activate locally */
 	CHANGE_ALN = 4, /* deactivate locally */
-	CHANGE_AAY = 5  /* automatic activation */
+	CHANGE_AAY = 5, /* automatic activation */
+	CHANGE_ASY = 6  /* activate shared */
 } activation_change_t;
 
 /* Returns true, when change activates device */

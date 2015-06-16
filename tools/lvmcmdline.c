@@ -286,6 +286,12 @@ int activation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_v
 		av->ui_value = CHANGE_AEY;
 	}
 
+	else if (!strcmp(av->value, "s") || !strcmp(av->value, "sy") ||
+		 !strcmp(av->value, "ys")) {
+		av->i_value = CHANGE_ASY;
+		av->ui_value = CHANGE_ASY;
+	}
+
 	else if (!strcmp(av->value, "y")) {
 		av->i_value = CHANGE_AY;
 		av->ui_value = CHANGE_AY;
