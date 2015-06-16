@@ -1,5 +1,6 @@
 Version 2.02.122 - 
 =================================
+  Avoid allocation in display_lvname internal function.
   Support thins with size of external origin unaligned with thin pool chunk.
   Allow to extend reduced thin volumes with external origins.
   Consider snapshot and origin LV as unusable if its component is suspended.

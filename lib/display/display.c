@@ -95,8 +95,23 @@ const char *get_percent_string(percent_type_t def)
 
 const char *display_lvname(const struct logical_volume *lv)
 {
-	/* On allocation failure, just return the LV name. */
-	return lv_fullname_dup(lv->vg->cmd->mem, lv) ? : lv->name;
+	char *name;
+	int r;
+
+	if ((lv->vg->cmd->display_lvname_idx + NAME_LEN) >= sizeof((lv->vg->cmd->display_buffer)))
+		lv->vg->cmd->display_lvname_idx = 0;
+
+	name = lv->vg->cmd->display_buffer + lv->vg->cmd->display_lvname_idx;
+	r = dm_snprintf(name, NAME_LEN, "%s/%s", lv->vg->name, lv->name);
+
+	if (r < 0) {
+		log_error("Full LV name \"%s/%s\" is too long.", lv->vg->name, lv->name);
+		return NULL;
+	}
+
+	lv->vg->cmd->display_lvname_idx += r;
+
+	return name;
 }
 
 #define BASE_UNKNOWN 0

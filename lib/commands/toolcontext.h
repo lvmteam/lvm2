@@ -146,6 +146,8 @@ struct cmd_context {
 	char system_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
 	char proc_dir[PATH_MAX];
+	char display_buffer[NAME_LEN * 10];	/* Ring buffer for upto 10 longest vg/lv names */
+	unsigned display_lvname_idx;		/* Index to ring buffer */
 };
 
 /*
