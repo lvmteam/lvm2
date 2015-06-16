@@ -10,7 +10,7 @@ vgchange \(em change attributes of a volume group
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-a | \-\-activate
-.RI [ a | e | l ]
+.RI [ a | e | s | l ]
 .RI { y | n }]
 .RB [ \-\-activationmode
 .IR { complete | degraded | partial } ]
@@ -77,7 +77,7 @@ Controls automatic backup of metadata after the change.  See
 .BR vgcfgbackup (8).
 Default is yes.
 .TP
-.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIl ]{ \fIy | \fIn }
+.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIs | \fIl ]{ \fIy | \fIn }
 Controls the availability of the logical volumes in the volume
 group for input/output.
 In other words, makes the logical volumes known/unknown to the kernel.
@@ -98,24 +98,49 @@ The location and name of the underlying device node may depend on
 the distribution and configuration (e.g. udev) and might change 
 from release to release.
 .IP
-If clustered locking is enabled, add 'e' to activate/deactivate
-exclusively on one node or 'l' to activate/deactivate only
-on the local node.
-Logical volumes with single-host snapshots are always activated
-exclusively because they can only be used on one node at once.
+In a clustered VG, clvmd is used for activation, and the
+following options are possible:
+
+With \-aey, clvmd activates the LV in exclusive mode
+(with an exclusive lock), allowing a single node to activate the LV.
+
+With \-asy, clvmd activates the LV in shared mode
+(with a shared lock), allowing multiple nodes to activate the LV concurrently.
+If the LV type prohibits shared access, such as an LV with a snapshot,
+the 's' option is ignored and an exclusive lock is used.
+
+With \-ay (no mode specified), clvmd activates the LV in shared mode
+if the LV type allows concurrent access, such as a linear LV.
+Otherwise, clvmd activates the LV in exclusive mode.
+
+With \-aey, \-asy, and \-ay, clvmd attempts to activate the LV
+on all nodes.  If exclusive mode is used, then only one of the
+nodes will be successful.
+
+With \-an, clvmd attempts to deactivate the LV on all nodes.
+
+With \-aly, clvmd activates the LV only on the local node, and \-aln
+deactivates only on the local node.  If the LV type allows concurrent
+access, then shared mode is used, otherwise exclusive.
+
+LVs with snapshots are always activated exclusively because they can only
+be used on one node at once.
+
+For local VGs, \-ay, \-aey, and \-asy are all equivalent.
+
 .TP
 .BR \-\-activationmode " {" \fIcomplete | \fIdegraded | \fIpartial }
 The activation mode determines whether logical volumes are allowed to
 activate when there are physical volumes missing (e.g. due to a device
-failure).  \fIcomplete is the most restrictive; allowing only those
+failure).  \fIcomplete\fP is the most restrictive; allowing only those
 logical volumes to be activated that are not affected by the missing
-PVs.  \fIdegraded allows RAID logical volumes to be activated even if
+PVs.  \fIdegraded\fP allows RAID logical volumes to be activated even if
 they have PVs missing.  (Note that the "mirror" segment type is not
 considered a RAID logical volume.  The "raid1" segment type should
-be used instead.)  Finally, \fIpartial allows any logical volume to
+be used instead.)  Finally, \fIpartial\fP allows any logical volume to
 be activated even if portions are missing due to a missing or failed
 PV.  This last option should only be used when performing recovery or
-repair operations.  \fIdegraded is the default mode.  To change it, modify
+repair operations.  \fIdegraded\fP is the default mode.  To change it, modify
 .B activation_mode
 in
 .BR lvm.conf (5).

@@ -8,7 +8,7 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-A | \-\-autobackup
 .RI { y | n }]
 .RB [ \-a | \-\-activate
-.RI [ a | e | l ]{ y | n }]
+.RI [ a | e | s | l ]{ y | n }]
 .RB [ \-\-activationmode
 .RI { complete | degraded | partial }]
 .RB [ \-k | \-\-setactivationskip
@@ -81,7 +81,7 @@ including making them known to the kernel ready for use.
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
-.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIl ]{ \fIy | \fIn }
+.BR \-a ", " \-\-activate " [" \fIa | \fIe | \fIs | \fIl ]{ \fIy | \fIn }
 Controls the availability of the logical volumes for use.
 Communicates with the kernel device-mapper driver via
 libdevmapper to activate (\-ay) or deactivate (\-an) the
@@ -104,11 +104,36 @@ activation. The \-aay option should be also used during system
 boot so it's possible to select which volumes to activate using
 the activation/auto_activation_volume_list setting.
 .IP
-If clustered locking is enabled, -aey will activate exclusively
-on one node and -aly will activate only on the local node.
-To deactivate only on the local node use -aln.
-Logical volumes with single-host snapshots are always activated
-exclusively because they can only be used on one node at once.
+In a clustered VG, clvmd is used for activation, and the
+following options are possible:
+
+With \-aey, clvmd activates the LV in exclusive mode
+(with an exclusive lock), allowing a single node to activate the LV.
+
+With \-asy, clvmd activates the LV in shared mode
+(with a shared lock), allowing multiple nodes to activate the LV concurrently.
+If the LV type prohibits shared access, such as an LV with a snapshot,
+the 's' option is ignored and an exclusive lock is used.
+
+With \-ay (no mode specified), clvmd activates the LV in shared mode
+if the LV type allows concurrent access, such as a linear LV.
+Otherwise, clvmd activates the LV in exclusive mode.
+
+With \-aey, \-asy, and \-ay, clvmd attempts to activate the LV
+on all nodes.  If exclusive mode is used, then only one of the
+nodes will be successful.
+
+With \-an, clvmd attempts to deactivate the LV on all nodes.
+
+With \-aly, clvmd activates the LV only on the local node, and \-aln
+deactivates only on the local node.  If the LV type allows concurrent
+access, then shared mode is used, otherwise exclusive.
+
+LVs with snapshots are always activated exclusively because they can only
+be used on one node at once.
+
+For local VGs, \-ay, \-aey, and \-asy are all equivalent.
+
 .TP
 .BR \-\-activationmode " {" \fIcomplete | \fIdegraded | \fIpartial }
 The activation mode determines whether logical volumes are allowed to
