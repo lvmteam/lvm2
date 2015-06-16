@@ -163,6 +163,10 @@ The following commands are not implemented in LVM2 but might be in the future: l
 The following options are available for many of the commands.
 They are implemented generically and documented here rather
 than repeated on individual manual pages.
+
+Additional hyphens within option names are ignored.  For example,
+\-\-readonly and \-\-read\-only are both accepted.
+
 .TP
 .BR \-h ", " \-? ", " \-\-help
 Display the help text.
