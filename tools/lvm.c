@@ -16,8 +16,33 @@
 #include "tools.h"
 #include "lvm2cmdline.h"
 
+#define MAX_ARG_LEN 64
+
 int main(int argc, char **argv)
 {
+	char arg_new[MAX_ARG_LEN];
+	char *arg;
+	int i, j, j_new;
+
+	for (i = 1; i < argc; i++) {
+		arg = argv[i];
+
+		if (arg[0] == '-' && arg[1] == '-' && strlen(arg) < MAX_ARG_LEN) {
+			memset(arg_new, 0, sizeof(arg_new));
+			arg_new[0] = '-';
+			arg_new[1] = '-';
+
+			for (j = 2, j_new = 2; j < strlen(arg) + 1; j++) {
+				if (arg[j] == '-')
+					continue;
+				arg_new[j_new] = arg[j];
+				j_new++;
+			}
+
+			memcpy(argv[i], arg_new, strlen(arg_new) + 1);
+		}
+	}
+
 	return lvm2_main(argc, argv);
 }
 
