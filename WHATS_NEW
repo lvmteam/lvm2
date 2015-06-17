@@ -1,5 +1,6 @@
 Version 2.02.122 - 
 =================================
+  Fix lvmconfig segfault on settings with undefined default value (2.02.120).
 
 Version 2.02.121 - 12th June 2015
 =================================
