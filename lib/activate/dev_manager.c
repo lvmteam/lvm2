@@ -445,6 +445,78 @@ out:
 	return r;
 }
 
+static int _device_is_suspended(int major, int minor)
+{
+	struct dm_task *dmt;
+	struct dm_info info;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+		return 0;
+
+	if (!dm_task_set_major_minor(dmt, major, minor, 1))
+		goto_out;
+
+	if (activation_checks() && !dm_task_enable_checks(dmt))
+		goto_out;
+
+	if (!dm_task_run(dmt) ||
+	    !dm_task_get_info(dmt, &info)) {
+		log_error("Failed to get info for device %d:%d", major, minor);
+		goto out;
+	}
+
+	r = info.exists && info.suspended;
+out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _ignore_suspended_snapshot_component(struct device *dev)
+{
+	struct dm_task *dmt;
+	void *next = NULL;
+	char *params, *target_type = NULL;
+	uint64_t start, length;
+	int major1, minor1, major2, minor2;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
+		return_0;
+
+	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
+		goto_out;
+
+	if (activation_checks() && !dm_task_enable_checks(dmt))
+		goto_out;
+
+	if (!dm_task_run(dmt)) {
+		log_error("Failed to get state of snapshot or snapshot origin device");
+		goto out;
+	}
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
+		if (!strcmp(target_type, "snapshot")) {
+			if (sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
+				log_error("Incorrect snapshot table found");
+				goto_out;
+			}
+			r = r | _device_is_suspended(major1, minor1) | _device_is_suspended(major2, minor2);
+		} else if (!strcmp(target_type, "snapshot-origin")) {
+			if (sscanf(params, "%d:%d", &major1, &minor1) != 2) {
+				log_error("Incorrect snapshot-origin table found");
+				goto_out;
+			}
+			r = r | _device_is_suspended(major1, minor1);
+		}
+	} while (next);
+
+out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 /*
  * device_is_usable
  * @dev
@@ -553,15 +625,25 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		 * supported anymore and in general using mirrors in a stack
 		 * is disabled by default (with a warning that if enabled,
 		 * it could cause various deadlocks).
-		 * This is former check used, but it's not correct as it
-		 * disables snapshot-origins to be used in a stack in
-		 * general, not just over mirrors!
+		 * Similar situation can happen with RAID devices where
+		 * a RAID device can be snapshotted.
+		 * If one of the RAID legs are down and we're doing
+		 * lvconvert --repair, there's a time period in which
+		 * snapshot components are (besides other devs) suspended.
+		 * See also https://bugzilla.redhat.com/show_bug.cgi?id=1219222
+		 * for an example where this causes problems.
+		 *
+		 * This is a quick check for now, but replace it with more
+		 * robust and better check that would check the stack
+		 * correctly, not just snapshots but any cobimnation possible
+		 * in a stack - use proper dm tree to check this instead.
 		 */
-		/*if (check.check_suspended && target_type && !strcmp(target_type, "snapshot-origin")) {
-			log_debug_activation("%s: Snapshot-origin device %s not usable.",
-					     dev_name(dev), name);
+		if (check.check_suspended &&
+		    (!strcmp(target_type, "snapshot") || !strcmp(target_type, "snapshot-origin")) &&
+		    _ignore_suspended_snapshot_component(dev)) {
+			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
 			goto out;
-		}*/
+		}
 
 		if (target_type && strcmp(target_type, "error"))
 			only_error_target = 0;
