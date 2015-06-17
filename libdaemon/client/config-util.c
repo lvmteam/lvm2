@@ -20,6 +20,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <math.h>  /* fabs() */
+#include <float.h> /* DBL_EPSILON */
+
 int buffer_append_vf(struct buffer *buf, va_list ap)
 {
 	char *append;
@@ -275,6 +278,60 @@ struct dm_config_node *config_make_nodes(struct dm_config_tree *cft,
 	va_end(ap);
 
 	return res;
+}
+
+/* Test if the doubles are close enough to be considered equal */
+static int close_enough(double d1, double d2)
+{
+	return fabs(d1 - d2) < DBL_EPSILON;
+}
+
+static int compare_value(struct dm_config_value *a, struct dm_config_value *b)
+{
+	int r = 0;
+
+	if (a->type > b->type)
+		return 1;
+	if (a->type < b->type)
+		return -1;
+
+	switch (a->type) {
+	case DM_CFG_STRING: r = strcmp(a->v.str, b->v.str); break;
+	case DM_CFG_FLOAT: r = close_enough(a->v.f, b->v.f) ? 0 : (a->v.f > b->v.f) ? 1 : -1; break;
+	case DM_CFG_INT: r = (a->v.i == b->v.i) ? 0 : (a->v.i > b->v.i) ? 1 : -1; break;
+	case DM_CFG_EMPTY_ARRAY: return 0;
+	}
+
+	if (r == 0 && a->next && b->next)
+		r = compare_value(a->next, b->next);
+	return r;
+}
+
+int compare_config(struct dm_config_node *a, struct dm_config_node *b)
+{
+	int result = 0;
+	if (a->v && b->v)
+		result = compare_value(a->v, b->v);
+	if (a->v && !b->v)
+		result = 1;
+	if (!a->v && b->v)
+		result = -1;
+	if (a->child && b->child)
+		result = compare_config(a->child, b->child);
+
+	if (result) {
+		// DEBUGLOG("config inequality at %s / %s", a->key, b->key);
+		return result;
+	}
+
+	if (a->sib && b->sib)
+		result = compare_config(a->sib, b->sib);
+	if (a->sib && !b->sib)
+		result = 1;
+	if (!a->sib && b->sib)
+		result = -1;
+
+	return result;
 }
 
 int buffer_realloc(struct buffer *buf, int needed)
