@@ -638,7 +638,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		 * correctly, not just snapshots but any cobimnation possible
 		 * in a stack - use proper dm tree to check this instead.
 		 */
-		if (check.check_suspended &&
+		if (check.check_suspended && target_type &&
 		    (!strcmp(target_type, "snapshot") || !strcmp(target_type, "snapshot-origin")) &&
 		    _ignore_suspended_snapshot_component(dev)) {
 			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
