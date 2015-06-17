@@ -502,13 +502,13 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 				log_error("Incorrect snapshot table found");
 				goto_out;
 			}
-			r = r | _device_is_suspended(major1, minor1) | _device_is_suspended(major2, minor2);
+			r = r || _device_is_suspended(major1, minor1) || _device_is_suspended(major2, minor2);
 		} else if (!strcmp(target_type, "snapshot-origin")) {
 			if (sscanf(params, "%d:%d", &major1, &minor1) != 2) {
 				log_error("Incorrect snapshot-origin table found");
 				goto_out;
 			}
-			r = r | _device_is_suspended(major1, minor1);
+			r = r || _device_is_suspended(major1, minor1);
 		}
 	} while (next);
 
