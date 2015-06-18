@@ -1,5 +1,6 @@
 Version 1.02.99 - 
 ================================
+  New dm_tree_node_set_thin_pool_read_only(DM_1_02_99) for read-only thin pool.
   Enhance error message when thin-pool message fails.
 
 Version 1.02.98 - 12th June 2015

@@ -205,6 +205,7 @@ struct load_segment {
 	unsigned ignore_discard;	/* Thin_pool target vsn 1.1 */
 	unsigned no_discard_passdown;	/* Thin_pool target vsn 1.1 */
 	unsigned error_if_no_space;	/* Thin pool target vsn 1.10 */
+	unsigned read_only;		/* Thin pool target vsn 1.3 */
 	uint32_t device_id;		/* Thin */
 
 };
@@ -2421,6 +2422,7 @@ static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 	int pos = 0;
 	char pool[DM_FORMAT_DEV_BUFSIZE], metadata[DM_FORMAT_DEV_BUFSIZE];
 	int features = (seg->error_if_no_space ? 1 : 0) +
+		 (seg->read_only ? 1 : 0) +
 		 (seg->ignore_discard ? 1 : 0) +
 		 (seg->no_discard_passdown ? 1 : 0) +
 		 (seg->skip_block_zeroing ? 1 : 0);
@@ -2431,9 +2433,10 @@ static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 	if (!_build_dev_string(pool, sizeof(pool), seg->pool))
 		return_0;
 
-	EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %d%s%s%s%s", metadata, pool,
+	EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %d%s%s%s%s%s", metadata, pool,
 		    seg->data_block_size, seg->low_water_mark, features,
 		    seg->error_if_no_space ? " error_if_no_space" : "",
+		    seg->read_only ? " read_only" : "",
 		    seg->skip_block_zeroing ? " skip_block_zeroing" : "",
 		    seg->ignore_discard ? " ignore_discard" : "",
 		    seg->no_discard_passdown ? " no_discard_passdown" : ""
@@ -3862,6 +3865,19 @@ int dm_tree_node_set_thin_pool_error_if_no_space(struct dm_tree_node *node,
 		return_0;
 
 	seg->error_if_no_space = error_if_no_space;
+
+	return 1;
+}
+
+int dm_tree_node_set_thin_pool_read_only(struct dm_tree_node *node,
+					 unsigned read_only)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _get_single_load_segment(node, SEG_THIN_POOL)))
+		return_0;
+
+	seg->read_only = read_only;
 
 	return 1;
 }

@@ -899,6 +899,9 @@ int dm_tree_node_set_thin_pool_discard(struct dm_tree_node *node,
  */
 int dm_tree_node_set_thin_pool_error_if_no_space(struct dm_tree_node *node,
 						 unsigned error_if_no_space);
+/* Start thin pool with metadata in read-only mode */
+int dm_tree_node_set_thin_pool_read_only(struct dm_tree_node *node,
+					 unsigned read_only);
 /*
  * FIXME: Defines bellow are based on kernel's dm-thin.c defines
  * MAX_DEV_ID ((1 << 24) - 1)
