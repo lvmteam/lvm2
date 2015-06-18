@@ -5084,16 +5084,6 @@ static int _lvresize_check_type(struct cmd_context *cmd, const struct logical_vo
 
 	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv &&
 	    (lp->resize == LV_EXTEND)) {
-		/*
-		 * TODO: currently we do not support extension of already reduced thin volume.
-		 * But it might be possible to create combined mapping of some part of
-		 * the external origin followed by zero target.
-		 */
-		if (first_seg(lv)->external_lv->size > lv->size) {
-			log_error("Extension of reduced thin volume with external origin is unsupported.");
-			return 0;
-		}
-
 		/* Validate thin target supports bigger size of thin volume then external origin */
 		if (first_seg(lv)->external_lv->size <= lv->size &&
 		    !thin_pool_feature_supported(first_seg(lv)->pool_lv, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
