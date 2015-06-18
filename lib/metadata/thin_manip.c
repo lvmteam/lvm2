@@ -243,12 +243,11 @@ int pool_supports_external_origin(const struct lv_segment *pool_seg, const struc
 {
 	uint32_t csize = pool_seg->chunk_size;
 
-	if ((external_lv->size < csize) || (external_lv->size % csize)) {
-		/* TODO: Validate with thin feature flag once, it will be supported */
-		log_error("Can't use \"%s/%s\" as external origin with \"%s/%s\" pool. "
+	if (((external_lv->size < csize) || (external_lv->size % csize)) &&
+	    !thin_pool_feature_supported(pool_seg->lv, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
+		log_error("Can't use \"%s\" as external origin with \"%s\" pool. "
 			  "Size %s is not a multiple of pool's chunk size %s.",
-			  external_lv->vg->name, external_lv->name,
-			  pool_seg->lv->vg->name, pool_seg->lv->name,
+			  display_lvname(external_lv), display_lvname(pool_seg->lv),
 			  display_size(external_lv->vg->cmd, external_lv->size),
 			  display_size(external_lv->vg->cmd, csize));
 		return 0;
