@@ -1414,11 +1414,34 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int ret = 0;
 	int locking_type;
 	int monitoring;
+	char *arg_new, *arg;
+	int i;
 
 	init_error_message_produced(0);
 
 	/* each command should start out with sigint flag cleared */
 	sigint_clear();
+
+	/* eliminate '-' from all options starting with -- */
+	for (i = 1; i < argc; ++i) {
+
+		if (argv[i][0] != '-' || argv[i][1] != '-')
+			continue;
+
+		arg_new = arg = argv[i] + 2;
+
+		while (*arg) {
+			if (*arg != '-') {
+				if (arg_new != arg)
+					*arg_new = *arg;
+				++arg_new;
+			}
+			++arg;
+		}
+
+		if (arg_new != arg)
+			*arg_new = 0;
+	}
 
 	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
 		return_ECMD_FAILED;
