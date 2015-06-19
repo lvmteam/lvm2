@@ -385,6 +385,8 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		default:
 			/* Typically only log_warn goes to stdout */
 			stream = (use_stderr || (level != _LOG_WARN)) ? stderr : stdout;
+			if (stream == stderr)
+				fflush(stdout);
 			fprintf(stream, "%s%s%s%s", buf, log_command_name(),
 				_msg_prefix, indent_spaces);
 			vfprintf(stream, trformat, ap);
