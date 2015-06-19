@@ -1,7 +1,9 @@
-Version 1.02.99 - 
+Version 1.02.99 - 20th June 2015
 ================================
   New dm_tree_node_set_thin_pool_read_only(DM_1_02_99) for read-only thin pool.
   Enhance error message when thin-pool message fails.
+  Fix dmeventd logging to avoid threaded use of static variable.
+  Remove redundant dmeventd SIGALRM coded.
 
 Version 1.02.98 - 12th June 2015
 ================================
