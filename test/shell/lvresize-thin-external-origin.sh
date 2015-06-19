@@ -20,7 +20,7 @@ test -e LOCAL_LVMPOLLD && skip
 aux have_thin 1 2 0 || skip
 
 # Pretend we miss the external_origin_extend feature
-aux lvmconf "global/thin_disabled_features = [ \"external_origin_extend\" ]"
+aux lvmconf 'global/thin_disabled_features = [ "external_origin_extend" ]'
 
 aux prepare_pvs 2
 
@@ -41,7 +41,11 @@ not lvresize -L+10 $vg/$lv1
 
 # But reduction works
 lvresize -L-5 -f $vg/$lv1
+check lv_field $vg/$lv1 lv_size "5.00" --units m --nosuffix
+
 not lvresize -L+15 -y $vg/$lv1
+check lv_field $vg/$lv1 lv_size "5.00" --units m --nosuffix
+
 # Try to resize again back up to the size of external origin
-# But for now we do not support zeroing for rexetended areas.
-not lvresize -L+5 -f $vg/$lv1
+lvresize -L+5 -f $vg/$lv1
+check lv_field $vg/$lv1 lv_size "10.00" --units m --nosuffix
