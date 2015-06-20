@@ -1,3 +1,6 @@
+Version 1.02.100 - 
+================================
+
 Version 1.02.99 - 20th June 2015
 ================================
   New dm_tree_node_set_thin_pool_read_only(DM_1_02_99) for read-only thin pool.
