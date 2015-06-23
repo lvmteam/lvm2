@@ -119,6 +119,8 @@ typedef union {
 #define CFG_DEFAULT_RUN_TIME	0x100
 /* whether the configuration setting is disabled (and hence defaults always used) */
 #define CFG_DISABLED		0x200
+/* whether to print integers in octal form (prefixed by "0") */
+#define CFG_FORMAT_INT_OCTAL	0x400
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {

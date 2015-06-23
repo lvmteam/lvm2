@@ -667,7 +667,8 @@ static void _log_type_error(const char *path, cfg_def_type_t actual,
 }
 
 static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
-						     const cfg_def_item_t *def)
+						     const cfg_def_item_t *def,
+						     uint32_t format_flags)
 {
 	char *enc_value, *token, *p, *r;
 	struct dm_config_value *array = NULL, *v = NULL, *oldv = NULL;
@@ -678,6 +679,7 @@ static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
 			return NULL;
 		}
 		array->type = DM_CFG_EMPTY_ARRAY;
+		dm_config_value_set_format_flags(array, format_flags);
 		return array;
 	}
 
@@ -710,6 +712,9 @@ static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
 			dm_free(enc_value);
 			return NULL;
 		}
+
+		dm_config_value_set_format_flags(v, format_flags);
+
 		if (oldv)
 			oldv->next = v;
 		if (!array)
@@ -839,7 +844,7 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 	}
 
 	if (!v_def && (def->type & CFG_TYPE_ARRAY)) {
-		if (!(v_def_array = v_def_iter = _get_def_array_values(handle->cft, def)))
+		if (!(v_def_array = v_def_iter = _get_def_array_values(handle->cft, def, 0)))
 			return_0;
 		do {
 			/* iterate over each element of the array and check its value */
@@ -1739,15 +1744,19 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 {
 	struct dm_config_node *cn;
 	const char *str;
+	uint32_t format_flags = 0;
 
 	if (!(cn = dm_config_create_node(cft, def->name))) {
 		log_error("Failed to create default config setting node.");
 		return NULL;
 	}
 
-	if (!(def->type & CFG_TYPE_SECTION) && (!(cn->v = dm_config_create_value(cft)))) {
-		log_error("Failed to create default config setting node value.");
-		return NULL;
+	if (!(def->type & CFG_TYPE_SECTION) && !(def->type & CFG_TYPE_ARRAY)) {
+		if (!(cn->v = dm_config_create_value(cft))) {
+			log_error("Failed to create default config setting node value.");
+			return NULL;
+		}
+		format_flags |= DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES;
 	}
 
 	cn->id = def->id;
@@ -1755,6 +1764,9 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 	if (spec->unconfigured && def->default_unconfigured_value.v_UNCONFIGURED) {
 		cn->v->type = DM_CFG_STRING;
 		cn->v->v.str = cfg_def_get_default_unconfigured_value_hint(spec->cmd, def);
+		if (def->type != CFG_TYPE_STRING)
+			format_flags |= DM_CONFIG_VALUE_FMT_STRING_NO_QUOTES;
+		dm_config_value_set_format_flags(cn->v, format_flags);
 	} else if (!(def->type & CFG_TYPE_ARRAY)) {
 		switch (def->type) {
 			case CFG_TYPE_SECTION:
@@ -1767,6 +1779,8 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 			case CFG_TYPE_INT:
 				cn->v->type = DM_CFG_INT;
 				cn->v->v.i = cfg_def_get_default_value_hint(spec->cmd, def, CFG_TYPE_INT, NULL);
+				if (def->flags & CFG_FORMAT_INT_OCTAL)
+					format_flags |= DM_CONFIG_VALUE_FMT_INT_OCTAL;
 				break;
 			case CFG_TYPE_FLOAT:
 				cn->v->type = DM_CFG_FLOAT;
@@ -1783,8 +1797,12 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 				return NULL;
 				break;
 		}
-	} else
-		cn->v = _get_def_array_values(cft, def);
+		dm_config_value_set_format_flags(cn->v, format_flags);
+	} else {
+		format_flags |= (DM_CONFIG_VALUE_FMT_COMMON_ARRAY |
+				 DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES);
+		cn->v = _get_def_array_values(cft, def, format_flags);
+	}
 
 	cn->child = NULL;
 	if (parent) {

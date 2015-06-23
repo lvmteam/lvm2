@@ -273,11 +273,13 @@ static int _line_end(const struct dm_config_node *cn, struct config_output *out)
 static int _write_value(struct config_output *out, const struct dm_config_value *v)
 {
 	char *buf;
+	const char *s;
 
 	switch (v->type) {
 	case DM_CFG_STRING:
 		buf = alloca(dm_escaped_len(v->v.str));
-		line_append("\"%s\"", dm_escape_double_quotes(buf, v->v.str));
+		s = (v->format_flags & DM_CONFIG_VALUE_FMT_STRING_NO_QUOTES) ? "" : "\"";
+		line_append("%s%s%s", s, dm_escape_double_quotes(buf, v->v.str), s);
 		break;
 
 	case DM_CFG_FLOAT:
@@ -285,11 +287,15 @@ static int _write_value(struct config_output *out, const struct dm_config_value 
 		break;
 
 	case DM_CFG_INT:
-		line_append("%" PRId64, v->v.i);
+		if (v->format_flags & DM_CONFIG_VALUE_FMT_INT_OCTAL)
+			line_append("0%" PRIo64, v->v.i);
+		else
+			line_append("%" PRId64, v->v.i);
 		break;
 
 	case DM_CFG_EMPTY_ARRAY:
-		line_append("[]");
+		s = (v->format_flags & DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES) ? " " : "";
+		line_append("[%s]", s);
 		break;
 
 	default:
@@ -303,6 +309,8 @@ static int _write_value(struct config_output *out, const struct dm_config_value 
 static int _write_config(const struct dm_config_node *n, int only_one,
 			 struct config_output *out, int level)
 {
+	const char *extra_space;
+	int format_array;
 	char space[MAX_INDENT + 1];
 	int l = (level < MAX_INDENT) ? level : MAX_INDENT;
 	int i;
@@ -316,6 +324,9 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 	space[i] = '\0';
 
 	do {
+		extra_space = (n->v && (n->v->format_flags & DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES)) ? " " : "";
+		format_array = (n->v && (n->v->format_flags & DM_CONFIG_VALUE_FMT_COMMON_ARRAY));
+
 		if (out->spec && out->spec->prefix_fn)
 			out->spec->prefix_fn(n, space, out->baton);
 
@@ -341,20 +352,25 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 		} else {
 			/* it's a value */
 			const struct dm_config_value *v = n->v;
-			line_append("=");
+			line_append("%s=%s", extra_space, extra_space);
 			if (v->next) {
-				line_append("[");
+				line_append("[%s", extra_space);
 				while (v && v->type != DM_CFG_EMPTY_ARRAY) {
 					if (!_write_value(out, v))
 						return_0;
 					v = v->next;
 					if (v && v->type != DM_CFG_EMPTY_ARRAY)
-						line_append(", ");
+						line_append(",%s", extra_space);
 				}
-				line_append("]");
-			} else
+				line_append("%s]", extra_space);
+			} else {
+				if (format_array && (v->type != DM_CFG_EMPTY_ARRAY))
+					line_append("[%s", extra_space);
 				if (!_write_value(out, v))
 					return_0;
+				if (format_array && (v->type != DM_CFG_EMPTY_ARRAY))
+					line_append("%s]", extra_space);
+			}
 		}
 		if (!_line_end(n, out))
 			return_0;
@@ -1326,6 +1342,22 @@ struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const c
 struct dm_config_value *dm_config_create_value(struct dm_config_tree *cft)
 {
 	return _create_value(cft->mem);
+}
+
+void dm_config_value_set_format_flags(struct dm_config_value *cv, uint32_t format_flags)
+{
+	if (!cv)
+		return;
+
+	cv->format_flags = format_flags;
+}
+
+uint32_t dm_config_value_get_format_flags(struct dm_config_value *cv)
+{
+	if (!cv)
+		return 0;
+
+	return cv->format_flags;
 }
 
 struct dm_pool *dm_config_memory(struct dm_config_tree *cft)

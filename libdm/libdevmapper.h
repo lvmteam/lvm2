@@ -1847,6 +1847,7 @@ struct dm_config_value {
 	} v;
 
 	struct dm_config_value *next;	/* For arrays */
+	uint32_t format_flags;
 };
 
 struct dm_config_node {
@@ -1948,6 +1949,24 @@ struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const 
 struct dm_config_node *dm_config_create_node(struct dm_config_tree *cft, const char *key);
 struct dm_config_value *dm_config_create_value(struct dm_config_tree *cft);
 struct dm_config_node *dm_config_clone_node(struct dm_config_tree *cft, const struct dm_config_node *cn, int siblings);
+
+/*
+ * Common formatting flags applicable to all config node types (lower 16 bits).
+ */
+#define DM_CONFIG_VALUE_FMT_COMMON_ARRAY             0x00000001 /* value is array */
+#define DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES      0x00000002 /* add spaces in "key = value" pairs in constrast to "key=value" for better readability */
+
+/*
+ * Type-related config node formatting flags (higher 16 bits).
+ */
+/* int-related formatting flags */
+#define DM_CONFIG_VALUE_FMT_INT_OCTAL                0x00010000 /* print number in octal form */
+
+/* string-related formatting flags */
+#define DM_CONFIG_VALUE_FMT_STRING_NO_QUOTES         0x00010000 /* do not print quotes around string value */
+
+void dm_config_value_set_format_flags(struct dm_config_value *cv, uint32_t format_flags);
+uint32_t dm_config_value_get_format_flags(struct dm_config_value *cv);
 
 struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
 

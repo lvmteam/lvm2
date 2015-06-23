@@ -50,6 +50,7 @@
  *                                 CFG_DEFAULT_UNDEFINED - node's default value is undefined (depends on other system/kernel values outside of lvm)
  *                                 CFG_DEFAULT_COMMENTED - node's default value is commented out on output
  *                                 CFG_DISABLED - configuration is disabled (defaults always used)
+ *                                 CFG_FORMAT_INT_OCTAL - print integer number in octal form (also prefixed by "0")
  *
  * type:		       Allowed type for the value of simple configuation setting, one of:
  *                                 CFG_TYPE_BOOL
