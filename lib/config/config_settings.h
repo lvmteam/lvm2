@@ -597,7 +597,7 @@ cfg(backup_retain_days_CFG, "retain_days", backup_CFG_SECTION, 0, CFG_TYPE_INT, 
 cfg(shell_history_size_CFG, "history_size", shell_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_MAX_HISTORY, vsn(1, 0, 0), NULL, 0, NULL,
 	"Number of lines of history to store in ~/.lvm_history.\n")
 
-cfg(global_umask_CFG, "umask", global_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_UMASK, vsn(1, 0, 0), NULL, 0, NULL,
+cfg(global_umask_CFG, "umask", global_CFG_SECTION, CFG_FORMAT_INT_OCTAL, CFG_TYPE_INT, DEFAULT_UMASK, vsn(1, 0, 0), NULL, 0, NULL,
 	"The file creation mask for any files and directories created.\n"
 	"Interpreted as octal if the first digit is zero.\n")
 
