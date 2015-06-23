@@ -137,6 +137,17 @@ hosts. Overall, this is not hard, but the devil is in the details. I would
 possibly disable lvmetad for clustered volume groups in the first phase and
 only proceed when the local mode is robust and well tested.
 
+With lvmlockd, lvmetad state is kept up to date by flagging either an
+individual VG as "invalid", or the global state as "invalid".  When either
+the VG or the global state are read, this invalid flag is returned along
+with the data.  The client command can check for this invalid state and
+decide to read the information from disk rather than use the stale cached
+data.  After the latest data is read from disk, the command may choose to
+send it to lvmetad to update the cache.  lvmlockd uses version numbers
+embedded in its VG and global locks to detect when cached data becomes
+invalid, and it then tells lvmetad to set the related invalid flag.
+dct, 2015-06-23
+
 Protocol & co.
 --------------
 
