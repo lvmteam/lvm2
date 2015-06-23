@@ -48,7 +48,11 @@ check_ not
 aux disable_dev "$dev1"
 vgreduce --removemissing --force $vg
 aux enable_dev "$dev1"
-vgs 2>&1 | grep 'Removing PV'
-vgs 2>&1 | not grep 'Removing PV'
+
+vgscan 2>&1 | tee out
+grep 'Removing PV' out
+
+vgs 2>&1 | tee out
+not grep 'Removing PV' out
 
 vgremove -ff $vg
