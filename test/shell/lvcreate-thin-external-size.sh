@@ -23,7 +23,9 @@ which cmp || skip
 #
 # Main
 #
-aux have_thin 1 3 0 || skip
+
+# Test needs thin-pool target with unaligned ext-orig size support
+aux have_thin 1 13 0 || skip
 
 aux prepare_pvs 2 640
 
