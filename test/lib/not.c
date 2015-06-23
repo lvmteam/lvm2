@@ -33,9 +33,13 @@ static int _finished(const char *cmd, int status, int pid) {
 			if (WIFEXITED(ret) && WEXITSTATUS(ret) == 0) {
 				printf("## timing off\n<======== Debug log ========>\n"); /* timing off */
 				fflush(stdout);
-				(void) system("sed -e 's,^,## DEBUG: ,' debug.log*${LVM_LOG_FILE_EPOCH}* 2>/dev/null");
+				if (system("sed -e 's,^,## DEBUG: ,' debug.log*${LVM_LOG_FILE_EPOCH}* 2>/dev/null")) {
+				    /* Ignore result code */;
+				}
 				printf("## timing on\n"); /* timing on */
-				(void) system("rm -f debug.log*${LVM_LOG_FILE_EPOCH}*");
+				if (system("rm -f debug.log*${LVM_LOG_FILE_EPOCH}*")) {
+				    /* Ignore result code */;
+				}
 				fflush(stdout);
 			}
 		}

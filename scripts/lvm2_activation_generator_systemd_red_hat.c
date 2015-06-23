@@ -64,7 +64,7 @@ static void kmsg(int log_level, const char *format, ...)
 		return;
 
 	/* The n+4: +3 for "<n>" prefix and +1 for '\0' suffix */
-	(void) write(kmsg_fd, message, n + 4);
+	if (write(kmsg_fd, message, n + 4)) { /* Ignore result code */; }
 }
 
 static void lvm_get_use_lvmetad_and_lvmpolld(int *use_lvmetad, int *use_lvmpolld)
