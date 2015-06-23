@@ -1152,9 +1152,16 @@ if test "$BLKID_WIPING" != no; then
 			   fi])
 	if test "$BLKID_WIPING" = yes; then
 		BLKID_PC="blkid"
+		DEFAULT_USE_BLKID_WIPING=1
 		AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
+	else
+		DEFAULT_USE_BLKID_WIPING=1
 	fi
+else
+	DEFAULT_USE_BLKID_WIPING=0
 fi
+AC_DEFINE_UNQUOTED(DEFAULT_USE_BLKID_WIPING, [$DEFAULT_USE_BLKID_WIPING],
+		   [Use blkid wiping by default.])
 
 ################################################################################
 dnl -- Enable udev-systemd protocol to instantiate a service for background jobs
@@ -1742,7 +1749,6 @@ LVM_LIBAPI=`echo "$VER" | $AWK -F '[[()]]' '{print $2}'`
 AC_SUBST(APPLIB)
 AC_SUBST(AWK)
 AC_SUBST(BLKID_PC)
-AC_SUBST(BLKID_WIPING)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(BUILD_LVMETAD)
@@ -1783,6 +1789,7 @@ AC_SUBST(DEFAULT_RAID10_SEGTYPE)
 AC_SUBST(DEFAULT_RUN_DIR)
 AC_SUBST(DEFAULT_SPARSE_SEGTYPE)
 AC_SUBST(DEFAULT_SYS_DIR)
+AC_SUBST(DEFAULT_USE_BLKID_WIPING)
 AC_SUBST(DEFAULT_USE_LVMETAD)
 AC_SUBST(DEFAULT_USE_LVMPOLLD)
 AC_SUBST(DEVMAPPER)

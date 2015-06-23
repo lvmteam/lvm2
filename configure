@@ -695,6 +695,7 @@ DL_LIBS
 DEVMAPPER
 DEFAULT_USE_LVMPOLLD
 DEFAULT_USE_LVMETAD
+DEFAULT_USE_BLKID_WIPING
 DEFAULT_SYS_DIR
 DEFAULT_SPARSE_SEGTYPE
 DEFAULT_RUN_DIR
@@ -724,7 +725,6 @@ BUILD_LVMPOLLD
 BUILD_LVMETAD
 BUILD_DMEVENTD
 BUILD_CMIRRORD
-BLKID_WIPING
 BLKID_PC
 APPLIB
 MODPROBE_CMD
@@ -11052,11 +11052,21 @@ $as_echo "yes" >&6; }
 fi
 	if test "$BLKID_WIPING" = yes; then
 		BLKID_PC="blkid"
+		DEFAULT_USE_BLKID_WIPING=1
 
 $as_echo "#define BLKID_WIPING_SUPPORT 1" >>confdefs.h
 
+	else
+		DEFAULT_USE_BLKID_WIPING=1
 	fi
+else
+	DEFAULT_USE_BLKID_WIPING=0
 fi
+
+cat >>confdefs.h <<_ACEOF
+#define DEFAULT_USE_BLKID_WIPING $DEFAULT_USE_BLKID_WIPING
+_ACEOF
+
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use udev-systemd protocol for jobs in background" >&5
