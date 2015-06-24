@@ -604,6 +604,11 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		kill(getppid(), SIGTERM);
 
+	/*
+	 * Use daemon_main for daemon-specific init and polling, or
+	 * use daemon_init for daemon-specific init and generic lib polling.
+	 */
+
 	if (s.daemon_main) {
 		if (!s.daemon_main(&s))
 			failed = 1;
