@@ -7446,6 +7446,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			goto deactivate_and_revert_new_lv; /* Let's retry on error path */
 		}
 
+		/* Get in sync with deactivation, before reusing LV as snapshot */
+		sync_local_dev_names(lv->vg->cmd);
+
 		/* Create zero origin volume for spare snapshot */
 		if (lp->virtual_extents &&
 		    !(origin_lv = _create_virtual_origin(cmd, vg, lv->name,
