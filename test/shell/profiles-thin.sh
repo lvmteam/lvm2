@@ -59,6 +59,11 @@ check lv_field $vg/pool_performance zero ""
 
 vgremove -ff $vg
 
+if test -d "$DM_DEV_DIR/$vg" ; then
+	should not echo "Udev has left \"$DM_DEV_DIR/$vg\"!"
+	rm -rf "$DM_DEV_DIR/$vg"
+fi
+
 # The profile must be also applied if using the profile
 # for the whole VG - any LVs inherit this profile then.
 vgcreate --profile thin-performance $vg "$dev1"
