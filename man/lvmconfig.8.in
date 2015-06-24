@@ -27,6 +27,7 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RB [ \-\-validate ]
 .RB [ \-\-withsummary ]
 .RB [ \-\-withcomments ]
+.RB [ \-\-withspaces ]
 .RB [ \-\-withversions ]
 .RB [ ConfigurationNode... ]
 
@@ -184,6 +185,10 @@ Display a one line comment for each configuration node.
 .B \-\-withcomments
 Display a full comment for each configuration node. For deprecated
 settings, also display comments about deprecation in addition.
+
+.TP
+.B \-\-withspaces
+Where appropriate, add more spaces in output for better readability.
 
 .TP
 .B \-\-withversions

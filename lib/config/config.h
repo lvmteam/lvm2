@@ -163,6 +163,7 @@ struct config_def_tree_spec {
 	unsigned withsummary:1;		/* include first line of comments - a summary */
 	unsigned withcomments:1;	/* include all comment lines */
 	unsigned withversions:1;	/* include versions */
+	unsigned withspaces:1;		/* add more spaces in output for better readability */
 	unsigned unconfigured:1;	/* use unconfigured path strings */
 	uint8_t *check_status;		/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };

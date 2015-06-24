@@ -277,6 +277,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, withversions_ARG))
 		tree_spec.withversions = 1;
 
+	if (arg_count(cmd, withspaces_ARG))
+		tree_spec.withspaces = 1;
+
 	if (cft_check_handle)
 		tree_spec.check_status = cft_check_handle->status;
 

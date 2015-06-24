@@ -1756,7 +1756,8 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 			log_error("Failed to create default config setting node value.");
 			return NULL;
 		}
-		format_flags |= DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES;
+		if (spec->withspaces)
+			format_flags |= DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES;
 	}
 
 	cn->id = def->id;
@@ -1799,8 +1800,9 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 		}
 		dm_config_value_set_format_flags(cn->v, format_flags);
 	} else {
-		format_flags |= (DM_CONFIG_VALUE_FMT_COMMON_ARRAY |
-				 DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES);
+		if (spec->withspaces)
+			format_flags |= DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES;
+		format_flags |= DM_CONFIG_VALUE_FMT_COMMON_ARRAY;
 		cn->v = _get_def_array_values(cft, def, format_flags);
 	}
 
