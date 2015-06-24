@@ -49,13 +49,14 @@ xx(config,
    "\t[--validate]\n"
    "\t[--withsummary]\n"
    "\t[--withcomments]\n"
+   "\t[--withspaces]\n"
    "\t[--unconfigured]\n"
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
    showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG,
-   unconfigured_ARG, withversions_ARG)
+   withspaces_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(devtypes,
    "Display recognised built-in block device types",
@@ -509,13 +510,14 @@ xx(lvmconfig,
    "\t[--validate]\n"
    "\t[--withsummary]\n"
    "\t[--withcomments]\n"
+   "\t[--withspaces]\n"
    "\t[--unconfigured]\n"
    "\t[--withversions]\n"
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
    showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG,
-   unconfigured_ARG, withversions_ARG)
+   withspaces_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
