@@ -518,8 +518,7 @@ Directory containing \fBlvm.conf\fP(5) and other LVM system files.
 Defaults to "#DEFAULT_SYS_DIR#".
 .TP
 .B LVM_SUPPRESS_FD_WARNINGS
-Suppress warnings about openned file descriptors, when lvm command
-is executed.
+Suppress warnings about unexpected file descriptors passed into LVM.
 .TP
 .B LVM_VG_NAME
 The Volume Group name that is assumed for
@@ -527,16 +526,40 @@ any reference to a Logical Volume that doesn't specify a path.
 Not set by default.
 .TP
 .B LVM_LVMETAD_PIDFILE
-Path for the lvmetad pid file.
+Path to the file that stores the lvmetad process ID.
 .TP
 .B LVM_LVMETAD_SOCKET
-Path for the lvmetad socket file.
+Path to the socket used to communicate with lvmetad.
 .TP
 .B LVM_LVMPOLLD_PIDFILE
-Path for the lvmpolld pid file.
+Path to the file that stores the lvmpolld process ID.
 .TP
 .B LVM_LVMPOLLD_SOCKET
-Path for the lvmpolld socket file.
+Path to the socket used to communicate with lvmpolld..
+.TP
+.B LVM_LOG_FILE_EPOCH
+A string of up to 32 letters appended to the log filename and
+followed by the process ID and a timestamp.  When set, each process logs to a
+separate file.
+.TP
+.B LVM_EXPECTED_EXIT_STATUS
+The status anticipated when the process exits.  Use ">N" to match any
+status greater than N.  If the actual exit status matches and a log
+file got produced, it is deleted.
+
+LVM_LOG_FILE_EPOCH and LVM_EXPECTED_EXIT_STATUS together allow
+automated test scripts to discard uninteresting log data.
+.TP
+.B LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES
+Used to suppress warning messages when the configured locking is known
+to be unavailable.
+.TP
+.B DM_ABORT_ON_INTERNAL_ERRORS
+Abort processing if the code detects a non-fatal internal error.
+.TP
+.B DM_DISABLE_UDEV
+Avoid interaction with udev.  LVM will manage the relevant nodes in /dev
+directly.
 .SH FILES
 .I #DEFAULT_SYS_DIR#/lvm.conf
 .br
