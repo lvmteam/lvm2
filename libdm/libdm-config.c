@@ -1308,6 +1308,8 @@ struct dm_config_node *dm_config_clone_node_with_mem(struct dm_pool *mem, const 
 		return NULL;
 	}
 
+	new_cn->id = cn->id;
+
 	if ((cn->v && !(new_cn->v = _clone_config_value(mem, cn->v))) ||
 	    (cn->child && !(new_cn->child = dm_config_clone_node_with_mem(mem, cn->child, 1))) ||
 	    (siblings && cn->sib && !(new_cn->sib = dm_config_clone_node_with_mem(mem, cn->sib, siblings))))
