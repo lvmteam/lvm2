@@ -72,7 +72,10 @@ Display full configuration tree - a combination of current configuration tree
 (\fB\-\-type current\fP) and tree of settings for which default values are
 used (\fB\-\-type missing\fP). This is exactly the configuration tree that
 LVM2 uses during command execution. Using this type also implies
-the use of \fB\-\-mergedconfig\fP option.
+the use of \fB\-\-mergedconfig\fP option. If comments are displayed
+(see \fB\-\-withcomments\fP and \fB\-\-withsummary\fP options), then
+for each setting found in existing configuration and for which defaults
+are not used, there's an extra comment line printed to denote this.
 .IP list 3
 Display plain list of configuration settings.
 .IP missing 3

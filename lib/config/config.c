@@ -1608,6 +1608,10 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 
 		if (cfg_def->flags & CFG_DEFAULT_UNDEFINED)
 			fprintf(out->fp, "%s# This configuration %s does not have a default value defined.\n", line, node_type_name);
+
+		if ((out->tree_spec->type == CFG_DEF_TREE_FULL) &&
+		    (out->tree_spec->check_status[cn->id] & CFG_USED))
+			fprintf(out->fp, "%s# Value defined in existing configuration has been used for this setting.\n", line);
 	}
 
 	if (out->tree_spec->withversions) {
