@@ -141,7 +141,7 @@ typedef struct cfg_def_item {
 typedef enum {
 	CFG_DEF_TREE_CURRENT,		/* tree of nodes with values currently set in the config */
 	CFG_DEF_TREE_MISSING,		/* tree of nodes missing in current config using default values */
-	CFG_DEF_TREE_COMPLETE,		/* CURRENT + MISSING, the tree actually used within execution, not implemented yet */
+	CFG_DEF_TREE_FULL,		/* CURRENT + MISSING, the tree actually used within execution */
 	CFG_DEF_TREE_DEFAULT,		/* tree of all possible config nodes with default values */
 	CFG_DEF_TREE_NEW,		/* tree of all new nodes that appeared in given version */
 	CFG_DEF_TREE_PROFILABLE,	/* tree of all nodes that are customizable by profiles */
@@ -153,19 +153,20 @@ typedef enum {
 
 /* configuration definition tree specification */
 struct config_def_tree_spec {
-	struct cmd_context *cmd;	/* command context (for run-time defaults */
-	cfg_def_tree_t type;		/* tree type */
-	uint16_t version;		/* tree at this LVM2 version */
-	unsigned ignoreadvanced:1;	/* do not include advanced configs */
-	unsigned ignoreunsupported:1;	/* do not include unsupported configs */
-	unsigned ignoredeprecated:1;	/* do not include deprecated configs */
-	unsigned ignorelocal:1;		/* do not include the local section */
-	unsigned withsummary:1;		/* include first line of comments - a summary */
-	unsigned withcomments:1;	/* include all comment lines */
-	unsigned withversions:1;	/* include versions */
-	unsigned withspaces:1;		/* add more spaces in output for better readability */
-	unsigned unconfigured:1;	/* use unconfigured path strings */
-	uint8_t *check_status;		/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
+	struct cmd_context *cmd;		/* command context (for run-time defaults */
+	struct dm_config_tree *current_cft;	/* current config tree which is defined explicitly - defaults are not used */
+	cfg_def_tree_t type;			/* tree type */
+	uint16_t version;			/* tree at this LVM2 version */
+	unsigned ignoreadvanced:1;		/* do not include advanced configs */
+	unsigned ignoreunsupported:1;		/* do not include unsupported configs */
+	unsigned ignoredeprecated:1;		/* do not include deprecated configs */
+	unsigned ignorelocal:1;			/* do not include the local section */
+	unsigned withsummary:1;			/* include first line of comments - a summary */
+	unsigned withcomments:1;		/* include all comment lines */
+	unsigned withversions:1;		/* include versions */
+	unsigned withspaces:1;			/* add more spaces in output for better readability */
+	unsigned unconfigured:1;		/* use unconfigured path strings */
+	uint8_t *check_status;			/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };
 
 

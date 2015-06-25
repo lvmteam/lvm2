@@ -1669,6 +1669,7 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	/* Usual tree view with nodes and their values. */
 	if ((out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
 	    (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
+	    (out->tree_spec->type != CFG_DEF_TREE_FULL) &&
 	    (cfg_def->flags & (CFG_DEFAULT_UNDEFINED | CFG_DEFAULT_COMMENTED))) {
 		space_prefix = ((len = strspn(line, "\t "))) ? dm_pool_strndup(out->mem, line, len) : NULL;
 		fprintf(out->fp, "%s%s%s\n", space_prefix ? : "", "# ", line + len);
@@ -1836,6 +1837,8 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 		return 1;
 
 	switch (spec->type) {
+		case CFG_DEF_TREE_FULL:
+			/* fall through */
 		case CFG_DEF_TREE_MISSING:
 			if (!spec->check_status) {
 				log_error_once(INTERNAL_ERROR "couldn't determine missing "
@@ -1843,9 +1846,12 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 				return 1;
 			}
 			if ((spec->check_status[id] & CFG_USED) ||
-			    (def->flags & CFG_NAME_VARIABLE) ||
-			    (def->since_version > spec->version) ||
-			    _should_skip_deprecated_def_node(def, spec))
+			    (def->flags & CFG_NAME_VARIABLE))
+				return 1;
+
+			if ((spec->type == CFG_DEF_TREE_MISSING) &&
+			    ((def->since_version > spec->version) ||
+			     _should_skip_deprecated_def_node(def, spec)))
 				return 1;
 			break;
 		case CFG_DEF_TREE_NEW:
@@ -1854,7 +1860,9 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 				return 1;
 			break;
 		case CFG_DEF_TREE_PROFILABLE:
+			/* fall through */
 		case CFG_DEF_TREE_PROFILABLE_CMD:
+			/* fall through */
 		case CFG_DEF_TREE_PROFILABLE_MDA:
 			if (!(def->flags & CFG_PROFILABLE) ||
 			    (def->since_version > spec->version) ||
@@ -1910,7 +1918,7 @@ bad:
 
 struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec)
 {
-	struct dm_config_tree *cft;
+	struct dm_config_tree *cft = NULL, *tmp_cft = NULL;
 	struct dm_config_node *root = NULL, *relay = NULL, *tmp;
 	int id;
 
@@ -1934,7 +1942,33 @@ struct dm_config_tree *config_def_create_tree(struct config_def_tree_spec *spec)
 	}
 
 	cft->root = root;
+
+	if (spec->type == CFG_DEF_TREE_FULL) {
+		if (!(tmp_cft = dm_config_create())) {
+			log_error("Failed to create temporary config tree while creating full tree.");
+			goto bad;
+		}
+
+		if (!(tmp_cft->root = dm_config_clone_node_with_mem(cft->mem, spec->current_cft->root, 1))) {
+			log_error("Failed to clone current config tree.");
+			goto bad;
+		}
+
+		if (!merge_config_tree(spec->cmd, cft, tmp_cft, CONFIG_MERGE_TYPE_RAW)) {
+			log_error("Failed to merge default and current config tree.");
+			goto bad;
+		}
+
+		dm_config_destroy(tmp_cft);
+	}
+
 	return cft;
+bad:
+	if (cft)
+		dm_config_destroy(cft);
+	if (tmp_cft)
+		dm_config_destroy(tmp_cft);
+	return NULL;
 }
 
 static int _check_profile(struct cmd_context *cmd, struct profile *profile)

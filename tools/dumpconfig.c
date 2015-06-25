@@ -154,21 +154,22 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, ignorelocal_ARG))
 		tree_spec.ignorelocal = 1;
 
-	if (!strcmp(type, "current")) {
+	if (!strcmp(type, "current") || !strcmp(type, "full")) {
 		if (arg_count(cmd, atversion_ARG)) {
-			log_error("--atversion has no effect with --type current");
+			log_error("--atversion has no effect with --type %s", type);
 			return EINVALID_CMD_LINE;
 		}
 
-		if (arg_count(cmd, ignoreunsupported_ARG) ||
-		    arg_count(cmd, ignoreadvanced_ARG)) {
+		if ((arg_count(cmd, ignoreunsupported_ARG) ||
+		    arg_count(cmd, ignoreadvanced_ARG)) &&
+		    !strcmp(type, "current")) {
 			/* FIXME: allow these even for --type current */
 			log_error("--ignoreadvanced and --ignoreunsupported has "
 				  "no effect with --type current");
 			return EINVALID_CMD_LINE;
 		}
 	} else if (arg_count(cmd, mergedconfig_ARG)) {
-		log_error("--mergedconfig has no effect without --type current");
+		log_error("--mergedconfig has no effect without --type current or --type full");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -191,7 +192,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	 * Set the 'cft' to work with based on whether we need the plain
 	 * config tree or merged config tree cascade if --mergedconfig is used.
 	 */
-	if (arg_count(cmd, mergedconfig_ARG) && cmd->cft->cascade) {
+	if ((arg_count(cmd, mergedconfig_ARG) || !strcmp(type, "full")) && cmd->cft->cascade) {
 		if (!_merge_config_cascade(cmd, cmd->cft, &cft)) {
 			log_error("Failed to merge configuration.");
 			r = ECMD_FAILED;
@@ -199,6 +200,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		}
 	} else
 		cft = cmd->cft;
+	tree_spec.current_cft = cft;
 
 	if (arg_count(cmd, validate_ARG)) {
 		if (_config_validate(cmd, cft)) {
@@ -218,6 +220,12 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 		/* list type does not require status check */
+	} else if (!strcmp(type, "full")) {
+		tree_spec.type = CFG_DEF_TREE_FULL;
+		if (!_do_def_check(&tree_spec, cft, &cft_check_handle)) {
+			r = ECMD_FAILED;
+			goto_out;
+		}
 	} else if (!strcmp(type, "current")) {
 		tree_spec.type = CFG_DEF_TREE_CURRENT;
 		if (!_do_def_check(&tree_spec, cft, &cft_check_handle)) {
@@ -261,8 +269,8 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	}
 	else {
 		log_error("Incorrect type of configuration specified. "
-			  "Expected one of: current, default, list, missing, new, "
-			  "profilable, profilable-command, profilable-metadata.");
+			  "Expected one of: current, default, diff, full, list, missing, "
+			  "new, profilable, profilable-command, profilable-metadata.");
 		r = EINVALID_CMD_LINE;
 		goto out;
 	}
@@ -295,8 +303,17 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		r = ECMD_FAILED;
 	}
 out:
+	if (tree_spec.current_cft && (tree_spec.current_cft != cft) &&
+	    (tree_spec.current_cft != cmd->cft))
+		/*
+		 * This happens in case of CFG_DEF_TREE_FULL where we
+		 * have merged explicitly defined config trees and also
+		 * we have used default tree.
+		 */
+		dm_config_destroy(tree_spec.current_cft);
+
 	if (cft && (cft != cmd->cft))
-		dm_pool_destroy(cft->mem);
+		dm_config_destroy(cft);
 	else if (profile)
 		remove_config_tree_by_source(cmd, CONFIG_PROFILE_COMMAND);
 

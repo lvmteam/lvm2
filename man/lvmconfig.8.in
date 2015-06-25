@@ -6,7 +6,7 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RB [ \-f | \-\-file
 .IR filename ]
 .RB [ \-\-type
-.RI { current | default | diff | list | missing | new | profilable | profilable-command | profilable-metadata }
+.RI { current | default | diff | full | list | missing | new | profilable | profilable-command | profilable-metadata }
 .RB [ \-\-atversion
 .IR version ]
 .RB [ \-\-ignoreadvanced ]
@@ -47,7 +47,7 @@ List configuration settings with summarizing comment. This is the same as using
 \fBlvmconfig --type list --withsummary\fP.
 
 .TP
-.IR \fB\-\-type " {" current | default | diff | missing | new | profilable }
+.IR \fB\-\-type " {" current | default | diff | full | missing | new | profilable | profilable-command | profilable-metadata }
 Select the type of configuration to display. The configuration settings
 displayed have either default values or currently-used values assigned based on
 the type selected. If no type is selected, \fB\-\-type current\fP is used
@@ -67,6 +67,12 @@ Display all configuration settings for which the values used differ from default
 The value assigned for each configuration setting is the value currently used.
 This is actually minimal LVM configuration which can be used without
 a change to current configured behaviour.
+.IP full 3
+Display full configuration tree - a combination of current configuration tree
+(\fB\-\-type current\fP) and tree of settings for which default values are
+used (\fB\-\-type missing\fP). This is exactly the configuration tree that
+LVM2 uses during command execution. Using this type also implies
+the use of \fB\-\-mergedconfig\fP option.
 .IP list 3
 Display plain list of configuration settings.
 .IP missing 3

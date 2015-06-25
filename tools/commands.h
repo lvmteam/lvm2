@@ -33,7 +33,7 @@ xx(config,
    PERMITTED_READ_ONLY,
    "config\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
@@ -89,7 +89,7 @@ xx(dumpconfig,
    PERMITTED_READ_ONLY,
    "dumpconfig\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
@@ -494,7 +494,7 @@ xx(lvmconfig,
    PERMITTED_READ_ONLY,
    "lvmconfig\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
+   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
    "\t[--atversion version]]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
