@@ -1629,6 +1629,16 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 	return 1;
 }
 
+static int _should_print_cfg_with_undef_def_val(struct out_baton *out, cfg_def_item_t *cfg_def,
+						const struct dm_config_node *cn)
+{
+	if (!(cfg_def->flags & CFG_DEFAULT_UNDEFINED))
+		return 1;
+
+	/* print it only if the value is directly defined in some config = it's used */
+	return out->tree_spec->check_status && (out->tree_spec->check_status[cn->id] & CFG_USED);
+}
+
 static int _out_line_fn(const struct dm_config_node *cn, const char *line, void *baton)
 {
 	struct out_baton *out = baton;
@@ -1671,15 +1681,23 @@ static int _out_line_fn(const struct dm_config_node *cn, const char *line, void 
 	}
 
 	/* Usual tree view with nodes and their values. */
+
 	if ((out->tree_spec->type != CFG_DEF_TREE_CURRENT) &&
 	    (out->tree_spec->type != CFG_DEF_TREE_DIFF) &&
 	    (out->tree_spec->type != CFG_DEF_TREE_FULL) &&
 	    (cfg_def->flags & (CFG_DEFAULT_UNDEFINED | CFG_DEFAULT_COMMENTED))) {
-		space_prefix = ((len = strspn(line, "\t "))) ? dm_pool_strndup(out->mem, line, len) : NULL;
-		fprintf(out->fp, "%s%s%s\n", space_prefix ? : "", "# ", line + len);
-		if (space_prefix)
-			dm_pool_free(out->mem, space_prefix);
-	} else
+		/* print with # at the front to comment out the line */
+		if (_should_print_cfg_with_undef_def_val(out, cfg_def, cn)) {
+			space_prefix = ((len = strspn(line, "\t "))) ? dm_pool_strndup(out->mem, line, len) : NULL;
+			fprintf(out->fp, "%s%s%s\n", space_prefix ? : "", "# ", line + len);
+			if (space_prefix)
+				dm_pool_free(out->mem, space_prefix);
+		}
+		return 1;
+	}
+
+	/* print the line as it is */
+	if (_should_print_cfg_with_undef_def_val(out, cfg_def, cn))
 		fprintf(out->fp, "%s\n", line);
 
 	return 1;
