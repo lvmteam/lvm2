@@ -27,7 +27,9 @@
 
 %service lvmpolld 1
 
+%if %{fedora} >= 22 || %{rhel} >= 7
 %service lvmlockd 1
+%endif
 
 ##############################################################
 
