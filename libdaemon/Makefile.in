@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -19,7 +19,10 @@ top_builddir = @top_builddir@
 
 SUBDIRS += client
 
-ifeq (yes, $(shell test @BUILD_LVMETAD@ == yes -o @BUILD_LVMPOLLD@ == yes && echo yes))
+ifeq (@BUILD_LVMETAD@,yes)
+  SUBDIRS += server
+server: client
+else ifeq (@BUILD_LVMPOLLD@,yes)
   SUBDIRS += server
 server: client
 endif

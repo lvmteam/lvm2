@@ -1,5 +1,6 @@
 Version 2.02.123 - 
 =================================
+  Fix makefile shell compare == when building lvmetad lvmpolld (2.02.120).
   Add --type full to lvmconfig for full configuration tree view.
   Add undocumented environment variables to lvm man page. (2.02.119)
   Add device synchronization point before activating a new snapshot.
