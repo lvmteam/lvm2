@@ -1416,7 +1416,7 @@ activation {
 	# Format specification is a string which may contain special character
 	# sequences and ordinary character sequences. Ordinary character sequences
 	# are copied verbatim. Each special character sequence is introduced by '%'
-	# character and such sequence is then substitued with a value as described below:
+	# character and such sequence is then substituted with a value as described below:
 	# %a     The abbreviated name of the day of the week according to the
 	#        current locale.
 	# %A     The full name of the day of the week according to the current locale.
@@ -1480,8 +1480,9 @@ activation {
 	# %y     The year as a decimal number without a century (range 00 to 99). (alt E, alt O)
 	# %Y     The year as a decimal number including the century. (alt E)
 	# %z     The +hhmm or -hhmm numeric timezone (that is, the hour and minute
-	#        offset from UTC).%Z     The timezone name or abbreviation.
-	# %%    A literal '%' character.
+	#        offset from UTC).
+	# %Z     The timezone name or abbreviation.
+	# %%     A literal '%' character.
 	# time_format = "%Y-%m-%d %T %z"
 
 	# Configuration option report/devtypes_sort.

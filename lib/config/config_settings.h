@@ -81,7 +81,7 @@
  *                             (see also lvmconfig ... --withversions)
  *
  * unconfigured_default_value: Unconfigured default value used as a default value which is
- *                             in "@...@" form and which is then substitued with concrete value
+ *                             in "@...@" form and which is then substituted with concrete value
  *                             while running configure.
  *                             (see also 'lvmconfig --type default --unconfigured')
  *
@@ -1362,7 +1362,7 @@ cfg(report_time_format_CFG, "time_format", report_CFG_SECTION, CFG_PROFILABLE | 
 	"Format specification is a string which may contain special character\n"
 	"sequences and ordinary character sequences. Ordinary character sequences\n"
 	"are copied verbatim. Each special character sequence is introduced by \'%\'\n"
-	"character and such sequence is then substitued with a value as described below:\n"
+	"character and such sequence is then substituted with a value as described below:\n"
 	"\%a     The abbreviated name of the day of the week according to the\n"
 	"       current locale.\n"
 	"\%A     The full name of the day of the week according to the current locale.\n"
@@ -1426,9 +1426,9 @@ cfg(report_time_format_CFG, "time_format", report_CFG_SECTION, CFG_PROFILABLE | 
 	"\%y     The year as a decimal number without a century (range 00 to 99). (alt E, alt O)\n"
 	"\%Y     The year as a decimal number including the century. (alt E)\n"
 	"\%z     The +hhmm or -hhmm numeric timezone (that is, the hour and minute\n"
-	"       offset from UTC)."
+	"       offset from UTC).\n"
 	"\%Z     The timezone name or abbreviation.\n"
-	"\%\%    A literal '\%' character.\n")
+	"\%\%     A literal '\%' character.\n")
 
 cfg(report_devtypes_sort_CFG, "devtypes_sort", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DEVTYPES_SORT, vsn(2, 2, 101), NULL, 0, NULL,
 	"List of columns to sort by when reporting 'lvm devtypes' command.\n"

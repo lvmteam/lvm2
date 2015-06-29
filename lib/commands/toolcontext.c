@@ -460,8 +460,8 @@ static const char *_set_time_format(struct cmd_context *cmd)
 
 	return tf;
 bad:
-	log_error("Incorrect time format specified. Using default time format instead.");
-	return DEFAULT_TIME_FORMAT;
+	log_error("Invalid time format \"%s\" supplied.", tf);
+	return NULL;
 }
 
 int process_profilable_config(struct cmd_context *cmd)
@@ -477,7 +477,8 @@ int process_profilable_config(struct cmd_context *cmd)
 	cmd->report_binary_values_as_numeric = find_config_tree_bool(cmd, report_binary_values_as_numeric_CFG, NULL);
 	cmd->default_settings.suffix = find_config_tree_bool(cmd, global_suffix_CFG, NULL);
 	cmd->report_list_item_separator = find_config_tree_str(cmd, report_list_item_separator_CFG, NULL);
-	cmd->time_format = _set_time_format(cmd);
+	if (!(cmd->time_format = _set_time_format(cmd)))
+		return 0;
 
 	return 1;
 }
