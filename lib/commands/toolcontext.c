@@ -443,10 +443,10 @@ static const char *_set_time_format(struct cmd_context *cmd)
 					chars_to_check = allowed_format_chars;
 
 				for (i = 0; chars_to_check[i]; i++) {
-					if (c == allowed_format_chars[i])
+					if (c == chars_to_check[i])
 						break;
 				}
-				if (!allowed_format_chars[i])
+				if (!chars_to_check[i])
 					goto_bad;
 			}
 			else if (isprint(c))
