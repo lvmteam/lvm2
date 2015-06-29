@@ -48,5 +48,4 @@ local {
 	# Use this only after consulting 'man lvmsystemid'
 	# to be certain of correct usage and possible dangers.
 	# This configuration option does not have a default value defined.
-	# extra_system_ids = [ ]
 }
