@@ -1,5 +1,7 @@
 Version 1.02.100 - 
 ================================
+  Support report reserved value ranges: DM_REPORT_FIELD_RESERVED_VALUE_RANGE.
+  Support report reserved value names: DM_REPORT_FIELD_RESERVED_VALUE_NAMED.
   Add DM_CONFIG_VALUE_FMT_{INT_OCTAL,STRING_NO_QUOTES} config value format flag.
   Add DM_CONFIG_VALUE_FMT_COMMON_{ARRAY,EXTRA_SPACE} config value format flag.
   Add dm_config_value_{get,set}_format_flags to get and set config value format.

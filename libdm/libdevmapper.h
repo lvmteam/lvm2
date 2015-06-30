@@ -1671,17 +1671,22 @@ struct dm_report_field;
 /*
  * dm_report_field_type flags
  */
-#define DM_REPORT_FIELD_MASK			0x00000FFF
-#define DM_REPORT_FIELD_ALIGN_MASK		0x0000000F
-#define DM_REPORT_FIELD_ALIGN_LEFT		0x00000001
-#define DM_REPORT_FIELD_ALIGN_RIGHT		0x00000002
-#define DM_REPORT_FIELD_TYPE_MASK		0x00000FF0
-#define DM_REPORT_FIELD_TYPE_NONE		0x00000000
-#define DM_REPORT_FIELD_TYPE_STRING		0x00000010
-#define DM_REPORT_FIELD_TYPE_NUMBER		0x00000020
-#define DM_REPORT_FIELD_TYPE_SIZE		0x00000040
-#define DM_REPORT_FIELD_TYPE_PERCENT		0x00000080
-#define DM_REPORT_FIELD_TYPE_STRING_LIST	0x00000100
+#define DM_REPORT_FIELD_MASK				0x00000FFF
+#define DM_REPORT_FIELD_ALIGN_MASK			0x0000000F
+#define DM_REPORT_FIELD_ALIGN_LEFT			0x00000001
+#define DM_REPORT_FIELD_ALIGN_RIGHT			0x00000002
+#define DM_REPORT_FIELD_TYPE_MASK			0x00000FF0
+#define DM_REPORT_FIELD_TYPE_NONE			0x00000000
+#define DM_REPORT_FIELD_TYPE_STRING			0x00000010
+#define DM_REPORT_FIELD_TYPE_NUMBER			0x00000020
+#define DM_REPORT_FIELD_TYPE_SIZE			0x00000040
+#define DM_REPORT_FIELD_TYPE_PERCENT			0x00000080
+#define DM_REPORT_FIELD_TYPE_STRING_LIST		0x00000100
+
+/* For use with reserved values only! */
+#define DM_REPORT_FIELD_RESERVED_VALUE_MASK		0x0000000F
+#define DM_REPORT_FIELD_RESERVED_VALUE_NAMED		0x00000001 /* only named value, less strict form of reservation */
+#define DM_REPORT_FIELD_RESERVED_VALUE_RANGE		0x00000002 /* value is range - low and high value defined */
 
 #define DM_REPORT_FIELD_TYPE_ID_LEN 32
 #define DM_REPORT_FIELD_TYPE_HEADING_LEN 32
@@ -1728,7 +1733,7 @@ struct dm_report_field_reserved_value {
  * selection enabled (see also dm_report_init_with_selection function).
  */
 struct dm_report_reserved_value {
-	const unsigned type;		/* DM_REPORT_FIELD_TYPE_* */
+	const uint32_t type;		/* DM_REPORT_FIELD_RESERVED_VALUE_* and DM_REPORT_FIELD_TYPE_*  */
 	const void *value;		/* reserved value:
 						struct dm_report_field_reserved_value for DM_REPORT_FIELD_TYPE_NONE
 						uint64_t for DM_REPORT_FIELD_TYPE_NUMBER

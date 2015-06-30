@@ -38,15 +38,15 @@
  */
 
 /*
- * TYPE_RESERVED_VALUE(type, reserved_value_id, description, value, reserved_name, ...)
- * FIELD_RESERVED_VALUE(field_id, reserved_value_id, description, value, reserved_name, ...)
+ * TYPE_RESERVED_VALUE(type, flags, reserved_value_id, description, value, reserved_name, ...)
+ * FIELD_RESERVED_VALUE(field_id, flags, reserved_value_id, description, value, reserved_name, ...)
  * FIELD_BINARY_RESERVED_VALUE(field_id, reserved_value_id, description, reserved_name for 1, ...)
  */
 
 /* *INDENT-OFF* */
 
 /* Per-type reserved values usable for all fields of certain type. */
-TYPE_RESERVED_VALUE(NUM, num_undef_64, "Reserved value for undefined numeric value.", UINT64_C(-1), "-1", "unknown", "undefined", "undef")
+TYPE_RESERVED_VALUE(NUM, NOFLAG, num_undef_64, "Reserved value for undefined numeric value.", UINT64_C(-1), "-1", "unknown", "undefined", "undef")
 
 /* Reserved values for PV fields */
 FIELD_RESERVED_BINARY_VALUE(pv_allocatable, pv_allocatable, "", "allocatable")
@@ -58,9 +58,9 @@ FIELD_RESERVED_BINARY_VALUE(vg_extendable, vg_extendable, "", "extendable")
 FIELD_RESERVED_BINARY_VALUE(vg_exported, vg_exported, "", "exported")
 FIELD_RESERVED_BINARY_VALUE(vg_partial, vg_partial, "", "partial")
 FIELD_RESERVED_BINARY_VALUE(vg_clustered, vg_clustered, "", "clustered")
-FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
-FIELD_RESERVED_VALUE(vg_permissions, vg_permissions_r, "", "read-only", "read-only", "r", "ro")
-FIELD_RESERVED_VALUE(vg_mda_copies, vg_mda_copies_unmanaged, "", &GET_TYPE_RESERVED_VALUE(num_undef_64), "unmanaged")
+FIELD_RESERVED_VALUE(NAMED, vg_permissions, vg_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
+FIELD_RESERVED_VALUE(NAMED, vg_permissions, vg_permissions_r, "", "read-only", "read-only", "r", "ro")
+FIELD_RESERVED_VALUE(NOFLAG, vg_mda_copies, vg_mda_copies_unmanaged, "", &GET_TYPE_RESERVED_VALUE(num_undef_64), "unmanaged")
 
 /* Reserved values for LV fields */
 FIELD_RESERVED_BINARY_VALUE(lv_initial_image_sync, lv_initial_image_sync, "", "initial image sync", "sync")
@@ -80,18 +80,18 @@ FIELD_RESERVED_BINARY_VALUE(lv_inactive_table, lv_inactive_table, "", "inactive 
 FIELD_RESERVED_BINARY_VALUE(lv_device_open, lv_device_open, "", "open")
 FIELD_RESERVED_BINARY_VALUE(lv_skip_activation, lv_skip_activation, "", "skip activation", "skip")
 FIELD_RESERVED_BINARY_VALUE(zero, zero, "", "zero")
-FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
-FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r, "", "read-only", "read-only", "r", "ro")
-FIELD_RESERVED_VALUE(lv_permissions, lv_permissions_r_override, "", "read-only-override", "read-only-override", "ro-override", "r-override", "R")
-FIELD_RESERVED_VALUE(lv_read_ahead, lv_read_ahead_auto, "", &_siz_max, "auto")
-FIELD_RESERVED_VALUE(lv_when_full, lv_when_full_error, "", "error", "error", "error when full", "error if no space")
-FIELD_RESERVED_VALUE(lv_when_full, lv_when_full_queue, "", "queue", "queue", "queue when full", "queue if no space")
-FIELD_RESERVED_VALUE(lv_when_full, lv_when_full_undef, "", "", "", "undefined")
+FIELD_RESERVED_VALUE(NAMED, lv_permissions, lv_permissions_rw, "", "writeable", "writeable", "rw", "read-write")
+FIELD_RESERVED_VALUE(NAMED, lv_permissions, lv_permissions_r, "", "read-only", "read-only", "r", "ro")
+FIELD_RESERVED_VALUE(NAMED, lv_permissions, lv_permissions_r_override, "", "read-only-override", "read-only-override", "ro-override", "r-override", "R")
+FIELD_RESERVED_VALUE(NOFLAG, lv_read_ahead, lv_read_ahead_auto, "", &_siz_max, "auto")
+FIELD_RESERVED_VALUE(NAMED, lv_when_full, lv_when_full_error, "", "error", "error", "error when full", "error if no space")
+FIELD_RESERVED_VALUE(NAMED, lv_when_full, lv_when_full_queue, "", "queue", "queue", "queue when full", "queue if no space")
+FIELD_RESERVED_VALUE(NOFLAG, lv_when_full, lv_when_full_undef, "", "", "", "undefined")
 
 /* Reserved values for SEG fields */
-FIELD_RESERVED_VALUE(cache_policy, cache_policy_undef, "", "", "", "undefined")
-FIELD_RESERVED_VALUE(seg_monitor, seg_monitor_undef, "", "", "", "undefined")
-FIELD_RESERVED_VALUE(lv_health_status, health_undef, "", "", "", "undefined")
+FIELD_RESERVED_VALUE(NOFLAG, cache_policy, cache_policy_undef, "", "", "", "undefined")
+FIELD_RESERVED_VALUE(NOFLAG, seg_monitor, seg_monitor_undef, "", "", "", "undefined")
+FIELD_RESERVED_VALUE(NOFLAG, lv_health_status, health_undef, "", "", "", "undefined")
 /* TODO the following 2 need STR_LIST support for reserved values
 FIELD_RESERVED_VALUE(cache_settings, cache_settings_default, "", "default", "default")
 FIELD_RESERVED_VALUE(cache_settings, cache_settings_undef, "", "undefined", "undefined") */
