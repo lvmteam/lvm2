@@ -85,7 +85,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
-	int count = 0, expected_count = 0;
+	int count = 0, expected_count = 0, r = 1;
 
 	sigint_allow();
 	dm_list_iterate_items(lvl, &vg->lvs) {
@@ -142,14 +142,19 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	sigint_restore();
-	sync_local_dev_names(vg->cmd);  /* Wait until devices are available */
+
+	/* Wait until devices are available */
+	if (!sync_local_dev_names(vg->cmd)) {
+		log_error("Failed to sync local devices for VG %s.", vg->name);
+		r = 0;
+	}
 
 	if (expected_count)
 		log_verbose("%s %d logical volumes in volume group %s",
 			    is_change_activating(activate) ?
 			    "Activated" : "Deactivated", count, vg->name);
 
-	return (expected_count != count) ? 0 : 1;
+	return (expected_count != count) ? 0 : r;
 }
 
 static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg)

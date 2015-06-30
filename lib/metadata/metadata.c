@@ -3241,7 +3241,10 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 			return_0;
 
 		/* Refresh metadata after orphan write */
-		drop_cached_metadata(vg);
+		if (!drop_cached_metadata(vg)) {
+			log_error("Unable to drop cached metadata for VG %s while wiping outdated PVs.", vg->name);
+			return 0;
+		}
 next_pv:
 		;
 	}

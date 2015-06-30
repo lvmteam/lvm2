@@ -6633,7 +6633,12 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 		/* nothing to do */
 		return 1;
 
-	sync_local_dev_names(lv->vg->cmd);  /* Wait until devices are available */
+	/* Wait until devices are available */
+	if (!sync_local_dev_names(lv->vg->cmd)) {
+		log_error("Failed to sync local devices before wiping LV %s.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	if (!lv_is_active_locally(lv)) {
 		log_error("Volume \"%s/%s\" is not active locally.",
@@ -7447,7 +7452,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* Get in sync with deactivation, before reusing LV as snapshot */
-		sync_local_dev_names(lv->vg->cmd);
+		if (!sync_local_dev_names(lv->vg->cmd)) {
+			log_error("Failed to sync local devices before creating snapshot using %s.",
+				  display_lvname(lv));
+			goto revert_new_lv;
+		}
 
 		/* Create zero origin volume for spare snapshot */
 		if (lp->virtual_extents &&

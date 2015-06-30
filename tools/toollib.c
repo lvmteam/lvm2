@@ -56,7 +56,10 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 	sigaction(SIGCHLD, &act, NULL);
 
 	if (!skip_lvm)
-		sync_local_dev_names(cmd); /* Flush ops and reset dm cookie */
+		if (!sync_local_dev_names(cmd)) { /* Flush ops and reset dm cookie */
+			log_error("Failed to sync local devices before forking.");
+			return -1;
+		}
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));

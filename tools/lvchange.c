@@ -472,7 +472,12 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 		}
 	}
 
-	sync_local_dev_names(lv->vg->cmd);  /* Wait until devices are away */
+	/* Wait until devices are away */
+	if (!sync_local_dev_names(lv->vg->cmd)) {
+		log_error("Failed to sync local devices after updating %s",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	/* Put metadata sub-LVs back in place */
 	if (!attach_metadata_devices(seg, &device_list)) {

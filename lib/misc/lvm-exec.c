@@ -62,8 +62,11 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 		*rstatus = -1;
 
 	if (sync_needed)
-		if (!sync_local_dev_names(cmd)) /* Flush ops and reset dm cookie */
-			return_0;
+		/* Flush ops and reset dm cookie */
+		if (!sync_local_dev_names(cmd)) {
+			log_error("Failed to sync local device names before forking.");
+			return 0;
+		}
 
 	log_verbose("Executing:%s", _verbose_args(argv, buf, sizeof(buf)));
 
@@ -148,8 +151,11 @@ FILE *pipe_open(struct cmd_context *cmd, const char *const argv[],
 	char buf[PATH_MAX * 2];
 
 	if (sync_needed)
-		if (!sync_local_dev_names(cmd)) /* Flush ops and reset dm cookie */
-			return_0;
+		/* Flush ops and reset dm cookie */
+		if (!sync_local_dev_names(cmd)) {
+			log_error("Failed to sync local device names before forking.");
+			return 0;
+		}
 
 	if (pipe(pipefd)) {
 		log_sys_error("pipe", "");

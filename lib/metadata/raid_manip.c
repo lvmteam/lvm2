@@ -1007,10 +1007,15 @@ static int _raid_remove_images(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (!sync_local_dev_names(lv->vg->cmd)) {
+		log_error("Failed to sync local devices after committing changes for %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	/*
 	 * Eliminate the extracted LVs
 	 */
-	sync_local_dev_names(lv->vg->cmd);
 	if (!dm_list_empty(&removal_list)) {
 		dm_list_iterate_items(lvl, &removal_list) {
 			if (!deactivate_lv(lv->vg->cmd, lvl->lv))

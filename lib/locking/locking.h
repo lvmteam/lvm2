@@ -195,9 +195,10 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define unlock_vg(cmd, vol)	\
 	do { \
-		if (is_real_vg(vol)) \
-			sync_dev_names(cmd); \
-		(void) lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL);	\
+		if (is_real_vg(vol) && !sync_dev_names(cmd)) \
+			stack; \
+		if (!lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL)) \
+			stack;	\
 	} while (0)
 #define unlock_and_release_vg(cmd, vg, vol) \
 	do { \
