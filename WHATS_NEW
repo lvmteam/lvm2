@@ -1,4 +1,4 @@
-Version 2.02.123 - 
+Version 2.02.123 - 30th June 2015
 =================================
   Add report/time_format lvm.conf option to define time format for report.
   Fix makefile shell compare == when building lvmetad lvmpolld (2.02.120).
@@ -6,6 +6,8 @@ Version 2.02.123 -
   Add undocumented environment variables to lvm man page. (2.02.119)
   Add device synchronization point before activating a new snapshot.
   Add --withspaces to lvmconfig to add spaces in output for better readability.
+  Add custom main function to libdaemon.
+  Use lvmetad to track out-of-date metadata discovered.
 
 Version 2.02.122 - 20th June 2015
 =================================

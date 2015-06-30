@@ -1,5 +1,5 @@
-Version 1.02.100 - 
-================================
+Version 1.02.100 - 30th June 2015
+=================================
   Add since, after, until and before time operators to be used in selection.
   Add support for time in reports and selection: DM_REPORT_FIELD_TYPE_TIME.
   Support report reserved value ranges: DM_REPORT_FIELD_RESERVED_VALUE_RANGE.
