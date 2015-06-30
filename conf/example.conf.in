@@ -855,7 +855,7 @@ global {
 	# ignorable errors and fix them later.
 	# With thin_check version 3.2 or newer you should add
 	# --clear-needs-check-flag.
-	# thin_check_options = [ "-q" ]
+	# thin_check_options = [ "-q", "--clear-needs-check-flag" ]
 
 	# Configuration option global/thin_repair_options.
 	# List of options passed to the thin_repair command.
