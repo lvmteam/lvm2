@@ -68,6 +68,10 @@
 /* Default system configuration directory. */
 #undef DEFAULT_ETC_DIR
 
+/* Fall back to LVM1 by default if device-mapper is missing from the kernel.
+   */
+#undef DEFAULT_FALLBACK_TO_LVM1
+
 /* Name of default locking directory. */
 #undef DEFAULT_LOCK_DIR
 

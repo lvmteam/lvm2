@@ -111,12 +111,6 @@
 
 #define DEFAULT_UMASK 0077
 
-#ifdef LVM1_FALLBACK
-#  define DEFAULT_FALLBACK_TO_LVM1 1
-#else
-#  define DEFAULT_FALLBACK_TO_LVM1 0
-#endif
-
 #define DEFAULT_FORMAT "lvm2"
 
 #define DEFAULT_STRIPESIZE 64	/* KB */

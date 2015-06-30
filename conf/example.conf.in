@@ -602,7 +602,7 @@ global {
 	# The LVM1 tools need to be installed with .lvm1 suffices,
 	# e.g. vgscan.lvm1. They will stop working once the lvm2
 	# on-disk metadata format is used.
-	# fallback_to_lvm1 = 1
+	# fallback_to_lvm1 = @DEFAULT_FALLBACK_TO_LVM1@
 
 	# Configuration option global/format.
 	# The default metadata format that commands should use.

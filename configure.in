@@ -263,8 +263,13 @@ AC_ARG_ENABLE(lvm1_fallback,
 AC_MSG_RESULT($LVM1_FALLBACK)
 
 if test "$LVM1_FALLBACK" = yes; then
+	DEFAULT_FALLBACK_TO_LVM1=1
 	AC_DEFINE([LVM1_FALLBACK], 1, [Define to 1 if 'lvm' should fall back to using LVM1 binaries if device-mapper is missing from the kernel])
+else
+	DEFAULT_FALLBACK_TO_LVM1=0
 fi
+AC_DEFINE_UNQUOTED(DEFAULT_FALLBACK_TO_LVM1, [$DEFAULT_FALLBACK_TO_LVM1],
+		   [Fall back to LVM1 by default if device-mapper is missing from the kernel.])
 
 ################################################################################
 dnl -- format1 inclusion type
@@ -1782,6 +1787,7 @@ AC_SUBST(DEFAULT_CACHE_SUBDIR)
 AC_SUBST(DEFAULT_DATA_ALIGNMENT)
 AC_SUBST(DEFAULT_DM_RUN_DIR)
 AC_SUBST(DEFAULT_LOCK_DIR)
+AC_SUBST(DEFAULT_FALLBACK_TO_LVM1)
 AC_SUBST(DEFAULT_MIRROR_SEGTYPE)
 AC_SUBST(DEFAULT_PID_DIR)
 AC_SUBST(DEFAULT_PROFILE_SUBDIR)
