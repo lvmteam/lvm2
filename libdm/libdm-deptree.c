@@ -301,6 +301,7 @@ struct dm_tree {
 	int no_flush;			/* 1 sets noflush (mirrors/multipath) */
 	int retry_remove;		/* 1 retries remove if not successful */
 	uint32_t cookie;
+	char buf[DM_NAME_LEN + 32];	/* print buffer for device_name (major:minor) */
 	const char **optional_uuid_suffixes;	/* uuid suffixes ignored when matching */
 };
 
@@ -593,6 +594,19 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 
 	log_debug("Not matched uuid %s in deptree.", uuid + default_uuid_prefix_len);
 	return NULL;
+}
+
+/* Return node's device_name (major:minor) for debug messages */
+static const char *_node_name(struct dm_tree_node *dnode)
+{
+	if (dm_snprintf(dnode->dtree->buf, sizeof(dnode->dtree->buf),
+			"%s (%" PRIu32 ":%" PRIu32 ")",
+			dnode->name, dnode->info.major, dnode->info.minor) < 0) {
+		stack;
+		return dnode->name;
+	}
+
+	return dnode->dtree->buf;
 }
 
 void dm_tree_node_set_udev_flags(struct dm_tree_node *dnode, uint16_t udev_flags)
