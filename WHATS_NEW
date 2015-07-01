@@ -1,5 +1,6 @@
 Version 2.02.124 -
 =================================
+  Move sending thin pool messages from resume to suspend phase.
   Report warning when pool is overprovisioned and not auto resized.
   Recognize free-form date/time values for lv_time field in selection criteria.
   Fix regression in select to match string fields if using synonyms (2.02.123).

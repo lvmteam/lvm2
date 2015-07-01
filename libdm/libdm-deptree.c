@@ -241,7 +241,12 @@ struct load_properties {
 	 */
 	unsigned delay_resume_if_new;
 
-	/* Send messages for this node in preload */
+	/*
+	 * Call node_send_messages(), set to 2 if there are messages
+	 * When != 0, it validates matching transaction id, thus thin-pools
+	 * where transation_id is passed as 0 are never validated, this
+	 * allows external managment of thin-pool TID.
+	 */
 	unsigned send_messages;
 	/* Skip suspending node's children, used when sending messages to thin-pool */
 	int skip_suspend;
@@ -3871,7 +3876,8 @@ int dm_tree_node_add_thin_pool_message(struct dm_tree_node *node,
 
 	tm->message.type = type;
 	dm_list_add(&seg->thin_messages, &tm->list);
-	node->props.send_messages = 1;
+	/* Higher value >1 identifies there are really some messages */
+	node->props.send_messages = 2;
 
 	return 1;
 }

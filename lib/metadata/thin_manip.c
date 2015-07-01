@@ -21,6 +21,7 @@
 #include "defaults.h"
 #include "display.h"
 
+/* TODO: drop unused no_update */
 int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,
 			int no_update)
@@ -61,10 +62,6 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 	}
 
 	tmsg->type = type;
-
-	/* If the 1st message is add in non-read-only mode, modify transaction_id */
-	if (!no_update && dm_list_empty(&pool_seg->thin_messages))
-		pool_seg->transaction_id++;
 
 	dm_list_add(&pool_seg->thin_messages, &tmsg->list);
 
@@ -423,7 +420,7 @@ static int _check_pool_create(const struct logical_volume *lv)
 
 int update_pool_lv(struct logical_volume *lv, int activate)
 {
-	int monitored;
+	int monitored = DMEVENTD_MONITOR_IGNORE;
 	int ret = 1;
 
 	if (!lv_is_thin_pool(lv)) {
@@ -449,31 +446,36 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 					  display_lvname(lv));
 				return 0;
 			}
+		} else
+			activate = 0; /* Was already active */
 
-			if (!(ret = _check_pool_create(lv)))
-				stack;
+		if (!(ret = _check_pool_create(lv)))
+			stack; /* Safety guard, needs local presence of thin-pool target */
+		else if (!(ret = suspend_lv_origin(lv->vg->cmd, lv)))
+			/* Send messages */
+			log_error("Failed to suspend and send message %s.", display_lvname(lv));
+		else if (!(ret = resume_lv_origin(lv->vg->cmd, lv)))
+			log_error("Failed to resume %s.", display_lvname(lv));
 
+		if (activate) {
 			if (!deactivate_lv(lv->vg->cmd, lv)) {
 				init_dmeventd_monitor(monitored);
 				return_0;
 			}
 			init_dmeventd_monitor(monitored);
-
-			/* Unlock memory if possible */
-			memlock_unlock(lv->vg->cmd);
 		}
-		/*
-		 * Resume active pool to send thin messages.
-		 * origin_only is used to skip check for resumed state
-		 */
-		else if (!resume_lv_origin(lv->vg->cmd, lv)) {
-			log_error("Failed to resume %s.", lv->name);
-			return 0;
-		} else if (!(ret = _check_pool_create(lv)))
-			stack;
+
+		/* Unlock memory if possible */
+		memlock_unlock(lv->vg->cmd);
+
+		if (!ret)
+			return_0;
 	}
 
 	dm_list_init(&(first_seg(lv)->thin_messages));
+
+	/* thin-pool target transaction is finished, increase lvm2 TID */
+	first_seg(lv)->transaction_id++;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;

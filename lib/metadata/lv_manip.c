@@ -7372,11 +7372,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				stack;
 				goto revert_new_lv;
 			}
-			/* When change is activating, don't duplicate backup call */
-			if (!is_change_activating(lp->activate))
-				backup(vg);
 		}
-		if (is_change_activating(lp->activate)) {
+		if (!dm_list_empty(&first_seg(pool_lv)->thin_messages)) {
 			/* Send message so that table preload knows new thin */
 			if (!lv_is_active(pool_lv)) {
 				/* Avoid multiple thin-pool activations in this case */
@@ -7394,25 +7391,24 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				}
 			}
 			/* Keep thin pool active until thin volume is activated */
-			if (!update_pool_lv(pool_lv, (thin_pool_was_active < 0) ? 1 : 0)) {
+			if (!update_pool_lv(pool_lv, 1)) {
 				stack;
 				goto revert_new_lv;
 			}
+		}
+		backup(vg);
 
-			backup(vg);
+		if (!lv_active_change(cmd, lv, lp->activate, 0)) {
+			log_error("Failed to activate thin %s.", lv->name);
+			goto deactivate_and_revert_new_lv;
+		}
 
-			if (!lv_active_change(cmd, lv, lp->activate, 0)) {
-				log_error("Failed to activate thin %s.", lv->name);
-				goto deactivate_and_revert_new_lv;
-			}
-
-			/* Restore inactive state if needed */
-			if (!thin_pool_was_active &&
-			    !deactivate_lv(cmd, pool_lv)) {
-				log_error("Failed to deactivate thin pool %s.",
-					  display_lvname(pool_lv));
-				return NULL;
-			}
+		/* Restore inactive state if needed */
+		if (!thin_pool_was_active &&
+		    !deactivate_lv(cmd, pool_lv)) {
+			log_error("Failed to deactivate thin pool %s.",
+				  display_lvname(pool_lv));
+			return NULL;
 		}
 	} else if (lp->snapshot) {
 		lv->status |= LV_TEMPORARY;

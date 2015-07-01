@@ -60,6 +60,7 @@ struct dev_manager {
 	uint32_t pvmove_mirror_count;
 	int flush_required;
 	int activation;                 /* building activation tree */
+	int suspend;			/* building suspend tree */
 	int skip_external_lv;
 	struct dm_list pending_delete;	/* str_list of dlid(s) with pending delete */
 	unsigned track_pending_delete;
@@ -2066,6 +2067,11 @@ static int _pool_register_callback(struct dev_manager *dm,
 	return 1;
 }
 
+/* Declaration to resolve suspend tree and message passing for thin-pool */
+static int _add_target_to_dtree(struct dev_manager *dm,
+				struct dm_tree_node *dnode,
+				struct lv_segment *seg,
+				struct lv_activate_opts *laopts);
 /*
  * Add LV and any known dependencies
  */
@@ -2134,15 +2140,43 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		 */
 		if (!_add_dev_to_dtree(dm, dtree, lv, lv_layer(lv)))
 			return_0;
+
+		/*
+		 * TODO: change API and move this code
+		 * Could be easier to handle this in _add_dev_to_dtree()
+		 * and base this according to info.exists ?
+		 */
 		if (!dm->activation) {
-			/* Setup callback for non-activation partial tree */
-			/* Activation gets own callback when needed */
-			/* TODO: extend _cached_dm_info() to return dnode */
 			if (!(uuid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 				return_0;
-			if ((node = dm_tree_find_node_by_uuid(dtree, uuid)) &&
-			    !_pool_register_callback(dm, node, lv))
-				return_0;
+			if ((node = dm_tree_find_node_by_uuid(dtree, uuid))) {
+				if (origin_only) {
+					struct lv_activate_opts laopts = {
+						.origin_only = 1,
+						.send_messages = 1 /* Node with messages */
+					};
+					/*
+					 * Add some messsages if right node exist in the table only
+					 * when building SUSPEND tree for origin-only thin-pool.
+					 *
+					 * TODO: Fix call of '_add_target_to_dtree()' to add message
+					 * to thin-pool node as we already know the pool node exists
+					 * in the table. Any better/cleaner API way ?
+					 *
+					 * Probably some 'new' target method to add messages for any node?
+					 */
+					if (dm->suspend &&
+					    !dm_list_empty(&(first_seg(lv)->thin_messages)) &&
+					    !_add_target_to_dtree(dm, node, first_seg(lv), &laopts))
+						return_0;
+				} else {
+					/* Setup callback for non-activation partial tree */
+					/* Activation gets own callback when needed */
+					/* TODO: extend _cached_dm_info() to return dnode */
+					if (!_pool_register_callback(dm, node, lv))
+						return_0;
+				}
+			}
 		}
 	}
 
@@ -2240,7 +2274,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, const struc
 
 	dm_tree_set_optional_uuid_suffixes(dtree, &uuid_suffix_list[0]);
 
-	if (!_add_lv_to_dtree(dm, dtree, lv, (lv_is_origin(lv) || lv_is_thin_volume(lv)) ? origin_only : 0))
+	if (!_add_lv_to_dtree(dm, dtree, lv, (lv_is_origin(lv) || lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) ? origin_only : 0))
 		goto_bad;
 
 	return dtree;
@@ -2695,7 +2729,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		return_0;
 
 	/* Add pool layer */
-	if (seg->pool_lv &&
+	if (seg->pool_lv && !laopts->origin_only &&
 	    !_add_new_lv_to_dtree(dm, dtree, seg->pool_lv, laopts,
 				  lv_layer(seg->pool_lv)))
 		return_0;
@@ -3137,6 +3171,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	}
 	/* Some targets may build bigger tree for activation */
 	dm->activation = ((action == PRELOAD) || (action == ACTIVATE));
+	dm->suspend = (action == SUSPEND_WITH_LOCKFS) || (action == SUSPEND);
 	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
 		return_0;
 
@@ -3181,7 +3216,9 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	case PRELOAD:
 	case ACTIVATE:
 		/* Add all required new devices to tree */
-		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts, (lv_is_origin(lv) && laopts->origin_only) ? "real" : NULL))
+		if (!_add_new_lv_to_dtree(dm, dtree, lv, laopts,
+					  (lv_is_origin(lv) && laopts->origin_only) ? "real" :
+					  (lv_is_thin_pool(lv) && laopts->origin_only) ? "tpool" : NULL))
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
@@ -3219,7 +3256,6 @@ out_no_root:
 int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv,
 			 struct lv_activate_opts *laopts)
 {
-	laopts->send_messages = 1;
 	if (!_tree_action(dm, lv, laopts, ACTIVATE))
 		return_0;
 
