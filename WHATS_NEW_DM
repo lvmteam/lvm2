@@ -1,5 +1,6 @@
 Version 1.02.101 -
 =================================
+  Add experimental support to passing messages in suspend tree.
   Add dm_report_value_cache_{set,get} to support caching during report/select.
   Add dm_report_reserved_handler to handle report reserved value actions.
   Support dynamic value in select: DM_REPORT_FIELD_RESERVED_VALUE_DYNAMIC_VALUE.

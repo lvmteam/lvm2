@@ -243,6 +243,8 @@ struct load_properties {
 
 	/* Send messages for this node in preload */
 	unsigned send_messages;
+	/* Skip suspending node's children, used when sending messages to thin-pool */
+	int skip_suspend;
 };
 
 /* Two of these used to join two nodes with uses and used_by. */
@@ -1768,6 +1770,19 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 		    !info.exists || info.suspended)
 			continue;
 
+		/* If child has some real messages send them */
+		if ((child->props.send_messages > 1) && r) {
+			if (!(r = _node_send_messages(child, uuid_prefix, uuid_prefix_len, 1)))
+				stack;
+			else {
+				log_debug_activation("Sent messages to thin-pool %s."
+						     "skipping suspend of its children.",
+						     _node_name(child));
+				child->props.skip_suspend++;
+			}
+			continue;
+		}
+
 		if (!_suspend_node(name, info.major, info.minor,
 				   child->dtree->skip_lockfs,
 				   child->dtree->no_flush, &newinfo)) {
@@ -1786,6 +1801,9 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 	handle = NULL;
 
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (child->props.skip_suspend)
+			continue;
+
 		if (!(uuid = dm_tree_node_get_uuid(child))) {
 			stack;
 			continue;
