@@ -1,5 +1,6 @@
 Version 2.02.124 -
 =================================
+  Fix regression when printing more lv names via display_lvname (2.02.122).
   Add missing error logging to unlock_vg and sync_local_dev_names callers.
 
 Version 2.02.123 - 30th June 2015

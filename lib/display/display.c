@@ -109,7 +109,7 @@ const char *display_lvname(const struct logical_volume *lv)
 		return NULL;
 	}
 
-	lv->vg->cmd->display_lvname_idx += r;
+	lv->vg->cmd->display_lvname_idx += r + 1;
 
 	return name;
 }
