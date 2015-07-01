@@ -29,11 +29,8 @@ lvcreate -T -L8M $vg/pool -V10M -n $lv1
 # skip $vg from activation
 aux lvmconf "activation/volume_list = [ \"$vg1\" ]"
 
-# We still could pass - since pool is still active
-lvcreate -V10 -n $lv2 -T $vg/pool
-
-# but $lv2 is not active
-check inactive $vg $lv2
+# We cannot pass - pool volume cannot be manipulated
+not lvcreate -V10 -n $lv2 -T $vg/pool
 
 vgchange -an $vg
 
