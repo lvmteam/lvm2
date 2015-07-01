@@ -1,5 +1,6 @@
 Version 1.02.101 -
 =================================
+  Thin pool trace messages show a device name and major:minor.
 
 Version 1.02.100 - 30th June 2015
 =================================
