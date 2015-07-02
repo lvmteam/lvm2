@@ -203,19 +203,19 @@ static inline int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 static inline int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  	struct logical_volume *lv, struct lvcreate_params *lp)
 {
-	return 0;
+	return 1;
 }
 
 static inline int lockd_init_lv_args(struct cmd_context *cmd, struct volume_group *vg,
 		       struct logical_volume *lv, const char *lock_type, const char **lock_args)
 {
-	return 0;
+	return 1;
 }
 
 static inline int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args)
 {
-	return 0;
+	return 1;
 }
 
 static inline const char *lockd_running_lock_type(struct cmd_context *cmd)
