@@ -185,6 +185,8 @@ sel lv 'lv_minor=undefined' vol1 vol2 abc orig snap
 sel lv 'lv_minor=undef' vol1 vol2 abc orig snap
 sel lv 'lv_minor=unknown' vol1 vol2 abc orig snap
 sel lv 'lv_minor=254' xyz
+# also test synonym for string field type
+sel lv 'seg_monitor=undefined' vol1 vol2 abc abc orig snap xyz
 
 # if size unit not spefied, the 'm' (MiB) unit is used by default
 sel lv 'lv_size=8' vol1
