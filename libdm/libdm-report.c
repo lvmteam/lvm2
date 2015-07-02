@@ -2962,6 +2962,14 @@ static const char *_tok_value(struct dm_report *rh,
 
 	s = _get_reserved(rh, expected_type, field_num, implicit, s, begin, end, rvw);
 	if (rvw->reserved) {
+		/*
+		 * FLD_CMP_NUMBER shares operators with FLD_CMP_TIME,
+		 * so adjust flags here based on expected type.
+		 */
+		if (expected_type == DM_REPORT_FIELD_TYPE_TIME)
+			*flags &= ~FLD_CMP_NUMBER;
+		else if (expected_type == DM_REPORT_FIELD_TYPE_NUMBER)
+			*flags &= ~FLD_CMP_TIME;
 		*flags |= expected_type;
 		return s;
 	}
