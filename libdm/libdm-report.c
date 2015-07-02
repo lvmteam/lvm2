@@ -1505,9 +1505,9 @@ static int _cmp_field_string(struct dm_report *rh __attribute__((unused)),
 
 	switch (fs->flags & FLD_CMP_MASK) {
 		case FLD_CMP_EQUAL:
-			return _check_value_is_strictly_reserved(rh, field_num, DM_REPORT_FIELD_TYPE_STRING, val, fs) ? 0 : !strcmp(val, sel);
+			return !strcmp(val, sel);
 		case FLD_CMP_NOT|FLD_CMP_EQUAL:
-			return _check_value_is_strictly_reserved(rh, field_num, DM_REPORT_FIELD_TYPE_STRING, val, fs) ? 0 : strcmp(val, sel);
+			return strcmp(val, sel);
 		default:
 			log_error(INTERNAL_ERROR "_cmp_field_string: unsupported string "
 				  "comparison type for selection field %s", field_id);
