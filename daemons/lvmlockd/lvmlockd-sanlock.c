@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat, Inc.
+ * Copyright (C) 2014-2015 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -1713,4 +1713,3 @@ int lm_is_running_sanlock(void)
 		return 0;
 	return 1;
 }
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat, Inc.
+ * Copyright (C) 2014-2015 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -46,4 +46,4 @@ static inline void lvmlockd_close(daemon_handle h)
 #define EPREPARE  215
 #define ELOCKD    216
 
-#endif
+#endif	/* _LVM_LVMLOCKD_CLIENT_H */

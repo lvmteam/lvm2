@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) 2014-2015 Red Hat, Inc.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License v.2.1.
+ */
+
 #define _GNU_SOURCE
 #include "configure.h"
 #include "lvmlockd-client.h"
@@ -632,4 +642,3 @@ out:
 	lvmlockd_close(_lvmlockd);
 	return rv;
 }
-

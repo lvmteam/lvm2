@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat, Inc.
+ * Copyright (C) 2014-2015 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -233,7 +233,6 @@ static inline int lockd_lv_uses_lock(struct logical_volume *lv)
 	return 0;
 }
 
-#endif /* LVMLOCKD_SUPPORT */
+#endif	/* LVMLOCKD_SUPPORT */
 
-#endif
-
+#endif	/* _LVMLOCKD_H */

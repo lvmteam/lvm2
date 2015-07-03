@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat, Inc.
+ * Copyright (C) 2014-2015 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -2585,4 +2585,3 @@ int lockd_lv_uses_lock(struct logical_volume *lv)
 		return 0;
 	return 1;
 }
-

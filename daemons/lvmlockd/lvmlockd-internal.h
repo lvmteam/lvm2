@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat, Inc.
+ * Copyright (C) 2014-2015 Red Hat, Inc.
  *
  * This file is part of LVM2.
  *
@@ -370,4 +370,4 @@ void log_level(int level, const char *fmt, ...)  __attribute__((format(printf, 2
 #define log_error(fmt, args...) log_level(LOG_ERR, fmt, ##args)
 #define log_warn(fmt, args...) log_level(LOG_WARNING, fmt, ##args)
 
-#endif
+#endif	/* _LVM_LVMLOCKD_INTERNAL_H */
