@@ -192,7 +192,6 @@ fi
  %if %{have_service lvmlockd}
   %{_unitdir}/lvm2-lvmlockd.service
   %{_unitdir}/lvm2-lvmlocking.service
-  #%{_unitdir}/lvm2-lvmlockd.socket
  %endif
 %else
  %{_sysconfdir}/rc.d/init.d/lvm2-monitor
@@ -203,9 +202,6 @@ fi
  %if %{have_service lvmpolld}
   %{_sysconfdir}/rc.d/init.d/lvm2-lvmpolld
  %endif
- #%if %{have_service lvmlockd}
- # %{_sysconfdir}/rc.d/init.d/lvm2-lvmlockd
- #%endif
 %endif
 
 ##############################################################################
