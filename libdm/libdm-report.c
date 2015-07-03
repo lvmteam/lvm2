@@ -2273,11 +2273,13 @@ static int _check_reserved_values_supported(const struct dm_report_field_type fi
 	static uint32_t supported_reserved_types = DM_REPORT_FIELD_TYPE_NUMBER |
 						   DM_REPORT_FIELD_TYPE_SIZE |
 						   DM_REPORT_FIELD_TYPE_PERCENT |
-						   DM_REPORT_FIELD_TYPE_STRING;
+						   DM_REPORT_FIELD_TYPE_STRING |
+						   DM_REPORT_FIELD_TYPE_TIME;
 	static uint32_t supported_reserved_types_with_range = DM_REPORT_FIELD_RESERVED_VALUE_RANGE |
 							      DM_REPORT_FIELD_TYPE_NUMBER |
 							      DM_REPORT_FIELD_TYPE_SIZE |
-							      DM_REPORT_FIELD_TYPE_PERCENT;
+							      DM_REPORT_FIELD_TYPE_PERCENT |
+							      DM_REPORT_FIELD_TYPE_TIME;
 
 
 	if (!reserved_values)
