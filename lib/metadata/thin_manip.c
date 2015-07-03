@@ -237,6 +237,94 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 }
 
 /*
+ * Detect overprovisioning and check lvm2 is configured for auto resize.
+ *
+ * If passed LV is thin volume/pool, check first only this one for overprovisiong.
+ * Lots of test combined together.
+ * Test is not detecting status of dmeventd, too complex for now...
+ */
+int pool_check_overprovisioning(const struct logical_volume *lv)
+{
+	const struct lv_list *lvl;
+	const struct seg_list *sl;
+	const struct logical_volume *pool_lv = NULL;
+	struct cmd_context *cmd = lv->vg->cmd;
+	const char *txt = "";
+	uint64_t thinsum = 0, poolsum = 0, sz = ~0;
+	int threshold, max_threshold = 0;
+	int percent, min_percent = 100;
+	int more_pools = 0;
+
+	/* When passed thin volume, check related pool first */
+	if (lv_is_thin_volume(lv))
+		pool_lv = first_seg(lv)->pool_lv;
+	else if (lv_is_thin_pool(lv))
+		pool_lv = lv;
+
+	if (pool_lv) {
+		poolsum += pool_lv->size;
+		dm_list_iterate_items(sl, &pool_lv->segs_using_this_lv)
+			thinsum += sl->seg->lv->size;
+
+		if (thinsum <= poolsum)
+			return 1; /* All thins fit into this thin pool */
+	}
+
+	/* Sum all thins and all thin pools in VG */
+	dm_list_iterate_items(lvl, &lv->vg->lvs) {
+		if (!lv_is_thin_pool(lvl->lv))
+			continue;
+
+		threshold = find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
+						 lv_config_profile(lvl->lv));
+		percent = find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
+					       lv_config_profile(lvl->lv));
+		if (threshold > max_threshold)
+			max_threshold = threshold;
+		if (percent < min_percent)
+			min_percent = percent;
+
+		if (lvl->lv == pool_lv)
+			continue; /* Skip iteration for already checked thin pool */
+
+		more_pools++;
+		poolsum += lvl->lv->size;
+		dm_list_iterate_items(sl, &lvl->lv->segs_using_this_lv)
+			thinsum += sl->seg->lv->size;
+	}
+
+	if (thinsum <= poolsum)
+		return 1; /* All fits for all pools */
+
+	if ((sz = vg_size(lv->vg)) < thinsum)
+		/* Thin sum size is above VG size */
+		txt = " and the size of whole volume group";
+	else if ((sz = vg_free(lv->vg)) < thinsum)
+		/* Thin sum size is more then free space in a VG */
+		txt = !sz ? "" : " and the amount of free space in volume group";
+	else if ((max_threshold > 99) || !min_percent)
+		/* There is some free space in VG, but it is not configured
+		 * for growing - threshold is 100% or percent is 0% */
+		sz = poolsum;
+
+	if (sz != ~0) {
+		log_warn("WARNING: Sum of all thin volume sizes (%s) exceeds the "
+			 "size of thin pool%s%s%s (%s)!",
+			 display_size(cmd, thinsum),
+			 more_pools ? "" : " ",
+			 more_pools ? "s" : display_lvname(pool_lv),
+			 txt,
+			 (sz > 0) ? display_size(cmd, sz) : "no free space in volume group");
+		if (max_threshold > 99)
+			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_threshold should be bellow 100.");
+		if (!min_percent)
+			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_percent should be above 0.");
+	}
+
+	return 1;
+}
+
+/*
  * Validate given external origin could be used with thin pool
  */
 int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv)

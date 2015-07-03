@@ -5167,6 +5167,8 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 			      lp->extents - lv->le_count,
 			      pvh, alloc, lp->approx_alloc))
 		return_NULL;
+	else if (!pool_check_overprovisioning(lv))
+		return_NULL;
 
 	if (old_extents == lv->le_count)
 		log_print_unless_silent("Size of logical volume %s unchanged from %s (%" PRIu32 " extents).",
@@ -7292,6 +7294,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!attach_pool_message(pool_seg, DM_THIN_MESSAGE_CREATE_THIN, lv, 0, 0))
 			return_NULL;
 	}
+
+	if (!pool_check_overprovisioning(lv))
+		return_NULL;
 
 	/* FIXME Log allocation and attachment should have happened inside lv_extend. */
 	if (lp->log_count &&
