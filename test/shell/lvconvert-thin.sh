@@ -36,7 +36,7 @@ vgcreate $vg1 $(head -n 3 DEVICES)
 # maybe  uname -m    [ x86_64 | i686 ]
 TSIZE=64T
 aux can_use_16T || TSIZE=15T
-lvcreate -s -l 100%FREE -n $lv $vg1 --virtualsize $TSIZE
+lvcreate --type snapshot -l 100%FREE -n $lv $vg1 --virtualsize $TSIZE
 aux extend_filter_LVMTEST
 
 pvcreate "$DM_DEV_DIR/$vg1/$lv"
