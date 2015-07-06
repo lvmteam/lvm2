@@ -198,49 +198,6 @@ struct val_blk {
 /* lm_unlock flags */
 #define LMUF_FREE_VG 0x00000001
 
-struct lockspace *alloc_lockspace(void);
-int lockspaces_empty(void);
-int last_string_from_args(char *args_in, char *last);
-int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsigned int *patch);
-
-int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
-int lm_prepare_lockspace_dlm(struct lockspace *ls);
-int lm_add_lockspace_dlm(struct lockspace *ls, int adopt);
-int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg);
-int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		uint32_t *r_version, int adopt);
-int lm_convert_dlm(struct lockspace *ls, struct resource *r,
-		   int ld_mode, uint32_t r_version);
-int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
-		  uint32_t r_version, uint32_t lmu_flags);
-int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r);
-int lm_get_lockspaces_dlm(struct list_head *ls_rejoin);
-int lm_data_size_dlm(void);
-int lm_is_running_dlm(void);
-
-int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
-int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, uint64_t free_offset);
-int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
-int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
-int lm_prepare_lockspace_sanlock(struct lockspace *ls);
-int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt);
-int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
-int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    uint32_t *r_version, int *retry, int adopt);
-int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
-		       int ld_mode, uint32_t r_version);
-int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
-		      uint32_t r_version, uint32_t lmu_flags);
-int lm_able_gl_sanlock(struct lockspace *ls, int enable);
-int lm_ex_disable_gl_sanlock(struct lockspace *ls);
-int lm_hosts_sanlock(struct lockspace *ls, int notify);
-int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r);
-int lm_gl_is_enabled(struct lockspace *ls);
-int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
-int lm_data_size_sanlock(void);
-int lm_is_running_sanlock(void);
-int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset);
-
 #define container_of(ptr, type, member) ({                      \
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
 	(type *)( (char *)__mptr - offsetof(type,member) );})
@@ -369,5 +326,217 @@ void log_level(int level, const char *fmt, ...)  __attribute__((format(printf, 2
 #define log_debug(fmt, args...) log_level(LOG_DEBUG, fmt, ##args)
 #define log_error(fmt, args...) log_level(LOG_ERR, fmt, ##args)
 #define log_warn(fmt, args...) log_level(LOG_WARNING, fmt, ##args)
+
+struct lockspace *alloc_lockspace(void);
+int lockspaces_empty(void);
+int last_string_from_args(char *args_in, char *last);
+int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsigned int *patch);
+
+
+#ifdef LOCKDDLM_SUPPORT
+
+int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
+int lm_prepare_lockspace_dlm(struct lockspace *ls);
+int lm_add_lockspace_dlm(struct lockspace *ls, int adopt);
+int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg);
+int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
+		uint32_t *r_version, int adopt);
+int lm_convert_dlm(struct lockspace *ls, struct resource *r,
+		   int ld_mode, uint32_t r_version);
+int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
+		  uint32_t r_version, uint32_t lmu_flags);
+int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r);
+int lm_get_lockspaces_dlm(struct list_head *ls_rejoin);
+int lm_data_size_dlm(void);
+int lm_is_running_dlm(void);
+
+#else
+
+static inline int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
+{
+	return -1;
+}
+
+static inline int lm_prepare_lockspace_dlm(struct lockspace *ls)
+{
+	return -1;
+}
+
+static inline int lm_add_lockspace_dlm(struct lockspace *ls, int adopt)
+{
+	return -1;
+}
+
+static inline int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
+{
+	return -1;
+}
+
+static inline int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
+		uint32_t *r_version, int adopt)
+{
+	return -1;
+}
+
+static inline int lm_convert_dlm(struct lockspace *ls, struct resource *r,
+		   int ld_mode, uint32_t r_version)
+{
+	return -1;
+}
+
+static inline int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
+		  uint32_t r_version, uint32_t lmu_flags)
+{
+	return -1;
+}
+
+static inline int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r)
+{
+	return -1;
+}
+
+static inline int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
+{
+	return -1;
+}
+
+static inline int lm_data_size_dlm(void)
+{
+	return -1;
+}
+
+static inline int lm_is_running_dlm(void)
+{
+	return 0;
+}
+
+#endif /* dlm support */
+
+#ifdef LOCKDSANLOCK_SUPPORT
+
+int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
+int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, uint64_t free_offset);
+int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
+int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
+int lm_prepare_lockspace_sanlock(struct lockspace *ls);
+int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt);
+int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
+int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
+		    uint32_t *r_version, int *retry, int adopt);
+int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
+		       int ld_mode, uint32_t r_version);
+int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
+		      uint32_t r_version, uint32_t lmu_flags);
+int lm_able_gl_sanlock(struct lockspace *ls, int enable);
+int lm_ex_disable_gl_sanlock(struct lockspace *ls);
+int lm_hosts_sanlock(struct lockspace *ls, int notify);
+int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r);
+int lm_gl_is_enabled(struct lockspace *ls);
+int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
+int lm_data_size_sanlock(void);
+int lm_is_running_sanlock(void);
+int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset);
+
+#else
+
+static inline int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
+{
+	return -1;
+}
+
+static inline int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, uint64_t free_offset)
+{
+	return -1;
+}
+
+static inline int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
+{
+	return -1;
+}
+
+static inline int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
+{
+	return -1;
+}
+
+static inline int lm_prepare_lockspace_sanlock(struct lockspace *ls)
+{
+	return -1;
+}
+
+static inline int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt)
+{
+	return -1;
+}
+
+static inline int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
+{
+	return -1;
+}
+
+static inline int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
+		    uint32_t *r_version, int *retry, int adopt)
+{
+	return -1;
+}
+
+static inline int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
+		       int ld_mode, uint32_t r_version)
+{
+	return -1;
+}
+
+static inline int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
+		      uint32_t r_version, uint32_t lmu_flags)
+{
+	return -1;
+}
+
+static inline int lm_able_gl_sanlock(struct lockspace *ls, int enable)
+{
+	return -1;
+}
+
+static inline int lm_ex_disable_gl_sanlock(struct lockspace *ls)
+{
+	return -1;
+}
+
+static inline int lm_hosts_sanlock(struct lockspace *ls, int notify)
+{
+	return -1;
+}
+
+static inline int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r)
+{
+	return -1;
+}
+
+static inline int lm_gl_is_enabled(struct lockspace *ls)
+{
+	return -1;
+}
+
+static inline int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin)
+{
+	return -1;
+}
+
+static inline int lm_data_size_sanlock(void)
+{
+	return -1;
+}
+
+static inline int lm_is_running_sanlock(void)
+{
+	return 0;
+}
+
+static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
+{
+	return -1;
+}
+
+#endif /* sanlock support */
 
 #endif	/* _LVM_LVMLOCKD_INTERNAL_H */

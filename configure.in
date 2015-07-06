@@ -40,6 +40,8 @@ case "$host_os" in
 		LVMETAD=no
 		LVMPOLLD=no
 		LVMLOCKD=no
+		LOCKDSANLOCK=no
+		LOCKDDLM=no
 		ODIRECT=yes
 		DM_IOCTLS=yes
 		SELINUX=yes
@@ -1175,9 +1177,44 @@ AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMLOCKD, [$DEFAULT_USE_LVMLOCKD],
 		   [Use lvmlockd by default.])
 
 ################################################################################
-dnl -- Look for sanlock and dlm libraries
-if test "$BUILD_LVMLOCKD" = yes; then
+dnl -- Build lockdsanlock
+AC_MSG_CHECKING(whether to build lockdsanlock)
+AC_ARG_ENABLE(lockd-sanlock,
+	      AC_HELP_STRING([--enable-lockd-sanlock],
+			     [enable the LVM lock daemon sanlock option]),
+	      LOCKDSANLOCK=$enableval)
+AC_MSG_RESULT($LOCKDSANLOCK)
+
+BUILD_LOCKDSANLOCK=$LOCKDSANLOCK
+
+if test "$BUILD_LOCKDSANLOCK" = yes; then
+	AC_DEFINE([LOCKDSANLOCK_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd sanlock option.])
+fi
+
+################################################################################
+dnl -- Build lockddlm
+AC_MSG_CHECKING(whether to build lockddlm)
+AC_ARG_ENABLE(lockd-dlm,
+	      AC_HELP_STRING([--enable-lockd-dlm],
+			     [enable the LVM lock daemon dlm option]),
+	      LOCKDDLM=$enableval)
+AC_MSG_RESULT($LOCKDDLM)
+
+BUILD_LOCKDDLM=$LOCKDDLM
+
+if test "$BUILD_LOCKDDLM" = yes; then
+	AC_DEFINE([LOCKDDLM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd dlm option.])
+fi
+
+################################################################################
+dnl -- Look for sanlock libraries
+if test "$BUILD_LOCKDSANLOCK" = yes; then
 	PKG_CHECK_MODULES(LOCKD_SANLOCK, libsanlock_client, [HAVE_LOCKD_SANLOCK=yes], $bailout)
+fi
+
+################################################################################
+dnl -- Look for dlm libraries
+if test "$BUILD_LOCKDDLM" = yes; then
 	PKG_CHECK_MODULES(LOCKD_DLM, libdlm, [HAVE_LOCKD_DLM=yes], $bailout)
 fi
 
@@ -1804,6 +1841,8 @@ AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(BUILD_LVMETAD)
 AC_SUBST(BUILD_LVMPOLLD)
 AC_SUBST(BUILD_LVMLOCKD)
+AC_SUBST(BUILD_LOCKDSANLOCK)
+AC_SUBST(BUILD_LOCKDDLM)
 AC_SUBST(CACHE)
 AC_SUBST(CFLAGS)
 AC_SUBST(CFLOW_CMD)
@@ -2039,3 +2078,7 @@ AS_IF([test "$BUILD_LVMLOCKD" == yes && test "$BUILD_LVMPOLLD" == no],
 
 AS_IF([test "$BUILD_LVMLOCKD" == yes && test "$BUILD_LVMETAD" == no],
       [AC_MSG_WARN([lvmlockd requires lvmetad])])
+
+AS_IF([test "$BUILD_LVMLOCKD" == yes && test "$BUILD_LOCKDDLM" == no && test "$BUILD_LOCKDSANLOCK" == no],
+      [AC_MSG_WARN([lvmlockd requires enabling sanlock or dlm or both])])
+
