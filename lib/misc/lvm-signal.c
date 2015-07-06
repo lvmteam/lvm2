@@ -95,7 +95,7 @@ void sigint_restore(void)
 	    --_handler_installed >= MAX_SIGINTS)
 		return;
 
-	/* Nesting count went bellow MAX_SIGINTS. */
+	/* Nesting count went below MAX_SIGINTS. */
 	if (_oldmasked[_handler_installed]) {
 		sigset_t sigs;
 		sigprocmask(0, NULL, &sigs);

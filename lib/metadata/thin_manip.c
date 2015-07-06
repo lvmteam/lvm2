@@ -313,7 +313,7 @@ int pool_check_overprovisioning(const struct logical_volume *lv)
 			 txt,
 			 (sz > 0) ? display_size(cmd, sz) : "no free space in volume group");
 		if (max_threshold > 99)
-			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_threshold should be bellow 100.");
+			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_threshold should be below 100.");
 		if (!min_percent)
 			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_percent should be above 0.");
 	}

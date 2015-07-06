@@ -50,7 +50,7 @@ write_ 1000 1700
 pre=$(percent_)
 # Normally the usage should be ~66% here, however on slower systems
 # dmeventd could be actually 'fast' enough to have COW already resized now
-# so mark test skipped if we are bellow 50% by now
+# so mark test skipped if we are below 50% by now
 test $pre -gt 50 || skip
 wait_for_change_ $pre
 test $pre -gt $(percent_)
