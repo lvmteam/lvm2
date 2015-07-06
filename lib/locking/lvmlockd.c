@@ -828,9 +828,6 @@ int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 {
-	if (cmd->lock_vg_mode && !strcmp(cmd->lock_vg_mode, "na"))
-		return 1;
-
 	switch (get_lock_type_from_string(vg->lock_type)) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
@@ -849,9 +846,6 @@ int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 
 void lockd_free_vg_final(struct cmd_context *cmd, struct volume_group *vg)
 {
-	if (cmd->lock_vg_mode && !strcmp(cmd->lock_vg_mode, "na"))
-		return;
-
 	switch (get_lock_type_from_string(vg->lock_type)) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
@@ -890,10 +884,6 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
 	memset(uuid, 0, sizeof(uuid));
 
 	if (!is_lockd_type(vg->lock_type))
-		return 1;
-
-	/* Skip starting the vg lockspace when the vg lock is skipped. */
-	if (cmd->lock_vg_mode && !strcmp(cmd->lock_vg_mode, "na"))
 		return 1;
 
 	if (!_use_lvmlockd) {
@@ -1056,36 +1046,6 @@ int lockd_start_wait(struct cmd_context *cmd)
 	return ret;
 }
 
-static int _mode_num(const char *mode)
-{
-	if (!strcmp(mode, "na"))
-		return -2;
-	if (!strcmp(mode, "un"))
-		return -1;
-	if (!strcmp(mode, "nl"))
-		return 0;
-	if (!strcmp(mode, "sh"))
-		return 1;
-	if (!strcmp(mode, "ex"))
-		return 2;
-	return -3;
-}
-
-/* same rules as strcmp */
-static int _mode_compare(const char *m1, const char *m2)
-{
-	int n1 = _mode_num(m1);
-	int n2 = _mode_num(m2);
-
-	if (n1 < n2)
-		return -1;
-	if (n1 == n2)
-		return 0;
-	if (n1 > n2)
-		return 1;
-	return -2;
-}
-
 /*
  * lockd_gl_create() is a variation of lockd_gl() used only by vgcreate.
  * It handles the case that when using sanlock, the global lock does
@@ -1159,21 +1119,6 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 			return 1;
 		log_error("Cannot create VG with lock_type %s without lvmlockd.", vg_lock_type);
 		return 0;
-	}
-
-	/*
-	 * A specific lock mode was given on the command line.
-	 */
-	if (cmd->lock_gl_mode) {
-		mode = cmd->lock_gl_mode;
-		if (mode && def_mode && strcmp(mode, "enable") && (_mode_compare(mode, def_mode) < 0)) {
-			if (!find_config_tree_bool(cmd, global_allow_override_lock_modes_CFG, NULL)) {
-				log_error("Disallowed lock-gl mode \"%s\"", mode);
-				return 0;
-			} else {
-				log_warn("WARNING: overriding default global lock mode.");
-			}
-		}
 	}
 
 	log_debug("lockd global lock_type %s", vg_lock_type);
@@ -1409,26 +1354,8 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		return 1;
 
 	if (def_mode && !strcmp(def_mode, "un")) {
-		if (cmd->lock_gl_mode && !strcmp(cmd->lock_gl_mode, "na"))
-			return 1;
-
 		mode = "un";
 		goto req;
-	}
-
-	/*
-	 * A specific lock mode was given on the command line.
-	 */
-	if (cmd->lock_gl_mode) {
-		mode = cmd->lock_gl_mode;
-		if (mode && def_mode && (_mode_compare(mode, def_mode) < 0)) {
-			if (!find_config_tree_bool(cmd, global_allow_override_lock_modes_CFG, NULL)) {
-				log_error("Disallowed lock-gl mode \"%s\"", mode);
-				return 0;
-			} else {
-				log_warn("WARNING: overriding default global lock mode.");
-			}
-		}
 	}
 
 	if (!mode)
@@ -1629,9 +1556,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * passed back to lockd_vg() for the corresponding unlock.
 	 */
 	if (def_mode && !strcmp(def_mode, "un")) {
-		if (cmd->lock_vg_mode && !strcmp(cmd->lock_vg_mode, "na"))
-			return 1;
-
 		if (prev_state & LDST_FAIL) {
 			log_debug("VG %s unlock skipped: lockd_state is failed", vg_name);
 			return 1;
@@ -1639,21 +1563,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 
 		mode = "un";
 		goto req;
-	}
-
-	/*
-	 * A specific lock mode was given on the command line.
-	 */
-	if (cmd->lock_vg_mode) {
-		mode = cmd->lock_vg_mode;
-		if (mode && def_mode && (_mode_compare(mode, def_mode) < 0)) {
-			if (!find_config_tree_bool(cmd, global_allow_override_lock_modes_CFG, NULL)) {
-				log_error("Disallowed lock-vg mode \"%s\"", mode);
-				return 0;
-			} else {
-				log_warn("WARNING: overriding default VG lock mode.");
-			}
-		}
 	}
 
 	/*
@@ -1918,30 +1827,9 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	 * For lvchange/vgchange activation, def_mode is "sh" or "ex"
 	 * according to the specific -a{e,s}y mode designation.
 	 * No e,s designation gives NULL def_mode.
-	 *
-	 * The --lock-lv option is saved in cmd->lock_lv_mode.
 	 */
 
-	if (cmd->lock_lv_mode && def_mode && strcmp(cmd->lock_lv_mode, "na") &&
-	    strcmp(cmd->lock_lv_mode, def_mode)) {
-		log_error("Different LV lock modes from activation %s and lock-lv %s",
-			  def_mode, cmd->lock_lv_mode);
-		return 0;
-	}
-
-	/* A specific lock mode was given on the command line. */
-	if (cmd->lock_lv_mode && (_mode_compare(cmd->lock_lv_mode, "sh") < 0)) {
-		if (!find_config_tree_bool(cmd, global_allow_override_lock_modes_CFG, NULL)) {
-			log_error("Disallowed lock-lv mode \"%s\"", cmd->lock_lv_mode);
-			return 0;
-		} else {
-			log_warn("WARNING: overriding default LV lock mode.");
-		}
-	}
-
-	if (cmd->lock_lv_mode)
-		mode = cmd->lock_lv_mode;
-	else if (def_mode)
+	if (def_mode)
 		mode = def_mode;
 
 	if (mode && !strcmp(mode, "sh") && (flags & LDLV_MODE_NO_SH)) {
@@ -2250,9 +2138,6 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 {
 	int lock_type_num = get_lock_type_from_string(vg->lock_type);
 
-	if (cmd->lock_lv_mode && !strcmp(cmd->lock_lv_mode, "na"))
-		return 1;
-
 	switch (lock_type_num) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
@@ -2374,9 +2259,6 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args)
 {
-	if (cmd->lock_lv_mode && !strcmp(cmd->lock_lv_mode, "na"))
-		return 1;
-
 	switch (get_lock_type_from_string(vg->lock_type)) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:

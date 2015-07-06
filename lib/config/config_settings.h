@@ -845,9 +845,6 @@ cfg(global_sanlock_lv_extend_CFG, "sanlock_lv_extend", global_CFG_SECTION, CFG_D
 	"the amount specified here.  Setting this to 0 disables the\n"
 	"automatic extension and can cause lvcreate to fail.\n")
 
-cfg(global_allow_override_lock_modes_CFG, "allow_override_lock_modes", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
-	"Allow command options to override normal locking.\n")
-
 cfg(global_read_only_lock_modes_CFG, "read_only_lock_modes", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
 	"Limit commands to actions that use read locks.\n"
 	"This disallows any actions that require a write (exclusive) lock.\n")

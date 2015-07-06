@@ -149,11 +149,6 @@ struct cmd_context {
 	const char *report_list_item_separator;
 	int hosttags;
 
-	/* Locking */
-	const char *lock_gl_mode; /* gl mode, from --lock-gl */
-	const char *lock_vg_mode; /* vg mode, from --lock-vg */
-	const char *lock_lv_mode; /* lv mode, from --lock-lv */
-
 	const char *lib_dir;		/* Cache value global/library_dir */
 	char system_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
