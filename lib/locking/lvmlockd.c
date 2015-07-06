@@ -1130,11 +1130,6 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 		return 0;
 	}
 
-	if (!strcmp(mode, "ex") && find_config_tree_bool(cmd, global_read_only_lock_modes_CFG, NULL)) {
-		log_error("Exclusive global lock not allowed with read_only_lock_modes");
-		return 0;
-	}
-
  req:
 	if (!_lockd_request(cmd, "lock_gl",
 			      NULL, vg_lock_type, NULL, NULL, NULL, NULL, mode, NULL,
@@ -1365,11 +1360,6 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		return 0;
 	}
 
-	if (!strcmp(mode, "ex") && find_config_tree_bool(cmd, global_read_only_lock_modes_CFG, NULL)) {
-		log_error("Exclusive global lock not allowed with read_only_lock_modes");
-		return 0;
-	}
-
  req:
 	log_debug("lockd global mode %s", mode);
 
@@ -1578,11 +1568,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		mode = def_mode;
 	if (!mode)
 		mode = cmd->lockd_vg_default_sh ? "sh" : "ex";
-
-	if (!strcmp(mode, "ex") && find_config_tree_bool(cmd, global_read_only_lock_modes_CFG, NULL)) {
-		log_error("Exclusive VG lock not allowed with read_only_lock_modes");
-		return 0;
-	}
 
 	if (!strcmp(mode, "ex"))
 		*lockd_state |= LDST_EX;

@@ -845,10 +845,6 @@ cfg(global_sanlock_lv_extend_CFG, "sanlock_lv_extend", global_CFG_SECTION, CFG_D
 	"the amount specified here.  Setting this to 0 disables the\n"
 	"automatic extension and can cause lvcreate to fail.\n")
 
-cfg(global_read_only_lock_modes_CFG, "read_only_lock_modes", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 124), NULL, 0, NULL,
-	"Limit commands to actions that use read locks.\n"
-	"This disallows any actions that require a write (exclusive) lock.\n")
-
 cfg(global_thin_check_executable_CFG, "thin_check_executable", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, THIN_CHECK_CMD, vsn(2, 2, 94), "@THIN_CHECK_CMD@", 0, NULL,
 	"The full path to the thin_check command.\n"
 	"LVM uses this command to check that a thin metadata\n"
