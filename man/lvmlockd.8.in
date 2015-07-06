@@ -442,9 +442,9 @@ only while an LVM command is running.
 If a request for a GL or VG lock fails due to a lock conflict with another
 host, lvmlockd automatically retries for a short time before returning a
 failure to the LVM command.  The LVM command will then retry the entire
-lock request a number of times specified by global/lock_retries before
-failing.  If a request for an LV lock fails due to a lock conflict, the
-command fails immediately.
+lock request a number of times specified by global/lvmlockd_lock_retries
+before failing.  If a request for an LV lock fails due to a lock conflict,
+the command fails immediately.
 
 
 .SS sanlock global lock
@@ -740,7 +740,7 @@ vgchange --lock-stop.
 .IP \[bu] 2
 Long lasting lock contention among hosts may result in a command giving up
 and failing.  The number of lock retries can be adjusted with
-global/lock_retries.
+global/lvmlockd_lock_retries.
 
 .IP \[bu] 2
 The reporting options locktype and lockargs can be used to view lockd VG
