@@ -1,5 +1,6 @@
 Version 1.02.102 -
 ================================
+  Include tool.h for default non-library use.
   Introduce format macros with embedded % such as FMTu64.
 
 Version 1.02.101 - 3rd July 2015

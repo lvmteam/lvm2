@@ -14,17 +14,17 @@
 
 #define _XOPEN_SOURCE 500  /* pthread */
 
-#include "configure.h"
+#define _REENTRANT
+
+#include "tool.h"
+
 #include "daemon-io.h"
-#include "config-util.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include "lvm-version.h"
 
 #include <assert.h>
 #include <pthread.h>
-#include <stdint.h>
-#include <unistd.h>
 
 #define LVMETAD_SOCKET DEFAULT_RUN_DIR "/lvmetad.socket"
 

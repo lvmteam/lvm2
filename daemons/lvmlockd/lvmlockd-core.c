@@ -10,25 +10,22 @@
 
 #define _XOPEN_SOURCE 500  /* pthread */
 #define _ISOC99_SOURCE
-#define _GNU_SOURCE
+#define _REENTRANT
 
-#include "configure.h"
+#include "tool.h"
+
 #include "daemon-io.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
-#include "config-util.h"
 #include "lvm-version.h"
 #include "lvmetad-client.h"
 #include "lvmlockd-client.h"
 
-#include <assert.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <poll.h>
+/* #include <assert.h> */
 #include <errno.h>
+#include <pthread.h>
+#include <stddef.h>
+#include <poll.h>
 #include <signal.h>
 #include <getopt.h>
 #include <syslog.h>

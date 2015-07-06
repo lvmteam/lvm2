@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+
 #include "memlock.h"
 
 static int _lvchange_permission(struct cmd_context *cmd,

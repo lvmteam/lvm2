@@ -16,26 +16,21 @@
  * dmeventd - dm event daemon to monitor active mapped devices
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
+#include "tool.h"
 
-#include "configure.h"
-#include "libdevmapper.h"
-#include "libdevmapper-event.h"
-#include "dmeventd.h"
 //#include "libmultilog.h"
 #include "dm-logging.h"
 
-#include <stdarg.h>
+#include "libdevmapper-event.h"
+#include "dmeventd.h"
+
 #include <dlfcn.h>
-#include <errno.h>
 #include <pthread.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <unistd.h>
 #include <signal.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 #include <fcntl.h>		/* for musl libc */
@@ -1567,9 +1562,6 @@ static void _process_request(struct dm_event_fifos *fifos)
 {
 	int die;
 	struct dm_event_daemon_message msg = { 0 };
-#ifdef DEBUG
-	const char *cmd;
-#endif
 
 	/*
 	 * Read the request from the client (client_read, client_write

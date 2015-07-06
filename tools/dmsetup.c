@@ -16,19 +16,12 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
+#include "tool.h"
 
-#include "configure.h"
-#include "util.h"
 #include "dm-logging.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <dirent.h>
-#include <errno.h>
 #include <sys/wait.h>
 #include <sys/param.h>
 #include <locale.h>

@@ -37,8 +37,6 @@
  *
  */
 
-#include <stdio.h>		/* FILE */
-#include <string.h>		/* strerror() */
 #include <errno.h>
 
 #define EUNCLASSIFIED -1	/* Generic error code */

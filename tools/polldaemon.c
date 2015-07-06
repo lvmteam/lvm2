@@ -13,12 +13,13 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <time.h>
-
 #include "tools.h"
+
 #include "polldaemon.h"
 #include "lvm2cmdline.h"
 #include "lvmpolld-client.h"
+
+#include <time.h>
 
 #define WAIT_AT_LEAST_NANOSECS 100000
 

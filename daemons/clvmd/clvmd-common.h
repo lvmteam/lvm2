@@ -18,15 +18,10 @@
 #ifndef _LVM_CLVMD_COMMON_H
 #define _LVM_CLVMD_COMMON_H
 
-#include "configure.h"
-
 #define _REENTRANT
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
 
-#include "libdevmapper.h"
+#include "tool.h"
+
 #include "lvm-logging.h"
-
-#include <unistd.h>
 
 #endif

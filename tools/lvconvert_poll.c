@@ -12,9 +12,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "libdevmapper.h"
-#include "lvconvert_poll.h"
 #include "tools.h"
+
+#include "lvconvert_poll.h"
 
 int lvconvert_mirror_finish(struct cmd_context *cmd,
 			    struct volume_group *vg,

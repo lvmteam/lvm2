@@ -15,10 +15,6 @@
 #ifndef _LVM_DAEMON_CONFIG_UTIL_H
 #define _LVM_DAEMON_CONFIG_UTIL_H
 
-#include "libdevmapper.h"
-
-#include <stdarg.h>
-
 struct buffer {
 	int allocated;
 	int used;

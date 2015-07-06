@@ -10,23 +10,9 @@
 
 #define _XOPEN_SOURCE 500  /* pthread */
 #define _ISOC99_SOURCE
-#define _GNU_SOURCE
 
-#include <assert.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <poll.h>
-#include <errno.h>
-#include <string.h>
-#include <syslog.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include "tool.h"
 
-#include "configure.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include "xlate.h"
@@ -38,6 +24,13 @@
 #include "sanlock_rv.h"
 #include "sanlock_admin.h"
 #include "sanlock_resource.h"
+
+#include <pthread.h>
+#include <stddef.h>
+#include <poll.h>
+#include <errno.h>
+#include <syslog.h>
+#include <sys/socket.h>
 
 /*
  * If access to the pv containing the vg's leases is lost, sanlock cannot renew

@@ -13,8 +13,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "pvmove_poll.h"
 #include "tools.h"
+
+#include "pvmove_poll.h"
 
 static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
 				      void *baton)

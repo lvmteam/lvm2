@@ -10,28 +10,9 @@
 
 #define _XOPEN_SOURCE 500  /* pthread */
 #define _ISOC99_SOURCE
-#define _GNU_SOURCE
 
-#include <assert.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <poll.h>
-#include <errno.h>
-#include <string.h>
-#include <endian.h>
-#include <fcntl.h>
-#include <byteswap.h>
-#include <syslog.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
+#include "tool.h"
 
-#include "configure.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include "xlate.h"
@@ -44,6 +25,17 @@
  * link with non-threaded version of library, libdlm_lt.
  */
 #include "libdlm.h"
+
+#include <pthread.h>
+#include <stddef.h>
+#include <poll.h>
+#include <errno.h>
+#include <endian.h>
+#include <fcntl.h>
+#include <byteswap.h>
+#include <syslog.h>
+#include <dirent.h>
+#include <sys/socket.h>
 
 struct lm_dlm {
 	dlm_lshandle_t *dh;

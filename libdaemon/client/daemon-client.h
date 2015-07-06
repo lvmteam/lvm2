@@ -15,7 +15,6 @@
 #ifndef _LVM_DAEMON_CLIENT_H
 #define _LVM_DAEMON_CLIENT_H
 
-#include "libdevmapper.h"
 #include "config-util.h"
 
 typedef struct {

@@ -8,21 +8,15 @@
  * of the GNU Lesser General Public License v.2.1.
  */
 
-#define _GNU_SOURCE
-#include "configure.h"
+#include "tool.h"
+
 #include "lvmlockd-client.h"
 
-#include <stdio.h>
-#include <stdint.h>
 #include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <getopt.h>
-#include <string.h>
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/un.h>

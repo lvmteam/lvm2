@@ -76,3 +76,4 @@
 @top_srcdir@/libdm/misc/kdev_t.h
 @top_srcdir@/po/pogen.h
 @top_srcdir@/tools/lvm2cmd.h
+@top_srcdir@/tools/tool.h

@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+
 #include "report.h"
 
 static int _process_each_devtype(struct cmd_context *cmd, int argc,

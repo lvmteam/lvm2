@@ -16,14 +16,10 @@
 #ifndef _LVM_TOOLS_H
 #define _LVM_TOOLS_H
 
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#include "configure.h"
-#include <assert.h>
-#include "libdevmapper.h"
+#include "tool.h"
 
 #include "lvm-logging.h"
+
 #include "activate.h"
 #include "archiver.h"
 #include "lvmcache.h"
@@ -47,11 +43,7 @@
 #include "toolcontext.h"
 #include "toollib.h"
 
-#include <stdlib.h>
-#include <unistd.h>
 #include <ctype.h>
-#include <limits.h>
-#include <stdarg.h>
 #include <sys/types.h>
 
 #define CMD_LEN 256

@@ -12,14 +12,12 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define _REENTRANT
+
+#include "tool.h"
+
 #include "daemon-io.h"
 #include "dm-logging.h"
-#include "util.h"
-
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
 #include <math.h>  /* fabs() */
 #include <float.h> /* DBL_EPSILON */

@@ -10,6 +10,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define _REENTRANT
+
+#include "tool.h"
+
 #include "daemon-io.h"
 #include "daemon-server.h"
 #include "daemon-log.h"
@@ -77,8 +81,6 @@ static void _exit_handler(int sig __attribute__((unused)))
 #  define SD_LISTEN_FDS_ENV_VAR_NAME "LISTEN_FDS"
 #  define SD_LISTEN_FDS_START 3
 #  define SD_FD_SOCKET_SERVER SD_LISTEN_FDS_START
-
-#  include <stdio.h>
 
 static int _is_idle(daemon_state s)
 {
