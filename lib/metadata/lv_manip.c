@@ -4356,7 +4356,7 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 	argv[i++] = lv_path;
 
 	if (fcmd == FSADM_CMD_RESIZE) {
-		if (dm_snprintf(size_buf, sizeof(size_buf), "%" PRIu64 "K",
+		if (dm_snprintf(size_buf, sizeof(size_buf), FMTu64 "K",
 				(uint64_t) lp->extents * (vg->extent_size / 2)) < 0) {
 			log_error("Couldn't generate new LV size string");
 			return 0;
@@ -6161,7 +6161,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 				log_error("Layer boundary mismatch: "
 					  "%s:%" PRIu32 "-%" PRIu32 " on "
 					  "%s:%" PRIu32 " / "
-					  "%" PRIu32 "-%" PRIu32 " / ",
+					  FMTu32 "-" FMTu32 " / ",
 					  lv->name, seg->le, seg->area_len,
 					  layer_lv->name, seg_le(seg, s),
 					  lseg->le, lseg->area_len);

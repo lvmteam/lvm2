@@ -243,7 +243,7 @@ static void openais_cpg_confchg_callback(cpg_handle_t handle,
 	struct node_info *ninfo;
 
 	DEBUGLOG("confchg callback. %" PRIsize_t " joined, "
-		 "%" PRIsize_t " left, %" PRIsize_t " members\n",
+		 FMTsize_t " left, %" PRIsize_t " members\n",
 		 joined_list_entries, left_list_entries, member_list_entries);
 
 	for (i=0; i<joined_list_entries; i++) {

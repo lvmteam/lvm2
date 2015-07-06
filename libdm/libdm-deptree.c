@@ -1458,7 +1458,7 @@ static int _thin_pool_status_transaction_id(struct dm_tree_node *dnode, uint64_t
 		goto out;
 	}
 
-	if (!params || (sscanf(params, "%" PRIu64, transaction_id) != 1)) {
+	if (!params || (sscanf(params, FMTu64, transaction_id) != 1)) {
 		log_error("Failed to parse transaction_id from %s.", params);
 		goto out;
 	}
@@ -3075,7 +3075,7 @@ int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
 		return 0;
 	}
 
-	r = sscanf(params, "%" PRIu64 "/%" PRIu64 " %" PRIu64,
+	r = sscanf(params, FMTu64 "/" FMTu64 " " FMTu64,
 		   &s->used_sectors, &s->total_sectors,
 		   &s->metadata_sectors);
 
@@ -3992,7 +3992,7 @@ int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 	}
 
 	/* FIXME: add support for held metadata root */
-	if (sscanf(params, "%" PRIu64 " %" PRIu64 "/%" PRIu64 " %" PRIu64 "/%" PRIu64 "%n",
+	if (sscanf(params, FMTu64 " " FMTu64 "/" FMTu64 " " FMTu64 "/" FMTu64 "%n",
 		   &s->transaction_id,
 		   &s->used_metadata_blocks,
 		   &s->total_metadata_blocks,
@@ -4044,7 +4044,7 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 	if (strchr(params, '-')) {
 		s->mapped_sectors = 0;
 		s->highest_mapped_sector = 0;
-	} else if (sscanf(params, "%" PRIu64 " %" PRIu64,
+	} else if (sscanf(params, FMTu64 " " FMTu64,
 		   &s->mapped_sectors,
 		   &s->highest_mapped_sector) != 2) {
 		dm_pool_free(mem, s);

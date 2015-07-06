@@ -1219,7 +1219,7 @@ static int _set_read_ahead(const char *dev_name, uint32_t major, uint32_t minor,
 		}
 
 		/* Sysfs is kB based, round up to kB */
-		if ((len = dm_snprintf(buf, sizeof(buf), "%" PRIu32,
+		if ((len = dm_snprintf(buf, sizeof(buf), FMTu32,
 				       (read_ahead + 1) / 2)) < 0) {
 			log_error("Failed to build size in kB.");
 			return 0;

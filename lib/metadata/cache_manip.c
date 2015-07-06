@@ -322,7 +322,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		dirty_blocks = status->cache->dirty_blocks;
 		dm_pool_destroy(status->mem);
 		if (dirty_blocks) {
-			log_print_unless_silent("%" PRIu64 " blocks must still be flushed.",
+			log_print_unless_silent(FMTu64 " blocks must still be flushed.",
 						dirty_blocks);
 			sleep(1);
 		}

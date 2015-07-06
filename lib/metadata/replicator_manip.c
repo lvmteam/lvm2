@@ -298,7 +298,7 @@ int check_replicator_segment(const struct lv_segment *rseg)
 			}
 			if (rsite->fall_behind_data) {
 				log_error("Defined fall_behind_data="
-					  "%" PRIu64 " for sync replicator %s/%s.",
+					  FMTu64 " for sync replicator %s/%s.",
 					  rsite->fall_behind_data, lv->name, rsite->name);
 				r = 0;
 			}

@@ -14,6 +14,7 @@
 
 #include "daemon-io.h"
 #include "dm-logging.h"
+#include "util.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -39,7 +40,7 @@ int buffer_append_vf(struct buffer *buf, va_list ap)
 			goto fail;
 		}
 		keylen = strchr(next, '=') - next;
-		if (strstr(next, "%d") || strstr(next, "%" PRId64)) {
+		if (strstr(next, "%d") || strstr(next, FMTd64)) {
 			value = va_arg(ap, int64_t);
 			if (dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value) < 0)
 				goto fail;
@@ -237,7 +238,7 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 		key[fmt - next] = '\0';
 		fmt += 2;
 
-		if (!strcmp(fmt, "%d") || !strcmp(fmt, "%" PRId64)) {
+		if (!strcmp(fmt, "%d") || !strcmp(fmt, FMTd64)) {
 			int64_t value = va_arg(ap, int64_t);
 			if (!(cn = make_int_node(cft, key, value, parent, pre_sib)))
 				return 0;

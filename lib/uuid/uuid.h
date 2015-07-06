@@ -18,7 +18,6 @@
 
 #define ID_LEN 32
 
-#include <inttypes.h>
 #include <sys/types.h>
 
 struct dm_pool;

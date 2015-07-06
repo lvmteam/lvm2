@@ -2406,12 +2406,12 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 			 */
 			if ((fgets(meta_path, sizeof(meta_path), f) > 0) &&
 			    (trans_id_str = strstr(meta_path, "transaction=\"")) &&
-			    (sscanf(trans_id_str + 13, "%" PRIu64, &trans_id) == 1) &&
+			    (sscanf(trans_id_str + 13, FMTu64, &trans_id) == 1) &&
 			    (trans_id != first_seg(pool_lv)->transaction_id) &&
 			    ((trans_id - 1) != first_seg(pool_lv)->transaction_id))
-				log_error("Transaction id %" PRIu64 " from pool \"%s/%s\" "
+				log_error("Transaction id " FMTu64 " from pool \"%s/%s\" "
 					  "does not match repaired transaction id "
-					  "%" PRIu64 " from %s.",
+					  FMTu64 " from %s.",
 					  first_seg(pool_lv)->transaction_id,
 					  pool_lv->vg->name, pool_lv->name, trans_id,
 					  pms_path);

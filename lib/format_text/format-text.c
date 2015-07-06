@@ -2237,7 +2237,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 	if (limit_applied)
 		log_very_verbose("Using limited metadata area size on %s "
 				 "with value %" PRIu64 " (limited by %s of "
-				 "%" PRIu64 ").", pv_dev_name(pv),
+				 FMTu64 ").", pv_dev_name(pv),
 				  mda_size, limit_name, limit);
 
 	if (mda_size) {

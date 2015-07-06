@@ -1171,7 +1171,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	if (removed)
 		*removed = old_area_count - new_area_count;
 
-	log_very_verbose("%" PRIu32 " image(s) removed from %s",
+	log_very_verbose(FMTu32 " image(s) removed from %s",
 			 old_area_count - new_area_count, lv->name);
 
 	return 1;

@@ -290,7 +290,7 @@ static int _write_value(struct config_output *out, const struct dm_config_value 
 		if (v->format_flags & DM_CONFIG_VALUE_FMT_INT_OCTAL)
 			line_append("0%" PRIo64, v->v.i);
 		else
-			line_append("%" PRId64, v->v.i);
+			line_append(FMTd64, v->v.i);
 		break;
 
 	case DM_CFG_EMPTY_ARRAY:

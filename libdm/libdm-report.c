@@ -639,7 +639,7 @@ int dm_report_field_uint64(struct dm_report *rh,
 		return 0;
 	}
 
-	if (dm_snprintf(repstr, 21, "%" PRIu64 , value) < 0) {
+	if (dm_snprintf(repstr, 21, FMTu64 , value) < 0) {
 		log_error("dm_report_field_uint64: uint64 too big: %" PRIu64, value);
 		return 0;
 	}

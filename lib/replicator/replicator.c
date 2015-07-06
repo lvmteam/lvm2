@@ -672,7 +672,7 @@ static int _replicator_dev_add_target_line(struct dev_manager *dm,
 			if (!(slog_dlid = build_dm_uuid(mem, rdev->slog, NULL)))
 				return_0;
 		} else if (rdev->slog_name &&
-			   sscanf(rdev->slog_name, "%" PRIu32, &slog_size) == 1) {
+			   sscanf(rdev->slog_name, FMTu32, &slog_size) == 1) {
 			slog_flags = DM_CORELOG | DM_FORCESYNC;
 			if (slog_size == 0) {
 				log_error("Failed to use empty corelog size "

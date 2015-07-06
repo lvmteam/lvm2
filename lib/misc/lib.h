@@ -25,11 +25,6 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-/* Define some portable printing types */
-#define PRIsize_t "zu"
-#define PRIptrdiff_t "td"
-#define PRIpid_t PRId32
-
 #if defined(__GNUC__)
 #define DM_EXPORTED_SYMBOL(func, ver) \
 	__asm__(".symver " #func "_v" #ver ", " #func "@@DM_" #ver )

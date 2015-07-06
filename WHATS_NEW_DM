@@ -1,5 +1,6 @@
 Version 1.02.102 -
 ================================
+  Introduce format macros with embedded % such as FMTu64.
 
 Version 1.02.101 - 3rd July 2015
 ================================

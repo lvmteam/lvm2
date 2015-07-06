@@ -195,7 +195,7 @@ static int _mirrored_target_percent(void **target_state,
 		pos += used;
 	}
 
-	if (sscanf(pos, "%" PRIu64 "/%" PRIu64 "%n", &numerator, &denominator,
+	if (sscanf(pos, FMTu64 "/" FMTu64 "%n", &numerator, &denominator,
 		   &used) != 2) {
 		log_error("Failure parsing mirror status fraction: %s", params);
 		return 0;
