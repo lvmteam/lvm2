@@ -2135,11 +2135,24 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		}
 
 		/*
-		 * Only let hidden LVs through it --all was used or the LVs 
+		 * Only let hidden LVs through if --all was used or the LVs 
 		 * were specifically named on the command line.
 		 */
 		if (!lvargs_supplied && !lv_is_visible(lvl->lv) && !arg_count(cmd, all_ARG))
 			continue;
+
+		/*
+		 * Only let sanlock LV through if --all was used or if
+		 * it is named on the command line.
+		 */
+		if (lv_is_lockd_sanlock_lv(lvl->lv)) {
+			if (arg_count(cmd, all_ARG) ||
+			    (lvargs_supplied && str_list_match_item(arg_lvnames, lvl->lv->name))) {
+				log_very_verbose("Processing lockd_sanlock_lv %s/%s.", vg->name, lvl->lv->name);
+			} else {
+				continue;
+			}
+		}
 
 		/*
 		 * process the LV if one of the following:
