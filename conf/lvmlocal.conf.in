@@ -48,4 +48,10 @@ local {
 	# Use this only after consulting 'man lvmsystemid'
 	# to be certain of correct usage and possible dangers.
 	# This configuration option does not have a default value defined.
+
+	# Configuration option local/host_id.
+	# The lvmlockd sanlock host_id.
+	# This must be a unique among all hosts,
+	# and must be between 1 and 2000.
+	# host_id = 0
 }

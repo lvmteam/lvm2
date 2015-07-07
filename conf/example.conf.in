@@ -821,6 +821,23 @@ global {
 	# is seen.
 	use_lvmetad = @DEFAULT_USE_LVMETAD@
 
+	# Configuration option global/use_lvmlockd.
+	# Use lvmlockd for locking among hosts using LVM on shared storage.
+	use_lvmlockd = 0
+
+	# Configuration option global/lvmlockd_lock_retries.
+	# Retry lvmlockd lock requests this many times.
+	# lvmlockd_lock_retries = 3
+
+	# Configuration option global/sanlock_lv_extend.
+	# Size in MiB to extend the internal LV holding sanlock locks.
+	# The internal LV holds locks for each LV in the VG, and after
+	# enough LVs have been created, the internal LV needs to be extended.
+	# lvcreate will automatically extend the internal LV when needed by
+	# the amount specified here.  Setting this to 0 disables the
+	# automatic extension and can cause lvcreate to fail.
+	# sanlock_lv_extend = 256
+
 	# Configuration option global/thin_check_executable.
 	# The full path to the thin_check command.
 	# LVM uses this command to check that a thin metadata
@@ -883,6 +900,8 @@ global {
 	# Also see cache_check_options.
 	# The cache tools are available from the package
 	# device-mapper-persistent-data.
+	# With cache_check version 5.0 or newer you should add
+	# --clear-needs-check-flag.
 	# cache_check_executable = "@CACHE_CHECK_CMD@"
 
 	# Configuration option global/cache_dump_executable.
@@ -1286,6 +1305,16 @@ activation {
 	# sometimes assist with data recovery.
 	# The '--activationmode' option overrides this setting.
 	activation_mode = "degraded"
+
+	# Configuration option activation/lock_start_list.
+	# Locking is started only for VGs selected by this list.
+	# The rules are the same as those for LVs in volume_list.
+	# This configuration option does not have a default value defined.
+
+	# Configuration option activation/auto_lock_start_list.
+	# Locking is auto-started only for VGs selected by this list.
+	# The rules are the same as those for LVs in auto_activation_volume_list.
+	# This configuration option does not have a default value defined.
 }
 
 # Configuration section metadata.
