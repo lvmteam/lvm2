@@ -2055,7 +2055,7 @@ static int _pool_register_callback(struct dev_manager *dm,
 		data->skip_zero = dm->activation;
 		data->exec = global_cache_check_executable_CFG;
 		data->opts = global_cache_check_options_CFG;
-		data->defaults = DEFAULT_CACHE_CHECK_OPTION1;
+		data->defaults = DEFAULT_CACHE_CHECK_OPTION1 " " DEFAULT_CACHE_CHECK_OPTION2;
 		data->global = "cache";
 	} else {
 		log_error(INTERNAL_ERROR "Registering unsupported pool callback.");

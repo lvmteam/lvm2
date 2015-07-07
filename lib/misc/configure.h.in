@@ -6,6 +6,10 @@
 /* The path to 'cache_check', if available. */
 #undef CACHE_CHECK_CMD
 
+/* Define to 1 if the external 'cache_check' tool requires the
+   --clear-needs-check-flag option */
+#undef CACHE_CHECK_NEEDS_CHECK
+
 /* The path to 'cache_dump', if available. */
 #undef CACHE_DUMP_CMD
 

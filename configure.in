@@ -560,6 +560,12 @@ case "$CACHE" in
  *) AC_MSG_ERROR([--with-cache parameter invalid]) ;;
 esac
 
+dnl -- cache_check needs-check flag
+AC_ARG_ENABLE(cache_check_needs_check,
+	      AC_HELP_STRING([--disable-cache_check_needs_check],
+			     [required if cache_check version is < 0.5]),
+	      CACHE_CHECK_NEEDS_CHECK=$enableval, CACHE_CHECK_NEEDS_CHECK=yes)
+
 # Test if necessary cache tools are available
 # if not - use plain defaults and warn user
 case "$CACHE" in
@@ -571,6 +577,21 @@ case "$CACHE" in
 			AC_MSG_WARN([cache_check not found in path $PATH])
 			CACHE_CHECK_CMD=/usr/sbin/cache_check
 			CACHE_CONFIGURE_WARN=y
+		fi
+	fi
+	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
+		CACHE_CHECK_VSN=`"$CACHE_CHECK_CMD" -V 2>/dev/null`
+		CACHE_CHECK_VSN_MAJOR=`echo "$CACHE_CHECK_VSN" | $AWK -F '.' '{print $1}'`
+		CACHE_CHECK_VSN_MINOR=`echo "$CACHE_CHECK_VSN" | $AWK -F '.' '{print $2}'`
+
+		if test -z "$CACHE_CHECK_VSN_MAJOR" -o -z "$CACHE_CHECK_VSN_MINOR"; then
+			AC_MSG_WARN([$CACHE_CHECK_CMD: Bad version "$CACHE_CHECK_VSN" found])
+			CACHE_CHECK_VERSION_WARN=y
+			CACHE_CHECK_NEEDS_CHECK=no
+		elif test "$CACHE_CHECK_VSN_MAJOR" -eq 0 -a "$CACHE_CHECK_VSN_MINOR" -lt 5; then
+			AC_MSG_WARN([$CACHE_CHECK_CMD: Old version "$CACHE_CHECK_VSN" found])
+			CACHE_CHECK_VERSION_WARN=y
+			CACHE_CHECK_NEEDS_CHECK=no
 		fi
 	fi
 	# Empty means a config way to ignore cache dumping
@@ -599,6 +620,12 @@ case "$CACHE" in
 			CACHE_RESTORE_CMD=/usr/sbin/cache_restore
 			CACHE_CONFIGURE_WARN=y
 		}
+	fi
+
+	AC_MSG_CHECKING([whether cache_check supports the needs-check flag])
+	AC_MSG_RESULT([$CACHE_CHECK_NEEDS_CHECK])
+	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
+		AC_DEFINE([CACHE_CHECK_NEEDS_CHECK], 1, [Define to 1 if the external 'cache_check' tool requires the --clear-needs-check-flag option])
 	fi
 	;;
 esac

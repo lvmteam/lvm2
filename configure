@@ -902,6 +902,7 @@ with_cache_check
 with_cache_dump
 with_cache_repair
 with_cache_restore
+enable_cache_check_needs_check
 enable_readline
 enable_realtime
 enable_ocf
@@ -1635,6 +1636,8 @@ Optional Features:
                           device-mapper is missing from the kernel
   --disable-thin_check_needs_check
                           required if thin_check version is < 0.3.0
+  --disable-cache_check_needs_check
+                          required if cache_check version is < 0.5
   --disable-readline      disable readline support
   --enable-realtime       enable realtime clock support
   --enable-ocf            enable Open Cluster Framework (OCF) compliant
@@ -8313,6 +8316,14 @@ $as_echo "#define CACHE_INTERNAL 1" >>confdefs.h
  *) as_fn_error $? "--with-cache parameter invalid" "$LINENO" 5 ;;
 esac
 
+# Check whether --enable-cache_check_needs_check was given.
+if test "${enable_cache_check_needs_check+set}" = set; then :
+  enableval=$enable_cache_check_needs_check; CACHE_CHECK_NEEDS_CHECK=$enableval
+else
+  CACHE_CHECK_NEEDS_CHECK=yes
+fi
+
+
 # Test if necessary cache tools are available
 # if not - use plain defaults and warn user
 case "$CACHE" in
@@ -8422,6 +8433,23 @@ fi
 $as_echo "$as_me: WARNING: cache_check not found in path $PATH" >&2;}
 			CACHE_CHECK_CMD=/usr/sbin/cache_check
 			CACHE_CONFIGURE_WARN=y
+		fi
+	fi
+	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
+		CACHE_CHECK_VSN=`"$CACHE_CHECK_CMD" -V 2>/dev/null`
+		CACHE_CHECK_VSN_MAJOR=`echo "$CACHE_CHECK_VSN" | $AWK -F '.' '{print $1}'`
+		CACHE_CHECK_VSN_MINOR=`echo "$CACHE_CHECK_VSN" | $AWK -F '.' '{print $2}'`
+
+		if test -z "$CACHE_CHECK_VSN_MAJOR" -o -z "$CACHE_CHECK_VSN_MINOR"; then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CACHE_CHECK_CMD: Bad version \"$CACHE_CHECK_VSN\" found" >&5
+$as_echo "$as_me: WARNING: $CACHE_CHECK_CMD: Bad version \"$CACHE_CHECK_VSN\" found" >&2;}
+			CACHE_CHECK_VERSION_WARN=y
+			CACHE_CHECK_NEEDS_CHECK=no
+		elif test "$CACHE_CHECK_VSN_MAJOR" -eq 0 -a "$CACHE_CHECK_VSN_MINOR" -lt 5; then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" found" >&5
+$as_echo "$as_me: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" found" >&2;}
+			CACHE_CHECK_VERSION_WARN=y
+			CACHE_CHECK_NEEDS_CHECK=no
 		fi
 	fi
 	# Empty means a config way to ignore cache dumping
@@ -8744,6 +8772,16 @@ $as_echo "$as_me: WARNING: cache_restore not found in path $PATH" >&2;}
 			CACHE_RESTORE_CMD=/usr/sbin/cache_restore
 			CACHE_CONFIGURE_WARN=y
 		}
+	fi
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether cache_check supports the needs-check flag" >&5
+$as_echo_n "checking whether cache_check supports the needs-check flag... " >&6; }
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $CACHE_CHECK_NEEDS_CHECK" >&5
+$as_echo "$CACHE_CHECK_NEEDS_CHECK" >&6; }
+	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
+
+$as_echo "#define CACHE_CHECK_NEEDS_CHECK 1" >>confdefs.h
+
 	fi
 	;;
 esac

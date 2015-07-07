@@ -900,7 +900,9 @@ cfg(global_cache_check_executable_CFG, "cache_check_executable", global_CFG_SECT
 	"Set to \"\" to skip this check.  (Not recommended.)\n"
 	"Also see cache_check_options.\n"
 	"The cache tools are available from the package\n"
-	"device-mapper-persistent-data.\n")
+	"device-mapper-persistent-data.\n"
+	"With cache_check version 5.0 or newer you should add\n"
+	"--clear-needs-check-flag.\n")
 
 cfg(global_cache_dump_executable_CFG, "cache_dump_executable", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, CACHE_DUMP_CMD, vsn(2, 2, 108), "@CACHE_DUMP_CMD@", 0, NULL,
 	"The full path to the cache_dump command.\n"
