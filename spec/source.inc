@@ -8,6 +8,9 @@
 %global enable_udev 1
 %global enable_systemd 1
 %global enable_cmirror 1
+#%global enable_lvmlockd 0
+#%global enable_lockd_dlm 0
+#%global enable_lockd_sanlock 0
 
 %global buildreq_cluster corosync-devel >= 1.99.9-1, dlm-devel >= 3.99.1-1
 %global req_cluster corosync >= 1.99.9-1, dlm >= 3.99.2-1
@@ -28,7 +31,22 @@
 %service lvmpolld 1
 
 %if %{fedora} >= 22 || %{rhel} >= 7
-%service lvmlockd 1
+ %service lvmlockd 1
+ %define sanlock_version 3.2.4-1
+ %define enable_lockd_dlm 1
+ %define enable_lockd_sanlock 1
+ %if %{rhel}
+  %ifarch i686 x86_64 s390x
+   %global buildreq_lockd_dlm dlm-devel >= %{dlm_version}
+  %else
+   %define enable_lockd_dlm 0
+  %endif
+  %ifarch x86_64 ppc64le ppc64 aarch64
+   %global buildreq_lockd_sanlock sanlock-devel >= %{sanlock_version}
+  %else
+   %define enable_lockd_sanlock 0
+  %endif
+ %endif
 %endif
 
 ##############################################################
@@ -109,6 +127,8 @@ BuildRequires: pkgconfig
 
 %maybe BuildRequires: %{?buildreq_udev}
 %maybe BuildRequires: %{?buildreq_cluster}
+%maybe BuildRequires: %{?buildreq_lockd_dlm}
+%maybe BuildRequires: %{?buildreq_lockd_sanlock}
 
 %description
 LVM2 includes all of the support for handling read/write operations on
