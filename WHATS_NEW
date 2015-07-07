@@ -1,6 +1,8 @@
 Version 2.02.125 -
 ================================
   Add support --clear-needs-check-flag for cache_check of cache pool metadata.
+  Add lvmetactl for developer use only.
+  Rename global/lock_retries to lvmlockd_retries.
   Replace --enable-lvmlockd by --enable-lockd-sanlock and --enable-lockd-dlm.
 
 Version 2.02.124 - 3rd July 2015
