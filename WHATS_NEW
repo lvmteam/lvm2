@@ -1,5 +1,6 @@
-Version 2.02.125 -
+Version 2.02.125 - 7th July 2015
 ================================
+  Fix getline memory usage in lvmpolld.
   Add support --clear-needs-check-flag for cache_check of cache pool metadata.
   Add lvmetactl for developer use only.
   Rename global/lock_retries to lvmlockd_retries.
