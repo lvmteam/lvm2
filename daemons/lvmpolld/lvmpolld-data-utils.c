@@ -325,6 +325,7 @@ struct lvmpolld_thread_data *lvmpolld_thread_data_constructor(struct lvmpolld_lv
 
 	data->pdlv = NULL;
 	data->line = NULL;
+	data->line_size = 0;
 	data->fout = data->ferr = NULL;
 	data->outpipe[0] = data->outpipe[1] = data->errpipe[0] = data->errpipe[1] = -1;
 
@@ -365,7 +366,8 @@ void lvmpolld_thread_data_destroy(void *thread_private)
 		pdst_unlock(data->pdlv->pdst);
 	}
 
-	dm_free(data->line);
+	/* may get reallocated in getline(). dm_free must not be used */
+	free(data->line);
 
 	if (data->fout && !fclose(data->fout))
 		data->outpipe[0] = -1;
