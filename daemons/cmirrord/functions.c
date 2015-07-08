@@ -32,12 +32,13 @@
 #define LOG_OFFSET 2
 
 #define RESYNC_HISTORY 50
+#define RESYNC_BUFLEN 128
 //static char resync_history[RESYNC_HISTORY][128];
 //static int idx = 0;
 #define LOG_SPRINT(_lc, f, arg...) do {					\
 		lc->idx++;						\
 		lc->idx = lc->idx % RESYNC_HISTORY;			\
-		sprintf(lc->resync_history[lc->idx], f, ## arg);	\
+		snprintf(lc->resync_history[lc->idx], RESYNC_BUFLEN, f, ## arg); \
 	} while (0)
 
 struct log_header {
@@ -88,7 +89,7 @@ struct log_c {
 	size_t disk_size;       /* size of disk_buffer in bytes */
 	void *disk_buffer;      /* aligned memory for O_DIRECT */
 	int idx;
-	char resync_history[RESYNC_HISTORY][128];
+	char resync_history[RESYNC_HISTORY][RESYNC_BUFLEN];
 };
 
 struct mark_entry {
