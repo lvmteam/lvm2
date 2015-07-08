@@ -454,7 +454,7 @@ static int _lvmpolld_init_poll_vg(struct cmd_context *cmd, const char *vgname,
 		if (!id.display_name && !lpdp->parms->aborting)
 			continue;
 
-		if (!lv->lvid.s) {
+		if (!*lv->lvid.s) {
 			log_print_unless_silent("Missing LV uuid within: %s/%s", id.vg_name, id.lv_name);
 			continue;
 		}
