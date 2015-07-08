@@ -141,7 +141,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct volume_group *vg;
 	const char *vg_name;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	int ret = ECMD_FAILED;
 	int fixed = 1;
 	int repairing = arg_count(cmd, removemissing_ARG);

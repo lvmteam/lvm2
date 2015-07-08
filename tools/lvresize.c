@@ -169,7 +169,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct volume_group *vg;
 	struct dm_list *pvh = NULL;
 	struct logical_volume *lv;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	int r = ECMD_FAILED;
 
 	if (!_lvresize_params(cmd, argc, argv, &lp))

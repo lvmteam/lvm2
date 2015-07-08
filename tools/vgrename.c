@@ -68,7 +68,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	const char *vgid = NULL, *vg_name, *vg_name_old;
 	char old_path[NAME_LEN], new_path[NAME_LEN];
 	struct volume_group *vg = NULL;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	int lock_vg_old_first = 1;
 
 	vg_name_old = skip_dev_dir(cmd, old_vg_path, NULL);

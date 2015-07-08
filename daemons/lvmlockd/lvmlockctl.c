@@ -270,6 +270,7 @@ static void format_info_line(char *line)
 
 	} else if (!strncmp(line, "info=r_action ", strlen("info=r_action "))) {
 		/* will use info from previous r */
+		/* FIXME: r_name and r_type uninitialized here??? */
 		format_info_r_action(line, r_name, r_type);
 	} else {
 		printf("UN %s\n", line);

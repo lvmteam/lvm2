@@ -1453,7 +1453,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
 	struct volume_group *vg;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
 		stack;

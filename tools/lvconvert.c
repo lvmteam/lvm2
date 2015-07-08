@@ -3314,7 +3314,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 	struct volume_group *vg;
 	int ret = ECMD_FAILED;
 	int saved_ignore_suspended_devices = ignore_suspended_devices();
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 
 	if (arg_count(cmd, repair_ARG)) {
 		init_ignore_suspended_devices(1);

@@ -1889,7 +1889,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 	struct vgnameid_list *vgnl;
 	const char *vg_name;
 	const char *vg_uuid;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	int selected;
 	int whole_selected = 0;
 	int ret_max = ECMD_PROCESSED;
@@ -2341,7 +2341,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 	struct dm_str_list *sl;
 	struct dm_list *tags_arg;
 	struct dm_list lvnames;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	const char *vg_name;
 	const char *vg_uuid;
 	const char *vgn;
@@ -2873,7 +2873,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 	struct vgnameid_list *vgnl;
 	const char *vg_name;
 	const char *vg_uuid;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	int skip;

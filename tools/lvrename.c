@@ -27,7 +27,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *st;
 	struct volume_group *vg;
 	struct lv_list *lvl;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	int r = ECMD_FAILED;
 
 	if (argc == 3) {

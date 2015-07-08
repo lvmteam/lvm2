@@ -600,7 +600,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	struct dm_list *lvs_changed;
 	struct physical_volume *pv;
 	struct logical_volume *lv_mirr;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 	unsigned flags = PVMOVE_FIRST_TIME;
 	unsigned exclusive;
 	int r = ECMD_FAILED;
@@ -726,7 +726,7 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 	struct logical_volume *lv;
 	struct physical_volume *pv;
 	struct volume_group *vg;
-	uint32_t lockd_state;
+	uint32_t lockd_state = 0;
 
 	if (!pv_name) {
 		log_error(INTERNAL_ERROR "Invalid PV name parameter.");

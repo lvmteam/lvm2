@@ -2911,7 +2911,7 @@ static void _get_final_time(time_range_t range, struct tm *tm,
 static int _parse_formatted_date_time(char *str, struct time_value *tval)
 {
 	time_range_t range = RANGE_NONE;
-	struct tm tm;
+	struct tm tm = {0};
 	int gmt_offset;
 	int tz_supplied;
 
