@@ -101,10 +101,11 @@ void init_log_file(const char *log_file, int append)
 				append = 1; /* force */
 			}
 		}
+
+		if (st && fclose(st))
+			log_sys_debug("fclose", statfile);
 	}
 
-	if (st && fclose(st))
-		log_sys_debug("fclose", statfile);
 no_epoch:
 	if (!(_log_file = fopen(log_file, append ? "a" : "w"))) {
 		log_sys_error("fopen", log_file);
