@@ -873,8 +873,6 @@ do_start:
 
 static int _vgchange_lock_stop(struct cmd_context *cmd, struct volume_group *vg)
 {
-	/* Disable the unlock in toollib because it's pointless after the stop. */
-	cmd->lockd_vg_disable = 1;
 	return lockd_stop_vg(cmd, vg);
 }
 
