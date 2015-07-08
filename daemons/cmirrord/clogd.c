@@ -209,6 +209,16 @@ static void daemonize(void)
 	}
 
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
+}
+
+/*
+ * init_all
+ *
+ * Initialize modules.  Exit on failure.
+ */
+static void init_all(void)
+{
+	int r;
 
 	(void) dm_prepare_selinux_context(CMIRRORD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(CMIRRORD_PIDFILE) == 0)
@@ -227,16 +237,6 @@ static void daemonize(void)
 	signal(SIGUSR2, &sig_handler);
 	sigemptyset(&signal_mask);
 	signal_received = 0;
-}
-
-/*
- * init_all
- *
- * Initialize modules.  Exit on failure.
- */
-static void init_all(void)
-{
-	int r;
 
 	if ((r = init_local()) ||
 	    (r = init_cluster())) {
