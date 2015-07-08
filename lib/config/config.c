@@ -666,14 +666,18 @@ static void _log_type_error(const char *path, cfg_def_type_t actual,
 					     actual_type_name, expected_type_name);
 }
 
-static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
+static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
+						     struct dm_config_tree *cft,
 						     const cfg_def_item_t *def,
 						     uint32_t format_flags)
 {
+	const char *def_enc_value;
 	char *enc_value, *token, *p, *r;
 	struct dm_config_value *array = NULL, *v = NULL, *oldv = NULL;
 
-	if (!def->default_value.v_CFG_TYPE_STRING) {
+	def_enc_value = cfg_def_get_default_value(cmd, def, CFG_TYPE_ARRAY, NULL);
+
+	if (!def_enc_value) {
 		if (!(array = dm_config_create_value(cft))) {
 			log_error("Failed to create default empty array for %s.", def->name);
 			return NULL;
@@ -683,7 +687,7 @@ static struct dm_config_value *_get_def_array_values(struct dm_config_tree *cft,
 		return array;
 	}
 
-	if (!(p = token = enc_value = dm_strdup(def->default_value.v_CFG_TYPE_STRING))) {
+	if (!(p = token = enc_value = dm_strdup(def_enc_value))) {
 		log_error("_get_def_array_values: dm_strdup failed");
 		return NULL;
 	}
@@ -844,7 +848,7 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 	}
 
 	if (!v_def && (def->type & CFG_TYPE_ARRAY)) {
-		if (!(v_def_array = v_def_iter = _get_def_array_values(handle->cft, def, 0)))
+		if (!(v_def_array = v_def_iter = _get_def_array_values(handle->cmd, handle->cft, def, 0)))
 			return_0;
 		do {
 			/* iterate over each element of the array and check its value */
@@ -1360,6 +1364,51 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 	return b;
 }
 
+static struct dm_config_node *_get_array_def_node(struct cmd_context *cmd,
+						  cfg_def_item_t *def,
+						  struct profile *profile)
+{
+	struct dm_config_node *cn;
+
+	if (def->flags & CFG_DEFAULT_UNDEFINED)
+		return NULL;
+
+	if (!(cn = dm_config_create_node(cmd->cft, def->name))) {
+		log_error("Failed to create default array node for %s.", def->name);
+		return NULL;
+	}
+
+	if (!(cn->v = _get_def_array_values(cmd, cmd->cft, def, 0))) {
+		dm_pool_free(cmd->cft->mem, cn);
+		return_NULL;
+	}
+
+	return cn;
+}
+
+struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, struct profile *profile)
+{
+	cfg_def_item_t *item = cfg_def_get_item_p(id);
+	char path[CFG_PATH_MAX_LEN];
+	int profile_applied;
+	struct dm_config_node *cn;
+
+	profile_applied = _apply_local_profile(cmd, profile);
+	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
+
+	if (!(item->type & CFG_TYPE_ARRAY))
+		log_error(INTERNAL_ERROR "%s cfg tree element not declared as array.", path);
+
+	if (_config_disabled(cmd, item, path) ||
+	    !(cn = dm_config_find_node(cmd->cft->root, path)))
+		cn = _get_array_def_node(cmd, item, profile);
+
+	if (profile_applied)
+		remove_config_tree_by_source(cmd, profile->source);
+
+	return cn;
+}
+
 /* Insert cn2 after cn1 */
 static void _insert_config_node(struct dm_config_node **cn1,
 				struct dm_config_node *cn2)
@@ -1826,7 +1875,7 @@ static struct dm_config_node *_add_def_node(struct dm_config_tree *cft,
 		if (spec->withspaces)
 			format_flags |= DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES;
 		format_flags |= DM_CONFIG_VALUE_FMT_COMMON_ARRAY;
-		cn->v = _get_def_array_values(cft, def, format_flags);
+		cn->v = _get_def_array_values(spec->cmd, cft, def, format_flags);
 	}
 
 	cn->child = NULL;

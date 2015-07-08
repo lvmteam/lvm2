@@ -1235,6 +1235,8 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		cmd->lvmetad_filter = NULL;
 	}
 
+	cn = find_config_tree_array(cmd, devices_filter_CFG, NULL);
+
 	/* filter component 1 */
 	if ((cn = find_config_tree_node(cmd, devices_filter_CFG, NULL))) {
 		if (!(filter_components[1] = regex_filter_create(cn->v)))

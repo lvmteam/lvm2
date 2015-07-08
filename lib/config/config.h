@@ -272,6 +272,7 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *profile);
 float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *profile);
 int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profile);
+struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, struct profile *profile);
 
 /*
  * Functions for configuration settings for which the default
