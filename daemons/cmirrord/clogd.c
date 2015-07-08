@@ -15,6 +15,7 @@
 #include "link_mon.h"
 #include "local.h"
 
+#include <getopt.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -32,14 +33,49 @@ static void daemonize(void);
 static void init_all(void);
 static void cleanup_all(void);
 
-int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
+static void usage (FILE *dest)
 {
-	daemonize();
+	fprintf (dest, "Usage: cmirrord [options]\n"
+		 "   -f, --foreground    stay in the foreground, log to the terminal\n"
+		 "   -h, --help          print this help\n");
+}
+
+int main(int argc, char *argv[])
+{
+	int foreground_mode = 0;
+	struct option longopts[] = {
+		{ "foreground", no_argument, NULL, 'f' },
+		{ "help"      , no_argument, NULL, 'h' },
+		{ 0, 0, 0, 0 }
+	};
+	int opt;
+
+	while ((opt = getopt_long (argc, argv, "fh", longopts, NULL)) != -1) {
+		switch (opt) {
+		case 'f':
+			foreground_mode = 1;
+			break;
+		case 'h':
+			usage (stdout);
+			exit (0);
+		default:
+			usage (stderr);
+			exit (2);
+		}
+	}
+	if (optind < argc) {
+		usage (stderr);
+		exit (2);
+	}
+
+	if (!foreground_mode)
+		daemonize();
 
 	init_all();
 
 	/* Parent can now exit, we're ready to handle requests */
-	kill(getppid(), SIGTERM);
+	if (!foreground_mode)
+		kill(getppid(), SIGTERM);
 
 	LOG_PRINT("Starting cmirrord:");
 	LOG_PRINT(" Built: "__DATE__" "__TIME__"\n");
