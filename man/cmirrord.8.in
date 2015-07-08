@@ -3,7 +3,7 @@
 cmirrord \(em cluster mirror log daemon
 
 .SH SYNOPSIS
-.B cmirrord
+\fBcmirrord\fR [\fB\-f\fR] [\fB\-h\fR]
 
 .SH DESCRIPTION
 cmirrord is the daemon that tracks mirror log information in a cluster.
@@ -23,6 +23,12 @@ Once started, cmirrord will run until it is shutdown via INT signal.  If
 there are still active cluster mirrors, however, the signal will be
 ignored.  Active cluster mirrors should be shutdown before stopping the
 cluster mirror log daemon.
+
+.SH OPTIONS
+.IP "\fB\-f\fR, \fB\-\-foreground\fR" 4
+Do not fork and log to the terminal.
+.IP "\fB\-h\fR, \fB\-\-help\fR" 4
+Print usage.
 
 .SH SEE ALSO
 .BR lvm (8)
