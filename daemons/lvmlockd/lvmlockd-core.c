@@ -920,9 +920,9 @@ static int lm_unlock(struct lockspace *ls, struct resource *r, struct action *ac
 	int rv;
 
 	if (ls->lm_type == LD_LM_DLM)
-		return lm_unlock_dlm(ls, r, r_version, lmu_flags);
+		rv = lm_unlock_dlm(ls, r, r_version, lmu_flags);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		return lm_unlock_sanlock(ls, r, r_version, lmu_flags);
+		rv = lm_unlock_sanlock(ls, r, r_version, lmu_flags);
 	else
 		return -1;
 
