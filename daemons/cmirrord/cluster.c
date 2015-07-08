@@ -104,10 +104,11 @@ static SaVersionT version = { 'B', 1, 1 };
 #endif
 
 #define DEBUGGING_HISTORY 100
+#define DEBUGGING_BUFLEN 128
 #define LOG_SPRINT(cc, f, arg...) do {				\
 		cc->idx++;					\
 		cc->idx = cc->idx % DEBUGGING_HISTORY;		\
-		sprintf(cc->debugging[cc->idx], f, ## arg);	\
+		snprintf(cc->debugging[cc->idx], DEBUGGING_BUFLEN, f, ## arg); \
 	} while (0)
 
 static int log_resp_rec = 0;
@@ -150,7 +151,7 @@ struct clog_cpg {
 	uint32_t checkpoint_requesters[MAX_CHECKPOINT_REQUESTERS];
 	struct checkpoint_data *checkpoint_list;
 	int idx;
-	char debugging[DEBUGGING_HISTORY][128];
+	char debugging[DEBUGGING_HISTORY][DEBUGGING_BUFLEN];
 };
 
 static struct dm_list clog_cpg_list;
