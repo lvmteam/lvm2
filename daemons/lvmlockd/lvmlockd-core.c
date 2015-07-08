@@ -624,6 +624,7 @@ fail:
 static int add_pollfd(int fd)
 {
 	int i, new_size;
+	struct pollfd *tmp_pollfd;
 
 	pthread_mutex_lock(&pollfd_mutex);
 	for (i = 0; i < pollfd_size; i++) {
@@ -643,11 +644,12 @@ static int add_pollfd(int fd)
 
 	new_size = pollfd_size + ADD_POLL_SIZE;
 
-	pollfd = realloc(pollfd, new_size * sizeof(struct pollfd));
-	if (!pollfd) {
+	tmp_pollfd = realloc(pollfd, new_size * sizeof(struct pollfd));
+	if (!tmp_pollfd) {
 		log_error("can't alloc new size %d for pollfd", new_size);
 		return -ENOMEM;
 	}
+	pollfd = tmp_pollfd;
 
 	for (i = pollfd_size; i < new_size; i++) {
 		pollfd[i].fd = POLL_FD_UNUSED;
@@ -790,7 +792,7 @@ int last_string_from_args(char *args_in, char *last)
 
 int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsigned int *patch)
 {
-	char version[MAX_ARGS];
+	char version[MAX_ARGS+1];
 	char *major_str, *minor_str, *patch_str;
 	char *n, *d1, *d2;
 
@@ -5606,16 +5608,16 @@ static void usage(char *prog, FILE *file)
 
 int main(int argc, char *argv[])
 {
-	daemon_state ds;
-
-	ds.daemon_main = main_loop;
-	ds.daemon_init = NULL;
-	ds.daemon_fini = NULL;
-	ds.pidfile = getenv("LVM_LVMLOCKD_PIDFILE");
-	ds.socket_path = getenv("LVM_LVMLOCKD_SOCKET");
-	ds.protocol = lvmlockd_protocol;
-	ds.protocol_version = lvmlockd_protocol_version;
-	ds.name = "lvmlockd";
+	daemon_state ds = {
+		.daemon_main = main_loop,
+		.daemon_init = NULL,
+		.daemon_fini = NULL,
+		.pidfile = getenv("LVM_LVMLOCKD_PIDFILE"),
+		.socket_path = getenv("LVM_LVMLOCKD_SOCKET"),
+		.protocol = lvmlockd_protocol,
+		.protocol_version = lvmlockd_protocol_version,
+		.name = "lvmlockd",
+	};
 
 	static struct option long_options[] = {
 		{"help",            no_argument,       0, 'h' },
