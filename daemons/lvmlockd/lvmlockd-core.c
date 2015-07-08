@@ -1850,10 +1850,16 @@ static int clear_locks(struct lockspace *ls, int free_vg)
 		list_for_each_entry_safe(lk, lk_safe, &r->locks, list) {
 			lk_count++;
 
+			/*
+			 * Stopping a lockspace shouldn't happen with LV locks
+			 * still held, but it will be stopped with GL and VG
+			 * locks held.
+			 */
+
 			if (lk->flags & LD_LF_PERSISTENT)
 				log_error("S %s R %s clear lock persistent", ls->name, r->name);
 			else
-				log_error("S %s R %s clear lock client %d", ls->name, r->name, lk->client_id);
+				log_debug("S %s R %s clear lock mode %s client %d", ls->name, r->name, mode_str(lk->mode), lk->client_id);
 
 			if (lk->version > lk_version)
 				lk_version = lk->version;
@@ -2356,17 +2362,14 @@ static int vg_ls_name(const char *vg_name, char *ls_name)
 
 /* FIXME: add mutex for gl_lsname_ ? */
 
-static int gl_ls_name(char *ls_name)
+static void gl_ls_name(char *ls_name)
 {
 	if (gl_use_dlm)
 		memcpy(ls_name, gl_lsname_dlm, MAX_NAME);
 	else if (gl_use_sanlock)
 		memcpy(ls_name, gl_lsname_sanlock, MAX_NAME);
-	else {
-		log_error("gl_ls_name: global lockspace type unknown");
-		return -1;
-	}
-	return 0;
+	else
+		memset(ls_name, 0, MAX_NAME);
 }
 
 /*
@@ -3482,7 +3485,8 @@ static int add_lock_action(struct action *act)
 		int ls_inactive = 0;
 		int ls_create_fail = 0;
 
-		ls = find_lockspace_inactive(ls_name);
+		if (ls_name[0])
+			ls = find_lockspace_inactive(ls_name);
 		if (ls) {
 			ls_inactive = 1;
 			ls_create_fail = ls->create_fail;
@@ -3496,7 +3500,7 @@ static int add_lock_action(struct action *act)
 
 		} else if (act->flags & LD_AF_SEARCH_LS) {
 			/* fail if we've already tried searching for the ls */
-			log_error("lockspace search repeated %s", ls_name);
+			log_debug("lockspace search repeated %s", ls_name);
 			return -ENOLS;
 
 		} else if (act->op == LD_OP_LOCK && act->rt == LD_RT_GL && gl_use_sanlock) {
@@ -3528,7 +3532,7 @@ static int add_lock_action(struct action *act)
 			return -ENOLS;
 
 		} else {
-			log_error("lockspace not found %s", ls_name);
+			log_debug("lockspace not found %s", ls_name);
 			return -ENOLS;
 		}
 	}
