@@ -106,6 +106,7 @@ static void _explain_error_codes(int retcode)
 	/* lvmpolld specific return codes */
 	case LVMPD_RET_DUP_FAILED:
 		log_error("lvmpolld failed to duplicate file descriptors.");
+		break;
 	case LVMPD_RET_EXC_FAILED:
 		log_error("lvmpolld failed to exec() lvm binary.");
 		break;
