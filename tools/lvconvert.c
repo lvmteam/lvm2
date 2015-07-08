@@ -2299,7 +2299,7 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 	int ret = 0, status;
 	int args = 0;
 	const char *argv[19]; /* Max supported 10 args */
-	char *split, *dm_name, *trans_id_str;
+	char *dm_name, *trans_id_str;
 	char meta_path[PATH_MAX];
 	char pms_path[PATH_MAX];
 	uint64_t trans_id;
@@ -2339,22 +2339,16 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if ((cn = find_config_tree_node(cmd, global_thin_repair_options_CFG, NULL))) {
-		for (cv = cn->v; cv && args < 16; cv = cv->next) {
-			if (cv->type != DM_CFG_STRING) {
-				log_error("Invalid string in config file: "
-					  "global/thin_repair_options");
-				return 0;
-			}
-			argv[++args] = cv->v.str;
-		}
-	} else {
-		/* Use default options (no support for options with spaces) */
-		if (!(split = dm_pool_strdup(cmd->mem, DEFAULT_THIN_REPAIR_OPTIONS))) {
-			log_error("Failed to duplicate thin repair string.");
+	if (!(cn = find_config_tree_array(cmd, global_thin_repair_options_CFG, NULL)))
+		return_0;
+
+	for (cv = cn->v; cv && args < 16; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "global/thin_repair_options");
 			return 0;
 		}
-		args = dm_split_words(split, 16, 0, (char**) argv + 1);
+		argv[++args] = cv->v.str;
 	}
 
 	if (args == 10) {

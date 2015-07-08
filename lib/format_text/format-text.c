@@ -2491,7 +2491,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		goto bad;
 	}
 
-	if ((cn = find_config_tree_node(cmd, metadata_dirs_CFG, NULL))) {
+	if ((cn = find_config_tree_array(cmd, metadata_dirs_CFG, NULL))) {
 		for (cv = cn->v; cv; cv = cv->next) {
 			if (cv->type != DM_CFG_STRING) {
 				log_error("Invalid string in config file: "

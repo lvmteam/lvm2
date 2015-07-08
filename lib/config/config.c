@@ -1386,12 +1386,12 @@ static struct dm_config_node *_get_array_def_node(struct cmd_context *cmd,
 	return cn;
 }
 
-struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, struct profile *profile)
+const struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
 	int profile_applied;
-	struct dm_config_node *cn;
+	const struct dm_config_node *cn;
 
 	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
@@ -1400,7 +1400,7 @@ struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, s
 		log_error(INTERNAL_ERROR "%s cfg tree element not declared as array.", path);
 
 	if (_config_disabled(cmd, item, path) ||
-	    !(cn = dm_config_find_node(cmd->cft->root, path)))
+	    !(cn = find_config_tree_node(cmd, id, profile)))
 		cn = _get_array_def_node(cmd, item, profile);
 
 	if (profile_applied)

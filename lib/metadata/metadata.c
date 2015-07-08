@@ -4602,7 +4602,7 @@ static int _allow_system_id(struct cmd_context *cmd, const char *system_id)
 	const struct dm_config_value *cv;
 	const char *str;
 
-	if (!(cn = find_config_tree_node(cmd, local_extra_system_ids_CFG, NULL)))
+	if (!(cn = find_config_tree_array(cmd, local_extra_system_ids_CFG, NULL)))
 		return 0;
 
 	for (cv = cn->v; cv; cv = cv->next) {

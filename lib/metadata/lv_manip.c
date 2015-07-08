@@ -3255,7 +3255,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	ah->parallel_areas = parallel_areas;
 
-	if ((ah->cling_tag_list_cn = find_config_tree_node(cmd, allocation_cling_tag_list_CFG, NULL)))
+	if ((ah->cling_tag_list_cn = find_config_tree_array(cmd, allocation_cling_tag_list_CFG, NULL)))
 		(void) _validate_tag_list(ah->cling_tag_list_cn);
 
 	ah->maximise_cling = find_config_tree_bool(cmd, allocation_maximise_cling_CFG, NULL);

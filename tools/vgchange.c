@@ -818,7 +818,7 @@ static int _passes_lock_start_filter(struct cmd_context *cmd,
 
 	/* undefined list means no restrictions, all vg names pass */
 
-	cn = find_config_tree_node(cmd, cfg_id, NULL);
+	cn = find_config_tree_array(cmd, cfg_id, NULL);
 	if (!cn)
 		return 1;
 

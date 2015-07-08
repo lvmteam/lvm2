@@ -1918,7 +1918,6 @@ struct pool_cb_data {
 	int skip_zero;  /* to skip zeroed device header (check first 64B) */
 	int exec;       /* which binary to call */
 	int opts;
-	const char *defaults;
 	const char *global;
 };
 
@@ -1926,7 +1925,6 @@ static int _pool_callback(struct dm_tree_node *node,
 			  dm_node_callback_t type, void *cb_data)
 {
 	int ret, status, fd;
-	char *split;
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	const struct pool_cb_data *data = cb_data;
@@ -1941,23 +1939,17 @@ static int _pool_callback(struct dm_tree_node *node,
 	if (!*argv[0])
 		return 1; /* Checking disabled */
 
-	if ((cn = find_config_tree_node(mlv->vg->cmd, data->opts, NULL))) {
-		for (cv = cn->v; cv && args < 16; cv = cv->next) {
-			if (cv->type != DM_CFG_STRING) {
-				log_error("Invalid string in config file: "
-					  "global/%s_check_options",
-					  data->global);
-				return 0;
-			}
-			argv[++args] = cv->v.str;
-		}
-	} else {
-		/* Use default options (no support for options with spaces) */
-		if (!(split = dm_pool_strdup(data->dm->mem, data->defaults))) {
-			log_error("Failed to duplicate defaults.");
+	if (!(cn = find_config_tree_array(mlv->vg->cmd, data->opts, NULL)))
+		return_0;
+
+	for (cv = cn->v; cv && args < 16; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "global/%s_check_options",
+				  data->global);
 			return 0;
 		}
-		args = dm_split_words(split, 16, 0, (char**) argv + 1);
+		argv[++args] = cv->v.str;
 	}
 
 	if (args == 16) {
@@ -2048,14 +2040,12 @@ static int _pool_register_callback(struct dev_manager *dm,
 		data->skip_zero = 1;
 		data->exec = global_thin_check_executable_CFG;
 		data->opts = global_thin_check_options_CFG;
-		data->defaults = DEFAULT_THIN_CHECK_OPTION1 " " DEFAULT_THIN_CHECK_OPTION2;
 		data->global = "thin";
 	} else if (lv_is_cache(lv)) { /* cache pool */
 		data->pool_lv = first_seg(lv)->pool_lv;
 		data->skip_zero = dm->activation;
 		data->exec = global_cache_check_executable_CFG;
 		data->opts = global_cache_check_options_CFG;
-		data->defaults = DEFAULT_CACHE_CHECK_OPTION1 " " DEFAULT_CACHE_CHECK_OPTION2;
 		data->global = "cache";
 	} else {
 		log_error(INTERNAL_ERROR "Registering unsupported pool callback.");
