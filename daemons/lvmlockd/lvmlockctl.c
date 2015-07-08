@@ -135,7 +135,7 @@ static void format_info_ls_action(char *line)
 
 	find_client_info(client_id, &pid, cl_name);
 
-	printf("OP %s pid %u (%s)", op, pid, cl_name);
+	printf("OP %s pid %u (%s)\n", op, pid, cl_name);
 }
 
 static void format_info_r(char *line, char *r_name_out, char *r_type_out)
@@ -242,13 +242,10 @@ static void format_info_r_action(char *line, char *r_name, char *r_type)
 	}
 }
 
-static void format_info_line(char *line)
+static void format_info_line(char *line, char *r_name, char *r_type)
 {
-	char r_name[MAX_NAME+1];
-	char r_type[MAX_NAME+1];
-
 	if (!strncmp(line, "info=structs ", strlen("info=structs "))) {
-		printf("%s\n", line);
+		printf("%s", line);
 
 	} else if (!strncmp(line, "info=client ", strlen("info=client "))) {
 		save_client_info(line);
@@ -260,8 +257,13 @@ static void format_info_line(char *line)
 		format_info_ls_action(line);
 
 	} else if (!strncmp(line, "info=r ", strlen("info=r "))) {
-		memset(r_name, 0, sizeof(r_name));
-		memset(r_type, 0, sizeof(r_type));
+		/*
+		 * r_name/r_type are reset when a new resource is found.
+		 * They are reused for the lock and action lines that
+		 * follow a resource line.
+		 */
+		memset(r_name, 0, MAX_NAME+1);
+		memset(r_type, 0, MAX_NAME+1);
 		format_info_r(line, r_name, r_type);
 
 	} else if (!strncmp(line, "info=lk ", strlen("info=lk "))) {
@@ -270,7 +272,6 @@ static void format_info_line(char *line)
 
 	} else if (!strncmp(line, "info=r_action ", strlen("info=r_action "))) {
 		/* will use info from previous r */
-		/* FIXME: r_name and r_type uninitialized here??? */
 		format_info_r_action(line, r_name, r_type);
 	} else {
 		printf("UN %s\n", line);
@@ -280,6 +281,8 @@ static void format_info_line(char *line)
 static void format_info(void)
 {
 	char line[MAX_LINE];
+	char r_name[MAX_NAME+1];
+	char r_type[MAX_NAME+1];
 	int i, j;
 
 	j = 0;
@@ -289,7 +292,7 @@ static void format_info(void)
 		line[j++] = dump_buf[i];
 
 		if ((line[j-1] == '\n') || (line[j-1] == '\0')) {
-			format_info_line(line);
+			format_info_line(line, r_name, r_type);
 			j = 0;
 			memset(line, 0, sizeof(line));
 		}
