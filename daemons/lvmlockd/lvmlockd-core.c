@@ -5337,8 +5337,11 @@ static void process_listener(int poll_fd)
 	if (fd < 0)
 		return;
 
-	if (!(cl = alloc_client()))
+	if (!(cl = alloc_client())) {
+		if (!close(fd))
+			log_error("failed to close lockd poll fd");
 		return;
+	}
 
 	pi = add_pollfd(fd);
 	if (pi < 0) {

@@ -21,15 +21,15 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-static int quit;
-static int info;
-static int dump;
-static int wait_opt;
-static int force_opt;
-static int gl_enable;
-static int gl_disable;
-static int stop_lockspaces;
-static char *able_vg_name;
+static int quit = 0;
+static int info = 0;
+static int dump = 0;
+static int wait_opt = 0;
+static int force_opt = 0;
+static int gl_enable = 0;
+static int gl_disable = 0;
+static int stop_lockspaces = 0;
+static char *able_vg_name = NULL;
 
 #define DUMP_SOCKET_NAME "lvmlockd-dump.sock"
 #define DUMP_BUF_SIZE (1024 * 1024)
@@ -381,8 +381,11 @@ static int setup_dump_socket(void)
 	dump_addrlen = sizeof(sa_family_t) + strlen(dump_addr.sun_path+1) + 1;
 
 	rv = bind(s, (struct sockaddr *) &dump_addr, dump_addrlen);
-	if (rv < 0)
+	if (rv < 0) {
+		if (!close(s))
+			log_error("failed to close dump socket");
 		return rv;
+	}
 
 	return s;
 }
