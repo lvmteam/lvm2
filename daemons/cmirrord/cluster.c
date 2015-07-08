@@ -1294,7 +1294,9 @@ static void cpg_join_callback(struct clog_cpg *match,
 	uint32_t my_pid = (uint32_t)getpid();
 	uint32_t lowest = match->lowest_id;
 	struct clog_request *rq;
-	char dbuf[32] = { 0 };
+	char dbuf[64] = { 0 };
+	char *dbuf_p = dbuf;
+	size_t dbuf_rem = sizeof dbuf;
 
 	/* Assign my_cluster_id */
 	if ((my_cluster_id == 0xDEAD) && (joined->pid == my_pid))
@@ -1310,9 +1312,17 @@ static void cpg_join_callback(struct clog_cpg *match,
 	if (joined->nodeid == my_cluster_id)
 		goto out;
 
-	for (i = 0; i < member_list_entries - 1; i++)
-		sprintf(dbuf+strlen(dbuf), "%u-", member_list[i].nodeid);
-	sprintf(dbuf+strlen(dbuf), "(%u)", joined->nodeid);
+	for (i = 0; i < member_list_entries - 1; i++) {
+		int written = snprintf(dbuf_p, dbuf_rem, "%u-", member_list[i].nodeid);
+		if (written < 0) continue; /* impossible */
+		if ((unsigned)written >= dbuf_rem) {
+			dbuf_rem = 0;
+			break;
+		}
+		dbuf_rem -= written;
+		dbuf_p += written;
+	}
+	snprintf(dbuf_p, dbuf_rem, "(%u)", joined->nodeid);
 	LOG_COND(log_checkpoint, "[%s] Joining node, %u needs checkpoint [%s]",
 		 SHORT_UUID(match->name.value), joined->nodeid, dbuf);
 
