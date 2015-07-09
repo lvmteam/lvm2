@@ -208,6 +208,10 @@ struct dm_config_node *make_int_node(struct dm_config_tree *cft,
 	return cn;
 }
 
+/*
+ * FIXME: return 1 even if VA list is empty and return the
+ *        dm_config_node* result as output parameter
+ */
 struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 					   struct dm_config_node *parent,
 					   struct dm_config_node *pre_sib,
