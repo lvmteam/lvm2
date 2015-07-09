@@ -999,7 +999,8 @@ static response pv_gone(lvmetad_state *s, request r)
 
 	DEBUGLOG(s, "pv_gone (updated): %s / %" PRIu64, pvid, device);
 
-	pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid);
+	if (!(pvmeta = dm_hash_lookup(s->pvid_to_pvmeta, pvid)))
+		return reply_unknown("PVID does not exist");
 	vgid = dm_hash_lookup(s->pvid_to_vgid, pvid);
 
 	dm_hash_remove_binary(s->device_to_pvid, &device, sizeof(device));
@@ -1020,9 +1021,6 @@ static response pv_gone(lvmetad_state *s, request r)
 		unlock_vg(s, vgid);
 		dm_free(vgid);
 	}
-
-	if (!pvmeta)
-		return reply_unknown("PVID does not exist");
 
 	if (!alt_device)
 		dm_config_destroy(pvmeta);

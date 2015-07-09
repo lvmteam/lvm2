@@ -2661,8 +2661,7 @@ static int rem_lockspace(struct action *act)
 	}
 	ls->thread_work = 1;
 	ls->thread_stop = 1;
-	if (act)
-		list_add_tail(&act->list, &ls->actions);
+	list_add_tail(&act->list, &ls->actions);
 	pthread_cond_signal(&ls->cond);
 	pthread_mutex_unlock(&ls->mutex);
 	pthread_mutex_unlock(&lockspaces_mutex);
