@@ -4726,7 +4726,10 @@ static int remove_inactive_lvs(struct list_head *vg_lockd)
 		strncpy(namebuf, names->name, MAX_NAME);
 		vgname = namebuf;
 
-		dm_split_lvm_name(NULL, NULL, &vgname, &lvname, &layer);
+		if (!dm_split_lvm_name(NULL, namebuf, &vgname, &lvname, &layer)) {
+			log_error("failed to split dm name %s", namebuf);
+			goto next_dmname;
+		}
 
 		log_debug("adopt remove_inactive dm name %s dm uuid %s vgname %s lvname %s",
 			  names->name, dm_uuid, vgname, lvname);
