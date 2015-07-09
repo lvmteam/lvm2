@@ -647,6 +647,7 @@ static int add_pollfd(int fd)
 	tmp_pollfd = realloc(pollfd, new_size * sizeof(struct pollfd));
 	if (!tmp_pollfd) {
 		log_error("can't alloc new size %d for pollfd", new_size);
+		pthread_mutex_unlock(&pollfd_mutex);
 		return -ENOMEM;
 	}
 	pollfd = tmp_pollfd;
@@ -2994,15 +2995,15 @@ static int work_init_lv(struct action *act)
 {
 	struct lockspace *ls;
 	char ls_name[MAX_NAME+1];
-	char vg_args[MAX_ARGS];
-	char lv_args[MAX_ARGS];
+	char vg_args[MAX_ARGS+1];
+	char lv_args[MAX_ARGS+1];
 	uint64_t free_offset = 0;
 	int lm_type = 0;
 	int rv = 0;
 
 	memset(ls_name, 0, sizeof(ls_name));
-	memset(vg_args, 0, MAX_ARGS);
-	memset(lv_args, 0, MAX_ARGS);
+	memset(vg_args, 0, sizeof(vg_args));
+	memset(lv_args, 0, sizeof(lv_args));
 
 	vg_ls_name(act->vg_name, ls_name);
 
@@ -3543,6 +3544,7 @@ static int add_lock_action(struct action *act)
 		/* should not happen */
 		log_error("S %s add_lock_action bad lm_type %d ls %d",
 			  ls_name, act->lm_type, ls->lm_type);
+		pthread_mutex_unlock(&lockspaces_mutex);
 		return -EINVAL;
 	}
 
@@ -4622,7 +4624,7 @@ static char *get_dm_uuid(char *dm_name)
 	}
 
 	memset(_dm_uuid, 0, sizeof(_dm_uuid));
-	strcpy(_dm_uuid, uuid);
+	strncpy(_dm_uuid, uuid, sizeof(_dm_uuid)-1);
 	dm_task_destroy(dmt);
 	return _dm_uuid;
 

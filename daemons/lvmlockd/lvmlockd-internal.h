@@ -127,8 +127,8 @@ struct action {
 	char vg_name[MAX_NAME+1];
 	char lv_name[MAX_NAME+1];
 	char lv_uuid[MAX_NAME+1];
-	char vg_args[MAX_ARGS];
-	char lv_args[MAX_ARGS];
+	char vg_args[MAX_ARGS+1];
+	char lv_args[MAX_ARGS+1];
 	char vg_sysid[MAX_NAME+1];
 };
 
@@ -145,7 +145,7 @@ struct resource {
 	struct list_head locks;
 	struct list_head actions;
 	struct val_blk *vb;
-	char lv_args[MAX_ARGS];
+	char lv_args[MAX_ARGS+1];
 	char lm_data[0];		/* lock manager specific data */
 };
 
@@ -164,7 +164,7 @@ struct lockspace {
 	char name[MAX_NAME+1];
 	char vg_name[MAX_NAME+1];
 	char vg_uuid[64];
-	char vg_args[MAX_ARGS];		/* lock manager specific args */
+	char vg_args[MAX_ARGS+1];	/* lock manager specific args */
 	char vg_sysid[MAX_NAME+1];
 	int8_t lm_type;			/* lock manager: LM_DLM, LM_SANLOCK */
 	void *lm_data;

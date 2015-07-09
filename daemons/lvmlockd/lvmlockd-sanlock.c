@@ -167,7 +167,7 @@ static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)
 
 static int lock_lv_offset_from_args(char *lv_args, uint64_t *lock_lv_offset)
 {
-	char offset_str[MAX_ARGS];
+	char offset_str[MAX_ARGS+1];
 	int rv;
 
 	memset(offset_str, 0, sizeof(offset_str));
@@ -256,8 +256,8 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	struct sanlk_lockspace ss;
 	struct sanlk_resourced rd;
 	struct sanlk_disk disk;
-	char lock_lv_name[MAX_ARGS];
-	char lock_args_version[MAX_ARGS];
+	char lock_lv_name[MAX_ARGS+1];
+	char lock_args_version[MAX_ARGS+1];
 	const char *gl_name = NULL;
 	uint32_t daemon_version;
 	uint32_t daemon_proto;
@@ -285,7 +285,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	if (strlen(lock_lv_name) + strlen(lock_args_version) + 2 > MAX_ARGS)
 		return -EARGS;
 
-	snprintf(disk.path, SANLK_PATH_LEN, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
+	snprintf(disk.path, SANLK_PATH_LEN-1, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
 
 	log_debug("S %s init_vg_san path %s", ls_name, disk.path);
 
@@ -423,8 +423,8 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 		       char *vg_args, char *lv_args, uint64_t free_offset)
 {
 	struct sanlk_resourced rd;
-	char lock_lv_name[MAX_ARGS];
-	char lock_args_version[MAX_ARGS];
+	char lock_lv_name[MAX_ARGS+1];
+	char lock_args_version[MAX_ARGS+1];
 	uint64_t offset;
 	int align_size;
 	int rv;
@@ -445,7 +445,7 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 
 	strncpy(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
-	snprintf(rd.rs.disks[0].path, SANLK_PATH_LEN, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
+	snprintf(rd.rs.disks[0].path, SANLK_PATH_LEN-1, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
 
 	align_size = sanlock_align(&rd.rs.disks[0]);
 	if (align_size <= 0) {
@@ -529,7 +529,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 	struct sanlk_lockspace ss;
 	struct sanlk_resourced rd;
 	struct sanlk_disk disk;
-	char lock_lv_name[MAX_ARGS];
+	char lock_lv_name[MAX_ARGS+1];
 	uint64_t offset;
 	uint32_t io_timeout;
 	int align_size;
@@ -550,7 +550,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 		return rv;
 	}
 
-	snprintf(disk.path, SANLK_PATH_LEN, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
+	snprintf(disk.path, SANLK_PATH_LEN-1, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
 
 	log_debug("S %s rename_vg_san path %s", ls_name, disk.path);
 
@@ -730,7 +730,7 @@ int lm_ex_disable_gl_sanlock(struct lockspace *ls)
 	strncpy(rd2.rs.name, R_NAME_GL_DISABLED, SANLK_NAME_LEN);
 
 	rd1.rs.num_disks = 1;
-	strncpy(rd1.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN);
+	strncpy(rd1.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 	rd1.rs.disks[0].offset = lms->align_size * GL_LOCK_BEGIN;
 
 	rv = sanlock_acquire(lms->sock, -1, 0, 1, &rs1, NULL);
@@ -788,7 +788,7 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 	strncpy(rd.rs.name, gl_name, SANLK_NAME_LEN);
 
 	rd.rs.num_disks = 1;
-	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN);
+	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 	rd.rs.disks[0].offset = lms->align_size * GL_LOCK_BEGIN;
 
 	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
@@ -827,7 +827,7 @@ static int gl_is_enabled(struct lockspace *ls, struct lm_sanlock *lms)
 	/* leave rs.name empty, it is what we're checking */
 
 	rd.rs.num_disks = 1;
-	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN);
+	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 
 	offset = lms->align_size * GL_LOCK_BEGIN;
 	rd.rs.disks[0].offset = offset;
@@ -885,7 +885,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
 
 	strncpy(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
-	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN);
+	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 
 	offset = lms->align_size * LV_LOCK_BEGIN;
 
@@ -960,7 +960,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 {
 	struct stat st;
 	struct lm_sanlock *lms = NULL;
-	char lock_lv_name[MAX_ARGS];
+	char lock_lv_name[MAX_ARGS+1];
 	char lsname[SANLK_NAME_LEN + 1];
 	char disk_path[SANLK_PATH_LEN];
 	int gl_found;
@@ -983,7 +983,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		goto fail;
 	}
 
-	snprintf(disk_path, SANLK_PATH_LEN, "/dev/mapper/%s-%s",
+	snprintf(disk_path, SANLK_PATH_LEN-1, "/dev/mapper/%s-%s",
 		 ls->vg_name, lock_lv_name);
 
 	/*
@@ -1035,7 +1035,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	memcpy(lms->ss.name, lsname, SANLK_NAME_LEN);
 	lms->ss.host_id_disk.offset = 0;
 	lms->ss.host_id = ls->host_id;
-	strncpy(lms->ss.host_id_disk.path, disk_path, SANLK_PATH_LEN);
+	strncpy(lms->ss.host_id_disk.path, disk_path, SANLK_PATH_LEN-1);
 
 	if (daemon_test) {
 		if (!gl_lsname_sanlock[0]) {

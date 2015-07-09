@@ -112,7 +112,7 @@ static int read_cluster_name(char *clustername)
 		return fd;
 	}
 
-	rv = read(fd, clustername, MAX_ARGS - 1);
+	rv = read(fd, clustername, MAX_ARGS);
 	if (rv < 0) {
 		log_error("read_cluster_name: cluster name read error %d, check dlm_controld", fd);
 		if (close(fd))
@@ -130,8 +130,8 @@ static int read_cluster_name(char *clustername)
 
 int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
 {
-	char clustername[MAX_ARGS];
-	char lock_args_version[MAX_ARGS];
+	char clustername[MAX_ARGS+1];
+	char lock_args_version[MAX_ARGS+1];
 	int rv;
 
 	memset(clustername, 0, sizeof(clustername));
@@ -158,8 +158,8 @@ int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
 
 int lm_prepare_lockspace_dlm(struct lockspace *ls)
 {
-	char sys_clustername[MAX_ARGS];
-	char arg_clustername[MAX_ARGS];
+	char sys_clustername[MAX_ARGS+1];
+	char arg_clustername[MAX_ARGS+1];
 	struct lm_dlm *lmd;
 	int rv;
 
@@ -650,7 +650,7 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 
 int lm_is_running_dlm(void)
 {
-	char sys_clustername[MAX_ARGS];
+	char sys_clustername[MAX_ARGS+1];
 	int rv;
 
 	memset(sys_clustername, 0, sizeof(sys_clustername));
