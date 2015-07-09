@@ -1004,7 +1004,11 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 	dm_pool_free(info->mem, info->ti_list);
 	info->ti_list = NULL;
 
-	dm_snprintf(buf, sizeof(buf), "@%ld:@%ld", t1, t2);
+	if (dm_snprintf(buf, sizeof(buf), "@%ld:@%ld", t1, t2) == -1) {
+		log_error("_translate_time_items: dm_snprintf failed");
+		return 0;
+	}
+
 	if (!(*data_out = dm_pool_strdup(info->mem, buf))) {
 		log_error("_translate_time_items: dm_pool_strdup failed");
 		return 0;

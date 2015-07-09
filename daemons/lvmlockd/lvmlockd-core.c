@@ -4347,7 +4347,9 @@ static void *client_thread_main(void *arg_in)
 						  cl->id, cl->pi, cl->fd);
 					/* assert cl->pi != -1 */
 					/* assert pollfd[pi].fd == FD_IGNORE */
-					close(cl->fd);
+					if (close(cl->fd))
+						log_error("client close %d pi %d fd %d failed",
+							  cl->id, cl->pi, cl->fd);
 					rem_pollfd(cl->pi);
 					cl->pi = -1;
 					cl->fd = -1;
@@ -5534,7 +5536,8 @@ static int main_loop(daemon_state *ds_arg)
 					cl->pi = -1;
 					cl->fd = -1;
 					cl->poll_ignore = 0;
-					close(pollfd[i].fd);
+					if (close(pollfd[i].fd))
+						log_error("close fd %d failed", pollfd[i].fd);
 					pollfd[i].fd = POLL_FD_UNUSED;
 					pollfd[i].events = 0;
 					pollfd[i].revents = 0;
@@ -5559,7 +5562,8 @@ static int main_loop(daemon_state *ds_arg)
 				/* don't think this can happen */
 				log_error("no client for index %d fd %d",
 					  i, pollfd[i].fd);
-				close(pollfd[i].fd);
+				if (close(pollfd[i].fd))
+					log_error("close fd %d failed", pollfd[i].fd);
 				pollfd[i].fd = POLL_FD_UNUSED;
 				pollfd[i].events = 0;
 				pollfd[i].revents = 0;

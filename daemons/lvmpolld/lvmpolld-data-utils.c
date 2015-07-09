@@ -376,16 +376,16 @@ void lvmpolld_thread_data_destroy(void *thread_private)
 		data->errpipe[0] = -1;
 
 	if (data->outpipe[0] >= 0)
-		close(data->outpipe[0]);
+		(void) close(data->outpipe[0]);
 
 	if (data->outpipe[1] >= 0)
-		close(data->outpipe[1]);
+		(void) close(data->outpipe[1]);
 
 	if (data->errpipe[0] >= 0)
-		close(data->errpipe[0]);
+		(void) close(data->errpipe[0]);
 
 	if (data->errpipe[1] >= 0)
-		close(data->errpipe[1]);
+		(void) close(data->errpipe[1]);
 
 	dm_free(data);
 }

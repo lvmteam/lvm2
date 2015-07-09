@@ -443,7 +443,8 @@ static int do_dump(const char *req_name)
 	else
 		format_info();
 out:
-	close(fd);
+	if (close(fd))
+		log_error("failed to close dump socket %d", fd);
 	return rv;
 }
 

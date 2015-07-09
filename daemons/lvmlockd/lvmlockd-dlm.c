@@ -96,6 +96,7 @@ static int check_args_version(char *vg_args)
 
 static int read_cluster_name(char *clustername)
 {
+	static const char close_error_msg[] = "read_cluster_name: close_error %d";
 	char *n;
 	int fd;
 	int rv;
@@ -114,14 +115,16 @@ static int read_cluster_name(char *clustername)
 	rv = read(fd, clustername, MAX_ARGS - 1);
 	if (rv < 0) {
 		log_error("read_cluster_name: cluster name read error %d, check dlm_controld", fd);
-		close(fd);
+		if (close(fd))
+			log_error(close_error_msg, fd);
 		return rv;
 	}
 
 	n = strstr(clustername, "\n");
 	if (n)
 		*n = '\0';
-	close(fd);
+	if (close(fd))
+		log_error(close_error_msg, fd);
 	return 0;
 }
 
@@ -630,7 +633,8 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 			continue;
 
 		if (!(ls = alloc_lockspace())) {
-			closedir(ls_dir);
+			if (closedir(ls_dir))
+				log_error("lm_get_lockspace_dlm: closedir failed");
 			return -ENOMEM;
 		}
 

@@ -154,16 +154,23 @@ static daemon_reply _lvmetad_send(const char *id, ...)
 	unsigned total_usecs_waited = 0;
 	unsigned max_remaining_sleep_times = 1;
 	unsigned wait_usecs;
+	int r;
 
 retry:
 	req = daemon_request_make(id);
 
-	if (_lvmetad_token)
-		daemon_request_extend(req, "token = %s", _lvmetad_token, NULL);
+	if (_lvmetad_token && !daemon_request_extend(req, "token = %s", _lvmetad_token, NULL)) {
+		repl.error = ENOMEM;
+		return repl;
+	}
 
 	va_start(ap, id);
-	daemon_request_extend_v(req, ap);
+	r = daemon_request_extend_v(req, ap);
 	va_end(ap);
+	if (!r) {
+		repl.error = ENOMEM;
+		return repl;
+	}
 
 	repl = daemon_send(_lvmetad, req);
 
@@ -1052,7 +1059,10 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 		if (!pvl->pv->dev)
 			continue;
 
-		info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0);
+		if (!(info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0))) {
+			log_error("Failed to find cached info for PV %s.", pv_dev_name(pvl->pv));
+			return NULL;
+		}
 
 		baton.vg = NULL;
 		baton.fid = lvmcache_fmt(info)->ops->create_instance(lvmcache_fmt(info), &fic);
@@ -1351,7 +1361,8 @@ static int _lvmetad_get_pv_cache_list(struct cmd_context *cmd, struct dm_list *p
 /*
  * Opening the device RDWR should trigger a udev db update.
  * FIXME: is there a better way to update the udev db than
- * doing an open/close of the device?
+ * doing an open/close of the device? - For example writing
+ * "change" to /sys/block/<device>/uevent?
  */
 static void _update_pv_in_udev(struct cmd_context *cmd, dev_t devt)
 {
@@ -1365,9 +1376,13 @@ static void _update_pv_in_udev(struct cmd_context *cmd, dev_t devt)
 		return;
 	}
 
-	if (!dev_open(dev))
+	if (!dev_open(dev)) {
+		stack;
 		return;
-	dev_close(dev);
+	}
+
+	if (!dev_close(dev))
+		stack;
 }
 
 /*

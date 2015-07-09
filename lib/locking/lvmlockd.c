@@ -898,6 +898,9 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
 	log_debug("lockd start VG %s lock_type %s",
 		  vg->name, vg->lock_type ? vg->lock_type : "empty");
 
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
+		return_0;
+
 	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
 		/*
 		 * This is the big difference between starting
@@ -911,8 +914,6 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 		host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	}
-
-	id_write_format(&vg->id, uuid, sizeof(uuid));
 
 	reply = _lockd_send("start_vg",
 				"pid = %d", getpid(),
@@ -1806,7 +1807,8 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	if (!_lvmlockd_connected)
 		return 0;
 
-	id_write_format(lv_id, lv_uuid, sizeof(lv_uuid));
+	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
+		return_0;
 
 	/*
 	 * For lvchange/vgchange activation, def_mode is "sh" or "ex"
@@ -2000,7 +2002,8 @@ static int _init_lv_sanlock(struct cmd_context *cmd, struct volume_group *vg,
 	if (!_lvmlockd_connected)
 		return 0;
 
-	id_write_format(lv_id, lv_uuid, sizeof(lv_uuid));
+	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
+		return_0;
 
 	reply = _lockd_send("init_lv",
 				"pid = %d", getpid(),
@@ -2066,7 +2069,8 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 	if (!_lvmlockd_connected)
 		return 0;
 
-	id_write_format(lv_id, lv_uuid, sizeof(lv_uuid));
+	if (!id_write_format(lv_id, lv_uuid, sizeof(lv_uuid)))
+		return_0;
 
 	reply = _lockd_send("free_lv",
 				"pid = %d", getpid(),

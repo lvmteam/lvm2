@@ -1338,7 +1338,8 @@ inval:
 		if (!info)
 			goto bad;
 		memset(info, 0, sizeof(struct vg_info));
-		dm_hash_insert(s->vgid_to_info, uuid, (void*)info);
+		if (!dm_hash_insert(s->vgid_to_info, uuid, (void*)info))
+			goto bad;
 	}
 
 	info->external_version = new_version;

@@ -236,7 +236,8 @@ static int read_host_id_file(void)
 			break;
 		}
 	}
-	fclose(file);
+	if (fclose(file))
+		log_error("failed to close host id file %s", daemon_host_id_file);
 out:
 	log_debug("host_id %d from %s", host_id, daemon_host_id_file);
 	return host_id;
@@ -1138,7 +1139,8 @@ out:
 	return 0;
 
 fail:
-	close(lms->sock);
+	if (close(lms->sock))
+		log_error("failed to close sanlock daemon socket connection");
 	free(lms);
 	ls->lm_data = NULL;
 	return rv;
@@ -1174,7 +1176,8 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 		}
 	}
 out:
-	close(lms->sock);
+	if (close(lms->sock))
+		log_error("failed to close sanlock daemon socket connection");
 
 	free(lms);
 	ls->lm_data = NULL;
