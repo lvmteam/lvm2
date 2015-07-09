@@ -101,8 +101,6 @@
 #define THIN_POOL_DATA		UINT64_C(0x0000004000000000)	/* LV - Internal use only */
 #define THIN_POOL_METADATA	UINT64_C(0x0000008000000000)	/* LV - Internal use only */
 #define POOL_METADATA_SPARE	UINT64_C(0x0000010000000000)	/* LV - Internal use only */
-#define LOCKD_SANLOCK_LV	UINT64_C(0x0000020000000000)	/* LV - Internal use only */
-
 #define LV_WRITEMOSTLY		UINT64_C(0x0000020000000000)	/* LV (RAID1) */
 
 #define LV_ACTIVATION_SKIP	UINT64_C(0x0000040000000000)	/* LV */
@@ -133,7 +131,8 @@
 #define PV_ALLOCATION_PROHIBITED	UINT64_C(0x0010000000000000)	/* PV - internal use only - allocation prohibited
 									e.g. to prohibit allocation of a RAID image
 									on a PV already holing an image of the RAID set */
-/* Next unused flag:		UINT64_C(0x0080000000000000)    */
+#define LOCKD_SANLOCK_LV	UINT64_C(0x0080000000000000)	/* LV - Internal use only */
+/* Next unused flag:		UINT64_C(0x0100000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
