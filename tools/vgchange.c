@@ -613,9 +613,9 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 		dm_list_iterate_items(lvl, &vg->lvs) {
 			lv = lvl->lv;
 
-			if ((lv->status & SNAPSHOT) || lv_is_cow(lv)) {
-				log_error("Changing to lock type %s is not allowed with cow snapshot LV %s/%s",
-					  lock_type, vg->name, lv->name);
+			if (lv_is_mirror_type(lv)) {
+				log_error("Changing to lock type %s is not allowed with mirror type LV %s/%s",
+					  lock_type, vg->name, display_lvname(lv));
 				return 0;
 			}
 		}
