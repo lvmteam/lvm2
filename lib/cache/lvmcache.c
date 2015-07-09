@@ -1856,14 +1856,12 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		}
 
 		/*
-		 * FIXME: when could this ever happen?
-		 * If this does happen, identify when/why here, and
-		 * if not, remove this code.
+		 * This happens when running pvcreate on an existing PV.
 		 */
 		if (strcmp(pvid_s, existing->dev->pvid))  {
-			log_warn("Replacing dev %s pvid %s with dev %s pvid %s",
-				 dev_name(existing->dev), existing->dev->pvid,
-				 dev_name(dev), pvid_s);
+			log_verbose("Replacing dev %s pvid %s with dev %s pvid %s",
+				    dev_name(existing->dev), existing->dev->pvid,
+				    dev_name(dev), pvid_s);
 		}
 
 		/*
