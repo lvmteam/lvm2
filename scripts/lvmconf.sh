@@ -412,12 +412,12 @@ if [ "$HANDLE_SERVICES" == "1" ]; then
 
         if [ "$LOCKING_TYPE" = "3" ]; then
             set_service systemd activate lvm2-cluster-activation.service
-            if [ "$HANDLE_CMIRROR_SERVICE" ]; then
+            if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
                 set_service activate lvm2-cmirrord.service
             fi
         else
             set_service systemd deactivate lvm2-cluster-activation.service
-            if [ "$HANDLE_CMIRROR_SERVICE" ]; then
+            if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
                 set_service systemd deactivate lvm2-cmirrord.service
             fi
         fi
