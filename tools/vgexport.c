@@ -22,6 +22,13 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 {
 	struct pv_list *pvl;
 
+	/* vgexport/vgimport have to use with shared VGs. */
+	if (is_lockd_type(vg->lock_type)) {
+		log_error("Volume group \"%s\" has lock_type %s that cannot be exported",
+			  vg_name, vg->lock_type);
+		goto bad;
+	}
+
 	if (lvs_in_vg_activated(vg)) {
 		log_error("Volume group \"%s\" has active logical volumes",
 			  vg_name);
