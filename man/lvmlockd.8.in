@@ -686,6 +686,8 @@ Things that do not yet work in lockd VGs:
 .br
 - using lvcreate to create cache pools or cache LVs (use lvconvert)
 .br
+- using external origins for thin LVs
+.br
 - splitting mirrors and snapshots from LVs
 .br
 - vgsplit

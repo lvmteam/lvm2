@@ -2533,6 +2533,16 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 	}
 
 	if (is_lockd_type(lv->vg->lock_type)) {
+		/*
+		 * FIXME: external origins don't work in lockd VGs.
+		 * Prior to the lvconvert, there's a lock associated with
+		 * the uuid of the external origin LV.  After the convert,
+		 * that uuid belongs to the new thin LV, and a new LV with
+		 * a new uuid exists as the non-thin, readonly external LV.
+		 * We'd need to remove the lock for the previous uuid
+		 * (the new thin LV will have no lock), and create a new
+		 * lock for the new LV uuid used by the external LV.
+		 */
 		log_error("Can't use lock_type %s LV as external origin.",
 			  lv->vg->lock_type);
 		return 0;
