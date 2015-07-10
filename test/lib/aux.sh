@@ -545,7 +545,7 @@ prepare_devs() {
 	# sanlock requires more space for the internal sanlock lv
 	# This could probably be lower, but what are the units?
 	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
-		devsize = 1024
+		devsize=1024
 	fi
 
 	touch DEVICES
