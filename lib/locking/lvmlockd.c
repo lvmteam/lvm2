@@ -2444,15 +2444,52 @@ out:
 
 int lockd_lv_uses_lock(struct logical_volume *lv)
 {
-	if (!lv_is_visible(lv) ||
-	    lv_is_thin_volume(lv) ||
-	    lv_is_thin_pool_data(lv) ||
-	    lv_is_thin_pool_metadata(lv) ||
-	    lv_is_pool_metadata_spare(lv) ||
-	    lv_is_cache_pool(lv) ||
-	    lv_is_cache_pool_data(lv) ||
-	    lv_is_cache_pool_metadata(lv) ||
-	    lv_is_lockd_sanlock_lv(lv))
+	if (lv_is_thin_volume(lv))
 		return 0;
+
+	if (lv_is_thin_pool_data(lv))
+		return 0;
+
+	if (lv_is_thin_pool_metadata(lv))
+		return 0;
+
+	if (lv_is_pool_metadata_spare(lv))
+		return 0;
+
+	if (lv_is_cache_pool(lv))
+		return 0;
+
+	if (lv_is_cache_pool_data(lv))
+		return 0;
+
+	if (lv_is_cache_pool_metadata(lv))
+		return 0;
+
+	if (lv_is_cow(lv))
+		return 0;
+
+	if (lv->status & SNAPSHOT)
+		return 0;
+
+	/* FIXME: lv_is_virtual_origin ? */
+
+	if (lv_is_lockd_sanlock_lv(lv))
+		return 0;
+
+	if (lv_is_mirror_image(lv))
+		return 0;
+
+	if (lv_is_mirror_log(lv))
+		return 0;
+
+	if (lv_is_raid_image(lv))
+		return 0;
+
+	if (lv_is_raid_metadata(lv))
+		return 0;
+
+	if (!lv_is_visible(lv))
+		return 0;
+
 	return 1;
 }

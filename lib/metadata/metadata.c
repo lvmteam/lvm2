@@ -2899,7 +2899,7 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
-		if (!vg->skip_validate_lock_args && !_validate_vg_lock_args(vg))
+		if (!_validate_vg_lock_args(vg))
 			r = 0;
 	} else {
 		if (vg->lock_args) {
@@ -2915,10 +2915,44 @@ int vg_validate(struct volume_group *vg)
 				if (vg->skip_validate_lock_args)
 					continue;
 
+				/*
+				 * FIXME: make missing lock_args an error.
+				 * There are at least two cases where this
+				 * check doesn't work correctly:
+				 *
+				 * 1. When creating a cow snapshot,
+				 * (lvcreate -s -L1M -n snap1 vg/lv1),
+				 * lockd_lv_uses_lock() uses lv_is_cow()
+				 * which depends on lv->snapshot being
+				 * set, but it's not set at this point,
+				 * so lockd_lv_uses_lock() cannot identify
+				 * the LV as a cow_lv, and thinks it needs
+				 * a lock when it doesn't.  To fix this we
+				 * probably need to validate by finding the
+				 * origin LV, then finding all its snapshots
+				 * which will have no lock_args.
+				 *
+				 * 2. When converting an LV to a thin pool
+				 * without using an existing metadata LV,
+				 * (lvconvert --type thin-pool vg/poolX),
+				 * there is an intermediate LV created,
+				 * probably for the metadata LV, and
+				 * validate is called on the VG in this
+				 * intermediate state, which finds the
+				 * newly created LV which is not yet
+				 * identified as a metadata LV, and
+				 * does not have any lock_args.  To fix
+				 * this we might be able to find the place
+				 * where the intermediate LV is created,
+				 * and set new variable on it like for vgs,
+				 * lv->skip_validate_lock_args.
+				 */
 				if (!lvl->lv->lock_args) {
-					log_error(INTERNAL_ERROR "LV %s/%s missing lock_args",
-						  vg->name, lvl->lv->name);
+					/*
+					log_verbose("LV %s/%s missing lock_args",
+						    vg->name, lvl->lv->name);
 					r = 0;
+					*/
 					continue;
 				}
 
