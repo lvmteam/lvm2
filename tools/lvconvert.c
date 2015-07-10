@@ -1130,6 +1130,12 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	*old_mimage_count = lv_mirror_count(lv);
 	*old_log_count = _get_log_count(lv);
 
+	if (is_lockd_type(lv->vg->lock_type) && arg_count(cmd, splitmirrors_ARG)) {
+		/* FIXME: we need to create a lock for the new LV. */
+		log_error("Unable to split mirrors in VG with lock_type %s", lv->vg->lock_type);
+		return 0;
+	}
+
 	/*
 	 * Collapsing a stack of mirrors:
 	 *
@@ -1835,6 +1841,12 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 
 	if (!(vg->fid->fmt->features & FMT_MDAS)) {
 		log_error("Unable to split off snapshot %s/%s using old LVM1-style metadata.", vg->name, cow->name);
+		return 0;
+	}
+
+	if (is_lockd_type(vg->lock_type)) {
+		/* FIXME: we need to create a lock for the new LV. */
+		log_error("Unable to split snapshots in VG with lock_type %s", vg->lock_type);
 		return 0;
 	}
 
