@@ -1346,6 +1346,14 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	if (!_use_lvmlockd)
 		return 1;
 
+	/*
+	 * Verify that when --readonly is used, no ex locks should be used.
+	 */
+	if (cmd->metadata_read_only && def_mode && !strcmp(def_mode, "ex")) {
+		log_error("Exclusive locks are not allowed with readonly option.");
+		return 0;
+	}
+
 	if (cmd->lockd_gl_disable)
 		return 1;
 
@@ -1527,6 +1535,16 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 
 	if (!is_real_vg(vg_name))
 		return 1;
+
+	/*
+	 * Verify that when --readonly is used, no ex locks should be used.
+	 */
+	if (cmd->metadata_read_only &&
+	    ((def_mode && !strcmp(def_mode, "ex")) ||
+	     (!def_mode && !cmd->lockd_vg_default_sh))) {
+		log_error("Exclusive locks are not allowed with readonly option.");
+		return 0;
+	}
 
 	/*
 	 * Some special cases need to disable the vg lock.
@@ -1798,6 +1816,14 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t lockd_flags;
 	int refreshed = 0;
 	int result;
+
+	/*
+	 * Verify that when --readonly is used, no LVs should be activated or used.
+	 */
+	if (cmd->metadata_read_only) {
+		log_error("LV locks are not allowed with readonly option.");
+		return 0;
+	}
 
 	if (cmd->lockd_lv_disable)
 		return 1;

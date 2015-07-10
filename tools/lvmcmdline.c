@@ -1435,6 +1435,14 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	const char *lvmlockd_socket;
 	int use_lvmlockd = find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL);
 
+	if (use_lvmlockd && arg_count(cmd, nolocking_ARG)) {
+		/* --nolocking is only allowed with vgs/lvs/pvs commands */
+		cmd->lockd_gl_disable = 1;
+		cmd->lockd_vg_disable = 1;
+		cmd->lockd_lv_disable = 1;
+		return 1;
+	}
+
 	if (use_lvmlockd && locking_is_clustered()) {
 		log_error("ERROR: configuration setting use_lvmlockd cannot be used with clustered locking_type 3.");
 		return 0;
@@ -1567,7 +1575,19 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_count(cmd, readonly_ARG)) {
-		locking_type = 5;
+		if (find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL)) {
+			/*
+			 * FIXME: we could use locking_type 5 here if that didn't
+			 * cause CLUSTERED to be set, which conflicts with using lvmlockd.
+			 */
+			locking_type = 1;
+			cmd->lockd_gl_disable = 1;
+			cmd->lockd_vg_disable = 1;
+			cmd->lockd_lv_disable = 1;
+		} else {
+			locking_type = 5;
+		}
+
 		if (lvmetad_used()) {
 			lvmetad_set_active(cmd, 0);
 			log_verbose("Disabling use of lvmetad because read-only is set.");
