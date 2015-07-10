@@ -2595,7 +2595,7 @@ static char *_get_date(char *str, struct tm *tm, time_range_t *range)
 {
 	static const char incorrect_date_format_msg[] = "Incorrect date format.";
 	time_range_t tmp_range = RANGE_NONE;
-	long n1 = -1, n2 = -1, n3 = -1;
+	long n1, n2 = -1, n3 = -1;
 	char *s = str, *end;
 	size_t len = 0;
 
@@ -2680,7 +2680,7 @@ static char *_get_time(char *str, struct tm *tm, time_range_t *range)
 {
 	static const char incorrect_time_format_msg[] = "Incorrect time format.";
 	time_range_t tmp_range = RANGE_NONE;
-	long n1 = -1, n2 = -1, n3 = -1;
+	long n1, n2 = -1, n3 = -1;
 	char *s = str, *end;
 	size_t len = 0;
 
@@ -2774,7 +2774,7 @@ static char *_get_time(char *str, struct tm *tm, time_range_t *range)
 /* The offset is always an absolute offset against GMT! */
 static char *_get_tz(char *str, int *tz_supplied, int *offset)
 {
-	long n1 = -1, n2 = -1;
+	long n1, n2 = -1;
 	char *s = str, *end;
 	int sign = 1; /* +HH:MM by default */
 	size_t len = 0;
