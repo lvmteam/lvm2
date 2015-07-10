@@ -682,13 +682,11 @@ it are not autoactivated.
 
 Things that do not yet work in lockd VGs:
 .br
-- old style mirror LVs (only raid1)
-.br
 - creating a new thin pool and a new thin LV in a single command
 .br
 - using lvcreate to create cache pools or cache LVs (use lvconvert)
 .br
-- splitting raid1 mirror LVs
+- splitting mirrors and snapshots from LVs
 .br
 - vgsplit
 .br

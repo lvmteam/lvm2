@@ -604,23 +604,6 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 		return 0;
 	}
 
-	/*
-	 * Check if there are any LV types in the VG that cannot be handled
-	 * with the new lock type.  Remove this once all LV types can be
-	 * handled.
-	 */
-	if (is_lockd_type(lock_type)) {
-		dm_list_iterate_items(lvl, &vg->lvs) {
-			lv = lvl->lv;
-
-			if (lv_is_mirror_type(lv)) {
-				log_error("Changing to lock type %s is not allowed with mirror type LV %s/%s",
-					  lock_type, vg->name, display_lvname(lv));
-				return 0;
-			}
-		}
-	}
-
 	/* none to clvm */
 	if (!strcmp(vg->lock_type, "none") && !strcmp(lock_type, "clvm")) {
 		log_warn("New clvm lock type will not be usable with lvmlockd.");
