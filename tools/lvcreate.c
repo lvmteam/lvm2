@@ -587,7 +587,7 @@ static int _read_cache_params(struct cmd_context *cmd,
 }
 
 static int _read_activation_params(struct cmd_context *cmd,
-                                   struct volume_group *vg,
+				   struct volume_group *vg,
 				   struct lvcreate_params *lp)
 {
 	unsigned pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
