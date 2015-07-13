@@ -37,7 +37,9 @@ static int vgimport_single(struct cmd_context *cmd,
 		goto_bad;
 
 	vg->status &= ~EXPORTED_VG;
-	vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
+
+	if (!is_lockd_type(vg->lock_type))
+		vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
