@@ -61,7 +61,8 @@ aux prepare_pvs 3 256
 vgcreate -s 1M $vg $(cat DEVICES)
 
 # Testing dmeventd autoresize
-lvcreate -L200M -V1G -n thin -T $vg/pool
+lvcreate -L200M -V500M -n thin -T $vg/pool 2>&1 | tee out
+not grep "WARNING: Sum" out
 lvcreate -L2M -n $lv1 $vg
 lvchange -an $vg/thin $vg/pool
 

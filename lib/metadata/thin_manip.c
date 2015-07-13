@@ -303,6 +303,8 @@ int pool_check_overprovisioning(const struct logical_volume *lv)
 		/* There is some free space in VG, but it is not configured
 		 * for growing - threshold is 100% or percent is 0% */
 		sz = poolsum;
+	else
+		sz = ~0; /* No warning */
 
 	if (sz != ~0) {
 		log_warn("WARNING: Sum of all thin volume sizes (%s) exceeds the "

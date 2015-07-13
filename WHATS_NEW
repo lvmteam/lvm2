@@ -1,5 +1,6 @@
 Version 2.02.126 -
 ================================
+  Fix detection of thin-pool overprovisioning (2.02.124).
   Fix lvmpolld segfaults on 32 bit architectures.
   Fix ignored --startstopservices option if running lvmconf with systemd.
 
