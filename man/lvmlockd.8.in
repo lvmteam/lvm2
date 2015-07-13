@@ -500,20 +500,43 @@ A small sanlock VG dedicated to holding the global lock can avoid the case
 where the GL lock must be manually enabled after a vgremove.
 
 
-.SS changing lock type
-
-To change a local VG to a lockd VG:
-
-vgchange --lock-type sanlock|dlm <vg_name>
+.SS changing a local VG to a lockd VG
 
 All LVs must be inactive to change the lock type.
 
-To change a clvm VG to a lockd VG:
+lvmlockd must be configured and running as described in USAGE.
 
-vgchange --lock-type sanlock|dlm <vg_name>
+Change a local VG to a lockd VG with the command:
+.br
+vgchange \-\-lock\-type sanlock|dlm <vg_name>
 
-Changing a lockd VG to a local VG is not yet generally allowed.
-(It can be done partially in certain recovery cases.)
+Start the VG on any hosts that need to use it:
+.br
+vgchange \-\-lock\-start <vg_name>
+
+
+.SS changing a clvm VG to a lockd VG
+
+All LVs must be inactive to change the lock type.
+
+1. Change the clvm VG to a local VG.
+
+Within a running clvm cluster, change a clvm VG to a local VG with the
+command:
+
+vgchange \-cn <vg_name>
+
+If the clvm cluster is no longer running on any nodes, then extra options
+can be used forcibly make the VG local.  Caution: this is only safe if all
+nodes have stopped using the VG:
+
+vgchange \-\-config 'global/locking_type=0 global/use_lvmlockd=0'
+.RS
+\-cn <vg_name>
+.RE
+
+2. After the VG is local, follow the steps described in "changing a local
+VG to a lockd VG".
 
 
 .SS vgremove and vgreduce with sanlock VGs
