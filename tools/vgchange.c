@@ -834,10 +834,17 @@ static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg
 	const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
 	int auto_opt = 0;
 
-	if (!start_opt || arg_is_set(cmd, force_ARG))
+	if (!is_lockd_type(vg->lock_type))
+		return 1;
+
+	if (arg_is_set(cmd, force_ARG))
 		goto do_start;
 
-	if (!strcmp(start_opt, "auto") || !strcmp(start_opt, "autowait"))
+	/*
+	 * Recognize both "auto" and "autonowait" options.
+	 * Any waiting is done at the end of vgchange.
+	 */
+	if (start_opt && !strncmp(start_opt, "auto", 4))
 		auto_opt = 1;
 
 	if (!_passes_lock_start_filter(cmd, vg, activation_lock_start_list_CFG)) {
@@ -1201,12 +1208,12 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 		lockd_gl(cmd, "un", 0);
 
-		if (!start_opt || !strcmp(start_opt, "wait") || !strcmp(start_opt, "autowait")) {
+		if (!start_opt || !strcmp(start_opt, "auto")) {
 			log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
 			lockd_start_wait(cmd);
 
-		} else if (!strcmp(start_opt, "nowait")) {
-			log_print_unless_silent("Starting locking.  VG is read-only until locks are ready.");
+		} else if (!strcmp(start_opt, "nowait") || !strcmp(start_opt, "autonowait")) {
+			log_print_unless_silent("Starting locking.  VG can only be read until locks are ready.");
 		}
 	}
 
