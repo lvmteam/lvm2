@@ -174,6 +174,9 @@ AC_SUBST(HAVE_FULL_RELRO)
 ################################################################################
 dnl -- Prefix is /usr by default, the exec_prefix default is setup later
 AC_PREFIX_DEFAULT(/usr)
+if test "$prefix" = NONE; then
+  datarootdir=${ac_default_prefix}/share
+fi
 
 ################################################################################
 dnl -- Setup the ownership of the files
@@ -1060,6 +1063,13 @@ if test "$TESTING" = yes; then
 	pkg_config_init
 	PKG_CHECK_MODULES(CUNIT, cunit >= 2.0)
 fi
+
+################################################################################
+dnl -- Set LVM2 testsuite data
+TESTSUITE_DATA='${datarootdir}/lvm2-testsuite'
+# double eval needed ${datarootdir} -> ${prefix}/share -> real path
+AC_DEFINE_UNQUOTED(TESTSUITE_DATA, ["$(eval echo $(eval echo $TESTSUITE_DATA))"], [Path to testsuite data])
+
 
 ################################################################################
 dnl -- Enable valgrind awareness of memory pools
@@ -1971,6 +1981,7 @@ AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(TESTING)
+AC_SUBST(TESTSUITE_DATA)
 AC_SUBST(THIN)
 AC_SUBST(THIN_CHECK_CMD)
 AC_SUBST(THIN_DUMP_CMD)

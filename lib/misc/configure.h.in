@@ -632,6 +632,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Path to testsuite data */
+#undef TESTSUITE_DATA
+
 /* The path to 'thin_check', if available. */
 #undef THIN_CHECK_CMD
 

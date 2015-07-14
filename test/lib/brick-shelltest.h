@@ -1173,7 +1173,7 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
     opt.workdir = args.opt( "--workdir" );
 
     if ( opt.testdir.empty() )
-        opt.testdir = "/usr/share/lvm2-testsuite";
+        opt.testdir = TESTSUITE_DATA;
 
     if ( opt.workdir.empty() )
         opt.workdir = opt.testdir;
