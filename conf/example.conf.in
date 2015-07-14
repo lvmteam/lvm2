@@ -876,7 +876,7 @@ global {
 
 	# Configuration option global/thin_repair_options.
 	# List of options passed to the thin_repair command.
-	# This configuration option does not have a default value defined.
+	# thin_repair_options = [ "" ]
 
 	# Configuration option global/thin_disabled_features.
 	# Features to not use in the thin driver.
@@ -924,7 +924,7 @@ global {
 
 	# Configuration option global/cache_repair_options.
 	# List of options passed to the cache_repair command.
-	# This configuration option does not have a default value defined.
+	# cache_repair_options = [ "" ]
 
 	# Configuration option global/system_id_source.
 	# The method LVM uses to set the local system ID.

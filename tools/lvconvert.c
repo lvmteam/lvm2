@@ -2351,8 +2351,10 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(cn = find_config_tree_array(cmd, global_thin_repair_options_CFG, NULL)))
-		return_0;
+	if (!(cn = find_config_tree_array(cmd, global_thin_repair_options_CFG, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for global/thin_repair_options");
+		return 0;
+	}
 
 	for (cv = cn->v; cv && args < 16; cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {

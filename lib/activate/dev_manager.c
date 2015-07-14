@@ -1939,8 +1939,10 @@ static int _pool_callback(struct dm_tree_node *node,
 	if (!*argv[0])
 		return 1; /* Checking disabled */
 
-	if (!(cn = find_config_tree_array(mlv->vg->cmd, data->opts, NULL)))
-		return_0;
+	if (!(cn = find_config_tree_array(mlv->vg->cmd, data->opts, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for pool check options.");
+		return 0;
+	}
 
 	for (cv = cn->v; cv && args < 16; cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {
