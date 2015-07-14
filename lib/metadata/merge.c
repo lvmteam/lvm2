@@ -208,6 +208,12 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 
 			}
+			if (seg_is_cache_pool(seg)) {
+				if (!seg->policy_name) {
+					log_error("LV %s is missing cache policy name.", lv->name);
+					inc_error_count;
+				}
+			}
 			if (seg_is_pool(seg)) {
 				if (seg->area_count != 1 ||
 				    seg_type(seg, 0) != AREA_LV) {
