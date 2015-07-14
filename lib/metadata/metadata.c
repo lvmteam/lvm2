@@ -4707,7 +4707,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	return (struct volume_group *)vg;
 }
 
-static int _allow_system_id(struct cmd_context *cmd, const char *system_id)
+static int _allow_extra_system_id(struct cmd_context *cmd, const char *system_id)
 {
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
@@ -4848,7 +4848,7 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	/*
 	 * A host can access a VG if the VG's system_id is in extra_system_ids list.
 	 */
-	if (cmd->system_id && _allow_system_id(cmd, vg->system_id))
+	if (cmd->system_id && _allow_extra_system_id(cmd, vg->system_id))
 		return 1;
 
 	/*
