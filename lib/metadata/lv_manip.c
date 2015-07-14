@@ -7245,6 +7245,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_cache_pool(lp) || seg_is_cache(lp)) {
 		pool_lv = pool_lv ? : lv;
+		if (!lv_cache_setpolicy(pool_lv, lp->cache_policy))
+			return_NULL; /* revert? */
 		first_seg(pool_lv)->chunk_size = lp->chunk_size;
 		first_seg(pool_lv)->feature_flags = lp->feature_flags;
 		/* TODO: some calc_policy solution for cache ? */
@@ -7435,13 +7437,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				  ? "snapshot exception store" : "start of new LV");
 			goto deactivate_and_revert_new_lv;
 		}
-	}
-
-	if (lv_is_cache_pool(lv) && !origin_lv) {
-		if (lp->cache_policy && !lv_cache_setpolicy(lv, lp->cache_policy))
-			return NULL; /* revert? */
-		if (!lv_update_and_reload(lv))
-			return NULL; /* FIXME: revert */
 	}
 
 	if (seg_is_cache(lp) || (origin_lv && lv_is_cache_pool(lv))) {
