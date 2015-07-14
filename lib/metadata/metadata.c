@@ -4747,7 +4747,7 @@ static int _access_vg_clustered(struct cmd_context *cmd, struct volume_group *vg
 }
 
 static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg,
-				uint32_t lockd_state)
+				uint32_t lockd_state, uint32_t *failure)
 {
 	if (!is_real_vg(vg->name))
 		return 1;
@@ -4791,6 +4791,7 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 				  vg->name, vg->lock_type);
 		}
 
+		*failure |= FAILED_LOCK_TYPE;
 		return 0;
 	}
 
@@ -4804,6 +4805,7 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 	if (lockd_state & LDST_FAIL) {
 		if (lockd_state & LDST_EX) {
 			log_error("Cannot access VG %s due to failed lock.", vg->name);
+			*failure |= FAILED_LOCK_MODE;
 			return 0;
 		} else {
 			log_warn("Reading VG %s without a lock.", vg->name);
@@ -4904,8 +4906,8 @@ static int _vg_access_permitted(struct cmd_context *cmd, struct volume_group *vg
 		return 0;
 	}
 
-	if (!_access_vg_lock_type(cmd, vg, lockd_state)) {
-		*failure |= FAILED_LOCK_TYPE;
+	if (!_access_vg_lock_type(cmd, vg, lockd_state, failure)) {
+		/* Either FAILED_LOCK_TYPE or FAILED_LOCK_MODE were set. */
 		return 0;
 	}
 

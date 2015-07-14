@@ -221,14 +221,22 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 	/*
 	 * Accessing a lockd VG when lvmlockd is not used is similar
 	 * to accessing a foreign VG.
+	 * This is also the point where a command fails if it failed
+	 * to acquire the necessary lock from lvmlockd.
+	 * The two cases are distinguished by FAILED_LOCK_TYPE (the
+	 * VG lock_type requires lvmlockd), and FAILED_LOCK_MODE (the
+	 * command failed to acquire the necessary lock.)
 	 */
-	if (read_error & FAILED_LOCK_TYPE) {
+	if (read_error & (FAILED_LOCK_TYPE | FAILED_LOCK_MODE)) {
 		if (arg_vgnames && str_list_match_item(arg_vgnames, vg->name)) {
-			log_error("Cannot access VG %s with lock_type %s that requires lvmlockd.",
-				  vg->name, vg->lock_type);
+			if (read_error & FAILED_LOCK_TYPE)
+				log_error("Cannot access VG %s with lock type %s that requires lvmlockd.",
+					  vg->name, vg->lock_type);
+			/* For FAILED_LOCK_MODE, the error is printed in vg_read. */
 			return 1;
 		} else {
 			read_error &= ~FAILED_LOCK_TYPE; /* Check for other errors */
+			read_error &= ~FAILED_LOCK_MODE;
 			log_verbose("Skipping volume group %s", vg_name);
 			*skip = 1;
 		}
