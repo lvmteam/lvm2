@@ -683,8 +683,10 @@ static int _init_preferred_names(struct cmd_context *cmd)
 
 	if (!(cn = find_config_tree_array(cmd, devices_preferred_names_CFG, NULL)) ||
 	    cn->v->type == DM_CFG_EMPTY_ARRAY) {
-		log_very_verbose("devices/preferred_names not found in config file: "
-				 "using built-in preferences");
+		log_very_verbose("devices/preferred_names %s: "
+				 "using built-in preferences",
+				 cn && cn->v->type == DM_CFG_EMPTY_ARRAY ? "is empty"
+									 : "not found in config");
 		return 1;
 	}
 
