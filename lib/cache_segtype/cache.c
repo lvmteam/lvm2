@@ -77,9 +77,13 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("policy must be a string in");
 		if (!(seg->policy_name = dm_pool_strdup(mem, str)))
 			return SEG_LOG_ERROR("Failed to duplicate policy in");
-	} else
+	} else {
 		/* Cannot use 'just' default, so pick one */
 		seg->policy_name = DEFAULT_CACHE_POOL_POLICY; /* FIXME make configurable */
+		/* FIXME maybe here should be always 'mq' */
+		log_warn("WARNING: cache_policy undefined, using default \"%s\" policy.",
+			 seg->policy_name);
+	}
 
 	/*
 	 * Read in policy args:
@@ -130,13 +134,17 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 	if (!(cache_mode = get_cache_pool_cachemode_name(seg)))
 		return_0;
 
+	if (!seg->policy_name) {
+		log_error(INTERNAL_ERROR "Policy name for %s is not defined.",
+			  display_lvname(seg->lv));
+		return 0;
+	}
+
 	outf(f, "data = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "chunk_size = %" PRIu32, seg->chunk_size);
 	outf(f, "cache_mode = \"%s\"", cache_mode);
-
-	if (seg->policy_name)
-		outf(f, "policy = \"%s\"", seg->policy_name);
+	outf(f, "policy = \"%s\"", seg->policy_name);
 
 	if (seg->policy_settings) {
 		if (strcmp(seg->policy_settings->key, "policy_settings")) {
