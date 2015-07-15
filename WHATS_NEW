@@ -1,5 +1,6 @@
 Version 2.02.126 -
 ================================
+  Fix lvconvert segfaults while performing snapshots merge.
   Ignore errors during detection if use_blkid_wiping=1 and --force is used.
   Recognise DM_ABORT_ON_INTERNAL_ERRORS env var override in lvm logging fn.
   Fix alloc segfault when extending LV with fewer stripes than in first seg.
