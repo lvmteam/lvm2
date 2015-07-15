@@ -1393,12 +1393,14 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stri
 	return _validate_stripe_params(cmd, stripes, stripe_size);
 }
 
-static int _validate_cachepool_params(struct dm_config_tree *tree)
+static int _validate_cachepool_params(const char *name,
+				      const struct dm_config_tree *settings)
 {
 	return 1;
 }
 
-struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
+int get_cache_policy_params(struct cmd_context *cmd, const char **name,
+			    struct dm_config_tree **settings)
 {
 	const char *str;
 	struct arg_value_group_list *group;
@@ -1406,12 +1408,13 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 	struct dm_config_node *cn;
 	int ok = 0;
 
+	*name = arg_str_value(cmd, cachepolicy_ARG, DEFAULT_CACHE_POOL_POLICY);
+
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {
 		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))
 			continue;
 
-		current = dm_config_create();
-		if (!current)
+		if (!(current = dm_config_create()))
 			goto_out;
 		if (prev)
 			current->cascade = prev;
@@ -1437,24 +1440,10 @@ struct dm_config_tree *get_cachepolicy_params(struct cmd_context *cmd)
 		result->root = cn;
 	}
 
-	if (arg_count(cmd, cachepolicy_ARG)) {
-		if (!(cn = dm_config_create_node(result, "policy")))
-			goto_out;
-
-		cn->sib = result->root;
-		result->root = cn;
-		if (!(cn->v = dm_config_create_value(result)))
-			goto_out;
-
-		cn->v->type = DM_CFG_STRING;
-		cn->v->v.str = arg_str_value(cmd, cachepolicy_ARG, NULL);
-	}
-
-	if (!_validate_cachepool_params(result))
+	if (!_validate_cachepool_params(*name, result))
 		goto_out;
 
 	ok = 1;
-
 out:
 	if (!ok && result) {
 		dm_config_destroy(result);
@@ -1465,7 +1454,10 @@ out:
 		dm_config_destroy(prev);
 		prev = current;
 	}
-	return result;
+
+	*settings = result;
+
+	return ok;
 }
 
 /* FIXME move to lib */

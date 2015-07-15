@@ -680,25 +680,27 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 
 static int _lvchange_cachepolicy(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	struct dm_config_tree *policy = NULL;
+	const char *name;
+	struct dm_config_tree *settings = NULL;
 	int r = 0;
 
 	if (!lv_is_cache(lv) && !lv_is_cache_pool(lv)) {
 		log_error("LV %s is not a cache LV.", lv->name);
 		log_error("Only cache or cache pool devices can have --cachepolicy set.");
-		goto_out;
+		goto out;
 	}
 
-	if (!(policy = get_cachepolicy_params(cmd)))
+	if (!get_cache_policy_params(cmd, &name, &settings))
 		goto_out;
-	if (!lv_cache_setpolicy(lv, policy))
+	if (!lv_cache_set_policy(lv, name, settings))
 		goto_out;
 	if (!lv_update_and_reload(lv))
 		goto_out;
 	r = 1;
 out:
-	if (policy)
-		dm_config_destroy(policy);
+	if (settings)
+		dm_config_destroy(settings);
+
 	return r;
 }
 

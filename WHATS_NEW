@@ -1,5 +1,6 @@
 Version 2.02.126 -
 ================================
+  Fix handling of cache policy name.
   Set cache policy before with the first lvm2 cache pool metadata commit.
   Fix detection of thin-pool overprovisioning (2.02.124).
   Fix lvmpolld segfaults on 32 bit architectures.

@@ -902,7 +902,8 @@ struct lvcreate_params {
 	uint32_t max_recovery_rate; /* RAID */
 
 	uint64_t feature_flags; /* cache */
-	struct dm_config_tree *cache_policy; /* cache */
+	const char *policy_name; /* cache */
+	struct dm_config_tree *policy_settings; /* cache */
 
 	const struct segment_type *segtype; /* all */
 	unsigned target_attr; /* all */
@@ -1164,7 +1165,8 @@ int validate_lv_cache_create_origin(const struct logical_volume *origin_lv);
 struct logical_volume *lv_cache_create(struct logical_volume *pool,
 				       struct logical_volume *origin);
 int lv_cache_remove(struct logical_volume *cache_lv);
-int lv_cache_setpolicy(struct logical_volume *cache_lv, struct dm_config_tree *pol);
+int lv_cache_set_policy(struct logical_volume *cache_lv, const char *name,
+			const struct dm_config_tree *settings);
 int wipe_cache_pool(struct logical_volume *cache_pool_lv);
 /* --  metadata/cache_manip.c */
 

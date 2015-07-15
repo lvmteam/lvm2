@@ -52,6 +52,8 @@ struct lvconvert_params {
 	uint32_t stripe_size;
 	uint32_t read_ahead;
 	uint64_t feature_flags; /* cache_pool */
+	const char *policy_name; /* cache */
+	struct dm_config_tree *policy_settings; /* cache */
 
 	const struct segment_type *segtype;
 	unsigned target_attr;
@@ -297,6 +299,11 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 
 		if (!set_cache_pool_feature(&lp->feature_flags, cachemode))
 			return_0;
+
+		if (!get_cache_policy_params(cmd, &lp->policy_name, &lp->policy_settings)) {
+			log_error("Failed to parse cache policy and/or settings.");
+			return 0;
+		}
 	} else {
 		if (arg_from_list_is_set(cmd, "is valid only with cache pools",
 					 cachepool_ARG, cachemode_ARG, -1))
@@ -3053,6 +3060,10 @@ mda_write:
 	seg->zero_new_blocks = lp->zero ? 1 : 0;
 	seg->feature_flags = lp->feature_flags; /* cache-pool */
 
+	if ((lp->policy_name || lp->policy_settings) &&
+	    !lv_cache_set_policy(seg->lv, lp->policy_name, lp->policy_settings))
+		return_0;
+
 	/* Rename deactivated metadata LV to have _tmeta suffix */
 	/* Implicit checks if metadata_lv is visible */
 	if (lp->pool_metadata_name &&
@@ -3523,6 +3534,8 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	} else
 		ret = lvconvert_single(cmd, &lp);
 out:
+	if (lp.policy_settings)
+		dm_config_destroy(lp.policy_settings);
 	destroy_processing_handle(cmd, handle);
 	return ret;
 }

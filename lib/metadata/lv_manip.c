@@ -7245,7 +7245,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_cache_pool(lp) || seg_is_cache(lp)) {
 		pool_lv = pool_lv ? : lv;
-		if (!lv_cache_setpolicy(pool_lv, lp->cache_policy))
+		if (!lv_cache_set_policy(pool_lv, lp->policy_name, lp->policy_settings))
 			return_NULL; /* revert? */
 		first_seg(pool_lv)->chunk_size = lp->chunk_size;
 		first_seg(pool_lv)->feature_flags = lp->feature_flags;
@@ -7457,9 +7457,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 		}
 		lv = tmp_lv;
-
-		if (lp->cache_policy && !lv_cache_setpolicy(lv, lp->cache_policy))
-			return NULL; /* revert? */
 
 		if (!lv_update_and_reload(lv)) {
 			/* FIXME Do a better revert */
