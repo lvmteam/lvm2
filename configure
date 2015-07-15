@@ -8813,20 +8813,27 @@ $as_echo "$as_me: WARNING: cache_check not found in path $PATH" >&2;}
 		fi
 	fi
 	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
-		CACHE_CHECK_VSN=`"$CACHE_CHECK_CMD" -V 2>/dev/null`
-		CACHE_CHECK_VSN_MAJOR=`echo "$CACHE_CHECK_VSN" | $AWK -F '.' '{print $1}'`
-		CACHE_CHECK_VSN_MINOR=`echo "$CACHE_CHECK_VSN" | $AWK -F '.' '{print $2}'`
+		$CACHE_CHECK_CMD -V 2>/dev/null >conftest.tmp
+		read -r CACHE_CHECK_VSN < conftest.tmp
+		IFS=. read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH < conftest.tmp
+		rm -f conftest.tmp
 
-		if test -z "$CACHE_CHECK_VSN_MAJOR" -o -z "$CACHE_CHECK_VSN_MINOR"; then
+		# Require version >= 0.5.4 for --clear-needs-check-flag
+		if test -z "$CACHE_CHECK_VSN_MAJOR" \
+			|| test -z "$CACHE_CHECK_VSN_MINOR" \
+			|| test -z "$CACHE_CHECK_VSN_PATCH"; then
 			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CACHE_CHECK_CMD: Bad version \"$CACHE_CHECK_VSN\" found" >&5
 $as_echo "$as_me: WARNING: $CACHE_CHECK_CMD: Bad version \"$CACHE_CHECK_VSN\" found" >&2;}
 			CACHE_CHECK_VERSION_WARN=y
 			CACHE_CHECK_NEEDS_CHECK=no
-		elif test "$CACHE_CHECK_VSN_MAJOR" -eq 0 -a "$CACHE_CHECK_VSN_MINOR" -lt 5; then
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" found" >&5
+		elif test "$CACHE_CHECK_VSN_MAJOR" -eq 0 ; then
+			if test "$CACHE_CHECK_VSN_MINOR" -lt 5 \
+				|| test "$CACHE_CHECK_VSN_MINOR" -eq 5 -a "$CACHE_CHECK_VSN_PATCH" -lt 4; then
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" found" >&5
 $as_echo "$as_me: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" found" >&2;}
-			CACHE_CHECK_VERSION_WARN=y
-			CACHE_CHECK_NEEDS_CHECK=no
+				CACHE_CHECK_VERSION_WARN=y
+				CACHE_CHECK_NEEDS_CHECK=no
+			fi
 		fi
 	fi
 	# Empty means a config way to ignore cache dumping
