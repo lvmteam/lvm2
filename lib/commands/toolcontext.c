@@ -245,8 +245,10 @@ static int _parse_debug_classes(struct cmd_context *cmd)
 	const struct dm_config_value *cv;
 	int debug_classes = 0;
 
-	if (!(cn = find_config_tree_array(cmd, log_debug_classes_CFG, NULL)))
+	if (!(cn = find_config_tree_array(cmd, log_debug_classes_CFG, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for log/debug_classes.");
 		return -1;
+	}
 
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != DM_CFG_STRING) {
@@ -686,7 +688,7 @@ static int _process_config(struct cmd_context *cmd)
 						      DEFAULT_RUN_DIR "/lvmetad.socket");
 	*/
 	lvmetad_set_socket(lvmetad_socket);
-	cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL);
+	cn = find_config_tree_array(cmd, devices_global_filter_CFG, NULL);
 	lvmetad_set_token(cn ? cn->v : NULL);
 
 	if (find_config_tree_int(cmd, global_locking_type_CFG, NULL) == 3 &&
@@ -1015,11 +1017,9 @@ static int _init_dev_cache(struct cmd_context *cmd)
 
 	init_obtain_device_list_from_udev(device_list_from_udev);
 
-	if (!(cn = find_config_tree_node(cmd, devices_scan_CFG, NULL))) {
-		log_verbose("device/scan not in config file, "
-			    "using defaults.");
-		if (!(cn = find_config_tree_array(cmd, devices_scan_CFG, NULL)))
-			return_0;
+	if (!(cn = find_config_tree_array(cmd, devices_scan_CFG, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for devices/scan.");
+		return_0;
 	}
 
 	for (cv = cn->v; cv; cv = cv->next) {
@@ -1232,7 +1232,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	}
 
 	/* filter component 1 */
-	if ((cn = find_config_tree_node(cmd, devices_filter_CFG, NULL))) {
+	if ((cn = find_config_tree_array(cmd, devices_filter_CFG, NULL))) {
 		if (!(filter_components[1] = regex_filter_create(cn->v)))
 			goto_bad;
 		/* we have two filter components - create composite filter */

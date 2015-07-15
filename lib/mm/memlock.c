@@ -347,7 +347,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 	}
 
 	line = _maps_buffer;
-	cn = find_config_tree_node(cmd, activation_mlock_filter_CFG, NULL);
+	cn = find_config_tree_array(cmd, activation_mlock_filter_CFG, NULL);
 
 	while ((line_end = strchr(line, '\n'))) {
 		*line_end = '\0'; /* remove \n */
