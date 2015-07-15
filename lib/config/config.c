@@ -1386,12 +1386,31 @@ static struct dm_config_node *_get_array_def_node(struct cmd_context *cmd,
 	return cn;
 }
 
+struct _config_array_out_handle {
+	struct dm_pool *mem;
+	char *str;
+};
+
+static int _config_array_line(const struct dm_config_node *cn, const char *line, void *baton)
+{
+	struct _config_array_out_handle *handle = (struct _config_array_out_handle *) baton;
+
+	if (!(handle->str = dm_pool_strdup(handle->mem, line))) {
+		log_error("_config_array_line: dm_pool_strdup failed");
+		return 0;
+	}
+
+	return 1;
+}
+
 const struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, struct profile *profile)
 {
 	cfg_def_item_t *item = cfg_def_get_item_p(id);
 	char path[CFG_PATH_MAX_LEN];
 	int profile_applied;
-	const struct dm_config_node *cn;
+	const struct dm_config_node *cn, *cn_def = NULL;
+	struct _config_array_out_handle out_handle = { 0 };
+	struct dm_config_node_out_spec out_spec = { 0 };
 
 	profile_applied = _apply_local_profile(cmd, profile);
 	_cfg_def_make_path(path, sizeof(path), item->id, item, 0);
@@ -1401,7 +1420,22 @@ const struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int
 
 	if (_config_disabled(cmd, item, path) ||
 	    !(cn = find_config_tree_node(cmd, id, profile)))
-		cn = _get_array_def_node(cmd, item, profile);
+		cn_def = _get_array_def_node(cmd, item, profile);
+
+	if (cn_def) {
+		out_handle.mem = cmd->cft->mem;
+		out_spec.line_fn = _config_array_line;
+		dm_config_value_set_format_flags(cn_def->v,
+			DM_CONFIG_VALUE_FMT_COMMON_EXTRA_SPACES |
+			DM_CONFIG_VALUE_FMT_COMMON_ARRAY);
+		if (!dm_config_write_one_node_out(cn_def, &out_spec, &out_handle))
+			out_handle.mem = NULL;
+		log_very_verbose("%s not found in config: defaulting to %s",
+				 path, out_handle.mem ? out_handle.str : "<unknown>");
+		if (out_handle.mem)
+			dm_pool_free(out_handle.mem, out_handle.str);
+		cn = cn_def;
+	}
 
 	if (profile_applied)
 		remove_config_tree_by_source(cmd, profile->source);
