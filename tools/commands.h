@@ -1229,7 +1229,7 @@ xx(vgextend,
 
 xx(vgimport,
    "Register exported volume group with system",
-   0,
+   ALL_VGS_IS_DEFAULT,
    "vgimport\n"
    "\t[-a|--all]\n"
    "\t[--commandprofile ProfileName]\n"
