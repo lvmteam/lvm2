@@ -1191,7 +1191,7 @@ xx(vgdisplay,
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
-   0,
+   ALL_VGS_IS_DEFAULT,
    "vgexport\n"
    "\t[-a|--all]\n"
    "\t[--commandprofile ProfileName]\n"
