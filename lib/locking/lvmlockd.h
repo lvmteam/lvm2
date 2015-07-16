@@ -167,6 +167,14 @@ static inline int lockd_start_wait(struct cmd_context *cmd)
 
 static inline int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type)
 {
+	/*
+	 * When lvm is built without lvmlockd support, creating a VG with
+	 * a shared lock type should fail.
+	 */
+	if (is_lockd_type(vg_lock_type)) {
+		log_error("Using a shared lock type requires lvmlockd.");
+		return 0;
+	}
 	return 1;
 }
 
@@ -220,6 +228,7 @@ static inline int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg
 
 static inline const char *lockd_running_lock_type(struct cmd_context *cmd)
 {
+	log_error("Using a shared lock type requires lvmlockd.");
 	return NULL;
 }
 

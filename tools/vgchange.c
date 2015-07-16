@@ -1007,6 +1007,16 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* The default vg lock mode is ex, but these options only need sh. */
 
+	if (!lvmlockd_use() && arg_is_set(cmd, locktype_ARG)) {
+		log_error("Using lock type requires lvmlockd.");
+		return 0;
+	}
+
+	if (!lvmlockd_use() && (arg_is_set(cmd, lockstart_ARG) || arg_is_set(cmd, lockstop_ARG))) {
+		log_error("Using lock start and lock stop requires lvmlockd.");
+		return 0;
+	}
+
 	if (arg_is_set(cmd, activate_ARG) || arg_is_set(cmd, refresh_ARG))
 		cmd->lockd_vg_default_sh = 1;
 

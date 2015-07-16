@@ -927,7 +927,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	} else if (arg_is_set(cmd, shared_ARG)) {
 		if (use_lvmlockd) {
 			if (!(lock_type = lockd_running_lock_type(cmd))) {
-				log_error("Failed to detect a running lock manager to select lock_type.");
+				log_error("Failed to detect a running lock manager to select lock type.");
 				return 0;
 			}
 
@@ -936,7 +936,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 			return 0;
 
 		} else {
-			log_error("The --shared option requires lvmlockd (use_lvmlockd=1).");
+			log_error("Using a shared lock type requires lvmlockd.");
 			return 0;
 		}
 
@@ -961,13 +961,13 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	case LOCK_TYPE_SANLOCK:
 	case LOCK_TYPE_DLM:
 		if (!use_lvmlockd) {
-			log_error("lock_type %s requires use_lvmlockd configuration setting", lock_type);
+			log_error("Using a shared lock type requires lvmlockd.");
 			return 0;
 		}
 		break;
 	case LOCK_TYPE_CLVM:
 		if (!use_clvmd) {
-			log_error("lock_type clvm requires locking_type 3 configuration setting");
+			log_error("Using clvm requires locking_type 3.");
 			return 0;
 		}
 		break;
