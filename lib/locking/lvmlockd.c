@@ -522,6 +522,9 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	case -EMANAGER:
 		log_error("VG %s init failed: lock manager dlm is not running", vg->name);
 		break;
+	case -EPROTONOSUPPORT:
+		log_error("VG %s init failed: lock manager dlm is not supported by lvmlockd", vg->name);
+		break;
 	default:
 		log_error("VG %s init failed: %d", vg->name, result);
 	}
@@ -623,6 +626,9 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 		break;
 	case -EMANAGER:
 		log_error("VG %s init failed: lock manager sanlock is not running", vg->name);
+		break;
+	case -EPROTONOSUPPORT:
+		log_error("VG %s init failed: lock manager sanlock is not supported by lvmlockd", vg->name);
 		break;
 	case -EMSGSIZE:
 		log_error("VG %s init failed: no disk space for leases", vg->name);
@@ -952,6 +958,9 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
 	case -EMANAGER:
 		log_error("VG %s start failed: lock manager %s is not running", vg->name, vg->lock_type);
 		break;
+	case -EPROTONOSUPPORT:
+		log_error("VG %s start failed: lock manager %s is not supported by lvmlockd", vg->name, vg->lock_type);
+		break;
 	default:
 		log_error("VG %s start failed: %d", vg->name, result);
 	}
@@ -1233,8 +1242,10 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 	if (result < 0) {
 		if (result == -ESTARTING)
 			log_error("Global lock failed: lockspace is starting.");
-		else if (result -EAGAIN)
+		else if (result == -EAGAIN)
 			log_error("Global lock failed: held by other host.");
+		else if (result == -EPROTONOSUPPORT)
+			log_error("VG create failed: lock manager %s is not supported by lvmlockd.", vg_lock_type);
 		else
 			log_error("Global lock failed: error %d", result);
 		return 0;

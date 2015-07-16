@@ -350,6 +350,11 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin);
 int lm_data_size_dlm(void);
 int lm_is_running_dlm(void);
 
+static inline int lm_support_dlm(void)
+{
+	return 1;
+}
+
 #else
 
 static inline int lm_init_vg_dlm(char *ls_name, char *vg_name, uint32_t flags, char *vg_args)
@@ -410,6 +415,11 @@ static inline int lm_is_running_dlm(void)
 	return 0;
 }
 
+static inline int lm_support_dlm(void)
+{
+	return 0;
+}
+
 #endif /* dlm support */
 
 #ifdef LOCKDSANLOCK_SUPPORT
@@ -436,6 +446,11 @@ int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
 int lm_data_size_sanlock(void);
 int lm_is_running_sanlock(void);
 int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset);
+
+static inline int lm_support_sanlock(void)
+{
+	return 1;
+}
 
 #else
 
@@ -535,6 +550,11 @@ static inline int lm_is_running_sanlock(void)
 static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
 {
 	return -1;
+}
+
+static inline int lm_support_sanlock(void)
+{
+	return 0;
 }
 
 #endif /* sanlock support */

@@ -4167,9 +4167,9 @@ static void client_recv_action(struct client *cl)
 		strncpy(cl->name, cl_name, MAX_NAME);
 
 	if (!gl_use_dlm && !gl_use_sanlock && (lm > 0)) {
-		if (lm == LD_LM_DLM)
+		if (lm == LD_LM_DLM && lm_support_dlm())
 			gl_use_dlm = 1;
-		else if (lm == LD_LM_SANLOCK)
+		else if (lm == LD_LM_SANLOCK && lm_support_sanlock())
 			gl_use_sanlock = 1;
 
 		log_debug("set gl_use_%s", lm_str(lm));
@@ -4233,6 +4233,18 @@ static void client_recv_action(struct client *cl)
 		  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
 		  op_str(act->op), rt_str(act->rt), act->vg_name, mode_str(act->mode), opts);
 
+	if (lm == LD_LM_DLM && !lm_support_dlm()) {
+		log_debug("dlm not supported");
+		rv = -EPROTONOSUPPORT;
+		goto out;
+	}
+
+	if (lm == LD_LM_SANLOCK && !lm_support_sanlock()) {
+		log_debug("sanlock not supported");
+		rv = -EPROTONOSUPPORT;
+		goto out;
+	}
+
 	switch (act->op) {
 	case LD_OP_START:
 		rv = add_lockspace(act);
@@ -4265,6 +4277,7 @@ static void client_recv_action(struct client *cl)
 		rv = -EINVAL;
 	};
 
+out:
 	if (rv < 0) {
 		act->result = rv;
 		add_client_result(act);
@@ -5685,9 +5698,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'g':
 			lm = str_to_lm(optarg);
-			if (lm == LD_LM_DLM)
+			if (lm == LD_LM_DLM && lm_support_dlm())
 				gl_use_dlm = 1;
-			else if (lm == LD_LM_SANLOCK)
+			else if (lm == LD_LM_SANLOCK && lm_support_sanlock())
 				gl_use_sanlock = 1;
 			else {
 				fprintf(stderr, "invalid gl-type option");
