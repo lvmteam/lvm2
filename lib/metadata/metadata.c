@@ -4803,7 +4803,7 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 	 * no lock.
 	 */
 	if (lockd_state & LDST_FAIL) {
-		if (lockd_state & LDST_EX) {
+		if ((lockd_state & LDST_EX) || cmd->lockd_vg_enforce_sh) {
 			log_error("Cannot access VG %s due to failed lock.", vg->name);
 			*failure |= FAILED_LOCK_MODE;
 			return 0;

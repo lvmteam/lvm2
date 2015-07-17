@@ -1294,8 +1294,10 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	 * are cases where lvchange does not modify the vg, so they can use
 	 * the sh lock mode.
 	 */
-	if (arg_count(cmd, activate_ARG) || arg_count(cmd, refresh_ARG))
+	if (arg_count(cmd, activate_ARG) || arg_count(cmd, refresh_ARG)) {
 		cmd->lockd_vg_default_sh = 1;
+		cmd->lockd_vg_enforce_sh = 1;
+	}
 
 	return process_each_lv(cmd, argc, argv,
 			       update ? READ_FOR_UPDATE : 0, NULL,
