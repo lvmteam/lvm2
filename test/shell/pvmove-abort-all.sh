@@ -11,6 +11,10 @@
 
 # Check pvmove --abort behaviour for all VGs and PVs
 
+# Ignore known failure when clvmd is processing sequences of commands for two VGs in parallel - 2015/07/17 agk
+# CLVMD: ioctl/libdm-iface.c:1940   Internal error: Performing unsafe table load while 3 device(s) are known to be suspended:  (253:19) 
+export DM_ABORT_ON_INTERNAL_ERRORS=0
+
 . lib/inittest
 
 aux prepare_pvs 6 60
