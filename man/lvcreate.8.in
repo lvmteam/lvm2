@@ -13,13 +13,13 @@ lvcreate \- create a logical volume in an existing volume group
 .RI { y | n }]
 .RB [ \-H | \-\-cache ]
 .RB [ \-\-cachemode
-.RI { writeback | writethrough }]
+.RI { passthrough | writeback | writethrough }]
 .RB [ \-\-cachepolicy
 .IR policy ]
-.RB [ \-\-cachesettings
-.IR key=value ]
 .RB [ \-\-cachepool
 .IR CachePoolLogicalVolume { Name | Path }
+.RB [ \-\-cachesettings
+.IR key=value ]
 .RB [ \-c | \-\-chunksize
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-commandprofile
@@ -188,7 +188,7 @@ See \fBlvmcache\fP(7) for more info about caching support.
 Note that the cache segment type requires a dm-cache kernel module version
 1.3.0 or greater.
 .TP
-.IR \fB\-\-cachemode " {" writeback | writethrough }
+.IR \fB\-\-cachemode " {" passthrough | writeback | writethrough }
 Specifying a cache mode determines when the writes to a cache LV
 are considered complete.  When \fIwriteback\fP is specified, a write is
 considered complete as soon as it is stored in the cache pool LV.
@@ -198,9 +198,20 @@ While \fIwritethrough\fP may be slower for writes, it is more
 resilient if something should happen to a device associated with the
 cache pool LV.
 .TP
+.B \-\-cachepolicy \fIpolicy
+Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
+the cache policy. \fImq\fP is the basic policy name. \fIsqm\fP is more advanced
+version available in newer kernels.
+.TP
 .IR \fB\-\-cachepool " " CachePoolLogicalVolume { Name | Path }
 Specifies the name of cache pool volume name. The other way to specify pool name
 is to append name to Volume group name argument.
+.TP
+.BR \-\-cachesettings " " \fIkey=value
+Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
+the cache tunable settings. In most use-cases, default values should be adequate.
+Special string value \fIdefault\fP switches setting back to its default kernel value
+and removes it from the list of settings stored in lvm2 metadata.
 .TP
 .BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
 Gives the size of chunk for snapshot, cache pool and thin pool logical volumes.
@@ -250,11 +261,6 @@ When set to \fIy\fPes, the I/O operation is immeditelly errored.
 Ignore the flag to skip Logical Volumes during activation.
 Use \fB\-\-setactivationskip\fP option to set or reset
 activation skipping flag persistently for logical volume.
-.TP
-.BR  \-\-cachepolicy " " policy ", " \-\-cachesettings " " key=value
-Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
-the cache policy and its associated tunable settings. In most use-cases,
-default values should be adequate.
 .TP
 .B \-\-ignoremonitoring
 Make no attempt to interact with dmeventd unless \fB\-\-monitor\fP

@@ -162,6 +162,10 @@ lvconvert \(em convert a logical volume from linear to mirror or snapshot
 .IR ChunkSize [ bBsSkKmMgG ]]
 .RB [ \-\-cachemode
 .RI { writeback | writethrough }]
+.RB [ \-\-cachepolicy
+.IR policy ]
+.RB [ \-\-cachesettings
+.IR key=value ]
 .RB [ \-\-poolmetadata
 .IR CachePoolMetadataLogicalVolume { Name | Path }
 |
@@ -222,9 +226,20 @@ Converts logical volume to a cached LV with the use of cache pool
 specified with \fB\-\-cachepool\fP.
 For more information on cache pool LVs and cache LVs, see \fBlvmcache\fP(7).
 .TP
+.B \-\-cachepolicy \fIpolicy
+Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
+the cache policy. \fImq\fP is the basic policy name. \fIsqm\fP is more advanced
+version available in newer kernels.
+.TP
 .BR \-\-cachepool " " \fICachePoolLV
 This argument is necessary when converting a logical volume to a cache LV.
 For more information on cache pool LVs and cache LVs, see \fBlvmcache\fP(7).
+.TP
+.BR \-\-cachesettings " " \fIkey=value
+Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
+the cache tunable settings. In most use-cases, default values should be adequate.
+Special string value \fIdefault\fP switches setting back to its default kernel value
+and removes it from the list of settings stored in lvm2 metadata.
 .TP
 .BR \-m ", " \-\-mirrors " " \fIMirrors
 Specifies the degree of the mirror you wish to create.
@@ -496,7 +511,7 @@ See \fBlvmthin\fP(7) for more info about thin provisioning support.
 Uncaches \fICacheLogicalVolume\fP.
 Before the volume becomes uncached, cache is flushed.
 Unlike with \fB\-\-splitcache\fP the cache pool volume is removed.
-This option could seen as an inverse of \fB\-\-cache\fP.
+This option could be seen as an inverse of \fB\-\-cache\fP.
 
 .SH Examples
 Converts the linear logical volume "vg00/lvol1" to a two-way mirror
