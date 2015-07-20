@@ -2415,3 +2415,8 @@ int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, st
 {
 	return DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
 }
+
+const char *get_default_allocation_cache_policy_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	return DEFAULT_CACHE_POLICY;
+}

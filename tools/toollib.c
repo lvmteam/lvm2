@@ -1408,7 +1408,7 @@ int get_cache_policy_params(struct cmd_context *cmd, const char **name,
 	struct dm_config_node *cn;
 	int ok = 0;
 
-	*name = arg_str_value(cmd, cachepolicy_ARG, DEFAULT_CACHE_POOL_POLICY);
+	*name = arg_str_value(cmd, cachepolicy_ARG, DEFAULT_CACHE_POLICY);
 
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {
 		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))

@@ -79,7 +79,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("Failed to duplicate policy in");
 	} else {
 		/* Cannot use 'just' default, so pick one */
-		seg->policy_name = DEFAULT_CACHE_POOL_POLICY; /* FIXME make configurable */
+		seg->policy_name = DEFAULT_CACHE_POLICY; /* FIXME make configurable */
 		/* FIXME maybe here should be always 'mq' */
 		log_warn("WARNING: cache_policy undefined, using default \"%s\" policy.",
 			 seg->policy_name);
