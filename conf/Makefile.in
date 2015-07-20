@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2004-2010 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -20,7 +20,11 @@ CONFDEST=lvm.conf
 CONFLOCAL=lvmlocal.conf
 
 PROFILE_TEMPLATES=command_profile_template.profile metadata_profile_template.profile
-PROFILES=$(PROFILE_TEMPLATES) $(srcdir)/thin-generic.profile $(srcdir)/thin-performance.profile
+PROFILES=$(PROFILE_TEMPLATES) \
+	$(srcdir)/cache-mq.profile \
+	$(srcdir)/cache-smq.profile \
+	$(srcdir)/thin-generic.profile \
+	$(srcdir)/thin-performance.profile
 
 include $(top_builddir)/make.tmpl
 
