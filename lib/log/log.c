@@ -36,7 +36,7 @@ static int _indent = 1;
 static int _log_suppress = 0;
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
-static int _abort_on_internal_errors = 0;
+static int _abort_on_internal_errors_config = 0;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -218,9 +218,10 @@ void init_indent(int indent)
 	_indent = indent;
 }
 
+/* If present, environment setting will override this. */
 void init_abort_on_internal_errors(int fatal)
 {
-	_abort_on_internal_errors = fatal;
+	_abort_on_internal_errors_config = fatal;
 }
 
 void reset_lvm_errno(int store_errmsg)
@@ -277,10 +278,24 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	size_t msglen;
 	const char *indent_spaces = "";
 	FILE *stream;
+	static int _abort_on_internal_errors_env_present = -1;
+	static int _abort_on_internal_errors_env = 0;
+	char *env_str;
 
 	level &= ~(_LOG_STDERR|_LOG_ONCE);
 
-	if (_abort_on_internal_errors &&
+	if (_abort_on_internal_errors_env_present < 0) {
+		if ((env_str = getenv("DM_ABORT_ON_INTERNAL_ERRORS"))) {
+			_abort_on_internal_errors_env_present = 1;
+			/* Set when env DM_ABORT_ON_INTERNAL_ERRORS is not "0" */
+			_abort_on_internal_errors_env = strcmp(env_str, "0");
+		} else
+			_abort_on_internal_errors_env_present = 0;
+	}
+
+	/* Use value from environment if present, otherwise use value from config. */
+	if (((_abort_on_internal_errors_env_present && _abort_on_internal_errors_env) ||
+	     (!_abort_on_internal_errors_env_present && _abort_on_internal_errors_config)) &&
 	    !strncmp(format, INTERNAL_ERROR, sizeof(INTERNAL_ERROR) - 1)) {
 		fatal_internal_error = 1;
 		/* Internal errors triggering abort cannot be suppressed. */
