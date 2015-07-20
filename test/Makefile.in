@@ -199,7 +199,8 @@ install: .tests-stamp lib/paths-installed
 	$(INSTALL_PROGRAM) api/*.{t,py} $(DATADIR)/api/
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	$(INSTALL_DATA) $(LIB_FLAVOURS) $(DATADIR)/lib/
-	$(INSTALL_DATA) $(abs_top_srcdir)/conf/thin-performance.profile $(DATADIR)/lib/thin-performance.profile
+	for i in cache-mq cache-smq thin-performance ; do \
+		$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib/$$i.profile; done
 	$(INSTALL_SCRIPT) $(LIB_SHARED) $(DATADIR)/lib/
 	for i in $(CMDS); do (cd $(DATADIR)/lib && $(LN_S) -f lvm-wrapper $$i); done
 
