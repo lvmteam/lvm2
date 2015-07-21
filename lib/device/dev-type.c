@@ -530,6 +530,7 @@ static inline int _type_in_flag_list(const char *type, uint32_t flag_list)
 
 #define MSG_FAILED_SIG_OFFSET "Failed to get offset of the %s signature on %s."
 #define MSG_FAILED_SIG_LENGTH "Failed to get length of the %s signature on %s."
+#define MSG_WIPING_SKIPPED " Wiping skipped."
 
 static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		       uint32_t types_to_exclude, uint32_t types_no_prompt,
@@ -549,7 +550,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 				log_error(MSG_FAILED_SIG_OFFSET, type, name);
 				return 0;
 			} else {
-				log_error("WARNING: " MSG_FAILED_SIG_OFFSET, type, name);
+				log_error("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
 				return 2;
 			}
 		}
@@ -558,7 +559,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 				log_error(MSG_FAILED_SIG_LENGTH, type, name);
 				return 0;
 			} else {
-				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH, type, name);
+				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH MSG_WIPING_SKIPPED, type, name);
 				return 2;
 			}
 		}
@@ -568,7 +569,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 				log_error(MSG_FAILED_SIG_OFFSET, type, name);
 				return 0;
 			} else {
-				log_warn("WARNING: " MSG_FAILED_SIG_OFFSET, type, name);
+				log_warn("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
 				return 2;
 			}
 		}
@@ -577,7 +578,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 				log_error(MSG_FAILED_SIG_LENGTH, type, name);
 				return 0;
 			} else {
-				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH, type, name);
+				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH MSG_WIPING_SKIPPED, type, name);
 				return 2;
 			}
 		}
