@@ -170,8 +170,8 @@ static void _destroy(struct segment_type *segtype)
 
 #ifdef DEVMAPPER_SUPPORT
 static int _target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg __attribute__((unused)),
-				unsigned *attributes __attribute__((unused)))
+			   const struct lv_segment *seg __attribute__((unused)),
+			   unsigned *attributes __attribute__((unused)))
 {
 	/* List of features with their kernel target version */
 	static const struct feature {

@@ -3405,7 +3405,6 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, seg->metadata))
 		return_0;
 
-
 	if (!(seg->origin = dm_tree_find_node_by_uuid(node->dtree,
 						      origin_uuid))) {
 		log_error("Missing cache's origin uuid %s.",
@@ -3433,7 +3432,6 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 			seg->policy_argc++;
 		}
 	}
-
 
 	return 1;
 }

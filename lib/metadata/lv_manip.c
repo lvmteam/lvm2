@@ -6998,7 +6998,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (seg_is_pool(lp))
 		status |= LVM_WRITE; /* Pool is always writable */
-        else if (seg_is_cache(lp) || seg_is_thin_volume(lp)) {
+	else if (seg_is_cache(lp) || seg_is_thin_volume(lp)) {
 		/* Resolve pool volume */
 		if (!lp->pool_name) {
 			/* Should be already checked */
@@ -7221,6 +7221,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (!archive(vg))
 		return_NULL;
+
 
 	if (pool_lv && seg_is_thin_volume(lp)) {
 		/* Ensure all stacked messages are submitted */
