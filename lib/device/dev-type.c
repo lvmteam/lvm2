@@ -545,20 +545,20 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 			return 2;
 		if (blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL)) {
 			log_error(_msg_failed_offset, type, name);
-			return 0;
+			return  (force < DONT_PROMPT) ? 0 : 2;
 		}
 		if (blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len)) {
 			log_error(_msg_failed_length, type, name);
-			return 0;
+			return  (force < DONT_PROMPT) ? 0 : 2;
 		}
 	} else if (!blkid_probe_lookup_value(probe, "PTTYPE", &type, NULL)) {
 		if (blkid_probe_lookup_value(probe, "PTMAGIC_OFFSET", &offset, NULL)) {
 			log_error(_msg_failed_offset, type, name);
-			return 0;
+			return  (force < DONT_PROMPT) ? 0 : 2;
 		}
 		if (blkid_probe_lookup_value(probe, "PTMAGIC", &magic, &len)) {
 			log_error(_msg_failed_length, type, name);
-			return 0;
+			return  (force < DONT_PROMPT) ? 0 : 2;
 		}
 		usage = "partition table";
 	} else
