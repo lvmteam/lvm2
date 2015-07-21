@@ -528,12 +528,13 @@ static inline int _type_in_flag_list(const char *type, uint32_t flag_list)
 		((flag_list & TYPE_DM_SNAPSHOT_COW) && !strcmp(type, "DM_snapshot_cow")));
 }
 
+#define MSG_FAILED_SIG_OFFSET "Failed to get offset of the %s signature on %s."
+#define MSG_FAILED_SIG_LENGTH "Failed to get length of the %s signature on %s."
+
 static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		       uint32_t types_to_exclude, uint32_t types_no_prompt,
 		       int yes, force_t force)
 {
-	static const char _msg_failed_offset[] = "Failed to get offset of the %s signature on %s.";
-	static const char _msg_failed_length[] = "Failed to get length of the %s signature on %s.";
 	static const char _msg_wiping[] = "Wiping %s signature on %s.";
 	const char *offset = NULL, *type = NULL, *magic = NULL,
 		   *usage = NULL, *label = NULL, *uuid = NULL;
@@ -544,21 +545,41 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 		if (_type_in_flag_list(type, types_to_exclude))
 			return 2;
 		if (blkid_probe_lookup_value(probe, "SBMAGIC_OFFSET", &offset, NULL)) {
-			log_error(_msg_failed_offset, type, name);
-			return  (force < DONT_PROMPT) ? 0 : 2;
+			if (force < DONT_PROMPT) {
+				log_error(MSG_FAILED_SIG_OFFSET, type, name);
+				return 0;
+			} else {
+				log_error("WARNING: " MSG_FAILED_SIG_OFFSET, type, name);
+				return 2;
+			}
 		}
 		if (blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len)) {
-			log_error(_msg_failed_length, type, name);
-			return  (force < DONT_PROMPT) ? 0 : 2;
+			if (force < DONT_PROMPT) {
+				log_error(MSG_FAILED_SIG_LENGTH, type, name);
+				return 0;
+			} else {
+				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH, type, name);
+				return 2;
+			}
 		}
 	} else if (!blkid_probe_lookup_value(probe, "PTTYPE", &type, NULL)) {
 		if (blkid_probe_lookup_value(probe, "PTMAGIC_OFFSET", &offset, NULL)) {
-			log_error(_msg_failed_offset, type, name);
-			return  (force < DONT_PROMPT) ? 0 : 2;
+			if (force < DONT_PROMPT) {
+				log_error(MSG_FAILED_SIG_OFFSET, type, name);
+				return 0;
+			} else {
+				log_warn("WARNING: " MSG_FAILED_SIG_OFFSET, type, name);
+				return 2;
+			}
 		}
 		if (blkid_probe_lookup_value(probe, "PTMAGIC", &magic, &len)) {
-			log_error(_msg_failed_length, type, name);
-			return  (force < DONT_PROMPT) ? 0 : 2;
+			if (force < DONT_PROMPT) {
+				log_error(MSG_FAILED_SIG_LENGTH, type, name);
+				return 0;
+			} else {
+				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH, type, name);
+				return 2;
+			}
 		}
 		usage = "partition table";
 	} else
