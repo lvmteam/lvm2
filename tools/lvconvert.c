@@ -3410,10 +3410,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 		cmd->handles_missing_pvs = 1;
 	}
 
-	/*
-	 * The VG lock will be released when the command exits.
-	 * Commands that poll the LV will reacquire the VG lock.
-	 */
+	/* Unlock on error paths not required, it's automatic when command exits. */
 	if (!lockd_vg(cmd, lp->vg_name, "ex", 0, &lockd_state))
 		goto_out;
 
@@ -3461,10 +3458,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 bad:
 	unlock_vg(cmd, lp->vg_name);
 
-	/*
-	 * The command may sit and monitor progress for some time,
-	 * and we do not need or want the VG lock held during that.
-	 */
+	/* Unlock here so it's not held during polling. */
 	lockd_vg(cmd, lp->vg_name, "un", 0, &lockd_state);
 
 	release_vg(vg);
