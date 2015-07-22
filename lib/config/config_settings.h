@@ -51,6 +51,7 @@
  *                                 CFG_DEFAULT_COMMENTED - node's default value is commented out on output
  *                                 CFG_DISABLED - configuration is disabled (defaults always used)
  *                                 CFG_FORMAT_INT_OCTAL - print integer number in octal form (also prefixed by "0")
+ *                                 CFG_SECTION_NO_CHECK - do not check content of the section at all - use with care!!!
  *
  * type:		       Allowed type for the value of simple configuation setting, one of:
  *                                 CFG_TYPE_BOOL

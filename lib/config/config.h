@@ -121,6 +121,8 @@ typedef union {
 #define CFG_DISABLED		0x200
 /* whether to print integers in octal form (prefixed by "0") */
 #define CFG_FORMAT_INT_OCTAL	0x400
+/* whether to disable checks for the whole config section subtree */
+#define CFG_SECTION_NO_CHECK	0x800
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {

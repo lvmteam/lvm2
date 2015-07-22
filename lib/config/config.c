@@ -1040,8 +1040,13 @@ static int _config_def_check_tree(struct cft_check_handle *handle,
 				  size_t buf_size, struct dm_config_node *root)
 {
 	struct dm_config_node *cn;
+	cfg_def_item_t *def;
 	int valid, r = 1;
 	size_t len;
+
+	def = cfg_def_get_item_p(root->id);
+	if (def->flags & CFG_SECTION_NO_CHECK)
+		return 1;
 
 	for (cn = root->child; cn; cn = cn->sib) {
 		if ((valid = _config_def_check_node(handle, vp, pvp, rp, prp,
@@ -1662,13 +1667,8 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 	char path[CFG_PATH_MAX_LEN];
 	char commentline[MAX_COMMENT_LINE+1];
 
-	if (cn->id < 0)
+	if (cn->id <= 0)
 		return 1;
-
-	if (!cn->id) {
-		log_error(INTERNAL_ERROR "Configuration node %s has invalid id.", cn->key);
-		return 0;
-	}
 
 	if (out->tree_spec->type == CFG_DEF_TREE_LIST)
 		return 1;
