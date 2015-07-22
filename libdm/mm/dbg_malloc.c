@@ -22,6 +22,22 @@
 #include <assert.h>
 #include <stdarg.h>
 
+void *dm_malloc_aux(size_t s, const char *file, int line)
+        __attribute__((__malloc__)) __attribute__((__warn_unused_result__));
+void *dm_malloc_aux_debug(size_t s, const char *file, int line)
+        __attribute__((__malloc__)) __attribute__((__warn_unused_result__));
+void *dm_zalloc_aux(size_t s, const char *file, int line)
+        __attribute__((__malloc__)) __attribute__((__warn_unused_result__));
+void *dm_zalloc_aux_debug(size_t s, const char *file, int line)
+        __attribute__((__malloc__)) __attribute__((__warn_unused_result__));
+void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
+        __attribute__((__warn_unused_result__));
+void dm_free_aux(void *p);
+char *dm_strdup_aux(const char *str, const char *file, int line)
+        __attribute__((__warn_unused_result__));
+int dm_dump_memory_debug(void);
+void dm_bounds_check_debug(void);
+
 char *dm_strdup_aux(const char *str, const char *file, int line)
 {
 	char *ret;
@@ -279,3 +295,82 @@ void *dm_zalloc_aux(size_t s, const char *file, int line)
 
 	return ptr;
 }
+
+#ifdef DEBUG_MEM
+
+void *dm_malloc_wrapper(size_t s, const char *file, int line)
+{
+	return dm_malloc_aux_debug(s, file, line);
+}
+
+void *dm_zalloc_wrapper(size_t s, const char *file, int line)
+{
+	return dm_zalloc_aux_debug(s, file, line);
+}
+
+char *dm_strdup_wrapper(const char *str, const char *file, int line)
+{
+	return dm_strdup_aux(str, file, line);
+}
+
+void dm_free_wrapper(void *ptr)
+{
+	dm_free_aux(ptr);
+}
+
+void *dm_realloc_wrapper(void *p, unsigned int s, const char *file, int line)
+{
+	return dm_realloc_aux(p, s, file, line);
+}
+
+int dm_dump_memory_wrapper(void)
+{
+	return dm_dump_memory_debug();
+}
+
+void dm_bounds_check_wrapper(void)
+{
+	dm_bounds_check_debug();
+}
+
+#else /* !DEBUG_MEM */
+
+void *dm_malloc_wrapper(size_t s, const char *file, int line)
+{
+	return dm_malloc_aux(s, file, line);
+}
+
+void *dm_zalloc_wrapper(size_t s, const char *file, int line)
+{
+	return dm_zalloc_aux(s, file, line);
+}
+
+char *dm_strdup_wrapper(const char *str,
+			const char *file __attribute__((unused)),
+			int line __attribute__((unused)))
+{
+	return strdup(str);
+}
+
+void dm_free_wrapper(void *ptr)
+{
+	free(ptr);
+}
+
+void *dm_realloc_wrapper(void *p, unsigned int s, 
+			 const char *file __attribute__((unused)),
+			 int line __attribute__((unused)))
+{
+	return realloc(p, s);
+}
+
+int dm_dump_memory_wrapper(void)
+{
+	return 1;
+}
+
+void dm_bounds_check_wrapper(void)
+{
+}
+
+#endif /* DEBUG_MEM */

@@ -962,44 +962,28 @@ uint32_t dm_tree_get_cookie(struct dm_tree_node *node);
  * Memory management
  *******************/
 
-void *dm_malloc_aux(size_t s, const char *file, int line)
+/*
+ * Never use these functions directly - use the macros following instead.
+ */
+void *dm_malloc_wrapper(size_t s, const char *file, int line)
 	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_malloc_aux_debug(size_t s, const char *file, int line)
-	__attribute__((__warn_unused_result__));
-void *dm_zalloc_aux(size_t s, const char *file, int line)
+void *dm_zalloc_wrapper(size_t s, const char *file, int line)
 	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void *dm_zalloc_aux_debug(size_t s, const char *file, int line)
+void *dm_realloc_wrapper(void *p, unsigned int s, const char *file, int line)
 	__attribute__((__warn_unused_result__));
-char *dm_strdup_aux(const char *str, const char *file, int line)
-	__attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-void dm_free_aux(void *p);
-void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
+void dm_free_wrapper(void *ptr);
+char *dm_strdup_wrapper(const char *s, const char *file, int line)
 	__attribute__((__warn_unused_result__));
-int dm_dump_memory_debug(void);
-void dm_bounds_check_debug(void);
+int dm_dump_memory_wrapper(void);
+void dm_bounds_check_wrapper(void);
 
-#ifdef DEBUG_MEM
-
-#  define dm_malloc(s) dm_malloc_aux_debug((s), __FILE__, __LINE__)
-#  define dm_zalloc(s) dm_zalloc_aux_debug((s), __FILE__, __LINE__)
-#  define dm_strdup(s) dm_strdup_aux((s), __FILE__, __LINE__)
-#  define dm_free(p) dm_free_aux(p)
-#  define dm_realloc(p, s) dm_realloc_aux(p, s, __FILE__, __LINE__)
-#  define dm_dump_memory() dm_dump_memory_debug()
-#  define dm_bounds_check() dm_bounds_check_debug()
-
-#else
-
-#  define dm_malloc(s) dm_malloc_aux((s), __FILE__, __LINE__)
-#  define dm_zalloc(s) dm_zalloc_aux((s), __FILE__, __LINE__)
-#  define dm_strdup(s) strdup(s)
-#  define dm_free(p) free(p)
-#  define dm_realloc(p, s) realloc(p, s)
-#  define dm_dump_memory() {}
-#  define dm_bounds_check() {}
-
-#endif
-
+#define dm_malloc(s) dm_malloc_wrapper((s), __FILE__, __LINE__)
+#define dm_zalloc(s) dm_zalloc_wrapper((s), __FILE__, __LINE__)
+#define dm_strdup(s) dm_strdup_wrapper((s), __FILE__, __LINE__)
+#define dm_free(p) dm_free_wrapper(p)
+#define dm_realloc(p, s) dm_realloc_wrapper((p), (s), __FILE__, __LINE__)
+#define dm_dump_memory() dm_dump_memory_wrapper()
+#define dm_bounds_check() dm_bounds_check_wrapper()
 
 /*
  * The pool allocator is useful when you are going to allocate
