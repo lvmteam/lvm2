@@ -952,6 +952,51 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 	     daemon_reply_int(reply, "seqno_after", -1) != daemon_reply_int(reply, "seqno_before", -1)))
 		log_warn("WARNING: Inconsistent metadata found for VG %s", vg->name);
 
+	/*
+	 * pvscan --cache does not perform any lvmlockd locking, and
+	 * pvscan --cache -aay skips autoactivation in lockd VGs.
+	 *
+	 * pvscan --cache populates lvmetad with VG metadata from disk.
+	 * No lvmlockd locking is needed.  It is expected that lockd VG
+	 * metadata that is read by pvscan and populated in lvmetad may
+	 * be immediately stale due to changes to the VG from other hosts
+	 * during or after this pvscan.  This is normal and not a problem.
+	 * When a subsequent lvm command uses the VG, it will lock the VG
+	 * with lvmlockd, read the VG from lvmetad, and update the cached
+	 * copy from disk if necessary.
+	 *
+	 * pvscan --cache -aay does not activate LVs in lockd VGs because
+	 * activation requires locking, and a lock-start operation is needed
+	 * on a lockd VG before any locking can be performed in it.
+	 *
+	 * An equivalent of pvscan --cache -aay for lockd VGs is:
+	 * 1. pvscan --cache
+	 * 2. vgchange --lock-start
+	 * 3. vgchange -aay -S 'locktype=sanlock || locktype=dlm'
+	 *
+	 * [We could eventually add support for autoactivating lockd VGs
+	 * using pvscan by incorporating the lock start step (which can
+	 * take a long time), but there may be a better option than
+	 * continuing to overload pvscan.]
+	 * 
+	 * Stages of starting a lockd VG:
+	 *
+	 * . pvscan --cache populates lockd VGs in lvmetad without locks,
+	 *   and this initial cached copy may quickly become stale.
+	 *
+	 * . vgchange --lock-start VG reads the VG without the VG lock
+	 *   because no locks are available until the locking is started.
+	 *   It only uses the VG name and lock_type from the VG metadata,
+	 *   and then only uses it to start the VG lockspace in lvmlockd.
+	 *
+	 * . Further lvm commands, e.g. activation, can then lock the VG
+	 *   with lvmlockd and use current VG metdata.
+	 */
+	if (handler && vg && is_lockd_type(vg->lock_type)) {
+		log_debug_lvmetad("Skip pvscan activation for lockd type VG %s", vg->name);
+		handler = NULL;
+	}
+
 	if (result && handler) {
 		status = daemon_reply_str(reply, "status", "<missing>");
 		vgname = daemon_reply_str(reply, "vgname", "<missing>");
