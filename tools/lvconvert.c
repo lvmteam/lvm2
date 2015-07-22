@@ -40,9 +40,6 @@ struct lvconvert_params {
 	int wait_completion;
 	int need_polling;
 
-	int is_merging_origin;
-	int is_merging_origin_thin;
-
 	int thin_chunk_size_calc_policy;
 	uint32_t chunk_size;
 	uint32_t region_size;
