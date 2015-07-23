@@ -50,7 +50,7 @@ struct profile_params {
 	struct dm_list profiles;                 /* list of profiles which are loaded already and which are ready for use */
 };
 
-#define CFG_PATH_MAX_LEN 64
+#define CFG_PATH_MAX_LEN 128
 
 /*
  * Structures used for definition of a configuration tree.
