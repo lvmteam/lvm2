@@ -901,7 +901,7 @@ struct lvcreate_params {
 	uint32_t min_recovery_rate; /* RAID */
 	uint32_t max_recovery_rate; /* RAID */
 
-	uint64_t feature_flags; /* cache */
+	const char *cache_mode; /* cache */
 	const char *policy_name; /* cache */
 	struct dm_config_tree *policy_settings; /* cache */
 

@@ -190,9 +190,10 @@ int get_pool_params(struct cmd_context *cmd,
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
 
-int get_cache_policy_params(struct cmd_context *cmd,
-			    const char **name,
-			    struct dm_config_tree **settings);
+int get_cache_params(struct cmd_context *cmd,
+		     const char **mode,
+		     const char **name,
+		     struct dm_config_tree **settings);
 
 int change_tag(struct cmd_context *cmd, struct volume_group *vg,
 	       struct logical_volume *lv, struct physical_volume *pv, int arg);

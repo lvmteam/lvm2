@@ -690,7 +690,7 @@ static int _lvchange_cachepolicy(struct cmd_context *cmd, struct logical_volume 
 		goto out;
 	}
 
-	if (!get_cache_policy_params(cmd, &name, &settings))
+	if (!get_cache_params(cmd, NULL, &name, &settings))
 		goto_out;
 	if (!lv_cache_set_policy(lv, name, settings))
 		goto_out;

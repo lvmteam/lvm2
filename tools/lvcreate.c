@@ -567,21 +567,14 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 static int _read_cache_params(struct cmd_context *cmd,
 			      struct lvcreate_params *lp)
 {
-	const char *cachemode;
-
 	if (!seg_is_cache(lp) && !seg_is_cache_pool(lp))
 		return 1;
 
-	if (!(cachemode = arg_str_value(cmd, cachemode_ARG, NULL)))
-		cachemode = find_config_tree_str(cmd, allocation_cache_pool_cachemode_CFG, NULL);
-
-	if (!set_cache_pool_feature(&lp->feature_flags, cachemode))
-		return_0;
-
-	if (!get_cache_policy_params(cmd, &lp->policy_name, &lp->policy_settings)) {
-		log_error("Failed to parse cache policy and/or settings.");
-		return 0;
-	}
+	if (!get_cache_params(cmd,
+			      &lp->cache_mode,
+			      &lp->policy_name,
+			      &lp->policy_settings))
+		return_NULL;
 
 	return 1;
 }
@@ -1089,8 +1082,6 @@ static int _determine_cache_argument(struct volume_group *vg,
 		/* If cache args not given, use those from cache pool */
 		if (!arg_is_set(cmd, chunksize_ARG))
 			lp->chunk_size = first_seg(lv)->chunk_size;
-		if (!arg_is_set(cmd, cachemode_ARG))
-			lp->feature_flags = first_seg(lv)->feature_flags;
 	} else if (lv) {
 		/* Origin exists, create cache pool volume */
 		if (!validate_lv_cache_create_origin(lv))

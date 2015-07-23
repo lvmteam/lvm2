@@ -1,5 +1,6 @@
 Version 2.02.128 - 
 ===================================
+  Enhance toollib's get_cache_params().
   Runtime detect presence of cache smq policy.
   Add demo cache-mq  and cache-smq profiles.
   Add cmd profilable allocation/cache_policy,cache_settings,cache_mode.

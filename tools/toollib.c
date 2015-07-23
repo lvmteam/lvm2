@@ -1399,8 +1399,10 @@ static int _validate_cachepool_params(const char *name,
 	return 1;
 }
 
-int get_cache_policy_params(struct cmd_context *cmd, const char **name,
-			    struct dm_config_tree **settings)
+int get_cache_params(struct cmd_context *cmd,
+		     const char **mode,
+		     const char **name,
+		     struct dm_config_tree **settings)
 {
 	const char *str;
 	struct arg_value_group_list *group;
@@ -1408,7 +1410,14 @@ int get_cache_policy_params(struct cmd_context *cmd, const char **name,
 	struct dm_config_node *cn;
 	int ok = 0;
 
-	*name = arg_str_value(cmd, cachepolicy_ARG, DEFAULT_CACHE_POLICY);
+	if (mode)
+		*mode = arg_str_value(cmd, cachemode_ARG, NULL);
+
+	if (name)
+		*name = arg_str_value(cmd, cachepolicy_ARG, NULL);
+
+	if (!settings)
+		return 1;
 
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {
 		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))
@@ -1428,6 +1437,9 @@ int get_cache_policy_params(struct cmd_context *cmd, const char **name,
 		if (!dm_config_parse(current, str, str + strlen(str)))
 			goto_out;
 	}
+
+	if (!current)
+		return 1;
 
 	if (!(result = dm_config_flatten(current)))
 		goto_out;
