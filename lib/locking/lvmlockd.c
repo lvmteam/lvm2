@@ -1169,55 +1169,24 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 			return 1;
 
 		/*
-		 * This is the explicit sanlock bootstrap condition for
-		 * proceding without the global lock: a chicken/egg case
-		 * for the first sanlock VG that is created.
+		 * This is the sanlock bootstrap condition for proceding
+		 * without the global lock: a chicken/egg case for the first
+		 * sanlock VG that is created.  When creating the first
+		 * sanlock VG, there is no global lock to acquire because
+		 * the gl will exist in the VG being created.  So, we
+		 * skip acquiring the global lock when creating this initial
+		 * VG, and enable the global lock in this VG.
 		 *
-		 * When creating the first sanlock VG, there is no global
-		 * lock to acquire because the gl will exist in the VG
-		 * being created.  The "enable" option makes explicit that
-		 * this is expected:
+		 * Here we assume that this is an initial bootstrap condition
+		 * based on the fact that lvmlockd has seen no lockd VGs.
+		 * (A commmand line option could be added to allow the user
+		 * to make this initial bootstrap condition explicit.)
 		 *
-		 * vgcreate --lock-type sanlock --lock-gl enable
-		 *
-		 * There are three indications that this is the unique
-		 * first-sanlock-vg bootstrap case:
-		 *
-		 * - result from lvmlockd is -ENOLS because lvmlockd found
-		 *   no lockspace for this VG; expected because it's being
-		 *   created here.
-		 *
-		 * - result flag LD_RF_NO_GL_LS from lvmlockd means that
-		 *   lvmlockd has seen no other lockspace with a global lock.
-		 *   This implies that this is probably the first sanlock vg
-		 *   to be created.  If other sanlock vgs exist, the global
-		 *   lock should be available from one of them.
-		 *
-		 * - command line lock-gl arg is "enable" which means the
-		 *   user expects this to be the first sanlock vg, and the
-		 *   global lock should be enabled in it.
-		 */
-
-		if ((lockd_flags & LD_RF_NO_GL_LS) &&
-		    !strcmp(vg_lock_type, "sanlock") &&
-		    !strcmp(mode, "enable")) {
-			log_print_unless_silent("Enabling sanlock global lock");
-			lvmetad_validate_global_cache(cmd, 1);
-			return 1;
-		}
-
-		/*
-		 * This is an implicit sanlock bootstrap condition for
-		 * proceeding without the global lock.  The command line does
-		 * not indicate explicitly that this is a bootstrap situation
-		 * (via "enable"), but it seems likely to be because lvmlockd
-		 * has seen no lockd-type vgs.  It is possible that a global
-		 * lock does exist in a vg that has not yet been seen.  If that
-		 * vg appears after this creates a new vg with a new enabled
-		 * gl, then there will be two enabled global locks, and one
-		 * will need to be disabled.  (We could instead return an error
-		 * here and insist with an error message that the --lock-gl
-		 * enable option be used to exercise the explicit case above.)
+		 * That assumption might be wrong.  It is possible that a global
+		 * lock does exist in a VG that has not yet been seen.  If that
+		 * VG appears after this creates a new VG with a new enabled
+		 * global lock, then there will be two VGs containing enabled
+		 * global locks, and one will need to be disabled by the user.
 		 */
 
 		if ((lockd_flags & LD_RF_NO_GL_LS) &&
