@@ -199,17 +199,6 @@ static struct list_head lockspaces;
 static struct list_head lockspaces_inactive;
 
 /*
- * This flag is set to 1 if we see multiple vgs with the global
- * lock enabled.  While this is set, we return a special flag
- * with the vg lock result indicating to the lvm command that
- * there is a duplicate gl in the vg which should be resolved.
- * While this is set, find_lockspace_name has the side job of
- * counting the number of lockspaces with enabled gl's so that
- * this can be set back to zero when the duplicates are disabled.
- */
-static int sanlock_gl_dup;
-
-/*
  * Client thread reads client requests and writes client results.
  */
 static pthread_t client_thread;
@@ -1045,6 +1034,9 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 
 	log_debug("S %s R %s res_lock lm done r_version %u",
 		  ls->name, r->name, r_version);
+
+	if (sanlock_gl_dup && ls->sanlock_gl_enabled)
+		act->flags |= LD_AF_DUP_GL_LS;
 
 	/* lm_lock() reads new r_version */
 
@@ -2095,9 +2087,6 @@ static void *lockspace_thread_main(void *arg_in)
 			}
 
 			act = list_first_entry(&ls->actions, struct action, list);
-
-			if (sanlock_gl_dup && ls->sanlock_gl_enabled)
-				act->flags |= LD_AF_DUP_GL_LS;
 
 			if (act->op == LD_OP_STOP) {
 				ls->thread_work = 0;
@@ -3855,8 +3844,7 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			"thread_work=%d "
 			"thread_stop=%d "
 			"thread_done=%d "
-			"sanlock_gl_enabled=%d "
-			"sanlock_gl_dup=%d\n",
+			"sanlock_gl_enabled=%d",
 			prefix,
 			ls->name,
 			ls->vg_name,
@@ -3870,8 +3858,7 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			ls->thread_work ? 1 : 0,
 			ls->thread_stop ? 1 : 0,
 			ls->thread_done ? 1 : 0,
-			ls->sanlock_gl_enabled ? 1 : 0,
-			ls->sanlock_gl_dup ? 1 : 0);
+			ls->sanlock_gl_enabled ? 1 : 0);
 }
 
 static int print_action(struct action *act, const char *prefix, int pos, int len)

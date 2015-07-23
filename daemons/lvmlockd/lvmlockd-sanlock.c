@@ -801,8 +801,6 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 	log_debug("S %s able_gl %s", ls->name, gl_name);
 
 	ls->sanlock_gl_enabled = enable;
-	if (ls->sanlock_gl_dup && !enable)
-		ls->sanlock_gl_dup = 0;
 
 	if (enable)
 		strncpy(gl_lsname_sanlock, ls->name, MAX_NAME);
@@ -1253,6 +1251,14 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	}
 
 	rs = &rds->rs;
+
+	/*
+	 * While there are duplicate global locks, keep checking
+	 * to see if any have been disabled.
+	 */
+	if (sanlock_gl_dup && ls->sanlock_gl_enabled &&
+	    (r->type == LD_RT_GL || r->type == LD_RT_VG))
+		ls->sanlock_gl_enabled = gl_is_enabled(ls, ls->lm_data);
 
 	if (r->type == LD_RT_LV) {
 		/*

@@ -322,6 +322,17 @@ EXTERN int daemon_host_id;
 EXTERN const char *daemon_host_id_file;
 EXTERN int sanlock_io_timeout;
 
+/*
+ * This flag is set to 1 if we see multiple vgs with the global
+ * lock enabled.  While this is set, we return a special flag
+ * with the vg lock result indicating to the lvm command that
+ * there is a duplicate gl in the vg which should be resolved.
+ * While this is set, find_lockspace_name has the side job of
+ * counting the number of lockspaces with enabled gl's so that
+ * this can be set back to zero when the duplicates are disabled.
+ */
+EXTERN int sanlock_gl_dup;
+
 void log_level(int level, const char *fmt, ...)  __attribute__((format(printf, 2, 3)));
 #define log_debug(fmt, args...) log_level(LOG_DEBUG, fmt, ##args)
 #define log_error(fmt, args...) log_level(LOG_ERR, fmt, ##args)
