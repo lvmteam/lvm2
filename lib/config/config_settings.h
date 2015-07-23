@@ -122,7 +122,8 @@ cfg_section(devices_CFG_SECTION, "devices", root_CFG_SECTION, 0, vsn(1, 0, 0), 0
 	"How LVM uses block devices.\n")
 
 cfg_section(allocation_CFG_SECTION, "allocation", root_CFG_SECTION, CFG_PROFILABLE, vsn(2, 2, 77), 0, NULL,
-	"How LVM selects free space for Logical Volumes.\n")
+	"How LVM selects free space for Logical Volumes and default\n"
+	"properties applied to new Logical Volumes of various types.\n")
 
 cfg_section(log_CFG_SECTION, "log", root_CFG_SECTION, 0, vsn(1, 0, 0), 0, NULL,
 	"How LVM log information is reported.\n")
