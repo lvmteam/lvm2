@@ -191,6 +191,9 @@ int init_thin_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 int init_cache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
+#define CACHE_FEATURE_POLICY_MQ			(1U << 0)
+#define CACHE_FEATURE_POLICY_SMQ		(1U << 1)
+
 #define SNAPSHOT_FEATURE_FIXED_LEAK		(1U << 0) /* version 1.12 */
 
 #ifdef SNAPSHOT_INTERNAL

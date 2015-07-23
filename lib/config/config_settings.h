@@ -909,6 +909,14 @@ cfg_array(global_thin_disabled_features_CFG, "thin_disabled_features", global_CF
 	"Example:\n"
 	"thin_disabled_features = [ \"discards\", \"block_size\" ]\n")
 
+cfg_array(global_cache_disabled_features_CFG, "cache_disabled_features", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 126), NULL, 0, NULL,
+	"Features to not use in the cache driver.\n"
+	"This can be helpful for testing, or to avoid\n"
+	"using a feature that is causing problems.\n"
+	"Features: policy_mq, policy_smq.\n"
+	"Example:\n"
+	"cache_disabled_features = [ \"policy_smq\" ]\n")
+
 cfg(global_cache_check_executable_CFG, "cache_check_executable", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, CACHE_CHECK_CMD, vsn(2, 2, 108), "@CACHE_CHECK_CMD@", 0, NULL,
 	"The full path to the cache_check command.\n"
 	"LVM uses this command to check that a cache metadata\n"
