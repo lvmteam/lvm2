@@ -1,3 +1,6 @@
+Version 1.02.104 -
+=================================
+
 Version 1.02.103 - 24th July 2015
 =================================
   Introduce libdevmapper wrappers for all malloc-related functions.
