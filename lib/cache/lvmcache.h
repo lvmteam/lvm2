@@ -39,11 +39,23 @@ struct disk_locn;
 
 struct lvmcache_vginfo;
 
+/*
+ * vgsummary represents a summary of the VG that is read
+ * without a lock.  The info does not come through vg_read(),
+ * but through reading mdas.  It provides information about
+ * the VG that is needed to lock the VG and then read it fully
+ * with vg_read(), after which the VG summary should be checked
+ * against the full VG metadata to verify it was correct (since
+ * it was read without a lock.)
+ *
+ * Once read, vgsummary information is saved in lvmcache_vginfo.
+ */
 struct lvmcache_vgsummary {
 	const char *vgname;
 	struct id vgid;
 	uint64_t vgstatus;
 	char *creation_host;
+	const char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
 };

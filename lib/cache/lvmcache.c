@@ -56,6 +56,7 @@ struct lvmcache_vginfo {
 	char _padding[7];
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
+	char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
 	size_t vgmetadata_size;
@@ -1447,7 +1448,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 }
 
 static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstatus,
-				     const char *creation_host)
+				     const char *creation_host, const char *lock_type)
 {
 	if (!info || !info->vginfo)
 		return 1;
@@ -1460,11 +1461,11 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 	info->vginfo->status = vgstatus;
 
 	if (!creation_host)
-		return 1;
+		goto set_lock_type;
 
 	if (info->vginfo->creation_host && !strcmp(creation_host,
 						   info->vginfo->creation_host))
-		return 1;
+		goto set_lock_type;
 
 	if (info->vginfo->creation_host)
 		dm_free(info->vginfo->creation_host);
@@ -1478,6 +1479,24 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 	log_debug_cache("lvmcache: %s: VG %s: Set creation host to %s.",
 			dev_name(info->dev), info->vginfo->vgname, creation_host);
 
+set_lock_type:
+
+	if (!lock_type)
+		goto out;
+
+	if (info->vginfo->lock_type && !strcmp(lock_type, info->vginfo->lock_type))
+		goto out;
+
+	if (info->vginfo->lock_type)
+		dm_free(info->vginfo->lock_type);
+
+	if (!(info->vginfo->lock_type = dm_strdup(lock_type))) {
+		log_error("cache creation host alloc failed for %s",
+			  lock_type);
+		return 0;
+	}
+
+out:
 	return 1;
 }
 
@@ -1546,7 +1565,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vg
 	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus,
 				     vgsummary->creation_host, info->fmt) ||
 	    !_lvmcache_update_vgid(info, info->vginfo, vgid) ||
-	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host) ||
+	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host, vgsummary->lock_type) ||
 	    !_lvmcache_update_vg_mda_info(info, vgsummary->mda_checksum, vgsummary->mda_size))
 		return_0;
 
@@ -1561,7 +1580,8 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	struct lvmcache_vgsummary vgsummary = {
 		.vgname = vg->name,
 		.vgstatus = vg->status,
-		.vgid = vg->id
+		.vgid = vg->id,
+		.lock_type = vg->lock_type
 	};
 
 	pvid_s[sizeof(pvid_s) - 1] = '\0';

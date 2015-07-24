@@ -1031,6 +1031,11 @@ static void _read_desc(struct dm_pool *mem,
 	*when = u;
 }
 
+/*
+ * It would be more accurate to call this _read_vgsummary().
+ * It is used to read vgsummary information about a VG
+ * before locking and reading the VG via vg_read().
+ */
 static int _read_vgname(const struct format_type *fmt, const struct dm_config_tree *cft, 
 			struct lvmcache_vgsummary *vgsummary)
 {
@@ -1066,6 +1071,8 @@ static int _read_vgname(const struct format_type *fmt, const struct dm_config_tr
 			  vgsummary->vgname);
 		return 0;
 	}
+
+	dm_config_get_str(vgn, "lock_type", &vgsummary->lock_type);
 
 	return 1;
 }
