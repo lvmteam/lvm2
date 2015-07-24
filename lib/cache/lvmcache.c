@@ -2345,3 +2345,16 @@ int lvmcache_lookup_mda(struct lvmcache_vgsummary *vgsummary)
 
 	return 0;
 }
+
+int lvmcache_contains_lock_type_sanlock(struct cmd_context *cmd)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		if (vginfo->lock_type && !strcmp(vginfo->lock_type, "sanlock"))
+			return 1;
+	}
+
+	return 0;
+}
+

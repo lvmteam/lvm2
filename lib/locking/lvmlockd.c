@@ -1177,23 +1177,48 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 		 * skip acquiring the global lock when creating this initial
 		 * VG, and enable the global lock in this VG.
 		 *
-		 * Here we assume that this is an initial bootstrap condition
-		 * based on the fact that lvmlockd has seen no lockd VGs.
-		 * (A commmand line option could be added to allow the user
-		 * to make this initial bootstrap condition explicit.)
+		 * This initial bootstrap condition is identified based on
+		 * two things:
 		 *
-		 * That assumption might be wrong.  It is possible that a global
-		 * lock does exist in a VG that has not yet been seen.  If that
-		 * VG appears after this creates a new VG with a new enabled
-		 * global lock, then there will be two VGs containing enabled
-		 * global locks, and one will need to be disabled by the user.
+		 * 1. No sanlock VGs have been started in lvmlockd, causing
+		 *    lvmlockd to return NO_GL_LS/NO_LOCKSPACES.
+		 *
+		 * 2. No sanlock VGs are seen in lvmcache after the disk
+		 *    scan performed in lvmetad_validate_global_cache().
+		 *
+		 * If both of those are true, we go ahead and create this new
+		 * VG which will have the global lock enabled.  However, this
+		 * has a shortcoming: another sanlock VG may exist that hasn't
+		 * appeared to the system yet.  If that VG has its global lock
+		 * enabled, then when it appears later, duplicate global locks
+		 * will be seen, and a warning will indicate that one of them
+		 * should be disabled.
+		 *
+		 * The two bootstrap conditions have another shortcoming to the
+		 * opposite effect:  other sanlock VGs may be visible to the
+		 * system, but none of them have a global lock enabled.
+		 * In that case, it would make sense to create this new VG with
+		 * an enabled global lock.  (FIXME: we could detect that none
+		 * of the existing sanlock VGs have a gl enabled and allow this
+		 * vgcreate to go ahead.)  Enabling the global lock in one of
+		 * the existing sanlock VGs is currently the simplest solution.
 		 */
 
 		if ((lockd_flags & LD_RF_NO_GL_LS) &&
 		    (lockd_flags & LD_RF_NO_LOCKSPACES) &&
 		    !strcmp(vg_lock_type, "sanlock")) {
-			log_print_unless_silent("Enabling sanlock global lock");
 			lvmetad_validate_global_cache(cmd, 1);
+			/*
+			 * lvmcache holds provisional VG lock_type info because
+			 * lvmetad_validate_global_cache did a disk scan.
+			 */
+			if (lvmcache_contains_lock_type_sanlock(cmd)) {
+				/* FIXME: we could check that all are started, and then check that none have gl enabled. */
+				log_error("Global lock failed: start existing sanlock VGs to access global lock.");
+				log_error("(If all sanlock VGs are started, enable global lock with lvmlockctl.)");
+				return 0;
+			}
+			log_print_unless_silent("Enabling sanlock global lock");
 			return 1;
 		}
 

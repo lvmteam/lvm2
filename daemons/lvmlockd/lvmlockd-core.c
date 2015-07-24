@@ -3341,12 +3341,6 @@ static void client_send_result(struct client *cl, struct action *act)
 		 * or if lockspaces exist, but not one with the global lock.
 		 * Given this detail, it may be able to procede without
 		 * the lock.
-		 *
-		 * FIXME: it would also help the caller to know if there
-		 * are other sanlock VGs that have not been started.
-		 * If there are, then one of them might have a global
-		 * lock enabled.  In that case, vgcreate may not want
-		 * to create a new sanlock vg with gl enabled.
 		 */
 		pthread_mutex_lock(&lockspaces_mutex);
 		if (list_empty(&lockspaces))

@@ -188,4 +188,6 @@ int lvmcache_found_duplicate_pvs(void);
 
 void lvmcache_set_preferred_duplicates(const char *vgid);
 
+int lvmcache_contains_lock_type_sanlock(struct cmd_context *cmd);
+
 #endif
