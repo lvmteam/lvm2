@@ -1463,8 +1463,6 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_ARG_LEN 64
-
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct dm_config_tree *config_string_cft;
@@ -1472,10 +1470,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int ret = 0;
 	int locking_type;
 	int monitoring;
-	char arg_new[MAX_ARG_LEN];
-	char *arg;
-	int quit_arg_hyphen_removal;
-	int i, j, j_new;
+	char *arg_new, *arg;
+	int i;
+	int skip_hyphens;
 
 	init_error_message_produced(0);
 
@@ -1484,28 +1481,35 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	/* eliminate '-' from all options starting with -- */
 	for (i = 1; i < argc; i++) {
-		quit_arg_hyphen_removal = 0;
+
 		arg = argv[i];
 
-		if (arg[0] == '-' && arg[1] == '-' && strlen(arg) == 2)
+		if (*arg++ != '-' || *arg++ != '-')
+			continue;
+
+		/* If we reach "--" then stop. */
+		if (!*arg)
 			break;
 
-		if (arg[0] == '-' && arg[1] == '-' && strlen(arg) < MAX_ARG_LEN) {
-			memset(arg_new, 0, sizeof(arg_new));
-			arg_new[0] = '-';
-			arg_new[1] = '-';
+		arg_new = arg;
+		skip_hyphens = 1;
+		while (*arg) {
+			/* If we encounter '=', stop any further hyphen removal. */
+			if (*arg == '=')
+				skip_hyphens = 0;
 
-			for (j = 2, j_new = 2; j < strlen(arg) + 1; j++) {
-				if (arg[j] == '=')
-					quit_arg_hyphen_removal = 1;
-				if (!quit_arg_hyphen_removal && arg[j] == '-')
-					continue;
-				arg_new[j_new] = arg[j];
-				j_new++;
+			/* Do we need to keep the next character? */
+			if (*arg != '-' || !skip_hyphens) {
+				if (arg_new != arg)
+					*arg_new = *arg;
+				++arg_new;
 			}
-
-			memcpy(argv[i], arg_new, strlen(arg_new) + 1);
+			arg++;
 		}
+
+		/* Terminate a shortened arg */
+		if (arg_new != arg)
+			*arg_new = '\0';
 	}
 
 	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))

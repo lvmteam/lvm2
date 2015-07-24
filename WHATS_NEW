@@ -1,5 +1,6 @@
 Version 2.02.126 -
 ================================
+  Fix long option hyphen removal. (2.02.122)
   Fix clvmd freeze if client disappears without first releasing its locks.
   Fix lvconvert segfaults while performing snapshots merge.
   Ignore errors during detection if use_blkid_wiping=1 and --force is used.
