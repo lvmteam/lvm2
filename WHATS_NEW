@@ -1,5 +1,5 @@
-Version 2.02.126 -
-================================
+Version 2.02.126 - 24th July 2015
+=================================
   Fix long option hyphen removal. (2.02.122)
   Fix clvmd freeze if client disappears without first releasing its locks.
   Fix lvconvert segfaults while performing snapshots merge.
