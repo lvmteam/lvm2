@@ -1,5 +1,6 @@
 Version 2.02.128 - 
 ===================================
+  Runtime detect presence of cache smq policy.
   Add demo cache-mq  and cache-smq profiles.
   Add cmd profilable allocation/cache_policy,cache_settings,cache_mode.
   Require cache_check 0.5.4 for use of --clear-needs-check-flag.
