@@ -34,7 +34,7 @@ include $(top_builddir)/make.tmpl
 INCLUDES += -I$(top_srcdir)/libdaemon/server
 LVMLIBS = -ldaemonserver $(LVMINTERNAL_LIBS) -ldevmapper
 
-LIBS += $(PTHREAD_LIBS) -lrt
+LIBS += $(PTHREAD_LIBS)
 
 ifeq ("@BUILD_LOCKDSANLOCK@", "yes")
   LIBS += -lsanlock_client
