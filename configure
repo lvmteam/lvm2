@@ -1641,7 +1641,7 @@ Optional Features:
   --disable-cache_check_needs_check
                           required if cache_check version is < 0.5
   --disable-readline      disable readline support
-  --enable-realtime       enable realtime clock support
+  --disable-realtime      disable realtime clock support
   --enable-ocf            enable Open Cluster Framework (OCF) compliant
                           resource agents
   --enable-cmirrord       enable the cluster mirror log daemon
@@ -9206,6 +9206,8 @@ $as_echo_n "checking whether to enable realtime support... " >&6; }
 # Check whether --enable-realtime was given.
 if test "${enable_realtime+set}" = set; then :
   enableval=$enable_realtime; REALTIME=$enableval
+else
+  REALTIME=yes
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $REALTIME" >&5
@@ -12796,6 +12798,8 @@ $as_echo "#define HAVE_REALTIME 1" >>confdefs.h
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling realtime clock" >&5
 $as_echo "$as_me: WARNING: Disabling realtime clock" >&2;}
 	fi
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $HAVE_REALTIME" >&5
+$as_echo "$HAVE_REALTIME" >&6; }
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for struct stat has st_ctim." >&5
