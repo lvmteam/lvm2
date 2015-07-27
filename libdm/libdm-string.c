@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2006-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -441,6 +441,161 @@ int dm_strncpy(char *dest, const char *src, size_t n)
 static int _close_enough(double d1, double d2)
 {
 	return fabs(d1 - d2) < DBL_EPSILON;
+}
+
+#define BASE_UNKNOWN 0
+#define BASE_SHARED 1
+#define BASE_1024 8
+#define BASE_1000 15
+#define BASE_SPECIAL 21
+#define NUM_UNIT_PREFIXES 6
+#define NUM_SPECIAL 3
+
+#define SIZE_BUF 128
+
+const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
+			      char unit_type, int use_si_units, 
+			      uint64_t unit_factor, int include_suffix, 
+			      dm_size_suffix_t suffix_type)
+{
+	unsigned base = BASE_UNKNOWN;
+	unsigned s;
+	int precision;
+	uint64_t byte = UINT64_C(0);
+	uint64_t units = UINT64_C(1024);
+	char *size_buf = NULL;
+	char new_unit_type = '\0', unit_type_buf[2];
+	const char * const size_str[][3] = {
+		/* BASE_UNKNOWN */
+		{"         ", "   ", " "},	/* [0] */
+
+		/* BASE_SHARED - Used if use_si_units = 0 */
+		{" Exabyte", " EB", "E"},	/* [1] */
+		{" Petabyte", " PB", "P"},	/* [2] */
+		{" Terabyte", " TB", "T"},	/* [3] */
+		{" Gigabyte", " GB", "G"},	/* [4] */
+		{" Megabyte", " MB", "M"},	/* [5] */
+		{" Kilobyte", " KB", "K"},	/* [6] */
+		{" Byte    ", " B", "B"},	/* [7] */
+
+		/* BASE_1024 - Used if use_si_units = 1 */
+		{" Exbibyte", " EiB", "e"},	/* [8] */
+		{" Pebibyte", " PiB", "p"},	/* [9] */
+		{" Tebibyte", " TiB", "t"},	/* [10] */
+		{" Gibibyte", " GiB", "g"},	/* [11] */
+		{" Mebibyte", " MiB", "m"},	/* [12] */
+		{" Kibibyte", " KiB", "k"},	/* [13] */
+		{" Byte    ", " B", "b"},	/* [14] */
+
+		/* BASE_1000 - Used if use_si_units = 1 */
+		{" Exabyte",  " EB", "E"},	/* [15] */
+		{" Petabyte", " PB", "P"},	/* [16] */
+		{" Terabyte", " TB", "T"},	/* [17] */
+		{" Gigabyte", " GB", "G"},	/* [18] */
+		{" Megabyte", " MB", "M"},	/* [19] */
+		{" Kilobyte", " kB", "K"},	/* [20] */
+
+		/* BASE_SPECIAL */
+		{" Byte    ", " B ", "B"},	/* [21] (shared with BASE_1000) */
+		{" Units   ", " Un", "U"},	/* [22] */
+		{" Sectors ", " Se", "S"},	/* [23] */
+	};
+
+	if (!(size_buf = dm_pool_alloc(mem, SIZE_BUF))) {
+		log_error("no memory for size display buffer");
+		return "";
+	}
+
+	if (!use_si_units) {
+		/* Case-independent match */
+		for (s = 0; s < NUM_UNIT_PREFIXES; s++)
+			if (toupper((int) unit_type) ==
+			    *size_str[BASE_SHARED + s][2]) {
+				base = BASE_SHARED;
+				break;
+			}
+	} else {
+		/* Case-dependent match for powers of 1000 */
+		for (s = 0; s < NUM_UNIT_PREFIXES; s++)
+			if (unit_type == *size_str[BASE_1000 + s][2]) {
+				base = BASE_1000;
+				break;
+			}
+
+		/* Case-dependent match for powers of 1024 */
+		if (base == BASE_UNKNOWN)
+			for (s = 0; s < NUM_UNIT_PREFIXES; s++)
+			if (unit_type == *size_str[BASE_1024 + s][2]) {
+				base = BASE_1024;
+				break;
+			}
+	}
+
+	if (base == BASE_UNKNOWN)
+		/* Check for special units - s, b or u */
+		for (s = 0; s < NUM_SPECIAL; s++)
+			if (toupper((int) unit_type) ==
+			    *size_str[BASE_SPECIAL + s][2]) {
+				base = BASE_SPECIAL;
+				break;
+			}
+
+	if (size == UINT64_C(0)) {
+		if (base == BASE_UNKNOWN)
+			s = 0;
+		sprintf(size_buf, "0%s", include_suffix ? size_str[base + s][suffix_type] : "");
+		return size_buf;
+	}
+
+	size *= UINT64_C(512);
+
+	if (base != BASE_UNKNOWN) {
+		if (!unit_factor) {
+			unit_type_buf[0] = unit_type;
+			unit_type_buf[1] = '\0';
+			if (!(unit_factor = dm_units_to_factor(&unit_type_buf[0], &new_unit_type, 1, NULL)) ||
+			    unit_type != new_unit_type) {
+				/* The two functions should match (and unrecognised units get treated like 'h'). */
+				log_error(INTERNAL_ERROR "Inconsistent units: %c and %c.", unit_type, new_unit_type);
+				return "";
+			}
+		}
+		byte = unit_factor;
+	} else {
+		/* Human-readable style */
+		if (unit_type == 'H') {
+			units = UINT64_C(1000);
+			base = BASE_1000;
+		} else {
+			units = UINT64_C(1024);
+			base = BASE_1024;
+		}
+
+		if (!use_si_units)
+			base = BASE_SHARED;
+
+		byte = units * units * units * units * units * units;
+
+		for (s = 0; s < NUM_UNIT_PREFIXES && size < byte; s++)
+			byte /= units;
+
+		include_suffix = 1;
+	}
+
+	/* FIXME Make precision configurable */
+	switch (toupper(*size_str[base + s][DM_SIZE_UNIT])) {
+	case 'B':
+	case 'S':
+		precision = 0;
+		break;
+	default:
+		precision = 2;
+	}
+
+	snprintf(size_buf, SIZE_BUF - 1, "%.*f%s", precision,
+		 (double) size / byte, include_suffix ? size_str[base + s][suffix_type] : "");
+
+	return size_buf;
 }
 
 uint64_t dm_units_to_factor(const char *units, char *unit_type,

@@ -1532,6 +1532,32 @@ int dm_strncpy(char *dest, const char *src, size_t n);
 uint64_t dm_units_to_factor(const char *units, char *unit_type,
 			    int strict, const char **endptr);
 
+/*
+ * Type of unit specifier used by dm_size_to_string().
+ */
+typedef enum {
+	DM_SIZE_LONG = 0,	/* Megabyte */
+	DM_SIZE_SHORT = 1,	/* MB or MiB */
+	DM_SIZE_UNIT = 2	/* M or m */
+} dm_size_suffix_t;
+
+/*
+ * Convert a size (in 512-byte sectors) into a printable string using units of unit_type.
+ * An upper-case unit_type indicates output units based on powers of 1000 are
+ * required; a lower-case unit_type indicates powers of 1024.
+ * For correct operation, unit_factor must be one of:
+ * 	0 - the correct value will be calculated internally;
+ *   or the output from dm_units_to_factor() corresponding to unit_type;
+ *   or 'u' or 'U', an arbitrary number of bytes to use as the power base.
+ * Set include_suffix to 1 to include a suffix of suffix_type.
+ * Set use_si_units to 0 for suffixes that don't distinguish between 1000 and 1024.
+ * Set use_si_units to 1 for a suffix that does distinguish.
+ */
+const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
+			      char unit_type, int use_si_units, 
+			      uint64_t unit_factor, int include_suffix, 
+			      dm_size_suffix_t suffix_type);
+
 /**************************
  * file/stream manipulation
  **************************/

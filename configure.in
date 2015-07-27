@@ -1726,7 +1726,7 @@ if test "$BUILD_CMIRRORD" = yes; then
 fi
 
 if test "$BUILD_LVMLOCKD" = yes; then
-	AC_CHECK_FUNCS(clock_gettime strtoull,,hard_bailout) 
+	AC_CHECK_FUNCS(clock_gettime strtoull,,hard_bailout)
 fi
 
 if test "$BUILD_LVMPOLLD" = yes; then

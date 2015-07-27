@@ -24,10 +24,6 @@
 
 #include <stdarg.h>
 
-#define SIZE_BUF 128
-
-typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
-
 static const struct {
 	alloc_policy_t alloc;
 	const char str[14]; /* must be changed when size extends 13 chars */
@@ -146,164 +142,30 @@ const char *display_lvname(const struct logical_volume *lv)
 	return name;
 }
 
-#define BASE_UNKNOWN 0
-#define BASE_SHARED 1
-#define BASE_1024 8
-#define BASE_1000 15
-#define BASE_SPECIAL 21
-#define NUM_UNIT_PREFIXES 6
-#define NUM_SPECIAL 3
-
 /* Size supplied in sectors */
 static const char *_display_size(const struct cmd_context *cmd,
-				 uint64_t size, size_len_t sl)
+				 uint64_t size, dm_size_suffix_t suffix_type)
 {
-	unsigned base = BASE_UNKNOWN;
-	unsigned s;
-	int suffix, precision;
-	uint64_t byte = UINT64_C(0);
-	uint64_t units = UINT64_C(1024);
-	char *size_buf = NULL;
-	const char * const size_str[][3] = {
-		/* BASE_UNKNOWN */
-		{"         ", "   ", " "},	/* [0] */
-
-		/* BASE_SHARED - Used if cmd->si_unit_consistency = 0 */
-		{" Exabyte", " EB", "E"},	/* [1] */
-		{" Petabyte", " PB", "P"},	/* [2] */
-		{" Terabyte", " TB", "T"},	/* [3] */
-		{" Gigabyte", " GB", "G"},	/* [4] */
-		{" Megabyte", " MB", "M"},	/* [5] */
-		{" Kilobyte", " KB", "K"},	/* [6] */
-		{" Byte    ", " B", "B"},	/* [7] */
-
-		/* BASE_1024 - Used if cmd->si_unit_consistency = 1 */
-		{" Exbibyte", " EiB", "e"},	/* [8] */
-		{" Pebibyte", " PiB", "p"},	/* [9] */
-		{" Tebibyte", " TiB", "t"},	/* [10] */
-		{" Gibibyte", " GiB", "g"},	/* [11] */
-		{" Mebibyte", " MiB", "m"},	/* [12] */
-		{" Kibibyte", " KiB", "k"},	/* [13] */
-		{" Byte    ", " B", "b"},	/* [14] */
-
-		/* BASE_1000 - Used if cmd->si_unit_consistency = 1 */
-		{" Exabyte",  " EB", "E"},	/* [15] */
-		{" Petabyte", " PB", "P"},	/* [16] */
-		{" Terabyte", " TB", "T"},	/* [17] */
-		{" Gigabyte", " GB", "G"},	/* [18] */
-		{" Megabyte", " MB", "M"},	/* [19] */
-		{" Kilobyte", " kB", "K"},	/* [20] */
-
-		/* BASE_SPECIAL */
-		{" Byte    ", " B ", "B"},	/* [21] (shared with BASE_1000) */
-		{" Units   ", " Un", "U"},	/* [22] */
-		{" Sectors ", " Se", "S"},	/* [23] */
-	};
-
-	if (!(size_buf = dm_pool_alloc(cmd->mem, SIZE_BUF))) {
-		log_error("no memory for size display buffer");
-		return "";
-	}
-
-	suffix = cmd->current_settings.suffix;
-
-	if (!cmd->si_unit_consistency) {
-		/* Case-independent match */
-		for (s = 0; s < NUM_UNIT_PREFIXES; s++)
-			if (toupper((int) cmd->current_settings.unit_type) ==
-			    *size_str[BASE_SHARED + s][2]) {
-				base = BASE_SHARED;
-				break;
-			}
-	} else {
-		/* Case-dependent match for powers of 1000 */
-		for (s = 0; s < NUM_UNIT_PREFIXES; s++)
-			if (cmd->current_settings.unit_type ==
-			    *size_str[BASE_1000 + s][2]) {
-				base = BASE_1000;
-				break;
-			}
-
-		/* Case-dependent match for powers of 1024 */
-		if (base == BASE_UNKNOWN)
-			for (s = 0; s < NUM_UNIT_PREFIXES; s++)
-			if (cmd->current_settings.unit_type ==
-			    *size_str[BASE_1024 + s][2]) {
-				base = BASE_1024;
-				break;
-			}
-	}
-
-	if (base == BASE_UNKNOWN)
-		/* Check for special units - s, b or u */
-		for (s = 0; s < NUM_SPECIAL; s++)
-			if (toupper((int) cmd->current_settings.unit_type) ==
-			    *size_str[BASE_SPECIAL + s][2]) {
-				base = BASE_SPECIAL;
-				break;
-			}
-
-	if (size == UINT64_C(0)) {
-		if (base == BASE_UNKNOWN)
-			s = 0;
-		sprintf(size_buf, "0%s", suffix ? size_str[base + s][sl] : "");
-		return size_buf;
-	}
-
-	size *= UINT64_C(512);
-
-	if (base != BASE_UNKNOWN)
-		byte = cmd->current_settings.unit_factor;
-	else {
-		/* Human-readable style */
-		if (cmd->current_settings.unit_type == 'H') {
-			units = UINT64_C(1000);
-			base = BASE_1000;
-		} else {
-			units = UINT64_C(1024);
-			base = BASE_1024;
-		}
-
-		if (!cmd->si_unit_consistency)
-			base = BASE_SHARED;
-
-		byte = units * units * units * units * units * units;
-
-		for (s = 0; s < NUM_UNIT_PREFIXES && size < byte; s++)
-			byte /= units;
-
-		suffix = 1;
-	}
-
-	/* FIXME Make precision configurable */
-	switch (toupper(*size_str[base + s][SIZE_UNIT])) {
-	case 'B':
-	case 'S':
-		precision = 0;
-		break;
-	default:
-		precision = 2;
-	}
-
-	snprintf(size_buf, SIZE_BUF - 1, "%.*f%s", precision,
-		 (double) size / byte, suffix ? size_str[base + s][sl] : "");
-
-	return size_buf;
+	return dm_size_to_string(cmd->mem, size, cmd->current_settings.unit_type,
+				 cmd->si_unit_consistency, 
+				 cmd->current_settings.unit_factor,
+				 cmd->current_settings.suffix,
+				 suffix_type);
 }
 
 const char *display_size_long(const struct cmd_context *cmd, uint64_t size)
 {
-	return _display_size(cmd, size, SIZE_LONG);
+	return _display_size(cmd, size, DM_SIZE_LONG);
 }
 
 const char *display_size_units(const struct cmd_context *cmd, uint64_t size)
 {
-	return _display_size(cmd, size, SIZE_UNIT);
+	return _display_size(cmd, size, DM_SIZE_UNIT);
 }
 
 const char *display_size(const struct cmd_context *cmd, uint64_t size)
 {
-	return _display_size(cmd, size, SIZE_SHORT);
+	return _display_size(cmd, size, DM_SIZE_SHORT);
 }
 
 void pvdisplay_colons(const struct physical_volume *pv)
