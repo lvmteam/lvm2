@@ -1,13 +1,16 @@
 *.5
+*.7
 *.8
 *.a
 *.d
 *.o
+*.orig
 *.pc
 *.pot
+*.rej
 *.so
 *.so.*
-*.swp
+*.sw*
 *~
 
 .export.sym
@@ -17,11 +20,11 @@
 Makefile
 make.tmpl
 
-configure.h
-version.h
-
 /autom4te.cache/
+/autoscan.log
 /config.log
 /config.status
+/configure.scan
 /cscope.out
+/tags
 /tmp/
