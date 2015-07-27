@@ -27,7 +27,7 @@
 /* lvmlockd result flags */
 #define LD_RF_NO_LOCKSPACES     0x00000001
 #define LD_RF_NO_GL_LS          0x00000002
-#define LD_RF_LOCAL_LS          0x00000004
+#define LD_RF_WARN_GL_REMOVED   0x00000004
 #define LD_RF_DUP_GL_LS         0x00000008
 #define LD_RF_INACTIVE_LS       0x00000010
 #define LD_RF_ADD_LS_ERROR      0x00000020

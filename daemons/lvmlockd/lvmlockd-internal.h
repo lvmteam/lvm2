@@ -101,6 +101,7 @@ struct client {
 #define LD_AF_INACTIVE_LS          0x00004000
 #define LD_AF_ADD_LS_ERROR         0x00008000
 #define LD_AF_ADOPT                0x00010000
+#define LD_AF_WARN_GL_REMOVED	   0x00020000
 
 /*
  * Number of times to repeat a lock request after
@@ -182,6 +183,7 @@ struct lockspace {
 	unsigned int thread_done : 1;
 	unsigned int sanlock_gl_enabled: 1;
 	unsigned int sanlock_gl_dup: 1;
+	unsigned int free_vg: 1;
 
 	struct list_head actions;	/* new client actions */
 	struct list_head resources;	/* resource/lock state for gl/vg/lv */

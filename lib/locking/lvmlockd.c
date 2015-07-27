@@ -115,9 +115,6 @@ static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_fla
 	if (strstr(flags_str, "NO_GL_LS"))
 		*lockd_flags |= LD_RF_NO_GL_LS;
 
-	if (strstr(flags_str, "LOCAL_LS"))
-		*lockd_flags |= LD_RF_LOCAL_LS;
-
 	if (strstr(flags_str, "DUP_GL_LS"))
 		*lockd_flags |= LD_RF_DUP_GL_LS;
 
@@ -126,6 +123,9 @@ static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_fla
 
 	if (strstr(flags_str, "ADD_LS_ERROR"))
 		*lockd_flags |= LD_RF_ADD_LS_ERROR;
+
+	if (strstr(flags_str, "WARN_GL_REMOVED"))
+		*lockd_flags |= LD_RF_WARN_GL_REMOVED;
 }
 
 /*
@@ -722,6 +722,7 @@ static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 {
 	daemon_reply reply;
+	uint32_t lockd_flags = 0;
 	int result;
 	int ret;
 
@@ -743,7 +744,7 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 				"vg_lock_args = %s", vg->lock_args,
 				NULL);
 
-	if (!_lockd_result(reply, &result, NULL)) {
+	if (!_lockd_result(reply, &result, &lockd_flags)) {
 		ret = 0;
 	} else {
 		ret = (result < 0) ? 0 : 1;
@@ -763,6 +764,9 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 		log_error("_free_vg_sanlock lvmlockd result %d", result);
 		goto out;
 	}
+
+	if (lockd_flags & LD_RF_WARN_GL_REMOVED)
+		log_warn("VG %s held the sanlock global lock, enable global lock in another VG.", vg->name);
 
 	/*
 	 * The usleep delay gives sanlock time to close the lock lv,

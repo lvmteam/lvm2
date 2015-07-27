@@ -1966,6 +1966,30 @@ static void free_ls_resources(struct lockspace *ls)
 }
 
 /*
+ * ls is the vg being removed that holds the global lock.
+ * check if any other vgs will be left without a global lock.
+ */
+
+static int other_sanlock_vgs_exist(struct lockspace *ls_rem)
+{
+	struct lockspace *ls;
+
+	list_for_each_entry(ls, &lockspaces_inactive, list) {
+		log_debug("other sanlock vg exists inactive %s", ls->name);
+		return 1;
+	}
+
+	list_for_each_entry(ls, &lockspaces, list) {
+		if (!strcmp(ls->name, ls_rem->name))
+			continue;
+		log_debug("other sanlock vg exists %s", ls->name);
+		return 1;
+	}
+
+	return 0;
+}
+
+/*
  * Process actions queued for this lockspace by
  * client_recv_action / add_lock_action.
  *
@@ -1981,6 +2005,7 @@ static void *lockspace_thread_main(void *arg_in)
 	struct lockspace *ls = arg_in;
 	struct resource *r, *r2;
 	struct action *add_act, *act, *safe;
+	struct action *act_op_free = NULL;
 	struct list_head tmp_act;
 	struct list_head act_close;
 	int free_vg = 0;
@@ -2253,9 +2278,10 @@ out_act:
 
 	pthread_mutex_lock(&ls->mutex);
 	list_for_each_entry_safe(act, safe, &ls->actions, list) {
-		if (act->op == LD_OP_FREE)
+		if (act->op == LD_OP_FREE) {
+			act_op_free = act;
 			act->result = 0;
-		else if (act->op == LD_OP_STOP)
+		} else if (act->op == LD_OP_STOP)
 			act->result = 0;
 		else if (act->op == LD_OP_RENAME_BEFORE)
 			act->result = 0;
@@ -2265,6 +2291,19 @@ out_act:
 		list_add_tail(&act->list, &tmp_act);
 	}
 	pthread_mutex_unlock(&ls->mutex);
+
+	/*
+	 * If this freed a sanlock vg that had gl enabled, and other sanlock
+	 * vgs exist, return a flag so the command can warn that the gl has
+	 * been removed and may need to be enabled in another sanlock vg.
+	 */
+
+	if (free_vg && ls->sanlock_gl_enabled && act_op_free) {
+		pthread_mutex_lock(&lockspaces_mutex);
+		if (other_sanlock_vgs_exist(ls))
+			act_op_free->flags |= LD_AF_WARN_GL_REMOVED;
+		pthread_mutex_unlock(&lockspaces_mutex);
+	}
 
 	pthread_mutex_lock(&client_mutex);
 	list_for_each_entry_safe(act, safe, &tmp_act, list) {
@@ -2276,11 +2315,12 @@ out_act:
 
 	pthread_mutex_lock(&lockspaces_mutex);
 	ls->thread_done = 1;
+	ls->free_vg = free_vg;
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/*
-	 * worker_thread will join this thread, and move the
-	 * ls struct from lockspaces list to lockspaces_inactive.
+	 * worker_thread will join this thread, and free the
+	 * ls or move it to lockspaces_inactive.
 	 */
 	pthread_mutex_lock(&worker_mutex);
 	worker_wake = 1;
@@ -2837,9 +2877,14 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 				pthread_join(ls->thread, NULL);
 				list_del(&ls->list);
 
+
 				/* In future we may need to free ls->actions here */
 				free_ls_resources(ls);
-				list_add(&ls->list, &lockspaces_inactive);
+
+				if (ls->free_vg)
+					free(ls);
+				else
+					list_add(&ls->list, &lockspaces_inactive);
 				free_count++;
 			} else {
 				need_free++;
@@ -3363,6 +3408,9 @@ static void client_send_result(struct client *cl, struct action *act)
 
 	if (act->flags & LD_AF_ADD_LS_ERROR)
 		strcat(result_flags, "ADD_LS_ERROR,");
+
+	if (act->flags & LD_AF_WARN_GL_REMOVED)
+		strcat(result_flags, "WARN_GL_REMOVED,");
 	
 	if (act->op == LD_OP_INIT) {
 		/*
