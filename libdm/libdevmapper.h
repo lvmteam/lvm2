@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2006 Rackable Systems All rights reserved.  
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -1663,6 +1664,45 @@ typedef int32_t dm_percent_t;
 
 float dm_percent_to_float(dm_percent_t percent);
 dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator);
+
+/********************
+ * timestamp handling
+ ********************/
+
+struct dm_timestamp;
+
+/*
+ * Create a dm_timestamp object to use with dm_timestamp_get.
+ */
+struct dm_timestamp *dm_timestamp_alloc(void);
+
+/*
+ * Update dm_timestamp object to represent the current time.
+ */
+int dm_timestamp_get(struct dm_timestamp *ts);
+
+/*
+ * Compare two timestamps.
+ * 
+ * Return: -1 if ts1 is less than ts2
+ *  	    0 if ts1 is equal to ts2
+ *          1 if ts1 is greater than ts2
+ */
+int dm_timestamp_compare(struct dm_timestamp *ts1, struct dm_timestamp *ts2);
+
+/*
+ * Return the absolute difference in nanoseconds between
+ * the dm_timestamp objects ts1 and ts2.
+ *
+ * Callers that need to know whether ts1 is before, equal to, or after ts2
+ * in addition to the magnitude should use dm_timestamp_compare.
+ */
+uint64_t dm_timestamp_delta(struct dm_timestamp *ts1, struct dm_timestamp *ts2);
+
+/*
+ * Destroy a dm_timestamp object.
+ */
+void dm_timestamp_destroy(struct dm_timestamp *ts);
 
 /*********************
  * reporting functions

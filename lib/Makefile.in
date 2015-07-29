@@ -122,11 +122,6 @@ SOURCES =\
 	uuid/uuid.c \
 	zero/zero.c
 
-ifeq ("@HAVE_REALTIME@", "yes")
-  SOURCES +=\
-	misc/timestamp.c
-endif
-
 ifeq ("@LVM1@", "internal")
   SOURCES +=\
 	format1/disk-rep.c \

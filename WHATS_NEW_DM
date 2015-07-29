@@ -1,5 +1,6 @@
 Version 1.02.104 -
 =================================
+  Add dm_timestamp functions to libdevmapper.
 
 Version 1.02.103 - 24th July 2015
 =================================
