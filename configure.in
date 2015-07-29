@@ -1570,6 +1570,7 @@ if test "$REALTIME" = yes; then
 	if test "$HAVE_REALTIME" = yes; then
 		AC_DEFINE([HAVE_REALTIME], 1, [Define to 1 to include support for realtime clock.])
 		LIBS="-lrt $LIBS"
+		RT_PC="librt"
 	else
 		AC_MSG_WARN(Disabling realtime clock)
 	fi
@@ -1984,6 +1985,7 @@ AC_SUBST(PYTHON_LIBDIRS)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
 AC_SUBST(RAID)
+AC_SUBST(RT_PC)
 AC_SUBST(READLINE_LIBS)
 AC_SUBST(REPLICATORS)
 AC_SUBST(SACKPT_CFLAGS)

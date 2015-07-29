@@ -659,6 +659,7 @@ SELINUX_PC
 SELINUX_LIBS
 REPLICATORS
 READLINE_LIBS
+RT_PC
 RAID
 PYTHON_LIBDIRS
 PYTHON_INCDIRS
@@ -12794,6 +12795,7 @@ fi
 $as_echo "#define HAVE_REALTIME 1" >>confdefs.h
 
 		LIBS="-lrt $LIBS"
+		RT_PC="librt"
 	else
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling realtime clock" >&5
 $as_echo "$as_me: WARNING: Disabling realtime clock" >&2;}
@@ -13998,6 +14000,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
