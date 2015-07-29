@@ -3857,15 +3857,8 @@ unknown:
 		goto out;
 	}
 
-	if (_switches[COLS_ARG]) {
-		if (!_report_init(cmd))
-			goto out;
-		if (!_report) {
-			if (!strcmp(cmd->name, "info"))
-				r = 0;  /* info -c -o help */
-			goto out;
-		}
-	}
+	if (_switches[COLS_ARG] && !_report_init(cmd))
+		goto out;
 
 	#ifdef UDEV_SYNC_SUPPORT
 	if (!_set_up_udev_support(dev_dir))
