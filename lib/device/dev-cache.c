@@ -945,7 +945,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 		if (d)
 			dm_hash_remove(_cache.names, name);
 		log_sys_very_verbose("stat", name);
-		return NULL;
+		d = NULL;
 	}
 
 	if (d && (buf.st_rdev != d->dev)) {
