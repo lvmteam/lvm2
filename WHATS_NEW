@@ -1,5 +1,6 @@
 Version 2.02.127 - 
 =================================
+  Recognise vg/lv name format in dmsetup.
   Fix regression in cache causing some PVs to bypass filters (2.02.105).
 
 Version 2.02.126 - 24th July 2015

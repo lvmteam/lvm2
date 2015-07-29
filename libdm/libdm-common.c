@@ -546,35 +546,57 @@ static int _dm_task_set_name_from_path(struct dm_task *dmt, const char *path,
 {
 	char buf[PATH_MAX];
 	struct stat st1, st2;
-	const char *final_name;
+	const char *final_name = NULL;
+	size_t len;
 
 	if (dmt->type == DM_DEVICE_CREATE) {
 		log_error("Name \"%s\" invalid. It contains \"/\".", path);
 		return 0;
 	}
 
-	if (stat(path, &st1)) {
-		log_error("Device %s not found", path);
-		return 0;
+	if (!stat(path, &st1)) {
+		/*
+		 * Found directly.
+		 * If supplied path points to same device as last component
+		 * under /dev/mapper, use that name directly.  
+		 */
+		if (dm_snprintf(buf, sizeof(buf), "%s/%s", _dm_dir, name) == -1) {
+			log_error("Couldn't create path for %s", name);
+			return 0;
+		}
+
+		if (!stat(buf, &st2) && (st1.st_rdev == st2.st_rdev))
+			final_name = name;
+	} else {
+		/* Not found. */
+		/* If there is exactly one '/' try a prefix of /dev */
+		if ((len = strlen(path)) < 3 || path[0] == '/' ||
+		    dm_count_chars(path, len, '/') != 1) {
+			log_error("Device %s not found", path);
+			return 0;
+		}
+		if (dm_snprintf(buf, sizeof(buf), "%s/../%s", _dm_dir, path) == -1) {
+			log_error("Couldn't create /dev path for %s", path);
+			return 0;
+		}
+		if (stat(buf, &st1)) {
+			log_error("Device %s not found", path);
+			return 0;
+		}
+		/* Found */
 	}
 
 	/*
-	 * If supplied path points to same device as last component
-	 * under /dev/mapper, use that name directly.  Otherwise call
-	 * _find_dm_name_of_device() to scan _dm_dir for a match.
+	 * If we don't have the dm name yet, Call _find_dm_name_of_device() to
+	 * scan _dm_dir for a match.
 	 */
-	if (dm_snprintf(buf, sizeof(buf), "%s/%s", _dm_dir, name) == -1) {
-		log_error("Couldn't create path for %s", name);
-		return 0;
-	}
-
-	if (!stat(buf, &st2) && (st1.st_rdev == st2.st_rdev))
-		final_name = name;
-	else if (_find_dm_name_of_device(st1.st_rdev, buf, sizeof(buf)))
-		final_name = buf;
-	else {
-		log_error("Device %s not found", name);
-		return 0;
+	if (!final_name) {
+		if (_find_dm_name_of_device(st1.st_rdev, buf, sizeof(buf)))
+			final_name = buf;
+		else {
+			log_error("Device %s not found", name);
+			return 0;
+		}
 	}
 
 	/* This is an already existing path - do not mangle! */
