@@ -30,7 +30,7 @@ xx(e2fsadm,
 
 xx(config,
    "Display and manipulate configuration information",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "config\n"
    "\t[-f|--file filename]\n"
    "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
@@ -60,7 +60,7 @@ xx(config,
 
 xx(devtypes,
    "Display recognised built-in block device types",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "devtypes\n"
    "\t[--aligned]\n"
    "\t[--binary]\n"
@@ -86,7 +86,7 @@ xx(devtypes,
 
 xx(dumpconfig,
    "Display and manipulate configuration information",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "dumpconfig\n"
    "\t[-f|--file filename]\n"
    "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
@@ -116,12 +116,12 @@ xx(dumpconfig,
 
 xx(formats,
    "List available metadata formats",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "formats\n")
 
 xx(help,
    "Display help for commands",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "help <command>\n")
 
 /*********
@@ -491,7 +491,7 @@ xx(lvmchange,
 
 xx(lvmconfig,
    "Display and manipulate configuration information",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "lvmconfig\n"
    "\t[-f|--file filename]\n"
    "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
@@ -979,17 +979,17 @@ xx(pvscan,
 
 xx(segtypes,
    "List available segment types",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "segtypes\n")
 
 xx(systemid,
    "Display the system ID, if any, currently set on this host",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "systemid\n")
 
 xx(tags,
    "List tags defined on this host",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "tags\n")
 
 xx(vgcfgbackup,
@@ -1409,5 +1409,5 @@ xx(vgsplit,
 
 xx(version,
    "Display software and driver version information",
-   PERMITTED_READ_ONLY,
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "version\n")

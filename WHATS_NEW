@@ -1,5 +1,6 @@
 Version 2.02.127 - 
 =================================
+  Do not init filters, locking, lvmetad, lvmpolld if command doesn't use it.
   Recognise vg/lv name format in dmsetup.
   Fix regression in cache causing some PVs to bypass filters (2.02.105).
 

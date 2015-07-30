@@ -1463,6 +1463,11 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	return 1;
 }
 
+static int _cmd_no_meta_proc(struct cmd_context *cmd)
+{
+	return cmd->command->flags & NO_METADATA_PROCESSING;
+}
+
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct dm_config_tree *config_string_cft;
@@ -1554,6 +1559,12 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!_prepare_profiles(cmd))
 		return_ECMD_FAILED;
 
+	if (!cmd->initialized.connections && !_cmd_no_meta_proc(cmd) && !init_connections(cmd))
+		return_ECMD_FAILED;
+
+	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) && !init_filters(cmd, 1))
+		return_ECMD_FAILED;
+
 	if (arg_count(cmd, readonly_ARG))
 		cmd->metadata_read_only = 1;
 
@@ -1587,7 +1598,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (arg_count(cmd, readonly_ARG)) {
+	if (_cmd_no_meta_proc(cmd))
+		locking_type = 0;
+	else if (arg_count(cmd, readonly_ARG)) {
 		if (find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL)) {
 			/*
 			 * FIXME: we could use locking_type 5 here if that didn't
@@ -1610,12 +1623,12 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	else
 		locking_type = -1;
 
-	if (!init_locking(locking_type, cmd, arg_count(cmd, sysinit_ARG))) {
+	if (!init_locking(locking_type, cmd, _cmd_no_meta_proc(cmd) || arg_count(cmd, sysinit_ARG))) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}
 
-	if (!_init_lvmlockd(cmd)) {
+	if (!_cmd_no_meta_proc(cmd) && !_init_lvmlockd(cmd)) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}
@@ -2056,7 +2069,7 @@ int lvm2_main(int argc, char **argv)
 	if (!alias && argc > 1 && !strcmp(argv[1], "version"))
 		return lvm_return_code(version(NULL, argc, argv));
 
-	if (!(cmd = init_lvm(1, 1)))
+	if (!(cmd = init_lvm(0, 0)))
 		return -1;
 
 	cmd->argv = argv;

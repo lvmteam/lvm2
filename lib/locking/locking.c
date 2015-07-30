@@ -119,8 +119,9 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 	switch (type) {
 	case 0:
 		init_no_locking(&_locking, cmd, suppress_messages);
-		log_warn("WARNING: Locking disabled. Be careful! "
-			  "This could corrupt your metadata.");
+		log_warn_suppress(suppress_messages,
+			"WARNING: Locking disabled. Be careful! "
+			"This could corrupt your metadata.");
 		return 1;
 
 	case 1:

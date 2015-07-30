@@ -103,6 +103,8 @@ struct arg_value_group_list {
 #define ONE_VGNAME_ARG		0x00000010
 /* Command needs a shared lock on a VG; it only reads the VG. */
 #define LOCKD_VG_SH		0x00000020
+/* Command does not process any metadata. */
+#define NO_METADATA_PROCESSING	0x00000040
  
 /* a register of the lvm commands */
 struct command {
