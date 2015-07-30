@@ -3886,7 +3886,7 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			"thread_work=%d "
 			"thread_stop=%d "
 			"thread_done=%d "
-			"sanlock_gl_enabled=%d",
+			"sanlock_gl_enabled=%d\n",
 			prefix,
 			ls->name,
 			ls->vg_name,
@@ -4127,11 +4127,10 @@ static void client_recv_action(struct client *cl)
 		if (op == LD_OP_QUIT) {
 			log_debug("op quit");
 			pthread_mutex_lock(&lockspaces_mutex);
-		       	if (list_empty(&lockspaces)) {
+		       	if (list_empty(&lockspaces))
 				daemon_quit = 1;
-			} else {
+			else
 				result = -EBUSY;
-			}
 			pthread_mutex_unlock(&lockspaces_mutex);
 		}
 
@@ -5511,7 +5510,7 @@ static int main_loop(daemon_state *ds_arg)
 
 	while (1) {
 		rv = poll(pollfd, pollfd_maxi + 1, -1);
-		if (rv == -1 && errno == EINTR) {
+		if ((rv == -1 && errno == EINTR) || daemon_quit) {
 			if (daemon_quit) {
 				int count;
 				/* first sigterm would trigger stops, and
