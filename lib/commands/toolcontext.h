@@ -165,7 +165,6 @@ struct cmd_context {
 	 * Host tags.
 	 */
 	struct dm_list tags;			/* list of defined tags */
-	const char *report_list_item_separator;
 	int hosttags;
 
 	/*
@@ -186,6 +185,7 @@ struct cmd_context {
 	/*
 	 * Others - unsorted.
 	 */
+	const char *report_list_item_separator;
 	const char *time_format;
 	unsigned rand_seed;
 };
