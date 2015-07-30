@@ -1873,7 +1873,7 @@ static int _close_stray_fds(const char *command)
 	return 1;
 }
 
-struct cmd_context *init_lvm(void)
+struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters)
 {
 	struct cmd_context *cmd;
 
@@ -1887,7 +1887,8 @@ struct cmd_context *init_lvm(void)
 	 */
 	dm_set_name_mangling_mode(DM_STRING_MANGLING_NONE);
 
-	if (!(cmd = create_toolcontext(0, NULL, 1, 0))) {
+	if (!(cmd = create_toolcontext(0, NULL, 1, 0,
+			set_connections, set_filters))) {
 		udev_fin_library_context();
 		return_NULL;
 	}
@@ -2055,7 +2056,7 @@ int lvm2_main(int argc, char **argv)
 	if (!alias && argc > 1 && !strcmp(argv[1], "version"))
 		return lvm_return_code(version(NULL, argc, argv));
 
-	if (!(cmd = init_lvm()))
+	if (!(cmd = init_lvm(1, 1)))
 		return -1;
 
 	cmd->argv = argv;

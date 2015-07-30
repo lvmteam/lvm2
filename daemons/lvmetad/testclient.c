@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
 	if (argc > 1) {
 		int i;
-		struct cmd_context *cmd = create_toolcontext(0, NULL, 0, 0);
+		struct cmd_context *cmd = create_toolcontext(0, NULL, 0, 0, 1, 1);
 		for (i = 1; i < argc; ++i) {
 			const char *uuid = NULL;
 			scan(h, argv[i]);

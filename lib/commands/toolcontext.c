@@ -55,7 +55,6 @@
 #endif
 
 static const size_t linebuffer_size = 4096;
-static int _init_connections(struct cmd_context *cmd);
 
 /*
  * Copy the input string, removing invalid characters.
@@ -675,9 +674,6 @@ static int _process_config(struct cmd_context *cmd)
 	init_detect_internal_vg_cache_corruption
 		(find_config_tree_bool(cmd, global_detect_internal_vg_cache_corruption_CFG, NULL));
 
-	if (!_init_connections(cmd))
-		return_0;
-
 	if (!_init_system_id(cmd))
 		return_0;
 
@@ -1165,13 +1161,18 @@ bad:
  *     md component filter -> fw raid filter
  *
  */
-static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
+int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
 	const char *dev_cache;
 	struct dev_filter *filter = NULL, *filter_components[2] = {0};
 	struct stat st;
 	const struct dm_config_node *cn;
 	struct timespec ts, cts;
+
+	if (!cmd->initialized.connections) {
+		log_error(INTERNAL_ERROR "connections must be initialized before filters");
+		return 0;
+	}
 
 	cmd->dump_filter = 0;
 
@@ -1253,6 +1254,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 				    dev_cache);
 	}
 
+	cmd->initialized.filters = 1;
 	return 1;
 bad:
 	if (!filter) {
@@ -1276,6 +1278,7 @@ bad:
 	if (cmd->lvmetad_filter)
 		cmd->lvmetad_filter->destroy(cmd->lvmetad_filter);
 
+	cmd->initialized.filters = 0;
 	return 0;
 }
 
@@ -1696,26 +1699,33 @@ static int _init_lvmpolld(struct cmd_context *cmd)
 	return 1;
 }
 
-static int _init_connections(struct cmd_context *cmd)
+int init_connections(struct cmd_context *cmd)
 {
+
 	if (!_init_lvmetad(cmd)) {
 		log_error("Failed to initialize lvmetad connection.");
-		return 0;
+		goto bad;
 	}
 
 	if (!_init_lvmpolld(cmd)) {
 		log_error("Failed to initialize lvmpolld connection.");
-		return 0;
+		goto bad;
 	}
 
+	cmd->initialized.connections = 1;
 	return 1;
+bad:
+	cmd->initialized.connections = 0;
+	return 0;
 }
 
 /* Entry point */
 struct cmd_context *create_toolcontext(unsigned is_long_lived,
 				       const char *system_dir,
 				       unsigned set_buffering,
-				       unsigned threaded)
+				       unsigned threaded,
+				       unsigned set_connections,
+				       unsigned set_filters)
 {
 	struct cmd_context *cmd;
 	FILE *new_stream;
@@ -1859,9 +1869,6 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (!_init_dev_cache(cmd))
 		goto_out;
 
-	if (!_init_filters(cmd, 1))
-		goto_out;
-
 	memlock_init(cmd);
 
 	if (!_init_formats(cmd))
@@ -1879,6 +1886,12 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	_init_rand(cmd);
 
 	_init_globals(cmd);
+
+	if (set_connections && !init_connections(cmd))
+		return_0;
+
+	if (set_filters && !init_filters(cmd, 1))
+		goto_out;
 
 	cmd->default_settings.cache_vgmetadata = 1;
 	cmd->current_settings = cmd->default_settings;
@@ -1957,14 +1970,19 @@ static void _destroy_filters(struct cmd_context *cmd)
 		cmd->full_filter->destroy(cmd->full_filter);
 		cmd->lvmetad_filter = cmd->filter = cmd->full_filter = NULL;
 	}
+	cmd->initialized.filters = 0;
 }
 
 int refresh_filters(struct cmd_context *cmd)
 {
 	int r, saved_ignore_suspended_devices = ignore_suspended_devices();
 
+	if (!cmd->initialized.filters)
+		/* if filters not initialized, there's nothing to refresh */
+		return 1;
+
 	_destroy_filters(cmd);
-	if (!(r = _init_filters(cmd, 0)))
+	if (!(r = init_filters(cmd, 0)))
                 stack;
 
 	/*
@@ -2074,9 +2092,6 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_dev_cache(cmd))
 		return_0;
 
-	if (!_init_filters(cmd, 0))
-		return_0;
-
 	if (!_init_formats(cmd))
 		return_0;
 
@@ -2090,6 +2105,12 @@ int refresh_toolcontext(struct cmd_context *cmd)
 		return_0;
 
 	cmd->initialized.config = 1;
+
+	if (cmd->initialized.connections && !init_connections(cmd))
+		return_0;
+
+	if (cmd->initialized.filters && !init_filters(cmd, 0))
+		return_0;
 
 	reset_lvm_errno(1);
 	return 1;
@@ -2159,6 +2180,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	lvmetad_release_token();
 	lvmetad_disconnect();
 	lvmpolld_disconnect();
+	cmd->initialized.connections = 0;
 
 	release_log_memory();
 	activation_exit();

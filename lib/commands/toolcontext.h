@@ -62,6 +62,8 @@ struct config_tree_list {
 
 struct cmd_context_initialized_parts {
 	unsigned config:1; /* used to reinitialize config if previous init was not successful */
+	unsigned filters:1;
+	unsigned connections:1;
 };
 
 /* FIXME Split into tool & library contexts */
@@ -171,13 +173,17 @@ struct cmd_context {
 struct cmd_context *create_toolcontext(unsigned is_long_lived,
 				       const char *system_dir,
 				       unsigned set_buffering,
-				       unsigned threaded);
+				       unsigned threaded,
+				       unsigned set_connections,
+				       unsigned set_filters);
 void destroy_toolcontext(struct cmd_context *cmd);
 int refresh_toolcontext(struct cmd_context *cmd);
 int refresh_filters(struct cmd_context *cmd);
 int process_profilable_config(struct cmd_context *cmd);
 int config_files_changed(struct cmd_context *cmd);
 int init_lvmcache_orphans(struct cmd_context *cmd);
+int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache);
+int init_connections(struct cmd_context *cmd);
 
 struct format_type *get_format_by_name(struct cmd_context *cmd, const char *format);
 
