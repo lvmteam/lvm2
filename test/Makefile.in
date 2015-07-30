@@ -66,6 +66,7 @@ help:
 	@echo -e "\nAvailable targets:"
 	@echo "  all			Default target, run check."
 	@echo "  check			Run all tests."
+	@echo "  check_system		Run all tests using udev."
 	@echo "  check_local		Run tests without clvmd and lvmetad."
 	@echo "  check_cluster		Run tests with cluster daemon."
 	@echo "  check_lvmetad		Run tests with lvmetad daemon."
