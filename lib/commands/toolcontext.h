@@ -60,6 +60,10 @@ struct config_tree_list {
 	struct dm_config_tree *cft;
 };
 
+struct cmd_context_initialized_parts {
+	unsigned config:1; /* used to reinitialize config if previous init was not successful */
+};
+
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
 struct cmd_context {
@@ -82,6 +86,9 @@ struct cmd_context {
 	char **argv;
 	struct arg_values *arg_values;
 	struct dm_list arg_value_groups;
+
+	struct cmd_context_initialized_parts initialized;
+
 	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
 	unsigned handles_missing_pvs:1;
 	unsigned handles_unknown_segments:1;
@@ -132,7 +139,6 @@ struct cmd_context {
 	struct dm_list config_files; /* master lvm config + any existing tag configs */
 	struct profile_params *profile_params; /* profile handling params including loaded profile configs */
 	struct dm_config_tree *cft; /* the whole cascade: CONFIG_STRING -> CONFIG_PROFILE -> CONFIG_FILE/CONFIG_MERGED_FILES */
-	int config_initialized; /* used to reinitialize config if previous init was not successful */
 
 	struct dm_hash_table *cft_def_hash; /* config definition hash used for validity check (item type + item recognized) */
 
