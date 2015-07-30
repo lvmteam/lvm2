@@ -257,7 +257,7 @@ Summary: LVM locking daemon
 Group: System Environment/Base
 Requires: lvm2 = %{version}-%{release}
 %if %{enable_lockd_dlm}
-Requires: dlm >= %{dlm_version}
+Requires: dlm-lib >= %{dlm_version}
 %endif
 %if %{enable_lockd_sanlock}
 Requires: sanlock-lib >= %{sanlock_version}
