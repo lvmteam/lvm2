@@ -526,6 +526,7 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 	const char *lock_type = arg_str_value(cmd, locktype_ARG, NULL);
 	struct lv_list *lvl;
 	struct logical_volume *lv;
+	int lv_lock_count = 0;
 
 	/*
 	 * This is a special/forced exception to change the lock type to none.
@@ -654,11 +655,17 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 		 * For lock_type dlm, lockd_init_vg() will do a single
 		 * vg_write() that sets lock_type, sets lock_args, clears
 		 * system_id, and sets all LV lock_args to dlm.
+		 * For lock_type sanlock, lockd_init_vg() needs to know
+		 * how many LV locks are needed so that it can make the
+		 * sanlock lv large enough.
 		 */
-		if (!strcmp(lock_type, "dlm")) {
-			dm_list_iterate_items(lvl, &vg->lvs) {
-				lv = lvl->lv;
-				if (lockd_lv_uses_lock(lv))
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			lv = lvl->lv;
+
+			if (lockd_lv_uses_lock(lv)) {
+				lv_lock_count++;
+
+				if (!strcmp(lock_type, "dlm"))
 					lv->lock_args = "dlm";
 			}
 		}
@@ -673,7 +680,7 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 
 		vg->system_id = NULL;
 
-		if (!lockd_init_vg(cmd, vg, lock_type)) {
+		if (!lockd_init_vg(cmd, vg, lock_type, lv_lock_count)) {
 			log_error("Failed to initialize lock args for lock type %s", lock_type);
 			return 0;
 		}

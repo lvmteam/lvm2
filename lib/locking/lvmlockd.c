@@ -320,9 +320,6 @@ static int _lockd_request(struct cmd_context *cmd,
 
 /*
  * Eventually add an option to specify which pv the lvmlock lv should be placed on.
- * FIXME: when converting a VG from lock_type none to sanlock, we need to count
- * the number of existing LVs to ensure that the new sanlock_lv is large enough
- * for all of them that need locks.
  */
 
 static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
@@ -559,7 +556,7 @@ out:
 	return ret;
 }
 
-static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
+static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, int lv_lock_count)
 {
 	daemon_reply reply;
 	const char *reply_str;
@@ -588,7 +585,18 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	 * LV, then activates the lvmlock LV.  The lvmlock LV must be active
 	 * before we ask lvmlockd to initialize the VG because sanlock needs
 	 * to initialize leases on the lvmlock LV.
+	 *
+	 * When converting an existing VG to sanlock, the sanlock lv needs to
+	 * be large enough to hold leases for all existing lvs needing locks.
+	 * One sanlock lease uses 1MB/8MB for 512/4K sector size devices, so
+	 * increase the initial size by 1MB/8MB for each existing lv.
+	 * FIXME: we don't know what sector size the pv will have, so we
+	 * multiply by 8 (MB) unnecessarily when the sector size is 512.
 	 */
+
+	if (lv_lock_count)
+		extend_mb += (lv_lock_count * 8);
+
 	if (!_create_sanlock_lv(cmd, vg, LOCKD_SANLOCK_LV_NAME, extend_mb)) {
 		log_error("Failed to create internal lv.");
 		return 0;
@@ -816,7 +824,7 @@ static void _forget_vg_name(struct cmd_context *cmd, struct volume_group *vg)
 /* vgcreate */
 
 int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
-		  const char *lock_type)
+		  const char *lock_type, int lv_lock_count)
 {
 	switch (get_lock_type_from_string(lock_type)) {
 	case LOCK_TYPE_NONE:
@@ -827,7 +835,7 @@ int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
 	case LOCK_TYPE_DLM:
 		return _init_vg_dlm(cmd, vg);
 	case LOCK_TYPE_SANLOCK:
-		return _init_vg_sanlock(cmd, vg);
+		return _init_vg_sanlock(cmd, vg, lv_lock_count);
 	default:
 		log_error("Unknown lock_type.");
 		return 0;

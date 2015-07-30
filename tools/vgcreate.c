@@ -131,7 +131,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	 * a local VG.  lockd_init_vg() then writes the VG a second time with
 	 * both lock_type and lock_args set.
 	 */
-	if (!lockd_init_vg(cmd, vg, vp_new.lock_type)) {
+	if (!lockd_init_vg(cmd, vg, vp_new.lock_type, 0)) {
 		log_error("Failed to initialize lock args for lock type %s",
 			  vp_new.lock_type);
 		vg_remove_pvs(vg);
