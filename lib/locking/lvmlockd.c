@@ -1475,11 +1475,7 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		log_warn("Duplicate sanlock global locks should be corrected");
 
 	if (result < 0) {
-		if (ignorelockingfailure()) {
-			log_debug("Ignore failed locking for global lock");
-			lvmetad_validate_global_cache(cmd, 1);
-			return 1;
-		} else if (result == -EAGAIN) {
+		if (result == -EAGAIN) {
 			/*
 			 * Most of the time, retries should avoid this case.
 			 */
@@ -1769,11 +1765,6 @@ out:
 	 */
 	if ((lockd_flags & LD_RF_DUP_GL_LS) && strcmp(mode, "un"))
 		log_warn("Duplicate sanlock global lock in VG %s", vg_name);
- 
-	if (!ret && ignorelockingfailure()) {
-		log_debug("Ignore failed locking for VG %s", vg_name);
-		return 1;
-	}
  
 	return ret;
 }
