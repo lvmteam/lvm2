@@ -2506,17 +2506,7 @@ static int add_dlm_global_lockspace(struct action *act)
 
 	if (gl_running_dlm)
 		return -EEXIST;
-
 	gl_running_dlm = 1;
-
-	/* Keep track of whether we automatically added
-	   the global ls, so we know to automatically
-	   remove it. */
-
-	if (act)
-		gl_auto_dlm = 0;
-	else
-		gl_auto_dlm = 1;
 
 	/*
 	 * There's a short period after which a previous gl lockspace thread
@@ -2526,11 +2516,9 @@ static int add_dlm_global_lockspace(struct action *act)
 	 */
 
 	rv = add_lockspace_thread(gl_lsname_dlm, NULL, NULL, LD_LM_DLM, NULL, act);
-
 	if (rv < 0) {
 		log_error("add_dlm_global_lockspace add_lockspace_thread %d", rv);
 		gl_running_dlm = 0;
-		gl_auto_dlm = 0;
 	}
 
 	return rv;
@@ -2583,28 +2571,12 @@ out:
 }
 
 /*
- * When the first dlm lockspace is added for a vg,
- * automatically add a separate dlm lockspace for the
- * global lock if it hasn't been done explicitly.
- * This is to make the dlm global lockspace work similarly to
- * the sanlock global lockspace, which is "automatic" by
- * nature of being one of the vg lockspaces.
+ * When the first dlm lockspace is added for a vg, automatically add a separate
+ * dlm lockspace for the global lock.
  *
- * For sanlock, a separate lockspace is not used for
- * the global lock, but the gl lock lives in a vg
- * lockspace, (although it's recommended to create a
+ * For sanlock, a separate lockspace is not used for the global lock, but the
+ * gl lock lives in a vg lockspace, (although it's recommended to create a
  * special vg dedicated to holding the gl).
- *
- * N.B. for dlm, if this is an add+WAIT action for a vg
- * lockspace, and this triggered the automatic addition
- * of the global lockspace, then the action may complete
- * for the vg ls add, while the gl ls add is still in
- * progress.  If the caller wants to ensure that the
- * gl ls add is complete, they should explicitly add+WAIT
- * the gl ls.
- *
- * If this function returns and error, the caller
- * will queue the act with that error for the client.
  */
 
 static int add_lockspace(struct action *act)
@@ -2614,6 +2586,11 @@ static int add_lockspace(struct action *act)
 
 	memset(ls_name, 0, sizeof(ls_name));
 
+	/*
+	 * FIXME: I don't think this is used any more.
+	 * Remove it, or add the ability to start the global
+	 * dlm lockspace using lvmlockctl?
+	 */
 	if (act->rt == LD_RT_GL) {
 		if (gl_use_dlm) {
 			rv = add_dlm_global_lockspace(act);
@@ -2697,13 +2674,13 @@ static int rem_lockspace(struct action *act)
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/*
-	 * If the dlm global lockspace was automatically added when
-	 * the first dlm vg lockspace was added, then reverse that
+	 * The dlm global lockspace was automatically added when
+	 * the first dlm vg lockspace was added, now reverse that
 	 * by automatically removing the dlm global lockspace when
 	 * the last dlm vg lockspace is removed.
 	 */
 
-	if (rt == LD_RT_VG && gl_use_dlm && gl_auto_dlm)
+	if (rt == LD_RT_VG && gl_use_dlm)
 		rem_dlm_global_lockspace();
 
 	return 0;
