@@ -3149,8 +3149,8 @@ static int _dmsetup_help(CMD_ARGS)
 	return 1;
 }
 
-static struct command *_find_command(const struct command *commands,
-				     const char *name)
+static const struct command *_find_command(const struct command *commands,
+					   const char *name)
 {
 	int i;
 
@@ -3161,7 +3161,7 @@ static struct command *_find_command(const struct command *commands,
 	return NULL;
 }
 
-static struct command *_find_dmsetup_command(const char *name)
+static const struct command *_find_dmsetup_command(const char *name)
 {
 	return _find_command(_dmsetup_commands, name);
 }
