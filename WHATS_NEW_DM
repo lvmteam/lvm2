@@ -1,5 +1,7 @@
 Version 1.02.104 -
 =================================
+  Add dmsetup --interval and --count to repeat reports at specified intervals.
+  Add report interval and waiting functions to libdevmapper.
   Add dm_timestamp functions to libdevmapper.
 
 Version 1.02.103 - 24th July 2015

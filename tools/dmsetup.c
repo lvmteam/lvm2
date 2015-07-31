@@ -111,6 +111,7 @@ enum {
 	ADD_NODE_ON_RESUME_ARG,
 	CHECKS_ARG,
 	COLS_ARG,
+	COUNT_ARG,
 	DEFERRED_ARG,
 	SELECT_ARG,
 	EXEC_ARG,
@@ -118,6 +119,7 @@ enum {
 	GID_ARG,
 	HELP_ARG,
 	INACTIVE_ARG,
+	INTERVAL_ARG,
 	MANGLENAME_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
@@ -182,6 +184,11 @@ static struct dm_tree *_dtree;
 static struct dm_report *_report;
 static report_type_t _report_type;
 static dev_name_t _dev_name_type;
+static uint32_t _count = 1; /* count of repeating reports */
+
+#define NSEC_PER_USEC	UINT64_C(1000)
+#define NSEC_PER_MSEC	UINT64_C(1000000)
+#define NSEC_PER_SEC	UINT64_C(1000000000)
 
 /*
  * Commands
@@ -2845,6 +2852,7 @@ static int _report_init(const struct command *cmd)
 	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0;
 	int quoted = 1, columns_as_rows = 0;
 	uint32_t flags = 0;
+	uint32_t interval;
 	size_t len = 0;
 	int r = 0;
 
@@ -2935,6 +2943,11 @@ static int _report_init(const struct command *cmd)
 		err("Internal device dependency tree creation failed.");
 		goto out;
 	}
+
+	/* Default interval is 1 second. */
+	interval = _switches[INTERVAL_ARG] ? _int_args[INTERVAL_ARG] : 1;
+
+	dm_report_set_interval_ns(_report, NSEC_PER_SEC * interval);
 
 	if (field_prefixes)
 		dm_report_set_output_field_name_prefix(_report, "dm_");
@@ -3110,6 +3123,7 @@ static void _dmsetup_usage(FILE *out)
 		"        [-y|--yes] [--readahead [+]<sectors>|auto|none] [--retry]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [-S|--select <selection>] [--nameprefixes] [--noheadings]\n"
+		"        [--count <count>] [--interval <seconds>]\n"
 		"        [--separator <separator>]\n\n");
 	for (i = 0; _dmsetup_commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
@@ -3523,6 +3537,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"readonly", 0, &ind, READ_ONLY},
 		{"checks", 0, &ind, CHECKS_ARG},
 		{"columns", 0, &ind, COLS_ARG},
+		{"count", 1, &ind, COUNT_ARG},
 		{"deferred", 0, &ind, DEFERRED_ARG},
 		{"select", 1, &ind, SELECT_ARG},
 		{"exec", 1, &ind, EXEC_ARG},
@@ -3530,6 +3545,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"gid", 1, &ind, GID_ARG},
 		{"help", 0, &ind, HELP_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
+		{"interval", 1, &ind, INTERVAL_ARG},
 		{"manglename", 1, &ind, MANGLENAME_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
@@ -3674,6 +3690,14 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[ADD_NODE_ON_CREATE_ARG]++;
 		if (ind == CHECKS_ARG)
 			_switches[CHECKS_ARG]++;
+		if (ind == COUNT_ARG) {
+			_switches[COUNT_ARG]++;
+			_int_args[COUNT_ARG] = atoi(optarg);
+			if (_int_args[COUNT_ARG] < 0) {
+				log_error("Count must be zero or greater.");
+				return 0;
+			}
+		}
 		if (ind == UDEVCOOKIE_ARG) {
 			_switches[UDEVCOOKIE_ARG]++;
 			_udev_cookie = _get_cookie_value(optarg);
@@ -3709,6 +3733,14 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if (ind == INACTIVE_ARG)
 		       _switches[INACTIVE_ARG]++;
+		if (ind == INTERVAL_ARG) {
+			_switches[INTERVAL_ARG]++;
+			_int_args[INTERVAL_ARG] = atoi(optarg);
+			if (_int_args[INTERVAL_ARG] <= 0) {
+				log_error("Interval must be a positive integer.");
+				return 0;
+			}
+		}
 		if (ind == MANGLENAME_ARG) {
 			_switches[MANGLENAME_ARG]++;
 			if (!strcasecmp(optarg, "none"))
@@ -3880,13 +3912,18 @@ unknown:
 		goto out;
 	}
 
+#ifdef UDEV_SYNC_SUPPORT
+	if (!_set_up_udev_support(dev_dir))
+		goto out;
+#endif
+
 	if (_switches[COLS_ARG] && !_report_init(cmd))
 		goto out;
 
-	#ifdef UDEV_SYNC_SUPPORT
-	if (!_set_up_udev_support(dev_dir))
-		goto out;
-	#endif
+	if (_switches[COUNT_ARG])
+		_count = _int_args[COUNT_ARG] ? : UINT32_MAX;
+	else if (_switches[INTERVAL_ARG])
+		_count = UINT32_MAX;
 
 	/*
 	 * Extract subcommand?
@@ -3897,17 +3934,26 @@ unknown:
 		argc--, argv++;
 	}
 
-      doit:
+doit:
 	multiple_devices = (cmd->repeatable_cmd && argc != 2 &&
 			    (argc != 1 || (!_switches[UUID_ARG] && !_switches[MAJOR_ARG])));
 
-	r = _perform_command_for_all_repeatable_args(cmd, subcommand, argc, argv, NULL, multiple_devices);
+	do {
+		r = _perform_command_for_all_repeatable_args(cmd, subcommand, argc, argv, NULL, multiple_devices);
+
+		if (_report) {
+			dm_report_output(_report);
+
+			if (_count > 1) {
+				printf("\n");
+				dm_report_wait(_report);
+			}
+		}
+	} while (--_count);
 
 out:
-	if (_report) {
-		dm_report_output(_report);
+	if (_report)
 		dm_report_free(_report);
-	}
 
 	if (_dtree)
 		dm_tree_free(_dtree);

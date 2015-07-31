@@ -42,6 +42,10 @@ dmsetup \(em low level logical volume management
 .IR sort_fields ]
 .RB [ \-S | \-\-select
 .IR Selection ]
+.RB [ \-\-interval
+.IR seconds ]
+.RB [ \-\-count
+.IR count ]
 .RI [ device_name ]
 .RE
 .br
@@ -187,6 +191,10 @@ In some cases these checks may slow down operations noticeably.
 .BR \-c | \-C | \-\-columns
 Display output in columns rather than as Field: Value lines.
 .TP
+.B \-\-count \fIcount
+Specify the number of times to repeat a report. Set this to zero
+continue until interrupted.  The default interval is one second.
+.TP
 .BR \-h | \-\-help
 Outputs a summary of the commands available, optionally including
 the list of report fields (synonym with \fBhelp\fP command).
@@ -195,6 +203,12 @@ the list of report fields (synonym with \fBhelp\fP command).
 When returning any table information from the kernel report on the
 inactive table instead of the live table.
 Requires kernel driver version 4.16.0 or above.
+.TP
+.B \-\-interval \fIseconds
+Specify the interval in seconds between successive iterations for
+repeating reports. If \-\-interval is specified but \-\-count is not,
+reports will continue to repeat until interrupted.
+The default interval is one second.
 .TP
 .IR \fB\-\-manglename \ { none | hex | auto }
 Mangle any character not on a whitelist using mangling_mode when
@@ -355,6 +369,10 @@ Outputs some brief information about the device in the form:
 .IR fields ]
 .RB [ \-O | \-\-sort
 .IR sort_fields ]
+.RB [ \-\-interval
+.IR seconds ]
+.RB [ \-\-count
+.IR count ]
 .RI [ device_name ]
 .br
 Output you can customise.

@@ -43,6 +43,8 @@ struct dm_report {
 	uint32_t flags;
 	const char *separator;
 
+	uint64_t interval_ns;	/* Reporting interval in nanoseconds */
+
 	uint32_t keys_count;
 
 	/* Ordered list of fields needed for this report */
@@ -4209,4 +4211,46 @@ int dm_report_output(struct dm_report *rh)
 		return _output_as_rows(rh);
 	else
 		return _output_as_columns(rh);
+}
+
+#define NSEC_PER_USEC	UINT64_C(1000)
+#define NSEC_PER_MSEC	UINT64_C(1000000)
+#define NSEC_PER_SEC	UINT64_C(1000000000)
+
+void dm_report_set_interval_ns(struct dm_report *rh, uint64_t interval_ns)
+{
+	rh->interval_ns = interval_ns;
+}
+
+void dm_report_set_interval_ms(struct dm_report *rh, uint64_t interval_ms)
+{
+	rh->interval_ns = interval_ms * NSEC_PER_MSEC;
+}
+
+uint64_t dm_report_get_interval_ns(struct dm_report *rh)
+{
+	return rh->interval_ns;
+}
+
+uint64_t dm_report_get_interval_ms(struct dm_report *rh)
+{
+	return (rh->interval_ns / NSEC_PER_MSEC);
+}
+
+int dm_report_wait(struct dm_report *rh)
+{
+	int r = 1;
+
+	if (!rh->interval_ns)
+		return_0;
+
+	if (usleep(rh->interval_ns / NSEC_PER_USEC)) {
+		if (errno == EINTR)
+			log_error("Report interval interrupted by signal.");
+		if (errno == EINVAL)
+			log_error("Report interval too short.");
+		r = 0;
+	}
+
+	return r;
 }
