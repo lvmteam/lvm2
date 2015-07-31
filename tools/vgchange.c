@@ -204,7 +204,7 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	if (vg->system_id && vg->system_id[0] &&
 	    cmd->system_id && cmd->system_id[0] &&
 	    strcmp(vg->system_id, cmd->system_id) &&
-	    is_change_activating(activate)) {
+	    do_activate) {
 		log_error("Cannot activate LVs in a foreign VG.");
 		return ECMD_FAILED;
 	}
@@ -1026,7 +1026,9 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, activate_ARG) || arg_is_set(cmd, refresh_ARG)) {
 		cmd->lockd_vg_default_sh = 1;
-		cmd->lockd_vg_enforce_sh = 1;
+		/* Allow deactivating if locks fail. */
+		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+			cmd->lockd_vg_enforce_sh = 1;
 	}
 
 	/* Starting a vg lockspace means there are no locks available yet. */

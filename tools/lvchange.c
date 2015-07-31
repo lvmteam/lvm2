@@ -1296,7 +1296,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	if (arg_count(cmd, activate_ARG) || arg_count(cmd, refresh_ARG)) {
 		cmd->lockd_vg_default_sh = 1;
-		cmd->lockd_vg_enforce_sh = 1;
+		/* Allow deactivating if locks fail. */
+		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+			cmd->lockd_vg_enforce_sh = 1;
 	}
 
 	return process_each_lv(cmd, argc, argv,
