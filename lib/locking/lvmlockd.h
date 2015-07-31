@@ -17,8 +17,7 @@
 #define LOCKD_SANLOCK_LV_NAME "lvmlock"
 
 /* lockd_gl flags */
-#define LDGL_SKIP_CACHE_VALIDATE  0x00000001
-#define LDGL_UPDATE_NAMES         0x00000002
+#define LDGL_UPDATE_NAMES         0x00000001
 
 /* lockd_lv flags */
 #define LDLV_MODE_NO_SH           0x00000001

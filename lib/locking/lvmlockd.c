@@ -1357,6 +1357,7 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	const char *mode = NULL;
 	const char *opts = NULL;
 	uint32_t lockd_flags;
+	int force_cache_update = 0;
 	int retries = 0;
 	int result;
 
@@ -1401,8 +1402,8 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		/* We can continue reading if a shared lock fails. */
 		if (!strcmp(mode, "sh")) {
 			log_warn("Reading without shared global lock.");
-			lvmetad_validate_global_cache(cmd, 1);
-			return 1;
+			force_cache_update = 1;
+			goto allow;
 		}
 
 		log_error("Global lock failed: check that lvmlockd is running.");
@@ -1425,9 +1426,19 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	 *
 	 * ESTARTING: the lockspace with the gl is starting.
 	 * The VG with the global lock is starting and should finish shortly.
+	 *
+	 * ELOCKIO: sanlock gets i/o errors when trying to read/write leases
+	 * (This can progress to EVGKILLED.)
+	 *
+	 * EVGKILLED: the sanlock lockspace is being killed after losing
+	 * access to lease storage.
 	 */
 
-	if (result == -ENOLS || result == -ESTARTING) {
+	if (result == -ENOLS ||
+	    result == -ESTARTING ||
+	    result == -EVGKILLED ||
+	    result == -ELOCKIO) {
+
 		if (!strcmp(mode, "un"))
 			return 1;
 
@@ -1436,9 +1447,13 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		 */
 		if (strcmp(mode, "sh")) {
 			if (result == -ESTARTING)
-				log_error("Global lock failed: lockspace is starting.");
+				log_error("Global lock failed: lockspace is starting");
 			else if (result == -ENOLS)
-				log_error("Global lock failed: check that global lockspace is started.");
+				log_error("Global lock failed: check that global lockspace is started");
+			else if (result == -ELOCKIO)
+				log_error("Global lock failed: storage errors for sanlock leases");
+			else if (result == -EVGKILLED)
+				log_error("Global lock failed: storage failed for sanlock leases");
 			else
 				log_error("Global lock failed: error %d", result);
 			return 0;
@@ -1452,14 +1467,21 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 
 		if (result == -ESTARTING) {
 			log_warn("Skipping global lock: lockspace is starting");
-			lvmetad_validate_global_cache(cmd, 1);
-			return 1;
+			force_cache_update = 1;
+			goto allow;
+		}
+
+		if (result == -ELOCKIO || result == -EVGKILLED) {
+			log_warn("Skipping global lock: storage %s for sanlock leases",
+				  result == -ELOCKIO ? "errors" : "failed");
+			force_cache_update = 1;
+			goto allow;
 		}
 
 		if ((lockd_flags & LD_RF_NO_GL_LS) || (lockd_flags & LD_RF_NO_LOCKSPACES)) {
 			log_warn("Skipping global lock: lockspace not found or started");
-			lvmetad_validate_global_cache(cmd, 1);
-			return 1;
+			force_cache_update = 1;
+			goto allow;
 		}
 
 		/*
@@ -1492,9 +1514,8 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		}
 	}
 
-	if (!(flags & LDGL_SKIP_CACHE_VALIDATE))
-		lvmetad_validate_global_cache(cmd, 0);
-
+ allow:
+	lvmetad_validate_global_cache(cmd, force_cache_update);
 	return 1;
 }
 
@@ -1510,7 +1531,7 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
  *
  * The result of the VG lock operation needs to be saved in lockd_state
  * because the result needs to be passed into vg_read so it can be
- * assessed in combination with vg->lock_state.
+ * assessed in combination with vg->lock_type.
  *
  * The VG lock protects the VG metadata on disk from concurrent access
  * among hosts.  The VG lock also ensures that the local lvmetad cache
@@ -1681,6 +1702,28 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 			goto out;
 		} else {
 			log_error("VG %s lock failed: lock start in progress", vg_name);
+			ret = 0;
+			goto out;
+		}
+	}
+
+	/*
+	 * sanlock is getting i/o errors while reading/writing leases, or the
+	 * lockspace/VG is being killed after failing to renew its lease for
+	 * too long.
+	 */
+	if (result == -EVGKILLED || result == -ELOCKIO) {
+		const char *problem = (result == -ELOCKIO ? "errors" : "failed");
+
+		if (!strcmp(mode, "un")) {
+			ret = 1;
+			goto out;
+		} else if (!strcmp(mode, "sh")) {
+			log_warn("VG %s lock skipped: storage %s for sanlock leases", vg_name, problem);
+			ret = 1;
+			goto out;
+		} else {
+			log_error("VG %s lock failed: storage %s for sanlock leases", vg_name, problem);
 			ret = 0;
 			goto out;
 		}
@@ -1900,6 +1943,12 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (result == -ENOLS) {
 		log_error("LV %s/%s lock failed: lockspace is inactive", vg->name, lv_name);
+		return 0;
+	}
+
+	if (result == -EVGKILLED || result == -ELOCKIO) {
+		const char *problem = (result == -ELOCKIO ? "errors" : "failed");
+		log_error("LV %s/%s lock failed: storage %s for sanlock leases", vg->name, lv_name, problem);
 		return 0;
 	}
 

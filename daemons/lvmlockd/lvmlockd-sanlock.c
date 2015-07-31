@@ -33,52 +33,101 @@
 #include <sys/socket.h>
 
 /*
- * If access to the pv containing the vg's leases is lost, sanlock cannot renew
- * the leases we have acquired for locked LVs.  This means that we could soon
- * loose the lease to another host which could activate our LV exclusively.  We
- * do not want to get to the point of two hosts having the same LV active
- * exclusively (it obviously violates the purpose of LV locks.)
- *
- * The default method of preventing this problem is for lvmlockd to do nothing,
- * which produces a safe but potentially inconvenient result.  Doing nothing
- * leads to our LV leases not being released, which leads to sanlock using the
- * local watchdog to reset us before another host can acquire our lock.  It
- * would often be preferrable to avoid the abrupt hard reset from the watchdog.
- *
- * There are other options to avoid being reset by our watchdog.  If we can
- * quickly stop using the LVs in question and release the locks for them, then
- * we could avoid a reset (there's a certain grace period of about 40 seconds
- * in which we can attempt this.)  To do this, we can tell sanlock to run a
- * specific program when it has lost access to our leases.  We could use this
- * program to:
- *
- * 1. Deactivate all lvs in the effected vg.  If all the leases are
- * deactivated, then our LV locks would be released and sanlock would no longer
- * use the watchdog to reset us.  If file systems are mounted on the active
- * lvs, then deactivating them would fail, so this option would be of limited
- * usefulness.
- *
- * 2. Option 1 could be extended to kill pids using the fs on the lv, unmount
- * the fs, and deactivate the lv.  This is probably out of scope for lvm
- * directly, and would likely need the help of another system service.
- *
- * 3. Use dmsetup suspend to block access to lvs in the effected vg.  If this
- * was successful, the local host could no longer write to the lvs, we could
- * safely release the LV locks, and sanlock would no longer reset us.  At this
- * point, with suspended lvs, the host would be in a fairly hobbled state, and
- * would almost certainly need a manual, forcible reset.
- *
- * 4. Option 3 could be extended to monitor the lost storage, and if it is
- * reconnected, the leases could be reacquired, and the suspended lvs resumed
- * (reacquiring leases will fail if another host has acquired them since they
- * were released.)  This complexity of this option, combined with the fact that
- * the error conditions are often not as simple as storage being lost and then
- * later connecting, will result in this option being too unreliable.
- *
- * Add a config option that we could use to select a different behavior than
- * the default.  Then implement one of the simpler options as a proof of
- * concept, which could be extended if needed.
- */
+-------------------------------------------------------------------------------
+For each VG, lvmlockd creates a sanlock lockspace that holds the leases for
+that VG.  There's a lease for the VG lock, and there's a lease for each active
+LV.  sanlock maintains (reads/writes) these leases, which exist on storage.
+That storage is a hidden LV within the VG: /dev/vg/lvmlock.  lvmlockd gives the
+path of this internal LV to sanlock, which then reads/writes the leases on it.
+
+# lvs -a cc -o+uuid
+  LV        VG   Attr       LSize   LV UUID
+  lv1       cc   -wi-a-----   2.00g 7xoDtu-yvNM-iwQx-C94t-BbYs-UzBl-o8hAIa
+  lv2       cc   -wi-a----- 100.00g exxNPX-wZdO-uCNy-yiGa-aJGT-JKVl-arfcYT
+  [lvmlock] cc   -wi-ao---- 256.00m iLpDel-hR0T-hJ3u-rnVo-PcDh-mcjt-sF9egM
+
+# sanlock status
+s lvm_cc:1:/dev/mapper/cc-lvmlock:0
+r lvm_cc:exxNPX-wZdO-uCNy-yiGa-aJGT-JKVl-arfcYT:/dev/mapper/cc-lvmlock:71303168:13 p 26099
+r lvm_cc:7xoDtu-yvNM-iwQx-C94t-BbYs-UzBl-o8hAIa:/dev/mapper/cc-lvmlock:70254592:3 p 26099
+
+This shows that sanlock is maintaining leases on /dev/mapper/cc-lvmlock.
+
+sanlock acquires a lockspace lease when the lockspace is joined, i.e. when the
+VG is started by 'vgchange --lock-start cc'.  This lockspace lease exists at
+/dev/mapper/cc-lvmlock offset 0, and sanlock regularly writes to it to maintain
+ownership of it.  Joining the lockspace (by acquiring the lockspace lease in
+it) then allows standard resource leases to be acquired in the lockspace for
+whatever the application wants.  lvmlockd uses resource leases for the VG lock
+and LV locks.
+
+sanlock acquires a resource lease for each actual lock that lvm commands use.
+Above, there are two LV locks that are held because the two LVs are active.
+These are on /dev/mapper/cc-lvmlock at offsets 71303168 and 70254592.  sanlock
+does not write to these resource leases except when acquiring and releasing
+them (e.g. lvchange -ay/-an).  The renewal of the lockspace lease maintains
+ownership of all the resource leases in the lockspace.
+
+If the host loses access to the disk that the sanlock lv lives on, then sanlock
+can no longer renew its lockspace lease.  The lockspace lease will eventually
+expire, at which point the host will lose ownership of it, and of all resource
+leases it holds in the lockspace.  Eventually, other hosts will be able to
+acquire those leases.  sanlock ensures that another host will not be able to
+acquire one of the expired leases until the current host has quit using it.
+
+It is important that the host "quit using" the leases it is holding if the
+sanlock storage is lost and they begin expiring.  If the host cannot quit using
+the leases and release them within a limited time, then sanlock will use the
+local watchdog to forcibly reset the host before any other host can acquire
+them.  This is severe, but preferable to possibly corrupting the data protected
+by the lease.  It ensures that two nodes will not be using the same lease at
+once.  For LV leases, that means that another host will not be able to activate
+the LV while another host still has it active.
+
+sanlock notifies the application that it cannot renew the lockspace lease.  The
+application needs to quit using all leases in the lockspace and release them as
+quickly as possible.  In the initial version, lvmlockd ignored this
+notification, so sanlock would eventually reach the point where it would use
+the local watchdog to reset the host.  However, it's better to attempt a
+response.  If that response succeeds, the host can avoid being reset.  If the
+response fails, then sanlock will eventually reset the host as the last resort.
+sanlock gives the application about 40 seconds to complete its response and
+release its leases before resetting the host.
+
+An application can specify the path and args of a program that sanlock should
+run to notify it if the lockspace lease cannot be renewed.  This program should
+carry out the application's response to the expiring leases: attempt to quit
+using the leases and then release them.  lvmlockd gives this command to sanlock
+for each VG when that VG is started: 'lvmlockctl --kill vg_name'
+
+If sanlock loses access to lease storage in that VG, it runs lvmlockctl --kill,
+which:
+
+1. Uses syslog to explain what is happening.
+
+2. Notifies lvmlockd that the VG is being killed, so lvmlockd can
+   immediatley return an error for this condition if any new lock
+   requests are made.  (This step would not be strictly necessary.)
+
+3. Attempts to quit using the VG.  This is not yet implemented, but
+   will eventually use blkdeactivate on the VG (or a more forceful
+   equivalent.)
+
+4. If step 3 was successful at terminating all use of the VG, then
+   lvmlockd is told to release all the leases for the VG.  If this
+   is all done without about 40 seconds, the host can avoid being
+   reset.
+
+Until steps 3 and 4 are fully implemented, manual steps can be substituted.
+This is primarily for testing since the problem needs to be noticed and
+responded to in a very short time.  The manual alternative to step 3 is to kill
+any processes using file systems on LV's in the VG, unmount all file systems on
+the LVs, and deactivate all the LVs.  Once this is done, the manual alternative
+to step 4 is to run 'lvmlockctl --drop vg_name', which tells lvmlockd to
+release all the leases for the VG.
+-------------------------------------------------------------------------------
+*/
+
 
 /*
  * Each lockspace thread has its own sanlock daemon connection.
@@ -961,11 +1010,23 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	char lock_lv_name[MAX_ARGS+1];
 	char lsname[SANLK_NAME_LEN + 1];
 	char disk_path[SANLK_PATH_LEN];
+	char killpath[SANLK_PATH_LEN];
+	char killargs[SANLK_PATH_LEN];
 	int gl_found;
 	int ret, rv;
 
 	memset(disk_path, 0, sizeof(disk_path));
 	memset(lock_lv_name, 0, sizeof(lock_lv_name));
+
+	/*
+	 * Construct the path to lvmlockctl by using the path to the lvm binary
+	 * and appending "lockctl" to get /path/to/lvmlockctl.
+	 */
+	memset(killpath, 0, sizeof(killpath));
+	snprintf(killpath, SANLK_PATH_LEN - 1, "%slockctl", LVM_PATH);
+
+	memset(killargs, 0, sizeof(killargs));
+	snprintf(killargs, SANLK_PATH_LEN - 1, "--kill %s", ls->vg_name);
 
 	rv = check_args_version(ls->vg_args, VG_LOCK_ARGS_MAJOR);
 	if (rv < 0) {
@@ -1047,6 +1108,15 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	if (lms->sock < 0) {
 		log_error("S %s prepare_lockspace_san register error %d", lsname, lms->sock);
 		lms->sock = 0;
+		ret = -EMANAGER;
+		goto fail;
+	}
+
+	log_debug("set killpath to %s %s", killpath, killargs);
+
+	rv = sanlock_killpath(lms->sock, 0, killpath, killargs);
+	if (rv < 0) {
+		log_error("S %s killpath error %d", lsname, rv);
 		ret = -EMANAGER;
 		goto fail;
 	}
@@ -1397,11 +1467,6 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		log_error("S %s R %s lock_san acquire error %d",
 			  ls->name, r->name, rv);
 
-		if (added) {
-			lm_rem_resource_sanlock(ls, r);
-			return rv;
-		}
-
 		/* if the gl has been disabled, remove and free the gl resource */
 		if ((rv == SANLK_LEADER_RESOURCE) && (r->type == LD_RT_GL)) {
 			if (!lm_gl_is_enabled(ls)) {
@@ -1412,6 +1477,22 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 				return -EUNATCH;
 			}
 		}
+
+		if (added)
+			lm_rem_resource_sanlock(ls, r);
+
+		/* sanlock gets i/o errors trying to read/write the leases. */
+		if (rv == -EIO)
+			rv = -ELOCKIO;
+
+		/*
+		 * The sanlock lockspace can disappear if the lease storage fails,
+		 * the delta lease renewals fail, the lockspace enters recovery,
+		 * lvmlockd holds no leases in the lockspace, so sanlock can
+		 * stop and free the lockspace.
+		 */
+		if (rv == -ENOSPC)
+			rv = -ELOCKIO;
 
 		return rv;
 	}
@@ -1594,9 +1675,11 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	}
 
 	rv = sanlock_release(lms->sock, -1, 0, 1, &rs);
-	if (rv < 0) {
+	if (rv < 0)
 		log_error("S %s R %s unlock_san release error %d", ls->name, r->name, rv);
-	}
+
+	if (rv == -EIO)
+		rv = -ELOCKIO;
 
 	return rv;
 }

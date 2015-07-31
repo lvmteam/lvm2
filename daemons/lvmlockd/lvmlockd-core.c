@@ -735,6 +735,10 @@ static const char *op_str(int x)
 		return "find_free_lock";
 	case LD_OP_FORGET_VG_NAME:
 		return "forget_vg_name";
+	case LD_OP_KILL_VG:
+		return "kill_vg";
+	case LD_OP_DROP_VG:
+		return "drop_vg";
 	default:
 		return "op_unknown";
 	};
@@ -786,6 +790,7 @@ int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsi
 	char *major_str, *minor_str, *patch_str;
 	char *n, *d1, *d2;
 
+	memset(version, 0, sizeof(version));
 	strncpy(version, args, MAX_ARGS);
 	version[MAX_ARGS] = '\0';
 
@@ -1828,7 +1833,7 @@ static int for_each_lock(struct lockspace *ls, int locks_do)
 	return 0;
 }
 
-static int clear_locks(struct lockspace *ls, int free_vg)
+static int clear_locks(struct lockspace *ls, int free_vg, int drop_vg)
 {
 	struct resource *r, *r_safe;
 	struct lock *lk, *lk_safe;
@@ -1847,10 +1852,10 @@ static int clear_locks(struct lockspace *ls, int free_vg)
 			/*
 			 * Stopping a lockspace shouldn't happen with LV locks
 			 * still held, but it will be stopped with GL and VG
-			 * locks held.
+			 * locks held.  The drop_vg case may see LV locks.
 			 */
 
-			if (lk->flags & LD_LF_PERSISTENT)
+			if (lk->flags & LD_LF_PERSISTENT && !drop_vg)
 				log_error("S %s R %s clear lock persistent", ls->name, r->name);
 			else
 				log_debug("S %s R %s clear lock mode %s client %d", ls->name, r->name, mode_str(lk->mode), lk->client_id);
@@ -1884,8 +1889,8 @@ static int clear_locks(struct lockspace *ls, int free_vg)
 		rv = lm_unlock(ls, r, NULL, r_version, free_vg ? LMUF_FREE_VG : 0);
 		if (rv < 0) {
 			/* should never happen */
-			log_error("S %s R %s clear_locks free %d lm unlock error %d",
-				  ls->name, r->name, free_vg, rv);
+			log_error("S %s R %s clear_locks free %d drop %d lm unlock error %d",
+				  ls->name, r->name, free_vg, drop_vg, rv);
 		}
 
 		list_for_each_entry_safe(act, act_safe, &r->actions, list) {
@@ -1991,6 +1996,28 @@ static int other_sanlock_vgs_exist(struct lockspace *ls_rem)
 }
 
 /*
+ * LOCK is the main thing we're interested in; the others are unlikely.
+ */
+
+static int process_op_during_kill(struct action *act)
+{
+	if (act->op == LD_OP_LOCK && act->mode == LD_LK_UN)
+		return 1;
+
+	switch (act->op) {
+	case LD_OP_LOCK:
+	case LD_OP_ENABLE:
+	case LD_OP_DISABLE:
+	case LD_OP_UPDATE:
+	case LD_OP_RENAME_BEFORE:
+	case LD_OP_RENAME_FINAL:
+	case LD_OP_FIND_FREE_LOCK:
+		return 0;
+	};
+	return 1;
+}
+
+/*
  * Process actions queued for this lockspace by
  * client_recv_action / add_lock_action.
  *
@@ -2010,6 +2037,7 @@ static void *lockspace_thread_main(void *arg_in)
 	struct list_head tmp_act;
 	struct list_head act_close;
 	int free_vg = 0;
+	int drop_vg = 0;
 	int error = 0;
 	int adopt_flag = 0;
 	int wait_flag = 0;
@@ -2114,7 +2142,43 @@ static void *lockspace_thread_main(void *arg_in)
 
 			act = list_first_entry(&ls->actions, struct action, list);
 
+			if (act->op == LD_OP_KILL_VG && act->rt == LD_RT_VG) {
+				/* Continue processing until DROP_VG arrives. */
+				log_debug("S %s kill_vg", ls->name);
+				ls->kill_vg = 1;
+				list_del(&act->list);
+				act->result = 0;
+				add_client_result(act);
+				continue;
+			}
+
+			if (ls->kill_vg && !process_op_during_kill(act)) {
+				log_debug("S %s disallow op %s after kill_vg", ls->name, op_str(act->op));
+				list_del(&act->list);
+				act->result = -EVGKILLED;
+				add_client_result(act);
+				continue;
+			}
+
+			if (act->op == LD_OP_DROP_VG && act->rt == LD_RT_VG) {
+				/*
+				 * If leases are released after i/o errors begin
+				 * but before lvmlockctl --kill, then the VG is not
+				 * killed, but drop is still needed to clean up the
+				 * VG, so in that case there would be a drop op without
+				 * a preceding kill op.
+				 */
+				if (!ls->kill_vg)
+					log_debug("S %s received drop without kill", ls->name);
+				log_debug("S %s drop_vg", ls->name);
+				ls->thread_work = 0;
+				ls->thread_stop = 1;
+				drop_vg = 1;
+				break;
+			}
+
 			if (act->op == LD_OP_STOP) {
+				/* thread_stop is already set */
 				ls->thread_work = 0;
 				break;
 			}
@@ -2238,6 +2302,9 @@ out_rem:
 	 * allowed in emergency/force situations, otherwise it's
 	 * obviously dangerous, since the lock holders are still
 	 * operating under the assumption that they hold the lock.
+	 * drop_vg drops all existing locks, but should only
+	 * happen when the VG access has been forcibly and
+	 * succesfully terminated.
 	 *
 	 * For vgremove of a sanlock vg, the vg lock will be held,
 	 * and possibly the gl lock if this vg holds the gl.
@@ -2246,7 +2313,7 @@ out_rem:
 
 	log_debug("S %s clearing locks", ls->name);
 
-	rv = clear_locks(ls, free_vg);
+	rv = clear_locks(ls, free_vg, drop_vg);
 
 	/*
 	 * Tell any other hosts in the lockspace to leave it
@@ -2284,6 +2351,8 @@ out_act:
 			act->result = 0;
 		} else if (act->op == LD_OP_STOP)
 			act->result = 0;
+		else if (act->op == LD_OP_DROP_VG)
+			act->result = 0;
 		else if (act->op == LD_OP_RENAME_BEFORE)
 			act->result = 0;
 		else
@@ -2317,6 +2386,7 @@ out_act:
 	pthread_mutex_lock(&lockspaces_mutex);
 	ls->thread_done = 1;
 	ls->free_vg = free_vg;
+	ls->drop_vg = drop_vg;
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/*
@@ -3539,7 +3609,6 @@ static int add_lock_action(struct action *act)
 			if (ls_create_fail)
 				act->flags |= LD_AF_ADD_LS_ERROR;
 			return -ENOLS;
-
 		} else {
 			log_debug("lockspace not found %s", ls_name);
 			return -ENOLS;
@@ -3714,6 +3783,16 @@ static int str_to_op_rt(const char *req_name, int *op, int *rt)
 		*rt = LD_RT_VG;
 		return 0;
 	}
+	if (!strcmp(req_name, "kill_vg")) {
+		*op = LD_OP_KILL_VG;
+		*rt = LD_RT_VG;
+		return 0;
+	}
+	if (!strcmp(req_name, "drop_vg")) {
+		*op = LD_OP_DROP_VG;
+		*rt = LD_RT_VG;
+		return 0;
+	}
 out:
 	return -1;
 }
@@ -3864,6 +3943,8 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			"thread_work=%d "
 			"thread_stop=%d "
 			"thread_done=%d "
+			"kill_vg=%d "
+			"drop_vg=%d "
 			"sanlock_gl_enabled=%d\n",
 			prefix,
 			ls->name,
@@ -3878,6 +3959,8 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			ls->thread_work ? 1 : 0,
 			ls->thread_stop ? 1 : 0,
 			ls->thread_done ? 1 : 0,
+			ls->kill_vg,
+			ls->drop_vg,
 			ls->sanlock_gl_enabled ? 1 : 0);
 }
 
@@ -4273,6 +4356,8 @@ static void client_recv_action(struct client *cl)
 	case LD_OP_FREE:
 	case LD_OP_RENAME_BEFORE:
 	case LD_OP_FIND_FREE_LOCK:
+	case LD_OP_KILL_VG:
+	case LD_OP_DROP_VG:
 		rv = add_lock_action(act);
 		break;
 	case LD_OP_FORGET_VG_NAME:

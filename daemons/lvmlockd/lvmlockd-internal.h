@@ -51,6 +51,8 @@ enum {
 	LD_OP_RUNNING_LM,
 	LD_OP_FIND_FREE_LOCK,
 	LD_OP_FORGET_VG_NAME,
+	LD_OP_KILL_VG,
+	LD_OP_DROP_VG,
 };
 
 /* resource types */
@@ -184,6 +186,8 @@ struct lockspace {
 	unsigned int sanlock_gl_enabled: 1;
 	unsigned int sanlock_gl_dup: 1;
 	unsigned int free_vg: 1;
+	unsigned int kill_vg: 1;
+	unsigned int drop_vg: 1;
 
 	struct list_head actions;	/* new client actions */
 	struct list_head resources;	/* resource/lock state for gl/vg/lv */
