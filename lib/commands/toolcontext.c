@@ -2011,7 +2011,6 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(cmd, &cmd->formats);
-	_destroy_filters(cmd);
 
 	if (!dev_cache_exit())
 		stack;
@@ -2109,7 +2108,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (cmd->initialized.connections && !init_connections(cmd))
 		return_0;
 
-	if (cmd->initialized.filters && !init_filters(cmd, 0))
+	if (!refresh_filters(cmd))
 		return_0;
 
 	reset_lvm_errno(1);
