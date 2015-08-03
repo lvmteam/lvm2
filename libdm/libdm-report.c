@@ -845,9 +845,10 @@ static int _get_canonical_field_name(const char *field,
 }
 
 /*
- * Compare name1 against name2 or prefix plus name2
- * name2 is not necessarily null-terminated.
- * len2 is the length of name2.
+ * Compare canonical_name1 against canonical_name2 or prefix
+ * plus canonical_name2. Canonical name is a name where all
+ * superfluous characters are removed (underscores for now).
+ * Both names are always null-terminated.
  */
 static int _is_same_field(const char *canonical_name1, const char *canonical_name2,
 			  const char *prefix)
