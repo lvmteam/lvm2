@@ -2179,7 +2179,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	lvmetad_release_token();
 	lvmetad_disconnect();
 	lvmpolld_disconnect();
-	cmd->initialized.connections = 0;
 
 	release_log_memory();
 	activation_exit();
