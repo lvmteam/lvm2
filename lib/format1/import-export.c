@@ -164,7 +164,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute__((unused
 	/* Is VG already exported or being exported? */
 	if (vg && vg_is_exported(vg)) {
 		/* Does system_id need setting? */
-		if ((vg->lvm1_system_id && !*vg->lvm1_system_id) ||
+		if (!vg->lvm1_system_id || !*vg->lvm1_system_id ||
 		    strncmp(vg->lvm1_system_id, EXPORTED_TAG,
 			    sizeof(EXPORTED_TAG) - 1)) {
 			if (!generate_lvm1_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
