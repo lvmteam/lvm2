@@ -876,15 +876,20 @@ static void _all_match_combine(const struct dm_report_object_type *types,
 			       const char *field, size_t flen,
 			       uint32_t *report_types)
 {
+	char field_canon[DM_REPORT_FIELD_TYPE_ID_LEN];
 	const struct dm_report_object_type *t;
 	size_t prefix_len;
 
-	for (t = types; t->data_fn; t++) {
-		prefix_len = strlen(t->prefix);
+	if (!_get_canonical_field_name(field, flen, field_canon, DM_REPORT_FIELD_TYPE_ID_LEN, NULL))
+		return;
+	flen = strlen(field_canon);
 
-		if (!strncasecmp(t->prefix, field, prefix_len) &&
+	for (t = types; t->data_fn; t++) {
+		prefix_len = strlen(t->prefix) - 1;
+
+		if (!strncasecmp(t->prefix, field_canon, prefix_len) &&
 		    ((unprefixed_all_matched && (flen == prefix_len)) ||
-		     (!strncasecmp(field + prefix_len, "all", 3) &&
+		     (!strncasecmp(field_canon + prefix_len, "all", 3) &&
 		      (flen == prefix_len + 3))))
 			*report_types |= t->id;
 	}
