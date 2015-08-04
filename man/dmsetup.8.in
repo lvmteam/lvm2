@@ -32,6 +32,7 @@ dmsetup \(em low level logical volume management
 .br
 .B dmsetup info
 .BR \-c | \-C | \-\-columns
+.RB [ \-\-nameprefixes ]
 .RB [ \-\-noheadings ]
 .RB [ \-\-separator
 .IR separator ]
@@ -235,6 +236,10 @@ Specify the minor number.
 .TP
 .BR \-n | \-\-notable
 When creating a device, don't load any table.
+.TP
+.BR \-\-nameprefixes
+Add a "DM_" prefix plus the field name to the output.  Useful with --noheadings to produce a list of
+field=value pairs that can be used to set environment variables (for example, in udev(7) rules).
 .TP
 .BR \-\-noheadings
 Suppress the headings line when using columnar output.
