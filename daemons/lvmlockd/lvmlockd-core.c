@@ -787,6 +787,7 @@ int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsi
 	char *n, *d1, *d2;
 
 	strncpy(version, args, MAX_ARGS);
+	version[MAX_ARGS] = '\0';
 
 	n = strstr(version, ":");
 	if (n)

@@ -69,7 +69,7 @@ void init_log_file(const char *log_file, int append)
 	static const char statfile[] = "/proc/self/stat";
 	const char *env;
 	int pid;
-	long long starttime;
+	unsigned long long starttime;
 	FILE *st;
 	int i = 0;
 
