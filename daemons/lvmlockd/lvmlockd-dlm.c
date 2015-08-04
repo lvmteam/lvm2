@@ -616,6 +616,7 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 
 int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 {
+	static const char closedir_err_msg[] = "lm_get_lockspace_dlm: closedir failed";
 	struct lockspace *ls;
 	struct dirent *de;
 	DIR *ls_dir;
@@ -632,7 +633,7 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 
 		if (!(ls = alloc_lockspace())) {
 			if (closedir(ls_dir))
-				log_error("lm_get_lockspace_dlm: closedir failed");
+				log_error(closedir_err_msg);
 			return -ENOMEM;
 		}
 
@@ -642,7 +643,8 @@ int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 		list_add_tail(&ls->list, ls_rejoin);
 	}
 
-	closedir(ls_dir);
+	if (closedir(ls_dir))
+		log_error(closedir_err_msg);
 	return 0;
 }
 
