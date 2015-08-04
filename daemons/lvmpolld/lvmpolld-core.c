@@ -566,6 +566,8 @@ static struct lvmpolld_lv *construct_pdlv(request req, struct lvmpolld_state *ls
 		return NULL;
 	}
 
+	pdlv->cmdargv = cmdargv;
+
 	cmdenvp = cmdenvp_ctr(pdlv);
 	if (!cmdenvp) {
 		pdlv_destroy(pdlv);
@@ -573,7 +575,6 @@ static struct lvmpolld_lv *construct_pdlv(request req, struct lvmpolld_state *ls
 		return NULL;
 	}
 
-	pdlv->cmdargv = cmdargv;
 	pdlv->cmdenvp = cmdenvp;
 
 	return pdlv;
