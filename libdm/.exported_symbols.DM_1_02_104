@@ -1,11 +1,11 @@
-dm_report_set_interval_ms
-dm_report_set_interval_ns
 dm_report_get_interval_ms
 dm_report_get_interval_ns
+dm_report_set_interval_ms
+dm_report_set_interval_ns
 dm_report_wait
 dm_size_to_string
 dm_timestamp_alloc
 dm_timestamp_compare
-dm_timestamp_get
 dm_timestamp_delta
 dm_timestamp_destroy
+dm_timestamp_get
