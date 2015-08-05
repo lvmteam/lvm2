@@ -68,6 +68,7 @@ static unsigned _dm_version = DM_VERSION_MAJOR;
 static unsigned _dm_version_minor = 0;
 static unsigned _dm_version_patchlevel = 0;
 static int _log_suppress = 0;
+static struct dm_timestamp *_dm_ioctl_timestamp = NULL;
 
 /*
  * If the kernel dm driver only supports one major number
@@ -919,6 +920,24 @@ int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 	return 1;
 }
 
+int dm_task_set_record_timestamp(struct dm_task *dmt)
+{
+	if (!_dm_ioctl_timestamp)
+		_dm_ioctl_timestamp = dm_timestamp_alloc();
+
+	if (!_dm_ioctl_timestamp)
+		return_0;
+
+	dmt->record_timestamp = 1;
+
+	return 1;
+}
+
+struct dm_timestamp *dm_task_get_ioctl_timestamp(struct dm_task *dmt)
+{
+	return dmt->record_timestamp ? _dm_ioctl_timestamp : NULL;
+}
+
 struct target *create_target(uint64_t start, uint64_t len, const char *type,
 			     const char *params)
 {
@@ -1716,6 +1735,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 {
 	struct dm_ioctl *dmi;
 	int ioctl_with_uevent;
+	int r;
 
 	dmt->ioctl_errno = 0;
 
@@ -1803,8 +1823,13 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			     dmt->sector, _sanitise_message(dmt->message),
 			     dmi->data_size, retry_repeat_count);
 #ifdef DM_IOCTLS
-	if (ioctl(_control_fd, command, dmi) < 0 &&
-	    dmt->expected_errno != errno) {
+	r = ioctl(_control_fd, command, dmi);
+
+	if (dmt->record_timestamp)
+		if (!dm_timestamp_get(_dm_ioctl_timestamp))
+			stack;
+
+	if (r < 0 && dmt->expected_errno != errno) {
 		dmt->ioctl_errno = errno;
 		if (dmt->ioctl_errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
 						  (dmt->type == DM_DEVICE_MKNODES) ||
@@ -2049,6 +2074,8 @@ repeat_ioctl:
 void dm_lib_release(void)
 {
 	_close_control_fd();
+	dm_timestamp_destroy(_dm_ioctl_timestamp);
+	_dm_ioctl_timestamp = NULL;
 	update_devs();
 }
 

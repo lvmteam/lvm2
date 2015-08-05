@@ -128,6 +128,7 @@ enum {
  */
 
 struct dm_task;
+struct dm_timestamp;
 
 struct dm_task *dm_task_create(int type);
 void dm_task_destroy(struct dm_task *dmt);
@@ -227,6 +228,12 @@ int dm_task_suppress_identical_reload(struct dm_task *dmt);
 int dm_task_secure_data(struct dm_task *dmt);
 int dm_task_retry_remove(struct dm_task *dmt);
 int dm_task_deferred_remove(struct dm_task *dmt);
+
+/*
+ * Record timestamp immediately after the ioctl returns.
+ */
+int dm_task_set_record_timestamp(struct dm_task *dmt);
+struct dm_timestamp *dm_task_get_ioctl_timestamp(struct dm_task *dmt);
 
 /*
  * Enable checks for common mistakes such as issuing ioctls in an unsafe order.
@@ -1668,8 +1675,6 @@ dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator);
 /********************
  * timestamp handling
  ********************/
-
-struct dm_timestamp;
 
 /*
  * Create a dm_timestamp object to use with dm_timestamp_get.

@@ -70,6 +70,8 @@ struct dm_task {
 	int expected_errno;
 	int ioctl_errno;
 
+	int record_timestamp;
+
 	char *uuid;
 	char *mangled_uuid;
 };

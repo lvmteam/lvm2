@@ -67,6 +67,8 @@ int dm_timestamp_get(struct dm_timestamp *ts)
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts->t)) {
 		log_sys_error("clock_gettime", "get_timestamp");
+		ts->t.tv_sec = 0;
+		ts->t.tv_nsec = 0;
 		return 0;
 	}
 
@@ -113,6 +115,8 @@ int dm_timestamp_get(struct dm_timestamp *ts)
 
 	if (gettimeofday(&ts->t, NULL)) {
 		log_sys_error("gettimeofday", "get_timestamp");
+		ts->t.tv_sec = 0;
+		ts->t.tv_usec = 0;
 		return 0;
 	}
 

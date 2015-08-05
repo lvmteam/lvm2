@@ -277,6 +277,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->query_inactive_table = 0;
 	dmt->new_uuid = 0;
 	dmt->secure_data = 0;
+	dmt->record_timestamp = 0;
 
 	return dmt;
 }

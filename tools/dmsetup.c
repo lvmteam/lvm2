@@ -185,6 +185,7 @@ static struct dm_report *_report;
 static report_type_t _report_type;
 static dev_name_t _dev_name_type;
 static uint32_t _count = 1; /* count of repeating reports */
+static struct dm_timestamp *_initial_timestamp = NULL;
 
 #define NSEC_PER_USEC	UINT64_C(1000)
 #define NSEC_PER_MSEC	UINT64_C(1000000)
@@ -309,6 +310,24 @@ struct dmsetup_report_obj {
 	struct dm_split_name *split_name;
 };
 
+static int _task_run(struct dm_task *dmt)
+{
+	int r;
+	uint64_t delta;
+
+	if (_initial_timestamp)
+		dm_task_set_record_timestamp(dmt);
+
+	r = dm_task_run(dmt);
+
+	if (_initial_timestamp) {
+		delta = dm_timestamp_delta(dm_task_get_ioctl_timestamp(dmt), _initial_timestamp);
+		log_debug("Timestamp: %7" PRIu64 ".%09" PRIu64 " seconds", delta / NSEC_PER_SEC, delta % NSEC_PER_SEC);
+	}
+
+	return r;
+}
+
 static struct dm_task *_get_deps_task(int major, int minor)
 {
 	struct dm_task *dmt;
@@ -330,7 +349,7 @@ static struct dm_task *_get_deps_task(int major, int minor)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto err;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto err;
 
 	if (!dm_task_get_info(dmt, &info))
@@ -601,7 +620,7 @@ static int _load(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	r = 1;
@@ -687,7 +706,7 @@ static int _create(CMD_ARGS)
 		udev_flags |= DM_UDEV_DISABLE_LIBRARY_FALLBACK;
 
 	if (!dm_task_set_cookie(dmt, &cookie, udev_flags) ||
-	    !dm_task_run(dmt))
+	    !_task_run(dmt))
 		goto out;
 
 	r = 1;
@@ -743,7 +762,7 @@ static int _do_rename(const char *name, const char *new_name, const char *new_uu
 		udev_flags |= DM_UDEV_DISABLE_LIBRARY_FALLBACK;
 
 	if (!dm_task_set_cookie(dmt, &cookie, udev_flags) ||
-	    !dm_task_run(dmt))
+	    !_task_run(dmt))
 		goto out;
 
 	r = 1;
@@ -833,7 +852,7 @@ static int _message(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	if ((response = dm_task_get_message_response(dmt))) {
@@ -882,7 +901,7 @@ static int _setgeometry(CMD_ARGS)
 		goto out;
 
 	/* run the task */
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	r = 1;
@@ -1322,7 +1341,7 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	if (_switches[DEFERRED_ARG] && (task == DM_DEVICE_REMOVE || task == DM_DEVICE_REMOVE_ALL))
 		dm_task_deferred_remove(dmt);
 
-	r = dm_task_run(dmt);
+	r = _task_run(dmt);
 
       out:
 	if (!_udev_cookie && udev_wait_flag)
@@ -1383,7 +1402,7 @@ static int _process_all(const struct command *cmd, const char *subcommand, int a
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt)) {
+	if (!_task_run(dmt)) {
 		r = 0;
 		goto out;
 	}
@@ -1434,7 +1453,7 @@ static uint64_t _get_device_size(const char *name)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	if (!dm_task_get_info(dmt, &info) || !info.exists)
@@ -1483,7 +1502,7 @@ static int _error_device(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto error;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto error;
 
 	if (!_simple(DM_DEVICE_RESUME, name, 0, 0)) {
@@ -1671,7 +1690,7 @@ static int _status(CMD_ARGS)
 	if (_switches[NOFLUSH_ARG] && !dm_task_no_flush(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	if (!dm_task_get_info(dmt, &info) || !info.exists)
@@ -1747,7 +1766,7 @@ static int _targets(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	target = dm_task_get_versions(dmt);
@@ -1799,7 +1818,7 @@ static int _info(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	r = _display_info(dmt);
@@ -1843,7 +1862,7 @@ static int _deps(CMD_ARGS)
 	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	if (!dm_task_get_info(dmt, &info))
@@ -3001,7 +3020,7 @@ static int _mangle(CMD_ARGS)
 	if (!_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
 		goto out;
 
-	if (!dm_task_run(dmt))
+	if (!_task_run(dmt))
 		goto out;
 
 	if (!dm_task_get_info(dmt, &info) || !info.exists)
@@ -3808,8 +3827,17 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[VERSION_ARG]++;
 	}
 
-	if (_switches[VERBOSE_ARG] > 1)
+	if (_switches[VERBOSE_ARG] > 1) {
 		dm_log_init_verbose(_switches[VERBOSE_ARG] - 1);
+		if (_switches[VERBOSE_ARG] > 2) {
+			if (!(_initial_timestamp = dm_timestamp_alloc()))
+				stack;
+			else if (!dm_timestamp_get(_initial_timestamp))
+				stack;
+			else
+				log_debug("Timestamp:       0.000000000 seconds");
+		}
+	}
 
 	if ((_switches[MAJOR_ARG] && !_switches[MINOR_ARG]) ||
 	    (!_switches[MAJOR_ARG] && _switches[MINOR_ARG])) {
@@ -3959,6 +3987,9 @@ out:
 		dm_tree_free(_dtree);
 
 	dm_free(_table);
+
+	if (_initial_timestamp)
+		dm_timestamp_destroy(_initial_timestamp);
 
 	return r;
 }
