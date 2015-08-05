@@ -1,5 +1,19 @@
 Version 1.02.104 -
 =================================
+  Add dmstats.8 man page
+  Add report stats sub-command to provide repeating stats reports.
+  Add clear, delete, list, and print stats sub-commands.
+  Add --segments switch to create one region per device segment.
+  Add create stats sub-command and --start, --length, --areas and --areasize.
+  Recognize 'dmstats' as an alias for 'dmsetup stats' when run with this name.
+  Add a 'stats' command to dmsetup to configure, manage and report stats data.
+  Add --regionid, --allregions to specify a single stats region or all regions.
+  Add --allprograms for stats commands that filter by program ID.
+  Add --auxdata and --programid arguments to specify aux data and program ID.
+  Add statistics fields to -o <field>
+  Add libdm-stats library to allow management of device-mapper statistics.
+  Add --nosuffix to suppress unit suffixes in report output.
+  Add --units to control report field output units.
   Add support to redisplay column headings for repeating column reports.
   Fix report header and row resource leaks.
   Report timestamps of ioctls with dmsetup -vvv.

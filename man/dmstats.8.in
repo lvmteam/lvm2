@@ -1,0 +1,693 @@
+.TH DMSTATS 8 "Jul 25 2015" "Linux" "MAINTENANCE COMMANDS"
+.SH NAME
+dmstats \(em device-mapper statistics management
+.SH SYNOPSIS
+.ad l
+.B dmsetup stats
+.I command
+.RB [ options ]
+.br
+
+.B dmstats <command>
+.RB [[
+.IR device_name ]
+.RB |[ \-\-uuid
+.IR uuid ]
+.RB |[ \-\-major
+.IR major
+.RB \-\-minor
+.IR minor ]]
+.br
+
+.B dmstats clear
+.I device_name
+.RB [ \-\-allregions
+.RB | \-\-regionid
+.IR id ]
+.br
+.B dmstats create
+.I device_name
+.RB [[ \-\-areas
+.IR nr_areas ]
+.RB |[ \-\-areasize
+.IR area_size ]]
+.RB [[ \-\-start
+.IR start_sector ]
+.RB [ \-\-length
+.IR length ]
+.RB |[ \-\-segments ]]
+.RB [ \-\-auxdata
+.IR data ]
+.RB [ \-\-programid
+.IR id ]
+.br
+.B dmstats delete
+.I device_name
+.RB [ \-\-force ]
+.RB [ \-\-allregions
+.RB | \-\-regionid
+.IR id ]
+.RB [ \-\-allprograms
+.RB | \-\-programid
+.IR id ]
+.br
+.B dmstats help
+.RB [ \-c | \-C | \-\-columns ]
+.br
+.B dmstats list
+.RI [ device_name ]
+.RB [ \-\-allprograms
+.RB | \-\-programid
+.IR id ]
+.RB [ \-\-units
+.IR units ]
+.RB [ \-\-nosuffix ]
+.br
+.B dmstats print
+.RI [ device_name ]
+.RB [ \-\-clear ]
+.RB [ \-\-allprograms
+.RB | \-\-programid
+.IR id ]
+.RB [ \-\-allregions
+.RB | \-\-regionid
+.IR id ]
+.br
+.B dmstats report
+.RI [ device_name ]
+.RB [ \-\-interval
+.IR seconds ]
+.RB [ \-\-count
+.IR count ]
+.RB [ \-\-units
+.IR units ]
+.RB [ \-\-allprograms ]
+.RB [ \-\-programid
+.IR id ]
+.RB [ \-\-regionid
+.IR id ]
+.RB [ \-O | \-\-sort
+.IR sort_fields ]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB [ \-\-units
+.IR units ]
+.RB [ \-\-nosuffix ]
+.br
+.ad b
+.SH DESCRIPTION
+The dmstats program manages IO statistics regions for devices that use
+the device-mapper driver. Statistics regions may be created, deleted,
+listed and reported on using the tool.
+
+The first argument to dmstats is a command.
+
+The second argument is the device name, uuid, or major and minor
+numbers.
+
+Further options permit the selection of regions, output format
+control, and reporting behaviour.
+
+When the program is run using the 'dmstats' alias, the command
+\fBmust\fP be the first argument and any switches and options should be
+specified following the command itself. This limitation is not present
+when run as 'dmsetup stats'.
+
+When no device argument is given dmstats will by default operate on all
+device-mapper devices present. The \fBcreate\fP and \fBdelete\fP
+commands require the use of \fB--force\fP when used in this way.
+
+.SH OPTIONS
+.TP
+.B \-\-allprograms
+Include regions from all program IDs for list and report operations.
+.TP
+.B \-\-allregions
+Include all present regions for commands that normally accept a single
+region identifier.
+.TP
+.B \-\-areas \fInr_areas
+Specify the number of statistics areas to create within a new region.
+.TP
+.B \-\-areasize \fIarea_size
+Specify the size of areas into which a new region should be divided. An
+optional suffix selects units of bBsSkKmMgGtTpPeE: (b)ytes,
+(s)ectors, (k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes,
+(p)etabytes, (e)xabytes.  Capitalise to use multiples of 1000 (S.I.)
+instead of 1024.
+.TP
+.B \-\-auxdata \fIaux_data
+Specify auxilliary data (a string) to be stored with a new region.
+.TP
+.B \-\-clear
+When printing statistics counters, also atomically reset them to zero.
+.TP
+.B \-\-count \fIcount
+Specify the iteration count for repeating reports. If the count
+argument is zero reports will continue to repeat until interrupted.
+.TP
+.B \-\-interval \fIseconds
+Specify the interval in seconds between successive iterations for
+repeating reports. If \-\-interval is specified but \-\-count is not,
+reports will continue to repeat until interrupted.
+.TP
+.B \-\-length \fIlength
+Specify the length of a new statistics region in sectors. An optional
+suffix selects units of bBsSkKmMgGtTpPeE: (b)ytes, (s)ectors,
+(k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes, (p)etabytes,
+(e)xabytes.  Capitalise to use multiples of 1000 (S.I.) instead of 1024.
+.TP
+.BR \-j | \-\-major\ \fImajor
+Specify the major number.
+.TP
+.BR \-m | \-\-minor\ \fIminor
+Specify the minor number.
+.TP
+.B \-\-nosuffix
+Suppress the suffix on output sizes.  Use with \fB\-\-units\fP
+(except h and H) if processing the output.
+.TP
+.BR \-o | \-\-options
+Specify which report fields to display.
+.TP
+.BR \-O | \-\-sort\ \fIsort_fields
+Sort output according to the list of fields given. Precede any
+sort_field with - for a reverse sort on that column.
+.TP
+.B \-\-programid \fIid
+Specify a program ID string. When creating new statistics regions this
+string is stored with the region. Subsequent operations may supply a
+program ID in order to select only regions with a matching value. The
+default program ID for dmstats-managed regions is "dmstats".
+.TP
+.BR \-S | \-\-select \ \fIselection
+Display only rows that match selection criteria. All rows with the
+additional "selected" column (-o selected) showing 1 if the row matches
+the selection and 0 otherwise. The selection criteria are defined by
+specifying column names and their valid values while making use of
+supported comparison operators.
+.TP
+.B \-\-start \fIstart
+Specify the start offset of a new statistics region in sectors. An
+optional suffix selects units of bBsSkKmMgGtTpPeE: (b)ytes,
+(s)ectors, (k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes,
+(p)etabytes, (e)xabytes.  Capitalise to use multiples of 1000 (S.I.)
+instead of 1024.
+.TP
+.B \-\-segments
+Create a new statistics region for each target contained in the target
+device. This causes a separate region to be allocated for each segment
+of the device.
+.TP
+.BR \-\-units \ hHbBsSkKmMgGtTpPeE
+Set the display units for report output. All sizes are output in these
+units: (h)uman-readable, (b)ytes, (s)ectors, (k)ilobytes, (m)egabytes,
+(g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.  Capitalise to use
+multiples of 1000 (S.I.) instead of 1024.  Can also specify custom units
+e.g. \fB\-\-units 3M\fP
+.TP
+.BR \-u | \-\-uuid
+Specify the uuid.
+.TP
+.BR \-v | \-\-verbose \ [ \-v | \-\-verbose ]
+Produce additional output.
+.br
+.SH COMMANDS
+.TP
+.B clear
+.I device_name
+.RB [ \-\-allregions
+.RB | \-\-regionid
+.IR id ]
+.RB [ \-\-allprograms
+.RB | \-\-programid
+.IR id ]
+.br
+Instructs the kernel to clear statistics counters for the speficied
+regions (with the exception of in-flight IO counters).
+.br
+.TP
+.B create
+.I device_name
+.RB [ \-\-areas
+.IR nr_areas ]
+.RB [ \-\-areasize
+.IR area_size ]
+.RB [[ \-\-start
+.IR start_sector ]
+.RB [ \-\-length
+.IR length ]
+.RB |[ \-\-segments ]]
+.RB [ \-\-auxdata
+.IR data ]
+.RB [ \-\-programid
+.IR id ]
+.br
+Creates one or more new statistics regions on the specified device(s).
+
+The region will span the entire device unless \fB\-\-start\fP and
+\fB\-\-length\fP or \fB\-\-target\fP are given. The \fB\-\-start\fP and
+\fB\-\-length\fP options allow a region of arbitrary length to be placed
+at an arbitrary offset into the device. The \fB\-\-segments\fP option
+causes a new region to be created for each target in the corresponding
+device-mapper device's table.
+
+An optional \fBprogram_id\fP or \fBaux_data\fP string may be associated
+with the region. A \fBprogram_id\fP may then be used to select regions
+for subsequent list, print, and report operations. The \fBaux_data\fP
+stores an arbitrary string and is not used by dmstats or the
+device-mapper kernel statistics subsystem.
+
+By default dmstats creates regions with a \fBprogram_id\fP of
+"DMSTATS1".
+
+On success the \fBregion_id\fP of the newly created region is printed to
+stdout.
+.br
+.TP
+.B delete
+.I [ device_name ]
+.RB [ \-\-force ]
+.RB [ \-\-allregions
+.RB | \-\-regionid
+.IR id ]
+.RB [ \-\-allprograms
+.RB | \-\-programid
+.IR id ]
+.br
+Delete the specified statistics region. All counters and resources used
+by the region are released and the region will not appear in the output
+of subsequent list, print, or report operations.
+
+All regions registered on a device may be removed using
+\fB\-\-allregions\fP.
+
+To remove all regions on all devices \fB\-\-force\fP must be used.
+.br
+.TP
+.B help
+.RB [ \-c | \-C | \-\-columns ]
+.br
+Outputs a summary of the commands available, optionally including
+the list of report fields.
+.br
+.TP
+.B list
+.RI [ device_name ]
+.RB [ \-\-allprograms ]
+.RB [ \-\-programid
+.IR id ]
+.br
+List the statistics regions registered on the device. If the
+\fB\-\-allprograms\fP switch is given all regions will be listed
+regardless of region program ID values.
+.br
+.TP
+.B print
+.RB [ \-\-clear ]
+.IR
+.RB [ \-\-allregions
+.RB | \-\-regionid
+.IR id ]
+.RB [ \-\-allprograms
+.RB | \-\-programid
+.IR id ]
+.br
+Print raw statistics counters for the specified region or for all
+present regions.
+.br
+.TP
+.B report
+.RB [ \-\-allprograms ]
+.RB [ \-\-interval
+.IR seconds ]
+.RB [ \-\-count
+.IR count ]
+.RB [ \-\-units
+.IR unit ]
+.RB [ \-\-regionid
+.IR id ]
+.RB [ \-\-programid
+.IR id ]
+.RB [ \-O | \-\-sort
+.IR sort_fields ]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB [ \-\-units
+.IR units ]
+.br
+Start a report for the specified region or for all present regions. If
+the count argument is specified, the report will repeat at a fixed
+interval set by the \fB\-\-interval\fP option. The default interval is
+one second.
+
+If the \fB\-\-allprograms\fP switch is given, all regions will be
+listed, regardless of region program ID values.
+.br
+.SH REGIONS AND AREAS
+The device-mapper statistics facility allows separate performance
+counters to be maintained for arbitrary regions of devices. A region may
+span any range: from a single sector to the whole device. A region may
+be further sub-divided into a number of distinct areas (one or more),
+each with its own counter set.
+
+By default new regions span the entire device. The \fB\-\-start\fP and
+\fB\-\-length\fP options allows a region of any size to be placed at any
+location on the device.
+
+A region may be either divided into the specified number of equal-sized
+areas, or into areas of the given size by specifying one of
+\fB\-\-areas\fP or \fB\-\-areasize\fP when creating a region with the
+\fBcreate\fP command. Depending on the size of the areas and the device
+region the final area within the region may be smaller than requested.
+
+.SS Region identifiers
+Each region is assigned an identifier when it is created that is used to
+reference the region in subsequent operations. Region identifiers are
+unique within a given device (including across different \fBprogram_id\fP
+values).
+.br
+Depending on the sequence of create and delete operations, gaps may
+exist in the sequence of \fBregion_id\fP values for a particular device.
+
+.SH REPORT FIELDS
+The dmstats report provides several types of field that may be added to
+the default field set, or used to create custom reports.
+.br
+All performance counters and metrics are calculated per-area.
+.br
+.SS Derived metrics
+A number of metrics fields are included that provide high level
+performance indicators. These are based on the fields provided by the
+conventional Linux iostat program and are derived from the basic counter
+values provided by the kernel for each area.
+.br
+.HP
+.B rrqm
+.br
+Read requests merged per second.
+.HP
+.B wrqm
+.br
+Write requests merged per second.
+.HP
+.B rs
+.br
+Read requests per second.
+.HP
+.B ws
+.br
+Write requests per second.
+.HP
+.B rsec
+.br
+Sectors read per second.
+.HP
+.B wsec
+.br
+Sectors written per second.
+.HP
+.B arqsz
+.br
+The average size of requests submitted to the area.
+.HP
+.B qusz
+.br
+The average queue length.
+.HP
+.B await
+.br
+The average wait time for read and write requests.
+.HP
+.B r_await
+.br
+The average wait time for read requests.
+.HP
+.B w_await
+.br
+The average wait time for write requests.
+.HP
+.B tput
+.br
+The device throughput in requests per second.
+.HP
+.B svctm
+.br
+The  average  service  time  (in milliseconds) for I/O requests that
+were issued to the device.
+.HP
+.B util
+.br
+Percentage of CPU time during which I/O requests were issued to the
+device (bandwidth utilization for the device). Device saturation occurs
+when this value is close to 100%.
+.br
+.SS Region and area meta fields
+Meta fields provide information about the region or area that the
+statistics values relate to. This includes the region and area
+identifier, start, length, and counts, as well as the program ID and
+auxiliary data values.
+.br
+.HP
+.B region_id
+.br
+Region identifier. This is a non-negative integer returned by the kernel
+when a statistics region is created.
+.HP
+.B region_start
+.br
+.br
+The region start sector in units of 512 byte sectors.
+.HP
+.B region_len
+.br
+The length of the region in units of 512 byte sectors.
+.HP
+.B area_id
+.br
+Area identifier. Area identifiers are assigned by the device-mapper
+statistics library and uniquely identify each area within a region. Each
+ID corresponds to a distinct set of performance counters for that area
+of the statistics region. Area identifiers are always monotonically
+increasing within a region so that higher ID values correspond to
+greater sector addresses within the region and no gaps in the sequence
+of identifiers exist. Sorting a report by device, region start, and area
+ID (the default) will then produce rows in order of ascending region and
+area address.
+.HP
+.B area_start
+.br
+The area start sector in units of 512 byte sectors.
+.HP
+.B area_len
+.br
+The length of the area in units of 512 byte sectors.
+.HP
+.B area_count
+.br
+The number of areas in this region.
+.HP
+.B program_id
+.br
+The program ID value associated with this region.
+.HP
+.B aux_data
+.br
+The auxiliary data value associated with this region.
+.br
+.SS Basic counters
+Basic counters provide access to the raw counter data from the kernel,
+allowing further processing to be carried out by another program.
+
+The kernel provides thirteen separate counters for each statistics
+area. The first eleven of these match the counters provided in
+/proc/diskstats or /sys/block/*/*/stat. The final pair provide separate
+counters for read and write time.
+.P
+.HP
+.B reads
+.br
+The number of reads successfully completed this interval.
+.HP
+.B read_merges
+.br
+The number of read requests merged this interval. This field is
+incremented every time a pair of requests are merged to create a single
+request to be issued to the device.
+.HP
+.B read_sectors
+.br
+The number of 512 byte sectors read this interval.
+.HP
+.B read_nsecs
+.br
+The number of nanoseconds spent reading during this interval.
+.HP
+.B writes
+.br
+The number of writes successfully completed this interval.
+.HP
+.B write_merges
+.br
+The number of write requests merged this interval. This field is
+incremented every time a pair of requests are merged to create a single
+request to be issued to the device.
+.HP
+.B write_sectors
+.br
+The number of 512 byte sectors written this interval.
+.HP
+.B write_nsecs
+.br
+The number of nanoseconds spent writing during this interval.
+.HP
+.B in_progress
+.br
+The number of reads and writes currently in progress.
+.HP
+.B io_nsecs
+.br
+The number of nanoseconds spent reading and writing.
+.HP
+.B weighted_io_nsecs
+.br
+This field is incremented at each I/O start, I/O completion, I/O merge,
+or read of these stats by the number of I/Os in progress multiplied by
+the number of milliseconds spent doing I/O since the last update of this
+field.  This can provide an easy measure of both I/O completion time and
+the backlog that may be accumulating.
+.br
+.br
+.P
+.SH EXAMPLES
+Create a whole-device region with one area on vg00/lvol1
+.br
+.br
+# dmstats create vg00/lvol1
+.br
+Created region: 0
+.br
+.br
+
+
+Create a 32M region 1G into device d0
+.br
+.br
+# dmstats create --start 1G --length 32M d0
+.br
+Created region: 2
+.br
+
+
+Create a whole-device region with 8 areas on every device
+.br
+.br
+# dmstats create --areas 8
+.br
+Created region: 0
+.br
+Created region: 0
+.br
+Created region: 0
+.br
+Created region: 2
+.br
+Created region: 0
+.br
+Created region: 0
+.br
+.br
+
+Delete all regions on all devices
+.br
+.br
+# dmstats delete --allregions --force
+.br
+.br
+
+Create a whole-device region with areas 10GiB in size on vg00/lvol1
+using dmsetup
+.br
+.br
+# dmsetup stats create --areasize 10G vg00/lvol1
+.br
+Created region: 1
+.br
+.br
+
+Create a 1GiB region with 16 areas at the start of vg00/lvol1
+.br
+# dmstats create --start 0 --len 1G --areas=16 vg00/lvol1
+.br
+Created region: 2
+.br
+.br
+
+List the statistics regions registered on vg00/lvol1
+.br
+# dmstats list vg00/lvol1
+.br
+RegionID    RegStart    RegLen  AreaSize ProgramID AuxData
+.br
+0                  0 104857600  20971520 dmstats
+.br
+1                  0 104857600  20971520 dmstats
+.br
+2                  0   2097152    131072 dmstats
+.br
+.br
+
+Display five statistics reports for vg00/lvol1 at an interval of one second
+.br
+.br
+# dmstats report --interval 1 --count 5 vg00/lvol1
+.br
+Name             RgID  ArID  RRqM/s   WRqM/s   R/s    W/s   RSz/s   WSz/s AvRqSz QSize SvcTm Util% AWait
+.br
+vg00-lvol1       0     0     0.00     0.00   8.00  0.00  48.00k     0  6.00k  0.00  5.50  4.40  6.62
+.br
+vg00-lvol1       0     1     0.00     0.00  22.00  0.00 624.00k     0 28.00k  0.00  5.23 11.50  5.36
+.br
+vg00-lvol1       0     2     0.00     0.00 353.00  0.00   1.84m     0  5.00k  0.00  1.34 47.40  1.33
+.br
+vg00-lvol1       0     3     0.00     0.00  73.00  0.00 592.00k     0  8.00k  0.00  2.10 15.30  2.10
+.br
+vg00-lvol1       0     4     0.00     0.00   5.00  0.00  52.00k     0 10.00k  0.00  4.00  2.00  4.00
+.br
+[...]
+.br
+.br
+
+Create one region for reach target contained in device vg00/lvol1
+.br
+.br
+# dmstats create --segments vg00/lvol1
+.br
+Created region: 0
+.br
+Created region: 1
+.br
+Created region: 2
+.br
+.br
+
+Print raw counters for region 4 on device d0
+.br
+.br
+# dmstats print --regionid 4 d0
+.br
+2097152+65536 0 0 0 0 29 0 264 701 0 41 701 0 41
+.br
+.br
+.SH AUTHORS
+Bryn M. Reeves <bmr@redhat.com>
+
+.SH SEE ALSO
+LVM2 resource page https://www.sourceware.org/lvm2/
+.br
+Device-mapper resource page: http://sources.redhat.com/dm/
+.br
+
+Device-mapper statistics kernel documentation
+.br
+   Documentation/device-mapper/statistics.txt

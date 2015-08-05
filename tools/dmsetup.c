@@ -102,6 +102,9 @@ extern char *optarg;
 
 #define err(msg, x...) fprintf(stderr, msg "\n", ##x)
 
+/* program_id used for dmstats-managed statistics regions */
+#define DM_STATS_PROGRAM_ID "dmstats"
+
 /*
  * We have only very simple switches ATM.
  */
@@ -109,7 +112,13 @@ enum {
 	READ_ONLY = 0,
 	ADD_NODE_ON_CREATE_ARG,
 	ADD_NODE_ON_RESUME_ARG,
+	ALL_PROGRAMS_ARG,
+	ALL_REGIONS_ARG,
+	AREAS_ARG,
+	AREA_SIZE_ARG,
+	AUX_DATA_ARG,
 	CHECKS_ARG,
+	CLEAR_ARG,
 	COLS_ARG,
 	COUNT_ARG,
 	DEFERRED_ARG,
@@ -120,6 +129,7 @@ enum {
 	HELP_ARG,
 	INACTIVE_ARG,
 	INTERVAL_ARG,
+	LENGTH_ARG,
 	MANGLENAME_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
@@ -129,23 +139,29 @@ enum {
 	NOHEADINGS_ARG,
 	NOLOCKFS_ARG,
 	NOOPENCOUNT_ARG,
+	NOSUFFIX_ARG,
 	NOTABLE_ARG,
 	UDEVCOOKIE_ARG,
 	NOUDEVRULES_ARG,
 	NOUDEVSYNC_ARG,
 	OPTIONS_ARG,
+	PROGRAM_ID_ARG,
 	READAHEAD_ARG,
+	REGION_ID_ARG,
 	RETRY_ARG,
 	ROWS_ARG,
 	SEPARATOR_ARG,
 	SETUUID_ARG,
 	SHOWKEYS_ARG,
 	SORT_ARG,
+	START_ARG,
 	TABLE_ARG,
 	TARGET_ARG,
+	SEGMENTS_ARG,
 	TREE_ARG,
 	UID_ARG,
 	UNBUFFERED_ARG,
+	UNITS_ARG,
 	UNQUOTED_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
@@ -160,7 +176,8 @@ typedef enum {
 	DR_INFO = 2,
 	DR_DEPS = 4,
 	DR_TREE = 8,	/* Complete dependency tree required */
-	DR_NAME = 16
+	DR_NAME = 16,
+	DR_STATS = 32,
 } report_type_t;
 
 typedef enum {
@@ -186,6 +203,11 @@ static report_type_t _report_type;
 static dev_name_t _dev_name_type;
 static uint32_t _count = 1; /* count of repeating reports */
 static struct dm_timestamp *_initial_timestamp = NULL;
+static int _stats_report_init = 0;
+static uint64_t _disp_factor = 512; /* display sizes in sectors */
+static char _disp_units = 's';
+
+/* report timekeeping */
 static struct dm_timestamp *_ts_start = NULL, *_ts_end = NULL;
 static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
 static uint64_t _interval = 0; /* configured interval in nsecs */
@@ -311,6 +333,7 @@ struct dmsetup_report_obj {
 	struct dm_task *deps_task;
 	struct dm_tree_node *tree_node;
 	struct dm_split_name *split_name;
+	struct dm_stats *stats;
 };
 
 static int _task_run(struct dm_task *dmt)
@@ -447,6 +470,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 	obj.info = info;
 	obj.deps_task = NULL;
 	obj.split_name = NULL;
+	obj.stats = NULL;
 
 	if (_report_type & DR_TREE)
 		if (!(obj.tree_node = dm_tree_find_node(_dtree, info->major, info->minor))) {
@@ -465,9 +489,35 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 						       dm_task_get_name(dmt), '-')))
 			goto_out;
 
-	if (!dm_report_object(_report, &obj))
-		goto_out;
+	/*
+	 * Obtain statistics for the current reporting object and set
+	 * the interval estimate used for stats rate conversion.
+	 */
+	if (_report_type & DR_STATS) {
+		if (!(obj.stats = dm_stats_create(DM_STATS_PROGRAM_ID)))
+			goto_out;
 
+		/* FIXME: use a single timestamp to measure _last_interval. */
+		dm_stats_set_sampling_interval_ns(obj.stats, _last_interval);
+
+		dm_stats_bind_devno(obj.stats, info->major, info->minor);
+		if (!(dm_stats_populate(obj.stats, DM_STATS_PROGRAM_ID, DM_STATS_REGIONS_ALL))) {
+			goto out;
+		}
+	}
+
+	/*
+	 * Walk any statistics regions contained in the current
+	 * reporting object: for objects with a NULL stats handle,
+	 * or a handle containing no registered regions, this loop
+	 * always executes exactly once.
+	 */
+	dm_stats_walk_do(obj.stats) {
+		if (!dm_report_object(_report, &obj))
+			goto_out;
+		/* report walk is always by area */
+		dm_stats_walk_next(obj.stats);
+	} dm_stats_walk_while(obj.stats);
 	r = 1;
 
       out:
@@ -475,6 +525,8 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 		dm_task_destroy(obj.deps_task);
 	if (obj.split_name)
 		_destroy_split_name(obj.split_name);
+	if (obj.stats)
+		dm_stats_destroy(obj.stats);
 	return r;
 }
 
@@ -1278,6 +1330,12 @@ static int _version(CMD_ARGS)
 		return 0;
 
 	printf("Driver version:    %s\n", version);
+
+	/* don't output column headings for 'dmstats version'. */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
 
 	return 1;
 }
@@ -2311,6 +2369,15 @@ static int _uint32_disp(struct dm_report *rh,
 	return dm_report_field_uint32(rh, field, &value);
 }
 
+static int _show_units(void)
+{
+	/* --nosuffix overrides --units */
+	if (_switches[NOSUFFIX_ARG])
+		return 0;
+
+	return (_int_args[UNITS_ARG]) ? 1 : 0;
+}
+
 static int _dm_name_disp(struct dm_report *rh,
 			 struct dm_pool *mem __attribute__((unused)),
 			 struct dm_report_field *field, const void *data,
@@ -2772,6 +2839,637 @@ static int _dm_lv_layer_name_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, (const char *const *) data);
 }
 
+/**
+ * All _dm_stats_*_disp functions for basic counters are identical:
+ * obtain the value for the current region and area and pass it to
+ * dm_report_field_uint64().
+ */
+#define MK_STATS_COUNTER_DISP_FN(counter)					  \
+static int _dm_stats_ ## counter ## _disp(struct dm_report *rh,			  \
+				 struct dm_pool *mem __attribute__((unused)),	  \
+				 struct dm_report_field *field, const void *data, \
+				 void *private __attribute__((unused)))		  \
+{										  \
+	const struct dm_stats *dms = (const struct dm_stats *) data;		  \
+	uint64_t value = dm_stats_get_ ## counter(dms, DM_STATS_REGION_CURRENT,   \
+						  DM_STATS_AREA_CURRENT);         \
+	return dm_report_field_uint64(rh, field, &value);			  \
+}
+
+MK_STATS_COUNTER_DISP_FN(reads)
+MK_STATS_COUNTER_DISP_FN(reads_merged)
+MK_STATS_COUNTER_DISP_FN(read_sectors)
+MK_STATS_COUNTER_DISP_FN(read_nsecs)
+MK_STATS_COUNTER_DISP_FN(writes)
+MK_STATS_COUNTER_DISP_FN(writes_merged)
+MK_STATS_COUNTER_DISP_FN(write_sectors)
+MK_STATS_COUNTER_DISP_FN(write_nsecs)
+MK_STATS_COUNTER_DISP_FN(io_in_progress)
+MK_STATS_COUNTER_DISP_FN(io_nsecs)
+MK_STATS_COUNTER_DISP_FN(weighted_io_nsecs)
+MK_STATS_COUNTER_DISP_FN(total_read_nsecs)
+MK_STATS_COUNTER_DISP_FN(total_write_nsecs)
+#undef MK_STATS_COUNTER_DISP_FN
+
+static int _dm_stats_region_id_disp(struct dm_report *rh,
+				    struct dm_pool *mem __attribute__((unused)),
+				    struct dm_report_field *field, const void *data,
+				    void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t region_id = dm_stats_get_current_region(dms);
+	return dm_report_field_uint64(rh, field, &region_id);
+}
+
+static int _dm_stats_region_start_disp(struct dm_report *rh,
+				       struct dm_pool *mem __attribute__((unused)),
+				       struct dm_report_field *field, const void *data,
+				       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t region_start;
+	const char *repstr;
+	double *sortval;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_current_region_start(dms, &region_start))
+		return_0;
+
+	if (!(repstr = dm_size_to_string(mem, region_start, units, 1, factor,
+					 _show_units(), DM_SIZE_UNIT)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = (double) region_start;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_region_len_disp(struct dm_report *rh,
+					struct dm_pool *mem __attribute__((unused)),
+					struct dm_report_field *field, const void *data,
+					void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t region_length;
+	const char *repstr;
+	double *sortval;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_current_region_len(dms, &region_length))
+		return_0;
+
+	if (!(repstr = dm_size_to_string(mem, region_length, units, 1, factor,
+					 _show_units(), DM_SIZE_UNIT)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = (double) region_length;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_area_id_disp(struct dm_report *rh,
+				  struct dm_pool *mem __attribute__((unused)),
+				  struct dm_report_field *field, const void *data,
+				  void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t area_id = dm_stats_get_current_area(dms);
+	return dm_report_field_uint64(rh, field, &area_id);
+}
+
+static int _dm_stats_area_start_disp(struct dm_report *rh,
+				     struct dm_pool *mem __attribute__((unused)),
+				     struct dm_report_field *field, const void *data,
+				     void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t area_start;
+	const char *repstr;
+	double *sortval;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_current_area_start(dms, &area_start))
+		return_0;
+
+	if (!(repstr = dm_size_to_string(mem, area_start, units, 1, factor,
+					 _show_units(), DM_SIZE_UNIT)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = (double) area_start;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_area_len_disp(struct dm_report *rh,
+				      struct dm_pool *mem __attribute__((unused)),
+				      struct dm_report_field *field, const void *data,
+				      void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t area_len;
+	const char *repstr;
+	double *sortval;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_current_area_len(dms, &area_len))
+		return_0;
+
+	if (!(repstr = dm_size_to_string(mem, area_len, units, 1, factor,
+					 _show_units(), DM_SIZE_UNIT)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = (double) area_len;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_area_count_disp(struct dm_report *rh,
+				     struct dm_pool *mem __attribute__((unused)),
+				     struct dm_report_field *field, const void *data,
+				     void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	uint64_t area_count, region;
+
+	region = dm_stats_get_current_region(dms);
+	if (!(area_count = dm_stats_get_region_nr_areas(dms, region)))
+		return_0;
+
+	return dm_report_field_uint64(rh, field, &area_count);
+}
+
+static int _dm_stats_program_id_disp(struct dm_report *rh,
+				     struct dm_pool *mem __attribute__((unused)),
+				     struct dm_report_field *field, const void *data,
+				     void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *program_id;
+	if (!(program_id = dm_stats_get_current_region_program_id(dms)))
+		return_0;
+	return dm_report_field_string(rh, field, (const char * const*) &program_id);
+}
+
+static int _dm_stats_aux_data_disp(struct dm_report *rh,
+				     struct dm_pool *mem __attribute__((unused)),
+				     struct dm_report_field *field, const void *data,
+				     void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *aux_data;
+	if (!(aux_data = dm_stats_get_current_region_aux_data(dms)))
+		return_0;
+	return dm_report_field_string(rh, field, (const char * const*) &aux_data);
+}
+
+static int _dm_stats_rrqm_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, rrqm;
+
+	if (!dm_stats_get_rd_merges_per_sec(dms, &rrqm,
+					    DM_STATS_REGION_CURRENT,
+					    DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", rrqm))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = rrqm;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+
+}
+
+static int _dm_stats_wrqm_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, wrqm;
+
+	if (!dm_stats_get_wr_merges_per_sec(dms, &wrqm,
+					    DM_STATS_REGION_CURRENT,
+					    DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", wrqm))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = wrqm;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+
+}
+
+static int _dm_stats_rs_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, rs;
+
+	if (!dm_stats_get_reads_per_sec(dms, &rs,
+					DM_STATS_REGION_CURRENT,
+					DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", rs))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = rs;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+
+}
+
+static int _dm_stats_ws_disp(struct dm_report *rh,
+			     struct dm_pool *mem __attribute__((unused)),
+			     struct dm_report_field *field, const void *data,
+			     void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, ws;
+
+	if (!dm_stats_get_writes_per_sec(dms, &ws,
+					 DM_STATS_REGION_CURRENT,
+					 DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", ws))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = ws;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+
+}
+
+static int _dm_stats_read_secs_disp(struct dm_report *rh,
+				    struct dm_pool *mem __attribute__((unused)),
+				    struct dm_report_field *field, const void *data,
+				    void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *repstr;
+	double *sortval, rsec;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_read_sectors_per_sec(dms, &rsec,
+					       DM_STATS_REGION_CURRENT,
+					       DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!(repstr = dm_size_to_string(mem, (uint64_t) rsec, units, 1,
+					 factor, _show_units(), DM_SIZE_UNIT)))
+
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = rsec;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_write_secs_disp(struct dm_report *rh,
+				     struct dm_pool *mem __attribute__((unused)),
+				     struct dm_report_field *field, const void *data,
+				     void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *repstr;
+	double *sortval, wsec;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_write_sectors_per_sec(dms, &wsec,
+						DM_STATS_REGION_CURRENT,
+						DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!(repstr = dm_size_to_string(mem, (uint64_t) wsec, units, 1,
+					 factor, _show_units(), DM_SIZE_UNIT)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = wsec;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_arqsz_disp(struct dm_report *rh,
+				struct dm_pool *mem __attribute__((unused)),
+				struct dm_report_field *field, const void *data,
+				void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *repstr;
+	double *sortval, arqsz;
+	char units = _disp_units;
+	uint64_t factor = _disp_factor;
+
+	if (!dm_stats_get_average_request_size(dms, &arqsz,
+					       DM_STATS_REGION_CURRENT,
+					       DM_STATS_AREA_CURRENT))
+		return_0;
+
+
+	if (!(repstr = dm_size_to_string(mem, (uint64_t) arqsz, units, 1,
+					 factor, _show_units(), DM_SIZE_UNIT)))
+
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = arqsz;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_qusz_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, qusz;
+
+	if (!dm_stats_get_average_queue_size(dms, &qusz,
+					     DM_STATS_REGION_CURRENT,
+					     DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", qusz))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = qusz;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_await_disp(struct dm_report *rh,
+				struct dm_pool *mem __attribute__((unused)),
+				struct dm_report_field *field, const void *data,
+				void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, await;
+
+	if (!dm_stats_get_average_wait_time(dms, &await,
+					    DM_STATS_REGION_CURRENT,
+					    DM_STATS_AREA_CURRENT))
+		return_0;
+
+	/* FIXME: make scale configurable */
+	/* display in msecs */
+	await /= NSEC_PER_MSEC;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", await))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = await;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_r_await_disp(struct dm_report *rh,
+				  struct dm_pool *mem __attribute__((unused)),
+				  struct dm_report_field *field, const void *data,
+				  void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, r_await;
+
+	if (!dm_stats_get_average_rd_wait_time(dms, &r_await,
+					       DM_STATS_REGION_CURRENT,
+					       DM_STATS_AREA_CURRENT))
+		return_0;
+
+	/* FIXME: make scale configurable */
+	/* display in msecs */
+	r_await /= NSEC_PER_MSEC;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", r_await))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = r_await;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_w_await_disp(struct dm_report *rh,
+				  struct dm_pool *mem __attribute__((unused)),
+				  struct dm_report_field *field, const void *data,
+				  void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, w_await;
+
+	if (!dm_stats_get_average_wr_wait_time(dms, &w_await,
+					       DM_STATS_REGION_CURRENT,
+					       DM_STATS_AREA_CURRENT))
+		return_0;
+
+	/* FIXME: make scale configurable */
+	/* display in msecs */
+	w_await /= NSEC_PER_MSEC;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", w_await))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = w_await;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_tput_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, tput;
+
+	if (!dm_stats_get_throughput(dms, &tput,
+				     DM_STATS_REGION_CURRENT,
+				     DM_STATS_AREA_CURRENT))
+		return_0;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", tput))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = tput;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
+static int _dm_stats_svctm_disp(struct dm_report *rh,
+				struct dm_pool *mem __attribute__((unused)),
+				struct dm_report_field *field, const void *data,
+				void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	char buf[64];
+	char *repstr;
+	double *sortval, svctm;
+
+	if (!dm_stats_get_service_time(dms, &svctm,
+				       DM_STATS_REGION_CURRENT,
+				       DM_STATS_AREA_CURRENT))
+		return_0;
+
+	/* FIXME: make scale configurable */
+	/* display in msecs */
+	svctm /= NSEC_PER_MSEC;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%.2f", svctm))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
+		return_0;
+
+	*sortval = svctm;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+
+}
+
+static int _dm_stats_util_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	dm_percent_t util;
+
+	if (!dm_stats_get_utilization(dms, &util,
+				      DM_STATS_REGION_CURRENT,
+				      DM_STATS_AREA_CURRENT))
+		return_0;
+
+	dm_report_field_percent(rh, field, &util);
+	return 1;
+}
+
 static void *_task_get_obj(void *obj)
 {
 	return ((struct dmsetup_report_obj *)obj)->task;
@@ -2797,20 +3495,28 @@ static void *_split_name_get_obj(void *obj)
 	return ((struct dmsetup_report_obj *)obj)->split_name;
 }
 
+static void *_stats_get_obj(void *obj)
+{
+	return ((struct dmsetup_report_obj *)obj)->stats;
+}
+
 static const struct dm_report_object_type _report_types[] = {
 	{ DR_TASK, "Mapped Device Name", "", _task_get_obj },
 	{ DR_INFO, "Mapped Device Information", "", _info_get_obj },
 	{ DR_DEPS, "Mapped Device Relationship Information", "", _deps_get_obj },
 	{ DR_TREE, "Mapped Device Relationship Information", "", _tree_get_obj },
 	{ DR_NAME, "Mapped Device Name Components", "", _split_name_get_obj },
-	{ 0, "", "", NULL },
+	{ DR_STATS, "Mapped Device Statistics","", _stats_get_obj },
+	{ 0, "", "", NULL }
 };
 
 /* Column definitions */
+/* N.B. Field names must not contain the substring 'help' as this will disable --count. */
 #define OFFSET_OF(strct, field) (((char*)&((struct strct*)0)->field) - (char*)0)
 #define STR (DM_REPORT_FIELD_TYPE_STRING)
 #define NUM (DM_REPORT_FIELD_TYPE_NUMBER)
 #define SIZ (DM_REPORT_FIELD_TYPE_SIZE)
+#define TIM (DM_REPORT_FIELD_TYPE_TIME)
 #define FIELD_O(type, strct, sorttype, head, field, width, func, id, desc) {DR_ ## type, sorttype, OFFSET_OF(strct, field), width, id, head, &_ ## func ## _disp, desc},
 #define FIELD_F(type, sorttype, head, width, func, id, desc) {DR_ ## type, sorttype, 0, width, id, head, &_ ## func ## _disp, desc},
 
@@ -2824,7 +3530,7 @@ FIELD_F(TASK, STR, "MangledUUID", 32, dm_mangled_uuid, "mangled_uuid", "Mangled 
 FIELD_F(TASK, STR, "UnmangledUUID", 32, dm_unmangled_uuid, "unmangled_uuid", "Unmangled unique (optional) identifier for mapped device.")
 
 /* FIXME Next one should be INFO */
-FIELD_F(TASK, NUM, "RAhead", 6, dm_read_ahead, "read_ahead", "Read ahead in sectors.")
+FIELD_F(TASK, NUM, "RAhead", 6, dm_read_ahead, "read_ahead", "Read ahead value.")
 
 FIELD_F(INFO, STR, "BlkDevName", 16, dm_blk_name, "blkdevname", "Name of block device.")
 FIELD_F(INFO, STR, "Stat", 4, dm_info_status, "attr", "(L)ive, (I)nactive, (s)uspended, (r)ead-only, read-(w)rite.")
@@ -2852,22 +3558,74 @@ FIELD_O(NAME, dm_split_name, STR, "VG", vg_name, 4, dm_vg_name, "vg_name", "LVM 
 FIELD_O(NAME, dm_split_name, STR, "LV", lv_name, 4, dm_lv_name, "lv_name", "LVM Logical Volume name.")
 FIELD_O(NAME, dm_split_name, STR, "LVLayer", lv_layer, 7, dm_lv_layer_name, "lv_layer", "LVM device layer.")
 
+/* basic stats counters */
+FIELD_F(STATS, NUM, "Reads", 8, dm_stats_reads, "reads", "Number of reads completed.")
+FIELD_F(STATS, NUM, "RdMrges", 8, dm_stats_reads_merged, "reads_merged", "Number of reads merged.")
+FIELD_F(STATS, NUM, "RdSectors", 8, dm_stats_read_sectors, "read_sectors", "Number of sectors read.")
+FIELD_F(STATS, NUM, "RdNsec", 8, dm_stats_read_nsecs, "read_nsecs", "Time spent reading.")
+FIELD_F(STATS, NUM, "Writes", 8, dm_stats_writes, "writes", "Number of writes completed.")
+FIELD_F(STATS, NUM, "WrMerges", 8, dm_stats_writes_merged, "writes_merged", "Number of writes merged.")
+FIELD_F(STATS, NUM, "WrSectors", 8, dm_stats_write_sectors, "write_sectors", "Number of sectors written.")
+FIELD_F(STATS, NUM, "WrNsec", 8, dm_stats_write_nsecs, "write_nsecs", "Time spent writing.")
+FIELD_F(STATS, NUM, "InProgress", 8, dm_stats_io_in_progress, "in_progress", "Number of I/Os currently in progress.")
+FIELD_F(STATS, NUM, "IoNsec", 8, dm_stats_io_nsecs, "io_nsecs", "Time spent doing I/O.")
+FIELD_F(STATS, NUM, "WtIoNsec", 8, dm_stats_weighted_io_nsecs, "weighted_io_nsecs", "Weighted time spent doing I/O.")
+FIELD_F(STATS, NUM, "TotalRdNsec", 8, dm_stats_total_read_nsecs, "total_rd_nsecs", "Total time spent reading.")
+FIELD_F(STATS, NUM, "TotalWrNsec", 8, dm_stats_total_write_nsecs, "total_wr_nsecs", "Total time spent writing.")
+
+/* Stats report meta-fields */
+FIELD_F(STATS, NUM, "RgID", 5, dm_stats_region_id, "region_id", "Region ID.")
+FIELD_F(STATS, SIZ, "RStart", 5, dm_stats_region_start, "region_start", "Region start.")
+FIELD_F(STATS, SIZ, "RSize", 5, dm_stats_region_len, "region_len", "Region length.")
+FIELD_F(STATS, NUM, "ArID", 5, dm_stats_area_id, "area_id", "Area ID.")
+FIELD_F(STATS, SIZ, "AStrt", 5, dm_stats_area_start, "area_start", "Area start.")
+FIELD_F(STATS, SIZ, "ASize", 5, dm_stats_area_len, "area_len", "Area length.")
+FIELD_F(STATS, NUM, "#Areas", 6, dm_stats_area_count, "area_count", "Area count.")
+FIELD_F(STATS, STR, "ProgID", 6, dm_stats_program_id, "program_id", "Program ID.")
+FIELD_F(STATS, STR, "AuxDat", 6, dm_stats_aux_data, "aux_data", "Auxiliary data.")
+
+/* Stats derived metrics */
+FIELD_F(STATS, NUM, "RRqM/s", 8, dm_stats_rrqm, "rrqm", "Read requests merged per second.")
+FIELD_F(STATS, NUM, "WRqM/s", 8, dm_stats_wrqm, "wrqm", "Write requests merged per second.")
+FIELD_F(STATS, NUM, "R/s", 5, dm_stats_rs, "rs", "Reads per second.")
+FIELD_F(STATS, NUM, "W/s", 5, dm_stats_ws, "ws", "Writes per second.")
+FIELD_F(STATS, NUM, "RSz/s", 5, dm_stats_read_secs, "rsize_sec", "Size of data read per second.")
+FIELD_F(STATS, NUM, "WSz/s", 5, dm_stats_write_secs, "wsize_sec", "Size of data written per second.")
+FIELD_F(STATS, NUM, "AvRqSz", 5, dm_stats_arqsz, "arqsz", "Average request size.")
+FIELD_F(STATS, NUM, "QSize", 5, dm_stats_qusz, "qusz", "Average queue size.")
+FIELD_F(STATS, NUM, "AWait", 5, dm_stats_await, "await", "Averate wait time.")
+FIELD_F(STATS, NUM, "RdAWait", 5, dm_stats_r_await, "r_await", "Averate read wait time.")
+FIELD_F(STATS, NUM, "WrAWait", 5, dm_stats_w_await, "w_await", "Averate write wait time.")
+FIELD_F(STATS, NUM, "TPut", 5, dm_stats_tput, "tput", "Throughput.")
+FIELD_F(STATS, NUM, "SvcTm", 5, dm_stats_svctm, "svctm", "Service time.")
+FIELD_F(STATS, NUM, "Util%", 10, dm_stats_util, "util", "Utilization.")
+
 {0, 0, 0, 0, "", "", NULL, NULL},
 /* *INDENT-ON* */
 };
 
+#undef FIELD_O
+#undef FIELD_F
+
 #undef STR
 #undef NUM
 #undef SIZ
-#undef FIELD_O
-#undef FIELD_F
 
 static const char *default_report_options = "name,major,minor,attr,open,segments,events,uuid";
 static const char *splitname_report_options = "vg_name,lv_name,lv_layer";
 
+#define DEV_INFO_STATS "name,region_id"
+#define RD_STATS "reads,reads_merged,read_sectors,read_nsecs,total_rd_nsecs"
+#define WR_STATS "writes,writes_merged,write_sectors,write_nsecs,total_wr_nsecs"
+#define IO_STATS "in_progress,io_nsecs,weighted_io_nsecs"
+#define METRICS "rrqm,wrqm,rs,ws,rsize_sec,wsize_sec,arqsz,qusz,util,await,r_await,w_await"
+static const char *_stats_default_report_options = DEV_INFO_STATS ",area_id," METRICS;
+static const char *_stats_list_options = "name,region_id,region_start,region_len,area_len,area_count,program_id";
+
 static int _report_init(const struct command *cmd)
 {
 	char *options = (char *) default_report_options;
+	char *opt_fields = NULL; /* optional fields from command line */
 	const char *keys = "";
 	const char *separator = " ";
 	const char *selection = NULL;
@@ -2879,6 +3637,12 @@ static int _report_init(const struct command *cmd)
 
 	if (cmd && !strcmp(cmd->name, "splitname"))
 		options = (char *) splitname_report_options;
+
+	if (cmd && !strcmp(cmd->name, "stats"))
+		options = (char *) _stats_default_report_options;
+
+	if (cmd && !strcmp(cmd->name, "list"))
+		options = (char *) _stats_list_options;
 
 	/* emulate old dmsetup behaviour */
 	if (_switches[NOHEADINGS_ARG]) {
@@ -2902,21 +3666,29 @@ static int _report_init(const struct command *cmd)
 	}
 
 	if (_switches[OPTIONS_ARG] && _string_args[OPTIONS_ARG]) {
+		/* Count & interval forbidden for help. */
+		if (strstr(_string_args[OPTIONS_ARG], "help")) {
+			_switches[COUNT_ARG] = 0;
+			_count = 1;
+			_switches[INTERVAL_ARG] = 0;
+		}
+
 		if (*_string_args[OPTIONS_ARG] != '+')
 			options = _string_args[OPTIONS_ARG];
 		else {
-			len = strlen(default_report_options) +
-			      strlen(_string_args[OPTIONS_ARG]) + 1;
-			if (!(options = dm_malloc(len))) {
+			char *tmpopts;
+			opt_fields = _string_args[OPTIONS_ARG] + 1;
+			len = strlen(options) + strlen(opt_fields) + 2;
+			if (!(tmpopts = dm_malloc(len))) {
 				err("Failed to allocate option string.");
 				return 0;
 			}
-			if (dm_snprintf(options, len, "%s,%s",
-					default_report_options,
-					&_string_args[OPTIONS_ARG][1]) < 0) {
-				err("snprintf failed");
-				goto out;
+			if (dm_snprintf(tmpopts, len, "%s,%s",
+					options, opt_fields) < 0) {
+				dm_free(tmpopts);
+				return 0;
 			}
+			options = tmpopts;
 		}
 	}
 
@@ -2968,7 +3740,7 @@ static int _report_init(const struct command *cmd)
 	if (!_switches[INTERVAL_ARG])
 		_int_args[INTERVAL_ARG] = 1; /* 1s default. */
 
-	_interval = NSEC_PER_SEC * _int_args[INTERVAL_ARG];
+	_interval = NSEC_PER_SEC * (uint64_t) _int_args[INTERVAL_ARG];
 
 	if (field_prefixes)
 		dm_report_set_output_field_name_prefix(_report, "dm_");
@@ -3087,21 +3859,624 @@ out:
 	return r;
 }
 
-static int _dmsetup_help(CMD_ARGS);
+static int _stats(CMD_ARGS);
+static int _bind_stats_device(struct dm_stats *dms, const char *name)
+{
+	if (name && !dm_stats_bind_name(dms, name))
+		return 0;
+	else if (_switches[UUID_ARG] && !dm_stats_bind_uuid(dms, _uuid))
+		return 0;
+	else if (_switches[MAJOR_ARG] && _switches[MINOR_ARG]
+		 && !dm_stats_bind_devno(dms, _int_args[MAJOR_ARG],
+					 _int_args[MINOR_ARG]))
+		return 0;
+
+	return 1;
+}
+
+static int _stats_clear_regions(struct dm_stats *dms, uint64_t region_id)
+{
+	int allregions = (region_id == DM_STATS_REGIONS_ALL);
+
+	if (!dm_stats_list(dms, NULL))
+		goto_out;
+
+	if (!dm_stats_get_nr_regions(dms))
+		goto done;
+
+	dm_stats_walk_do(dms) {
+		if (allregions)
+			region_id = dm_stats_get_current_region(dms);
+
+		if (!dm_stats_region_present(dms, region_id)) {
+			log_error("No such region: %"PRIu64".", region_id);
+			goto out;
+		}
+		if (!dm_stats_clear_region(dms, region_id)) {
+			log_error("Clearing statistics region %"PRIu64" failed.",
+				  region_id);
+			goto out;
+		}
+		log_info("Cleared statistics region %"PRIu64".", region_id);
+		dm_stats_walk_next_region(dms);
+	} dm_stats_walk_while(dms);
+done:
+	return 1;
+
+out:
+	return 0;
+}
+
+static int _stats_clear(CMD_ARGS)
+{
+	struct dm_stats *dms;
+	uint64_t region_id;
+	char *name = NULL;
+	int allregions = _switches[ALL_REGIONS_ARG];
+
+	if (!_switches[REGION_ID_ARG] && !_switches[ALL_REGIONS_ARG]) {
+		err("Please specify a region_id.");
+		return 0;
+	}
+
+	if (names)
+		name = names->name;
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(cmd, subcommand, argc, argv, 0, _stats_clear);
+		name = argv[1];
+	}
+
+	/* create does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
+	region_id = (allregions) ? DM_STATS_REGIONS_ALL
+		     : (uint64_t) _int_args[REGION_ID_ARG];
+
+	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
+
+	if (!_bind_stats_device(dms, name))
+		goto_out;
+
+	if (!_stats_clear_regions(dms, region_id))
+		goto_out;
+
+	dm_stats_destroy(dms);
+	return 1;
+
+out:
+	dm_stats_destroy(dms);
+	return 0;
+}
+
+static uint64_t _factor_from_units(char *argptr, char *unit_type)
+{
+	return dm_units_to_factor(argptr, unit_type, 0, NULL);
+}
+
+/**
+ * Parse a start, length, or area size argument in bytes from a string
+ * using optional units as supported by _factor_from_units().
+ */
+static int _size_from_string(char *argptr, uint64_t *size, const char *name)
+{
+	uint64_t factor;
+	char *endptr = NULL, unit_type;
+	if (!argptr)
+		return 0;
+
+	*size = strtoull(argptr, &endptr, 10);
+	if (endptr == argptr) {
+		*size = 0;
+		log_error("Invalid %s argument: \"%s\"",
+			  name, (*argptr) ? argptr : "");
+		return 0;
+	}
+
+	if (*endptr == '\0') {
+		*size *= 512;
+		return 1;
+	}
+
+	factor = _factor_from_units(endptr, &unit_type);
+	if (factor)
+		*size *= factor;
+
+	return 1;
+}
+
+static int _stats_create_segments(struct dm_stats *dms,
+				  const char *name, int64_t step,
+				  const char *program_id, const char *aux_data)
+{
+	uint64_t start, length, region_id = UINT64_C(0);
+	char *target_type, *params; /* unused */
+	struct dm_task *dmt;
+	struct dm_info info;
+	void *next = NULL;
+	const char *devname = NULL;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
+		return 0;
+
+	if (!_set_task_device(dmt, name, 0))
+		goto out;
+
+	if (!dm_task_no_open_count(dmt))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
+	if (!_task_run(dmt))
+		goto out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto out;
+
+	if (!(devname = dm_task_get_name(dmt)))
+		goto out;
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &target_type, &params);
+		if (!dm_stats_create_region(dms, &region_id, start, length,
+					    step, program_id, aux_data)) {
+			log_error("Could not create statistics region.");
+		}
+		printf("Created region %"PRIu64" on %s\n",
+		       region_id, devname);
+	} while (next);
+
+	dm_stats_destroy(dms);
+	dm_task_destroy(dmt);
+	return 1;
+
+out:
+	dm_task_destroy(dmt);
+	return 0;
+}
+
+static int _stats_create(CMD_ARGS)
+{
+	struct dm_stats *dms;
+	const char *name, *aux_data = "", *program_id = DM_STATS_PROGRAM_ID;
+	uint64_t region_id;
+	uint64_t start = 0, len = 0, areas = 0, area_size = 0;
+	int64_t step = 0;
+
+	if (_switches[ALL_REGIONS_ARG]) {
+		log_error("Cannot use --allregions with create.");
+		return 0;
+	}
+
+	if (_switches[ALL_PROGRAMS_ARG]) {
+		log_error("Cannot use --allprograms with create.");
+		return 0;
+	}
+
+	if (_switches[AREAS_ARG] && _switches[AREA_SIZE_ARG]) {
+		log_error("Please specify one of --areas and --areasize.");
+		return 0;
+	}
+
+	if (_switches[PROGRAM_ID_ARG]
+	    && !strlen(_string_args[PROGRAM_ID_ARG]) && !_switches[FORCE_ARG]) {
+		log_error("Creating a region with no program "
+			  "id requires --force.");
+			return 0;
+	}
+
+	if (names)
+		name = names->name;
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG]) {
+			if (!_switches[FORCE_ARG]) {
+				log_error("Creating regions on all devices "
+					  "requires --force.");
+				return 0;
+			}
+			return _process_all(cmd, subcommand, argc, argv, 0, _stats_create);
+		}
+		name = argv[1];
+	}
+
+	/* create does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
+	if (_switches[AREAS_ARG])
+		areas = (uint64_t) _int_args[AREAS_ARG];
+
+	if (_switches[AREA_SIZE_ARG])
+		if (!_size_from_string(_string_args[AREA_SIZE_ARG],
+				       &area_size, "areasize"))
+			return 0;
+
+	areas = (areas) ? areas : 1;
+	/* bytes to sectors or area count - promote to int before conversion */
+	step = (area_size) ? ((int64_t) area_size / 512) : -((int64_t) areas);
+
+	if (_switches[START_ARG]) {
+		if (!_size_from_string(_string_args[START_ARG],
+				       &start, "start"))
+			return 0;
+	}
+
+	/* bytes to sectors */
+	start /= 512;
+
+	if (_switches[LENGTH_ARG]) {
+		if (!_size_from_string(_string_args[LENGTH_ARG],
+				       &len, "length"))
+			return 0;
+	}
+
+	/* bytes to sectors */
+	len /= 512;
+
+	if (_switches[PROGRAM_ID_ARG])
+		program_id = _string_args[PROGRAM_ID_ARG];
+	if (!strlen(program_id) && !_switches[FORCE_ARG])
+		program_id = DM_STATS_PROGRAM_ID;
+
+	if (_switches[AUX_DATA_ARG])
+		aux_data = _string_args[AUX_DATA_ARG];
+
+	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
+	if (!_bind_stats_device(dms, name))
+		goto_out;
+
+	if (!strlen(program_id))
+		/* force creation of a region with no id */
+		dm_stats_set_program_id(dms, 1, NULL);
+
+	if (_switches[SEGMENTS_ARG])
+		return _stats_create_segments(dms, name, step,
+					      program_id, aux_data);
+
+	if (!dm_stats_create_region(dms, &region_id, start, len,
+				    step, program_id, aux_data)) {
+		log_error("Could not create statistics region.");
+		goto out;
+	}
+
+	/* FIXME: support --quiet and --export output modes */
+	printf("Created region: %"PRIu64"\n", region_id);
+	dm_stats_destroy(dms);
+	return 1;
+
+out:
+	dm_stats_destroy(dms);
+	return 0;
+}
+
+static int _stats_delete(CMD_ARGS)
+{
+	struct dm_stats *dms;
+	uint64_t region_id;
+	char *name = NULL;
+	const char *program_id = DM_STATS_PROGRAM_ID;
+	int allregions = _switches[ALL_REGIONS_ARG];
+
+	if (!_switches[REGION_ID_ARG] && !allregions) {
+		err("Please specify a region_id.");
+		return 0;
+	}
+
+	if (names)
+		name = names->name;
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG]) {
+			if (!_switches[FORCE_ARG]) {
+				log_error("Deleting regions from all devices "
+					  "requires --force.");
+				return 0;
+			}
+			return _process_all(cmd, subcommand, argc, argv, 0, _stats_delete);
+		}
+		name = argv[1];
+	}
+
+	/* delete does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
+	if (_switches[ALL_PROGRAMS_ARG])
+		program_id = DM_STATS_ALL_PROGRAMS;
+
+	region_id = (uint64_t) _int_args[REGION_ID_ARG];
+
+	dms = dm_stats_create(program_id);
+
+	if (!_bind_stats_device(dms, name))
+		goto_out;
+
+	if (allregions && !dm_stats_list(dms, program_id))
+		goto_out;
+
+	if (allregions && !dm_stats_get_nr_regions(dms))
+		/* no regions present */
+		goto done;
+
+	dm_stats_walk_do(dms) {
+		if (_switches[ALL_REGIONS_ARG])
+			region_id = dm_stats_get_current_region(dms);
+		if (!dm_stats_delete_region(dms, region_id)) {
+			log_error("Could not delete statistics region.");
+			goto out;
+		}
+		log_info("Deleted statistics region %" PRIu64, region_id);
+		dm_stats_walk_next_region(dms);
+	} dm_stats_walk_while(dms);
+
+done:
+	dm_stats_destroy(dms);
+	return 1;
+
+out:
+	dm_stats_destroy(dms);
+	return 0;
+}
+
+static int _stats_list(CMD_ARGS)
+{
+	struct dm_stats *dms;
+	const char *name, *program_id = DM_STATS_PROGRAM_ID;
+	struct dm_task *dmt = NULL;
+	struct dm_info info;
+	struct dmsetup_report_obj obj;
+
+	if (names)
+		name = names->name;
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(cmd, subcommand, argc, argv, 0, _stats_list);
+		name = argv[1];
+	}
+
+	if (_switches[PROGRAM_ID_ARG])
+		program_id = _string_args[PROGRAM_ID_ARG];
+
+	if (_switches[ALL_PROGRAMS_ARG])
+		program_id = "";
+
+	if (_switches[OPTIONS_ARG] && !strcmp(_string_args[OPTIONS_ARG], "help"))
+		/* field help already output from _report_init(). */
+		return 1;
+
+	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
+		goto_out;
+
+	if (!_bind_stats_device(dms, name))
+		goto_out;
+
+	if (!dm_stats_list(dms, program_id)) {
+		log_error("Could not list statistics regions.");
+		goto out;
+	}
+
+	if (_report && !_stats_report_init) {
+		dm_report_free(_report);
+		_report_init(cmd);
+		_stats_report_init = 1;
+	}
+
+	if (!dm_stats_get_nr_regions(dms)) {
+		log_info("No statistics regions present.");
+		goto none;
+	}
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+		return 0;
+
+	if (!_set_task_device(dmt, name, 0))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
+	if (!_task_run(dmt))
+		goto out;
+
+	if (!dm_task_get_info(dmt, &info))
+		goto out;
+
+	obj.task = dmt;
+	obj.stats = dms;
+	obj.info = &info;
+
+	dm_stats_walk_do(obj.stats) {
+		dm_report_object(_report, &obj);
+		dm_stats_walk_next_region(obj.stats);
+	} dm_stats_walk_while(obj.stats);
+
+	dm_task_destroy(dmt);
+
+none:
+	dm_stats_destroy(dms);
+	return 1;
+
+out:
+	if (dmt)
+		dm_task_destroy(dmt);
+	dm_stats_destroy(dms);
+	return 0;
+}
+
+static int _stats_print(CMD_ARGS)
+{
+	struct dm_stats *dms;
+	char *name, *stbuff = NULL;
+	uint64_t region_id;
+	unsigned clear = (unsigned) _switches[CLEAR_ARG];
+	int allregions = _switches[ALL_REGIONS_ARG];
+
+	if (!_switches[REGION_ID_ARG] && !allregions) {
+		err("Please specify a region_id.");
+		return 0;
+	}
+
+	if (names)
+		name = names->name;
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(cmd, subcommand, argc, argv, 0, _stats_print);
+		name = argv[1];
+	}
+
+	/* print does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
+	region_id = (uint64_t) _int_args[REGION_ID_ARG];
+
+	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
+
+	if (!_bind_stats_device(dms, name))
+		goto_out;
+
+	if (!dm_stats_list(dms, NULL))
+		goto_out;
+
+	if (allregions && !dm_stats_get_nr_regions(dms))
+		goto done;
+
+	dm_stats_walk_do(dms) {
+		if (_switches[ALL_REGIONS_ARG])
+			region_id = dm_stats_get_current_region(dms);
+
+		if (!dm_stats_region_present(dms, region_id)) {
+			log_error("No such region: %"PRIu64".", region_id);
+			goto out;
+		}
+
+		/*FIXME: line control for large regions */
+		if (!(stbuff = dm_stats_print_region(dms, region_id, 0, 0, clear))) {
+			log_error("Could not print statistics region.");
+			goto out;
+		}
+
+		printf("%s", stbuff);
+
+		dm_stats_buffer_destroy(dms, stbuff);
+		dm_stats_walk_next_region(dms);
+
+	} dm_stats_walk_while(dms);
+
+done:
+	dm_stats_destroy(dms);
+	return 1;
+
+out:
+	dm_stats_destroy(dms);
+	return 0;
+}
+
+static int _stats_report(CMD_ARGS)
+{
+	int r = 0;
+
+	struct dm_task *dmt;
+	char *name = NULL;
+
+	if (names)
+		name = names->name;
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(cmd, subcommand, argc, argv, 0, _info);
+		name = argv[1];
+	}
+
+	if (!_report)
+		goto out;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+		return 0;
+
+	if (!_set_task_device(dmt, name, 0))
+		goto out;
+
+	if (_switches[CHECKS_ARG] && !dm_task_enable_checks(dmt))
+		goto out;
+
+	if (!_task_run(dmt))
+		goto out;
+
+	r = _display_info(dmt);
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
 
 /*
- * Dispatch table
+ * Command dispatch tables and usage.
  */
+static int _stats_help(CMD_ARGS);
+
+/*
+ * dmsetup stats <cmd> [options] [device_name]
+ * dmstats <cmd> [options] [device_name]
+ *
+ *    clear [--regionid id] <device_name>
+ *    create [--areas nr_areas] [--areasize size]
+ *           [ [--start start] [--length len] | [--segments]]
+ *           [--auxdata data] [--programid id] [<device_name>]
+ *    delete [--regionid] <device_name>
+ *    delete_all [--programid id]
+ *    list [--programid id] [<device_name>]
+ *    print [--clear] [--programid id] [--regionid id] [<device_name>]
+ *    report [--interval seconds] [--count count] [--units units] [--regionid id]
+ *           [--programid id] [<device>]
+ */
+
+#define AREA_OPTS "[--areas <nr_areas>] [--areasize <size>] "
+#define CREATE_OPTS "[--start <start> [--length <len>]]\n\t\t" AREA_OPTS
+#define ID_OPTS "[--programid <id>] [--auxdata <data> ] "
+#define SELECT_OPTS "[--programid <id>] [--regionid <id>] "
+#define PRINT_OPTS "[--clear] " SELECT_OPTS
+#define REPORT_OPTS "[--interval <seconds>] [--count <cnt>]\n\t\t[--units <u>]" SELECT_OPTS
+
+static struct command _stats_subcommands[] = {
+	{"help", "", 0, 0, 0, 0, _stats_help},
+	{"clear", "--regionid <id> [<device>]", 0, -1, 1, 0, _stats_clear},
+	{"create", CREATE_OPTS "\n\t\t" ID_OPTS "[<device>]", 0, -1, 1, 0, _stats_create},
+	{"delete", "--regionid <id> <device>", 1, -1, 1, 0, _stats_delete},
+	{"list", "[--programid <id>] [<device>]", 0, -1, 1, 0, _stats_list},
+	{"print", PRINT_OPTS "[<device>]", 0, -1, 1, 0, _stats_print},
+	{"report", REPORT_OPTS "[<device>]", 0, -1, 1, 0, _stats_report},
+	{"version", "", 0, -1, 1, 0, _version},
+	{NULL, NULL, 0, 0, 0, 0, NULL}
+};
+
+#undef AREA_OPTS
+#undef CREATE_OPTS
+#undef ID_OPTS
+#undef PRINT_OPTS
+#undef REPORT_OPTS
+#undef SELECT_OPTS
+
+static int _dmsetup_help(CMD_ARGS);
+
 static struct command _dmsetup_commands[] = {
 	{"help", "[-c|-C|--columns]", 0, 0, 0, 0, _dmsetup_help},
 	{"create", "<dev_name>\n"
 	  "\t    [-j|--major <major> -m|--minor <minor>]\n"
 	  "\t    [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
 	  "\t    [-u|uuid <uuid>] [{--addnodeonresume|--addnodeoncreate}]\n"
-	  "\t    [--notable | --table <table> | <table_file>]",
-	 1, 2,0,  0, _create},
+	  "\t    [--notable | --table <table> | <table_file>]", 1, 2, 0, 0, _create},
 	{"remove", "[-f|--force] [--deferred] <device>", 0, -1, 1, 0, _remove},
-	{"remove_all", "[-f|--force]", 0, 0, 0,  0, _remove_all},
+	{"remove_all", "[-f|--force]", 0, 0, 0, 0, _remove_all},
 	{"suspend", "[--noflush] <device>", 0, -1, 1, 0, _suspend},
 	{"resume", "<device> [{--addnodeonresume|--addnodeoncreate}]", 0, -1, 1, 0, _resume},
 	{"load", "<device> [<table_file>]", 0, 2, 0, 0, _load},
@@ -3113,6 +4488,7 @@ static struct command _dmsetup_commands[] = {
 	{"ls", "[--target <target_type>] [--exec <command>] [-o options] [--tree]", 0, 0, 0, 0, _ls},
 	{"info", "[<device>]", 0, -1, 1, 0, _info},
 	{"deps", "[-o options] [<device>]", 0, -1, 1, 0, _deps},
+	{"stats", "<command> [<options>] [<devices>]", 1, -1, 1, 1, _stats},
 	{"status", "[<device>] [--noflush] [--target <target_type>]", 0, -1, 1, 0, _status},
 	{"table", "[<device>] [--target <target_type>] [--showkeys]", 0, -1, 1, 0, _status},
 	{"wait", "<device> [<event_nr>] [--noflush]", 0, 2, 0, 0, _wait},
@@ -3131,6 +4507,32 @@ static struct command _dmsetup_commands[] = {
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
+/*
+ * Usage and help text.
+ */
+
+static void _stats_usage(FILE *out)
+{
+	int i;
+
+	fprintf(out, "Usage:\n");
+	fprintf(out, "stats [-h|--help]\n");
+	fprintf(out, "        [-v|--verbose [-v|--verbose ...]]\n");
+	fprintf(out, "        [--areas <nr_areas>] [--areasize <size>]\n");
+	fprintf(out, "        [--auxdata <data>] [--clear]\n");
+	fprintf(out, "        [--count <count>] [--interval <seconds>]\n");
+	fprintf(out, "        [-o <fields>] [-O|--sort <sort_fields>]\n");
+	fprintf(out, "	   [--programid <id>]\n");
+	fprintf(out, "        [--start <start>] [--length <length>]\n");
+	fprintf(out, "        [--segments] [--units <units>]\n\n");
+	for (i = 0; _stats_subcommands[i].name; i++)
+		fprintf(out, "\t%s %s\n", _stats_subcommands[i].name, _stats_subcommands[i].help);
+	fprintf(out, "<device> may be device name or -u <uuid> or "
+		     "-j <major> -m <minor>\n");
+	fprintf(out, "<fields> are comma-separated.  Use 'help -c' for list.\n");
+	fprintf(out, "\n");
+}
+
 static void _dmsetup_usage(FILE *out)
 {
 	int i;
@@ -3144,7 +4546,6 @@ static void _dmsetup_usage(FILE *out)
 		"        [-y|--yes] [--readahead [+]<sectors>|auto|none] [--retry]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [-S|--select <selection>] [--nameprefixes] [--noheadings]\n"
-		"        [--count <count>] [--interval <seconds>]\n"
 		"        [--separator <separator>]\n\n");
 	for (i = 0; _dmsetup_commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
@@ -3164,6 +4565,37 @@ static void _losetup_usage(FILE *out)
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "losetup [-d|-a] [-e encryption] "
 		     "[-o offset] [-f|loop_device] [file]\n\n");
+}
+
+static int _stats_help(CMD_ARGS)
+{
+	_stats_usage(stderr);
+
+	/**
+	 * main() increments this to ensure reports are set up for
+	 * stats use so decrement that count here; if the counter is
+	 * still non-zero then the user explicitly requested the
+	 * columns help output.
+	 */
+	_switches[COLS_ARG]--;
+
+	if (_switches[COLS_ARG]) {
+		_switches[OPTIONS_ARG] = 1;
+		_string_args[OPTIONS_ARG] = (char *) "help";
+		_switches[SORT_ARG] = 0;
+
+		if (_report) {
+			dm_report_free(_report);
+			_report = NULL;
+		}
+		(void) _report_init(cmd);
+	}
+
+	/* help text already output: don't repeat from main */
+	dm_report_free(_report);
+	_report = NULL;
+
+	return 1;
 }
 
 static int _dmsetup_help(CMD_ARGS)
@@ -3200,6 +4632,43 @@ static const struct command *_find_command(const struct command *commands,
 static const struct command *_find_dmsetup_command(const char *name)
 {
 	return _find_command(_dmsetup_commands, name);
+}
+
+static const struct command *_find_stats_subcommand(const char *name)
+{
+	return _find_command(_stats_subcommands, name);
+}
+
+static int _stats(CMD_ARGS)
+{
+	const struct command *stats_cmd;
+
+	if (_switches[HELP_ARG]) {
+		stats_cmd = _find_stats_subcommand("help");
+		goto doit;
+	}
+
+	if (!(stats_cmd = _find_stats_subcommand(subcommand))) {
+		log_error("Unknown stats command.");
+		_stats_help(stats_cmd, NULL, argc, argv, NULL, multiple_devices);
+		return 0;
+	}
+
+	if (_switches[ALL_PROGRAMS_ARG] && _switches[PROGRAM_ID_ARG]) {
+		log_error("Please supply one of --allprograms and --programid");
+		return 0;
+	}
+
+	if (_switches[ALL_REGIONS_ARG] && _switches[REGION_ID_ARG]) {
+		log_error("Please supply one of --allregions and --regionid");
+		return 0;
+	}
+
+doit:
+	if (!stats_cmd->fn(stats_cmd, NULL, argc, argv, NULL, multiple_devices))
+		return 0;
+
+	return 1;
 }
 
 static int _process_tree_options(const char *options)
@@ -3552,11 +5021,19 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 	char *namebase, *s;
 	static int ind;
 	int c, r;
+	/* "stats" command and sub-command when run as 'dmstats'. */
+	char *stats_p = NULL, *stats_c = NULL;
 
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
 		{"readonly", 0, &ind, READ_ONLY},
+		{"allprograms", 0, &ind, ALL_PROGRAMS_ARG},
+		{"allregions", 0, &ind, ALL_REGIONS_ARG},
+		{"areas", 1, &ind, AREAS_ARG},
+		{"areasize", 1, &ind, AREA_SIZE_ARG},
+		{"auxdata", 1, &ind, AUX_DATA_ARG},
 		{"checks", 0, &ind, CHECKS_ARG},
+		{"clear", 0, &ind, CLEAR_ARG},
 		{"columns", 0, &ind, COLS_ARG},
 		{"count", 1, &ind, COUNT_ARG},
 		{"deferred", 0, &ind, DEFERRED_ARG},
@@ -3567,6 +5044,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"help", 0, &ind, HELP_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
 		{"interval", 1, &ind, INTERVAL_ARG},
+		{"length", 1, &ind, LENGTH_ARG},
 		{"manglename", 1, &ind, MANGLENAME_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
@@ -3576,22 +5054,28 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"noheadings", 0, &ind, NOHEADINGS_ARG},
 		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
+		{"nosuffix", 0, &ind, NOSUFFIX_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"udevcookie", 1, &ind, UDEVCOOKIE_ARG},
 		{"noudevrules", 0, &ind, NOUDEVRULES_ARG},
 		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"programid", 1, &ind, PROGRAM_ID_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
+		{"regionid", 1, &ind, REGION_ID_ARG},
 		{"retry", 0, &ind, RETRY_ARG},
 		{"rows", 0, &ind, ROWS_ARG},
+		{"segments", 0, &ind, SEGMENTS_ARG},
 		{"separator", 1, &ind, SEPARATOR_ARG},
 		{"setuuid", 0, &ind, SETUUID_ARG},
 		{"showkeys", 0, &ind, SHOWKEYS_ARG},
 		{"sort", 1, &ind, SORT_ARG},
+		{"start", 1, &ind, START_ARG},
 		{"table", 1, &ind, TABLE_ARG},
 		{"target", 1, &ind, TARGET_ARG},
 		{"tree", 0, &ind, TREE_ARG},
 		{"uid", 1, &ind, UID_ARG},
+		{"units", 1, &ind, UNITS_ARG},
 		{"uuid", 1, &ind, UUID_ARG},
 		{"unbuffered", 0, &ind, UNBUFFERED_ARG},
 		{"unquoted", 0, &ind, UNQUOTED_ARG},
@@ -3655,22 +5139,50 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		return r;
 	}
 
+	if (!strcmp(base, "dmstats")) {
+		/* save the offset to the 'stats' in 'dmstats' */
+		stats_p = (*argvp)[0] + strlen(namebase) - strlen(base) + 2;
+		stats_c = (*argvp)[1]; /* stats command */
+	}
+
 	free(namebase);
 
 	optarg = 0;
 	optind = OPTIND_INIT;
 	while ((ind = -1, c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
 					    long_options, NULL)) != -1) {
+		if (ind == ALL_PROGRAMS_ARG)
+			_switches[ALL_PROGRAMS_ARG]++;
+		if (ind == ALL_REGIONS_ARG)
+			_switches[ALL_REGIONS_ARG]++;
+		if (ind == AREAS_ARG) {
+			_switches[AREAS_ARG]++;
+			_int_args[AREAS_ARG] = atoi(optarg);
+		}
+		if (ind == AREA_SIZE_ARG) {
+			_switches[AREA_SIZE_ARG]++;
+			_string_args[AREA_SIZE_ARG] = optarg;
+		}
+		if (ind == AUX_DATA_ARG) {
+			_switches[AUX_DATA_ARG]++;
+			_string_args[AUX_DATA_ARG] = optarg;
+		}
 		if (c == ':' || c == '?')
 			return 0;
 		if (c == 'h' || ind == HELP_ARG)
 			_switches[HELP_ARG]++;
+		if (ind == CLEAR_ARG)
+			_switches[CLEAR_ARG]++;
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
 		if (c == 'f' || ind == FORCE_ARG)
 			_switches[FORCE_ARG]++;
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
+		if (ind == LENGTH_ARG) {
+			_switches[LENGTH_ARG]++;
+			_string_args[LENGTH_ARG] = optarg;
+		}
 		if (c == 'j' || ind == MAJOR_ARG) {
 			_switches[MAJOR_ARG]++;
 			_int_args[MAJOR_ARG] = atoi(optarg);
@@ -3679,15 +5191,29 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[MINOR_ARG]++;
 			_int_args[MINOR_ARG] = atoi(optarg);
 		}
+		if (ind == NOSUFFIX_ARG)
+			_switches[NOSUFFIX_ARG]++;
 		if (c == 'n' || ind == NOTABLE_ARG)
 			_switches[NOTABLE_ARG]++;
 		if (c == 'o' || ind == OPTIONS_ARG) {
 			_switches[OPTIONS_ARG]++;
 			_string_args[OPTIONS_ARG] = optarg;
 		}
+		if (ind == PROGRAM_ID_ARG) {
+			_switches[PROGRAM_ID_ARG]++;
+			_string_args[PROGRAM_ID_ARG] = optarg;
+		}
+		if (ind == REGION_ID_ARG) {
+			_switches[REGION_ID_ARG]++;
+			_int_args[REGION_ID_ARG] = atoi(optarg);
+		}
 		if (ind == SEPARATOR_ARG) {
 			_switches[SEPARATOR_ARG]++;
 			_string_args[SEPARATOR_ARG] = optarg;
+		}
+		if (ind == UNITS_ARG) {
+			_switches[UNITS_ARG]++;
+			_string_args[UNITS_ARG] = optarg;
 		}
 		if (c == 'O' || ind == SORT_ARG) {
 			_switches[SORT_ARG]++;
@@ -3696,6 +5222,10 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		if (c == 'S' || ind == SELECT_ARG) {
 			_switches[SELECT_ARG]++;
 			_string_args[SELECT_ARG] = optarg;
+		}
+		if (ind == START_ARG) {
+			_switches[START_ARG]++;
+			_string_args[START_ARG] = optarg;
 		}
 		if (c == 'v' || ind == VERBOSE_ARG)
 			_switches[VERBOSE_ARG]++;
@@ -3752,6 +5282,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[TARGET_ARG]++;
 			_target = optarg;
 		}
+		if (ind == SEGMENTS_ARG)
+			_switches[SEGMENTS_ARG]++;
 		if (ind == INACTIVE_ARG)
 		       _switches[INACTIVE_ARG]++;
 		if (ind == INTERVAL_ARG) {
@@ -3860,6 +5392,15 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 
 	*argvp += optind;
 	*argcp -= optind;
+
+	/* preserve sub-command in argv[0] */
+	if (stats_p) {
+		(*argvp)--;
+		(*argcp)++;
+		(*argvp)[0] = stats_p;
+		(*argvp)[1] = stats_c;
+	}
+
 	return 1;
 }
 
@@ -3881,7 +5422,8 @@ static int _do_report_wait(void)
 	if (!dm_timestamp_get(_ts_start))
 		goto_out;
 
-	if (usleep(_interval / NSEC_PER_USEC)) {
+	/* FIXME: compensate for interval drift from time spent reporting. */
+	if (usleep((useconds_t) (_interval / NSEC_PER_USEC))) {
 		if (errno == EINTR)
 			log_error("Report interval interrupted by signal.");
 		if (errno == EINVAL)
@@ -3923,7 +5465,8 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	if (_switches[HELP_ARG]) {
+	/* let stats do its own --help handling. */
+	if (_switches[HELP_ARG] && strcmp("stats", argv[0])) {
 		if ((cmd = _find_dmsetup_command("help")))
 			goto doit;
 		goto unknown;
@@ -3950,12 +5493,29 @@ unknown:
 	if (argc < cmd->min_args + 1 ||
 	    (cmd->max_args >= 0 && argc > cmd->max_args + 1)) {
 		fprintf(stderr, "Incorrect number of arguments\n");
-		_dmsetup_usage(stderr);
+		if (!strcmp(cmd->name, "stats"))
+			_stats_usage(stderr);
+		else
+			_dmsetup_usage(stderr);
 		goto out;
 	}
 
 	if (!_switches[COLS_ARG] && !strcmp(cmd->name, "splitname"))
 		_switches[COLS_ARG]++;
+
+	/**
+	 * Unconditionally increment for "stats" commands; the only
+	 * command to not require this is non-columns "stats help".
+	 * In that case _stats_help will remove the extra count
+	 * before displaying the help message.
+	 */
+	if (!strcmp(cmd->name, "stats")) {
+		_switches[COLS_ARG]++;
+		if (!_switches[UNITS_ARG]) {
+			_switches[UNITS_ARG]++;
+			_string_args[UNITS_ARG] = (char *) "h";
+		}
+	}
 
 	if (!strcmp(cmd->name, "mangle"))
 		dm_set_name_mangling_mode(DM_STRING_MANGLING_NONE);
@@ -3974,9 +5534,18 @@ unknown:
 		goto out;
 
 	if (_switches[COUNT_ARG])
-		_count = _int_args[COUNT_ARG] ? : UINT32_MAX;
+		_count = ((uint32_t)_int_args[COUNT_ARG]) ? : UINT32_MAX;
 	else if (_switches[INTERVAL_ARG])
 		_count = UINT32_MAX;
+
+	if (_switches[UNITS_ARG]) {
+		_disp_factor = _factor_from_units(_string_args[UNITS_ARG],
+						  &_disp_units);
+		if (!_disp_factor) {
+			log_error("Invalid --units argument.");
+			goto out;
+		}
+	}
 
 	/*
 	 * Extract subcommand?
@@ -3987,16 +5556,14 @@ unknown:
 		argc--, argv++;
 	}
 
-	if (_count > 1) {
-		_ts_start = dm_timestamp_alloc();
-		_ts_end = dm_timestamp_alloc();
-		if (!_ts_start || !_ts_end) {
-			log_error("Could not allocate timestamp objects.");
-			goto out;
-		}
-		/* Pretend we have the configured interval for the first iteration. */
-		_last_interval = _interval;
+	_ts_start = dm_timestamp_alloc();
+	_ts_end = dm_timestamp_alloc();
+	if (!_ts_start || !_ts_end) {
+		log_error("Could not allocate timestamp objects.");
+		goto out;
 	}
+	/* Pretend we have the configured interval for the first iteration. */
+	_last_interval = _interval;
 doit:
 	multiple_devices = (cmd->repeatable_cmd && argc != 2 &&
 			    (argc != 1 || (!_switches[UUID_ARG] && !_switches[MAJOR_ARG])));
@@ -4005,7 +5572,8 @@ doit:
 		r = _perform_command_for_all_repeatable_args(cmd, subcommand, argc, argv, NULL, multiple_devices);
 
 		if (_report) {
-			if (_count > 1)
+			/* only output headings for repeating reports */
+			if (_int_args[COUNT_ARG] != 1)
 				dm_report_column_headings(_report);
 			dm_report_output(_report);
 
@@ -4016,6 +5584,7 @@ doit:
 					goto_out;
 			}
 		}
+
 	} while (--_count);
 
 out:
@@ -4024,6 +5593,9 @@ out:
 
 	if (_dtree)
 		dm_tree_free(_dtree);
+
+	dm_timestamp_destroy(_ts_start);
+	dm_timestamp_destroy(_ts_end);
 
 	dm_free(_table);
 

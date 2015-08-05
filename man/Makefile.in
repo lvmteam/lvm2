@@ -83,7 +83,7 @@ ifneq ("@THIN@", "none")
   MAN7+=lvmthin.7
 endif
 
-MAN8DM=dmsetup.8 $(DMEVENTDMAN) $(BLKDEACTIVATEMAN)
+MAN8DM=dmsetup.8 dmstats.8 $(DMEVENTDMAN) $(BLKDEACTIVATEMAN)
 MAN5DIR=$(mandir)/man5
 MAN7DIR=$(mandir)/man7
 MAN8DIR=$(mandir)/man8
