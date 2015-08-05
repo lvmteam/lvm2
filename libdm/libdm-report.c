@@ -154,18 +154,18 @@ static struct op_def _op_cmp[] = {
 #define SEL_LIST_SUBSET_LE	0x00080000
 
 static struct op_def _op_log[] = {
-        { "&&", SEL_AND, "All fields must match" },
+	{ "&&", SEL_AND, "All fields must match" },
 	{ ",", SEL_AND, "All fields must match" },
-        { "||", SEL_OR, "At least one field must match" },
+	{ "||", SEL_OR, "At least one field must match" },
 	{ "#", SEL_OR, "At least one field must match" },
-        { "!", SEL_MODIFIER_NOT, "Logical negation" },
-        { "(", SEL_PRECEDENCE_PS, "Left parenthesis" },
-        { ")", SEL_PRECEDENCE_PE, "Right parenthesis" },
-        { "[", SEL_LIST_LS, "List start" },
-        { "]", SEL_LIST_LE, "List end"},
-        { "{", SEL_LIST_SUBSET_LS, "List subset start"},
-        { "}", SEL_LIST_SUBSET_LE, "List subset end"},
-        { NULL,  0, NULL},
+	{ "!", SEL_MODIFIER_NOT, "Logical negation" },
+	{ "(", SEL_PRECEDENCE_PS, "Left parenthesis" },
+	{ ")", SEL_PRECEDENCE_PE, "Right parenthesis" },
+	{ "[", SEL_LIST_LS, "List start" },
+	{ "]", SEL_LIST_LE, "List end"},
+	{ "{", SEL_LIST_SUBSET_LS, "List subset start"},
+	{ "}", SEL_LIST_SUBSET_LE, "List subset end"},
+	{ NULL,  0, NULL},
 };
 
 struct selection_str_list {
