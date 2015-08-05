@@ -68,10 +68,10 @@ extern char *optarg;
 
 #ifndef TEMP_FAILURE_RETRY
 # define TEMP_FAILURE_RETRY(expression) \
-  (__extension__                                                              \
-    ({ long int __result;                                                     \
-       do __result = (long int) (expression);                                 \
-       while (__result == -1L && errno == EINTR);                             \
+  (__extension__					\
+    ({ long int __result;				\
+       do __result = (long int) (expression);		\
+       while (__result == -1L && errno == EINTR);	\
        __result; }))
 #endif
 
@@ -295,10 +295,10 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 }
 
 struct dm_split_name {
-        char *subsystem;
-        char *vg_name;
-        char *lv_name;
-        char *lv_layer;
+	char *subsystem;
+	char *vg_name;
+	char *lv_name;
+	char *lv_layer;
 };
 
 struct dmsetup_report_obj {
@@ -391,7 +391,7 @@ static struct dm_split_name *_get_split_name(const char *uuid, const char *name,
 	if (!strcmp(split_name->subsystem, "LVM") &&
 	    (!(split_name->vg_name = dm_strdup(name)) ||
 	     !dm_split_lvm_name(NULL, NULL, &split_name->vg_name,
-			        &split_name->lv_name, &split_name->lv_layer)))
+				&split_name->lv_name, &split_name->lv_layer)))
 		log_error("Failed to allocate memory to split LVM name "
 			  "into components.");
 
@@ -678,7 +678,7 @@ static int _create(CMD_ARGS)
 		goto out;
 
 	if (!_set_task_add_node(dmt))
-                goto out;
+		goto out;
 
 	if (_udev_cookie)
 		cookie = _udev_cookie;
@@ -900,7 +900,7 @@ static int _splitname(CMD_ARGS)
 
 	if (!(obj.split_name = _get_split_name((argc == 3) ? argv[2] : "LVM",
 					       argv[1], '\0')))
-                return_0;
+		return_0;
 
 	r = dm_report_object(_report, &obj);
 	_destroy_split_name(obj.split_name);
@@ -1296,7 +1296,7 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 
 	/* FIXME: needs to coperate with udev */
 	if (!_set_task_add_node(dmt))
-                goto out;
+		goto out;
 
 	if (_switches[READAHEAD_ARG] &&
 	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG],
@@ -3353,7 +3353,7 @@ static int _loop_table(char *table, size_t tlen, char *file,
 #endif
 
 	if (close(fd))
-                log_sys_error("close", file);
+		log_sys_error("close", file);
 
 	if (dm_snprintf(table, tlen, "%llu %llu loop %s %llu\n", 0ULL,
 			(long long unsigned)sectors, file, (long long unsigned)off) < 0)
