@@ -16,7 +16,7 @@ origin LV to increase speed.  The cache metadata LV holds the
 accounting information that specifies where data blocks are stored (e.g.
 on the origin LV or on the cache data LV).  Users should be familiar with
 these LVs if they wish to create the best and most robust cached
-logical volumes.
+logical volumes.  All of these associated LVs must be in the same VG.
 
 .SH Cache Terms
 .nf
