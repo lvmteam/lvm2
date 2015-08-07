@@ -93,7 +93,7 @@ are missing from the system
 .IP 5 3
 Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere
 .IP 6 3
-(c)lustered
+(c)lustered, (s)hared
 .RE
 .TP
 .BR \-O ", " \-\-sort

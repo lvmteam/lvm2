@@ -27,6 +27,7 @@ vgcreate \(em create a volume group
 .IR NumberOfCopies | unmanaged | all ]
 .RB [ \-s | \-\-physicalextentsize
 .IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
+.RB [ \-\-shared ]
 .RB [ \-\-systemid
 .IR SystemID ]
 .RB [ \-t | \-\-test ]
@@ -126,6 +127,13 @@ but having a large number of extents will slow down the tools but have no
 impact on I/O performance to the logical volume.  The smallest PE is 1KiB
 
 The 2.4 kernel has a limitation of 2TiB per block device.
+
+.TP
+.B \-\-shared
+Create a shared VG using lvmlockd.  lvmlockd will select lock type sanlock
+or dlm depending on which lock manager is running.  This allows multiple
+hosts to share a VG on shared devices.  See
+.BR lvmlockd (8).
 
 .TP
 .BR \-\-systemid " " \fISystemID

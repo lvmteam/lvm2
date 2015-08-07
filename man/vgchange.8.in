@@ -34,6 +34,10 @@ vgchange \(em change attributes of a volume group
 .RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-sysinit ]
 .RB [ \-\-noudevsync ]
+.RB [ \-\-lock\-start ]
+.RB [ \-\-lock\-stop ]
+.RB [ \-\-lock\-type
+.IR LockType ]
 .RB [ \-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
 .RB [ \-p | \-\-maxphysicalvolumes
@@ -127,6 +131,30 @@ LVs with snapshots are always activated exclusively because they can only
 be used on one node at once.
 
 For local VGs, \-ay, \-aey, and \-asy are all equivalent.
+.IP
+In a shared VG, lvmlockd is used for locking, and the following options
+are possible:
+
+With \-aey, the command activates the LV in exclusive mode, allowing a
+single host to activate the LV (the host running the command).  Before
+activating the LV, the command uses lvmlockd to acquire an exclusive lock
+on the LV.  If the lock cannot be acquired, the LV is not activated and an
+error is reported.  This would happen if the LV is active on another host.
+
+With \-asy, the command activates the LV in shared mode, allowing multiple
+hosts to activate the LV concurrently.  Before activating the LV, the
+command uses lvmlockd to acquire a shared lock on the LV.  If the lock
+cannot be acquired, the LV is not activated and an error is reported.
+This would happen if the LV is active exclusively on another host.  If the
+LV type prohibits shared access, such as a snapshot, the command will
+report an error and fail.
+
+With \-an, the command deactivates the LV on the host running the command.
+After deactivating the LV, the command uses lvmlockd to release the
+current lock on the LV.
+
+With lvmlockd, an unspecified mode is always exclusive, \-ay defaults to
+\-aey.
 
 .TP
 .BR \-\-activationmode " {" \fIcomplete | \fIdegraded | \fIpartial }
@@ -212,6 +240,20 @@ Make no attempt to interact with dmeventd unless
 .BR \-\-monitor
 is specified.
 Do not use this if dmeventd is already monitoring a device.
+.TP
+.BR \-\-lock\-start
+Start the lockspace of a shared VG in lvmlockd.  lvmlockd locks becomes
+available for the VG, allowing LVM to use the VG.  See
+.BR lvmlockd (8).
+.TP
+.BR \-\-lock\-stop
+Stop the lockspace of a shared VG in lvmlockd.  lvmlockd locks become
+unavailable for the VG, preventing LVM from using the VG.  See
+.BR lvmlockd (8).
+.TP
+.BR \-\-lock\-type " " \fILockType
+Change the VG lock type to or from a shared lock type used with lvmlockd.  See
+.BR lvmlockd (8).
 .TP
 .BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes
 Changes the maximum logical volume number of an existing inactive
