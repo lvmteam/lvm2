@@ -35,6 +35,12 @@ struct selection {
 struct dm_report {
 	struct dm_pool *mem;
 
+	/**
+	 * Cache the first row allocated so that all rows and fields
+	 * can be disposed of in a single dm_pool_free() call.
+	 */
+	struct row *first_row;
+
 	/* To report all available types */
 #define REPORT_TYPES_ALL	UINT32_MAX
 	uint32_t report_types;
@@ -791,7 +797,7 @@ static struct field_properties * _add_field(struct dm_report *rh,
 {
 	struct field_properties *fp;
 
-	if (!(fp = dm_pool_zalloc(rh->mem, sizeof(struct field_properties)))) {
+	if (!(fp = dm_pool_zalloc(rh->mem, sizeof(*fp)))) {
 		log_error("dm_report: struct field_properties allocation "
 			  "failed");
 		return NULL;
@@ -1878,6 +1884,9 @@ static int _do_report_object(struct dm_report *rh, void *object, int do_output, 
 		log_error("_do_report_object: struct row allocation failed");
 		return 0;
 	}
+
+	if (!rh->first_row)
+		rh->first_row = row;
 
 	row->rh = rh;
 
@@ -3972,8 +3981,12 @@ static int _report_headings(struct dm_report *rh)
 		log_error("dm_report: Failed to generate report headings for printing");
 		goto bad;
 	}
-	log_print("%s", (char *) dm_pool_end_object(rh->mem));
 
+	/* print all headings */
+	heading = (char *) dm_pool_end_object(rh->mem);
+	log_print("%s", heading);
+
+	dm_pool_free(rh->mem, (void *)heading);
 	dm_free(buf);
 
 	return 1;
@@ -4162,6 +4175,19 @@ bad:
 	return 0;
 }
 
+static void _destroy_rows(struct dm_report *rh)
+{
+	/*
+	 * free the first row allocated to this report: since this is a
+	 * pool allocation this will also free all subsequently allocated
+	 * rows from the report and any associated string data.
+	 */
+	if(rh->first_row)
+		dm_pool_free(rh->mem, rh->first_row);
+	rh->first_row = NULL;
+	dm_list_init(&rh->rows);
+}
+
 static int _output_as_rows(struct dm_report *rh)
 {
 	const struct dm_report_field_type *fields;
@@ -4217,6 +4243,8 @@ static int _output_as_rows(struct dm_report *rh)
 		log_print("%s", (char *) dm_pool_end_object(rh->mem));
 	}
 
+	_destroy_rows(rh);
+
 	return 1;
 
       bad:
@@ -4265,8 +4293,7 @@ static int _output_as_columns(struct dm_report *rh)
 		dm_list_del(&row->list);
 	}
 
-	if (row)
-		dm_pool_free(rh->mem, row);
+	_destroy_rows(rh);
 
 	return 1;
 
