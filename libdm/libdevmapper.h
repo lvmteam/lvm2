@@ -2183,6 +2183,11 @@ struct dm_timestamp *dm_timestamp_alloc(void);
 int dm_timestamp_get(struct dm_timestamp *ts);
 
 /*
+ * Copy a timestamp from ts_old to ts_new.
+ */
+void dm_timestamp_copy(struct dm_timestamp *ts_new, struct dm_timestamp *ts_old);
+
+/*
  * Compare two timestamps.
  *
  * Return: -1 if ts1 is less than ts2

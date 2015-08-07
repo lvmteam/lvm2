@@ -168,6 +168,11 @@ uint64_t dm_timestamp_delta(struct dm_timestamp *ts1, struct dm_timestamp *ts2)
 	return t2 - t1;
 }
 
+void dm_timestamp_copy(struct dm_timestamp *ts_new, struct dm_timestamp *ts_old)
+{
+	*ts_new = *ts_old;
+}
+
 void dm_timestamp_destroy(struct dm_timestamp *ts)
 {
 	dm_free(ts);

@@ -72,6 +72,7 @@ dm_task_get_ioctl_timestamp
 dm_task_set_record_timestamp
 dm_timestamp_alloc
 dm_timestamp_compare
+dm_timestamp_copy
 dm_timestamp_delta
 dm_timestamp_destroy
 dm_timestamp_get
