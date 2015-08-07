@@ -3970,6 +3970,8 @@ doit:
 		r = _perform_command_for_all_repeatable_args(cmd, subcommand, argc, argv, NULL, multiple_devices);
 
 		if (_report) {
+			if (_count > 1)
+				dm_report_column_headings(_report);
 			dm_report_output(_report);
 
 			if (_count > 1) {
