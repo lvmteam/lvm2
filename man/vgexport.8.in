@@ -20,6 +20,8 @@ You can then move all the Physical Volumes in that Volume Group to
 a different system for later
 .BR vgimport (8).
 Most LVM2 tools ignore exported Volume Groups.
+vgexport clears the VG system ID, and vgimport sets the VG system ID
+to match the host running vgimport (if the host has a system ID).
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
@@ -29,4 +31,5 @@ Export all inactive Volume Groups.
 .BR lvm (8),
 .BR pvscan (8),
 .BR vgimport (8),
-.BR vgscan (8)
+.BR vgscan (8),
+.BR lvmsystemid (7)
