@@ -186,6 +186,9 @@ static report_type_t _report_type;
 static dev_name_t _dev_name_type;
 static uint32_t _count = 1; /* count of repeating reports */
 static struct dm_timestamp *_initial_timestamp = NULL;
+static struct dm_timestamp *_ts_start = NULL, *_ts_end = NULL;
+static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
+static uint64_t _interval = 0; /* configured interval in nsecs */
 
 #define NSEC_PER_USEC	UINT64_C(1000)
 #define NSEC_PER_MSEC	UINT64_C(1000000)
@@ -2871,7 +2874,6 @@ static int _report_init(const struct command *cmd)
 	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0;
 	int quoted = 1, columns_as_rows = 0;
 	uint32_t flags = 0;
-	uint32_t interval;
 	size_t len = 0;
 	int r = 0;
 
@@ -2963,10 +2965,10 @@ static int _report_init(const struct command *cmd)
 		goto out;
 	}
 
-	/* Default interval is 1 second. */
-	interval = _switches[INTERVAL_ARG] ? _int_args[INTERVAL_ARG] : 1;
+	if (!_switches[INTERVAL_ARG])
+		_int_args[INTERVAL_ARG] = 1; /* 1s default. */
 
-	dm_report_set_interval_ns(_report, NSEC_PER_SEC * interval);
+	_interval = NSEC_PER_SEC * _int_args[INTERVAL_ARG];
 
 	if (field_prefixes)
 		dm_report_set_output_field_name_prefix(_report, "dm_");
@@ -3874,6 +3876,29 @@ static int _perform_command_for_all_repeatable_args(CMD_ARGS)
 	return 0;
 }
 
+static int _do_report_wait(void)
+{
+	if (!dm_timestamp_get(_ts_start))
+		goto_out;
+
+	if (usleep(_interval / NSEC_PER_USEC)) {
+		if (errno == EINTR)
+			log_error("Report interval interrupted by signal.");
+		if (errno == EINVAL)
+			log_error("Report interval too short.");
+		goto out;
+	}
+
+	if (!dm_timestamp_get(_ts_end))
+		goto_out;
+
+	_last_interval = dm_timestamp_delta(_ts_end, _ts_start);
+
+	return 1;
+out:
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int r = 1;
@@ -3962,6 +3987,16 @@ unknown:
 		argc--, argv++;
 	}
 
+	if (_count > 1) {
+		_ts_start = dm_timestamp_alloc();
+		_ts_end = dm_timestamp_alloc();
+		if (!_ts_start || !_ts_end) {
+			log_error("Could not allocate timestamp objects.");
+			goto out;
+		}
+		/* Pretend we have the configured interval for the first iteration. */
+		_last_interval = _interval;
+	}
 doit:
 	multiple_devices = (cmd->repeatable_cmd && argc != 2 &&
 			    (argc != 1 || (!_switches[UUID_ARG] && !_switches[MAJOR_ARG])));
@@ -3976,7 +4011,9 @@ doit:
 
 			if (_count > 1) {
 				printf("\n");
-				dm_report_wait(_report);
+				/* wait for --interval and update timestamps */
+				if (!_do_report_wait())
+					goto_out;
 			}
 		}
 	} while (--_count);

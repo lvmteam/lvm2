@@ -1941,50 +1941,6 @@ int dm_report_field_percent(struct dm_report *rh, struct dm_report_field *field,
 void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
 
-/*
- * Set an interval (in nanoseconds) for this dm_report object that will
- * be used by any subsequent call to dm_report_wait_interval. This is
- * only useful for repeating reports (e.g. statistics).
- *
- * The default value is zero: no interval.
- */
-void dm_report_set_interval_ns(struct dm_report *rh, uint64_t interval_ns);
-
-/*
- * Set an interval in milliseconds for this dm_report object that will
- * be used by any subsequent call to dm_report_wait. This is only
- * useful for repeating reports (e.g. statistics).
- *
- * The default value is zero: no interval.
- */
-void dm_report_set_interval_ms(struct dm_report *rh, uint64_t interval_ms);
-
-/*
- * Retrieve the configured interval of the dm_report handle rh in
- * nanoseconds.
- */
-uint64_t dm_report_get_interval_ns(struct dm_report *rh);
-
-/*
- * Retrieve the configured interval of the dm_report handle rh in
- * milliseconds.
- */
-uint64_t dm_report_get_interval_ms(struct dm_report *rh);
-
-/*
- * Suspend the calling thread until the current reporting interval
- * expires. When this function returns the caller should obtain updated
- * report data and call dm_report_object() and dm_report_output() as
- * necessary in order to produce the new interval's reporting output.
- *
- * Delivery of a non-blocked signal to the thread carrying out the
- * wait will cause the function to return prematurely with an error.
- *
- * Attempting to wait on a report that has no interval set is also
- * treated as an error.
- */
-int dm_report_wait(struct dm_report *rh);
-
 /*************************
  * config file parse/print
  *************************/

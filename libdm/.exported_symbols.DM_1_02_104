@@ -1,9 +1,4 @@
 dm_report_column_headings
-dm_report_get_interval_ms
-dm_report_get_interval_ns
-dm_report_set_interval_ms
-dm_report_set_interval_ns
-dm_report_wait
 dm_size_to_string
 dm_task_get_ioctl_timestamp
 dm_task_set_record_timestamp
