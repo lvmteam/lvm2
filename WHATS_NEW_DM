@@ -1,9 +1,10 @@
 Version 1.02.104 -
 =================================
+  Add support to redisplay column headings for repeating column reports.
+  Fix report header and row resource leaks.
   Report timestamps of ioctls with dmsetup -vvv.
   Recognize report field name variants without any underscores too.
   Add dmsetup --interval and --count to repeat reports at specified intervals.
-  Add report interval and waiting functions to libdevmapper.
   Add dm_timestamp functions to libdevmapper.
 
 Version 1.02.103 - 24th July 2015
