@@ -3994,6 +3994,9 @@ static int _report_headings(struct dm_report *rh)
 
 int dm_report_column_headings(struct dm_report *rh)
 {
+	/* Columns-as-rows does not use _report_headings. */
+	if (rh->flags & DM_REPORT_OUTPUT_COLUMNS_AS_ROWS)
+		return 1;
 	return _report_headings(rh);
 }
 
