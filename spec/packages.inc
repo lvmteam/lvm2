@@ -398,7 +398,9 @@ for the kernel device-mapper.
 %defattr(-,root,root,-)
 %doc COPYING COPYING.LIB WHATS_NEW_DM VERSION_DM README INSTALL
 %attr(755,root,root) %{_sbindir}/dmsetup
+%{_sbindir}/dmstats
 %{_mandir}/man8/dmsetup.8.gz
+%{_mandir}/man8/dmstats.8.gz
 %if %{enable_udev}
 %doc udev/12-dm-permissions.rules
 %dir %{_udevbasedir}

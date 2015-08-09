@@ -204,9 +204,11 @@ install_tools_static: lvm.static
 
 install_dmsetup_dynamic: dmsetup
 	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
+	$(LN_S) -f $(<F) $(sbindir)/dmstats
 
 install_dmsetup_static: dmsetup.static
 	$(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
+	$(LN_S) -f $(<F) $(sbindir)/dmstats
 
 install_device-mapper: $(INSTALL_DMSETUP_TARGETS)
 
