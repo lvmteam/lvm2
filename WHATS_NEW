@@ -1,8 +1,11 @@
-Version 2.02.127 - 
-=================================
+Version 2.02.127 - 10th August 2015
+===================================
   Do not init filters, locking, lvmetad, lvmpolld if command doesn't use it.
-  Recognise vg/lv name format in dmsetup.
+  Order fields in struct cmd_context more logically.
+  Add lock_type to lvmcache VG summary and info structs.
   Fix regression in cache causing some PVs to bypass filters (2.02.105).
+  Make configure --enable-realtime the default now.
+  Update .gitignore and configure.in files to reflect usage of current tree.
 
 Version 2.02.126 - 24th July 2015
 =================================
