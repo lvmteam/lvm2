@@ -79,11 +79,13 @@ static char *_program_id_from_proc(void)
 	if (!(comm = fopen(PROC_SELF_COMM, "r")))
 		return_NULL;
 
-	if (!fgets(buf, sizeof(buf), comm))
-		return_NULL;
+	if (!fgets(buf, sizeof(buf), comm)) {
+		log_error("Could not read from %s", PROC_SELF_COMM);
+		fclose(comm);
+		return NULL;
+	}
 
-	if (fclose(comm))
-		return_NULL;
+	fclose(comm);
 
 	return dm_strdup(buf);
 }
