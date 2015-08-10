@@ -739,6 +739,19 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	if (!_lvmlockd_connected)
 		return 0;
 
+	/*
+	 * vgremove originally held the global lock, but lost it because the
+	 * vgremove command is removing multiple VGs, and removed the VG
+	 * holding the global lock before attempting to remove this VG.
+	 * To avoid this situation, the user should remove the VG holding
+	 * the global lock in a command by itself, or as the last arg in a
+	 * vgremove command that removes multiple VGs.
+	 */
+	if (cmd->lockd_gl_removed) {
+		log_error("Global lock failed: global lock was lost by removing a previous VG.");
+		return 0;
+	}
+
 	if (!vg->lock_args || !strlen(vg->lock_args)) {
 		/* Shouldn't happen in general, but maybe in some error cases? */
 		log_debug("_free_vg_sanlock %s no lock_args", vg->name);
@@ -773,8 +786,21 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 		goto out;
 	}
 
-	if (lockd_flags & LD_RF_WARN_GL_REMOVED)
+	/*
+	 * If the global lock was been removed by removing this VG, then:
+	 *
+	 * Print a warning indicating that the global lock should be enabled
+	 * in another remaining sanlock VG.
+	 *
+	 * Do not allow any more VGs to be removed by this command, e.g.
+	 * if a command removes two sanlock VGs, like vgremove foo bar,
+	 * and the global lock existed in foo, do not continue to remove
+	 * VG bar without the global lock.  See the corresponding check above.
+	 */
+	if (lockd_flags & LD_RF_WARN_GL_REMOVED) {
 		log_warn("VG %s held the sanlock global lock, enable global lock in another VG.", vg->name);
+		cmd->lockd_gl_removed = 1;
+	}
 
 	/*
 	 * The usleep delay gives sanlock time to close the lock lv,
