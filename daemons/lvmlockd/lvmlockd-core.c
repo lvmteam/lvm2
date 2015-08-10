@@ -1981,11 +1981,15 @@ static int other_sanlock_vgs_exist(struct lockspace *ls_rem)
 	struct lockspace *ls;
 
 	list_for_each_entry(ls, &lockspaces_inactive, list) {
+		if (ls->lm_type != LD_LM_SANLOCK)
+			continue;
 		log_debug("other sanlock vg exists inactive %s", ls->name);
 		return 1;
 	}
 
 	list_for_each_entry(ls, &lockspaces, list) {
+		if (ls->lm_type != LD_LM_SANLOCK)
+			continue;
 		if (!strcmp(ls->name, ls_rem->name))
 			continue;
 		log_debug("other sanlock vg exists %s", ls->name);
