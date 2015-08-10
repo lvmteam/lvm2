@@ -4205,6 +4205,18 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
+	/*
+	 * The lvmlockd LV lock is only acquired here to ensure the LV is not
+	 * active on another host.  This requests a transient LV lock.
+	 * If the LV is active, a persistent LV lock already exists in
+	 * lvmlockd, and the transient lock request does nothing.
+	 * If the LV is not active, then no LV lock exists and the transient
+	 * lock request acquires the LV lock (or fails).  The transient lock
+	 * is automatically released when the command exits.
+	 */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_0;
+
 	if (update_mda && !archive(vg))
 		return_0;
 
