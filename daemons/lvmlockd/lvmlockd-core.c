@@ -1022,7 +1022,10 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	uint32_t r_version = 0;
 	int rv;
 
-	log_debug("S %s R %s res_lock mode %s", ls->name, r->name, mode_str(act->mode));
+	if (r->type == LD_RT_LV)
+		log_debug("S %s R %s res_lock mode %s (%s)", ls->name, r->name, mode_str(act->mode), act->lv_name);
+	else
+		log_debug("S %s R %s res_lock mode %s", ls->name, r->name, mode_str(act->mode));
 
 	if (r->mode == LD_LK_SH && act->mode == LD_LK_SH)
 		goto add_lk;
@@ -1284,8 +1287,12 @@ static int res_unlock(struct lockspace *ls, struct resource *r,
 	return -ENOENT;
 
 do_unlock:
-	log_debug("S %s R %s res_unlock %s", ls->name, r->name,
-		  (act->op == LD_OP_CLOSE) ? "from close" : "");
+	if (act->op == LD_OP_CLOSE)
+		log_debug("S %s R %s res_unlock from close", ls->name, r->name);
+	else if (r->type == LD_RT_LV)
+		log_debug("S %s R %s res_unlock (%s)", ls->name, r->name, act->lv_name);
+	else
+		log_debug("S %s R %s res_unlock", ls->name, r->name);
 
 	/* send unlock to lm when last sh lock is unlocked */
 	if (lk->mode == LD_LK_SH) {
