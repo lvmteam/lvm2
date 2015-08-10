@@ -94,10 +94,10 @@ struct dm_stats *dm_stats_create(const char *program_id)
 {
 	struct dm_stats *dms = NULL;
 
-	if (!(dms = dm_malloc(sizeof(*dms))))
+	if (!(dms = dm_zalloc(sizeof(*dms))))
 		return_NULL;
 	if (!(dms->mem = dm_pool_create("stats_pool", 4096)))
-		return_NULL;
+		goto_out;
 
 	if (!program_id || !strlen(program_id))
 		dms->program_id = _program_id_from_proc();
@@ -117,6 +117,9 @@ struct dm_stats *dm_stats_create(const char *program_id)
 	dms->regions = NULL;
 
 	return dms;
+out:
+	dm_free(dms);
+	return NULL;
 }
 
 /**
