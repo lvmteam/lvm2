@@ -4397,9 +4397,6 @@ static int _stats_report(CMD_ARGS)
 		name = argv[1];
 	}
 
-	if (!_report)
-		goto out;
-
 	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
 		return 0;
 
