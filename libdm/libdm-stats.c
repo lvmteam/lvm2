@@ -503,8 +503,7 @@ static uint64_t _nr_areas(uint64_t len, uint64_t step)
 	 * treat the entire region as a single area. Any partial area at the
 	 * end of the region is treated as an additional complete area.
 	 */
-	return (len && step)
-		? (len / (step ? step : len)) + !!(len % step) : 0;
+	return (len / (step ? : len)) + !!(len % step);
 }
 
 static uint64_t _nr_areas_region(struct dm_stats_region *region)
