@@ -81,11 +81,13 @@ static char *_program_id_from_proc(void)
 
 	if (!fgets(buf, sizeof(buf), comm)) {
 		log_error("Could not read from %s", PROC_SELF_COMM);
-		fclose(comm);
+		if(fclose(comm))
+			stack;
 		return NULL;
 	}
 
-	fclose(comm);
+	if (fclose(comm))
+		stack;
 
 	return dm_strdup(buf);
 }
@@ -340,10 +342,13 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 	dms->max_region = max_region - 1;
 	dms->regions = dm_pool_end_object(mem);
 
-	fclose(list_rows);
+	if (fclose(list_rows))
+		stack;
+
 	return 1;
 out:
-	fclose(list_rows);
+	if(fclose(list_rows))
+		stack;
 	dm_pool_abandon_object(mem);
 	return 0;
 }
@@ -483,13 +488,16 @@ static int _stats_parse_region(struct dm_pool *mem, const char *resp,
 	region->timescale = timescale;
 	region->counters = dm_pool_end_object(mem);
 
-	fclose(stats_rows);
+	if (fclose(stats_rows))
+		stack;
+
 	return 1;
 
 out:
 
 	if (stats_rows)
-		fclose(stats_rows);
+		if(fclose(stats_rows))
+			stack;
 	dm_pool_abandon_object(mem);
 	return 0;
 }
