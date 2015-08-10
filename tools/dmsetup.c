@@ -4253,7 +4253,7 @@ static int _stats_list(CMD_ARGS)
 		return 1;
 
 	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
-		goto_out;
+		return_0;
 
 	if (!_bind_stats_device(dms, name))
 		goto_out;
