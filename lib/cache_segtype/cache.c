@@ -71,23 +71,15 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	if (dm_config_has_node(sn, "cache_mode")) {
 		if (!(str = dm_config_find_str(sn, "cache_mode", NULL)))
 			return SEG_LOG_ERROR("cache_mode must be a string in");
-		if (!set_cache_pool_feature(&seg->feature_flags, str))
+		if (!cache_set_mode(seg, str))
 			return SEG_LOG_ERROR("Unknown cache_mode in");
-	} else
-		/* When missed in metadata, it's an old stuff - use writethrough */
-		seg->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+	}
 
 	if (dm_config_has_node(sn, "policy")) {
 		if (!(str = dm_config_find_str(sn, "policy", NULL)))
 			return SEG_LOG_ERROR("policy must be a string in");
 		if (!(seg->policy_name = dm_pool_strdup(mem, str)))
 			return SEG_LOG_ERROR("Failed to duplicate policy in");
-	} else {
-		/* Cannot use 'just' default, so pick one */
-		seg->policy_name = DEFAULT_CACHE_POLICY; /* FIXME make configurable */
-		/* FIXME maybe here should be always 'mq' */
-		log_warn("WARNING: cache_policy undefined, using default \"%s\" policy.",
-			 seg->policy_name);
 	}
 
 	/*
@@ -136,28 +128,33 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 {
 	const char *cache_mode;
 
-	if (!(cache_mode = get_cache_pool_cachemode_name(seg)))
-		return_0;
-
-	if (!seg->policy_name) {
-		log_error(INTERNAL_ERROR "Policy name for %s is not defined.",
-			  display_lvname(seg->lv));
-		return 0;
-	}
-
 	outf(f, "data = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "chunk_size = %" PRIu32, seg->chunk_size);
-	outf(f, "cache_mode = \"%s\"", cache_mode);
-	outf(f, "policy = \"%s\"", seg->policy_name);
 
-	if (seg->policy_settings) {
-		if (strcmp(seg->policy_settings->key, "policy_settings")) {
-			log_error(INTERNAL_ERROR "Incorrect policy_settings tree, %s.",
-				  seg->policy_settings->key);
-			return 0;
+	/*
+	 * Cache pool used by a cache LV holds data. Not ideal,
+	 * but not worth to break backward compatibility, by shifting
+	 * content to cache segment
+	 */
+	if (cache_mode_is_set(seg)) {
+		if (!(cache_mode = get_cache_mode_name(seg)))
+			return_0;
+		outf(f, "cache_mode = \"%s\"", cache_mode);
+	}
+
+	if (seg->policy_name) {
+		outf(f, "policy = \"%s\"", seg->policy_name);
+
+		if (seg->policy_settings) {
+			if (strcmp(seg->policy_settings->key, "policy_settings")) {
+				log_error(INTERNAL_ERROR "Incorrect policy_settings tree, %s.",
+					  seg->policy_settings->key);
+				return 0;
+			}
+			if (seg->policy_settings->child)
+				out_config_node(f, seg->policy_settings);
 		}
-		out_config_node(f, seg->policy_settings);
 	}
 
 	return 1;

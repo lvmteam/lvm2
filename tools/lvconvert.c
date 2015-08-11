@@ -3070,7 +3070,7 @@ mda_write:
 	seg->zero_new_blocks = lp->zero ? 1 : 0;
 
 	if ((lp->policy_name || lp->policy_settings) &&
-	    !lv_cache_set_policy(seg->lv, lp->policy_name, lp->policy_settings))
+	    !cache_set_policy(seg, lp->policy_name, lp->policy_settings))
 		return_0;
 
 	/* Rename deactivated metadata LV to have _tmeta suffix */
@@ -3176,6 +3176,12 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 		return_0;
 
 	if (!(cache_lv = lv_cache_create(pool_lv, origin_lv)))
+		return_0;
+
+	if (!cache_set_mode(first_seg(cache_lv), lp->cache_mode))
+		return_0;
+
+	if (!cache_set_policy(first_seg(cache_lv), lp->policy_name, lp->policy_settings))
 		return_0;
 
 	if (!lv_update_and_reload(cache_lv))

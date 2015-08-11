@@ -7264,16 +7264,25 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	memlock_unlock(vg->cmd);
 
 	if (seg_is_cache_pool(lp) || seg_is_cache(lp)) {
-		pool_lv = pool_lv ? : lv;
-		if (!lv_cache_set_policy(pool_lv, lp->policy_name, lp->policy_settings))
-			return_NULL; /* revert? */
-		first_seg(pool_lv)->chunk_size = lp->chunk_size;
-		first_seg(pool_lv)->feature_flags = lp->feature_flags;
-		/* TODO: some calc_policy solution for cache ? */
-		if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, lp->passed_args,
-								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC)) {
+		if (!cache_set_mode(first_seg(lv), lp->cache_mode)) {
 			stack;
 			goto revert_new_lv;
+		}
+
+		if (!cache_set_policy(first_seg(lv), lp->policy_name, lp->policy_settings)) {
+			stack;
+			goto revert_new_lv;
+		}
+
+		pool_lv = pool_lv ? : lv;
+		if (lp->chunk_size) {
+			first_seg(pool_lv)->chunk_size = lp->chunk_size;
+			/* TODO: some calc_policy solution for cache ? */
+			if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, lp->passed_args,
+									THIN_CHUNK_SIZE_CALC_METHOD_GENERIC)) {
+				stack;
+				goto revert_new_lv;
+			}
 		}
 	} else if (seg_is_raid(lp)) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
@@ -7477,6 +7486,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 		}
 		lv = tmp_lv;
+
+		if (!cache_set_mode(first_seg(lv), lp->cache_mode))
+			return_NULL; /* revert? */
+
+		if (!cache_set_policy(first_seg(lv), lp->policy_name, lp->policy_settings))
+			return_NULL; /* revert? */
 
 		if (!lv_update_and_reload(lv)) {
 			/* FIXME Do a better revert */
