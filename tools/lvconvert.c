@@ -3427,14 +3427,12 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 	}
 
 	/*
-	 * If the lv is inactive before and after the command, the
-	 * use of PERSISTENT here means the lv will remain locked as
-	 * an effect of running the lvconvert.
-	 * To unlock it, it would need to be activated+deactivated.
-	 * Or, we could identify the commands for which the lv remains
-	 * inactive, and not use PERSISTENT here for those cases.
+	 * Request a transient lock.  If the LV is active, it has a persistent
+	 * lock already, and this request does nothing.  If the LV is not
+	 * active, this acquires a transient lock that will be released when
+	 * the command exits.
 	 */
-	if (!lockd_lv(cmd, lv, "ex", LDLV_PERSISTENT))
+	if (!lockd_lv(cmd, lv, "ex", 0))
 		goto_bad;
 
 	/*
