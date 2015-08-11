@@ -100,6 +100,9 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	 *   If the policy is not present, default policy is used.
 	 */
 	if ((sn = dm_config_find_node(sn, "policy_settings"))) {
+		if (!seg->policy_name)
+			return SEG_LOG_ERROR("policy_settings must have a policy_name in");
+
 		if (sn->v)
 			return SEG_LOG_ERROR("policy_settings must be a section in");
 

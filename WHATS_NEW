@@ -1,5 +1,6 @@
 Version 2.02.128 - 
 ===================================
+  Check for valid cache mode in validation of cache segment.
   Enhance internal API cache_set_mode() and cache_set_policy().
   Enhance toollib's get_cache_params().
   Runtime detect presence of cache smq policy.

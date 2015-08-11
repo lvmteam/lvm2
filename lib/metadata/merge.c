@@ -208,7 +208,21 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				}
 
 			}
-			if (seg_is_cache_pool(seg)) {
+			if (seg_is_cache_pool(seg) &&
+			    !dm_list_empty(&seg->lv->segs_using_this_lv)) {
+				switch (seg->feature_flags &
+					(DM_CACHE_FEATURE_PASSTHROUGH |
+					 DM_CACHE_FEATURE_WRITETHROUGH |
+					 DM_CACHE_FEATURE_WRITEBACK)) {
+					 case DM_CACHE_FEATURE_PASSTHROUGH:
+					 case DM_CACHE_FEATURE_WRITETHROUGH:
+					 case DM_CACHE_FEATURE_WRITEBACK:
+						 break;
+					 default:
+						 log_error("LV %s has invalid cache's feature flag.",
+							   lv->name);
+						 inc_error_count;
+				}
 				if (!seg->policy_name) {
 					log_error("LV %s is missing cache policy name.", lv->name);
 					inc_error_count;

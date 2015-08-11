@@ -7074,7 +7074,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				  display_lvname(origin_lv));
 			return NULL;
 		}
-	} else if (pool_lv && seg_is_cache(lp)) {
+	} else if (seg_is_cache(lp)) {
+		if (!pool_lv) {
+			log_error(INTERNAL_ERROR "Pool LV for cache is missing.");
+			return NULL;
+		}
 		if (!lv_is_cache_pool(pool_lv)) {
 			log_error("Logical volume %s is not a cache pool.",
 				  display_lvname(pool_lv));
