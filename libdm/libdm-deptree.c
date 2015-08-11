@@ -3358,6 +3358,32 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	struct dm_config_node *cn;
 	struct load_segment *seg;
 
+	switch (feature_flags &
+		(DM_CACHE_FEATURE_PASSTHROUGH |
+		 DM_CACHE_FEATURE_WRITETHROUGH |
+		 DM_CACHE_FEATURE_WRITEBACK)) {
+		 case DM_CACHE_FEATURE_PASSTHROUGH:
+		 case DM_CACHE_FEATURE_WRITETHROUGH:
+		 case DM_CACHE_FEATURE_WRITEBACK:
+			 break;
+		 default:
+			 log_error("Invalid cache's feature flag " FMTu64 ".",
+				   feature_flags);
+			 return 0;
+	}
+
+	if (data_block_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) {
+		log_error("Data block size %u is lower then %u sectors.",
+			  data_block_size, DM_CACHE_MIN_DATA_BLOCK_SIZE);
+		return 0;
+	}
+
+	if (data_block_size > DM_CACHE_MAX_DATA_BLOCK_SIZE) {
+		log_error("Data block size %u is higher then %u sectors.",
+			  data_block_size, DM_CACHE_MAX_DATA_BLOCK_SIZE);
+		return 0;
+	}
+
 	if (!(seg = _add_segment(node, SEG_CACHE, size)))
 		return_0;
 
