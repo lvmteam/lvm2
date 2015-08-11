@@ -159,7 +159,7 @@ struct load_segment {
 	uint32_t stripe_size;		/* Striped + raid */
 
 	int persistent;			/* Snapshot */
-	uint32_t chunk_size;		/* Snapshot + cache */
+	uint32_t chunk_size;		/* Snapshot */
 	struct dm_tree_node *cow;	/* Snapshot */
 	struct dm_tree_node *origin;	/* Snapshot + Snapshot origin + Cache */
 	struct dm_tree_node *merge;	/* Snapshot */
@@ -200,7 +200,7 @@ struct load_segment {
 	struct dm_list thin_messages;	/* Thin_pool */
 	uint64_t transaction_id;	/* Thin_pool */
 	uint64_t low_water_mark;	/* Thin_pool */
-	uint32_t data_block_size;       /* Thin_pool */
+	uint32_t data_block_size;       /* Thin_pool + cache */
 	unsigned skip_block_zeroing;	/* Thin_pool */
 	unsigned ignore_discard;	/* Thin_pool target vsn 1.1 */
 	unsigned no_discard_passdown;	/* Thin_pool target vsn 1.1 */
@@ -2429,8 +2429,8 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 
 	EMIT_PARAMS(pos, " %s %s %s", metadata, data, origin);
 
-	/* Chunk size */
-	EMIT_PARAMS(pos, " %u", seg->chunk_size);
+	/* Data block size */
+	EMIT_PARAMS(pos, " %u", seg->data_block_size);
 
 	/* Features */
 	/* feature_count = hweight32(seg->flags); */
@@ -3353,7 +3353,7 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  const char *origin_uuid,
 				  const char *policy_name,
 				  const struct dm_config_node *policy_settings,
-				  uint32_t chunk_size)
+				  uint32_t data_block_size)
 {
 	struct dm_config_node *cn;
 	struct load_segment *seg;
@@ -3415,7 +3415,7 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 	if (!_link_tree_nodes(node, seg->origin))
 		return_0;
 
-	seg->chunk_size = chunk_size;
+	seg->data_block_size = data_block_size;
 	seg->flags = feature_flags;
 	seg->policy_name = policy_name;
 
