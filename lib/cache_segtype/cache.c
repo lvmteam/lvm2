@@ -378,7 +378,9 @@ static int _cache_add_target_line(struct dev_manager *dm,
 					   metadata_uuid,
 					   data_uuid,
 					   origin_uuid,
-					   seg->cleaner_policy ? "cleaner" : cache_pool_seg->policy_name,
+					   seg->cleaner_policy ? "cleaner" :
+						   /* undefined policy name -> likely an old "mq" */
+						   cache_pool_seg->policy_name ? : "mq",
 					   seg->cleaner_policy ? NULL : cache_pool_seg->policy_settings,
 					   cache_pool_seg->chunk_size))
 		return_0;
