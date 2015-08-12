@@ -4193,6 +4193,12 @@ static int _stats_clear(CMD_ARGS)
 	char *name = NULL;
 	int allregions = _switches[ALL_REGIONS_ARG];
 
+	/* clear does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
 	if (!_switches[REGION_ID_ARG] && !_switches[ALL_REGIONS_ARG]) {
 		err("Please specify a region_id.");
 		return 0;
@@ -4204,12 +4210,6 @@ static int _stats_clear(CMD_ARGS)
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
 			return _process_all(cmd, subcommand, argc, argv, 0, _stats_clear);
 		name = argv[1];
-	}
-
-	/* create does not use a report */
-	if (_report) {
-		dm_report_free(_report);
-		_report = NULL;
 	}
 
 	region_id = (allregions) ? DM_STATS_REGIONS_ALL
@@ -4327,6 +4327,12 @@ static int _stats_create(CMD_ARGS)
 	uint64_t start = 0, len = 0, areas = 0, area_size = 0;
 	int64_t step = 0;
 
+	/* create does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
 	if (_switches[ALL_REGIONS_ARG]) {
 		log_error("Cannot use --allregions with create.");
 		return 0;
@@ -4361,12 +4367,6 @@ static int _stats_create(CMD_ARGS)
 			return _process_all(cmd, subcommand, argc, argv, 0, _stats_create);
 		}
 		name = argv[1];
-	}
-
-	/* create does not use a report */
-	if (_report) {
-		dm_report_free(_report);
-		_report = NULL;
 	}
 
 	if (_switches[AREAS_ARG])
@@ -4443,6 +4443,12 @@ static int _stats_delete(CMD_ARGS)
 	const char *program_id = DM_STATS_PROGRAM_ID;
 	int allregions = _switches[ALL_REGIONS_ARG];
 
+	/* delete does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
 	if (!_switches[REGION_ID_ARG] && !allregions) {
 		err("Please specify a region_id.");
 		return 0;
@@ -4460,12 +4466,6 @@ static int _stats_delete(CMD_ARGS)
 			return _process_all(cmd, subcommand, argc, argv, 0, _stats_delete);
 		}
 		name = argv[1];
-	}
-
-	/* delete does not use a report */
-	if (_report) {
-		dm_report_free(_report);
-		_report = NULL;
 	}
 
 	if (_switches[ALL_PROGRAMS_ARG])
@@ -4598,6 +4598,12 @@ static int _stats_print(CMD_ARGS)
 	unsigned clear = (unsigned) _switches[CLEAR_ARG];
 	int allregions = _switches[ALL_REGIONS_ARG];
 
+	/* print does not use a report */
+	if (_report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
+
 	if (!_switches[REGION_ID_ARG] && !allregions) {
 		err("Please specify a region_id.");
 		return 0;
@@ -4609,12 +4615,6 @@ static int _stats_print(CMD_ARGS)
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
 			return _process_all(cmd, subcommand, argc, argv, 0, _stats_print);
 		name = argv[1];
-	}
-
-	/* print does not use a report */
-	if (_report) {
-		dm_report_free(_report);
-		_report = NULL;
 	}
 
 	region_id = (uint64_t) _int_args[REGION_ID_ARG];
