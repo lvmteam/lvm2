@@ -638,6 +638,12 @@ static int _update_interval_times(void)
 	int r = 0;
 
 	/*
+	 * Clock shutdown for exit - nothing to do.
+	 */
+	if (_timer_fd == TIMER_STOPPED && !_cycle_timestamp)
+		return 1;
+
+	/*
          * Current timestamp. If _new_interval is set this is used as
          * the new cycle start timestamp.
 	 */
@@ -717,6 +723,9 @@ out:
 		if (_cycle_timestamp)
 			dm_timestamp_destroy(_cycle_timestamp);
 		dm_timestamp_destroy(this_timestamp);
+
+		/* Clear timestamp pointers to signal shutdown. */
+		_cycle_timestamp = this_timestamp = NULL;
 	}
 	return r;
 }
