@@ -1695,6 +1695,11 @@ static int _out_prefix_fn(const struct dm_config_node *cn, const char *line, voi
 		if (cfg_def->comment) {
 			int pos = 0;
 			while (_copy_one_line(cfg_def->comment, commentline, &pos, strlen(cfg_def->comment))) {
+				if ((commentline[0] == '#') && (strlen(commentline) == 1)) {
+					if (!out->tree_spec->withspaces)
+						continue;
+					commentline[0] = '\0';
+				}
 				fprintf(out->fp, "%s# %s\n", line, commentline);
 				/* withsummary prints only the first comment line. */
 				if (!out->tree_spec->withcomments)
