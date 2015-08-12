@@ -574,7 +574,7 @@ static int _read_cache_params(struct cmd_context *cmd,
 			      &lp->cache_mode,
 			      &lp->policy_name,
 			      &lp->policy_settings))
-		return_NULL;
+		return_0;
 
 	return 1;
 }
