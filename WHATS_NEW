@@ -1,5 +1,6 @@
 Version 2.02.128 - 
 ===================================
+  Fix lvmetad udev rules to not override SYSTEMD_WANTS, add the service instead.
 
 Version 2.02.127 - 10th August 2015
 ===================================
