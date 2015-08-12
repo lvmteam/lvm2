@@ -23,6 +23,7 @@ aux have_cache 1 3 0 || skip
 # FIXME: parallel cache metadata allocator is crashing when used value 8000!
 aux prepare_vg 5 80000
 
+aux lvmconf 'global/cache_disabled_features = [ "policy_smq" ]'
 
 #######################
 # Cache_Pool creation #

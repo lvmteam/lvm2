@@ -16,6 +16,8 @@ test -e LOCAL_LVMPOLLD && skip
 aux have_cache 1 3 0 || skip
 aux prepare_vg 3
 
+aux lvmconf 'global/cache_disabled_features = [ "policy_smq" ]'
+
 lvcreate --type cache-pool -an -v -L 2 -n cpool $vg
 lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
 lvcreate -n noncache -l 1 $vg
