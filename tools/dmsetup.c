@@ -4692,6 +4692,10 @@ static int _stats_report(CMD_ARGS)
 
       out:
 	dm_task_destroy(dmt);
+	if (!r && _report) {
+		dm_report_free(_report);
+		_report = NULL;
+	}
 	return r;
 }
 
@@ -5838,6 +5842,9 @@ doit:
 					goto_out;
 			}
 		}
+
+		if (r)
+			break;
 	} while (--_count);
 
 out:
