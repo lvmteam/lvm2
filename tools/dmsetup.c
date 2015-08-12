@@ -482,6 +482,14 @@ static void _destroy_split_name(struct dm_split_name *split_name)
  *  _update_interval_times() - Update timestamps and interval estimate.
  */
 
+/*
+ * Return the current interval number counting upwards from one.
+ */
+static uint64_t _interval_num(void)
+{
+	return 1 + (uint64_t) _int_args[COUNT_ARG] - _count;
+}
+
 #if HAVE_SYS_TIMERFD_H
 static int _start_timerfd_timer(void)
 {
@@ -639,7 +647,7 @@ static int _do_timer_wait(void)
 static int _update_interval_times(void)
 {
 	static struct dm_timestamp *this_timestamp = NULL;
-	uint64_t delta_t;
+	uint64_t delta_t, interval_num = _interval_num();
 	int r = 0;
 
 	/*
@@ -697,7 +705,9 @@ static int _update_interval_times(void)
 		_new_interval = 1;
 	}
 
-	log_debug("Checking for interval end, dt="FMTu64, delta_t);
+	log_debug("Interval     #%-4"PRIu64"     time delta: %12"
+		  PRIu64"ns", interval_num, delta_t);
+
 	if (_new_interval) {
 		/* Update timestamp and interval and clear _new_interval */
 		dm_timestamp_copy(_cycle_timestamp, this_timestamp);
@@ -708,14 +718,14 @@ static int _update_interval_times(void)
 		_mean_interval = ((double) delta_t + _mean_interval) / 2.0;
 
 		/*
-		 * Log interval duration, mean interval, the last interval
-		 * error and the difference between the mean and configured
-		 * intervals.
+		 * Log interval duration, mean duration and interval error.
 		 */
-		log_debug("Ending interval, I="FMTu64" Imean=%f, Ierr="FMTi64
-			  ", Emean=%.2f", _last_interval, _mean_interval,
-			  ((int64_t)_last_interval - (int64_t)_interval),
-			  _mean_interval - (double) _interval);
+		log_debug("Interval     #%-5"PRIu64" mean duration: %12.0fns, "
+			  "current err: "FMTi64"ns", interval_num,
+			  _mean_interval, ((int64_t)_last_interval
+					   - (int64_t)_interval));
+		log_debug("End interval #%-9"PRIu64"  duration: %12"PRIu64"ns",
+			  interval_num, _last_interval);
 	}
 
 	r = 1;
@@ -785,7 +795,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 		/* Update timestamps and handle end-of-interval accounting. */
 		_update_interval_times();
 
-		log_debug("Setting interval, I="FMTu64, _last_interval);
+		log_debug("Adjusted sample interval duration: %12"PRIu64"ns", _last_interval);
 		/* use measured approximation for calculations */
 		dm_stats_set_sampling_interval_ns(obj.stats, _last_interval);
 	}
