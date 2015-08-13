@@ -27,6 +27,7 @@ dmstats \(em device-mapper statistics management
 .br
 .B dmstats create
 .I device_name
+.RB [ \-\-alldevices ]
 .RB [[ \-\-areas
 .IR nr_areas ]
 .RB |[ \-\-areasize
@@ -43,7 +44,7 @@ dmstats \(em device-mapper statistics management
 .br
 .B dmstats delete
 .I device_name
-.RB [ \-\-force ]
+.RB [ \-\-alldevices ]
 .RB [ \-\-allregions
 .RB | \-\-regionid
 .IR id ]
@@ -115,9 +116,13 @@ when run as 'dmsetup stats'.
 
 When no device argument is given dmstats will by default operate on all
 device-mapper devices present. The \fBcreate\fP and \fBdelete\fP
-commands require the use of \fB--force\fP when used in this way.
+commands require the use of \fB--alldevices\fP when used in this way.
 
 .SH OPTIONS
+.TP
+.B \-\-alldevices
+If no device arguments are given allow operation on all devices when
+creating or deleting regions.
 .TP
 .B \-\-allprograms
 Include regions from all program IDs for list and report operations.
@@ -267,7 +272,7 @@ stdout.
 .TP
 .B delete
 .I [ device_name ]
-.RB [ \-\-force ]
+.RB [ \-\-alldevices ]
 .RB [ \-\-allregions
 .RB | \-\-regionid
 .IR id ]
@@ -282,7 +287,8 @@ of subsequent list, print, or report operations.
 All regions registered on a device may be removed using
 \fB\-\-allregions\fP.
 
-To remove all regions on all devices \fB\-\-force\fP must be used.
+To remove all regions on all devices both \fB--allregions\fP and
+\fB\-\-alldevices\fP must be used.
 .br
 .TP
 .B help
@@ -601,7 +607,7 @@ Created region: 0
 Delete all regions on all devices
 .br
 .br
-# dmstats delete --allregions --force
+# dmstats delete --alldevices --allregions
 .br
 .br
 

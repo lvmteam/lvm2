@@ -1,6 +1,7 @@
 Version 1.02.105 - 
 ===================================
   Add more arg validation for dm_tree_node_add_cache_target().
+  Add --alldevices switch to replace use of --force for stats create / delete.
 
 Version 1.02.104 - 10th August 2015
 ===================================

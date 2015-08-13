@@ -120,6 +120,7 @@ enum {
 	READ_ONLY = 0,
 	ADD_NODE_ON_CREATE_ARG,
 	ADD_NODE_ON_RESUME_ARG,
+	ALL_DEVICES_ARG,
 	ALL_PROGRAMS_ARG,
 	ALL_REGIONS_ARG,
 	AREAS_ARG,
@@ -4418,9 +4419,9 @@ static int _stats_create(CMD_ARGS)
 		name = names->name;
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG]) {
-			if (!_switches[FORCE_ARG]) {
-				log_error("Creating regions on all devices "
-					  "requires --force.");
+			if (!_switches[ALL_DEVICES_ARG]) {
+				log_error("Please specify device(s) or use "
+					  "--alldevices.");
 				return 0;
 			}
 			return _process_all(cmd, subcommand, argc, argv, 0, _stats_create);
@@ -4506,9 +4507,9 @@ static int _stats_delete(CMD_ARGS)
 		name = names->name;
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG]) {
-			if (!_switches[FORCE_ARG]) {
-				log_error("Deleting regions from all devices "
-					  "requires --force.");
+			if (!_switches[ALL_DEVICES_ARG]) {
+				log_error("Please specify device(s) or use "
+					  "--alldevices.");
 				return 0;
 			}
 			return _process_all(cmd, subcommand, argc, argv, 0, _stats_delete);
@@ -5355,6 +5356,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
 		{"readonly", 0, &ind, READ_ONLY},
+		{"alldevices", 0, &ind, ALL_DEVICES_ARG},
 		{"allprograms", 0, &ind, ALL_PROGRAMS_ARG},
 		{"allregions", 0, &ind, ALL_REGIONS_ARG},
 		{"areas", 1, &ind, AREAS_ARG},
@@ -5479,6 +5481,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 	optind = OPTIND_INIT;
 	while ((ind = -1, c = GETOPTLONG_FN(*argcp, *argvp, "cCfG:hj:m:M:no:O:rS:u:U:vy",
 					    long_options, NULL)) != -1) {
+		if (ind == ALL_DEVICES_ARG)
+			_switches[ALL_DEVICES_ARG]++;
 		if (ind == ALL_PROGRAMS_ARG)
 			_switches[ALL_PROGRAMS_ARG]++;
 		if (ind == ALL_REGIONS_ARG)
