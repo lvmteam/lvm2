@@ -4305,6 +4305,11 @@ static int _output_as_columns(struct dm_report *rh)
 	return 0;
 }
 
+int dm_report_is_empty(struct dm_report *rh)
+{
+	return dm_list_empty(&rh->rows) ? 1 : 0;
+}
+
 int dm_report_output(struct dm_report *rh)
 {
 	if (dm_list_empty(&rh->rows))

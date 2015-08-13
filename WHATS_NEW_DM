@@ -1,5 +1,11 @@
 Version 1.02.105 - 
 ===================================
+  Exit immediately if no device is supplied to dmsetup wipe_table.
+  Suppress dmsetup report headings when no data is output. (1.02.104)
+  Adjust dmsetup usage/help output selection to match command invoked.
+  Fix dmsetup -o all to select correct fields in splitname report.
+  Restructure internal dmsetup argument handling across all commands.
+  Add dm_report_is_empty() to indicate there is no data awaiting output.
   Add more arg validation for dm_tree_node_add_cache_target().
   Add --alldevices switch to replace use of --force for stats create / delete.
 

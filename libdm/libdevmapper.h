@@ -2396,6 +2396,11 @@ int dm_report_object_is_selected(struct dm_report *rh, void *object, int do_outp
  */
 int dm_report_compact_fields(struct dm_report *rh);
 
+/*
+ * Returns 1 if there is no data waiting to be output.
+ */
+int dm_report_is_empty(struct dm_report *rh);
+
 int dm_report_output(struct dm_report *rh);
 
 /*
