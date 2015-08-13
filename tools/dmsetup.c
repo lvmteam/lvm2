@@ -108,6 +108,11 @@ extern char *optarg;
 /* program_id used for dmstats-managed statistics regions */
 #define DM_STATS_PROGRAM_ID "dmstats"
 
+#define DMSETUP_CMD_NAME "dmsetup"
+#define LOSETUP_CMD_NAME "losetup"
+#define DMLOSETUP_CMD_NAME "dmlosetup"
+#define DMSTATS_CMD_NAME "dmstats"
+
 /*
  * We have only very simple switches ATM.
  */
@@ -4818,7 +4823,7 @@ static void _dmsetup_usage(FILE *out)
 	int i;
 
 	fprintf(out, "Usage:\n\n");
-	fprintf(out, "dmsetup [--version] [-h|--help [-c|-C|--columns]]\n"
+	fprintf(out, DMSETUP_CMD_NAME " [--version] [-h|--help [-c|-C|--columns]]\n"
 		"        [-v|--verbose [-v|--verbose ...]]\n"
 		"        [--checks] [--manglename <mangling_mode>]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs] [--inactive]\n"
@@ -4843,7 +4848,7 @@ static void _dmsetup_usage(FILE *out)
 static void _losetup_usage(FILE *out)
 {
 	fprintf(out, "Usage:\n\n");
-	fprintf(out, "losetup [-d|-a] [-e encryption] "
+	fprintf(out, LOSETUP_CMD_NAME " [-d|-a] [-e encryption] "
 		     "[-o offset] [-f|loop_device] [file]\n\n");
 }
 
@@ -5110,7 +5115,7 @@ static int _loop_table(char *table, size_t tlen, char *file,
 	sectors = size >> SECTOR_SHIFT;
 
 	if (_switches[VERBOSE_ARG])
-		fprintf(stderr, "losetup: set loop size to %llukB "
+		fprintf(stderr, LOSETUP_CMD_NAME ": set loop size to %llukB "
 			"(%llu sectors)\n", (long long unsigned) sectors >> 1,
 			(long long unsigned) sectors);
 
@@ -5413,13 +5418,13 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		return 1;
 	}
 
-	if (!strcmp(base, "losetup") || !strcmp(base, "dmlosetup")){
+	if (!strcmp(base, LOSETUP_CMD_NAME) || !strcmp(base, DMLOSETUP_CMD_NAME)){
 		r = _process_losetup_switches(base, argcp, argvp, dev_dir);
 		free(namebase);
 		return r;
 	}
 
-	if (!strcmp(base, "dmstats")) {
+	if (!strcmp(base, DMSTATS_CMD_NAME)) {
 		/* save the offset to the 'stats' in 'dmstats' */
 		stats_p = (*argvp)[0] + strlen(namebase) - strlen(base) + 2;
 		stats_c = (*argvp)[1]; /* stats command */
