@@ -501,6 +501,20 @@ The program ID value associated with this region.
 .br
 The auxiliary data value associated with this region.
 .br
+.HP
+.B interval_ns
+.br
+The estimated interval over which the current counter values have
+accumulated. The vaulue is reported as an interger expressed in units
+of nanoseconds.
+.br
+.HP
+.B interval
+.br
+The estimated interval over which the current counter values have
+accumulated. The value is reported as a real number in units of
+seconds.
+.br
 .SS Basic counters
 Basic counters provide access to the raw counter data from the kernel,
 allowing further processing to be carried out by another program.

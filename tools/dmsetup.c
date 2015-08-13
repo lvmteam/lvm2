@@ -3376,6 +3376,39 @@ static int _dm_stats_aux_data_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, (const char * const*) &aux_data);
 }
 
+static int _dm_stats_sample_interval_ns_disp(struct dm_report *rh,
+					     struct dm_pool *mem __attribute__((unused)),
+					     struct dm_report_field *field, const void *data,
+					     void *private __attribute__((unused)))
+{
+	/* FIXME: use internal interval estimate when supported by libdm */
+	return dm_report_field_uint64(rh, field, &_last_interval);
+}
+
+static int _dm_stats_sample_interval_disp(struct dm_report *rh,
+					  struct dm_pool *mem __attribute__((unused)),
+					  struct dm_report_field *field, const void *data,
+					  void *private __attribute__((unused)))
+{
+	char buf[64];
+	char *repstr;
+	double *sortval;
+
+	if (!(sortval = dm_pool_alloc(mem, sizeof(*sortval))))
+		return_0;
+
+	*sortval = (double)_last_interval / (double) NSEC_PER_SEC;
+
+	if (!dm_snprintf(buf, sizeof(buf), "%2.6f", *sortval))
+		return_0;
+
+	if (!(repstr = dm_pool_strdup(mem, buf)))
+		return_0;
+
+	dm_report_field_set_value(field, repstr, sortval);
+	return 1;
+}
+
 static int _dm_stats_rrqm_disp(struct dm_report *rh,
 			       struct dm_pool *mem __attribute__((unused)),
 			       struct dm_report_field *field, const void *data,
@@ -3917,6 +3950,8 @@ FIELD_F(STATS, SIZ, "ASize", 5, dm_stats_area_len, "area_len", "Area length.")
 FIELD_F(STATS, NUM, "#Areas", 6, dm_stats_area_count, "area_count", "Area count.")
 FIELD_F(STATS, STR, "ProgID", 6, dm_stats_program_id, "program_id", "Program ID.")
 FIELD_F(STATS, STR, "AuxDat", 6, dm_stats_aux_data, "aux_data", "Auxiliary data.")
+FIELD_F(STATS, NUM, "IntervalNSec", 10, dm_stats_sample_interval_ns, "interval_ns", "Sampling interval in nanoseconds.")
+FIELD_F(STATS, NUM, "Interval", 8, dm_stats_sample_interval, "interval", "Sampling interval.")
 
 /* Stats derived metrics */
 FIELD_F(STATS, NUM, "RRqM/s", 8, dm_stats_rrqm, "rrqm", "Read requests merged per second.")
