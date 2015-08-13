@@ -4381,7 +4381,9 @@ static uint64_t _nr_areas_from_step(uint64_t len, int64_t step)
 /*
  * Create a single region starting at start and spanning len sectors,
  * or, if the segments argument is no-zero create one region for each
- * segment present in the mapped device.
+ * segment present in the mapped device. Passing zero for segments,
+ * start, and length will create a single segment spanning the whole
+ * device.
  */
 static int _do_stats_create_regions(struct dm_stats *dms,
 				    const char *name, uint64_t start,
@@ -4390,7 +4392,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 				    const char *program_id,
 				    const char *aux_data)
 {
-	uint64_t this_start = start, this_len = len, region_id = UINT64_C(0);
+	uint64_t this_start, this_len, region_id = UINT64_C(0);
 	char *target_type, *params; /* unused */
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -4439,8 +4441,8 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			 * --start/--length arguments, or 0/0 for a default
 			 *  whole-device region).
 			 */
-			this_start = (segments) ? segment_start : this_start;
-			this_len = (segments) ? segment_len : this_len;
+			this_start = (segments) ? segment_start : start;
+			this_len = (segments) ? segment_len : len;
 			if (!dm_stats_create_region(dms, &region_id,
 						    this_start, this_len, step,
 						    program_id, aux_data)) {
