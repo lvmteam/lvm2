@@ -4216,7 +4216,7 @@ static int _stats_clear(CMD_ARGS)
 	}
 
 	if (!_switches[REGION_ID_ARG] && !_switches[ALL_REGIONS_ARG]) {
-		err("Please specify a region_id.");
+		err("Please specify a --regionid or use --allregions.");
 		return 0;
 	}
 
@@ -4499,7 +4499,7 @@ static int _stats_delete(CMD_ARGS)
 	}
 
 	if (!_switches[REGION_ID_ARG] && !allregions) {
-		err("Please specify a region_id.");
+		err("Please specify a --regionid or use --allregions.");
 		return 0;
 	}
 
@@ -4654,7 +4654,7 @@ static int _stats_print(CMD_ARGS)
 	}
 
 	if (!_switches[REGION_ID_ARG] && !allregions) {
-		err("Please specify a region_id.");
+		err("Please specify a --regionid or use --allregions.");
 		return 0;
 	}
 
