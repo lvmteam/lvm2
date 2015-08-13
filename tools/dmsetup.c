@@ -5832,7 +5832,7 @@ static int _do_report_wait(void)
 
 int main(int argc, char **argv)
 {
-	int r = 1;
+	int ret = 1, r;
 	const char *dev_dir;
 	const struct command *cmd;
 	const char *subcommand = NULL;
@@ -5975,8 +5975,11 @@ doit:
 		}
 
 		if (!r)
-			break;
+			goto_out;
 	} while (--_count);
+
+	/* Success */
+	ret = 0;
 
 out:
 	if (_report)
@@ -5990,5 +5993,5 @@ out:
 	if (_initial_timestamp)
 		dm_timestamp_destroy(_initial_timestamp);
 
-	return r;
+	return ret;
 }
