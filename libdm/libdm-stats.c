@@ -1335,10 +1335,25 @@ uint64_t dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
 	return 1;
 }
 
+uint64_t dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
+				  uint64_t region_id, uint64_t area_id)
+{
+	if (!dms || !dms->regions)
+		return_0;
+	*offset = dms->regions[region_id].step * area_id;
+}
+
 uint64_t dm_stats_get_current_area_start(const struct dm_stats *dms,
 					 uint64_t *start)
 {
 	return dm_stats_get_area_start(dms, start,
+				       dms->cur_region, dms->cur_area);
+}
+
+uint64_t dm_stats_get_current_area_offset(const struct dm_stats *dms,
+					  uint64_t *offset)
+{
+	return dm_stats_get_area_offset(dms, offset,
 				       dms->cur_region, dms->cur_area);
 }
 

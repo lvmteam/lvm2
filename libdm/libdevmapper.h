@@ -705,18 +705,26 @@ uint64_t dm_stats_get_region_area_len(const struct dm_stats *dms,
 				      uint64_t *area_len, uint64_t region_id);
 
 /*
- * Area properties: start and length.
+ * Area properties: start, offset and length.
  *
  * The area length is always equal to the area length of the region
  * that contains it and is obtained from dm_stats_get_region_area_len().
  *
- * The start offset of an area is a function of the area_id and the
- * containing region's start and area length.
+ * The start of an area is a function of the area_id and the containing
+ * region's start and area length: it gives the absolute offset into the
+ * containing device of the beginning of the area.
+ *
+ * The offset expresses the area's relative offset into the current
+ * region. I.e. the area start minus the start offset of the containing
+ * region.
  *
  * All values are returned in units of 512b sectors.
  */
 uint64_t dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
 				 uint64_t region_id, uint64_t area_id);
+
+uint64_t dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
+				  uint64_t region_id, uint64_t area_id);
 
 /*
  * Retrieve program_id and aux_data for a specific region. Only valid
@@ -875,6 +883,9 @@ uint64_t dm_stats_get_current_region_area_len(const struct dm_stats *dms,
  */
 uint64_t dm_stats_get_current_area_start(const struct dm_stats *dms,
 					 uint64_t *start);
+
+uint64_t dm_stats_get_current_area_offset(const struct dm_stats *dms,
+					  uint64_t *offset);
 
 uint64_t dm_stats_get_current_area_len(const struct dm_stats *dms,
 				       uint64_t *start);
