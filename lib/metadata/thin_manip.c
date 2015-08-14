@@ -63,6 +63,10 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 
 	tmsg->type = type;
 
+	/* If the 1st message is add in non-read-only mode, modify transaction_id */
+	if (!no_update && dm_list_empty(&pool_seg->thin_messages))
+		pool_seg->transaction_id++;
+
 	dm_list_add(&pool_seg->thin_messages, &tmsg->list);
 
 	log_debug_metadata("Added %s message.",
@@ -475,9 +479,6 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	}
 
 	dm_list_init(&(first_seg(lv)->thin_messages));
-
-	/* thin-pool target transaction is finished, increase lvm2 TID */
-	first_seg(lv)->transaction_id++;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;

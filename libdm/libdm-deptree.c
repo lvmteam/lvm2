@@ -1586,7 +1586,7 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 	}
 
 	/* Error if there are no stacked messages or id mismatches */
-	if (trans_id != (seg->transaction_id - have_messages)) {
+	if ((trans_id + 1) != seg->transaction_id) {
 		log_error("Thin pool %s transaction_id is %" PRIu64 ", while expected %" PRIu64 ".",
 			  _node_name(dnode), trans_id, seg->transaction_id - have_messages);
 		return 0;

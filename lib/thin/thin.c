@@ -295,7 +295,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	}
 
 	if (!dm_tree_node_add_thin_pool_target(node, len,
-					       seg->transaction_id + (laopts->send_messages ? 1 : 0),
+					       seg->transaction_id,
 					       metadata_dlid, pool_dlid,
 					       seg->chunk_size, seg->low_water_mark,
 					       seg->zero_new_blocks ? 0 : 1))
@@ -345,7 +345,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 				 */
 				if (!lv_thin_pool_transaction_id(seg->lv, &transaction_id))
 					return_0; /* Thin pool should exist and work */
-				if (transaction_id != seg->transaction_id) {
+				if ((transaction_id + 1) != seg->transaction_id) {
 					log_error("Can't create snapshot %s as origin %s is not suspended.",
 						  lmsg->u.lv->name, origin->name);
 					return 0;
@@ -373,11 +373,11 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	if (!dm_list_empty(&seg->thin_messages)) {
 		/* Messages were passed, modify transaction_id as the last one */
-		log_debug_activation("Thin pool set transaction id %" PRIu64 ".", seg->transaction_id + 1);
+		log_debug_activation("Thin pool set transaction id %" PRIu64 ".", seg->transaction_id);
 		if (!dm_tree_node_add_thin_pool_message(node,
 							DM_THIN_MESSAGE_SET_TRANSACTION_ID,
-							seg->transaction_id,
-							seg->transaction_id + 1))
+							seg->transaction_id - 1,
+							seg->transaction_id))
 			return_0;
 	}
 
