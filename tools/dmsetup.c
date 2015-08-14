@@ -4456,7 +4456,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 				    const char *program_id,
 				    const char *aux_data)
 {
-	uint64_t this_start, this_len, region_id = UINT64_C(0);
+	uint64_t this_start = 0, this_len = 0, region_id = UINT64_C(0);
 	char *target_type, *params; /* unused */
 	struct dm_task *dmt;
 	struct dm_info info;
@@ -4506,7 +4506,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			 *  whole-device region).
 			 */
 			this_start = (segments) ? segment_start : start;
-			this_len = (segments) ? segment_len : len;
+			this_len = (segments) ? segment_len : this_len;
 			if (!dm_stats_create_region(dms, &region_id,
 						    this_start, this_len, step,
 						    program_id, aux_data)) {
