@@ -3915,7 +3915,7 @@ static const struct dm_report_object_type _report_types[] = {
 	{ DR_TREE, "Mapped Device Relationship Information", "tree_", _tree_get_obj },
 	{ DR_NAME, "Mapped Device Name Components", "splitname_", _split_name_get_obj },
 	{ DR_STATS, "Mapped Device Statistics","stats_", _stats_get_obj },
-	{ DR_STATS_META, "Mapped Device Statistics Region Information","stats_region_", _stats_get_obj },
+	{ DR_STATS_META, "Mapped Device Statistics Region Information","region_", _stats_get_obj },
 	{ 0, "", "", NULL }
 };
 
