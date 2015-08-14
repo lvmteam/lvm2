@@ -77,7 +77,7 @@ grep expected out
 check inactive $vg pool_tmeta
 
 # Transaction_id is higher by 1
-fake_metadata_ 10 3 >data
+fake_metadata_ 10 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 not vgchange -ay $vg 2>&1 | tee out
