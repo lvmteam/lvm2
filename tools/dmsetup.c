@@ -3877,11 +3877,11 @@ static void *_stats_get_obj(void *obj)
 }
 
 static const struct dm_report_object_type _report_types[] = {
-	{ DR_TASK, "Mapped Device Name", "", _task_get_obj },
-	{ DR_INFO, "Mapped Device Information", "", _info_get_obj },
-	{ DR_DEPS, "Mapped Device Relationship Information", "", _deps_get_obj },
-	{ DR_TREE, "Mapped Device Relationship Information", "", _tree_get_obj },
-	{ DR_NAME, "Mapped Device Name Components", "", _split_name_get_obj },
+	{ DR_TASK, "Mapped Device Name", "name_", _task_get_obj },
+	{ DR_INFO, "Mapped Device Information", "info_", _info_get_obj },
+	{ DR_DEPS, "Mapped Device Relationship Information", "deps_", _deps_get_obj },
+	{ DR_TREE, "Mapped Device Relationship Information", "tree_", _tree_get_obj },
+	{ DR_NAME, "Mapped Device Name Components", "splitname_", _split_name_get_obj },
 	{ DR_STATS, "Mapped Device Statistics","stats_", _stats_get_obj },
 	{ DR_STATS_META, "Mapped Device Statistics Region Information","stats_region_", _stats_get_obj },
 	{ 0, "", "", NULL }
