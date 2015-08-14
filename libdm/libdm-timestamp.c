@@ -34,7 +34,6 @@
 #ifdef HAVE_REALTIME
 
 #include <time.h>
-#include <bits/time.h>
 
 struct dm_timestamp {
 	struct timespec t;
