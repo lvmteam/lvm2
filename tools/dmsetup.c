@@ -3882,8 +3882,8 @@ static const struct dm_report_object_type _report_types[] = {
 	{ DR_DEPS, "Mapped Device Relationship Information", "", _deps_get_obj },
 	{ DR_TREE, "Mapped Device Relationship Information", "", _tree_get_obj },
 	{ DR_NAME, "Mapped Device Name Components", "", _split_name_get_obj },
-	{ DR_STATS, "Mapped Device Statistics","", _stats_get_obj },
-	{ DR_STATS_META, "Mapped Device Statistics Region Information","", _stats_get_obj },
+	{ DR_STATS, "Mapped Device Statistics","stats_", _stats_get_obj },
+	{ DR_STATS_META, "Mapped Device Statistics Region Information","stats_region_", _stats_get_obj },
 	{ 0, "", "", NULL }
 };
 
@@ -4000,7 +4000,7 @@ static const char *splitname_report_options = "vg_name,lv_name,lv_layer";
 #define WR_STATS "writes,writes_merged,write_sectors,write_nsecs,total_wr_nsecs"
 #define IO_STATS "in_progress,io_nsecs,weighted_io_nsecs"
 #define METRICS "rrqm,wrqm,rs,ws,rsize_sec,wsize_sec,arqsz,qusz,util,await,r_await,w_await"
-static const char *_stats_default_report_options = DEV_INFO_STATS ",area_id," METRICS;
+static const char *_stats_default_report_options = DEV_INFO_STATS ",area_id,area_start,area_len," METRICS;
 static const char *_stats_list_options = "name,region_id,region_start,region_len,area_len,area_count,program_id";
 
 static int _report_init(const struct command *cmd, const char *subcommand)
