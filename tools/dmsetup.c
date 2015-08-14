@@ -261,7 +261,6 @@ static struct dm_timestamp *_cycle_timestamp = NULL;
 static uint64_t _interval = 0; /* configured interval in nsecs */
 static uint64_t _new_interval = 0; /* flag top-of-interval */
 static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
-static double _mean_interval = 0.0; /* mean sample interval. */
 static int _timer_fd = -1; /* timerfd file descriptor. */
 
 /* Invalid fd value used to signal end-of-reporting. */
@@ -739,7 +738,6 @@ static int _update_interval_times(void)
 
 		/* Pretend we have the configured interval. */
 		delta_t = _interval;
-		_mean_interval = (double) delta_t;
 
 		/* start the first cycle */
 		log_debug("Beginning first interval");
@@ -755,16 +753,11 @@ static int _update_interval_times(void)
 		_last_interval = delta_t;
 		_new_interval = 0;
 
-		/* Track mean interval estimate. */
-		_mean_interval = ((double) delta_t + _mean_interval) / 2.0;
-
 		/*
-		 * Log interval duration, mean duration and interval error.
+		 * Log interval duration and current error.
 		 */
-		log_debug("Interval     #%-5"PRIu64" mean duration: %12.0fns, "
-			  "current err: "FMTi64"ns", interval_num,
-			  _mean_interval, ((int64_t)_last_interval
-					   - (int64_t)_interval));
+		log_debug("Interval     #%-5"PRIu64"   current err: %12"PRIi64"ns",
+			  interval_num, ((int64_t)_last_interval - (int64_t)_interval));
 		log_debug("End interval #%-9"PRIu64"  duration: %12"PRIu64"ns",
 			  interval_num, _last_interval);
 	}
