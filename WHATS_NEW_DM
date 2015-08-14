@@ -1,5 +1,9 @@
 Version 1.02.105 - 
 ===================================
+  Fix 'stats list -o all' segfault
+  Separate statistics fields from region information fields
+  Add interval and interval_ns fields to DR_STATS reports.
+  Do not include internal glibc headers in libdm-timestamp.c (1.02.104)
   Exit immediately if no device is supplied to dmsetup wipe_table.
   Suppress dmsetup report headings when no data is output. (1.02.104)
   Adjust dmsetup usage/help output selection to match command invoked.
