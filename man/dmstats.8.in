@@ -63,6 +63,8 @@ dmstats \(em device-mapper statistics management
 .RB [ \-\-units
 .IR units ]
 .RB [ \-\-nosuffix ]
+.RB [ \-\-nosuffix ]
+.RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]
 .br
 .B dmstats print
 .RI [ device_name ]
@@ -302,11 +304,15 @@ the list of report fields.
 .RI [ device_name ]
 .RB [ \-\-allprograms ]
 .RB [ \-\-programid
+.RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]]
 .IR id ]
 .br
 List the statistics regions registered on the device. If the
 \fB\-\-allprograms\fP switch is given all regions will be listed
 regardless of region program ID values.
+
+If \fB\-v\fP or \fB\-\-verbose\fP is given the report will include
+a row of information for each area contained in each region displayed.
 .br
 .TP
 .B print
