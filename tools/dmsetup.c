@@ -4456,7 +4456,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 				    const char *program_id,
 				    const char *aux_data)
 {
-	uint64_t this_start = 0, this_len = 0, region_id = UINT64_C(0);
+	uint64_t this_start = 0, this_len = len, region_id = UINT64_C(0);
 	char *target_type, *params; /* unused */
 	struct dm_task *dmt;
 	struct dm_info info;
