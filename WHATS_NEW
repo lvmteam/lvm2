@@ -1,10 +1,9 @@
 Version 2.02.128 - 
 ===================================
   Check for valid cache mode in validation of cache segment.
-  Enhance internal API cache_set_mode() and cache_set_policy().
-  Enhance toollib's get_cache_params().
-  Runtime detect presence of cache smq policy.
-  Add demo cache-mq  and cache-smq profiles.
+  Change internal interface handling cache mode and policy.
+  When no cache policy specified, prefer smq (if available) over mq.
+  Add demo cache-mq and cache-smq profiles.
   Add cmd profilable allocation/cache_policy,cache_settings,cache_mode.
   Require cache_check 0.5.4 for use of --clear-needs-check-flag.
   Fix lvmetad udev rules to not override SYSTEMD_WANTS, add the service instead.
