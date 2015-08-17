@@ -3425,6 +3425,17 @@ static int _dm_stats_aux_data_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, (const char * const *) &aux_data);
 }
 
+static int _dm_stats_precise_disp(struct dm_report *rh,
+				  struct dm_pool *mem __attribute__((unused)),
+				  struct dm_report_field *field, const void *data,
+				  void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	int precise;
+	precise = dm_stats_get_current_region_precise_timestamps(dms);
+	return dm_report_field_int(rh, field, (const int *) &precise);
+}
+
 static int _dm_stats_rrqm_disp(struct dm_report *rh,
 			       struct dm_pool *mem __attribute__((unused)),
 			       struct dm_report_field *field, const void *data,
@@ -4021,6 +4032,7 @@ FIELD_F(STATS_META, SIZ, "AOff", 5, dm_stats_area_offset, "area_offset", "Area o
 FIELD_F(STATS_META, NUM, "#Areas", 3, dm_stats_area_count, "area_count", "Area count.")
 FIELD_F(STATS_META, STR, "ProgID", 6, dm_stats_program_id, "program_id", "Program ID.")
 FIELD_F(STATS_META, STR, "AuxDat", 6, dm_stats_aux_data, "aux_data", "Auxiliary data.")
+FIELD_F(STATS_META, STR, "Precise", 5, dm_stats_precise, "precise", "Set if the nanosecond precision timers are enabled.")
 {0, 0, 0, 0, "", "", NULL, NULL},
 /* *INDENT-ON* */
 };

@@ -1,5 +1,6 @@
 Version 1.02.106 -
 ===================================
+  Add 'precise' column to statistics reports.
   Add --precise switch to 'dmstats create' to request nanosecond counters.
   Add precise argument to dm_stats_create_region().
   Add support to libdm-stats for precise_timestamps
