@@ -1,5 +1,6 @@
 Version 2.02.128 - 
 ===================================
+  Allocation setting cache_pool_cachemode is replaced by cache_mode.
   Don't attempt to close config file that couldn't be opened.
   Check for valid cache mode in validation of cache segment.
   Change internal interface handling cache mode and policy.

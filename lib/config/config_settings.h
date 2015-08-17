@@ -472,7 +472,8 @@ cfg(allocation_cache_mode_CFG, "cache_mode", allocation_CFG_SECTION, CFG_PROFILA
 	"writethrough - Data blocks are immediately written from\n"
 	"the cache to disk.\n"
 	"writeback - Data blocks are written from the cache back\n"
-	"to disk after some delay to improve performance.\n")
+	"to disk after some delay to improve performance.\n"
+	"This setting replaces allocation/cache_pool_cachemode.\n")
 
 cfg(allocation_cache_policy_CFG, "cache_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, 0, vsn(2, 2, 128), NULL, 0, NULL,
 	"The default cache policy used for new cache volume.\n"
