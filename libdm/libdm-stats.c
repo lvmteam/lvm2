@@ -504,6 +504,9 @@ out:
 
 static uint64_t _nr_areas(uint64_t len, uint64_t step)
 {
+	/* Default is one area. */
+	if (!len || !step)
+		return 1;
 	/*
 	 * drivers/md/dm-stats.c::message_stats_create()
 	 * A region may be sub-divided into areas with their own counters.
