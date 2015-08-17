@@ -434,6 +434,34 @@ int lv_is_cache_origin(const struct logical_volume *lv)
 	return seg && lv_is_cache(seg->lv) && !lv_is_pending_delete(seg->lv) && (seg_lv(seg, 0) == lv);
 }
 
+static const char *_get_default_cache_policy(struct cmd_context *cmd)
+{
+	const struct segment_type *segtype = get_segtype_from_string(cmd, "cache");
+	unsigned attr = ~0;
+        const char *def = NULL;
+
+	if (!segtype ||
+	    !segtype->ops->target_present ||
+	    !segtype->ops->target_present(cmd, NULL, &attr)) {
+		log_warn("WARNING: Cannot detect default cache policy, using \""
+			 DEFAULT_CACHE_POLICY "\".");
+		return DEFAULT_CACHE_POLICY;
+	}
+
+	if (attr & CACHE_FEATURE_POLICY_SMQ)
+		def = "smq";
+	else if (attr & CACHE_FEATURE_POLICY_MQ)
+		def = "mq";
+	else {
+		log_error("Default cache policy is not available.");
+		return NULL;
+	}
+
+	log_debug_metadata("Detected default cache_policy \"%s\".", def);
+
+	return def;
+}
+
 int cache_set_policy(struct lv_segment *seg, const char *name,
 		     const struct dm_config_tree *settings)
 {
@@ -451,8 +479,11 @@ int cache_set_policy(struct lv_segment *seg, const char *name,
 			log_error("Failed to duplicate policy name.");
 			return 0;
 		}
-	} else if (!seg->policy_name && passed_seg_is_cache)
-		seg->policy_name = find_config_tree_str(seg->lv->vg->cmd, allocation_cache_policy_CFG, NULL);
+	} else if (!seg->policy_name && passed_seg_is_cache) {
+		if (!(seg->policy_name = find_config_tree_str(seg->lv->vg->cmd, allocation_cache_policy_CFG, NULL)) &&
+		    !(seg->policy_name = _get_default_cache_policy(seg->lv->vg->cmd)))
+			return_0;
+	}
 
 	if (settings) {
 		if (!seg->policy_name) {

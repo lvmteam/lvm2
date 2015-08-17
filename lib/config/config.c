@@ -2419,27 +2419,3 @@ int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, st
 {
 	return DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
 }
-
-const char *get_default_allocation_cache_policy_CFG(struct cmd_context *cmd, struct profile *profile)
-{
-	const struct segment_type *segtype = get_segtype_from_string(cmd, "cache");
-	unsigned attr = ~0;
-
-	if (!segtype ||
-	    !segtype->ops->target_present ||
-	    !segtype->ops->target_present(cmd, NULL, &attr)) {
-		log_warn("WARNING: Cannot detect default cache policy, using \""
-			 DEFAULT_CACHE_POLICY "\".");
-		return DEFAULT_CACHE_POLICY;
-	}
-
-	if (attr & CACHE_FEATURE_POLICY_SMQ)
-		return "smq";
-
-	if (attr & CACHE_FEATURE_POLICY_MQ)
-		return "mq";
-
-	log_warn("WARNING: Default cache policy not available.");
-
-	return NULL;
-}
