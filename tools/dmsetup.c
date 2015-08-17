@@ -48,11 +48,11 @@
 #  include <sys/ioctl.h>
 #endif
 
-#if HAVE_SYS_TIMERFD_H
+#ifdef HAVE_SYS_TIMERFD_H
 # include <sys/timerfd.h>
 #endif
 
-#if HAVE_TERMIOS_H
+#ifdef HAVE_TERMIOS_H
 #  include <termios.h>
 #endif
 
@@ -532,7 +532,7 @@ static uint64_t _interval_num(void)
 	return 1 + (uint64_t) _int_args[COUNT_ARG] - _count;
 }
 
-#if HAVE_SYS_TIMERFD_H
+#ifdef HAVE_SYS_TIMERFD_H
 static int _start_timerfd_timer(void)
 {
 	struct itimerspec interval_timer;
