@@ -573,17 +573,24 @@ static int _start_timerfd_timer(void)
 static int _do_timerfd_wait(void)
 {
 	uint64_t expired;
+	ssize_t bytes;
 
 	if (_timer_fd < 0)
 		return 0;
 
 	/* read on timerfd returns a uint64_t in host byte order. */
-	if (read(_timer_fd, &expired, sizeof(expired)) < 0) {
+	bytes = read(_timer_fd, &expired, sizeof(expired));
+
+	if (bytes < 0) {
 		/* EBADF from invalid timerfd or EINVAL from too small buffer. */
 		log_error("Interval timer wait failed: %s",
 			  strerror(errno));
 		return 0;
 	}
+
+	/* read(2) on a timerfd descriptor is guaranteed to return 8 bytes. */
+	if (bytes != 8)
+		log_error("Unexepcted byte count on timerfd read: %d", bytes);
 
 	/* FIXME: attempt to rebase clock? */
 	if (expired > 1)
