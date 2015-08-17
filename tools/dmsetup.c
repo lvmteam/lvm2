@@ -5964,7 +5964,8 @@ unknown:
 	if (cmd->has_subcommands) {
 		subcommand = argv[0];
 		argc--, argv++;
-	}
+	} else
+		subcommand = (char *) "";
 
 	if (_switches[COLS_ARG] && !_report_init(cmd, subcommand))
 		goto out;
