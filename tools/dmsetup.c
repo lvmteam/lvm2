@@ -4434,6 +4434,10 @@ static int _size_from_string(char *argptr, uint64_t *size, const char *name)
  */
 static uint64_t _nr_areas_from_step(uint64_t len, int64_t step)
 {
+	/* Default is one area. */
+	if (!step || !len)
+		return 1;
+
 	/* --areas */
 	if (step < 0)
 		return (uint64_t)(-step);
