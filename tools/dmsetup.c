@@ -3409,7 +3409,7 @@ static int _dm_stats_program_id_disp(struct dm_report *rh,
 	const char *program_id;
 	if (!(program_id = dm_stats_get_current_region_program_id(dms)))
 		return_0;
-	return dm_report_field_string(rh, field, (const char * const*) &program_id);
+	return dm_report_field_string(rh, field, (const char * const *) &program_id);
 }
 
 static int _dm_stats_aux_data_disp(struct dm_report *rh,
@@ -3421,7 +3421,7 @@ static int _dm_stats_aux_data_disp(struct dm_report *rh,
 	const char *aux_data;
 	if (!(aux_data = dm_stats_get_current_region_aux_data(dms)))
 		return_0;
-	return dm_report_field_string(rh, field, (const char * const*) &aux_data);
+	return dm_report_field_string(rh, field, (const char * const *) &aux_data);
 }
 
 static int _dm_stats_rrqm_disp(struct dm_report *rh,
