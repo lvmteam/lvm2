@@ -1328,9 +1328,10 @@ int dm_stats_get_current_region_area_len(const struct dm_stats *dms,
 int dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
 			    uint64_t region_id, uint64_t area_id)
 {
-	struct dm_stats_region *region = &dms->regions[region_id];
+	struct dm_stats_region *region;
 	if (!dms || !dms->regions)
 		return_0;
+	region = &dms->regions[region_id];
 	*start = region->start + region->step * area_id;
 	return 1;
 }
