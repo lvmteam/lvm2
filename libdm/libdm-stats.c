@@ -1489,3 +1489,15 @@ const char *dm_stats_get_current_region_aux_data(const struct dm_stats *dms)
 {
 	return dm_stats_get_region_aux_data(dms, dms->cur_region);
 }
+
+int dm_stats_get_region_precise_timestamps(const struct dm_stats *dms,
+					   uint64_t region_id)
+{
+	struct dm_stats_region *region = &dms->regions[region_id];
+	return region->timescale == 1;
+}
+
+int dm_stats_get_current_region_precise_timestamps(const struct dm_stats *dms)
+{
+	return dm_stats_get_region_precise_timestamps(dms, dms->cur_region);
+}

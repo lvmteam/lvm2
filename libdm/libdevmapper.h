@@ -480,6 +480,22 @@ int dm_message_supports_precise_timestamps(void);
  */
 int dm_stats_driver_supports_precise(void);
 
+/*
+ * Returns 1 if the specified region has the precise_timestamps feature
+ * enabled (i.e. produces nanosecond-precision counter values) or 0 for
+ * a region using the default milisecond precision.
+ */
+int dm_stats_get_region_precise_timestamps(const struct dm_stats *dms,
+					   uint64_t region_id);
+
+/*
+ * Returns 1 if the region at the current cursor location has the
+ * precise_timestamps feature enabled (i.e. produces
+ * nanosecond-precision counter values) or 0 for a region using the
+ * default milisecond precision.
+ */
+int dm_stats_get_current_region_precise_timestamps(const struct dm_stats *dms);
+
 #define DM_STATS_ALL_PROGRAMS ""
 /*
  * Parse the response from a @stats_list message. dm_stats_list will
