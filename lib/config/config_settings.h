@@ -474,13 +474,13 @@ cfg(allocation_cache_mode_CFG, "cache_mode", allocation_CFG_SECTION, CFG_DEFAULT
 	"writeback - Data blocks are written from the cache back\n"
 	"to disk after some delay to improve performance.\n")
 
-cfg_runtime(allocation_cache_policy_CFG, "cache_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, vsn(2, 2, 127), 0, NULL,
+cfg_runtime(allocation_cache_policy_CFG, "cache_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, vsn(2, 2, 128), 0, NULL,
 	"The default cache policy used for new cache volume.\n"
-	"Generally available policies are: mq, smq.\n"
-	"mq  - Multiqueue policy with 88 bytes per block\n"
-	"smq - Stochastic multique with 25 bytes per block (kernel >= 4.2).\n")
+	"For the kernel 4.2 and newer the default policy is smq\n"
+	"(Stochastic multique), otherwise the older mq (Multiqueue),\n"
+	"policy is selected.\n")
 
-cfg_section(allocation_cache_settings_CFG_SECTION, "cache_settings", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(2, 2, 127), 0, NULL,
+cfg_section(allocation_cache_settings_CFG_SECTION, "cache_settings", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(2, 2, 128), 0, NULL,
 	"Individual settings for policies.\n"
 	"See the help for individual policies for more info.\n")
 
