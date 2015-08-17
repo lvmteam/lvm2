@@ -1,5 +1,6 @@
 Version 2.02.128 - 
 ===================================
+  Don't attempt to close config file that couldn't be opened.
   Check for valid cache mode in validation of cache segment.
   Change internal interface handling cache mode and policy.
   When no cache policy specified, prefer smq (if available) over mq.

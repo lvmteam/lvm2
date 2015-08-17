@@ -123,6 +123,7 @@ void dev_flush(struct device *dev);
 
 struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct dm_str_list *alias, int use_malloc);
+void dev_destroy_file(struct device *dev);
 
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);

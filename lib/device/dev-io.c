@@ -586,12 +586,8 @@ static void _close(struct device *dev)
 
 	log_debug_devs("Closed %s", dev_name(dev));
 
-	if (dev->flags & DEV_ALLOCED) {
-		dm_free((void *) dm_list_item(dev->aliases.n, struct dm_str_list)->
-			 str);
-		dm_free(dev->aliases.n);
-		dm_free(dev);
-	}
+	if (dev->flags & DEV_ALLOCED)
+		dev_destroy_file(dev);
 }
 
 static int _dev_close(struct device *dev, int immediate)

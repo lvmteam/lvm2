@@ -71,6 +71,16 @@ static void _dev_init(struct device *dev, int max_error_count)
 	dm_list_init(&dev->open_list);
 }
 
+void dev_destroy_file(struct device *dev)
+{
+	if (!(dev->flags & DEV_ALLOCED))
+		return;
+
+	dm_free((void *) dm_list_item(dev->aliases.n, struct dm_str_list)->str);
+	dm_free(dev->aliases.n);
+	dm_free(dev);
+}
+
 struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct dm_str_list *alias, int use_malloc)
 {

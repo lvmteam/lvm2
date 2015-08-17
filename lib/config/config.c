@@ -582,8 +582,11 @@ int config_file_read(struct dm_config_tree *cft)
 		if (!(cf->dev = dev_create_file(filename, NULL, NULL, 1)))
 			return_0;
 
-		if (!dev_open_readonly_buffered(cf->dev))
+		if (!dev_open_readonly_buffered(cf->dev)) {
+			dev_destroy_file(cf->dev);
+			cf->dev = NULL;
 			return_0;
+		}
 	}
 
 	r = config_file_read_fd(cft, cf->dev, 0, (size_t) info.st_size, 0, 0,
