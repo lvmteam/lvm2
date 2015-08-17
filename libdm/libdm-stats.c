@@ -1341,6 +1341,7 @@ uint64_t dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
 	if (!dms || !dms->regions)
 		return_0;
 	*offset = dms->regions[region_id].step * area_id;
+	return 1;
 }
 
 uint64_t dm_stats_get_current_area_start(const struct dm_stats *dms,
