@@ -63,8 +63,9 @@ vgcreate -s 1M $vg $(cat DEVICES)
 # Testing dmeventd autoresize
 lvcreate -L200M -V500M -n thin -T $vg/pool 2>&1 | tee out
 not grep "WARNING: Sum" out
+lvcreate -V2M -n thin2 $vg/pool
 lvcreate -L2M -n $lv1 $vg
-lvchange -an $vg/thin $vg/pool
+lvchange -an $vg/thin $vg/thin2 $vg/pool
 
 # Prepare some fake metadata with unmatching id
 # Transaction_id is lower by 1 and there are no message -> ERROR
@@ -77,7 +78,7 @@ grep expected out
 check inactive $vg pool_tmeta
 
 # Transaction_id is higher by 1
-fake_metadata_ 10 2 >data
+fake_metadata_ 10 3 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
 not vgchange -ay $vg 2>&1 | tee out
@@ -86,7 +87,7 @@ grep expected out
 check inactive $vg pool_tmeta
 
 # Prepare some fake metadata prefilled to ~81% (>70%)
-fake_metadata_ 400 1 >data
+fake_metadata_ 400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
