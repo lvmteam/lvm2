@@ -485,7 +485,7 @@ cfg_section(allocation_cache_settings_CFG_SECTION, "cache_settings", allocation_
 	"Individual settings for policies.\n"
 	"See the help for individual policies for more info.\n")
 
-cfg_section(policy_settings_CFG_SUBSECTION, "policy_settings", allocation_cache_settings_CFG_SECTION, CFG_NAME_VARIABLE | CFG_SECTION_NO_CHECK | CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(2, 2, 127), 0, NULL,
+cfg_section(policy_settings_CFG_SUBSECTION, "policy_settings", allocation_cache_settings_CFG_SECTION, CFG_NAME_VARIABLE | CFG_SECTION_NO_CHECK | CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(2, 2, 128), 0, NULL,
 	"Replace this subsection name with a policy name.\n"
 	"Multiple subsections for different policies can be created.\n")
 
@@ -910,7 +910,7 @@ cfg_array(global_thin_disabled_features_CFG, "thin_disabled_features", global_CF
 	"Example:\n"
 	"thin_disabled_features = [ \"discards\", \"block_size\" ]\n")
 
-cfg_array(global_cache_disabled_features_CFG, "cache_disabled_features", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 126), NULL, 0, NULL,
+cfg_array(global_cache_disabled_features_CFG, "cache_disabled_features", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 128), NULL, 0, NULL,
 	"Features to not use in the cache driver.\n"
 	"This can be helpful for testing, or to avoid\n"
 	"using a feature that is causing problems.\n"

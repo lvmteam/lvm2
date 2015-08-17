@@ -1,4 +1,4 @@
-Version 1.02.105 - 
+Version 1.02.105 - 17th August 2015
 ===================================
   Fix 'dmstats list -o all' segfault.
   Separate dmstats statistics fields from region information fields.
