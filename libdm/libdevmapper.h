@@ -697,12 +697,14 @@ int dm_stats_set_program_id(struct dm_stats *dms, int allow_empty,
  *
  * All values are returned in units of 512b sectors.
  */
-uint64_t dm_stats_get_region_start(const struct dm_stats *dms, uint64_t *start,
-				   uint64_t region_id);
-uint64_t dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
-				 uint64_t region_id);
-uint64_t dm_stats_get_region_area_len(const struct dm_stats *dms,
-				      uint64_t *area_len, uint64_t region_id);
+int dm_stats_get_region_start(const struct dm_stats *dms, uint64_t *start,
+			      uint64_t region_id);
+
+int dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
+			    uint64_t region_id);
+
+int dm_stats_get_region_area_len(const struct dm_stats *dms,
+				 uint64_t *len, uint64_t region_id);
 
 /*
  * Area properties: start, offset and length.
@@ -720,11 +722,11 @@ uint64_t dm_stats_get_region_area_len(const struct dm_stats *dms,
  *
  * All values are returned in units of 512b sectors.
  */
-uint64_t dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
-				 uint64_t region_id, uint64_t area_id);
+int dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
+			    uint64_t region_id, uint64_t area_id);
 
-uint64_t dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
-				  uint64_t region_id, uint64_t area_id);
+int dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
+			     uint64_t region_id, uint64_t area_id);
 
 /*
  * Retrieve program_id and aux_data for a specific region. Only valid
@@ -864,14 +866,14 @@ uint64_t dm_stats_get_current_area(const struct dm_stats *dms);
  *
  * All values are returned in units of 512b sectors.
  */
-uint64_t dm_stats_get_current_region_start(const struct dm_stats *dms,
-					   uint64_t *start);
+int dm_stats_get_current_region_start(const struct dm_stats *dms,
+				      uint64_t *start);
 
-uint64_t dm_stats_get_current_region_len(const struct dm_stats *dms,
-					 uint64_t *len);
+int dm_stats_get_current_region_len(const struct dm_stats *dms,
+				    uint64_t *len);
 
-uint64_t dm_stats_get_current_region_area_len(const struct dm_stats *dms,
-					      uint64_t *area_len);
+int dm_stats_get_current_region_area_len(const struct dm_stats *dms,
+					 uint64_t *area_len);
 
 /*
  * Current area properties: start and length.
@@ -881,13 +883,13 @@ uint64_t dm_stats_get_current_region_area_len(const struct dm_stats *dms,
  *
  * All values are returned in units of 512b sectors.
  */
-uint64_t dm_stats_get_current_area_start(const struct dm_stats *dms,
-					 uint64_t *start);
+int dm_stats_get_current_area_start(const struct dm_stats *dms,
+				    uint64_t *start);
 
-uint64_t dm_stats_get_current_area_offset(const struct dm_stats *dms,
-					  uint64_t *offset);
+int dm_stats_get_current_area_offset(const struct dm_stats *dms,
+				     uint64_t *offset);
 
-uint64_t dm_stats_get_current_area_len(const struct dm_stats *dms,
+int dm_stats_get_current_area_len(const struct dm_stats *dms,
 				       uint64_t *start);
 
 /*

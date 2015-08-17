@@ -1280,7 +1280,7 @@ uint64_t dm_stats_get_current_area(const struct dm_stats *dms)
 	return dms->cur_area;
 }
 
-uint64_t dm_stats_get_region_start(const struct dm_stats *dms, uint64_t *start,
+int dm_stats_get_region_start(const struct dm_stats *dms, uint64_t *start,
 			      uint64_t region_id)
 {
 	if (!dms || !dms->regions)
@@ -1289,7 +1289,7 @@ uint64_t dm_stats_get_region_start(const struct dm_stats *dms, uint64_t *start,
 	return 1;
 }
 
-uint64_t dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
+int dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
 			    uint64_t region_id)
 {
 	if (!dms || !dms->regions)
@@ -1298,35 +1298,35 @@ uint64_t dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
 	return 1;
 }
 
-uint64_t dm_stats_get_region_area_len(const struct dm_stats *dms, uint64_t *step,
-			    uint64_t region_id)
+int dm_stats_get_region_area_len(const struct dm_stats *dms, uint64_t *len,
+				 uint64_t region_id)
 {
 	if (!dms || !dms->regions)
 		return_0;
-	*step = dms->regions[region_id].step;
+	*len = dms->regions[region_id].step;
 	return 1;
 }
 
-uint64_t dm_stats_get_current_region_start(const struct dm_stats *dms,
-					   uint64_t *start)
+int dm_stats_get_current_region_start(const struct dm_stats *dms,
+				      uint64_t *start)
 {
 	return dm_stats_get_region_start(dms, start, dms->cur_region);
 }
 
-uint64_t dm_stats_get_current_region_len(const struct dm_stats *dms,
-					 uint64_t *len)
+int dm_stats_get_current_region_len(const struct dm_stats *dms,
+				    uint64_t *len)
 {
 	return dm_stats_get_region_len(dms, len, dms->cur_region);
 }
 
-uint64_t dm_stats_get_current_region_area_len(const struct dm_stats *dms,
-					      uint64_t *step)
+int dm_stats_get_current_region_area_len(const struct dm_stats *dms,
+					 uint64_t *step)
 {
 	return dm_stats_get_region_area_len(dms, step, dms->cur_region);
 }
 
-uint64_t dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
-				 uint64_t region_id, uint64_t area_id)
+int dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
+			    uint64_t region_id, uint64_t area_id)
 {
 	struct dm_stats_region *region = &dms->regions[region_id];
 	if (!dms || !dms->regions)
@@ -1335,8 +1335,8 @@ uint64_t dm_stats_get_area_start(const struct dm_stats *dms, uint64_t *start,
 	return 1;
 }
 
-uint64_t dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
-				  uint64_t region_id, uint64_t area_id)
+int dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
+			     uint64_t region_id, uint64_t area_id)
 {
 	if (!dms || !dms->regions)
 		return_0;
@@ -1344,22 +1344,22 @@ uint64_t dm_stats_get_area_offset(const struct dm_stats *dms, uint64_t *offset,
 	return 1;
 }
 
-uint64_t dm_stats_get_current_area_start(const struct dm_stats *dms,
-					 uint64_t *start)
+int dm_stats_get_current_area_start(const struct dm_stats *dms,
+				    uint64_t *start)
 {
 	return dm_stats_get_area_start(dms, start,
 				       dms->cur_region, dms->cur_area);
 }
 
-uint64_t dm_stats_get_current_area_offset(const struct dm_stats *dms,
+int dm_stats_get_current_area_offset(const struct dm_stats *dms,
 					  uint64_t *offset)
 {
 	return dm_stats_get_area_offset(dms, offset,
 				       dms->cur_region, dms->cur_area);
 }
 
-uint64_t dm_stats_get_current_area_len(const struct dm_stats *dms,
-				       uint64_t *len)
+int dm_stats_get_current_area_len(const struct dm_stats *dms,
+				  uint64_t *len)
 {
 	return dm_stats_get_region_area_len(dms, len, dms->cur_region);
 }
