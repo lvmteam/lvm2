@@ -203,7 +203,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		unlock_and_release_vg(cmd, vg, vg->name);
 
 		if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
-			return_0;
+			stack;
 
 		/*
 		 * FIXME Sleeping after testing, while preferred, also works around
@@ -226,10 +226,8 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 out:
 	if (vg)
 		unlock_and_release_vg(cmd, vg, vg->name);
-	if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state)) {
+	if (!lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
 		stack;
-		ret = 0;
-	}
 
 	return ret;
 }

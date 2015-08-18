@@ -712,10 +712,8 @@ out_ret:
 	 * for some time monitoring the progress, and we don not want
 	 * or need the lockd lock held over that.
 	 */
-	if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state)) {
+	if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
 		stack;
-		r = ECMD_FAILED;
-	}
 
 	return r;
 }
@@ -765,10 +763,8 @@ static int _read_poll_id_from_pvname(struct cmd_context *cmd, const char *pv_nam
 
 	unlock_and_release_vg(cmd, vg, vg_name);
 out:
-	if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state)) {
+	if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
 		stack;
-		ret = 0;
-	}
 	free_pv_fid(pv);
 	return ret;
 }
