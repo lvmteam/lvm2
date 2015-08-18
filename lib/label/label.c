@@ -105,7 +105,8 @@ static void _update_lvmcache_orphan(struct lvmcache_info *info)
 
         memcpy(&vgsummary_orphan.vgid, lvmcache_fmt(info)->orphan_vg_name, strlen(lvmcache_fmt(info)->orphan_vg_name));
 
-	lvmcache_update_vgname_and_id(info, &vgsummary_orphan);
+	if (!lvmcache_update_vgname_and_id(info, &vgsummary_orphan))
+		stack;
 }
 
 static struct labeller *_find_labeller(struct device *dev, char *buf,

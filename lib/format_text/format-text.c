@@ -453,8 +453,9 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				   "not match expected name %s.", vgname);
 
       bad:
-	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, 0)))
-		lvmcache_update_vgname_and_id(info, &vgsummary_orphan);
+	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, 0)) &&
+	    !lvmcache_update_vgname_and_id(info, &vgsummary_orphan))
+		stack;
 
 	return NULL;
 }
