@@ -855,12 +855,12 @@ static void main_loop(int cmd_timeout)
 		int quorate = clops->is_quorate();
 		int client_count = 0;
 		int max_fd = 0;
+		struct local_client *lastfd = &local_client_head;
+		struct local_client *nextfd = local_client_head.next;
 
 		/* Wait on the cluster FD and all local sockets/pipes */
 		local_client_head.fd = clops->get_main_cluster_fd();
 		FD_ZERO(&in);
-		struct local_client *lastfd = &local_client_head;
-		struct local_client *nextfd = local_client_head.next;
 
 		for (thisfd = &local_client_head; thisfd; thisfd = thisfd->next) {
 			client_count++;

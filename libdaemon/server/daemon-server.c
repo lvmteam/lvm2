@@ -539,6 +539,7 @@ void daemon_start(daemon_state s)
 	log_state _log = { { 0 } };
 	thread_state _threads = { .next = NULL };
 	unsigned timeout_count = 0;
+	fd_set in;
 
 	/*
 	 * Switch to C locale to avoid reading large locale-archive file used by
@@ -623,7 +624,6 @@ void daemon_start(daemon_state s)
 
 	while (!_shutdown_requested && !failed) {
 		_reset_timeout(s);
-		fd_set in;
 		FD_ZERO(&in);
 		FD_SET(s.socket_fd, &in);
 		if (select(FD_SETSIZE, &in, NULL, NULL, _get_timeout(s)) < 0 && errno != EINTR)
