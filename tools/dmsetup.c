@@ -562,7 +562,7 @@ static int _start_timerfd_timer(void)
 	interval_timer.it_value.tv_sec = secs;
 	interval_timer.it_value.tv_nsec = nsecs;
 
-	log_debug("Setting interval timer to: "FMTu64"s "FMTu64"ns", secs, nsecs);
+	log_debug("Setting interval timer to: " FMTu64 "s %ldns", (uint64_t)secs, nsecs);
 	if (timerfd_settime(_timer_fd, 0, &interval_timer, NULL)) {
 		log_error("Could not set interval timer: %s", strerror(errno));
 		return 0;
