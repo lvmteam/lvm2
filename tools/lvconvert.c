@@ -2430,7 +2430,7 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 			 * Scan only the 1st. line for transation id.
 			 * Watch out, if the thin_dump format changes
 			 */
-			if ((fgets(meta_path, sizeof(meta_path), f) > 0) &&
+			if (fgets(meta_path, sizeof(meta_path), f) &&
 			    (trans_id_str = strstr(meta_path, "transaction=\"")) &&
 			    (sscanf(trans_id_str + 13, FMTu64, &trans_id) == 1) &&
 			    (trans_id != first_seg(pool_lv)->transaction_id) &&
