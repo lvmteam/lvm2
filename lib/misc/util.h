@@ -37,11 +37,13 @@
 
 /* Define some portable printing types */
 #define PRIsize_t "zu"
+#define PRIssize_t "zd"
 #define PRIptrdiff_t "td"
 #define PRIpid_t PRId32
 
 /* For convenience */
 #define FMTsize_t "%" PRIsize_t
+#define FMTssize_t "%" PRIssize_t
 #define FMTptrdiff_t "%" PRIptrdiff_t
 #define FMTpid_t "%" PRIpid_t
 

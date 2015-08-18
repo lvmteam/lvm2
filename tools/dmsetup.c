@@ -590,7 +590,7 @@ static int _do_timerfd_wait(void)
 
 	/* read(2) on a timerfd descriptor is guaranteed to return 8 bytes. */
 	if (bytes != 8)
-		log_error("Unexepcted byte count on timerfd read: %d", bytes);
+		log_error("Unexpected byte count on timerfd read: " FMTssize_t, bytes);
 
 	/* FIXME: attempt to rebase clock? */
 	if (expired > 1)
