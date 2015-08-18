@@ -464,6 +464,15 @@ int dm_stats_bind_name(struct dm_stats *dms, const char *name);
  */
 int dm_stats_bind_uuid(struct dm_stats *dms, const char *uuid);
 
+/*
+ * Test whether the running kernel supports the precise_timestamps
+ * feature. Presence of this feature also implies histogram support.
+ * The library will check this call internally and fails any attempt
+ * to use nanosecond counters or histograms on kernels that fail to
+ * meet this check.
+ */
+int dm_message_supports_precise_timestamps(void);
+
 #define DM_STATS_ALL_PROGRAMS ""
 /*
  * Parse the response from a @stats_list message. dm_stats_list will
