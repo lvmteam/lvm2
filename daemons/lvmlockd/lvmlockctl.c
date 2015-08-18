@@ -151,13 +151,12 @@ static void format_info_r(char *line, char *r_name_out, char *r_type_out)
 	sscanf(line, "info=r name=%s type=%s mode=%s %s version=%u",
 	       r_name, r_type, mode, sh_count, &ver);
 
-	/* when mode is not un, wait and print each lk line */
+	strcpy(r_name_out, r_name);
+	strcpy(r_type_out, r_type);
 
-	if (strcmp(mode, "un")) {
-		strcpy(r_name_out, r_name);
-		strcpy(r_type_out, r_type);
+	/* when mode is not un, wait and print each lk line */
+	if (strcmp(mode, "un"))
 		return;
-	}
 
 	/* when mode is un, there will be no lk lines, so print now */
 
@@ -229,7 +228,7 @@ static void format_info_r_action(char *line, char *r_name, char *r_type)
 	find_client_info(client_id, &pid, cl_name);
 
 	if (strcmp(op, "lock")) {
-		printf("OP %s pid %u (%s)", op, pid, cl_name);
+		printf("OP %s pid %u (%s)\n", op, pid, cl_name);
 		return;
 	}
 
