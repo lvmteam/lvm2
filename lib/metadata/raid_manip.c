@@ -21,7 +21,6 @@
 #include "activate.h"
 #include "lv_alloc.h"
 #include "lvm-string.h"
-#include "lvmlockd.h"
 
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 				     struct logical_volume **tracking)

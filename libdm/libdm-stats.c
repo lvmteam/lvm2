@@ -13,8 +13,6 @@
  */
 
 #include "dmlib.h"
-#include "libdm-targets.h"
-#include "libdm-common.h"
 
 #define DM_STATS_REGION_NOT_PRESENT UINT64_MAX
 

@@ -20,7 +20,6 @@
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "archiver.h"
-#include "lvmlockd.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 			      const char *vg_name)

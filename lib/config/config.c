@@ -23,7 +23,6 @@
 #include "toolcontext.h"
 #include "lvm-file.h"
 #include "memlock.h"
-#include "segtype.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
