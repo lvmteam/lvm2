@@ -1957,7 +1957,10 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 			unlock_vg(cmd, vg_name);
 endvg:
 		release_vg(vg);
-		lockd_vg(cmd, vg_name, "un", 0, &lockd_state);
+		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state)) {
+			stack;
+			ret_max = ECMD_FAILED;
+		}
 	}
 
 	/* the VG is selected if at least one LV is selected */
@@ -2438,7 +2441,10 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		unlock_vg(cmd, vg_name);
 endvg:
 		release_vg(vg);
-		lockd_vg(cmd, vg_name, "un", 0, &lockd_state);
+		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state)) {
+			stack;
+			ret_max = ECMD_FAILED;
+		}
 	}
 
 	return ret_max;
@@ -2942,7 +2948,10 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 			unlock_vg(cmd, vg->name);
 endvg:
 		release_vg(vg);
-		lockd_vg(cmd, vg_name, "un", 0, &lockd_state);
+		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state)) {
+			stack;
+			ret_max = ECMD_FAILED;
+		}
 
 		/* Quit early when possible. */
 		if (!process_all_pvs && dm_list_empty(arg_tags) && dm_list_empty(arg_devices))

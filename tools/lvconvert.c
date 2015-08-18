@@ -3450,7 +3450,10 @@ bad:
 	unlock_vg(cmd, lp->vg_name);
 
 	/* Unlock here so it's not held during polling. */
-	lockd_vg(cmd, lp->vg_name, "un", 0, &lockd_state);
+	if (!lockd_vg(cmd, lp->vg_name, "un", 0, &lockd_state)) {
+		stack;
+		ret = ECMD_FAILED;
+	}
 
 	release_vg(vg);
 out:

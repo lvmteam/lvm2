@@ -1227,7 +1227,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, lockstart_ARG)) {
 		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
 
-		lockd_gl(cmd, "un", 0);
+		if (!lockd_gl(cmd, "un", 0))
+			return_ECMD_FAILED;
 
 		if (!start_opt || !strcmp(start_opt, "auto")) {
 			log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
