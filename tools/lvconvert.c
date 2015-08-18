@@ -2002,7 +2002,7 @@ static int _lvconvert_uncache(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lv_remove_single(cmd, first_seg(lv)->pool_lv, lp->force, 0))
+	if (!lv_remove_single(cmd, first_seg(lv)->pool_lv, (force_t) lp->force, 0))
 		return_0;
 
 	log_print_unless_silent("Logical volume %s is not cached.", display_lvname(lv));
