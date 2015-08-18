@@ -22,7 +22,8 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 	if (arg_count(cmd, activevolumegroups_ARG) && !lvs_in_vg_activated(vg))
 		return ECMD_PROCESSED;
 
-	vg_check_status(vg, EXPORTED_VG);
+	if (!vg_check_status(vg, EXPORTED_VG))
+		stack;
 
 	if (arg_count(cmd, colon_ARG)) {
 		vgdisplay_colons(vg);
