@@ -585,12 +585,16 @@ static int spawn_detached_thread(struct lvmpolld_lv *pdlv)
 	int r;
 	pthread_attr_t attr;
 
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	if (pthread_attr_init(&attr) != 0)
+		return 0;
+
+	if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0)
+		return 0;
 
 	r = pthread_create(&pdlv->tid, &attr, fork_and_poll, (void *)pdlv);
 
-	pthread_attr_destroy(&attr);
+	if (pthread_attr_destroy(&attr) != 0)
+		return 0;
 
 	return !r;
 }
