@@ -32,6 +32,7 @@ dmstats \(em device-mapper statistics management
 .IR nr_areas ]
 .RB |[ \-\-areasize
 .IR area_size ]]
+.RB [ \-\-precise ]
 .RB [[ \-\-start
 .IR start_sector ]
 .RB [ \-\-length
@@ -181,6 +182,10 @@ Specify which report fields to display.
 Sort output according to the list of fields given. Precede any
 sort_field with - for a reverse sort on that column.
 .TP
+.BR \-\-precise
+Attempt to use nanosecond precision counters when creating new
+statistics regions.
+.TP
 .B \-\-programid \fIid
 Specify a program ID string. When creating new statistics regions this
 string is stored with the region. Subsequent operations may supply a
@@ -240,6 +245,7 @@ regions (with the exception of in-flight IO counters).
 .IR nr_areas ]
 .RB [ \-\-areasize
 .IR area_size ]
+.RB [ \-\-precise ]
 .RB [[ \-\-start
 .IR start_sector ]
 .RB [ \-\-length
@@ -258,6 +264,9 @@ The region will span the entire device unless \fB\-\-start\fP and
 at an arbitrary offset into the device. The \fB\-\-segments\fP option
 causes a new region to be created for each target in the corresponding
 device-mapper device's table.
+
+If the \fB\-\-precise\fP option is used the command will attempt to
+create a region using nanosecond precision counters.
 
 An optional \fBprogram_id\fP or \fBaux_data\fP string may be associated
 with the region. A \fBprogram_id\fP may then be used to select regions

@@ -190,6 +190,7 @@ enum {
 	NOUDEVRULES_ARG,
 	NOUDEVSYNC_ARG,
 	OPTIONS_ARG,
+	PRECISE_ARG,
 	PROGRAM_ID_ARG,
 	RAW_ARG,
 	READAHEAD_ARG,
@@ -4473,7 +4474,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 	struct dm_info info;
 	void *next = NULL;
 	const char *devname = NULL;
-	int r = 0;
+	int r = 0, precise = _switches[PRECISE_ARG];
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TABLE))) {
 		dm_stats_destroy(dms);
@@ -4520,7 +4521,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			this_len = (segments) ? segment_len : this_len;
 			if (!dm_stats_create_region(dms, &region_id,
 						    this_start, this_len, step,
-						    -1,
+						    precise,
 						    program_id, aux_data)) {
 				log_error("%s: Could not create statistics region.",
 					  devname);
@@ -4630,6 +4631,14 @@ static int _stats_create(CMD_ARGS)
 	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
 	if (!_bind_stats_device(dms, name))
 		goto_out;
+
+	if (_switches[PRECISE_ARG]) {
+		if (!dm_stats_driver_supports_precise()) {
+			log_error("Using --precise requires driver version "
+				  "4.32.0 or later.");
+			goto out;
+		}
+	}
 
 	if (!strlen(program_id))
 		/* force creation of a region with no id */
@@ -5497,6 +5506,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"noudevrules", 0, &ind, NOUDEVRULES_ARG},
 		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"precise", 0, &ind, PRECISE_ARG},
 		{"programid", 1, &ind, PROGRAM_ID_ARG},
 		{"raw", 0, &ind, RAW_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
@@ -5648,6 +5658,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[PROGRAM_ID_ARG]++;
 			_string_args[PROGRAM_ID_ARG] = optarg;
 		}
+		if (ind == PRECISE_ARG)
+			_switches[PRECISE_ARG]++;
 		if (ind == RAW_ARG)
 			_switches[RAW_ARG]++;
 		if (ind == REGION_ID_ARG) {
