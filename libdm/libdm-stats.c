@@ -510,11 +510,10 @@ static uint64_t _nr_areas(uint64_t len, uint64_t step)
 	/*
 	 * drivers/md/dm-stats.c::message_stats_create()
 	 * A region may be sub-divided into areas with their own counters.
-	 * If step is non-zero, divide len into that many areas, otherwise
-	 * treat the entire region as a single area. Any partial area at the
-	 * end of the region is treated as an additional complete area.
+	 * Any partial area at the end of the region is treated as an
+	 * additional complete area.
 	 */
-	return (len / (step ? : len)) + !!(len % step);
+	return (len + step - 1) / step;
 }
 
 static uint64_t _nr_areas_region(struct dm_stats_region *region)
