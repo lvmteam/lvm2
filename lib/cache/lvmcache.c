@@ -1178,7 +1178,12 @@ static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 		return 1;
 	if (*info->dev->pvid)
 		dm_hash_remove(_pvid_hash, info->dev->pvid);
-	strncpy(info->dev->pvid, pvid, sizeof(info->dev->pvid));
+
+	if (!dm_strncpy(info->dev->pvid, pvid, sizeof(info->dev->pvid))){
+		log_error("_lvmcache_update: too long pvid: %s.", pvid);
+		return 0;
+	}
+
 	if (!dm_hash_insert(_pvid_hash, pvid, info)) {
 		log_error("_lvmcache_update: pvid insertion failed: %s", pvid);
 		return 0;

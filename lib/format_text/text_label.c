@@ -94,9 +94,11 @@ static int _text_write(struct label *label, void *buf)
 	 * PV header base
 	 */
 	/* FIXME Move to where label is created */
-	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
-
-	strncpy((char *)lh->type, label->type, sizeof(label->type));
+	if (!dm_strncpy(label->type, LVM2_LABEL, sizeof(label->type)) ||
+	    !dm_strncpy((char *)lh->type, label->type, sizeof(label->type))) {
+		log_error(INTERNAL_ERROR "LVM2 label %s does not fit.", LVM2_LABEL);
+		return 0;
+	}
 
 	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
 	info = (struct lvmcache_info *) label->info;
