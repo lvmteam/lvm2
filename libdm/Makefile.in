@@ -55,7 +55,7 @@ include $(top_builddir)/make.tmpl
 
 CFLAGS += $(UDEV_CFLAGS) $(VALGRIND_CFLAGS)
 
-LIBS += $(SELINUX_LIBS) $(UDEV_LIBS) $(PTHREAD_LIBS)
+LIBS += $(SELINUX_LIBS) $(UDEV_LIBS) $(PTHREAD_LIBS) $(M_LIBS)
 
 device-mapper: all
 

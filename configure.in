@@ -1538,6 +1538,10 @@ if [[ \( "$LVM1" = shared -o "$POOL" = shared -o "$CLUSTER" = shared \
 fi
 
 ################################################################################
+AC_CHECK_LIB(m, log10,
+	[M_LIBS="-lm"], hard_bailout)
+
+################################################################################
 AC_CHECK_LIB([pthread], [pthread_mutex_lock],
 	[PTHREAD_LIBS="-lpthread"], hard_bailout)
 
@@ -1984,6 +1988,7 @@ AC_SUBST(OCF)
 AC_SUBST(OCFDIR)
 AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
+AC_SUBST(M_LIBS)
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PYTHON)
 AC_SUBST(PYTHON_BINDINGS)

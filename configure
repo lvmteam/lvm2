@@ -665,6 +665,7 @@ PYTHON_LIBDIRS
 PYTHON_INCDIRS
 PYTHON_BINDINGS
 PTHREAD_LIBS
+M_LIBS
 POOL
 PKGCONFIG
 OCFDIR
@@ -12570,6 +12571,50 @@ if [ \( "$LVM1" = shared -o "$POOL" = shared -o "$CLUSTER" = shared \
 fi
 
 ################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for log10 in -lm" >&5
+$as_echo_n "checking for log10 in -lm... " >&6; }
+if ${ac_cv_lib_m_log10+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lm  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char log10 ();
+int
+main ()
+{
+return log10 ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_m_log10=yes
+else
+  ac_cv_lib_m_log10=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_m_log10" >&5
+$as_echo "$ac_cv_lib_m_log10" >&6; }
+if test "x$ac_cv_lib_m_log10" = xyes; then :
+  M_LIBS="-lm"
+else
+  hard_bailout
+fi
+
+
+################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_mutex_lock in -lpthread" >&5
 $as_echo_n "checking for pthread_mutex_lock in -lpthread... " >&6; }
 if ${ac_cv_lib_pthread_pthread_mutex_lock+:} false; then :
@@ -14007,6 +14052,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 
