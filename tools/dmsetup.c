@@ -172,6 +172,7 @@ enum {
 	FORCE_ARG,
 	GID_ARG,
 	HELP_ARG,
+	HISTOGRAM_ARG,
 	INACTIVE_ARG,
 	INTERVAL_ARG,
 	LENGTH_ARG,
@@ -195,6 +196,7 @@ enum {
 	RAW_ARG,
 	READAHEAD_ARG,
 	REGION_ID_ARG,
+	RELATIVE_ARG,
 	RETRY_ARG,
 	ROWS_ARG,
 	SEPARATOR_ARG,
@@ -3436,6 +3438,153 @@ static int _dm_stats_precise_disp(struct dm_report *rh,
 	return dm_report_field_int(rh, field, (const int *) &precise);
 }
 
+static const char *_get_histogram_string(const struct dm_stats *dms, int rel,
+					 int vals, int bounds)
+{
+	const struct dm_histogram *dmh;
+	int flags = 0;
+
+	if (!(dmh = dm_stats_get_histogram(dms, DM_STATS_REGION_CURRENT,
+					   DM_STATS_AREA_CURRENT)))
+		return ""; /* No histogram. */
+
+	flags |= (vals) ? DM_HISTOGRAM_VALUES
+			: 0;
+
+	flags |= bounds;
+
+	flags |= (rel) ? DM_HISTOGRAM_PERCENT
+			: 0;
+
+	flags |= DM_HISTOGRAM_SUFFIX;
+
+	/* FIXME: make unit conversion optional. */
+	return dm_histogram_to_string(dmh, -1, 0, flags);
+}
+
+static int _stats_hist_count_disp(struct dm_report *rh,
+				  struct dm_report_field *field, const void *data,
+				  int bounds)
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *histogram;
+
+	histogram = _get_histogram_string(dms, 0, 1, bounds); /* counts */
+
+	if (!histogram)
+		return_0;
+
+	return dm_report_field_string(rh, field, (const char * const *) &histogram);
+}
+
+static int _dm_stats_hist_count_disp(struct dm_report *rh,
+				     struct dm_pool *mem __attribute__((unused)),
+				     struct dm_report_field *field, const void *data,
+				     void *private __attribute__((unused)))
+{
+	return _stats_hist_count_disp(rh, field, data, 0);
+}
+
+static int _dm_stats_hist_count_bounds_disp(struct dm_report *rh,
+					    struct dm_pool *mem __attribute__((unused)),
+					    struct dm_report_field *field, const void *data,
+					    void *private __attribute__((unused)))
+{
+	return _stats_hist_count_disp(rh, field, data, DM_HISTOGRAM_BOUNDS_LOWER);
+}
+
+static int _dm_stats_hist_count_ranges_disp(struct dm_report *rh,
+					    struct dm_pool *mem __attribute__((unused)),
+					    struct dm_report_field *field, const void *data,
+					    void *private __attribute__((unused)))
+{
+	return _stats_hist_count_disp(rh, field, data, DM_HISTOGRAM_BOUNDS_RANGE);
+}
+
+static int _stats_hist_percent_disp(struct dm_report *rh,
+				    struct dm_report_field *field, const void *data,
+				    int bounds)
+{
+
+	/* FIXME: configurable to-string options. */
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *histogram;
+
+	histogram = _get_histogram_string(dms, 1, 1, bounds); /* relative values */
+
+	if (!histogram)
+		return_0;
+
+	return dm_report_field_string(rh, field, (const char * const *) &histogram);
+}
+
+static int _dm_stats_hist_percent_disp(struct dm_report *rh,
+				       struct dm_pool *mem __attribute__((unused)),
+				       struct dm_report_field *field, const void *data,
+				       void *private __attribute__((unused)))
+{
+	return _stats_hist_percent_disp(rh, field, data, 0);
+}
+
+static int _dm_stats_hist_percent_bounds_disp(struct dm_report *rh,
+					      struct dm_pool *mem __attribute__((unused)),
+					      struct dm_report_field *field, const void *data,
+					      void *private __attribute__((unused)))
+{
+	return _stats_hist_percent_disp(rh, field, data, DM_HISTOGRAM_BOUNDS_LOWER);
+}
+
+static int _dm_stats_hist_percent_ranges_disp(struct dm_report *rh,
+					      struct dm_pool *mem __attribute__((unused)),
+					      struct dm_report_field *field, const void *data,
+					      void *private __attribute__((unused)))
+{
+	return _stats_hist_percent_disp(rh, field, data, DM_HISTOGRAM_BOUNDS_RANGE);
+}
+
+static int _stats_hist_bounds_disp(struct dm_report *rh,
+				   struct dm_report_field *field, const void *data,
+				   int bounds)
+{
+	/* FIXME: configurable to-string options. */
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *histogram;
+
+	histogram = _get_histogram_string(dms, 0, 0, bounds);
+
+	if (!histogram)
+		return_0;
+
+	return dm_report_field_string(rh, field, (const char * const *) &histogram);
+}
+
+static int _dm_stats_hist_bounds_disp(struct dm_report *rh,
+				      struct dm_pool *mem __attribute__((unused)),
+				      struct dm_report_field *field, const void *data,
+				      void *private __attribute__((unused)))
+{
+	return _stats_hist_bounds_disp(rh, field, data, DM_HISTOGRAM_BOUNDS_LOWER);
+}
+
+static int _dm_stats_hist_ranges_disp(struct dm_report *rh,
+				      struct dm_pool *mem __attribute__((unused)),
+				      struct dm_report_field *field, const void *data,
+				      void *private __attribute__((unused)))
+{
+	return _stats_hist_bounds_disp(rh, field, data, DM_HISTOGRAM_BOUNDS_RANGE);
+}
+
+static int _dm_stats_hist_bins_disp(struct dm_report *rh,
+				   struct dm_pool *mem __attribute__((unused)),
+				   struct dm_report_field *field, const void *data,
+				   void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	int bins;
+	bins = dm_stats_get_region_nr_histogram_bins(dms, DM_STATS_REGION_CURRENT);
+	return dm_report_field_int(rh, field, (const int *) &bins);
+}
+
 static int _dm_stats_rrqm_disp(struct dm_report *rh,
 			       struct dm_pool *mem __attribute__((unused)),
 			       struct dm_report_field *field, const void *data,
@@ -4017,6 +4166,14 @@ FIELD_F(STATS, NUM, "TPut", 5, dm_stats_tput, "tput", "Throughput.")
 FIELD_F(STATS, NUM, "SvcTm", 5, dm_stats_svctm, "svctm", "Service time.")
 FIELD_F(STATS, NUM, "Util%", 5, dm_stats_util, "util", "Utilization.")
 
+/* Histogram fields */
+FIELD_F(STATS, STR, "Histogram Counts", 16, dm_stats_hist_count, "hist_count", "Latency histogram counts.")
+FIELD_F(STATS, STR, "Histogram Counts", 16, dm_stats_hist_count_bounds, "hist_count_bounds", "Latency histogram counts with bin boundaries.")
+FIELD_F(STATS, STR, "Histogram Counts", 16, dm_stats_hist_count_ranges, "hist_count_ranges", "Latency histogram counts with bin ranges.")
+FIELD_F(STATS, STR, "Histogram%", 10, dm_stats_hist_percent, "hist_percent", "Relative latency histogram.")
+FIELD_F(STATS, STR, "Histogram%", 10, dm_stats_hist_percent_bounds, "hist_percent_bounds", "Relative latency histogram with bin boundaries.")
+FIELD_F(STATS, STR, "Histogram%", 10, dm_stats_hist_percent_ranges, "hist_percent_ranges", "Relative latency histogram with bin ranges.")
+
 /* Stats interval duration estimates */
 FIELD_F(STATS, NUM, "IntervalNSec", 10, dm_stats_sample_interval_ns, "interval_ns", "Sampling interval in nanoseconds.")
 FIELD_F(STATS, NUM, "Interval", 8, dm_stats_sample_interval, "interval", "Sampling interval.")
@@ -4032,7 +4189,10 @@ FIELD_F(STATS_META, SIZ, "AOff", 5, dm_stats_area_offset, "area_offset", "Area o
 FIELD_F(STATS_META, NUM, "#Areas", 3, dm_stats_area_count, "area_count", "Area count.")
 FIELD_F(STATS_META, STR, "ProgID", 6, dm_stats_program_id, "program_id", "Program ID.")
 FIELD_F(STATS_META, STR, "AuxDat", 6, dm_stats_aux_data, "aux_data", "Auxiliary data.")
-FIELD_F(STATS_META, STR, "Precise", 5, dm_stats_precise, "precise", "Set if the nanosecond precision timers are enabled.")
+FIELD_F(STATS_META, STR, "Precise", 7, dm_stats_precise, "precise", "Set if nanosecond precision counters are enabled.")
+FIELD_F(STATS_META, STR, "#Bins", 9, dm_stats_hist_bins, "hist_bins", "The number of histogram bins configured.")
+FIELD_F(STATS_META, STR, "Histogram Bounds", 16, dm_stats_hist_bounds, "hist_bounds", "Latency histogram bin boundaries.")
+FIELD_F(STATS_META, STR, "Histogram Ranges", 16, dm_stats_hist_ranges, "hist_ranges", "Latency histogram bin ranges.")
 {0, 0, 0, 0, "", "", NULL, NULL},
 /* *INDENT-ON* */
 };
@@ -4056,14 +4216,20 @@ static const char *splitname_report_options = "vg_name,lv_name,lv_layer";
 
 /* Device, region and area metadata. */
 #define STATS_DEV_INFO "name,region_id"
-#define STATS_AREA_INFO STATS_DEV_INFO ",region_start,region_len,area_count,area_id,area_start,area_len"
+#define STATS_AREA_INFO "area_id,area_start,area_len"
+#define STATS_AREA_INFO_FULL STATS_DEV_INFO ",region_start,region_len,area_count,area_id,area_start,area_len"
 #define STATS_REGION_INFO STATS_DEV_INFO ",region_start,region_len,area_count,area_len"
 
+/* Minimal set of fields for histogram report. */
+#define STATS_HIST STATS_REGION_INFO ",util,await"
+
 /* Default stats report options. */
-static const char *_stats_default_report_options = STATS_DEV_INFO ",area_id,area_start,area_len," METRICS;
-static const char *_stats_raw_report_options = STATS_DEV_INFO ",area_id,area_start,area_len," COUNTERS;
+static const char *_stats_default_report_options = STATS_DEV_INFO "," STATS_AREA_INFO "," METRICS;
+static const char *_stats_raw_report_options = STATS_DEV_INFO "," STATS_AREA_INFO "," COUNTERS;
 static const char *_stats_list_options = STATS_REGION_INFO ",program_id";
-static const char *_stats_area_list_options = STATS_AREA_INFO ",program_id";
+static const char *_stats_area_list_options = STATS_AREA_INFO_FULL ",program_id";
+static const char *_stats_hist_options = STATS_HIST ",hist_count_bounds";
+static const char *_stats_hist_relative_options = STATS_HIST ",hist_percent_bounds";
 
 static int _report_init(const struct command *cmd, const char *subcommand)
 {
@@ -4089,6 +4255,10 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 			options = (char *) ((_switches[VERBOSE_ARG])
 					    ? _stats_area_list_options
 					    : _stats_list_options);
+		else if (!strcmp(subcommand, "histogram"))
+			options = (char *) ((_switches[RELATIVE_ARG])
+					    ? _stats_hist_relative_options
+					    : _stats_hist_options);
 		else {
 			options = (char *) ((!_switches[RAW_ARG])
 					    ? _stats_default_report_options
@@ -4481,12 +4651,16 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 				    const char *aux_data)
 {
 	uint64_t this_start = 0, this_len = len, region_id = UINT64_C(0);
+	const char *devname = NULL, *histogram = _string_args[HISTOGRAM_ARG];
+	int r = 0, precise = _switches[PRECISE_ARG];
+	struct dm_histogram *bounds = NULL; /* histogram bounds */
 	char *target_type, *params; /* unused */
 	struct dm_task *dmt;
 	struct dm_info info;
 	void *next = NULL;
-	const char *devname = NULL;
-	int r = 0, precise = _switches[PRECISE_ARG];
+
+	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram)))
+		return 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TABLE))) {
 		dm_stats_destroy(dms);
@@ -4533,7 +4707,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			this_len = (segments) ? segment_len : this_len;
 			if (!dm_stats_create_region(dms, &region_id,
 						    this_start, this_len, step,
-						    precise, NULL,
+						    precise, bounds,
 						    program_id, aux_data)) {
 				log_error("%s: Could not create statistics region.",
 					  devname);
@@ -4550,6 +4724,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 out:
 	dm_task_destroy(dmt);
 	dm_stats_destroy(dms);
+	dm_histogram_bounds_destroy(bounds);
 	return r;
 }
 
@@ -4647,6 +4822,14 @@ static int _stats_create(CMD_ARGS)
 	if (_switches[PRECISE_ARG]) {
 		if (!dm_stats_driver_supports_precise()) {
 			log_error("Using --precise requires driver version "
+				  "4.32.0 or later.");
+			goto out;
+		}
+	}
+
+	if (_switches[HISTOGRAM_ARG]) {
+		if (!dm_stats_driver_supports_histogram()) {
+			log_error("Using --histogram requires driver version "
 				  "4.32.0 or later.");
 			goto out;
 		}
@@ -4886,6 +5069,7 @@ static struct command _stats_subcommands[] = {
 	{"clear", "--regionid <id> [<device>]", 0, -1, 1, 0, _stats_clear},
 	{"create", CREATE_OPTS "\n\t\t" ID_OPTS "[<device>]", 0, -1, 1, 0, _stats_create},
 	{"delete", "--regionid <id> <device>", 1, -1, 1, 0, _stats_delete},
+	{"histogram", REPORT_OPTS "[<device>]", 0, -1, 1, 0, _stats_report},
 	{"list", "[--programid <id>] [<device>]", 0, -1, 1, 0, _stats_report},
 	{"print", PRINT_OPTS "[<device>]", 0, -1, 1, 0, _stats_print},
 	{"report", REPORT_OPTS "[<device>]", 0, -1, 1, 0, _stats_report},
@@ -5500,6 +5684,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"force", 0, &ind, FORCE_ARG},
 		{"gid", 1, &ind, GID_ARG},
 		{"help", 0, &ind, HELP_ARG},
+		{"histogram", 1, &ind, HISTOGRAM_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
 		{"interval", 1, &ind, INTERVAL_ARG},
 		{"length", 1, &ind, LENGTH_ARG},
@@ -5523,6 +5708,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"raw", 0, &ind, RAW_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
 		{"regionid", 1, &ind, REGION_ID_ARG},
+		{"relative", 0, &ind, RELATIVE_ARG},
 		{"retry", 0, &ind, RETRY_ARG},
 		{"rows", 0, &ind, ROWS_ARG},
 		{"segments", 0, &ind, SEGMENTS_ARG},
@@ -5638,6 +5824,10 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			return 0;
 		if (c == 'h' || ind == HELP_ARG)
 			_switches[HELP_ARG]++;
+		if (ind == HISTOGRAM_ARG) {
+			_switches[HISTOGRAM_ARG]++;
+			_string_args[HISTOGRAM_ARG] = optarg;
+		}
 		if (ind == CLEAR_ARG)
 			_switches[CLEAR_ARG]++;
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
@@ -5678,6 +5868,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[REGION_ID_ARG]++;
 			_int_args[REGION_ID_ARG] = atoi(optarg);
 		}
+		if (ind == RELATIVE_ARG)
+			_switches[RELATIVE_ARG]++;
 		if (ind == SEPARATOR_ARG) {
 			_switches[SEPARATOR_ARG]++;
 			_string_args[SEPARATOR_ARG] = optarg;

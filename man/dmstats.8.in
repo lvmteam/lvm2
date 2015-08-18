@@ -32,6 +32,8 @@ dmstats \(em device-mapper statistics management
 .IR nr_areas ]
 .RB |[ \-\-areasize
 .IR area_size ]]
+.RB [ \-\-histogram
+.IR boundaries ]
 .RB [ \-\-precise ]
 .RB [[ \-\-start
 .IR start_sector ]
@@ -55,6 +57,28 @@ dmstats \(em device-mapper statistics management
 .br
 .B dmstats help
 .RB [ \-c | \-C | \-\-columns ]
+.br
+.B dmstats histogram
+.RI [ device_name ]
+.RB [ \-\-interval
+.IR seconds ]
+.RB [ \-\-count
+.IR count ]
+.RB [ \-\-units
+.IR units ]
+.RB [ \-\-allprograms ]
+.RB [ \-\-programid
+.IR id ]
+.RB [ \-\-relative ]
+.RB [ \-\-regionid
+.IR id ]
+.RB [ \-O | \-\-sort
+.IR sort_fields ]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB [ \-\-units
+.IR units ]
+.RB [ \-\-nosuffix ]
 .br
 .B dmstats list
 .RI [ device_name ]
@@ -154,6 +178,13 @@ When printing statistics counters, also atomically reset them to zero.
 Specify the iteration count for repeating reports. If the count
 argument is zero reports will continue to repeat until interrupted.
 .TP
+.B \-\-histogram \fIboundaries
+Specify the boundaries of a latency histogram to be tracked for the
+region as a comma separated list of latency values. Latency values are
+given in nanoseconds. An optional unit suffix of ns, us, ms, or s may be
+given after each value to specify units of nanoseconds, microseconds,
+miliseconds or seconds respectively.
+.TP
 .B \-\-interval \fIseconds
 Specify the interval in seconds between successive iterations for
 repeating reports. If \-\-interval is specified but \-\-count is not,
@@ -191,6 +222,10 @@ Specify a program ID string. When creating new statistics regions this
 string is stored with the region. Subsequent operations may supply a
 program ID in order to select only regions with a matching value. The
 default program ID for dmstats-managed regions is "dmstats".
+.TP
+.BR \-\-relative
+If displaying the histogram report show relative (percentage) values
+instead of absolute counts.
 .TP
 .BR \-S | \-\-select \ \fIselection
 Display only rows that match selection criteria. All rows with the
@@ -245,6 +280,8 @@ regions (with the exception of in-flight IO counters).
 .IR nr_areas ]
 .RB [ \-\-areasize
 .IR area_size ]
+.RB [ \-\-histogram
+.IR boundaries ]
 .RB [ \-\-precise ]
 .RB [[ \-\-start
 .IR start_sector ]
@@ -267,6 +304,20 @@ device-mapper device's table.
 
 If the \fB\-\-precise\fP option is used the command will attempt to
 create a region using nanosecond precision counters.
+
+If \fB\-\-histogram\fP is given a latency histogram will be tracked for
+the new region. The boundaries of the histogram bins are given as a
+comma separated list of latency values. There is an implicit lower bound
+of zero on the first bin and an implicit upper bound of infinity (or the
+configured interval duration) on the final bin.
+
+Latencies are given in nanoseconds. An optional unit suffix of ns, us,
+ms, or s may be given after each value to specify units of nanoseconds,
+microseconds, miliseconds or seconds respectively, so for example, 10ms
+is equivalent to 10000000. Latency values with a precision of less than
+one milisecond can only be used when precise timestamps are enabled: if
+\fB\-\-precise\fP is not given and values less than one milisecond are
+used it will be enabled automatically.
 
 An optional \fBprogram_id\fP or \fBaux_data\fP string may be associated
 with the region. A \fBprogram_id\fP may then be used to select regions
@@ -307,6 +358,38 @@ To remove all regions on all devices both \fB--allregions\fP and
 .br
 Outputs a summary of the commands available, optionally including
 the list of report fields.
+.br
+.TP
+.B histogram
+.RB [ \-\-allprograms ]
+.RB [ \-\-interval
+.IR seconds ]
+.RB [ \-\-count
+.IR count ]
+.RB [ \-\-units
+.IR unit ]
+.RB [ \-\-relative ]
+.RB [ \-\-regionid
+.IR id ]
+.RB [ \-\-programid
+.IR id ]
+.RB [ \-O | \-\-sort
+.IR sort_fields ]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB [ \-\-units
+.IR units ]
+.br
+Start a report for the specified region or for all present regions that
+emphasizes latency histograms in the default field options. If the count
+argument is specified, the report will repeat at a fixed interval set by
+the \fB\-\-interval\fP option. The default interval is one second.
+
+If the \fB\-\-allprograms\fP switch is given, all regions will be
+listed, regardless of region program ID values.
+
+If \fB\-\-relative\fP is given the default histogram field displays the
+relative histogram instead of absolute counts.
 .br
 .TP
 .B list
@@ -591,6 +674,77 @@ or read of these stats by the number of I/Os in progress multiplied by
 the number of milliseconds spent doing I/O since the last update of this
 field.  This can provide an easy measure of both I/O completion time and
 the backlog that may be accumulating.
+.br
+.SS Histogram fields
+Histograms measure the frequency distribution of user specified I/O
+latency intervals. Histogram bin boundaries are specified when a region
+is created.
+
+A brief representation of the histogram values and latency intervals can
+be included in the report using these fields.
+.P
+.HP
+.B hist_count
+.br
+A list of the histogram counts for the current statistics area in order
+of ascending latency value. Each value represents the number of I/Os
+with latency times falling into that bin's time range during the sample
+period.
+.HP
+.B hist_count_bounds
+.br
+A list of the histogram counts for the current statistics area in order
+of ascending latency value including bin boundaries: each count is
+prefixed by the lower bound of the corresponding histogram bin.
+.HP
+.B hist_count_ranges
+.br
+A list of the histogram counts for the current statistics area in order
+of ascending latency value including bin boundaries: each count is
+prefixed by both the lower and upper bounds of the corresponding
+histogram bin.
+.HP
+.B hist_percent
+.br
+A list of the relative histogram values for the current statistics area
+in order of ascending latency value, expressed as a percentage. Each
+value represents the proportion of I/Os with latency times falling into
+that bin's time range during the sample period.
+.HP
+.B hist_percent_bounds
+.br
+A list of the relative histogram values for the current statistics area
+in order of ascending latency value, expressed as a percentage and
+including bin boundaries. Each value represents the proportion of I/Os
+with latency times falling into that bin's time range during the sample
+period and is prefixed with the corresponding bin's lower bound.
+.HP
+.B hist_percent_ranges
+.br
+A list of the relative histogram values for the current statistics area
+in order of ascending latency value, expressed as a percentage and
+including bin boundaries. Each value represents the proportion of I/Os
+with latency times falling into that bin's time range during the sample
+period and is prefixed with the corresponding bin's lower and upper
+bounds.
+.HP
+.B hist_bounds
+.br
+A list of the histogram boundary values for the current statistics area
+in order of ascending latency value.  The values are expressed in whole
+units of seconds, miliseconds, microseconds or nanoseconds with a suffix
+indicating the unit.
+.HP
+.B hist_ranges
+.br
+A list of the histogram bin ranges for the current statistics area in
+order of ascending latency value.  The values are expressed as
+"LOWER-UPPER" in whole units of seconds, miliseconds, microseconds or
+nanoseconds with a suffix indicating the unit.
+.HP
+.B hist_bins
+.br
+The number of latency histogram bins configured for the area.
 .br
 .br
 .P

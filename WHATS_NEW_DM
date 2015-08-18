@@ -4,6 +4,8 @@ Version 1.02.107 -
 
 Version 1.02.106 - 26th August 2015
 ===================================
+  Add basic report fields for displaying latency histogram data.
+  Add dmstats --histogram to specify histogram boundaries for a region.
   Add public methods to libdm-stats to access numerical histogram data.
   Add the ability to parse histogram data into numeric form to libdm-stats.
   Add 'precise' column to statistics reports.
