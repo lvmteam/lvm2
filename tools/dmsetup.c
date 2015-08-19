@@ -4533,7 +4533,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			this_len = (segments) ? segment_len : this_len;
 			if (!dm_stats_create_region(dms, &region_id,
 						    this_start, this_len, step,
-						    precise,
+						    precise, NULL,
 						    program_id, aux_data)) {
 				log_error("%s: Could not create statistics region.",
 					  devname);
