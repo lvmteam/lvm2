@@ -1283,7 +1283,7 @@ static int res_unlock(struct lockspace *ls, struct resource *r,
 	}
 
 	if (act->op != LD_OP_CLOSE)
-		log_error("S %s R %s res_unlock no locks", ls->name, r->name);
+		log_debug("S %s R %s res_unlock no locks", ls->name, r->name);
 	return -ENOENT;
 
 do_unlock:
