@@ -85,6 +85,7 @@ struct client {
 	unsigned int recv : 1;
 	unsigned int dead : 1;
 	unsigned int poll_ignore : 1;
+	unsigned int lock_ops : 1;
 	char name[MAX_NAME+1];
 };
 

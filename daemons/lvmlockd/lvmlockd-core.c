@@ -3529,6 +3529,13 @@ static void client_purge(struct client *cl)
 	struct lockspace *ls;
 	struct action *act;
 
+	/*
+	 * If the client made no lock requests, there can be
+	 * no locks to release for it.
+	 */
+	if (!cl->lock_ops)
+		return;
+
 	pthread_mutex_lock(&lockspaces_mutex);
 	list_for_each_entry(ls, &lockspaces, list) {
 		if (!(act = alloc_action()))
@@ -4344,6 +4351,9 @@ static void client_recv_action(struct client *cl)
 		rv = -EPROTONOSUPPORT;
 		goto out;
 	}
+
+	if (act->op == LD_OP_LOCK && act->mode != LD_LK_UN)
+		cl->lock_ops = 1;
 
 	switch (act->op) {
 	case LD_OP_START:
