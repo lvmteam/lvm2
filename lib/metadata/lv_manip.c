@@ -5327,7 +5327,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	log_print_unless_silent("Logical volume %s successfully resized", lp->lv_name);
+	log_print_unless_silent("Logical volume %s successfully resized.", lp->lv_name);
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
 	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL))
