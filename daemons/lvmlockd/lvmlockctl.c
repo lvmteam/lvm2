@@ -379,6 +379,7 @@ static int setup_dump_socket(void)
 
 	rv = bind(s, (struct sockaddr *) &dump_addr, dump_addrlen);
 	if (rv < 0) {
+		rv = -errno;
 		if (!close(s))
 			log_error("failed to close dump socket");
 		return rv;
@@ -392,6 +393,7 @@ static int do_dump(const char *req_name)
 	daemon_reply reply;
 	int result;
 	int fd, rv = 0;
+	int count = 0;
 
 	fd = setup_dump_socket();
 	if (fd < 0) {
@@ -422,13 +424,18 @@ static int do_dump(const char *req_name)
 
 	memset(dump_buf, 0, sizeof(dump_buf));
 
-	rv = recvfrom(fd, dump_buf, dump_len, MSG_WAITALL,
+retry:
+	rv = recvfrom(fd, dump_buf + count, dump_len - count, MSG_WAITALL,
 		      (struct sockaddr *)&dump_addr, &dump_addrlen);
 	if (rv < 0) {
 		log_error("recvfrom error %d %d", rv, errno);
 		rv = -errno;
 		goto out;
 	}
+	count += rv;
+
+	if (count < dump_len)
+		goto retry;
 
 	rv = 0;
 	if ((info && dump) || !strcmp(req_name, "dump"))
