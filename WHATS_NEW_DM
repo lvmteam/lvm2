@@ -1,5 +1,7 @@
 Version 1.02.106 -
 ===================================
+  Add precise argument to dm_stats_create_region().
+  Add support to libdm-stats for precise_timestamps
 
 Version 1.02.105 - 17th August 2015
 ===================================

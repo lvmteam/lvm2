@@ -1,1 +1,3 @@
 dm_message_supports_precise_timestamps
+dm_stats_create_region
+dm_stats_driver_supports_precise

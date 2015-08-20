@@ -473,6 +473,13 @@ int dm_stats_bind_uuid(struct dm_stats *dms, const char *uuid);
  */
 int dm_message_supports_precise_timestamps(void);
 
+/*
+ * Precise timetamps support.
+ * 
+ * Test for the presence of precise_timestamps support.
+ */
+int dm_stats_driver_supports_precise(void);
+
 #define DM_STATS_ALL_PROGRAMS ""
 /*
  * Parse the response from a @stats_list message. dm_stats_list will
@@ -535,6 +542,9 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
  *
  *   dm_stats_create_region(dms, 1024, 1 << 11, -2, p, a);
  *
+ * If precise is non-zero attempt to create a region with nanosecond
+ * precision counters using the kernel precise_timestamps feature.
+ *
  * program_id is an optional string argument that identifies the
  * program creating the region. If program_id is NULL or the empty
  * string the default program_id stored in the handle will be used.
@@ -548,6 +558,7 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
  */
 int dm_stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 			   uint64_t start, uint64_t len, int64_t step,
+			   int precise,
 			   const char *program_id, const char *aux_data);
 
 /*
