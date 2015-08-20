@@ -266,7 +266,7 @@ stores an arbitrary string and is not used by dmstats or the
 device-mapper kernel statistics subsystem.
 
 By default dmstats creates regions with a \fBprogram_id\fP of
-"DMSTATS1".
+"dmstats".
 
 On success the \fBregion_id\fP of the newly created region is printed to
 stdout.
