@@ -15,14 +15,25 @@ test_description='Remove the sanlock test setup'
 
 [ -z "$LVM_TEST_LOCK_TYPE_SANLOCK" ] && skip;
 
+# FIMXME: get this to run after a test fails
+
 # Removes the VG with the global lock that was created by
 # the corresponding create script.
 
 vgremove --config 'devices { global_filter=["a|GL_DEV|", "r|.*|"] filter=["a|GL_DEV|", "r|.*|"]}' glvg
 
+# FIXME: collect debug logs (only if a test failed?)
+# lvmlockctl -d > lvmlockd-debug.txt
+# sanlock log_dump > sanlock-debug.txt
 
 killall lvmlockd
 killall sanlock
 
-dmsetup remove GL_DEV
-# dmsetup remove glvg-lvmlock
+killall -9 lvmlockd
+killall -9 sanlock
+
+# FIXME: dmsetup remove LVMTEST*-lvmlock
+
+dmsetup remove glvg-lvmlock || true
+dmsetup remove GL_DEV || true
+

@@ -15,6 +15,10 @@ test_description='Remove the dlm test setup'
 
 [ -z "$LVM_TEST_LOCK_TYPE_DLM" ] && skip;
 
+# FIXME: collect debug logs (only if a test failed?)
+# lvmlockctl -d > lvmlockd-debug.txt
+# dlm_tool dump > dlm-debug.txt
+
 systemctl stop dlm
 systemctl stop corosync
 killall lvmlockd
