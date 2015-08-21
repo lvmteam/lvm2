@@ -42,6 +42,11 @@ lv_field() {
 	trim_ "$r"
 }
 
+lva_field() {
+	local r=$(lvs -a --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1")
+	trim_ "$r"
+}
+
 lv_devices() {
 	lv_field "$1" devices -a "${@:2}" | sed 's/([^)]*)//g; s/,/\n/g'
 }

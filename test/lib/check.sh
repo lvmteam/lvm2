@@ -308,6 +308,12 @@ lv_field() {
 		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
+lva_field() {
+	local actual=$(get lva_field "$1" "$2" "${@:4}")
+	test "$actual" = "$3" || \
+		die "lva_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
+}
+
 lv_attr_bit() {
 	local actual=$(get lv_field "$2" lv_attr "${@:4}")
 	local offset=$1
