@@ -13,7 +13,7 @@ test_description='Check lvmlockd lock_args for different LV types'
 
 . lib/inittest
 
-test -e LOCAL_LVMLOCKD && skip
+[ -z "$LVM_TEST_LVMLOCKD" ] && skip;
 
 if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
 LOCKARGS1="1.0.0:70254592"
