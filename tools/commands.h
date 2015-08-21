@@ -275,6 +275,8 @@ xx(lvconvert,
    "[--type cache[-pool]|-H|--cache]\n"
    "\t[--cachepool CacheDataLogicalVolume[Path]]\n"
    "\t[--cachemode CacheMode]\n"
+   "\t[--cachepolicy policy]\n"
+   "\t[--cachesettings key=value]\n"
    "\t[--chunksize size]\n"
    "\t[--poolmetadataspare {y|n}]]\n"
    "\t[{--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
@@ -282,7 +284,8 @@ xx(lvconvert,
    COMMON_OPTS
    "\t[Cache|CacheDataPool]LogicalVolume[Path] [PhysicalVolumePath...]\n\n",
 
-   alloc_ARG, background_ARG, cache_ARG, cachemode_ARG, cachepool_ARG, chunksize_ARG,
+   alloc_ARG, background_ARG, cache_ARG, cachemode_ARG,
+   cachepool_ARG, cachepolicy_ARG, cachesettings_ARG, chunksize_ARG,
    corelog_ARG, discards_ARG, force_ARG, interval_ARG, merge_ARG, mirrorlog_ARG,
    mirrors_ARG, name_ARG, noudevsync_ARG, originname_ARG, poolmetadata_ARG,
    poolmetadatasize_ARG, poolmetadataspare_ARG, readahead_ARG, regionsize_ARG,
@@ -301,6 +304,8 @@ xx(lvcreate,
    "\t[--alloc AllocationPolicy]\n"
    "\t[-H|--cache\n"
    "\t  [--cachemode {writeback|writethrough}]\n"
+   "\t  [--cachepolicy policy]\n"
+   "\t  [--cachesettings key=value]\n"
    "\t[--cachepool CachePoolLogicalVolume{Name|Path}]\n"
    "\t[-c|--chunksize ChunkSize]\n"
    "\t[-C|--contiguous {y|n}]\n"
