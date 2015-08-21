@@ -200,7 +200,7 @@ cache pool LV.
 .TP
 .B \-\-cachepolicy \fIpolicy
 Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
-the cache policy. \fImq\fP is the basic policy name. \fIsqm\fP is more advanced
+the cache policy. \fImq\fP is the basic policy name. \fIsmq\fP is more advanced
 version available in newer kernels.
 .TP
 .IR \fB\-\-cachepool " " CachePoolLogicalVolume { Name | Path }
