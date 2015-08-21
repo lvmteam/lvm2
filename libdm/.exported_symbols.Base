@@ -179,7 +179,6 @@ dm_task_destroy
 dm_task_enable_checks
 dm_task_get_deps
 dm_task_get_driver_version
-dm_task_get_info
 dm_task_get_info_with_deferred_remove
 dm_task_get_message_response
 dm_task_get_name

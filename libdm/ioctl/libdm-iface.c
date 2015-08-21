@@ -681,13 +681,7 @@ int dm_format_dev(char *buf, int bufsize, uint32_t dev_major,
 	return 1;
 }
 
-#if defined(__GNUC__)
-int dm_task_get_info_v1_02_97(struct dm_task *dmt, struct dm_info *info);
-DM_EXPORTED_SYMBOL(dm_task_get_info, 1_02_97);
-int dm_task_get_info_v1_02_97(struct dm_task *dmt, struct dm_info *info)
-#else
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
-#endif
 {
 	if (!dmt->dmi.v4)
 		return 0;
@@ -2140,12 +2134,12 @@ void dm_lib_exit(void)
  */
 
 int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info);
-DM_EXPORTED_SYMBOL_BASE(dm_task_get_info);
+DM_EXPORT_SYMBOL_BASE(dm_task_get_info);
 int dm_task_get_info_base(struct dm_task *dmt, struct dm_info *info)
 {
 	struct dm_info new_info;
 
-	if (!dm_task_get_info_v1_02_97(dmt, &new_info))
+	if (!dm_task_get_info(dmt, &new_info))
 		return 0;
 
 	memcpy(info, &new_info, offsetof(struct dm_info, deferred_remove));
@@ -2158,7 +2152,7 @@ int dm_task_get_info_with_deferred_remove(struct dm_task *dmt, struct dm_info *i
 {
 	struct dm_info new_info;
 
-	if (!dm_task_get_info_v1_02_97(dmt, &new_info))
+	if (!dm_task_get_info(dmt, &new_info))
 		return 0;
 
 	memcpy(info, &new_info, offsetof(struct dm_info, internal_suspend));
