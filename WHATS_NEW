@@ -1,5 +1,7 @@
 Version 2.02.129 -
 ===================================
+  Enable usage of --cachepolicy and --cachesetting with lvconvert.
+  Don't allow to reduce size of thin-pool metadata.
   Fix debug buffer overflows in cmirrord logging.
   Add --foreground and --help to cmirrord.
 
