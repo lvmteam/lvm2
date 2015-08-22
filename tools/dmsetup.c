@@ -4136,34 +4136,34 @@ FIELD_O(NAME, dm_split_name, STR, "LV", lv_name, 4, dm_lv_name, "lv_name", "LVM 
 FIELD_O(NAME, dm_split_name, STR, "LVLayer", lv_layer, 7, dm_lv_layer_name, "lv_layer", "LVM device layer.")
 
 /* basic stats counters */
-FIELD_F(STATS, NUM, "Reads", 5, dm_stats_reads, "reads", "Number of reads completed.")
-FIELD_F(STATS, NUM, "RdMrges", 5, dm_stats_reads_merged, "reads_merged", "Number of reads merged.")
-FIELD_F(STATS, NUM, "RdSectors", 5, dm_stats_read_sectors, "read_sectors", "Number of sectors read.")
-FIELD_F(STATS, NUM, "RdNsec", 5, dm_stats_read_nsecs, "read_nsecs", "Time spent reading.")
-FIELD_F(STATS, NUM, "Writes", 5, dm_stats_writes, "writes", "Number of writes completed.")
-FIELD_F(STATS, NUM, "WrMerges", 5, dm_stats_writes_merged, "writes_merged", "Number of writes merged.")
-FIELD_F(STATS, NUM, "WrSectors", 5, dm_stats_write_sectors, "write_sectors", "Number of sectors written.")
-FIELD_F(STATS, NUM, "WrNsec", 5, dm_stats_write_nsecs, "write_nsecs", "Time spent writing.")
-FIELD_F(STATS, NUM, "InProgress", 5, dm_stats_io_in_progress, "in_progress", "Number of I/Os currently in progress.")
-FIELD_F(STATS, NUM, "IoNsec", 5, dm_stats_io_nsecs, "io_nsecs", "Time spent doing I/O.")
-FIELD_F(STATS, NUM, "WtIoNsec", 5, dm_stats_weighted_io_nsecs, "weighted_io_nsecs", "Weighted time spent doing I/O.")
-FIELD_F(STATS, NUM, "TotalRdNsec", 5, dm_stats_total_read_nsecs, "total_rd_nsecs", "Total time spent reading.")
-FIELD_F(STATS, NUM, "TotalWrNsec", 5, dm_stats_total_write_nsecs, "total_wr_nsecs", "Total time spent writing.")
+FIELD_F(STATS, NUM, "#Reads", 6, dm_stats_reads, "read_count", "Count of reads completed.")
+FIELD_F(STATS, NUM, "#RdMrgs", 7, dm_stats_reads_merged, "reads_merged_count", "Count of read requests merged.")
+FIELD_F(STATS, NUM, "#RdSectors", 10, dm_stats_read_sectors, "read_sector_count", "Count of sectors read.")
+FIELD_F(STATS, NUM, "AccRdTime", 11, dm_stats_read_nsecs, "read_time", "Accumulated duration of all read requests (ns).")
+FIELD_F(STATS, NUM, "#Writes", 7, dm_stats_writes, "write_count", "Count of writes completed.")
+FIELD_F(STATS, NUM, "#WrMrgs", 7, dm_stats_writes_merged, "writes_merged_count", "Count of write requests merged.")
+FIELD_F(STATS, NUM, "#WrSectors", 10, dm_stats_write_sectors, "write_sector_count", "Count of sectors written.")
+FIELD_F(STATS, NUM, "AccWrTime", 11, dm_stats_write_nsecs, "write_time", "Accumulated duration of all writes (ns).")
+FIELD_F(STATS, NUM, "#InProg", 7, dm_stats_io_in_progress, "in_progress_count", "Count of requests currently in progress.")
+FIELD_F(STATS, NUM, "IoTicks", 7, dm_stats_io_nsecs, "io_ticks", "Nanoseconds spent servicing requests.")
+FIELD_F(STATS, NUM, "QueueTicks", 10, dm_stats_weighted_io_nsecs, "queue_ticks", "Total nanoseconds spent in queue.")
+FIELD_F(STATS, NUM, "RdTicks", 7, dm_stats_total_read_nsecs, "read_ticks", "Nanoseconds spent servicing reads.")
+FIELD_F(STATS, NUM, "WrTicks", 7, dm_stats_total_write_nsecs, "write_ticks", "Nanoseconds spent servicing writes.")
 
 /* Stats derived metrics */
-FIELD_F(STATS, NUM, "RRqM/s", 5, dm_stats_rrqm, "rrqm", "Read requests merged per second.")
-FIELD_F(STATS, NUM, "WRqM/s", 5, dm_stats_wrqm, "wrqm", "Write requests merged per second.")
-FIELD_F(STATS, NUM, "R/s", 5, dm_stats_rs, "rs", "Reads per second.")
-FIELD_F(STATS, NUM, "W/s", 5, dm_stats_ws, "ws", "Writes per second.")
-FIELD_F(STATS, NUM, "RSz/s", 5, dm_stats_read_secs, "rsize_sec", "Size of data read per second.")
-FIELD_F(STATS, NUM, "WSz/s", 5, dm_stats_write_secs, "wsize_sec", "Size of data written per second.")
-FIELD_F(STATS, NUM, "AvRqSz", 5, dm_stats_arqsz, "arqsz", "Average request size.")
-FIELD_F(STATS, NUM, "QSize", 5, dm_stats_qusz, "qusz", "Average queue size.")
+FIELD_F(STATS, NUM, "RMrg/s", 6, dm_stats_rrqm, "reads_merged_per_sec", "Read requests merged per second.")
+FIELD_F(STATS, NUM, "WMrg/s", 6, dm_stats_wrqm, "writes_merged_per_sec", "Write requests merged per second.")
+FIELD_F(STATS, NUM, "R/s", 3, dm_stats_rs, "reads_per_sec", "Reads per second.")
+FIELD_F(STATS, NUM, "W/s", 3, dm_stats_ws, "writes_per_sec", "Writes per second.")
+FIELD_F(STATS, NUM, "RSz/s", 5, dm_stats_read_secs, "read_size_per_sec", "Size of data read per second.")
+FIELD_F(STATS, NUM, "WSz/s", 5, dm_stats_write_secs, "write_size_per_sec", "Size of data written per second.")
+FIELD_F(STATS, NUM, "AvgRqSz", 7, dm_stats_arqsz, "avg_request_size", "Average request size.")
+FIELD_F(STATS, NUM, "QSize", 5, dm_stats_qusz, "queue_size", "Average queue size.")
 FIELD_F(STATS, NUM, "AWait", 5, dm_stats_await, "await", "Averate wait time.")
-FIELD_F(STATS, NUM, "RdAWait", 5, dm_stats_r_await, "r_await", "Averate read wait time.")
-FIELD_F(STATS, NUM, "WrAWait", 5, dm_stats_w_await, "w_await", "Averate write wait time.")
-FIELD_F(STATS, NUM, "TPut", 5, dm_stats_tput, "tput", "Throughput.")
-FIELD_F(STATS, NUM, "SvcTm", 5, dm_stats_svctm, "svctm", "Service time.")
+FIELD_F(STATS, NUM, "RdAWait", 7, dm_stats_r_await, "read_await", "Averate read wait time.")
+FIELD_F(STATS, NUM, "WrAWait", 7, dm_stats_w_await, "write_await", "Averate write wait time.")
+FIELD_F(STATS, NUM, "Throughput", 10, dm_stats_tput, "throughput", "Throughput.")
+FIELD_F(STATS, NUM, "SvcTm", 5, dm_stats_svctm, "service_time", "Service time.")
 FIELD_F(STATS, NUM, "Util%", 5, dm_stats_util, "util", "Utilization.")
 
 /* Histogram fields */
@@ -4175,18 +4175,18 @@ FIELD_F(STATS, STR, "Histogram%", 10, dm_stats_hist_percent_bounds, "hist_percen
 FIELD_F(STATS, STR, "Histogram%", 10, dm_stats_hist_percent_ranges, "hist_percent_ranges", "Relative latency histogram with bin ranges.")
 
 /* Stats interval duration estimates */
-FIELD_F(STATS, NUM, "IntervalNSec", 10, dm_stats_sample_interval_ns, "interval_ns", "Sampling interval in nanoseconds.")
+FIELD_F(STATS, NUM, "IntervalNs", 10, dm_stats_sample_interval_ns, "interval_ns", "Sampling interval in nanoseconds.")
 FIELD_F(STATS, NUM, "Interval", 8, dm_stats_sample_interval, "interval", "Sampling interval.")
 
 /* Stats report meta-fields */
 FIELD_F(STATS_META, NUM, "RgID", 4, dm_stats_region_id, "region_id", "Region ID.")
-FIELD_F(STATS_META, SIZ, "RStart", 5, dm_stats_region_start, "region_start", "Region start.")
-FIELD_F(STATS_META, SIZ, "RSize", 5, dm_stats_region_len, "region_len", "Region length.")
+FIELD_F(STATS_META, SIZ, "RgStart", 5, dm_stats_region_start, "region_start", "Region start.")
+FIELD_F(STATS_META, SIZ, "RgSize", 5, dm_stats_region_len, "region_len", "Region length.")
 FIELD_F(STATS_META, NUM, "ArID", 4, dm_stats_area_id, "area_id", "Area ID.")
-FIELD_F(STATS_META, SIZ, "AStart", 5, dm_stats_area_start, "area_start", "Area offset from start of device.")
-FIELD_F(STATS_META, SIZ, "ASize", 5, dm_stats_area_len, "area_len", "Area length.")
-FIELD_F(STATS_META, SIZ, "AOff", 5, dm_stats_area_offset, "area_offset", "Area offset from start of region.")
-FIELD_F(STATS_META, NUM, "#Areas", 3, dm_stats_area_count, "area_count", "Area count.")
+FIELD_F(STATS_META, SIZ, "ArStart", 7, dm_stats_area_start, "area_start", "Area offset from start of device.")
+FIELD_F(STATS_META, SIZ, "ArSize", 6, dm_stats_area_len, "area_len", "Area length.")
+FIELD_F(STATS_META, SIZ, "ArOff", 5, dm_stats_area_offset, "area_offset", "Area offset from start of region.")
+FIELD_F(STATS_META, NUM, "#Areas", 6, dm_stats_area_count, "area_count", "Area count.")
 FIELD_F(STATS_META, STR, "ProgID", 6, dm_stats_program_id, "program_id", "Program ID.")
 FIELD_F(STATS_META, STR, "AuxDat", 6, dm_stats_aux_data, "aux_data", "Auxiliary data.")
 FIELD_F(STATS_META, STR, "Precise", 7, dm_stats_precise, "precise", "Set if nanosecond precision counters are enabled.")
@@ -4208,11 +4208,16 @@ static const char *default_report_options = "name,major,minor,attr,open,segments
 static const char *splitname_report_options = "vg_name,lv_name,lv_layer";
 
 /* Stats counters & derived metrics. */
-#define RD_COUNTERS "reads,reads_merged,read_sectors,read_nsecs,total_rd_nsecs"
-#define WR_COUNTERS "writes,writes_merged,write_sectors,write_nsecs,total_wr_nsecs"
-#define IO_COUNTERS "in_progress,io_nsecs,weighted_io_nsecs"
-#define METRICS "rrqm,wrqm,rs,ws,rsize_sec,wsize_sec,arqsz,qusz,util,await,r_await,w_await"
+#define RD_COUNTERS "read_count,reads_merged_count,read_sector_count,read_time,read_ticks"
+#define WR_COUNTERS "write_count,writes_merged_count,write_sector_count,write_time,write_ticks"
+#define IO_COUNTERS "in_progress_count,io_ticks,queue_ticks"
 #define COUNTERS RD_COUNTERS "," WR_COUNTERS "," IO_COUNTERS
+
+#define METRICS "reads_merged_per_sec,writes_merged_per_sec,"	\
+		"reads_per_sec,writes_per_sec,"			\
+		"read_size_per_sec,write_size_per_sec,"		\
+		"avg_request_size,queue_size,util,"		\
+		"await,read_await,write_await"
 
 /* Device, region and area metadata. */
 #define STATS_DEV_INFO "name,region_id"

@@ -487,58 +487,58 @@ conventional Linux iostat program and are derived from the basic counter
 values provided by the kernel for each area.
 .br
 .HP
-.B rrqm
+.B reads_merged_per_sec
 .br
-Read requests merged per second.
+Reads merged per second.
 .HP
-.B wrqm
+.B writes_merged_per_sec
 .br
-Write requests merged per second.
+Writes merged per second.
 .HP
-.B rs
+.B reads_per_sec
 .br
-Read requests per second.
+Reads completed per second.
 .HP
-.B ws
+.B writes_per_sec
 .br
-Write requests per second.
+Writes completed per second.
 .HP
-.B rsec
+.B read_size_per_sec
 .br
-Sectors read per second.
+Size of data read per second.
 .HP
-.B wsec
+.B write_size_per_sec
 .br
-Sectors written per second.
+Size of data written per second.
 .HP
-.B arqsz
+.B avg_request_size
 .br
-The average size of requests submitted to the area.
+Average request size.
 .HP
-.B qusz
+.B queue_size
 .br
-The average queue length.
+Average queue size.
 .HP
 .B await
 .br
-The average wait time for read and write requests.
+The average wait time for read and write operations.
 .HP
 .B r_await
 .br
-The average wait time for read requests.
+The average wait time for read operations.
 .HP
 .B w_await
 .br
-The average wait time for write requests.
+The average wait time for write operations.
 .HP
-.B tput
+.B throughput
 .br
-The device throughput in requests per second.
+The device throughput in operations per second.
 .HP
-.B svctm
+.B service_time
 .br
-The  average  service  time  (in milliseconds) for I/O requests that
-were issued to the device.
+The  average  service  time  (in milliseconds) for operations issued
+to the device.
 .HP
 .B util
 .br
@@ -561,11 +561,13 @@ when a statistics region is created.
 .B region_start
 .br
 .br
-The region start sector in units of 512 byte sectors.
+The region start location. Display units are selected by the
+\fB--units\fP option.
 .HP
 .B region_len
 .br
-The length of the region in units of 512 byte sectors.
+The length of the region. Display units are selected by the
+\fB--units\fP option.
 .HP
 .B area_id
 .br
@@ -574,18 +576,18 @@ statistics library and uniquely identify each area within a region. Each
 ID corresponds to a distinct set of performance counters for that area
 of the statistics region. Area identifiers are always monotonically
 increasing within a region so that higher ID values correspond to
-greater sector addresses within the region and no gaps in the sequence
-of identifiers exist. Sorting a report by device, region start, and area
-ID (the default) will then produce rows in order of ascending region and
-area address.
+greater sector addresses within the area and no gaps in the sequence of
+identifiers exist.
 .HP
 .B area_start
 .br
-The area start sector in units of 512 byte sectors.
+The area start location. Display units are selected by the
+\fB--units\fP option.
 .HP
 .B area_len
 .br
-The length of the area in units of 512 byte sectors.
+The length of the area. Display units are selected by the
+\fB--units\fP option.
 .HP
 .B area_count
 .br
@@ -603,7 +605,7 @@ The auxiliary data value associated with this region.
 .B interval_ns
 .br
 The estimated interval over which the current counter values have
-accumulated. The vaulue is reported as an interger expressed in units
+accumulated. The value is reported as an interger expressed in units
 of nanoseconds.
 .br
 .HP
@@ -623,57 +625,61 @@ area. The first eleven of these match the counters provided in
 counters for read and write time.
 .P
 .HP
-.B reads
+.B read_count
 .br
-The number of reads successfully completed this interval.
+Count of reads completed this interval.
 .HP
-.B read_merges
+.B reads_merged_count
 .br
-The number of read requests merged this interval. This field is
-incremented every time a pair of requests are merged to create a single
-request to be issued to the device.
+Count of reads merged this interval.
 .HP
-.B read_sectors
+.B read_sector_count
 .br
-The number of 512 byte sectors read this interval.
+Count of 512 byte sectors read this interval.
 .HP
-.B read_nsecs
+.B read_time
 .br
-The number of nanoseconds spent reading during this interval.
+Accumulated duration of all read requests (ns).
 .HP
-.B writes
+.B write_count
 .br
-The number of writes successfully completed this interval.
+Count of writes completed this interval.
 .HP
-.B write_merges
+.B writes_merged_count
 .br
-The number of write requests merged this interval. This field is
-incremented every time a pair of requests are merged to create a single
-request to be issued to the device.
+Count of writes merged this interval.
 .HP
-.B write_sectors
+.B write_sector_count
 .br
-The number of 512 byte sectors written this interval.
+Count of 512 byte sectors written this interval.
 .HP
 .B write_nsecs
 .br
-The number of nanoseconds spent writing during this interval.
+Accumulated duration of all write requests (ns).
 .HP
-.B in_progress
+.B in_progress_count
 .br
-The number of reads and writes currently in progress.
+Count of requests currently in progress.
 .HP
-.B io_nsecs
+.B io_ticks
 .br
-The number of nanoseconds spent reading and writing.
+Nanoseconds spent servicing requests.
 .HP
-.B weighted_io_nsecs
+.B queue_ticks
 .br
 This field is incremented at each I/O start, I/O completion, I/O merge,
 or read of these stats by the number of I/Os in progress multiplied by
 the number of milliseconds spent doing I/O since the last update of this
 field.  This can provide an easy measure of both I/O completion time and
 the backlog that may be accumulating.
+.HP
+.B read_ticks
+.br
+Nanoseconds spent servicing reads.
+.HP
+.B write_ticks
+.br
+Nanoseconds spent servicing writes.
 .br
 .SS Histogram fields
 Histograms measure the frequency distribution of user specified I/O
