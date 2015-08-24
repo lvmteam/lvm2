@@ -384,7 +384,7 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 			  (void *)1, (void *)1, (void *)1,
 			  NULL, NULL);
 
-	if (rv == -EAGAIN) {
+	if (rv == -1 && errno == -EAGAIN) {
 		log_debug("S %s R %s adopt_dlm adopt mode %d try other mode",
 			  ls->name, r->name, ld_mode);
 		rv = -EUCLEAN;
@@ -471,12 +471,12 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	rv = dlm_ls_lock_wait(lmd->dh, mode, lksb, flags,
 			      r->name, strlen(r->name),
 			      0, NULL, NULL, NULL);
-	if (rv == -EAGAIN) {
-		log_error("S %s R %s lock_dlm mode %d rv EAGAIN", ls->name, r->name, mode);
+	if (rv == -1 && errno == EAGAIN) {
+		log_debug("S %s R %s lock_dlm acquire mode %d rv EAGAIN", ls->name, r->name, mode);
 		return -EAGAIN;
 	}
 	if (rv < 0) {
-		log_error("S %s R %s lock_dlm error %d", ls->name, r->name, rv);
+		log_error("S %s R %s lock_dlm acquire error %d errno %d", ls->name, r->name, rv, errno);
 		return rv;
 	}
 
@@ -549,7 +549,7 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 	rv = dlm_ls_lock_wait(lmd->dh, mode, lksb, flags,
 			      r->name, strlen(r->name),
 			      0, NULL, NULL, NULL);
-	if (rv == -EAGAIN) {
+	if (rv == -1 && errno == EAGAIN) {
 		/* FIXME: When does this happen?  Should something different be done? */
 		log_error("S %s R %s convert_dlm mode %d rv EAGAIN", ls->name, r->name, mode);
 		return -EAGAIN;
