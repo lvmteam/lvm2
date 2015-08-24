@@ -86,7 +86,8 @@ struct field_properties {
 	struct dm_list list;
 	uint32_t field_num;
 	uint32_t sort_posn;
-	int32_t width;
+	int32_t initial_width;
+	int32_t width; /* current width: adjusted by dm_report_object() */
 	const struct dm_report_object_type *type;
 	uint32_t flags;
 	int implicit;
@@ -774,7 +775,8 @@ static int _copy_field(struct dm_report *rh, struct field_properties *dest,
 							     : rh->fields;
 
 	dest->field_num = field_num;
-	dest->width = fields[field_num].width;
+	dest->initial_width = fields[field_num].width;
+	dest->width = fields[field_num].width; /* adjusted in _do_report_object() */
 	dest->flags = fields[field_num].flags & DM_REPORT_FIELD_MASK;
 	dest->implicit = implicit;
 
@@ -4178,6 +4180,13 @@ bad:
 	return 0;
 }
 
+static void _reset_field_props(struct dm_report *rh)
+{
+	struct field_properties *fp;
+	dm_list_iterate_items(fp, &rh->field_props)
+		fp->width = fp->initial_width;
+}
+
 static void _destroy_rows(struct dm_report *rh)
 {
 	/*
@@ -4189,6 +4198,9 @@ static void _destroy_rows(struct dm_report *rh)
 		dm_pool_free(rh->mem, rh->first_row);
 	rh->first_row = NULL;
 	dm_list_init(&rh->rows);
+
+	/* Reset field widths to original values. */
+	_reset_field_props(rh);
 }
 
 static int _output_as_rows(struct dm_report *rh)
