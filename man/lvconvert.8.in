@@ -326,7 +326,7 @@ operation from its arguments.
 Separates \fICacheLogicalVolume\fP from cache pool.
 Before the logical volume becomes uncached, cache is flushed.
 The cache pool volume is then left unused and
-could be used e.g. to caching another volume.
+could be used e.g. for caching another volume.
 See also the option \fB\-\-uncache\fP for uncaching and removing
 cache pool with one command.
 .TP
