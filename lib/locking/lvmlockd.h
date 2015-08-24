@@ -54,7 +54,7 @@ void lvmlockd_disconnect(void);
 /* vgcreate/vgremove use init/free */
 
 int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg, const char *lock_type, int lv_lock_count);
-int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg);
+int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg, int changing);
 void lockd_free_vg_final(struct cmd_context *cmd, struct volume_group *vg);
 
 /* vgrename */

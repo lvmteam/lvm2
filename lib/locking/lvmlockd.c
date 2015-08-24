@@ -868,10 +868,37 @@ int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 }
 
+static int _lockd_all_lvs(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct lv_list *lvl;
+
+	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!lockd_lv(cmd, lvl->lv, "ex", 0)) {
+			log_error("LV %s/%s must be inactive on all hosts.",
+				  vg->name, lvl->lv->name);
+			return 0;
+		}
+
+		if (!lockd_lv(cmd, lvl->lv, "un", 0)) {
+			log_error("Failed to unlock LV %s/%s.", vg->name, lvl->lv->name);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 /* vgremove before the vg is removed */
 
-int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg)
+int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
+			 int changing)
 {
+	/* Check that no LVs are active on other hosts. */
+	if (changing && !_lockd_all_lvs(cmd, vg)) {
+		log_error("Cannot change VG %s with active LVs", vg->name);
+		return 0;
+	}
+
 	switch (get_lock_type_from_string(vg->lock_type)) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
@@ -2374,7 +2401,6 @@ int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 {
-	struct lv_list *lvl;
 	daemon_reply reply;
 	int result;
 	int ret;
@@ -2392,18 +2418,9 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/* Check that no LVs are active on other hosts. */
-
-	dm_list_iterate_items(lvl, &vg->lvs) {
-		if (!lockd_lv(cmd, lvl->lv, "ex", 0)) {
-			log_error("LV %s/%s must be inactive on all hosts before vgrename.",
-				  vg->name, lvl->lv->name);
-			return 0;
-		}
-
-		if (!lockd_lv(cmd, lvl->lv, "un", 0)) {
-			log_error("Failed to unlock LV %s/%s.", vg->name, lvl->lv->name);
-			return 0;
-		}
+	if (!_lockd_all_lvs(cmd, vg)) {
+		log_error("Cannot rename VG %s with active LVs", vg->name);
+		return 0;
 	}
 
 	/*
