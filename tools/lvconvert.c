@@ -2828,7 +2828,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 		if (!metadata_lv) {
 			if (arg_from_list_is_set(cmd, "is invalid with existing pool",
-						 cachemode_ARG, chunksize_ARG, discards_ARG,
+						 chunksize_ARG, discards_ARG,
 						 zero_ARG, poolmetadatasize_ARG, -1))
 				return_0;
 
@@ -3068,6 +3068,10 @@ mda_write:
 	seg->chunk_size = lp->chunk_size;
 	seg->discards = lp->discards;
 	seg->zero_new_blocks = lp->zero ? 1 : 0;
+
+	if (lp->cache_mode &&
+	    !cache_set_mode(seg, lp->cache_mode))
+		return_0;
 
 	if ((lp->policy_name || lp->policy_settings) &&
 	    !cache_set_policy(seg, lp->policy_name, lp->policy_settings))
