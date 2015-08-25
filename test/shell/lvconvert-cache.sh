@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -37,11 +37,25 @@ lvcreate -an -Zn -L 8 -n $lv3 $vg
 lvcreate -an -Zn -L 8 -n $lv4 $vg
 lvcreate -an -Zn -L 16 -n $lv5 $vg
 
-lvconvert --yes --type cache-pool --cachepool $vg/$lv1
+# check validation of cachemode arg works
+fail lvconvert --yes --type cache-pool --cachemode writethroughX --cachepool $vg/$lv1
+
+# by default no cache settings are attached to converted cache-pool
+lvconvert --yes --type cache-pool --chunksize 256 $vg/$lv1
 check inactive $vg ${lv1}_cdata
-lvconvert --yes --type cache-pool --chunksize 256 $vg/$lv2
+check lv_field $vg/$lv1 cache_mode ""
+check lv_field $vg/$lv1 cache_policy ""
+check lv_field $vg/$lv1 cache_settings ""
+check lv_field $vg/$lv1 chunk_size "256.00k"
+
+# but allow to set them when specified explicitely on command line
+lvconvert --yes --type cache-pool --cachemode writeback --cachepolicy mq \
+	--cachesettings sequential_threshold=1234 --cachesettings random_threshold=56 \
+	--cachepool $vg/$lv2
 check inactive $vg ${lv2}_cdata
-check lv_field $vg/$lv2 chunk_size "256.00k"
+check lv_field $vg/$lv2 cache_mode "writeback"
+check lv_field $vg/$lv2 cache_policy "mq"
+check lv_field $vg/$lv2 cache_settings "random_threshold=56,sequential_threshold=1234"
 
 # Check swap of cache pool metadata
 lvconvert --yes --type cache-pool --poolmetadata $lv4 $vg/$lv3
@@ -58,7 +72,8 @@ lvremove -ff $vg
 
 lvcreate -L 2 -n $lv1 $vg
 lvcreate --type cache-pool -l 1 -n ${lv1}_cachepool $vg
-lvconvert --cache --cachepool $vg/${lv1}_cachepool $vg/$lv1
+lvconvert --cache --cachepool $vg/${lv1}_cachepool --cachemode writeback $vg/$lv1
+check lv_field $vg/$lv1 cache_mode "writeback"
 dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 
 #lvconvert --cachepool $vg/${lv1}_cachepool $vg/$lv1
