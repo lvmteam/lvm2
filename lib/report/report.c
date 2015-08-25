@@ -1344,7 +1344,7 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
-	else {
+	else if (!seg_is_cache_pool(seg)) {
 		dm_list_init(&dummy_list);
 		return _field_set_string_list(rh, field, &dummy_list, private, 0);
 		/* TODO: once we have support for STR_LIST reserved values, replace with:
@@ -1384,7 +1384,7 @@ static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
-	else
+	else if (!seg_is_cache_pool(seg) || !seg->policy_name)
 		return _field_set_value(field, GET_FIRST_RESERVED_NAME(cache_policy_undef),
 					GET_FIELD_RESERVED_VALUE(cache_policy_undef));
 
