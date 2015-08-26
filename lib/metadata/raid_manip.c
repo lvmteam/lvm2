@@ -397,8 +397,10 @@ static struct logical_volume *_alloc_image_component(struct logical_volume *lv,
 	}
 
 	if (dm_snprintf(img_name, sizeof(img_name), "%s_%s_%%d",
-			(alt_base_name) ? : lv->name, type_suffix) < 0)
-		return_0;
+			(alt_base_name) ? : lv->name, type_suffix) < 0) {
+		log_error("Component name for raid %s is too long.", lv->name);
+		return 0;
+	}
 
 	status = LVM_READ | LVM_WRITE | LV_REBUILD | type;
 	if (!(tmp_lv = lv_create_empty(img_name, NULL, status, ALLOC_INHERIT, lv->vg))) {
