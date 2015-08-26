@@ -194,7 +194,11 @@ struct lockspace {
 	struct list_head resources;	/* resource/lock state for gl/vg/lv */
 };
 
+/* val_blk version */
 #define VAL_BLK_VERSION 0x0101
+
+/* val_blk flags */
+#define VBF_REMOVED 0x0001
 
 struct val_blk {
 	uint16_t version;

@@ -1763,7 +1763,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 				list_del(&act->list);
 				add_client_result(act);
 			}
-			if (rv == -EUNATCH)
+			if (rv == -EUNATCH || rv == -EREMOVED)
 				goto r_free;
 		}
 	}
@@ -1796,7 +1796,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 				list_del(&act->list);
 				add_client_result(act);
 			}
-			if (rv == -EUNATCH)
+			if (rv == -EUNATCH || rv == -EREMOVED)
 				goto r_free;
 			break;
 		}
@@ -1817,6 +1817,9 @@ r_free:
 	lm_rem_resource(ls, r);
 	list_del(&r->list);
 	free_resource(r);
+
+	if (rv == -EREMOVED)
+		ls->thread_stop = 1;
 }
 
 #define LOCKS_EXIST_ANY 1

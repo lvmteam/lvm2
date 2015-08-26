@@ -694,7 +694,8 @@ out:
 
 static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 {
-	uint32_t lockd_flags;
+	daemon_reply reply;
+	uint32_t lockd_flags = 0;
 	int result;
 	int ret;
 
@@ -704,23 +705,31 @@ static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 
 	/*
-	 * Unlocking the vg lock here preempts the lvmlockd unlock in
-	 * toollib.c which happens too late since the lockspace is
-	 * left here.
+	 * For the dlm, free_vg means unlock the ex VG lock,
+	 * and include an indication in the lvb that the VG
+	 * has been removed.  Then, leave the lockspace.
+	 * If another host tries to acquire the VG lock, it
+	 * will see that the VG has been removed by looking
+	 * at the lvb value.
 	 */
 
-	/* Equivalent to a standard unlock. */
-	ret = _lockd_request(cmd, "lock_vg",
-			     vg->name, NULL, NULL, NULL, NULL, NULL, "un", NULL,
-			     &result, &lockd_flags);
+	reply = _lockd_send("free_vg",
+				"pid = %d", getpid(),
+				"vg_name = %s", vg->name,
+				"vg_lock_type = %s", vg->lock_type,
+				"vg_lock_args = %s", vg->lock_args,
+				NULL);
 
-	if (!ret || result < 0) {
-		log_error("_free_vg_dlm lvmlockd result %d", result);
-		return 0;
+	if (!_lockd_result(reply, &result, &lockd_flags)) {
+		ret = 0;
+	} else {
+		ret = (result < 0) ? 0 : 1;
 	}
 
-	/* Leave the dlm lockspace. */
-	lockd_stop_vg(cmd, vg);
+	if (!ret)
+		log_error("_free_vg_dlm lvmlockd result %d", result);
+
+	daemon_reply_destroy(reply);
 
 	return 1;
 }
@@ -893,7 +902,11 @@ static int _lockd_all_lvs(struct cmd_context *cmd, struct volume_group *vg)
 int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
 			 int changing)
 {
-	/* Check that no LVs are active on other hosts. */
+	/*
+	 * Check that no LVs are active on other hosts.
+	 * When removing (not changing), each LV is locked
+	 * when it is removed, they do not need checking here.
+	 */
 	if (changing && !_lockd_all_lvs(cmd, vg)) {
 		log_error("Cannot change VG %s with active LVs", vg->name);
 		return 0;
@@ -1737,6 +1750,16 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 */
 	if (!result) {
 		ret = 1;
+		goto out;
+	}
+
+	/*
+	 * The VG has been removed.  This will only happen with a dlm VG
+	 * since a sanlock VG must be stopped everywhere before it's removed.
+	 */
+	if (result == -EREMOVED) {
+		log_error("VG %s lock is removed", vg_name);
+		ret = 0;
 		goto out;
 	}
 
