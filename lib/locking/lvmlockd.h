@@ -129,7 +129,7 @@ static inline int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg
 	return 1;
 }
 
-static inline int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg)
+static inline int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg, int changing)
 {
 	return 1;
 }
