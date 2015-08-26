@@ -1,3 +1,6 @@
+Version 2.02.130 - 
+===================================
+
 Version 2.02.129 - 26th August 2015
 ===================================
   Drop error message when vgdisplay encounters an exported VG. (2.02.27)
