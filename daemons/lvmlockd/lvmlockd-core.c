@@ -1057,7 +1057,18 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 
 	/* lm_lock() reads new r_version */
 
-	if ((r_version > r->version) || (!r->version && !r->version_zero_valid)) {
+	if ((r_version != r->version) || (!r->version && !r->version_zero_valid)) {
+
+		/*
+		 * r_version only increases, so if it goes down, it means the
+		 * dlm lvb became invalid (happens during recovery if the
+		 * resource master leaves).
+		 */
+		if (r_version < r->version) {
+			log_debug("S %s R %s res_lock lvb invalid r_version %u prev %u",
+				  ls->name, r->name, r_version, r->version);
+		}
+
 		/*
 		 * New r_version of the lock: means that another
 		 * host has changed data protected by this lock
