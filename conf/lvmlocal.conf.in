@@ -24,34 +24,33 @@ local {
 
 	# Configuration option local/system_id.
 	# Defines the local system ID for lvmlocal mode.
-	# This is used when global/system_id_source is set
-	# to 'lvmlocal' in the main configuration file,
-	# e.g. lvm.conf.
-	# When used, it must be set to a unique value
-	# among all hosts sharing access to the storage,
+	# This is used when global/system_id_source is set to 'lvmlocal' in the
+	# main configuration file, e.g. lvm.conf. When used, it must be set to
+	# a unique value among all hosts sharing access to the storage,
 	# e.g. a host name.
-	# Example:
-	# Set no system ID.
+	# 
+	# Example
+	# Set no system ID:
 	# system_id = ""
-	# Example:
-	# Set the system_id to the string 'host1'.
+	# Set the system_id to a specific name:
 	# system_id = "host1"
+	# 
+	# This configuration option has an automatic default value.
 	# system_id = ""
 
 	# Configuration option local/extra_system_ids.
 	# A list of extra VG system IDs the local host can access.
-	# VGs with the system IDs listed here (in addition
-	# to the host's own system ID) can be fully accessed
-	# by the local host.  (These are system IDs that the
-	# host sees in VGs, not system IDs that identify the
-	# local host, which is determined by system_id_source.)
-	# Use this only after consulting 'man lvmsystemid'
-	# to be certain of correct usage and possible dangers.
+	# VGs with the system IDs listed here (in addition to the host's own
+	# system ID) can be fully accessed by the local host. (These are
+	# system IDs that the host sees in VGs, not system IDs that identify
+	# the local host, which is determined by system_id_source.)
+	# Use this only after consulting 'man lvmsystemid' to be certain of
+	# correct usage and possible dangers.
 	# This configuration option does not have a default value defined.
 
 	# Configuration option local/host_id.
 	# The lvmlockd sanlock host_id.
-	# This must be a unique among all hosts,
-	# and must be between 1 and 2000.
+	# This must be unique among all hosts, and must be between 1 and 2000.
+	# This configuration option has an automatic default value.
 	# host_id = 0
 }

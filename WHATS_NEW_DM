@@ -1,4 +1,4 @@
-Version 1.02.106 -
+Version 1.02.106 - 26th August 2015
 ===================================
   Add 'precise' column to statistics reports.
   Add --precise switch to 'dmstats create' to request nanosecond counters.
