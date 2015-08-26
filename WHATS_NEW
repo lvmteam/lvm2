@@ -1,5 +1,6 @@
 Version 2.02.129 -
 ===================================
+  Fix shared library generation to stop exporting internal functions.(2.02.120)
   Accept --cachemode with lvconvert.
   Fix and improve reporting properties of cache-pool.
   Enable usage of --cachepolicy and --cachesetting with lvconvert.

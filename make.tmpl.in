@@ -505,7 +505,7 @@ else
 	for i in $$(echo $(EXPORTED_SYMBOLS) | tr ' ' '\n' | sort -rnt_ -k5 ); do\
 		echo "$${i##*.} {"; echo "	global:";\
 		$(SED) "s/^/		/;s/$$/;/" $$i;\
-		test "$$i" = Base && { echo "	local:"; echo "		*;"; };\
+		test "$${i##*.}" = Base && { echo "	local:"; echo "		*;"; };\
 		echo "};";\
 	done > $@
 endif
