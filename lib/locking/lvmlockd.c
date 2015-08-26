@@ -1323,6 +1323,9 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 		return 0;
 	}
 
+	/* --shared with vgcreate does not mean include_shared_vgs */
+	cmd->include_shared_vgs = 0;
+
 	lvmetad_validate_global_cache(cmd, 1);
 
 	return 1;
@@ -1631,7 +1634,30 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	int result;
 	int ret;
 
+	/*
+	 * The result of the VG lock request is saved in lockd_state to be
+	 * passed into vg_read where the lock result is needed once we
+	 * know if this is a local VG or lockd VG.
+	 */
 	*lockd_state = 0;
+
+	/*
+	 * Use of lockd_vg_rescan.
+	 *
+	 * This is the VG equivalent of using lvmetad_validate_global_cache()
+	 * for the global lock (after failing to acquire the global lock).  If
+	 * we fail to acquire the VG lock from lvmlockd, then the lvmlockd
+	 * mechanism has been missed that would have updated the cached lvmetad
+	 * copy of the VG.  So, set lockd_vg_rescan to tell the VG reading code
+	 * to treat the lvmetad copy as if the invalid flag had been returned.
+	 * i.e. If a lockd VG is read without a lock, ignore the lvmetad copy
+	 * and read it from disk since we don't know if the cache is stale.
+	 *
+	 * Because lvmlockd requests return an error for local VGs, this will
+	 * be set for local VGs, but it ends up being ignored once the VG is
+	 * read and found to be a local VG.
+	 */
+	cmd->lockd_vg_rescan = 0;
 
 	if (!is_real_vg(vg_name))
 		return 1;
@@ -1703,6 +1729,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 */
 	if (!_use_lvmlockd) {
 		*lockd_state |= LDST_FAIL_REQUEST;
+		cmd->lockd_vg_rescan = 1;
 		return 1;
 	}
 
@@ -1719,6 +1746,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		 * this error for local VGs, but we do care for lockd VGs.
 		 */
 		*lockd_state |= LDST_FAIL_REQUEST;
+		cmd->lockd_vg_rescan = 1;
 		return 1;
 	}
 
@@ -1737,12 +1765,15 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		break;
 	case -ENOLS:
 		*lockd_state |= LDST_FAIL_NOLS;
+		cmd->lockd_vg_rescan = 1;
 		break;
 	case -ESTARTING:
 		*lockd_state |= LDST_FAIL_STARTING;
+		cmd->lockd_vg_rescan = 1;
 		break;
 	default:
 		*lockd_state |= LDST_FAIL_OTHER;
+		cmd->lockd_vg_rescan = 1;
 	}
 
 	/*
@@ -1758,8 +1789,8 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * since a sanlock VG must be stopped everywhere before it's removed.
 	 */
 	if (result == -EREMOVED) {
-		log_error("VG %s lock is removed", vg_name);
-		ret = 0;
+		log_error("VG %s lock failed: removed", vg_name);
+		ret = 1;
 		goto out;
 	}
 

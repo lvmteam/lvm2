@@ -134,6 +134,7 @@ struct cmd_context {
 	unsigned lockd_vg_disable:1;
 	unsigned lockd_lv_disable:1;
 	unsigned lockd_gl_removed:1;
+	unsigned lockd_vg_rescan:1;
 	unsigned lockd_vg_default_sh:1;
 	unsigned lockd_vg_enforce_sh:1;
 

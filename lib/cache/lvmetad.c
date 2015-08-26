@@ -434,6 +434,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	struct format_type *fmt;
 	struct dm_config_node *pvcn;
 	struct pv_list *pvl;
+	int rescan = 0;
 
 	if (!lvmetad_active())
 		return NULL;
@@ -493,15 +494,55 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 			goto_out;
 
 		/*
+		 * Read the VG from disk, ignoring the lvmetad copy in these
+		 * cases:
+		 *
+		 * 1. The host is not using lvmlockd, but is reading lockd VGs
+		 * using the --shared option.  The shared option is meant to
+		 * let hosts not running lvmlockd look at lockd VGs, like the
+		 * foreign option allows hosts to look at foreign VGs.  When
+		 * --foreign is used, the code forces a rescan since the local
+		 * lvmetad cache of foreign VGs is likely stale.  Similarly,
+		 * for --shared, have the code reading the shared VGs below
+		 * not use the cached copy from lvmetad but to rescan the VG.
+		 *
+		 * 2. The host failed to acquire the VG lock from lvmlockd for
+		 * the lockd VG.  In this case, the usual mechanisms for
+		 * updating the lvmetad copy of the VG have been missed.  Since
+		 * we don't know if the cached copy is valid, assume it's not.
+		 *
+		 * 3. lvmetad has returned the "vg_invalid" flag, which is the
+		 * usual mechanism used by lvmlockd/lvmetad to cause a host to
+		 * reread a VG from disk that has been modified from another
+		 * host.
+		 */
+
+		if (is_lockd_type(vg->lock_type) && cmd->include_shared_vgs) {
+			log_debug_lvmetad("Rescan VG %s because including shared", vgname);
+			rescan = 1;
+		} else if (is_lockd_type(vg->lock_type) && cmd->lockd_vg_rescan) {
+			log_debug_lvmetad("Rescan VG %s because no lvmlockd lock is held", vgname);
+			rescan = 1;
+		} else if (dm_config_find_node(reply.cft->root, "vg_invalid")) {
+			log_debug_lvmetad("Rescan VG %s because lvmetad returned invalid", vgname);
+			rescan = 1;
+		}
+
+		/*
 		 * locking may have detected a newer vg version and
 		 * invalidated the cached vg.
 		 */
-		if (dm_config_find_node(reply.cft->root, "vg_invalid")) {
+		if (rescan) {
 			log_debug_lvmetad("Update invalid lvmetad cache for VG %s", vgname);
 			vg2 = lvmetad_pvscan_vg(cmd, vg);
 			release_vg(vg);
 			vg = vg2;
-			fid = vg->fid;
+			if (!vg) {
+				log_debug_lvmetad("VG %s from lvmetad not found during rescan.", vgname);
+				fid = NULL;
+				goto out;
+			} else
+				fid = vg->fid;
 		}
 
 		dm_list_iterate_items(pvl, &vg->pvs) {
