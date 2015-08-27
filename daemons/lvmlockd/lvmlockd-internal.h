@@ -50,7 +50,6 @@ enum {
 	LD_OP_RENAME_FINAL,
 	LD_OP_RUNNING_LM,
 	LD_OP_FIND_FREE_LOCK,
-	LD_OP_FORGET_VG_NAME,
 	LD_OP_KILL_VG,
 	LD_OP_DROP_VG,
 };
@@ -101,8 +100,6 @@ struct client {
 #define LD_AF_SEARCH_LS            0x00000200
 #define LD_AF_WAIT_STARTING        0x00001000
 #define LD_AF_DUP_GL_LS            0x00002000
-#define LD_AF_INACTIVE_LS          0x00004000
-#define LD_AF_ADD_LS_ERROR         0x00008000
 #define LD_AF_ADOPT                0x00010000
 #define LD_AF_WARN_GL_REMOVED	   0x00020000
 

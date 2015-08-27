@@ -185,18 +185,9 @@ static int restart_fds[2];
  * Each lockspace has its own thread to do locking.
  * The lockspace thread makes synchronous lock requests to dlm/sanlock.
  * Every vg with a lockd type, i.e. "dlm", "sanlock", should be on this list.
- *
- * lockspaces_inactive holds old ls structs for vgs that have been
- * stopped, or for vgs that failed to start.  The old ls structs
- * are removed from the inactive list and freed when a new ls with
- * the same name is started and added to the standard lockspaces list.
- * Keeping this bit of "history" for the ls allows us to return a
- * more informative error message if a vg lock request is made for
- * an ls that has been stopped or failed to start.
  */
 static pthread_mutex_t lockspaces_mutex;
 static struct list_head lockspaces;
-static struct list_head lockspaces_inactive;
 
 /*
  * Client thread reads client requests and writes client results.
@@ -264,7 +255,6 @@ static int alloc_new_structs; /* used for initializing in setup_structs */
 
 static int add_lock_action(struct action *act);
 static int str_to_lm(const char *str);
-static int clear_lockspace_inactive(char *name);
 static int setup_dump_socket(void);
 static void send_dump_buf(int fd, int dump_len);
 static int dump_info(int *dump_len);
@@ -737,8 +727,6 @@ static const char *op_str(int x)
 		return "running_lm";
 	case LD_OP_FIND_FREE_LOCK:
 		return "find_free_lock";
-	case LD_OP_FORGET_VG_NAME:
-		return "forget_vg_name";
 	case LD_OP_KILL_VG:
 		return "kill_vg";
 	case LD_OP_DROP_VG:
@@ -2009,13 +1997,6 @@ static int other_sanlock_vgs_exist(struct lockspace *ls_rem)
 {
 	struct lockspace *ls;
 
-	list_for_each_entry(ls, &lockspaces_inactive, list) {
-		if (ls->lm_type != LD_LM_SANLOCK)
-			continue;
-		log_debug("other sanlock vg exists inactive %s", ls->name);
-		return 1;
-	}
-
 	list_for_each_entry(ls, &lockspaces, list) {
 		if (ls->lm_type != LD_LM_SANLOCK)
 			continue;
@@ -2422,10 +2403,7 @@ out_act:
 	ls->drop_vg = drop_vg;
 	pthread_mutex_unlock(&lockspaces_mutex);
 
-	/*
-	 * worker_thread will join this thread, and free the
-	 * ls or move it to lockspaces_inactive.
-	 */
+	/* worker_thread will join this thread, and free the ls */
 	pthread_mutex_lock(&worker_mutex);
 	worker_wake = 1;
 	pthread_cond_signal(&worker_cond);
@@ -2579,8 +2557,6 @@ static int add_lockspace_thread(const char *ls_name,
 	 */
 	if (act)
 		list_add(&act->list, &ls->actions);
-
-	clear_lockspace_inactive(ls->name);
 
 	list_add_tail(&ls->list, &lockspaces);
 	pthread_mutex_unlock(&lockspaces_mutex);
@@ -2826,65 +2802,6 @@ static int count_lockspace_starting(uint32_t client_id)
 	return count;
 }
 
-/* lockspaces_mutex is held */
-static struct lockspace *find_lockspace_inactive(char *ls_name)
-{
-	struct lockspace *ls;
-
-	list_for_each_entry(ls, &lockspaces_inactive, list) {
-		if (!strcmp(ls->name, ls_name))
-			return ls;
-	}
-
-	return NULL;
-}
-
-/* lockspaces_mutex is held */
-static int clear_lockspace_inactive(char *ls_name)
-{
-	struct lockspace *ls;
-
-	ls = find_lockspace_inactive(ls_name);
-	if (ls) {
-		list_del(&ls->list);
-		free(ls);
-		return 1;
-	}
-
-	return 0;
-}
-
-static int forget_lockspace_inactive(char *vg_name)
-{
-	char ls_name[MAX_NAME+1];
-	int found;
-
-	memset(ls_name, 0, sizeof(ls_name));
-	vg_ls_name(vg_name, ls_name);
-
-	log_debug("forget_lockspace_inactive %s", ls_name);
-
-	pthread_mutex_lock(&lockspaces_mutex);
-	found = clear_lockspace_inactive(ls_name);
-	pthread_mutex_unlock(&lockspaces_mutex);
-
-	if (found)
-		return 0;
-	return -ENOENT;
-}
-
-static void free_lockspaces_inactive(void)
-{
-	struct lockspace *ls, *safe;
-
-	pthread_mutex_lock(&lockspaces_mutex);
-	list_for_each_entry_safe(ls, safe, &lockspaces_inactive, list) {
-		list_del(&ls->list);
-		free(ls);
-	}
-	pthread_mutex_unlock(&lockspaces_mutex);
-}
-
 /*
  * Loop through all lockspaces, and:
  * - if do_stop is set, stop any that are not stopped
@@ -2958,15 +2875,14 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 				pthread_join(ls->thread, NULL);
 				list_del(&ls->list);
 
+				/* FIXME: will free_vg ever not be set? */
 
-				/* In future we may need to free ls->actions here */
-				free_ls_resources(ls);
-
-				if (ls->free_vg)
+				if (ls->free_vg) {
+					/* In future we may need to free ls->actions here */
+					free_ls_resources(ls);
 					free(ls);
-				else
-					list_add(&ls->list, &lockspaces_inactive);
-				free_count++;
+					free_count++;
+				}
 			} else {
 				need_free++;
 			}
@@ -3486,12 +3402,6 @@ static void client_send_result(struct client *cl, struct action *act)
 	if (act->flags & LD_AF_DUP_GL_LS)
 		strcat(result_flags, "DUP_GL_LS,");
 
-	if (act->flags & LD_AF_INACTIVE_LS)
-		strcat(result_flags, "INACTIVE_LS,");
-
-	if (act->flags & LD_AF_ADD_LS_ERROR)
-		strcat(result_flags, "ADD_LS_ERROR,");
-
 	if (act->flags & LD_AF_WARN_GL_REMOVED)
 		strcat(result_flags, "WARN_GL_REMOVED,");
 	
@@ -3635,19 +3545,8 @@ static int add_lock_action(struct action *act)
 	pthread_mutex_lock(&lockspaces_mutex);
 	if (ls_name[0])
 		ls = find_lockspace_name(ls_name);
+	pthread_mutex_unlock(&lockspaces_mutex);
 	if (!ls) {
-		int ls_inactive = 0;
-		int ls_create_fail = 0;
-
-		if (ls_name[0])
-			ls = find_lockspace_inactive(ls_name);
-		if (ls) {
-			ls_inactive = 1;
-			ls_create_fail = ls->create_fail;
-			ls = NULL;
-		}
-		pthread_mutex_unlock(&lockspaces_mutex);
-
 		if (act->op == LD_OP_UPDATE && act->rt == LD_RT_VG) {
 			log_debug("lockspace not found ignored for vg update");
 			return -ENOLS;
@@ -3676,14 +3575,6 @@ static int add_lock_action(struct action *act)
 			log_debug("lockspace not found ignored for unlock");
 			return -ENOLS;
 
-		} else if (act->op == LD_OP_LOCK && act->rt == LD_RT_VG && ls_inactive) {
-			/* ls has been stopped or previously failed to start */
-			log_debug("lockspace inactive create_fail %d %s",
-				  ls_create_fail, ls_name);
-			act->flags |= LD_AF_INACTIVE_LS;
-			if (ls_create_fail)
-				act->flags |= LD_AF_ADD_LS_ERROR;
-			return -ENOLS;
 		} else {
 			log_debug("lockspace not found %s", ls_name);
 			return -ENOLS;
@@ -3850,11 +3741,6 @@ static int str_to_op_rt(const char *req_name, int *op, int *rt)
 	}
 	if (!strcmp(req_name, "find_free_lock")) {
 		*op = LD_OP_FIND_FREE_LOCK;
-		*rt = LD_RT_VG;
-		return 0;
-	}
-	if (!strcmp(req_name, "forget_vg_name")) {
-		*op = LD_OP_FORGET_VG_NAME;
 		*rt = LD_RT_VG;
 		return 0;
 	}
@@ -4436,10 +4322,6 @@ static void client_recv_action(struct client *cl)
 	case LD_OP_KILL_VG:
 	case LD_OP_DROP_VG:
 		rv = add_lock_action(act);
-		break;
-	case LD_OP_FORGET_VG_NAME:
-		act->result = forget_lockspace_inactive(act->vg_name);
-		add_client_result(act);
 		break;
 	default:
 		rv = -EINVAL;
@@ -5619,7 +5501,6 @@ static int main_loop(daemon_state *ds_arg)
 	strcpy(gl_lsname_dlm, S_NAME_GL_DLM);
 
 	INIT_LIST_HEAD(&lockspaces);
-	INIT_LIST_HEAD(&lockspaces_inactive);
 	pthread_mutex_init(&lockspaces_mutex, NULL);
 	pthread_mutex_init(&pollfd_mutex, NULL);
 	pthread_mutex_init(&log_mutex, NULL);
@@ -5759,7 +5640,6 @@ static int main_loop(daemon_state *ds_arg)
 	}
 
 	for_each_lockspace_retry(DO_STOP, DO_FREE, DO_FORCE);
-	free_lockspaces_inactive();
 	close_worker_thread();
 	close_client_thread();
 	closelog();

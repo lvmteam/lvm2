@@ -118,12 +118,6 @@ static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_fla
 	if (strstr(flags_str, "DUP_GL_LS"))
 		*lockd_flags |= LD_RF_DUP_GL_LS;
 
-	if (strstr(flags_str, "INACTIVE_LS"))
-		*lockd_flags |= LD_RF_INACTIVE_LS;
-
-	if (strstr(flags_str, "ADD_LS_ERROR"))
-		*lockd_flags |= LD_RF_ADD_LS_ERROR;
-
 	if (strstr(flags_str, "WARN_GL_REMOVED"))
 		*lockd_flags |= LD_RF_WARN_GL_REMOVED;
 }
@@ -825,37 +819,6 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	return ret;
 }
 
-/*
- * Tell lvmlockd to forget about an old VG name.
- * lvmlockd remembers previous lockd VGs so that it can provide more
- * informative error messages (see INACTIVE_LS, ADD_LS_ERROR).
- *
- * If a new local VG is created with the same name as a previous lockd VG,
- * lvmlockd's memory of the previous lockd VG interferes (causes incorrect
- * lockd_vg failures).
- *
- * We could also remove the list of inactive (old) VG names from lvmlockd,
- * and then this function would not be needed, but this would also reduce
- * the ability to have helpful error messages.
- */
-
-static void _forget_vg_name(struct cmd_context *cmd, struct volume_group *vg)
-{
-	daemon_reply reply;
-
-	if (!_use_lvmlockd)
-		return;
-	if (!_lvmlockd_connected)
-		return;
-
-	reply = _lockd_send("forget_vg_name",
-				"pid = %d", getpid(),
-				"vg_name = %s", vg->name,
-				NULL);
-
-	daemon_reply_destroy(reply);
-}
-
 /* vgcreate */
 
 int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
@@ -863,7 +826,6 @@ int lockd_init_vg(struct cmd_context *cmd, struct volume_group *vg,
 {
 	switch (get_lock_type_from_string(lock_type)) {
 	case LOCK_TYPE_NONE:
-		_forget_vg_name(cmd, vg);
 		return 1;
 	case LOCK_TYPE_CLVM:
 		return 1;
@@ -1835,46 +1797,6 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 			goto out;
 		} else {
 			log_error("VG %s lock failed: storage %s for sanlock leases", vg_name, problem);
-			ret = 0;
-			goto out;
-		}
-	}
-
-	/*
-	 * An unused/previous lockspace for the VG was found.
-	 * This means it must be a lockd VG, not local.  The
-	 * lockspace needs to be started to be used.
-	 */
-	if ((result == -ENOLS) && (lockd_flags & LD_RF_INACTIVE_LS)) {
-		if (!strcmp(mode, "un")) {
-			ret = 1;
-			goto out;
-		} else if (!strcmp(mode, "sh")) {
-			log_warn("VG %s lock skipped: lockspace is inactive", vg_name);
-			ret = 1;
-			goto out;
-		} else {
-			log_error("VG %s lock failed: lockspace is inactive", vg_name);
-			ret = 0;
-			goto out;
-		}
-	}
-
-	/*
-	 * An unused lockspace for the VG was found.  The previous
-	 * start of the lockspace failed, so we can print a more useful
-	 * error message.
-	 */
-	if ((result == -ENOLS) && (lockd_flags & LD_RF_ADD_LS_ERROR)) {
-		if (!strcmp(mode, "un")) {
-			ret = 1;
-			goto out;
-		} else if (!strcmp(mode, "sh")) {
-			log_warn("VG %s lock skipped: lockspace start error", vg_name);
-			ret = 1;
-			goto out;
-		} else {
-			log_error("VG %s lock failed: lockspace start error", vg_name);
 			ret = 0;
 			goto out;
 		}
