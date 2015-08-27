@@ -1048,15 +1048,6 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 		cmd->lockd_vg_disable = 1;
 
 	/*
-	 * In most cases, lockd_vg does not apply when changing lock type.
-	 * (We don't generally allow changing *from* lockd type yet.)
-	 * lockd_vg could be called within _vgchange_locktype as needed.
-	 */
-
-	if (arg_is_set(cmd, locktype_ARG))
-		cmd->lockd_vg_disable = 1;
-
-	/*
 	 * Changing system_id or lock_type must only be done on explicitly
 	 * named vgs.
 	 */
