@@ -313,7 +313,7 @@ static inline int list_empty(const struct list_head *head)
  * or when disable_gl matches.
  */
 
-EXTERN int gl_running_dlm;
+EXTERN int dlm_gl_lockspace_running;
 EXTERN int gl_type_static;
 EXTERN int gl_use_dlm;
 EXTERN int gl_use_sanlock;

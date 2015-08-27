@@ -260,10 +260,6 @@ int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
  out:
 	free(lmd);
 	ls->lm_data = NULL;
-
-	if (!strcmp(ls->name, gl_lsname_dlm))
-		gl_running_dlm = 0;
-
 	return 0;
 }
 

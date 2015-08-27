@@ -2403,6 +2403,9 @@ out_act:
 	ls->drop_vg = drop_vg;
 	pthread_mutex_unlock(&lockspaces_mutex);
 
+	if (gl_use_dlm && !strcmp(ls->name, gl_lsname_dlm))
+		dlm_gl_lockspace_running = 0;
+
 	/* worker_thread will join this thread, and free the ls */
 	pthread_mutex_lock(&worker_mutex);
 	worker_wake = 1;
@@ -2584,21 +2587,21 @@ static int add_dlm_global_lockspace(struct action *act)
 {
 	int rv;
 
-	if (gl_running_dlm)
+	if (dlm_gl_lockspace_running)
 		return -EEXIST;
-	gl_running_dlm = 1;
+	dlm_gl_lockspace_running = 1;
 
 	/*
 	 * There's a short period after which a previous gl lockspace thread
-	 * has set gl_running_dlm = 0, but before its ls struct has been
-	 * deleted, during which this add_lockspace_thread() can fail with
+	 * has set dlm_gl_lockspace_running = 0, but before its ls struct has
+	 * been deleted, during which this add_lockspace_thread() can fail with
 	 * -EAGAIN.
 	 */
 
 	rv = add_lockspace_thread(gl_lsname_dlm, NULL, NULL, LD_LM_DLM, NULL, act);
 	if (rv < 0) {
 		log_error("add_dlm_global_lockspace add_lockspace_thread %d", rv);
-		gl_running_dlm = 0;
+		dlm_gl_lockspace_running = 0;
 	}
 
 	return rv;
