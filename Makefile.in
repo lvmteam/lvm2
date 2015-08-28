@@ -150,6 +150,9 @@ install_systemd_generators:
 install_systemd_units:
 	$(MAKE) -C scripts install_systemd_units
 
+install_full_man:
+	$(MAKE) -C man install_full_man
+
 ifeq ("@PYTHON_BINDINGS@", "yes")
 install_python_bindings:
 	$(MAKE) -C liblvm/python install_python_bindings

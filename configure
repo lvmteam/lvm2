@@ -13870,16 +13870,14 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-if  test "$CLVMD" != none; then
-	clvmd_prefix=$ac_default_prefix
-	test "$prefix" != NONE && clvmd_prefix=$prefix
-	CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
+clvmd_prefix=$ac_default_prefix
+test "$prefix" != NONE && clvmd_prefix=$prefix
+CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
 
 cat >>confdefs.h <<_ACEOF
 #define CLVMD_PATH "$CLVMD_PATH"
 _ACEOF
 
-fi
 
 ################################################################################
 if test "$BUILD_DMEVENTD" = yes; then
