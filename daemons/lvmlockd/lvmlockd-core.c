@@ -1100,7 +1100,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 				  ls->name, r->name, r_version);
 	
 			if (!ls->vg_uuid[0] || !strcmp(ls->vg_uuid, "none"))
-				uuid = ls->name;
+				uuid = (char *)"none";
 			else
 				uuid = ls->vg_uuid;
 
@@ -1108,6 +1108,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 			reply = daemon_send_simple(lvmetad_handle, "set_vg_info",
 						   "token = %s", "skip",
 						   "uuid = %s", uuid,
+						   "name = %s", ls->vg_name,
 						   "version = %d", (int)r_version,
 						   NULL);
 			pthread_mutex_unlock(&lvmetad_mutex);
