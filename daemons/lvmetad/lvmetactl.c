@@ -34,16 +34,16 @@ int main(int argc, char **argv)
 	int ver;
 
 	if (argc < 2) {
-		printf("lvmeta dump\n");
-		printf("lvmeta pv_list\n");
-		printf("lvmeta vg_list\n");
-		printf("lvmeta vg_lookup_name <name>\n");
-		printf("lvmeta vg_lookup_uuid <uuid>\n");
-		printf("lvmeta pv_lookup_uuid <uuid>\n");
-		printf("lvmeta set_global_invalid 0|1\n");
-		printf("lvmeta get_global_invalid\n");
-		printf("lvmeta set_vg_version <uuid> <version>\n");
-		printf("lvmeta vg_lock_type <uuid>\n");
+		printf("lvmetactl dump\n");
+		printf("lvmetactl pv_list\n");
+		printf("lvmetactl vg_list\n");
+		printf("lvmetactl vg_lookup_name <name>\n");
+		printf("lvmetactl vg_lookup_uuid <uuid>\n");
+		printf("lvmetactl pv_lookup_uuid <uuid>\n");
+		printf("lvmetactl set_global_invalid 0|1\n");
+		printf("lvmetactl get_global_invalid\n");
+		printf("lvmetactl set_vg_version <uuid> <name> <version>\n");
+		printf("lvmetactl vg_lock_type <uuid>\n");
 		return -1;
 	}
 
@@ -89,18 +89,43 @@ int main(int argc, char **argv)
 		printf("%s\n", reply.buffer.mem);
 
 	} else if (!strcmp(cmd, "set_vg_version")) {
-		if (argc < 4) {
-			printf("set_vg_version <uuid> <ver>\n");
+		if (argc < 5) {
+			printf("set_vg_version <uuid> <name> <ver>\n");
 			return -1;
 		}
 		uuid = argv[2];
-		ver = atoi(argv[3]);
+		name = argv[3];
+		ver = atoi(argv[4]);
 
-		reply = daemon_send_simple(h, "set_vg_info",
-					   "uuid = %s", uuid,
-					   "version = %d", ver,
-					   "token = %s", "skip",
-					   NULL);
+		if ((strlen(uuid) == 1) && (uuid[0] == '-'))
+			uuid = NULL;
+		if ((strlen(name) == 1) && (name[0] == '-'))
+			name = NULL;
+
+		if (uuid && name) {
+			reply = daemon_send_simple(h, "set_vg_info",
+						   "uuid = %s", uuid,
+						   "name = %s", name,
+						   "version = %d", ver,
+						    "token = %s", "skip",
+						    NULL);
+		} else if (uuid) {
+			reply = daemon_send_simple(h, "set_vg_info",
+						   "uuid = %s", uuid,
+						   "version = %d", ver,
+						    "token = %s", "skip",
+						    NULL);
+		} else if (name) {
+			reply = daemon_send_simple(h, "set_vg_info",
+						   "name = %s", name,
+						   "version = %d", ver,
+						    "token = %s", "skip",
+						    NULL);
+		} else {
+			printf("name or uuid required\n");
+			return -1;
+		}
+
 		print_reply(reply);
 
 	} else if (!strcmp(cmd, "vg_lookup_name")) {
