@@ -1,5 +1,6 @@
 Version 1.02.107 - 
 ===================================
+  Reinstate dm_task_get_info@Base to libdevmapper exports. (1.02.106)
 
 Version 1.02.106 - 26th August 2015
 ===================================
