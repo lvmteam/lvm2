@@ -779,17 +779,17 @@ Create a whole-device region with 8 areas on every device
 .br
 # dmstats create --areas 8
 .br
-vg00/lvol1: Created new region with 8 area(s) as region ID 0
+vg00-lvol1: Created new region with 8 area(s) as region ID 0
 .br
-vg00/lvol2: Created new region with 8 area(s) as region ID 0
+vg00-lvol2: Created new region with 8 area(s) as region ID 0
 .br
-vg00/lvol3: Created new region with 8 area(s) as region ID 0
+vg00-lvol3: Created new region with 8 area(s) as region ID 0
 .br
-vg01/lvol0: Created new region with 8 area(s) as region ID 2
+vg01-lvol0: Created new region with 8 area(s) as region ID 2
 .br
-vg01/lvol1: Created new region with 8 area(s) as region ID 0
+vg01-lvol1: Created new region with 8 area(s) as region ID 0
 .br
-vg00/lvol2: Created new region with 8 area(s) as region ID 1
+vg00-lvol2: Created new region with 8 area(s) as region ID 1
 .br
 .br
 
@@ -806,7 +806,7 @@ using dmsetup
 .br
 # dmsetup stats create --areasize 10G vg00/lvol1
 .br
-vg00/lvol1: Created new region with 5 area(s) as region ID 1
+vg00-lvol1: Created new region with 5 area(s) as region ID 1
 .br
 .br
 
@@ -814,7 +814,7 @@ Create a 1GiB region with 16 areas at the start of vg00/lvol1
 .br
 # dmstats create --start 0 --len 1G --areas=16 vg00/lvol1
 .br
-vg00/lvol1: Created new region with 16 area(s) as region ID 0
+vg00-lvol1: Created new region with 16 area(s) as region ID 0
 .br
 .br
 
@@ -854,11 +854,11 @@ Create one region for reach target contained in device vg00/lvol1
 .br
 # dmstats create --segments vg00/lvol1
 .br
-Created new region with 1 area(s) as region ID 0
+vg00-lvol1: Created new region with 1 area(s) as region ID 0
 .br
-Created new region with 1 area(s) as region ID 1
+vg00-lvol1: Created new region with 1 area(s) as region ID 1
 .br
-Created new region with 1 area(s) as region ID 2
+vg00-lvol1: Created new region with 1 area(s) as region ID 2
 .br
 .br
 
