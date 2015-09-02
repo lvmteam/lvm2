@@ -1,4 +1,4 @@
-.TH DMSTATS 8 "Jul 25 2015" "Linux" "MAINTENANCE COMMANDS"
+eTH DMSTATS 8 "Jul 25 2015" "Linux" "MAINTENANCE COMMANDS"
 .SH NAME
 dmstats \(em device-mapper statistics management
 .SH SYNOPSIS
@@ -222,6 +222,9 @@ Specify a program ID string. When creating new statistics regions this
 string is stored with the region. Subsequent operations may supply a
 program ID in order to select only regions with a matching value. The
 default program ID for dmstats-managed regions is "dmstats".
+.TP
+.BR \-\-regionid \fIid
+Specify the region to operate on.
 .TP
 .BR \-\-relative
 If displaying the histogram report show relative (percentage) values
