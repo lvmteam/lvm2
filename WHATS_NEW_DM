@@ -1,5 +1,6 @@
 Version 1.02.107 - 
 ===================================
+  Parse thin-pool status with one single routine internally.
   Fix devmapper.pc pkgconfig file to not reference non-existent rt.pc file.
   Reinstate dm_task_get_info@Base to libdevmapper exports. (1.02.106)
 
