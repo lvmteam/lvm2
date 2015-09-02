@@ -1,5 +1,6 @@
 Version 2.02.130 - 
 ===================================
+  Make lvpoll error messages visible in lvmpolld's stderr and in syslog.
   Add 'make install_full_man' to install all man pages regardless of config.
 
 Version 2.02.129 - 26th August 2015

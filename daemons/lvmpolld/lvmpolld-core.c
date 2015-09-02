@@ -83,6 +83,12 @@ static int _init(struct daemon_state *s)
 	struct lvmpolld_state *ls = s->private;
 	ls->log = s->log;
 
+	/*
+	 * log warnings to stderr by default. Otherwise we would miss any lvpoll
+	 * error messages in default configuration
+	 */
+	daemon_log_enable(ls->log, DAEMON_LOG_OUTLET_STDERR, DAEMON_LOG_WARN,  1);
+
 	if (!daemon_log_parse(ls->log, DAEMON_LOG_OUTLET_STDERR, ls->log_config, 1))
 		return 0;
 
@@ -284,7 +290,7 @@ static int poll_for_output(struct lvmpolld_lv *pdlv, struct lvmpolld_thread_data
 				 "caught input data in STDERR");
 
 			assert(read_single_line(data, 1)); /* may block indef. anyway */
-			INFO(pdlv->ls, "%s: PID %d: %s: '%s'", LVM2_LOG_PREFIX,
+			WARN(pdlv->ls, "%s: PID %d: %s: '%s'", LVM2_LOG_PREFIX,
 			     pdlv->cmd_pid, "STDERR", data->line);
 		} else if (fds[1].revents) {
 			if (fds[1].revents & POLLHUP)
@@ -327,15 +333,19 @@ static int poll_for_output(struct lvmpolld_lv *pdlv, struct lvmpolld_thread_data
 	if (fds[1].fd >= 0)
 		while (read_single_line(data, 1)) {
 			assert(r > 0);
-			INFO(pdlv->ls, "%s: PID %d: %s: %s", LVM2_LOG_PREFIX, pdlv->cmd_pid, "STDERR", data->line);
+			WARN(pdlv->ls, "%s: PID %d: %s: %s", LVM2_LOG_PREFIX, pdlv->cmd_pid, "STDERR", data->line);
 		}
 
 	if (WIFEXITED(ch_stat)) {
-		INFO(pdlv->ls, "%s: %s (PID %d) %s (%d)", PD_LOG_PREFIX,
-		     "lvm2 cmd", pdlv->cmd_pid, "exited with", WEXITSTATUS(ch_stat));
 		cmd_state.retcode = WEXITSTATUS(ch_stat);
+		if (cmd_state.retcode)
+			ERROR(pdlv->ls, "%s: %s (PID %d) %s (retcode: %d)", PD_LOG_PREFIX,
+			     "lvm2 cmd", pdlv->cmd_pid, "failed", cmd_state.retcode);
+		else
+			INFO(pdlv->ls, "%s: %s (PID %d) %s", PD_LOG_PREFIX,
+			     "lvm2 cmd", pdlv->cmd_pid, "finished successfully");
 	} else if (WIFSIGNALED(ch_stat)) {
-		WARN(pdlv->ls, "%s: %s (PID %d) %s (%d)", PD_LOG_PREFIX,
+		ERROR(pdlv->ls, "%s: %s (PID %d) %s (%d)", PD_LOG_PREFIX,
 		     "lvm2 cmd", pdlv->cmd_pid, "got terminated by signal",
 		     WTERMSIG(ch_stat));
 		cmd_state.signal = WTERMSIG(ch_stat);
