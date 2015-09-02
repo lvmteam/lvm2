@@ -1,5 +1,7 @@
 Version 2.02.130 - 
 ===================================
+  Check if dm device is usable before checking its size (2.02.116).
+  Extend parsing of cache_check version in configure.
   Make lvpoll error messages visible in lvmpolld's stderr and in syslog.
   Add 'make install_full_man' to install all man pages regardless of config.
 
