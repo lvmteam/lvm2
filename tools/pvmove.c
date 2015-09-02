@@ -817,9 +817,6 @@ int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 	int r;
 	struct poll_operation_id *id = NULL;
 
-	if (test_mode())
-		return ECMD_PROCESSED;
-
 	if (uuid) {
 		id = _create_id(cmd, pv_name, vg_name, lv_name, uuid);
 		if (!id) {
@@ -828,7 +825,10 @@ int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		}
 	}
 
-	r = poll_daemon(cmd, background, PVMOVE, &_pvmove_fns, "Moved", id);
+	if (test_mode())
+		r = ECMD_PROCESSED;
+	else
+		r = poll_daemon(cmd, background, PVMOVE, &_pvmove_fns, "Moved", id);
 
 	_destroy_id(cmd, id);
 
