@@ -518,6 +518,73 @@ out:
 	return r;
 }
 
+static int _ignore_unusable_thins(struct device *dev)
+{
+	/* TODO make function for thin testing */
+	struct dm_pool *mem;
+	struct dm_status_thin_pool *status;
+	struct dm_task *dmt = NULL;
+	void *next = NULL;
+	uint64_t start, length;
+	char *target_type = NULL;
+	char *params;
+	int minor, major;
+	int r = 0;
+
+	if (!(mem = dm_pool_create("unusable_thins", 128)))
+		return_0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
+		goto_out;
+	if (!dm_task_no_open_count(dmt))
+		goto_out;
+	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
+		goto_out;
+	if (!dm_task_run(dmt)) {
+		log_error("Failed to get state of mapped device.");
+		goto out;
+	}
+	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
+	if (sscanf(params, "%d:%d", &minor, &major) != 2) {
+		log_error("Failed to get thin-pool major:minor for thin device %d:%d.",
+			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
+		goto out;
+	}
+	dm_task_destroy(dmt);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
+		goto_out;
+	if (!dm_task_no_flush(dmt))
+		log_warn("Can't set no_flush.");
+	if (!dm_task_no_open_count(dmt))
+		goto_out;
+	if (!dm_task_set_major_minor(dmt, minor, major, 1))
+		goto_out;
+	if (!dm_task_run(dmt)) {
+		log_error("Failed to get state of mapped device.");
+		goto out;
+	}
+
+	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
+	if (!dm_get_status_thin_pool(mem, params, &status))
+		return_0;
+
+	if (status->read_only || status->out_of_data_space) {
+		log_warn("WARNING: %s: Thin's thin-pool needs inspection.",
+			 dev_name(dev));
+		goto out;
+	}
+
+	r = 1;
+out:
+	if (dmt)
+		dm_task_destroy(dmt);
+
+	dm_pool_destroy(mem);
+
+        return r;
+}
+
 /*
  * device_is_usable
  * @dev
@@ -642,6 +709,13 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		if (check.check_suspended && target_type &&
 		    (!strcmp(target_type, "snapshot") || !strcmp(target_type, "snapshot-origin")) &&
 		    _ignore_suspended_snapshot_component(dev)) {
+			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
+			goto out;
+		}
+
+		/* TODO: extend check struct ? */
+		if (target_type && !strcmp(target_type, "thin") &&
+		    !_ignore_unusable_thins(dev)) {
 			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
 			goto out;
 		}
