@@ -1,4 +1,4 @@
-eTH DMSTATS 8 "Jul 25 2015" "Linux" "MAINTENANCE COMMANDS"
+.TH DMSTATS 8 "Jul 25 2015" "Linux" "MAINTENANCE COMMANDS"
 .SH NAME
 dmstats \(em device-mapper statistics management
 .SH SYNOPSIS
