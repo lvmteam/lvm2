@@ -763,6 +763,9 @@ static int _lvconvert_poll_by_id(struct cmd_context *cmd, struct poll_operation_
 				 int is_merging_origin,
 				 int is_merging_origin_thin)
 {
+	if (test_mode())
+		return ECMD_PROCESSED;
+
 	if (is_merging_origin)
 		return poll_daemon(cmd, background,
 				(MERGING | (is_merging_origin_thin ? THIN_VOLUME : SNAPSHOT)),
