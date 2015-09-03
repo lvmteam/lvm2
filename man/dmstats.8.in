@@ -79,6 +79,7 @@ dmstats \(em device-mapper statistics management
 .RB [ \-\-units
 .IR units ]
 .RB [ \-\-nosuffix ]
+.RB [ \-\-notimesuffix ]
 .br
 .B dmstats list
 .RI [ device_name ]
@@ -88,7 +89,7 @@ dmstats \(em device-mapper statistics management
 .RB [ \-\-units
 .IR units ]
 .RB [ \-\-nosuffix ]
-.RB [ \-\-nosuffix ]
+.RB [ \-\-notimesuffix ]
 .RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]
 .br
 .B dmstats print
@@ -121,6 +122,7 @@ dmstats \(em device-mapper statistics management
 .RB [ \-\-units
 .IR units ]
 .RB [ \-\-nosuffix ]
+.RB [ \-\-notimesuffix ]
 .br
 .ad b
 .SH DESCRIPTION
@@ -205,6 +207,10 @@ Specify the minor number.
 .B \-\-nosuffix
 Suppress the suffix on output sizes.  Use with \fB\-\-units\fP
 (except h and H) if processing the output.
+.TP
+.B \-\-notimesuffix
+Suppress the suffix on output time values. Histogram boundary values
+will be reported in units of nanoseconds.
 .TP
 .BR \-o | \-\-options
 Specify which report fields to display.

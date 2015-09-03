@@ -187,6 +187,7 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOSUFFIX_ARG,
 	NOTABLE_ARG,
+	NOTIMESUFFIX_ARG,
 	UDEVCOOKIE_ARG,
 	NOUDEVRULES_ARG,
 	NOUDEVSYNC_ARG,
@@ -3456,7 +3457,7 @@ static const char *_get_histogram_string(const struct dm_stats *dms, int rel,
 	flags |= (rel) ? DM_HISTOGRAM_PERCENT
 			: 0;
 
-	flags |= DM_HISTOGRAM_SUFFIX;
+	flags |= (_switches[NOTIMESUFFIX_ARG]) ? 0 : DM_HISTOGRAM_SUFFIX;
 
 	/* FIXME: make unit conversion optional. */
 	return dm_histogram_to_string(dmh, -1, 0, flags);
@@ -5704,6 +5705,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"nosuffix", 0, &ind, NOSUFFIX_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
+		{"notimesuffix", 0, &ind, NOTIMESUFFIX_ARG},
 		{"udevcookie", 1, &ind, UDEVCOOKIE_ARG},
 		{"noudevrules", 0, &ind, NOUDEVRULES_ARG},
 		{"noudevsync", 0, &ind, NOUDEVSYNC_ARG},
@@ -5857,6 +5859,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[NOSUFFIX_ARG]++;
 		if (c == 'n' || ind == NOTABLE_ARG)
 			_switches[NOTABLE_ARG]++;
+		if (ind == NOTIMESUFFIX_ARG)
+			_switches[NOTIMESUFFIX_ARG]++;
 		if (c == 'o' || ind == OPTIONS_ARG) {
 			_switches[OPTIONS_ARG]++;
 			_string_args[OPTIONS_ARG] = optarg;
