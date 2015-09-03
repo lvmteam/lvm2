@@ -341,11 +341,13 @@ static int _add_alias(struct device *dev, const char *path)
 	if (!dm_list_empty(&dev->aliases)) {
 		oldpath = dm_list_item(dev->aliases.n, struct dm_str_list)->str;
 		prefer_old = _compare_paths(path, oldpath);
-		log_debug_devs("%s: Aliased to %s in device cache%s",
-			       path, oldpath, prefer_old ? "" : " (preferred name)");
+		log_debug_devs("%s: Aliased to %s in device cache%s (%d:%d)",
+			       path, oldpath, prefer_old ? "" : " (preferred name)",
+			       (int) MAJOR(dev->dev), (int) MINOR(dev->dev));
 
 	} else
-		log_debug_devs("%s: Added to device cache", path);
+		log_debug_devs("%s: Added to device cache (%d:%d)", path,
+			       (int) MAJOR(dev->dev), (int) MINOR(dev->dev));
 
 	if (prefer_old)
 		dm_list_add(&dev->aliases, &sl->list);
