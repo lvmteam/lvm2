@@ -162,6 +162,7 @@ enum {
 	AREAS_ARG,
 	AREA_SIZE_ARG,
 	AUX_DATA_ARG,
+	BOUNDS_ARG,
 	CHECKS_ARG,
 	CLEAR_ARG,
 	COLS_ARG,
@@ -4234,6 +4235,8 @@ static const char *_stats_default_report_options = STATS_DEV_INFO "," STATS_AREA
 static const char *_stats_raw_report_options = STATS_DEV_INFO "," STATS_AREA_INFO "," COUNTERS;
 static const char *_stats_list_options = STATS_REGION_INFO ",program_id";
 static const char *_stats_area_list_options = STATS_AREA_INFO_FULL ",program_id";
+static const char *_stats_hist_list_options = STATS_REGION_INFO ",hist_bins,hist_bounds";
+static const char *_stats_hist_area_list_options = STATS_AREA_INFO_FULL ",hist_bins,hist_bounds";
 static const char *_stats_hist_options = STATS_HIST ",hist_count_bounds";
 static const char *_stats_hist_relative_options = STATS_HIST ",hist_percent_bounds";
 
@@ -4257,19 +4260,24 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 
 	if (cmd && !strcmp(cmd->name, "stats")) {
 		_report_type |= DR_STATS_META;
-		if (!strcmp(subcommand, "list"))
-			options = (char *) ((_switches[VERBOSE_ARG])
-					    ? _stats_area_list_options
-					    : _stats_list_options);
-		else if (!strcmp(subcommand, "histogram"))
-			options = (char *) ((_switches[RELATIVE_ARG])
-					    ? _stats_hist_relative_options
-					    : _stats_hist_options);
-		else {
-			options = (char *) ((!_switches[RAW_ARG])
-					    ? _stats_default_report_options
-					    : _stats_raw_report_options);
-
+		if (!strcmp(subcommand, "list")) {
+			if (!_switches[HISTOGRAM_ARG])
+				options = (char *) ((_switches[VERBOSE_ARG])
+						    ? _stats_area_list_options
+						    : _stats_list_options);
+			else
+				options = (char *) ((_switches[VERBOSE_ARG])
+						    ? _stats_hist_area_list_options
+						    : _stats_hist_list_options);
+		} else {
+			if (_switches[HISTOGRAM_ARG])
+				options = (char *) ((_switches[RELATIVE_ARG])
+						    ? _stats_hist_relative_options
+						    : _stats_hist_options);
+			else
+				options = (char *) ((!_switches[RAW_ARG])
+						    ? _stats_default_report_options
+						    : _stats_raw_report_options);
 			_report_type |= DR_STATS;
 		}
 	}
@@ -4657,7 +4665,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 				    const char *aux_data)
 {
 	uint64_t this_start = 0, this_len = len, region_id = UINT64_C(0);
-	const char *devname = NULL, *histogram = _string_args[HISTOGRAM_ARG];
+	const char *devname = NULL, *histogram = _string_args[BOUNDS_ARG];
 	int r = 0, precise = _switches[PRECISE_ARG];
 	struct dm_histogram *bounds = NULL; /* histogram bounds */
 	char *target_type, *params; /* unused */
@@ -4833,9 +4841,9 @@ static int _stats_create(CMD_ARGS)
 		}
 	}
 
-	if (_switches[HISTOGRAM_ARG]) {
+	if (_switches[BOUNDS_ARG]) {
 		if (!dm_stats_driver_supports_histogram()) {
-			log_error("Using --histogram requires driver version "
+			log_error("Using --bounds requires driver version "
 				  "4.32.0 or later.");
 			goto out;
 		}
@@ -5075,7 +5083,6 @@ static struct command _stats_subcommands[] = {
 	{"clear", "--regionid <id> [<device>]", 0, -1, 1, 0, _stats_clear},
 	{"create", CREATE_OPTS "\n\t\t" ID_OPTS "[<device>]", 0, -1, 1, 0, _stats_create},
 	{"delete", "--regionid <id> <device>", 1, -1, 1, 0, _stats_delete},
-	{"histogram", REPORT_OPTS "[<device>]", 0, -1, 1, 0, _stats_report},
 	{"list", "[--programid <id>] [<device>]", 0, -1, 1, 0, _stats_report},
 	{"print", PRINT_OPTS "[<device>]", 0, -1, 1, 0, _stats_print},
 	{"report", REPORT_OPTS "[<device>]", 0, -1, 1, 0, _stats_report},
@@ -5680,6 +5687,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"areas", 1, &ind, AREAS_ARG},
 		{"areasize", 1, &ind, AREA_SIZE_ARG},
 		{"auxdata", 1, &ind, AUX_DATA_ARG},
+		{"bounds", 1, &ind, BOUNDS_ARG},
 		{"checks", 0, &ind, CHECKS_ARG},
 		{"clear", 0, &ind, CLEAR_ARG},
 		{"columns", 0, &ind, COLS_ARG},
@@ -5690,7 +5698,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"force", 0, &ind, FORCE_ARG},
 		{"gid", 1, &ind, GID_ARG},
 		{"help", 0, &ind, HELP_ARG},
-		{"histogram", 1, &ind, HISTOGRAM_ARG},
+		{"histogram", 0, &ind, HISTOGRAM_ARG},
 		{"inactive", 0, &ind, INACTIVE_ARG},
 		{"interval", 1, &ind, INTERVAL_ARG},
 		{"length", 1, &ind, LENGTH_ARG},
@@ -5831,9 +5839,9 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			return 0;
 		if (c == 'h' || ind == HELP_ARG)
 			_switches[HELP_ARG]++;
-		if (ind == HISTOGRAM_ARG) {
-			_switches[HISTOGRAM_ARG]++;
-			_string_args[HISTOGRAM_ARG] = optarg;
+		if (ind == BOUNDS_ARG) {
+			_switches[BOUNDS_ARG]++;
+			_string_args[BOUNDS_ARG] = optarg;
 		}
 		if (ind == CLEAR_ARG)
 			_switches[CLEAR_ARG]++;
@@ -5843,6 +5851,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[FORCE_ARG]++;
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
+		if (ind == HISTOGRAM_ARG)
+			_switches[HISTOGRAM_ARG]++;
 		if (ind == LENGTH_ARG) {
 			_switches[LENGTH_ARG]++;
 			_string_args[LENGTH_ARG] = optarg;

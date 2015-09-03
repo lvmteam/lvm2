@@ -32,8 +32,8 @@ dmstats \(em device-mapper statistics management
 .IR nr_areas ]
 .RB |[ \-\-areasize
 .IR area_size ]]
-.RB [ \-\-histogram
-.IR boundaries ]
+.RB [ \-\-bounds
+.IR histogram_boundaries ]
 .RB [ \-\-precise ]
 .RB [[ \-\-start
 .IR start_sector ]
@@ -58,34 +58,12 @@ dmstats \(em device-mapper statistics management
 .B dmstats help
 .RB [ \-c | \-C | \-\-columns ]
 .br
-.B dmstats histogram
-.RI [ device_name ]
-.RB [ \-\-interval
-.IR seconds ]
-.RB [ \-\-count
-.IR count ]
-.RB [ \-\-units
-.IR units ]
-.RB [ \-\-allprograms ]
-.RB [ \-\-programid
-.IR id ]
-.RB [ \-\-relative ]
-.RB [ \-\-regionid
-.IR id ]
-.RB [ \-O | \-\-sort
-.IR sort_fields ]
-.RB [ \-S | \-\-select
-.IR Selection ]
-.RB [ \-\-units
-.IR units ]
-.RB [ \-\-nosuffix ]
-.RB [ \-\-notimesuffix ]
-.br
 .B dmstats list
 .RI [ device_name ]
 .RB [ \-\-allprograms
 .RB | \-\-programid
 .IR id ]
+.RB [ \-\-histogram ]
 .RB [ \-\-units
 .IR units ]
 .RB [ \-\-nosuffix ]
@@ -110,6 +88,7 @@ dmstats \(em device-mapper statistics management
 .IR count ]
 .RB [ \-\-units
 .IR units ]
+.RB [ \-\-histogram ]
 .RB [ \-\-allprograms ]
 .RB [ \-\-programid
 .IR id ]
@@ -180,12 +159,16 @@ When printing statistics counters, also atomically reset them to zero.
 Specify the iteration count for repeating reports. If the count
 argument is zero reports will continue to repeat until interrupted.
 .TP
-.B \-\-histogram \fIboundaries
+.B \-\-bounds \fIhistogram_boundaries
 Specify the boundaries of a latency histogram to be tracked for the
 region as a comma separated list of latency values. Latency values are
 given in nanoseconds. An optional unit suffix of ns, us, ms, or s may be
 given after each value to specify units of nanoseconds, microseconds,
 miliseconds or seconds respectively.
+.TP
+.B \-\-histogram
+When used with the \fBreport\fP and \fBlist\fP commands select default
+fields that emphasize latency histogram data.
 .TP
 .B \-\-interval \fIseconds
 Specify the interval in seconds between successive iterations for
@@ -289,8 +272,8 @@ regions (with the exception of in-flight IO counters).
 .IR nr_areas ]
 .RB [ \-\-areasize
 .IR area_size ]
-.RB [ \-\-histogram
-.IR boundaries ]
+.RB [ --bounds
+.IR histogram_boundaries ]
 .RB [ \-\-precise ]
 .RB [[ \-\-start
 .IR start_sector ]
@@ -314,7 +297,7 @@ device-mapper device's table.
 If the \fB\-\-precise\fP option is used the command will attempt to
 create a region using nanosecond precision counters.
 
-If \fB\-\-histogram\fP is given a latency histogram will be tracked for
+If \fB--bounds\fP is given a latency histogram will be tracked for
 the new region. The boundaries of the histogram bins are given as a
 comma separated list of latency values. There is an implicit lower bound
 of zero on the first bin and an implicit upper bound of infinity (or the
@@ -369,40 +352,9 @@ Outputs a summary of the commands available, optionally including
 the list of report fields.
 .br
 .TP
-.B histogram
-.RB [ \-\-allprograms ]
-.RB [ \-\-interval
-.IR seconds ]
-.RB [ \-\-count
-.IR count ]
-.RB [ \-\-units
-.IR unit ]
-.RB [ \-\-relative ]
-.RB [ \-\-regionid
-.IR id ]
-.RB [ \-\-programid
-.IR id ]
-.RB [ \-O | \-\-sort
-.IR sort_fields ]
-.RB [ \-S | \-\-select
-.IR Selection ]
-.RB [ \-\-units
-.IR units ]
-.br
-Start a report for the specified region or for all present regions that
-emphasizes latency histograms in the default field options. If the count
-argument is specified, the report will repeat at a fixed interval set by
-the \fB\-\-interval\fP option. The default interval is one second.
-
-If the \fB\-\-allprograms\fP switch is given, all regions will be
-listed, regardless of region program ID values.
-
-If \fB\-\-relative\fP is given the default histogram field displays the
-relative histogram instead of absolute counts.
-.br
-.TP
 .B list
 .RI [ device_name ]
+.RB [ \-\-histogram ]
 .RB [ \-\-allprograms ]
 .RB [ \-\-programid
 .RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]]
@@ -414,6 +366,9 @@ regardless of region program ID values.
 
 If \fB\-v\fP or \fB\-\-verbose\fP is given the report will include
 a row of information for each area contained in each region displayed.
+
+If \fB\-\-histogram\fP is given the report will include the bin count
+and latency boundary values for any configured histograms.
 .br
 .TP
 .B print
@@ -456,6 +411,13 @@ one second.
 
 If the \fB\-\-allprograms\fP switch is given, all regions will be
 listed, regardless of region program ID values.
+
+If \fB\-\-histogram\fP is given the report will include the histogram
+values and latency boundaries.
+
+If \fB\-\-relative\fP is used the default histogram field displays
+bin values as a percentage of the total number of I/Os.
+
 .br
 .SH REGIONS AND AREAS
 The device-mapper statistics facility allows separate performance
