@@ -2545,10 +2545,13 @@ static int add_lockspace_thread(const char *ls_name,
 	pthread_mutex_lock(&lockspaces_mutex);
 	ls2 = find_lockspace_name(ls->name);
 	if (ls2) {
-		if (ls2->thread_stop)
+		if (ls2->thread_stop) {
+			log_debug("add_lockspace_thread %s exists and stopping", ls->name);
 			rv = -EAGAIN;
-		else
+		} else {
+			log_debug("add_lockspace_thread %s exists", ls->name);
 			rv = -EEXIST;
+		}
 		pthread_mutex_unlock(&lockspaces_mutex);
 		free_resource(r);
 		free(ls);
@@ -2567,6 +2570,7 @@ static int add_lockspace_thread(const char *ls_name,
 
 	rv = pthread_create(&ls->thread, NULL, lockspace_thread_main, ls);
 	if (rv < 0) {
+		log_error("add_lockspace_thread %s pthread error %d %d", ls->name, rv, errno);
 		pthread_mutex_lock(&lockspaces_mutex);
 		list_del(&ls->list);
 		pthread_mutex_unlock(&lockspaces_mutex);
@@ -2601,7 +2605,7 @@ static int add_dlm_global_lockspace(struct action *act)
 
 	rv = add_lockspace_thread(gl_lsname_dlm, NULL, NULL, LD_LM_DLM, NULL, act);
 	if (rv < 0) {
-		log_error("add_dlm_global_lockspace add_lockspace_thread %d", rv);
+		log_debug("add_dlm_global_lockspace add_lockspace_thread %d", rv);
 		dlm_gl_lockspace_running = 0;
 	}
 
@@ -2685,20 +2689,16 @@ static int add_lockspace(struct action *act)
 	}
 
 	if (act->rt == LD_RT_VG) {
-		if (gl_use_dlm) {
-			rv = add_dlm_global_lockspace(NULL);
-			if (rv < 0 && rv != -EEXIST)
-				return rv;
-		}
+		if (gl_use_dlm)
+			add_dlm_global_lockspace(NULL);
 
 		vg_ls_name(act->vg_name, ls_name);
 
 		rv = add_lockspace_thread(ls_name, act->vg_name, act->vg_uuid,
 					  act->lm_type, act->vg_args,
 					  act);
-
 		if (rv)
-			log_error("add_lockspace %s add_lockspace_thread %d", ls_name, rv);
+			log_debug("add_lockspace %s add_lockspace_thread %d", ls_name, rv);
 		return rv;
 	}
 
