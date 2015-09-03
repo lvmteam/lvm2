@@ -3443,7 +3443,7 @@ static const char *_get_histogram_string(const struct dm_stats *dms, int rel,
 					 int vals, int bounds)
 {
 	const struct dm_histogram *dmh;
-	int flags = 0;
+	int flags = 0, width = (_switches[NOHEADINGS_ARG]) ? -1 : 0;
 
 	if (!(dmh = dm_stats_get_histogram(dms, DM_STATS_REGION_CURRENT,
 					   DM_STATS_AREA_CURRENT)))
@@ -3460,7 +3460,7 @@ static const char *_get_histogram_string(const struct dm_stats *dms, int rel,
 	flags |= (_switches[NOTIMESUFFIX_ARG]) ? 0 : DM_HISTOGRAM_SUFFIX;
 
 	/* FIXME: make unit conversion optional. */
-	return dm_histogram_to_string(dmh, -1, 0, flags);
+	return dm_histogram_to_string(dmh, -1, width, flags);
 }
 
 static int _stats_hist_count_disp(struct dm_report *rh,
