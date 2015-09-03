@@ -30,24 +30,24 @@ which md5sum || skip
 aux prepare_vg
 
 # 8M file with some random data
-dd if=/dev/urandom of=data bs=1M count=1
-dd if=data of=data bs=1M count=7 seek=1
+dd if=/dev/urandom of=data bs=1M count=1 conv=fdatasync
+dd if=data of=data bs=1M count=7 seek=1 conv=fdatasync
 echo "$(md5sum data | cut -d' ' -f1)  $DM_DEV_DIR/$vg/s" >md5.${vg}-s
 
 lvcreate -aey -L 8M -n o $vg
-dd if=data of="$DM_DEV_DIR/$vg/o" bs=1M
+dd if=data of="$DM_DEV_DIR/$vg/o" bs=1M conv=fdatasync
 
 lvcreate -L 8M -s -n s $vg/o
 check_s_
 
-dd if=data of="$DM_DEV_DIR/$vg/o" bs=1234567 count=1 skip=1
+dd if=data of="$DM_DEV_DIR/$vg/o" bs=1234567 count=1 skip=1 conv=fdatasync
 check_s_
 lvchange -an $vg
 
 lvchange -ay $vg
 check_s_
 
-dd if=data of="$DM_DEV_DIR/$vg/o" bs=1234567 count=2 skip=1
+dd if=data of="$DM_DEV_DIR/$vg/o" bs=1234567 count=2 skip=1 conv=fdatasync
 check_s_
 
 lvchange -an $vg

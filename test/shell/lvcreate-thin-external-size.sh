@@ -42,7 +42,7 @@ d2="$DM_DEV_DIR/$vg/$lv2"
 lvcreate -l47 -n $lv1 $vg
 
 # Fill end with pattern
-dd if=64K of="$d1" bs=8192 seek=45 count=2
+dd if=64K of="$d1" bs=8192 seek=45 count=2 conv=fdatasync
 
 # Switch to read-only volume
 lvchange -an $vg/$lv1
@@ -58,7 +58,7 @@ cmp -n 16384 -l 64K 16K
 # Now extend and rewrite
 lvextend -l+2 $vg/$lv2
 
-dd if=64K of="$d2" bs=8192 seek=46 count=3 oflag=direct
+dd if=64K of="$d2" bs=8192 seek=46 count=3 conv=fdatasync
 dd if="$d2" of=24K bs=8192 skip=46 count=3 iflag=direct
 cmp -n 24576 -l 64K 24K
 
@@ -67,7 +67,7 @@ check lv_field $vg/$lv2 data_percent "66.67"
 
 lvreduce -f -l-24 $vg/$lv2
 
-dd if=64K of="$d2" bs=8192 seek=24 count=1 oflag=direct
+dd if=64K of="$d2" bs=8192 seek=24 count=1 conv=fdatasync
 dd if="$d2" of=8K bs=8192 skip=24 count=1 iflag=direct
 cmp -n 8192 -l 64K 8K
 
@@ -80,7 +80,7 @@ lvcreate -L256M -T $vg/pool -c 64M
 lvcreate -s $vg/$lv1 --name $lv2 --thinpool $vg/pool
 lvextend -l+2 $vg/$lv2
 
-dd if=64K of="$d2" bs=8192 seek=45 count=4 oflag=direct
+dd if=64K of="$d2" bs=8192 seek=45 count=4 conv=fdatasync
 dd if="$d2" of=32K bs=8192 skip=45 count=4 iflag=direct
 cmp -n 32768 -l 64K 32K
 
