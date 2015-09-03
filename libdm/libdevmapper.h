@@ -2826,8 +2826,8 @@ uint64_t dm_histogram_get_sum(const struct dm_histogram *dmh);
 /*
  * Histogram formatting flags.
  */
-#define DM_HISTOGRAM_VALUES  0x1
-#define DM_HISTOGRAM_SUFFIX  0x2
+#define DM_HISTOGRAM_SUFFIX  0x1
+#define DM_HISTOGRAM_VALUES  0x2
 #define DM_HISTOGRAM_PERCENT 0X4
 #define DM_HISTOGRAM_BOUNDS_LOWER 0x10
 #define DM_HISTOGRAM_BOUNDS_UPPER 0x20
@@ -2839,6 +2839,12 @@ uint64_t dm_histogram_get_sum(const struct dm_histogram *dmh);
  *
  * The bin argument selects the bin to format. If this argument is less
  * than zero all bins will be included in the resulting string.
+ *
+ * width specifies a minimum width for the field in characters; if it is
+ * zero the width will be determined automatically based on the options
+ * selected for formatting. A value less than zero disables field width
+ * control: bin boundaries and values will be output with a minimum
+ * amount of whitespace.
  *
  * flags is a collection of flag arguments that control the string format:
  *

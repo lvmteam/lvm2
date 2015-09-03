@@ -2116,7 +2116,7 @@ static int _make_bounds_string(char *buf, size_t size, uint64_t lower,
 {
 	const char *l_suff = NULL;
 	const char *u_suff = NULL;
-	const char *sep = (flags & DM_HISTOGRAM_VALUES) ? ": " : "";
+	const char *sep = "";
 	char bound_buf[32];
 	int bounds = flags & DM_HISTOGRAM_BOUNDS_MASK;
 
@@ -2130,6 +2130,9 @@ static int _make_bounds_string(char *buf, size_t size, uint64_t lower,
 		_scale_bound_value_to_suffix(&upper, &u_suff);
 	} else
 		l_suff = u_suff = "";
+
+	if (flags & DM_HISTOGRAM_VALUES)
+		sep = ":";
 
 	if (bounds > DM_HISTOGRAM_BOUNDS_LOWER) {
 		/* Handle infinite uppermost bound. */
@@ -2162,9 +2165,11 @@ out:
 	return 0;
 }
 
+#define BOUND_WIDTH_NOSUFFIX 10 /* 999999999 nsecs */
 #define BOUND_WIDTH 6 /* bounds string up to 9999xs */
 #define COUNT_WIDTH 6 /* count string: up to 9999 */
-#define PERCENT_WIDTH 8 /* percent string : 0.00-100.00% */
+#define PERCENT_WIDTH 6 /* percent string : 0.00-100.00% */
+#define DM_HISTOGRAM_VALUES_MASK 0x06
 
 const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 				   int width, int flags)
@@ -2186,12 +2191,15 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 	} else
 		start = last = bin;
 
-	if (flags & DM_HISTOGRAM_PERCENT)
+	if (width < 0 || !values)
+		width = minwidth = 0; /* no padding */
+	else if (flags & DM_HISTOGRAM_PERCENT)
 		width = minwidth = (width) ? : PERCENT_WIDTH;
 	else if (flags & DM_HISTOGRAM_VALUES)
 		width = minwidth = (width) ? : COUNT_WIDTH;
-	else
-		width = 0; /* bounds only */
+
+	if (values && !width)
+		sep = ":";
 
 	/* Set bounds string to the empty string. */
 	bounds_buf[0] = '\0';
@@ -2200,18 +2208,38 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 
 	for (bin = start; bin <= last; bin++) {
 		if (bounds) {
+			int bounds_width;
+
+			/* Default bounds width depends on time suffixes. */
+			bounds_width = (!(flags & DM_HISTOGRAM_SUFFIX))
+					? BOUND_WIDTH_NOSUFFIX
+					: BOUND_WIDTH ;
+
+			bounds_width = (!width) ? width : bounds_width;
+
 			lower = dm_histogram_get_bin_lower(dmh, bin);
 			upper = dm_histogram_get_bin_upper(dmh, bin);
-			_make_bounds_string(bounds_buf, sizeof(bounds_buf),
-					    lower, upper, flags,
-					    (width) ? BOUND_WIDTH : 0);
-			sep = ", "; /* Comma separates "bounds: value" pairs */
-			width -= (int) (strlen(bounds_buf) - BOUND_WIDTH);
+
+			len = sizeof(bounds_buf);
+			len = _make_bounds_string(bounds_buf, len,
+						  lower, upper, flags,
+						  bounds_width);
+			/*
+			 * Comma separates "bounds: value" pairs unless
+			 * --noheadings is used.
+			 */
+			sep = (width || !values) ? "," : ":";
+
+			/* Adjust width by real bounds length if set. */
+			width -= (width) ? (len - (bounds_width + 1)) : 0;
+
+			/* -ve width indicates specified width was overrun. */
 			width = (width > 0) ? width : 0;
 		}
 
 		if (bin == last)
 			sep = "";
+
 		if (flags & DM_HISTOGRAM_PERCENT) {
 			dm_percent_t pr;
 			float value;
