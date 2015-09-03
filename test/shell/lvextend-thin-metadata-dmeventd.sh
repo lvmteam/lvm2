@@ -40,7 +40,7 @@ fake_metadata_() {
 	echo '<superblock uuid="" time="1" transaction="'$2'" data_block_size="128" nr_data_blocks="3200">'
 	for i in $(seq 1 $1)
 	do
-		echo ' <device dev_id="'$i'" mapped_blocks="785" transaction="0" creation_time="0" snap_time="1">'
+		echo ' <device dev_id="'$i'" mapped_blocks="37" transaction="0" creation_time="0" snap_time="1">'
 		echo '  <range_mapping origin_begin="0" data_begin="0" length="37" time="0"/>'
 		echo ' </device>'
 	done
@@ -68,7 +68,7 @@ lvcreate -L2M -n $lv1 $vg
 lvchange -an $vg/thin $vg/thin2 $vg/pool
 
 # Prepare some fake metadata with unmatching id
-# Transaction_id is lower by 1 and there are no message -> ERROR
+# Transaction_id is lower by 1 and there are no messages -> ERROR
 fake_metadata_ 10 0 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
@@ -91,7 +91,7 @@ fake_metadata_ 400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
-lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
 
 vgchange -ay $vg
 
