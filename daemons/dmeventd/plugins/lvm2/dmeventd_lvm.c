@@ -94,21 +94,22 @@ int dmeventd_lvm2_init(void)
 
 	pthread_mutex_lock(&_register_mutex);
 
-	/*
-	 * Need some space for allocations.  1024 should be more
-	 * than enough for what we need (device mapper name splitting)
-	 */
-	if (!_mem_pool && !(_mem_pool = dm_pool_create("mirror_dso", 1024)))
-		goto out;
-
 	if (!_lvm_handle) {
 		if (!getenv("LVM_LOG_FILE_EPOCH"))
 			lvm2_log_fn(_temporary_log_fn);
-		if (!(_lvm_handle = lvm2_init())) {
-			dm_pool_destroy(_mem_pool);
-			_mem_pool = NULL;
+		if (!(_lvm_handle = lvm2_init()))
+			goto out;
+
+		/*
+		 * Need some space for allocations.  1024 should be more
+		 * than enough for what we need (device mapper name splitting)
+		 */
+		if (!_mem_pool && !(_mem_pool = dm_pool_create("mirror_dso", 1024))) {
+			lvm2_exit(_lvm_handle);
+			_lvm_handle = NULL;
 			goto out;
 		}
+
 		lvm2_disable_dmeventd_monitoring(_lvm_handle);
 		/* FIXME Temporary: move to dmeventd core */
 		lvm2_run(_lvm_handle, "_memlock_inc");
