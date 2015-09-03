@@ -620,6 +620,15 @@ static int _thin_target_percent(void **target_state __attribute__((unused)),
 		/* Pool allocates whole chunk so round-up to nearest one */
 		csize = first_seg(seg->pool_lv)->chunk_size;
 		csize = ((seg->lv->size + csize - 1) / csize) * csize;
+		if (s->mapped_sectors > csize) {
+			log_warn("WARNING: LV %s maps %s while the size is only %s.",
+				 display_lvname(seg->lv),
+				 display_size(cmd, s->mapped_sectors),
+				 display_size(cmd, csize));
+			/* Don't show nonsense numbers like i.e. 1000% full */
+			s->mapped_sectors = csize;
+		}
+
 		*percent = dm_make_percent(s->mapped_sectors, csize);
 		*total_denominator += csize;
 	} else {
