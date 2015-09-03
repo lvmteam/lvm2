@@ -659,7 +659,7 @@ SELINUX_PC
 SELINUX_LIBS
 REPLICATORS
 READLINE_LIBS
-RT_PC
+RT_LIB
 RAID
 PYTHON_LIBDIRS
 PYTHON_INCDIRS
@@ -12847,7 +12847,7 @@ fi
 $as_echo "#define HAVE_REALTIME 1" >>confdefs.h
 
 		LIBS="-lrt $LIBS"
-		RT_PC="librt"
+		RT_LIB="-lrt"
 	else
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling realtime clock" >&5
 $as_echo "$as_me: WARNING: Disabling realtime clock" >&2;}
