@@ -1045,6 +1045,11 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
 
+	/* No freeze on overfilled thin-pool, read existing slightly outdated data */
+	if (lv && lv_is_thin_pool(lv) &&
+	    !dm_task_no_flush(dmt))
+		log_warn("Can't set no_flush flag."); /* Non fatal */
+
 	if (!dm_task_run(dmt))
 		goto_out;
 

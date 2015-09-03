@@ -1,5 +1,6 @@
 Version 2.02.130 - 
 ===================================
+  Read thin-pool data and metadata percent without flush.
   Detect blocked thin-pool and avoid scanning their thin volumes.
   Check if dm device is usable before checking its size (2.02.116).
   Extend parsing of cache_check version in configure.
