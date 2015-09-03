@@ -8816,7 +8816,7 @@ $as_echo "$as_me: WARNING: cache_check not found in path $PATH" >&2;}
 	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
 		$CACHE_CHECK_CMD -V 2>/dev/null >conftest.tmp
 		read -r CACHE_CHECK_VSN < conftest.tmp
-		IFS=. read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH < conftest.tmp
+		IFS=.- read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH LEFTOVER < conftest.tmp
 		rm -f conftest.tmp
 
 		# Require version >= 0.5.4 for --clear-needs-check-flag
@@ -12852,8 +12852,6 @@ $as_echo "#define HAVE_REALTIME 1" >>confdefs.h
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling realtime clock" >&5
 $as_echo "$as_me: WARNING: Disabling realtime clock" >&2;}
 	fi
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $HAVE_REALTIME" >&5
-$as_echo "$HAVE_REALTIME" >&6; }
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for struct stat has st_ctim." >&5

@@ -586,7 +586,7 @@ case "$CACHE" in
 	if test "$CACHE_CHECK_NEEDS_CHECK" = yes; then
 		$CACHE_CHECK_CMD -V 2>/dev/null >conftest.tmp
 		read -r CACHE_CHECK_VSN < conftest.tmp
-		IFS=. read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH < conftest.tmp
+		IFS=.- read -r CACHE_CHECK_VSN_MAJOR CACHE_CHECK_VSN_MINOR CACHE_CHECK_VSN_PATCH LEFTOVER < conftest.tmp
 		rm -f conftest.tmp
 
 		# Require version >= 0.5.4 for --clear-needs-check-flag
@@ -1585,7 +1585,6 @@ if test "$REALTIME" = yes; then
 	else
 		AC_MSG_WARN(Disabling realtime clock)
 	fi
-	AC_MSG_RESULT($HAVE_REALTIME)
 fi
 
 dnl Check if the system has struct stat st_ctim.
