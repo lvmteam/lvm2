@@ -2309,7 +2309,8 @@ static const char *_get_reserved(struct dm_report *rh, unsigned type,
 
 float dm_percent_to_float(dm_percent_t percent)
 {
-	return (float) percent / DM_PERCENT_1;
+	/* Add 0.f to prevent returning -0.00 */
+	return (float) percent / DM_PERCENT_1 + 0.f;
 }
 
 dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator)
