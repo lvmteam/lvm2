@@ -1454,6 +1454,10 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		}
 	}
 
+
+	if (!strcmp(mode, "un"))
+		return 1;
+
 	/*
 	 * ENOLS: no lockspace was found with a global lock.
 	 * The VG with the global lock may not be visible or started yet,
@@ -1473,10 +1477,6 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	    result == -ESTARTING ||
 	    result == -EVGKILLED ||
 	    result == -ELOCKIO) {
-
-		if (!strcmp(mode, "un"))
-			return 1;
-
 		/*
 		 * If an ex global lock fails, then the command fails.
 		 */
