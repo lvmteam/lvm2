@@ -2404,9 +2404,6 @@ out_act:
 	ls->drop_vg = drop_vg;
 	pthread_mutex_unlock(&lockspaces_mutex);
 
-	if (gl_use_dlm && !strcmp(ls->name, gl_lsname_dlm))
-		dlm_gl_lockspace_running = 0;
-
 	/* worker_thread will join this thread, and free the ls */
 	pthread_mutex_lock(&worker_mutex);
 	worker_wake = 1;
@@ -2592,22 +2589,14 @@ static int add_dlm_global_lockspace(struct action *act)
 {
 	int rv;
 
-	if (dlm_gl_lockspace_running)
-		return -EEXIST;
-	dlm_gl_lockspace_running = 1;
-
 	/*
-	 * There's a short period after which a previous gl lockspace thread
-	 * has set dlm_gl_lockspace_running = 0, but before its ls struct has
-	 * been deleted, during which this add_lockspace_thread() can fail with
-	 * -EAGAIN.
+	 * FIXME: optimize this by setting a flag to indicate that the
+	 * dlm global lockspace is running so we can quit here.
 	 */
 
 	rv = add_lockspace_thread(gl_lsname_dlm, NULL, NULL, LD_LM_DLM, NULL, act);
-	if (rv < 0) {
+	if (rv < 0)
 		log_debug("add_dlm_global_lockspace add_lockspace_thread %d", rv);
-		dlm_gl_lockspace_running = 0;
-	}
 
 	return rv;
 }
@@ -3535,15 +3524,27 @@ static int add_lock_action(struct action *act)
 
 	memset(ls_name, 0, sizeof(ls_name));
 
-	/* Determine which lockspace this action is for, and set ls_name. */
+	/*
+	 * Determine which lockspace this action is for, and set ls_name.
+	 */
 
-	if (act->rt == LD_RT_GL && gl_use_sanlock &&
-	    (act->op == LD_OP_ENABLE || act->op == LD_OP_DISABLE))
+	if (act->rt == LD_RT_GL) {
+		/* Global lock is requested */
+		if (gl_use_sanlock && (act->op == LD_OP_ENABLE || act->op == LD_OP_DISABLE)) {
+			vg_ls_name(act->vg_name, ls_name);
+		} else {
+			if (!gl_use_dlm && !gl_use_sanlock) {
+				if (lm_is_running_dlm())
+					gl_use_dlm = 1;
+				else if (lm_is_running_sanlock())
+					gl_use_sanlock = 1;
+			}
+			gl_ls_name(ls_name);
+		}
+	} else {
+		/* VG lock is requested */
 		vg_ls_name(act->vg_name, ls_name);
-	else if (act->rt == LD_RT_GL)
-		gl_ls_name(ls_name);
-	else
-		vg_ls_name(act->vg_name, ls_name);
+	}
 
  retry:
 	pthread_mutex_lock(&lockspaces_mutex);
@@ -3552,35 +3553,43 @@ static int add_lock_action(struct action *act)
 	pthread_mutex_unlock(&lockspaces_mutex);
 	if (!ls) {
 		if (act->op == LD_OP_UPDATE && act->rt == LD_RT_VG) {
-			log_debug("lockspace not found ignored for vg update");
+			log_debug("lockspace \"%s\" not found ignored for vg update", ls_name);
 			return -ENOLS;
 
 		} else if (act->flags & LD_AF_SEARCH_LS) {
-			/* fail if we've already tried searching for the ls */
-			log_debug("lockspace search repeated %s", ls_name);
+			/*
+			 * Fail if we've already tried searching for the lockspace.
+			 */
+			log_debug("lockspace \"%s\" not found after search", ls_name);
 			return -ENOLS;
 
 		} else if (act->op == LD_OP_LOCK && act->rt == LD_RT_GL && gl_use_sanlock) {
-			/* gl may have been enabled in an existing vg */
-			log_debug("gl lockspace not found check sanlock vgs");
+			/*
+			 * The sanlock global lock may have been enabled in an existing VG,
+			 * so search existing VGs for an enabled global lock.
+			 */
+			log_debug("lockspace \"%s\" not found for sanlock gl, searching...", ls_name);
 			act->flags |= LD_AF_SEARCH_LS;
 			add_work_action(act);
 			return 0;
 
-		} else if (act->op == LD_OP_LOCK && act->rt == LD_RT_GL && gl_use_dlm) {
-			log_debug("gl lockspace not found add dlm global");
+		} else if (act->op == LD_OP_LOCK && act->rt == LD_RT_GL && act->mode != LD_LK_UN && gl_use_dlm) {
+			/*
+			 * Automatically start the dlm global lockspace when
+			 * a command tries to acquire the global lock.
+			 */
+			log_debug("lockspace \"%s\" not found for dlm gl, adding...", ls_name);
 			act->flags |= LD_AF_SEARCH_LS;
 			act->flags |= LD_AF_WAIT_STARTING;
 			add_dlm_global_lockspace(NULL);
-			gl_ls_name(ls_name);
 			goto retry;
 
 		} else if (act->op == LD_OP_LOCK && act->mode == LD_LK_UN) {
-			log_debug("lockspace not found ignored for unlock");
+			log_debug("lockspace \"%s\" not found for unlock ignored", ls_name);
 			return -ENOLS;
 
 		} else {
-			log_debug("lockspace not found %s", ls_name);
+			log_debug("lockspace \"%s\" not found", ls_name);
 			return -ENOLS;
 		}
 	}
