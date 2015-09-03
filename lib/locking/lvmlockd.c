@@ -2423,6 +2423,12 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	daemon_reply_destroy(reply);
+
+	/* Other hosts have not stopped the lockspace. */
+	if (result == -EBUSY) {
+		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		return 0;
+	}
 	
 	if (!ret) {
 		log_error("lockd_rename_vg_before lvmlockd result %d", result);
