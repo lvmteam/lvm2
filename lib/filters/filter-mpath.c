@@ -244,11 +244,16 @@ static int _dev_is_mpath(struct dev_filter *f, struct device *dev)
 	return 0;
 }
 
+#define MSG_SKIPPING "%s: Skipping mpath component device"
+
 static int _ignore_mpath(struct dev_filter *f, struct device *dev)
 {
 	if (_dev_is_mpath(f, dev) == 1) {
-		log_debug_devs("%s: Skipping mpath component device [%s:%p]",
-				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
+		if (dev->ext.src == DEV_EXT_NONE)
+			log_debug_devs(MSG_SKIPPING, dev_name(dev));
+		else
+			log_debug_devs(MSG_SKIPPING " [%s:%p]", dev_name(dev),
+					dev_ext_name(dev), dev->ext.handle);
 		return 0;
 	}
 

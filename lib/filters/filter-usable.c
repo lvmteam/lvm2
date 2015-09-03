@@ -29,22 +29,19 @@ static int _native_check_pv_min_size(struct device *dev)
 
 	/* Check it's accessible */
 	if (!dev_open_readonly_quiet(dev)) {
-		log_debug_devs("%s: Skipping: open failed [%s:%p]",
-				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
+		log_debug_devs("%s: Skipping: open failed", dev_name(dev));
 		return 0;
 	}
 
 	/* Check it's not too small */
 	if (!dev_get_size(dev, &size)) {
-		log_debug_devs("%s: Skipping: dev_get_size failed [%s:%p]",
-				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
+		log_debug_devs("%s: Skipping: dev_get_size failed", dev_name(dev));
 		goto out;
 	}
 
 	if (size < pv_min_size()) {
-		log_debug_devs("%s: Skipping: %s [%s:%p]", dev_name(dev),
-				_too_small_to_hold_pv_msg,
-				dev_ext_name(dev), dev->ext.handle);
+		log_debug_devs("%s: Skipping: %s", dev_name(dev),
+				_too_small_to_hold_pv_msg);
 		goto out;
 	}
 

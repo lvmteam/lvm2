@@ -16,13 +16,18 @@
 #include "lib.h"
 #include "filter.h"
 
+#define MSG_SKIPPING "%s: Skipping: Partition table signature found"
+
 static int _passes_partitioned_filter(struct dev_filter *f, struct device *dev)
 {
 	struct dev_types *dt = (struct dev_types *) f->private;
 
 	if (dev_is_partitioned(dt, dev)) {
-		log_debug_devs("%s: Skipping: Partition table signature found [%s:%p]",
-			       dev_name(dev), dev_ext_name(dev), dev->ext.handle);
+		if (dev->ext.src == DEV_EXT_NONE)
+			log_debug_devs(MSG_SKIPPING, dev_name(dev));
+		else
+			log_debug_devs(MSG_SKIPPING " [%s:%p]", dev_name(dev),
+					dev_ext_name(dev), dev->ext.handle);
 		return 0;
 	}
 

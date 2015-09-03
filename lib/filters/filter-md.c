@@ -18,6 +18,8 @@
 
 #ifdef __linux__
 
+#define MSG_SKIPPING "%s: Skipping md component device"
+
 static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 		      struct device *dev)
 {
@@ -29,8 +31,11 @@ static int _ignore_md(struct dev_filter *f __attribute__((unused)),
 	ret = dev_is_md(dev, NULL);
 
 	if (ret == 1) {
-		log_debug_devs("%s: Skipping md component device [%s:%p]",
-				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
+		if (dev->ext.src == DEV_EXT_NONE)
+			log_debug_devs(MSG_SKIPPING, dev_name(dev));
+		else
+			log_debug_devs(MSG_SKIPPING " [%s:%p]", dev_name(dev),
+					dev_ext_name(dev), dev->ext.handle);
 		return 0;
 	}
 

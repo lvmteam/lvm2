@@ -61,6 +61,8 @@ static int _dev_is_fwraid(struct device *dev)
 	return 0;
 }
 
+#define MSG_SKIPPING "%s: Skipping firmware RAID component device"
+
 static int _ignore_fwraid(struct dev_filter *f __attribute__((unused)),
 			   struct device *dev)
 {
@@ -72,8 +74,11 @@ static int _ignore_fwraid(struct dev_filter *f __attribute__((unused)),
 	ret = _dev_is_fwraid(dev);
 
 	if (ret == 1) {
-		log_debug_devs("%s: Skipping firmware RAID component device [%s:%p]",
-				dev_name(dev), dev_ext_name(dev), dev->ext.handle);
+		if (dev->ext.src == DEV_EXT_NONE)
+			log_debug_devs(MSG_SKIPPING, dev_name(dev));
+		else
+			log_debug_devs(MSG_SKIPPING " [%s:%p]", dev_name(dev),
+					dev_ext_name(dev), dev->ext.handle);
 		return 0;
 	}
 
