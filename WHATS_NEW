@@ -1,5 +1,6 @@
 Version 2.02.130 - 
 ===================================
+  Fix use of uninitialized device status if reading outdated .cache record.
   Restore support for --monitor option in lvcreate (2.02.112).
   Read thin-pool data and metadata percent without flush.
   Detect blocked thin-pool and avoid scanning their thin volumes.
