@@ -574,8 +574,10 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 	}
 
 	if (is_lockd_type(vg->lock_type) && is_lockd_type(lock_type)) {
-		log_error("First change from lock type %s to none, then to lock type %s",
+		log_error("Cannot change lock type directly from \"%s\" to \"%s\".",
 			  vg->lock_type, lock_type);
+		log_error("First change lock type to \"none\", then to \"%s\".",
+			  lock_type);
 		return 0;
 	}
 
