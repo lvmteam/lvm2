@@ -419,7 +419,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 	struct dm_pool *mem = dms->hist_mem;
 	struct dm_histogram_bin cur;
 	struct dm_histogram hist;
-	unsigned nr_bins = 1;
+	int nr_bins = 1;
 	const char *c, *v;
 	char *p;
 
@@ -2180,7 +2180,7 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 	struct dm_pool *mem = dmh->dms->hist_mem;
 	char buf[64], bounds_buf[64];
 	const char *sep = "";
-	ssize_t len;
+	ssize_t len = 0;
 
 	bounds = flags & DM_HISTOGRAM_BOUNDS_MASK;
 	values = flags & DM_HISTOGRAM_VALUES;
@@ -2190,6 +2190,8 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 		last = dmh->nr_bins - 1;
 	} else
 		start = last = bin;
+
+	minwidth = width;
 
 	if (width < 0 || !values)
 		width = minwidth = 0; /* no padding */
