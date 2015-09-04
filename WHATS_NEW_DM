@@ -1,15 +1,20 @@
 Version 1.02.107 - 
 ===================================
   Parse thin-pool status with one single routine internally.
+  Add --histogram to select default histogram fields for list and report.
+  Add report fields for displaying latency histogram configuration and data.
+  Add dmstats --bounds to specify histogram boundaries for a new region.
+  Add dm_histogram_to_string() to format histogram data in string form.
+  Add public methods to libdm to access numerical histogram config and data.
+  Parse and store histogram data in dm_stats_list() and dm_stats_populate().
+  Add an argument to specify histogram bounds to dm_stats_create_region().
+  Add dm_histogram_bounds_from_{string,uint64_t}() to parse histogram bounds.
+  Add dm_histogram handle type to represent a latency histogram and its bounds.
   Fix devmapper.pc pkgconfig file to not reference non-existent rt.pc file.
   Reinstate dm_task_get_info@Base to libdevmapper exports. (1.02.106)
 
 Version 1.02.106 - 26th August 2015
 ===================================
-  Add basic report fields for displaying latency histogram data.
-  Add dmstats --histogram to specify histogram boundaries for a region.
-  Add public methods to libdm-stats to access numerical histogram data.
-  Add the ability to parse histogram data into numeric form to libdm-stats.
   Add 'precise' column to statistics reports.
   Add --precise switch to 'dmstats create' to request nanosecond counters.
   Add precise argument to dm_stats_create_region().
