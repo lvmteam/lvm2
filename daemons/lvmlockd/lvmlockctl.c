@@ -599,14 +599,14 @@ static void print_usage(void)
 	printf("      Wait option for other commands.\n");
 	printf("--force | -f 0|1>\n");
 	printf("      Force option for other commands.\n");
-	printf("--kill | -k <vg_name>\n");
-	printf("      Kill access to the vg when sanlock cannot renew lease.\n");
-	printf("--drop | -r <vg_name>\n");
-	printf("      Clear locks for the vg after it has been killed and is no longer used.\n");
-	printf("--gl-enable <vg_name>\n");
-	printf("      Tell lvmlockd to enable the global lock in a sanlock vg.\n");
-	printf("--gl-disable <vg_name>\n");
-	printf("      Tell lvmlockd to disable the global lock in a sanlock vg.\n");
+	printf("--kill | -k <vgname>\n");
+	printf("      Kill access to the VG when sanlock cannot renew lease.\n");
+	printf("--drop | -r <vgname>\n");
+	printf("      Clear locks for the VG when it is unused after kill (-k).\n");
+	printf("--gl-enable | -E <vgname>\n");
+	printf("      Tell lvmlockd to enable the global lock in a sanlock VG.\n");
+	printf("--gl-disable | -D <vgname>\n");
+	printf("      Tell lvmlockd to disable the global lock in a sanlock VG.\n");
 	printf("--stop-lockspaces | -S\n");
 	printf("      Stop all lockspaces.\n");
 }
@@ -731,11 +731,13 @@ int main(int argc, char **argv)
 	}
 
 	if (gl_enable) {
+		syslog(LOG_INFO, "Enabling global lock in VG %s.", arg_vg_name);
 		rv = do_able("enable_gl");
 		goto out;
 	}
 
 	if (gl_disable) {
+		syslog(LOG_INFO, "Disabling global lock in VG %s.", arg_vg_name);
 		rv = do_able("disable_gl");
 		goto out;
 	}
