@@ -578,7 +578,7 @@ static void mark_outdated_pv(lvmetad_state *s, const char *vgid, const char *pvi
 		    !(cft_vgid = make_text_node(outdated_pvs, "vgid", dm_pool_strdup(outdated_pvs->mem, vgid),
 						outdated_pvs->root, NULL)))
 			abort();
-		if(!dm_hash_insert(s->vgid_to_outdated_pvs, cft_vgid->v->v.str, outdated_pvs))
+		if (!dm_hash_insert(s->vgid_to_outdated_pvs, cft_vgid->v->v.str, outdated_pvs))
 			abort();
 		DEBUGLOG(s, "created outdated_pvs list for VG %s", vgid);
 	}

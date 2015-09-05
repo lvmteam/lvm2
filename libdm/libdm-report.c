@@ -4195,7 +4195,7 @@ static void _destroy_rows(struct dm_report *rh)
 	 * pool allocation this will also free all subsequently allocated
 	 * rows from the report and any associated string data.
 	 */
-	if(rh->first_row)
+	if (rh->first_row)
 		dm_pool_free(rh->mem, rh->first_row);
 	rh->first_row = NULL;
 	dm_list_init(&rh->rows);

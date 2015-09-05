@@ -319,10 +319,11 @@ static struct pv_list *_copy_pvl(struct dm_pool *pvmem, struct pv_list *pvl_from
 	if (!(pvl_to->pv = dm_pool_alloc(pvmem, sizeof(*pvl_to->pv))))
 		goto_bad;
 
-	if(!_copy_pv(pvmem, pvl_to->pv, pvl_from->pv))
+	if (!_copy_pv(pvmem, pvl_to->pv, pvl_from->pv))
 		goto_bad;
 
 	return pvl_to;
+
 bad:
 	dm_pool_free(pvmem, pvl_to);
 	return NULL;

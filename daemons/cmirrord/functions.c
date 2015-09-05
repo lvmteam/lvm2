@@ -1445,7 +1445,7 @@ static int disk_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 	char *data = (char *)rq->data;
 	struct stat statbuf;
 
-	if(fstat(lc->disk_fd, &statbuf)) {
+	if (fstat(lc->disk_fd, &statbuf)) {
 		rq->error = -errno;
 		return -errno;
 	}
@@ -1508,7 +1508,7 @@ static int disk_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 	char *data = (char *)rq->data;
 	struct stat statbuf;
 
-	if(fstat(lc->disk_fd, &statbuf)) {
+	if (fstat(lc->disk_fd, &statbuf)) {
 		rq->error = -errno;
 		return -errno;
 	}

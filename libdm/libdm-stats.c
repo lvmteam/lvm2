@@ -105,7 +105,7 @@ static char *_program_id_from_proc(void)
 
 	if (!fgets(buf, sizeof(buf), comm)) {
 		log_error("Could not read from %s", PROC_SELF_COMM);
-		if(fclose(comm))
+		if (fclose(comm))
 			stack;
 		return NULL;
 	}
@@ -145,7 +145,7 @@ struct dm_stats *dm_stats_create(const char *program_id)
 
 	/* FIXME: better hint. */
 	if (!(dms->mem = dm_pool_create("stats_pool", 4096)))
-		goto_out;
+		goto_bad;
 
 	if (!(dms->hist_mem = dm_pool_create("histogram_pool", hist_hint)))
 		return_0;
@@ -169,7 +169,8 @@ struct dm_stats *dm_stats_create(const char *program_id)
 	dms->regions = NULL;
 
 	return dms;
-out:
+
+bad:
 	dm_free(dms);
 	return NULL;
 }
@@ -354,7 +355,7 @@ static char *_build_histogram_arg(struct dm_histogram *bounds, int *precise)
 		hist_len += 1 + (size_t) lround(log10(value));
 	}
 
-	if(!(hist_arg = dm_zalloc(hist_len))) {
+	if (!(hist_arg = dm_zalloc(hist_len))) {
 		log_error("Could not allocate memory for histogram argument.");
 		return 0;
 	}
@@ -373,14 +374,16 @@ static char *_build_histogram_arg(struct dm_histogram *bounds, int *precise)
 		value = entry->upper / scale;
 		if ((l = dm_snprintf(arg, hist_len - len, FMTu64"%s", value,
 				     (last) ? "" : ",")) < 0)
-			goto out;
+			goto_bad;
 		len += (size_t) l;
 		arg += (size_t) l;
 	}
 	return hist_arg;
-out:
+
+bad:
 	log_error("Could not build histogram arguments.");
 	dm_free(hist_arg);
+
 	return NULL;
 }
 
@@ -392,16 +395,17 @@ static struct dm_task *_stats_send_message(struct dm_stats *dms, char *msg)
 		return_0;
 
 	if (!_set_stats_device(dms, dmt))
-		goto_out;
+		goto_bad;
 
 	if (!dm_task_set_message(dmt, msg))
-		goto_out;
+		goto_bad;
 
 	if (!dm_task_run(dmt))
-		goto_out;
+		goto_bad;
 
 	return dmt;
-out:
+
+bad:
 	dm_task_destroy(dmt);
 	return NULL;
 }
@@ -425,7 +429,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 
 	/* Advance past "histogram:". */
 	histogram = strchr(histogram, ':');
-	if(!histogram) {
+	if (!histogram) {
 		log_error("Could not parse histogram description.");
 		return 0;
 	}
@@ -444,21 +448,23 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 	hist.region = region;
 	hist.dms = dms;
 
-	if(!dm_pool_grow_object(mem, &hist, sizeof(hist)))
-		goto_out;
+	if (!dm_pool_grow_object(mem, &hist, sizeof(hist)))
+		goto_bad;
 
 	c = histogram;
 	do {
-		for(v = _valid_chars; *v; v++)
+		for (v = _valid_chars; *v; v++)
 			if (*c == *v)
 				break;
-		if(!*v)
+		if (!*v) {
+			stack;
 			goto badchar;
+		}
 
 		if (*c == ',') {
 			log_error("Invalid histogram description: %s",
 				  histogram);
-			goto out;
+			goto bad;
 		} else {
 			const char *val_start = c;
 			char *endptr = NULL;
@@ -467,15 +473,17 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 			this_val = strtoull(val_start, &endptr, 10);
 			if (!endptr) {
 				log_error("Could not parse histogram boundary.");
-				goto out;
+				goto bad;
 			}
 
 			c = endptr; /* Advance to units, comma, or end. */
 
 			if (*c == ',')
 				c++;
-			else if (*c || (*c == ' ')) /* Expected ',' or NULL. */
+			else if (*c || (*c == ' ')) { /* Expected ',' or NULL. */
+				stack;
 				goto badchar;
+			}
 
 			if (*c == ',')
 				c++;
@@ -484,7 +492,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 			cur.count = 0;
 
 			if (!dm_pool_grow_object(mem, &cur, sizeof(cur)))
-				goto_out;
+				goto_bad;
 
 			nr_bins++;
 		}
@@ -493,7 +501,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 	/* final upper bound. */
 	cur.upper = UINT64_MAX;
 	if (!dm_pool_grow_object(mem, &cur, sizeof(cur)))
-		goto_out;
+		goto_bad;
 
 	region->bounds = dm_pool_end_object(mem);
 
@@ -507,7 +515,7 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 
 badchar:
 	log_error("Invalid character in histogram: '%c' (0x%x)", *c, *c);
-out:
+bad:
 	dm_pool_abandon_object(mem);
 	return 0;
 }
@@ -614,12 +622,12 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 		return_0;
 
 	if (!dm_pool_begin_object(mem, 1024))
-		goto_out;
+		goto_bad;
 
 	while(fgets(line, sizeof(line), list_rows)) {
 
 		if (!_stats_parse_list_region(dms, &cur, line))
-			goto_out;
+			goto_bad;
 
 		/* handle holes in the list of region_ids */
 		if (cur.region_id > max_region) {
@@ -628,12 +636,12 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 			fill.region_id = DM_STATS_REGION_NOT_PRESENT;
 			do {
 				if (!dm_pool_grow_object(mem, &fill, sizeof(fill)))
-					goto_out;
+					goto_bad;
 			} while (max_region++ < (cur.region_id - 1));
 		}
 
 		if (!dm_pool_grow_object(mem, &cur, sizeof(cur)))
-			goto_out;
+			goto_bad;
 
 		max_region++;
 		nr_regions++;
@@ -647,10 +655,12 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 		stack;
 
 	return 1;
-out:
-	if(fclose(list_rows))
+
+bad:
+	if (fclose(list_rows))
 		stack;
 	dm_pool_abandon_object(mem);
+
 	return 0;
 }
 
@@ -675,17 +685,17 @@ int dm_stats_list(struct dm_stats *dms, const char *program_id)
 	}
 
 	if (!(dmt = _stats_send_message(dms, msg)))
-		return 0;
+		return_0;
 
 	if (!_stats_parse_list(dms, dm_task_get_message_response(dmt))) {
 		log_error("Could not parse @stats_list response.");
-		goto out;
+		goto bad;
 	}
 
 	dm_task_destroy(dmt);
 	return 1;
 
-out:
+bad:
 	dm_task_destroy(dmt);
 	return 0;
 }
@@ -715,15 +725,17 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 	do {
 		memset(&cur, 0, sizeof(cur));
-		for(v = _valid_chars; *v; v++)
+		for (v = _valid_chars; *v; v++)
 			if (*c == *v)
 				break;
-		if(!*v)
+		if (!*v) {
+			stack;
 			goto badchar;
+		}
 
 		if (*c == ',') {
 			log_error("Invalid histogram: %s", hist_str);
-			goto out;
+			return 0;
 		} else {
 			const char *val_start = c;
 			char *endptr = NULL;
@@ -732,15 +744,17 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 			this_val = strtoull(val_start, &endptr, 10);
 			if (!endptr) {
 				log_error("Could not parse histogram value.");
-				goto out;
+				return 0;
 			}
 			c = endptr; /* Advance to colon, or end. */
 
 			if (*c == ':')
 				c++;
-			else if (*c & (*c != '\n'))
+			else if (*c & (*c != '\n')) {
 				/* Expected ':', '\n', or NULL. */
+				stack;
 				goto badchar;
+			}
 
 			if (*c == ':')
 				c++;
@@ -764,7 +778,6 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 badchar:
 	log_error("Invalid character in histogram data: '%c' (0x%x)", *c, *c);
-out:
 	return 0;
 }
 
@@ -788,7 +801,7 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 	region->start = UINT64_MAX;
 
 	if (!dm_pool_begin_object(mem, 512))
-		goto_out;
+		goto_bad;
 
 	/*
 	 * dm_task_get_message_response() returns a 'const char *' but
@@ -796,7 +809,7 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 	 */
 	stats_rows = fmemopen((char *)resp, strlen(resp), "r");
 	if (!stats_rows)
-		goto_out;
+		goto_bad;
 
 	/*
 	 * Output format for each step-sized area of a region:
@@ -844,7 +857,7 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 			   &cur.total_read_nsecs, &cur.total_write_nsecs);
 		if (r != 15) {
 			log_error("Could not parse @stats_print row.");
-			goto out;
+			goto bad;
 		}
 
 		/* scale time values up if needed */
@@ -862,7 +875,7 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 			char *hist_str = strchr(row, ':');
 			if (!hist_str) {
 				log_error("Could not parse histogram value.");
-				goto out;
+				goto bad;
 			}
 			/* Find space preceding histogram. */
 			while (hist_str && *(hist_str - 1) != ' ')
@@ -874,15 +887,15 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 			 */
 			if (!_stats_parse_histogram(dms->hist_mem, hist_str,
 						    &hist, region))
-				goto out;
+				goto_bad;
 			hist->dms = dms;
 			hist->region = region;
 		}
 
 		cur.histogram = hist;
 
-		if(!dm_pool_grow_object(mem, &cur, sizeof(cur)))
-			goto_out;
+		if (!dm_pool_grow_object(mem, &cur, sizeof(cur)))
+			goto_bad;
 
 		if (region->start == UINT64_MAX) {
 			region->start = start;
@@ -899,12 +912,12 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 
 	return 1;
 
-out:
-
+bad:
 	if (stats_rows)
-		if(fclose(stats_rows))
+		if (fclose(stats_rows))
 			stack;
 	dm_pool_abandon_object(mem);
+
 	return 0;
 }
 
@@ -1017,7 +1030,7 @@ int dm_stats_get_region_nr_histogram_bins(const struct dm_stats *dms,
 		     ? dms->cur_region : region_id ;
 
 	if (!dms->regions[region_id].bounds)
-		return 0;
+		return_0;
 
 	return dms->regions[region_id].bounds->nr_bins;
 }
@@ -1083,7 +1096,7 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	}
 
 	if (!(dmt = _stats_send_message(dms, msg)))
-		goto out;
+		goto_out;
 
 	resp = dm_task_get_message_response(dmt);
 	if (!resp) {
@@ -1101,9 +1114,10 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	r = 1;
 
 out:
-	if(dmt)
+	if (dmt)
 		dm_task_destroy(dmt);
 	dm_free((void *) opt_args);
+
 	return r;
 }
 
@@ -1116,9 +1130,8 @@ int dm_stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	int r = 0;
 
 	/* Nanosecond counters and histograms both need precise_timestamps. */
-	if ((precise || bounds)
-	    && !_stats_check_precise_timestamps(dms))
-		return 0;
+	if ((precise || bounds) && !_stats_check_precise_timestamps(dms))
+		return_0;
 
 	if (bounds) {
 		/* _build_histogram_arg enables precise if vals < 1ms. */
@@ -1129,6 +1142,7 @@ int dm_stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	r = _stats_create_region(dms, region_id, start, len, step,
 				 precise, hist_arg, program_id, aux_data);
 	dm_free(hist_arg);
+
 out:
 	return r;
 }
@@ -1143,17 +1157,15 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 
 	if (!dm_snprintf(msg, sizeof(msg), "@stats_delete " FMTu64, region_id)) {
 		log_error("Could not prepare @stats_delete message.");
-		goto out;
+		return 0;
 	}
 
 	dmt = _stats_send_message(dms, msg);
 	if (!dmt)
-		goto_out;
+		return_0;
 	dm_task_destroy(dmt);
-	return 1;
 
-out:
-	return 0;
+	return 1;
 }
 
 int dm_stats_clear_region(struct dm_stats *dms, uint64_t region_id)
@@ -1166,17 +1178,17 @@ int dm_stats_clear_region(struct dm_stats *dms, uint64_t region_id)
 
 	if (!dm_snprintf(msg, sizeof(msg), "@stats_clear " FMTu64, region_id)) {
 		log_error("Could not prepare @stats_clear message.");
-		goto out;
+		return 0;
 	}
 
 	dmt = _stats_send_message(dms, msg);
-	if (!dmt)
-		goto_out;
-	dm_task_destroy(dmt);
-	return 1;
 
-out:
-	return 0;
+	if (!dmt)
+		return_0;
+
+	dm_task_destroy(dmt);
+
+	return 1;
 }
 
 static struct dm_task *_stats_print_region(struct dm_stats *dms,
@@ -1194,22 +1206,19 @@ static struct dm_task *_stats_print_region(struct dm_stats *dms,
 		if (!dm_snprintf(lines, sizeof(lines),
 				 lines_fmt, start_line, num_lines)) {
 			log_error(err_fmt, "row specification");
-			goto out;
+			return NULL;
 		}
 
 	if (!dm_snprintf(msg, sizeof(msg), msg_fmt, (clear) ? clear_str : "",
 			 region_id, (start_line || num_lines) ? lines : "")) {
 		log_error(err_fmt, "message");
-		goto out;
+		return NULL;
 	}
 
 	if (!(dmt = _stats_send_message(dms, msg)))
-		goto out;
+		return_NULL;
 
 	return dmt;
-
-out:
-	return NULL;
 }
 
 char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
@@ -1226,7 +1235,7 @@ char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
 				  start_line, num_lines, clear);
 
 	if (!dmt)
-		return 0;
+		return_0;
 
 	resp = dm_pool_strdup(dms->mem, dm_task_get_message_response(dmt));
 	dm_task_destroy(dmt);
@@ -1245,7 +1254,7 @@ void dm_stats_buffer_destroy(struct dm_stats *dms, char *buffer)
 uint64_t dm_stats_get_nr_regions(const struct dm_stats *dms)
 {
 	if (!dms || !dms->regions)
-		return 0;
+		return_0;
 	return dms->nr_regions;
 }
 
@@ -1255,10 +1264,10 @@ uint64_t dm_stats_get_nr_regions(const struct dm_stats *dms)
 int dm_stats_region_present(const struct dm_stats *dms, uint64_t region_id)
 {
 	if (!dms->regions)
-		return 0;
+		return_0;
 
 	if (region_id > dms->max_region)
-		return 0;
+		return_0;
 
 	return _stats_region_present(&dms->regions[region_id]);
 }
@@ -1293,12 +1302,12 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 
 	if (all_regions && !dm_stats_list(dms, program_id)) {
 		log_error("Could not parse @stats_list response.");
-		goto out;
+		goto bad;
 	}
 
 	/* successful list but no regions registered */
 	if (!dms->nr_regions)
-		return 0;
+		return_0;
 
 	dm_stats_walk_start(dms);
 	do {
@@ -1310,12 +1319,12 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 
 		/* obtain all lines and clear counter values */
 		if (!(dmt = _stats_print_region(dms, region_id, 0, 0, 1)))
-			goto_out;
+			goto_bad;
 
 		resp = dm_task_get_message_response(dmt);
 		if (!_dm_stats_populate_region(dms, region_id, resp)) {
 			dm_task_destroy(dmt);
-			goto_out;
+			goto_bad;
 		}
 
 		dm_task_destroy(dmt);
@@ -1325,7 +1334,7 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 
 	return 1;
 
-out:
+bad:
 	_stats_regions_destroy(dms);
 	dms->regions = NULL;
 	return 0;
@@ -1620,10 +1629,10 @@ int dm_stats_get_service_time(const struct dm_stats *dms, double *svctm,
 	double tput;
 
 	if (!dm_stats_get_throughput(dms, &tput, region_id, area_id))
-		return 0;
+		return_0;
 
 	if (!dm_stats_get_utilization(dms, &util, region_id, area_id))
-		return 0;
+		return_0;
 
 	/* avoid NAN with zero counter values */
 	if ( (uint64_t) tput == 0 || (uint64_t) util == 0) {
@@ -1973,23 +1982,26 @@ struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str)
 	c = bounds_str;
 
 	if (!(dmh = _alloc_dm_histogram(nr_entries)))
-		return 0;
+		return_0;
 
 	dmh->nr_bins = nr_entries;
 
 	cur = dmh->bins;
 
 	do {
-		for(v = _valid_chars; *v; v++)
+		for (v = _valid_chars; *v; v++)
 			if (*c == *v)
 				break;
-		if(!*v)
+
+		if (!*v) {
+			stack;
 			goto badchar;
+		}
 
 		if (*c == ',') {
 			log_error("Empty histogram bin not allowed: %s",
 				  bounds_str);
-			goto out;
+			goto bad;
 		} else {
 			const char *val_start = c;
 			char *endptr = NULL;
@@ -1998,7 +2010,7 @@ struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str)
 			this_val = strtoull(val_start, &endptr, 10);
 			if (!endptr) {
 				log_error("Could not parse histogram bound.");
-				goto out;
+				goto bad;
 			}
 			c = endptr; /* Advance to units, comma, or end. */
 
@@ -2012,13 +2024,17 @@ struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str)
 					mult = NSEC_PER_USEC;
 				else if (*c == 'n')
 					mult = 1;
-				else
+				else {
+					stack;
 					goto badchar;
+				}
 				c += 2; /* Advance over 'ms', 'us', or 'ns'. */
 			} else if (*c == ',')
 				c++;
-			else if (*c) /* Expected ',' or NULL. */
+			else if (*c) { /* Expected ',' or NULL. */
+				stack;
 				goto badchar;
+			}
 
 			if (*c == ',')
 				c++;
@@ -2035,7 +2051,7 @@ struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str)
 
 badchar:
 	log_error("Invalid character in histogram: %c", *c);
-out:
+bad:
 	dm_free(dmh);
 	return NULL;
 }
@@ -2121,7 +2137,7 @@ static int _make_bounds_string(char *buf, size_t size, uint64_t lower,
 	int bounds = flags & DM_HISTOGRAM_BOUNDS_MASK;
 
 	if (!bounds)
-		return 0;
+		return_0;
 
 	*buf = '\0';
 
@@ -2258,14 +2274,15 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 					  sep);
 
 		if (len < 0)
-			goto_out;
+			goto_bad;
 
 		width = minwidth; /* re-set histogram column width. */
 		dm_pool_grow_object(mem, buf, (size_t) len);
 	}
 	dm_pool_grow_object(mem, "\0", 1);
 	return (const char *) dm_pool_end_object(mem);
-out:
+
+bad:
 	dm_pool_abandon_object(mem);
 	return NULL;
 }

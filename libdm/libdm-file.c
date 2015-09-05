@@ -119,8 +119,8 @@ int dm_create_lockfile(const char *lockfile)
 	char buffer[50];
 	int retries = 0;
 
-	if((fd = open(lockfile, O_CREAT | O_WRONLY,
-		      (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) < 0) {
+	if ((fd = open(lockfile, O_CREAT | O_WRONLY,
+		       (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) < 0) {
 		log_error("Cannot open lockfile [%s], error was [%s]",
 			  lockfile, strerror(errno));
 		return 0;
