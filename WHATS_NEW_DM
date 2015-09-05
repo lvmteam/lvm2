@@ -1,3 +1,6 @@
+Version 1.02.108 - 
+=====================================
+
 Version 1.02.107 - 5th September 2015
 =====================================
   Parse thin-pool status with one single routine internally.
