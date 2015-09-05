@@ -1,5 +1,5 @@
-Version 1.02.107 - 
-===================================
+Version 1.02.107 - 5th September 2015
+=====================================
   Parse thin-pool status with one single routine internally.
   Add --histogram to select default histogram fields for list and report.
   Add report fields for displaying latency histogram configuration and data.
