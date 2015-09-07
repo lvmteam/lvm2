@@ -200,9 +200,11 @@ static void _stats_histograms_destroy(struct dm_pool *mem,
 	if (!region->counters)
 		return;
 
-	for (n = _nr_areas_region(region) - 1; n; n--)
-		if (region->counters[n].histogram)
-			dm_pool_free(mem, region->counters[n].histogram);
+	/*
+	 * Only the first histogram needs to be freed explicitly.
+	 */
+	if (region->counters[0].histogram)
+		dm_pool_free(mem, region->counters[0].histogram);
 }
 
 static void _stats_region_destroy(struct dm_stats_region *region)
