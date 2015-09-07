@@ -105,7 +105,6 @@ fi
 %{_mandir}/man8/lvmconf.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
 %{_mandir}/man8/lvmdump.8.gz
-%{_mandir}/man8/lvmlockctl.8.gz
 %{_mandir}/man8/lvmsadc.8.gz
 %{_mandir}/man8/lvmsar.8.gz
 %{_mandir}/man8/lvreduce.8.gz
@@ -285,6 +284,7 @@ LVM commands use lvmlockd to coordinate access to shared storage.
 %{_sbindir}/lvmlockd
 %{_sbindir}/lvmlockctl
 %{_mandir}/man8/lvmlockd.8.gz
+%{_mandir}/man8/lvmlockctl.8.gz
 %dir %{_default_locking_dir}
 %{_unitdir}/lvm2-lvmlockd.service
 %{_unitdir}/lvm2-lvmlocking.service
