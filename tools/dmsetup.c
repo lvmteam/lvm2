@@ -4674,6 +4674,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 		return_0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TABLE))) {
+		dm_histogram_bounds_destroy(bounds);
 		dm_stats_destroy(dms);
 		return_0;
 	}
