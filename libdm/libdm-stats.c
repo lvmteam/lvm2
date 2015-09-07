@@ -717,7 +717,8 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 	c = hist_str;
 
-	dm_pool_begin_object(mem, sizeof(cur));
+	if (!dm_pool_begin_object(mem, sizeof(cur)))
+		return_0;
 
 	hist.nr_bins = nr_bins;
 
