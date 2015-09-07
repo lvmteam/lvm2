@@ -2148,6 +2148,7 @@ void dm_histogram_bounds_destroy(struct dm_histogram *bounds)
  */
 static void _scale_bound_value_to_suffix(uint64_t *bound, const char **suffix)
 {
+	*suffix = "ns";
 	if (!(*bound % NSEC_PER_SEC)) {
 		*bound /= NSEC_PER_SEC;
 		*suffix = "s";
