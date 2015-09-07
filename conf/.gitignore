@@ -2,3 +2,5 @@ command_profile_template.profile
 example.conf
 lvmlocal.conf
 metadata_profile_template.profile
+configure.h
+lvm-version.h

@@ -1,5 +1,6 @@
 Version 2.02.131 - 
 =====================================
+  Fix usage of configure.h when building in srcdir != builddir.
 
 Version 2.02.130 - 5th September 2015
 =====================================

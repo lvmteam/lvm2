@@ -229,5 +229,3 @@ include $(top_builddir)/make.tmpl
 CFLAGS += $(BLKID_CFLAGS) $(UDEV_CFLAGS) $(VALGRIND_CFLAGS)
 
 $(SUBDIRS): $(LIB_STATIC)
-
-DISTCLEAN_TARGETS += misc/configure.h misc/lvm-version.h
