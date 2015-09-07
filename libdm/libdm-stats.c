@@ -2222,7 +2222,8 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 	/* Set bounds string to the empty string. */
 	bounds_buf[0] = '\0';
 
-	dm_pool_begin_object(mem, 64);
+	if (!dm_pool_begin_object(mem, 64))
+		return_0;
 
 	for (bin = start; bin <= last; bin++) {
 		if (bounds) {
@@ -2277,9 +2278,13 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 			goto_bad;
 
 		width = minwidth; /* re-set histogram column width. */
-		dm_pool_grow_object(mem, buf, (size_t) len);
+		if (!dm_pool_grow_object(mem, buf, (size_t) len))
+			goto_bad;
 	}
-	dm_pool_grow_object(mem, "\0", 1);
+
+	if (!dm_pool_grow_object(mem, "\0", 1))
+		goto_bad;
+
 	return (const char *) dm_pool_end_object(mem);
 
 bad:
