@@ -721,22 +721,20 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 	hist.nr_bins = nr_bins;
 
-	dm_pool_grow_object(mem, &hist, sizeof(hist));
+	if (!dm_pool_grow_object(mem, &hist, sizeof(hist)))
+		goto_bad;
 
 	do {
 		memset(&cur, 0, sizeof(cur));
 		for (v = _valid_chars; *v; v++)
 			if (*c == *v)
 				break;
-		if (!*v) {
-			stack;
+		if (!*v)
 			goto badchar;
-		}
 
-		if (*c == ',') {
-			log_error("Invalid histogram: %s", hist_str);
-			return 0;
-		} else {
+		if (*c == ',')
+			goto badchar;
+		else {
 			const char *val_start = c;
 			char *endptr = NULL;
 			uint64_t this_val = 0;
@@ -744,17 +742,15 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 			this_val = strtoull(val_start, &endptr, 10);
 			if (!endptr) {
 				log_error("Could not parse histogram value.");
-				return 0;
+				goto bad;
 			}
 			c = endptr; /* Advance to colon, or end. */
 
 			if (*c == ':')
 				c++;
-			else if (*c & (*c != '\n')) {
+			else if (*c & (*c != '\n'))
 				/* Expected ':', '\n', or NULL. */
-				stack;
 				goto badchar;
-			}
 
 			if (*c == ':')
 				c++;
@@ -763,7 +759,8 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 			cur.count = this_val;
 			sum += this_val;
 
-			dm_pool_grow_object(mem, &cur, sizeof(cur));
+			if (!dm_pool_grow_object(mem, &cur, sizeof(cur)))
+				goto_bad;
 
 			bin++;
 		}
@@ -778,6 +775,8 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 badchar:
 	log_error("Invalid character in histogram data: '%c' (0x%x)", *c, *c);
+bad:
+	dm_pool_abandon_object(mem);
 	return 0;
 }
 
