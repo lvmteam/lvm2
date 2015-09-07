@@ -144,16 +144,23 @@ struct dm_stats *dm_stats_create(const char *program_id)
 		return_NULL;
 
 	/* FIXME: better hint. */
-	if (!(dms->mem = dm_pool_create("stats_pool", 4096)))
-		goto_bad;
+	if (!(dms->mem = dm_pool_create("stats_pool", 4096))) {
+		dm_free(dms);
+		return_NULL;
+	}
 
 	if (!(dms->hist_mem = dm_pool_create("histogram_pool", hist_hint)))
-		return_0;
+		goto_bad;
 
 	if (!program_id || !strlen(program_id))
 		dms->program_id = _program_id_from_proc();
 	else
 		dms->program_id = dm_strdup(program_id);
+
+	if (!dms->program_id) {
+		dm_pool_destroy(dms->hist_mem);
+		goto_bad;
+	}
 
 	dms->major = -1;
 	dms->minor = -1;
@@ -171,6 +178,7 @@ struct dm_stats *dm_stats_create(const char *program_id)
 	return dms;
 
 bad:
+	dm_pool_destroy(dms->mem);
 	dm_free(dms);
 	return NULL;
 }
