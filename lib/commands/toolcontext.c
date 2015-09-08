@@ -1069,13 +1069,24 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 			nr_filt++;
 	}
 
-	/* regex filter. Optional. */
+	/* global regex filter. Optional. */
 	if ((cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL))) {
 		if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
 			log_error("Failed to create global regex device filter");
 			goto bad;
 		}
 		nr_filt++;
+	}
+
+	/* regex filter. Optional. */
+	if (!lvmetad_used()) {
+		if ((cn = find_config_tree_node(cmd, devices_filter_CFG, NULL))) {
+			if (!(filters[nr_filt] = regex_filter_create(cn->v))) {
+				log_error("Failed to create regex device filter");
+				goto bad;
+			}
+			nr_filt++;
+		}
 	}
 
 	/* device type filter. Required. */
@@ -1145,26 +1156,24 @@ bad:
  *     md component filter -> fw raid filter
  *
  *   - cmd->filter - the filter chain used for lvmetad responses:
- *     persistent filter -> usable device filter(FILTER_MODE_POST_LVMETAD) ->
- *     regex filter
+ *     persistent filter -> regex_filter -> usable device filter(FILTER_MODE_POST_LVMETAD)
  *
  *   - cmd->full_filter - the filter chain used for all the remaining situations:
- *     lvmetad_filter -> filter
+ *     cmd->lvmetad_filter -> cmd->filter
  *
- * If lvmetad isnot used, there's just one filter chain:
+ * If lvmetad is not used, there's just one filter chain:
  *
  *   - cmd->filter == cmd->full_filter:
- *     persistent filter -> regex filter -> sysfs filter ->
- *     global regex filter -> type filter ->
- *     usable device filter(FILTER_MODE_NO_LVMETAD) ->
- *     mpath component filter -> partitioned filter ->
- *     md component filter -> fw raid filter
+ *     persistent filter -> sysfs filter -> global regex filter ->
+ *     regex_filter -> type filter -> usable device filter(FILTER_MODE_NO_LVMETAD) ->
+ *     mpath component filter -> partitioned filter -> md component filter -> fw raid filter
  *
  */
 int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
 	const char *dev_cache;
 	struct dev_filter *filter = NULL, *filter_components[2] = {0};
+	int nr_filt;
 	struct stat st;
 	const struct dm_config_node *cn;
 	struct timespec ts, cts;
@@ -1193,25 +1202,25 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 	 */
 	/* filter component 0 */
 	if (lvmetad_used()) {
-		if (!(filter_components[0] = usable_filter_create(cmd->dev_types, FILTER_MODE_POST_LVMETAD))) {
+		nr_filt = 0;
+		if ((cn = find_config_tree_array(cmd, devices_filter_CFG, NULL))) {
+			if (!(filter_components[nr_filt] = regex_filter_create(cn->v))) {
+				log_verbose("Failed to create regex device filter.");
+				goto bad;
+			}
+			nr_filt++;
+		}
+		if (!(filter_components[nr_filt] = usable_filter_create(cmd->dev_types, FILTER_MODE_POST_LVMETAD))) {
 			log_verbose("Failed to create usable device filter.");
 			goto bad;
 		}
+		nr_filt++;
+		if (!(filter = composite_filter_create(nr_filt, 0, filter_components)))
+			goto_bad;
 	} else {
-		filter_components[0] = cmd->lvmetad_filter;
+		filter = cmd->lvmetad_filter;
 		cmd->lvmetad_filter = NULL;
 	}
-
-	/* filter component 1 */
-	if ((cn = find_config_tree_array(cmd, devices_filter_CFG, NULL))) {
-		if (!(filter_components[1] = regex_filter_create(cn->v)))
-			goto_bad;
-		/* we have two filter components - create composite filter */
-		if (!(filter = composite_filter_create(2, 0, filter_components)))
-			goto_bad;
-	} else
-		/* we have only one filter component - no need to create composite filter */
-		filter = filter_components[0];
 
 	if (!(dev_cache = find_config_tree_str(cmd, devices_cache_CFG, NULL)))
 		goto_bad;
@@ -1224,9 +1233,12 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 	cmd->filter = filter;
 
 	if (lvmetad_used()) {
-		filter_components[0] = cmd->lvmetad_filter;
-		filter_components[1] = cmd->filter;
-		if (!(cmd->full_filter = composite_filter_create(2, 0, filter_components)))
+		nr_filt = 0;
+		filter_components[nr_filt] = cmd->lvmetad_filter;
+		nr_filt++;
+		filter_components[nr_filt] = cmd->filter;
+		nr_filt++;
+		if (!(cmd->full_filter = composite_filter_create(nr_filt, 0, filter_components)))
 			goto_bad;
 	} else
 		cmd->full_filter = filter;
