@@ -1,5 +1,6 @@
 Version 2.02.131 - 
 =====================================
+  Fix devices/filter to be applied before disk-accessing filters. (2.02.112)
   Make tags only when requested via 'make tags'.
   Configure supports --disable-dependency-tracking for one-time builds.
   Fix usage of configure.h when building in srcdir != builddir.
