@@ -60,7 +60,7 @@ sel() {
 	items_found=$(wc -l "$OUT_LOG_FILE" | cut -f 1 -d ' ')
 
 	# the number of lines on output must match
-	test $items_found -eq $# || {
+	test "$items_found" -eq $# || {
 		echo "  >>> NUMBER OF ITEMS EXPECTED: $# ($@)"
 		echo "  >>> NUMBER OF ITEMS FOUND: $items_found ($(< $OUT_LOG_FILE))"
 		return 1
@@ -143,10 +143,11 @@ if aux target_at_least dm-snapshot 1 10 0; then
 	# Before 1.10.0, the snap percent included metadata size.
 	sel lv 'snap_percent=0' snap
 fi
-dd if=/dev/zero of="$DM_DEV_DIR/$vg3/snap" bs=1M count=1
+dd if=/dev/zero of="$DM_DEV_DIR/$vg3/snap" bs=1M count=1 conv=fdatasync
 sel lv 'snap_percent<50' snap
 sel lv 'snap_percent>50'
-dd if=/dev/zero of="$DM_DEV_DIR/$vg3/snap" bs=1M count=4
+# overflow snapshot -> invalidated, but still showing 100%
+not dd if=/dev/zero of="$DM_DEV_DIR/$vg3/snap" bs=1M count=4 conv=fdatasync
 sel lv 'snap_percent=100' snap
 # % char is accepted as suffix for percent values
 sel lv 'snap_percent=100%' snap
