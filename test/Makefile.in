@@ -281,7 +281,7 @@ lib/paths: lib/paths-common
 	echo 'abs_builddir="$(abs_builddir)"' >> $@-t
 	mv $@-t $@
 
-CMDS = lvm $(shell cat $(top_builddir)/tools/.commands)
+CMDS = lvm $(shell cat $(top_builddir)/tools/.commands 2>/dev/null)
 LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(LIB_FLAVOURS))
 
 .tests-stamp: $(ALL) $(LIB) $(SUBDIRS)
