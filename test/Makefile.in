@@ -197,15 +197,17 @@ LIB_NOT = not
 LIB_LINK_NOT = invalid fail should
 LIB_SHARED = check aux inittest utils get lvm-wrapper
 
-install: .tests-stamp lib/paths-installed
+install: .tests-stamp lib/paths-installed lib/version-expected
 	@echo $(srcdir)
 	$(INSTALL_DIR) $(DATADIR)/{shell,api,lib} $(EXECDIR)
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell
 	$(INSTALL_DATA) api/*.sh $(DATADIR)/api
 	$(INSTALL_PROGRAM) api/*.{t,py} $(DATADIR)/api
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
-	cd lib && $(INSTALL_DATA) $(LIB_FLAVOURS) $(DATADIR)/lib
-	cd lib && $(INSTALL_DATA) $(LIB_LVMLOCKD_CONF) $(DATADIR)/lib
+	cd lib && $(INSTALL_DATA) \
+		$(LIB_FLAVOURS) \
+		$(LIB_LVMLOCKD_CONF) \
+		version-expected $(DATADIR)/lib
 	@for i in cache-mq cache-smq thin-performance ; do \
 		echo "$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib"; \
 		$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib; done
@@ -281,10 +283,13 @@ lib/paths: lib/paths-common
 	echo 'abs_builddir="$(abs_builddir)"' >> $@-t
 	mv $@-t $@
 
+lib/version-expected: $(top_srcdir)/VERSION .lib-dir-stamp
+	cut -f 1 -d ' ' <$< >$@
+
 CMDS = lvm $(shell cat $(top_builddir)/tools/.commands 2>/dev/null)
 LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(LIB_FLAVOURS))
 
-.tests-stamp: $(ALL) $(LIB) $(SUBDIRS)
+.tests-stamp: $(ALL) $(LIB) $(SUBDIRS) lib/version-expected
 	@if test "$(srcdir)" != . ; then \
 		echo "Linking tests to builddir."; \
 		$(MKDIR_P) shell; \
@@ -316,7 +321,7 @@ endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
 	$(CMDS) clvmd dmeventd dmsetup lvmetad lvmpolld \
-	harness thin-performance.profile fsadm vgimportclone \
+	harness thin-performance.profile fsadm vgimportclone version-expected \
 	paths-installed paths-installed-t paths-common paths-common-t)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
