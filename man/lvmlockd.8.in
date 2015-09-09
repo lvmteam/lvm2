@@ -306,10 +306,17 @@ they are not available until the VG exists.  The first sanlock VG will
 contain the "global lock".
 
 .IP \[bu] 2
-While running vgcreate for the first sanlock VG, ensure that the PV being
-used is not used by another LVM command.  Allocation of shared PVs is
-usually protected by the global lock, but this cannot be done for the
-first sanlock VG which will hold the global lock.
+The first vgcreate command needs to be given the path to a device that has
+not yet been initialized with pvcreate.  The pvcreate initialization will
+be done by vgcreate.  This is because the pvcreate command requires the
+global lock, which will not available until after the first sanlock VG is
+created.
+
+.IP \[bu] 2
+While running vgcreate for the first sanlock VG, ensure that the device
+being used is not used by another LVM command.  Allocation of shared
+devices is usually protected by the global lock, but this cannot be done
+for the first sanlock VG which will hold the global lock.
 
 .IP \[bu] 2
 While running vgcreate for the first sanlock VG, ensure that the VG name
@@ -321,7 +328,7 @@ Because the first sanlock VG will contain the global lock, this VG needs
 to be accessible to all hosts that will use sanlock shared VGs.  All hosts
 will need to use the global lock from the first sanlock VG.
 
-See below for other special cases related to moving the global lock.
+See below for more information about managing the sanlock global lock.
 
 
 .SS using lockd VGs
