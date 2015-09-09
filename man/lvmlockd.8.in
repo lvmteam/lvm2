@@ -309,8 +309,8 @@ contain the "global lock".
 The first vgcreate command needs to be given the path to a device that has
 not yet been initialized with pvcreate.  The pvcreate initialization will
 be done by vgcreate.  This is because the pvcreate command requires the
-global lock, which will not available until after the first sanlock VG is
-created.
+global lock, which will not be available until after the first sanlock VG
+is created.
 
 .IP \[bu] 2
 While running vgcreate for the first sanlock VG, ensure that the device
