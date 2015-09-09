@@ -1044,6 +1044,9 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 			cmd->lockd_vg_enforce_sh = 1;
 	}
 
+	if (arg_is_set(cmd, lockstop_ARG))
+		cmd->lockd_vg_default_sh = 1;
+
 	/* Starting a vg lockspace means there are no locks available yet. */
 
 	if (arg_is_set(cmd, lockstart_ARG))
