@@ -197,11 +197,11 @@ static pthread_mutex_t client_mutex;
 static pthread_cond_t client_cond;
 static struct list_head client_list;    /* connected clients */
 static struct list_head client_results; /* actions to send back to clients */
-static uint32_t client_ids;             /* 0 and ADOPT_CLIENT_ID are skipped */
+static uint32_t client_ids;             /* 0 and INTERNAL_CLIENT_ID are skipped */
 static int client_stop;                 /* stop the thread */
 static int client_work;                 /* a client on client_list has work to do */
 
-#define ADOPT_CLIENT_ID 0xFFFFFFFF      /* special client_id for adopt actions */
+#define INTERNAL_CLIENT_ID 0xFFFFFFFF   /* special client_id for internal actions */
 static struct list_head adopt_results;  /* special start actions from adopt_locks() */
 
 /*
@@ -5047,7 +5047,7 @@ static void adopt_locks(void)
 		act->flags = (LD_AF_ADOPT | LD_AF_WAIT);
 		act->rt = LD_RT_GL;
 		act->lm_type = LD_LM_DLM;
-		act->client_id = ADOPT_CLIENT_ID;
+		act->client_id = INTERNAL_CLIENT_ID;
 		add_dlm_global_lockspace(act);
 		count_start++;
 	}
@@ -5059,7 +5059,7 @@ static void adopt_locks(void)
 		act->flags = (LD_AF_ADOPT | LD_AF_WAIT);
 		act->rt = LD_RT_VG;
 		act->lm_type = ls->lm_type;
-		act->client_id = ADOPT_CLIENT_ID;
+		act->client_id = INTERNAL_CLIENT_ID;
 		strncpy(act->vg_name, ls->vg_name, MAX_NAME);
 		memcpy(act->vg_uuid, ls->vg_uuid, 64);
 		memcpy(act->vg_args, ls->vg_args, MAX_ARGS);
@@ -5151,7 +5151,7 @@ static void adopt_locks(void)
 			act->rt = LD_RT_LV;
 			act->mode = LD_LK_EX;
 			act->flags = (LD_AF_ADOPT | LD_AF_PERSISTENT);
-			act->client_id = ADOPT_CLIENT_ID;
+			act->client_id = INTERNAL_CLIENT_ID;
 			act->lm_type = ls->lm_type;
 			strncpy(act->vg_name, ls->vg_name, MAX_NAME);
 			strncpy(act->lv_uuid, r->name, MAX_NAME);
@@ -5179,7 +5179,7 @@ static void adopt_locks(void)
 		act->rt = LD_RT_VG;
 		act->mode = LD_LK_SH;
 		act->flags = LD_AF_ADOPT;
-		act->client_id = ADOPT_CLIENT_ID;
+		act->client_id = INTERNAL_CLIENT_ID;
 		act->lm_type = ls->lm_type;
 		strncpy(act->vg_name, ls->vg_name, MAX_NAME);
 
@@ -5205,7 +5205,7 @@ static void adopt_locks(void)
 	act->rt = LD_RT_GL;
 	act->mode = LD_LK_SH;
 	act->flags = LD_AF_ADOPT;
-	act->client_id = ADOPT_CLIENT_ID;
+	act->client_id = INTERNAL_CLIENT_ID;
 	act->lm_type = (gl_use_sanlock ? LD_LM_SANLOCK : LD_LM_DLM);
 
 	log_debug("adopt lock for gl");
@@ -5444,7 +5444,7 @@ static void process_listener(int poll_fd)
 	pthread_mutex_lock(&client_mutex);
 	client_ids++;
 
-	if (client_ids == ADOPT_CLIENT_ID)
+	if (client_ids == INTERNAL_CLIENT_ID)
 		client_ids++;
 	if (!client_ids)
 		client_ids++;
