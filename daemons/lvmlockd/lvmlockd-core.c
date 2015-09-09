@@ -959,6 +959,13 @@ static int lm_find_free_lock(struct lockspace *ls, uint64_t *free_offset)
 
 static void add_client_result(struct action *act)
 {
+	if (act->flags & LD_AF_NO_CLIENT) {
+		log_debug("internal action done op %s mode %s result %d vg %s",
+			  op_str(act->op), mode_str(act->mode), act->result, act->vg_name);
+		free_action(act);
+		return;
+	}
+
 	pthread_mutex_lock(&client_mutex);
 	if (act->flags & LD_AF_ADOPT)
 		list_add_tail(&act->list, &adopt_results);

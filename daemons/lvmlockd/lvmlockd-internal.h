@@ -89,7 +89,7 @@ struct client {
 };
 
 #define LD_AF_PERSISTENT           0x00000001
-#define LD_AF_UNUSED               0x00000002 /* use me */
+#define LD_AF_NO_CLIENT            0x00000002
 #define LD_AF_UNLOCK_CANCEL        0x00000004
 #define LD_AF_NEXT_VERSION         0x00000008
 #define LD_AF_WAIT                 0x00000010
