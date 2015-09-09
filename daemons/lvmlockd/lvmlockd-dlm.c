@@ -343,7 +343,7 @@ static int to_dlm_mode(int ld_mode)
 }
 
 static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-			uint32_t *r_version)
+			struct val_blk *vb_out)
 {
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 	struct rd_dlm *rdd = (struct rd_dlm *)r->lm_data;
@@ -352,7 +352,7 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	int mode;
 	int rv;
 
-	*r_version = 0;
+	memset(vb_out, 0, sizeof(struct val_blk));
 
 	if (!r->lm_init) {
 		rv = lm_add_resource_dlm(ls, r, 0);
@@ -431,15 +431,13 @@ static int lm_adopt_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
  */
 
 int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		uint32_t *r_version, int adopt)
+		struct val_blk *vb_out, int adopt)
 {
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 	struct rd_dlm *rdd = (struct rd_dlm *)r->lm_data;
 	struct dlm_lksb *lksb;
 	struct val_blk vb;
 	uint32_t flags = 0;
-	uint16_t vb_version;
-	uint16_t vb_flags;
 	int mode;
 	int rv;
 
@@ -447,7 +445,7 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 		/* When adopting, we don't follow the normal method
 		   of acquiring a NL lock then converting it to the
 		   desired mode. */
-		return lm_adopt_dlm(ls, r, ld_mode, r_version);
+		return lm_adopt_dlm(ls, r, ld_mode, vb_out);
 	}
 
 	if (!r->lm_init) {
@@ -475,7 +473,7 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	log_debug("S %s R %s lock_dlm", ls->name, r->name);
 
 	if (daemon_test) {
-		*r_version = 0;
+		memset(vb_out, 0, sizeof(struct val_blk));
 		return 0;
 	}
 
@@ -513,35 +511,22 @@ lockrv:
 		if (lksb->sb_flags & DLM_SBF_VALNOTVALID) {
 			log_debug("S %s R %s lock_dlm VALNOTVALID", ls->name, r->name);
 			memset(rdd->vb, 0, sizeof(struct val_blk));
-			*r_version = 0;
+			memset(vb_out, 0, sizeof(struct val_blk));
 			goto out;
 		}
 
+		/*
+		 * 'vb' contains disk endian values, not host endian.
+		 * It is copied directly to rdd->vb which is also kept
+		 * in disk endian form.
+		 * vb_out is returned to the caller in host endian form.
+		 */
 		memcpy(&vb, lksb->sb_lvbptr, sizeof(struct val_blk));
-		vb_version = le16_to_cpu(vb.version);
-		vb_flags = le16_to_cpu(vb.flags);
+		memcpy(rdd->vb, &vb, sizeof(vb));
 
-		if (vb_version && ((vb_version & 0xFF00) > (VAL_BLK_VERSION & 0xFF00))) {
-			log_error("S %s R %s lock_dlm ignore vb_version %x",
-				  ls->name, r->name, vb_version);
-			*r_version = 0;
-			free(rdd->vb);
-			rdd->vb = NULL;
-			lksb->sb_lvbptr = NULL;
-			goto out;
-		}
-
-		*r_version = le32_to_cpu(vb.r_version);
-		memcpy(rdd->vb, &vb, sizeof(vb)); /* rdd->vb saved as le */
-
-		log_debug("S %s R %s lock_dlm get r_version %u flags %x",
-			  ls->name, r->name, *r_version, vb_flags);
-
-		if (vb_flags & VBF_REMOVED) {
-			log_debug("S %s R %s lock_dlm VG has been removed",
-				  ls->name, r->name);
-			return -EREMOVED;
-		}
+		vb_out->version = le16_to_cpu(vb.version);
+		vb_out->flags = le16_to_cpu(vb.flags);
+		vb_out->r_version = le32_to_cpu(vb.r_version);
 	}
 out:
 	return 0;
@@ -602,11 +587,11 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 	struct lm_dlm *lmd = (struct lm_dlm *)ls->lm_data;
 	struct rd_dlm *rdd = (struct rd_dlm *)r->lm_data;
 	struct dlm_lksb *lksb = &rdd->lksb;
+	struct val_blk vb_prev;
+	struct val_blk vb_next;
 	uint32_t flags = 0;
+	int new_vb = 0;
 	int rv;
-
-	log_debug("S %s R %s unlock_dlm r_version %u flags %x",
-		  ls->name, r->name, r_version, lmu_flags);
 
 	/*
 	 * Do not set PERSISTENT, because we don't need an orphan
@@ -616,22 +601,45 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 	flags |= LKF_CONVERT;
 
 	if (rdd->vb && (r->mode == LD_LK_EX)) {
-		if (!rdd->vb->version) {
-			/* first time vb has been written */
-			rdd->vb->version = cpu_to_le16(VAL_BLK_VERSION);
+
+		/* vb_prev and vb_next are in disk endian form */
+		memcpy(&vb_prev, rdd->vb, sizeof(struct val_blk));
+		memcpy(&vb_next, rdd->vb, sizeof(struct val_blk));
+
+		if (!vb_prev.version) {
+			vb_next.version = cpu_to_le16(VAL_BLK_VERSION);
+			new_vb = 1;
 		}
-		if (r_version)
-			rdd->vb->r_version = cpu_to_le32(r_version);
 
-		if ((lmu_flags & LMUF_FREE_VG) && (r->type == LD_RT_VG))
-			rdd->vb->flags = cpu_to_le16(VBF_REMOVED);
+		if ((lmu_flags & LMUF_FREE_VG) && (r->type == LD_RT_VG)) {
+			vb_next.flags = cpu_to_le16(VBF_REMOVED);
+			new_vb = 1;
+		}
 
-		memcpy(lksb->sb_lvbptr, rdd->vb, sizeof(struct val_blk));
+		if (r_version) {
+			vb_next.r_version = cpu_to_le32(r_version);
+			new_vb = 1;
+		}
 
-		log_debug("S %s R %s unlock_dlm set r_version %u",
-			  ls->name, r->name, r_version);
+		if (new_vb) {
+			memcpy(rdd->vb, &vb_next, sizeof(struct val_blk));
+			memcpy(lksb->sb_lvbptr, &vb_next, sizeof(struct val_blk));
+
+			log_debug("S %s R %s unlock_dlm vb old %x %x %u new %x %x %u",
+				  ls->name, r->name,
+				  le16_to_cpu(vb_prev.version),
+				  le16_to_cpu(vb_prev.flags),
+				  le32_to_cpu(vb_prev.r_version),
+				  le16_to_cpu(vb_next.version),
+				  le16_to_cpu(vb_next.flags),
+				  le32_to_cpu(vb_next.r_version));
+		} else {
+			log_debug("S %s R %s unlock_dlm vb unchanged", ls->name, r->name);
+		}
 
 		flags |= LKF_VALBLK;
+	} else {
+		log_debug("S %s R %s unlock_dlm", ls->name, r->name);
 	}
 
 	if (daemon_test)
@@ -700,3 +708,4 @@ int lm_is_running_dlm(void)
 		return 0;
 	return 1;
 }
+

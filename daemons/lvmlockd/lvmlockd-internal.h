@@ -143,9 +143,9 @@ struct resource {
 	unsigned int lm_init : 1;	/* lm_data is initialized */
 	unsigned int adopt : 1;		/* temp flag in remove_inactive_lvs */
 	unsigned int version_zero_valid : 1;
+	unsigned int use_vb : 1;
 	struct list_head locks;
 	struct list_head actions;
-	struct val_blk *vb;
 	char lv_args[MAX_ARGS+1];
 	char lm_data[0];		/* lock manager specific data */
 };
@@ -356,7 +356,7 @@ int lm_prepare_lockspace_dlm(struct lockspace *ls);
 int lm_add_lockspace_dlm(struct lockspace *ls, int adopt);
 int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg);
 int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		uint32_t *r_version, int adopt);
+		struct val_blk *vb_out, int adopt);
 int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 		   int ld_mode, uint32_t r_version);
 int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
@@ -394,7 +394,7 @@ static inline int lm_rem_lockspace_dlm(struct lockspace *ls, int free_vg)
 }
 
 static inline int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
-		uint32_t *r_version, int adopt)
+		struct val_blk *vb_out, int adopt)
 {
 	return -1;
 }
@@ -448,7 +448,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls);
 int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt);
 int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    uint32_t *r_version, int *retry, int adopt);
+		    struct val_blk *vb_out, int *retry, int adopt);
 int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 		       int ld_mode, uint32_t r_version);
 int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
@@ -506,7 +506,7 @@ static inline int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 }
 
 static inline int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    uint32_t *r_version, int *retry, int adopt)
+		    struct val_blk *vb_out, int *retry, int adopt)
 {
 	return -1;
 }

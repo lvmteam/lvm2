@@ -1300,7 +1300,7 @@ int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r)
 }
 
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    uint32_t *r_version, int *retry, int adopt)
+		    struct val_blk *vb_out, int *retry, int adopt)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
@@ -1308,7 +1308,6 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	uint64_t lock_lv_offset;
 	uint32_t flags = 0;
 	struct val_blk vb;
-	uint16_t vb_version;
 	int added = 0;
 	int rv;
 
@@ -1384,7 +1383,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		  (unsigned long long)rs->disks[0].offset);
 
 	if (daemon_test) {
-		*r_version = 0;
+		memset(vb_out, 0, sizeof(struct val_blk));
 		return 0;
 	}
 
@@ -1501,26 +1500,23 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		rv = sanlock_get_lvb(0, rs, (char *)&vb, sizeof(vb));
 		if (rv < 0) {
 			log_error("S %s R %s lock_san get_lvb error %d", ls->name, r->name, rv);
-			*r_version = 0;
+			memset(rds->vb, 0, sizeof(struct val_blk));
+			memset(vb_out, 0, sizeof(struct val_blk));
 			goto out;
 		}
 
-		vb_version = le16_to_cpu(vb.version);
+		/*
+		 * 'vb' contains disk endian values, not host endian.
+		 * It is copied directly to rrs->vb which is also kept
+		 * in disk endian form.
+		 * vb_out is returned to the caller in host endian form.
+		 */
 
-		if (vb_version && ((vb_version & 0xFF00) > (VAL_BLK_VERSION & 0xFF00))) {
-			log_error("S %s R %s lock_san ignore vb_version %x",
-				  ls->name, r->name, vb_version);
-			*r_version = 0;
-			free(rds->vb);
-			rds->vb = NULL;
-			goto out;
-		}
+		memcpy(rds->vb, &vb, sizeof(vb));
 
-		*r_version = le32_to_cpu(vb.r_version);
-		memcpy(rds->vb, &vb, sizeof(vb)); /* rds->vb saved as le */
-
-		log_debug("S %s R %s lock_san get r_version %u",
-			  ls->name, r->name, *r_version);
+		vb_out->version = le16_to_cpu(vb.version);
+		vb_out->flags = le16_to_cpu(vb.flags);
+		vb_out->r_version = le32_to_cpu(vb.r_version);
 	}
 out:
 	return rv;
