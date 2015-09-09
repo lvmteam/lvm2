@@ -42,6 +42,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 make install_system_dirs DESTDIR=$RPM_BUILD_ROOT
 %if %{enable_systemd}
 make install_systemd_units DESTDIR=$RPM_BUILD_ROOT
+make install_systemd_generators DESTDIR=$RPM_BUILD_ROOT
 make install_tmpfiles_configuration DESTDIR=$RPM_BUILD_ROOT
 %else
 make install_initscripts DESTDIR=$RPM_BUILD_ROOT

@@ -4,6 +4,7 @@
 %global _default_locking_dir /run/lock/lvm
 %global _udevbasedir %{_prefix}/lib/udev
 %global _udevdir %{_udevbasedir}/rules.d
+%global _tmpfilesdir %{_prefix}/lib/tmpfiles.d
 
 %if !0%{?fedora}
 %global fedora 0
@@ -34,7 +35,7 @@
 
 %define daemon_reload \
 %if %{enable_systemd} \
-/bin/systemctl daemon-reload > /dev/null 2>&1 || : \
+systemctl daemon-reload > /dev/null 2>&1 || : \
 %endif \
 : \
 %{nil}
@@ -42,9 +43,11 @@
 %define enable(s:t:) \
 %if %{have_service %{-s*}} \
 %if %{enable_systemd} \
-  /bin/systemctl enable lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
+if [ $1 = 1 ]; then \
+	systemctl preset lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
+fi \
 %else \
-  /sbin/chkconfig --add lvm2-%{-s*} \
+/sbin/chkconfig --add lvm2-%{-s*} \
 %endif \
 %endif \
 : \
@@ -53,13 +56,18 @@
 %define disable(s:t:) \
 %if %{have_service %{-s*}} \
 %if %{enable_systemd} \
-    /bin/systemctl --no-reload disable lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
-    /bin/systemctl stop lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
-%if %{-t*} == socket \
-        /bin/systemctl stop lvm2-%{-s*}.service > /dev/null 2>&1 || : \
-%endif \
+if [ $1 = 0 ]; then \
+	systemctl --no-reload disable lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
+	%if %{-t*} == socket \
+	systemctl --no-reload disable lvm2-%{-s*}.service > /dev/null 2>&1 || : \
+	%endif \
+	systemctl stop lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
+	%if %{-t*} == socket \
+	systemctl stop lvm2-%{-s*}.service > /dev/null 2>&1 || : \
+	%endif \
+fi \
 %else \
-    /sbin/chkconfig --del lvm2-%{-s*} \
+/sbin/chkconfig --del lvm2-%{-s*} \
 %endif \
 %endif \
 : \
@@ -67,7 +75,9 @@
 
 %define try_restart(s:t:) \
 %if %{have_service %{-s*}} && %{enable_systemd} \
-    /bin/systemctl try-restart lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
+if [ $1 = 1 ]; then \
+	systemctl try-restart lvm2-%{-s*}.%{-t*} > /dev/null 2>&1 || : \
+fi \
 %endif \
-    : \
+: \
 %{nil}

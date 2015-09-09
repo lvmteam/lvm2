@@ -4,13 +4,30 @@
 # Defaults (rawhide)... 
 
 %global enable_profiling 0
-%global enable_testsuite 0
+%global enable_testsuite 1
 %global enable_udev 1
 %global enable_systemd 1
 %global enable_cmirror 1
-#%global enable_lvmlockd 0
+%global enable_lvmlockd 1
+%global enable_lvmetad 1
+%global enable_lvmpolld 1
 #%global enable_lockd_dlm 0
 #%global enable_lockd_sanlock 0
+
+%if %{enable_udev}
+%service lvmetad 1
+%service lvmpolld 1
+%endif
+
+########################################################
+# Normally clustering is maintained via resource agents
+#
+# enable service only if you know what you are doing
+#
+%if %{enable_cmirror}
+#service clvmd 1
+#service cmirrord 1
+%endif
 
 %global buildreq_cluster corosync-devel >= 1.99.9-1, dlm-devel >= 3.99.1-1
 %global req_cluster corosync >= 1.99.9-1, dlm >= 3.99.2-1
@@ -26,9 +43,6 @@
 %global buildreq_udev systemd-devel
 %global req_udev udev >= 181-1
 
-%service lvmetad 1
-
-%service lvmpolld 1
 
 %if %{fedora} >= 22 || %{rhel} >= 7
  %service lvmlockd 1

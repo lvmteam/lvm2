@@ -1,23 +1,34 @@
 ### MAIN PACKAGE (lvm2)
 
 %post
-/sbin/ldconfig
 %daemon_reload
 %enable -s monitor -t service
+%if %{have_service lvmetad}
 %enable -s lvmetad -t socket
+%endif
+%if %{have_service lvmpolld}
+%enable -s lvmpolld -t socket
+%endif
 
 %preun
-if [ "$1" = 0 ]; then
-%disable -s monitor -t service
+%if %{have_service lvmpolld}
+%disable -s lvmpolld -t socket
+%endif
+%if %{have_service lvmetad}
 %disable -s lvmetad -t socket
-fi
+%endif
+%disable -s monitor -t service
 
 %postun
-%daemon_reload
-
-if [ $1 -ge 1 ]; then
 %try_restart -s monitor -t service
+%if %{have_service lvmetad}
 %try_restart -s lvmetad -t service
+%endif
+%if %{have_service lvmpolld}
+%try_restart -s lvmpolld -t service
+%endif
+if [ $1 = 0 ]; then
+%daemon_reload
 fi
 
 %triggerun -- %{name} < 2.02.86-2
@@ -31,6 +42,7 @@ fi
 %defattr(-,root,root,-)
 %doc COPYING COPYING.LIB INSTALL README VERSION WHATS_NEW
 %doc doc/lvm_fault_handling.txt
+%{_sbindir}/blkdeactivate
 %{_sbindir}/fsadm
 %{_sbindir}/lvchange
 %{_sbindir}/lvconvert
@@ -39,6 +51,8 @@ fi
 %{_sbindir}/lvextend
 %{_sbindir}/lvm
 %{_sbindir}/lvmchange
+%{_sbindir}/lvmconf
+%{_sbindir}/lvmconfig
 %{_sbindir}/lvmdiskscan
 %{_sbindir}/lvmdump
 %{_sbindir}/lvmsadc
@@ -77,32 +91,28 @@ fi
 %{_sbindir}/vgs
 %{_sbindir}/vgscan
 %{_sbindir}/vgsplit
-%{_sbindir}/lvmconfig
-%{_sbindir}/lvmconf
-%{_sbindir}/blkdeactivate
 %if %{have_service lvmetad}
  %{_sbindir}/lvmetad
 %endif
 %if %{have_service lvmpolld}
  %{_sbindir}/lvmpolld
 %endif
-%if %{have_with cache}
-  %{_mandir}/man7/lvmcache.7.gz
-%endif
-%if %{have_with thin}
-  %{_mandir}/man7/lvmthin.7.gz
-%endif
-%{_mandir}/man7/lvmsystemid.7.gz
 %{_mandir}/man5/lvm.conf.5.gz
+%{_mandir}/man7/lvmsystemid.7.gz
+%{_mandir}/man8/blkdeactivate.8.gz
 %{_mandir}/man8/fsadm.8.gz
 %{_mandir}/man8/lvchange.8.gz
 %{_mandir}/man8/lvconvert.8.gz
 %{_mandir}/man8/lvcreate.8.gz
 %{_mandir}/man8/lvdisplay.8.gz
 %{_mandir}/man8/lvextend.8.gz
+%{_mandir}/man8/lvm-config.8.gz
+%{_mandir}/man8/lvm-dumpconfig.8.gz
 %{_mandir}/man8/lvm.8.gz
+%{_mandir}/man8/lvm2-activation-generator.8.gz
 %{_mandir}/man8/lvmchange.8.gz
 %{_mandir}/man8/lvmconf.8.gz
+%{_mandir}/man8/lvmconfig.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
 %{_mandir}/man8/lvmdump.8.gz
 %{_mandir}/man8/lvmsadc.8.gz
@@ -141,10 +151,16 @@ fi
 %{_mandir}/man8/vgs.8.gz
 %{_mandir}/man8/vgscan.8.gz
 %{_mandir}/man8/vgsplit.8.gz
-%{_mandir}/man8/blkdeactivate.8.gz
-%{_mandir}/man8/lvm-dumpconfig.8.gz
-%{_mandir}/man8/lvm-config.8.gz
-%{_mandir}/man8/lvmconfig.8.gz
+%if %{have_with cache}
+  %{_mandir}/man7/lvmcache.7.gz
+%endif
+%if %{have_with thin}
+  %{_mandir}/man7/lvmthin.7.gz
+%endif
+%if %{have_service lvmpolld}
+  %{_mandir}/man8/lvmpolld.8.gz
+  %{_mandir}/man8/lvm-lvpoll.8.gz
+%endif
 %if %{enable_udev}
  %{_udevdir}/11-dm-lvm.rules
  %if %{have_service lvmetad}
@@ -152,14 +168,11 @@ fi
   %{_udevdir}/69-dm-lvm-metad.rules
  %endif
 %endif
-%if %{have_service lvmpolld}
-  %{_mandir}/man8/lvmpolld.8.gz
-  %{_mandir}/man8/lvm-lvpoll.8.gz
-%endif
 %dir %{_sysconfdir}/lvm
 %ghost %{_sysconfdir}/lvm/cache/.cache
-%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvm.conf
-%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvmlocal.conf
+%attr(644, -, -) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvm.conf
+%attr(644, -, -) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvmlocal.conf
+%dir %{_sysconfdir}/lvm/profile
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/command_profile_template.profile
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/metadata_profile_template.profile
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/thin-generic.profile
@@ -169,23 +182,25 @@ fi
 %dir %{_sysconfdir}/lvm/backup
 %dir %{_sysconfdir}/lvm/cache
 %dir %{_sysconfdir}/lvm/archive
-%dir %{_default_run_dir}
+%ghost %dir %{_default_locking_dir}
+%ghost %dir %{_default_run_dir}
 %if %{enable_systemd}
- %config(noreplace) %{_prefix}/lib/tmpfiles.d/%{name}.conf
+ %{_tmpfilesdir}/%{name}.conf
+ %{_unitdir}/blk-availability.service
  %{_unitdir}/lvm2-monitor.service
+ %attr(555, -, -) %{_prefix}/lib/systemd/system-generators/lvm2-activation-generator
  %if %{have_service lvmetad}
   %{_unitdir}/lvm2-lvmetad.socket
   %{_unitdir}/lvm2-lvmetad.service
   %{_unitdir}/lvm2-pvscan@.service
-  %{_unitdir}/blk-availability.service
  %endif
  %if %{have_service lvmpolld}
   %{_unitdir}/lvm2-lvmpolld.service
   %{_unitdir}/lvm2-lvmpolld.socket
  %endif
 %else
- %{_sysconfdir}/rc.d/init.d/lvm2-monitor
  %{_sysconfdir}/rc.d/init.d/blk-availability
+ %{_sysconfdir}/rc.d/init.d/lvm2-monitor
  %if %{have_service lvmetad}
   %{_sysconfdir}/rc.d/init.d/lvm2-lvmetad
  %endif
@@ -272,13 +287,18 @@ Requires(postun): systemd-units
 LVM commands use lvmlockd to coordinate access to shared storage.
 
 %post lockd
-%systemd_post lvm2-lvmlockd.service lvm2-lvmlocking.service
+%daemon_reload
+%enable -s lvmlockd -t service
+%enable -s lvmlocking -t service
 
 %preun lockd
-%systemd_preun lvm2-lvmlockd.service lvm2-lvmlocking.service
+%disable -s lvmlocking -t service
+%disable -s lvmlockd -t service
 
 %postun lockd
-%systemd_postun lvm2-lvmlockd.service lvm2-lvmlocking.service
+if [ $1 = 0 ]; then
+%daemon_reload
+fi
 
 %files lockd
 %{_sbindir}/lvmlockd
@@ -311,17 +331,28 @@ Requires(preun): lvm2 >= 2.02
 Extensions to LVM2 to support clusters.
 
 %post cluster
-/sbin/chkconfig --add clvmd
-
-if [ "$1" -gt "1" ] ; then
-	/usr/sbin/clvmd -S >/dev/null 2>&1 || :
+%daemon_reload
+%enable -s clvmd -t service
+%if %{have_service clvmd}
+if [ $1 = 2 ]; then
+	if [ -e %{_default_pid_dir}/clvmd.pid ]; then
+		%{_sbindir}/clvmd -S >/dev/null 2>&1 || :
+	fi
 fi
+%endif
 
 %preun cluster
-if [ "$1" = 0 ]; then
-	/sbin/chkconfig --del clvmd
-        # lvmconf may no longer exist if lvm2 is being removed in the same rpm run
+%disable -s clvmd -t service
+%if %{have_service clvmd}
+if [ $1 = 0 ]; then
+	# lvmconf may no longer exist if lvm2 is being removed in the same rpm run
 	if test -x /sbin/lvmconf; then /sbin/lvmconf --disable-cluster; fi
+fi
+%endif
+
+%postun cluster
+if [ $1 = 0 ]; then
+%daemon_reload
 fi
 
 %files cluster
@@ -355,11 +386,16 @@ Requires: device-mapper >= %{device_mapper_version}-%{release}
 Daemon providing device-mapper-based mirrors in a shared-storage cluster.
 
 %post -n cmirror
-/sbin/chkconfig --add cmirrord
+%daemon_reload
+%enable -s cmirrord -t service
 
 %preun -n cmirror
-if [ "$1" = 0 ]; then
-	/sbin/chkconfig --del cmirrord
+%disable -s cmirrord -t service
+
+%postun -n cmirror
+%try_restart -s cmirrord -t service
+if [ $1 = 0 ]; then
+%daemon_reload
 fi
 
 %files -n cmirror
@@ -468,26 +504,26 @@ This package contains the dmeventd daemon for monitoring the state
 of device-mapper devices.
 
 %post -n device-mapper-event
+%daemon_reload
 %if %{enable_systemd}
-/bin/systemctl daemon-reload > /dev/null 2>&1 || :
-/bin/systemctl enable dm-event.socket > /dev/null 2>&1 || :
+systemctl preset dm-event.socket > /dev/null 2>&1 || :
 %endif
+if [ -e %{_default_pid_dir}/dmeventd.pid ]; then
+        %{_sbindir}/dmeventd -R || echo "Failed to restart dmeventd daemon. Please, try manual restart."
+fi
 
 %preun -n device-mapper-event
 %if %{enable_systemd}
-if [ "$1" = 0 ]; then
-	/bin/systemctl --no-reload disable dm-event.service dm-event.socket > /dev/null 2>&1 || :
-	/bin/systemctl stop dm-event.service dm-event.socket> /dev/null 2>&1 || :
+if [ $1 = 0 ]; then
+	systemctl --no-reload disable dm-event.service dm-event.socket > /dev/null 2>&1 || :
+	systemctl stop dm-event.service dm-event.socket> /dev/null 2>&1 || :
 fi
 %endif
 
 %postun -n device-mapper-event
-%if %{enable_systemd}
-/bin/systemctl daemon-reload > /dev/null 2>&1 || :
-if [ $1 -ge 1 ]; then
-	/bin/systemctl reload dm-event.service > /dev/null 2>&1 || :
+if [ $1 = 0 ]; then
+%daemon_reload
 fi
-%endif
 
 %files -n device-mapper-event
 %defattr(-,root,root,-)
