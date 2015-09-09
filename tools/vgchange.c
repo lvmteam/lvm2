@@ -878,7 +878,7 @@ static int _vgchange_lock_start(struct cmd_context *cmd, struct volume_group *vg
 	}
 
 do_start:
-	return lockd_start_vg(cmd, vg);
+	return lockd_start_vg(cmd, vg, 0);
 }
 
 static int _vgchange_lock_stop(struct cmd_context *cmd, struct volume_group *vg)

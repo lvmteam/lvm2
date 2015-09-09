@@ -921,9 +921,13 @@ void lockd_free_vg_final(struct cmd_context *cmd, struct volume_group *vg)
  * for starting the lockspace.  To use the vg after starting
  * the lockspace, follow the standard method which is:
  * lock the vg, read/use/write the vg, unlock the vg.
+ *
+ * start_init is 1 when the VG is being started after the
+ * command has done lockd_init_vg().  This tells lvmlockd
+ * that the VG lockspace being started is new.
  */
 
-int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
+int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_init)
 {
 	char uuid[64] __attribute__((aligned(8)));
 	daemon_reply reply;
@@ -945,8 +949,8 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 	}
 
-	log_debug("lockd start VG %s lock_type %s",
-		  vg->name, vg->lock_type ? vg->lock_type : "empty");
+	log_debug("lockd start VG %s lock_type %s init %d",
+		  vg->name, vg->lock_type ? vg->lock_type : "empty", start_init);
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
 		return_0;
@@ -973,6 +977,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg)
 				"vg_uuid = %s", uuid[0] ? uuid : "none",
 				"version = %d", (int64_t)vg->seqno,
 				"host_id = %d", host_id,
+				"opts = %s", start_init ? "start_init" : "none",
 				NULL);
 
 	if (!_lockd_result(reply, &result, NULL)) {
@@ -2461,7 +2466,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 		 * Depending on the problem that caused the rename to
 		 * fail, it may make sense to not restart the VG here.
 		 */
-		if (!lockd_start_vg(cmd, vg))
+		if (!lockd_start_vg(cmd, vg, 0))
 			log_error("Failed to restart VG %s lockspace.", vg->name);
 		return 1;
 	}
@@ -2501,7 +2506,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 		}
 	}
 
-	if (!lockd_start_vg(cmd, vg))
+	if (!lockd_start_vg(cmd, vg, 1))
 		log_error("Failed to start VG %s lockspace.", vg->name);
 
 	return 1;
