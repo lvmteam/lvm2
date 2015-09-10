@@ -770,7 +770,8 @@ static int _lvcreate_params(struct cmd_context *cmd,
 					    CACHE_POOL_ARGS,
 					    LVCREATE_ARGS,
 					    POOL_ARGS,
-					    SIZE_ARGS,
+					    extents_ARG,
+					    size_ARG,
 					    cache_ARG,
 					    chunksize_ARG,
 					    -1))
@@ -1096,6 +1097,8 @@ static int _determine_cache_argument(struct volume_group *vg,
 		}
 		/* FIXME How to handle skip flag? */
 		if (arg_from_list_is_set(cmd, "is unsupported with cache conversion",
+					 stripes_ARG,
+					 stripesize_ARG,
 					 setactivationskip_ARG,
 					 ignoreactivationskip_ARG,
 					 -1))
