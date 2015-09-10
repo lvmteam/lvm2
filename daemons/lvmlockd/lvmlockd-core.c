@@ -3760,17 +3760,6 @@ static int add_lock_action(struct action *act)
 	}
 
 	pthread_mutex_lock(&ls->mutex);
-	if (ls->thread_stop && ls->thread_done) {
-		log_debug("lockspace is done finish cleanup %s", ls_name);
-		pthread_join(ls->thread, NULL);
-		list_del(&ls->list);
-		pthread_mutex_unlock(&ls->mutex);
-		free_ls_resources(ls);
-		free(ls);
-		pthread_mutex_unlock(&lockspaces_mutex);
-		goto retry;
-	}
-
 	if (ls->thread_stop) {
 		pthread_mutex_unlock(&ls->mutex);
 		pthread_mutex_unlock(&lockspaces_mutex);
