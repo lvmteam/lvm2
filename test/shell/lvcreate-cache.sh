@@ -36,6 +36,8 @@ invalid lvcreate -H -l 1 --name $lv1 $vg
 invalid lvcreate -l 1 --cache $vg
 # Only cached volume could be created
 invalid lvcreate -l 1 --type cache $vg
+# Striping is not supported with cache-pool creation
+invalid lvcreate -l 1 -i 2 --type cache-pool $vg
 # Fails as it needs to see VG content
 fail lvcreate -l 1 --type cache --cachepool $vg/pool1
 fail lvcreate -l 1 --type cache --cachepool pool2 $vg
@@ -142,13 +144,6 @@ lvcreate -aey -l 2 -n $lv1 $vg
 lvcreate --type cache -l 1 $vg/$lv1
 dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 
-# Bug 1110026 & Bug 1095843
-# Create RAID1 origin, then cache pool and cache
-lvcreate -aey -l 2 --type raid1 -m1 -n $lv2 $vg
-lvcreate --cache -l 1 $vg/$lv2
-check lv_exists $vg/${lv2}_corig_rimage_0	# ensure images are properly renamed
-dmsetup table ${vg}-$lv2 | grep cache		# ensure it is loaded in kernel
-
 lvremove -f $vg
 
 
@@ -168,6 +163,8 @@ lvremove -f $vg
 
 # writeable origin and 'default' => writable cache + origin
 lvcreate -an -l1 -n $vg/$lv1
+# do not allow stripping for cache-pool
+fail lvcreate -H -i 2 -l1 -n cpool1 $vg/$lv1
 lvcreate -H -l1 -n cpool1 $vg/$lv1
 check lv_attr_bit perm $vg/cpool1 "w"
 check lv_attr_bit perm $vg/${lv1}_corig "w"
@@ -211,8 +208,9 @@ lvremove -f $vg
 lvcreate --type cache-pool -L10 --chunksize 256 --cachemode writeback $vg/cpool1
 check lv_field $vg/cpool1 chunksize "256.00k"
 check lv_field $vg/cpool1 cachemode "writeback"
-lvcreate -H -L10 -n $lv1 $vg/cpool1
-lvs -a -o+cachemode,chunksize $vg
+# check striping is supported when creating a cached LV
+lvcreate -H -L10 -i 2 -n $lv1 $vg/cpool1
+check lv_field $vg/${lv1}_corig stripes "2" -a
 check lv_field $vg/$lv1 chunksize "256.00k"
 check lv_field $vg/$lv1 cachemode "writeback"
 
@@ -263,11 +261,5 @@ grep "chunk size" out
 # --cachepolicy
 # --poolmetadatasize
 # --poolmetadataspare
-
-lvremove -f $vg
-lvcreate -n corigin -m 1 --type raid1 -l 10 $vg
-lvcreate -n cpool -H $vg/corigin -l 10
-check active $vg corigin_corig
-dmsetup table | grep ^$PREFIX | grep corigin_corig
 
 vgremove -ff $vg
