@@ -1,5 +1,6 @@
 Version 2.02.131 - 
 =====================================
+  Warn user when caching raid or thin pool data LV.
   When layering LV, move LV flags with segments.
   Ignore persistent cache if configuration changed. (2.02.127)
   Fix devices/filter to be applied before disk-accessing filters. (2.02.112)

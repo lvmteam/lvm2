@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -99,6 +99,23 @@ int cache_set_mode(struct lv_segment *seg, const char *str)
 	seg->feature_flags |= mode;
 
 	return 1;
+}
+
+/*
+ * At least warn a user if certain cache stacks may present some problems
+ */
+void cache_check_for_warns(const struct lv_segment *seg)
+{
+	struct logical_volume *origin_lv = seg_lv(seg, 0);
+
+	if (lv_is_raid(origin_lv) &&
+	    first_seg(seg->pool_lv)->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
+		log_warn("WARNING: Data redundancy is lost with writeback "
+			 "caching of raid logical volume!");
+
+	if (lv_is_thin_pool_data(seg->lv))
+		log_warn("WARNING: Cached thin pool's data cannot be currently "
+			 "resized and require manual uncache before resize!");
 }
 
 int update_cache_pool_params(const struct segment_type *segtype,

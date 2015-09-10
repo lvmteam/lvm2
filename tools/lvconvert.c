@@ -3191,6 +3191,8 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 	if (!cache_set_policy(first_seg(cache_lv), lp->policy_name, lp->policy_settings))
 		return_0;
 
+	cache_check_for_warns(first_seg(cache_lv));
+
 	if (!lv_update_and_reload(cache_lv))
 		return_0;
 

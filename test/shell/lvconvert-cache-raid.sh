@@ -24,7 +24,7 @@ aux prepare_vg 5 80
 
 # Bug 1095843
 # lvcreate RAID1 origin, lvcreate cache-pool, and lvconvert to cache
-lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
+lvcreate --type raid1 -m 1 --nosync -l 2 -n $lv1 $vg
 lvcreate --type cache-pool -l 1 -n ${lv1}_cachepool $vg
 lvconvert --cache --cachepool $vg/${lv1}_cachepool $vg/$lv1
 check lv_exists $vg/${lv1}_corig_rimage_0 # ensure images are properly renamed
@@ -33,17 +33,19 @@ lvremove -f $vg
 
 
 # lvcreate RAID1 origin, lvcreate RAID1 cache-pool, and lvconvert to cache
-lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
-lvcreate --type raid1 -m 1 -l 2 -n ${lv1}_cachepool $vg
+lvcreate --type raid1 -m 1 --nosync -l 2 -n $lv1 $vg
+lvcreate --type raid1 -m 1 --nosync -l 2 -n ${lv1}_cachepool $vg
 #should lvs -a $vg/${lv1}_cdata_rimage_0  # ensure images are properly renamed
-lvconvert --yes --type cache --cachepool $vg/${lv1}_cachepool $vg/$lv1
+lvconvert --yes --type cache --cachemode writeback --cachepool $vg/${lv1}_cachepool $vg/$lv1 2>&1 | tee out
+grep "WARNING: Data redundancy is lost" out
 check lv_exists $vg/${lv1}_corig_rimage_0        # ensure images are properly renamed
 dmsetup table ${vg}-$lv1 | grep cache   # ensure it is loaded in kernel
 lvremove -f $vg
 
 
-lvcreate -n corigin -m 1 --type raid1 -l 10 $vg
-lvcreate -n cpool --type cache $vg/corigin -l 10
+lvcreate -n corigin -m 1 --type raid1 --nosync -l 10 $vg
+lvcreate -n cpool --type cache $vg/corigin --cachemode writeback -l 10 2>&1 | tee out
+grep "WARNING: Data redundancy is lost" out
 lvconvert --splitmirrors 1 --name split $vg/corigin "$dev1"
 
 lvremove -f $vg
