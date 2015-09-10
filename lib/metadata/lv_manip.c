@@ -6254,6 +6254,7 @@ int move_lv_segments(struct logical_volume *lv_to,
 		     struct logical_volume *lv_from,
 		     uint64_t set_status, uint64_t reset_status)
 {
+	const uint64_t MOVE_BITS = (RAID | MIRROR | THIN_VOLUME);
 	struct lv_segment *seg;
 
 	dm_list_iterate_items(seg, &lv_to->segments)
@@ -6270,6 +6271,16 @@ int move_lv_segments(struct logical_volume *lv_to,
 		seg->status &= ~reset_status;
 		seg->status |= set_status;
 	}
+
+	/*
+	 * Move LV status bits for selected types with their segments
+	 * i.e. when inserting layer to cache LV, we move raid segments
+	 * to a new place, thus 'raid' LV property now belongs to this LV.
+	 *
+	 * Bits should match to those which appears after read from disk.
+	 */
+	lv_to->status |= lv_from->status & MOVE_BITS;
+	lv_from->status &= ~MOVE_BITS;
 
 	lv_to->le_count = lv_from->le_count;
 	lv_to->size = lv_from->size;
