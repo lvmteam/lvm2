@@ -2546,6 +2546,8 @@ out_act:
 	ls->thread_done = 1;
 	ls->free_vg = free_vg;
 	ls->drop_vg = drop_vg;
+	if (ls->lm_type == LD_LM_DLM && !strcmp(ls->name, gl_lsname_dlm))
+		global_dlm_lockspace_exists = 0;
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/* worker_thread will join this thread, and free the ls */
@@ -2702,6 +2704,8 @@ static int add_lockspace_thread(const char *ls_name,
 	if (act)
 		list_add(&act->list, &ls->actions);
 
+	if (ls->lm_type == LD_LM_DLM && !strcmp(ls->name, gl_lsname_dlm))
+		global_dlm_lockspace_exists = 1;
 	list_add_tail(&ls->list, &lockspaces);
 	pthread_mutex_unlock(&lockspaces_mutex);
 
@@ -2729,14 +2733,24 @@ static int add_dlm_global_lockspace(struct action *act)
 {
 	int rv;
 
+	if (global_dlm_lockspace_exists)
+		return 0;
+
 	/*
-	 * FIXME: optimize this by setting a flag to indicate that the
-	 * dlm global lockspace is running so we can quit here.
+	 * FIXME: if the dlm global lockspace is started without a global
+	 * lock request, insert an internal gl sh lock request?
 	 */
 
 	rv = add_lockspace_thread(gl_lsname_dlm, NULL, NULL, LD_LM_DLM, NULL, act);
 	if (rv < 0)
 		log_debug("add_dlm_global_lockspace add_lockspace_thread %d", rv);
+
+	/*
+	 * EAGAIN may be returned for a short period because
+	 * global_dlm_lockspace_exists is set to 0 before the
+	 * ls is removed from the lockspaces list by the
+	 * worker_thread.
+	 */
 
 	return rv;
 }

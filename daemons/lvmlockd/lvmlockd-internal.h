@@ -316,10 +316,9 @@ static inline int list_empty(const struct list_head *head)
 EXTERN int gl_type_static;
 EXTERN int gl_use_dlm;
 EXTERN int gl_use_sanlock;
-EXTERN pthread_mutex_t gl_type_mutex;
-
 EXTERN char gl_lsname_dlm[MAX_NAME+1];
 EXTERN char gl_lsname_sanlock[MAX_NAME+1];
+EXTERN int global_dlm_lockspace_exists;
 
 EXTERN int daemon_test; /* run as much as possible without a live lock manager */
 EXTERN int daemon_debug;
