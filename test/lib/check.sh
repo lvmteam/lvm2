@@ -268,8 +268,7 @@ lv_not_exists() {
 	else
 		while [ $# -gt 1 ]; do
 			shift
-			lvl $vg/$1 &>/dev/null || continue
-			die "$vg/$1 expected to not exist but it does!"
+			not lvl $vg/$1 &>/dev/null || die "$vg/$1 expected to not exist but it does!"
 		done
 	fi
 	rm -f debug.log
