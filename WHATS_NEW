@@ -1,5 +1,6 @@
 Version 2.02.131 - 
 =====================================
+  Ignore persistent cache if configuration changed. (2.02.127)
   Fix devices/filter to be applied before disk-accessing filters. (2.02.112)
   Make tags only when requested via 'make tags'.
   Configure supports --disable-dependency-tracking for one-time builds.

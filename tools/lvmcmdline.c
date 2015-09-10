@@ -1478,6 +1478,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	char *arg_new, *arg;
 	int i;
 	int skip_hyphens;
+	int refresh_done = 0;
 
 	init_error_message_produced(0);
 
@@ -1554,6 +1555,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Updated config file invalid. Aborting.");
 			return ECMD_FAILED;
 		}
+		refresh_done = 1;
 	}
 
 	if (!_prepare_profiles(cmd))
@@ -1562,7 +1564,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!cmd->initialized.connections && !_cmd_no_meta_proc(cmd) && !init_connections(cmd))
 		return_ECMD_FAILED;
 
-	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) && !init_filters(cmd, 1))
+	/* Note: Load persistent cache only if we haven't refreshed toolcontext!
+	 *       If toolcontext has been refreshed, it means config has changed
+	 *       and we can't rely on persistent cache anymore.
+	 */
+	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) && !init_filters(cmd, !refresh_done))
 		return_ECMD_FAILED;
 
 	if (arg_count(cmd, readonly_ARG))
