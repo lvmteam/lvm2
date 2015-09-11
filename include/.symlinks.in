@@ -1,5 +1,3 @@
-@top_builddir@/conf/configure.h
-@top_builddir@/conf/lvm-version.h
 @top_srcdir@/daemons/clvmd/clvm.h
 @top_srcdir@/daemons/dmeventd/libdevmapper-event.h
 @top_srcdir@/daemons/lvmetad/lvmetad-client.h

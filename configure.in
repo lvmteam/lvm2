@@ -16,7 +16,7 @@ AC_PREREQ(2.61)
 dnl -- Process this file with autoconf to produce a configure script.
 AC_INIT
 AC_CONFIG_SRCDIR([lib/device/dev-cache.h])
-AC_CONFIG_HEADERS([conf/configure.h])
+AC_CONFIG_HEADERS([include/configure.h])
 
 ################################################################################
 dnl -- Setup the directory where autoconf has auxilary files
@@ -2086,7 +2086,7 @@ lib/format_pool/Makefile
 lib/locking/Makefile
 lib/mirror/Makefile
 lib/replicator/Makefile
-conf/lvm-version.h
+include/lvm-version.h
 lib/raid/Makefile
 lib/snapshot/Makefile
 lib/thin/Makefile
