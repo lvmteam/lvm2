@@ -352,6 +352,10 @@ be displayed with 'vgs \-o+locktype,lockargs'.
 lockd VGs need to be "started" and "stopped", unlike other types of VGs.
 See the following section for a full description of starting and stopping.
 
+vgremove of a lockd VG will fail if other hosts have the VG started.
+Run vgchange \-\-lock-stop <vgname> on all other hosts before vgremove.
+(It may take several seconds before vgremove recognizes that all hosts
+have stopped a sanlock VG.)
 
 .SS starting and stopping VGs
 
@@ -566,12 +570,6 @@ change the VG lock type back to "sanlock".
 
 To place the lvmlock LV on a specific device, create the VG with only that
 device, then use vgextend to add other devices.
-
-vgremove of a sanlock VG will fail if other hosts have the VG started.
-Run vgchange \-\-lock-stop <vgname> on all other hosts before vgremove.
-(It may take several seconds before vgremove recognizes that all hosts
-have stopped.)  This is necessary because while a host has a sanlock VG
-started, it is using the internal lvmlock LV.
 
 
 .SS shared LVs
