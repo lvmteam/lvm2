@@ -1,5 +1,6 @@
 Version 2.02.131 - 
 =====================================
+  Swapping of LV identifiers handles more complex LVs.
   Use passed list of PVS when allocating space in lvconvert --thinpool.
   Disallow usage of --stripe and --stripesize when creating cache pool.
   Warn user when caching raid or thin pool data LV.

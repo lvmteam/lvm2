@@ -44,15 +44,20 @@ int swap_lv_identifiers(struct cmd_context *cmd,
 			struct logical_volume *a, struct logical_volume *b)
 {
 	union lvid lvid;
-	const char *name;
+	const char *aname = a->name, *bname = b->name;
 
 	lvid = a->lvid;
 	a->lvid = b->lvid;
 	b->lvid = lvid;
 
-	name = a->name;
-	a->name = b->name;
-	if (!lv_rename_update(cmd, b, name, 0))
+	/* rename temporarily to 'unused' name */
+	if (!lv_rename_update(cmd, a, "pmove_tmeta", 0))
+		return_0;
+	/* name rename 'b' to unused name of 'a' */
+	if (!lv_rename_update(cmd, b, aname, 0))
+		return_0;
+	/* finish name swapping */
+	if (!lv_rename_update(cmd, a, bname, 0))
 		return_0;
 
 	return 1;
