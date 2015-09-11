@@ -24,7 +24,10 @@ for deactivate in true false; do
 # Extend and reduce a 2-way RAID1
 	lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
 
-	test $deactivate && lvchange -an $vg/$lv1
+	test $deactivate && {
+		aux wait_for_sync $vg $lv1
+		lvchange -an $vg/$lv1
+	}
 
 	lvresize -l +2 $vg/$lv1
 
@@ -36,7 +39,10 @@ for deactivate in true false; do
 	for i in 4 5 6 ; do
 		lvcreate --type raid$i -i 3 -l 3 -n $lv2 $vg
 
-		test $deactivate && lvchange -an $vg/$lv2
+		test $deactivate && {
+			aux wait_for_sync $vg $lv2
+			lvchange -an $vg/$lv2
+		}
 
 		lvresize -l +3 $vg/$lv2
 
