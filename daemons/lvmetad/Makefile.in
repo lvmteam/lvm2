@@ -45,6 +45,8 @@ lvmetactl: lvmetactl.o $(top_builddir)/libdaemon/client/libdaemonclient.a \
 	$(top_builddir)/libdaemon/server/libdaemonserver.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmetactl.o $(LVMLIBS)
 
+CLEAN_TARGETS += lvmetactl.o
+
 # TODO: No idea. No idea how to test either.
 #ifneq ("$(CFLOW_CMD)", "")
 #CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
