@@ -662,6 +662,62 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 
 #define DLM_LOCKSPACES_PATH "/sys/kernel/config/dlm/cluster/spaces"
 
+/*
+ * FIXME: this should be implemented differently.
+ * It's not nice to use an aspect of the dlm clustering
+ * implementation, which could change.  It would be
+ * better to do something like use a special lock in the
+ * lockspace that was held PR by all nodes, and then an
+ * EX request on it could check if it's started (and
+ * possibly also notify others to stop it automatically).
+ * Or, possibly an enhancement to libdlm that would give
+ * info about lockspace members.
+ *
+ * (We could let the VG be removed while others still
+ * have the lockspace running, which largely works, but
+ * introduces problems if another VG with the same name is
+ * recreated while others still have the lockspace running
+ * for the previous VG.  We'd also want a way to clean up
+ * the stale lockspaces on the others eventually.)
+ */
+
+int lm_hosts_dlm(struct lockspace *ls, int notify)
+{
+	static const char closedir_err_msg[] = "lm_hosts_dlm: closedir failed";
+	char ls_nodes_path[PATH_MAX];
+	struct dirent *de;
+	DIR *ls_dir;
+	int count = 0;
+
+	memset(ls_nodes_path, 0, sizeof(ls_nodes_path));
+	snprintf(ls_nodes_path, PATH_MAX-1, "%s/%s/nodes",
+		 DLM_LOCKSPACES_PATH, ls->name);
+
+	if (!(ls_dir = opendir(ls_nodes_path)))
+		return -ECONNREFUSED;
+
+	while ((de = readdir(ls_dir))) {
+		if (de->d_name[0] == '.')
+			continue;
+		count++;
+	}
+
+	if (closedir(ls_dir))
+		log_error(closedir_err_msg);
+
+	if (!count) {
+		log_error("lm_hosts_dlm found no nodes in %s", ls_nodes_path);
+		return 0;
+	}
+
+	/*
+	 * Assume that a count of one node represents ourself,
+	 * and any value over one represents other nodes.
+	 */
+
+	return count - 1;
+}
+
 int lm_get_lockspaces_dlm(struct list_head *ls_rejoin)
 {
 	static const char closedir_err_msg[] = "lm_get_lockspace_dlm: closedir failed";

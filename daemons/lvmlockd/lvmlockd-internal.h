@@ -52,6 +52,7 @@ enum {
 	LD_OP_FIND_FREE_LOCK,
 	LD_OP_KILL_VG,
 	LD_OP_DROP_VG,
+	LD_OP_BUSY,
 };
 
 /* resource types */
@@ -364,6 +365,7 @@ int lm_rem_resource_dlm(struct lockspace *ls, struct resource *r);
 int lm_get_lockspaces_dlm(struct list_head *ls_rejoin);
 int lm_data_size_dlm(void);
 int lm_is_running_dlm(void);
+int lm_hosts_dlm(struct lockspace *ls, int notify);
 
 static inline int lm_support_dlm(void)
 {
@@ -431,6 +433,11 @@ static inline int lm_is_running_dlm(void)
 }
 
 static inline int lm_support_dlm(void)
+{
+	return 0;
+}
+
+static inline int lm_hosts_dlm(struct lockspace *ls, int notify)
 {
 	return 0;
 }

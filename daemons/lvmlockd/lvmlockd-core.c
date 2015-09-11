@@ -735,6 +735,8 @@ static const char *op_str(int x)
 		return "dump_log";
 	case LD_OP_DUMP_INFO:
 		return "dump_info";
+	case LD_OP_BUSY:
+		return "busy";
 	default:
 		return "op_unknown";
 	};
@@ -926,7 +928,7 @@ static int lm_unlock(struct lockspace *ls, struct resource *r, struct action *ac
 static int lm_hosts(struct lockspace *ls, int notify)
 {
 	if (ls->lm_type == LD_LM_DLM)
-		return 0;
+		return lm_hosts_dlm(ls, notify);
 	else if (ls->lm_type == LD_LM_SANLOCK)
 		return lm_hosts_sanlock(ls, notify);
 	return -1;
@@ -2362,6 +2364,18 @@ static void *lockspace_thread_main(void *arg_in)
 				ls->thread_stop = 1;
 				free_vg = 1;
 				break;
+			}
+
+			if (act->op == LD_OP_BUSY && act->rt == LD_RT_VG) {
+				log_debug("S %s checking if lockspace is busy", ls->name);
+				rv = lm_hosts(ls, 0);
+				if (rv)
+					act->result = -EBUSY;
+				else
+					act->result = 0;
+				list_del(&act->list);
+				add_client_result(act);
+				continue;
 			}
 
 			if (act->op == LD_OP_RENAME_BEFORE && act->rt == LD_RT_VG) {
@@ -3825,6 +3839,11 @@ static int str_to_op_rt(const char *req_name, int *op, int *rt)
 		*rt = LD_RT_VG;
 		return 0;
 	}
+	if (!strcmp(req_name, "busy_vg")) {
+		*op = LD_OP_BUSY;
+		*rt = LD_RT_VG;
+		return 0;
+	}
 	if (!strcmp(req_name, "free_lv")) {
 		*op = LD_OP_FREE;
 		*rt = LD_RT_LV;
@@ -4477,6 +4496,7 @@ static void client_recv_action(struct client *cl)
 	case LD_OP_FIND_FREE_LOCK:
 	case LD_OP_KILL_VG:
 	case LD_OP_DROP_VG:
+	case LD_OP_BUSY:
 		rv = add_lock_action(act);
 		break;
 	default:

@@ -698,15 +698,6 @@ static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	if (!_lvmlockd_connected)
 		return 0;
 
-	/*
-	 * For the dlm, free_vg means unlock the ex VG lock,
-	 * and include an indication in the lvb that the VG
-	 * has been removed.  Then, leave the lockspace.
-	 * If another host tries to acquire the VG lock, it
-	 * will see that the VG has been removed by looking
-	 * at the lvb value.
-	 */
-
 	reply = _lockd_send("free_vg",
 				"pid = %d", getpid(),
 				"vg_name = %s", vg->name,
@@ -726,6 +717,50 @@ static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	daemon_reply_destroy(reply);
 
 	return 1;
+}
+
+/* called before vg_remove on disk */
+
+static int _busy_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
+{
+	daemon_reply reply;
+	uint32_t lockd_flags = 0;
+	int result;
+	int ret;
+
+	if (!_use_lvmlockd)
+		return 0;
+	if (!_lvmlockd_connected)
+		return 0;
+
+	/*
+	 * Check that other hosts do not have the VG lockspace started.
+	 */
+
+	reply = _lockd_send("busy_vg",
+				"pid = %d", getpid(),
+				"vg_name = %s", vg->name,
+				"vg_lock_type = %s", vg->lock_type,
+				"vg_lock_args = %s", vg->lock_args,
+				NULL);
+
+	if (!_lockd_result(reply, &result, &lockd_flags)) {
+		ret = 0;
+	} else {
+		ret = (result < 0) ? 0 : 1;
+	}
+
+	if (result == -EBUSY) {
+		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		goto out;
+	}
+
+	if (!ret)
+		log_error("_busy_vg_dlm lvmlockd result %d", result);
+
+ out:
+	daemon_reply_destroy(reply);
+	return ret;
 }
 
 /* called before vg_remove on disk */
@@ -881,8 +916,10 @@ int lockd_free_vg_before(struct cmd_context *cmd, struct volume_group *vg,
 	switch (lock_type_num) {
 	case LOCK_TYPE_NONE:
 	case LOCK_TYPE_CLVM:
-	case LOCK_TYPE_DLM:
 		return 1;
+	case LOCK_TYPE_DLM:
+		/* returning an error will prevent vg_remove() */
+		return _busy_vg_dlm(cmd, vg);
 	case LOCK_TYPE_SANLOCK:
 		/* returning an error will prevent vg_remove() */
 		return _free_vg_sanlock(cmd, vg);
