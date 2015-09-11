@@ -3011,7 +3011,7 @@ out:
 int vg_write(struct volume_group *vg)
 {
 	struct dm_list *mdah;
-        struct pv_to_create *pv_to_create;
+	struct pv_to_create *pv_to_create, *pv_to_create_safe;
 	struct metadata_area *mda;
 	struct lv_list *lvl;
 	int revert = 0, wrote = 0;
@@ -3067,10 +3067,11 @@ int vg_write(struct volume_group *vg)
 	memlock_unlock(vg->cmd);
 	vg->seqno++;
 
-        dm_list_iterate_items(pv_to_create, &vg->pvs_to_create) {
+	dm_list_iterate_items_safe(pv_to_create, pv_to_create_safe, &vg->pvs_to_create) {
 		if (!_pvcreate_write(vg->cmd, pv_to_create))
 			return 0;
-        }
+		dm_list_del(&pv_to_create->list);
+	}
 
 	/* Write to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
