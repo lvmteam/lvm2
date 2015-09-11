@@ -2348,7 +2348,7 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 	pmslv = pool_lv->vg->pool_metadata_spare_lv;
 
 	/* Check we have pool metadata spare LV */
-	if (!handle_pool_metadata_spare(pool_lv->vg, 0, NULL, 1))
+	if (!handle_pool_metadata_spare(pool_lv->vg, 0, lp->pvh, 1))
 		return_0;
 
 	if (pmslv != pool_lv->vg->pool_metadata_spare_lv) {
@@ -2473,7 +2473,7 @@ deactivate_pmslv:
 	}
 
 	/* Try to allocate new pool metadata spare LV */
-	if (!handle_pool_metadata_spare(pool_lv->vg, 0, NULL, 1))
+	if (!handle_pool_metadata_spare(pool_lv->vg, 0, lp->pvh, 1))
 		stack;
 
 	if (dm_snprintf(meta_path, sizeof(meta_path), "%s_meta%%d", pool_lv->name) < 0) {

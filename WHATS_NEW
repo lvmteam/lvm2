@@ -1,6 +1,7 @@
 Version 2.02.131 - 
 =====================================
-  Disallow usage of --stripe and --stripsize when creating cache pool.
+  Use passed list of PVS when allocating space in lvconvert --thinpool.
+  Disallow usage of --stripe and --stripesize when creating cache pool.
   Warn user when caching raid or thin pool data LV.
   When layering LV, move LV flags with segments.
   Ignore persistent cache if configuration changed. (2.02.127)
