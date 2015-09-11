@@ -1174,7 +1174,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 		if (!vgmeta_ret) {
 			vgmeta_ret = vgmeta;
 		} else {
-			if (!compare_config(vgmeta_ret->root, vgmeta->root)) {
+			if (compare_config(vgmeta_ret->root, vgmeta->root)) {
 				log_error("VG metadata comparison failed");
 				dm_config_destroy(vgmeta);
 				dm_config_destroy(vgmeta_ret);
