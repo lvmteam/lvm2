@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright (C) 2009 Chris Procter All rights reserved.
-# Copyright (C) 2009 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2009-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -239,7 +239,7 @@ LVMCONF=${TMP_LVM_SYSTEM_DIR}/lvm.conf
 
 CMD_CONFIG_LINE="devices { \
                    scan = [ \"${TMP_LVM_SYSTEM_DIR}\" ] \
-                   cache_dir = \"$TMP_LVM_SYSTEM_DIR}/cache\"
+                   cache_dir = \"${TMP_LVM_SYSTEM_DIR}/cache\"
                    global_filter = [ \"a|.*|\" ] \
                    ${FILTER}
                  } \

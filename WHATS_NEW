@@ -1,5 +1,6 @@
 Version 2.02.131 - 
 =====================================
+  Fix vgimportclone cache_dir path name (2.02.115).
   Swapping of LV identifiers handles more complex LVs.
   Use passed list of PVS when allocating space in lvconvert --thinpool.
   Disallow usage of --stripe and --stripesize when creating cache pool.
