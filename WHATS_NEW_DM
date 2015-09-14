@@ -1,5 +1,6 @@
 Version 1.02.108 - 
 =====================================
+  Do not check for full thin pool when activating without messages (1.02.107).
 
 Version 1.02.107 - 5th September 2015
 =====================================

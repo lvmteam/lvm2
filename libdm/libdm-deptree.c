@@ -1633,7 +1633,7 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 		return 0;
 	}
 
-	if (!send)
+	if (!have_messages || !send)
 		return 1; /* transaction_id is matching */
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages) {
