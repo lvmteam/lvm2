@@ -11,6 +11,9 @@
 
 . lib/inittest
 
+# test if snapshot-merge target is available
+aux target_at_least snapshot-merge 1 0 0 || skip
+
 which mkfs.ext3 || skip
 
 lvdev_() {
@@ -45,8 +48,6 @@ mkdir test_mnt
 
 # test full merge of a single LV
 setup_merge_ $vg $lv1
-# now that snapshot LV is created: test if snapshot-merge target is available
-aux target_at_least snapshot-merge 1 0 0 || skip
 
 # make sure lvconvert --merge requires explicit LV listing
 not lvconvert --merge
