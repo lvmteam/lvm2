@@ -4405,8 +4405,11 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		policy_amount =
 			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
 					     lv_config_profile(lv));
-		if (!policy_amount && policy_threshold < DM_PERCENT_100)
-                        return 0;
+		if (!policy_amount && policy_threshold < DM_PERCENT_100) {
+			log_error("Can't extend thin pool %s, autoextend is set to 0%%.",
+				  display_lvname(lv));
+			return 0;
+		}
 	} else {
 		policy_threshold =
 			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG, NULL) * DM_PERCENT_1;
@@ -4416,6 +4419,12 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 
 	if (policy_threshold >= DM_PERCENT_100)
 		return 1; /* nothing to do */
+
+	if (!lv_is_active_locally(lv)) {
+		log_error("Can't read state of locally inactive LV %s.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, 1, &percent))
