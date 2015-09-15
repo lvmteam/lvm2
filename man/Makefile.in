@@ -42,7 +42,15 @@ MAN8DM=dmsetup.8 dmstats.8
 MAN8CLUSTER=
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
-ifeq ($(MAKECMDGOALS),install_full_man)
+ifeq ($(MAKECMDGOALS),all_man)
+  MAN_ALL="yes"
+endif
+
+ifeq ($(MAKECMDGOALS),install_all_man)
+  MAN_ALL="yes"
+endif
+
+ifeq ($(MAN_ALL),"yes")
   MAN8+=$(FSADMMAN) $(LVMETADMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN)
   MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN)
   MAN8CLUSTER+=$(CLVMDMAN) $(CMIRRORDMAN)
@@ -109,6 +117,8 @@ device-mapper: $(MAN8DM)
 
 man: $(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS)
 
+all_man: man
+
 $(MAN5) $(MAN7) $(MAN8) $(MAN8DM) $(MAN8CLUSTER):	Makefile
 
 Makefile: Makefile.in
@@ -150,4 +160,4 @@ install_systemd_generators: $(MAN8SYSTEMD_GENERATORS)
 
 install: install_lvm2 install_device-mapper install_cluster
 
-install_full_man: install install_systemd_generators
+install_all_man: install install_systemd_generators

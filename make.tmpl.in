@@ -275,7 +275,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
 .PHONY: install install_cluster install_device-mapper install_lvm2
 .PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
-.PHONY: install_ocf install_systemd_generators install_full_man help
+.PHONY: install_ocf install_systemd_generators install_all_man all_man man help
 .PHONY: python_bindings install_python_bindings
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
