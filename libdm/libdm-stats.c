@@ -199,7 +199,7 @@ static void _stats_histograms_destroy(struct dm_pool *mem,
 		return;
 
 	/*
-	 * Only the first histogram needs to be freed explicitly.
+	 * Free everything in the pool back to the first histogram.
 	 */
 	if (region->counters[0].histogram)
 		dm_pool_free(mem, region->counters[0].histogram);
