@@ -1,5 +1,6 @@
 Version 2.02.132 - 
 ======================================
+  Fix PV label processing failure after pvcreate in lvm shell with lvmetad.
 
 Version 2.02.131 - 15th September 2015
 ======================================

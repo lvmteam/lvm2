@@ -1339,6 +1339,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	label = lvmcache_get_label(info);
 	label->sector = pv->label_sector;
+	label->dev = pv->dev;
 
 	lvmcache_update_pv(info, pv, fmt);
 
