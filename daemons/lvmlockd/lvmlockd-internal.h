@@ -103,6 +103,8 @@ struct client {
 #define LD_AF_DUP_GL_LS            0x00002000
 #define LD_AF_ADOPT                0x00010000
 #define LD_AF_WARN_GL_REMOVED	   0x00020000
+#define LD_AF_LV_LOCK              0x00040000
+#define LD_AF_LV_UNLOCK            0x00080000
 
 /*
  * Number of times to repeat a lock request after
@@ -141,6 +143,7 @@ struct resource {
 	int8_t mode;
 	unsigned int sh_count;		/* number of sh locks on locks list */
 	uint32_t version;
+	uint32_t last_client_id;	/* last client_id to lock or unlock resource */
 	unsigned int lm_init : 1;	/* lm_data is initialized */
 	unsigned int adopt : 1;		/* temp flag in remove_inactive_lvs */
 	unsigned int version_zero_valid : 1;
