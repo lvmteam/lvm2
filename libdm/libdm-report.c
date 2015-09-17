@@ -1644,11 +1644,21 @@ static int _cmp_field_time(struct dm_report *rh,
 static int _cmp_field_string_list_strict_all(const struct str_list_sort_value *val,
 					     const struct selection_str_list *sel)
 {
+	unsigned int sel_list_size = dm_list_size(sel->list);
 	struct dm_str_list *sel_item;
 	unsigned int i = 1;
 
+	if (!val->items[0].len) {
+		if (sel_list_size == 1) {
+			/* match blank string list with selection defined as blank string only */
+			sel_item = dm_list_item(dm_list_first(sel->list), struct dm_str_list);
+			return !strcmp(sel_item->str, "");
+		}
+		return 0;
+	}
+
 	/* if item count differs, it's clear the lists do not match */
-	if (val->items[0].len != dm_list_size(sel->list))
+	if (val->items[0].len != sel_list_size)
 		return 0;
 
 	/* both lists are sorted so they either match 1:1 or not */
@@ -1666,15 +1676,21 @@ static int _cmp_field_string_list_strict_all(const struct str_list_sort_value *v
 static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *val,
 					     const struct selection_str_list *sel)
 {
+	unsigned int sel_list_size = dm_list_size(sel->list);
 	struct dm_str_list *sel_item;
 	unsigned int i, last_found = 1;
 	int r = 0;
 
-	/* if value has no items and selection has at leas one, it's clear there's no match */
-	if ((val->items[0].len == 0) && dm_list_size(sel->list))
+	if (!val->items[0].len) {
+		if (sel_list_size == 1) {
+			/* match blank string list with selection defined as blank string only */
+			sel_item = dm_list_item(dm_list_first(sel->list), struct dm_str_list);
+			return !strcmp(sel_item->str, "");
+		}
 		return 0;
+	}
 
-	/* Check selection is a subset of the value. */
+	/* check selection is a subset of the value */
 	dm_list_iterate_items(sel_item, sel->list) {
 		r = 0;
 		for (i = last_found; i <= val->items[0].len; i++) {
@@ -1698,9 +1714,14 @@ static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
 	struct dm_str_list *sel_item;
 	unsigned int i;
 
-	/* if value has no items and selection has at least one, it's clear there's no match */
-	if ((val->items[0].len == 0) && dm_list_size(sel->list))
+	/* match blank string list with selection that contains blank string */
+	if (!val->items[0].len) {
+		dm_list_iterate_items(sel_item, sel->list) {
+			if (!strcmp(sel_item->str, ""))
+				return 1;
+		}
 		return 0;
+	}
 
 	dm_list_iterate_items(sel_item, sel->list) {
 		/*
@@ -2460,11 +2481,8 @@ static int _add_item_to_string_list(struct dm_pool *mem, const char *begin,
 {
 	struct dm_str_list *item;
 
-	if (begin == end)
-		return_0;
-
 	if (!(item = dm_pool_zalloc(mem, sizeof(*item))) ||
-	    !(item->str = dm_pool_strndup(mem, begin, end - begin))) {
+	    !(item->str = begin == end ? "" : dm_pool_strndup(mem, begin, end - begin))) {
 		log_error("_add_item_to_string_list: memory allocation failed for string list item");
 		return 0;
 	}

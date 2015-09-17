@@ -106,6 +106,10 @@ sel pv 'tags=["pv_tag4" || "pv_tag3"]' "$dev1" "$dev6"
 sel pv 'tags!=["pv_tag1"]' "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 # check mixture of && and || - this is not allowed
 not sel pv 'tags=["pv_tag1" && "pv_tag2" || "pv_tag3"]'
+# check selection with blank value
+sel lv 'tags=""' xyz orig snap
+sel lv 'tags={}' xyz orig snap
+sel lv 'tags=[]' xyz orig snap
 
 ##########################
 # NUMBER FIELD SELECTION #
