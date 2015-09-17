@@ -1038,7 +1038,7 @@ static int _rm_dev_node(const char *dev_name, int warn_if_udev_failed)
 
 	if (!_build_dev_path(path, sizeof(path), dev_name))
 		return_0;
-	if (stat(path, &info) < 0)
+	if (lstat(path, &info) < 0)
 		return 1;
 	else if (_warn_if_op_needed(warn_if_udev_failed))
 		log_warn("Node %s was not removed by udev. "
@@ -1060,20 +1060,31 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 {
 	char oldpath[PATH_MAX];
 	char newpath[PATH_MAX];
-	struct stat info;
+	struct stat info, info2;
+	struct stat *info_block_dev;
 
 	if (!_build_dev_path(oldpath, sizeof(oldpath), old_name) ||
 	    !_build_dev_path(newpath, sizeof(newpath), new_name))
 		return_0;
 
-	if (stat(newpath, &info) == 0) {
-		if (!S_ISBLK(info.st_mode)) {
+	if (lstat(newpath, &info) == 0) {
+		if (S_ISLNK(info.st_mode)) {
+			if (stat(newpath, &info2) == 0)
+				info_block_dev = &info2;
+			else {
+				log_sys_error("stat", newpath);
+				return 0;
+			}
+		} else
+			info_block_dev = &info;
+
+		if (!S_ISBLK(info_block_dev->st_mode)) {
 			log_error("A non-block device file at '%s' "
 				  "is already present", newpath);
 			return 0;
 		}
 		else if (_warn_if_op_needed(warn_if_udev_failed)) {
-			if (stat(oldpath, &info) < 0 &&
+			if (lstat(oldpath, &info) < 0 &&
 				 errno == ENOENT)
 				/* assume udev already deleted this */
 				return 1;
