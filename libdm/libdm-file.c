@@ -19,6 +19,24 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+static int _is_dir(const char *path)
+{
+	struct stat st;
+
+	if (stat(path, &st) < 0) {
+		log_sys_error("stat", path);
+		return 0;
+	}
+
+	if (!S_ISDIR(st.st_mode)) {
+		log_error("Existing path %s is not "
+			  "a directory.", path);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _create_dir_recursive(const char *dir)
 {
 	char *orig, *s;
@@ -36,10 +54,15 @@ static int _create_dir_recursive(const char *dir)
 		*s = '\0';
 		if (*orig) {
 			rc = mkdir(orig, 0777);
-			if (rc < 0 && errno != EEXIST) {
-				if (errno != EROFS)
-					log_sys_error("mkdir", orig);
-				goto out;
+			if (rc < 0) {
+				if (errno == EEXIST) {
+					if (!_is_dir(orig))
+						goto_out;
+				} else {
+					if (errno != EROFS)
+						log_sys_error("mkdir", orig);
+					goto out;
+				}
 			}
 		}
 		*s++ = '/';
@@ -47,10 +70,15 @@ static int _create_dir_recursive(const char *dir)
 
 	/* Create final directory */
 	rc = mkdir(dir, 0777);
-	if (rc < 0 && errno != EEXIST) {
-		if (errno != EROFS)
-			log_sys_error("mkdir", orig);
-		goto out;
+	if (rc < 0) {
+		if (errno == EEXIST) {
+			if (!_is_dir(dir))
+				goto_out;
+		} else {
+			if (errno != EROFS)
+				log_sys_error("mkdir", orig);
+			goto out;
+		}
 	}
 
 	r = 1;
@@ -66,14 +94,15 @@ int dm_create_dir(const char *dir)
 	if (!*dir)
 		return 1;
 
-	if (stat(dir, &info) < 0)
-		return _create_dir_recursive(dir);
-
-	if (S_ISDIR(info.st_mode))
+	if (stat(dir, &info) == 0 && S_ISDIR(info.st_mode))
 		return 1;
 
-	log_error("Directory \"%s\" not found", dir);
-	return 0;
+	if (!_create_dir_recursive(dir)) {
+		log_error("Failed to create directory %s.", dir);
+		return 0;
+	}
+
+	return 1;
 }
 
 int dm_is_empty_dir(const char *dir)
