@@ -140,7 +140,7 @@ int id_valid(struct id *id)
 
 	for (i = 0; i < ID_LEN; i++)
 		if (!_inverse_c[id->uuid[i]]) {
-			log_error("UUID contains invalid character");
+			log_error("UUID contains invalid character '%c'", id->uuid[i]);
 			return 0;
 		}
 
