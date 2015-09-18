@@ -6,80 +6,69 @@ dmstats \(em device-mapper statistics management
 .B dmsetup stats
 .I command
 .RB [ options ]
-.br
-
-.B dmstats <command>
-.RB [[
-.IR device_name ]
-.RB |[ \-\-uuid
-.IR uuid ]
-.RB |[ \-\-major
-.IR major
-.RB \-\-minor
-.IR minor ]]
-.br
-
+.HP
+.PD 0
+.B dmstats
+.RB < command >
+.RI [ device_name | \fB\-\-uuid
+.IR uuid | \fB\-\-major
+.I major
+.B \-\-minor
+.IR minor ]
+.HP
 .B dmstats clear
 .I device_name
-.RB [ \-\-allregions
-.RB | \-\-regionid
+.RB [ \-\-allregions | \-\-regionid
 .IR id ]
-.br
+.HP
 .B dmstats create
 .I device_name
 .RB [ \-\-alldevices ]
-.RB [[ \-\-areas
-.IR nr_areas ]
-.RB |[ \-\-areasize
-.IR area_size ]]
+.RB [ \-\-areas
+.IR nr_areas | \fB\-\-areasize
+.IR area_size ]
 .RB [ \-\-bounds
 .IR histogram_boundaries ]
 .RB [ \-\-precise ]
-.RB [[ \-\-start
-.IR start_sector ]
-.RB [ \-\-length
-.IR length ]
-.RB |[ \-\-segments ]]
+.RB [ \-\-start
+.I  start_sector
+.B  \-\-length
+.IR length | \fB\-\-segments ]
 .RB [ \-\-auxdata
 .IR data ]
 .RB [ \-\-programid
 .IR id ]
-.br
+.HP
 .B dmstats delete
 .I device_name
 .RB [ \-\-alldevices ]
-.RB [ \-\-allregions
-.RB | \-\-regionid
+.RB [ \-\-allregions | \-\-regionid
 .IR id ]
-.RB [ \-\-allprograms
-.RB | \-\-programid
+.RB [ \-\-allprograms | \-\-programid
 .IR id ]
-.br
+.HP
 .B dmstats help
 .RB [ \-c | \-C | \-\-columns ]
-.br
+.HP
 .B dmstats list
 .RI [ device_name ]
-.RB [ \-\-allprograms
-.RB | \-\-programid
+.RB [ \-\-allprograms | \-\-programid
 .IR id ]
 .RB [ \-\-histogram ]
 .RB [ \-\-units
 .IR units ]
 .RB [ \-\-nosuffix ]
 .RB [ \-\-notimesuffix ]
-.RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]
-.br
+.RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]]
+.HP
 .B dmstats print
 .RI [ device_name ]
 .RB [ \-\-clear ]
-.RB [ \-\-allprograms
-.RB | \-\-programid
+.RB [ \-\-allprograms | \-\-programid
 .IR id ]
-.RB [ \-\-allregions
-.RB | \-\-regionid
+.RB [ \-\-allregions | \-\-regionid
 .IR id ]
-.br
+.HP
 .B dmstats report
 .RI [ device_name ]
 .RB [ \-\-interval
@@ -102,7 +91,8 @@ dmstats \(em device-mapper statistics management
 .IR units ]
 .RB [ \-\-nosuffix ]
 .RB [ \-\-notimesuffix ]
-.br
+.PD
+.HP
 .ad b
 .SH DESCRIPTION
 The dmstats program manages IO statistics regions for devices that use
@@ -212,7 +202,7 @@ string is stored with the region. Subsequent operations may supply a
 program ID in order to select only regions with a matching value. The
 default program ID for dmstats-managed regions is "dmstats".
 .TP
-.BR \-\-regionid \fIid
+.B \-\-regionid \fIid
 Specify the region to operate on.
 .TP
 .BR \-\-relative
@@ -255,11 +245,11 @@ Produce additional output.
 .TP
 .B clear
 .I device_name
-.RB [ \-\-allregions
-.RB | \-\-regionid
+.RB [ \-\-allregions | \-\-regionid
 .IR id ]
 .RB [ \-\-allprograms
-.RB | \-\-programid
+.RB |
+.B \-\-programid
 .IR id ]
 .br
 Instructs the kernel to clear statistics counters for the speficied
@@ -275,11 +265,10 @@ regions (with the exception of in-flight IO counters).
 .RB [ --bounds
 .IR histogram_boundaries ]
 .RB [ \-\-precise ]
-.RB [[ \-\-start
-.IR start_sector ]
-.RB [ \-\-length
-.IR length ]
-.RB |[ \-\-segments ]]
+.RB [ \-\-start
+.I  start_sector
+.B  \-\-length
+.IR length | \fB\-\-segments ]
 .RB [ \-\-auxdata
 .IR data ]
 .RB [ \-\-programid
@@ -325,13 +314,13 @@ stdout.
 .br
 .TP
 .B delete
-.I [ device_name ]
+.RI [ device_name ]
 .RB [ \-\-alldevices ]
 .RB [ \-\-allregions
-.RB | \-\-regionid
+|
+.B \-\-regionid
 .IR id ]
-.RB [ \-\-allprograms
-.RB | \-\-programid
+.RB [ \-\-allprograms | \-\-programid
 .IR id ]
 .br
 Delete the specified statistics region. All counters and resources used
@@ -357,8 +346,8 @@ the list of report fields.
 .RB [ \-\-histogram ]
 .RB [ \-\-allprograms ]
 .RB [ \-\-programid
-.RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]]
 .IR id ]
+.RB [ \-v | \-\-verbose \ [ \-v | \-\-verbose ]]
 .br
 List the statistics regions registered on the device. If the
 \fB\-\-allprograms\fP switch is given all regions will be listed
@@ -372,14 +361,11 @@ and latency boundary values for any configured histograms.
 .br
 .TP
 .B print
+.RB [ \-\-allregions | \-\-regionid
+.IR id ]
+.RB [ \-\-allprograms | \-\-programid
+.IR id ]
 .RB [ \-\-clear ]
-.IR
-.RB [ \-\-allregions
-.RB | \-\-regionid
-.IR id ]
-.RB [ \-\-allprograms
-.RB | \-\-programid
-.IR id ]
 .br
 Print raw statistics counters for the specified region or for all
 present regions.
@@ -400,7 +386,7 @@ present regions.
 .RB [ \-O | \-\-sort
 .IR sort_fields ]
 .RB [ \-S | \-\-select
-.IR Selection ]
+.IR selection ]
 .RB [ \-\-units
 .IR units ]
 .br
@@ -845,6 +831,8 @@ Print raw counters for region 4 on device d0
 Bryn M. Reeves <bmr@redhat.com>
 
 .SH SEE ALSO
+.BR dmsetup (8)
+
 LVM2 resource page https://www.sourceware.org/lvm2/
 .br
 Device-mapper resource page: http://sources.redhat.com/dm/
@@ -852,4 +840,4 @@ Device-mapper resource page: http://sources.redhat.com/dm/
 
 Device-mapper statistics kernel documentation
 .br
-   Documentation/device-mapper/statistics.txt
+Documentation/device-mapper/statistics.txt
