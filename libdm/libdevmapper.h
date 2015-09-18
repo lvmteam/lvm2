@@ -352,6 +352,7 @@ struct dm_status_snapshot {
 	unsigned has_metadata_sectors : 1; /* set when metadata_sectors is present */
 	unsigned invalid : 1;		/* set when snapshot is invalidated */
 	unsigned merge_failed : 1;	/* set when snapshot merge failed */
+	unsigned overflow : 1;		/* set when snapshot overflows */
 };
 
 int dm_get_status_snapshot(struct dm_pool *mem, const char *params,

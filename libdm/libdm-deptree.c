@@ -3126,6 +3126,8 @@ int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
 		s->invalid = 1;
 	else if (!strcmp(params, "Merge failed"))
 		s->merge_failed = 1;
+	else if (!strcmp(params, "Overflow"))
+		s->overflow = 1;
 	else {
 		dm_pool_free(mem, s);
 		log_error("Failed to parse snapshot params: %s.", params);
