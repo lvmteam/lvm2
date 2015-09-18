@@ -1,5 +1,6 @@
 Version 1.02.109 - 
 ======================================
+  Use --noflush and --nolockfs when removing device with --force.
   Parse new Overflow status string for snapshot target.
   Check dir path components are valid if using dm_create_dir, error out if not.
   Fix /dev/mapper handling to remove dangling entries if symlinks are found.

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2005-2007 NEC Corporation
  *
  * This file is part of the device-mapper userspace tools.
@@ -1922,6 +1922,10 @@ static int _error_device(CMD_ARGS)
 
 	if (!_task_run(dmt))
 		goto_bad;
+
+	if (_switches[FORCE_ARG])
+		/* Avoid hang on flushing with --force */
+		_switches[NOLOCKFS_ARG] = _switches[NOFLUSH_ARG] = 1;
 
 	if (!_simple(DM_DEVICE_RESUME, name, 0, 0)) {
 		_simple(DM_DEVICE_CLEAR, name, 0, 0);
