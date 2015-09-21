@@ -9,7 +9,7 @@ dmstats \(em device-mapper statistics management
 .HP
 .PD 0
 .B dmstats
-.RB < command >
+.I command
 .RI [ device_name | \fB\-\-uuid
 .IR uuid | \fB\-\-major
 .I major
