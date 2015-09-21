@@ -62,7 +62,7 @@ uint64_t lv_size(const struct logical_volume *lv);
 uint64_t lv_metadata_size(const struct logical_volume *lv);
 char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm);
 char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv);
-char *lv_uuid_dup(const struct logical_volume *lv);
+char *lv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_tags_dup(const struct logical_volume *lv);
 char *lv_path_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_dmpath_dup(struct dm_pool *mem, const struct logical_volume *lv);

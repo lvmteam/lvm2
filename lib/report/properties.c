@@ -264,7 +264,7 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _cache_write_misses_get prop_not_implemented_get
 
 /* LV */
-GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv))
+GET_LV_STR_PROPERTY_FN(lv_uuid, lv_uuid_dup(lv->vg->vgmem, lv))
 #define _lv_uuid_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_name, lv_name_dup(lv->vg->vgmem, lv))
 #define _lv_name_set prop_not_implemented_set

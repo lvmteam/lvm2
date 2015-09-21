@@ -479,9 +479,9 @@ char *lv_dmpath_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return repstr;
 }
 
-char *lv_uuid_dup(const struct logical_volume *lv)
+char *lv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-	return id_format_and_copy(lv->vg->vgmem, &lv->lvid.id[1]);
+	return id_format_and_copy(mem ? mem : lv->vg->vgmem, &lv->lvid.id[1]);
 }
 
 char *lv_tags_dup(const struct logical_volume *lv)

@@ -56,7 +56,7 @@ const char *lvm_lv_get_uuid(const lv_t lv)
 {
 	const char *rc;
 	struct saved_env e = store_user_env(lv->vg->cmd);
-	rc = lv_uuid_dup(lv);
+	rc = lv_uuid_dup(lv->vg->vgmem, lv);
 	restore_user_env(&e);
 	return rc;
 }
