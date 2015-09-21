@@ -154,7 +154,7 @@ static void usage(const char *prog, FILE *file)
 {
 	fprintf(file, "Usage: %s [options]\n"
 		"   -C       Sets debug level (from -d) on all clvmd instances clusterwide\n"
-		"   -d[n]    Set debug logging (0:none, 1:stderr (implies -f option), 2:syslog)\n"
+		"   -d[<n>]  Set debug logging (0:none, 1:stderr (implies -f option), 2:syslog)\n"
 		"   -E<uuid> Take this lock uuid as exclusively locked resource (for restart)\n"
 		"   -f       Don't fork, run in the foreground\n"
 		"   -h       Show this help information\n"
