@@ -1271,6 +1271,18 @@ static int _chars_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((
 	return dm_report_field_string(rh, field, (const char * const *) &data);
 }
 
+static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+		      struct dm_report_field *field,
+		      const void *data, void *private __attribute__((unused)))
+{
+	char *repstr;
+
+	if (!(repstr = id_format_and_copy(mem, data)))
+		return_0;
+
+	return _field_set_value(field, repstr, NULL);
+}
+
 static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			  struct dm_report_field *field,
 			  const void *data, void *private __attribute__((unused)))
@@ -2187,30 +2199,16 @@ static int _vglockargs_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _string_disp(rh, mem, field, &repstr, private);
 }
 
-static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
-		      struct dm_report_field *field,
-		      const void *data, void *private __attribute__((unused)))
-{
-	char *repstr;
-
-	if (!(repstr = id_format_and_copy(mem, data)))
-		return_0;
-
-	return _field_set_value(field, repstr, NULL);
-}
-
 static int _pvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 		        struct dm_report_field *field,
 		        const void *data, void *private __attribute__((unused)))
 {
 	const struct label *label = (const struct label *) data;
-	const char *repstr = "";
 
-	if (label->dev &&
-	    !(repstr = id_format_and_copy(mem, (const struct id *) label->dev->pvid)))
-		return_0;
+	if (!label->dev)
+		return _field_set_value(field, "", NULL);
 
-	return _field_set_value(field, repstr, NULL);
+	return _uuid_disp(rh, mem, field, label->dev->pvid, private);
 }
 
 static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
