@@ -336,6 +336,8 @@ GET_LV_STR_PROPERTY_FN(metadata_lv, lv_metadata_lv_dup(lv->vg->vgmem, lv))
 #define _metadata_lv_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(pool_lv, lv_pool_lv_dup(lv->vg->vgmem, lv))
 #define _pool_lv_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(pool_lv_uuid, lv_pool_lv_uuid_dup(lv->vg->vgmem, lv))
+#define _pool_lv_uuid_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(data_percent, _data_percent(lv))
 #define _data_percent_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(metadata_percent, _metadata_percent(lv))
