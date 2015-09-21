@@ -443,7 +443,8 @@ int lv_kernel_major(const struct logical_volume *lv)
 	return -1;
 }
 
-char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+static char *_do_lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv,
+				   int uuid)
 {
 	struct lv_segment *seg;
 
@@ -452,10 +453,24 @@ char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 		/* Temporary mirror is always area_num == 0 */
 		if (seg_type(seg, 0) == AREA_LV &&
-		    is_temporary_mirror_layer(seg_lv(seg, 0)))
-			return dm_pool_strdup(mem, seg_lv(seg, 0)->name);
+		    is_temporary_mirror_layer(seg_lv(seg, 0))) {
+			if (uuid)
+				return lv_uuid_dup(mem, seg_lv(seg, 0));
+			else
+				return lv_name_dup(mem, seg_lv(seg, 0));
+		}
 	}
 	return NULL;
+}
+
+char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_convert_lv_dup(mem, lv, 0);
+}
+
+char *lv_convert_lv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_convert_lv_dup(mem, lv, 1);
 }
 
 static char *_do_lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv,

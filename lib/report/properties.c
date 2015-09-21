@@ -328,6 +328,8 @@ GET_LV_STR_PROPERTY_FN(move_pv_uuid, lv_move_pv_uuid_dup(lv->vg->vgmem, lv))
 #define _move_pv_uuid_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(convert_lv, lv_convert_lv_dup(lv->vg->vgmem, lv))
 #define _convert_lv_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(convert_lv_uuid, lv_convert_lv_uuid_dup(lv->vg->vgmem, lv))
+#define _convert_lv_uuid_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_tags, lv_tags_dup(lv))
 #define _lv_tags_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(mirror_log, lv_mirror_log_dup(lv->vg->vgmem, lv))
