@@ -1871,8 +1871,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 			 * device already exists?  Things don't seem to work
 			 * if we do that for some reason.
 			 */
-			log_verbose("Found same device %s with same pvid %s",
-				    dev_name(existing->dev), pvid_s);
+			log_debug_cache("Found same device %s with same pvid %s",
+					dev_name(existing->dev), pvid_s);
 		}
 
 		/*
