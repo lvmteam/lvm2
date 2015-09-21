@@ -298,6 +298,8 @@ GET_LV_NUM_PROPERTY_FN(seg_count, dm_list_size(&lv->segments))
 #define _seg_count_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(origin, lv_origin_dup(lv->vg->vgmem, lv))
 #define _origin_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(origin_uuid, lv_origin_uuid_dup(lv->vg->vgmem, lv))
+#define _origin_uuid_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(origin_size, (SECTOR_SIZE * lv_origin_size(lv)))
 #define _origin_size_set prop_not_implemented_set
 #define _lv_ancestors_set prop_not_implemented_set

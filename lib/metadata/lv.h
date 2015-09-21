@@ -83,6 +83,8 @@ char *lv_fullname_dup(struct dm_pool *mem, const struct logical_volume *lv);
 struct logical_volume *lv_parent(const struct logical_volume *lv);
 char *lv_parent_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv);
+char *lv_origin_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv);
+
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv);
 const char *lvseg_name(const struct lv_segment *seg);
 uint64_t lvseg_start(const struct lv_segment *seg);

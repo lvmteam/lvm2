@@ -219,21 +219,37 @@ uint32_t lv_kernel_read_ahead(const struct logical_volume *lv)
 	return info.read_ahead;
 }
 
+static char *_do_lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv,
+			       int uuid)
+{
+	struct logical_volume *origin;
+
+
+	if (lv_is_cow(lv))
+		origin = origin_from_cow(lv);
+	else if (lv_is_cache(lv) && first_seg(lv)->origin)
+		origin = first_seg(lv)->origin;
+	else if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
+		origin = first_seg(lv)->origin;
+	else if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
+		origin = first_seg(lv)->external_lv;
+	else
+		return NULL;
+
+	if (uuid)
+		return lv_uuid_dup(mem, origin);
+	else
+		return lv_name_dup(mem, origin);
+}
+
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-	if (lv_is_cow(lv))
-		return lv_name_dup(mem, origin_from_cow(lv));
+	return _do_lv_origin_dup(mem, lv, 0);
+}
 
-	if (lv_is_cache(lv) && first_seg(lv)->origin)
-		return lv_name_dup(mem, first_seg(lv)->origin);
-
-	if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
-		return lv_name_dup(mem, first_seg(lv)->origin);
-
-	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
-		return lv_name_dup(mem, first_seg(lv)->external_lv);
-
-	return NULL;
+char *lv_origin_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_origin_dup(mem, lv, 1);
 }
 
 char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv)

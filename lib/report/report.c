@@ -1709,26 +1709,44 @@ static int _lvdmpath_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, repstr, NULL);
 }
 
+static int _do_origin_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private,
+			   int uuid)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const struct lv_segment *seg = first_seg(lv);
+	struct logical_volume *origin;
+
+	if (lv_is_cow(lv))
+		origin = origin_from_cow(lv);
+	else if (lv_is_cache(lv) && !lv_is_pending_delete(lv))
+		origin = seg_lv(seg, 0);
+	else if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
+		origin = first_seg(lv)->origin;
+	else if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
+		origin = first_seg(lv)->external_lv;
+	else
+		return _field_set_value(field, "", NULL);
+
+	if (uuid)
+		return _uuid_disp(rh, mem, field, &origin->lvid.id[1], private);
+	else
+		return _lvname_disp(rh, mem, field, origin, private);
+}
+
 static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = first_seg(lv);
+	return _do_origin_disp(rh, mem, field, data, private, 0);
+}
 
-	if (lv_is_cow(lv))
-		return _lvname_disp(rh, mem, field, origin_from_cow(lv), private);
-
-	if (lv_is_cache(lv) && !lv_is_pending_delete(lv))
-		return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
-
-	if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
-		return _lvname_disp(rh, mem, field, first_seg(lv)->origin, private);
-
-	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
-		return _lvname_disp(rh, mem, field, first_seg(lv)->external_lv, private);
-
-	return _field_set_value(field, "", NULL);
+static int _originuuid_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	return _do_origin_disp(rh, mem, field, data, private, 1);
 }
 
 static int _find_ancestors(struct _str_list_append_baton *ancestors,
