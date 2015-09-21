@@ -308,15 +308,31 @@ char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return tags_format_and_copy(mem, modules);
 }
 
-char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
+static char *_do_lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv,
+				   int uuid)
 {
 	struct lv_segment *seg;
 
-	dm_list_iterate_items(seg, &lv->segments)
-		if (seg_is_mirrored(seg) && seg->log_lv)
-			return dm_pool_strdup(mem, seg->log_lv->name);
+	dm_list_iterate_items(seg, &lv->segments) {
+		if (seg_is_mirrored(seg) && seg->log_lv) {
+			if (uuid)
+				return lv_uuid_dup(mem, seg->log_lv);
+			else
+				return lv_name_dup(mem, seg->log_lv);
+		}
+	}
 
 	return NULL;
+}
+
+char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_mirror_log_dup(mem, lv, 0);
+}
+
+char *lv_mirror_log_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_mirror_log_dup(mem, lv, 1);
 }
 
 static char *_do_lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume *lv,

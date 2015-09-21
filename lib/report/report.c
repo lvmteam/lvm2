@@ -1555,17 +1555,37 @@ static int _segtype_disp(struct dm_report *rh __attribute__((unused)),
 	return _field_set_value(field, name, NULL);
 }
 
+static int _do_loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			  struct dm_report_field *field,
+			  const void *data, void *private __attribute__((unused)),
+			  int uuid)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *repstr = NULL;
+
+	if (uuid)
+		repstr = lv_mirror_log_uuid_dup(mem, lv);
+	else
+		repstr = lv_mirror_log_dup(mem, lv);
+
+	if (repstr)
+		return dm_report_field_string(rh, field, &repstr);
+
+	return _field_set_value(field, "", NULL);
+}
+
 static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 		       struct dm_report_field *field,
 		       const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const char *name;
+	return _do_loglv_disp(rh, mem, field, data, private, 0);
+}
 
-	if ((name = lv_mirror_log_dup(mem, lv)))
-		return dm_report_field_string(rh, field, &name);
-
-	return _field_set_value(field, "", NULL);
+static int _loglvuuid_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			   struct dm_report_field *field,
+			   const void *data, void *private __attribute__((unused)))
+{
+	return _do_loglv_disp(rh, mem, field, data, private, 1);
 }
 
 static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,

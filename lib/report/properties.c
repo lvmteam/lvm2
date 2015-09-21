@@ -330,6 +330,8 @@ GET_LV_STR_PROPERTY_FN(lv_tags, lv_tags_dup(lv))
 #define _lv_tags_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(mirror_log, lv_mirror_log_dup(lv->vg->vgmem, lv))
 #define _mirror_log_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(mirror_log_uuid, lv_mirror_log_uuid_dup(lv->vg->vgmem, lv))
+#define _mirror_log_uuid_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_modules, lv_modules_dup(lv->vg->vgmem, lv))
 #define _lv_modules_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(data_lv, lv_data_lv_dup(lv->vg->vgmem, lv))
