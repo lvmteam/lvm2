@@ -458,11 +458,12 @@ char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return NULL;
 }
 
-char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+static char *_do_lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv,
+				int uuid)
 {
 	struct logical_volume *mimage0_lv;
 	struct lv_segment *seg;
-	const struct device *dev;
+	struct pv_segment *pvseg;
 
 	dm_list_iterate_items(seg, &lv->segments) {
 		if (seg->status & PVMOVE) {
@@ -473,15 +474,28 @@ char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
 						  "Bad pvmove structure");
 					return NULL;
 				}
-				dev = seg_dev(first_seg(mimage0_lv), 0);
+				pvseg = seg_pvseg(first_seg(mimage0_lv), 0);
 			} else /* Segment pvmove */
-				dev = seg_dev(seg, 0);
+				pvseg = seg_pvseg(seg, 0);
 
-			return dm_pool_strdup(mem, dev_name(dev));
+			if (uuid)
+				return pv_uuid_dup(mem, pvseg->pv);
+			else
+				return pv_name_dup(mem, pvseg->pv);
 		}
 	}
 
 	return NULL;
+}
+
+char *lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_move_pv_dup(mem, lv, 0);
+}
+
+char *lv_move_pv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
+{
+	return _do_lv_move_pv_dup(mem, lv, 1);
 }
 
 uint64_t lv_origin_size(const struct logical_volume *lv)

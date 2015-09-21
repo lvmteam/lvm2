@@ -1907,17 +1907,37 @@ static int _lvdescendants_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_string_list(rh, field, descendants.result, private, 0);
 }
 
+static int _do_movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			   struct dm_report_field *field,
+			   const void *data, void *private __attribute__((unused)),
+			   int uuid)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *repstr;
+
+	if (uuid)
+		repstr = lv_move_pv_uuid_dup(mem, lv);
+	else
+		repstr = lv_move_pv_dup(mem, lv);
+
+	if (repstr)
+		return dm_report_field_string(rh, field, &repstr);
+
+	return _field_set_value(field, "", NULL);
+}
+
 static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const char *name;
+	return _do_movepv_disp(rh, mem, field, data, private, 0);
+}
 
-	if ((name = lv_move_pv_dup(mem, lv)))
-		return dm_report_field_string(rh, field, &name);
-
-	return _field_set_value(field, "", NULL);
+static int _movepvuuid_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			    struct dm_report_field *field,
+			    const void *data, void *private __attribute__((unused)))
+{
+	return _do_movepv_disp(rh, mem, field, data, private, 1);
 }
 
 static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
