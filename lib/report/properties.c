@@ -334,6 +334,8 @@ GET_LV_STR_PROPERTY_FN(lv_modules, lv_modules_dup(lv->vg->vgmem, lv))
 #define _lv_modules_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(data_lv, lv_data_lv_dup(lv->vg->vgmem, lv))
 #define _data_lv_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(data_lv_uuid, lv_data_lv_uuid_dup(lv->vg->vgmem, lv))
+#define _data_lv_uuid_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(metadata_lv, lv_metadata_lv_dup(lv->vg->vgmem, lv))
 #define _metadata_lv_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(metadata_lv_uuid, lv_metadata_lv_uuid_dup(lv->vg->vgmem, lv))

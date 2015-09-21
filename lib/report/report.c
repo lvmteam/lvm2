@@ -1624,17 +1624,36 @@ static int _lvparent_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, repstr, NULL);
 }
 
-static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
-			struct dm_report_field *field,
-			const void *data, void *private __attribute__((unused)))
+static int _do_datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			   struct dm_report_field *field,
+			   const void *data, void *private __attribute__((unused)),
+			   int uuid)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	const struct lv_segment *seg = (lv_is_pool(lv)) ? first_seg(lv) : NULL;
 
-	if (seg)
-		return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
+	if (seg) {
+		if (uuid)
+			return _uuid_disp(rh, mem, field, &seg_lv(seg, 0)->lvid.id[1], private);
+		else
+			return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
+	}
 
 	return _field_set_value(field, "", NULL);
+}
+
+static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			struct dm_report_field *field,
+			const void *data, void *private __attribute__((unused)))
+{
+	return _do_datalv_disp(rh, mem, field, data, private, 0);
+}
+
+static int _datalvuuid_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			    struct dm_report_field *field,
+			    const void *data, void *private __attribute__((unused)))
+{
+	return _do_datalv_disp(rh, mem, field, data, private, 1);
 }
 
 static int _do_metadatalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
