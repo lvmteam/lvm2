@@ -68,12 +68,12 @@ struct physical_volume {
 };
 
 char *pv_fmt_dup(const struct physical_volume *pv);
-char *pv_name_dup(const struct physical_volume *pv);
+char *pv_name_dup(struct dm_pool *mem, const struct physical_volume *pv);
 struct device *pv_dev(const struct physical_volume *pv);
 const char *pv_vg_name(const struct physical_volume *pv);
 char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv);
 const char *pv_dev_name(const struct physical_volume *pv);
-char *pv_uuid_dup(const struct physical_volume *pv);
+char *pv_uuid_dup(struct dm_pool *mem, const struct physical_volume *pv);
 char *pv_tags_dup(const struct physical_volume *pv);
 uint64_t pv_size(const struct physical_volume *pv);
 uint64_t pv_size_field(const struct physical_volume *pv);

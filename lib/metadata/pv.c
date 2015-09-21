@@ -29,9 +29,9 @@ char *pv_fmt_dup(const struct physical_volume *pv)
 	return dm_pool_strdup(pv->vg->vgmem, pv->fmt->name);
 }
 
-char *pv_name_dup(const struct physical_volume *pv)
+char *pv_name_dup(struct dm_pool *mem, const struct physical_volume *pv)
 {
-	return dm_pool_strdup(pv->vg->vgmem, dev_name(pv->dev));
+	return dm_pool_strdup(mem ? mem : pv->vg->vgmem, dev_name(pv->dev));
 }
 
 /*
@@ -42,9 +42,9 @@ struct id pv_id(const struct physical_volume *pv)
 	return pv_field(pv, id);
 }
 
-char *pv_uuid_dup(const struct physical_volume *pv)
+char *pv_uuid_dup(struct dm_pool *mem, const struct physical_volume *pv)
 {
-	return id_format_and_copy(pv->vg->vgmem, &pv->id);
+	return id_format_and_copy(mem ? mem : pv->vg->vgmem, &pv->id);
 }
 
 char *pv_tags_dup(const struct physical_volume *pv)

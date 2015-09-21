@@ -149,11 +149,11 @@ static dm_percent_t _metadata_percent(const struct logical_volume *lv)
 /* PV */
 GET_PV_STR_PROPERTY_FN(pv_fmt, pv_fmt_dup(pv))
 #define _pv_fmt_set prop_not_implemented_set
-GET_PV_STR_PROPERTY_FN(pv_uuid, pv_uuid_dup(pv))
+GET_PV_STR_PROPERTY_FN(pv_uuid, pv_uuid_dup(pv->vg->vgmem, pv))
 #define _pv_uuid_set prop_not_implemented_set
 GET_PV_NUM_PROPERTY_FN(dev_size, SECTOR_SIZE * pv_dev_size(pv))
 #define _dev_size_set prop_not_implemented_set
-GET_PV_STR_PROPERTY_FN(pv_name, pv_name_dup(pv))
+GET_PV_STR_PROPERTY_FN(pv_name, pv_name_dup(pv->vg->vgmem, pv))
 #define _pv_name_set prop_not_implemented_set
 GET_PV_NUM_PROPERTY_FN(pv_mda_free, SECTOR_SIZE * pv_mda_free(pv))
 #define _pv_mda_free_set prop_not_implemented_set
