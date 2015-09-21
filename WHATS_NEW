@@ -1,5 +1,7 @@
 Version 2.02.132 - 
 ======================================
+  Add origin_uuid, mirror_log_uuid, move_pv_uuid, convert_lv_uuid reporting fields.
+  Add pool_lv_uuid, metadata_lv_uuid, data_lv_uuid reporting fields.
   Fix PV label processing failure after pvcreate in lvm shell with lvmetad.
 
 Version 2.02.131 - 15th September 2015
