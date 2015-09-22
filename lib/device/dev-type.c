@@ -734,13 +734,20 @@ int wipe_known_signatures(struct cmd_context *cmd, struct device *dev,
 			  uint32_t types_no_prompt, int yes, force_t force,
 			  int *wiped)
 {
+	int blkid_wiping_enabled = find_config_tree_bool(cmd, allocation_use_blkid_wiping_CFG, NULL);
+
 #ifdef BLKID_WIPING_SUPPORT
-	if (find_config_tree_bool(cmd, allocation_use_blkid_wiping_CFG, NULL))
+	if (blkid_wiping_enabled)
 		return _wipe_known_signatures_with_blkid(dev, name,
 							 types_to_exclude,
 							 types_no_prompt,
 							 yes, force, wiped);
 #endif
+	if (blkid_wiping_enabled) {
+		log_warn("allocation/use_blkid_wiping=1 configuration setting is set "
+			 "while LVM is not compiled with blkid wiping support.");
+		log_warn("Falling back to native LVM signature detection.");
+	}
 	return _wipe_known_signatures_with_lvm(dev, name,
 					       types_to_exclude,
 					       types_no_prompt,
