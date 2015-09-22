@@ -133,6 +133,11 @@ function parse_args
                 exit 1
         esac
     done
+
+    if [ "$LOCKINGLIBDIR" -o "$LOCKINGLIB" ]; then
+        LOCKING_TYPE=2
+        USE_LVMETAD=0
+    fi
 }
 
 function validate_args

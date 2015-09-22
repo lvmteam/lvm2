@@ -1,5 +1,6 @@
 Version 2.02.132 - 
 ======================================
+  Fix lvmconf to set locking_type=2 if external locking library is requested.
   Remove verbose message when rescanning an unchanged device. (2.02.119)
   Add origin_uuid, mirror_log_uuid, move_pv_uuid, convert_lv_uuid report fields.
   Add pool_lv_uuid, metadata_lv_uuid, data_lv_uuid reporting fields.
