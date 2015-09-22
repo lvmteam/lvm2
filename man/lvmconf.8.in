@@ -6,8 +6,8 @@ lvmconf \(em LVM configuration modifier
 .B lvmconf
 .RB [ \-\-disable-cluster ]
 .RB [ \-\-enable-cluster ]
-.RB [ \-\---enable-halvm ]
-.RB [ \-\---disable-halvm ]
+.RB [ \-\-enable-halvm ]
+.RB [ \-\-disable-halvm ]
 .RB [ \-\-file
 .RI < configfile >]
 .RB [ \-\-lockinglib
