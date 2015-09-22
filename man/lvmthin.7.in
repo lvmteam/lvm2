@@ -583,7 +583,7 @@ with the lvs \-o+metadata_percent command.
 
 Command to extend thin pool metadata space:
 .br
-.B lvextend \-L Size VG/ThinPoolLV_tmeta
+.B lvextend \-\-poolmetadatasize Size VG/ThinPoolLV
 
 .I Example
 .br
@@ -605,7 +605,7 @@ Command to extend thin pool metadata space:
 
 3. Double the amount of physical space in the thin metadata LV.
 .nf
-# lvextend \-L+12M vg/pool0_tmeta
+# lvextend \-\-poolmetadatasize +12M vg/pool0
 .fi
 
 4. The percentage of used metadata blocks is half the previous value.
@@ -873,7 +873,7 @@ repair.
 .br
    See "Metadata check and repair".
 
-3. Extend pool metadata space with lvextend VG/ThinPoolLV_tmeta.
+3. Extend pool metadata space with lvextend \-\-poolmetadatasize.
 .br
    See "Manually manage free metadata space of a thin pool LV".
 
