@@ -434,7 +434,7 @@ static struct segtype_handler _raid_ops = {
 static const struct raid_type {
 	const char name[12];
 	unsigned parity;
-	int extra_flags;
+	uint64_t extra_flags;
 } _raid_types[] = {
 	{ SEG_TYPE_NAME_RAID1,    0, SEG_AREAS_MIRRORED },
 	{ SEG_TYPE_NAME_RAID10,   0, SEG_AREAS_MIRRORED },
@@ -452,7 +452,7 @@ static const struct raid_type {
 
 static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,
 					       const struct raid_type *rt,
-					       int monitored)
+					       uint64_t monitored)
 {
 	struct segment_type *segtype = dm_zalloc(sizeof(*segtype));
 
@@ -482,7 +482,7 @@ int init_multiple_segtypes(struct cmd_context *cmd, struct segtype_library *segl
 {
 	struct segment_type *segtype;
 	unsigned i;
-	int monitored = 0;
+	uint64_t monitored = 0;
 
 #ifdef DEVMAPPER_SUPPORT
 #  ifdef DMEVENTD
