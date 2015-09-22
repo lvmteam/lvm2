@@ -661,14 +661,14 @@ static int _lvcreate_params(struct cmd_context *cmd,
 		   (arg_is_set(cmd, virtualoriginsize_ARG) ||
 		   !arg_is_set(cmd, virtualsize_ARG)))
 		/* Snapshot has higher priority then thin */
-		segtype_str = "snapshot"; /* --thinpool makes thin volume */
+		segtype_str = SEG_TYPE_NAME_SNAPSHOT; /* --thinpool makes thin volume */
 	else if (arg_is_set(cmd, cache_ARG) || arg_is_set(cmd, cachepool_ARG))
-		segtype_str = "cache";
+		segtype_str = SEG_TYPE_NAME_CACHE;
 	else if (arg_is_set(cmd, thin_ARG) || arg_is_set(cmd, thinpool_ARG))
-		segtype_str = "thin";
+		segtype_str = SEG_TYPE_NAME_THIN;
 	else if (arg_is_set(cmd, virtualsize_ARG)) {
 		if (arg_is_set(cmd, virtualoriginsize_ARG))
-			segtype_str = "snapshot"; /* --virtualoriginsize incompatible with pools */
+			segtype_str = SEG_TYPE_NAME_SNAPSHOT; /* --virtualoriginsize incompatible with pools */
 		else
 			segtype_str = find_config_tree_str(cmd, global_sparse_segtype_default_CFG, NULL);
 	} else if (arg_uint_value(cmd, mirrors_ARG, 0)) {
@@ -677,7 +677,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 			? global_raid10_segtype_default_CFG : global_mirror_segtype_default_CFG;
 		segtype_str = find_config_tree_str(cmd, mirror_default_cfg, NULL);
 	} else
-		segtype_str = "striped";
+		segtype_str = SEG_TYPE_NAME_STRIPED;
 
 	if (!(lp->segtype = get_segtype_from_string(cmd, segtype_str)))
 		return_0;
@@ -906,7 +906,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 				}
 
 				log_debug_metadata("Switching from thin to thin pool segment type.");
-				if (!(lp->segtype = get_segtype_from_string(cmd, "thin-pool")))
+				if (!(lp->segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_THIN_POOL)))
 					return_0;
 			} else	/* Parse free arg as snapshot origin */
 				lp->snapshot = 1;
@@ -1183,7 +1183,7 @@ static int _determine_snapshot_type(struct volume_group *vg,
 	}
 
 	log_debug_metadata("Switching from snapshot to thin segment type.");
-	if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin")))
+	if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN)))
 		return_0;
 	lp->snapshot = 0;
 

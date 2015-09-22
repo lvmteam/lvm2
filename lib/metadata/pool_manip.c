@@ -438,7 +438,7 @@ int create_pool(struct logical_volume *pool_lv,
 	}
 
 	/* LV is not yet a pool, so it's extension from lvcreate */
-	if (!(striped = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
+	if (!(striped = get_segtype_from_string(pool_lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	if (activation() && striped->ops->target_present &&
@@ -561,7 +561,7 @@ struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
 		.zero = 1,
 	};
 
-	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, "striped")))
+	if (!(lvc.segtype = get_segtype_from_string(pool_lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	/* FIXME: allocate properly space for metadata_lv */
@@ -597,7 +597,7 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		.zero = 1,
 	};
 
-	if (!(lp.segtype = get_segtype_from_string(vg->cmd, "striped")))
+	if (!(lp.segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	/* FIXME: Maybe using silent mode ? */

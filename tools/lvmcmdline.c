@@ -643,7 +643,7 @@ int locktype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_val
 int segtype_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	struct segment_type *segtype;
-	const char *str = (!strcmp(av->value, "linear")) ? "striped" : av->value;
+	const char *str = (!strcmp(av->value, SEG_TYPE_NAME_LINEAR)) ? SEG_TYPE_NAME_STRIPED : av->value;
 
 	if (!(segtype = get_segtype_from_string(cmd, str)))
 		return_0;

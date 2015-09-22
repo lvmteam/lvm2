@@ -550,7 +550,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 					    -1))
 			return_0;
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
+		if (!(lp->segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_SNAPSHOT)))
 			return_0;
 	} else if (lp->splitsnapshot)	/* Destroy snapshot retaining cow as separate LV */
 		;
@@ -587,7 +587,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		}
 		log_verbose("Setting chunk size to %s.", display_size(cmd, lp->chunk_size));
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
+		if (!(lp->segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_SNAPSHOT)))
 			return_0;
 
 		lp->zero = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED)
@@ -675,7 +675,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		if (arg_count(cmd, mirrors_ARG) && !lp->mirrors) {
 			/* down-converting to linear/stripe? */
 			if (!(lp->segtype =
-			      get_segtype_from_string(cmd, "striped")))
+			      get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
 				return_0;
 		} else if (arg_count(cmd, type_ARG)) {
 			/* changing mirror type? */
@@ -2575,7 +2575,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 	if (!pool_supports_external_origin(first_seg(pool_lv), lv))
 		return_0;
 
-	if (!(lvc.segtype = get_segtype_from_string(cmd, "thin")))
+	if (!(lvc.segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_THIN)))
 		return_0;
 
 	if (!archive(vg))

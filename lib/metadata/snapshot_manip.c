@@ -44,7 +44,7 @@ static uint64_t _cow_extra_chunks(struct cmd_context *cmd, uint64_t n_chunks)
 	unsigned attrs = 0;
 
 	if (activation() &&
-	    (segtype = get_segtype_from_string(cmd, "snapshot")) &&
+	    (segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_SNAPSHOT)) &&
 	    segtype->ops->target_present &&
 	    segtype->ops->target_present(cmd, NULL, &attrs) &&
 	    (attrs & SNAPSHOT_FEATURE_FIXED_LEAK))

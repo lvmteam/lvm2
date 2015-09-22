@@ -219,7 +219,7 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 	struct lv_segment *seg;
 	struct segment_type *segtype;
 
-	if (!(segtype = get_segtype_from_string(cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	while (le < lvm->lv->le_count) {
@@ -281,7 +281,7 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 
 	total_area_len = lvm->lv->le_count / lvm->stripes;
 
-	if (!(segtype = get_segtype_from_string(cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	while (first_area_le < total_area_len) {

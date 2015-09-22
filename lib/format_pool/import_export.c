@@ -188,8 +188,7 @@ static int _add_stripe_seg(struct dm_pool *mem,
 
 	area_len = (usp->devs[0].blocks) / POOL_PE_SIZE;
 
-	if (!(segtype = get_segtype_from_string(lv->vg->cmd,
-						     "striped")))
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	if (!(seg = alloc_lv_segment(segtype, lv, *le_cur,
@@ -226,7 +225,7 @@ static int _add_linear_seg(struct dm_pool *mem,
 	unsigned j;
 	uint32_t area_len;
 
-	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	for (j = 0; j < usp->num_devs; j++) {

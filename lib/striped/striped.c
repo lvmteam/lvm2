@@ -29,7 +29,7 @@
 
 static const char *_striped_name(const struct lv_segment *seg)
 {
-	return (seg->area_count == 1) ? "linear" : seg->segtype->name;
+	return (seg->area_count == 1) ? SEG_TYPE_NAME_LINEAR : seg->segtype->name;
 }
 
 static void _striped_display(const struct lv_segment *seg)
@@ -229,7 +229,7 @@ struct segment_type *init_striped_segtype(struct cmd_context *cmd)
 		return_NULL;
 
 	segtype->ops = &_striped_ops;
-	segtype->name = "striped";
+	segtype->name = SEG_TYPE_NAME_STRIPED;
 	segtype->flags =
 	    SEG_CAN_SPLIT | SEG_AREAS_STRIPED | SEG_FORMAT1_SUPPORT;
 

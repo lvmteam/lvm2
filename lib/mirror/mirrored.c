@@ -620,7 +620,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 		return_NULL;
 
 	segtype->ops = &_mirrored_ops;
-	segtype->name = "mirror";
+	segtype->name = SEG_TYPE_NAME_MIRROR;
 	segtype->flags = SEG_MIRROR | SEG_AREAS_MIRRORED;
 
 #ifdef DEVMAPPER_SUPPORT

@@ -375,7 +375,7 @@ static int _read_segment(struct logical_volume *lv, const struct dm_config_node 
 		return 0;
 	}
 
-	segtype_str = "striped";
+	segtype_str = SEG_TYPE_NAME_STRIPED;
 
 	if (!dm_config_get_str(sn_child, "type", &segtype_str)) {
 		log_error("Segment type must be a string.");

@@ -95,7 +95,7 @@ struct segment_type *init_error_segtype(struct cmd_context *cmd)
 		return_NULL;
 
 	segtype->ops = &_error_ops;
-	segtype->name = "error";
+	segtype->name = SEG_TYPE_NAME_ERROR;
 	segtype->flags = SEG_CAN_SPLIT | SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);

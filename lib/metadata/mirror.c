@@ -83,7 +83,7 @@ int cluster_mirror_is_available(struct cmd_context *cmd)
        unsigned attr = 0;
        const struct segment_type *segtype;
 
-       if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+       if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
                return_0;
 
        if (!segtype->ops->target_present)
@@ -112,7 +112,7 @@ uint32_t lv_mirror_count(const struct logical_volume *lv)
 	seg = first_seg(lv);
 
 	/* FIXME: RAID10 only supports 2 copies right now */
-	if (!strcmp(seg->segtype->name, "raid10"))
+	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_RAID10))
 		return 2;
 
 	if (lv_is_pvmove(lv))
@@ -1493,8 +1493,7 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 			}
 		} else {
 			if (!lv_add_segment(ah, m * stripes, stripes, img_lvs[m],
-					    get_segtype_from_string(lv->vg->cmd,
-								    "striped"),
+					    get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED),
 					    stripe_size, 0, 0)) {
 				log_error("Aborting. Failed to add mirror image segment "
 					  "to %s. Remove new LV and retry.",
@@ -1547,8 +1546,7 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 		seg->area_count = new_mirrors + 1;
 
 		if (!new_mirrors)
-			seg->segtype = get_segtype_from_string(lv->vg->cmd,
-							       "striped");
+			seg->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED);
 	}
 
 	return 1;
@@ -1720,7 +1718,7 @@ int fixup_imported_mirrors(struct volume_group *vg)
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		dm_list_iterate_items(seg, &lvl->lv->segments) {
 			if (seg->segtype !=
-			    get_segtype_from_string(vg->cmd, "mirror"))
+			    get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_MIRROR))
 				continue;
 
 			if (seg->log_lv && !add_seg_to_segs_using_this_lv(seg->log_lv, seg))
@@ -1748,7 +1746,7 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 1, 0)))
 		return_0;
 
-	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
 	adjusted_region_size = adjusted_mirror_region_size(lv->vg->extent_size,
@@ -2033,7 +2031,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))
 		return_0;
 
-	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
 	if (activation() && segtype->ops->target_present &&
@@ -2106,7 +2104,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))
 		return_0;
 
-	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
 	ah = allocate_extents(lv->vg, NULL, segtype,

@@ -261,7 +261,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 	if (lv_is_thin_pool(cache_lv))
 		cache_lv = seg_lv(first_seg(cache_lv), 0); /* cache _tdata */
 
-	if (!(segtype = get_segtype_from_string(cmd, "cache")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_CACHE)))
 		return_NULL;
 
 	if (!insert_layer_for_lv(cmd, cache_lv, CACHE, "_corig"))
@@ -407,7 +407,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	/* Replace 'error' with 'cache' segtype */
 	cache_seg = first_seg(corigin_lv);
-	if (!(cache_seg->segtype = get_segtype_from_string(corigin_lv->vg->cmd, "cache")))
+	if (!(cache_seg->segtype = get_segtype_from_string(corigin_lv->vg->cmd, SEG_TYPE_NAME_CACHE)))
 		return_0;
 
 	if (!(cache_seg->areas = dm_pool_zalloc(cache_lv->vg->vgmem, sizeof(*cache_seg->areas))))
@@ -453,7 +453,7 @@ int lv_is_cache_origin(const struct logical_volume *lv)
 
 static const char *_get_default_cache_policy(struct cmd_context *cmd)
 {
-	const struct segment_type *segtype = get_segtype_from_string(cmd, "cache");
+	const struct segment_type *segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_CACHE);
 	unsigned attr = ~0;
         const char *def = NULL;
 

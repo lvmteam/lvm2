@@ -259,7 +259,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 		return_NULL;
 
 	segtype->ops = &_snapshot_ops;
-	segtype->name = "snapshot";
+	segtype->name = SEG_TYPE_NAME_SNAPSHOT;
 	segtype->flags = SEG_SNAPSHOT | SEG_CANNOT_BE_ZEROED | SEG_ONLY_EXCLUSIVE;
 
 #ifdef DEVMAPPER_SUPPORT

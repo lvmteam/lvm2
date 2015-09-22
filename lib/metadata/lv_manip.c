@@ -1013,7 +1013,7 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 	struct lv_segment *seg;
 	const struct segment_type *segtype;
 
-	segtype = get_segtype_from_string(lv->vg->cmd, "snapshot");
+	segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_SNAPSHOT);
 	if (!segtype) {
 		log_error("Failed to find snapshot segtype");
 		return NULL;
@@ -1393,7 +1393,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 
 	/* FIXME Check for any attached LVs that will become orphans e.g. mirror logs */
 
-	if (!lv_add_virtual_segment(lv, 0, len, get_segtype_from_string(lv->vg->cmd, "error")))
+	if (!lv_add_virtual_segment(lv, 0, len, get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR)))
 		return_0;
 
 	return 1;
@@ -3401,7 +3401,7 @@ static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
 		return NULL;
 	}
 
-	if (!(newseg = alloc_lv_segment(get_segtype_from_string(seg->lv->vg->cmd, "mirror"),
+	if (!(newseg = alloc_lv_segment(get_segtype_from_string(seg->lv->vg->cmd, SEG_TYPE_NAME_MIRROR),
 					seg->lv, seg->le, seg->len,
 					seg->status, seg->stripe_size,
 					log_lv,
@@ -3494,7 +3494,7 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	if (!lv_add_mirror_lvs(lv, &copy_lv, 1, MIRROR_IMAGE, region_size))
 		return_0;
 
-	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
@@ -3608,7 +3608,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 		return 0;
 	}
 
-	mirror_segtype = get_segtype_from_string(lv->vg->cmd, "mirror");
+	mirror_segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_MIRROR);
 	if (seg->segtype != mirror_segtype)
 		if (!(seg = _convert_seg_to_mirror(seg, region_size, NULL)))
 			return_0;
@@ -3668,7 +3668,7 @@ int lv_add_log_segment(struct alloc_handle *ah, uint32_t first_area,
 
 	return lv_add_segment(ah, ah->area_count + first_area, 1, log_lv,
 			      get_segtype_from_string(log_lv->vg->cmd,
-						      "striped"),
+						      SEG_TYPE_NAME_STRIPED),
 			      0, status, 0);
 }
 
@@ -3769,7 +3769,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	uint32_t fa, s;
 	int clear_metadata = 0;
 
-	segtype = get_segtype_from_string(lv->vg->cmd, "striped");
+	segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED);
 
 	/*
 	 * The component devices of a "striped" LV all go in the same
@@ -6209,7 +6209,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 
 			/* Replace mirror with error segment */
 			if (!(lseg->segtype =
-			      get_segtype_from_string(lv->vg->cmd, "error"))) {
+			      get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR))) {
 				log_error("Missing error segtype");
 				return 0;
 			}
@@ -6343,7 +6343,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 		return_0;
 
 	/* Replace the empty layer with error segment */
-	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "error")))
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR)))
 		return_0;
 	if (!lv_add_virtual_segment(layer_lv, 0, parent_lv->le_count, segtype))
 		return_0;
@@ -6407,7 +6407,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	if (lv_is_active(lv_where) && strstr(name, "_mimagetmp")) {
 		log_very_verbose("Creating transient LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
 
-		segtype = get_segtype_from_string(cmd, "error");
+		segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_ERROR);
 
 		if (!lv_add_virtual_segment(layer_lv, 0, lv_where->le_count, segtype)) {
 			log_error("Creation of transient LV %s for mirror conversion in VG %s failed.", name, lv_where->vg->name);
@@ -6455,7 +6455,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	if (!move_lv_segments(layer_lv, lv_where, 0, 0))
 		return_NULL;
 
-	if (!(segtype = get_segtype_from_string(cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
 		return_NULL;
 
 	/* allocate a new linear segment */
@@ -6505,7 +6505,7 @@ static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 	if (seg_type(seg, s) != AREA_PV && seg_type(seg, s) != AREA_LV)
 		return_0;
 
-	if (!(segtype = get_segtype_from_string(layer_lv->vg->cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(layer_lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	/* FIXME Incomplete message? Needs more context */
@@ -6778,7 +6778,7 @@ static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,
 	char vorigin_name[NAME_LEN];
 	struct logical_volume *lv;
 
-	if (!(segtype = get_segtype_from_string(cmd, "zero"))) {
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_ZERO))) {
 		log_error("Zero segment type for virtual origin not found");
 		return NULL;
 	}
@@ -7113,7 +7113,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		/* Create cache origin for cache pool */
 		/* FIXME Eventually support raid/mirrors with -m */
-		if (!(create_segtype = get_segtype_from_string(vg->cmd, "striped")))
+		if (!(create_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
 			return_0;
 	} else if (seg_is_mirrored(lp) || seg_is_raid(lp)) {
 		if (is_change_activating(lp->activate) && (lp->activate != CHANGE_AEY) &&
@@ -7229,7 +7229,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return_NULL;
 
 		/* The snapshot segment gets created later */
-		if (!(create_segtype = get_segtype_from_string(cmd, "striped")))
+		if (!(create_segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
 			return_NULL;
 
 		/* Must zero cow */
@@ -7626,7 +7626,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 	if (lp->create_pool && !seg_is_pool(lp)) {
 		segtype = lp->segtype;
 		if (seg_is_thin_volume(lp)) {
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool")))
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN_POOL)))
 				return_NULL;
 
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
@@ -7638,7 +7638,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 				return NULL;
 			}
 			/* origin_name is defined -> creates cache LV with new cache pool */
-			if (!(lp->segtype = get_segtype_from_string(vg->cmd, "cache-pool")))
+			if (!(lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_CACHE_POOL)))
 				return_NULL;
 
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))

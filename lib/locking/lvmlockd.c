@@ -337,7 +337,7 @@ static int _create_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 	dm_list_init(&lp.tags);
 
-	if (!(lp.segtype = get_segtype_from_string(vg->cmd, "striped")))
+	if (!(lp.segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	lv = lv_create_single(vg, &lp);

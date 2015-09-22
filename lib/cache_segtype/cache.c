@@ -420,7 +420,7 @@ int init_cache_segtypes(struct cmd_context *cmd,
 		return 0;
 	}
 
-	segtype->name = "cache-pool";
+	segtype->name = SEG_TYPE_NAME_CACHE_POOL;
 	segtype->flags = SEG_CACHE_POOL | SEG_CANNOT_BE_ZEROED | SEG_ONLY_EXCLUSIVE;
 	segtype->ops = &_cache_pool_ops;
 
@@ -434,7 +434,7 @@ int init_cache_segtypes(struct cmd_context *cmd,
 		return 0;
 	}
 
-	segtype->name = "cache";
+	segtype->name = SEG_TYPE_NAME_CACHE;
 	segtype->flags = SEG_CACHE | SEG_ONLY_EXCLUSIVE;
 	segtype->ops = &_cache_ops;
 

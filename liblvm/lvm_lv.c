@@ -205,7 +205,7 @@ static void _lv_set_default_params(struct lvcreate_params *lp,
 }
 
 static struct segment_type * _get_segtype(struct cmd_context *cmd) {
-	struct segment_type *rc = get_segtype_from_string(cmd, "striped");
+	struct segment_type *rc = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED);
 	if (!rc) {
 		log_error(INTERNAL_ERROR "Segtype striped not found.");
 	}
@@ -503,7 +503,7 @@ static int _lv_set_pool_params(struct lvcreate_params *lp,
 	_lv_set_default_params(lp, vg, pool_name, extents);
 
 	lp->create_pool = 1;
-	lp->segtype = get_segtype_from_string(vg->cmd, "thin-pool");
+	lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN_POOL);
 	lp->stripes = 1;
 
 	if (!meta_size) {
@@ -611,7 +611,7 @@ static int _lv_set_thin_params(struct lvcreate_params *lp,
 	_lv_set_default_params(lp, vg, lvname, 0);
 
 	lp->pool_name = pool_name;
-	lp->segtype = get_segtype_from_string(vg->cmd, "thin");
+	lp->segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_THIN);
 	lp->virtual_extents = extents;
 	lp->stripes = 1;
 
@@ -655,14 +655,14 @@ static lv_create_params_t _lvm_lv_params_create_snapshot(const lv_t lv,
 		_lv_set_default_params(&lvcp->lvp, lv->vg, snap_name, extents);
 
 		if (size) {
-			if (!(lvcp->lvp.segtype = get_segtype_from_string(lv->vg->cmd, "snapshot"))) {
+			if (!(lvcp->lvp.segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_SNAPSHOT))) {
 				log_error("Segtype snapshot not found.");
 				return NULL;
 			}
 			lvcp->lvp.chunk_size = 8;
 			lvcp->lvp.snapshot = 1;
 		} else {
-			if (!(lvcp->lvp.segtype = get_segtype_from_string(lv->vg->cmd, "thin"))) {
+			if (!(lvcp->lvp.segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_THIN))) {
 				log_error("Segtype thin not found.");
 				return NULL;
 			}

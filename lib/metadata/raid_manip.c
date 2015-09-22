@@ -408,7 +408,7 @@ static struct logical_volume *_alloc_image_component(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
 
 	if (!lv_add_segment(ah, first_area, 1, tmp_lv, segtype, 0, status, 0)) {
@@ -867,7 +867,7 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 					sizeof(*lvl_array) * extract * 2)))
 		return_0;
 
-	if (!(error_segtype = get_segtype_from_string(lv->vg->cmd, "error")))
+	if (!(error_segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR)))
 		return_0;
 
 	/*
@@ -1475,7 +1475,7 @@ int lv_raid_reshape(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!strcmp(seg->segtype->name, "mirror") &&
+	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_MIRROR) &&
 	    (!strcmp(new_segtype->name, SEG_TYPE_NAME_RAID1)))
 	    return _convert_mirror_to_raid1(lv, new_segtype);
 

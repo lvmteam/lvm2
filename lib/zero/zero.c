@@ -89,7 +89,7 @@ struct segment_type *init_zero_segtype(struct cmd_context *cmd)
 		return_NULL;
 
 	segtype->ops = &_zero_ops;
-	segtype->name = "zero";
+	segtype->name = SEG_TYPE_NAME_ZERO;
 	segtype->flags = SEG_CAN_SPLIT | SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);

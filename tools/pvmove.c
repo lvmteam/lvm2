@@ -32,7 +32,7 @@ static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
 	if (clustered && _clustered_found >= 0)
 		return _clustered_found;
 
-	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
 	if (activation() && segtype->ops->target_present &&
