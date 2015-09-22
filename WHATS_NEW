@@ -1,4 +1,4 @@
-Version 2.02.132 - 
+Version 2.02.132 - 22nd September 2015
 ======================================
   Fix lvmconf to set locking_type=2 if external locking library is requested.
   Remove verbose message when rescanning an unchanged device. (2.02.119)
