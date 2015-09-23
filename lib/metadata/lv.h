@@ -35,8 +35,8 @@ struct logical_volume {
 	int32_t major;
 	int32_t minor;
 
-	uint64_t size;		/* Sectors */
-	uint32_t le_count;
+	uint64_t size;		/* Sectors visible */
+	uint32_t le_count;	/* Logical extents visible */
 
 	uint32_t origin_count;
 	uint32_t external_count;

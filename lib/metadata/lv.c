@@ -648,6 +648,7 @@ int lv_raid_image_in_sync(const struct logical_volume *lv)
 
 	if ((seg = first_seg(lv)))
 		raid_seg = get_only_segment_using_this_lv(seg->lv);
+
 	if (!raid_seg) {
 		log_error("Failed to find RAID segment for %s", lv->name);
 		return 0;
