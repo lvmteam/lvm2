@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Fix dm-event systemd service to make sure it is executed before mounting.
 
 Version 1.02.109 - 22nd September 2016
 ======================================

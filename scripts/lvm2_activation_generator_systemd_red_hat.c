@@ -28,8 +28,8 @@
 #define LVM_CONF_USE_LVMETAD	"global/use_lvmetad"
 #define LVM_CONF_USE_LVMPOLLD	"global/use_lvmpolld"
 
-#define UNIT_TARGET_LOCAL_FS  "local-fs.target"
-#define UNIT_TARGET_REMOTE_FS "remote-fs.target"
+#define UNIT_TARGET_LOCAL_FS  "local-fs-pre.target"
+#define UNIT_TARGET_REMOTE_FS "remote-fs-pre.target"
 
 static char unit_path[PATH_MAX];
 static char target_path[PATH_MAX];
@@ -135,7 +135,7 @@ static int generate_unit(const char *dir, int unit, int sysinit_needed)
 
 	if (unit == UNIT_NET) {
 		fprintf(f, "After=%s iscsi.service fcoe.service\n"
-			"Before=remote-fs.target shutdown.target\n\n"
+			"Before=remote-fs-pre.target shutdown.target\n\n"
 			"[Service]\n"
 			"ExecStartPre=/usr/bin/udevadm settle\n", unit_names[UNIT_MAIN]);
 	} else {
@@ -145,7 +145,7 @@ static int generate_unit(const char *dir, int unit, int sysinit_needed)
 		} else
 			fprintf(f, "After= %s cryptsetup.target\n", unit_names[UNIT_EARLY]);
 
-		fputs("Before=local-fs.target shutdown.target\n"
+		fputs("Before=local-fs-pre.target shutdown.target\n"
 		      "Wants=systemd-udev-settle.service\n\n"
 		      "[Service]\n", f);
 	}

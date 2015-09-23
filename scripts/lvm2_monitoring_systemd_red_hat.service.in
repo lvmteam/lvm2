@@ -3,7 +3,7 @@ Description=Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progres
 Documentation=man:dmeventd(8) man:lvcreate(8) man:lvchange(8) man:vgchange(8)
 Requires=dm-event.socket lvm2-lvmetad.socket
 After=dm-event.socket dm-event.service lvm2-lvmetad.socket lvm2-activation.service lvm2-lvmetad.service
-Before=local-fs.target
+Before=local-fs-pre.target
 DefaultDependencies=no
 Conflicts=shutdown.target
 

@@ -3,7 +3,7 @@ Description=Device-mapper event daemon
 Documentation=man:dmeventd(8)
 Requires=dm-event.socket
 After=dm-event.socket
-Before=local-fs.target
+Before=local-fs-pre.target
 DefaultDependencies=no
 
 [Service]

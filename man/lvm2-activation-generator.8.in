@@ -28,8 +28,8 @@ layered on top of encrypted devices.
 
 \fIlvm2-activation-net.service\fP
 used for activation of LVM2 volumes that is ordered after systemd's
-special \fBremote-fs.target\fP to support LVM2 volumes which are layered
-on attached remote devices.
+special \fBremote-fs-pre.target\fP to support LVM2 volumes which are
+layered on attached remote devices.
 
 Note that all the underlying devices (Physical Volumes) need to be present
 when the service is run. If the there are any devices presented in the system
