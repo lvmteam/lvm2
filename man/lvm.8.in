@@ -1,29 +1,35 @@
 .TH LVM 8 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
+.
 .SH NAME
+.
 lvm \(em LVM2 tools
+.
 .SH SYNOPSIS
+.
 .B lvm
-[command | file]
+.RI [ command | file ]
+.
 .SH DESCRIPTION
+.
 lvm provides the command-line tools for LVM2.  A separate
 manual page describes each command in detail.
-.LP
+.P
 If \fBlvm\fP is invoked with no arguments it presents a readline prompt
 (assuming it was compiled with readline support).
 LVM commands may be entered interactively at this prompt with
 readline facilities including history and command name and option
 completion.  Refer to \fBreadline\fP(3) for details.
-.LP
+.P
 If \fBlvm\fP is invoked with argv[0] set to the name of a specific
 LVM command (for example by using a hard or soft link) it acts as
 that command.
-.LP
+.P
 On invocation, \fBlvm\fP requires that only the standard file descriptors
 stdin, stdout and stderr are available.  If others are found, they
 get closed and messages are issued warning about the leak.
 This warning can be suppressed by setting the environment variable
 .B LVM_SUPPRESS_FD_WARNINGS\fP.
-.LP
+.P
 Where commands take VG or LV names as arguments, the full path name is
 optional.  An LV called "lvol0" in a VG called "vg0" can be specified
 as "vg0/lvol0".  Where a list of VGs is required but is left empty,
@@ -31,223 +37,319 @@ a list of all VGs will be substituted.  Where a list of LVs is required
 but a VG is given, a list of all the LVs in that VG will be substituted.
 So \fBlvdisplay vg0\fP will display all the LVs in "vg0".
 Tags can also be used - see \fB\-\-addtag\fP below.
-.LP
+.P
 One advantage of using the built-in shell is that configuration
 information gets cached internally between commands.
-.LP
+.P
 A file containing a simple script with one command per line
 can also be given on the command line.  The script can also be
 executed directly if the first line is #! followed by the absolute
 path of \fBlvm\fP.
+.
 .SH BUILT-IN COMMANDS
-The following commands are built into lvm without links normally
-being created in the filesystem for them.
+.
+The following commands are built into lvm without links
+normally being created in the filesystem for them.
+.sp
 .PD 0
-.HP
-\fBconfig\fP \(em The same as \fBlvmconfig\fP(8) below.
-.HP
-\fBdevtypes\fP \(em Display the recognised built-in block device types.
-.HP
-\fBdumpconfig\fP \(em The same as \fBlvmconfig\fP(8) below.
-.HP
-\fBformats\fP \(em Display recognised metadata formats.
-.HP
-\fBhelp\fP \(em Display the help text.
-.HP
-\fBlvpoll\fP \(em Internal command used by lvmpolld to complete some Logical Volume operations.
-.HP
-\fBpvdata\fP \(em Not implemented in LVM2.
-.HP
-\fBsegtypes\fP \(em Display recognised Logical Volume segment types.
-.HP
-\fBsystemid\fP \(em Display the system ID, if any, currently set on this host.
-.HP
-\fBtags\fP \(em Display any tags defined on this host.
-.HP
-\fBversion\fP \(em Display version information.
+.TP 14
+.B config
+The same as \fBlvmconfig\fP(8) below.
+.TP
+.B devtypes
+Display the recognised built-in block device types.
+.TP
+.B dumpconfig
+The same as \fBlvmconfig\fP(8) below.
+.TP
+.B formats
+Display recognised metadata formats.
+.TP
+.B help
+Display the help text.
+.TP
+.B lvpoll
+Complete lvmpolld operations (Internal command).
+.TP
+.B pvdata
+Not implemented in LVM2.
+.TP
+.B segtypes
+Display recognised Logical Volume segment types.
+.TP
+.B systemid
+Display any system ID currently set on this host.
+.TP
+.B tags
+Display any tags defined on this host.
+.TP
+.B version
+Display version information.
 .PD
+.
 .SH COMMANDS
+.
 The following commands implement the core LVM functionality.
+.sp
 .PD 0
-.HP
-\fBpvchange\fP \(em Change attributes of a Physical Volume.
-.HP
-\fBpvck\fP \(em Check Physical Volume metadata.
-.HP
-\fBpvcreate\fP \(em Initialize a disk or partition for use by LVM.
-.HP
-\fBpvdisplay\fP \(em Display attributes of a Physical Volume.
-.HP
-\fBpvmove\fP \(em Move Physical Extents.
-.HP
-\fBpvremove\fP \(em Remove a Physical Volume.
-.HP
-\fBpvresize\fP \(em Resize a disk or partition in use by LVM2.
-.HP
-\fBpvs\fP \(em Report information about Physical Volumes.
-.HP
-\fBpvscan\fP \(em Scan all disks for Physical Volumes.
-.HP
-\fBvgcfgbackup\fP \(em Backup Volume Group descriptor area.
-.HP
-\fBvgcfgrestore\fP \(em Restore Volume Group descriptor area.
-.HP
-\fBvgchange\fP \(em Change attributes of a Volume Group.
-.HP
-\fBvgck\fP \(em Check Volume Group metadata.
-.HP
-\fBvgconvert\fP \(em Convert Volume Group metadata format.
-.HP
-\fBvgcreate\fP \(em Create a Volume Group.
-.HP
-\fBvgdisplay\fP \(em Display attributes of Volume Groups.
-.HP
-\fBvgexport\fP \(em Make volume Groups unknown to the system.
-.HP
-\fBvgextend\fP \(em Add Physical Volumes to a Volume Group.
-.HP
-\fBvgimport\fP \(em Make exported Volume Groups known to the system.
-.HP
-\fBvgimportclone\fP \(em Import and rename duplicated Volume Group (e.g. a hardware snapshot).
-.HP
-\fBvgmerge\fP \(em Merge two Volume Groups.
-.HP
-\fBvgmknodes\fP \(em Recreate Volume Group directory and Logical Volume special files
-.HP
-\fBvgreduce\fP \(em Reduce a Volume Group by removing one or more
-Physical Volumes.
-.HP
-\fBvgremove\fP \(em Remove a Volume Group.
-.HP
-\fBvgrename\fP \(em Rename a Volume Group.
-.HP
-\fBvgs\fP \(em Report information about Volume Groups.
-.HP
-\fBvgscan\fP \(em Scan all disks for Volume Groups and rebuild caches.
-.HP
-\fBvgsplit\fP \(em Split a Volume Group into two, moving any logical
+.TP 14
+.B pvchange
+Change attributes of a Physical Volume.
+.TP
+.B pvck
+Check Physical Volume metadata.
+.TP
+.B pvcreate
+Initialize a disk or partition for use by LVM.
+.TP
+.B pvdisplay
+Display attributes of a Physical Volume.
+.TP
+.B pvmove
+Move Physical Extents.
+.TP
+.B pvremove
+Remove a Physical Volume.
+.TP
+.B pvresize
+Resize a disk or partition in use by LVM2.
+.TP
+.B pvs
+Report information about Physical Volumes.
+.TP
+.B pvscan
+Scan all disks for Physical Volumes.
+.TP
+.B vgcfgbackup
+Backup Volume Group descriptor area.
+.TP
+.B vgcfgrestore
+Restore Volume Group descriptor area.
+.TP
+.B vgchange
+Change attributes of a Volume Group.
+.TP
+.B vgck
+Check Volume Group metadata.
+.TP
+.B vgconvert
+Convert Volume Group metadata format.
+.TP
+.B vgcreate
+Create a Volume Group.
+.TP
+.B vgdisplay
+Display attributes of Volume Groups.
+.TP
+.B vgexport
+Make volume Groups unknown to the system.
+.TP
+.B vgextend
+Add Physical Volumes to a Volume Group.
+.TP
+.B vgimport
+Make exported Volume Groups known to the system.
+.TP
+.B vgimportclone
+Import and rename duplicated Volume Group (e.g. a hardware snapshot).
+.TP
+.B vgmerge
+Merge two Volume Groups.
+.TP
+.B vgmknodes
+Recreate Volume Group directory and Logical Volume special files
+.TP
+.B vgreduce
+Reduce a Volume Group by removing one or more Physical Volumes.
+.TP
+.B vgremove
+Remove a Volume Group.
+.TP
+.B vgrename
+Rename a Volume Group.
+.TP
+.B vgs
+Report information about Volume Groups.
+.TP
+.B vgscan
+Scan all disks for Volume Groups and rebuild caches.
+.TP
+.B vgsplit
+Split a Volume Group into two, moving any logical
 volumes from one Volume Group to another by moving entire Physical
 Volumes.
-.HP
-\fBlvchange\fP \(em Change attributes of a Logical Volume.
-.HP
-\fBlvconvert\fP \(em Convert a Logical Volume from linear to mirror or snapshot.
-.HP
-\fBlvcreate\fP \(em Create a Logical Volume in an existing Volume Group.
-.HP
-\fBlvdisplay\fP \(em Display attributes of a Logical Volume.
-.HP
-\fBlvextend\fP \(em Extend the size of a Logical Volume.
-.HP
-\fBlvmchange\fP \(em Change attributes of the Logical Volume Manager.
-.HP
-\fBlvmconfig\fP \(em Display the configuration information after
+.TP
+.B lvchange
+Change attributes of a Logical Volume.
+.TP
+.B lvconvert
+Convert a Logical Volume from linear to mirror or snapshot.
+.TP
+.B lvcreate
+Create a Logical Volume in an existing Volume Group.
+.TP
+.B lvdisplay
+Display attributes of a Logical Volume.
+.TP
+.B lvextend
+Extend the size of a Logical Volume.
+.TP
+.B lvmchange
+Change attributes of the Logical Volume Manager.
+.TP
+.B lvmconfig
+Display the configuration information after
 loading \fBlvm.conf\fP(5) and any other configuration files.
-.HP
-\fBlvmdiskscan\fP \(em Scan for all devices visible to LVM2.
-.HP
-\fBlvmdump\fP \(em Create lvm2 information dumps for diagnostic purposes.
-.HP
-\fBlvreduce\fP \(em Reduce the size of a Logical Volume.
-.HP
-\fBlvremove\fP \(em Remove a Logical Volume.
-.HP
-\fBlvrename\fP \(em Rename a Logical Volume.
-.HP
-\fBlvresize\fP \(em Resize a Logical Volume.
-.HP
-\fBlvs\fP \(em Report information about Logical Volumes.
-.HP
-\fBlvscan\fP \(em Scan (all disks) for Logical Volumes.
+.TP
+.B lvmdiskscan
+Scan for all devices visible to LVM2.
+.TP
+.B lvmdump
+Create lvm2 information dumps for diagnostic purposes.
+.TP
+.B lvreduce
+Reduce the size of a Logical Volume.
+.TP
+.B lvremove
+Remove a Logical Volume.
+.TP
+.B lvrename
+Rename a Logical Volume.
+.TP
+.B lvresize
+Resize a Logical Volume.
+.TP
+.B lvs
+Report information about Logical Volumes.
+.TP
+.B lvscan
+Scan (all disks) for Logical Volumes.
 .PD
-.HP
-The following commands are not implemented in LVM2 but might be in the future: lvmsadc, lvmsar, pvdata.
+.P
+The following commands are not implemented in LVM2 but might be
+in the future:
+.BR lvmsadc ", " lvmsar ", " pvdata .
+.
 .SH OPTIONS
+.
 The following options are available for many of the commands.
 They are implemented generically and documented here rather
 than repeated on individual manual pages.
-
+.P
 Additional hyphens within option names are ignored.  For example,
-\-\-readonly and \-\-read\-only are both accepted.
-
-.TP
-.BR \-h ", " \-? ", " \-\-help
+\fB\-\-readonly\fP and \fB\-\-read\-only\fP are both accepted.
+.
+.HP
+.BR \-h | \-? | \-\-help
+.br
 Display the help text.
-.TP
-.B \-\-version
+.
+.HP
+.BR \-\-version
+.br
 Display version information.
-.TP
-.BR \-v ", " \-\-verbose
+.
+.HP
+.BR \-v | \-\-verbose
+.br
 Set verbose level. Repeat from 1 to 3 times to increase the detail
 of messages sent to stdout and stderr.  Overrides config file setting.
-.TP
-.BR \-d ", " \-\-debug
+.
+.HP
+.BR \-d | \-\-debug
+.br
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 Overrides config file setting.
-.TP
-.BR \-q ", "  \-\-quiet
+.
+.HP
+.BR \-q | \-\-quiet
+.br
 Suppress output and log messages.
 Overrides \fB\-d\fP and \fB\-v\fP.
 Repeat once to also suppress any prompts with answer 'no'.
-.TP
+.
+.HP
 .BR \-\-yes
+.br
 Don't prompt for confirmation interactively but instead always assume the
 answer is 'yes'.  Take great care if you use this!
-.TP
-.BR \-t ", " \-\-test
+.
+.HP
+.BR \-t | \-\-test
+.br
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function.  This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
-.TP
-.BR \-\-driverloaded " {" \fIy | \fIn }
+.
+.HP
+.BR \-\-driverloaded
+.RB { y | n }
+.br
 Whether or not the device-mapper kernel driver is loaded.
-If you set this to \fIn\fP, no attempt will be made to contact the driver.
-.TP
-.BR \-A ", " \-\-autobackup " {" \fIy | \fIn }
+If you set this to \fBn\fP, no attempt will be made to contact the driver.
+.
+.HP
+.BR \-A | \-\-autobackup
+.RB { y | n }
+.br
 Whether or not to metadata should be backed up automatically after a change.
 You are strongly advised not to disable this!
 See \fBvgcfgbackup\fP(8).
-.TP
-.BR \-P ", " \-\-partial
+.
+.HP
+.BR \-P | \-\-partial
+.br
 When set, the tools will do their best to provide access to Volume Groups
 that are only partially available (one or more Physical Volumes belonging
 to the Volume Group are missing from the system).  Where part of a logical
-volume is missing, \fB/dev/ioerror\fP will be substituted, and you could use
+volume is missing, \fI\%/dev/ioerror\fP will be substituted, and you could use
 \fBdmsetup\fP(8) to set this up to return I/O errors when accessed,
 or create it as a large block device of nulls.  Metadata may not be
 changed with this option. To insert a replacement Physical Volume
 of the same or large size use \fBpvcreate \-u\fP to set the uuid to
 match the original followed by \fBvgcfgrestore\fP(8).
-.TP
-.BR \-S ", " \-\-select " " \fISelection
-For reporting commands, display only rows that match selection criteria.
+.
+.HP
+.BR \-S | \-\-select
+.IR Selection
+.br
+For reporting commands, display only rows that match \fISelection\fP criteria.
 All rows are displayed with the additional "selected" column (\fB-o selected\fP)
-showing 1 if the row matches the Selection and 0 otherwise. For non-reporting
+showing 1 if the row matches the \fISelection\fP and 0 otherwise. For non-reporting
 commands which process LVM entities, the selection can be used to match items
 to process. See \fBSELECTION CRITERIA\fP section of this man page for more
 information about the way the selection criteria are constructed.
-.TP
-.BR \-M ", " \-\-metadatatype " " \fIType
-Specifies which type of on-disk metadata to use, such as \fIlvm1\fP
-or \fIlvm2\fP, which can be abbreviated to \fI1\fP or \fI2\fP respectively.
-The default (\fIlvm2\fP) can be changed by setting \fBformat\fP
-in the \fBglobal\fP section of the config file.
-.TP
-.B \-\-ignorelockingfailure
+.
+.HP
+.BR \-M | \-\-metadatatype
+.IR Type
+.br
+Specifies which \fItype\fP of on-disk metadata to use, such as \fBlvm1\fP
+or \fBlvm2\fP, which can be abbreviated to \fB1\fP or \fB2\fP respectively.
+The default (\fBlvm2\fP) can be changed by setting \fBformat\fP
+in the \fBglobal\fP section of the config file \fBlvm.conf\fP(5).
+.
+.HP
+.BR \-\-ignorelockingfailure
+.br
 This lets you proceed with read-only metadata operations such as
 \fBlvchange \-ay\fP and \fBvgchange \-ay\fP even if the locking module fails.
 One use for this is in a system init script if the lock directory
 is mounted read-only when the script runs.
-.TP
-.B \-\-ignoreskippedcluster
+.
+.HP
+.BR \-\-ignoreskippedcluster
+.br
 Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and some clustered Volume Groups have to be
 skipped over.
-.TP
-.B \-\-readonly
+.
+.HP
+.BR \-\-readonly
+.br
 Run the command in a special read-only mode which will read on-disk
 metadata without needing to take any locks.  This can be used to peek
 inside metadata used by a virtual machine image while the virtual
@@ -255,21 +357,28 @@ machine is running.
 It can also be used to peek inside the metadata of clustered Volume
 Groups when clustered locking is not configured or running.  No attempt
 will be made to communicate with the device-mapper kernel driver, so
-this option is unable to report whether or not Logical Volumes are 
+this option is unable to report whether or not Logical Volumes are
 actually in use.
-.TP
-.B \-\-foreign
+.
+.HP
+.BR \-\-foreign
+.br
 Cause the command to access foreign VGs, that would otherwise be skipped.
 It can be used to report or display a VG that is owned by another host.
 This option can cause a command to perform poorly because lvmetad caching
 is not used and metadata is read from disks.
-.TP
-.B \-\-shared
+.
+.HP
+.BR \-\-shared
+.br
 Cause the command to access shared VGs, that would otherwise be skipped
 when lvmlockd is not being used.  It can be used to report or display a
 lockd VG without locking.
-.TP
-.B \-\-addtag \fITag
+.
+.HP
+.BR \-\-addtag
+.IR Tag
+.br
 Add the tag \fITag\fP to a PV, VG or LV.
 Supply this argument multiple times to add more than one tag at once.
 A tag is a word that can be used to group LVM2 objects of the same type
@@ -288,79 +397,113 @@ Only the new LVM2 metadata format supports tagging: objects using the
 LVM1 metadata format cannot be tagged because the on-disk format does not
 support it.
 Characters allowed in tags are:
-.B A-Z a-z 0-9 _ + . -
+.BR A - Z
+.BR a - z
+.BR 0 - 9
+.BR "_ + . -"
 and as of version 2.02.78 the following characters are also accepted:
-.B / = ! : # &
-.TP
-.B \-\-deltag \fITag
+.BR "/ = ! : # &"
+..
+.HP
+.BR \-\-deltag
+.IR Tag
+.br
 Delete the tag \fITag\fP from a PV, VG or LV, if it's present.
 Supply this argument multiple times to remove more than one tag at once.
-.TP
-.IR \fB\-\-alloc \ { anywhere | contiguous | cling | inherit | normal }
+.
+.HP
+.BR \-\-alloc
+.RB { anywhere | contiguous | cling | inherit | normal }
+.br
 Selects the allocation policy when a command needs to allocate
 Physical Extents from the Volume Group.
 Each Volume Group and Logical Volume has an allocation policy defined.
-The default for a Volume Group is \fInormal\fP which applies
+The default for a Volume Group is \fBnormal\fP which applies
 common-sense rules such as not placing parallel stripes on the same
-Physical Volume.  The default for a Logical Volume is \fIinherit\fP
+Physical Volume.  The default for a Logical Volume is \fBinherit\fP
 which applies the same policy as for the Volume Group.  These policies can
 be changed using \fBlvchange\fP(8) and \fBvgchange\fP(8) or overridden
 on the command line of any command that performs allocation.
-The \fIcontiguous\fP policy requires that new Physical Extents be placed adjacent
+The \fBcontiguous\fP policy requires that new Physical Extents be placed adjacent
 to existing Physical Extents.
-The \fIcling\fP policy places new Physical Extents on the same Physical
+The \fBcling\fP policy places new Physical Extents on the same Physical
 Volume as existing Physical Extents in the same stripe of the Logical Volume.
 If there are sufficient free Physical Extents to satisfy
-an allocation request but \fInormal\fP doesn't use them,
-\fIanywhere\fP will - even if that reduces performance by
+an allocation request but \fBnormal\fP doesn't use them,
+\fBanywhere\fP will - even if that reduces performance by
 placing two stripes on the same Physical Volume.
-.TP
-.IR \fB\-\-commandprofile " " \fIProfileName
+.
+.HP
+.BR \-\-commandprofile
+.IR ProfileName
+.br
 Selects the command configuration profile to use when processing an LVM command.
 See also \fBlvm.conf\fP(5) for more information about \fBcommand profile config\fP and
 the way it fits with other LVM configuration methods. Using \fB\-\-commandprofile\fP
 option overrides any command profile specified via \fBLVM_COMMAND_PROFILE\fP
 environment variable.
-.TP
-.IR \fB\-\-metadataprofile " " \fIProfileName
+.
+.HP
+.BR \-\-metadataprofile
+.IR ProfileName
+.br
 Selects the metadata configuration profile to use when processing an LVM command.
 When using metadata profile during Volume Group or Logical Volume creation,
 the metadata profile name is saved in metadata. When such Volume Group or Logical
 Volume is processed next time, the metadata profile is automatically applied
-and the use of \-\-metadataprofile option is not necessary. See also
+and the use of \fB\-\-metadataprofile\fP option is not necessary. See also
 \fBlvm.conf\fP(5) for more information about \fBmetadata profile config\fP and the
 way it fits with other LVM configuration methods.
-.TP
-.IR \fB\-\-profile " " \fIProfileName
+.
+.HP
+.BR \-\-profile
+.IR ProfileName
+.br
 A short form of \fB\-\-metadataprofile\fP for \fBvgcreate\fP, \fBlvcreate\fP,
 \fBvgchange\fP and \fBlvchange\fP command and a short form of \fB\-\-commandprofile\fP
 for any other command (with the exception of \fBlvmconfig\fP command where the
-\-\-profile has special meaning, see \fBlvmconfig\fP(8) for more information).
-.TP
-.IR \fB\-\-config " " \fIConfigurationString
+\fB\-\-profile\fP has special meaning, see \fBlvmconfig\fP(8) for more information).
+.
+.HP
+.BR \-\-config
+.IR ConfigurationString
+.br
 Uses the ConfigurationString as direct string representation of the configuration
 to override the existing configuration. The ConfigurationString is of exactly
 the same format as used in any LVM configuration file. See \fBlvm.conf\fP(5)
 for more information about \fBdirect config override on command line\fP and the
 way it fits with other LVM configuration methods.
+.
 .SH VALID NAMES
+.
 The valid characters for VG and LV names are:
-.B a-z A-Z 0-9 + _ . -
-.LP
+.BR a - z
+.BR A - Z
+.BR 0 - 9
+.BR "+ _ . -"
+.P
 VG and LV names cannot begin with a hyphen.
-There are also various reserved names that are used internally by lvm that can not be used as LV or VG names.
-A VG cannot be called anything that exists in /dev/ at the time of creation, nor can it be called '.' or '..'.
-An LV cannot be called '.', '..', 'snapshot' or 'pvmove'. The LV name may also not contain any of the following 
-strings: '_cdata', '_cmeta', '_corig', '_mlog', '_mimage', '_pmspare', '_rimage', '_rlog', '_tdata' or '_tmeta'.
-A directory bearing the name of each Volume Group is created under /dev when any of its Logical Volumes are activated.
-Each active Logical Volume is accessible from this directory as a symbolic link leading to a device node.
-Links or nodes in /dev/mapper are intended only for internal use and the precise format and escaping might change between releases and distributions.
+There are also various reserved names that are used internally by lvm that can
+not be used as LV or VG names. A VG cannot be called anything that exists in
+\fI/dev/\fP at the time of creation, nor can it be called '.' or '..'.
+An LV cannot be called '.', '..', 'snapshot' or 'pvmove'.
+The LV name may also not contain any of the following strings:
+'_cdata', '_cmeta', '_corig', '_mlog', '_mimage', '_pmspare', '_rimage',
+'_rlog', '_tdata' or '_tmeta'.
+A directory bearing the name of each Volume Group is created under
+\fI/dev\fP when any of its Logical Volumes are activated.
+Each active Logical Volume is accessible from this directory as a symbolic
+link leading to a device node.
+Links or nodes in \fI/dev/mapper\fP are intended only for internal use and
+the precise format and escaping might change between releases and distributions.
 Other software and scripts should use the
-/dev/VolumeGroupName/LogicalVolumeName format to reduce the chance of needing
+\fI/dev/VolumeGroupName/LogicalVolumeName\fP format to reduce the chance of needing
 amendment when the software is updated.  Should you need to process the node
 names in /dev/mapper, you may use \fBdmsetup splitname\fP to separate out the
 original VG, LV and internal layer names.
+.
 .SH ALLOCATION
+.
 When an operation needs to allocate Physical Extents for one or more
 Logical Volumes, the tools proceed as follows:
 
@@ -370,7 +513,7 @@ the end of the command line, only unallocated Physical Extents within
 those ranges on the specified Physical Volumes are considered.
 
 Then they try each allocation policy in turn, starting with the strictest
-policy (\fIcontiguous\fP) and ending with the allocation policy specified
+policy (\fBcontiguous\fP) and ending with the allocation policy specified
 using \fB\-\-alloc\fP or set as the default for the particular Logical
 Volume or Volume Group concerned.  For each policy, working from the
 lowest-numbered Logical Extent of the empty Logical Volume space that
@@ -380,15 +523,15 @@ they move on to the next policy.
 
 The restrictions are as follows:
 
-\fIContiguous\fP requires that the physical location of any Logical
+\fBContiguous\fP requires that the physical location of any Logical
 Extent that is not the first Logical Extent of a Logical Volume is
 adjacent to the physical location of the Logical Extent immediately
 preceding it.
 
-\fICling\fP requires that the Physical Volume used for any Logical
+\fBCling\fP requires that the Physical Volume used for any Logical
 Extent to be added to an existing Logical Volume is already in use by at
 least one Logical Extent earlier in that Logical Volume.  If the
-configuration parameter allocation/cling_tag_list is defined, then two
+configuration parameter \fBallocation/cling_tag_list\fP is defined, then two
 Physical Volumes are considered to match if any of the listed tags is
 present on both Physical Volumes.  This allows groups of Physical
 Volumes with similar properties (such as their physical location) to be
@@ -398,25 +541,25 @@ When a Logical Volume is striped or mirrored, the above restrictions are
 applied independently to each stripe or mirror image (leg) that needs
 space.
 
-\fINormal\fP will not choose a Physical Extent that shares the same Physical
+\fBNormal\fP will not choose a Physical Extent that shares the same Physical
 Volume as a Logical Extent already allocated to a parallel Logical
-Volume (i.e. a different stripe or mirror image/leg) at the same offset 
+Volume (i.e. a different stripe or mirror image/leg) at the same offset
 within that parallel Logical Volume.
 
 When allocating a mirror log at the same time as Logical Volumes to hold
 the mirror data, Normal will first try to select different Physical
 Volumes for the log and the data.  If that's not possible and the
-allocation/mirror_logs_require_separate_pvs configuration parameter is
-set to 0, it will then allow the log to share Physical Volume(s) with
-part of the data.  
+.B allocation/mirror_logs_require_separate_pvs
+configuration parameter is set to 0, it will then allow the log
+to share Physical Volume(s) with part of the data.
 
 When allocating thin pool metadata, similar considerations to those of a
 mirror log in the last paragraph apply based on the value of the
-allocation/thin_pool_metadata_require_separate_pvs configuration
-parameter.
+.B allocation/thin_pool_metadata_require_separate_pvs
+configuration parameter.
 
 If you rely upon any layout behaviour beyond that documented here, be
-aware that it might change in future versions of the code.  
+aware that it might change in future versions of the code.
 
 For example, if you supply on the command line two empty Physical
 Volumes that have an identical number of free Physical Extents available for
@@ -431,87 +574,123 @@ discretion over the layout.
 To view the way the allocation process currently works in any specific
 case, read the debug logging output, for example by adding \fB\-vvvv\fP to
 a command.
-
+.
 .SH LOGICAL VOLUME TYPES
+.
 Some logical volume types are simple to create and can be done with a
 single \fBlvcreate\fP(8) command.  The linear and striped logical
 volume types are an example of this.  Other logical volume types may
 require more than one command to create.  The cache (\fBlvmcache\fP(7))
 and thin provisioning (\fBlvmthin\fP(7)) types are examples of this.
-
+.
 .SH SELECTION CRITERIA
-.LP
+.
 The selection criteria are a set of \fBstatements\fP combined by \fBlogical
 and grouping operators\fP. The \fBstatement\fP consists of \fBcolumn\fP
 name for which a set of valid \fBvalues\fP is defined using
 \fBcomparison operators\fP. For complete list of column names (fields)
 that can be used in selection, see the output of \fB<lvm reporting command> -S help\fP.
-.LP
-\fBComparison operators\fP (cmp_op):
-.IP
-\fB=~\fP \(em Matching regular expression.
-.IP
-\fB!~\fP \(em Not matching regular expression.
-.IP
-\fB=\fP  \(em Equal to.
-.IP
-\fB!=\fP \(em Not equal to.
-.IP
-\fB>=\fP \(em Greater than or equal to.
-.IP
-\fB>\fP  \(em Greater than
-.IP
-\fB<=\fP \(em Less than or equal to.
-.IP
-\fB<\fP  \(em Less than.
-.LP
-\fBBinary logical operators\fP (cmp_log):
-.IP
-\fB&&\fP \(em All fields must match
-.IP
-\fB,\fP  \(em All fields must match
-.IP
-\fB||\fP \(em At least one field must match
-.IP
-\fB#\fP  \(em At least one field must match
-.LP
-\fBUnary logical operators\fP:
-.IP
-\fB!\fP  \(em Logical negation
-.LP
-\fBGrouping operators\fP:
-.IP
-\fB(\fP  \(em Left parenthesis
-.IP
-\fB)\fP  \(em Right parenthesis
-.IP
-\fB[\fP  \(em List start
-.IP
-\fB]\fP  \(em List end
-.IP
-\fB{\fP  \(em List subset start
-.IP
-\fB}\fP  \(em List subset end
-.LP
-\fBInformal grammar specification\fP:
-.IP
-.BR STATEMENT " = " column " cmp_op " VALUE " | " STATEMENT " log_op " STATEMENT " | " (STATEMENT) " | " !(STATEMENT)
-.IP
+.P
+.SS Comparison operators \fR(cmp_op)
+.sp
+.PD 0
+.TP
+.B =~
+Matching regular expression.
+.TP
+.B !~
+Not matching regular expression.
+.TP
+.B =
+Equal to.
+.TP
+.B !=
+Not equal to.
+.TP
+.B >=
+Greater than or equal to.
+.TP
+.B >
+Greater than
+.TP
+.B <=
+Less than or equal to.
+.TP
+.B <
+Less than.
+.PD
+.P
+.SS Binary logical operators \fR(cmp_log)
+.sp
+.PD 0
+.TP
+.B &&
+All fields must match
+.TP
+.B ,
+All fields must match
+.TP
+.B ||
+At least one field must match
+.TP
+.B #
+At least one field must match
+.PD
+.P
+.SS Unary logical operators
+.TP
+.B !
+Logical negation
+.P
+.SS Grouping operators
+.sp
+.PD 0
+.TP
+.B (
+Left parenthesis
+.TP
+.B )
+Right parenthesis
+.TP
+.B [
+List start
+.TP
+.B ]
+List end
+.TP
+.B {
+List subset start
+.TP
+.B }
+List subset end
+.PD
+.SS Informal grammar specification
+.HP
+.BR STATEMENT " = " column " cmp_op " VALUE " | " \%STATEMENT " log_op " STATEMENT " | " \%(STATEMENT) " | " \%!(STATEMENT)
+.br
+.HP
 .BR VALUE " = " [VALUE " log_op " VALUE]
 .br
-For list-based types: string list. Matches strictly. The log_op must always be of one type within the whole list value.
-.IP
+For list-based types: string list. Matches strictly.
+The log_op must always be of one type within the whole list value.
+.HP
 .BR VALUE " = " {VALUE " log_op " VALUE}
 .br
-For list-based types: string list. Matches a subset. The log_op must always be of one type within the whole list value.
-.IP
+For list-based types: string list. Matches a subset.
+The log_op must always be of one type within the whole list value.
+.HP
 .BR VALUE " = " value
 .br
-For scalar types: number (integer), size (floating point number with size unit suffix), percent (floating point number with or without % suffix), string.
-
+For scalar types: number (integer), size (floating point number
+with size unit suffix), percent (floating point number with or
+without % suffix), string.
+.
 .SH DIAGNOSTICS
+.
 All tools return a status code of zero on success or non-zero on failure.
+.
 .SH ENVIRONMENT VARIABLES
+.
 .TP
 .B HOME
 Directory containing \fI.lvm_history\fP if the internal readline
@@ -523,7 +702,7 @@ is overriden by direct use of \fB\-\-commandprofile\fP command line option.
 .TP
 .B LVM_SYSTEM_DIR
 Directory containing \fBlvm.conf\fP(5) and other LVM system files.
-Defaults to "#DEFAULT_SYS_DIR#".
+Defaults to "\fI#DEFAULT_SYS_DIR#\fP".
 .TP
 .B LVM_SUPPRESS_FD_WARNINGS
 Suppress warnings about unexpected file descriptors passed into LVM.
@@ -554,9 +733,10 @@ separate file.
 The status anticipated when the process exits.  Use ">N" to match any
 status greater than N.  If the actual exit status matches and a log
 file got produced, it is deleted.
-
-LVM_LOG_FILE_EPOCH and LVM_EXPECTED_EXIT_STATUS together allow
-automated test scripts to discard uninteresting log data.
+.B LVM_LOG_FILE_EPOCH
+and
+.B LVM_EXPECTED_EXIT_STATUS
+together allow automated test scripts to discard uninteresting log data.
 .TP
 .B LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES
 Used to suppress warning messages when the configured locking is known
@@ -568,11 +748,15 @@ Abort processing if the code detects a non-fatal internal error.
 .B DM_DISABLE_UDEV
 Avoid interaction with udev.  LVM will manage the relevant nodes in /dev
 directly.
+.
 .SH FILES
+.
 .I #DEFAULT_SYS_DIR#/lvm.conf
 .br
 .I $HOME/.lvm_history
+.
 .SH SEE ALSO
+.
 .BR lvm.conf (5),
 .BR lvmcache (7),
 .BR lvmthin (7),

@@ -1,125 +1,159 @@
 .TH CLVMD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.
 .SH NAME
+.
 clvmd \(em cluster LVM daemon
+.
 .SH SYNOPSIS
+.
+.ad l
 .B clvmd
 .RB [ \-C ]
 .RB [ \-d
 .RI [ value ]]
 .RB [ \-E
-.IR "lock uuid" ]
+.IR lock_uuid ]
 .RB [ \-f ]
 .RB [ \-h ]
 .RB [ \-I
-.IR "cluster manager" ]
+.IR cluster_manager ]
 .RB [ \-R ]
 .RB [ \-S ]
 .RB [ \-t
 .IR timeout ]
 .RB [ \-T
-.IR "start timeout" ]
+.IR start_timeout ]
 .RB [ \-V ]
+.ad b
+.
 .SH DESCRIPTION
+.
 clvmd is the daemon that distributes LVM metadata updates around a cluster.
 It must be running on all nodes in the cluster and will give an error
 if a node in the cluster does not have this daemon running.
+.
 .SH OPTIONS
-.TP
-.BR \-d \ [ \fIvalue ]
+.
+.HP
+.BR \-C
+.br
+Only valid if \fB\-d\fP is also specified.
+Tells all clvmds in a cluster to enable/disable debug logging.
+Without this switch, only the local clvmd will change its debug level to that
+given with \fB\-d\fP.
+.br
+This does not work correctly if specified on the command-line that starts clvmd.
+If you want to start clvmd \fBand\fP
+enable cluster-wide logging then the command needs to be issued twice, eg:
+.br
+.BR clvmd
+.br
+.BR clvmd\ \-d2
+.
+.HP
+.BR \-d
+.RI [ value ]
+.br
 Set debug logging level.
 If \fB\-d\fP is specified without a \fIvalue\fP
 then 1 is assumed. \fIValue\fP can be:
 .PD 0
 .IP
-.B 0
+.BR 0
 \(em Disabled
 .IP
-.B 1
+.BR 1
 \(em Sends debug logs to stderr (implies \fB\-f\fP)
 .IP
-.B 2
+.BR 2
 \(em Sends debug logs to \fBsyslog\fP(3)
 .PD
-.TP
-.B \-C
-Only valid if
-.B \-d
-is also specified. Tells all clvmds in a cluster to enable/disable debug logging.
-Without this switch, only the local clvmd will change its debug level to that
-given with
-.B \-d
 .
+.HP
+.BR \-E
+.IR lock_uuid
 .br
-This does not work correctly if specified on the command-line that starts clvmd.
-If you want to start clvmd
-.B and
-enable cluster-wide logging then the command needs to be issued twice, eg:
+Pass lock uuid to be reacquired exclusively when clvmd is restarted.
+.
+.HP
+.BR \-f
 .br
-.B clvmd
-.br
-.B clvmd \-d2
-.br
-.TP
-.BR \-E "\fI lock uuid"
-Pass \fIlock uuid\fP to be reacquired exclusively when clvmd is restarted.
-.TP
-.B \-f
 Don't fork, run in the foreground.
-.TP
-.B \-h
+.
+.HP
+.BR \-h
+.br
 Show help information.
-.TP
-.BR \-I "\fI cluster manager"
-Selects the \fIcluster manager\fP to use for locking and internal
+.
+.HP
+.BR \-I
+.IR cluster_manager
+.br
+Selects the cluster manager to use for locking and internal
 communications. As it is quite possible to have multiple managers available on
 the same system you might have to manually specify this option to override the
 search.
 
-By default, omit \fB-I\fP is equivalent to \fB\-Iauto\fP. \fBClvmd\fP
-will use the first cluster manager that succeeds, and it checks them in a
-predefined order cman,corosync,openais.
+By default, omit \fB-I\fP is equivalent to \fB\-Iauto\fP.
+Clvmd will use the first cluster manager that succeeds,
+and it checks them in a predefined order
+.BR cman ,
+.BR corosync ,
+.BR openais .
 The available managers will be listed by order as part of the
 \fBclvmd \-h\fP output.
-.TP
-.B \-R
+.
+.HP
+.BR \-R
+.br
 Tells all the running instance of \fBclvmd\fP in the cluster to reload their device cache and
 re-read the lvm configuration file \fBlvm.conf\fP(5). This command should be run whenever the
 devices on a cluster system are changed.
-.TP
-.B \-S
+.
+.HP
+.BR \-S
+.br
 Tells the running \fBclvmd\fP to exit and reexecute itself, for example at the
 end of a package upgrade. The new instance is instructed to reacquire
 any locks in the same state as they were previously held. (Alternative
 methods of restarting the daemon have the side effect of changing
 exclusive LV locks into shared locks.)
-.TP
-.BR \-t "\fI timeout"
+.
+.HP
+.BR \-t
+.IR timeout
+.br
 Specifies the \fItimeout\fP for commands to run around the cluster. This should not
 be so small that commands with many disk updates to do will fail, so you
 may need to increase this on systems with very large disk farms.
 The default is 60 seconds.
-.TP
-.BR \-T "\fI start timeout"
-Specifies the \fIstart timeout\fP for \fBclvmd\fP daemon startup. If the
+.
+.HP
+.BR \-T
+.IR start_timeout
+.br
+Specifies the start timeout for \fBclvmd\fP daemon startup. If the
 daemon does not report that it has started up within this time then the parent
 command will exit with status of 5. This does NOT mean that \fBclvmd\fP has
 not started! What it means is that the startup has been delayed for some
 reason; the most likely cause of this is an inquorate cluster though it
 could be due to locking latencies on a cluster with large numbers of logical
 volumes. If you get the return code of 5 it is usually not necessary to
-restart \fBclvmd\fP — it will start as soon as that blockage has cleared.
+restart \fBclvmd\fP it will start as soon as that blockage has cleared.
 This flag is to allow startup scripts to exit in a timely fashion even if the
 cluster is stalled for some reason.
 
-The default is 0 (no timeout) and the value is in seconds. Don't set this too
+The default is \fB0\fP (no timeout) and the value is in seconds. Don't set this too
 small or you will experience spurious errors. 10 or 20 seconds might be
 sensible.
 
 This timeout will be ignored if you start \fBclvmd\fP with the \fB\-d\fP.
-.TP
-.B \-V
+.
+.HP
+.BR \-V
+.br
 Display the version of the cluster LVM daemon.
-
+.
 .SH ENVIRONMENT VARIABLES
 .TP
 .B LVM_CLVMD_BINARY
@@ -129,7 +163,10 @@ Defaults to \fI#CLVMD_PATH#\fP.
 .B LVM_BINARY
 The LVM2 binary to use.
 Defaults to \fI#LVM_PATH#\fP.
-
+.SH FILES
+.I #CLVMD_PATH#
+.br
+.I #LVM_PATH#
 .SH SEE ALSO
 .BR syslog (3),
 .BR lvm.conf (5),

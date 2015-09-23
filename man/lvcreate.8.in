@@ -2,40 +2,41 @@
 .SH NAME
 lvcreate \- create a logical volume in an existing volume group
 .SH SYNOPSIS
+.ad l
 .B lvcreate
 .RB [ \-a | \-\-activate
-.RI [ a | e | l ]{ y | n }]
+.RB [ a ][ e | l | s ]{ y | n }]
 .RB [ \-\-addtag
 .IR Tag ]
 .RB [ \-\-alloc
-.IR AllocationPolicy ]
+.IR Allocation\%Policy ]
 .RB [ \-A | \-\-autobackup
-.RI { y | n }]
+.RB { y | n }]
 .RB [ \-H | \-\-cache ]
 .RB [ \-\-cachemode
-.RI { passthrough | writeback | writethrough }]
+.RB { passthrough | writeback | writethrough }]
 .RB [ \-\-cachepolicy
 .IR policy ]
 .RB [ \-\-cachepool
-.IR CachePoolLogicalVolume { Name | Path }
+.IR CachePoolLogicalVolume ]
 .RB [ \-\-cachesettings
-.IR key=value ]
+.IR key \fB= value ]
 .RB [ \-c | \-\-chunksize
-.IR ChunkSize [ bBsSkKmMgG ]]
+.IR ChunkSize ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
 .RB [ \-C | \-\-contiguous
-.RI { y | n }]
+.RB { y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-\-discards
-.RI { ignore | nopassdown | passdown }]
+.RB \%{ ignore | nopassdown | passdown }]
 .RB [ \-\-errorwhenfull
-.RI { y | n }]
+.RB { y | n }]
 .RB [{ \-l | \-\-extents
-.IR LogicalExtentsNumber [ % { FREE | PVS | VG }]
-|
+.BR \fILogicalExtents\%Number [ % { FREE | PVS | VG }]
+.RB |
 .BR \-L | \-\-size
-.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
+.BR \fILogicalVolumeSize }
 .RB [ \-i | \-\-stripes
 .IR Stripes
 .RB [ \-I | \-\-stripesize
@@ -48,86 +49,79 @@ lvcreate \- create a logical volume in an existing volume group
 .RB [ \-j | \-\-major
 .IR major ]]
 .RB [ \-\-metadataprofile
-.IR ProfileName ]
+.IR Profile\%Name ]
 .RB [ \-m | \-\-mirrors
 .IR Mirrors
-.RB [{ \-\-corelog
-|
-.B \-\-mirrorlog
-.RI { disk | core | mirrored }}]
+.RB [ \-\-corelog | \-\-mirrorlog
+.RB { disk | core | mirrored }]
 .RB [ \-\-nosync ]
 .RB [ \-R | \-\-regionsize
-.IR MirrorLogRegionSize [ bBsSkKmMgG ]]]
+.BR \fIMirrorLogRegionSize ]]
 .RB [ \-\-monitor
-.RI { y | n }]
+.RB { y | n }]
 .RB [ \-n | \-\-name
-.IR LogicalVolume { Name | Path }]
+.IR Logical\%Volume ]
 .RB [ \-\-noudevsync ]
 .RB [ \-p | \-\-permission
-.RI { r | rw }]
+.RB { r | rw }]
 .RB [ \-M | \-\-persistent
-.RI { y | n }]
+.RB { y | n }]
 .\" .RB [ \-\-pooldatasize
-.\" .IR DataVolumeSize [ bBsSkKmMgGtTpPeE ]]
-.RB [ \-\-poolmetadatasize
-.IR MetadataVolumeSize [ bBsSkKmMgG ]]
+.\" .I DataVolumeSize
+.RB \%[ \-\-poolmetadatasize
+.IR MetadataVolumeSize ]
 .RB [ \-\-poolmetadataspare
-.RI { y | n }]
+.RB { y | n }]
 .RB [ \-\- [ raid ] maxrecoveryrate
 .IR Rate ]
 .RB [ \-\- [ raid ] minrecoveryrate
 .IR Rate ]
 .RB [ \-r | \-\-readahead
-.RI { ReadAheadSectors | auto | none }]
+.RB { \fIReadAheadSectors | auto | none }]
 .RB [ \-k | \-\-setactivationskip
-.RI { y | n }]
-.RB [ \-s | \-\-snapshot
+.RB { y | n }]
+.RB [ \-s | \-\-snapshot ]
 .RB [ \-V | \-\-virtualsize
-.IR VirtualSize [ bBsSkKmMgGtTpPeE ]]
+.IR VirtualSize ]
 .RB [ \-t | \-\-test ]
 .RB [ \-T | \-\-thin ]
 .RB [ \-\-thinpool
-.IR ThinPoolLogicalVolume { Name | Path }]
+.IR ThinPoolLogicalVolume ]
 .RB [ \-\-type
 .IR SegmentType ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-W | \-\-wipesignatures
-.RI { y | n }]
+.RB { y | n }]
 .RB [ \-Z | \-\-zero
-.RI { y | n }]
-.RI [ VolumeGroup { Name | Path }
-.RI [/\{ ExternalOrigin
-|
-.I Origin
-|
+.RB { y | n }]
+.RI [ VolumeGroup [ \fB/ { ExternalOrigin |\: Origin |
 .IR Pool } LogicalVolumeName ]
-.RI [ PhysicalVolumePath [ :PE [ \-PE ]]...]
-
+.RI [ PhysicalVolumePath [ \fB: \fIPE \fR[ \fB\- PE ]]...]
+.LP
 .B lvcreate
 .RB [ \-l | \-\-extents
-.IR LogicalExtentsNumber [ % { FREE | ORIGIN | PVS | VG }]
+.BR \fILogicalExtentsNumber [ % { FREE | ORIGIN | PVS | VG }]
 |
 .BR \-L | \-\-size
 .\" | \-\-pooldatasize
-.IR LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]]
+.IR LogicalVolumeSize ]
 .RB [ \-c | \-\-chunksize
-.IR ChunkSize [ bBsSkKmMgG ]]
+.IR ChunkSize ]
 .RB [ \-\-commandprofile
-.IR Profilename ]
+.IR Profile\%Name ]
 .RB [ \-\-noudevsync ]
 .RB [ \-\-ignoremonitoring ]
-.RB [ \-\-metadataProfile
-.IR ProfileName ]
-.RB [ \-\-monitor
-.RI { y | n }]
+.RB [ \-\-metadataprofile
+.IR Profile\%Name ]
+.RB \%[ \-\-monitor
+.RB { y | n }]
 .RB [ \-n | \-\-name
-.IR SnapshotLogicalVolume { Name | Path }]
+.IR SnapshotLogicalVolume ]
 .BR \-s | \-\-snapshot | \-H | \-\-cache
-.RI {[ VolumeGroup { Name | Path }/] OriginalLogicalVolumeName
+.RI \%{[ VolumeGroup \fB/ ] OriginalLogicalVolume
 .BR \-V | \-\-virtualsize
-.IR VirtualSize [ bBsSkKmMgGtTpPeE ]}
-.br
-
+.IR VirtualSize }
+.ad b
 .SH DESCRIPTION
 lvcreate creates a new logical volume in a volume group (see
 .BR vgcreate "(8), " vgchange (8))
@@ -144,12 +138,17 @@ extents will be restricted to these volumes.
 .br
 The second form supports the creation of snapshot logical volumes which
 keep the contents of the original logical volume for backup purposes.
+.
 .SH OPTIONS
+.
 See
 .BR lvm (8)
 for common options.
-.TP
-.IR \fB\-a ", " \fB\-\-activate " {" y | ay | n | ey | en | ly | ln }
+.
+.HP
+.BR \-a | \-\-activate
+.RB [ a ][ l | e | s ]{ y | n }
+.br
 Controls the availability of the Logical Volumes for immediate use after
 the command finishes running.
 By default, new Logical Volumes are activated (\fB\-a\fIy\fR).
@@ -171,8 +170,10 @@ be overridden. If the clustered locking is enabled,
 \fB\-a\fIey\fR will activate exclusively on one node and
 .IR \fB\-a { a | l } y
 will activate only on the local node.
-.TP
-.IR \fB\-H ", " \fB\-\-cache
+.
+.HP
+.BR \-H | \-\-cache
+.br
 Creates cache or cache pool logical volume or both.
 Specifying the optional argument \fB\-\-size\fP will cause the creation of
 the cache logical volume.
@@ -187,33 +188,49 @@ the \fB\-\-size\fP is used to specify size of cache pool volume.
 See \fBlvmcache\fP(7) for more info about caching support.
 Note that the cache segment type requires a dm-cache kernel module version
 1.3.0 or greater.
-.TP
-.IR \fB\-\-cachemode " {" passthrough | writeback | writethrough }
+.
+.HP
+.BR \-\-cachemode
+.RB { passthrough | writeback | writethrough }
+.br
 Specifying a cache mode determines when the writes to a cache LV
-are considered complete.  When \fIwriteback\fP is specified, a write is
+are considered complete.  When \fBwriteback\fP is specified, a write is
 considered complete as soon as it is stored in the cache pool LV.
-If \fIwritethough\fP is specified, a write is considered complete only
+If \fBwritethough\fP is specified, a write is considered complete only
 when it has been stored in the cache pool LV and on the origin LV.
-While \fIwritethrough\fP may be slower for writes, it is more
+While \fBwritethrough\fP may be slower for writes, it is more
 resilient if something should happen to a device associated with the
 cache pool LV.
-.TP
-.B \-\-cachepolicy \fIpolicy
+.
+.HP
+.BR \-\-cachepolicy
+.IR policy
+.br
 Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
-the cache policy. \fImq\fP is the basic policy name. \fIsmq\fP is more advanced
+the cache policy. \fBmq\fP is the basic policy name. \fBsmq\fP is more advanced
 version available in newer kernels.
-.TP
-.IR \fB\-\-cachepool " " CachePoolLogicalVolume { Name | Path }
+.
+.HP
+.BR \-\-cachepool
+.IR CachePoolLogicalVolume { Name | Path }
+.br
 Specifies the name of cache pool volume name. The other way to specify pool name
 is to append name to Volume group name argument.
-.TP
-.BR \-\-cachesettings " " \fIkey=value
+.
+.HP
+.BR \-\-cachesettings
+.IB key = value
+.br
 Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
 the cache tunable settings. In most use-cases, default values should be adequate.
-Special string value \fIdefault\fP switches setting back to its default kernel value
+Special string value \fBdefault\fP switches setting back to its default kernel value
 and removes it from the list of settings stored in lvm2 metadata.
-.TP
-.BR \-c ", " \-\-chunksize " " \fIChunkSize [ \fIbBsSkKmMgG ]
+.
+.HP
+.BR \-c | \-\-chunksize
+.IR ChunkSize \c
+.RB [ b | B | s | S | k | K | m | M | g | G ]
+.br
 Gives the size of chunk for snapshot, cache pool and thin pool logical volumes.
 Default unit is in kilobytes.
 .br
@@ -230,79 +247,108 @@ fit the pool metadata size within 128MiB,
 if the pool metadata size is not specified.
 See
 .BR lvm.conf (5)
-setting
-.IR allocation / thin_pool_chunk_size_policy
+setting \fBallocation/thin_pool_chunk_size_policy\fP
 to select different calculation policy.
 Thin pool target version <1.4 requires this value to be a power of 2.
 For target version <1.5 discard is not supported for non power of 2 values.
-.TP
-.BR \-C ", " \-\-contiguous " {" \fIy | \fIn }
+.
+.HP
+.BR \-C | \-\-contiguous
+.RB { y | n }
+.br
 Sets or resets the contiguous allocation policy for
 logical volumes. Default is no contiguous allocation based
 on a next free principle.
-.TP
+.
+.HP
 .BR \-\-corelog
-This is shortcut for option \fB\-\-mirrorlog\fP \fIcore\fP.
-.TP
-.BR \-\-discards " {" \fIignore | \fInopassdown | \fIpassdown }
+.br
+This is shortcut for option \fB\-\-mirrorlog core\fP.
+.
+.HP
+.BR \-\-discards
+.RB { ignore | nopassdown | passdown }
+.br
 Sets discards behavior for thin pool.
-Default is \fIpassdown\fP.
-.TP
-.BR \-\-errorwhenfull " {" \fIy |\fIn }
+Default is \fBpassdown\fP.
+.
+.HP
+.BR \-\-errorwhenfull
+.RB { y | n }
+.br
 Configures thin pool behaviour when data space is exhausted.
-Default is \fIn\fPo.
+Default is \fBn\fPo.
 Device will queue I/O operations until target timeout
 (see dm-thin-pool kernel module option \fIno_space_timeout\fP)
 expires. Thus configured system has a time to i.e. extend
 the size of thin pool data device.
-When set to \fIy\fPes, the I/O operation is immeditelly errored.
-.TP
-.BR \-K ", " \-\-ignoreactivationskip
+When set to \fBy\fPes, the I/O operation is immeditelly errored.
+.
+.HP
+.BR \-K | \-\-ignoreactivationskip
+.br
 Ignore the flag to skip Logical Volumes during activation.
 Use \fB\-\-setactivationskip\fP option to set or reset
 activation skipping flag persistently for logical volume.
-.TP
-.B \-\-ignoremonitoring
+.
+.HP
+.BR \-\-ignoremonitoring
+.br
 Make no attempt to interact with dmeventd unless \fB\-\-monitor\fP
 is specified.
-.TP
-.IR \fB\-l ", " \fB\-\-extents " " LogicalExtentsNumber [ % { VG | PVS | FREE | ORIGIN }]
+.
+.HP
+.BR -l | \-\-extents
+.IR LogicalExtentsNumber \c
+.RB [ % { VG | PVS | FREE | ORIGIN }]
+.br
 Gives the number of logical extents to allocate for the new
 logical volume.  The total number of physical extents allocated will be
 greater than this, for example, if the volume is mirrored.
 The number can also be expressed as a percentage of the total space
-in the Volume Group with the suffix \fI%VG\fR, as a percentage of the
-remaining free space in the Volume Group with the suffix \fI%FREE\fR, as a
+in the Volume Group with the suffix \fB%VG\fP, as a percentage of the
+remaining free space in the Volume Group with the suffix \fB%FREE\fP, as a
 percentage of the remaining free space for the specified
-PhysicalVolume(s) with the suffix \fI%PVS\fR, or (for a snapshot) as a
+PhysicalVolume(s) with the suffix \fB%PVS\fP, or (for a snapshot) as a
 percentage of the total space in the Origin Logical Volume with the
-suffix \fI%ORIGIN\fR (i.e. \fI100%ORIGIN\fR provides space for the whole origin).
+suffix \fB%ORIGIN\fP (i.e. \fB100%ORIGIN\fP provides space for the whole origin).
 When expressed as a percentage, the number is treated
 as an approximate upper limit for the total number of physical extents
 to be allocated (including extents used by any mirrors, for example).
-.TP
-.BR \-j ", " \-\-major " " \fImajor
+.
+.HP
+.BR \-j | \-\-major
+.IR major
+.br
 Sets the major number.
 Major numbers are not supported with pool volumes.
 This option is supported only on older systems
 (kernel version 2.4) and is ignored on modern Linux systems where major
 numbers are dynamically assigned.
-.TP
-.BR \-\-metadataprofile " " \fIProfileName
+.
+.HP
+.BR \-\-metadataprofile
+.IR ProfileName
+.br
 Uses and attaches the ProfileName configuration profile to the logical
 volume metadata. Whenever the logical volume is processed next time,
 the profile is automatically applied. If the volume group has another
 profile attached, the logical volume profile is preferred.
 See \fBlvm.conf\fP(5) for more information about \fBmetadata profiles\fP.
-.TP
-.B \-\-minor \fIminor
+.
+.HP
+.BR \-\-minor
+.IR minor
+.br
 Sets the minor number.
 Minor numbers are not supported with pool volumes.
-.TP
-.BR \-m ", " \-\-mirrors " " \fIMirrors
-Creates a mirrored logical volume with \fIMirrors\fP copies.
-For example, specifying
-.BI \-m\  1
+.
+.HP
+.BR \-m | \-\-mirrors
+.IR mirrors
+.br
+Creates a mirrored logical volume with \fImirrors\fP copies.
+For example, specifying \fB\-m 1\fP
 would result in a mirror with two-sides; that is,
 a linear volume plus one copy.
 
@@ -318,131 +364,173 @@ The default is "\fIraid1\fP".  See the
 \fB\-\-type\fP option for more information if you would like to use the
 legacy "\fImirror\fP" segment type.  See
 .BR lvm.conf (5)
-settings
-.IR global / mirror_segtype_default
-and
-.IR global / raid10_segtype_default
+settings \fB global/mirror_segtype_default\fP
+and \fBglobal/raid10_segtype_default\fP
 to configure default mirror segment type.
 The options
 \fB\-\-mirrorlog\fP and \fB\-\-corelog\fP apply
 to the legacy "\fImirror\fP" segment type only.
-.TP
-.BR \-\-mirrorlog " {" \fIdisk | \fIcore | \fImirrored }
+.
+.HP
+.BR \-\-mirrorlog
+.RB { disk | core | mirrored }
+.br
 Specifies the type of log to be used for logical volumes utilizing
 the legacy "\fImirror\fP" segment type.
 .br
-The default is \fIdisk\fP, which is persistent and requires
+The default is \fBdisk\fP, which is persistent and requires
 a small amount of storage space, usually on a separate device from the
 data being mirrored.
 .br
-Using \fIcore\fP means the mirror is regenerated by copying the data
+Using \fBcore\fP means the mirror is regenerated by copying the data
 from the first device each time the logical volume is activated,
 like after every reboot.
 .br
-Using \fImirrored\fP will create a persistent log that is itself mirrored.
-.TP
-.BR \-\-monitor " {" \fIy | \fIn }
+Using \fBmirrored\fP will create a persistent log that is itself mirrored.
+.
+.HP
+.BR \-\-monitor
+.RB { y | n }
+.br
 Starts or avoids monitoring a mirrored, snapshot or thin pool logical volume with
 dmeventd, if it is installed.
 If a device used by a monitored mirror reports an I/O error,
 the failure is handled according to
-.IR activation / mirror_image_fault_policy
-and
-.IR activation / mirror_log_fault_policy
+\fBactivation/mirror_image_fault_policy\fP
+and \fBactivation/mirror_log_fault_policy\fP
 set in \fBlvm.conf\fP(5).
-.TP
-.IR \fB\-n ", " \fB\-\-name " " LogicalVolume { Name | Path }
+.
+.HP
+.BR \-n | \-\-name
+.IR LogicalVolume { Name | Path }
+.br
 Sets the name for the new logical volume.
 .br
 Without this option a default name of "lvol#" will be generated where
 # is the LVM internal number of the logical volume.
-.TP
-.B \-\-nosync
+.
+.HP
+.BR \-\-nosync
+.br
 Causes the creation of the mirror to skip the initial resynchronization.
-.TP
-.B \-\-noudevsync
+.
+.HP
+.BR \-\-noudevsync
+.br
 Disables udev synchronisation. The
 process will not wait for notification from udev.
 It will continue irrespective of any possible udev processing
 in the background.  You should only use this if udev is not running
 or has rules that ignore the devices LVM2 creates.
-.TP
-.BR \-p ", " \-\-permission " {" \fIr | \fIrw }
-Sets access permissions to read only (\fIr\fP) or read and write (\fIrw\fP).
+.
+.HP
+.BR \-p | \-\-permission
+.RB { r | rw }
+.br
+Sets access permissions to read only (\fBr\fP) or read and write (\fBrw\fP).
 .br
 Default is read and write.
-.TP
-.BR \-M ", " \-\-persistent " {" \fIy | \fIn }
-Set to \fIy\fP to make the minor number specified persistent.
+.
+.HP
+.BR \-M | \-\-persistent
+.RB { y | n }
+.br
+Set to \fBy\fP to make the minor number specified persistent.
 Pool volumes cannot have persistent major and minor numbers.
-Defaults to \fIy\fPes only when major or minor number is specified.
-Otherwise it is \fIn\fPo.
-.TP
+Defaults to \fBy\fPes only when major or minor number is specified.
+Otherwise it is \fBn\fPo.
+.\" .HP
 .\" .IR \fB\-\-pooldatasize " " PoolDataVolumeSize [ bBsSkKmMgGtTpPeE ]
 .\" Sets the size of pool's data logical volume.
 .\" For thin pools you may also specify the size
 .\" with the option \fB\-\-size\fP.
-.\" .TP
-.IR \fB\-\-poolmetadatasize " " MetadataVolumeSize [ bBsSkKmMgG ]
+.\"
+.
+.HP
+.BR \-\-poolmetadatasize
+.BR \fIMetadataVolumeSize [ b | B | s | S | k | K | m | M | g | G ]
+.br
 Sets the size of pool's metadata logical volume.
 Supported values are in range between 2MiB and 16GiB for thin pool,
 and upto 16GiB for cache pool. The minimum value is computed from pool's
 data size.
 Default value for thin pool is (Pool_LV_size / Pool_LV_chunk_size * 64b).
 Default unit is megabytes.
-.TP
-.IR \fB\-\-poolmetadataspare " {"  y | n }
+.
+.HP
+.BR \-\-poolmetadataspare
+.RB { y | n }
+.br
 Controls creation and maintanence of pool metadata spare logical volume
 that will be used for automated pool recovery.
 Only one such volume is maintained within a volume group
 with the size of the biggest pool metadata volume.
-Default is \fIy\fPes.
-.TP
-.BR \-\- [ raid ] maxrecoveryrate " " \fIRate [ \fIbBsSkKmMgG ]
+Default is \fBy\fPes.
+.
+.HP
+.BR \-\- [ raid ] maxrecoveryrate
+.BR \fIRate [ b | B | s | S | k | K | m | M | g | G ]
+.br
 Sets the maximum recovery rate for a RAID logical volume.  \fIRate\fP
 is specified as an amount per second for each device in the array.
 If no suffix is given, then KiB/sec/device is assumed.  Setting the
 recovery rate to 0 means it will be unbounded.
-.TP
-.BR \-\- [ raid ] minrecoveryrate " " \fIRate [ \fIbBsSkKmMgG ]
+.
+.HP
+.BR \-\- [ raid ] minrecoveryrate
+.BR \fIRate [ b | B | s | S | k | K | m | M | g | G ]
+.br
 Sets the minimum recovery rate for a RAID logical volume.  \fIRate\fP
 is specified as an amount per second for each device in the array.
 If no suffix is given, then KiB/sec/device is assumed.  Setting the
 recovery rate to 0 means it will be unbounded.
-.TP
-.IR \fB\-r ", " \fB\-\-readahead " {" ReadAheadSectors | auto | none }
+.
+.HP
+.BR \-r | \-\-readahead
+.RB { \fIReadAheadSectors | auto | none }
+.br
 Sets read ahead sector count of this logical volume.
 For volume groups with metadata in lvm1 format, this must
 be a value between 2 and 120.
-The default value is \fIauto\fP which allows the kernel to choose
+The default value is \fBauto\fP which allows the kernel to choose
 a suitable value automatically.
-\fINone\fP is equivalent to specifying zero.
-.TP
-.BR \-R ", " \-\-regionsize " " \fIMirrorLogRegionSize [ \fIbBsSkKmMgG ]
+\fBnone\fP is equivalent to specifying zero.
+.
+.HP
+.BR \-R | \-\-regionsize
+.BR \fIMirrorLogRegionSize [ b | B | s | S | k | K | m | M | g | G ]
+.br
 A mirror is divided into regions of this size (in MiB), and the mirror log
 uses this granularity to track which regions are in sync.
-.TP
-.IR \fB\-k ", " \fB\-\-setactivationskip "  {" y | n }
+.
+.HP
+.BR \-k | \-\-setactivationskip
+.RB { y | n }
+.br
 Controls whether Logical Volumes are persistently flagged to be skipped during
 activation. By default, thin snapshot volumes are flagged for activation skip.
 See
 .BR lvm.conf (5)
-.IR activation / auto_set_activation_skip
+\fBactivation/auto_set_activation_skip\fP
 how to change its default behaviour.
-To activate such volumes, an extra
-.BR \-K | \-\-ignoreactivationskip
+To activate such volumes, an extra \fB\-\-ignoreactivationskip\fP
 option must be used. The flag is not applied during deactivation. Use
-.B lvchange \-\-setactivationskip {y|n}
+\fBlvchange \-\-setactivationskip\fP
 command to change the skip flag for existing volumes.
 To see whether the flag is attached, use \fBlvs\fP command
 where the state of the flag is reported within \fBlv_attr\fP bits.
-.TP
-.IR \fB\-L ", " \fB\-\-size " " LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]
+.
+.HP
+.BR \-L | \-\-size
+.BR \fILogicalVolumeSize [ b | B | s | S | k | K | m | M | \c
+.BR g | G | t | T | p | P | e | E ]
+.\" man2html cannot handle all those changes in 1 line
+.br
 Gives the size to allocate for the new logical volume.
-A size suffix of \fIB\fR for bytes, \fIS\fR for sectors as 512 bytes,
-\fIK\fR for kilobytes, \fIM\fR for megabytes,
-\fIG\fR for gigabytes, \fIT\fR for terabytes, \fIP\fR for petabytes
-or \fIE\fR for exabytes is optional.
+A size suffix of \fBB\fP for bytes, \fBS\fP for sectors as 512 bytes,
+\fBK\fP for kilobytes, \fBM\fP for megabytes,
+\fBG\fP for gigabytes, \fBT\fP for terabytes, \fBP\fP for petabytes
+or \fBE\fP for exabytes is optional.
 .br
 Default unit is megabytes.
 .TP
@@ -589,7 +677,7 @@ If blkid wiping is used
 setting in
 .BR lvm.conf (5))
 and LVM2 is compiled with blkid wiping support, then \fBblkid\fP(8) library is used
-to detect the signatures (use \fBblkid -k\fP command to list the signatures that are recognized).
+to detect the signatures (use \fBblkid \-k\fP command to list the signatures that are recognized).
 Otherwise, native LVM2 code is used to detect signatures (MD RAID, swap and LUKS
 signatures are detected only in this case).
 .br
@@ -705,7 +793,7 @@ volume (i.e. the origin LV), creating a cache LV.
 
 .\" Create a 1G cached LV "lvol1" with  10M cache pool "vg00/pool".
 .\" .sp
-.\" .B lvcreate \-\-cache \-L 1G \-n lv --pooldatasize 10M vg00/pool
+.\" .B lvcreate \-\-cache \-L 1G \-n lv \-\-pooldatasize 10M vg00/pool
 
 .SH SEE ALSO
 .BR lvm (8),
