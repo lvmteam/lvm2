@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -86,7 +86,7 @@ static const struct {
 	{ SEG_RAID6_NC, "raid6_nc"},
 
 	/*
-	 *WARNING: Since 'raid' target overloads this 1:1 mapping table
+	 * WARNING: Since 'raid' target overloads this 1:1 mapping table
 	 * for search do not add new enum elements past them!
 	 */
 	{ SEG_RAID5_LS, "raid5"}, /* same as "raid5_ls" (default for MD also) */
@@ -2369,7 +2369,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, struct load_segment *s
 
 	return 1;
 }
- 
+
 /* Is parameter non-zero? */
 #define PARAM_IS_SET(p) (p) ? 1 : 0
 
@@ -2396,9 +2396,12 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	if ((seg->flags & DM_NOSYNC) || (seg->flags & DM_FORCESYNC))
 		param_count++;
 
-	param_count += 2 * (PARAM_IS_SET(seg->region_size) + PARAM_IS_SET(seg->writebehind) +
-			    PARAM_IS_SET(seg->min_recovery_rate) + PARAM_IS_SET(seg->max_recovery_rate));
+	param_count += 2 * (PARAM_IS_SET(seg->region_size) +
+			    PARAM_IS_SET(seg->writebehind) +
+			    PARAM_IS_SET(seg->min_recovery_rate) +
+			    PARAM_IS_SET(seg->max_recovery_rate));
 
+	/* rebuilds and writemostly are 64 bits */
 	param_count += _get_params_count(seg->rebuilds);
 	param_count += _get_params_count(seg->writemostly);
 
@@ -2420,13 +2423,6 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 		if (seg->rebuilds & (1ULL << i))
 			EMIT_PARAMS(pos, " rebuild %u", i);
 
-	for (i = 0; i < (seg->area_count / 2); i++)
-		if (seg->writemostly & (1ULL << i))
-			EMIT_PARAMS(pos, " write_mostly %u", i);
-
-	if (seg->writebehind)
-		EMIT_PARAMS(pos, " writebehind %u", seg->writebehind);
-
 	if (seg->min_recovery_rate)
 		EMIT_PARAMS(pos, " min_recovery_rate %u",
 			    seg->min_recovery_rate);
@@ -2434,6 +2430,13 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	if (seg->max_recovery_rate)
 		EMIT_PARAMS(pos, " max_recovery_rate %u",
 			    seg->max_recovery_rate);
+
+	for (i = 0; i < (seg->area_count / 2); i++)
+		if (seg->writemostly & (1ULL << i))
+			EMIT_PARAMS(pos, " write_mostly %u", i);
+
+	if (seg->writebehind)
+		EMIT_PARAMS(pos, " max_write_behind %u", seg->writebehind);
 
 	/* Print number of metadata/data device pairs */
 	EMIT_PARAMS(pos, " %u", seg->area_count/2);
