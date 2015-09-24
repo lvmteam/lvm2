@@ -331,6 +331,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 		const char *feature;
 	} _features[] = {
 		{ 1, 3, RAID_FEATURE_RAID10, SEG_TYPE_NAME_RAID10 },
+		{ 1, 7, RAID_FEATURE_RAID0, SEG_TYPE_NAME_RAID0 },
 	};
 
 	static int _raid_checked = 0;
