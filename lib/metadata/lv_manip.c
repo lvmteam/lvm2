@@ -941,6 +941,26 @@ dm_percent_t copy_percent(const struct logical_volume *lv)
 	return denominator ? dm_make_percent(numerator, denominator) : 100.0;
 }
 
+/* Round up extents to next stripe boundary for number of stripes */
+static uint32_t _round_to_stripe_boundary(struct volume_group *vg, uint32_t extents,
+					  uint32_t stripes, int extend)
+{
+	uint32_t size_rest, new_extents = extents;
+
+	if (!stripes)
+		return extents;
+
+	/* Round up extents to stripe divisible amount */
+	if ((size_rest = extents % stripes)) {
+		new_extents += extend ? stripes - size_rest : -size_rest;
+		log_print_unless_silent("Rounding size %s (%d extents) up to stripe boundary size %s (%d extents).",
+					display_size(vg->cmd, extents * vg->extent_size), extents,
+					display_size(vg->cmd, new_extents * vg->extent_size), new_extents);
+	}
+
+	return new_extents;
+}
+
 /*
  * All lv_segments get created here.
  */
@@ -6933,7 +6953,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					       const char *new_lv_name)
 {
 	struct cmd_context *cmd = vg->cmd;
-	uint32_t size_rest, size;
+	uint32_t size;
 	uint64_t status = lp->permission | VISIBLE_LV;
 	const struct segment_type *create_segtype = lp->segtype;
 	struct logical_volume *lv, *origin_lv = NULL;
@@ -6998,12 +7018,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lp->stripe_size = vg->extent_size;
 	}
 
-	if ((size_rest = lp->extents % lp->stripes)) {
-		log_print_unless_silent("Rounding size (%d extents) up to stripe boundary "
-					"size (%d extents).", lp->extents,
-					lp->extents - size_rest + lp->stripes);
-		lp->extents = lp->extents - size_rest + lp->stripes;
-	}
+	lp->extents = _round_to_stripe_boundary(vg, lp->extents, lp->stripes, 1);
 
 	if (!lp->extents && !seg_is_thin_volume(lp)) {
 		log_error(INTERNAL_ERROR "Unable to create new logical volume with no extents.");
