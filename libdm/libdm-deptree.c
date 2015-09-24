@@ -2371,7 +2371,7 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, struct load_segment *s
 }
 
 /* Is parameter non-zero? */
-#define PARAM_IS_SET(p) (p) ? 1 : 0
+#define PARAM_IS_SET(p) ((p) ? 1 : 0)
 
 /* Return number of bits assuming 4 * 64 bit size */
 static int _get_params_count(uint64_t bits)
