@@ -46,6 +46,26 @@ struct dev_manager;
 #define SEG_MIRROR		0x0000000000008000ULL
 #define SEG_ONLY_EXCLUSIVE	0x0000000000010000ULL /* In cluster only exlusive activation */
 #define SEG_CAN_ERROR_WHEN_FULL	0x0000000000020000ULL
+
+#define SEG_RAID1		0x0000000000100000ULL
+#define SEG_RAID10		0x0000000000200000ULL
+#define SEG_RAID4		0x0000000000400000ULL
+#define SEG_RAID5_N		0x0000000000800000ULL
+#define SEG_RAID5_LA		0x0000000001000000ULL
+#define SEG_RAID5_LS		0x0000000002000000ULL
+#define SEG_RAID5_RA		0x0000000004000000ULL
+#define SEG_RAID5_RS		0x0000000008000000ULL
+#define SEG_RAID5		SEG_RAID5_LS
+#define SEG_RAID6_NC		0x0000000010000000ULL
+#define SEG_RAID6_NR		0x0000000020000000ULL
+#define SEG_RAID6_ZR		0x0000000040000000ULL
+#define SEG_RAID6_LA_6		0x0000000080000000ULL
+#define SEG_RAID6_LS_6		0x0000000100000000ULL
+#define SEG_RAID6_RA_6		0x0000000200000000ULL
+#define SEG_RAID6_RS_6		0x0000000400000000ULL
+#define SEG_RAID6_N_6		0x0000000800000000ULL
+#define SEG_RAID6		SEG_RAID6_ZR
+
 #define SEG_UNKNOWN		0x8000000000000000ULL
 
 #define SEG_TYPE_NAME_LINEAR		"linear"
@@ -141,7 +161,7 @@ struct segment_type {
 	struct dm_list list;		/* Internal */
 
 	uint64_t flags;
-	uint32_t parity_devs;           /* Parity drives required by segtype */
+	uint32_t parity_devs;		/* Parity drives required by segtype */
 
 	struct segtype_handler *ops;
 	const char *name;
