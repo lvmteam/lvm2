@@ -731,7 +731,7 @@ static int _lvchange_writemostly(struct logical_volume *lv)
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *raid_seg = first_seg(lv);
 
-	if (strcmp(raid_seg->segtype->name, SEG_TYPE_NAME_RAID1)) {
+	if (!seg_is_raid1(raid_seg)) {
 		log_error("--write%s can only be used with 'raid1' segment type",
 			  arg_count(cmd, writemostly_ARG) ? "mostly" : "behind");
 		return 0;

@@ -1102,7 +1102,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	}
 
 	if (!seg_is_mirrored(first_seg(lv)) ||
-	    !strcmp(first_seg(lv)->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	    seg_is_raid10(first_seg(lv))) {
 		log_error("Unable to split logical volume of segment type, %s",
 			  lvseg_name(first_seg(lv)));
 		return 0;
@@ -1475,13 +1475,11 @@ int lv_raid_reshape(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_MIRROR) &&
-	    (!strcmp(new_segtype->name, SEG_TYPE_NAME_RAID1)))
-	    return _convert_mirror_to_raid1(lv, new_segtype);
+	if (seg_is_mirror(seg) && segtype_is_raid1(new_segtype))
+		return _convert_mirror_to_raid1(lv, new_segtype);
 
-	log_error("Converting the segment type for %s/%s from %s to %s"
-		  " is not yet supported.", lv->vg->name, lv->name,
-		  lvseg_name(seg), new_segtype->name);
+	log_error("Converting the segment type for %s/%s from %s to %s is not yet supported.",
+		  lv->vg->name, lv->name, lvseg_name(seg), new_segtype->name);
 	return 0;
 }
 
@@ -1663,7 +1661,7 @@ int lv_raid_replace(struct logical_volume *lv,
 			  lvseg_name(raid_seg),
 			  lv->vg->name, lv->name);
 		return 0;
-	} else if (!strcmp(raid_seg->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	} else if (seg_is_raid10(raid_seg)) {
 		uint32_t i, rebuilds_per_group = 0;
 		/* FIXME: We only support 2-way mirrors in RAID10 currently */
 		uint32_t copies = 2;
@@ -1895,7 +1893,7 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 	uint32_t i, s, rebuilds_per_group = 0;
 	uint32_t failed_components = 0;
 
-	if (!strcmp(raid_seg->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	if (seg_is_raid10(raid_seg)) {
 		/* FIXME: We only support 2-way mirrors in RAID10 currently */
 		copies = 2;
 		for (i = 0; i < raid_seg->area_count * copies; i++) {

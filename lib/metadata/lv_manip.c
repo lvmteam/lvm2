@@ -224,7 +224,7 @@ static int _lv_layout_and_role_raid(struct dm_pool *mem,
 				    int *public_lv)
 {
 	int top_level = 0;
-	const char *seg_name;
+	const struct segment_type *segtype;
 
 	/* non-top-level LVs */
 	if (lv_is_raid_image(lv)) {
@@ -251,45 +251,45 @@ static int _lv_layout_and_role_raid(struct dm_pool *mem,
 	if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID]))
 		goto_bad;
 
-	seg_name = first_seg(lv)->segtype->name;
+	segtype = first_seg(lv)->segtype;
 
-	if (!strcmp(seg_name, SEG_TYPE_NAME_RAID1)) {
+	if (segtype_is_raid1(segtype)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID1]))
 			goto_bad;
-	} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID10)) {
+	} else if (segtype_is_raid10(segtype)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID10]))
 			goto_bad;
-	} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID4)) {
+	} else if (segtype_is_raid4(segtype)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID4]))
 			goto_bad;
-	} else if (!strncmp(seg_name, SEG_TYPE_NAME_RAID5, strlen(SEG_TYPE_NAME_RAID5))) {
+	} else if (segtype_is_any_raid5(segtype)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID5]))
 			goto_bad;
 
-		if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_LA)) {
+		if (segtype_is_raid5_la(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID5_LA]))
 				goto_bad;
-		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_RA)) {
+		} else if (segtype_is_raid5_ra(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID5_RA]))
 				goto_bad;
-		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_LS)) {
+		} else if (segtype_is_raid5_ls(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID5_LS]))
 				goto_bad;
-		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID5_RS)) {
+		} else if (segtype_is_raid5_rs(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID5_RS]))
 				goto_bad;
 		}
-	} else if (!strncmp(seg_name, SEG_TYPE_NAME_RAID6, strlen(SEG_TYPE_NAME_RAID6))) {
+	} else if (segtype_is_any_raid6(segtype)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID6]))
 			goto_bad;
 
-		if (!strcmp(seg_name, SEG_TYPE_NAME_RAID6_ZR)) {
+		if (segtype_is_raid6_zr(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID6_ZR]))
 				goto_bad;
-		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID6_NR)) {
+		} else if (segtype_is_raid6_nr(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID6_NR]))
 				goto_bad;
-		} else if (!strcmp(seg_name, SEG_TYPE_NAME_RAID6_NC)) {
+		} else if (segtype_is_raid6_nc(segtype)) {
 			if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID6_NC]))
 				goto_bad;
 		}
@@ -3669,8 +3669,7 @@ int lv_add_log_segment(struct alloc_handle *ah, uint32_t first_area,
 {
 
 	return lv_add_segment(ah, ah->area_count + first_area, 1, log_lv,
-			      get_segtype_from_string(log_lv->vg->cmd,
-						      SEG_TYPE_NAME_STRIPED),
+			      get_segtype_from_string(log_lv->vg->cmd, SEG_TYPE_NAME_STRIPED),
 			      0, status, 0);
 }
 

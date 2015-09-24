@@ -453,7 +453,7 @@ static int _read_mirror_params(struct cmd_context *cmd,
 static int _read_raid_params(struct cmd_context *cmd,
 			     struct lvcreate_params *lp)
 {
-	if ((lp->stripes < 2) && !strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	if ((lp->stripes < 2) && segtype_is_raid10(lp->segtype)) {
 		if (arg_count(cmd, stripes_ARG)) {
 			/* User supplied the bad argument */
 			log_error("Segment type 'raid10' requires 2 or more stripes.");
@@ -468,15 +468,14 @@ static int _read_raid_params(struct cmd_context *cmd,
 	 * RAID1 does not take a stripe arg
 	 */
 	if ((lp->stripes > 1) && seg_is_mirrored(lp) &&
-	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	    !segtype_is_raid10(lp->segtype)) {
 		log_error("Stripe argument cannot be used with segment type, %s",
 			  lp->segtype->name);
 		return 0;
 	}
 
 	if (arg_count(cmd, mirrors_ARG) && segtype_is_raid(lp->segtype) &&
-	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID1) &&
-	    strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	    !segtype_is_raid1(lp->segtype) && !segtype_is_raid10(lp->segtype)) {
 		log_error("Mirror argument cannot be used with segment type, %s",
 			  lp->segtype->name);
 		return 0;
@@ -512,7 +511,7 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if ((lp->mirrors > 2) && !strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+		if ((lp->mirrors > 2) && segtype_is_raid10(lp->segtype)) {
 			/*
 			 * FIXME: When RAID10 is no longer limited to
 			 *        2-way mirror, 'lv_mirror_count()'
@@ -974,8 +973,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10) &&
-		    !(lp->target_attr & RAID_FEATURE_RAID10)) {
+		if (segtype_is_raid10(lp->segtype) && !(lp->target_attr & RAID_FEATURE_RAID10)) {
 			log_error("RAID module does not support RAID10.");
 			return 0;
 		}
@@ -1215,7 +1213,7 @@ static int _check_raid_parameters(struct volume_group *vg,
 				  lp->segtype->name);
 			return 0;
 		}
-	} else if (!strcmp(lp->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	} else if (segtype_is_raid10(lp->segtype)) {
 		if (!arg_count(cmd, stripes_ARG))
 			lp->stripes = devs / lp->mirrors;
 		if (lp->stripes < 2) {

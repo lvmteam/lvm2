@@ -143,23 +143,23 @@ static int _get_segment_status_from_target_params(const char *target_name,
 		return 0;
 	}
 
-	if (!strcmp(segtype->name, SEG_TYPE_NAME_CACHE)) {
+	if (segtype_is_cache(segtype)) {
 		if (!dm_get_status_cache(seg_status->mem, params, &(seg_status->cache)))
 			return_0;
 		seg_status->type = SEG_STATUS_CACHE;
-	} else if (!strcmp(segtype->name, SEG_TYPE_NAME_RAID)) {
+	} else if (segtype_is_raid(segtype)) {
 		if (!dm_get_status_raid(seg_status->mem, params, &seg_status->raid))
 			return_0;
 		seg_status->type = SEG_STATUS_RAID;
-	} else if (!strcmp(segtype->name, SEG_TYPE_NAME_THIN)) {
+	} else if (segtype_is_thin_volume(segtype)) {
 		if (!dm_get_status_thin(seg_status->mem, params, &seg_status->thin))
 			return_0;
 		seg_status->type = SEG_STATUS_THIN;
-	} else if (!strcmp(segtype->name, SEG_TYPE_NAME_THIN_POOL)) {
+	} else if (segtype_is_thin_pool(segtype)) {
 		if (!dm_get_status_thin_pool(seg_status->mem, params, &seg_status->thin_pool))
 			return_0;
 		seg_status->type = SEG_STATUS_THIN_POOL;
-	} else if (!strcmp(segtype->name, SEG_TYPE_NAME_SNAPSHOT)) {
+	} else if (segtype_is_snapshot(segtype)) {
 		if (!dm_get_status_snapshot(seg_status->mem, params, &seg_status->snapshot))
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;

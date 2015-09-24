@@ -112,7 +112,7 @@ uint32_t lv_mirror_count(const struct logical_volume *lv)
 	seg = first_seg(lv);
 
 	/* FIXME: RAID10 only supports 2 copies right now */
-	if (!strcmp(seg->segtype->name, SEG_TYPE_NAME_RAID10))
+	if (seg_is_raid10(seg))
 		return 2;
 
 	if (lv_is_pvmove(lv))

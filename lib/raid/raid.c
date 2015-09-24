@@ -242,7 +242,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		/* RAID 4/5/6 */
 		params.mirrors = 1;
 		params.stripes = seg->area_count - seg->segtype->parity_devs;
-	} else if (strcmp(seg->segtype->name, SEG_TYPE_NAME_RAID10)) {
+	} else if (seg_is_raid10(seg)) {
 		/* RAID 10 only supports 2 mirrors now */
 		params.mirrors = 2;
 		params.stripes = seg->area_count / 2;
