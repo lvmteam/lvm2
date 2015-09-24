@@ -879,6 +879,9 @@ static int _lockd_all_lvs(struct cmd_context *cmd, struct volume_group *vg)
 	struct lv_list *lvl;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
+		if (!lockd_lv_uses_lock(lvl->lv))
+			continue;
+
 		if (!lockd_lv(cmd, lvl->lv, "ex", 0)) {
 			log_error("LV %s/%s must be inactive on all hosts.",
 				  vg->name, lvl->lv->name);
