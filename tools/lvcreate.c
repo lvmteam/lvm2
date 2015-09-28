@@ -500,14 +500,23 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 					struct lvcreate_params *lp)
 {
 	int pagesize = lvm_getpagesize();
+	unsigned max_images;
+	const char *segtype_name;
 
 	/* Common mirror and raid params */
 	if (arg_count(cmd, mirrors_ARG)) {
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
+		if (segtype_is_raid1(lp->segtype)) {
+			segtype_name = SEG_TYPE_NAME_RAID1;
+			max_images = DEFAULT_RAID_MAX_IMAGES;
+		} else {
+			segtype_name = SEG_TYPE_NAME_MIRROR;
+			max_images = DEFAULT_MIRROR_MAX_IMAGES;
+		}
 
-		if (lp->mirrors > DEFAULT_MIRROR_MAX_IMAGES) {
-			log_error("Only up to " DM_TO_STRING(DEFAULT_MIRROR_MAX_IMAGES)
-				  " images in mirror supported currently.");
+		if (lp->mirrors > max_images) {
+			log_error("Only up to %u images in %s supported currently.",
+				  max_images, segtype_name);
 			return 0;
 		}
 
