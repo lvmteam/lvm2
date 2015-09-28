@@ -46,12 +46,12 @@ check mirror_images_redundant $vg $lv7
 lvremove -ff $vg
 
 lvcreate -aey --nosync -i3 -l4 --type mirror -m1 --mirrorlog core -n $lv1 $vg 2>&1 | tee log
-grep "Rounding size (4 extents) up to .* (6 extents)" log
+grep "Rounding size .*(4 extents) up to .*(6 extents)" log
 
 lvcreate -aey --nosync -i3 -l4 --type mirror -m2 --mirrorlog core -n $lv2 $vg 2>&1 | tee log
-grep "Rounding size (4 extents) up to .* (6 extents)" log
+grep "Rounding size .*(4 extents) up to .*(6 extents)" log
 
 lvcreate -aey --nosync -i3 -l2 --type mirror -m2 --mirrorlog core -n $lv3 $vg 2>&1 | tee log
-grep "Rounding size (2 extents) up to .* (3 extents)" log
+grep "Rounding size .*(2 extents) up to .*(3 extents)" log
 
 lvremove -ff $vg
