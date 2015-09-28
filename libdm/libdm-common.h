@@ -51,4 +51,6 @@ void selinux_release(void);
 void inc_suspended(void);
 void dec_suspended(void);
 
+int parse_thin_pool_status(const char *params, struct dm_status_thin_pool *s);
+
 #endif

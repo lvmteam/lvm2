@@ -21,13 +21,14 @@ SOURCES =\
 	datastruct/hash.c \
 	datastruct/list.c \
 	libdm-common.c \
-	libdm-file.c \
-	libdm-deptree.c \
-	libdm-string.c \
-	libdm-report.c \
-	libdm-timestamp.c \
-	libdm-stats.c \
 	libdm-config.c \
+	libdm-deptree.c \
+	libdm-file.c \
+	libdm-report.c \
+	libdm-stats.c \
+	libdm-string.c \
+	libdm-targets.c \
+	libdm-timestamp.c \
 	mm/dbg_malloc.c \
 	mm/pool.c \
 	regex/matcher.c \
