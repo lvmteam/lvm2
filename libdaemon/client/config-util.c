@@ -289,7 +289,7 @@ static int close_enough(double d1, double d2)
 	return fabs(d1 - d2) < DBL_EPSILON;
 }
 
-static int compare_value(struct dm_config_value *a, struct dm_config_value *b)
+int compare_value(struct dm_config_value *a, struct dm_config_value *b)
 {
 	int r = 0;
 

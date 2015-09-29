@@ -37,6 +37,70 @@ static struct cmd_context *_lvmetad_cmd = NULL;
 
 static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg);
 
+static int _log_debug_inequality(struct dm_config_node *a, struct dm_config_node *b)
+{
+	int result = 0;
+	int final_result = 0;
+
+	if (a->v && b->v) {
+		result = compare_value(a->v, b->v);
+		if (result) {
+			struct dm_config_value *av = a->v;
+			struct dm_config_value *bv = b->v;
+
+			if (!strcmp(a->key, b->key)) {
+				if (a->v->type == DM_CFG_STRING && b->v->type == DM_CFG_STRING)
+					log_debug_lvmetad("VG metadata inequality at %s / %s: %s / %s",
+							  a->key, b->key, av->v.str, bv->v.str);
+				else if (a->v->type == DM_CFG_INT && b->v->type == DM_CFG_INT)
+					log_debug_lvmetad("VG metadata inequality at %s / %s: %li / %li",
+							  a->key, b->key, (int64_t)av->v.i, (int64_t)bv->v.i);
+				else
+					log_debug_lvmetad("VG metadata inequality at %s / %s: type %d / type %d",
+							  a->key, b->key, av->type, bv->type);
+			} else {
+				log_debug_lvmetad("VG metadata inequality at %s / %s", a->key, b->key);
+			}
+			final_result = result;
+		}
+	}
+
+	if (a->v && !b->v) {
+		log_debug_lvmetad("VG metadata inequality at %s / %s", a->key, b->key);
+		final_result = 1;
+	}
+
+	if (!a->v && b->v) {
+		log_debug_lvmetad("VG metadata inequality at %s / %s", a->key, b->key);
+		final_result = -1;
+	}
+
+	if (a->child && b->child) {
+		result = _log_debug_inequality(a->child, b->child);
+		if (result)
+			final_result = result;
+	}
+
+	if (a->sib && b->sib) {
+		result = _log_debug_inequality(a->sib, b->sib);
+		if (result)
+			final_result = result;
+	}
+	
+
+	if (a->sib && !b->sib) {
+		log_debug_lvmetad("VG metadata inequality at %s / %s", a->key, b->key);
+		final_result = 1;
+	}
+
+	if (!a->sib && b->sib) {
+		log_debug_lvmetad("VG metadata inequality at %s / %s", a->key, b->key);
+		final_result = -1;
+	}
+
+	return final_result;
+}
+
 void lvmetad_disconnect(void)
 {
 	if (_lvmetad_connected)
@@ -1136,6 +1200,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 	struct format_instance *fid;
 	struct format_instance_ctx fic = { .type = 0 };
 	struct _lvmetad_pvscan_baton baton;
+	struct device *save_dev = NULL;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		/* missing pv */
@@ -1191,9 +1256,12 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 
 		if (!vgmeta_ret) {
 			vgmeta_ret = vgmeta;
+			save_dev = pvl->pv->dev;
 		} else {
 			if (compare_config(vgmeta_ret->root, vgmeta->root)) {
-				log_error("VG metadata comparison failed");
+				log_error("VG %s metadata comparison failed for device %s vs %s",
+					  vg->name, dev_name(pvl->pv->dev), save_dev ? dev_name(save_dev) : "none");
+				_log_debug_inequality(vgmeta_ret->root, vgmeta->root);
 				dm_config_destroy(vgmeta);
 				dm_config_destroy(vgmeta_ret);
 				release_vg(baton.vg);

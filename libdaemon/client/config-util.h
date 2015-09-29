@@ -42,6 +42,7 @@ struct dm_config_node *make_config_node(struct dm_config_tree *cft,
 					struct dm_config_node *parent,
 					struct dm_config_node *pre_sib);
 
+int compare_value(struct dm_config_value *a, struct dm_config_value *b);
 int compare_config(struct dm_config_node *a, struct dm_config_node *b);
 
 struct dm_config_node *make_text_node(struct dm_config_tree *cft,
