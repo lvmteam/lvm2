@@ -1122,6 +1122,8 @@ static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
  * due to something like an lvcreate from another host.
  * This is limited to changes that only affect the vg (not global state like
  * orphan PVs), so we only need to reread mdas on the vg's existing pvs.
+ * But, a previous PV in the VG may have been removed since we last read
+ * the VG, and that PV may have been reused for another VG.
  */
 
 static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg)
@@ -1160,9 +1162,25 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 
 		lvmcache_foreach_mda(info, _lvmetad_pvscan_single, &baton);
 
+		/*
+		 * The PV may have been removed from the VG by another host
+		 * since we last read the VG.
+		 */
 		if (!baton.vg) {
+			log_debug_lvmetad("Did not find VG %s in scan of PV %s", vg->name, dev_name(pvl->pv->dev));
 			lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
-			return NULL;
+			continue;
+		}
+
+		/*
+		 * The PV may have been removed from the VG and used for a
+		 * different VG since we last read the VG.
+		 */
+		if (strcmp(baton.vg->name, vg->name)) {
+			log_debug_lvmetad("Did not find VG %s in scan of PV %s which is now VG %s",
+					  vg->name, dev_name(pvl->pv->dev), baton.vg->name);
+			release_vg(baton.vg);
+			continue;
 		}
 
 		if (!(vgmeta = export_vg_to_config_tree(baton.vg))) {
