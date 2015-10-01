@@ -267,7 +267,7 @@ struct Journal {
         std::cout << std::endl << "### " << status.size() << " tests: "
                   << count( PASSED ) << " passed, "
                   << count( SKIPPED ) << " skipped, "
-                  << count( TIMEOUT ) + count( WARNED ) << " broken, "
+                  << count( TIMEOUT ) << " timed out, " << count( WARNED ) << " warned, "
                   << count( FAILED ) << " failed" << std::endl;
     }
 
@@ -1047,7 +1047,7 @@ struct Main {
         if ( die || fatal_signal )
             return 1;
 
-        return journal.count( Journal::FAILED ) ? 1 : 0;
+        return journal.count( Journal::FAILED ) || journal.count( Journal::TIMEOUT ) ? 1 : 0;
     }
 
     Main( Options o ) : die( false ), journal( o.outdir ), options( o ) {}
