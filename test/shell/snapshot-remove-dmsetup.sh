@@ -58,8 +58,16 @@ dmsetup resume $vg1-snap
 # Try how force removal works
 dmsetup suspend $vg-$lv1
 # needs to fail as device is still open
-not dmsetup remove --force $vg1-snap
+not dmsetup remove --force $vg1-snap &
+
+sleep .5
+
+dmsetup table $vg1-snap | tee out
+should grep -i error out
+
 dmsetup resume $vg-$lv1
+
+wait
 
 # check it really is now 'error' target
 dmsetup table $vg1-snap | tee out
