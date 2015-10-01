@@ -474,8 +474,8 @@ cfg(allocation_cache_policy_CFG, "cache_policy", allocation_CFG_SECTION, CFG_PRO
 	"otherwise the older mq (Multiqueue) policy is selected.\n")
 
 cfg_section(allocation_cache_settings_CFG_SECTION, "cache_settings", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(2, 2, 128), 0, NULL,
-	"Individual settings for policies.\n"
-	"See the help for individual policies for more info.\n")
+	"Settings for the cache policy.\n"
+	"See documentation for individual cache policies for more info.\n")
 
 cfg_section(policy_settings_CFG_SUBSECTION, "policy_settings", allocation_cache_settings_CFG_SECTION, CFG_NAME_VARIABLE | CFG_SECTION_NO_CHECK | CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, vsn(2, 2, 128), 0, NULL,
 	"Replace this subsection name with a policy name.\n"
