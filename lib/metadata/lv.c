@@ -29,7 +29,7 @@ static struct utsname _utsname;
 static int _utsinit = 0;
 
 static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
-			     int range_format)
+			    int range_format, int metadata_areas_only)
 {
 	unsigned int s;
 	const char *name = NULL;
@@ -41,13 +41,19 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 		return NULL;
 	}
 
+	if (metadata_areas_only && (!seg_is_raid(seg) || lv_is_raid_metadata(seg->lv) || lv_is_raid_image(seg->lv)))
+		goto out;
+
 	for (s = 0; s < seg->area_count; s++) {
-		switch (seg_type(seg, s)) {
+		switch (metadata_areas_only ? seg_metatype(seg, s) : seg_type(seg, s)) {
 		case AREA_LV:
-			name = seg_lv(seg, s)->name;
-			extent = seg_le(seg, s);
+			name = metadata_areas_only ? seg_metalv(seg, s)->name : seg_lv(seg, s)->name;
+			extent = metadata_areas_only ? seg_le(seg, s) : 0;
 			break;
 		case AREA_PV:
+			/* Raid metadata never uses PVs directly */
+			if (metadata_areas_only)
+				continue;
 			name = dev_name(seg_dev(seg, s));
 			extent = seg_pe(seg, s);
 			break;
@@ -79,7 +85,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 
 		if (range_format) {
 			if (dm_snprintf(extent_str, sizeof(extent_str),
-					FMTu32, extent + seg->area_len - 1) < 0) {
+					FMTu32, metadata_areas_only ? extent + seg_metalv(seg, s)->le_count - 1 : extent + seg->area_len - 1) < 0) {
 				log_error("Extent number dm_snprintf failed");
 				return NULL;
 			}
@@ -96,6 +102,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 		}
 	}
 
+out:
 	if (!dm_pool_grow_object(mem, "\0", 1)) {
 		log_error("dm_pool_grow_object failed");
 		return NULL;
@@ -106,12 +113,22 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 
 char *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 0);
+	return _format_pvsegs(mem, seg, 0, 0);
+}
+
+char *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	return _format_pvsegs(mem, seg, 0, 1);
 }
 
 char *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 1);
+	return _format_pvsegs(mem, seg, 1, 0);
+}
+
+char *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	return _format_pvsegs(mem, seg, 1, 1);
 }
 
 char *lvseg_tags_dup(const struct lv_segment *seg)

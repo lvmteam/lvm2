@@ -1304,6 +1304,18 @@ static int _devices_disp(struct dm_report *rh __attribute__((unused)), struct dm
 	return _field_set_value(field, str, NULL);
 }
 
+static int _metadatadevices_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private __attribute__((unused)))
+{
+	char *str;
+
+	if (!(str = lvseg_metadata_devices(mem, (const struct lv_segment *) data)))
+		return_0;
+
+	return _field_set_value(field, str, NULL);
+}
+
 static int _peranges_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 			  struct dm_report_field *field,
 			  const void *data, void *private __attribute__((unused)))
@@ -1311,6 +1323,18 @@ static int _peranges_disp(struct dm_report *rh __attribute__((unused)), struct d
 	char *str;
 
 	if (!(str = lvseg_seg_pe_ranges(mem, (const struct lv_segment *) data)))
+		return_0;
+
+	return _field_set_value(field, str, NULL);
+}
+
+static int _metadataleranges_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+				  struct dm_report_field *field,
+				  const void *data, void *private __attribute__((unused)))
+{
+	char *str;
+
+	if (!(str = lvseg_seg_metadata_le_ranges(mem, (const struct lv_segment *) data)))
 		return_0;
 
 	return _field_set_value(field, str, NULL);

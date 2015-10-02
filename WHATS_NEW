@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Add metadata_devices and seg_metadata_le_ranges report fields for raid vols.
   Fix lvm2-{activation,clvmd,cmirrord,monitor} service to exec before mounting.
 
 Version 2.02.132 - 22nd September 2015
