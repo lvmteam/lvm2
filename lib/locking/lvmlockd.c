@@ -2010,6 +2010,15 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	if (result == -EEXIST) {
+		/*
+		 * This happens if lvchange tries to modify the LV with an ex
+		 * LV lock when the LV is already active with a sh LV lock.
+		 */
+		log_error("LV is already locked with incompatible mode: %s/%s", vg->name, lv_name);
+		return 0;
+	}
+
 	if (result == -EMSGSIZE) {
 		/* Another host probably extended lvmlock. */
 		if (!refreshed++) {
