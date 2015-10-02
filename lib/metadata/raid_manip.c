@@ -460,9 +460,12 @@ static int _alloc_image_components(struct logical_volume *lv,
 	 * individual devies, we must specify how large the individual device
 	 * is along with the number we want ('count').
 	 */
-	extents = (segtype->parity_devs) ?
-		(lv->le_count / (seg->area_count - segtype->parity_devs)) :
-		lv->le_count;
+	if (segtype_is_raid10(segtype))
+		extents = lv->le_count / (seg->area_count / 2); /* we enforce 2 mirrors right now */
+	else
+		extents = (segtype->parity_devs) ?
+			   (lv->le_count / (seg->area_count - segtype->parity_devs)) :
+			   lv->le_count;
 
 	if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0, count, count,
 				    region_size, extents, pvs,
