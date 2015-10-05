@@ -86,10 +86,10 @@ NL='
 tool_usage() {
 	echo "${TOOL}: Utility to resize or check the filesystem on a device"
 	echo
-	echo "  ${TOOL} [options] check device"
+	echo "  ${TOOL} [options] check <device>"
 	echo "    - Check the filesystem on device using fsck"
 	echo
-	echo "  ${TOOL} [options] resize device [new_size[BKMGTPE]]"
+	echo "  ${TOOL} [options] resize <device> [<new_size>[BKMGTPE]]"
 	echo "    - Change the size of the filesystem on device to new_size"
 	echo
 	echo "  Options:"
