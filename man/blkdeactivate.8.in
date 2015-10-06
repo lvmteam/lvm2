@@ -14,10 +14,11 @@ blkdeactivate \(em utility to deactivate block devices
 blkdeactivate utility deactivates block devices. If a device
 is mounted, the utility can unmount it automatically before
 trying to deactivate. The utility currently supports
-device-mapper devices, including LVM volumes.
-LVM volumes are handled directly using the \fBlvm\fP(8) command.
-Other device-mapper based devices are handled using the
-\fBdmsetup\fP(8) command.
+device-mapper devices (DM), including LVM volumes and
+software RAID MD devices. LVM volumes are handled directly
+using the \fBlvm\fP(8) command, the rest of device-mapper
+based devices are handled using the \fBdmsetup\fP(8) command.
+MD devices are handled using the \fBmdadm\fP(8) command.
 .SH OPTIONS
 .TP
 .BR \-d ", " \-\-dmoption \ \fIdm_options\fP
@@ -88,4 +89,5 @@ of device-mapper devices in case the deactivation fails and force removal.
 .BR dmsetup (8),
 .BR lsblk (8),
 .BR lvm (8),
+.BR mdadm (8),
 .BR umount (8)

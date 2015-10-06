@@ -37,6 +37,7 @@ SYS_BLK_DIR='/sys/block'
 UMOUNT="/bin/umount"
 DMSETUP="@sbindir@/dmsetup"
 LVM="@sbindir@/lvm"
+MDADM="@sbindir@/mdadm"
 
 if $UMOUNT --help | grep -- "--all-targets" >$DEV_DIR/null; then
 	UMOUNT_OPTS="--all-targets "
@@ -47,6 +48,7 @@ else
 fi
 DMSETUP_OPTS=""
 LVM_OPTS=""
+MDADM_OPTS=""
 
 LSBLK="/bin/lsblk -r --noheadings -o TYPE,KNAME,NAME,MOUNTPOINT"
 LSBLK_VARS="local devtype local kname local name local mnt"
@@ -259,6 +261,28 @@ deactivate_lvm () {
 	fi
 }
 
+deactivate_md () {
+	local name=$(printf $name)
+	test -b "$DEV_DIR/$name" || return 0
+	test -z ${SKIP_DEVICE_LIST["$kname"]} || return 1
+
+	# Skip MD device deactivation if MD tools missing.
+	test $MDADM_AVAILABLE -eq 0 && {
+		add_device_to_skip_list
+		return 1
+	}
+
+	deactivate_holders "$DEV_DIR/$name" || return 1
+
+	echo -n "  [MD]: deactivating $devtype device $kname... "
+	if eval $MDADM $MDADM_OPTS -S "$name" $OUT $ERR; then
+		echo "done"
+	else
+		echo "skipping"
+		add_device_to_skip_list
+	fi
+}
+
 deactivate () {
 	######################################################################
 	# DEACTIVATION HOOKS FOR NEW DEVICE TYPES GO HERE!                   #
@@ -277,6 +301,8 @@ deactivate () {
 		deactivate_lvm
 	elif test "${kname:0:3}" = "dm-"; then
 		deactivate_dm
+	elif test "${kname:0:2}" = "md"; then
+		deactivate_md
 	fi
 }
 
@@ -392,6 +418,7 @@ set_env() {
 		UMOUNT_OPTS+="-v"
 		DMSETUP_OPTS+="-vvvv"
 		LVM_OPTS+="-vvvv"
+		MDADM_OPTS+="-vv"
 	else
 		OUT="1>$DEV_DIR/null"
 	fi
@@ -400,6 +427,12 @@ set_env() {
 		LVM_AVAILABLE=1
 	else
 		LVM_AVAILABLE=0
+	fi
+
+	if test -f $MDADM; then
+		MDADM_AVAILABLE=1
+	else
+		MDADM_AVAILABLE=0
 	fi
 }
 
