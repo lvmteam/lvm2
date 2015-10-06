@@ -431,7 +431,10 @@ Suppress locking failure messages.
 Changes the permission on volume lvol1 in volume group vg00 to be read-only:
 .sp
 .B lvchange \-pr vg00/lvol1
+.
 .SH SEE ALSO
+.
+.nh
 .BR lvm (8),
 .BR lvmetad (8),
 .BR lvs (8),

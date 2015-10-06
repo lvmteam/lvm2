@@ -757,6 +757,7 @@ directly.
 .
 .SH SEE ALSO
 .
+.nh
 .BR lvm.conf (5),
 .BR lvmcache (7),
 .BR lvmthin (7),
