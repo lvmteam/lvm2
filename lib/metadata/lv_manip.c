@@ -7087,12 +7087,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 		}
 
-		if (seg_is_thin_volume(lp) &&
-		    lv_is_new_thin_pool(pool_lv)) {
-			thin_pool_was_active = lv_is_active(pool_lv);
-			if (!check_new_thin_pool(pool_lv))
-				return_NULL;
-			/* New pool is now inactive */
+		if (seg_is_thin_volume(lp)) {
+			if (lv_is_new_thin_pool(pool_lv)) {
+				thin_pool_was_active = lv_is_active(pool_lv);
+				if (!check_new_thin_pool(pool_lv))
+					return_NULL;
+				/* New pool is now inactive */
+			} else if (!pool_below_threshold(first_seg(pool_lv))) {
+				log_error("Cannot create new thin volume, free space in "
+					  "thin pool %s reached threshold.",
+					  display_lvname(pool_lv));
+				return NULL;
+			}
 		}
 
 		if (seg_is_cache(lp) &&
