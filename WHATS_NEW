@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Properly identify internal LV holding sanlock locks within lv_role field.
   Add metadata_devices and seg_metadata_le_ranges report fields for raid vols.
   Fix lvm2-{activation,clvmd,cmirrord,monitor} service to exec before mounting.
 

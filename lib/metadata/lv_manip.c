@@ -129,6 +129,8 @@ enum {
 	LV_TYPE_RAID6_ZR,
 	LV_TYPE_RAID6_NR,
 	LV_TYPE_RAID6_NC,
+	LV_TYPE_LOCKD,
+	LV_TYPE_SANLOCK
 };
 
 static const char *_lv_type_names[] = {
@@ -173,6 +175,8 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_RAID6_ZR] =				SEG_TYPE_NAME_RAID6_ZR,
 	[LV_TYPE_RAID6_NR] =				SEG_TYPE_NAME_RAID6_NR,
 	[LV_TYPE_RAID6_NC] =				SEG_TYPE_NAME_RAID6_NC,
+	[LV_TYPE_LOCKD] =				"lockd",
+	[LV_TYPE_SANLOCK] =				"sanlock",
 };
 
 static int _lv_layout_and_role_mirror(struct dm_pool *mem,
@@ -504,6 +508,13 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	/* Old-style origins/snapshots, virtual origins */
 	if (!_lv_layout_and_role_thick_origin_snapshot(mem, lv, *layout, *role, &public_lv))
 		goto_bad;
+
+	if (lv_is_lockd_sanlock_lv(lv)) {
+		if (!str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_LOCKD]) ||
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_SANLOCK]))
+			goto_bad;
+		public_lv = 0;
+	}
 
 	/*
 	 * If layout not yet determined, it must be either
