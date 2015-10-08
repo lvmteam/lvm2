@@ -898,11 +898,17 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	use_clvmd = (locking_type == 3);
 
 	if (arg_is_set(cmd, locktype_ARG)) {
-		if (arg_is_set(cmd, clustered_ARG) || arg_is_set(cmd, shared_ARG)) {
-			log_error("A lock type cannot be specified with --shared or --clustered.");
+		if (arg_is_set(cmd, clustered_ARG)) {
+			log_error("A lock type cannot be specified with --clustered.");
 			return 0;
 		}
+
 		lock_type = arg_str_value(cmd, locktype_ARG, "");
+
+		if (arg_is_set(cmd, shared_ARG) && !is_lockd_type(lock_type)) {
+			log_error("The --shared option requires lock type sanlock or dlm.");
+			return 0;
+		}
 
 	} else if (arg_is_set(cmd, clustered_ARG)) {
 		const char *arg_str = arg_str_value(cmd, clustered_ARG, "");
