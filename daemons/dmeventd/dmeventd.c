@@ -931,7 +931,7 @@ static int _lookup_symbol(void *dl, void **symbol, const char *name)
 	return 0;
 }
 
-static int lookup_symbols(void *dl, struct dso_data *data)
+static int _lookup_symbols(void *dl, struct dso_data *data)
 {
 	return _lookup_symbol(dl, (void *) &data->process_event,
 			     "process_event") &&
@@ -962,7 +962,7 @@ static struct dso_data *_load_dso(struct message_data *data)
 		return NULL;
 	}
 
-	if (!(lookup_symbols(dl, ret))) {
+	if (!(_lookup_symbols(dl, ret))) {
 		_free_dso_data(ret);
 		dlclose(dl);
 		return NULL;
@@ -1931,7 +1931,7 @@ static int _reinstate_registrations(struct dm_event_fifos *fifos)
 	return 1;
 }
 
-static void restart(void)
+static void _restart_dmeventd(void)
 {
 	struct dm_event_fifos fifos = {
 		.server = -1,
@@ -2048,13 +2048,14 @@ bad:
 	exit(EXIT_FAILURE);
 }
 
-static void usage(char *prog, FILE *file)
+static void _usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
 		"%s [-d [-d [-d]]] [-f] [-h] [-R] [-V] [-?]\n\n"
 		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
 		"   -f       Don't fork, run in the foreground\n"
-		"   -h -?    Show this help information\n"
+		"   -h       Show this help information\n"
+		"   -?       Show this help information on stderr\n"
 		"   -R       Restart dmeventd\n"
 		"   -V       Show version of dmeventd\n\n", prog);
 }
@@ -2077,10 +2078,10 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, "?fhVdR")) != EOF) {
 		switch (opt) {
 		case 'h':
-			usage(argv[0], stdout);
+			_usage(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 		case '?':
-			usage(argv[0], stderr);
+			_usage(argv[0], stderr);
 			exit(EXIT_SUCCESS);
 		case 'R':
 			_restart++;
@@ -2106,7 +2107,7 @@ int main(int argc, char *argv[])
 		perror("Cannot set LC_ALL to C");
 
 	if (_restart)
-		restart();
+		_restart_dmeventd();
 
 #ifdef __linux__
 	_systemd_activation = _systemd_handover(&fifos);
