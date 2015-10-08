@@ -84,7 +84,7 @@ version without the system_id feature.
 
 .SS Types of VG access
 
-A local VG is mean to be used by a single host.
+A local VG is meant to be used by a single host.
 .br
 A shared or clustered VG is meant to be used by multiple hosts.
 .br
