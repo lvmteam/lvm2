@@ -931,9 +931,14 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		}
 
 	} else if (arg_is_set(cmd, shared_ARG)) {
+		int found_multiple = 0;
+
 		if (use_lvmlockd) {
-			if (!(lock_type = lockd_running_lock_type(cmd))) {
-				log_error("Failed to detect a running lock manager to select lock type.");
+			if (!(lock_type = lockd_running_lock_type(cmd, &found_multiple))) {
+				if (found_multiple)
+					log_error("Found multiple lock managers, select one with --lock-type.");
+				else
+					log_error("Failed to detect a running lock manager to select lock type.");
 				return 0;
 			}
 

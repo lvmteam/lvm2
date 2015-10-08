@@ -2561,7 +2561,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 	return 1;
 }
 
-const char *lockd_running_lock_type(struct cmd_context *cmd)
+const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple)
 {
 	daemon_reply reply;
 	const char *lock_type = NULL;
@@ -2583,10 +2583,9 @@ const char *lockd_running_lock_type(struct cmd_context *cmd)
 
 	switch (result) {
 	case -EXFULL:
-		log_error("lvmlockd found multiple lock managers, use --lock-type to select one.");
+		*found_multiple = 1;
 		break;
 	case -ENOLCK:
-		log_error("lvmlockd found no lock manager running.");
 		break;
 	case LOCK_TYPE_SANLOCK:
 		log_debug("lvmlockd found sanlock");
