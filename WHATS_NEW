@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Do not change logging in lvm2 library when it's already set.
   Check for enough space in thin-pool in command before creating new thin.
   Make libblkid detect all copies of the same signature if use_blkid_wiping=1.
   Fix vgimportclone with -n to not add number unnecessarily to base VG name.

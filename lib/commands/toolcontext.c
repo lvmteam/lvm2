@@ -362,7 +362,8 @@ static void _init_logging(struct cmd_context *cmd)
 
 	/* Tell device-mapper about our logging */
 #ifdef DEVMAPPER_SUPPORT
-	dm_log_with_errno_init(print_log);
+	if (!dm_log_is_non_default())
+		dm_log_with_errno_init(print_log);
 #endif
 	reset_log_duplicated();
 	reset_lvm_errno(1);
