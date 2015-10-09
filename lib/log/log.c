@@ -49,10 +49,7 @@ static size_t _lvm_errmsg_len = 0;
 
 void init_log_fn(lvm2_log_fn_t log_fn)
 {
-	if (log_fn)
-		_lvm2_log_fn = log_fn;
-	else
-		_lvm2_log_fn = NULL;
+	_lvm2_log_fn = log_fn;
 }
 
 /*

@@ -16,9 +16,9 @@
 #ifndef _LVM_LOGGING_H
 #define _LVM_LOGGING_H
 
+__attribute__ ((format(printf, 5, 6)))
 void print_log(int level, const char *file, int line, int dm_errno_or_class,
-	       const char *format, ...)
-    __attribute__ ((format(printf, 5, 6)));
+	       const char *format, ...);
 
 #define LOG_LINE(l, x...) \
     print_log(l, __FILE__, __LINE__ , 0, ## x)
