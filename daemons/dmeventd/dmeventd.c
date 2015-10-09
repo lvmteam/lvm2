@@ -1564,6 +1564,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 {
 	int die;
 	struct dm_event_daemon_message msg = { 0 };
+	int cmd;
 
 	/*
 	 * Read the request from the client (client_read, client_write
@@ -1572,7 +1573,8 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_read(fifos, &msg))
 		return;
 
-	DEBUGLOG("%s (0x%x) processing...", decode_cmd(msg.cmd), msg.cmd);
+	cmd = msg.cmd;
+	DEBUGLOG("%s (0x%x) processing...", decode_cmd(cmd), cmd);
 
 	die = (msg.cmd == DM_EVENT_CMD_DIE) ? 1 : 0;
 
@@ -1585,7 +1587,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 
 	dm_free(msg.data);
 
-	DEBUGLOG("%s (0x%x) completed.", decode_cmd(msg.cmd), msg.cmd);
+	DEBUGLOG("%s (0x%x) completed (=%d).", decode_cmd(cmd), cmd, msg.cmd);
 
 	if (die) {
 		if (unlink(DMEVENTD_PIDFILE))
