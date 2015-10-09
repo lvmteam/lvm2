@@ -150,7 +150,7 @@ void process_event(struct dm_task *dmt,
 	if (!dm_get_status_snapshot(state->mem, params, &status))
 		goto out;
 
-	if (status->invalid) {
+	if (status->invalid || status->overflow) {
 		struct dm_info info;
 		log_error("Snapshot %s is lost.", device);
 		if (dm_task_get_info(dmt, &info)) {
@@ -170,7 +170,7 @@ void process_event(struct dm_task *dmt,
 	 * If the snapshot has been invalidated or we failed to parse
 	 * the status string. Report the full status string to syslog.
 	 */
-	if (status->invalid || !status->total_sectors) {
+	if (status->invalid || status->overflow || !status->total_sectors) {
 		log_error("Snapshot %s changed state to: %s.", device, params);
 		state->percent_check = 0;
 		goto out;
