@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -718,13 +718,12 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 		} else if (thread->status == DM_THREAD_SHUTDOWN && ioctl_errno == EINTR)
 			ret = DM_WAIT_FATAL;
 		else {
-			syslog(LOG_NOTICE, "dm_task_run failed, errno = %d, %s",
-			       ioctl_errno, strerror(ioctl_errno));
 			if (ioctl_errno == ENXIO) {
-				syslog(LOG_ERR, "%s disappeared, detaching",
-				       thread->device.name);
+				log_error("%s disappeared, detaching.",
+					  thread->device.name);
 				ret = DM_WAIT_FATAL;
-			}
+			} else
+				log_sys_error("dm_task_run", "");
 		}
 	}
 	DEBUGLOG("Completed waitevent task for %s", thread->device.uuid);
@@ -778,8 +777,8 @@ static void _monitor_unregister(void *arg)
 
 	DEBUGLOG("_monitor_unregister thread cleanup handler running");
 	if (!_do_unregister_device(thread))
-		syslog(LOG_ERR, "%s: %s unregister failed\n", __func__,
-		       thread->device.name);
+		log_error("%s: %s unregister failed.", __func__,
+			  thread->device.name);
 	if (thread->current_task) {
 		dm_task_destroy(thread->current_task);
 		thread->current_task = NULL;
@@ -981,8 +980,8 @@ static struct dso_data *_load_dso(struct message_data *data)
 
 	if (!(dl = dlopen(data->dso_name, RTLD_NOW))) {
 		const char *dlerr = dlerror();
-		syslog(LOG_ERR, "dmeventd %s dlopen failed: %s", data->dso_name,
-		       dlerr);
+		log_error("dmeventd %s dlopen failed: %s.",
+			  data->dso_name, dlerr);
 		data->msg->size =
 		    dm_asprintf(&(data->msg->data), "%s %s dlopen failed: %s",
 				data->id, data->dso_name, dlerr);
@@ -1309,8 +1308,7 @@ static int _open_fifos(struct dm_event_fifos *fifos)
 	/* Create client fifo. */
 	(void) dm_prepare_selinux_context(fifos->client_path, S_IFIFO);
 	if ((mkfifo(fifos->client_path, 0600) == -1) && errno != EEXIST) {
-		syslog(LOG_ERR, "%s: Failed to create client fifo %s: %m.\n",
-		       __func__, fifos->client_path);
+		log_sys_error("client mkfifo", fifos->client_path);
 		(void) dm_prepare_selinux_context(NULL, 0);
 		goto fail;
 	}
@@ -1318,8 +1316,7 @@ static int _open_fifos(struct dm_event_fifos *fifos)
 	/* Create server fifo. */
 	(void) dm_prepare_selinux_context(fifos->server_path, S_IFIFO);
 	if ((mkfifo(fifos->server_path, 0600) == -1) && errno != EEXIST) {
-		syslog(LOG_ERR, "%s: Failed to create server fifo %s: %m.\n",
-		       __func__, fifos->server_path);
+		log_sys_error("server mkfifo", fifos->server_path);
 		(void) dm_prepare_selinux_context(NULL, 0);
 		goto fail;
 	}
@@ -1328,58 +1325,53 @@ static int _open_fifos(struct dm_event_fifos *fifos)
 
 	/* Warn about wrong permissions if applicable */
 	if ((!stat(fifos->client_path, &st)) && (st.st_mode & 0777) != 0600)
-		syslog(LOG_WARNING, "Fixing wrong permissions on %s: %m.\n",
-		       fifos->client_path);
+		log_warn("WARNING: Fixing wrong permissions on %s: %s.\n",
+			 fifos->client_path, strerror(errno));
 
 	if ((!stat(fifos->server_path, &st)) && (st.st_mode & 0777) != 0600)
-		syslog(LOG_WARNING, "Fixing wrong permissions on %s: %m.\n",
-		       fifos->server_path);
+		log_warn("WARNING: Fixing wrong permissions on %s: %s.\n",
+			 fifos->server_path, strerror(errno));
 
 	/* If they were already there, make sure permissions are ok. */
 	if (chmod(fifos->client_path, 0600)) {
-		syslog(LOG_ERR, "Unable to set correct file permissions on %s: %m.\n",
-		       fifos->client_path);
+		log_sys_error("chmod", fifos->client_path);
 		goto fail;
 	}
 
 	if (chmod(fifos->server_path, 0600)) {
-		syslog(LOG_ERR, "Unable to set correct file permissions on %s: %m.\n",
-		       fifos->server_path);
+		log_sys_error("chmod", fifos->server_path);
 		goto fail;
 	}
 
 	/* Need to open read+write or we will block or fail */
 	if ((fifos->server = open(fifos->server_path, O_RDWR)) < 0) {
-		syslog(LOG_ERR, "Failed to open fifo server %s: %m.\n",
-		       fifos->server_path);
+		log_sys_error("server open", fifos->server_path);
 		goto fail;
 	}
 
 	if (fcntl(fifos->server, F_SETFD, FD_CLOEXEC) < 0) {
-		syslog(LOG_ERR, "Failed to set FD_CLOEXEC for fifo server %s: %m.\n",
-		       fifos->server_path);
+		log_sys_error("fcntl(FD_CLOEXEC)", fifos->server_path);
 		goto fail;
 	}
 
 	/* Need to open read+write for select() to work. */
 	if ((fifos->client = open(fifos->client_path, O_RDWR)) < 0) {
-		syslog(LOG_ERR, "Failed to open fifo client %s: %m", fifos->client_path);
+		log_sys_error("client open", fifos->client_path);
 		goto fail;
 	}
 
 	if (fcntl(fifos->client, F_SETFD, FD_CLOEXEC) < 0) {
-		syslog(LOG_ERR, "Failed to set FD_CLOEXEC for fifo client %s: %m.\n",
-		       fifos->client_path);
+		log_sys_error("fcntl(FD_CLOEXEC)", fifos->client_path);
 		goto fail;
 	}
 
 	return 1;
 fail:
 	if (fifos->server >= 0 && close(fifos->server))
-		syslog(LOG_ERR, "Failed to close fifo server %s: %m", fifos->server_path);
+		log_sys_error("server close", fifos->server_path);
 
 	if (fifos->client >= 0 && close(fifos->client))
-		syslog(LOG_ERR, "Failed to close fifo client %s: %m", fifos->client_path);
+		log_sys_error("client close", fifos->client_path);
 
 	return 0;
 }
@@ -1591,7 +1583,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 
 	if (die) {
 		if (unlink(DMEVENTD_PIDFILE))
-			perror(DMEVENTD_PIDFILE ": unlink failed");
+			log_sys_error("unlink", DMEVENTD_PIDFILE);
 		_exit(0);
 	}
 }
@@ -1637,15 +1629,14 @@ static void _cleanup_unused_threads(void)
 				if (ret == ESRCH) {
 					thread->status = DM_THREAD_DONE;
 				} else if (ret) {
-					syslog(LOG_ERR, "Unable to terminate thread: %s",
-					       strerror(ret));
+					log_error("Unable to terminate thread: %s",
+						  strerror(ret));
 				}
 				break;
 			}
 
 			dm_list_del(l);
-			syslog(LOG_ERR,
-			       "thread can't be on unused list unless !thread->events");
+			log_error("thread can't be on unused list unless !thread->events");
 			thread->status = DM_THREAD_RUNNING;
 			LINK_THREAD(thread);
 
@@ -1665,7 +1656,7 @@ static void _cleanup_unused_threads(void)
 	_unlock_mutex();
 
 	if (join_ret)
-		syslog(LOG_ERR, "Failed pthread_join: %s\n", strerror(join_ret));
+		log_error("Failed pthread_join: %s.", strerror(join_ret));
 }
 
 static void _sig_alarm(int signum __attribute__((unused)))
@@ -1709,14 +1700,14 @@ static int _set_oom_adj(const char *oom_adj_path, int val)
 	FILE *fp;
 
 	if (!(fp = fopen(oom_adj_path, "w"))) {
-		perror("oom_adj: fopen failed");
+		log_sys_error("open", oom_adj_path);
 		return 0;
 	}
 
 	fprintf(fp, "%i", val);
 
 	if (dm_fclose(fp))
-		perror("oom_adj: fclose failed");
+		log_sys_error("fclose", oom_adj_path);
 
 	return 1;
 }
@@ -1730,14 +1721,11 @@ static int _protect_against_oom_killer(void)
 
 	if (stat(OOM_ADJ_FILE, &st) == -1) {
 		if (errno != ENOENT)
-			perror(OOM_ADJ_FILE ": stat failed");
+			log_sys_error("stat", OOM_ADJ_FILE);
 
 		/* Try old oom_adj interface as a fallback */
 		if (stat(OOM_ADJ_FILE_OLD, &st) == -1) {
-			if (errno == ENOENT)
-				perror(OOM_ADJ_FILE_OLD " not found");
-			else
-				perror(OOM_ADJ_FILE_OLD ": stat failed");
+			log_sys_error("stat", OOM_ADJ_FILE_OLD);
 			return 1;
 		}
 
@@ -1826,14 +1814,14 @@ out:
 static void _remove_files_on_exit(void)
 {
 	if (unlink(DMEVENTD_PIDFILE))
-		perror(DMEVENTD_PIDFILE ": unlink failed");
+		log_sys_error("unlink", DMEVENTD_PIDFILE);
 
 	if (!_systemd_activation) {
 		if (unlink(DM_EVENT_FIFO_CLIENT))
-			perror(DM_EVENT_FIFO_CLIENT " : unlink failed");
+			log_sys_error("unlink", DM_EVENT_FIFO_CLIENT);
 
 		if (unlink(DM_EVENT_FIFO_SERVER))
-			perror(DM_EVENT_FIFO_SERVER " : unlink failed");
+			log_sys_error("unlink", DM_EVENT_FIFO_SERVER);
 	}
 }
 
@@ -1855,7 +1843,7 @@ static void _daemonize(void)
 
 	switch (pid = fork()) {
 	case -1:
-		perror("fork failed:");
+		log_sys_error("fork", "");
 		exit(EXIT_FAILURE);
 
 	case 0:		/* Child */
@@ -2167,7 +2155,7 @@ int main(int argc, char *argv[])
 #ifdef __linux__
 	/* Systemd has adjusted oom killer for us already */
 	if (!_systemd_activation && !_protect_against_oom_killer())
-		syslog(LOG_ERR, "Failed to protect against OOM killer");
+		log_error("Failed to protect against OOM killer.");
 #endif
 
 	_init_thread_signals();
@@ -2185,7 +2173,7 @@ int main(int argc, char *argv[])
 	/* Signal parent, letting them know we are ready to go. */
 	if (!_foreground)
 		kill(getppid(), SIGTERM);
-	syslog(LOG_NOTICE, "dmeventd ready for processing.");
+	log_notice("dmeventd ready for processing.");
 
 	if (_initial_registrations)
 		_process_initial_registrations();
@@ -2204,8 +2192,8 @@ int main(int argc, char *argv[])
 			_unlock_mutex();
 			if (nothreads)
 				break;
-			syslog(LOG_ERR, "There are still devices being monitored.");
-			syslog(LOG_ERR, "Refusing to exit.");
+			log_error("There are still devices being monitored.");
+			log_error("Refusing to exit.");
 		}
 		_process_request(&fifos);
 		_cleanup_unused_threads();
@@ -2215,7 +2203,7 @@ int main(int argc, char *argv[])
 
 	pthread_mutex_destroy(&_global_mutex);
 
-	syslog(LOG_NOTICE, "dmeventd shutting down.");
+	log_notice("dmeventd shutting down.");
 	closelog();
 
 	exit(EXIT_SUCCESS);

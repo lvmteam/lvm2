@@ -155,8 +155,8 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 	int r;
 
 	if (!dm_split_lvm_name(mem, device, &vg, &lv, &layer)) {
-		syslog(LOG_ERR, "Unable to determine VG name from %s.\n",
-		       device);
+		log_error("Unable to determine VG name from %s.",
+			  device);
 		return 0;
 	}
 
@@ -170,7 +170,7 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 	dm_pool_free(mem, vg);
 
 	if (r < 0) {
-		syslog(LOG_ERR, "Unable to form LVM command. (too long).\n");
+		log_error("Unable to form LVM command. (too long).");
 		return 0;
 	}
 

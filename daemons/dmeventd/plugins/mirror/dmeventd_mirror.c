@@ -39,18 +39,15 @@ static int _process_status_code(const char status_code, const char *dev_name,
 	 *    U => Unclassified failure (bug)
 	 */ 
 	if (status_code == 'F') {
-		syslog(LOG_ERR, "%s device %s flush failed.",
-		       dev_type, dev_name);
+		log_error("%s device %s flush failed.", dev_type, dev_name);
 		r = ME_FAILURE;
 	} else if (status_code == 'S')
-		syslog(LOG_ERR, "%s device %s sync failed.",
-		       dev_type, dev_name);
+		log_error("%s device %s sync failed.", dev_type, dev_name);
 	else if (status_code == 'R')
-		syslog(LOG_ERR, "%s device %s read failed.",
-		       dev_type, dev_name);
+		log_error("%s device %s read failed.", dev_type, dev_name);
 	else if (status_code != 'A') {
-		syslog(LOG_ERR, "%s device %s has failed (%c).",
-		       dev_type, dev_name, status_code);
+		log_error("%s device %s has failed (%c).",
+			  dev_type, dev_name, status_code);
 		r = ME_FAILURE;
 	}
 
@@ -125,7 +122,8 @@ out:
 
 out_parse:
 	dm_free(args);
-	syslog(LOG_ERR, "Unable to parse mirror status string.");
+	log_error("Unable to parse mirror status string.");
+
 	return ME_IGNORE;
 }
 
@@ -142,7 +140,7 @@ static int _remove_failed_devices(const char *device)
 	r = dmeventd_lvm2_run(cmd_str);
 
 	if (!r)
-		syslog(LOG_INFO, "Re-scan of mirror device %s failed.", device);
+		log_info("Re-scan of mirror device %s failed.", device);
 
 	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
 				  "lvconvert --config devices{ignore_suspended_devices=1} "
@@ -152,8 +150,8 @@ static int _remove_failed_devices(const char *device)
 	/* if repair goes OK, report success even if lvscan has failed */
 	r = dmeventd_lvm2_run(cmd_str);
 
-	syslog(LOG_INFO, "Repair of mirrored device %s %s.", device,
-	       (r) ? "finished successfully" : "failed");
+	log_info("Repair of mirrored device %s %s.", device,
+		 (r) ? "finished successfully" : "failed");
 
 	return (r) ? 0 : -1;
 }
@@ -175,12 +173,12 @@ void process_event(struct dm_task *dmt,
 					  &target_type, &params);
 
 		if (!target_type) {
-			syslog(LOG_INFO, "%s mapping lost.", device);
+			log_info("%s mapping lost.", device);
 			continue;
 		}
 
 		if (strcmp(target_type, "mirror")) {
-			syslog(LOG_INFO, "%s has unmirrored portion.", device);
+			log_info("%s has unmirrored portion.", device);
 			continue;
 		}
 
@@ -190,25 +188,25 @@ void process_event(struct dm_task *dmt,
 			   _part_ of the device is in sync
 			   Also, this is not an error
 			*/
-			syslog(LOG_NOTICE, "%s is now in-sync.", device);
+			log_notice("%s is now in-sync.", device);
 			break;
 		case ME_FAILURE:
-			syslog(LOG_ERR, "Device failure in %s.", device);
+			log_error("Device failure in %s.", device);
 			if (_remove_failed_devices(device))
 				/* FIXME Why are all the error return codes unused? Get rid of them? */
-				syslog(LOG_ERR, "Failed to remove faulty devices in %s.",
-				       device);
+				log_error("Failed to remove faulty devices in %s.",
+					  device);
 			/* Should check before warning user that device is now linear
 			else
-				syslog(LOG_NOTICE, "%s is now a linear device.\n",
-					device);
+				log_notice("%s is now a linear device.",
+					   device);
 			*/
 			break;
 		case ME_IGNORE:
 			break;
 		default:
 			/* FIXME Provide value then! */
-			syslog(LOG_INFO, "Unknown event received.");
+			log_info("Unknown event received.");
 		}
 	} while (next);
 
@@ -224,7 +222,7 @@ int register_device(const char *device,
 	if (!dmeventd_lvm2_init())
 		return 0;
 
-	syslog(LOG_INFO, "Monitoring mirror device %s for events.", device);
+	log_info("Monitoring mirror device %s for events.", device);
 
 	return 1;
 }
@@ -235,8 +233,8 @@ int unregister_device(const char *device,
 		      int minor __attribute__((unused)),
 		      void **unused __attribute__((unused)))
 {
-	syslog(LOG_INFO, "No longer monitoring mirror device %s for events.",
-	       device);
+	log_info("No longer monitoring mirror device %s for events.",
+		 device);
 	dmeventd_lvm2_exit();
 
 	return 1;

@@ -39,7 +39,7 @@ static int run_repair(const char *device)
 	r = dmeventd_lvm2_run(cmd_str);
 
 	if (!r)
-		syslog(LOG_INFO, "Re-scan of RAID device %s failed.", device);
+		log_info("Re-scan of RAID device %s failed.", device);
 
 	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
 				  "lvconvert --config devices{ignore_suspended_devices=1} "
@@ -50,7 +50,7 @@ static int run_repair(const char *device)
 	r = dmeventd_lvm2_run(cmd_str);
 
 	if (!r)
-		syslog(LOG_INFO, "Repair of RAID device %s failed.", device);
+		log_info("Repair of RAID device %s failed.", device);
 
 	return (r) ? 0 : -1;
 }
@@ -69,8 +69,7 @@ static int _process_raid_event(char *params, const char *device)
 	 *                 <health chars> <resync ratio>
 	 */
 	if (!dm_split_words(params, 4, 0, a)) {
-		syslog(LOG_ERR, "Failed to process status line for %s\n",
-		       device);
+		log_error("Failed to process status line for %s.", device);
 		return -EINVAL;
 	}
 	raid_type = a[0];
@@ -79,8 +78,8 @@ static int _process_raid_event(char *params, const char *device)
 	resync_ratio = a[3];
 
 	if (!(n = atoi(num_devices))) {
-		syslog(LOG_ERR, "Failed to parse number of devices for %s: %s",
-		       device, num_devices);
+		log_error("Failed to parse number of devices for %s: %s.",
+			  device, num_devices);
 		return -EINVAL;
 	}
 
@@ -92,9 +91,8 @@ static int _process_raid_event(char *params, const char *device)
 			/* Device is 'a'live, but not yet in-sync */
 			break;
 		case 'D':
-			syslog(LOG_ERR,
-			       "Device #%d of %s array, %s, has failed.",
-			       i, raid_type, device);
+			log_error("Device #%d of %s array, %s, has failed.",
+				  i, raid_type, device);
 			failure++;
 			break;
 		default:
@@ -107,13 +105,13 @@ static int _process_raid_event(char *params, const char *device)
 
 	p = strstr(resync_ratio, "/");
 	if (!p) {
-		syslog(LOG_ERR, "Failed to parse resync_ratio for %s: %s",
-		       device, resync_ratio);
+		log_error("Failed to parse resync_ratio for %s: %s.",
+			  device, resync_ratio);
 		return -EINVAL;
 	}
 	p[0] = '\0';
-	syslog(LOG_INFO, "%s array, %s, is %s in-sync.",
-	       raid_type, device, strcmp(resync_ratio, p+1) ? "not" : "now");
+	log_info("%s array, %s, is %s in-sync.",
+		 raid_type, device, strcmp(resync_ratio, p+1) ? "not" : "now");
 
 	return 0;
 }
@@ -135,18 +133,18 @@ void process_event(struct dm_task *dmt,
 					  &target_type, &params);
 
 		if (!target_type) {
-			syslog(LOG_INFO, "%s mapping lost.", device);
+			log_info("%s mapping lost.", device);
 			continue;
 		}
 
 		if (strcmp(target_type, "raid")) {
-			syslog(LOG_INFO, "%s has non-raid portion.", device);
+			log_info("%s has non-raid portion.", device);
 			continue;
 		}
 
 		if (_process_raid_event(params, device))
-			syslog(LOG_ERR, "Failed to process event for %s",
-			       device);
+			log_error("Failed to process event for %s.",
+				  device);
 	} while (next);
 
 	dmeventd_lvm2_unlock();
@@ -161,7 +159,7 @@ int register_device(const char *device,
 	if (!dmeventd_lvm2_init())
 		return 0;
 
-	syslog(LOG_INFO, "Monitoring RAID device %s for events.", device);
+	log_info("Monitoring RAID device %s for events.", device);
 
 	return 1;
 }
@@ -172,8 +170,8 @@ int unregister_device(const char *device,
 		      int minor __attribute__((unused)),
 		      void **unused __attribute__((unused)))
 {
-	syslog(LOG_INFO, "No longer monitoring RAID device %s for events.",
-	       device);
+	log_info("No longer monitoring RAID device %s for events.",
+		 device);
 	dmeventd_lvm2_exit();
 
 	return 1;

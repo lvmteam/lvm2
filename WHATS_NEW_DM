@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Convert dmeventd to use common logging macro system from libdm.
   Return -ENOMEM when device registration fails instead of 0 (=success).
   Enforce writethrough mode for cleaner policy.
   Add support for recognition and deactivation of MD devices to blkdeactivate.

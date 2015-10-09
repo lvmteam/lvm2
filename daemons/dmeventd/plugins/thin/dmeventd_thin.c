@@ -93,8 +93,8 @@ static int _has_deps(const char *name, int tp_major, int tp_minor, int *dev_mino
 	{
 		char dev_name[PATH_MAX];
 		if (dm_device_get_name(major, minor, 0, dev_name, sizeof(dev_name)))
-			syslog(LOG_DEBUG, "Found %s (%u:%u) depends on %s",
-			       name, major, *dev_minor, dev_name);
+			log_debug("Found %s (%u:%u) depends on %s.",
+				  name, major, *dev_minor, dev_name);
 	}
 #endif
 	r = 1;
@@ -144,7 +144,7 @@ out:
 static int _extend(struct dso_state *state)
 {
 #if THIN_DEBUG
-	syslog(LOG_INFO, "dmeventd executes: %s.\n", state->cmd_str);
+	log_info("dmeventd executes: %s.", state->cmd_str);
 #endif
 	return dmeventd_lvm2_run(state->cmd_str);
 }
@@ -173,7 +173,7 @@ static int _run(const char *cmd, ...)
 		va_end(ap);
 
 		execvp(cmd, (char **)argv);
-		syslog(LOG_ERR, "Failed to execute %s: %s.\n", cmd, strerror(errno));
+		log_sys_error("exec", cmd);
 		exit(127);
 	}
 
@@ -202,11 +202,11 @@ static int _umount_device(char *buffer, unsigned major, unsigned minor,
 	struct mountinfo_s *data = cb_data;
 
 	if ((major == data->info.major) && dm_bit(data->minors, minor)) {
-		syslog(LOG_INFO, "Unmounting thin volume %s from %s.\n",
-		       data->device, target);
+		log_info("Unmounting thin volume %s from %s.",
+			 data->device, target);
 		if (!_run(UMOUNT_COMMAND, "-fl", target, NULL))
-			syslog(LOG_ERR, "Failed to umount thin %s from %s: %s.\n",
-			       data->device, target, strerror(errno));
+			log_error("Failed to umount thin %s from %s: %s.",
+				  data->device, target, strerror(errno));
 	}
 
 	return 1;
@@ -230,17 +230,17 @@ static void _umount(struct dm_task *dmt, const char *device)
 	dmeventd_lvm2_unlock();
 
 	if (!(data.minors = dm_bitset_create(NULL, MINORS))) {
-		syslog(LOG_ERR, "Failed to allocate bitset. Not unmounting %s.\n", device);
+		log_error("Failed to allocate bitset. Not unmounting %s.", device);
 		goto out;
 	}
 
 	if (!_find_all_devs(data.minors, data.info.major, data.info.minor)) {
-		syslog(LOG_ERR, "Failed to detect mounted volumes for %s.\n", device);
+		log_error("Failed to detect mounted volumes for %s.", device);
 		goto out;
 	}
 
 	if (!dm_mountinfo_read(_umount_device, &data)) {
-		syslog(LOG_ERR, "Could not parse mountinfo file.\n");
+		log_error("Could not parse mountinfo file.");
 		goto out;
 	}
 
@@ -273,21 +273,21 @@ void process_event(struct dm_task *dmt,
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 
 	if (!target_type || (strcmp(target_type, "thin-pool") != 0)) {
-		syslog(LOG_ERR, "Invalid target type.\n");
+		log_error("Invalid target type.");
 		goto out;
 	}
 
 	if (!dm_get_status_thin_pool(state->mem, params, &tps)) {
-		syslog(LOG_ERR, "Failed to parse status.\n");
+		log_error("Failed to parse status.");
 		_umount(dmt, device);
 		goto out;
 	}
 
 #if THIN_DEBUG
-	syslog(LOG_INFO, "%p: Got status %" PRIu64 " / %" PRIu64
-	       " %" PRIu64  " / %" PRIu64 ".\n", state,
-	       tps->used_metadata_blocks, tps->total_metadata_blocks,
-	       tps->used_data_blocks, tps->total_data_blocks);
+	log_debug("%p: Got status " FMTu64 " / " FMTu64 " " FMTu64
+		  " / " FMTu64 ".", state,
+		  tps->used_metadata_blocks, tps->total_metadata_blocks,
+		  tps->used_data_blocks, tps->total_data_blocks);
 #endif
 
 	/* Thin pool size had changed. Clear the threshold. */
@@ -311,12 +311,12 @@ void process_event(struct dm_task *dmt,
 
 		/* FIXME: extension of metadata needs to be written! */
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
-			syslog(LOG_WARNING, "Thin metadata %s is now %i%% full.\n",
-			       device, percent);
+			log_warn("WARNING: Thin metadata %s is now %i%% full.",
+				 device, percent);
 		 /* Try to extend the metadata, in accord with user-set policies */
 		if (!_extend(state)) {
-			syslog(LOG_ERR, "Failed to extend thin metadata %s.\n",
-			       device);
+			log_error("Failed to extend thin metadata %s.",
+				  device);
 			_umount(dmt, device);
 		}
 		/* FIXME: hmm READ-ONLY switch should happen in error path */
@@ -331,10 +331,11 @@ void process_event(struct dm_task *dmt,
 		state->data_percent_check = (percent / CHECK_STEP) * CHECK_STEP + CHECK_STEP;
 
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
-			syslog(LOG_WARNING, "Thin %s is now %i%% full.\n", device, percent);
+			log_warn("WARNING: Thin %s is now %i%% full.",
+				 device, percent);
 		/* Try to extend the thin data, in accord with user-set policies */
 		if (!_extend(state)) {
-			syslog(LOG_ERR, "Failed to extend thin %s.\n", device);
+			log_error("Failed to extend thin %s.", device);
 			state->data_percent_check = 0;
 			_umount(dmt, device);
 		}
@@ -376,11 +377,11 @@ int register_device(const char *device,
 	state->data_percent_check = CHECK_MINIMUM;
 	*private = state;
 
-	syslog(LOG_INFO, "Monitoring thin %s.\n", device);
+	log_info("Monitoring thin %s.", device);
 
 	return 1;
 bad:
-	syslog(LOG_ERR, "Failed to monitor thin %s.\n", device);
+	log_error("Failed to monitor thin %s.", device);
 
 	return 0;
 }
@@ -393,7 +394,7 @@ int unregister_device(const char *device,
 {
 	struct dso_state *state = *private;
 
-	syslog(LOG_INFO, "No longer monitoring thin %s.\n", device);
+	log_info("No longer monitoring thin %s.", device);
 	dm_pool_destroy(state->mem);
 	dmeventd_lvm2_exit();
 
