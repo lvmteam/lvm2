@@ -497,7 +497,9 @@ EXPORTED_SYMBOLS := $(wildcard $(srcdir)/.exported_symbols.Base $(srcdir)/.expor
 ifeq (,$(firstword $(EXPORTED_SYMBOLS)))
 	set -e; (echo "Base {"; echo "	global:";\
 		 $(SED) "s/^/		/;s/$$/;/" $<;\
-		 echo "	local:"; echo "		*;"; echo "};") > $@
+		 echo "};";\
+		 echo "Local {"; echo "	local:"; echo "		*;"; echo "};";\
+		 ) > $@
 else
 	set -e;\
 	R=$$(sort $^ | uniq -u);\
