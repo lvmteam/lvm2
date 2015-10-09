@@ -1683,7 +1683,7 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 		return;
 	}
 
-	if (!lvmetad_used())
+	if (!lvmetad_active())
 		return;
 
 	log_debug_lvmetad("Validating global lvmetad cache");
