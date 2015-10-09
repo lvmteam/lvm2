@@ -28,11 +28,6 @@ ifeq ("@APPLIB@", "yes")
 	LVMLIBS = @LVM2APP_LIB@ -ldevmapper
 endif
 
-ifeq ("@DMEVENTD@", "yes")
-	DEPLIBS += $(top_builddir)/daemons/dmeventd/libdevmapper-event.so
-	LVMLIBS += -ldevmapper-event
-endif
-
 LVM_SCRIPTS = lvmdump.sh lvmconf.sh vgimportclone.sh
 DM_SCRIPTS =
 
