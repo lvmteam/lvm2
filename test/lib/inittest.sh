@@ -30,7 +30,7 @@ COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
 
 # Check we are not conflickting with some exiting setup
-dmsetup table | not grep "$PREFIX" || die "DM table already has devices with prefix $PREFIX!"
+dmsetup table | not grep "${PREFIX}[^0-9]" || die "DM table already has devices with prefix $PREFIX!"
 
 if test -z "$LVM_TEST_DIR"; then LVM_TEST_DIR=$TMPDIR; fi
 TESTDIR=$(mkdtemp "${LVM_TEST_DIR:-/tmp}" "$PREFIX.XXXXXXXXXX") || \
