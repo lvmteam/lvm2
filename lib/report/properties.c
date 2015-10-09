@@ -420,6 +420,8 @@ GET_VG_NUM_PROPERTY_FN(vg_mda_copies, (vg_mda_copies(vg)))
 SET_VG_NUM_PROPERTY_FN(vg_mda_copies, vg_set_mda_copies)
 GET_VG_STR_PROPERTY_FN(vg_profile, vg_profile_dup(vg))
 #define _vg_profile_set prop_not_implemented_set
+GET_VG_NUM_PROPERTY_FN(vg_missing_pv_count, vg_missing_pv_count(vg))
+#define _vg_missing_pv_count_set prop_not_implemented_set
 
 /* LVSEG */
 GET_LVSEG_STR_PROPERTY_FN(segtype, lvseg_segtype_dup(lvseg->lv->vg->vgmem, lvseg))
