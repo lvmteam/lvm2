@@ -16,13 +16,12 @@
  * dmeventd - dm event daemon to monitor active mapped devices
  */
 
-#include "tool.h"
-
-//#include "libmultilog.h"
 #include "dm-logging.h"
 
 #include "libdevmapper-event.h"
 #include "dmeventd.h"
+
+#include "tool.h"
 
 #include <dlfcn.h>
 #include <pthread.h>
@@ -61,7 +60,6 @@
 
 #endif
 
-/* FIXME We use syslog for now, because multilog is not yet implemented */
 #include <syslog.h>
 
 static volatile sig_atomic_t _exit_now = 0;	/* set to '1' when signal is given to exit */
@@ -114,15 +112,14 @@ static char **_initial_registrations = 0;
 
 /* FIXME Make configurable at runtime */
 #ifdef DEBUG
-#  define DEBUGLOG(fmt, args...) debuglog("[Thr %x]: " fmt, (int)pthread_self(), ## args)
-void debuglog(const char *fmt, ... ) __attribute__ ((format(printf, 1, 2)));
-
-void debuglog(const char *fmt, ...)
+#  define DEBUGLOG  log_debug
+__attribute__((format(printf, 4, 5)))
+static void _dmeventd_log(int level, const char *file, int line,
+			  const char *format, ...)
 {
 	va_list ap;
-
-	va_start(ap, fmt);
-	vsyslog(LOG_DEBUG, fmt, ap);
+	va_start(ap, format);
+	dm_event_log("dm", level, file, line, 0, format, ap);
 	va_end(ap);
 }
 
@@ -632,24 +629,6 @@ static void _unregister_for_timeout(struct thread_status *thread)
 			pthread_cond_signal(&_timeout_cond);
 	}
 	pthread_mutex_unlock(&_timeout_mutex);
-}
-
-__attribute__((format(printf, 4, 5)))
-static void _no_intr_log(int level, const char *file, int line,
-			const char *f, ...)
-{
-	va_list ap;
-
-	if (errno == EINTR)
-		return;
-	if (level > _LOG_WARN)
-		return;
-
-	va_start(ap, f);
-	vfprintf((level < _LOG_WARN) ? stderr : stdout, f, ap);
-	va_end(ap);
-
-	fputc('\n', (level < _LOG_WARN) ? stderr : stdout);
 }
 
 static sigset_t _unblock_sigalrm(void)
@@ -2138,6 +2117,9 @@ int main(int argc, char *argv[])
 		_daemonize();
 
 	openlog("dmeventd", LOG_PID, LOG_DAEMON);
+
+	dm_event_log_set(_debug_level, _use_syslog);
+	dm_log_init(_dmeventd_log);
 
 	(void) dm_prepare_selinux_context(DMEVENTD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(DMEVENTD_PIDFILE) == 0)
