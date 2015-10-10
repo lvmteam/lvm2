@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -104,6 +104,25 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next);
  */
 int dm_event_register_handler(const struct dm_event_handler *dmevh);
 int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
+
+/* Set debug level for logging, and whether to log on stdout/stderr or syslog */
+void dm_event_log_set(int debug_level, int use_syslog);
+
+/* Log messages acroding to current debug level  */
+__attribute__((format(printf, 6, 0)))
+void dm_event_log(const char *subsys, int level, const char *file,
+		  int line, int dm_errno_or_class,
+		  const char *format, va_list ap);
+/* Macro to route print_log do dm_event_log() */
+#define DM_EVENT_LOG_FN(subsys) \
+void print_log(int level, const char *file, int line, int dm_errno_or_class,\
+	       const char *format, ...)\
+{\
+	va_list ap;\
+	va_start(ap, format);\
+	dm_event_log(subsys, level, file, line, dm_errno_or_class, format, ap);\
+	va_end(ap);\
+}
 
 /* Prototypes for DSO interface, see dmeventd.c, struct dso_data for
    detailed descriptions. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -12,9 +12,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "dm-logging.h"
 #include "dmlib.h"
 #include "libdevmapper-event.h"
-//#include "libmultilog.h"
 #include "dmeventd.h"
 
 #include <fcntl.h>
@@ -23,7 +23,11 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
+#include <pthread.h>
+#include <syslog.h>
 
+static int _debug_level = 0;
+static int _use_syslog = 0;
 static int _sequence_nr = 0;
 
 struct dm_event_handler {
@@ -821,6 +825,79 @@ int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
 		*version = atoi(p);
 
 	return 1;
+}
+
+void dm_event_log_set(int debug_level, int use_syslog)
+{
+	_debug_level = debug_level;
+	_use_syslog = use_syslog;
+}
+
+void dm_event_log(const char *subsys, int level, const char *file,
+		  int line, int dm_errno_or_class,
+		  const char *format, va_list ap)
+{
+	static pthread_mutex_t _log_mutex = PTHREAD_MUTEX_INITIALIZER;
+	static time_t start = 0;
+	const char *indent = "";
+	FILE *stream = stdout;
+	int prio = -1;
+	time_t now;
+
+	switch (level & ~(_LOG_STDERR | _LOG_ONCE)) {
+	case _LOG_DEBUG:
+		if (_debug_level < 3)
+			return;
+		prio = LOG_DEBUG;
+		indent = "      ";
+		break;
+	case _LOG_INFO:
+		if (_debug_level < 2)
+			return;
+		prio = LOG_INFO;
+		indent = "    ";
+		break;
+	case _LOG_NOTICE:
+		if (_debug_level < 1)
+			return;
+		prio = LOG_NOTICE;
+		indent = "  ";
+		break;
+	case _LOG_WARN:
+		prio = LOG_WARNING;
+		break;
+	case _LOG_ERR:
+		prio = LOG_ERR;
+		stream = stderr;
+		break;
+	default:
+		prio = LOG_CRIT;
+	}
+
+	/* Serialize to keep lines readable */
+	pthread_mutex_lock(&_log_mutex);
+
+	if (_use_syslog) {
+		vsyslog(prio, format, ap);
+	} else {
+		now = time(NULL);
+		if (!start)
+			start = now;
+		now -= start;
+		fprintf(stream, "[%2d:%02d] %8x:%-6s%s",
+			(int)now / 60, (int)now % 60,
+			// TODO: Maybe use shorter ID
+			// ((int)(pthread_self()) >> 6) & 0xffff,
+			(int)pthread_self(), subsys,
+			(_debug_level > 3) ? "" : indent);
+		if (_debug_level > 3)
+			fprintf(stream, "%28s:%4d %s", file, line, indent);
+		vfprintf(stream, _(format), ap);
+		fputc('\n', stream);
+		fflush(stream);
+	}
+
+	pthread_mutex_unlock(&_log_mutex);
 }
 
 #if 0				/* left out for now */
