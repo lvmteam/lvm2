@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2007-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,14 +13,11 @@
  */
 
 #include "lib.h"
-
-#include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
+#include "libdevmapper-event.h"
 
 #include <sys/wait.h>
-#include <syslog.h> /* FIXME Replace syslog with multilog */
 #include <stdarg.h>
-/* FIXME Missing openlog? */
 
 /* First warning when snapshot is 80% full. */
 #define WARNING_THRESH 80
@@ -37,6 +34,8 @@ struct dso_state {
 	uint64_t known_size;
 	char cmd_str[1024];
 };
+
+DM_EVENT_LOG_FN("snap")
 
 static int _run(const char *cmd, ...)
 {

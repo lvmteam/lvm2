@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -12,15 +12,12 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "lib.h"
-
-#include "libdevmapper-event.h"
+#include "lib.h"	/* using here lvm log */
 #include "dmeventd_lvm.h"
+#include "libdevmapper-event.h"
 
 #include <sys/wait.h>
-#include <syslog.h> /* FIXME Replace syslog with multilog */
 #include <stdarg.h>
-/* FIXME Missing openlog? */
 
 /* First warning when thin is 80% full. */
 #define WARNING_THRESH 80
@@ -51,6 +48,8 @@ struct dso_state {
 #  define MINOR(x) minor((x))
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
+
+DM_EVENT_LOG_FN("thin")
 
 /* Get dependencies for device, and try to find matching device */
 static int _has_deps(const char *name, int tp_major, int tp_minor, int *dev_minor)

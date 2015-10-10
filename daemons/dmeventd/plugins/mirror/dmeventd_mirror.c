@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,19 +13,17 @@
  */
 
 #include "lib.h"
-
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
 #include "defaults.h"
 
-#include <syslog.h> /* FIXME Replace syslog with multilog */
-/* FIXME Missing openlog? */
-/* FIXME Replace most syslogs with log_error() style messages and add complete context. */
 /* FIXME Reformat to 80 char lines. */
 
 #define ME_IGNORE    0
 #define ME_INSYNC    1
 #define ME_FAILURE   2
+
+DM_EVENT_LOG_FN("mirr")
 
 static int _process_status_code(const char status_code, const char *dev_name,
 				const char *dev_type, int r)

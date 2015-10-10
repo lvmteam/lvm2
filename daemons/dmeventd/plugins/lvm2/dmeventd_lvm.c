@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2010-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,15 +13,11 @@
  */
 
 #include "lib.h"
-#include "log.h"
-
-#include "lvm2cmd.h"
 #include "dmeventd_lvm.h"
+#include "libdevmapper-event.h"
+#include "lvm2cmd.h"
 
 #include <pthread.h>
-#include <syslog.h>
-
-extern int dmeventd_debug;
 
 /*
  * register_device() is called first and performs initialisation.
@@ -36,47 +32,12 @@ static int _register_count = 0;
 static struct dm_pool *_mem_pool = NULL;
 static void *_lvm_handle = NULL;
 
+DM_EVENT_LOG_FN("lvm")
+
 /*
  * Currently only one event can be processed at a time.
  */
 static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/*
- * FIXME Do not pass things directly to syslog, rather use the existing logging
- * facilities to sort logging ... however that mechanism needs to be somehow
- * configurable and we don't have that option yet
- */
-static void _temporary_log_fn(int level,
-			      const char *file __attribute__((unused)),
-			      int line __attribute__((unused)),
-			      int dm_errno __attribute__((unused)),
-			      const char *message)
-{
-	level &= ~(_LOG_STDERR | _LOG_ONCE);
-
-	switch (level) {
-	case _LOG_DEBUG:
-		if (dmeventd_debug >= 3)
-			syslog(LOG_DEBUG, "%s", message);
-		break;
-	case _LOG_INFO:
-		if (dmeventd_debug >= 2)
-			syslog(LOG_INFO, "%s", message);
-		break;
-	case _LOG_NOTICE:
-		if (dmeventd_debug >= 1)
-			syslog(LOG_NOTICE, "%s", message);
-		break;
-	case _LOG_WARN:
-		syslog(LOG_WARNING, "%s", message);
-		break;
-	case _LOG_ERR:
-		syslog(LOG_ERR, "%s", message);
-		break;
-	default:
-		syslog(LOG_CRIT, "%s", message);
-	}
-}
 
 void dmeventd_lvm2_lock(void)
 {
@@ -95,8 +56,8 @@ int dmeventd_lvm2_init(void)
 	pthread_mutex_lock(&_register_mutex);
 
 	if (!_lvm_handle) {
-		if (!getenv("LVM_LOG_FILE_EPOCH"))
-			lvm2_log_fn(_temporary_log_fn);
+		lvm2_log_fn((lvm2_log_fn_t)print_log);
+
 		if (!(_lvm_handle = lvm2_init()))
 			goto out;
 

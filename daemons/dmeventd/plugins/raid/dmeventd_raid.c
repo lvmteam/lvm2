@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,13 +13,11 @@
  */
 
 #include "lib.h"
-
-#include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
+#include "libdevmapper-event.h"
 
-#include <syslog.h> /* FIXME Replace syslog with multilog */
-/* FIXME Missing openlog? */
-/* FIXME Replace most syslogs with log_error() style messages and add complete context. */
+DM_EVENT_LOG_FN("raid")
+
 /* FIXME Reformat to 80 char lines. */
 
 /*
