@@ -74,6 +74,7 @@ int dmeventd_lvm2_init(void)
 		lvm2_disable_dmeventd_monitoring(_lvm_handle);
 		/* FIXME Temporary: move to dmeventd core */
 		lvm2_run(_lvm_handle, "_memlock_inc");
+		log_debug("lvm plugin initilized.");
 	}
 
 	_register_count++;
@@ -89,14 +90,17 @@ void dmeventd_lvm2_exit(void)
 	pthread_mutex_lock(&_register_mutex);
 
 	if (!--_register_count) {
+		log_debug("lvm plugin shuting down.");
 		lvm2_run(_lvm_handle, "_memlock_dec");
 		dm_pool_destroy(_mem_pool);
 		_mem_pool = NULL;
+		log_debug("lvm plugin exiting.");
 		lvm2_exit(_lvm_handle);
 		_lvm_handle = NULL;
 	}
 
 	pthread_mutex_unlock(&_register_mutex);
+	log_debug("lvm plugin exited.");
 }
 
 struct dm_pool *dmeventd_lvm2_pool(void)

@@ -152,6 +152,7 @@ void process_event(struct dm_task *dmt,
 
 	if (status->invalid) {
 		struct dm_info info;
+		log_error("Snapshot %s is lost.", device);
 		if (dm_task_get_info(dmt, &info)) {
 			dmeventd_lvm2_unlock();
 			_umount(device, info.major, info.minor);

@@ -874,7 +874,7 @@ static void *_monitor_thread(void *arg)
 		}
 	}
 
-	DEBUGLOG("Finished _monitor_thread");
+	DEBUGLOG("Finished _monitor_thread.");
 	pthread_cleanup_pop(1);
 
 	return NULL;
@@ -1120,6 +1120,8 @@ static int _unregister_for_event(struct message_data *message_data)
 	}
 	_unlock_mutex();
 
+	DEBUGLOG("Unregistered uuid:%s.", thread->device.uuid);
+
       out:
 	return ret;
 }
@@ -1147,6 +1149,7 @@ static int _registered_device(struct message_data *message_data,
 		return -ENOMEM;
 
 	msg->size = (uint32_t) r;
+	DEBUGLOG("Registered %s.", msg->data);
 
 	return 0;
 }
@@ -1154,6 +1157,7 @@ static int _registered_device(struct message_data *message_data,
 static int _want_registered_device(char *dso_name, char *device_uuid,
 				   struct thread_status *thread)
 {
+	DEBUGLOG("Looking for dso:%s  uuid:%s.", dso_name, device_uuid);
 	/* If DSO names and device paths are equal. */
 	if (dso_name && device_uuid)
 		return !strcmp(dso_name, thread->dso_data->dso_name) &&
@@ -1175,6 +1179,9 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	struct thread_status *thread, *hit = NULL;
 	int ret = -ENOENT;
 
+	DEBUGLOG("Get%s dso:%s  uuid:%s.", next ? "" : "Next",
+		 message_data->dso_name,
+		 message_data->device_uuid);
 	_lock_mutex();
 
 	/* Iterate list of threads checking if we want a particular one. */
@@ -1205,8 +1212,10 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 				goto reg;
 			}
 
-	if (!hit)
+	if (!hit) {
+		DEBUGLOG("Get%s not registered", next ? "" : "Next");
 		goto out;
+	}
 
 	while (1) {
 		if (dm_list_end(&_thread_registry, &thread->list))
@@ -1613,9 +1622,9 @@ static void _cleanup_unused_threads(void)
 		}
 
 		if (thread->status == DM_THREAD_DONE) {
-			DEBUGLOG("Destroying Thr %x.", (int)thread->thread);
 			dm_list_del(l);
 			_unlock_mutex();
+			DEBUGLOG("Destroying Thr %x.", (int)thread->thread);
 			join_ret = pthread_join(thread->thread, NULL);
 			_free_thread_status(thread);
 			_lock_mutex();
