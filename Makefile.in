@@ -234,7 +234,7 @@ ifneq ($(shell which ctags),)
 .PHONY: tags
 tags:
 	test -z "$(shell find $(top_srcdir) -type f -name '*.[ch]' -newer tags 2>/dev/null | head -1)" || $(RM) tags
-	test -f tags || find $(top_srcdir) -maxdepth 4 -type f -name '*.[ch]' -exec ctags -a '{}' +
+	test -f tags || find $(top_srcdir) -maxdepth 5 -type f -name '*.[ch]' -exec ctags -a '{}' +
 
 CLEAN_TARGETS += tags
 endif
