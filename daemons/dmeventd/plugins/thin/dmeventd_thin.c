@@ -19,11 +19,19 @@
 #include <sys/wait.h>
 #include <stdarg.h>
 
-/* First warning when thin is 80% full. */
+/* TODO - move this mountinfo code into library to be reusable */
+#ifdef __linux__
+#  include "kdev_t.h"
+#else
+#  define MAJOR(x) major((x))
+#  define MINOR(x) minor((x))
+#endif
+
+/* First warning when thin data or metadata is 80% full. */
 #define WARNING_THRESH 80
 /* Run a check every 5%. */
 #define CHECK_STEP 5
-/* Do not bother checking thins less than 50% full. */
+/* Do not bother checking thin data or metadata is less than 50% full. */
 #define CHECK_MINIMUM 50
 
 #define UMOUNT_COMMAND "/bin/umount"
@@ -38,16 +46,6 @@ struct dso_state {
 	uint64_t known_data_size;
 	char cmd_str[1024];
 };
-
-
-/* TODO - move this mountinfo code into library to be reusable */
-#ifdef __linux__
-#  include "kdev_t.h"
-#else
-#  define MAJOR(x) major((x))
-#  define MINOR(x) minor((x))
-#  define MKDEV(x,y) makedev((x),(y))
-#endif
 
 DM_EVENT_LOG_FN("thin")
 
