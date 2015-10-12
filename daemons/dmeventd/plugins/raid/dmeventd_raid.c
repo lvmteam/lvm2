@@ -116,7 +116,7 @@ static int _process_raid_event(char *params, const char *device)
 
 void process_event(struct dm_task *dmt,
 		   enum dm_event_mask event __attribute__((unused)),
-		   void **unused __attribute__((unused)))
+		   void **user)
 {
 	void *next = NULL;
 	uint64_t start, length;
@@ -152,7 +152,7 @@ int register_device(const char *device,
 		    const char *uuid __attribute__((unused)),
 		    int major __attribute__((unused)),
 		    int minor __attribute__((unused)),
-		    void **unused __attribute__((unused)))
+		    void **user)
 {
 	if (!dmeventd_lvm2_init())
 		return 0;
@@ -166,7 +166,7 @@ int unregister_device(const char *device,
 		      const char *uuid __attribute__((unused)),
 		      int major __attribute__((unused)),
 		      int minor __attribute__((unused)),
-		      void **unused __attribute__((unused)))
+		      void **user)
 {
 	log_info("No longer monitoring RAID device %s for events.",
 		 device);

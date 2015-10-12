@@ -126,8 +126,9 @@ static void _umount(const char *device, int major, int minor)
 
 void process_event(struct dm_task *dmt,
 		   enum dm_event_mask event __attribute__((unused)),
-		   void **private)
+		   void **user)
 {
+	struct dso_state *state = *user;
 	void *next = NULL;
 	uint64_t start, length;
 	char *target_type = NULL;
@@ -135,7 +136,6 @@ void process_event(struct dm_task *dmt,
 	struct dm_status_snapshot *status = NULL;
 	const char *device = dm_task_get_name(dmt);
 	int percent;
-	struct dso_state *state = *private;
 
 	/* No longer monitoring, waiting for remove */
 	if (!state->percent_check)
@@ -199,7 +199,7 @@ int register_device(const char *device,
 		    const char *uuid __attribute__((unused)),
 		    int major __attribute__((unused)),
 		    int minor __attribute__((unused)),
-		    void **private)
+		    void **user)
 {
 	struct dm_pool *statemem = NULL;
 	struct dso_state *state;
@@ -218,7 +218,7 @@ int register_device(const char *device,
 
 	state->mem = statemem;
 	state->percent_check = CHECK_MINIMUM;
-	*private = state;
+	*user = state;
 
 	log_info("Monitoring snapshot %s.", device);
 
@@ -237,9 +237,9 @@ int unregister_device(const char *device,
 		      const char *uuid __attribute__((unused)),
 		      int major __attribute__((unused)),
 		      int minor __attribute__((unused)),
-		      void **private)
+		      void **user)
 {
-	struct dso_state *state = *private;
+	struct dso_state *state = *user;
 
 	log_info("No longer monitoring snapshot %s.", device);
 	dm_pool_destroy(state->mem);

@@ -251,11 +251,11 @@ out:
 
 void process_event(struct dm_task *dmt,
 		   enum dm_event_mask event __attribute__((unused)),
-		   void **private)
+		   void **user)
 {
 	const char *device = dm_task_get_name(dmt);
 	int percent;
-	struct dso_state *state = *private;
+	struct dso_state *state = *user;
 	struct dm_status_thin_pool *tps = NULL;
 	void *next = NULL;
 	uint64_t start, length;
@@ -351,7 +351,7 @@ int register_device(const char *device,
 		    const char *uuid __attribute__((unused)),
 		    int major __attribute__((unused)),
 		    int minor __attribute__((unused)),
-		    void **private)
+		    void **user)
 {
 	struct dm_pool *statemem = NULL;
 	struct dso_state *state;
@@ -374,7 +374,7 @@ int register_device(const char *device,
 	state->mem = statemem;
 	state->metadata_percent_check = CHECK_MINIMUM;
 	state->data_percent_check = CHECK_MINIMUM;
-	*private = state;
+	*user = state;
 
 	log_info("Monitoring thin %s.", device);
 
@@ -389,9 +389,9 @@ int unregister_device(const char *device,
 		      const char *uuid __attribute__((unused)),
 		      int major __attribute__((unused)),
 		      int minor __attribute__((unused)),
-		      void **private)
+		      void **user)
 {
-	struct dso_state *state = *private;
+	struct dso_state *state = *user;
 
 	log_info("No longer monitoring thin %s.", device);
 	dm_pool_destroy(state->mem);
