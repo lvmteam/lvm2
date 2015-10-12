@@ -220,7 +220,7 @@ fi
 ###     :vgname1:vgname2:...:vgnameN:
 #####################################################################
 
-OLDVGS=":`"${LVM}" vgs ${LVM_OPTS} -o name --noheadings --rows --separator :`:"
+OLDVGS=":`"${LVM}" vgs ${LVM_OPTS} -o name --noheadings --rows --separator : --config 'log{prefix=""}'`:"
 checkvalue $? "Current VG names could not be collected without errors"
 
 #####################################################################
