@@ -59,6 +59,7 @@ int major_is_scsi_device(struct dev_types *dt, int major);
 int dev_is_md(struct device *dev, uint64_t *sb);
 int dev_is_swap(struct device *dev, uint64_t *signature);
 int dev_is_luks(struct device *dev, uint64_t *signature);
+int dasd_is_cdl_formatted(struct device *dev);
 
 /* Signature wiping. */
 #define TYPE_LVM1_MEMBER	0x001

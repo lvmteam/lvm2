@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Do not support unpartitioned DASD devices with CDL formatted with pvcreate.
   For thins use flush for suspend only when volume size is reduced.
   Enable code which detects the need of flush during suspend.
   Ensure --use-policy will resize volume to fit below threshold.

@@ -363,7 +363,7 @@ static int _native_dev_is_partitioned(struct dev_types *dt, struct device *dev)
 		return 0;
 
 	/* Unpartitioned DASD devices are not supported. */
-	if (MAJOR(dev->dev) == dt->dasd_major)
+	if ((MAJOR(dev->dev) == dt->dasd_major) && dasd_is_cdl_formatted(dev))
 		return 1;
 
 	if (!dev_open_readonly_quiet(dev)) {

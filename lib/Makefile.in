@@ -62,6 +62,7 @@ SOURCES =\
 	device/dev-swap.c \
 	device/dev-type.c \
 	device/dev-luks.c \
+	device/dev-dasd.c \
 	display/display.c \
 	error/errseg.c \
 	unknown/unknown.c \
