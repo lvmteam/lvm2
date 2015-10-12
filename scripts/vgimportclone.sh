@@ -48,7 +48,7 @@ function getvgname {
     NAME="${BNAME}"
     I=0
 
-    while [[ "${VGLIST}" =~ "${NAME}" ]]
+    while [[ "${VGLIST}" =~ ":${NAME}:" ]]
     do
         I=$(($I+1))
         NAME="${BNAME}$I"
@@ -215,10 +215,12 @@ then
 fi
 
 #####################################################################
-### Get the existing state so we can use it later
+### Get the existing state so we can use it later.
+### The list of VG names is saved in this format:
+###     :vgname1:vgname2:...:vgnameN:
 #####################################################################
 
-OLDVGS=`"${LVM}" vgs ${LVM_OPTS} -o name --noheadings`
+OLDVGS=":`"${LVM}" vgs ${LVM_OPTS} -o name --noheadings --rows --separator :`:"
 checkvalue $? "Current VG names could not be collected without errors"
 
 #####################################################################

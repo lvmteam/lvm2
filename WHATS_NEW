@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Fix vgimportclone with -n to not add number unnecessarily to base VG name.
   Cleanup vgimportclone script and remove dependency on awk, grep, cut and tr.
   Add vg_missing_pv_count report field to report number of missing PVs in a VG.
   Properly identify internal LV holding sanlock locks within lv_role field.
