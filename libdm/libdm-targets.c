@@ -82,7 +82,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		return_0;
 
 	if (!(s->raid_type = dm_pool_zalloc(mem, p - params)))
-		goto_bad; /* memory is freed went pool is destroyed */
+		goto_bad; /* memory is freed when pool is destroyed */
 
 	if (!(s->dev_health = dm_pool_zalloc(mem, i + 1)))
 		goto_bad;
