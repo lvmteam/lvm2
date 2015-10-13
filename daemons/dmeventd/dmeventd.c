@@ -2152,11 +2152,6 @@ int main(int argc, char *argv[])
 
 	_init_thread_signals();
 
-	//multilog_clear_logging();
-	//multilog_add_type(std_syslog, &logdata);
-	//multilog_init_verbose(std_syslog, _LOG_DEBUG);
-	//multilog_async(1);
-
 	pthread_mutex_init(&_global_mutex, NULL);
 
 	if (!_systemd_activation && !_open_fifos(&fifos))
@@ -2190,7 +2185,6 @@ int main(int argc, char *argv[])
 		_process_request(&fifos);
 		_cleanup_unused_threads();
 	}
-
 
 	pthread_mutex_destroy(&_global_mutex);
 
