@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Lock protect only lvm2 execution for snapshot and thin dmeventd plugin.
   Use local mempool for raid and mirror plugins.
   Reworked thread initialization for dmeventd plugins.
   Dmeventd handles snapshot overflow for now equally as invalid.

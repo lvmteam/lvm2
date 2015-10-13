@@ -143,7 +143,7 @@ static int _extend(struct dso_state *state)
 #if THIN_DEBUG
 	log_info("dmeventd executes: %s.", state->cmd_str);
 #endif
-	return dmeventd_lvm2_run(state->cmd_str);
+	return dmeventd_lvm2_run_with_lock(state->cmd_str);
 }
 
 static int _run(const char *cmd, ...)
@@ -224,8 +224,6 @@ static void _umount(struct dm_task *dmt, const char *device)
 	if (!dm_task_get_info(dmt, &data.info))
 		return;
 
-	dmeventd_lvm2_unlock();
-
 	if (!(data.minors = dm_bitset_create(NULL, MINORS))) {
 		log_error("Failed to allocate bitset. Not unmounting %s.", device);
 		goto out;
@@ -244,7 +242,6 @@ static void _umount(struct dm_task *dmt, const char *device)
 out:
 	if (data.minors)
 		dm_bitset_destroy(data.minors);
-	dmeventd_lvm2_lock();
 }
 
 void process_event(struct dm_task *dmt,
@@ -265,8 +262,6 @@ void process_event(struct dm_task *dmt,
 	if (!state->meta_percent_check && !state->data_percent_check)
 		return;
 #endif
-	dmeventd_lvm2_lock();
-
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 
 	if (!target_type || (strcmp(target_type, "thin-pool") != 0)) {

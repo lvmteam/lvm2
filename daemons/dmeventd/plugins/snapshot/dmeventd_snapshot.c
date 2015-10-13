@@ -80,7 +80,8 @@ static int _run(const char *cmd, ...)
 
 static int _extend(const char *cmd)
 {
-	return dmeventd_lvm2_run(cmd);
+	log_debug("Extending snapshot via %s.", cmd);
+	return dmeventd_lvm2_run_with_lock(cmd);
 }
 
 static void _umount(const char *device, int major, int minor)
@@ -141,22 +142,21 @@ void process_event(struct dm_task *dmt,
 	if (!state->percent_check)
 		return;
 
-	dmeventd_lvm2_lock();
-
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
-	if (!target_type)
-		goto out;
+	if (!target_type || strcmp(target_type, "snapshot")) {
+		log_error("Target %s is not snapshot.", target_type);
+		return;
+	}
 
 	if (!dm_get_status_snapshot(state->mem, params, &status))
-		goto out;
+		return;
 
 	if (status->invalid || status->overflow) {
 		struct dm_info info;
 		log_error("Snapshot %s is lost.", device);
 		if (dm_task_get_info(dmt, &info)) {
-			dmeventd_lvm2_unlock();
 			_umount(device, info.major, info.minor);
-			return;
+			goto_out;
 		} /* else; too bad, but this is best-effort thing... */
 	}
 
@@ -190,9 +190,7 @@ void process_event(struct dm_task *dmt,
 			log_error("Failed to extend snapshot %s.", device);
 	}
 out:
-	if (status)
-		dm_pool_free(state->mem, status);
-	dmeventd_lvm2_unlock();
+	dm_pool_free(state->mem, status);
 }
 
 int register_device(const char *device,
