@@ -112,8 +112,6 @@ static int _restart = 0;
 static char **_initial_registrations = 0;
 
 /* FIXME Make configurable at runtime */
-#ifdef DEBUG
-#  define DEBUGLOG  log_debug
 __attribute__((format(printf, 4, 5)))
 static void _dmeventd_log(int level, const char *file, int line,
 			  const char *format, ...)
@@ -124,6 +122,8 @@ static void _dmeventd_log(int level, const char *file, int line,
 	va_end(ap);
 }
 
+#ifdef DEBUG
+#  define DEBUGLOG  log_debug
 static const char *decode_cmd(uint32_t cmd)
 {
 	switch (cmd) {
@@ -1535,8 +1535,9 @@ static void _process_request(struct dm_event_fifos *fifos)
 {
 	int die;
 	struct dm_event_daemon_message msg = { 0 };
+#ifdef DEBUG
 	int cmd;
-
+#endif
 	/*
 	 * Read the request from the client (client_read, client_write
 	 * give true on success and false on failure).
@@ -1544,7 +1545,9 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_read(fifos, &msg))
 		return;
 
+#ifdef DEBUG
 	cmd = msg.cmd;
+#endif
 	DEBUGLOG(">>> CMD:%s (0x%x) processing...", decode_cmd(cmd), cmd);
 
 	die = (msg.cmd == DM_EVENT_CMD_DIE) ? 1 : 0;
