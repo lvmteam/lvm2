@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Use local mempool for raid and mirror plugins.
   Reworked thread initialization for dmeventd plugins.
   Dmeventd handles snapshot overflow for now equally as invalid.
   Convert dmeventd to use common logging macro system from libdm.

@@ -16,6 +16,13 @@
 #include "dmeventd_lvm.h"
 #include "libdevmapper-event.h"
 
+struct dso_state {
+	struct dm_pool *mem;
+	char cmd_lvscan[512];
+	char cmd_lvconvert[512];
+	int failed;
+};
+
 DM_EVENT_LOG_FN("raid")
 
 /* FIXME Reformat to 80 char lines. */
@@ -154,12 +161,29 @@ int register_device(const char *device,
 		    int minor __attribute__((unused)),
 		    void **user)
 {
-	if (!dmeventd_lvm2_init())
-		return 0;
+	struct dso_state *state;
+
+	if (!dmeventd_lvm2_init_with_pool("raid_state", state))
+		goto_bad;
+
+	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvscan, sizeof(state->cmd_lvscan),
+				   "lvscan --cache", device) ||
+	    !dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
+				   "lvconvert --config devices{ignore_suspended_devices=1} "
+				   "--repair --use-policies", device)) {
+		dmeventd_lvm2_exit_with_pool(state);
+		goto_bad;
+	}
+
+	*user = state;
 
 	log_info("Monitoring RAID device %s for events.", device);
 
 	return 1;
+bad:
+	log_error("Failed to monitor RAID %s.", device);
+
+	return 0;
 }
 
 int unregister_device(const char *device,
@@ -168,9 +192,11 @@ int unregister_device(const char *device,
 		      int minor __attribute__((unused)),
 		      void **user)
 {
+	struct dso_state *state = *user;
+
+	dmeventd_lvm2_exit_with_pool(state);
 	log_info("No longer monitoring RAID device %s for events.",
 		 device);
-	dmeventd_lvm2_exit();
 
 	return 1;
 }
