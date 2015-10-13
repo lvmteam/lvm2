@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2011 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2006-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -26,7 +26,7 @@ ifeq ("@APPLIB@", "yes")
 	DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
 	LDFLAGS += -L$(top_builddir)/liblvm
 ifeq ("@DMEVENTD@", "yes")
-	LDFLAGS += -Wl,-rpath,$(top_builddir)/daemons/dmeventd
+	LDFLAGS += -Wl,-rpath-link,$(top_builddir)/daemons/dmeventd
 endif
 	LVMLIBS = @LVM2APP_LIB@ -ldevmapper
 endif
