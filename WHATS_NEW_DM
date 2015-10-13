@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Reworked thread initialization for dmeventd plugins.
   Dmeventd handles snapshot overflow for now equally as invalid.
   Convert dmeventd to use common logging macro system from libdm.
   Return -ENOMEM when device registration fails instead of 0 (=success).
