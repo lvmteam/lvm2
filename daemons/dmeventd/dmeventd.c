@@ -568,12 +568,12 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 	time_t curr_time;
 
 	DEBUGLOG("Timeout thread starting.");
-	timeout.tv_nsec = 0;
 	pthread_cleanup_push(_exit_timeout, NULL);
 	pthread_mutex_lock(&_timeout_mutex);
 
 	while (!dm_list_empty(&_timeout_registry)) {
 		timeout.tv_sec = 0;
+		timeout.tv_nsec = 0;
 		curr_time = time(NULL);
 
 		dm_list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
