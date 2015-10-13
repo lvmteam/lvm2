@@ -351,25 +351,19 @@ int register_device(const char *device,
 		    int minor __attribute__((unused)),
 		    void **user)
 {
-	struct dm_pool *statemem = NULL;
 	struct dso_state *state;
 
-	if (!dmeventd_lvm2_init())
-		goto bad;
+	if (!dmeventd_lvm2_init_with_pool("thin_pool_state", state))
+		goto_bad;
 
-	if (!(statemem = dm_pool_create("thin_pool_state", 2048)) ||
-	    !(state = dm_pool_zalloc(statemem, sizeof(*state))) ||
-	    !dmeventd_lvm2_command(statemem, state->cmd_str,
+	if (!dmeventd_lvm2_command(state->mem, state->cmd_str,
 				   sizeof(state->cmd_str),
 				   "lvextend --use-policies",
 				   device)) {
-		if (statemem)
-			dm_pool_destroy(statemem);
-		dmeventd_lvm2_exit();
-		goto bad;
+		dmeventd_lvm2_exit_with_pool(state);
+		goto_bad;
 	}
 
-	state->mem = statemem;
 	state->metadata_percent_check = CHECK_MINIMUM;
 	state->data_percent_check = CHECK_MINIMUM;
 	*user = state;
@@ -391,9 +385,8 @@ int unregister_device(const char *device,
 {
 	struct dso_state *state = *user;
 
+	dmeventd_lvm2_exit_with_pool(state);
 	log_info("No longer monitoring thin %s.", device);
-	dm_pool_destroy(state->mem);
-	dmeventd_lvm2_exit();
 
 	return 1;
 }

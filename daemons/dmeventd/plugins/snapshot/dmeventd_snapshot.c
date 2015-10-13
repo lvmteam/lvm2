@@ -32,7 +32,7 @@ struct dso_state {
 	struct dm_pool *mem;
 	int percent_check;
 	uint64_t known_size;
-	char cmd_str[1024];
+	char cmd_lvextend[512];
 };
 
 DM_EVENT_LOG_FN("snap")
@@ -184,11 +184,11 @@ void process_event(struct dm_task *dmt,
 
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
 			log_warn("WARNING: Snapshot %s is now %i%% full.", device, percent);
+
 		/* Try to extend the snapshot, in accord with user-set policies */
-		if (!_extend(state->cmd_str))
+		if (!_extend(state->cmd_lvextend))
 			log_error("Failed to extend snapshot %s.", device);
 	}
-
 out:
 	if (status)
 		dm_pool_free(state->mem, status);
@@ -201,22 +201,18 @@ int register_device(const char *device,
 		    int minor __attribute__((unused)),
 		    void **user)
 {
-	struct dm_pool *statemem = NULL;
 	struct dso_state *state;
 
-	if (!dmeventd_lvm2_init())
-		goto out;
+	if (dmeventd_lvm2_init_with_pool("snapshot_state", state))
+		goto_bad;
 
-	if (!(statemem = dm_pool_create("snapshot_state", 512)) ||
-	    !(state = dm_pool_zalloc(statemem, sizeof(*state))))
-		goto bad;
+	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvextend,
+				   sizeof(state->cmd_lvextend),
+				   "lvextend --use-policies", device)) {
+		dmeventd_lvm2_exit_with_pool(state);
+		goto_bad;
+	}
 
-	if (!dmeventd_lvm2_command(statemem, state->cmd_str,
-				   sizeof(state->cmd_str),
-				   "lvextend --use-policies", device))
-		goto bad;
-
-	state->mem = statemem;
 	state->percent_check = CHECK_MINIMUM;
 	*user = state;
 
@@ -224,10 +220,6 @@ int register_device(const char *device,
 
 	return 1;
 bad:
-	if (statemem)
-		dm_pool_destroy(statemem);
-	dmeventd_lvm2_exit();
-out:
 	log_error("Failed to monitor snapshot %s.", device);
 
 	return 0;
@@ -241,9 +233,8 @@ int unregister_device(const char *device,
 {
 	struct dso_state *state = *user;
 
+	dmeventd_lvm2_exit_with_pool(state);
 	log_info("No longer monitoring snapshot %s.", device);
-	dm_pool_destroy(state->mem);
-	dmeventd_lvm2_exit();
 
 	return 1;
 }
