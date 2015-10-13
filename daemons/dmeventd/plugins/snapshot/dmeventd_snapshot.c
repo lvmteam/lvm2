@@ -201,7 +201,7 @@ int register_device(const char *device,
 {
 	struct dso_state *state;
 
-	if (dmeventd_lvm2_init_with_pool("snapshot_state", state))
+	if (!dmeventd_lvm2_init_with_pool("snapshot_state", state))
 		goto_bad;
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvextend,
