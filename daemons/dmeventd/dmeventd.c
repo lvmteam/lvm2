@@ -674,7 +674,7 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 	 * TODO: audit libdm thread usage
 	 */
 	if (!_in_event_counter++)
-		dm_log_init(_no_intr_log);
+		dm_log_init(_dmeventd_log);
 	_unlock_mutex();
 
 	DEBUGLOG("Starting waitevent task for %s", thread->device.uuid);
@@ -2118,7 +2118,6 @@ int main(int argc, char *argv[])
 
 	openlog("dmeventd", LOG_PID, LOG_DAEMON);
 
-	dm_event_log_set(_debug_level, _use_syslog);
 	dm_log_init(_dmeventd_log);
 
 	(void) dm_prepare_selinux_context(DMEVENTD_PIDFILE, S_IFREG);
