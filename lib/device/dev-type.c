@@ -651,8 +651,13 @@ static int _wipe_known_signatures_with_blkid(struct device *dev, const char *nam
 						 BLKID_SUBLKS_BADCSUM);
 
 	while (!blkid_do_probe(probe)) {
-		if ((r_wipe = _blkid_wipe(probe, dev, name, types_to_exclude, types_no_prompt, yes, force)) == 1)
+		if ((r_wipe = _blkid_wipe(probe, dev, name, types_to_exclude, types_no_prompt, yes, force)) == 1) {
 			(*wiped)++;
+			if (blkid_probe_step_back(probe)) {
+				log_error("Failed to step back blkid probe to check just wiped signature.");
+				goto out;
+			}
+		}
 		/* do not count excluded types */
 		if (r_wipe != 2)
 			found++;
