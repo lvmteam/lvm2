@@ -12,6 +12,7 @@ dmeventd \(em Device-mapper event daemon
 .RB [ \-d ]]]
 .RB [ \-f ]
 .RB [ \-h ]
+.RB [ \-l ]
 .RB [ \-R ]
 .RB [ \-V ]
 .RB [ \-? ]
@@ -79,6 +80,12 @@ Don't fork, run in the foreground.
 .BR \-h
 .br
 Show help information.
+.
+.HP
+.BR \-l
+.br
+Log through stdout and stderr instead of syslog.
+This option works only with option \-f, otherwise it is ignored.
 .
 .HP
 .BR \-?
