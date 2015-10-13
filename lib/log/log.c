@@ -71,10 +71,6 @@ void init_log_file(const char *log_file, int append)
 	int i = 0;
 
 	_log_file_path[0] = '\0';
-
-	if (_lvm2_log_fn)
-		return; /* No log file, when log function is set */
-
 	if ((env = getenv("LVM_LOG_FILE_EPOCH"))) {
 		while (isalpha(env[i]) && i < 32) /* Up to 32 alphas */
 			i++;
