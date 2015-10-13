@@ -3302,7 +3302,8 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 		return_0;
 
 	seg->data_block_size = data_block_size;
-	seg->flags = feature_flags;
+	/* Enforce WriteThough mode for cleaner policy */
+	seg->flags = (strcmp(policy_name, "cleaner") == 0) ? DM_CACHE_FEATURE_WRITETHROUGH : feature_flags;
 	seg->policy_name = policy_name;
 
 	/* FIXME: better validation missing */
