@@ -1574,7 +1574,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 		return;
 
 	cmd = msg.cmd;
-	DEBUGLOG("%s (0x%x) processing...", decode_cmd(cmd), cmd);
+	DEBUGLOG(">>> CMD:%s (0x%x) processing...", decode_cmd(cmd), cmd);
 
 	die = (msg.cmd == DM_EVENT_CMD_DIE) ? 1 : 0;
 
@@ -1587,7 +1587,7 @@ static void _process_request(struct dm_event_fifos *fifos)
 
 	dm_free(msg.data);
 
-	DEBUGLOG("%s (0x%x) completed (=%d).", decode_cmd(cmd), cmd, msg.cmd);
+	DEBUGLOG("<<< CMD:%s (0x%x) completed (=%d).", decode_cmd(cmd), cmd, msg.cmd);
 
 	if (die) {
 		if (unlink(DMEVENTD_PIDFILE))
