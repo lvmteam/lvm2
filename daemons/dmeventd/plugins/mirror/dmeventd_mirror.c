@@ -131,46 +131,32 @@ out_parse:
 	return ME_IGNORE;
 }
 
-static int _remove_failed_devices(const char *device)
+static int _remove_failed_devices(const char *cmd_lvscan, const char *cmd_lvconvert)
 {
 	int r;
-#define CMD_SIZE 256	/* FIXME Use system restriction */
-	char cmd_str[CMD_SIZE];
 
-	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
-				   "lvscan --cache", device))
-		return -1;
-
-	r = dmeventd_lvm2_run(cmd_str);
-
-	if (!r)
-		log_info("Re-scan of mirror device %s failed.", device);
-
-	if (!dmeventd_lvm2_command(dmeventd_lvm2_pool(), cmd_str, sizeof(cmd_str),
-				  "lvconvert --config devices{ignore_suspended_devices=1} "
-				  "--repair --use-policies", device))
-		return -ENAMETOOLONG; /* FIXME Replace with generic error return - reason for failure has already got logged */
+	if (!dmeventd_lvm2_run_with_lock(cmd_lvscan))
+		log_info("Re-scan of mirrored device failed.");
 
 	/* if repair goes OK, report success even if lvscan has failed */
-	r = dmeventd_lvm2_run(cmd_str);
+	r = dmeventd_lvm2_run_with_lock(cmd_lvconvert);
 
-	log_info("Repair of mirrored device %s %s.", device,
+	log_info("Repair of mirrored device %s.",
 		 (r) ? "finished successfully" : "failed");
 
-	return (r) ? 0 : -1;
+	return r;
 }
 
 void process_event(struct dm_task *dmt,
 		   enum dm_event_mask event __attribute__((unused)),
 		   void **user)
 {
+	struct dso_state *state = *user;
 	void *next = NULL;
 	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
 	const char *device = dm_task_get_name(dmt);
-
-	dmeventd_lvm2_lock();
 
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
@@ -196,7 +182,8 @@ void process_event(struct dm_task *dmt,
 			break;
 		case ME_FAILURE:
 			log_error("Device failure in %s.", device);
-			if (_remove_failed_devices(device))
+			if (!_remove_failed_devices(state->cmd_lvscan,
+						    state->cmd_lvconvert))
 				/* FIXME Why are all the error return codes unused? Get rid of them? */
 				log_error("Failed to remove faulty devices in %s.",
 					  device);
@@ -213,8 +200,6 @@ void process_event(struct dm_task *dmt,
 			log_info("Unknown event received.");
 		}
 	} while (next);
-
-	dmeventd_lvm2_unlock();
 }
 
 int register_device(const char *device,
