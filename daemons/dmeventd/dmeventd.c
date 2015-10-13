@@ -1070,8 +1070,10 @@ static int _register_for_event(struct message_data *message_data)
 	if (!(thread = _lookup_thread_status(message_data))) {
 		_unlock_mutex();
 
-		if (!(ret = _do_register_device(thread_new)))
-			goto out;
+		if (!_do_register_device(thread_new)) {
+			ret = -ENOMEM;
+			goto_out;
+		}
 
 		thread = thread_new;
 		thread_new = NULL;

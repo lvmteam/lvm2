@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Return -ENOMEM when device registration fails instead of 0 (=success).
   Enforce writethrough mode for cleaner policy.
   Add support for recognition and deactivation of MD devices to blkdeactivate.
   Move target status functions out of libdm-deptree.
