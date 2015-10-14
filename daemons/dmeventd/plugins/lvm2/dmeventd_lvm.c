@@ -34,6 +34,12 @@ static void *_lvm_handle = NULL;
 
 DM_EVENT_LOG_FN("lvm")
 
+static void lvm2_print_log(int level, const char *file, int line,
+			   int dm_errno_or_class, const char *msg)
+{
+	print_log(level, file, line, dm_errno_or_class, "%s", msg);
+}
+
 /*
  * Currently only one event can be processed at a time.
  */
@@ -56,7 +62,7 @@ int dmeventd_lvm2_init(void)
 	pthread_mutex_lock(&_register_mutex);
 
 	if (!_lvm_handle) {
-		lvm2_log_fn((lvm2_log_fn_t)print_log);
+		lvm2_log_fn(lvm2_print_log);
 
 		if (!(_lvm_handle = lvm2_init()))
 			goto out;
