@@ -1392,6 +1392,15 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	if (adopt)
 		flags |= SANLK_ACQUIRE_ORPHAN_ONLY;
 
+#ifdef SANLOCK_HAS_ACQUIRE_OWNER_NOWAIT
+	/*
+	 * Don't block waiting for a failed lease to expire since it causes
+	 * sanlock_acquire to block for a long time, which would prevent this
+	 * thread from processing other lock requests.
+	 */
+	flags |= SANLK_ACQUIRE_OWNER_NOWAIT;
+#endif
+
 	rv = sanlock_acquire(lms->sock, -1, flags, 1, &rs, NULL);
 
 	if (rv == -EAGAIN) {
@@ -1462,6 +1471,26 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EAGAIN;
 	}
 
+#ifdef SANLOCK_HAS_ACQUIRE_OWNER_NOWAIT
+	if (rv == SANLK_ACQUIRE_OWNED_RETRY) {
+		/*
+		 * The lock is held by a failed host, and will eventually
+		 * expire.  If we retry we'll eventually acquire the lock
+		 * (or find someone else has acquired it).  The EAGAIN retry
+		 * attempts for SH locks above would not be sufficient for
+		 * the length of expiration time.  We could add a longer
+		 * retry time here to cover the full expiration time and block
+		 * the activation command for that long.  For now just return
+		 * the standard error indicating that another host still owns
+		 * the lease.  FIXME: return a different error number so the
+		 * command can print an different error indicating that the
+		 * owner of the lease is in the process of expiring?
+		 */
+		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		*retry = 0;
+		return -EAGAIN;
+	}
+#endif
 	if (rv < 0) {
 		log_error("S %s R %s lock_san acquire error %d",
 			  ls->name, r->name, rv);
