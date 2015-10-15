@@ -439,6 +439,14 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 
 	while (alt_device) {
 		dev_alternate = dev_cache_get_by_devt(alt_device->v.i, cmd->filter);
+
+		log_verbose("PV on device %s (%d:%d %d) is also on device %s (%d:%d %d) %s",
+			    dev_name(dev),
+			    (int)MAJOR(devt), (int)MINOR(devt), (int)devt,
+			    dev_alternate ? dev_name(dev_alternate) : "unknown",
+			    (int)MAJOR(alt_device->v.i), (int)MINOR(alt_device->v.i), (int)alt_device->v.i,
+			    pvid_txt);
+
 		if (dev_alternate) {
 			if ((info_alternate = lvmcache_add(fmt->labeller, (const char *)&pvid, dev_alternate,
 							   vgname, (const char *)&vgid, 0))) {
@@ -446,9 +454,6 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 				info = info_alternate;
 				lvmcache_get_label(info)->dev = dev_alternate;
 			}
-		} else {
-			log_warn("Duplicate of PV %s dev %s exists on unknown device %"PRId64 ":%" PRId64,
-				 pvid_txt, dev_name(dev), MAJOR(alt_device->v.i), MINOR(alt_device->v.i));
 		}
 		alt_device = alt_device->next;
 	}
