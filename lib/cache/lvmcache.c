@@ -1784,9 +1784,9 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				 * been chosen during a previous populating of
 				 * lvmcache, so just use the existing preferences.
 				 */
-				log_verbose("Found duplicate PV %s: using existing dev %s",
-					    pvid_s,
-					    dev_name(existing->dev));
+				log_warn("Found duplicate PV %s: using existing dev %s",
+					 pvid_s,
+					 dev_name(existing->dev));
 				return NULL;
 			}
 
