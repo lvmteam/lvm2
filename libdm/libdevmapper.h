@@ -2552,7 +2552,7 @@ int dm_report_compact_fields(struct dm_report *rh);
  * The same as dm_report_compact_fields, but for selected fields only.
  * The "fields" arg is comma separated list of field names (the same format
  * as used for "output_fields" arg in dm_report_init fn).
-*/
+ */
 int dm_report_compact_given_fields(struct dm_report *rh, const char *fields);
 
 /*

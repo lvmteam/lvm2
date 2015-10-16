@@ -1501,6 +1501,15 @@ activation {
 	# This configuration option has an automatic default value.
 	# compact_output = 0
 
+	# Configuration option report/compact_output_cols.
+	# Do not print empty values for given report fields.
+	# The same as compact_output setting, but the compaction is not done
+	# globally for all fields in report but only for given fields. If both
+	# compact_output and compact_output_fields is used at the same time,
+	# the compact_output setting prevails.
+	# This configuration option has an automatic default value.
+	# compact_output_cols = ""
+
 	# Configuration option report/aligned.
 	# Align columns in report output.
 	# This configuration option has an automatic default value.

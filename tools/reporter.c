@@ -618,6 +618,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	unsigned args_are_pvs;
 	int lv_info_needed, lv_segment_status_needed;
 	int lock_global = 0;
+	const char *fields_to_compact;
 
 	aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
 	buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);
@@ -817,9 +818,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		break;
 	}
 
-	if (find_config_tree_bool(cmd, report_compact_output_CFG, NULL) &&
-	    !dm_report_compact_fields(report_handle))
-		log_error("Failed to compact report output.");
+	if (find_config_tree_bool(cmd, report_compact_output_CFG, NULL)) {
+		if (!dm_report_compact_fields(report_handle))
+			log_error("Failed to compact report output.");
+	} else if ((fields_to_compact = find_config_tree_str_allow_empty(cmd, report_compact_output_cols_CFG, NULL))) {
+		if (!dm_report_compact_given_fields(report_handle, fields_to_compact))
+			log_error("Failed to compact given columns in report output.");
+	}
 
 	dm_report_output(report_handle);
 
