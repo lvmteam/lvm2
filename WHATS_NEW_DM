@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Add dm_report_compact_given_fields to remove given empty fields from report.
   Use libdm status parsing and local mem raid dmeventd plugin.
   Use local mem pool and lock only lvm2 execution for mirror dmeventd plugin.
   Lock protect only lvm2 execution for snapshot and thin dmeventd plugin.

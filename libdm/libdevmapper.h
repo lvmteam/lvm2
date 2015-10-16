@@ -2549,6 +2549,13 @@ int dm_report_object_is_selected(struct dm_report *rh, void *object, int do_outp
 int dm_report_compact_fields(struct dm_report *rh);
 
 /*
+ * The same as dm_report_compact_fields, but for selected fields only.
+ * The "fields" arg is comma separated list of field names (the same format
+ * as used for "output_fields" arg in dm_report_init fn).
+*/
+int dm_report_compact_given_fields(struct dm_report *rh, const char *fields);
+
+/*
  * Returns 1 if there is no data waiting to be output.
  */
 int dm_report_is_empty(struct dm_report *rh);

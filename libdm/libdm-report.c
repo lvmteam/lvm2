@@ -81,6 +81,7 @@ struct dm_report {
 #define FLD_ASCENDING	0x00004000
 #define FLD_DESCENDING	0x00008000
 #define FLD_COMPACTED	0x00010000
+#define FLD_COMPACT_ONE 0x00020000
 
 struct field_properties {
 	struct dm_list list;
@@ -2013,7 +2014,7 @@ out:
 	return r;
 }
 
-int dm_report_compact_fields(struct dm_report *rh)
+static int _do_report_compact_fields(struct dm_report *rh, int global)
 {
 	struct dm_report_field *field;
 	struct field_properties *fp;
@@ -2036,7 +2037,9 @@ int dm_report_compact_fields(struct dm_report *rh)
 	 * in next step...
 	 */
 	dm_list_iterate_items(fp, &rh->field_props) {
-		if (!(fp->flags & FLD_HIDDEN))
+		if (fp->flags & FLD_HIDDEN)
+			continue;
+		if (global || (fp->flags & FLD_COMPACT_ONE))
 			fp->flags |= (FLD_COMPACTED | FLD_HIDDEN);
 	}
 
@@ -2063,6 +2066,61 @@ int dm_report_compact_fields(struct dm_report *rh)
 	 */
 
 	return 1;
+}
+
+int dm_report_compact_fields(struct dm_report *rh)
+{
+	return _do_report_compact_fields(rh, 1);
+}
+
+static int _field_to_compact_match(struct dm_report *rh, const char *field, size_t flen)
+{
+	struct field_properties *fp;
+	uint32_t f;
+	int implicit;
+
+	if ((_get_field(rh, field, flen, &f, &implicit))) {
+		dm_list_iterate_items(fp, &rh->field_props) {
+			if ((fp->implicit == implicit) && (fp->field_num == f)) {
+				fp->flags |= FLD_COMPACT_ONE;
+				break;
+			}
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+static int _parse_fields_to_compact(struct dm_report *rh, const char *fields)
+{
+	const char *ws;		  /* Word start */
+	const char *we = fields;  /* Word end */
+
+	if (!fields)
+		return 1;
+
+	while (*we) {
+		while (*we && *we == ',')
+			we++;
+		ws = we;
+		while (*we && *we != ',')
+			we++;
+		if (!_field_to_compact_match(rh, ws, (size_t) (we - ws))) {
+			log_error("dm_report: Unrecognized field: %.*s", (int) (we - ws), ws);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int dm_report_compact_given_fields(struct dm_report *rh, const char *fields)
+{
+	if (!_parse_fields_to_compact(rh, fields))
+		return_0;
+
+	return _do_report_compact_fields(rh, 0);
 }
 
 int dm_report_object(struct dm_report *rh, void *object)
