@@ -1394,10 +1394,13 @@ static int _client_read(struct dm_event_fifos *fifos,
 		bytes += ret > 0 ? ret : 0;
 		if (header && (bytes == 2 * sizeof(uint32_t))) {
 			msg->cmd = ntohl(header[0]);
-			msg->size = ntohl(header[1]);
-			buf = msg->data = dm_malloc(msg->size);
-			size = msg->size;
+			size = msg->size = ntohl(header[1]);
 			bytes = 0;
+			if (!size)
+				break; /* No data -> error */
+			buf = msg->data = dm_malloc(msg->size);
+			if (!buf)
+				break; /* No mem -> error */
 			header = 0;
 		}
 	}
