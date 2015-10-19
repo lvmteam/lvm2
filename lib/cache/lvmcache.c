@@ -2358,3 +2358,27 @@ int lvmcache_contains_lock_type_sanlock(struct cmd_context *cmd)
 	return 0;
 }
 
+void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
+				   unsigned *pv_max_name_len,
+				   unsigned *vg_max_name_len)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+	unsigned len;
+
+	*vg_max_name_len = 0;
+	*pv_max_name_len = 0;
+
+	dm_list_iterate_items(vginfo, &_vginfos) {
+		len = strlen(vginfo->vgname);
+		if (*vg_max_name_len < len)
+			*vg_max_name_len = len;
+
+		dm_list_iterate_items(info, &vginfo->infos) {
+			len = strlen(dev_name(info->dev));
+			if (*pv_max_name_len < len)
+				*pv_max_name_len = len;
+		}
+	}
+}
+

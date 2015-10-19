@@ -190,4 +190,8 @@ void lvmcache_set_preferred_duplicates(const char *vgid);
 
 int lvmcache_contains_lock_type_sanlock(struct cmd_context *cmd);
 
+void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
+			unsigned *pv_max_name_len, unsigned *vg_max_name_len);
+
+
 #endif
