@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Fix missing in-sync progress info while lvconvert used with lvmpolld.
   Add report/compact_output_cols to lvm.conf to define report cols to compact.
   Do not change logging in lvm2 library when it's already set.
   Check for enough space in thin-pool in command before creating new thin.
