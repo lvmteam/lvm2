@@ -389,8 +389,8 @@ allocation {
 	# This configuration option does not have a default value defined.
 
 	# Configuration section allocation/cache_settings.
-	# Individual settings for policies.
-	# See the help for individual policies for more info.
+	# Settings for the cache policy.
+	# See documentation for individual cache policies for more info.
 	# This configuration section has an automatic default value.
 	# cache_settings {
 	# }
