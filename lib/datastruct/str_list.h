@@ -30,5 +30,7 @@ int str_list_match_list(const struct dm_list *sll, const struct dm_list *sll2, c
 int str_list_lists_equal(const struct dm_list *sll, const struct dm_list *sll2);
 int str_list_dup(struct dm_pool *mem, struct dm_list *sllnew,
 		 const struct dm_list *sllold);
+char *str_list_to_str(struct dm_pool *mem, const struct dm_list *list, const char *delim);
+struct dm_list *str_to_str_list(struct dm_pool *mem, const char *str, const char *delim, int ignore_multiple_delim);
 
 #endif
