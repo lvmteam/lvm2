@@ -604,13 +604,35 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 	}
 }
 
+static int _get_report_options(struct cmd_context *cmd, const char **options)
+{
+	const char *opts;
+	char *str;
+
+	opts = arg_str_value(cmd, options_ARG, "");
+	if (!opts || !*opts) {
+		log_error("Invalid options string: %s", opts);
+		return EINVALID_CMD_LINE;
+	}
+	if (*opts == '+') {
+		if (!(str = dm_pool_alloc(cmd->mem,
+				 strlen(*options) + strlen(opts) + 1))) {
+			log_error("options string allocation failed");
+			return ECMD_FAILED;
+		}
+		(void) sprintf(str, "%s,%s", *options, opts + 1);
+		*options = str;
+	} else
+		*options = opts;
+
+	return ECMD_PROCESSED;
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {
 	void *report_handle;
 	struct processing_handle handle = {0};
-	const char *opts;
-	char *str;
 	const char *keys = NULL, *options = NULL, *selection = NULL, *separator;
 	int r = ECMD_PROCESSED;
 	int aligned, buffered, headings, field_prefixes, quoted;
@@ -689,23 +711,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	}
 
 	/* If -o supplied use it, else use default for report_type */
-	if (arg_count(cmd, options_ARG)) {
-		opts = arg_str_value(cmd, options_ARG, "");
-		if (!opts || !*opts) {
-			log_error("Invalid options string: %s", opts);
-			return EINVALID_CMD_LINE;
-		}
-		if (*opts == '+') {
-			if (!(str = dm_pool_alloc(cmd->mem,
-					 strlen(options) + strlen(opts) + 1))) {
-				log_error("options string allocation failed");
-				return ECMD_FAILED;
-			}
-			(void) sprintf(str, "%s,%s", options, opts + 1);
-			options = str;
-		} else
-			options = opts;
-	}
+	if (arg_count(cmd, options_ARG) &&
+	    ((r = _get_report_options(cmd, &options) != ECMD_PROCESSED)))
+		return r;
 
 	/* -O overrides default sort settings */
 	keys = arg_str_value(cmd, sort_ARG, keys);
