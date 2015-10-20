@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2010-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -311,6 +311,13 @@ lvcreate -aey -l2 --type mirror -m1 --mirrorlog core -n $lv1 $vg "$dev1" "$dev2"
 lvchange -an $vg/$lv1
 lvconvert --mirrorlog disk $vg/$lv1 "$dev3:0-1"
 check mirror $vg $lv1 "$dev3"
+lvremove -ff $vg
+
+# bz1272175: check lvconvert reports progress while waiting for mirror
+# to get synced
+lvcreate -l2 -n $lv1 $vg
+lvconvert --type mirror -i1 -m1 $vg/$lv1 | tee out
+grep -e "$vg/$lv1: Converted:" out || fail "Missing sync info in foreground mode"
 lvremove -ff $vg
 
 vgremove -ff $vg
