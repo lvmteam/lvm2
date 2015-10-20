@@ -20,7 +20,8 @@ struct dm_list *str_list_create(struct dm_pool *mem)
 {
 	struct dm_list *sl;
 
-	if (!(sl = dm_pool_alloc(mem, sizeof(struct dm_list)))) {
+	if (!(sl = mem ? dm_pool_alloc(mem, sizeof(struct dm_list))
+		       : dm_malloc(sizeof(struct dm_list)))) {
 		log_errno(ENOMEM, "str_list allocation failed");
 		return NULL;
 	}
@@ -37,7 +38,8 @@ static int _str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, 
 	if (!str)
 		return_0;
 
-	if (!(sln = dm_pool_alloc(mem, sizeof(*sln))))
+	if (!(sln = mem ? dm_pool_alloc(mem, sizeof(*sln))
+			: dm_malloc(sizeof(*sln))))
 		return_0;
 
 	sln->str = str;
