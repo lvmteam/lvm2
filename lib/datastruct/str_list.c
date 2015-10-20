@@ -247,3 +247,16 @@ bad:
 		dm_pool_free(mem, list);
 	return NULL;
 }
+
+void str_list_destroy(struct dm_list *list, int deallocate_strings)
+{
+	struct dm_str_list *sl, *tmp_sl;
+
+	dm_list_iterate_items_safe(sl, tmp_sl, list) {
+		dm_list_del(&sl->list);
+		if (deallocate_strings)
+			dm_free((char *)sl->str);
+		dm_free(sl);
+	}
+	dm_free(list);
+}
