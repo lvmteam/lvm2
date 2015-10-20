@@ -10,6 +10,8 @@ lvmetad \(em LVM metadata cache daemon
 .IR pidfile_path ]
 .RB [ \-s
 .IR socket_path ]
+.RB [ \-t
+.IR timeout_value ]
 .RB [ \-f ]
 .RB [ \-h ]
 .RB [ \-V ]
@@ -96,6 +98,10 @@ Path to the socket file. This overrides both the built-in default
 (#DEFAULT_RUN_DIR#/lvmetad.socket) and the environment variable
 \fBLVM_LVMETAD_SOCKET\fP.  To communicate successfully with lvmetad,
 all LVM2 processes should use the same socket path.
+.TP
+.B \-t \fItimeout_value
+The daemon may shutdown after being idle for the given time (in seconds). When the
+option is omitted or the value given is zero the daemon never shutdowns on idle.
 .TP
 .B \-V
 Display the version of lvmetad daemon.
