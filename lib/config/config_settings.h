@@ -1416,17 +1416,20 @@ cfg(disk_area_size_CFG, "size", disk_area_CFG_SUBSECTION, CFG_UNSUPPORTED | CFG_
 cfg(disk_area_id_CFG, "id", disk_area_CFG_SUBSECTION, CFG_UNSUPPORTED | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL, NULL)
 
 cfg(report_compact_output_CFG, "compact_output", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_COMPACT_OUTPUT, vsn(2, 2, 115), NULL, 0, NULL,
-	"Do not print empty report fields.\n"
-	"Fields that don't have a value set for any of the rows reported are\n"
-	"skipped and not printed. Compact output is applicable only if\n"
-	"report/buffered is enabled.\n")
+	"Do not print empty values for all report fields.\n"
+	"If enabled, all fields that don't have a value set for any of the\n"
+	"rows reported are skipped and not printed. Compact output is\n"
+	"applicable only if report/buffered is enabled. If you need to\n"
+	"compact only specified fields, use compact_output=0 and define\n"
+	"report/compact_output_cols configuration setting instead.\n")
 
 cfg(report_compact_output_cols_CFG, "compact_output_cols", report_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_COMPACT_OUTPUT_COLS, vsn(2, 2, 133), NULL, 0, NULL,
-	"Do not print empty values for given report fields.\n"
-	"The same as compact_output setting, but the compaction is not done\n"
-	"globally for all fields in report but only for given fields. If both\n"
-	"compact_output and compact_output_cols is used at the same time,\n"
-	"the compact_output setting prevails.\n")
+	"Do not print empty values for specified report fields.\n"
+	"If defined, specified fields that don't have a value set for any\n"
+	"of the rows reported are skipped and not printed. Compact output\n"
+	"is applicable only if report/buffered is enabled. If you need to\n"
+	"compact all fields, use compact_output=1 instead in which case\n"
+	"the compact_output_cols setting is then ignored.\n")
 
 cfg(report_aligned_CFG, "aligned", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_ALIGNED, vsn(1, 0, 0), NULL, 0, NULL,
 	"Align columns in report output.\n")

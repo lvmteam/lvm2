@@ -1494,19 +1494,22 @@ activation {
 # report {
 
 	# Configuration option report/compact_output.
-	# Do not print empty report fields.
-	# Fields that don't have a value set for any of the rows reported are
-	# skipped and not printed. Compact output is applicable only if
-	# report/buffered is enabled.
+	# Do not print empty values for all report fields.
+	# If enabled, all fields that don't have a value set for any of the
+	# rows reported are skipped and not printed. Compact output is
+	# applicable only if report/buffered is enabled. If you need to
+	# compact only specified fields, use compact_output=0 and define
+	# report/compact_output_cols configuration setting instead.
 	# This configuration option has an automatic default value.
 	# compact_output = 0
 
 	# Configuration option report/compact_output_cols.
-	# Do not print empty values for given report fields.
-	# The same as compact_output setting, but the compaction is not done
-	# globally for all fields in report but only for given fields. If both
-	# compact_output and compact_output_cols is used at the same time,
-	# the compact_output setting prevails.
+	# Do not print empty values for specified report fields.
+	# If defined, specified fields that don't have a value set for any
+	# of the rows reported are skipped and not printed. Compact output
+	# is applicable only if report/buffered is enabled. If you need to
+	# compact all fields, use compact_output=1 instead in which case
+	# the compact_output_cols setting is then ignored.
 	# This configuration option has an automatic default value.
 	# compact_output_cols = ""
 
