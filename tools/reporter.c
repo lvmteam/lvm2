@@ -604,11 +604,26 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 	}
 }
 
+static void _del_option_from_list(struct dm_list *sll, const char *str)
+{
+	struct dm_list *slh;
+	struct dm_str_list *sl;
+
+	dm_list_uniterate(slh, sll, sll) {
+		sl = dm_list_item(slh, struct dm_str_list);
+		if (!strcmp(str, sl->str)) {
+			dm_list_del(slh);
+			return;
+		}
+	}
+}
+
 static int _get_report_options(struct cmd_context *cmd, const char **options)
 {
 	struct arg_value_group_list *current_group;
 	struct dm_list *final_opts_list;
 	struct dm_list *opts_list = NULL;
+	struct dm_str_list *sl;
 	const char *opts;
 	int r = ECMD_PROCESSED;
 
@@ -630,11 +645,18 @@ static int _get_report_options(struct cmd_context *cmd, const char **options)
 
 		switch (*opts) {
 			case '+':
+				/* fall through */
+			case '-':
 				if (!(opts_list = str_to_str_list(NULL, opts + 1, ",", 1))) {
 					r = ECMD_FAILED;
 					goto_out;
 				}
-				dm_list_splice(final_opts_list, opts_list);
+				if (*opts == '+') {
+					dm_list_splice(final_opts_list, opts_list);
+				} else if (*opts == '-') {
+					dm_list_iterate_items(sl, opts_list)
+						_del_option_from_list(final_opts_list, sl->str);
+				}
 				str_list_destroy(opts_list, 1);
 				opts_list = NULL;
 				break;
