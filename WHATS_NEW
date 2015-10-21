@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Allow all log levels to be used with the lvmetad -l option.
   Add optional shutdown when idle support for lvmetad.
   Fix missing in-sync progress info while lvconvert used with lvmpolld.
   Add report/compact_output_cols to lvm.conf to define report cols to compact.

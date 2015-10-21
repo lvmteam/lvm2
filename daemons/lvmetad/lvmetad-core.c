@@ -1637,11 +1637,11 @@ static int process_timeout_arg(const char *str, unsigned *max_timeouts)
 static void usage(const char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-V] [-h] [-f] [-l {all|wire|debug}] [-s path] [-t secs]\n\n"
+		"%s [-V] [-h] [-f] [-l level[,level ...]] [-s path] [-t secs]\n\n"
 		"   -V       Show version of lvmetad\n"
 		"   -h       Show this help information\n"
 		"   -f       Don't fork, run in the foreground\n"
-		"   -l       Logging message level (-l {all|wire|debug})\n"
+		"   -l       Logging message levels (all,fatal,error,warn,info,wire,debug)\n"
 		"   -p       Set path to the pidfile\n"
 		"   -s       Set path to the socket to listen on\n"
 		"   -t       Time to wait in seconds before shutdown on idle (missing or 0 = inifinite)\n\n", prog);

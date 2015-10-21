@@ -5,7 +5,7 @@ lvmetad \(em LVM metadata cache daemon
 .SH SYNOPSIS
 .B lvmetad
 .RB [ \-l
-.RI { all | wire | debug }]
+.IR level [,level...]]
 .RB [ \-p
 .IR pidfile_path ]
 .RB [ \-s
@@ -77,15 +77,11 @@ Don't fork, but run in the foreground.
 .BR \-h ", " \-?
 Show help information.
 .TP
-.IR \fB\-l " {" all | wire | debug }
-Select the type of log messages to generate.
-Messages are logged by syslog.  
+.B \-l \fIlevels
+Specify the levels of log messages to generate as a comma separated list.
+Messages are logged by syslog.
 Additionally, when \-f is given they are also sent to standard error.
-Since release 2.02.98, there are two classes of messages: wire and debug.
-Selecting 'all' supplies both and is equivalent to a comma-separated list
-\-l wire,debug.
-Prior to release 2.02.98, repeating \-d from 1 to 3 times, viz. \-d, \-dd, \-ddd,
-increased the detail of messages.
+Possible levels are: all, fatal, error, warn, info, wire, debug.
 .TP
 .B \-p \fIpidfile_path
 Path to the pidfile. This overrides both the built-in default
