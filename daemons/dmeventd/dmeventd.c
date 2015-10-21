@@ -102,7 +102,7 @@ static pthread_mutex_t _global_mutex;
 #define DM_THREAD_SHUTDOWN 1
 #define DM_THREAD_DONE     2
 
-#define THREAD_STACK_SIZE (300*1024)
+static const size_t THREAD_STACK_SIZE = 300 * 1024;
 
 static int _debug_level = 0;
 static int _use_syslog = 1;
@@ -774,9 +774,11 @@ static sigset_t _unblock_sigalrm(void)
 	return old;
 }
 
-#define DM_WAIT_RETRY 0
-#define DM_WAIT_INTR 1
-#define DM_WAIT_FATAL 2
+enum {
+	DM_WAIT_RETRY,
+	DM_WAIT_INTR,
+	DM_WAIT_FATAL
+};
 
 /* Wait on a device until an event occurs. */
 static int _event_wait(struct thread_status *thread, struct dm_task **task)
