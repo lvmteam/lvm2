@@ -282,6 +282,13 @@ static void _lib_put(struct dso_data *data)
 		dlclose(data->dso_handle);
 		UNLINK_DSO(data);
 		_free_dso_data(data);
+
+		/* Close control device if there is no plugin in-use */
+		if (dm_list_empty(&_dso_registry)) {
+			DEBUGLOG("Unholding control device.");
+			dm_hold_control_dev(0);
+			dm_lib_release();
+		}
 	}
 }
 
@@ -342,6 +349,12 @@ static struct dso_data *_load_dso(struct message_data *data)
 		dlclose(dl);
 		dlerr = "symbols missing";
 		goto_bad;
+	}
+
+	/* Keep control device open until last user closes */
+	if (dm_list_empty(&_dso_registry)) {
+		DEBUGLOG("Holding control device open.");
+		dm_hold_control_dev(1);
 	}
 
 	/*
