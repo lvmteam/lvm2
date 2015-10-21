@@ -606,26 +606,57 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 
 static int _get_report_options(struct cmd_context *cmd, const char **options)
 {
+	struct arg_value_group_list *current_group;
+	struct dm_list *final_opts_list;
+	struct dm_list *opts_list = NULL;
 	const char *opts;
-	char *str;
+	int r = ECMD_PROCESSED;
 
-	opts = arg_str_value(cmd, options_ARG, "");
-	if (!opts || !*opts) {
-		log_error("Invalid options string: %s", opts);
-		return EINVALID_CMD_LINE;
+	if (!(final_opts_list = str_to_str_list(NULL, *options, ",", 1))) {
+		r = ECMD_FAILED;
+		goto_out;
 	}
-	if (*opts == '+') {
-		if (!(str = dm_pool_alloc(cmd->mem,
-				 strlen(*options) + strlen(opts) + 1))) {
-			log_error("options string allocation failed");
-			return ECMD_FAILED;
-		}
-		(void) sprintf(str, "%s,%s", *options, opts + 1);
-		*options = str;
-	} else
-		*options = opts;
 
-	return ECMD_PROCESSED;
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(current_group->arg_values, options_ARG))
+			continue;
+
+		opts = grouped_arg_str_value(current_group->arg_values, options_ARG, NULL);
+		if (!opts || !*opts) {
+			log_error("Invalid options string: %s", opts);
+			r = EINVALID_CMD_LINE;
+			goto out;
+		}
+
+		switch (*opts) {
+			case '+':
+				if (!(opts_list = str_to_str_list(NULL, opts + 1, ",", 1))) {
+					r = ECMD_FAILED;
+					goto_out;
+				}
+				dm_list_splice(final_opts_list, opts_list);
+				str_list_destroy(opts_list, 1);
+				opts_list = NULL;
+				break;
+			default:
+				str_list_destroy(final_opts_list, 1);
+				if (!(final_opts_list = str_to_str_list(NULL, opts, ",", 1))) {
+					r = ECMD_FAILED;
+					goto out;
+				}
+		}
+	}
+
+	if (!(*options = str_list_to_str(cmd->mem, final_opts_list, ","))) {
+		r = ECMD_FAILED;
+		goto out;
+	}
+out:
+	if (opts_list)
+		str_list_destroy(final_opts_list, 1);
+	if (final_opts_list)
+		str_list_destroy(final_opts_list, 1);
+	return r;
 }
 
 static int _report(struct cmd_context *cmd, int argc, char **argv,
