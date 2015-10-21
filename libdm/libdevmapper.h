@@ -1168,6 +1168,9 @@ void dm_lib_init(void) __attribute__((constructor));
 void dm_lib_release(void);
 void dm_lib_exit(void) __attribute__((destructor));
 
+/* An optimisation for clients making repeated calls involving dm ioctls */
+void dm_hold_control_dev(int hold_open);
+
 /*
  * Use NULL for all devices.
  */

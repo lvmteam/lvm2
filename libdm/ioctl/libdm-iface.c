@@ -81,6 +81,7 @@ static dm_bitset_t _dm_bitset = NULL;
 static uint32_t _dm_device_major = 0;
 
 static int _control_fd = -1;
+static int _hold_control_fd_open = 0;
 static int _version_checked = 0;
 static int _version_ok = 1;
 static unsigned _ioctl_buffer_double_factor = 0;
@@ -2079,9 +2080,18 @@ repeat_ioctl:
 	return 0;
 }
 
+void dm_hold_control_dev(int hold_open)
+{
+	_hold_control_fd_open = hold_open ? 1 : 0;
+
+	log_debug("Hold of control device is now %sset.",
+		  _hold_control_fd_open ? "" : "un");
+}
+
 void dm_lib_release(void)
 {
-	_close_control_fd();
+	if (!_hold_control_fd_open)
+		_close_control_fd();
 	dm_timestamp_destroy(_dm_ioctl_timestamp);
 	_dm_ioctl_timestamp = NULL;
 	update_devs();
