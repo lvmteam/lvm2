@@ -166,7 +166,7 @@ static int _parse_one(log_state *s, int outlet, const char *type, int enable)
 		daemon_log_enable(s, outlet, DAEMON_LOG_ERROR, enable);
 	else if (!strcmp(type, "warn"))
 		daemon_log_enable(s, outlet, DAEMON_LOG_WARN, enable);
-	else if (!strcmp(type, "warn"))
+	else if (!strcmp(type, "info"))
 		daemon_log_enable(s, outlet, DAEMON_LOG_INFO, enable);
 	else if (!strcmp(type, "wire"))
 		daemon_log_enable(s, outlet, DAEMON_LOG_WIRE, enable);
