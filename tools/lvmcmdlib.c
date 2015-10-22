@@ -79,9 +79,11 @@ int lvm2_run(void *handle, const char *cmdline)
 
 	/* FIXME Temporary - move to libdevmapper */
 	ret = ECMD_PROCESSED;
-	if (!strcmp(cmdline, "_memlock_inc"))
+	if (!strcmp(cmdline, "_memlock_inc")) {
+		init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
+		init_ignore_suspended_devices(1);
 		memlock_inc_daemon(cmd);
-	else if (!strcmp(cmdline, "_memlock_dec"))
+	} else if (!strcmp(cmdline, "_memlock_dec"))
 		memlock_dec_daemon(cmd);
 	else
 		ret = lvm_run_command(cmd, argc, argv);

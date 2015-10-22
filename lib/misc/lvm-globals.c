@@ -123,7 +123,8 @@ void init_mirror_in_sync(int in_sync)
 
 void init_dmeventd_monitor(int reg)
 {
-	_dmeventd_monitor = reg;
+	if (!memlock_count_daemon())
+		_dmeventd_monitor = reg;
 }
 
 void init_background_polling(int polling)
@@ -133,7 +134,8 @@ void init_background_polling(int polling)
 
 void init_ignore_suspended_devices(int ignore)
 {
-	_ignore_suspended_devices = ignore;
+	if (!memlock_count_daemon())
+		_ignore_suspended_devices = ignore;
 }
 
 void init_ignore_lvm_mirrors(int scan)
