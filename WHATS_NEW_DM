@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Snapshot plugin for dmeventd improved percentage usage.
   Add dm_hold_control_dev to allow holding of control device open.
   Add dm_report_compact_given_fields to remove given empty fields from report.
   Use libdm status parsing and local mem raid dmeventd plugin.

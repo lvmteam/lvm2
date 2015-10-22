@@ -20,17 +20,17 @@
 #include <stdarg.h>
 
 /* First warning when snapshot is 80% full. */
-#define WARNING_THRESH 80
+#define WARNING_THRESH	(DM_PERCENT_1 * 80)
 /* Run a check every 5%. */
-#define CHECK_STEP 5
+#define CHECK_STEP	(DM_PERCENT_1 *  5)
 /* Do not bother checking snapshots less than 50% full. */
-#define CHECK_MINIMUM 50
+#define CHECK_MINIMUM	(DM_PERCENT_1 * 50)
 
 #define UMOUNT_COMMAND "/bin/umount"
 
 struct dso_state {
 	struct dm_pool *mem;
-	int percent_check;
+	dm_percent_t percent_check;
 	uint64_t known_size;
 	char cmd_lvextend[512];
 };
@@ -137,6 +137,7 @@ void process_event(struct dm_task *dmt,
 	struct dm_status_snapshot *status = NULL;
 	const char *device = dm_task_get_name(dmt);
 	int percent;
+	struct dm_info info;
 
 	/* No longer monitoring, waiting for remove */
 	if (!state->percent_check)
@@ -148,16 +149,22 @@ void process_event(struct dm_task *dmt,
 		return;
 	}
 
-	if (!dm_get_status_snapshot(state->mem, params, &status))
+	if (!dm_get_status_snapshot(state->mem, params, &status)) {
+		log_error("Cannot parse snapshot %s state: %s.", device, params);
 		return;
+	}
 
-	if (status->invalid || status->overflow) {
-		struct dm_info info;
-		log_error("Snapshot %s is lost.", device);
-		if (dm_task_get_info(dmt, &info)) {
+	/*
+	 * If the snapshot has been invalidated or we failed to parse
+	 * the status string. Report the full status string to syslog.
+	 */
+	if (status->invalid || status->overflow || !status->total_sectors) {
+		log_warn("WARNING: Snapshot %s changed state to: %s and should be removed.",
+			 device, params);
+		state->percent_check = 0;
+		if (dm_task_get_info(dmt, &info))
 			_umount(device, info.major, info.minor);
-			goto_out;
-		} /* else; too bad, but this is best-effort thing... */
+		goto out;
 	}
 
 	/* Snapshot size had changed. Clear the threshold. */
@@ -166,24 +173,15 @@ void process_event(struct dm_task *dmt,
 		state->known_size = status->total_sectors;
 	}
 
-	/*
-	 * If the snapshot has been invalidated or we failed to parse
-	 * the status string. Report the full status string to syslog.
-	 */
-	if (status->invalid || status->overflow || !status->total_sectors) {
-		log_error("Snapshot %s changed state to: %s.", device, params);
-		state->percent_check = 0;
-		goto out;
-	}
-
-	percent = (int) (100 * status->used_sectors / status->total_sectors);
+	percent = dm_make_percent(status->used_sectors, status->total_sectors);
 	if (percent >= state->percent_check) {
 		/* Usage has raised more than CHECK_STEP since the last
 		   time. Run actions. */
 		state->percent_check = (percent / CHECK_STEP) * CHECK_STEP + CHECK_STEP;
 
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
-			log_warn("WARNING: Snapshot %s is now %i%% full.", device, percent);
+			log_warn("WARNING: Snapshot %s is now %.2f%% full.",
+				 device, dm_percent_to_float(percent));
 
 		/* Try to extend the snapshot, in accord with user-set policies */
 		if (!_extend(state->cmd_lvextend))
