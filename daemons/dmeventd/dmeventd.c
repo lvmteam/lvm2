@@ -1590,11 +1590,8 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 /* Only one caller at a time. */
 static void _process_request(struct dm_event_fifos *fifos)
 {
-	int die;
 	struct dm_event_daemon_message msg = { 0 };
-#ifdef DEBUG
 	int cmd;
-#endif
 	/*
 	 * Read the request from the client (client_read, client_write
 	 * give true on success and false on failure).
@@ -1602,12 +1599,9 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_read(fifos, &msg))
 		return;
 
-#ifdef DEBUG
 	cmd = msg.cmd;
-#endif
-	DEBUGLOG(">>> CMD:%s (0x%x) processing...", decode_cmd(cmd), cmd);
 
-	die = (msg.cmd == DM_EVENT_CMD_DIE) ? 1 : 0;
+	DEBUGLOG(">>> CMD:%s (0x%x) processing...", decode_cmd(cmd), cmd);
 
 	/* _do_process_request fills in msg (if memory allows for
 	   data, otherwise just cmd and size = 0) */
@@ -1616,11 +1610,11 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_write(fifos, &msg))
 		stack;
 
+	DEBUGLOG("<<< CMD:%s (0x%x) completed (result %d).", decode_cmd(cmd), cmd, msg.cmd);
+
 	dm_free(msg.data);
 
-	DEBUGLOG("<<< CMD:%s (0x%x) completed (=%d).", decode_cmd(cmd), cmd, msg.cmd);
-
-	if (die) {
+	if (cmd == DM_EVENT_CMD_DIE) {
 		if (unlink(DMEVENTD_PIDFILE))
 			log_sys_error("unlink", DMEVENTD_PIDFILE);
 		_exit(0);
