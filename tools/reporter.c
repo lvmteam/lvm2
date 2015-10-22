@@ -604,22 +604,48 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 	}
 }
 
-static void _del_option_from_list(struct dm_list *sll, const char *str)
+static void _del_option_from_list(struct dm_list *sll, const char *prefix,
+				  size_t prefix_len, const char *str)
 {
 	struct dm_list *slh;
 	struct dm_str_list *sl;
+	const char *a = str, *b;
 
+	prefix_len--;
 	dm_list_uniterate(slh, sll, sll) {
 		sl = dm_list_item(slh, struct dm_str_list);
+
+		/* exact match */
 		if (!strcmp(str, sl->str)) {
+			dm_list_del(slh);
+			return;
+		}
+
+		/* also try to match with known prefix */
+		b = sl->str;
+		if (!strncmp(prefix, a, prefix_len)) {
+			a += prefix_len;
+			if (*a == '_')
+				a++;
+		}
+		if (!strncmp(prefix, b, prefix_len)) {
+			b += prefix_len;
+			if (*b == '_')
+				b++;
+		}
+		if (!strcmp(a, b)) {
 			dm_list_del(slh);
 			return;
 		}
 	}
 }
 
-static int _get_report_options(struct cmd_context *cmd, const char **options)
+static int _get_report_options(struct cmd_context *cmd,
+			       report_type_t report_type,
+			       const char **options)
 {
+	const char *prefix = report_get_field_prefix(report_type);
+	size_t prefix_len = strlen(prefix);
 	struct arg_value_group_list *current_group;
 	struct dm_list *final_opts_list;
 	struct dm_list *opts_list = NULL;
@@ -655,7 +681,8 @@ static int _get_report_options(struct cmd_context *cmd, const char **options)
 					dm_list_splice(final_opts_list, opts_list);
 				} else if (*opts == '-') {
 					dm_list_iterate_items(sl, opts_list)
-						_del_option_from_list(final_opts_list, sl->str);
+						_del_option_from_list(final_opts_list, prefix,
+								      prefix_len, sl->str);
 				}
 				str_list_destroy(opts_list, 1);
 				opts_list = NULL;
@@ -765,7 +792,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	/* If -o supplied use it, else use default for report_type */
 	if (arg_count(cmd, options_ARG) &&
-	    ((r = _get_report_options(cmd, &options) != ECMD_PROCESSED)))
+	    ((r = _get_report_options(cmd, report_type, &options) != ECMD_PROCESSED)))
 		return r;
 
 	/* -O overrides default sort settings */
