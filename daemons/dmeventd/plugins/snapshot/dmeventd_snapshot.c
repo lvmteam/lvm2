@@ -18,6 +18,7 @@
 
 #include <sys/wait.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 /* First warning when snapshot is 80% full. */
 #define WARNING_THRESH	(DM_PERCENT_1 * 80)
@@ -203,6 +204,15 @@ void process_event(struct dm_task *dmt,
 		/* Maybe configurable ? */
 		_remove(dm_task_get_uuid(dmt));
 #endif
+		pthread_kill(pthread_self(), SIGALRM);
+		goto out;
+	}
+
+	if (length <= (status->used_sectors - status->metadata_sectors)) {
+		/* TODO eventually recognize earlier when room is enough */
+		log_info("Dropping monitoring of fully provisioned snapshot %s.",
+			 device);
+		pthread_kill(pthread_self(), SIGALRM);
 		goto out;
 	}
 
