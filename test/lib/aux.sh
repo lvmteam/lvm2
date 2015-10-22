@@ -1112,9 +1112,8 @@ have_raid() {
 	# some kernels have broken mdraid bitmaps, don't use them!
 	# may oops kernel, we know for sure all FC24 are currently broken
 	# in general any 4.1, 4.2 is likely useless unless patched
-	# hopefully 4.3 will be patched
 	case "$(uname -r)" in
-	  4.[123].*fc24*) return 1 ;;
+	  4.[12].*fc24*) return 1 ;;
 	esac
 }
 
