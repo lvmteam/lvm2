@@ -157,21 +157,18 @@ struct dm_config_tree *dm_config_insert_cascaded_tree(struct dm_config_tree *fir
 
 static struct dm_config_node *_config_reverse(struct dm_config_node *head)
 {
-	if (!head)
-		return NULL;
-
 	struct dm_config_node *left = head, *middle = NULL, *right = NULL;
 
-	do {
+	while (left) {
 		right = middle;
 		middle = left;
 		left = left->sib;
 		middle->sib = right;
 		middle->child = _config_reverse(middle->child);
-	} while (left);
+	}
 
 	return middle;
-};
+}
 
 int dm_config_parse(struct dm_config_tree *cft, const char *start, const char *end)
 {
