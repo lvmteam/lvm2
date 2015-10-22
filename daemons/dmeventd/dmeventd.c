@@ -1292,18 +1292,18 @@ static int _get_timeout(struct message_data *message_data)
 	struct thread_status *thread;
 	struct dm_event_daemon_message *msg = message_data->msg;
 
-	dm_free(msg->data);
-
 	_lock_mutex();
-	if ((thread = _lookup_thread_status(message_data))) {
-		msg->size = dm_asprintf(&(msg->data), "%s %" PRIu32,
-					message_data->id, thread->timeout);
-	} else
-		msg->data = NULL;
-
+	thread = _lookup_thread_status(message_data);
 	_unlock_mutex();
 
-	return thread ? 0 : -ENODEV;
+	if (!thread)
+		return -ENODEV;
+
+	dm_free(msg->data);
+	msg->size = dm_asprintf(&(msg->data), "%s %" PRIu32,
+				message_data->id, thread->timeout);
+
+	return (msg->data && msg->size) ? 0 : -ENOMEM;
 }
 
 /* Open fifos used for client communication. */
