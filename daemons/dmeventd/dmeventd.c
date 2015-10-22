@@ -1472,6 +1472,8 @@ static int _handle_request(struct dm_event_daemon_message *msg,
 {
 	switch (msg->cmd) {
 	case DM_EVENT_CMD_REGISTER_FOR_EVENT:
+		if (!message_data->events_field)
+			return -EINVAL;
 		return _register_for_event(message_data);
 	case DM_EVENT_CMD_UNREGISTER_FOR_EVENT:
 		return _unregister_for_event(message_data);
