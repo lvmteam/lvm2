@@ -545,9 +545,6 @@ static int _fill_device_data(struct thread_status *ts)
 	struct dm_info dmi;
 	int ret = 0;
 
-	if (!ts->device.uuid)
-		return 0;
-
 	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
 		return 0;
 
