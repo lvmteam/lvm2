@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  Support exit on idle for dmenventd (1 hour).
   Add support to allow unmonitor device from plugin itself.
   New design for thread co-operation in dmeventd.
   Dmeventd read device status with 'noflush'.
