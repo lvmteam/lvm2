@@ -7248,8 +7248,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return NULL;
 			}
 			if (lv_is_cow(origin_lv)) {
-				log_error("Snapshots of snapshots are not "
-					  "supported yet.");
+				log_error("Snapshots of snapshots are not supported.");
 				return NULL;
 			}
 			if (lv_is_locked(origin_lv)) {
