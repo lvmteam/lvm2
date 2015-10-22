@@ -789,6 +789,23 @@ static void _unregister_for_timeout(struct thread_status *thread)
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
+#ifdef DEBUG_SIGNALS
+/* Print list of signals within a signal set */
+static void _print_sigset(const char *prefix, const sigset_t *sigset)
+{
+	int sig, cnt = 0;
+
+	for (sig = 1; sig < NSIG; sig++)
+		if (!sigismember(sigset, sig)) {
+			cnt++;
+			log_debug("%s%d (%s)", prefix, sig, strsignal(sig));
+		}
+
+	if (!cnt)
+		log_debug("%s<empty signal set>", prefix);
+}
+#endif
+
 static sigset_t _unblock_sigalrm(void)
 {
 	sigset_t set, old;
@@ -844,6 +861,9 @@ static int _event_wait(struct thread_status *thread)
 
 	pthread_sigmask(SIG_SETMASK, &set, NULL);
 
+#ifdef DEBUG_SIGNALS
+	_print_sigset("dmeventd blocking ", &set);
+#endif
 	DEBUGLOG("Completed waitevent task for %s.", thread->device.name);
 
 	return ret;
