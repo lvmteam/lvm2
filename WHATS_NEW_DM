@@ -1,5 +1,6 @@
 Version 1.02.110 - 
 ======================================
+  New design for thread cooperation in dmeventd.
   Dmeventd read device status with 'noflush'.
   Dmeventd closes control device when no device is monitored.
   Thin plugin for dmeventd improved percentage usage.
