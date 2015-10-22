@@ -42,8 +42,8 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 			goto out; /* already reported */
 
 		log_error("Device #%d of %s array, %s, has failed.",
-			 (int)(d - status->dev_health),
-			 status->raid_type, device);
+			  (int)(d - status->dev_health),
+			  status->raid_type, device);
 
 		state->failed = 1;
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvscan))

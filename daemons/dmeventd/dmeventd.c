@@ -230,6 +230,7 @@ struct thread_status {
 	void *dso_private; /* dso per-thread status variable */
 	/* TODO per-thread mutex */
 };
+
 static DM_LIST_INIT(_thread_registry);
 static DM_LIST_INIT(_thread_registry_unused);
 
@@ -819,6 +820,7 @@ static sigset_t _unblock_sigalrm(void)
 	sigemptyset(&set);
 	sigaddset(&set, SIGALRM);
 	pthread_sigmask(SIG_UNBLOCK, &set, &old);
+
 	return old;
 }
 
@@ -1412,7 +1414,7 @@ fail:
  * and a complete message is read.  Must not block indefinitely.
  */
 static int _client_read(struct dm_event_fifos *fifos,
-		       struct dm_event_daemon_message *msg)
+			struct dm_event_daemon_message *msg)
 {
 	struct timeval t;
 	unsigned bytes = 0;
@@ -1859,7 +1861,6 @@ static void _daemonize(void)
 	case -1:
 		log_sys_error("fork", "");
 		exit(EXIT_FAILURE);
-
 	case 0:		/* Child */
 		break;
 
@@ -2107,8 +2108,6 @@ int main(int argc, char *argv[])
 		.server_path = DM_EVENT_FIFO_SERVER
 	};
 	time_t now, idle_exit_timeout = DMEVENTD_IDLE_EXIT_TIMEOUT;
-	//struct sys_log logdata = {DAEMON_NAME, LOG_DAEMON};
-
 	opterr = 0;
 	optind = 0;
 
@@ -2195,6 +2194,7 @@ int main(int argc, char *argv[])
 	/* Signal parent, letting them know we are ready to go. */
 	if (!_foreground)
 		kill(getppid(), SIGTERM);
+
 	log_notice("dmeventd ready for processing.");
 
 	_idle_since = time(NULL);

@@ -4495,7 +4495,7 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		if (!lv_snapshot_percent(lv, &percent))
 			return_0;
 		if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) || percent <= policy_threshold)
-		return 1; /* nothing to do */
+			return 1; /* nothing to do */
 	}
 
 	lp->extents = policy_amount;
