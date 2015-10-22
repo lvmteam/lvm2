@@ -243,6 +243,137 @@ static DM_LIST_INIT(_timeout_registry);
 static pthread_mutex_t _timeout_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
 
+
+/**********
+ *   DSO
+ **********/
+
+/* DSO data allocate/free. */
+static void _free_dso_data(struct dso_data *data)
+{
+	dm_free(data->dso_name);
+	dm_free(data);
+}
+
+static struct dso_data *_alloc_dso_data(struct message_data *data)
+{
+	struct dso_data *ret = (typeof(ret)) dm_zalloc(sizeof(*ret));
+
+	if (!ret)
+		return_NULL;
+
+	if (!(ret->dso_name = dm_strdup(data->dso_name))) {
+		dm_free(ret);
+		return_NULL;
+	}
+
+	return ret;
+}
+
+/* DSO reference counting. */
+static void _lib_get(struct dso_data *data)
+{
+	data->ref_count++;
+}
+
+static void _lib_put(struct dso_data *data)
+{
+	if (!--data->ref_count) {
+		dlclose(data->dso_handle);
+		UNLINK_DSO(data);
+		_free_dso_data(data);
+	}
+}
+
+/* Find DSO data. */
+static struct dso_data *_lookup_dso(struct message_data *data)
+{
+	struct dso_data *dso_data, *ret = NULL;
+
+	dm_list_iterate_items(dso_data, &_dso_registry)
+		if (!strcmp(data->dso_name, dso_data->dso_name)) {
+			_lib_get(dso_data);
+			ret = dso_data;
+			break;
+		}
+
+	return ret;
+}
+
+/* Lookup DSO symbols we need. */
+static int _lookup_symbol(void *dl, void **symbol, const char *name)
+{
+	if (!(*symbol = dlsym(dl, name)))
+		return_0;
+
+	return 1;
+}
+
+static int _lookup_symbols(void *dl, struct dso_data *data)
+{
+	return _lookup_symbol(dl, (void *) &data->process_event,
+			     "process_event") &&
+	    _lookup_symbol(dl, (void *) &data->register_device,
+			  "register_device") &&
+	    _lookup_symbol(dl, (void *) &data->unregister_device,
+			  "unregister_device");
+}
+
+/* Load an application specific DSO. */
+static struct dso_data *_load_dso(struct message_data *data)
+{
+	void *dl;
+	struct dso_data *ret;
+	const char *dlerr;
+
+	if (!(dl = dlopen(data->dso_name, RTLD_NOW))) {
+		dlerr = dlerror();
+		goto_bad;
+	}
+
+	if (!(ret = _alloc_dso_data(data))) {
+		dlclose(dl);
+		dlerr = "no memory";
+		goto_bad;
+	}
+
+	if (!(_lookup_symbols(dl, ret))) {
+		_free_dso_data(ret);
+		dlclose(dl);
+		dlerr = "symbols missing";
+		goto_bad;
+	}
+
+	/*
+	 * Keep handle to close the library once
+	 * we've got no references to it any more.
+	 */
+	ret->dso_handle = dl;
+	LINK_DSO(ret);
+
+	return ret;
+bad:
+	log_error("dmeventd %s dlopen failed: %s.", data->dso_name, dlerr);
+	data->msg->size = dm_asprintf(&(data->msg->data), "%s %s dlopen failed: %s",
+				      data->id, data->dso_name, dlerr);
+	return NULL;
+}
+
+/************
+ *  THREAD
+ ************/
+
+/* Allocate/free the thread status structure for a monitoring thread. */
+static void _free_thread_status(struct thread_status *thread)
+{
+	_lib_put(thread->dso_data);
+	if (thread->current_task)
+		dm_task_destroy(thread->current_task);
+	dm_free(thread->device.uuid);
+	dm_free(thread->device.name);
+	dm_free(thread);
+}
+
 /* Allocate/free the status structure for a monitoring thread. */
 static struct thread_status *_alloc_thread_status(const struct message_data *data,
 						  struct dso_data *dso_data)
@@ -261,33 +392,6 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	ret->events = data->events_field;
 	ret->timeout = data->timeout_secs;
 	dm_list_init(&ret->timeout_list);
-
-	return ret;
-}
-
-static void _lib_put(struct dso_data *data);
-static void _free_thread_status(struct thread_status *thread)
-{
-	_lib_put(thread->dso_data);
-	if (thread->current_task)
-		dm_task_destroy(thread->current_task);
-	dm_free(thread->device.uuid);
-	dm_free(thread->device.name);
-	dm_free(thread);
-}
-
-/* Allocate/free DSO data. */
-static struct dso_data *_alloc_dso_data(struct message_data *data)
-{
-	struct dso_data *ret = (typeof(ret)) dm_zalloc(sizeof(*ret));
-
-	if (!ret)
-		return NULL;
-
-	if (!(ret->dso_name = dm_strdup(data->dso_name))) {
-		dm_free(ret);
-		return NULL;
-	}
 
 	return ret;
 }
@@ -329,12 +433,6 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 	pthread_attr_destroy(&attr);
 
 	return r;
-}
-
-static void _free_dso_data(struct dso_data *data)
-{
-	dm_free(data->dso_name);
-	dm_free(data);
 }
 
 /*
@@ -891,96 +989,6 @@ static int _terminate_thread(struct thread_status *thread)
 {
 	DEBUGLOG("Sending SIGALRM to terminate Thr %x.", (int)thread->thread);
 	return pthread_kill(thread->thread, SIGALRM);
-}
-
-/* DSO reference counting. Call with _global_mutex locked! */
-static void _lib_get(struct dso_data *data)
-{
-	data->ref_count++;
-}
-
-static void _lib_put(struct dso_data *data)
-{
-	if (!--data->ref_count) {
-		dlclose(data->dso_handle);
-		UNLINK_DSO(data);
-		_free_dso_data(data);
-	}
-}
-
-/* Find DSO data. */
-static struct dso_data *_lookup_dso(struct message_data *data)
-{
-	struct dso_data *dso_data, *ret = NULL;
-
-	dm_list_iterate_items(dso_data, &_dso_registry)
-		if (!strcmp(data->dso_name, dso_data->dso_name)) {
-			_lib_get(dso_data);
-			ret = dso_data;
-			break;
-		}
-
-	return ret;
-}
-
-/* Lookup DSO symbols we need. */
-static int _lookup_symbol(void *dl, void **symbol, const char *name)
-{
-	if ((*symbol = dlsym(dl, name)))
-		return 1;
-
-	return 0;
-}
-
-static int _lookup_symbols(void *dl, struct dso_data *data)
-{
-	return _lookup_symbol(dl, (void *) &data->process_event,
-			     "process_event") &&
-	    _lookup_symbol(dl, (void *) &data->register_device,
-			  "register_device") &&
-	    _lookup_symbol(dl, (void *) &data->unregister_device,
-			  "unregister_device");
-}
-
-/* Load an application specific DSO. */
-static struct dso_data *_load_dso(struct message_data *data)
-{
-	void *dl;
-	struct dso_data *ret;
-
-	if (!(dl = dlopen(data->dso_name, RTLD_NOW))) {
-		const char *dlerr = dlerror();
-		log_error("dmeventd %s dlopen failed: %s.",
-			  data->dso_name, dlerr);
-		data->msg->size =
-		    dm_asprintf(&(data->msg->data), "%s %s dlopen failed: %s",
-				data->id, data->dso_name, dlerr);
-		return NULL;
-	}
-
-	if (!(ret = _alloc_dso_data(data))) {
-		dlclose(dl);
-		return NULL;
-	}
-
-	if (!(_lookup_symbols(dl, ret))) {
-		_free_dso_data(ret);
-		dlclose(dl);
-		return NULL;
-	}
-
-	/*
-	 * Keep handle to close the library once
-	 * we've got no references to it any more.
-	 */
-	ret->dso_handle = dl;
-	_lib_get(ret);
-
-	_lock_mutex();
-	LINK_DSO(ret);
-	_unlock_mutex();
-
-	return ret;
 }
 
 /* Return success on daemon active check. */
