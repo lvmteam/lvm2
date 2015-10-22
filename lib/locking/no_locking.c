@@ -19,8 +19,6 @@
 #include "lvm-string.h"
 #include "activate.h"
 
-#include <signal.h>
-
 /*
  * No locking
  */
