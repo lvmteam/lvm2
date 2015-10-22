@@ -3396,6 +3396,21 @@ void *report_init_for_selection(struct cmd_context *cmd,
 					     cmd);
 }
 
+const char *report_get_field_prefix(report_type_t report_type_id)
+{
+	const struct dm_report_object_type *report_types, *report_type;
+
+	report_types = report_type_id & DEVTYPES ? _devtypes_report_types
+						 : _report_types;
+
+	for (report_type = report_types; report_type->id; report_type++) {
+		if (report_type_id & report_type->id)
+			return report_type->prefix;
+	}
+
+	return "";
+}
+
 /*
  * Create a row of data for an object
  */

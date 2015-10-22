@@ -71,6 +71,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  int quoted, int columns_as_rows, const char *selection);
 void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_type,
 				const char *selection);
+const char *report_get_field_prefix(report_type_t report_type);
 int report_for_selection(struct cmd_context *cmd,
 			 struct selection_handle *sh,
 			 struct physical_volume *pv,
