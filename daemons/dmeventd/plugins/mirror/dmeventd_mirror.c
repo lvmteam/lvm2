@@ -220,8 +220,7 @@ int register_device(const char *device,
 	}
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
-				   "lvconvert --config devices{ignore_suspended_devices=1} "
-				   "--repair --use-policies", device)) {
+				   "lvconvert --repair --use-policies", device)) {
 		dmeventd_lvm2_exit_with_pool(state);
 		goto_bad;
 	}
