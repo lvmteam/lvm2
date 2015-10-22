@@ -1274,11 +1274,20 @@ static int _set_timeout(struct message_data *message_data)
 	struct thread_status *thread;
 
 	_lock_mutex();
-	if ((thread = _lookup_thread_status(message_data)))
-		thread->timeout = message_data->timeout_secs;
+	thread = _lookup_thread_status(message_data);
 	_unlock_mutex();
 
-	return thread ? 0 : -ENODEV;
+	if (!thread)
+		return -ENODEV;
+
+	/* Lets reprogram timer */
+	pthread_mutex_lock(&_timeout_mutex);
+	thread->timeout = message_data->timeout_secs;
+	thread->next_time = 0;
+	pthread_cond_signal(&_timeout_cond);
+	pthread_mutex_unlock(&_timeout_mutex);
+
+	return 0;
 }
 
 static int _get_timeout(struct message_data *message_data)
