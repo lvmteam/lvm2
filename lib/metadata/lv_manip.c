@@ -4433,23 +4433,34 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 	if (lv_is_thin_pool(lv)) {
 		policy_threshold =
 			find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
-					     lv_config_profile(lv)) * DM_PERCENT_1;
+					     lv_config_profile(lv));
 		policy_amount =
 			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
 					     lv_config_profile(lv));
-		if (!policy_amount && policy_threshold < DM_PERCENT_100) {
-			log_error("Can't extend thin pool %s, autoextend is set to 0%%.",
-				  display_lvname(lv));
-			return 0;
+		if (policy_threshold < 50) {
+			log_warn("WARNING: Thin pool autoextend threshold %d%% is set bellow "
+				 "minimal supported value 50%%.", policy_threshold);
+			policy_threshold = 50;
 		}
 	} else {
 		policy_threshold =
-			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG, NULL) * DM_PERCENT_1;
+			find_config_tree_int(cmd, activation_snapshot_autoextend_threshold_CFG, NULL);
 		policy_amount =
 			find_config_tree_int(cmd, activation_snapshot_autoextend_percent_CFG, NULL);
+		if (policy_threshold < 50) {
+			log_warn("WARNING: Snapshot autoextend threshold %d%% is set bellow "
+				 "minimal supported value 50%%.", policy_threshold);
+			policy_threshold = 50;
+		}
 	}
 
-	if (policy_threshold >= DM_PERCENT_100)
+	if (!policy_amount && policy_threshold < 100) {
+		log_error("Can't extend %s with %s autoextend percent set to 0%%.",
+			  display_lvname(lv),  first_seg(lv)->segtype->name);
+		return 0;
+	}
+
+	if (policy_threshold >= 100)
 		return 1; /* nothing to do */
 
 	if (!lv_is_active_locally(lv)) {
@@ -4457,6 +4468,8 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 			  display_lvname(lv));
 		return 0;
 	}
+
+	policy_threshold *= DM_PERCENT_1;
 
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, 1, &percent))
