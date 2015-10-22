@@ -37,14 +37,17 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 		return 0;
 	}
 
-	if ((d = strchr(status->dev_health, 'D')) && !state->failed) {
+	if ((d = strchr(status->dev_health, 'D'))) {
+		if (state->failed)
+			goto out; /* already reported */
+
 		log_error("Device #%d of %s array, %s, has failed.",
 			 (int)(d - status->dev_health),
 			 status->raid_type, device);
 
 		state->failed = 1;
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvscan))
-			log_info("Re-scan of RAID device %s failed.", device);
+			log_warn("WARNING: Re-scan of RAID device %s failed.", device);
 
 		/* if repair goes OK, report success even if lvscan has failed */
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvconvert)) {
@@ -58,7 +61,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 			 status->raid_type, device,
 			 (status->insync_regions == status->total_regions) ? "now" : "not");
 	}
-
+out:
 	dm_pool_free(state->mem, status);
 
 	return 1;
