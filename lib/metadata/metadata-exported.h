@@ -163,10 +163,9 @@
 /* vg_read and vg_read_for_update flags */
 #define READ_ALLOW_INCONSISTENT	0x00010000U
 #define READ_ALLOW_EXPORTED	0x00020000U
+#define READ_OK_NOTFOUND	0x00040000U
 #define READ_WARN_INCONSISTENT	0x00080000U
-
-/* A meta-flag, useful with toollib for_each_* functions. */
-#define READ_FOR_UPDATE		0x00100000U
+#define READ_FOR_UPDATE		0x00100000U /* A meta-flag, useful with toollib for_each_* functions. */
 
 /* vg's "read_status" field */
 #define FAILED_INCONSISTENT	0x00000001U
@@ -650,9 +649,9 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
  * Return a handle to VG metadata.
  */
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
-			     const char *vgid, uint32_t flags, uint32_t lockd_state);
+			     const char *vgid, uint32_t read_flags, uint32_t lockd_state);
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
-			 const char *vgid, uint32_t flags, uint32_t lockd_state);
+			 const char *vgid, uint32_t read_flags, uint32_t lockd_state);
 
 /* 
  * Test validity of a VG handle.

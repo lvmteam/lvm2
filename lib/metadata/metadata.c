@@ -4925,7 +4925,7 @@ static int _vg_access_permitted(struct cmd_context *cmd, struct volume_group *vg
  * Consolidated locking, reading, and status flag checking.
  *
  * If the metadata is inconsistent, setting READ_ALLOW_INCONSISTENT in
- * misc_flags will return it with FAILED_INCONSISTENT set instead of 
+ * read_flags will return it with FAILED_INCONSISTENT set instead of 
  * giving you nothing.
  *
  * Use vg_read_error(vg) to determine the result.  Nonzero means there were
@@ -4933,8 +4933,10 @@ static int _vg_access_permitted(struct cmd_context *cmd, struct volume_group *vg
  * Zero value means that the VG is open and appropriate locks are held.
  */
 static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
-			       const char *vgid, uint32_t lock_flags,
-			       uint64_t status_flags, uint32_t misc_flags,
+			       const char *vgid,
+			       uint32_t lock_flags,
+			       uint64_t status_flags,
+			       uint32_t read_flags,
 			       uint32_t lockd_state)
 {
 	struct volume_group *vg = NULL;
@@ -4944,7 +4946,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	uint32_t warn_flags = 0;
 	int already_locked;
 
-	if (misc_flags & READ_ALLOW_INCONSISTENT || lock_flags != LCK_VG_WRITE)
+	if ((read_flags & READ_ALLOW_INCONSISTENT) || (lock_flags != LCK_VG_WRITE))
 		consistent = 0;
 
 	if (!validate_name(vg_name) && !is_orphan_vg(vg_name)) {
@@ -4967,7 +4969,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 	consistent_in = consistent;
 
 	warn_flags = WARN_PV_READ;
-	if (consistent || (misc_flags & READ_WARN_INCONSISTENT))
+	if (consistent || (read_flags & READ_WARN_INCONSISTENT))
 		warn_flags |= WARN_INCONSISTENT;
 
 	/* If consistent == 1, we get NULL here if correction fails. */
@@ -4976,7 +4978,8 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 			failure |= FAILED_INCONSISTENT;
 			goto bad;
 		}
-		log_error("Volume group \"%s\" not found", vg_name);
+		if (!(read_flags & READ_OK_NOTFOUND))
+			log_error("Volume group \"%s\" not found", vg_name);
 		failure |= FAILED_NOTFOUND;
 		goto bad;
 	}
@@ -5057,20 +5060,20 @@ bad_no_unlock:
  * *consistent = 1.
  */
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
-			     const char *vgid, uint32_t flags, uint32_t lockd_state)
+			     const char *vgid, uint32_t read_flags, uint32_t lockd_state)
 {
-	uint64_t status = UINT64_C(0);
+	uint64_t status_flags = UINT64_C(0);
 	uint32_t lock_flags = LCK_VG_READ;
 
-	if (flags & READ_FOR_UPDATE) {
-		status |= EXPORTED_VG | LVM_WRITE;
+	if (read_flags & READ_FOR_UPDATE) {
+		status_flags |= EXPORTED_VG | LVM_WRITE;
 		lock_flags = LCK_VG_WRITE;
 	}
 
-	if (flags & READ_ALLOW_EXPORTED)
-		status &= ~EXPORTED_VG;
+	if (read_flags & READ_ALLOW_EXPORTED)
+		status_flags &= ~EXPORTED_VG;
 
-	return _vg_lock_and_read(cmd, vg_name, vgid, lock_flags, status, flags, lockd_state);
+	return _vg_lock_and_read(cmd, vg_name, vgid, lock_flags, status_flags, read_flags, lockd_state);
 }
 
 /*
@@ -5079,9 +5082,9 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
  * request the new metadata to be written and committed).
  */
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
-			 const char *vgid, uint32_t flags, uint32_t lockd_state)
+			 const char *vgid, uint32_t read_flags, uint32_t lockd_state)
 {
-	return vg_read(cmd, vg_name, vgid, flags | READ_FOR_UPDATE, lockd_state);
+	return vg_read(cmd, vg_name, vgid, read_flags | READ_FOR_UPDATE, lockd_state);
 }
 
 /*

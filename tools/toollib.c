@@ -184,12 +184,24 @@ const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
  *   If *skip is 1, it's OK for the caller to read the list of PVs in the VG.
  */
 static int _ignore_vg(struct volume_group *vg, const char *vg_name,
-		      struct dm_list *arg_vgnames, int allow_inconsistent, int *skip)
+		      struct dm_list *arg_vgnames, uint32_t read_flags, int *skip)
 {
 	uint32_t read_error = vg_read_error(vg);
 	*skip = 0;
 
-	if ((read_error & FAILED_INCONSISTENT) && allow_inconsistent)
+	if ((read_error & FAILED_NOTFOUND) && (read_flags & READ_OK_NOTFOUND)) {
+		read_error &= ~FAILED_NOTFOUND;
+		*skip = 1;
+		return 0;
+	}
+
+	if ((read_error & FAILED_INCONSISTENT) && (read_flags & READ_OK_NOTFOUND)) {
+		read_error &= ~FAILED_INCONSISTENT;
+		*skip = 1;
+		return 0;
+	}
+
+	if ((read_error & FAILED_INCONSISTENT) && (read_flags & READ_ALLOW_INCONSISTENT))
 		read_error &= ~FAILED_INCONSISTENT; /* Check for other errors */
 
 	if ((read_error & FAILED_CLUSTERED) && vg->cmd->ignore_clustered_vgs) {
@@ -1943,7 +1955,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		}
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags, lockd_state);
-		if (_ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (_ignore_vg(vg, vg_name, arg_vgnames, flags, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			goto endvg;
@@ -2431,7 +2443,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t flags,
 		}
 
 		vg = vg_read(cmd, vg_name, vg_uuid, flags, lockd_state);
-		if (_ignore_vg(vg, vg_name, arg_vgnames, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		if (_ignore_vg(vg, vg_name, arg_vgnames, flags, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			goto endvg;
@@ -2897,7 +2909,7 @@ out:
  * should produce an error.  Any devices remaining in all_devices were
  * not found and should be processed by process_device_list().
  */
-static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
+static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			       struct dm_list *all_vgnameids,
 			       struct dm_list *all_devices,
 			       struct dm_list *arg_devices,
@@ -2929,8 +2941,8 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t flags,
 			continue;
 		}
 
-		vg = vg_read(cmd, vg_name, vg_uuid, flags | READ_WARN_INCONSISTENT, lockd_state);
-		if (_ignore_vg(vg, vg_name, NULL, flags & READ_ALLOW_INCONSISTENT, &skip)) {
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state);
+		if (_ignore_vg(vg, vg_name, NULL, read_flags, &skip)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			if (!skip)
@@ -2969,7 +2981,7 @@ endvg:
 int process_each_pv(struct cmd_context *cmd,
 		    int argc, char **argv,
 		    const char *only_this_vgname,
-		    uint32_t flags,
+		    uint32_t read_flags,
 		    struct processing_handle *handle,
 		    process_single_pv_fn_t process_single_pv)
 {
@@ -2983,6 +2995,19 @@ int process_each_pv(struct cmd_context *cmd,
 	int process_all_devices;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
+
+	/*
+	 * When processing a specific VG name, warn if it's inconsistent and
+	 * print an error if it's not found.  Otherwise we're processing all
+	 * VGs, in which case the command doesn't care if the VG is inconsisent
+	 * or not found; it just wants to skip that VG.  (It may be not found
+	 * if it was removed between creating the list of all VGs and then
+	 * processing each VG.
+	 */
+	if (only_this_vgname)
+		read_flags |= READ_WARN_INCONSISTENT;
+	else
+		read_flags |= READ_OK_NOTFOUND;
 
 	/* Disable error in vg_read so we can print it from ignore_vg. */
 	cmd->vg_read_print_access_error = 0;
@@ -3040,7 +3065,7 @@ int process_each_pv(struct cmd_context *cmd,
 		/* get_arg_devices reports the error for any PV names not found. */
 		ret_max = ECMD_FAILED;
 
-	ret = _process_pvs_in_vgs(cmd, flags, &all_vgnameids, &all_devices,
+	ret = _process_pvs_in_vgs(cmd, read_flags, &all_vgnameids, &all_devices,
 				  &arg_devices, &arg_tags,
 				  process_all_pvs, process_all_devices,
 				  handle, process_single_pv);
