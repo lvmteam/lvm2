@@ -84,6 +84,41 @@ static int _extend(const char *cmd)
 	return dmeventd_lvm2_run_with_lock(cmd);
 }
 
+#ifdef SNAPSHOT_REMOVE
+/* Remove invalid snapshot from dm-table */
+/* Experimental for now and not used by default */
+static int _remove(const char *uuid)
+{
+	int r = 1;
+	uint32_t cookie = 0;
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE)))
+		return 0;
+
+	if (!dm_task_set_uuid(dmt, uuid)) {
+		r = 0;
+		goto_out;
+	}
+
+	dm_task_retry_remove(dmt);
+
+	if (!dm_task_set_cookie(dmt, &cookie, 0)) {
+		r = 0;
+		goto_out;
+	}
+
+	if (!dm_task_run(dmt)) {
+		r = 0;
+		goto_out;
+	}
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+#endif /* SNAPSHOT_REMOVE */
+
 static void _umount(const char *device, int major, int minor)
 {
 	FILE *mounts;
@@ -164,6 +199,10 @@ void process_event(struct dm_task *dmt,
 		state->percent_check = 0;
 		if (dm_task_get_info(dmt, &info))
 			_umount(device, info.major, info.minor);
+#ifdef SNAPSHOT_REMOVE
+		/* Maybe configurable ? */
+		_remove(dm_task_get_uuid(dmt));
+#endif
 		goto out;
 	}
 
