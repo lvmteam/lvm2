@@ -570,6 +570,30 @@ fail:
 	return ret;
 }
 
+static struct dm_task *_get_device_status(struct thread_status *ts)
+{
+	struct dm_task *dmt = dm_task_create(DM_DEVICE_STATUS);
+
+	if (!dmt)
+		return_NULL;
+
+	if (!dm_task_set_uuid(dmt, ts->device.uuid)) {
+		dm_task_destroy(dmt);
+		return_NULL;
+	}
+
+	/* Non-blocking status read */
+	if (!dm_task_no_flush(dmt))
+		log_warn("WARNING: Can't set no_flush for dm status.");
+
+	if (!dm_task_run(dmt)) {
+		dm_task_destroy(dmt);
+		return_NULL;
+	}
+
+	return dmt;
+}
+
 /*
  * Find an existing thread for a device.
  *
@@ -884,26 +908,6 @@ static void _monitor_unregister(void *arg)
 	UNLINK_THREAD(thread);
 	LINK(thread, &_thread_registry_unused);
 	_unlock_mutex();
-}
-
-static struct dm_task *_get_device_status(struct thread_status *ts)
-{
-	struct dm_task *dmt = dm_task_create(DM_DEVICE_STATUS);
-
-	if (!dmt)
-		return NULL;
-
-	if (!dm_task_set_uuid(dmt, ts->device.uuid)) {
-		dm_task_destroy(dmt);
-		return NULL;
-	}
-
-	if (!dm_task_run(dmt)) {
-		dm_task_destroy(dmt);
-		return NULL;
-	}
-
-	return dmt;
 }
 
 /* Device monitoring thread. */
