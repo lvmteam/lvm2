@@ -34,8 +34,8 @@ static void *_lvm_handle = NULL;
 
 DM_EVENT_LOG_FN("lvm")
 
-static void lvm2_print_log(int level, const char *file, int line,
-			   int dm_errno_or_class, const char *msg)
+static void _lvm2_print_log(int level, const char *file, int line,
+			    int dm_errno_or_class, const char *msg)
 {
 	print_log(level, file, line, dm_errno_or_class, "%s", msg);
 }
@@ -62,7 +62,7 @@ int dmeventd_lvm2_init(void)
 	pthread_mutex_lock(&_register_mutex);
 
 	if (!_lvm_handle) {
-		lvm2_log_fn(lvm2_print_log);
+		lvm2_log_fn(_lvm2_print_log);
 
 		if (!(_lvm_handle = lvm2_init()))
 			goto out;
@@ -103,10 +103,10 @@ void dmeventd_lvm2_exit(void)
 		log_debug("lvm plugin exiting.");
 		lvm2_exit(_lvm_handle);
 		_lvm_handle = NULL;
+		log_debug("lvm plugin exited.");
 	}
 
 	pthread_mutex_unlock(&_register_mutex);
-	log_debug("lvm plugin exited.");
 }
 
 struct dm_pool *dmeventd_lvm2_pool(void)
