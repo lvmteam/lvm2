@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "lvm-signal.h"
+#include "memlock.h"
 
 #include <signal.h>
 
@@ -60,6 +61,8 @@ void sigint_allow(void)
 	struct sigaction handler;
 	sigset_t sigs;
 
+	if (memlock_count_daemon())
+		return;
 	/*
 	 * Do not overwrite the backed-up handler data -
 	 * just increase nesting count.
@@ -91,6 +94,9 @@ void sigint_allow(void)
 
 void sigint_restore(void)
 {
+	if (memlock_count_daemon())
+		return;
+
 	if (!_handler_installed ||
 	    --_handler_installed >= MAX_SIGINTS)
 		return;
@@ -112,6 +118,9 @@ void block_signals(uint32_t flags __attribute__((unused)))
 {
 	sigset_t set;
 
+	if (memlock_count_daemon())
+		return;
+
 	if (_signals_blocked)
 		return;
 
@@ -130,6 +139,9 @@ void block_signals(uint32_t flags __attribute__((unused)))
 
 void unblock_signals(void)
 {
+	if (memlock_count_daemon())
+		return;
+
 	/* Don't unblock signals while any locks are held */
 	if (!_signals_blocked)
 		return;
