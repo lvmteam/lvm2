@@ -2155,7 +2155,7 @@ int main(int argc, char *argv[])
 #ifdef __linux__
 	/* Systemd has adjusted oom killer for us already */
 	if (!_systemd_activation && !_protect_against_oom_killer())
-		log_error("Failed to protect against OOM killer.");
+		log_warn("WARNING: Failed to protect against OOM killer.");
 #endif
 
 	_init_thread_signals();
@@ -2187,8 +2187,8 @@ int main(int argc, char *argv[])
 			_unlock_mutex();
 			if (nothreads)
 				break;
-			log_error("There are still devices being monitored.");
-			log_error("Refusing to exit.");
+			log_warn("WARNING: There are still devices being monitored.");
+			log_warn("WARNING: Refusing to exit.");
 		}
 		_process_request(&fifos);
 		_cleanup_unused_threads();
