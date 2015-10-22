@@ -973,6 +973,17 @@ static void *_monitor_thread(void *arg)
 
 			_lock_mutex();
 			thread->processing = 0;
+
+			/*
+			 * Thread can terminate itself from plugin via SIGALRM
+			 * Timer thread will not send signal while processing
+			 * TODO: maybe worth API change and return value for
+			 *       _do_process_event() instead of this signal solution
+			 */
+			if (sigpending(&pendmask) < 0)
+				log_sys_error("sigpending", "");
+			else if (sigismember(&pendmask, SIGALRM))
+				break;
 		} else {
 			_unlock_mutex();
 
