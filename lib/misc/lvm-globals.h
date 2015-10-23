@@ -38,6 +38,7 @@ void init_lockingfailed(int level);
 void init_security_level(int level);
 void init_mirror_in_sync(int in_sync);
 void init_dmeventd_monitor(int reg);
+void init_disable_dmeventd_monitoring(int disable);
 void init_background_polling(int polling);
 void init_ignore_suspended_devices(int ignore);
 void init_ignore_lvm_mirrors(int scan);

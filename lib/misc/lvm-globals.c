@@ -40,6 +40,8 @@ static int _security_level = SECURITY_LEVEL;
 static char _cmd_name[30] = "";
 static int _mirror_in_sync = 0;
 static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
+/* When set, disables update of _dmeventd_monitor & _ignore_suspended_devices */
+static int _disable_dmeventd_monitoring = 0;
 static int _background_polling = DEFAULT_BACKGROUND_POLLING;
 static int _ignore_suspended_devices = 0;
 static int _ignore_lvm_mirrors = DEFAULT_IGNORE_LVM_MIRRORS;
@@ -123,8 +125,13 @@ void init_mirror_in_sync(int in_sync)
 
 void init_dmeventd_monitor(int reg)
 {
-	if (!memlock_count_daemon())
+	if (!_disable_dmeventd_monitoring)
 		_dmeventd_monitor = reg;
+}
+
+void init_disable_dmeventd_monitoring(int reg)
+{
+	_disable_dmeventd_monitoring = reg;
 }
 
 void init_background_polling(int polling)
@@ -134,7 +141,7 @@ void init_background_polling(int polling)
 
 void init_ignore_suspended_devices(int ignore)
 {
-	if (!memlock_count_daemon())
+	if (!_disable_dmeventd_monitoring)
 		_ignore_suspended_devices = ignore;
 }
 
