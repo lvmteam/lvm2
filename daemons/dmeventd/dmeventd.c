@@ -1029,6 +1029,9 @@ static void *_monitor_thread(void *arg)
 		}
 	}
 out:
+	/* ';' fixes gcc compilation problem with older pthread macros
+	 * "label at end of compound statement" */
+	;
 
 	pthread_cleanup_pop(1);
 
