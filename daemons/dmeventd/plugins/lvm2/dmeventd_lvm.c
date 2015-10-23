@@ -100,7 +100,6 @@ void dmeventd_lvm2_exit(void)
 		lvm2_run(_lvm_handle, "_memlock_dec");
 		dm_pool_destroy(_mem_pool);
 		_mem_pool = NULL;
-		log_debug("lvm plugin exiting.");
 		lvm2_exit(_lvm_handle);
 		_lvm_handle = NULL;
 		log_debug("lvm plugin exited.");
