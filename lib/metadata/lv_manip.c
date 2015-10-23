@@ -4438,8 +4438,8 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 			find_config_tree_int(cmd, activation_thin_pool_autoextend_percent_CFG,
 					     lv_config_profile(lv));
 		if (policy_threshold < 50) {
-			log_warn("WARNING: Thin pool autoextend threshold %d%% is set bellow "
-				 "minimal supported value 50%%.", policy_threshold);
+			log_warn("WARNING: Thin pool autoextend threshold %d%% is set below "
+				 "minimum supported 50%%.", policy_threshold);
 			policy_threshold = 50;
 		}
 	} else {
