@@ -195,12 +195,6 @@ static int _ignore_vg(struct volume_group *vg, const char *vg_name,
 		return 0;
 	}
 
-	if ((read_error & FAILED_INCONSISTENT) && (read_flags & READ_OK_NOTFOUND)) {
-		read_error &= ~FAILED_INCONSISTENT;
-		*skip = 1;
-		return 0;
-	}
-
 	if ((read_error & FAILED_INCONSISTENT) && (read_flags & READ_ALLOW_INCONSISTENT))
 		read_error &= ~FAILED_INCONSISTENT; /* Check for other errors */
 
