@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Fix lvmcache to move PV from VG to orphans if VG is removed and lvmetad used.
   Fix lvmcache to not cache even invalid info about PV which got removed.
   Support checking of memlock daemon counter.
   Allow all log levels to be used with the lvmetad -l option.

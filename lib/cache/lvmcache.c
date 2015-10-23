@@ -1542,10 +1542,6 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vg
 		vgid = vgname;
 	}
 
-	/* When using lvmetad, the PV could not have become orphaned. */
-	if (lvmetad_active() && is_orphan_vg(vgname) && info->vginfo)
-		return 1;
-
 	/* If PV without mdas is already in a real VG, don't make it orphan */
 	if (is_orphan_vg(vgname) && info->vginfo &&
 	    mdas_empty_or_ignored(&info->mdas) &&
