@@ -639,7 +639,7 @@ void memlock_unlock(struct cmd_context *cmd)
 
 #endif
 
-int memlock_count_daemon()
+int memlock_count_daemon(void)
 {
 	return _memlock_count_daemon;
 }
