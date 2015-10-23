@@ -2032,7 +2032,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list vgnameids_to_process;	/* vgnameid_list */
 
 	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
-	unsigned one_vgname_arg = (flags & ONE_VGNAME_ARG);
+	int one_vgname_arg = (cmd->command->flags & ONE_VGNAME_ARG);
 	int ret;
 
 	/* Disable error in vg_read so we can print it from ignore_vg. */
