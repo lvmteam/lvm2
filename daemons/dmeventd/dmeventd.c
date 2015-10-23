@@ -446,8 +446,10 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 	 * Linux these functions always succeed (but portable and future-proof
 	 * applications should nevertheless handle a possible error return).
 	 */
-	if ((r = pthread_attr_init(&attr)) != 0)
+	if ((r = pthread_attr_init(&attr)) != 0) {
+		log_sys_error("pthread_attr_init", "");
 		return r;
+	}
 
 	/*
 	 * We use a smaller stack since it gets preallocated in its entirety
@@ -462,7 +464,8 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 		t = &tmp;
 	}
 
-	r = pthread_create(t, &attr, fun, arg);
+	if ((r = pthread_create(t, &attr, fun, arg)))
+		log_sys_error("pthread_create", "");
 
 	pthread_attr_destroy(&attr);
 
@@ -1150,7 +1153,7 @@ static int _register_for_event(struct message_data *message_data)
 		}
 
 		if ((ret = _create_thread(thread))) {
-			log_sys_error("pthread_create", "");
+			stack;
 			_free_thread_status(thread);
 			return -ret;
 		}
@@ -1169,8 +1172,10 @@ static int _register_for_event(struct message_data *message_data)
 	   usually means we are so starved on resources that we are
 	   almost as good as dead already... */
 	if ((message_data->events_field & DM_EVENT_TIMEOUT) &&
-	    (ret = _register_for_timeout(thread)))
+	    (ret = _register_for_timeout(thread))) {
+		stack;
 		_unregister_for_event(message_data);
+	}
 
 	return -ret;
 }
