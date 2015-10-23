@@ -936,6 +936,7 @@ static void _monitor_unregister(void *arg)
 			break;
 		}
 
+	thread->events = 0;	/* Filter is now empty */
 	thread->pending = 0;	/* Event pending resolved */
 	thread->processing = 1;	/* Process unregistering */
 
