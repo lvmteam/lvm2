@@ -781,7 +781,7 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto out;
 	}
 
-	info = lvmcache_info_from_pvid(dev->pvid, 1);
+	info = lvmcache_info_from_pvid(dev->pvid, 0);
 
 	if (!dev_test_excl(dev)) {
 		/* FIXME Detect whether device-mapper is still using the device */
