@@ -3296,7 +3296,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 		if (!dm_tree_preload_children(root, dlid, DLID_SIZE))
 			goto_out;
 
-		if (dm_tree_node_size_changed(root))
+		if ((dm_tree_node_size_changed(root) < 0))
 			dm->flush_required = 1;
 
 		if (action == ACTIVATE) {

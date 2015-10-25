@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Enforce flush for suspend only when volume size is reduced.
   Enable code which detects the need of flush during suspend.
   Ensure --use-policy will resize volume to fit below threshold.
   Correct percentage evaluation when checking thin-pool over threshold.
