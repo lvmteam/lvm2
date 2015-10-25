@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Correct percentage evaluation when checking thin-pool over threshold.
   Fix lvmcache to move PV from VG to orphans if VG is removed and lvmetad used.
   Fix lvmcache to not cache even invalid info about PV which got removed.
   Support checking of memlock daemon counter.

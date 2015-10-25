@@ -224,7 +224,7 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent))
 		return_0;
 
-	if (percent >= threshold) {
+	if (percent > threshold) {
 		log_debug("Threshold configured for free data space in "
 			  "thin pool %s has been reached (%.2f%% >= %.2f%%).",
 			  display_lvname(pool_seg->lv),
@@ -237,7 +237,7 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent))
 		return_0;
 
-	if (percent >= threshold) {
+	if (percent > threshold) {
 		log_debug("Threshold configured for free metadata space in "
 			  "thin pool %s has been reached (%.2f%% > %.2f%%).",
 			  display_lvname(pool_seg->lv),
