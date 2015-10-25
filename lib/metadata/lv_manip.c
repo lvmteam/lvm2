@@ -4424,6 +4424,25 @@ static int _fsadm_cmd(struct cmd_context *cmd,
 	return exec_cmd(cmd, argv, status, 1);
 }
 
+static int _adjust_amount(dm_percent_t percent, int policy_threshold, int *policy_amount)
+{
+	if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) ||
+	    percent <= (policy_threshold * DM_PERCENT_1))
+		return 0;
+	/*
+	 * Evaluate the minimal amount needed to get bellow threshold.
+	 * Keep using DM_PERCENT_1 units for better precision.
+	 * Round-up to needed percentage value
+	 */
+	percent = (percent/policy_threshold + (DM_PERCENT_1 - 1) / 100) / (DM_PERCENT_1 / 100) - 100;
+
+	/* Use it if current policy amount is smaller */
+	if (*policy_amount < percent)
+		*policy_amount = percent;
+
+	return 1;
+}
+
 static int _adjust_policy_params(struct cmd_context *cmd,
 				 struct logical_volume *lv, struct lvresize_params *lp)
 {
@@ -4469,34 +4488,28 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	policy_threshold *= DM_PERCENT_1;
-
 	if (lv_is_thin_pool(lv)) {
 		if (!lv_thin_pool_percent(lv, 1, &percent))
 			return_0;
-		if ((DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) &&
-		    (percent > policy_threshold)) {
+		if (_adjust_amount(percent, policy_threshold, &policy_amount)) {
 			if (!thin_pool_feature_supported(lv, THIN_FEATURE_METADATA_RESIZE)) {
-				log_error_once("Online metadata resize for %s/%s is not supported.",
-					       lv->vg->name, lv->name);
+				log_error_once("Online metadata resize for %s is not supported.",
+					       display_lvname(lv));
 				return 0;
 			}
 			lp->poolmetadatasize = (first_seg(lv)->metadata_lv->size *
 						policy_amount + 99) / 100;
 			lp->poolmetadatasign = SIGN_PLUS;
 		}
-
 		if (!lv_thin_pool_percent(lv, 0, &percent))
 			return_0;
-		if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) ||
-		    percent <= policy_threshold)
-			return 1;
 	} else {
 		if (!lv_snapshot_percent(lv, &percent))
 			return_0;
-		if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) || percent <= policy_threshold)
-			return 1; /* nothing to do */
 	}
+
+	if (!_adjust_amount(percent, policy_threshold, &policy_amount))
+		return 1; /* nothing to do */
 
 	lp->extents = policy_amount;
 	lp->sizeargs = (lp->extents) ? 1 : 0;
