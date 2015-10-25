@@ -220,7 +220,7 @@ struct load_properties {
 	uint32_t read_ahead_flags;
 
 	unsigned segment_count;
-	unsigned size_changed;
+	int size_changed;
 	struct dm_list segs;
 
 	const char *new_name;
@@ -2729,7 +2729,8 @@ static int _load_node(struct dm_tree_node *dnode)
 
 		existing_table_size = dm_task_get_existing_table_size(dmt);
 		if ((dnode->props.size_changed =
-		     (existing_table_size == seg_start) ? 0 : 1)) {
+		     (existing_table_size == seg_start) ? 0 :
+		     (existing_table_size > seg_start) ? -1 : 1)) {
 			/*
 			 * Kernel usually skips size validation on zero-length devices
 			 * now so no need to preload them.
@@ -2825,8 +2826,10 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		}
 
 		/* Propagate device size change change */
-		if (child->props.size_changed)
+		if (child->props.size_changed > 0 && !dnode->props.size_changed)
 			dnode->props.size_changed = 1;
+		else if (child->props.size_changed < 0)
+			dnode->props.size_changed = -1;
 
 		/* Resume device immediately if it has parents and its size changed */
 		if (!dm_tree_node_num_children(child, 1) || !child->props.size_changed)
@@ -3853,3 +3856,19 @@ void dm_tree_node_set_callback(struct dm_tree_node *dnode,
 	dnode->callback = cb;
 	dnode->callback_data = data;
 }
+
+/*
+ * Backward compatible dm_tree_node_size_changed() implementations.
+ *
+ * Keep these at the end of the file to avoid adding clutter around the
+ * current dm_tree_node_size_changed() version.
+ */
+#if defined(__GNUC__)
+int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode);
+DM_EXPORT_SYMBOL_BASE(dm_tree_node_size_changed);
+int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode)
+{
+	/* Base does not make difference between smaller and bigger */
+	return dm_tree_node_size_changed(dnode) ? 1 : 0;
+}
+#endif

@@ -1256,6 +1256,11 @@ const char *dm_tree_node_get_name(const struct dm_tree_node *node);
 const char *dm_tree_node_get_uuid(const struct dm_tree_node *node);
 const struct dm_info *dm_tree_node_get_info(const struct dm_tree_node *node);
 void *dm_tree_node_get_context(const struct dm_tree_node *node);
+/*
+ * Returns  0 when node size and its children is unchanged.
+ * Returns  1 when node or any of its children has increased size.
+ * Rerurns -1 when node or any of its children has reduced size.
+ */
 int dm_tree_node_size_changed(const struct dm_tree_node *dnode);
 
 /*
