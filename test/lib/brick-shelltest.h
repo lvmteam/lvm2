@@ -17,7 +17,7 @@
  */
 
 /*
- * (c) 2014 Petr Ročkai <me@mornfall.net>
+ * (c) 2014 Petr Rockai <me@mornfall.net>
  * (c) 2014 Red Hat, Inc.
  */
 
@@ -80,6 +80,9 @@
 #endif
 
 #include "configure.h"
+
+/*  Timeout for the whole test suite in hours */
+static const unsigned TEST_SUITE_TIMEOUT = 4;
 
 #ifndef BRICK_SHELLTEST_H
 #define BRICK_SHELLTEST_H
@@ -1034,8 +1037,8 @@ struct Main {
                 die = 1;
             }
 
-            if ( time(0) - start > 3 * 3600 ) {
-                std::cerr << "3 hours passed, giving up..." << std::endl;
+            if ( time(0) - start > (TEST_SUITE_TIMEOUT * 3600) ) {
+                std::cerr << TEST_SUITE_TIMEOUT << " hours passed, giving up..." << std::endl;
                 die = 1;
             }
 
