@@ -169,13 +169,13 @@ lvcreate -s -l12 $vg1/lvol0
 fill 1K
 check lv_field $vg1/lvol1 data_percent "100.00"
 
-# Check it resizes 100% full valid snapshot
+# Check it resizes 100% full valid snapshot to fit threshold
 lvextend --use-policies $vg1/lvol1
-check lv_field $vg1/lvol1 data_percent "80.00"
+check lv_field $vg1/lvol1 data_percent "50.00"
 
 fill 4K
 lvextend --use-policies $vg1/lvol1
-check lv_field $vg1/lvol1 size "18.00k"
+check lv_field $vg1/lvol1 size "24.00k"
 
 lvextend -l+33 $vg1/lvol1
 check lv_field $vg1/lvol1 size "$EXPECT3"
