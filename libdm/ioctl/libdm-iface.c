@@ -1202,8 +1202,13 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
 		dmi->flags |= DM_SUSPEND_FLAG;
-	if (dmt->no_flush)
-		dmi->flags |= DM_NOFLUSH_FLAG;
+	if (dmt->no_flush) {
+		if (_dm_version_minor < 12)
+			log_verbose("No flush flag unsupported by kernel. "
+				    "Buffers will be flushed.");
+		else
+			dmi->flags |= DM_NOFLUSH_FLAG;
+	}
 	if (dmt->read_only)
 		dmi->flags |= DM_READONLY_FLAG;
 	if (dmt->skip_lockfs)
