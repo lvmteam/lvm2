@@ -9,10 +9,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. lib/inittest
+SKIP_WITHOUT_LVMETAD=1
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMETAD || skip
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"

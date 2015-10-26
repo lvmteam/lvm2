@@ -13,11 +13,12 @@
 export LVM_CLVMD_BINARY=clvmd
 export LVM_BINARY=lvm
 
+SKIP_WITHOUT_CLVMD=1
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 # only clvmd based test, skip otherwise
-test -e LOCAL_LVMPOLLD && skip
-test -e LOCAL_CLVMD || skip
 read LOCAL_CLVMD < LOCAL_CLVMD
 
 # TODO read from build, for now hardcoded

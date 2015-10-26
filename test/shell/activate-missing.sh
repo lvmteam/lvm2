@@ -16,9 +16,9 @@
 #   instead lvconvert --repair them?)
 # - linear LVs with bits missing are not activated
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux prepare_vg 4
 

@@ -9,12 +9,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 # Just skip this test if minor is already in use...
 dmsetup info | tee info
 egrep "^Major, minor: *[0-9]+, 123" info && skip
-test -e LOCAL_LVMPOLLD && skip
 
 aux prepare_vg 2
 lvcreate -a n --zero n -l 1 -n foo $vg
