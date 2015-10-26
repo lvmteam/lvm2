@@ -25,6 +25,15 @@ unset CDPATH
 # grab some common utilities
 . lib/utils
 
+if test -n "$LVM_TEST_FLAVOUR"; then
+	. lib/flavour-$LVM_TEST_FLAVOUR
+fi
+
+test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && skip
+test -n "$SKIP_WITHOUT_LVMETAD" && test -z "$LVM_TEST_LVMETAD" && skip
+test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && skip
+
+
 TESTOLDPWD=$(pwd)
 COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
@@ -53,10 +62,6 @@ test -n "$abs_top_builddir" && \
     -exec ln -s -t lib "{}" +
 find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
     -o -name '*~' \)  -exec ln -s -t lib "{}" +
-
-if test -n "$LVM_TEST_FLAVOUR"; then
-	. lib/flavour-$LVM_TEST_FLAVOUR
-fi
 
 DM_DEFAULT_NAME_MANGLING_MODE=none
 DM_DEV_DIR="$TESTDIR/dev"
