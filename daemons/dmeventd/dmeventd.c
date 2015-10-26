@@ -296,7 +296,6 @@ static struct dso_data *_lookup_dso(struct message_data *data)
 
 	dm_list_iterate_items(dso_data, &_dso_registry)
 		if (!strcmp(data->dso_name, dso_data->dso_name)) {
-			_lib_get(dso_data);
 			ret = dso_data;
 			break;
 		}
