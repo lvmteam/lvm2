@@ -9,13 +9,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
-
 # FIXME RESYNC doesn't work in cluster with exclusive activation
 # seriously broken!
-test -e LOCAL_CLVMD && skip
+SKIP_WITH_CLVMD=1
+SKIP_WITH_LVMPOLLD=1
+
+. lib/inittest
 
 aux prepare_dmeventd
 aux prepare_vg 3

@@ -14,9 +14,9 @@
 # Full CLI uses  --type
 # Shorthand CLI uses -H | --cache
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux have_cache 1 3 0 || skip
 aux prepare_vg 5 8000

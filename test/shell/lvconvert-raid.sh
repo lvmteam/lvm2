@@ -10,11 +10,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # disable lvmetad logging as it bogs down test systems
+
+SKIP_WITH_LVMPOLLD=1
+
 export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 get_image_pvs() {
 	local d

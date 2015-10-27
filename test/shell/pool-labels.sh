@@ -9,11 +9,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-. lib/inittest
-
 # lvmetad does not handle pool labels so skip test.
-test ! -e LOCAL_LVMETAD || skip
-test -e LOCAL_LVMPOLLD && skip
+SKIP_WITH_LVMETAD=1
+SKIP_WITH_LVMPOLLD=1
+
+. lib/inittest
 
 env printf "" || skip # skip if printf is not available
 

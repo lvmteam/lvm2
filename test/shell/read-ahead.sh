@@ -14,10 +14,9 @@
 #
 
 test_description='Test read-ahead functionality'
+SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 aux prepare_vg 5
 

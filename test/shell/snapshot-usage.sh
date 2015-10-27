@@ -11,9 +11,9 @@
 
 # no automatic extensions please
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 MKFS=mkfs.ext2
 which $MKFS || skip

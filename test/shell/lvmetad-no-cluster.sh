@@ -14,9 +14,6 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-test -e LOCAL_CLVMD || skip
-test -e LOCAL_LVMPOLLD && skip
-
 aux prepare_vg 2
 aux prepare_lvmetad
 vgs -vv 2> errs

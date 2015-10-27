@@ -10,6 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description='Test process_each_pv with zero mda'
+SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 

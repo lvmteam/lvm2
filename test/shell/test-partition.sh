@@ -15,11 +15,11 @@
 #
 
 
+SKIP_WITH_LVMPOLLD=1
+
 LVM_TEST_CONFIG_DEVICES="types = [\"device-mapper\", 142]"
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 which sfdisk || skip
 

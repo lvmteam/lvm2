@@ -13,9 +13,9 @@
 # tests lvm initialization, and especially negative tests of error paths
 #
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux prepare_devs 5
 

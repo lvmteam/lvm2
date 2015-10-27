@@ -15,9 +15,10 @@
 # is triggered by kernel 3.14-rc[1..5]
 # http://www.redhat.com/archives/dm-devel/2014-March/msg00005.html
 #
-. lib/inittest
 
-test -e LOCAL_LVMPOLLD && skip
+SKIP_WITH_LVMPOLLD=1
+
+. lib/inittest
 
 # Snapshot should remain unmodified
 check_s_() {

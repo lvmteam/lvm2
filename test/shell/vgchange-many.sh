@@ -10,9 +10,9 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # Check perfomance of activation and deactivation
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 # FIXME: lvmetad fails with i.e. 1500 device on memory failure...
 

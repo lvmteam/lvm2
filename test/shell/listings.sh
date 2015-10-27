@@ -13,9 +13,9 @@
 # tests functionality of lvs, pvs, vgs, *display tools
 #
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux prepare_devs 5
 get_devs

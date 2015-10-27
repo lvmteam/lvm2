@@ -13,8 +13,6 @@ TEST_RAID=raid456
 
 . shell/lvchange-raid.sh
 
-test -e LOCAL_LVMPOLLD && skip
-
 aux raid456_replace_works || skip
 aux have_raid 1 5 2 || skip
 

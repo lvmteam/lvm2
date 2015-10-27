@@ -10,11 +10,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description='Test pvcreate option values'
+SKIP_WITH_LVMPOLLD=1
 PAGESIZE=$(getconf PAGESIZE)
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 aux prepare_devs 4
 

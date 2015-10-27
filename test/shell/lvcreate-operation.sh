@@ -11,9 +11,9 @@
 
 # 'Exercise some lvcreate diagnostics'
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 cleanup_lvs() {
 	lvremove -ff $vg

@@ -10,10 +10,9 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description='Exercise some vgcreate diagnostics'
+SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 aux prepare_devs 3
 pvcreate "$dev1" "$dev2"

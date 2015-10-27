@@ -11,13 +11,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description="ensure that 'vgreduce --removemissing' works on mirrored LV"
+SKIP_WITH_LVMPOLLD=1
 
 # disable lvmetad logging as it bogs down test systems
 export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 lv_is_on_ ()
 {

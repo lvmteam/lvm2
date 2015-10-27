@@ -11,11 +11,11 @@
 
 # test defaults entered through lvm.conf
 
+SKIP_WITH_LVMPOLLD=1
+
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 #
 # Main

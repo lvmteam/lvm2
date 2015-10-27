@@ -11,7 +11,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+SKIP_WITH_LVMETAD=1
+SKIP_WITH_CLVMD=1
+
 . lib/inittest
+
+aux prepare_dmeventd
 
 #
 # TODO:
@@ -28,11 +33,6 @@
 python_lib=$(find $abs_top_builddir -name lvm.so)
 # Unable to test python bindings if library not available
 test -n "$python_lib" || skip
-
-test -e LOCAL_CLVMD && skip
-test -e LOCAL_LVMETAD && skip
-
-aux prepare_dmeventd
 
 #If you change this change the unit test case too.
 aux prepare_pvs 6

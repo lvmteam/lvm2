@@ -10,9 +10,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description="ensure pvmove works with thin segment types"
+SKIP_WITH_CLVMD=1
 
 . lib/inittest
-test -e LOCAL_CLVMD && skip
+
 which md5sum || skip
 
 aux have_thin 1 8 0 || skip

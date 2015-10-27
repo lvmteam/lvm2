@@ -11,9 +11,9 @@
 
 # Basic usage of zero target
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 which md5sum || skip
 

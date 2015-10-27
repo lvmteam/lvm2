@@ -14,6 +14,8 @@
 
 # Moving 2 LVs in VG variant
 
+SKIP_WITH_CLVMD=1
+
 . lib/inittest
 
 aux prepare_pvs 2 30
@@ -188,8 +190,6 @@ pvmove_bg_single() {
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev1"
 }
-
-test -e LOCAL_CLVMD && skip
 
 test_pvmove_resume lvchange_single
 test_pvmove_resume lvchange_all

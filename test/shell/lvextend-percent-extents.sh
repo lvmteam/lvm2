@@ -11,9 +11,9 @@
 
 # 'Check extents percentage arguments'
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux prepare_pvs 2 128
 vgcreate $vg $(cat DEVICES)

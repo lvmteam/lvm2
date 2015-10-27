@@ -12,9 +12,9 @@
 # Testing renaming snapshots in cluster
 # https://bugzilla.redhat.com/show_bug.cgi?id=1136925
 
-. lib/inittest
+SKIP_WITH_LVMPOLLD=1
 
-test -e LOCAL_LVMPOLLD && skip
+. lib/inittest
 
 aux prepare_vg 1
 

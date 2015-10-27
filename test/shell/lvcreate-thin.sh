@@ -13,11 +13,11 @@
 # test currently needs to drop
 # 'return NULL' in _lv_create_an_lv after log_error("Can't create %s without using "
 
+SKIP_WITH_LVMPOLLD=1
+
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
 . lib/inittest
-
-test -e LOCAL_LVMPOLLD && skip
 
 check_lv_field_modules_()
 {

@@ -10,6 +10,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description="ensure pvmove works with the cache segment types"
+SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
@@ -19,7 +20,6 @@ test_description="ensure pvmove works with the cache segment types"
 # This allows us to ensure that it is disallowed even when there are
 # stacking complications to consider.
 
-test -e LOCAL_CLVMD && skip
 which md5sum || skip
 
 aux have_cache 1 3 0 || skip
