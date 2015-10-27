@@ -473,34 +473,48 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 
 /*
  * Fetch a string off src and duplicate it into *ptr.
- * Pay attention to zero-length strings.
+ * Pay attention to zero-length and 'empty' strings ('-').
  */
 /* FIXME? move to libdevmapper to share with the client lib (need to
    make delimiter a parameter then) */
 static int _fetch_string(char **ptr, char **src, const int delimiter)
 {
-	int ret = 0;
+	int ret = 1;
 	char *p;
 	size_t len;
+	*ptr = NULL; /* Empty field returns NULL pointer */
 
-	if ((p = strchr(*src, delimiter)))
-		*p = 0;
-
-	if ((*ptr = dm_strdup(*src))) {
-		if ((len = strlen(*ptr)))
-			*src += len;
-		else {
-			dm_free(*ptr);
-			*ptr = NULL;
+	if ((*src)[0] == '-') {
+		/* Could be empty field '-', handle without allocation */
+		if ((*src)[1] == '\0') {
+			(*src)++;
+			goto out;
+		} else if ((*src)[1] == delimiter) {
+			(*src) += 2;
+			goto out;
 		}
-
-		(*src)++;
-		ret = 1;
 	}
 
-	if (p)
-		*p = delimiter;
-
+	if ((p = strchr(*src, delimiter))) {
+		if (*src < p) {
+			*p = 0; /* Temporary exit with \0 */
+			if (!(*ptr = dm_strdup(*src))) {
+				log_error("Failed to fetch item %s.", *src);
+				ret = 0; /* Allocation fail */
+			}
+			*p = delimiter;
+			*src = p;
+		}
+		(*src)++; /* Skip delmiter, next field */
+	} else if ((len = strlen(*src))) {
+		/* No delimiter, item ends with '\0' */
+		if (!(*ptr = dm_strdup(*src))) {
+			log_error("Failed to fetch last item %s.", *src);
+			ret = 0; /* Fail */
+		}
+		*src += len + 1;
+	}
+out:
 	return ret;
 }
 
