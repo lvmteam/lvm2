@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -8,6 +8,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+initskip() {
+	test "$#" -eq 0 || echo "TEST SKIPPED: $@"
+	exit 200
+}
 
 # sanitize the environment
 LANG=C
@@ -20,19 +25,22 @@ TESTNAME=${0##*/}
 PS4='#${BASH_SOURCE[0]##*/}:${LINENO}+ '
 export TESTNAME PS4
 
-unset CDPATH
-
-# grab some common utilities
-. lib/utils
-
 if test -n "$LVM_TEST_FLAVOUR"; then
 	. lib/flavour-$LVM_TEST_FLAVOUR
 fi
 
-test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && skip
-test -n "$SKIP_WITHOUT_LVMETAD" && test -z "$LVM_TEST_LVMETAD" && skip
-test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && skip
+test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && initskip
+test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" -eq 3 && initskip
 
+test -n "$SKIP_WITHOUT_LVMETAD" && test -z "$LVM_TEST_LVMETAD" && initskip
+test -n "$SKIP_WITH_LVMETAD" && test -n "$LVM_TEST_LVMETAD" && initskip
+
+test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && initskip
+
+unset CDPATH
+
+# grab some common utilities
+. lib/utils
 
 TESTOLDPWD=$(pwd)
 COMMON_PREFIX="LVMTEST"
