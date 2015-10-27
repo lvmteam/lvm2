@@ -82,7 +82,7 @@
 #include "configure.h"
 
 /*  Timeout for the whole test suite in hours */
-static const unsigned TEST_SUITE_TIMEOUT = 4;
+static const time_t TEST_SUITE_TIMEOUT = 4;
 
 #ifndef BRICK_SHELLTEST_H
 #define BRICK_SHELLTEST_H
