@@ -3428,6 +3428,18 @@ static int _repair_inconsistent_vg(struct volume_group *vg)
 {
 	unsigned saved_handles_missing_pvs = vg->cmd->handles_missing_pvs;
 
+	/* Cannot write foreign VGs, the owner will repair it. */
+	if (vg->cmd->system_id && strcmp(vg->system_id, vg->cmd->system_id)) {
+		log_verbose("Skip metadata repair for foreign VG.");
+		return 0;
+	}
+
+	/* FIXME: do this at higher level where lvmlockd lock can be changed. */
+	if (is_lockd_type(vg->lock_type)) {
+		log_verbose("Skip metadata repair for shared VG.");
+		return 0;
+	}
+
 	vg->cmd->handles_missing_pvs = 1;
 	if (!vg_write(vg)) {
 		log_error("Automatic metadata correction failed");
@@ -3457,6 +3469,30 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 {
 	struct pv_list *pvl, *pvl2;
 	char uuid[64] __attribute__((aligned(8)));
+
+	/*
+	 * Cannot write foreign VGs, the owner will repair it.
+	 * Also, if another host is updating its VG, we may read
+	 * the PVs while some are written but not others, making
+	 * some PVs look outdated to us just because we're reading
+	 * the VG while it's only partially written out.
+	 */
+	if (cmd->system_id && strcmp(vg->system_id, cmd->system_id)) {
+		log_verbose("Skip wiping outdated PVs for foreign VG.");
+		return 0;
+	}
+
+	/*
+	 * FIXME: do this at higher level where lvmlockd lock can be changed.
+	 * Also if we're reading the VG with the --shared option (not using
+	 * lvmlockd), we can see a VG while it's being written by another
+	 * host, same as the foreign VG case.
+	 */
+	if (is_lockd_type(vg->lock_type)) {
+		log_verbose("Skip wiping outdated PVs for shared VG.");
+		return 0;
+	}
+
 	dm_list_iterate_items(pvl, to_check) {
 		dm_list_iterate_items(pvl2, &vg->pvs) {
 			if (pvl->pv->dev == pvl2->pv->dev)
