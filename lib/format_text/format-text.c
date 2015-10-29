@@ -2146,7 +2146,6 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 					goto bad;
 			}
 			/* Otherwise, give up and take any usable space. */
-			/* FIXME: We should probably check for some minimum MDA size here. */
 			else
 				mda_size = limit - mda_start;
 
@@ -2241,6 +2240,12 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				 "with value %" PRIu64 " (limited by %s of "
 				 FMTu64 ").", pv_dev_name(pv),
 				  mda_size, limit_name, limit);
+
+	if (mda_size < MDA_SIZE_MIN) {
+		log_error("Metadata area size too small. "
+			  "It must be at least %u bytes.", MDA_SIZE_MIN);
+		goto bad;
+	}
 
 	if (mda_size) {
 		/* Wipe metadata area with zeroes. */
