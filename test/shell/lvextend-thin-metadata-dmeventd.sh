@@ -23,8 +23,8 @@ meta_percent_() {
 
 wait_for_change_() {
 	# dmeventd only checks every 10 seconds :(
-	for i in $(seq 1 15) ; do
-		test "$(meta_percent_)" != "$1" && return
+	for i in $(seq 1 12) ; do
+		test "$(meta_percent_)" -lt "$1" && return
 		sleep 1
 	done
 
@@ -101,43 +101,27 @@ lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
 
 vgchange -ay $vg
 
-# Check dmeventd resizes metadata
+# Check dmeventd resizes metadata via timeout (nothing is written to pool)
 pre=$(meta_percent_)
 wait_for_change_ $pre
 
 lvchange -an $vg
 
-lvs -a $vg
 #
 fake_metadata_ 350 2 >data
 lvchange -ay $vg/$lv1
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
-lvs -a $vg
-dmsetup table
 lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
 lvchange -ay $vg/pool  $vg/$lv1
 lvs -a $vg
 
 lvcreate -s -Ky -n $lv2 $vg/thin
+pre=$(meta_percent_)
+
+# go over thin metadata threshold
 echo 2 >"$DM_DEV_DIR/mapper/$vg-$lv2"
 
-#lvchange -an $vg
-#lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
-#lvchange -ay $vg/$lv1
-#thin_dump "$DM_DEV_DIR/mapper/$vg-$lv1"
-#exit
-
-# no more space for new thin LV
-#
-# TODO:
-# though maybe 'lvcreate' itself should initiate  resize - if dmeventd is not 'fast' enough
-# deploying usage of threshold kernel module paramater would likely help as well
-# for now it stops here:
-not lvcreate -s -Ky -n $lv3 $vg/thin
-lvs -a $vg
-
-pre=$(meta_percent_)
 wait_for_change_ $pre
 
 lvs -a $vg
