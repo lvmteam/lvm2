@@ -1331,7 +1331,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			log_warn("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
 				  baton.fid->fmt->name, dev_name(dev));
 		else
-			log_error("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
+			log_error("Ignoring obsolete format of metadata (%s) on device %s when using lvmetad.",
 				  baton.fid->fmt->name, dev_name(dev));
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 
