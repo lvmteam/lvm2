@@ -36,12 +36,12 @@ mount -o errors=remount-ro "$DM_DEV_DIR/$vg1/snap" mnt
 
 sync
 
-# intetionally suspend layer bellow
+# intentionally suspend layer bellow
 dmsetup suspend $vg-$lv1
 
 # now this should pass without blocking
-#dmsetup suspend --noflush --nolockfs $vg1-snap &
-dmsetup suspend $vg1-snap &
+dmsetup suspend --noflush --nolockfs $vg1-snap &
+#dmsetup suspend $vg1-snap &
 
 sleep .5
 
