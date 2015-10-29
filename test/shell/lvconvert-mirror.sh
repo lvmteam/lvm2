@@ -317,7 +317,7 @@ lvremove -ff $vg
 # to get synced
 lvcreate -l2 -n $lv1 $vg
 lvconvert --type mirror -i1 -m1 $vg/$lv1 | tee out
-grep -e "$vg/$lv1: Converted:" out || fail "Missing sync info in foreground mode"
+grep -e "$vg/$lv1: Converted:" out || die "Missing sync info in foreground mode"
 lvremove -ff $vg
 
 vgremove -ff $vg
