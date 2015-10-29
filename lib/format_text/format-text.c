@@ -654,6 +654,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if ((new_wrap && old_wrap) ||
 	    (rlocn && (new_wrap || old_wrap) && (new_end > rlocn->offset)) ||
+	    (!rlocn && new_wrap && (new_end > mdac->rlocn.offset)) ||
 	    (mdac->rlocn.size >= mdah->size)) {
 		log_error("VG %s metadata too large for circular buffer",
 			  vg->name);
