@@ -279,20 +279,20 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (seg->chunk_size & (seg->chunk_size - 1))) {
-		log_error("Thin pool target does not support %uKiB chunk size "
-			  "(needs kernel >= 3.6).", seg->chunk_size / 2);
+		log_error("Thin pool target does not support %s chunk size (needs"
+			  " kernel >= 3.6).", display_size(cmd, seg->chunk_size));
 		return 0;
 	}
 
 	if (!(metadata_dlid = build_dm_uuid(mem, seg->metadata_lv, NULL))) {
 		log_error("Failed to build uuid for metadata LV %s.",
-			  seg->metadata_lv->name);
+			  display_lvname(seg->metadata_lv));
 		return 0;
 	}
 
 	if (!(pool_dlid = build_dm_uuid(mem, seg_lv(seg, 0), NULL))) {
 		log_error("Failed to build uuid for pool LV %s.",
-			  seg_lv(seg, 0)->name);
+			  display_lvname(seg_lv(seg, 0)));
 		return 0;
 	}
 
