@@ -118,10 +118,6 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	else if (!set_pool_discards(&seg->discards, discards_str))
 		return SEG_LOG_ERROR("Discards option unsupported for");
 
-	if (dm_config_has_node(sn, "low_water_mark") &&
-	    !dm_config_get_uint64(sn, "low_water_mark", &seg->low_water_mark))
-		return SEG_LOG_ERROR("Could not read low_water_mark");
-
 	if ((seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE))
 		return SEG_LOG_ERROR("Unsupported value %u for chunk_size",
@@ -168,9 +164,6 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 		log_error(INTERNAL_ERROR "Invalid discards value %d.", seg->discards);
 		return 0;
 	}
-
-	if (seg->low_water_mark)
-		outf(f, "low_water_mark = %" PRIu64, seg->low_water_mark);
 
 	if (seg->zero_new_blocks)
 		outf(f, "zero_new_blocks = 1");

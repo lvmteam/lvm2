@@ -7388,8 +7388,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		first_seg(lv)->chunk_size = lp->chunk_size;
 		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
 		first_seg(lv)->discards = lp->discards;
-		/* FIXME: use lowwatermark  via lvm.conf global for all thinpools ? */
-		first_seg(lv)->low_water_mark = 0;
 		if (!recalculate_pool_chunk_size_with_dev_hints(lv, lp->passed_args,
 								lp->thin_chunk_size_calc_policy)) {
 			stack;

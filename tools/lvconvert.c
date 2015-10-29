@@ -3064,7 +3064,6 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 	/* FIXME: revert renamed LVs in fail path? */
 	/* FIXME: any common code with metadata/thin_manip.c  extend_pool() ? */
 
-	seg->low_water_mark = 0;
 	seg->transaction_id = 0;
 
 mda_write:
