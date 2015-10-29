@@ -21,12 +21,11 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_vg 5
 
 #COMM "test various read ahead settings (bz450922)"
-lvcreate -l 100%FREE -i5 -I256 -n $lv $vg
+lvcreate -l 100%FREE -i5 -I512 -n $lv $vg
 ra=$(get lv_field $vg/$lv lv_kernel_read_ahead --units s --nosuffix)
-test $(( ( $ra / 5 ) * 5 )) -eq $ra
+test $(( ( $ra / 5 ) * 5 )) -le $ra
 not lvchange -r auto $vg/$lv 2>&1 | grep auto
 check lv_field $vg/$lv lv_read_ahead auto
-check lv_field $vg/$lv lv_kernel_read_ahead 5120 --units s --nosuffix
 lvchange -r 640 $vg/$lv
 check lv_field $vg/$lv lv_read_ahead 640 --units s --nosuffix
 lvremove -ff $vg
