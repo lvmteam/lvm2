@@ -18,6 +18,7 @@
 
 #include <sys/wait.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 /* TODO - move this mountinfo code into library to be reusable */
 #ifdef __linux__
@@ -36,6 +37,8 @@
 
 #define UMOUNT_COMMAND "/bin/umount"
 
+#define MAX_FAILS	(10)
+
 #define THIN_DEBUG 0
 
 struct dso_state {
@@ -44,6 +47,7 @@ struct dso_state {
 	int data_percent_check;
 	uint64_t known_metadata_size;
 	uint64_t known_data_size;
+	unsigned fails;
 	char cmd_str[1024];
 };
 
@@ -157,7 +161,7 @@ static int _run(const char *cmd, ...)
 		argv = alloca(sizeof(const char *) * (argc + 1));
 
 		argv[0] = cmd;
-                va_start(ap, cmd);
+		va_start(ap, cmd);
 		while ((argv[++i] = va_arg(ap, const char *)));
 		va_end(ap);
 
@@ -245,7 +249,9 @@ static void _use_policy(struct dm_task *dmt, struct dso_state *state)
 		log_error("Failed to extend thin pool %s.",
 			  dm_task_get_name(dmt));
 		_umount(dmt);
-	}
+		state->fails++;
+	} else
+		state->fails = 0;
 }
 
 void process_event(struct dm_task *dmt,
@@ -270,7 +276,7 @@ void process_event(struct dm_task *dmt,
 	if (event & DM_EVENT_DEVICE_ERROR) {
 		/* Error -> no need to check and do instant resize */
 		_use_policy(dmt, state);
-		return;
+		goto out;
 	}
 
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
@@ -338,6 +344,13 @@ void process_event(struct dm_task *dmt,
 out:
 	if (tps)
 		dm_pool_free(state->mem, tps);
+
+	if (state->fails >= MAX_FAILS) {
+		log_warn("WARNING: Dropping monitoring of %s. "
+			 "lvm2 command fails too often (%u times in raw).",
+			 device, state->fails);
+		pthread_kill(pthread_self(), SIGALRM);
+	}
 }
 
 int register_device(const char *device,
