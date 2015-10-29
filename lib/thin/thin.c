@@ -266,6 +266,8 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	struct lvinfo info;
 	uint64_t transaction_id = 0;
 	unsigned attr;
+	uint64_t low_water_mark;
+	int threshold;
 
 	if (!_thin_target_present(cmd, NULL, &attr))
 		return_0;
@@ -294,10 +296,20 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		return 0;
 	}
 
+	threshold = find_config_tree_int(seg->lv->vg->cmd,
+					 activation_thin_pool_autoextend_threshold_CFG,
+					 lv_config_profile(seg->lv));
+	if (threshold < 50)
+		threshold = 50;
+	if (threshold < 100)
+		low_water_mark = (len * threshold + 99) / 100;
+	else
+		low_water_mark = len;
+
 	if (!dm_tree_node_add_thin_pool_target(node, len,
 					       seg->transaction_id,
 					       metadata_dlid, pool_dlid,
-					       seg->chunk_size, seg->low_water_mark,
+					       seg->chunk_size, low_water_mark,
 					       seg->zero_new_blocks ? 0 : 1))
 		return_0;
 

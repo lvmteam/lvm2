@@ -1,5 +1,6 @@
 Version 2.02.133 - 
 ======================================
+  Thin pool targets uses low_water_mark from profile.
   Dropping 'yet' from error of unsupported thick snapshot of snapshots.
   Do not support unpartitioned DASD devices with CDL formatted with pvcreate.
   For thins use flush for suspend only when volume size is reduced.
