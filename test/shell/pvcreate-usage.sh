@@ -12,6 +12,8 @@
 test_description='Test pvcreate option values'
 SKIP_WITH_LVMPOLLD=1
 PAGESIZE=$(getconf PAGESIZE)
+# MDA_SIZE_MIN defined in lib/format_text/layout.h
+MDA_SIZE_MIN=$((8*$PAGESIZE))
 
 . lib/inittest
 
@@ -22,6 +24,13 @@ not pvcreate --setphysicalvolumesize -1024 "$dev1"
 
 #COMM 'pvcreate rejects negative metadatasize'
 not pvcreate --metadatasize -1024 "$dev1"
+
+#COMM 'pvcreate rejects metadatasize that is less than minimum size'
+not pvcreate --dataalignment $((${MDA_SIZE_MIN}/2))b --metadatasize $((${MDA_SIZE_MIN}/2))b "$dev1" 2>err
+grep "Metadata area size too small" err
+
+#COMM 'pvcreate accepts metadatasize that is at least the minimum size'
+pvcreate --dataalignment ${MDA_SIZE_MIN}b --metadatasize ${MDA_SIZE_MIN}b "$dev1"
 
 # x. metadatasize 0, defaults to 255
 # FIXME: unable to check default value, not in reporting cmds
