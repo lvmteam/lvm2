@@ -1,5 +1,5 @@
-Version 2.02.133 - 
-======================================
+Version 2.02.133 - 30th October 2015
+====================================
   Support repeated -o|--options for reporting commands.
   Support -o- and -o# for reporting commands to remove and compact fields.
   Fix missing PVs from pvs output if vgremove is run concurrently.

@@ -36,7 +36,7 @@ mount -o errors=remount-ro "$DM_DEV_DIR/$vg1/snap" mnt
 
 sync
 
-# intentionally suspend layer bellow
+# intentionally suspend layer below
 dmsetup suspend $vg-$lv1
 
 # now this should pass without blocking

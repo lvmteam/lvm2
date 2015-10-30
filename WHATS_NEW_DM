@@ -1,5 +1,5 @@
-Version 1.02.110 - 
-======================================
+Version 1.02.110 - 30th October 2015
+====================================
   Disable thin monitoring plugin when it fails too often (>10 times).
   Fix/restore parsing of empty field '-' when processing dmeventd event.
   Enhance dm_tree_node_size_changed() to recognize size reduction.
