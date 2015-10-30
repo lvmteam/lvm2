@@ -1,5 +1,7 @@
 Version 2.02.133 - 
 ======================================
+  Support repeated -o|--options for reporting commands.
+  Support -o- and -o# for reporting commands to remove and compact fields.
   Fix missing PVs from pvs output if vgremove is run concurrently.
   Remove unwanted error message when running pvs/vgs/lvs and vgremove at once.
   Check newly created VG's metadata do not overlap in metadata ring buffer.
