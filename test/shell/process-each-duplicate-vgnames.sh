@@ -7,6 +7,7 @@
 
 test_description='Test vgs with duplicate vg names'
 SKIP_WITH_LVMPOLLD=1
+SKIP_WITH_LVMETAD=1
 
 . lib/inittest
 
