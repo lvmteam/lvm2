@@ -1,5 +1,7 @@
 Version 2.02.133 - 
 ======================================
+  Fix missing PVs from pvs output if vgremove is run concurrently.
+  Remove unwanted error message when running pvs/vgs/lvs and vgremove at once.
   Check newly created VG's metadata do not overlap in metadata ring buffer.
   Check metadata area size is at least the minimum size defined for the format.
   Thin pool targets uses low_water_mark from profile.
