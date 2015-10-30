@@ -37,7 +37,7 @@ vgdisplay \(em display attributes of volume groups
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
 .RB [ \-o|\-\-options
-.RI [ + ] Field1 [ ,Field2 ...]]
+.RI [ + | \- | # ] Field1 [ ,Field2 ...]]
 .RB [ \-O | \-\-sort
 .RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]

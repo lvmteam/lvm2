@@ -37,7 +37,7 @@ pvdisplay \- display attributes of a physical volume
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
 .RB [ \-o | \-\-options
-.RI [ + ] Field [ ,Field ...]]
+.RI [ + | \- | # ] Field [ ,Field ...]]
 .RB [ \-O | \-\-sort
 .RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...
 .RI ]]

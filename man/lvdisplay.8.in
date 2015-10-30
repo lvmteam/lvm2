@@ -37,7 +37,7 @@ lvdisplay \(em display attributes of a logical volume
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
 .RB [ \-o | \-\-options
-.RI [ + ] Field [ ,Field ...]]
+.RI [ + | \- | # ] Field [ ,Field ...]]
 .RB [ \-O | \-\-sort
 .RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]

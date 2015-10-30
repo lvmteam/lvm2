@@ -16,7 +16,7 @@ pvs \(em report information about physical volumes
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
 .RB [ \-o | \-\-options
-.RI [ + ] Field [ ,Field ...]]
+.RI [ + | \- | # ] Field [ ,Field ...]]
 .RB [ \-O | \-\-sort
 .RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]
@@ -65,8 +65,13 @@ Suppress the suffix on output sizes.  Use with \fB\-\-units\fP
 (except h and H) if processing the output.
 .TP
 .BR \-o ", " \-\-options
-Comma-separated ordered list of columns.  Precede the list with '\fI+\fP'
-to append to the default selection of columns.
+Comma-separated ordered list of columns.
+.IP
+Precede the list with '\fI+\fP' to append to the current list
+of columns, '\fI-\fP' to remove from the current list of columns
+or '\fI#\fP' to compact given columns. The \fI\-o\fP option can
+be repeated, providing several lists. These lists are evaluated
+from left to right.
 .IP
 Use \fB-o pv_all\fP to select all physical volume columns,
 and \fB-o pvseg_all\fP to select all Physical Volume segment columns.
