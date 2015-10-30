@@ -2241,13 +2241,13 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				 FMTu64 ").", pv_dev_name(pv),
 				  mda_size, limit_name, limit);
 
-	if (mda_size < MDA_SIZE_MIN) {
-		log_error("Metadata area size too small. "
-			  "It must be at least %u bytes.", MDA_SIZE_MIN);
-		goto bad;
-	}
-
 	if (mda_size) {
+		if (mda_size < MDA_SIZE_MIN) {
+			log_error("Metadata area size too small: %" PRIu64" bytes. "
+				  "It must be at least %u bytes.", mda_size, MDA_SIZE_MIN);
+			goto bad;
+		}
+
 		/* Wipe metadata area with zeroes. */
 		if (!dev_set((struct device *) pv->dev, mda_start,
 			(size_t) ((mda_size > wipe_size) ?
