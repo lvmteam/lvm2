@@ -270,7 +270,7 @@ lib/paths-installed: lib/paths-common
 	$(RM) $@-t
 	cat lib/paths-common > $@-t
 	echo 'installed_testsuite=1' >> $@-t
-	echo 'export PATH=@libexecdir@/lvm2-testsuite:@datadir@/lvm2-testsuite/lib:$$PATH' >> $@-t
+	echo 'export PATH=@libexecdir@/lvm2-testsuite:@datadir@/lvm2-testsuite/lib:@datadir@/lvm2-testsuite/api:$$PATH' >> $@-t
 	mv $@-t $@
 
 lib/paths: lib/paths-common
