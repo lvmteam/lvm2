@@ -411,6 +411,60 @@ fi
 %endif
 
 ##############################################################################
+# Python bindings
+##############################################################################
+%if %{enable_python}
+%package python-libs
+Summary: Python module to access LVM
+License: LGPLv2
+Group: Development/Libraries
+Provides: python-lvm = %{version}-%{release}
+Requires: %{name}-libs = %{version}-%{release}
+
+%description python-libs
+Python module to allow the creation and use of LVM
+logical volumes, physical volumes, and volume groups.
+
+%files python-libs
+%{python_sitearch}/*
+%endif
+
+%if %{enable_python3}
+%package python3-libs
+Summary: Python 3 module to access LVM
+License: LGPLv2
+Group: Development/Libraries
+Provides: python3-lvm = %{version}-%{release}
+Requires: %{name}-libs = %{version}-%{release}
+
+%description python3-libs
+Python 3 module to allow the creation and use of LVM
+logical volumes, physical volumes, and volume groups.
+
+%files python3-libs
+%{python3_sitearch}/*
+%endif
+
+##############################################################################
+# Testsuite subpackage
+##############################################################################
+%if %{enable_testsuite}
+%package testsuite
+Summary: LVM2 Testsuite
+License: LGPLv2
+Group: Development
+
+%description testsuite
+An extensive functional testsuite for LVM2.
+
+%files testsuite
+%defattr(-,root,root,-)
+%{_datadir}/lvm2-testsuite/
+%{_libexecdir}/lvm2-testsuite/
+%{_bindir}/lvm2-testsuite
+%endif
+
+##############################################################################
 # Device-mapper subpackages
 ##############################################################################
 %package -n device-mapper
@@ -571,18 +625,3 @@ the device-mapper event library.
 %{_includedir}/libdevmapper-event.h
 %{_libdir}/pkgconfig/devmapper-event.pc
 
-%if %{enable_testsuite}
-%package testsuite
-Summary: LVM2 Testsuite
-License: LGPLv2
-Group: Development
-
-%description testsuite
-An extensive functional testsuite for LVM2.
-
-%files testsuite
-%defattr(-,root,root,-)
-%{_datadir}/lvm2-testsuite/
-%{_libexecdir}/lvm2-testsuite/
-%{_bindir}/lvm2-testsuite
-%endif

@@ -1,3 +1,22 @@
+%with default-dm-run-dir %{_default_dm_run_dir}
+%with default-run-dir %{_default_run_dir}
+%with default-pid-dir %{_default_pid_dir}
+%with default-locking-dir %{_default_locking_dir}
+%with usrlibdir %{_libdir}
+%enableif 1 lvm1_fallback
+%enableif 1 fsadm
+%with pool internal
+%with user
+%with group
+%with device-uid 0
+%with device-gid 6
+%with device-mode 0660
+%enableif 1 pkgconfig
+%enableif 1 applib
+%enableif 1 cmdlib
+%enableif 1 dmeventd
+%enableif 1 write_install
+
 %with udevdir %{_udevdir}
 %enableif %{enable_cmirror} cmirrord
 %enableif %{enable_udev} udev_sync
@@ -11,28 +30,22 @@
 %enableif %{enable_lockd_dlm} lockd-dlm
 %enableif %{enable_lockd_sanlock} lockd-sanlock
 %endif
+%enableif %{enable_python} python-bindings
+%enableif %{enable_python} applib
 
 %build
-%configure \
-  --with-default-dm-run-dir=%{_default_dm_run_dir} \
-  --with-default-run-dir=%{_default_run_dir} \
-  --with-default-pid-dir=%{_default_pid_dir} \
-  --with-default-locking-dir=%{_default_locking_dir} \
-  --with-usrlibdir=%{_libdir} \
-  --enable-lvm1_fallback \
-  --enable-fsadm \
-  --with-pool=internal \
-  --with-user= \
-  --with-group= \
-  --with-device-uid=0 \
-  --with-device-gid=6 \
-  --with-device-mode=0660 \
-  --enable-pkgconfig \
-  --enable-applib \
-  --enable-cmdlib \
-  --enable-dmeventd \
-  --enable-write_install \
-  %{configure_flags}
+
+%if %{enable_python3}
+rm -rf %{py3dir}
+cp -a . %{py3dir}
+pushd %{py3dir}
+%configure %{configure_flags} PYTHON=/usr/bin/python3 PYTHON_CONFIG=/usr/bin/python3-config
+
+make %{?_smp_mflags}
+popd
+%endif
+
+%configure %{configure_flags}
 
 make %{?_smp_mflags}
 %{?extra_build_commands}
@@ -49,6 +62,11 @@ make install_initscripts DESTDIR=$RPM_BUILD_ROOT
 %endif
 %if %{enable_testsuite}
 make -C test install DESTDIR=$RPM_BUILD_ROOT
+%endif
+%if %{enable_python3}
+pushd %{py3dir}
+make -C python install DESTDIR=$RPM_BUILD_ROOT
+popd
 %endif
 
 # when building an src.rpm from freestanding specfiles

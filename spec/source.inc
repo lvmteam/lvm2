@@ -5,6 +5,9 @@
 
 %global enable_profiling 0
 %global enable_testsuite 1
+%global enable_python 1
+# Off by default - <= does not work well with or:
+%global enable_python3 0
 %global enable_udev 1
 %global enable_systemd 1
 %global enable_cmirror 1
@@ -61,6 +64,25 @@
    %define enable_lockd_sanlock 0
   %endif
  %endif
+%endif
+
+##############################################################
+
+%if %{rhel} == 5
+%global enable_python 0
+%endif
+
+%if %{rhel} >= 8 || %{fedora} >= 20
+%global enable_python3 1
+%endif
+
+%if %{enable_python}
+  %global buildreq_python2_devel python2-devel
+  %global buildreq_python_setuptools python-setuptools
+%endif
+%if %{enable_python3}
+  %global buildreq_python3_devel python3-devel
+  %global buildreq_python_setuptools python-setuptools
 %endif
 
 ##############################################################
@@ -143,6 +165,9 @@ BuildRequires: pkgconfig
 %maybe BuildRequires: %{?buildreq_cluster}
 %maybe BuildRequires: %{?buildreq_lockd_dlm}
 %maybe BuildRequires: %{?buildreq_lockd_sanlock}
+%maybe BuildRequires: %{?buildreq_python2_devel}
+%maybe BuildRequires: %{?buildreq_python3_devel}
+%maybe BuildRequires: %{?buildreq_python_setuptools}
 
 %description
 LVM2 includes all of the support for handling read/write operations on
