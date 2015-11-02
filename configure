@@ -3130,7 +3130,6 @@ case "$host_os" in
 		DEVMAPPER=yes
 		LVMETAD=no
 		LVMPOLLD=no
-		LVMLOCKD=no
 		LOCKDSANLOCK=no
 		LOCKDDLM=no
 		ODIRECT=yes
@@ -11368,6 +11367,8 @@ $as_echo "$LVMPOLLD" >&6; }
 BUILD_LVMPOLLD=$LVMPOLLD
 
 ################################################################################
+BUILD_LVMLOCKD=no
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lockdsanlock" >&5
 $as_echo_n "checking whether to build lockdsanlock... " >&6; }
 # Check whether --enable-lockd-sanlock was given.
@@ -11380,13 +11381,6 @@ $as_echo "$LOCKDSANLOCK" >&6; }
 
 BUILD_LOCKDSANLOCK=$LOCKDSANLOCK
 
-if test "$BUILD_LOCKDSANLOCK" = yes; then
-
-$as_echo "#define LOCKDSANLOCK_SUPPORT 1" >>confdefs.h
-
-fi
-
-################################################################################
 if test "$BUILD_LOCKDSANLOCK" = yes; then
 
 pkg_failed=no
@@ -11459,6 +11453,9 @@ else
 $as_echo "yes" >&6; }
 	HAVE_LOCKD_SANLOCK=yes
 fi
+
+$as_echo "#define LOCKDSANLOCK_SUPPORT 1" >>confdefs.h
+
 	BUILD_LVMLOCKD=yes
 fi
 
@@ -11475,13 +11472,6 @@ $as_echo "$LOCKDDLM" >&6; }
 
 BUILD_LOCKDDLM=$LOCKDDLM
 
-if test "$BUILD_LOCKDDLM" = yes; then
-
-$as_echo "#define LOCKDDLM_SUPPORT 1" >>confdefs.h
-
-fi
-
-################################################################################
 if test "$BUILD_LOCKDDLM" = yes; then
 
 pkg_failed=no
@@ -11554,11 +11544,13 @@ else
 $as_echo "yes" >&6; }
 	HAVE_LOCKD_DLM=yes
 fi
+
+$as_echo "#define LOCKDDLM_SUPPORT 1" >>confdefs.h
+
 	BUILD_LVMLOCKD=yes
 fi
 
 ################################################################################
-
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmlockd" >&5
 $as_echo_n "checking whether to build lvmlockd... " >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_LVMLOCKD" >&5

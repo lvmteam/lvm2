@@ -39,7 +39,6 @@ case "$host_os" in
 		DEVMAPPER=yes
 		LVMETAD=no
 		LVMPOLLD=no
-		LVMLOCKD=no
 		LOCKDSANLOCK=no
 		LOCKDDLM=no
 		ODIRECT=yes
@@ -1145,6 +1144,8 @@ AC_MSG_RESULT($LVMPOLLD)
 BUILD_LVMPOLLD=$LVMPOLLD
 
 ################################################################################
+BUILD_LVMLOCKD=no
+
 dnl -- Build lockdsanlock
 AC_MSG_CHECKING(whether to build lockdsanlock)
 AC_ARG_ENABLE(lockd-sanlock,
@@ -1155,14 +1156,10 @@ AC_MSG_RESULT($LOCKDSANLOCK)
 
 BUILD_LOCKDSANLOCK=$LOCKDSANLOCK
 
-if test "$BUILD_LOCKDSANLOCK" = yes; then
-	AC_DEFINE([LOCKDSANLOCK_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd sanlock option.])
-fi
-
-################################################################################
 dnl -- Look for sanlock libraries
 if test "$BUILD_LOCKDSANLOCK" = yes; then
 	PKG_CHECK_MODULES(LOCKD_SANLOCK, libsanlock_client, [HAVE_LOCKD_SANLOCK=yes], $bailout)
+	AC_DEFINE([LOCKDSANLOCK_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd sanlock option.])
 	BUILD_LVMLOCKD=yes
 fi
 
@@ -1177,20 +1174,15 @@ AC_MSG_RESULT($LOCKDDLM)
 
 BUILD_LOCKDDLM=$LOCKDDLM
 
-if test "$BUILD_LOCKDDLM" = yes; then
-	AC_DEFINE([LOCKDDLM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd dlm option.])
-fi
-
-################################################################################
 dnl -- Look for dlm libraries
 if test "$BUILD_LOCKDDLM" = yes; then
 	PKG_CHECK_MODULES(LOCKD_DLM, libdlm, [HAVE_LOCKD_DLM=yes], $bailout)
+	AC_DEFINE([LOCKDDLM_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd dlm option.])
 	BUILD_LVMLOCKD=yes
 fi
 
 ################################################################################
 dnl -- Build lvmlockd
-
 AC_MSG_CHECKING(whether to build lvmlockd)
 AC_MSG_RESULT($BUILD_LVMLOCKD)
 

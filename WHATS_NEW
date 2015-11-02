@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Correct configure messages when enabling/disabling lvmlockd.
 
 Version 2.02.134 - 9th November 2015
 ====================================
