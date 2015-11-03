@@ -1066,9 +1066,9 @@ cfg_array(activation_volume_list_CFG, "volume_list", activation_CFG_SECTION, CFG
 	"    or VG.\n"
 	"  @*\n"
 	"    Selects an LV if a tag defined on the host is also set on the LV\n"
-	"    or VG. See tags/hosttags. If any host tags exist but volume_list\n"
-	"    is not defined, a default single-entry list containing '@*' is\n"
-	"    assumed.\n"
+	"    or VG. See tags/hosttags. If any host tags exist but the volume\n"
+	"    list is not defined, a default single-entry list containing '@*'\n"
+	"    is assumed.\n"
 	"#\n"
 	"Example\n"
 	"volume_list = [ \"vg1\", \"vg2/lvol1\", \"@tag1\", \"@*\" ]\n"
@@ -1102,12 +1102,12 @@ cfg_array(activation_auto_activation_volume_list_CFG, "auto_activation_volume_li
 	"    or VG.\n"
 	"  @*\n"
 	"    Selects an LV if a tag defined on the host is also set on the LV\n"
-	"    or VG. See tags/hosttags. If any host tags exist but volume_list\n"
-	"    is not defined, a default single-entry list containing '@*' is\n"
-	"    assumed.\n"
+	"    or VG. See tags/hosttags. If any host tags exist but the volume\n"
+	"    list is not defined, a default single-entry list containing '@*'\n"
+	"    is assumed.\n"
 	"#\n"
 	"Example\n"
-	"volume_list = [ \"vg1\", \"vg2/lvol1\", \"@tag1\", \"@*\" ]\n"
+	"auto_activation_volume_list = [ \"vg1\", \"vg2/lvol1\", \"@tag1\", \"@*\" ]\n"
 	"#\n")
 
 cfg_array(activation_read_only_volume_list_CFG, "read_only_volume_list", activation_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 89), NULL, 0, NULL,
@@ -1127,12 +1127,12 @@ cfg_array(activation_read_only_volume_list_CFG, "read_only_volume_list", activat
 	"    or VG.\n"
 	"  @*\n"
 	"    Selects an LV if a tag defined on the host is also set on the LV\n"
-	"    or VG. See tags/hosttags. If any host tags exist but volume_list\n"
-	"    is not defined, a default single-entry list containing '@*' is\n"
-	"    assumed.\n"
+	"    or VG. See tags/hosttags. If any host tags exist but the volume\n"
+	"    list is not defined, a default single-entry list containing '@*'\n"
+	"    is assumed.\n"
 	"#\n"
 	"Example\n"
-	"volume_list = [ \"vg1\", \"vg2/lvol1\", \"@tag1\", \"@*\" ]\n"
+	"read_only_volume_list = [ \"vg1\", \"vg2/lvol1\", \"@tag1\", \"@*\" ]\n"
 	"#\n")
 
 cfg(activation_mirror_region_size_CFG, "mirror_region_size", activation_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_RAID_REGION_SIZE, vsn(1, 0, 0), NULL, vsn(2, 2, 99),
