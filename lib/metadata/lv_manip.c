@@ -3138,7 +3138,6 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
  * If log_area_count > 1 it is always mirrored (not striped).
  */
 static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
-					struct dm_pool *mem,
 					const struct segment_type *segtype,
 					alloc_policy_t alloc, int approx_alloc,
 					uint32_t existing_extents,
@@ -3150,6 +3149,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					uint32_t region_size,
 					struct dm_list *parallel_areas)
 {
+	struct dm_pool *mem;
 	struct alloc_handle *ah;
 	uint32_t s, area_count, alloc_count, parity_count, total_extents;
 	size_t size = 0;
@@ -3199,20 +3199,22 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	size += sizeof(ah->alloced_areas[0]) * alloc_count;
 
+	if (!(mem = dm_pool_create("allocation", 1024))) {
+		log_error("allocation pool creation failed");
+		return NULL;
+	}
+
 	if (!(ah = dm_pool_zalloc(mem, size))) {
 		log_error("allocation handle allocation failed");
+		dm_pool_destroy(mem);
 		return NULL;
 	}
 
 	ah->cmd = cmd;
+	ah->mem = mem;
 
 	if (segtype_is_virtual(segtype))
 		return ah;
-
-	if (!(ah->mem = dm_pool_create("allocation", 1024))) {
-		log_error("allocation pool creation failed");
-		return NULL;
-	}
 
 	ah->area_count = area_count;
 	ah->parity_count = parity_count;
@@ -3314,8 +3316,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 void alloc_destroy(struct alloc_handle *ah)
 {
-	if (ah->mem)
-		dm_pool_destroy(ah->mem);
+	dm_pool_destroy(ah->mem);
 }
 
 /*
@@ -3356,7 +3357,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 	if (alloc >= ALLOC_INHERIT)
 		alloc = vg->alloc;
 
-	if (!(ah = _alloc_init(vg->cmd, vg->vgmem, segtype, alloc, approx_alloc,
+	if (!(ah = _alloc_init(vg->cmd, segtype, alloc, approx_alloc,
 			       lv ? lv->le_count : 0, extents, mirrors, stripes, log_count,
 			       vg->extent_size, region_size,
 			       parallel_areas)))
