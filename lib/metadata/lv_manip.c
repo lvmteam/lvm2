@@ -3165,6 +3165,12 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	else
 		area_count = stripes;
 
+	if (!segtype_is_virtual(segtype) &&
+	    !(area_count + metadata_area_count)) {
+		log_error(INTERNAL_ERROR "_alloc_init called for non-virtual segment with no disk space.");
+		return NULL;
+	}
+
 	size = sizeof(*ah);
 
 	/*
@@ -3202,11 +3208,6 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	if (segtype_is_virtual(segtype))
 		return ah;
-
-	if (!(area_count + metadata_area_count)) {
-		log_error(INTERNAL_ERROR "_alloc_init called for non-virtual segment with no disk space.");
-		return NULL;
-	}
 
 	if (!(ah->mem = dm_pool_create("allocation", 1024))) {
 		log_error("allocation pool creation failed");
