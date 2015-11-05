@@ -805,36 +805,32 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 static int _insert_lvconvert_layer(struct cmd_context *cmd,
 				   struct logical_volume *lv)
 {
-	char *format, *layer_name;
-	size_t len;
+	char format[NAME_LEN], layer_name[NAME_LEN];
 	int i;
 
 	/*
- 	 * We would like to give the same number for this layer
- 	 * and the newly added mimage.
- 	 * However, LV name of newly added mimage is determined *after*
+	 * We would like to give the same number for this layer
+	 * and the newly added mimage.
+	 * However, LV name of newly added mimage is determined *after*
 	 * the LV name of this layer is determined.
 	 *
 	 * So, use generate_lv_name() to generate mimage name first
 	 * and take the number from it.
 	 */
 
-	len = strlen(lv->name) + 32;
-	if (!(format = alloca(len)) ||
-	    !(layer_name = alloca(len)) ||
-	    dm_snprintf(format, len, "%s_mimage_%%d", lv->name) < 0) {
-		log_error("lvconvert: layer name allocation failed.");
+	if (dm_snprintf(format, sizeof(format), "%s_mimage_%%d", lv->name) < 0) {
+		log_error("lvconvert: layer name creation failed.");
 		return 0;
 	}
 
-	if (!generate_lv_name(lv->vg, format, layer_name, len) ||
+	if (!generate_lv_name(lv->vg, format, layer_name, sizeof(layer_name)) ||
 	    sscanf(layer_name, format, &i) != 1) {
 		log_error("lvconvert: layer name generation failed.");
 		return 0;
 	}
 
-	if (dm_snprintf(layer_name, len, MIRROR_SYNC_LAYER "_%d", i) < 0) {
-		log_error("layer name allocation failed.");
+	if (dm_snprintf(layer_name, sizeof(layer_name), MIRROR_SYNC_LAYER "_%d", i) < 0) {
+		log_error("layer name creation failed.");
 		return 0;
 	}
 
