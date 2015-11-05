@@ -4018,13 +4018,12 @@ int lv_extend(struct logical_volume *lv,
 			dm_percent_t sync_percent = DM_PERCENT_INVALID;
 
 			if (!lv_is_active_locally(lv)) {
-				log_error("%s/%s is not active locally."
-					  "  Unable to get sync percent.",
-					  lv->vg->name, lv->name);
+				log_error("Unable to read sync percent while LV %s "
+					  "is not locally active.", display_lvname(lv));
 				/* FIXME Support --force */
 				if (yes_no_prompt("Do full resync of extended "
-						  "portion of %s/%s?  [y/n]: ",
-						  lv->vg->name, lv->name) == 'n') {
+						  "portion of %s?  [y/n]: ",
+						  display_lvname(lv)) == 'n') {
 					r = 0;
 					goto_out;
 				}
@@ -4033,19 +4032,18 @@ int lv_extend(struct logical_volume *lv,
 
 			if (!(r = lv_mirror_percent(lv->vg->cmd, lv, 0,
 						    &sync_percent, NULL))) {
-				log_error("Failed to get sync percent for %s/%s",
-					  lv->vg->name, lv->name);
+				log_error("Failed to get sync percent for %s.",
+					  display_lvname(lv));
 				goto out;
 			} else if (sync_percent == DM_PERCENT_100) {
 				log_verbose("Skipping initial resync for "
-					    "extended portion of %s/%s",
-					    lv->vg->name, lv->name);
+					    "extended portion of %s",
+					    display_lvname(lv));
 				init_mirror_in_sync(1);
 				lv->status |= LV_NOTSYNCED;
 			} else {
-				log_error("%s/%s cannot be extended while"
-					  " it is recovering.",
-					  lv->vg->name, lv->name);
+				log_error("LV %s cannot be extended while it "
+					  "is recovering.", display_lvname(lv));
 				r = 0;
 				goto out;
 			}
