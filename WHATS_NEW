@@ -1,5 +1,6 @@
 Version 2.02.134 - 
 ====================================
+  Pass correct data size to mirror log calc so log can be bigger than 1 extent.
 
 Version 2.02.133 - 30th October 2015
 ====================================

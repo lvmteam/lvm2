@@ -1579,7 +1579,7 @@ struct alloc_handle {
  * Returns log device size in extents, algorithm from kernel code
  */
 #define BYTE_SHIFT 3
-static uint32_t mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint32_t area_len)
+static uint32_t _mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint32_t area_len)
 {
 	size_t area_size, bitset_size, log_size, region_count;
 
@@ -3281,12 +3281,15 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	} else {
 		ah->log_area_count = metadata_area_count;
 		ah->log_len = !metadata_area_count ? 0 :
-			mirror_log_extents(ah->region_size, extent_size,
-					   (existing_extents + total_extents) / ah->area_multiple);
+			_mirror_log_extents(ah->region_size, extent_size,
+					    (existing_extents + new_extents) / ah->area_multiple);
 	}
 
 	log_debug("Adjusted allocation request to %" PRIu32 " logical extents. Existing size %" PRIu32 ". New size %" PRIu32 ".",
 		  total_extents, existing_extents, total_extents + existing_extents);
+	if (ah->log_len)
+		log_debug("Mirror log of %" PRIu32 " extents of size %" PRIu32 "sectors needed for region size %" PRIu32  ".",
+			  ah->log_len, extent_size, ah->region_size);
 
 	if (mirrors || stripes)
 		total_extents += existing_extents;
