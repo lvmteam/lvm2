@@ -515,8 +515,7 @@ static int _merge_mirror_images(struct logical_volume *lv,
 	if (!addition)
 		return 1;
 
-	if (!(img_lvs = alloca(sizeof(*img_lvs) * addition)))
-		return_0;
+	img_lvs = alloca(sizeof(*img_lvs) * addition);
 
 	dm_list_iterate_items(lvl, mimages)
 		img_lvs[i++] = lvl->lv;
@@ -1461,11 +1460,7 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 	size_t len;
 	
 	len = strlen(lv->name) + 32;
-	if (!(img_name = alloca(len))) {
-		log_error("img_name allocation failed. "
-			  "Remove new LV and retry.");
-		return 0;
-	}
+	img_name = alloca(len);
 
 	if (dm_snprintf(img_name, len, "%s_mimage_%%d", lv->name) < 0) {
 		log_error("img_name allocation failed. "
@@ -1861,10 +1856,7 @@ static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
 	size_t len;
 
 	len = strlen(lv_name) + 32;
-	if (!(log_name = alloca(len))) {
-		log_error("log_name allocation failed.");
-		return NULL;
-	}
+	log_name = alloca(len); /* alloca never fails */
 
 	if (dm_snprintf(log_name, len, "%s%s", lv_name, suffix) < 0) {
 		log_error("log_name allocation failed.");
@@ -1903,11 +1895,7 @@ static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 	/*
 	 * create mirror image LVs
 	 */
-	if (!(img_lvs = alloca(sizeof(*img_lvs) * mirrors))) {
-		log_error("img_lvs allocation failed. "
-			  "Remove new LV and retry.");
-		return 0;
-	}
+	img_lvs = alloca(sizeof(*img_lvs) * mirrors);
 
 	if (!_create_mimage_lvs(ah, mirrors, stripes, stripe_size, lv, img_lvs, log))
 		return_0;

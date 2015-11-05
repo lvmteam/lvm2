@@ -341,11 +341,7 @@ static int _print_header(struct cmd_context *cmd, struct formatter *f,
 	outf(f, FORMAT_VERSION_FIELD " = %d", FORMAT_VERSION_VALUE);
 	outnl(f);
 
-	if (!(buf = alloca(dm_escaped_len(desc)))) {
-		log_error("temporary stack allocation for description"
-			  "string failed");
-		return 0;
-	}
+	buf = alloca(dm_escaped_len(desc));
 	outf(f, "description = \"%s\"", dm_escape_double_quotes(buf, desc));
 	outnl(f);
 	outf(f, "creation_host = \"%s\"\t# %s %s %s %s %s", _utsname.nodename,
