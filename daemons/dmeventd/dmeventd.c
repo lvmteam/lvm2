@@ -1355,78 +1355,73 @@ static int _get_timeout(struct message_data *message_data)
 	return (msg->data && msg->size) ? 0 : -ENOMEM;
 }
 
-/* Open fifos used for client communication. */
-static int _open_fifos(struct dm_event_fifos *fifos)
+static int _open_fifo(const char *path)
 {
 	struct stat st;
+	int fd = -1;
 
-	/* Create client fifo. */
-	(void) dm_prepare_selinux_context(fifos->client_path, S_IFIFO);
-	if ((mkfifo(fifos->client_path, 0600) == -1) && errno != EEXIST) {
-		log_sys_error("client mkfifo", fifos->client_path);
-		(void) dm_prepare_selinux_context(NULL, 0);
-		goto fail;
-	}
-
-	/* Create server fifo. */
-	(void) dm_prepare_selinux_context(fifos->server_path, S_IFIFO);
-	if ((mkfifo(fifos->server_path, 0600) == -1) && errno != EEXIST) {
-		log_sys_error("server mkfifo", fifos->server_path);
+	/* Create fifo. */
+	(void) dm_prepare_selinux_context(path, S_IFIFO);
+	if ((mkfifo(path, 0600) == -1) && errno != EEXIST) {
+		log_sys_error("mkfifo", path);
 		(void) dm_prepare_selinux_context(NULL, 0);
 		goto fail;
 	}
 
 	(void) dm_prepare_selinux_context(NULL, 0);
 
-	/* Warn about wrong permissions if applicable */
-	if ((!stat(fifos->client_path, &st)) && (st.st_mode & 0777) != 0600)
-		log_warn("WARNING: Fixing wrong permissions on %s: %s.\n",
-			 fifos->client_path, strerror(errno));
-
-	if ((!stat(fifos->server_path, &st)) && (st.st_mode & 0777) != 0600)
-		log_warn("WARNING: Fixing wrong permissions on %s: %s.\n",
-			 fifos->server_path, strerror(errno));
-
-	/* If they were already there, make sure permissions are ok. */
-	if (chmod(fifos->client_path, 0600)) {
-		log_sys_error("chmod", fifos->client_path);
-		goto fail;
-	}
-
-	if (chmod(fifos->server_path, 0600)) {
-		log_sys_error("chmod", fifos->server_path);
-		goto fail;
-	}
-
 	/* Need to open read+write or we will block or fail */
-	if ((fifos->server = open(fifos->server_path, O_RDWR)) < 0) {
-		log_sys_error("server open", fifos->server_path);
+	if ((fd = open(path, O_RDWR)) < 0) {
+		log_sys_error("open", path);
 		goto fail;
 	}
 
-	if (fcntl(fifos->server, F_SETFD, FD_CLOEXEC) < 0) {
-		log_sys_error("fcntl(FD_CLOEXEC)", fifos->server_path);
+	/* Warn about wrong permissions if applicable */
+	if (fstat(fd, &st)) {
+		log_sys_error("fstat", path);
 		goto fail;
 	}
 
-	/* Need to open read+write for select() to work. */
-	if ((fifos->client = open(fifos->client_path, O_RDWR)) < 0) {
-		log_sys_error("client open", fifos->client_path);
+	if ((st.st_mode & 0777) != 0600) {
+		log_warn("WARNING: Fixing wrong permissions on %s: %s.",
+			 path, strerror(errno));
+
+		if (fchmod(fd, 0600)) {
+			log_sys_error("fchmod", path);
+			goto fail;
+		}
+	}
+
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC)) {
+		log_sys_error("fcntl(FD_CLOEXEC)", path);
 		goto fail;
 	}
 
-	if (fcntl(fifos->client, F_SETFD, FD_CLOEXEC) < 0) {
-		log_sys_error("fcntl(FD_CLOEXEC)", fifos->client_path);
+	return fd;
+
+fail:
+	if ((fd >= 0) && close(fd))
+		log_sys_error("close", path);
+
+	return -1;
+}
+
+/* Open fifos used for client communication. */
+static int _open_fifos(struct dm_event_fifos *fifos)
+{
+	/* Create client fifo. */
+	if ((fifos->client = _open_fifo(fifos->client_path)) < 0)
 		goto fail;
-	}
+
+	/* Create server fifo. */
+	if ((fifos->server = _open_fifo(fifos->server_path)) < 0)
+		goto fail;
 
 	return 1;
-fail:
-	if (fifos->server >= 0 && close(fifos->server))
-		log_sys_error("server close", fifos->server_path);
 
+fail:
 	if (fifos->client >= 0 && close(fifos->client))
-		log_sys_error("client close", fifos->client_path);
+		log_sys_error("close", fifos->client_path);
 
 	return 0;
 }
