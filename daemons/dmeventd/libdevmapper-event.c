@@ -412,17 +412,15 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	char default_dmeventd_path[] = DMEVENTD_PATH;
 	char *args[] = { dmeventd_path ? : default_dmeventd_path, NULL };
 
-	if (stat(fifos->client_path, &statbuf))
-		goto start_server;
-
-	if (!S_ISFIFO(statbuf.st_mode)) {
-		log_error("%s is not a fifo.", fifos->client_path);
-		return 0;
-	}
-
 	/* Anyone listening?  If not, errno will be ENXIO */
 	fifos->client = open(fifos->client_path, O_WRONLY | O_NONBLOCK);
 	if (fifos->client >= 0) {
+		if ((fstat(fifos->client, &statbuf) < 0) ||
+		    !S_ISFIFO(statbuf.st_mode)) {
+			log_error("%s is not a fifo.", fifos->client_path);
+			return 0;
+		}
+
 		/* server is running and listening */
 		if (close(fifos->client))
 			log_sys_debug("close", fifos->client_path);
@@ -433,7 +431,6 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		return 0;
 	}
 
-      start_server:
 	/* server is not running */
 
 	if ((args[0][0] == '/') && stat(args[0], &statbuf)) {
