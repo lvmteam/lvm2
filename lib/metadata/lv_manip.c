@@ -965,8 +965,8 @@ static uint32_t _round_to_stripe_boundary(struct volume_group *vg, uint32_t exte
 	if ((size_rest = extents % stripes)) {
 		new_extents += extend ? stripes - size_rest : -size_rest;
 		log_print_unless_silent("Rounding size %s (%d extents) up to stripe boundary size %s (%d extents).",
-					display_size(vg->cmd, extents * vg->extent_size), extents,
-					display_size(vg->cmd, new_extents * vg->extent_size), new_extents);
+					display_size(vg->cmd, (uint64_t) extents * vg->extent_size), extents,
+					display_size(vg->cmd, (uint64_t) new_extents * vg->extent_size), new_extents);
 	}
 
 	return new_extents;
