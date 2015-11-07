@@ -838,7 +838,7 @@ void dm_event_log(const char *subsys, int level, const char *file,
 	static time_t start = 0;
 	const char *indent = "";
 	FILE *stream = stdout;
-	int prio = -1;
+	int prio;
 	time_t now;
 
 	switch (level & ~(_LOG_STDERR | _LOG_ONCE)) {
