@@ -30,7 +30,7 @@ static int _fwraid_filtering = 0;
 static int _pvmove = 0;
 static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
 static int _obtain_device_list_from_udev = DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV;
-static unsigned _external_device_info_source = DEV_EXT_NONE;
+static enum dev_ext_e _external_device_info_source = DEV_EXT_NONE;
 static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
 static int _debug_level = 0;
 static int _debug_classes_logged = 0;
@@ -98,7 +98,7 @@ void init_obtain_device_list_from_udev(int device_list_from_udev)
 	_obtain_device_list_from_udev = device_list_from_udev;
 }
 
-void init_external_device_info_source(unsigned src)
+void init_external_device_info_source(enum dev_ext_e src)
 {
 	_external_device_info_source = src;
 }
@@ -261,7 +261,7 @@ int obtain_device_list_from_udev(void)
 	return _obtain_device_list_from_udev;
 }
 
-unsigned external_device_info_source(void)
+enum dev_ext_e external_device_info_source(void)
 {
 	return _external_device_info_source;
 }

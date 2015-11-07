@@ -20,6 +20,8 @@
 #define SECURITY_LEVEL 0
 #define PV_MIN_SIZE_KB 512
 
+enum dev_ext_e;
+
 void init_verbose(int level);
 void init_silent(int silent);
 void init_test(int level);
@@ -27,7 +29,7 @@ void init_md_filtering(int level);
 void init_fwraid_filtering(int level);
 void init_pvmove(int level);
 void init_full_scan_done(int level);
-void init_external_device_info_source(unsigned src);
+void init_external_device_info_source(enum dev_ext_e src);
 void init_obtain_device_list_from_udev(int device_list_from_udev);
 void init_trust_cache(int trustcache);
 void init_debug(int level);
@@ -61,7 +63,7 @@ int fwraid_filtering(void);
 int pvmove_mode(void);
 int full_scan_done(void);
 int obtain_device_list_from_udev(void);
-unsigned external_device_info_source(void);
+enum dev_ext_e external_device_info_source(void);
 int trust_cache(void);
 int verbose_level(void);
 int silent_mode(void);

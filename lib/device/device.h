@@ -33,7 +33,7 @@
  * Any new external device info source needs to be
  * registered using EXT_REGISTER macro in dev-ext.c.
  */
-typedef enum {
+typedef enum dev_ext_e {
 	DEV_EXT_NONE,
 	DEV_EXT_UDEV,
 	DEV_EXT_NUM
