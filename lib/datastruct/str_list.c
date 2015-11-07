@@ -16,8 +16,6 @@
 #include "lib.h"
 #include "str_list.h"
 
-#include <ctype.h>
-
 struct dm_list *str_list_create(struct dm_pool *mem)
 {
 	struct dm_list *sl;
