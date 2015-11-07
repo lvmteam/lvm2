@@ -1956,21 +1956,21 @@ static int _reinstate_registrations(struct dm_event_fifos *fifos)
 		    !(dev_name = strtok(NULL, _delim)) ||
 		    !(mask = strtok(NULL, _delim)) ||
 		    !(timeout = strtok(NULL, _delim))) {
-			fprintf(stderr, _failed_parsing_msg);
+			fputs(_failed_parsing_msg, stderr);
 			continue;
 		}
 
 		errno = 0;
 		mask_value = strtoul(mask, &endp, 10);
 		if (errno || !endp || *endp) {
-			fprintf(stderr, _failed_parsing_msg);
+			fputs(_failed_parsing_msg, stderr);
 			continue;
 		}
 
 		errno = 0;
 		timeout_value = strtoul(timeout, &endp, 10);
 		if (errno || !endp || *endp) {
-			fprintf(stderr, _failed_parsing_msg);
+			fputs(_failed_parsing_msg, stderr);
 			continue;
 		}
 
@@ -2255,9 +2255,9 @@ int main(int argc, char *argv[])
 
 	log_notice("dmeventd shutting down.");
 
-	if (close(fifos.client))
+	if (fifos.client >= 0 && close(fifos.client))
 		log_sys_error("client close", fifos.client_path);
-	if (close(fifos.server))
+	if (fifos.server >= 0 && close(fifos.server))
 		log_sys_error("server close", fifos.server_path);
 
 	if (_use_syslog)
