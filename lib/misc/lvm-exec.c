@@ -53,13 +53,13 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 	int status;
 	char buf[PATH_MAX * 2];
 
+	if (rstatus)
+		*rstatus = -1;
+
 	if (!argv[0]) {
 		log_error(INTERNAL_ERROR "Missing command.");
 		return 0;
 	}
-
-	if (rstatus)
-		*rstatus = -1;
 
 	if (sync_needed)
 		/* Flush ops and reset dm cookie */
