@@ -960,13 +960,13 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 					t += (multiplier * SECS_PER_HOUR);
 					break;
 				case TIME_UNIT_AM:
-					if (ti_p->prop->id == TIME_NUM_MULTIPLIER)
+					if (ti_p && ti_p->prop->id == TIME_NUM_MULTIPLIER)
 						tm.tm_hour = multiplier;
 					break;
 				case TIME_UNIT_PM:
-					if (_is_time_unit(ti_p->prop->id))
+					if (ti_p && _is_time_unit(ti_p->prop->id))
 						t -= 12 * SECS_PER_HOUR;
-					else if (ti_p->prop->id == TIME_NUM_MULTIPLIER)
+					else if (ti_p && ti_p->prop->id == TIME_NUM_MULTIPLIER)
 						tm.tm_hour = multiplier + 12;
 					break;
 				case TIME_UNIT_DAY:
