@@ -567,7 +567,7 @@ static int _ignore_unusable_thins(struct device *dev)
 
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 	if (!dm_get_status_thin_pool(mem, params, &status))
-		return_0;
+		goto_out;
 
 	if (status->read_only || status->out_of_data_space) {
 		log_warn("WARNING: %s: Thin's thin-pool needs inspection.",
