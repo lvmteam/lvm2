@@ -822,7 +822,7 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 	struct dm_pool *mem = dms->mem;
 	struct dm_stats_counters cur;
 	FILE *stats_rows = NULL;
-	uint64_t start, len;
+	uint64_t start = 0, len = 0;
 	char row[256];
 	int r;
 
@@ -2305,6 +2305,10 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 		} else if (bounds)
 			len = dm_snprintf(buf, sizeof(buf), "%s%s", bounds_buf,
 					  sep);
+		else {
+			*buf = '\0';
+			len = 0;
+		}
 
 		if (len < 0)
 			goto_bad;
