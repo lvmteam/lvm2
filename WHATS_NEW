@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Drop unneeded stat() call when checking for sysfs file.
   Fix memory leak on error path of failing thin-pool percentage check.
   Add missing test for failing node allocation in lvmetad.
   Correct configure messages when enabling/disabling lvmlockd.

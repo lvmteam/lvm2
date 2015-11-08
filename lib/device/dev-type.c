@@ -462,7 +462,6 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 		*result = dev->dev;
 		ret = 1;
 		goto out; /* dev is not a partition! */
-
 	}
 
 	/*
@@ -486,17 +485,11 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	}
 
 	/* finally, parse 'dev' attribute and create corresponding dev_t */
-	if (stat(path, &info) == -1) {
+	if (!(fp = fopen(path, "r"))) {
 		if (errno == ENOENT)
-			log_error("sysfs file %s does not exist", path);
+			log_error("sysfs file %s does not exist.", path);
 		else
-			log_sys_error("stat", path);
-		goto out;
-	}
-
-	fp = fopen(path, "r");
-	if (!fp) {
-		log_sys_error("fopen", path);
+			log_sys_error("fopen", path);
 		goto out;
 	}
 
