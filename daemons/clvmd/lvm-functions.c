@@ -291,6 +291,7 @@ static int hold_lock(char *resource, int mode, int flags)
 		}
 
 		lvi->lock_mode = mode;
+		lvi->lock_id = 0;
 		status = sync_lock(resource, mode, flags & ~LCKF_CONVERT, &lvi->lock_id);
 		saved_errno = errno;
 		if (status) {
