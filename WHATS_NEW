@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Add missing test for failing node allocation in lvmetad.
   Correct configure messages when enabling/disabling lvmlockd.
 
 Version 2.02.134 - 9th November 2015

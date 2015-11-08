@@ -504,7 +504,9 @@ static response pv_list(lvmetad_state *s, request r)
 		return res; /* FIXME error reporting */
 
 	/* The response field */
-	res.cft->root = make_text_node(res.cft, "response", "OK", NULL, NULL);
+	if (!(res.cft->root = make_text_node(res.cft, "response", "OK", NULL, NULL)))
+		return res; /* FIXME doomed */
+
 	cn_pvs = make_config_node(res.cft, "physical_volumes", NULL, res.cft->root);
 
 	lock_pvid_to_pvmeta(s);
