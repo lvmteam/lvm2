@@ -1,5 +1,6 @@
 Version 1.02.111 - 
 ====================================
+  Add missing fifo close when failed to initialize client connection.
 
 Version 1.02.110 - 30th October 2015
 ====================================

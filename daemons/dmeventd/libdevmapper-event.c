@@ -587,8 +587,8 @@ static int _do_event(int cmd, char *dmeventd_path, struct dm_event_daemon_messag
 	};
 
 	if (!_init_client(dmeventd_path, &fifos)) {
-		stack;
-		return -ESRCH;
+		ret = -ESRCH;
+		goto_out;
 	}
 
 	ret = daemon_talk(&fifos, msg, DM_EVENT_CMD_HELLO, NULL, NULL, 0, 0);
@@ -598,7 +598,7 @@ static int _do_event(int cmd, char *dmeventd_path, struct dm_event_daemon_messag
 
 	if (!ret)
 		ret = daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
-
+out:
 	/* what is the opposite of init? */
 	fini_fifos(&fifos);
 
