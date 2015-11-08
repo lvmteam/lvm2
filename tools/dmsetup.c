@@ -401,15 +401,18 @@ static int _task_run(struct dm_task *dmt)
 {
 	int r;
 	uint64_t delta;
+	struct dm_timestamp *ts;
 
 	if (_initial_timestamp)
 		dm_task_set_record_timestamp(dmt);
 
 	r = dm_task_run(dmt);
 
-	if (_initial_timestamp) {
-		delta = dm_timestamp_delta(dm_task_get_ioctl_timestamp(dmt), _initial_timestamp);
-		log_debug("Timestamp: %7" PRIu64 ".%09" PRIu64 " seconds", delta / NSEC_PER_SEC, delta % NSEC_PER_SEC);
+	if (_initial_timestamp &&
+	    (ts = dm_task_get_ioctl_timestamp(dmt))) {
+		delta = dm_timestamp_delta(ts, _initial_timestamp);
+		log_debug("Timestamp: %7" PRIu64 ".%09" PRIu64 " seconds",
+			  delta / NSEC_PER_SEC, delta % NSEC_PER_SEC);
 	}
 
 	return r;
