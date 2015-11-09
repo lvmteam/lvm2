@@ -14,7 +14,6 @@
 #include "tool.h"
 
 #include "daemon-server.h"
-#include "daemon-log.h"
 #include "xlate.h"
 
 #include "lvmlockd-internal.h"
@@ -26,7 +25,6 @@
  */
 #include "libdlm.h"
 
-#include <pthread.h>
 #include <stddef.h>
 #include <poll.h>
 #include <errno.h>
@@ -35,7 +33,6 @@
 #include <byteswap.h>
 #include <syslog.h>
 #include <dirent.h>
-#include <sys/socket.h>
 
 struct lm_dlm {
 	dlm_lshandle_t *dh;

@@ -16,7 +16,6 @@
 
 #include "daemon-io.h"
 #include "daemon-server.h"
-#include "daemon-log.h"
 #include "lvm-version.h"
 #include "lvmetad-client.h"
 #include "lvmlockd-client.h"
