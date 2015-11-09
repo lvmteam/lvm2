@@ -437,7 +437,8 @@ static int _report_field_string_list(struct dm_report *rh,
 	/* one item */
 	if (list_size == 1) {
 		sl = (struct dm_str_list *) dm_list_first(data);
-		if (!(sort_value->value = field->report_string = dm_pool_strdup(rh->mem, sl->str))) {
+		if (!sl ||
+		    !(sort_value->value = field->report_string = dm_pool_strdup(rh->mem, sl->str))) {
 			log_error("dm_report_field_string_list: dm_pool_strdup failed");
 			goto out;
 		}
@@ -2218,6 +2219,7 @@ static const char *_tok_value_number(const char *s,
 	int is_float = 0;
 
 	*begin = s;
+	/* coverity[assign_where_compare_meant] */
 	while ((!is_float && (*s == '.') && ((is_float = 1))) || isdigit(*s))
 		s++;
 	*end = s;
