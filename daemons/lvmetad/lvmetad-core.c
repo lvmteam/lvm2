@@ -1327,9 +1327,9 @@ out_free:
  * pvid and ret_old_seq are both NULL.
  */
 
-static int update_metadata(lvmetad_state *s, const char *arg_name, const char *arg_vgid,
-			   struct dm_config_node *new_metadata, int64_t *ret_old_seq,
-			   const char *pvid)
+static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *arg_vgid,
+			    struct dm_config_node *new_metadata, int *ret_old_seq,
+			    const char *pvid)
 {
 	struct dm_config_tree *old_meta = NULL;
 	struct dm_config_tree *new_meta = NULL;
@@ -2083,10 +2083,10 @@ static response pv_found(lvmetad_state *s, request r)
 	uint64_t arg_device_lookup = 0;
 	uint64_t new_device = 0;
 	uint64_t old_device = 0;
-	int64_t arg_seqno = -1;
-	int64_t old_seqno = -1;
-	int64_t vg_status_seqno = -1;
-	int64_t changed = 0;
+	int arg_seqno = -1;
+	int old_seqno = -1;
+	int vg_status_seqno = -1;
+	int changed = 0;
 
 	/*
 	 * New input values.
@@ -2383,9 +2383,9 @@ static response pv_found(lvmetad_state *s, request r)
 	 * name of the VG so we can check if the VG is complete.
 	 */
 	if (arg_vgmeta) {
-		DEBUGLOG(s, "pv_found pvid %s has VG %s %s seqno %ld", arg_pvid, arg_name, arg_vgid, arg_seqno);
+		DEBUGLOG(s, "pv_found pvid %s has VG %s %s seqno %d", arg_pvid, arg_name, arg_vgid, arg_seqno);
 
-		if (!update_metadata(s, arg_name, arg_vgid, arg_vgmeta, &old_seqno, arg_pvid)) {
+		if (!_update_metadata(s, arg_name, arg_vgid, arg_vgmeta, &old_seqno, arg_pvid)) {
 			ERROR(s, "Cannot use VG metadata for %s %s from PV %s on %" PRIu64,
 			      arg_name, arg_vgid, arg_pvid, arg_device);
 		}
@@ -2470,8 +2470,8 @@ static response pv_found(lvmetad_state *s, request r)
 				   "changed = %d", changed,
 				   "vgid = %s", arg_vgid ? arg_vgid : "#orphan",
 				   "vgname = %s", arg_name ? arg_name : "#orphan",
-				   "seqno_before = %"PRId64, old_seqno,
-				   "seqno_after = %"PRId64, vg_status_seqno,
+				   "seqno_before = %d", old_seqno,
+				   "seqno_after = %d", vg_status_seqno,
 				   NULL);
 
  nomem:
@@ -2544,7 +2544,7 @@ static response vg_update(lvmetad_state *s, request r)
 		/* TODO defer metadata update here; add a separate vg_commit
 		 * call; if client does not commit, die */
 
-		if (!update_metadata(s, vgname, vgid, metadata, NULL, NULL)) {
+		if (!_update_metadata(s, vgname, vgid, metadata, NULL, NULL)) {
 			ERROR(s, "vg_update failed: metadata update failed");
 			reply_fail("vg_update: failed metadata update");
 			goto fail;
