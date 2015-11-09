@@ -2340,7 +2340,7 @@ static int _lvconvert_pool_repair(struct cmd_context *cmd,
 	struct pipe_data pdata;
 	FILE *f;
 
-	if (!thin_repair[0]) {
+	if (!thin_repair || !thin_repair[0]) {
 		log_error("Thin repair commnand is not configured. Repair is disabled.");
 		return 0; /* Checking disabled */
 	}
