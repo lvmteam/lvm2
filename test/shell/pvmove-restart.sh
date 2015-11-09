@@ -22,6 +22,7 @@ vgextend $vg "$dev3"
 # Slowdown writes
 # (FIXME: generates interesting race when not used)
 aux delay_dev "$dev3" 0 800 $(get first_extent_sector "$dev3"):
+test -e HAVE_DM_DELAY || skip
 
 for mode in "--atomic" ""
 do

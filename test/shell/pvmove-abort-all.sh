@@ -45,6 +45,8 @@ cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
 cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
 cmd3=(pvmove -i1 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
 
+if test -e HAVE_DM_DELAY; then
+
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
@@ -57,6 +59,8 @@ else
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd1[@]}"
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd2[@]}"
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd3[@]}"
+fi
+
 fi
 
 # test removal of all pvmove LVs

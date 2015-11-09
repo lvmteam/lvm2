@@ -33,6 +33,7 @@ test_pvmove_resume() {
 	lvcreate -an -Zn -l30 -n $lv2 $vg "$dev3"
 
 	aux delay_dev "$dev4" 0 250
+	test -e HAVE_DM_DELAY || { lvremove -f $vg; return 0; }
 	aux delay_dev "$dev5" 0 250
 
 	pvmove -i5 "$dev1" "$dev4" &

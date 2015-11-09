@@ -34,6 +34,8 @@ lvcreate -an -Zn -l30 -n $lv2 $vg "$dev2"
 cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
 cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
 
+if test -e HAVE_DM_DELAY; then
+
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
@@ -51,6 +53,8 @@ pvmove --abort "$dev1"
 get lv_field $vg name -a | tee out
 not grep "^\[pvmove0\]" out
 grep "^\[pvmove1\]" out
+
+fi
 
 # remove any remaining pvmoves in progress
 pvmove --abort
