@@ -1,6 +1,3 @@
-Version 1.02.111 - 
-====================================
-
 Version 1.02.110 - 30th October 2015
 ====================================
   Disable thin monitoring plugin when it fails too often (>10 times).

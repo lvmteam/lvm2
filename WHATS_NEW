@@ -1,5 +1,7 @@
-Version 2.02.134 - 
+Version 2.02.134 - 9th November 2015
 ====================================
+  Refactor some lvmetad code and adjust some duplicate PV messages.
+  No longer repair/wipe VG/PVs if inaccessible because foreign or shared.
   Pass correct data size to mirror log calc so log can be bigger than 1 extent.
 
 Version 2.02.133 - 30th October 2015
