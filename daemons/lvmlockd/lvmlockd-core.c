@@ -3594,10 +3594,15 @@ static int client_send_result(struct client *cl, struct action *act)
 			strcat(result_flags, "NO_LOCKSPACES,");
 		pthread_mutex_unlock(&lockspaces_mutex);
 
-		if (gl_use_sanlock && !gl_lsname_sanlock[0])
+		if (gl_use_sanlock) {
+			if (!gl_lsname_sanlock[0])
+				strcat(result_flags, "NO_GL_LS,");
+		} else if (gl_use_dlm) {
+			if (!gl_lsname_dlm[0])
+				strcat(result_flags, "NO_GL_LS,");
+		} else {
 			strcat(result_flags, "NO_GL_LS,");
-		else
-			strcat(result_flags, "NO_GL_LS,");
+		}
 	}
 
 	if (act->flags & LD_AF_DUP_GL_LS)
