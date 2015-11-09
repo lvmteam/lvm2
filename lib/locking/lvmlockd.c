@@ -248,7 +248,7 @@ static int _lockd_request(struct cmd_context *cmd,
 	if (vg_name && lv_name) {
 		reply = _lockd_send(req_name,
 					"cmd = %s", cmd_name,
-					"pid = %d", pid,
+					"pid = " FMTd64, (int64_t) pid,
 					"mode = %s", mode,
 					"opts = %s", opts ?: "none",
 					"vg_name = %s", vg_name,
@@ -268,7 +268,7 @@ static int _lockd_request(struct cmd_context *cmd,
 	} else if (vg_name) {
 		reply = _lockd_send(req_name,
 					"cmd = %s", cmd_name,
-					"pid = %d", pid,
+					"pid = " FMTd64, (int64_t) pid,
 					"mode = %s", mode,
 					"opts = %s", opts ?: "none",
 					"vg_name = %s", vg_name,
@@ -285,7 +285,7 @@ static int _lockd_request(struct cmd_context *cmd,
 	} else {
 		reply = _lockd_send(req_name,
 					"cmd = %s", cmd_name,
-					"pid = %d", pid,
+					"pid = " FMTd64, (int64_t) pid,
 					"mode = %s", mode,
 					"opts = %s", opts ?: "none",
 					"vg_lock_type = %s", vg_lock_type ?: "none",
@@ -436,7 +436,7 @@ int handle_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 	 * Ask lvmlockd/sanlock to look for an unused lock.
 	 */
 	reply = _lockd_send("find_free_lock",
-			"pid = %d", getpid(),
+			"pid = " FMTd64, (int64_t) getpid(),
 			"vg_name = %s", vg->name,
 			NULL);
 
@@ -489,7 +489,7 @@ static int _init_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 
 	reply = _lockd_send("init_vg",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", "dlm",
 				NULL);
@@ -603,7 +603,7 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 	 */
 
 	reply = _lockd_send("init_vg",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", "sanlock",
 				"vg_lock_args = %s", vg->sanlock_lv->name,
@@ -699,7 +699,7 @@ static int _free_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 
 	reply = _lockd_send("free_vg",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", vg->lock_type,
 				"vg_lock_args = %s", vg->lock_args,
@@ -738,7 +738,7 @@ static int _busy_vg_dlm(struct cmd_context *cmd, struct volume_group *vg)
 	 */
 
 	reply = _lockd_send("busy_vg",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", vg->lock_type,
 				"vg_lock_args = %s", vg->lock_args,
@@ -797,7 +797,7 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	reply = _lockd_send("free_vg",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", vg->lock_type,
 				"vg_lock_args = %s", vg->lock_args,
@@ -1010,13 +1010,13 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 	}
 
 	reply = _lockd_send("start_vg",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", vg->lock_type,
 				"vg_lock_args = %s", vg->lock_args ?: "none",
 				"vg_uuid = %s", uuid[0] ? uuid : "none",
-				"version = %d", (int64_t)vg->seqno,
-				"host_id = %d", host_id,
+				"version = " FMTd64, (int64_t) vg->seqno,
+				"host_id = " FMTd64, (int64_t) host_id,
 				"opts = %s", start_init ? "start_init" : "none",
 				NULL);
 
@@ -1076,7 +1076,7 @@ int lockd_stop_vg(struct cmd_context *cmd, struct volume_group *vg)
 		  vg->name, vg->lock_type ? vg->lock_type : "empty");
 
 	reply = _lockd_send("stop_vg",
-			"pid = %d", getpid(),
+			"pid = " FMTd64, (int64_t) getpid(),
 			"vg_name = %s", vg->name,
 			NULL);
 
@@ -1123,7 +1123,7 @@ int lockd_start_wait(struct cmd_context *cmd)
 		return 0;
 
 	reply = _lockd_send("start_wait",
-			"pid = %d", getpid(),
+			"pid = " FMTd64, (int64_t) getpid(),
 			NULL);
 
 	if (!_lockd_result(reply, &result, NULL)) {
@@ -1915,9 +1915,9 @@ int lockd_vg_update(struct volume_group *vg)
 		return 0;
 
 	reply = _lockd_send("vg_update",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
-				"version = %d", (int64_t)vg->seqno,
+				"version = " FMTd64, (int64_t) vg->seqno,
 				NULL);
 
 	if (!_lockd_result(reply, &result, NULL)) {
@@ -2176,7 +2176,7 @@ static int _init_lv_sanlock(struct cmd_context *cmd, struct volume_group *vg,
 		return_0;
 
 	reply = _lockd_send("init_lv",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"lv_name = %s", lv_name,
 				"lv_uuid = %s", lv_uuid,
@@ -2243,7 +2243,7 @@ static int _free_lv(struct cmd_context *cmd, struct volume_group *vg,
 		return_0;
 
 	reply = _lockd_send("free_lv",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"lv_name = %s", lv_name,
 				"lv_uuid = %s", lv_uuid,
@@ -2464,7 +2464,7 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 	 */
 
 	reply = _lockd_send("rename_vg_before",
-			"pid = %d", getpid(),
+			"pid = " FMTd64, (int64_t) getpid(),
 			"vg_name = %s", vg->name,
 			"vg_lock_type = %s", vg->lock_type,
 			"vg_lock_args = %s", vg->lock_args,
@@ -2529,7 +2529,7 @@ int lockd_rename_vg_final(struct cmd_context *cmd, struct volume_group *vg, int 
 		 * with the new VG (lockspace) name.
 		 */
 		reply = _lockd_send("rename_vg_final",
-				"pid = %d", getpid(),
+				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
 				"vg_lock_type = %s", vg->lock_type,
 				"vg_lock_args = %s", vg->lock_args,
@@ -2573,7 +2573,7 @@ const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple
 		return NULL;
 
 	reply = _lockd_send("running_lm",
-			"pid = %d", getpid(),
+			"pid = " FMTd64, (int64_t) getpid(),
 			NULL);
 
 	if (!_lockd_result(reply, &result, NULL)) {

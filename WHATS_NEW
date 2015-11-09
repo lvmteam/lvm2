@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Fix passing of 32bit values through daemons (mostly lvmlockd).
   Use local memory pool for whole alloc_handle manipulation.
   Add missing pointer validation after dm_get_next_target().
   Do not deref NULL pointer in debug message for _match_pv_tags().

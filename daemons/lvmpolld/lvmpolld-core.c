@@ -539,7 +539,7 @@ static response progress_info(client_handle h, struct lvmpolld_state *ls, reques
 		if (st.polling_finished)
 			r = daemon_reply_simple(LVMPD_RESP_FINISHED,
 						"reason = %s", st.cmd_state.signal ? LVMPD_REAS_SIGNAL : LVMPD_REAS_RETCODE,
-						LVMPD_PARM_VALUE " = %d", (int64_t)(st.cmd_state.signal ?: st.cmd_state.retcode),
+						LVMPD_PARM_VALUE " = " FMTd64, (int64_t)(st.cmd_state.signal ?: st.cmd_state.retcode),
 						NULL);
 		else
 			r = daemon_reply_simple(LVMPD_RESP_IN_PROGRESS, NULL);

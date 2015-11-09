@@ -1744,7 +1744,7 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	 */
 	reply = daemon_send_simple(_lvmetad, "set_global_info",
 				   "token = %s", "skip",
-				   "global_invalid = %d", 0,
+				   "global_invalid = " FMTd64, INT64_C(0),
 				   NULL);
 	if (reply.error)
 		log_error("lvmetad_validate_global_cache set_global_info error %d", reply.error);

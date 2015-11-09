@@ -1252,7 +1252,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 					   "token = %s", "skip",
 					   "uuid = %s", uuid,
 					   "name = %s", ls->vg_name,
-					   "version = %d", (int)new_version,
+					   "version = " FMTd64, (int64_t)new_version,
 					   NULL);
 			pthread_mutex_unlock(&lvmetad_mutex);
 
@@ -1270,7 +1270,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 		pthread_mutex_lock(&lvmetad_mutex);
 		reply = daemon_send_simple(lvmetad_handle, "set_global_info",
 						   "token = %s", "skip",
-						   "global_invalid = %d", 1,
+						   "global_invalid = " FMTd64, INT64_C(1),
 						   NULL);
 		pthread_mutex_unlock(&lvmetad_mutex);
 
@@ -3624,9 +3624,9 @@ static int client_send_result(struct client *cl, struct action *act)
 			  act->result, vg_args ? vg_args : "", lv_args ? lv_args : "");
 
 		res = daemon_reply_simple("OK",
-					  "op = %d", act->op,
-					  "op_result = %d", act->result,
-					  "lm_result = %d", act->lm_rv,
+					  "op = " FMTd64, (int64_t)act->op,
+					  "op_result = " FMTd64, (int64_t) act->result,
+					  "lm_result = " FMTd64, (int64_t) act->lm_rv,
 					  "vg_lock_args = %s", vg_args,
 					  "lv_lock_args = %s", lv_args,
 					  "result_flags = %s", result_flags[0] ? result_flags : "none",
@@ -3655,8 +3655,8 @@ static int client_send_result(struct client *cl, struct action *act)
 			  act->result, dump_len);
 
 		res = daemon_reply_simple("OK",
-					  "result = %d", act->result,
-					  "dump_len = %d", dump_len,
+					  "result = " FMTd64, (int64_t) act->result,
+					  "dump_len = " FMTd64, (int64_t) dump_len,
 					  NULL);
 	} else {
 		/*
@@ -3669,10 +3669,10 @@ static int client_send_result(struct client *cl, struct action *act)
 			  act->result, (act->result == -ENOLS) ? "ENOLS" : "", result_flags);
 
 		res = daemon_reply_simple("OK",
-					  "op = %d", act->op,
+					  "op = " FMTd64, (int64_t) act->op,
 					  "lock_type = %s", lm_str(act->lm_type),
-					  "op_result = %d", act->result,
-					  "lm_result = %d", act->lm_rv,
+					  "op_result = " FMTd64, (int64_t) act->result,
+					  "lm_result = " FMTd64, (int64_t) act->lm_rv,
 					  "result_flags = %s", result_flags[0] ? result_flags : "none",
 					  NULL);
 	}
@@ -4399,9 +4399,9 @@ static void client_recv_action(struct client *cl)
 		buffer_init(&res.buffer);
 
 		res = daemon_reply_simple("OK",
-					  "result = %d", result,
+					  "result = " FMTd64, (int64_t) result,
 					  "protocol = %s", lvmlockd_protocol,
-					  "version = %d", lvmlockd_protocol_version,
+					  "version = " FMTd64, (int64_t) lvmlockd_protocol_version,
 					  NULL);
 		buffer_write(cl->fd, &res.buffer);
 		buffer_destroy(&res.buffer);

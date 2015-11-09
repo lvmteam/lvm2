@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 		val = atoi(argv[2]);
 
 		reply = daemon_send_simple(h, "set_global_info",
-					   "global_invalid = %d", val,
+					   "global_invalid = " FMTd64, (int64_t) val,
 					   "token = %s", "skip",
 					   NULL);
 		print_reply(reply);
@@ -106,21 +106,21 @@ int main(int argc, char **argv)
 			reply = daemon_send_simple(h, "set_vg_info",
 						   "uuid = %s", uuid,
 						   "name = %s", name,
-						   "version = %d", ver,
-						    "token = %s", "skip",
-						    NULL);
+						   "version = " FMTd64, (int64_t) ver,
+						   "token = %s", "skip",
+						   NULL);
 		} else if (uuid) {
 			reply = daemon_send_simple(h, "set_vg_info",
 						   "uuid = %s", uuid,
-						   "version = %d", ver,
-						    "token = %s", "skip",
-						    NULL);
+						   "version = " FMTd64, (int64_t) ver,
+						   "token = %s", "skip",
+						   NULL);
 		} else if (name) {
 			reply = daemon_send_simple(h, "set_vg_info",
 						   "name = %s", name,
-						   "version = %d", ver,
-						    "token = %s", "skip",
-						    NULL);
+						   "version = " FMTd64, (int64_t) ver,
+						   "token = %s", "skip",
+						   NULL);
 		} else {
 			printf("name or uuid required\n");
 			return -1;

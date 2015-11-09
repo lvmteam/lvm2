@@ -147,7 +147,7 @@ static struct progress_info _request_progress_info(const char *uuid, unsigned ab
 	}
 
 	if (abort_polling &&
-	    !daemon_request_extend(req, LVMPD_PARM_ABORT " = %d", (int64_t)abort_polling, NULL)) {
+	    !daemon_request_extend(req, LVMPD_PARM_ABORT " = " FMTd64, (int64_t) abort_polling, NULL)) {
 		log_error("Failed to create " LVMPD_REQ_PROGRESS " request.");
 		goto out_req;
 	}
@@ -228,14 +228,14 @@ static int _process_poll_init(const struct cmd_context *cmd, const char *poll_ty
 	}
 
 	if (parms->aborting &&
-	    !(daemon_request_extend(req, LVMPD_PARM_ABORT " = %d", (int64_t)(parms->aborting), NULL))) {
+	    !(daemon_request_extend(req, LVMPD_PARM_ABORT " = " FMTd64, (int64_t) (parms->aborting), NULL))) {
 		log_error("Failed to create %s request." , poll_type);
 		goto out_req;
 	}
 
 	if (cmd->handles_missing_pvs &&
-	    !(daemon_request_extend(req, LVMPD_PARM_HANDLE_MISSING_PVS " = %d",
-				    (int64_t)(cmd->handles_missing_pvs), NULL))) {
+	    !(daemon_request_extend(req, LVMPD_PARM_HANDLE_MISSING_PVS " = " FMTd64,
+				    (int64_t) (cmd->handles_missing_pvs), NULL))) {
 		log_error("Failed to create %s request." , poll_type);
 		goto out_req;
 	}
