@@ -79,7 +79,10 @@ int cache_set_mode(struct lv_segment *seg, const char *str)
 		    find_config_node(cmd, cmd->cft, allocation_cache_pool_cachemode_CFG))
 			id = allocation_cache_pool_cachemode_CFG;
 
-		str = find_config_tree_str(cmd, id, NULL);
+		if (!(str = find_config_tree_str(cmd, id, NULL))) {
+			log_error(INTERNAL_ERROR "Cache mode is not determined.");
+			return 0;
+		}
 	}
 
 	if (!strcmp(str, "writeback"))
