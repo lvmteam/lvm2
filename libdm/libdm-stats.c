@@ -1259,6 +1259,7 @@ char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
 {
 	char *resp = NULL;
 	struct dm_task *dmt = NULL;
+	const char *response;
 
 	if (!_stats_bound(dms))
 		return_0;
@@ -1269,7 +1270,10 @@ char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
 	if (!dmt)
 		return_0;
 
-	resp = dm_pool_strdup(dms->mem, dm_task_get_message_response(dmt));
+	if (!(response = dm_task_get_message_response(dmt)))
+		return_0;
+
+	resp = dm_pool_strdup(dms->mem, response);
 	dm_task_destroy(dmt);
 
 	if (!resp)
