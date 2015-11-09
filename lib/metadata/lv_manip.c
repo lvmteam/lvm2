@@ -4058,7 +4058,7 @@ out:
 /*
  * Minimal LV renaming function.
  * Metadata transaction should be made by caller.
- * Assumes new_name is allocated from cmd->mem pool.
+ * Assumes new_name is allocated from lv->vgmem pool.
  */
 static int _rename_single_lv(struct logical_volume *lv, char *new_name)
 {
