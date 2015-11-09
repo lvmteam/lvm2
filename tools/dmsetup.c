@@ -4585,7 +4585,8 @@ static int _stats_clear(CMD_ARGS)
 	region_id = (allregions) ? DM_STATS_REGIONS_ALL
 		     : (uint64_t) _int_args[REGION_ID_ARG];
 
-	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
+	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
+                return_0;
 
 	if (!_bind_stats_device(dms, name))
 		goto_out;
