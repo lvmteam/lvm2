@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Do not deref NULL pointer in debug message for _match_pv_tags().
   Drop unneeded stat() call when checking for sysfs file.
   Fix memory leak on error path of failing thin-pool percentage check.
   Add missing test for failing node allocation in lvmetad.

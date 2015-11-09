@@ -2114,7 +2114,7 @@ static int _match_pv_tags(const struct dm_config_node *cling_tag_list_cn,
 			else {
 				if (!pv_tags)
 					log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
-							tag_matched, pv_dev_name(pv1), pv_dev_name(pv2));
+							tag_matched, pv_dev_name(pv1), pv2 ? pv_dev_name(pv2) : "-");
 				else
 					log_debug_alloc("Eliminating allocation area %" PRIu32 " at PV %s start PE %" PRIu32
 							" from consideration: PV tag %s already used.",
