@@ -498,14 +498,14 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
-		if (!strcmp(target_type, "snapshot")) {
-			if (sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
+		if (!target_type || !strcmp(target_type, "snapshot")) {
+			if (!params || sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
 				log_error("Incorrect snapshot table found");
 				goto_out;
 			}
 			r = r || _device_is_suspended(major1, minor1) || _device_is_suspended(major2, minor2);
 		} else if (!strcmp(target_type, "snapshot-origin")) {
-			if (sscanf(params, "%d:%d", &major1, &minor1) != 2) {
+			if (!params || sscanf(params, "%d:%d", &major1, &minor1) != 2) {
 				log_error("Incorrect snapshot-origin table found");
 				goto_out;
 			}
@@ -545,7 +545,7 @@ static int _ignore_unusable_thins(struct device *dev)
 		goto out;
 	}
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
-	if (sscanf(params, "%d:%d", &minor, &major) != 2) {
+	if (!params || sscanf(params, "%d:%d", &minor, &major) != 2) {
 		log_error("Failed to get thin-pool major:minor for thin device %d:%d.",
 			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		goto out;
@@ -1678,12 +1678,12 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (strcmp(target_type, "thin")) {
+	if (!target_type || strcmp(target_type, "thin")) {
 		log_error("Unexpected target type %s found for thin %s.", target_type, lv->name);
 		goto out;
 	}
 
-	if (sscanf(params, "%*u:%*u %u", device_id) != 1) {
+	if (!params || sscanf(params, "%*u:%*u %u", device_id) != 1) {
 		log_error("Cannot parse table like parameters %s for %s.", params, lv->name);
 		goto out;
 	}

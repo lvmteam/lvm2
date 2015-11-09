@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Add missing pointer validation after dm_get_next_target().
   Do not deref NULL pointer in debug message for _match_pv_tags().
   Drop unneeded stat() call when checking for sysfs file.
   Fix memory leak on error path of failing thin-pool percentage check.
