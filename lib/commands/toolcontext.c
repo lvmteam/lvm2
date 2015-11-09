@@ -561,9 +561,9 @@ static int _process_config(struct cmd_context *cmd)
 #endif
 
 	dev_ext_info_src = find_config_tree_str(cmd, devices_external_device_info_source_CFG, NULL);
-	if (!strcmp(dev_ext_info_src, "none"))
+	if (dev_ext_info_src && !strcmp(dev_ext_info_src, "none"))
 		init_external_device_info_source(DEV_EXT_NONE);
-	else if (!strcmp(dev_ext_info_src, "udev"))
+	else if (dev_ext_info_src && !strcmp(dev_ext_info_src, "udev"))
 		init_external_device_info_source(DEV_EXT_UDEV);
 	else {
 		log_error("Invalid external device info source specification.");
