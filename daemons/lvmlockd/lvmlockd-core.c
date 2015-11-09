@@ -3073,7 +3073,7 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 			 */
 			if (done) {
 				if ((perrno = pthread_join(ls->thread, NULL)))
-					log_error("pthread_join error %s", strerror(perrno));
+					log_error("pthread_join error %d", perrno);
 
 				list_del(&ls->list);
 
@@ -3698,8 +3698,7 @@ static int client_send_result(struct client *cl, struct action *act)
 	if (dump_fd >= 0) {
 		/* To avoid deadlock, send data here after the reply. */
 		send_dump_buf(dump_fd, dump_len);
-		if (close(dump_fd))
-			log_error("dump close failed");
+		close(dump_fd);
 	}
 
 	return rv;
@@ -4613,8 +4612,7 @@ static void *client_thread_main(void *arg_in)
 					act_un->mode = LD_LK_UN;
 					act_un->flags |= LD_AF_LV_UNLOCK;
 					act_un->flags &= ~LD_AF_LV_LOCK;
-					if (add_lock_action(act_un) < 0)
-						log_debug("add_lock_action unlock failed");
+					add_lock_action(act_un);
 				}
 			}
 
@@ -4720,8 +4718,7 @@ static void close_client_thread(void)
 	client_stop = 1;
 	pthread_cond_signal(&client_cond);
 	pthread_mutex_unlock(&client_mutex);
-	if (pthread_join(client_thread, NULL))
-		log_error("pthread_join of client thread failed.");
+	pthread_join(client_thread, NULL);
 }
 
 /*
