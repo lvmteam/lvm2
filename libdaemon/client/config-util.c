@@ -38,7 +38,12 @@ int buffer_append_vf(struct buffer *buf, va_list ap)
 			goto fail;
 		}
 		keylen = strchr(next, '=') - next;
-		if (strstr(next, "%d") || strstr(next, FMTd64)) {
+		if (strstr(next, "%d")) {
+                        /* Use of plain %d is prohibited, use  FMTd64 */
+			log_error(INTERNAL_ERROR "Do not use  %%d and use correct 64bit form");
+			goto fail;
+		}
+		if (strstr(next, FMTd64)) {
 			value = va_arg(ap, int64_t);
 			if (dm_asprintf(&append, "%.*s= %" PRId64 "\n", keylen, next, value) < 0)
 				goto fail;
