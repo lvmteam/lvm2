@@ -1228,20 +1228,19 @@ static struct dm_task *_stats_print_region(struct dm_stats *dms,
 				    unsigned num_lines, unsigned clear)
 {
 	/* @stats_print[_clear] <region_id> [<start_line> <num_lines>] */
-	const char *clear_str = "_clear", *lines_fmt = "%u %u";
-	const char *msg_fmt = "@stats_print%s " FMTu64 " %s";
 	const char *err_fmt = "Could not prepare @stats_print %s.";
 	struct dm_task *dmt = NULL;
 	char msg[1024], lines[64];
 
 	if (start_line || num_lines)
 		if (!dm_snprintf(lines, sizeof(lines),
-				 lines_fmt, start_line, num_lines)) {
+				 "%u %u", start_line, num_lines)) {
 			log_error(err_fmt, "row specification");
 			return NULL;
 		}
 
-	if (!dm_snprintf(msg, sizeof(msg), msg_fmt, (clear) ? clear_str : "",
+	if (!dm_snprintf(msg, sizeof(msg), "@stats_print%s " FMTu64 " %s",
+			 (clear) ? "_clear" : "",
 			 region_id, (start_line || num_lines) ? lines : "")) {
 		log_error(err_fmt, "message");
 		return NULL;
@@ -1981,10 +1980,9 @@ dm_percent_t dm_histogram_get_bin_percent(const struct dm_histogram *dmh,
  */
 static struct dm_histogram *_alloc_dm_histogram(int nr_bins)
 {
-	struct dm_histogram *dmh = NULL;
-	struct dm_histogram_bin *cur = NULL;
 	/* Allocate space for dm_histogram + nr_entries. */
-	size_t size = sizeof(*dmh) + (unsigned) nr_bins * sizeof(*cur);
+	size_t size = sizeof(struct dm_histogram) +
+		(unsigned) nr_bins * sizeof(struct dm_histogram_bin);
 	return dm_zalloc(size);
 }
 
