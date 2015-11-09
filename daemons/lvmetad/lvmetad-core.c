@@ -2467,11 +2467,11 @@ static response pv_found(lvmetad_state *s, request r)
 
 	return daemon_reply_simple("OK",
 				   "status = %s", vg_status,
-				   "changed = %d", changed,
+				   "changed = " FMTd64, (int64_t) changed,
 				   "vgid = %s", arg_vgid ? arg_vgid : "#orphan",
 				   "vgname = %s", arg_name ? arg_name : "#orphan",
-				   "seqno_before = %d", old_seqno,
-				   "seqno_after = %d", vg_status_seqno,
+				   "seqno_before = " FMTd64, (int64_t) old_seqno,
+				   "seqno_after = " FMTd64, (int64_t) vg_status_seqno,
 				   NULL);
 
  nomem:
@@ -2590,8 +2590,8 @@ static response set_global_info(lvmetad_state *s, request r)
 
 static response get_global_info(lvmetad_state *s, request r)
 {
-	return daemon_reply_simple("OK", "global_invalid = %d",
-					 (s->flags & GLFL_INVALID) ? 1 : 0,
+	return daemon_reply_simple("OK", "global_invalid = " FMTd64,
+					 (int64_t)((s->flags & GLFL_INVALID) ? 1 : 0),
 					 NULL);
 }
 
