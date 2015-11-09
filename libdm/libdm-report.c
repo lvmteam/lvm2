@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -2219,8 +2219,7 @@ static const char *_tok_value_number(const char *s,
 	int is_float = 0;
 
 	*begin = s;
-	/* coverity[assign_where_compare_meant] */
-	while ((!is_float && (*s == '.') && ((is_float = 1))) || isdigit(*s))
+	while ((!is_float && (*s == '.') && ++is_float) || isdigit(*s))
 		s++;
 	*end = s;
 
