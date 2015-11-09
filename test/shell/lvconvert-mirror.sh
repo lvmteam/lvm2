@@ -14,7 +14,7 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
 
-aux prepare_pvs 5 10
+aux prepare_pvs 5 20
 # proper DEVRANGE needs to be set according to extent size
 DEVRANGE="0-32"
 vgcreate -s 32k $vg $(cat DEVICES)
@@ -77,12 +77,14 @@ lvremove -ff $vg
 # Test pulling primary image before mirror in-sync (should fail)
 # Test pulling primary image after mirror in-sync (should work)
 # Test that the correct devices remain in the mirror
-lvcreate -aey -l2 --type mirror -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
-# FIXME:
-#  This is somewhat timing dependent - sync /could/ finish before
-#  we get a chance to have this command fail
+offset=$(get first_extent_sector "$dev2")
+offset=$(( offset + 2 ))
+# put 1 single slowing delayed sector
+# update in case  mirror ever gets faster and allows parallel read
+aux delay_dev "$dev2" 0 2000 ${offset}:1
+lvcreate -aey -l5 -Zn -Wn --type mirror --regionsize 16K -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
 should not lvconvert -m-1 $vg/$lv1 "$dev1"
-
+aux enable_dev "$dev2"
 lvconvert $vg/$lv1 # wait
 lvconvert -m2 $vg/$lv1 "$dev1" "$dev2" "$dev4" "$dev3:0" # If the above "should" failed...
 
@@ -94,15 +96,21 @@ check linear $vg $lv1
 check lv_on $vg $lv1 "$dev4"
 lvremove -ff $vg
 
+# FIXME: lots of unneeded extents here for log - it needs to be at least region_size in size
 # No parallel lvconverts on a single LV please
 
-lvcreate -aey -l5 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0"
+lvcreate -aey -Zn -Wn -l8 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:0-8"
 check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
+
+offset=$(get first_extent_sector "$dev4")
+offset=$(( offset + 2 ))
+aux delay_dev "$dev4" 0 2000 ${offset}:
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 
 # Next convert should fail b/c we can't have 2 at once
 should not lvconvert -m+1 $vg/$lv1 "$dev5"
+aux enable_dev "$dev4"
 lvconvert $vg/$lv1 # wait
 lvconvert -m2 $vg/$lv1 # In case the above "should" actually failed
 
@@ -225,7 +233,7 @@ lvremove -ff $vg
 
 # lvconvert from linear (on multiple PVs) to mirror
 lvcreate -aey -l 8 -n $lv1 $vg "$dev1:0-3" "$dev2:0-3"
-lvconvert --type mirror -m1 $vg/$lv1
+lvconvert --type mirror -vvvv -m1 $vg/$lv1
 
 should check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
