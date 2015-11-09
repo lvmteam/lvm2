@@ -6132,7 +6132,7 @@ int main(int argc, char **argv)
 	int ret = 1, r;
 	const char *dev_dir;
 	const struct command *cmd;
-	const char *subcommand = NULL;
+	const char *subcommand;
 	int multiple_devices;
 
 	(void) setlocale(LC_ALL, "");
@@ -6228,7 +6228,7 @@ unknown:
 		subcommand = argv[0];
 		argc--, argv++;
 	} else
-		subcommand = (char *) "";
+		subcommand = "";
 
 	if (_switches[COLS_ARG] && !_report_init(cmd, subcommand))
 		goto_out;
