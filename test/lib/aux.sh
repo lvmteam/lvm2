@@ -668,7 +668,7 @@ common_dev_() {
 # i.e.  delay_dev "$dev1" 0 200 256:
 delay_dev() {
 	if test ! -f HAVE_DM_DELAY ; then
-		target_at_least dm-delay 1 1 0 || skip
+		target_at_least dm-delay 1 1 0 || return 0
 	fi
 	touch HAVE_DM_DELAY
 	common_dev_ delay "$@"
