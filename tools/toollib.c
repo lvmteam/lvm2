@@ -3181,7 +3181,11 @@ int process_each_pv(struct cmd_context *cmd,
 		log_verbose("Some PVs were not found in first search, retrying.");
 
 		lvmcache_destroy(cmd, 0, 0);
-		lvmcache_init();
+		if (!lvmcache_init()) {
+			log_error("Failed to initalize lvm cache.");
+			ret_max = ECMD_FAILED;
+			goto out;
+		}
 		lvmcache_seed_infos_from_lvmetad(cmd);
 
 		ret = _process_pvs_in_vgs(cmd, read_flags, &all_vgnameids, &all_devices,
