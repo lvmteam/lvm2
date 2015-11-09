@@ -1310,6 +1310,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	struct _lvmetad_pvscan_baton baton;
 	/* Create a dummy instance. */
 	struct format_instance_ctx fic = { .type = 0 };
+	struct metadata_area *mda;
 
 	if (!lvmetad_active()) {
 		log_error("Cannot proceed since lvmetad is not active.");
@@ -1353,8 +1354,11 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	 * Note that the single_device parameter also gets ignored and this code
 	 * can scan further devices.
 	 */
-	if (!baton.vg && !(baton.fid->fmt->features & FMT_MDAS))
-		baton.vg = ((struct metadata_area *) dm_list_first(&baton.fid->metadata_areas_in_use))->ops->vg_read(baton.fid, lvmcache_vgname_from_info(info), NULL, NULL, NULL, 1);
+	if (!baton.vg && !(baton.fid->fmt->features & FMT_MDAS)) {
+		if ((mda = (struct metadata_area *)dm_list_first(&baton.fid->metadata_areas_in_use)))
+			baton.vg = mda->ops->vg_read(baton.fid, lvmcache_vgname_from_info(info),
+						     NULL, NULL, NULL, 1);
+	}
 
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
