@@ -4834,7 +4834,9 @@ static int _stats_create(CMD_ARGS)
 	if (_switches[AUX_DATA_ARG])
 		aux_data = _string_args[AUX_DATA_ARG];
 
-	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
+	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
+		return_0;
+
 	if (!_bind_stats_device(dms, name))
 		goto_bad;
 
@@ -4906,7 +4908,8 @@ static int _stats_delete(CMD_ARGS)
 
 	region_id = (uint64_t) _int_args[REGION_ID_ARG];
 
-	dms = dm_stats_create(program_id);
+	if (!(dms = dm_stats_create(program_id)))
+		return_0;
 
 	if (!_bind_stats_device(dms, name))
 		goto_out;
@@ -4968,7 +4971,8 @@ static int _stats_print(CMD_ARGS)
 
 	region_id = (uint64_t) _int_args[REGION_ID_ARG];
 
-	dms = dm_stats_create(DM_STATS_PROGRAM_ID);
+	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
+		return_0;
 
 	if (!_bind_stats_device(dms, name))
 		goto_out;
