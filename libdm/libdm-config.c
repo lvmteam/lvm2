@@ -563,7 +563,8 @@ static struct dm_config_node *_section(struct parser *p, struct dm_config_node *
 		return NULL;
 	}
 
-	root = _find_or_make_node(p->mem, parent, str);
+	if (!(root = _find_or_make_node(p->mem, parent, str)))
+		return_NULL;
 
 	if (p->t == TOK_SECTION_B) {
 		match(TOK_SECTION_B);
