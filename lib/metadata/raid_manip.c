@@ -1802,6 +1802,7 @@ try_again:
 			lvl = dm_list_item(dm_list_first(&new_data_lvs),
 					   struct lv_list);
 			dm_list_del(&lvl->list);
+			/* coverity[copy_paste_error] intentional */
 			if (!(tmp_names[sd] = _generate_raid_name(lv, "rimage", s)))
 				return_0;
 			if (!set_lv_segment_area_lv(raid_seg, s, lvl->lv, 0,
