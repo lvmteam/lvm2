@@ -3594,8 +3594,6 @@ static int client_send_result(struct client *cl, struct action *act)
 
 		if (gl_use_sanlock && !gl_lsname_sanlock[0])
 			strcat(result_flags, "NO_GL_LS,");
-		else if (gl_use_dlm && !gl_lsname_dlm[0])
-			strcat(result_flags, "NO_GL_LS,");
 		else
 			strcat(result_flags, "NO_GL_LS,");
 	}
