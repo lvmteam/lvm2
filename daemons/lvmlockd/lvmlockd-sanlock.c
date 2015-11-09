@@ -202,9 +202,9 @@ int lm_data_size_sanlock(void)
  */
 
 #define LS_BEGIN 0
-#define GL_LOCK_BEGIN 65
-#define VG_LOCK_BEGIN 66
-#define LV_LOCK_BEGIN 67
+#define GL_LOCK_BEGIN UINT64_C(65)
+#define VG_LOCK_BEGIN UINT64_C(66)
+#define LV_LOCK_BEGIN UINT64_C(67)
 
 static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)
 {
