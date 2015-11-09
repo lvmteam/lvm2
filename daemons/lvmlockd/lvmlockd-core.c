@@ -3029,6 +3029,7 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 	int free_count = 0;
 	int done;
 	int stop;
+	int perrno;
 
 	pthread_mutex_lock(&lockspaces_mutex);
 
@@ -3071,7 +3072,9 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 			 * thread touches the ls struct under lockspaces_mutex.
 			 */
 			if (done) {
-				pthread_join(ls->thread, NULL);
+				if ((perrno = pthread_join(ls->thread, NULL)))
+					log_error("pthread_join error %s", strerror(perrno));
+
 				list_del(&ls->list);
 
 				/* FIXME: will free_vg ever not be set? */
@@ -3690,7 +3693,8 @@ static int client_send_result(struct client *cl, struct action *act)
 	if (dump_fd >= 0) {
 		/* To avoid deadlock, send data here after the reply. */
 		send_dump_buf(dump_fd, dump_len);
-		close(dump_fd);
+		if (close(dump_fd))
+			log_error("dump close failed");
 	}
 
 	return rv;
@@ -4604,7 +4608,8 @@ static void *client_thread_main(void *arg_in)
 					act_un->mode = LD_LK_UN;
 					act_un->flags |= LD_AF_LV_UNLOCK;
 					act_un->flags &= ~LD_AF_LV_LOCK;
-					add_lock_action(act_un);
+					if (add_lock_action(act_un) < 0)
+						log_debug("add_lock_action unlock failed");
 				}
 			}
 
@@ -4710,7 +4715,8 @@ static void close_client_thread(void)
 	client_stop = 1;
 	pthread_cond_signal(&client_cond);
 	pthread_mutex_unlock(&client_mutex);
-	pthread_join(client_thread, NULL);
+	if (pthread_join(client_thread, NULL))
+		log_error("pthread_join of client thread failed.");
 }
 
 /*
