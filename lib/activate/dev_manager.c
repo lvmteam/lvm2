@@ -1410,14 +1410,14 @@ int dev_manager_raid_message(struct dev_manager *dm,
 	}
 
 	/* These are the supported RAID messages for dm-raid v1.5.0 */
-	if (!strcmp(msg, "idle") &&
-	    !strcmp(msg, "frozen") &&
-	    !strcmp(msg, "resync") &&
-	    !strcmp(msg, "recover") &&
-	    !strcmp(msg, "check") &&
-	    !strcmp(msg, "repair") &&
-	    !strcmp(msg, "reshape")) {
-		log_error("Unknown RAID message: %s", msg);
+	if (strcmp(msg, "idle") &&
+	    strcmp(msg, "frozen") &&
+	    strcmp(msg, "resync") &&
+	    strcmp(msg, "recover") &&
+	    strcmp(msg, "check") &&
+	    strcmp(msg, "repair") &&
+	    strcmp(msg, "reshape")) {
+		log_error(INTERNAL_ERROR "Unknown RAID message: %s", msg);
 		return 0;
 	}
 
