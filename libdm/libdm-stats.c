@@ -1270,13 +1270,12 @@ char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
 		return_0;
 
 	if (!(response = dm_task_get_message_response(dmt)))
-		return_0;
+		goto_out;
 
-	resp = dm_pool_strdup(dms->mem, response);
-	dm_task_destroy(dmt);
-
-	if (!resp)
+	if (!(resp = dm_pool_strdup(dms->mem, response)))
 		log_error("Could not allocate memory for response buffer.");
+out:
+	dm_task_destroy(dmt);
 
 	return resp;
 }
