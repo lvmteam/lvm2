@@ -657,9 +657,8 @@ static int _get_report_options(struct cmd_context *cmd,
 	int r = ECMD_PROCESSED;
 
 	if (!(mem = dm_pool_create("report_options", 128))) {
-		r = ECMD_FAILED;
 		log_error("Failed to create temporary mempool to process report options.");
-		goto_out;
+		return ECMD_FAILED;
 	}
 
 	if (!(final_opts_list = str_to_str_list(mem, *options, ",", 1))) {
@@ -704,24 +703,24 @@ static int _get_report_options(struct cmd_context *cmd,
 			default:
 				if (!(final_opts_list = str_to_str_list(mem, opts, ",", 1))) {
 					r = ECMD_FAILED;
-					goto out;
+					goto_out;
 				}
 		}
 	}
 
 	if (!(*options = str_list_to_str(cmd->mem, final_opts_list, ","))) {
 		r = ECMD_FAILED;
-		goto out;
+		goto_out;
 	}
 	if (final_compact_list &&
 	    !(*fields_to_compact = str_list_to_str(cmd->mem, final_compact_list, ","))) {
 		dm_pool_free(cmd->mem, (char *) *options);
 		r = ECMD_FAILED;
-		goto out;
+		goto_out;
 	}
 out:
-	if (mem)
-		dm_pool_destroy(mem);
+	dm_pool_destroy(mem);
+
 	return r;
 }
 
