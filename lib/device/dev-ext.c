@@ -60,6 +60,12 @@ static struct dev_ext *_dev_ext_get_udev(struct device *dev)
 	if (!(udev_device = udev_device_new_from_devnum(udev, 'b', dev->dev)))
 		return_NULL;
 
+	if (!udev_device_get_is_initialized(udev_device)) {
+		/* Timeout or some other udev db inconsistency! */
+		log_error("Udev database has incomplete information about device %s.", dev_name(dev));
+		return NULL;
+	}
+
 	dev->ext.handle = (void *) udev_device;
 	return &dev->ext;
 #else
