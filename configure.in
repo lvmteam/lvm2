@@ -1334,6 +1334,10 @@ if test "$UDEV_SYNC" = yes; then
 	pkg_config_init
 	PKG_CHECK_MODULES(UDEV, libudev >= 143, [UDEV_PC="libudev"])
 	AC_DEFINE([UDEV_SYNC_SUPPORT], 1, [Define to 1 to enable synchronisation with udev processing.])
+
+	AC_CHECK_LIB(udev, udev_device_get_is_initialized, AC_DEFINE([HAVE_LIBUDEV_UDEV_DEVICE_GET_IS_INITIALIZED], 1,
+	  [Define to 1 if udev_device_get_is_initialized is available.]))
+	LIBS=$ac_check_lib_save_LIBS
 fi
 
 dnl -- Enable udev rules

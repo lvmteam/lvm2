@@ -12007,6 +12007,50 @@ fi
 
 $as_echo "#define UDEV_SYNC_SUPPORT 1" >>confdefs.h
 
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for udev_device_get_is_initialized in -ludev" >&5
+$as_echo_n "checking for udev_device_get_is_initialized in -ludev... " >&6; }
+if ${ac_cv_lib_udev_udev_device_get_is_initialized+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ludev  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char udev_device_get_is_initialized ();
+int
+main ()
+{
+return udev_device_get_is_initialized ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_udev_udev_device_get_is_initialized=yes
+else
+  ac_cv_lib_udev_udev_device_get_is_initialized=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_udev_udev_device_get_is_initialized" >&5
+$as_echo "$ac_cv_lib_udev_udev_device_get_is_initialized" >&6; }
+if test "x$ac_cv_lib_udev_udev_device_get_is_initialized" = xyes; then :
+
+$as_echo "#define HAVE_LIBUDEV_UDEV_DEVICE_GET_IS_INITIALIZED 1" >>confdefs.h
+
+fi
+
+	LIBS=$ac_check_lib_save_LIBS
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable installation of udev rules required for synchronisation" >&5
