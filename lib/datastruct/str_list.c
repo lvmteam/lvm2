@@ -20,8 +20,7 @@ struct dm_list *str_list_create(struct dm_pool *mem)
 {
 	struct dm_list *sl;
 
-	if (!(sl = mem ? dm_pool_alloc(mem, sizeof(struct dm_list))
-		       : dm_malloc(sizeof(struct dm_list)))) {
+	if (!(sl = dm_pool_alloc(mem, sizeof(struct dm_list)))) {
 		log_errno(ENOMEM, "str_list allocation failed");
 		return NULL;
 	}
@@ -38,8 +37,7 @@ static int _str_list_add_no_dup_check(struct dm_pool *mem, struct dm_list *sll, 
 	if (!str)
 		return_0;
 
-	if (!(sln = mem ? dm_pool_alloc(mem, sizeof(*sln))
-			: dm_malloc(sizeof(*sln))))
+	if (!(sln = dm_pool_alloc(mem, sizeof(*sln))))
 		return_0;
 
 	sln->str = str;
@@ -176,7 +174,7 @@ char *str_list_to_str(struct dm_pool *mem, const struct dm_list *list,
 	if (list_size > 1)
 		len += ((list_size - 1) * delim_len);
 
-	str = mem ? dm_pool_alloc(mem, len+1) : dm_malloc(len+1);
+	str = dm_pool_alloc(mem, len+1);
 	if (!str) {
 		log_error("str_list_to_str: string allocation failed.");
 		return NULL;
@@ -220,7 +218,7 @@ struct dm_list *str_to_str_list(struct dm_pool *mem, const char *str,
 			next = p2 + delim_len;
 
 		len = p2 - p1;
-		str_item = mem ? dm_pool_alloc(mem, len+1) : dm_malloc(len+1);
+		str_item = dm_pool_alloc(mem, len+1);
 		if (!str_item) {
 			log_error("str_to_str_list: string list item allocation failed.");
 			goto bad;
@@ -244,17 +242,4 @@ bad:
 	if (mem)
 		dm_pool_free(mem, list);
 	return NULL;
-}
-
-void str_list_destroy(struct dm_list *list, int deallocate_strings)
-{
-	struct dm_str_list *sl, *tmp_sl;
-
-	dm_list_iterate_items_safe(sl, tmp_sl, list) {
-		dm_list_del(&sl->list);
-		if (deallocate_strings)
-			dm_free((char *)sl->str);
-		dm_free(sl);
-	}
-	dm_free(list);
 }

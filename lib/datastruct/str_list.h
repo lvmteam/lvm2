@@ -32,7 +32,5 @@ int str_list_dup(struct dm_pool *mem, struct dm_list *sllnew,
 		 const struct dm_list *sllold);
 char *str_list_to_str(struct dm_pool *mem, const struct dm_list *list, const char *delim);
 struct dm_list *str_to_str_list(struct dm_pool *mem, const char *str, const char *delim, int ignore_multiple_delim);
-/* Only for lists which were *not* allocated from the mem pool! */
-void str_list_destroy(struct dm_list *list, int deallocate_strings);
 
 #endif

@@ -651,13 +651,18 @@ static int _get_report_options(struct cmd_context *cmd,
 	struct dm_list *final_opts_list;
 	struct dm_list *final_compact_list = NULL;
 	struct dm_list *opts_list = NULL;
-	int opts_list_destroy = 1;
 	struct dm_str_list *sl;
 	const char *opts;
+	struct dm_pool *mem;
 	int r = ECMD_PROCESSED;
 
+	if (!(mem = dm_pool_create("report_options", 128))) {
+		r = ECMD_FAILED;
+		log_error("Failed to create temporary mempool to process report options.");
+		goto_out;
+	}
 
-	if (!(final_opts_list = str_to_str_list(NULL, *options, ",", 1))) {
+	if (!(final_opts_list = str_to_str_list(mem, *options, ",", 1))) {
 		r = ECMD_FAILED;
 		goto_out;
 	}
@@ -679,7 +684,7 @@ static int _get_report_options(struct cmd_context *cmd,
 			case '-':
 				/* fall through */
 			case '#':
-				if (!(opts_list = str_to_str_list(NULL, opts + 1, ",", 1))) {
+				if (!(opts_list = str_to_str_list(mem, opts + 1, ",", 1))) {
 					r = ECMD_FAILED;
 					goto_out;
 				}
@@ -690,21 +695,14 @@ static int _get_report_options(struct cmd_context *cmd,
 						_del_option_from_list(final_opts_list, prefix,
 								      prefix_len, sl->str);
 				} else if (*opts == '#') {
-					if (!final_compact_list) {
+					if (!final_compact_list)
 						final_compact_list = opts_list;
-						opts_list_destroy = 0;
-					} else
+					else
 						dm_list_splice(final_compact_list, opts_list);
 				}
-				if (opts_list_destroy)
-					str_list_destroy(opts_list, 1);
-				else
-					opts_list_destroy = 1;
-				opts_list = NULL;
 				break;
 			default:
-				str_list_destroy(final_opts_list, 1);
-				if (!(final_opts_list = str_to_str_list(NULL, opts, ",", 1))) {
+				if (!(final_opts_list = str_to_str_list(mem, opts, ",", 1))) {
 					r = ECMD_FAILED;
 					goto out;
 				}
@@ -722,12 +720,8 @@ static int _get_report_options(struct cmd_context *cmd,
 		goto out;
 	}
 out:
-	if (opts_list)
-		str_list_destroy(final_opts_list, 1);
-	if (final_compact_list)
-		str_list_destroy(final_compact_list, 1);
-	if (final_opts_list)
-		str_list_destroy(final_opts_list, 1);
+	if (mem)
+		dm_pool_destroy(mem);
 	return r;
 }
 
