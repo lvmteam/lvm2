@@ -239,7 +239,7 @@ struct dm_list *str_to_str_list(struct dm_pool *mem, const char *str,
 
 	return list;
 bad:
-	if (mem)
-		dm_pool_free(mem, list);
+	dm_pool_free(mem, list);
+
 	return NULL;
 }
