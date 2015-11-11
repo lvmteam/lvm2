@@ -1734,7 +1734,8 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	 * Update the local lvmetad cache so it correctly reflects any
 	 * changes made on remote hosts.
 	 */
-	lvmetad_pvscan_all_devs(cmd, NULL);
+	if (!lvmetad_pvscan_all_devs(cmd, NULL))
+		stack; /* FIXME: Anything more on this error path ? */
 
 	/*
 	 * Clear the global_invalid flag in lvmetad.
