@@ -12,3 +12,97 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/*
+ * Coverity usage:
+ *
+ * translate model into xml
+ * cov-make-library -of coverity_model.xml coverity_model.c
+ *
+ * compile (using outdir 'cov'):
+ * cov-build --dir=cov make CC=gcc
+ *
+ * analyze (agressively, using 'cov')
+ * cov-analyze --dir cov --wait-for-license --hfa --concurrency --enable-fnptr --enable-constraint-fpp --security --all --aggressiveness-level=high --field-offset-escape --user-model-file=coverity/coverity_model.xml
+ *
+ * generate html output (to 'html' from 'cov'):
+ * cov-format-errors --dir cov  --html-output html
+ */
+
+struct lv_segment;
+
+struct logical_volume {
+	struct lv_segment *seg;
+};
+
+struct lv_segment *first_seg(const struct logical_volume *lv)
+{
+	return lv->seg;
+}
+
+struct lv_segment *last_seg(const struct logical_volume *lv)
+{
+	return lv->seg;
+}
+
+/* simple_memccpy() from glibc */
+void *memccpy(void *dest, const void *src, int c, size_t n)
+{
+	const char *s = src;
+	char *d = dest;
+
+	while (n-- > 0)
+		if ((*d++ = *s++) == (char) c)
+			return d;
+
+	return 0;
+}
+
+/*
+ * Added extra pointer check to not need these models,
+ * for now just keep then in file
+ */
+
+/*
+struct cmd_context;
+struct profile;
+
+const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile *profile)
+{
+        return "text";
+}
+
+const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, struct profile *profile)
+{
+        return "text";
+}
+*/
+
+/*
+ * Until fixed coverity case# 00531860:
+ *   A FORWARD_NULL false positive on a recursive function call
+ *
+ * model also these functions:
+ */
+/*
+const struct dm_config_node;
+const struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int id, struct profile *profile)
+{
+	const struct dm_config_node *cn;
+
+	return cn;
+}
+
+const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int id, struct profile *profile)
+{
+	const struct dm_config_node *cn;
+
+	return cn;
+}
+
+int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profile)
+{
+	int b;
+
+	return b;
+}
+*/
