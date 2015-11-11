@@ -425,7 +425,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		if (close(fifos->client))
 			log_sys_debug("close", fifos->client_path);
 		return 1;
-	} else if (errno != ENXIO) {
+	} else if (errno != ENXIO && errno != ENOENT)  {
 		/* problem */
 		log_sys_error("open", fifos->client_path);
 		return 0;
