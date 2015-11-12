@@ -208,6 +208,139 @@ void dm_hash_remove(struct dm_hash_table *t, const char *key)
 	dm_hash_remove_binary(t, key, strlen(key) + 1);
 }
 
+static struct dm_hash_node **_find_str_withval(struct dm_hash_table *t,
+					       const void *key, const void *val,
+					       uint32_t len, uint32_t val_len)
+{
+	struct dm_hash_node **c;
+	unsigned h;
+       
+	h = _hash(key, len) & (t->num_slots - 1);
+
+	for (c = &t->slots[h]; *c; c = &((*c)->next)) {
+		if ((*c)->keylen != len)
+			continue;
+
+		if (!memcmp(key, (*c)->key, len) && (*c)->data) {
+			char *str = (char *)((*c)->data);
+
+			if (((strlen(str) + 1) == val_len) &&
+			    !memcmp(val, str, val_len))
+				return c;
+		}
+	}
+
+	return NULL;
+}
+
+int dm_hash_insert_str_multival(struct dm_hash_table *t, const char *key, const char *val)
+{
+	struct dm_hash_node *n;
+	struct dm_hash_node *first;
+	int len = strlen(key) + 1;
+	unsigned h;
+
+	n = _create_node(key, len);
+	if (!n)
+		return 0;
+
+	n->data = (void *)val;
+
+	h = _hash(key, len) & (t->num_slots - 1);
+
+	first = t->slots[h];
+
+	if (first)
+		n->next = first;
+	else
+		n->next = 0;
+	t->slots[h] = n;
+
+	t->num_nodes++;
+	return 1;
+}
+
+/*
+ * Look through multiple entries with the same key for one that has a
+ * matching val and return that.  If none have maching val, return NULL.
+ */
+void *dm_hash_lookup_str_withval(struct dm_hash_table *t, const char *key, const char *val)
+{
+	struct dm_hash_node **c;
+
+	c = _find_str_withval(t, key, val, strlen(key) + 1, strlen(val) + 1);
+
+	return (c && *c) ? (*c)->data : 0;
+}
+
+/*
+ * Look through multiple entries with the same key for one that has a
+ * matching val and remove that.
+ */
+void dm_hash_remove_str_withval(struct dm_hash_table *t, const char *key, const char *val)
+{
+	struct dm_hash_node **c;
+
+	c = _find_str_withval(t, key, val, strlen(key) + 1, strlen(val) + 1);
+
+	if (c && *c) {
+		struct dm_hash_node *old = *c;
+		*c = (*c)->next;
+		dm_free(old);
+		t->num_nodes--;
+	}
+}
+
+/*
+ * Look for multiple entries with the same key.
+ *
+ * If no entries have key, return NULL.
+ *
+ * If one entry has the key, the function returns the val,
+ * and sets val2 to NULL.
+ *
+ * If two entries have the key, the function returns the val
+ * from the first entry, and the val2 arg is set to the val
+ * from the second entry.
+ *
+ * If more than two entries have the key, the function looks
+ * at only the first two.
+ */
+void *dm_hash_lookup_str_multival(struct dm_hash_table *t, const char *key, const char **val2)
+{
+	struct dm_hash_node **c;
+	struct dm_hash_node **c1 = NULL;
+	struct dm_hash_node **c2 = NULL;
+	uint32_t len = strlen(key) + 1;
+	unsigned h;
+
+	h = _hash(key, len) & (t->num_slots - 1);
+
+	for (c = &t->slots[h]; *c; c = &((*c)->next)) {
+		if ((*c)->keylen != len)
+			continue;
+
+		if (!memcmp(key, (*c)->key, len)) {
+			if (!c1) {
+				c1 = c;
+			} else if (!c2) {
+				c2 = c;
+				break;
+			}
+		}
+	}
+
+	if (!c2)
+		*val2 = NULL;
+	else
+		*val2 = (*c2)->data;
+
+	if (!c1)
+		return NULL;
+	else
+		return *c1 ? (*c1)->data : 0;
+}
+
 unsigned dm_hash_get_num_entries(struct dm_hash_table *t)
 {
 	return t->num_nodes;
