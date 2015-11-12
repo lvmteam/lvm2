@@ -1346,8 +1346,14 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	int abort_daemon = 0;
 	int retval = 0;
 
+	if (!arg_vgid || !arg_name) {
+		ERROR(s, "update_metadata missing args arg_vgid %s arg_name %s pvid %s",
+		      arg_vgid ?: "none", arg_name ?: "none", pvid ?: "none");
+		return 0;
+	}
+
 	DEBUGLOG(s, "update_metadata begin arg_vgid %s arg_name %s pvid %s",
-		 arg_vgid ?: "none", arg_name ?: "none", pvid ?: "none");
+		 arg_vgid, arg_name, pvid ?: "none");
 
 	/*
 	 * Begin by figuring out what has changed:
@@ -1378,7 +1384,7 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	 * A lookup of the name arg was successful in finding arg_vgid_lookup,
 	 * but that resulting vgid doesn't match the arg_vgid.
 	 */
-	if (arg_vgid_lookup && arg_vgid && strcmp(arg_vgid_lookup, arg_vgid)) {
+	if (arg_vgid_lookup && strcmp(arg_vgid_lookup, arg_vgid)) {
 		if (arg_name_lookup) {
 			/*
 			 * This shouldn't happen.
@@ -1419,7 +1425,7 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	 * A lookup of the vgid arg was successful in finding arg_name_lookup,
 	 * but that resulting name doesn't match the arg_name.
 	 */
-	if (arg_name_lookup && arg_name && strcmp(arg_name_lookup, arg_name)) {
+	if (arg_name_lookup && strcmp(arg_name_lookup, arg_name)) {
 		if (arg_vgid_lookup) {
 			/*
 			 * This shouldn't happen.
