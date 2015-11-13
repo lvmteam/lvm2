@@ -99,7 +99,7 @@ lvchange_all() {
 	if test -e LOCAL_LVMPOLLD; then
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0" || should false
-	else
+	elif test -e HAVE_DM_DELAY; then
 		test $(aux count_processes_with_tag) -eq $1 || should false
 	fi
 }
@@ -110,7 +110,7 @@ vgchange_single() {
 	if test -e LOCAL_LVMPOLLD; then
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0"
-	else
+	elif test -e HAVE_DM_DELAY; then
 		test $(aux count_processes_with_tag) -eq $1
 	fi
 }
