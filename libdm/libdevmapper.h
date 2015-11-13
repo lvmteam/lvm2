@@ -1849,20 +1849,14 @@ void *dm_hash_get_data(struct dm_hash_table *t, struct dm_hash_node *n);
 struct dm_hash_node *dm_hash_get_first(struct dm_hash_table *t);
 struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_node *n);
 
-/* 
- * Using these requires that string values were inserted.
- * They support the case where multiple values with the
- * same key are inserted.
- *
- * The "withval" variants ensure that an entry matches
- * both the specified key and value.  They are used to
- * return or remove a unique entry by specifiying both
- * the key and the value.
- */
-int dm_hash_insert_str_multival(struct dm_hash_table *t, const char *key, const char *val);
-void *dm_hash_lookup_str_multival(struct dm_hash_table *t, const char *key, const char **val2);
-void *dm_hash_lookup_str_withval(struct dm_hash_table *t, const char *key, const char *val);
-void dm_hash_remove_str_withval(struct dm_hash_table *t, const char *key, const char *val);
+void *dm_hash_lookup_withval(struct dm_hash_table *t, const char *key,
+                             const void *val, uint32_t val_len);
+void dm_hash_remove_withval(struct dm_hash_table *t, const char *key,
+                            const void *val, uint32_t val_len);
+int dm_hash_insert_multival(struct dm_hash_table *t, const char *key,
+                            const void *val, uint32_t val_len);
+void *dm_hash_lookup_multival(struct dm_hash_table *t, const char *key, const void **val2);
+
 
 #define dm_hash_iterate(v, h) \
 	for (v = dm_hash_get_first((h)); v; \

@@ -18,6 +18,7 @@
 struct dm_hash_node {
 	struct dm_hash_node *next;
 	void *data;
+	unsigned data_len;
 	unsigned keylen;
 	char key[0];
 };
@@ -222,10 +223,8 @@ static struct dm_hash_node **_find_str_withval(struct dm_hash_table *t,
 			continue;
 
 		if (!memcmp(key, (*c)->key, len) && (*c)->data) {
-			char *str = (char *)((*c)->data);
-
-			if (((strlen(str) + 1) == val_len) &&
-			    !memcmp(val, str, val_len))
+			if (((*c)->data_len == val_len) &&
+			    !memcmp(val, (*c)->data, val_len))
 				return c;
 		}
 	}
@@ -233,7 +232,8 @@ static struct dm_hash_node **_find_str_withval(struct dm_hash_table *t,
 	return NULL;
 }
 
-int dm_hash_insert_str_multival(struct dm_hash_table *t, const char *key, const char *val)
+int dm_hash_insert_multival(struct dm_hash_table *t, const char *key,
+			    const void *val, uint32_t val_len)
 {
 	struct dm_hash_node *n;
 	struct dm_hash_node *first;
@@ -245,6 +245,7 @@ int dm_hash_insert_str_multival(struct dm_hash_table *t, const char *key, const 
 		return 0;
 
 	n->data = (void *)val;
+	n->data_len = val_len;
 
 	h = _hash(key, len) & (t->num_slots - 1);
 
@@ -264,11 +265,12 @@ int dm_hash_insert_str_multival(struct dm_hash_table *t, const char *key, const 
  * Look through multiple entries with the same key for one that has a
  * matching val and return that.  If none have maching val, return NULL.
  */
-void *dm_hash_lookup_str_withval(struct dm_hash_table *t, const char *key, const char *val)
+void *dm_hash_lookup_withval(struct dm_hash_table *t, const char *key,
+			     const void *val, uint32_t val_len)
 {
 	struct dm_hash_node **c;
 
-	c = _find_str_withval(t, key, val, strlen(key) + 1, strlen(val) + 1);
+	c = _find_str_withval(t, key, val, strlen(key) + 1, val_len);
 
 	return (c && *c) ? (*c)->data : 0;
 }
@@ -277,11 +279,12 @@ void *dm_hash_lookup_str_withval(struct dm_hash_table *t, const char *key, const
  * Look through multiple entries with the same key for one that has a
  * matching val and remove that.
  */
-void dm_hash_remove_str_withval(struct dm_hash_table *t, const char *key, const char *val)
+void dm_hash_remove_withval(struct dm_hash_table *t, const char *key,
+			    const void *val, uint32_t val_len)
 {
 	struct dm_hash_node **c;
 
-	c = _find_str_withval(t, key, val, strlen(key) + 1, strlen(val) + 1);
+	c = _find_str_withval(t, key, val, strlen(key) + 1, val_len);
 
 	if (c && *c) {
 		struct dm_hash_node *old = *c;
@@ -306,7 +309,7 @@ void dm_hash_remove_str_withval(struct dm_hash_table *t, const char *key, const 
  * If more than two entries have the key, the function looks
  * at only the first two.
  */
-void *dm_hash_lookup_str_multival(struct dm_hash_table *t, const char *key, const char **val2)
+void *dm_hash_lookup_multival(struct dm_hash_table *t, const char *key, const void **val2)
 {
 	struct dm_hash_node **c;
 	struct dm_hash_node **c1 = NULL;

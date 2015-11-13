@@ -92,10 +92,10 @@ dm_hash_lookup_binary
 dm_hash_remove
 dm_hash_remove_binary
 dm_hash_wipe
-dm_hash_lookup_str_withval
-dm_hash_lookup_str_multival
-dm_hash_remove_str_withval
-dm_hash_insert_str_multival
+dm_hash_lookup_withval
+dm_hash_lookup_multival
+dm_hash_remove_withval
+dm_hash_insert_multival
 dm_is_dm_major
 dm_is_empty_dir
 dm_lib_exit

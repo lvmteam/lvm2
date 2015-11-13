@@ -736,7 +736,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 
 		lock_vgid_to_metadata(s);
 		if (name && !uuid)
-			uuid = dm_hash_lookup_str_multival(s->vgname_to_vgid, name, &uuid2);
+			uuid = dm_hash_lookup_multival(s->vgname_to_vgid, name, (void *)&uuid2);
 		else if (uuid && !name)
 			name = dm_hash_lookup(s->vgid_to_vgname, uuid);
 		unlock_vgid_to_metadata(s);
@@ -749,7 +749,7 @@ static response vg_lookup(lvmetad_state *s, request r)
 
 	} else {
 		char *name_lookup = dm_hash_lookup(s->vgid_to_vgname, uuid);
-		char *uuid_lookup = dm_hash_lookup_str_withval(s->vgname_to_vgid, name, uuid);
+		char *uuid_lookup = dm_hash_lookup_withval(s->vgname_to_vgid, name, uuid, strlen(uuid) + 1);
 
 		/* FIXME: comment out these sanity checks when not testing */
 
@@ -920,7 +920,7 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 	name_lookup = dm_hash_lookup(s->vgid_to_vgname, vgid);
 	outdated_pvs_lookup = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid);
 	if (name_lookup)
-		vgid_lookup = dm_hash_lookup_str_withval(s->vgname_to_vgid, name_lookup, vgid);
+		vgid_lookup = dm_hash_lookup_withval(s->vgname_to_vgid, name_lookup, vgid, strlen(vgid) + 1);
 
 	/* remove hash table mappings */
 
@@ -929,7 +929,7 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 	dm_hash_remove(s->vgid_to_vgname, vgid);
 	dm_hash_remove(s->vgid_to_outdated_pvs, vgid);
 	if (name_lookup)
-		dm_hash_remove_str_withval(s->vgname_to_vgid, name_lookup, vgid);
+		dm_hash_remove_withval(s->vgname_to_vgid, name_lookup, vgid, strlen(vgid) + 1);
 
 	unlock_vgid_to_metadata(s);
 
@@ -1009,8 +1009,8 @@ static void _purge_metadata(lvmetad_state *s, const char *arg_name, const char *
 	lock_pvid_to_vgid(s);
 	remove_metadata(s, arg_vgid, 1);
 
-	if ((rem_vgid = dm_hash_lookup_str_withval(s->vgname_to_vgid, arg_name, arg_vgid))) {
-		dm_hash_remove_str_withval(s->vgname_to_vgid, arg_name, arg_vgid);
+	if ((rem_vgid = dm_hash_lookup_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1))) {
+		dm_hash_remove_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1);
 		dm_free(rem_vgid);
 	}
 	unlock_pvid_to_vgid(s);
@@ -1077,7 +1077,7 @@ static int _update_metadata_new_vgid(lvmetad_state *s,
 	dm_config_destroy(old_meta);
 	old_meta = NULL;
 
-	dm_hash_remove_str_withval(s->vgname_to_vgid, arg_name, old_vgid);
+	dm_hash_remove_withval(s->vgname_to_vgid, arg_name, old_vgid, strlen(old_vgid) + 1);
 	dm_hash_remove(s->vgid_to_vgname, old_vgid);
 	dm_free((char *)old_vgid);
 	old_vgid = NULL;
@@ -1098,7 +1098,7 @@ static int _update_metadata_new_vgid(lvmetad_state *s,
 		goto out;
 	}
 
-	if (!dm_hash_insert_str_multival(s->vgname_to_vgid, arg_name, new_vgid_dup)) {
+	if (!dm_hash_insert_multival(s->vgname_to_vgid, arg_name, new_vgid_dup, strlen(new_vgid_dup) + 1)) {
 		ERROR(s, "update_metadata_new_vgid out of memory for vgid hash insert for %s %s", arg_name, new_vgid);
 		abort_daemon = 1;
 		goto out;
@@ -1192,7 +1192,7 @@ static int _update_metadata_new_name(lvmetad_state *s,
 	old_meta = NULL;
 
 	dm_hash_remove(s->vgid_to_vgname, arg_vgid);
-	dm_hash_remove_str_withval(s->vgname_to_vgid, old_name, arg_vgid);
+	dm_hash_remove_withval(s->vgname_to_vgid, old_name, arg_vgid, strlen(arg_vgid) + 1);
 	dm_free((char *)old_name);
 	old_name = NULL;
 
@@ -1212,7 +1212,7 @@ static int _update_metadata_new_name(lvmetad_state *s,
 		goto out;
 	}
 
-	if (!dm_hash_insert_str_multival(s->vgname_to_vgid, new_name, arg_vgid_dup)) {
+	if (!dm_hash_insert_multival(s->vgname_to_vgid, new_name, arg_vgid_dup, strlen(arg_vgid_dup) + 1)) {
 		ERROR(s, "update_metadata_new_name out of memory for vgid hash insert for %s %s", new_name, arg_vgid);
 		abort_daemon = 1;
 		goto out;
@@ -1281,7 +1281,7 @@ static int _update_metadata_add_new(lvmetad_state *s, const char *new_name, cons
 		goto out;
 	}
 
-	if (!dm_hash_insert_str_multival(s->vgname_to_vgid, new_name, new_vgid_dup)) {
+	if (!dm_hash_insert_multival(s->vgname_to_vgid, new_name, new_vgid_dup, strlen(new_vgid_dup) + 1)) {
 		ERROR(s, "update_metadata_add_new out of memory for vgid hash insert for %s %s", new_name, new_vgid);
 		abort_daemon = 1;
 		goto out;
@@ -1381,7 +1381,7 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	 */
 	if (pvid && !arg_name_lookup && arg_vgid_lookup &&
 	    strcmp(arg_vgid_lookup, arg_vgid)) {
-		if ((arg_vgid2 = dm_hash_lookup_str_withval(s->vgname_to_vgid, arg_name, arg_vgid))) {
+		if ((arg_vgid2 = dm_hash_lookup_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1))) {
 			/* This VG already exists in the cache. */
 			DEBUGLOG(s, "update_metadata arg_vgid %s arg_name %s found VG with same name as %s",
 				 arg_vgid, arg_name, arg_vgid_lookup);
@@ -1402,7 +1402,7 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	if (!pvid && arg_name_lookup && arg_vgid_lookup &&
 	    !strcmp(arg_name_lookup, arg_name) &&
 	     strcmp(arg_vgid_lookup, arg_vgid)) {
-		if ((arg_vgid2 = dm_hash_lookup_str_withval(s->vgname_to_vgid, arg_name, arg_vgid))) {
+		if ((arg_vgid2 = dm_hash_lookup_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1))) {
 			/* The first lookup found the another VG with the same name. */
 			DEBUGLOG(s, "update_metadata arg_vgid %s arg_name %s update VG with same name as %s",
 				 arg_vgid, arg_name, arg_vgid_lookup);
@@ -1442,7 +1442,7 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 		}
 
 		new_vgid = arg_vgid;
-		old_vgid = dm_hash_lookup_str_multival(s->vgname_to_vgid, arg_name, &old_vgid2);
+		old_vgid = dm_hash_lookup_multival(s->vgname_to_vgid, arg_name, (void *)&old_vgid2);
 
 		/*
 		 * FIXME: this ensures that arg_name maps to only one existing
