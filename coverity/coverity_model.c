@@ -29,19 +29,16 @@
  */
 
 struct lv_segment;
-
-struct logical_volume {
-	struct lv_segment *seg;
-};
+struct logical_volume;
 
 struct lv_segment *first_seg(const struct logical_volume *lv)
 {
-	return lv->seg;
+	return ((struct lv_segment **)lv)[0];
 }
 
 struct lv_segment *last_seg(const struct logical_volume *lv)
 {
-	return lv->seg;
+	return ((struct lv_segment **)lv)[0];
 }
 
 /* simple_memccpy() from glibc */
@@ -55,6 +52,22 @@ void *memccpy(void *dest, const void *src, int c, size_t n)
 			return d;
 
 	return 0;
+}
+
+/*
+ * 2 lines bellow needs to be placed in coverity/config/user_nodefs.h
+ * Not sure about any other way.
+ * Without them, coverity shows warning since x86 system header files
+ * are using inline assembly to reset fdset
+ */
+//#nodef FD_ZERO model_FD_ZERO
+//void model_FD_ZERO(void *fdset);
+
+void model_FD_ZERO(void *fdset)
+{
+	unsigned i;
+	for (i = 0; i < 1024 / 8 / sizeof(int); ++i)
+		((int*)fdset)[i];
 }
 
 /*
