@@ -4903,7 +4903,12 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			return 0;
 		}
 
-		if (!strcmp(mirr_seg->segtype->name, _lv_type_names[LV_TYPE_RAID10])) {
+		if (seg_is_raid10(mirr_seg)) {
+			if (!seg_mirrors) {
+				log_error(INTERNAL_ERROR "Missing mirror segments for %s.",
+					  display_lvname(lv));
+				return 0;
+			}
 			/* FIXME Warn if command line values are being overridden? */
 			lp->stripes = mirr_seg->area_count / seg_mirrors;
 			lp->stripe_size = mirr_seg->stripe_size;
@@ -4916,7 +4921,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 				/* Allow through "striped" and RAID 4/5/6/10 */
 				if (!seg_is_striped(seg) &&
 				    (!seg_is_raid(seg) || seg_is_mirrored(seg)) &&
-				    strcmp(seg->segtype->name, _lv_type_names[LV_TYPE_RAID10]))
+				    !seg_is_raid10(seg))
 					continue;
 	
 				sz = seg->stripe_size;
@@ -5748,7 +5753,11 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  lv->name);
 		return 0;
 	} else if (lv_is_thin_volume(lv)) {
-		pool_lv = first_seg(lv)->pool_lv;
+		if (!(pool_lv = first_seg(lv)->pool_lv)) {
+			log_error(INTERNAL_ERROR "Thin LV %s without pool.",
+				  display_lvname(lv));
+			return 0;
+		}
 		lock_lv = pool_lv;
 	}
 
