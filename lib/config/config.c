@@ -1215,7 +1215,7 @@ const struct dm_config_node *find_config_tree_node(struct cmd_context *cmd, int 
 
 	cn = dm_config_tree_find_node(cmd->cft, path);
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return cn;
@@ -1237,7 +1237,7 @@ const char *find_config_tree_str(struct cmd_context *cmd, int id, struct profile
 	str = _config_disabled(cmd, item, path) ? cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile)
 						: dm_config_tree_find_str(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile));
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return str;
@@ -1261,7 +1261,7 @@ const char *find_config_tree_str_allow_empty(struct cmd_context *cmd, int id, st
 	str = _config_disabled(cmd, item, path) ? cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile)
 						: dm_config_tree_find_str_allow_empty(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_STRING, profile));
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return str;
@@ -1283,7 +1283,7 @@ int find_config_tree_int(struct cmd_context *cmd, int id, struct profile *profil
 	i = _config_disabled(cmd, item, path) ? cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile)
 					      : dm_config_tree_find_int(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile));
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return i;
@@ -1305,7 +1305,7 @@ int64_t find_config_tree_int64(struct cmd_context *cmd, int id, struct profile *
 	i64 = _config_disabled(cmd, item, path) ? cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile)
 						: dm_config_tree_find_int64(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_INT, profile));
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return i64;
@@ -1327,7 +1327,7 @@ float find_config_tree_float(struct cmd_context *cmd, int id, struct profile *pr
 	f = _config_disabled(cmd, item, path) ? cfg_def_get_default_value(cmd, item, CFG_TYPE_FLOAT, profile)
 					      : dm_config_tree_find_float(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_FLOAT, profile));
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return f;
@@ -1366,7 +1366,7 @@ int find_config_tree_bool(struct cmd_context *cmd, int id, struct profile *profi
 	b = _config_disabled(cmd, item, path) ? cfg_def_get_default_value(cmd, item, CFG_TYPE_BOOL, profile)
 					      : dm_config_tree_find_bool(cmd->cft, path, cfg_def_get_default_value(cmd, item, CFG_TYPE_BOOL, profile));
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return b;
@@ -1466,7 +1466,7 @@ const struct dm_config_node *find_config_tree_array(struct cmd_context *cmd, int
 		cn = cn_def;
 	}
 
-	if (profile_applied)
+	if (profile_applied && profile)
 		remove_config_tree_by_source(cmd, profile->source);
 
 	return cn;
