@@ -2246,19 +2246,20 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	/* Check if merge is possible */
 	if (lv_is_merging_origin(origin)) {
 		log_error("Snapshot %s is already merging into the origin.",
-			  find_snapshot(origin)->lv->name);
+			  display_lvname(find_snapshot(origin)->lv));
 		return 0;
 	}
 
 	if (lv_is_external_origin(origin)) {
-		log_error("\"%s\" is read-only external origin \"%s\".",
-			  lv->name, origin_from_cow(lv)->name);
+		origin = origin_from_cow(lv);
+		log_error("%s is read-only external origin %s.",
+			  display_lvname(lv), display_lvname(origin));
 		return 0;
 	}
 
 	if (lv_is_origin(origin)) {
 		log_error("Merging into the old snapshot origin %s is not supported.",
-			  origin->name);
+			  display_lvname(origin));
 		return 0;
 	}
 
@@ -2288,7 +2289,8 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 			goto_out;
 
 		if (origin_is_active && !activate_lv(cmd, lv)) {
-			log_error("Failed to reactivate origin %s.", lv->name);
+			log_error("Failed to reactivate origin %s.",
+				  display_lvname(lv));
 			goto out;
 		}
 
