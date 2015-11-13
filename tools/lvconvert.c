@@ -2238,8 +2238,8 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	struct logical_volume *origin = snap_seg->origin;
 
 	if (!origin) {
-		log_error("\"%s\" is not a mergeable logical volume.",
-			  lv->name);
+		log_error("%s is not a mergeable logical volume.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -2251,9 +2251,12 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	}
 
 	if (lv_is_external_origin(origin)) {
-		origin = origin_from_cow(lv);
-		log_error("%s is read-only external origin %s.",
-			  display_lvname(lv), display_lvname(origin));
+		if (!(origin = origin_from_cow(lv)))
+			log_error(INTERNAL_ERROR "%s is missing origin.",
+				  display_lvname(lv));
+		else
+			log_error("%s is read-only external origin %s.",
+				  display_lvname(lv), display_lvname(origin));
 		return 0;
 	}
 
