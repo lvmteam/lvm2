@@ -41,18 +41,6 @@ vgcreate $vg2 "$dev2"
 not vgrename $vg1 $vg2
 vgremove $vg1 $vg2
 
-# FIXME: decide how lvmetad should handle
-# duplicate VG names.  lvmetad now ignores
-# the VG on device B if it already knows
-# about the same VG name on device A.
-# This lets you vgrename the VG on device A
-# which allows the VG on device B to reappear
-# once it's rescanned.
-# It's not yet known how we want lvmetad to
-# handle duplicate VG names.
-
-test -e LOCAL_LVMETAD && exit 0
-
 # vgrename duplicate name
 vgcreate $vg1 "$dev1"
 aux disable_dev "$dev1"
