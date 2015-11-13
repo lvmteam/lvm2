@@ -1640,24 +1640,6 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 	return NULL;
 }
 
-struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
-						  struct volume_group *vg,
-						  const char *name,
-						  const char *uuid __attribute__((unused)),
-						  uint64_t lv_type)
-{
-	struct physical_volume *pv;
-	struct logical_volume *lv;
-
-	if (!(pv = find_pv_by_name(cmd, name, 0, 0)))
-		return_NULL;
-
-	lv = find_pvmove_lv(vg, pv->dev, lv_type);
-	free_pv_fid(pv);
-
-	return lv;
-}
-
 struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv)
 {
