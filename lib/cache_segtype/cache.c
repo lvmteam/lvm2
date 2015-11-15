@@ -34,6 +34,32 @@ static unsigned _feature_mask;
         log_error(t " segment %s of logical volume %s.", ## p,	\
                   dm_config_parent_name(sn), seg->lv->name), 0;
 
+/*
+ * When older metadata are loaded without newer settings,
+ * set then to default settings (the one that could have been
+ * used implicitely at that time).
+ *
+ * Needs both segments cache and cache_pool to be loaded.
+ */
+static int _fix_missing_defaults(struct lv_segment *cpool_seg)
+{
+	if (!cpool_seg->policy_name) {
+		cpool_seg->policy_name = "mq";
+		log_verbose("Cache is missing cache policy, using %s.",
+			    cpool_seg->policy_name);
+	}
+
+	if (!cache_mode_is_set(cpool_seg)) {
+		if (!cache_set_mode(cpool_seg, "writethrough")) {
+			log_error(INTERNAL_ERROR "Failed to writethrough cache mode.");
+			return 0;
+		}
+		log_verbose("Cache is missing cache mode, using %s.",
+			    get_cache_mode_name(cpool_seg));
+	}
+
+	return 1;
+}
 
 static int _cache_pool_text_import(struct lv_segment *seg,
 				   const struct dm_config_node *sn,
@@ -113,6 +139,10 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	if (!attach_pool_data_lv(seg, data_lv))
 		return_0;
 	if (!attach_pool_metadata_lv(seg, meta_lv))
+		return_0;
+
+	if (!dm_list_empty(&seg->lv->segs_using_this_lv) &&
+	    !_fix_missing_defaults(seg))
 		return_0;
 
 	return 1;
@@ -317,6 +347,10 @@ static int _cache_text_import(struct lv_segment *seg,
 	seg->lv->status |= strstr(seg->lv->name, "_corig") ? LV_PENDING_DELETE : 0;
 
 	if (!attach_pool_lv(seg, pool_lv, NULL, NULL))
+		return_0;
+
+	if (!dm_list_empty(&pool_lv->segments) &&
+	    !_fix_missing_defaults(first_seg(pool_lv)))
 		return_0;
 
 	return 1;
