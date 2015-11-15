@@ -2692,13 +2692,15 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	dm_free(arr);
 out:
 	*end = s;
-	*sel_str_list = ssl;
+        if (*sel_str_list)
+		*sel_str_list = ssl;
 	return s;
 bad:
 	*end = s;
 	if (ssl)
 		dm_pool_free(mem, ssl);
-	*sel_str_list = NULL;
+        if (*sel_str_list)
+		*sel_str_list = NULL;
 	return s;
 }
 
