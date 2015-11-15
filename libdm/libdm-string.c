@@ -95,8 +95,10 @@ static char *_unquote(char *component)
 int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 		      char **vgname, char **lvname, char **layer)
 {
-	if (mem)
-		*vgname = dm_pool_strdup(mem, dmname);
+	if (mem && !(*vgname = dm_pool_strdup(mem, dmname))) {
+		log_error("Failed to duplicate dmname.");
+		return 0;
+	}
 
 	if (!*vgname)
 		return 0;

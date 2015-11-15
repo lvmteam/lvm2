@@ -1,5 +1,6 @@
 Version 1.02.111 - 
 ====================================
+  Add missing check for allocation inside dm_split_lvm_name().
   Test dm_task_get_message_response for !NULL in dm_stats_print_region().
   Add checks for failing dm_stats_create() in dmsetup.
   Add missing fifo close when failed to initialize client connection.
