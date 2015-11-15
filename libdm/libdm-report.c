@@ -3545,6 +3545,10 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 					if (rvw->reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE)
 						fs->value->next->v.t = (((const time_t *) rvw->value)[1]);
 				} else {
+					if (!custom) {
+						log_error(INTERNAL_ERROR "Custom time value is undefined.");
+						goto error;
+					}
 					tval = (struct time_value *) custom;
 					fs->value->v.t = tval->t1;
 					if (tval->range)
