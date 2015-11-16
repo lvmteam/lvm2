@@ -1342,7 +1342,6 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	const char *new_name = NULL;
 	const char *old_vgid = NULL;
 	const char *new_vgid = NULL;
-	const char *arg_vgid2 = NULL;
 	const char *old_vgid2 = NULL;
 	const char *new_metadata_vgid;
 	int old_seq = -1;
@@ -1370,47 +1369,7 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 
 	lock_vgid_to_metadata(s);
 	arg_name_lookup = dm_hash_lookup(s->vgid_to_vgname, arg_vgid);
-	arg_vgid_lookup = dm_hash_lookup(s->vgname_to_vgid, arg_name);
-
-	/*
-	 * A new PV has been found with a VG that:
-	 * has a vgid we don't know about (null arg_name_lookup),
-	 * has a name we do know about (non-null arg_vgid_lookup).
-	 * This happens when there are two different VGs with the
-	 * same name.
-	 */
-	if (pvid && !arg_name_lookup && arg_vgid_lookup &&
-	    strcmp(arg_vgid_lookup, arg_vgid)) {
-		if ((arg_vgid2 = dm_hash_lookup_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1))) {
-			/* This VG already exists in the cache. */
-			DEBUGLOG(s, "update_metadata arg_vgid %s arg_name %s found VG with same name as %s",
-				 arg_vgid, arg_name, arg_vgid_lookup);
-			arg_vgid_lookup = arg_vgid2;
-		} else {
-			/* This VG doesn't exist in cache yet. */
-			DEBUGLOG(s, "update_metadata arg_vgid %s arg_name %s found VG with same name as %s",
-				 arg_vgid, arg_name, arg_vgid_lookup);
-			arg_vgid_lookup = NULL;
-		}
-	}
-
-	/*
-	 * Updated VG metadata has been sent from a command
-	 * for a VG but we have two VGs with this same name,
-	 * so we need to figure out which of the VGs it is.
-	 */
-	if (!pvid && arg_name_lookup && arg_vgid_lookup &&
-	    !strcmp(arg_name_lookup, arg_name) &&
-	     strcmp(arg_vgid_lookup, arg_vgid)) {
-		if ((arg_vgid2 = dm_hash_lookup_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1))) {
-			/* The first lookup found the another VG with the same name. */
-			DEBUGLOG(s, "update_metadata arg_vgid %s arg_name %s update VG with same name as %s",
-				 arg_vgid, arg_name, arg_vgid_lookup);
-			arg_vgid_lookup = arg_vgid2;
-		} else {
-			/* This case is detected as an error below. */
-		}
-	}
+	arg_vgid_lookup = dm_hash_lookup_withval(s->vgname_to_vgid, arg_name, arg_vgid, strlen(arg_vgid) + 1);
 
 	/*
 	 * A new VG when there is no existing record of the name or vgid args.
