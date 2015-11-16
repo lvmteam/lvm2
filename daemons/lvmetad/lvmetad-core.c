@@ -741,8 +741,11 @@ static response vg_lookup(lvmetad_state *s, request r)
 			name = dm_hash_lookup(s->vgid_to_vgname, uuid);
 		unlock_vgid_to_metadata(s);
 
-		if (name && uuid && uuid2)
-			return reply_unknown("Multiple VGs found with same name");
+		if (name && uuid && uuid2) {
+			DEBUGLOG(s, "vg_lookup name %s found multiple vgids %s %s",
+				 name, uuid, uuid2);
+			return daemon_reply_simple("multiple", "reason = %s", "Multiple VGs found with same name", NULL);
+		}
 
 		if (!uuid || !name)
 			return reply_unknown("VG not found");
