@@ -2119,7 +2119,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		}
 
 		/* Align MDA0 end position with given alignment offset if possible. */
-		if (alignment_offset &&
+		if (alignment && alignment_offset &&
 		    (((mda_start + mda_size) % alignment) == 0)) {
 			tmp_mda_size = mda_size + alignment_offset;
 			if (mda_start + tmp_mda_size <= limit)
