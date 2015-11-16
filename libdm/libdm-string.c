@@ -96,7 +96,7 @@ int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 		      char **vgname, char **lvname, char **layer)
 {
 	if (!vgname || !lvname || !layer) {
-		log_error(INTERNAL_ERROR "dm_split_lvm_name: vgname, lvname nor layer could be NULL.");
+		log_error(INTERNAL_ERROR "dm_split_lvm_name: Forbidden NULL parameter detected.");
 		return 0;
 	}
 
