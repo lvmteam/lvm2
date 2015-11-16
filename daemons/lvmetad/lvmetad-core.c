@@ -1542,23 +1542,11 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 		}
 
 		if (strcmp(arg_vgid_lookup, arg_vgid)) {
-			/*
-			 * This shouldn't usually happen, but could when
-			 * disks are moved (or filters are changed?)
-			 *
-			 * FIXME: two different VGs with different uuids, on
-			 * different PVs could have the same name, e.g. disks
-			 * are moved, filters are changed.  Possible solution:
-			 * purge all info for these VGs and return an error
-			 * that causes the command to go to disk.  Would this
-			 * only happen from pv_found?
-			 * Until there's a proper solution, ignore this VG.
-			 */
-			ERROR(s, "update_metadata ignore VG with duplicate name %s vgid %s pvid %s existing vgid %s",
-			      arg_name, arg_vgid, pvid ?: "none", arg_vgid_lookup);
-			unlock_vgid_to_metadata(s);
-			retval = 0;
-			goto out;
+			/* This shouldn't happen.  Two VGs with the same name is handled above. */
+			ERROR(s, "update_metadata arg_vgid %s arg_name %s mismatch arg_vgid_lookup %s",
+			      arg_vgid, arg_name, arg_vgid_lookup);
+			needs_repair = 1;
+			goto update;
 		}
 
 		/* old_vgid == arg_vgid, and old_name == arg_name */
