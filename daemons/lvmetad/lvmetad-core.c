@@ -1603,7 +1603,8 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	if (pvid && needs_repair) {
 		ERROR(s, "update_metadata ignore inconsistent metadata on PV %s seqno %d for %s %s seqno %d",
 		      pvid, new_seq, arg_vgid, arg_name, old_seq);
-		DEBUGLOG_cft(s, "OLD: ", old_meta->root);
+		if (old_meta)
+			DEBUGLOG_cft(s, "OLD: ", old_meta->root);
 		DEBUGLOG_cft(s, "NEW: ", new_metadata);
 		retval = 0;
 		goto out;
@@ -1615,7 +1616,8 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	if (!pvid && needs_repair) {
 		ERROR(s, "update_metadata inconsistent with cache for vgid %s and name %s",
 		      arg_vgid, arg_name);
-		DEBUGLOG_cft(s, "OLD: ", old_meta->root);
+		if (old_meta)
+			DEBUGLOG_cft(s, "OLD: ", old_meta->root);
 		DEBUGLOG_cft(s, "NEW: ", new_metadata);
 		abort_daemon = 1;
 		retval = 0;
