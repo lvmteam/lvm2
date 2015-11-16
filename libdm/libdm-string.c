@@ -95,13 +95,18 @@ static char *_unquote(char *component)
 int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 		      char **vgname, char **lvname, char **layer)
 {
-	if (mem && !(*vgname = dm_pool_strdup(mem, dmname))) {
-		log_error("Failed to duplicate dmname.");
+	if (!vgname || !lvname || !layer) {
+		log_error(INTERNAL_ERROR "dm_split_lvm_name: vgname, lvname nor layer could be NULL.");
 		return 0;
 	}
 
-	if (!*vgname)
+	if (mem && (!dmname || !(*vgname = dm_pool_strdup(mem, dmname)))) {
+		log_error("Failed to duplicate lvm name.");
 		return 0;
+	} else if (!*vgname) {
+		log_error("Missing lvm name for split.");
+		return 0;
+	}
 
 	_unquote(*layer = _unquote(*lvname = _unquote(*vgname)));
 
