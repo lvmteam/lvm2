@@ -1859,7 +1859,7 @@ struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_no
  * val_len is the size of the data being inserted.
  *
  * If two entries with the same key exist,
- * (added using dm_hash_insert_multival), then:
+ * (added using dm_hash_insert_allow_multiple), then:
  * . dm_hash_lookup() returns the first one it finds, and
  *   dm_hash_lookup_with_val() returns the one with a matching
  *   val_len/val.
@@ -1897,8 +1897,8 @@ void *dm_hash_lookup_with_val(struct dm_hash_table *t, const char *key,
                               const void *val, uint32_t val_len);
 void dm_hash_remove_with_val(struct dm_hash_table *t, const char *key,
                              const void *val, uint32_t val_len);
-int dm_hash_insert_multival(struct dm_hash_table *t, const char *key,
-                            const void *val, uint32_t val_len);
+int dm_hash_insert_allow_multiple(struct dm_hash_table *t, const char *key,
+                                  const void *val, uint32_t val_len);
 void *dm_hash_lookup_with_count(struct dm_hash_table *t, const char *key, int *count);
 
 

@@ -232,8 +232,8 @@ static struct dm_hash_node **_find_str_with_val(struct dm_hash_table *t,
 	return NULL;
 }
 
-int dm_hash_insert_multival(struct dm_hash_table *t, const char *key,
-			    const void *val, uint32_t val_len)
+int dm_hash_insert_allow_multiple(struct dm_hash_table *t, const char *key,
+				  const void *val, uint32_t val_len)
 {
 	struct dm_hash_node *n;
 	struct dm_hash_node *first;

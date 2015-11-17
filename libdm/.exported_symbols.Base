@@ -95,7 +95,7 @@ dm_hash_wipe
 dm_hash_lookup_with_val
 dm_hash_lookup_with_count
 dm_hash_remove_with_val
-dm_hash_insert_multival
+dm_hash_insert_allow_multiple
 dm_is_dm_major
 dm_is_empty_dir
 dm_lib_exit

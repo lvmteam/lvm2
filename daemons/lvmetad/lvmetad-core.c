@@ -1101,7 +1101,7 @@ static int _update_metadata_new_vgid(lvmetad_state *s,
 		goto out;
 	}
 
-	if (!dm_hash_insert_multival(s->vgname_to_vgid, arg_name, new_vgid_dup, strlen(new_vgid_dup) + 1)) {
+	if (!dm_hash_insert_allow_multiple(s->vgname_to_vgid, arg_name, new_vgid_dup, strlen(new_vgid_dup) + 1)) {
 		ERROR(s, "update_metadata_new_vgid out of memory for vgid hash insert for %s %s", arg_name, new_vgid);
 		abort_daemon = 1;
 		goto out;
@@ -1215,7 +1215,7 @@ static int _update_metadata_new_name(lvmetad_state *s,
 		goto out;
 	}
 
-	if (!dm_hash_insert_multival(s->vgname_to_vgid, new_name, arg_vgid_dup, strlen(arg_vgid_dup) + 1)) {
+	if (!dm_hash_insert_allow_multiple(s->vgname_to_vgid, new_name, arg_vgid_dup, strlen(arg_vgid_dup) + 1)) {
 		ERROR(s, "update_metadata_new_name out of memory for vgid hash insert for %s %s", new_name, arg_vgid);
 		abort_daemon = 1;
 		goto out;
@@ -1284,7 +1284,7 @@ static int _update_metadata_add_new(lvmetad_state *s, const char *new_name, cons
 		goto out;
 	}
 
-	if (!dm_hash_insert_multival(s->vgname_to_vgid, new_name, new_vgid_dup, strlen(new_vgid_dup) + 1)) {
+	if (!dm_hash_insert_allow_multiple(s->vgname_to_vgid, new_name, new_vgid_dup, strlen(new_vgid_dup) + 1)) {
 		ERROR(s, "update_metadata_add_new out of memory for vgid hash insert for %s %s", new_name, new_vgid);
 		abort_daemon = 1;
 		goto out;
