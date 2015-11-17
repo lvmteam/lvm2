@@ -18,12 +18,20 @@ aux prepare_pvs 5
 vgcreate $vg1 "$dev1"
 vgcreate $vg2 "$dev3" "$dev4" "$dev5"
 
+UUID1=$(get vg_field $vg1 uuid)
+
 aux disable_dev "$dev1"
 pvscan
 # dev1 is missing
 fail pvs $(cat DEVICES)
 
+# create a new vg1 on dev2,
+# so dev1 and dev2 have different VGs with the same name
 vgcreate $vg1 "$dev2"
+
+UUID2=$(get vg_field $vg1 uuid)
+
+# Once dev1 is visible again, both VGs named "vg1" are visible.
 aux enable_dev "$dev1"
 
 pvs "$dev1"
@@ -36,9 +44,15 @@ lvconvert --yes --repair $vg2/$lv1
 aux enable_dev "$dev3"
 
 # here it should fix any reappeared devices
-lvs $vg1 $vg2
+lvs
 
 lvs -a $vg2 -o+devices 2>&1 | tee out
 not grep reappeared out
 
+# This removes the first "vg1" using its uuid
+vgremove -ff -S vg_uuid=$UUID1
+
+# This removes the second "vg1" using its name,
+# now that there is only one VG with that name.
 vgremove -ff $vg1 $vg2
+
