@@ -316,6 +316,15 @@ static int _lvmetad_handle_reply(daemon_reply reply, const char *action, const c
 		return 1;
 	}
 
+	/* Multiple VGs with the same name were found. */
+	if (found && !strcmp(daemon_reply_str(reply, "response", ""), "multiple")) {
+		log_very_verbose("Request to %s %s%sin lvmetad found multiple matching objects.",
+				 action, object, *object ? " " : "");
+		if (found)
+			*found = 2;
+		return 1;
+	}
+
 	log_error("Request to %s %s%sin lvmetad gave response %s. Reason: %s",
 		  action, object, *object ? " " : "", 
 		  daemon_reply_str(reply, "response", "<missing>"),
@@ -526,6 +535,12 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	}
 
 	if (_lvmetad_handle_reply(reply, "lookup VG", diag_name, &found) && found) {
+
+		if ((found == 2) && vgname) {
+			log_error("Multiple VGs found with the same name: %s.", vgname);
+			log_error("See the --select option with VG UUID (vg_uuid).");
+			goto out;
+		}
 
 		if (!(top = dm_config_find_node(reply.cft->root, "metadata"))) {
 			log_error(INTERNAL_ERROR "metadata config node not found.");
