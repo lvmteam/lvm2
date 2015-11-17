@@ -1370,9 +1370,10 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	 * can scan further devices.
 	 */
 	if (!baton.vg && !(baton.fid->fmt->features & FMT_MDAS)) {
+		/* This code seems to be unreachable */
 		if ((mda = (struct metadata_area *)dm_list_first(&baton.fid->metadata_areas_in_use)))
 			baton.vg = mda->ops->vg_read(baton.fid, lvmcache_vgname_from_info(info),
-						     NULL, NULL, NULL, 1);
+						     mda, NULL, NULL, 1);
 	}
 
 	if (!baton.vg)
