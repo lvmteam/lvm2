@@ -66,8 +66,9 @@ void *memccpy(void *dest, const void *src, int c, size_t n)
 void model_FD_ZERO(void *fdset)
 {
 	unsigned i;
-	for (i = 0; i < 1024 / 8 / sizeof(int); ++i)
-		((int*)fdset)[i];
+
+	for (i = 0; i < 1024 / 8 / sizeof(long); ++i)
+		((long*)fdset)[i] = 0;
 }
 
 /*
