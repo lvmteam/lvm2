@@ -2254,7 +2254,7 @@ static int _lv_postorder_cleanup(struct logical_volume *lv, void *data)
 static int _lv_postorder_level(struct logical_volume *lv, void *data)
 {
 	struct _lv_postorder_baton *baton = data;
-	return _lv_postorder_visit(lv, baton->fn, baton->data);
+	return (data) ? _lv_postorder_visit(lv, baton->fn, baton->data) : 0;
 };
 
 static int _lv_postorder_visit(struct logical_volume *lv,
@@ -2346,7 +2346,7 @@ struct _lv_mark_if_partial_baton {
 static int _lv_mark_if_partial_collect(struct logical_volume *lv, void *data)
 {
 	struct _lv_mark_if_partial_baton *baton = data;
-	if (lv->status & PARTIAL_LV)
+	if (baton && lv->status & PARTIAL_LV)
 		baton->partial = 1;
 
 	return 1;
