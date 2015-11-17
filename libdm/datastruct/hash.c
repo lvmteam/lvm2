@@ -209,9 +209,9 @@ void dm_hash_remove(struct dm_hash_table *t, const char *key)
 	dm_hash_remove_binary(t, key, strlen(key) + 1);
 }
 
-static struct dm_hash_node **_find_str_withval(struct dm_hash_table *t,
-					       const void *key, const void *val,
-					       uint32_t len, uint32_t val_len)
+static struct dm_hash_node **_find_str_with_val(struct dm_hash_table *t,
+					        const void *key, const void *val,
+					        uint32_t len, uint32_t val_len)
 {
 	struct dm_hash_node **c;
 	unsigned h;
@@ -265,12 +265,12 @@ int dm_hash_insert_multival(struct dm_hash_table *t, const char *key,
  * Look through multiple entries with the same key for one that has a
  * matching val and return that.  If none have maching val, return NULL.
  */
-void *dm_hash_lookup_withval(struct dm_hash_table *t, const char *key,
-			     const void *val, uint32_t val_len)
+void *dm_hash_lookup_with_val(struct dm_hash_table *t, const char *key,
+			      const void *val, uint32_t val_len)
 {
 	struct dm_hash_node **c;
 
-	c = _find_str_withval(t, key, val, strlen(key) + 1, val_len);
+	c = _find_str_with_val(t, key, val, strlen(key) + 1, val_len);
 
 	return (c && *c) ? (*c)->data : 0;
 }
@@ -279,12 +279,12 @@ void *dm_hash_lookup_withval(struct dm_hash_table *t, const char *key,
  * Look through multiple entries with the same key for one that has a
  * matching val and remove that.
  */
-void dm_hash_remove_withval(struct dm_hash_table *t, const char *key,
-			    const void *val, uint32_t val_len)
+void dm_hash_remove_with_val(struct dm_hash_table *t, const char *key,
+			     const void *val, uint32_t val_len)
 {
 	struct dm_hash_node **c;
 
-	c = _find_str_withval(t, key, val, strlen(key) + 1, val_len);
+	c = _find_str_with_val(t, key, val, strlen(key) + 1, val_len);
 
 	if (c && *c) {
 		struct dm_hash_node *old = *c;
@@ -295,27 +295,25 @@ void dm_hash_remove_withval(struct dm_hash_table *t, const char *key,
 }
 
 /*
- * Look for multiple entries with the same key.
+ * Look up the value for a key and count how many
+ * entries have the same key.
  *
- * If no entries have key, return NULL.
+ * If no entries have key, return NULL and set count to 0.
  *
  * If one entry has the key, the function returns the val,
- * and sets val2 to NULL.
+ * and sets count to 1.
  *
- * If two entries have the key, the function returns the val
- * from the first entry, and the val2 arg is set to the val
- * from the second entry.
- *
- * If more than two entries have the key, the function looks
- * at only the first two.
+ * If N entries have the key, the function returns the val
+ * from the first entry, and sets count to N.
  */
-void *dm_hash_lookup_multival(struct dm_hash_table *t, const char *key, const void **val2)
+void *dm_hash_lookup_with_count(struct dm_hash_table *t, const char *key, int *count)
 {
 	struct dm_hash_node **c;
 	struct dm_hash_node **c1 = NULL;
-	struct dm_hash_node **c2 = NULL;
 	uint32_t len = strlen(key) + 1;
 	unsigned h;
+
+	*count = 0;
 
 	h = _hash(key, len) & (t->num_slots - 1);
 
@@ -324,19 +322,11 @@ void *dm_hash_lookup_multival(struct dm_hash_table *t, const char *key, const vo
 			continue;
 
 		if (!memcmp(key, (*c)->key, len)) {
-			if (!c1) {
+			(*count)++;
+			if (!c1)
 				c1 = c;
-			} else if (!c2) {
-				c2 = c;
-				break;
-			}
 		}
 	}
-
-	if (!c2)
-		*val2 = NULL;
-	else
-		*val2 = (*c2)->data;
 
 	if (!c1)
 		return NULL;

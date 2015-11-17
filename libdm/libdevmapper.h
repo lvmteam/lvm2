@@ -1854,27 +1854,27 @@ struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_no
  * entry with a matching key if one exists.  Otherwise
  * it adds a new entry.
  *
- * dm_hash_insert_withval() inserts a new entry if
+ * dm_hash_insert_with_val() inserts a new entry if
  * another entry with the same key already exists.
  * val_len is the size of the data being inserted.
  *
  * If two entries with the same key exist,
  * (added using dm_hash_insert_multival), then:
  * . dm_hash_lookup() returns the first one it finds, and
- *   dm_hash_lookup_withval() returns the one with a matching
+ *   dm_hash_lookup_with_val() returns the one with a matching
  *   val_len/val.
  * . dm_hash_remove() removes the first one it finds, and
- *   dm_hash_remove_withval() removes the one with a matching
+ *   dm_hash_remove_with_val() removes the one with a matching
  *   val_len/val.
  *
  * If a single entry with a given key exists, and it has
  * zero val_len, then:
  * . dm_hash_lookup() returns it
- * . dm_hash_lookup_withval(val_len=0) returns it
+ * . dm_hash_lookup_with_val(val_len=0) returns it
  * . dm_hash_remove() removes it
- * . dm_hash_remove_withval(val_len=0) removes it
+ * . dm_hash_remove_with_val(val_len=0) removes it
  *
- * dm_hash_lookup_multival() is a single call that will
+ * dm_hash_lookup_with_count() is a single call that will
  * both lookup a key's value and check if there is more
  * than one entry with the given key.
  *
@@ -1884,24 +1884,22 @@ struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_no
  * both look up the value and indicate if multiple values
  * exist for the key.)
  *
- * dm_hash_lookup_multival:
+ * dm_hash_lookup_with_count:
  * . If no entries exist, the function returns NULL, and
- *   the val2 arg is set to NULL.
+ *   the count is set to 0.
  * . If only one entry exists, the value of that entry is
- *   returned and the val2 arg is set to NULL.
- * . If more than one entry exists, the value of one entry
- *   is returned and the val2 arg is set to the value of a
- *   second entry.  Testing that the val2 arg is not NULL
- *   indicates that more than one entry exists.
+ *   returned and count is set to 1.
+ * . If N entries exists, the value of the first entry is
+ *   returned and count is set to N.
  */
 
-void *dm_hash_lookup_withval(struct dm_hash_table *t, const char *key,
+void *dm_hash_lookup_with_val(struct dm_hash_table *t, const char *key,
+                              const void *val, uint32_t val_len);
+void dm_hash_remove_with_val(struct dm_hash_table *t, const char *key,
                              const void *val, uint32_t val_len);
-void dm_hash_remove_withval(struct dm_hash_table *t, const char *key,
-                            const void *val, uint32_t val_len);
 int dm_hash_insert_multival(struct dm_hash_table *t, const char *key,
                             const void *val, uint32_t val_len);
-void *dm_hash_lookup_multival(struct dm_hash_table *t, const char *key, const void **val2);
+void *dm_hash_lookup_with_count(struct dm_hash_table *t, const char *key, int *count);
 
 
 #define dm_hash_iterate(v, h) \
