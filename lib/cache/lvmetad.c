@@ -1187,16 +1187,17 @@ struct _lvmetad_pvscan_baton {
 static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
 {
 	struct _lvmetad_pvscan_baton *b = baton;
-	struct volume_group *this;
+	struct volume_group *vg;
 
-	if (!(this = mda_is_ignored(mda) ? NULL : mda->ops->vg_read(b->fid, "", mda, NULL, NULL, 1)))
+	if (mda_is_ignored(mda) ||
+	    !(vg = mda->ops->vg_read(b->fid, "", mda, NULL, NULL, 1)))
 		return 1;
 
 	/* FIXME Also ensure contents match etc. */
-	if (!b->vg || this->seqno > b->vg->seqno)
-		b->vg = this;
+	if (!b->vg || vg->seqno > b->vg->seqno)
+		b->vg = vg;
 	else if (b->vg)
-		release_vg(this);
+		release_vg(vg);
 
 	return 1;
 }
