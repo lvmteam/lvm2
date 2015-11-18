@@ -709,7 +709,7 @@ int vg_remove_pool_metadata_spare(struct volume_group *vg)
 
 	if (!(lv->status & POOL_METADATA_SPARE)) {
 		log_error(INTERNAL_ERROR "LV %s is not pool metadata spare.",
-			  lv->name);
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -718,10 +718,10 @@ int vg_remove_pool_metadata_spare(struct volume_group *vg)
 	lv_set_visible(lv);
 
 	/* Cut off suffix _pmspare */
-	(void) dm_strncpy(new_name, lv->name, sizeof(new_name));
-	if (!(c = strchr(new_name, '_'))) {
+	if (!dm_strncpy(new_name, lv->name, sizeof(new_name)) ||
+	    !(c = strchr(new_name, '_'))) {
 		log_error(INTERNAL_ERROR "LV %s has no suffix for pool metadata spare.",
-			  new_name);
+			  display_lvname(lv));
 		return 0;
 	}
 	*c = 0;
@@ -735,8 +735,8 @@ int vg_remove_pool_metadata_spare(struct volume_group *vg)
 	}
 
 	log_print_unless_silent("Renaming existing pool metadata spare "
-				"logical volume \"%s/%s\" to \"%s/%s\".",
-                                vg->name, lv->name, vg->name, new_name);
+				"logical volume \"%s\" to \"%s/%s\".",
+                                display_lvname(lv), vg->name, new_name);
 
 	if (!lv_rename_update(vg->cmd, lv, new_name, 0))
 		return_0;
