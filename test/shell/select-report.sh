@@ -110,6 +110,9 @@ not sel pv 'tags=["pv_tag1" && "pv_tag2" || "pv_tag3"]'
 sel lv 'tags=""' xyz orig snap
 sel lv 'tags={}' xyz orig snap
 sel lv 'tags=[]' xyz orig snap
+# check subset selection
+sel pv 'tags={"pv_tag1"}' "$dev1" "$dev6"
+sel pv 'tags={"pv_tag1" && "pv_tag2"}' "$dev1"
 
 ##########################
 # NUMBER FIELD SELECTION #
