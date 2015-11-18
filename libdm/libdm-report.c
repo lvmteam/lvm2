@@ -949,7 +949,7 @@ static int _get_field(struct dm_report *rh, const char *field, size_t flen,
 		return 0;
 
 	if (!_get_canonical_field_name(field, flen, field_canon, DM_REPORT_FIELD_TYPE_ID_LEN, NULL))
-		return 0;
+		return_0;
 
 	for (f = 0; _implicit_report_fields[f].report_fn; f++) {
 		if (_is_same_field(_implicit_report_fields[f].id, field_canon, rh->field_prefix)) {
@@ -1063,7 +1063,7 @@ static int _key_match(struct dm_report *rh, const char *key, size_t len,
 	}
 
 	if (!_get_canonical_field_name(key, len, key_canon, DM_REPORT_FIELD_TYPE_ID_LEN, NULL))
-		return 0;
+		return_0;
 
 	for (f = 0; _implicit_report_fields[f].report_fn; f++)
 		if (_is_same_field(_implicit_report_fields[f].id, key_canon, rh->field_prefix))
