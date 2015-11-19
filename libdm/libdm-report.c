@@ -2310,7 +2310,7 @@ static const char *_reserved_name(struct dm_report *rh,
 	}
 
 	if (reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_FUZZY_NAMES) {
-		handler = (dm_report_reserved_handler) frv ? frv->value : reserved->value;
+		handler = (dm_report_reserved_handler) (frv ? frv->value : reserved->value);
 		c = s[len];
 		tmp_s = (char *) s;
 		tmp_s[len] = '\0';
