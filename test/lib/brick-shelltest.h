@@ -675,7 +675,7 @@ bool interrupt = false;
 struct Options {
     bool verbose, batch, interactive, cont, fatal_timeouts, kmsg;
     std::string testdir, outdir, workdir, heartbeat;
-    std::vector< std::string > flavours, filter, watch;
+    std::vector< std::string > flavours, filter, skip, watch;
     std::string flavour_envvar;
     int timeout;
     Options() : verbose( false ), batch( false ), interactive( false ),
@@ -986,6 +986,7 @@ struct Main {
     Cases cases;
 
     void setup() {
+        bool filter;
         Listing l = listdir( options.testdir, true );
         std::sort( l.begin(), l.end() );
 
@@ -997,15 +998,33 @@ struct Main {
                     continue;
                 if ( i->substr( 0, 4 ) == "lib/" )
                     continue;
-                bool filter = !options.filter.empty();
 
-                for ( std::vector< std::string >::iterator filt = options.filter.begin();
-                      filt != options.filter.end(); ++filt ) {
-                    if ( i->find( *filt ) != std::string::npos )
-                        filter = false;
+                if (!options.filter.empty()) {
+                    filter = true;
+                    for ( std::vector< std::string >::iterator filt = options.filter.begin();
+                          filt != options.filter.end(); ++filt ) {
+                        if ( i->find( *filt ) != std::string::npos ) {
+                            filter = false;
+                            break;
+                        }
+                    }
+                    if ( filter )
+                        continue;
                 }
-                if ( filter )
-                    continue;
+
+                if (!options.skip.empty()) {
+                    filter = false;
+                    for ( std::vector< std::string >::iterator filt = options.skip.begin();
+                          filt != options.skip.end(); ++filt ) {
+                        if ( i->find( *filt ) != std::string::npos ) {
+                            filter = true;
+                            break;
+                        }
+                    }
+                    if ( filter )
+                        continue;
+                }
+
                 cases.push_back( TestCase( journal, options, options.testdir + *i, *i, *flav ) );
                 cases.back().options = options;
             }
@@ -1214,6 +1233,11 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
         split( args.opt( "--only" ), opt.filter );
     else if ( hasenv( "T" ) )
         split( getenv( "T" ), opt.filter );
+
+    if ( args.has( "--skip" ) )
+        split( args.opt( "--skip" ), opt.skip );
+    else if ( hasenv( "S" ) )
+        split( getenv( "S" ), opt.skip );
 
     if ( args.has( "--fatal-timeouts" ) )
         opt.fatal_timeouts = true;
