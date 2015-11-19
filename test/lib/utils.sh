@@ -107,7 +107,7 @@ grep1_() {
 	awk -v pattern="${1}" 'NR==1 || $0~pattern' "${@:2}"
 }
 
-STACKTRACE() {
+stacktrace() {
 	trap - ERR
 	local i=0
 
@@ -116,6 +116,13 @@ STACKTRACE() {
 		echo "## $i ${FUNC}() called from ${BASH_SOURCE[$i]}:${BASH_LINENO[$i]}"
 		i=$(($i + 1))
 	done
+}
+
+STACKTRACE() {
+	trap - ERR
+	local i=0
+
+	stacktrace
 
 	test "${LVM_TEST_PARALLEL:-0}" -eq 1 -o -n "$RUNNING_DMEVENTD" -o -f LOCAL_DMEVENTD || {
 		pgrep dmeventd &>/dev/null && \
@@ -211,7 +218,11 @@ dm_table() {
 }
 
 skip() {
-	test "$#" -eq 0 || echo "TEST SKIPPED: $@"
+	if test "$#" -eq 0; then
+		stacktrace
+	else
+		echo "TEST SKIPPED: $@"
+	fi
 	touch SKIP_THIS_TEST
 	exit 200
 }
