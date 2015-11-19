@@ -199,6 +199,8 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	    !arg_count(cmd, splitmirrors_ARG) &&
 	    !strstr(lp->lv_name, "_tdata") &&
 	    !strstr(lp->lv_name, "_tmeta") &&
+	    !strstr(lp->lv_name, "_cdata") &&
+	    !strstr(lp->lv_name, "_cmeta") &&
 	    !apply_lvname_restrictions(lp->lv_name))
 		return_0;
 
