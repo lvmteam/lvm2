@@ -1,5 +1,6 @@
 Version 2.02.135 - 
 ====================================
+  Show correct error message for unsupported yet cache pool repair.
   Allow lvconvert cache pools' data and metadata LV to raid.
   Fix reading of old metadata with missing cache policy or mode settings.
   Issue error if external_device_info_source=udev and udev db record incomplete.

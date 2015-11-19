@@ -2320,9 +2320,9 @@ out:
 	return r;
 }
 
-static int _lvconvert_pool_repair(struct cmd_context *cmd,
-				  struct logical_volume *pool_lv,
-				  struct lvconvert_params *lp)
+static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
+				       struct logical_volume *pool_lv,
+				       struct lvconvert_params *lp)
 {
 	const char *dmdir = dm_dir();
 	const char *thin_dump =
@@ -3270,7 +3270,12 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (arg_count(cmd, repair_ARG)) {
 		if (lv_is_pool(lv)) {
-			if (!_lvconvert_pool_repair(cmd, lv, lp))
+			if (lv_is_cache_pool(lv)) {
+				log_error("Repair for cache pool %s not yet implemented.",
+					  display_lvname(lv));
+				return ECMD_FAILED;
+			}
+			if (!_lvconvert_thin_pool_repair(cmd, lv, lp))
 				return_ECMD_FAILED;
 			return ECMD_PROCESSED;
 		}
