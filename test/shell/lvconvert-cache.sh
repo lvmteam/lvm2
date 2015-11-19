@@ -135,6 +135,18 @@ fail lvconvert --yes --type cache-pool --chunksize 16M --poolmetadata $lv2 $vg/$
 
 lvremove -f $vg
 
+########################
+# Repair of cache pool #
+########################
+lvcreate --type cache-pool -an -v -L 2 -n cpool $vg
+lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
+
+# unsupported yet
+fail lvconvert --repair $vg/cpool 2>&1 | tee out
+grep "not yet implemented" out
+
+lvremove -f $vg
+
 ##########################
 # Prohibited conversions #
 ##########################

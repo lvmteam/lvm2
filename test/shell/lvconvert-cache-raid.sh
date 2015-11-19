@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -73,5 +73,27 @@ aux wait_for_sync $vg cpool_cmeta
 aux wait_for_sync $vg cpool_cdata
 lvconvert --splitmirrors 1 --name split_meta $vg/cpool_cmeta "$dev1"
 lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
+
+lvremove -f $vg
+
+
+# Test up/down raid conversion of cache pool data and metadata
+lvcreate --type cache-pool $vg/cpool -l 10
+lvcreate -n corigin -H $vg/cpool -l 20
+
+lvconvert -m+1 --type raid1 $vg/cpool_cmeta
+check lv_field $vg/cpool_cmeta layout "raid,raid1"
+check lv_field $vg/cpool_cmeta role "private,cache,pool,metadata"
+
+lvconvert -m+1 --type raid1 $vg/cpool_cdata
+check lv_field $vg/cpool_cdata layout "raid,raid1"
+check lv_field $vg/cpool_cdata role "private,cache,pool,data"
+
+lvconvert -m-1  $vg/cpool_cmeta
+check lv_field $vg/cpool_cmeta layout "linear"
+lvconvert -m-1  $vg/cpool_cdata
+check lv_field $vg/cpool_cdata layout "linear"
+
+lvremove -f $vg
 
 vgremove -f $vg
