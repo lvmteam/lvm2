@@ -1,5 +1,6 @@
 Version 2.02.136 - 
 =====================================
+  Extend the list of ignored libraries when locking memory.
 
 Version 2.02.135 - 23rd November 2015
 =====================================
