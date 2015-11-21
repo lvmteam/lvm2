@@ -1975,14 +1975,14 @@ struct lv_list *find_lv_in_lv_list(const struct dm_list *ll,
 	return NULL;
 }
 
-struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
-				      const union lvid *lvid)
+struct logical_volume *find_lv_in_vg_by_lvid(struct volume_group *vg,
+					     const union lvid *lvid)
 {
 	struct lv_list *lvl;
 
 	dm_list_iterate_items(lvl, &vg->lvs)
 		if (!strncmp(lvl->lv->lvid.s, lvid->s, sizeof(*lvid)))
-			return lvl;
+			return lvl->lv;
 
 	return NULL;
 }
@@ -4134,7 +4134,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 				    unsigned precommitted)
 {
-	struct lv_list *lvl;
+	struct logical_volume *lv;
 	struct volume_group *vg;
 	const union lvid *lvid;
 
@@ -4151,12 +4151,12 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 		log_error("Volume group \"%s\" is exported", vg->name);
 		goto out;
 	}
-	if (!(lvl = find_lv_in_vg_by_lvid(vg, lvid))) {
+	if (!(lv = find_lv_in_vg_by_lvid(vg, lvid))) {
 		log_very_verbose("Can't find logical volume id %s", lvid_s);
 		goto out;
 	}
 
-	return lvl->lv;
+	return lv;
 out:
 	release_vg(vg);
 	return NULL;
@@ -5534,7 +5534,7 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl)
 const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
 {
 	struct volume_group *vg;
-	struct lv_list *lvl;
+	struct logical_volume *found_lv;
 
 	if (!lv)
 		return NULL;
@@ -5544,13 +5544,13 @@ const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
 
 	vg = lv->vg->vg_ondisk;
 
-	if (!(lvl = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
+	if (!(found_lv = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
 		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in ondisk metadata.",
 			  display_lvname(lv), lv->lvid.s);
 		return NULL;
 	}
 
-	return lvl->lv;
+	return found_lv;
 }
 
 /*

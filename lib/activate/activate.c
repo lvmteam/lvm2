@@ -1763,25 +1763,25 @@ struct detached_lv_data {
 static int _preload_detached_lv(struct logical_volume *lv, void *data)
 {
 	struct detached_lv_data *detached = data;
-	struct lv_list *lvl_pre;
+	struct logical_volume *lv_pre;
 
 	/* Check and preload removed raid image leg or metadata */
 	if (lv_is_raid_image(lv)) {
-		if ((lvl_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_raid_image(lvl_pre->lv) && lv_is_active(lv) &&
-		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
+		if ((lv_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
+		    !lv_is_raid_image(lv_pre) && lv_is_active(lv) &&
+		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
 			return_0;
 	} else if (lv_is_raid_metadata(lv)) {
-		if ((lvl_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
-		    !lv_is_raid_metadata(lvl_pre->lv) && lv_is_active(lv) &&
-		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
+		if ((lv_pre = find_lv_in_vg_by_lvid(detached->lv_pre->vg, &lv->lvid)) &&
+		    !lv_is_raid_metadata(lv_pre) && lv_is_active(lv) &&
+		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
 			return_0;
 	}
 
-	if ((lvl_pre = find_lv_in_vg(detached->lv_pre->vg, lv->name))) {
-		if (lv_is_visible(lvl_pre->lv) && lv_is_active(lv) &&
-		    (!lv_is_cow(lv) || !lv_is_cow(lvl_pre->lv)) &&
-		    !_lv_preload(lvl_pre->lv, detached->laopts, detached->flush_required))
+	if ((lv_pre = find_lv(detached->lv_pre->vg, lv->name))) {
+		if (lv_is_visible(lv_pre) && lv_is_active(lv) &&
+		    (!lv_is_cow(lv) || !lv_is_cow(lv_pre)) &&
+		    !_lv_preload(lv_pre, detached->laopts, detached->flush_required))
 			return_0;
 	}
 
@@ -1795,7 +1795,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	const struct logical_volume *pvmove_lv = NULL;
 	const struct logical_volume *ondisk_lv_to_free = NULL;
 	const struct logical_volume *incore_lv_to_free = NULL;
-	struct lv_list *lvl_pre;
+	struct logical_volume *lv_pre;
 	struct seg_list *sl;
         struct lv_segment *snap_seg;
 	struct lvinfo info;
@@ -1854,19 +1854,19 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	    (pvmove_lv = find_pvmove_lv_in_lv(ondisk_lv))) {
 		/* Preload all the LVs above the PVMOVE LV */
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
-			if (!(lvl_pre = find_lv_in_vg(incore_lv->vg, sl->seg->lv->name))) {
+			if (!(lv_pre = find_lv(incore_lv->vg, sl->seg->lv->name))) {
 				log_error(INTERNAL_ERROR "LV %s missing from preload metadata", sl->seg->lv->name);
 				goto out;
 			}
-			if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
+			if (!_lv_preload(lv_pre, laopts, &flush_required))
 				goto_out;
 		}
 		/* Now preload the PVMOVE LV itself */
-		if (!(lvl_pre = find_lv_in_vg(incore_lv->vg, pvmove_lv->name))) {
+		if (!(lv_pre = find_lv(incore_lv->vg, pvmove_lv->name))) {
 			log_error(INTERNAL_ERROR "LV %s missing from preload metadata", pvmove_lv->name);
 			goto out;
 		}
-		if (!_lv_preload(lvl_pre->lv, laopts, &flush_required))
+		if (!_lv_preload(lv_pre, laopts, &flush_required))
 			goto_out;
 	} else {
 		if (!_lv_preload(incore_lv, laopts, &flush_required))
@@ -1888,13 +1888,13 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		 */
 		if (!laopts->origin_only && lv_is_origin(ondisk_lv)) {
         		dm_list_iterate_items_gen(snap_seg, &ondisk_lv->snapshot_segs, origin_list) {
-				if (!(lvl_pre = find_lv_in_vg_by_lvid(incore_lv->vg, &snap_seg->cow->lvid))) {
+				if (!(lv_pre = find_lv_in_vg_by_lvid(incore_lv->vg, &snap_seg->cow->lvid))) {
 					log_error(INTERNAL_ERROR "LV %s (%s) missing from preload metadata",
 						  snap_seg->cow->name, snap_seg->cow->lvid.id[1].uuid);
 					goto out;
 				}
-				if (!lv_is_cow(lvl_pre->lv) &&
-				    !_lv_preload(lvl_pre->lv, laopts, &flush_required))
+				if (!lv_is_cow(lv_pre) &&
+				    !_lv_preload(lv_pre, laopts, &flush_required))
 					goto_out;
 			}
 		}

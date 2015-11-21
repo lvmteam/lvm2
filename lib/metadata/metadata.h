@@ -364,8 +364,8 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 			 const char *vgid, const char *pvid,
 			 struct physical_volume *pv);
 
-struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
-				      const union lvid *lvid);
+struct logical_volume *find_lv_in_vg_by_lvid(struct volume_group *vg,
+					     const union lvid *lvid);
 
 struct lv_list *find_lv_in_lv_list(const struct dm_list *ll,
 				   const struct logical_volume *lv);
