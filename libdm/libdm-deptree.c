@@ -2788,6 +2788,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 	struct dm_tree_node *child;
 	struct dm_info newinfo;
 	int update_devs_flag = 0;
+	struct load_segment *seg;
 
 	/* Preload children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
@@ -2834,6 +2835,22 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		/* Resume device immediately if it has parents and its size changed */
 		if (!dm_tree_node_num_children(child, 1) || !child->props.size_changed)
 			continue;
+
+		if (!node_created && (dm_list_size(&child->props.segs) == 1)) {
+			/* If thin-pool child nodes were preloaded WITH changed size
+			 * skip device resume, as this is likely resize of data or
+			 * metadata device and so thin pool needs suspend before
+			 * resume operation.
+			 * Note: child->props.segment_count is already 0 here
+			 */
+			seg = dm_list_item(dm_list_last(&child->props.segs),
+					   struct load_segment);
+			if (seg->type == SEG_THIN_POOL) {
+				log_debug_activation("Skipping resume of thin-pool %s.",
+						     child->name);
+				continue;
+			}
+		}
 
 		if (!child->info.inactive_table && !child->info.suspended)
 			continue;
