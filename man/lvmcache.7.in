@@ -301,6 +301,35 @@ defines the default cache policy.
 defines the default cache settings.
 
 
+.SS Chunk size
+
+\&
+
+The size of data blocks managed by a cache pool can be specified with the
+\-\-chunksize option when the cache LV is created.  The default unit
+is KiB. The value must be a multiple of 32KiB between 32KiB and 1GiB.
+
+Using a chunk size that is too large can result in wasteful use of the
+cache, where small reads and writes can cause large sections of an LV to
+be mapped into the cache.  However, choosing a chunk size that is too
+small can result in more overhead trying to manage the numerous chunks
+that become mapped into the cache.  Overhead can include both excessive
+CPU time searching for chunks, and excessive memory tracking chunks.
+
+Command to display the cache pool LV chunk size:
+.br
+.B lvs \-o+chunksize VG/CacheLV
+
+.BR lvm.conf (5)
+.B cache_pool_chunk_size
+.br
+controls the default chunk size used when creating a cache LV.
+
+The default value is shown by:
+.br
+.B lvmconfig \-\-type default allocation/cache_pool_chunk_size
+
+
 .SS Spare metadata LV
 
 \&
