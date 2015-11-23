@@ -1,9 +1,12 @@
-Version 2.02.135 - 
-====================================
+Version 2.02.135 - 23rd November 2015
+=====================================
+  Add a model file for Coverity.
   Show correct error message for unsupported yet cache pool repair.
   Allow lvconvert cache pools' data and metadata LV to raid.
   Fix reading of old metadata with missing cache policy or mode settings.
   Issue error if external_device_info_source=udev and udev db record incomplete.
+  Update lvmetad duplicate VG name handling to use hash function extensions.
+  Detect invalid vgrenames by vgid where the name is unchanged.
   Fix passing of 32bit values through daemons (mostly lvmlockd).
   Use local memory pool for whole alloc_handle manipulation.
   Add missing pointer validation after dm_get_next_target().
