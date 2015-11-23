@@ -322,8 +322,12 @@ teardown() {
 	dm_table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
-		vgremove -ff $cfg  \
+		if echo "$(dm_info suspended,name)" | grep -q "^Suspended:.*$prefix" ; then
+			echo "Skipping vgremove, suspended devices detected."
+		else
+			vgremove -ff $cfg  \
 			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log strace.log
+		fi
 	}
 
 	kill_sleep_kill_ LOCAL_LVMPOLLD ${LVM_VALGRIND_LVMPOLLD:-0}
