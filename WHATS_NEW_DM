@@ -1,5 +1,6 @@
 Version 1.02.112 - 
 =====================================
+  Drop extra space from cache target line to fix unneded table reloads.
 
 Version 1.02.111 - 23rd November 2015
 =====================================

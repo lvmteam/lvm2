@@ -2429,7 +2429,7 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	if (!_build_dev_string(origin, sizeof(origin), seg->origin))
 		return_0;
 
-	EMIT_PARAMS(pos, " %s %s %s", metadata, data, origin);
+	EMIT_PARAMS(pos, "%s %s %s", metadata, data, origin);
 
 	/* Data block size */
 	EMIT_PARAMS(pos, " %u", seg->data_block_size);
