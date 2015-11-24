@@ -2311,7 +2311,8 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			return_0;
 		if (seg->pool_lv &&
 		    (lv_is_cache_pool(seg->pool_lv) || !dm->skip_external_lv) &&
-		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, origin_only))
+		    /* When activating and not origin_only detect linear 'overlay' over pool */
+		    !_add_lv_to_dtree(dm, dtree, seg->pool_lv, dm->activation ? origin_only : 1))
 			return_0;
 
 		for (s = 0; s < seg->area_count; s++) {
