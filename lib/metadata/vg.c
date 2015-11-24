@@ -98,7 +98,7 @@ void release_vg(struct volume_group *vg)
 	    !lvmcache_vginfo_holders_dec_and_test_for_zero(vg->vginfo))
 		return;
 
-	release_vg(vg->vg_ondisk);
+	release_vg(vg->vg_committed);
 	release_vg(vg->vg_precommitted);
 	if (vg->cft_precommitted)
 		dm_config_destroy(vg->cft_precommitted);

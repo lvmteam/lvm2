@@ -936,18 +936,18 @@ static int _vg_update_vg_precommitted(struct volume_group *vg)
 	return 1;
 }
 
-static int _vg_update_vg_ondisk(struct volume_group *vg)
+static int _vg_update_vg_committed(struct volume_group *vg)
 {
 	if (dm_pool_locked(vg->vgmem))
 		return 1;
 
-	if (vg->vg_ondisk || is_orphan_vg(vg->name)) /* we already have it */
+	if (vg->vg_committed || is_orphan_vg(vg->name)) /* we already have it */
 		return 1;
 
 	if (!_vg_update_vg_precommitted(vg))
 		return_0;
 
-	vg->vg_ondisk = vg->vg_precommitted;
+	vg->vg_committed = vg->vg_precommitted;
 	vg->vg_precommitted = NULL;
 	if (vg->cft_precommitted) {
 		dm_config_destroy(vg->cft_precommitted);
@@ -978,7 +978,7 @@ static struct volume_group *_vg_make_handle(struct cmd_context *cmd,
 	if (vg->read_status != failure)
 		vg->read_status = failure;
 
-	if (vg->fid && !_vg_update_vg_ondisk(vg))
+	if (vg->fid && !_vg_update_vg_committed(vg))
 		vg->read_status |= FAILED_ALLOCATION;
 
 	return vg;
@@ -3206,8 +3206,8 @@ int vg_commit(struct volume_group *vg)
 		vg->old_name = NULL;
 
 		/* This *is* the original now that it's commited. */
-		release_vg(vg->vg_ondisk);
-		vg->vg_ondisk = vg->vg_precommitted;
+		release_vg(vg->vg_committed);
+		vg->vg_committed = vg->vg_precommitted;
 		vg->vg_precommitted = NULL;
 		if (vg->cft_precommitted) {
 			dm_config_destroy(vg->cft_precommitted);
@@ -5539,10 +5539,10 @@ const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
 	if (!lv)
 		return NULL;
 
-	if (!lv->vg->vg_ondisk)
+	if (!lv->vg->vg_committed)
 		return lv;
 
-	vg = lv->vg->vg_ondisk;
+	vg = lv->vg->vg_committed;
 
 	if (!(found_lv = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
 		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in ondisk metadata.",

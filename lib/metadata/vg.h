@@ -52,13 +52,13 @@ struct volume_group {
 	unsigned skip_validate_lock_args : 1;
 
 	/*
-	 * The parsed on-disk copy of this VG; is NULL if this is the on-disk
-	 * version (i.e. vg_ondisk == NULL *implies* this is the on-disk copy,
-	 * there is no guarantee that if this VG is the same as the on-disk one
+	 * The parsed committed (on-disk) copy of this VG; is NULL if this VG is committed
+	 * version (i.e. vg_committed == NULL *implies* this is the committed copy,
+	 * there is no guarantee that if this VG is the same as the committed one
 	 * this will be NULL). The pointer is maintained by calls to
-	 * _vg_update_vg_ondisk.
+	 * _vg_update_vg_committed.
 	 */
-	struct volume_group *vg_ondisk;
+	struct volume_group *vg_committed;
 	struct dm_config_tree *cft_precommitted; /* Precommitted metadata */
 	struct volume_group *vg_precommitted; /* Parsed from cft */
 
