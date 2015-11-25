@@ -146,6 +146,7 @@ typedef enum {
 	CFG_DEF_TREE_FULL,		/* CURRENT + MISSING, the tree actually used within execution */
 	CFG_DEF_TREE_DEFAULT,		/* tree of all possible config nodes with default values */
 	CFG_DEF_TREE_NEW,		/* tree of all new nodes that appeared in given version */
+	CFG_DEF_TREE_NEW_SINCE,		/* tree of all new nodes that appeared since given version */
 	CFG_DEF_TREE_PROFILABLE,	/* tree of all nodes that are customizable by profiles */
 	CFG_DEF_TREE_PROFILABLE_CMD,	/* tree of all nodes that are customizable by command profiles (subset of PROFILABLE) */
 	CFG_DEF_TREE_PROFILABLE_MDA,	/* tree of all nodes that are customizable by metadata profiles (subset of PROFILABLE) */

@@ -9,6 +9,8 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .RI { current | default | diff | full | list | missing | new | profilable | profilable-command | profilable-metadata }
 .RB [ \-\-atversion
 .IR version ]
+.RB [ \-\---sinceversion
+.IR version ]
 .RB [ \-\-ignoreadvanced ]
 .RB [ \-\-ignoreunsupported ]
 .RB [ \-\-ignorelocal ]
@@ -107,6 +109,13 @@ at this LVM version will be considered only. This can be used
 to display a configuration that a certain LVM version understands and
 which does not contain any newer settings for which LVM would
 issue a warning message when checking the configuration.
+
+.TP
+.BI \-\-sinceversion " version"
+Specify an LVM version in x.y.z format where x is the major version,
+the y is the minor version and z is the patchlevel (e.g. 2.2.106).
+This option is currently applicable only with \fB\-\-type new\fP
+to display all configuration settings introduced since given version.
 
 .TP
 .B \-\-ignoreadvanced

@@ -1996,6 +1996,11 @@ static int _should_skip_def_node(struct config_def_tree_spec *spec, int section_
 			    _should_skip_deprecated_def_node(def, spec))
 				return 1;
 			break;
+		case CFG_DEF_TREE_NEW_SINCE:
+			if ((def->since_version < spec->version) ||
+			    _should_skip_deprecated_def_node(def, spec))
+				return 1;
+			break;
 		case CFG_DEF_TREE_PROFILABLE:
 			/* fall through */
 		case CFG_DEF_TREE_PROFILABLE_CMD:

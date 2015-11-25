@@ -17,10 +17,17 @@
 
 static int _get_vsn(struct cmd_context *cmd, uint16_t *version_int)
 {
-	const char *atversion = arg_str_value(cmd, atversion_ARG, LVM_VERSION);
+	const char *version;
 	unsigned int major, minor, patchlevel;
 
-	if (sscanf(atversion, "%u.%u.%u", &major, &minor, &patchlevel) != 3) {
+	if (arg_count(cmd, atversion_ARG))
+		version = arg_str_value(cmd, atversion_ARG, NULL);
+	else if (arg_count(cmd, sinceversion_ARG))
+		version = arg_str_value(cmd, sinceversion_ARG, NULL);
+	else
+		version = LVM_VERSION;
+
+	if (sscanf(version, "%u.%u.%u", &major, &minor, &patchlevel) != 3) {
 		log_error("Incorrect version format.");
 		return 0;
 	}
@@ -110,10 +117,21 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, atversion_ARG) && !arg_count(cmd, configtype_ARG) &&
-	    !arg_count(cmd, list_ARG)) {
-		log_error("--atversion requires --type or --list");
-		return EINVALID_CMD_LINE;
+	if (arg_count(cmd, atversion_ARG)) {
+		if (arg_count(cmd, sinceversion_ARG)) {
+			log_error("Only one of --atversion and --sinceversion permitted.");
+			return EINVALID_CMD_LINE;
+		}
+
+		if (!arg_count(cmd, configtype_ARG) && !arg_count(cmd, list_ARG)) {
+			log_error("--atversion requires --type or --list");
+			return EINVALID_CMD_LINE;
+		}
+	} else if (arg_count(cmd, sinceversion_ARG)) {
+		if (!arg_count(cmd, configtype_ARG) || strcmp(type, "new")) {
+			log_error("--sinceversion requires --type new");
+			return EINVALID_CMD_LINE;
+		}
 	}
 
 	if (arg_count(cmd, ignoreadvanced_ARG))
@@ -252,7 +270,8 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 	else if (!strcmp(type, "new")) {
-		tree_spec.type = CFG_DEF_TREE_NEW;
+		tree_spec.type = arg_count(cmd, sinceversion_ARG) ? CFG_DEF_TREE_NEW_SINCE
+								  : CFG_DEF_TREE_NEW;
 		/* new type does not require check status */
 	}
 	else if (!strcmp(type, "profilable")) {

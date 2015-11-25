@@ -33,8 +33,8 @@ xx(config,
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "config\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
-   "\t[--atversion version]]\n"
+   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}]\n"
+   "\t[--atversion version]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
    "\t[--ignorelocal]\n"
@@ -44,6 +44,7 @@ xx(config,
    "\t[--profile ProfileName]\n"
    "\t[--metadataprofile ProfileName]\n"
    "\t[--mergedconfig]\n"
+   "\t[--sinceversion version]\n"
    "\t[--showdeprecated]\n"
    "\t[--showunsupported]\n"
    "\t[--validate]\n"
@@ -55,8 +56,8 @@ xx(config,
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG,
-   withspaces_ARG, unconfigured_ARG, withversions_ARG)
+   sinceversion_ARG, showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG,
+   withcomments_ARG, withspaces_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(devtypes,
    "Display recognised built-in block device types",
@@ -89,8 +90,8 @@ xx(dumpconfig,
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "dumpconfig\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
-   "\t[--atversion version]]\n"
+   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}]\n"
+   "\t[--atversion version]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
    "\t[--ignorelocal]\n"
@@ -100,6 +101,7 @@ xx(dumpconfig,
    "\t[--profile ProfileName]\n"
    "\t[--metadataprofile ProfileName]\n"
    "\t[--mergedconfig]\n"
+   "\t[--sinceversion version]\n"
    "\t[--showdeprecated]\n"
    "\t[--showunsupported]\n"
    "\t[--validate]\n"
@@ -111,8 +113,8 @@ xx(dumpconfig,
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG,
-   withspaces_ARG, unconfigured_ARG, withversions_ARG)
+   sinceversion_ARG, showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG,
+   withcomments_ARG, withspaces_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(formats,
    "List available metadata formats",
@@ -499,8 +501,8 @@ xx(lvmconfig,
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "lvmconfig\n"
    "\t[-f|--file filename]\n"
-   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}\n"
-   "\t[--atversion version]]\n"
+   "\t[--type {current|default|diff|full|list|missing|new|profilable|profilable-command|profilable-metadata}]\n"
+   "\t[--atversion version]\n"
    "\t[--ignoreadvanced]\n"
    "\t[--ignoreunsupported]\n"
    "\t[--ignorelocal]\n"
@@ -510,6 +512,7 @@ xx(lvmconfig,
    "\t[--profile ProfileName]\n"
    "\t[--metadataprofile ProfileName]\n"
    "\t[--mergedconfig]\n"
+   "\t[--sinceversion version]\n"
    "\t[--showdeprecated]\n"
    "\t[--showunsupported]\n"
    "\t[--validate]\n"
@@ -521,8 +524,8 @@ xx(lvmconfig,
    "\t[ConfigurationNode...]\n",
    atversion_ARG, configtype_ARG, file_ARG, ignoreadvanced_ARG,
    ignoreunsupported_ARG, ignorelocal_ARG, list_ARG, mergedconfig_ARG, metadataprofile_ARG,
-   showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG, withcomments_ARG,
-   withspaces_ARG, unconfigured_ARG, withversions_ARG)
+   sinceversion_ARG, showdeprecated_ARG, showunsupported_ARG, validate_ARG, withsummary_ARG,
+   withcomments_ARG, withspaces_ARG, unconfigured_ARG, withversions_ARG)
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
