@@ -66,7 +66,7 @@ struct dev_manager {
 	unsigned track_pending_delete;
 	unsigned track_pvmove_deps;
 
-	char *vg_name;
+	const char *vg_name;
 };
 
 struct lv_layer {
@@ -1230,9 +1230,7 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 
 	dm->cmd = cmd;
 	dm->mem = mem;
-
-	if (!(dm->vg_name = dm_pool_strdup(dm->mem, vg_name)))
-		goto_bad;
+	dm->vg_name = vg_name;
 
 	/*
 	 * When we manipulate (normally suspend/resume) the PVMOVE
