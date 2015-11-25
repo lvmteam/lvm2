@@ -1977,13 +1977,6 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned o
 	return _lv_suspend(cmd, lvid_s, &laopts, 0, lv, lv_pre);
 }
 
-/* No longer used */
-/***********
-int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
-{
-	return _lv_suspend(cmd, lvid_s, 1);
-}
-***********/
 
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		      struct lv_activate_opts *laopts, int error_if_not_active,
