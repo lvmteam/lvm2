@@ -5531,7 +5531,7 @@ char *tags_format_and_copy(struct dm_pool *mem, const struct dm_list *tagsl)
 	return dm_pool_end_object(mem);
 }
 
-const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
+const struct logical_volume *lv_committed(const struct logical_volume *lv)
 {
 	struct volume_group *vg;
 	struct logical_volume *found_lv;
@@ -5545,7 +5545,7 @@ const struct logical_volume *lv_ondisk(const struct logical_volume *lv)
 	vg = lv->vg->vg_committed;
 
 	if (!(found_lv = find_lv_in_vg_by_lvid(vg, &lv->lvid))) {
-		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in ondisk metadata.",
+		log_error(INTERNAL_ERROR "LV %s (UUID %s) not found in committed metadata.",
 			  display_lvname(lv), lv->lvid.s);
 		return NULL;
 	}
