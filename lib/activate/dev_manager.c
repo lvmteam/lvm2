@@ -827,7 +827,8 @@ static const struct dm_info *_cached_dm_info(struct dm_pool *mem,
 		goto_out;
 
 	if (!(dinfo = dm_tree_node_get_info(dnode))) {
-		log_error("Failed to get info from tree node for %s.", lv->name);
+		log_error("Failed to get info from tree node for %s.",
+			  display_lvname(lv));
 		goto out;
 	}
 
@@ -983,7 +984,8 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		if (lv) {
 			if (!(segh = dm_list_next(&lv->segments, segh))) {
 				log_error("Number of segments in active LV %s "
-					  "does not match metadata", lv->name);
+					  "does not match metadata.",
+					  display_lvname(lv));
 				goto out;
 			}
 			seg = dm_list_item(segh, struct lv_segment);
@@ -1023,7 +1025,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 	if (lv && dm_list_next(&lv->segments, segh)) {
 		log_error("Number of segments in active LV %s does not "
-			  "match metadata", lv->name);
+			  "match metadata.", display_lvname(lv));
 		goto out;
 	}
 
@@ -1098,7 +1100,7 @@ int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *l
 
 		if (!(segh = dm_list_next(&lv->segments, segh))) {
 		    log_error("Number of segments in active LV %s "
-			      "does not match metadata", lv->name);
+			      "does not match metadata.", display_lvname(lv));
 		    goto out;
 		}
 		seg = dm_list_item(segh, struct lv_segment);
@@ -1119,7 +1121,7 @@ int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *l
 
 	if (dm_list_next(&lv->segments, segh)) {
 		log_error("Number of segments in active LV %s does not "
-			  "match metadata", lv->name);
+			  "match metadata.", display_lvname(lv));
 		goto out;
 	}
 
@@ -1318,8 +1320,8 @@ int dev_manager_raid_message(struct dev_manager *dm,
 	const char *layer = lv_layer(lv);
 
 	if (!lv_is_raid(lv)) {
-		log_error(INTERNAL_ERROR "%s/%s is not a RAID logical volume",
-			  lv->vg->name, lv->name);
+		log_error(INTERNAL_ERROR "%s is not a RAID logical volume",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -1528,17 +1530,20 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 
 	if (dm_get_next_target(dmt, NULL, &start, &length,
 			       &target_type, &params)) {
-		log_error("More then one table line found for %s.", lv->name);
+		log_error("More then one table line found for %s.",
+			  display_lvname(lv));
 		goto out;
 	}
 
 	if (!target_type || strcmp(target_type, "thin")) {
-		log_error("Unexpected target type %s found for thin %s.", target_type, lv->name);
+		log_error("Unexpected target type %s found for thin %s.",
+			  target_type, display_lvname(lv));
 		goto out;
 	}
 
 	if (!params || sscanf(params, "%*u:%*u %u", device_id) != 1) {
-		log_error("Cannot parse table like parameters %s for %s.", params, lv->name);
+		log_error("Cannot parse table like parameters %s for %s.",
+			  params, display_lvname(lv));
 		goto out;
 	}
 
@@ -1559,7 +1564,7 @@ static int _dev_manager_lv_mknodes(const struct logical_volume *lv)
 	char *name;
 
 	if (!(name = dm_build_dm_name(lv->vg->cmd->mem, lv->vg->name,
-				   lv->name, NULL)))
+				      lv->name, NULL)))
 		return_0;
 
 	return fs_add_lv(lv, name);
@@ -1738,7 +1743,8 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			log_error("Volume %s (%" PRIu32 ":%" PRIu32")"
 				  " differs from already active device "
 				  "(%" PRIu32 ":%" PRIu32")",
-				  lv->name, lv->major, lv->minor, info.major, info.minor);
+				  display_lvname(lv), lv->major, lv->minor,
+				  info.major, info.minor);
 			return 0;
 		}
 		if (!info.exists && _info_by_dev(lv->major, lv->minor, &info2) &&
@@ -1758,7 +1764,8 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	}
 
 	if (info.exists && dm->track_pending_delete) {
-		log_debug_activation("Tracking pending delete for %s (%s).", lv->name, dlid);
+		log_debug_activation("Tracking pending delete for %s (%s).",
+				     display_lvname(lv), dlid);
 		if (!str_list_add(dm->mem, &dm->pending_delete, dlid))
 			return_0;
 	}
@@ -2194,7 +2201,8 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, const struc
 	struct dm_tree *dtree;
 
 	if (!(dtree = dm_tree_create())) {
-		log_debug_activation("Partial dtree creation failed for %s.", lv->name);
+		log_debug_activation("Partial dtree creation failed for %s.",
+				     display_lvname(lv));
 		return NULL;
 	}
 
@@ -2238,7 +2246,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 		return_NULL;
 
 	if (!(name = dm_build_dm_name(dm->mem, seg->lv->vg->name,
-				   seg->lv->name, errid)))
+				      seg->lv->name, errid)))
 		return_NULL;
 
 	log_debug_activation("Getting device info for %s [%s]", name, dlid);
@@ -2311,7 +2319,8 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 				if (!seg->lv->vg->cmd->degraded_activation ||
 				    !lv_is_raid_type(seg->lv)) {
 					log_error("Aborting.  LV %s is now incomplete "
-						  "and '--activationmode partial' was not specified.", seg->lv->name);
+						  "and '--activationmode partial' was not specified.",
+						  display_lvname(seg->lv));
 					return 0;
 				}
 			}
@@ -2362,7 +2371,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 				return_0;
 		} else {
 			log_error(INTERNAL_ERROR "Unassigned area found in LV %s.",
-				  seg->lv->name);
+				  display_lvname(seg->lv));
 			return 0;
 		}
 	}
@@ -2370,8 +2379,8 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
         if (num_error_areas) {
 		/* Thins currently do not support partial activation */
 		if (lv_is_thin_type(seg->lv)) {
-			log_error("Cannot activate %s%s: pool incomplete.",
-				  seg->lv->vg->name, seg->lv->name);
+			log_error("Cannot activate %s: pool incomplete.",
+				  display_lvname(seg->lv));
 			return 0;
 		}
 	}
@@ -2421,7 +2430,8 @@ static int _add_snapshot_merge_target_to_dtree(struct dev_manager *dm,
 	struct lv_segment *merging_snap_seg = find_snapshot(lv);
 
 	if (!lv_is_merging_origin(lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not merging snapshot.", lv->name);
+		log_error(INTERNAL_ERROR "LV %s is not merging snapshot.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -2453,7 +2463,8 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 	uint64_t size;
 
 	if (!(snap_seg = find_snapshot(lv))) {
-		log_error("Couldn't find snapshot for '%s'.", lv->name);
+		log_error("Couldn't find snapshot for '%s'.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -2578,8 +2589,8 @@ static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 	 */
 	dm->skip_external_lv = 1;
 
-	log_debug_activation("Adding external origin lv %s and all active users.",
-			     external_lv->name);
+	log_debug_activation("Adding external origin LV %s and all active users.",
+			     display_lvname(external_lv));
 
 	if (!_add_new_lv_to_dtree(dm, dtree, external_lv, laopts,
 				  lv_layer(external_lv)))
@@ -2599,8 +2610,9 @@ static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 					  laopts, lv_layer(sl->seg->lv)))
 			return_0;
 
-	log_debug_activation("Finished adding  external origin lv %s and all active users.",
-			     external_lv->name);
+	log_debug_activation("Finished adding external origin LV %s and all active users.",
+			     display_lvname(external_lv));
+
 	dm->skip_external_lv = 0;
 
 	return 1;
@@ -2627,14 +2639,14 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		       segtype->name);
 
 	log_debug_activation("Checking kernel supports %s segment type for %s%s%s",
-			     target_name, seg->lv->name,
+			     target_name, display_lvname(seg->lv),
 			     layer ? "-" : "", layer ? : "");
 
 	if (segtype->ops->target_present &&
 	    !segtype->ops->target_present(seg_present->lv->vg->cmd,
 					  seg_present, NULL)) {
 		log_error("Can't process LV %s: %s target support missing "
-			  "from kernel?", seg->lv->name, target_name);
+			  "from kernel?", display_lvname(seg->lv), target_name);
 		return 0;
 	}
 
@@ -2681,7 +2693,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	if (dm->track_pending_delete) {
 		/* Replace target and all its used devs with error mapping */
 		log_debug_activation("Using error for pending delete %s.",
-				     seg->lv->name);
+				     display_lvname(seg->lv));
 		if (!dm_tree_node_add_error_target(dnode, (uint64_t)seg->lv->vg->extent_size * seg->len))
 			return_0;
 	} else if (!_add_target_to_dtree(dm, dnode, seg, laopts))
@@ -2762,7 +2774,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
 		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.",
-			  lv->name, layer);
+			  display_lvname(lv), layer);
 		return 0;
 	}
 
@@ -3032,7 +3044,8 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	/* Some LV can be used for top level tree */
 	/* TODO: add more.... */
 	if (lv_is_cache_pool(lv) && !dm_list_empty(&lv->segs_using_this_lv)) {
-		log_error(INTERNAL_ERROR "Cannot create tree for %s.", lv->name);
+		log_error(INTERNAL_ERROR "Cannot create tree for %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 	/* Some targets may build bigger tree for activation */
@@ -3068,7 +3081,8 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 		if (!dm_tree_deactivate_children(root, dlid, DLID_SIZE))
 			goto_out;
 		if (!_remove_lv_symlinks(dm, root))
-			log_warn("Failed to remove all device symlinks associated with %s.", lv->name);
+			log_warn("Failed to remove all device symlinks associated with %s.",
+				 display_lvname(lv));
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
@@ -3105,7 +3119,8 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 			if (!dm_tree_activate_children(root, dlid, DLID_SIZE))
 				goto_out;
 			if (!_create_lv_symlinks(dm, root))
-				log_warn("Failed to create symlinks for %s.", lv->name);
+				log_warn("Failed to create symlinks for %s.",
+					 display_lvname(lv));
 		}
 
 		break;

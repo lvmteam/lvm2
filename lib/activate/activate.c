@@ -118,8 +118,8 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 
 	config_def_get_path(config_path, sizeof(config_path), cfg_id);
 	log_verbose("%s configuration setting defined: "
-		    "Checking the list to match %s/%s",
-		    config_path, lv->vg->name, lv->name);
+		    "Checking the list to match %s.",
+		    config_path, display_lvname(lv));
 
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type == DM_CFG_EMPTY_ARRAY)
@@ -170,8 +170,8 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 	}
 
 out:
-	log_verbose("No item supplied in %s configuration setting "
-		    "matches %s/%s", config_path, lv->vg->name, lv->name);
+	log_verbose("No item supplied in %s configuration setting matches %s.",
+		    config_path, display_lvname(lv));
 
 	return 0;
 }
@@ -469,8 +469,8 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 
 	if (!(cn = find_config_tree_array(cmd, activation_volume_list_CFG, NULL))) {
 		log_verbose("activation/volume_list configuration setting "
-			    "not defined: Checking only host tags for %s/%s",
-			    lv->vg->name, lv->name);
+			    "not defined: Checking only host tags for %s.",
+			    display_lvname(lv));
 
 		/* If no host tags defined, activate */
 		if (dm_list_empty(&cmd->tags))
@@ -481,8 +481,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 		    str_list_match_list(&cmd->tags, &lv->vg->tags, NULL))
 			return 1;
 
-		log_verbose("No host tag matches %s/%s",
-			    lv->vg->name, lv->name);
+		log_verbose("No host tag matches %s", display_lvname(lv));
 
 		/* Don't activate */
 		return 0;
@@ -771,14 +770,14 @@ int lv_check_not_in_use(const struct logical_volume *lv)
 	/* If sysfs is not used, use open_count information only. */
 	if (dm_sysfs_dir()) {
 		if (dm_device_has_holders(info.major, info.minor)) {
-			log_error("Logical volume %s/%s is used by another device.",
-				  lv->vg->name, lv->name);
+			log_error("Logical volume %s is used by another device.",
+				  display_lvname(lv));
 			return 0;
 		}
 
 		if (dm_device_has_mounted_fs(info.major, info.minor)) {
-			log_error("Logical volume %s/%s contains a filesystem in use.",
-				  lv->vg->name, lv->name);
+			log_error("Logical volume %s contains a filesystem in use.",
+				  display_lvname(lv));
 			return 0;
 		}
 	}
@@ -786,14 +785,14 @@ int lv_check_not_in_use(const struct logical_volume *lv)
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
 	while (info.open_count > 0 && open_count_check_retries--) {
 		if (!open_count_check_retries) {
-			log_error("Logical volume %s/%s in use.",
-				  lv->vg->name, lv->name);
+			log_error("Logical volume %s in use.",
+				  display_lvname(lv));
 			return 0;
 		}
 
 		usleep(OPEN_COUNT_CHECK_USLEEP_DELAY);
-		log_debug_activation("Retrying open_count check for %s/%s.",
-				     lv->vg->name, lv->name);
+		log_debug_activation("Retrying open_count check for %s.",
+				     display_lvname(lv));
 		if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)) {
 			stack; /* device dissappeared? */
 			break;
@@ -814,7 +813,8 @@ int lv_check_transient(struct logical_volume *lv)
 	if (!activation())
 		return 0;
 
-	log_debug_activation("Checking transient status for LV %s/%s", lv->vg->name, lv->name);
+	log_debug_activation("Checking transient status for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -838,7 +838,8 @@ int lv_snapshot_percent(const struct logical_volume *lv, dm_percent_t *percent)
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking snapshot percent for LV %s/%s", lv->vg->name, lv->name);
+	log_debug_activation("Checking snapshot percent for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -868,7 +869,8 @@ int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 	if (!lv_info(cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking mirror percent for LV %s/%s", lv->vg->name, lv->name);
+	log_debug_activation("Checking mirror percent for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -897,8 +899,8 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health)
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking raid device health for LV %s/%s",
-			     lv->vg->name, lv->name);
+	log_debug_activation("Checking raid device health for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -925,8 +927,8 @@ int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt)
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking raid mismatch count for LV %s/%s",
-			     lv->vg->name, lv->name);
+	log_debug_activation("Checking raid mismatch count for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -953,8 +955,8 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking raid sync_action for LV %s/%s",
-			     lv->vg->name, lv->name);
+	log_debug_activation("Checking raid sync_action for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -990,12 +992,12 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		    (lv_is_raid(seg_lv(first_seg(lv), 0)) ||
 		     lv_is_raid(first_seg(lv)->metadata_lv))) {
 			log_error("Thin pool data or metadata volume "
-				  "must be specified. (E.g. \"%s/%s_tdata\")",
-				  lv->vg->name, lv->name);
+				  "must be specified. (E.g. \"%s_tdata\")",
+				  display_lvname(lv));
 			return 0;
 		}
-		log_error("%s/%s must be a RAID logical volume to"
-			  " perform this action.", lv->vg->name, lv->name);
+		log_error("%s must be a RAID logical volume to perform this action.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -1008,8 +1010,8 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		return_0;
 
 	if (!(r = dev_manager_raid_status(dm, lv, &status))) {
-		log_error("Failed to retrieve status of %s/%s",
-			  lv->vg->name, lv->name);
+		log_error("Failed to retrieve status of %s.",
+			  display_lvname(lv));
 		goto out;
 	}
 
@@ -1036,8 +1038,8 @@ int lv_raid_message(const struct logical_volume *lv, const char *msg)
 		goto out;
 	}
 	if (strcmp(status->sync_action, "idle")) {
-		log_error("%s/%s state is currently \"%s\".  Unable to switch to \"%s\".",
-			  lv->vg->name, lv->name, status->sync_action, msg);
+		log_error("%s state is currently \"%s\".  Unable to switch to \"%s\".",
+			  display_lvname(lv), status->sync_action, msg);
 		goto out;
 	}
 
@@ -1101,8 +1103,8 @@ int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking thin %sdata percent for LV %s/%s",
-			     (metadata) ? "meta" : "", lv->vg->name, lv->name);
+	log_debug_activation("Checking thin %sdata percent for LV %s.",
+			     (metadata) ? "meta" : "", display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -1127,8 +1129,8 @@ int lv_thin_percent(const struct logical_volume *lv,
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking thin percent for LV %s/%s",
-			     lv->vg->name, lv->name);
+	log_debug_activation("Checking thin percent for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -1154,8 +1156,8 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking thin percent for LV %s/%s",
-			     lv->vg->name, lv->name);
+	log_debug_activation("Checking thin percent for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -1178,8 +1180,8 @@ int lv_thin_device_id(const struct logical_volume *lv, uint32_t *device_id)
 	if (!lv_info(lv->vg->cmd, lv, 0, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking device id for LV %s/%s",
-			     lv->vg->name, lv->name);
+	log_debug_activation("Checking device id for LV %s.",
+			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
 		return_0;
@@ -1381,7 +1383,7 @@ static int _lv_is_active(const struct logical_volume *lv,
 	 * New users of this function who specifically ask for 'exclusive'
 	 * will be given an error message.
 	 */
-	log_error("Unable to determine exclusivity of %s", lv->name);
+	log_error("Unable to determine exclusivity of %s.", display_lvname(lv));
 
 	e = 0;
 
@@ -1396,8 +1398,8 @@ out:
 	if (exclusive)
 		*exclusive = e;
 
-	log_very_verbose("%s/%s is %sactive%s%s",
-			 lv->vg->name, lv->name,
+	log_very_verbose("%s is %sactive%s%s",
+			 display_lvname(lv),
 			 (r || l) ? "" : "not ",
 			 (exclusive && e) ? " exclusive" : "",
 			 e ? (l ? " locally" : " remotely") : "");
@@ -1606,14 +1608,14 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	if (laopts->skip_in_use && lv_is_thin_pool(lv) &&
 	    lv_info(lv->vg->cmd, lv, 1, &info, 1, 0) && (info.open_count > 1)) {
 		log_debug_activation("Skipping unmonitor of opened %s (open:%d)",
-				     lv->name, info.open_count);
+				     display_lvname(lv), info.open_count);
 		return 1;
 	}
 
 	/* Do not monitor snapshot that already covers origin */
 	if (monitor && lv_is_cow_covering_origin(lv)) {
 		log_debug_activation("Skipping monitor of snapshot larger "
-				     "then origin %s.", lv->name);
+				     "then origin %s.", display_lvname(lv));
 		return 1;
 	}
 
@@ -1661,7 +1663,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 						    monitor)) {
 				log_error("Failed to %smonitor %s",
 					  monitor ? "" : "un",
-					  seg_lv(seg, s)->name);
+					  display_lvname(seg_lv(seg, s)));
 				r = 0;
 			}
 		}
@@ -1698,12 +1700,12 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 		if (monitor) {
 			if (monitored)
-				log_verbose("%s/%s already monitored.", lv->vg->name, lv->name);
+				log_verbose("%s already monitored.", display_lvname(lv));
 			else if (seg->segtype->ops->target_monitor_events)
 				monitor_fn = seg->segtype->ops->target_monitor_events;
 		} else {
 			if (!monitored)
-				log_verbose("%s/%s already not monitored.", lv->vg->name, lv->name);
+				log_verbose("%s already not monitored.", display_lvname(lv));
 			else if (seg->segtype->ops->target_unmonitor_events)
 				monitor_fn = seg->segtype->ops->target_unmonitor_events;
 		}
@@ -1712,7 +1714,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		if (!monitor_fn)
 			continue;
 
-		log_verbose("%sonitoring %s/%s%s", monitor ? "M" : "Not m", lv->vg->name, lv->name,
+		log_verbose("%sonitoring %s%s", monitor ? "M" : "Not m", display_lvname(lv),
 			    test_mode() ? " [Test mode: skipping this]" : "");
 
 		/* FIXME Test mode should really continue a bit further. */
@@ -1721,8 +1723,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 		/* FIXME specify events */
 		if (!monitor_fn(seg, 0)) {
-			log_error("%s/%s: %s segment monitoring function failed.",
-				  lv->vg->name, lv->name, seg->segtype->name);
+			log_error("%s: %s segment monitoring function failed.",
+				  display_lvname(lv), seg->segtype->name);
 			return 0;
 		}
 
@@ -1734,8 +1736,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			if (pending ||
 			    (!monitored && monitor) ||
 			    (monitored && !monitor))
-				log_very_verbose("%s/%s %smonitoring still pending: waiting...",
-						 lv->vg->name, lv->name, monitor ? "" : "un");
+				log_very_verbose("%s %smonitoring still pending: waiting...",
+						 display_lvname(lv), monitor ? "" : "un");
 			else
 				break;
 			usleep(10000 * i);
@@ -1746,8 +1748,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	}
 
 	if (!r && !error_message_produced())
-		log_error("%sonitoring %s/%s failed.", monitor ? "M" : "Not m",
-			  lv->vg->name, lv->name);
+		log_error("%sonitoring %s failed.", monitor ? "M" : "Not m",
+			  display_lvname(lv));
 	return r;
 #else
 	return 1;
@@ -1858,7 +1860,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		/* Preload all the LVs above the PVMOVE LV */
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
 			if (!(lv_pre_tmp = find_lv(lv_pre->vg, sl->seg->lv->name))) {
-				log_error(INTERNAL_ERROR "LV %s missing from preload metadata", sl->seg->lv->name);
+				log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
+					  display_lvname(sl->seg->lv));
 				goto out;
 			}
 			if (!_lv_preload(lv_pre_tmp, laopts, &flush_required))
@@ -1866,7 +1869,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		}
 		/* Now preload the PVMOVE LV itself */
 		if (!(lv_pre_tmp = find_lv(lv_pre->vg, pvmove_lv->name))) {
-			log_error(INTERNAL_ERROR "LV %s missing from preload metadata", pvmove_lv->name);
+			log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
+				  display_lvname(pvmove_lv));
 			goto out;
 		}
 		if (!_lv_preload(lv_pre_tmp, laopts, &flush_required))
@@ -1892,8 +1896,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		if (!laopts->origin_only && lv_is_origin(lv)) {
 			dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list) {
 				if (!(lv_pre_tmp = find_lv_in_vg_by_lvid(lv_pre->vg, &snap_seg->cow->lvid))) {
-					log_error(INTERNAL_ERROR "LV %s (%s) missing from preload metadata",
-						  snap_seg->cow->name, snap_seg->cow->lvid.id[1].uuid);
+					log_error(INTERNAL_ERROR "LV %s (%s) missing from preload metadata.",
+						  display_lvname(snap_seg->cow),
+						  snap_seg->cow->lvid.id[1].uuid);
 					goto out;
 				}
 				if (!lv_is_cow(lv_pre_tmp) &&
@@ -1996,13 +2001,14 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		laopts->origin_only = 0;
 
 	if (test_mode()) {
-		_skip("Resuming %s%s%s.", lv->name, laopts->origin_only ? " without snapshots" : "",
+		_skip("Resuming %s%s%s.", display_lvname(lv),
+		      laopts->origin_only ? " without snapshots" : "",
 		      laopts->revert ? " (reverting)" : "");
 		r = 1;
 		goto out;
 	}
 
-	log_debug_activation("Resuming LV %s/%s%s%s%s.", lv->vg->name, lv->name,
+	log_debug_activation("Resuming LV %s%s%s%s.", display_lvname(lv),
 			     error_if_not_active ? "" : " if active",
 			     laopts->origin_only ?
 			     (lv_is_thin_pool(lv) ? " pool only" :
@@ -2080,8 +2086,8 @@ static int _lv_has_open_snapshots(const struct logical_volume *lv)
 			r++;
 
 	if (r)
-		log_error("LV %s/%s has open %d snapshot(s), not deactivating.",
-			  lv->vg->name, lv->name, r);
+		log_error("LV %s has open %d snapshot(s), not deactivating.",
+			  display_lvname(lv), r);
 
 	return r;
 }
@@ -2101,12 +2107,12 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 		goto out;
 
 	if (test_mode()) {
-		_skip("Deactivating '%s'.", lv->name);
+		_skip("Deactivating %s.", display_lvname(lv));
 		r = 1;
 		goto out;
 	}
 
-	log_debug_activation("Deactivating %s/%s.", lv->vg->name, lv->name);
+	log_debug_activation("Deactivating %s.", display_lvname(lv));
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0))
 		goto_out;
@@ -2175,11 +2181,11 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	if (!lv && !(lv_to_free = lv = lv_from_lvid(cmd, lvid_s, 0)))
-		goto out;
+		goto_out;
 
 	if (!_passes_activation_filter(cmd, lv)) {
-		log_verbose("Not activating %s/%s since it does not pass "
-			    "activation filter.", lv->vg->name, lv->name);
+		log_verbose("Not activating %s since it does not pass "
+			    "activation filter.", display_lvname(lv));
 		*activate_lv = 0;
 	} else
 		*activate_lv = 1;
@@ -2206,8 +2212,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
-		log_verbose("Not activating %s/%s since it does not pass "
-			    "activation filter.", lv->vg->name, lv->name);
+		log_verbose("Not activating %s since it does not pass "
+			    "activation filter.", display_lvname(lv));
 		r = 1;
 		goto out;
 	}
@@ -2230,7 +2236,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 
 	if (lv_has_unknown_segments(lv)) {
 		log_error("Refusing activation of LV %s containing "
-			  "an unrecognised segment.", lv->name);
+			  "an unrecognised segment.", display_lvname(lv));
 		goto out;
 	}
 
@@ -2245,7 +2251,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	if (test_mode()) {
-		_skip("Activating '%s'.", lv->name);
+		_skip("Activating %s.", display_lvname(lv));
 		r = 1;
 		goto out;
 	}
@@ -2253,7 +2259,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (filter)
 		laopts->read_only = _passes_readonly_filter(cmd, lv);
 
-	log_debug_activation("Activating %s/%s%s%s%s%s.", lv->vg->name, lv->name,
+	log_debug_activation("Activating %s%s%s%s%s.", display_lvname(lv),
 			     laopts->exclusive ? " exclusively" : "",
 			     laopts->read_only ? " read-only" : "",
 			     laopts->noscan ? " noscan" : "",
