@@ -16,6 +16,7 @@
 #include "lib.h"
 #include "lvm-string.h"
 #include "metadata-exported.h"
+#include "display.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -211,6 +212,7 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 		    const char *layer)
 {
 	const char *lvid = lv->lvid.s;
+	char *dlid;
 
 	if (!layer) {
 		/*
@@ -235,5 +237,9 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 			NULL;
 	}
 
-	return dm_build_dm_uuid(mem, UUID_PREFIX, lvid, layer);
+	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, lvid, layer)))
+		log_error("Failed to build LVM dlid for %s.",
+			  display_lvname(lv));
+
+	return dlid;
 }
