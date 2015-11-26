@@ -21,6 +21,11 @@ lvm pvmove --version|sed -n "1s/.*: *\([0-9][^ ]*\) .*/\1/p" | tee version
 # ensure they are the same
 diff -u version lib/version-expected
 
+dmstats version |sed -n "1s/.*: *\([0-9][^ ]*\) .*/\1/p" | tee dmstats-version
+
+# ensure dmstats version matches build
+diff -u dmstats-version lib/dm-version-expected
+
 # ensure we can create devices (uses dmsetup, etc)
 aux prepare_devs 5
 
