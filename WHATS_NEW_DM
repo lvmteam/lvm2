@@ -1,5 +1,6 @@
 Version 1.02.112 - 
 =====================================
+  Show error message when trying to create unsupported raid type.
   Improve preloading sequence of an active thin-pool target.
   Drop extra space from cache target line to fix unneded table reloads.
 

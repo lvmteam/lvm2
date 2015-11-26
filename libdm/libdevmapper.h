@@ -1441,7 +1441,7 @@ struct dm_tree_node_raid_params {
 
 int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 					     uint64_t size,
-					     struct dm_tree_node_raid_params *p);
+					     const struct dm_tree_node_raid_params *p);
 
 /* Cache feature_flags */
 #define DM_CACHE_FEATURE_WRITEBACK    0x00000001

@@ -3207,7 +3207,7 @@ int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 
 int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 					     uint64_t size,
-					     struct dm_tree_node_raid_params *p)
+					     const struct dm_tree_node_raid_params *p)
 {
 	unsigned i;
 	struct load_segment *seg = NULL;
@@ -3217,8 +3217,10 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 			if (!(seg = _add_segment(node,
 						 _dm_segtypes[i].type, size)))
 				return_0;
-	if (!seg)
-		return_0;
+	if (!seg) {
+		log_error("Unsupported raid type %s.", p->raid_type);
+		return 0;
+	}
 
 	seg->region_size = p->region_size;
 	seg->stripe_size = p->stripe_size;
