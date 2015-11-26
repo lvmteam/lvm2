@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -17,17 +17,17 @@
 
 static int _get_vsn(struct cmd_context *cmd, uint16_t *version_int)
 {
-	const char *version;
+	const char *vsn;
 	unsigned int major, minor, patchlevel;
 
 	if (arg_count(cmd, atversion_ARG))
-		version = arg_str_value(cmd, atversion_ARG, NULL);
+		vsn = arg_str_value(cmd, atversion_ARG, NULL);
 	else if (arg_count(cmd, sinceversion_ARG))
-		version = arg_str_value(cmd, sinceversion_ARG, NULL);
+		vsn = arg_str_value(cmd, sinceversion_ARG, NULL);
 	else
-		version = LVM_VERSION;
+		vsn = LVM_VERSION;
 
-	if (sscanf(version, "%u.%u.%u", &major, &minor, &patchlevel) != 3) {
+	if (sscanf(vsn, "%u.%u.%u", &major, &minor, &patchlevel) != 3) {
 		log_error("Incorrect version format.");
 		return 0;
 	}
