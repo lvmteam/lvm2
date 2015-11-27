@@ -1232,6 +1232,21 @@ target_at_least() {
 	}
 }
 
+# Check whether the kernel driver version is greater or equal
+# to the specified version. This can be used to skip tests on
+# kernels where they are known to not be supported.
+#
+# e.g. driver_at_least 4 33
+#
+driver_at_least() {
+	local version=$(dmsetup version | tail -1 2>/dev/null)
+	version=${version##*:}
+	version_at_least "$version" "$@" || {
+		echo "Found driver version $version, but requested $@." >&2
+		return 1
+	}
+}
+
 have_thin() {
 	test "$THIN" = shared -o "$THIN" = internal || {
 		echo "Thin is not built-in." >&2
