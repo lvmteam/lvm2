@@ -12,15 +12,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "libdevmapper.h"
+#include "units.h"
 
 #include <stdio.h>
 #include <string.h>
-
-#include <CUnit/CUnit.h>
-
-int string_init(void);
-int string_fini(void);
 
 static struct dm_pool *mem = NULL;
 

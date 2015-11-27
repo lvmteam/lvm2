@@ -1,29 +1,36 @@
-#include <CUnit/CUnit.h>
+#include "units.h"
 #include <CUnit/Basic.h>
 
-#define DECL(n) \
-	extern CU_TestInfo n ## _list[]; \
-	int n ## _init(void); \
-	int n ## _fini(void);
-#define USE(n) { (char*) #n, n##_init, n##_fini, n##_list }
+#include <stdio.h>
+#include <stdlib.h>
 
-DECL(bitset);
-DECL(regex);
-DECL(config);
-DECL(string);
+/* Setup SuiteInfo struct in a  compatible way across different CUnit versions */
+/* old version of CUnit has used char* for .pName, so using cast here */
+#define USE(n) { \
+	.pName = (char*) #n, \
+	.pInitFunc = n##_init, \
+	.pCleanupFunc = n##_fini, \
+	.pTests = n##_list }
 
 CU_SuiteInfo suites[] = {
 	USE(bitset),
-	USE(regex),
 	USE(config),
+	USE(dmlist),
+	USE(regex),
 	USE(string),
 	CU_SUITE_INFO_NULL
 };
 
 int main(int argc, char **argv) {
-	CU_initialize_registry();
+	if (CU_initialize_registry() != CUE_SUCCESS) {
+		printf("Initialization of Test Registry failed.\n");
+		return CU_get_error();
+	}
+
 	CU_register_suites(suites);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
-	return CU_get_number_of_failures() != 0;
+	CU_cleanup_registry();
+
+	return (CU_get_number_of_failures() != 0);
 }
