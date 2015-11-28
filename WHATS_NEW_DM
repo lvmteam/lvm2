@@ -1,4 +1,4 @@
-Version 1.02.112 - 
+Version 1.02.112 - 28th November 2015
 =====================================
   Show error message when trying to create unsupported raid type.
   Improve preloading sequence of an active thin-pool target.

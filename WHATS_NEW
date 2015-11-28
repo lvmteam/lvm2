@@ -1,4 +1,4 @@
-Version 2.02.136 - 
+Version 2.02.136 - 28th November 2015
 =====================================
   Add new --sinceversion option for lvmconfig --type new.
   Fix inactive table loaded for wrapping thin-pool when resizing it.
