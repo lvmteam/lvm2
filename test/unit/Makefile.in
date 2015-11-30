@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -19,6 +19,7 @@ UNITS = \
 	bitset_t.c\
 	config_t.c\
 	dmlist_t.c\
+	dmstatus_t.c\
 	matcher_t.c\
 	string_t.c\
 	run.c
@@ -40,7 +41,7 @@ CFLAGS += @CUNIT_CFLAGS@
 
 check: unit
 
-$(TARGETS): $(OBJECTS)
+$(TARGETS): $(OBJECTS) $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
 
 unit: $(TARGETS)
 	@echo Running unit tests

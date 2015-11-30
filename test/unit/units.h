@@ -26,6 +26,7 @@
 DECL(bitset);
 DECL(config);
 DECL(dmlist);
+DECL(dmstatus);
 DECL(regex);
 DECL(string);
 

@@ -16,6 +16,7 @@ CU_SuiteInfo suites[] = {
 	USE(bitset),
 	USE(config),
 	USE(dmlist),
+	USE(dmstatus),
 	USE(regex),
 	USE(string),
 	CU_SUITE_INFO_NULL
