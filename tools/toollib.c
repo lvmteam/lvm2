@@ -2026,6 +2026,77 @@ static int _copy_str_to_vgnameid_list(struct cmd_context *cmd, struct dm_list *s
 }
 
 /*
+ * Check if a command line VG name is ambiguous, i.e. there are multiple VGs on
+ * the system that have the given name.  If *one* VG with the given name is
+ * local and the rest are foreign, then use the local VG (removing foreign VGs
+ * with the same name from the vgnameids_on_system list).  If multiple VGs with
+ * the given name are local, we don't know which VG is intended, so remove the
+ * ambiguous name from the list of args.
+ */
+static int _resolve_duplicate_vgnames(struct cmd_context *cmd,
+				      struct dm_list *arg_vgnames,
+				      struct dm_list *vgnameids_on_system)
+{
+	struct dm_str_list *sl, *sl2;
+	struct vgnameid_list *vgnl, *vgnl2;
+	char uuid[64] __attribute__((aligned(8)));
+	int found;
+	int ret = ECMD_PROCESSED;
+
+	dm_list_iterate_items_safe(sl, sl2, arg_vgnames) {
+		found = 0;
+		dm_list_iterate_items(vgnl, vgnameids_on_system) {
+			if (strcmp(sl->str, vgnl->vg_name))
+				continue;
+			found++;
+		}
+
+		if (found < 2)
+			continue;
+
+		/*
+		 * More than one VG match the given name.
+		 * If only one is local, use that one.
+		 */
+
+		found = 0;
+		dm_list_iterate_items_safe(vgnl, vgnl2, vgnameids_on_system) {
+			if (strcmp(sl->str, vgnl->vg_name))
+				continue;
+
+			/*
+			 * Without lvmetad, a label scan has already populated
+			 * lvmcache vginfo with this information.
+			 * With lvmetad, this function does vg_lookup on this
+			 * name/vgid and checks system_id in the metadata.
+			 */
+			if (lvmcache_vg_is_foreign(cmd, vgnl->vg_name, vgnl->vgid)) {
+				id_write_format((const struct id*)vgnl->vgid, uuid, sizeof(uuid));
+				log_warn("WARNING: Ignoring foreign VG with matching name %s UUID %s.",
+					 vgnl->vg_name, uuid);
+				dm_list_del(&vgnl->list);
+			} else {
+				found++;
+			}
+		}
+
+		if (found < 2)
+			continue;
+
+		/*
+		 * More than one VG with this name is local so the intended VG
+		 * is unknown.
+		 */
+		log_error("Multiple VGs found with the same name: skipping %s", sl->str);
+		log_error("Use the VG UUID with --select vg_uuid=<uuid>");
+		dm_list_del(&sl->list);
+		ret = ECMD_FAILED;
+	}
+
+	return ret;
+}
+
+/*
  * For each arg_vgname, move the corresponding entry from
  * vgnameids_on_system to vgnameids_to_process.  If an
  * item in arg_vgnames doesn't exist in vgnameids_on_system,
@@ -2139,6 +2210,17 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, 0)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
+	}
+
+	if (!dm_list_empty(&arg_vgnames)) {
+		/* This may remove entries from arg_vgnames or vgnameids_on_system. */
+		ret = _resolve_duplicate_vgnames(cmd, &arg_vgnames, &vgnameids_on_system);
+		if (ret > ret_max)
+			ret_max = ret;
+		if (dm_list_empty(&arg_vgnames) && dm_list_empty(&arg_tags)) {
+			ret_max = ECMD_FAILED;
+			goto out;
+		}
 	}
 
 	if (dm_list_empty(&arg_vgnames) && dm_list_empty(&vgnameids_on_system)) {
@@ -2644,6 +2726,17 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t rea
 	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, 0)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
+	}
+
+	if (!dm_list_empty(&arg_vgnames)) {
+		/* This may remove entries from arg_vgnames or vgnameids_on_system. */
+		ret = _resolve_duplicate_vgnames(cmd, &arg_vgnames, &vgnameids_on_system);
+		if (ret > ret_max)
+			ret_max = ret;
+		if (dm_list_empty(&arg_vgnames) && dm_list_empty(&arg_tags)) {
+			ret_max = ECMD_FAILED;
+			goto out;
+		}
 	}
 
 	if (dm_list_empty(&arg_vgnames) && dm_list_empty(&vgnameids_on_system)) {
