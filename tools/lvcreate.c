@@ -25,6 +25,11 @@ struct lvcreate_cmdline_params {
 	uint32_t pv_count;
 };
 
+struct processing_params {
+	struct lvcreate_params *lp;
+	struct lvcreate_cmdline_params *lcp;
+};
+
 static int _set_vg_name(struct lvcreate_params *lp, const char *vg_name)
 {
 	/* Can't do anything */
@@ -1445,16 +1450,88 @@ static void _destroy_lvcreate_params(struct lvcreate_params *lp)
 	}
 }
 
+static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
+			    struct volume_group *vg, struct processing_handle *handle)
+{
+	struct processing_params *pp = (struct processing_params *) handle->custom_handle;
+	struct lvcreate_params *lp = pp->lp;
+	struct lvcreate_cmdline_params *lcp = pp->lcp;
+	int ret = ECMD_FAILED;
+
+	if (!_read_activation_params(cmd, vg, lp))
+		goto_out;
+
+	/* Resolve segment types with opened VG */
+	if (lp->snapshot && lp->origin_name && !_determine_snapshot_type(vg, lp, lcp))
+		goto_out;
+
+	if (seg_is_cache(lp) && !_determine_cache_argument(vg, lp))
+		goto_out;
+
+	/* All types resolved at this point, now only validation steps */
+	if (seg_is_raid(lp) && !_check_raid_parameters(vg, lp, lcp))
+		goto_out;
+
+	if (seg_is_thin(lp) && !_check_thin_parameters(vg, lp, lcp))
+		goto_out;
+
+	if (!_check_pool_parameters(cmd, vg, lp, lcp))
+		goto_out;
+
+	/* All types are checked */
+	if (!_check_zero_parameters(cmd, lp))
+		return_0;
+
+	if (!_update_extents_params(vg, lp, lcp))
+		goto_out;
+
+	if (seg_is_thin(lp) && !_validate_internal_thin_processing(lp))
+		goto_out;
+
+	if (lp->create_pool) {
+		if (!handle_pool_metadata_spare(vg, lp->pool_metadata_extents,
+						lp->pvh, lp->pool_metadata_spare))
+			goto_out;
+
+		log_verbose("Making pool %s in VG %s using segtype %s",
+			    lp->pool_name ? : "with generated name", lp->vg_name, lp->segtype->name);
+	}
+
+	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+		if (!handle_sanlock_lv(cmd, vg)) {
+			log_error("No space for sanlock lock, extend the internal lvmlock LV.");
+			goto_out;
+		}
+	}
+
+	if (seg_is_thin_volume(lp))
+		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
+			    lp->lv_name ? : "with generated name",
+			    lp->pool_name ? : "with generated name", lp->vg_name,
+			    lp->snapshot ? " as snapshot of " : "",
+			    lp->snapshot ? lp->origin_name : "", lp->segtype->name);
+
+	if (is_lockd_type(vg->lock_type))
+		lp->needs_lockd_init = 1;
+
+	if (!lv_create_single(vg, lp))
+		goto_out;
+
+	ret = ECMD_PROCESSED;
+out:
+	return ret;
+}
+
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	int r = ECMD_FAILED;
+	struct processing_handle *handle = NULL;
+	struct processing_params pp;
 	struct lvcreate_params lp = {
 		.major = -1,
 		.minor = -1,
 	};
 	struct lvcreate_cmdline_params lcp = { 0 };
-	struct volume_group *vg;
-	uint32_t lockd_state = 0;
+	int ret;
 
 	if (!_lvcreate_params(cmd, argc, argv, &lp, &lcp)) {
 		stack;
@@ -1466,78 +1543,20 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!lockd_vg(cmd, lp.vg_name, "ex", 0, &lockd_state))
-		return_ECMD_FAILED;
+	pp.lp = &lp;
+	pp.lcp = &lcp;
 
-	log_verbose("Finding volume group \"%s\"", lp.vg_name);
-	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0, lockd_state);
-	if (vg_read_error(vg)) {
-		release_vg(vg);
-		return_ECMD_FAILED;
+        if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
 	}
 
-	if (!_read_activation_params(cmd, vg, &lp))
-		goto_out;
+	handle->custom_handle = &pp;
 
-	/* Resolve segment types with opened VG */
-	if (lp.snapshot && lp.origin_name && !_determine_snapshot_type(vg, &lp, &lcp))
-		goto_out;
+	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, READ_FOR_UPDATE, handle,
+			      &_lvcreate_single);
 
-	if (seg_is_cache(&lp) && !_determine_cache_argument(vg, &lp))
-		goto_out;
-
-	/* All types resolved at this point, now only validation steps */
-	if (seg_is_raid(&lp) && !_check_raid_parameters(vg, &lp, &lcp))
-		goto_out;
-
-	if (seg_is_thin(&lp) && !_check_thin_parameters(vg, &lp, &lcp))
-		goto_out;
-
-	if (!_check_pool_parameters(cmd, vg, &lp, &lcp))
-		goto_out;
-
-	/* All types are checked */
-	if (!_check_zero_parameters(cmd, &lp))
-		return_0;
-
-	if (!_update_extents_params(vg, &lp, &lcp))
-		goto_out;
-
-	if (seg_is_thin(&lp) && !_validate_internal_thin_processing(&lp))
-		goto_out;
-
-	if (lp.create_pool) {
-		if (!handle_pool_metadata_spare(vg, lp.pool_metadata_extents,
-						lp.pvh, lp.pool_metadata_spare))
-			goto_out;
-
-		log_verbose("Making pool %s in VG %s using segtype %s",
-			    lp.pool_name ? : "with generated name", lp.vg_name, lp.segtype->name);
-	}
-
-	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
-		if (!handle_sanlock_lv(cmd, vg)) {
-			log_error("No space for sanlock lock, extend the internal lvmlock LV.");
-			goto_out;
-		}
-	}
-
-	if (seg_is_thin_volume(&lp))
-		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
-			    lp.lv_name ? : "with generated name",
-			    lp.pool_name ? : "with generated name", lp.vg_name,
-			    lp.snapshot ? " as snapshot of " : "",
-			    lp.snapshot ? lp.origin_name : "", lp.segtype->name);
-
-	if (is_lockd_type(vg->lock_type))
-		lp.needs_lockd_init = 1;
-
-	if (!lv_create_single(vg, &lp))
-		goto_out;
-
-	r = ECMD_PROCESSED;
-out:
 	_destroy_lvcreate_params(&lp);
-	unlock_and_release_vg(cmd, vg, lp.vg_name);
-	return r;
+	destroy_processing_handle(cmd, handle);
+	return ret;
 }
