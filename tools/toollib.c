@@ -1997,35 +1997,6 @@ endvg:
 }
 
 /*
- * Copy the contents of a str_list of VG names to a name list, filling
- * in the vgid with NULL (unknown).
- */
-static int _copy_str_to_vgnameid_list(struct cmd_context *cmd, struct dm_list *sll,
-				      struct dm_list *vgnll)
-{
-	const char *vgname;
-	struct dm_str_list *sl;
-	struct vgnameid_list *vgnl;
-
-	dm_list_iterate_items(sl, sll) {
-		vgname = sl->str;
-
-		vgnl = dm_pool_alloc(cmd->mem, sizeof(*vgnl));
-		if (!vgnl) {
-			log_error("vgnameid_list allocation failed.");
-			return ECMD_FAILED;
-		}
-
-		vgnl->vgid = NULL;
-		vgnl->vg_name = dm_pool_strdup(cmd->mem, vgname);
-
-		dm_list_add(vgnll, &vgnl->list);
-	}
-
-	return ECMD_PROCESSED;
-}
-
-/*
  * Check if a command line VG name is ambiguous, i.e. there are multiple VGs on
  * the system that have the given name.  If *one* VG with the given name is
  * local and the rest are foreign, then use the local VG (removing foreign VGs
