@@ -1259,6 +1259,15 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 			return_0;
 
 		/*
+		 * vginfo is kept for each VG with the same name.
+		 * They are saved with the vginfo->next list.
+		 * These checks just decide the ordering of
+		 * that list.
+		 *
+		 * FIXME: it should no longer matter what order
+		 * the vginfo's are kept in, so we can probably
+		 * remove these comparisons and reordering entirely.
+		 *
 		 * If   Primary not exported, new exported => keep
 		 * Else Primary exported, new not exported => change
 		 * Else Primary has hostname for this machine => keep
@@ -1268,38 +1277,42 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 		 */
 		if (!(primary_vginfo->status & EXPORTED_VG) &&
 		    (vgstatus & EXPORTED_VG))
-			log_warn("WARNING: Duplicate VG name %s: "
-				 "Existing %s takes precedence over "
-				 "exported %s", new_vginfo->vgname,
-				 uuid_primary, uuid_new);
+			log_verbose("Cache: Duplicate VG name %s: "
+				    "Existing %s takes precedence over "
+				    "exported %s", new_vginfo->vgname,
+				    uuid_primary, uuid_new);
 		else if ((primary_vginfo->status & EXPORTED_VG) &&
 			   !(vgstatus & EXPORTED_VG)) {
-			log_warn("WARNING: Duplicate VG name %s: "
-				 "%s takes precedence over exported %s",
-				 new_vginfo->vgname, uuid_new,
-				 uuid_primary);
+			log_verbose("Cache: Duplicate VG name %s: "
+				    "%s takes precedence over exported %s",
+				    new_vginfo->vgname, uuid_new,
+				    uuid_primary);
 			use_new = 1;
 		} else if (primary_vginfo->creation_host &&
 			   !strcmp(primary_vginfo->creation_host,
 				   primary_vginfo->fmt->cmd->hostname))
-			log_warn("WARNING: Duplicate VG name %s: "
-				 "Existing %s (created here) takes precedence "
-				 "over %s", new_vginfo->vgname, uuid_primary,
-				 uuid_new);
+			log_verbose("Cache: Duplicate VG name %s: "
+				    "Existing %s (created here) takes precedence "
+				    "over %s", new_vginfo->vgname, uuid_primary,
+				    uuid_new);
 		else if (!primary_vginfo->creation_host && creation_host) {
-			log_warn("WARNING: Duplicate VG name %s: "
-				 "%s (with creation_host) takes precedence over %s",
-				 new_vginfo->vgname, uuid_new,
-				 uuid_primary);
+			log_verbose("Cache: Duplicate VG name %s: "
+				    "%s (with creation_host) takes precedence over %s",
+				    new_vginfo->vgname, uuid_new,
+				    uuid_primary);
 			use_new = 1;
 		} else if (creation_host &&
 			   !strcmp(creation_host,
 				   primary_vginfo->fmt->cmd->hostname)) {
-			log_warn("WARNING: Duplicate VG name %s: "
-				 "%s (created here) takes precedence over %s",
-				 new_vginfo->vgname, uuid_new,
-				 uuid_primary);
+			log_verbose("Cache: Duplicate VG name %s: "
+				    "%s (created here) takes precedence over %s",
+				    new_vginfo->vgname, uuid_new,
+				    uuid_primary);
 			use_new = 1;
+		} else {
+			log_verbose("Cache: Duplicate VG name %s: "
+				    "Prefer existing %s vs new %s",
+				    new_vginfo->vgname, uuid_primary, uuid_new);
 		}
 
 		if (!use_new) {
