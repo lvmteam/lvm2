@@ -56,6 +56,7 @@ struct lvmcache_vginfo {
 	char _padding[7];
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
+	char *system_id;
 	char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
@@ -1448,7 +1449,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 }
 
 static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstatus,
-				     const char *creation_host, const char *lock_type)
+				     const char *creation_host, const char *lock_type,
+				     const char *system_id)
 {
 	if (!info || !info->vginfo)
 		return 1;
@@ -1482,19 +1484,40 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 set_lock_type:
 
 	if (!lock_type)
-		goto out;
+		goto set_system_id;
 
 	if (info->vginfo->lock_type && !strcmp(lock_type, info->vginfo->lock_type))
-		goto out;
+		goto set_system_id;
 
 	if (info->vginfo->lock_type)
 		dm_free(info->vginfo->lock_type);
 
 	if (!(info->vginfo->lock_type = dm_strdup(lock_type))) {
-		log_error("cache creation host alloc failed for %s",
-			  lock_type);
+		log_error("cache lock_type alloc failed for %s", lock_type);
 		return 0;
 	}
+
+	log_debug_cache("lvmcache: %s: VG %s: Set lock_type to %s.",
+			dev_name(info->dev), info->vginfo->vgname, lock_type);
+
+set_system_id:
+
+	if (!system_id)
+		goto out;
+
+	if (info->vginfo->system_id && !strcmp(system_id, info->vginfo->system_id))
+		goto out;
+
+	if (info->vginfo->system_id)
+		dm_free(info->vginfo->system_id);
+
+	if (!(info->vginfo->system_id = dm_strdup(system_id))) {
+		log_error("cache system_id alloc failed for %s", system_id);
+		return 0;
+	}
+
+	log_debug_cache("lvmcache: %s: VG %s: Set system_id to %s.",
+			dev_name(info->dev), info->vginfo->vgname, system_id);
 
 out:
 	return 1;
@@ -1561,7 +1584,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info, struct lvmcache_vg
 	if (!_lvmcache_update_vgname(info, vgname, vgid, vgsummary->vgstatus,
 				     vgsummary->creation_host, info->fmt) ||
 	    !_lvmcache_update_vgid(info, info->vginfo, vgid) ||
-	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host, vgsummary->lock_type) ||
+	    !_lvmcache_update_vgstatus(info, vgsummary->vgstatus, vgsummary->creation_host, vgsummary->lock_type, vgsummary->system_id) ||
 	    !_lvmcache_update_vg_mda_info(info, vgsummary->mda_checksum, vgsummary->mda_size))
 		return_0;
 
@@ -1577,6 +1600,7 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 		.vgname = vg->name,
 		.vgstatus = vg->status,
 		.vgid = vg->id,
+		.system_id = vg->system_id,
 		.lock_type = vg->lock_type
 	};
 

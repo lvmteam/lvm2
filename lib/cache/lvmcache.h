@@ -55,6 +55,7 @@ struct lvmcache_vgsummary {
 	struct id vgid;
 	uint64_t vgstatus;
 	char *creation_host;
+	const char *system_id;
 	const char *lock_type;
 	uint32_t mda_checksum;
 	size_t mda_size;
