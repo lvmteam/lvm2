@@ -1,5 +1,6 @@
 Version 2.02.137 -
 =====================================
+  Avoid misleading error with -m is omitted with lvconvert to raid types.
 
 Version 2.02.136 - 28th November 2015
 =====================================

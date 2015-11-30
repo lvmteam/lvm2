@@ -242,9 +242,9 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 	if (!type_str || !*type_str)
 		return 1;
 
-	if (!strcmp(type_str, "mirror")) {
+	if (!strcmp(type_str, "mirror") || !strncmp(type_str, "raid", 4)) {
 		if (!arg_count(cmd, mirrors_ARG)) {
-			log_error("--type mirror requires -m/--mirrors");
+			log_error("Mirror and raid conversions require -m/--mirrors");
 			return 0;
 		}
 		return 1;
