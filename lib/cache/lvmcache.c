@@ -2402,3 +2402,17 @@ void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
 	}
 }
 
+int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+	int ret = 0;
+
+	if (lvmetad_active())
+		return lvmetad_vg_is_foreign(cmd, vgname, vgid);
+
+	if ((vginfo = lvmcache_vginfo_from_vgid(vgid)))
+		ret = !is_system_id_allowed(cmd, vginfo->system_id);
+
+	return ret;
+}
+

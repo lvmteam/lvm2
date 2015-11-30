@@ -1808,3 +1808,29 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 		_update_changed_pvs_in_udev(cmd, &pvc_before, &pvc_after);
 	}
 }
+
+int lvmetad_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const char *vgid)
+{
+	daemon_reply reply;
+	struct dm_config_node *top;
+	const char *system_id = NULL;
+	char uuid[64];
+	int ret;
+
+	if (!id_write_format((const struct id*)vgid, uuid, sizeof(uuid)))
+		return_0;
+
+	reply = _lvmetad_send("vg_lookup",
+			      "uuid = %s", uuid,
+			      "name = %s", vgname,
+			       NULL);
+
+	if ((top = dm_config_find_node(reply.cft->root, "metadata")))
+		system_id = dm_config_find_str(top, "metadata/system_id", NULL);
+
+	ret = !is_system_id_allowed(cmd, system_id);
+
+	daemon_reply_destroy(reply);
+	return ret;
+}
+
