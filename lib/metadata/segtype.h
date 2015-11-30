@@ -192,7 +192,8 @@ struct segtype_handler {
 				struct dm_tree_node *node, uint64_t len,
 				uint32_t *pvmove_mirror_count);
 	int (*target_status_compatible) (const char *type);
-	int (*check_transient_status) (struct lv_segment *seg, char *params);
+	int (*check_transient_status) (struct dm_pool *mem,
+				       struct lv_segment *seg, char *params);
 	int (*target_percent) (void **target_state,
 			       dm_percent_t *percent,
 			       struct dm_pool * mem,

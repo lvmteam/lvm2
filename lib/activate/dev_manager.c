@@ -1114,7 +1114,7 @@ int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *l
 		}
 
 		if (seg->segtype->ops->check_transient_status &&
-		    !seg->segtype->ops->check_transient_status(seg, params))
+		    !seg->segtype->ops->check_transient_status(dm->mem, seg, params))
 			goto_out;
 
 	} while (next);

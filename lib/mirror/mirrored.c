@@ -213,7 +213,7 @@ static int _mirrored_target_percent(void **target_state,
 	return 1;
 }
 
-static int _mirrored_transient_status(struct lv_segment *seg, char *params)
+static int _mirrored_transient_status(struct dm_pool *mem, struct lv_segment *seg, char *params)
 {
 	unsigned i, j;
 	struct logical_volume *lv = seg->lv;
