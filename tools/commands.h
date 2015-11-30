@@ -1214,7 +1214,7 @@ xx(vgexport,
 
 xx(vgextend,
    "Add physical volumes to a volume group",
-   ONE_VGNAME_ARG,
+   0,
    "vgextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--restoremissing]\n"

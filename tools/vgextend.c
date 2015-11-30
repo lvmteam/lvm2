@@ -129,6 +129,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	struct vgextend_params vp;
 	unsigned restoremissing = arg_is_set(cmd, restoremissing_ARG);
 	struct processing_handle *handle;
+	const char *one_vgname;
 	int ret;
 
 	if (!argc) {
@@ -136,6 +137,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 			  "physical volume(s)");
 		return EINVALID_CMD_LINE;
 	}
+
+	one_vgname = skip_dev_dir(cmd, argv[0], NULL);
 
 	if (arg_count(cmd, metadatacopies_ARG)) {
 		log_error("Invalid option --metadatacopies, "
@@ -169,7 +172,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	if (!lockd_gl(cmd, "ex", 0))
 		return_ECMD_FAILED;
 
-	ret = process_each_vg(cmd, argc, argv,
+	ret = process_each_vg(cmd, 0, NULL, one_vgname,
 			      READ_FOR_UPDATE, handle,
 			      restoremissing ? &_vgextend_restoremissing : &_vgextend_single);
 

@@ -249,6 +249,6 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_vg(cmd, argc, argv, READ_FOR_UPDATE, NULL,
+	return process_each_vg(cmd, argc, argv, NULL, READ_FOR_UPDATE, NULL,
 			       &vgconvert_single);
 }

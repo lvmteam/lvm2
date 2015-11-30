@@ -1729,7 +1729,7 @@ int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_na
  */
 static int _get_arg_vgnames(struct cmd_context *cmd,
 			    int argc, char **argv,
-			    unsigned one_vgname_arg,
+			    const char *one_vgname,
 			    struct dm_list *arg_vgnames,
 			    struct dm_list *arg_tags)
 {
@@ -1739,15 +1739,19 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 
 	log_verbose("Using volume group(s) on command line.");
 
+	if (one_vgname) {
+		if (!str_list_add(cmd->mem, arg_vgnames,
+				  dm_pool_strdup(cmd->mem, one_vgname))) {
+			log_error("strlist allocation failed.");
+			return ECMD_FAILED;
+		}
+		return ret_max;
+	}
+
 	for (; opt < argc; opt++) {
 		vg_name = argv[opt];
 
 		if (*vg_name == '@') {
-			if (one_vgname_arg) {
-				log_error("This command does not yet support a tag to identify a Volume Group.");
-				return EINVALID_CMD_LINE;
-			}
-
 			if (!validate_tag(vg_name + 1)) {
 				log_error("Skipping invalid tag: %s", vg_name);
 				if (ret_max < EINVALID_CMD_LINE)
@@ -1769,8 +1773,6 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 			log_error("Invalid volume group name %s.", vg_name);
 			if (ret_max < EINVALID_CMD_LINE)
 				ret_max = EINVALID_CMD_LINE;
-			if (one_vgname_arg)
-				break;
 			continue;
 		}
 
@@ -1779,9 +1781,6 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 			log_error("strlist allocation failed.");
 			return ECMD_FAILED;
 		}
-
-		if (one_vgname_arg)
-			break;
 	}
 
 	return ret_max;
@@ -1937,7 +1936,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		process_all = 1;
 
 	/*
-	 * FIXME If one_vgname_arg, only proceed if exactly one VG matches tags or selection.
+	 * FIXME If one_vgname, only proceed if exactly one VG matches tags or selection.
 	 */
 	dm_list_iterate_items(vgnl, vgnameids_to_process) {
 		if (sigint_caught())
@@ -2120,9 +2119,12 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 
 /*
  * Call process_single_vg() for each VG selected by the command line arguments.
+ * If one_vgname is set, process only that VG and ignore argc/argv (which should be 0/NULL)..
+ * If one_vgname is not set, get VG names to process from argc/argv.
  */
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    uint32_t read_flags, struct processing_handle *handle,
+		    const char *one_vgname, uint32_t read_flags,
+		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg)
 {
 	int handle_supplied = handle != NULL;
@@ -2131,7 +2133,6 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	struct dm_list vgnameids_on_system;	/* vgnameid_list */
 	struct dm_list vgnameids_to_process;	/* vgnameid_list */
 	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
-	int one_vgname_arg = (cmd->command->flags & ONE_VGNAME_ARG);
 	int process_all_vgs_on_system = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -2147,7 +2148,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	/*
 	 * Find any VGs or tags explicitly provided on the command line.
 	 */
-	if ((ret = _get_arg_vgnames(cmd, argc, argv, one_vgname_arg, &arg_vgnames, &arg_tags)) != ECMD_PROCESSED) {
+	if ((ret = _get_arg_vgnames(cmd, argc, argv, one_vgname, &arg_vgnames, &arg_tags)) != ECMD_PROCESSED) {
 		ret_max = ret;
 		goto_out;
 	}
