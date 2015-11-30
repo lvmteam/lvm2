@@ -1,5 +1,6 @@
 Version 2.02.137 -
 =====================================
+  Use dm_get_status_mirror() instead of individual parsers.
   Add mem pool arg for check_transient_status() target function.
   Avoid misleading error with -m is omitted with lvconvert to raid types.
 

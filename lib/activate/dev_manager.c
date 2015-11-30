@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -247,79 +247,6 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 }
 
 /*
- * _parse_mirror_status
- * @mirror_status_string
- * @image_health:  return for allocated copy of image health characters
- * @log_device: return for 'dev_t' of log device
- * @log_health: NULL if corelog, otherwise dm_malloc'ed log health char which
- *              the caller must free
- *
- * This function takes the mirror status string, breaks it up and returns
- * its components.  For now, we only return the health characters.  This
- * is an internal function.  If there are more things we want to return
- * later, we can do that then.
- *
- * Returns: 1 on success, 0 on failure
- */
-static int _parse_mirror_status(char *mirror_status_str,
-				char **images_health,
-				dev_t *log_dev, char **log_health)
-{
-	int major, minor;
-	char *p = NULL;
-	char **args, **log_args;
-	unsigned num_devs, log_argc;
-
-	*images_health = NULL;
-	*log_health = NULL;
-	*log_dev = 0;
-
-	if (!dm_split_words(mirror_status_str, 1, 0, &p) ||
-	    !(num_devs = (unsigned) atoi(p)))
-		/* On errors, we must assume the mirror is to be avoided */
-		return_0;
-
-	p += strlen(p) + 1;
-	args = alloca((num_devs + 5) * sizeof(char *));
-
-	if ((unsigned)dm_split_words(p, num_devs + 4, 0, args) < num_devs + 4)
-		return_0;
-
-	log_argc = (unsigned) atoi(args[3 + num_devs]);
-	log_args = alloca(log_argc * sizeof(char *));
-
-	if ((unsigned)dm_split_words(args[3 + num_devs] + strlen(args[3 + num_devs]) + 1,
-				     log_argc, 0, log_args) < log_argc)
-		return_0;
-
-	if (!strcmp(log_args[0], "disk")) {
-		if (!(*log_health = dm_strdup(log_args[2]))) {
-			log_error("Allocation of log string failed.");
-			return 0;
-		}
-		if (sscanf(log_args[1], "%d:%d", &major, &minor) != 2) {
-			log_error("Failed to parse log's device number from %s.", log_args[1]);
-			goto out;
-		}
-		*log_dev = MKDEV((dev_t)major, minor);
-	}
-
-	if (!(*images_health = dm_strdup(args[2 + num_devs]))) {
-		log_error("Allocation of images string failed.");
-		goto out;
-	}
-
-	return 1;
-
-out:
-	dm_free(*log_health);
-	*log_health = NULL;
-	*log_dev = 0;
-
-	return 0;
-}
-
-/*
  * ignore_blocked_mirror_devices
  * @dev
  * @start
@@ -349,44 +276,45 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 					  uint64_t start, uint64_t length,
 					  char *mirror_status_str)
 {
+	struct dm_pool *mem;
+	struct dm_status_mirror *sm;
 	unsigned i, check_for_blocking = 0;
-	dev_t log_dev;
-	char *images_health, *log_health;
 	uint64_t s,l;
 	char *p, *params, *target_type = NULL;
 	void *next = NULL;
 	struct dm_task *dmt = NULL;
 	int r = 0;
+	struct device *tmp_dev;
+	char buf[16];
 
-	if (!_parse_mirror_status(mirror_status_str,
-				  &images_health, &log_dev, &log_health))
+	if (!(mem = dm_pool_create("blocked_mirrors", 128)))
 		return_0;
 
-	for (i = 0; images_health[i]; i++)
-		if (images_health[i] != 'A') {
+	if (!dm_get_status_mirror(mem, mirror_status_str, &sm))
+		goto_out;
+
+	for (i = 0; i < sm->dev_count; ++i)
+		if (sm->devs[i].health != DM_STATUS_MIRROR_ALIVE) {
 			log_debug_activation("%s: Mirror image %d marked as failed",
 					     dev_name(dev), i);
 			check_for_blocking = 1;
 		}
 
-	if (!check_for_blocking && log_dev) {
-		if (log_health[0] != 'A') {
+	if (!check_for_blocking && sm->log_count) {
+		if (sm->logs[0].health != DM_STATUS_MIRROR_ALIVE) {
 			log_debug_activation("%s: Mirror log device marked as failed",
 					     dev_name(dev));
 			check_for_blocking = 1;
 		} else {
-			struct device *tmp_dev;
-			char buf[16];
 
-			if (dm_snprintf(buf, sizeof(buf), "%d:%d",
-					(int)MAJOR(log_dev),
-					(int)MINOR(log_dev)) < 0)
+			if (dm_snprintf(buf, sizeof(buf), "%u:%u",
+					sm->logs[0].major, sm->logs[0].minor) < 0)
 				goto_out;
 
 			if (!(tmp_dev = dev_create_file(buf, NULL, NULL, 0)))
 				goto_out;
 
-			tmp_dev->dev = log_dev;
+			tmp_dev->dev = MKDEV((dev_t)sm->logs[0].major, sm->logs[0].minor);
 			if (device_is_usable(tmp_dev, (struct dev_usable_check_params)
 					     { .check_empty = 1,
 					       .check_blocked = 1,
@@ -440,8 +368,8 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 out:
 	if (dmt)
 		dm_task_destroy(dmt);
-	dm_free(log_health);
-	dm_free(images_health);
+
+	dm_pool_destroy(mem);
 
 	return r;
 }

@@ -31,8 +31,9 @@ struct dso_state {
 
 DM_EVENT_LOG_FN("mirr")
 
-static int _process_status_code(const char status_code, const char *dev_name,
-				const char *dev_type, int r)
+static void _process_status_code(dm_status_mirror_health_t health,
+				 uint32_t major, uint32_t minor,
+				 const char *dev_type, int *r)
 {
 	/*
 	 *    A => Alive - No failures
@@ -42,90 +43,60 @@ static int _process_status_code(const char status_code, const char *dev_name,
 	 *    R => Read - A read failure occurred, mirror data unaffected
 	 *    U => Unclassified failure (bug)
 	 */ 
-	if (status_code == 'F') {
-		log_error("%s device %s flush failed.", dev_type, dev_name);
-		r = ME_FAILURE;
-	} else if (status_code == 'S')
-		log_error("%s device %s sync failed.", dev_type, dev_name);
-	else if (status_code == 'R')
-		log_error("%s device %s read failed.", dev_type, dev_name);
-	else if (status_code != 'A') {
-		log_error("%s device %s has failed (%c).",
-			  dev_type, dev_name, status_code);
-		r = ME_FAILURE;
+	switch (health) {
+	case DM_STATUS_MIRROR_ALIVE:
+		return;
+	case DM_STATUS_MIRROR_FLUSH_FAILED:
+		log_error("%s device %u:%u flush failed.",
+			  dev_type, major, minor);
+		*r = ME_FAILURE;
+		break;
+	case DM_STATUS_MIRROR_SYNC_FAILED:
+		log_error("%s device %u:%u sync failed.",
+			  dev_type, major, minor);
+		break;
+	case DM_STATUS_MIRROR_READ_FAILED:
+		log_error("%s device %u:%u read failed.",
+			  dev_type, major, minor);
+		break;
+	default:
+		log_error("%s device %u:%u has failed (%c).",
+			  dev_type, major, minor, (char)health);
+		*r = ME_FAILURE;
+		break;
 	}
-
-	return r;
 }
 
-static int _get_mirror_event(char *params)
+static int _get_mirror_event(struct dso_state *state, char *params)
 {
-	int i, r = ME_INSYNC;
-	char **args = NULL;
-	char *dev_status_str;
-	char *log_status_str;
-	char *sync_str;
-	char *p = NULL;
-	int log_argc, num_devs;
+	int r = ME_INSYNC;
+	unsigned i;
+	struct dm_status_mirror *ms;
 
-	/*
-	 * dm core parms:	     0 409600 mirror
-	 * Mirror core parms:	     2 253:4 253:5 400/400
-	 * New-style failure params: 1 AA
-	 * New-style log params:     3 cluster 253:3 A
-	 *			 or  3 disk 253:3 A
-	 *			 or  1 core
-	 */
-
-	/* number of devices */
-	if (!dm_split_words(params, 1, 0, &p))
-		goto out_parse;
-
-	if (!(num_devs = atoi(p)) ||
-	    (num_devs > DEFAULT_MIRROR_MAX_IMAGES) || (num_devs < 0))
-		goto out_parse;
-	p += strlen(p) + 1;
-
-	/* devices names + "400/400" + "1 AA" + 1 or 3 log parms + NULL */
-	args = dm_malloc((num_devs + 7) * sizeof(char *));
-	if (!args || dm_split_words(p, num_devs + 7, 0, args) < num_devs + 5)
-		goto out_parse;
-
-	/* FIXME: Code differs from lib/mirror/mirrored.c */
-	dev_status_str = args[2 + num_devs];
-	log_argc = atoi(args[3 + num_devs]);
-	log_status_str = args[3 + num_devs + log_argc];
-	sync_str = args[num_devs];
+	if (dm_get_status_mirror(state->mem, params, &ms))
+		goto_out;
 
 	/* Check for bad mirror devices */
-	for (i = 0; i < num_devs; i++)
-		r = _process_status_code(dev_status_str[i], args[i],
-			i ? "Secondary mirror" : "Primary mirror", r);
+	for (i = 0; i < ms->dev_count; ++i)
+		_process_status_code(ms->devs[i].health,
+				     ms->devs[i].major, ms->devs[i].minor,
+				     i ? "Secondary mirror" : "Primary mirror", &r);
 
 	/* Check for bad disk log device */
-	if (log_argc > 1)
-		r = _process_status_code(log_status_str[0],
-					 args[2 + num_devs + log_argc],
-					 "Log", r);
+	for (i = 0; i < ms->log_count; ++i)
+		_process_status_code(ms->logs[i].health,
+				     ms->logs[i].major, ms->logs[i].minor,
+				     "Log", &r);
 
-	if (r == ME_FAILURE)
-		goto out;
+	/* Ignore if not in-sync */
+	if ((r == ME_INSYNC) && (ms->insync_regions != ms->total_regions))
+		r = ME_IGNORE;
 
-	p = strstr(sync_str, "/");
-	if (p) {
-		p[0] = '\0';
-		if (strcmp(sync_str, p+1))
-			r = ME_IGNORE;
-		p[0] = '/';
-	} else
-		goto out_parse;
+	dm_pool_free(state->mem, ms);
 
-out:
-	dm_free(args);
 	return r;
 
-out_parse:
-	dm_free(args);
+out:
 	log_error("Unable to parse mirror status string.");
 
 	return ME_IGNORE;
@@ -172,7 +143,7 @@ void process_event(struct dm_task *dmt,
 			continue;
 		}
 
-		switch(_get_mirror_event(params)) {
+		switch(_get_mirror_event(state, params)) {
 		case ME_INSYNC:
 			/* FIXME: all we really know is that this
 			   _part_ of the device is in sync

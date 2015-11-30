@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -168,161 +168,94 @@ static int _mirrored_target_percent(void **target_state,
 				    uint64_t *total_numerator,
 				    uint64_t *total_denominator)
 {
-	uint64_t numerator, denominator;
-	unsigned mirror_count, m;
-	int used;
-	char *pos = params;
+	struct dm_status_mirror *sm;
 
 	if (!*target_state)
 		*target_state = _mirrored_init_target(mem, cmd);
 
-	/* Status line: <#mirrors> (maj:min)+ <synced>/<total_regions> */
-	log_debug_activation("Mirror status: %s", params);
+	if (!dm_get_status_mirror(mem, params, &sm))
+		return_0;
 
-	if (sscanf(pos, "%u %n", &mirror_count, &used) != 1) {
-		log_error("Failure parsing mirror status mirror count: %s",
-			  params);
-		return 0;
-	}
-	pos += used;
-
-	for (m = 0; m < mirror_count; m++) {
-		if (sscanf(pos, "%*x:%*x %n", &used) != 0) {
-			log_error("Failure parsing mirror status devices: %s",
-				  params);
-			return 0;
-		}
-		pos += used;
-	}
-
-	if (sscanf(pos, FMTu64 "/" FMTu64 "%n", &numerator, &denominator,
-		   &used) != 2) {
-		log_error("Failure parsing mirror status fraction: %s", params);
-		return 0;
-	}
-	pos += used;
-
-	*total_numerator += numerator;
-	*total_denominator += denominator;
+	*total_numerator += sm->insync_regions;
+	*total_denominator += sm->total_regions;
 
 	if (seg)
-		seg->extents_copied = seg->area_len * numerator / denominator;
+		seg->extents_copied = seg->area_len * sm->insync_regions / sm->total_regions;
 
-        *percent = dm_make_percent(numerator, denominator);
+	*percent = dm_make_percent(sm->insync_regions, sm->total_regions);
+
+	dm_pool_free(mem, sm);
 
 	return 1;
 }
 
 static int _mirrored_transient_status(struct dm_pool *mem, struct lv_segment *seg, char *params)
 {
-	unsigned i, j;
-	struct logical_volume *lv = seg->lv;
-	struct lvinfo info;
-	char *p = NULL;
-	char **args, **log_args;
-	struct logical_volume **images;
+	struct dm_status_mirror *sm;
 	struct logical_volume *log;
-	unsigned num_devs, log_argc;
-	int failed = 0;
-	char *status;
+	struct logical_volume *lv = seg->lv;
+	int failed = 0, r = 0;
+	unsigned i, j;
+	struct lvinfo info;
 
 	log_very_verbose("Mirrored transient status: \"%s\"", params);
 
-	/* number of devices */
-	if (!dm_split_words(params, 1, 0, &p))
+	if (!dm_get_status_mirror(mem, params, &sm))
 		return_0;
 
-	if (!(num_devs = (unsigned) atoi(p)))
-		return_0;
-
-	p += strlen(p) + 1;
-
-	if (num_devs > DEFAULT_MIRROR_MAX_IMAGES) {
-		log_error("Unexpectedly many (%d) mirror images in %s.",
-			  num_devs, lv->name);
-		return 0;
-	}
-
-	args = alloca((num_devs + 5) * sizeof(char *));
-	images = alloca(num_devs * sizeof(struct logical_volume *));
-
-	/* FIXME: dm_split_words()  should return unsigned */
-	if ((unsigned)dm_split_words(p, num_devs + 4, 0, args) < num_devs + 4)
-		return_0;
-
-	log_argc = (unsigned) atoi(args[3 + num_devs]);
-
-	if (log_argc > 16) {
-		log_error("Unexpectedly many (%d) log arguments in %s.",
-			  log_argc, lv->name);
-		return 0;
-	}
-
-	log_args = alloca(log_argc * sizeof(char *));
-
-	if ((unsigned)dm_split_words(args[3 + num_devs] + strlen(args[3 + num_devs]) + 1,
-				     log_argc, 0, log_args) < log_argc)
-		return_0;
-
-	if (num_devs != seg->area_count) {
+	if (sm->dev_count != seg->area_count) {
 		log_error("Active mirror has a wrong number of mirror images!");
-		log_error("Metadata says %d, kernel says %d.", seg->area_count, num_devs);
-		return 0;
+		log_error("Metadata says %u, kernel says %u.",
+			  seg->area_count, sm->dev_count);
+		goto out;
 	}
 
-	if (!strcmp(log_args[0], "disk")) {
-		char buf[32];
+	if (!strcmp(sm->log_type, "disk")) {
 		log = first_seg(lv)->log_lv;
 		if (!lv_info(lv->vg->cmd, log, 0, &info, 0, 0)) {
 			log_error("Check for existence of mirror log %s failed.",
-				  log->name);
-			return 0;
+				  display_lvname(log));
+			goto out;
 		}
 		log_debug_activation("Found mirror log at %d:%d", info.major, info.minor);
-		sprintf(buf, "%d:%d", info.major, info.minor);
-		if (strcmp(buf, log_args[1])) {
-			log_error("Mirror log mismatch. Metadata says %s, kernel says %s.",
-				  buf, log_args[1]);
-			return 0;
+		if (info.major != (int)sm->logs[0].major ||
+		    info.minor != (int)sm->logs[0].minor) {
+			log_error("Mirror log mismatch. Metadata says %d:%d, kernel says %u:%u.",
+				  info.major, info.minor,
+				  sm->logs[0].major, sm->logs[0].minor);
+			goto out;
 		}
-		log_very_verbose("Status of log (%s): %s", buf, log_args[2]);
-		if (log_args[2][0] != 'A') {
+		log_very_verbose("Status of log (%d:%d): %c.",
+				 info.major, info.minor,
+				 sm->logs[0].health);
+		if (sm->logs[0].health != DM_STATUS_MIRROR_ALIVE) {
 			log->status |= PARTIAL_LV;
 			++failed;
 		}
 	}
 
-	for (i = 0; i < num_devs; ++i)
-		images[i] = NULL;
-
 	for (i = 0; i < seg->area_count; ++i) {
-		char buf[32];
 		if (!lv_info(lv->vg->cmd, seg_lv(seg, i), 0, &info, 0, 0)) {
 			log_error("Check for existence of mirror image %s failed.",
 				  seg_lv(seg, i)->name);
-			return 0;
+			goto out;
 		}
 		log_debug_activation("Found mirror image at %d:%d", info.major, info.minor);
-		sprintf(buf, "%d:%d", info.major, info.minor);
-		for (j = 0; j < num_devs; ++j) {
-			if (!strcmp(buf, args[j])) {
-			    log_debug_activation("Match: metadata image %d matches kernel image %d", i, j);
-			    images[j] = seg_lv(seg, i);
+		for (j = 0; j < sm->dev_count; ++j)
+			if (info.major == (int)sm->devs[j].major &&
+			    info.minor == (int)sm->devs[j].minor) {
+				log_very_verbose("Status of image %d: %c.",
+						 i, sm->devs[j].health);
+				if (sm->devs[j].health != DM_STATUS_MIRROR_ALIVE) {
+					seg_lv(seg, i)->status |= PARTIAL_LV;
+					++failed;
+				}
+				break;
 			}
-		}
-	}
-
-	status = args[2 + num_devs];
-
-	for (i = 0; i < num_devs; ++i) {
-		if (!images[i]) {
-			log_error("Failed to find image %d (%s).", i, args[i]);
-			return 0;
-		}
-		log_very_verbose("Status of image %d: %c", i, status[i]);
-		if (status[i] != 'A') {
-			images[i]->status |= PARTIAL_LV;
-			++failed;
+		if (j == sm->dev_count) {
+			log_error("Failed to find image %d (%d:%d).",
+				  i, info.major, info.minor);
+			goto out;
 		}
 	}
 
@@ -330,7 +263,11 @@ static int _mirrored_transient_status(struct dm_pool *mem, struct lv_segment *se
 	if (failed)
 		vg_mark_partial_lvs(lv->vg, 0);
 
-	return 1;
+	r = 1;
+out:
+	dm_pool_free(mem, sm);
+
+	return r;
 }
 
 static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
