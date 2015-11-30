@@ -614,6 +614,23 @@ const char *lvmcache_vgname_from_vgid(struct dm_pool *mem, const char *vgid)
 	return vgname;
 }
 
+const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
+		return_NULL;
+
+	if (!vginfo->next)
+		return dm_pool_strdup(cmd->mem, vginfo->vgid);
+
+	/*
+	 * There are multiple VGs with this name to choose from.
+	 * Return an error because we don't know which VG is intended.
+	 */
+	return NULL;
+}
+
 static int _info_is_valid(struct lvmcache_info *info)
 {
 	if (info->status & CACHE_INVALID)

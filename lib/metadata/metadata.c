@@ -3617,8 +3617,16 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	/* Now determine the correct vgname if none was supplied */
-	if (!vgname && !(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid)))
+	if (!vgname && !(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
+		log_debug_metadata("Cache did not find VG name from vgid %.32s", vgid);
 		return_NULL;
+	}
+
+	/* Determine the correct vgid if none was supplied */
+	if (!vgid && !(vgid = lvmcache_vgid_from_vgname(cmd, vgname))) {
+		log_debug_metadata("Cache did not find VG vgid from name %s", vgname);
+		return_NULL;
+	}
 
 	if (use_precommitted && !(fmt->features & FMT_PRECOMMIT))
 		use_precommitted = 0;
