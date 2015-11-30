@@ -127,6 +127,7 @@ enum {
  * each ioctl command you want to execute.
  */
 
+struct dm_pool;
 struct dm_task;
 struct dm_timestamp;
 
@@ -281,17 +282,43 @@ void *dm_get_next_target(struct dm_task *dmt,
 			 char **target_type, char **params);
 
 /*
- * Parse params from STATUS call for raid target
+ * Following dm_get_status_* functions will allocate approriate status structure
+ * from passed mempool together with the necessary character arrays.
+ * Destroying the mempool will release all asociated allocation.
  */
-struct dm_pool;
 
-/*
- * dm_get_status_raid will allocate the dm_status_raid structure and
- * the necessary character arrays from the mempool provided to the
- * function.  If the mempool is from a dev_manager struct (dm->mem),
- * then the caller does not need to free the memory - simply calling
- * dev_manager_destroy will do.
- */
+/* Parse params from STATUS call for mirror target */
+typedef enum {
+	DM_STATUS_MIRROR_ALIVE	      = 'A',/* No failures */
+	DM_STATUS_MIRROR_FLUSH_FAILED = 'F',/* Mirror out-of-sync */
+	DM_STATUS_MIRROR_WRITE_FAILED = 'D',/* Mirror out-of-sync */
+	DM_STATUS_MIRROR_SYNC_FAILED  = 'S',/* Mirror out-of-sync */
+	DM_STATUS_MIRROR_READ_FAILED  = 'R',/* Mirror data unaffected */
+	DM_STATUS_MIRROR_UNCLASSIFIED = 'U' /* Bug */
+} dm_status_mirror_health_t;
+
+struct dm_status_mirror {
+	uint64_t total_regions;
+	uint64_t insync_regions;
+	uint32_t dev_count;
+	struct {
+		dm_status_mirror_health_t health;
+		uint32_t major;
+		uint32_t minor;
+	} *devs;
+	const char *log_type;
+	uint32_t log_count;
+	struct {
+		dm_status_mirror_health_t health;
+		uint32_t major;
+		uint32_t minor;
+	} *logs;
+};
+
+int dm_get_status_mirror(struct dm_pool *mem, const char *params,
+			 struct dm_status_mirror **status);
+
+/* Parse params from STATUS call for raid target */
 struct dm_status_raid {
 	uint64_t reserved;
 	uint64_t total_regions;
@@ -306,6 +333,7 @@ struct dm_status_raid {
 int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		       struct dm_status_raid **status);
 
+/* Parse params from STATUS call for cache target */
 struct dm_status_cache {
 	uint64_t version;  /* zero for now */
 
@@ -341,6 +369,8 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 			struct dm_status_cache **status);
 
 /*
+ * Parse params from STATUS call for snapshot target
+ *
  * Snapshot target's format:
  * <= 1.7.0: <used_sectors>/<total_sectors>
  * >= 1.8.0: <used_sectors>/<total_sectors> <metadata_sectors>
@@ -358,9 +388,7 @@ struct dm_status_snapshot {
 int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
 			   struct dm_status_snapshot **status);
 
-/*
- * Parse params from STATUS call for thin_pool target
- */
+/* Parse params from STATUS call for thin_pool target */
 typedef enum {
 	DM_THIN_DISCARDS_IGNORE,
 	DM_THIN_DISCARDS_NO_PASSDOWN,
@@ -385,9 +413,7 @@ struct dm_status_thin_pool {
 int dm_get_status_thin_pool(struct dm_pool *mem, const char *params,
 			    struct dm_status_thin_pool **status);
 
-/*
- * Parse params from STATUS call for thin target
- */
+/* Parse params from STATUS call for thin target */
 struct dm_status_thin {
 	uint64_t mapped_sectors;
 	uint64_t highest_mapped_sector;

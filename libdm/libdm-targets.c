@@ -355,3 +355,112 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 
 	return 1;
 }
+
+/*
+ * dm core parms:	     0 409600 mirror
+ * Mirror core parms:	     2 253:4 253:5 400/400
+ * New-style failure params: 1 AA
+ * New-style log params:     3 cluster 253:3 A
+ *			 or  3 disk 253:3 A
+ *			 or  1 core
+ */
+#define DM_MIRROR_MAX_IMAGES 8 /* limited by kernel DM_KCOPYD_MAX_REGIONS */
+
+int dm_get_status_mirror(struct dm_pool *mem, const char *params,
+			 struct dm_status_mirror **status)
+{
+	struct dm_status_mirror *s;
+	const char *p, *pos = params;
+	unsigned num_devs, argc, i;
+	int used;
+
+	if (!(s = dm_pool_zalloc(mem, sizeof(*s)))) {
+		log_error("Failed to alloc mem pool to parse mirror status.");
+		return 0;
+	}
+
+	if (sscanf(pos, "%u %n", &num_devs, &used) != 1)
+		goto_out;
+	pos += used;
+
+	if (num_devs > DM_MIRROR_MAX_IMAGES) {
+		log_error(INTERNAL_ERROR "More then " DM_TO_STRING(DM_MIRROR_MAX_IMAGES)
+			  " reported in mirror status.");
+		goto out;
+	}
+
+	if (!(s->devs = dm_pool_alloc(mem, num_devs * sizeof(*(s->devs))))) {
+		log_error("Allocation of devs failed.");
+		goto out;
+	}
+
+	for (i = 0; i < num_devs; ++i, pos += used)
+		if (sscanf(pos, "%u:%u %n",
+			   &(s->devs[i].major), &(s->devs[i].minor), &used) != 2)
+			goto_out;
+
+	if (sscanf(pos, FMTu64 "/" FMTu64 "%n",
+		   &s->insync_regions, &s->total_regions, &used) != 2)
+		goto_out;
+	pos += used;
+
+	if (sscanf(pos, "%u %n", &argc, &used) != 1)
+		goto_out;
+	pos += used;
+
+	for (i = 0; i < num_devs ; ++i)
+		s->devs[i].health = pos[i];
+
+	if (!(pos = _advance_to_next_word(pos, argc)))
+		goto_out;
+
+	if (sscanf(pos, "%u %n", &argc, &used) != 1)
+		goto_out;
+	pos += used;
+
+	if (argc == 1) {
+		/* core, cluster-core */
+		if (!(s->log_type = dm_pool_strdup(mem, pos))) {
+			log_error("Allocation of log type string failed.");
+			goto out;
+		}
+	} else {
+		if (!(p = _advance_to_next_word(pos, 1)))
+			goto_out;
+
+		/* disk, cluster-disk */
+		if (!(s->log_type = dm_pool_strndup(mem, pos, p - pos - 1))) {
+			log_error("Allocation of log type string failed.");
+			goto out;
+		}
+		pos = p;
+
+		if ((argc > 2) && !strcmp(s->log_type, "disk")) {
+			s->log_count = argc - 2;
+
+			if (!(s->logs = dm_pool_alloc(mem, s->log_count * sizeof(*(s->logs))))) {
+				log_error("Allocation of logs failed.");
+				goto out;
+			}
+
+			for (i = 0; i < s->log_count; ++i, pos += used)
+				if (sscanf(pos, "%u:%u %n",
+					   &s->logs[i].major, &s->logs[i].minor, &used) != 2)
+					goto_out;
+
+			for (i = 0; i < s->log_count; ++i)
+				s->logs[i].health = pos[i];
+		}
+	}
+
+	s->dev_count = num_devs;
+	*status = s;
+
+	return 1;
+out:
+	log_error("Failed to parse mirror status %s.", params);
+	dm_pool_free(mem, s);
+	*status = NULL;
+
+	return 0;
+}
