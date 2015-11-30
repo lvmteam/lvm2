@@ -4854,6 +4854,35 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 	return 1;
 }
 
+int is_system_id_allowed(struct cmd_context *cmd, const char *system_id)
+{
+	/*
+	 * A VG without a system_id can be accessed by anyone.
+	 */
+	if (!system_id || !system_id[0])
+		return 1;
+
+	/*
+	 * Allowed if the host and VG system_id's match.
+	 */
+	if (cmd->system_id && !strcmp(cmd->system_id, system_id))
+		return 1;
+
+	/*
+	 * Allowed if a host's extra system_id matches.
+	 */
+	if (cmd->system_id && _allow_extra_system_id(cmd, system_id))
+		return 1;
+
+	/*
+	 * Not allowed if the host does not have a system_id
+	 * and the VG does, or if the host and VG's system_id's
+	 * do not match.
+	 */
+
+	return 0;
+}
+
 static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 {
 	/*
@@ -4866,27 +4895,12 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/*
-	 * A VG without a system_id can be accessed by anyone.
-	 */
-	if (!vg->system_id || !vg->system_id[0])
-		return 1;
-
-	/*
 	 * A few commands allow read-only access to foreign VGs.
 	 */
 	if (cmd->include_foreign_vgs)
 		return 1;
 
-	/*
-	 * A host can access a VG with a matching system_id.
-	 */
-	if (cmd->system_id && !strcmp(vg->system_id, cmd->system_id))
-		return 1;
-
-	/*
-	 * A host can access a VG if the VG's system_id is in extra_system_ids list.
-	 */
-	if (cmd->system_id && _allow_extra_system_id(cmd, vg->system_id))
+	if (is_system_id_allowed(cmd, vg->system_id))
 		return 1;
 
 	/*
@@ -4901,7 +4915,8 @@ static int _access_vg_systemid(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/*
-	 * A host without a system_id cannot access a VG with a system_id.
+	 * Print an error when reading a VG that has a system_id
+	 * and the host system_id is unknown.
 	 */
 	if (!cmd->system_id || cmd->unknown_system_id) {
 		log_error("Cannot access VG %s with system ID %s with unknown local system ID.",

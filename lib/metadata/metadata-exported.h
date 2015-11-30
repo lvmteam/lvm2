@@ -1238,4 +1238,6 @@ int validate_vg_rename_params(struct cmd_context *cmd,
 
 int is_lockd_type(const char *lock_type);
 
+int is_system_id_allowed(struct cmd_context *cmd, const char *system_id);
+
 #endif
