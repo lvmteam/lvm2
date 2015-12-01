@@ -163,51 +163,56 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	return 1;
 }
 
-int lvresize(struct cmd_context *cmd, int argc, char **argv)
+static int _lvresize_single(struct cmd_context *cmd, const char *vg_name,
+			    struct volume_group *vg, struct processing_handle *handle)
 {
-	struct lvresize_params lp = { 0 };
-	struct volume_group *vg;
+	struct lvresize_params *lp = (struct lvresize_params *) handle->custom_handle;
 	struct dm_list *pvh = NULL;
 	struct logical_volume *lv;
-	uint32_t lockd_state = 0;
-	int r = ECMD_FAILED;
+	int ret = ECMD_FAILED;
+
+	/* Does LV exist? */
+	if (!(lv = find_lv(vg, lp->lv_name))) {
+		log_error("Logical volume %s not found in volume group %s",
+			  lp->lv_name, lp->vg_name);
+		goto out;
+	}
+
+	if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc, lp->argv, 1) : &vg->pvs))
+		goto_out;
+
+	if (!lv_resize_prepare(cmd, lv, lp, pvh)) {
+		ret = EINVALID_CMD_LINE;
+		goto_out;
+	}
+
+	if (!lv_resize(cmd, lv, lp, pvh))
+		goto_out;
+
+	ret = ECMD_PROCESSED;
+out:
+	return ret;
+}
+
+int lvresize(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle = NULL;
+	struct lvresize_params lp = { 0 };
+	int ret = ECMD_FAILED;
 
 	if (!_lvresize_params(cmd, argc, argv, &lp))
 		return EINVALID_CMD_LINE;
 
-	if (!lockd_vg(cmd, lp.vg_name, "ex", 0, &lockd_state))
-		return_ECMD_FAILED;
-
-	log_verbose("Finding volume group %s", lp.vg_name);
-	vg = vg_read_for_update(cmd, lp.vg_name, NULL, 0, lockd_state);
-	if (vg_read_error(vg)) {
-		release_vg(vg);
-		return_ECMD_FAILED;
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
 	}
 
-	/* Does LV exist? */
-	if (!(lv = find_lv(vg, lp.lv_name))) {
-		log_error("Logical volume %s not found in volume group %s",
-			  lp.lv_name, lp.vg_name);
-		goto out;
-	}
+	handle->custom_handle = &lp;
 
-	if (!(pvh = lp.argc ? create_pv_list(cmd->mem, vg, lp.argc,
-					     lp.argv, 1) : &vg->pvs))
-		goto_out;
+	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, READ_FOR_UPDATE, handle,
+			      &_lvresize_single);
 
-	if (!lv_resize_prepare(cmd, lv, &lp, pvh)) {
-		r = EINVALID_CMD_LINE;
-		goto_out;
-	}
-
-	if (!lv_resize(cmd, lv, &lp, pvh))
-		goto_out;
-
-	r = ECMD_PROCESSED;
-
-out:
-	unlock_and_release_vg(cmd, vg, lp.vg_name);
-
-	return r;
+	destroy_processing_handle(cmd, handle);
+	return ret;
 }
