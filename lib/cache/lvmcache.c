@@ -82,6 +82,7 @@ static int _has_scanned = 0;
 static int _vgs_locked = 0;
 static int _vg_global_lock_held = 0;	/* Global lock held when cache wiped? */
 static int _found_duplicate_pvs = 0;	/* If we never see a duplicate PV we can skip checking for them later. */
+static int _suppress_lock_ordering = 0;
 
 int lvmcache_init(void)
 {
@@ -371,6 +372,11 @@ static int _vgname_order_correct(const char *vgname1, const char *vgname2)
 	return 0;
 }
 
+void lvmcache_lock_ordering(int enable)
+{
+	_suppress_lock_ordering = !enable;
+}
+
 /*
  * Ensure VG locks are acquired in alphabetical order.
  */
@@ -378,6 +384,9 @@ int lvmcache_verify_lock_order(const char *vgname)
 {
 	struct dm_hash_node *n;
 	const char *vgname2;
+
+	if (_suppress_lock_ordering)
+		return 1;
 
 	if (!_lock_hash)
 		return_0;
@@ -743,7 +752,24 @@ static int _scan_invalid(void)
 	return 1;
 }
 
-int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
+/*
+ * lvmcache_label_scan() remembers that it has already
+ * been called, and will not scan labels if it's called
+ * again.  (It will rescan "INVALID" devices if called again.)
+ *
+ * To force lvmcache_label_scan() to rescan labels on all devices,
+ * call lvmcache_force_next_label_scan() before calling
+ * lvmcache_label_scan().
+ */
+
+static int _force_label_scan;
+
+void lvmcache_force_next_label_scan(void)
+{
+	_force_label_scan = 1;
+}
+
+int lvmcache_label_scan(struct cmd_context *cmd)
 {
 	struct label *label;
 	struct dev_iter *iter;
@@ -767,15 +793,15 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		goto out;
 	}
 
-	if (_has_scanned && !full_scan) {
+	if (_has_scanned && !_force_label_scan) {
 		r = _scan_invalid();
 		goto out;
 	}
 
-	if (full_scan == 2 && (cmd->full_filter && !cmd->full_filter->use_count) && !refresh_filters(cmd))
+	if (_force_label_scan && (cmd->full_filter && !cmd->full_filter->use_count) && !refresh_filters(cmd))
 		goto_out;
 
-	if (!cmd->full_filter || !(iter = dev_iter_create(cmd->full_filter, (full_scan == 2) ? 1 : 0))) {
+	if (!cmd->full_filter || !(iter = dev_iter_create(cmd->full_filter, _force_label_scan))) {
 		log_error("dev_iter creation failed");
 		goto out;
 	}
@@ -803,7 +829,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	 * If we are a long-lived process, write out the updated persistent
 	 * device cache for the benefit of short-lived processes.
 	 */
-	if (full_scan == 2 && cmd->is_long_lived &&
+	if (_force_label_scan && cmd->is_long_lived &&
 	    cmd->dump_filter && cmd->full_filter && cmd->full_filter->dump &&
 	    !cmd->full_filter->dump(cmd->full_filter, 0))
 		stack;
@@ -812,6 +838,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 
       out:
 	_scanning_in_progress = 0;
+	_force_label_scan = 0;
 
 	return r;
 }
@@ -937,7 +964,7 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 	struct vgnameid_list *vgnl;
 	struct lvmcache_vginfo *vginfo;
 
-	lvmcache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd);
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		if (!include_internal && is_orphan_vg(vginfo->vgname))
@@ -969,7 +996,7 @@ struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd,
 	struct lvmcache_vginfo *vginfo;
 
 	// TODO plug into lvmetad here automagically?
-	lvmcache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd);
 
 	if (!(vgids = str_list_create(cmd->mem))) {
 		log_error("vgids list allocation failed");
@@ -996,7 +1023,7 @@ struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd,
 	struct dm_list *vgnames;
 	struct lvmcache_vginfo *vginfo;
 
-	lvmcache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd);
 
 	if (!(vgnames = str_list_create(cmd->mem))) {
 		log_errno(ENOMEM, "vgnames list allocation failed");
@@ -1078,7 +1105,7 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 	if (dev)
 		return dev;
 
-	lvmcache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd);
 
 	/* Try again */
 	dev = _device_from_pvid(pvid, label_sector);
@@ -1088,7 +1115,8 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 	if (critical_section() || (scan_done_once && *scan_done_once))
 		return NULL;
 
-	lvmcache_label_scan(cmd, 2);
+	lvmcache_force_next_label_scan();
+	lvmcache_label_scan(cmd);
 	if (scan_done_once)
 		*scan_done_once = 1;
 
@@ -2126,7 +2154,8 @@ int lvmcache_populate_pv_fields(struct lvmcache_info *info,
 
 	/* Perform full scan (just the first time) and try again */
 	if (!scan_label_only && !critical_section() && !full_scan_done()) {
-		lvmcache_label_scan(info->fmt->cmd, 2);
+		lvmcache_force_next_label_scan();
+		lvmcache_label_scan(info->fmt->cmd);
 
 		if (_get_pv_if_in_vg(info, pv))
 			return 1;

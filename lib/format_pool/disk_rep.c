@@ -373,7 +373,9 @@ int read_pool_pds(const struct format_type *fmt, const char *vg_name,
 					   vg_name);
 			return 0;
 		}
-		lvmcache_label_scan(fmt->cmd, full_scan);
+		if (full_scan > 0)
+			lvmcache_force_next_label_scan();
+		lvmcache_label_scan(fmt->cmd);
 
 	} while (1);
 

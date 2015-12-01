@@ -663,7 +663,8 @@ int do_refresh_cache(void)
 
 	init_full_scan_done(0);
 	init_ignore_suspended_devices(1);
-	lvmcache_label_scan(cmd, 2);
+	lvmcache_force_next_label_scan();
+	lvmcache_label_scan(cmd);
 	dm_pool_empty(cmd->mem);
 
 	pthread_mutex_unlock(&lvm_lock);

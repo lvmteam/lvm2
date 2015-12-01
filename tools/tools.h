@@ -105,6 +105,8 @@ struct arg_value_group_list {
 #define LOCKD_VG_SH		0x00000020
 /* Command does not process any metadata. */
 #define NO_METADATA_PROCESSING	0x00000040
+/* Command wants to scan for new devices and force labels to be read from them all. */
+#define REQUIRES_FULL_LABEL_SCAN 0x00000080
  
 /* a register of the lvm commands */
 struct command {

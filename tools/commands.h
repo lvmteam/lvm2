@@ -1323,7 +1323,7 @@ xx(vgremove,
 
 xx(vgrename,
    "Rename a volume group",
-   ALLOW_UUID_AS_NAME,
+   ALLOW_UUID_AS_NAME | REQUIRES_FULL_LABEL_SCAN,
    "vgrename\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--commandprofile ProfileName]\n"

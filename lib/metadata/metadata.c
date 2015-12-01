@@ -1539,7 +1539,8 @@ out:
 		}
 
 	if (scan_needed) {
-		if (!lvmcache_label_scan(cmd, 2)) {
+		lvmcache_force_next_label_scan();
+		if (!lvmcache_label_scan(cmd)) {
 			stack;
 			r = 0;
 		}
@@ -3299,7 +3300,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct pv_list head;
 
 	dm_list_init(&head.list);
-	lvmcache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd);
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(orphan_vgname, NULL)))
@@ -3605,12 +3606,13 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
 	if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
-		lvmcache_label_scan(cmd, 0);
+		lvmcache_label_scan(cmd);
 		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 1))) {
 			/* Independent MDAs aren't supported under low memory */
 			if (!cmd->independent_metadata_areas && critical_section())
 				return_NULL;
-			lvmcache_label_scan(cmd, 2);
+			lvmcache_force_next_label_scan();
+			lvmcache_label_scan(cmd);
 			if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
 				return_NULL;
 		}
@@ -3820,7 +3822,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		/* Independent MDAs aren't supported under low memory */
 		if (!cmd->independent_metadata_areas && critical_section())
 			return_NULL;
-		lvmcache_label_scan(cmd, 2);
+		lvmcache_force_next_label_scan();
+		lvmcache_label_scan(cmd);
 		if (!(fmt = lvmcache_fmt_from_vgname(cmd, vgname, vgid, 0)))
 			return_NULL;
 
@@ -4113,7 +4116,8 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	 *       allowed to do a full scan here any more. */
 
 	// The slow way - full scan required to cope with vgrename
-	lvmcache_label_scan(cmd, 2);
+	lvmcache_force_next_label_scan();
+	lvmcache_label_scan(cmd);
 	if (!(vgnames = get_vgnames(cmd, 0))) {
 		log_error("vg_read_by_vgid: get_vgnames failed");
 		return NULL;
@@ -4374,7 +4378,7 @@ static int _get_pvs(struct cmd_context *cmd, uint32_t warn_flags,
 	struct vg_list *vgl_item = NULL;
 	int have_pv = 0;
 
-	lvmcache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd);
 
 	/* Get list of VGs */
 	if (!(vgids = get_vgids(cmd, 1))) {
@@ -5179,7 +5183,7 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
 	if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
-		lvmcache_label_scan(cmd, 0);
+		lvmcache_label_scan(cmd);
 		if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 1)) {
 			/* Independent MDAs aren't supported under low memory */
 			if (!cmd->independent_metadata_areas && critical_section()) {
@@ -5190,7 +5194,8 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 				unlock_vg(cmd, vgname);
 				return FAILED_LOCKING;
 			}
-			lvmcache_label_scan(cmd, 2);
+			lvmcache_force_next_label_scan();
+			lvmcache_label_scan(cmd);
 			if (!lvmcache_fmt_from_vgname(cmd, vgname, NULL, 0)) {
 				/* vgname not found after scanning */
 				return SUCCESS;

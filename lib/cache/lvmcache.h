@@ -66,9 +66,14 @@ void lvmcache_allow_reads_with_lvmetad(void);
 
 void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset);
 
-/* Set full_scan to 1 to reread every filtered device label or
- * 2 to rescan /dev for new devices */
-int lvmcache_label_scan(struct cmd_context *cmd, int full_scan);
+/*
+ * lvmcache_label_scan() will scan labels the first time it's
+ * called, but not on subsequent calls, unless
+ * lvmcache_force_next_label_scan() is called first
+ * to force the next lvmcache_label_scan() to scan again.
+ */
+void lvmcache_force_next_label_scan(void);
+int lvmcache_label_scan(struct cmd_context *cmd);
 
 /* Add/delete a device */
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
@@ -196,5 +201,7 @@ void lvmcache_get_max_name_lengths(struct cmd_context *cmd,
 			unsigned *pv_max_name_len, unsigned *vg_max_name_len);
 
 int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const char *vgid);
+
+void lvmcache_lock_ordering(int enable);
 
 #endif

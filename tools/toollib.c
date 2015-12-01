@@ -2205,6 +2205,16 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	}
 
 	/*
+	 * First rescan for available devices, then force the next
+	 * label scan to be done.  get_vgnameids() will scan labels
+	 * (when not using lvmetad).
+	 */
+	if (cmd->command->flags & REQUIRES_FULL_LABEL_SCAN) {
+		dev_cache_full_scan(cmd->full_filter);
+		lvmcache_force_next_label_scan();
+	}
+
+	/*
 	 * A list of all VGs on the system is needed when:
 	 * . processing all VGs on the system
 	 * . A VG name is specified which may refer to one

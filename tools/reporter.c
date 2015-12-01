@@ -582,7 +582,7 @@ static void _check_pv_list(struct cmd_context *cmd, int argc, char **argv,
 			if (!rescan_done && !dev_cache_get(argv[i], cmd->full_filter)) {
 				cmd->filter->wipe(cmd->filter);
 				/* FIXME scan only one device */
-				lvmcache_label_scan(cmd, 0);
+				lvmcache_label_scan(cmd);
 				rescan_done = 1;
 			}
 			if (*argv[i] == '@') {
