@@ -73,7 +73,7 @@ static int _get_mirror_event(struct dso_state *state, char *params)
 	unsigned i;
 	struct dm_status_mirror *ms;
 
-	if (dm_get_status_mirror(state->mem, params, &ms))
+	if (!dm_get_status_mirror(state->mem, params, &ms))
 		goto_out;
 
 	/* Check for bad mirror devices */
