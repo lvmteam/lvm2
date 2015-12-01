@@ -2081,7 +2081,7 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 	struct dm_str_list *sl, *sl2;
 	struct vgnameid_list *vgnl, *vgnl2;
 	struct id id;
-	int arg_is_uuid;
+	int arg_is_uuid = 0;
 	int found;
 
 	dm_list_iterate_items_safe(sl, sl2, arg_vgnames) {
@@ -2098,13 +2098,10 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 
 		/*
 		 * If the VG name arg looks like a UUID, then check if it
-		 * matches the UUID of a VG.
-		 *
-		 * FIXME: Do we want to allow vgname args to be interpretted
-		 * as uuids for all commands or only some (e.g. vgrename)?
-		 * If only some, then use a cmd flag to enable this.
+		 * matches the UUID of a VG.  (--select should generally
+		 * be used to select a VG by uuid instead.)
 		 */
-		if (!found) {
+		if (!found && (cmd->command->flags & ALLOW_UUID_AS_NAME)) {
 			log_suppress(2);
 			arg_is_uuid = id_read_format(&id, sl->str);
 			log_suppress(0);
