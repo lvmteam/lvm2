@@ -502,6 +502,28 @@ amendment when the software is updated.  Should you need to process the node
 names in /dev/mapper, you may use \fBdmsetup splitname\fP to separate out the
 original VG, LV and internal layer names.
 .
+.SH UNIQUE NAMES
+.
+
+VG names should be unique.  vgcreate will produce an error if the
+specified VG name matches an existing VG name.  However, there are cases
+where different VGs with the same name can appear to LVM, e.g. after
+moving disks or changing filters.
+
+When VGs with the same name exist, commands operating on all VGs will
+include all of the VGs with the same name.  If the ambiguous VG name is
+specified on the command line, the command will produce an error.  The
+error states that multiple VGs exist with the specified name.  To process
+one of the VGs specifically, the --select option should be used with the
+UUID of the intended VG: '--select vg_uuid=<uuid>'.
+
+An exception is if all but one of the VGs with the shared name is foreign
+(see
+.BR lvmsystemid (7).)
+In this case, the one VG that is not foreign is assumed to be the intended
+VG and is processed.
+
+.
 .SH ALLOCATION
 .
 When an operation needs to allocate Physical Extents for one or more
