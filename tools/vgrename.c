@@ -107,9 +107,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		}
 	}
 
-	log_suppress(2);
-	found_id = id_read_format(&id, vg_name_old);
-	log_suppress(0);
+	found_id = id_read_format_try(&id, vg_name_old);
 
 	if (found_id && (vg_name = lvmcache_vgname_from_vgid(cmd->mem, (char *)id.uuid))) {
 		if (!strcmp(vg_name, vg_name_new)) {

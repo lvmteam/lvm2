@@ -2101,11 +2101,8 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 		 * matches the UUID of a VG.  (--select should generally
 		 * be used to select a VG by uuid instead.)
 		 */
-		if (!found && (cmd->command->flags & ALLOW_UUID_AS_NAME)) {
-			log_suppress(2);
-			arg_is_uuid = id_read_format(&id, sl->str);
-			log_suppress(0);
-		}
+		if (!found && (cmd->command->flags & ALLOW_UUID_AS_NAME))
+			arg_is_uuid = id_read_format_try(&id, sl->str);
 
 		if (!found && arg_is_uuid) {
 			dm_list_iterate_items_safe(vgnl, vgnl2, vgnameids_on_system) {
