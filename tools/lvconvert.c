@@ -1734,7 +1734,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return 0;
 	}
 
-	if (seg_is_linear(seg) && !arg_count(cmd, mirrors_ARG)) {
+	if (seg_is_linear(seg) && !lp->merge_mirror && !arg_count(cmd, mirrors_ARG)) {
 		log_error("Raid conversions require -m/--mirrors");
 		return 0;
 	}
