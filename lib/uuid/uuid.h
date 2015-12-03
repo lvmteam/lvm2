@@ -56,6 +56,10 @@ int id_write_format(const struct id *id, char *buffer, size_t size);
  * Reads a formatted uuid.
  */
 int id_read_format(struct id *id, const char *buffer);
+/*
+ * Tries to read a formatted uuid without logging error for invalid ID
+ */
+int id_read_format_try(struct id *id, const char *buffer);
 
 char *id_format_and_copy(struct dm_pool *mem, const struct id *id);
 
