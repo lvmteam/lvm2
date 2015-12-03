@@ -299,9 +299,6 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		level = _LOG_FATAL;
 	}
 
-	if (_log_suppress == 2)
-		return;
-
 	if (level <= _LOG_ERR)
 		init_error_message_produced(1);
 
