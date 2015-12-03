@@ -242,9 +242,9 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 	if (!type_str || !*type_str)
 		return 1;
 
-	if (!strcmp(type_str, "mirror") || !strncmp(type_str, "raid", 4)) {
+	if (!strcmp(type_str, "mirror")) {
 		if (!arg_count(cmd, mirrors_ARG)) {
-			log_error("Mirror and raid conversions require -m/--mirrors");
+			log_error("Conversions to --type mirror require -m/--mirrors");
 			return 0;
 		}
 		return 1;
@@ -1731,6 +1731,11 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		log_error("Unable to convert %s/%s from %s to %s",
 			  lv->vg->name, lv->name,
 			  lvseg_name(seg), lp->segtype->name);
+		return 0;
+	}
+
+	if (seg_is_linear(seg) && !arg_count(cmd, mirrors_ARG)) {
+		log_error("Raid conversions require -m/--mirrors");
 		return 0;
 	}
 
