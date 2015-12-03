@@ -52,6 +52,9 @@ static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unuse
 	int fixed = 0;
 	int i;
 
+	if (!archive(vg))
+		return_0;
+
 	for (i = 0; i < vp->pv_count; i++)
 		if (_restore_pv(vg, vp->pv_names[i]))
 			fixed++;
@@ -87,6 +90,9 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 		log_error("Volume group %s not changed", vg_name);
 		return ECMD_FAILED;
 	}
+
+	if (!archive(vg))
+		return_ECMD_FAILED;
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs");

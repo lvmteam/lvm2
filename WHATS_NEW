@@ -1,5 +1,6 @@
 Version 2.02.137 -
 =====================================
+  Restore archiving before changing metadata in vgextend (2.02.117).
   Dropped internal usage of log_suppress(2).
   Cleaned logging code for buffer size usage.
   Added internal id_read_format_try() function to check and read valid UUID.
