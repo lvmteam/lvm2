@@ -264,9 +264,8 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	       const char *format, ...)
 {
 	va_list ap;
-	char buf[1024], locn[4096];
+	char buf[1024], message[4096];
 	int bufused, n;
-	const char *message;
 	const char *trformat;		/* Translated format string */
 	char *newbuf;
 	int use_stderr = level & _LOG_STDERR;
@@ -315,17 +314,16 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	    (_store_errmsg && (level <= _LOG_ERR)) ||
 	    log_once) {
 		va_start(ap, format);
-		n = vsnprintf(locn, sizeof(locn) - 1, trformat, ap);
+		n = vsnprintf(message, sizeof(message), trformat, ap);
 		va_end(ap);
 
+		/* When newer glibc returns >= sizeof(locn), we will just log what
+                 * has fit into buffer, it's '\0' terminated string */
 		if (n < 0) {
 			fprintf(stderr, _("vsnprintf failed: skipping external "
 					"logging function"));
 			goto log_it;
 		}
-
-		locn[sizeof(locn) - 1] = '\0';
-		message = locn;
 	}
 
 /* FIXME Avoid pointless use of message buffer when it'll never be read! */
@@ -441,20 +439,24 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		_already_logging = 1;
 		memset(&buf, ' ', sizeof(buf));
 		bufused = 0;
-		if ((n = dm_snprintf(buf, sizeof(buf) - 1,
+		if ((n = dm_snprintf(buf, sizeof(buf),
 				      "%s:%d %s%s", file, line, log_command_name(),
 				      _msg_prefix)) == -1)
 			goto done;
 
-		bufused += n;
+		bufused += n;		/* n does not include '\0' */
 
 		va_start(ap, format);
-		n = vsnprintf(buf + bufused - 1, sizeof(buf) - bufused - 1,
+		n = vsnprintf(buf + bufused, sizeof(buf) - bufused,
 			      trformat, ap);
 		va_end(ap);
-		bufused += n;
 
-		buf[bufused - 1] = '\n';
+		if (n < 0)
+			goto done;
+
+		bufused += n;
+		if (n >= sizeof(buf))
+			bufused = sizeof(buf) - 1;
 	      done:
 		buf[bufused] = '\n';
 		buf[sizeof(buf) - 1] = '\n';

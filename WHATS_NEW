@@ -1,5 +1,6 @@
 Version 2.02.137 -
 =====================================
+  Cleaned logging code for buffer size usage.
   Added internal id_read_format_try() function to check and read valid UUID.
   Use dm_get_status_mirror() instead of individual parsers.
   Add mem pool arg for check_transient_status() target function.
