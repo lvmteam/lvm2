@@ -321,7 +321,8 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 					       .check_suspended = ignore_suspended_devices(),
 					       .check_error_target = 1,
 					       .check_reserved = 0 }))
-				goto_out;
+				goto out; /* safe to use */
+			stack;
 		}
 	}
 
