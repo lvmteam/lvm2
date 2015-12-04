@@ -121,19 +121,20 @@ static int _archive(struct volume_group *vg, int compulsory)
 	}
 
 	if (!dm_create_dir(vg->cmd->archive_params->dir)) {
-		/* FIXME: !compulsory logs error here */
-		log_error("Cannot create archiving directory %s.",
-			  vg->cmd->archive_params->dir);
-		return compulsory ? 0 : 1;
+		if (compulsory)
+			return_0;
+		return 1;
 	}
 
 	/* Trap a read-only file system */
 	if ((access(vg->cmd->archive_params->dir, R_OK | W_OK | X_OK) == -1) &&
 	    (errno == EROFS)) {
-		/* FIXME: !compulsory logs error here */
-		log_error("Cannot archive volume group metadata for %s to read-only filesystem.",
-			  vg->name);
-		return compulsory ? 0 : 1;
+		if (compulsory) {
+			log_error("Cannot archive volume group metadata for %s to read-only filesystem.",
+				  vg->name);
+			return 0;
+		}
+		return 1;
 	}
 
 	log_verbose("Archiving volume group \"%s\" metadata (seqno %u).", vg->name,
@@ -249,8 +250,8 @@ int backup_locally(struct volume_group *vg)
 	/* Trap a read-only file system */
 	if ((access(vg->cmd->backup_params->dir, R_OK | W_OK | X_OK) == -1) &&
 	    (errno == EROFS)) {
-		log_warn("WARNING: Cannot backup of volume group %s metadata to read-only fs.",
-			  vg->name);
+		/* Will take a backup next time when FS is writable */
+		log_debug("Skipping backup of volume group on read-only filesystem.");
 		return 0;
 	}
 
@@ -493,6 +494,9 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 
 /*
  * Update backup (and archive) if they're out-of-date or don't exist.
+ *
+ * This function is not supposed to log_error
+ * when the filesystem with archive/backup dir is read-only.
  */
 void check_current_backup(struct volume_group *vg)
 {
