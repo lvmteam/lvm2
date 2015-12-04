@@ -42,7 +42,7 @@ mount -n -r "$etc_lv" "$mount_dir"
 
 aux lvmconf "backup/archive = 1" "backup/backup = 1"
 
-# cannot archive to read-only
+# cannot archive to read-only - requires user to specify -An
 not lvcreate -n $lv2 -l 10%FREE $vg
 lvcreate -An -n $lv2 -l 10%FREE $vg
 
@@ -59,12 +59,24 @@ vgreduce $vg "$dev2"
 mount_dir="etc/backup"
 mount -n -r "$etc_lv" "$mount_dir"
 
-lvcreate -n $lv3 -l 10%FREE $vg
+# Must not fail on making backup
+vgscan
+
+lvcreate -An -n $lv3 -l 10%FREE $vg
+
 vgextend $vg "$dev2"
 
+#
+# Now check both archive & backup read-only
+#
+rm -rf etc/archive
+ln -s backup etc/archive
+
+# Must not fail on making backup
+vgscan
+lvcreate -An -n $lv4 -l 10%FREE $vg
+
 umount "$mount_dir" || true
-#ls -laR
-#grep "" etc/archive/*
 
 # TODO maybe also support --ignorelockingfailure ??
 vgremove -ff $vg
