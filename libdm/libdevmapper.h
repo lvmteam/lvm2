@@ -300,19 +300,19 @@ typedef enum {
 struct dm_status_mirror {
 	uint64_t total_regions;
 	uint64_t insync_regions;
-	uint32_t dev_count;
+	uint32_t dev_count;             /* # of devs[] elements (<= 8) */
 	struct {
 		dm_status_mirror_health_t health;
 		uint32_t major;
 		uint32_t minor;
-	} *devs;
-	const char *log_type;
-	uint32_t log_count;
+	} *devs;                        /* array with individual legs */
+	const char *log_type;           /* core, disk,.... */
+	uint32_t log_count;		/* # of logs[] elements */
 	struct {
 		dm_status_mirror_health_t health;
 		uint32_t major;
 		uint32_t minor;
-	} *logs;
+	} *logs;			/* array with individual logs */
 };
 
 int dm_get_status_mirror(struct dm_pool *mem, const char *params,
