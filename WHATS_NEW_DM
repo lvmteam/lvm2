@@ -1,5 +1,5 @@
-Version 1.02.113 - 
-=====================================
+Version 1.02.113 - 5th December 2015
+====================================
   Mirror plugin in dmeventd uses dm_get_status_mirror().
   Add dm_get_status_mirror() for parsing mirror status line.
 

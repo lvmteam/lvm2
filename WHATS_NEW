@@ -1,12 +1,17 @@
-Version 2.02.137 -
-=====================================
+Version 2.02.137 - 5th December 2015
+====================================
   Restore archiving before changing metadata in vgextend (2.02.117).
   Dropped internal usage of log_suppress(2).
   Cleaned logging code for buffer size usage.
   Added internal id_read_format_try() function to check and read valid UUID.
+  Change lvcreate, lvrename, lvresize to use process_each_vg.
+  Change process_each_vg to handle single VG as separate arg.
+  Issue error if ambiguous VG name is supplied in most commands.
+  Make process_each fns always work through full list of known VG names.
   Use dm_get_status_mirror() instead of individual parsers.
   Add mem pool arg for check_transient_status() target function.
   Avoid misleading error with -m is omitted with lvconvert to raid types.
+  Add system_id to vginfo cache.
 
 Version 2.02.136 - 28th November 2015
 =====================================
