@@ -1,3 +1,6 @@
+Version 2.02.138 -
+====================================
+
 Version 2.02.137 - 5th December 2015
 ====================================
   Restore archiving before changing metadata in vgextend (2.02.117).
