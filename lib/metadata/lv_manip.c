@@ -4154,7 +4154,7 @@ static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
 	if (lv_is_cow(lv) && lv_is_virtual_origin(org = origin_from_cow(lv))) {
 		if (!fn(org, data))
 			return_0;
-		if (!for_each_sub_lv(org, fn, data))
+		if (!_for_each_sub_lv(org, skip_pools, fn, data))
 			return_0;
 	}
 
@@ -4162,21 +4162,21 @@ static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
 		if (seg->log_lv) {
 			if (!fn(seg->log_lv, data))
 				return_0;
-			if (!for_each_sub_lv(seg->log_lv, fn, data))
+			if (!_for_each_sub_lv(seg->log_lv, skip_pools, fn, data))
 				return_0;
 		}
 
 		if (seg->metadata_lv) {
 			if (!fn(seg->metadata_lv, data))
 				return_0;
-			if (!for_each_sub_lv(seg->metadata_lv, fn, data))
+			if (!_for_each_sub_lv(seg->metadata_lv, skip_pools, fn, data))
 				return_0;
 		}
 
 		if (seg->pool_lv && !skip_pools) {
 			if (!fn(seg->pool_lv, data))
 				return_0;
-			if (!for_each_sub_lv(seg->pool_lv, fn, data))
+			if (!_for_each_sub_lv(seg->pool_lv, skip_pools, fn, data))
 				return_0;
 		}
 
@@ -4185,7 +4185,7 @@ static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
 				continue;
 			if (!fn(seg_lv(seg, s), data))
 				return_0;
-			if (!for_each_sub_lv(seg_lv(seg, s), fn, data))
+			if (!_for_each_sub_lv(seg_lv(seg, s), skip_pools, fn, data))
 				return_0;
 		}
 
@@ -4198,7 +4198,7 @@ static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
 				continue;
 			if (!fn(seg_metalv(seg, s), data))
 				return_0;
-			if (!for_each_sub_lv(seg_metalv(seg, s), fn, data))
+			if (!_for_each_sub_lv(seg_metalv(seg, s), skip_pools, fn, data))
 				return_0;
 		}
 	}
