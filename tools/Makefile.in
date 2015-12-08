@@ -130,7 +130,7 @@ dmsetup: dmsetup.o $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
 
 dmsetup.static: dmsetup.o $(interfacebuilddir)/libdevmapper.a
 	$(CC) $(CFLAGS) $(LDFLAGS) -static -L$(interfacebuilddir) \
-	      -o $@ dmsetup.o -ldevmapper $(STATIC_LIBS) $(LIBS)
+	      -o $@ dmsetup.o -ldevmapper $(M_LIBS) $(PTHREAD_LIBS) $(STATIC_LIBS) $(LIBS)
 
 all: device-mapper
 
