@@ -408,7 +408,7 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	if (!(thread->device.uuid = dm_strdup(data->device_uuid)))
 		goto_out;
 
-        /* Until real name resolved, use UUID */
+	/* Until real name resolved, use UUID */
 	if (!(thread->device.name = dm_strdup(data->device_uuid)))
 		goto_out;
 
@@ -1359,6 +1359,26 @@ static int _open_fifo(const char *path)
 {
 	struct stat st;
 	int fd = -1;
+ 
+ 	/*
+	 * FIXME Explicitly verify the code's requirement that path is secure:
+	 * - All parent directories owned by root without group/other write access unless sticky.
+	 */
+
+	/* If path exists, only use it if it is root-owned fifo mode 0600 */
+	if ((lstat(path, &st) < 0)) {
+		if (errno != ENOENT) {
+			log_sys_error("stat", path);
+			return -1;
+		}
+	} else if (!S_ISFIFO(st.st_mode) || st.st_uid ||
+		   (st.st_mode & (S_IEXEC | S_IRWXG | S_IRWXO))) {
+		log_warn("WARNING: %s has wrong attributes: Replacing.", path);
+		if (unlink(path)) {
+			log_sys_error("unlink", path);
+			return -1;
+		}
+	}
 
 	/* Create fifo. */
 	(void) dm_prepare_selinux_context(path, S_IFIFO);
@@ -1382,14 +1402,10 @@ static int _open_fifo(const char *path)
 		goto fail;
 	}
 
-	if ((st.st_mode & 0777) != 0600) {
-		log_warn("WARNING: Fixing wrong permissions on %s: %s.",
-			 path, strerror(errno));
-
-		if (fchmod(fd, 0600)) {
-			log_sys_error("fchmod", path);
-			goto fail;
-		}
+	if (!S_ISFIFO(st.st_mode) || st.st_uid ||
+	    (st.st_mode & (S_IEXEC | S_IRWXG | S_IRWXO))) {
+		log_error("%s: fifo has incorrect attributes", path);
+		goto fail;
 	}
 
 	if (fcntl(fd, F_SETFD, FD_CLOEXEC)) {
