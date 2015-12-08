@@ -1,5 +1,6 @@
 Version 1.02.114 -
 ====================================
+  Extend validity checks on dmeventd client socket.
 
 Version 1.02.113 - 5th December 2015
 ====================================

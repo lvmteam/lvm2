@@ -412,12 +412,41 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 	char default_dmeventd_path[] = DMEVENTD_PATH;
 	char *args[] = { dmeventd_path ? : default_dmeventd_path, NULL };
 
+	/*
+	 * FIXME Explicitly verify the code's requirement that client_path is secure:
+	 * - All parent directories owned by root without group/other write access unless sticky.
+	 */
+
+	/* If client fifo path exists, only use it if it is root-owned fifo mode 0600 */
+	if ((lstat(fifos->client_path, &statbuf) < 0)) {
+		if (errno == ENOENT)
+			/* Jump ahead if fifo does not already exist. */
+			goto start_server;
+		else {
+			log_sys_error("stat", fifos->client_path);
+			return 0;
+		}
+	} else if (!S_ISFIFO(statbuf.st_mode)) {
+		log_error("%s must be a fifo.", fifos->client_path);
+		return 0;
+	} else if (statbuf.st_uid) {
+		log_error("%s must be owned by uid 0.", fifos->client_path);
+		return 0;
+	} else if (statbuf.st_mode & (S_IEXEC | S_IRWXG | S_IRWXO)) {
+		log_error("%s must have mode 0600.", fifos->client_path);
+		return 0;
+	}
+
 	/* Anyone listening?  If not, errno will be ENXIO */
 	fifos->client = open(fifos->client_path, O_WRONLY | O_NONBLOCK);
 	if (fifos->client >= 0) {
+		/* Should never happen if all the above checks passed. */
 		if ((fstat(fifos->client, &statbuf) < 0) ||
-		    !S_ISFIFO(statbuf.st_mode)) {
-			log_error("%s is not a fifo.", fifos->client_path);
+		    !S_ISFIFO(statbuf.st_mode) || statbuf.st_uid ||
+		    (statbuf.st_mode & (S_IEXEC | S_IRWXG | S_IRWXO))) {
+			log_error("%s is no longer a secure root-owned fifo with mode 0600.", fifos->client_path);
+			if (close(fifos->client))
+				log_sys_debug("close", fifos->client_path);
 			return 0;
 		}
 
@@ -431,6 +460,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		return 0;
 	}
 
+start_server:
 	/* server is not running */
 
 	if ((args[0][0] == '/') && stat(args[0], &statbuf)) {
@@ -724,6 +754,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 
 	uuid = dm_task_get_uuid(dmt);
 
+	/* FIXME Distinguish errors connecting to daemon */
 	if (_do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
 		      DM_EVENT_CMD_GET_REGISTERED_DEVICE, dmevh->dmeventd_path,
 		      &msg, dmevh->dso, uuid, dmevh->mask, 0)) {
