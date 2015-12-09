@@ -46,6 +46,18 @@ static int _lvrename_single(struct cmd_context *cmd, const char *vg_name,
 		goto bad;
 	}
 
+	/*
+	 * The lvmlockd LV lock is only acquired here to ensure the LV is not
+	 * active on another host.  This requests a transient LV lock.
+	 * If the LV is active, a persistent LV lock already exists in
+	 * lvmlockd, and the transient lock request does nothing.
+	 * If the LV is not active, then no LV lock exists and the transient
+	 * lock request acquires the LV lock (or fails).  The transient lock
+	 * is automatically released when the command exits.
+	 */
+	if (!lockd_lv(cmd, lvl->lv, "ex", 0))
+		goto_bad;
+
 	if (!lv_rename(cmd, lvl->lv, lp->lv_name_new))
 		goto_bad;
 
