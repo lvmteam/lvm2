@@ -4230,8 +4230,12 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names = { .old = lv->name };
 
-	/* rename is not allowed on sub LVs */
-	if (!lv_is_visible(lv)) {
+	/*
+	 * rename is not allowed on sub LVs except for pools
+	 * (thin pool is 'visible', but cache may not)
+	 */
+	if (!lv_is_pool(lv) &&
+	    !lv_is_visible(lv)) {
 		log_error("Cannot rename internal LV \"%s\".", lv->name);
 		return 0;
 	}
@@ -4265,7 +4269,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_cow(lv))
 		lv = origin_from_cow(lv);
 
-	if (update_mda && !lv_update_and_reload(lv))
+	if (update_mda && !lv_update_and_reload((struct logical_volume *)lv_lock_holder(lv)))
 		return_0;
 
 	return 1;
