@@ -37,7 +37,7 @@ dm_table | grep -F "$pv_ugly"
 created="$dev1"
 # when used with real udev without fallback, it will fail here
 pvcreate "$dev1" || created="$dev2"
-pvdisplay 2>&1 | tee >err
+pvdisplay 2>&1 | tee err
 should grep -F "$pv_ugly" err
 should check pv_field "$dev1" pv_name "$dev1"
 vgcreate $vg "$created"

@@ -34,7 +34,7 @@ check lv_field $vg/$lv1 size "2.00m"
 # prepare 2097152  file content
 seq 0 315465 > 2M
 md5sum 2M | cut -f 1 -d ' ' | tee MD5
-dd if=2M of="$DM_DEV_DIR/mapper/$vg-$lv1" bs=512K conv=fdatasync 2>&1 >log &
+dd if=2M of="$DM_DEV_DIR/mapper/$vg-$lv1" bs=512K conv=fdatasync >log 2>&1 &
 #dd if=2M of="$DM_DEV_DIR/mapper/$vg-$lv1" bs=2M oflag=direct &
 
 # give it some time to fill thin-volume
