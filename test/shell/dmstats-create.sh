@@ -15,6 +15,13 @@
 aux driver_at_least 4 33 || skip
 
 # ensure we can create devices (uses dmsetup, etc)
-#aux prepare_devs 5
+aux prepare_devs 1
 
-# FIXME: some actual tests here.
+# basic dmstats create commands
+
+dmstats create "$dev1"
+dmstats create --start 0 --len 1 "$dev1"
+dmstats create --segments "$dev1"
+dmstats create --precise "$dev1"
+dmstats create --bounds 10ms,20ms,30ms "$dev1"
+
