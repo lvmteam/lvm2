@@ -1,5 +1,7 @@
 Version 2.02.138 -
 ====================================
+  Support lvrename for hidden (used) cache pools.
+  Fix lvrename for stacked cache pools.
 
 Version 2.02.137 - 5th December 2015
 ====================================
