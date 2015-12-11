@@ -749,6 +749,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	struct dev_iter *iter;
 	struct device *dev;
 	struct format_type *fmt;
+	int dev_count = 0;
 
 	int r = 0;
 
@@ -779,10 +780,16 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		goto out;
 	}
 
-	while ((dev = dev_iter_get(iter)))
+	log_very_verbose("Scanning device labels");
+
+	while ((dev = dev_iter_get(iter))) {
 		(void) label_read(dev, &label, UINT64_C(0));
+		dev_count++;
+	}
 
 	dev_iter_destroy(iter);
+
+	log_very_verbose("Scanned %d device labels", dev_count);
 
 	_has_scanned = 1;
 

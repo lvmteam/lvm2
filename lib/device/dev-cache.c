@@ -1026,6 +1026,16 @@ struct device *dev_cache_get_by_devt(dev_t dev, struct dev_filter *f)
 		      f->passes_filter(f, d))) ? d : NULL;
 }
 
+void dev_cache_full_scan(struct dev_filter *f)
+{
+	if (f && f->wipe) {
+		f->wipe(f); /* might call _full_scan(1) */
+		if (!full_scan_done())
+			_full_scan(1);
+	} else
+		_full_scan(1);
+}
+
 struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 {
 	struct dev_iter *di = dm_malloc(sizeof(*di));
@@ -1037,14 +1047,8 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 
 	if (dev_scan && !trust_cache()) {
 		/* Flag gets reset between each command */
-		if (!full_scan_done()) {
-			if (f && f->wipe) {
-				f->wipe(f); /* might call _full_scan(1) */
-				if (!full_scan_done())
-					_full_scan(1);
-			} else
-				_full_scan(1);
-		}
+		if (!full_scan_done())
+			dev_cache_full_scan(f);
 	} else
 		_full_scan(0);
 

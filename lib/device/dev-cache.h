@@ -45,6 +45,7 @@ int dev_cache_check_for_open_devices(void);
 /* Trigger(1) or avoid(0) a scan */
 void dev_cache_scan(int do_scan);
 int dev_cache_has_scanned(void);
+void dev_cache_full_scan(struct dev_filter *f);
 
 int dev_cache_add_dir(const char *path);
 int dev_cache_add_loopfile(const char *path);

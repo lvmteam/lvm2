@@ -3340,6 +3340,13 @@ int process_each_pv(struct cmd_context *cmd,
 		return_ECMD_FAILED;
 
 	/*
+	 * This full scan would be done by _get_all_devices() if
+	 * it were not done here first.  It's called here first
+	 * so that get_vgnameids() will look at any new devices.
+	 */
+	dev_cache_full_scan(cmd->full_filter);
+
+	/*
 	 * Need pvid's set on all PVs before processing so that pvid's
 	 * can be compared to find duplicates while processing.
 	 */
