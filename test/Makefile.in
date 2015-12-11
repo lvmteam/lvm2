@@ -199,7 +199,7 @@ LIB_NOT = not
 LIB_LINK_NOT = invalid fail should
 LIB_SHARED = check aux inittest utils get lvm-wrapper
 
-install: .tests-stamp lib/paths-installed lib/version-expected
+install: .tests-stamp lib/paths-installed
 	@echo $(srcdir)
 	$(INSTALL_DIR) $(DATADIR)/{shell,api,lib} $(EXECDIR)
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell
