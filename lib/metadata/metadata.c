@@ -3478,7 +3478,7 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 	 * the VG while it's only partially written out.
 	 */
 	if (cmd->system_id && strcmp(vg->system_id, cmd->system_id)) {
-		log_verbose("Skip wiping outdated PVs for foreign VG.");
+		log_debug_metadata("Skip wiping outdated PVs for foreign VG.");
 		return 0;
 	}
 
@@ -3489,7 +3489,7 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 	 * host, same as the foreign VG case.
 	 */
 	if (is_lockd_type(vg->lock_type)) {
-		log_verbose("Skip wiping outdated PVs for shared VG.");
+		log_debug_metadata("Skip wiping outdated PVs for shared VG.");
 		return 0;
 	}
 
