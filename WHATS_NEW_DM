@@ -1,5 +1,5 @@
-Version 1.02.114 -
-====================================
+Version 1.02.114 - 14th December 2015
+=====================================
   Better support for dmsetup static linkage.
   Extend validity checks on dmeventd client socket.
 
