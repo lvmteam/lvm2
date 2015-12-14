@@ -404,10 +404,6 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	if (!lockd_gl(cmd, "sh", 0))
 		return_ECMD_FAILED;
 
-	if (cmd->full_filter->wipe)
-		cmd->full_filter->wipe(cmd->full_filter);
-
-	lvmcache_destroy(cmd, 1, 0);
 
 	if (!(handle = init_processing_handle(cmd))) {
 		log_error("Failed to initialize processing handle.");

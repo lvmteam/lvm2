@@ -3344,7 +3344,10 @@ int process_each_pv(struct cmd_context *cmd,
 	 * it were not done here first.  It's called here first
 	 * so that get_vgnameids() will look at any new devices.
 	 */
-	dev_cache_full_scan(cmd->full_filter);
+	if (!trust_cache()) {
+		dev_cache_full_scan(cmd->full_filter);
+		lvmcache_destroy(cmd, 1, 0);
+	}
 
 	/*
 	 * Need pvid's set on all PVs before processing so that pvid's
