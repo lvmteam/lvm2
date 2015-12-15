@@ -5146,22 +5146,19 @@ static int _lvresize_check_type(struct cmd_context *cmd, const struct logical_vo
 		}
 	}
 
-	if (lv_is_thin_pool(lv)) {
-		if (lp->resize == LV_REDUCE) {
+	if (lp->resize == LV_REDUCE) {
+		if (lv_is_thin_pool(lv)) {
 			log_error("Thin pool volumes cannot be reduced in size yet.");
 			return 0;
 		}
-	}
-
-	if ((lp->resize == LV_REDUCE) && lv_is_thin_pool_metadata(lv)) {
-		log_error("Thin pool metadata volumes cannot be reduced.");
-		return 0;
-	}
-
-	if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv &&
-	    (lp->resize == LV_EXTEND)) {
+		if (lv_is_thin_pool_metadata(lv)) {
+			log_error("Thin pool metadata volumes cannot be reduced.");
+			return 0;
+		}
+	} else if (lp->resize == LV_EXTEND)  {
 		/* Validate thin target supports bigger size of thin volume then external origin */
-		if (first_seg(lv)->external_lv->size <= lv->size &&
+		if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv &&
+		    (lv->size > first_seg(lv)->external_lv->size) &&
 		    !thin_pool_feature_supported(first_seg(lv)->pool_lv, THIN_FEATURE_EXTERNAL_ORIGIN_EXTEND)) {
 			log_error("Thin target does not support external origin smaller then thin volume.");
 			return 0;
