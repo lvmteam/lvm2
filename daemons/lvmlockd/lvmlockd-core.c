@@ -1579,8 +1579,23 @@ static int res_update(struct lockspace *ls, struct resource *r,
 
 	if (act->flags & LD_AF_NEXT_VERSION)
 		lk->version = r->version + 1;
-	else
+	else {
+		if (r->version >= act->version) {
+			/*
+			 * This update is done from vg_write. If the metadata with
+			 * this seqno is not committed by vg_commit, then next
+			 * vg_write can use the same seqno, causing us to see no
+			 * increase in seqno here as expected.
+			 * FIXME: In this case, do something like setting the lvb
+			 * version to 0 to instead of the same seqno which will
+			 * force an invalidation on other hosts.  The next change
+			 * will return to using the seqno again.
+			 */
+			log_error("S %s R %s res_update cl %u old version %u new version %u too small",
+			  	  ls->name, r->name, act->client_id, r->version, act->version);
+		}
 		lk->version = act->version;
+	}
 
 	log_debug("S %s R %s res_update cl %u lk version to %u", ls->name, r->name, act->client_id, lk->version);
 
