@@ -1,5 +1,6 @@
 Version 2.02.140 -
 ===================================
+  Eval poolmetadatasize arg earlier in lvresize.
   Fix vgcfgrestore to respect allocatable attribute of PVs.
   Add report/mark_hidden_devices to lvm.conf.
   Use brackets consistently in report fields to mark hidden devices.
