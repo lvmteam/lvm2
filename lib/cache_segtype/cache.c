@@ -224,20 +224,22 @@ static int _target_present(struct cmd_context *cmd,
 	const struct dm_config_value *cv;
 	const char *str;
 
+	if (!activation())
+		return 0;
+
 	if (!_cache_checked) {
-		_cache_present = target_present(cmd, "cache", 1);
-
-		if (!target_version("cache", &maj, &min, &patchlevel)) {
-			log_error("Failed to determine version of cache kernel module");
-			return 0;
-		}
-
 		_cache_checked = 1;
+
+		if (!(_cache_present = target_present(cmd, "cache", 1)))
+			return 0;
+
+		if (!target_version("cache", &maj, &min, &patchlevel))
+			return_0;
 
 		if ((maj < 1) ||
 		    ((maj == 1) && (min < 3))) {
 			_cache_present = 0;
-			log_error("The cache kernel module is version %u.%u.%u. "
+			log_warn("WARNING: The cache kernel module is version %u.%u.%u. "
 				  "Version 1.3.0+ is required.",
 				  maj, min, patchlevel);
 			return 0;

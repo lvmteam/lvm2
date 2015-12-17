@@ -377,9 +377,12 @@ static int _replicator_target_present(struct cmd_context *cmd,
 	static int _checked = 0;
 	static int _present = 0;
 
+	if (!activation())
+		return 0;
+
 	if (!_checked) {
-		_present = target_present(cmd, REPLICATOR_MODULE, 1);
 		_checked = 1;
+		_present = target_present(cmd, REPLICATOR_MODULE, 1);
 	}
 
 	return _present;

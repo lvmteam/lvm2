@@ -1,5 +1,6 @@
 Version 2.02.140 -
 ===================================
+  Correct checking of target presence when driver access is disabled.
   Eval poolmetadatasize arg earlier in lvresize.
   Fix vgcfgrestore to respect allocatable attribute of PVs.
   Add report/mark_hidden_devices to lvm.conf.

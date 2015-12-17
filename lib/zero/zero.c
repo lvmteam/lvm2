@@ -45,10 +45,13 @@ static int _zero_target_present(struct cmd_context *cmd,
 	static int _zero_checked = 0;
 	static int _zero_present = 0;
 
-	if (!_zero_checked)
-		_zero_present = target_present(cmd, "zero", 1);
+	if (!activation())
+		return 0;
 
-	_zero_checked = 1;
+	if (!_zero_checked) {
+		_zero_checked = 1;
+		_zero_present = target_present(cmd, "zero", 1);
+	}
 
 	return _zero_present;
 }

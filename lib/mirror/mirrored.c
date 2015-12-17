@@ -398,9 +398,14 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	unsigned maj2, min2, patchlevel2;
 	char vsn[80];
 
+	if (!activation())
+		return 0;
+
 	if (!_mirrored_checked) {
 		_mirrored_checked = 1;
-		_mirrored_present = target_present(cmd, "mirror", 1);
+
+		if (!(_mirrored_present = target_present(cmd, "mirror", 1)))
+			return 0;
 
 		/*
 		 * block_on_error available as "block_on_error" log

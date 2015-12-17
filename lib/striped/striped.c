@@ -192,11 +192,14 @@ static int _striped_target_present(struct cmd_context *cmd,
 	static int _striped_checked = 0;
 	static int _striped_present = 0;
 
-	if (!_striped_checked)
-		_striped_present = target_present(cmd, "linear", 0) &&
-			  target_present(cmd, "striped", 0);
+	if (!activation())
+		return 0;
 
-	_striped_checked = 1;
+	if (!_striped_checked) {
+		_striped_checked = 1;
+		_striped_present = target_present(cmd, "linear", 0) &&
+			target_present(cmd, "striped", 0);
+	}
 
 	return _striped_present;
 }

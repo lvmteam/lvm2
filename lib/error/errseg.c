@@ -49,13 +49,16 @@ static int _errseg_target_present(struct cmd_context *cmd,
 	static int _errseg_checked = 0;
 	static int _errseg_present = 0;
 
-	/* Reported truncated in older kernels */
-	if (!_errseg_checked &&
-	    (target_present(cmd, "error", 0) ||
-	     target_present(cmd, "erro", 0)))
-		_errseg_present = 1;
+	if (!activation())
+		return 0;
 
-	_errseg_checked = 1;
+	/* Reported truncated in older kernels */
+	if (!_errseg_checked) {
+		_errseg_checked = 1;
+		_errseg_present = target_present(cmd, "error", 0) ||
+			target_present(cmd, "erro", 0);
+	}
+
 	return _errseg_present;
 }
 
