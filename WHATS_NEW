@@ -1,5 +1,6 @@
 Version 2.02.139 - 
 =====================================
+  Also add lvm2-activation{-early,-net}.service systemd status for lvmdump -s.
 
 Version 2.02.138 - 14th December 2015
 =====================================
