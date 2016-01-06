@@ -3128,19 +3128,20 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	uint32_t s, area_count, alloc_count, parity_count, total_extents;
 	size_t size = 0;
 
+	if (segtype_is_virtual(segtype)) {
+		log_error(INTERNAL_ERROR "_alloc_init called for virtual segment.");
+		return NULL;
+	}
+
 	/* FIXME Caller should ensure this */
 	if (mirrors && !stripes)
 		stripes = 1;
-
-	if (segtype_is_virtual(segtype))
-		area_count = 0;
 	else if (mirrors > 1)
 		area_count = mirrors * stripes;
 	else
 		area_count = stripes;
 
-	if (!segtype_is_virtual(segtype) &&
-	    !(area_count + metadata_area_count)) {
+	if (!(area_count + metadata_area_count)) {
 		log_error(INTERNAL_ERROR "_alloc_init called for non-virtual segment with no disk space.");
 		return NULL;
 	}
@@ -3186,10 +3187,6 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	ah->cmd = cmd;
 	ah->mem = mem;
-
-	if (segtype_is_virtual(segtype))
-		return ah;
-
 	ah->area_count = area_count;
 	ah->parity_count = parity_count;
 	ah->region_size = region_size;
