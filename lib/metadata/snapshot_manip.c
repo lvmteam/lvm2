@@ -129,21 +129,11 @@ int lv_is_visible(const struct logical_volume *lv)
 	return lv->status & VISIBLE_LV ? 1 : 0;
 }
 
-int lv_is_virtual_origin(const struct logical_volume *lv)
+int lv_is_merging_cow(const struct logical_volume *cow)
 {
-	return (lv->status & VIRTUAL_ORIGIN) ? 1 : 0;
-}
+	struct lv_segment *snap_seg = find_snapshot(cow);
 
-int lv_is_merging_origin(const struct logical_volume *origin)
-{
-	return lv_is_merging(origin);
-}
-
-int lv_is_merging_cow(const struct logical_volume *snapshot)
-{
-	struct lv_segment *snap_seg = find_snapshot(snapshot);
-
-	/* checks lv_segment's status to see if cow is merging */
+	/* checks lv_segment's status to see if snapshot is merging */
 	return (snap_seg && (snap_seg->status & MERGING)) ? 1 : 0;
 }
 

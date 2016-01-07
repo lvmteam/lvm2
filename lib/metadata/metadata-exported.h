@@ -84,7 +84,7 @@
 
 //#define POSTORDER_FLAG	UINT64_C(0x0000000002000000) /* Not real flags, reserved for
 //#define POSTORDER_OPEN_FLAG	UINT64_C(0x0000000004000000)    temporary use inside vg_read_internal. */
-//#define VIRTUAL_ORIGIN	UINT64_C(0x0000000008000000)	/* LV - internal use only */
+#define VIRTUAL_ORIGIN		UINT64_C(0x0000000008000000)	/* LV - internal use only */
 
 #define MERGING			UINT64_C(0x0000000010000000)	/* LV SEG */
 
@@ -191,8 +191,11 @@
 #define lv_is_locked(lv)	(((lv)->status & LOCKED) ? 1 : 0)
 #define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
 #define lv_is_merging(lv)	(((lv)->status & MERGING) ? 1 : 0)
+#define lv_is_merging_origin(lv) (lv_is_merging(lv))
+#define lv_is_snapshot(lv)	(((lv)->status & SNAPSHOT) ? 1 : 0)
 #define lv_is_converting(lv)	(((lv)->status & CONVERTING) ? 1 : 0)
 #define lv_is_external_origin(lv)	(((lv)->external_count > 0) ? 1 : 0)
+#define lv_is_virtual_origin(lv) (((lv)->status & VIRTUAL_ORIGIN) ? 1 : 0)
 
 #define lv_is_thin_volume(lv)	(((lv)->status & THIN_VOLUME) ? 1 : 0)
 #define lv_is_thin_pool(lv)	(((lv)->status & THIN_POOL) ? 1 : 0)
@@ -1004,12 +1007,10 @@ struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *l
 * Useful functions for managing snapshots.
 */
 int lv_is_origin(const struct logical_volume *lv);
-int lv_is_virtual_origin(const struct logical_volume *lv);
 int lv_is_thin_origin(const struct logical_volume *lv, unsigned *snapshot_count);
 int lv_is_cache_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
-int lv_is_merging_origin(const struct logical_volume *origin);
-int lv_is_merging_cow(const struct logical_volume *snapshot);
+int lv_is_merging_cow(const struct logical_volume *cow);
 uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size);
 int cow_has_min_chunks(const struct volume_group *vg, uint32_t cow_extents, uint32_t chunk_size);
 int lv_is_cow_covering_origin(const struct logical_volume *lv);
