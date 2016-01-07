@@ -190,6 +190,15 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 		goto out;
 	}
 
+	/*
+	 * After sucessfull activation we need to initialise polling
+	 * for all activated LVs in a VG. Possible enhancement would
+	 * be adding --poll y|n cmdline option for pvscan and call
+	 * init_background_polling routine in autoactivation handler.
+	 */
+	if (!(vgchange_background_polling(vg->cmd, vg)))
+		goto_out;
+
 	r = 1;
 
 out:
