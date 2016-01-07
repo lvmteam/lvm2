@@ -214,6 +214,28 @@ void clear_snapshot_merge(struct logical_volume *origin)
 	origin->status &= ~MERGING;
 }
 
+static struct lv_segment *_alloc_snapshot_seg(struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+	const struct segment_type *segtype;
+
+	segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_SNAPSHOT);
+	if (!segtype) {
+		log_error("Failed to find snapshot segtype");
+		return NULL;
+	}
+
+	if (!(seg = alloc_lv_segment(segtype, lv, 0, lv->le_count, 0, 0,
+				     NULL, 0, lv->le_count, 0, 0, 0, NULL))) {
+		log_error("Couldn't allocate new snapshot segment.");
+		return NULL;
+	}
+
+	dm_list_add(&lv->segments, &seg->list);
+
+	return seg;
+}
+
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow, union lvid *lvid,
 		    uint32_t extent_count, uint32_t chunk_size)
@@ -241,7 +263,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 	snap->le_count = extent_count;
 
-	if (!(seg = alloc_snapshot_seg(snap, 0, 0)))
+	if (!(seg = _alloc_snapshot_seg(snap)))
 		return_0;
 
 	init_snapshot_seg(seg, origin, cow, chunk_size, 0);

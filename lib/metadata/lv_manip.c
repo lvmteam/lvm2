@@ -1038,32 +1038,6 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	return seg;
 }
 
-struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
-				      uint64_t status, uint32_t old_le_count)
-{
-	struct lv_segment *seg;
-	const struct segment_type *segtype;
-
-	segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_SNAPSHOT);
-	if (!segtype) {
-		log_error("Failed to find snapshot segtype");
-		return NULL;
-	}
-
-	if (!(seg = alloc_lv_segment(segtype, lv, old_le_count,
-				     lv->le_count - old_le_count, status, 0,
-				     NULL, 0, lv->le_count - old_le_count,
-				     0, 0, 0, NULL))) {
-		log_error("Couldn't allocate new snapshot segment.");
-		return NULL;
-	}
-
-	dm_list_add(&lv->segments, &seg->list);
-	lv->status |= VIRTUAL;
-
-	return seg;
-}
-
 static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t s,
 						uint32_t area_reduction, int with_discard)
 {

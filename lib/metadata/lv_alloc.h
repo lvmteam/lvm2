@@ -31,9 +31,6 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 				    uint32_t extents_copied,
 				    struct lv_segment *pvmove_source_seg);
 
-struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
-				      uint64_t status, uint32_t old_le_count);
-
 int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 			   struct physical_volume *pv, uint32_t pe);
 int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
