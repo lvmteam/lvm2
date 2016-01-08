@@ -183,19 +183,33 @@ snapshots of thin volumes using the new thin provisioning driver appear as (t).
 .IP 8 3
 Newly-allocated data blocks are overwritten with blocks of (z)eroes before use.
 .IP 9 3
-Volume Health: (p)artial, (r)efresh needed, (m)ismatches exist, (w)ritemostly,
-(X) unknown.
+Volume Health, where there are currently three groups of attributes identified:
+.IP
+Common ones for all Logical Volumes: (p)artial, (X) unknown.
+.br
 (p)artial signifies that one or more of the Physical Volumes this Logical
-Volume uses is missing from the system.  (r)efresh signifies that one or
-more of the Physical Volumes this RAID Logical Volume uses had suffered a
-write error.  The write error could be due to a temporary failure of that
-Physical Volume or an indication that it is failing.  The device should be
-refreshed or replaced.  (m)ismatches signifies that the RAID logical volume
-has portions of the array that are not coherent.  Inconsistencies are
-detected by initiating a "check" on a RAID logical volume.  (The scrubbing
-operations, "check" and "repair", can be performed on a RAID logical
-volume via the 'lvchange' command.)  (w)ritemostly signifies the devices in
-a RAID 1 logical volume that have been marked write-mostly.
+Volume uses is missing from the system. (X) unknown signifies the status
+is unknown.
+.IP
+Related to RAID Logical Volumes: (r)efresh needed, (m)ismatches exist, (w)ritemostly.
+.br
+(r)efresh signifies that one or more of the Physical Volumes this RAID Logical
+Volume uses had suffered a write error. The write error could be due to a
+temporary failure of that Physical Volume or an indication that it is failing.
+The device should be refreshed or replaced. (m)ismatches signifies that the
+RAID logical volume has portions of the array that are not coherent.
+Inconsistencies are detected by initiating a "check" on a RAID logical volume.
+(The scrubbing operations, "check" and "repair", can be performed on a RAID
+logical volume via the 'lvchange' command.)  (w)ritemostly signifies the
+devices in a RAID 1 logical volume that have been marked write-mostly.
+.IP
+Related to thin pool Logical Volumes: (F)ailed, out of (D)ata space, (M) read only.
+.br
+(F)ailed is set if thin pool encounters serious failures and hence no further I/O
+is permitted at all. The out of (D)ata space is set if thin pool has run out of
+data space. (M) read only signifies that thin pool encounters certain types of
+failures but it's still possible to do reads at least, but no metadata changes
+are allowed.
 .IP 10 3
 s(k)ip activation: this volume is flagged to be skipped during activation.
 .RE
