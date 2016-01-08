@@ -1,3 +1,6 @@
+Version 2.02.140 -
+===================================
+
 Version 2.02.139 - 8th January 2016
 ===================================
   Update lvmlockd with the new VG seqno before devices are suspended.
