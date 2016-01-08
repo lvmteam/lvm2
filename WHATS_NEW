@@ -1,5 +1,8 @@
 Version 2.02.139 - 
 =====================================
+  Update lvmlockd with the new VG seqno before devices are suspended.
+  Rework vgrename to use the common processing code in toollib.
+  Make pvs show new devices on the system since the last .cache update.
   Document F,D and M thin pool health status chars for lv_attr in lvs man page.
   Also add lvm2-activation{-early,-net}.service systemd status for lvmdump -s.
 
