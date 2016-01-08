@@ -1,5 +1,5 @@
-Version 2.02.139 - 
-=====================================
+Version 2.02.139 - 8th January 2016
+===================================
   Update lvmlockd with the new VG seqno before devices are suspended.
   Rework vgrename to use the common processing code in toollib.
   Make pvs show new devices on the system since the last .cache update.
