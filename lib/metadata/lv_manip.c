@@ -4631,14 +4631,14 @@ static int _lvresize_check_lv(struct cmd_context *cmd, struct logical_volume *lv
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			lp->stripes = lp->ac_stripes_value;
 		else
-			log_warn("Varied striping not supported. Ignoring.");
+			log_print_unless_silent("Varied striping not supported. Ignoring.");
 	}
 
 	if (lp->ac_mirrors) {
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			lp->mirrors = lp->ac_mirrors_value;
 		else
-			log_warn("Mirrors not supported. Ignoring.");
+			log_print_unless_silent("Mirrors not supported. Ignoring.");
 	}
 
 	if (lp->ac_stripesize && !_validate_stripesize(cmd, vg, lp))
