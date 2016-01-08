@@ -4950,21 +4950,14 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			log_print_unless_silent("Ignoring stripes, stripesize and mirrors "
 						"arguments when reducing.");
 
-		if (lp->sign == SIGN_MINUS) 
-			if (lp->extents_are_pes) {
-				if (lp->extents >= existing_physical_extents) {
-					log_error("Unable to reduce %s below 1 extent.", lp->lv_name);
-					return 0;
-				}
-				new_extents = existing_physical_extents - lp->extents;
-			} else {
-				new_extents = existing_logical_extents - lp->extents;
-				if (lp->extents >= existing_logical_extents) {
-					log_error("Unable to reduce %s below 1 extent.", lp->lv_name);
-					return 0;
-				}
+		if (lp->sign == SIGN_MINUS)  {
+			new_extents = lp->extents_are_pes ? existing_physical_extents : existing_logical_extents;
+			if (lp->extents >= new_extents) {
+				log_error("Unable to reduce %s below 1 extent.", lp->lv_name);
+				return 0;
 			}
-		else
+			new_extents -= lp->extents;
+		} else
 			new_extents = lp->extents;
 
 		dm_list_iterate_items(seg, &lv->segments) {
