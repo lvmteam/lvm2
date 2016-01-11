@@ -1,5 +1,6 @@
 Version 2.02.140 -
 ===================================
+  Use brackets to signify LVs which are not visible when reporting lv_parent.
   Fix invalid memory read when reporting cache LV policy_name (2.02.126).
 
 Version 2.02.139 - 8th January 2016

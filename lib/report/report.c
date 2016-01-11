@@ -1655,15 +1655,15 @@ static int _lvfullname_disp(struct dm_report *rh, struct dm_pool *mem,
 
 static int _lvparent_disp(struct dm_report *rh, struct dm_pool *mem,
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute__((unused)))
+			  const void *data, void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	char *repstr;
+	struct logical_volume *parent_lv = lv_parent(lv);
 
-	if (!(repstr = lv_parent_dup(mem, lv)))
-		return_0;
+	if (!parent_lv)
+		return _field_set_value(field, "", NULL);
 
-	return _field_set_value(field, repstr, NULL);
+	return _lvname_disp(rh, mem, field, parent_lv, private);
 }
 
 static int _do_datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
