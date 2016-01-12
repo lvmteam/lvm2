@@ -1271,9 +1271,9 @@ static int _chars_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((
 	return dm_report_field_string(rh, field, (const char * const *) &data);
 }
 
-static int _uuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _uuid_disp(struct dm_report *rh, struct dm_pool *mem,
 		      struct dm_report_field *field,
-		      const void *data, void *private __attribute__((unused)))
+		      const void *data, void *private)
 {
 	char *repstr;
 
@@ -1968,17 +1968,15 @@ static int _do_convertlv_disp(struct dm_report *rh, struct dm_pool *mem,
 			      int uuid)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const char *repstr;
+	const struct logical_volume *convert_lv = lv_convert_lv(lv);
+
+	if (!convert_lv)
+		return _field_set_value(field, "", NULL);
 
 	if (uuid)
-		repstr = lv_convert_lv_uuid_dup(mem, lv);
+		return _uuid_disp(rh, mem, field, &convert_lv->lvid.id[1], private);
 	else
-		repstr = lv_convert_lv_dup(mem, lv);
-
-	if (repstr)
-		return _string_disp(rh, mem, field, &repstr, private);
-
-	return _field_set_value(field, "", NULL);
+		return _lvname_disp(rh, mem, field, convert_lv, private);
 }
 
 static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
