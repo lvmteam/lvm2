@@ -643,6 +643,28 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		goto out_ret;
 	}
 
+	/*
+	 * We cannot move blocks from under the sanlock leases, so disallow
+	 * pvmoving any PVs used by the lvmlock LV.
+	 */
+	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+		struct lv_segment *lvseg;
+		struct physical_volume *sanlock_pv;
+		unsigned s;
+
+		dm_list_iterate_items(lvseg, &vg->sanlock_lv->segments) {
+			for (s = 0; s < lvseg->area_count; s++) {
+				if (seg_type(lvseg, s) == AREA_PV) {
+					sanlock_pv = seg_pv(lvseg, s);
+					if (sanlock_pv->dev == pv->dev) {
+						log_error("Cannot pvmove device %s used for sanlock leases.", pv_dev_name(pv));
+						goto out;
+					}
+				}
+			}
+		}
+	}
+
 	exclusive = _pvmove_is_exclusive(cmd, vg);
 
 	if ((lv_mirr = find_pvmove_lv(vg, pv_dev(pv), PVMOVE))) {
@@ -894,6 +916,12 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
+		/*
+		 * FIXME: use process_each_pv() where the "single" function
+		 * depends on the abort arg.  The single functions would not
+		 * need to use find_pv_by_name() (which includes a hidden
+		 * equivalent of process_each_pv), or vg_read().
+		 */
 		if (!arg_count(cmd, abort_ARG)) {
 			if ((ret = _set_up_pvmove(cmd, pv_name, argc, argv, lvid, &vg_name, &lv_name)) != ECMD_PROCESSED) {
 				stack;
