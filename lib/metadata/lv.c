@@ -31,10 +31,13 @@ static int _utsinit = 0;
 static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			    int range_format, int metadata_areas_only)
 {
+	static const char pool_grow_object_failed_msg[] = "dm_pool_grow_object failed";
 	unsigned int s;
 	const char *name = NULL;
 	uint32_t extent = 0;
 	char extent_str[32];
+	struct logical_volume *lv;
+	int visible = 1;
 
 	if (!dm_pool_begin_object(mem, 256)) {
 		log_error("dm_pool_begin_object failed");
@@ -47,7 +50,9 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 	for (s = 0; s < seg->area_count; s++) {
 		switch (metadata_areas_only ? seg_metatype(seg, s) : seg_type(seg, s)) {
 		case AREA_LV:
-			name = metadata_areas_only ? seg_metalv(seg, s)->name : seg_lv(seg, s)->name;
+			lv = metadata_areas_only ? seg_metalv(seg, s) : seg_lv(seg, s);
+			visible = lv_is_visible(lv);
+			name = lv->name;
 			extent = metadata_areas_only ? seg_le(seg, s) : 0;
 			break;
 		case AREA_PV:
@@ -66,8 +71,18 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			return NULL;
 		}
 
+		if (!visible && !dm_pool_grow_object(mem, "[", 1)) {
+			log_error(pool_grow_object_failed_msg);
+			return NULL;
+		}
+
 		if (!dm_pool_grow_object(mem, name, strlen(name))) {
-			log_error("dm_pool_grow_object failed");
+			log_error(pool_grow_object_failed_msg);
+			return NULL;
+		}
+
+		if (!visible && !dm_pool_grow_object(mem, "]", 1)) {
+			log_error(pool_grow_object_failed_msg);
 			return NULL;
 		}
 
@@ -79,7 +94,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			return NULL;
 		}
 		if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
-			log_error("dm_pool_grow_object failed");
+			log_error(pool_grow_object_failed_msg);
 			return NULL;
 		}
 
@@ -90,14 +105,14 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 				return NULL;
 			}
 			if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
-				log_error("dm_pool_grow_object failed");
+				log_error(pool_grow_object_failed_msg);
 				return NULL;
 			}
 		}
 
 		if ((s != seg->area_count - 1) &&
 		    !dm_pool_grow_object(mem, range_format ? " " : ",", 1)) {
-			log_error("dm_pool_grow_object failed");
+			log_error(pool_grow_object_failed_msg);
 			return NULL;
 		}
 	}
