@@ -95,6 +95,7 @@ struct logical_volume *lv_origin(const struct logical_volume *lv);
 struct logical_volume *lv_mirror_log(const struct logical_volume *lv);
 struct logical_volume *lv_data(const struct logical_volume *lv);
 struct logical_volume *lv_metadata_lv(const struct logical_volume *lv);
+struct logical_volume *lv_pool_lv(const struct logical_volume *lv);
 char *lv_parent_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv);

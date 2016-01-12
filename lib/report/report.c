@@ -1732,17 +1732,15 @@ static int _do_poollv_disp(struct dm_report *rh, struct dm_pool *mem,
 			   int uuid)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lv_segment *seg = (lv_is_thin_volume(lv) || lv_is_cache(lv)) ?
-				  first_seg(lv) : NULL;
+	struct logical_volume *pool_lv = lv_pool_lv(lv);
 
-	if (seg) {
-		if (uuid)
-			return _uuid_disp(rh, mem, field, &seg->pool_lv->lvid.id[1], private);
-		else
-			return _lvname_disp(rh, mem, field, seg->pool_lv, private);
-	}
+	if (!pool_lv)
+		return _field_set_value(field, "", NULL);
 
-	return _field_set_value(field, "", NULL);
+	if (uuid)
+		return _uuid_disp(rh, mem, field, &pool_lv->lvid.id[1], private);
+	else
+		return _lvname_disp(rh, mem, field, pool_lv, private);
 }
 
 static int _poollv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
