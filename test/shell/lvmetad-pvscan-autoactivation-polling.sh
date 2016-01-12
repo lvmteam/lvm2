@@ -13,6 +13,9 @@ SKIP_WITHOUT_LVMETAD=1
 
 . lib/inittest
 
+# test if snapshot-merge target is available
+aux target_at_least dm-snapshot-merge 1 0 0 || skip
+
 which mkfs.ext3 || skip
 
 lvdev_() {
