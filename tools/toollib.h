@@ -102,7 +102,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		    process_single_vg_fn_t process_single_vg);
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    const char *vg_name, uint32_t lock_type,
+		    const char *vg_name, uint32_t read_flags,
 		    struct processing_handle *handle,
 		    process_single_pv_fn_t process_single_pv);
 
