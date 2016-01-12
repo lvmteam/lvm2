@@ -1795,24 +1795,15 @@ static int _do_origin_disp(struct dm_report *rh, struct dm_pool *mem,
 			   int uuid)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = first_seg(lv);
-	struct logical_volume *origin;
+	struct logical_volume *origin_lv = lv_origin_lv(lv);
 
-	if (lv_is_cow(lv))
-		origin = origin_from_cow(lv);
-	else if (lv_is_cache(lv) && !lv_is_pending_delete(lv))
-		origin = seg_lv(seg, 0);
-	else if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
-		origin = first_seg(lv)->origin;
-	else if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)
-		origin = first_seg(lv)->external_lv;
-	else
+	if (!origin_lv)
 		return _field_set_value(field, "", NULL);
 
 	if (uuid)
-		return _uuid_disp(rh, mem, field, &origin->lvid.id[1], private);
+		return _uuid_disp(rh, mem, field, &origin_lv->lvid.id[1], private);
 	else
-		return _lvname_disp(rh, mem, field, origin, private);
+		return _lvname_disp(rh, mem, field, origin_lv, private);
 }
 
 static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
