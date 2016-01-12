@@ -566,7 +566,8 @@ where the GL lock must be manually enabled after a vgremove.
 A sanlock VG contains a hidden LV called "lvmlock" that holds the sanlock
 locks.  vgreduce cannot yet remove the PV holding the lvmlock LV.  To
 remove this PV, change the VG lock type to "none", run vgreduce, then
-change the VG lock type back to "sanlock".
+change the VG lock type back to "sanlock".  Similarly, pvmove cannot be
+used on a PV used by the lvmlock LV.
 
 To place the lvmlock LV on a specific device, create the VG with only that
 device, then use vgextend to add other devices.
@@ -852,8 +853,8 @@ stopped the VG lockspace.  Stop the VG on all hosts using vgchange
 \-\-lock-stop.
 
 .IP \[bu] 2
-vgreduce of a PV in a sanlock VG may fail if it holds the internal
-"lvmlock" LV that holds the sanlock locks.
+vgreduce or pvmove of a PV in a sanlock VG will fail if it holds the
+internal "lvmlock" LV that holds the sanlock locks.
 
 .IP \[bu] 2
 lvmlockd uses lock retries instead of lock queueing, so high lock
