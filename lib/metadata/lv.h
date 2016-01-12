@@ -89,6 +89,7 @@ struct logical_volume *lv_parent(const struct logical_volume *lv);
 struct logical_volume *lv_convert_lv(const struct logical_volume *lv);
 struct logical_volume *lv_origin_lv(const struct logical_volume *lv);
 struct logical_volume *lv_mirror_log_lv(const struct logical_volume *lv);
+struct logical_volume *lv_data_lv(const struct logical_volume *lv);
 char *lv_parent_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_origin_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv);

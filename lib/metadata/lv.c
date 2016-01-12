@@ -398,20 +398,27 @@ char *lv_pool_lv_uuid_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	return _do_lv_pool_lv_dup(mem, lv, 1);
 }
 
+struct logical_volume *lv_data_lv(const struct logical_volume *lv)
+{
+	struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ?
+				  first_seg(lv) : NULL;
+	struct logical_volume *data_lv = seg ? seg_lv(seg, 0) : NULL;
+
+	return data_lv;
+}
+
 static char *_do_lv_data_lv_dup(struct dm_pool *mem, const struct logical_volume *lv,
 				int uuid)
 {
-	struct lv_segment *seg = (lv_is_thin_pool(lv) || lv_is_cache_pool(lv)) ?
-		first_seg(lv) : NULL;
+	struct logical_volume *data_lv = lv_data_lv(lv);
 
-	if (seg) {
-		if (uuid)
-			return lv_uuid_dup(mem, seg_lv(seg, 0));
-		else
-			return lv_name_dup(mem, seg_lv(seg, 0));
-	}
+	if (!data_lv)
+		return NULL;
 
-	return NULL;
+	if (uuid)
+		return lv_uuid_dup(mem, data_lv);
+	else
+		return lv_name_dup(mem, data_lv);
 }
 
 char *lv_data_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)

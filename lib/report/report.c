@@ -1670,16 +1670,15 @@ static int _do_datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute
 			   int uuid)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const struct lv_segment *seg = (lv_is_pool(lv)) ? first_seg(lv) : NULL;
+	struct logical_volume *data_lv = lv_data_lv(lv);
 
-	if (seg) {
-		if (uuid)
-			return _uuid_disp(rh, mem, field, &seg_lv(seg, 0)->lvid.id[1], private);
-		else
-			return _lvname_disp(rh, mem, field, seg_lv(seg, 0), private);
-	}
+	if (!data_lv)
+		return _field_set_value(field, "", NULL);
 
-	return _field_set_value(field, "", NULL);
+	if (uuid)
+		return _uuid_disp(rh, mem, field, &data_lv->lvid.id[1], private);
+	else
+		return _lvname_disp(rh, mem, field, data_lv, private);
 }
 
 static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
