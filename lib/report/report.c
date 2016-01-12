@@ -1429,7 +1429,7 @@ static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 		return 0;
 	}
 
-	return _string_disp(rh, mem, field, seg->policy_name, private);
+	return _string_disp(rh, mem, field, &seg->policy_name, private);
 }
 
 static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
