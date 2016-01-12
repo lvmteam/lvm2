@@ -998,8 +998,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!arg_count(cmd, refresh_ARG) &&
-	    background_polling())
-		if (!vgchange_background_polling(cmd, vg))
+	    !vgchange_background_polling(cmd, vg))
 			return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, lockstart_ARG)) {
