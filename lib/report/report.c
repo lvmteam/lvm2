@@ -1577,39 +1577,6 @@ static int _segtype_disp(struct dm_report *rh __attribute__((unused)),
 	return _field_set_value(field, name, NULL);
 }
 
-static int _do_loglv_disp(struct dm_report *rh, struct dm_pool *mem,
-			  struct dm_report_field *field,
-			  const void *data, void *private,
-			  int uuid)
-{
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	const char *repstr = NULL;
-
-	if (uuid)
-		repstr = lv_mirror_log_uuid_dup(mem, lv);
-	else
-		repstr = lv_mirror_log_dup(mem, lv);
-
-	if (repstr)
-		return _string_disp(rh, mem, field, &repstr, private);
-
-	return _field_set_value(field, "", NULL);
-}
-
-static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
-		       struct dm_report_field *field,
-		       const void *data, void *private __attribute__((unused)))
-{
-	return _do_loglv_disp(rh, mem, field, data, private, 0);
-}
-
-static int _loglvuuid_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
-			   struct dm_report_field *field,
-			   const void *data, void *private __attribute__((unused)))
-{
-	return _do_loglv_disp(rh, mem, field, data, private, 1);
-}
-
 static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
@@ -1638,6 +1605,37 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	}
 
 	return _field_set_value(field, repstr, lvname);
+}
+
+static int _do_loglv_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private,
+			  int uuid)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct logical_volume *mirror_log_lv = lv_mirror_log_lv(lv);
+
+	if (!mirror_log_lv)
+		return _field_set_value(field, "", NULL);
+
+	if (uuid)
+		return _uuid_disp(rh, mem, field, &mirror_log_lv->lvid.id[1], private);
+	else
+		return _lvname_disp(rh, mem, field, mirror_log_lv, private);
+}
+
+static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+		       struct dm_report_field *field,
+		       const void *data, void *private __attribute__((unused)))
+{
+	return _do_loglv_disp(rh, mem, field, data, private, 0);
+}
+
+static int _loglvuuid_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
+			   struct dm_report_field *field,
+			   const void *data, void *private __attribute__((unused)))
+{
+	return _do_loglv_disp(rh, mem, field, data, private, 1);
 }
 
 static int _lvfullname_disp(struct dm_report *rh, struct dm_pool *mem,
