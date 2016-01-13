@@ -55,5 +55,5 @@ report {
 	pvsegs_sort="pv_name,pvseg_start"
 	pvsegs_cols="pv_name,vg_name,pv_fmt,pv_attr,pv_size,pv_free,pvseg_start,pvseg_size"
 	pvsegs_cols_verbose="pv_name,vg_name,pv_fmt,pv_attr,pv_size,pv_free,pvseg_start,pvseg_size,lv_name,seg_start_pe,segtype,seg_pe_ranges"
-	mark_invisible_devices=1
+	mark_hidden_devices=1
 }
