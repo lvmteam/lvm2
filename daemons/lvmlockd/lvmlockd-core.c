@@ -5935,7 +5935,7 @@ static int main_loop(daemon_state *ds_arg)
 	close_client_thread();
 	closelog();
 	daemon_close(lvmetad_handle);
-	return 0;
+	return 1; /* libdaemon uses 1 for success */
 }
 
 static void usage(char *prog, FILE *file)
