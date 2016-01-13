@@ -29,7 +29,8 @@ static struct utsname _utsname;
 static int _utsinit = 0;
 
 static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
-			    int range_format, int metadata_areas_only)
+			    int range_format, int metadata_areas_only,
+			    int mark_invisible)
 {
 	static const char pool_grow_object_failed_msg[] = "dm_pool_grow_object failed";
 	unsigned int s;
@@ -71,7 +72,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			return NULL;
 		}
 
-		if (!visible && !dm_pool_grow_object(mem, "[", 1)) {
+		if (!visible && mark_invisible && !dm_pool_grow_object(mem, "[", 1)) {
 			log_error(pool_grow_object_failed_msg);
 			return NULL;
 		}
@@ -81,7 +82,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			return NULL;
 		}
 
-		if (!visible && !dm_pool_grow_object(mem, "]", 1)) {
+		if (!visible && mark_invisible && !dm_pool_grow_object(mem, "]", 1)) {
 			log_error(pool_grow_object_failed_msg);
 			return NULL;
 		}
@@ -128,22 +129,22 @@ out:
 
 char *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 0, 0);
+	return _format_pvsegs(mem, seg, 0, 0, seg->lv->vg->cmd->report_mark_invisible_devices);
 }
 
 char *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 0, 1);
+	return _format_pvsegs(mem, seg, 0, 1, seg->lv->vg->cmd->report_mark_invisible_devices);
 }
 
 char *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 1, 0);
+	return _format_pvsegs(mem, seg, 1, 0, seg->lv->vg->cmd->report_mark_invisible_devices);
 }
 
 char *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 1, 1);
+	return _format_pvsegs(mem, seg, 1, 1, seg->lv->vg->cmd->report_mark_invisible_devices);
 }
 
 char *lvseg_tags_dup(const struct lv_segment *seg)

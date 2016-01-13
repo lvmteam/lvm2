@@ -1581,11 +1581,12 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
+	struct cmd_context *cmd = (struct cmd_context *) private;
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	char *repstr, *lvname;
 	size_t len;
 
-	if (lv_is_visible(lv))
+	if (lv_is_visible(lv) || !cmd->report_mark_invisible_devices)
 		return _string_disp(rh, mem, field, &lv->name, private);
 
 	len = strlen(lv->name) + 3;
