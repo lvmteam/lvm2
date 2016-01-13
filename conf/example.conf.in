@@ -1108,9 +1108,9 @@ activation {
 	#     or VG.
 	#   @*
 	#     Selects an LV if a tag defined on the host is also set on the LV
-	#     or VG. See tags/hosttags. If any host tags exist but volume_list
-	#     is not defined, a default single-entry list containing '@*' is
-	#     assumed.
+	#     or VG. See tags/hosttags. If any host tags exist but the volume
+	#     list is not defined, a default single-entry list containing '@*'
+	#     is assumed.
 	# 
 	# Example
 	# volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
@@ -1145,12 +1145,12 @@ activation {
 	#     or VG.
 	#   @*
 	#     Selects an LV if a tag defined on the host is also set on the LV
-	#     or VG. See tags/hosttags. If any host tags exist but volume_list
-	#     is not defined, a default single-entry list containing '@*' is
-	#     assumed.
+	#     or VG. See tags/hosttags. If any host tags exist but the volume
+	#     list is not defined, a default single-entry list containing '@*'
+	#     is assumed.
 	# 
 	# Example
-	# volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
+	# auto_activation_volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 	# 
 	# This configuration option does not have a default value defined.
 
@@ -1171,12 +1171,12 @@ activation {
 	#     or VG.
 	#   @*
 	#     Selects an LV if a tag defined on the host is also set on the LV
-	#     or VG. See tags/hosttags. If any host tags exist but volume_list
-	#     is not defined, a default single-entry list containing '@*' is
-	#     assumed.
+	#     or VG. See tags/hosttags. If any host tags exist but the volume
+	#     list is not defined, a default single-entry list containing '@*'
+	#     is assumed.
 	# 
 	# Example
-	# volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
+	# read_only_volume_list = [ "vg1", "vg2/lvol1", "@tag1", "@*" ]
 	# 
 	# This configuration option does not have a default value defined.
 
@@ -1808,6 +1808,11 @@ activation {
 	# See 'pvs --segments -o help' for the list of possible fields.
 	# This configuration option has an automatic default value.
 	# pvsegs_cols_verbose = "pv_name,vg_name,pv_fmt,pv_attr,pv_size,pv_free,pvseg_start,pvseg_size,lv_name,seg_start_pe,segtype,seg_pe_ranges"
+
+	# Configuration option report/mark_invisible_devices.
+	# Use brackets [] to mark invisible devices.
+	# This configuration option has an automatic default value.
+	# mark_invisible_devices = 1
 # }
 
 # Configuration section dmeventd.
