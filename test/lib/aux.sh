@@ -880,6 +880,7 @@ log/level = 9
 log/overwrite = 1
 log/syslog = 0
 log/verbose = 0
+report/mark_invisible_devices=0
 EOF
 	}
 
