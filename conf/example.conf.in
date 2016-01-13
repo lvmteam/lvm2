@@ -1108,8 +1108,8 @@ activation {
 	#     or VG.
 	#   @*
 	#     Selects an LV if a tag defined on the host is also set on the LV
-	#     or VG. See tags/hosttags. If any host tags exist but the volume
-	#     list is not defined, a default single-entry list containing '@*'
+	#     or VG. See tags/hosttags. If any host tags exist but volume_list
+	#     is not defined, a default single-entry list containing '@*'
 	#     is assumed.
 	# 
 	# Example
@@ -1145,8 +1145,8 @@ activation {
 	#     or VG.
 	#   @*
 	#     Selects an LV if a tag defined on the host is also set on the LV
-	#     or VG. See tags/hosttags. If any host tags exist but the volume
-	#     list is not defined, a default single-entry list containing '@*'
+	#     or VG. See tags/hosttags. If any host tags exist but volume_list
+	#     is not defined, a default single-entry list containing '@*'
 	#     is assumed.
 	# 
 	# Example
@@ -1171,8 +1171,8 @@ activation {
 	#     or VG.
 	#   @*
 	#     Selects an LV if a tag defined on the host is also set on the LV
-	#     or VG. See tags/hosttags. If any host tags exist but the volume
-	#     list is not defined, a default single-entry list containing '@*'
+	#     or VG. See tags/hosttags. If any host tags exist but volume_list
+	#     is not defined, a default single-entry list containing '@*'
 	#     is assumed.
 	# 
 	# Example
