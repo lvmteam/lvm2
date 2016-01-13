@@ -3033,7 +3033,6 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	const char *pv_name;
 	int selected;
 	int process_pv;
-	int dev_found;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 
@@ -3087,21 +3086,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			else
 				log_very_verbose("Processing PV %s in VG %s.", pv_name, vg->name);
 
-			dev_found = _device_list_remove(all_devices, pv->dev);
-
-			/*
-			 * FIXME PVs with no mdas may turn up in an orphan VG when
-			 * not using lvmetad as well as their correct VG.  They
-			 * will be missing from all_devices the second time
-			 * around but must not be processed twice or trigger a message.
-			 *
-			 * Missing PVs will also need processing even though they are
-			 * not present in all_devices.
-			 */
-			if (!dev_found && !is_missing_pv(pv)) {
-				log_verbose("Skipping PV %s in VG %s: not in device list.", pv_name, vg->name);
-				continue;
-			}
+			_device_list_remove(all_devices, pv->dev);
 
 			if (!skip) {
 				ret = process_single_pv(cmd, vg, pv, handle);
