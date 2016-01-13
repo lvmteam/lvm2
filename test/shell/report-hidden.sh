@@ -20,7 +20,7 @@ lvcreate --type mirror -m1 -l1 --alloc anywhere -n $lv1 $vg
 
 aux lvmconf 'log/prefix=""'
 
-aux lvmconf "report/mark_invisible_devices = 0"
+aux lvmconf "report/mark_hidden_devices = 0"
 lvs --noheadings -a -o name $vg > out
 grep "^${lv1}_mimage_0" out
 not grep "^\[${lv1}_mimage_0\]" out
@@ -28,7 +28,7 @@ lvs --noheadings -a -o devices $vg/$lv1 > out
 grep "^${lv1}_mimage_0" out
 not grep "^\[${lv1}_mimage_0\]" out
 
-aux lvmconf "report/mark_invisible_devices = 1"
+aux lvmconf "report/mark_hidden_devices = 1"
 lvs --noheadings -a -o name $vg > out
 grep "^\[${lv1}_mimage_0\]" out
 not grep "^${lv1}_mimage_0" out

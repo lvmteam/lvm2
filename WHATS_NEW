@@ -1,7 +1,7 @@
 Version 2.02.140 -
 ===================================
-  Add report/mark_invisible_devices to lvm.conf.
-  Use brackets consistently in report fields to mark invisible devices.
+  Add report/mark_hidden_devices to lvm.conf.
+  Use brackets consistently in report fields to mark hidden devices.
   Restore background polling processing during auto-activation (2.02.119).
   Fix invalid memory read when reporting cache LV policy_name (2.02.126).
 

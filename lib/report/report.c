@@ -1586,7 +1586,7 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr, *lvname;
 	size_t len;
 
-	if (lv_is_visible(lv) || !cmd->report_mark_invisible_devices)
+	if (lv_is_visible(lv) || !cmd->report_mark_hidden_devices)
 		return _string_disp(rh, mem, field, &lv->name, private);
 
 	len = strlen(lv->name) + 3;

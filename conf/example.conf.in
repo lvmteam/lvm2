@@ -1809,10 +1809,10 @@ activation {
 	# This configuration option has an automatic default value.
 	# pvsegs_cols_verbose = "pv_name,vg_name,pv_fmt,pv_attr,pv_size,pv_free,pvseg_start,pvseg_size,lv_name,seg_start_pe,segtype,seg_pe_ranges"
 
-	# Configuration option report/mark_invisible_devices.
-	# Use brackets [] to mark invisible devices.
+	# Configuration option report/mark_hidden_devices.
+	# Use brackets [] to mark hidden devices.
 	# This configuration option has an automatic default value.
-	# mark_invisible_devices = 1
+	# mark_hidden_devices = 1
 # }
 
 # Configuration section dmeventd.
