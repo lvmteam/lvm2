@@ -273,7 +273,7 @@ static char *_do_lv_origin_dup(struct dm_pool *mem, const struct logical_volume 
 {
 	struct logical_volume *origin_lv = lv_origin_lv(lv);
 
-	if (!lv)
+	if (!origin_lv)
 		return NULL;
 
 	if (uuid)
@@ -533,14 +533,13 @@ static char *_do_lv_convert_lv_dup(struct dm_pool *mem, const struct logical_vol
 {
 	struct logical_volume *convert_lv = lv_convert_lv(lv);
 
-	if (convert_lv) {
-		if (uuid)
-			return lv_uuid_dup(mem, convert_lv);
-		else
-			return lv_name_dup(mem, convert_lv);
-	}
+	if (!convert_lv)
+		return NULL;
 
-	return NULL;
+	if (uuid)
+		return lv_uuid_dup(mem, convert_lv);
+	else
+		return lv_name_dup(mem, convert_lv);
 }
 
 char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
