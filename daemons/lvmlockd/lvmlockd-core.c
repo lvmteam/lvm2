@@ -3365,6 +3365,11 @@ static void *worker_thread_main(void *arg_in)
 			int run_sanlock = lm_is_running_sanlock();
 			int run_dlm = lm_is_running_dlm();
 
+			if (daemon_test) {
+				run_sanlock = gl_use_sanlock;
+				run_dlm = gl_use_dlm;
+			}
+
 			if (run_sanlock && run_dlm)
 				act->result = -EXFULL;
 			else if (!run_sanlock && !run_dlm)

@@ -74,6 +74,7 @@ help:
 	@echo "  check_lvmpolld         Run tests with lvmpolld daemon."
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
+	@echo "  check_lvmlockd_test    Run tests with lvmlockd --test."
 	@echo "  clean			Clean dir."
 	@echo "  help			Display callable targets."
 	@echo -e "\nSupported variables:"
@@ -146,26 +147,21 @@ ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_sanlock: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--flavours udev-lvmlockd-sanlock --only shell/sanlock-prepare.sh
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
-		--flavours udev-lvmlockd-sanlock --only $(T) --skip $(S)
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
-		--flavours udev-lvmlockd-sanlock --only shell/sanlock-remove.sh
+		--flavours udev-lvmlockd-sanlock --only shell/aa-lvmlockd-sanlock-prepare.sh,$(T),shell/zz-lvmlockd-sanlock-remove.sh --skip $(S)
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_dlm: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--flavours udev-lvmlockd-dlm --only shell/dlm-prepare.sh
+		--flavours udev-lvmlockd-dlm --only shell/aa-lvmlockd-dlm-prepare.sh,$(T),shell/zz-lvmlockd-dlm-remove.sh --skip $(S)
+endif
+
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+check_lvmlockd_test: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--flavours udev-lvmlockd-dlm --only $(T) --skip $(S)
-	VERBOSE=$(VERBOSE) ./lib/runner \
-		--testdir . --outdir results \
-		--flavours udev-lvmlockd-dlm --only shell/dlm-remove.sh
+		--flavours udev-lvmlockd-test --only shell/aa-lvmlockd-test-prepare.sh,$(T),shell/zz-lvmlockd-test-remove.sh --skip $(S)
 endif
 
 DATADIR = $(datadir)/lvm2-testsuite
@@ -185,6 +181,7 @@ LIB_FLAVOURS = \
  flavour-udev-lvmpolld\
  flavour-udev-lvmlockd-sanlock\
  flavour-udev-lvmlockd-dlm\
+ flavour-udev-lvmlockd-test\
  flavour-udev-vanilla
 
 LIB_LVMLOCKD_CONF = \

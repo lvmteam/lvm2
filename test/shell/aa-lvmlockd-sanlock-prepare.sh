@@ -16,7 +16,7 @@ test_description='Set up things to run tests with sanlock'
 
 [ -z "$LVM_TEST_LOCK_TYPE_SANLOCK" ] && skip;
 
-SANLOCK_CONF="/etc/sysconfig/sanlock"
+SANLOCK_CONF="/etc/sanlock/sanlock.conf"
 create_sanlock_conf() {
 	if test -a $SANLOCK_CONF; then
 		if ! grep "created by lvm test suite" $SANLOCK_CONF; then
@@ -43,9 +43,7 @@ prepare_lvmlockd_sanlock() {
 
 	create_sanlock_conf
 
-	# FIXME: use 'systemctl start sanlock' once we can pass options
-	sanlock daemon -U sanlock -G sanlock -w 0 -e testhostname
-	sleep 1
+	systemctl start sanlock
 	if ! pgrep sanlock; then
 		echo "Failed to start sanlock"
 		exit 1

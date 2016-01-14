@@ -27,6 +27,12 @@ LOCKARGS2="dlm"
 LOCKARGS3="dlm"
 fi
 
+if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
+LOCKARGS1="dlm"
+LOCKARGS2="dlm"
+LOCKARGS3="dlm"
+fi
+
 aux prepare_devs 5
 
 vgcreate --shared $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
