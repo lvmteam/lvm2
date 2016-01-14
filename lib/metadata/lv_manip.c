@@ -3136,7 +3136,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	/* FIXME Caller should ensure this */
 	if (mirrors && !stripes)
 		stripes = 1;
-	else if (mirrors > 1)
+
+	if (mirrors > 1)
 		area_count = mirrors * stripes;
 	else
 		area_count = stripes;
