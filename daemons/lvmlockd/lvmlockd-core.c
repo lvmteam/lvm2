@@ -6042,7 +6042,7 @@ int main(int argc, char *argv[])
 			else if (lm == LD_LM_SANLOCK && lm_support_sanlock())
 				gl_use_sanlock = 1;
 			else {
-				fprintf(stderr, "invalid gl-type option");
+				fprintf(stderr, "invalid gl-type option\n");
 				exit(EXIT_FAILURE);
 			}
 			break;

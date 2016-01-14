@@ -206,6 +206,8 @@ int lm_data_size_sanlock(void)
 #define VG_LOCK_BEGIN UINT64_C(66)
 #define LV_LOCK_BEGIN UINT64_C(67)
 
+static unsigned int daemon_test_lv_count;
+
 static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)
 {
 	return last_string_from_args(vg_args, lock_lv_name);
@@ -338,6 +340,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	if (daemon_test) {
 		if (!gl_lsname_sanlock[0])
 			strncpy(gl_lsname_sanlock, ls_name, MAX_NAME);
+		snprintf(vg_args, MAX_ARGS, "%s:%s", lock_args_version, lock_lv_name);
 		return 0;
 	}
 
@@ -489,6 +492,15 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 	snprintf(lock_args_version, MAX_ARGS, "%u.%u.%u",
 		 LV_LOCK_ARGS_MAJOR, LV_LOCK_ARGS_MINOR, LV_LOCK_ARGS_PATCH);
 
+	if (daemon_test) {
+		align_size = 1048576;
+		snprintf(lv_args, MAX_ARGS, "%s:%llu",
+			 lock_args_version,
+			 (unsigned long long)((align_size * LV_LOCK_BEGIN) + (align_size * daemon_test_lv_count)));
+		daemon_test_lv_count++;
+		return 0;
+	}
+
 	strncpy(rd.rs.lockspace_name, ls_name, SANLK_NAME_LEN);
 	rd.rs.num_disks = 1;
 	snprintf(rd.rs.disks[0].path, SANLK_PATH_LEN-1, "/dev/mapper/%s-%s", vg_name, lock_lv_name);
@@ -504,12 +516,6 @@ int lm_init_lv_sanlock(char *ls_name, char *vg_name, char *lv_name,
 	else
 		offset = align_size * LV_LOCK_BEGIN;
 	rd.rs.disks[0].offset = offset;
-
-	if (daemon_test) {
-		snprintf(lv_args, MAX_ARGS, "%s:%llu",
-			 lock_args_version, (unsigned long long)1111);
-		return 0;
-	}
 
 	while (1) {
 		rd.rs.disks[0].offset = offset;
@@ -759,6 +765,9 @@ int lm_ex_disable_gl_sanlock(struct lockspace *ls)
 	struct sanlk_resource **rs_args;
 	int rv;
 
+	if (daemon_test)
+		return 0;
+
 	rs_args = malloc(2 * sizeof(struct sanlk_resource *));
 	if (!rs_args)
 		return -ENOMEM;
@@ -828,6 +837,9 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 	else
 		gl_name = R_NAME_GL_DISABLED;
 
+	if (daemon_test)
+		goto out;
+
 	memset(&rd, 0, sizeof(rd));
 
 	strncpy(rd.rs.lockspace_name, ls->name, SANLK_NAME_LEN);
@@ -843,7 +855,7 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 			  ls->name, enable, rv, rd.rs.disks[0].path);
 		return rv;
 	}
-
+out:
 	log_debug("S %s able_gl %s", ls->name, gl_name);
 
 	ls->sanlock_gl_enabled = enable;
@@ -863,6 +875,9 @@ static int gl_is_enabled(struct lockspace *ls, struct lm_sanlock *lms)
 	struct sanlk_resourced rd;
 	uint64_t offset;
 	int rv;
+
+	if (daemon_test)
+		return 1;
 
 	memset(&rd, 0, sizeof(rd));
 
@@ -922,8 +937,10 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
 	uint64_t offset;
 	int rv;
 
-	if (daemon_test)
+	if (daemon_test) {
+		*free_offset = (1048576 * LV_LOCK_BEGIN) + (1048576 * (daemon_test_lv_count + 1));
 		return 0;
+	}
 
 	memset(&rd, 0, sizeof(rd));
 
@@ -1172,6 +1189,11 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt)
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	int rv;
 
+	if (daemon_test) {
+		sleep(2);
+		goto out;
+	}
+
 	rv = sanlock_add_lockspace_timeout(&lms->ss, 0, sanlock_io_timeout);
 	if (rv == -EEXIST && adopt) {
 		/* We could alternatively just skip the sanlock call for adopt. */
@@ -1240,10 +1262,10 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 				  ls->name, rv, lms->ss.host_id_disk.path);
 		}
 	}
-out:
+
 	if (close(lms->sock))
 		log_error("failed to close sanlock daemon socket connection");
-
+out:
 	free(lms);
 	ls->lm_data = NULL;
 
@@ -1380,7 +1402,11 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		  (unsigned long long)rs->disks[0].offset);
 
 	if (daemon_test) {
-		memset(vb_out, 0, sizeof(struct val_blk));
+		if (rds->vb) {
+			vb_out->version = le16_to_cpu(rds->vb->version);
+			vb_out->flags = le16_to_cpu(rds->vb->flags);
+			vb_out->r_version = le32_to_cpu(rds->vb->r_version);
+		}
 		return 0;
 	}
 
@@ -1665,8 +1691,15 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	log_debug("S %s R %s unlock_san r_version %u flags %x",
 		  ls->name, r->name, r_version, lmu_flags);
 
-	if (daemon_test)
+	if (daemon_test) {
+		if (rds->vb && r_version && (r->mode == LD_LK_EX)) {
+			if (!rds->vb->version)
+				rds->vb->version = cpu_to_le16(VAL_BLK_VERSION);
+			if (r_version)
+				rds->vb->r_version = cpu_to_le32(r_version);
+		}
 		return 0;
+	}
 
 	if (rds->vb && r_version && (r->mode == LD_LK_EX)) {
 		if (!rds->vb->version) {
@@ -1715,6 +1748,9 @@ int lm_hosts_sanlock(struct lockspace *ls, int notify)
 	int found_self = 0;
 	int found_others = 0;
 	int i, rv;
+
+	if (daemon_test)
+		return 0;
 
 	rv = sanlock_get_hosts(ls->name, 0, &hss, &hss_count, 0);
 	if (rv < 0) {
@@ -1814,6 +1850,9 @@ int lm_is_running_sanlock(void)
 	uint32_t daemon_version;
 	uint32_t daemon_proto;
 	int rv;
+
+	if (daemon_test)
+		return gl_use_sanlock;
 
 	rv = sanlock_version(0, &daemon_version, &daemon_proto);
 	if (rv < 0)

@@ -163,6 +163,9 @@ int lm_prepare_lockspace_dlm(struct lockspace *ls)
 	struct lm_dlm *lmd;
 	int rv;
 
+	if (daemon_test)
+		goto skip_args;
+
 	memset(sys_clustername, 0, sizeof(sys_clustername));
 	memset(arg_clustername, 0, sizeof(arg_clustername));
 
@@ -470,7 +473,11 @@ int lm_lock_dlm(struct lockspace *ls, struct resource *r, int ld_mode,
 	log_debug("S %s R %s lock_dlm", ls->name, r->name);
 
 	if (daemon_test) {
-		memset(vb_out, 0, sizeof(struct val_blk));
+		if (rdd->vb) {
+			vb_out->version = le16_to_cpu(rdd->vb->version);
+			vb_out->flags = le16_to_cpu(rdd->vb->flags);
+			vb_out->r_version = le32_to_cpu(rdd->vb->r_version);
+		}
 		return 0;
 	}
 
@@ -686,6 +693,9 @@ int lm_hosts_dlm(struct lockspace *ls, int notify)
 	DIR *ls_dir;
 	int count = 0;
 
+	if (daemon_test)
+		return 0;
+
 	memset(ls_nodes_path, 0, sizeof(ls_nodes_path));
 	snprintf(ls_nodes_path, PATH_MAX-1, "%s/%s/nodes",
 		 DLM_LOCKSPACES_PATH, ls->name);
@@ -753,6 +763,9 @@ int lm_is_running_dlm(void)
 {
 	char sys_clustername[MAX_ARGS+1];
 	int rv;
+
+	if (daemon_test)
+		return gl_use_dlm;
 
 	memset(sys_clustername, 0, sizeof(sys_clustername));
 
