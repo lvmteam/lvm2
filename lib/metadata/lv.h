@@ -95,6 +95,7 @@ char *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment 
 int lv_kernel_major(const struct logical_volume *lv);
 int lv_kernel_minor(const struct logical_volume *lv);
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv);
+char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *seg);
 
 /* LV modification functions */
 int lv_set_creation(struct logical_volume *lv,
@@ -137,4 +138,5 @@ char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_profile_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_lock_args_dup(struct dm_pool *mem, const struct logical_volume *lv);
+char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm);
 #endif /* _LVM_LV_H */

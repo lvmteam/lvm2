@@ -162,6 +162,45 @@ char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
 	return  dm_pool_strdup(mem, get_pool_discards_name(seg->discards));
 }
 
+char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm)
+{
+	const char *s = "";
+	char *ret;
+
+	if (lvdm->seg_status.type == SEG_STATUS_THIN_POOL)
+		s = get_pool_discards_name(lvdm->seg_status.thin_pool->discards);
+
+	if (!(ret = dm_pool_strdup(mem, s))) {
+		log_error("lvseg_kernel_discards_dup_with_info_and_seg_status: dm_pool_strdup failed");
+		return NULL;
+	}
+
+	return ret;
+}
+
+char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	char *ret = NULL;
+	struct lv_with_info_and_seg_status status = {
+		.seg_status.type = SEG_STATUS_NONE,
+		.seg_status.seg = seg
+	};
+
+	if (!lv_is_thin_pool(seg->lv))
+		return NULL;
+
+	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024)))
+		return_NULL;
+
+	if (!(status.info_ok = lv_info_with_seg_status(seg->lv->vg->cmd, seg->lv, seg, 1, &status, 0, 0)))
+		goto_bad;
+
+	ret = lvseg_kernel_discards_dup_with_info_and_seg_status(mem, &status);
+bad:
+	dm_pool_destroy(status.seg_status.mem);
+	return ret;
+}
+
 char *lvseg_cachemode_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	const char *name = get_cache_mode_name(seg);

@@ -450,6 +450,8 @@ GET_LVSEG_NUM_PROPERTY_FN(thin_id, lvseg->device_id)
 #define _thin_id_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(discards, lvseg_discards_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _discards_set prop_not_implemented_set
+GET_LVSEG_STR_PROPERTY_FN(kernel_discards, lvseg_kernel_discards_dup(lvseg->lv->vg->vgmem, lvseg))
+#define _kernel_discards_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(cachemode, lvseg_cachemode_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _cachemode_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start, (SECTOR_SIZE * lvseg_start(lvseg)))

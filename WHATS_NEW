@@ -1,5 +1,6 @@
 Version 2.02.140 -
 ===================================
+  Add kernel_discards report field to display thin pool discard used in kernel.
   Correct checking of target presence when driver access is disabled.
   Eval poolmetadatasize arg earlier in lvresize.
   Fix vgcfgrestore to respect allocatable attribute of PVs.
