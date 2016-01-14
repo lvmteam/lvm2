@@ -574,17 +574,16 @@ struct lvresize_params {
 
 	/* FIXME Deal with meaningless 'ac' */
 	/* Arg counts & values */
+	alloc_policy_t ac_alloc;
+	unsigned ac_force;
+	unsigned ac_mirrors;
+	uint32_t ac_mirrors_value;
+	unsigned ac_no_sync;
 	unsigned ac_policy;
 	unsigned ac_stripes;
 	uint32_t ac_stripes_value;
-	unsigned ac_mirrors;
-	uint32_t ac_mirrors_value;
 	unsigned ac_stripesize;
 	uint64_t ac_stripesize_value;
-	alloc_policy_t ac_alloc;
-	unsigned ac_no_sync;
-	unsigned ac_force;
-
 	const char *ac_type;
 };
 
