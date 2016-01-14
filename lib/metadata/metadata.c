@@ -227,6 +227,10 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	 */
 	pv->pe_alloc_count = 0;
 
+	/* LVM1 stores this outside a VG; LVM2 only stores it inside */
+	/* FIXME Default from config file? vgextend cmdline flag? */
+	pv->status |= ALLOCATABLE_PV;
+
 	if (!fid->fmt->ops->pv_setup(fid->fmt, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);

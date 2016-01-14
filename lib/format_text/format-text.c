@@ -1818,10 +1818,6 @@ static int _text_pv_setup(const struct format_type *fmt,
 		pv->pe_count = (uint32_t) pe_count;
 	}
 
-	/* Unlike LVM1, we don't store this outside a VG */
-	/* FIXME Default from config file? vgextend cmdline flag? */
-	pv->status |= ALLOCATABLE_PV;
-
 	return 1;
 }
 

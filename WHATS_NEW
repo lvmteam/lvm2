@@ -1,5 +1,6 @@
 Version 2.02.140 -
 ===================================
+  Fix vgcfgrestore to respect allocatable attribute of PVs.
   Add report/mark_hidden_devices to lvm.conf.
   Use brackets consistently in report fields to mark hidden devices.
   Restore background polling processing during auto-activation (2.02.119).

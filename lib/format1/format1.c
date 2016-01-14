@@ -383,7 +383,6 @@ static int _format1_pv_setup(const struct format_type *fmt,
 			     struct physical_volume *pv,
 			     struct volume_group *vg)
 {
-	int r;
 	struct pvcreate_restorable_params rp = {.restorefile = NULL,
 						.id = {{0}},
 						.idp = NULL,
@@ -393,10 +392,7 @@ static int _format1_pv_setup(const struct format_type *fmt,
 						.extent_count = 0,
 						.extent_size = vg->extent_size};
 
-	if ((r = _format1_pv_initialise(fmt, -1, 0, 0, &rp, pv)))
-		pv->status |= ALLOCATABLE_PV;
-
-	return r;
+	return _format1_pv_initialise(fmt, -1, 0, 0, &rp, pv);
 }
 
 static int _format1_lv_setup(struct format_instance *fid, struct logical_volume *lv)
