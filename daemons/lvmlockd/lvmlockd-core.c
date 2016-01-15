@@ -1379,12 +1379,16 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 		r->version++;
 		lk->version = r->version;
 		r_version = r->version;
+		r->version_zero_valid = 0;
+
 		log_debug("S %s R %s res_convert r_version inc %u",
 			  ls->name, r->name, r_version);
 
 	} else if ((r->type == LD_RT_VG) && (r->mode == LD_LK_EX) && (lk->version > r->version)) {
 		r->version = lk->version;
 		r_version = r->version;
+		r->version_zero_valid = 0;
+
 		log_debug("S %s R %s res_convert r_version new %u", ls->name, r->name, r_version);
 	} else {
 		r_version = 0;
