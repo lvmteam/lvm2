@@ -4445,14 +4445,17 @@ static int _adjust_policy_params(struct cmd_context *cmd,
 		}
 	}
 
-	if (!policy_amount && policy_threshold < 100) {
+	if (policy_threshold >= 100) {
+		lp->extents = lp->poolmetadatasize = 0;
+		lp->sizeargs = 0;
+		return 1; /* nothing to do */
+	}
+
+	if (!policy_amount) {
 		log_error("Can't extend %s with %s autoextend percent set to 0%%.",
 			  display_lvname(lv),  first_seg(lv)->segtype->name);
 		return 0;
 	}
-
-	if (policy_threshold >= 100)
-		return 1; /* nothing to do */
 
 	if (!lv_is_active_locally(lv)) {
 		log_error("Can't read state of locally inactive LV %s.",
