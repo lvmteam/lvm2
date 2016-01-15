@@ -87,8 +87,11 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 	 * i.e. the global lock is only needed for orphans.
 	 * Convert sh to ex.
 	 */
-	if (is_orphan(pv) && !lockd_gl(cmd, "ex", 0))
-		return_ECMD_FAILED;
+	if (is_orphan(pv)) {
+		if (!lockd_gl(cmd, "ex", 0))
+			return_ECMD_FAILED;
+		cmd->lockd_gl_disable = 1;
+	}
 
 	if (tagargs) {
 		/* tag or deltag */
