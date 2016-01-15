@@ -305,7 +305,7 @@ struct pv_segment {
 	uint32_t lv_area;	/* Index to area in LV segment */
 };
 
-#define pvseg_is_allocated(pvseg) ((pvseg)->lvseg)
+#define pvseg_is_allocated(pvseg) ((pvseg)->lvseg ? 1 : 0)
 
 /*
  * Properties of each format instance type.
@@ -1204,9 +1204,9 @@ int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore);
 
 int vg_flag_write_locked(struct volume_group *vg);
 int vg_check_write_mode(struct volume_group *vg);
-#define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
-#define vg_is_exported(vg) (vg_status((vg)) & EXPORTED_VG)
-#define vg_is_resizeable(vg) (vg_status((vg)) & RESIZEABLE_VG)
+#define vg_is_clustered(vg) ((vg_status((vg)) & CLUSTERED) ? 1 : 0)
+#define vg_is_exported(vg) ((vg_status((vg)) & EXPORTED_VG) ? 1 : 0)
+#define vg_is_resizeable(vg) ((vg_status((vg)) & RESIZEABLE_VG) ? 1 : 0)
 
 int lv_has_unknown_segments(const struct logical_volume *lv);
 int vg_has_unknown_segments(const struct volume_group *vg);
