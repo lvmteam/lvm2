@@ -741,24 +741,6 @@ static const char *op_str(int x)
 	};
 }
 
-static const char *mode_str(int x)
-{
-	switch (x) {
-	case LD_LK_IV:
-		return "iv";
-	case LD_LK_UN:
-		return "un";
-	case LD_LK_NL:
-		return "nl";
-	case LD_LK_SH:
-		return "sh";
-	case LD_LK_EX:
-		return "ex";
-	default:
-		return ".";
-	};
-}
-
 int last_string_from_args(char *args_in, char *last)
 {
 	const char *args = args_in;
@@ -1365,7 +1347,7 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 
 	r->last_client_id = act->client_id;
 
-	log_debug("S %s R %s res_convert cl %u mode %d", ls->name, r->name, act->client_id, act->mode);
+	log_debug("S %s R %s res_convert cl %u mode %s", ls->name, r->name, act->client_id, mode_str(act->mode));
 
 	if (act->mode == LD_LK_EX && lk->mode == LD_LK_SH && r->sh_count > 1)
 		return -EAGAIN;

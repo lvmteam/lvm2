@@ -351,6 +351,23 @@ int lockspaces_empty(void);
 int last_string_from_args(char *args_in, char *last);
 int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsigned int *patch);
 
+static inline const char *mode_str(int x)
+{
+	switch (x) {
+	case LD_LK_IV:
+		return "iv";
+	case LD_LK_UN:
+		return "un";
+	case LD_LK_NL:
+		return "nl";
+	case LD_LK_SH:
+		return "sh";
+	case LD_LK_EX:
+		return "ex";
+	default:
+		return ".";
+	};
+}
 
 #ifdef LOCKDDLM_SUPPORT
 

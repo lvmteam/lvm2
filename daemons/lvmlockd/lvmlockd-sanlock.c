@@ -1324,6 +1324,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
 	struct sanlk_resource *rs;
+	struct sanlk_options opt;
 	uint64_t lock_lv_offset;
 	uint32_t flags = 0;
 	struct val_blk vb;
@@ -1397,8 +1398,8 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	rs->flags |= SANLK_RES_PERSISTENT;
 
-	log_debug("S %s R %s lock_san acquire %s:%llu",
-		  ls->name, r->name, rs->disks[0].path,
+	log_debug("S %s R %s lock_san %s at %s:%llu",
+		  ls->name, r->name, mode_str(ld_mode), rs->disks[0].path,
 		  (unsigned long long)rs->disks[0].offset);
 
 	if (daemon_test) {
@@ -1424,7 +1425,10 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	flags |= SANLK_ACQUIRE_OWNER_NOWAIT;
 #endif
 
-	rv = sanlock_acquire(lms->sock, -1, flags, 1, &rs, NULL);
+	memset(&opt, 0, sizeof(opt));
+	sprintf(opt.owner_name, "%s", "lvmlockd");
+
+	rv = sanlock_acquire(lms->sock, -1, flags, 1, &rs, &opt);
 
 	if (rv == -EAGAIN) {
 		/*
@@ -1584,7 +1588,8 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	uint32_t flags = 0;
 	int rv;
 
-	log_debug("S %s R %s convert_san", ls->name, r->name);
+	log_debug("S %s R %s convert_san %s to %s",
+		  ls->name, r->name, mode_str(r->mode), mode_str(ld_mode));
 
 	if (daemon_test)
 		goto rs_flag;
@@ -1688,8 +1693,8 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	struct val_blk vb;
 	int rv;
 
-	log_debug("S %s R %s unlock_san r_version %u flags %x",
-		  ls->name, r->name, r_version, lmu_flags);
+	log_debug("S %s R %s unlock_san %s r_version %u flags %x",
+		  ls->name, r->name, mode_str(r->mode), r_version, lmu_flags);
 
 	if (daemon_test) {
 		if (rds->vb && r_version && (r->mode == LD_LK_EX)) {
