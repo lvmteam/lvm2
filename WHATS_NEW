@@ -1,5 +1,6 @@
 Version 2.02.141 - 
 ====================================
+  Cache device sizes internally.
   Restore support for command breaking in process_each_lv_in_vg() (2.02.118).
   Use correct mempool when process_each_lv_in_vg() (2.02.118).
   Fix lvm.8 man to show again prohibited suffixes.

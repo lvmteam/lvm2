@@ -62,6 +62,8 @@ struct device {
 	int block_size;
 	int read_ahead;
 	uint32_t flags;
+	unsigned size_seqno;
+	uint64_t size;
 	uint64_t end;
 	struct dm_list open_list;
 	struct dev_ext ext;
@@ -89,6 +91,13 @@ int dev_ext_enable(struct device *dev, dev_ext_t src);
 int dev_ext_disable(struct device *dev);
 struct dev_ext *dev_ext_get(struct device *dev);
 int dev_ext_release(struct device *dev);
+
+/*
+ * Increment current dev_size_seqno.
+ * This is used to control lifetime
+ * of cached device size.
+ */
+void dev_size_seqno_inc(void);
 
 /*
  * All io should use these routines.

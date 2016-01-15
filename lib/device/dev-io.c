@@ -54,6 +54,7 @@
 #endif
 
 static DM_LIST_INIT(_open_devices);
+static unsigned _dev_size_seqno = 1;
 
 /*-----------------------------------------------------------------
  * The standard io loop that keeps submitting an io until it's
@@ -271,10 +272,17 @@ out:
 	return r;
 }
 
-static int _dev_get_size_file(const struct device *dev, uint64_t *size)
+static int _dev_get_size_file(struct device *dev, uint64_t *size)
 {
 	const char *name = dev_name(dev);
 	struct stat info;
+
+	if (dev->size_seqno == _dev_size_seqno) {
+		log_very_verbose("%s: using cached size %" PRIu64 " sectors",
+				 name, dev->size);
+		*size = dev->size;
+		return 1;
+	}
 
 	if (stat(name, &info)) {
 		log_sys_error("stat", name);
@@ -283,6 +291,8 @@ static int _dev_get_size_file(const struct device *dev, uint64_t *size)
 
 	*size = info.st_size;
 	*size >>= SECTOR_SHIFT;	/* Convert to sectors */
+	dev->size = *size;
+	dev->size_seqno = _dev_size_seqno;
 
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
@@ -292,6 +302,13 @@ static int _dev_get_size_file(const struct device *dev, uint64_t *size)
 static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 {
 	const char *name = dev_name(dev);
+
+	if (dev->size_seqno == _dev_size_seqno) {
+		log_very_verbose("%s: using cached size %" PRIu64 " sectors",
+				 name, dev->size);
+		*size = dev->size;
+		return 1;
+	}
 
 	if (!dev_open_readonly(dev))
 		return_0;
@@ -304,6 +321,9 @@ static int _dev_get_size_dev(struct device *dev, uint64_t *size)
 	}
 
 	*size >>= BLKSIZE_SHIFT;	/* Convert to sectors */
+	dev->size = *size;
+	dev->size_seqno = _dev_size_seqno;
+
 	if (!dev_close(dev))
 		log_sys_error("close", name);
 
@@ -373,6 +393,10 @@ static int _dev_discard_blocks(struct device *dev, uint64_t offset_bytes, uint64
 /*-----------------------------------------------------------------
  * Public functions
  *---------------------------------------------------------------*/
+void dev_size_seqno_inc(void)
+{
+	_dev_size_seqno++;
+}
 
 int dev_get_size(struct device *dev, uint64_t *size)
 {
