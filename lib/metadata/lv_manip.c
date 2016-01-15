@@ -4614,7 +4614,8 @@ static int _lvresize_check_lv(struct cmd_context *cmd, struct logical_volume *lv
 		 * Since external-origin can be activated read-only,
 		 * there is no way to use extended areas.
 		 */
-		log_error("Cannot resize external origin \"%s\".", lv->name);
+		log_error("Cannot resize external origin logical volume %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -4626,53 +4627,54 @@ static int _lvresize_check_lv(struct cmd_context *cmd, struct logical_volume *lv
 	}
 
 	if (lv_is_raid_with_tracking(lv)) {
-		log_error("Cannot resize %s while it is tracking a split image",
-			  lv->name);
+		log_error("Cannot resize logical volume %s while it is "
+			  "tracking a split image.", display_lvname(lv));
 		return 0;
 	}
-
-	if (lp->ac_stripes) {
-		if (vg->fid->fmt->features & FMT_SEGMENTS)
-			lp->stripes = lp->ac_stripes_value;
-		else
-			log_print_unless_silent("Varied striping not supported. Ignoring.");
-	}
-
-	if (lp->ac_mirrors) {
-		if (vg->fid->fmt->features & FMT_SEGMENTS)
-			lp->mirrors = lp->ac_mirrors_value;
-		else
-			log_print_unless_silent("Mirrors not supported. Ignoring.");
-	}
-
-	if (lp->ac_stripesize && !_validate_stripesize(cmd, vg, lp))
-		return_0;
 
 	if (lp->ac_policy && !lv_is_cow(lv) && !lv_is_thin_pool(lv)) {
 		log_error("Policy-based resize is supported only for snapshot and thin pool volumes.");
 		return 0;
 	}
 
-	/* FIXME: use a status flag instead of the name "lvmlock". */
-
-	if (!lv_is_visible(lv) && !lv_is_thin_pool_metadata(lv) && strcmp(lv->name, "lvmlock")) {
-		log_error("Can't resize internal logical volume %s", lv->name);
+	if (!lv_is_visible(lv) &&
+	    !lv_is_thin_pool_metadata(lv) &&
+	    !lv_is_lockd_sanlock_lv(lv)) {
+		log_error("Can't resize internal logical volume %s.", display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_locked(lv)) {
-		log_error("Can't resize locked LV %s", lv->name);
+		log_error("Can't resize locked logical volume %s.", display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_converting(lv)) {
-		log_error("Can't resize %s while lvconvert in progress", lv->name);
+		log_error("Can't resize logical volume %s while "
+			  "lvconvert in progress.", display_lvname(lv));
 		return 0;
 	}
 
 	if (!lv_is_thin_pool(lv) && lp->poolmetadatasize) {
 		log_error("--poolmetadatasize can be used only with thin pools.");
 		return 0;
+	}
+
+	if (lp->ac_stripesize && !_validate_stripesize(cmd, vg, lp))
+		return_0;
+
+	if (lp->ac_stripes) {
+		if (!(vg->fid->fmt->features & FMT_SEGMENTS))
+			log_print_unless_silent("Varied striping not supported. Ignoring.");
+		else
+			lp->stripes = lp->ac_stripes_value;
+	}
+
+	if (lp->ac_mirrors) {
+		if (!(vg->fid->fmt->features & FMT_SEGMENTS))
+			log_print_unless_silent("Mirrors not supported. Ignoring.");
+		else
+			lp->mirrors = lp->ac_mirrors_value;
 	}
 
 	return 1;
