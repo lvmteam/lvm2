@@ -4269,17 +4269,17 @@ static int _validate_stripesize(struct cmd_context *cmd,
 				struct lvresize_params *lp)
 {
 
-	if ( lp->ac_stripesize_value > STRIPE_SIZE_LIMIT * 2) {
-		log_error("Stripe size cannot be larger than %s",
+	if (lp->ac_stripesize_value > (STRIPE_SIZE_LIMIT * 2)) {
+		log_error("Stripe size cannot be larger than %s.",
 			  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
 		return 0;
 	}
 
 	if (!(vg->fid->fmt->features & FMT_SEGMENTS))
-		log_warn("Varied stripesize not supported. Ignoring.");
+		log_print_unless_silent("Varied stripesize not supported. Ignoring.");
 	else if (lp->ac_stripesize_value > vg->extent_size) {
 		log_print_unless_silent("Reducing stripe size %s to maximum, "
-					"physical extent size %s",
+					"physical extent size %s.",
 					display_size(cmd, lp->ac_stripesize_value),
 					display_size(cmd, vg->extent_size));
 		lp->stripe_size = vg->extent_size;
@@ -4287,7 +4287,7 @@ static int _validate_stripesize(struct cmd_context *cmd,
 		lp->stripe_size = lp->ac_stripesize_value;
 
 	if (lp->stripe_size & (lp->stripe_size - 1)) {
-		log_error("Stripe size must be power of 2");
+		log_error("Stripe size must be power of 2.");
 		return 0;
 	}
 
