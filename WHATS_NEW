@@ -1,3 +1,6 @@
+Version 2.02.141 - 
+====================================
+
 Version 2.02.140 - 16th January 2016
 ====================================
   Fix lvm2app to return either 0 or 1 for lvm_vg_is_{clustered,exported}.
