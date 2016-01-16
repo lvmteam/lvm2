@@ -1,5 +1,5 @@
-Version 2.02.140 -
-===================================
+Version 2.02.140 - 16th January 2016
+====================================
   Fix lvm2app to return either 0 or 1 for lvm_vg_is_{clustered,exported}.
   Add kernel_discards report field to display thin pool discard used in kernel.
   Correct checking of target presence when driver access is disabled.
