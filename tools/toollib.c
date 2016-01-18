@@ -3088,6 +3088,16 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 
 			_device_list_remove(all_devices, pv->dev);
 
+			/*
+			 * pv->dev should be found in all_devices unless it's a
+			 * case of a "missing device".  Previously there have
+			 * been cases where we needed to skip processing the PV
+			 * if pv->dev was not found in all_devices to avoid
+			 * processing a PV twice, i.e. when the PV had no MDAs
+			 * it would be seen once in its real VG and again
+			 * wrongly in the orphan VG.  This no longer happens.
+			 */
+
 			if (!skip) {
 				ret = process_single_pv(cmd, vg, pv, handle);
 				if (ret != ECMD_PROCESSED)
