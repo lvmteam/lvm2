@@ -3434,6 +3434,13 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 		goto_out;
 	}
 
+	if (test_mode() && is_lockd_type(vg->lock_type)) {
+		log_error("Test mode is not yet supported with lock type %s",
+			  vg->lock_type);
+		unlock_and_release_vg(cmd, vg, lp->vg_name);
+		goto_out;
+	}
+
 	if (!(lv = find_lv(vg, lp->lv_name))) {
 		log_error("Can't find LV %s in VG %s", lp->lv_name, lp->vg_name);
 		unlock_and_release_vg(cmd, vg, lp->vg_name);
