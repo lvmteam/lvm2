@@ -1412,6 +1412,74 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_string_list(rh, field, result, private, 0);
 }
 
+static int _do_get_kernel_cache_settings_list(struct dm_pool *mem,
+					      int cache_argc, char **cache_argv,
+					      struct dm_list *result)
+{
+	const char *key, *value;
+	char *buf;
+	size_t buf_len;
+	int i;
+
+	for (i = 0; i+1 < cache_argc; i += 2) {
+		key = cache_argv[i];
+		value = cache_argv[i+1];
+		/* +1 for "=" char and +1 for trailing zero */
+		buf_len = strlen(key) + strlen(value) + 2;
+		if (!(buf = dm_pool_alloc(mem, buf_len)))
+			return_0;
+		dm_snprintf(buf, buf_len, "%s=%s", key, value);
+		if (!str_list_add_no_dup_check(mem, result, buf))
+			return_0;
+	}
+
+	return 1;
+}
+
+static int _get_kernel_cache_settings_list(struct dm_pool *mem,
+					   struct dm_status_cache *cache_status,
+					   struct dm_list **result)
+{
+	if (!(*result = str_list_create(mem)))
+		return_0;
+
+	if (!_do_get_kernel_cache_settings_list(mem, cache_status->core_argc,
+						cache_status->core_argv, *result))
+		return_0;
+
+	if (!_do_get_kernel_cache_settings_list(mem, cache_status->policy_argc,
+						cache_status->policy_argv, *result))
+		return_0;
+
+	return 1;
+}
+
+static int _kernel_cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
+				       struct dm_report_field *field,
+				       const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+	struct dm_list dummy_list; /* dummy list to display "nothing" */
+	struct dm_list *result;
+	int r = 0;
+
+	if (lvdm->seg_status.type != SEG_STATUS_CACHE) {
+		dm_list_init(&dummy_list);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0);
+	}
+
+	if (!(mem = dm_pool_create("reporter_pool", 1024)))
+		return_0;
+
+	if (!_get_kernel_cache_settings_list(mem, lvdm->seg_status.cache, &result))
+		goto_out;
+
+	r = _field_set_string_list(rh, field, result, private, 0);
+out:
+	dm_pool_destroy(mem);
+	return r;
+}
+
 static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)

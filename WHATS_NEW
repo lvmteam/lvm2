@@ -1,5 +1,6 @@
 Version 2.02.141 - 
 ====================================
+  Add kernel_cache_settings report field for cache LV settings used in kernel.
 
 Version 2.02.140 - 16th January 2016
 ====================================
