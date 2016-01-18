@@ -36,6 +36,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 	unsigned int s;
 	const char *name = NULL;
 	uint32_t extent = 0;
+	uint32_t seg_len = 0;
 	char extent_str[32];
 	struct logical_volume *lv;
 	int visible = 1;
@@ -52,6 +53,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 		switch (metadata_areas_only ? seg_metatype(seg, s) : seg_type(seg, s)) {
 		case AREA_LV:
 			lv = metadata_areas_only ? seg_metalv(seg, s) : seg_lv(seg, s);
+			seg_len = metadata_areas_only ? seg_metalv(seg, s)->le_count - 1 : seg_lv(seg, s)->le_count;
 			visible = lv_is_visible(lv);
 			name = lv->name;
 			extent = metadata_areas_only ? seg_le(seg, s) : 0;
@@ -62,10 +64,12 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 				continue;
 			name = dev_name(seg_dev(seg, s));
 			extent = seg_pe(seg, s);
+			seg_len = seg->area_len;
 			break;
 		case AREA_UNASSIGNED:
 			name = "unassigned";
 			extent = 0;
+			seg_len = 0;
 			break;
 		default:
 			log_error(INTERNAL_ERROR "Unknown area segtype.");
@@ -101,7 +105,7 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 
 		if (range_format) {
 			if (dm_snprintf(extent_str, sizeof(extent_str),
-					FMTu32, metadata_areas_only ? extent + seg_metalv(seg, s)->le_count - 1 : extent + seg->area_len - 1) < 0) {
+					FMTu32, extent + seg_len - 1) < 0) {
 				log_error("Extent number dm_snprintf failed");
 				return NULL;
 			}
