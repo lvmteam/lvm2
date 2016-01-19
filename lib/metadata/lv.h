@@ -92,6 +92,8 @@ struct dm_list *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segm
 char *lvseg_metadata_devices_str(struct dm_pool *mem, const struct lv_segment *seg);
 struct dm_list *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg);
 char *lvseg_seg_pe_ranges_str(struct dm_pool *mem, const struct lv_segment *seg);
+struct dm_list *lvseg_seg_le_ranges(struct dm_pool *mem, const struct lv_segment *seg);
+char *lvseg_seg_le_ranges_str(struct dm_pool *mem, const struct lv_segment *seg);
 struct dm_list *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg);
 char *lvseg_seg_metadata_le_ranges_str(struct dm_pool *mem, const struct lv_segment *seg);
 

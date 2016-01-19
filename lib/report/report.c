@@ -1332,6 +1332,19 @@ static int _peranges_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_string_list(rh, field, list, private, 0, " ");
 }
 
+static int _leranges_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct dm_list *list;
+
+	if (!(list = lvseg_seg_le_ranges(mem, seg)))
+		return_0;
+
+	return _field_set_string_list(rh, field, list, private, 0, NULL);
+}
+
 static int _metadataleranges_disp(struct dm_report *rh, struct dm_pool *mem,
 				  struct dm_report_field *field,
 				  const void *data, void *private)

@@ -466,6 +466,8 @@ GET_LVSEG_STR_PROPERTY_FN(seg_tags, lvseg_tags_dup(lvseg))
 #define _seg_tags_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(seg_pe_ranges, lvseg_seg_pe_ranges_str(lvseg->lv->vg->vgmem, lvseg))
 #define _seg_pe_ranges_set prop_not_implemented_set
+GET_LVSEG_STR_PROPERTY_FN(seg_le_ranges, lvseg_seg_le_ranges_str(lvseg->lv->vg->vgmem, lvseg))
+#define _seg_le_ranges_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(seg_metadata_le_ranges, lvseg_seg_metadata_le_ranges_str(lvseg->lv->vg->vgmem, lvseg))
 #define _seg_metadata_le_ranges_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(devices, lvseg_devices_str(lvseg->lv->vg->vgmem, lvseg))
