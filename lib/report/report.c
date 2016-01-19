@@ -1217,11 +1217,12 @@ static int _field_set_value(struct dm_report_field *field, const void *data, con
 }
 
 static int _field_set_string_list(struct dm_report *rh, struct dm_report_field *field,
-				  const struct dm_list *list, void *private, int sorted)
+				  const struct dm_list *list, void *private, int sorted,
+				  const char *delimiter)
 {
 	struct cmd_context *cmd = (struct cmd_context *) private;
-	return sorted ? dm_report_field_string_list(rh, field, list, cmd->report_list_item_separator)
-		      : dm_report_field_string_list_unsorted(rh, field, list, cmd->report_list_item_separator);
+	return sorted ? dm_report_field_string_list(rh, field, list, delimiter ? : cmd->report_list_item_separator)
+		      : dm_report_field_string_list_unsorted(rh, field, list, delimiter ? : cmd->report_list_item_separator);
 }
 
 /*
@@ -1346,7 +1347,7 @@ static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct dm_list *tagsl = (const struct dm_list *) data;
 
-	return _field_set_string_list(rh, field, tagsl, private, 1);
+	return _field_set_string_list(rh, field, tagsl, private, 1, NULL);
 }
 
 struct _str_list_append_baton {
@@ -1382,7 +1383,7 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 		seg = first_seg(seg->pool_lv);
 	else if (!seg_is_cache_pool(seg)) {
 		dm_list_init(&dummy_list);
-		return _field_set_string_list(rh, field, &dummy_list, private, 0);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0, NULL);
 		/* TODO: once we have support for STR_LIST reserved values, replace with:
 		 * return _field_set_value(field,  GET_FIRST_RESERVED_NAME(cache_settings_undef), GET_FIELD_RESERVED_VALUE(cache_settings_undef));
 		 */
@@ -1392,7 +1393,7 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 		settings = seg->policy_settings->child;
 	else {
 		dm_list_init(&dummy_list);
-		return _field_set_string_list(rh, field, &dummy_list, private, 0);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0, NULL);
 		/* TODO: once we have support for STR_LIST reserved values, replace with:
 		 * return _field_set_value(field,  GET_FIRST_RESERVED_NAME(cache_settings_undef), GET_FIELD_RESERVED_VALUE(cache_settings_undef));
 		 */
@@ -1409,7 +1410,7 @@ static int _cache_settings_disp(struct dm_report *rh, struct dm_pool *mem,
 		settings = settings->sib;
 	};
 
-	return _field_set_string_list(rh, field, result, private, 0);
+	return _field_set_string_list(rh, field, result, private, 0, NULL);
 }
 
 static int _do_get_kernel_cache_settings_list(struct dm_pool *mem,
@@ -1465,7 +1466,7 @@ static int _kernel_cache_settings_disp(struct dm_report *rh, struct dm_pool *mem
 
 	if (lvdm->seg_status.type != SEG_STATUS_CACHE) {
 		dm_list_init(&dummy_list);
-		return _field_set_string_list(rh, field, &dummy_list, private, 0);
+		return _field_set_string_list(rh, field, &dummy_list, private, 0, NULL);
 	}
 
 	if (!(mem = dm_pool_create("reporter_pool", 1024)))
@@ -1474,7 +1475,7 @@ static int _kernel_cache_settings_disp(struct dm_report *rh, struct dm_pool *mem
 	if (!_get_kernel_cache_settings_list(mem, lvdm->seg_status.cache, &result))
 		goto_out;
 
-	r = _field_set_string_list(rh, field, result, private, 0);
+	r = _field_set_string_list(rh, field, result, private, 0, NULL);
 out:
 	dm_pool_destroy(mem);
 	return r;
@@ -1515,7 +1516,7 @@ static int _modules_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!(list_lv_modules(mem, lv, modules)))
 		return_0;
 
-	return _field_set_string_list(rh, field, modules, private, 1);
+	return _field_set_string_list(rh, field, modules, private, 1, NULL);
 }
 
 static int _lvprofile_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -1925,7 +1926,7 @@ static int _lvancestors_disp(struct dm_report *rh, struct dm_pool *mem,
 		return_0;
 	}
 
-	return _field_set_string_list(rh, field, ancestors.result, private, 0);
+	return _field_set_string_list(rh, field, ancestors.result, private, 0, NULL);
 }
 
 static int _find_descendants(struct _str_list_append_baton *descendants,
@@ -1980,7 +1981,7 @@ static int _lvdescendants_disp(struct dm_report *rh, struct dm_pool *mem,
 		return_0;
 	}
 
-	return _field_set_string_list(rh, field, descendants.result, private, 0);
+	return _field_set_string_list(rh, field, descendants.result, private, 0, NULL);
 }
 
 static int _do_movepv_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -2910,7 +2911,7 @@ static int _lvlayout_disp(struct dm_report *rh, struct dm_pool *mem,
 		return 0;
 	}
 
-	return _field_set_string_list(rh, field, lv_layout, private, 0);
+	return _field_set_string_list(rh, field, lv_layout, private, 0, NULL);
 }
 
 static int _lvrole_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -2926,7 +2927,7 @@ static int _lvrole_disp(struct dm_report *rh, struct dm_pool *mem,
 		return 0;
 	}
 
-	return _field_set_string_list(rh, field, lv_role, private, 0);
+	return _field_set_string_list(rh, field, lv_role, private, 0, NULL);
 }
 
 static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,
