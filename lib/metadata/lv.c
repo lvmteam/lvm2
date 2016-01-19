@@ -28,11 +28,10 @@
 static struct utsname _utsname;
 static int _utsinit = 0;
 
-static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
-			    int range_format, int metadata_areas_only,
-			    int mark_hidden)
+static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
+				      int range_format, int metadata_areas_only,
+				      int mark_hidden)
 {
-	static const char pool_grow_object_failed_msg[] = "dm_pool_grow_object failed";
 	unsigned int s;
 	const char *name = NULL;
 	uint32_t extent = 0;
@@ -40,10 +39,13 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 	char extent_str[32];
 	struct logical_volume *lv;
 	int visible = 1;
+	char *list_item;
+	size_t list_item_len;
+	struct dm_list *result = NULL;
 
-	if (!dm_pool_begin_object(mem, 256)) {
-		log_error("dm_pool_begin_object failed");
-		return NULL;
+	if (!(result = str_list_create(mem))) {
+		log_error("_format_pvsegs: str_list_create failed");
+		goto bad;
 	}
 
 	if (metadata_areas_only && (!seg_is_raid(seg) || lv_is_raid_metadata(seg->lv) || lv_is_raid_image(seg->lv)))
@@ -73,82 +75,117 @@ static char *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 			break;
 		default:
 			log_error(INTERNAL_ERROR "Unknown area segtype.");
-			return NULL;
+			goto bad;
 		}
 
-		if (!visible && mark_hidden && !dm_pool_grow_object(mem, "[", 1)) {
-			log_error(pool_grow_object_failed_msg);
-			return NULL;
-		}
-
-		if (!dm_pool_grow_object(mem, name, strlen(name))) {
-			log_error(pool_grow_object_failed_msg);
-			return NULL;
-		}
-
-		if (!visible && mark_hidden && !dm_pool_grow_object(mem, "]", 1)) {
-			log_error(pool_grow_object_failed_msg);
-			return NULL;
-		}
-
-		if (dm_snprintf(extent_str, sizeof(extent_str),
-				"%s%" PRIu32 "%s",
-				range_format ? ":" : "(", extent,
-				range_format ? "-"  : ")") < 0) {
-			log_error("Extent number dm_snprintf failed");
-			return NULL;
-		}
-		if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
-			log_error(pool_grow_object_failed_msg);
-			return NULL;
-		}
+		list_item_len = strlen(name);
+		if (!visible && mark_hidden)
+			/* +2 for [ ] */
+			list_item_len += 2;
 
 		if (range_format) {
 			if (dm_snprintf(extent_str, sizeof(extent_str),
-					FMTu32, extent + seg_len - 1) < 0) {
-				log_error("Extent number dm_snprintf failed");
-				return NULL;
+					":%" PRIu32 "-%" PRIu32,
+					extent, extent + seg_len - 1) < 0) {
+				log_error("_format_pvseggs: extent range dm_snprintf failed");
+				goto bad;
 			}
-			if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
-				log_error(pool_grow_object_failed_msg);
-				return NULL;
+		} else {
+			if (dm_snprintf(extent_str, sizeof(extent_str),
+					"(%" PRIu32 ")", extent) < 0) {
+				log_error("_format_pvsegs: extent number dm_snprintf failed");
+				goto bad;
 			}
 		}
+		list_item_len += strlen(extent_str);
+		/* trialing 0 */
+		list_item_len += 1;
 
-		if ((s != seg->area_count - 1) &&
-		    !dm_pool_grow_object(mem, range_format ? " " : ",", 1)) {
-			log_error(pool_grow_object_failed_msg);
-			return NULL;
+		if (!(list_item = dm_pool_zalloc(mem, list_item_len))) {
+			log_error("_format_pvsegs: list item dm_pool_zalloc failed");
+			goto bad;
+		}
+
+		if (dm_snprintf(list_item, list_item_len,
+				"%s%s%s%s",
+				(!visible && mark_hidden) ? "[" : "",
+				name,
+				(!visible && mark_hidden) ? "]" : "",
+				extent_str) < 0) {
+			log_error("_format_pvsegs: list item dmsnprintf failed");
+			goto bad;
+		}
+
+		if (!str_list_add_no_dup_check(mem, result, list_item)) {
+			log_error("_format_pvsegs: failed to add item to list");
+			goto bad;
 		}
 	}
-
 out:
-	if (!dm_pool_grow_object(mem, "\0", 1)) {
-		log_error("dm_pool_grow_object failed");
-		return NULL;
-	}
-
-	return dm_pool_end_object(mem);
+	return result;
+bad:
+	dm_pool_free(mem, result);
+	return NULL;
 }
 
-char *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg)
+struct dm_list *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	return _format_pvsegs(mem, seg, 0, 0, seg->lv->vg->cmd->report_mark_hidden_devices);
 }
 
-char *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg)
+char *lvseg_devices_str(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	struct dm_list *list;
+
+	if (!(list = lvseg_devices(mem, seg)))
+		return_NULL;
+
+	return str_list_to_str(mem, list, ",");
+}
+
+struct dm_list *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	return _format_pvsegs(mem, seg, 0, 1, seg->lv->vg->cmd->report_mark_hidden_devices);
 }
 
-char *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg)
+char *lvseg_metadata_devices_str(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	struct dm_list *list;
+
+	if (!(list = lvseg_devices(mem, seg)))
+		return_NULL;
+
+	return str_list_to_str(mem, list, ",");
+}
+
+struct dm_list *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	return _format_pvsegs(mem, seg, 1, 0, seg->lv->vg->cmd->report_mark_hidden_devices);
 }
 
-char *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg)
+char *lvseg_seg_pe_ranges_str(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	struct dm_list *list;
+
+	if (!(list = lvseg_seg_pe_ranges(mem, seg)))
+		return_NULL;
+
+	return str_list_to_str(mem, list, " ");
+}
+
+struct dm_list *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	return _format_pvsegs(mem, seg, 1, 1, seg->lv->vg->cmd->report_mark_hidden_devices);
+}
+
+char *lvseg_seg_metadata_le_ranges_str(struct dm_pool *mem, const struct lv_segment *seg)
+{
+	struct dm_list *list;
+
+	if (!(list = lvseg_seg_metadata_le_ranges(mem, seg)))
+		return_NULL;
+
+	return str_list_to_str(mem, list, " ");
 }
 
 char *lvseg_tags_dup(const struct lv_segment *seg)

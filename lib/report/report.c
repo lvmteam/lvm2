@@ -1293,52 +1293,56 @@ static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _string_disp(rh, mem, field, &name, private);
 }
 
-static int _devices_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _devices_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field,
-			 const void *data, void *private __attribute__((unused)))
+			 const void *data, void *private)
 {
-	char *str;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct dm_list *list;
 
-	if (!(str = lvseg_devices(mem, (const struct lv_segment *) data)))
+	if (!(list = lvseg_devices(mem, seg)))
 		return_0;
 
-	return _field_set_value(field, str, NULL);
+	return _field_set_string_list(rh, field, list, private, 0, ",");
 }
 
-static int _metadatadevices_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _metadatadevices_disp(struct dm_report *rh, struct dm_pool *mem,
 				 struct dm_report_field *field,
-				 const void *data, void *private __attribute__((unused)))
+				 const void *data, void *private)
 {
-	char *str;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct dm_list *list;
 
-	if (!(str = lvseg_metadata_devices(mem, (const struct lv_segment *) data)))
+	if (!(list = lvseg_metadata_devices(mem, seg)))
 		return_0;
 
-	return _field_set_value(field, str, NULL);
+	return _field_set_string_list(rh, field, list, private, 0, ",");
 }
 
-static int _peranges_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _peranges_disp(struct dm_report *rh, struct dm_pool *mem,
 			  struct dm_report_field *field,
-			  const void *data, void *private __attribute__((unused)))
+			  const void *data, void *private)
 {
-	char *str;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct dm_list *list;
 
-	if (!(str = lvseg_seg_pe_ranges(mem, (const struct lv_segment *) data)))
+	if (!(list = lvseg_seg_pe_ranges(mem, seg)))
 		return_0;
 
-	return _field_set_value(field, str, NULL);
+	return _field_set_string_list(rh, field, list, private, 0, " ");
 }
 
-static int _metadataleranges_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+static int _metadataleranges_disp(struct dm_report *rh, struct dm_pool *mem,
 				  struct dm_report_field *field,
-				  const void *data, void *private __attribute__((unused)))
+				  const void *data, void *private)
 {
-	char *str;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct dm_list *list;
 
-	if (!(str = lvseg_seg_metadata_le_ranges(mem, (const struct lv_segment *) data)))
+	if (!(list = lvseg_seg_metadata_le_ranges(mem, seg)))
 		return_0;
 
-	return _field_set_value(field, str, NULL);
+	return _field_set_string_list(rh, field, list, private, 0, " ");
 }
 
 static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,

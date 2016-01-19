@@ -86,10 +86,14 @@ int lv_raid_image_in_sync(const struct logical_volume *lv);
 int lv_raid_healthy(const struct logical_volume *lv);
 const char *lvseg_name(const struct lv_segment *seg);
 uint64_t lvseg_start(const struct lv_segment *seg);
-char *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg);
-char *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg);
-char *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg);
-char *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg);
+struct dm_list *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg);
+char *lvseg_devices_str(struct dm_pool *mem, const struct lv_segment *seg);
+struct dm_list *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg);
+char *lvseg_metadata_devices_str(struct dm_pool *mem, const struct lv_segment *seg);
+struct dm_list *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg);
+char *lvseg_seg_pe_ranges_str(struct dm_pool *mem, const struct lv_segment *seg);
+struct dm_list *lvseg_seg_metadata_le_ranges(struct dm_pool *mem, const struct lv_segment *seg);
+char *lvseg_seg_metadata_le_ranges_str(struct dm_pool *mem, const struct lv_segment *seg);
 
 /* LV kernel properties */
 int lv_kernel_major(const struct logical_volume *lv);
