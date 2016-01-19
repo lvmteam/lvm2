@@ -18,7 +18,7 @@
 
 typedef int (*lock_resource_fn) (struct cmd_context * cmd, const char *resource,
 				 uint32_t flags, const struct logical_volume *lv);
-typedef int (*query_resource_fn) (const char *resource, int *mode);
+typedef int (*query_resource_fn) (const char *resource, const char *node, int *mode);
 
 typedef void (*fin_lock_fn) (void);
 typedef void (*reset_lock_fn) (void);

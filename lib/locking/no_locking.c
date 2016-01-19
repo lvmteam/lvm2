@@ -70,7 +70,7 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 	return 1;
 }
 
-static int _no_query_resource(const char *resource, int *mode)
+static int _no_query_resource(const char *resource, const char *node, int *mode)
 {
 	log_very_verbose("Locking is disabled: Treating lock %s as not held.",
 			 resource);

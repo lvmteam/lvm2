@@ -34,7 +34,7 @@
 
 #ifndef CLUSTER_LOCKING_INTERNAL
 int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags, const struct logical_volume *lv __attribute__((unused)));
-int query_resource(const char *resource, int *mode);
+int query_resource(const char *resource, const char *node, int *mode);
 void locking_end(void);
 int locking_init(int type, struct dm_config_tree *cf, uint32_t *flags);
 #endif
@@ -530,13 +530,12 @@ static int decode_lock_type(const char *response)
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL
-static int _query_resource(const char *resource, int *mode)
+static int _query_resource(const char *resource, const char *node, int *mode)
 #else
-int query_resource(const char *resource, int *mode)
+int query_resource(const char *resource, const char *node, int *mode)
 #endif
 {
 	int i, status, len, num_responses, saved_errno;
-	const char *node = "";
 	char *args;
 	lvm_response_t *response = NULL;
 

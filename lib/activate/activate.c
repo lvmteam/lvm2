@@ -1371,7 +1371,7 @@ static int _lv_is_active(const struct logical_volume *lv,
 	if (l && !exclusive)
 		goto out;
 
-	if ((r = remote_lock_held(lv->lvid.s, &e)) >= 0)
+	if ((r = cluster_lock_held(lv->lvid.s, "", &e)) >= 0)
 		goto out;
 
 	/*

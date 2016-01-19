@@ -498,7 +498,7 @@ int locking_supports_remote_queries(void)
 	return (_locking.flags & LCK_SUPPORTS_REMOTE_QUERIES) ? 1 : 0;
 }
 
-int remote_lock_held(const char *vol, int *exclusive)
+int cluster_lock_held(const char *vol, const char *node, int *exclusive)
 {
 	int mode = LCK_NULL;
 
@@ -511,7 +511,7 @@ int remote_lock_held(const char *vol, int *exclusive)
 	/*
 	 * If an error occured, expect that volume is active
 	 */
-	if (!_locking.query_resource(vol, &mode)) {
+	if (!_locking.query_resource(vol, node, &mode)) {
 		stack;
 		return 1;
 	}

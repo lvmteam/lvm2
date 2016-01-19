@@ -76,8 +76,10 @@ static const char CLVMD_SOCKNAME[]= DEFAULT_RUN_DIR "/clvmd.sock";
 #define CLVMD_CMD_SYNC_NAMES	    45
 
 /* Used internally by some callers, but not part of the protocol.*/
-#define NODE_ALL	"*"
-#define NODE_LOCAL	"."
-#define NODE_REMOTE	"^"
+#ifndef NODE_ALL
+#  define NODE_ALL	"*"
+#  define NODE_LOCAL	"."
+#  define NODE_REMOTE	"^"
+#endif
 
 #endif

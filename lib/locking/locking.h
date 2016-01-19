@@ -28,7 +28,12 @@ int vg_write_lock_held(void);
 int locking_is_clustered(void);
 int locking_supports_remote_queries(void);
 
-int remote_lock_held(const char *vol, int *exclusive);
+#ifndef NODE_ALL
+#  define NODE_ALL     "*"
+#  define NODE_LOCAL   "."
+#  define NODE_REMOTE  "^"
+#endif
+int cluster_lock_held(const char *vol, const char *node, int *exclusive);
 
 /*
  * LCK_VG:
