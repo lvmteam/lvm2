@@ -1342,7 +1342,7 @@ static int _metadataleranges_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (!(list = lvseg_seg_metadata_le_ranges(mem, seg)))
 		return_0;
 
-	return _field_set_string_list(rh, field, list, private, 0, " ");
+	return _field_set_string_list(rh, field, list, private, 0, NULL);
 }
 
 static int _tags_disp(struct dm_report *rh, struct dm_pool *mem,

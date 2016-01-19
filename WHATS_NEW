@@ -1,5 +1,7 @@
 Version 2.02.141 - 
 ====================================
+  Honour report/list_item_separator for seg_metadata_le_ranges report field.
+  Don't mark hidden devs in -o devices,metadata_devices,seg_pe_ranges (2.02.140).
   Change LV sizes in seg_pe_ranges report field to match underlying devices.
   Add kernel_cache_settings report field for cache LV settings used in kernel.
 

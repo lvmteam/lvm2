@@ -130,7 +130,7 @@ bad:
 
 struct dm_list *lvseg_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 0, 0, seg->lv->vg->cmd->report_mark_hidden_devices);
+	return _format_pvsegs(mem, seg, 0, 0, 0);
 }
 
 char *lvseg_devices_str(struct dm_pool *mem, const struct lv_segment *seg)
@@ -145,7 +145,7 @@ char *lvseg_devices_str(struct dm_pool *mem, const struct lv_segment *seg)
 
 struct dm_list *lvseg_metadata_devices(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 0, 1, seg->lv->vg->cmd->report_mark_hidden_devices);
+	return _format_pvsegs(mem, seg, 0, 1, 0);
 }
 
 char *lvseg_metadata_devices_str(struct dm_pool *mem, const struct lv_segment *seg)
@@ -160,7 +160,7 @@ char *lvseg_metadata_devices_str(struct dm_pool *mem, const struct lv_segment *s
 
 struct dm_list *lvseg_seg_pe_ranges(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return _format_pvsegs(mem, seg, 1, 0, seg->lv->vg->cmd->report_mark_hidden_devices);
+	return _format_pvsegs(mem, seg, 1, 0, 0);
 }
 
 char *lvseg_seg_pe_ranges_str(struct dm_pool *mem, const struct lv_segment *seg)
@@ -185,7 +185,7 @@ char *lvseg_seg_metadata_le_ranges_str(struct dm_pool *mem, const struct lv_segm
 	if (!(list = lvseg_seg_metadata_le_ranges(mem, seg)))
 		return_NULL;
 
-	return str_list_to_str(mem, list, " ");
+	return str_list_to_str(mem, list, seg->lv->vg->cmd->report_list_item_separator);
 }
 
 char *lvseg_tags_dup(const struct lv_segment *seg)
