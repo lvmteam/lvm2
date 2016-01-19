@@ -777,7 +777,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	}
 
 	if (arg_uint64_value(cmd, physicalextentsize_ARG, 0) > MAX_EXTENT_SIZE) {
-		log_error("Physical extent size cannot be larger than %s.",
+		log_error("Physical extent size must be smaller than %s.",
 				  display_size(cmd, (uint64_t) MAX_EXTENT_SIZE));
 		return 0;
 	}
