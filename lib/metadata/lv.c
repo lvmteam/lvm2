@@ -55,7 +55,7 @@ static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segme
 		switch (metadata_areas_only ? seg_metatype(seg, s) : seg_type(seg, s)) {
 		case AREA_LV:
 			lv = metadata_areas_only ? seg_metalv(seg, s) : seg_lv(seg, s);
-			seg_len = metadata_areas_only ? seg_metalv(seg, s)->le_count - 1 : seg_lv(seg, s)->le_count;
+			seg_len = metadata_areas_only ? seg_metalv(seg, s)->le_count : seg_lv(seg, s)->le_count;
 			visible = lv_is_visible(lv);
 			name = lv->name;
 			extent = metadata_areas_only ? seg_le(seg, s) : 0;
