@@ -1381,7 +1381,7 @@ static int _lv_is_active(const struct logical_volume *lv,
 	if (skip_cluster_query)
 		goto out;
 
-	if ((r = cluster_lock_held(lv->lvid.s, NODE_REMOTE, &e)) >= 0)
+	if ((r = cluster_lock_held(lv->lvid.s, "", &e)) >= 0)
 		goto out;
 
 	/*
