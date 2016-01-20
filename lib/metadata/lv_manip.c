@@ -4709,6 +4709,17 @@ static int _lvresize_check_lv(struct logical_volume *lv,
 	if (lp->ac_stripesize && !_validate_stripesize(vg, lp))
 		return_0;
 
+	if (lp->resizefs &&
+	    (lv_is_thin_pool(lv) ||
+	     lv_is_thin_pool_data(lv) ||
+	     lv_is_thin_pool_metadata(lv) ||
+	     lv_is_pool_metadata_spare(lv) ||
+	     lv_is_lockd_sanlock_lv(lv))) {
+		log_print_unless_silent("Ignoring --resizefs as volume %s does not have a filesystem.",
+					display_lvname(lv));
+		lp->resizefs = 0;
+	}
+
 	if (lp->ac_stripes) {
 		if (!(vg->fid->fmt->features & FMT_SEGMENTS))
 			log_print_unless_silent("Varied striping not supported. Ignoring.");
@@ -5212,10 +5223,6 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 	alloc_policy_t alloc;
 
 	if (lv_is_thin_pool(lv)) {
-		if (lp->resizefs) {
-			log_print_unless_silent("Ignoring --resizefs as thin pool volumes do not have filesystem.");
-			lp->resizefs = 0;
-		}
 		lock_lv = lv;
 		seg = first_seg(lv);
 		/* Switch to layered LV resizing */
