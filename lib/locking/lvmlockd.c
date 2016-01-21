@@ -1702,10 +1702,8 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * passed back to lockd_vg() for the corresponding unlock.
 	 */
 	if (def_mode && !strcmp(def_mode, "un")) {
-		if (prev_state & LDST_FAIL) {
-			log_debug("VG %s unlock skipped: lockd_state is failed", vg_name);
+		if (prev_state & LDST_FAIL)
 			return 1;
-		}
 
 		mode = "un";
 		goto req;
