@@ -1,5 +1,6 @@
 Version 2.02.141 - 
 ====================================
+  Fix lvm.8 man to show again prohibited suffixes.
   Fix configure to set proper use_blkid_wiping if autodetected as disabled.
   Initialise udev in clvmd for use in device scanning. (2.02.116)
   Add seg_le_ranges report field for common format when displaying seg devices.
