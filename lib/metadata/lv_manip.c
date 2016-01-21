@@ -4867,10 +4867,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 		if (!lp->ac_mirrors && seg_mirrors) {
 			log_print_unless_silent("Extending %" PRIu32 " mirror images.", seg_mirrors);
 			lp->mirrors = seg_mirrors;
-		}
-
-		if ((lp->ac_mirrors || seg_mirrors) &&
-		    (lp->mirrors != seg_mirrors)) {
+		} else if ((lp->ac_mirrors || seg_mirrors) && (lp->mirrors != seg_mirrors)) {
 			log_error("Cannot vary number of mirrors in LV yet.");
 			return 0;
 		}
