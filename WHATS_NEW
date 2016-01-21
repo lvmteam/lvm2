@@ -1,5 +1,6 @@
 Version 2.02.141 - 
 ====================================
+  Restore support for command breaking in process_each_lv_in_vg() (2.02.118).
   Use correct mempool when process_each_lv_in_vg() (2.02.118).
   Fix lvm.8 man to show again prohibited suffixes.
   Fix configure to set proper use_blkid_wiping if autodetected as disabled.

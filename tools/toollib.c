@@ -2416,6 +2416,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	dm_list_iterate_items(lvl, &final_lvs) {
+		if (sigint_caught()) {
+			ret_max = ECMD_FAILED;
+			goto_out;
+		}
 		/*
 		 *  FIXME: Once we have index over vg->removed_lvs, check directly
 		 *         LV presence there and remove LV_REMOVE flag/lv_is_removed fn
