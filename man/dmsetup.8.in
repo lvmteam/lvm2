@@ -309,10 +309,10 @@ dmsetup \(em low level logical volume management
 .
 .HP
 .B dmsetup
-.de CMD_UDEVCTEATECOOKIE
+.de CMD_UDEVCREATECOOKIE
 .  BR udevcreatecookie
 ..
-.CMD_UDEVCTEATECOOKIE
+.CMD_UDEVCREATECOOKIE
 .
 .HP
 .B dmsetup
