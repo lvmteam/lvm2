@@ -291,7 +291,7 @@ while read VGNAME VGEXPORTED VGMISSINGPVCOUNT; do
     fi
 
     "$LVM" pvchange ${LVM_OPTS} ${TEST_OPT} --uuid --config 'global{activation=0}' --select "vg_name=${VGNAME}"
-    checkvalue $? "Unable to change all PV uuids in VG ${VG_NAME}"
+    checkvalue $? "Unable to change all PV uuids in VG ${VGNAME}"
 
     NEWVGNAME=`getvgname "${OLDVGS}" "${VGNAME}" "${NEWVG}"`
 
