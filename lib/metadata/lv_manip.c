@@ -4822,7 +4822,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 	uint32_t seg_logical_extents;
 	uint32_t seg_physical_extents;
 	uint32_t area_multiple;
-	uint32_t stripesize_extents;
+	uint32_t stripes_extents;
 	uint32_t size_rest;
 	uint32_t existing_logical_extents = lv->le_count;
 	uint32_t existing_physical_extents, saved_existing_physical_extents;
@@ -5053,22 +5053,24 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			return 0;
 		}
 
-		if (!(stripesize_extents = lp->stripe_size / vg->extent_size))
-			stripesize_extents = 1;
+		/* Segment size in extents must be divisible by stripes */
+		stripes_extents = lp->stripes;
+		if (lp->stripe_size > vg->extent_size)
+			/* Strip size is bigger then extent size needs more extents */
+			stripes_extents *= (lp->stripe_size / vg->extent_size);
 
-		size_rest = seg_size % (lp->stripes * stripesize_extents);
+		size_rest = seg_size % stripes_extents;
 		/* Round toward the original size. */
 		if (size_rest &&
 		    ((lp->extents < existing_logical_extents) ||
 		     !lp->percent ||
 		     (vg->free_count >= (lp->extents - existing_logical_extents - size_rest +
-					 (lp->stripes * stripesize_extents))))) {
+					 stripes_extents)))) {
 			log_print_unless_silent("Rounding size (%d extents) up to stripe "
 						"boundary size for segment (%d extents)",
-						lp->extents, lp->extents - size_rest +
-						(lp->stripes * stripesize_extents));
-			lp->extents = lp->extents - size_rest +
-				      (lp->stripes * stripesize_extents);
+						lp->extents,
+						lp->extents - size_rest + stripes_extents);
+			lp->extents = lp->extents - size_rest + stripes_extents;
 		} else if (size_rest) {
 			log_print_unless_silent("Rounding size (%d extents) down to stripe "
 						"boundary size for segment (%d extents)",
