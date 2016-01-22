@@ -4974,11 +4974,9 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 			}
 		}
 	} else {  /* If reducing, find stripes, stripesize & size of last segment */
-		if (lp->stripes || lp->stripe_size || lp->mirrors) {
-			lp->stripes = lp->stripe_size = lp->mirrors = 0;
+		if (lp->ac_stripes || lp->ac_stripesize || lp->ac_mirrors)
 			log_print_unless_silent("Ignoring stripes, stripesize and mirrors "
 						"arguments when reducing.");
-		}
 
 		if (lp->sign == SIGN_MINUS)  {
 			if (lp->extents >= existing_extents) {
