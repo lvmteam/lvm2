@@ -1,5 +1,6 @@
 Version 2.02.141 - 
 ====================================
+  Add metadata/check_pv_device_sizes switch to lvm.conf for device size checks.
   Warn if device size is less than corresponding PV size in metadata.
   Cache device sizes internally.
   Restore support for command breaking in process_each_lv_in_vg() (2.02.118).

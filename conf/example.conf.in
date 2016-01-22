@@ -1415,6 +1415,17 @@ activation {
 # This configuration section has an automatic default value.
 # metadata {
 
+	# Configuration option metadata/check_pv_device_sizes.
+	# Check device sizes are not smaller than corresponding PV sizes.
+	# If device size is less than corresponding PV size found in metadata,
+	# there is always a risk of data loss. If this option is set, then LVM
+	# issues a warning message each time it finds that the device size is
+	# less than corresponding PV size. You should not disable this unless
+	# you are absolutely sure about what you are doing!
+	# This configuration option is advanced.
+	# This configuration option has an automatic default value.
+	# check_pv_device_sizes = 1
+
 	# Configuration option metadata/pvmetadatacopies.
 	# Number of copies of metadata to store on each PV.
 	# The --pvmetadatacopies option overrides this setting.

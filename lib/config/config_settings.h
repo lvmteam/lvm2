@@ -1352,6 +1352,14 @@ cfg_array(activation_auto_lock_start_list_CFG, "auto_lock_start_list", activatio
 	"Locking is auto-started only for VGs selected by this list.\n"
 	"The rules are the same as those for auto_activation_volume_list.\n")
 
+cfg(metadata_check_pv_device_sizes_CFG, "check_pv_device_sizes", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 1, vsn(2, 2, 141), NULL, 0, NULL,
+	"Check device sizes are not smaller than corresponding PV sizes.\n"
+	"If device size is less than corresponding PV size found in metadata,\n"
+	"there is always a risk of data loss. If this option is set, then LVM\n"
+	"issues a warning message each time it finds that the device size is\n"
+	"less than corresponding PV size. You should not disable this unless\n"
+	"you are absolutely sure about what you are doing!\n")
+
 cfg(metadata_pvmetadatacopies_CFG, "pvmetadatacopies", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PVMETADATACOPIES, vsn(1, 0, 0), NULL, 0, NULL,
 	"Number of copies of metadata to store on each PV.\n"
 	"The --pvmetadatacopies option overrides this setting.\n"

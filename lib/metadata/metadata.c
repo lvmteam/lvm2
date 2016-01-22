@@ -672,7 +672,8 @@ static int _check_pv_dev_sizes(struct volume_group *vg)
 	uint64_t dev_size, size;
 	int r = 1;
 
-	if (is_orphan_vg(vg->name))
+	if (!vg->cmd->check_pv_dev_sizes ||
+	    is_orphan_vg(vg->name))
 		return 1;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
