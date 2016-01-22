@@ -666,6 +666,34 @@ int vg_check_pv_dev_block_sizes(const struct volume_group *vg)
 	return 1;
 }
 
+static int _check_pv_dev_sizes(struct volume_group *vg)
+{
+	struct pv_list *pvl;
+	uint64_t dev_size, size;
+	int r = 1;
+
+	if (is_orphan_vg(vg->name))
+		return 1;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (is_missing_pv(pvl->pv))
+			continue;
+
+		dev_size = pv_dev_size(pvl->pv);
+		size = pv_size(pvl->pv);
+
+		if (dev_size < size) {
+			log_warn("Device %s has size of %" PRIu64 " sectors which "
+				 "is smaller than corresponding PV size of %" PRIu64
+				  " sectors. Was device resized?",
+				  pv_dev_name(pvl->pv), dev_size, size);
+			r = 0;
+		}
+	}
+
+	return r;
+}
+
 /*
  * Extend a VG by a single PV / device path
  *
@@ -741,6 +769,8 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 		}
 		dm_free(pv_name);
 	}
+
+	(void) _check_pv_dev_sizes(vg);
 
 /* FIXME Decide whether to initialise and add new mdahs to format instance */
 
@@ -4030,6 +4060,10 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 
 	if (!(vg = _vg_read(cmd, vgname, vgid, warn_flags, consistent, 0)))
 		goto_out;
+
+	if (!_check_pv_dev_sizes(vg))
+		log_warn("One or more devices used as PVs in VG %s "
+			 "have changed sizes.", vg->name);
 
 	if (!check_pv_segments(vg)) {
 		log_error(INTERNAL_ERROR "PV segments corrupted in %s.",
