@@ -1,3 +1,6 @@
+Version 2.02.142 - 
+====================================
+
 Version 2.02.141 - 25th January 2016
 ====================================
   Add metadata/check_pv_device_sizes switch to lvm.conf for device size checks.
