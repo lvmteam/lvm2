@@ -54,7 +54,7 @@ vg_t lvm_vg_create(lvm_t libh, const char *vg_name)
 	struct volume_group *vg = NULL;
 	struct saved_env e = store_user_env((struct cmd_context *)libh);
 
-	vg = vg_create((struct cmd_context *)libh, vg_name);
+	vg = vg_lock_and_create((struct cmd_context *)libh, vg_name);
 	/* FIXME: error handling is still TBD */
 	if (vg_read_error(vg)) {
 		release_vg(vg);

@@ -1087,6 +1087,24 @@ int vg_has_unknown_segments(const struct volume_group *vg)
 	return 0;
 }
 
+struct volume_group *vg_lock_and_create(struct cmd_context *cmd, const char *vg_name)
+{
+	uint32_t rc;
+
+	if (!validate_name(vg_name)) {
+		log_error("Invalid vg name %s", vg_name);
+		/* FIXME: use _vg_make_handle() w/proper error code */
+		return NULL;
+	}
+
+	rc = vg_lock_newname(cmd, vg_name);
+	if (rc != SUCCESS)
+		/* NOTE: let caller decide - this may be check for existence */
+		return _vg_make_handle(cmd, NULL, rc);
+
+	return vg_create(cmd, vg_name);
+}
+
 /*
  * Create a VG with default parameters.
  * Returns:
@@ -1103,21 +1121,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name)
 		.context.vg_ref.vg_name = vg_name
 	};
 	struct format_instance *fid;
-	uint32_t rc;
-
-	if (!validate_name(vg_name)) {
-		log_error("Invalid vg name %s", vg_name);
-		/* FIXME: use _vg_make_handle() w/proper error code */
-		return NULL;
-	}
-
-	rc = vg_lock_newname(cmd, vg_name);
-	if (rc != SUCCESS)
-		/* NOTE: let caller decide - this may be check for existence */
-		return _vg_make_handle(cmd, NULL, rc);
-
-	/* Strip dev_dir if present */
-	vg_name = strip_dir(vg_name, cmd->dev_dir);
 
 	if (!(vg = alloc_vg("vg_create", cmd, vg_name)))
 		goto_bad;

@@ -17,14 +17,16 @@
 
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
+	struct processing_handle *handle;
+	struct pvcreate_each_params pp;
 	struct vgcreate_params vp_new;
 	struct vgcreate_params vp_def;
 	struct volume_group *vg;
 	const char *tag;
 	const char *clustered_message = "";
 	char *vg_name;
-	struct pvcreate_params pp;
 	struct arg_value_group_list *current_group;
+	uint32_t rc;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -36,10 +38,19 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	pvcreate_params_set_defaults(&pp);
-	if (!pvcreate_params_validate(cmd, argc, &pp)) {
+	pvcreate_each_params_set_defaults(&pp);
+
+	if (!pvcreate_each_params_from_args(cmd, &pp))
 		return EINVALID_CMD_LINE;
-	}
+
+	pp.pv_count = argc;
+	pp.pv_names = argv;
+
+	/* Don't create a new PV on top of an existing PV like pvcreate does. */
+	pp.preserve_existing = 1;
+
+	/* pvcreate within vgcreate cannot be forced. */
+	pp.force = 0;
 
 	if (!vgcreate_params_set_defaults(cmd, &vp_def, NULL))
 		return EINVALID_CMD_LINE;
@@ -48,27 +59,63 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 
 	if (!vgcreate_params_validate(cmd, &vp_new))
-	    return EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 
 	/*
 	 * Needed to change the global VG namespace,
 	 * and to change the set of orphan PVs.
 	 */
 	if (!lockd_gl_create(cmd, "ex", vp_new.lock_type))
-		return ECMD_FAILED;
+		return_ECMD_FAILED;
+	cmd->lockd_gl_disable = 1;
 
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
-	/* Create the new VG */
-	vg = vg_create(cmd, vp_new.vg_name);
-	if (vg_read_error(vg)) {
-		if (vg_read_error(vg) == FAILED_EXIST)
+	/*
+	 * Check if the VG name already exists.  This should be done before
+	 * creating PVs on any of the devices.
+	 */
+	if ((rc = vg_lock_newname(cmd, vp_new.vg_name)) != SUCCESS) {
+		if (rc == FAILED_EXIST)
 			log_error("A volume group called %s already exists.", vp_new.vg_name);
 		else
 			log_error("Can't get lock for %s.", vp_new.vg_name);
-		release_vg(vg);
 		return ECMD_FAILED;
 	}
+
+	/*
+	 * FIXME: we have to unlock/relock the new VG name around the pvcreate
+	 * step because pvcreate needs to destroy lvmcache, which doesn't allow
+	 * any locks to be held.  There shouldn't be any reason to require this
+	 * VG lock to be released, so the lvmcache destroy rule about locks
+	 * seems to be unwarranted here.
+	 */
+	unlock_vg(cmd, vp_new.vg_name);
+
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	if (!pvcreate_each_device(cmd, handle, &pp)) {
+		destroy_processing_handle(cmd, handle);
+		return_ECMD_FAILED;
+	}
+
+	/* Relock the new VG name, see comment above. */
+	if (!lock_vol(cmd, vp_new.vg_name, LCK_VG_WRITE, NULL)) {
+		destroy_processing_handle(cmd, handle);
+		return_ECMD_FAILED;
+	}
+
+	/*
+	 * pvcreate_each_device returns with the VG_ORPHANS write lock held,
+	 * which was used to do pvcreate.  Now to create the VG using those
+	 * PVs, the VG lock will be taken (with the orphan lock already held.)
+	 */
+
+	if (!(vg = vg_create(cmd, vp_new.vg_name)))
+		goto_bad;
 
 	if (vg->fid->fmt->features & FMT_CONFIG_PROFILE)
 		vg->profile = vg->cmd->profile_params->global_metadata_profile;
@@ -80,15 +127,10 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	    !vg_set_clustered(vg, vp_new.clustered) ||
 	    !vg_set_system_id(vg, vp_new.system_id) ||
 	    !vg_set_mda_copies(vg, vp_new.vgmetadatacopies))
-		goto bad_orphan;
-
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Can't get lock for orphan PVs");
-		goto bad_orphan;
-	}
+		goto_bad;
 
 	/* attach the pv's */
-	if (!vg_extend(vg, argc, (const char* const*)argv, &pp))
+	if (!vg_extend_each_pv(vg, &pp))
 		goto_bad;
 
 	if (vp_new.max_lv != vg->max_lv)
@@ -176,12 +218,13 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 out:
 	release_vg(vg);
+	destroy_processing_handle(cmd, handle);
 	return ECMD_PROCESSED;
 
 bad:
-	unlock_vg(cmd, VG_ORPHANS);
-bad_orphan:
-	release_vg(vg);
 	unlock_vg(cmd, vp_new.vg_name);
+	unlock_vg(cmd, VG_ORPHANS);
+	release_vg(vg);
+	destroy_processing_handle(cmd, handle);
 	return ECMD_FAILED;
 }

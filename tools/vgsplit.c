@@ -413,7 +413,7 @@ static struct volume_group *_vgsplit_to(struct cmd_context *cmd,
 	 * we obtained a WRITE lock and could not find the vgname in the
 	 * system.  Thus, the split will be into a new VG.
 	 */
-	vg_to = vg_create(cmd, vg_name_to);
+	vg_to = vg_lock_and_create(cmd, vg_name_to);
 	if (vg_read_error(vg_to) == FAILED_LOCKING) {
 		log_error("Can't get lock for %s", vg_name_to);
 		release_vg(vg_to);
@@ -526,8 +526,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			return_ECMD_FAILED;
 		/*
 		 * Set metadata format of original VG.
-		 * NOTE: We must set the format before calling vg_create()
-		 * since vg_create() calls the per-format constructor.
+		 * NOTE: We must set the format before calling vg_lock_and_create()
+		 * since vg_lock_and_create() calls the per-format constructor.
 		 */
 		cmd->fmt = vg_from->fid->fmt;
 
