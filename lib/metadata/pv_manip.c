@@ -864,24 +864,3 @@ out:
 
 	return ret;
 }
-
-int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
-		    struct pvcreate_params *pp)
-{
-	int r = 0;
-
-	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
-		log_error("Can't get lock for orphan PVs");
-		return 0;
-	}
-
-	if (!(pvcreate_vol(cmd, pv_name, pp, 1)))
-		goto_out;
-
-	r = 1;
-
-out:
-	unlock_vg(cmd, VG_ORPHANS);
-
-	return r;
-}

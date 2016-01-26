@@ -419,6 +419,7 @@ int lvm_pv_params_set_property(pv_create_params_t params, const char *name,
 static int _pv_create(pv_create_params_t params)
 {
 	struct cmd_context *cmd = (struct cmd_context *)params->libh;
+	int rc = 0;
 
 	if (params->pv_p.size) {
 		if (params->pv_p.size % SECTOR_SIZE) {
@@ -428,9 +429,16 @@ static int _pv_create(pv_create_params_t params)
 		params->pv_p.size = params->pv_p.size >> SECTOR_SHIFT;
 	}
 
-	if (!pvcreate_single(cmd, params->pv_name, &params->pv_p))
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
+		log_errno(EINVAL, "Can't get lock for orphan PVs");
 		return -1;
-	return 0;
+	}
+
+	if (!(pvcreate_vol(cmd, params->pv_name, &params->pv_p, 1)))
+		rc = -1;
+
+	unlock_vg(cmd, VG_ORPHANS);
+	return rc;
 }
 
 int lvm_pv_create(lvm_t libh, const char *pv_name, uint64_t size)
