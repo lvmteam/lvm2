@@ -1160,7 +1160,7 @@ int lv_thin_pool_transaction_id(const struct logical_volume *lv,
 	if (!lv_info(lv->vg->cmd, lv, 1, NULL, 0, 0))
 		return 0;
 
-	log_debug_activation("Checking thin percent for LV %s.",
+	log_debug_activation("Checking thin-pool percent for LV %s.",
 			     display_lvname(lv));
 
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name, 1)))
