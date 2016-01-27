@@ -315,7 +315,7 @@ static void _init_logging(struct cmd_context *cmd)
 	init_silent(cmd->default_settings.silent);
 
 	/* Verbose level for tty output */
-	cmd->default_settings.verbose = find_config_tree_bool(cmd, log_verbose_CFG, NULL);
+	cmd->default_settings.verbose = find_config_tree_int(cmd, log_verbose_CFG, NULL);
 	init_verbose(cmd->default_settings.verbose + VERBOSE_BASE_LEVEL);
 
 	/* Log message formatting */

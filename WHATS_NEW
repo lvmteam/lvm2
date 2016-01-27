@@ -1,5 +1,6 @@
 Version 2.02.142 - 
 ====================================
+  Fix config type of 'log/verbose' from bool to int (2.02.99).
   Fix thinp watermark calc for data LV for faster dmeventd responce (2.02.133).
   Use use_blkid_wiping=0 if not defined in lvm.conf and support not compiled in.
   Do not check for suspended devices if scanning for lvmetad update.
