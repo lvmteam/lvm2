@@ -2477,11 +2477,11 @@ static int _thin_pool_emit_segment_line(struct dm_task *dmt,
 
 	EMIT_PARAMS(pos, "%s %s %d %" PRIu64 " %d%s%s%s%s%s", metadata, pool,
 		    seg->data_block_size, seg->low_water_mark, features,
-		    seg->error_if_no_space ? " error_if_no_space" : "",
-		    seg->read_only ? " read_only" : "",
 		    seg->skip_block_zeroing ? " skip_block_zeroing" : "",
 		    seg->ignore_discard ? " ignore_discard" : "",
-		    seg->no_discard_passdown ? " no_discard_passdown" : ""
+		    seg->no_discard_passdown ? " no_discard_passdown" : "",
+		    seg->error_if_no_space ? " error_if_no_space" : "",
+		    seg->read_only ? " read_only" : ""
 		   );
 
 	return 1;

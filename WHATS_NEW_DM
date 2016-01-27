@@ -1,5 +1,6 @@
 Version 1.02.116 - 
 ====================================
+  Fix thin-pool table parameter feature order to match kernel output.
 
 Version 1.02.115 - 25th January 2016
 ====================================
