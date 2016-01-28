@@ -2614,10 +2614,25 @@ static response set_global_info(lvmetad_state *s, request r)
 	return daemon_reply_simple("OK", NULL);
 }
 
+#define REASON_BUF_SIZE 64
+
+/*
+ * FIXME: save the time when "updating" begins, and add a config setting for
+ * how long we'll allow an update to take.  Before returning "updating" as the
+ * token value in get_global_info, check if the update has exceeded the max
+ * allowed time.  If so, then clear the current cache state and return "none"
+ * as the current token value, so that the command will repopulate our cache.
+ *
+ * This will resolve the problem of a command starting to update the cache and
+ * then failing, leaving the token set to "update in progress".
+ */
+
 static response get_global_info(lvmetad_state *s, request r)
 {
 	return daemon_reply_simple("OK", "global_invalid = " FMTd64,
 					 (int64_t)((s->flags & GLFL_INVALID) ? 1 : 0),
+					 "token = %s",
+					 s->token[0] ? s->token : "none",
 					 NULL);
 }
 
@@ -2815,13 +2830,17 @@ static response handler(daemon_state s, client_handle h, request r)
 	lvmetad_state *state = s.private;
 	const char *rq = daemon_request_str(r, "request", "NONE");
 	const char *token = daemon_request_str(r, "token", "NONE");
+	char prev_token[128] = { 0 };
 
 	pthread_mutex_lock(&state->token_lock);
 	if (!strcmp(rq, "token_update")) {
+		memcpy(prev_token, state->token, 128);
 		strncpy(state->token, token, 128);
 		state->token[127] = 0;
 		pthread_mutex_unlock(&state->token_lock);
-		return daemon_reply_simple("OK", NULL);
+		return daemon_reply_simple("OK",
+					   "prev_token = %s", prev_token,
+					   NULL);
 	}
 
 	if (strcmp(token, state->token) && strcmp(rq, "dump") && strcmp(token, "skip")) {

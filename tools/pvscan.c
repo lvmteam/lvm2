@@ -234,8 +234,6 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	dev_t devno;
 	activation_handler handler = NULL;
 
-	cmd->include_foreign_vgs = 1;
-
 	/*
 	 * Return here immediately if lvmetad is not used.
 	 * Also return if locking_type=3 (clustered) as we
@@ -273,9 +271,27 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Scan everything? */
 	if (!argc && !devno_args) {
-		if (!lvmetad_pvscan_all_devs(cmd, handler))
+		if (!lvmetad_pvscan_all_devs(cmd, handler, 1)) {
+			log_error("Failed to update cache.");
 			ret = ECMD_FAILED;
+		}
 		goto out;
+	}
+
+	/*
+	 * FIXME: when specific devs are named, we generally don't
+	 * want to scan any other devs, but if lvmetad is not yet
+	 * populated, the first 'pvscan --cache dev' does need to
+	 * do a full scan.  We want to remove the need for this
+	 * case so that 'pvscan --cache dev' is guaranteed to never
+	 * scan any devices other than those specified.
+	 */
+	if (lvmetad_used() && !lvmetad_token_matches(cmd)) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
+			log_error("Failed to update cache.");
+			ret = ECMD_FAILED;
+			goto out;
+		}
 	}
 
 	log_verbose("Using physical volume(s) on command line");
@@ -403,6 +419,14 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: only considering physical volumes %s",
 			  arg_count(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
+
+	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */
+	if (lvmetad_used() && !lvmetad_token_matches(cmd)) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
+			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_set_active(cmd, 0);
+		}
+	}
 
 	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE, NULL)) {
 		log_error("Unable to obtain global lock.");

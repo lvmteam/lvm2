@@ -21,10 +21,8 @@ static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume
 	struct dm_list all_pvs;
 	char pvid_s[64] __attribute__((aligned(8)));
 
-	if (!lvmetad_used()) {
-		log_verbose("Ignoring lvscan --cache because lvmetad is not in use.");
+	if (!lvmetad_used())
 		return ECMD_PROCESSED;
-	}
 
 	dm_list_init(&all_pvs);
 
@@ -96,6 +94,22 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 	if (argc && !arg_count(cmd, cache_long_ARG)) {
 		log_error("No additional command line arguments allowed");
 		return EINVALID_CMD_LINE;
+	}
+
+	if (!lvmetad_used() && arg_is_set(cmd, cache_long_ARG))
+		log_verbose("Ignoring lvscan --cache because lvmetad is not in use.");
+
+	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */
+	if (lvmetad_used() && !lvmetad_token_matches(cmd)) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
+			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_set_active(cmd, 0);
+		}
+
+		/*
+		 * FIXME: doing lvscan --cache after a full scan is pointless.
+		 * Should the cache case just exit here?
+		 */
 	}
 
 	return process_each_lv(cmd, argc, argv, 0, NULL,

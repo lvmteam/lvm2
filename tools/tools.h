@@ -110,6 +110,8 @@ struct arg_value_group_list {
 #define REQUIRES_FULL_LABEL_SCAN 0x00000080
 /* Command must use all specified arg names and fail if all cannot be used. */
 #define MUST_USE_ALL_ARGS        0x00000100
+/* Command wants to control the device scan for lvmetad itself. */
+#define NO_LVMETAD_AUTOSCAN      0x00000200
  
 /* a register of the lvm commands */
 struct command {

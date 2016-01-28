@@ -61,21 +61,20 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		cmd->filter->wipe(cmd->filter);
 	lvmcache_destroy(cmd, 1, 0);
 
-	if (arg_count(cmd, cache_long_ARG)) {
-		cmd->include_foreign_vgs = 1;
+	if (!lvmetad_used() && arg_is_set(cmd, cache_long_ARG))
+		log_verbose("Ignoring vgscan --cache command because lvmetad is not in use.");
 
-		if (lvmetad_active()) {
-			if (!lvmetad_pvscan_all_devs(cmd, NULL))
-				return ECMD_FAILED;
-		}
-		else {
-			log_error("Cannot proceed since lvmetad is not active.");
-			unlock_vg(cmd, VG_GLOBAL);
-			return ECMD_FAILED;
+	if (lvmetad_used() && (arg_is_set(cmd, cache_long_ARG) || !lvmetad_token_matches(cmd))) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, arg_is_set(cmd, cache_long_ARG))) {
+			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_set_active(cmd, 0);
 		}
 	}
 
-	log_print_unless_silent("Reading all physical volumes.  This may take a while...");
+	if (!lvmetad_used())
+		log_print_unless_silent("Reading all physical volumes.  This may take a while...");
+	else
+		log_print_unless_silent("Reading volume groups from cache.");
 
 	maxret = process_each_vg(cmd, argc, argv, NULL, 0, NULL,
 				 &vgscan_single);
