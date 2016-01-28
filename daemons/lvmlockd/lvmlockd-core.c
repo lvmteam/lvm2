@@ -5153,13 +5153,17 @@ static void adopt_locks(void)
 	 * This is expected for at least one of them.
 	 */
 
-	rv = lm_get_lockspaces_dlm(&ls_found);
-	if ((rv < 0) && (rv != -ECONNREFUSED))
-		goto fail;
+	if (lm_support_dlm()) {
+		rv = lm_get_lockspaces_dlm(&ls_found);
+		if ((rv < 0) && (rv != -ECONNREFUSED))
+			goto fail;
+	}
 
-	rv = lm_get_lockspaces_sanlock(&ls_found);
-	if ((rv < 0) && (rv != -ECONNREFUSED))
-		goto fail;
+	if (lm_support_sanlock()) {
+		rv = lm_get_lockspaces_sanlock(&ls_found);
+		if ((rv < 0) && (rv != -ECONNREFUSED))
+			goto fail;
+	}
 
 	if (list_empty(&ls_found)) {
 		log_debug("No lockspaces found to adopt");
