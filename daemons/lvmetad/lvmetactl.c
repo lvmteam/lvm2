@@ -37,11 +37,12 @@ int main(int argc, char **argv)
 		printf("lvmetactl dump\n");
 		printf("lvmetactl pv_list\n");
 		printf("lvmetactl vg_list\n");
+		printf("lvmetactl get_global_info\n");
 		printf("lvmetactl vg_lookup_name <name>\n");
 		printf("lvmetactl vg_lookup_uuid <uuid>\n");
 		printf("lvmetactl pv_lookup_uuid <uuid>\n");
 		printf("lvmetactl set_global_invalid 0|1\n");
-		printf("lvmetactl get_global_invalid\n");
+		printf("lvmetactl set_global_disable 0|1\n");
 		printf("lvmetactl set_vg_version <uuid> <name> <version>\n");
 		printf("lvmetactl vg_lock_type <uuid>\n");
 		return -1;
@@ -69,6 +70,12 @@ int main(int argc, char **argv)
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
+	} else if (!strcmp(cmd, "get_global_info")) {
+		reply = daemon_send_simple(h, "get_global_info",
+					   "token = %s", "skip",
+					   NULL);
+		printf("%s\n", reply.buffer.mem);
+
 	} else if (!strcmp(cmd, "set_global_invalid")) {
 		if (argc < 3) {
 			printf("set_global_invalid 0|1\n");
@@ -82,11 +89,19 @@ int main(int argc, char **argv)
 					   NULL);
 		print_reply(reply);
 
-	} else if (!strcmp(cmd, "get_global_invalid")) {
-		reply = daemon_send_simple(h, "get_global_info",
+	} else if (!strcmp(cmd, "set_global_disable")) {
+		if (argc < 3) {
+			printf("set_global_disable 0|1\n");
+			return -1;
+		}
+		val = atoi(argv[2]);
+
+		reply = daemon_send_simple(h, "set_global_info",
+					   "global_disable = " FMTd64, (int64_t) val,
+					   "disable_reason = %s", "DIRECT",
 					   "token = %s", "skip",
 					   NULL);
-		printf("%s\n", reply.buffer.mem);
+		print_reply(reply);
 
 	} else if (!strcmp(cmd, "set_vg_version")) {
 		if (argc < 5) {

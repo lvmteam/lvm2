@@ -2249,3 +2249,52 @@ int lvmetad_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const cha
 
 	return ret;
 }
+
+int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
+{
+	daemon_reply reply;
+	const char *reply_reason;
+	int ret = 0;
+
+	reply = daemon_send_simple(_lvmetad, "get_global_info",
+				   "token = %s", "skip",
+				   NULL);
+
+	if (reply.error) {
+		*reason = "send error";
+		ret = 1;
+		goto out;
+	}
+
+	if (strcmp(daemon_reply_str(reply, "response", ""), "OK")) {
+		*reason = "response error";
+		ret = 1;
+		goto out;
+	}
+
+	if (daemon_reply_int(reply, "global_disable", 0)) {
+		ret = 1;
+
+		reply_reason = daemon_reply_str(reply, "disable_reason", NULL);
+
+		if (!reply_reason) {
+			*reason = "<not set>";
+
+		} else if (strstr(reply_reason, "DIRECT")) {
+			*reason = "the disable flag was set directly";
+
+		} else if (strstr(reply_reason, "LVM1")) {
+			*reason = "LVM1 metadata was found";
+
+		} else if (strstr(reply_reason, "DUPLICATES")) {
+			*reason = "duplicate PVs were found";
+
+		} else {
+			*reason = "<unknown>";
+		}
+	}
+out:
+	daemon_reply_destroy(reply);
+	return ret;
+}
+
