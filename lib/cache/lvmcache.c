@@ -27,6 +27,7 @@
 #include "config.h"
 
 #include "lvmetad.h"
+#include "lvmetad-client.h"
 
 #define CACHE_INVALID	0x00000001
 #define CACHE_LOCKED	0x00000002
@@ -1840,6 +1841,11 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 			 * pv->dev under the VG, and its duplicate outside
 			 * the VG context.)
 			 */
+
+			if (!_found_duplicate_pvs && lvmetad_used()) {
+				log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs."); 
+				lvmetad_set_disabled(fmt->cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
+			}
 			_found_duplicate_pvs = 1;
 
 			/*
