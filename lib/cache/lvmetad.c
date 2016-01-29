@@ -665,17 +665,14 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 				 struct dm_config_node *cn,
 				 struct format_type *fmt, dev_t fallback)
 {
-	struct device *dev, *dev_alternate, *dev_alternate_cache = NULL;
-	struct label *label;
+	struct device *dev;
 	struct id pvid, vgid;
 	char mda_id[32];
 	char da_id[32];
 	int i = 0;
 	struct dm_config_node *mda, *da;
-	struct dm_config_node *alt_devices = dm_config_find_node(cn->child, "devices_alternate");
-	struct dm_config_value *alt_device = NULL;
 	uint64_t offset, size;
-	struct lvmcache_info *info, *info_alternate;
+	struct lvmcache_info *info;
 	const char *pvid_txt = dm_config_find_str(cn->child, "id", NULL),
 		   *vgid_txt = dm_config_find_str(cn->child, "vgid", NULL),
 		   *vgname = dm_config_find_str(cn->child, "vgname", NULL),
@@ -759,42 +756,6 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 		}
 		++i;
 	} while (da);
-
-	if (alt_devices)
-		alt_device = alt_devices->v;
-
-	while (alt_device) {
-		dev_alternate = dev_cache_get_by_devt(alt_device->v.i, cmd->filter);
-
-		log_verbose("PV on device %s (%d:%d %d) is also on device %s (%d:%d %d) %s",
-			    dev_name(dev),
-			    (int)MAJOR(devt), (int)MINOR(devt), (int)devt,
-			    dev_alternate ? dev_name(dev_alternate) : "unknown",
-			    (int)MAJOR(alt_device->v.i), (int)MINOR(alt_device->v.i), (int)alt_device->v.i,
-			    pvid_txt);
-
-		if (dev_alternate) {
-			if ((info_alternate = lvmcache_add(fmt->labeller, (const char *)&pvid, dev_alternate,
-							   vgname, (const char *)&vgid, 0))) {
-				dev_alternate_cache = dev_alternate;
-				info = info_alternate;
-				lvmcache_get_label(info)->dev = dev_alternate;
-			}
-		}
-		alt_device = alt_device->next;
-	}
-
-	/*
-	 * Update lvmcache with the info about the alternate device by
-	 * reading its label, which should update lvmcache.
-	 */
-	if (dev_alternate_cache) {
-		if (!label_read(dev_alternate_cache, &label, 0)) {
-			log_warn("No PV label found on duplicate device %s.", dev_name(dev_alternate_cache));
-		}
-	}
-
-	lvmcache_set_preferred_duplicates((const char *)&vgid);
 
 	lvmcache_set_ext_flags(info, ext_flags);
 	lvmcache_set_ext_version(info, ext_version);
