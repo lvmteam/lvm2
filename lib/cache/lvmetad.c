@@ -1595,6 +1595,8 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 			log_error("WARNING: Ignoring obsolete format of metadata (%s) on device %s when using lvmetad",
 			  	baton.fid->fmt->name, dev_name(pvl->pv->dev));
 			lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+			log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
+			lvmetad_set_disabled(cmd, "LVM1");
 			return NULL;
 		}
 
@@ -1715,6 +1717,9 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			log_error("Ignoring obsolete format of metadata (%s) on device %s when using lvmetad.",
 				  baton.fid->fmt->name, dev_name(dev));
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
+
+		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
+		lvmetad_set_disabled(cmd, "LVM1");
 
 		if (ignore_obsolete)
 			return 1;
@@ -2248,6 +2253,29 @@ int lvmetad_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const cha
 	daemon_reply_destroy(reply);
 
 	return ret;
+}
+
+void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
+{
+	daemon_reply reply;
+
+	if (!_lvmetad_use)
+		return;
+
+	log_debug_lvmetad("lvmetad send disabled %s", reason);
+
+	reply = daemon_send_simple(_lvmetad, "set_global_info",
+				   "token = %s", "skip",
+				   "global_disable = " FMTd64, (int64_t)1,
+				   "disable_reason = %s", reason,
+				   NULL);
+	if (reply.error)
+		log_error("Failed to send message to lvmetad %d", reply.error);
+
+	if (strcmp(daemon_reply_str(reply, "response", ""), "OK"))
+		log_error("Failed response from lvmetad.");
+
+	daemon_reply_destroy(reply);
 }
 
 int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
