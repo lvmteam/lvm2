@@ -105,6 +105,7 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 
 	lvmcache_set_device_size(info, ((uint64_t)xlate32_be(pd->pl_blocks)) << SECTOR_SHIFT);
 	lvmcache_del_mdas(info);
+	lvmcache_del_bas(info);
 	lvmcache_make_valid(info);
 
 	pl->dev = dev;
