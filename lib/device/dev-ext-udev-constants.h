@@ -32,7 +32,9 @@
 #define DEV_EXT_UDEV_BLKID_TYPE_RAID_SUFFIX     "_raid_member"
 #define DEV_EXT_UDEV_BLKID_TYPE_SW_RAID         "linux_raid_member"
 #define DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE      "ID_PART_TABLE_TYPE"
-#define DEV_EXT_UDEV_BLKID_PART_ENTRY_DISK      "ID_PART_ENTRY_DISK"
+
+#define DEV_EXT_UDEV_DEVTYPE			"DEVTYPE"
+#define DEV_EXT_UDEV_DEVTYPE_DISK		"disk"
 
 /*
  * DEV_EXT_UDEV_MPATH_DEVICE_PATH is set by multipath in udev db

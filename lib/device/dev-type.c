@@ -333,23 +333,43 @@ static int _has_partition_table(struct device *dev)
 }
 
 #ifdef UDEV_SYNC_SUPPORT
-static int _udev_dev_is_partitioned(struct device *dev)
+static int _udev_dev_is_partitioned(struct dev_types *dt, struct device *dev)
 {
 	struct dev_ext *ext;
+	struct udev_device *device;
+	const char *value;
 
 	if (!(ext = dev_ext_get(dev)))
 		return_0;
 
-	if (!udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE))
+	device = (struct udev_device *) ext->handle;
+	if (!(value = udev_device_get_property_value(device, DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE)))
 		return 0;
 
-	if (udev_device_get_property_value((struct udev_device *)ext->handle, DEV_EXT_UDEV_BLKID_PART_ENTRY_DISK))
-		return 0;
+	/*
+	 * Device-mapper devices have DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE
+	 * variable set if there's partition table found on whole device.
+	 * Partitions do not have this variable set - it's enough to use
+	 * only this variable to decide whether this device has partition
+	 * table on it.
+	 */
+	if (MAJOR(dev->dev) == dt->device_mapper_major)
+		return 1;
 
-	return 1;
+	/*
+	 * Other devices have DEV_EXT_UDEV_BLKID_PART_TABLE_TYPE set for
+	 * *both* whole device and partitions. We need to look at the
+	 * DEV_EXT_UDEV_DEVTYPE in addition to decide - whole device
+	 * with partition table on it has this variable set to
+	 * DEV_EXT_UDEV_DEVTYPE_DISK.
+	 */
+	if (!(value = udev_device_get_property_value(device, DEV_EXT_UDEV_DEVTYPE)))
+		return_0;
+
+	return !strcmp(value, DEV_EXT_UDEV_DEVTYPE_DISK);
 }
 #else
-static int _udev_dev_is_partitioned(struct device *dev)
+static int _udev_dev_is_partitioned(struct dev_types *dt, struct device *dev)
 {
 	return 0;
 }
@@ -386,7 +406,7 @@ int dev_is_partitioned(struct dev_types *dt, struct device *dev)
 		return _native_dev_is_partitioned(dt, dev);
 
 	if (dev->ext.src == DEV_EXT_UDEV)
-		return _udev_dev_is_partitioned(dev);
+		return _udev_dev_is_partitioned(dt, dev);
 
 	log_error(INTERNAL_ERROR "Missing hook for partition table recognition "
 		  "using external device info source %s", dev_ext_name(dev));
