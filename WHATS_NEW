@@ -1,5 +1,6 @@
 Version 2.02.142 - 
 ====================================
+  Do not check for suspended devices if scanning for lvmetad update.
   Fix part. table filter with external_device_info_source="udev" and blkid<2.20.
 
 Version 2.02.141 - 25th January 2016

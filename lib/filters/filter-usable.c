@@ -126,15 +126,8 @@ static int _passes_usable_filter(struct dev_filter *f, struct device *dev)
 			break;
 		case FILTER_MODE_PRE_LVMETAD:
 			ucp.check_empty = 1;
-			/*
-			 * If we're scanning for lvmetad update,
-			 * we don't want to hang on blocked/suspended devices.
-			 * When the device is unblocked/resumed, surely,
-			 * there's going to be a CHANGE event so the device
-			 * gets scanned via udev rule anyway after resume.
-			 */
 			ucp.check_blocked = 1;
-			ucp.check_suspended = 1;
+			ucp.check_suspended = 0;
 			ucp.check_error_target = 1;
 			ucp.check_reserved = 1;
 			break;
