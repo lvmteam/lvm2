@@ -117,6 +117,51 @@ void free_orphan_vg(struct volume_group *vg)
 	_free_vg(vg);
 }
 
+int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	if (vg_max_lv_reached(vg))
+		stack;
+
+	if (!(lvl = dm_pool_zalloc(vg->vgmem, sizeof(*lvl))))
+		return_0;
+
+	lvl->lv = lv;
+	lv->vg = vg;
+	dm_list_add(&vg->lvs, &lvl->list);
+	lv->status &= ~LV_REMOVED;
+
+	return 1;
+}
+
+int unlink_lv_from_vg(struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	if (!(lvl = find_lv_in_vg(lv->vg, lv->name)))
+		return_0;
+
+	dm_list_move(&lv->vg->removed_lvs, &lvl->list);
+	lv->status |= LV_REMOVED;
+
+	return 1;
+}
+
+int vg_max_lv_reached(struct volume_group *vg)
+{
+	if (!vg->max_lv)
+		return 0;
+
+	if (vg->max_lv > vg_visible_lvs(vg))
+		return 0;
+
+	log_verbose("Maximum number of logical volumes (%u) reached "
+		    "in volume group %s", vg->max_lv, vg->name);
+
+	return 1;
+}
+
 char *vg_fmt_dup(const struct volume_group *vg)
 {
 	if (!vg->fid || !vg->fid->fmt)
