@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -168,7 +168,7 @@ static int _lvresize_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, struct processing_handle *handle)
 {
 	struct lvresize_params *lp = (struct lvresize_params *) handle->custom_handle;
-	struct dm_list *pvh = NULL;
+	struct dm_list *pvh;
 	struct logical_volume *lv;
 	int ret = ECMD_FAILED;
 
@@ -197,7 +197,7 @@ out:
 
 int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct processing_handle *handle = NULL;
+	struct processing_handle *handle;
 	struct lvresize_params lp = { 0 };
 	int ret = ECMD_FAILED;
 
@@ -215,5 +215,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			      &_lvresize_single);
 
 	destroy_processing_handle(cmd, handle);
+
 	return ret;
 }
