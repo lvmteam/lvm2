@@ -387,7 +387,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	if (arg_count(cmd, repair_ARG) &&
 	    arg_outside_list_is_set(cmd, "cannot be used with --repair",
 				    repair_ARG,
-				    alloc_ARG, use_policies_ARG,
+				    alloc_ARG, usepolicies_ARG,
 				    stripes_long_ARG, stripesize_ARG,
 				    force_ARG, noudevsync_ARG, test_ARG,
 				    -1))
@@ -953,7 +953,7 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 	int force = arg_count(cmd, force_ARG);
 	int yes = arg_count(cmd, yes_ARG);
 
-	if (arg_count(cmd, use_policies_ARG)) {
+	if (arg_count(cmd, usepolicies_ARG)) {
 		leg_policy = find_config_tree_str(cmd, activation_mirror_image_fault_policy_CFG, NULL);
 		log_policy = find_config_tree_str(cmd, activation_mirror_log_fault_policy_CFG, NULL);
 		*replace_mirrors = strcmp(leg_policy, "remove");
@@ -1686,7 +1686,7 @@ static void _lvconvert_raid_repair_ask(struct cmd_context *cmd,
 
 	*replace_dev = 1;
 
-	if (arg_count(cmd, use_policies_ARG)) {
+	if (arg_count(cmd, usepolicies_ARG)) {
 		dev_policy = find_config_tree_str(cmd, activation_raid_fault_policy_CFG, NULL);
 
 		if (!strcmp(dev_policy, "allocate") ||
@@ -1822,7 +1822,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		}
 
 		/* "warn" if policy not set to replace */
-		if (arg_count(cmd, use_policies_ARG))
+		if (arg_count(cmd, usepolicies_ARG))
 			log_warn("Use 'lvconvert --repair %s/%s' to replace "
 				 "failed device.", lv->vg->name, lv->name);
 		return 1;
@@ -3286,7 +3286,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_PROCESSED;
 		}
 		if (!lv_is_mirrored(lv) && !lv_is_raid(lv)) {
-			if (arg_count(cmd, use_policies_ARG))
+			if (arg_count(cmd, usepolicies_ARG))
 				return ECMD_PROCESSED; /* nothing to be done here */
 			log_error("Can't repair LV \"%s\" of segtype %s.",
 				  lv->name, lvseg_name(first_seg(lv)));
@@ -3345,7 +3345,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_ECMD_FAILED;
 
 		/* If repairing and using policies, remove missing PVs from VG */
-		if (arg_count(cmd, repair_ARG) && arg_count(cmd, use_policies_ARG))
+		if (arg_count(cmd, repair_ARG) && arg_count(cmd, usepolicies_ARG))
 			_remove_missing_empty_pv(lv->vg, failed_pvs);
 	} else if (arg_count(cmd, mirrors_ARG) ||
 		   arg_count(cmd, splitmirrors_ARG) ||
@@ -3360,7 +3360,7 @@ static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_ECMD_FAILED;
 
 		/* If repairing and using policies, remove missing PVs from VG */
-		if (arg_count(cmd, repair_ARG) && arg_count(cmd, use_policies_ARG))
+		if (arg_count(cmd, repair_ARG) && arg_count(cmd, usepolicies_ARG))
 			_remove_missing_empty_pv(lv->vg, failed_pvs);
 	}
 

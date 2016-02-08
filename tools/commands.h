@@ -294,7 +294,7 @@ xx(lvconvert,
    repair_ARG, replace_ARG, snapshot_ARG,
    split_ARG, splitcache_ARG, splitmirrors_ARG, splitsnapshot_ARG,
    stripes_long_ARG, stripesize_ARG, test_ARG, thin_ARG, thinpool_ARG,
-   trackchanges_ARG, type_ARG, uncache_ARG, use_policies_ARG, zero_ARG)
+   trackchanges_ARG, type_ARG, uncache_ARG, usepolicies_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
@@ -480,8 +480,8 @@ xx(lvextend,
 
    alloc_ARG, autobackup_ARG, extents_ARG, force_ARG, mirrors_ARG,
    nofsck_ARG, nosync_ARG, noudevsync_ARG, poolmetadatasize_ARG,
-   resizefs_ARG, size_ARG, stripes_ARG,
-   stripesize_ARG, test_ARG, type_ARG, use_policies_ARG)
+   resizefs_ARG, size_ARG, stripes_ARG, stripesize_ARG,
+   test_ARG, type_ARG, usepolicies_ARG)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",

@@ -20,7 +20,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 {
 	const char *cmd_name;
 	char *st;
-	int use_policy = arg_count(cmd, use_policies_ARG);
+	int use_policy = arg_count(cmd, usepolicies_ARG);
 
 	lp->sign = SIGN_NONE;
 	lp->poolmetadatasign = SIGN_NONE;
@@ -124,7 +124,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	lp->argc = argc;
 	lp->argv = argv;
 
-	lp->ac_policy = arg_count(cmd, use_policies_ARG);
+	lp->ac_policy = arg_count(cmd, usepolicies_ARG);
 	lp->ac_stripes = arg_count(cmd, stripes_ARG);
 	if (lp->ac_stripes) {
 		lp->ac_stripes_value = arg_uint_value(cmd, stripes_ARG, 1);
