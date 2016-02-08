@@ -4224,7 +4224,8 @@ static int _request_confirmation(const struct volume_group *vg,
 	if (lp->resizefs) {
 		if (!info.exists) {
 			log_error("Logical volume %s must be activated "
-				  "before resizing filesystem", lp->lv_name);
+				  "before resizing filesystem.",
+				  display_lvname(lv));
 			return 0;
 		}
 		return 1;
@@ -4233,7 +4234,7 @@ static int _request_confirmation(const struct volume_group *vg,
 	if (!info.exists)
 		return 1;
 
-	log_warn("WARNING: Reducing active%s logical volume to %s",
+	log_warn("WARNING: Reducing active%s logical volume to %s.",
 		 info.open_count ? " and open" : "",
 		 display_size(vg->cmd, (uint64_t) lp->extents * vg->extent_size));
 
@@ -4241,8 +4242,9 @@ static int _request_confirmation(const struct volume_group *vg,
 
 	if (!lp->ac_force) {
 		if (yes_no_prompt("Do you really want to reduce %s? [y/n]: ",
-				  lp->lv_name) == 'n') {
-			log_error("Logical volume %s NOT reduced", lp->lv_name);
+				  display_lvname(lv)) == 'n') {
+			log_error("Logical volume %s NOT reduced",
+				  display_lvname(lv));
 			return 0;
 		}
 		if (sigint_caught())
@@ -4315,13 +4317,13 @@ static int _adjust_amount(dm_percent_t percent, int policy_threshold, int *polic
 {
 	if (!(DM_PERCENT_0 < percent && percent <= DM_PERCENT_100) ||
 	    percent <= (policy_threshold * DM_PERCENT_1))
-		return 0;
+		return 0; /* nothing to do */
 	/*
 	 * Evaluate the minimal amount needed to get bellow threshold.
 	 * Keep using DM_PERCENT_1 units for better precision.
 	 * Round-up to needed percentage value
 	 */
-	percent = (percent/policy_threshold + (DM_PERCENT_1 - 1) / 100) / (DM_PERCENT_1 / 100) - 100;
+	percent = (percent / policy_threshold + (DM_PERCENT_1 - 1) / 100) / (DM_PERCENT_1 / 100) - 100;
 
 	/* Use it if current policy amount is smaller */
 	if (*policy_amount < percent)
