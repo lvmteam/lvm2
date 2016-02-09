@@ -35,7 +35,7 @@ static void _init_text_import(void)
 /*
  * Find out vgname on a given device.
  */
-int text_vgname_import(const struct format_type *fmt,
+int text_vgsummary_import(const struct format_type *fmt,
 		       struct device *dev,
 		       off_t offset, uint32_t size,
 		       off_t offset2, uint32_t size2,
@@ -74,7 +74,7 @@ int text_vgname_import(const struct format_type *fmt,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(*vsn)->read_vgname(fmt, cft, vgsummary))
+		if (!(*vsn)->read_vgsummary(fmt, cft, vgsummary))
 			goto_out;
 
 		r = 1;

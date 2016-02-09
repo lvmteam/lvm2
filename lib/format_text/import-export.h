@@ -51,9 +51,9 @@ struct text_vg_version_ops {
 					 unsigned allow_lvmetad_extensions);
 	void (*read_desc) (struct dm_pool * mem, const struct dm_config_tree *cf,
 			   time_t *when, char **desc);
-	int (*read_vgname) (const struct format_type *fmt,
-			    const struct dm_config_tree *cft,
-			    struct lvmcache_vgsummary *vgsummary);
+	int (*read_vgsummary) (const struct format_type *fmt,
+			       const struct dm_config_tree *cft,
+			       struct lvmcache_vgsummary *vgsummary);
 };
 
 struct text_vg_version_ops *text_vg_vsn1_init(void);
@@ -78,7 +78,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       uint32_t checksum,
 				       time_t *when, char **desc);
 
-int text_vgname_import(const struct format_type *fmt,
+int text_vgsummary_import(const struct format_type *fmt,
 		       struct device *dev,
 		       off_t offset, uint32_t size,
 		       off_t offset2, uint32_t size2,
