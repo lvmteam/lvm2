@@ -198,6 +198,8 @@ void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
 
 int lvmcache_found_duplicate_pvs(void);
 
+int vg_has_duplicate_pvs(struct volume_group *vg);
+
 int lvmcache_contains_lock_type_sanlock(struct cmd_context *cmd);
 
 void lvmcache_get_max_name_lengths(struct cmd_context *cmd,

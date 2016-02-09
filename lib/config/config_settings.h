@@ -395,6 +395,18 @@ cfg(devices_issue_discards_CFG, "issue_discards", devices_CFG_SECTION, 0, CFG_TY
 	"generally do. If enabled, discards will only be issued if both the\n"
 	"storage and kernel provide support.\n")
 
+cfg(devices_allow_changes_with_duplicate_pvs_CFG, "allow_changes_with_duplicate_pvs", devices_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_ALLOW_CHANGES_WITH_DUPLICATE_PVS, vsn(2, 2, 153), NULL, 0, NULL,
+	"Allow VG modification while a PV appears on multiple devices.\n"
+	"When a PV appears on multiple devices, LVM attempts to choose the\n"
+	"best device to use for the PV. If the devices represent the same\n"
+	"underlying storage, the choice has minimal consequence. If the\n"
+	"devices represent different underlying storage, the wrong choice\n"
+	"can result in data loss if the VG is modified. Disabling this\n"
+	"setting is the safest option because it prevents modifying a VG\n"
+	"or activating LVs in it while a PV appears on multiple devices.\n"
+	"Enabling this setting allows the VG to be used as usual even with\n"
+	"uncertain devices.\n")
+
 cfg_array(allocation_cling_tag_list_CFG, "cling_tag_list", allocation_CFG_SECTION, CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 77), NULL, 0, NULL,
 	"Advise LVM which PVs to use when searching for new space.\n"
 	"When searching for free space to extend an LV, the 'cling' allocation\n"
