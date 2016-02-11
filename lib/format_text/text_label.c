@@ -421,6 +421,9 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	log_debug_metadata("%s: PV header extension version %" PRIu32 " found",
 			   dev_name(dev), ext_version);
 
+	/* Extension version */
+	lvmcache_set_ext_version(info, xlate32(pvhdr_ext->version));
+
 	/* Extension flags */
 	lvmcache_set_ext_flags(info, xlate32(pvhdr_ext->flags));
 

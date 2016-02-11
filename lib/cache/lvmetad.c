@@ -369,6 +369,7 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 	uint64_t devsize = dm_config_find_int64(cn->child, "dev_size", 0),
 		 label_sector = dm_config_find_int64(cn->child, "label_sector", 0);
 	uint32_t ext_flags = (uint32_t) dm_config_find_int64(cn->child, "ext_flags", 0);
+	uint32_t ext_version = (uint32_t) dm_config_find_int64(cn->child, "ext_version", 0);
 
 	if (!fmt && fmt_name)
 		fmt = get_format_by_name(cmd, fmt_name);
@@ -481,6 +482,7 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 	lvmcache_set_preferred_duplicates((const char *)&vgid);
 
 	lvmcache_set_ext_flags(info, ext_flags);
+	lvmcache_set_ext_version(info, ext_version);
 
 	return 1;
 }
@@ -1051,6 +1053,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 			       "format = %s", fmt->name,
 			       "label_sector = %"PRId64, (int64_t) label_sector,
 			       "id = %s", uuid,
+			       "ext_version = %"PRId64, (int64_t) lvmcache_ext_version(info),
 			       "ext_flags = %"PRId64, (int64_t) lvmcache_ext_flags(info),
 			       NULL))
 	{

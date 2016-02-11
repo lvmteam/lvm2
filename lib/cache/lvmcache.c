@@ -42,6 +42,7 @@ struct lvmcache_info {
 	const struct format_type *fmt;
 	struct device *dev;
 	uint64_t device_size;	/* Bytes */
+	uint32_t ext_version;   /* Extension version */
 	uint32_t ext_flags;	/* Extension flags */
 	uint32_t status;
 };
@@ -2365,6 +2366,14 @@ void lvmcache_set_device_size(struct lvmcache_info *info, uint64_t size) {
 
 struct device *lvmcache_device(struct lvmcache_info *info) {
 	return info->dev;
+}
+void lvmcache_set_ext_version(struct lvmcache_info *info, uint32_t version)
+{
+	info->ext_version = version;
+}
+
+uint32_t lvmcache_ext_version(struct lvmcache_info *info) {
+	return info->ext_version;
 }
 
 void lvmcache_set_ext_flags(struct lvmcache_info *info, uint32_t flags) {
