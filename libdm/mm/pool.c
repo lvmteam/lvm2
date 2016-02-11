@@ -48,17 +48,18 @@ static size_t pagesize_mask = 0;
 
 char *dm_pool_strdup(struct dm_pool *p, const char *str)
 {
-	char *ret = dm_pool_alloc_aligned(p, strlen(str) + 1, 2);
+	size_t len = strlen(str) + 1;
+	char *ret = dm_pool_alloc(p, len);
 
 	if (ret)
-		strcpy(ret, str);
+		memcpy(ret, str, len);
 
 	return ret;
 }
 
 char *dm_pool_strndup(struct dm_pool *p, const char *str, size_t n)
 {
-	char *ret = dm_pool_alloc_aligned(p, n + 1, 2);
+	char *ret = dm_pool_alloc(p, n + 1);
 
 	if (ret) {
 		strncpy(ret, str, n);
