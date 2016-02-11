@@ -1,5 +1,6 @@
 Version 2.02.142 - 
 ====================================
+  Fix thinp watermark calc for data LV for faster dmeventd responce (2.02.133).
   Use use_blkid_wiping=0 if not defined in lvm.conf and support not compiled in.
   Do not check for suspended devices if scanning for lvmetad update.
   Fix part. table filter with external_device_info_source="udev" and blkid<2.20.

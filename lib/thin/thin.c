@@ -295,9 +295,10 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	if (threshold < 50)
 		threshold = 50;
 	if (threshold < 100)
-		low_water_mark = (len * threshold + 99) / 100;
+		/* Translate to number of free pool blocks to trigger watermark */
+		low_water_mark = len / seg->chunk_size * (100 - threshold) / 100;
 	else
-		low_water_mark = len;
+		low_water_mark = 0;
 
 	if (!dm_tree_node_add_thin_pool_target(node, len,
 					       seg->transaction_id,
