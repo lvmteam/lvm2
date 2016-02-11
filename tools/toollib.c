@@ -2928,18 +2928,6 @@ static struct device_id_list *_device_list_find_dev(struct dm_list *devices, str
 	return NULL;
 }
 
-static struct device_id_list *_device_list_find_pvid(struct dm_list *devices, struct physical_volume *pv)
-{
-	struct device_id_list *dil;
-
-	dm_list_iterate_items(dil, devices) {
-		if (id_equal((struct id *) dil->pvid, &pv->id))
-			return dil;
-	}
-
-	return NULL;
-}
-
 static int _device_list_copy(struct cmd_context *cmd, struct dm_list *src, struct dm_list *dst)
 {
 	struct device_id_list *dil;
@@ -3030,6 +3018,94 @@ static int _process_device_list(struct cmd_context *cmd, struct dm_list *all_dev
 	return ECMD_PROCESSED;
 }
 
+static int _process_duplicate_pvs(struct cmd_context *cmd,
+				  struct dm_list *all_devices,
+				  struct dm_list *arg_devices,
+				  int process_all_devices,
+				  struct processing_handle *handle,
+				  process_single_pv_fn_t process_single_pv)
+{
+	struct physical_volume pv_dummy;
+	struct physical_volume *pv;
+	struct device_id_list *dil;
+	struct device_list *devl;
+	struct dm_list unused_duplicate_devs;
+	struct lvmcache_info *info;
+	struct volume_group *vg = NULL;
+	const char *vgname = NULL;
+	const char *vgid = NULL;
+	int ret_max = ECMD_PROCESSED;
+	int ret = 0;
+
+	dm_list_init(&unused_duplicate_devs);
+
+	if (!lvmcache_get_unused_duplicate_devs(cmd, &unused_duplicate_devs))
+		return_ECMD_FAILED;
+
+	dm_list_iterate_items(devl, &unused_duplicate_devs) {
+		/* Duplicates are displayed if -a is used or the dev is named as an arg. */
+
+		_device_list_remove(all_devices, devl->dev);
+
+		if (!process_all_devices && dm_list_empty(arg_devices))
+			continue;
+
+		if ((dil = _device_list_find_dev(arg_devices, devl->dev)))
+			_device_list_remove(arg_devices, devl->dev);
+
+		if (!process_all_devices && !dil)
+			continue;
+
+		if (!(cmd->command->flags & ENABLE_DUPLICATE_DEVS))
+			continue;
+
+		/*
+		 * Use the cached VG from the preferred device for the PV,
+		 * the vg is only used to display the VG name.
+		 *
+		 * This VG from lvmcache was not read from the duplicate
+		 * dev being processed here, but from the preferred dev
+		 * in lvmcache.
+		 *
+		 * When a duplicate PV is displayed, the reporting fields
+		 * that come from the VG metadata are not shown, because
+		 * the dev is not a part of the VG, the dev for the
+		 * preferred PV is (also the VG metadata in lvmcache is
+		 * not from the duplicate dev, but from the preferred dev).
+		 */
+
+		log_very_verbose("Processing duplicate device %s.", dev_name(devl->dev));
+
+		info = lvmcache_info_from_pvid(devl->dev->pvid, 0);
+		if (info)
+			vgname = lvmcache_vgname_from_info(info);
+		if (vgname)
+			vgid = lvmcache_vgid_from_vgname(cmd, vgname);
+		if (vgid)
+			vg = lvmcache_get_vg(cmd, vgname, vgid, 0);
+
+		memset(&pv_dummy, 0, sizeof(pv_dummy));
+		dm_list_init(&pv_dummy.tags);
+		dm_list_init(&pv_dummy.segments);
+		pv_dummy.dev = devl->dev;
+		pv_dummy.fmt = lvmcache_fmt_from_info(info);
+		pv = &pv_dummy;
+
+		ret = process_single_pv(cmd, vg, pv, handle);
+
+		if (vg)
+			release_vg(vg);
+
+		if (ret > ret_max)
+			ret_max = ret;
+
+		if (sigint_caught())
+			return_ECMD_FAILED;
+	}
+
+	return ECMD_PROCESSED;
+}
+
 static int _process_pvs_in_vg(struct cmd_context *cmd,
 			      struct volume_group *vg,
 			      struct dm_list *all_devices,
@@ -3045,7 +3121,6 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 	struct device_id_list *dil;
-	struct device *dev_orig;
 	const char *pv_name;
 	int selected;
 	int process_pv;
@@ -3082,14 +3157,6 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			_device_list_remove(arg_devices, dil->dev);
 		}
 
-		/* Select the PV if the device arg has the same pvid. */
-
-		if (!process_pv && !dm_list_empty(arg_devices) &&
-		    (dil = _device_list_find_pvid(arg_devices, pv))) {
-			process_pv = 1;
-			_device_list_remove(arg_devices, dil->dev);
-		}
-
 		if (!process_pv && !dm_list_empty(arg_tags) &&
 		    str_list_match_list(arg_tags, &pv->tags, NULL))
 			process_pv = 1;
@@ -3120,83 +3187,6 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 					stack;
 				if (ret > ret_max)
 					ret_max = ret;
-			}
-
-			/*
-			 * We have processed the PV on device pv->dev.  Now
-			 * deal with any duplicates of this PV on other
-			 * devices.
-			 */
-
-			/*
-			 * This is a very rare and obscure case where multiple
-			 * duplicate devices are specified on the command line
-			 * referring to this PV.  In this case we want to
-			 * process this PV once for each specified device.
-			 */
-			if (!skip && !dm_list_empty(arg_devices)) {
-				while ((dil = _device_list_find_pvid(arg_devices, pv))) {
-					_device_list_remove(arg_devices, dil->dev);
-
-					/*
-					 * Replace pv->dev with this dil->dev
-					 * in lvmcache so the duplicate dev
-					 * info will be reported.  FIXME: it
-					 * would be nicer to override pv->dev
-					 * without munging lvmcache content.
-					 */
-					dev_orig = pv->dev;
-					lvmcache_replace_dev(cmd, pv, dil->dev);
-
-					log_very_verbose("Processing PV %s device %s in VG %s.",
-							 pv_name, dev_name(dil->dev), vg->name);
-
-					ret = process_single_pv(cmd, vg, pv, handle);
-					if (ret != ECMD_PROCESSED)
-						stack;
-					if (ret > ret_max)
-						ret_max = ret;
-
-					/* Put the cache state back as it was. */
-					lvmcache_replace_dev(cmd, pv, dev_orig);
-				}
-			}
-
-			/*
-			 * This is another rare and obscure case where multiple
-			 * duplicate devices are being displayed by pvs -a, and
-			 * we want each of them to be displayed in the context
-			 * of this VG, so that this VG name appears next to it.
-			 */
-			if (process_all_devices && lvmcache_found_duplicate_pvs()) {
-				while ((dil = _device_list_find_pvid(all_devices, pv))) {
-					_device_list_remove(all_devices, dil->dev);
-
-					dev_orig = pv->dev;
-					lvmcache_replace_dev(cmd, pv, dil->dev);
-
-					ret = process_single_pv(cmd, vg, pv, handle);
-					if (ret != ECMD_PROCESSED)
-						stack;
-					if (ret > ret_max)
-						ret_max = ret;
-
-					lvmcache_replace_dev(cmd, pv, dev_orig);
-				}
-			}
-
-			/*
-			 * Remove any duplicates of the processed device from
-			 * the list of all devices.  If they were left in the
-			 * list of all devices, they would be considered
-			 * "missed" at the end.
-			 */
-			if (process_all_pvs && lvmcache_found_duplicate_pvs()) {
-				while ((dil = _device_list_find_pvid(all_devices, pv))) {
-					log_very_verbose("Skip duplicate device %s of processed device %s",
-							 dev_name(dil->dev), dev_name(pv->dev));
-					_device_list_remove(all_devices, dil->dev);
-				}
 			}
 		}
 
@@ -3404,6 +3394,46 @@ int process_each_pv(struct cmd_context *cmd,
 				  &arg_devices, &arg_tags,
 				  process_all_pvs, process_all_devices,
 				  handle, process_single_pv);
+	if (ret != ECMD_PROCESSED)
+		stack;
+	if (ret > ret_max)
+		ret_max = ret;
+
+	/*
+	 * Process the list of unused duplicate devs so they can be shown by
+	 * report/display commands.  These are the devices that were not chosen
+	 * to be used in lvmcache because another device with the same PVID was
+	 * preferred.  The unused duplicate devs are not seen by
+	 * _process_pvs_in_vgs, which only sees the preferred device for the
+	 * PVID.
+	 *
+	 * The main purpose in reporting/displaying the unused duplicate PVs
+	 * here is so that they do not appear to be unused/free devices or
+	 * orphans.
+	 *
+	 * We do not allow modifying the unused duplicate PVs.  To modify a
+	 * non-preferred duplicate PV, e.g. pvchange -u, a filter needs to be
+	 * used with the command to exclude the other devices with the same
+	 * PVID.  This results in the command seeing only the one device with
+	 * the PVID and allows it to be changed.  (If the duplicates actually
+	 * represent the same underlying storage, these precautions are
+	 * unnecessary, but lvm can't tell when the duplicates are different
+	 * paths to the same storage or different underlying storage.)
+	 *
+	 * Even the preferred duplicate PV in lvmcache is limitted from being
+	 * modified (by allow_changes_with_duplicate_pvs setting), because lvm
+	 * cannot be sure that the preferred duplicate device is the correct one,
+	 * e.g. if a VG has two PVs, and both PVs are cloned, lvm might prefer
+	 * one of the original PVs and one of the cloned PVs, pairing them
+	 * together as the VG.  Any changes on the VG or PVs in that state would
+	 * end up changing one of the original PVs and one of the cloned PVs.
+	 *
+	 * vgimportclone of the two cloned PVs changes their PV UUIDs and gives
+	 * them a new VG name.
+	 */
+
+	ret = _process_duplicate_pvs(cmd, &all_devices, &arg_devices, process_all_devices,
+				     handle, process_single_pv);
 	if (ret != ECMD_PROCESSED)
 		stack;
 	if (ret > ret_max)

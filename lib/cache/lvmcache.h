@@ -111,6 +111,7 @@ const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 				       const char *devname);
 char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid);
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
+const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info);
 int lvmcache_vgs_locked(void);
 int lvmcache_vgname_is_locked(const char *vgname);
 
@@ -193,10 +194,9 @@ unsigned lvmcache_mda_count(struct lvmcache_info *info);
 int lvmcache_vgid_is_cached(const char *vgid);
 uint64_t lvmcache_smallest_mda_size(struct lvmcache_info *info);
 
-void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
-			struct device *dev);
-
 int lvmcache_found_duplicate_pvs(void);
+
+int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head);
 
 int vg_has_duplicate_pvs(struct volume_group *vg);
 

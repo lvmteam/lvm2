@@ -40,6 +40,23 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		goto bad;
 	}
 
+	/*
+	 * The primary location of this check is in vg_write(), but it needs
+	 * to be copied here to prevent the pv_write() which is called before
+	 * the vg_write().
+	 */
+	if (vg && lvmcache_found_duplicate_pvs() && vg_has_duplicate_pvs(vg)) {
+	    	if (!find_config_tree_bool(vg->cmd, devices_allow_changes_with_duplicate_pvs_CFG, NULL)) {
+			log_error("Cannot update volume group %s with duplicate PV devices.",
+				  vg->name);
+			goto bad;
+		}
+		if (arg_count(cmd, uuid_ARG)) {
+			log_error("Resolve duplicate PV UUIDs with vgimportclone (or filters).");
+			goto bad;
+		}
+	}
+
 	/* If in a VG, must change using volume group. */
 	if (!is_orphan(pv)) {
 		if (tagargs && !(vg->fid->fmt->features & FMT_TAGS)) {

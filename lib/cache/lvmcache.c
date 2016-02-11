@@ -444,6 +444,21 @@ int lvmcache_found_duplicate_pvs(void)
 	return _found_duplicate_pvs;
 }
 
+int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *head)
+{
+	struct device_list *devl, *devl2;
+
+	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+		if (!(devl2 = dm_pool_alloc(cmd->mem, sizeof(*devl2)))) {
+			log_error("device_list element allocation failed");
+			return 0;
+		}
+		devl2->dev = devl->dev;
+		dm_list_add(head, &devl2->list);
+	}
+	return 1;
+}
+
 static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
 				struct lvmcache_info *info)
 {
@@ -681,6 +696,11 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, int valid_only)
 		return NULL;
 
 	return info;
+}
+
+const struct format_type *lvmcache_fmt_from_info(struct lvmcache_info *info)
+{
+	return info->fmt;
 }
 
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info)
@@ -1865,27 +1885,6 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 		_store_metadata(vg, precommitted);
 
 	return 1;
-}
-
-/*
- * Replace pv->dev with dev so that dev will appear for reporting.
- */
-
-void lvmcache_replace_dev(struct cmd_context *cmd, struct physical_volume *pv,
-			  struct device *dev)
-{
-	struct lvmcache_info *info;
-	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
-
-	strncpy(pvid_s, (char *) &pv->id, sizeof(pvid_s) - 1);
-	pvid_s[sizeof(pvid_s) - 1] = '\0';
-
-	if (!(info = lvmcache_info_from_pvid(pvid_s, 0)))
-		return;
-
-	info->dev = dev;
-	info->label->dev = dev;
-	pv->dev = dev;
 }
 
 /*
