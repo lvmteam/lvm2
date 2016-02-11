@@ -2363,6 +2363,7 @@ static int _pvused_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct physical_volume *pv =
 	    (const struct physical_volume *) data;
+
 	uint64_t used = pv_used(pv);
 
 	return _size64_disp(rh, mem, field, &used, private);
@@ -2374,7 +2375,20 @@ static int _pvfree_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct physical_volume *pv =
 	    (const struct physical_volume *) data;
+	struct lvmcache_info *info;
+	uint32_t ext_flags;
 	uint64_t freespace = pv_free(pv);
+
+	if (is_orphan(pv)) {
+		if (!(info = lvmcache_info_from_pvid((const char *) &pv->id, 0))) {
+			log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
+			return 0;
+		}
+
+		ext_flags = lvmcache_ext_flags(info);
+		if (ext_flags & PV_EXT_USED)
+			freespace = 0;
+	}
 
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
