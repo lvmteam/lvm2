@@ -73,17 +73,20 @@ lvs -a $vg
 for i in $(seq 1 12) ; do
 	is_lv_opened_ "$vg/$lv1" || break
 	test $i -lt 12 || die "$mntdir should have been unmounted by dmeventd!"
-        sleep 1
+	sleep 1
 done
 
 is_lv_opened_ "$vg/$lv2" || \
-	die "$mntusedir is not mounted here (sleep already expired??) "
+	die "$mntusedir is not mounted here (sleep already expired??)"
 
 # Kill device holding process
 kill $PID_SLEEP
 wait
 
-is_lv_opened_ "$vg/$lv2" && \
-	{ mount; die "$mntusedir should have been unmounted by dmeventd!" }
+is_lv_opened_ "$vg/$lv2" && {
+	mount
+	die "$mntusedir should have been unmounted by dmeventd!"
+}
 
 vgremove -f $vg
+
