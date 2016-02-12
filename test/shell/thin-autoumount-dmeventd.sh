@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -15,9 +15,9 @@ SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-is_dir_mounted_()
+is_lv_opened_()
 {
-	cat /proc/mounts | sed 's:\\040: :g' | grep "$1"
+	test $(get lv_field "$1" lv_device_open --binary) = "1"
 }
 
 . lib/inittest
@@ -31,6 +31,7 @@ aux have_thin 1 0 0 || skip
 
 aux prepare_dmeventd
 
+# Use autoextend percent 0 - so extension fails and triggers umount...
 aux lvmconf "activation/thin_pool_autoextend_percent = 0" \
             "activation/thin_pool_autoextend_threshold = 70"
 
@@ -51,24 +52,38 @@ mkdir "$mntdir" "$mntusedir"
 mount "$DM_DEV_DIR/mapper/$vg-$lv1" "$mntdir"
 mount "$DM_DEV_DIR/mapper/$vg-$lv2" "$mntusedir"
 
-is_dir_mounted_ "$mntdir"
+# Check both LVs are opened (~mounted)
+is_lv_opened_ "$vg/$lv1"
+is_lv_opened_ "$vg/$lv2"
 
-# fill above 70%
-dd if=/dev/zero of="$mntdir/file$$" bs=1M count=6
 touch "$mntusedir/file$$"
-tail -f "$mntusedir/file$$" &
-PID_TAIL=$!
 sync
-lvs -a $vg
-sleep 12 # dmeventd only checks every 10 seconds :(
 
-lvs -a $vg
-# both dirs should be unmounted
-not is_dir_mounted "$mntdir"
-not is_dir_mounted "$mntusedir"
+# Running 'keeper' process sleep holds the block device still in use
+sleep 60 < "$mntusedir/file$$" &
+PID_SLEEP=$!
 
-# running tail keeps the block device still in use
-kill $PID_TAIL
+# Fill pool above 70%
+dd if=/dev/zero of="$mntdir/file$$" bs=1M count=6 conv=fdatasync
 lvs -a $vg
+
+# Could loop here for a few secs so dmeventd can do some work
+# In the worst case check only happens every 10 seconds :(
+# With low water mark it should react way faster
+for i in $(seq 1 12) ; do
+	is_lv_opened_ "$vg/$lv1" || break
+	test $i -lt 12 || die "$mntdir should have been unmounted by dmeventd!"
+        sleep 1
+done
+
+is_lv_opened_ "$vg/$lv2" || \
+	die "$mntusedir is not mounted here (sleep already expired??) "
+
+# Kill device holding process
+kill $PID_SLEEP
+wait
+
+is_lv_opened_ "$vg/$lv2" && \
+	{ mount; die "$mntusedir should have been unmounted by dmeventd!" }
 
 vgremove -f $vg
