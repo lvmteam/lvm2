@@ -238,8 +238,10 @@ char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *se
 {
 	char *ret = NULL;
 	struct lv_with_info_and_seg_status status = {
-		.seg_status.type = SEG_STATUS_NONE,
-		.seg_status.seg = seg
+		.seg_status = {
+			.type = SEG_STATUS_NONE,
+			.seg = seg
+		},
 	};
 
 	if (!lv_is_thin_pool(seg->lv))
