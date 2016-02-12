@@ -23,11 +23,11 @@ aux prepare_pvs 4
 
 # check 'allocatable' pv attribute
 pvcreate "$dev1"
-check pv_field "$dev1" pv_attr ---
+check pv_field "$dev1" pv_attr ----
 vgcreate $vg1 "$dev1"
-check pv_field "$dev1" pv_attr a--
+check pv_field "$dev1" pv_attr a--u
 pvchange --allocatable n "$dev1"
-check pv_field "$dev1" pv_attr ---
+check pv_field "$dev1" pv_attr ---u
 vgremove -ff $vg1
 not pvchange --allocatable y "$dev1"
 pvremove -ff "$dev1"
@@ -50,10 +50,10 @@ do
 # "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)"
 	pvchange "$dev1" -x n
 	pvchange "$dev1" -x n   # already disabled
-	check pv_field "$dev1" pv_attr  ---
+	check pv_field "$dev1" pv_attr  ---u
 	pvchange "$dev1" -x y
 	pvchange "$dev1" -x y   # already enabled
-	check pv_field "$dev1" pv_attr  a--
+	check pv_field "$dev1" pv_attr  a--u
 
 # check we are able to change number of managed metadata areas
 	if test $mda -gt 0 ; then

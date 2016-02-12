@@ -1447,6 +1447,9 @@ static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical
 
 	*needs_rewrite = 0;
 
+	if (!pv->is_labelled)
+		return 1;
+
 	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, 0))) {
 		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
 		return 0;
