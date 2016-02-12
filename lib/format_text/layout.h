@@ -23,7 +23,12 @@
 
 /* disk_locn and data_area_list are defined in format-text.h */
 
-#define PV_HEADER_EXTENSION_VSN 1
+/*
+ * PV header extension versions:
+ *   - version 1: bootloader area support
+ *   - version 2: PV_EXT_USED flag support
+ */
+#define PV_HEADER_EXTENSION_VSN 2
 
 struct pv_header_extension {
 	uint32_t version;

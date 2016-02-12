@@ -40,6 +40,9 @@
 /* Layer suffix */
 #define MIRROR_SYNC_LAYER "_mimagetmp"
 
+/* PV extension flags */
+#define PV_EXT_USED		UINT32_C(0x00000001)
+
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
