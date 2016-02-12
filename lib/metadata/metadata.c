@@ -3073,6 +3073,59 @@ out:
 	return r;
 }
 
+static int _pv_in_pvs_to_write_list(struct physical_volume *pv, struct volume_group *vg)
+{
+	struct pv_to_write *pvw;
+
+	dm_list_iterate_items(pvw, &vg->pvs_to_write) {
+		if (pvw->pv == pv)
+			return 1;
+	}
+
+	return 0;
+}
+
+/*
+ * Check if any of the PVs in VG still contain old PV headers
+ * and if yes, schedule them for PV header update.
+ */
+static int _check_old_pv_ext_for_vg(struct volume_group *vg)
+{
+	struct pv_list *pvl;
+	struct pv_to_write *pvw;
+	int pv_needs_rewrite;
+
+	if (!(vg->fid->fmt->features & FMT_PV_FLAGS))
+		return 1;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (is_missing_pv(pvl->pv) ||
+		    !pvl->pv->fmt->ops->pv_needs_rewrite)
+			continue;
+
+		if (!pvl->pv->fmt->ops->pv_needs_rewrite(pvl->pv->fmt, pvl->pv,
+							 &pv_needs_rewrite))
+			return_0;
+
+		if (pv_needs_rewrite) {
+			/*
+			 * Schedule PV for writing only once!
+			 */
+			if (_pv_in_pvs_to_write_list(pvl->pv, vg))
+				continue;
+
+			if (!(pvw = dm_pool_zalloc(vg->vgmem, sizeof(*pvw)))) {
+				log_error("pv_to_write allocation for '%s' failed", pv_dev_name(pvl->pv));
+				return 0;
+			}
+			pvw->pv = pvl->pv;
+			dm_list_add(&vg->pvs_to_write, &pvw->list);
+		}
+	}
+
+	return 1;
+}
+
 /*
  * After vg_write() returns success,
  * caller MUST call either vg_commit() or vg_revert()
@@ -3120,6 +3173,11 @@ int vg_write(struct volume_group *vg)
 
 	if (!vg_mda_used_count(vg)) {
 		log_error("Aborting vg_write: No metadata areas to write to!");
+		return 0;
+	}
+
+	if (!(_check_old_pv_ext_for_vg(vg))) {
+		log_error("Failed to schedule physical volume header update.");
 		return 0;
 	}
 
