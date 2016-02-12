@@ -208,6 +208,27 @@ int is_missing_pv(const struct physical_volume *pv)
 	return pv_field(pv, status) & MISSING_PV ? 1 : 0;
 }
 
+int is_used_pv(const struct physical_volume *pv)
+{
+	struct lvmcache_info *info;
+	uint32_t ext_flags;
+
+	if (!is_orphan(pv))
+		return 1;
+
+	if (!(pv->fmt->features & FMT_PV_FLAGS))
+		return 0;
+
+	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, 0))) {
+		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
+		return -1;
+	}
+
+	ext_flags = lvmcache_ext_flags(info);
+
+	return ext_flags & PV_EXT_USED ? 1 : 0;
+}
+
 char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
 {
 	char *repstr;

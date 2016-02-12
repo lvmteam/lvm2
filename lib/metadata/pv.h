@@ -96,6 +96,7 @@ uint32_t pv_mda_used_count(const struct physical_volume *pv);
 unsigned pv_mda_set_ignored(const struct physical_volume *pv, unsigned ignored);
 int is_orphan(const struct physical_volume *pv);
 int is_missing_pv(const struct physical_volume *pv);
+int is_used_pv(const struct physical_volume *pv);
 int is_pv(const struct physical_volume *pv);
 struct label *pv_label(const struct physical_volume *pv);
 
