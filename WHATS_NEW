@@ -1,5 +1,6 @@
 Version 2.02.142 - 
 ====================================
+  Fix memory pool corruption in pvmove (2.02.141).
   Support control of spare metadata creation when repairing thin-pool.
   Fix config type of 'log/verbose' from bool to int (2.02.99).
   Fix thinp watermark calc for data LV for faster dmeventd responce (2.02.133).

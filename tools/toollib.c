@@ -1834,7 +1834,11 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 	if (handle) {
 		if (handle->selection_handle && handle->selection_handle->selection_rh)
 			dm_report_free(handle->selection_handle->selection_rh);
-		dm_pool_free(cmd->mem, handle);
+		/*
+		 * TODO: think about better alternatives:
+		 * handle mempool, dm_alloc for handle memory...
+		 */
+		memset(handle, 0, sizeof(*handle));
 	}
 }
 
