@@ -46,8 +46,7 @@ free space, like
 does.
 .sp
 .B pvresize
-won't currently work correctly on LVM1 volumes or PVs with extra
-metadata areas.
+won't currently work correctly on LVM1 volumes.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvmove (8),
