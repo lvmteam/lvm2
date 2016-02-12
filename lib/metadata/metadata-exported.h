@@ -150,6 +150,7 @@
 #define FMT_OBSOLETE		0x000001000U	/* Obsolete format? */
 #define FMT_NON_POWER2_EXTENTS	0x000002000U	/* Non-power-of-2 extent sizes? */
 #define FMT_SYSTEMID_ON_PVS	0x000004000U	/* System ID is stored on PVs not VG */
+#define FMT_PV_FLAGS		0x000008000U	/* Supports PV flags */
 
 #define systemid_on_pvs(vg)	((vg)->fid->fmt->features & FMT_SYSTEMID_ON_PVS)
 
