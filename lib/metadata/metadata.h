@@ -303,6 +303,15 @@ struct format_handler {
 			 struct physical_volume * pv);
 
 	/*
+	 * Check if PV needs rewriting. This is used to check whether there are any
+	 * format-specific changes  before actually writing the PV (by calling pv_write).
+	 * With this, we can call pv_write conditionally only if it's really needed.
+	 */
+	int (*pv_needs_rewrite) (const struct format_type *fmt,
+				 struct physical_volume *pv,
+				 int *needs_rewrite);
+
+	/*
 	 * Tweak an already filled out a lv eg, check there
 	 * aren't too many extents.
 	 */

@@ -1439,6 +1439,27 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	return 1;
 }
 
+static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical_volume *pv,
+				  int *needs_rewrite)
+{
+	struct lvmcache_info *info;
+	uint32_t ext_vsn;
+
+	*needs_rewrite = 0;
+
+	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, 0))) {
+		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
+		return 0;
+	}
+
+	ext_vsn = lvmcache_ext_version(info);
+
+	if (ext_vsn < PV_HEADER_EXTENSION_VSN)
+		*needs_rewrite = 1;
+
+	return 1;
+}
+
 static int _add_raw(struct dm_list *raw_list, struct device_area *dev_area)
 {
 	struct raw_list *rl;
@@ -2384,6 +2405,7 @@ static struct format_handler _text_handler = {
 	.pv_remove_metadata_area = _text_pv_remove_metadata_area,
 	.pv_resize = _text_pv_resize,
 	.pv_write = _text_pv_write,
+	.pv_needs_rewrite = _text_pv_needs_rewrite,
 	.vg_setup = _text_vg_setup,
 	.lv_setup = _text_lv_setup,
 	.create_instance = _text_create_text_instance,
