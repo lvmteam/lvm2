@@ -278,6 +278,17 @@ int parse_thin_pool_status(const char *params, struct dm_status_thin_pool *s)
 		return 0;
 	}
 
+	if (strstr(params, "Error")) {
+		s->error = 1;
+		s->fail = 1; /*  This is also I/O fail state */
+		return 1;
+	}
+
+	if (strstr(params, "Fail")) {
+		s->fail = 1;
+		return 1;
+	}
+
 	/* FIXME: add support for held metadata root */
 	if (sscanf(params, FMTu64 " " FMTu64 "/" FMTu64 " " FMTu64 "/" FMTu64 "%n",
 		   &s->transaction_id,
@@ -297,15 +308,18 @@ int parse_thin_pool_status(const char *params, struct dm_status_thin_pool *s)
 	else /* default discard_passdown */
 		s->discards = DM_THIN_DISCARDS_PASSDOWN;
 
-	if (strstr(params + pos, "ro "))
-		s->read_only = 1;
-	else if (strstr(params + pos, "fail"))
-		s->fail = 1;
-	else if (strstr(params + pos, "out_of_data_space"))
+	/* Default is 'writable' (rw) data */
+	if (strstr(params + pos, "out_of_data_space"))
 		s->out_of_data_space = 1;
+	else if (strstr(params + pos, "ro "))
+		s->read_only = 1;
 
+	/* Default is 'queue_if_no_space' */
 	if (strstr(params + pos, "error_if_no_space"))
 		s->error_if_no_space = 1;
+
+	if (strstr(params + pos, "needs_check"))
+		s->needs_check = 1;
 
 	return 1;
 }
@@ -341,8 +355,9 @@ int dm_get_status_thin(struct dm_pool *mem, const char *params,
 	}
 
 	if (strchr(params, '-')) {
-		s->mapped_sectors = 0;
-		s->highest_mapped_sector = 0;
+		/* nothing to parse */
+	} else if (strstr(params, "Fail")) {
+		s->fail = 1;
 	} else if (sscanf(params, FMTu64 " " FMTu64,
 		   &s->mapped_sectors,
 		   &s->highest_mapped_sector) != 2) {

@@ -1,5 +1,6 @@
 Version 1.02.117 - 
 =====================================
+  Improve status parsing for thin-pool and thin devices.
 
 Version 1.02.116 - 15th February 2016
 =====================================
