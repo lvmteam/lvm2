@@ -1,5 +1,10 @@
 Version 2.02.143 - 
 =====================================
+  Automatically change PV header extension to latest version if writing PV/VG.
+  Identify used PVs in pv_attr field by new 'u' character.
+  Add pv_in_use reporting field to report if PV is used or not.
+  Add pv_ext_vsn reporting field to report PV header extension version.
+  Add protective flag marking PVs as used even if no metadata available.
 
 Version 2.02.142 - 15th February 2016
 =====================================
