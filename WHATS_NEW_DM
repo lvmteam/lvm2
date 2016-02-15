@@ -1,3 +1,6 @@
+Version 1.02.117 - 
+=====================================
+
 Version 1.02.116 - 15th February 2016
 =====================================
   Use fully aligned allocations for dm_pool_strdup/strndup() (1.02.64).
