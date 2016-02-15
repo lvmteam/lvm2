@@ -213,7 +213,7 @@ int is_used_pv(const struct physical_volume *pv)
 	struct lvmcache_info *info;
 	uint32_t ext_flags;
 
-	if (!pv->vg)
+	if (!pv->fmt)
 		return 0;
 
 	if (!is_orphan(pv))
