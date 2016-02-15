@@ -3068,7 +3068,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		pv_name = pv_dev_name(pv);
 
 		if (cmd->system_id && is_orphan(pv) && is_used_pv(pv)) {
-			log_verbose("PV %s is belonging to a VG but its metadata is missing.", pv_name);
+			log_verbose("PV %s is marked as belonging to a VG but its metadata is missing.", pv_name);
 			log_verbose("Skipping PV %s because it's not possible to decide whether it matches system id.", pv_name);
 			continue;
 		}
