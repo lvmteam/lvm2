@@ -591,9 +591,11 @@ struct pvcreate_each_params {
 	struct dm_list arg_process;     /* pvcreate_device, used for processing */
 	struct dm_list arg_confirm;     /* pvcreate_device, used for processing */
 	struct dm_list arg_create;      /* pvcreate_device, used for pvcreate */
+	struct dm_list arg_remove;      /* pvcreate_device, used for pvremove */
 	struct dm_list arg_fail;        /* pvcreate_device, failed to create */
 	struct dm_list pvs;             /* pv_list, created and usable for vgcreate/vgextend */
 	const char *orphan_vg_name;
+	unsigned is_remove : 1;         /* is removing PVs, not creating */
 	unsigned preserve_existing : 1;
 	unsigned check_failed : 1;
 };

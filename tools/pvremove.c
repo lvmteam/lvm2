@@ -17,33 +17,51 @@
 
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
-	int i;
-	unsigned force_count;
-	unsigned prompt;
-	struct dm_list pv_names;
+	struct processing_handle *handle;
+	struct pvcreate_each_params pp;
+	int ret;
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
 		return EINVALID_CMD_LINE;
 	}
 
-	force_count = arg_count(cmd, force_ARG);
-	prompt = arg_count(cmd, yes_ARG);
+	pvcreate_each_params_set_defaults(&pp);
 
-	dm_list_init(&pv_names);
+	pp.is_remove = 1;
+	pp.force = arg_count(cmd, force_ARG);
+	pp.yes = arg_count(cmd, yes_ARG);
+	pp.pv_count = argc;
+	pp.pv_names = argv;
 
-	/* Needed to change the set of orphan PVs. */
+	/*
+	 * Needed to change the set of orphan PVs.
+	 * (disable afterward to prevent process_each_pv from doing
+	 * a shared global lock since it's already acquired it ex.)
+	 */
 	if (!lockd_gl(cmd, "ex", 0))
 		return_ECMD_FAILED;
+	cmd->lockd_gl_disable = 1;
 
-	for (i = 0; i < argc; i++) {
-		dm_unescape_colons_and_at_signs(argv[i], NULL, NULL);
-		if (!str_list_add(cmd->mem, &pv_names, argv[i]))
-			return_ECMD_FAILED;
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
 	}
 
-	if (!pvremove_many(cmd, &pv_names, force_count, prompt))
-		return_ECMD_FAILED;
+	/*
+	 * pvremove uses the same toollib function as pvcreate,
+	 * but sets "is_remove" which changes the check function,
+	 * and the actual create vs remove step.
+	 */
 
-	return ECMD_PROCESSED;
+	if (!pvcreate_each_device(cmd, handle, &pp))
+		ret = ECMD_FAILED;
+	else {
+		/* pvcreate_each_device returns with orphans locked */
+		unlock_vg(cmd, VG_ORPHANS);
+		ret = ECMD_PROCESSED;
+	}
+
+	destroy_processing_handle(cmd, handle);
+	return ret;
 }

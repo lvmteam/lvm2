@@ -911,7 +911,7 @@ xx(lvpoll,
 
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
-   0,
+   ENABLE_ALL_DEVS,
    "pvremove\n"
    "\t[--commandprofile ProfileName]\n"
    "\t[-d|--debug]\n"
