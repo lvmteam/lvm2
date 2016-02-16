@@ -3723,6 +3723,8 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 	struct lvmcache_info *info;
 	uint32_t ext_version, ext_flags;
 	struct pv_list *pvl;
+	unsigned pvs_fixed = 0;
+	int r = 0;
 
 	*inconsistent_pvs = 0;
 
@@ -3733,7 +3735,7 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 
 		if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, 0))) {
 			log_error("Failed to find cached info for PV %s.", pv_dev_name(pvl->pv));
-			return 0;
+			goto out;
 		}
 
 		ext_version = lvmcache_ext_version(info);
@@ -3744,7 +3746,10 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 		if (!(ext_flags & PV_EXT_USED)) {
 			if (!repair) {
 				*inconsistent_pvs = 1;
-				continue;
+				/* we're not repairing now, so no need to
+				 * check further PVs - inconsistent_pvs is already
+				 * set and that will trigger the repair next time */
+				return 1;
 			}
 
 			if (_is_foreign_vg(vg)) {
@@ -3762,13 +3767,19 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 					*inconsistent_pvs = 1;
 					log_error("Failed to repair physical volume \"%s\".",
 						  pv_dev_name(pvl->pv));
-					return 0;
+					goto out;
 				}
+				pvs_fixed++;
 			}
 		}
 	}
 
-	return 1;
+	r = 1;
+out:
+	if ((pvs_fixed > 0) && !_repair_inconsistent_vg(vg))
+		return_0;
+
+	return r;
 }
 
 /* Caller sets consistent to 1 if it's safe for vg_read_internal to correct
