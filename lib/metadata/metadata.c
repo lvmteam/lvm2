@@ -3084,12 +3084,12 @@ out:
 	return r;
 }
 
-static int _pv_in_pvs_to_write_list(struct physical_volume *pv, struct volume_group *vg)
+static int _pv_in_pv_list(struct physical_volume *pv, struct dm_list *head)
 {
-	struct pv_to_write *pvw;
+	struct pv_list *pvl;
 
-	dm_list_iterate_items(pvw, &vg->pvs_to_write) {
-		if (pvw->pv == pv)
+	dm_list_iterate_items(pvl, head) {
+		if (pvl->pv == pv)
 			return 1;
 	}
 
@@ -3102,8 +3102,7 @@ static int _pv_in_pvs_to_write_list(struct physical_volume *pv, struct volume_gr
  */
 static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 {
-	struct pv_list *pvl;
-	struct pv_to_write *pvw;
+	struct pv_list *pvl, *new_pvl;
 	int pv_needs_rewrite;
 
 	if (!(vg->fid->fmt->features & FMT_PV_FLAGS))
@@ -3122,15 +3121,15 @@ static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 			/*
 			 * Schedule PV for writing only once!
 			 */
-			if (_pv_in_pvs_to_write_list(pvl->pv, vg))
+			if (_pv_in_pv_list(pvl->pv, &vg->pv_write_list))
 				continue;
 
-			if (!(pvw = dm_pool_zalloc(vg->vgmem, sizeof(*pvw)))) {
+			if (!(new_pvl = dm_pool_zalloc(vg->vgmem, sizeof(*new_pvl)))) {
 				log_error("pv_to_write allocation for '%s' failed", pv_dev_name(pvl->pv));
 				return 0;
 			}
-			pvw->pv = pvl->pv;
-			dm_list_add(&vg->pvs_to_write, &pvw->list);
+			new_pvl->pv = pvl->pv;
+			dm_list_add(&vg->pv_write_list, &new_pvl->list);
 		}
 	}
 
