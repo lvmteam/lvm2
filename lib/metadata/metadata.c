@@ -749,6 +749,24 @@ bad:
 }
 
 /*
+ * FIXME: commands shifting to common code in toollib have left a large
+ * amount of code only used by liblvm.  Either remove this by shifting
+ * liblvm to use toollib, or isolate all this code into a liblvm-specific
+ * source file.  All the following and more are only used by liblvm:
+ *
+ * . vg_extend()
+ * . vg_extend_single_pv()
+ * . pvcreate_vol()
+ * . _pvcreate_check()
+ * . _pvcreate_write()
+ * . pvremove_many()
+ * . pvremove_single()
+ * . find_pv_by_name()
+ * . get_pvs()
+ * . the vg->pvs_to_write list and pv_to_write struct
+ */
+
+/*
  * Extend a VG by a single PV / device path
  *
  * Parameters:
