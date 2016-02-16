@@ -3627,6 +3627,11 @@ static int _check_reappeared_pv(struct volume_group *correct_vg,
 	return rv;
 }
 
+static int _is_foreign_vg(struct volume_group *vg)
+{
+	return vg->cmd->system_id && strcmp(vg->system_id, vg->cmd->system_id);
+}
+
 static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 				   struct physical_volume *pv,
 				   int repair, int *inconsistent_pvs)
@@ -3678,7 +3683,7 @@ static int _repair_inconsistent_vg(struct volume_group *vg)
 	unsigned saved_handles_missing_pvs = vg->cmd->handles_missing_pvs;
 
 	/* Cannot write foreign VGs, the owner will repair it. */
-	if (vg->cmd->system_id && strcmp(vg->system_id, vg->cmd->system_id)) {
+	if (_is_foreign_vg(vg)) {
 		log_verbose("Skip metadata repair for foreign VG.");
 		return 0;
 	}
@@ -3718,7 +3723,7 @@ static int _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg, 
 	 * some PVs look outdated to us just because we're reading
 	 * the VG while it's only partially written out.
 	 */
-	if (cmd->system_id && strcmp(vg->system_id, cmd->system_id)) {
+	if (_is_foreign_vg(vg)) {
 		log_debug_metadata("Skip wiping outdated PVs for foreign VG.");
 		return 0;
 	}
