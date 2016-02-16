@@ -3146,7 +3146,8 @@ static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 int vg_write(struct volume_group *vg)
 {
 	struct dm_list *mdah;
-        struct pv_to_write *pv_to_write, *pv_to_write_safe;
+	struct pv_to_write *pv_to_write, *pv_to_write_safe;
+	struct pv_list *pvl, *pvl_safe;
 	struct metadata_area *mda;
 	struct lv_list *lvl;
 	int revert = 0, wrote = 0;
@@ -3206,6 +3207,12 @@ int vg_write(struct volume_group *vg)
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
 	vg->seqno++;
+
+	dm_list_iterate_items_safe(pvl, pvl_safe, &vg->pv_write_list) {
+		if (!pv_write(vg->cmd, pvl->pv, 1))
+			return_0;
+		dm_list_del(&pvl->list);
+	}
 
         dm_list_iterate_items_safe(pv_to_write, pv_to_write_safe, &vg->pvs_to_write) {
 		if (!_pvcreate_write(vg->cmd, pv_to_write))
