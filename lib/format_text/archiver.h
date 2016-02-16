@@ -51,8 +51,15 @@ int backup_remove(struct cmd_context *cmd, const char *vg_name);
 
 struct volume_group *backup_read_vg(struct cmd_context *cmd,
 				    const char *vg_name, const char *file);
+
 int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
-		      struct pvcreate_params *pp, int drop_lvmetad);
+                      int drop_lvmetad,
+                      int do_pvcreate,
+                      uint64_t bootloaderareasize,
+                      int pvmetadatacopies,
+                      uint64_t pvmetadatasize,
+                      uint64_t label_sector);
+
 int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 			     const char *file, int force);
 int backup_restore(struct cmd_context *cmd, const char *vg_name, int force);
