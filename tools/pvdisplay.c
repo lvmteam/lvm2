@@ -107,8 +107,9 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	ret = process_each_pv(cmd, argc, argv, NULL, 0, NULL,
-			      _pvdisplay_single);
+	ret = process_each_pv(cmd, argc, argv, NULL,
+			      arg_is_set(cmd, all_ARG), 0,
+			      NULL, _pvdisplay_single);
 
 	if (lock_global)
 		unlock_vg(cmd, VG_GLOBAL);

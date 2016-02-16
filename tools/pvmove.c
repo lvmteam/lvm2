@@ -895,7 +895,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 
 		handle->custom_handle = &pp;
 
-		process_each_pv(cmd, 1, &pv_name, NULL,
+		process_each_pv(cmd, 1, &pv_name, NULL, 0,
 				is_abort ? 0 : READ_FOR_UPDATE,
 				handle,
 				is_abort ? &_pvmove_read_single : &_pvmove_setup_single);

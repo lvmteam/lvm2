@@ -101,8 +101,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg);
 
-int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    const char *vg_name, uint32_t read_flags,
+int process_each_pv(struct cmd_context *cmd, int argc, char **argv, const char *vg_name,
+		    int all_is_set, uint32_t read_flags,
 		    struct processing_handle *handle,
 		    process_single_pv_fn_t process_single_pv);
 
@@ -151,6 +151,10 @@ int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 			 unsigned *dev_dir_found);
+
+void pvcreate_each_params_set_defaults(struct pvcreate_each_params *pp);
+int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each_params *pp);
+int pvcreate_each_device(struct cmd_context *cmd, struct processing_handle *handle, struct pvcreate_each_params *pp);
 
 /*
  * Builds a list of pv's from the names in argv.  Used in

@@ -893,7 +893,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		break;
 	case PVS:
 		if (args_are_pvs)
-			r = process_each_pv(cmd, argc, argv, NULL, 0,
+			r = process_each_pv(cmd, argc, argv, NULL,
+					    arg_is_set(cmd, all_ARG), 0,
 					    &handle, &_pvs_single);
 		else
 			r = process_each_vg(cmd, argc, argv, NULL, 0,
@@ -910,7 +911,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		break;
 	case PVSEGS:
 		if (args_are_pvs)
-			r = process_each_pv(cmd, argc, argv, NULL, 0,
+			r = process_each_pv(cmd, argc, argv, NULL,
+					    arg_is_set(cmd, all_ARG), 0,
 					    &handle,
 					    lv_info_needed && !lv_segment_status_needed ? &_pvsegs_with_lv_info_single :
 					    !lv_info_needed && lv_segment_status_needed ? &_pvsegs_with_lv_status_single :

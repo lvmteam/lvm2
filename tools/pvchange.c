@@ -228,7 +228,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	ret = process_each_pv(cmd, argc, argv, NULL, READ_FOR_UPDATE, handle, _pvchange_single);
+	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE, handle, _pvchange_single);
 
 	if (!argc)
 		unlock_vg(cmd, VG_GLOBAL);

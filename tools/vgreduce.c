@@ -188,7 +188,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		/* FIXME: Pass private struct through to all these functions */
 		/* and update in batch afterwards? */
 		return process_each_pv(cmd, argc, argv, vg_name,
-				       READ_FOR_UPDATE, NULL,
+				       0, READ_FOR_UPDATE, NULL,
 				      _vgreduce_single);
 
 	log_verbose("Finding volume group \"%s\"", vg_name);

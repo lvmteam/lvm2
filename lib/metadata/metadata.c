@@ -791,6 +791,40 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 	return 1;
 }
 
+int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_each_params *pp)
+{
+	struct pv_list *pvl;
+	unsigned int max_phys_block_size = 0;
+
+	log_debug_metadata("Adding PVs to VG %s", vg->name);
+
+	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
+		return_0;
+
+	dm_list_iterate_items(pvl, &pp->pvs) {
+		log_debug_metadata("Adding PV %s to VG %s", pv_dev_name(pvl->pv), vg->name);
+
+		if (!(check_dev_block_size_for_vg(pvl->pv->dev,
+						  (const struct volume_group *) vg,
+						  &max_phys_block_size))) {
+			log_error("PV %s has wrong block size", pv_dev_name(pvl->pv));
+			return_0;
+		}
+
+		if (!add_pv_to_vg(vg, pv_dev_name(pvl->pv), pvl->pv, 0)) {
+			log_error("PV %s cannot be added to VG %s.",
+				  pv_dev_name(pvl->pv), vg->name);
+			return_0;
+		}
+	}
+
+	(void) _check_pv_dev_sizes(vg);
+
+	dm_list_splice(&vg->pv_write_list, &pp->pvs);
+
+	return 1;
+}
+
 int vg_reduce(struct volume_group *vg, const char *pv_name)
 {
 	struct physical_volume *pv;
@@ -3839,6 +3873,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	unsigned use_previous_vg;
 
+	log_very_verbose("Reading VG %s %.32s", vgname ?: "<no name>", vgid ?: "<no vgid>");
+
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
 			log_error(INTERNAL_ERROR "vg_read_internal requires vgname "
@@ -5321,6 +5357,9 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 		log_error("Can't get lock for %s", vg_name);
 		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
 	}
+
+	if (already_locked)
+		log_very_verbose("Locking %s already done", vg_name);
 
 	if (is_orphan_vg(vg_name))
 		status_flags &= ~LVM_WRITE;

@@ -542,6 +542,62 @@ struct pvcreate_params {
 	struct pvcreate_restorable_params rp;
 };
 
+/*
+ * FIXME: rename this pvcreate_params once the old pvcreate_params is unused.
+ * This can probably be put in toollib.h.
+ */
+struct pvcreate_each_params {
+	/*
+	 * From argc and argv.
+	 */
+	char **pv_names;
+	uint32_t pv_count;
+
+	/*
+	 * From command line args.
+	 */
+	int zero;
+	uint64_t size;
+	uint64_t data_alignment;
+	uint64_t data_alignment_offset;
+	int pvmetadatacopies;
+	uint64_t pvmetadatasize;
+	int64_t labelsector;
+	force_t force;
+	unsigned yes;
+	unsigned metadataignore;
+
+	/*
+	 * From recovery-specific command line args.
+	 */
+	const char *restorefile; /* NULL if no --restorefile option */
+	const char *uuid_str;    /* id in printable format, NULL if no id */
+	struct id id;
+
+	/*
+	 * From reading VG backup file.
+	 */
+	uint64_t ba_start;
+	uint64_t ba_size;
+	uint64_t pe_start;
+	uint32_t extent_count;
+	uint32_t extent_size;
+
+	/*
+	 * Used for command processing.
+	 */
+	struct dm_list prompts;         /* pvcreate_prompt */
+	struct dm_list arg_devices;     /* pvcreate_device, one for each pv_name */
+	struct dm_list arg_process;     /* pvcreate_device, used for processing */
+	struct dm_list arg_confirm;     /* pvcreate_device, used for processing */
+	struct dm_list arg_create;      /* pvcreate_device, used for pvcreate */
+	struct dm_list arg_fail;        /* pvcreate_device, failed to create */
+	struct dm_list pvs;             /* pv_list, created and usable for vgcreate/vgextend */
+	const char *orphan_vg_name;
+	unsigned preserve_existing : 1;
+	unsigned check_failed : 1;
+};
+
 struct lvresize_params {
 	const char *vg_name; /* only-used when VG is not yet opened (in /tools) */
 	const char *lv_name;
@@ -705,6 +761,7 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);
 int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names,
 	      struct pvcreate_params *pp);
+int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_each_params *pp);
 int vg_reduce(struct volume_group *vg, const char *pv_name);
 
 int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,

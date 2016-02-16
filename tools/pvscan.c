@@ -422,7 +422,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &params;
 
-	ret = process_each_pv(cmd, argc, argv, NULL, 0, handle, _pvscan_single);
+	ret = process_each_pv(cmd, argc, argv, NULL, 0, 0, handle, _pvscan_single);
 
 	if (!params.pvs_found)
 		log_print_unless_silent("No matching physical volumes found");

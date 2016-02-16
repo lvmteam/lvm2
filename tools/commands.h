@@ -766,7 +766,7 @@ xx(pvck,
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
-   0,
+   ENABLE_ALL_DEVS,
    "pvcreate\n"
    "\t[--norestorefile]\n"
    "\t[--restorefile file]\n"
@@ -1119,7 +1119,7 @@ xx(vgconvert,
 
 xx(vgcreate,
    "Create a volume group",
-   0,
+   MUST_USE_ALL_ARGS | ENABLE_ALL_DEVS,
    "vgcreate\n"
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--addtag Tag]\n"
@@ -1214,7 +1214,7 @@ xx(vgexport,
 
 xx(vgextend,
    "Add physical volumes to a volume group",
-   0,
+   MUST_USE_ALL_ARGS | ENABLE_ALL_DEVS,
    "vgextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--restoremissing]\n"
