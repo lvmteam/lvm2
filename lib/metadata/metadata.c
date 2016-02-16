@@ -169,18 +169,15 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
  * @vg - volume group to add to
  * @pv_name - name of the pv (to be removed)
  * @pv - physical volume to add to volume group
- * @pp - physical volume creation params (OPTIONAL)
  *
  * Returns:
  *  0 - failure
  *  1 - success
  * FIXME: remove pv_name - obtain safely from pv
  */
-int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
-		 struct physical_volume *pv, struct pvcreate_params *pp,
-		 int new_pv)
+static int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
+		        struct physical_volume *pv, int new_pv)
 {
-	struct pv_to_write *pvw;
 	struct pv_list *pvl;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = vg->vgmem;
@@ -288,18 +285,6 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 			dm_list_del(&pvl->list);
 			break;
 		}
-
-	if ((pv->fmt->features & FMT_PV_FLAGS) ||
-	    (pv->status & UNLABELLED_PV)) {
-		if (!(pvw = dm_pool_zalloc(mem, sizeof(*pvw)))) {
-			log_error("pv_to_write allocation for '%s' failed", pv_name);
-			return 0;
-		}
-		pvw->pv = pv;
-		pvw->pp = new_pv ? pp : NULL;
-		pvw->new_pv = new_pv;
-		dm_list_add(&vg->pvs_to_write, &pvw->list);
-	}
 
 	return 1;
 }
@@ -723,6 +708,7 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 			       unsigned int *max_phys_block_size)
 {
 	struct physical_volume *pv;
+	struct pv_to_write *pvw;
 	int new_pv = 0;
 
 	pv = find_pv_by_name(vg->cmd, pv_name, 1, 1);
@@ -741,8 +727,20 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 					  max_phys_block_size)))
 		goto_bad;
 
-	if (!add_pv_to_vg(vg, pv_name, pv, pp, new_pv))
+	if (!add_pv_to_vg(vg, pv_name, pv, new_pv))
 		goto_bad;
+
+	if ((pv->fmt->features & FMT_PV_FLAGS) ||
+	    (pv->status & UNLABELLED_PV)) {
+		if (!(pvw = dm_pool_zalloc(vg->vgmem, sizeof(*pvw)))) {
+			log_error("pv_to_write allocation for '%s' failed", pv_name);
+			return 0;
+		}
+		pvw->pv = pv;
+		pvw->pp = new_pv ? pp : NULL;
+		pvw->new_pv = new_pv;
+		dm_list_add(&vg->pvs_to_write, &pvw->list);
+	}
 
 	return 1;
 bad:
