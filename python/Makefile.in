@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2011-2013 Red Hat, Inc.
+# Copyright (C) 2011-2016 Red Hat, Inc.
 #
 # This file is part of LVM2.
 #
@@ -20,14 +20,24 @@ TARGETS = .liblvm_built
 include $(top_builddir)/make.tmpl
 
 .liblvm_built: liblvm_python.c
-	$(PYTHON) setup.py build
+ifeq ("@PYTHON2_BINDINGS@", "yes")
+	$(PYTHON2) setup.py build
+endif
+ifeq ("@PYTHON3_BINDINGS@", "yes")
+	$(PYTHON3) setup.py build
+endif
 	touch $@
 
 liblvm_python.c:
 	$(LN_S) $(srcdir)/liblvm.c $@
 
 install_python_bindings: $(TARGETS)
-	$(PYTHON) setup.py install --skip-build --prefix $(pyexecdir)
+ifeq ("@PYTHON2_BINDINGS@", "yes")
+	$(PYTHON2) setup.py install --skip-build --prefix $(pythonprefix)
+endif
+ifeq ("@PYTHON3_BINDINGS@", "yes")
+	$(PYTHON3) setup.py install --skip-build --prefix $(pythonprefix)
+endif
 
 install_lvm2: install_python_bindings
 

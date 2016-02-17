@@ -1,5 +1,7 @@
 Version 2.02.143 - 
 =====================================
+  Add configure --enable-dbus-service for an LVM D-Bus service.
+  Replace configure --enable-python-bindings with python2 and python3 vsns.
   If PV belongs to some VG and metadata missing, skip it if system ID is used.
   Automatically change PV header extension to latest version if writing PV/VG.
   Identify used PVs in pv_attr field by new 'u' character.

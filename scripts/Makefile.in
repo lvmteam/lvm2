@@ -100,7 +100,7 @@ else
 	      "It requires the LVM2 application library to be built as well."
 endif
 
-install_systemd_units:
+install_systemd_units:	install_dbus_service
 	$(INSTALL_DIR) $(systemd_unit_dir)
 ifeq ("@BUILD_DMEVENTD@", "yes")
 	$(INSTALL_DATA) dm_event_systemd_red_hat.socket $(systemd_unit_dir)/dm-event.socket
@@ -130,6 +130,19 @@ ifneq ("@CLVMD@", "none")
 endif
 ifeq ("@BUILD_CMIRRORD@", "yes")
 	$(INSTALL_DATA) lvm2_cmirrord_systemd_red_hat.service $(systemd_unit_dir)/lvm2-cmirrord.service
+endif
+ifeq ("@BUILD_LVMDBUSD@", "yes")
+	$(INSTALL_DATA) lvm2_lvmdbusd_systemd_red_hat.service $(systemd_unit_dir)/lvm2-lvmdbusd.service
+endif
+
+ifeq ("@BUILD_LVMDBUSD@", "yes")
+install_dbus_service:
+	$(INSTALL_DIR) $(dbusconfdir)
+	$(INSTALL_DIR) $(dbusservicedir)
+	$(INSTALL_DATA) $(top_srcdir)/scripts/com.redhat.lvmdbus1.conf $(dbusconfdir)
+	$(INSTALL_DATA) com.redhat.lvmdbus1.service $(dbusservicedir)
+
+install_systemd_units:	install_dbus_service
 endif
 
 install_tmpfiles_configuration:

@@ -39,7 +39,10 @@ LN_S = @LN_S@
 SED = @SED@
 CFLOW_CMD = @CFLOW_CMD@
 AWK = @AWK@
-PYTHON = @PYTHON@
+CHMOD = @CHMOD@
+PYTHON2 = @PYTHON2@
+PYTHON3 = @PYTHON3@
+PYCOMPILE = $(top_srcdir)/autoconf/py-compile
 
 LIBS = @LIBS@
 # Extra libraries always linked with static binaries
@@ -88,12 +91,18 @@ staticdir = $(DESTDIR)@STATICDIR@
 udevdir = $(DESTDIR)@udevdir@
 pkgconfigdir = $(usrlibdir)/pkgconfig
 initdir = $(DESTDIR)$(sysconfdir)/rc.d/init.d
+dbusconfdir = $(DESTDIR)$(sysconfdir)/dbus-1/system.d
+dbusservicedir = $(datadir)/dbus-1/system-services
 systemd_unit_dir = $(DESTDIR)@systemdsystemunitdir@
 systemd_generator_dir = $(DESTDIR)$(SYSTEMD_GENERATOR_DIR)
 systemd_dir = $(DESTDIR)@systemdutildir@
 tmpfiles_dir = $(DESTDIR)@tmpfilesdir@
 ocf_scriptdir = $(DESTDIR)@OCFDIR@
-pyexecdir = $(DESTDIR)$(prefix)
+pythonprefix = $(DESTDIR)$(prefix)
+
+# N.B. No $(DESTDIR) prefix here.
+python2dir = @PYTHON2DIR@
+python3dir = @PYTHON3DIR@
 
 USRLIB_RELPATH = $(shell echo $(abspath $(usrlibdir) $(libdir)) | \
   $(AWK) -f $(top_srcdir)/scripts/relpath.awk)
@@ -274,6 +283,7 @@ POTFILES = $(SOURCES:%.c=%.pot)
 
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
 .PHONY: install install_cluster install_device-mapper install_lvm2
+.PHONY: install_dbus_service
 .PHONY: install_lib_shared install_dm_plugin install_lvm2_plugin
 .PHONY: install_ocf install_systemd_generators install_all_man all_man man help
 .PHONY: python_bindings install_python_bindings

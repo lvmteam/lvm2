@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=com.redhat.lvmdbus1
+Exec=@sbindir@/lvmdbusd --udev
+User=root
+SystemdService=lvmdbusd.service

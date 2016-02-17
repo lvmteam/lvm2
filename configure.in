@@ -1,6 +1,6 @@
 ###############################################################################
 ## Copyright (C) 2000-2004 Sistina Software, Inc. All rights reserved.
-## Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+## Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
 ##
 ## This copyrighted material is made available to anyone wishing to use,
 ## modify, copy, or redistribute it subject to the terms and conditions
@@ -11,7 +11,7 @@
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 ################################################################################
 
-AC_PREREQ(2.61)
+AC_PREREQ(2.69)
 ################################################################################
 dnl -- Process this file with autoconf to produce a configure script.
 AC_INIT
@@ -85,6 +85,7 @@ AC_PROG_MKDIR_P
 AC_PROG_RANLIB
 AC_PATH_TOOL(CFLOW_CMD, cflow)
 AC_PATH_TOOL(CSCOPE_CMD, cscope)
+AC_PATH_TOOL(CHMOD, chmod)
 
 ################################################################################
 dnl -- Check for header files.
@@ -1438,24 +1439,74 @@ test "$CMDLIB" = yes \
   || LVM2CMD_LIB=
 
 ################################################################################
+dnl -- Enable D-Bus service
+AC_MSG_CHECKING(whether to include Python D-Bus support)
+AC_ARG_ENABLE(dbus-service,
+	      AC_HELP_STRING([--enable-dbus-service], [install D-Bus support]),
+	      BUILD_LVMDBUSD=$enableval, BUILD_LVMDBUSD=no)
+AC_MSG_RESULT($BUILD_LVMDBUSD)
+
+################################################################################
 dnl -- Enable Python liblvm2app bindings
 AC_MSG_CHECKING(whether to build Python wrapper for liblvm2app.so)
 AC_ARG_ENABLE(python_bindings,
-	      AC_HELP_STRING([--enable-python_bindings], [build Python applib bindings]),
+	      AC_HELP_STRING([--enable-python_bindings], [build default Python applib bindings]),
 	      PYTHON_BINDINGS=$enableval, PYTHON_BINDINGS=no)
 AC_MSG_RESULT($PYTHON_BINDINGS)
 
+AC_MSG_CHECKING(whether to build Python2 wrapper for liblvm2app.so)
+AC_ARG_ENABLE(python2_bindings,
+	      AC_HELP_STRING([--enable-python2_bindings], [build Python2 applib bindings]),
+	      PYTHON2_BINDINGS=$enableval, PYTHON2_BINDINGS=no)
+AC_MSG_RESULT($PYTHON2_BINDINGS)
+
+
+AC_MSG_CHECKING(whether to build Python3 wrapper for liblvm2app.so)
+AC_ARG_ENABLE(python3_bindings,
+	      AC_HELP_STRING([--enable-python3_bindings], [build Python3 applib bindings]),
+	      PYTHON3_BINDINGS=$enableval, PYTHON3_BINDINGS=no)
+AC_MSG_RESULT($PYTHON3_BINDINGS)
+
 if test "$PYTHON_BINDINGS" = yes; then
-	test "$APPLIB" != yes && AC_MSG_ERROR([--enable-python_bindings requires --enable-applib])
+	AC_MSG_ERROR([--enable-python-bindings is replaced by --enable-python2-bindings and --enable-python3-bindings])
+fi
 
-	AC_PATH_TOOL(PYTHON, python)
-	test -z "$PYTHON" && AC_MSG_ERROR([python is required for --enable-python_bindings but cannot be found])
+if test "$PYTHON2_BINDINGS" = yes; then
+	AM_PATH_PYTHON([2])
+	AC_PATH_TOOL(PYTHON2, python2)
+	test -z "$PYTHON2" && AC_MSG_ERROR([python2 is required for --enable-python2_bindings but cannot be found])
+	AC_PATH_TOOL(PYTHON2_CONFIG, python2-config)
+	test -z "$PYTHON2_CONFIG" && AC_MSG_ERROR([python headers are required for --enable-python2_bindings but cannot be found])
+	PYTHON2_INCDIRS=`"$PYTHON2_CONFIG" --includes`
+	PYTHON2_LIBDIRS=`"$PYTHON2_CONFIG" --libs`
+	PYTHON2DIR=$pythondir
+	PYTHON_BINDINGS=yes
+fi
+	
+if test "$PYTHON3_BINDINGS" = yes -o "$BUILD_LVMDBUSD" = yes; then
+	unset PYTHON PYTHON_CONFIG
+	unset am_cv_pathless_PYTHON ac_cv_path_PYTHON am_cv_python_platform
+	unset am_cv_python_pythondir am_cv_python_version am_cv_python_pyexecdir
+	unset ac_cv_path_PYTHON_CONFIG ac_cv_path_ac_pt_PYTHON_CONFIG
+	AM_PATH_PYTHON([3])
+	PYTHON3=$PYTHON
+	test -z "$PYTHON3" && AC_MSG_ERROR([python3 is required for --enable-python3_bindings or --enable-dbus-service but cannot be found])
+	AC_PATH_TOOL(PYTHON3_CONFIG, python3-config)
+	test -z "$PYTHON3_CONFIG" && AC_MSG_ERROR([python3 headers are required for --enable-python3_bindings or --enable-dbus-service but cannot be found])
+	PYTHON3_INCDIRS=`"$PYTHON3_CONFIG" --includes`
+	PYTHON3_LIBDIRS=`"$PYTHON3_CONFIG" --libs`
+	PYTHON3DIR=$pythondir
+	PYTHON_BINDINGS=yes
+fi
 
-	AC_PATH_TOOL(PYTHON_CONFIG, python-config)
-	test -z "$PYTHON_CONFIG" && AC_MSG_ERROR([python headers are required for --enable-python_bindings but cannot be found])
+if test "$BUILD_LVMDBUSD" = yes; then
+	# To get this macro, install autoconf-archive package then run autoreconf
+	AC_PYTHON_MODULE([pyudev], [Required], python3)
+	AC_PYTHON_MODULE([dbus], [Required], python3)
+fi
 
-	PYTHON_INCDIRS=`"$PYTHON_CONFIG" --includes`
-	PYTHON_LIBDIRS=`"$PYTHON_CONFIG" --libs`
+if test "$PYTHON_BINDINGS" = yes -o "$PYTHON2_BINDINGS" = yes -o "$PYTHON3_BINDINGS" = yes; then
+	test "$APPLIB" != yes && AC_MSG_ERROR([Python_bindings require --enable-applib])
 fi
 
 ################################################################################
@@ -1907,6 +1958,7 @@ AC_SUBST(AWK)
 AC_SUBST(BLKID_PC)
 AC_SUBST(BUILD_CMIRRORD)
 AC_SUBST(BUILD_DMEVENTD)
+AC_SUBST(BUILD_LVMDBUSD)
 AC_SUBST(BUILD_LVMETAD)
 AC_SUBST(BUILD_LVMPOLLD)
 AC_SUBST(BUILD_LVMLOCKD)
@@ -1915,6 +1967,7 @@ AC_SUBST(BUILD_LOCKDDLM)
 AC_SUBST(CACHE)
 AC_SUBST(CFLAGS)
 AC_SUBST(CFLOW_CMD)
+AC_SUBST(CHMOD)
 AC_SUBST(CLDFLAGS)
 AC_SUBST(CLDNOWHOLEARCHIVE)
 AC_SUBST(CLDWHOLEARCHIVE)
@@ -1991,10 +2044,17 @@ AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
 AC_SUBST(M_LIBS)
 AC_SUBST(PTHREAD_LIBS)
-AC_SUBST(PYTHON)
+AC_SUBST(PYTHON2)
+AC_SUBST(PYTHON3)
 AC_SUBST(PYTHON_BINDINGS)
-AC_SUBST(PYTHON_INCDIRS)
-AC_SUBST(PYTHON_LIBDIRS)
+AC_SUBST(PYTHON2_BINDINGS)
+AC_SUBST(PYTHON3_BINDINGS)
+AC_SUBST(PYTHON2_INCDIRS)
+AC_SUBST(PYTHON3_INCDIRS)
+AC_SUBST(PYTHON2_LIBDIRS)
+AC_SUBST(PYTHON3_LIBDIRS)
+AC_SUBST(PYTHON2DIR)
+AC_SUBST(PYTHON3DIR)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
 AC_SUBST(RAID)
@@ -2066,6 +2126,8 @@ daemons/dmeventd/plugins/raid/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 daemons/dmeventd/plugins/thin/Makefile
+daemons/lvmdbusd/Makefile
+daemons/lvmdbusd/path.py
 daemons/lvmetad/Makefile
 daemons/lvmpolld/Makefile
 daemons/lvmlockd/Makefile
@@ -2103,12 +2165,14 @@ scripts/blk_availability_init_red_hat
 scripts/blk_availability_systemd_red_hat.service
 scripts/clvmd_init_red_hat
 scripts/cmirrord_init_red_hat
+scripts/com.redhat.lvmdbus1.service
 scripts/dm_event_systemd_red_hat.service
 scripts/dm_event_systemd_red_hat.socket
 scripts/lvm2_cluster_activation_red_hat.sh
 scripts/lvm2_cluster_activation_systemd_red_hat.service
 scripts/lvm2_clvmd_systemd_red_hat.service
 scripts/lvm2_cmirrord_systemd_red_hat.service
+scripts/lvm2_lvmdbusd_systemd_red_hat.service
 scripts/lvm2_lvmetad_init_red_hat
 scripts/lvm2_lvmetad_systemd_red_hat.service
 scripts/lvm2_lvmetad_systemd_red_hat.socket
