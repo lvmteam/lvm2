@@ -8,6 +8,7 @@
 %global enable_python 1
 # Off by default - <= does not work well with or:
 %global enable_python3 0
+%global enable_dbusd 0
 %global enable_udev 1
 %global enable_systemd 1
 %global enable_cmirror 1
@@ -83,6 +84,22 @@
 %if %{enable_python3}
   %global buildreq_python3_devel python3-devel
   %global buildreq_python_setuptools python-setuptools
+%endif
+
+##############################################################
+
+%if %{rhel} >= 8 || %{fedora} >= 23
+  %if %{enable_python3}
+    %global enable_dbusd 1
+  %else
+    # dbusd requires python3
+    false
+  %endif
+%endif
+
+%if %{enable_dbusd}
+  %global buildreq_python3_dbus python3-dbus
+  %global buildreq_python3_pyudev python3-pyudev
 %endif
 
 ##############################################################

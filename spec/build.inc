@@ -31,19 +31,11 @@
 %enableif %{enable_lockd_sanlock} lockd-sanlock
 %endif
 %enableif %{enable_python} python2-bindings
+%enableif %{enable_python3} python3-bindings
 %enableif %{enable_python} applib
+%enableif %{enable_dbusd} dbus-service
 
 %build
-
-%if %{enable_python3}
-rm -rf %{py3dir}
-cp -a . %{py3dir}
-pushd %{py3dir}
-%configure %{configure_flags} --disable-python2-bindings --enable-python3-bindings PYTHON=/usr/bin/python3 PYTHON_CONFIG=/usr/bin/python3-config
-
-make %{?_smp_mflags}
-popd
-%endif
 
 %configure %{configure_flags}
 

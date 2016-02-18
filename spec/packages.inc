@@ -442,7 +442,49 @@ Python 3 module to allow the creation and use of LVM
 logical volumes, physical volumes, and volume groups.
 
 %files python3-libs
-%{python3_sitearch}/*
+%{python3_sitearch}/*.so
+%{python3_sitearch}/*.egg-info
+%endif
+
+##############################################################################
+# LVM D-Bus daemon
+##############################################################################
+%if %{enable_dbusd}
+%package dbusd
+Summary: LVM2 D-Bus daemon
+License: GPLv2
+Group: System Environment/Base
+Requires: lvm2 >= %{version}-%{release}
+Requires: dbus
+Requires: python3-dbus
+Requires: python3-pyudev
+Requires(post): systemd-units >= %{systemd_version}
+Requires(preun): systemd-units >= %{systemd_version}
+Requires(postun): systemd-units >= %{systemd_version}
+
+%description dbusd
+
+Daemon for access to LVM2 functionality through a D-Bus interface.
+
+%post dbusd
+%systemd_post lvm2-lvmdbusd.service
+
+%preun dbusd
+%systemd_preun lvm2-lvmdbusd.service
+
+%postun dbusd
+%systemd_postun lvm2-lvmdbusd.service
+
+%files dbusd
+%defattr(555,root,root,-)
+%{_sbindir}/lvmdbusd
+%defattr(444,root,root,-)
+%{_sysconfdir}/dbus-1/system.d/com.redhat.lvmdbus1.conf
+%{_datadir}/dbus-1/system-services/com.redhat.lvmdbus1.service
+%{_mandir}/man8/lvmdbusd.8.gz
+%{_unitdir}/lvm2-lvmdbusd.service
+%{python3_sitelib}/lvmdbusd/*
+
 %endif
 
 ##############################################################################
