@@ -404,8 +404,10 @@ static int _thin_pool_target_percent(void **target_state __attribute__((unused))
 	if (!dm_get_status_thin_pool(mem, params, &s))
 		return_0;
 
+	if (s->fail || s->error)
+		*percent = DM_PERCENT_INVALID;
 	/* With 'seg' report metadata percent, otherwice data percent */
-	if (seg) {
+	else if (seg) {
 		*percent = dm_make_percent(s->used_metadata_blocks,
 					   s->total_metadata_blocks);
 		*total_numerator += s->used_metadata_blocks;
@@ -622,7 +624,9 @@ static int _thin_target_percent(void **target_state __attribute__((unused)),
 	if (!dm_get_status_thin(mem, params, &s))
 		return_0;
 
-	if (seg) {
+	if (s->fail)
+		*percent = DM_PERCENT_INVALID;
+	else if (seg) {
 		/* Pool allocates whole chunk so round-up to nearest one */
 		csize = first_seg(seg->pool_lv)->chunk_size;
 		csize = ((seg->lv->size + csize - 1) / csize) * csize;

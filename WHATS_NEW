@@ -1,5 +1,6 @@
 Version 2.02.143 -
 =====================================
+  For failing thin-pool and thin volume correctly report percentage as INVALID.
   Report -1, not 'unkown' for lv_{snapshot_invalid,merge_failed} with --binary.
   Add configure --enable-dbus-service for an LVM D-Bus service.
   Replace configure --enable-python_bindings with python2 and python3 versions.
