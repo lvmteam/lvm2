@@ -169,6 +169,7 @@ fixed (m)inor
 State: (a)ctive, (s)uspended, (I)nvalid snapshot, invalid (S)uspended snapshot,
 snapshot (m)erge failed, suspended snapshot (M)erge failed,
 mapped (d)evice present without tables, mapped device present with (i)nactive table,
+thin-pool (c)heck needed, suspended thin-pool (C)heck needed,
 (X) unknown
 .IP 6 3
 device (o)pen, (X) unknown
@@ -203,13 +204,19 @@ Inconsistencies are detected by initiating a "check" on a RAID logical volume.
 logical volume via the 'lvchange' command.)  (w)ritemostly signifies the
 devices in a RAID 1 logical volume that have been marked write-mostly.
 .IP
-Related to thin pool Logical Volumes: (F)ailed, out of (D)ata space, (M) read only.
+Related to Thin pool Logical Volumes: (F)ailed, out of (D)ata space,
+(M)etadata read only.
 .br
 (F)ailed is set if thin pool encounters serious failures and hence no further I/O
 is permitted at all. The out of (D)ata space is set if thin pool has run out of
-data space. (M) read only signifies that thin pool encounters certain types of
-failures but it's still possible to do reads at least, but no metadata changes
-are allowed.
+data space. (M)etadata read only signifies that thin pool encounters certain
+types of failures but it's still possible to do reads at least,
+but no metadata changes are allowed.
+.IP
+Related to Thin Logical Volumes: (F)ailed.
+.br
+(F)ailed is set when related thin pool enters Failed state and no further I/O
+is permitted at all.
 .IP 10 3
 s(k)ip activation: this volume is flagged to be skipped during activation.
 .RE
