@@ -30,7 +30,7 @@
 %enableif %{enable_lockd_dlm} lockd-dlm
 %enableif %{enable_lockd_sanlock} lockd-sanlock
 %endif
-%enableif %{enable_python} python-bindings
+%enableif %{enable_python} python2-bindings
 %enableif %{enable_python} applib
 
 %build
@@ -39,7 +39,7 @@
 rm -rf %{py3dir}
 cp -a . %{py3dir}
 pushd %{py3dir}
-%configure %{configure_flags} PYTHON=/usr/bin/python3 PYTHON_CONFIG=/usr/bin/python3-config
+%configure %{configure_flags} --disable-python2-bindings --enable-python3-bindings PYTHON=/usr/bin/python3 PYTHON_CONFIG=/usr/bin/python3-config
 
 make %{?_smp_mflags}
 popd
