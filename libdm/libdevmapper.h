@@ -1843,6 +1843,16 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit);
 #define dm_bit_copy(bs1, bs2) \
    memcpy((bs1) + 1, (bs2) + 1, ((*(bs1) / DM_BITS_PER_INT) + 1) * sizeof(int))
 
+/*
+ * Parse a string representation of a bitset into a dm_bitset_t. The
+ * notation used is identical to the kernel bitmap parser (cpuset etc.)
+ * and supports both lists ("1,2,3") and ranges ("1-2,5-8"). If the mem
+ * parameter is NULL memory for the bitset will be allocated using
+ * dm_malloc(). Otherwise the bitset will be allocated using the supplied
+ * dm_pool.
+ */
+dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem);
+
 /* Returns number of set bits */
 static inline unsigned hweight32(uint32_t i)
 {

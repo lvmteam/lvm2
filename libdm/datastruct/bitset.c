@@ -15,6 +15,8 @@
 
 #include "dmlib.h"
 
+#include <ctype.h>
+
 /* FIXME: calculate this. */
 #define INT_SHIFT 5
 
@@ -102,4 +104,100 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit)
 int dm_bit_get_first(dm_bitset_t bs)
 {
 	return dm_bit_get_next(bs, -1);
+}
+
+/*
+ * Based on the Linux kernel __bitmap_parselist from lib/bitmap.c
+ */
+dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem)
+{
+	unsigned a, b;
+	int c, old_c, totaldigits, ndigits, nmaskbits;
+	int at_start, in_range;
+	dm_bitset_t mask = NULL;
+	const char *start = str;
+	size_t len;
+
+scan:
+	len = strlen(str);
+	totaldigits = c = 0;
+	nmaskbits = 0;
+	do {
+		at_start = 1;
+		in_range = 0;
+		a = b = 0;
+		ndigits = totaldigits;
+
+		/* Get the next value or range of values */
+		while (len) {
+			old_c = c;
+			c = *str++;
+			len--;
+			if (isspace(c))
+				continue;
+
+			/* A '\0' or a ',' signal the end of a value or range */
+			if (c == '\0' || c == ',')
+				break;
+			/*
+			* whitespaces between digits are not allowed,
+			* but it's ok if whitespaces are on head or tail.
+			* when old_c is whilespace,
+			* if totaldigits == ndigits, whitespace is on head.
+			* if whitespace is on tail, it should not run here.
+			* as c was ',' or '\0',
+			* the last code line has broken the current loop.
+			*/
+			if ((totaldigits != ndigits) && isspace(old_c))
+				goto_bad;
+
+			if (c == '-') {
+				if (at_start || in_range)
+					return_0;
+				b = 0;
+				in_range = 1;
+				at_start = 1;
+				continue;
+			}
+
+			if (!isdigit(c))
+				goto_bad;
+
+			b = b * 10 + (c - '0');
+			if (!in_range)
+				a = b;
+			at_start = 0;
+			totaldigits++;
+		}
+		if (ndigits == totaldigits)
+			continue;
+		/* if no digit is after '-', it's wrong */
+		if (at_start && in_range)
+			goto_bad;
+		if (!(a <= b))
+			goto_bad;
+		if (b >= nmaskbits)
+			nmaskbits = b + 1;
+		while ((a <= b) && mask) {
+			dm_bit_set(mask, a);
+			a++;
+		}
+	} while (len && c == ',');
+
+	if (!mask) {
+		if (!(mask = dm_bitset_create(mem, nmaskbits)))
+			goto_bad;
+		str = start;
+		goto scan;
+	}
+
+	return mask;
+bad:
+	if (mask) {
+		if (mem)
+			dm_pool_free(mem, mask);
+		else
+			dm_bitset_destroy(mask);
+	}
+	return NULL;
 }
