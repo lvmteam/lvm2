@@ -3317,7 +3317,7 @@ static int _lvcheckneeded_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lv_is_thin_pool(lvdm->lv))
+	if (lv_is_thin_pool(lvdm->lv) && lvdm->seg_status.type == SEG_STATUS_THIN_POOL)
 		return _binary_disp(rh, mem, field, lvdm->seg_status.thin_pool->needs_check,
 				    GET_FIRST_RESERVED_NAME(lv_check_needed_y), private);
 
