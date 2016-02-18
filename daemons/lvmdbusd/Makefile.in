@@ -27,7 +27,7 @@ LVMDBUS_SRCDIR_FILES = \
 	job.py \
 	loader.py \
 	lvmdb.py \
-	lvmdbusd.py \
+	main.py \
 	lvm_shell_proxy.py \
 	lv.py \
 	manager.py \
