@@ -3311,6 +3311,19 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _string_disp(rh, mem, field, &health, private);
 }
 
+static int _lvcheckneeded_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if (lv_is_thin_pool(lvdm->lv))
+		return _binary_disp(rh, mem, field, lvdm->seg_status.thin_pool->needs_check,
+				    GET_FIRST_RESERVED_NAME(lv_check_needed_y), private);
+
+	return _binary_undef_disp(rh, mem, field, private);
+}
+
 static int _lvskipactivation_disp(struct dm_report *rh, struct dm_pool *mem,
 				  struct dm_report_field *field,
 				  const void *data, void *private)

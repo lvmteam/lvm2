@@ -1129,6 +1129,12 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 			}
 		}
 
+		/* 'c' when thin-pool active with needs_check flag
+		 * 'C' for suspend */
+		if (lv_is_thin_pool(lv) &&
+		    lvdm->seg_status.thin_pool->needs_check)
+			repstr[4] = lvdm->info.suspended ? 'C' : 'c';
+
 		/*
 		 * 'R' indicates read-only activation of a device that
 		 * does not have metadata flagging it as read-only.
@@ -1190,6 +1196,12 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 			repstr[8] = 'D';
 		else if (lvdm->seg_status.thin_pool->read_only)
 			repstr[8] = 'M';
+	} else if (lv_is_thin_volume(lv) &&
+		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
+		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
+			repstr[8] = 'X'; /* Unknown */
+		else if (lvdm->seg_status.thin->fail)
+			repstr[8] = 'F';
 	}
 
 	if (lv->status & LV_ACTIVATION_SKIP)
