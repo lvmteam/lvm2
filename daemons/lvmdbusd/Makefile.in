@@ -15,7 +15,7 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
-lvmdbusdir = $(python3dir)/lvmdbus
+lvmdbusdir = $(python3dir)/lvmdbusd
 
 LVMDBUS_SRCDIR_FILES = \
 	automatedproperties.py \
@@ -27,7 +27,7 @@ LVMDBUS_SRCDIR_FILES = \
 	job.py \
 	loader.py \
 	lvmdb.py \
-	lvmdbus.py \
+	lvmdbusd.py \
 	lvm_shell_proxy.py \
 	lv.py \
 	manager.py \
