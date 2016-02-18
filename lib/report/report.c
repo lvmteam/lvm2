@@ -3194,7 +3194,7 @@ static int _lvmergefailed_disp(struct dm_report *rh, struct dm_pool *mem,
 	int merge_failed;
 
 	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &snap_percent))
-		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
+		return _binary_undef_disp(rh, mem, field, private);
 
 	merge_failed = snap_percent == LVM_PERCENT_MERGE_FAILED;
 	return _binary_disp(rh, mem, field, merge_failed, GET_FIRST_RESERVED_NAME(lv_merge_failed_y), private);
@@ -3209,7 +3209,7 @@ static int _lvsnapshotinvalid_disp(struct dm_report *rh, struct dm_pool *mem,
 	int snap_invalid;
 
 	if (!lv_is_cow(lv))
-		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
+		return _binary_undef_disp(rh, mem, field, private);
 
 	snap_invalid = !lv_snapshot_percent(lv, &snap_percent) || snap_percent == DM_PERCENT_INVALID;
 	return _binary_disp(rh, mem, field, snap_invalid, GET_FIRST_RESERVED_NAME(lv_snapshot_invalid_y), private);
