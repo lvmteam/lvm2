@@ -22,8 +22,8 @@
  * Output arguments:
  * pp: structure allocated by caller, fields written / validated here
  */
-static int pvcreate_each_restore_params_from_args(struct cmd_context *cmd, int argc,
-					          struct pvcreate_each_params *pp)
+static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
+					     struct pvcreate_params *pp)
 {
 	pp->restorefile = arg_str_value(cmd, restorefile_ARG, NULL);
 
@@ -62,8 +62,8 @@ static int pvcreate_each_restore_params_from_args(struct cmd_context *cmd, int a
 	return 1;
 }
 
-static int pvcreate_each_restore_params_from_backup(struct cmd_context *cmd,
-					            struct pvcreate_each_params *pp)
+static int pvcreate_restore_params_from_backup(struct cmd_context *cmd,
+					       struct pvcreate_params *pp)
 {
 	struct volume_group *vg;
 	struct pv_list *existing_pvl;
@@ -99,7 +99,7 @@ static int pvcreate_each_restore_params_from_backup(struct cmd_context *cmd,
 int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
-	struct pvcreate_each_params pp;
+	struct pvcreate_params pp;
 	int ret;
 
 	if (!argc) {
@@ -109,7 +109,7 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	/*
 	 * Device info needs to be available for reading the VG backup file in
-	 * pvcreate_each_restore_params_from_backup.
+	 * pvcreate_restore_params_from_backup.
 	 */
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
@@ -123,15 +123,15 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	 * 5. argc/argv free args specifying devices
 	 */
 
-	pvcreate_each_params_set_defaults(&pp);
+	pvcreate_params_set_defaults(&pp);
 
-	if (!pvcreate_each_restore_params_from_args(cmd, argc, &pp))
+	if (!pvcreate_restore_params_from_args(cmd, argc, &pp))
 		return EINVALID_CMD_LINE;
 
-	if (!pvcreate_each_restore_params_from_backup(cmd, &pp))
+	if (!pvcreate_restore_params_from_backup(cmd, &pp))
 		return EINVALID_CMD_LINE;
 
-	if (!pvcreate_each_params_from_args(cmd, &pp))
+	if (!pvcreate_params_from_args(cmd, &pp))
 		return EINVALID_CMD_LINE;
 
 	pp.pv_count = argc;

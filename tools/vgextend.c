@@ -16,7 +16,7 @@
 #include "tools.h"
 
 struct vgextend_params {
-	struct pvcreate_each_params pp;
+	struct pvcreate_params pp;
 };
 
 static int _restore_pv(struct volume_group *vg, const char *pv_name)
@@ -47,7 +47,7 @@ static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unuse
 				    struct processing_handle *handle)
 {
 	struct vgextend_params *vp = (struct vgextend_params *) handle->custom_handle;
-	struct pvcreate_each_params *pp = &vp->pp;
+	struct pvcreate_params *pp = &vp->pp;
 	int fixed = 0;
 	int i;
 
@@ -77,7 +77,7 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, struct processing_handle *handle)
 {
 	struct vgextend_params *vp = (struct vgextend_params *) handle->custom_handle;
-	struct pvcreate_each_params *pp = &vp->pp;
+	struct pvcreate_params *pp = &vp->pp;
 	uint32_t mda_copies;
 	uint32_t mda_used;
 	int ret = ECMD_FAILED;
@@ -125,7 +125,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
 	struct vgextend_params vp;
-	struct pvcreate_each_params *pp = &vp.pp;
+	struct pvcreate_params *pp = &vp.pp;
 	unsigned restoremissing = arg_is_set(cmd, restoremissing_ARG);
 	const char *vg_name;
 	int ret;
@@ -146,9 +146,9 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	pvcreate_each_params_set_defaults(pp);
+	pvcreate_params_set_defaults(pp);
 
-	if (!pvcreate_each_params_from_args(cmd, pp))
+	if (!pvcreate_params_from_args(cmd, pp))
 		return EINVALID_CMD_LINE;
 
 	pp->pv_count = argc;

@@ -540,18 +540,6 @@ struct pv_create_args {
 };
 
 struct pvcreate_params {
-	int zero;
-	force_t force;
-	unsigned yes;
-	const char *restorefile; /* 0 if no --restorefile option */
-	struct pv_create_args pva;
-};
-
-/*
- * FIXME: rename this pvcreate_params once the old pvcreate_params is unused.
- * This can probably be put in toollib.h.
- */
-struct pvcreate_each_params {
 	/*
 	 * From argc and argv.
 	 */
@@ -747,7 +735,7 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);
 int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names,
 	      struct pvcreate_params *pp);
-int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_each_params *pp);
+int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp);
 int vg_reduce(struct volume_group *vg, const char *pv_name);
 
 int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,

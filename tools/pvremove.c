@@ -18,7 +18,7 @@
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
-	struct pvcreate_each_params pp;
+	struct pvcreate_params pp;
 	int ret;
 
 	if (!argc) {
@@ -26,7 +26,7 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	pvcreate_each_params_set_defaults(&pp);
+	pvcreate_params_set_defaults(&pp);
 
 	pp.is_remove = 1;
 	pp.force = arg_count(cmd, force_ARG);

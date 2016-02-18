@@ -809,7 +809,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 	return 1;
 }
 
-int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_each_params *pp)
+int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 {
 	struct pv_list *pvl;
 	unsigned int max_phys_block_size = 0;
@@ -1516,6 +1516,39 @@ int vg_split_mdas(struct cmd_context *cmd __attribute__((unused)),
 	return 1;
 }
 
+void pvcreate_params_set_defaults(struct pvcreate_params *pp)
+{
+	memset(pp, 0, sizeof(*pp));
+
+	pp->zero = 1;
+	pp->force = PROMPT;
+	pp->yes = 0;
+	pp->restorefile = NULL;
+	pp->uuid_str = NULL;
+
+	pp->pva.size = 0;
+	pp->pva.data_alignment = UINT64_C(0);
+	pp->pva.data_alignment_offset = UINT64_C(0);
+	pp->pva.pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
+	pp->pva.pvmetadatasize = DEFAULT_PVMETADATASIZE;
+	pp->pva.label_sector = DEFAULT_LABELSECTOR;
+	pp->pva.metadataignore = DEFAULT_PVMETADATAIGNORE;
+	pp->pva.ba_start = 0;
+	pp->pva.ba_size = 0;
+	pp->pva.pe_start = PV_PE_START_CALC;
+	pp->pva.extent_count = 0;
+	pp->pva.extent_size = 0;
+
+	dm_list_init(&pp->prompts);
+	dm_list_init(&pp->arg_devices);
+	dm_list_init(&pp->arg_process);
+	dm_list_init(&pp->arg_confirm);
+	dm_list_init(&pp->arg_create);
+	dm_list_init(&pp->arg_remove);
+	dm_list_init(&pp->arg_fail);
+	dm_list_init(&pp->pvs);
+}
+
 /*
  * See if we may pvcreate on this device.
  * 0 indicates we may not.
@@ -1676,28 +1709,6 @@ out:
 
 	free_pv_fid(pv);
 	return r;
-}
-
-void pvcreate_params_set_defaults(struct pvcreate_params *pp)
-{
-	memset(pp, 0, sizeof(*pp));
-	pp->zero = 1;
-	pp->force = PROMPT;
-	pp->yes = 0;
-	pp->restorefile = 0;
-	pp->pva.size = 0;
-	pp->pva.data_alignment = UINT64_C(0);
-	pp->pva.data_alignment_offset = UINT64_C(0);
-	pp->pva.pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
-	pp->pva.pvmetadatasize = DEFAULT_PVMETADATASIZE;
-	pp->pva.label_sector = DEFAULT_LABELSECTOR;
-	pp->pva.metadataignore = DEFAULT_PVMETADATAIGNORE;
-	pp->pva.idp = 0;
-	pp->pva.ba_start = 0;
-	pp->pva.ba_size = 0;
-	pp->pva.pe_start = PV_PE_START_CALC;
-	pp->pva.extent_count = 0;
-	pp->pva.extent_size = 0;
 }
 
 static int _pvcreate_write(struct cmd_context *cmd, struct pv_to_write *pvw)

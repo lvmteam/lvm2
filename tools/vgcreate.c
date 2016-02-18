@@ -18,7 +18,7 @@
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
-	struct pvcreate_each_params pp;
+	struct pvcreate_params pp;
 	struct vgcreate_params vp_new;
 	struct vgcreate_params vp_def;
 	struct volume_group *vg;
@@ -38,9 +38,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	pvcreate_each_params_set_defaults(&pp);
+	pvcreate_params_set_defaults(&pp);
 
-	if (!pvcreate_each_params_from_args(cmd, &pp))
+	if (!pvcreate_params_from_args(cmd, &pp))
 		return EINVALID_CMD_LINE;
 
 	pp.pv_count = argc;

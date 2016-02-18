@@ -3425,40 +3425,7 @@ int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	return ECMD_PROCESSED;
 }
 
-void pvcreate_each_params_set_defaults(struct pvcreate_each_params *pp)
-{
-	memset(pp, 0, sizeof(*pp));
-
-	pp->zero = 1;
-	pp->force = PROMPT;
-	pp->yes = 0;
-	pp->restorefile = NULL;
-	pp->uuid_str = NULL;
-
-	pp->pva.size = 0;
-	pp->pva.data_alignment = UINT64_C(0);
-	pp->pva.data_alignment_offset = UINT64_C(0);
-	pp->pva.pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
-	pp->pva.pvmetadatasize = DEFAULT_PVMETADATASIZE;
-	pp->pva.label_sector = DEFAULT_LABELSECTOR;
-	pp->pva.metadataignore = DEFAULT_PVMETADATAIGNORE;
-	pp->pva.ba_start = 0;
-	pp->pva.ba_size = 0;
-	pp->pva.pe_start = PV_PE_START_CALC;
-	pp->pva.extent_count = 0;
-	pp->pva.extent_size = 0;
-
-	dm_list_init(&pp->prompts);
-	dm_list_init(&pp->arg_devices);
-	dm_list_init(&pp->arg_process);
-	dm_list_init(&pp->arg_confirm);
-	dm_list_init(&pp->arg_create);
-	dm_list_init(&pp->arg_remove);
-	dm_list_init(&pp->arg_fail);
-	dm_list_init(&pp->pvs);
-}
-
-int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each_params *pp)
+int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *pp)
 {
 	pp->yes = arg_count(cmd, yes_ARG);
 	pp->force = (force_t) arg_count(cmd, force_ARG);
@@ -3620,7 +3587,7 @@ struct pvcreate_device {
  */
 
 static void _check_pvcreate_prompt(struct cmd_context *cmd,
-				   struct pvcreate_each_params *pp,
+				   struct pvcreate_params *pp,
 				   struct pvcreate_prompt *prompt,
 				   int ask)
 {
@@ -3728,7 +3695,7 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 				  struct physical_volume *pv,
 				  struct processing_handle *handle)
 {
-	struct pvcreate_each_params *pp = (struct pvcreate_each_params *) handle->custom_handle;
+	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
 	struct device *dev;
@@ -3871,7 +3838,7 @@ static int _pv_confirm_single(struct cmd_context *cmd,
 			      struct physical_volume *pv,
 			      struct processing_handle *handle)
 {
-	struct pvcreate_each_params *pp = (struct pvcreate_each_params *) handle->custom_handle;
+	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	int found = 0;
 
@@ -3958,7 +3925,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 				  struct physical_volume *pv,
 				  struct processing_handle *handle)
 {
-	struct pvcreate_each_params *pp = (struct pvcreate_each_params *) handle->custom_handle;
+	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
 	struct label *label;
@@ -4113,7 +4080,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 
 int pvcreate_each_device(struct cmd_context *cmd,
 			 struct processing_handle *handle,
-			 struct pvcreate_each_params *pp)
+			 struct pvcreate_params *pp)
 {
 	struct pvcreate_device *pd, *pd2;
 	struct pvcreate_prompt *prompt, *prompt2;
