@@ -1,4 +1,4 @@
-Version 2.02.143 - 
+Version 2.02.143 -
 =====================================
   Add configure --enable-dbus-service for an LVM D-Bus service.
   Replace configure --enable-python_bindings with python2 and python3 versions.
