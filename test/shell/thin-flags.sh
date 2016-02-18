@@ -92,23 +92,26 @@ lvchange -ay $vg/$lv2
 dd if=/dev/zero of="$DM_DEV_DIR/mapper/$vg-$lv2" bs=32K count=1
 
 check lv_attr_bit health $vg/pool "M"
-check lv_attr_bit state $vg/pool "c"
-check lv_field $vg/pool lv_check_needed "check needed"
 # TODO - use spaces ??
 check lv_field $vg/pool lv_health_status "metadata_read_only"
-
 check lv_attr_bit health $vg/$lv2 "-"
 
-dmsetup suspend $vg-pool-tpool
+# needs_check needs newer version
+if aux have_thin 1 16 0 ; then
+	check lv_attr_bit state $vg/pool "c"
+	check lv_field $vg/pool lv_check_needed "check needed"
 
-# suspended  thin-pool with Capital 'c'
-check lv_attr_bit state $vg/pool "C"
+	dmsetup suspend $vg-pool-tpool
 
-dmsetup resume $vg-pool-tpool
+	# suspended  thin-pool with Capital 'c'
+	check lv_attr_bit state $vg/pool "C"
 
-lvresize -L+2M $vg/pool_tmeta
+	dmsetup resume $vg-pool-tpool
 
-# still require thin_check
-check lv_attr_bit state $vg/pool "c"
+	lvresize -L+2M $vg/pool_tmeta
+
+	# still require thin_check
+	check lv_attr_bit state $vg/pool "c"
+fi
 
 vgremove -ff $vg
