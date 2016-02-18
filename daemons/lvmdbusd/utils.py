@@ -12,6 +12,7 @@ import sys
 import inspect
 import ctypes
 import os
+import string
 
 import dbus
 import dbus.service
@@ -386,3 +387,98 @@ def round_size(size_bytes):
 	if not remainder:
 		return size_bytes
 	return size_bytes + bs - remainder
+
+
+_ALLOWABLE_CH = string.ascii_letters + string.digits + '#+.:=@_\/%'
+_ALLOWABLE_CH_SET = set(_ALLOWABLE_CH)
+
+_ALLOWABLE_VG_LV_CH = string.ascii_letters + string.digits + '.-_+'
+_ALLOWABLE_VG_LV_CH_SET = set(_ALLOWABLE_VG_LV_CH)
+_LV_NAME_RESERVED = ("_cdata", "_cmeta", "_corig", "_mimage", "_mlog",
+	"_pmspare", "_rimage", "_rmeta", "_tdata", "_tmeta", "_vorigin")
+
+# Tags can have the characters, based on the code
+# a-zA-Z0-9._-+/=!:&#
+_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._-+/=!:&#"
+_ALLOWABLE_TAG_CH_SET = set(_ALLOWABLE_TAG_CH)
+
+
+def _allowable_tag(tag_name):
+	# LVM should impose a length restriction
+	return set(tag_name) <= _ALLOWABLE_TAG_CH_SET
+
+
+def _allowable_vg_name(vg_name):
+	if vg_name is None:
+		raise ValueError("VG name is None or empty")
+
+	vg_len = len(vg_name)
+	if vg_len == 0 or vg_len > 127:
+		raise ValueError("VG name (%s) length (%d) not in the domain 1..127" %
+			(vg_name, vg_len))
+
+	if not set(vg_name) <= _ALLOWABLE_VG_LV_CH_SET:
+		raise ValueError("VG name (%s) contains invalid character, "
+			"allowable set(%s)" % (vg_name, _ALLOWABLE_VG_LV_CH))
+
+	if vg_name == "." or vg_name == "..":
+		raise ValueError('VG name (%s) cannot be "." or ".."' % (vg_name))
+
+
+def _allowable_lv_name(vg_name, lv_name):
+
+	if lv_name is None:
+		raise ValueError("LV name is None or empty")
+
+	lv_len = len(lv_name)
+
+	# This length is derived from empirical testing
+	if lv_len == 0 or (len(vg_name) + lv_len) > 125:
+		raise ValueError("LV name (%s) length (%d) + VG name length "
+			"not in the domain 1..125" % (lv_name, lv_len))
+
+	if not set(lv_name) <= _ALLOWABLE_VG_LV_CH_SET:
+		raise ValueError("LV name (%s) contains invalid character, "
+			"allowable (%s)" % (lv_name, _ALLOWABLE_VG_LV_CH))
+
+	if any(x in lv_name for x in _LV_NAME_RESERVED):
+		raise ValueError("LV name (%s) contains a reserved word, "
+			"reserved set(%s)" % (lv_name, str(_LV_NAME_RESERVED)))
+
+	if lv_name.startswith("snapshot") or lv_name.startswith("pvmove"):
+		raise ValueError("LV name (%s) starts with a reserved word, "
+			"reserved set(%s)" % (lv_name, str(["snapshot", "pvmove"])))
+
+	if lv_name[0] == '-':
+		raise ValueError("LV name (%s) cannot start with a '-' "
+				"character" % lv_name)
+
+
+def validate_device_path(interface, device):
+	if not set(device) <= _ALLOWABLE_CH_SET:
+		raise dbus.exceptions.DBusException(
+			interface, 'Device path (%s) has invalid characters, '
+			'allowable (%s)' % (device, _ALLOWABLE_CH))
+
+
+def validate_vg_name(interface, vg_name):
+	try:
+		_allowable_vg_name(vg_name)
+	except ValueError as ve:
+		raise dbus.exceptions.DBusException(
+			interface, str(ve))
+
+
+def validate_lv_name(interface, vg_name, lv_name):
+	try:
+		_allowable_lv_name(vg_name, lv_name)
+	except ValueError as ve:
+		raise dbus.exceptions.DBusException(
+			interface, str(ve))
+
+
+def validate_tag(interface, tag):
+	if not _allowable_tag(tag):
+		raise dbus.exceptions.DBusException(
+			interface, 'tag (%s) contains invalid character, allowable set(%s)'
+			% (tag, _ALLOWABLE_TAG_CH))

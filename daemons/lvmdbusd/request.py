@@ -34,7 +34,7 @@ class RequestEntry(object):
 		self._rc_error = None
 		self._return_tuple = return_tuple
 
-		if self.tmo == -1:
+		if self.tmo < 0:
 			# Client is willing to block forever
 			pass
 		elif tmo == 0:

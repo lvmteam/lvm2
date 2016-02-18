@@ -377,6 +377,8 @@ class Lv(LvCommon):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def Rename(self, name, tmo, rename_options, cb, cbe):
+		utils.validate_lv_name(LV_INTERFACE, self.vg_name_lookup(), name)
+
 		r = RequestEntry(
 			tmo, Lv._rename,
 			(self.Uuid, self.lvm_id, name, rename_options),
@@ -441,6 +443,9 @@ class Lv(LvCommon):
 		async_callbacks=('cb', 'cbe'))
 	def Snapshot(self, name, optional_size, tmo,
 			snapshot_options, cb, cbe):
+
+		utils.validate_lv_name(LV_INTERFACE, self.vg_name_lookup(), name)
+
 		r = RequestEntry(
 			tmo, Lv._snap_shot,
 			(self.Uuid, self.lvm_id, name,
@@ -590,6 +595,10 @@ class Lv(LvCommon):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def TagsAdd(self, tags, tmo, tag_options, cb, cbe):
+
+		for t in tags:
+			utils.validate_tag(LV_INTERFACE, t)
+
 		r = RequestEntry(
 			tmo, Lv._add_rm_tags,
 			(self.state.Uuid, self.state.lvm_id,
@@ -603,6 +612,10 @@ class Lv(LvCommon):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def TagsDel(self, tags, tmo, tag_options, cb, cbe):
+
+		for t in tags:
+			utils.validate_tag(LV_INTERFACE, t)
+
 		r = RequestEntry(
 			tmo, Lv._add_rm_tags,
 			(self.state.Uuid, self.state.lvm_id,
@@ -678,6 +691,8 @@ class LvThinPool(Lv):
 		out_signature='(oo)',
 		async_callbacks=('cb', 'cbe'))
 	def LvCreate(self, name, size_bytes, tmo, create_options, cb, cbe):
+		utils.validate_lv_name(THIN_POOL_INTERFACE, self.vg_name_lookup(), name)
+
 		r = RequestEntry(
 			tmo, LvThinPool._lv_create,
 			(self.Uuid, self.lvm_id, name,

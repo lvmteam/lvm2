@@ -179,6 +179,7 @@ class Vg(AutomatedProperties):
 		in_signature='sia{sv}', out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def Rename(self, name, tmo, rename_options, cb, cbe):
+		utils.validate_vg_name(VG_INTERFACE, name)
 		r = RequestEntry(tmo, Vg._rename,
 				(self.state.Uuid, self.state.lvm_id, name,
 				rename_options), cb, cbe, False)
@@ -422,6 +423,7 @@ class Vg(AutomatedProperties):
 					job object path if created.  Each == '/' when it doesn't
 					apply.
 		"""
+		utils.validate_lv_name(VG_INTERFACE, self.Name, name)
 		r = RequestEntry(tmo, Vg._lv_create,
 				(self.state.Uuid, self.state.lvm_id,
 				name, round_size(size_bytes), pv_dests_and_ranges,
@@ -459,6 +461,7 @@ class Vg(AutomatedProperties):
 		async_callbacks=('cb', 'cbe'))
 	def LvCreateLinear(self, name, size_bytes,
 			thin_pool, tmo, create_options, cb, cbe):
+		utils.validate_lv_name(VG_INTERFACE, self.Name, name)
 		r = RequestEntry(tmo, Vg._lv_create_linear,
 						(self.state.Uuid, self.state.lvm_id,
 						name, round_size(size_bytes), thin_pool,
@@ -496,6 +499,7 @@ class Vg(AutomatedProperties):
 	def LvCreateStriped(self, name, size_bytes, num_stripes,
 						stripe_size_kb, thin_pool, tmo, create_options,
 						cb, cbe):
+		utils.validate_lv_name(VG_INTERFACE, self.Name, name)
 		r = RequestEntry(
 				tmo, Vg._lv_create_striped,
 				(self.state.Uuid, self.state.lvm_id, name,
@@ -535,6 +539,7 @@ class Vg(AutomatedProperties):
 		async_callbacks=('cb', 'cbe'))
 	def LvCreateMirror(self, name, size_bytes, num_copies,
 			tmo, create_options, cb, cbe):
+		utils.validate_lv_name(VG_INTERFACE, self.Name, name)
 		r = RequestEntry(
 			tmo, Vg._lv_create_mirror,
 			(self.state.Uuid, self.state.lvm_id, name,
@@ -575,6 +580,7 @@ class Vg(AutomatedProperties):
 	def LvCreateRaid(self, name, raid_type, size_bytes,
 			num_stripes, stripe_size_kb, tmo,
 			create_options, cb, cbe):
+		utils.validate_lv_name(VG_INTERFACE, self.Name, name)
 		r = RequestEntry(tmo, Vg._lv_create_raid,
 				(self.state.Uuid, self.state.lvm_id, name,
 				raid_type, round_size(size_bytes), num_stripes,
@@ -692,6 +698,10 @@ class Vg(AutomatedProperties):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def PvTagsAdd(self, pvs, tags, tmo, tag_options, cb, cbe):
+
+		for t in tags:
+			utils.validate_tag(VG_INTERFACE, t)
+
 		r = RequestEntry(tmo, Vg._pv_add_rm_tags,
 				(self.state.Uuid, self.state.lvm_id,
 				pvs, tags, None, tag_options),
@@ -704,6 +714,10 @@ class Vg(AutomatedProperties):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def PvTagsDel(self, pvs, tags, tmo, tag_options, cb, cbe):
+
+		for t in tags:
+			utils.validate_tag(VG_INTERFACE, t)
+
 		r = RequestEntry(
 			tmo, Vg._pv_add_rm_tags,
 			(self.state.Uuid, self.state.lvm_id,
@@ -740,6 +754,10 @@ class Vg(AutomatedProperties):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def TagsAdd(self, tags, tmo, tag_options, cb, cbe):
+
+		for t in tags:
+			utils.validate_tag(VG_INTERFACE, t)
+
 		r = RequestEntry(tmo, Vg._vg_add_rm_tags,
 				(self.state.Uuid, self.state.lvm_id,
 				tags, None, tag_options),
@@ -752,6 +770,10 @@ class Vg(AutomatedProperties):
 		out_signature='o',
 		async_callbacks=('cb', 'cbe'))
 	def TagsDel(self, tags, tmo, tag_options, cb, cbe):
+
+		for t in tags:
+			utils.validate_tag(VG_INTERFACE, t)
+
 		r = RequestEntry(tmo, Vg._vg_add_rm_tags,
 				(self.state.Uuid, self.state.lvm_id,
 				None, tags, tag_options),

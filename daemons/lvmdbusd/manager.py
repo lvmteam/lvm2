@@ -61,6 +61,7 @@ class Manager(AutomatedProperties):
 		out_signature='(oo)',
 		async_callbacks=('cb', 'cbe'))
 	def PvCreate(self, device, tmo, create_options, cb, cbe):
+		utils.validate_device_path(MANAGER_INTERFACE, device)
 		r = RequestEntry(
 			tmo, Manager._pv_create,
 			(device, create_options), cb, cbe)
@@ -100,6 +101,7 @@ class Manager(AutomatedProperties):
 		out_signature='(oo)',
 		async_callbacks=('cb', 'cbe'))
 	def VgCreate(self, name, pv_object_paths, tmo, create_options, cb, cbe):
+		utils.validate_vg_name(MANAGER_INTERFACE, name)
 		r = RequestEntry(
 			tmo, Manager._create_vg,
 			(name, pv_object_paths, create_options,),
@@ -219,6 +221,9 @@ class Manager(AutomatedProperties):
 		:param cbe: Not visible in API (used for async. error callback)
 		:return: '/' if operation done, else job path
 		"""
+		for d in device_paths:
+			utils.validate_device_path(MANAGER_INTERFACE, d)
+
 		r = RequestEntry(
 			tmo, Manager._pv_scan,
 			(activate, cache, device_paths, major_minors,
