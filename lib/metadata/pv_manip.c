@@ -687,9 +687,6 @@ out:
 	return r;
 }
 
-const char _really_wipe[] =
-    "Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ";
-
 /*
  * Decide whether it is "safe" to wipe the labels on this device.
  * 0 indicates we may not.
@@ -697,6 +694,8 @@ const char _really_wipe[] =
 static int pvremove_check(struct cmd_context *cmd, const char *name,
 			  unsigned force_count, unsigned prompt, struct dm_list *pvslist)
 {
+	static const char really_wipe_msg[] = "Really WIPE LABELS from physical volume";
+	static const char not_removed_msg[] = "physical volume label not removed";
 	static const char pvremove_force_hint_msg[] = "(If you are certain you need pvremove, then confirm by using --force twice.)";
 	struct device *dev;
 	struct label *label;
@@ -741,25 +740,32 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 			log_error("%s", pvremove_force_hint_msg);
 			goto out;
 		}
-
-		r = 1;
-		goto out;
-	}
-
-	/* we must have -ff to overwrite a non orphan */
-	if (force_count < 2) {
-		log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", name, pv_vg_name(pv));
-		log_error("%s", pvremove_force_hint_msg);
-		goto out;
+	} else {
+		/* we must have -ff to overwrite a non orphan */
+		if (force_count < 2) {
+			log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", name, pv_vg_name(pv));
+			log_error("%s", pvremove_force_hint_msg);
+			goto out;
+		}
 	}
 
 	/* prompt */
-	if (!prompt &&
-	    yes_no_prompt("Really WIPE LABELS from physical volume \"%s\" "
-			  "of volume group \"%s\" [y/n]? ",
-			  name, pv_vg_name(pv)) == 'n') {
-		log_error("%s: physical volume label not removed", name);
-		goto out;
+	if (!prompt) {
+		if (is_orphan(pv)) {
+			if (used) {
+				if (yes_no_prompt("%s \"%s\" that is marked as belonging to a VG [y/n]? ",
+						   really_wipe_msg, name) == 'n') {
+					log_error("%s: %s", name, not_removed_msg);
+					goto out;
+				}
+			}
+		} else {
+			if (yes_no_prompt("%s \"%s\" of volume group \"%s\" [y/n]? ",
+					  really_wipe_msg, name, pv_vg_name(pv)) == 'n') {
+				log_error("%s: %s", name, not_removed_msg);
+				goto out;
+			}
+		}
 	}
 
 	if (force_count) {

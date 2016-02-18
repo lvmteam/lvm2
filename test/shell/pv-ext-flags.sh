@@ -55,9 +55,9 @@ grep "$MARKED_AS_USED_MSG" err
 dd if="$dev1" of=dev1_backup bs=1M
 
 # pvcreate and pvremove can be forced even if the PV is marked as used
-pvremove -ff "$dev1"
+pvremove -ff -y "$dev1"
 dd if=dev1_backup of="$dev1" bs=1M
-pvcreate -ff "$dev1"
+pvcreate -ff -y "$dev1"
 dd if=dev1_backup of="$dev1" bs=1M
 
 # prepare a VG with $dev1 and $dev both having 1 MDA
@@ -120,9 +120,9 @@ grep "$MARKED_AS_USED_MSG" err
 dd if="$dev1" of=dev1_backup bs=1M
 
 # pvcreate and pvremove can be forced even if the PV is marked as used
-pvremove -ff "$dev1"
+pvremove -ff -y "$dev1"
 dd if=dev1_backup of="$dev1" bs=1M
-pvcreate -ff "$dev1"
+pvcreate -ff -y "$dev1"
 dd if=dev1_backup of="$dev1" bs=1M
 
 # prepare a VG with $dev1 and $dev both having 1 MDA

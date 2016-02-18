@@ -1470,6 +1470,8 @@ int vg_split_mdas(struct cmd_context *cmd __attribute__((unused)),
 static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 			   struct pvcreate_params *pp, int *wiped)
 {
+	static const char really_init_msg[] = "Really INITIALIZE physical volume";
+	static const char not_init_msg[] = "physical volume not initialized";
 	struct physical_volume *pv;
 	struct device *dev;
 	int r = 0;
@@ -1504,11 +1506,22 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 	}
 
 	/* prompt */
-	if (pv && !is_orphan(pv) && !pp->yes &&
-	    yes_no_prompt("Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ",
-			  name, pv_vg_name(pv)) == 'n') {
-		log_error("%s: physical volume not initialized", name);
-		goto out;
+	if (pv && !pp->yes) {
+		if (is_orphan(pv)) {
+			if (used) {
+				if (yes_no_prompt("%s \"%s\" that is marked as belonging to a VG [y/n]? ",
+						  really_init_msg, name) == 'n') {
+					log_error("%s: %s", name, not_init_msg);
+					goto out;
+				}
+			}
+		} else {
+			if (yes_no_prompt("%s \"%s\" of volume group \"%s\" [y/n]? ",
+					  really_init_msg, name, pv_vg_name(pv)) == 'n') {
+				log_error("%s: %s", name, not_init_msg);
+				goto out;
+			}
+		}
 	}
 
 	if (sigint_caught())
