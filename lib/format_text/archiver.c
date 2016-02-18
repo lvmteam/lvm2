@@ -361,13 +361,8 @@ static int _restore_vg_should_write_pv(struct physical_volume *pv, int do_pvcrea
 int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 		      int drop_lvmetad,
 		      int do_pvcreate,
-		      uint64_t bootloaderareasize,
-		      int pvmetadatacopies,
-		      uint64_t pvmetadatasize,
-		      uint64_t label_sector)
-
+		      struct pv_create_args *pva)
 {
-	struct pvcreate_restorable_params rp = { 0 };
 	struct dm_list new_pvs;
 	struct pv_list *pvl, *new_pvl;
 	struct physical_volume *existing_pv, *pv;
@@ -389,20 +384,14 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 		dm_list_iterate_items(pvl, &vg->pvs) {
 			existing_pv = pvl->pv;
 
-			rp.id = existing_pv->id;
-			rp.idp = &rp.id;
-			rp.pe_start = pv_pe_start(existing_pv);
-			rp.extent_count = pv_pe_count(existing_pv);
-			rp.extent_size = pv_pe_size(existing_pv);
-			rp.ba_size = bootloaderareasize;
+			pva->id = existing_pv->id;
+			pva->idp = &pva->id;
+			pva->pe_start = pv_pe_start(existing_pv);
+			pva->extent_count = pv_pe_count(existing_pv);
+			pva->extent_size = pv_pe_size(existing_pv);
 			/* pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv) + pe_start - 1 */
 
-			if (!(pv = pv_create(cmd, pv_dev(existing_pv),
-					     0, 0, 0,
-					     label_sector,
-					     pvmetadatacopies,
-					     pvmetadatasize,
-					     0, &rp))) {
+			if (!(pv = pv_create(cmd, pv_dev(existing_pv), pva))) {
 				log_error("Failed to setup physical volume \"%s\".",
 					  pv_dev_name(existing_pv));
 				return 0;
@@ -561,7 +550,7 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 
 	missing_pvs = vg_missing_pv_count(vg);
 	if (missing_pvs == 0)
-		r = backup_restore_vg(cmd, vg, 1, 0, 0, 0, 0, 0);
+		r = backup_restore_vg(cmd, vg, 1, 0, NULL);
 	else
 		log_error("Cannot restore Volume Group %s with %i PVs "
 			  "marked as missing.", vg->name, missing_pvs);

@@ -21,20 +21,20 @@ GET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)
 SET_LVCREATEPARAMS_NUM_PROPERTY_FN(skip_zero, lvcp->zero)
 
 /* PV create parameters */
-GET_PVCREATEPARAMS_NUM_PROPERTY_FN(size, pvcp->size)
-SET_PVCREATEPARAMS_NUM_PROPERTY_FN(size, pvcp->size)
+GET_PVCREATEPARAMS_NUM_PROPERTY_FN(size, pvcp->pva.size)
+SET_PVCREATEPARAMS_NUM_PROPERTY_FN(size, pvcp->pva.size)
 
-GET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatacopies, pvcp->pvmetadatacopies)
-SET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatacopies, pvcp->pvmetadatacopies)
+GET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatacopies, pvcp->pva.pvmetadatacopies)
+SET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatacopies, pvcp->pva.pvmetadatacopies)
 
-GET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatasize, pvcp->pvmetadatasize)
-SET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatasize, pvcp->pvmetadatasize)
+GET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatasize, pvcp->pva.pvmetadatasize)
+SET_PVCREATEPARAMS_NUM_PROPERTY_FN(pvmetadatasize, pvcp->pva.pvmetadatasize)
 
-GET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment, pvcp->data_alignment)
-SET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment, pvcp->data_alignment)
+GET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment, pvcp->pva.data_alignment)
+SET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment, pvcp->pva.data_alignment)
 
-GET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment_offset, pvcp->data_alignment_offset)
-SET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment_offset, pvcp->data_alignment_offset)
+GET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment_offset, pvcp->pva.data_alignment_offset)
+SET_PVCREATEPARAMS_NUM_PROPERTY_FN(data_alignment_offset, pvcp->pva.data_alignment_offset)
 
 GET_PVCREATEPARAMS_NUM_PROPERTY_FN(zero, pvcp->zero)
 SET_PVCREATEPARAMS_NUM_PROPERTY_FN(zero, pvcp->zero)

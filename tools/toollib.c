@@ -3430,22 +3430,23 @@ void pvcreate_each_params_set_defaults(struct pvcreate_each_params *pp)
 	memset(pp, 0, sizeof(*pp));
 
 	pp->zero = 1;
-	pp->size = 0;
-	pp->data_alignment = UINT64_C(0);
-	pp->data_alignment_offset = UINT64_C(0);
-	pp->pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
-	pp->pvmetadatasize = DEFAULT_PVMETADATASIZE;
-	pp->labelsector = DEFAULT_LABELSECTOR;
 	pp->force = PROMPT;
 	pp->yes = 0;
-	pp->metadataignore = DEFAULT_PVMETADATAIGNORE;
 	pp->restorefile = NULL;
 	pp->uuid_str = NULL;
-	pp->ba_start = 0;
-	pp->ba_size = 0;
-	pp->pe_start = PV_PE_START_CALC;
-	pp->extent_count = 0;
-	pp->extent_size = 0;
+
+	pp->pva.size = 0;
+	pp->pva.data_alignment = UINT64_C(0);
+	pp->pva.data_alignment_offset = UINT64_C(0);
+	pp->pva.pvmetadatacopies = DEFAULT_PVMETADATACOPIES;
+	pp->pva.pvmetadatasize = DEFAULT_PVMETADATASIZE;
+	pp->pva.label_sector = DEFAULT_LABELSECTOR;
+	pp->pva.metadataignore = DEFAULT_PVMETADATAIGNORE;
+	pp->pva.ba_start = 0;
+	pp->pva.ba_size = 0;
+	pp->pva.pe_start = PV_PE_START_CALC;
+	pp->pva.extent_count = 0;
+	pp->pva.extent_size = 0;
 
 	dm_list_init(&pp->prompts);
 	dm_list_init(&pp->arg_devices);
@@ -3467,7 +3468,7 @@ int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each
 			  LABEL_SCAN_SECTORS);
 		return 0;
 	} else {
-		pp->labelsector = arg_int64_value(cmd, labelsector_ARG,
+		pp->pva.label_sector = arg_int64_value(cmd, labelsector_ARG,
 						  DEFAULT_LABELSECTOR);
 	}
 
@@ -3489,14 +3490,14 @@ int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each
 	}
 
 	if (arg_count(cmd, metadataignore_ARG))
-		pp->metadataignore = arg_int_value(cmd, metadataignore_ARG,
+		pp->pva.metadataignore = arg_int_value(cmd, metadataignore_ARG,
 						   DEFAULT_PVMETADATAIGNORE);
 	else
-		pp->metadataignore = find_config_tree_bool(cmd, metadata_pvmetadataignore_CFG, NULL);
+		pp->pva.metadataignore = find_config_tree_bool(cmd, metadata_pvmetadataignore_CFG, NULL);
 
 	if (arg_count(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
-	    pp->metadataignore) {
+	    pp->pva.metadataignore) {
 		log_error("metadataignore only applies to metadatacopies > 0");
 		return 0;
 	}
@@ -3507,9 +3508,9 @@ int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each
 		log_error("Physical volume data alignment may not be negative.");
 		return 0;
 	}
-	pp->data_alignment = arg_uint64_value(cmd, dataalignment_ARG, UINT64_C(0));
+	pp->pva.data_alignment = arg_uint64_value(cmd, dataalignment_ARG, UINT64_C(0));
 
-	if (pp->data_alignment > UINT32_MAX) {
+	if (pp->pva.data_alignment > UINT32_MAX) {
 		log_error("Physical volume data alignment is too big.");
 		return 0;
 	}
@@ -3518,22 +3519,22 @@ int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each
 		log_error("Physical volume data alignment offset may not be negative");
 		return 0;
 	}
-	pp->data_alignment_offset = arg_uint64_value(cmd, dataalignmentoffset_ARG, UINT64_C(0));
+	pp->pva.data_alignment_offset = arg_uint64_value(cmd, dataalignmentoffset_ARG, UINT64_C(0));
 
-	if (pp->data_alignment_offset > UINT32_MAX) {
+	if (pp->pva.data_alignment_offset > UINT32_MAX) {
 		log_error("Physical volume data alignment offset is too big.");
 		return 0;
 	}
 
-	if ((pp->data_alignment + pp->data_alignment_offset) &&
-	    (pp->pe_start != PV_PE_START_CALC)) {
-		if ((pp->data_alignment ? pp->pe_start % pp->data_alignment : pp->pe_start) != pp->data_alignment_offset) {
+	if ((pp->pva.data_alignment + pp->pva.data_alignment_offset) &&
+	    (pp->pva.pe_start != PV_PE_START_CALC)) {
+		if ((pp->pva.data_alignment ? pp->pva.pe_start % pp->pva.data_alignment : pp->pva.pe_start) != pp->pva.data_alignment_offset) {
 			log_warn("WARNING: Ignoring data alignment %s"
 				 " incompatible with restored pe_start value %s)",
-				 display_size(cmd, pp->data_alignment + pp->data_alignment_offset),
-				 display_size(cmd, pp->pe_start));
-			pp->data_alignment = 0;
-			pp->data_alignment_offset = 0;
+				 display_size(cmd, pp->pva.data_alignment + pp->pva.data_alignment_offset),
+				 display_size(cmd, pp->pva.pe_start));
+			pp->pva.data_alignment = 0;
+			pp->pva.data_alignment_offset = 0;
 		}
 	}
 
@@ -3547,20 +3548,20 @@ int pvcreate_each_params_from_args(struct cmd_context *cmd, struct pvcreate_each
 		return 0;
 	}
 
-	pp->pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
-	if (!pp->pvmetadatasize)
-		pp->pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
+	pp->pva.pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
+	if (!pp->pva.pvmetadatasize)
+		pp->pva.pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
 
-	pp->pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
-	if (pp->pvmetadatacopies < 0)
-		pp->pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
+	pp->pva.pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
+	if (pp->pva.pvmetadatacopies < 0)
+		pp->pva.pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
 
-	if (pp->pvmetadatacopies > 2) {
+	if (pp->pva.pvmetadatacopies > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
 		return 0;
 	}
 
-	pp->ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, pp->ba_size);
+	pp->pva.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, pp->pva.ba_size);
 
 	return 1;
 }
@@ -3763,7 +3764,7 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	/*
 	 * Check if the uuid specified for the new PV is used by another PV.
 	 */
-	if (!found && pv->dev && pp->uuid_str && id_equal(&pv->id, &pp->id)) {
+	if (!found && pv->dev && pp->uuid_str && id_equal(&pv->id, &pp->pva.id)) {
 		log_error("uuid %s already in use on \"%s\"", pp->uuid_str, pv_dev_name(pv));
 		pp->check_failed = 1;
 		return 0;
@@ -4114,7 +4115,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 			 struct processing_handle *handle,
 			 struct pvcreate_each_params *pp)
 {
-	struct pvcreate_restorable_params rp;
 	struct pvcreate_device *pd, *pd2;
 	struct pvcreate_prompt *prompt, *prompt2;
 	struct physical_volume *pv;
@@ -4445,23 +4445,7 @@ do_command:
 
 		log_debug("Creating a new PV on %s", pv_name);
 
-		/* FIXME: get rid of rp usage in pv_create to avoid this. */
-		memset(&rp, 0, sizeof(rp));
-		rp.restorefile = pp->restorefile;
-		if (pp->uuid_str) {
-			rp.id = pp->id;
-			rp.idp = &pp->id;
-		}
-		rp.ba_start = pp->ba_start;
-		rp.ba_size = pp->ba_size;
-		rp.pe_start = pp->pe_start;
-		rp.extent_count = pp->extent_count;
-		rp.extent_size = pp->extent_size;
-
-		if (!(pv = pv_create(cmd, pd->dev, pp->size, pp->data_alignment,
-				     pp->data_alignment_offset, pp->labelsector,
-				     pp->pvmetadatacopies, pp->pvmetadatasize,
-				     pp->metadataignore, &rp))) {
+		if (!(pv = pv_create(cmd, pd->dev, &pp->pva))) {
 			log_error("Failed to setup physical volume \"%s\"", pv_name);
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;

@@ -55,10 +55,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
                       int drop_lvmetad,
                       int do_pvcreate,
-                      uint64_t bootloaderareasize,
-                      int pvmetadatacopies,
-                      uint64_t pvmetadatasize,
-                      uint64_t label_sector);
+		      struct pv_create_args *pva);
 
 int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 			     const char *file, int force);

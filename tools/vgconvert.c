@@ -19,13 +19,11 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg,
 			    struct processing_handle *handle __attribute__((unused)))
 {
+	struct pv_create_args pva = { 0 };
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 	struct lvinfo info;
 	int active = 0;
-	int pvmetadatacopies = 0;
-	uint64_t pvmetadatasize = 0;
-	uint64_t bootloaderareasize = 0;
 
 	if (!vg_check_status(vg, LVM_WRITE | EXPORTED_VG))
 		return_ECMD_FAILED;
@@ -42,13 +40,13 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			return EINVALID_CMD_LINE;
 		}
 
-		pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
-		if (!pvmetadatasize)
-			pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
+		pva.pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0));
+		if (!pva.pvmetadatasize)
+			pva.pvmetadatasize = find_config_tree_int(cmd, metadata_pvmetadatasize_CFG, NULL);
 
-		pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
-		if (pvmetadatacopies < 0)
-			pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
+		pva.pvmetadatacopies = arg_int_value(cmd, pvmetadatacopies_ARG, -1);
+		if (pva.pvmetadatacopies < 0)
+			pva.pvmetadatacopies = find_config_tree_int(cmd, metadata_pvmetadatacopies_CFG, NULL);
 	}
 
 	if (cmd->fmt->features & FMT_BAS) {
@@ -57,7 +55,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			return EINVALID_CMD_LINE;
 		}
 
-		bootloaderareasize = arg_uint64_value(cmd, bootloaderareasize_ARG, UINT64_C(0));
+		pva.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, UINT64_C(0));
 	}
 
 	if (!vg_check_new_extent_size(cmd->fmt, vg->extent_size))
@@ -128,11 +126,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	log_verbose("Writing metadata for VG %s using format %s", vg_name,
 		    cmd->fmt->name);
 
-	if (!backup_restore_vg(cmd, vg, 0, 1,
-			       bootloaderareasize,
-			       pvmetadatacopies,
-			       pvmetadatasize,
-			       arg_int64_value(cmd, labelsector_ARG, DEFAULT_LABELSECTOR))) {
+	if (!backup_restore_vg(cmd, vg, 0, 1, &pva)) {
 		log_error("Conversion failed for volume group %s.", vg_name);
 		log_error("Use pvcreate and vgcfgrestore to repair from "
 			  "archived metadata.");

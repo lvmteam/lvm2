@@ -166,10 +166,7 @@ bad:
 }
 
 static int _pool_pv_initialise(const struct format_type *fmt __attribute__((unused)),
-			       int64_t label_sector __attribute__((unused)),
-			       unsigned long data_alignment __attribute__((unused)),
-			       unsigned long data_alignment_offset __attribute__((unused)),
-			       struct pvcreate_restorable_params *rp __attribute__((unused)),
+			       struct pv_create_args *pva __attribute__((unused)),
 			       struct physical_volume *pv __attribute__((unused)))
 {
 	return 1;

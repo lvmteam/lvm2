@@ -256,10 +256,7 @@ struct format_handler {
 	 * Initialise a new PV.
 	 */
 	int (*pv_initialise) (const struct format_type * fmt,
-			      int64_t label_sector,
-			      unsigned long data_alignment,
-			      unsigned long data_alignment_offset,
-			      struct pvcreate_restorable_params *rp,
+			      struct pv_create_args *pva,
 			      struct physical_volume * pv);
 
 	/*

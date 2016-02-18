@@ -47,7 +47,7 @@ static int pvcreate_each_restore_params_from_args(struct cmd_context *cmd, int a
 
 	if (arg_count(cmd, uuidstr_ARG)) {
 		pp->uuid_str = arg_str_value(cmd, uuidstr_ARG, "");
-		if (!id_read_format(&pp->id, pp->uuid_str))
+		if (!id_read_format(&pp->pva.id, pp->uuid_str))
 			return 0;
 	}
 
@@ -55,7 +55,7 @@ static int pvcreate_each_restore_params_from_args(struct cmd_context *cmd, int a
 		log_error("Physical volume size may not be negative");
 		return 0;
 	}
-	pp->size = arg_uint64_value(cmd, physicalvolumesize_ARG, UINT64_C(0));
+	pp->pva.size = arg_uint64_value(cmd, physicalvolumesize_ARG, UINT64_C(0));
 
 	if (arg_count(cmd, restorefile_ARG) || arg_count(cmd, uuidstr_ARG))
 		pp->zero = 0;
@@ -79,18 +79,18 @@ static int pvcreate_each_restore_params_from_backup(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!(existing_pvl = find_pv_in_vg_by_uuid(vg, &pp->id))) {
+	if (!(existing_pvl = find_pv_in_vg_by_uuid(vg, &pp->pva.id))) {
 		release_vg(vg);
 		log_error("Can't find uuid %s in backup file %s",
 			  pp->uuid_str, pp->restorefile);
 		return 0;
 	}
 
-	pp->ba_start = pv_ba_start(existing_pvl->pv);
-	pp->ba_size = pv_ba_size(existing_pvl->pv);
-	pp->pe_start = pv_pe_start(existing_pvl->pv);
-	pp->extent_size = pv_pe_size(existing_pvl->pv);
-	pp->extent_count = pv_pe_count(existing_pvl->pv);
+	pp->pva.ba_start = pv_ba_start(existing_pvl->pv);
+	pp->pva.ba_size = pv_ba_size(existing_pvl->pv);
+	pp->pva.pe_start = pv_pe_start(existing_pvl->pv);
+	pp->pva.extent_size = pv_pe_size(existing_pvl->pv);
+	pp->pva.extent_count = pv_pe_count(existing_pvl->pv);
 
 	release_vg(vg);
 	return 1;

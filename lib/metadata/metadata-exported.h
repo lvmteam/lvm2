@@ -517,10 +517,21 @@ struct vgnameid_list {
 
 #define PV_PE_START_CALC ((uint64_t) -1) /* Calculate pe_start value */
 
-struct pvcreate_restorable_params {
-	const char *restorefile; /* 0 if no --restorefile option */
-	struct id id; /* FIXME: redundant */
-	struct id *idp; /* 0 if no --uuid option */
+/*
+ * Values used by pv_create().
+ */
+struct pv_create_args {
+	uint64_t size;
+	unsigned long data_alignment;
+	unsigned long data_alignment_offset;
+	uint64_t label_sector;
+	int pvmetadatacopies;
+	uint64_t pvmetadatasize;
+	unsigned metadataignore;
+
+	/* used when restoring */
+	struct id id;
+	struct id *idp;
 	uint64_t ba_start;
 	uint64_t ba_size;
 	uint64_t pe_start;
@@ -530,16 +541,10 @@ struct pvcreate_restorable_params {
 
 struct pvcreate_params {
 	int zero;
-	uint64_t size;
-	uint64_t data_alignment;
-	uint64_t data_alignment_offset;
-	int pvmetadatacopies;
-	uint64_t pvmetadatasize;
-	int64_t labelsector;
 	force_t force;
 	unsigned yes;
-	unsigned metadataignore;
-	struct pvcreate_restorable_params rp;
+	const char *restorefile; /* 0 if no --restorefile option */
+	struct pv_create_args pva;
 };
 
 /*
@@ -557,31 +562,19 @@ struct pvcreate_each_params {
 	 * From command line args.
 	 */
 	int zero;
-	uint64_t size;
-	uint64_t data_alignment;
-	uint64_t data_alignment_offset;
-	int pvmetadatacopies;
-	uint64_t pvmetadatasize;
-	int64_t labelsector;
 	force_t force;
 	unsigned yes;
-	unsigned metadataignore;
 
 	/*
 	 * From recovery-specific command line args.
 	 */
 	const char *restorefile; /* NULL if no --restorefile option */
 	const char *uuid_str;    /* id in printable format, NULL if no id */
-	struct id id;
 
 	/*
-	 * From reading VG backup file.
+	 * Values used by pv_create().
 	 */
-	uint64_t ba_start;
-	uint64_t ba_size;
-	uint64_t pe_start;
-	uint32_t extent_count;
-	uint32_t extent_size;
+	struct pv_create_args pva;
 
 	/*
 	 * Used for command processing.
@@ -722,15 +715,7 @@ uint32_t vg_read_error(struct volume_group *vg_handle);
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
 struct physical_volume *pv_create(const struct cmd_context *cmd,
-				  struct device *dev,
-				  uint64_t size,
-				  unsigned long data_alignment,
-				  unsigned long data_alignment_offset,
-				  uint64_t label_sector,
-				  unsigned pvmetadatacopies,
-				  uint64_t pvmetadatasize,
-				  unsigned metadataignore,
-				  struct pvcreate_restorable_params *rp);
+				  struct device *dev, struct pv_create_args *pva);
 
 int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		    void *handle __attribute__((unused)), unsigned force_count,
