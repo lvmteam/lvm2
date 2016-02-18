@@ -1476,6 +1476,7 @@ if test "$PYTHON2_BINDINGS" = yes; then
 	AC_PATH_TOOL(PYTHON2, python2)
 	test -z "$PYTHON2" && AC_MSG_ERROR([python2 is required for --enable-python2_bindings but cannot be found])
 	AC_PATH_TOOL(PYTHON2_CONFIG, python2-config)
+	test -z "$PYTHON2_CONFIG" && AC_PATH_TOOL(PYTHON2_CONFIG, python-config)
 	test -z "$PYTHON2_CONFIG" && AC_MSG_ERROR([python headers are required for --enable-python2_bindings but cannot be found])
 	PYTHON2_INCDIRS=`"$PYTHON2_CONFIG" --includes`
 	PYTHON2_LIBDIRS=`"$PYTHON2_CONFIG" --libs`
