@@ -469,16 +469,22 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 
 		if (!(ret = _check_pool_create(lv)))
 			stack; /* Safety guard, needs local presence of thin-pool target */
-		else if (!(ret = suspend_lv_origin(lv->vg->cmd, lv)))
-			/* Send messages */
-			log_error("Failed to suspend and send message %s.", display_lvname(lv));
-		else if (!(ret = resume_lv_origin(lv->vg->cmd, lv)))
-			log_error("Failed to resume %s.", display_lvname(lv));
+		else {
+			if (!(ret = suspend_lv_origin(lv->vg->cmd, lv)))
+				/* Send messages */
+				log_error("Failed to suspend %s with queued messages.", display_lvname(lv));
+
+			/* Even failing suspend needs resume */
+			if (!resume_lv_origin(lv->vg->cmd, lv)) {
+				log_error("Failed to resume %s.", display_lvname(lv));
+				ret = 0;
+			}
+		}
 
 		if (activate) {
 			if (!deactivate_lv(lv->vg->cmd, lv)) {
-				init_dmeventd_monitor(monitored);
-				return_0;
+				log_error("Failed to deactivate %s.", display_lvname(lv));
+				ret = 0;
 			}
 			init_dmeventd_monitor(monitored);
 		}

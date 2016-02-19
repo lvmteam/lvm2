@@ -1,5 +1,6 @@
 Version 2.02.143 -
 =====================================
+  Fix error path when sending thin-pool message fails in update_pool_lv().
   Support reporting CheckNeeded and Fail state for thin-pool and thin LV.
   For failing thin-pool and thin volume correctly report percentage as INVALID.
   Report -1, not 'unkown' for lv_{snapshot_invalid,merge_failed} with --binary.
