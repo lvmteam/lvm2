@@ -1,4 +1,4 @@
-Version 2.02.143 -
+Version 2.02.143 - 21st February 2016
 =====================================
   Fix error path when sending thin-pool message fails in update_pool_lv().
   Support reporting CheckNeeded and Fail state for thin-pool and thin LV.
