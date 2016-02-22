@@ -44,7 +44,12 @@ def rs(length, suffix, character_set=string.ascii_lowercase):
 				for _ in range(length)) + suffix
 
 
-bus = dbus.SystemBus(mainloop=DBusGMainLoop())
+use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
+
+if use_session:
+	bus = dbus.SessionBus(mainloop=DBusGMainLoop())
+else:
+	bus = dbus.SystemBus(mainloop=DBusGMainLoop())
 
 
 def mib(s):

@@ -28,6 +28,7 @@ import sys
 from . import udevwatch
 from .utils import log_debug
 import argparse
+import os
 
 
 class Lvm(objectmanager.ObjectManager):
@@ -71,6 +72,8 @@ def main():
 						help="Dump debug messages", default=False,
 						dest='debug')
 
+	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
+
 	args = parser.parse_args()
 
 	cfg.DEBUG = args.debug
@@ -90,7 +93,11 @@ def main():
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	GObject.threads_init()
 	dbus.mainloop.glib.threads_init()
-	cfg.bus = dbus.SystemBus()
+
+	if use_session:
+		cfg.bus = dbus.SessionBus()
+	else:
+		cfg.bus = dbus.SystemBus()
 	# The base name variable needs to exist for things to work.
 	# noinspection PyUnusedLocal
 	base_name = dbus.service.BusName(BASE_INTERFACE, cfg.bus)
