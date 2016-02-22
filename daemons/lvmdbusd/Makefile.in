@@ -57,7 +57,7 @@ install_lvmdbusd:
 	$(INSTALL_DATA) $(LVMDBUS_BUILDDIR_FILES) $(DESTDIR)$(lvmdbusdir)
 	PYTHON=$(PYTHON3) $(PYCOMPILE) --destdir "$(DESTDIR)" --basedir "$(lvmdbusdir)" $(LVMDBUS_SRCDIR_FILES) $(LVMDBUS_BUILDDIR_FILES)
 	$(CHMOD) 755 $(DESTDIR)$(lvmdbusdir)/__pycache__
-	$(CHMOD) 444 $(DESTDIR)$(lvmdbusdir)/__pycache__/*.pyc $(DESTDIR)$(lvmdbusdir)/__pycache__/*.pyo
+	$(CHMOD) 444 $(DESTDIR)$(lvmdbusdir)/__pycache__/*.py[co]
 
 install_lvm2: install_lvmdbusd
 
