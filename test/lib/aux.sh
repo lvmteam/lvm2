@@ -1007,6 +1007,18 @@ raid456_replace_works() {
 	esac
 }
 
+#
+# Some 32bit kernel cannot pass some erroring magic which forces
+# thin-pool to be falling into Error state.
+#
+# Skip test on such kernels (see: https://bugzilla.redhat.com/1310661)
+#
+thin_pool_error_works_32() {
+	case "$(uname -r)" in
+	  2.6.32-618.*.i686) return 1 ;;
+	esac
+}
+
 udev_wait() {
 	pgrep udev >/dev/null || return 0
 	which udevadm &>/dev/null || return 0

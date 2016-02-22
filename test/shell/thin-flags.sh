@@ -39,6 +39,7 @@ fake_metadata_() {
 # Main
 #
 aux have_thin 1 3 0 || skip
+aux thin_pool_error_works_32 || skip
 
 aux prepare_vg 2 256
 
