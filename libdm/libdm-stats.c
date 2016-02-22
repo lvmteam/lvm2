@@ -963,7 +963,9 @@ static void _stats_walk_next(const struct dm_stats *dms, int region,
 	if (!dms || !dms->regions)
 		return;
 
-	cur = &dms->regions[*cur_r];
+	if (!(cur = &dms->regions[*cur_r]))
+		return;
+
 	present = _stats_region_present(cur);
 
 	if (region && present)
@@ -1314,7 +1316,7 @@ static int _dm_stats_populate_region(struct dm_stats *dms, uint64_t region_id,
 	if (!_stats_bound(dms))
 		return_0;
 
-	if (!_stats_parse_region(dms, resp, region, region->timescale)) {
+	if (!region || !_stats_parse_region(dms, resp, region, region->timescale)) {
 		log_error("Could not parse @stats_print message response.");
 		return 0;
 	}
