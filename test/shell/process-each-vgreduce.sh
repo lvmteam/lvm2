@@ -11,6 +11,8 @@
 
 test_description='Exercise toollib process_each_pv with vgreduce'
 
+SKIP_WITH_LVMLOCKD=1
+
 . lib/inittest
 
 aux prepare_devs 14

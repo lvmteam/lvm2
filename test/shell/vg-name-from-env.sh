@@ -6,6 +6,7 @@
 # of the GNU General Public License v.2.
 
 test_description='Test the vg name for an lv from env var'
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

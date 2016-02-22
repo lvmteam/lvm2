@@ -14,6 +14,7 @@
 
 # Moving 2 LVs in VG variant
 
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_CLVMD=1
 
 . lib/inittest

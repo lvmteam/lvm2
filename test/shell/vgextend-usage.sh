@@ -13,6 +13,7 @@
 # Exercise various vgextend commands
 #
 
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

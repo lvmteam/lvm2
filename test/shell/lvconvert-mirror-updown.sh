@@ -11,6 +11,8 @@
 
 # Demonstrate problem when upconverting and cutting leg in clvmd
 
+SKIP_WITH_LVMLOCKD=1
+
 . lib/inittest
 
 aux prepare_pvs 3

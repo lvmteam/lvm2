@@ -14,6 +14,7 @@
 
 # Multisegment variant w/ 2 pvmoves LVs per VG
 
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_CLVMD=1
 
 . lib/inittest

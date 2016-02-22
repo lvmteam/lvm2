@@ -11,6 +11,8 @@
 
 # Check pvmove --abort behaviour when specific device is requested
 
+SKIP_WITH_LVMLOCKD=1
+
 . lib/inittest
 
 aux prepare_pvs 3 60

@@ -11,6 +11,8 @@
 
 # 'Exercise some lvcreate diagnostics'
 
+SKIP_WITH_LVMLOCKD=1
+
 . lib/inittest
 
 aux prepare_pvs 4

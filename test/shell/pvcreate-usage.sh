@@ -10,6 +10,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 test_description='Test pvcreate option values'
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 PAGESIZE=$(getconf PAGESIZE)
 # MDA_SIZE_MIN defined in lib/format_text/layout.h

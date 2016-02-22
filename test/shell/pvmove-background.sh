@@ -11,6 +11,8 @@
 
 # Check pvmove behavior when it's progress and machine is rebooted
 
+SKIP_WITH_LVMLOCKD=1
+
 . lib/inittest
 
 aux prepare_vg 3

@@ -12,6 +12,8 @@
 
 test_description="check namings of mirrored LV"
 
+SKIP_WITH_LVMLOCKD=1
+
 . lib/inittest
 
 # ---------------------------------------------------------------------

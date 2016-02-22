@@ -13,6 +13,7 @@
 # tests functionality of lvs, pvs, vgs, *display tools
 #
 
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

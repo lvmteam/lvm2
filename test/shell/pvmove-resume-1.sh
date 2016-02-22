@@ -14,6 +14,7 @@
 
 # 2 pvmove LVs in 2 VGs (1 per VG)
 
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_CLVMD=1
 
 . lib/inittest

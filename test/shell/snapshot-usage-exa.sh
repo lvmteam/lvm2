@@ -12,6 +12,7 @@
 # Check very large device size (upto 15Exa bytes)
 # this needs 64bit arch
 
+SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest

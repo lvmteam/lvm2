@@ -12,6 +12,8 @@
 
 test_description="ensure that pvmove works with basic options"
 
+SKIP_WITH_LVMLOCKD=1
+
 # disable lvmetad logging as it bogs down test systems
 export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
