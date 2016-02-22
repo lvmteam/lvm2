@@ -388,6 +388,9 @@ def lv_detach_cache(lv_full_name, detach_options, destroy_cache):
 
 def pv_retrieve_with_segs(device=None):
 	d = []
+	err = ""
+	out = ""
+	rc = 0
 
 	columns = ['pv_name', 'pv_uuid', 'pv_fmt', 'pv_size', 'pv_free',
 				'pv_used', 'dev_size', 'pv_mda_size', 'pv_mda_free',
@@ -398,7 +401,7 @@ def pv_retrieve_with_segs(device=None):
 	# Lvm has some issues where it returns failure when querying pvs when other
 	# operations are in process, see:
 	# https://bugzilla.redhat.com/show_bug.cgi?id=1274085
-	while True:
+	for i in range(0, 10):
 		cmd = _dc('pvs', ['-o', ','.join(columns)])
 
 		if device:
@@ -412,6 +415,13 @@ def pv_retrieve_with_segs(device=None):
 		else:
 			time.sleep(0.2)
 			log_debug("LVM Bug workaround, retrying pvs command...")
+
+	if rc != 0:
+		msg = "We were unable to get pvs to return without error after " \
+			"trying 10 times, RC=%d, STDERR=(%s), STDOUT=(%s)" % \
+			(rc, err, out)
+		log_error(msg)
+		raise RuntimeError(msg)
 
 	return d
 
