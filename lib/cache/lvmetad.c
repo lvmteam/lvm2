@@ -507,7 +507,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 {
 	struct volume_group *vg = NULL;
 	struct volume_group *vg2 = NULL;
-	daemon_reply reply;
+	daemon_reply reply = { 0 };
 	int found;
 	char uuid[64];
 	struct format_instance *fid = NULL;

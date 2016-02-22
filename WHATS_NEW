@@ -1,5 +1,6 @@
 Version 2.02.144 - 
 =====================================
+  Fix error path for internal error in lvmetad vg lookup code.
 
 Version 2.02.143 - 21st February 2016
 =====================================
