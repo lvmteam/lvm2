@@ -19,6 +19,11 @@ test_description='Remove the dlm test setup'
 # lvmlockctl -d > lvmlockd-debug.txt
 # dlm_tool dump > dlm-debug.txt
 
+lvmlockctl --stop-lockspaces
+sleep 1
+killall lvmlockd
+sleep 1
+killall lvmlockd || true
+sleep 1
 systemctl stop dlm
 systemctl stop corosync
-killall lvmlockd
