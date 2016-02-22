@@ -740,9 +740,11 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 				  struct dm_histogram **histogram,
 				  struct dm_stats_region *region)
 {
-	struct dm_histogram hist, *bounds = region->bounds;
+	struct dm_histogram *bounds = region->bounds;
 	static const char *_valid_chars = "0123456789:";
-	int nr_bins = region->bounds->nr_bins;
+	struct dm_histogram hist = {
+		.nr_bins = region->bounds->nr_bins
+	};
 	const char *c, *v, *val_start;
 	struct dm_histogram_bin cur;
 	uint64_t sum = 0, this_val;
@@ -753,8 +755,6 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 	if (!dm_pool_begin_object(mem, sizeof(cur)))
 		return_0;
-
-	hist.nr_bins = nr_bins;
 
 	if (!dm_pool_grow_object(mem, &hist, sizeof(hist)))
 		goto_bad;
@@ -800,7 +800,7 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 		}
 	} while (*c && (*c != '\n'));
 
-	log_debug("Added region histogram data with %d entries.", nr_bins);
+	log_debug("Added region histogram data with %d entries.", hist.nr_bins);
 
 	*histogram = dm_pool_end_object(mem);
 	(*histogram)->sum = sum;
