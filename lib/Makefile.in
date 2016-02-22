@@ -116,6 +116,7 @@ SOURCES =\
 	misc/lvm-wrappers.c \
 	misc/lvm-percent.c \
 	mm/memlock.c \
+	notify/lvmnotify.c \
 	properties/prop_common.c \
 	report/properties.c \
 	report/report.c \
@@ -215,6 +216,7 @@ ifeq ($(MAKECMDGOALS),distclean)
 	format_pool \
 	snapshot \
 	mirror \
+	notify \
 	raid \
 	replicator \
 	thin \

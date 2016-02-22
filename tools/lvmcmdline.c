@@ -1660,6 +1660,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	lvmlockd_disconnect();
 	fin_locking();
 
+	if (!_cmd_no_meta_proc(cmd) && find_config_tree_bool(cmd, global_notify_dbus_CFG, NULL))
+		lvmnotify_send(cmd);
+
       out:
 	if (test_mode()) {
 		log_verbose("Test mode: Wiping internal cache");

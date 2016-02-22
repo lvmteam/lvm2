@@ -1069,6 +1069,8 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!lv_active_change(cmd, lv, activate, 0))
 		return_0;
 
+	set_lv_notify(lv->vg->cmd);
+
 	return r;
 }
 
@@ -4178,6 +4180,8 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	int must_use_all = (cmd->command->flags & MUST_USE_ALL_ARGS);
 	int found;
 	int i;
+
+	set_pv_notify(cmd);
 
 	dm_list_init(&arg_sort);
 

@@ -33,6 +33,7 @@
 #include "defaults.h"
 #include "lvmlockd.h"
 #include "time.h"
+#include "lvmnotify.h"
 
 #include <math.h>
 #include <sys/param.h>
@@ -603,6 +604,8 @@ int vg_remove_direct(struct volume_group *vg)
 		stack;
 
 	lockd_vg_update(vg);
+
+	set_vg_notify(vg->cmd);
 
 	if (!backup_remove(vg->cmd, vg->name))
 		stack;
@@ -3590,6 +3593,8 @@ int vg_commit(struct volume_group *vg)
 		return_0;
 
 	cache_updated = _vg_commit_mdas(vg);
+
+	set_vg_notify(vg->cmd);
 
 	if (cache_updated) {
 		/* Instruct remote nodes to upgrade cached metadata. */

@@ -42,6 +42,7 @@
 #include "str_list.h"
 #include "toolcontext.h"
 #include "toollib.h"
+#include "lvmnotify.h"
 
 #include <ctype.h>
 #include <sys/types.h>

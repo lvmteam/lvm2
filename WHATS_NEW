@@ -1,5 +1,6 @@
 Version 2.02.146 - 
 =================================
+  Add dbus notification from commands after a PV/VG/LV changes state.
 
 Version 2.02.145 - 4th March 2016
 =================================

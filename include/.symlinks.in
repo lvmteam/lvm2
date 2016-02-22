@@ -58,6 +58,7 @@
 @top_srcdir@/lib/misc/util.h
 @top_srcdir@/lib/mm/memlock.h
 @top_srcdir@/lib/mm/xlate.h
+@top_srcdir@/lib/notify/lvmnotify.h
 @top_srcdir@/lib/properties/prop_common.h
 @top_srcdir@/lib/report/properties.h
 @top_srcdir@/lib/report/report.h
