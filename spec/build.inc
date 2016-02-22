@@ -55,11 +55,6 @@ make install_initscripts DESTDIR=$RPM_BUILD_ROOT
 %if %{enable_testsuite}
 make -C test install DESTDIR=$RPM_BUILD_ROOT
 %endif
-%if %{enable_python3}
-pushd %{py3dir}
-make -C python install DESTDIR=$RPM_BUILD_ROOT
-popd
-%endif
 
 # when building an src.rpm from freestanding specfiles
 test -e %{_sourcedir}/source.inc || cp source.inc build.inc packages.inc macros.inc %{_sourcedir}

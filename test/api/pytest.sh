@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright (C) 2012-2015 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
@@ -31,9 +31,17 @@ aux prepare_dmeventd
 
 #Locate the python binding library to use.
 if [[ -n $abs_top_builddir ]]; then
-  python_lib=$(find $abs_top_builddir -name lvm.so)
-  # Unable to test python bindings if library not available
-  test -n "$python_lib" || skip "lvm2-python-libs not built"
+  python_lib=($(find $abs_top_builddir -name lvm.so))
+  if [[ ${#python_lib[*]} -ne 1 ]]; then
+    if [[ ${#python_lib[*]} -gt 1 ]]; then
+      # Unable to test python bindings if multiple libraries found:
+      echo "Found left over lvm.so: ${python_lib[*]}"
+      false
+    else
+      # Unable to test python bindings if library not available
+      skip "lvm2-python-libs not built"
+    fi
+  fi
 
   export PYTHONPATH=$(dirname $python_lib):$PYTHONPATH
 elif rpm -q lvm2-python-libs &>/dev/null; then
