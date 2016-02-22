@@ -2269,6 +2269,7 @@ static void *lockspace_thread_main(void *arg_in)
 	struct action *act_op_free = NULL;
 	struct list_head tmp_act;
 	struct list_head act_close;
+	char tmp_name[MAX_NAME+1];
 	int free_vg = 0;
 	int drop_vg = 0;
 	int error = 0;
@@ -2634,6 +2635,10 @@ out_act:
 	ls->drop_vg = drop_vg;
 	if (ls->lm_type == LD_LM_DLM && !strcmp(ls->name, gl_lsname_dlm))
 		global_dlm_lockspace_exists = 0;
+	/* Avoid a name collision of the same lockspace is added again before this thread is cleaned up. */
+	memset(tmp_name, 0, sizeof(tmp_name));
+	snprintf(tmp_name, MAX_NAME, "REM:%s", ls->name);
+	memcpy(ls->name, tmp_name, MAX_NAME);
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/* worker_thread will join this thread, and free the ls */
@@ -3112,6 +3117,8 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 				list_del(&ls->list);
 
 				/* FIXME: will free_vg ever not be set? */
+
+				log_debug("free ls %s", ls->name);
 
 				if (ls->free_vg) {
 					/* In future we may need to free ls->actions here */
