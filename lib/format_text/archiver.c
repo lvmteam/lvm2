@@ -364,7 +364,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 	struct dm_list new_pvs;
 	struct pv_list *pvl, *new_pvl;
 	struct physical_volume *existing_pv, *pv;
-	struct dm_list *pvs = &vg->pvs;;
+	struct dm_list *pvs = &vg->pvs;
 	struct format_instance *fid;
 	struct format_instance_ctx fic;
 	int should_write_pv;
