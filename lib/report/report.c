@@ -1446,7 +1446,8 @@ static int _do_get_kernel_cache_settings_list(struct dm_pool *mem,
 		buf_len = strlen(key) + strlen(value) + 2;
 		if (!(buf = dm_pool_alloc(mem, buf_len)))
 			return_0;
-		dm_snprintf(buf, buf_len, "%s=%s", key, value);
+		if (dm_snprintf(buf, buf_len, "%s=%s", key, value) < 0)
+			return_0;
 		if (!str_list_add_no_dup_check(mem, result, buf))
 			return_0;
 	}
