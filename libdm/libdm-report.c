@@ -839,8 +839,9 @@ static int _get_canonical_field_name(const char *field,
 			diff = 1;
 			continue;
 		}
-		if (i >= fcanonical_len) {
-			log_error("%s: field name too long", field);
+		if ((i + 1) >= fcanonical_len) {
+			canonical_field[0] = '\0';
+			log_error("%s: field name too long.", field);
 			return 0;
 		}
 		canonical_field[i++] = *field;
