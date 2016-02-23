@@ -142,6 +142,8 @@ static int _lockd_result(daemon_reply reply, int *result, uint32_t *lockd_flags)
 	const char *flags_str = NULL;
 	const char *lock_type = NULL;
 
+	*result = -1;
+
 	if (reply.error) {
 		log_error("lockd_result reply error %d", reply.error);
 		return 0;
