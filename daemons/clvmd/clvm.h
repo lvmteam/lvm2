@@ -50,7 +50,7 @@ struct clvm_header {
 #define CLVMD_FLAG_REMOTE	8	/* Do this on all nodes except for the local node */
 
 /* Name of the local socket to communicate between lvm and clvmd */
-static const char CLVMD_SOCKNAME[]= DEFAULT_RUN_DIR "/clvmd.sock";
+#define CLVMD_SOCKNAME		DEFAULT_RUN_DIR "/clvmd.sock"
 
 /* Internal commands & replies */
 #define CLVMD_CMD_REPLY    1
