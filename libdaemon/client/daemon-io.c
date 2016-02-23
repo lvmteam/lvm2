@@ -49,8 +49,9 @@ int buffer_read(int fd, struct buffer *buffer) {
 		} else if (result == 0) {
 			errno = ECONNRESET;
 			return 0; /* we should never encounter EOF here */
-		} else if (result < 0 && ( errno == EAGAIN || errno == EWOULDBLOCK ||
-					   errno == EINTR || errno == EIO)) {
+		} else if (result < 0 && (errno == EAGAIN ||
+					  (EWOULDBLOCK != EAGAIN && errno == EWOULDBLOCK) ||
+					  errno == EINTR || errno == EIO)) {
 			fd_set in;
 			FD_ZERO(&in);
 			FD_SET(fd, &in);
@@ -78,8 +79,9 @@ int buffer_write(int fd, const struct buffer *buffer) {
 			result = write(fd, use->mem + written, use->used - written);
 			if (result > 0)
 				written += result;
-			else if (result < 0 && ( errno == EAGAIN || errno == EWOULDBLOCK ||
-						 errno == EINTR || errno == EIO)) {
+			else if (result < 0 && (errno == EAGAIN ||
+						(EWOULDBLOCK != EAGAIN && errno == EWOULDBLOCK) ||
+						errno == EINTR || errno == EIO)) {
 				fd_set out;
 				FD_ZERO(&out);
 				FD_SET(fd, &out);
