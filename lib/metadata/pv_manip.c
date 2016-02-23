@@ -695,8 +695,6 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 			  unsigned force_count, unsigned prompt, struct dm_list *pvslist)
 {
 	static const char really_wipe_msg[] = "Really WIPE LABELS from physical volume";
-	static const char not_removed_msg[] = "physical volume label not removed";
-	static const char pvremove_force_hint_msg[] = "(If you are certain you need pvremove, then confirm by using --force twice.)";
 	struct device *dev;
 	struct label *label;
 	struct pv_list *pvl;
@@ -707,7 +705,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	if (!(dev = dev_cache_get(name, cmd->filter))) {
-		log_error("Device %s not found", name);
+		log_error("Device %s not found.", name);
 		return 0;
 	}
 
@@ -725,8 +723,8 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 			pv = pvl->pv;
 
 	if (!pv) {
-		log_error(INTERNAL_ERROR "Physical Volume %s has a label,"
-			  " but is neither in a VG nor orphan.", name);
+		log_error(INTERNAL_ERROR "Physical Volume %s has a label, "
+			  "but is neither in a VG nor orphan.", name);
 		goto out; /* better safe than sorry */
 	}
 
@@ -734,49 +732,47 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 		if ((used = is_used_pv(pv)) < 0)
 			goto_out;
 
-		if (used && force_count < 2) {
-			log_error("PV '%s' is marked as belonging to a VG "
-				  "but its metadata is missing.", name);
-			log_error("%s", pvremove_force_hint_msg);
-			goto out;
+		if (used) {
+			log_warn("WARNING: PV '%s' is marked as belonging to a VG "
+				 "but its metadata is missing.", name);
+
+			if (force_count < 2)
+				goto_bad;
+
+			if (!prompt &&
+			    yes_no_prompt("%s \"%s\" that is marked as belonging to a VG [y/n]? ",
+					  really_wipe_msg, name) == 'n')
+				goto_bad;
 		}
 	} else {
-		/* we must have -ff to overwrite a non orphan */
-		if (force_count < 2) {
-			log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", name, pv_vg_name(pv));
-			log_error("%s", pvremove_force_hint_msg);
-			goto out;
-		}
+		log_warn("WARNING: PV %s belongs to Volume Group %s "
+			 "(consider using vgreduce).", name, pv_vg_name(pv));
+
+		if (force_count < 2)
+			goto_bad;
+
+		if (!prompt &&
+		    yes_no_prompt("%s \"%s\" of volume group \"%s\" [y/n]? ",
+				  really_wipe_msg, name, pv_vg_name(pv)) == 'n')
+			goto_bad;
 	}
 
-	/* prompt */
-	if (!prompt) {
-		if (is_orphan(pv)) {
-			if (used) {
-				if (yes_no_prompt("%s \"%s\" that is marked as belonging to a VG [y/n]? ",
-						   really_wipe_msg, name) == 'n') {
-					log_error("%s: %s", name, not_removed_msg);
-					goto out;
-				}
-			}
-		} else {
-			if (yes_no_prompt("%s \"%s\" of volume group \"%s\" [y/n]? ",
-					  really_wipe_msg, name, pv_vg_name(pv)) == 'n') {
-				log_error("%s: %s", name, not_removed_msg);
-				goto out;
-			}
-		}
-	}
-
-	if (force_count) {
+	if (force_count)
 		log_warn("WARNING: Wiping physical volume label from "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
 			  pv_vg_name(pv),
 			  !is_orphan(pv) ? "\"" : "");
-	}
 
 	r = 1;
+bad:
+	if (!r) {
+		log_error("%s: physical volume label not removed.", name);
+
+		if (force_count < 2) /* Show hint as log_error() */
+			log_error("(If you are certain you need pvremove, "
+				  "then confirm by using --force twice.)");
+	}
 out:
 	return r;
 }
