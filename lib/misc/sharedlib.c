@@ -27,10 +27,13 @@ void get_shared_library_path(struct cmd_context *cmd, const char *libname,
 {
 	struct stat info;
 
+	if (!path_len)
+		return;
+
 	/* If libname doesn't begin with '/' then use lib_dir/libname,
 	 * if present */
 	if (libname[0] == '/' ||
-            (!cmd->lib_dir &&
+	    (!cmd->lib_dir &&
 	     !(cmd->lib_dir = find_config_tree_str(cmd, global_library_dir_CFG, NULL))) ||
 	    (dm_snprintf(path, path_len, "%s/%s", cmd->lib_dir,
 			 libname) == -1) || stat(path, &info) == -1) {
