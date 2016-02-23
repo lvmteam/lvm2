@@ -2331,6 +2331,12 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		 * represents itself and all associated cow snapshots.
 		 */
 
+		if (!lp->origin_name) {
+			/* Sparse LV case. We require a lock from the origin LV. */
+			log_error("Cannot create snapshot without origin LV in shared VG.");
+			return 0;
+		}
+
 		if (!(origin_lv = find_lv(vg, lp->origin_name))) {
 			log_error("Failed to find origin LV %s/%s", vg->name, lp->origin_name);
 			return 0;
