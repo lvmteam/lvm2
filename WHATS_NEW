@@ -1,5 +1,6 @@
 Version 2.02.144 - 
 =====================================
+  Use uninitilized pool header detection in all cases.
   Fir read error detection when checking for uninitialized thin-pool header.
   Fix error path for internal error in lvmetad vg lookup code.
 

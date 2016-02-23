@@ -1916,7 +1916,7 @@ static int _pool_register_callback(struct dev_manager *dm,
 		data->global = "thin";
 	} else if (lv_is_cache(lv)) { /* cache pool */
 		data->pool_lv = first_seg(lv)->pool_lv;
-		data->skip_zero = dm->activation;
+		data->skip_zero = 1; /* cheap read-error detection */
 		data->exec = global_cache_check_executable_CFG;
 		data->opts = global_cache_check_options_CFG;
 		data->global = "cache";
