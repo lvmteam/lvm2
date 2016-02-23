@@ -458,6 +458,7 @@ Requires: lvm2 >= %{version}-%{release}
 Requires: dbus
 Requires: python3-dbus
 Requires: python3-pyudev
+Requires: python3-gobject
 Requires(post): systemd-units >= %{systemd_version}
 Requires(preun): systemd-units >= %{systemd_version}
 Requires(postun): systemd-units >= %{systemd_version}
