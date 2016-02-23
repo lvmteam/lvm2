@@ -1662,8 +1662,10 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	lv->size += (uint64_t) extents * lv->vg->extent_size;
 
 	if (lv_is_thin_pool_data(lv)) {
+		if (!(thin_pool_seg = get_only_segment_using_this_lv(lv)))
+			return_0;
+
 		/* Update thin pool segment from the layered LV */
-		thin_pool_seg = get_only_segment_using_this_lv(lv);
 		thin_pool_seg->lv->le_count =
 			thin_pool_seg->len =
 			thin_pool_seg->area_len = lv->le_count;
