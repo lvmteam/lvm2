@@ -1841,7 +1841,7 @@ static int _pool_callback(struct dm_tree_node *node,
 			return 0;
 		}
 		/* let's assume there is no problem to read 64 bytes */
-		if (read(fd, buf, sizeof(buf)) < sizeof(buf)) {
+		if (read(fd, buf, sizeof(buf)) < (int)sizeof(buf)) {
 			log_sys_error("read", argv[args]);
 			if (close(fd))
 				log_sys_error("close", argv[args]);
