@@ -4384,7 +4384,7 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 				selection, NULL, NULL)))
 		goto_out;
 
-	if ((_report_type & DR_TREE) && !_build_whole_deptree(cmd)) {
+	if ((_report_type & DR_TREE) && cmd && !_build_whole_deptree(cmd)) {
 		err("Internal device dependency tree creation failed.");
 		goto out;
 	}
