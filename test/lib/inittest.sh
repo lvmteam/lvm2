@@ -128,7 +128,16 @@ if test -n "$LVM_TEST_LVMLOCKD" ; then
 	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
 		aux lvmconf 'local/host_id = 1'
 	fi
+
 	export SHARED="--shared"
+fi
+
+# for check_lvmlockd_test, lvmlockd is restarted for each shell test.
+# for check_lvmlockd_{sanlock,dlm}, lvmlockd is started once by
+# aa-lvmlockd-{sanlock,dlm}-prepare.sh and left running for all shell tests.
+
+if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
+	aux prepare_lvmlockd
 fi
 
 echo "<======== Processing test: \"$TESTNAME\" ========>"

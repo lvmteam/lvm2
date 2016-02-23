@@ -21,6 +21,133 @@ expect_failure() {
         echo "TEST EXPECT FAILURE"
 }
 
+COROSYNC_CONF="/etc/corosync/corosync.conf"
+COROSYNC_NODE="$(hostname)"
+create_corosync_conf() {
+	if test -a $COROSYNC_CONF; then
+		if ! grep "created by lvm test suite" $COROSYNC_CONF; then
+			rm $COROSYNC_CONF
+		else
+			mv $COROSYNC_CONF $COROSYNC_CONF.prelvmtest
+		fi
+	fi
+
+	sed -e "s/@LOCAL_NODE@/$COROSYNC_NODE/" lib/test-corosync-conf > $COROSYNC_CONF
+	echo "created new $COROSYNC_CONF"
+}
+
+DLM_CONF="/etc/dlm/dlm.conf"
+create_dlm_conf() {
+	if test -a $DLM_CONF; then
+		if ! grep "created by lvm test suite" $DLM_CONF; then
+			rm $DLM_CONF
+		else
+			mv $DLM_CONF $DLM_CONF.prelvmtest
+		fi
+	fi
+
+	cp lib/test-dlm-conf $DLM_CONF
+	echo "created new $DLM_CONF"
+}
+
+prepare_dlm() {
+	if pgrep dlm_controld ; then
+		echo "Cannot run while existing dlm_controld process exists"
+		exit 1
+	fi
+
+	if pgrep corosync; then
+		echo "Cannot run while existing corosync process exists"
+		exit 1
+	fi
+
+	create_corosync_conf
+	create_dlm_conf
+
+	systemctl start corosync
+	sleep 1
+	if ! pgrep corosync; then
+		echo "Failed to start corosync"
+		exit 1
+	fi
+
+	systemctl start dlm
+	sleep 1
+	if ! pgrep dlm_controld; then
+		echo "Failed to start dlm"
+		exit 1
+	fi
+}
+
+SANLOCK_CONF="/etc/sanlock/sanlock.conf"
+create_sanlock_conf() {
+	if test -a $SANLOCK_CONF; then
+		if ! grep "created by lvm test suite" $SANLOCK_CONF; then
+			rm $SANLOCK_CONF
+		else
+			mv $SANLOCK_CONF $SANLOCK_CONF.prelvmtest
+		fi
+	fi
+
+	cp lib/test-sanlock-conf $SANLOCK_CONF
+	echo "created new $SANLOCK_CONF"
+}
+
+prepare_sanlock() {
+	if pgrep sanlock ; then
+		echo "Cannot run while existing sanlock process exists"
+		exit 1
+	fi
+
+	create_sanlock_conf
+
+	systemctl start sanlock
+	if ! pgrep sanlock; then
+		echo "Failed to start sanlock"
+		exit 1
+	fi
+}
+
+# FIXME: add option to allow --test with sanlock
+LVM_TEST_LVMLOCKD_TEST_DLM=1
+
+prepare_lvmlockd() {
+	if pgrep lvmlockd ; then
+		echo "Cannot run while existing lvmlockd process exists"
+		exit 1
+	fi
+
+	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK"; then
+		# make check_lvmlockd_sanlock
+		echo "starting lvmlockd for sanlock"
+		lvmlockd -o 2
+
+	elif test -n "$LVM_TEST_LOCK_TYPE_DLM"; then
+		# make check_lvmlockd_dlm
+		echo "starting lvmlockd for dlm"
+		lvmlockd
+
+	elif test -n "$LVM_TEST_LVMLOCKD_TEST_DLM"; then
+		# make check_lvmlockd_test
+		echo "starting lvmlockd --test (dlm)"
+		lvmlockd --test -g dlm
+
+	elif test -n "$LVM_TEST_LVMLOCKD_TEST_SANLOCK"; then
+		# FIXME: add option for this combination of --test and sanlock
+		echo "starting lvmlockd --test (sanlock)"
+		lvmlockd --test -g sanlock -o 2
+	else
+		echo "not starting lvmlockd"
+		exit 0
+	fi
+
+	sleep 1
+	if ! pgrep lvmlockd; then
+		echo "Failed to start lvmlockd"
+		exit 1
+	fi
+}
+
 prepare_clvmd() {
 	rm -f debug.log strace.log
 	test "${LVM_TEST_LOCKING:-0}" -ne 3 && return # not needed
@@ -316,6 +443,16 @@ teardown() {
 	if test -f TESTNAME ; then
 
 	kill_tagged_processes
+
+	if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
+		echo ""
+		echo "stopping lvmlockd in teardown"
+		killall lvmlockd
+		sleep 1
+		killall lvmlockd || true
+		sleep 1
+		killall -9 lvmlockd || true
+	fi
 
 	kill_sleep_kill_ LOCAL_LVMETAD ${LVM_VALGRIND_LVMETAD:-0}
 

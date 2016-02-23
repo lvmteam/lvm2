@@ -161,7 +161,7 @@ ifeq ("@BUILD_LVMLOCKD@", "yes")
 check_lvmlockd_test: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
-		--flavours udev-lvmlockd-test --only shell/aa-lvmlockd-test-prepare.sh,$(T),shell/zz-lvmlockd-test-remove.sh --skip $(S)
+		--flavours udev-lvmlockd-test --only $(T) --skip $(S)
 endif
 
 DATADIR = $(datadir)/lvm2-testsuite

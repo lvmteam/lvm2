@@ -16,48 +16,6 @@ test_description='Set up things to run tests with sanlock'
 
 [ -z "$LVM_TEST_LOCK_TYPE_SANLOCK" ] && skip;
 
-SANLOCK_CONF="/etc/sanlock/sanlock.conf"
-create_sanlock_conf() {
-	if test -a $SANLOCK_CONF; then
-		if ! grep "created by lvm test suite" $SANLOCK_CONF; then
-			rm $SANLOCK_CONF
-		else
-			mv $SANLOCK_CONF $SANLOCK_CONF.prelvmtest
-		fi
-	fi
-
-	cp lib/test-sanlock-conf $SANLOCK_CONF
-	echo "created new $SANLOCK_CONF"
-}
-
-prepare_lvmlockd_sanlock() {
-	if pgrep lvmlockd ; then
-		echo "Cannot run while existing lvmlockd process exists"
-		exit 1
-	fi
-
-	if pgrep sanlock ; then
-		echo "Cannot run while existing sanlock process exists"
-		exit 1
-	fi
-
-	create_sanlock_conf
-
-	systemctl start sanlock
-	if ! pgrep sanlock; then
-		echo "Failed to start sanlock"
-		exit 1
-	fi
-
-	# FIXME: use 'systemctl start lvm2-lvmlockd' once we can pass -o 2
-	lvmlockd -o 2
-	sleep 1
-	if ! pgrep lvmlockd; then
-		echo "Failed to start lvmlockd"
-		exit 1
-	fi
-}
-
 # Create a device and a VG that are both outside the scope of
 # the standard lvm test suite so that they will not be removed
 # and will remain in place while all the tests are run.
@@ -77,7 +35,8 @@ dd if=/dev/zero of="$GL_FILE" bs=$((1024*1024)) count=1024 2> /dev/null
 GL_LOOP=$(losetup -f "$GL_FILE" --show)
 echo "0 `blockdev --getsize $GL_LOOP` linear $GL_LOOP 0" | dmsetup create GL_DEV
 
-prepare_lvmlockd_sanlock
+aux prepare_sanlock
+aux prepare_lvmlockd
 
 vgcreate --config 'devices { global_filter=["a|GL_DEV|", "r|.*|"] filter=["a|GL_DEV|", "r|.*|"]}' --lock-type sanlock glvg $GL_DEV
 

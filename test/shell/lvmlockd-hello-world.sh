@@ -7,17 +7,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-test_description='Remove the dlm test setup'
+test_description='Hello world for vgcreate with lvmlockd and sanlock'
 
 . lib/inittest
 
-[ -z "$LVM_TEST_LVMLOCKD_TEST" ] && skip;
+[ -z "$LVM_TEST_LVMLOCKD" ] && skip;
 
-killall lvmlockd
-sleep 1
-killall lvmlockd || true
-sleep 1
-killall -9 lvmlockd || true
+aux prepare_pvs 1
+
+vgcreate $SHARED $vg "$dev1"
+
+vgs -o+locktype,lockargs $vg
+
+vgremove $vg
 
