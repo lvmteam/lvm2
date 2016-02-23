@@ -54,6 +54,11 @@ LVMPOLLD_NDEV_FLAVOUR = ,ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpol
 LVMPOLLD_UDEV_FLAVOUR = ,udev-lvmpolld,udev-cluster-lvmpolld,udev-lvmetad-lvmpolld
 endif
 
+ifeq ("@BUILD_LVMLOCKD@", "yes")
+LVMLOCKD_RUN_BASE = $(RUN_BASE)
+LVMLOCKD_UDEV_FLAVOUR = ,udev-lvmlockd-test
+endif
+
 # Shell quote;
 SHELL_PATH_SQ := $(subst ','\'',$(SHELL_PATH))
 
@@ -112,7 +117,7 @@ help:
 check: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours ndev-vanilla,ndev-cluster$(LVMETAD_NDEV_FLAVOUR)$(LVMPOLLD_NDEV_FLAVOUR) --only $(T) --skip $(S)
+		--flavours ndev-vanilla,ndev-cluster$(LVMETAD_NDEV_FLAVOUR)$(LVMPOLLD_NDEV_FLAVOUR)$(LVMLOCKD_UDEV_FLAVOUR) --only $(T) --skip $(S)
 
 check_system: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
