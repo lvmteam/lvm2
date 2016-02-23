@@ -17,7 +17,7 @@ SKIP_WITH_CLVMD=1
 . lib/inittest
 
 # Will default to skip until we can get this reviewed
-skip
+#skip
 
 aux prepare_pvs 6
 
