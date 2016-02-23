@@ -1847,14 +1847,14 @@ static int _pool_callback(struct dm_tree_node *node,
 				log_sys_error("close", argv[args]);
 			return 0;
 		}
-		for (ret = 0; ret < DM_ARRAY_SIZE(buf); ++ret)
+		for (ret = 0; ret < (int) DM_ARRAY_SIZE(buf); ++ret)
 			if (buf[ret])
 				break;
 
 		if (close(fd))
 			log_sys_error("close", argv[args]);
 
-		if (ret == DM_ARRAY_SIZE(buf)) {
+		if (ret == (int) DM_ARRAY_SIZE(buf)) {
 			log_debug("%s skipped, detect empty disk header on %s.",
 				  argv[0], argv[args]);
 			return 1;

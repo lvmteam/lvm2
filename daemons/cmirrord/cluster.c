@@ -1440,7 +1440,7 @@ static void cpg_leave_callback(struct clog_cpg *match,
 			free(rq);
 		}
 	}
-	for (i = 0, j = 0; i < match->checkpoints_needed; i++, j++) {
+	for (i = 0, j = 0; (int) i < match->checkpoints_needed; i++, j++) {
 		match->checkpoint_requesters[j] = match->checkpoint_requesters[i];
 		if (match->checkpoint_requesters[i] == left->nodeid) {
 			LOG_ERROR("[%s] Removing pending ckpt from needed list (%u is leaving)",

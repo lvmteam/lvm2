@@ -317,7 +317,7 @@ static void log_save_line(int len, char *line,
 	unsigned int w = *wrap;
 	int i;
 
-	if (len < LOG_DUMP_SIZE - p) {
+	if (len < (int) (LOG_DUMP_SIZE - p)) {
 		memcpy(log_buf + p, line, len);
 		p += len;
 

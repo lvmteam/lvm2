@@ -452,7 +452,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 			goto done;
 
 		bufused += n;
-		if (n >= sizeof(buf))
+		if (n >= (int) sizeof(buf))
 			bufused = sizeof(buf) - 1;
 	      done:
 		buf[bufused] = '\n';

@@ -789,7 +789,7 @@ static int _lvchange_writemostly(struct logical_volume *lv)
 				return 0;
 			}
 
-			for (s = 0; s < raid_seg->area_count; s++) {
+			for (s = 0; s < (int) raid_seg->area_count; s++) {
 				/*
 				 * We don't bother checking the metadata area,
 				 * since writemostly only affects the data areas.

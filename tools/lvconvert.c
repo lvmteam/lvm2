@@ -90,7 +90,7 @@ struct convert_poll_id_list {
 
 static int _lvconvert_validate_names(struct lvconvert_params *lp)
 {
-	int i, j;
+	unsigned i, j;
 	const char *names[] = {
 		(lp->lv_name == lp->pool_data_name) ? NULL : lp->lv_name, "converted",
 		lp->pool_data_name, "pool",

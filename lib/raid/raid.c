@@ -121,7 +121,7 @@ static int _raid_text_import(struct lv_segment *seg,
 		{ "min_recovery_rate",	&seg->min_recovery_rate },
 		{ "max_recovery_rate",	&seg->max_recovery_rate },
 	}, *aip = raid_attr_import;
-	int i;
+	unsigned i;
 
 	for (i = 0; i < DM_ARRAY_SIZE(raid_attr_import); i++, aip++) {
 		if (dm_config_has_node(sn, aip->name)) {

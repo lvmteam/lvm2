@@ -320,9 +320,9 @@ int pool_check_overprovisioning(const struct logical_volume *lv)
 		 * for growing - threshold is 100% or percent is 0% */
 		sz = poolsum;
 	else
-		sz = ~0; /* No warning */
+		sz = UINT64_C(~0); /* No warning */
 
-	if (sz != ~0) {
+	if (sz != UINT64_C(~0)) {
 		log_warn("WARNING: Sum of all thin volume sizes (%s) exceeds the "
 			 "size of thin pool%s%s%s (%s)!",
 			 display_size(cmd, thinsum),

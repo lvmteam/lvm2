@@ -6201,7 +6201,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	struct lv_segment *parent_seg;
 	struct segment_type *segtype;
 	struct lv_names lv_names;
-	int r;
+	unsigned r;
 
 	log_very_verbose("Removing layer %s for %s", layer_lv->name, lv->name);
 
@@ -6277,7 +6277,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
 	struct lv_names lv_names;
-	unsigned exclusive = 0;
+	unsigned exclusive = 0, i;
 
 	/* create an empty layer LV */
 	if (dm_snprintf(name, sizeof(name), "%s%s", lv_where->name, layer_suffix) < 0) {
@@ -6370,8 +6370,8 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	 *   currently supported only for thin data layer
 	 *   FIXME: without strcmp it breaks mirrors....
 	 */
-	for (r = 0; r < DM_ARRAY_SIZE(_suffixes); ++r)
-		if (strcmp(layer_suffix, _suffixes[r]) == 0) {
+	for (i = 0; i < DM_ARRAY_SIZE(_suffixes); ++i)
+		if (strcmp(layer_suffix, _suffixes[i]) == 0) {
 			lv_names.old = lv_where->name;
 			lv_names.new = layer_lv->name;
 			if (!for_each_sub_lv(layer_lv, _rename_cb, (void *) &lv_names))

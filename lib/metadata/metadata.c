@@ -2572,7 +2572,7 @@ static int _lv_validate_references_single(struct logical_volume *lv, void *data)
  */
 static int _validate_lock_args_chars(const char *lock_args)
 {
-	int i;
+	unsigned i;
 	char c;
 	int found_colon = 0;
 	int r = 1;
@@ -2581,13 +2581,13 @@ static int _validate_lock_args_chars(const char *lock_args)
 		c = lock_args[i];
 
 		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+' && c != ':') {
-			log_error(INTERNAL_ERROR "Invalid character at index %d of lock_args \"%s\"",
+			log_error(INTERNAL_ERROR "Invalid character at index %u of lock_args \"%s\"",
 				  i, lock_args);
 			r = 0;
 		}
 
 		if (c == ':' && found_colon) {
-			log_error(INTERNAL_ERROR "Invalid colon at index %d of lock_args \"%s\"",
+			log_error(INTERNAL_ERROR "Invalid colon at index %u of lock_args \"%s\"",
 				  i, lock_args);
 			r = 0;
 		}
