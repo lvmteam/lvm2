@@ -15,7 +15,6 @@
 #include "lib.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
-#include "defaults.h"
 
 /* FIXME Reformat to 80 char lines. */
 
