@@ -1062,14 +1062,16 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 		return_0;
 	}
 
+	/* TODO: resolve what does it actually mean  'info == NULL'
+	 *       missing info is likely an INTERNAL_ERROR */
 	if (!config_make_nodes(pvmeta, pvmeta->root, NULL,
 			       "device = %"PRId64, (int64_t) dev->dev,
 			       "dev_size = %"PRId64, (int64_t) (info ? lvmcache_device_size(info) : 0),
 			       "format = %s", fmt->name,
 			       "label_sector = %"PRId64, (int64_t) label_sector,
 			       "id = %s", uuid,
-			       "ext_version = %"PRId64, (int64_t) lvmcache_ext_version(info),
-			       "ext_flags = %"PRId64, (int64_t) lvmcache_ext_flags(info),
+			       "ext_version = %"PRId64, (int64_t) (info ? lvmcache_ext_version(info) : 0),
+			       "ext_flags = %"PRId64, (int64_t) (info ? lvmcache_ext_flags(info) : 0),
 			       NULL))
 	{
 		dm_config_destroy(pvmeta);
