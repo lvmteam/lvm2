@@ -352,7 +352,8 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 	do {
 		next = dm_get_next_target(dmt, next, &s, &l,
 					  &target_type, &params);
-		if ((s == start) && (l == length)) {
+		if ((s == start) && (l == length) &&
+		    target_type && params) {
 			if (strcmp(target_type, "mirror"))
 				goto_out;
 
