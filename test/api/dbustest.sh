@@ -21,18 +21,17 @@ skip
 
 aux prepare_pvs 6
 
-# This allows us to run without installing
-# com.redhat.lvmdbus1.conf to /etc/dbus-1/system.d/
-# but in normal operation it needs to be on system bus
-export LVMDBUSD_USE_SESSION="True"
+# Copy the needed file to run on the system bus if it doesn't
+# already exist
+if [ ! -f /etc/dbus-1/system.d/com.redhat.lvmdbus1.conf ]; then
+	install -m 644 $abs_top_builddir/scripts/com.redhat.lvmdbus1.conf /etc/dbus-1/system.d/.
+fi
 
 # Setup the python path so we can run
 export PYTHONPATH=$abs_top_builddir/daemons
 
-# Where should we be logging the output of the daemon when not running as
-# a systemd service
 # Start the dbus service
-$abs_top_builddir/daemons/lvmdbusd/lvmdbusd --debug --udev > /tmp/lvmdbusd.log 2>&1 &
+$abs_top_builddir/daemons/lvmdbusd/lvmdbusd --debug --udev > debug.log_lvmdbusd 2>&1 &
 
 # Give the service some time to start before we try to run the
 # unit test
@@ -45,17 +44,16 @@ if [ "CHK${LVM_DBUS_PID}" == "CHK" ];then
 fi
 
 # Run all the unit tests
-# Are we already logging stdout & stderror?
-$abs_top_builddir/test/dbus/lvmdbustest.py -v > /tmp/lvmdbustest.log 2>&1
+$abs_top_builddir/test/dbus/lvmdbustest.py -v || fail=$?
 
 # We can run individual unit tests by doing this
 # $abs_top_builddir/test/dbus/lvmdbustest.py -v TestDbusService.test_snapshot_merge
 
-# I'm guessing there is a better way to handle this with the built in test env.
-if [ $? -eq 0 ]; then
-	rm -f /tmp/lvmdbusd.log
-	rm -f /tmp/lvmdbustest.log
-fi
-
 echo "Stopping service"
-kill $LVM_DBUS_PID
+kill $LVM_DBUS_PID || {
+	sleep 1
+        kill -9 $LVM_DBUS_PID
+}
+wait
+
+exit ${fail:-"0"}
