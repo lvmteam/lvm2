@@ -199,10 +199,12 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
 	struct lvresize_params lp = { 0 };
-	int ret = ECMD_FAILED;
+	int ret;
 
-	if (!_lvresize_params(cmd, argc, argv, &lp))
+	if (!_lvresize_params(cmd, argc, argv, &lp)) {
+		stack;
 		return EINVALID_CMD_LINE;
+	}
 
 	if (!(handle = init_processing_handle(cmd))) {
 		log_error("Failed to initialize processing handle.");

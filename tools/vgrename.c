@@ -38,7 +38,6 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, struct processing_handle *handle)
 {
 	struct vgrename_params *vp = (struct vgrename_params *) handle->custom_handle;
-	struct lvmcache_vginfo *vginfo;
 	char old_path[NAME_LEN];
 	char new_path[NAME_LEN];
 	struct id id;
@@ -72,7 +71,7 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	 */
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
-	if ((vginfo = lvmcache_vginfo_from_vgname(vp->vg_name_new, NULL))) {
+	if (lvmcache_vginfo_from_vgname(vp->vg_name_new, NULL)) {
 		log_error("New VG name \"%s\" already exists", vp->vg_name_new);
 		return ECMD_FAILED;
 	}

@@ -81,7 +81,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *lv_name_old, *lv_name_new;
 	const char *vg_name, *vg_name_new, *vg_name_old;
 	char *st;
-	int ret = ECMD_FAILED;
+	int ret;
 
 	if (argc == 3) {
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
@@ -169,6 +169,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 			      _lvrename_single);
 
 	destroy_processing_handle(cmd, handle);
-	return ret;
 
+	return ret;
 }
