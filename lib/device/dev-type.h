@@ -21,9 +21,9 @@
 #define NUMBER_OF_MAJORS 4096
 
 #ifdef __linux__
-#  define MAJOR(dev)	((dev & 0xfff00) >> 8)
-#  define MINOR(dev)	((dev & 0xff) | ((dev >> 12) & 0xfff00))
-#  define MKDEV(ma,mi)	((mi & 0xff) | (ma << 8) | ((mi & ~0xff) << 12))
+#  define MAJOR(dev)	(((dev) & 0xfff00) >> 8)
+#  define MINOR(dev)	(((dev) & 0xff) | (((dev) >> 12) & 0xfff00))
+#  define MKDEV(ma,mi)	(((mi) & 0xff) | ((ma) << 8) | (((mi) & ~0xff) << 12))
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
