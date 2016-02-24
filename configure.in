@@ -1159,7 +1159,7 @@ BUILD_LOCKDSANLOCK=$LOCKDSANLOCK
 
 dnl -- Look for sanlock libraries
 if test "$BUILD_LOCKDSANLOCK" = yes; then
-	PKG_CHECK_MODULES(LOCKD_SANLOCK, libsanlock_client, [HAVE_LOCKD_SANLOCK=yes], $bailout)
+	PKG_CHECK_MODULES(LOCKD_SANLOCK, libsanlock_client >= 3.3.0, [HAVE_LOCKD_SANLOCK=yes], $bailout)
 	AC_DEFINE([LOCKDSANLOCK_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd sanlock option.])
 	BUILD_LVMLOCKD=yes
 fi
