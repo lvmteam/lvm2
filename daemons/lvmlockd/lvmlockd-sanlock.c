@@ -1416,14 +1416,12 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	if (adopt)
 		flags |= SANLK_ACQUIRE_ORPHAN_ONLY;
 
-#ifdef SANLOCK_HAS_ACQUIRE_OWNER_NOWAIT
 	/*
 	 * Don't block waiting for a failed lease to expire since it causes
 	 * sanlock_acquire to block for a long time, which would prevent this
 	 * thread from processing other lock requests.
 	 */
 	flags |= SANLK_ACQUIRE_OWNER_NOWAIT;
-#endif
 
 	memset(&opt, 0, sizeof(opt));
 	sprintf(opt.owner_name, "%s", "lvmlockd");
@@ -1498,7 +1496,6 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EAGAIN;
 	}
 
-#ifdef SANLOCK_HAS_ACQUIRE_OWNER_NOWAIT
 	if (rv == SANLK_ACQUIRE_OWNED_RETRY) {
 		/*
 		 * The lock is held by a failed host, and will eventually
@@ -1517,7 +1514,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		*retry = 0;
 		return -EAGAIN;
 	}
-#endif
+
 	if (rv < 0) {
 		log_error("S %s R %s lock_san acquire error %d",
 			  ls->name, r->name, rv);
