@@ -3503,15 +3503,13 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	struct convert_poll_id_list *idl;
 	struct lvconvert_params lp = {
 		.target_attr = ~0,
+		.idls = DM_LIST_HEAD_INIT(lp.idls),
 	};
-	struct processing_handle *handle = NULL;
+	struct processing_handle *handle = init_processing_handle(cmd);
 
-	dm_list_init(&lp.idls);
-
-	if (!(handle = init_processing_handle(cmd))) {
+	if (!handle) {
 		log_error("Failed to initialize processing handle.");
-		ret = ECMD_FAILED;
-		goto out;
+		return ECMD_FAILED;
 	}
 
 	handle->custom_handle = &lp;
@@ -3537,10 +3535,10 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	}
 
 out:
-	if (!dm_list_empty(&lp.idls))
-		dm_pool_free(cmd->mem, dm_list_item(dm_list_first(&lp.idls), struct convert_poll_id_list));
 	if (lp.policy_settings)
 		dm_config_destroy(lp.policy_settings);
+
 	destroy_processing_handle(cmd, handle);
+
 	return ret;
 }
