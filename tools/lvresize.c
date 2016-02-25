@@ -47,6 +47,16 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		 */
 		lp->sizeargs = arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG);
 
+		if (arg_from_list_is_zero(cmd, "may not be zero",
+					  chunksize_ARG, extents_ARG,
+					  poolmetadatasize_ARG,
+					  regionsize_ARG,
+					  size_ARG,
+					  stripes_ARG, stripesize_ARG,
+					  virtualsize_ARG,
+					  -1))
+			return_0;
+
 		if (arg_count(cmd, poolmetadatasize_ARG)) {
 			lp->poolmetadatasize = arg_uint64_value(cmd, poolmetadatasize_ARG, 0);
 			lp->poolmetadatasign = arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE);
