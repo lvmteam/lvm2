@@ -1177,6 +1177,9 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 			vginfo2 = vginfo2->next;
 		}
 
+	if (vginfo->system_id)
+		dm_free(vginfo->system_id);
+
 	dm_free(vginfo->vgname);
 	dm_free(vginfo->creation_host);
 
