@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2007-2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -18,6 +18,8 @@ aux prepare_vg 2 80
 
 lvcreate -L 10M -n lv -i2 $vg
 lvresize -l +4 $vg/lv
+not lvextend -L+0 $vg/lv
+not lvextend -l+0 $vg/lv
 lvremove -ff $vg
 
 lvcreate -L 64M -n $lv -i2 $vg
