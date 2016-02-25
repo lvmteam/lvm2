@@ -24,16 +24,40 @@ from .manager import Manager
 from .background import background_reaper
 import traceback
 import queue
-import sys
 from . import udevwatch
 from .utils import log_debug
 import argparse
 import os
+from .refresh import handle_external_event, event_complete
 
 
 class Lvm(objectmanager.ObjectManager):
 	def __init__(self, object_path):
 		super(Lvm, self).__init__(object_path, BASE_INTERFACE)
+
+
+def _discard_pending_refreshes():
+	# We just handled a refresh, if we have any in the queue they can be
+	# removed because by definition they are older than the refresh we just did.
+	# As we limit the number of refreshes getting into the queue
+	# we should only ever have one to remove.
+	requests = []
+	while not cfg.worker_q.empty():
+		try:
+			r = cfg.worker_q.get(block=False)
+			if r.method != handle_external_event:
+				requests.append(r)
+			else:
+				# Make sure we make this event complete even though it didn't
+				# run, otherwise no other events will get processed
+				event_complete()
+				break
+		except queue.Empty:
+			break
+
+	# Any requests we removed, but did not discard need to be re-queued
+	for r in requests:
+		cfg.worker_q.put(r)
 
 
 def process_request():
@@ -50,16 +74,21 @@ def process_request():
 
 			end = cfg.db.num_refreshes
 
-			if end - start > 1:
-				log_debug(
-					"Inspect method %s for too many refreshes" %
-					(str(req.method)))
+			num_refreshes = end - start
+
+			if num_refreshes > 0:
+				_discard_pending_refreshes()
+
+				if num_refreshes > 1:
+					log_debug(
+						"Inspect method %s for too many refreshes" %
+						(str(req.method)))
 			log_debug("Complete ")
 		except queue.Empty:
 			pass
 		except Exception:
-			traceback.print_exc(file=sys.stdout)
-			pass
+			st = traceback.format_exc()
+			utils.log_error("process_request exception: \n%s" % st)
 
 
 def main():

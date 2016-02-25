@@ -272,10 +272,9 @@ class DataStore(object):
 		:param log  Add debug log entry/exit messages
 		:return: None
 		"""
-
+		self.num_refreshes += 1
 		if log:
 			log_debug("lvmdb - refresh entry")
-			self.num_refreshes += 1
 
 		# Grab everything first then parse it
 		_raw_pvs = cmdhandler.pv_retrieve_with_segs()
