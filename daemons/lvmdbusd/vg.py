@@ -237,10 +237,7 @@ class Vg(AutomatedProperties):
 			# locals(), ['Variant']).Variant("s", "n")}
 
 			if rc == 0:
-				dbo.refresh()
-
-				if (('activate' in change_options) or ('-a' in change_options)):
-					cfg.load()
+				cfg.load()
 			else:
 				raise dbus.exceptions.DBusException(
 					VG_INTERFACE,
