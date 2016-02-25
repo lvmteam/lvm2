@@ -751,35 +751,31 @@ static struct poll_functions _pvmove_fns = {
 	.finish_copy = pvmove_finish,
 };
 
-static void _destroy_id(struct cmd_context *cmd, struct poll_operation_id *id)
+static struct poll_operation_id *_pvmove_create_id(struct cmd_context *cmd,
+						   const char *pv_name,
+						   const char *vg_name,
+						   const char *lv_name,
+						   const char *uuid)
 {
-	if (!id)
-		return;
+	struct poll_operation_id *id;
 
-	dm_pool_free(cmd->mem, id);
-}
+	if (!vg_name || !lv_name || !pv_name || !uuid) {
+		log_error(INTERNAL_ERROR "Wrong params for _pvmove_create_id.");
+		return NULL;
+	}
 
-static struct poll_operation_id *_create_id(struct cmd_context *cmd,
-					    const char *pv_name,
-					    const char *vg_name,
-					    const char *lv_name,
-					    const char *uuid)
-{
-	struct poll_operation_id *id = dm_pool_alloc(cmd->mem, sizeof(struct poll_operation_id));
-	if (!id) {
+	if (!(id = dm_pool_alloc(cmd->mem, sizeof(*id)))) {
 		log_error("Poll operation ID allocation failed.");
 		return NULL;
 	}
 
-	id->vg_name = vg_name ? dm_pool_strdup(cmd->mem, vg_name) : NULL;
-	id->lv_name = lv_name ? dm_pool_strdup(cmd->mem, lv_name) : NULL;
-	id->display_name = pv_name ? dm_pool_strdup(cmd->mem, pv_name) : NULL;
-	id->uuid = uuid ? dm_pool_strdup(cmd->mem, uuid) : NULL;
-
-	if (!id->vg_name || !id->lv_name || !id->display_name || !id->uuid) {
+	if (!(id->vg_name = dm_pool_strdup(cmd->mem, vg_name)) ||
+	    !(id->lv_name = dm_pool_strdup(cmd->mem, lv_name)) ||
+	    !(id->display_name = dm_pool_strdup(cmd->mem, pv_name)) ||
+	    !(id->uuid = dm_pool_strdup(cmd->mem, uuid))) {
 		log_error("Failed to copy one or more poll operation ID members.");
-		_destroy_id(cmd, id);
-		id = NULL;
+		dm_pool_free(cmd->mem, id);
+		return NULL;
 	}
 
 	return id;
@@ -789,25 +785,18 @@ int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		const char *uuid, const char *vg_name,
 		const char *lv_name, unsigned background)
 {
-	int r;
 	struct poll_operation_id *id = NULL;
 
-	if (uuid) {
-		id = _create_id(cmd, pv_name, vg_name, lv_name, uuid);
-		if (!id) {
-			log_error("Failed to allocate poll identifier for pvmove.");
-			return ECMD_FAILED;
-		}
+	if (uuid &&
+	    !(id = _pvmove_create_id(cmd, pv_name, vg_name, lv_name, uuid))) {
+		log_error("Failed to allocate poll identifier for pvmove.");
+		return ECMD_FAILED;
 	}
 
 	if (test_mode())
-		r = ECMD_PROCESSED;
-	else
-		r = poll_daemon(cmd, background, PVMOVE, &_pvmove_fns, "Moved", id);
+		return ECMD_PROCESSED;
 
-	_destroy_id(cmd, id);
-
-	return r;
+	return poll_daemon(cmd, background, PVMOVE, &_pvmove_fns, "Moved", id);
 }
 
 int pvmove(struct cmd_context *cmd, int argc, char **argv)

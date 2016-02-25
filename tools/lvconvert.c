@@ -722,42 +722,39 @@ static struct poll_functions _lvconvert_thin_merge_fns = {
 	.finish_copy = lvconvert_merge_finish,
 };
 
-static void _destroy_id(struct cmd_context *cmd, struct poll_operation_id *id)
-{
-	if (!id)
-		return;
-
-	dm_pool_free(cmd->mem, (void *)id);
-}
-
 static struct poll_operation_id *_create_id(struct cmd_context *cmd,
 					    const char *vg_name,
 					    const char *lv_name,
 					    const char *uuid)
 {
+	struct poll_operation_id *id;
 	char lv_full_name[NAME_LEN];
-	struct poll_operation_id *id = dm_pool_alloc(cmd->mem, sizeof(struct poll_operation_id));
-	if (!id) {
-		log_error("Poll operation ID allocation failed.");
+
+	if (!vg_name || !lv_name || !uuid) {
+		log_error(INTERNAL_ERROR "Wrong params for lvconvert _create_id.");
 		return NULL;
 	}
 
 	if (dm_snprintf(lv_full_name, sizeof(lv_full_name), "%s/%s", vg_name, lv_name) < 0) {
 		log_error(INTERNAL_ERROR "Name \"%s/%s\" is too long.", vg_name, lv_name);
-		_destroy_id(cmd, id);
 		return NULL;
 	}
 
-	id->display_name = dm_pool_strdup(cmd->mem, lv_full_name);
-	id->vg_name = vg_name ? dm_pool_strdup(cmd->mem, vg_name) : NULL;
-	id->lv_name = id->display_name ? strchr(id->display_name, '/') + 1 : NULL;
-	id->uuid = uuid ? dm_pool_strdup(cmd->mem, uuid) : NULL;
-
-	if (!id->vg_name || !id->lv_name || !id->display_name || !id->uuid) {
-		log_error("Failed to copy one or more poll operation ID members.");
-		_destroy_id(cmd, id);
-		id = NULL;
+	if (!(id = dm_pool_alloc(cmd->mem, sizeof(*id)))) {
+		log_error("Poll operation ID allocation failed.");
+		return NULL;
 	}
+
+	if (!(id->display_name = dm_pool_strdup(cmd->mem, lv_full_name)) ||
+	    !(id->lv_name = strchr(id->display_name, '/')) ||
+	    !(id->vg_name = dm_pool_strdup(cmd->mem, vg_name)) ||
+	    !(id->uuid = dm_pool_strdup(cmd->mem, uuid))) {
+		log_error("Failed to copy one or more poll operation ID members.");
+		dm_pool_free(cmd->mem, id);
+		return NULL;
+	}
+
+	id->lv_name++; /* skip over '/' */
 
 	return id;
 }
@@ -800,8 +797,6 @@ int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	r = _lvconvert_poll_by_id(cmd, id, background, is_merging_origin, is_merging_origin_thin);
-
-	_destroy_id(cmd, id);
 
 	return r;
 }

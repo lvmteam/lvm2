@@ -242,22 +242,22 @@ static struct poll_operation_id *copy_poll_operation_id(struct dm_pool *mem,
 {
 	struct poll_operation_id *copy;
 
-	if (!id)
-		return_NULL;
+	if (!id || !id->vg_name || !id->lv_name || !id->display_name || !id->uuid) {
+		log_error(INTERNAL_ERROR "Wrong params for copy_poll_operation_id.");
+		return NULL;
+	}
 
-	copy = (struct poll_operation_id *) dm_pool_alloc(mem, sizeof(struct poll_operation_id));
-	if (!copy) {
+	if (!(copy = dm_pool_alloc(mem, sizeof(*copy)))) {
 		log_error("Poll operation ID allocation failed.");
 		return NULL;
 	}
 
-	copy->display_name = id->display_name ? dm_pool_strdup(mem, id->display_name) : NULL;
-	copy->lv_name = id->lv_name ? dm_pool_strdup(mem, id->lv_name) : NULL;
-	copy->vg_name = id->vg_name ? dm_pool_strdup(mem, id->vg_name) : NULL;
-	copy->uuid = id->uuid ? dm_pool_strdup(mem, id->uuid) : NULL;
-
-	if (!copy->display_name || !copy->lv_name || !copy->vg_name || !copy->uuid) {
+	if (!(copy->display_name = dm_pool_strdup(mem, id->display_name)) ||
+	    !(copy->lv_name = dm_pool_strdup(mem, id->lv_name)) ||
+	    !(copy->vg_name = dm_pool_strdup(mem, id->vg_name)) ||
+	    !(copy->uuid = dm_pool_strdup(mem, id->uuid))) {
 		log_error("Failed to copy one or more poll_operation_id members.");
+		dm_pool_free(mem, copy);
 		return NULL;
 	}
 
