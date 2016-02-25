@@ -49,6 +49,7 @@ static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
 		pp->uuid_str = arg_str_value(cmd, uuidstr_ARG, "");
 		if (!id_read_format(&pp->pva.id, pp->uuid_str))
 			return 0;
+		pp->pva.idp = &pp->pva.id;
 	}
 
 	if (arg_sign_value(cmd, physicalvolumesize_ARG, SIGN_NONE) == SIGN_MINUS) {
