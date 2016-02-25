@@ -1,5 +1,6 @@
 Version 2.02.144 - 
 =====================================
+  Improve support for env LVM_VG_NAME for reference VG name in lvconvert.
   Fix regresion when lvresize accepted zero sizes (2.02.141).
   Always warn user about PV in use even when pvremove uses --force --force.
   Use uninitilized pool header detection in all cases.

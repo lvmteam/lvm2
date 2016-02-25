@@ -173,8 +173,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	if (!validate_restricted_lvname_param(cmd, &lp->vg_name, &lp->lv_split_name))
 		return_0;
 
-	if (strchr(lp->lv_name_full, '/') &&
-	    (vg_name = extract_vgname(cmd, lp->lv_name_full)) &&
+	if ((vg_name = extract_vgname(cmd, lp->lv_name_full)) &&
 	    lp->vg_name && strcmp(vg_name, lp->vg_name)) {
 		log_error("Please use a single volume group name "
 			  "(\"%s\" or \"%s\")", vg_name, lp->vg_name);
