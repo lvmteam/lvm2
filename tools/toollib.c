@@ -4452,6 +4452,7 @@ do_command:
 		if (!pv_write(cmd, pv, 0)) {
 			log_error("Failed to write physical volume \"%s\"", pv_name);
 			dm_list_move(&pp->arg_fail, &pd->list);
+			continue;
 		}
 
 		log_print_unless_silent("Physical volume \"%s\" successfully created", pv_name);
