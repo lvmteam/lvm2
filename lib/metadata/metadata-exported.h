@@ -522,8 +522,8 @@ struct vgnameid_list {
  */
 struct pv_create_args {
 	uint64_t size;
-	unsigned long data_alignment;
-	unsigned long data_alignment_offset;
+	uint64_t data_alignment;
+	uint64_t data_alignment_offset;
 	uint64_t label_sector;
 	int pvmetadatacopies;
 	uint64_t pvmetadatasize;
