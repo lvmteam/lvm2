@@ -757,10 +757,10 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 
 	if (force_count)
 		log_warn("WARNING: Wiping physical volume label from "
-			  "%s%s%s%s", name,
-			  !is_orphan(pv) ? " of volume group \"" : "",
-			  pv_vg_name(pv),
-			  !is_orphan(pv) ? "\"" : "");
+			 "%s%s%s%s", name,
+			 !is_orphan(pv) ? " of volume group \"" : "",
+			 pv_vg_name(pv),
+			 !is_orphan(pv) ? "\"" : "");
 
 	r = 1;
 bad:
