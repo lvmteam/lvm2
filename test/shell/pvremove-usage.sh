@@ -56,16 +56,16 @@ for mdacp in 0 1 2; do
 
     # pvremove -f fails when pv in a vg (---metadatacopies $mdacp)
     not pvremove -f "$dev1" 2>&1 | tee out
-    grep "belongs" out
+    grep "is used" out
     pvs "$dev1"
 
     # pvremove -ff fails without confirmation when pv in a vg (---metadatacopies $mdacp)
     not pvremove -ff "$dev1" 2>&1 | tee out
-    grep "belongs" out
+    grep "is used" out
 
     # pvremove -ff succeds with confirmation when pv in a vg (---metadatacopies $mdacp)
     pvremove -ffy "$dev1" 2>&1 | tee out
-    grep "belongs" out
+    grep "is used" out
     not pvs "$dev1"
 
     vgreduce --removemissing $vg

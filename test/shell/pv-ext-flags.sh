@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_devs 2
 
 # PV_EXT_USED flag
-MARKED_AS_USED_MSG="marked as belonging to a VG but its metadata is missing"
+MARKED_AS_USED_MSG="is used by a VG but its metadata is missing"
 
 ######################################
 ### CHECK PV WITH 0 METADATA AREAS ###

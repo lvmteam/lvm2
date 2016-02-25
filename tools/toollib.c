@@ -2962,7 +2962,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		pv_name = pv_dev_name(pv);
 
 		if (cmd->system_id && is_orphan(pv) && is_used_pv(pv)) {
-			log_verbose("PV %s is marked as belonging to a VG but its metadata is missing.", pv_name);
+			log_verbose("PV %s is used by a VG but its metadata is missing.", pv_name);
 			log_verbose("Skipping PV %s because it's not possible to decide whether it matches system id.", pv_name);
 			continue;
 		}
@@ -3601,7 +3601,7 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 			prompt->answer = PROMPT_ANSWER_NO;
 
 			if (prompt->vg_name_unknown) {
-				log_error("PV '%s' is marked as belonging to a VG but its metadata is missing.", pvname);
+				log_error("PV %s is used by a VG but its metadata is missing.", pvname);
 				log_error("Can't initialize PV '%s' without -ff.", pvname);
 			} else if (!strcmp(command_name(cmd), "pvcreate")) {
 				log_error("Can't initialize physical volume \"%s\" of volume group \"%s\" without -ff", pvname, vgname);
@@ -3626,15 +3626,15 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 			prompt->answer = PROMPT_ANSWER_NO;
 
 			if (prompt->vg_name_unknown)
-				log_error("PV %s belongs to a VG but its metadata is missing.", pvname);
+				log_error("PV %s is used by a VG but its metadata is missing.", pvname);
 			else
-				log_error("PV %s belongs to Volume Group %s so please use vgreduce first.", pvname, vgname);
+				log_error("PV %s is used by VG %s so please use vgreduce first.", pvname, vgname);
 			log_error("(If you are certain you need pvremove, then confirm by using --force twice.)");
 		} else if (pp->yes) {
-			log_warn("WARNING: PV %s belongs to Volume Group %s", pvname, vgname);
+			log_warn("WARNING: PV %s is used by VG %s", pvname, vgname);
 			prompt->answer = PROMPT_ANSWER_YES;
 		} else if (ask) {
-			log_warn("WARNING: PV %s belongs to Volume Group %s", pvname, vgname);
+			log_warn("WARNING: PV %s is used by VG %s", pvname, vgname);
 			if (yes_no_prompt("Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ", pvname, vgname) == 'n') {
 				prompt->answer = PROMPT_ANSWER_NO;
 				log_error("%s: physical volume label not removed", pvname);

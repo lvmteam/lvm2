@@ -733,8 +733,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 			goto_out;
 
 		if (used) {
-			log_warn("WARNING: PV '%s' is marked as belonging to a VG "
-				 "but its metadata is missing.", name);
+			log_warn("WARNING: PV %s is used by a VG but its metadata is missing.", name);
 
 			if (force_count < 2)
 				goto_bad;
@@ -745,8 +744,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name,
 				goto_bad;
 		}
 	} else {
-		log_warn("WARNING: PV %s belongs to Volume Group %s "
-			 "(consider using vgreduce).", name, pv_vg_name(pv));
+		log_warn("WARNING: PV %s is used by VG %s (consider using vgreduce).", name, pv_vg_name(pv));
 
 		if (force_count < 2)
 			goto_bad;

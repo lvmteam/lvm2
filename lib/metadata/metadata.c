@@ -201,8 +201,7 @@ static int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 			return_0;
 
 		if (used) {
-			log_error("Physical volume '%s' is marked as belonging to a VG "
-				  "but its metadata is missing.", pv_name);
+			log_error("PV %s is used by a VG but its metadata is missing.", pv_name);
 			return 0;
 		}
 	}
@@ -1585,7 +1584,7 @@ static int _pvcreate_check(struct cmd_context *cmd, const char *name,
 			goto_out;
 
 		if (used && pp->force != DONT_PROMPT_OVERRIDE) {
-			log_error("PV '%s' is marked as belonging to a VG but its metadata is missing.", name);
+			log_error("PV %s is used by a VG but its metadata is missing.", name);
 			log_error("Can't initialize PV '%s' without -ff.", name);
 			goto out;
 		}
