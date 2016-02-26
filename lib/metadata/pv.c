@@ -237,15 +237,17 @@ char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
 	char *repstr;
 	int used = is_used_pv(pv);
 
-	if (!(repstr = dm_pool_zalloc(mem, 5))) {
+	if (!(repstr = dm_pool_zalloc(mem, 4))) {
 		log_error("dm_pool_alloc failed");
 		return NULL;
 	}
 
-	repstr[0] = (pv->status & ALLOCATABLE_PV) ? 'a' : '-';
+	/*
+	 * An allocatable PV is always used, so we don't need to show 'u'.
+	 */
+	repstr[0] = (pv->status & ALLOCATABLE_PV) ? 'a' : (used > 0) ? 'u' : '-';
 	repstr[1] = (pv->status & EXPORTED_VG) ? 'x' : '-';
 	repstr[2] = (pv->status & MISSING_PV) ? 'm' : '-';
-	repstr[3] = used <= 0 ? '-' : 'u';
 
 	return repstr;
 }
