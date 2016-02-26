@@ -3376,6 +3376,16 @@ static struct volume_group _dummy_vg = {
 	.tags = DM_LIST_HEAD_INIT(_dummy_vg.tags),
 };
 
+static struct volume_group _unknown_vg = {
+	.fid = &_dummy_fid,
+	.name = "[unknown]",
+	.system_id = (char *) "",
+	.lvm1_system_id = (char *) "",
+	.pvs = DM_LIST_HEAD_INIT(_unknown_vg.pvs),
+	.lvs = DM_LIST_HEAD_INIT(_unknown_vg.lvs),
+	.tags = DM_LIST_HEAD_INIT(_unknown_vg.tags),
+};
+
 static void *_obj_get_vg(void *obj)
 {
 	struct volume_group *vg = ((struct lvm_report_object *)obj)->vg;
@@ -3582,12 +3592,17 @@ int report_object(void *handle, int selection_only, const struct volume_group *v
 	}
 
 	/* Never report orphan VGs. */
-	if (vg && is_orphan_vg(vg->name))
-		obj.vg = NULL;
+	if (vg && is_orphan_vg(vg->name)) {
+		obj.vg = &_dummy_vg;
+		if (pv)
+			_dummy_fid.fmt = pv->fmt;
+	}
 
-	/* The two format fields might as well match. */
-	if (!obj.vg && pv)
-		_dummy_fid.fmt = pv->fmt;
+	if (vg && is_orphan_vg(vg->name) && is_used_pv(pv)) {
+		obj.vg = &_unknown_vg;
+		if (pv)
+			_dummy_fid.fmt = pv->fmt;
+	}
 
 	return sh ? dm_report_object_is_selected(sh->selection_rh, &obj, 0, &sh->selected)
 		  : dm_report_object(handle, &obj);
