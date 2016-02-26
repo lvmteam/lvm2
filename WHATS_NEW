@@ -1,5 +1,6 @@
 Version 2.02.144 - 
 =====================================
+  Update makefile to generate lcov output also for lvmpolld and lvmlockd.
   Fix SystemdService lvm2-lvmdbusd.service name.
   Improve support for env LVM_VG_NAME for reference VG name in lvconvert.
   Fix regresion when lvresize accepted zero sizes (2.02.141).
