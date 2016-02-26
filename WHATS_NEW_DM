@@ -1,4 +1,4 @@
-Version 1.02.118 -
+Version 1.02.118 - 26th February 2016
 =====================================
   Fix string boundary check in _get_canonical_field_name().
   Always initialized hist struct in _stats_parse_histogram().

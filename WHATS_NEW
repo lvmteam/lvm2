@@ -1,14 +1,14 @@
-Version 2.02.144 - 
+Version 2.02.144 - 26th February 2016
 =====================================
   Only show (u)sed pv_attr char when PV is not (a)llocatable. (2.02.143)
   Update makefile to generate lcov output also for lvmpolld and lvmlockd.
   Fix SystemdService lvm2-lvmdbusd.service name.
   Improve support for env LVM_VG_NAME for reference VG name in lvconvert.
-  Fix regresion when lvresize accepted zero sizes (2.02.141).
+  Fix regression when lvresize accepted zero sizes. (2.02.141)
   Always warn user about PV in use even when pvremove uses --force --force.
-  Use uninitilized pool header detection in all cases.
-  Fir read error detection when checking for uninitialized thin-pool header.
-  Fix error path for internal error in lvmetad vg lookup code.
+  Use uninitialized pool header detection in all cases.
+  Fix read error detection when checking for uninitialized thin-pool header.
+  Fix error path for internal error in lvmetad VG lookup code.
 
 Version 2.02.143 - 21st February 2016
 =====================================
