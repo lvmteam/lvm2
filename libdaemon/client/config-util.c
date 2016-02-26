@@ -366,9 +366,9 @@ int buffer_append(struct buffer *buf, const char *string)
 {
 	int len = strlen(string);
 
-	if ((buf->allocated - buf->used <= len) &&
+	if ((!buf->mem || (buf->allocated - buf->used <= len)) &&
 	    !buffer_realloc(buf, len + 1))
-                return 0;
+		return 0;
 
 	strcpy(buf->mem + buf->used, string);
 	buf->used += len;
