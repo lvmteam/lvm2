@@ -1108,5 +1108,5 @@ int dev_fd(struct device *dev)
 const char *dev_name(const struct device *dev)
 {
 	return (dev && dev->aliases.n) ? dm_list_item(dev->aliases.n, struct dm_str_list)->str :
-	    "unknown device";
+	    unknown_device_name();
 }
