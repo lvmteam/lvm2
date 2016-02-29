@@ -32,7 +32,7 @@ vgs | grep $vg1
 pvchange --metadataignore y "$dev1"
 aux disable_dev "$dev2"
 pvscan --cache
-check pv_field "$dev1" vg_name ""
+check pv_field "$dev1" vg_name "[unknown]"
 aux enable_dev "$dev2"
 pvscan --cache
 check pv_field "$dev1" vg_name "$vg1"
