@@ -1,8 +1,12 @@
 Version 2.02.145 - 
 =====================================
+  Display [unknown] instead of blank for unknown VG names in pvs output.
 
 Version 2.02.144 - 26th February 2016
 =====================================
+  Use new PV processing code in pvcreate/vgcreate/vgextend/pvremove.
+  Add new PV processing code that prompts user without locks held.
+  Prevent lvmlockd blocking with new flag requiring sanlock 3.3.0.
   Only show (u)sed pv_attr char when PV is not (a)llocatable. (2.02.143)
   Update makefile to generate lcov output also for lvmpolld and lvmlockd.
   Fix SystemdService lvm2-lvmdbusd.service name.
