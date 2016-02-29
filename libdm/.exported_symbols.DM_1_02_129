@@ -1,1 +1,3 @@
 dm_bitset_parse_list
+dm_stats_get_counter
+dm_stats_get_metric

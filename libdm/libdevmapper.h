@@ -2742,6 +2742,12 @@ int dm_report_group_destroy(struct dm_report_group *group);
  * or area is selected according to the current state of the dm_stats
  * handle's embedded cursor.
  *
+ * Two methods are provided to access counter values: a named function
+ * for each available counter field and a single function that accepts
+ * an enum value specifying the required field. New code is encouraged
+ * to use the enum based interface as calls to the named functions are
+ * implemented using the enum method internally.
+ *
  * See the kernel documentation for complete descriptions of each
  * counter field:
  *
@@ -2765,6 +2771,27 @@ int dm_report_group_destroy(struct dm_report_group *group);
 
 #define DM_STATS_REGION_CURRENT UINT64_MAX
 #define DM_STATS_AREA_CURRENT UINT64_MAX
+
+typedef enum {
+	DM_STATS_READS_COUNT,
+	DM_STATS_READS_MERGED_COUNT,
+	DM_STATS_READ_SECTORS_COUNT,
+	DM_STATS_READ_NSECS,
+	DM_STATS_WRITES_COUNT,
+	DM_STATS_WRITES_MERGED_COUNT,
+	DM_STATS_WRITE_SECTORS_COUNT,
+	DM_STATS_WRITE_NSECS,
+	DM_STATS_IO_IN_PROGRESS_COUNT,
+	DM_STATS_IO_NSECS,
+	DM_STATS_WEIGHTED_IO_NSECS,
+	DM_STATS_TOTAL_READ_NSECS,
+	DM_STATS_TOTAL_WRITE_NSECS,
+	DM_STATS_NR_COUNTERS
+} dm_stats_counter_t;
+
+uint64_t dm_stats_get_counter(const struct dm_stats *dms,
+			      dm_stats_counter_t counter,
+			      uint64_t region_id, uint64_t area_id);
 
 uint64_t dm_stats_get_reads(const struct dm_stats *dms,
 			    uint64_t region_id, uint64_t area_id);
@@ -2831,6 +2858,27 @@ uint64_t dm_stats_get_total_write_nsecs(const struct dm_stats *dms,
  * average_rd_wait_time: the average read wait time
  * average_wr_wait_time: the average write wait time
  */
+
+typedef enum {
+	DM_STATS_RD_MERGES_PER_SEC,
+	DM_STATS_WR_MERGES_PER_SEC,
+	DM_STATS_READS_PER_SEC,
+	DM_STATS_WRITES_PER_SEC,
+	DM_STATS_READ_SECTORS_PER_SEC,
+	DM_STATS_WRITE_SECTORS_PER_SEC,
+	DM_STATS_AVERAGE_REQUEST_SIZE,
+	DM_STATS_AVERAGE_QUEUE_SIZE,
+	DM_STATS_AVERAGE_WAIT_TIME,
+	DM_STATS_AVERAGE_RD_WAIT_TIME,
+	DM_STATS_AVERAGE_WR_WAIT_TIME,
+	DM_STATS_SERVICE_TIME,
+	DM_STATS_THROUGHPUT,
+	DM_STATS_UTILIZATION,
+	DM_STATS_NR_METRICS
+} dm_stats_metric_t;
+
+int dm_stats_get_metric(const struct dm_stats *dms, int metric,
+			uint64_t region_id, uint64_t area_id, double *value);
 
 int dm_stats_get_rd_merges_per_sec(const struct dm_stats *dms, double *rrqm,
 				   uint64_t region_id, uint64_t area_id);

@@ -1438,332 +1438,315 @@ void dm_stats_destroy(struct dm_stats *dms)
 	dm_free(dms);
 }
 
+static uint64_t _stats_get_counter(const struct dm_stats *dms,
+				   const struct dm_stats_counters *area,
+				   dm_stats_counter_t counter)
+{
+	switch(counter) {
+	case DM_STATS_READS_COUNT:
+		return area->reads;
+	case DM_STATS_READS_MERGED_COUNT:
+		return area->reads_merged;
+	case DM_STATS_READ_SECTORS_COUNT:
+		return area->read_sectors;
+	case DM_STATS_READ_NSECS:
+		return area->read_nsecs;
+	case DM_STATS_WRITES_COUNT:
+		return area->writes;
+	case DM_STATS_WRITES_MERGED_COUNT:
+		return area->writes_merged;
+	case DM_STATS_WRITE_SECTORS_COUNT:
+		return area->write_sectors;
+	case DM_STATS_WRITE_NSECS:
+		return area->write_nsecs;
+	case DM_STATS_IO_IN_PROGRESS_COUNT:
+		return area->io_in_progress;
+	case DM_STATS_IO_NSECS:
+		return area->io_nsecs;
+	case DM_STATS_WEIGHTED_IO_NSECS:
+		return area->weighted_io_nsecs;
+	case DM_STATS_TOTAL_READ_NSECS:
+		return area->total_read_nsecs;
+	case DM_STATS_TOTAL_WRITE_NSECS:
+		return area->total_write_nsecs;
+	case DM_STATS_NR_COUNTERS:
+	default:
+		log_error("Attempt to read invalid counter: %d", counter);
+	}
+	return 0;
+}
+
+uint64_t dm_stats_get_counter(const struct dm_stats *dms,
+			      dm_stats_counter_t counter,
+			      uint64_t region_id, uint64_t area_id)
+{
+	struct dm_stats_region *region;
+	struct dm_stats_counters *area;
+
+	region_id = (region_id == DM_STATS_REGION_CURRENT)
+		     ? dms->cur_region : region_id ;
+	area_id = (area_id == DM_STATS_REGION_CURRENT)
+		   ? dms->cur_area : area_id ;
+
+	region = &dms->regions[region_id];
+
+	area = &region->counters[area_id];
+
+	return _stats_get_counter(dms, area, counter);
+}
+
 /**
- * Methods for accessing counter fields. All methods share the
+ * Methods for accessing named counter fields. All methods share the
  * following naming scheme and prototype:
  *
- * uint64_t dm_stats_get_COUNTER(struct dm_stats *, uint64_t, uint64_t)
+ * uint64_t dm_stats_get_COUNTER(const struct dm_stats *, uint64_t, uint64_t)
  *
  * Where the two integer arguments are the region_id and area_id
  * respectively.
+ *
+ * name is the name of the counter (lower case)
+ * counter is the part of the enum name following DM_STATS_ (upper case)
  */
-#define MK_STATS_GET_COUNTER_FN(counter)				\
-uint64_t dm_stats_get_ ## counter(const struct dm_stats *dms,		\
-				uint64_t region_id, uint64_t area_id)	\
+#define MK_STATS_GET_COUNTER_FN(name, counter)				\
+uint64_t dm_stats_get_ ## name(const struct dm_stats *dms,		\
+			       uint64_t region_id, uint64_t area_id)	\
 {									\
-	region_id = (region_id == DM_STATS_REGION_CURRENT)		\
-		     ? dms->cur_region : region_id ;			\
-	area_id = (area_id == DM_STATS_REGION_CURRENT)			\
-		   ? dms->cur_area : area_id ;				\
-	return dms->regions[region_id].counters[area_id].counter;	\
+	return dm_stats_get_counter(dms, DM_STATS_ ## counter,		\
+				    region_id, area_id);		\
 }
 
-MK_STATS_GET_COUNTER_FN(reads)
-MK_STATS_GET_COUNTER_FN(reads_merged)
-MK_STATS_GET_COUNTER_FN(read_sectors)
-MK_STATS_GET_COUNTER_FN(read_nsecs)
-MK_STATS_GET_COUNTER_FN(writes)
-MK_STATS_GET_COUNTER_FN(writes_merged)
-MK_STATS_GET_COUNTER_FN(write_sectors)
-MK_STATS_GET_COUNTER_FN(write_nsecs)
-MK_STATS_GET_COUNTER_FN(io_in_progress)
-MK_STATS_GET_COUNTER_FN(io_nsecs)
-MK_STATS_GET_COUNTER_FN(weighted_io_nsecs)
-MK_STATS_GET_COUNTER_FN(total_read_nsecs)
-MK_STATS_GET_COUNTER_FN(total_write_nsecs)
+MK_STATS_GET_COUNTER_FN(reads, READS_COUNT)
+MK_STATS_GET_COUNTER_FN(reads_merged, READS_MERGED_COUNT)
+MK_STATS_GET_COUNTER_FN(read_sectors, READ_SECTORS_COUNT)
+MK_STATS_GET_COUNTER_FN(read_nsecs, READ_NSECS)
+MK_STATS_GET_COUNTER_FN(writes, WRITES_COUNT)
+MK_STATS_GET_COUNTER_FN(writes_merged, WRITES_MERGED_COUNT)
+MK_STATS_GET_COUNTER_FN(write_sectors, WRITE_SECTORS_COUNT)
+MK_STATS_GET_COUNTER_FN(write_nsecs, WRITE_NSECS)
+MK_STATS_GET_COUNTER_FN(io_in_progress, IO_IN_PROGRESS_COUNT)
+MK_STATS_GET_COUNTER_FN(io_nsecs, IO_NSECS)
+MK_STATS_GET_COUNTER_FN(weighted_io_nsecs, WEIGHTED_IO_NSECS)
+MK_STATS_GET_COUNTER_FN(total_read_nsecs, TOTAL_READ_NSECS)
+MK_STATS_GET_COUNTER_FN(total_write_nsecs, TOTAL_WRITE_NSECS)
 #undef MK_STATS_GET_COUNTER_FN
 
-int dm_stats_get_rd_merges_per_sec(const struct dm_stats *dms, double *rrqm,
-				   uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
+/*
+ * Floating point stats metric functions
+ *
+ * Called from dm_stats_get_metric() to calculate the value of
+ * the requested metric.
+ *
+ * int _metric_name(const struct dm_stats *dms,
+ * 		    struct dm_stats_counters *c,
+ * 		    double *value);
+ *
+ * Calculate a metric value from the counter data for the given
+ * identifiers and store it in the memory pointed to by value,
+ * applying group or region aggregation if enabled.
+ *
+ * Return one on success or zero on failure.
+ *
+ * To add a new metric:
+ *
+ * o Add a new name to the dm_stats_metric_t enum.
+ * o Create a _metric_fn() to calculate the new metric.
+ * o Add _metric_fn to the _metrics function table
+ *   (entries in enum order).
+ * o Do not add a new named public function for the metric -
+ *   users of new metrics are encouraged to convert to the enum
+ *   based metric interface.
+ *
+ */
 
-	if (!dms->interval_ns)
-		return_0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	*rrqm = ((double) c->reads_merged) / (double) dms->interval_ns;
-	return 1;
-}
-
-int dm_stats_get_wr_merges_per_sec(const struct dm_stats *dms, double *wrqm,
-				   uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	*wrqm = ((double) c->writes_merged) / (double) dms->interval_ns;
-	return 1;
-}
-
-int dm_stats_get_reads_per_sec(const struct dm_stats *dms, double *rd_s,
-			       uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	*rd_s = ((double) c->reads * NSEC_PER_SEC) / (double) dms->interval_ns;
-	return 1;
-}
-
-int dm_stats_get_writes_per_sec(const struct dm_stats *dms, double *wr_s,
-				uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	*wr_s = ((double) c->writes * (double) NSEC_PER_SEC)
-		 / (double) dms->interval_ns;
-
-	return 1;
-}
-
-int dm_stats_get_read_sectors_per_sec(const struct dm_stats *dms, double *rsec_s,
-				      uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	*rsec_s = ((double) c->read_sectors * (double) NSEC_PER_SEC)
-		   / (double) dms->interval_ns;
-
-	return 1;
-}
-
-int dm_stats_get_write_sectors_per_sec(const struct dm_stats *dms, double *wsec_s,
-				       uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	*wsec_s = ((double) c->write_sectors * (double) NSEC_PER_SEC)
-		   / (double) dms->interval_ns;
-	return 1;
-}
-
-int dm_stats_get_average_request_size(const struct dm_stats *dms, double *arqsz,
-				      uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-	uint64_t nr_ios, nr_sectors;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	*arqsz = 0.0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	nr_ios = c->reads + c->writes;
-	nr_sectors = c->read_sectors + c->write_sectors;
-	if (nr_ios)
-		*arqsz = (double) nr_sectors / (double) nr_ios;
-	return 1;
-}
-
-int dm_stats_get_average_queue_size(const struct dm_stats *dms, double *qusz,
-				    uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-	uint64_t io_ticks;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	*qusz = 0.0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	io_ticks = c->weighted_io_nsecs;
-	if (io_ticks)
-		*qusz = (double) io_ticks / (double) dms->interval_ns;
-	return 1;
-}
-
-int dm_stats_get_average_wait_time(const struct dm_stats *dms, double *await,
-				   uint64_t region_id, uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-	uint64_t io_ticks, nr_ios;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	*await = 0.0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	io_ticks = c->read_nsecs + c->write_nsecs;
-	nr_ios = c->reads + c->writes;
-	if (nr_ios)
-		*await = (double) io_ticks / (double) nr_ios;
-	return 1;
-}
-
-int dm_stats_get_average_rd_wait_time(const struct dm_stats *dms,
-				      double *await, uint64_t region_id,
-				      uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-	uint64_t rd_io_ticks, nr_rd_ios;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	*await = 0.0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	rd_io_ticks = c->read_nsecs;
-	nr_rd_ios = c->reads;
-	if (rd_io_ticks)
-		*await = (double) rd_io_ticks / (double) nr_rd_ios;
-	return 1;
-}
-
-int dm_stats_get_average_wr_wait_time(const struct dm_stats *dms,
-				      double *await, uint64_t region_id,
-				      uint64_t area_id)
-{
-	struct dm_stats_counters *c;
-	uint64_t wr_io_ticks, nr_wr_ios;
-
-	if (!dms->interval_ns)
-		return_0;
-
-	*await = 0.0;
-
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-	wr_io_ticks = c->write_nsecs;
-	nr_wr_ios = c->writes;
-	if (wr_io_ticks && nr_wr_ios)
-		*await = (double) wr_io_ticks / (double) nr_wr_ios;
-	return 1;
-}
-
-int dm_stats_get_service_time(const struct dm_stats *dms, double *svctm,
+static int _rd_merges_per_sec(const struct dm_stats *dms, double *rrqm,
 			      uint64_t region_id, uint64_t area_id)
 {
-	dm_percent_t util;
-	double tput;
+	double mrgs;
+	mrgs = (double) dm_stats_get_counter(dms, DM_STATS_READS_MERGED_COUNT,
+					     region_id, area_id);
 
-	if (!dm_stats_get_throughput(dms, &tput, region_id, area_id))
-		return_0;
+	*rrqm = mrgs / (double) dms->interval_ns;
 
-	if (!dm_stats_get_utilization(dms, &util, region_id, area_id))
-		return_0;
-
-	/* avoid NAN with zero counter values */
-	if ( (uint64_t) tput == 0 || (uint64_t) util == 0) {
-		*svctm = 0.0;
-		return 1;
-	}
-	*svctm = ((double) NSEC_PER_SEC * dm_percent_to_float(util))
-		  / (100.0 * tput);
 	return 1;
 }
 
-int dm_stats_get_throughput(const struct dm_stats *dms, double *tput,
-			    uint64_t region_id, uint64_t area_id)
+static int _wr_merges_per_sec(const struct dm_stats *dms, double *wrqm,
+			      uint64_t region_id, uint64_t area_id)
 {
-	struct dm_stats_counters *c;
+	double mrgs;
+	mrgs = (double) dm_stats_get_counter(dms, DM_STATS_WRITES_MERGED_COUNT,
+					     region_id, area_id);
 
-	if (!dms->interval_ns)
-		return_0;
+	*wrqm = mrgs / (double) dms->interval_ns;
 
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
-
-	c = &(dms->regions[region_id].counters[area_id]);
-
-	*tput = (( NSEC_PER_SEC * ((double) c->reads + (double) c->writes))
-		 / (double) (dms->interval_ns));
 	return 1;
 }
 
-int dm_stats_get_utilization(const struct dm_stats *dms, dm_percent_t *util,
-			     uint64_t region_id, uint64_t area_id)
+static int _reads_per_sec(const struct dm_stats *dms, double *rd_s,
+			  uint64_t region_id, uint64_t area_id)
 {
-	struct dm_stats_counters *c;
-	uint64_t io_nsecs;
+	double reads;
+	reads = (double) dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+					      region_id, area_id);
 
-	if (!dms->interval_ns)
-		return_0;
+	*rd_s = (reads * NSEC_PER_SEC) / (double) dms->interval_ns;
 
-	region_id = (region_id == DM_STATS_REGION_CURRENT)
-		     ? dms->cur_region : region_id ;
-	area_id = (area_id == DM_STATS_REGION_CURRENT)
-		   ? dms->cur_area : area_id ;
+	return 1;
+}
 
-	c = &(dms->regions[region_id].counters[area_id]);
+static int _writes_per_sec(const struct dm_stats *dms, double *wr_s,
+			   uint64_t region_id, uint64_t area_id)
+{
+	double writes;
+	writes = (double) dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+					       region_id, area_id);
+
+	*wr_s = (writes * NSEC_PER_SEC) / (double) dms->interval_ns;
+
+	return 1;
+}
+
+static int _read_sectors_per_sec(const struct dm_stats *dms, double *rsec_s,
+				 uint64_t region_id, uint64_t area_id)
+{
+	double sect;
+	sect = (double) dm_stats_get_counter(dms, DM_STATS_READ_SECTORS_COUNT,
+					     region_id, area_id);
+
+	*rsec_s = (sect * (double) NSEC_PER_SEC) / (double) dms->interval_ns;
+
+	return 1;
+}
+
+static int _write_sectors_per_sec(const struct dm_stats *dms, double *wsec_s,
+				  uint64_t region_id, uint64_t area_id)
+{
+	double sect;
+	sect = (double) dm_stats_get_counter(dms, DM_STATS_WRITE_SECTORS_COUNT,
+					     region_id, area_id);
+
+	*wsec_s = (sect * (double) NSEC_PER_SEC) / (double) dms->interval_ns;
+
+	return 1;
+}
+
+static int _average_request_size(const struct dm_stats *dms, double *arqsz,
+				 uint64_t region_id, uint64_t area_id)
+{
+	double ios, sectors;
+
+	ios = (double) (dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+					     region_id, area_id)
+			+ dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+					       region_id, area_id));
+	sectors = (double) (dm_stats_get_counter(dms, DM_STATS_READ_SECTORS_COUNT,
+						 region_id, area_id)
+			    + dm_stats_get_counter(dms, DM_STATS_WRITE_SECTORS_COUNT,
+						   region_id, area_id));
+
+	if (ios > 0.0)
+		*arqsz = sectors / ios;
+	else
+		*arqsz = 0.0;
+
+	return 1;
+}
+
+static int _average_queue_size(const struct dm_stats *dms, double *qusz,
+			       uint64_t region_id, uint64_t area_id)
+{
+	double io_ticks;
+	io_ticks = (double) dm_stats_get_counter(dms, DM_STATS_WEIGHTED_IO_NSECS,
+						 region_id, area_id);
+
+	if (io_ticks > 0.0)
+		*qusz = io_ticks / (double) dms->interval_ns;
+	else
+		*qusz = 0.0;
+
+	return 1;
+}
+
+static int _average_wait_time(const struct dm_stats *dms, double *await,
+			      uint64_t region_id, uint64_t area_id)
+{
+	uint64_t io_ticks, nr_ios;
+
+	io_ticks = dm_stats_get_counter(dms, DM_STATS_READ_NSECS,
+					region_id, area_id);
+	io_ticks += dm_stats_get_counter(dms, DM_STATS_WRITE_NSECS,
+					 region_id, area_id);
+
+	nr_ios = dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+				      region_id, area_id);
+	nr_ios += dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+				       region_id, area_id);
+
+	if (nr_ios > 0)
+		*await = (double) io_ticks / (double) nr_ios;
+	else
+		*await = 0.0;
+
+	return 1;
+}
+
+static int _average_rd_wait_time(const struct dm_stats *dms, double *await,
+				 uint64_t region_id, uint64_t area_id)
+{
+	uint64_t rd_io_ticks, nr_rd_ios;
+
+	rd_io_ticks = dm_stats_get_counter(dms, DM_STATS_READ_NSECS,
+					   region_id, area_id);
+
+	nr_rd_ios = dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+					 region_id, area_id);
+
+	if (rd_io_ticks > 0)
+		*await = (double) rd_io_ticks / (double) nr_rd_ios;
+	else
+		*await = 0.0;
+
+	return 1;
+}
+
+static int _average_wr_wait_time(const struct dm_stats *dms, double *await,
+				 uint64_t region_id, uint64_t area_id)
+{
+	uint64_t wr_io_ticks, nr_wr_ios;
+
+	wr_io_ticks = dm_stats_get_counter(dms, DM_STATS_WRITE_NSECS,
+					   region_id, area_id);
+	nr_wr_ios = dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+					 region_id, area_id);
+
+	if (wr_io_ticks > 0)
+		*await = (double) wr_io_ticks / (double) nr_wr_ios;
+	else
+		*await = 0.0;
+
+	return 1;
+}
+
+static int _throughput(const struct dm_stats *dms, double *tput,
+		       uint64_t region_id, uint64_t area_id)
+{
+	uint64_t nr_ios;
+
+	nr_ios = dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+				      region_id, area_id);
+	nr_ios += dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+				       region_id, area_id);
+
+	*tput = ((double) NSEC_PER_SEC * (double) nr_ios)
+		/ (double) (dms->interval_ns);
+
+	return 1;
+}
+
+static int _utilization(const struct dm_stats *dms, double *util,
+			uint64_t region_id, uint64_t area_id)
+{
+	uint64_t io_nsecs, interval_ns = dms->interval_ns;
 
 	/**
 	 * If io_nsec > interval_ns there is something wrong with the clock
@@ -1771,9 +1754,149 @@ int dm_stats_get_utilization(const struct dm_stats *dms, dm_percent_t *util,
 	 * to be passed to a dm_make_percent() call. We expect to see these
 	 * at startup if counters have not been cleared before the first read.
 	 */
-	io_nsecs = (c->io_nsecs <= dms->interval_ns) ? c->io_nsecs : dms->interval_ns;
-	*util = dm_make_percent(io_nsecs, dms->interval_ns);
+	io_nsecs = dm_stats_get_counter(dms, DM_STATS_IO_NSECS,
+					region_id, area_id);
 
+	io_nsecs = ((io_nsecs < interval_ns) ? io_nsecs : interval_ns);
+
+	*util = (double) io_nsecs / (double) interval_ns;
+
+	return 1;
+}
+
+static int _service_time(const struct dm_stats *dms, double *svctm,
+			 uint64_t region_id, uint64_t area_id)
+{
+	double tput, util;
+
+	if (!_throughput(dms, &tput, region_id, area_id))
+		return 0;
+
+	if (!_utilization(dms, &util, region_id, area_id))
+		return 0;
+
+	util *= 100;
+
+	/* avoid NAN with zero counter values */
+	if ( (uint64_t) tput == 0 || (uint64_t) util == 0) {
+		*svctm = 0.0;
+		return 1;
+	}
+
+	*svctm = ((double) NSEC_PER_SEC * dm_percent_to_float(util))
+		  / (100.0 * tput);
+
+	return 1;
+}
+
+/*
+ * Table in enum order:
+ *      DM_STATS_RD_MERGES_PER_SEC,
+ *      DM_STATS_WR_MERGES_PER_SEC,
+ *      DM_STATS_READS_PER_SEC,
+ *      DM_STATS_WRITES_PER_SEC,
+ *      DM_STATS_READ_SECTORS_PER_SEC,
+ *      DM_STATS_WRITE_SECTORS_PER_SEC,
+ *      DM_STATS_AVERAGE_REQUEST_SIZE,
+ *      DM_STATS_AVERAGE_QUEUE_SIZE,
+ *      DM_STATS_AVERAGE_WAIT_TIME,
+ *      DM_STATS_AVERAGE_RD_WAIT_TIME,
+ *      DM_STATS_AVERAGE_WR_WAIT_TIME
+ *      DM_STATS_SERVICE_TIME,
+ *      DM_STATS_THROUGHPUT,
+ *      DM_STATS_UTILIZATION
+ *
+*/
+
+typedef int (*_metric_fn_t)(const struct dm_stats *, double *,
+			    uint64_t, uint64_t);
+
+_metric_fn_t _metrics[DM_STATS_NR_METRICS] = {
+	_rd_merges_per_sec,
+	_wr_merges_per_sec,
+	_reads_per_sec,
+	_writes_per_sec,
+	_read_sectors_per_sec,
+	_write_sectors_per_sec,
+	_average_request_size,
+	_average_queue_size,
+	_average_wait_time,
+	_average_rd_wait_time,
+	_average_wr_wait_time,
+	_service_time,
+	_throughput,
+	_utilization
+};
+
+int dm_stats_get_metric(const struct dm_stats *dms, int metric,
+			uint64_t region_id, uint64_t area_id, double *value)
+{
+	if (!dms->interval_ns)
+		return_0;
+
+	if (metric < 0 || metric >= DM_STATS_NR_METRICS) {
+		log_error("Attempt to read invalid metric: %d", metric);
+		return 0;
+	}
+
+	return _metrics[metric](dms, value, region_id, area_id);
+}
+
+/**
+ * Methods for accessing stats metrics. All methods share the
+ * following naming scheme and prototype:
+ *
+ * uint64_t dm_stats_get_metric(struct dm_stats *,
+ * 				int, int,
+ * 				uint64_t, uint64_t,
+ * 				double *v)
+ *
+ * Where the two integer arguments are the region_id and area_id
+ * respectively.
+ *
+ * name is the name of the metric (lower case)
+ * metric is the part of the enum name following DM_STATS_ (upper case)
+ */
+#define MK_STATS_GET_METRIC_FN(name, metric, meta)			\
+int dm_stats_get_ ## name(const struct dm_stats *dms, double *meta,	\
+			  uint64_t region_id, uint64_t area_id)		\
+{									\
+	return dm_stats_get_metric(dms, DM_STATS_ ## metric, 		\
+				   region_id, area_id, meta);		\
+}
+
+MK_STATS_GET_METRIC_FN(rd_merges_per_sec, RD_MERGES_PER_SEC, rrqm)
+MK_STATS_GET_METRIC_FN(wr_merges_per_sec, WR_MERGES_PER_SEC, wrqm)
+MK_STATS_GET_METRIC_FN(reads_per_sec, READS_PER_SEC, rd_s)
+MK_STATS_GET_METRIC_FN(writes_per_sec, WRITES_PER_SEC, wr_s)
+MK_STATS_GET_METRIC_FN(read_sectors_per_sec, READ_SECTORS_PER_SEC, rsec_s)
+MK_STATS_GET_METRIC_FN(write_sectors_per_sec, WRITE_SECTORS_PER_SEC, wsec_s)
+MK_STATS_GET_METRIC_FN(average_request_size, AVERAGE_REQUEST_SIZE, arqsz)
+MK_STATS_GET_METRIC_FN(average_queue_size, AVERAGE_QUEUE_SIZE, qusz)
+MK_STATS_GET_METRIC_FN(average_wait_time, AVERAGE_WAIT_TIME, await)
+MK_STATS_GET_METRIC_FN(average_rd_wait_time, AVERAGE_RD_WAIT_TIME, await)
+MK_STATS_GET_METRIC_FN(average_wr_wait_time, AVERAGE_WR_WAIT_TIME, await)
+MK_STATS_GET_METRIC_FN(service_time, SERVICE_TIME, svctm)
+MK_STATS_GET_METRIC_FN(throughput, THROUGHPUT, tput)
+
+/*
+ * Utilization is an exception since it used the dm_percent_t type in the
+ * original named function based interface: preserve this behaviour for
+ * backwards compatibility with existing users.
+ *
+ * The same metric may be accessed as a double via the enum based metric
+ * interface.
+ */
+int dm_stats_get_utilization(const struct dm_stats *dms, dm_percent_t *util,
+			     uint64_t region_id, uint64_t area_id)
+{
+	double _util;
+
+	if (!dm_stats_get_metric(dms, DM_STATS_UTILIZATION,
+				 region_id, area_id, &_util))
+		return_0;
+	/* scale up utilization value in the range [0.00..1.00] */
+	*util = dm_make_percent(DM_PERCENT_1 * _util, DM_PERCENT_1);
 	return 1;
 }
 

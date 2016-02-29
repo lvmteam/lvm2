@@ -1,5 +1,6 @@
 Version 1.02.129 - 
 =================================
+  Add enum-driven dm_stats_get_{metric,counter}() interfaces.
   Add dm_bitset_parse_list() to parse a string representation of a bitset.
   Thin dmeventd plugin umounts lvm2 volume only when pool is 95% or more.
 
