@@ -1,5 +1,10 @@
 Version 1.02.129 - 
 =================================
+  Add dm_stats_get_group_descriptor() to return the member list as a string.
+  Add dm_stats_get_nr_groups() and dm_stats_group_present().
+  Add dm_stats_{get,set}_alias() to set and retrieve alias names for groups.
+  Add dm_stats_get_group_id() to return the group ID for a given region.
+  Add dm_stats_{create,delete}_group() to allow grouping of stats regions.
   Add enum-driven dm_stats_get_{metric,counter}() interfaces.
   Add dm_bitset_parse_list() to parse a string representation of a bitset.
   Thin dmeventd plugin umounts lvm2 volume only when pool is 95% or more.

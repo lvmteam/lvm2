@@ -715,6 +715,19 @@ void dm_stats_buffer_destroy(struct dm_stats *dms, char *buffer);
 uint64_t dm_stats_get_nr_regions(const struct dm_stats *dms);
 
 /*
+ * Determine the number of groups contained in a dm_stats handle
+ * following a dm_stats_list() or dm_stats_populate() call.
+ *
+ * The value returned is the number of registered groups visible with the
+ * progam_id value used for the list or populate operation and may not be
+ * equal to the highest present group_id (either due to program_id
+ * filtering or gaps in the sequence of group_id values).
+ *
+ * Always returns zero on an empty handle.
+ */
+uint64_t dm_stats_get_nr_groups(const struct dm_stats *dms);
+
+/*
  * Test whether region_id is present in this dm_stats handle.
  */
 int dm_stats_region_present(const struct dm_stats *dms, uint64_t region_id);
@@ -731,6 +744,11 @@ uint64_t dm_stats_get_region_nr_areas(const struct dm_stats *dms,
  * given dm_stats object.
  */
 uint64_t dm_stats_get_nr_areas(const struct dm_stats *dms);
+
+/*
+ * Test whether group_id is present in this dm_stats handle.
+ */
+int dm_stats_group_present(const struct dm_stats *dms, uint64_t group_id);
 
 /*
  * Return the number of bins in the histogram configuration for the
@@ -1078,6 +1096,62 @@ const char *dm_stats_get_current_region_program_id(const struct dm_stats *dms);
  * cursor location.
  */
 const char *dm_stats_get_current_region_aux_data(const struct dm_stats *dms);
+
+/*
+ * Statistics groups and data aggregation.
+ */
+
+/*
+ * Create a new group in stats handle dms from the group descriptor
+ * passed in group. The group descriptor is a string containing a list
+ * of region_id values that will be included in the group. The first
+ * region_id found will be the group leader. Ranges of identifiers may
+ * be expressed as "M-N", where M and N are the start and end region_id
+ * values for the range.
+ */
+int dm_stats_create_group(struct dm_stats *dms, const char *group,
+			  const char *alias, uint64_t *group_id);
+
+/*
+ * Remove the specified group_id.
+ */
+int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id);
+
+/*
+ * Set an alias for this group or region. The alias will be returned
+ * instead of the normal dm-stats name for this region or group.
+ */
+int dm_stats_set_alias(struct dm_stats *dms, uint64_t group_id,
+		       const char *alias);
+
+/*
+ * Returns a pointer to the currently configured alias for id, or the
+ * name of the dm device the handle is bound to if no alias has been
+ * set. The pointer will be freed automatically when a new alias is set
+ * or when the stats handle is cleared.
+ */
+const char *dm_stats_get_alias(const struct dm_stats *dms, uint64_t id);
+
+/*
+ * Return the group_id that the specified region_id belongs to, or the
+ * special value DM_STATS_GROUP_NONE if the region does not belong
+ * to any group.
+ */
+uint64_t dm_stats_get_group_id(const struct dm_stats *dms, uint64_t region_id);
+
+/*
+ * Store a pointer to a string describing the regions that are members
+ * of the group specified by group_id in the memory pointed to by buf.
+ * The string is in the same format as the 'group' argument to
+ * dm_stats_create_group().
+ *
+ * The pointer does not need to be freed explicitly by the caller: it
+ * will become invalid following a subsequent dm_stats_list(),
+ * dm_stats_populate() or dm_stats_destroy() of the corresponding
+ * dm_stats handle.
+ */
+int dm_stats_get_group_descriptor(const struct dm_stats *dms,
+				  uint64_t group_id, char **buf);
 
 /*
  * Call this to actually run the ioctl.
