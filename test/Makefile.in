@@ -209,7 +209,9 @@ install: .tests-stamp lib/paths-installed
 	cd lib && $(INSTALL_DATA) \
 		$(LIB_FLAVOURS) \
 		$(LIB_LVMLOCKD_CONF) \
-		version-expected $(DATADIR)/lib
+		dm-version-expected \
+		version-expected \
+		$(DATADIR)/lib
 	@for i in cache-mq cache-smq thin-performance ; do \
 		echo "$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib"; \
 		$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib; done
@@ -327,7 +329,8 @@ endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
 	$(CMDS) clvmd dmeventd dmsetup lvmetad lvmpolld \
-	harness thin-performance.profile fsadm vgimportclone version-expected \
+	harness thin-performance.profile fsadm vgimportclone \
+	dm-version-expected version-expected \
 	paths-installed paths-installed-t paths-common paths-common-t)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
