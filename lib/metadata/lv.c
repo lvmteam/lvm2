@@ -28,6 +28,11 @@
 static struct utsname _utsname;
 static int _utsinit = 0;
 
+int lv_is_historical(const struct logical_volume *lv)
+{
+	return lv->this_glv && lv->this_glv->is_historical;
+}
+
 static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 				      int range_format, int metadata_areas_only,
 				      int mark_hidden)

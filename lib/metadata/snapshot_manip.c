@@ -113,6 +113,9 @@ int lv_is_cow_covering_origin(const struct logical_volume *lv)
 
 int lv_is_visible(const struct logical_volume *lv)
 {
+	if (lv_is_historical(lv))
+		return 1;
+
 	if (lv->status & SNAPSHOT)
 		return 0;
 
