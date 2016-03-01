@@ -4460,6 +4460,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 			goto out;
 		}
 	}
+
 out:
 	if (!*consistent && (warn_flags & WARN_INCONSISTENT)) {
 		if (is_orphan_vg(vgname))
@@ -6013,7 +6014,7 @@ int is_lockd_type(const char *lock_type)
 int vg_strip_outdated_historical_lvs(struct volume_group *vg) {
 	struct glv_list *glvl, *tglvl;
 	time_t current_time = time(NULL);
-	uint64_t threshold = 0;
+	uint64_t threshold = find_config_tree_int(vg->cmd, metadata_lvs_history_retention_time_CFG, NULL);
 
 	if (!threshold)
 		return 1;

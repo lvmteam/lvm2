@@ -1367,6 +1367,11 @@ cfg(metadata_record_lvs_history_CFG, "record_lvs_history", metadata_CFG_SECTION,
 	"information kept in metadata for live LVs. Currently, this\n"
 	"feature is supported for thin and thin snapshot LVs only.\n")
 
+cfg(metadata_lvs_history_retention_time_CFG, "lvs_history_retention_time", metadata_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_LVS_HISTORY_RETENTION_TIME, vsn(2, 2, 145), NULL, 0, NULL,
+	"Retention time in seconds after which a record about individual\n"
+	"historical logical volume is automatically destroyed.\n"
+	"A value of 0 disables this feature.\n")
+
 cfg(metadata_pvmetadatacopies_CFG, "pvmetadatacopies", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PVMETADATACOPIES, vsn(1, 0, 0), NULL, 0, NULL,
 	"Number of copies of metadata to store on each PV.\n"
 	"The --pvmetadatacopies option overrides this setting.\n"
