@@ -651,6 +651,25 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 	return 1;
 }
 
+static int _print_timestamp(struct formatter *f,
+			     const char *name, time_t ts,
+			     char *buf, size_t buf_size)
+{
+	struct tm *local_tm;
+
+	if (ts) {
+		strncpy(buf, "# ", buf_size);
+		if (!(local_tm = localtime(&ts)) ||
+		    !strftime(buf + 2, buf_size - 2,
+			      "%Y-%m-%d %T %z", local_tm))
+			buf[0] = 0;
+
+		outfc(f, buf, "%s = %" PRIu64, name, ts);
+	}
+
+	return 1;
+}
+
 static int _print_lv(struct formatter *f, struct logical_volume *lv)
 {
 	struct lv_segment *seg;
@@ -774,6 +793,127 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	return 1;
 }
 
+static int _alloc_printed_indirect_descendants(struct dm_list *indirect_glvs, char **buffer)
+{
+	struct glv_list *user_glvl;
+	size_t buf_size = 0;
+	int first = 1;
+	char *buf;
+
+	*buffer = NULL;
+
+	dm_list_iterate_items(user_glvl, indirect_glvs) {
+		if (user_glvl->glv->is_historical)
+			continue;
+		/* '"' + name + '"' + ',' + ' ' */
+		buf_size += strlen(user_glvl->glv->live->name) + 4;
+	}
+
+	if (!buf_size)
+		return 1;
+
+	/* '[' + ']' + '\0' */
+	buf_size += 3;
+
+	if (!(*buffer = dm_malloc(buf_size))) {
+		log_error("Could not allocate memory for ancestor list buffer.");
+		return 0;
+	}
+	buf = *buffer;
+
+	if (!emit_to_buffer(&buf, &buf_size, "["))
+		goto_bad;
+
+	dm_list_iterate_items(user_glvl, indirect_glvs) {
+		if (user_glvl->glv->is_historical)
+			continue;
+		if (!first) {
+			if (!emit_to_buffer(&buf, &buf_size, ", "))
+				goto_bad;
+		} else
+			first = 0;
+
+		if (!emit_to_buffer(&buf, &buf_size, "\"%s\"", user_glvl->glv->live->name))
+			goto_bad;
+	}
+
+	if (!emit_to_buffer(&buf, &buf_size, "]"))
+		goto_bad;
+
+	return 1;
+bad:
+	if (*buffer) {
+		dm_free(*buffer);
+		*buffer = NULL;
+	}
+	return 0;
+}
+
+static int _print_historical_lv(struct formatter *f, struct historical_logical_volume *hlv)
+{
+	char buffer[40];
+	char *descendants_buffer = NULL;
+	int r = 0;
+
+	if (!id_write_format(&hlv->lvid.id[1], buffer, sizeof(buffer)))
+		goto_out;
+
+	if (!_alloc_printed_indirect_descendants(&hlv->indirect_glvs, &descendants_buffer))
+		goto_out;
+
+	outnl(f);
+	outf(f, "%s {", hlv->name);
+	_inc_indent(f);
+
+	outf(f, "id = \"%s\"", buffer);
+
+	if (!_print_timestamp(f, "creation_time", hlv->timestamp, buffer, sizeof(buffer)))
+		goto_out;
+
+	if (!_print_timestamp(f, "removal_time", hlv->timestamp_removed, buffer, sizeof(buffer)))
+		goto_out;
+
+	if (hlv->indirect_origin) {
+		if (hlv->indirect_origin->is_historical)
+			outf(f, "origin = \"%s%s\"", HISTORICAL_LV_PREFIX, hlv->indirect_origin->historical->name);
+		else
+			outf(f, "origin = \"%s\"", hlv->indirect_origin->live->name);
+	}
+
+	if (descendants_buffer)
+		outf(f, "descendants = %s", descendants_buffer);
+
+	_dec_indent(f);
+	outf(f, "}");
+
+	r = 1;
+out:
+	if (descendants_buffer)
+		dm_free(descendants_buffer);
+	return r;
+}
+
+static int _print_historical_lvs(struct formatter *f, struct volume_group *vg)
+{
+	struct glv_list *glvl;
+
+	if (dm_list_empty(&vg->historical_lvs))
+		return 1;
+
+	outf(f, "historical_logical_volumes {");
+	_inc_indent(f);
+
+	dm_list_iterate_items(glvl, &vg->historical_lvs) {
+		if (!_print_historical_lv(f, glvl->glv->historical))
+			return_0;
+	}
+
+	_dec_indent(f);
+	outf(f, "}");
+
+	return 1;
+}
+
 /*
  * In the text format we refer to pv's as 'pv1',
  * 'pv2' etc.  This function builds a hash table
@@ -838,6 +978,10 @@ static int _text_vg_export(struct formatter *f,
 
 	outnl(f);
 	if (!_print_lvs(f, vg))
+		goto_out;
+
+	outnl(f);
+	if (!_print_historical_lvs(f, vg))
 		goto_out;
 
 	_dec_indent(f);

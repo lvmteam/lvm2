@@ -37,6 +37,8 @@
 #define MAX_EXTENT_SIZE ((uint32_t) -1)
 #define MIN_NON_POWER2_EXTENT_SIZE (128U * 2U)	/* 128KB in sectors */
 
+#define HISTORICAL_LV_PREFIX "-"
+
 /* Layer suffix */
 #define MIRROR_SYNC_LAYER "_mimagetmp"
 
