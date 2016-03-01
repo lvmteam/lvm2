@@ -1040,7 +1040,7 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 	}
 
 	/* Blank if this is a "free space" LV. */
-	if (!*lv->name)
+	if (!*lv->name && !lv_is_historical(lv))
 		goto out;
 
 	if (lv_is_pvmove(lv))
@@ -1104,7 +1104,10 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 
 	repstr[3] = (lv->status & FIXED_MINOR) ? 'm' : '-';
 
-	if (!activation() || !lvdm->info_ok) {
+	if (lv_is_historical(lv)) {
+		repstr[4] = 'h';
+		repstr[5] = '-';
+	} else if (!activation() || !lvdm->info_ok) {
 		repstr[4] = 'X';		/* Unknown */
 		repstr[5] = 'X';		/* Unknown */
 	} else if (lvdm->info.exists) {
