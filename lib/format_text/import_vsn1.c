@@ -788,7 +788,7 @@ static int _read_historical_lvnames_interconnections(struct format_instance *fid
 	historical_lv_name = hlvn->key;
 	hlvn = hlvn->child;
 
-	if (!(glv = find_historical_glv(vg, historical_lv_name, NULL))) {
+	if (!(glv = find_historical_glv(vg, historical_lv_name, 0, NULL))) {
 		log_error("Unknown historical logical volume %s/%s%s",
 			  vg->name, HISTORICAL_LV_PREFIX, historical_lv_name);
 		goto bad;
@@ -828,7 +828,7 @@ static int _read_historical_lvnames_interconnections(struct format_instance *fid
 		glvl->glv = glv;
 
 		if (!strncmp(origin_name, HISTORICAL_LV_PREFIX, strlen(HISTORICAL_LV_PREFIX))) {
-			if (!(origin_glv = find_historical_glv(vg, origin_name + strlen(HISTORICAL_LV_PREFIX), NULL))) {
+			if (!(origin_glv = find_historical_glv(vg, origin_name + strlen(HISTORICAL_LV_PREFIX), 0, NULL))) {
 				log_error("Unknown origin %s for historical logical volume %s/%s%s",
 					  origin_name, vg->name, HISTORICAL_LV_PREFIX, historical_lv_name);
 				goto bad;

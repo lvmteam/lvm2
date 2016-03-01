@@ -2122,10 +2122,13 @@ struct logical_volume *find_lv(const struct volume_group *vg,
 
 struct generic_logical_volume *find_historical_glv(const struct volume_group *vg,
 					       const char *historical_lv_name,
+					       int check_removed_list,
 					       struct glv_list **glvl_found)
 {
 	struct glv_list *glvl;
 	const char *ptr;
+	const struct dm_list *list = check_removed_list ? &vg->removed_historical_lvs
+							: &vg->historical_lvs;
 
 	/* Use last component */
 	if ((ptr = strrchr(historical_lv_name, '/')))
@@ -2133,7 +2136,7 @@ struct generic_logical_volume *find_historical_glv(const struct volume_group *vg
 	else
 		ptr = historical_lv_name;
 
-	dm_list_iterate_items(glvl, &vg->historical_lvs) {
+	dm_list_iterate_items(glvl, list) {
 		if (!strcmp(glvl->glv->historical->name, ptr)) {
 			if (glvl_found)
 				*glvl_found = glvl;

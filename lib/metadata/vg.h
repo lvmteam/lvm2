@@ -142,6 +142,11 @@ struct volume_group {
 	struct dm_list removed_lvs;
 
 	/*
+	 * List of removed historical logical volumes by historical_glv_remove.
+	 */
+	struct dm_list removed_historical_lvs;
+
+	/*
 	 * List of removed physical volumes by pvreduce.
 	 * They have to get cleared on vg_commit.
 	 */

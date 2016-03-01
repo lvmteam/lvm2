@@ -807,6 +807,9 @@ int lv_extend(struct logical_volume *lv,
 /* lv must be part of lv->vg->lvs */
 int lv_remove(struct logical_volume *lv);
 
+/* historical_glv must be part of lv->vg->historical_lvs */
+int historical_glv_remove(struct generic_logical_volume *historical_glv);
+
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		     force_t force, int suppress_remove_message);
 
@@ -1029,6 +1032,7 @@ struct logical_volume *find_lv(const struct volume_group *vg,
 
 struct generic_logical_volume *find_historical_glv(const struct volume_group *vg,
 						    const char *historical_lv_name,
+						    int check_removed_list,
 						    struct glv_list **glvl_found);
 
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,

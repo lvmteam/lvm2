@@ -1398,11 +1398,75 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	return _lv_reduce(lv, extents, 1);
 }
 
+int historical_glv_remove(struct generic_logical_volume *glv)
+{
+	struct generic_logical_volume *origin_glv;
+	struct glv_list *glvl, *user_glvl;
+	struct historical_logical_volume *hlv;
+	int reconnected;
+
+	if (!glv || !glv->is_historical)
+		return_0;
+
+	hlv = glv->historical;
+
+	if (!(glv = find_historical_glv(hlv->vg, hlv->name, 0, &glvl))) {
+		if (!(find_historical_glv(hlv->vg, hlv->name, 1, NULL))) {
+			log_error(INTERNAL_ERROR "historical_glv_remove: historical LV %s/-%s not found ",
+				  hlv->vg->name, hlv->name);
+			return 0;
+		} else {
+			log_verbose("Historical LV %s/-%s already on removed list ",
+				    hlv->vg->name, hlv->name);
+			return 1;
+		}
+	}
+
+	if ((origin_glv = hlv->indirect_origin) &&
+	    !remove_glv_from_indirect_glvs(origin_glv, glv))
+		return_0;
+
+	dm_list_iterate_items(user_glvl, &hlv->indirect_glvs) {
+		reconnected = 0;
+		if ((origin_glv && !origin_glv->is_historical) && !user_glvl->glv->is_historical)
+			log_verbose("Removing historical connection between %s and %s.",
+				     origin_glv->live->name, user_glvl->glv->live->name);
+		else if (hlv->vg->cmd->record_historical_lvs) {
+			if (!add_glv_to_indirect_glvs(hlv->vg->vgmem, origin_glv, user_glvl->glv))
+				return_0;
+			reconnected = 1;
+		}
+
+		if (!reconnected) {
+			/*
+			 * Break ancestry chain if we're removing historical LV and tracking
+			 * historical LVs is switched off either via:
+			 *   - "metadata/record_lvs_history=0" config
+			 *   - "--nohistory" cmd line option
+			 *
+			 * Also, break the chain if we're unable to store such connection at all
+			 * because we're removing the very last historical LV that was in between
+			 * live LVs - pure live LVs can't store any indirect origin relation in
+			 * metadata - we need at least one historical LV to do that!
+			 */
+			if (user_glvl->glv->is_historical)
+				user_glvl->glv->historical->indirect_origin = NULL;
+			else
+				first_seg(user_glvl->glv->live)->indirect_origin = NULL;
+		}
+	}
+
+	dm_list_move(&hlv->vg->removed_historical_lvs, &glvl->list);
+	return 1;
+}
+
 /*
  * Completely remove an LV.
  */
 int lv_remove(struct logical_volume *lv)
 {
+	if (lv_is_historical(lv))
+		return historical_glv_remove(lv->this_glv);
 
 	if (!lv_reduce(lv, lv->le_count))
 		return_0;
@@ -5740,9 +5804,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		is_last_pool = 1;
 	}
 
-	/* Used cache pool or COW cannot be activated */
+	/* Used cache pool, COW or historical LV cannot be activated */
 	if ((!lv_is_cache_pool(lv) || dm_list_empty(&lv->segs_using_this_lv)) &&
-	    !lv_is_cow(lv) &&
+	    !lv_is_cow(lv) && !lv_is_historical(lv) &&
 	    !deactivate_lv(cmd, lv)) {
 		/* FIXME Review and fix the snapshot error paths! */
 		log_error("Unable to deactivate logical volume %s.",
