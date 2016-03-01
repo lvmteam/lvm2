@@ -440,6 +440,12 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le);
 int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
 int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
 
+int add_glv_to_indirect_glvs(struct dm_pool *mem,
+			     struct generic_logical_volume *origin_glv,
+			     struct generic_logical_volume *user_glv);
+int remove_glv_from_indirect_glvs(struct generic_logical_volume *glv,
+				  struct generic_logical_volume *user_glv);
+
 int for_each_sub_lv_except_pools(struct logical_volume *lv,
 				 int (*fn)(struct logical_volume *lv, void *data),
 				 void *data);

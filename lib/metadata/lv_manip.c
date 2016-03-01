@@ -5343,6 +5343,64 @@ struct glv_list *get_or_create_glvl(struct dm_pool *mem, struct logical_volume *
 	return glvl;
 }
 
+int add_glv_to_indirect_glvs(struct dm_pool *mem,
+				  struct generic_logical_volume *origin_glv,
+				  struct generic_logical_volume *glv)
+{
+	struct glv_list *glvl;
+
+	if (!(glvl = dm_pool_zalloc(mem, sizeof(struct glv_list)))) {
+		log_error("Failed to allocate generic volume list item "
+			  "for indirect glv %s", glv->is_historical ? glv->historical->name
+								    : glv->live->name);
+		return 0;
+	}
+
+	glvl->glv = glv;
+
+	if (glv->is_historical)
+		glv->historical->indirect_origin = origin_glv;
+	else
+		first_seg(glv->live)->indirect_origin = origin_glv;
+
+	if (origin_glv) {
+		if (origin_glv->is_historical)
+			dm_list_add(&origin_glv->historical->indirect_glvs, &glvl->list);
+		else
+			dm_list_add(&origin_glv->live->indirect_glvs, &glvl->list);
+	}
+
+	return 1;
+}
+
+int remove_glv_from_indirect_glvs(struct generic_logical_volume *origin_glv,
+				  struct generic_logical_volume *glv)
+{
+	struct glv_list *glvl, *tglvl;
+	struct dm_list *list = origin_glv->is_historical ? &origin_glv->historical->indirect_glvs
+							 : &origin_glv->live->indirect_glvs;
+
+	dm_list_iterate_items_safe(glvl, tglvl, list) {
+		if (glvl->glv != glv)
+			continue;
+
+		dm_list_del(&glvl->list);
+
+		if (glvl->glv->is_historical)
+			glvl->glv->historical->indirect_origin = NULL;
+		else
+			first_seg(glvl->glv->live)->indirect_origin = NULL;
+
+		return 1;
+	}
+
+	log_error(INTERNAL_ERROR "%s logical volume %s is not a user of %s.",
+		  glv->is_historical ? "historical" : "Live",
+		  glv->is_historical ? glv->historical->name : glv->live->name,
+		  origin_glv->is_historical ? origin_glv->historical->name : origin_glv->live->name);
+	return 0;
+}
+
 struct logical_volume *alloc_lv(struct dm_pool *mem)
 {
 	struct logical_volume *lv;
