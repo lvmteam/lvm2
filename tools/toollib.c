@@ -4406,6 +4406,7 @@ do_command:
 		if (!(pvl = dm_pool_alloc(cmd->mem, sizeof(*pvl)))) {
 			log_error("alloc pvl failed");
 			dm_list_move(&pp->arg_fail, &pd->list);
+			continue;
 		}
 
 		pv_name = pd->name;
