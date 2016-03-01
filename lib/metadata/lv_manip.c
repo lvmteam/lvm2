@@ -84,8 +84,10 @@ struct lv_names {
 
 enum {
 	LV_TYPE_UNKNOWN,
+	LV_TYPE_NONE,
 	LV_TYPE_PUBLIC,
 	LV_TYPE_PRIVATE,
+	LV_TYPE_HISTORY,
 	LV_TYPE_LINEAR,
 	LV_TYPE_STRIPED,
 	LV_TYPE_MIRROR,
@@ -130,8 +132,10 @@ enum {
 
 static const char *_lv_type_names[] = {
 	[LV_TYPE_UNKNOWN] =				"unknown",
+	[LV_TYPE_NONE] =				"none",
 	[LV_TYPE_PUBLIC] =				"public",
 	[LV_TYPE_PRIVATE] =				"private",
+	[LV_TYPE_HISTORY] =				"history",
 	[LV_TYPE_LINEAR] =				"linear",
 	[LV_TYPE_STRIPED] =				"striped",
 	[LV_TYPE_MIRROR] =				"mirror",
@@ -470,6 +474,12 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 	if (!(*role = str_list_create(mem))) {
 		log_error("LV role list allocation failed");
 		goto bad;
+	}
+
+	if (lv_is_historical(lv)) {
+		if (!str_list_add_no_dup_check(mem, *layout, _lv_type_names[LV_TYPE_NONE]) ||
+		    !str_list_add_no_dup_check(mem, *role, _lv_type_names[LV_TYPE_HISTORY]))
+			goto_bad;
 	}
 
 	/* Mirrors and related */
