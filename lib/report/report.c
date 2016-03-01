@@ -1685,27 +1685,36 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	struct cmd_context *cmd = (struct cmd_context *) private;
 	const struct logical_volume *lv = (const struct logical_volume *) data;
+	int is_historical = lv_is_historical(lv);
+	const char *tmp_lvname;
 	char *repstr, *lvname;
 	size_t len;
 
-	if (lv_is_historical(lv))
-		return _string_disp(rh, mem, field, &lv->this_glv->historical->name, private);
-
-	if (lv_is_visible(lv) || !cmd->report_mark_hidden_devices)
+	if (!is_historical && (lv_is_visible(lv) || !cmd->report_mark_hidden_devices))
 		return _field_string(rh, field, lv->name);
 
-	len = strlen(lv->name) + 3;
+	if (is_historical) {
+		tmp_lvname = lv->this_glv->historical->name;
+		len = strlen(tmp_lvname) + strlen(HISTORICAL_LV_PREFIX) + 1;
+	} else {
+		tmp_lvname = lv->name;
+		len = strlen(tmp_lvname) + 3;
+	}
+
 	if (!(repstr = dm_pool_zalloc(mem, len))) {
 		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
-	if (dm_snprintf(repstr, len, "[%s]", lv->name) < 0) {
+	if (dm_snprintf(repstr, len, "%s%s%s",
+			is_historical ? HISTORICAL_LV_PREFIX : "[",
+			tmp_lvname,
+			is_historical ? "" : "]") < 0) {
 		log_error("lvname snprintf failed");
 		return 0;
 	}
 
-	if (!(lvname = dm_pool_strdup(mem, lv->name))) {
+	if (!(lvname = dm_pool_strdup(mem, tmp_lvname))) {
 		log_error("dm_pool_strdup failed");
 		return 0;
 	}
