@@ -1688,6 +1688,9 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr, *lvname;
 	size_t len;
 
+	if (lv_is_historical(lv))
+		return _string_disp(rh, mem, field, &lv->this_glv->historical->name, private);
+
 	if (lv_is_visible(lv) || !cmd->report_mark_hidden_devices)
 		return _field_string(rh, field, lv->name);
 
@@ -2463,6 +2466,25 @@ static int _vglockargs_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_string(rh, field, vg->lock_args ? : "");
 }
 
+static int _lvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
+			struct dm_report_field *field,
+			const void *data, void *private __attribute__((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const union lvid *lvid;
+	char *repstr;
+
+	if (lv_is_historical(lv))
+		lvid = &lv->this_glv->historical->lvid;
+	else
+		lvid = &lv->lvid;
+
+	if (!(repstr = id_format_and_copy(mem, &lvid->id[1])))
+		return_0;
+
+	return _field_set_value(field, repstr, NULL);
+}
+
 static int _pvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
 		        struct dm_report_field *field,
 		        const void *data, void *private __attribute__((unused)))
@@ -2851,14 +2873,31 @@ static int _lvtime_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr;
 	uint64_t *sortval;
 
-	if (!(repstr = lv_time_dup(mem, lv, 0)) ||
+	if (!(repstr = lv_creation_time_dup(mem, lv, 0)) ||
 	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
 		log_error("Failed to allocate buffer for time.");
 		return 0;
 	}
 
-	*sortval = lv->timestamp;
+	*sortval = lv_is_historical(lv) ? lv->this_glv->historical->timestamp : lv->timestamp;
+	return _field_set_value(field, repstr, sortval);
+}
 
+static int _lvtimeremoved_disp(struct dm_report *rh, struct dm_pool *mem,
+			       struct dm_report_field *field,
+			       const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	char *repstr;
+	uint64_t *sortval;
+
+	if (!(repstr = lv_removal_time_dup(mem, lv, 0)) ||
+	    !(sortval = dm_pool_alloc(mem, sizeof(uint64_t)))) {
+		log_error("Failed to allocate buffer for time.");
+		return 0;
+	}
+
+	*sortval = lv_is_historical(lv) ? lv->this_glv->historical->timestamp_removed : 0;
 	return _field_set_value(field, repstr, sortval);
 }
 

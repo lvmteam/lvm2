@@ -1274,12 +1274,13 @@ int lv_set_creation(struct logical_volume *lv,
 	return 1;
 }
 
-char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode)
+static char *_time_dup(struct cmd_context *cmd, struct dm_pool *mem,
+		       time_t ts, int iso_mode)
 {
 	char buffer[4096];
 	struct tm *local_tm;
-	time_t ts = (time_t)lv->timestamp;
-	const char *format = iso_mode ? DEFAULT_TIME_FORMAT : lv->vg->cmd->time_format;
+	const char *format = iso_mode ? DEFAULT_TIME_FORMAT
+				      : cmd->time_format;
 
 	if (!ts ||
 	    !(local_tm = localtime(&ts)) ||
@@ -1287,6 +1288,22 @@ char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_
 		buffer[0] = 0;
 
 	return dm_pool_strdup(mem, buffer);
+}
+
+char *lv_creation_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode)
+{
+	time_t ts = lv_is_historical(lv) ? (time_t) lv->this_glv->historical->timestamp
+					 : (time_t) lv->timestamp;
+
+	return _time_dup(lv->vg->cmd, mem, ts, iso_mode);
+}
+
+char *lv_removal_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode)
+{
+	time_t ts = lv_is_historical(lv) ? (time_t)lv->this_glv->historical->timestamp_removed
+					 : (time_t)0;
+
+	return _time_dup(lv->vg->cmd, mem, ts, iso_mode);
 }
 
 char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv)

@@ -362,8 +362,10 @@ GET_LV_NUM_PROPERTY_FN(metadata_percent, _metadata_percent(lv))
 #define _metadata_percent_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(lv_metadata_size, lv_metadata_size(lv) * SECTOR_SIZE)
 #define _lv_metadata_size_set prop_not_implemented_set
-GET_LV_STR_PROPERTY_FN(lv_time, lv_time_dup(lv->vg->vgmem, lv, 0))
+GET_LV_STR_PROPERTY_FN(lv_time, lv_creation_time_dup(lv->vg->vgmem, lv, 0))
 #define _lv_time_set prop_not_implemented_set
+GET_LV_STR_PROPERTY_FN(lv_time_removed, lv_removal_time_dup(lv->vg->vgmem, lv, 0))
+#define _lv_time_removed_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_host, lv_host_dup(lv->vg->vgmem, lv))
 #define _lv_host_set prop_not_implemented_set
 GET_LV_STR_PROPERTY_FN(lv_active, lv_active_dup(lv->vg->vgmem, lv))

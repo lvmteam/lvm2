@@ -187,10 +187,12 @@ char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg);
 char *lvseg_cachemode_dup(struct dm_pool *mem, const struct lv_segment *seg);
 char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg);
 char *lvseg_tags_dup(const struct lv_segment *seg);
-char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode);
+char *lv_creation_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode);
+char *lv_removal_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode);
 char *lv_host_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_profile_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_lock_args_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm);
+char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode);
 #endif /* _LVM_LV_H */

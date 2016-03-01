@@ -383,7 +383,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	log_print("LV UUID                %s", uuid);
 	log_print("LV Write Access        %s", access_str);
 	log_print("LV Creation host, time %s, %s",
-		  lv_host_dup(cmd->mem, lv), lv_time_dup(cmd->mem, lv, 1));
+		  lv_host_dup(cmd->mem, lv), lv_creation_time_dup(cmd->mem, lv, 1));
 
 	if (lv_is_origin(lv)) {
 		log_print("LV snapshot status     source of");
