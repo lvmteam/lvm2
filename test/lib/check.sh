@@ -310,6 +310,12 @@ lv_field() {
 		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
+lvh_field() {
+	local actual=$(get lvh_field "$1" "$2" "${@:4}")
+	test "$actual" = "$3" || \
+		die "lvh_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
+}
+
 lva_field() {
 	local actual=$(get lva_field "$1" "$2" "${@:4}")
 	test "$actual" = "$3" || \
