@@ -32,6 +32,7 @@
 #include "archiver.h"
 #include "defaults.h"
 #include "lvmlockd.h"
+#include "time.h"
 
 #include <math.h>
 #include <sys/param.h>
@@ -3182,6 +3183,25 @@ static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 	return 1;
 }
 
+static int _handle_historical_lvs(struct volume_group *vg)
+{
+	struct glv_list *glvl;
+	time_t current_timestamp = 0;
+	struct historical_logical_volume *hlv;
+
+	dm_list_iterate_items(glvl, &vg->historical_lvs) {
+		hlv = glvl->glv->historical;
+
+		if (!hlv->timestamp_removed) {
+			if (!current_timestamp)
+				current_timestamp = time(NULL);
+			hlv->timestamp_removed = (uint64_t) current_timestamp;
+		}
+	}
+
+	return 1;
+}
+
 /*
  * After vg_write() returns success,
  * caller MUST call either vg_commit() or vg_revert()
@@ -3203,6 +3223,11 @@ int vg_write(struct volume_group *vg)
 			}
 			lvl->lv->new_lock_args = 1;
 		}
+	}
+
+	if (!_handle_historical_lvs(vg)) {
+		log_error("Failed to handle historical LVs in VG %s.", vg->name);
+		return 0;
 	}
 
 	if (!vg_validate(vg))
