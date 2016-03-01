@@ -1929,26 +1929,52 @@ static int _originuuid_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _do_origin_disp(rh, mem, field, data, private, 1);
 }
 
-static int _find_ancestors(struct _str_list_append_baton *ancestors,
-			   struct logical_volume *lv)
+static const char *_get_glv_str(char *buf, size_t buf_len,
+				struct generic_logical_volume *glv)
 {
-	struct logical_volume *ancestor_lv = NULL;
-	struct lv_segment *seg;
+	if (!glv->is_historical)
+		return glv->live->name;
 
-	if (lv_is_cow(lv)) {
-		ancestor_lv = origin_from_cow(lv);
-	} else 	if (lv_is_thin_volume(lv)) {
-		seg = first_seg(lv);
-		if (seg->origin)
-			ancestor_lv = seg->origin;
-		else if (seg->external_lv)
-			ancestor_lv = seg->external_lv;
+	if (dm_snprintf(buf, buf_len, "%s%s", HISTORICAL_LV_PREFIX, glv->historical->name) < 0) {
+		log_error("_get_glv_str: dm_snprintf failed");
+		return NULL;
 	}
 
-	if (ancestor_lv) {
-		if (!_str_list_append(ancestor_lv->name, ancestors))
+	return buf;
+}
+
+static int _find_ancestors(struct _str_list_append_baton *ancestors,
+			   struct generic_logical_volume glv,
+			   int full, int include_historical_lvs)
+{
+	struct lv_segment *seg;
+	void *orig_p = glv.live;
+	const char *ancestor_str;
+	char buf[NAME_LEN + strlen(HISTORICAL_LV_PREFIX) + 1];
+
+	if (glv.is_historical) {
+		if (full && glv.historical->indirect_origin)
+			glv = *glv.historical->indirect_origin;
+	} else if (lv_is_cow(glv.live)) {
+		glv.live = origin_from_cow(glv.live);
+	} else if (lv_is_thin_volume(glv.live)) {
+		seg = first_seg(glv.live);
+		if (seg->origin)
+			glv.live = seg->origin;
+		else if (seg->external_lv)
+			glv.live = seg->external_lv;
+		else if (full && seg->indirect_origin)
+			glv = *seg->indirect_origin;
+	}
+
+	if (orig_p != glv.live) {
+		if (!(ancestor_str = _get_glv_str(buf, sizeof(buf), &glv)))
 			return_0;
-		if (!_find_ancestors(ancestors, ancestor_lv))
+		if (!glv.is_historical || include_historical_lvs) {
+			if (!_str_list_append(ancestor_str, ancestors))
+				return_0;
+		}
+		if (!_find_ancestors(ancestors, glv, full, include_historical_lvs))
 			return_0;
 	}
 
@@ -1959,19 +1985,52 @@ static int _lvancestors_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
+	struct cmd_context *cmd = (struct cmd_context *) private;
 	struct logical_volume *lv = (struct logical_volume *) data;
 	struct _str_list_append_baton ancestors;
+	struct generic_logical_volume glv;
 
 	ancestors.mem = mem;
 	if (!(ancestors.result = str_list_create(mem)))
 		return_0;
 
-	if (!_find_ancestors(&ancestors, lv)) {
+	if ((glv.is_historical = lv_is_historical(lv)))
+		glv.historical = lv->this_glv->historical;
+	else
+		glv.live = lv;
+
+	if (!_find_ancestors(&ancestors, glv, 0, cmd->include_historical_lvs)) {
 		dm_pool_free(ancestors.mem, ancestors.result);
 		return_0;
 	}
 
 	return _field_set_string_list(rh, field, ancestors.result, private, 0, NULL);
+}
+
+static int _lvfullancestors_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	struct cmd_context *cmd = (struct cmd_context *) private;
+	struct logical_volume *lv = (struct logical_volume *) data;
+	struct _str_list_append_baton full_ancestors;
+	struct generic_logical_volume glv;
+
+	full_ancestors.mem = mem;
+	if (!(full_ancestors.result = str_list_create(mem)))
+		return_0;
+
+	if ((glv.is_historical = lv_is_historical(lv)))
+		glv.historical = lv->this_glv->historical;
+	else
+		glv.live = lv;
+
+	if (!_find_ancestors(&full_ancestors, glv, 1, cmd->include_historical_lvs)) {
+		dm_pool_free(full_ancestors.mem, full_ancestors.result);
+		return_0;
+	}
+
+	return _field_set_string_list(rh, field, full_ancestors.result, private, 0, NULL);
 }
 
 static int _find_descendants(struct _str_list_append_baton *descendants,
