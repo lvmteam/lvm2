@@ -5691,7 +5691,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg;
 	struct logical_volume *format1_origin = NULL;
 	int format1_reload_required = 0;
-	int visible;
+	int visible, historical;
 	struct logical_volume *pool_lv = NULL;
 	struct logical_volume *lock_lv = lv;
 	struct lv_segment *cache_seg = NULL;
@@ -5782,7 +5782,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if ((force == PROMPT) && ask_discard &&
+	if (!lv_is_historical(lv) && (force == PROMPT) && ask_discard &&
 	    yes_no_prompt("Do you really want to remove and DISCARD "
 			  "logical volume %s? [y/n]: ",
 			  lv->name) == 'n') {
@@ -5868,10 +5868,15 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	visible = lv_is_visible(lv);
+	historical = lv_is_historical(lv);
 
-	log_verbose("Releasing logical volume \"%s\"", lv->name);
+	log_verbose("Releasing %slogical volume \"%s\"",
+		    historical ? "historical " : "",
+		    historical ? lv->this_glv->historical->name : lv->name);
 	if (!lv_remove(lv)) {
-		log_error("Error releasing logical volume \"%s\"", lv->name);
+		log_error("Error releasing %slogical volume \"%s\"",
+			  historical ? "historical ": "",
+			  historical ? lv->this_glv->historical->name : lv->name);
 		return 0;
 	}
 
@@ -5934,8 +5939,10 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	lockd_lv(cmd, lock_lv, "un", LDLV_PERSISTENT);
 	lockd_free_lv(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 
-	if (!suppress_remove_message && visible)
-		log_print_unless_silent("Logical volume \"%s\" successfully removed", lv->name);
+	if (!suppress_remove_message && (visible || historical))
+		log_print_unless_silent("%sogical volume \"%s\" successfully removed",
+					historical ? "Historical l" : "L",
+					historical ? lv->this_glv->historical->name : lv->name);
 
 	return 1;
 }

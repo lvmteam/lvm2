@@ -606,7 +606,8 @@ xx(lvremove,
    "\t[--version]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, force_ARG, nohistory_ARG, noudevsync_ARG, select_ARG, test_ARG)
+   autobackup_ARG, force_ARG, nohistory_ARG, noudevsync_ARG,
+   select_ARG, test_ARG)
 
 xx(lvrename,
    "Rename a logical volume",
