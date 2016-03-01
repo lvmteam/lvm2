@@ -2180,6 +2180,48 @@ out:
 	return ret_max;
 }
 
+static struct dm_str_list *_str_list_match_item_with_prefix(const struct dm_list *sll, const char *prefix, const char *str)
+{
+	struct dm_str_list *sl;
+	size_t prefix_len = strlen(prefix);
+
+	dm_list_iterate_items(sl, sll) {
+		if (!strncmp(prefix, sl->str, prefix_len) &&
+		    !strcmp(sl->str + prefix_len, str))
+			return sl;
+	}
+
+	return NULL;
+}
+
+/*
+ * Dummy LV, segment type and segment to represent all historical LVs.
+ */
+static struct logical_volume _historical_lv = {
+	.name = "",
+	.major = -1,
+	.minor = -1,
+	.snapshot_segs = DM_LIST_HEAD_INIT(_historical_lv.snapshot_segs),
+	.segments = DM_LIST_HEAD_INIT(_historical_lv.segments),
+	.tags = DM_LIST_HEAD_INIT(_historical_lv.tags),
+	.segs_using_this_lv = DM_LIST_HEAD_INIT(_historical_lv.segs_using_this_lv),
+	.indirect_glvs = DM_LIST_HEAD_INIT(_historical_lv.indirect_glvs),
+	.hostname = "",
+};
+
+static struct segment_type _historical_segment_type = {
+	.name = "historical",
+	.flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED,
+};
+
+static struct lv_segment _historical_lv_segment = {
+	.lv = &_historical_lv,
+	.segtype = &_historical_segment_type,
+	.len = 0,
+	.tags = DM_LIST_HEAD_INIT(_historical_lv_segment.tags),
+	.origin_list = DM_LIST_HEAD_INIT(_historical_lv_segment.origin_list),
+};
+
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct dm_list *arg_lvnames, const struct dm_list *tags_in,
 			  int stop_on_error,
@@ -2199,6 +2241,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	struct dm_str_list *sl;
 	struct dm_list final_lvs;
 	struct lv_list *final_lvl;
+	struct glv_list *glvl, *tglvl;
 
 	dm_list_init(&final_lvs);
 
@@ -2338,6 +2381,48 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (stop_on_error && ret != ECMD_PROCESSED)
 			goto_out;
+	}
+
+	if (handle->include_historical_lvs && !tags_supplied) {
+		if (!dm_list_size(&_historical_lv.segments))
+			dm_list_add(&_historical_lv.segments, &_historical_lv_segment.list);
+		_historical_lv.vg = vg;
+
+		dm_list_iterate_items_safe(glvl, tglvl, &vg->historical_lvs) {
+			process_lv = process_all;
+
+			if (lvargs_supplied &&
+			    (sl = _str_list_match_item_with_prefix(arg_lvnames, HISTORICAL_LV_PREFIX, glvl->glv->historical->name))) {
+				str_list_del(arg_lvnames, glvl->glv->historical->name);
+				dm_list_del(&sl->list);
+				process_lv = 1;
+			}
+
+			process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv, &selected) && selected;
+
+			if (sigint_caught()) {
+				ret_max = ECMD_FAILED;
+				goto_out;
+			}
+
+			if (!process_lv)
+				continue;
+
+			_historical_lv.this_glv = glvl->glv;
+			_historical_lv.name = glvl->glv->historical->name;
+			log_very_verbose("Processing historical LV %s in VG %s.", glvl->glv->historical->name, vg->name);
+
+			ret = process_single_lv(cmd, &_historical_lv, handle);
+			if (handle_supplied)
+				_update_selection_result(handle, &whole_selected);
+			if (ret != ECMD_PROCESSED)
+				stack;
+			if (ret > ret_max)
+				ret_max = ret;
+
+			if (stop_on_error && ret != ECMD_PROCESSED)
+				goto_out;
+		}
 	}
 
 	if (lvargs_supplied) {
