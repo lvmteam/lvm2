@@ -1360,6 +1360,13 @@ cfg(metadata_check_pv_device_sizes_CFG, "check_pv_device_sizes", metadata_CFG_SE
 	"less than corresponding PV size. You should not disable this unless\n"
 	"you are absolutely sure about what you are doing!\n")
 
+cfg(metadata_record_lvs_history_CFG, "record_lvs_history", metadata_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_RECORD_LVS_HISTORY, vsn(2, 2, 145), NULL, 0, NULL,
+	"When enabled, LVM keeps history records about removed LVs in\n"
+	"metadata. The information that is recorded in metadata for\n"
+	"historical LVs is reduced when compared to original\n"
+	"information kept in metadata for live LVs. Currently, this\n"
+	"feature is supported for thin and thin snapshot LVs only.\n")
+
 cfg(metadata_pvmetadatacopies_CFG, "pvmetadatacopies", metadata_CFG_SECTION, CFG_ADVANCED | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PVMETADATACOPIES, vsn(1, 0, 0), NULL, 0, NULL,
 	"Number of copies of metadata to store on each PV.\n"
 	"The --pvmetadatacopies option overrides this setting.\n"
