@@ -80,6 +80,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 	unsigned seg_count = 0, seg_found;
 	uint32_t area_multiplier, s;
 	struct seg_list *sl;
+	struct glv_list *glvl;
 	int error_count = 0;
 	struct replicator_site *rsite;
 	struct replicator_device *rdev;
@@ -492,6 +493,25 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				  seg->lv->name, seg->le, seg->le + seg->len - 1,
 				  lv->name);
 			inc_error_count;
+		}
+	}
+
+	dm_list_iterate_items(glvl, &lv->indirect_glvs) {
+		if (glvl->glv->is_historical) {
+			if (glvl->glv->historical->indirect_origin != lv->this_glv) {
+				log_error("LV %s is indirectly used by historical LV %s"
+					  "but that historical LV does not point back to LV %s",
+					   lv->name, glvl->glv->historical->name, lv->name);
+				inc_error_count;
+			}
+		} else {
+			if (!(seg = first_seg(glvl->glv->live)) ||
+			    seg->indirect_origin != lv->this_glv) {
+				log_error("LV %s is indirectly used by LV %s"
+					  "but that LV does not point back to LV %s",
+					  lv->name, glvl->glv->live->name, lv->name);
+				inc_error_count;
+			}
 		}
 	}
 

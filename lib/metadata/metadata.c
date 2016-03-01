@@ -2613,7 +2613,9 @@ void lv_calculate_readahead(const struct logical_volume *lv, uint32_t *read_ahea
 
 struct validate_hash {
 	struct dm_hash_table *lvname;
+	struct dm_hash_table *historical_lvname;
 	struct dm_hash_table *lvid;
+	struct dm_hash_table *historical_lvid;
 	struct dm_hash_table *pvid;
 	struct dm_hash_table *lv_lock_args;
 };
@@ -2733,6 +2735,8 @@ int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl;
 	struct lv_list *lvl;
+	struct glv_list *glvl;
+	struct historical_logical_volume *hlv;
 	struct lv_segment *seg;
 	struct dm_str_list *sl;
 	char uuid[64] __attribute__((aligned(8)));
@@ -3166,11 +3170,95 @@ int vg_validate(struct volume_group *vg)
 		}
 	}
 
+	if (!(vhash.historical_lvname = dm_hash_create(dm_list_size(&vg->historical_lvs)))) {
+		log_error("Failed to allocate historical LV name hash");
+		r = 0;
+		goto out;
+	}
+
+        if (!(vhash.historical_lvid = dm_hash_create(dm_list_size(&vg->historical_lvs)))) {
+                log_error("Failed to allocate historical LV uuid hash");
+                r = 0;
+                goto out;
+        }
+
+	dm_list_iterate_items(glvl, &vg->historical_lvs) {
+		if (!glvl->glv->is_historical) {
+			log_error(INTERNAL_ERROR "LV %s/%s appearing in VG's historical list is not a historical LV",
+				  vg->name, glvl->glv->live->name);
+			r = 0;
+			continue;
+		}
+
+		hlv = glvl->glv->historical;
+
+		if (hlv->vg != vg) {
+			log_error(INTERNAL_ERROR "Historical LV %s points to different VG %s while it is listed in VG %s",
+				  hlv->name, hlv->vg->name, vg->name);
+			r = 0;
+			continue;
+		}
+
+		if (!id_equal(&hlv->lvid.id[0], &hlv->vg->id)) {
+			if (!id_write_format(&hlv->lvid.id[0], uuid, sizeof(uuid)))
+				stack;
+			if (!id_write_format(&hlv->vg->id, uuid2, sizeof(uuid2)))
+				stack;
+			log_error(INTERNAL_ERROR "Historical LV %s has VG UUID %s but its VG %s has UUID %s",
+				  hlv->name, uuid, hlv->vg->name, uuid2);
+			r = 0;
+			continue;
+                }
+
+		if (dm_hash_lookup_binary(vhash.historical_lvid, &hlv->lvid.id[1], sizeof(hlv->lvid.id[1]))) {
+			if (!id_write_format(&hlv->lvid.id[1], uuid,sizeof(uuid)))
+				stack;
+			log_error(INTERNAL_ERROR "Duplicate historical LV id %s detected for %s in %s",
+				  uuid, hlv->name, vg->name);
+                        r = 0;
+                }
+
+		if (dm_hash_lookup(vhash.historical_lvname, hlv->name)) {
+			log_error(INTERNAL_ERROR "Duplicate historical LV name %s detected in %s", hlv->name, vg->name);
+			r = 0;
+			continue;
+		}
+
+                if (!dm_hash_insert(vhash.historical_lvname, hlv->name, hlv)) {
+                        log_error("Failed to hash historical LV name");
+                        r = 0;
+                        break;
+                }
+
+                if (!dm_hash_insert_binary(vhash.historical_lvid, &hlv->lvid.id[1], sizeof(hlv->lvid.id[1]), hlv)) {
+                        log_error("Failed to hash historical LV id");
+                        r = 0;
+                        break;
+                }
+
+		if (dm_hash_lookup(vhash.lvname, hlv->name)) {
+			log_error(INTERNAL_ERROR "Name %s appears as live and historical LV at the same time in VG %s",
+				  hlv->name, vg->name);
+			r = 0;
+			continue;
+		}
+
+		if (!hlv->indirect_origin && !dm_list_size(&hlv->indirect_glvs)) {
+			log_error(INTERNAL_ERROR "Historical LV %s is not part of any LV chain in VG %s", hlv->name, vg->name);
+			r = 0;
+			continue;
+		}
+	}
+
 out:
 	if (vhash.lvid)
 		dm_hash_destroy(vhash.lvid);
 	if (vhash.lvname)
 		dm_hash_destroy(vhash.lvname);
+	if (vhash.historical_lvid)
+		dm_hash_destroy(vhash.historical_lvid);
+	if (vhash.historical_lvname)
+		dm_hash_destroy(vhash.historical_lvname);
 	if (vhash.pvid)
 		dm_hash_destroy(vhash.pvid);
 	if (vhash.lv_lock_args)
