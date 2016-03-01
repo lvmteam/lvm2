@@ -1102,6 +1102,8 @@ static int _get_settings(struct cmd_context *cmd)
 	cmd->include_foreign_vgs = arg_is_set(cmd, foreign_ARG) ? 1 : 0;
 	cmd->include_shared_vgs = arg_is_set(cmd, shared_ARG) ? 1 : 0;
 	cmd->include_historical_lvs = arg_is_set(cmd, history_ARG) ? 1 : 0;
+	cmd->include_historical_lvs = arg_is_set(cmd, history_ARG) ? 1 : 0;
+	cmd->record_historical_lvs = arg_is_set(cmd, nohistory_ARG) ? 0 : 1;
 
 	/*
 	 * This is set to zero by process_each which wants to print errors
