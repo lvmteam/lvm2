@@ -316,6 +316,8 @@ GET_LV_NUM_PROPERTY_FN(origin_size, (SECTOR_SIZE * lv_origin_size(lv)))
 #define _lv_full_ancestors_get prop_not_implemented_get
 #define _lv_descendants_set prop_not_implemented_set
 #define _lv_descendants_get prop_not_implemented_get
+#define _lv_full_descendants_set prop_not_implemented_set
+#define _lv_full_descendants_get prop_not_implemented_get
 GET_LV_NUM_PROPERTY_FN(snap_percent, _snap_percent(lv))
 #define _snap_percent_set prop_not_implemented_set
 GET_LV_NUM_PROPERTY_FN(copy_percent, _copy_percent(lv))
