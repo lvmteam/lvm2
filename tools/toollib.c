@@ -3958,7 +3958,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	 */
 	if (!dev_test_excl(pv->dev)) {
 		/* FIXME Detect whether device-mapper itself is still using it */
-		log_error("Can't open %s exclusively.  Mounted filesystem?.",
+		log_error("Can't open %s exclusively.  Mounted filesystem?",
 			  pv_dev_name(pv));
 		dm_list_move(&pp->arg_fail, &pd->list);
 		return 1;
@@ -4049,6 +4049,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 
 	pd->dev = pv->dev;
 	dm_list_move(&pp->arg_process, &pd->list);
+
 	return 1;
 }
 
@@ -4193,7 +4194,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 */
 	if (dm_list_empty(&pp->arg_process)) {
 		log_debug("No devices to process.");
-		goto_bad;
+		goto bad;
 	}
 
 	/*
