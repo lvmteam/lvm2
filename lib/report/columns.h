@@ -96,6 +96,7 @@ FIELD(LVS, lv, TIM, "CTime", lvid, 26, lvtime, lv_time, "Creation time of the LV
 FIELD(LVS, lv, TIM, "RTime", lvid, 26, lvtimeremoved, lv_time_removed, "Removal time of the LV, if known", 0)
 FIELD(LVS, lv, STR, "Host", lvid, 10, lvhost, lv_host, "Creation host of the LV, if known.", 0)
 FIELD(LVS, lv, STR_LIST, "Modules", lvid, 7, modules, lv_modules, "Kernel device-mapper modules required for this LV.", 0)
+FIELD(LVS, lv, BIN, "Historical", lvid, 8, lvhistorical, lv_historical, "Set if the LV is historical.", 0)
 
 FIELD(LVSINFO, lv, SNUM, "KMaj", lvid, 4, lvkmaj, lv_kernel_major, "Currently assigned major number or -1 if LV is not active.", 0)
 FIELD(LVSINFO, lv, SNUM, "KMin", lvid, 4, lvkmin, lv_kernel_minor, "Currently assigned minor number or -1 if LV is not active.", 0)

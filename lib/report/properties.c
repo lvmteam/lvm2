@@ -253,6 +253,8 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _lv_skip_activation_get prop_not_implemented_get
 #define _lv_check_needed_set prop_not_implemented_set
 #define _lv_check_needed_get prop_not_implemented_get
+#define _lv_historical_set prop_not_implemented_set
+#define _lv_historical_get prop_not_implemented_get
 
 #define _cache_total_blocks_set prop_not_implemented_set
 #define _cache_total_blocks_get prop_not_implemented_get

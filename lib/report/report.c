@@ -3385,6 +3385,14 @@ static int _lvskipactivation_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _binary_disp(rh, mem, field, skip_activation, "skip activation", private);
 }
 
+static int _lvhistorical_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	return _binary_disp(rh, mem, field, lv_is_historical(lv), "historical", private);
+}
+
 /*
  * Macro to generate '_cache_<cache_status_field_name>_disp' reporting function.
  * The 'cache_status_field_name' is field name from struct dm_cache_status.
