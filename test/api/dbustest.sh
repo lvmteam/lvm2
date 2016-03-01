@@ -30,6 +30,13 @@ fi
 # Setup the python path so we can run
 export PYTHONPATH=$abs_top_builddir/daemons
 
+if true; then
+
+aux prepare_lvmdbusd
+$abs_top_builddir/test/dbus/lvmdbustest.py -v
+
+else
+
 # Start the dbus service
 $abs_top_builddir/daemons/lvmdbusd/lvmdbusd --debug --udev > debug.log_lvmdbusd 2>&1 &
 
@@ -39,9 +46,10 @@ sleep 1
 
 LVM_DBUS_PID=$(ps aux | grep lvmdbus[d] |  awk '{print $2}')
 if [ "CHK${LVM_DBUS_PID}" == "CHK" ];then
-	echo "Failed to start lsmdbusd daemon"
+	echo "Failed to start lvmdbusd daemon"
 	exit 1
 fi
+END
 
 # Run all the unit tests
 $abs_top_builddir/test/dbus/lvmdbustest.py -v || fail=$?
@@ -57,3 +65,5 @@ kill $LVM_DBUS_PID || {
 wait
 
 exit ${fail:-"0"}
+
+fi

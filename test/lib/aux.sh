@@ -300,6 +300,42 @@ lvmpolld_dump() {
 	(echo 'request="dump"'; echo '##') | lvmpolld_talk "$@"
 }
 
+prepare_lvmdbusd() {
+	rm -f debug.log_LVMDBUSD_out
+
+	echo "checking lvmdbusd is NOT running..."
+	if ps -elf | grep lvmdbusd | grep python3; then
+		echo "Cannot run while existing lvmdbusd process exists"
+		return 1
+	fi
+	echo ok
+
+	# skip if we don't have our own lvmdbusd...
+        # TODO: lvmdbusd is not in PATH
+	#(which lvmdbusd 2>/dev/null | grep "$abs_builddir") || skip
+	[[ -x $abs_top_builddir/daemons/lvmdbusd/lvmdbusd ]] || skip
+
+	kill_sleep_kill_ LOCAL_LVMDBUSD 0
+
+	echo "preparing lvmdbusd..."
+	$abs_top_builddir/daemons/lvmdbusd/lvmdbusd --debug --udev > debug.log_LVMDBUSD_out 2>&1 &
+	local pid=$!
+
+	sleep 1
+	echo "checking lvmdbusd IS running..."
+	if ! ps -elf | grep lvmdbusd | grep python3; then
+		echo "Failed to start lvmdbusd daemon"
+		return 1
+	fi
+	# TODO: Is there a better check than wait 1 second and check pid?
+	if ! ps -p $pid -o comm= >/dev/null || [[ $(ps -p $pid -o comm=) != python3 ]]; then
+		echo "Failed to start lvmdbusd daemon"
+		return 1
+	fi
+	echo $pid > LOCAL_LVMDBUSD
+	echo ok
+}
+
 teardown_devs_prefixed() {
 	local prefix=$1
 	local stray=${2:-0}
@@ -463,6 +499,10 @@ teardown() {
 			$vg $vg1 $vg2 $vg3 $vg4 &>/dev/null || rm -f debug.log strace.log
 		fi
 	}
+
+	kill_sleep_kill_ LOCAL_LVMDBUSD 0
+
+	echo -n .
 
 	kill_sleep_kill_ LOCAL_LVMPOLLD ${LVM_VALGRIND_LVMPOLLD:-0}
 
