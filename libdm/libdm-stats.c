@@ -957,15 +957,13 @@ bad:
 static void _stats_walk_next(const struct dm_stats *dms, int region,
 			     uint64_t *cur_r, uint64_t *cur_a)
 {
-	struct dm_stats_region *cur = NULL;
+	struct dm_stats_region *cur;
 	int present;
 
 	if (!dms || !dms->regions)
 		return;
 
-	if (!(cur = &dms->regions[*cur_r]))
-		return;
-
+	cur = dms->regions + *cur_r;
 	present = _stats_region_present(cur);
 
 	if (region && present)
