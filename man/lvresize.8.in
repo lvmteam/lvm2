@@ -9,12 +9,12 @@ lvresize \(em resize a logical volume
 .IR ProfileName ]
 .RB [ \-i | \-\-stripes " " \fIStripes
 .RB [ \-I | \-\-stripesize " " \fIStripeSize ]]
-.RB {[ \-l | \-\-extents
+.RB { \-l | \-\-extents
 .RI [ + | \- ] LogicalExtentsNumber [ % { VG | LV | PVS | FREE | ORIGIN "}] |"
-.RB [ \-L | \-\-size
+.BR \-L | \-\-size
 .RI [ + | \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
 .RB [ \-\-poolmetadatasize
-.RI [ + ] MetadataVolumeSize [ bBsSkKmMgG ]
+.RI [ + ] MetadataVolumeSize [ bBsSkKmMgG ]]
 .RB [ \-f | \-\-force ]
 .RB [ \-n | \-\-nofsck ]
 .RB [ \-r | \-\-resizefs ]
