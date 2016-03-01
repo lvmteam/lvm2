@@ -215,10 +215,17 @@ static int _set_up_historical_lv(struct lv_segment *seg_to_remove,
 {
 	struct generic_logical_volume *glv = NULL;
 
-	if (seg_to_remove->origin || seg_to_remove->indirect_origin ||
-	    dm_list_size(&seg_to_remove->lv->segs_using_this_lv) ||
-	    dm_list_size(&seg_to_remove->lv->indirect_glvs)) {
-		if (!(glv = _create_historical_glv(seg_to_remove)))
+	if (seg_to_remove->lv->vg->cmd->record_historical_lvs) {
+		if (seg_to_remove->origin || seg_to_remove->indirect_origin ||
+		    dm_list_size(&seg_to_remove->lv->segs_using_this_lv) ||
+		    dm_list_size(&seg_to_remove->lv->indirect_glvs)) {
+			if (!(glv = _create_historical_glv(seg_to_remove)))
+				return_0;
+		}
+	} else {
+		if (seg_to_remove->indirect_origin &&
+		    !remove_glv_from_indirect_glvs(seg_to_remove->indirect_origin,
+						   seg_to_remove->lv->this_glv))
 			return_0;
 	}
 
