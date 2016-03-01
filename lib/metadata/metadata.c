@@ -3930,6 +3930,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_pvs = 0;
 	int inconsistent_mdas = 0;
 	int inconsistent_mda_count = 0;
+	int strip_historical_lvs = *consistent;
 	unsigned use_precommitted = precommitted;
 	struct dm_list *pvids;
 	struct pv_list *pvl;
@@ -3965,6 +3966,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				lvmetad_vg_clear_outdated_pvs(correct_vg);
                         }
 		}
+
+		if (correct_vg && strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg))
+			return_NULL;
+
 		return correct_vg;
 	}
 
@@ -4405,6 +4410,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	*consistent = !inconsistent_pvs;
+
+	if (*consistent && correct_vg && strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg))
+		return_NULL;
+
 	return correct_vg;
 }
 
@@ -4451,7 +4460,6 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 			goto out;
 		}
 	}
-
 out:
 	if (!*consistent && (warn_flags & WARN_INCONSISTENT)) {
 		if (is_orphan_vg(vgname))
@@ -6002,3 +6010,32 @@ int is_lockd_type(const char *lock_type)
 	return 0;
 }
 
+int vg_strip_outdated_historical_lvs(struct volume_group *vg) {
+	struct glv_list *glvl, *tglvl;
+	time_t current_time = time(NULL);
+	uint64_t threshold = 0;
+
+	if (!threshold)
+		return 1;
+
+	dm_list_iterate_items_safe(glvl, tglvl, &vg->historical_lvs) {
+		/*
+		 * Removal time in the future? Not likely,
+		 * but skip this item in any case.
+		*/
+		if ((current_time) < glvl->glv->historical->timestamp_removed)
+			continue;
+
+		if ((current_time - glvl->glv->historical->timestamp_removed) > threshold) {
+			if (!historical_glv_remove(glvl->glv)) {
+				log_error("Failed to destroy record about historical LV %s/%s.",
+					  vg->name, glvl->glv->historical->name);
+				return 0;
+			}
+			log_verbose("Outdated record for historical logical volume \"%s\" "
+				    "automatically destroyed.", glvl->glv->historical->name);
+		}
+	}
+
+	return 1;
+}
