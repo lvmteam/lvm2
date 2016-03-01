@@ -598,6 +598,7 @@ xx(lvremove,
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
+   "\t[--nohistory]\n"
    "\t[--noudevsync]\n"
    "\t[-S|--select Selection]\n"
    "\t[-t|--test]\n"
@@ -605,7 +606,7 @@ xx(lvremove,
    "\t[--version]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, force_ARG, noudevsync_ARG, select_ARG, test_ARG)
+   autobackup_ARG, force_ARG, nohistory_ARG, noudevsync_ARG, select_ARG, test_ARG)
 
 xx(lvrename,
    "Rename a logical volume",
