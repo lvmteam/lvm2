@@ -5307,6 +5307,42 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 	return buffer;
 }
 
+struct generic_logical_volume *get_or_create_glv(struct dm_pool*mem, struct logical_volume *lv, int *glv_created)
+{
+	struct generic_logical_volume *glv;
+
+	if (!(glv = lv->this_glv)) {
+		if (!(glv = dm_pool_zalloc(mem, sizeof(struct generic_logical_volume)))) {
+			log_error("Failed to allocate generic logical volume structure.");
+			return NULL;
+		}
+		glv->live = lv;
+		lv->this_glv = glv;
+		if (glv_created)
+			*glv_created = 1;
+	} else if (glv_created)
+		*glv_created = 0;
+
+	return glv;
+}
+
+struct glv_list *get_or_create_glvl(struct dm_pool *mem, struct logical_volume *lv, int *glv_created)
+{
+	struct glv_list *glvl;
+
+	if (!(glvl = dm_pool_zalloc(mem, sizeof(struct glv_list)))) {
+		log_error("Failed to allocate generic logical volume list item.");
+		return NULL;
+	}
+
+	if (!(glvl->glv = get_or_create_glv(mem, lv, glv_created))) {
+		dm_pool_free(mem, glvl);
+		return_NULL;
+	}
+
+	return glvl;
+}
+
 struct logical_volume *alloc_lv(struct dm_pool *mem)
 {
 	struct logical_volume *lv;
