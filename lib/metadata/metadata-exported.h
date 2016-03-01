@@ -447,6 +447,7 @@ struct lv_segment {
 	uint32_t chunk_size;	/* For snapshots/thin_pool.  In sectors. */
 				/* For thin_pool, 128..2097152. */
 	struct logical_volume *origin;	/* snap and thin */
+	struct generic_logical_volume *indirect_origin;
 	struct logical_volume *merge_lv; /* thin, merge descendent lv into this ancestor */
 	struct logical_volume *cow;
 	struct dm_list origin_list;
@@ -503,6 +504,11 @@ struct pv_list {
 struct lv_list {
 	struct dm_list list;
 	struct logical_volume *lv;
+};
+
+struct glv_list {
+	struct dm_list list;
+	struct generic_logical_volume *glv;
 };
 
 struct vg_list {

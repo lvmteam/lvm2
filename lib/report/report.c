@@ -3386,6 +3386,7 @@ static struct volume_group _dummy_vg = {
 	.lvm1_system_id = (char *) "",
 	.pvs = DM_LIST_HEAD_INIT(_dummy_vg.pvs),
 	.lvs = DM_LIST_HEAD_INIT(_dummy_vg.lvs),
+	.historical_lvs = DM_LIST_HEAD_INIT(_dummy_vg.historical_lvs),
 	.tags = DM_LIST_HEAD_INIT(_dummy_vg.tags),
 };
 
@@ -3396,6 +3397,7 @@ static struct volume_group _unknown_vg = {
 	.lvm1_system_id = (char *) "",
 	.pvs = DM_LIST_HEAD_INIT(_unknown_vg.pvs),
 	.lvs = DM_LIST_HEAD_INIT(_unknown_vg.lvs),
+	.historical_lvs = DM_LIST_HEAD_INIT(_unknown_vg.historical_lvs),
 	.tags = DM_LIST_HEAD_INIT(_unknown_vg.tags),
 };
 

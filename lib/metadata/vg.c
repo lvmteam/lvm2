@@ -64,6 +64,7 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	dm_list_init(&vg->pv_write_list);
 	dm_list_init(&vg->pvs_outdated);
 	dm_list_init(&vg->lvs);
+	dm_list_init(&vg->historical_lvs);
 	dm_list_init(&vg->tags);
 	dm_list_init(&vg->removed_lvs);
 	dm_list_init(&vg->removed_pvs);

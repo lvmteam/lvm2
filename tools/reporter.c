@@ -244,6 +244,7 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 		.name = "",
 		.pvs = DM_LIST_HEAD_INIT(_free_vg.pvs),
 		.lvs = DM_LIST_HEAD_INIT(_free_vg.lvs),
+		.historical_lvs = DM_LIST_HEAD_INIT(_free_vg.historical_lvs),
 		.tags = DM_LIST_HEAD_INIT(_free_vg.tags),
 	};
 
@@ -256,6 +257,7 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 		.tags = DM_LIST_HEAD_INIT(_free_logical_volume.tags),
 		.segments = DM_LIST_HEAD_INIT(_free_logical_volume.segments),
 		.segs_using_this_lv = DM_LIST_HEAD_INIT(_free_logical_volume.segs_using_this_lv),
+		.indirect_glvs = DM_LIST_HEAD_INIT(_free_logical_volume.indirect_glvs),
 		.snapshot_segs = DM_LIST_HEAD_INIT(_free_logical_volume.snapshot_segs),
 	};
 
