@@ -1426,6 +1426,22 @@ activation {
 	# This configuration option has an automatic default value.
 	# check_pv_device_sizes = 1
 
+	# Configuration option metadata/record_lvs_history.
+	# When enabled, LVM keeps history records about removed LVs in
+	# metadata. The information that is recorded in metadata for
+	# historical LVs is reduced when compared to original
+	# information kept in metadata for live LVs. Currently, this
+	# feature is supported for thin and thin snapshot LVs only.
+	# This configuration option has an automatic default value.
+	# record_lvs_history = 0
+
+	# Configuration option metadata/lvs_history_retention_time.
+	# Retention time in seconds after which a record about individual
+	# historical logical volume is automatically destroyed.
+	# A value of 0 disables this feature.
+	# This configuration option has an automatic default value.
+	# lvs_history_retention_time = 0
+
 	# Configuration option metadata/pvmetadatacopies.
 	# Number of copies of metadata to store on each PV.
 	# The --pvmetadatacopies option overrides this setting.
