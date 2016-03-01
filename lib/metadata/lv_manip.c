@@ -4028,10 +4028,12 @@ out:
 static int _rename_single_lv(struct logical_volume *lv, char *new_name)
 {
 	struct volume_group *vg = lv->vg;
+	int historical;
 
-	if (find_lv_in_vg(vg, new_name)) {
-		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", new_name, vg->name);
+	if (lv_name_is_used_in_vg(vg, new_name, &historical)) {
+		log_error("%sLogical Volume \"%s\" already exists in "
+			  "volume group \"%s\"", historical ? "historical " : "",
+			   new_name, vg->name);
 		return 0;
 	}
 
@@ -4194,6 +4196,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names = { .old = lv->name };
+	int historical;
 
 	/*
 	 * rename is not allowed on sub LVs except for pools
@@ -4205,9 +4208,10 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (find_lv_in_vg(vg, new_name)) {
-		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", new_name, vg->name);
+	if (lv_name_is_used_in_vg(vg, new_name, &historical)) {
+		log_error("%sLogical Volume \"%s\" already exists in "
+			  "volume group \"%s\"", historical ? "historical " : "",
+			  new_name, vg->name);
 		return 0;
 	}
 
@@ -5365,10 +5369,19 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len)
 {
 	struct lv_list *lvl;
+	struct glv_list *glvl;
 	int high = -1, i;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (sscanf(lvl->lv->name, format, &i) != 1)
+			continue;
+
+		if (i > high)
+			high = i;
+	}
+
+	dm_list_iterate_items(glvl, &vg->historical_lvs) {
+		if (sscanf(glvl->glv->historical->name, format, &i) != 1)
 			continue;
 
 		if (i > high)
@@ -5506,6 +5519,7 @@ struct logical_volume *lv_create_empty(const char *name,
 	struct format_instance *fi = vg->fid;
 	struct logical_volume *lv;
 	char dname[NAME_LEN];
+	int historical;
 
 	if (vg_max_lv_reached(vg))
 		stack;
@@ -5515,9 +5529,10 @@ struct logical_volume *lv_create_empty(const char *name,
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;
-	} else if (find_lv_in_vg(vg, name)) {
+	} else if (lv_name_is_used_in_vg(vg, name, &historical)) {
 		log_error("Unable to create LV %s in Volume Group %s: "
-			  "name already in use.", name, vg->name);
+			  "name already in use%s.", name, vg->name,
+			  historical ? " by historical LV" : "");
 		return NULL;
 	}
 
@@ -7010,10 +7025,12 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	struct logical_volume *tmp_lv;
 	struct lv_segment *seg, *pool_seg;
 	int thin_pool_was_active = -1; /* not scanned, inactive, active */
+	int historical;
 
-	if (new_lv_name && find_lv_in_vg(vg, new_lv_name)) {
-		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", new_lv_name, vg->name);
+	if (new_lv_name && lv_name_is_used_in_vg(vg, new_lv_name, &historical)) {
+		log_error("%sLogical Volume \"%s\" already exists in "
+			  "volume group \"%s\"", historical ? "historical " : "",
+			  new_lv_name, vg->name);
 		return NULL;
 	}
 

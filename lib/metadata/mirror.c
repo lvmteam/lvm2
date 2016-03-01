@@ -2213,10 +2213,12 @@ int lv_split_mirror_images(struct logical_volume *lv, const char *split_name,
 			   uint32_t split_count, struct dm_list *removable_pvs)
 {
 	int r;
+	int historical;
 
-	if (find_lv_in_vg(lv->vg, split_name)) {
-		log_error("Logical Volume \"%s\" already exists in "
-			  "volume group \"%s\"", split_name, lv->vg->name);
+	if (lv_name_is_used_in_vg(lv->vg, split_name, &historical)) {
+		log_error("%sLogical Volume \"%s\" already exists in "
+			  "volume group \"%s\"", historical ? "historical " : "",
+			  split_name, lv->vg->name);
 		return 0;
 	}
 

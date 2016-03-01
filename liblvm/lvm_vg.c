@@ -523,6 +523,7 @@ int lvm_lv_name_validate(const vg_t vg, const char *name)
 {
 	int rc = -1;
 	name_error_t name_error;
+	int historical;
 
 	struct saved_env e = store_user_env(vg->cmd);
 
@@ -530,10 +531,11 @@ int lvm_lv_name_validate(const vg_t vg, const char *name)
 
 	if (NAME_VALID == name_error) {
 		if (apply_lvname_restrictions(name)) {
-			if (!find_lv_in_vg(vg, name)) {
+			if (!lv_name_is_used_in_vg(vg, name, &historical)) {
 				rc = 0;
 			} else {
-				log_errno(EINVAL, "LV name exists in VG");
+				log_errno(EINVAL, "%sLV name exists in VG",
+					  historical ? "historical " : "");
 			}
 		}
 	} else {

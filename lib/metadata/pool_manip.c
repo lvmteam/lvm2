@@ -867,7 +867,7 @@ int vg_remove_pool_metadata_spare(struct volume_group *vg)
 	*c = 0;
 
 	/* If the name is in use, generate new lvol%d */
-	if (find_lv_in_vg(vg, new_name) &&
+	if (lv_name_is_used_in_vg(vg, new_name, NULL) &&
 	    !generate_lv_name(vg, "lvol%d", new_name, sizeof(new_name))) {
 		log_error("Failed to generate unique name for "
 			  "pool metadata spare logical volume.");

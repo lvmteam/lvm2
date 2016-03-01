@@ -2149,6 +2149,25 @@ struct generic_logical_volume *find_historical_glv(const struct volume_group *vg
 	return NULL;
 }
 
+int lv_name_is_used_in_vg(const struct volume_group *vg, const char *name, int *historical)
+{
+	struct generic_logical_volume *historical_lv;
+	struct logical_volume *lv;
+	int found = 0;
+
+	if ((lv = find_lv(vg, name))) {
+		found = 1;
+		if (historical)
+			*historical = 0;
+	} else if ((historical_lv = find_historical_glv(vg, name, 0, NULL))) {
+		found = 1;
+		if (historical)
+			*historical = 1;
+	}
+
+	return found;
+}
+
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 {
 	struct pv_list *pvl;

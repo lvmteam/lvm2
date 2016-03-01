@@ -1035,6 +1035,8 @@ struct generic_logical_volume *find_historical_glv(const struct volume_group *vg
 						    int check_removed_list,
 						    struct glv_list **glvl_found);
 
+int lv_name_is_used_in_vg(const struct volume_group *vg, const char *name, int *historical);
+
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 					const char *pv_name,
 					int allow_orphan, int allow_unformatted);

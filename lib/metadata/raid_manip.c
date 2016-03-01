@@ -339,6 +339,7 @@ static char *_generate_raid_name(struct logical_volume *lv,
 	const char *format = (count >= 0) ? "%s_%s_%u" : "%s_%s";
 	size_t len = strlen(lv->name) + strlen(suffix) + ((count >= 0) ? 5 : 2);
 	char *name;
+	int historical;
 
 	if (!(name = dm_pool_alloc(lv->vg->vgmem, len))) {
 		log_error("Failed to allocate new name.");
@@ -353,9 +354,9 @@ static char *_generate_raid_name(struct logical_volume *lv,
 		return NULL;
 	}
 
-	if (find_lv_in_vg(lv->vg, name)) {
-		log_error("Logical volume %s already exists in volume group %s.",
-			  name, lv->vg->name);
+	if (lv_name_is_used_in_vg(lv->vg, name, &historical)) {
+		log_error("%sLogical Volume %s already exists in volume group %s.",
+			  historical ? "historical " : "", name, lv->vg->name);
 		return NULL;
 	}
 
@@ -1093,6 +1094,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	uint32_t old_count = lv_raid_image_count(lv);
 	struct logical_volume *tracking;
 	struct dm_list tracking_pvs;
+	int historical;
 
 	dm_list_init(&removal_list);
 	dm_list_init(&data_list);
@@ -1116,9 +1118,9 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		return 0;
 	}
 
-	if (find_lv_in_vg(lv->vg, split_name)) {
-		log_error("Logical Volume \"%s\" already exists in %s",
-			  split_name, lv->vg->name);
+	if (lv_name_is_used_in_vg(lv->vg, split_name, &historical)) {
+		log_error("%sLogical Volume \"%s\" already exists in %s",
+			  historical ? "historical " : "", split_name, lv->vg->name);
 		return 0;
 	}
 
