@@ -90,8 +90,11 @@ int attach_pool_data_lv(struct lv_segment *pool_seg,
 int attach_pool_lv(struct lv_segment *seg,
 		   struct logical_volume *pool_lv,
 		   struct logical_volume *origin,
+		   struct generic_logical_volume *indirect_origin,
 		   struct logical_volume *merge_lv)
 {
+	struct glv_list *glvl;
+
 	if (!seg_is_thin_volume(seg) && !seg_is_cache(seg)) {
 		log_error(INTERNAL_ERROR "Unable to attach pool to %s/%s"
 			  " that is not cache or thin volume.",
@@ -108,6 +111,18 @@ int attach_pool_lv(struct lv_segment *seg,
 
 	if (origin && !add_seg_to_segs_using_this_lv(origin, seg))
 		return_0;
+
+	if (indirect_origin) {
+		if (!(glvl = get_or_create_glvl(seg->lv->vg->vgmem, seg->lv, NULL)))
+			return_0;
+
+		seg->indirect_origin = indirect_origin;
+		if (indirect_origin->is_historical)
+			dm_list_add(&indirect_origin->historical->indirect_glvs, &glvl->list);
+		else
+			dm_list_add(&indirect_origin->live->indirect_glvs, &glvl->list);
+
+	}
 
 	if (!add_seg_to_segs_using_this_lv(pool_lv, seg))
 		return_0;

@@ -348,7 +348,7 @@ static int _cache_text_import(struct lv_segment *seg,
 
 	seg->lv->status |= strstr(seg->lv->name, "_corig") ? LV_PENDING_DELETE : 0;
 
-	if (!attach_pool_lv(seg, pool_lv, NULL, NULL))
+	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 		return_0;
 
 	if (!dm_list_empty(&pool_lv->segments) &&

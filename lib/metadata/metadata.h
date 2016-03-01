@@ -487,7 +487,9 @@ int fixup_imported_mirrors(struct volume_group *vg);
  * From thin_manip.c
  */
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
-		   struct logical_volume *origin_lv, struct logical_volume *merge_lv);
+		   struct logical_volume *origin_lv,
+		   struct generic_logical_volume *indirect_origin,
+		   struct logical_volume *merge_lv);
 int detach_pool_lv(struct lv_segment *seg);
 int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,

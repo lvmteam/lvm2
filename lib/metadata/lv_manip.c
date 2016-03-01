@@ -7335,13 +7335,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (origin_lv && lv_is_thin_volume(origin_lv) &&
 		    (first_seg(origin_lv)->pool_lv == pool_lv)) {
 			/* For thin snapshot pool must match */
-			if (!attach_pool_lv(seg, pool_lv, origin_lv, NULL))
+			if (!attach_pool_lv(seg, pool_lv, origin_lv, NULL, NULL))
 				return_NULL;
 			/* Use the same external origin */
 			if (!attach_thin_external_origin(seg, first_seg(origin_lv)->external_lv))
 				return_NULL;
 		} else {
-			if (!attach_pool_lv(seg, pool_lv, NULL, NULL))
+			if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 				return_NULL;
 			/* If there is an external origin... */
 			if (!attach_thin_external_origin(seg, origin_lv))

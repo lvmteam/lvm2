@@ -273,7 +273,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 	seg = first_seg(cache_lv);
 	seg->segtype = segtype;
 
-	if (!attach_pool_lv(seg, pool_lv, NULL, NULL))
+	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 		return_NULL;
 
 	return cache_lv;
@@ -424,7 +424,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	corigin_lv->status |= LV_PENDING_DELETE;
 
 	/* Reattach cache pool */
-	if (!attach_pool_lv(cache_seg, cache_pool_lv, NULL, NULL))
+	if (!attach_pool_lv(cache_seg, cache_pool_lv, NULL, NULL, NULL))
 		return_0;
 
 	/* Suspend/resume also deactivates deleted LV via support of LV_PENDING_DELETE */
