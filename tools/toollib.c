@@ -1692,6 +1692,7 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd)
 	 * *The internal report for select is only needed for non-reporting tools!*
 	 */
 	handle->internal_report_for_select = arg_is_set(cmd, select_ARG);
+	handle->include_historical_lvs = cmd->include_historical_lvs;
 
 	return handle;
 }

@@ -1101,6 +1101,7 @@ static int _get_settings(struct cmd_context *cmd)
 	cmd->ignore_clustered_vgs = arg_is_set(cmd, ignoreskippedcluster_ARG);
 	cmd->include_foreign_vgs = arg_is_set(cmd, foreign_ARG) ? 1 : 0;
 	cmd->include_shared_vgs = arg_is_set(cmd, shared_ARG) ? 1 : 0;
+	cmd->include_historical_lvs = arg_is_set(cmd, history_ARG) ? 1 : 0;
 
 	/*
 	 * This is set to zero by process_each which wants to print errors

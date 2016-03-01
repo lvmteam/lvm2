@@ -70,6 +70,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm);
  */
 struct processing_handle {
 	int internal_report_for_select;
+	int include_historical_lvs;
 	struct selection_handle *selection_handle;
 	void *custom_handle;
 };
