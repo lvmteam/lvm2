@@ -3319,20 +3319,65 @@ static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 	return 1;
 }
 
-static int _handle_historical_lvs(struct volume_group *vg)
+static int _check_historical_lv_is_valid(struct historical_logical_volume *hlv)
 {
 	struct glv_list *glvl;
+
+	if (hlv->checked)
+		return hlv->valid;
+
+	/*
+	 * Historical LV is valid if there is
+	 * at least one live LV among ancestors.
+	 */
+	hlv->valid = 0;
+	dm_list_iterate_items(glvl, &hlv->indirect_glvs) {
+		if (!glvl->glv->is_historical ||
+		    _check_historical_lv_is_valid(glvl->glv->historical)) {
+			hlv->valid = 1;
+			break;
+		}
+	}
+
+	hlv->checked = 1;
+	return hlv->valid;
+}
+
+static int _handle_historical_lvs(struct volume_group *vg)
+{
+	struct glv_list *glvl, *tglvl;
 	time_t current_timestamp = 0;
 	struct historical_logical_volume *hlv;
+	int valid = 1;
+
+	dm_list_iterate_items(glvl, &vg->historical_lvs)
+		glvl->glv->historical->checked = 0;
 
 	dm_list_iterate_items(glvl, &vg->historical_lvs) {
 		hlv = glvl->glv->historical;
+
+		valid &= _check_historical_lv_is_valid(hlv);
 
 		if (!hlv->timestamp_removed) {
 			if (!current_timestamp)
 				current_timestamp = time(NULL);
 			hlv->timestamp_removed = (uint64_t) current_timestamp;
 		}
+	}
+
+	if (valid)
+		return 1;
+
+	dm_list_iterate_items_safe(glvl, tglvl, &vg->historical_lvs) {
+		hlv = glvl->glv->historical;
+		if (hlv->checked && hlv->valid)
+			continue;
+
+		log_print_unless_silent("Automatically removing historical "
+					"logical volume %s/%s%s.",
+					 vg->name, HISTORICAL_LV_PREFIX, hlv->name);
+		if (!historical_glv_remove(glvl->glv))
+			return_0;
 	}
 
 	return 1;
