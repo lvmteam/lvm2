@@ -16,8 +16,6 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-which md5sum || skip
-
 aux prepare_pvs 1
 
 vgcreate -s 256k $vg $(cat DEVICES)
