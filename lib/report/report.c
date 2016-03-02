@@ -1499,6 +1499,20 @@ out:
 	return r;
 }
 
+static int _kernel_cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
+				     struct dm_report_field *field,
+				     const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	if ((lvdm->seg_status.type == SEG_STATUS_CACHE) &&
+	    lvdm->seg_status.cache->policy_name)
+		return _string_disp(rh, mem, field, &lvdm->seg_status.cache->policy_name, NULL);
+
+	return _field_set_value(field, GET_FIRST_RESERVED_NAME(cache_policy_undef),
+				GET_FIELD_RESERVED_VALUE(cache_policy_undef));
+}
+
 static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)

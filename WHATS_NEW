@@ -1,5 +1,6 @@
 Version 2.02.145 - 
 =====================================
+  Add kernel_cache_policy lvs field.
   Display [unknown] instead of 'unknown device' in pvs output.
   Fix error path when pvcreate allocation fails (2.02.144).
   Display [unknown] instead of blank for unknown VG names in pvs output.
