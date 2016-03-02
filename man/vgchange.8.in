@@ -13,7 +13,7 @@ vgchange \(em change attributes of a volume group
 .RI [ a | e | s | l ]
 .RI { y | n }]
 .RB [ \-\-activationmode
-.IR { complete | degraded | partial } ]
+.IB { complete | degraded | partial } ]
 .RB [ \-K | \-\-ignoreactivationskip ]
 .RB [ \-\-monitor
 .RI { y | n }]

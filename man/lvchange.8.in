@@ -410,7 +410,7 @@ If \fB\-\-sysinit\fP is used in conjunction with
 \fBlvmetad\fP(8) enabled and running,
 autoactivation is preferred over manual activation via direct lvchange call.
 Logical volumes are autoactivated according to
-\fB auto_activation_volume_list\fP set in \fBlvm.conf\fP(5).
+\fBauto_activation_volume_list\fP set in \fBlvm.conf\fP(5).
 .
 .HP
 .BR \-Z | \-\-zero
