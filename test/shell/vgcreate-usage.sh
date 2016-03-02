@@ -142,8 +142,14 @@ check pv_field "$dev1" pe_start ${pv_align}B --units b
 vgremove -f $vg
 pvremove -f "$dev1"
 
+if test -n "$LVM_TEST_LVM1" ; then
+mdatypes='1 2'
+else
+mdatypes='2'
+fi
+
 # metadatatype
-for i in 1 2
+for i in $mdatypes
 do
     vgcreate -M $i $vg "$dev1"
     check vg_field $vg vg_fmt lvm$i

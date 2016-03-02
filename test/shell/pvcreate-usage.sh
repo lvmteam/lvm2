@@ -93,8 +93,10 @@ not pvcreate --labelsector 1000000000000 "$dev1"
 
 #COMM 'pvcreate basic dataalignment sanity checks'
 not pvcreate --dataalignment -1 "$dev1"
-not pvcreate -M 1 --dataalignment 1 "$dev1"
 not pvcreate --dataalignment 1e "$dev1"
+if test -n "$LVM_TEST_LVM1" ; then
+not pvcreate -M1 --dataalignment 1 "$dev1"
+fi
 
 #COMM 'pvcreate always rounded up to page size for start of device'
 #pvcreate --metadatacopies 0 --dataalignment 1 "$dev1"
@@ -142,7 +144,7 @@ check pv_field "$dev1" pv_mda_count 2
 
 #COMM 'pv with LVM1 compatible data alignment can be convereted'
 #compatible == LVM1_PE_ALIGN == 64k
-if test ! -e LOCAL_LVMETAD; then
+if test -n "$LVM_TEST_LVM1" ; then
 pvcreate --dataalignment 256k "$dev1"
 vgcreate -s 1m $vg "$dev1"
 vgconvert -M1 $vg
@@ -152,17 +154,9 @@ vgremove $vg
 fi
 
 #COMM 'pv with LVM1 incompatible data alignment cannot be convereted'
-if test ! -e LOCAL_LVMETAD; then
+if test -n "$LVM_TEST_LVM1" ; then
 pvcreate --dataalignment 10k "$dev1"
 vgcreate -s 1m $vg "$dev1"
-not vgconvert -M1 $vg
-vgremove $vg
-fi
-
-#COMM 'vgconvert -M is disallowed with lvmetad'
-if test -e LOCAL_LVMETAD; then
-pvcreate "$dev1"
-vgcreate $vg "$dev1"
 not vgconvert -M1 $vg
 vgremove $vg
 fi

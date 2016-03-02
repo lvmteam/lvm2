@@ -1,1 +1,2 @@
 export LVM_TEST_LOCKING=1
+export LVM_TEST_LVM1=1

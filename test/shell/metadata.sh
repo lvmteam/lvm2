@@ -46,7 +46,9 @@ for mdacp in 1 0; do
 done
 not grep "Cached VG .* incorrect PV list" out0
 
-# some M1 metadata tests
+# begin M1 metadata tests
+if test -n "$LVM_TEST_LVM1" ; then
+
 pvcreate -M1 "$dev1" "$dev2" "$dev3"
 pv3_uuid=$(get pv_field "$dev3" pv_uuid)
 vgcreate -M1 $vg "$dev1" "$dev2" "$dev3"
@@ -59,9 +61,6 @@ check pv_field "$dev2" pe_start $pv_align
 check pv_field "$dev3" pe_start $pv_align
 
 pvs --units k -o name,pe_start,vg_mda_size,vg_name $(cat DEVICES)
-
-# vgconvert -M does not work with lvmetad
-test -e LOCAL_LVMETAD && exit 0
 
 # upgrade from v1 to v2 metadata
 vgconvert -M2 $vg
@@ -80,3 +79,7 @@ vgcfgrestore -f $TESTDIR/bak-$vg $vg
 
 # verify pe_start of $dev3
 check pv_field "$dev3" pe_start $pv_align
+
+fi
+# end M1 metadata tests
+

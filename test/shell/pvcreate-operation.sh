@@ -17,7 +17,13 @@ aux lvmconf 'devices/md_component_detection = 1'
 
 aux prepare_devs 4
 
-for mdatype in 1 2
+if test -n "$LVM_TEST_LVM1" ; then
+mdatypes='1 2'
+else
+mdatypes='2'
+fi
+
+for mdatype in $mdatypes
 do
 # pvcreate (lvm$mdatype) refuses to overwrite an mounted filesystem (bz168330)
 	test ! -d mnt && mkdir mnt

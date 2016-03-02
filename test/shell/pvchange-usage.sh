@@ -113,7 +113,10 @@ vgremove -f $vg1
 fail pvchange "$dev1" --addtag test
 fail pvchange "$dev1" --deltag test
 
+if test -n "$LVM_TEST_LVM1" ; then
 # cannot add PV tag to lvm1 format
 pvcreate -M1 "$dev1"
 vgcreate -M1 $vg1 "$dev1"
 fail pvchange "$dev1" --addtag test
+fi
+

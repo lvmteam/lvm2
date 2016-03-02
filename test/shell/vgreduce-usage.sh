@@ -16,7 +16,13 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_devs 4
 
-for mdatype in 1 2
+if test -n "$LVM_TEST_LVM1" ; then
+mdatypes='1 2'
+else
+mdatypes='2'
+fi
+
+for mdatype in $mdatypes
 do
     # setup PVs
     pvcreate -M$mdatype "$dev1" "$dev2"
