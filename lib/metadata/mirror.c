@@ -935,7 +935,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			 * not in-sync.
 			 */
 			if ((s == 0) && !_mirrored_lv_in_sync(lv) &&
-			    !(lv->status & PARTIAL_LV)) {
+			    !(lv_is_partial(lv))) {
 				log_error("Unable to remove primary mirror image while mirror is not in-sync");
 				return 0;
 			}
@@ -1034,7 +1034,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * the only way to release the pending writes.
 	 */
 	if (detached_log_lv && lv_is_mirrored(detached_log_lv) &&
-	    (detached_log_lv->status & PARTIAL_LV)) {
+	    lv_is_partial(detached_log_lv)) {
 		struct lv_segment *seg = first_seg(detached_log_lv);
 
 		log_very_verbose("%s being removed due to failures",

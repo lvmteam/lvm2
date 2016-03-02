@@ -3298,7 +3298,7 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 	const char *health = "";
 	uint64_t n;
 
-	if (lv->status & PARTIAL_LV)
+	if (lv_is_partial(lv))
 		health = "partial";
 	else if (lv_is_raid_type(lv)) {
 		if (!activation())

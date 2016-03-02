@@ -51,7 +51,7 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 	int r = 1;
 
 	dm_list_iterate_items(lvl, &vg->lvs)
-		if (lvl->lv->status & PARTIAL_LV) {
+		if (lv_is_partial(lvl->lv)) {
 			log_warn("WARNING: Partial LV %s needs to be repaired "
 				 "or removed. ", lvl->lv->name);
 			r = 0;
@@ -88,7 +88,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		lv = lvl->lv;
 
 		/* Are any segments of this LV on missing PVs? */
-		if (lv->status & PARTIAL_LV) {
+		if (lv_is_partial(lv)) {
 			if (seg_is_raid(first_seg(lv))) {
 				if (!lv_raid_remove_missing(lv))
 					return_0;

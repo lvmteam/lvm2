@@ -2471,7 +2471,8 @@ struct _lv_mark_if_partial_baton {
 static int _lv_mark_if_partial_collect(struct logical_volume *lv, void *data)
 {
 	struct _lv_mark_if_partial_baton *baton = data;
-	if (baton && lv->status & PARTIAL_LV)
+
+	if (baton && lv_is_partial(lv))
 		baton->partial = 1;
 
 	return 1;

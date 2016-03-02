@@ -1360,7 +1360,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 
 int lv_refresh_suspend_resume(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	if (!cmd->partial_activation && (lv->status & PARTIAL_LV)) {
+	if (!cmd->partial_activation && lv_is_partial(lv)) {
 		log_error("Refusing refresh of partial LV %s."
 			  " Use '--activationmode partial' to override.",
 			  display_lvname(lv));

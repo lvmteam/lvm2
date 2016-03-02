@@ -1173,7 +1173,7 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 		repstr[7] = '-';
 
 	repstr[8] = '-';
-	if (lv->status & PARTIAL_LV)
+	if (lv_is_partial(lv))
 		repstr[8] = 'p';
 	else if (lv_is_raid_type(lv)) {
 		uint64_t n;

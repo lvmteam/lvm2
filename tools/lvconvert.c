@@ -854,7 +854,7 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 			if (seg_type(lvseg, s) == AREA_LV) {
 				if (is_temporary_mirror_layer(seg_lv(lvseg, s)))
 					ret += _failed_mirrors_count(seg_lv(lvseg, s));
-				else if (seg_lv(lvseg, s)->status & PARTIAL_LV)
+				else if (lv_is_partial(seg_lv(lvseg, s)))
 					++ ret;
 			}
 			else if (seg_type(lvseg, s) == AREA_PV &&
@@ -871,7 +871,7 @@ static int _failed_logs_count(struct logical_volume *lv)
 	int ret = 0;
 	unsigned s;
 	struct logical_volume *log_lv = first_seg(lv)->log_lv;
-	if (log_lv && (log_lv->status & PARTIAL_LV)) {
+	if (log_lv && lv_is_partial(log_lv)) {
 		if (lv_is_mirrored(log_lv))
 			ret += _failed_mirrors_count(log_lv);
 		else
@@ -926,7 +926,7 @@ static struct dm_list *_failed_pv_list(struct volume_group *vg)
 static int _is_partial_lv(struct logical_volume *lv,
 			  void *baton __attribute__((unused)))
 {
-	return lv->status & PARTIAL_LV;
+	return lv_is_partial(lv);
 }
 
 /*
@@ -1499,7 +1499,7 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 
 	lv_check_transient(lv); /* TODO check this in lib for all commands? */
 
-	if (!(lv->status & PARTIAL_LV)) {
+	if (!lv_is_partial(lv)) {
 		log_print_unless_silent("Volume %s is consistent. Nothing to repair.",
 					display_lvname(lv));
 		return 1;
