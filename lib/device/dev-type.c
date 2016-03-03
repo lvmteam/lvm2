@@ -853,6 +853,12 @@ static unsigned long _dev_topology_attribute(struct dev_types *dt,
 
 	result = value >> SECTOR_SHIFT;
 
+	if (!result && value) {
+		log_warn("WARNING: Device %s: %s is %lu and is unexpectedly less then sector.",
+			 dev_name(dev), attribute, value);
+		result = 1;
+	}
+
 out_close:
 	if (fclose(fp))
 		log_sys_debug("fclose", path);
