@@ -6,15 +6,14 @@ lvmconfig, lvm dumpconfig, lvm config \(em Display LVM configuration
 .ad l
 .B lvmconfig
 .RB [ \-f | \-\-file
-.IR filename ]
+.IR Filename ]
 .RB [ \-\-type
-.RB { current |\: default |\: diff |\: full | list |\: missing \c
-.RB |\: new |\: profilable |\: profilable-command \c
-.RB |\: profilable-metadata }]
+.RB { current | default | diff | full |\: list | missing | new \c
+.RB | profilable | profilable-command | profilable-metadata }]
 .RB [ \-\-atversion
-.IR version ]
+.IR Version ]
 .RB [ \-\-sinceversion
-.IR version ]
+.IR Version ]
 .RB [ \-\-ignoreadvanced ]
 .RB [ \-\-ignoreunsupported ]
 .RB [ \-\-ignorelocal ]
@@ -45,7 +44,7 @@ The command was added in release 2.02.119 and has an identical longer form
 
 .SH OPTIONS
 .TP
-.BR \-f ", " \-\-file " \fIfilename"
+.BR \-f ", " \-\-file " \fIFilename"
 Send output to a file named 'filename'.
 
 .TP
@@ -54,7 +53,7 @@ List configuration settings with summarizing comment. This is the same as using
 \fBlvmconfig --type list --withsummary\fP.
 
 .TP
-.BR \-\-type " {" current | default | diff | full | missing | new | profilable | profilable-command | profilable-metadata }
+.BR \-\-type " {" current | default | diff | full | missing | new | profilable |\: profilable-command | profilable-metadata }
 Select the type of configuration to display. The configuration settings
 displayed have either default values or currently-used values assigned based on
 the type selected. If no type is selected, \fB\-\-type current\fP is used
@@ -106,7 +105,7 @@ by \fB\-\-type profilable\fP.
 .RE
 
 .TP
-.BI \-\-atversion " version"
+.BI \-\-atversion " Version"
 Specify an LVM version in x.y.z format where x is the major version,
 the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 When configuration is displayed, the configuration settings recognized
@@ -116,7 +115,7 @@ which does not contain any newer settings for which LVM would
 issue a warning message when checking the configuration.
 
 .TP
-.BI \-\-sinceversion " version"
+.BI \-\-sinceversion " Version"
 Specify an LVM version in x.y.z format where x is the major version,
 the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 This option is currently applicable only with \fB\-\-type new\fP
@@ -140,13 +139,13 @@ Ignore local section.
 
 .TP
 .BI \-\-config " ConfigurationString"
-Use \fBConfigurationString\fP to override existing configuration.
+Use \fIConfigurationString\fP to override existing configuration.
 This configuration is then applied for the lvmconfig command itself.
 See also \fBlvm.conf\fP(5) for more info about \fBconfig cascade\fP.
 
 .TP
 .BI \-\-commandprofile " ProfileName"
-Use \fBProfileName\fP to override existing configuration.
+Use \fIProfileName\fP to override existing configuration.
 This configuration is then applied for the lvmconfig command itself.
 See also \fB\-\-mergedconfig\fP option and \fBlvm.conf\fP(5) for
 more info about \fBconfig cascade\fP.
@@ -158,7 +157,7 @@ applied for the lvmconfig command itself.
 
 .TP
 .BI \-\-metadataprofile " ProfileName"
-Use \fBProfileName\fP to override existing configuration.
+Use \fIProfileName\fP to override existing configuration.
 The configuration defined in metadata profile has no effect for
 the lvmconfig command itself. lvmconfig displays the configuration only.
 See also \fB\-\-mergedconfig\fP option and \fBlvm.conf\fP(5) for more
