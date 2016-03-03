@@ -482,7 +482,18 @@ The valid characters for VG and LV names are:
 .BR 0 - 9
 .BR "+ _ . -"
 .P
-VG and LV names cannot begin with a hyphen.
+VG names cannot begin with a hyphen.
+The name of a new LV also cannot begin with a hyphen.  However, if the
+configuration setting \fBmetadata/record_lvs_history\fP is enabled then an LV
+name with a hyphen as a prefix indicates that, although the LV was
+removed, it is still being tracked because it forms part of the history of at
+least one LV that is still present.  This helps to record the ancestry of
+thin snapshots even after some links in the chain have been removed.
+A reference to the historical LV 'lvol1' in VG 'vg00' would be 'vg00/-lvol1'
+or just '-lvol1' if the VG is already set.  (The latter form must be preceded
+by '--' to terminate command line option processing before reaching this
+argument.)
+.P
 There are also various reserved names that are used internally by lvm that can
 not be used as LV or VG names. A VG cannot be called anything that exists in
 \fI/dev/\fP at the time of creation, nor can it be called '.' or '..'.
@@ -501,6 +512,7 @@ Other software and scripts should use the
 amendment when the software is updated.  Should you need to process the node
 names in /dev/mapper, you may use \fBdmsetup splitname\fP to separate out the
 original VG, LV and internal layer names.
+.P
 .
 .SH UNIQUE NAMES
 .
@@ -522,6 +534,9 @@ An exception is if all but one of the VGs with the shared name is foreign
 .BR lvmsystemid (7).)
 In this case, the one VG that is not foreign is assumed to be the intended
 VG and is processed.
+.P
+LV names are unique within a VG.  The name of an historical LV cannot be
+reused until the historical LV has itself been removed or renamed.
 
 .
 .SH ALLOCATION

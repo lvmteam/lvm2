@@ -10,6 +10,7 @@ lvs \(em report information about logical volumes
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-H | \-\-history ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-nameprefixes ]
@@ -59,6 +60,11 @@ in the output.  For example, after creating a mirror using
 .B lvcreate -m1 \-\-mirrorlog disk
 , this option will reveal three internal Logical
 Volumes, with suffixes mimage_0, mimage_1, and mlog.
+.TP
+.B \-H ", " \-\-history
+Include historical logical volumes in the output.
+(This has no effect unless logical volumes were removed while the configuration
+setting \fBmetadata/record_lvs_history\fP was enabled.)
 .TP
 .B \-\-nameprefixes
 Add an "LVM2_" prefix plus the field name to the output.  Useful
@@ -166,11 +172,11 @@ changes, for example during
 .IP 4 3
 fixed (m)inor
 .IP 5 3
-State: (a)ctive, (s)uspended, (I)nvalid snapshot, invalid (S)uspended snapshot,
-snapshot (m)erge failed, suspended snapshot (M)erge failed,
-mapped (d)evice present without tables, mapped device present with (i)nactive table,
-thin-pool (c)heck needed, suspended thin-pool (C)heck needed,
-(X) unknown
+State: (a)ctive, (h)istorical, (s)uspended, (I)nvalid snapshot,
+invalid (S)uspended snapshot, snapshot (m)erge failed,
+suspended snapshot (M)erge failed, mapped (d)evice present without tables,
+mapped device present with (i)nactive table, thin-pool (c)heck needed,
+suspended thin-pool (C)heck needed, (X) unknown
 .IP 6 3
 device (o)pen, (X) unknown
 .IP 7 3
