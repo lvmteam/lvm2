@@ -1,5 +1,5 @@
-Version 2.02.145 - 
-=====================================
+Version 2.02.145 - 4th March 2016
+=================================
   Make it possible to use lvremove and lvrename on historical LVs.
   For historical LVs, report 'none' for lv_layout and 'history' for lv_role.
   Add full_{ancestors,descendants} fields to report LV ancestry with history.
