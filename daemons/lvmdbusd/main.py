@@ -103,6 +103,9 @@ def main():
 
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
 
+	# Ensure that we get consistent output for parsing stdout/stderr
+	os.environ["LC_ALL"] = "C"
+
 	args = parser.parse_args()
 
 	cfg.DEBUG = args.debug
