@@ -1,5 +1,18 @@
 Version 2.02.145 - 
 =====================================
+  Make it possible to use lvremove and lvrename on historical LVs.
+  For historical LVs, report 'none' for lv_layout and 'history' for lv_role.
+  Add full_{ancestors,descendants} fields to report LV ancestry with history.
+  Report (h)istorical state within 5th bit (State) of the lv_attr field.
+  Add lv_historical reporting field to report if LV is historical or not.
+  Add lv_time_removed reporting field to display removal time for hist. LVs.
+  Report lv_name, lv_uuid, vg_name, lv_time for historical LVs.
+  Add --nohistory switch to lvremove to disable history recording on demand.
+  Add -H|--history switch to lvs and lvdisplay to include historical LVs.
+  Create historical LVs out of removed thin snapshot LVs and record in history.
+  Add metadata/lvs_history_retention_time for automatic removal of hist. LVs.
+  Add metadata/record_lvs_history config for switching LV history recording.
+  Add support and infrastructure for tracking historical LVs.
   Improve lvconvert man page.
   Add kernel_cache_policy lvs field.
   Display [unknown] instead of 'unknown device' in pvs output.
