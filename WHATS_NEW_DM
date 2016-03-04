@@ -1,3 +1,6 @@
+Version 1.02.120 - 
+=================================
+
 Version 1.02.119 - 4th March 2016
 =================================
   Fix dm_config_write_node and variants to return error on subsection failures.

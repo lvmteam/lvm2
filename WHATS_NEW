@@ -1,3 +1,6 @@
+Version 2.02.146 - 
+=================================
+
 Version 2.02.145 - 4th March 2016
 =================================
   Make it possible to use lvremove and lvrename on historical LVs.
