@@ -4196,6 +4196,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct volume_group *vg = lv->vg;
 	struct lv_names lv_names = { .old = lv->name };
+	int old_lv_is_historical = lv_is_historical(lv);
 	int historical;
 
 	/*
@@ -4210,7 +4211,7 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_name_is_used_in_vg(vg, new_name, &historical)) {
 		log_error("%sLogical Volume \"%s\" already exists in "
-			  "volume group \"%s\"", historical ? "historical " : "",
+			  "volume group \"%s\"", historical ? "Historical " : "",
 			  new_name, vg->name);
 		return 0;
 	}
@@ -4223,23 +4224,31 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 	if (update_mda && !archive(vg))
 		return_0;
 
-	if (!(lv_names.new = dm_pool_strdup(cmd->mem, new_name))) {
-		log_error("Failed to allocate space for new name.");
-		return 0;
+	if (old_lv_is_historical) {
+		/* historical LVs don't have sub LVs */
+		lv->this_glv->historical->name = lv->name = new_name;
+		if (update_mda &&
+		    (!vg_write(vg) || !vg_commit(vg)))
+			return_0;
+	} else {
+		if (!(lv_names.new = dm_pool_strdup(cmd->mem, new_name))) {
+			log_error("Failed to allocate space for new name.");
+			return 0;
+		}
+
+		/* rename sub LVs */
+		if (!for_each_sub_lv_except_pools(lv, _rename_cb, (void *) &lv_names))
+			return_0;
+
+		/* rename main LV */
+		lv->name = lv_names.new;
+
+		if (lv_is_cow(lv))
+			lv = origin_from_cow(lv);
+
+		if (update_mda && !lv_update_and_reload((struct logical_volume *)lv_lock_holder(lv)))
+			return_0;
 	}
-
-	/* rename sub LVs */
-	if (!for_each_sub_lv_except_pools(lv, _rename_cb, (void *) &lv_names))
-		return_0;
-
-	/* rename main LV */
-	lv->name = lv_names.new;
-
-	if (lv_is_cow(lv))
-		lv = origin_from_cow(lv);
-
-	if (update_mda && !lv_update_and_reload((struct logical_volume *)lv_lock_holder(lv)))
-		return_0;
 
 	return 1;
 }
