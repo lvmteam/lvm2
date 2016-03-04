@@ -4225,7 +4225,10 @@ int lv_rename_update(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	if (old_lv_is_historical) {
-		/* historical LVs don't have sub LVs */
+		/*
+		 * Historical LVs have neither sub LVs nor any
+		 * devices to reload, so just update metadata.
+		 */
 		lv->this_glv->historical->name = lv->name = new_name;
 		if (update_mda &&
 		    (!vg_write(vg) || !vg_commit(vg)))
