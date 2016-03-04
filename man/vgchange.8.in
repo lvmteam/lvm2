@@ -44,7 +44,7 @@ vgchange \(em change attributes of a volume group
 .IR MaxPhysicalVolumes ]
 .RB [ \-\-metadataprofile
 .IR ProfileName ]
-.RB [ \-\- [ vg ] metadatacopies ]
+.RB [ \-\- [ vg ] metadatacopies
 .IR NumberOfCopies | unmanaged | all ]
 .RB [ \-P | \-\-partial ]
 .RB [ \-s | \-\-physicalextentsize

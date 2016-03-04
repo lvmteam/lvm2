@@ -15,8 +15,9 @@ lvreduce \(em reduce the size of a logical volume
 .RB [ \-f | \-\-force ]
 .RB [ \-\-noudevsync ]
 .RB { \-l | \-\-extents
-.RI [ \- ] LogicalExtentsNumber [ % { VG | LV | FREE | ORIGIN "}] |"
-.RB [ \-L | \-\-size
+.RI [ \- ] LogicalExtentsNumber [ % { VG | LV | FREE | ORIGIN }]
+.RB |
+.BR \-L | \-\-size
 .RI [ \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
 .RB [ \-n | \-\-nofsck ]
 .RB [ \-r | \-\-resizefs ]
