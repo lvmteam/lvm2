@@ -409,6 +409,7 @@ xx(lvdisplay,
    "\t[-d|--debug]\n"
    "\t[--foreign]\n"
    "\t[-h|--help]\n"
+   "\t[-H|--history]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
    "\t[-m|--maps]\n"
@@ -429,6 +430,7 @@ xx(lvdisplay,
    "\t[-d|--debug]\n"
    "\t[--foreign]\n"
    "\t[-h|--help]\n"
+   "\t[-H|--history]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
    "\t[--noheadings]\n"
@@ -447,10 +449,10 @@ xx(lvdisplay,
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
     aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG, foreign_ARG,
-    ignorelockingfailure_ARG, ignoreskippedcluster_ARG, maps_ARG,
-    noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG, partial_ARG,
-    readonly_ARG, segments_ARG, select_ARG, separator_ARG, shared_ARG,
-    unbuffered_ARG, units_ARG)
+    history_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
+    maps_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG,
+    partial_ARG, readonly_ARG, segments_ARG, select_ARG, separator_ARG,
+    shared_ARG, unbuffered_ARG, units_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
