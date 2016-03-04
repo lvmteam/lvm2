@@ -222,7 +222,7 @@ __attribute__ ((format(printf, 2, 3)))
 static int _line_append(struct config_output *out, const char *fmt, ...)
 {
 	char buf[4096];
-	char *final_buf;
+	char *dyn_buf = NULL;
 	va_list ap;
 	int n;
 
@@ -246,20 +246,22 @@ static int _line_append(struct config_output *out, const char *fmt, ...)
 		 * so try dynamically allocated buffer now...
 		 */
 		va_start(ap, fmt);
-		n = dm_vasprintf(&final_buf, fmt, ap);
+		n = dm_vasprintf(&dyn_buf, fmt, ap);
 		va_end(ap);
 
 		if (n < 0) {
 			log_error("dm_vasprintf failed for config line");
 			return 0;
 		}
-	} else
-		final_buf = buf;
+	}
 
-	if (!dm_pool_grow_object(out->mem, final_buf, strlen(final_buf))) {
+	if (!dm_pool_grow_object(out->mem, dyn_buf ? : buf, 0)) {
 		log_error("dm_pool_grow_object failed for config line");
+		dm_free(dyn_buf);
 		return 0;
 	}
+
+	dm_free(dyn_buf);
 
 	return 1;
 }
