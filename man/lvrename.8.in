@@ -19,7 +19,8 @@ lvrename \(em rename a logical volume
 |
 .I VolumeGroupName OldLogicalVolumeName NewLogicalVolumeName\fR}
 .SH DESCRIPTION
-lvrename renames an existing logical volume from
+lvrename renames an existing logical volume or an existing
+historical logical volume from
 .IR OldLogicalVolume { Name | Path }
 to
 .IR NewLogicalVolume { Name | Path }.
