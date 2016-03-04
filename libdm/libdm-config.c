@@ -222,19 +222,41 @@ __attribute__ ((format(printf, 2, 3)))
 static int _line_append(struct config_output *out, const char *fmt, ...)
 {
 	char buf[4096];
+	char *final_buf;
 	va_list ap;
 	int n;
+
+	/*
+	 * We should be fine with the 4096 char buffer 99% of the time,
+	 * but if we need to go beyond that, allocate the buffer dynamically.
+	 */
 
 	va_start(ap, fmt);
 	n = vsnprintf(&buf[0], sizeof buf - 1, fmt, ap);
 	va_end(ap);
 
-	if (n < 0 || n > (int) sizeof buf - 1) {
+	if (n < 0) {
 		log_error("vsnprintf failed for config line");
 		return 0;
 	}
 
-	if (!dm_pool_grow_object(out->mem, &buf[0], strlen(buf))) {
+	if (n > (int) sizeof buf - 1) {
+		/*
+		 * Fixed size buffer with sizeof buf is not enough,
+		 * so try dynamically allocated buffer now...
+		 */
+		va_start(ap, fmt);
+		n = dm_vasprintf(&final_buf, fmt, ap);
+		va_end(ap);
+
+		if (n < 0) {
+			log_error("dm_vasprintf failed for config line");
+			return 0;
+		}
+	} else
+		final_buf = buf;
+
+	if (!dm_pool_grow_object(out->mem, final_buf, strlen(final_buf))) {
 		log_error("dm_pool_grow_object failed for config line");
 		return 0;
 	}
