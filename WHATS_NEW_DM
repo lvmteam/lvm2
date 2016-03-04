@@ -1,5 +1,6 @@
 Version 1.02.119 -
 =====================================
+  Fix dm_config_write_node and variants to return error on subsection failures.
   Remove 4096 char limit due to buffer size if writing dm_config_node.
 
 Version 1.02.118 - 26th February 2016

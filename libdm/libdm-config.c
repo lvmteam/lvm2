@@ -366,7 +366,8 @@ static int _write_config(const struct dm_config_node *n, int only_one,
 			line_append(" {");
 			if (!_line_end(n, out))
 				return_0;
-			_write_config(n->child, 0, out, level + 1);
+			if (!_write_config(n->child, 0, out, level + 1))
+				return_0;
 			if (!_line_start(out))
 				return_0;
 			line_append("%s}", space);
