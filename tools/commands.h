@@ -197,28 +197,28 @@ xx(lvchange,
    test_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
 
 #define COMMON_OPTS \
-	"\t[--commandprofile ProfileName] [-d|--debug] [-h|-?|--help]\n" \
+	"\t[--commandprofile <ProfileName>] [-d|--debug] [-h|-?|--help]\n" \
 	"\t[--noudevsync] [-t|--test] [-v|--verbose] [--version] [-y|--yes]\n"
 
 xx(lvconvert,
    "Change logical volume layout",
    0,
    "lvconvert "
-   "[-m|--mirrors Mirrors [{--mirrorlog {disk|core|mirrored}|--corelog}]]\n"
-   "\t[--type SegmentType]\n"
+   "[-m|--mirrors <Mirrors> [--mirrorlog {disk|core|mirrored}|--corelog]]\n"
+   "\t[--type <SegmentType>]\n"
    "\t[--repair [--use-policies]]\n"
    "\t[--replace PhysicalVolume]\n"
-   "\t[-R|--regionsize MirrorLogRegionSize]\n"
-   "\t[--alloc AllocationPolicy]\n"
+   "\t[-R|--regionsize <MirrorLogRegionSize>]\n"
+   "\t[--alloc <AllocationPolicy>]\n"
    "\t[-b|--background]\n"
    "\t[-f|--force]\n"
-   "\t[-i|--interval seconds]\n"
-   "\t[--stripes Stripes [-I|--stripesize StripeSize]]\n"
+   "\t[-i|--interval <Seconds>]\n"
+   "\t[--stripes <Stripes> [-I|--stripesize <StripeSize>]]\n"
    COMMON_OPTS
    "\tLogicalVolume[Path] [PhysicalVolume[Path]...]\n\n"
 
    "lvconvert "
-   "[--splitmirrors Images --trackchanges]\n"
+   "[--splitmirrors <Images> --trackchanges]\n"
    "\t[--splitmirrors Images --name SplitLogicalVolumeName]\n"
    COMMON_OPTS
    "\tLogicalVolume[Path] [SplittablePhysicalVolume[Path]...]\n\n"
@@ -246,7 +246,7 @@ xx(lvconvert,
 
    "lvconvert "
    "[--type snapshot|-s|--snapshot]\n"
-   "\t[-c|--chunksize]\n"
+   "\t[-c|--chunksize <ChunkSize>]\n"
    "\t[-Z|--zero {y|n}]\n"
    COMMON_OPTS
    "\tOriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]\n\n"
@@ -254,20 +254,20 @@ xx(lvconvert,
    "lvconvert "
    "--merge\n"
    "\t[-b|--background]\n"
-   "\t[-i|--interval seconds]\n"
+   "\t[-i|--interval <Seconds>]\n"
    COMMON_OPTS
    "\tLogicalVolume[Path]\n\n"
 
    "lvconvert "
    "[--type thin[-pool]|-T|--thin]\n"
    "\t[--thinpool ThinPoolLogicalVolume[Path]]\n"
-   "\t[--chunksize size]\n"
+   "\t[--chunksize <ChunkSize>]\n"
    "\t[--discards {ignore|nopassdown|passdown}]\n"
    "\t[--poolmetadataspare {y|n}]\n"
-   "\t[{--poolmetadata ThinMetadataLogicalVolume[Path] |\n"
-   "\t --poolmetadatasize size}]\n"
-   "\t[-r|--readahead ReadAheadSectors|auto|none]\n"
-   "\t[--stripes Stripes [-I|--stripesize StripeSize]]]\n"
+   "\t[--poolmetadata ThinMetadataLogicalVolume[Path] |\n"
+   "\t --poolmetadatasize <MetadataSize>]\n"
+   "\t[-r|--readahead <ReadAheadSectors>|auto|none]\n"
+   "\t[--stripes <Stripes> [-I|--stripesize <StripeSize>]]]\n"
    "\t[--originname NewExternalOriginVolumeName]]\n"
    "\t[-Z|--zero {y|n}]\n"
    COMMON_OPTS
@@ -276,13 +276,13 @@ xx(lvconvert,
    "lvconvert "
    "[--type cache[-pool]|-H|--cache]\n"
    "\t[--cachepool CacheDataLogicalVolume[Path]]\n"
-   "\t[--cachemode CacheMode]\n"
-   "\t[--cachepolicy policy]\n"
-   "\t[--cachesettings key=value]\n"
-   "\t[--chunksize size]\n"
+   "\t[--cachemode <CacheMode>]\n"
+   "\t[--cachepolicy <CachePolicy>]\n"
+   "\t[--cachesettings <Key>=<Value>]\n"
+   "\t[--chunksize <ChunkSize>]\n"
+   "\t[--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
+   "\t --poolmetadatasize <MetadataSize>]\n"
    "\t[--poolmetadataspare {y|n}]]\n"
-   "\t[{--poolmetadata CacheMetadataLogicalVolume[Path] |\n"
-   "\t --poolmetadatasize size}]\n"
    COMMON_OPTS
    "\t[Cache|CacheDataPool]LogicalVolume[Path] [PhysicalVolumePath...]\n\n",
 
