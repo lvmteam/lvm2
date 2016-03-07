@@ -914,7 +914,7 @@ static int _raid_extract_images(struct logical_volume *lv, uint32_t new_count,
 				  display_lvname(seg_lv(seg, s)));
 		} else {
 			/* Conditions for second pass */
-			if (!lv_is_on_pvs(seg_lv(seg, s), target_pvs) ||
+			if (!lv_is_on_pvs(seg_lv(seg, s), target_pvs) &&
 			    !lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
 				continue;
 
