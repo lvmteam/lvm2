@@ -25,11 +25,7 @@
 
 daemon_handle daemon_open(daemon_info i)
 {
-	daemon_handle h = {
-		.protocol = NULL,
-		.protocol_version = 0,
-		.error = 0
-	};
+	daemon_handle h = { .error = 0 };
 	daemon_reply r = { 0 };
 	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 
@@ -191,20 +187,22 @@ void daemon_close(daemon_handle h)
 daemon_request daemon_request_make(const char *id)
 {
 	daemon_request r;
-	r.cft = NULL;
+
 	buffer_init(&r.buffer);
 
 	if (!(r.cft = dm_config_create()))
-		goto bad;
+		goto_bad;
 
 	if (!(r.cft->root = make_text_node(r.cft, "request", id, NULL, NULL)))
-		goto bad;
+		goto_bad;
 
 	return r;
 bad:
-	if (r.cft)
+	if (r.cft) {
 		dm_config_destroy(r.cft);
-	r.cft = NULL;
+		r.cft = NULL;
+	}
+
 	return r;
 }
 
