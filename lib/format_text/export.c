@@ -854,10 +854,10 @@ static int _print_historical_lv(struct formatter *f, struct historical_logical_v
 		goto_out;
 
 	outnl(f);
-	outf(f, "%s {", hlv->name);
+	outfgo(f, "%s {", hlv->name);
 	_inc_indent(f);
 
-	outf(f, "id = \"%s\"", buffer);
+	outfgo(f, "id = \"%s\"", buffer);
 
 	if (!_print_timestamp(f, "creation_time", hlv->timestamp, buffer, sizeof(buffer)))
 		goto_out;
@@ -867,16 +867,16 @@ static int _print_historical_lv(struct formatter *f, struct historical_logical_v
 
 	if (hlv->indirect_origin) {
 		if (hlv->indirect_origin->is_historical)
-			outf(f, "origin = \"%s%s\"", HISTORICAL_LV_PREFIX, hlv->indirect_origin->historical->name);
+			outfgo(f, "origin = \"%s%s\"", HISTORICAL_LV_PREFIX, hlv->indirect_origin->historical->name);
 		else
-			outf(f, "origin = \"%s\"", hlv->indirect_origin->live->name);
+			outfgo(f, "origin = \"%s\"", hlv->indirect_origin->live->name);
 	}
 
 	if (descendants_buffer)
-		outf(f, "descendants = %s", descendants_buffer);
+		outfgo(f, "descendants = %s", descendants_buffer);
 
 	_dec_indent(f);
-	outf(f, "}");
+	outfgo(f, "}");
 
 	r = 1;
 out:
