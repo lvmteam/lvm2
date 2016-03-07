@@ -395,19 +395,10 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		return 0;
 	}
 
-	if (arg_is_set(cmd, splitsnapshot_ARG)) {
-		if (arg_outside_list_is_set(cmd, "cannot be used with --splitsnapshot",
-					    splitsnapshot_ARG,
-					    force_ARG, noudevsync_ARG, test_ARG,
-					    -1))
-			return_0;
-		lp->splitsnapshot = 1;
-	}
-
 	if (arg_is_set(cmd, split_ARG)) {
 		if (arg_outside_list_is_set(cmd, "cannot be used with --split",
 					    split_ARG,
-                                            name_ARG,
+					    name_ARG,
 					    force_ARG, noudevsync_ARG, test_ARG,
 					    -1))
 			return_0;
@@ -421,6 +412,15 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 					    -1))
 			return_0;
 		lp->splitcache = 1;
+	}
+
+	if (arg_is_set(cmd, splitsnapshot_ARG)) {
+		if (arg_outside_list_is_set(cmd, "cannot be used with --splitsnapshot",
+					    splitsnapshot_ARG,
+					    force_ARG, noudevsync_ARG, test_ARG,
+					    -1))
+			return_0;
+		lp->splitsnapshot = 1;
 	}
 
 	if (arg_is_set(cmd, uncache_ARG)) {
