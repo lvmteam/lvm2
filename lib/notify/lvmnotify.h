@@ -11,6 +11,7 @@
 #ifndef _LVMNOTIFY_H
 #define _LVMNOTIFY_H
 
+int lvmnotify_is_supported(void);
 void lvmnotify_send(struct cmd_context *cmd);
 void set_vg_notify(struct cmd_context *cmd);
 void set_lv_notify(struct cmd_context *cmd);

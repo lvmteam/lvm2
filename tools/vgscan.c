@@ -37,6 +37,21 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_is_set(cmd, notifydbus_ARG)) {
+		if (!lvmnotify_is_supported()) {
+			log_error("Cannot notify dbus: lvm is not built with dbus support.");
+			return ECMD_FAILED;
+		}
+		if (!find_config_tree_bool(cmd, global_notify_dbus_CFG, NULL)) {
+			log_error("Cannot notify dbus: notify_dbus is disabled in lvm config.");
+			return ECMD_FAILED;
+		}
+		set_pv_notify(cmd);
+		set_vg_notify(cmd);
+		set_lv_notify(cmd);
+		return ECMD_PROCESSED;
+	}
+
 	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE, NULL)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;

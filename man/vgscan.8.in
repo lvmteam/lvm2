@@ -9,6 +9,7 @@ vgscan \(em scan all disks for volume groups and rebuild caches
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-mknodes ]
+.RB [ \-\-notifydbus ]
 .RB [ \-P | \-\-partial ]
 .RB [ \-v | \-\-verbose ]
 .SH DESCRIPTION
@@ -25,6 +26,11 @@ See \fBlvm\fP(8) for common options.
 .B \-\-mknodes
 Also checks the LVM special files in /dev that are needed for active 
 logical volumes and creates any missing ones and removes unused ones.
+.TP
+.B \-\-notifydbus
+Send a notification to D-Bus. The command will exit with an error
+if LVM is not built with support for D-Bus notification, or if the
+notify_dbus config setting is disabled.
 .TP
 .B \-\-cache
 Scan devices for LVM physical volumes and volume groups and instruct

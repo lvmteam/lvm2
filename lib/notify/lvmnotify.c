@@ -20,6 +20,11 @@
 #ifdef NOTIFYDBUS_SUPPORT
 #include <systemd/sd-bus.h>
 
+int lvmnotify_is_supported(void)
+{
+	return 1;
+}
+
 void lvmnotify_send(struct cmd_context *cmd)
 {
 	sd_bus *bus = NULL;
@@ -88,6 +93,11 @@ void set_pv_notify(struct cmd_context *cmd)
 }
 
 #else
+
+int lvmnotify_is_supported(void)
+{
+	return 0;
+}
 
 void lvmnotify_send(struct cmd_context *cmd)
 {

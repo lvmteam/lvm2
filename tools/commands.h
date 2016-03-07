@@ -1390,11 +1390,12 @@ xx(vgscan,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--mknodes]\n"
+   "\t[--notifydbus]\n"
    "\t[-P|--partial]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]\n",
 
-   cache_long_ARG, ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
+   cache_long_ARG, ignorelockingfailure_ARG, mknodes_ARG, notifydbus_ARG, partial_ARG)
 
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",
