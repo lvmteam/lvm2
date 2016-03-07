@@ -664,7 +664,7 @@ static int _print_timestamp(struct formatter *f,
 			      "%Y-%m-%d %T %z", local_tm))
 			buf[0] = 0;
 
-		outfc(f, buf, "%s = %" PRIu64, name, ts);
+		outfc(f, buf, "%s = %" PRIu64, name, (uint64_t) ts);
 	}
 
 	return 1;
