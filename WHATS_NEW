@@ -1,5 +1,6 @@
 Version 2.02.146 - 
 =================================
+  Support --uncache with missing PVs.
   Tidy report field names, headings and widths.
   Add vgscan --notifydbus to send a dbus notification.
   Add dbus notification from commands after a PV/VG/LV changes state.
