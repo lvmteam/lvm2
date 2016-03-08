@@ -398,10 +398,10 @@ GET_VG_STR_PROPERTY_FN(vg_sysid, vg_system_id_dup(vg))
 #define _vg_sysid_set prop_not_implemented_set
 GET_VG_STR_PROPERTY_FN(vg_systemid, vg_system_id_dup(vg))
 #define _vg_systemid_set prop_not_implemented_set
-GET_VG_STR_PROPERTY_FN(vg_locktype, vg_lock_type_dup(vg))
-#define _vg_locktype_set prop_not_implemented_set
-GET_VG_STR_PROPERTY_FN(vg_lockargs, vg_lock_args_dup(vg))
-#define _vg_lockargs_set prop_not_implemented_set
+GET_VG_STR_PROPERTY_FN(vg_lock_type, vg_lock_type_dup(vg))
+#define _vg_lock_type_set prop_not_implemented_set
+GET_VG_STR_PROPERTY_FN(vg_lock_args, vg_lock_args_dup(vg))
+#define _vg_lock_args_set prop_not_implemented_set
 GET_VG_NUM_PROPERTY_FN(vg_extent_size, (SECTOR_SIZE * vg->extent_size))
 #define _vg_extent_size_set prop_not_implemented_set
 GET_VG_NUM_PROPERTY_FN(vg_extent_count, vg->extent_count)
@@ -442,16 +442,10 @@ GET_LVSEG_STR_PROPERTY_FN(segtype, lvseg_segtype_dup(lvseg->lv->vg->vgmem, lvseg
 #define _segtype_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(stripes, lvseg->area_count)
 #define _stripes_set prop_not_implemented_set
-GET_LVSEG_NUM_PROPERTY_FN(stripesize, (SECTOR_SIZE * lvseg->stripe_size))
-#define _stripesize_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(stripe_size, (SECTOR_SIZE * lvseg->stripe_size))
 #define _stripe_size_set prop_not_implemented_set
-GET_LVSEG_NUM_PROPERTY_FN(regionsize, (SECTOR_SIZE * lvseg->region_size))
-#define _regionsize_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(region_size, (SECTOR_SIZE * lvseg->region_size))
 #define _region_size_set prop_not_implemented_set
-GET_LVSEG_NUM_PROPERTY_FN(chunksize, (SECTOR_SIZE * lvseg_chunksize(lvseg)))
-#define _chunksize_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(chunk_size, (SECTOR_SIZE * lvseg_chunksize(lvseg)))
 #define _chunk_size_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(thin_count, dm_list_size(&lvseg->lv->segs_using_this_lv))
@@ -466,8 +460,8 @@ GET_LVSEG_STR_PROPERTY_FN(discards, lvseg_discards_dup(lvseg->lv->vg->vgmem, lvs
 #define _discards_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(kernel_discards, lvseg_kernel_discards_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _kernel_discards_set prop_not_implemented_set
-GET_LVSEG_STR_PROPERTY_FN(cachemode, lvseg_cachemode_dup(lvseg->lv->vg->vgmem, lvseg))
-#define _cachemode_set prop_not_implemented_set
+GET_LVSEG_STR_PROPERTY_FN(cache_mode, lvseg_cachemode_dup(lvseg->lv->vg->vgmem, lvseg))
+#define _cache_mode_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start, (SECTOR_SIZE * lvseg_start(lvseg)))
 #define _seg_start_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start_pe, lvseg->le)

@@ -3660,7 +3660,7 @@ static const struct dm_report_object_type _devtypes_report_types[] = {
 #define STR_LIST DM_REPORT_FIELD_TYPE_STRING_LIST
 #define SNUM DM_REPORT_FIELD_TYPE_NUMBER
 #define FIELD(type, strct, sorttype, head, field, width, func, id, desc, writeable) \
-	{type, sorttype, offsetof(type_ ## strct, field), width, \
+	{type, sorttype, offsetof(type_ ## strct, field), width ? : sizeof(head) - 1, \
 	 #id, head, &_ ## func ## _disp, desc},
 
 typedef struct physical_volume type_pv;
