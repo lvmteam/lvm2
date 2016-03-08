@@ -1153,6 +1153,8 @@ raid456_replace_works() {
 thin_pool_error_works_32() {
 	case "$(uname -r)" in
 	  2.6.32-618.*.i686) return 1 ;;
+	  2.6.32-623.*.i686) return 1 ;;
+	  2.6.32-573.1[28].1.el6.i686) return 1 ;;
 	esac
 }
 
