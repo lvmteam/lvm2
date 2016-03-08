@@ -64,13 +64,13 @@ class RequestEntry(object):
 		try:
 			result = self.method(*self.arguments)
 			self.register_result(result)
-		except Exception:
+		except Exception as e:
 			# Use the request entry to return the result as the client may
 			# have gotten a job by the time we hit an error
 			# Lets get the stacktrace and set that to the error message
 			st = traceback.format_exc()
 			log_error("Exception returned to client: \n%s" % st)
-			self.register_error(-1, st)
+			self.register_error(-1, str(e), e)
 
 	def is_done(self):
 		with self.lock:
@@ -87,7 +87,8 @@ class RequestEntry(object):
 				return self._result
 			return '/'
 
-	def _reg_ending(self, result, error_rc=0, error=None):
+	def _reg_ending(self, result, error_rc=0, error_msg=None,
+					error_exception=None):
 		with self.lock:
 			self.done = True
 			if self.timer_id != -1:
@@ -96,7 +97,7 @@ class RequestEntry(object):
 
 			self._result = result
 			self._rc = error_rc
-			self._rc_error = error
+			self._rc_error = error_msg
 
 			if not self._job:
 				# We finished and there is no job, so return result or error
@@ -112,15 +113,23 @@ class RequestEntry(object):
 							self.cb(result)
 				else:
 					if self.cb_error:
-						self.cb_error(self._rc_error)
+						if not error_exception:
+							if not error_msg:
+								error_exception = Exception(
+									"An error occurred, but no reason was "
+									"given, see service logs!")
+							else:
+								error_exception = Exception(error_msg)
+
+						self.cb_error(error_exception)
 			else:
 				# We have a job and it's complete, indicate that it's done.
 				# TODO: We need to signal the job is done too.
 				self._job.Complete = True
 				self._job = None
 
-	def register_error(self, error_rc, error):
-		self._reg_ending(None, error_rc, error)
+	def register_error(self, error_rc, error_message, error_exception):
+		self._reg_ending(None, error_rc, error_message, error_exception)
 
 	def register_result(self, result):
 		self._reg_ending(result)
