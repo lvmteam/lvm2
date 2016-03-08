@@ -1,5 +1,6 @@
 Version 2.02.146 - 
 =================================
+  Another attempt to improve VG name parsing for lvconvert (2.02.144).
   Use new cache status info and skip flushing for failed cache.
   Support --uncache with missing PVs.
   Tidy report field names, headings and widths.

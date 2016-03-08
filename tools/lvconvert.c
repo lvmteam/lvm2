@@ -115,9 +115,6 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 				  struct cmd_context *cmd,
 				  int *pargc, char ***pargv)
 {
-	char *ptr;
-	const char *vg_name = NULL;
-
 	if (lp->merge) {
 		if (!*pargc) {
 			log_error("Please specify a logical volume path.");
@@ -174,25 +171,23 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	if (!validate_restricted_lvname_param(cmd, &lp->vg_name, &lp->lv_split_name))
 		return_0;
 
-	if ((vg_name = extract_vgname(cmd, lp->lv_name_full)) &&
-	    lp->vg_name && strcmp(vg_name, lp->vg_name)) {
-		log_error("Please use a single volume group name "
-			  "(\"%s\" or \"%s\")", vg_name, lp->vg_name);
-		return 0;
+	if (!lp->vg_name && !strchr(lp->lv_name_full, '/')) {
+		/* Check for $LVM_VG_NAME */
+		if (!(lp->vg_name = extract_vgname(cmd, NULL))) {
+			log_error("Please specify a logical volume path.");
+			return 0;
+		}
 	}
 
-	if (!lp->vg_name)
-		lp->vg_name = vg_name;
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->lv_name_full))
+		return_0;
+
+	lp->lv_name = lp->lv_name_full;
 
 	if (!validate_name(lp->vg_name)) {
 		log_error("Please provide a valid volume group name");
 		return 0;
 	}
-
-	if ((ptr = strrchr(lp->lv_name_full, '/')))
-		lp->lv_name = ptr + 1;
-	else
-		lp->lv_name = lp->lv_name_full;
 
 	if (!lp->merge_mirror &&
 	    !lp->repair &&
