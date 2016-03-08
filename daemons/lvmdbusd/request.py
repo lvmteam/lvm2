@@ -9,7 +9,7 @@
 
 import threading
 # noinspection PyUnresolvedReferences
-from gi.repository import GObject
+from gi.repository import GLib
 from .job import Job
 from . import cfg
 import traceback
@@ -40,7 +40,7 @@ class RequestEntry(object):
 		elif tmo == 0:
 			self._return_job()
 		else:
-			self.timer_id = GObject.timeout_add_seconds(
+			self.timer_id = GLib.timeout_add_seconds(
 				tmo, RequestEntry._request_timeout, self)
 
 	@staticmethod
@@ -93,7 +93,7 @@ class RequestEntry(object):
 			self.done = True
 			if self.timer_id != -1:
 				# Try to prevent the timer from firing
-				GObject.source_remove(self.timer_id)
+				GLib.source_remove(self.timer_id)
 
 			self._result = result
 			self._rc = error_rc

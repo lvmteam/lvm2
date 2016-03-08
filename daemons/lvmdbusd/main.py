@@ -18,7 +18,7 @@ import signal
 import dbus
 from . import lvmdb
 # noinspection PyUnresolvedReferences
-from gi.repository import GObject
+from gi.repository import GLib
 from .fetch import load
 from .manager import Manager
 from .background import background_reaper
@@ -123,7 +123,6 @@ def main():
 			pass
 
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-	GObject.threads_init()
 	dbus.mainloop.glib.threads_init()
 
 	if use_session:
@@ -148,7 +147,7 @@ def main():
 	thread_list.append(threading.Thread(target=process_request))
 
 	cfg.load(refresh=False, emit_signal=False)
-	cfg.loop = GObject.MainLoop()
+	cfg.loop = GLib.MainLoop()
 
 	for process in thread_list:
 		process.damon = True
