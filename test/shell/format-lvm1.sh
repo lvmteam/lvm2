@@ -11,6 +11,8 @@
 
 test_description='Test lvm1 format'
 
+SKIP_WITH_LVMPOLLD=1
+
 . lib/inittest
 
 aux prepare_devs 1

@@ -12,6 +12,7 @@
 test_description='Exercise toollib process_each_pv with vgreduce'
 
 SKIP_WITH_LVMLOCKD=1
+SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
