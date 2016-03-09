@@ -361,8 +361,14 @@ struct dm_status_cache {
 	char **core_argv;
 
 	char *policy_name;
-	int   policy_argc;
+	int policy_argc;
 	char **policy_argv;
+
+	unsigned error : 1;		/* detected error (switches to fail soon) */
+	unsigned fail : 1;		/* all I/O fails */
+	unsigned needs_check : 1;	/* metadata needs check */
+	unsigned read_only : 1;		/* metadata may not be changed */
+	uint32_t reserved : 28;
 };
 
 int dm_get_status_cache(struct dm_pool *mem, const char *params,

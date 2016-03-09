@@ -194,6 +194,17 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 	if (!(s = dm_pool_zalloc(mem, sizeof(struct dm_status_cache))))
 		return_0;
 
+	if (strstr(params, "Error")) {
+		s->error = 1;
+		s->fail = 1; /*  This is also I/O fail state */
+		goto out;
+	}
+
+	if (strstr(params, "Fail")) {
+		s->fail = 1;
+		goto out;
+	}
+
 	/* Read in args that have definitive placement */
 	if (sscanf(params,
 		   " %" PRIu32
@@ -258,6 +269,13 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 	     (dm_split_words(str, s->policy_argc, 0, s->policy_argv) != s->policy_argc)))
 		goto bad;
 
+	/* TODO: improve this parser */
+	if (strstr(p, " ro"))
+		s->read_only = 1;
+
+	if (strstr(p, " needs_check"))
+		s->needs_check = 1;
+out:
 	*status = s;
 	return 1;
 
