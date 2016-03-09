@@ -108,9 +108,6 @@ prepare_sanlock() {
 	fi
 }
 
-# FIXME: add option to allow --test with sanlock
-LVM_TEST_LVMLOCKD_TEST_DLM=1
-
 prepare_lvmlockd() {
 	if pgrep lvmlockd ; then
 		echo "Cannot run while existing lvmlockd process exists"
@@ -965,8 +962,9 @@ generate_config() {
 	LVM_TEST_LVMETAD=${LVM_TEST_LVMETAD:-0}
 	LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD:-0}
 	LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD:-0}
-	LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK:-0}
-	LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM:-0}
+        # FIXME:dct: This is harmful! Variables are unused here and are tested not being empty elsewhere:
+	#LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK:-0}
+	#LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM:-0}
 	if test "$DM_DEV_DIR" = "/dev"; then
 	    LVM_VERIFY_UDEV=${LVM_VERIFY_UDEV:-0}
 	else
