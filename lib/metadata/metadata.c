@@ -680,8 +680,14 @@ static int _check_pv_dev_sizes(struct volume_group *vg)
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (is_missing_pv(pvl->pv))
 			continue;
-
-		dev_size = pv_dev_size(pvl->pv);
+		/*
+		 * Don't compare the sizes if we're not able
+		 * to determine the real dev_size. This may
+		 * happen if the device has gone since we did
+		 * VG read.
+		 */
+		if (!dev_get_size(pvl->pv->dev, &dev_size))
+			continue;
 		size = pv_size(pvl->pv);
 
 		if (dev_size < size) {
