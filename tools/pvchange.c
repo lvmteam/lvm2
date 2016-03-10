@@ -35,6 +35,11 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	params->total++;
 
+	if (vg && vg_is_exported(vg)) {
+		log_error("Volume group %s is exported", vg->name);
+		goto bad;
+	}
+
 	/* If in a VG, must change using volume group. */
 	if (!is_orphan(pv)) {
 		if (tagargs && !(vg->fid->fmt->features & FMT_TAGS)) {
@@ -230,7 +235,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	set_pv_notify(cmd);
 
-	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE, handle, _pvchange_single);
+	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, handle, _pvchange_single);
 
 	if (!argc)
 		unlock_vg(cmd, VG_GLOBAL);
