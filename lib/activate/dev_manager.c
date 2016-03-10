@@ -1334,12 +1334,18 @@ int dev_manager_cache_status(struct dev_manager *dm,
 
 	c = (*status)->cache;
 	(*status)->mem = dm->mem; /* User has to destroy this mem pool later */
-	(*status)->data_usage = dm_make_percent(c->used_blocks,
-						c->total_blocks);
-	(*status)->metadata_usage = dm_make_percent(c->metadata_used_blocks,
-						    c->metadata_total_blocks);
-	(*status)->dirty_usage = dm_make_percent(c->dirty_blocks,
-						 c->used_blocks);
+	if (c->fail || c->error) {
+		(*status)->data_usage =
+			(*status)->metadata_usage =
+			(*status)->dirty_usage = DM_PERCENT_INVALID;
+	} else {
+		(*status)->data_usage = dm_make_percent(c->used_blocks,
+							c->total_blocks);
+		(*status)->metadata_usage = dm_make_percent(c->metadata_used_blocks,
+							    c->metadata_total_blocks);
+		(*status)->dirty_usage = dm_make_percent(c->dirty_blocks,
+							 c->used_blocks);
+	}
 	r = 1;
 out:
 	dm_task_destroy(dmt);

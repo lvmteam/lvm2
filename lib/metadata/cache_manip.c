@@ -359,10 +359,16 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 */
 	if (!lv_cache_status(cache_lv, &status))
 		return_0;
-	dirty_blocks = status->cache->dirty_blocks;
-	if (!(status->cache->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH))
-		dirty_blocks++; /* Not writethrough - always dirty */
-	is_cleaner = !strcmp(status->cache->policy_name, "cleaner");
+	if (!status->cache->fail) {
+		is_cleaner = !strcmp(status->cache->policy_name, "cleaner");
+		dirty_blocks = status->cache->dirty_blocks;
+		if (!(status->cache->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH))
+			dirty_blocks++; /* Not writethrough - always dirty */
+	} else {
+		log_warn("WARNING: Skippping flush for failed cache.");
+		is_cleaner = 0;
+		dirty_blocks = 0;
+	}
 	dm_pool_destroy(status->mem);
 
 	if (dirty_blocks && !is_cleaner) {
@@ -378,6 +384,10 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	while (dirty_blocks) {
 		if (!lv_cache_status(cache_lv, &status))
 			return_0;
+		if (status->cache->fail) {
+			log_warn("WARNING: Flushing of failing cache skipped.");
+			break;
+		}
 		dirty_blocks = status->cache->dirty_blocks;
 		dm_pool_destroy(status->mem);
 		if (dirty_blocks) {

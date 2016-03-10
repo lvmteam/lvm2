@@ -3487,6 +3487,14 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 				health = "mismatches exist";
 		} else if (lv->status & LV_WRITEMOSTLY)
 			health = "writemostly";
+	} else if (lv_is_cache(lv) && (lvdm->seg_status.type != SEG_STATUS_NONE)) {
+		if (lvdm->seg_status.type != SEG_STATUS_CACHE)
+			return _field_set_value(field, GET_FIRST_RESERVED_NAME(health_undef),
+						GET_FIELD_RESERVED_VALUE(health_undef));
+		else if (lvdm->seg_status.cache->fail)
+			health = "failed";
+		else if (lvdm->seg_status.cache->read_only)
+			health = "metadata_read_only";
 	} else if (lv_is_thin_pool(lv) && (lvdm->seg_status.type != SEG_STATUS_NONE)) {
 		if (lvdm->seg_status.type != SEG_STATUS_THIN_POOL)
 			return _field_set_value(field, GET_FIRST_RESERVED_NAME(health_undef),
@@ -3510,6 +3518,10 @@ static int _lvcheckneeded_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (lv_is_thin_pool(lvdm->lv) && lvdm->seg_status.type == SEG_STATUS_THIN_POOL)
 		return _binary_disp(rh, mem, field, lvdm->seg_status.thin_pool->needs_check,
+				    GET_FIRST_RESERVED_NAME(lv_check_needed_y), private);
+
+	if (lv_is_cache(lvdm->lv) && lvdm->seg_status.type == SEG_STATUS_CACHE)
+		return _binary_disp(rh, mem, field, lvdm->seg_status.cache->needs_check,
 				    GET_FIRST_RESERVED_NAME(lv_check_needed_y), private);
 
 	return _binary_undef_disp(rh, mem, field, private);

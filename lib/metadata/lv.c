@@ -1137,10 +1137,12 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 			}
 		}
 
-		/* 'c' when thin-pool active with needs_check flag
+		/* 'c' when cache/thin-pool is active with needs_check flag
 		 * 'C' for suspend */
-		if (lv_is_thin_pool(lv) &&
-		    lvdm->seg_status.thin_pool->needs_check)
+		if ((lv_is_thin_pool(lv) &&
+		     lvdm->seg_status.thin_pool->needs_check) ||
+		    (lv_is_cache(lv) &&
+		     lvdm->seg_status.cache->needs_check))
 			repstr[4] = lvdm->info.suspended ? 'C' : 'c';
 
 		/*
@@ -1194,6 +1196,14 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
+	} else if (lv_is_cache(lv) &&
+		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
+		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
+			repstr[8] = 'X'; /* Unknown */
+		else if (lvdm->seg_status.cache->fail)
+			repstr[8] = 'F';
+		else if (lvdm->seg_status.cache->read_only)
+			repstr[8] = 'M';
 	} else if (lv_is_thin_pool(lv) &&
 		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
 		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)

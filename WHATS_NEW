@@ -1,5 +1,6 @@
 Version 2.02.146 - 
 =================================
+  Use new cache status info and skip flushing for failed cache.
   Support --uncache with missing PVs.
   Tidy report field names, headings and widths.
   Add vgscan --notifydbus to send a dbus notification.
