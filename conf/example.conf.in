@@ -525,7 +525,7 @@ log {
 	# debug output if the class is listed here. Classes currently
 	# available: memory, devices, activation, allocation, lvmetad,
 	# metadata, cache, locking, lvmpolld. Use "all" to see everything.
-	debug_classes = [ "memory", "devices", "activation", "allocation", "lvmetad", "metadata", "cache", "locking", "lvmpolld" ]
+	debug_classes = [ "memory", "devices", "activation", "allocation", "lvmetad", "metadata", "cache", "locking", "lvmpolld", "dbus" ]
 }
 
 # Configuration section backup.
@@ -1015,6 +1015,12 @@ global {
 	# and to use its own control group. When this option is disabled, LVM
 	# commands will supervise long running operations by forking themselves.
 	use_lvmpolld = @DEFAULT_USE_LVMPOLLD@
+
+	# Configuration option global/notify_dbus.
+	# Enable D-Bus notification from LVM commands.
+	# When enabled, an LVM command that changes PVs, changes VG metadata,
+	# or changes the activation state of an LV will send a notification.
+	notify_dbus = 1
 }
 
 # Configuration section activation.
@@ -1840,6 +1846,12 @@ activation {
 	# Use brackets [] to mark hidden devices.
 	# This configuration option has an automatic default value.
 	# mark_hidden_devices = 1
+
+	# Configuration option report/two_word_unknown_device.
+	# Use the two words 'unknown device' in place of '[unknown]'.
+	# This is displayed when the device for a PV is not known.
+	# This configuration option has an automatic default value.
+	# two_word_unknown_device = 0
 # }
 
 # Configuration section dmeventd.

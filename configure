@@ -735,6 +735,7 @@ CLDWHOLEARCHIVE
 CLDNOWHOLEARCHIVE
 CLDFLAGS
 CACHE
+BUILD_NOTIFYDBUS
 BUILD_LOCKDDLM
 BUILD_LOCKDSANLOCK
 BUILD_LVMLOCKD
@@ -767,6 +768,8 @@ SYSTEMD_LIBS
 SYSTEMD_CFLAGS
 BLKID_LIBS
 BLKID_CFLAGS
+NOTIFY_DBUS_LIBS
+NOTIFY_DBUS_CFLAGS
 LOCKD_DLM_LIBS
 LOCKD_DLM_CFLAGS
 LOCKD_SANLOCK_LIBS
@@ -954,6 +957,7 @@ enable_use_lvmetad
 with_lvmetad_pidfile
 enable_use_lvmpolld
 with_lvmpolld_pidfile
+enable_notify_dbus
 enable_blkid_wiping
 enable_udev_systemd_background_jobs
 enable_udev_sync
@@ -1039,6 +1043,8 @@ LOCKD_SANLOCK_CFLAGS
 LOCKD_SANLOCK_LIBS
 LOCKD_DLM_CFLAGS
 LOCKD_DLM_LIBS
+NOTIFY_DBUS_CFLAGS
+NOTIFY_DBUS_LIBS
 BLKID_CFLAGS
 BLKID_LIBS
 SYSTEMD_CFLAGS
@@ -1685,6 +1691,7 @@ Optional Features:
   --disable-use-lvmlockd  disable usage of LVM lock daemon
   --disable-use-lvmetad   disable usage of LVM Metadata Daemon
   --disable-use-lvmpolld  disable usage of LVM Poll Daemon
+  --enable-notify-dbus    enable LVM notification using dbus
   --disable-blkid_wiping  disable libblkid detection of signatures when wiping
                           and use native code instead
   --disable-udev-systemd-background-jobs
@@ -1877,6 +1884,10 @@ Some influential environment variables:
               C compiler flags for LOCKD_DLM, overriding pkg-config
   LOCKD_DLM_LIBS
               linker flags for LOCKD_DLM, overriding pkg-config
+  NOTIFY_DBUS_CFLAGS
+              C compiler flags for NOTIFY_DBUS, overriding pkg-config
+  NOTIFY_DBUS_LIBS
+              linker flags for NOTIFY_DBUS, overriding pkg-config
   BLKID_CFLAGS
               C compiler flags for BLKID, overriding pkg-config
   BLKID_LIBS  linker flags for BLKID, overriding pkg-config
@@ -11817,6 +11828,101 @@ _ACEOF
 
 
 ################################################################################
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build notifydbus" >&5
+$as_echo_n "checking whether to build notifydbus... " >&6; }
+# Check whether --enable-notify-dbus was given.
+if test "${enable_notify_dbus+set}" = set; then :
+  enableval=$enable_notify_dbus; NOTIFYDBUS=$enableval
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $NOTIFYDBUS" >&5
+$as_echo "$NOTIFYDBUS" >&6; }
+
+BUILD_NOTIFYDBUS=$NOTIFYDBUS
+
+if test "$BUILD_NOTIFYDBUS" = yes; then
+
+$as_echo "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
+
+	LIBS="-lsystemd $LIBS"
+fi
+
+################################################################################
+if test "$BUILD_NOTIFYDBUS" = yes; then
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for NOTIFY_DBUS" >&5
+$as_echo_n "checking for NOTIFY_DBUS... " >&6; }
+
+if test -n "$NOTIFY_DBUS_CFLAGS"; then
+    pkg_cv_NOTIFY_DBUS_CFLAGS="$NOTIFY_DBUS_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 221\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "systemd >= 221") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_NOTIFY_DBUS_CFLAGS=`$PKG_CONFIG --cflags "systemd >= 221" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$NOTIFY_DBUS_LIBS"; then
+    pkg_cv_NOTIFY_DBUS_LIBS="$NOTIFY_DBUS_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"systemd >= 221\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "systemd >= 221") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_NOTIFY_DBUS_LIBS=`$PKG_CONFIG --libs "systemd >= 221" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        NOTIFY_DBUS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "systemd >= 221" 2>&1`
+        else
+	        NOTIFY_DBUS_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "systemd >= 221" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$NOTIFY_DBUS_PKG_ERRORS" >&5
+
+	$bailout
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	$bailout
+else
+	NOTIFY_DBUS_CFLAGS=$pkg_cv_NOTIFY_DBUS_CFLAGS
+	NOTIFY_DBUS_LIBS=$pkg_cv_NOTIFY_DBUS_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	HAVE_NOTIFY_DBUS=yes
+fi
+fi
+
+################################################################################
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
 $as_echo_n "checking whether to enable libblkid detection of signatures when wiping... " >&6; }
@@ -15069,6 +15175,7 @@ LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
 
 ################################################################################
+
 
 
 

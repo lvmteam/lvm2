@@ -1,5 +1,5 @@
-Version 2.02.146 - 
-=================================
+Version 2.02.146 - 11th March 2016
+==================================
   More man page cleanups in lvconvert.
   Fix makefile vpath in /udev when generating udev rules files.
   Another attempt to improve VG name parsing for lvconvert (2.02.144).

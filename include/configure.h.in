@@ -631,6 +631,9 @@
 /* The path to 'modprobe', if available. */
 #undef MODPROBE_CMD
 
+/* Define to 1 to include code that uses dbus notification. */
+#undef NOTIFYDBUS_SUPPORT
+
 /* Define to 1 to enable O_DIRECT support. */
 #undef O_DIRECT_SUPPORT
 
