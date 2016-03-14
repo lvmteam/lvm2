@@ -114,6 +114,7 @@ if test -n "$LVM_TEST_LVMETAD" ; then
 	aux prepare_lvmetad
 else
 	# lvmetad prepares its own lvmconf
+	export LVM_LVMETAD_PIDFILE="$TESTDIR/non-existing-file"
 	aux lvmconf
 	aux prepare_clvmd
 fi
