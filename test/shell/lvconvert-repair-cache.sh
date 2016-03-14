@@ -61,6 +61,10 @@ lvconvert -H --cachemode writethrough --cachepool $vg/cpool $lv1
 
 aux disable_dev "$dev2"
 
+# Deactivate before remove
+# FIXME: handle this while LV is alive
+lvchange -an $vg/$lv1
+
 # Check it is prompting for confirmation
 not lvconvert --uncache $vg/$lv1
 # --yes to drop when Check its prompting
@@ -72,6 +76,9 @@ lvconvert --yes --uncache $vg/$lv1
 #lvchange -ay $vg
 
 aux enable_dev "$dev2"
+
+# FIXME: temporary workaround
+lvcreate -L1 -n $lv5 $vg
 lvremove -ff $vg
 
 ##########################
@@ -92,7 +99,7 @@ lvs -a -o+seg_pe_ranges,cachemode $vg
 sync
 
 # Seriously damage cache metadata
-aux error_dev  "$dev1" 2054:2
+aux error_dev "$dev1" 2054:2
 
 # Here we usually for the 1st. notice needs_check
 check lv_attr_bit state $vg/$lv1 "c"
