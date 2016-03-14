@@ -1,5 +1,6 @@
 Version 2.02.147 - 
 ==================================
+  Fix test for lvremove failure in lvconvert --uncache (2.02.146).
 
 Version 2.02.146 - 11th March 2016
 ==================================

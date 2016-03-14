@@ -2043,7 +2043,7 @@ static int _lvconvert_uncache(struct cmd_context *cmd,
 		}
 	}
 
-	if (!lvremove_single(cmd, remove_lv, NULL))
+	if (lvremove_single(cmd, remove_lv, NULL) != ECMD_PROCESSED)
 		return_0;
 
 	if (remove_lv != lv)
