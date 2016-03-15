@@ -1704,6 +1704,28 @@ static int _log_parallel_areas(struct dm_pool *mem, struct dm_list *parallel_are
 	return 1;
 }
 
+/* Handles also stacking */
+static int _setup_lv_size(struct logical_volume *lv, uint32_t extents)
+{
+	struct lv_segment *thin_pool_seg;
+
+	lv->le_count = extents;
+	lv->size = (uint64_t) extents * lv->vg->extent_size;
+
+	if (lv_is_thin_pool_data(lv)) {
+		if (!(thin_pool_seg = get_only_segment_using_this_lv(lv)))
+			return_0;
+
+		/* Update thin pool segment from the layered LV */
+		thin_pool_seg->lv->le_count =
+			thin_pool_seg->len =
+			thin_pool_seg->area_len = lv->le_count;
+		thin_pool_seg->lv->size = lv->size;
+	}
+
+	return 1;
+}
+
 static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 				  uint32_t area_count,
 				  uint32_t stripe_size,
@@ -1712,7 +1734,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 				  uint32_t region_size)
 {
 	uint32_t s, extents, area_multiple;
-	struct lv_segment *seg, *thin_pool_seg;
+	struct lv_segment *seg;
 
 	area_multiple = _calc_area_multiple(segtype, area_count, 0);
 	extents = aa[0].len * area_multiple;
@@ -1732,19 +1754,9 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	dm_list_add(&lv->segments, &seg->list);
 
 	extents = aa[0].len * area_multiple;
-	lv->le_count += extents;
-	lv->size += (uint64_t) extents * lv->vg->extent_size;
 
-	if (lv_is_thin_pool_data(lv)) {
-		if (!(thin_pool_seg = get_only_segment_using_this_lv(lv)))
-			return_0;
-
-		/* Update thin pool segment from the layered LV */
-		thin_pool_seg->lv->le_count =
-			thin_pool_seg->len =
-			thin_pool_seg->area_len = lv->le_count;
-		thin_pool_seg->lv->size = lv->size;
-	}
+	if (!_setup_lv_size(lv, lv->le_count + extents))
+		return_0;
 
 	return 1;
 }
@@ -3875,8 +3887,9 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 
 	seg->area_len += extents;
 	seg->len += extents;
-	lv->le_count += extents;
-	lv->size += (uint64_t) extents * lv->vg->extent_size;
+
+	if (!_setup_lv_size(lv, lv->le_count + extents))
+		return_0;
 
 	/*
 	 * The MD bitmap is limited to being able to track 2^21 regions.
