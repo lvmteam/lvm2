@@ -17,6 +17,8 @@
 #include "btree.h"
 #include "config.h"
 #include "toolcontext.h"
+#include "dm-ioctl.h" /* for DM_UUID_LEN */
+#include "lvm-string.h" /* for LVM's UUID_PREFIX */
 
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
@@ -38,6 +40,8 @@ struct dir_list {
 static struct {
 	struct dm_pool *mem;
 	struct dm_hash_table *names;
+	struct dm_hash_table *vgid_index;
+	struct dm_hash_table *lvid_index;
 	struct btree *devices;
 	struct dm_regex *preferred_names_matcher;
 	const char *dev_dir;
@@ -358,6 +362,229 @@ static int _add_alias(struct device *dev, const char *path)
 	return 1;
 }
 
+static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
+{
+	FILE *fp;
+
+	if (!(fp = fopen(path, "r"))) {
+		log_sys_error("fopen", path);
+		return 0;
+	}
+
+	if (!fgets(buf, buf_size, fp)) {
+		log_sys_error("fgets", path);
+		if (fclose(fp))
+			log_sys_error("fclose", path);
+		return 0;
+	}
+
+	buf[strlen(buf) - 1] = '\0';
+
+	if (fclose(fp))
+		log_sys_error("fclose", path);
+
+	return 1;
+}
+
+static int _get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor)
+{
+	char path[PATH_MAX];
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/dm/uuid", dm_sysfs_dir(), major, minor) < 0) {
+		log_error("%d:%d: dm_snprintf failed for path to sysfs dm directory.", major, minor);
+		return 0;
+	}
+
+	return _get_sysfs_value(path, buf, buf_size);
+}
+
+static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, const char *key)
+{
+	struct dm_list *list;
+
+	if ((list = dm_hash_lookup(idx, key)))
+		return list;
+
+	if (!(list = _zalloc(sizeof(*list)))) {
+		log_error("%s: failed to allocate device list for device cache index.", key);
+		return NULL;
+	}
+
+	dm_list_init(list);
+
+	if (!dm_hash_insert(idx, key, list)) {
+		log_error("%s: failed to insert device list to device cache index.", key);
+		return NULL;
+	}
+
+	return list;
+}
+
+static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev_name)
+{
+	char path[PATH_MAX];
+	char buf[PATH_MAX];
+	int major, minor;
+
+	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev", dm_sysfs_dir(), dev_name) < 0) {
+		log_error("_get_device_for_non_dm_dev: %s: dm_snprintf failed", dev_name);
+		return NULL;
+	}
+
+	if (!_get_sysfs_value(path, buf, sizeof(buf)))
+		return_NULL;
+
+	if (sscanf(buf, "%d:%d", &major, &minor) != 2) {
+		log_error("_get_device_for_non_dm_dev: %s: failed to get major and minor number", dev_name);
+		return NULL;
+	}
+
+	return (struct device *) btree_lookup(_cache.devices, (uint32_t) MKDEV(major, minor));
+}
+
+#define NOT_LVM_UUID "-"
+
+static int _get_vgid_and_lvid_for_dev(struct device *dev)
+{
+	size_t lvm_prefix_len = strlen(UUID_PREFIX);
+	char uuid[DM_UUID_LEN];
+
+	if (!_get_dm_uuid_from_sysfs(uuid, sizeof(uuid), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)))
+		return_0;
+
+	if (strlen(uuid) == (2 * ID_LEN + 4) &&
+	    !strncmp(uuid, UUID_PREFIX, lvm_prefix_len)) {
+		/* Separate VGID and LVID part from DM UUID. */
+		if (!(dev->vgid = dm_pool_strndup(_cache.mem, uuid + lvm_prefix_len, ID_LEN)) ||
+		    !(dev->lvid = dm_pool_strndup(_cache.mem, uuid + lvm_prefix_len + ID_LEN, ID_LEN)))
+			return_0;
+	} else
+		dev->vgid = dev->lvid = NOT_LVM_UUID;
+
+	return 1;
+}
+
+static int _index_dev_by_vgid_and_lvid(struct device *dev)
+{
+	const char *devname = dev_name(dev);
+	char devpath[PATH_MAX];
+	char path[PATH_MAX];
+	DIR *d;
+	struct dirent *dirent;
+	struct device *holder_dev;
+	struct dm_list *vgid_list, *lvid_list;
+	struct device_list *dl_vgid, *dl_lvid;
+	int r = 0;
+
+	/* Get holders for device. */
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/holders/", dm_sysfs_dir(), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)) < 0) {
+		log_error("%s: dm_snprintf failed for path to holders directory.", devname);
+		return 0;
+	}
+
+	if (!(d = opendir(path))) {
+		if (errno == ENOENT) {
+			log_debug("%s: path does not exist, skipping", path);
+			return 1;
+		}
+		log_sys_error("opendir", path);
+		return 0;
+	}
+
+	/* Iterate over device's holders and look for LVs. */
+	while ((dirent = readdir(d))) {
+		if (!strcmp(".", dirent->d_name) ||
+		    !strcmp("..", dirent->d_name))
+			continue;
+
+		if (dm_snprintf(devpath, sizeof(devpath), "%s%s", _cache.dev_dir, dirent->d_name) == -1) {
+			log_error("%s: dm_snprintf failed for holder %s device path.", devname, dirent->d_name);
+			goto out;
+		}
+
+		if (!(holder_dev = (struct device *) dm_hash_lookup(_cache.names, devpath))) {
+			/*
+			 * Cope with situation where canonical /<dev_dir>/<dirent->d_name>
+			 * does not exist, but some other node name or symlink exists in
+			 * non-standard environments - someone renaming the nodes or using
+			 * mknod with different dev names than actual kernel names.
+			 * This looks up struct device by major:minor pair which we get
+			 * by looking at /sys/block/<dirent->d_name>/dev sysfs attribute.
+			 */
+			if (!(holder_dev = _get_device_for_sysfs_dev_name_using_devno(dirent->d_name))) {
+				log_error("%s: failed to find associated device structure for holder %s.", devname, devpath);
+				goto out;
+			}
+		}
+
+		/* We're only interested in a holder which is a DM device. */
+		if (!dm_is_dm_major(MAJOR(holder_dev->dev)))
+			continue;
+
+		/*
+		 * And if it's a DM device, we're only interested in a holder which is an LVM device.
+		 * Get the VG UUID and LV UUID if we don't have that already.
+		 */
+		if (!holder_dev->vgid && !_get_vgid_and_lvid_for_dev(holder_dev))
+			goto_out;
+
+		if (*holder_dev->vgid == *NOT_LVM_UUID)
+			continue;
+
+		/*
+		 * Do not add internal LV devices to index.
+		 * If a device is internal, the holder has the same VG UUID as the device.
+		 */
+		if (dm_is_dm_major(MAJOR(dev->dev))) {
+			if (!dev->vgid && !_get_vgid_and_lvid_for_dev(dev))
+				goto_out;
+
+			if (*dev->vgid != *NOT_LVM_UUID && !strcmp(holder_dev->vgid, dev->vgid))
+				continue;
+		}
+
+		if (!(vgid_list = _get_or_add_list_by_index_key(_cache.vgid_index, holder_dev->vgid)) ||
+		    !(lvid_list = _get_or_add_list_by_index_key(_cache.lvid_index, holder_dev->lvid)))
+			goto_out;
+
+		/* Create dev list items for the holder device. */
+		if (!(dl_vgid = _zalloc(sizeof(*dl_vgid))) ||
+		    !(dl_lvid = _zalloc(sizeof(*dl_lvid)))) {
+			log_error("%s: failed to allocate dev list item.", devname);
+			goto out;
+		}
+
+		dl_vgid->dev = dl_lvid->dev = dev;
+
+		/* Add dev list item to VGID device list if it's not there already. */
+		if (!(dev->flags & DEV_USED_FOR_LV))
+			dm_list_add(vgid_list, &dl_vgid->list);
+
+		/* Add dev list item to LVID device list. */
+		dm_list_add(lvid_list, &dl_lvid->list);
+
+		/* Mark device as used == also indexed in dev cache by VGID and LVID. */
+		dev->flags |= DEV_USED_FOR_LV;
+	}
+
+	r = 1;
+out:
+	if (closedir(d))
+		log_sys_error("closedir", path);
+
+	return r;
+}
+
+struct dm_list *dev_cache_get_dev_list_for_vgid(const char *vgid)
+{
+	return dm_hash_lookup(_cache.vgid_index, vgid);
+}
+
+struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid)
+{
+	return dm_hash_lookup(_cache.lvid_index, lvid);
+}
+
 /*
  * Either creates a new dev, or adds an alias to
  * an existing dev.
@@ -570,6 +797,24 @@ bad:
 	return 0;
 }
 
+static int _add_devs_to_index(void)
+{
+	struct btree_iter *iter = btree_first(_cache.devices);
+	struct device *dev;
+	int r = 1;
+
+	while (iter) {
+		dev = btree_get_data(iter);
+
+		if (!_index_dev_by_vgid_and_lvid(dev))
+			r = 0;
+
+		iter = btree_next(iter);
+	}
+
+	return r;
+}
+
 static void _insert_dirs(struct dm_list *dirs)
 {
 	struct dir_list *dl;
@@ -590,6 +835,8 @@ static void _insert_dirs(struct dm_list *dirs)
 			log_debug_devs("%s: Failed to insert devices to "
 				       "device cache fully", dl->dir);
 	}
+
+	(void) _add_devs_to_index();
 }
 
 #else	/* UDEV_SYNC_SUPPORT */
@@ -751,7 +998,9 @@ int dev_cache_init(struct cmd_context *cmd)
 	if (!(_cache.mem = dm_pool_create("dev_cache", 10 * 1024)))
 		return_0;
 
-	if (!(_cache.names = dm_hash_create(128))) {
+	if (!(_cache.names = dm_hash_create(128)) ||
+	    !(_cache.vgid_index = dm_hash_create(32)) ||
+	    !(_cache.lvid_index = dm_hash_create(32))) {
 		dm_pool_destroy(_cache.mem);
 		_cache.mem = 0;
 		return_0;
@@ -824,6 +1073,12 @@ int dev_cache_exit(void)
 
 	if (_cache.names)
 		dm_hash_destroy(_cache.names);
+
+	if (_cache.vgid_index)
+		dm_hash_destroy(_cache.vgid_index);
+
+	if (_cache.lvid_index)
+		dm_hash_destroy(_cache.lvid_index);
 
 	memset(&_cache, 0, sizeof(_cache));
 

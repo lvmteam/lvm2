@@ -31,6 +31,9 @@ struct dev_filter {
 	unsigned use_count;
 };
 
+struct dm_list *dev_cache_get_dev_list_for_vgid(const char *vgid);
+struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid);
+
 /*
  * The global device cache.
  */

@@ -1,5 +1,6 @@
 Version 2.02.148 - 
 ==================================
+  Detect and warn about mismatch between devices used and assumed for an LV.
 
 Version 2.02.147 - 19th March 2016
 ==================================

@@ -4580,6 +4580,124 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	return correct_vg;
 }
 
+#define DEV_LIST_DELIM ", "
+
+static int _check_devs_used_correspond_with_lv(struct dm_list *list, struct logical_volume *lv)
+{
+	struct dm_pool *mem = lv->vg->vgmem;
+	struct device_list *dl;
+	int found_inconsistent = 0;
+	struct device *dev;
+	struct lv_segment *seg;
+	uint32_t s;
+	char *used_devnames = NULL, *assumed_devnames = NULL;
+
+	if (!(list = dev_cache_get_dev_list_for_lvid(lv->lvid.s + ID_LEN)))
+		return 1;
+
+	dm_list_iterate_items(dl, list) {
+		dev = dl->dev;
+		if (!(dev->flags & DEV_ASSUMED_FOR_LV)) {
+			if (!found_inconsistent) {
+				dm_pool_begin_object(mem, 32);
+				found_inconsistent = 1;
+			} else
+				dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1);
+			if (!dm_pool_grow_object(mem, dev_name(dev), 0))
+				goto_bad;
+		}
+	}
+
+	if (!found_inconsistent)
+		return 1;
+
+	dm_pool_grow_object(mem, "\0", 1);
+	used_devnames = dm_pool_end_object(mem);
+
+	found_inconsistent = 0;
+	dm_list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) == AREA_PV) {
+				if (!(dev = seg_dev(seg, s))) {
+					log_error("Couldn't find device for segment belonging to "
+						  "%s/%s while checking used and assumed devices.",
+						  lv->vg->name, lv->name);
+					goto bad;
+				}
+				if (!(dev->flags & DEV_USED_FOR_LV)) {
+					if (!found_inconsistent) {
+						dm_pool_begin_object(mem, 32);
+						found_inconsistent = 1;
+					} else {
+						dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1);
+					}
+					if (!dm_pool_grow_object(mem, dev_name(dev), 0))
+						goto bad;
+				}
+			}
+		}
+	}
+
+	if (found_inconsistent) {
+		dm_pool_grow_object(mem, "\0", 1);
+		assumed_devnames = dm_pool_end_object(mem);
+	}
+
+	log_warn("WARNING: Device mismatch detected for %s/%s which is accessing %s instead of %s.",
+		 lv->vg->name, lv->name, used_devnames, assumed_devnames);
+
+	/* This also frees assumed_devnames. */
+	dm_pool_free(mem, (void *) used_devnames);
+	return 1;
+bad:
+	if (found_inconsistent)
+		dm_pool_abandon_object(mem);
+	return 0;
+}
+
+static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
+{
+	char vgid[ID_LEN + 1];
+	struct pv_list *pvl;
+	struct lv_list *lvl;
+	struct dm_list *list;
+	struct device_list *dl;
+	int found_inconsistent = 0;
+
+	if (is_orphan_vg(vg->name))
+		return 1;
+
+	strncpy(vgid, (const char *) vg->id.uuid, sizeof(vgid));
+	vgid[ID_LEN] = '\0';
+
+	/* Mark all PVs in VG as used. */
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (is_missing_pv(pvl->pv))
+			continue;
+		pvl->pv->dev->flags |= DEV_ASSUMED_FOR_LV;
+	}
+
+	if (!(list = dev_cache_get_dev_list_for_vgid(vgid)))
+		return 1;
+
+	dm_list_iterate_items(dl, list) {
+		if (!(dl->dev->flags & DEV_OPEN_FAILURE) &&
+		    !(dl->dev->flags & DEV_ASSUMED_FOR_LV)) {
+			found_inconsistent = 1;
+			break;
+		}
+	}
+
+	if (found_inconsistent) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
+			if (!_check_devs_used_correspond_with_lv(list, lvl->lv))
+				return_0;
+		}
+	}
+
+	return 1;
+}
+
 struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgname,
 				      const char *vgid, uint32_t warn_flags, int *consistent)
 {
@@ -4624,6 +4742,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgnam
 		}
 	}
 
+	(void) _check_devs_used_correspond_with_vg(vg);
 out:
 	if (!*consistent && (warn_flags & WARN_INCONSISTENT)) {
 		if (is_orphan_vg(vgname))

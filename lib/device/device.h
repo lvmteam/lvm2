@@ -28,6 +28,8 @@
 #define DEV_O_DIRECT		0x00000020	/* Use O_DIRECT */
 #define DEV_O_DIRECT_TESTED	0x00000040	/* DEV_O_DIRECT is reliable */
 #define DEV_OPEN_FAILURE	0x00000080	/* Has last open failed? */
+#define DEV_USED_FOR_LV		0x00000100	/* Is device used for an LV */
+#define DEV_ASSUMED_FOR_LV	0x00000200	/* Is device assumed for an LV */
 
 /*
  * Support for external device info.
@@ -69,7 +71,10 @@ struct device {
 	struct dm_list open_list;
 	struct dev_ext ext;
 
-	char pvid[ID_LEN + 1];
+	const char *vgid; /* if device is an LV */
+	const char *lvid; /* if device is an LV */
+
+	char pvid[ID_LEN + 1]; /* if device is a PV */
 	char _padding[7];
 };
 
