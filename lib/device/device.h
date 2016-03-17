@@ -27,6 +27,7 @@
 #define DEV_OPENED_EXCL		0x00000010	/* Opened EXCL */
 #define DEV_O_DIRECT		0x00000020	/* Use O_DIRECT */
 #define DEV_O_DIRECT_TESTED	0x00000040	/* DEV_O_DIRECT is reliable */
+#define DEV_OPEN_FAILURE	0x00000080	/* Has last open failed? */
 
 /*
  * Support for external device info.
