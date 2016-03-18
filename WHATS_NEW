@@ -1,5 +1,6 @@
 Version 2.02.147 - 
 ==================================
+  If available, use /proc/self/mountinfo to detect mounted volume in fsadm.
   Fix resize of stacked raid thin data volume (2.02.141).
   Fix test for lvremove failure in lvconvert --uncache (2.02.146).
 
