@@ -191,6 +191,13 @@ detect_fs() {
 		read </sys/block/${RVOLUME#/dev/}/dm/name SYSVOLUME 2>&1 && VOLUME="$DM_DEV_DIR/mapper/$SYSVOLUME"
 		read </sys/block/${RVOLUME#/dev/}/dev MAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\""
 		;;
+	  *)
+		STAT=$(stat --format "MAJOR=%t MINOR=%T" ${RVOLUME}) || error "Cannot get major:minor for \"$VOLUME\""
+		eval $STAT
+		MAJOR=$((0x${MAJOR}))
+		MINOR=$((0x${MINOR}))
+		MAJORMINOR=${MAJOR}:${MINOR}
+		;;
 	esac
 	# use null device as cache file to be sure about the result
 	# not using option '-o value' to be compatible with older version of blkid
