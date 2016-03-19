@@ -1,3 +1,6 @@
+Version 2.02.148 - 
+==================================
+
 Version 2.02.147 - 19th March 2016
 ==================================
   If available, use /proc/self/mountinfo to detect mounted volume in fsadm.
