@@ -1,4 +1,4 @@
-Version 2.02.147 - 
+Version 2.02.147 - 19th March 2016
 ==================================
   If available, use /proc/self/mountinfo to detect mounted volume in fsadm.
   Fix resize of stacked raid thin data volume (2.02.141).
