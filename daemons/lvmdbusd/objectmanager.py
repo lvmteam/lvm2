@@ -11,6 +11,7 @@ import sys
 import threading
 import traceback
 import dbus
+import os
 from . import cfg
 from .utils import log_debug
 from .automatedproperties import AutomatedProperties
@@ -184,13 +185,13 @@ class ObjectManager(AutomatedProperties):
 				return self.get_object_by_path(self._id_to_object_path[lvm_id])
 			return None
 
-	def _uuid_verify(self, path, lvm_id, uuid):
+	def _uuid_verify(self, path, uuid, lvm_id):
 		"""
 		Ensure uuid is present for a successful lvm_id lookup
 		NOTE: Internal call, assumes under object manager lock
 		:param path: 		Path to object we looked up
-		:param lvm_id:		lvm_id used to find object
 		:param uuid: 		lvm uuid to verify
+		:param lvm_id:		lvm_id used to find object
 		:return: None
 		"""
 		# This gets called when we found an object based on lvm_id, ensure
@@ -199,6 +200,17 @@ class ObjectManager(AutomatedProperties):
 			if uuid not in self._id_to_object_path:
 				obj = self.get_object_by_path(path)
 				self._lookup_add(obj, path, lvm_id, uuid)
+
+	def _return_lookup(self, uuid, lvm_identifier):
+		"""
+		We found an identifier, so lets return the path to the found object
+		:param uuid:	The lvm uuid
+		:param lvm_identifier: The lvm_id used to find object
+		:return:
+		"""
+		path = self._id_to_object_path[lvm_identifier]
+		self._uuid_verify(path, uuid, lvm_identifier)
+		return path
 
 	def get_object_path_by_lvm_id(self, uuid, lvm_id, path_create=None,
 								gen_new=True):
@@ -221,16 +233,19 @@ class ObjectManager(AutomatedProperties):
 			path = None
 
 			if lvm_id in self._id_to_object_path:
-				path = self._id_to_object_path[lvm_id]
-				self._uuid_verify(path, lvm_id, uuid)
-				return path
+				self._return_lookup(uuid, lvm_id)
+
 			if "/" in lvm_id:
 				vg, lv = lvm_id.split("/", 1)
 				int_lvm_id = vg + "/" + ("[%s]" % lv)
 				if int_lvm_id in self._id_to_object_path:
-					path = self._id_to_object_path[int_lvm_id]
-					self._uuid_verify(path, int_lvm_id, uuid)
-					return path
+					self._return_lookup(uuid, int_lvm_id)
+				elif lvm_id.startswith('/'):
+					# We could have a pv device path lookup that failed,
+					# lets try canonical form and try again.
+					canonical = os.path.realpath(lvm_id)
+					if canonical in self._id_to_object_path:
+						self._return_lookup(uuid, canonical)
 
 			if uuid and uuid in self._id_to_object_path:
 				# If we get here it indicates that we found the object, but

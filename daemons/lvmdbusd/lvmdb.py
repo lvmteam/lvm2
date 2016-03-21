@@ -12,6 +12,7 @@
 from collections import OrderedDict
 
 import pprint as prettyprint
+import os
 
 try:
 	from . import cmdhandler
@@ -309,6 +310,11 @@ class DataStore(object):
 		else:
 			rc = []
 			for s in pv_name:
+				# Ths user could be using a symlink instead of the actual
+				# block device, make sure we are using actual block device file
+				# if the pv name isn't in the lookup
+				if s not in self.pv_path_to_uuid:
+					s = os.path.realpath(s)
 				rc.append(self.pvs[self.pv_path_to_uuid[s]])
 			return rc
 
