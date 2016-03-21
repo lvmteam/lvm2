@@ -69,6 +69,7 @@ class RequestEntry(object):
 			# have gotten a job by the time we hit an error
 			# Lets get the stacktrace and set that to the error message
 			st = traceback.format_exc()
+			cfg.blackbox.dump()
 			log_error("Exception returned to client: \n%s" % st)
 			self.register_error(-1, str(e), e)
 

@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE
 import time
 import threading
 from itertools import chain
+import collections
 
 try:
 	from . import cfg
@@ -28,11 +29,49 @@ total_count = 0
 
 # We need to prevent different threads from using the same lvm shell
 # at the same time.
-cmd_lock = threading.Lock()
+cmd_lock = threading.RLock()
 
 # The actual method which gets called to invoke the lvm command, can vary
 # from forking a new process to using lvm shell
 _t_call = None
+
+
+class LvmExecutionMeta(object):
+
+	def __init__(self, start, ended, cmd, ec, stdout_txt, stderr_txt):
+		self.start = start
+		self.ended = ended
+		self.cmd = cmd
+		self.ec = ec
+		self.stdout_txt = stdout_txt
+		self.stderr_txt = stderr_txt
+
+	def __str__(self):
+		return "EC= %d for %s\n" \
+			"STARTED: %f, ENDED: %f\n" \
+			"STDOUT=%s\n" \
+			"STDERR=%s\n" % \
+			(self.ec, str(self.cmd), self.start, self.ended, self.stdout_txt,
+			self.stderr_txt)
+
+
+class LvmFlightRecorder(object):
+
+	def __init__(self):
+		self.queue = collections.deque(maxlen=16)
+
+	def add(self, lvm_exec_meta):
+		self.queue.append(lvm_exec_meta)
+
+	def dump(self):
+		with cmd_lock:
+			log_error("LVM dbus flight recorder START")
+			for c in self.queue:
+				log_error(str(c))
+			log_error("LVM dbus flight recorder END")
+
+
+cfg.blackbox = LvmFlightRecorder()
 
 
 def _debug_c(cmd, exit_code, out):
@@ -105,9 +144,10 @@ def time_wrapper(command, debug=False):
 	with cmd_lock:
 		start = time.time()
 		results = _t_call(command, debug)
-		total_time += (time.time() - start)
+		ended = time.time()
+		total_time += (ended - start)
 		total_count += 1
-
+		cfg.blackbox.add(LvmExecutionMeta(start, ended, command, *results))
 	return results
 
 

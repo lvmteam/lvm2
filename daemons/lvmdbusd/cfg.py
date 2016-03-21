@@ -78,3 +78,6 @@ load = None
 
 # Global cached state
 db = None
+
+# lvm flight recorder
+blackbox = None
