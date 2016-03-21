@@ -4582,9 +4582,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 #define DEV_LIST_DELIM ", "
 
-static int _check_devs_used_correspond_with_lv(struct dm_list *list, struct logical_volume *lv)
+static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_list *list, struct logical_volume *lv)
 {
-	struct dm_pool *mem = lv->vg->vgmem;
 	struct device_list *dl;
 	int found_inconsistent = 0;
 	struct device *dev;
@@ -4657,6 +4656,7 @@ bad:
 
 static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 {
+	struct dm_pool *mem;
 	char vgid[ID_LEN + 1];
 	struct pv_list *pvl;
 	struct lv_list *lvl;
@@ -4689,10 +4689,17 @@ static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 	}
 
 	if (found_inconsistent) {
+		if (!(mem = dm_pool_create("vg_devs_check", 1024)))
+			return_0;
+
 		dm_list_iterate_items(lvl, &vg->lvs) {
-			if (!_check_devs_used_correspond_with_lv(list, lvl->lv))
+			if (!_check_devs_used_correspond_with_lv(mem, list, lvl->lv)) {
+				dm_pool_destroy(mem);
 				return_0;
+			}
 		}
+
+		dm_pool_destroy(mem);
 	}
 
 	return 1;
