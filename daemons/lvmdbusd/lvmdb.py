@@ -16,7 +16,7 @@ import os
 
 try:
 	from . import cmdhandler
-	from .utils import log_debug
+	from .utils import log_debug, log_error
 except SystemError:
 	import cmdhandler
 	from utils import log_debug
@@ -337,13 +337,13 @@ class DataStore(object):
 					rc.append(self.lvs[self.lv_full_name_to_uuid[s]])
 				return rc
 		except KeyError as ke:
-			print("Key %s not found!" % (str(lv_names)))
-			print("lv name to uuid lookup")
+			log_error("Key %s not found!" % (str(lv_names)))
+			log_error("lv name to uuid lookup")
 			for keys in sorted(self.lv_full_name_to_uuid.keys()):
-				print("%s" % (keys))
-			print("lvs entries by uuid")
+				log_error("%s" % (keys))
+			log_error("lvs entries by uuid")
 			for keys in sorted(self.lvs.keys()):
-				print("%s" % (keys))
+				log_error("%s" % (keys))
 			raise ke
 
 	def pv_pe_segments(self, pv_uuid):
