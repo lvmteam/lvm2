@@ -365,6 +365,7 @@ static int _add_alias(struct device *dev, const char *path)
 static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
 {
 	FILE *fp;
+	size_t len;
 
 	if (!(fp = fopen(path, "r"))) {
 		log_sys_error("fopen", path);
@@ -378,7 +379,13 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
 		return 0;
 	}
 
-	buf[strlen(buf) - 1] = '\0';
+	if (!(len = strlen(buf))) {
+		log_error("_get_sysfs_value: %s: no value", path);
+		return 0;
+	}
+
+	if (buf[len - 1] == '\n')
+		buf[len - 1] = '\0';
 
 	if (fclose(fp))
 		log_sys_error("fclose", path);
