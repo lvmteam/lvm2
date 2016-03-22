@@ -4600,8 +4600,10 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 			if (!found_inconsistent) {
 				dm_pool_begin_object(mem, 32);
 				found_inconsistent = 1;
-			} else
-				dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1);
+			} else {
+				if (!dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1))
+					goto_bad;
+			}
 			if (!dm_pool_grow_object(mem, dev_name(dev), 0))
 				goto_bad;
 		}
@@ -4610,7 +4612,8 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 	if (!found_inconsistent)
 		return 1;
 
-	dm_pool_grow_object(mem, "\0", 1);
+	if (!dm_pool_grow_object(mem, "\0", 1))
+		goto_bad;
 	used_devnames = dm_pool_end_object(mem);
 
 	found_inconsistent = 0;
@@ -4628,7 +4631,8 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 						dm_pool_begin_object(mem, 32);
 						found_inconsistent = 1;
 					} else {
-						dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1);
+						if (!dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1))
+							goto_bad;
 					}
 					if (!dm_pool_grow_object(mem, dev_name(dev), 0))
 						goto bad;
@@ -4638,7 +4642,8 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 	}
 
 	if (found_inconsistent) {
-		dm_pool_grow_object(mem, "\0", 1);
+		if (!dm_pool_grow_object(mem, "\0", 1))
+			goto_bad;
 		assumed_devnames = dm_pool_end_object(mem);
 	}
 

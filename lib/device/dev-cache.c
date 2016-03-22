@@ -366,6 +366,7 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
 {
 	FILE *fp;
 	size_t len;
+	int r = 0;
 
 	if (!(fp = fopen(path, "r"))) {
 		log_sys_error("fopen", path);
@@ -374,23 +375,23 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
 
 	if (!fgets(buf, buf_size, fp)) {
 		log_sys_error("fgets", path);
-		if (fclose(fp))
-			log_sys_error("fclose", path);
-		return 0;
+		goto out;
 	}
 
 	if (!(len = strlen(buf)) || (len == 1 && buf[0] == '\n')) {
 		log_error("_get_sysfs_value: %s: no value", path);
-		return 0;
+		goto out;
 	}
 
 	if (buf[len - 1] == '\n')
 		buf[len - 1] = '\0';
 
+	r = 1;
+out:
 	if (fclose(fp))
 		log_sys_error("fclose", path);
 
-	return 1;
+	return r;
 }
 
 static int _get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int minor)
@@ -427,14 +428,14 @@ static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, 
 	return list;
 }
 
-static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev_name)
+static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *devname)
 {
 	char path[PATH_MAX];
 	char buf[PATH_MAX];
 	int major, minor;
 
-	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev", dm_sysfs_dir(), dev_name) < 0) {
-		log_error("_get_device_for_non_dm_dev: %s: dm_snprintf failed", dev_name);
+	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev", dm_sysfs_dir(), devname) < 0) {
+		log_error("_get_device_for_non_dm_dev: %s: dm_snprintf failed", devname);
 		return NULL;
 	}
 
@@ -442,7 +443,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 		return_NULL;
 
 	if (sscanf(buf, "%d:%d", &major, &minor) != 2) {
-		log_error("_get_device_for_non_dm_dev: %s: failed to get major and minor number", dev_name);
+		log_error("_get_device_for_non_dm_dev: %s: failed to get major and minor number", devname);
 		return NULL;
 	}
 
