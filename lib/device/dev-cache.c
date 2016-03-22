@@ -453,13 +453,23 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 
 static int _get_vgid_and_lvid_for_dev(struct device *dev)
 {
-	size_t lvm_prefix_len = strlen(UUID_PREFIX);
+	static size_t lvm_prefix_len = sizeof(UUID_PREFIX) - 1;
+	static size_t lvm_uuid_len = sizeof(UUID_PREFIX) - 1 + 2 * ID_LEN;
 	char uuid[DM_UUID_LEN];
+	size_t uuid_len;
 
 	if (!_get_dm_uuid_from_sysfs(uuid, sizeof(uuid), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)))
 		return_0;
 
-	if (strlen(uuid) == (2 * ID_LEN + 4) &&
+	uuid_len = strlen(uuid);
+
+	/*
+	 * UUID for LV is either "LVM-<vg_uuid><lv_uuid>" or "LVM-<vg_uuid><lv_uuid>-<suffix>",
+	 * where vg_uuid and lv_uuid has length of ID_LEN and suffix len is not restricted
+	 * (only restricted by whole DM UUID max len).
+	 */
+	if (((uuid_len == lvm_uuid_len) ||
+	     ((uuid_len > lvm_uuid_len) && (uuid[lvm_uuid_len] == '-'))) &&
 	    !strncmp(uuid, UUID_PREFIX, lvm_prefix_len)) {
 		/* Separate VGID and LVID part from DM UUID. */
 		if (!(dev->vgid = dm_pool_strndup(_cache.mem, uuid + lvm_prefix_len, ID_LEN)) ||
