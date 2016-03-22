@@ -16,16 +16,7 @@ SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
-# Will default to skip until we can get this reviewed
-#skip
-
 aux prepare_pvs 6
-
-# Copy the needed file to run on the system bus if it doesn't
-# already exist
-if [ ! -f /etc/dbus-1/system.d/com.redhat.lvmdbus1.conf ]; then
-	install -m 644 $abs_top_builddir/scripts/com.redhat.lvmdbus1.conf /etc/dbus-1/system.d/.
-fi
 
 aux prepare_lvmdbusd
 $test_data_dir/dbus/lvmdbustest.py -v
