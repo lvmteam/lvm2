@@ -132,14 +132,13 @@ bad:
 	return 0;
 }
 
-static const char *_advance_to_next_word(const char *str, int count)
+/*
+ * Skip nr fields delimited by a single space.
+ */
+static const char *_skip_fields(const char *p, unsigned nr)
 {
-	int i;
-	const char *p;
-
-	for (p = str, i = 0; i < count; i++, p++)
-		if (!(p = strchr(p, ' ')))
-			return NULL;
+	while (p && nr-- && (p = strchr(p, ' ')))
+		p++;
 
 	return p;
 }
@@ -228,7 +227,7 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 		goto bad;
 
 	/* Now jump to "features" section */
-	if (!(p = _advance_to_next_word(params, 12)))
+	if (!(p = _skip_fields(params, 12)))
 		goto bad;
 
 	/* Read in features */
@@ -240,31 +239,31 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 		else
 			log_error("Unknown feature in status: %s", params);
 
-		if (!(p = _advance_to_next_word(p, 1)))
+		if (!(p = _skip_fields(p, 1)))
 			goto bad;
 	}
 
 	/* Read in core_args. */
 	if (sscanf(p, "%d ", &s->core_argc) != 1)
 		goto bad;
-	if (s->core_argc &&
+	if ((s->core_argc > 0) &&
 	    (!(s->core_argv = dm_pool_zalloc(mem, sizeof(char *) * s->core_argc)) ||
-	     !(p = _advance_to_next_word(p, 1)) ||
+	     !(p = _skip_fields(p, 1)) ||
 	     !(str = dm_pool_strdup(mem, p)) ||
-	     !(p = _advance_to_next_word(p, s->core_argc)) ||
+	     !(p = _skip_fields(p, (unsigned) s->core_argc)) ||
 	     (dm_split_words(str, s->core_argc, 0, s->core_argv) != s->core_argc)))
 		goto bad;
 
 	/* Read in policy args */
 	pp = p;
-	if (!(p = _advance_to_next_word(p, 1)) ||
+	if (!(p = _skip_fields(p, 1)) ||
 	    !(s->policy_name = dm_pool_zalloc(mem, (p - pp))))
 		goto bad;
 	if (sscanf(pp, "%s %d", s->policy_name, &s->policy_argc) != 2)
 		goto bad;
 	if (s->policy_argc &&
 	    (!(s->policy_argv = dm_pool_zalloc(mem, sizeof(char *) * s->policy_argc)) ||
-	     !(p = _advance_to_next_word(p, 1)) ||
+	     !(p = _skip_fields(p, 1)) ||
 	     !(str = dm_pool_strdup(mem, p)) ||
 	     (dm_split_words(str, s->policy_argc, 0, s->policy_argv) != s->policy_argc)))
 		goto bad;
@@ -444,7 +443,7 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 	for (i = 0; i < num_devs ; ++i)
 		s->devs[i].health = pos[i];
 
-	if (!(pos = _advance_to_next_word(pos, argc)))
+	if (!(pos = _skip_fields(pos, argc)))
 		goto_out;
 
 	if (sscanf(pos, "%u %n", &argc, &used) != 1)
@@ -458,7 +457,7 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 			goto out;
 		}
 	} else {
-		if (!(p = _advance_to_next_word(pos, 1)))
+		if (!(p = _skip_fields(pos, 1)))
 			goto_out;
 
 		/* disk, cluster-disk */
