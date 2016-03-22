@@ -379,7 +379,7 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
 		return 0;
 	}
 
-	if (!(len = strlen(buf))) {
+	if (!(len = strlen(buf)) || (len == 1 && buf[0] == '\n')) {
 		log_error("_get_sysfs_value: %s: no value", path);
 		return 0;
 	}
