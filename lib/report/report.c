@@ -1289,6 +1289,24 @@ static int _uuid_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _field_set_value(field, repstr, NULL);
 }
 
+static int _devminor_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
+{
+	int devminor = (int) MINOR((*(const struct device * const *) data)->dev);
+
+	return dm_report_field_int(rh, field, &devminor);
+}
+
+static int _devmajor_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
+{
+	int devmajor = (int) MAJOR((*(const struct device * const *) data)->dev);
+
+	return dm_report_field_int(rh, field, &devmajor);
+}
+
 static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem,
 			  struct dm_report_field *field,
 			  const void *data, void *private)
