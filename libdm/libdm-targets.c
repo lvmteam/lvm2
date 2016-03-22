@@ -55,6 +55,18 @@ int dm_get_status_snapshot(struct dm_pool *mem, const char *params,
 }
 
 /*
+ * Skip nr fields each delimited by a single space.
+ * FIXME Don't assume single space.
+ */
+static const char *_skip_fields(const char *p, unsigned nr)
+{
+	while (p && nr-- && (p = strchr(p, ' ')))
+		p++;
+
+	return p;
+}
+
+/*
  * Various RAID status versions include:
  * Versions < 1.5.0 (4 fields):
  *   <raid_type> <#devs> <health_str> <sync_ratio>
@@ -130,17 +142,6 @@ bad:
 	dm_pool_free(mem, s);
 
 	return 0;
-}
-
-/*
- * Skip nr fields delimited by a single space.
- */
-static const char *_skip_fields(const char *p, unsigned nr)
-{
-	while (p && nr-- && (p = strchr(p, ' ')))
-		p++;
-
-	return p;
 }
 
 /*
