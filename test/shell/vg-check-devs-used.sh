@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2008-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -20,5 +20,15 @@ lvcreate -l100%FREE -n $lv $vg
 dd if="$dev1" of="$dev3" bs=1M
 pvs --config "devices/global_filter = [ \"a|$dev2|\", \"a|$dev3|\", \"r|.*|\" ]" 2>err
 grep "WARNING: Device mismatch detected for $vg/$lv which is accessing $dev1 instead of $dev3" err
+
+dd if=/dev/zero of="$dev3" bs=1M count=8
+lvremove -ff $vg
+
+# Also test if sub LVs with suffixes are correctly processed.
+# Check with thick snapshot which has sub LVs with -real and -cow suffix in UUID.
+lvcreate -l1 -n $lv $vg
+lvcreate -l1 -s $vg/$lv
+pvs 2>err
+not grep "WARNING: Device mismatch detected for $vg/$lv" err
 
 vgremove -ff $vg
