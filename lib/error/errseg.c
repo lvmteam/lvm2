@@ -55,8 +55,8 @@ static int _errseg_target_present(struct cmd_context *cmd,
 	/* Reported truncated in older kernels */
 	if (!_errseg_checked) {
 		_errseg_checked = 1;
-		_errseg_present = target_present(cmd, "error", 0) ||
-			target_present(cmd, "erro", 0);
+		_errseg_present = target_present(cmd, TARGET_NAME_ERROR, 0) ||
+			target_present(cmd, TARGET_NAME_ERROR_OLD, 0);
 	}
 
 	return _errseg_present;
@@ -66,7 +66,7 @@ static int _errseg_modules_needed(struct dm_pool *mem,
 				  const struct lv_segment *seg __attribute__((unused)),
 				  struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, "error")) {
+	if (!str_list_add(mem, modules, MODULE_NAME_ERROR)) {
 		log_error("error module string list allocation failed");
 		return 0;
 	}

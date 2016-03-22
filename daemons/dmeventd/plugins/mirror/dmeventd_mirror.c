@@ -15,6 +15,7 @@
 #include "lib.h"
 #include "libdevmapper-event.h"
 #include "dmeventd_lvm.h"
+#include "activate.h"	/* For TARGET_NAME* */
 
 /* FIXME Reformat to 80 char lines. */
 
@@ -137,7 +138,7 @@ void process_event(struct dm_task *dmt,
 			continue;
 		}
 
-		if (strcmp(target_type, "mirror")) {
+		if (strcmp(target_type, TARGET_NAME_MIRROR)) {
 			log_info("%s has unmirrored portion.", device);
 			continue;
 		}

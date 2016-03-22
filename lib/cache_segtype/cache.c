@@ -230,10 +230,10 @@ static int _target_present(struct cmd_context *cmd,
 	if (!_cache_checked) {
 		_cache_checked = 1;
 
-		if (!(_cache_present = target_present(cmd, "cache", 1)))
+		if (!(_cache_present = target_present(cmd, TARGET_NAME_CACHE, 1)))
 			return 0;
 
-		if (!target_version("cache", &maj, &min, &patchlevel))
+		if (!target_version(TARGET_NAME_CACHE, &maj, &min, &patchlevel))
 			return_0;
 
 		if ((maj < 1) ||
@@ -294,7 +294,7 @@ static int _modules_needed(struct dm_pool *mem,
 			   const struct lv_segment *seg __attribute__((unused)),
 			   struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, "cache")) {
+	if (!str_list_add(mem, modules, MODULE_NAME_CACHE)) {
 		log_error("String list allocation failed for cache module.");
 		return 0;
 	}

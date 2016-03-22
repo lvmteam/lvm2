@@ -239,4 +239,28 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check);
  */
 void fs_unlock(void);
 
+#define TARGET_NAME_CACHE "cache"
+#define TARGET_NAME_ERROR "error"
+#define TARGET_NAME_ERROR_OLD "erro"	/* Truncated in older kernels */
+#define TARGET_NAME_LINEAR "linear"
+#define TARGET_NAME_MIRROR "mirror"
+#define TARGET_NAME_RAID "raid"
+#define TARGET_NAME_SNAPSHOT "snapshot"
+#define TARGET_NAME_SNAPSHOT_MERGE "snapshot-merge"
+#define TARGET_NAME_SNAPSHOT_ORIGIN "snapshot-origin"
+#define TARGET_NAME_STRIPED "striped"
+#define TARGET_NAME_THIN "thin"
+#define TARGET_NAME_THIN_POOL "thin-pool"
+#define TARGET_NAME_ZERO "zero"
+
+#define MODULE_NAME_CLUSTERED_MIRROR "clog"
+#define MODULE_NAME_CACHE TARGET_NAME_CACHE
+#define MODULE_NAME_ERROR TARGET_NAME_ERROR
+#define MODULE_NAME_LOG_CLUSTERED "log-clustered"
+#define MODULE_NAME_LOG_USERSPACE "log-userspace"
+#define MODULE_NAME_MIRROR TARGET_NAME_MIRROR
+#define MODULE_NAME_SNAPSHOT TARGET_NAME_SNAPSHOT
+#define MODULE_NAME_RAID TARGET_NAME_RAID
+#define MODULE_NAME_ZERO TARGET_NAME_ZERO
+
 #endif

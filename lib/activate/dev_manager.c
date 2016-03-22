@@ -130,9 +130,9 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	 * linear/striped, old snapshots and raids have proper
 	 * segment selected for status!
 	 */
-	if (strcmp(target_name, "cache") &&
-	    strcmp(target_name, "thin-pool") &&
-	    strcmp(target_name, "thin"))
+	if (strcmp(target_name, TARGET_NAME_CACHE) &&
+	    strcmp(target_name, TARGET_NAME_THIN_POOL) &&
+	    strcmp(target_name, TARGET_NAME_THIN))
 		return 1;
 
 	if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name)))
@@ -354,7 +354,7 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 					  &target_type, &params);
 		if ((s == start) && (l == length) &&
 		    target_type && params) {
-			if (strcmp(target_type, "mirror"))
+			if (strcmp(target_type, TARGET_NAME_MIRROR))
 				goto_out;
 
 			if (((p = strstr(params, " block_on_error")) &&
@@ -430,13 +430,13 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
-		if (!target_type || !strcmp(target_type, "snapshot")) {
+		if (!target_type || !strcmp(target_type, TARGET_NAME_SNAPSHOT)) {
 			if (!params || sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
 				log_error("Incorrect snapshot table found");
 				goto_out;
 			}
 			r = r || _device_is_suspended(major1, minor1) || _device_is_suspended(major2, minor2);
-		} else if (!strcmp(target_type, "snapshot-origin")) {
+		} else if (!strcmp(target_type, TARGET_NAME_SNAPSHOT_ORIGIN)) {
 			if (!params || sscanf(params, "%d:%d", &major1, &minor1) != 2) {
 				log_error("Incorrect snapshot-origin table found");
 				goto_out;
@@ -604,7 +604,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 
-		if (check.check_blocked && target_type && !strcmp(target_type, "mirror")) {
+		if (check.check_blocked && target_type && !strcmp(target_type, TARGET_NAME_MIRROR)) {
 			if (ignore_lvm_mirrors()) {
 				log_debug_activation("%s: Scanning mirror devices is disabled.", dev_name(dev));
 				goto out;
@@ -639,20 +639,20 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 		 * in a stack - use proper dm tree to check this instead.
 		 */
 		if (check.check_suspended && target_type &&
-		    (!strcmp(target_type, "snapshot") || !strcmp(target_type, "snapshot-origin")) &&
+		    (!strcmp(target_type, TARGET_NAME_SNAPSHOT) || !strcmp(target_type, TARGET_NAME_SNAPSHOT_ORIGIN)) &&
 		    _ignore_suspended_snapshot_component(dev)) {
 			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
 			goto out;
 		}
 
 		/* TODO: extend check struct ? */
-		if (target_type && !strcmp(target_type, "thin") &&
+		if (target_type && !strcmp(target_type, TARGET_NAME_THIN) &&
 		    !_ignore_unusable_thins(dev)) {
 			log_debug_activation("%s: %s device %s not usable.", dev_name(dev), target_type, name);
 			goto out;
 		}
 
-		if (target_type && strcmp(target_type, "error"))
+		if (target_type && strcmp(target_type, TARGET_NAME_ERROR))
 			only_error_target = 0;
 	} while (next);
 
@@ -1160,7 +1160,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/*
 	 * Try and get some info on this device.
 	 */
-	if (!_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
+	if (!_percent(dm, name, dlid, TARGET_NAME_SNAPSHOT, 0, NULL, percent,
 		      NULL, fail_if_percent_unsupported))
 		return_0;
 
@@ -1318,7 +1318,7 @@ int dev_manager_cache_status(struct dev_manager *dm,
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
-	if (!type || strcmp(type, "cache")) {
+	if (!type || strcmp(type, TARGET_NAME_CACHE)) {
 		log_error("Expected cache segment type but got %s instead",
 			  type ? type : "NULL");
 		goto out;
@@ -1412,7 +1412,7 @@ int dev_manager_thin_pool_percent(struct dev_manager *dm,
 		return_0;
 
 	log_debug_activation("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "thin-pool", 0,
+	if (!(_percent(dm, name, dlid, TARGET_NAME_THIN_POOL, 0,
 		       (metadata) ? lv : NULL, percent, NULL, 1)))
 		return_0;
 
@@ -1473,7 +1473,7 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 		goto out;
 	}
 
-	if (!target_type || strcmp(target_type, "thin")) {
+	if (!target_type || strcmp(target_type, TARGET_NAME_THIN)) {
 		log_error("Unexpected target type %s found for thin %s.",
 			  target_type, display_lvname(lv));
 		goto out;
@@ -2217,7 +2217,7 @@ static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
 	char *dlid;
 	uint64_t extent_size = seg->lv->vg->extent_size;
 
-	if (!strcmp(dm->cmd->stripe_filler, "error")) {
+	if (!strcmp(dm->cmd->stripe_filler, TARGET_NAME_ERROR)) {
 		/*
 		 * FIXME, the tree pointer is first field of dm_tree_node, but
 		 * we don't have the struct definition available.
@@ -2690,7 +2690,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		     dinfo->open_count)) {
 			if (seg_is_thin_volume(seg) ||
 			    /* FIXME Is there anything simpler to check for instead? */
-			    !lv_has_target_type(dm->mem, lv, NULL, "snapshot-merge"))
+			    !lv_has_target_type(dm->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE))
 				laopts->no_merging = 1;
 		}
 	}

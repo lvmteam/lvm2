@@ -404,7 +404,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 	if (!_mirrored_checked) {
 		_mirrored_checked = 1;
 
-		if (!(_mirrored_present = target_present(cmd, "mirror", 1)))
+		if (!(_mirrored_present = target_present(cmd, TARGET_NAME_MIRROR, 1)))
 			return 0;
 
 		/*
@@ -421,7 +421,7 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 		 */
 		/* FIXME Move this into libdevmapper */
 
-		if (target_version("mirror", &maj, &min, &patchlevel) &&
+		if (target_version(TARGET_NAME_MIRROR, &maj, &min, &patchlevel) &&
 		    maj == 1 &&
 		    ((min >= 1) ||
 		     (min == 0 && driver_version(vsn, sizeof(vsn)) &&
@@ -445,9 +445,9 @@ static int _mirrored_target_present(struct cmd_context *cmd,
 			if (!uname(&uts) &&
 			    (sscanf(uts.release, "%u.%u.%u", &kmaj, &kmin, &krel) == 3) &&
 			    KERNEL_VERSION(kmaj, kmin, krel) < KERNEL_VERSION(2, 6, 31)) {
-				if (module_present(cmd, "log-clustered"))
+				if (module_present(cmd, MODULE_NAME_LOG_CLUSTERED))
 				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
-			} else if (module_present(cmd, "log-userspace"))
+			} else if (module_present(cmd, MODULE_NAME_LOG_USERSPACE))
 				_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 
 			if (!(_mirror_attributes & MIRROR_LOG_CLUSTERED))
@@ -510,12 +510,12 @@ static int _mirrored_modules_needed(struct dm_pool *mem,
 		return_0;
 
 	if (vg_is_clustered(seg->lv->vg) &&
-	    !str_list_add(mem, modules, "clog")) {
+	    !str_list_add(mem, modules, MODULE_NAME_CLUSTERED_MIRROR)) {
 		log_error("cluster log string list allocation failed");
 		return 0;
 	}
 
-	if (!str_list_add(mem, modules, "mirror")) {
+	if (!str_list_add(mem, modules, MODULE_NAME_MIRROR)) {
 		log_error("mirror string list allocation failed");
 		return 0;
 	}

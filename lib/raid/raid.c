@@ -322,7 +322,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 	if (!_raid_checked) {
 		_raid_checked = 1;
 
-		if (!(_raid_present = target_present(cmd, "raid", 1)))
+		if (!(_raid_present = target_present(cmd, TARGET_NAME_RAID, 1)))
 			return 0;
 
 		if (!target_version("raid", &maj, &min, &patchlevel))
@@ -347,7 +347,7 @@ static int _raid_modules_needed(struct dm_pool *mem,
 				const struct lv_segment *seg __attribute__((unused)),
 				struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, "raid")) {
+	if (!str_list_add(mem, modules, MODULE_NAME_RAID)) {
 		log_error("raid module string list allocation failed");
 		return 0;
 	}

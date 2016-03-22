@@ -50,7 +50,7 @@ static int _zero_target_present(struct cmd_context *cmd,
 
 	if (!_zero_checked) {
 		_zero_checked = 1;
-		_zero_present = target_present(cmd, "zero", 1);
+		_zero_present = target_present(cmd, TARGET_NAME_ZERO, 1);
 	}
 
 	return _zero_present;
@@ -60,7 +60,7 @@ static int _zero_modules_needed(struct dm_pool *mem,
 				const struct lv_segment *seg __attribute__((unused)),
 				struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, "zero")) {
+	if (!str_list_add(mem, modules, MODULE_NAME_ZERO)) {
 		log_error("zero module string list allocation failed");
 		return 0;
 	}

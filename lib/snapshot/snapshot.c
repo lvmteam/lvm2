@@ -29,7 +29,7 @@ static const char *_snap_target_name(const struct lv_segment *seg,
 				     const struct lv_activate_opts *laopts)
 {
 	if (!laopts->no_merging && (seg->status & MERGING))
-		return "snapshot-merge";
+		return TARGET_NAME_SNAPSHOT_MERGE;
 
 	return lvseg_name(seg);
 }
@@ -99,7 +99,7 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 #ifdef DEVMAPPER_SUPPORT
 static int _snap_target_status_compatible(const char *type)
 {
-	return (strcmp(type, "snapshot-merge") == 0);
+	return (strcmp(type, TARGET_NAME_SNAPSHOT_MERGE) == 0);
 }
 
 static int _snap_target_percent(void **target_state __attribute__((unused)),
@@ -151,11 +151,11 @@ static int _snap_target_present(struct cmd_context *cmd,
 	if (!_snap_checked) {
 		_snap_checked = 1;
 
-		if (!(_snap_present = target_present(cmd, "snapshot", 1) &&
-		      target_present(cmd, "snapshot-origin", 0)))
+		if (!(_snap_present = target_present(cmd, TARGET_NAME_SNAPSHOT, 1) &&
+		      target_present(cmd, TARGET_NAME_SNAPSHOT_ORIGIN, 0)))
 			return 0;
 
-		if (target_version("snapshot", &maj, &min, &patchlevel) &&
+		if (target_version(TARGET_NAME_SNAPSHOT, &maj, &min, &patchlevel) &&
 		    (maj > 1 ||
 		     (maj == 1 && (min >= 12 || (min == 10 && patchlevel >= 2)))))
 			_snap_attrs |= SNAPSHOT_FEATURE_FIXED_LEAK;
@@ -169,7 +169,7 @@ static int _snap_target_present(struct cmd_context *cmd,
 	/* TODO: test everything at once */
 	if (_snap_present && seg && (seg->status & MERGING)) {
 		if (!_snap_merge_checked) {
-			_snap_merge_present = target_present(cmd, "snapshot-merge", 0);
+			_snap_merge_present = target_present(cmd, TARGET_NAME_SNAPSHOT_MERGE, 0);
 			_snap_merge_checked = 1;
 		}
 		return _snap_merge_present;
@@ -218,7 +218,7 @@ static int _snap_modules_needed(struct dm_pool *mem,
 				const struct lv_segment *seg __attribute__((unused)),
 				struct dm_list *modules)
 {
-	if (!str_list_add(mem, modules, "snapshot")) {
+	if (!str_list_add(mem, modules, MODULE_NAME_SNAPSHOT)) {
 		log_error("snapshot string list allocation failed");
 		return 0;
 	}
