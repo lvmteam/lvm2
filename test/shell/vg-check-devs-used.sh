@@ -26,8 +26,8 @@ lvremove -ff $vg
 
 # Also test if sub LVs with suffixes are correctly processed.
 # Check with thick snapshot which has sub LVs with -real and -cow suffix in UUID.
-lvcreate -l1 -n $lv $vg
-lvcreate -l1 -s $vg/$lv
+lvcreate -l1 -aey -n $lv $vg
+lvcreate -l1 -aey -s $vg/$lv
 pvs 2>err
 not grep "WARNING: Device mismatch detected for $vg/$lv" err
 
