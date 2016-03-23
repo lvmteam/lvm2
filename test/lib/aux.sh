@@ -301,7 +301,10 @@ lvmpolld_dump() {
 }
 
 prepare_lvmdbusd() {
+	local daemon=
 	rm -f debug.log_LVMDBUSD_out
+
+	kill_sleep_kill_ LOCAL_LVMDBUSD 0
 
 	echo "checking lvmdbusd is NOT running..."
 	if ps -elf | grep lvmdbusd | grep python3; then
@@ -311,16 +314,21 @@ prepare_lvmdbusd() {
 	echo ok
 
 	# skip if we don't have our own lvmdbusd...
-	# NOTE: this is always present - additional checks are needed:
-	[[ -x $abs_top_builddir/daemons/lvmdbusd/lvmdbusd ]] || skip
+	if test -z "${installed_testsuite+varset}"; then
+		# NOTE: this is always present - additional checks are needed:
+		daemon="$abs_top_builddir/daemons/lvmdbusd/lvmdbusd"
+		# Setup the python path so we can run
+		export PYTHONPATH=$abs_top_builddir/daemons
+	else
+		daemon="$(which lvmdbusd)"
+	fi
+	[[ -n $daemon && -x $daemon ]] || skip "The daemon is missing"
 
 	which python3 >/dev/null || skip "Missing python3"
 	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
 
-	kill_sleep_kill_ LOCAL_LVMDBUSD 0
-
 	echo "preparing lvmdbusd..."
-	$abs_top_builddir/daemons/lvmdbusd/lvmdbusd --debug --udev > debug.log_LVMDBUSD_out 2>&1 &
+	"$daemon" --debug --udev > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
 
 	sleep 1

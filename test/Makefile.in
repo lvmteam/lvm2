@@ -205,6 +205,7 @@ install: .tests-stamp lib/paths-installed
 	$(INSTALL_DATA) shell/*.sh $(DATADIR)/shell
 	$(INSTALL_DATA) api/*.sh $(DATADIR)/api
 	$(INSTALL_PROGRAM) api/*.{t,py} $(DATADIR)/api
+	$(INSTALL_PROGRAM) dbus/*.py $(DATADIR)/dbus/
 	$(INSTALL_DATA) lib/paths-installed $(DATADIR)/lib/paths
 	cd lib && $(INSTALL_DATA) \
 		$(LIB_FLAVOURS) \
@@ -274,12 +275,14 @@ lib/paths-installed: lib/paths-common
 	$(RM) $@-t
 	cat lib/paths-common > $@-t
 	echo 'installed_testsuite=1' >> $@-t
+	echo 'test_data_dir="@datadir@/lvm2-testsuite"' >> $@-t
 	echo 'export PATH=@libexecdir@/lvm2-testsuite:@datadir@/lvm2-testsuite/lib:@datadir@/lvm2-testsuite/api:$$PATH' >> $@-t
 	mv $@-t $@
 
 lib/paths: lib/paths-common
 	$(RM) $@-t
 	cat lib/paths-common > $@-t
+	echo 'test_data_dir="$(abs_top_builddir)/test"' >> $@-t
 	echo 'top_srcdir="$(top_srcdir)"' >> $@-t
 	echo 'abs_top_builddir="$(abs_top_builddir)"' >> $@-t
 	echo 'abs_top_srcdir="$(abs_top_srcdir)"' >> $@-t

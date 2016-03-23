@@ -27,8 +27,5 @@ if [ ! -f /etc/dbus-1/system.d/com.redhat.lvmdbus1.conf ]; then
 	install -m 644 $abs_top_builddir/scripts/com.redhat.lvmdbus1.conf /etc/dbus-1/system.d/.
 fi
 
-# Setup the python path so we can run
-export PYTHONPATH=$abs_top_builddir/daemons
-
 aux prepare_lvmdbusd
-$abs_top_builddir/test/dbus/lvmdbustest.py -v
+$test_data_dir/dbus/lvmdbustest.py -v
