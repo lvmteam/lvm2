@@ -311,9 +311,11 @@ prepare_lvmdbusd() {
 	echo ok
 
 	# skip if we don't have our own lvmdbusd...
-        # TODO: lvmdbusd is not in PATH
-	#(which lvmdbusd 2>/dev/null | grep "$abs_builddir") || skip
+	# NOTE: this is always present - additional checks are needed:
 	[[ -x $abs_top_builddir/daemons/lvmdbusd/lvmdbusd ]] || skip
+
+	which python3 >/dev/null || skip "Missing python3"
+	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
 
 	kill_sleep_kill_ LOCAL_LVMDBUSD 0
 
