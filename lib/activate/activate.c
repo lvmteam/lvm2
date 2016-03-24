@@ -1746,12 +1746,6 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		if (test_mode())
 			continue;
 
-		/*
-		 * Sync all queued device names/symlinks so dmeventd
-		 * has consistent view during possible device scan.
-		 */
-		fs_unlock();
-
 		/* FIXME specify events */
 		if (!monitor_fn(seg, 0)) {
 			log_error("%s: %s segment monitoring function failed.",
