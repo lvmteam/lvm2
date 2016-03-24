@@ -1,5 +1,6 @@
 Version 2.02.148 - 
 ==================================
+  Fix missing /dev sync in lvm2 command before dmeventd monitor/unmonitor.
   Replace hard-coded module and target names with macros.
   Add pv_major and pv_minor report fields.
   Detect and warn about mismatch between devices used and assumed for an LV.
