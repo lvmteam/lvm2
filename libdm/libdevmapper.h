@@ -321,8 +321,8 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 /* Parse params from STATUS call for raid target */
 struct dm_status_raid {
 	uint64_t reserved;
-	uint64_t total_regions;
-	uint64_t insync_regions;
+	uint64_t total_regions;		/* sectors */
+	uint64_t insync_regions;	/* sectors */
 	uint64_t mismatch_count;
 	uint32_t dev_count;
 	char *raid_type;
