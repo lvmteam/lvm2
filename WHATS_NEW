@@ -1,5 +1,6 @@
-Version 2.02.148 - 
+Version 2.02.148 - 26th March 2016
 ==================================
+  Introduce TARGET_NAME and MODULE NAME macros.
   Replace hard-coded module and target names with macros.
   Add pv_major and pv_minor report fields.
   Detect and warn about mismatch between devices used and assumed for an LV.
