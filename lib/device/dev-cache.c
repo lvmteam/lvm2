@@ -363,7 +363,7 @@ static int _add_alias(struct device *dev, const char *path)
 	return 1;
 }
 
-static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
+static int _get_sysfs_value(const char *path, char *buf, size_t buf_size, int error_if_no_value)
 {
 	FILE *fp;
 	size_t len;
@@ -380,8 +380,10 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size)
 	}
 
 	if (!(len = strlen(buf)) || (len == 1 && buf[0] == '\n')) {
-		log_error("_get_sysfs_value: %s: no value", path);
-		goto out;
+		if (error_if_no_value) {
+			log_error("_get_sysfs_value: %s: no value", path);
+			goto out;
+		}
 	}
 
 	if (buf[len - 1] == '\n')
@@ -404,7 +406,7 @@ static int _get_dm_uuid_from_sysfs(char *buf, size_t buf_size, int major, int mi
 		return 0;
 	}
 
-	return _get_sysfs_value(path, buf, buf_size);
+	return _get_sysfs_value(path, buf, buf_size, 0);
 }
 
 static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, const char *key)
@@ -442,7 +444,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 		return NULL;
 	}
 
-	if (!_get_sysfs_value(path, buf, sizeof(buf)))
+	if (!_get_sysfs_value(path, buf, sizeof(buf), 1))
 		return_NULL;
 
 	if (sscanf(buf, "%d:%d", &major, &minor) != 2) {

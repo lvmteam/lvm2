@@ -1,5 +1,6 @@
 Version 2.02.149 - 
 ==================================
+  Remove spurious error about no value in /sys/dev/block/major:minor/dm/uuid.
   Fix device mismatch detection for LV if persistent .cache file is used.
   Fix holder device not being found in /dev while sysfs has it during dev scan.
 
