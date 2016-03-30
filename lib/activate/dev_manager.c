@@ -1332,10 +1332,10 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	 * ->target_percent() API is able to transfer only a single value.
 	 * Needs to be able to pass whole structure.
 	 */
-	if (!dm_get_status_cache(dm->mem, params, &((*status)->cache)))
+	if (!dm_get_status_cache(dm->mem, params, &c))
 		goto_out;
 
-	c = (*status)->cache;
+	(*status)->cache = c;
 	(*status)->mem = dm->mem; /* User has to destroy this mem pool later */
 	if (c->fail || c->error) {
 		(*status)->data_usage =
