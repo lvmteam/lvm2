@@ -613,7 +613,7 @@ static int _thin_add_target_line(struct dev_manager *dm,
 static int _thin_target_percent(void **target_state __attribute__((unused)),
 				dm_percent_t *percent,
 				struct dm_pool *mem,
-				struct cmd_context *cmd __attribute__((unused)),
+				struct cmd_context *cmd,
 				struct lv_segment *seg,
 				char *params,
 				uint64_t *total_numerator,
@@ -643,14 +643,17 @@ static int _thin_target_percent(void **target_state __attribute__((unused)),
 
 		*percent = dm_make_percent(s->mapped_sectors, csize);
 		*total_denominator += csize;
+		*total_numerator += s->mapped_sectors;
 	} else {
-		/* No lv_segment info here */
-		*percent = DM_PERCENT_INVALID;
-		/* FIXME: Using denominator to pass the mapped info upward? */
+		/* Using denominator to pass the mapped info upward? */
+		if (s->highest_mapped_sector > *total_numerator) {
+			log_warn("WARNING: highest mapped sector %s is above device size.",
+				 display_size(cmd, s->highest_mapped_sector));
+			s->highest_mapped_sector = *total_numerator;
+		}
+		*percent = dm_make_percent(s->highest_mapped_sector, *total_numerator);
 		*total_denominator += s->highest_mapped_sector;
 	}
-
-	*total_numerator += s->mapped_sectors;
 
 	return 1;
 }

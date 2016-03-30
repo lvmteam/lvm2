@@ -938,6 +938,10 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		if (!segtype->ops->target_percent)
 			continue;
 
+		/* For thin volume pass device size via 'total_numerator' */
+		if (!seg && segtype_is_thin_volume(segtype))
+			total_numerator = length - 1; /* highest mapped is  0 .. (length - 1) */
+
 		if (!segtype->ops->target_percent(&dm->target_state,
 						  &percent, dm->mem,
 						  dm->cmd, seg, params,
