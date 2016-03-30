@@ -529,7 +529,7 @@ static int _index_dev_by_vgid_and_lvid(struct device *dev)
 	struct device_list *dl_vgid, *dl_lvid;
 	int r = 0;
 
-	if (dev->vgid)
+	if (dev->flags & DEV_USED_FOR_LV)
 		/* already indexed */
 		return 1;
 
