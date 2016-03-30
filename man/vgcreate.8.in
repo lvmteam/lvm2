@@ -130,10 +130,10 @@ The 2.4 kernel has a limitation of 2TiB per block device.
 
 .TP
 .B \-\-shared
-Create a shared VG using lvmlockd.  lvmlockd will select lock type sanlock
-or dlm depending on which lock manager is running.  This allows multiple
-hosts to share a VG on shared devices.  lvmlockd and a lock manager must
-be configured and running.  See
+Create a shared VG using lvmlockd if LVM is copiled with lockd support.
+ lvmlockd will select lock type sanlock or dlm depending on which lock
+manager is running.  This allows multiple hosts to share a VG on shared
+devices.  lvmlockd and a lock manager must be configured and running.  See
 .BR lvmlockd (8).
 
 .TP

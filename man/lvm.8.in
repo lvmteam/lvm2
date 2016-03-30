@@ -373,7 +373,8 @@ is not used and metadata is read from disks.
 .br
 Cause the command to access shared VGs, that would otherwise be skipped
 when lvmlockd is not being used.  It can be used to report or display a
-lockd VG without locking.
+lockd VG without locking. Applicable only if LVM is compiled with lockd
+support.
 .
 .HP
 .BR \-\-addtag

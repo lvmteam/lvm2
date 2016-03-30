@@ -132,8 +132,8 @@ be used on one node at once.
 
 For local VGs, \-ay, \-aey, and \-asy are all equivalent.
 .IP
-In a shared VG, lvmlockd is used for locking, and the following options
-are possible:
+In a shared VG, lvmlockd is used for locking if LVM is compiled with lockd
+support, and the following options are possible:
 
 With \-aey, the command activates the LV in exclusive mode, allowing a
 single host to activate the LV (the host running the command).  Before

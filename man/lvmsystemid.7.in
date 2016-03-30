@@ -111,7 +111,8 @@ owned.
 .B Shared:
 A shared or "lockd" VG has lock_type set and no system_id.
 A shared VG is meant to be used on shared storage from multiple hosts,
-and is only accessible to hosts using lvmlockd.
+and is only accessible to hosts using lvmlockd. Applicable only if LVM
+is compiled with lockd support.
 
 .B Clustered:
 A clustered or "clvm" VG has the clustered flag set and no system_id.
@@ -308,7 +309,8 @@ extra_system_ids list.
 
 A shared/lockd VG has no system_id set, allowing multiple hosts to
 use it via lvmlockd.  Changing a VG to a lockd type will clear the
-existing system_id.
+existing system_id. Applicable only if LVM is compiled with lockd
+support.
 
 .SS clustered VGs
 

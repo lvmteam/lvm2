@@ -853,11 +853,14 @@ global {
 
 	# Configuration option global/use_lvmlockd.
 	# Use lvmlockd for locking among hosts using LVM on shared storage.
-	# See lvmlockd(8) for more information.
+	# Applicable only if LVM is compiled with lockd support in which
+	# case there is also lvmlockd(8) man page available for more
+	# information.
 	use_lvmlockd = 0
 
 	# Configuration option global/lvmlockd_lock_retries.
 	# Retry lvmlockd lock requests this many times.
+	# Applicable only if LVM is compiled with lockd support
 	# This configuration option has an automatic default value.
 	# lvmlockd_lock_retries = 3
 
@@ -867,7 +870,8 @@ global {
 	# LVs have been created, the internal LV needs to be extended. lvcreate
 	# will automatically extend the internal LV when needed by the amount
 	# specified here. Setting this to 0 disables the automatic extension
-	# and can cause lvcreate to fail.
+	# and can cause lvcreate to fail. Applicable only if LVM is compiled
+	# with lockd support
 	# This configuration option has an automatic default value.
 	# sanlock_lv_extend = 256
 
@@ -1014,6 +1018,7 @@ global {
 	# a native systemd service, which allows it to be started on demand,
 	# and to use its own control group. When this option is disabled, LVM
 	# commands will supervise long running operations by forking themselves.
+	# Applicable only if LVM is compiled with lvmpolld support.
 	use_lvmpolld = @DEFAULT_USE_LVMPOLLD@
 
 	# Configuration option global/notify_dbus.

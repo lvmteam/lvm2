@@ -51,6 +51,7 @@ local {
 	# Configuration option local/host_id.
 	# The lvmlockd sanlock host_id.
 	# This must be unique among all hosts, and must be between 1 and 2000.
+	# Applicable only if LVM is compiled with lockd support
 	# This configuration option has an automatic default value.
 	# host_id = 0
 }
