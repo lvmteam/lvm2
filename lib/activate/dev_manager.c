@@ -884,20 +884,22 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	char *params = NULL;
 	const struct dm_list *segh = lv ? &lv->segments : NULL;
 	struct lv_segment *seg = NULL;
-	struct segment_type *segtype;
 	int first_time = 1;
 	dm_percent_t percent = DM_PERCENT_INVALID;
-
 	uint64_t total_numerator = 0, total_denominator = 0;
+	struct segment_type *segtype;
 
 	*overall_percent = percent;
+
+	if (!(segtype = get_segtype_from_string(dm->cmd, target_type)))
+		return_0;
 
 	if (!(dmt = _setup_task(name, dlid, event_nr,
 				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0, 0)))
 		return_0;
 
 	/* No freeze on overfilled thin-pool, read existing slightly outdated data */
-	if (lv && lv_is_thin_pool(lv) &&
+	if (segtype_is_thin(segtype) &&
 	    !dm_task_no_flush(dmt))
 		log_warn("Can't set no_flush flag."); /* Non fatal */
 
@@ -924,9 +926,6 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		}
 
 		if (!type || !params)
-			continue;
-
-		if (!(segtype = get_segtype_from_string(dm->cmd, target_type)))
 			continue;
 
 		if (strcmp(type, target_type)) {
