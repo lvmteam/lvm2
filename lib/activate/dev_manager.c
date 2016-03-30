@@ -1438,7 +1438,7 @@ int dev_manager_thin_percent(struct dev_manager *dm,
 		return_0;
 
 	log_debug_activation("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, dlid, "thin", 0,
+	if (!(_percent(dm, name, dlid, TARGET_NAME_THIN, 0,
 		       (mapped) ? NULL : lv, percent, NULL, 1)))
 		return_0;
 
