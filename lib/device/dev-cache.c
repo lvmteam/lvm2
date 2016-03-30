@@ -527,6 +527,10 @@ static int _index_dev_by_vgid_and_lvid(struct device *dev)
 	struct device_list *dl_vgid, *dl_lvid;
 	int r = 0;
 
+	if (dev->vgid)
+		/* already indexed */
+		return 1;
+
 	/* Get holders for device. */
 	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/holders/", dm_sysfs_dir(), (int) MAJOR(dev->dev), (int) MINOR(dev->dev)) < 0) {
 		log_error("%s: dm_snprintf failed for path to holders directory.", devname);
@@ -848,7 +852,7 @@ bad:
 	return 0;
 }
 
-static int _add_devs_to_index(void)
+int dev_cache_index_devs(void)
 {
 	struct btree_iter *iter = btree_first(_cache.devices);
 	struct device *dev;
@@ -887,7 +891,7 @@ static void _insert_dirs(struct dm_list *dirs)
 				       "device cache fully", dl->dir);
 	}
 
-	(void) _add_devs_to_index();
+	(void) dev_cache_index_devs();
 }
 
 #else	/* UDEV_SYNC_SUPPORT */

@@ -31,6 +31,7 @@ struct dev_filter {
 	unsigned use_count;
 };
 
+int dev_cache_index_devs(void);
 struct dm_list *dev_cache_get_dev_list_for_vgid(const char *vgid);
 struct dm_list *dev_cache_get_dev_list_for_lvid(const char *lvid);
 

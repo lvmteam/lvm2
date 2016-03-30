@@ -129,6 +129,8 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 	if (dm_hash_get_num_entries(pf->devices)) {
 		/* We populated dev_cache ourselves */
 		dev_cache_scan(0);
+		if (!dev_cache_index_devs())
+			stack;
 		r = 1;
 	}
 
