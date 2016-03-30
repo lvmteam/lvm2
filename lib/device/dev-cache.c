@@ -777,6 +777,24 @@ static int _insert_file(const char *path)
 	return 1;
 }
 
+int dev_cache_index_devs(void)
+{
+	struct btree_iter *iter = btree_first(_cache.devices);
+	struct device *dev;
+	int r = 1;
+
+	while (iter) {
+		dev = btree_get_data(iter);
+
+		if (!_index_dev_by_vgid_and_lvid(dev))
+			r = 0;
+
+		iter = btree_next(iter);
+	}
+
+	return r;
+}
+
 #ifdef UDEV_SYNC_SUPPORT
 
 static int _device_in_udev_db(const dev_t d)
@@ -852,24 +870,6 @@ bad:
 	log_error("Failed to enumerate udev device list.");
 	udev_enumerate_unref(udev_enum);
 	return 0;
-}
-
-int dev_cache_index_devs(void)
-{
-	struct btree_iter *iter = btree_first(_cache.devices);
-	struct device *dev;
-	int r = 1;
-
-	while (iter) {
-		dev = btree_get_data(iter);
-
-		if (!_index_dev_by_vgid_and_lvid(dev))
-			r = 0;
-
-		iter = btree_next(iter);
-	}
-
-	return r;
 }
 
 static void _insert_dirs(struct dm_list *dirs)
