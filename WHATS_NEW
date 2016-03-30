@@ -1,5 +1,6 @@
 Version 2.02.149 - 
 ==================================
+  Fix holder device not being found in /dev while sysfs has it during dev scan.
 
 Version 2.02.148 - 26th March 2016
 ==================================
