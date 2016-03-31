@@ -40,9 +40,9 @@ struct dir_list {
 static struct {
 	struct dm_pool *mem;
 	struct dm_hash_table *names;
-	struct dm_hash_table *sysfs_only_names; /* see comments in _get_device_for_sysfs_dev_name_using_devno */
 	struct dm_hash_table *vgid_index;
 	struct dm_hash_table *lvid_index;
+	struct btree *sysfs_only_devices; /* see comments in _get_device_for_sysfs_dev_name_using_devno */
 	struct btree *devices;
 	struct dm_regex *preferred_names_matcher;
 	const char *dev_dir;
@@ -463,20 +463,13 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 		 * problem with devtmpfs as there's at least kernel name for device in /dev as soon
 		 * as the sysfs item exists, but we still support environments without devtmpfs or
 		 * where different directory for dev nodes is used (e.g. our test suite). So track
-		 * such devices in _cache.sysfs_only_names hash for the vgid/lvid check to work still.
+		 * such devices in _cache.sysfs_only_devices hash for the vgid/lvid check to work still.
 		 */
-		if (!_cache.sysfs_only_names) {
-			if (!(_cache.sysfs_only_names = dm_hash_create(32))) {
-				log_error("Failed to create hash in dev cache for sysfs-only devices.");
-				return NULL;
-			}
-		}
-
-		if (!(dev = (struct device *) dm_hash_lookup(_cache.sysfs_only_names, devname))) {
+		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) devno))) {
 			if (!(dev = _dev_create(devno)))
 				return_NULL;
-			if (!dm_hash_insert(_cache.sysfs_only_names, devname, dev)) {
-				log_error("Couldn't add device to sysfs-only hash in dev cache.");
+			if (!btree_insert(_cache.sysfs_only_devices, (uint32_t) devno, dev)) {
+				log_error("Couldn't add device to binary tree of sysfs-only devices in dev cache.");
 				return NULL;
 			}
 		}
@@ -1068,6 +1061,11 @@ int dev_cache_init(struct cmd_context *cmd)
 		goto bad;
 	}
 
+	if (!(_cache.sysfs_only_devices = btree_create(_cache.mem))) {
+		log_error("Couldn't create binary tree for sysfs-only devices in dev cache.");
+		goto bad;
+	}
+
 	if (!(_cache.dev_dir = _strdup(cmd->dev_dir))) {
 		log_error("strdup dev_dir failed.");
 		goto bad;
@@ -1130,9 +1128,6 @@ int dev_cache_exit(void)
 
 	if (_cache.names)
 		dm_hash_destroy(_cache.names);
-
-	if (_cache.sysfs_only_names)
-		dm_hash_destroy(_cache.sysfs_only_names);
 
 	if (_cache.vgid_index)
 		dm_hash_destroy(_cache.vgid_index);
