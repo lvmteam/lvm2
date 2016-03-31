@@ -13,6 +13,9 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+# We need "dm" directory for dm devices in sysfs.
+aux driver_at_least 4 15 || skip
+
 aux prepare_devs 3 8
 
 vgcreate $vg $dev1 $dev2
