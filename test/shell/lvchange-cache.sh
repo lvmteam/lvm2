@@ -48,7 +48,8 @@ get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
 lvchange --cachesettings 'migration_threshold = 233 sequential_threshold = 13' $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=233' out
-grep 'sequential_threshold=13' out
+
+if grep 'sequential_threshold=13' out ; then
 
 lvchange --cachesettings 'migration_threshold = 17' $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
@@ -78,5 +79,11 @@ get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=4' out
+
+else
+# When MQ is emulated by SMQ policy it does not hold settings.
+# So just skip testing of param changes when sequential_threshold=0
+grep 'sequential_threshold=0' out
+fi
 
 vgremove -f $vg
