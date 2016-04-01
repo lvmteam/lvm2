@@ -321,7 +321,7 @@ prepare_lvmdbusd() {
 		# Setup the python path so we can run
 		export PYTHONPATH=$abs_top_builddir/daemons
 	else
-		daemon="$(which lvmdbusd)"
+		daemon="$(which lvmdbusd || :)"
 	fi
 	[[ -n $daemon && -x $daemon ]] || skip "The daemon is missing"
 
