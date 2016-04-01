@@ -818,9 +818,8 @@ static int _dev_cache_iterate_devs_for_index(void)
 	return r;
 }
 
-static int _dev_cache_iterate_sysfs_for_index(void)
+static int _dev_cache_iterate_sysfs_for_index(const char *path)
 {
-	char path[PATH_MAX];
 	char devname[PATH_MAX];
 	DIR *d;
 	struct dirent *dirent;
@@ -829,11 +828,6 @@ static int _dev_cache_iterate_sysfs_for_index(void)
 	struct device *dev;
 	int partial_failure = 0;
 	int r = 0;
-
-	if (dm_snprintf(path, sizeof(path), "%sdev/block", dm_sysfs_dir()) < 0) {
-		log_error("_dev_cache_iterate_sysfs_for_index: dm_snprintf failed.");
-		return 0;
-	}
 
 	if (!(d = opendir(path))) {
 		log_sys_error("opendir", path);
@@ -876,11 +870,36 @@ static int _dev_cache_iterate_sysfs_for_index(void)
 
 int dev_cache_index_devs(void)
 {
+	static int sysfs_has_dev_block = -1;
+	char path[PATH_MAX];
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block", dm_sysfs_dir()) < 0) {
+		log_error("dev_cache_index_devs: dm_snprintf failed.");
+		return 0;
+	}
+
+	/* Skip indexing if /sys/dev/block is not available.*/
+	if (sysfs_has_dev_block == -1) {
+		struct stat info;
+		if (stat(path, &info) == 0)
+			sysfs_has_dev_block = 1;
+		else {
+			if (errno == ENOENT) {
+				sysfs_has_dev_block = 0;
+				return 1;
+			} else {
+				log_sys_error("stat", path);
+				return 0;
+			}
+		}
+	} else if (!sysfs_has_dev_block)
+		return 1;
+
 	int with_udev = obtain_device_list_from_udev() &&
 			udev_get_library_context();
 
 	return with_udev ? _dev_cache_iterate_devs_for_index()
-			 : _dev_cache_iterate_sysfs_for_index();
+			 : _dev_cache_iterate_sysfs_for_index(path);
 }
 
 #ifdef UDEV_SYNC_SUPPORT
