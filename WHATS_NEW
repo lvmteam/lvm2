@@ -1,6 +1,5 @@
 Version 2.02.149 - 
 ==================================
-  Report highest mapping for thin volume as Meta%.
   Do not flush thin-pool when checking metadata fullness.
   Remove spurious error about no value in /sys/dev/block/major:minor/dm/uuid.
   Fix device mismatch detection for LV if persistent .cache file is used.
