@@ -431,6 +431,22 @@ static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, 
 	return list;
 }
 
+static struct device *_insert_sysfs_dev(dev_t devno, const char *devname)
+{
+	struct device *dev;
+
+	if (!(dev = _dev_create(devno)))
+		return_NULL;
+
+	if (!btree_insert(_cache.sysfs_only_devices, (uint32_t) devno, dev)) {
+		log_error("Couldn't add device to binary tree of sysfs-only devices in dev cache.");
+		_free(dev);
+		return NULL;
+	}
+
+	return dev;
+}
+
 static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *devname)
 {
 	char path[PATH_MAX];
@@ -440,7 +456,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 	struct device *dev;
 
 	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev", dm_sysfs_dir(), devname) < 0) {
-		log_error("_get_device_for_non_dm_dev: %s: dm_snprintf failed", devname);
+		log_error("_get_device_for_sysfs_dev_name_using_devno: %s: dm_snprintf failed", devname);
 		return NULL;
 	}
 
@@ -448,7 +464,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 		return_NULL;
 
 	if (sscanf(buf, "%d:%d", &major, &minor) != 2) {
-		log_error("_get_device_for_non_dm_dev: %s: failed to get major and minor number", devname);
+		log_error("_get_device_for_sysfs_dev_name_using_devno: %s: failed to get major and minor number", devname);
 		return NULL;
 	}
 
@@ -465,14 +481,9 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 		 * where different directory for dev nodes is used (e.g. our test suite). So track
 		 * such devices in _cache.sysfs_only_devices hash for the vgid/lvid check to work still.
 		 */
-		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) devno))) {
-			if (!(dev = _dev_create(devno)))
-				return_NULL;
-			if (!btree_insert(_cache.sysfs_only_devices, (uint32_t) devno, dev)) {
-				log_error("Couldn't add device to binary tree of sysfs-only devices in dev cache.");
-				return NULL;
-			}
-		}
+		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) devno)) &&
+		    !(dev = _insert_sysfs_dev(devno, devname)))
+			return_NULL;
 	}
 
 	return dev;
