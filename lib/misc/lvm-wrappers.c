@@ -66,7 +66,7 @@ bad:
 	return 0;
 }
 
-struct udev* udev_get_library_context(void)
+void *udev_get_library_context(void)
 {
 	return _udev;
 }
@@ -76,6 +76,11 @@ struct udev* udev_get_library_context(void)
 int udev_init_library_context(void)
 {
 	return 1;
+}
+
+void *udev_get_library_context(void)
+{
+	return NULL;
 }
 
 void udev_fin_library_context(void)
