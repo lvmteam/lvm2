@@ -433,10 +433,28 @@ static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, 
 
 static struct device *_insert_sysfs_dev(dev_t devno, const char *devname)
 {
+	char path[PATH_MAX];
+	char *path_copy;
 	struct device *dev;
+
+	if (dm_snprintf(path, sizeof(path), "%s%s", _cache.dev_dir, devname) < 0) {
+		log_error("_insert_sysfs_dev: %s: dm_snprintf failed", devname);
+		return NULL;
+	}
 
 	if (!(dev = _dev_create(devno)))
 		return_NULL;
+
+	if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
+		log_error("_insert_sysfs_dev: %s: dm_pool_strdup failed", devname);
+		return NULL;
+	}
+
+	if (!_add_alias(dev, path_copy)) {
+		log_error("Couldn't add alias to dev cache.");
+		_free(dev);
+		return NULL;
+	}
 
 	if (!btree_insert(_cache.sysfs_only_devices, (uint32_t) devno, dev)) {
 		log_error("Couldn't add device to binary tree of sysfs-only devices in dev cache.");
