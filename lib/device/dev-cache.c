@@ -684,14 +684,15 @@ static int _insert_dev(const char *path, dev_t d)
 	}
 
 	/* is this device already registered ? */
-	if (!(dev = (struct device *) btree_lookup(_cache.devices,
-						   (uint32_t) d))) {
-		/* create new device */
-		if (loopfile) {
-			if (!(dev = dev_create_file(path, NULL, NULL, 0)))
+	if (!(dev = (struct device *) btree_lookup(_cache.devices, (uint32_t) d))) {
+		if (!(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) d))) {
+			/* create new device */
+			if (loopfile) {
+				if (!(dev = dev_create_file(path, NULL, NULL, 0)))
+					return_0;
+			} else if (!(dev = _dev_create(d)))
 				return_0;
-		} else if (!(dev = _dev_create(d)))
-			return_0;
+		}
 
 		if (!(btree_insert(_cache.devices, (uint32_t) d, dev))) {
 			log_error("Couldn't insert device into binary tree.");
@@ -799,7 +800,7 @@ static int _insert_file(const char *path)
 	return 1;
 }
 
-int dev_cache_index_devs(void)
+static int _dev_cache_iterate_devs_for_index(void)
 {
 	struct btree_iter *iter = btree_first(_cache.devices);
 	struct device *dev;
@@ -815,6 +816,71 @@ int dev_cache_index_devs(void)
 	}
 
 	return r;
+}
+
+static int _dev_cache_iterate_sysfs_for_index(void)
+{
+	char path[PATH_MAX];
+	char devname[PATH_MAX];
+	DIR *d;
+	struct dirent *dirent;
+	int major, minor;
+	dev_t devno;
+	struct device *dev;
+	int partial_failure = 0;
+	int r = 0;
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block", dm_sysfs_dir()) < 0) {
+		log_error("_dev_cache_iterate_sysfs_for_index: dm_snprintf failed.");
+		return 0;
+	}
+
+	if (!(d = opendir(path))) {
+		log_sys_error("opendir", path);
+		return 0;
+	}
+
+	while ((dirent = readdir(d))) {
+		if (!strcmp(".", dirent->d_name) ||
+		    !strcmp("..", dirent->d_name))
+			continue;
+
+		if (sscanf(dirent->d_name, "%d:%d", &major, &minor) != 2) {
+			log_error("_dev_cache_iterate_sysfs_for_index: %s: failed "
+				  "to get major and minor number", dirent->d_name);
+			partial_failure = 1;
+			continue;
+		}
+
+		devno = MKDEV(major, minor);
+		if (!(dev = (struct device *) btree_lookup(_cache.devices, (uint32_t) devno)) &&
+		    !(dev = (struct device *) btree_lookup(_cache.sysfs_only_devices, (uint32_t) devno))) {
+			if (!dm_device_get_name(major, minor, 1, devname, sizeof(devname)) ||
+			    !(dev = _insert_sysfs_dev(devno, devname))) {
+				partial_failure = 1;
+				continue;
+			}
+		}
+
+		if (!_index_dev_by_vgid_and_lvid(dev))
+			partial_failure = 1;
+	}
+
+	r = !partial_failure;
+
+	if (closedir(d))
+		log_sys_error("closedir", path);
+
+	return r;
+}
+
+int dev_cache_index_devs(void)
+{
+	int with_udev = obtain_device_list_from_udev() &&
+			udev_get_library_context();
+
+	return with_udev ? _dev_cache_iterate_devs_for_index()
+			 : _dev_cache_iterate_sysfs_for_index();
 }
 
 #ifdef UDEV_SYNC_SUPPORT
