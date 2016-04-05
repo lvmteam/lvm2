@@ -3044,12 +3044,11 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 
 		if ((dm_tree_node_size_changed(root) < 0))
 			dm->flush_required = 1;
-
 		/* Currently keep the code require flush for any
-		 * non 'thin pool/volume, mirror' or with any size change */
-		if (!lv_is_thin_volume(lv) &&
-		    !lv_is_thin_pool(lv) &&
-		    (!lv_is_mirror(lv) || dm_tree_node_size_changed(root)))
+		 * non 'thin pool/volume' and  size increase */
+		else if (!lv_is_thin_volume(lv) &&
+			 !lv_is_thin_pool(lv) &&
+			 dm_tree_node_size_changed(root))
 			dm->flush_required = 1;
 
 		if (action == ACTIVATE) {
