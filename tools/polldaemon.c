@@ -40,10 +40,10 @@ progress_t poll_mirror_progress(struct cmd_context *cmd,
 
 	overall_percent = copy_percent(lv);
 	if (parms->progress_display)
-		log_print_unless_silent("%s: %s: %.1f%%", name, parms->progress_title,
+		log_print_unless_silent("%s: %s: %.2f%%", name, parms->progress_title,
 					dm_percent_to_float(overall_percent));
 	else
-		log_verbose("%s: %s: %.1f%%", name, parms->progress_title,
+		log_verbose("%s: %s: %.2f%%", name, parms->progress_title,
 			    dm_percent_to_float(overall_percent));
 
 	if (segment_percent != DM_PERCENT_100)
