@@ -2119,6 +2119,7 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 {
 	struct dm_list pvc_before; /* pv_cache_list */
 	struct dm_list pvc_after; /* pv_cache_list */
+	const char *reason = NULL;
 	daemon_reply reply;
 	int global_invalid;
 
@@ -2179,6 +2180,12 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	 */
 	if (!lvmetad_pvscan_all_devs(cmd, NULL, 1)) {
 		log_warn("WARNING: Not using lvmetad because cache update failed.");
+		lvmetad_set_active(cmd, 0);
+		return;
+	}
+
+	if (lvmetad_is_disabled(cmd, &reason)) {
+		log_warn("WARNING: Not using lvmetad because %s.", reason);
 		lvmetad_set_active(cmd, 0);
 		return;
 	}

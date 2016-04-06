@@ -1475,6 +1475,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct dm_config_tree *config_string_cft;
 	struct dm_config_tree *config_profile_command_cft, *config_profile_metadata_cft;
+	const char *reason = NULL;
 	int ret = 0;
 	int locking_type;
 	int monitoring;
@@ -1625,7 +1626,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 		if (lvmetad_used()) {
 			lvmetad_set_active(cmd, 0);
-			log_verbose("Disabling use of lvmetad because read-only is set.");
+			log_verbose("Not using lvmetad because read-only is set.");
 		}
 	} else if (arg_count(cmd, nolocking_ARG))
 		locking_type = 0;
@@ -1655,6 +1656,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 * - Another local command may have run with a different global filter
 	 *   which changed the content of lvmetad from what we want (recognized
 	 *   by different token values.)
+	 *
+	 * lvmetad may have been previously disabled (or disabled during the
+	 * rescan done here) because duplicate devices or lvm1 metadata were seen.
+	 * In this case, disable the *use* of lvmetad by this command, reverting to
+	 * disk scanning.
 	 */
 	if (lvmetad_used() && !(cmd->command->flags & NO_LVMETAD_AUTOSCAN)) {
 		if (cmd->include_foreign_vgs || !lvmetad_token_matches(cmd)) {
@@ -1662,6 +1668,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 				log_warn("WARNING: Not using lvmetad because cache update failed.");
 				lvmetad_set_active(cmd, 0);
 			}
+		}
+
+		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+			log_warn("WARNING: Not using lvmetad because %s.", reason);
+			lvmetad_set_active(cmd, 0);
 		}
 	}
 

@@ -61,6 +61,8 @@ bad:
 
 int vgimport(struct cmd_context *cmd, int argc, char **argv)
 {
+	const char *reason = NULL;
+
 	if (!argc && !arg_count(cmd, all_ARG) && !arg_is_set(cmd, select_ARG)) {
 		log_error("Please supply volume groups or -S for selection or use -a for all.");
 		return EINVALID_CMD_LINE;
@@ -96,6 +98,11 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 	if (lvmetad_used()) {
 		if (!lvmetad_pvscan_all_devs(cmd, NULL, 1)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_set_active(cmd, 0);
+		}
+
+		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+			log_warn("WARNING: Not using lvmetad because %s.", reason);
 			lvmetad_set_active(cmd, 0);
 		}
 	}

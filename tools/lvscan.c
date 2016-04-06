@@ -91,6 +91,8 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvscan(struct cmd_context *cmd, int argc, char **argv)
 {
+	const char *reason = NULL;
+
 	if (argc && !arg_count(cmd, cache_long_ARG)) {
 		log_error("No additional command line arguments allowed");
 		return EINVALID_CMD_LINE;
@@ -100,9 +102,14 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Ignoring lvscan --cache because lvmetad is not in use.");
 
 	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */
-	if (lvmetad_used() && !lvmetad_token_matches(cmd)) {
+	if (lvmetad_used() && (!lvmetad_token_matches(cmd) || lvmetad_is_disabled(cmd, &reason))) {
 		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_set_active(cmd, 0);
+		}
+
+		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+			log_warn("WARNING: Not using lvmetad because %s.", reason);
 			lvmetad_set_active(cmd, 0);
 		}
 
