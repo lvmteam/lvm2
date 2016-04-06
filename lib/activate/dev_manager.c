@@ -3093,6 +3093,8 @@ int dev_manager_activate(struct dev_manager *dm, const struct logical_volume *lv
 int dev_manager_preload(struct dev_manager *dm, const struct logical_volume *lv,
 			struct lv_activate_opts *laopts, int *flush_required)
 {
+	dm->flush_required = *flush_required;
+
 	if (!_tree_action(dm, lv, laopts, PRELOAD))
 		return_0;
 
