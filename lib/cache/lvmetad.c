@@ -37,6 +37,8 @@ static char *_lvmetad_token = NULL;
 static const char *_lvmetad_socket = NULL;
 static struct cmd_context *_lvmetad_cmd = NULL;
 
+static int _found_lvm1_metadata = 0;
+
 static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg);
 
 static uint64_t _monotonic_seconds(void)
@@ -1597,6 +1599,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 			lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 			log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
 			lvmetad_set_disabled(cmd, "LVM1");
+			_found_lvm1_metadata = 1;
 			return NULL;
 		}
 
@@ -1720,6 +1723,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 
 		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
 		lvmetad_set_disabled(cmd, "LVM1");
+		_found_lvm1_metadata = 1;
 
 		if (ignore_obsolete)
 			return 1;
@@ -1795,6 +1799,7 @@ static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler 
 	daemon_reply reply;
 	int r = 1;
 	char *future_token;
+	const char *reason;
 	int was_silent;
 	int replacing_other_update = 0;
 	int replaced_update = 0;
@@ -1879,6 +1884,16 @@ static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler 
 	_lvmetad_token = future_token;
 	if (!_token_update(NULL))
 		return 0;
+
+	/*
+	 * If lvmetad is disabled, and no lvm1 metadata was seen and no
+	 * duplicate PVs were seen, then re-enable lvmetad.
+	 */
+	if (lvmetad_is_disabled(cmd, &reason) &&
+	    !lvmcache_found_duplicate_pvs() && !_found_lvm1_metadata) {
+		log_debug_lvmetad("Enabling lvmetad which was previously disabled.");
+		lvmetad_clear_disabled(cmd);
+	}
 
 	return r;
 }
@@ -2275,6 +2290,28 @@ void lvmetad_set_disabled(struct cmd_context *cmd, const char *reason)
 				   "token = %s", "skip",
 				   "global_disable = " FMTd64, (int64_t)1,
 				   "disable_reason = %s", reason,
+				   NULL);
+	if (reply.error)
+		log_error("Failed to send message to lvmetad %d", reply.error);
+
+	if (strcmp(daemon_reply_str(reply, "response", ""), "OK"))
+		log_error("Failed response from lvmetad.");
+
+	daemon_reply_destroy(reply);
+}
+
+void lvmetad_clear_disabled(struct cmd_context *cmd)
+{
+	daemon_reply reply;
+
+	if (!_lvmetad_use)
+		return;
+
+	log_debug_lvmetad("lvmetad send disabled 0");
+
+	reply = daemon_send_simple(_lvmetad, "set_global_info",
+				   "token = %s", "skip",
+				   "global_disable = " FMTd64, (int64_t)0,
 				   NULL);
 	if (reply.error)
 		log_error("Failed to send message to lvmetad %d", reply.error);
