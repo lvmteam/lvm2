@@ -1,5 +1,6 @@
 Version 2.02.150 -
 =================================
+  Allow the lvmdump directory to exist already provided it is empty.
 
 Version 2.02.149 - 1st April 2016
 =================================
