@@ -1827,7 +1827,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	const struct logical_volume *lv_pre_to_free = NULL;
 	struct logical_volume *lv_pre_tmp;
 	struct seg_list *sl;
-        struct lv_segment *snap_seg;
+	struct lv_segment *snap_seg;
 	struct lvinfo info;
 	int r = 0, lockfs = 0, flush_required = 0;
 	struct detached_lv_data detached;
