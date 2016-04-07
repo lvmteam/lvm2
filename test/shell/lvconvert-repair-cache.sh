@@ -25,7 +25,7 @@ which "$FSCK" || skip
 #
 # Main
 #
-aux have_cache 1 3 0 || skip
+aux have_cache 1 5 0 || skip
 
 aux prepare_vg 4
 
