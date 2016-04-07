@@ -368,7 +368,7 @@ static int _update_extents_params(struct volume_group *vg,
 					&lp->discards, &lp->zero))
 			return_0;
 
-		if (lcp->percent == PERCENT_FREE) {
+		if (lcp->percent == PERCENT_FREE || lcp->percent == PERCENT_PVS) {
 			if (lp->extents <= (2 * lp->pool_metadata_extents)) {
 				log_error("Not enough space for thin pool creation.");
 				return 0;

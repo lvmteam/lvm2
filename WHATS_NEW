@@ -1,5 +1,6 @@
 Version 2.02.150 -
 =================================
+  Reuse %FREE size aproximation with lvcreate -l%PVS thin-pool.
   Allow the lvmdump directory to exist already provided it is empty.
   Show lvconverted percentage with 2 decimal digits.
   Fix regression in suspend when repairing --type mirror (2.02.133).
