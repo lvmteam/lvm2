@@ -1,5 +1,6 @@
 Version 2.02.150 -
 =================================
+  Check for devices without LVM- uuid prefix only with kernels < 3.X.
   Reuse %FREE size aproximation with lvcreate -l%PVS thin-pool.
   Allow the lvmdump directory to exist already provided it is empty.
   Show lvconverted percentage with 2 decimal digits.

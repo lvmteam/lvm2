@@ -29,6 +29,7 @@
 
 #include <limits.h>
 #include <dirent.h>
+#include <sys/utsname.h>
 
 #define MAX_TARGET_PARAMSIZE 50000
 #define LVM_UDEV_NOSCAN_FLAG DM_SUBSYSTEM_UDEV_FLAG0
@@ -674,6 +675,24 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 	return r;
 }
 
+/* Returns 1 for kernels >= 3.X, otherwise 0 */
+static int _check_new_kernel(void)
+{
+	static int major = 0;
+	struct utsname _uts;
+
+	if (!major) {
+		if (uname(&_uts) ||
+		    (sscanf(_uts.release, "%d", &major) != 1))
+			major = 1;
+		else if (major >= 3)
+			log_debug("Not checking for devices without prefix "
+				  UUID_PREFIX " with newer kernel.");
+	}
+
+	return (major >= 3);
+}
+
 static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 		 struct dm_info *dminfo, uint32_t *read_ahead,
 		 struct lv_seg_status *seg_status)
@@ -702,6 +721,10 @@ static int _info(const char *dlid, int with_open_count, int with_read_ahead,
 				return 1;
 		}
 	}
+
+	/* With kernels > 3.X skip checking for devices without UUID_PREFIX */
+	if (_check_new_kernel())
+		return r;
 
 	/* Check for dlid before UUID_PREFIX was added */
 	if ((r = _info_run(seg_status ? STATUS : INFO, NULL, dlid + sizeof(UUID_PREFIX) - 1,
