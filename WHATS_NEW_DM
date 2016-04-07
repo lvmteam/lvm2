@@ -1,5 +1,6 @@
 Version 1.02.122 - 
 ==================================
+  Improve log_debug ioctl bit attrs.
 
 Version 1.02.121 - 26th March 2016
 ==================================
