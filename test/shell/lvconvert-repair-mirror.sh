@@ -12,9 +12,12 @@
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
+MKFS=mkfs.ext3
 MOUNT_DIR=mnt
 
 . lib/inittest
+
+which "$MKFS" || skp
 
 cleanup_mounted_and_teardown()
 {
@@ -33,7 +36,7 @@ aux prepare_vg 5
 # with the default 512K - my C2D T61 reads just couple MB/s!
 #
 lvcreate -aey --type mirror -L10 --regionsize 1M -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
-mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+"$MKFS" "$DM_DEV_DIR/$vg/$lv1"
 mkdir "$MOUNT_DIR"
 
 aux delay_dev "$dev2" 0 500 $(get first_extent_sector "$dev2"):
@@ -42,7 +45,7 @@ aux delay_dev "$dev4" 0 500 $(get first_extent_sector "$dev4"):
 # Enforce syncronization
 # ATM requires unmounted/unused LV??
 #
-lvchange --yes --resync --noudevsync $vg/$lv1
+lvchange --yes --resync $vg/$lv1
 trap 'cleanup_mounted_and_teardown' EXIT
 mount "$DM_DEV_DIR/$vg/$lv1" "$MOUNT_DIR"
 
@@ -52,7 +55,8 @@ dd if=/dev/zero of=mnt/zero bs=4K count=100 conv=fdatasync 2>err &
 
 PERCENT=$(get lv_field $vg/$lv1 copy_percent)
 PERCENT=${PERCENT%%\.*}  # cut decimal
-test "$PERCENT" -lt 50   # and check less then 50% mirror is in sync
+# and check less then 50% mirror is in sync (could be unusable delay_dev ?)
+test "$PERCENT" -lt 50 || skip
 #lvs -a -o+devices $vg
 
 #aux disable_dev "$dev3"
