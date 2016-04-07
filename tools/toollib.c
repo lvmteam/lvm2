@@ -3372,12 +3372,6 @@ int process_each_pv(struct cmd_context *cmd,
 		dev_cache_full_scan(cmd->full_filter);
 	}
 
-	/*
-	 * Need pvid's set on all PVs before processing so that pvid's
-	 * can be compared to find duplicates while processing.
-	 */
-	lvmcache_seed_infos_from_lvmetad(cmd);
-
 	if (!get_vgnameids(cmd, &all_vgnameids, only_this_vgname, 1)) {
 		stack;
 		return ret;
