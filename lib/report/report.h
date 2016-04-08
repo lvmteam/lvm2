@@ -28,10 +28,9 @@ typedef enum {
 	PVS		= 16,
 	VGS		= 32,
 	SEGS		= 64,
-	SEGSSTATUS	= 128,
-	PVSEGS		= 256,
-	LABEL		= 512,
-	DEVTYPES	= 1024
+	PVSEGS		= 128,
+	LABEL		= 256,
+	DEVTYPES	= 512
 } report_type_t;
 
 /*

@@ -409,10 +409,10 @@ static int _get_final_report_type(int args_are_pvs,
 	*lv_info_needed = (report_type & (LVSINFO | LVSINFOSTATUS)) ? 1 : 0;
 
 	/* Do we need to acquire LV device status in addition? */
-	*lv_segment_status_needed = (report_type & (SEGSSTATUS | LVSSTATUS | LVSINFOSTATUS)) ? 1 : 0;
+	*lv_segment_status_needed = (report_type & (LVSSTATUS | LVSINFOSTATUS)) ? 1 : 0;
 
 	/* Ensure options selected are compatible */
-	if (report_type & (SEGS | SEGSSTATUS))
+	if (report_type & SEGS)
 		report_type |= LVS;
 	if (report_type & PVSEGS)
 		report_type |= PVS;
@@ -429,7 +429,7 @@ static int _get_final_report_type(int args_are_pvs,
 	else if ((report_type & PVS) ||
 		 ((report_type & LABEL) && (report_type & VGS)))
 		report_type = PVS;
-	else if (report_type & (SEGS | SEGSSTATUS))
+	else if (report_type & SEGS)
 		report_type = SEGS;
 	else if (report_type & (LVS | LVSINFO | LVSSTATUS | LVSINFOSTATUS))
 		report_type = LVS;
@@ -907,8 +907,6 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			r = process_each_vg(cmd, argc, argv, NULL, 0,
 					    handle, &_pvs_in_vg);
 		break;
-	case SEGSSTATUS:
-		/* fall through */
 	case SEGS:
 		r = process_each_lv(cmd, argc, argv, 0, handle,
 				    lv_info_needed && !lv_segment_status_needed ? &_lvsegs_with_info_single :
