@@ -106,7 +106,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh);
 int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 
 /* Set debug level for logging, and whether to log on stdout/stderr or syslog */
-void dm_event_log_set(int debug_level, int use_syslog);
+void dm_event_log_set(int debug_log_level, int use_syslog);
 
 /* Log messages acroding to current debug level  */
 __attribute__((format(printf, 6, 0)))

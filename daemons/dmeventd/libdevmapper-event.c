@@ -855,9 +855,9 @@ int dm_event_get_version(struct dm_event_fifos *fifos, int *version) {
 	return 1;
 }
 
-void dm_event_log_set(int debug_level, int use_syslog)
+void dm_event_log_set(int debug_log_level, int use_syslog)
 {
-	_debug_level = debug_level;
+	_debug_level = debug_log_level;
 	_use_syslog = use_syslog;
 }
 

@@ -108,7 +108,7 @@ const char *lvmcache_vgid_from_vgname(struct cmd_context *cmd, const char *vgnam
 struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct id *pvid,
 				unsigned *scan_done_once, uint64_t *label_sector);
 const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
-			      const char *dev_name);
+				       const char *devname);
 char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid);
 const char *lvmcache_vgname_from_info(struct lvmcache_info *info);
 int lvmcache_vgs_locked(void);

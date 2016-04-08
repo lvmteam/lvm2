@@ -1133,7 +1133,7 @@ struct device *lvmcache_device_from_pvid(struct cmd_context *cmd, const struct i
 }
 
 const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
-			      const char *devname)
+				       const char *devname)
 {
 	struct device *dev;
 	struct label *label;
