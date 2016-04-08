@@ -553,7 +553,14 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 
 	if (activation_checks() && !dm_task_enable_checks(dmt))
 		goto_out;
-		
+
+	/* Non-blocking status read */
+	if (!dm_task_no_flush(dmt))
+		log_warn("WARNING: Can't set no_flush for dm status.");
+
+	if (!dm_task_no_open_count(dmt))
+		goto_out;
+
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device");
 		goto out;

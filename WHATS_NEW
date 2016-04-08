@@ -1,5 +1,6 @@
 Version 2.02.150 -
 =================================
+  Avoid using flushing dm status ioctl when checking for usable DM device.
   Check for devices without LVM- uuid prefix only with kernels < 3.X.
   Reuse %FREE size aproximation with lvcreate -l%PVS thin-pool.
   Allow the lvmdump directory to exist already provided it is empty.
