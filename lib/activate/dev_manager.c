@@ -337,13 +337,8 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 	 * We avoid another system call if we can, but if a device is
 	 * dead, we have no choice but to look up the table too.
 	 */
-	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
-		goto_out;
-
-	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
-		goto_out;
-
-	if (activation_checks() && !dm_task_enable_checks(dmt))
+	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
+				MAJOR(dev->dev), MINOR(dev->dev), 0)))
 		goto_out;
 
 	if (!dm_task_run(dmt))
@@ -384,13 +379,8 @@ static int _device_is_suspended(int major, int minor)
 	struct dm_info info;
 	int r = 0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
-		return 0;
-
-	if (!dm_task_set_major_minor(dmt, major, minor, 1))
-		goto_out;
-
-	if (activation_checks() && !dm_task_enable_checks(dmt))
+	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_INFO,
+				major, minor, 0)))
 		goto_out;
 
 	if (!dm_task_run(dmt) ||
@@ -414,13 +404,8 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 	int major1, minor1, major2, minor2;
 	int r = 0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
-		return_0;
-
-	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
-		goto_out;
-
-	if (activation_checks() && !dm_task_enable_checks(dmt))
+	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
+				MAJOR(dev->dev), MINOR(dev->dev), 0)))
 		goto_out;
 
 	if (!dm_task_run(dmt)) {
@@ -466,32 +451,29 @@ static int _ignore_unusable_thins(struct device *dev)
 	if (!(mem = dm_pool_create("unusable_thins", 128)))
 		return_0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
+	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
+				MAJOR(dev->dev), MINOR(dev->dev), 0)))
 		goto_out;
-	if (!dm_task_no_open_count(dmt))
-		goto_out;
-	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
-		goto_out;
+
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device.");
 		goto out;
 	}
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
-	if (!params || sscanf(params, "%d:%d", &minor, &major) != 2) {
+	if (!params || sscanf(params, "%d:%d", &major, &minor) != 2) {
 		log_error("Failed to get thin-pool major:minor for thin device %d:%d.",
 			  (int)MAJOR(dev->dev), (int)MINOR(dev->dev));
 		goto out;
 	}
 	dm_task_destroy(dmt);
 
-	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
+	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_STATUS,
+				major, minor, 0)))
 		goto_out;
+
 	if (!dm_task_no_flush(dmt))
 		log_warn("Can't set no_flush.");
-	if (!dm_task_no_open_count(dmt))
-		goto_out;
-	if (!dm_task_set_major_minor(dmt, minor, major, 1))
-		goto_out;
+
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device.");
 		goto out;
@@ -545,21 +527,13 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 	int only_error_target = 1;
 	int r = 0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
-		return_0;
-
-	if (!dm_task_set_major_minor(dmt, MAJOR(dev->dev), MINOR(dev->dev), 1))
-		goto_out;
-
-	if (activation_checks() && !dm_task_enable_checks(dmt))
+	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_STATUS,
+				MAJOR(dev->dev), MINOR(dev->dev), 0)))
 		goto_out;
 
 	/* Non-blocking status read */
 	if (!dm_task_no_flush(dmt))
 		log_warn("WARNING: Can't set no_flush for dm status.");
-
-	if (!dm_task_no_open_count(dmt))
-		goto_out;
 
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device");
