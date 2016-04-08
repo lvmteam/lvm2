@@ -669,14 +669,15 @@ static int _original_uuid_format_check_required(struct cmd_context *cmd)
 	static int _kernel_major = 0;
 
 	if (!_kernel_major) {
-		if ((sscanf(cmd->kernel_vsn, "%d", &_kernel_major) != 1))
-			_kernel_major = 1;
-		else if (_kernel_major >= MIN_KERNEL_MAJOR)
+		if ((sscanf(cmd->kernel_vsn, "%d", &_kernel_major) == 1) &&
+		    (_kernel_major >= MIN_KERNEL_MAJOR))
 			log_debug_activation("Skipping checks for old devices without " UUID_PREFIX
 					     " dm uuid prefix (kernel vsn %d >= %d).", _kernel_major, MIN_KERNEL_MAJOR);
+		else
+			_kernel_major = -1;
 	}
 
-	return (_kernel_major < MIN_KERNEL_MAJOR);
+	return (_kernel_major == -1);
 }
 
 static int _info(struct cmd_context *cmd, const char *dlid, int with_open_count, int with_read_ahead,
