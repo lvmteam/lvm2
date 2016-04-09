@@ -1,4 +1,4 @@
-Version 2.02.150 -
+Version 2.02.150 - 9th April 2016
 =================================
   Avoid using flushing dm status ioctl when checking for usable DM device.
   Check for devices without LVM- uuid prefix only with kernels < 3.X.
