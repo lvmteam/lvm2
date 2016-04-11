@@ -433,6 +433,8 @@ static struct dm_list *_get_or_add_list_by_index_key(struct dm_hash_table *idx, 
 
 static struct device *_insert_sysfs_dev(dev_t devno, const char *devname)
 {
+	static struct device _fake_dev = { .flags = DEV_USED_FOR_LV };
+	struct stat stat0;
 	char path[PATH_MAX];
 	char *path_copy;
 	struct device *dev;
@@ -440,6 +442,13 @@ static struct device *_insert_sysfs_dev(dev_t devno, const char *devname)
 	if (dm_snprintf(path, sizeof(path), "%s%s", _cache.dev_dir, devname) < 0) {
 		log_error("_insert_sysfs_dev: %s: dm_snprintf failed", devname);
 		return NULL;
+	}
+
+	if (lstat(path, &stat0) < 0) {
+		/* When device node does not exist return fake entry.
+		 * This may happen when i.e. lvm2 device dir != /dev */
+		log_debug("%s: Not available device node", path);
+		return &_fake_dev;
 	}
 
 	if (!(dev = _dev_create(devno)))
