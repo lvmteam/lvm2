@@ -999,8 +999,6 @@ static void _insert_dirs(struct dm_list *dirs)
 			log_debug_devs("%s: Failed to insert devices to "
 				       "device cache fully", dl->dir);
 	}
-
-	(void) dev_cache_index_devs();
 }
 
 #else	/* UDEV_SYNC_SUPPORT */
@@ -1073,6 +1071,8 @@ static void _full_scan(int dev_scan)
 		return;
 
 	_insert_dirs(&_cache.dirs);
+
+	(void) dev_cache_index_devs();
 
 	dm_list_iterate_items(dl, &_cache.files)
 		_insert_file(dl->dir);
