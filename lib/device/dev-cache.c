@@ -904,11 +904,11 @@ int dev_cache_index_devs(void)
 	} else if (!sysfs_has_dev_block)
 		return 1;
 
-	int with_udev = obtain_device_list_from_udev() &&
-			udev_get_library_context();
+	if (obtain_device_list_from_udev() &&
+	    udev_get_library_context())
+		return _dev_cache_iterate_devs_for_index();  /* with udev */
 
-	return with_udev ? _dev_cache_iterate_devs_for_index()
-			 : _dev_cache_iterate_sysfs_for_index(path);
+	return _dev_cache_iterate_sysfs_for_index(path);
 }
 
 #ifdef UDEV_SYNC_SUPPORT
