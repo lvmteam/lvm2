@@ -72,4 +72,6 @@
 #define FMTx32 "%" PRIx32
 #define FMTx64 "%" PRIx64
 
+#define FMTVGID "%." DM_TO_STRING(ID_LEN) "s"
+
 #endif

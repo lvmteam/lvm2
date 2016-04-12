@@ -1153,7 +1153,6 @@ int vgname_from_mda(const struct format_type *fmt,
 	uint32_t wrap = 0;
 	unsigned int len = 0;
 	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
-	char uuid[64] __attribute__((aligned(8)));
 	uint64_t buffer_size, current_usage;
 	unsigned used_cached_metadata = 0;
 
@@ -1222,16 +1221,14 @@ int vgname_from_mda(const struct format_type *fmt,
 	if (!validate_name(vgsummary->vgname))
 		return_0;
 
-	if (!id_write_format((struct id *)&vgsummary->vgid, uuid, sizeof(uuid)))
-		return_0;
-
 	log_debug_metadata("%s: %s metadata at %" PRIu64 " size %" PRIu64
 			   " (in area at %" PRIu64 " size %" PRIu64
-			   ") for %s (%s)",
+			   ") for %s (" FMTVGID ")",
 			   dev_name(dev_area->dev),
 			   used_cached_metadata ? "Using cached" : "Found",
 			   dev_area->start + rlocn->offset,
-			   rlocn->size, dev_area->start, dev_area->size, vgsummary->vgname, uuid);
+			   rlocn->size, dev_area->start, dev_area->size, vgsummary->vgname,
+			   (char *)&vgsummary->vgid);
 
 	if (mda_free_sectors) {
 		current_usage = (rlocn->size + SECTOR_SIZE - UINT64_C(1)) -
