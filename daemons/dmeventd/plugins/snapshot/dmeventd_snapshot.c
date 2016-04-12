@@ -148,8 +148,8 @@ static void _umount(const char *device, int major, int minor)
 			continue; /* can't stat, skip this one */
 
 		if (S_ISBLK(st.st_mode) &&
-		    major(st.st_rdev) == major &&
-		    minor(st.st_rdev) == minor) {
+		    (int) major(st.st_rdev) == major &&
+		    (int) minor(st.st_rdev) == minor) {
 			log_error("Unmounting invalid snapshot %s from %s.", device, words[1]);
 			if (!_run(UMOUNT_COMMAND, "-fl", words[1], NULL))
 				log_error("Failed to umount snapshot %s from %s: %s.",

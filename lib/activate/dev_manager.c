@@ -1687,7 +1687,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		/*
 		 * FIXME compare info.major with lv->major if multiple major support
 		 */
-		if (info.exists && (info.minor != lv->minor)) {
+		if (info.exists && ((int) info.minor != lv->minor)) {
 			log_error("Volume %s (%" PRIu32 ":%" PRIu32")"
 				  " differs from already active device "
 				  "(%" PRIu32 ":%" PRIu32")",
