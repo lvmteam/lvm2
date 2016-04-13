@@ -19,11 +19,11 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_devs 2
 pvcreate --metadatatype 1 "$dev1"
-not vgscan --cache
+vgscan --cache
 pvs | tee out
 not grep "$dev1" out
 vgcreate --metadatatype 1 $vg1 "$dev1"
-not vgscan --cache
+vgscan --cache
 vgs | tee out
 not grep $vg1 out
 pvs | tee out
