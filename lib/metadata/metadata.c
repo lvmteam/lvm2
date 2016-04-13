@@ -4122,7 +4122,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		return _vg_read_orphans(cmd, warn_flags, vgname, consistent);
 	}
 
-	if (lvmetad_active() && !use_precommitted) {
+	if (lvmetad_used() && !use_precommitted) {
 		if ((correct_vg = lvmcache_get_vg(cmd, vgname, vgid, precommitted))) {
 			dm_list_iterate_items(pvl, &correct_vg->pvs)
 				if (pvl->pv->dev)
@@ -4949,7 +4949,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	if (!(dev = dev_cache_get(pv_name, cmd->filter)))
 		return_NULL;
 
-	if (lvmetad_active()) {
+	if (lvmetad_used()) {
 		info = lvmcache_info_from_pvid(dev->pvid, 0);
 		if (!info) {
 			if (!lvmetad_pv_lookup_by_dev(cmd, dev, &found))
@@ -5044,7 +5044,7 @@ int get_vgnameids(struct cmd_context *cmd, struct dm_list *vgnameids,
 		return 1;
 	}
 
-	if (lvmetad_active()) {
+	if (lvmetad_used()) {
 		/*
 		 * This just gets the list of names/ids from lvmetad
 		 * and does not populate lvmcache.

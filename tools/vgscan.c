@@ -103,12 +103,12 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 	if (lvmetad_used() && (arg_is_set(cmd, cache_long_ARG) || !lvmetad_token_matches(cmd) || lvmetad_is_disabled(cmd, &reason))) {
 		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, arg_is_set(cmd, cache_long_ARG))) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
-			lvmetad_set_active(cmd, 0);
+			lvmetad_make_unused(cmd);
 		}
 
 		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
 			log_warn("WARNING: Not using lvmetad because %s.", reason);
-			lvmetad_set_active(cmd, 0);
+			lvmetad_make_unused(cmd);
 		}
 	}
 

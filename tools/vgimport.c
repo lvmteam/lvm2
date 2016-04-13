@@ -98,12 +98,12 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 	if (lvmetad_used()) {
 		if (!lvmetad_pvscan_all_devs(cmd, NULL, 1)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
-			lvmetad_set_active(cmd, 0);
+			lvmetad_make_unused(cmd);
 		}
 
 		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
 			log_warn("WARNING: Not using lvmetad because %s.", reason);
-			lvmetad_set_active(cmd, 0);
+			lvmetad_make_unused(cmd);
 		}
 	}
 

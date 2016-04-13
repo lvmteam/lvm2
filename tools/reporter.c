@@ -897,7 +897,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	 * This can pause alongide pvscan or vgscan process for a while.
 	 */
 	if (args_are_pvs && (report_type == PVS || report_type == PVSEGS) &&
-	    !lvmetad_active()) {
+	    !lvmetad_used()) {
 		lock_global = 1;
 		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 			log_error("Unable to obtain global lock.");

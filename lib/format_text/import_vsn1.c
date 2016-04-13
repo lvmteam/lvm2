@@ -63,7 +63,7 @@ static int _vsn1_check_version(const struct dm_config_tree *cft)
 	const struct dm_config_value *cv;
 
 	// TODO if this is pvscan --cache, we want this check back.
-	if (lvmetad_active())
+	if (lvmetad_used())
 		return 1;
 
 	/*
@@ -241,8 +241,8 @@ static int _read_pv(struct format_instance *fid,
 		return 0;
 	}
 
-	/* TODO is the !lvmetad_active() too coarse here? */
-	if (!pv->dev && !lvmetad_active())
+	/* TODO is the !lvmetad_used() too coarse here? */
+	if (!pv->dev && !lvmetad_used())
 		pv->status |= MISSING_PV;
 
 	if ((pv->status & MISSING_PV) && pv->dev && pv_mda_used_count(pv) == 0) {

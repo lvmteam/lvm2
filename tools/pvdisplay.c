@@ -99,7 +99,7 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 	 * we lock VG_GLOBAL to enable use of metadata cache.
 	 * This can pause alongide pvscan or vgscan process for a while.
 	 */
-	if (!lvmetad_active()) {
+	if (!lvmetad_used()) {
 		lock_global = 1;
 		if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 			log_error("Unable to obtain global lock.");

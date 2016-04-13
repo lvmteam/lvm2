@@ -120,55 +120,49 @@ void lvmetad_disconnect(void)
 		daemon_close(_lvmetad);
 
 	_lvmetad_connected = 0;
+	_lvmetad_use = 0;
+	_lvmetad_cmd = NULL;
 }
 
-void lvmetad_init(struct cmd_context *cmd)
+int lvmetad_connect(struct cmd_context *cmd)
 {
-	if (!_lvmetad_use && !access(getenv("LVM_LVMETAD_PIDFILE") ? : LVMETAD_PIDFILE, F_OK))
-		log_warn("WARNING: lvmetad is running but disabled."
-			 " Restart lvmetad before enabling it!");
-
-	if (_lvmetad_connected)
-		log_debug(INTERNAL_ERROR "Refreshing lvmetad global handle while connection with the daemon is active");
-
-	_lvmetad_cmd = cmd;
-}
-
-static void _lvmetad_connect(void)
-{
-	if (!_lvmetad_use || !_lvmetad_socket || _lvmetad_connected)
-		return;
+	if (access(getenv("LVM_LVMETAD_PIDFILE") ? : LVMETAD_PIDFILE, F_OK)) {
+		log_debug_lvmetad("Failed to connect to lvmetad: not running.");
+		_lvmetad_connected = 0;
+		_lvmetad_use = 0;
+		_lvmetad_cmd = NULL;
+		return 0;
+	}
 
 	_lvmetad = lvmetad_open(_lvmetad_socket);
+
 	if (_lvmetad.socket_fd >= 0 && !_lvmetad.error) {
 		log_debug_lvmetad("Successfully connected to lvmetad on fd %d.",
 				  _lvmetad.socket_fd);
 		_lvmetad_connected = 1;
-	}
-
-	if (!_lvmetad_connected)
+		_lvmetad_use = 1;
+		_lvmetad_cmd = cmd;
+		return 1;
+	} else {
+		log_debug_lvmetad("Failed to connect to lvmetad: %s", strerror(_lvmetad.error));
+		_lvmetad_connected = 0;
 		_lvmetad_use = 0;
-}
-
-void lvmetad_connect_or_warn(void)
-{
-	if (!_lvmetad_use)
-		return;
-
-	if (!_lvmetad_connected && !_lvmetad.error) {
-		_lvmetad_connect();
-
-		if ((_lvmetad.socket_fd < 0 || _lvmetad.error))
-			log_warn("WARNING: Failed to connect to lvmetad. Falling back to internal scanning.");
+		_lvmetad_cmd = NULL;
+		return 0;
 	}
-
-	if (!_lvmetad_connected)
-		_lvmetad_use = 0;
 }
 
 int lvmetad_used(void)
 {
 	return _lvmetad_use;
+}
+
+void lvmetad_make_unused(struct cmd_context *cmd)
+{
+	lvmetad_disconnect();
+
+	if (cmd && !refresh_filters(cmd))
+		stack;
 }
 
 int lvmetad_socket_present(void)
@@ -182,22 +176,9 @@ int lvmetad_socket_present(void)
 	return !r;
 }
 
-int lvmetad_active(void)
+void lvmetad_set_socket(const char *sock)
 {
-	lvmetad_connect_or_warn();
-
-	return _lvmetad_connected;
-}
-
-void lvmetad_set_active(struct cmd_context *cmd, int active)
-{
-	_lvmetad_use = active;
-
-	if (!active && lvmetad_active())
-		lvmetad_disconnect();
-
-	if (cmd && !refresh_filters(cmd))
-		stack;
+	_lvmetad_socket = sock;
 }
 
 /*
@@ -222,11 +203,6 @@ void lvmetad_release_token(void)
 {
 	dm_free(_lvmetad_token);
 	_lvmetad_token = NULL;
-}
-
-void lvmetad_set_socket(const char *sock)
-{
-	_lvmetad_socket = sock;
 }
 
 /*
@@ -351,7 +327,7 @@ out:
 fail:
 	daemon_reply_destroy(reply);
 	/* The command will not use lvmetad and will revert to scanning. */
-	lvmetad_set_active(cmd, 0);
+	lvmetad_make_unused(cmd);
 	return 0;
 }
 
@@ -428,6 +404,11 @@ static daemon_reply _lvmetad_send(struct cmd_context *cmd, const char *id, ...)
 	unsigned int wait_sec = 0;
 	uint64_t now = 0, wait_start = 0;
 
+	if (!_lvmetad_connected || !_lvmetad_use) {
+		reply.error = ECONNRESET;
+		return reply;
+	}
+
 	if (cmd)
 		wait_sec = (unsigned int)find_config_tree_int(cmd, global_lvmetad_update_wait_time_CFG, NULL);
 retry:
@@ -447,6 +428,9 @@ retry:
 	reply = daemon_send(_lvmetad, req);
 
 	daemon_request_destroy(req);
+
+	if (reply.error == ECONNRESET)
+		log_warn("WARNING: lvmetad connection failed, cannot reconnect."); 
 
 	if (reply.error)
 		goto out;
@@ -846,7 +830,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 	struct pv_list *pvl;
 	int rescan = 0;
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return NULL;
 
 	if (vgid) {
@@ -1026,7 +1010,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 	if (!vg)
 		return 0;
 
-	if (!lvmetad_active() || test_mode())
+	if (!lvmetad_used() || test_mode())
 		return 1; /* fake it */
 
 	if (!vg->cft_precommitted) {
@@ -1080,7 +1064,7 @@ int lvmetad_vg_remove(struct volume_group *vg)
 	daemon_reply reply;
 	int result;
 
-	if (!lvmetad_active() || test_mode())
+	if (!lvmetad_used() || test_mode())
 		return 1; /* just fake it */
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
@@ -1102,7 +1086,7 @@ int lvmetad_pv_lookup(struct cmd_context *cmd, struct id pvid, int *found)
 	int result = 0;
 	struct dm_config_node *cn;
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return_0;
 
 	if (!id_write_format(&pvid, uuid, sizeof(uuid)))
@@ -1136,7 +1120,7 @@ int lvmetad_pv_lookup_by_dev(struct cmd_context *cmd, struct device *dev, int *f
 	daemon_reply reply;
 	struct dm_config_node *cn;
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return_0;
 
 	log_debug_lvmetad("Asking lvmetad for PV on %s", dev_name(dev));
@@ -1165,7 +1149,7 @@ int lvmetad_pv_list_to_lvmcache(struct cmd_context *cmd)
 	daemon_reply reply;
 	struct dm_config_node *cn;
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return 1;
 
 	log_debug_lvmetad("Asking lvmetad for complete list of known PVs");
@@ -1243,7 +1227,7 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 	daemon_reply reply;
 	struct dm_config_node *cn;
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return 1;
 
 	log_debug_lvmetad("Asking lvmetad for complete list of known VGs");
@@ -1362,7 +1346,7 @@ int lvmetad_pv_found(const struct id *pvid, struct device *dev, const struct for
 	int64_t changed;
 	int result;
 
-	if (!lvmetad_active() || test_mode())
+	if (!lvmetad_used() || test_mode())
 		return 1;
 
 	if (!id_write_format(pvid, uuid, sizeof(uuid)))
@@ -1502,7 +1486,7 @@ int lvmetad_pv_gone(dev_t devno, const char *pv_name, activation_handler handler
 	int result;
 	int found;
 
-	if (!lvmetad_active() || test_mode())
+	if (!lvmetad_used() || test_mode())
 		return 1;
 
 	/*
@@ -1692,7 +1676,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	struct format_instance_ctx fic = { .type = 0 };
 	struct metadata_area *mda;
 
-	if (!lvmetad_active()) {
+	if (!lvmetad_used()) {
 		log_error("Cannot proceed since lvmetad is not active.");
 		return 0;
 	}
@@ -1805,7 +1789,7 @@ static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler 
 	int replaced_update = 0;
 	int retries = 0;
 
-	if (!lvmetad_active()) {
+	if (!lvmetad_used()) {
 		log_error("Cannot proceed since lvmetad is not active.");
 		return 0;
 	}
@@ -1952,7 +1936,7 @@ static int _lvmetad_get_pv_cache_list(struct cmd_context *cmd, struct dm_list *p
 	const char *pvid_txt;
 	const char *vgid;
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return 1;
 
 	log_debug_lvmetad("Asking lvmetad for complete list of known PVs");
@@ -2146,7 +2130,7 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 		return;
 	}
 
-	if (!lvmetad_active())
+	if (!lvmetad_used())
 		return;
 
 	log_debug_lvmetad("Validating global lvmetad cache");
@@ -2195,13 +2179,13 @@ void lvmetad_validate_global_cache(struct cmd_context *cmd, int force)
 	 */
 	if (!lvmetad_pvscan_all_devs(cmd, NULL, 1)) {
 		log_warn("WARNING: Not using lvmetad because cache update failed.");
-		lvmetad_set_active(cmd, 0);
+		lvmetad_make_unused(cmd);
 		return;
 	}
 
 	if (lvmetad_is_disabled(cmd, &reason)) {
 		log_warn("WARNING: Not using lvmetad because %s.", reason);
-		lvmetad_set_active(cmd, 0);
+		lvmetad_make_unused(cmd);
 		return;
 	}
 

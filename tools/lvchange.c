@@ -1258,25 +1258,10 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	 * need to take special care here as lvmetad service does
 	 * not neet to be running at this moment yet - it could be
 	 * just too early during system initialization time.
-	*/
-	if (arg_count(cmd, sysinit_ARG) && lvmetad_used() &&
-	    arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY) {
-		if (!lvmetad_socket_present()) {
-			/*
-			 * If lvmetad socket is not present yet,
-			 * the service is just not started. It'll
-			 * be started a bit later so we need to do
-			 * the activation without lvmetad which means
-			 * direct activation instead of autoactivation.
-			*/
-			log_warn("lvmetad is not active yet, using direct activation during sysinit");
-			lvmetad_set_active(cmd, 0);
-		} else if (lvmetad_active()) {
-			/*
-			 * If lvmetad is active already, we want
-			 * to make use of the autoactivation.
-			*/
-			log_warn("lvmetad is active, skipping direct activation during sysinit");
+	 */
+	if (arg_count(cmd, sysinit_ARG) && (arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY)) {
+		if (lvmetad_used()) {
+			log_warn("WARNING: lvmetad is active, skipping direct activation during sysinit");
 			return ECMD_PROCESSED;
 		}
 	}

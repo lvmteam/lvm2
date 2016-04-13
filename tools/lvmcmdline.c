@@ -1112,9 +1112,6 @@ static int _get_settings(struct cmd_context *cmd)
 	 */
 	cmd->vg_read_print_access_error = 1;
 		
-	if (!arg_count(cmd, sysinit_ARG))
-		lvmetad_connect_or_warn();
-
 	if (arg_count(cmd, nosuffix_ARG))
 		cmd->current_settings.suffix = 0;
 
@@ -1474,8 +1471,7 @@ static int _cmd_no_meta_proc(struct cmd_context *cmd)
 
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct dm_config_tree *config_string_cft;
-	struct dm_config_tree *config_profile_command_cft, *config_profile_metadata_cft;
+	struct dm_config_tree *config_string_cft, *config_profile_command_cft, *config_profile_metadata_cft;
 	const char *reason = NULL;
 	int ret = 0;
 	int locking_type;
@@ -1606,7 +1602,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
 		lvmetad_set_disabled(cmd, "LVM1");
 		log_warn("WARNING: Not using lvmetad because lvm1 format is used.");
-		lvmetad_set_active(cmd, 0);
+		lvmetad_make_unused(cmd);
 	}
 
 	if (cmd->metadata_read_only &&
@@ -1633,7 +1629,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (lvmetad_used()) {
-			lvmetad_set_active(cmd, 0);
+			lvmetad_make_unused(cmd);
 			log_verbose("Not using lvmetad because read-only is set.");
 		}
 	} else if (arg_count(cmd, nolocking_ARG))
@@ -1674,13 +1670,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		if (cmd->include_foreign_vgs || !lvmetad_token_matches(cmd)) {
 			if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, cmd->include_foreign_vgs ? 1 : 0)) {
 				log_warn("WARNING: Not using lvmetad because cache update failed.");
-				lvmetad_set_active(cmd, 0);
+				lvmetad_make_unused(cmd);
 			}
 		}
 
 		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
 			log_warn("WARNING: Not using lvmetad because %s.", reason);
-			lvmetad_set_active(cmd, 0);
+			lvmetad_make_unused(cmd);
 		}
 	}
 

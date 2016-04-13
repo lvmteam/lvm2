@@ -1673,6 +1673,26 @@ static int _reopen_stream(FILE *stream, int fd, const char *mode, const char *na
 	return 1;
 }
 
+/*
+ * init_connections();
+ *   _init_lvmetad();
+ *     lvmetad_disconnect();  (close previous connection)
+ *     lvmetad_set_socket();  (set path from config)
+ *     lvmetad_set_token();   (set token from filter config)
+ *     if (find_config(use_lvmetad))
+ *       lvmetad_connect();
+ *
+ * If lvmetad_connect() is successful, lvmetad_used() will
+ * return 1.
+ *
+ * If the config has use_lvmetad=0, then lvmetad_connect()
+ * will not be called, and lvmetad_used() will return 0.
+ *
+ * Other code should use lvmetad_used() to check if the
+ * command is using lvmetad.
+ *
+ */
+
 static int _init_lvmetad(struct cmd_context *cmd)
 {
 	const struct dm_config_node *cn;
@@ -1695,13 +1715,27 @@ static int _init_lvmetad(struct cmd_context *cmd)
 
 	if (find_config_tree_int(cmd, global_locking_type_CFG, NULL) == 3 &&
 	    find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
-		log_warn("WARNING: configuration setting use_lvmetad overridden to 0 due to locking_type 3. "
-			 "Clustered environment not supported by lvmetad yet.");
-		lvmetad_set_active(NULL, 0);
-	} else
-		lvmetad_set_active(NULL, find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL));
+		log_warn("WARNING: Not using lvmetad because locking_type is 3 (clustered).");
+		return 1;
+	}
 
-	lvmetad_init(cmd);
+	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
+		if (lvmetad_socket_present())
+			log_warn("WARNING: Not using lvmetad because config setting use_lvmetad=0.");
+		return 1;
+	}
+
+	if (!lvmetad_connect(cmd)) {
+		log_warn("WARNING: Failed to connect to lvmetad. Falling back to device scanning.");
+		return 1;
+	}
+
+	if (!lvmetad_used()) {
+		/* This should never happen. */
+		log_error(INTERNAL_ERROR "lvmetad setup incorrect");
+		return 0;
+	}
+
 	return 1;
 }
 

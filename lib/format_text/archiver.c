@@ -502,7 +502,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 	if (!vg_write(vg))
 		return_0;
 
-	if (drop_lvmetad && lvmetad_active()) {
+	if (drop_lvmetad && lvmetad_used()) {
 		struct volume_group *vg_lvmetad = lvmetad_vg_lookup(cmd, vg->name, NULL);
 		if (vg_lvmetad) {
 			/* FIXME Cope with failure to update lvmetad */

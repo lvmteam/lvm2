@@ -164,7 +164,7 @@ void lvmcache_set_preferred_duplicates(const char *vgid)
 
 void lvmcache_seed_infos_from_lvmetad(struct cmd_context *cmd)
 {
-	if (!lvmetad_active() || _has_scanned)
+	if (!lvmetad_used() || _has_scanned)
 		return;
 
 	if (!lvmetad_pv_list_to_lvmcache(cmd)) {
@@ -542,7 +542,7 @@ const struct format_type *lvmcache_fmt_from_vgname(struct cmd_context *cmd,
 	char vgid_found[ID_LEN + 1] __attribute__((aligned(8)));
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vgname, vgid))) {
-		if (!lvmetad_active())
+		if (!lvmetad_used())
 			return NULL; /* too bad */
 		/* If we don't have the info but we have lvmetad, we can ask
 		 * there before failing. */
@@ -784,7 +784,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 	int r = 0;
 
-	if (lvmetad_active())
+	if (lvmetad_used())
 		return 1;
 
 	/* Avoid recursion when a PVID can't be found! */
@@ -862,7 +862,7 @@ struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname
 	 * using the classic scanning mechanics, and read from disk or from
 	 * lvmcache.
 	 */
-	if (lvmetad_active() && !precommitted) {
+	if (lvmetad_used() && !precommitted) {
 		/* Still serve the locally cached VG if available */
 		if (vgid && (vginfo = lvmcache_vginfo_from_vgid(vgid)) &&
 		    vginfo->vgmetadata && (vg = vginfo->cached_vg))
@@ -1082,7 +1082,7 @@ static struct device *_device_from_pvid(const struct id *pvid,
 	struct label *label;
 
 	if ((info = lvmcache_info_from_pvid((const char *) pvid, 0))) {
-		if (lvmetad_active()) {
+		if (lvmetad_used()) {
 			if (info->label && label_sector)
 				*label_sector = info->label->sector;
 			return info->dev;
@@ -2397,7 +2397,7 @@ int lvmcache_is_orphan(struct lvmcache_info *info) {
 int lvmcache_vgid_is_cached(const char *vgid) {
 	struct lvmcache_vginfo *vginfo;
 
-	if (lvmetad_active())
+	if (lvmetad_used())
 		return 1;
 
 	vginfo = lvmcache_vginfo_from_vgid(vgid);
@@ -2497,7 +2497,7 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 	struct lvmcache_vginfo *vginfo;
 	int ret = 0;
 
-	if (lvmetad_active())
+	if (lvmetad_used())
 		return lvmetad_vg_is_foreign(cmd, vgname, vgid);
 
 	if ((vginfo = lvmcache_vginfo_from_vgid(vgid)))
