@@ -296,9 +296,9 @@ retry:
 	 * If lvmetad is still being updated after the timeout period,
 	 * then disable this command's use of lvmetad.
 	 *
-	 * (lvmetad could return the number of objects in its cache along with
+	 * FIXME: lvmetad could return the number of objects in its cache along with
 	 * the update message so that callers could detect when a rescan has
-	 * stalled while updating lvmetad.)
+	 * stalled while updating lvmetad.
 	 */
 	if (!strcmp(daemon_token, "update in progress")) {
 		if (!(now = _monotonic_seconds()))
