@@ -1,5 +1,6 @@
-Version 2.02.151
+Version 2.02.151 -
 =================================
+  Don't try deactivating fictional internal LV before snapshot merge. (2.02.105)
   When not obtaining devs from udev, check they exist before caching them.
   Detect device mismatch also when compiling without udev support.
 

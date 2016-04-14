@@ -1022,6 +1022,7 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		       activation_change_t activate)
 {
 	int r = 1;
+	struct logical_volume *snapshot_lv;
 
 	if (lv_is_cache_pool(lv)) {
 		if (is_change_activating(activate)) {
@@ -1053,7 +1054,8 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		 * User could retry to deactivate it with another
 		 * deactivation of origin, which is the only visible LV
 		 */
-		if (!deactivate_lv(cmd, find_snapshot(lv)->lv)) {
+		snapshot_lv = find_snapshot(lv)->lv;
+		if (lv_is_thin_type(snapshot_lv) && !deactivate_lv(cmd, snapshot_lv)) {
 			if (is_change_activating(activate)) {
 				log_error("Refusing to activate merging \"%s\" while snapshot \"%s\" is still active.",
 					  lv->name, find_snapshot(lv)->lv->name);
