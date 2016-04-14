@@ -872,7 +872,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 
 	} else {
 		log_error(INTERNAL_ERROR "VG name required (VGID not available)");
-		goto out;
+		return NULL;
 	}
 
 	if (_lvmetad_handle_reply(reply, "vg_lookup", diag_name, &found) && found) {
@@ -958,16 +958,14 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		 * invalidated the cached vg.
 		 */
 		if (rescan) {
-			log_debug_lvmetad("Update invalid lvmetad cache for VG %s", vgname);
-			vg2 = lvmetad_pvscan_vg(cmd, vg);
-			release_vg(vg);
-			vg = vg2;
-			if (!vg) {
+			if (!(vg2 = lvmetad_pvscan_vg(cmd, vg))) {
 				log_debug_lvmetad("VG %s from lvmetad not found during rescan.", vgname);
 				fid = NULL;
 				goto out;
-			} else
-				fid = vg->fid;
+			}
+			release_vg(vg);
+			vg = vg2;
+			fid = vg2->fid;
 		}
 
 		dm_list_iterate_items(pvl, &vg->pvs) {
@@ -1575,6 +1573,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 	struct format_instance_ctx fic = { .type = 0 };
 	struct _lvmetad_pvscan_baton baton;
 	struct device *save_dev = NULL;
+	uint32_t save_seqno = 0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		/* missing pv */
@@ -1622,6 +1621,9 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 			continue;
 		}
 
+		if (!save_seqno)
+			save_seqno = baton.vg->seqno;
+
 		if (!(vgmeta = export_vg_to_config_tree(baton.vg))) {
 			log_error("VG export to config tree failed");
 			release_vg(baton.vg);
@@ -1661,10 +1663,14 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 		 * but that is the field which lvmetad_vg_update() uses
 		 * to send the metadata cft to lvmetad.
 		 */
-		vg_ret->cft_precommitted = vgmeta_ret;
-		if (!lvmetad_vg_update(vg_ret))
-			log_error("Failed to update lvmetad with new VG meta");
-		vg_ret->cft_precommitted = NULL;
+		if (save_seqno != vg->seqno) {
+			log_debug_lvmetad("Update lvmetad from seqno %u to seqno %u for VG %s",
+					  vg->seqno, save_seqno, vg->name);
+			vg_ret->cft_precommitted = vgmeta_ret;
+			if (!lvmetad_vg_update(vg_ret))
+				log_error("Failed to update lvmetad with new VG meta");
+			vg_ret->cft_precommitted = NULL;
+		}
 		dm_config_destroy(vgmeta_ret);
 	}
 out:
