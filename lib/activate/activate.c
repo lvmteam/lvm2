@@ -2309,7 +2309,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (info.exists && !info.suspended && info.live_table &&
 	    (info.read_only == read_only_lv(lv, laopts))) {
 		r = 1;
-		log_debug_activation("Volume is already active.");
+		log_debug_activation("LV %s is already active.", display_lvname(lv));
 		goto out;
 	}
 
