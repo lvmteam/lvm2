@@ -54,7 +54,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		.sa_flags = SA_NOCLDSTOP,
 	};
 
-	log_verbose("Forking background process: %s", cmd->cmd_line);
+	log_verbose("Forking background process from command: %s", cmd->cmd_line);
 
 	sigaction(SIGCHLD, &act, NULL);
 
