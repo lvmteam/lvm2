@@ -4037,6 +4037,14 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 					    "VG %s but not marked as used.",
 					    pv_dev_name(pvl->pv), vg->name);
 				*inconsistent_pvs = 1;
+			} else if (is_lockd_type(vg->lock_type)) {
+				/*
+				 * FIXME: decide how to handle repair for shared VGs.
+				 */
+				log_warn("Skip repair of PV %s that is in shared "
+					    "VG %s but not marked as used.",
+					    pv_dev_name(pvl->pv), vg->name);
+				*inconsistent_pvs = 1;
 			} else {
 				log_warn("WARNING: Repairing Physical Volume %s that is "
 					 "in Volume Group %s but not marked as used.",
