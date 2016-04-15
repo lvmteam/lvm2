@@ -1700,11 +1700,6 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 	if (!baton.vg)
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 
-	/*
-	 * NB. If this command failed and we are relying on lvmetad to have an
-	 * *exact* image of the system, the lvmetad instance that went out of
-	 * sync needs to be killed.
-	 */
 	if (!lvmetad_pv_found((const struct id *) &dev->pvid, dev, lvmcache_fmt(info),
 			      label->sector, baton.vg, handler)) {
 		release_vg(baton.vg);
@@ -1749,13 +1744,13 @@ static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler 
 	struct dev_iter *iter;
 	struct device *dev;
 	daemon_reply reply;
-	int r = 1;
 	char *future_token;
 	const char *reason;
 	int was_silent;
 	int replacing_other_update = 0;
 	int replaced_update = 0;
 	int retries = 0;
+	int ret = 1;
 
 	if (!lvmetad_used()) {
 		log_error("Cannot proceed since lvmetad is not active.");
@@ -1813,7 +1808,7 @@ static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler 
 	log_debug_lvmetad("Telling lvmetad to clear its cache");
 	reply = _lvmetad_send(cmd, "pv_clear_all", NULL);
 	if (!_lvmetad_handle_reply(reply, "pv_clear_all", "", NULL))
-		r = 0;
+		ret = 0;
 	daemon_reply_destroy(reply);
 
 	was_silent = silent_mode();
@@ -1821,33 +1816,38 @@ static int _lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler 
 
 	while ((dev = dev_iter_get(iter))) {
 		if (sigint_caught()) {
-			r = 0;
+			ret = 0;
 			stack;
 			break;
 		}
 		if (!lvmetad_pvscan_single(cmd, dev, handler, ignore_obsolete))
-			r = 0;
+			ret = 0;
 	}
 
 	init_silent(was_silent);
 
 	dev_iter_destroy(iter);
 
+	if (!ret)
+		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_SCANERROR);
+
 	_lvmetad_token = future_token;
-	if (!_token_update(NULL))
+	if (!_token_update(NULL)) {
+		log_error("Failed to update lvmetad token after device scan.");
 		return 0;
+	}
 
 	/*
 	 * If lvmetad is disabled, and no lvm1 metadata was seen and no
 	 * duplicate PVs were seen, then re-enable lvmetad.
 	 */
-	if (lvmetad_is_disabled(cmd, &reason) &&
+	if (ret && lvmetad_is_disabled(cmd, &reason) &&
 	    !lvmcache_found_duplicate_pvs() && !_found_lvm1_metadata) {
 		log_debug_lvmetad("Enabling lvmetad which was previously disabled.");
 		lvmetad_clear_disabled(cmd);
 	}
 
-	return r;
+	return ret;
 }
 
 int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler, int do_wait)
@@ -2450,6 +2450,9 @@ int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
 
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DUPLICATES)) {
 			*reason = "duplicate PVs were found";
+
+		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_SCANERROR)) {
+			*reason = "scanning devices failed";
 
 		} else {
 			*reason = "<unknown>";
