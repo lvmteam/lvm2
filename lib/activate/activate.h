@@ -81,6 +81,7 @@ struct lv_activate_opts {
 				 * set of flags to avoid any scanning in udev. These udev
 				 * flags are persistent in udev db for any spurious event
 				 * that follows. */
+	unsigned resuming;	/* Set when resuming after a suspend. */
 };
 
 void set_activation(int activation, int silent);

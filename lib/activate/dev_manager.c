@@ -806,13 +806,28 @@ int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 	if (!dm_task_get_info(dmt, &info) || !info.exists)
 		goto_out;
 
+	/* If there is a preloaded table, use that in preference. */
+	if (info.inactive_table) {
+		dm_task_destroy(dmt);
+
+		if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
+			goto_bad;
+
+		if (!dm_task_query_inactive_table(dmt))
+			goto_out;
+
+		if (!dm_task_run(dmt))
+			goto_out;
+
+		if (!dm_task_get_info(dmt, &info) || !info.exists || !info.inactive_table)
+			goto_out;
+	}
+
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &type, &params);
-		if (type && strncmp(type, target_type,
-				    strlen(target_type)) == 0) {
-			if (info.live_table)
-				r = 1;
+		if (type && !strncmp(type, target_type, strlen(target_type))) {
+			r = 1;
 			break;
 		}
 	} while (next);
@@ -2665,6 +2680,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t read_ahead = lv->read_ahead;
 	uint32_t read_ahead_flags = UINT32_C(0);
 	int save_pending_delete = dm->track_pending_delete;
+	int snap_dev_is_open = 0;
 
 	/* LV with pending delete is never put new into a table */
 	if (lv_is_pending_delete(lv) && !_cached_dm_info(dm->mem, dtree, lv, NULL))
@@ -2697,13 +2713,15 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		    ((dinfo = _cached_dm_info(dm->mem, dtree,
 					      seg_is_thin_volume(seg) ?
 					      seg->lv : seg->cow, NULL)) &&
-		     dinfo->open_count)) {
-			if (seg_is_thin_volume(seg) ||
-			    /* FIXME Is there anything simpler to check for instead? */
-			    !lv_has_target_type(dm->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE)) {
-				log_debug_activation("Postponing pending snapshot merge for origin LV %s.", display_lvname(lv));
-				laopts->no_merging = 1;
-			}
+		     dinfo->open_count))
+			snap_dev_is_open = 1;
+
+		/* Preload considers open devices. */
+		/* Resume looks at the table that will be the live one after the operation. */
+		if ((!laopts->resuming && snap_dev_is_open && (seg_is_thin_volume(seg) || !lv_has_target_type(dm->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE))) ||
+		    (laopts->resuming && !seg_is_thin_volume(seg) && !lv_has_target_type(dm->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE))) {
+			log_debug_activation("Postponing pending snapshot merge for origin LV %s.", display_lvname(lv));
+			laopts->no_merging = 1;
 		}
 	}
 

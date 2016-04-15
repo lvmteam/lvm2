@@ -2063,6 +2063,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	laopts->read_only = _passes_readonly_filter(cmd, lv);
+	laopts->resuming = 1;
 
 	if (!_lv_activate_lv(lv, laopts))
 		goto_out;
