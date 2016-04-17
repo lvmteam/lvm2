@@ -766,11 +766,11 @@ static const struct dm_info *_cached_dm_info(struct dm_pool *mem,
 		return_NULL;
 
 	if (!(dnode = dm_tree_find_node_by_uuid(dtree, dlid)))
-		goto_out;
+		goto out;
 
 	if (!(dinfo = dm_tree_node_get_info(dnode))) {
-		log_error("Failed to get info from tree node for %s.",
-			  display_lvname(lv));
+		log_warn("WARNING: Cannot get info from tree node for %s.",
+			 display_lvname(lv));
 		goto out;
 	}
 
