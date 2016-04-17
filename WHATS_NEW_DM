@@ -1,5 +1,6 @@
 Version 1.02.122 - 9th April 2016
 =================================
+  Do not strip LVM- when debug reporting not found uuid.
   Change log_debug ioctl flags from single characters into words.
 
 Version 1.02.121 - 26th March 2016

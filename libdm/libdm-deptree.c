@@ -599,7 +599,7 @@ static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 		return node;
 	}
 
-	log_debug("Not matched uuid %s in deptree.", uuid + default_uuid_prefix_len);
+	log_debug("Not matched uuid %s in deptree.", uuid);
 	return NULL;
 }
 
