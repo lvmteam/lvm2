@@ -1,5 +1,6 @@
 Version 2.02.151 -
 =================================
+  Recognize in-progress snapshot merge for thin volumes from dm table.
   Avoid deciding to initiate a pending snapshot merge during resume.
   Improve retrying lvmetad requests while lvmetad is being updated.
   Read devices instead of using the lvmetad cache if rescan fails.
