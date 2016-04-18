@@ -18,12 +18,34 @@ SKIP_WITH_LVMPOLLD=1
 aux prepare_pvs 2
 
 vgcreate $vg1 "$dev1" "$dev2"
-lvchange -ay $vg1 2>&1 | not grep "Failed to connect"
+lvcreate -an -l1 --zero n -n $lv1 $vg1
+
+lvchange -ay $vg1 2>&1 | tee out
+not grep "WARNING: Failed to connect" out
+check active $vg1 $lv1
+lvchange -an $vg1
+check inactive $vg1 $lv1
+
 kill $(< LOCAL_LVMETAD)
-lvchange -ay $vg1 2>&1 | grep "Failed to connect"
-lvchange -aay $vg1 --sysinit 2>&1 | not grep "Failed to connect"
-lvchange -ay $vg1 --config 'global { use_lvmetad = 0 }' 2>&1 | not grep "Failed to connect"
+
+lvchange -ay $vg1 2>&1 | tee out
+grep "WARNING: Failed to connect" out
+check active $vg1 $lv1
+lvchange -an $vg1
+check inactive $vg1 $lv1
+
+lvchange -ay --config global/use_lvmetad=0 $vg1 2>&1 | tee out
+not grep "WARNING: Failed to connect" out
+check active $vg1 $lv1
+lvchange -an $vg1
+check inactive $vg1 $lv1
+
 aux lvmconf "global/use_lvmetad = 0"
-lvchange -ay $vg1 --config 'global { use_lvmetad = 1 }' 2>&1 | grep "Failed to connect"
+
+lvchange -ay --config global/use_lvmetad=1 $vg1 2>&1 | tee out
+grep "WARNING: Failed to connect" out
+check active $vg1 $lv1
+lvchange -an $vg1
+check inactive $vg1 $lv1
 
 vgremove -ff $vg1
