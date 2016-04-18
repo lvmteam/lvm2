@@ -1057,13 +1057,15 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		snapshot_lv = find_snapshot(lv)->lv;
 		if (lv_is_thin_type(snapshot_lv) && !deactivate_lv(cmd, snapshot_lv)) {
 			if (is_change_activating(activate)) {
-				log_error("Refusing to activate merging \"%s\" while snapshot \"%s\" is still active.",
-					  lv->name, find_snapshot(lv)->lv->name);
+				log_error("Refusing to activate merging volume %s while "
+					  "snapshot volume %s is still active.",
+					  display_lvname(lv), display_lvname(snapshot_lv));
 				return 0;
 			}
 
-			log_error("Cannot fully deactivate merging origin \"%s\" while snapshot \"%s\" is still active.",
-				  lv->name, find_snapshot(lv)->lv->name);
+			log_error("Cannot fully deactivate merging origin volume %s while "
+				  "snapshot volume %s is still active.",
+				  display_lvname(lv), display_lvname(snapshot_lv));
 			r = 0; /* and continue to deactivate origin... */
 		}
 	}
