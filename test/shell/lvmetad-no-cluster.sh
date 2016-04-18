@@ -17,8 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_vg 2
 aux prepare_lvmetad
-vgs -vv 2> errs
-cat errs
-grep 'use_lvmetad' errs
+vgs 2>&1 | tee out
+grep "WARNING: Not using lvmetad because locking_type is 3" out
 
 vgremove -ff $vg
