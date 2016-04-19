@@ -19,6 +19,10 @@
 
 #define LVMETAD_SOCKET DEFAULT_RUN_DIR "/lvmetad.socket"
 
+#define LVMETAD_DISABLE_REASON_DIRECT		"DIRECT"
+#define LVMETAD_DISABLE_REASON_LVM1		"LVM1"
+#define LVMETAD_DISABLE_REASON_DUPLICATES	"DUPLICATES"
+
 struct volume_group;
 
 /* Different types of replies we may get from lvmetad. */

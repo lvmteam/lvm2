@@ -22,6 +22,7 @@
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include "lvm-version.h"
+#include "lvmetad-client.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -2626,11 +2627,11 @@ static response set_global_info(lvmetad_state *s, request r)
 	uint32_t reason_flags = 0;
 
 	if ((reason = daemon_request_str(r, "disable_reason", NULL))) {
-		if (strstr(reason, "DIRECT"))
+		if (strstr(reason, LVMETAD_DISABLE_REASON_DIRECT))
 			reason_flags |= GLFL_DISABLE_REASON_DIRECT;
-		if (strstr(reason, "LVM1"))
+		if (strstr(reason, LVMETAD_DISABLE_REASON_LVM1))
 			reason_flags |= GLFL_DISABLE_REASON_LVM1;
-		if (strstr(reason, "DUPLICATES"))
+		if (strstr(reason, LVMETAD_DISABLE_REASON_DUPLICATES))
 			reason_flags |= GLFL_DISABLE_REASON_DUPLICATES;
 	}
 
@@ -2686,9 +2687,9 @@ static response get_global_info(lvmetad_state *s, request r)
 
 	if (s->flags & GLFL_DISABLE) {
 		snprintf(reason, REASON_BUF_SIZE - 1, "%s%s%s",
-			 (s->flags & GLFL_DISABLE_REASON_DIRECT) ? "DIRECT," : "",
-			 (s->flags & GLFL_DISABLE_REASON_LVM1) ? "LVM1," : "",
-			 (s->flags & GLFL_DISABLE_REASON_DUPLICATES) ? "DUPLICATES," : "");
+			 (s->flags & GLFL_DISABLE_REASON_DIRECT)     ? LVMETAD_DISABLE_REASON_DIRECT "," : "",
+			 (s->flags & GLFL_DISABLE_REASON_LVM1)       ? LVMETAD_DISABLE_REASON_LVM1 "," : "",
+			 (s->flags & GLFL_DISABLE_REASON_DUPLICATES) ? LVMETAD_DISABLE_REASON_DUPLICATES "," : "");
 	}
 
 	if (!reason[0])

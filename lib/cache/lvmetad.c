@@ -1598,7 +1598,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 			  	baton.fid->fmt->name, dev_name(pvl->pv->dev));
 			lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 			log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
-			lvmetad_set_disabled(cmd, "LVM1");
+			lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_LVM1);
 			_found_lvm1_metadata = 1;
 			return NULL;
 		}
@@ -1722,7 +1722,7 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 		lvmcache_fmt(info)->ops->destroy_instance(baton.fid);
 
 		log_warn("WARNING: Disabling lvmetad cache which does not support obsolete metadata.");
-		lvmetad_set_disabled(cmd, "LVM1");
+		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_LVM1);
 		_found_lvm1_metadata = 1;
 
 		if (ignore_obsolete)
@@ -2352,13 +2352,13 @@ int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
 		if (!reply_reason) {
 			*reason = "<not set>";
 
-		} else if (strstr(reply_reason, "DIRECT")) {
+		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DIRECT)) {
 			*reason = "the disable flag was set directly";
 
-		} else if (strstr(reply_reason, "LVM1")) {
+		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_LVM1)) {
 			*reason = "LVM1 metadata was found";
 
-		} else if (strstr(reply_reason, "DUPLICATES")) {
+		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DUPLICATES)) {
 			*reason = "duplicate PVs were found";
 
 		} else {

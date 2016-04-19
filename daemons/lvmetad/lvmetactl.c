@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
 		reply = daemon_send_simple(h, "set_global_info",
 					   "global_disable = " FMTd64, (int64_t) val,
-					   "disable_reason = %s", "DIRECT",
+					   "disable_reason = %s", LVMETAD_DISABLE_REASON_DIRECT,
 					   "token = %s", "skip",
 					   NULL);
 		print_reply(reply);
