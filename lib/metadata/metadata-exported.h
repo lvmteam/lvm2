@@ -1082,6 +1082,9 @@ struct lv_segment *find_snapshot(const struct logical_volume *lv);
 /* Given a cow LV, return its origin */
 struct logical_volume *origin_from_cow(const struct logical_volume *lv);
 
+/* Given an internal snapshot LV, return its cow */
+struct logical_volume *find_cow(const struct logical_volume *snap);
+
 void init_snapshot_seg(struct lv_segment *seg, struct logical_volume *origin,
 		       struct logical_volume *cow, uint32_t chunk_size, int merge);
 

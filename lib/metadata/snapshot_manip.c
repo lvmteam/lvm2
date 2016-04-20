@@ -34,6 +34,11 @@ int lv_is_cow(const struct logical_volume *lv)
 	return (!lv_is_thin_volume(lv) && !lv_is_origin(lv) && lv->snapshot) ? 1 : 0;
 }
 
+struct logical_volume *find_cow(const struct logical_volume *snap)
+{
+	return first_seg(snap)->cow;
+}
+
 /*
  * Some kernels have a bug that they may leak space in the snapshot on crash.
  * If the kernel is buggy, we add some extra space.

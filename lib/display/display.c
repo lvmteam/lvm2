@@ -121,19 +121,29 @@ const char *get_percent_string(percent_type_t def)
 	return _percent_types[def];
 }
 
+static const char *_lv_name(const struct logical_volume *lv)
+{
+	/* Never try to display names of the internal snapshot structures. */
+	if (lv_is_snapshot(lv))
+		return find_cow(lv)->name;
+
+	return lv->name;
+}
+
 const char *display_lvname(const struct logical_volume *lv)
 {
 	char *name;
+	const char *lv_name = _lv_name(lv);
 	int r;
 
 	if ((lv->vg->cmd->display_lvname_idx + NAME_LEN) >= sizeof((lv->vg->cmd->display_buffer)))
 		lv->vg->cmd->display_lvname_idx = 0;
 
 	name = lv->vg->cmd->display_buffer + lv->vg->cmd->display_lvname_idx;
-	r = dm_snprintf(name, NAME_LEN, "%s/%s", lv->vg->name, lv->name);
+	r = dm_snprintf(name, NAME_LEN, "%s/%s", lv->vg->name, lv_name);
 
 	if (r < 0) {
-		log_error("Full LV name \"%s/%s\" is too long.", lv->vg->name, lv->name);
+		log_error("Full LV name \"%s/%s\" is too long.", lv->vg->name, lv_name);
 		return NULL;
 	}
 
