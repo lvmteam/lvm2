@@ -3168,8 +3168,8 @@ case "$host_os" in
 		LDDEPS="$LDDEPS .export.sym"
 		LIB_SUFFIX=so
 		DEVMAPPER=yes
-		LVMETAD=no
-		LVMPOLLD=no
+		BUILD_LVMETAD=no
+		BUILD_LVMPOLLD=no
 		LOCKDSANLOCK=no
 		LOCKDDLM=no
 		ODIRECT=yes
@@ -11486,10 +11486,9 @@ if test "${enable_lvmetad+set}" = set; then :
   enableval=$enable_lvmetad; LVMETAD=$enableval
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $LVMETAD" >&5
-$as_echo "$LVMETAD" >&6; }
-
-BUILD_LVMETAD=$LVMETAD
+test -n "$LVMETAD" && BUILD_LVMETAD=$LVMETAD
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_LVMETAD" >&5
+$as_echo "$BUILD_LVMETAD" >&6; }
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmpolld" >&5
@@ -11499,10 +11498,9 @@ if test "${enable_lvmpolld+set}" = set; then :
   enableval=$enable_lvmpolld; LVMPOLLD=$enableval
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $LVMPOLLD" >&5
-$as_echo "$LVMPOLLD" >&6; }
-
-BUILD_LVMPOLLD=$LVMPOLLD
+test -n "$LVMPOLLD" && BUILD_LVMPOLLD=$LVMPOLLD
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_LVMPOLLD" >&5
+$as_echo "$BUILD_LVMPOLLD" >&6; }
 
 ################################################################################
 BUILD_LVMLOCKD=no
@@ -11695,11 +11693,17 @@ $as_echo_n "checking whether to build lvmlockd... " >&6; }
 $as_echo "$BUILD_LVMLOCKD" >&6; }
 
 if test "$BUILD_LVMLOCKD" = yes; then
-	if test -n "$BUILD_LVMPOLLD"; then :
+	if test "$LVMPOLLD" = no; then :
+  as_fn_error $? "cannot build lvmlockd with --disable-lvmpolld." "$LINENO" 5
+fi
+	if test "$LVMETAD" = no; then :
+  as_fn_error $? "cannot build lvmlockd with --disable-lvmetad." "$LINENO" 5
+fi
+	if test "$BUILD_LVMPOLLD" = no; then :
   BUILD_LVMPOLLD=yes; { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Enabling lvmpolld - required by lvmlockd." >&5
 $as_echo "$as_me: WARNING: Enabling lvmpolld - required by lvmlockd." >&2;}
 fi
-	if test -n "$BUILD_LVMETAD"; then :
+	if test "$BUILD_LVMETAD" = no; then :
   BUILD_LVMETAD=yes; { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Enabling lvmetad - required by lvmlockd." >&5
 $as_echo "$as_me: WARNING: Enabling lvmetad - required by lvmlockd." >&2;}
 fi
