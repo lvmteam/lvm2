@@ -1933,8 +1933,12 @@ AC_DEFINE_UNQUOTED(DEFAULT_CACHE_SUBDIR, ["$DEFAULT_CACHE_SUBDIR"],
 
 AC_ARG_WITH(default-locking-dir,
 	    AC_HELP_STRING([--with-default-locking-dir=DIR],
-			   [default locking directory [/var/lock/lvm]]),
-	    DEFAULT_LOCK_DIR=$withval, DEFAULT_LOCK_DIR="/var/lock/lvm")
+			   [default locking directory [autodetect_lock_dir/lvm]]),
+	    DEFAULT_LOCK_DIR=$withval,
+	    [AC_MSG_CHECKING(for default lock directory)
+	     DEFAULT_LOCK_DIR="$RUN_DIR/lock/lvm"
+	     test -d "$RUN_DIR/lock" || DEFAULT_LOCK_DIR="/var/lock/lvm"
+	     AC_MSG_RESULT($DEFAULT_LOCK_DIR)])
 AC_DEFINE_UNQUOTED(DEFAULT_LOCK_DIR, ["$DEFAULT_LOCK_DIR"],
 		   [Name of default locking directory.])
 

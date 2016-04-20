@@ -1820,7 +1820,7 @@ Optional Packages:
   --with-default-cache-subdir=SUBDIR
                           default metadata cache subdir [cache]
   --with-default-locking-dir=DIR
-                          default locking directory [/var/lock/lvm]
+                          default locking directory [autodetect_lock_dir/lvm]
   --with-default-data-alignment=NUM
                           set the default data alignment in MiB [1]
   --with-interface=IFACE  choose kernel interface (ioctl) [ioctl]
@@ -15113,7 +15113,12 @@ _ACEOF
 if test "${with_default_locking_dir+set}" = set; then :
   withval=$with_default_locking_dir; DEFAULT_LOCK_DIR=$withval
 else
-  DEFAULT_LOCK_DIR="/var/lock/lvm"
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for default lock directory" >&5
+$as_echo_n "checking for default lock directory... " >&6; }
+	     DEFAULT_LOCK_DIR="$RUN_DIR/lock/lvm"
+	     test -d "$RUN_DIR/lock" || DEFAULT_LOCK_DIR="/var/lock/lvm"
+	     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DEFAULT_LOCK_DIR" >&5
+$as_echo "$DEFAULT_LOCK_DIR" >&6; }
 fi
 
 
