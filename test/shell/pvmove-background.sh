@@ -21,11 +21,15 @@ for mode in "--atomic" ""
 do
 lvcreate -aey -l1 -n $lv1 $vg "$dev1"
 
-lvs -o +devices | grep "$dev1"
+lvs -o +devices | tee out
+grep "$dev1" out
+
 LVM_TEST_TAG="kill_me_$PREFIX" pvmove $mode -i 1 -b "$dev1" "$dev2"
 sleep 5 # arbitrary...
-lvs -o +devices | not grep "pvmove"
-lvs -o +devices | grep "$dev2"
+lvs -o +devices | tee out
+not grep "pvmove" out
+lvs -o +devices | tee out
+grep "$dev2" out
 
 lvremove -ff $vg
 done
