@@ -985,8 +985,8 @@ static int _vg_write_file(struct format_instance *fid __attribute__((unused)),
 	if (lvm_fclose(fp, tc->path_edit))
 		return_0;
 
+	log_debug_metadata("Renaming %s to %s", temp_file, tc->path_edit);
 	if (rename(temp_file, tc->path_edit)) {
-		log_debug_metadata("Renaming %s to %s", temp_file, tc->path_edit);
 		log_error("%s: rename to %s failed: %s", temp_file,
 			  tc->path_edit, strerror(errno));
 		return 0;
