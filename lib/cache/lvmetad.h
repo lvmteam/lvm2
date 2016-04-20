@@ -154,8 +154,8 @@ void lvmetad_clear_disabled(struct cmd_context *cmd);
 #  else		/* LVMETAD_SUPPORT */
 
 #    define lvmetad_disconnect()	do { } while (0)
-#    define lvmetad_connect(cmd)	do { } while (0)
-#    define lvmetad_make_unused()	do { } while (0)
+#    define lvmetad_connect(cmd)	(0)
+#    define lvmetad_make_unused(cmd)	do { } while (0)
 #    define lvmetad_used()		(0)
 #    define lvmetad_set_socket(a)	do { } while (0)
 #    define lvmetad_socket_present()	(0)
@@ -175,7 +175,7 @@ void lvmetad_clear_disabled(struct cmd_context *cmd);
 #    define lvmetad_pvscan_single(cmd, dev, handler, ignore_obsolete)	(0)
 #    define lvmetad_pvscan_all_devs(cmd, handler, do_wait)	(0)
 #    define lvmetad_pvscan_foreign_vgs(cmd, handler)	(0)
-#    define lvmetad_vg_clear_outdated_pvs(vg)           (1)
+#    define lvmetad_vg_clear_outdated_pvs(vg)           do { } while (0)
 #    define lvmetad_validate_global_cache(cmd, force)	do { } while (0)
 #    define lvmetad_vg_is_foreign(cmd, vgname, vgid) (0)
 #    define lvmetad_token_matches(cmd) (1)
