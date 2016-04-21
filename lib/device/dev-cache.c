@@ -379,17 +379,13 @@ static int _get_sysfs_value(const char *path, char *buf, size_t buf_size, int er
 		goto out;
 	}
 
-	if (!(len = strlen(buf)) || (len == 1 && buf[0] == '\n')) {
-		if (error_if_no_value) {
-			log_error("_get_sysfs_value: %s: no value", path);
-			goto out;
-		}
-	}
+	if ((len = strlen(buf)) && buf[len - 1] == '\n')
+		buf[--len] = '\0';
 
-	if (buf[len - 1] == '\n')
-		buf[len - 1] = '\0';
-
-	r = 1;
+	if (!len && error_if_no_value)
+		log_error("_get_sysfs_value: %s: no value", path);
+	else
+		r = 1;
 out:
 	if (fclose(fp))
 		log_sys_error("fclose", path);
