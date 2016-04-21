@@ -10,7 +10,6 @@
 
 #include "lib.h"
 #include "toolcontext.h"
-#include "metadata.h"
 #include "lvmnotify.h"
 
 #define LVM_DBUS_DESTINATION "com.redhat.lvmdbus1"
