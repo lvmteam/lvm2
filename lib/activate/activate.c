@@ -763,7 +763,8 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 #define OPEN_COUNT_CHECK_RETRIES 25
 #define OPEN_COUNT_CHECK_USLEEP_DELAY 200000
 
-int lv_check_not_in_use(const struct logical_volume *lv)
+/* Only report error if error_if_used is set */
+int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 {
 	struct lvinfo info;
 	unsigned int open_count_check_retries;
@@ -774,14 +775,22 @@ int lv_check_not_in_use(const struct logical_volume *lv)
 	/* If sysfs is not used, use open_count information only. */
 	if (dm_sysfs_dir()) {
 		if (dm_device_has_holders(info.major, info.minor)) {
-			log_error("Logical volume %s is used by another device.",
-				  display_lvname(lv));
+			if (error_if_used)
+				log_error("Logical volume %s is used by another device.",
+					  display_lvname(lv));
+			else
+				log_debug_activation("Logical volume %s is used by another device.",
+						     display_lvname(lv));
 			return 0;
 		}
 
 		if (dm_device_has_mounted_fs(info.major, info.minor)) {
-			log_error("Logical volume %s contains a filesystem in use.",
-				  display_lvname(lv));
+			if (error_if_used)
+				log_error("Logical volume %s contains a filesystem in use.",
+					  display_lvname(lv));
+			else
+				log_debug_activation("Logical volume %s contains a filesystem in use.",
+						     display_lvname(lv));
 			return 0;
 		}
 	}
@@ -789,8 +798,10 @@ int lv_check_not_in_use(const struct logical_volume *lv)
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
 	while (info.open_count > 0 && open_count_check_retries--) {
 		if (!open_count_check_retries) {
-			log_error("Logical volume %s in use.",
-				  display_lvname(lv));
+			if (error_if_used)
+				log_error("Logical volume %s in use.", display_lvname(lv));
+			else
+				log_debug_activation("Logical volume %s in use.", display_lvname(lv));
 			return 0;
 		}
 
@@ -2118,7 +2129,7 @@ static int _lv_has_open_snapshots(const struct logical_volume *lv)
 	int r = 0;
 
 	dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs, origin_list)
-		if (!lv_check_not_in_use(snap_seg->cow))
+		if (!lv_check_not_in_use(snap_seg->cow, 1))
 			r++;
 
 	if (r)
@@ -2172,7 +2183,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 	if (lv_is_visible(lv) || lv_is_virtual_origin(lv) ||
 	    lv_is_merging_thin_snapshot(lv)) {
-		if (!lv_check_not_in_use(lv))
+		if (!lv_check_not_in_use(lv, 1))
 			goto_out;
 
 		if (lv_is_origin(lv) && _lv_has_open_snapshots(lv))

@@ -1876,7 +1876,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 	}
 
 	if (lv_is_active_locally(cow)) {
-		if (!lv_check_not_in_use(cow))
+		if (!lv_check_not_in_use(cow, 1))
 			return_0;
 
 		if ((lp->force == PROMPT) && !lp->yes &&
@@ -2232,11 +2232,11 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	 * being open.
 	 */
 	if (lv_is_active_locally(origin)) {
-		if (!lv_check_not_in_use(origin)) {
-			log_print_unless_silent("Can't merge over open origin volume.");
+		if (!lv_check_not_in_use(origin, 0)) {
+			log_print_unless_silent("Can't merge until origin volume is closed.");
 			merge_on_activate = 1;
-		} else if (!lv_check_not_in_use(lv)) {
-			log_print_unless_silent("Can't merge when snapshot is open.");
+		} else if (!lv_check_not_in_use(lv, 0)) {
+			log_print_unless_silent("Can't merge until snapshot is closed.");
 			merge_on_activate = 1;
 		}
 	} else if (vg_is_clustered(origin->vg) && lv_is_active(origin)) {

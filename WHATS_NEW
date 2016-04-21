@@ -1,5 +1,6 @@
 Version 2.02.151 -
 =================================
+  Suppress errors when snapshot merge gets delayed because volume is in use.
   Avoid internal snapshot LV names in messages.
   Autodetect and use /run/lock dir when available instead of /var/lock.
   lvchange --refresh for merging thin origin will retry to deactivate snapshot.

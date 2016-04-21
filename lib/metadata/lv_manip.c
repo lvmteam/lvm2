@@ -5802,7 +5802,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!lv_is_cache_pool(lv) && /* cache pool cannot be active */
 	    lv_is_active(lv)) {
-		if (!lv_check_not_in_use(lv))
+		if (!lv_check_not_in_use(lv, 1))
 			return_0;
 
 		if ((force == PROMPT) &&
