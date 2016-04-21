@@ -94,8 +94,8 @@ struct historical_logical_volume {
 	uint64_t timestamp_removed;
 	struct generic_logical_volume *indirect_origin;
 	struct dm_list indirect_glvs; /* list of struct generic_logical_volume */
-	int checked:1; /* set if this historical LV has been checked for validity */
-	int valid:1;   /* historical LV is valid if there's at least one live LV among ancestors */
+	unsigned checked:1; /* set if this historical LV has been checked for validity */
+	unsigned valid:1;   /* historical LV is valid if there's at least one live LV among ancestors */
 };
 
 struct generic_logical_volume {
