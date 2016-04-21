@@ -122,11 +122,17 @@ inline Listing listdir( std::string p, bool recurse = false, std::string prefix 
     Listing r;
 
     dir d( p );
+#if !defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 23))
+    /* readdir_r is deprecated with newer GLIBC */
     struct dirent entry, *iter = 0;
-    int readerr;
-
-    while ( (readerr = readdir_r( d.d, &entry, &iter )) == 0 && iter ) {
+    while ( (errno = readdir_r( d.d, &entry, &iter )) == 0 && iter ) {
         std::string ename( entry.d_name );
+#else
+    struct dirent *entry;
+    errno = 0;
+    while ( (entry = readdir( d.d )) ) {
+        std::string ename( entry->d_name );
+#endif
 
         if ( ename == "." || ename == ".." )
             continue;
@@ -134,8 +140,10 @@ inline Listing listdir( std::string p, bool recurse = false, std::string prefix 
         if ( recurse ) {
             struct stat64 stat;
             std::string s = p + "/" + ename;
-            if ( ::stat64( s.c_str(), &stat ) == -1 )
+            if ( ::stat64( s.c_str(), &stat ) == -1 ) {
+                errno = 0;
                 continue;
+            }
             if ( S_ISDIR(stat.st_mode) ) {
                 Listing sl = listdir( s, true, prefix + ename + "/" );
                 for ( Listing::iterator i = sl.begin(); i != sl.end(); ++i )
@@ -146,7 +154,7 @@ inline Listing listdir( std::string p, bool recurse = false, std::string prefix 
             r.push_back( ename );
     };
 
-    if ( readerr != 0 )
+    if ( errno != 0 )
         throw syserr( "error reading directory", p );
 
     return r;
