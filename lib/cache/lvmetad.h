@@ -165,6 +165,7 @@ void lvmetad_clear_disabled(struct cmd_context *cmd);
 #    define lvmetad_used()		(0)
 #    define lvmetad_set_socket(a)	do { } while (0)
 #    define lvmetad_socket_present()	(0)
+#    define lvmetad_pidfile_present()   (0)
 #    define lvmetad_set_token(a)	do { } while (0)
 #    define lvmetad_release_token()	do { } while (0)
 #    define lvmetad_vg_update(vg)	(1)
