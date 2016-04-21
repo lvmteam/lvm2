@@ -19,13 +19,35 @@ aux prepare_devs 3
 
 pvcreate "$dev1"
 UUID1=$(get pv_field "$dev1" uuid)
-pvcreate --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}" -u "$UUID1" --norestorefile "$dev2"
-pvcreate --config "devices{filter=[\"a|$dev3|\",\"r|.*|\"]}" -u "$UUID1" --norestorefile "$dev3"
+pvcreate --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]} global/use_lvmetad=0" -u "$UUID1" --norestorefile "$dev2"
+pvcreate --config "devices{filter=[\"a|$dev3|\",\"r|.*|\"]} global/use_lvmetad=0" -u "$UUID1" --norestorefile "$dev3"
+
+pvscan --cache 2>&1 | tee out
+
+if test -e LOCAL_LVMETAD; then
+	grep "was already found" out
+	grep "WARNING: Disabling lvmetad cache which does not support duplicate PVs." out
+fi
 
 pvs -o+uuid 2>&1 | tee out
-COUNT=$(should grep --count "Found duplicate" out)
 
-# FIXME  lvmetad is not able to serve properly this case
-should [ "$COUNT" -eq 2 ]
+grep    WARNING out > warn || true
+grep -v WARNING out > main || true
 
-pvs -o+uuid --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}"
+test $(grep $UUID1 main | wc -l) -eq 1
+
+COUNT=$(grep --count "was already found" warn)
+[ "$COUNT" -eq 2 ]
+
+pvs -o+uuid --config "devices{filter=[\"a|$dev2|\",\"r|.*|\"]}" 2>&1 | tee out
+
+rm warn main || true
+grep    WARNING out > warn || true
+grep -v WARNING out > main || true
+
+not grep "$dev1" main
+grep "$dev2" main
+not grep "$dev3" main
+
+not grep "was already found" warn
+
