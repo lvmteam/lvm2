@@ -1,5 +1,6 @@
 Version 2.02.151 -
 =================================
+  Fix error path after reusing of _setup_task (2.02.150).
   Fix memory access for empty sysfs values (2.02.149).
   Disable lvmetad when lvm1 metadata is seen, so commands revert to scanning.
   Suppress errors when snapshot merge gets delayed because volume is in use.

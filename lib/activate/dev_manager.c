@@ -381,7 +381,7 @@ static int _device_is_suspended(int major, int minor)
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_INFO,
 				major, minor, 0)))
-		goto_out;
+		return_0;
 
 	if (!dm_task_run(dmt) ||
 	    !dm_task_get_info(dmt, &info)) {
@@ -406,7 +406,7 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
 				MAJOR(dev->dev), MINOR(dev->dev), 0)))
-		goto_out;
+		return_0;
 
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of snapshot or snapshot origin device");
@@ -529,7 +529,7 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_STATUS,
 				MAJOR(dev->dev), MINOR(dev->dev), 0)))
-		goto_out;
+		return_0;
 
 	/* Non-blocking status read */
 	if (!dm_task_no_flush(dmt))
