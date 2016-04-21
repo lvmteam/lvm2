@@ -3827,10 +3827,9 @@ int report_object(void *handle, int selection_only, const struct volume_group *v
 			_dummy_fid.fmt = pv->fmt;
 	}
 
-	if (vg && is_orphan_vg(vg->name) && is_used_pv(pv)) {
+	if (vg && is_orphan_vg(vg->name) && pv && is_used_pv(pv)) {
 		obj.vg = &_unknown_vg;
-		if (pv)
-			_dummy_fid.fmt = pv->fmt;
+		_dummy_fid.fmt = pv->fmt;
 	}
 
 	return sh ? dm_report_object_is_selected(sh->selection_rh, &obj, 0, &sh->selected)
