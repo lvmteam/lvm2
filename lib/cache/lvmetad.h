@@ -53,6 +53,12 @@ void lvmetad_set_socket(const char *);
 int lvmetad_socket_present(void);
 
 /*
+ * Check if lvmetad pidfile is present, indicating that the lvmetad
+ * process is running or not.
+ */
+int lvmetad_pidfile_present(void);
+
+/*
  * Set the "lvmetad validity token" (currently only consists of the lvmetad
  * filter. See lvm.conf.
  */

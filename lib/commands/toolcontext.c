@@ -1720,7 +1720,7 @@ static int _init_lvmetad(struct cmd_context *cmd)
 	}
 
 	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
-		if (lvmetad_socket_present())
+		if (lvmetad_pidfile_present())
 			log_warn("WARNING: Not using lvmetad because config setting use_lvmetad=0.");
 		return 1;
 	}

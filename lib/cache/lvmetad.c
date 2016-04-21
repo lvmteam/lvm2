@@ -165,6 +165,13 @@ void lvmetad_make_unused(struct cmd_context *cmd)
 		stack;
 }
 
+int lvmetad_pidfile_present(void)
+{
+	const char *pidfile = getenv("LVM_LVMETAD_PIDFILE") ?: LVMETAD_PIDFILE;
+
+	return !access(pidfile, F_OK);
+}
+
 int lvmetad_socket_present(void)
 {
 	const char *socket = _lvmetad_socket ?: LVMETAD_SOCKET;
