@@ -41,19 +41,19 @@ int cache_mode_is_set(const struct lv_segment *seg)
 
 const char *get_cache_mode_name(const struct lv_segment *seg)
 {
-	if (seg->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
-		return "writeback";
-
-	if (seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH)
-		return "writethrough";
-
 	if (seg->feature_flags & DM_CACHE_FEATURE_PASSTHROUGH)
 		return "passthrough";
 
-	log_error(INTERNAL_ERROR "LV %s has uknown feature flags %" PRIu64 ".",
-		  display_lvname(seg->lv), seg->feature_flags);
+	if (seg->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
+		return "writeback";
 
-	return NULL;
+	if (!seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH) {
+		log_error(INTERNAL_ERROR "LV %s has uknown feature flags %" PRIu64 ", "
+			  "returning writethrough instead.",
+			  display_lvname(seg->lv), seg->feature_flags);
+	}
+
+	return "writethrough";
 }
 
 int cache_set_mode(struct lv_segment *seg, const char *str)
