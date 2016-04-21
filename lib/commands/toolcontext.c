@@ -1720,8 +1720,10 @@ static int _init_lvmetad(struct cmd_context *cmd)
 	}
 
 	if (!find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
-		if (lvmetad_pidfile_present())
+		if (lvmetad_pidfile_present()) {
 			log_warn("WARNING: Not using lvmetad because config setting use_lvmetad=0.");
+			log_warn("WARNING: To avoid corruption, rescan devices to make changes visible (pvscan --cache).");
+		}
 		return 1;
 	}
 
