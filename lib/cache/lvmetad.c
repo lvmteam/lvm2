@@ -126,8 +126,8 @@ void lvmetad_disconnect(void)
 
 int lvmetad_connect(struct cmd_context *cmd)
 {
-	if (access(getenv("LVM_LVMETAD_PIDFILE") ? : LVMETAD_PIDFILE, F_OK)) {
-		log_debug_lvmetad("Failed to connect to lvmetad: not running.");
+	if (!lvmetad_socket_present()) {
+		log_debug_lvmetad("Failed to connect to lvmetad: socket not present.");
 		_lvmetad_connected = 0;
 		_lvmetad_use = 0;
 		_lvmetad_cmd = NULL;
