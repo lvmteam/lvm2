@@ -129,7 +129,7 @@ pvmove_fg() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
 
 	aux enable_dev "$dev2"
 
@@ -149,7 +149,7 @@ pvmove_bg() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b
 }
@@ -167,7 +167,7 @@ pvmove_fg_single() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
 
 	aux enable_dev "$dev2"
 
@@ -187,7 +187,7 @@ pvmove_bg_single() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev1"
 }

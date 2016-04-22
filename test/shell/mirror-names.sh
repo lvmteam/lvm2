@@ -37,11 +37,11 @@ lv_devices_() {
 }
 
 lv_mirror_log_() {
-	test $(get lv_field $1 mirror_log) = $2
+	get lv_field $1 mirror_log | tr -d []
 }
 
 lv_convert_lv_() {
-	get lv_field $1 convert_lv
+	get lv_field $1 convert_lv | tr -d []
 }
 
 enable_devs() {
@@ -87,7 +87,7 @@ lvcreate -an -Zn -l2 --type mirror -m1 -n $lv1 $vg
 lv_devices_ $vg/$lv1 ${lv1}_mimage_0 ${lv1}_mimage_1
 
 #COMM "mirror log is ${lv1}_mlog"
-lv_mirror_log_ $vg/$lv1 ${lv1}_mlog
+test $(lv_mirror_log_ $vg/$lv1) = ${lv1}_mlog
 
 # "cleanup"
 check_and_cleanup_lvs_

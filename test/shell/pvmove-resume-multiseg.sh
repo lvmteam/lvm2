@@ -15,7 +15,7 @@
 # Multisegment variant w/ 2 pvmoves LVs per VG
 
 SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_CLVMD=1
+#SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
@@ -89,7 +89,7 @@ test_pvmove_resume() {
 	aux enable_dev "$dev5"
 
 	i=0
-	while get lv_field $vg name -a | grep "^pvmove"; do
+	while get lv_field $vg name -a | grep "^\[?pvmove"; do
 		# wait for 30 secs at max
 		test $i -ge 300 && die "Pvmove is too slow or does not progress."
 		sleep .1
@@ -99,6 +99,8 @@ test_pvmove_resume() {
 	aux kill_tagged_processes
 
 	lvremove -ff $vg
+	# drop debug logs from killed lvm2 commands
+	rm -f debug.log_DEBUG*
 }
 
 lvchange_single() {
@@ -145,8 +147,8 @@ pvmove_fg() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
-	get lv_field $vg name -a | grep "^pvmove1"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove1"
 
 	# disable delay device
 	# fg pvmove would take ages to complete otherwise
@@ -170,8 +172,8 @@ pvmove_bg() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
-	get lv_field $vg name -a | grep "^pvmove1"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove1"
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b
 }
@@ -190,8 +192,8 @@ pvmove_fg_single() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
-	get lv_field $vg name -a | grep "^pvmove1"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove1"
 
 	# disable delay device
 	# fg pvmove would take ages to complete otherwise
@@ -216,8 +218,8 @@ pvmove_bg_single() {
 	fi
 
 	# ...thus finish polling
-	get lv_field $vg name -a | grep "^pvmove0"
-	get lv_field $vg name -a | grep "^pvmove1"
+	get lv_field $vg name -a | egrep "^\[?pvmove0"
+	get lv_field $vg name -a | egrep "^\[?pvmove1"
 
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev1"
 	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -b "$dev3"
