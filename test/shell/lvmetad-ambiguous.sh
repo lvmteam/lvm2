@@ -26,11 +26,11 @@ dmsetup create -u TEST-${PREFIX}pv1 ${PREFIX}pv1 ${PREFIX}pv1.table
 aux finish_udev_transaction
 
 # re-scan them
-pvscan --cache "$dev1"
-pvscan --cache "$dev2"
+pvscan --cache "$dev1" || true
+pvscan --cache "$dev2" || true
 
 # expect both to be there
-pvs | tee pvs.txt
-grep "$dev1" pvs.txt
-grep "$dev2" pvs.txt
+pvs -a -o name | tee out
+grep "$dev1" out
+grep "$dev2" out
 
