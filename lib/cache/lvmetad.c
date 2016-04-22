@@ -2028,8 +2028,8 @@ static void _update_changed_pvs_in_udev(struct cmd_context *cmd,
 {
 	struct pv_cache_list *before;
 	struct pv_cache_list *after;
-	char id_before[ID_LEN + 1]  __attribute__((aligned(8)));
-	char id_after[ID_LEN + 1]  __attribute__((aligned(8)));
+	char id_before[ID_LEN + 1];
+	char id_after[ID_LEN + 1];
 	int found;
 
 	dm_list_iterate_items(before, pvc_before) {
@@ -2043,8 +2043,8 @@ static void _update_changed_pvs_in_udev(struct cmd_context *cmd,
 				continue;
 
 			if (!id_equal(&before->pvid, &after->pvid)) {
-				dm_strncpy(id_before, (char *) &before->pvid, sizeof(id_before));
-				dm_strncpy(id_after, (char *) &after->pvid, sizeof(id_after));
+				(void) dm_strncpy(id_before, (char *) &before->pvid, sizeof(id_before));
+				(void) dm_strncpy(id_after, (char *) &after->pvid, sizeof(id_after));
 
 				log_debug_devs("device %d:%d changed pvid from %s to %s",
 					       (int)MAJOR(before->devt), (int)MINOR(before->devt),
@@ -2070,7 +2070,7 @@ static void _update_changed_pvs_in_udev(struct cmd_context *cmd,
 		}
 
 		if (!found) {
-			dm_strncpy(id_before, (char *) &before->pvid, sizeof(id_before));
+			(void) dm_strncpy(id_before, (char *) &before->pvid, sizeof(id_before));
 
 			log_debug_devs("device %d:%d pvid %s vg %s is gone",
 				       (int)MAJOR(before->devt), (int)MINOR(before->devt),
