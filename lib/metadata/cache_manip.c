@@ -47,11 +47,10 @@ const char *get_cache_mode_name(const struct lv_segment *seg)
 	if (seg->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
 		return "writeback";
 
-	if (!seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH) {
+	if (!(seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH))
 		log_error(INTERNAL_ERROR "LV %s has uknown feature flags %" PRIu64 ", "
 			  "returning writethrough instead.",
 			  display_lvname(seg->lv), seg->feature_flags);
-	}
 
 	return "writethrough";
 }
