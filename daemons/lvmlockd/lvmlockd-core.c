@@ -306,7 +306,13 @@ static const char *_syslog_num_to_name(int num)
 static uint64_t monotime(void)
 {
 	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
+		log_error("clock_gettime failed to get timestamp %s.",
+			  strerror(errno));
+		ts.tv_sec = 0;
+	}
+
 	return ts.tv_sec;
 }
 
@@ -3340,7 +3346,10 @@ static void *worker_thread_main(void *arg_in)
 
 	while (1) {
 		pthread_mutex_lock(&worker_mutex);
-		clock_gettime(CLOCK_REALTIME, &ts);
+		if (clock_gettime(CLOCK_REALTIME, &ts)) {
+			log_error("clock_gettime failed.");
+			ts.tv_sec = ts.tv_nsec = 0;
+		}
 		ts.tv_sec += delay_sec;
 		rv = 0;
 		act = NULL;
