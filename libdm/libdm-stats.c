@@ -680,6 +680,10 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 		nr_regions++;
 	}
 
+	if (!nr_regions)
+		/* no region data read from @stats_list */
+		goto bad;
+
 	dms->nr_regions = nr_regions;
 	dms->max_region = max_region - 1;
 	dms->regions = dm_pool_end_object(mem);
@@ -935,6 +939,10 @@ static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 			region->step = len; /* area size is always uniform. */
 		}
 	}
+
+	if (region->start == UINT64_MAX)
+		/* no area data read from @stats_print */
+		goto bad;
 
 	region->len = (start + len) - region->start;
 	region->timescale = timescale;
