@@ -851,6 +851,13 @@ global {
 	# devices/global_filter.
 	use_lvmetad = @DEFAULT_USE_LVMETAD@
 
+	# Configuration option global/lvmetad_update_wait_time.
+	# The number of seconds a command will wait for lvmetad update to finish.
+	# After waiting for this period, a command will not use lvmetad, and
+	# will revert to disk scanning.
+	# This configuration option has an automatic default value.
+	# lvmetad_update_wait_time = 10
+
 	# Configuration option global/use_lvmlockd.
 	# Use lvmlockd for locking among hosts using LVM on shared storage.
 	# Applicable only if LVM is compiled with lockd support in which
