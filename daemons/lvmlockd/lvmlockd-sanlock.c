@@ -206,7 +206,7 @@ int lm_data_size_sanlock(void)
 #define VG_LOCK_BEGIN UINT64_C(66)
 #define LV_LOCK_BEGIN UINT64_C(67)
 
-static unsigned int daemon_test_lv_count;
+static uint64_t daemon_test_lv_count;
 
 static int lock_lv_name_from_args(char *vg_args, char *lock_lv_name)
 {
