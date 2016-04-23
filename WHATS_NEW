@@ -1,5 +1,6 @@
 Version 2.02.152 - 
 ==================================
+  Show creation transaction_id and zeroing state of pool with thin volume.
   Stop checking for dm_cache_mq policy with cache target 1.9 (alias to smq).
   Check first /sys/module/dm_* dir existance before using modprobe.
   Remove mpath from 10-dm.rules, superseded by 11-dm-mpath.rules (mpath>=0.6.0).
