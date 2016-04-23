@@ -136,7 +136,7 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 	if (!update)
 		return 0;
 
-	if (!lv_update_and_reload_origin(lv))
+	if (!lv_update_and_reload(lv))
 		return_0;
 
 	return 1;

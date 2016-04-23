@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Fix lvchange --discard|--zero for active thin-pool.
   Enforce 4MiB or 25% metadata free space for thin pool operations.
   Fix lock-holder device for thin pool with inactive thin volumes.
   Use --alloc normal for mirror logs even if the mimages were stricter.
