@@ -26,15 +26,14 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-A | \-\-autobackup
 .RB { y | n }]
 .RB [ \-\-cachepolicy
-.IR policy ]
+.IR Policy ]
 .RB [ \-\-cachesettings
-.IR key \fB= value ]
+.IR Key \fB= Value ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
 .RB [ \-C | \-\-contiguous
 .RB { y | n }]
 .RB [ \-d | \-\-debug ]
-.RB [ \-\-degraded ]
 .RB [ \-\-deltag
 .IR Tag ]
 .RB [ \-\-detachprofile ]
@@ -57,9 +56,9 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-M | \-\-persistent
 .RB { y | n }
 .RB [ \-\-major
-.IR major ]
+.IR Major ]
 .RB [ \-\-minor
-.IR minor ]]
+.IR Minor ]]
 .RB [ \-\-poll
 .RB { y | n }]
 .RB [ \-\- [ raid ] maxrecoveryrate
@@ -188,9 +187,9 @@ of the flag is reported within \fBlv_attr\fP bits.
 .
 .HP
 .BR  \-\-cachepolicy
-.IR policy ,
+.IR Policy ,
 .BR \-\-cachesettings
-.IR key \fB= value
+.IR Key \fB= Value
 .br
 Only applicable to cached LVs; see also \fBlvmcache(7)\fP. Sets
 the cache policy and its associated tunable settings. In most use-cases,
@@ -240,7 +239,7 @@ Do not use this if dmeventd is already monitoring a device.
 .
 .HP
 .BR \-\-major
-.IR major
+.IR Major
 .br
 Sets the major number. This option is supported only on older systems
 (kernel version 2.4) and is ignored on modern Linux systems where major
@@ -248,7 +247,7 @@ numbers are dynamically assigned.
 .
 .HP
 .BR \-\-minor
-.IR minor
+.IR Minor
 .br
 Set the minor number.
 .
