@@ -194,7 +194,7 @@ int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 		      uint32_t *stripe_size);
 
 int get_cache_params(struct cmd_context *cmd,
-		     const char **mode,
+		     cache_mode_t *cache_mode,
 		     const char **name,
 		     struct dm_config_tree **settings);
 

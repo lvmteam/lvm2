@@ -328,6 +328,19 @@ int activation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_v
 	return 1;
 }
 
+int cachemode_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
+{
+	cache_mode_t mode;
+
+	if (!set_cache_mode(&mode, av->value))
+		return_0;
+
+	av->i_value = mode;
+	av->ui_value = mode;
+
+	return 1;
+}
+
 int discards_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	thin_discards_t discards;

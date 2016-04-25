@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -39,7 +39,7 @@ lvcreate -an -Zn -L 8 -n $lv4 $vg
 lvcreate -an -Zn -L 16 -n $lv5 $vg
 
 # check validation of cachemode arg works
-fail lvconvert --yes --type cache-pool --cachemode writethroughX --cachepool $vg/$lv1
+invalid lvconvert --yes --type cache-pool --cachemode writethroughX --cachepool $vg/$lv1
 
 # by default no cache settings are attached to converted cache-pool
 lvconvert --yes --type cache-pool --chunksize 256 $vg/$lv1

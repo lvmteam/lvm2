@@ -29,76 +29,91 @@
 #define DM_HINT_OVERHEAD_PER_BLOCK	8  /* bytes */
 #define DM_MAX_HINT_WIDTH		(4+16)  /* bytes.  FIXME Configurable? */
 
-int cache_mode_is_set(const struct lv_segment *seg)
+const char *display_cache_mode(const struct lv_segment *seg)
 {
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
 
-	return (seg->feature_flags & (DM_CACHE_FEATURE_WRITEBACK |
-				      DM_CACHE_FEATURE_WRITETHROUGH |
-				      DM_CACHE_FEATURE_PASSTHROUGH)) ? 1 : 0;
+	if (!seg_is_cache_pool(seg) ||
+	    (seg->cache_mode == CACHE_MODE_UNDEFINED))
+		return "";
+
+	return get_cache_mode_name(seg);
 }
 
-const char *get_cache_mode_name(const struct lv_segment *seg)
-{
-	if (seg->feature_flags & DM_CACHE_FEATURE_PASSTHROUGH)
-		return "passthrough";
 
-	if (seg->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
+const char *get_cache_mode_name(const struct lv_segment *pool_seg)
+{
+	switch (pool_seg->cache_mode) {
+	default:
+		log_error(INTERNAL_ERROR "Cache pool %s has undefined cache mode, using writethrough instead.",
+			  display_lvname(pool_seg->lv));
+		/* Fall through */
+	case CACHE_MODE_WRITETHROUGH:
+		return "writethrough";
+	case CACHE_MODE_WRITEBACK:
 		return "writeback";
-
-	if (!(seg->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH))
-		log_error(INTERNAL_ERROR "LV %s has uknown feature flags %" PRIu64 ", "
-			  "returning writethrough instead.",
-			  display_lvname(seg->lv), seg->feature_flags);
-
-	return "writethrough";
+	case CACHE_MODE_PASSTHROUGH:
+		return "passthrough";
+	}
 }
 
-int cache_set_mode(struct lv_segment *seg, const char *str)
+int set_cache_mode(cache_mode_t *mode, const char *cache_mode)
 {
-	struct cmd_context *cmd = seg->lv->vg->cmd;
-	int id;
-	uint64_t mode;
-
-	if (!str && !seg_is_cache(seg))
-		return 1;			/* Defaults only for cache */
-
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-
-	if (!str) {
-		if (cache_mode_is_set(seg))
-			return 1;               /* Default already set in cache pool */
-
-		id = allocation_cache_mode_CFG;
-
-		/* If present, check backward compatible settings */
-		if (!find_config_node(cmd, cmd->cft, id) &&
-		    find_config_node(cmd, cmd->cft, allocation_cache_pool_cachemode_CFG))
-			id = allocation_cache_pool_cachemode_CFG;
-
-		if (!(str = find_config_tree_str(cmd, id, NULL))) {
-			log_error(INTERNAL_ERROR "Cache mode is not determined.");
-			return 0;
-		}
-	}
-
-	if (!strcmp(str, "writeback"))
-		mode = DM_CACHE_FEATURE_WRITEBACK;
-	else if (!strcmp(str, "writethrough"))
-		mode = DM_CACHE_FEATURE_WRITETHROUGH;
-	else if (!strcmp(str, "passthrough"))
-		mode = DM_CACHE_FEATURE_PASSTHROUGH;
+	if (!strcasecmp(cache_mode, "writethrough"))
+		*mode = CACHE_MODE_WRITETHROUGH;
+	else if (!strcasecmp(cache_mode, "writeback"))
+		*mode = CACHE_MODE_WRITEBACK;
+	else if (!strcasecmp(cache_mode, "passthrough"))
+		*mode = CACHE_MODE_PASSTHROUGH;
 	else {
-		log_error("Cannot set unknown cache mode \"%s\".", str);
+		log_error("Unknown cache mode: %s.", cache_mode);
 		return 0;
 	}
 
-	seg->feature_flags &= ~(DM_CACHE_FEATURE_WRITEBACK |
-				DM_CACHE_FEATURE_WRITETHROUGH |
-				DM_CACHE_FEATURE_PASSTHROUGH);
-	seg->feature_flags |= mode;
+	return 1;
+}
+
+int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
+{
+	struct cmd_context *cmd = seg->lv->vg->cmd;
+	const char *str;
+	int id;
+
+	if (seg_is_cache(seg))
+		seg = first_seg(seg->pool_lv);
+	else if (seg_is_cache_pool(seg)) {
+		if (mode == CACHE_MODE_UNDEFINED)
+			return 1;	/* Defaults only for cache */
+	} else {
+		log_error(INTERNAL_ERROR "Cannot set cache mode for non cache volume %s.",
+			  display_lvname(seg->lv));
+		return 0;
+	}
+
+	if (mode != CACHE_MODE_UNDEFINED) {
+		seg->cache_mode = mode;
+		return 1;
+	}
+
+	if (seg->cache_mode != CACHE_MODE_UNDEFINED)
+		return 1;               /* Default already set in cache pool */
+
+	/* Figure default settings from config/profiles */
+	id = allocation_cache_mode_CFG;
+
+	/* If present, check backward compatible settings */
+	if (!find_config_node(cmd, cmd->cft, id) &&
+	    find_config_node(cmd, cmd->cft, allocation_cache_pool_cachemode_CFG))
+		id = allocation_cache_pool_cachemode_CFG;
+
+	if (!(str = find_config_tree_str(cmd, id, NULL))) {
+		log_error(INTERNAL_ERROR "Cache mode is not determined.");
+		return 0;
+	}
+
+	if (!(set_cache_mode(&seg->cache_mode, str)))
+		return_0;
 
 	return 1;
 }
@@ -111,7 +126,7 @@ void cache_check_for_warns(const struct lv_segment *seg)
 	struct logical_volume *origin_lv = seg_lv(seg, 0);
 
 	if (lv_is_raid(origin_lv) &&
-	    first_seg(seg->pool_lv)->feature_flags & DM_CACHE_FEATURE_WRITEBACK)
+	    first_seg(seg->pool_lv)->cache_mode == CACHE_MODE_WRITEBACK)
 		log_warn("WARNING: Data redundancy is lost with writeback "
 			 "caching of raid logical volume!");
 
@@ -313,6 +328,7 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
  */
 int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 {
+	const struct logical_volume *lock_lv = lv_lock_holder(cache_lv);
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct lv_status_cache *status;
 	int cleaner_policy;
@@ -326,7 +342,8 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 			return_0;
 		if (status->cache->fail) {
 			dm_pool_destroy(status->mem);
-			log_warn("WARNING: Skippping flush for failed cache.");
+			log_warn("WARNING: Skippping flush for failed cache %s.",
+				 display_lvname(cache_lv));
 			return 1;
 		}
 
@@ -342,23 +359,31 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 		if (!dirty_blocks)
 			break;
 
+		log_print_unless_silent("Flushing " FMTu64 " blocks for cache %s.",
+					dirty_blocks, display_lvname(cache_lv));
 		if (cleaner_policy) {
-			log_print_unless_silent(FMTu64 " blocks must still be flushed.",
-						dirty_blocks);
 			/* TODO: Use centralized place */
 			usleep(500000);
 			continue;
 		}
 
 		/* Switch to cleaner policy to flush the cache */
-		log_print_unless_silent("Flushing cache for %s.",
-					display_lvname(cache_lv));
 		cache_seg->cleaner_policy = 1;
 		/* Reaload kernel with "cleaner" policy */
 		if (!lv_update_and_reload_origin(cache_lv))
 			return_0;
 	}
 
+	/*
+	 * TODO: add check if extra suspend resume is necessary
+	 * ATM this is workaround for missing cache sync when cache gets clean
+	 */
+	if (1) {
+		if (!lv_refresh_suspend_resume(lock_lv->vg->cmd, lock_lv))
+			return_0;
+	}
+
+	cache_seg->cleaner_policy = 0;
 	*is_clean = 1;
 
 	return 1;
@@ -401,8 +426,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 			return 0;
 		}
 		/* For inactive writethrough just drop cache layer */
-		if (first_seg(cache_seg->pool_lv)->feature_flags &
-		    DM_CACHE_FEATURE_WRITETHROUGH) {
+		if (first_seg(cache_seg->pool_lv)->cache_mode == CACHE_MODE_WRITETHROUGH) {
 			corigin_lv = seg_lv(cache_seg, 0);
 			if (!detach_pool_lv(cache_seg))
 				return_0;
@@ -636,14 +660,14 @@ out:
  * to update all commonly specified cache parameters
  */
 int cache_set_params(struct lv_segment *seg,
-		     const char *cache_mode,
+		     cache_mode_t mode,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings,
 		     uint32_t chunk_size)
 {
 	struct lv_segment *pool_seg;
 
-	if (!cache_set_mode(seg, cache_mode))
+	if (!cache_set_cache_mode(seg, mode))
 		return_0;
 
 	if (!cache_set_policy(seg, policy_name, policy_settings))

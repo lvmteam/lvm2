@@ -25,6 +25,8 @@ lvchange \(em change attributes of a logical volume
 .IR AllocationPolicy ]
 .RB [ \-A | \-\-autobackup
 .RB { y | n }]
+.RB [ \-\-cachemode
+.RB { passthrough | writeback | writethrough }]
 .RB [ \-\-cachepolicy
 .IR Policy ]
 .RB [ \-\-cachesettings
@@ -184,6 +186,22 @@ an extra \fB\-\-ignoreactivationskip\fP option must be used.
 The flag is not applied during deactivation. To see whether
 the flag is attached, use \fBlvs\fP(8) command where the state
 of the flag is reported within \fBlv_attr\fP bits.
+.
+.HP
+.BR \-\-cachemode
+.RB { passthrough | writeback | writethrough }
+.br
+Specifying a cache mode determines when the writes to a cache LV
+are considered complete.  When \fBwriteback\fP is specified, a write is
+considered complete as soon as it is stored in the cache pool LV.
+If \fBwritethough\fP is specified, a write is considered complete only
+when it has been stored in the cache pool LV and on the origin LV.
+While \fBwritethrough\fP may be slower for writes, it is more
+resilient if something should happen to a device associated with the
+cache pool LV. With \fBpassthrough\fP mode, all reads are served
+from origin LV (all reads miss the cache) and all writes are
+forwarded to the origin LV; additionally, write hits cause cache
+block invalidates. See \fBlvmcache(7)\fP for more details.
 .
 .HP
 .BR  \-\-cachepolicy

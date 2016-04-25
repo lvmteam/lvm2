@@ -678,24 +678,50 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _lvchange_cachepolicy(struct cmd_context *cmd, struct logical_volume *lv)
+static int _lvchange_cache(struct cmd_context *cmd, struct logical_volume *lv)
 {
+	cache_mode_t mode;
 	const char *name;
 	struct dm_config_tree *settings = NULL;
-	int r = 0;
+	struct lv_segment *pool_seg = first_seg(lv);
+	int r = 0, is_clean;
 
-	if (!lv_is_cache(lv) && !lv_is_cache_pool(lv)) {
-		log_error("LV %s is not a cache LV.", lv->name);
-		log_error("Only cache or cache pool devices can have --cachepolicy set.");
+	if (lv_is_cache(lv))
+		pool_seg = first_seg(pool_seg->pool_lv);
+        else if (!lv_is_cache_pool(lv)) {
+		log_error("LV %s is not a cache LV.", display_lvname(lv));
+		(void) arg_from_list_is_set(cmd, "is supported only with cache or cache pool LVs",
+					    cachemode_ARG,
+					    cachepolicy_ARG,
+					    cachesettings_ARG,
+					    -1);
 		goto out;
 	}
 
-	if (!get_cache_params(cmd, NULL, &name, &settings))
+	if (!get_cache_params(cmd, &mode, &name, &settings))
 		goto_out;
-	if (!cache_set_policy(first_seg(lv), name, settings))
+
+	if ((mode != CACHE_MODE_UNDEFINED) &&
+	    (mode != pool_seg->cache_mode)) {
+		if (!lv_cache_wait_for_clean(lv, &is_clean))
+			return_0;
+		if (!is_clean) {
+			log_error("Cache %s is not clean, refusing to switch cache mode.",
+				  display_lvname(lv));
+			return 0;
+		}
+	}
+
+	if (mode && !cache_set_cache_mode(first_seg(lv), mode))
 		goto_out;
+
+	if ((name || settings) &&
+	    !cache_set_policy(first_seg(lv), name, settings))
+		goto_out;
+
 	if (!lv_update_and_reload(lv))
 		goto_out;
+
 	r = 1;
 out:
 	if (settings)
@@ -1135,15 +1161,16 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
-	if (arg_count(cmd, cachepolicy_ARG) || arg_count(cmd, cachesettings_ARG)) {
+	if (arg_is_set(cmd, cachemode_ARG) ||
+	    arg_count(cmd, cachepolicy_ARG) || arg_count(cmd, cachesettings_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
-		doit += _lvchange_cachepolicy(cmd, lv);
+		doit += _lvchange_cache(cmd, lv);
 		docmds++;
 	}
 
 	if (doit)
-		log_print_unless_silent("Logical volume \"%s\" changed.", lv->name);
+		log_print_unless_silent("Logical volume %s changed.", display_lvname(lv));
 
 	if (arg_count(cmd, resync_ARG) &&
 	    !_lvchange_resync(cmd, lv))
@@ -1199,6 +1226,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	int update_partial_unsafe =
 		arg_from_list_is_set(cmd, NULL,
 				     alloc_ARG,
+				     cachemode_ARG,
 				     cachepolicy_ARG,
 				     cachesettings_ARG,
 				     discards_ARG,

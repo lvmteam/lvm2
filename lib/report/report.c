@@ -2504,19 +2504,8 @@ static int _cachemode_disp(struct dm_report *rh, struct dm_pool *mem,
 			   const void *data, void *private)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
-	const char *cachemode_str;
 
-	if (seg_is_cache(seg))
-		seg = first_seg(seg->pool_lv);
-
-	if (seg_is_cache_pool(seg) && cache_mode_is_set(seg)) {
-		if (!(cachemode_str = get_cache_mode_name(seg)))
-			return_0;
-
-		return _field_string(rh, field, cachemode_str);
-	}
-
-	return _field_set_value(field, "", NULL);
+	return _field_string(rh, field, display_cache_mode(seg));
 }
 
 static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,

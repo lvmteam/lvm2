@@ -274,6 +274,13 @@ typedef enum {
 } thin_discards_t;
 
 typedef enum {
+	CACHE_MODE_UNDEFINED = 0,
+	CACHE_MODE_WRITETHROUGH,
+	CACHE_MODE_WRITEBACK,
+	CACHE_MODE_PASSTHROUGH,
+} cache_mode_t;
+
+typedef enum {
 	LOCK_TYPE_INVALID = -1,
 	LOCK_TYPE_NONE = 0,
 	LOCK_TYPE_CLVM = 1,
@@ -472,7 +479,7 @@ struct lv_segment {
 	struct logical_volume *pool_lv;		/* For thin, cache */
 	uint32_t device_id;			/* For thin, 24bit */
 
-	uint64_t feature_flags;			/* For cache_pool */
+	cache_mode_t cache_mode;		/* For cache_pool */
 	const char *policy_name;		/* For cache_pool */
 	struct dm_config_node *policy_settings;	/* For cache_pool */
 	unsigned cleaner_policy;		/* For cache */
@@ -948,7 +955,7 @@ struct lvcreate_params {
 	uint32_t min_recovery_rate; /* RAID */
 	uint32_t max_recovery_rate; /* RAID */
 
-	const char *cache_mode; /* cache */
+	cache_mode_t cache_mode; /* cache */
 	const char *policy_name; /* cache */
 	struct dm_config_tree *policy_settings; /* cache */
 
@@ -1211,13 +1218,14 @@ struct lv_status_cache {
 	dm_percent_t dirty_usage;
 };
 
+const char *display_cache_mode(const struct lv_segment *seg);
 const char *get_cache_mode_name(const struct lv_segment *cache_seg);
-int cache_mode_is_set(const struct lv_segment *seg);
-int cache_set_mode(struct lv_segment *cache_seg, const char *str);
+int set_cache_mode(cache_mode_t *mode, const char *cache_mode);
+int cache_set_cache_mode(struct lv_segment *cache_seg, cache_mode_t mode);
 int cache_set_policy(struct lv_segment *cache_seg, const char *name,
 		     const struct dm_config_tree *settings);
 int cache_set_params(struct lv_segment *seg,
-		     const char *cache_mode,
+		     cache_mode_t mode,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings,
 		     uint32_t chunk_size);

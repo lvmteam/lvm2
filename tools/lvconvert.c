@@ -51,7 +51,7 @@ struct lvconvert_params {
 	uint32_t stripes;
 	uint32_t stripe_size;
 	uint32_t read_ahead;
-	const char *cache_mode; /* cache */
+	cache_mode_t cache_mode; /* cache */
 	const char *policy_name; /* cache */
 	struct dm_config_tree *policy_settings; /* cache */
 
@@ -2024,7 +2024,7 @@ static int _lvconvert_uncache(struct cmd_context *cmd,
 
 	/* TODO: Check for failed cache as well to get prompting? */
 	if (lv_is_partial(lv)) {
-		if (strcmp("writethrough", get_cache_mode_name(first_seg(seg->pool_lv)))) {
+		if (first_seg(seg->pool_lv)->cache_mode != CACHE_MODE_WRITETHROUGH) {
 			if (!lp->force) {
 				log_error("Conversion aborted.");
 				log_error("Cannot uncache writethrough cache volume %s without --force.",
@@ -3116,7 +3116,7 @@ mda_write:
 	seg->zero_new_blocks = lp->zero ? 1 : 0;
 
 	if (lp->cache_mode &&
-	    !cache_set_mode(seg, lp->cache_mode))
+	    !cache_set_cache_mode(seg, lp->cache_mode))
 		return_0;
 
 	if ((lp->policy_name || lp->policy_settings) &&
@@ -3228,7 +3228,7 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 	if (!(cache_lv = lv_cache_create(pool_lv, origin_lv)))
 		return_0;
 
-	if (!cache_set_mode(first_seg(cache_lv), lp->cache_mode))
+	if (!cache_set_cache_mode(first_seg(cache_lv), lp->cache_mode))
 		return_0;
 
 	if (!cache_set_policy(first_seg(cache_lv), lp->policy_name, lp->policy_settings))

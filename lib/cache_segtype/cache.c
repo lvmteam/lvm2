@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2013-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -26,6 +26,8 @@
 #include "defaults.h"
 
 static const char _cache_module[] = "cache";
+#define CACHE_POLICY_WHEN_MISSING   "mq"
+#define CACHE_MODE_WHEN_MISSING	    CACHE_MODE_WRITETHROUGH
 
 /* TODO: using static field here, maybe should be a part of segment_type */
 static unsigned _feature_mask;
@@ -41,24 +43,21 @@ static unsigned _feature_mask;
  *
  * Needs both segments cache and cache_pool to be loaded.
  */
-static int _fix_missing_defaults(struct lv_segment *cpool_seg)
+static void _fix_missing_defaults(struct lv_segment *cpool_seg)
 {
 	if (!cpool_seg->policy_name) {
-		cpool_seg->policy_name = "mq";
-		log_verbose("Cache is missing cache policy, using %s.",
+		cpool_seg->policy_name = CACHE_POLICY_WHEN_MISSING;
+		log_verbose("Cache pool %s is missing cache policy, using %s.",
+			    display_lvname(cpool_seg->lv),
 			    cpool_seg->policy_name);
 	}
 
-	if (!cache_mode_is_set(cpool_seg)) {
-		if (!cache_set_mode(cpool_seg, "writethrough")) {
-			log_error(INTERNAL_ERROR "Failed to writethrough cache mode.");
-			return 0;
-		}
-		log_verbose("Cache is missing cache mode, using %s.",
+	if (cpool_seg->cache_mode == CACHE_MODE_UNDEFINED) {
+		cpool_seg->cache_mode = CACHE_MODE_WHEN_MISSING;
+		log_verbose("Cache pool %s is missing cache mode, using %s.",
+			    display_lvname(cpool_seg->lv),
 			    get_cache_mode_name(cpool_seg));
 	}
-
-	return 1;
 }
 
 static int _cache_pool_text_import(struct lv_segment *seg,
@@ -97,7 +96,7 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	if (dm_config_has_node(sn, "cache_mode")) {
 		if (!(str = dm_config_find_str(sn, "cache_mode", NULL)))
 			return SEG_LOG_ERROR("cache_mode must be a string in");
-		if (!cache_set_mode(seg, str))
+		if (!set_cache_mode(&seg->cache_mode, str))
 			return SEG_LOG_ERROR("Unknown cache_mode in");
 	}
 
@@ -141,9 +140,9 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 	if (!attach_pool_metadata_lv(seg, meta_lv))
 		return_0;
 
-	if (!dm_list_empty(&seg->lv->segs_using_this_lv) &&
-	    !_fix_missing_defaults(seg))
-		return_0;
+	/* when cache pool is used, we require policy and mode to be defined */
+	if (!dm_list_empty(&seg->lv->segs_using_this_lv))
+		_fix_missing_defaults(seg);
 
 	return 1;
 }
@@ -170,7 +169,7 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 	 * but not worth to break backward compatibility, by shifting
 	 * content to cache segment
 	 */
-	if (cache_mode_is_set(seg)) {
+	if (seg->cache_mode != CACHE_MODE_UNDEFINED) {
 		if (!(cache_mode = get_cache_mode_name(seg)))
 			return_0;
 		outf(f, "cache_mode = \"%s\"", cache_mode);
@@ -358,9 +357,9 @@ static int _cache_text_import(struct lv_segment *seg,
 	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 		return_0;
 
-	if (!dm_list_empty(&pool_lv->segments) &&
-	    !_fix_missing_defaults(first_seg(pool_lv)))
-		return_0;
+	/* load order is unknown, could be cache origin or pool LV, so check for both */
+	if (!dm_list_empty(&pool_lv->segments))
+		_fix_missing_defaults(first_seg(pool_lv));
 
 	return 1;
 }
@@ -399,6 +398,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 {
 	struct lv_segment *cache_pool_seg;
 	char *metadata_uuid, *data_uuid, *origin_uuid;
+	uint64_t feature_flags = 0;
 
 	if (!seg->pool_lv || !seg_is_cache(seg)) {
 		log_error(INTERNAL_ERROR "Passed segment is not cache.");
@@ -406,6 +406,25 @@ static int _cache_add_target_line(struct dev_manager *dm,
 	}
 
 	cache_pool_seg = first_seg(seg->pool_lv);
+	if (seg->cleaner_policy)
+		/* With cleaner policy always pass writethrough */
+		feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+	else
+		switch (cache_pool_seg->cache_mode) {
+		default:
+			log_error(INTERNAL_ERROR "LV %s has unknown cache mode %d.",
+				  display_lvname(seg->lv), cache_pool_seg->cache_mode);
+			/* Fall through */
+		case CACHE_MODE_WRITETHROUGH:
+			feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+			break;
+		case CACHE_MODE_WRITEBACK:
+			feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
+			break;
+		case CACHE_MODE_PASSTHROUGH:
+			feature_flags |= DM_CACHE_FEATURE_PASSTHROUGH;
+			break;
+		}
 
 	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
 		return_0;
@@ -417,7 +436,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		return_0;
 
 	if (!dm_tree_node_add_cache_target(node, len,
-					   cache_pool_seg->feature_flags,
+					   feature_flags,
 					   metadata_uuid,
 					   data_uuid,
 					   origin_uuid,

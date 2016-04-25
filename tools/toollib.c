@@ -1334,7 +1334,7 @@ static int _validate_cachepool_params(const char *name,
 }
 
 int get_cache_params(struct cmd_context *cmd,
-		     const char **mode,
+		     cache_mode_t *cache_mode,
 		     const char **name,
 		     struct dm_config_tree **settings)
 {
@@ -1344,8 +1344,8 @@ int get_cache_params(struct cmd_context *cmd,
 	struct dm_config_node *cn;
 	int ok = 0;
 
-	if (mode)
-		*mode = arg_str_value(cmd, cachemode_ARG, NULL);
+	if (cache_mode)
+		*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNDEFINED);
 
 	if (name)
 		*name = arg_str_value(cmd, cachepolicy_ARG, NULL);
