@@ -219,7 +219,10 @@ If \fBwritethough\fP is specified, a write is considered complete only
 when it has been stored in the cache pool LV and on the origin LV.
 While \fBwritethrough\fP may be slower for writes, it is more
 resilient if something should happen to a device associated with the
-cache pool LV.
+cache pool LV. With \fBpassthrough\fP mode, all reads are served
+from origin LV (all reads miss the cache) and all writes are
+forwarded to the origin LV; additionally, write hits cause cache
+block invalidates. See \fBlvmcache(7)\fP for more details.
 .
 .HP
 .BR \-\-cachepolicy
