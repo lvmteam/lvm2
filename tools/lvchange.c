@@ -907,6 +907,9 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct logical_volume *origin;
 	char snaps_msg[128];
 
+	if (sigint_caught())
+		return_ECMD_FAILED;
+
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
@@ -1062,8 +1065,6 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return_ECMD_FAILED;
 		doit += _lvchange_persistent(cmd, lv);
 		docmds++;
-		if (sigint_caught())
-			return_ECMD_FAILED;
 	}
 
 	if (arg_count(cmd, discards_ARG) ||
