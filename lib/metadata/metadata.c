@@ -4597,6 +4597,7 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 	struct device *dev;
 	struct lv_segment *seg;
 	uint32_t s;
+	int warned_about_no_dev = 0;
 	char *used_devnames = NULL, *assumed_devnames = NULL;
 
 	if (!(list = dev_cache_get_dev_list_for_lvid(lv->lvid.s + ID_LEN)))
@@ -4629,10 +4630,13 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_PV) {
 				if (!(dev = seg_dev(seg, s))) {
-					log_error("Couldn't find device for segment belonging to "
-						  "%s while checking used and assumed devices.",
-						  display_lvname(lv));
-					return 0;
+					if (!warned_about_no_dev) {
+						log_warn("WARNING: Couldn't find device for segment belonging "
+							 "to %s while checking used and assumed devices.",
+							  display_lvname(lv));
+						warned_about_no_dev = 1;
+					}
+					continue;
 				}
 				if (!(dev->flags & DEV_USED_FOR_LV)) {
 					if (!found_inconsistent) {
@@ -4653,10 +4657,9 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 		if (!dm_pool_grow_object(mem, "\0", 1))
 			return_0;
 		assumed_devnames = dm_pool_end_object(mem);
+		log_warn("WARNING: Device mismatch detected for %s which is accessing %s instead of %s.",
+			 display_lvname(lv), used_devnames, assumed_devnames);
 	}
-
-	log_warn("WARNING: Device mismatch detected for %s which is accessing %s instead of %s.",
-		 display_lvname(lv), used_devnames, assumed_devnames);
 
 	return 1;
 }
