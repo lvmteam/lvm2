@@ -915,7 +915,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	     arg_count(cmd, metadataprofile_ARG))) {
 		log_error("Only -a permitted with read-only volume "
 			  "group \"%s\"", lv->vg->name);
-		return EINVALID_CMD_LINE;
+		return ECMD_FAILED;
 	}
 
 	if (lv_is_origin(lv) && !lv_is_thin_volume(lv) &&
