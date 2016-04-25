@@ -4631,8 +4631,8 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 			if (seg_type(seg, s) == AREA_PV) {
 				if (!(dev = seg_dev(seg, s))) {
 					if (!warned_about_no_dev) {
-						log_warn("WARNING: Couldn't find device for segment belonging "
-							 "to %s while checking used and assumed devices.",
+						log_warn("WARNING: Couldn't find all devices for LV %s "
+							 "while checking used and assumed devices.",
 							  display_lvname(lv));
 						warned_about_no_dev = 1;
 					}
