@@ -279,6 +279,61 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 }
 
 /*
+ * Checks cache status and loops until there are not dirty blocks
+ * Set 1 to *is_clean when there are no dirty blocks on return.
+ */
+int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
+{
+	struct lv_segment *cache_seg = first_seg(cache_lv);
+	struct lv_status_cache *status;
+	int cleaner_policy;
+	uint64_t dirty_blocks;
+
+	*is_clean = 0;
+
+	//FIXME: use polling to do this...
+	for (;;) {
+		if (!lv_cache_status(cache_lv, &status))
+			return_0;
+		if (status->cache->fail) {
+			dm_pool_destroy(status->mem);
+			log_warn("WARNING: Skippping flush for failed cache.");
+			return 1;
+		}
+
+		cleaner_policy = !strcmp(status->cache->policy_name, "cleaner");
+		dirty_blocks = status->cache->dirty_blocks;
+
+		/* No clear policy and writeback mode means dirty */
+		if (!cleaner_policy &&
+		    (status->cache->feature_flags & DM_CACHE_FEATURE_WRITEBACK))
+			dirty_blocks++;
+		dm_pool_destroy(status->mem);
+
+		if (!dirty_blocks)
+			break;
+
+		if (cleaner_policy) {
+		    log_print_unless_silent(FMTu64 " blocks must still be flushed.",
+					    dirty_blocks);
+		    sleep(1);
+                    continue;
+		}
+
+		/* Switch to cleaner policy to flush the cache */
+		log_print_unless_silent("Flushing cache for %s.",
+					display_lvname(cache_lv));
+		cache_seg->cleaner_policy = 1;
+		/* Reaload kernel with "cleaner" policy */
+		if (!lv_update_and_reload_origin(cache_lv))
+		    return_0;
+	}
+
+	*is_clean = 1;
+
+	return 1;
+}
+/*
  * lv_cache_remove
  * @cache_lv
  *
@@ -291,12 +346,10 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
  */
 int lv_cache_remove(struct logical_volume *cache_lv)
 {
-	int is_cleaner;
-	uint64_t dirty_blocks;
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
 	struct logical_volume *cache_pool_lv;
-	struct lv_status_cache *status;
+	int is_clear;
 
 	if (!lv_is_cache(cache_lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not cache volume.",
@@ -356,45 +409,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 * remove the cache_pool then without waiting for the flush to
 	 * complete.
 	 */
-	if (!lv_cache_status(cache_lv, &status))
+	if (!lv_cache_wait_for_clean(cache_lv, &is_clear))
 		return_0;
-	if (!status->cache->fail) {
-		is_cleaner = !strcmp(status->cache->policy_name, "cleaner");
-		dirty_blocks = status->cache->dirty_blocks;
-		if (!(status->cache->feature_flags & DM_CACHE_FEATURE_WRITETHROUGH))
-			dirty_blocks++; /* Not writethrough - always dirty */
-	} else {
-		log_warn("WARNING: Skippping flush for failed cache.");
-		is_cleaner = 0;
-		dirty_blocks = 0;
-	}
-	dm_pool_destroy(status->mem);
-
-	if (dirty_blocks && !is_cleaner) {
-		/* Switch to cleaner policy to flush the cache */
-		log_print_unless_silent("Flushing cache for %s.", cache_lv->name);
-		cache_seg->cleaner_policy = 1;
-		/* update the kernel to put the cleaner policy in place */
-		if (!lv_update_and_reload_origin(cache_lv))
-			return_0;
-	}
-
-	//FIXME: use polling to do this...
-	while (dirty_blocks) {
-		if (!lv_cache_status(cache_lv, &status))
-			return_0;
-		if (status->cache->fail) {
-			log_warn("WARNING: Flushing of failing cache skipped.");
-			break;
-		}
-		dirty_blocks = status->cache->dirty_blocks;
-		dm_pool_destroy(status->mem);
-		if (dirty_blocks) {
-			log_print_unless_silent(FMTu64 " blocks must still be flushed.",
-						dirty_blocks);
-			sleep(1);
-		}
-	}
 
 	cache_pool_lv = cache_seg->pool_lv;
 	if (!detach_pool_lv(cache_seg))
