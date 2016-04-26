@@ -314,10 +314,11 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 			break;
 
 		if (cleaner_policy) {
-		    log_print_unless_silent(FMTu64 " blocks must still be flushed.",
-					    dirty_blocks);
-		    sleep(1);
-                    continue;
+			log_print_unless_silent(FMTu64 " blocks must still be flushed.",
+						dirty_blocks);
+			/* TODO: Use centralized place */
+			usleep(500000);
+			continue;
 		}
 
 		/* Switch to cleaner policy to flush the cache */
@@ -326,7 +327,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 		cache_seg->cleaner_policy = 1;
 		/* Reaload kernel with "cleaner" policy */
 		if (!lv_update_and_reload_origin(cache_lv))
-		    return_0;
+			return_0;
 	}
 
 	*is_clean = 1;
