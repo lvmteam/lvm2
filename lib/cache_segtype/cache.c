@@ -211,8 +211,9 @@ static int _target_present(struct cmd_context *cmd,
 		const char feature[12];
 		const char module[12]; /* check dm-%s */
 	} _features[] = {
-		{ 1, 3, CACHE_FEATURE_POLICY_MQ, "policy_mq", "cache-mq" },
+		{ 1, 9, CACHE_FEATURE_POLICY_SMQ | CACHE_FEATURE_POLICY_MQ, "policy_smq", "cache-smq" },
 		{ 1, 8, CACHE_FEATURE_POLICY_SMQ, "policy_smq", "cache-smq" },
+		{ 1, 3, CACHE_FEATURE_POLICY_MQ, "policy_mq", "cache-mq" },
 	};
 	static const char _lvmconf[] = "global/cache_disabled_features";
 	static unsigned _attrs = 0;
@@ -249,7 +250,9 @@ static int _target_present(struct cmd_context *cmd,
 		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i) {
 			if (((maj > _features[i].maj) ||
 			     (maj == _features[i].maj && min >= _features[i].min)) &&
-			    (!_features[i].module[0] || module_present(cmd, _features[i].module)))
+			    (!_features[i].module[0] ||
+			     (_attrs & _features[i].cache_feature) || /* already present */
+			     module_present(cmd, _features[i].module)))
 				_attrs |= _features[i].cache_feature;
 			else
 				log_very_verbose("Target %s does not support %s.",
