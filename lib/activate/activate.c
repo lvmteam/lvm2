@@ -603,7 +603,24 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 #ifdef MODPROBE_CMD
 	char module[128];
 	const char *argv[] = { MODPROBE_CMD, module, NULL };
+#endif
+	struct stat st;
+	char path[PATH_MAX];
+	int i = dm_snprintf(path, (sizeof(path) - 1), "%smodule/dm_%s",
+			    dm_sysfs_dir(), target_name);
 
+	if (i > 0) {
+		while (path[--i] != '/')  /* stop on dm_ */
+			if (path[i] == '-')
+				path[i] = '_'; /* replace '-' with '_' */
+
+		if ((lstat(path, &st) == 0) && S_ISDIR(st.st_mode)) {
+			log_debug("Module directory %s exists.", path);
+			return 1;
+		}
+	}
+
+#ifdef MODPROBE_CMD
 	if (dm_snprintf(module, sizeof(module), "dm-%s", target_name) < 0) {
 		log_error("module_present module name too long: %s",
 			  target_name);

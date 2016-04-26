@@ -1,5 +1,6 @@
 Version 2.02.152 - 
 ==================================
+  Check first /sys/module/dm_* dir existance before using modprobe.
   Remove mpath from 10-dm.rules, superseded by 11-dm-mpath.rules (mpath>=0.6.0).
 
 Version 2.02.151 - 23rd April 2016
