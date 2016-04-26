@@ -13,6 +13,20 @@
 #   DM_UUID - UUID set for DM device (blank if not specified)
 #   DM_SUSPENDED - suspended state of DM device (0 or 1)
 #   DM_UDEV_RULES_VSN - DM udev rules version
+#
+# These rules cover only basic device-mapper functionality in udev.
+#
+# Various DM subsystems may contain further subsystem-specific rules
+# in 11-dm-<subsystem_name>.rules which should be installed together
+# with the DM subsystem and which extend these basic rules.
+# For example:
+#   11-dm-lvm.rules for LVM subsystem
+#   11-dm-mpath.rules for multipath subsystem (since version 0.6.0, recommended!)
+#
+# Even more specific rules may be required by subsystems so always
+# check subsystem's upstream repository for recent set of rules.
+# Also, keep in mind that recent rules may also require recent
+# subsystem-specific binaries.
 
 KERNEL=="device-mapper", NAME="(DM_DIR)/control"
 
