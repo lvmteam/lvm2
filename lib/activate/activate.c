@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -615,7 +615,7 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 				path[i] = '_'; /* replace '-' with '_' */
 
 		if ((lstat(path, &st) == 0) && S_ISDIR(st.st_mode)) {
-			log_debug("Module directory %s exists.", path);
+			log_debug_activation("Module directory %s exists.", path);
 			return 1;
 		}
 	}
