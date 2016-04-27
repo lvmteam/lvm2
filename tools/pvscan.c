@@ -257,6 +257,7 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	int ret = ECMD_PROCESSED;
 	struct device *dev;
 	const char *pv_name;
+	const char *reason = NULL;
 	int32_t major = -1;
 	int32_t minor = -1;
 	int devno_args = 0;
@@ -305,6 +306,18 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Failed to update cache.");
 			ret = ECMD_FAILED;
 		}
+		goto out;
+	}
+
+	/*
+	 * When lvmetad is disabled, all devices need to be rescanned,
+	 * i.e. the !argc case above, pvscan --cache.
+	 */
+	if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+		log_warn("WARNING: Not using lvmetad because %s.", reason);
+		log_warn("WARNING: Rescan all devices to update lvmetad cache (pvscan --cache).");
+		log_error("Failed to update cache.");
+		ret = ECMD_FAILED;
 		goto out;
 	}
 
