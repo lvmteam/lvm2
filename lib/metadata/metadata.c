@@ -4682,6 +4682,15 @@ static int _check_devs_used_correspond_with_vg(struct volume_group *vg)
 
 	/* Mark all PVs in VG as used. */
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		/*
+		 * FIXME: It's not clear if the meaning
+		 * of "missing" should always include the
+		 * !pv->dev case, or if "missing" is the
+		 * more narrow case where VG metadata has
+		 * been written with the MISSING flag.
+		 */
+		if (!pvl->pv->dev)
+			continue;
 		if (is_missing_pv(pvl->pv))
 			continue;
 		pvl->pv->dev->flags |= DEV_ASSUMED_FOR_LV;
