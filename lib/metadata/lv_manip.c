@@ -7370,7 +7370,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lp->wipe_signatures = 0;
 	}
 
-	if (!seg_is_virtual(lp) && !lp->approx_alloc &&
+	if (!segtype_is_virtual(create_segtype) && !lp->approx_alloc &&
 	    (vg->free_count < lp->extents)) {
 		log_error("Volume group \"%s\" has insufficient free space "
 			  "(%u extents): %u required.",
@@ -7382,7 +7382,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		return_NULL;
 
 
-	if (pool_lv && seg_is_thin_volume(lp)) {
+	if (pool_lv && segtype_is_thin_volume(create_segtype)) {
 		/* Ensure all stacked messages are submitted */
 		if ((pool_is_active(pool_lv) || is_change_activating(lp->activate)) &&
 		    !update_pool_lv(pool_lv, 1))
@@ -7398,7 +7398,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		log_debug_metadata("Setting read ahead sectors %u.", lv->read_ahead);
 	}
 
-	if (!seg_is_pool(lp) && lp->minor >= 0) {
+	if (!segtype_is_pool(create_segtype) && lp->minor >= 0) {
 		lv->major = lp->major;
 		lv->minor = lp->minor;
 		lv->status |= FIXED_MINOR;
@@ -7419,15 +7419,15 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!lv_extend(lv, create_segtype,
 		       lp->stripes, lp->stripe_size,
 		       lp->mirrors,
-		       seg_is_pool(lp) ? lp->pool_metadata_extents : lp->region_size,
-		       seg_is_thin_volume(lp) ? lp->virtual_extents : lp->extents,
+		       segtype_is_pool(create_segtype) ? lp->pool_metadata_extents : lp->region_size,
+		       segtype_is_thin_volume(create_segtype) ? lp->virtual_extents : lp->extents,
 		       lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
 
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
 
-	if (seg_is_cache_pool(lp) || seg_is_cache(lp)) {
+	if (lv_is_cache_pool(lv) || lv_is_cache(lv)) {
 		if (!cache_set_mode(first_seg(lv), lp->cache_mode)) {
 			stack;
 			goto revert_new_lv;
@@ -7448,10 +7448,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				goto revert_new_lv;
 			}
 		}
-	} else if (seg_is_raid(lp)) {
+	} else if (lv_is_raid(lv)) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
-	} else if (seg_is_thin_pool(lp)) {
+	} else if (lv_is_thin_pool(lv)) {
 		first_seg(lv)->chunk_size = lp->chunk_size;
 		first_seg(lv)->zero_new_blocks = lp->zero ? 1 : 0;
 		first_seg(lv)->discards = lp->discards;
@@ -7462,7 +7462,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		if (lp->error_when_full)
 			lv->status |= LV_ERROR_WHEN_FULL;
-	} else if (pool_lv && seg_is_thin_volume(lp)) {
+	} else if (pool_lv && lv_is_virtual(lv)) { /* going to be a thin volume */
 		seg = first_seg(lv);
 		pool_seg = first_seg(pool_lv);
 		if (!(seg->device_id = get_free_pool_device_id(pool_seg)))
