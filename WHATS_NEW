@@ -1,5 +1,6 @@
 Version 2.02.153 - 
 ==================================
+  Add function to check for target presence and version via 1 ioctl.
 
 Version 2.02.152 - 30th April 2016
 ==================================

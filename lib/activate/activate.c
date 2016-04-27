@@ -632,25 +632,32 @@ int module_present(struct cmd_context *cmd, const char *target_name)
 	return ret;
 }
 
-int target_present(struct cmd_context *cmd, const char *target_name,
-		   int use_modprobe)
+int target_present_version(struct cmd_context *cmd, const char *target_name,
+			   int use_modprobe,
+			   uint32_t *maj, uint32_t *min, uint32_t *patchlevel)
 {
-	uint32_t maj, min, patchlevel;
-
 	if (!activation())
-		return 0;
+		return_0;
 
 #ifdef MODPROBE_CMD
 	if (use_modprobe) {
-		if (target_version(target_name, &maj, &min, &patchlevel))
+		if (target_version(target_name, maj, min, patchlevel))
 			return 1;
 
 		if (!module_present(cmd, target_name))
 			return_0;
 	}
 #endif
+	return target_version(target_name, maj, min, patchlevel);
+}
 
-	return target_version(target_name, &maj, &min, &patchlevel);
+int target_present(struct cmd_context *cmd, const char *target_name,
+		   int use_modprobe)
+{
+	uint32_t maj, min, patchlevel;
+
+	return target_present_version(cmd, target_name, use_modprobe,
+				      &maj, &min, &patchlevel);
 }
 
 static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,

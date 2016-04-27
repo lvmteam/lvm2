@@ -92,6 +92,9 @@ int library_version(char *version, size_t size);
 int lvm1_present(struct cmd_context *cmd);
 
 int module_present(struct cmd_context *cmd, const char *target_name);
+int target_present_version(struct cmd_context *cmd, const char *target_name,
+			   int use_modprobe, uint32_t *maj,
+			   uint32_t *min, uint32_t *patchlevel);
 int target_present(struct cmd_context *cmd, const char *target_name,
 		   int use_modprobe);
 int target_version(const char *target_name, uint32_t *maj,
