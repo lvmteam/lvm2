@@ -643,7 +643,7 @@ fail:
 	 * commands will not use it until it's been properly repopulated.
 	 */
 	if (action_modifies)
-		log_error("lvmetad update failed.  Restart lvmetad immediately.");
+		log_warn("WARNING: To avoid corruption, restart lvmetad (or disable with use_lvmetad=0).");
 
 	return 0;
 }
