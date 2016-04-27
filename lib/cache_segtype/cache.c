@@ -227,15 +227,13 @@ static int _target_present(struct cmd_context *cmd,
 	const char *str;
 
 	if (!activation())
-		return 0;
+		return_0;
 
 	if (!_cache_checked) {
 		_cache_checked = 1;
 
-		if (!(_cache_present = target_present(cmd, TARGET_NAME_CACHE, 1)))
-			return 0;
-
-		if (!target_version(TARGET_NAME_CACHE, &maj, &min, &patchlevel))
+		if (!(_cache_present = target_present_version(cmd, TARGET_NAME_CACHE, 1,
+							      &maj, &min, &patchlevel)))
 			return_0;
 
 		if ((maj < 1) ||
