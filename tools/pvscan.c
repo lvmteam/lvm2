@@ -132,6 +132,7 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	int refresh_done = 0;
 	struct volume_group *vg;
 	struct id vgid_raw;
+	uint32_t read_error;
 	int r = 0;
 
 	/* TODO: add support for partial and clustered VGs */
@@ -141,16 +142,45 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	if (!id_read_format(&vgid_raw, vgid))
 		return_0;
 
+	/*
+	 * FIXME: pvscan activation really needs to be changed to use
+	 * the standard process_each_vg() interface.  It should save
+	 * a list of VG names that are found during the scan, then
+	 * call process_each_vg() with that list to do activation.
+	 */
+
+	cmd->vg_read_print_access_error = 0;
+
 	/* NB. This is safe because we know lvmetad is running and we won't hit disk. */
 	vg = vg_read(cmd, vgname, (const char *)&vgid_raw, 0, 0);
-	if (vg_read_error(vg)) {
+	read_error = vg_read_error(vg);
+	if (read_error) {
+		/*
+		 * foreign VGs: we want to read and update lvmetad, but that's
+		 * all, we don't want to even attempt to autoactivate.
+		 *
+		 * shared VGs: we want to read and update lvmetad, and for now
+		 * ignore them for autoactivation.  Once pvscan autoactivation
+		 * uses process_each_vg, then shared VGs could be autoactivated.
+		 */
+		if (read_error & (FAILED_SYSTEMID | FAILED_LOCK_TYPE | FAILED_LOCK_MODE)) {
+			release_vg(vg);
+			return 1;
+		}
+
 		log_error("Failed to read Volume Group \"%s\" (%s) during autoactivation.", vgname, vgid);
 		release_vg(vg);
 		return 0;
 	}
 
+	if (is_lockd_type(vg->lock_type)) {
+		r = 1;
+		goto out;
+	}
+
 	if (vg_is_clustered(vg)) {
-		r = 1; goto out;
+		r = 1;
+		goto out;
 	}
 
 	/* FIXME: There's a tiny race when suspending the device which is part
