@@ -2082,6 +2082,14 @@ int dm_udev_wait(uint32_t cookie)
 	return 1;
 }
 
+int dm_udev_wait_immediate(uint32_t cookie, int *ready)
+{
+	update_devs();
+	*ready = 1;
+
+	return 1;
+}
+
 #else		/* UDEV_SYNC_SUPPORT */
 
 static int _check_semaphore_is_supported(void)
@@ -2506,16 +2514,37 @@ int dm_udev_complete(uint32_t cookie)
 	return 1;
 }
 
-static int _udev_wait(uint32_t cookie)
+/*
+ * If *nowait is set, return immediately leaving it set if the semaphore
+ * is not ready to be decremented to 0.  *nowait is cleared if the wait
+ * succeeds.
+ */
+static int _udev_wait(uint32_t cookie, int *nowait)
 {
 	int semid;
 	struct sembuf sb = {0, 0, 0};
+	int val;
 
 	if (!cookie || !dm_udev_get_sync_support())
 		return 1;
 
 	if (!_get_cookie_sem(cookie, &semid))
 		return_0;
+
+	/* Return immediately if the semaphore value exceeds 1? */
+	if (*nowait) {
+		if ((val = semctl(semid, 0, GETVAL)) < 0) {
+			log_error("semid %d: sem_ctl GETVAL failed for "
+				  "cookie 0x%" PRIx32 ": %s",
+				  semid, cookie, strerror(errno));
+			return 0;		
+		}
+
+		if (val > 1)
+			return 1;
+
+		*nowait = 0;
+	}
 
 	if (!_udev_notify_sem_dec(cookie, semid)) {
 		log_error("Failed to set a proper state for notification "
@@ -2548,11 +2577,27 @@ repeat_wait:
 
 int dm_udev_wait(uint32_t cookie)
 {
-	int r = _udev_wait(cookie);
+	int nowait = 0;
+	int r = _udev_wait(cookie, &nowait);
 
 	update_devs();
 
 	return r;
 }
 
+int dm_udev_wait_immediate(uint32_t cookie, int *ready)
+{
+	int nowait = 1;
+	int r = _udev_wait(cookie, &nowait);
+
+	if (r && nowait) {
+		*ready = 0;
+		return 1;
+	}
+
+	update_devs();
+	*ready = 1;
+
+	return r;
+}
 #endif		/* UDEV_SYNC_SUPPORT */

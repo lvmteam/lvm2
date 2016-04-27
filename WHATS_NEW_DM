@@ -1,5 +1,6 @@
 Version 1.02.124 - 
 ==================================
+  Add dm_udev_wait_immediate to libdevmapper for waiting outside the library.
 
 Version 1.02.123 - 23rd April 2016
 ==================================

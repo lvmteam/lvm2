@@ -3218,6 +3218,15 @@ int dm_udev_create_cookie(uint32_t *cookie);
 int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
 
+/*
+ * dm_dev_wait_immediate 
+ * If *ready is 1 on return, the wait is complete.
+ * If *ready is 0 on return, the wait is incomplete and either
+ * this function or dm_udev_wait() must be called again.
+ * Returns 0 on error, when neither function should be called again.
+ */
+int dm_udev_wait_immediate(uint32_t cookie, int *ready);
+
 #define DM_DEV_DIR_UMASK 0022
 #define DM_CONTROL_NODE_UMASK 0177
 
