@@ -4624,7 +4624,7 @@ do_command:
 		if (info)
 			lvmcache_del(info);
 
-		if (!lvmetad_pv_gone_by_dev(pd->dev, NULL)) {
+		if (!lvmetad_pv_gone_by_dev(pd->dev)) {
 			log_error("Failed to remove PV %s from lvmetad.", pd->name);
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;
@@ -4644,7 +4644,7 @@ do_command:
 			continue;
 		}
 
-		if (!lvmetad_pv_gone_by_dev(pd->dev, NULL)) {
+		if (!lvmetad_pv_gone_by_dev(pd->dev)) {
 			log_error("Failed to remove PV %s from lvmetad.", pd->name);
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;

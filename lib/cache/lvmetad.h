@@ -95,15 +95,17 @@ int lvmetad_vg_remove(struct volume_group *vg);
  * number on the cached and on the discovered PV match but the metadata content
  * does not.
  */
-int lvmetad_pv_found(const struct id *pvid, struct device *dev,
+int lvmetad_pv_found(struct cmd_context *cmd, const struct id *pvid, struct device *dev,
 		     const struct format_type *fmt, uint64_t label_sector,
-		     struct volume_group *vg, activation_handler handler);
+		     struct volume_group *vg,
+		     struct dm_list *found_vgnames,
+		     struct dm_list *changed_vgnames);
 
 /*
  * Inform the daemon that the device no longer exists.
  */
-int lvmetad_pv_gone(dev_t devno, const char *pv_name, activation_handler handler);
-int lvmetad_pv_gone_by_dev(struct device *dev, activation_handler handler);
+int lvmetad_pv_gone(dev_t devno, const char *pv_name);
+int lvmetad_pv_gone_by_dev(struct device *dev);
 
 /*
  * Request a list of all PVs available to lvmetad. If requested, this will also
@@ -142,10 +144,10 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd,
  * Scan a single device and update lvmetad with the result(s).
  */
 int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
-			  activation_handler handler, int ignore_obsolete);
+			  struct dm_list *found_vgnames,
+			  struct dm_list *changed_vgnames);
 
-int lvmetad_pvscan_all_devs(struct cmd_context *cmd, activation_handler handler, int do_wait);
-int lvmetad_pvscan_foreign_vgs(struct cmd_context *cmd, activation_handler handler);
+int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait);
 
 int lvmetad_vg_clear_outdated_pvs(struct volume_group *vg);
 void lvmetad_validate_global_cache(struct cmd_context *cmd, int force);
@@ -170,18 +172,17 @@ void lvmetad_clear_disabled(struct cmd_context *cmd);
 #    define lvmetad_release_token()	do { } while (0)
 #    define lvmetad_vg_update(vg)	(1)
 #    define lvmetad_vg_remove(vg)	(1)
-#    define lvmetad_pv_found(pvid, dev, fmt, label_sector, vg, handler)	(1)
-#    define lvmetad_pv_gone(devno, pv_name, handler)	(1)
-#    define lvmetad_pv_gone_by_dev(dev, handler)	(1)
+#    define lvmetad_pv_found(cmd, pvid, dev, fmt, label_sector, vg, found_vgnames, changed_vgnames)	(1)
+#    define lvmetad_pv_gone(devno, pv_name)	(1)
+#    define lvmetad_pv_gone_by_dev(dev)	(1)
 #    define lvmetad_pv_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_pv_lookup(cmd, pvid, found)	(0)
 #    define lvmetad_pv_lookup_by_dev(cmd, dev, found)	(0)
 #    define lvmetad_vg_list_to_lvmcache(cmd)	(1)
 #    define lvmetad_get_vgnameids(cmd, vgnameids)       do { } while (0)
 #    define lvmetad_vg_lookup(cmd, vgname, vgid)	(NULL)
-#    define lvmetad_pvscan_single(cmd, dev, handler, ignore_obsolete)	(0)
-#    define lvmetad_pvscan_all_devs(cmd, handler, do_wait)	(0)
-#    define lvmetad_pvscan_foreign_vgs(cmd, handler)	(0)
+#    define lvmetad_pvscan_single(cmd, dev, found_vgnames, changed_vgnames)	(0)
+#    define lvmetad_pvscan_all_devs(cmd, do_wait)	(0)
 #    define lvmetad_vg_clear_outdated_pvs(vg)           do { } while (0)
 #    define lvmetad_validate_global_cache(cmd, force)	do { } while (0)
 #    define lvmetad_vg_is_foreign(cmd, vgname, vgid) (0)

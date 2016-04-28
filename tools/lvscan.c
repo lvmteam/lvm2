@@ -38,7 +38,7 @@ static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume
 					 pvid_s);
 			continue;
 		}
-		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL, 0))
+		if (!lvmetad_pvscan_single(cmd, pvl->pv->dev, NULL, NULL))
 			return ECMD_FAILED;
 	}
 
@@ -103,7 +103,7 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */
 	if (lvmetad_used() && (!lvmetad_token_matches(cmd) || lvmetad_is_disabled(cmd, &reason))) {
-		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, 0)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
 			lvmetad_make_unused(cmd);
 		}

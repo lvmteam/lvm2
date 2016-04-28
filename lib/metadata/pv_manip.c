@@ -810,7 +810,7 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	if (info)
 		lvmcache_del(info);
 
-	if (!lvmetad_pv_gone_by_dev(dev, NULL))
+	if (!lvmetad_pv_gone_by_dev(dev))
 		goto_out;
 
 	log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped",

@@ -37,13 +37,19 @@ aux lvmconf 'global/use_lvmetad = 0'
 check inactive $vg1 foo
 aux lvmconf 'global/use_lvmetad = 1'
 
-pvscan --cache "$dev2" -aay
+# Tell lvmetad about dev2, but the VG is not complete with
+# only dev2, so the -aay should not yet activate the LV.
+
+pvscan --cache -aay "$dev2"
 
 aux lvmconf 'global/use_lvmetad = 0'
 check inactive $vg1 foo
 aux lvmconf 'global/use_lvmetad = 1'
 
-pvscan --cache "$dev1" -aay
+# Tell lvmetad about dev1, now the VG is complete with
+# both devs, so the -aay should activate the LV.
+
+pvscan --cache -aay "$dev1"
 
 aux lvmconf 'global/use_lvmetad = 0'
 check active $vg1 foo

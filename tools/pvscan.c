@@ -29,6 +29,12 @@ struct pvscan_params {
 	char *pv_tmp_name;
 };
 
+struct pvscan_aa_params {
+	int refresh_all;
+	unsigned int activate_errors;
+	struct dm_list changed_vgnames;
+};
+
 static int _pvscan_display_single(struct cmd_context *cmd,
 				  struct physical_volume *pv,
 				  struct pvscan_params *params)
@@ -120,70 +126,85 @@ static int _pvscan_single(struct cmd_context *cmd, struct volume_group *vg,
 	return ECMD_PROCESSED;
 }
 
+static int _lvmetad_clear_dev(dev_t devno, int32_t major, int32_t minor)
+{
+	char buf[24];
+
+	(void) dm_snprintf(buf, sizeof(buf), FMTi32 ":" FMTi32, major, minor);
+
+	if (!lvmetad_pv_gone(devno, buf))
+		return_0;
+
+	log_print_unless_silent("Device %s not found. Cleared from lvmetad cache.", buf);
+
+	return 1;
+}
+
+/*
+ * pvscan --cache does not perform any lvmlockd locking, and
+ * pvscan --cache -aay skips autoactivation in lockd VGs.
+ *
+ * pvscan --cache populates lvmetad with VG metadata from disk.
+ * No lvmlockd locking is needed.  It is expected that lockd VG
+ * metadata that is read by pvscan and populated in lvmetad may
+ * be immediately stale due to changes to the VG from other hosts
+ * during or after this pvscan.  This is normal and not a problem.
+ * When a subsequent lvm command uses the VG, it will lock the VG
+ * with lvmlockd, read the VG from lvmetad, and update the cached
+ * copy from disk if necessary.
+ *
+ * pvscan --cache -aay does not activate LVs in lockd VGs because
+ * activation requires locking, and a lock-start operation is needed
+ * on a lockd VG before any locking can be performed in it.
+ *
+ * An equivalent of pvscan --cache -aay for lockd VGs is:
+ * 1. pvscan --cache
+ * 2. vgchange --lock-start
+ * 3. vgchange -aay -S 'locktype=sanlock || locktype=dlm'
+ *
+ * [We could eventually add support for autoactivating lockd VGs
+ * using pvscan by incorporating the lock start step (which can
+ * take a long time), but there may be a better option than
+ * continuing to overload pvscan.]
+ * 
+ * Stages of starting a lockd VG:
+ *
+ * . pvscan --cache populates lockd VGs in lvmetad without locks,
+ *   and this initial cached copy may quickly become stale.
+ *
+ * . vgchange --lock-start VG reads the VG without the VG lock
+ *   because no locks are available until the locking is started.
+ *   It only uses the VG name and lock_type from the VG metadata,
+ *   and then only uses it to start the VG lockspace in lvmlockd.
+ *
+ * . Further lvm commands, e.g. activation, can then lock the VG
+ *   with lvmlockd and use current VG metdata.
+ */
+
 #define REFRESH_BEFORE_AUTOACTIVATION_RETRIES 5
 #define REFRESH_BEFORE_AUTOACTIVATION_RETRY_USLEEP_DELAY 100000
 
-static int _auto_activation_handler(struct cmd_context *cmd,
-				    const char *vgname, const char *vgid,
-				    int partial, int changed,
-				    activation_change_t activate)
+static int _pvscan_autoactivate_single(struct cmd_context *cmd, const char *vg_name,
+				       struct volume_group *vg, struct processing_handle *handle)
 {
+	struct pvscan_aa_params *pp = (struct pvscan_aa_params *)handle->custom_handle;
 	unsigned int refresh_retries = REFRESH_BEFORE_AUTOACTIVATION_RETRIES;
 	int refresh_done = 0;
-	struct volume_group *vg;
-	struct id vgid_raw;
-	uint32_t read_error;
-	int r = 0;
 
-	/* TODO: add support for partial and clustered VGs */
-	if (partial)
-		return 1;
+	if (vg_is_clustered(vg))
+		return ECMD_PROCESSED;
 
-	if (!id_read_format(&vgid_raw, vgid))
-		return_0;
+	if (is_lockd_type(vg->lock_type))
+		return ECMD_PROCESSED;
+
+	log_debug("pvscan autoactivating VG %s.", vg_name);
 
 	/*
-	 * FIXME: pvscan activation really needs to be changed to use
-	 * the standard process_each_vg() interface.  It should save
-	 * a list of VG names that are found during the scan, then
-	 * call process_each_vg() with that list to do activation.
-	 */
-
-	cmd->vg_read_print_access_error = 0;
-
-	/* NB. This is safe because we know lvmetad is running and we won't hit disk. */
-	vg = vg_read(cmd, vgname, (const char *)&vgid_raw, 0, 0);
-	read_error = vg_read_error(vg);
-	if (read_error) {
-		/*
-		 * foreign VGs: we want to read and update lvmetad, but that's
-		 * all, we don't want to even attempt to autoactivate.
-		 *
-		 * shared VGs: we want to read and update lvmetad, and for now
-		 * ignore them for autoactivation.  Once pvscan autoactivation
-		 * uses process_each_vg, then shared VGs could be autoactivated.
-		 */
-		if (read_error & (FAILED_SYSTEMID | FAILED_LOCK_TYPE | FAILED_LOCK_MODE)) {
-			release_vg(vg);
-			return 1;
-		}
-
-		log_error("Failed to read Volume Group \"%s\" (%s) during autoactivation.", vgname, vgid);
-		release_vg(vg);
-		return 0;
-	}
-
-	if (is_lockd_type(vg->lock_type)) {
-		r = 1;
-		goto out;
-	}
-
-	if (vg_is_clustered(vg)) {
-		r = 1;
-		goto out;
-	}
-
-	/* FIXME: There's a tiny race when suspending the device which is part
+	 * Refresh LVs in a VG that has "changed" from finding a PV.
+	 * The meaning of "changed" is determined in lvmetad, and is
+	 * returned to the command as a flag.
+	 *
+	 * FIXME: There's a tiny race when suspending the device which is part
 	 * of the refresh because when suspend ioctl is performed, the dm
 	 * kernel driver executes (do_suspend and dm_suspend kernel fn):
 	 *
@@ -202,9 +223,10 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	 *
 	 * Remove this workaround with "refresh_retries" once we have proper locking in!
 	 */
-	if (changed) {
+	if (pp->refresh_all || str_list_match_item(&pp->changed_vgnames, vg_name)) {
 		while (refresh_retries--) {
-			if (vg_refresh_visible(vg->cmd, vg)) {
+			log_debug_activation("Refreshing VG %s before autoactivation.", vg_name);
+			if (vg_refresh_visible(cmd, vg)) {
 				refresh_done = 1;
 				break;
 			}
@@ -215,8 +237,11 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 			log_warn("%s: refresh before autoactivation failed.", vg->name);
 	}
 
-	if (!vgchange_activate(vg->cmd, vg, activate)) {
+	log_debug_activation("Autoactivating VG %s.", vg_name);
+
+	if (!vgchange_activate(cmd, vg, CHANGE_AAY)) {
 		log_error("%s: autoactivation failed.", vg->name);
+		pp->activate_errors++;
 		goto out;
 	}
 
@@ -226,35 +251,53 @@ static int _auto_activation_handler(struct cmd_context *cmd,
 	 * be adding --poll y|n cmdline option for pvscan and call
 	 * init_background_polling routine in autoactivation handler.
 	 */
-	if (!(vgchange_background_polling(vg->cmd, vg)))
+	log_debug_activation("Starting background polling for VG %s.", vg_name);
+
+	if (!(vgchange_background_polling(cmd, vg)))
 		goto_out;
-
-	r = 1;
-
 out:
-	unlock_and_release_vg(cmd, vg, vgname);
-	return r;
+	return ECMD_PROCESSED;
 }
 
-static int _clear_dev_from_lvmetad_cache(dev_t devno, int32_t major, int32_t minor,
-					 activation_handler handler)
+static int _pvscan_autoactivate(struct cmd_context *cmd, struct pvscan_aa_params *pp,
+				int all_vgs, struct dm_list *vgnames)
 {
-	char buf[24];
+	struct processing_handle *handle = NULL;
+	int ret;
 
-	(void) dm_snprintf(buf, sizeof(buf), FMTi32 ":" FMTi32, major, minor);
+	if (!all_vgs && dm_list_empty(vgnames)) {
+		log_debug("No VGs to autoactivate.");
+		return ECMD_PROCESSED;
+	}
 
-	if (!lvmetad_pv_gone(devno, buf, handler))
-		return_0;
+	if (!lvmetad_used())
+		log_warn("WARNING: Autoactivation reading from disk instead of lvmetad.");
 
-	log_print_unless_silent("Device %s not found. "
-				"Cleared from lvmetad cache.", buf);
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
 
-	return 1;
+	handle->custom_handle = pp;
+
+	if (all_vgs) {
+		cmd->command->flags |= ALL_VGS_IS_DEFAULT;
+		pp->refresh_all = 1;
+	}
+
+	dev_cache_full_scan(cmd->full_filter);
+
+	ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, 0, handle, _pvscan_autoactivate_single);
+
+	destroy_processing_handle(cmd, handle);
+
+	return ret;
 }
 
-static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
+static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 {
-	int ret = ECMD_PROCESSED;
+	struct pvscan_aa_params pp = { 0 };
+	struct dm_list found_vgnames;
 	struct device *dev;
 	const char *pv_name;
 	const char *reason = NULL;
@@ -263,28 +306,26 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 	int devno_args = 0;
 	struct arg_value_group_list *current_group;
 	dev_t devno;
-	activation_handler handler = NULL;
+	int do_activate = 0;
+	int all_vgs = 0;
+	int remove_errors = 0;
+	int add_errors = 0;
+	int ret = ECMD_PROCESSED;
 
-	/*
-	 * Return here immediately if lvmetad is not used.
-	 * Also return if locking_type=3 (clustered) as we
-	 * dont't support cluster + lvmetad yet.
-	 *
-	 * This is to avoid taking the global lock uselessly
-	 * and to prevent hangs in clustered environment.
-	 */
-	/* TODO: Remove this once lvmetad + cluster supported! */
+	dm_list_init(&found_vgnames);
+	dm_list_init(&pp.changed_vgnames);
+
 	if (!lvmetad_used()) {
 		log_verbose("Ignoring pvscan --cache command because lvmetad is not in use.");
 		return ret;
 	}
 
-	if (arg_count(cmd, activate_ARG)) {
+	if (arg_is_set(cmd, activate_ARG)) {
 		if (arg_uint_value(cmd, activate_ARG, CHANGE_AAY) != CHANGE_AAY) {
 			log_error("Only --activate ay allowed with pvscan.");
 			return 0;
 		}
-		handler = _auto_activation_handler;
+		do_activate = 1;
 	}
 
 	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG))
@@ -300,96 +341,130 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	/* Scan everything? */
+	/*
+	 * Scan all devices when no args are given.
+	 */
 	if (!argc && !devno_args) {
-		if (!lvmetad_pvscan_all_devs(cmd, handler, 1)) {
-			log_error("Failed to update cache.");
-			ret = ECMD_FAILED;
+		log_verbose("Scanning all devices.");
+
+		if (!lvmetad_pvscan_all_devs(cmd, 1)) {
+			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_make_unused(cmd);
 		}
-		goto out;
+		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+			log_warn("WARNING: Not using lvmetad because %s.", reason);
+			lvmetad_make_unused(cmd);
+		}
+		all_vgs = 1;
+		goto activate;
+	}
+       
+	/*
+	 * FIXME: when specific devs are named, we generally don't want to scan
+	 * any other devs, but if lvmetad is not yet populated, the first
+	 * 'pvscan --cache dev' does need to do a full scan.  We want to remove
+	 * the need for this case so that 'pvscan --cache dev' is guaranteed to
+	 * never scan any devices other than those specified.
+	 */
+	if (!lvmetad_token_matches(cmd)) {
+		log_verbose("Scanning all devices to initialize lvmetad.");
+
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, 0)) {
+			log_warn("WARNING: Not using lvmetad because cache update failed.");
+			lvmetad_make_unused(cmd);
+		}
+		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+			log_warn("WARNING: Not using lvmetad because %s.", reason);
+			lvmetad_make_unused(cmd);
+		}
+		all_vgs = 1;
+		goto activate;
 	}
 
 	/*
-	 * When lvmetad is disabled, all devices need to be rescanned,
-	 * i.e. the !argc case above, pvscan --cache.
+	 * When args are given, scan only those devices.  If lvmetad is already
+	 * disabled, a full scan is required to reenable it, so there's no
+	 * point in doing individual device scans, so go directly to
+	 * autoactivation.  (FIXME: Should we also skip autoactivation in this
+	 * case since that will read disks with lvmetad disabled?
+	 * i.e. avoid disk access and not activate LVs, or or read from disk
+	 * and activate LVs?)
 	 */
-	if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+	if (lvmetad_is_disabled(cmd, &reason)) {
 		log_warn("WARNING: Not using lvmetad because %s.", reason);
-		log_warn("WARNING: Rescan all devices to update lvmetad cache (pvscan --cache).");
-		log_error("Failed to update cache.");
-		ret = ECMD_FAILED;
-		goto out;
+		lvmetad_make_unused(cmd);
+		all_vgs = 1;
+		goto activate;
 	}
 
 	/*
-	 * FIXME: when specific devs are named, we generally don't
-	 * want to scan any other devs, but if lvmetad is not yet
-	 * populated, the first 'pvscan --cache dev' does need to
-	 * do a full scan.  We want to remove the need for this
-	 * case so that 'pvscan --cache dev' is guaranteed to never
-	 * scan any devices other than those specified.
+	 * Step 1: for each device, if it's no longer found, then tell lvmetad
+	 * to drop it.  If the device exists, read metadata from it and send
+	 * that to lvmetad.
+	 *
+	 * When given a device name, check if the device is not visible to
+	 * lvmetad, but still visible to the system, and if so, tell lvmetad to
+	 * drop it (using the major:minor from the system).
+	 *
+	 * When given a major:minor which is not visible to the system, just
+	 * tell lvmetad to drop it directly using that major:minor.
+	 *
+	 * When a device has left the system, it must be dropped using
+	 * --major/--minor because we cannot map the device name to major:minor
+	 *  after the device has left.  (A full rescan could of course be used
+	 *  to drop any devices that have left.)
 	 */
-	if (lvmetad_used() && !lvmetad_token_matches(cmd)) {
-		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
-			log_error("Failed to update cache.");
-			ret = ECMD_FAILED;
-			goto out;
-		}
-	}
 
-	log_verbose("Using physical volume(s) on command line");
+	if (argc || devno_args)
+		log_verbose("Scanning devices on command line.");
 
-	/* Process any command line PVs first. */
 	while (argc--) {
 		pv_name = *argv++;
 		if (pv_name[0] == '/') {
-			/* device path */
 			if (!(dev = dev_cache_get(pv_name, cmd->lvmetad_filter))) {
+				/* Remove device path from lvmetad. */
+				log_debug("Removing dev %s from lvmetad cache.", pv_name);
 				if ((dev = dev_cache_get(pv_name, NULL))) {
-					if (!_clear_dev_from_lvmetad_cache(dev->dev, MAJOR(dev->dev), MINOR(dev->dev), handler)) {
-						stack;
-						ret = ECMD_FAILED;
-						break;
-					}
+					if (!_lvmetad_clear_dev(dev->dev, MAJOR(dev->dev), MINOR(dev->dev)))
+						remove_errors++;
 				} else {
 					log_error("Physical Volume %s not found.", pv_name);
 					ret = ECMD_FAILED;
-					break;
 				}
-				continue;
+			} else {
+				/* Add device path to lvmetad. */
+				log_debug("Scanning dev %s for lvmetad cache.", pv_name);
+				if (!lvmetad_pvscan_single(cmd, dev, &found_vgnames, &pp.changed_vgnames))
+					add_errors++;
 			}
-		}
-		else {
-			/* device major:minor */
+		} else {
 			if (sscanf(pv_name, "%d:%d", &major, &minor) != 2) {
-				log_error("Failed to parse major:minor from %s", pv_name);
-				ret = ECMD_FAILED;
+				log_warn("WARNING: Failed to parse major:minor from %s, skipping.", pv_name);
 				continue;
 			}
 			devno = MKDEV((dev_t)major, (dev_t)minor);
+
 			if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
-				if (!(_clear_dev_from_lvmetad_cache(devno, major, minor, handler))) {
-					stack;
-					ret = ECMD_FAILED;
-					break;
-				}
-				continue;
+				/* Remove major:minor from lvmetad. */
+				log_debug("Removing dev %d:%d from lvmetad cache.", major, minor);
+				if (!_lvmetad_clear_dev(devno, major, minor))
+					remove_errors++;
+			} else {
+				/* Add major:minor to lvmetad. */
+				log_debug("Scanning dev %d:%d for lvmetad cache.", major, minor);
+				if (!lvmetad_pvscan_single(cmd, dev, &found_vgnames, &pp.changed_vgnames))
+					add_errors++;
 			}
 		}
+
 		if (sigint_caught()) {
 			ret = ECMD_FAILED;
-			stack;
-			break;
-		}
-		if (!lvmetad_pvscan_single(cmd, dev, handler, 0)) {
-			ret = ECMD_FAILED;
-			stack;
-			break;
+			goto_out;
 		}
 	}
 
 	if (!devno_args)
-		goto out;
+		goto activate;
 
 	/* Process any grouped --major --minor args */
 	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
@@ -402,27 +477,47 @@ static int _pvscan_lvmetad(struct cmd_context *cmd, int argc, char **argv)
 		devno = MKDEV((dev_t)major, (dev_t)minor);
 
 		if (!(dev = dev_cache_get_by_devt(devno, cmd->lvmetad_filter))) {
-			if (!(_clear_dev_from_lvmetad_cache(devno, major, minor, handler))) {
-				stack;
-				ret = ECMD_FAILED;
-				break;
-			}
-			continue;
+			/* Remove major:minor from lvmetad. */
+			log_debug("Removing dev %d:%d from lvmetad cache.", major, minor);
+			if (!_lvmetad_clear_dev(devno, major, minor))
+				remove_errors++;
+		} else {
+			/* Add major:minor to lvmetad. */
+			log_debug("Scanning dev %d:%d for lvmetad cache.", major, minor);
+			if (!lvmetad_pvscan_single(cmd, dev, &found_vgnames, &pp.changed_vgnames))
+				add_errors++;
 		}
+
 		if (sigint_caught()) {
 			ret = ECMD_FAILED;
-			stack;
-			break;
+			goto_out;
 		}
-		if (!lvmetad_pvscan_single(cmd, dev, handler, 0)) {
-			ret = ECMD_FAILED;
-			stack;
-			break;
-		}
-
 	}
 
+	/*
+	 * In the process of scanning devices, lvmetad may have become
+	 * disabled.  If so, revert to scanning for the autoactivation step.
+	 * Only autoactivate the VGs that were found during the dev scans.
+	 */
+	if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
+		log_warn("WARNING: Not using lvmetad because %s.", reason);
+		lvmetad_make_unused(cmd);
+	}
+
+activate:
+	/*
+	 * Step 2: when the PV was sent to lvmetad, the lvmetad reply
+	 * indicated if all the PVs for the VG are now found.  If so,
+	 * the vgname was added to the list, and we can attempt to
+	 * autoactivate LVs in the VG.
+	 */
+	if (do_activate)
+		ret = _pvscan_autoactivate(cmd, &pp, all_vgs, &found_vgnames);
+
 out:
+	if (remove_errors || add_errors || pp.activate_errors)
+		ret = ECMD_FAILED;
+
 	if (!sync_local_dev_names(cmd))
 		stack;
 	unlock_vg(cmd, VG_GLOBAL);
@@ -477,7 +572,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	int ret;
 
 	if (arg_count(cmd, cache_long_ARG))
-		return _pvscan_lvmetad(cmd, argc, argv);
+		return _pvscan_cache(cmd, argc, argv);
 
 	if (argc) {
 		log_error("Too many parameters on command line.");
@@ -506,7 +601,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */
 	if (lvmetad_used() && (!lvmetad_token_matches(cmd) || lvmetad_is_disabled(cmd, &reason))) {
-		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, NULL, 0)) {
+		if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, 0)) {
 			log_warn("WARNING: Not using lvmetad because cache update failed.");
 			lvmetad_make_unused(cmd);
 		}
@@ -525,7 +620,6 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	/* Needed for a current listing of the global VG namespace. */
 	if (!lockd_gl(cmd, "sh", 0))
 		return_ECMD_FAILED;
-
 
 	if (!(handle = init_processing_handle(cmd))) {
 		log_error("Failed to initialize processing handle.");

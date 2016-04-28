@@ -5242,7 +5242,7 @@ int scan_vgs_for_pvs(struct cmd_context *cmd, uint32_t warn_flags)
 	return _get_pvs(cmd, warn_flags, NULL, NULL);
 }
 
-int pv_write(struct cmd_context *cmd __attribute__((unused)),
+int pv_write(struct cmd_context *cmd,
 	     struct physical_volume *pv, int allow_non_orphan)
 {
 	if (!pv->fmt->ops->pv_write) {
@@ -5268,8 +5268,7 @@ int pv_write(struct cmd_context *cmd __attribute__((unused)),
 
 	pv->status &= ~UNLABELLED_PV;
 
-	if (!lvmetad_pv_found(&pv->id, pv->dev, pv->fmt, pv->label_sector,
-			      NULL, NULL))
+	if (!lvmetad_pv_found(cmd, &pv->id, pv->dev, pv->fmt, pv->label_sector, NULL, NULL, NULL))
 		return_0;
 
 	return 1;
