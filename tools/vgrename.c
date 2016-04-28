@@ -244,7 +244,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &vp;
 
-	ret = process_each_vg(cmd, 0, NULL, vg_name_old,
+	ret = process_each_vg(cmd, 0, NULL, vg_name_old, NULL,
 			      READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
 			      handle, _vgrename_single);
 

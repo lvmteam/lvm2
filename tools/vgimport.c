@@ -107,7 +107,7 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	return process_each_vg(cmd, argc, argv, NULL,
+	return process_each_vg(cmd, argc, argv, NULL, NULL,
 			       READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
 			       NULL,
 			       &vgimport_single);

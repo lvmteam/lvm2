@@ -109,7 +109,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	cmd->lockd_gl_disable = 1;
 
 	cmd->handles_missing_pvs = 1;
-	ret = process_each_vg(cmd, argc, argv, NULL,
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL,
 			      READ_FOR_UPDATE,
 			      NULL, &vgremove_single);
 

@@ -97,8 +97,11 @@ typedef int (*process_single_pvseg_fn_t) (struct cmd_context * cmd,
 					  struct pv_segment * pvseg,
 					  struct processing_handle *handle);
 
-int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    const char *one_vgname, uint32_t flags,
+int process_each_vg(struct cmd_context *cmd,
+	            int argc, char **argv,
+		    const char *one_vgname,
+		    struct dm_list *use_vgnames,
+		    uint32_t flags,
 		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg);
 

@@ -197,7 +197,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &vp;
 
-	ret = process_each_vg(cmd, 0, NULL, vg_name,
+	ret = process_each_vg(cmd, 0, NULL, vg_name, NULL,
 			      READ_FOR_UPDATE, handle,
 			      restoremissing ? &_vgextend_restoremissing : &_vgextend_single);
 

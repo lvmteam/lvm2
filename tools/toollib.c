@@ -1645,6 +1645,7 @@ int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_na
 static int _get_arg_vgnames(struct cmd_context *cmd,
 			    int argc, char **argv,
 			    const char *one_vgname,
+			    struct dm_list *use_vgnames,
 			    struct dm_list *arg_vgnames,
 			    struct dm_list *arg_tags)
 {
@@ -1658,6 +1659,11 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 			log_error("strlist allocation failed.");
 			return ECMD_FAILED;
 		}
+		return ret_max;
+	}
+
+	if (use_vgnames && !dm_list_empty(use_vgnames)) {
+		dm_list_splice(arg_vgnames, use_vgnames);
 		return ret_max;
 	}
 
@@ -2073,11 +2079,14 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 
 /*
  * Call process_single_vg() for each VG selected by the command line arguments.
- * If one_vgname is set, process only that VG and ignore argc/argv (which should be 0/NULL)..
+ * If one_vgname is set, process only that VG and ignore argc/argv (which should be 0/NULL).
  * If one_vgname is not set, get VG names to process from argc/argv.
  */
-int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    const char *one_vgname, uint32_t read_flags,
+int process_each_vg(struct cmd_context *cmd,
+		    int argc, char **argv,
+		    const char *one_vgname,
+		    struct dm_list *use_vgnames,
+		    uint32_t read_flags,
 		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg)
 {
@@ -2104,7 +2113,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	/*
 	 * Find any VGs or tags explicitly provided on the command line.
 	 */
-	if ((ret = _get_arg_vgnames(cmd, argc, argv, one_vgname, &arg_vgnames, &arg_tags)) != ECMD_PROCESSED) {
+	if ((ret = _get_arg_vgnames(cmd, argc, argv, one_vgname, use_vgnames, &arg_vgnames, &arg_tags)) != ECMD_PROCESSED) {
 		ret_max = ret;
 		goto_out;
 	}
