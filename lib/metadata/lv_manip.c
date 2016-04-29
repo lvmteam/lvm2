@@ -3834,6 +3834,16 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				return 0;
 			}
 			lv_set_visible(meta_lv);
+
+			/*
+			 * Copy any tags from the new LV to the metadata LV so
+			 * it can be activated temporarily.
+			 */
+			if (!str_list_dup(meta_lv->vg->vgmem, &meta_lv->tags, &lv->tags)) {
+				log_error("Failed to copy tags onto LV %s to clear metadata.", display_lvname(meta_lv));
+				return 0;
+			}
+
 			clear_metadata = 1;
 		}
 
@@ -3882,6 +3892,9 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				return 0;
 			}
 			lv_set_hidden(meta_lv);
+
+			/* Wipe any temporary tags required for activation. */
+			str_list_wipe(&meta_lv->tags);
 		}
 	}
 
