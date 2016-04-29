@@ -236,6 +236,7 @@ char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
 {
 	char *repstr;
 	int used = is_used_pv(pv);
+	int duplicate = lvmcache_dev_is_unchosen_duplicate(pv->dev);
 
 	if (!(repstr = dm_pool_zalloc(mem, 4))) {
 		log_error("dm_pool_alloc failed");
@@ -245,7 +246,15 @@ char *pv_attr_dup(struct dm_pool *mem, const struct physical_volume *pv)
 	/*
 	 * An allocatable PV is always used, so we don't need to show 'u'.
 	 */
-	repstr[0] = (pv->status & ALLOCATABLE_PV) ? 'a' : (used > 0) ? 'u' : '-';
+	if (duplicate)
+		repstr[0] = 'd';
+	else if (pv->status & ALLOCATABLE_PV)
+		repstr[0] = 'a';
+	else if (used > 0)
+		repstr[0] = 'u';
+	else
+		repstr[0] = '-';
+
 	repstr[1] = (pv->status & EXPORTED_VG) ? 'x' : '-';
 	repstr[2] = (pv->status & MISSING_PV) ? 'm' : '-';
 

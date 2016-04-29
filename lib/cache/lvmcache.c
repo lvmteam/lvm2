@@ -782,6 +782,17 @@ int vg_has_duplicate_pvs(struct volume_group *vg)
 	return 0;
 }
 
+int lvmcache_dev_is_unchosen_duplicate(struct device *dev)
+{
+	struct device_list *devl;
+
+	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+		if (devl->dev == dev)
+			return 1;
+	}
+	return 0;
+}
+
 /*
  * Compare _found_duplicate_devs entries with the corresponding duplicate dev
  * in lvmcache.  There may be multiple duplicates in _found_duplicate_devs for

@@ -53,6 +53,7 @@ FIELD_RESERVED_BINARY_VALUE(pv_allocatable, pv_allocatable, "", "allocatable")
 FIELD_RESERVED_BINARY_VALUE(pv_exported, pv_exported, "", "exported")
 FIELD_RESERVED_BINARY_VALUE(pv_missing, pv_missing, "", "missing")
 FIELD_RESERVED_BINARY_VALUE(pv_in_use, pv_in_use, "", "used", "in use")
+FIELD_RESERVED_BINARY_VALUE(pv_duplicate, pv_duplicate, "", "duplicate")
 
 /* Reserved values for VG fields */
 FIELD_RESERVED_BINARY_VALUE(vg_extendable, vg_extendable, "", "extendable")

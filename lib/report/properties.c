@@ -194,6 +194,8 @@ GET_PV_NUM_PROPERTY_FN(pv_ba_size, SECTOR_SIZE * pv->ba_size)
 #define _pv_ext_vsn_set prop_not_implemented_set
 #define _pv_in_use_get prop_not_implemented_get
 #define _pv_in_use_set prop_not_implemented_set
+#define _pv_duplicate_get prop_not_implemented_get
+#define _pv_duplicate_set prop_not_implemented_set
 #define _pv_major_get prop_not_implemented_get
 #define _pv_major_set prop_not_implemented_set
 #define _pv_minor_get prop_not_implemented_get

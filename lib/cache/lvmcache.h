@@ -209,4 +209,6 @@ int lvmcache_vg_is_foreign(struct cmd_context *cmd, const char *vgname, const ch
 
 void lvmcache_lock_ordering(int enable);
 
+int lvmcache_dev_is_unchosen_duplicate(struct device *dev);
+
 #endif
