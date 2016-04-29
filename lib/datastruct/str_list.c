@@ -92,7 +92,15 @@ void str_list_del(struct dm_list *sll, const char *str)
 
 	dm_list_iterate_safe(slh, slht, sll)
 		if (!strcmp(str, dm_list_item(slh, struct dm_str_list)->str))
-			 dm_list_del(slh);
+			dm_list_del(slh);
+}
+
+void str_list_wipe(struct dm_list *sll)
+{
+	struct dm_list *slh, *slht;
+
+	dm_list_iterate_safe(slh, slht, sll)
+		dm_list_del(slh);
 }
 
 int str_list_dup(struct dm_pool *mem, struct dm_list *sllnew,
@@ -118,8 +126,8 @@ int str_list_match_item(const struct dm_list *sll, const char *str)
 	struct dm_str_list *sl;
 
 	dm_list_iterate_items(sl, sll)
-	    if (!strcmp(str, sl->str))
-		return 1;
+		if (!strcmp(str, sl->str))
+			return 1;
 
 	return 0;
 }
@@ -153,8 +161,8 @@ int str_list_lists_equal(const struct dm_list *sll, const struct dm_list *sll2)
 		return 0;
 
 	dm_list_iterate_items(sl, sll)
-	    if (!str_list_match_item(sll2, sl->str))
-		return 0;
+		if (!str_list_match_item(sll2, sl->str))
+			return 0;
 
 	return 1;
 }

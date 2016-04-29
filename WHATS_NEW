@@ -1,5 +1,6 @@
 Version 2.02.152 - 
 ==================================
+  Add str_list_wipe.
   Improve support for interrupting procesing of volumes during lvchange.
   Use failed command return code when lvchanging read-only volume.
   Show creation transaction_id and zeroing state of pool with thin volume.
