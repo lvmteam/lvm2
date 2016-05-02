@@ -2704,6 +2704,20 @@ void dm_report_field_set_value(struct dm_report_field *field, const void *value,
 			       const void *sortvalue);
 
 /*
+ * Report group support.
+ */
+struct dm_report_group;
+
+typedef enum {
+	DM_REPORT_GROUP_SINGLE,
+} dm_report_group_type_t;
+
+struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data);
+int dm_report_group_push(struct dm_report_group *group, struct dm_report *report, void *data);
+int dm_report_group_pop(struct dm_report_group *group);
+int dm_report_group_destroy(struct dm_report_group *group);
+
+/*
  * Stats counter access methods
  *
  * Each method returns the corresponding stats counter value from the

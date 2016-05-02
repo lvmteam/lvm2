@@ -32,6 +32,8 @@ struct selection {
 	struct selection_node *selection_root;
 };
 
+struct report_group_item;
+
 struct dm_report {
 	struct dm_pool *mem;
 
@@ -71,6 +73,29 @@ struct dm_report {
 	/* Null-terminated array of reserved values */
 	const struct dm_report_reserved_value *reserved_values;
 	struct dm_hash_table *value_cache;
+
+	struct report_group_item *group_item;
+};
+
+struct dm_report_group {
+	dm_report_group_type_t type;
+	struct dm_pool *mem;
+	struct dm_list items;
+	int indent;
+};
+
+struct report_group_item {
+	struct dm_list list;
+	struct dm_report_group *group;
+	struct dm_report *report;
+	union {
+		uint32_t orig_report_flags;
+		uint32_t finished_count;
+	} store;
+	struct report_group_item *parent;
+	int output_done:1;
+	int needs_closing:1;
+	void *data;
 };
 
 /*
@@ -4426,16 +4451,171 @@ int dm_report_is_empty(struct dm_report *rh)
 	return dm_list_empty(&rh->rows) ? 1 : 0;
 }
 
+static struct report_group_item *_get_topmost_report_group_item(struct dm_report_group *group)
+{
+	struct report_group_item *item;
+
+	if (group && !dm_list_empty(&group->items))
+		item = dm_list_item(dm_list_first(&group->items), struct report_group_item);
+	else
+		item = NULL;
+
+	return item;
+}
+
 int dm_report_output(struct dm_report *rh)
 {
-	if (dm_list_empty(&rh->rows))
-		return 1;
+	int r;
+
+	if (dm_list_empty(&rh->rows)) {
+		r = 1;
+		goto out;
+	}
 
 	if ((rh->flags & RH_SORT_REQUIRED))
 		_sort_rows(rh);
 
 	if ((rh->flags & DM_REPORT_OUTPUT_COLUMNS_AS_ROWS))
-		return _output_as_rows(rh);
+		r = _output_as_rows(rh);
 	else
-		return _output_as_columns(rh);
+		r = _output_as_columns(rh);
+out:
+	if (r && rh && rh->group_item)
+		rh->group_item->output_done = 1;
+	return r;
+}
+
+struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data)
+{
+	struct dm_report_group *group;
+	struct dm_pool *mem;
+	struct report_group_item *item;
+
+	if (!(mem = dm_pool_create("report_group", 1024))) {
+		log_error("dm_report: dm_report_init_group: failed to allocate mem pool");
+		return NULL;
+	}
+
+	if (!(group = dm_pool_zalloc(mem, sizeof(*group)))) {
+		log_error("dm_report: failed to allocate report group structure");
+		goto bad;
+	}
+
+	group->mem = mem;
+	group->type = type;
+	dm_list_init(&group->items);
+
+	if (!(item = dm_pool_zalloc(mem, sizeof(*item)))) {
+		log_error("dm_report: faile to allocate root report group item");
+		goto bad;
+	}
+
+	dm_list_add_h(&group->items, &item->list);
+
+	switch (type) {
+		default:
+			goto_bad;
+	}
+
+	return group;
+bad:
+	dm_pool_destroy(mem);
+	return NULL;
+}
+
+int dm_report_group_push(struct dm_report_group *group, struct dm_report *report, void *data)
+{
+	struct report_group_item *item, *tmp_item;
+
+	if (!group)
+		return 1;
+
+	if (!(item = dm_pool_zalloc(group->mem, sizeof(*item)))) {
+		log_error("dm_report: dm_report_group_push: group item allocation failed");
+		return 0;
+	}
+
+	if ((item->report = report)) {
+		item->store.orig_report_flags = report->flags;
+		report->group_item = item;
+	}
+	item->group = group;
+	item->data = data;
+
+	dm_list_iterate_items(tmp_item, &group->items) {
+		if (!tmp_item->report) {
+			item->parent = tmp_item;
+			break;
+		}
+	}
+
+	dm_list_add_h(&group->items, &item->list);
+
+	switch (group->type) {
+		default:
+			goto_bad;
+	}
+
+	return 1;
+bad:
+	dm_list_del(&item->list);
+	dm_pool_free(group->mem, item);
+	return 0;
+}
+
+int dm_report_group_pop(struct dm_report_group *group)
+{
+	struct report_group_item *item;
+
+	if (!group)
+		return 1;
+
+	if (!(item = _get_topmost_report_group_item(group))) {
+		log_error("dm_report: dm_report_group_pop: group has no items");
+		return 0;
+	}
+
+	switch (group->type) {
+		default:
+			return 0;
+        }
+
+	dm_list_del(&item->list);
+
+	if (item->report) {
+		item->report->flags = item->store.orig_report_flags;
+		item->report->group_item = NULL;
+	}
+
+	if (item->parent)
+		item->parent->store.finished_count++;
+
+	dm_pool_free(group->mem, item);
+	return 1;
+}
+
+int dm_report_group_destroy(struct dm_report_group *group)
+{
+	struct report_group_item *item, *tmp_item;
+	int r = 0;
+
+	if (!group)
+		return 1;
+
+	dm_list_iterate_items_safe(item, tmp_item, &group->items) {
+		if (item->report && !dm_report_output(item->report))
+			goto_out;
+		if (!dm_report_group_pop(group))
+			goto_out;
+	}
+
+	switch (group->type) {
+		default:
+			goto_out;
+        }
+
+	r = 1;
+out:
+	dm_pool_destroy(group->mem);
+	return r;
 }
