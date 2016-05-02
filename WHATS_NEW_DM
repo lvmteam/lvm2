@@ -1,5 +1,6 @@
 Version 1.02.128 -
 =================================
+  Introduce DM_REPORT_GROUP_JSON for report group with JSON output format.
   Introduce DM_REPORT_GROUP_BASIC for report group with basic report output.
   Introduce DM_REPORT_GROUP_SINGLE for report group having single report only.
   Add dm_report_group_{create,push,pop,destroy} to support report grouping.
