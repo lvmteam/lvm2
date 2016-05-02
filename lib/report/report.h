@@ -80,6 +80,9 @@ struct processing_handle;
 typedef int (*field_report_fn) (struct report_handle * dh, struct field * field,
 				const void *data);
 
+int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_group_type,
+		       struct dm_report_group **report_group, struct dm_report **log_rh);
+
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
 		  int aligned, int buffered, int headings, int field_prefixes,

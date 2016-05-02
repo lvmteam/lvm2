@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Recognize --reportformat {basic|json} option to select report output format.
   Add log/command_log_{sort,cols} to lvm.conf to configure command log report.
   Add log_object_{type,name,id,group,group_id} fields to cmd log.
   Add log_{seq_num,type,context,message,errno,ret_code} fields to cmd log.

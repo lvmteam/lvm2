@@ -20,6 +20,7 @@
 struct report_args {
 	int argc;
 	char **argv;
+	dm_report_group_type_t report_group_type;
 	report_type_t report_type;
 	int args_are_pvs;
 	int aligned;
@@ -1060,4 +1061,69 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 int devtypes(struct cmd_context *cmd, int argc, char **argv)
 {
 	return _report(cmd, argc, argv, DEVTYPES);
+}
+
+#define REPORT_FORMAT_NAME_BASIC "basic"
+#define REPORT_FORMAT_NAME_JSON "json"
+
+int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_group_type,
+		       struct dm_report_group **report_group, struct dm_report **log_rh)
+{
+	static char log_report_name[] = "log";
+	const char *format_str = arg_str_value(cmd, reportformat_ARG, NULL);
+	struct report_args args = {0};
+	struct dm_report_group *new_report_group;
+	struct dm_report *tmp_log_rh = NULL;
+
+	if (!format_str) {
+		args.report_group_type = DM_REPORT_GROUP_SINGLE;
+	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_BASIC)) {
+		args.report_group_type = DM_REPORT_GROUP_BASIC;
+	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON)) {
+		args.report_group_type = DM_REPORT_GROUP_JSON;
+	} else {
+		log_error("%s: unknown report format.", format_str);
+		log_error("Supported report formats: %s, %s.",
+			  REPORT_FORMAT_NAME_BASIC,
+			  REPORT_FORMAT_NAME_JSON);
+		return 0;
+	}
+
+	if (report_group_type)
+		*report_group_type = args.report_group_type;
+
+	if (!(new_report_group = dm_report_group_create(args.report_group_type, NULL))) {
+		log_error("Failed to create report group.");
+		return 0;
+	}
+
+	if (!*log_rh) {
+		args.report_type = CMDLOG;
+		if (!_config_report(cmd, &args))
+			goto_bad;
+
+		if (!(tmp_log_rh = report_init(NULL, args.options, args.keys, &args.report_type,
+						  args.separator, args.aligned, args.buffered, args.headings,
+						  args.field_prefixes, args.quoted, args.columns_as_rows,
+						  args.selection))) {
+			log_error("Failed to create log report.");
+			goto bad;
+		}
+	}
+
+	if (!(dm_report_group_push(new_report_group, tmp_log_rh ? : *log_rh, log_report_name))) {
+		log_error("Failed to add log report to report group.");
+		goto bad;
+	}
+
+	*report_group = new_report_group;
+	if (tmp_log_rh)
+		*log_rh = tmp_log_rh;
+	return 1;
+bad:
+	if (!dm_report_group_destroy(new_report_group))
+		stack;
+	if (tmp_log_rh)
+		dm_report_free(tmp_log_rh);
+	return 0;
 }
