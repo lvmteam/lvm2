@@ -106,6 +106,7 @@ int process_each_vg(struct cmd_context *cmd,
 		    const char *one_vgname,
 		    struct dm_list *use_vgnames,
 		    uint32_t flags,
+		    int include_internal,
 		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg);
 

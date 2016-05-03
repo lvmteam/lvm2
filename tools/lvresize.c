@@ -223,7 +223,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &lp;
 
-	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, NULL, READ_FOR_UPDATE, handle,
+	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, NULL, READ_FOR_UPDATE, 0, handle,
 			      &_lvresize_single);
 
 	destroy_processing_handle(cmd, handle);

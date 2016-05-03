@@ -38,6 +38,6 @@ static int vgck_single(struct cmd_context *cmd __attribute__((unused)),
 int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
 	lvmetad_make_unused(cmd);
-	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, NULL,
+	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL,
 			       &vgck_single);
 }

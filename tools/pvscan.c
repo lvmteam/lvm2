@@ -287,7 +287,7 @@ static int _pvscan_autoactivate(struct cmd_context *cmd, struct pvscan_aa_params
 
 	dev_cache_full_scan(cmd->full_filter);
 
-	ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, 0, handle, _pvscan_autoactivate_single);
+	ret = process_each_vg(cmd, 0, NULL, NULL, vgnames, 0, 0, handle, _pvscan_autoactivate_single);
 
 	destroy_processing_handle(cmd, handle);
 

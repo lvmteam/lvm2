@@ -89,7 +89,7 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 **********/
 
-	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, NULL,
+	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL,
 			       vgdisplay_single);
 
 /******** FIXME Need to count number processed

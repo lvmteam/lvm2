@@ -110,7 +110,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 
 	cmd->handles_missing_pvs = 1;
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL,
-			      READ_FOR_UPDATE,
+			      READ_FOR_UPDATE, 0,
 			      NULL, &vgremove_single);
 
 	return ret;

@@ -1216,7 +1216,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, lockstart_ARG) || arg_is_set(cmd, lockstop_ARG))
 		flags |= READ_ALLOW_EXPORTED;
 
-	ret = process_each_vg(cmd, argc, argv, NULL, NULL, flags, NULL, &vgchange_single);
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL, flags, 0, NULL, &vgchange_single);
 
 	/* Wait for lock-start ops that were initiated in vgchange_lockstart. */
 

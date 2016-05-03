@@ -364,7 +364,7 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 
 	while (1) {
 		parms->outstanding_count = 0;
-		process_each_vg(cmd, 0, NULL, NULL, NULL, READ_FOR_UPDATE, handle, _poll_vg);
+		process_each_vg(cmd, 0, NULL, NULL, NULL, READ_FOR_UPDATE, 0, handle, _poll_vg);
 		if (!parms->outstanding_count)
 			break;
 		if (parms->interval)
@@ -508,7 +508,7 @@ static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 
 	handle->custom_handle = &lpdp;
 
-	process_each_vg(cmd, 0, NULL, NULL, NULL, 0, handle, _lvmpolld_init_poll_vg);
+	process_each_vg(cmd, 0, NULL, NULL, NULL, 0, 0, handle, _lvmpolld_init_poll_vg);
 
 	first = dm_list_first(&lpdp.idls);
 

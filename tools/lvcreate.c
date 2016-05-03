@@ -1564,7 +1564,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &pp;
 
-	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, NULL, READ_FOR_UPDATE, handle,
+	ret = process_each_vg(cmd, 0, NULL, lp.vg_name, NULL, READ_FOR_UPDATE, 0, handle,
 			      &_lvcreate_single);
 
 	_destroy_lvcreate_params(&lp);

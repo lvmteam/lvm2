@@ -1875,7 +1875,8 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		skip = 0;
 		notfound = 0;
 
-		if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
+		if (vg_uuid && !is_orphan_vg(vg_name) &&
+		    !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
 			stack;
 
 		log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
@@ -2091,6 +2092,7 @@ int process_each_vg(struct cmd_context *cmd,
 		    const char *one_vgname,
 		    struct dm_list *use_vgnames,
 		    uint32_t read_flags,
+		    int include_internal,
 		    struct processing_handle *handle,
 		    process_single_vg_fn_t process_single_vg)
 {
@@ -2158,7 +2160,7 @@ int process_each_vg(struct cmd_context *cmd,
 	 */
 	log_debug("Get list of VGs on system");
 
-	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, 0)) {
+	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, include_internal)) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}

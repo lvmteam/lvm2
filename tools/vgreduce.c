@@ -247,7 +247,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	process_each_vg(cmd, 0, NULL, vg_name, NULL,
 			READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
-			handle, &_vgreduce_repair_single);
+			0, handle, &_vgreduce_repair_single);
 
 	if (vp.already_consistent) {
 		log_print_unless_silent("Volume group \"%s\" is already consistent", vg_name);

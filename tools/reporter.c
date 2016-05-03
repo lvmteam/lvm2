@@ -1084,8 +1084,8 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 			if (args->full_report_vg)
 				r = _report_all_in_vg(cmd, handle, args->full_report_vg, VGS, lv_info_needed, lv_segment_status_needed);
 			else
-				r = process_each_vg(cmd, args->argc, args->argv, NULL, NULL, 0,
-						    handle, &_vgs_single);
+				r = process_each_vg(cmd, args->argc, args->argv, NULL, NULL,
+						    0, 0, handle, &_vgs_single);
 			break;
 		case LABEL:
 			r = process_each_label(cmd, args->argc, args->argv,
@@ -1101,7 +1101,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 							    handle, &_pvs_single);
 				else
 					r = process_each_vg(cmd, args->argc, args->argv, NULL, NULL,
-							    0, handle, &_pvs_in_vg);
+							    0, 0, handle, &_pvs_in_vg);
 			}
 			break;
 		case SEGS:
@@ -1128,7 +1128,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 												 &_pvsegs_single);
 				else
 					r = process_each_vg(cmd, args->argc, args->argv, NULL, NULL,
-							    0, handle, &_pvsegs_in_vg);
+							    0, 0, handle, &_pvsegs_in_vg);
 			}
 			break;
 		case FULL:
@@ -1367,7 +1367,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 
 	if (single_args->report_type == FULL) {
 		handle->custom_handle = &args;
-		r = process_each_vg(cmd, argc, argv, NULL, NULL, 0, handle, &_full_report_single);
+		r = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 1, handle, &_full_report_single);
 	} else
 		r = _do_report(cmd, handle, &args, single_args);
 
