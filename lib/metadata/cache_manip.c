@@ -184,6 +184,25 @@ int update_cache_pool_params(const struct segment_type *segtype,
 }
 
 /*
+ * Validate if existing cache-pool can be used with given chunk size
+ * i.e. cache-pool metadata size fits all info.
+ */
+int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size)
+{
+	uint64_t min_size = _cache_min_metadata_size(pool_lv->size, chunk_size);
+
+	if (min_size > first_seg(pool_lv)->metadata_lv->size) {
+		log_error("Cannot use chunk size %s with cache pool %s. "
+			  "Minimal required size for metadata is %s.",
+			  display_size(pool_lv->vg->cmd, chunk_size),
+			  display_lvname(pool_lv),
+			  display_size(pool_lv->vg->cmd, min_size));
+		return 0;
+	}
+
+	return 1;
+}
+/*
  * Validate arguments for converting origin into cached volume with given cache pool.
  *
  * Always validates origin_lv, and when it is known also cache pool_lv
