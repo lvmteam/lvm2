@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Log warnings and errors via report during cmd processing if this is enabled.
   Make it possible to iterate over internal 'orphan' VGs in process_each_vg fn.
   Make -S|--select option groupable that allows this option to be repeated.
   Make -O|--sort option groupable that allows this option to be repeated.

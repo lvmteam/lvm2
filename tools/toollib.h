@@ -76,6 +76,7 @@ struct processing_handle {
 	dm_report_group_type_t report_group_type;
 	struct dm_report_group *report_group;
 	struct dm_report *log_rh;
+	log_report_t saved_log_report_state;
 	void *custom_handle;
 };
 

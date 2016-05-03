@@ -1729,11 +1729,12 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct
 
 	if (!parent_handle) {
 		if (!report_format_init(cmd, &handle->report_group_type, &handle->report_group,
-					&handle->log_rh)) {
+					&handle->log_rh, &handle->saved_log_report_state)) {
 			dm_pool_free(cmd->mem, handle);
 			return NULL;
 		}
-	}
+	} else
+		handle->saved_log_report_state = log_get_report_state();
 
 	return handle;
 }
@@ -1767,6 +1768,9 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 	if (handle) {
 		if (handle->selection_handle && handle->selection_handle->selection_rh)
 			dm_report_free(handle->selection_handle->selection_rh);
+
+		log_restore_report_state(handle->saved_log_report_state);
+
 		if (!dm_report_group_destroy(handle->report_group))
 			stack;
 		if (handle->log_rh)

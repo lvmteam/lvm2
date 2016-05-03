@@ -1418,7 +1418,8 @@ int devtypes(struct cmd_context *cmd, int argc, char **argv)
 #define REPORT_FORMAT_NAME_JSON "json"
 
 int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_group_type,
-		       struct dm_report_group **report_group, struct dm_report **log_rh)
+		       struct dm_report_group **report_group, struct dm_report **log_rh,
+		       log_report_t *saved_log_report_state)
 {
 	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
 	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
@@ -1483,6 +1484,11 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 	*report_group = new_report_group;
 	if (tmp_log_rh)
 		*log_rh = tmp_log_rh;
+
+	if (saved_log_report_state) {
+		*saved_log_report_state = log_get_report_state();
+		log_set_report(*log_rh);
+	}
 	return 1;
 bad:
 	if (!dm_report_group_destroy(new_report_group))
