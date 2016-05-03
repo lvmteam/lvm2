@@ -90,7 +90,7 @@ void init_log_file(const char *log_file, int append)
 			log_warn("WARNING: Cannot parse content of %s.", statfile);
 		} else {
 			if (dm_snprintf(_log_file_path, sizeof(_log_file_path),
-					"%s_%s_%d_%lld", log_file, env, pid, starttime) < 0) {
+					"%s_%s_%d_%llu", log_file, env, pid, starttime) < 0) {
 				log_warn("WARNING: Debug log file path is too long for epoch.");
 				_log_file_path[0] = '\0';
 			} else {
