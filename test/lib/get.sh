@@ -103,4 +103,5 @@ first_extent_sector() {
 
 #set -x
 unset LVM_VALGRIND
+unset LVM_LOG_FILE_EPOCH
 "$@"
