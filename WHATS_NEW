@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Add lvm fullreport command for joined PV, VG, LV and segment report per VG.
   Integrate report group handling and cmd log report into cmd processing code.
   Add log/report_command_log to lvm.conf to enable or disable cmd log report.
   Add log/report_output_format to lvm.conf for default report output format.

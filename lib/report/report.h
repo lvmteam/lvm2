@@ -22,16 +22,17 @@
 
 typedef enum {
 	CMDLOG		= 1,
-	LVS		= 2,
-	LVSINFO		= 4,
-	LVSSTATUS	= 8,
-	LVSINFOSTATUS   = 16,
-	PVS		= 32,
-	VGS		= 64,
-	SEGS		= 128,
-	PVSEGS		= 256,
-	LABEL		= 512,
-	DEVTYPES	= 1024
+	FULL		= 2,
+	LVS		= 4,
+	LVSINFO		= 8,
+	LVSSTATUS	= 16,
+	LVSINFOSTATUS   = 32,
+	PVS		= 64,
+	VGS		= 128,
+	SEGS		= 256,
+	PVSEGS		= 512,
+	LABEL		= 1024,
+	DEVTYPES	= 2048
 } report_type_t;
 
 /*

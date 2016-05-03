@@ -136,6 +136,44 @@ xx(lvactivate,
    "Logical Volume(s)\n")
 ***********/
 
+xx(fullreport,
+   "Display full report",
+   PERMITTED_READ_ONLY | ALL_VGS_IS_DEFAULT | LOCKD_VG_SH,
+   "fullreport\n"
+   "\t[--aligned]\n"
+   "\t[--binary]\n"
+   "\t[-a|--all]\n"
+   "\t[--commandprofile ProfileName]\n"
+   "\t[-d|--debug]\n"
+   "\t[--foreign]\n"
+   "\t[-h|--help]\n"
+   "\t[--ignorelockingfailure]\n"
+   "\t[--ignoreskippedcluster]\n"
+   "\t[--nameprefixes]\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+|-|#]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[-P|--partial]\n"
+   "\t[--readonly]\n"
+   "\t[--reportformat {json}]\n"
+   "\t[--rows]\n"
+   "\t[-S|--select Selection]\n"
+   "\t[--separator Separator]\n"
+   "\t[--trustcache]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hHbBsSkKmMgGtTpPeE]\n"
+   "\t[--unquoted]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]\n"
+   "\t[VolumeGroupName [VolumeGroupName...]]\n",
+
+   aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
+   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG, nolocking_ARG,
+   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, reportformat_ARG,
+   rows_ARG, select_ARG, separator_ARG, shared_ARG, sort_ARG, trustcache_ARG,
+   unbuffered_ARG, units_ARG, unquoted_ARG)
+
 xx(lvchange,
    "Change the attributes of logical volume(s)",
    CACHE_VGMETADATA | PERMITTED_READ_ONLY,
