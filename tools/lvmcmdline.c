@@ -1677,6 +1677,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		if (lvmetad_used() && lvmetad_is_disabled(cmd, &reason)) {
 			log_warn("WARNING: Not using lvmetad because %s.", reason);
 			lvmetad_make_unused(cmd);
+
+			if (strstr(reason, "duplicate")) {
+				log_warn("WARNING: Use multipath or vgimportclone to resolve duplicate PVs?");
+				if (!find_config_tree_bool(cmd, devices_multipath_component_detection_CFG, NULL))
+					log_warn("WARNING: Set multipath_component_detection=1 to hide multipath duplicates.");
+				log_warn("WARNING: After duplicates are resolved, run \"pvscan --cache\" to enable lvmetad.");
+			}
 		}
 	}
 
