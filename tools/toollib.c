@@ -3818,8 +3818,8 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	if (!found)
 		return 1;
 
-	log_debug("Checking device %s for pvcreate %.32s.",
-		  pv_dev_name(pv), pv->dev->pvid[0] ? pv->dev->pvid : "");
+	log_debug("Checking pvcreate arg %s which has existing PVID: %.32s.",
+		  pv_dev_name(pv), pv->dev->pvid[0] ? pv->dev->pvid : "<none>");
 
 	/*
 	 * This test will fail if the device belongs to an MD array.
