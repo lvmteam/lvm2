@@ -3787,7 +3787,6 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
-	struct device *dev;
 	int found = 0;
 
 	if (!pv->dev)
@@ -3796,21 +3795,11 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	/*
 	 * Check if one of the command args in arg_devices
 	 * matches this device.
-	 *
-	 * (Possible optimization: the first time this _single
-	 * function is called, we could iterate through all
-	 * arg_devices entries, do the name to dev lookup
-	 * with dev_cache_get() and set the pd->dev fields.
-	 * Subsequent _single calls would just compare devs
-	 * and not do any dev_cache_get(). This would avoid
-	 * repeating dev_cache_get() for arg_devices entries.)
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices) {
-		dev = dev_cache_get(pd->name, cmd->full_filter);
-		if (dev != pv->dev)
+		if (pd->dev != pv->dev)
 			continue;
 
-		pd->dev = pv->dev;
 		if (pv->dev->pvid[0])
 			strncpy(pd->pvid, pv->dev->pvid, ID_LEN);
 		found = 1;
@@ -4015,7 +4004,6 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
 	struct label *label;
-	struct device *dev;
 	int found = 0;
 
 	if (!pv->dev)
@@ -4026,11 +4014,9 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 	 * matches this device.
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices) {
-		dev = dev_cache_get(pd->name, cmd->full_filter);
-		if (dev != pv->dev)
+		if (pd->dev != pv->dev)
 			continue;
 
-		pd->dev = pv->dev;
 		if (pv->dev->pvid[0])
 			strncpy(pd->pvid, pv->dev->pvid, ID_LEN);
 		found = 1;
@@ -4238,6 +4224,12 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	}
 
 	dev_cache_full_scan(cmd->full_filter);
+
+	/*
+	 * Translate arg names into struct device's.
+	 */
+	dm_list_iterate_items(pd, &pp->arg_devices)
+		pd->dev = dev_cache_get(pd->name, cmd->full_filter);
 
 	/*
 	 * Use process_each_pv to search all existing PVs and devices.
