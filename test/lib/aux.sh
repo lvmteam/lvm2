@@ -659,6 +659,8 @@ prepare_md_dev() {
 
 	rm -f debug.log strace.log MD_DEV MD_DEV_PV MD_DEVICES
 
+	coption="--chunk"
+	test "$level" = "1" && coption="--bitmap-chunk"
 	# Have MD use a non-standard name to avoid colliding with an existing MD device
 	# - mdadm >= 3.0 requires that non-standard device names be in /dev/md/
 	# - newer mdadm _completely_ defers to udev to create the associated device node
@@ -668,7 +670,7 @@ prepare_md_dev() {
 		mddev=/dev/md/md_lvm_test0 || \
 		mddev=/dev/md_lvm_test0
 
-	mdadm --create --metadata=1.0 "$mddev" --auto=md --level $level --chunk $rchunk --raid-devices=$rdevs "${@:4}" || {
+	mdadm --create --metadata=1.0 "$mddev" --auto=md --level $level --bitmap=internal $coption=$rchunk --raid-devices=$rdevs "${@:4}" || {
 		# Some older 'mdadm' version managed to open and close devices internaly
 		# and reporting non-exclusive access on such device
 		# let's just skip the test if this happens.
@@ -707,6 +709,7 @@ cleanup_md_dev() {
 	mdadm --stop "$dev" || true
 	test "$DM_DEV_DIR" != "/dev" && rm -f "$DM_DEV_DIR/$(basename $dev)"
 	notify_lvmetad $(< MD_DEV_PV)
+	udev_wait  # wait till events are process, not zeroing to early
 	for dev in $(< MD_DEVICES); do
 		mdadm --zero-superblock "$dev" || true
 		notify_lvmetad "$dev"
