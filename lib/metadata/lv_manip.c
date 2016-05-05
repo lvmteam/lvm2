@@ -7771,16 +7771,16 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
 			if (!(lv = _lv_create_an_lv(vg, lp, lp->pool_name)))
 				return_NULL;
 
-			if (lv_is_cache(lv)) {
-				/* Here it's been converted via lvcreate */
-				log_print_unless_silent("Logical volume %s is now cached.",
-							display_lvname(lv));
-				return lv;
+			if (!lv_is_cache(lv)) {
+				log_error(INTERNAL_ERROR "Logical volume is not cache %s.",
+					  display_lvname(lv));
+				return NULL;
 			}
 
-			log_error(INTERNAL_ERROR "Logical volume is not cache %s.",
-				  display_lvname(lv));
-			return NULL;
+			/* Convertion via lvcreate */
+			log_print_unless_silent("Logical volume %s is now cached.",
+						display_lvname(lv));
+			return lv;
 		} else {
 			log_error(INTERNAL_ERROR "Creation of pool for unsupported segment type %s.",
 				  lp->segtype->name);
