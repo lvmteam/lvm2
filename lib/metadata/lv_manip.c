@@ -7166,9 +7166,17 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
+		if (seg_is_cache(lp)) {
+			/* validate metadata size */
+			if (!validate_lv_cache_chunk_size(pool_lv, lp->chunk_size))
+				return_0;
+
+			first_seg(pool_lv)->chunk_size = lp->chunk_size;
+		}
+
 		/* Validate volume size to to aling on chunk for small extents */
 		/* Cache chunk size is always set */
-		size = seg_is_cache(lp) ? lp->chunk_size : first_seg(pool_lv)->chunk_size;
+		size = first_seg(pool_lv)->chunk_size;
 		if (size > vg->extent_size) {
 			/* Align extents on chunk boundary size */
 			size = ((uint64_t)vg->extent_size * lp->extents + size - 1) /
@@ -7427,26 +7435,14 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
 
-	if (lv_is_cache_pool(lv) || lv_is_cache(lv)) {
-		if (!cache_set_mode(first_seg(lv), lp->cache_mode)) {
+	if (lv_is_cache_pool(lv)) {
+		if (!cache_set_params(first_seg(lv),
+				      lp->cache_mode,
+				      lp->policy_name,
+				      lp->policy_settings,
+				      lp->chunk_size)) {
 			stack;
 			goto revert_new_lv;
-		}
-
-		if (!cache_set_policy(first_seg(lv), lp->policy_name, lp->policy_settings)) {
-			stack;
-			goto revert_new_lv;
-		}
-
-		pool_lv = pool_lv ? : lv;
-		if (lp->chunk_size) {
-			first_seg(pool_lv)->chunk_size = lp->chunk_size;
-			/* TODO: some calc_policy solution for cache ? */
-			if (!recalculate_pool_chunk_size_with_dev_hints(pool_lv, lp->passed_args,
-									THIN_CHUNK_SIZE_CALC_METHOD_GENERIC)) {
-				stack;
-				goto revert_new_lv;
-			}
 		}
 	} else if (lv_is_raid(lv)) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
@@ -7649,10 +7645,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 		lv = tmp_lv;
 
-		if (!cache_set_mode(first_seg(lv), lp->cache_mode))
-			return_NULL; /* revert? */
-
-		if (!cache_set_policy(first_seg(lv), lp->policy_name, lp->policy_settings))
+		if (!cache_set_params(first_seg(lv),
+				      lp->cache_mode,
+				      lp->policy_name,
+				      lp->policy_settings,
+				      (lp->passed_args & PASS_ARG_CHUNK_SIZE) ? lp->chunk_size : 0))
 			return_NULL; /* revert? */
 
 		cache_check_for_warns(first_seg(lv));
