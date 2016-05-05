@@ -632,6 +632,40 @@ out:
 }
 
 /*
+ * Universal 'wrapper' function  do-it-all
+ * to update all commonly specified cache parameters
+ */
+int cache_set_params(struct lv_segment *seg,
+		     const char *cache_mode,
+		     const char *policy_name,
+		     const struct dm_config_tree *policy_settings,
+		     uint32_t chunk_size)
+{
+	struct lv_segment *pool_seg;
+
+	if (!cache_set_mode(seg, cache_mode))
+		return_0;
+
+	if (!cache_set_policy(seg, policy_name, policy_settings))
+		return_0;
+
+	pool_seg = seg_is_cache(seg) ? first_seg(seg->pool_lv) : seg;
+
+	if (chunk_size) {
+		if (!validate_lv_cache_chunk_size(pool_seg->lv, chunk_size))
+			return_0;
+		pool_seg->chunk_size = chunk_size;
+	} else {
+		/* TODO: some calc_policy solution for cache ? */
+		if (!recalculate_pool_chunk_size_with_dev_hints(pool_seg->lv, 0,
+								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC))
+			return_0;
+	}
+
+	return 1;
+}
+
+/*
  * Wipe cache pool metadata area before use.
  *
  * Activates metadata volume as 'cache-pool' so regular wiping

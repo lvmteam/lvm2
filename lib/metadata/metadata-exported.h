@@ -1216,6 +1216,11 @@ int cache_mode_is_set(const struct lv_segment *seg);
 int cache_set_mode(struct lv_segment *cache_seg, const char *str);
 int cache_set_policy(struct lv_segment *cache_seg, const char *name,
 		     const struct dm_config_tree *settings);
+int cache_set_params(struct lv_segment *seg,
+		     const char *cache_mode,
+		     const char *policy_name,
+		     const struct dm_config_tree *policy_settings,
+		     uint32_t chunk_size);
 void cache_check_for_warns(const struct lv_segment *seg);
 int update_cache_pool_params(const struct segment_type *segtype,
 			     struct volume_group *vg, unsigned attr,
