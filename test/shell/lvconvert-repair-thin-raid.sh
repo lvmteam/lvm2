@@ -21,6 +21,15 @@ aux have_thin 1 0 0 || skip
 aux have_raid 1 4 0 || skip
 
 #
+# To continue this test - we need real tools available
+# When they are not present mark test as skipped, but still
+# let proceed initial part which should work even without tools
+#
+aux have_tool_at_least "$LVM_TEST_THIN_CHECK_CMD" 0 3 1 || skip
+aux have_tool_at_least "$LVM_TEST_THIN_DUMP_CMD" 0 3 1 || skip
+aux have_tool_at_least "$LVM_TEST_THIN_REPAIR_CMD" 0 3 1 || skip
+
+#
 # Main
 #
 
