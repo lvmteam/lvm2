@@ -42,7 +42,7 @@ while ! test -e "$TESTDIR/lvmetad.socket"; do echo -n .; sleep .1; done # wait f
 test -e "$LVM_LVMETAD_PIDFILE"
 cp "$LVM_LVMETAD_PIDFILE" LOCAL_LVMETAD
 
-not pvscan --cache 2>&1 | tee out
+pvscan --cache 2>&1 | tee out
 grep "WARNING: Disabling lvmetad cache" out
 
 pvs  2>&1 | tee out
