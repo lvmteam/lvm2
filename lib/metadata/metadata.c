@@ -691,7 +691,7 @@ static int _check_pv_dev_sizes(struct volume_group *vg)
 		size = pv_size(pvl->pv);
 
 		if (dev_size < size) {
-			log_warn("Device %s has size of %" PRIu64 " sectors which "
+			log_warn("WARNING: Device %s has size of %" PRIu64 " sectors which "
 				 "is smaller than corresponding PV size of %" PRIu64
 				  " sectors. Was device resized?",
 				  pv_dev_name(pvl->pv), dev_size, size);
@@ -3890,7 +3890,7 @@ static int _check_reappeared_pv(struct volume_group *correct_vg,
 	dm_list_iterate_items(pvl, &correct_vg->pvs)
 		if (pv->dev == pvl->pv->dev && is_missing_pv(pvl->pv)) {
 			if (act)
-				log_warn("Missing device %s reappeared, updating "
+				log_warn("WARNING: Missing device %s reappeared, updating "
 					 "metadata for VG %s to version %u.",
 					 pv_dev_name(pvl->pv),  pv_vg_name(pvl->pv), 
 					 correct_vg->seqno);
@@ -3901,9 +3901,11 @@ static int _check_reappeared_pv(struct volume_group *correct_vg,
 				}
 				++ rv;
 			} else if (act)
-				log_warn("Device still marked missing because of allocated data "
-					 "on it, remove volumes and consider vgreduce --removemissing.");
+				log_warn("WARNING: Device %s still marked missing because of allocated data "
+					 "on it, remove volumes and consider vgreduce --removemissing.",
+					 pv_dev_name(pvl->pv));
 		}
+
 	return rv;
 }
 
