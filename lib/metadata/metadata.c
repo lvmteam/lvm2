@@ -3942,6 +3942,8 @@ static int _repair_inconsistent_vg(struct volume_group *vg)
 		return 0;
 	}
 
+	log_warn("WARNING: Inconsistent metadata found for VG %s - updating to use version %u", vg->name, vg->seqno);
+
 	vg->cmd->handles_missing_pvs = 1;
 	if (!vg_write(vg)) {
 		log_error("Automatic metadata correction failed");
@@ -4553,9 +4555,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			_free_pv_list(&all_pvs);
 			return correct_vg;
 		}
-
-		log_warn("WARNING: Inconsistent metadata found for VG %s - updating "
-			 "to use version %u", vgname, correct_vg->seqno);
 
 		/*
 		 * If PV is marked missing but we found it,
