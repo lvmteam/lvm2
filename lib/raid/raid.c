@@ -319,6 +319,9 @@ static int _raid_target_present(struct cmd_context *cmd,
 	uint32_t maj, min, patchlevel;
 	unsigned i;
 
+	if (!activation())
+		return 0;
+
 	if (!_raid_checked) {
 		_raid_checked = 1;
 
