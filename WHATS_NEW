@@ -1,5 +1,5 @@
-Version 2.02.153 - 
-==================================
+Version 2.02.153 - 7th May 2016
+===============================
   Change warning messages related to duplicate PVs.
   A named device is always processed itself, not switched for a duplicate.
   Add PV attr "d" and report field "duplicate" for duplicate PVs.

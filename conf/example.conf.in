@@ -299,6 +299,19 @@ devices {
 	# generally do. If enabled, discards will only be issued if both the
 	# storage and kernel provide support.
 	issue_discards = 0
+
+	# Configuration option devices/allow_changes_with_duplicate_pvs.
+	# Allow VG modification while a PV appears on multiple devices.
+	# When a PV appears on multiple devices, LVM attempts to choose the
+	# best device to use for the PV. If the devices represent the same
+	# underlying storage, the choice has minimal consequence. If the
+	# devices represent different underlying storage, the wrong choice
+	# can result in data loss if the VG is modified. Disabling this
+	# setting is the safest option because it prevents modifying a VG
+	# or activating LVs in it while a PV appears on multiple devices.
+	# Enabling this setting allows the VG to be used as usual even with
+	# uncertain devices.
+	allow_changes_with_duplicate_pvs = 0
 }
 
 # Configuration section allocation.
