@@ -230,7 +230,7 @@ static int _target_present(struct cmd_context *cmd,
 	const char *str;
 
 	if (!activation())
-		return_0;
+		return 0;
 
 	if (!_cache_checked) {
 		_cache_checked = 1;
