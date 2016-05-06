@@ -636,9 +636,10 @@ int target_present_version(struct cmd_context *cmd, const char *target_name,
 			   int use_modprobe,
 			   uint32_t *maj, uint32_t *min, uint32_t *patchlevel)
 {
-	if (!activation())
-		return_0;
-
+	if (!activation()) {
+		log_error(INTERNAL_ERROR "Target present version called when activation is disabled.");
+		return 0;
+	}
 #ifdef MODPROBE_CMD
 	if (use_modprobe) {
 		if (target_version(target_name, maj, min, patchlevel))
