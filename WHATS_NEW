@@ -1,5 +1,8 @@
 Version 2.02.158 - 
 =================================
+  Add log_object_{type,name,id,group,group_id} fields to cmd log.
+  Add log_{seq_num,type,context,message,errno,ret_code} fields to cmd log.
+  Add CMDLOG report type - a separate report type for command logging.
 
 Version 2.02.157 - 17th June 2016
 =================================

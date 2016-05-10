@@ -21,16 +21,17 @@
 #include "activate.h"
 
 typedef enum {
-	LVS		= 1,
-	LVSINFO		= 2,
-	LVSSTATUS	= 4,
-	LVSINFOSTATUS   = 8,
-	PVS		= 16,
-	VGS		= 32,
-	SEGS		= 64,
-	PVSEGS		= 128,
-	LABEL		= 256,
-	DEVTYPES	= 512
+	CMDLOG		= 1,
+	LVS		= 2,
+	LVSINFO		= 4,
+	LVSSTATUS	= 8,
+	LVSINFOSTATUS   = 16,
+	PVS		= 32,
+	VGS		= 64,
+	SEGS		= 128,
+	PVSEGS		= 256,
+	LABEL		= 512,
+	DEVTYPES	= 1024
 } report_type_t;
 
 /*
@@ -56,6 +57,20 @@ struct selection_handle {
 	report_type_t orig_report_type;
 	report_type_t report_type;
 	int selected;
+};
+
+struct cmd_log_item {
+	uint32_t seq_num;
+	const char *type;
+	const char *context;
+	const char *object_type_name;
+	const char *object_name;
+	const char *object_id;
+	const char *object_group;
+	const char *object_group_id;
+	const char *msg;
+	int current_errno;
+	int ret_code;
 };
 
 struct field;
@@ -84,6 +99,11 @@ int report_object(void *handle, int selection_only, const struct volume_group *v
 		  const struct lv_with_info_and_seg_status *lvdm,
 		  const struct label *label);
 int report_devtypes(void *handle);
+int report_cmdlog(void *handle, const char *type, const char *context,
+		  const char *object_type_name, const char *object_name,
+		  const char *object_id, const char *object_group,
+		  const char *object_group_id, const char *msg,
+		  int current_errno, int ret_code);
 int report_output(void *handle);
 
 #endif

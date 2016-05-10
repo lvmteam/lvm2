@@ -3622,6 +3622,16 @@ static void *_obj_get_devtypes(void *obj)
 	return obj;
 }
 
+static void *_obj_get_cmdlog(void *obj)
+{
+	return obj;
+}
+
+static const struct dm_report_object_type _log_report_types[] = {
+	{ CMDLOG, "Command Log", "log_", _obj_get_cmdlog },
+	{ 0, "", "", NULL },
+};
+
 static const struct dm_report_object_type _report_types[] = {
 	{ VGS, "Volume Group", "vg_", _obj_get_vg },
 	{ LVS, "Logical Volume", "lv_", _obj_get_lv },
@@ -3656,6 +3666,8 @@ static const struct dm_report_object_type _devtypes_report_types[] = {
 	{type, sorttype, offsetof(type_ ## strct, field), width ? : sizeof(head) - 1, \
 	 #id, head, &_ ## func ## _disp, desc},
 
+typedef struct cmd_log_item type_cmd_log_item;
+
 typedef struct physical_volume type_pv;
 typedef struct logical_volume type_lv;
 typedef struct volume_group type_vg;
@@ -3672,6 +3684,11 @@ static const struct dm_report_field_type _fields[] = {
 
 static const struct dm_report_field_type _devtypes_fields[] = {
 #include "columns-devtypes.h"
+{0, 0, 0, 0, "", "", NULL, NULL},
+};
+
+static const struct dm_report_field_type _log_fields[] = {
+#include "columns-cmdlog.h"
 {0, 0, 0, 0, "", "", NULL, NULL},
 };
 
@@ -3712,7 +3729,11 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	if (columns_as_rows)
 		report_flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
 
-	if (*report_type & DEVTYPES) {
+	if (*report_type & CMDLOG) {
+		types = _log_report_types;
+		fields = _log_fields;
+		reserved_values = NULL;
+	} else if (*report_type & DEVTYPES) {
 		types = _devtypes_report_types;
 		fields = _devtypes_fields;
 		reserved_values = NULL;
@@ -3748,8 +3769,12 @@ const char *report_get_field_prefix(report_type_t report_type_id)
 {
 	const struct dm_report_object_type *report_types, *report_type;
 
-	report_types = report_type_id & DEVTYPES ? _devtypes_report_types
-						 : _report_types;
+	if (report_type_id & CMDLOG)
+		report_types = _log_report_types;
+	else if (report_type_id & DEVTYPES)
+		report_types = _devtypes_report_types;
+	else
+		report_types = _report_types;
 
 	for (report_type = report_types; report_type->id; report_type++) {
 		if (report_type_id & report_type->id)
@@ -3822,6 +3847,25 @@ int report_devtypes(void *handle)
 	while (_dev_known_types[devtypeind].name[0])
 		if (!_report_devtype_single(handle, &_dev_known_types[devtypeind++]))
 			return 0;
+
+	return 1;
+}
+
+int report_cmdlog(void *handle, const char *type, const char *context,
+		  const char *object_type_name, const char *object_name,
+		  const char *object_id, const char *object_group,
+		  const char *object_group_id, const char *msg,
+		  int current_errno, int ret_code)
+{
+	static uint32_t seq_num = 1;
+
+	struct cmd_log_item log_item = {seq_num++, type, context, object_type_name,
+					object_name ? : "", object_id ? : "",
+					object_group ? : "", object_group_id ? : "",
+					msg ? : "", current_errno, ret_code};
+
+	if (handle)
+		return dm_report_object(handle, &log_item);
 
 	return 1;
 }
