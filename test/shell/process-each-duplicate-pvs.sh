@@ -15,6 +15,11 @@ SKIP_WITH_CLVMD=1
 
 aux prepare_devs 6 16
 
+# The LV-using-PV tests (DEV_USED_FOR_LV, where a PV is
+# preferred if an active LV is using it) depend on sysfs
+# info that is not available in RHEL5 kernels.
+aux driver_at_least 4 15 || skip
+
 aux lvmconf 'devices/allow_changes_with_duplicate_pvs = 0'
 
 pvcreate "$dev1"
