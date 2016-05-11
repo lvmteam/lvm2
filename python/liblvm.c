@@ -93,6 +93,9 @@ static PyObject *_LibLVMError;
 
 #define LVM_VALID(ptr) \
 	do { \
+		if (!_libh) { \
+			_libh = lvm_init(NULL); \
+		} \
 		if (ptr && _libh) { \
 			if (ptr != _libh) { \
 				PyErr_SetString(PyExc_UnboundLocalError, "LVM handle reference stale"); \
@@ -175,8 +178,6 @@ static PyObject *_liblvm_get_last_error(void)
 
 static PyObject *_liblvm_library_get_version(void)
 {
-	LVM_VALID(NULL);
-
 	return Py_BuildValue("s", lvm_library_get_version());
 }
 
@@ -184,13 +185,9 @@ static const char _gc_doc[] = "Garbage collect the C library";
 
 static PyObject *_liblvm_lvm_gc(void)
 {
-	LVM_VALID(NULL);
-
-	lvm_quit(_libh);
-
-	if (!(_libh = lvm_init(NULL))) {
-		PyErr_SetObject(_LibLVMError, _liblvm_get_last_error());
-		return NULL;
+	if (_libh) {
+		lvm_quit(_libh);
+		_libh = NULL;
 	}
 
 	Py_INCREF(Py_None);
@@ -2046,8 +2043,6 @@ PyMODINIT_FUNC initlvm(void)
 #endif
 {
 	PyObject *m;
-
-	_libh = lvm_init(NULL);
 
 	if (PyType_Ready(&_LibLVMvgType) < 0)
 		MODINITERROR;
