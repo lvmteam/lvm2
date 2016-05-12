@@ -1,5 +1,6 @@
 Version 2.02.154 - 
 ===============================
+  Retry open without O_NOATIME if it fails (not file owner/CAP_FOWNER).
 
 Version 2.02.153 - 7th May 2016
 ===============================

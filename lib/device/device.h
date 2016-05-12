@@ -30,6 +30,7 @@
 #define DEV_OPEN_FAILURE	0x00000080	/* Has last open failed? */
 #define DEV_USED_FOR_LV		0x00000100	/* Is device used for an LV */
 #define DEV_ASSUMED_FOR_LV	0x00000200	/* Is device assumed for an LV */
+#define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
 
 /*
  * Support for external device info.

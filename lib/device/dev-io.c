@@ -494,11 +494,22 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 #ifdef O_NOATIME
 	/* Don't update atime on device inodes */
-	if (!(dev->flags & DEV_REGULAR))
+	if (!(dev->flags & DEV_REGULAR) && !(dev->flags & DEV_NOT_O_NOATIME))
 		flags |= O_NOATIME;
 #endif
 
 	if ((dev->fd = open(name, flags, 0777)) < 0) {
+#ifdef O_NOATIME
+		if ((errno == EPERM) && (flags & O_NOATIME)) {
+			flags &= ~O_NOATIME;
+			dev->flags |= DEV_NOT_O_NOATIME;
+			if ((dev->fd = open(name, flags, 0777)) >= 0) {
+				log_debug_devs("%s: Not using O_NOATIME", name);
+				goto opened;
+			}
+		}
+#endif
+
 #ifdef O_DIRECT_SUPPORT
 		if (direct && !(dev->flags & DEV_O_DIRECT_TESTED)) {
 			flags &= ~O_DIRECT;
