@@ -254,6 +254,7 @@ struct row {
 	struct dm_list fields;			  /* Fields in display order */
 	struct dm_report_field *(*sort_fields)[]; /* Fields in sort order */
 	int selected;
+	struct dm_report_field *field_sel_status;
 };
 
 /*
@@ -1910,7 +1911,7 @@ static int _do_report_object(struct dm_report *rh, void *object, int do_output, 
 	const struct dm_report_field_type *fields;
 	struct field_properties *fp;
 	struct row *row = NULL;
-	struct dm_report_field *field, *field_sel_status = NULL;
+	struct dm_report_field *field;
 	void *data = NULL;
 	int len;
 	int r = 0;
@@ -1962,7 +1963,7 @@ static int _do_report_object(struct dm_report *rh, void *object, int do_output, 
 		if (fp->implicit) {
 			fields = _implicit_report_fields;
 			if (!strcmp(fields[fp->field_num].id, SPECIAL_FIELD_SELECTED_ID))
-				field_sel_status = field;
+				row->field_sel_status = field;
 		} else
 			fields = rh->fields;
 
@@ -1994,7 +1995,7 @@ static int _do_report_object(struct dm_report *rh, void *object, int do_output, 
 	if (!_check_report_selection(rh, &row->fields)) {
 		row->selected = 0;
 
-		if (!field_sel_status)
+		if (!row->field_sel_status)
 			goto out;
 
 		/*
@@ -2004,14 +2005,14 @@ static int _do_report_object(struct dm_report *rh, void *object, int do_output, 
 		 * The "selected" field reports the result
 		 * of the selection.
 		 */
-		_implicit_report_fields[field_sel_status->props->field_num].report_fn(rh,
-						rh->mem, field_sel_status, row, rh->private);
+		_implicit_report_fields[row->field_sel_status->props->field_num].report_fn(rh,
+						rh->mem, row->field_sel_status, row, rh->private);
 		/*
 		 * If the "selected" field is not displayed, e.g.
 		 * because it is part of the sort field list,
 		 * skip the display of the row as usual.
 		 */
-		if (field_sel_status->props->flags & FLD_HIDDEN)
+		if (row->field_sel_status->props->flags & FLD_HIDDEN)
 			goto out;
 	}
 
