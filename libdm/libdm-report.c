@@ -1994,25 +1994,35 @@ static int _do_report_object(struct dm_report *rh, void *object, int do_output, 
 	if (!_check_report_selection(rh, &row->fields)) {
 		row->selected = 0;
 
-		if (!row->field_sel_status)
+		/*
+		 * If the row is not selected, we still keep it for output if either:
+		 *   - we're displaying special "selected" field in the row,
+		 *   - or the report is supposed to be on output multiple times
+		 *     where each output can have a new selection defined.
+		 */
+		if (!row->field_sel_status && !(rh->flags & DM_REPORT_OUTPUT_MULTIPLE_TIMES))
 			goto out;
 
-		/*
-		 * If field with id "selected" is reported,
-		 * report the row although it does not pass
-		 * the selection criteria.
-		 * The "selected" field reports the result
-		 * of the selection.
-		 */
-		_implicit_report_fields[row->field_sel_status->props->field_num].report_fn(rh,
-						rh->mem, row->field_sel_status, row, rh->private);
-		/*
-		 * If the "selected" field is not displayed, e.g.
-		 * because it is part of the sort field list,
-		 * skip the display of the row as usual.
-		 */
-		if (row->field_sel_status->props->flags & FLD_HIDDEN)
-			goto out;
+		if (row->field_sel_status) {
+			/*
+			 * If field with id "selected" is reported,
+			 * report the row although it does not pass
+			 * the selection criteria.
+			 * The "selected" field reports the result
+			 * of the selection.
+			 */
+			_implicit_report_fields[row->field_sel_status->props->field_num].report_fn(rh,
+							rh->mem, row->field_sel_status, row, rh->private);
+			/*
+			 * If the "selected" field is not displayed, e.g.
+			 * because it is part of the sort field list,
+			 * skip the display of the row as usual unless
+			 * we plan to do the output multiple times.
+			 */
+			if ((row->field_sel_status->props->flags & FLD_HIDDEN) &&
+			    !(rh->flags & DM_REPORT_OUTPUT_MULTIPLE_TIMES))
+				goto out;
+		}
 	}
 
 	if (!do_output)
@@ -4165,6 +4175,11 @@ static int _row_compare(const void *a, const void *b)
 	return 0;		/* Identical */
 }
 
+static int _should_display_row(struct row *row)
+{
+	return row->field_sel_status || row->selected;
+}
+
 static int _sort_rows(struct dm_report *rh)
 {
 	struct row *(*rows)[];
@@ -4439,6 +4454,11 @@ static int _output_as_columns(struct dm_report *rh)
 	/* Print and clear buffer */
 	last_row = dm_list_last(&rh->rows);
 	dm_list_iterate_safe(rowh, rtmp, &rh->rows) {
+		row = dm_list_item(rowh, struct row);
+
+		if (!_should_display_row(row))
+			continue;
+
 		if (!dm_pool_begin_object(rh->mem, 512)) {
 			log_error("dm_report: Unable to allocate output line");
 			return 0;
@@ -4451,7 +4471,6 @@ static int _output_as_columns(struct dm_report *rh)
 			}
 		}
 
-		row = dm_list_item(rowh, struct row);
 		do_field_delim = 0;
 
 		dm_list_iterate_safe(fh, ftmp, &row->fields) {
@@ -4478,7 +4497,8 @@ static int _output_as_columns(struct dm_report *rh)
 			if (!_output_field(rh, field))
 				goto bad;
 
-			dm_list_del(&field->list);
+			if (!(rh->flags & DM_REPORT_OUTPUT_MULTIPLE_TIMES))
+				dm_list_del(&field->list);
 		}
 
 		if (_is_json_report(rh)) {
@@ -4500,10 +4520,12 @@ static int _output_as_columns(struct dm_report *rh)
 
 		line = (char *) dm_pool_end_object(rh->mem);
 		log_print_bypass_report("%*s", rh->group_item ? rh->group_item->group->indent + (int) strlen(line) : 0, line);
-		dm_list_del(&row->list);
+		if (!(rh->flags & DM_REPORT_OUTPUT_MULTIPLE_TIMES))
+			dm_list_del(&row->list);
 	}
 
-	_destroy_rows(rh);
+	if (!(rh->flags & DM_REPORT_OUTPUT_MULTIPLE_TIMES))
+		_destroy_rows(rh);
 
 	return 1;
 
@@ -4631,13 +4653,16 @@ int dm_report_output(struct dm_report *rh)
 
 	dm_list_iterate_items(row, &rh->rows) {
 		dm_list_iterate_items(field, &row->fields) {
-			len = (int) strlen(field->report_string);
-			if ((len > field->props->width))
-				field->props->width = len;
-
 			if ((rh->flags & RH_SORT_REQUIRED) &&
 			    (field->props->flags & FLD_SORT_KEY)) {
 				(*row->sort_fields)[field->props->sort_posn] = field;
+			}
+
+			if (_should_display_row(row)) {
+				len = (int) strlen(field->report_string);
+				if ((len > field->props->width))
+					field->props->width = len;
+
 			}
 		}
 	}
@@ -4746,8 +4771,13 @@ static int _report_group_push_single(struct report_group_item *item, void *data)
 
 static int _report_group_push_basic(struct report_group_item *item, const char *name)
 {
-	if (!item->report && !name && item->parent->store.finished_count > 0)
-		log_print_bypass_report("%s", "");
+	if (item->report) {
+		if (!(item->report->flags & DM_REPORT_OUTPUT_BUFFERED))
+			item->report->flags &= ~(DM_REPORT_OUTPUT_MULTIPLE_TIMES);
+	} else {
+		if (!name && item->parent->store.finished_count > 0)
+			log_print_bypass_report("%s", "");
+	}
 
 	return 1;
 }
@@ -4802,6 +4832,7 @@ int dm_report_group_push(struct dm_report_group *group, struct dm_report *report
 		item->store.orig_report_flags = report->flags;
 		report->group_item = item;
 	}
+
 	item->group = group;
 	item->data = data;
 
