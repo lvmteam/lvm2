@@ -2675,6 +2675,8 @@ void dm_report_free(struct dm_report *rh);
 int dm_report_set_output_field_name_prefix(struct dm_report *rh,
 					   const char *report_prefix);
 
+int dm_report_set_selection(struct dm_report *rh, const char *selection);
+
 /*
  * Report functions are provided for simple data types.
  * They take care of allocating copies of the data.

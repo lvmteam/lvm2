@@ -1,5 +1,6 @@
 Version 1.02.128 -
 =================================
+  Add dm_report_set_selection to set selection for multiple output of report.
   Add DM_REPORT_OUTPUT_MULTIPLE_TIMES flag for multiple output of same report.
   Move field width handling/sort init from dm_report_object to dm_report_output.
   Add _LOG_BYPASS_REPORT flag for bypassing any log report currently set.
