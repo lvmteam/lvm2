@@ -211,4 +211,6 @@ void lvmcache_lock_ordering(int enable);
 
 int lvmcache_dev_is_unchosen_duplicate(struct device *dev);
 
+void lvmcache_remove_unchosen_duplicate(struct device *dev);
+
 #endif

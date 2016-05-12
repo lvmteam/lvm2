@@ -4199,6 +4199,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct physical_volume *pv;
 	struct volume_group *orphan_vg;
 	struct lvmcache_info *info;
+	struct dm_list remove_duplicates;
 	struct dm_list arg_sort;
 	struct pv_list *pvl;
 	struct pv_list *vgpvl;
@@ -4210,6 +4211,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	set_pv_notify(cmd);
 
+	dm_list_init(&remove_duplicates);
 	dm_list_init(&arg_sort);
 
 	handle->custom_handle = pp;
@@ -4295,6 +4297,23 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		goto_bad;
 
 	/*
+	 * Special case: pvremove -ff is allowed to clear a duplicate device in
+	 * the unchosen duplicates list.  PVs in the unchosen duplicates list
+	 * won't be found by normal process_each searches -- they are not in
+	 * lvmcache and can't be processed normally.  We save them here and
+	 * erase them below without going through the normal processing code.
+	 */
+	if (pp->is_remove && (pp->force == DONT_PROMPT_OVERRIDE) &&
+	   !dm_list_empty(&pp->arg_devices) && lvmcache_found_duplicate_pvs()) {
+		dm_list_iterate_items_safe(pd, pd2, &pp->arg_devices) {
+			if (lvmcache_dev_is_unchosen_duplicate(pd->dev)) {
+				log_debug("Found pvremove arg %s: device is a duplicate.", pd->name);
+				dm_list_move(&remove_duplicates, &pd->list);
+			}
+		}
+	}
+
+	/*
 	 * Check if all arg_devices were found by process_each_pv.
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices)
@@ -4313,9 +4332,9 @@ int pvcreate_each_device(struct cmd_context *cmd,
 		goto_bad;
 
 	/*
-	 * The command cannot continue if there are no devices to create.
+	 * The command cannot continue if there are no devices to process.
 	 */
-	if (dm_list_empty(&pp->arg_process)) {
+	if (dm_list_empty(&pp->arg_process) && dm_list_empty(&remove_duplicates)) {
 		log_debug("No devices to process.");
 		goto bad;
 	}
@@ -4601,6 +4620,28 @@ do_command:
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;
 		}
+
+		log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped.",
+					pd->name);
+	}
+
+	/*
+	 * Special case: pvremove duplicate PVs (also see above).
+	 */
+	dm_list_iterate_items_safe(pd, pd2, &remove_duplicates) {
+		if (!label_remove(pd->dev)) {
+			log_error("Failed to wipe existing label(s) on %s.", pd->name);
+			dm_list_move(&pp->arg_fail, &pd->list);
+			continue;
+		}
+
+		if (!lvmetad_pv_gone_by_dev(pd->dev, NULL)) {
+			log_error("Failed to remove PV %s from lvmetad.", pd->name);
+			dm_list_move(&pp->arg_fail, &pd->list);
+			continue;
+		}
+
+		lvmcache_remove_unchosen_duplicate(pd->dev);
 
 		log_print_unless_silent("Labels on physical volume \"%s\" successfully wiped.",
 					pd->name);

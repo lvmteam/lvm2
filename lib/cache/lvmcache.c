@@ -459,6 +459,19 @@ int lvmcache_get_unused_duplicate_devs(struct cmd_context *cmd, struct dm_list *
 	return 1;
 }
 
+void lvmcache_remove_unchosen_duplicate(struct device *dev)
+{
+	struct device_list *devl;
+
+	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+		if (devl->dev == dev) {
+			dm_list_del(&devl->list);
+			return;
+		}
+	}
+}
+
+
 static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
 				struct lvmcache_info *info)
 {
