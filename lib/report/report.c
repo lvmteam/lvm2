@@ -3703,7 +3703,8 @@ static const struct dm_report_field_type _log_fields[] = {
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
 		  int aligned, int buffered, int headings, int field_prefixes,
-		  int quoted, int columns_as_rows, const char *selection)
+		  int quoted, int columns_as_rows, const char *selection,
+		  int multiple_output)
 {
 	uint32_t report_flags = 0;
 	const struct dm_report_object_type *types;
@@ -3728,6 +3729,9 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 
 	if (columns_as_rows)
 		report_flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
+
+	if (multiple_output)
+		report_flags |= DM_REPORT_OUTPUT_MULTIPLE_TIMES;
 
 	if (*report_type & CMDLOG) {
 		types = _log_report_types;
