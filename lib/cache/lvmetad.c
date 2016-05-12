@@ -178,7 +178,7 @@ int lvmetad_socket_present(void)
 	int r;
 
 	if ((r = access(socket, F_OK)) && errno != ENOENT)
-		log_sys_error("lvmetad_socket_present", "");
+		log_sys_error("access", socket);
 
 	return !r;
 }
