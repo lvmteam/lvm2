@@ -1,5 +1,6 @@
 Version 1.02.125 - 
 ==================================
+  Show library version in message even if dm driver version is unavailable.
 
 Version 1.02.124 - 30th April 2016
 ==================================

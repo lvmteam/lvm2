@@ -570,9 +570,9 @@ int dm_check_version(void)
 
 	compat = "(compat)";
 
+      bad:
 	dm_get_library_version(libversion, sizeof(libversion));
 
-      bad:
 	log_error("Incompatible libdevmapper %s%s and kernel driver %s.",
 		  *libversion ? libversion : "(unknown version)", compat,
 		  *dmversion ? dmversion : "(unknown version)");
