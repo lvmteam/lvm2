@@ -49,9 +49,6 @@ static lvm_t _lvm_init(const char *system_dir)
 	if (!cmd)
 		return NULL;
 
-	if (stored_errno())
-		return (lvm_t) cmd;
-
 	/*
 	 * FIXME: if an non memory error occured, return the cmd (maybe some
 	 * cleanup needed).

@@ -1945,7 +1945,7 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	_init_globals(cmd);
 
 	if (set_connections && !init_connections(cmd))
-		return_0;
+		goto_out;
 
 	if (set_filters && !init_filters(cmd, 1))
 		goto_out;
