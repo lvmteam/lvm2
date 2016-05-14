@@ -1,6 +1,8 @@
-Version 2.02.154 - 
-===============================
+Version 2.02.154 - 14th May 2016
+================================
+  Fix liblvm segfault after failure initialising lvmetad connection.
   Retry open without O_NOATIME if it fails (not file owner/CAP_FOWNER).
+  Split _report into one fn for options and arguments and one for processing.
 
 Version 2.02.153 - 7th May 2016
 ===============================
