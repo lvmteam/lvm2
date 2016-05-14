@@ -1,3 +1,6 @@
+Version 2.02.155 - 
+================================
+
 Version 2.02.154 - 14th May 2016
 ================================
   Fix liblvm segfault after failure initialising lvmetad connection.
