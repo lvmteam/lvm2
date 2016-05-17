@@ -69,16 +69,10 @@ static void kmsg(int log_level, const char *format, ...)
 
 static void lvm_get_use_lvmetad_and_lvmpolld(int *use_lvmetad, int *use_lvmpolld)
 {
-	lvm_t lvm;
-
 	*use_lvmetad = *use_lvmpolld = 0;
-	if (!(lvm = lvm_init(NULL))) {
-		kmsg(LOG_ERR, "LVM: Failed to initialize library context for activation generator.\n");
-		return;
-	}
-	*use_lvmetad = lvm_config_find_bool(lvm, LVM_CONF_USE_LVMETAD, 0);
-	*use_lvmpolld = lvm_config_find_bool(lvm, LVM_CONF_USE_LVMPOLLD, 0);
-	lvm_quit(lvm);
+
+	*use_lvmetad = lvm_config_find_bool(NULL, LVM_CONF_USE_LVMETAD, 0);
+	*use_lvmpolld = lvm_config_find_bool(NULL, LVM_CONF_USE_LVMPOLLD, 0);
 }
 
 static int register_unit_with_target(const char *dir, const char *unit, const char *target)
