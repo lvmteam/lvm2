@@ -1776,6 +1776,49 @@ bad:
 	return 0;
 }
 
+void destroy_config_context(struct cmd_context *cmd)
+{
+	_destroy_config(cmd);
+
+	if (cmd->mem)
+		dm_pool_destroy(cmd->mem);
+	if (cmd->libmem)
+		dm_pool_destroy(cmd->libmem);
+
+	dm_free(cmd);
+}
+
+/*
+ * A "config context" is a very light weight toolcontext that
+ * is only used for reading config settings from lvm.conf.
+ */
+struct cmd_context *create_config_context(void)
+{
+	struct cmd_context *cmd;
+
+	if (!(cmd = dm_zalloc(sizeof(*cmd))))
+		goto_out;
+
+	strcpy(cmd->system_dir, DEFAULT_SYS_DIR);
+
+	if (!_get_env_vars(cmd))
+		goto_out;
+
+	if (!(cmd->libmem = dm_pool_create("library", 4 * 1024)))
+		goto_out;
+
+	dm_list_init(&cmd->config_files);
+
+	if (!_init_lvm_conf(cmd))
+		goto_out;
+
+	return cmd;
+out:
+	if (cmd)
+		destroy_config_context(cmd);
+	return NULL;
+}
+
 /* Entry point */
 struct cmd_context *create_toolcontext(unsigned is_long_lived,
 				       const char *system_dir,

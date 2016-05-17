@@ -126,14 +126,31 @@ int lvm_config_override(lvm_t libh, const char *config_settings)
 	return rc;
 }
 
+/*
+ * When full lvm connection is not being used, libh can be NULL
+ * and this command will internally create a single-use, light-weight
+ * cmd struct that only has cmd->cft populated from lvm.conf.
+ */
 int lvm_config_find_bool(lvm_t libh, const char *config_path, int fail)
 {
 	int rc = 0;
-	struct cmd_context *cmd = (struct cmd_context *)libh;
-	struct saved_env e = store_user_env((struct cmd_context *)libh);
+	struct cmd_context *cmd;
+	struct saved_env e;
+
+	if (libh) {
+		cmd = (struct cmd_context *)libh;
+		e = store_user_env((struct cmd_context *)libh);
+	} else {
+		if (!(cmd = create_config_context()))
+			return 0;
+	}
 
 	rc = dm_config_tree_find_bool(cmd->cft, config_path, fail);
-	restore_user_env(&e);
+
+	if (libh)
+		restore_user_env(&e);
+	else
+		destroy_config_context(cmd);
 	return rc;
 }
 
