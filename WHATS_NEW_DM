@@ -12,6 +12,7 @@ Version 1.02.124 - 30th April 2016
 
 Version 1.02.123 - 23rd April 2016
 ==================================
+  Trace more settings in very verbose mode for libdm-config.
   Do not strip LVM- when debug reporting not found uuid.
 
 Version 1.02.122 - 9th April 2016
