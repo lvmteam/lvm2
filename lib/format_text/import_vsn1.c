@@ -569,8 +569,11 @@ static int _read_lvnames(struct format_instance *fid __attribute__((unused)),
 	if (!(lv->name = dm_pool_strdup(mem, lvn->key)))
 		return_0;
 
+	log_debug_metadata("Importing logical volume %s.", display_lvname(lv));
+
 	if (!(lvn = lvn->child)) {
-		log_error("Empty logical volume section.");
+		log_error("Empty logical volume section for %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 

@@ -2154,6 +2154,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		dm_list_iterate(snh, &lv->snapshot_segs)
 			if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, 0))
 				return_0;
+
 	if (dm->activation && !origin_only && lv_is_merging_origin(lv) &&
 	    !_add_lv_to_dtree(dm, dtree, find_snapshot(lv)->lv, 1))
 		return_0;
@@ -3104,6 +3105,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 	/* Some targets may build bigger tree for activation */
 	dm->activation = ((action == PRELOAD) || (action == ACTIVATE));
 	dm->suspend = (action == SUSPEND_WITH_LOCKFS) || (action == SUSPEND);
+
 	if (!(dtree = _create_partial_dtree(dm, lv, laopts->origin_only)))
 		return_0;
 
