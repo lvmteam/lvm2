@@ -1,5 +1,11 @@
 Version 2.02.155 - 
 ================================
+  Fix liblvm2app error handling when setting up context.
+  Delay liblvm2app init in python code until it is needed.
+  Simplify thread locking in lvmetad to fix locking problems.
+  Allow pvremove -ff to remove a duplicate PV.
+  Fix lvm2-activation-generator to read lvm.conf without full command setup.
+  Allow a minimal context to be used in lvm2app for reading lvm.conf.
 
 Version 2.02.154 - 14th May 2016
 ================================
