@@ -1,5 +1,6 @@
 Version 1.02.126 - 
 ================================
+  Report passthrough caching mode when parsing cache mode.
 
 Version 1.02.125 - 14th May 2016
 ================================
