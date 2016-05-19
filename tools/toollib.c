@@ -1979,7 +1979,7 @@ static int _resolve_duplicate_vgnames(struct cmd_context *cmd,
 		 * is unknown.
 		 */
 		log_error("Multiple VGs found with the same name: skipping %s", sl->str);
-		log_error("Use the VG UUID with --select vg_uuid=<uuid>");
+		log_error("Use --select vg_uuid=<uuid> in place of the VG name.");
 		dm_list_del(&sl->list);
 		ret = ECMD_FAILED;
 	}
