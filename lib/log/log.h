@@ -44,6 +44,7 @@
 #define _LOG_STDERR 128 /* force things to go to stderr, even if loglevel
 			   would make them go to stdout */
 #define _LOG_ONCE 256 /* downgrade to NOTICE if this has been already logged */
+#define _LOG_BYPASS_REPORT 512 /* do not log through report even if report available */
 #define _LOG_DEBUG 7
 #define _LOG_INFO 6
 #define _LOG_NOTICE 5
@@ -93,6 +94,7 @@
 #define log_very_verbose(args...) log_info(args)
 #define log_verbose(args...) log_notice(args)
 #define log_print(args...) LOG_LINE(_LOG_WARN, args)
+#define log_print_bypass_report(args...) LOG_LINE(_LOG_WARN | _LOG_BYPASS_REPORT, args)
 #define log_print_unless_silent(args...) LOG_LINE(silent_mode() ? _LOG_NOTICE : _LOG_WARN, args)
 #define log_error(args...) log_err(args)
 #define log_error_suppress(s, args...) log_err_suppress(s, args)

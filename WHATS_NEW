@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Also pass common printed messages (besides warnings and errors) to log report.
   Log warnings and errors via report during cmd processing if this is enabled.
   Make it possible to iterate over internal 'orphan' VGs in process_each_vg fn.
   Make -S|--select option groupable that allows this option to be repeated.

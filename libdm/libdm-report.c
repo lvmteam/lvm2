@@ -4105,7 +4105,7 @@ static int _report_headings(struct dm_report *rh)
 
 	/* print all headings */
 	heading = (char *) dm_pool_end_object(rh->mem);
-	log_print("%s", heading);
+	log_print_bypass_report("%s", heading);
 
 	dm_pool_free(rh->mem, (void *)heading);
 	dm_free(buf);
@@ -4422,7 +4422,7 @@ static int _output_as_rows(struct dm_report *rh)
 			log_error("dm_report: Failed to terminate row");
 			goto bad;
 		}
-		log_print("%s", (char *) dm_pool_end_object(rh->mem));
+		log_print_bypass_report("%s", (char *) dm_pool_end_object(rh->mem));
 	}
 
 	_destroy_rows(rh);
@@ -4510,7 +4510,7 @@ static int _output_as_columns(struct dm_report *rh)
 		}
 
 		line = (char *) dm_pool_end_object(rh->mem);
-		log_print("%*s", rh->group_item ? rh->group_item->group->indent + (int) strlen(line) : 0, line);
+		log_print_bypass_report("%*s", rh->group_item ? rh->group_item->group->indent + (int) strlen(line) : 0, line);
 		dm_list_del(&row->list);
 	}
 
@@ -4560,14 +4560,14 @@ static int _json_output_array_start(struct dm_pool *mem, struct report_group_ite
 	}
 
 	if (item->parent->store.finished_count > 0)
-		log_print("%*s", item->group->indent + (int) sizeof(JSON_SEPARATOR) - 1, JSON_SEPARATOR);
+		log_print_bypass_report("%*s", item->group->indent + (int) sizeof(JSON_SEPARATOR) - 1, JSON_SEPARATOR);
 
 	if (item->parent->parent && item->parent->data) {
-		log_print("%*s", item->group->indent + (int) sizeof(JSON_OBJECT_START) - 1, JSON_OBJECT_START);
+		log_print_bypass_report("%*s", item->group->indent + (int) sizeof(JSON_OBJECT_START) - 1, JSON_OBJECT_START);
 		item->group->indent += JSON_INDENT_UNIT;
 	}
 
-	log_print("%*s", item->group->indent + (int) strlen(output), output);
+	log_print_bypass_report("%*s", item->group->indent + (int) strlen(output), output);
 	item->group->indent += JSON_INDENT_UNIT;
 
 	dm_pool_free(mem, output);
@@ -4616,9 +4616,9 @@ static int _print_basic_report_header(struct dm_report *rh)
 	memset(underline, '=', len);
 
 	if (rh->group_item->parent->store.finished_count > 0)
-		log_print("%s", "");
-	log_print("%s", report_name);
-	log_print("%s", underline);
+		log_print_bypass_report("%s", "");
+	log_print_bypass_report("%s", report_name);
+	log_print_bypass_report("%s", underline);
 
 	dm_pool_free(rh->mem, underline);
 	return 1;
@@ -4665,7 +4665,7 @@ static int _report_group_create_basic(struct dm_report_group *group)
 
 static int _report_group_create_json(struct dm_report_group *group)
 {
-	log_print(JSON_OBJECT_START);
+	log_print_bypass_report(JSON_OBJECT_START);
 	group->indent += JSON_INDENT_UNIT;
 	return 1;
 }
@@ -4742,7 +4742,7 @@ static int _report_group_push_single(struct report_group_item *item, void *data)
 static int _report_group_push_basic(struct report_group_item *item, const char *name)
 {
 	if (!item->report && !name && item->parent->store.finished_count > 0)
-		log_print("%s", "");
+		log_print_bypass_report("%s", "");
 
 	return 1;
 }
@@ -4769,8 +4769,8 @@ static int _report_group_push_json(struct report_group_item *item, const char *n
 				return 0;
 			}
 			if (item->parent->store.finished_count > 0)
-				log_print("%*s", item->group->indent + (int) sizeof(JSON_SEPARATOR) - 1, JSON_SEPARATOR);
-			log_print("%*s", item->group->indent + (int) sizeof(JSON_OBJECT_START) - 1, JSON_OBJECT_START);
+				log_print_bypass_report("%*s", item->group->indent + (int) sizeof(JSON_SEPARATOR) - 1, JSON_SEPARATOR);
+			log_print_bypass_report("%*s", item->group->indent + (int) sizeof(JSON_OBJECT_START) - 1, JSON_OBJECT_START);
 			item->group->indent += JSON_INDENT_UNIT;
 		}
 
@@ -4848,11 +4848,11 @@ static int _report_group_pop_json(struct report_group_item *item)
 	if (item->output_done && item->needs_closing) {
 		if (item->data) {
 			item->group->indent -= JSON_INDENT_UNIT;
-			log_print("%*s", item->group->indent + (int) sizeof(JSON_ARRAY_END) - 1, JSON_ARRAY_END);
+			log_print_bypass_report("%*s", item->group->indent + (int) sizeof(JSON_ARRAY_END) - 1, JSON_ARRAY_END);
 		}
 		if (item->parent->data && item->parent->parent) {
 			item->group->indent -= JSON_INDENT_UNIT;
-			log_print("%*s", item->group->indent + (int) sizeof(JSON_OBJECT_END) - 1, JSON_OBJECT_END);
+			log_print_bypass_report("%*s", item->group->indent + (int) sizeof(JSON_OBJECT_END) - 1, JSON_OBJECT_END);
 		}
 		item->needs_closing = 0;
 	}
@@ -4915,7 +4915,7 @@ static int _report_group_destroy_basic(void)
 
 static int _report_group_destroy_json(void)
 {
-	log_print(JSON_OBJECT_END);
+	log_print_bypass_report(JSON_OBJECT_END);
 	return 1;
 }
 

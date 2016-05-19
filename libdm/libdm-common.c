@@ -116,7 +116,7 @@ static void _default_log_line(int level,
 	static int _abort_on_internal_errors = -1;
 	FILE *out = (level & _LOG_STDERR) ? stderr : stdout;
 
-	level &= ~_LOG_STDERR;
+	level &= ~(_LOG_STDERR | _LOG_BYPASS_REPORT);
 
 	if (level <= _LOG_WARN || _verbose) {
 		if (level < _LOG_WARN)

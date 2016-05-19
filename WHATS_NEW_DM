@@ -1,5 +1,6 @@
 Version 1.02.128 -
 =================================
+  Add _LOG_BYPASS_REPORT flag for bypassing any log report currently set.
   Introduce DM_REPORT_GROUP_JSON for report group with JSON output format.
   Introduce DM_REPORT_GROUP_BASIC for report group with basic report output.
   Introduce DM_REPORT_GROUP_SINGLE for report group having single report only.
