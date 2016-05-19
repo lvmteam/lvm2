@@ -286,7 +286,7 @@ retry:
 	 * the update message so that callers could detect when a rescan has
 	 * stalled while updating lvmetad.
 	 */
-	if (!strcmp(daemon_token, "update in progress")) {
+	if (!strcmp(daemon_token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS)) {
 		if (!(now = _monotonic_seconds()))
 			goto fail;
 
@@ -370,7 +370,7 @@ retry:
 	if (!(daemon_token = daemon_reply_str(reply, "token", NULL)))
 		goto out;
 
-	if (!strcmp(daemon_token, "update in progress")) {
+	if (!strcmp(daemon_token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS)) {
 		ret = 1;
 
 		if (!do_wait)
@@ -441,7 +441,7 @@ retry:
 		goto out;
 
 	if (!strcmp(daemon_reply_str(reply, "response", ""), "token_mismatch")) {
-		if (!strcmp(daemon_reply_str(reply, "expected", ""), "update in progress")) {
+		if (!strcmp(daemon_reply_str(reply, "expected", ""), LVMETAD_TOKEN_UPDATE_IN_PROGRESS)) {
 			/*
 			 * Another command is updating the lvmetad cache, and
 			 * we cannot use lvmetad until the update is finished.
@@ -520,7 +520,7 @@ static int _token_update(int *replaced_update)
 	}
 
 	if ((prev_token = daemon_reply_str(reply, "prev_token", NULL))) {
-		if (!strcmp(prev_token, "update in progress"))
+		if (!strcmp(prev_token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS))
 			if (replaced_update)
 				*replaced_update = 1;
 	}
@@ -583,7 +583,7 @@ static int _lvmetad_handle_reply(daemon_reply reply, const char *id, const char 
 	 * See the description of the token mismatch errors in lvmetad_send.
 	 */
 	if (!strcmp(daemon_reply_str(reply, "response", ""), "token_mismatch")) {
-		if (!strcmp(daemon_reply_str(reply, "expected", ""), "update in progress")) {
+		if (!strcmp(daemon_reply_str(reply, "expected", ""), LVMETAD_TOKEN_UPDATE_IN_PROGRESS)) {
 			/*
 			 * lvmetad_send retried up to the limit and eventually
 			 * printed a warning and gave up.
@@ -1739,7 +1739,7 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 	}
 
 	future_token = _lvmetad_token;
-	_lvmetad_token = (char *) "update in progress";
+	_lvmetad_token = (char *) LVMETAD_TOKEN_UPDATE_IN_PROGRESS;
 
 	if (!_token_update(&replaced_update)) {
 		log_error("Failed to update lvmetad which had an update in progress.");
