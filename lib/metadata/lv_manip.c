@@ -5771,39 +5771,39 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	if (lv_is_origin(lv)) {
-		log_error("Can't remove logical volume \"%s\" under snapshot",
-			  lv->name);
+		log_error("Can't remove logical volume %s under snapshot.",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_external_origin(lv)) {
-		log_error("Can't remove external origin logical volume \"%s\".",
-			  lv->name);
+		log_error("Can't remove external origin logical volume %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_mirror_image(lv)) {
-		log_error("Can't remove logical volume %s used by a mirror",
-			  lv->name);
+		log_error("Can't remove logical volume %s used by a mirror.",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_mirror_log(lv)) {
-		log_error("Can't remove logical volume %s used as mirror log",
-			  lv->name);
+		log_error("Can't remove logical volume %s used as mirror log.",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_raid_metadata(lv) || lv_is_raid_image(lv)) {
-		log_error("Can't remove logical volume %s used as RAID device",
-			  lv->name);
+		log_error("Can't remove logical volume %s used as RAID device.",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	if (lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv) ||
 	    lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) {
 		log_error("Can't remove logical volume %s used by a pool.",
-			  lv->name);
+			  display_lvname(lv));
 		return 0;
 	} else if (lv_is_thin_volume(lv)) {
 		if (!(pool_lv = first_seg(lv)->pool_lv)) {
@@ -5815,7 +5815,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (lv_is_locked(lv)) {
-		log_error("Can't remove locked LV %s", lv->name);
+		log_error("Can't remove locked logical volume %s.", display_lvname(lv));
 		return 0;
 	}
 
@@ -5838,8 +5838,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					  "%slogical volume %s? [y/n]: ",
 					  ask_discard ? " and DISCARD" : "",
 					  vg_is_clustered(vg) ? "clustered " : "",
-					  lv->name) == 'n') {
-				log_error("Logical volume %s not removed", lv->name);
+					  display_lvname(lv)) == 'n') {
+				log_error("Logical volume %s not removed.", display_lvname(lv));
 				return 0;
 			} else {
 				ask_discard = 0;
@@ -5850,8 +5850,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!lv_is_historical(lv) && (force == PROMPT) && ask_discard &&
 	    yes_no_prompt("Do you really want to remove and DISCARD "
 			  "logical volume %s? [y/n]: ",
-			  lv->name) == 'n') {
-		log_error("Logical volume %s not removed", lv->name);
+			  display_lvname(lv)) == 'n') {
+		log_error("Logical volume %s not removed.", display_lvname(lv));
 		return 0;
 	}
 
@@ -5907,7 +5907,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!(lv->vg->fid->fmt->features & FMT_MDAS))
 			format1_origin = origin_from_cow(lv);
 
-		log_verbose("Removing snapshot %s", lv->name);
+		log_verbose("Removing snapshot volume %s.", display_lvname(lv));
 		/* vg_remove_snapshot() will preload origin/former snapshots */
 		if (!vg_remove_snapshot(lv))
 			return_0;

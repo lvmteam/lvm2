@@ -340,6 +340,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 	for (;;) {
 		if (!lv_cache_status(cache_lv, &status))
 			return_0;
+
 		if (status->cache->fail) {
 			dm_pool_destroy(status->mem);
 			log_warn("WARNING: Skippping flush for failed cache %s.",
@@ -422,7 +423,8 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!lv_is_active_locally(cache_lv)) {
 		/* Give up any remote locks */
 		if (!deactivate_lv(cache_lv->vg->cmd, cache_lv)) {
-			log_error("Cannot deactivate remotely active cache lv.");
+			log_error("Cannot deactivate remotely active cache volume %s.",
+				  display_lvname(cache_lv));
 			return 0;
 		}
 
@@ -497,6 +499,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 
 	if (!(cache_seg->areas = dm_pool_zalloc(cache_lv->vg->vgmem, sizeof(*cache_seg->areas))))
 		return_0;
+
 	if (!set_lv_segment_area_lv(cache_seg, 0, cache_lv, 0, 0))
 		return_0;
 
