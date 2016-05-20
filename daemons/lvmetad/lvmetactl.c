@@ -55,24 +55,32 @@ int main(int argc, char **argv)
 	if (!strcmp(cmd, "dump")) {
 		reply = daemon_send_simple(h, "dump",
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
 	} else if (!strcmp(cmd, "pv_list")) {
 		reply = daemon_send_simple(h, "pv_list",
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
 	} else if (!strcmp(cmd, "vg_list")) {
 		reply = daemon_send_simple(h, "vg_list",
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
 	} else if (!strcmp(cmd, "get_global_info")) {
 		reply = daemon_send_simple(h, "get_global_info",
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
@@ -86,6 +94,8 @@ int main(int argc, char **argv)
 		reply = daemon_send_simple(h, "set_global_info",
 					   "global_invalid = " FMTd64, (int64_t) val,
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		print_reply(reply);
 
@@ -100,6 +110,8 @@ int main(int argc, char **argv)
 					   "global_disable = " FMTd64, (int64_t) val,
 					   "disable_reason = %s", LVMETAD_DISABLE_REASON_DIRECT,
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		print_reply(reply);
 
@@ -123,18 +135,24 @@ int main(int argc, char **argv)
 						   "name = %s", name,
 						   "version = " FMTd64, (int64_t) ver,
 						   "token = %s", "skip",
+						   "pid = " FMTd64, (int64_t)getpid(),
+						   "cmd = %s", "lvmetactl",
 						   NULL);
 		} else if (uuid) {
 			reply = daemon_send_simple(h, "set_vg_info",
 						   "uuid = %s", uuid,
 						   "version = " FMTd64, (int64_t) ver,
 						   "token = %s", "skip",
+						   "pid = " FMTd64, (int64_t)getpid(),
+						   "cmd = %s", "lvmetactl",
 						   NULL);
 		} else if (name) {
 			reply = daemon_send_simple(h, "set_vg_info",
 						   "name = %s", name,
 						   "version = " FMTd64, (int64_t) ver,
 						   "token = %s", "skip",
+						   "pid = " FMTd64, (int64_t)getpid(),
+						   "cmd = %s", "lvmetactl",
 						   NULL);
 		} else {
 			printf("name or uuid required\n");
@@ -153,6 +171,8 @@ int main(int argc, char **argv)
 		reply = daemon_send_simple(h, "vg_lookup",
 					   "name = %s", name,
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
@@ -166,6 +186,8 @@ int main(int argc, char **argv)
 		reply = daemon_send_simple(h, "vg_lookup",
 					   "uuid = %s", uuid,
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 
@@ -182,6 +204,8 @@ int main(int argc, char **argv)
 		reply = daemon_send_simple(h, "vg_lookup",
 					   "uuid = %s", uuid,
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		/* printf("%s\n", reply.buffer.mem); */
 
@@ -208,6 +232,8 @@ int main(int argc, char **argv)
 		reply = daemon_send_simple(h, "pv_lookup",
 					   "uuid = %s", uuid,
 					   "token = %s", "skip",
+					   "pid = " FMTd64, (int64_t)getpid(),
+					   "cmd = %s", "lvmetactl",
 					   NULL);
 		printf("%s\n", reply.buffer.mem);
 

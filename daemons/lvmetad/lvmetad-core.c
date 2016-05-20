@@ -207,6 +207,8 @@ struct vg_info {
 
 #define VGFL_INVALID 0x00000001
 
+#define CMD_NAME_SIZE 32
+
 typedef struct {
 	daemon_idle *idle;
 	log_state *log; /* convenience */
@@ -222,11 +224,24 @@ typedef struct {
 	struct dm_hash_table *vgname_to_vgid;
 	struct dm_hash_table *pvid_to_vgid;
 	char token[128];
+	char update_cmd[CMD_NAME_SIZE];
+	int update_pid;
+	int update_timeout;
+	uint64_t update_begin;
 	uint32_t flags; /* GLFL_ */
 	pthread_mutex_t token_lock;
 	pthread_mutex_t info_lock;
 	pthread_rwlock_t cache_lock;
 } lvmetad_state;
+
+static uint64_t _monotonic_seconds(void)
+{
+	struct timespec ts;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
+		return 0;
+	return ts.tv_sec;
+}
 
 static void destroy_metadata_hashes(lvmetad_state *s)
 {
@@ -2366,23 +2381,27 @@ static response set_global_info(lvmetad_state *s, request r)
 #define REASON_BUF_SIZE 64
 
 /*
- * FIXME: save the time when "updating" begins, and add a config setting for
- * how long we'll allow an update to take.  Before returning "updating" as the
- * token value in get_global_info, check if the update has exceeded the max
- * allowed time.  If so, then clear the current cache state and return "none"
- * as the current token value, so that the command will repopulate our cache.
+ * Save the time when "updating" begins, and the config setting for how long
+ * the update is allowed to take.  Before returning "updating" as the token
+ * value in get_global_info, check if the update has exceeded the max allowed
+ * time.  If so, then return "none" as the current token value (i.e.
+ * uninitialized), so that the command will repopulate our cache.
  *
- * This will resolve the problem of a command starting to update the cache and
- * then failing, leaving the token set to "update in progress".
+ * This automatically clears a stuck update, where a command started to update
+ * the cache and then failed, leaving the token set to "update in progress".
  */
 
 static response get_global_info(lvmetad_state *s, request r)
 {
 	char reason[REASON_BUF_SIZE];
+	char flag_str[64];
+	int pid;
 
 	/* This buffer should be large enough to hold all the possible reasons. */
 
 	memset(reason, 0, sizeof(reason));
+
+	pid = (int)daemon_request_int(r, "pid", 0);
 
 	if (s->flags & GLFL_DISABLE) {
 		snprintf(reason, REASON_BUF_SIZE - 1, "%s%s%s",
@@ -2394,17 +2413,46 @@ static response get_global_info(lvmetad_state *s, request r)
 	if (!reason[0])
 		strcpy(reason, "none");
 
-	DEBUGLOG(s, "global info invalid is %d disable is %d reason %s",
-		 (s->flags & GLFL_INVALID) ? 1 : 0,
-		 (s->flags & GLFL_DISABLE) ? 1 : 0, reason);
+	/*
+	 * If the current update has timed out, then return
+	 * token of "none" which means "uninitialized" so that
+	 * the caller will repopulate lvmetad.
+	 */
+	if (s->update_begin && s->update_timeout) {
+		if (_monotonic_seconds() - s->update_begin >= s->update_timeout) {
+			DEBUGLOG(s, "global info cancel update after timeout %d len %d begin %llu pid %d cmd %s",
+				 s->update_timeout,
+				 (int)(_monotonic_seconds() - s->update_begin),
+				 (unsigned long long)s->update_begin,
+				 s->update_pid, s->update_cmd);
+			memset(s->token, 0, sizeof(s->token));
+			s->update_begin = 0;
+			s->update_timeout = 0;
+			s->update_pid = 0;
+			memset(s->update_cmd, 0, CMD_NAME_SIZE);
+		}
+	}
 
-	return daemon_reply_simple("OK", "global_invalid = " FMTd64,
-					 (int64_t)((s->flags & GLFL_INVALID) ? 1 : 0),
-					 "global_disable = " FMTd64,
-					 (int64_t)((s->flags & GLFL_DISABLE) ? 1 : 0),
+	memset(flag_str, 0, sizeof(flag_str));
+	if (s->flags & GLFL_INVALID)
+		strcat(flag_str, "Invalid");
+	if (s->flags & GLFL_DISABLE)
+		strcat(flag_str, "Disable");
+	if (!flag_str[0])
+		strcat(flag_str, "none");
+
+	DEBUGLOG(s, "%d global info flags %s reason %s token %s update_pid %d",
+		 pid, flag_str, reason, s->token[0] ? s->token : "none", s->update_pid);
+
+	return daemon_reply_simple("OK", "global_invalid = " FMTd64, (int64_t)((s->flags & GLFL_INVALID) ? 1 : 0),
+					 "global_disable = " FMTd64, (int64_t)((s->flags & GLFL_DISABLE) ? 1 : 0),
 					 "disable_reason = %s", reason,
-					 "token = %s",
-					 s->token[0] ? s->token : "none",
+					 "daemon_pid = " FMTd64, (int64_t)getpid(),
+					 "token = %s", s->token[0] ? s->token : "none",
+					 "update_cmd = %s", s->update_cmd,
+					 "update_pid = " FMTd64, (int64_t)s->update_pid,
+					 "update_begin = " FMTd64, (int64_t)s->update_begin,
+					 "update_timeout = " FMTd64, (int64_t)s->update_timeout,
 					 NULL);
 }
 
@@ -2593,37 +2641,145 @@ static response handler(daemon_state s, client_handle h, request r)
 {
 	response res = { 0 };
 	lvmetad_state *state = s.private;
-	const char *rq = daemon_request_str(r, "request", "NONE");
-	const char *token = daemon_request_str(r, "token", "NONE");
 	char prev_token[128] = { 0 };
+	const char *rq;
+	const char *token;
+	const char *cmd;
+	int prev_in_progress, this_in_progress;
+	int update_timeout;
+	int pid;
 	int cache_lock = 0;
 	int info_lock = 0;
 
+	rq = daemon_request_str(r, "request", "NONE");
+	token = daemon_request_str(r, "token", "NONE");
+	pid = (int)daemon_request_int(r, "pid", 0);
+	cmd = daemon_request_str(r, "cmd", "NONE");
+	update_timeout = (int)daemon_request_int(r, "update_timeout", 0);
+
 	pthread_mutex_lock(&state->token_lock);
+
+	/*
+	 * token_update: start populating the cache, i.e. a full update.
+	 * To populate the lvmetad cache, a command does:
+	 *
+	 * - token_update, setting token to "update in progress"
+	 *   (further requests during the update continue using
+	 *   this same "update in progress" token)
+	 * - pv_clear_all, to clear the current cache
+	 * - pv_gone, for each PV
+	 * - pv_found, for each PV to populate the cache
+	 * - token_update, setting token to filter hash
+	 */
 	if (!strcmp(rq, "token_update")) {
-		memcpy(prev_token, state->token, 128);
-		strncpy(state->token, token, 128);
-		state->token[127] = 0;
+		prev_in_progress = !strcmp(state->token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS);
+		this_in_progress = !strcmp(token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS);
+
+		if (!prev_in_progress && this_in_progress) {
+			/* New update is starting (filter token is replaced by update token) */
+
+			memcpy(prev_token, state->token, 128);
+			strncpy(state->token, token, 128);
+			state->token[127] = 0;
+			state->update_begin = _monotonic_seconds();
+			state->update_timeout = update_timeout;
+			state->update_pid = pid;
+			strncpy(state->update_cmd, cmd, CMD_NAME_SIZE - 1);
+
+			DEBUGLOG(state, "token_update begin %llu timeout %d pid %d cmd %s",
+				 (unsigned long long)state->update_begin,
+				 state->update_timeout,
+				 state->update_pid,
+				 state->update_cmd);
+
+		} else if (prev_in_progress && this_in_progress) {
+			/* Current update is cancelled and replaced by a new update */
+
+			DEBUGLOG(state, "token_update replacing pid %d begin %llu len %d cmd %s",
+				 state->update_pid,
+				 (unsigned long long)state->update_begin,
+				 (int)(_monotonic_seconds() - state->update_begin),
+				 state->update_cmd);
+
+			memcpy(prev_token, state->token, 128);
+			strncpy(state->token, token, 128);
+			state->token[127] = 0;
+			state->update_begin = _monotonic_seconds();
+			state->update_timeout = update_timeout;
+			state->update_pid = pid;
+			strncpy(state->update_cmd, cmd, CMD_NAME_SIZE - 1);
+
+			DEBUGLOG(state, "token_update begin %llu timeout %d pid %d cmd %s",
+				 (unsigned long long)state->update_begin,
+				 state->update_timeout,
+				 state->update_pid,
+				 state->update_cmd);
+
+		} else if (prev_in_progress && !this_in_progress) {
+			/* Update is finished, update token is replaced by filter token */
+
+			if (state->update_pid != pid) {
+				/* If a pid doing update was cancelled, ignore its token update at the end. */
+				DEBUGLOG(state, "token_update ignored from cancelled update pid %d", pid);
+				pthread_mutex_unlock(&state->token_lock);
+
+				return daemon_reply_simple("token_mismatch",
+							   "expected = %s", state->token,
+							   "received = %s", token,
+							   "update_pid = " FMTd64, (int64_t)state->update_pid,
+							   "reason = %s", "another command has populated the cache");
+			}
+
+			DEBUGLOG(state, "token_update end len %d pid %d new token %s",
+				 (int)(_monotonic_seconds() - state->update_begin),
+				 state->update_pid, token);
+
+			memcpy(prev_token, state->token, 128);
+			strncpy(state->token, token, 128);
+			state->token[127] = 0;
+			state->update_begin = 0;
+			state->update_timeout = 0;
+			state->update_pid = 0;
+			memset(state->update_cmd, 0, CMD_NAME_SIZE);
+		}
 		pthread_mutex_unlock(&state->token_lock);
+
 		return daemon_reply_simple("OK",
 					   "prev_token = %s", prev_token,
+					   "update_pid = " FMTd64, (int64_t)state->update_pid,
 					   NULL);
 	}
 
 	if (strcmp(token, state->token) && strcmp(rq, "dump") && strcmp(token, "skip")) {
 		pthread_mutex_unlock(&state->token_lock);
+
+		DEBUGLOG(state, "token_mismatch current \"%s\" got \"%s\" from pid %d cmd %s",
+			 state->token, token, pid, cmd ?: "none");
+
 		return daemon_reply_simple("token_mismatch",
 					   "expected = %s", state->token,
 					   "received = %s", token,
-					   "reason = %s",
-					   "lvmetad cache is invalid due to a global_filter change or due to a running rescan", NULL);
+					   "update_pid = " FMTd64, (int64_t)state->update_pid,
+					   "reason = %s", "another command has populated the cache");
 	}
+
+	/* If a pid doing update was cancelled, ignore its update messages. */
+	if (!strcmp(token, LVMETAD_TOKEN_UPDATE_IN_PROGRESS) &&
+	    state->update_pid && pid && (state->update_pid != pid)) {
+		pthread_mutex_unlock(&state->token_lock);
+
+		DEBUGLOG(state, "token_mismatch ignore update from pid %d current update pid %d",
+			 pid, state->update_pid);
+
+		return daemon_reply_simple("token_mismatch",
+					   "expected = %s", state->token,
+					   "received = %s", token,
+					   "update_pid = " FMTd64, (int64_t)state->update_pid,
+					   "reason = %s", "another command has populated the lvmetad cache");
+	}
+
 	pthread_mutex_unlock(&state->token_lock);
 
-	/*
-	 * TODO Add a stats call, with transaction count/rate, time since last
-	 * update &c.
-	 */
 
 	if (!strcmp(rq, "pv_found") ||
 	    !strcmp(rq, "pv_gone") ||
