@@ -235,6 +235,12 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 			break;
 		}
 
+		if (cmd->log_rh && strcmp(argv[0], "lastlog")) {
+			/* drop old log report */
+			dm_report_free(cmd->log_rh);
+			cmd->log_rh = NULL;
+		}
+
 		ret = lvm_run_command(cmd, argc, argv);
 		if (ret == ENO_SUCH_CMD)
 			log_error("No such command '%s'.  Try 'help'.",

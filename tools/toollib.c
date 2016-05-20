@@ -1778,8 +1778,16 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 
 		if (!dm_report_group_destroy(handle->report_group))
 			stack;
-		if (handle->log_rh)
-			dm_report_free(handle->log_rh);
+		if (handle->log_rh) {
+			if (cmd->is_interactive) {
+				/*
+				 * Keep log report if we're interactive so
+				 * we can do further queries on this report.
+				 */
+				cmd->log_rh = handle->log_rh;
+			} else
+				dm_report_free(handle->log_rh);
+		}
 		/*
 		 * TODO: think about better alternatives:
 		 * handle mempool, dm_alloc for handle memory...

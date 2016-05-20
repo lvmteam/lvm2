@@ -174,6 +174,15 @@ xx(fullreport,
    rows_ARG, select_ARG, separator_ARG, shared_ARG, sort_ARG, trustcache_ARG,
    unbuffered_ARG, units_ARG, unquoted_ARG)
 
+xx(lastlog,
+   "Display last command's log report",
+   PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
+   "log\n"
+   "\t[--reportformat {json}]\n"
+   "\t[-S|--select Selection]\n",
+
+   reportformat_ARG, select_ARG)
+
 xx(lvchange,
    "Change the attributes of logical volume(s)",
    CACHE_VGMETADATA | PERMITTED_READ_ONLY,

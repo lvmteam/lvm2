@@ -1497,3 +1497,38 @@ bad:
 		dm_report_free(tmp_log_rh);
 	return 0;
 }
+
+int lastlog(struct cmd_context *cmd, int argc, char **argv)
+{
+	static report_idx_t expected_idxs[] = {REPORT_IDX_SINGLE, REPORT_IDX_LOG, REPORT_IDX_NULL};
+	struct dm_report_group *report_group = NULL;
+	const char *selection = NULL;
+	int r = ECMD_FAILED;
+
+	if (!cmd->log_rh) {
+		log_error("No log report stored.");
+		goto out;
+	}
+
+	if (!report_format_init(cmd, NULL, &report_group, &cmd->log_rh, NULL))
+		goto_out;
+
+	if (arg_count(cmd, select_ARG) &&
+	    !_do_report_get_selection(cmd, NULL, NULL, expected_idxs, &selection))
+		goto_out;
+
+	if (!dm_report_set_selection(cmd->log_rh, selection)) {
+		log_error("Failed to set selection for log report.");
+		goto out;
+	}
+
+	if (!dm_report_output(cmd->log_rh) ||
+	    !dm_report_group_pop(report_group))
+		goto_out;
+
+	r = ECMD_PROCESSED;
+out:
+	if (!dm_report_group_destroy(report_group))
+		stack;
+	return r;
+}

@@ -186,6 +186,11 @@ struct cmd_context {
 	char proc_dir[PATH_MAX];
 
 	/*
+	 * Command log reporting.
+	 */
+	struct dm_report *log_rh;		/* keep log report of last cmd for further queries if cmd line is interactive (e.g. lvm shell) */
+
+	/*
 	 * Buffers.
 	 */
 	char display_buffer[NAME_LEN * 10];	/* ring buffer for upto 10 longest vg/lv names */
