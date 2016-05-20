@@ -391,7 +391,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 
 static int _refresh_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 {
-	if (!lv_refresh_suspend_resume(cmd, vg->sanlock_lv)) {
+	if (!lv_refresh_suspend_resume(vg->sanlock_lv)) {
 		log_error("Failed to refresh %s.", vg->sanlock_lv->name);
 		return 0;
 	}

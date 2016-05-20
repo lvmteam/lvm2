@@ -1099,7 +1099,7 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 						display_lvname(lv), display_lvname(snapshot_lv));
 	}
 
-	if (!lv_refresh_suspend_resume(cmd, lv))
+	if (!lv_refresh_suspend_resume(lv))
 		return_0;
 
 	/*

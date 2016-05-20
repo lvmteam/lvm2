@@ -379,7 +379,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 	 * ATM this is workaround for missing cache sync when cache gets clean
 	 */
 	if (1) {
-		if (!lv_refresh_suspend_resume(lock_lv->vg->cmd, lock_lv))
+		if (!lv_refresh_suspend_resume(lock_lv))
 			return_0;
 	}
 

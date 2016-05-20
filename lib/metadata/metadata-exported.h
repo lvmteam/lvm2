@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -801,7 +801,7 @@ int lv_empty(struct logical_volume *lv);
 /* Empty an LV and add error segment */
 int replace_lv_with_error_segment(struct logical_volume *lv);
 
-int lv_refresh_suspend_resume(struct cmd_context *cmd, struct logical_volume *lv);
+int lv_refresh_suspend_resume(const struct logical_volume *lv);
 
 /* Entry point for all LV extent allocations */
 int lv_extend(struct logical_volume *lv,
