@@ -1376,6 +1376,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 int lv_refresh_suspend_resume(const struct logical_volume *lv)
 {
 	struct cmd_context *cmd = lv->vg->cmd;
+	int r = 1;
 
 	if (!cmd->partial_activation && lv_is_partial(lv)) {
 		log_error("Refusing refresh of partial LV %s."
@@ -1386,15 +1387,15 @@ int lv_refresh_suspend_resume(const struct logical_volume *lv)
 
 	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to suspend %s.", display_lvname(lv));
-		return 0;
+		r = 0;
 	}
 
 	if (!resume_lv(cmd, lv)) {
 		log_error("Failed to reactivate %s.", display_lvname(lv));
-		return 0;
+		r = 0;
 	}
 
-	return 1;
+	return r;
 }
 
 /*

@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  When refresh failed in suspend, call resume upon error path.
   Support passthrough cache mode when waiting for clean cache.
   Check cache status only for 'in-use' cache pools.
   Extend setup_task() to preset flushing for dm_task object.
