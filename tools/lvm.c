@@ -193,7 +193,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 
 	_cmdline = cmdline;
 
-	_cmdline->interactive = 1;
+	cmd->is_interactive = 1;
 	while (1) {
 		free(input);
 		input = readline("lvm> ");
@@ -246,6 +246,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 		}
 		_write_history();
 	}
+	cmd->is_interactive = 0;
 
 	free(input);
 	return 0;

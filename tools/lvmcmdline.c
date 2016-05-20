@@ -1739,7 +1739,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 	}
 
-	if (ret == EINVALID_CMD_LINE && !_cmdline.interactive)
+	if (ret == EINVALID_CMD_LINE && !cmd->is_interactive)
 		_short_usage(cmd->command->name);
 
 	log_debug("Completed: %s", cmd->cmd_line);

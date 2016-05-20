@@ -113,6 +113,7 @@ struct cmd_context {
 	 * Switches.
 	 */
 	unsigned is_long_lived:1;		/* optimises persistent_filter handling */
+	unsigned is_interactive:1;
 	unsigned check_pv_dev_sizes:1;
 	unsigned handles_missing_pvs:1;
 	unsigned handles_unknown_segments:1;

@@ -23,7 +23,6 @@ struct cmdline_context {
         struct command *commands;
         int num_commands;
         int commands_size;
-        int interactive;
 };
 
 int lvm2_main(int argc, char **argv);
