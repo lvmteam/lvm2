@@ -3869,3 +3869,14 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 
 	return 1;
 }
+
+int report_current_object_cmdlog(const char *type, const char *msg, int32_t ret_code)
+{
+	log_report_t log_state = log_get_report_state();
+
+	return report_cmdlog(log_state.report, type, log_get_report_context_name(log_state.context),
+			     log_get_report_object_type_name(log_state.object_type),
+			     log_state.object_name, log_state.object_id,
+			     log_state.object_group, log_state.object_group_id,
+			     msg, stored_errno(), ret_code);
+}
