@@ -2710,6 +2710,7 @@ struct dm_report_group;
 
 typedef enum {
 	DM_REPORT_GROUP_SINGLE,
+	DM_REPORT_GROUP_BASIC
 } dm_report_group_type_t;
 
 struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data);
