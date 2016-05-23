@@ -1725,6 +1725,12 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd)
 	handle->internal_report_for_select = arg_is_set(cmd, select_ARG);
 	handle->include_historical_lvs = cmd->include_historical_lvs;
 
+	if (!report_format_init(cmd, &handle->report_group_type, &handle->report_group,
+				&handle->log_rh)) {
+		dm_pool_free(cmd->mem, handle);
+		return NULL;
+	}
+
 	return handle;
 }
 
@@ -1754,6 +1760,10 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 	if (handle) {
 		if (handle->selection_handle && handle->selection_handle->selection_rh)
 			dm_report_free(handle->selection_handle->selection_rh);
+		if (!dm_report_group_destroy(handle->report_group))
+			stack;
+		if (handle->log_rh)
+			dm_report_free(handle->log_rh);
 		/*
 		 * TODO: think about better alternatives:
 		 * handle mempool, dm_alloc for handle memory...

@@ -72,6 +72,9 @@ struct processing_handle {
 	int internal_report_for_select;
 	int include_historical_lvs;
 	struct selection_handle *selection_handle;
+	dm_report_group_type_t report_group_type;
+	struct dm_report_group *report_group;
+	struct dm_report *log_rh;
 	void *custom_handle;
 };
 
