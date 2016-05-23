@@ -33,10 +33,10 @@ static void _raid_display(const struct lv_segment *seg)
 		display_stripe(seg, s, "    ");
 	}
 
-	if (seg->meta_areas) {
+	if (seg->meta_areas)
 		for (s = 0; s < seg->area_count; ++s)
-			log_print("  Raid Metadata LV%2d\t%s", s, seg_metalv(seg, s)->name);
-	}
+			if (seg_metalv(seg, s))
+				log_print("  Raid Metadata LV%2d\t%s", s, seg_metalv(seg, s)->name);
 
 	log_print(" ");
 }

@@ -1019,7 +1019,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		}
 
 		/* Remove metadata area if image has been removed */
-		if (area_reduction == seg->area_len) {
+		if (seg->meta_areas && seg_metalv(seg, s) && (area_reduction == seg->area_len)) {
 			if (!lv_reduce(seg_metalv(seg, s),
 				       seg_metalv(seg, s)->le_count)) {
 				log_error("Failed to remove RAID meta-device %s",
@@ -3826,7 +3826,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		}
 
 		/* Extend metadata LVs only on initial creation */
-		if (seg_is_raid(seg) && !seg_is_raid0(seg) && !lv->le_count) {
+		if (seg_is_raid_with_meta(seg) && !lv->le_count) {
 			if (!seg->meta_areas) {
 				log_error("No meta_areas for RAID type");
 				return 0;
@@ -4190,12 +4190,12 @@ static int _for_each_sub_lv(struct logical_volume *lv, int skip_pools,
 				return_0;
 		}
 
-		if (!seg_is_raid(seg))
+		if (!seg_is_raid_with_meta(seg))
 			continue;
 
 		/* RAID has meta_areas */
 		for (s = 0; s < seg->area_count; s++) {
-			if (seg_metatype(seg, s) != AREA_LV)
+			if ((seg_metatype(seg, s) != AREA_LV) || !seg_metalv(seg, s))
 				continue;
 			if (!fn(seg_metalv(seg, s), data))
 				return_0;

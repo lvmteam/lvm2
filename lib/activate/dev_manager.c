@@ -2207,7 +2207,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			    (!dm->track_pending_delete || !lv_is_cache(lv)) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_lv(seg, s), 0))
 				return_0;
-			if (seg_is_raid(seg) && seg->meta_areas && seg_metalv(seg, s) &&
+			if (seg_is_raid_with_meta(seg) && seg->meta_areas && seg_metalv(seg, s) &&
 			    !_add_lv_to_dtree(dm, dtree, seg_metalv(seg, s), 0))
 				return_0;
 		}
@@ -2713,7 +2713,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		    !_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s),
 					  laopts, NULL))
 			return_0;
-		if (seg_is_raid(seg) && seg->meta_areas && seg_metalv(seg, s) &&
+		if (seg_is_raid_with_meta(seg) && seg->meta_areas && seg_metalv(seg, s) &&
 		    !_add_new_lv_to_dtree(dm, dtree, seg_metalv(seg, s),
 					  laopts, NULL))
 			return_0;

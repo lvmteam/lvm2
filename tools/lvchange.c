@@ -243,7 +243,7 @@ static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 	if (!(lvl = dm_pool_alloc(seg->lv->vg->vgmem, sizeof(*lvl) * num_meta_lvs)))
 		return_0;
 
-	if (seg_is_raid(seg)) {
+	if (seg_is_raid_with_meta(seg)) {
 		for (s = 0; s < seg->area_count; s++) {
 			if (!seg_metalv(seg, s))
 				return_0; /* Trap this future possibility */

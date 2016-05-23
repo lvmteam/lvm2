@@ -253,11 +253,11 @@ static int _move_raid(struct volume_group *vg_from,
 		for (s = 0; s < seg->area_count; s++) {
 			if (_lv_is_in_vg(vg_to, seg_lv(seg, s)))
 				seg_in++;
-			if (_lv_is_in_vg(vg_to, seg_metalv(seg, s)))
-				seg_in++;
+			if (seg->meta_areas && seg_metalv(seg, s) && _lv_is_in_vg(vg_to, seg_metalv(seg, s)))
+				seg_in++;	/* FIXME Inadequate - must count separately */
 		}
 
-		if (seg_in && seg_in != (seg->area_count * 2)) {
+		if (seg_in && seg_in != (seg->area_count * (seg->meta_areas ? 2 : 1))) {
 			log_error("Can't split RAID %s between "
 				  "two Volume Groups", lv->name);
 			return 0;

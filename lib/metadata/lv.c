@@ -53,7 +53,7 @@ static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segme
 		goto bad;
 	}
 
-	if (metadata_areas_only && (!seg_is_raid(seg) || lv_is_raid_metadata(seg->lv) || lv_is_raid_image(seg->lv)))
+	if (metadata_areas_only && (!seg_is_raid_with_meta(seg) || !seg->meta_areas || lv_is_raid_metadata(seg->lv) || lv_is_raid_image(seg->lv)))
 		goto out;
 
 	for (s = 0; s < seg->area_count; s++) {
@@ -1012,7 +1012,7 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	/* Find out which sub-LV this is. */
 	for (s = 0; s < raid_seg->area_count; s++)
 		if ((lv_is_raid_image(lv) && (seg_lv(raid_seg, s) == lv)) ||
-		    (lv_is_raid_metadata(lv) && (seg_metalv(raid_seg,s) == lv)))
+		    (lv_is_raid_metadata(lv) && (seg_metalv(raid_seg, s) == lv)))
 			break;
 	if (s == raid_seg->area_count) {
 		log_error(INTERNAL_ERROR
