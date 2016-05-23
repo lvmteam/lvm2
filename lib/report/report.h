@@ -111,6 +111,9 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 		  const char *object_id, const char *object_group,
 		  const char *object_group_id, const char *msg,
 		  int current_errno, int ret_code);
+#define REPORT_OBJECT_CMDLOG_NAME "status"
+#define REPORT_OBJECT_CMDLOG_SUCCESS "success"
+#define REPORT_OBJECT_CMDLOG_FAILURE "failure"
 int report_current_object_cmdlog(const char *type, const char *msg, int32_t ret_code);
 int report_output(void *handle);
 

@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Report per-object return codes via cmd log while processing multiple objects.
   Annotate processing code with log report hooks for per-object command log.
   Also pass common printed messages (besides warnings and errors) to log report.
   Log warnings and errors via report during cmd processing if this is enabled.

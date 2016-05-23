@@ -22,6 +22,10 @@
 #include <sys/wait.h>
 #include <sys/utsname.h>
 
+#define report_log_ret_code(ret_code) report_current_object_cmdlog(REPORT_OBJECT_CMDLOG_NAME, \
+					ret_code == ECMD_PROCESSED ? REPORT_OBJECT_CMDLOG_SUCCESS \
+								   : REPORT_OBJECT_CMDLOG_FAILURE, ret_code)
+
 struct device_id_list {
 	struct dm_list list;
 	struct device *dev;
@@ -1862,6 +1866,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 	int notfound;
 	int process_all = 0;
 	int already_locked;
+	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
 
@@ -1896,6 +1901,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 
 		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
 			ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 			continue;
 		}
 
@@ -1905,6 +1911,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		if (_ignore_vg(vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 			goto endvg;
 		}
 		if (skip || notfound)
@@ -1922,6 +1929,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 			_update_selection_result(handle, &whole_selected);
 			if (ret != ECMD_PROCESSED)
 				stack;
+			report_log_ret_code(ret);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
@@ -1935,10 +1943,12 @@ endvg:
 
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
-
 	/* the VG is selected if at least one LV is selected */
 	_set_final_selection_result(handle, whole_selected);
+	do_report_ret_code = 0;
 out:
+	if (do_report_ret_code)
+		report_log_ret_code(ret_max);
 	log_restore_report_state(saved_log_report_state);
 	return ret_max;
 }
@@ -2304,6 +2314,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	struct dm_list final_lvs;
 	struct lv_list *final_lvl;
 	struct glv_list *glvl, *tglvl;
+	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LV);
 
@@ -2459,11 +2470,12 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			_update_selection_result(handle, &whole_selected);
 		if (ret != ECMD_PROCESSED)
 			stack;
+		report_log_ret_code(ret);
 		if (ret > ret_max)
 			ret_max = ret;
 
 		if (stop_on_error && ret != ECMD_PROCESSED) {
-			log_set_report_object_name_and_id(NULL, NULL);
+			do_report_ret_code = 0;
 			goto_out;
 		}
 	}
@@ -2509,11 +2521,12 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				_update_selection_result(handle, &whole_selected);
 			if (ret != ECMD_PROCESSED)
 				stack;
+			report_log_ret_code(ret);
 			if (ret > ret_max)
 				ret_max = ret;
 
 			if (stop_on_error && ret != ECMD_PROCESSED) {
-				log_set_report_object_name_and_id(NULL, NULL);
+				do_report_ret_code = 0;
 				goto_out;
 			}
 		}
@@ -2531,9 +2544,13 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				  vg->name, sl->str);
 			if (ret_max < ECMD_FAILED)
 				ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 		}
 	}
+	do_report_ret_code = 0;
 out:
+	if (do_report_ret_code)
+		report_log_ret_code(ret_max);
 	log_set_report_object_name_and_id(NULL, NULL);
 	log_set_report_object_group_and_group_id(NULL, NULL);
 	if (!handle_supplied)
@@ -2701,6 +2718,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 	int skip;
 	int notfound;
 	int already_locked;
+	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
 
@@ -2756,6 +2774,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 
 		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
 			ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 			continue;
 		}
 
@@ -2765,6 +2784,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 		if (_ignore_vg(vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 			goto endvg;
 		}
 		if (skip || notfound)
@@ -2774,6 +2794,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 					    handle, process_single_lv);
 		if (ret != ECMD_PROCESSED)
 			stack;
+		report_log_ret_code(ret);
 		if (ret > ret_max)
 			ret_max = ret;
 
@@ -2785,7 +2806,10 @@ endvg:
 			stack;
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
+	do_report_ret_code = 0;
 out:
+	if (do_report_ret_code)
+		report_log_ret_code(ret_max);
 	log_restore_report_state(saved_log_report_state);
 	return ret_max;
 }
@@ -3253,6 +3277,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	struct device_id_list *dil;
 	const char *pv_name;
 	int process_pv;
+	int do_report_ret_code = 1;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 
@@ -3327,6 +3352,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 				ret = process_single_pv(cmd, vg, pv, handle);
 				if (ret != ECMD_PROCESSED)
 					stack;
+				report_log_ret_code(ret);
 				if (ret > ret_max)
 					ret_max = ret;
 			}
@@ -3339,7 +3365,10 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 			break;
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
+	do_report_ret_code = 0;
 out:
+	if (do_report_ret_code)
+		report_log_ret_code(ret_max);
 	log_set_report_object_name_and_id(NULL, NULL);
 	log_set_report_object_group_and_group_id(NULL, NULL);
 	if (!handle_supplied)
@@ -3382,6 +3411,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	int skip;
 	int notfound;
 	int already_locked;
+	int do_report_ret_code;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
 
@@ -3405,6 +3435,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 
 		if (!lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
 			ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 			continue;
 		}
 
@@ -3416,6 +3447,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		if (_ignore_vg(vg, vg_name, NULL, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
+			report_log_ret_code(ret_max);
 			if (!skip)
 				goto endvg;
 			/* Drop through to eliminate a clustered VG's PVs from the devices list */
@@ -3433,6 +3465,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 					 handle, process_single_pv);
 		if (ret != ECMD_PROCESSED)
 			stack;
+		report_log_ret_code(ret);
 		if (ret > ret_max)
 			ret_max = ret;
 
@@ -3444,12 +3477,17 @@ endvg:
 			stack;
 
 		/* Quit early when possible. */
-		if (!process_all_pvs && dm_list_empty(arg_tags) && dm_list_empty(arg_devices))
+		if (!process_all_pvs && dm_list_empty(arg_tags) && dm_list_empty(arg_devices)) {
+			do_report_ret_code = 0;
 			goto_out;
+		}
 
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
+	do_report_ret_code = 0;
 out:
+	if (do_report_ret_code)
+		report_log_ret_code(ret_max);
 	log_restore_report_state(saved_log_report_state);
 	return ret_max;
 }
@@ -3695,6 +3733,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	int whole_selected = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
+	int do_report_ret_code = 1;
 	struct pv_list *pvl;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_PV);
@@ -3721,6 +3760,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		_update_selection_result(handle, &whole_selected);
 		if (ret != ECMD_PROCESSED)
 			stack;
+		report_log_ret_code(ret);
 		if (ret > ret_max)
 			ret_max = ret;
 
@@ -3728,7 +3768,10 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	_set_final_selection_result(handle, whole_selected);
+	do_report_ret_code = 0;
 out:
+	if (do_report_ret_code)
+		report_log_ret_code(ret_max);
 	log_restore_report_state(saved_log_report_state);
 	return ret_max;
 }
