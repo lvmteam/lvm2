@@ -833,7 +833,7 @@ static int _do_report(struct cmd_context *cmd, struct report_args *args)
 		case LVSINFOSTATUS:
 			/* fall through */
 		case LVS:
-			r = process_each_lv(cmd, args->argc, args->argv, 0, handle,
+			r = process_each_lv(cmd, args->argc, args->argv, NULL, NULL, 0, handle,
 					    lv_info_needed && !lv_segment_status_needed ? &_lvs_with_info_single :
 					    !lv_info_needed && lv_segment_status_needed ? &_lvs_with_status_single :
 					    lv_info_needed && lv_segment_status_needed ? &_lvs_with_info_and_status_single :
@@ -857,7 +857,7 @@ static int _do_report(struct cmd_context *cmd, struct report_args *args)
 						    0, handle, &_pvs_in_vg);
 			break;
 		case SEGS:
-			r = process_each_lv(cmd, args->argc, args->argv, 0, handle,
+			r = process_each_lv(cmd, args->argc, args->argv, NULL, NULL, 0, handle,
 					    lv_info_needed && !lv_segment_status_needed ? &_lvsegs_with_info_single :
 					    !lv_info_needed && lv_segment_status_needed ? &_lvsegs_with_status_single :
 					    lv_info_needed && lv_segment_status_needed ? &_lvsegs_with_info_and_status_single :

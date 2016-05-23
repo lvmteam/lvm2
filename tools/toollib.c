@@ -2489,6 +2489,7 @@ out:
  */
 static int _get_arg_lvnames(struct cmd_context *cmd,
 			    int argc, char **argv,
+			    const char *one_vgname, const char *one_lvname,
 			    struct dm_list *arg_vgnames,
 			    struct dm_list *arg_lvnames,
 			    struct dm_list *arg_tags)
@@ -2502,6 +2503,34 @@ static int _get_arg_lvnames(struct cmd_context *cmd,
 	const char *tmp_lv_name;
 	const char *vgname_def;
 	unsigned dev_dir_found;
+
+	if (one_vgname) {
+		if (!str_list_add(cmd->mem, arg_vgnames,
+				  dm_pool_strdup(cmd->mem, one_vgname))) {
+			log_error("strlist allocation failed.");
+			return ECMD_FAILED;
+		}
+
+		if (!one_lvname) {
+			if (!str_list_add(cmd->mem, arg_lvnames,
+					  dm_pool_strdup(cmd->mem, one_vgname))) {
+				log_error("strlist allocation failed.");
+				return ECMD_FAILED;
+			}
+		} else {
+			vglv_sz = strlen(one_vgname) + strlen(one_lvname) + 2;
+			if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
+			    dm_snprintf(vglv, vglv_sz, "%s/%s", one_vgname, one_lvname) < 0) {
+				log_error("vg/lv string alloc failed.");
+				return ECMD_FAILED;
+			}
+			if (!str_list_add(cmd->mem, arg_lvnames, vglv)) {
+				log_error("strlist allocation failed.");
+				return ECMD_FAILED;
+			}
+		}
+		return ret_max;
+	}
 
 	for (; opt < argc; opt++) {
 		lv_name = argv[opt];
@@ -2687,8 +2716,12 @@ endvg:
 /*
  * Call process_single_lv() for each LV selected by the command line arguments.
  */
-int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t read_flags,
-		    struct processing_handle *handle, process_single_lv_fn_t process_single_lv)
+int process_each_lv(struct cmd_context *cmd,
+		    int argc, char **argv,
+		    const char *one_vgname, const char *one_lvname,
+		    uint32_t read_flags,
+		    struct processing_handle *handle,
+		    process_single_lv_fn_t process_single_lv)
 {
 	int handle_supplied = handle != NULL;
 	struct dm_list arg_tags;		/* str_list */
@@ -2713,7 +2746,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv, uint32_t rea
 	/*
 	 * Find any LVs, VGs or tags explicitly provided on the command line.
 	 */
-	if ((ret = _get_arg_lvnames(cmd, argc, argv, &arg_vgnames, &arg_lvnames, &arg_tags) != ECMD_PROCESSED)) {
+	if ((ret = _get_arg_lvnames(cmd, argc, argv, one_vgname, one_lvname, &arg_vgnames, &arg_lvnames, &arg_tags) != ECMD_PROCESSED)) {
 		ret_max = ret;
 		goto_out;
 	}

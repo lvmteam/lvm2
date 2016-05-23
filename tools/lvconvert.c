@@ -3245,11 +3245,10 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
-			     void *handle)
+static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
+		      struct lvconvert_params *lp)
 {
 	struct logical_volume *origin = NULL;
-	struct lvconvert_params *lp = handle;
 	struct dm_list *failed_pvs;
 
 	if (lv_is_locked(lv)) {
@@ -3426,16 +3425,16 @@ static struct convert_poll_id_list* _convert_poll_id_list_create(struct cmd_cont
 	return idl;
 }
 
-static int _convert_and_add_to_poll_list(struct cmd_context *cmd,
-					 struct lvconvert_params *lp,
-					 struct logical_volume *lv)
+static int _lvconvert_and_add_to_poll_list(struct cmd_context *cmd,
+					    struct lvconvert_params *lp,
+					    struct logical_volume *lv)
 {
 	int ret;
 	struct lvinfo info;
 	struct convert_poll_id_list *idl;
 
-	/* _lvconvert_single() call may alter the reference in lp->lv_to_poll */
-	if ((ret = _lvconvert_single(cmd, lv, lp)) != ECMD_PROCESSED)
+	/* _lvconvert() call may alter the reference in lp->lv_to_poll */
+	if ((ret = _lvconvert(cmd, lv, lp)) != ECMD_PROCESSED)
 		stack;
 	else if (lp->need_polling) {
 		if (!lv_info(cmd, lp->lv_to_poll, 0, &info, 0, 0) || !info.exists)
@@ -3450,57 +3449,24 @@ static int _convert_and_add_to_poll_list(struct cmd_context *cmd,
 	return ret;
 }
 
-static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp)
+static int _lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
+			     struct processing_handle *handle)
 {
-	struct logical_volume *lv;
-	struct volume_group *vg;
-	int ret = ECMD_FAILED;
-	int saved_ignore_suspended_devices = ignore_suspended_devices();
-	uint32_t lockd_state = 0;
-
-	if (lp->repair || lp->uncache) {
-		init_ignore_suspended_devices(1);
-		cmd->handles_missing_pvs = 1;
-	}
-
-	/* Unlock on error paths not required, it's automatic when command exits. */
-	if (!lockd_vg(cmd, lp->vg_name, "ex", 0, &lockd_state))
-		goto_out;
-
-	vg = vg_read(cmd, lp->vg_name, NULL, READ_FOR_UPDATE, lockd_state);
-	if (vg_read_error(vg)) {
-		release_vg(vg);
-		goto_out;
-	}
+	struct lvconvert_params *lp = (struct lvconvert_params *) handle->custom_handle;
+	struct volume_group *vg = lv->vg;
 
 	if (test_mode() && is_lockd_type(vg->lock_type)) {
 		log_error("Test mode is not yet supported with lock type %s",
 			  vg->lock_type);
-		unlock_and_release_vg(cmd, vg, lp->vg_name);
-		goto_out;
+		return ECMD_FAILED;
 	}
-
-	if (!(lv = find_lv(vg, lp->lv_name))) {
-		log_error("Can't find LV %s in VG %s", lp->lv_name, lp->vg_name);
-		unlock_and_release_vg(cmd, vg, lp->vg_name);
-		goto_out;
-	}
-
-	/*
-	 * Request a transient lock.  If the LV is active, it has a persistent
-	 * lock already, and this request does nothing.  If the LV is not
-	 * active, this acquires a transient lock that will be released when
-	 * the command exits.
-	 */
-	if (!lockd_lv(cmd, lv, "ex", 0))
-		goto_bad;
 
 	/*
 	 * lp->pvh holds the list of PVs available for allocation or removal
 	 */
 	if (lp->pv_count) {
 		if (!(lp->pvh = create_pv_list(cmd->mem, vg, lp->pv_count, lp->pvs, 0)))
-			goto_bad;
+			return_ECMD_FAILED;
 	} else
 		lp->pvh = &vg->pvs;
 
@@ -3508,22 +3474,11 @@ static int lvconvert_single(struct cmd_context *cmd, struct lvconvert_params *lp
 	    !(lp->replace_pvh = create_pv_list(cmd->mem, vg,
 					       lp->replace_pv_count,
 					       lp->replace_pvs, 0)))
-			goto_bad;
+			return_ECMD_FAILED;
 
 	lp->lv_to_poll = lv;
-	ret = _convert_and_add_to_poll_list(cmd, lp, lv);
 
-bad:
-	unlock_vg(cmd, lp->vg_name);
-
-	/* Unlock here so it's not held during polling. */
-	if (!lockd_vg(cmd, lp->vg_name, "un", 0, &lockd_state))
-		stack;
-
-	release_vg(vg);
-out:
-	init_ignore_suspended_devices(saved_ignore_suspended_devices);
-	return ret;
+	return _lvconvert_and_add_to_poll_list(cmd, lp, lv);
 }
 
 static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -3533,7 +3488,7 @@ static int _lvconvert_merge_single(struct cmd_context *cmd, struct logical_volum
 
 	lp->lv_to_poll = lv;
 
-	return _convert_and_add_to_poll_list(cmd, lp, lv);
+	return _lvconvert_and_add_to_poll_list(cmd, lp, lv);
 }
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
@@ -3558,11 +3513,22 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		goto_out;
 	}
 
-	if (lp.merge)
-		ret = process_each_lv(cmd, argc, argv, READ_FOR_UPDATE, handle,
-				      &_lvconvert_merge_single);
-	else
-		ret = lvconvert_single(cmd, &lp);
+	if (lp.merge) {
+		ret = process_each_lv(cmd, argc, argv, NULL, NULL,
+				      READ_FOR_UPDATE, handle, &_lvconvert_merge_single);
+	} else {
+		int saved_ignore_suspended_devices = ignore_suspended_devices();
+
+		if (lp.repair || lp.uncache) {
+			init_ignore_suspended_devices(1);
+			cmd->handles_missing_pvs = 1;
+		}
+
+		ret = process_each_lv(cmd, 0, NULL, lp.vg_name, lp.lv_name,
+				      READ_FOR_UPDATE, handle, &_lvconvert_single);
+
+		init_ignore_suspended_devices(saved_ignore_suspended_devices);
+	}
 
 	dm_list_iterate_items(idl, &lp.idls) {
 		poll_ret = _lvconvert_poll_by_id(cmd, idl->id,

@@ -121,6 +121,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 			       process_single_pvseg_fn_t process_single_pvseg);
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
+		    const char *one_vgname, const char *one_lvname,
 		    uint32_t flags, struct processing_handle *handle,
 		    process_single_lv_fn_t process_single_lv);
 

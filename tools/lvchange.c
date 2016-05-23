@@ -1330,7 +1330,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 			cmd->lockd_vg_enforce_sh = 1;
 	}
 
-	return process_each_lv(cmd, argc, argv,
+	return process_each_lv(cmd, argc, argv, NULL, NULL,
 			       update ? READ_FOR_UPDATE : 0, NULL,
 			       &_lvchange_single);
 }
