@@ -2845,7 +2845,7 @@ static int _copypercent_disp(struct dm_report *rh,
 	struct lv_status_cache *status;
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
-	if (((lv_is_raid(lv) && lv_raid_percent(lv, &percent)) ||
+	if (((lv_is_raid(lv) && !seg_is_any_raid0(first_seg(lv)) && lv_raid_percent(lv, &percent)) ||
 	     (lv_is_mirror(lv) && lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
 	    (percent != DM_PERCENT_INVALID)) {
 		percent = copy_percent(lv);

@@ -606,7 +606,14 @@ would use 3 devices for striped logical volumes,
 RAID 4/5/6 will stripe across all PVs in the volume group or
 all of the PVs specified if the \fB\-i\fP
 argument is omitted.
-.
+Two implementations of basic striping are available in the kernel.
+The original device-mapper implementation is the default and should
+normally be used.  The alternative implementation using MD, available
+since version 1.7 of the RAID device-mapper kernel target (kernel
+version 4.2) is provided to facilitate the development of new RAID
+features.  It may be accessed with \fB--type raid0\fP, but is best
+avoided at present because of assorted restrictions on resizing and converting
+such devices.
 .HP
 .BR \-I | \-\-stripesize
 .IR StripeSize
@@ -649,6 +656,7 @@ Supported types are:
 .BR error ,
 .BR linear ,
 .BR mirror,
+.BR raid0 ,
 .BR raid1 ,
 .BR raid4 ,
 .BR raid5_la ,
@@ -683,7 +691,7 @@ is selected from combination of options:
 (snapshot or thin),
 .BR \-i | \-\-stripes
 (striped).
-Default segment type is \fBlinear\fP.
+The default segment type is \fBlinear\fP.
 .
 .HP
 .BR \-V | \-\-virtualsize

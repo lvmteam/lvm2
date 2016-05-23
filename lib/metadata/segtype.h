@@ -47,6 +47,7 @@ struct dev_manager;
 #define SEG_ONLY_EXCLUSIVE	0x0000000000010000ULL /* In cluster only exlusive activation */
 #define SEG_CAN_ERROR_WHEN_FULL	0x0000000000020000ULL
 
+#define SEG_RAID0		0x0000000000040000ULL
 #define SEG_RAID1		0x0000000000100000ULL
 #define SEG_RAID10		0x0000000000200000ULL
 #define SEG_RAID4		0x0000000000400000ULL
@@ -100,6 +101,8 @@ struct dev_manager;
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define segtype_is_mirror(segtype)	((segtype)->flags & SEG_MIRROR ? 1 : 0)
 #define segtype_is_pool(segtype)	((segtype)->flags & (SEG_CACHE_POOL | SEG_THIN_POOL)  ? 1 : 0)
+#define segtype_is_raid0(segtype)	((segtype)->flags & SEG_RAID0 ? 1 : 0)
+#define segtype_is_any_raid0(segtype)	((segtype)->flags & SEG_RAID0 ? 1 : 0)
 #define segtype_is_raid(segtype)	((segtype)->flags & SEG_RAID ? 1 : 0)
 #define segtype_is_raid1(segtype)	((segtype)->flags & SEG_RAID1 ? 1 : 0)
 #define segtype_is_raid4(segtype)	((segtype)->flags & SEG_RAID4 ? 1 : 0)
@@ -130,6 +133,8 @@ struct dev_manager;
 #define seg_is_mirror(seg)	segtype_is_mirror((seg)->segtype)
 #define seg_is_mirrored(seg)	segtype_is_mirrored((seg)->segtype)
 #define seg_is_pool(seg)	segtype_is_pool((seg)->segtype)
+#define seg_is_raid0(seg)	segtype_is_raid0((seg)->segtype)
+#define seg_is_any_raid0(seg)	segtype_is_any_raid0((seg)->segtype)
 #define seg_is_raid(seg)	segtype_is_raid((seg)->segtype)
 #define seg_is_raid1(seg)	segtype_is_raid1((seg)->segtype)
 #define seg_is_raid4(seg)	segtype_is_raid4((seg)->segtype)

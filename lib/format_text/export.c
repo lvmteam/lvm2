@@ -621,6 +621,7 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 			     (s == seg->area_count - 1) ? "" : ",");
 			break;
 		case AREA_LV:
+			/* FIXME This helper code should be target-independent! Check for metadata LV property. */
 			if (!(seg->status & RAID)) {
 				outf(f, "\"%s\", %u%s",
 				     seg_lv(seg, s)->name,
@@ -630,15 +631,19 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 			}
 
 			/* RAID devices are laid-out in metadata/data pairs */
+			/* FIXME Validation should be elsewhere, not here! */
 			if (!lv_is_raid_image(seg_lv(seg, s)) ||
-			    !lv_is_raid_metadata(seg_metalv(seg, s))) {
+			    (seg->meta_areas && seg_metalv(seg, s) && !lv_is_raid_metadata(seg_metalv(seg, s)))) {
 				log_error("RAID segment has non-RAID areas");
 				return 0;
 			}
 
-			outf(f, "\"%s\", \"%s\"%s",
-			     seg_metalv(seg, s)->name, seg_lv(seg, s)->name,
-			     (s == seg->area_count - 1) ? "" : ",");
+			if (seg->meta_areas && seg_metalv(seg,s))
+				outf(f, "\"%s\", \"%s\"%s",
+				     (seg->meta_areas && seg_metalv(seg, s)) ? seg_metalv(seg, s)->name : "",
+				     seg_lv(seg, s)->name, (s == seg->area_count - 1) ? "" : ",");
+			else
+				outf(f, "\"%s\"%s", seg_lv(seg, s)->name, (s == seg->area_count - 1) ? "" : ",");
 
 			break;
 		case AREA_UNASSIGNED:

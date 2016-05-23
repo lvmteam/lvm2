@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Add basic support for --type raid0 using md.
   Add support for lvchange --cachemode for cached LV.
   Fix liblvm2app error handling when setting up context.
   Delay liblvm2app init in python code until it is needed.

@@ -33,8 +33,10 @@ static void _raid_display(const struct lv_segment *seg)
 		display_stripe(seg, s, "    ");
 	}
 
-	for (s = 0; s < seg->area_count; ++s)
-		log_print("  Raid Metadata LV%2d\t%s", s, seg_metalv(seg, s)->name);
+	if (seg->meta_areas) {
+		for (s = 0; s < seg->area_count; ++s)
+			log_print("  Raid Metadata LV%2d\t%s", s, seg_metalv(seg, s)->name);
+	}
 
 	log_print(" ");
 }
@@ -42,11 +44,26 @@ static void _raid_display(const struct lv_segment *seg)
 static int _raid_text_import_area_count(const struct dm_config_node *sn,
 					uint32_t *area_count)
 {
-	if (!dm_config_get_uint32(sn, "device_count", area_count)) {
-		log_error("Couldn't read 'device_count' for "
+	uint32_t stripe_count = 0, device_count = 0;
+	int stripe_count_found, device_count_found;
+
+	device_count_found = dm_config_get_uint32(sn, "device_count", &device_count);
+	stripe_count_found = dm_config_get_uint32(sn, "stripe_count", &stripe_count);
+
+	if (!device_count_found && !stripe_count_found) {
+		log_error("Couldn't read 'device_count' or 'stripe_count' for "
 			  "segment '%s'.", dm_config_parent_name(sn));
 		return 0;
 	}
+
+	if (device_count_found && stripe_count_found) {
+		log_error("Only one of 'device_count' and 'stripe_count' allowed for "
+			  "segment '%s'.", dm_config_parent_name(sn));
+		return 0;
+	}
+
+	*area_count = stripe_count + device_count;
+
 	return 1;
 }
 
@@ -69,22 +86,25 @@ static int _raid_text_import_areas(struct lv_segment *seg,
 			return 0;
 		}
 
-		if (!cv->next) {
+		/* Metadata device comes first. */
+		if (!seg_is_raid0(seg)) {
+			if (!(lv = find_lv(seg->lv->vg, cv->v.str))) {
+				log_error("Couldn't find volume '%s' for segment '%s'.",
+					  cv->v.str ? : "NULL", seg_name);
+				return 0;
+			}
+
+			if (!set_lv_segment_area_lv(seg, s, lv, 0, RAID_META))
+				return_0;
+			cv = cv->next;
+		}
+
+		if (!cv) {
 			log_error("Missing data device in areas array for segment %s.", seg_name);
 			return 0;
 		}
 
-		/* Metadata device comes first */
-		if (!(lv = find_lv(seg->lv->vg, cv->v.str))) {
-			log_error("Couldn't find volume '%s' for segment '%s'.",
-				  cv->v.str ? : "NULL", seg_name);
-			return 0;
-		}
-		if (!set_lv_segment_area_lv(seg, s, lv, 0, RAID_META))
-			return_0;
-
 		/* Data device comes second */
-		cv = cv->next;
 		if (!(lv = find_lv(seg->lv->vg, cv->v.str))) {
 			log_error("Couldn't find volume '%s' for segment '%s'.",
 				  cv->v.str ? : "NULL", seg_name);
@@ -133,7 +153,7 @@ static int _raid_text_import(struct lv_segment *seg,
 		}
 	}
 
-	if (!dm_config_get_list(sn, "raids", &cv)) {
+	if (!dm_config_get_list(sn, seg_is_any_raid0(seg) ? "raid0_lvs" : "raids", &cv)) {
 		log_error("Couldn't find RAID array for "
 			  "segment %s of logical volume %s.",
 			  dm_config_parent_name(sn), seg->lv->name);
@@ -145,18 +165,31 @@ static int _raid_text_import(struct lv_segment *seg,
 		return 0;
 	}
 
+	if (seg_is_any_raid0(seg))
+		seg->area_len /= seg->area_count;
 	seg->status |= RAID;
 
 	return 1;
 }
 
-static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
+static int _raid_text_export_raid0(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "device_count = %u", seg->area_count);
-	if (seg->region_size)
-		outf(f, "region_size = %" PRIu32, seg->region_size);
+	outf(f, "stripe_count = %u", seg->area_count);
+
 	if (seg->stripe_size)
 		outf(f, "stripe_size = %" PRIu32, seg->stripe_size);
+
+	return out_areas(f, seg, "raid0_lv");
+}
+
+static int _raid_text_export_raid(const struct lv_segment *seg, struct formatter *f)
+{
+	outf(f, "device_count = %u", seg->area_count);
+
+	if (seg->stripe_size)
+		outf(f, "stripe_size = %" PRIu32, seg->stripe_size);
+	if (seg->region_size)
+		outf(f, "region_size = %" PRIu32, seg->region_size);
 	if (seg->writebehind)
 		outf(f, "writebehind = %" PRIu32, seg->writebehind);
 	if (seg->min_recovery_rate)
@@ -165,6 +198,14 @@ static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
 		outf(f, "max_recovery_rate = %" PRIu32, seg->max_recovery_rate);
 
 	return out_areas(f, seg, "raid");
+}
+
+static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
+{
+	if (seg_is_any_raid0(seg))
+		return _raid_text_export_raid0(seg, f);
+
+	return _raid_text_export_raid(seg, f);
 }
 
 static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
@@ -181,6 +222,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	uint64_t rebuilds = 0;
 	uint64_t writemostly = 0;
 	struct dm_tree_node_raid_params params;
+	int raid0 = seg_is_any_raid0(seg);
 
 	memset(&params, 0, sizeof(params));
 
@@ -200,24 +242,32 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		return 0;
 	}
 
-	if (!seg->region_size) {
-		log_error("Missing region size for mirror segment.");
-		return 0;
+	if (!raid0) {
+		if (!seg->region_size) {
+			log_error("Missing region size for mirror segment.");
+			return 0;
+		}
+
+		for (s = 0; s < seg->area_count; s++)
+			if (seg_lv(seg, s)->status & LV_REBUILD)
+				rebuilds |= 1ULL << s;
+
+		for (s = 0; s < seg->area_count; s++)
+			if (seg_lv(seg, s)->status & LV_WRITEMOSTLY)
+				writemostly |= 1ULL << s;
+
+		if (mirror_in_sync())
+			flags = DM_NOSYNC;
 	}
 
-	for (s = 0; s < seg->area_count; s++)
-		if (seg_lv(seg, s)->status & LV_REBUILD)
-			rebuilds |= 1ULL << s;
-
-	for (s = 0; s < seg->area_count; s++)
-		if (seg_lv(seg, s)->status & LV_WRITEMOSTLY)
-			writemostly |= 1ULL << s;
-
-	if (mirror_in_sync())
-		flags = DM_NOSYNC;
-
 	params.raid_type = lvseg_name(seg);
-	if (seg->segtype->parity_devs) {
+	params.stripe_size = seg->stripe_size;
+	params.flags = flags;
+
+	if (raid0) {
+		params.mirrors = 1;
+		params.stripes = seg->area_count;
+	} else if (seg->segtype->parity_devs) {
 		/* RAID 4/5/6 */
 		params.mirrors = 1;
 		params.stripes = seg->area_count - seg->segtype->parity_devs;
@@ -231,13 +281,14 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		params.stripes = 1;
 		params.writebehind = seg->writebehind;
 	}
-	params.region_size = seg->region_size;
-	params.stripe_size = seg->stripe_size;
-	params.rebuilds = rebuilds;
-	params.writemostly = writemostly;
-	params.min_recovery_rate = seg->min_recovery_rate;
-	params.max_recovery_rate = seg->max_recovery_rate;
-	params.flags = flags;
+
+	if (!raid0) {
+		params.region_size = seg->region_size;
+		params.rebuilds = rebuilds;
+		params.writemostly = writemostly;
+		params.min_recovery_rate = seg->min_recovery_rate;
+		params.max_recovery_rate = seg->max_recovery_rate;
+	}
 
 	if (!dm_tree_node_add_raid_target_with_params(node, len, &params))
 		return_0;
@@ -418,6 +469,7 @@ static const struct raid_type {
 	unsigned parity;
 	uint64_t extra_flags;
 } _raid_types[] = {
+	{ SEG_TYPE_NAME_RAID0,    0, SEG_RAID0 | SEG_AREAS_STRIPED },
 	{ SEG_TYPE_NAME_RAID1,    0, SEG_RAID1 | SEG_AREAS_MIRRORED },
 	{ SEG_TYPE_NAME_RAID10,   0, SEG_RAID10 | SEG_AREAS_MIRRORED },
 	{ SEG_TYPE_NAME_RAID4,    1, SEG_RAID4 },

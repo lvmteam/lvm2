@@ -42,6 +42,7 @@ enum {
 	SEG_ZERO,
 	SEG_THIN_POOL,
 	SEG_THIN,
+	SEG_RAID0,
 	SEG_RAID1,
 	SEG_RAID10,
 	SEG_RAID4,
@@ -74,6 +75,7 @@ static const struct {
 	{ SEG_ZERO, "zero"},
 	{ SEG_THIN_POOL, "thin-pool"},
 	{ SEG_THIN, "thin"},
+	{ SEG_RAID0, "raid0"},
 	{ SEG_RAID1, "raid1"},
 	{ SEG_RAID10, "raid10"},
 	{ SEG_RAID4, "raid4"},
@@ -2131,6 +2133,7 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 					EMIT_PARAMS(*pos, "%s", synctype);
 			}
 			break;
+		case SEG_RAID0:
 		case SEG_RAID1:
 		case SEG_RAID10:
 		case SEG_RAID4:
@@ -2572,6 +2575,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			    seg->iv_offset != DM_CRYPT_IV_DEFAULT ?
 			    seg->iv_offset : *seg_start);
 		break;
+	case SEG_RAID0:
 	case SEG_RAID1:
 	case SEG_RAID10:
 	case SEG_RAID4:
@@ -3848,6 +3852,7 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 
 	switch (seg->type) {
+	case SEG_RAID0:
 	case SEG_RAID1:
 	case SEG_RAID4:
 	case SEG_RAID5_LA:

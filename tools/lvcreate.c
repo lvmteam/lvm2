@@ -987,6 +987,12 @@ static int _lvcreate_params(struct cmd_context *cmd,
 			return 0;
 		}
 
+		if (segtype_is_any_raid0(lp->segtype) &&
+		    !(lp->target_attr & RAID_FEATURE_RAID0)) {
+			log_error("RAID module does not support RAID0.");
+			return 0;
+		}
+
 		if (segtype_is_raid10(lp->segtype) && !(lp->target_attr & RAID_FEATURE_RAID10)) {
 			log_error("RAID module does not support RAID10.");
 			return 0;
@@ -1209,17 +1215,22 @@ static int _check_raid_parameters(struct volume_group *vg,
 	unsigned devs = lcp->pv_count ? : dm_list_size(&vg->pvs);
 	struct cmd_context *cmd = vg->cmd;
 
-	/*
-	 * If number of devices was not supplied, we can infer from
-	 * the PVs given.
-	 */
-	if (!seg_is_mirrored(lp)) {
+	if (!seg_is_mirrored(lp) && !lp->stripe_size)
+		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
+
+	if (seg_is_any_raid0(lp)) {
+		if (lp->stripes < 2) {
+			log_error("Segment type 'raid0' requires 2 or more stripes.");
+			return 0;
+		}
+	} else if (!seg_is_mirrored(lp)) {
+		/*
+		 * If number of devices was not supplied, we can infer from
+		 * the PVs given.
+		 */
 		if (!arg_count(cmd, stripes_ARG) &&
 		    (devs > 2 * lp->segtype->parity_devs))
 			lp->stripes = devs - lp->segtype->parity_devs;
-
-		if (!lp->stripe_size)
-			lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
 
 		if (lp->stripes <= lp->segtype->parity_devs) {
 			log_error("Number of stripes must be at least %d for %s",

@@ -114,6 +114,7 @@ enum {
 	LV_TYPE_DATA,
 	LV_TYPE_SPARE,
 	LV_TYPE_VIRTUAL,
+	LV_TYPE_RAID0,
 	LV_TYPE_RAID1,
 	LV_TYPE_RAID10,
 	LV_TYPE_RAID4,
@@ -162,6 +163,7 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_DATA] =				"data",
 	[LV_TYPE_SPARE] =				"spare",
 	[LV_TYPE_VIRTUAL] =				"virtual",
+	[LV_TYPE_RAID0] =				SEG_TYPE_NAME_RAID0,
 	[LV_TYPE_RAID1] =				SEG_TYPE_NAME_RAID1,
 	[LV_TYPE_RAID10] =				SEG_TYPE_NAME_RAID10,
 	[LV_TYPE_RAID4] =				SEG_TYPE_NAME_RAID4,
@@ -256,7 +258,10 @@ static int _lv_layout_and_role_raid(struct dm_pool *mem,
 
 	segtype = first_seg(lv)->segtype;
 
-	if (segtype_is_raid1(segtype)) {
+	if (segtype_is_raid0(segtype)) {
+		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID0]))
+			goto_bad;
+	} else if (segtype_is_raid1(segtype)) {
 		if (!str_list_add_no_dup_check(mem, layout, _lv_type_names[LV_TYPE_RAID1]))
 			goto_bad;
 	} else if (segtype_is_raid10(segtype)) {
@@ -860,7 +865,7 @@ dm_percent_t copy_percent(const struct logical_volume *lv)
 		denominator += seg->area_len;
 
 		/* FIXME Generalise name of 'extents_copied' field */
-		if ((seg_is_raid(seg) || seg_is_mirrored(seg)) &&
+		if (((seg_is_raid(seg) && !seg_is_any_raid0(seg)) || seg_is_mirrored(seg)) &&
 		    (seg->area_count > 1))
 			numerator += seg->extents_copied;
 		else
@@ -3751,7 +3756,7 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 			return_0;
 
 		/* Metadata LVs for raid */
-		if (segtype_is_raid(segtype)) {
+		if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype)) {
 			if (dm_snprintf(img_name, sizeof(img_name), "%s_rmeta_%u",
 					lv->name, i) < 0)
 				goto_bad;
@@ -3787,6 +3792,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	struct lv_segment *seg = first_seg(lv);
 	uint32_t fa, s;
 	int clear_metadata = 0;
+	uint32_t area_multiple = 1;
 
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
@@ -3797,13 +3803,14 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	 * 'stripes' and 'stripe_size' parameters meaningless.
 	 */
 	if (seg_is_raid(seg)) {
+		area_multiple = _calc_area_multiple(seg->segtype, seg->area_count, 0);
 		stripes = 1;
 		stripe_size = 0;
 	}
 
 	for (fa = first_area, s = 0; s < seg->area_count; s++) {
 		if (is_temporary_mirror_layer(seg_lv(seg, s))) {
-			if (!_lv_extend_layered_lv(ah, seg_lv(seg, s), extents,
+			if (!_lv_extend_layered_lv(ah, seg_lv(seg, s), extents / area_multiple,
 						   fa, stripes, stripe_size))
 				return_0;
 			fa += lv_mirror_count(seg_lv(seg, s));
@@ -3819,7 +3826,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		}
 
 		/* Extend metadata LVs only on initial creation */
-		if (seg_is_raid(seg) && !lv->le_count) {
+		if (seg_is_raid(seg) && !seg_is_raid0(seg) && !lv->le_count) {
 			if (!seg->meta_areas) {
 				log_error("No meta_areas for RAID type");
 				return 0;
@@ -3854,6 +3861,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		/*
 		 * We must clear the metadata areas upon creation.
 		 */
+		/* FIXME VG is not in a fully-consistent state here and should not be committed! */
 		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 			return_0;
 
@@ -3898,7 +3906,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		}
 	}
 
-	seg->area_len += extents;
+	seg->area_len += extents / area_multiple;
 	seg->len += extents;
 
 	if (!_setup_lv_size(lv, lv->le_count + extents))
@@ -3953,7 +3961,7 @@ int lv_extend(struct logical_volume *lv,
 		 */
 		/* FIXME Support striped metadata pool */
 		log_count = 1;
-	} else if (segtype_is_raid(segtype) && !lv->le_count)
+	} else if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype) && !lv->le_count)
 		log_count = mirrors * stripes;
 	/* FIXME log_count should be 1 for mirrors */
 
@@ -3963,7 +3971,7 @@ int lv_extend(struct logical_volume *lv,
 		return_0;
 
 	new_extents = ah->new_extents;
-	if (segtype_is_raid(segtype))
+	if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
 		new_extents -= ah->log_len * ah->area_multiple;
 
 	if (segtype_is_pool(segtype)) {
@@ -7078,7 +7086,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!activation()) {
 		if (seg_is_cache(lp) ||
 		    seg_is_mirror(lp) ||
-		    seg_is_raid(lp) ||
+		    (seg_is_raid(lp) && !seg_is_raid0(lp)) ||
 		    seg_is_thin(lp) ||
 		    lp->snapshot) {
 			/*
@@ -7256,7 +7264,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		/* FIXME Eventually support raid/mirrors with -m */
 		if (!(create_segtype = get_segtype_from_string(vg->cmd, SEG_TYPE_NAME_STRIPED)))
 			return_0;
-	} else if (seg_is_mirrored(lp) || seg_is_raid(lp)) {
+	} else if (seg_is_mirrored(lp) || (seg_is_raid(lp) && !seg_is_any_raid0(lp))) {
 		if (is_change_activating(lp->activate) && (lp->activate != CHANGE_AEY) &&
 		    vg_is_clustered(vg) && seg_is_mirrored(lp) && !seg_is_raid(lp) &&
 		    !cluster_mirror_is_available(vg->cmd)) {
@@ -7389,7 +7397,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (!archive(vg))
 		return_NULL;
 
-
 	if (pool_lv && segtype_is_thin_volume(create_segtype)) {
 		/* Ensure all stacked messages are submitted */
 		if ((pool_is_active(pool_lv) || is_change_activating(lp->activate)) &&
@@ -7444,7 +7451,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			stack;
 			goto revert_new_lv;
 		}
-	} else if (lv_is_raid(lv)) {
+	} else if (lv_is_raid(lv) && !seg_is_any_raid0(first_seg(lv))) {
 		first_seg(lv)->min_recovery_rate = lp->min_recovery_rate;
 		first_seg(lv)->max_recovery_rate = lp->max_recovery_rate;
 	} else if (lv_is_thin_pool(lv)) {
