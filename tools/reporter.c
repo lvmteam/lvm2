@@ -628,6 +628,9 @@ static void _check_pv_list(struct cmd_context *cmd, struct report_args *args)
 	unsigned i;
 	int rescan_done = 0;
 
+	if (!args->argv)
+		return;
+
 	args->args_are_pvs = (args->report_type == PVS ||
 			     args->report_type == LABEL ||
 			     args->report_type == PVSEGS) ? 1 : 0;
@@ -898,6 +901,103 @@ out:
 	return r;
 }
 
+static int _config_report(struct cmd_context *cmd, struct report_args *args)
+{
+	args->aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
+	args->buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);
+	args->headings = find_config_tree_bool(cmd, report_headings_CFG, NULL);
+	args->separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
+	args->field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG, NULL);
+	args->quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
+	args->columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG, NULL);
+
+	/* Check PV specifics and do extra changes/actions if needed. */
+	_check_pv_list(cmd, args);
+
+	switch (args->report_type) {
+		case DEVTYPES:
+			args->keys = find_config_tree_str(cmd, report_devtypes_sort_CFG, NULL);
+			if (!arg_count(cmd, verbose_ARG))
+				args->options = find_config_tree_str(cmd, report_devtypes_cols_CFG, NULL);
+			else
+				args->options = find_config_tree_str(cmd, report_devtypes_cols_verbose_CFG, NULL);
+			break;
+		case LVS:
+			args->keys = find_config_tree_str(cmd, report_lvs_sort_CFG, NULL);
+			if (!arg_count(cmd, verbose_ARG))
+				args->options = find_config_tree_str(cmd, report_lvs_cols_CFG, NULL);
+			else
+				args->options = find_config_tree_str(cmd, report_lvs_cols_verbose_CFG, NULL);
+			break;
+		case VGS:
+			args->keys = find_config_tree_str(cmd, report_vgs_sort_CFG, NULL);
+			if (!arg_count(cmd, verbose_ARG))
+				args->options = find_config_tree_str(cmd, report_vgs_cols_CFG, NULL);
+			else
+				args->options = find_config_tree_str(cmd, report_vgs_cols_verbose_CFG, NULL);
+			break;
+		case LABEL:
+		case PVS:
+			args->keys = find_config_tree_str(cmd, report_pvs_sort_CFG, NULL);
+			if (!arg_count(cmd, verbose_ARG))
+				args->options = find_config_tree_str(cmd, report_pvs_cols_CFG, NULL);
+			else
+				args->options = find_config_tree_str(cmd, report_pvs_cols_verbose_CFG, NULL);
+			break;
+		case SEGS:
+			args->keys = find_config_tree_str(cmd, report_segs_sort_CFG, NULL);
+			if (!arg_count(cmd, verbose_ARG))
+				args->options = find_config_tree_str(cmd, report_segs_cols_CFG, NULL);
+			else
+				args->options = find_config_tree_str(cmd, report_segs_cols_verbose_CFG, NULL);
+			break;
+		case PVSEGS:
+			args->keys = find_config_tree_str(cmd, report_pvsegs_sort_CFG, NULL);
+			if (!arg_count(cmd, verbose_ARG))
+				args->options = find_config_tree_str(cmd, report_pvsegs_cols_CFG, NULL);
+			else
+				args->options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
+			break;
+		default:
+			log_error(INTERNAL_ERROR "_report: unknown report type.");
+			return 0;
+	}
+
+	/* If -o supplied use it, else use default for report_type */
+	if (arg_count(cmd, options_ARG) &&
+	    (_get_report_options(cmd, args) != ECMD_PROCESSED))
+		return_0;
+
+	if (!args->fields_to_compact)
+		args->fields_to_compact = find_config_tree_str_allow_empty(cmd, report_compact_output_cols_CFG, NULL);
+
+	/* -O overrides default sort settings */
+	args->keys = arg_str_value(cmd, sort_ARG, args->keys);
+
+	args->separator = arg_str_value(cmd, separator_ARG, args->separator);
+	if (arg_count(cmd, separator_ARG))
+		args->aligned = 0;
+	if (arg_count(cmd, aligned_ARG))
+		args->aligned = 1;
+	if (arg_count(cmd, unbuffered_ARG) && !arg_count(cmd, sort_ARG))
+		args->buffered = 0;
+	if (arg_count(cmd, noheadings_ARG))
+		args->headings = 0;
+	if (arg_count(cmd, nameprefixes_ARG)) {
+		args->aligned = 0;
+		args->field_prefixes = 1;
+	}
+	if (arg_count(cmd, unquoted_ARG))
+		args->quoted = 0;
+	if (arg_count(cmd, rows_ARG))
+		args->columns_as_rows = 1;
+
+	if (arg_count(cmd, select_ARG))
+		args->selection = arg_str_value(cmd, select_ARG, NULL);
+
+	return 1;
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t report_type)
 {
 	struct report_args args = {0};
@@ -914,97 +1014,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 	args.argv = argv;
 	args.report_type = report_type;
 
-	args.aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
-	args.buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);
-	args.headings = find_config_tree_bool(cmd, report_headings_CFG, NULL);
-	args.separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
-	args.field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG, NULL);
-	args.quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
-	args.columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG, NULL);
-
-	/* Check PV specifics and do extra changes/actions if needed. */
-	_check_pv_list(cmd, &args);
-
-	switch (args.report_type) {
-		case DEVTYPES:
-			args.keys = find_config_tree_str(cmd, report_devtypes_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
-				args.options = find_config_tree_str(cmd, report_devtypes_cols_CFG, NULL);
-			else
-				args.options = find_config_tree_str(cmd, report_devtypes_cols_verbose_CFG, NULL);
-			break;
-		case LVS:
-			args.keys = find_config_tree_str(cmd, report_lvs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
-				args.options = find_config_tree_str(cmd, report_lvs_cols_CFG, NULL);
-			else
-				args.options = find_config_tree_str(cmd, report_lvs_cols_verbose_CFG, NULL);
-			break;
-		case VGS:
-			args.keys = find_config_tree_str(cmd, report_vgs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
-				args.options = find_config_tree_str(cmd, report_vgs_cols_CFG, NULL);
-			else
-				args.options = find_config_tree_str(cmd, report_vgs_cols_verbose_CFG, NULL);
-			break;
-		case LABEL:
-		case PVS:
-			args.keys = find_config_tree_str(cmd, report_pvs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
-				args.options = find_config_tree_str(cmd, report_pvs_cols_CFG, NULL);
-			else
-				args.options = find_config_tree_str(cmd, report_pvs_cols_verbose_CFG, NULL);
-			break;
-		case SEGS:
-			args.keys = find_config_tree_str(cmd, report_segs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
-				args.options = find_config_tree_str(cmd, report_segs_cols_CFG, NULL);
-			else
-				args.options = find_config_tree_str(cmd, report_segs_cols_verbose_CFG, NULL);
-			break;
-		case PVSEGS:
-			args.keys = find_config_tree_str(cmd, report_pvsegs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
-				args.options = find_config_tree_str(cmd, report_pvsegs_cols_CFG, NULL);
-			else
-				args.options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
-			break;
-		default:
-			log_error(INTERNAL_ERROR "_report: unknown report type.");
-			return 0;
-	}
-
-	/* If -o supplied use it, else use default for report_type */
-	if (arg_count(cmd, options_ARG) &&
-	    (_get_report_options(cmd, &args) != ECMD_PROCESSED))
-		return_0;
-
-	if (!args.fields_to_compact)
-		args.fields_to_compact = find_config_tree_str_allow_empty(cmd, report_compact_output_cols_CFG, NULL);
-
-	/* -O overrides default sort settings */
-	args.keys = arg_str_value(cmd, sort_ARG, args.keys);
-
-	args.separator = arg_str_value(cmd, separator_ARG, args.separator);
-	if (arg_count(cmd, separator_ARG))
-		args.aligned = 0;
-	if (arg_count(cmd, aligned_ARG))
-		args.aligned = 1;
-	if (arg_count(cmd, unbuffered_ARG) && !arg_count(cmd, sort_ARG))
-		args.buffered = 0;
-	if (arg_count(cmd, noheadings_ARG))
-		args.headings = 0;
-	if (arg_count(cmd, nameprefixes_ARG)) {
-		args.aligned = 0;
-		args.field_prefixes = 1;
-	}
-	if (arg_count(cmd, unquoted_ARG))
-		args.quoted = 0;
-	if (arg_count(cmd, rows_ARG))
-		args.columns_as_rows = 1;
-
-	if (arg_count(cmd, select_ARG))
-		args.selection = arg_str_value(cmd, select_ARG, NULL);
+	if (!_config_report(cmd, &args))
+		return_ECMD_FAILED;
 
 	return _do_report(cmd, &args);
 }
