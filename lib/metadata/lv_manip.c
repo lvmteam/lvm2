@@ -3805,7 +3805,8 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	if (seg_is_raid(seg)) {
 		stripes = 1;
 		stripe_size = 0;
-		area_multiple = _calc_area_multiple(seg->segtype, seg->area_count, stripes);
+		if (seg_is_raid0(seg))
+			area_multiple = seg->area_count;
 	}
 
 	for (fa = first_area, s = 0; s < seg->area_count; s++) {
