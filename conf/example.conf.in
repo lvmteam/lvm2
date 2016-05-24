@@ -1567,6 +1567,16 @@ activation {
 # This configuration section has an automatic default value.
 # report {
 
+	# Configuration option report/output_format.
+	# Format of LVM2 command report output.
+	# Accepted values:
+	#   basic
+	#     Original format with columns and rows.
+	#   json
+	#     JSON format.
+	# This configuration option has an automatic default value.
+	# output_format = "basic"
+
 	# Configuration option report/compact_output.
 	# Do not print empty values for all report fields.
 	# If enabled, all fields that don't have a value set for any of the

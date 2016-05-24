@@ -207,6 +207,7 @@
 #define DEFAULT_REP_LIST_ITEM_SEPARATOR ","
 #define DEFAULT_TIME_FORMAT "%Y-%m-%d %T %z"
 
+#define DEFAULT_REP_OUTPUT_FORMAT "basic"
 #define DEFAULT_COMPACT_OUTPUT_COLS ""
 
 #define DEFAULT_LVS_COLS "lv_name,vg_name,lv_attr,lv_size,pool_lv,origin,data_percent,metadata_percent,move_pv,mirror_log,copy_percent,convert_lv"

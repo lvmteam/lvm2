@@ -1070,7 +1070,9 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 		       struct dm_report_group **report_group, struct dm_report **log_rh)
 {
 	static char log_report_name[] = "log";
-	const char *format_str = arg_str_value(cmd, reportformat_ARG, NULL);
+	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
+	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
+	const char *format_str = arg_str_value(cmd, reportformat_ARG, config_set ? config_format_str : NULL);
 	struct report_args args = {0};
 	struct dm_report_group *new_report_group;
 	struct dm_report *tmp_log_rh = NULL;
