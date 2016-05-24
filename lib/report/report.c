@@ -2849,7 +2849,7 @@ static int _copypercent_disp(struct dm_report *rh,
 	     (lv_is_mirror(lv) && lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
 	    (percent != DM_PERCENT_INVALID)) {
 		percent = copy_percent(lv);
-	} else if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+	} else if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
 		if (lv_cache_status(lv, &status)) {
 			percent = status->dirty_usage;
 			dm_pool_destroy(status->mem);
@@ -2947,7 +2947,7 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 		(void) lv_thin_pool_percent(lv, 0, &percent);
 	else if (lv_is_thin_volume(lv))
 		(void) lv_thin_percent(lv, 0, &percent);
-	else if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+	else if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
 		if (lv_cache_status(lv, &status)) {
 			percent = status->data_usage;
 			dm_pool_destroy(status->mem);
@@ -2970,7 +2970,7 @@ static int _metadatapercent_disp(struct dm_report *rh,
 		(void) lv_thin_pool_percent(lv, 1, &percent);
 	else if (lv_is_thin_volume(lv))
 		(void) lv_thin_percent(lv, 1, &percent);
-	else if (lv_is_cache(lv) || lv_is_cache_pool(lv)) {
+	else if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
 		if (lv_cache_status(lv, &status)) {
 			percent = status->metadata_usage;
 			dm_pool_destroy(status->mem);
