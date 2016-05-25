@@ -345,6 +345,88 @@ uint64_t lvseg_size(const struct lv_segment *seg)
 	return (uint64_t) seg->len * seg->lv->vg->extent_size;
 }
 
+dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_and_seg_status *lvdm,
+						    percent_get_t type)
+{
+	dm_percent_t p;
+	uint64_t csize;
+	const struct lv_segment *seg;
+	const struct lv_seg_status *s = &lvdm->seg_status;
+
+	/*
+	 * TODO:
+	 *   Later move to segment methods, instead of using single place.
+	 *   Also handle logic for mirror segments and it total_* summing
+	 *   Esentially rework  _target_percent API for segtype.
+	 */
+	switch (s->type) {
+	case SEG_STATUS_CACHE:
+		if (s->cache->fail || s->cache->error)
+			p = DM_PERCENT_INVALID;
+		else {
+			switch (type) {
+			case PERCENT_GET_DIRTY:
+				p = dm_make_percent(s->cache->dirty_blocks,
+						    s->cache->used_blocks);
+				break;
+			case PERCENT_GET_METADATA:
+				p = dm_make_percent(s->cache->metadata_used_blocks,
+						    s->cache->metadata_total_blocks);
+				break;
+			default:
+				p = dm_make_percent(s->cache->used_blocks,
+						    s->cache->total_blocks);
+			}
+		}
+		break;
+	case SEG_STATUS_SNAPSHOT:
+		if (s->snapshot->invalid || s->snapshot->merge_failed)
+			p = DM_PERCENT_INVALID;
+		else if (s->snapshot->has_metadata_sectors &&
+			 (s->snapshot->used_sectors == s->snapshot->metadata_sectors))
+			p = DM_PERCENT_0;
+		else
+			p = dm_make_percent(s->snapshot->used_sectors,
+					    s->snapshot->total_sectors);
+		break;
+	case SEG_STATUS_THIN_POOL:
+		if (s->thin_pool->fail || s->thin_pool->error)
+			p = DM_PERCENT_INVALID;
+		else if (type == PERCENT_GET_METADATA)
+			p = dm_make_percent(s->thin_pool->used_metadata_blocks,
+					    s->thin_pool->total_metadata_blocks);
+		else
+			p = dm_make_percent(s->thin_pool->used_data_blocks,
+					    s->thin_pool->total_data_blocks);
+		break;
+	case SEG_STATUS_THIN:
+		if (s->thin->fail || (type != PERCENT_GET_DATA))
+			/* TODO: expose highest mapped sector */
+			p = DM_PERCENT_INVALID;
+		else {
+			seg = first_seg(lvdm->lv);
+			/* Pool allocates whole chunk so round-up to nearest one */
+			csize = first_seg(seg->pool_lv)->chunk_size;
+			csize = ((seg->lv->size + csize - 1) / csize) * csize;
+			if (s->thin->mapped_sectors <= csize)
+				p = dm_make_percent(s->thin->mapped_sectors, csize);
+			else {
+				log_warn("WARNING: Thin volume %s maps %s while the size is only %s.",
+					 display_lvname(seg->lv),
+					 display_size(lvdm->lv->vg->cmd, s->thin->mapped_sectors),
+					 display_size(lvdm->lv->vg->cmd, csize));
+				/* Don't show nonsense numbers like i.e. 1000% full */
+				p = DM_PERCENT_100;
+			}
+		}
+		break;
+	default:
+		p = DM_PERCENT_INVALID;
+	}
+
+	return p;
+}
+
 uint32_t lv_kernel_read_ahead(const struct logical_volume *lv)
 {
 	struct lvinfo info;

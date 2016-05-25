@@ -197,4 +197,13 @@ char *lv_profile_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lv_lock_args_dup(struct dm_pool *mem, const struct logical_volume *lv);
 char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm);
 char *lv_time_dup(struct dm_pool *mem, const struct logical_volume *lv, int iso_mode);
+
+typedef enum {
+	PERCENT_GET_DATA = 0,
+	PERCENT_GET_METADATA,
+	PERCENT_GET_DIRTY
+} percent_get_t;
+dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_and_seg_status *lvdm,
+						    percent_get_t type);
+
 #endif /* _LVM_LV_H */
