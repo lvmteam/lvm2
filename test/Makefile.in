@@ -321,7 +321,6 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 	$(LN_S) -f $(abs_top_builddir)/tools/dmsetup lib/dmstats
 	$(LN_S) -f $(abs_top_srcdir)/conf/thin-performance.profile lib/
 	$(LN_S) -f $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
-	$(LN_S) -f $(abs_top_srcdir)/scripts/vgimportclone.sh lib/vgimportclone
 	test "$(srcdir)" = . || for i in $(LIB_LVMLOCKD_CONF); do \
 		$(LN_S) -f $(abs_top_srcdir)/test/lib/$$i lib/; done
 	touch $@
@@ -333,7 +332,7 @@ endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
 	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
-	harness thin-performance.profile fsadm vgimportclone \
+	harness thin-performance.profile fsadm \
 	dm-version-expected version-expected \
 	paths-installed paths-installed-t paths-common paths-common-t)
 

@@ -1358,6 +1358,21 @@ xx(vgimport,
 
    all_ARG, force_ARG, reportformat_ARG, select_ARG, test_ARG)
 
+xx(vgimportclone,
+   "Import a VG from cloned PVs",
+   NO_LVMETAD_AUTOSCAN,
+   "vgimportclone\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[-i|--import]\n"
+   "\t[-n|--basevgname]\n"
+   "\t[-t|--test]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]\n"
+   "\t[PhysicalVolumePath...]\n",
+
+   basevgname_ARG, test_ARG, import_ARG)
+
 xx(vgmerge,
    "Merge volume groups",
    0,

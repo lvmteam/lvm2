@@ -26,6 +26,7 @@ void init_verbose(int level);
 void init_silent(int silent);
 void init_test(int level);
 void init_md_filtering(int level);
+void init_internal_filtering(int level);
 void init_fwraid_filtering(int level);
 void init_pvmove(int level);
 void init_full_scan_done(int level);
@@ -60,6 +61,7 @@ void set_sysfs_dir_path(const char *path);
 
 int test_mode(void);
 int md_filtering(void);
+int internal_filtering(void);
 int fwraid_filtering(void);
 int pvmove_mode(void);
 int full_scan_done(void);

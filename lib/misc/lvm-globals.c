@@ -26,6 +26,7 @@ static int _verbose_level = VERBOSE_BASE_LEVEL;
 static int _silent = 0;
 static int _test = 0;
 static int _md_filtering = 0;
+static int _internal_filtering = 0;
 static int _fwraid_filtering = 0;
 static int _pvmove = 0;
 static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
@@ -77,6 +78,11 @@ void init_test(int level)
 void init_md_filtering(int level)
 {
 	_md_filtering = level;
+}
+
+void init_internal_filtering(int level)
+{
+	_internal_filtering = level;
 }
 
 void init_fwraid_filtering(int level)
@@ -240,6 +246,11 @@ int test_mode(void)
 int md_filtering(void)
 {
 	return _md_filtering;
+}
+
+int internal_filtering(void)
+{
+	return _internal_filtering;
 }
 
 int fwraid_filtering(void)

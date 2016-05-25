@@ -1053,7 +1053,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 8
+#define MAX_FILTERS 9
 
 static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 {
@@ -1077,6 +1077,13 @@ static struct dev_filter *_init_lvmetad_filter_chain(struct cmd_context *cmd)
 		if ((filters[nr_filt] = sysfs_filter_create()))
 			nr_filt++;
 	}
+
+	/* internal filter used by command processing. */
+	if (!(filters[nr_filt] = internal_filter_create())) {
+		log_error("Failed to create internal device filter");
+		goto bad;
+	}
+	nr_filt++;
 
 	/* global regex filter. Optional. */
 	if ((cn = find_config_tree_node(cmd, devices_global_filter_CFG, NULL))) {

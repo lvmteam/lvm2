@@ -31,7 +31,7 @@ endif
 	LVMLIBS = @LVM2APP_LIB@ -ldevmapper
 endif
 
-LVM_SCRIPTS = lvmdump.sh lvmconf.sh vgimportclone.sh
+LVM_SCRIPTS = lvmdump.sh lvmconf.sh
 DM_SCRIPTS =
 
 ifeq ("@FSADM@", "yes")

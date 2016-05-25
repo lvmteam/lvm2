@@ -3306,6 +3306,9 @@ static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 		    !pvl->pv->fmt->ops->pv_needs_rewrite)
 			continue;
 
+		if (_pv_in_pv_list(pvl->pv, &vg->pv_write_list))
+			continue;
+
 		if (!pvl->pv->fmt->ops->pv_needs_rewrite(pvl->pv->fmt, pvl->pv,
 							 &pv_needs_rewrite))
 			return_0;

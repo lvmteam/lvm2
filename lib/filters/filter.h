@@ -32,6 +32,10 @@ struct dev_filter *persistent_filter_create(struct dev_types *dt,
 					    const char *file);
 struct dev_filter *sysfs_filter_create(void);
 
+struct dev_filter *internal_filter_create(void);
+int internal_filter_allow(struct dm_pool *mem, struct device *dev);
+void internal_filter_clear(void);
+
 /*
  * patterns must be an array of strings of the form:
  * [ra]<sep><regex><sep>, eg,
