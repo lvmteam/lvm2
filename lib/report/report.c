@@ -2812,28 +2812,11 @@ static int _snpercent_disp(struct dm_report *rh, struct dm_pool *mem __attribute
 			   struct dm_report_field *field,
 			   const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	dm_percent_t snap_percent;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if ((lv_is_cow(lv) || lv_is_merging_origin(lv)) &&
-	    lv_snapshot_percent(lv, &snap_percent)) {
-		if ((snap_percent != DM_PERCENT_INVALID) &&
-		    (snap_percent != LVM_PERCENT_MERGE_FAILED))
-			return dm_report_field_percent(rh, field, &snap_percent);
+	dm_percent_t percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_DATA);
 
-		if (!lv_is_merging_origin(lv)) {
-			snap_percent = DM_PERCENT_100;
-			return dm_report_field_percent(rh, field, &snap_percent);
-		}
-
-		/*
-		 * on activate merge that hasn't started yet would
-		 * otherwise display incorrect snap% in origin
-		 */
-	}
-
-	snap_percent = DM_PERCENT_INVALID;
-	return dm_report_field_percent(rh, field, &snap_percent);
+	return dm_report_field_percent(rh, field, &percent);
 }
 
 static int _copypercent_disp(struct dm_report *rh,
@@ -2841,20 +2824,20 @@ static int _copypercent_disp(struct dm_report *rh,
 			     struct dm_report_field *field,
 			     const void *data, void *private __attribute__((unused)))
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lv_status_cache *status;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+
+	const struct logical_volume *lv = lvdm->lv;
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
-	if (((lv_is_raid(lv) && !seg_is_any_raid0(first_seg(lv)) && lv_raid_percent(lv, &percent)) ||
-	     (lv_is_mirror(lv) && lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
-	    (percent != DM_PERCENT_INVALID)) {
+	/* TODO: just cache passes through lvseg_percent... */
+	if (lv_is_cache(lv) || lv_is_used_cache_pool(lv))
+		percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_DIRTY);
+	else if (((lv_is_raid(lv) && !seg_is_any_raid0(first_seg(lv)) &&
+		   lv_raid_percent(lv, &percent)) ||
+		  (lv_is_mirror(lv) &&
+		   lv_mirror_percent(lv->vg->cmd, lv, 0, &percent, NULL))) &&
+		 (percent != DM_PERCENT_INVALID))
 		percent = copy_percent(lv);
-	} else if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
-		if (lv_cache_status(lv, &status)) {
-			percent = status->dirty_usage;
-			dm_pool_destroy(status->mem);
-		}
-	}
 
 	return dm_report_field_percent(rh, field, &percent);
 }
@@ -2937,22 +2920,9 @@ static int _datapercent_disp(struct dm_report *rh, struct dm_pool *mem,
 			     struct dm_report_field *field,
 			     const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	dm_percent_t percent = DM_PERCENT_INVALID;
-	struct lv_status_cache *status;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (lv_is_cow(lv))
-		return _snpercent_disp(rh, mem, field, data, private);
-	else if (lv_is_thin_pool(lv))
-		(void) lv_thin_pool_percent(lv, 0, &percent);
-	else if (lv_is_thin_volume(lv))
-		(void) lv_thin_percent(lv, 0, &percent);
-	else if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
-		if (lv_cache_status(lv, &status)) {
-			percent = status->data_usage;
-			dm_pool_destroy(status->mem);
-		}
-	}
+	dm_percent_t percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_DATA);
 
 	return dm_report_field_percent(rh, field, &percent);
 }
@@ -2962,20 +2932,12 @@ static int _metadatapercent_disp(struct dm_report *rh,
 				 struct dm_report_field *field,
 				 const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 	dm_percent_t percent = DM_PERCENT_INVALID;
-	struct lv_status_cache *status;
 
-	if (lv_is_thin_pool(lv))
-		(void) lv_thin_pool_percent(lv, 1, &percent);
-	else if (lv_is_thin_volume(lv))
-		(void) lv_thin_percent(lv, 1, &percent);
-	else if (lv_is_cache(lv) || lv_is_used_cache_pool(lv)) {
-		if (lv_cache_status(lv, &status)) {
-			percent = status->metadata_usage;
-			dm_pool_destroy(status->mem);
-		}
-	}
+	if (lv_is_thin_pool(lvdm->lv) ||
+	    lv_is_used_cache_pool(lvdm->lv))
+		percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_METADATA);
 
 	return dm_report_field_percent(rh, field, &percent);
 }
