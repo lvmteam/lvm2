@@ -202,9 +202,8 @@ struct vg_info {
 #define GLFL_DISABLE_REASON_DIRECT     0x00000004
 #define GLFL_DISABLE_REASON_LVM1       0x00000008
 #define GLFL_DISABLE_REASON_DUPLICATES 0x00000010
-#define GLFL_DISABLE_REASON_SCANERROR  0x00000020
 
-#define GLFL_DISABLE_REASON_ALL (GLFL_DISABLE_REASON_DIRECT | GLFL_DISABLE_REASON_LVM1 | GLFL_DISABLE_REASON_DUPLICATES | GLFL_DISABLE_REASON_SCANERROR)
+#define GLFL_DISABLE_REASON_ALL (GLFL_DISABLE_REASON_DIRECT | GLFL_DISABLE_REASON_LVM1 | GLFL_DISABLE_REASON_DUPLICATES)
 
 #define VGFL_INVALID 0x00000001
 
@@ -2333,8 +2332,6 @@ static response set_global_info(lvmetad_state *s, request r)
 			reason_flags |= GLFL_DISABLE_REASON_LVM1;
 		if (strstr(reason, LVMETAD_DISABLE_REASON_DUPLICATES))
 			reason_flags |= GLFL_DISABLE_REASON_DUPLICATES;
-		if (strstr(reason, LVMETAD_DISABLE_REASON_SCANERROR))
-			reason_flags |= GLFL_DISABLE_REASON_SCANERROR;
 	}
 
 	if (global_invalid != -1) {
@@ -2388,11 +2385,10 @@ static response get_global_info(lvmetad_state *s, request r)
 	memset(reason, 0, sizeof(reason));
 
 	if (s->flags & GLFL_DISABLE) {
-		snprintf(reason, REASON_BUF_SIZE - 1, "%s%s%s%s",
+		snprintf(reason, REASON_BUF_SIZE - 1, "%s%s%s",
 			 (s->flags & GLFL_DISABLE_REASON_DIRECT)     ? LVMETAD_DISABLE_REASON_DIRECT "," : "",
 			 (s->flags & GLFL_DISABLE_REASON_LVM1)       ? LVMETAD_DISABLE_REASON_LVM1 "," : "",
-			 (s->flags & GLFL_DISABLE_REASON_DUPLICATES) ? LVMETAD_DISABLE_REASON_DUPLICATES "," : "",
-			 (s->flags & GLFL_DISABLE_REASON_SCANERROR)  ? LVMETAD_DISABLE_REASON_SCANERROR "," : "");
+			 (s->flags & GLFL_DISABLE_REASON_DUPLICATES) ? LVMETAD_DISABLE_REASON_DUPLICATES "," : "");
 	}
 
 	if (!reason[0])

@@ -1792,9 +1792,6 @@ int lvmetad_pvscan_all_devs(struct cmd_context *cmd, int do_wait)
 
 	dev_iter_destroy(iter);
 
-	if (!ret)
-		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_SCANERROR);
-
 	_lvmetad_token = future_token;
 	if (!_token_update(NULL)) {
 		log_error("Failed to update lvmetad token after device scan.");
@@ -2400,9 +2397,6 @@ int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
 
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DUPLICATES)) {
 			*reason = "duplicate PVs were found";
-
-		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_SCANERROR)) {
-			*reason = "scanning devices failed";
 
 		} else {
 			*reason = "<unknown>";
