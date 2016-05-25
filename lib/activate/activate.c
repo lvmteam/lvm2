@@ -1131,19 +1131,29 @@ int lv_cache_status(const struct logical_volume *cache_lv,
 	struct dev_manager *dm;
 	struct lv_segment *cache_seg;
 
-	if (lv_is_cache_pool(cache_lv) && !dm_list_empty(&cache_lv->segs_using_this_lv)) {
-		if (!(cache_seg = get_only_segment_using_this_lv(cache_lv)))
-			return_0;
+	if (lv_is_cache_pool(cache_lv)) {
+		if (dm_list_empty(&cache_lv->segs_using_this_lv) ||
+		    !(cache_seg = get_only_segment_using_this_lv(cache_lv))) {
+			log_error(INTERNAL_ERROR "Cannot check status for unused cache pool %s.",
+				  display_lvname(cache_lv));
+			return 0;
+		}
 		cache_lv = cache_seg->lv;
 	}
 
-	if (lv_is_pending_delete(cache_lv))
+	if (lv_is_pending_delete(cache_lv)) {
+		log_error("Cannot check status for deleted cache volume %s.",
+			  display_lvname(cache_lv));
 		return 0;
+	}
 
-	if (!lv_info(cache_lv->vg->cmd, cache_lv, 0, NULL, 0, 0))
+	if (!lv_info(cache_lv->vg->cmd, cache_lv, 0, NULL, 0, 0)) {
+		log_error("Cannot check status for locally inactive cache volume %s.",
+			  display_lvname(cache_lv));
 		return 0;
+	}
 
-	log_debug_activation("Checking cache status for LV %s.",
+	log_debug_activation("Checking status for cache volume %s.",
 			     display_lvname(cache_lv));
 
 	if (!(dm = dev_manager_create(cache_lv->vg->cmd, cache_lv->vg->name, 1)))

@@ -702,7 +702,8 @@ static int _lvchange_cache(struct cmd_context *cmd, struct logical_volume *lv)
 		goto_out;
 
 	if ((mode != CACHE_MODE_UNDEFINED) &&
-	    (mode != pool_seg->cache_mode)) {
+	    (mode != pool_seg->cache_mode) &&
+	    lv_is_cache(lv)) {
 		if (!lv_cache_wait_for_clean(lv, &is_clean))
 			return_0;
 		if (!is_clean) {
