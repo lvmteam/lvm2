@@ -127,6 +127,7 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	struct segment_type *segtype;
 
 	seg_status->type = SEG_STATUS_UNKNOWN;
+
 	/*
 	 * TODO: Add support for other segment types too!
 	 * The segment to report status for must be properly
@@ -134,19 +135,27 @@ static int _get_segment_status_from_target_params(const char *target_name,
 	 * linear/striped, old snapshots and raids have proper
 	 * segment selected for status!
 	 */
-	if (strcmp(target_name, TARGET_NAME_CACHE) &&
-	    strcmp(target_name, TARGET_NAME_THIN_POOL) &&
-	    strcmp(target_name, TARGET_NAME_THIN))
-		return 1;
+	if (!strcmp(target_name, TARGET_NAME_SNAPSHOT_MERGE) &&
+	    lv_is_merging_origin(seg_status->seg->lv)) {
+		/* Snapshot merge has started, check snapshot status */
+		if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, TARGET_NAME_SNAPSHOT)))
+			return_0;
+	} else {
+		if (strcmp(target_name, TARGET_NAME_CACHE) &&
+		    strcmp(target_name, TARGET_NAME_SNAPSHOT) &&
+		    strcmp(target_name, TARGET_NAME_THIN_POOL) &&
+		    strcmp(target_name, TARGET_NAME_THIN))
+			return 1; /* TODO: Do not know how to handle yet */
 
-	if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name)))
-		return_0;
+		if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name)))
+			return_0;
 
-	if (segtype != seg_status->seg->segtype) {
-		log_error(INTERNAL_ERROR "_get_segment_status_from_target_params: "
-			  "segment type %s found does not match expected segment type %s",
-			   segtype->name, seg_status->seg->segtype->name);
-		return 0;
+		if (segtype != seg_status->seg->segtype) {
+			log_error(INTERNAL_ERROR "_get_segment_status_from_target_params: "
+				  "segment type %s found does not match expected segment type %s",
+				  segtype->name, seg_status->seg->segtype->name);
+			return 0;
+		}
 	}
 
 	if (segtype_is_cache(segtype)) {

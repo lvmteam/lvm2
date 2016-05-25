@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Enhance internal seg_status handling to understand snapshots better.
   When refresh failed in suspend, call resume upon error path.
   Support passthrough cache mode when waiting for clean cache.
   Check cache status only for 'in-use' cache pools.

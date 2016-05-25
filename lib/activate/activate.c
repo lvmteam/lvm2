@@ -691,8 +691,36 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 			use_layer = 1;
 	}
 
-	if (seg_status)
+	if (seg_status) {
+		/* TODO: for now it's mess with seg_status */
 		seg_status->seg = seg;
+		if (lv_is_merging_cow(lv)) {
+			if (lv_has_target_type(cmd->mem, origin_from_cow(lv), NULL, TARGET_NAME_SNAPSHOT_MERGE)) {
+				/*
+				 * When the snapshot-merge has not yet started, query COW LVs as is.
+				 * When merge is in progress, query merging origin LV instead.
+				 * COW volume is already mapped as error target in this case.
+				 */
+				lv = origin_from_cow(lv);
+				seg_status->seg = first_seg(lv);
+				log_debug_activation("Snapshot merge is in progress, querying status of %s instead.",
+						     display_lvname(lv));
+			}
+		} else if (!use_layer && lv_is_origin(lv) && !lv_is_external_origin(lv)) {
+			/*
+			 * Query status for 'layered' (-real) device most of the time,
+			 * only when snapshot merge started, query its progress.
+			 * TODO: single LV may need couple status to be exposed at once....
+			 *       but this needs more logical background
+			 */
+			if (!lv_is_merging_origin(lv) ||
+			    !lv_has_target_type(cmd->mem, origin_from_cow(lv), NULL, TARGET_NAME_SNAPSHOT_MERGE))
+				use_layer = 1;
+		} else if (lv_is_cow(lv)) {
+			/* Hadle fictional lvm2 snapshot and query snapshotX volume */
+			seg_status->seg = find_snapshot(lv);
+		}
+	}
 
 	if (!dev_manager_info(cmd, lv,
 			      (use_layer) ? lv_layer(lv) : NULL,
