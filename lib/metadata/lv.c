@@ -1111,7 +1111,6 @@ int lv_raid_healthy(const struct logical_volume *lv)
 
 char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm)
 {
-	dm_percent_t snap_percent;
 	const struct logical_volume *lv = lvdm->lv;
 	struct lv_segment *seg;
 	char *repstr;
@@ -1203,19 +1202,18 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 			repstr[4] = 'd';	/* Inactive without table */
 
 		/* Snapshot dropped? */
-		if (lvdm->info.live_table && lv_is_cow(lv)) {
-			if (!lv_snapshot_percent(lv, &snap_percent) ||
-			    snap_percent == DM_PERCENT_INVALID) {
+		if (lvdm->info.live_table &&
+		    (lvdm->seg_status.type == SEG_STATUS_SNAPSHOT)) {
+			if (lvdm->seg_status.snapshot->invalid) {
 				if (lvdm->info.suspended)
 					repstr[4] = 'S'; /* Susp Inv snapshot */
 				else
 					repstr[4] = 'I'; /* Invalid snapshot */
-			}
-			else if (snap_percent == LVM_PERCENT_MERGE_FAILED) {
+			} else if (lvdm->seg_status.snapshot->merge_failed) {
 				if (lvdm->info.suspended)
 					repstr[4] = 'M'; /* Susp snapshot merge failed */
 				else
-					repstr[4] = 'm'; /* snapshot merge failed */
+					repstr[4] = 'm'; /* Snapshot merge failed */
 			}
 		}
 
