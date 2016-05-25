@@ -58,7 +58,13 @@ vgcfgbackup -f /tmp/ooo $vg
 #dmsetup resume $vg-$lv1
 
 #dmsetup load --table "0 28672 cache 253:4 253:3 253:5 128 1 passthrough smq 2 migration_threshold 204800" $vg-$lv1
+#dmsetup status $vg-$lv1
+#dmsetup load --table "0 28672 cache 253:4 253:3 253:5 128 1 writethrough smq 2 migration_threshold 204800" $vg-$lv1
 #dmsetup resume $vg-$lv1
+#dmsetup status $vg-$lv1
+#dmsetup table  $vg-$lv1
+#dmsetup ls --tree
+#exit
 
 check lv_field $vg/$lv1 cache_mode "writeback"
 lvchange --cachemode passthrough $vg/$lv1
@@ -67,5 +73,19 @@ lvchange --cachemode writethrough $vg/$lv1
 check lv_field  $vg/$lv1 cache_mode "writethrough"
 lvchange --cachemode writeback $vg/$lv1
 check lv_field  $vg/$lv1 cache_mode "writeback"
+
+lvconvert --splitcache $vg/$lv1
+
+lvs -a $vg
+
+check lv_field $vg/cpool cache_mode "writeback"
+lvchange --cachemode passthrough $vg/cpool
+check lv_field  $vg/cpool cache_mode "passthrough"
+lvchange --cachemode writethrough $vg/cpool
+check lv_field  $vg/cpool cache_mode "writethrough"
+lvchange --cachemode writeback $vg/cpool
+check lv_field  $vg/cpool cache_mode "writeback"
+
+lvs -a $vg
 
 vgremove -f $vg
