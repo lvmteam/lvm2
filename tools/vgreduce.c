@@ -15,6 +15,12 @@
 
 #include "tools.h"
 
+struct vgreduce_params {
+	int force;
+	int fixed;
+	int already_consistent;
+};
+
 static int _remove_pv(struct volume_group *vg, struct pv_list *pvl, int silent)
 {
 	char uuid[64] __attribute__((aligned(8)));
@@ -137,16 +143,43 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	return ECMD_PROCESSED;
 }
 
+static int _vgreduce_repair_single(struct cmd_context *cmd, const char *vg_name,
+		                   struct volume_group *vg, struct processing_handle *handle)
+{
+	struct vgreduce_params *vp = (struct vgreduce_params *) handle->custom_handle;
+
+	if (!vg_missing_pv_count(vg)) {
+		vp->already_consistent = 1;
+		return ECMD_PROCESSED;
+	}
+
+	if (!archive(vg))
+		return_ECMD_FAILED;
+
+	if (vp->force) {
+		if (!_make_vg_consistent(cmd, vg))
+			return_ECMD_FAILED;
+		vp->fixed = 1;
+	} else
+		vp->fixed = _consolidate_vg(cmd, vg);
+
+	if (!vg_write(vg) || !vg_commit(vg)) {
+		log_error("Failed to write out a consistent VG for %s", vg_name);
+		return ECMD_FAILED;
+	}
+
+	backup(vg);
+	return ECMD_PROCESSED;
+}
+
 int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct volume_group *vg;
+	struct processing_handle *handle;
+	struct vgreduce_params vp = { 0 };
 	const char *vg_name;
-	uint32_t lockd_state = 0;
-	int ret = ECMD_FAILED;
-	int fixed = 1;
 	int repairing = arg_count(cmd, removemissing_ARG);
 	int saved_ignore_suspended_devices = ignore_suspended_devices();
-	int locked = 0;
+	int ret;
 
 	if (!argc && !repairing) {
 		log_error("Please give volume group name and "
@@ -184,99 +217,48 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 	argc--;
 
-	if (!repairing)
+	if (!(handle = init_processing_handle(cmd))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+	handle->custom_handle = &vp;
+
+	if (!repairing) {
 		/* FIXME: Pass private struct through to all these functions */
 		/* and update in batch afterwards? */
-		return process_each_pv(cmd, argc, argv, vg_name,
-				       0, READ_FOR_UPDATE, NULL,
-				      _vgreduce_single);
+		ret = process_each_pv(cmd, argc, argv, vg_name, 0, READ_FOR_UPDATE, handle, _vgreduce_single);
+		goto out;
+	}
 
-	log_verbose("Finding volume group \"%s\"", vg_name);
+	/*
+	 * VG repair (removemissing)
+	 */
 
-	init_ignore_suspended_devices(1);
-	cmd->handles_missing_pvs = 1;
+	vp.force = arg_count(cmd, force_ARG);
 
 	/* Needed to change the set of orphan PVs. */
 	if (!lockd_gl(cmd, "ex", 0))
 		return_ECMD_FAILED;
+	cmd->lockd_gl_disable = 1;
 
-	if (!lockd_vg(cmd, vg_name, "ex", 0, &lockd_state))
-		return_ECMD_FAILED;
+	cmd->handles_missing_pvs = 1;
 
-	vg = vg_read_for_update(cmd, vg_name, NULL, READ_ALLOW_EXPORTED, lockd_state);
-	if (vg_read_error(vg) == FAILED_ALLOCATION ||
-	    vg_read_error(vg) == FAILED_NOTFOUND)
-		goto_out;
+	init_ignore_suspended_devices(1);
 
-	/* FIXME We want to allow read-only VGs to be changed here? */
-	if (vg_read_error(vg) &&
-	    (vg_read_error(vg) != FAILED_READ_ONLY) &&
-	    !arg_count(cmd, removemissing_ARG))
-		goto_out;
+	process_each_vg(cmd, 0, NULL, vg_name, NULL,
+			READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
+			handle, &_vgreduce_repair_single);
 
-	locked = !vg_read_error(vg);
-
-	if (!vg_read_error(vg) && !vg_missing_pv_count(vg)) {
-		log_error("Volume group \"%s\" is already consistent", vg_name);
+	if (vp.already_consistent) {
+		log_print_unless_silent("Volume group \"%s\" is already consistent", vg_name);
 		ret = ECMD_PROCESSED;
-		goto out;
-	}
-
-	release_vg(vg);
-	log_verbose("Trying to open VG %s for recovery...", vg_name);
-
-	vg = vg_read_for_update(cmd, vg_name, NULL,
-				READ_ALLOW_INCONSISTENT | READ_ALLOW_EXPORTED, lockd_state);
-
-	locked |= !vg_read_error(vg);
-
-	if (vg_read_error(vg) &&
-	    (vg_read_error(vg) != FAILED_READ_ONLY) &&
-	    (vg_read_error(vg) != FAILED_INCONSISTENT))
-		goto_out;
-
-	if (!archive(vg))
-		goto_out;
-
-	if (arg_count(cmd, force_ARG)) {
-		if (!_make_vg_consistent(cmd, vg))
-			goto_out;
-	} else
-		fixed = _consolidate_vg(cmd, vg);
-
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		log_error("Failed to write out a consistent VG for %s", vg_name);
-		goto out;
-	}
-
-	backup(vg);
-
-	if (fixed) {
+	} else if (vp.fixed) {
 		log_print_unless_silent("Wrote out consistent volume group %s", vg_name);
 		ret = ECMD_PROCESSED;
 	} else
 		ret = ECMD_FAILED;
-
 out:
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
-	if (locked)
-		unlock_vg(cmd, vg_name);
-
-	release_vg(vg);
 
 	return ret;
-
-/******* FIXME
-	log_error ("no empty physical volumes found in volume group \"%s\"", vg_name);
-
-	log_verbose("volume group \"%s\" will be reduced by %d physical volume%s",
-		    vg_name, np, np > 1 ? "s" : "");
-	log_verbose("reducing volume group \"%s\" by physical volume \"%s\"",
-		    vg_name, pv_names[p]);
-
-	log_print("volume group \"%s\" %ssuccessfully reduced by physical volume%s:",
-		  vg_name, error > 0 ? "NOT " : "", p > 1 ? "s" : "");
-	log_print("%s", pv_this[p]->pv_name);
-********/
-
 }

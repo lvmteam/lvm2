@@ -773,6 +773,7 @@ bad:
  * . find_pv_by_name()
  * . get_pvs()
  * . the vg->pvs_to_write list and pv_to_write struct
+ * . vg_reduce()
  */
 
 /*
