@@ -723,6 +723,47 @@ static void _del_option_from_list(struct dm_list *sll, const char *prefix,
 	}
 }
 
+#define _get_report_idx(report_type,single_report_type) \
+	(((report_type != FULL) && (report_type == single_report_type)) ? REPORT_IDX_SINGLE : REPORT_IDX_FULL_ ## single_report_type)
+
+static report_idx_t _get_report_idx_from_name(report_type_t report_type, const char *name)
+{
+	report_idx_t idx;
+
+	if (!name || !*name)
+		return REPORT_IDX_NULL;
+
+	if (!strcasecmp(name, "log"))
+		idx = REPORT_IDX_LOG;
+	else if (!strcasecmp(name, "vg"))
+		idx = _get_report_idx(report_type, VGS);
+	else if (!strcasecmp(name, "pv"))
+		idx = _get_report_idx(report_type, PVS);
+	else if (!strcasecmp(name, "lv"))
+		idx = _get_report_idx(report_type, LVS);
+	else if (!strcasecmp(name, "pvseg"))
+		idx = _get_report_idx(report_type, PVSEGS);
+	else if (!strcasecmp(name, "seg"))
+		idx = _get_report_idx(report_type, SEGS);
+	else {
+		idx = REPORT_IDX_NULL;
+		log_error("Unknonwn report specifier in "
+			  "report option list: %s.", name);
+	}
+
+	return idx;
+}
+
+static int _should_process_report_idx(report_type_t report_type, report_idx_t idx)
+{
+	if (((idx == REPORT_IDX_LOG) && (report_type != CMDLOG)) ||
+	    ((idx == REPORT_IDX_SINGLE) && ((report_type == FULL) || (report_type == CMDLOG))) ||
+	    ((idx > REPORT_IDX_LOG) && report_type != FULL))
+		return 0;
+
+	return 1;
+}
+
 static int _get_report_options(struct cmd_context *cmd,
 			       struct report_args *args,
 			       struct single_report_args *single_args)
