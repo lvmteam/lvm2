@@ -1,5 +1,8 @@
 Version 2.02.155 - 
 ================================
+  Update vgreduce to use process_each_vg.
+  Update lvconvert to use process_each_lv.
+  Update pvscan to use process_each_vg for autoactivation.
   Add basic support for --type raid0 using md.
   Add support for lvchange --cachemode for cached LV.
   Fix liblvm2app error handling when setting up context.
