@@ -892,10 +892,26 @@ static int _get_report_keys(struct cmd_context *cmd,
 			    struct report_args *args,
 			    struct single_report_args *single_args)
 {
-	int r = ECMD_PROCESSED;
+	struct arg_value_group_list *current_group;
+	const char *report_name = NULL;
+	report_idx_t idx = REPORT_IDX_SINGLE;
+	int r = ECMD_FAILED;
 
-	single_args->keys = arg_str_value(cmd, sort_ARG, single_args->keys);
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(current_group->arg_values, sort_ARG))
+			continue;
 
+		if (grouped_arg_is_set(current_group->arg_values, configreport_ARG)) {
+			report_name = grouped_arg_str_value(current_group->arg_values, configreport_ARG, NULL);
+			if ((idx = _get_report_idx_from_name(single_args->report_type, report_name)) == REPORT_IDX_NULL)
+				goto_out;
+		}
+
+		args->single_args[idx].keys = grouped_arg_str_value(current_group->arg_values, sort_ARG, NULL);
+	}
+
+	r = ECMD_PROCESSED;
+out:
 	return r;
 }
 
