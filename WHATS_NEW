@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Make -S|--select option groupable that allows this option to be repeated.
   Make -O|--sort option groupable that allows this option to be repeated.
   Add --configreport option to select report for which next options are applied.
   Add support for priorities on grouping command arguments.

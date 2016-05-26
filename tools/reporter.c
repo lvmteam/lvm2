@@ -915,16 +915,60 @@ out:
 	return r;
 }
 
+static int _do_report_get_selection(struct cmd_context *cmd,
+				    struct report_args *args,
+				    struct single_report_args *single_args,
+				    report_idx_t expected_idxs[],
+				    const char **ret_selection)
+{
+	struct arg_value_group_list *current_group;
+	const char *final_selection = "", *selection = NULL;
+	const char *report_name = NULL;
+	report_idx_t idx = REPORT_IDX_SINGLE;
+	int i;
+
+	dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(current_group->arg_values, select_ARG))
+			continue;
+
+		if (grouped_arg_is_set(current_group->arg_values, configreport_ARG)) {
+			report_name = grouped_arg_str_value(current_group->arg_values, configreport_ARG, NULL);
+			if ((idx = _get_report_idx_from_name(single_args->report_type, report_name)) == REPORT_IDX_NULL)
+				return_0;
+		}
+
+		selection = grouped_arg_str_value(current_group->arg_values, select_ARG, NULL);
+
+		if (single_args) {
+			if (!_should_process_report_idx(single_args->report_type, idx))
+				continue;
+			args->single_args[idx].selection = selection;
+			final_selection = selection;
+		} else {
+			for (i = 0; expected_idxs[i] != REPORT_IDX_NULL; i++) {
+				if (idx == expected_idxs[i])
+					final_selection = selection;
+			}
+		}
+	}
+
+	if (ret_selection)
+		*ret_selection = final_selection;
+
+	return 1;
+}
+
 static int _get_report_selection(struct cmd_context *cmd,
 				 struct report_args *args,
 				 struct single_report_args *single_args)
 {
-	int r = ECMD_PROCESSED;
+	return _do_report_get_selection(cmd, args, single_args, NULL, NULL) ? ECMD_PROCESSED : ECMD_FAILED;
+}
 
-	if (arg_count(cmd, select_ARG))
-		single_args->selection = arg_str_value(cmd, select_ARG, NULL);
-
-	return r;
+int report_get_single_selection(struct cmd_context *cmd, const char **selection)
+{
+	report_idx_t expected_idxs[] = {REPORT_IDX_SINGLE, REPORT_IDX_NULL};
+	return _do_report_get_selection(cmd, NULL, NULL, expected_idxs, selection);
 }
 
 static int _set_report_prefix_and_name(struct single_report_args *single_args)

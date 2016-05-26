@@ -1742,15 +1742,18 @@ int init_selection_handle(struct cmd_context *cmd, struct processing_handle *han
 			  report_type_t initial_report_type)
 {
 	struct selection_handle *sh;
+	const char *selection;
 
 	if (!(sh = dm_pool_zalloc(cmd->mem, sizeof(struct selection_handle)))) {
 		log_error("_init_selection_handle: failed to allocate memory for selection handle");
 		return 0;
 	}
 
+	if (!report_get_single_selection(cmd, &selection))
+		return_0;
+
 	sh->report_type = initial_report_type;
-	if (!(sh->selection_rh = report_init_for_selection(cmd, &sh->report_type,
-					arg_str_value(cmd, select_ARG, NULL)))) {
+	if (!(sh->selection_rh = report_init_for_selection(cmd, &sh->report_type, selection))) {
 		dm_pool_free(cmd->mem, sh);
 		return_0;
 	}
