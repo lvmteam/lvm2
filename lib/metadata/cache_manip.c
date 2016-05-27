@@ -425,8 +425,11 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 			log_error("Cannot deactivate remotely active cache lv.");
 			return 0;
 		}
-		/* For inactive writethrough just drop cache layer */
-		if (first_seg(cache_seg->pool_lv)->cache_mode == CACHE_MODE_WRITETHROUGH) {
+
+		switch (first_seg(cache_seg->pool_lv)->cache_mode) {
+		case CACHE_MODE_WRITETHROUGH:
+		case CACHE_MODE_PASSTHROUGH:
+			/* For inactive pass/writethrough just drop cache layer */
 			corigin_lv = seg_lv(cache_seg, 0);
 			if (!detach_pool_lv(cache_seg))
 				return_0;
@@ -435,17 +438,17 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 			if (!lv_remove(corigin_lv))
 				return_0;
 			return 1;
+		default:
+			/* Otherwise localy activate volume to sync dirty blocks */
+			cache_lv->status |= LV_TEMPORARY;
+			if (!activate_lv_excl_local(cache_lv->vg->cmd, cache_lv) ||
+			    !lv_is_active_locally(cache_lv)) {
+				log_error("Failed to active cache locally %s.",
+					  display_lvname(cache_lv));
+				return 0;
+			}
+			cache_lv->status &= ~LV_TEMPORARY;
 		}
-
-		/* Otherwise localy active volume is need to sync dirty blocks */
-		cache_lv->status |= LV_TEMPORARY;
-		if (!activate_lv_excl_local(cache_lv->vg->cmd, cache_lv) ||
-		    !lv_is_active_locally(cache_lv)) {
-			log_error("Failed to active cache locally %s.",
-				  display_lvname(cache_lv));
-			return 0;
-		}
-		cache_lv->status &= ~LV_TEMPORARY;
 	}
 
 	/*

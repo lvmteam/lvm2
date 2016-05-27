@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Support passthrough cache mode when waiting for clean cache.
   Check cache status only for 'in-use' cache pools.
   Extend setup_task() to preset flushing for dm_task object.
   When checking LV is a merging COW, validate its a COW LV first.
