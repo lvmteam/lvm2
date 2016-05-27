@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Correcting value in copy_percent() for 100%.
   Update vgreduce to use process_each_vg.
   Update lvconvert to use process_each_lv.
   Update pvscan to use process_each_vg for autoactivation.

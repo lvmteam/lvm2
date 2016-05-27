@@ -872,7 +872,7 @@ dm_percent_t copy_percent(const struct logical_volume *lv)
 			numerator += seg->area_len;
 	}
 
-	return denominator ? dm_make_percent(numerator, denominator) : 100.0;
+	return denominator ? dm_make_percent(numerator, denominator) : DM_PERCENT_100;
 }
 
 /* Round up extents to next stripe boundary for number of stripes */
