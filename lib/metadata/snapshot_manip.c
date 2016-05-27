@@ -139,7 +139,12 @@ int lv_is_visible(const struct logical_volume *lv)
 
 int lv_is_merging_cow(const struct logical_volume *cow)
 {
-	struct lv_segment *snap_seg = find_snapshot(cow);
+	struct lv_segment *snap_seg;
+
+	if (!lv_is_cow(cow))
+		return 0;
+
+	snap_seg = find_snapshot(cow);
 
 	/* checks lv_segment's status to see if snapshot is merging */
 	return (snap_seg && (snap_seg->status & MERGING)) ? 1 : 0;
