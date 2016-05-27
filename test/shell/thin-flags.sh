@@ -52,6 +52,10 @@ lvcreate -T -L1M --errorwhenfull y $vg/pool
 lvcreate -V2 -n $lv2 $vg/pool
 
 aux error_dev  "$dev2" 2054:2
+# Check our 'lvs' is not flushing pool - should be still OK
+check lv_attr_bit health $vg/pool "-"
+# Enforce flush on thin pool device to notice error device.
+dmsetup status $vg-pool-tpool
 check lv_attr_bit health $vg/pool "F"
 check lv_attr_bit health $vg/$lv2 "F"
 aux enable_dev "$dev2"
