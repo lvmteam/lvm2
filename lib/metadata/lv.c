@@ -380,8 +380,10 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 		}
 		break;
 	case SEG_STATUS_SNAPSHOT:
-		if (s->snapshot->invalid || s->snapshot->merge_failed)
+		if (s->snapshot->merge_failed)
 			p = DM_PERCENT_INVALID;
+		else if (s->snapshot->invalid)
+			p = DM_PERCENT_100; /* Shown as 100% full */
 		else if (s->snapshot->has_metadata_sectors &&
 			 (s->snapshot->used_sectors == s->snapshot->metadata_sectors))
 			p = DM_PERCENT_0;
