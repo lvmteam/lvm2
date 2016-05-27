@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -85,7 +85,8 @@ int read_only_lv(const struct logical_volume *lv, const struct lv_activate_opts 
 static struct dm_task *_setup_task(const char *name, const char *uuid,
 				   uint32_t *event_nr, int task,
 				   uint32_t major, uint32_t minor,
-				   int with_open_count)
+				   int with_open_count,
+				   int with_flush)
 {
 	struct dm_task *dmt;
 
@@ -109,6 +110,9 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 
 	if (!with_open_count && !dm_task_no_open_count(dmt))
 		log_warn("WARNING: Failed to disable open_count.");
+
+	if (!with_flush && !dm_task_no_flush(dmt))
+		log_warn("WARNING: Failed to set no_flush.");
 
 	return dmt;
       out:
@@ -192,6 +196,7 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 	uint64_t target_start, target_length;
 	char *target_name, *target_params, *params_to_process = NULL;
 	uint32_t extent_size;
+	int with_flush = 1; /* TODO: arg for _info_run */
 
 	switch (type) {
 		case INFO:
@@ -199,6 +204,7 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 			break;
 		case STATUS:
 			dmtask = DM_DEVICE_STATUS;
+			with_flush = 0;
 			break;
 		case MKNODES:
 			dmtask = DM_DEVICE_MKNODES;
@@ -209,7 +215,7 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 	}
 
 	if (!(dmt = _setup_task((type == MKNODES) ? name : NULL, dlid, 0, dmtask,
-				major, minor, with_open_count)))
+				major, minor, with_open_count, with_flush)))
 		return_0;
 
 	if (!dm_task_run(dmt))
@@ -338,7 +344,7 @@ static int _ignore_blocked_mirror_devices(struct device *dev,
 	 * dead, we have no choice but to look up the table too.
 	 */
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
-				MAJOR(dev->dev), MINOR(dev->dev), 0)))
+				MAJOR(dev->dev), MINOR(dev->dev), 0, 1)))
 		goto_out;
 
 	if (!dm_task_run(dmt))
@@ -380,7 +386,7 @@ static int _device_is_suspended(int major, int minor)
 	int r = 0;
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_INFO,
-				major, minor, 0)))
+				major, minor, 0, 0)))
 		return_0;
 
 	if (!dm_task_run(dmt) ||
@@ -405,7 +411,7 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 	int r = 0;
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
-				MAJOR(dev->dev), MINOR(dev->dev), 0)))
+				MAJOR(dev->dev), MINOR(dev->dev), 0, 1)))
 		return_0;
 
 	if (!dm_task_run(dmt)) {
@@ -452,7 +458,7 @@ static int _ignore_unusable_thins(struct device *dev)
 		return_0;
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_TABLE,
-				MAJOR(dev->dev), MINOR(dev->dev), 0)))
+				MAJOR(dev->dev), MINOR(dev->dev), 0, 1)))
 		goto_out;
 
 	if (!dm_task_run(dmt)) {
@@ -468,11 +474,8 @@ static int _ignore_unusable_thins(struct device *dev)
 	dm_task_destroy(dmt);
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_STATUS,
-				major, minor, 0)))
+				major, minor, 0, 0)))
 		goto_out;
-
-	if (!dm_task_no_flush(dmt))
-		log_warn("Can't set no_flush.");
 
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device.");
@@ -528,12 +531,8 @@ int device_is_usable(struct device *dev, struct dev_usable_check_params check)
 	int r = 0;
 
 	if (!(dmt = _setup_task(NULL, NULL, NULL, DM_DEVICE_STATUS,
-				MAJOR(dev->dev), MINOR(dev->dev), 0)))
+				MAJOR(dev->dev), MINOR(dev->dev), 0, 0)))
 		return_0;
-
-	/* Non-blocking status read */
-	if (!dm_task_no_flush(dmt))
-		log_warn("WARNING: Can't set no_flush for dm status.");
 
 	if (!dm_task_run(dmt)) {
 		log_error("Failed to get state of mapped device");
@@ -797,7 +796,7 @@ int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 	if (!(dlid = build_dm_uuid(mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0, 0)))
 		goto_bad;
 
 	if (!dm_task_run(dmt))
@@ -810,7 +809,7 @@ int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 	if (info.inactive_table) {
 		dm_task_destroy(dmt);
 
-		if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
+		if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0, 0)))
 			goto_bad;
 
 		if (!dm_task_query_inactive_table(dmt))
@@ -855,7 +854,7 @@ static int _thin_lv_has_device_id(struct dm_pool *mem, const struct logical_volu
 	if (!(dlid = build_dm_uuid(mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0, 1)))
 		goto_bad;
 
 	if (!dm_task_run(dmt))
@@ -868,7 +867,7 @@ static int _thin_lv_has_device_id(struct dm_pool *mem, const struct logical_volu
 	if (info.inactive_table) {
 		dm_task_destroy(dmt);
 
-		if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0)))
+		if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0, 1)))
 			goto_bad;
 
 		if (!dm_task_query_inactive_table(dmt))
@@ -981,13 +980,8 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		return_0;
 
 	if (!(dmt = _setup_task(name, dlid, event_nr,
-				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0, 0)))
+				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS, 0, 0, 0, 0)))
 		return_0;
-
-	/* No freeze on overfilled thin-pool, read existing slightly outdated data */
-	if (segtype_is_thin(segtype) &&
-	    !dm_task_no_flush(dmt))
-		log_warn("Can't set no_flush flag."); /* Non fatal */
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -1103,7 +1097,7 @@ int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *l
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0, 0)))
+	if (!(dmt = _setup_task(0, dlid, NULL, DM_DEVICE_STATUS, 0, 0, 0, 0)))
 		return_0;
 
 	if (!dm_task_run(dmt))
@@ -1299,7 +1293,7 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0, 0)))
 		return_0;
 
 	if (!dm_task_run(dmt))
@@ -1358,7 +1352,7 @@ int dev_manager_raid_message(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TARGET_MSG, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TARGET_MSG, 0, 0, 0, 1)))
 		return_0;
 
 	if (!dm_task_set_message(dmt, msg))
@@ -1393,7 +1387,7 @@ int dev_manager_cache_status(struct dev_manager *dm,
 	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_cache))))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0, 0)))
 		return_0;
 
 	if (!dm_task_run(dmt))
@@ -1442,7 +1436,7 @@ out:
 int dev_manager_thin_pool_status(struct dev_manager *dm,
 				 const struct logical_volume *lv,
 				 struct dm_status_thin_pool **status,
-				 int noflush)
+				 int flush)
 {
 	const char *dlid;
 	struct dm_task *dmt;
@@ -1456,11 +1450,8 @@ int dev_manager_thin_pool_status(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_STATUS, 0, 0, 0, flush)))
 		return_0;
-
-	if (noflush && !dm_task_no_flush(dmt))
-		log_warn("Can't set no_flush.");
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -1543,7 +1534,7 @@ int dev_manager_thin_device_id(struct dev_manager *dm,
 	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
 		return_0;
 
-	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0)))
+	if (!(dmt = _setup_task(NULL, dlid, 0, DM_DEVICE_TABLE, 0, 0, 0, 1)))
 		return_0;
 
 	if (!dm_task_run(dmt))

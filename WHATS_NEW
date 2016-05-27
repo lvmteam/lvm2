@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Extend setup_task() to preset flushing for dm_task object.
   When checking LV is a merging COW, validate its a COW LV first.
   Correcting value in copy_percent() for 100%.
   Update vgreduce to use process_each_vg.
