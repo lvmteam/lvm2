@@ -1154,11 +1154,8 @@ int dm_config_get_uint32(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != DM_CFG_INT)
 		return 0;
 
-	if (result) {
-		log_very_verbose("Setting %s to %u", path, (uint32_t) n->v->v.i);
+	if (result)
 		*result = n->v->v.i;
-	}
-
 	return 1;
 }
 
@@ -1172,11 +1169,8 @@ int dm_config_get_uint64(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != DM_CFG_INT)
 		return 0;
 
-	if (result) {
-		log_very_verbose("Setting %s to " FMTu64 , path, (uint64_t) n->v->v.i);
+	if (result)
 		*result = (uint64_t) n->v->v.i;
-	}
-
 	return 1;
 }
 
@@ -1190,11 +1184,8 @@ int dm_config_get_str(const struct dm_config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != DM_CFG_STRING)
 		return 0;
 
-	if (result) {
-		log_very_verbose("Setting %s to %s", path, n->v->v.str);
+	if (result)
 		*result = n->v->v.str;
-	}
-
 	return 1;
 }
 
