@@ -3689,7 +3689,9 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  int quoted, int columns_as_rows, const char *selection)
 {
 	uint32_t report_flags = 0;
-	int devtypes_report = *report_type & DEVTYPES ? 1 : 0;
+	const struct dm_report_object_type *types;
+	const struct dm_report_field_type *fields;
+	const struct dm_report_reserved_value *reserved_values;
 	void *rh;
 
 	if (aligned)
@@ -3710,11 +3712,19 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	if (columns_as_rows)
 		report_flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
 
-	rh = dm_report_init_with_selection(report_type,
-		devtypes_report ? _devtypes_report_types : _report_types,
-		devtypes_report ? _devtypes_fields : _fields,
+	if (*report_type & DEVTYPES) {
+		types = _devtypes_report_types;
+		fields = _devtypes_fields;
+		reserved_values = NULL;
+	} else {
+		types = _report_types;
+		fields = _fields;
+		reserved_values = _report_reserved_values;
+	}
+
+	rh = dm_report_init_with_selection(report_type, types, fields,
 		format, separator, report_flags, keys,
-		selection, _report_reserved_values, cmd);
+		selection, reserved_values, cmd);
 
 	if (rh && field_prefixes)
 		dm_report_set_output_field_name_prefix(rh, "lvm2_");
