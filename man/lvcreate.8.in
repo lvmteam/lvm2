@@ -261,7 +261,7 @@ and the default value is 4KiB.
 For cache pools the value must a multiple of 32KiB
 between 32KiB and 1GiB. The default is 64KiB.
 When the size is specified with volume caching, it may not be smaller
-then cache pool creation chunk size was.
+than cache pool creation chunk size was.
 .br
 For thin pools the value must be a multiple of 64KiB
 between 64KiB and 1GiB.
