@@ -549,11 +549,12 @@ static int _report_all_in_pv(struct cmd_context *cmd, struct processing_handle *
 }
 
 int report_for_selection(struct cmd_context *cmd,
-			 struct selection_handle *sh,
+			 struct processing_handle *parent_handle,
 			 struct physical_volume *pv,
 			 struct volume_group *vg,
 			 struct logical_volume *lv)
 {
+	struct selection_handle *sh = parent_handle->selection_handle;
 	int args_are_pvs = sh->orig_report_type == PVS;
 	int do_lv_info, do_lv_seg_status;
 	struct processing_handle *handle;

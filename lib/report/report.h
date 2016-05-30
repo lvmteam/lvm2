@@ -60,6 +60,7 @@ struct selection_handle {
 
 struct field;
 struct report_handle;
+struct processing_handle;
 
 typedef int (*field_report_fn) (struct report_handle * dh, struct field * field,
 				const void *data);
@@ -72,7 +73,7 @@ void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_t
 				const char *selection);
 const char *report_get_field_prefix(report_type_t report_type);
 int report_for_selection(struct cmd_context *cmd,
-			 struct selection_handle *sh,
+			 struct processing_handle *parent_handle,
 			 struct physical_volume *pv,
 			 struct volume_group *vg,
 			 struct logical_volume *lv);

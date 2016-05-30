@@ -1764,72 +1764,59 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 
 
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
-		    struct volume_group *vg, int *selected)
+		    struct volume_group *vg)
 {
-	struct selection_handle *sh = handle->selection_handle;
-
-	if (!handle->internal_report_for_select) {
-		*selected = 1;
+	if (!handle->internal_report_for_select)
 		return 1;
-	}
 
-	sh->orig_report_type = VGS;
-
-	if (!report_for_selection(cmd, sh, NULL, vg, NULL)) {
+	handle->selection_handle->orig_report_type = VGS;
+	if (!report_for_selection(cmd, handle, NULL, vg, NULL)) {
 		log_error("Selection failed for VG %s.", vg->name);
 		return 0;
 	}
-
-	sh->orig_report_type = 0;
-	*selected = sh->selected;
+	handle->selection_handle->orig_report_type = 0;
 
 	return 1;
 }
 
 int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
-		    struct volume_group *vg, struct logical_volume *lv, int *selected)
+		    struct volume_group *vg, struct logical_volume *lv)
 {
-	struct selection_handle *sh = handle->selection_handle;
-
-	if (!handle->internal_report_for_select) {
-		*selected = 1;
+	if (!handle->internal_report_for_select)
 		return 1;
-	}
 
-	sh->orig_report_type = LVS;
-
-	if (!report_for_selection(cmd, sh, NULL, vg, lv)) {
+	handle->selection_handle->orig_report_type = LVS;
+	if (!report_for_selection(cmd, handle, NULL, vg, lv)) {
 		log_error("Selection failed for LV %s.", lv->name);
 		return 0;
 	}
-
-	sh->orig_report_type = 0;
-	*selected = sh->selected;
+	handle->selection_handle->orig_report_type = 0;
 
 	return 1;
 }
 
 int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
-		    struct volume_group *vg, struct physical_volume *pv, int *selected)
+		    struct volume_group *vg, struct physical_volume *pv)
 {
-	struct selection_handle *sh = handle->selection_handle;
-
-	if (!handle->internal_report_for_select) {
-		*selected = 1;
+	if (!handle->internal_report_for_select)
 		return 1;
-	}
 
-	sh->orig_report_type = PVS;
-
-	if (!report_for_selection(cmd, sh, pv, vg, NULL)) {
+	handle->selection_handle->orig_report_type = PVS;
+	if (!report_for_selection(cmd, handle, pv, vg, NULL)) {
 		log_error("Selection failed for PV %s.", dev_name(pv->dev));
 		return 0;
 	}
-
-	sh->orig_report_type = 0;
-	*selected = sh->selected;
+	handle->selection_handle->orig_report_type = 0;
 
 	return 1;
+}
+
+static int _select_matches(struct processing_handle *handle)
+{
+	if (!handle->internal_report_for_select)
+		return 1;
+
+	return handle->selection_handle->selected;
 }
 
 static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
@@ -1845,7 +1832,6 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 	const char *vg_name;
 	const char *vg_uuid;
 	uint32_t lockd_state = 0;
-	int selected;
 	int whole_selected = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -1897,7 +1883,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		if ((process_all ||
 		    (!dm_list_empty(arg_vgnames) && str_list_match_item(arg_vgnames, vg_name)) ||
 		    (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL))) &&
-		    select_match_vg(cmd, handle, vg, &selected) && selected) {
+		    select_match_vg(cmd, handle, vg) && _select_matches(handle)) {
 
 			log_very_verbose("Process single VG %s", vg_name);
 
@@ -2264,7 +2250,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
-	int selected;
 	int whole_selected = 0;
 	int handle_supplied = handle != NULL;
 	unsigned process_lv;
@@ -2369,7 +2354,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!process_lv && tags_supplied && str_list_match_list(tags_in, &lvl->lv->tags, NULL))
 			process_lv = 1;
 
-		process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv, &selected) && selected;
+		process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv) && _select_matches(handle);
 
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
@@ -2432,7 +2417,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				process_lv = 1;
 			}
 
-			process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv, &selected) && selected;
+			process_lv = process_lv && select_match_lv(cmd, handle, vg, lvl->lv) && _select_matches(handle);
 
 			if (sigint_caught()) {
 				ret_max = ECMD_FAILED;
@@ -3164,7 +3149,6 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	struct device_id_list *dil;
 	const char *pv_name;
-	int selected;
 	int process_pv;
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
@@ -3203,7 +3187,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		    str_list_match_list(arg_tags, &pv->tags, NULL))
 			process_pv = 1;
 
-		process_pv = process_pv && select_match_pv(cmd, handle, vg, pv, &selected) && selected;
+		process_pv = process_pv && select_match_pv(cmd, handle, vg, pv) && _select_matches(handle);
 
 		if (process_pv) {
 			if (skip)

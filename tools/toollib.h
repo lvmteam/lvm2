@@ -147,11 +147,11 @@ int init_selection_handle(struct cmd_context *cmd, struct processing_handle *han
 void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle *handle);
 
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
-		    struct volume_group *vg, int *selected);
+		    struct volume_group *vg);
 int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
-		    struct volume_group *vg, struct logical_volume *lv, int *selected);
+		    struct volume_group *vg, struct logical_volume *lv);
 int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
-		    struct volume_group *vg, struct physical_volume *pv, int *selected);
+		    struct volume_group *vg, struct physical_volume *pv);
 
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 const char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
