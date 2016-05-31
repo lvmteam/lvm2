@@ -75,7 +75,10 @@ int scan(daemon_handle h, char *fn) {
 	}
 
 	char uuid[64];
-	id_write_format(dev->pvid, uuid, 64);
+	if (!id_write_format(dev->pvid, uuid, 64)) {
+		fprintf(stderr, "[C] Failed to format PV UUID for %s", dev_name(dev));
+		return;
+	}
 	fprintf(stderr, "[C] found PV: %s\n", uuid);
 	struct lvmcache_info *info = (struct lvmcache_info *) label->info;
 	struct physical_volume pv = { 0, };

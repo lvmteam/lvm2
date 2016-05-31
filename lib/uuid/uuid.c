@@ -171,6 +171,8 @@ int id_write_format(const struct id *id, char *buffer, size_t size)
 
 	/* split into groups separated by dashes */
 	if (size < (32 + 6 + 1)) {
+		if (size > 0)
+			buffer[0] = '\0';
 		log_error("Couldn't write uuid, buffer too small.");
 		return 0;
 	}

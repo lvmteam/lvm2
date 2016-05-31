@@ -995,7 +995,8 @@ next:
 			alt = devl;
 		}
 
-		id_write_format((const struct id *)dev1->pvid, uuid, sizeof(uuid));
+		if (!id_write_format((const struct id *)dev1->pvid, uuid, sizeof(uuid)))
+			stack;
 		log_warn("WARNING: PV %s prefers device %s because %s.", uuid, dev_name(dev1), reason);
 	}
 
@@ -2066,7 +2067,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 
 	strncpy(pvid_s, pvid, sizeof(pvid_s) - 1);
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
-	id_write_format((const struct id *)&pvid_s, uuid, sizeof(uuid));
+	if (!id_write_format((const struct id *)&pvid_s, uuid, sizeof(uuid)))
+		stack;
 
 	/*
 	 * Find existing info struct in _pvid_hash or create a new one.

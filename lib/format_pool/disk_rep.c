@@ -60,7 +60,8 @@ static void _add_pl_to_list(struct cmd_context *cmd, struct dm_list *head, struc
 		if (id_equal(&data->pv_uuid, &pl->pv_uuid)) {
 			char uuid[ID_LEN + 7] __attribute__((aligned(8)));
 
-			id_write_format(&pl->pv_uuid, uuid, ID_LEN + 7);
+			if (!id_write_format(&pl->pv_uuid, uuid, ID_LEN + 7))
+				stack;
 
 			if (!dev_subsystem_part_major(cmd->dev_types, data->dev)) {
 				log_very_verbose("Ignoring duplicate PV %s on "
@@ -90,11 +91,13 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	pool_label_in(pd, buf);
 
 	get_pool_pv_uuid(&pvid, pd);
-	id_write_format(&pvid, uuid, ID_LEN + 7);
+	if (!id_write_format(&pvid, uuid, ID_LEN + 7))
+		stack;
 	log_debug_metadata("Calculated uuid %s for %s", uuid, dev_name(dev));
 
 	get_pool_vg_uuid(&vgid, pd);
-	id_write_format(&vgid, uuid, ID_LEN + 7);
+	if (!id_write_format(&vgid, uuid, ID_LEN + 7))
+		stack;
 	log_debug_metadata("Calculated uuid %s for %s", uuid, pd->pl_pool_name);
 
 	if (!(info = lvmcache_add(l, (char *) &pvid, dev, pd->pl_pool_name,

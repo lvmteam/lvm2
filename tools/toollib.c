@@ -1858,8 +1858,8 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		skip = 0;
 		notfound = 0;
 
-		if (vg_uuid)
-			id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid));
+		if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
+			stack;
 
 		log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
 
@@ -1954,7 +1954,8 @@ static int _resolve_duplicate_vgnames(struct cmd_context *cmd,
 			 * name/vgid and checks system_id in the metadata.
 			 */
 			if (lvmcache_vg_is_foreign(cmd, vgnl->vg_name, vgnl->vgid)) {
-				id_write_format((const struct id*)vgnl->vgid, uuid, sizeof(uuid));
+				if (!id_write_format((const struct id*)vgnl->vgid, uuid, sizeof(uuid)))
+					stack;
 				log_warn("WARNING: Ignoring foreign VG with matching name %s UUID %s.",
 					 vgnl->vg_name, uuid);
 				dm_list_del(&vgnl->list);
@@ -2659,8 +2660,8 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 			}
 		}
 
-		if (vg_uuid)
-			id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid));
+		if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
+			stack;
 
 		log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
 
