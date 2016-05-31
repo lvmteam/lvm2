@@ -3499,7 +3499,7 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		.target_attr = ~0,
 		.idls = DM_LIST_HEAD_INIT(lp.idls),
 	};
-	struct processing_handle *handle = init_processing_handle(cmd);
+	struct processing_handle *handle = init_processing_handle(cmd, NULL);
 
 	if (!handle) {
 		log_error("Failed to initialize processing handle.");

@@ -210,7 +210,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!(lp.lv_name_new = dm_pool_strdup(cmd->mem, lv_name_new)))
 		return ECMD_FAILED;
 
-	if (!(handle = init_processing_handle(cmd))) {
+	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}

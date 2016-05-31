@@ -85,7 +85,7 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 	char *last_filename = NULL;
 	struct processing_handle *handle = NULL;
 
-	if (!(handle = init_processing_handle(cmd))) {
+	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}

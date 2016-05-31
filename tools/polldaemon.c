@@ -561,7 +561,7 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
 		return r ? ECMD_PROCESSED : ECMD_FAILED;
 	} else {
 		/* process all in-flight operations */
-		if (!(handle = init_processing_handle(cmd))) {
+		if (!(handle = init_processing_handle(cmd, NULL))) {
 			log_error("Failed to initialize processing handle.");
 			return ECMD_FAILED;
 		} else {
@@ -614,7 +614,7 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	} else {
 		if (!parms->interval)
 			parms->interval = find_config_tree_int(cmd, activation_polling_interval_CFG, NULL);
-		if (!(handle = init_processing_handle(cmd))) {
+		if (!(handle = init_processing_handle(cmd, NULL))) {
 			log_error("Failed to initialize processing handle.");
 			ret = ECMD_FAILED;
 		} else {

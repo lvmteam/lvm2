@@ -1705,7 +1705,7 @@ static int _get_arg_vgnames(struct cmd_context *cmd,
 	return ret_max;
 }
 
-struct processing_handle *init_processing_handle(struct cmd_context *cmd)
+struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct processing_handle *parent_handle)
 {
 	struct processing_handle *handle;
 
@@ -1713,6 +1713,8 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd)
 		log_error("_init_processing_handle: failed to allocate memory for processing handle");
 		return NULL;
 	}
+
+	handle->parent = parent_handle;
 
 	/*
 	 * For any reporting tool, the internal_report_for_select is reset to 0
@@ -1725,10 +1727,12 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd)
 	handle->internal_report_for_select = arg_is_set(cmd, select_ARG);
 	handle->include_historical_lvs = cmd->include_historical_lvs;
 
-	if (!report_format_init(cmd, &handle->report_group_type, &handle->report_group,
-				&handle->log_rh)) {
-		dm_pool_free(cmd->mem, handle);
-		return NULL;
+	if (!parent_handle) {
+		if (!report_format_init(cmd, &handle->report_group_type, &handle->report_group,
+					&handle->log_rh)) {
+			dm_pool_free(cmd->mem, handle);
+			return NULL;
+		}
 	}
 
 	return handle;
@@ -2189,7 +2193,7 @@ int process_each_vg(struct cmd_context *cmd,
 	else
 		_choose_vgs_to_process(cmd, &arg_vgnames, &vgnameids_on_system, &vgnameids_to_process);
 
-	if (!handle && !(handle = init_processing_handle(cmd))) {
+	if (!handle && !(handle = init_processing_handle(cmd, NULL))) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -2286,7 +2290,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	if (arg_lvnames && !dm_list_empty(arg_lvnames))
 		lvargs_supplied = 1;
 
-	if (!handle && !(handle = init_processing_handle(cmd))) {
+	if (!handle && !(handle = init_processing_handle(cmd, NULL))) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -2747,7 +2751,7 @@ int process_each_lv(struct cmd_context *cmd,
 		goto_out;
 	}
 
-	if (!handle && !(handle = init_processing_handle(cmd))) {
+	if (!handle && !(handle = init_processing_handle(cmd, NULL))) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}
@@ -3168,7 +3172,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 
-	if (!handle && (!(handle = init_processing_handle(cmd)))) {
+	if (!handle && (!(handle = init_processing_handle(cmd, NULL)))) {
 		ret_max = ECMD_FAILED;
 		goto_out;
 	}

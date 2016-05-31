@@ -216,7 +216,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (!(handle = init_processing_handle(cmd))) {
+	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		ret = ECMD_FAILED;
 		goto out;

@@ -581,7 +581,7 @@ int report_for_selection(struct cmd_context *cmd,
 				    &sh->report_type))
 		return_0;
 
-	if (!(handle = init_processing_handle(cmd)))
+	if (!(handle = init_processing_handle(cmd, parent_handle)))
 		return_0;
 
 	/*
@@ -832,7 +832,7 @@ static int _do_report(struct cmd_context *cmd, struct report_args *args, struct 
 	int lv_segment_status_needed;
 	int r = ECMD_FAILED;
 
-	if (!(handle = init_processing_handle(cmd)))
+	if (!(handle = init_processing_handle(cmd, NULL)))
 		goto_out;
 
 	if (!(report_handle = report_init(cmd, single_args->options, single_args->keys, &report_type,

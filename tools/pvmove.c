@@ -877,7 +877,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		if (is_abort)
 			cmd->lockd_vg_default_sh = 1;
 
-		if (!(handle = init_processing_handle(cmd))) {
+		if (!(handle = init_processing_handle(cmd, NULL))) {
 			log_error("Failed to initialize processing handle.");
 			return ECMD_FAILED;
 		}
