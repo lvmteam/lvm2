@@ -1766,49 +1766,49 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 int select_match_vg(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg)
 {
+	int r;
+
 	if (!handle->internal_report_for_select)
 		return 1;
 
 	handle->selection_handle->orig_report_type = VGS;
-	if (!report_for_selection(cmd, handle, NULL, vg, NULL)) {
+	if (!(r = report_for_selection(cmd, handle, NULL, vg, NULL)))
 		log_error("Selection failed for VG %s.", vg->name);
-		return 0;
-	}
 	handle->selection_handle->orig_report_type = 0;
 
-	return 1;
+	return r;
 }
 
 int select_match_lv(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, struct logical_volume *lv)
 {
+	int r;
+
 	if (!handle->internal_report_for_select)
 		return 1;
 
 	handle->selection_handle->orig_report_type = LVS;
-	if (!report_for_selection(cmd, handle, NULL, vg, lv)) {
+	if (!(r = report_for_selection(cmd, handle, NULL, vg, lv)))
 		log_error("Selection failed for LV %s.", lv->name);
-		return 0;
-	}
 	handle->selection_handle->orig_report_type = 0;
 
-	return 1;
+	return r;
 }
 
 int select_match_pv(struct cmd_context *cmd, struct processing_handle *handle,
 		    struct volume_group *vg, struct physical_volume *pv)
 {
+	int r;
+
 	if (!handle->internal_report_for_select)
 		return 1;
 
 	handle->selection_handle->orig_report_type = PVS;
-	if (!report_for_selection(cmd, handle, pv, vg, NULL)) {
+	if (!(r = report_for_selection(cmd, handle, pv, vg, NULL)))
 		log_error("Selection failed for PV %s.", dev_name(pv->dev));
-		return 0;
-	}
 	handle->selection_handle->orig_report_type = 0;
 
-	return 1;
+	return r;
 }
 
 static int _select_matches(struct processing_handle *handle)
