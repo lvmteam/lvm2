@@ -858,7 +858,7 @@ static int _print_historical_lv(struct formatter *f, struct historical_logical_v
 	if (!_alloc_printed_indirect_descendants(&hlv->indirect_glvs, &descendants_buffer))
 		goto_out;
 
-	outnl(f);
+	outnlgo(f);
 	outfgo(f, "%s {", hlv->name);
 	_inc_indent(f);
 
