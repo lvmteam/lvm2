@@ -332,7 +332,7 @@ CLEAN_TARGETS += $(RUN_BASE) $(addprefix lib/,$(LIB_LVMLOCKD_CONF))
 endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
-	$(CMDS) clvmd dmeventd dmsetup lvmetad lvmpolld \
+	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
 	harness thin-performance.profile fsadm vgimportclone \
 	dm-version-expected version-expected \
 	paths-installed paths-installed-t paths-common paths-common-t)
