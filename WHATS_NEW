@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Automatically filter out partitioned loop devices with partscan (losetup -P).
   Fix lvm devtypes internal error if -S used with field name from pvs/vgs/lvs.
   When reporting Data%,Snap%,Meta%,Cpy%Sync use single ioctl per LV.
   Add lvseg_percent_with_info_and_seg_status() for percent retrieval.

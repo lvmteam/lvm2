@@ -125,6 +125,9 @@ struct dev_types *create_dev_types(const char *proc_dir,
 		if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
 			dt->emcpower_major = line_maj;
 
+		if (!strncmp("loop", line + i, 4) && isspace(*(line + i + 4)))
+			dt->loop_major = line_maj;
+
 		if (!strncmp("power2", line + i, 6) && isspace(*(line + i + 6)))
 			dt->power2_major = line_maj;
 
@@ -246,6 +249,9 @@ const char *dev_subsystem_name(struct dev_types *dt, struct device *dev)
 	if (MAJOR(dev->dev) == dt->blkext_major)
 		return "BLKEXT";
 
+	if (MAJOR(dev->dev) == dt->loop_major)
+		return "LOOP";
+
 	return "";
 }
 
@@ -263,6 +269,38 @@ int major_is_scsi_device(struct dev_types *dt, int major)
 		return 0;
 
 	return (dt->dev_type_array[major].flags & PARTITION_SCSI_DEVICE) ? 1 : 0;
+}
+
+
+static int _loop_is_with_partscan(struct device *dev)
+{
+	FILE *fp;
+	int partscan = 0;
+	char path[PATH_MAX];
+	char buffer[64];
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d/loop/partscan",
+			dm_sysfs_dir(),
+			(int) MAJOR(dev->dev),
+			(int) MINOR(dev->dev)) < 0) {
+		log_warn("Sysfs path for partscan is too long.");
+		return 0;
+	}
+
+	if (!(fp = fopen(path, "r")))
+		return 0; /* not there -> no partscan */
+
+	if (!fgets(buffer, sizeof(buffer), fp)) {
+		log_warn("Failed to read %s.", path);
+	} else if (sscanf(buffer, "%d", &partscan) != 1) {
+		log_warn("Failed to parse %s '%s'.", path, buffer);
+		partscan = 0;
+	}
+
+	if (fclose(fp))
+		log_sys_debug("fclose", path);
+
+	return partscan;
 }
 
 /* See linux/genhd.h and fs/partitions/msdos */
@@ -292,6 +330,11 @@ static int _is_partitionable(struct dev_types *dt, struct device *dev)
 
 	/* All MD devices are partitionable via blkext (as of 2.6.28) */
 	if (MAJOR(dev->dev) == dt->md_major)
+		return 1;
+
+	/* All loop devices are partitionable via blkext (as of 3.2) */
+	if ((MAJOR(dev->dev) == dt->loop_major) &&
+	    _loop_is_with_partscan(dev))
 		return 1;
 
 	if ((parts <= 1) || (MINOR(dev->dev) % parts))

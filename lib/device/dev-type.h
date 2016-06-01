@@ -43,6 +43,7 @@ struct dev_types {
 	int emcpower_major;
 	int power2_major;
 	int dasd_major;
+	int loop_major;
 	struct dev_type_def dev_type_array[NUMBER_OF_MAJORS];
 };
 
