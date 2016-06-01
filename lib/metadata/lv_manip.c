@@ -5410,7 +5410,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 bad:
 	if (inactive && !deactivate_lv(cmd, lock_lv))
-		log_error("Problem deactivating %s.", lock_lv->name);
+		log_error("Problem deactivating %s.", display_lvname(lock_lv));
 
 	return 0;
 }

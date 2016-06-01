@@ -369,18 +369,17 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 	struct lvresize_params lp = {
 		.lv_name = vg->sanlock_lv->name,
 		.sign = SIGN_NONE,
+		.size = lv->size + ((extend_mb * 1024 * 1024) / SECTOR_SIZE),
 		.percent = PERCENT_NONE,
 		.resize = LV_EXTEND,
 		.ac_force = 1,
 		.sizeargs = 1,
 	};
 
-	lp.size = lv->size + ((extend_mb * 1024 * 1024) / SECTOR_SIZE);
-
 	if (!lv_resize_prepare(cmd, lv, &lp, &vg->pvs) ||
 	    !lv_resize(cmd, lv, &lp, &vg->pvs)) {
-		log_error("Extend LV %s/%s to size %llu failed.",
-			  vg->name, lv->name, (unsigned long long)lp.size);
+		log_error("Extend LV %s to size %s failed.",
+			  display_lvname(lv), display_size(cmd, lp.size));
 		return 0;
 	}
 
