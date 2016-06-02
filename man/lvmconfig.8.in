@@ -71,6 +71,7 @@ Display all possible configuration settings with default values assigned.
 .IP \fBdiff\fP 3
 Display all configuration settings for which the values used differ from defaults.
 The value assigned for each configuration setting is the value currently used.
+Using this type also implies the use of \fB\-\-mergedconfig\fP option.
 This is actually minimal LVM configuration which can be used without
 a change to current configured behaviour.
 .IP \fBfull\fP 3
