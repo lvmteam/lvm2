@@ -63,3 +63,5 @@ install_lvm2: install_lvmdbusd
 
 install: install_lvm2
 
+DISTCLEAN_TARGETS+= \
+	$(LVMDBUS_BUILDDIR_FILES)
