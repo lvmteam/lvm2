@@ -210,7 +210,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	 * Set the 'cft' to work with based on whether we need the plain
 	 * config tree or merged config tree cascade if --mergedconfig is used.
 	 */
-	if ((arg_count(cmd, mergedconfig_ARG) || !strcmp(type, "full")) && cmd->cft->cascade) {
+	if ((arg_count(cmd, mergedconfig_ARG) || !strcmp(type, "full") || !strcmp(type, "diff")) && cmd->cft->cascade) {
 		if (!_merge_config_cascade(cmd, cmd->cft, &cft)) {
 			log_error("Failed to merge configuration.");
 			r = ECMD_FAILED;
