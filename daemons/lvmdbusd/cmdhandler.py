@@ -466,6 +466,7 @@ def lvm_full_report_json():
 	lv_seg_columns = ['seg_pe_ranges', 'segtype', 'lv_uuid']
 
 	cmd = _dc('fullreport', [
+		'-a',		# Need hidden too
 		'-o', '/pv/' + ','.join(pv_columns),
 		'-o', '/vg/' + ','.join(vg_columns),
 		'-o', '/lv/' + ','.join(lv_columns),
