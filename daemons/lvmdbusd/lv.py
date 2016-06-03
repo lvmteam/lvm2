@@ -179,6 +179,7 @@ class LvState(State):
 @utils.dbus_property(LV_COMMON_INTERFACE, 'HiddenLvs', "ao")
 class LvCommon(AutomatedProperties):
 	_Tags_meta = ("as", LV_COMMON_INTERFACE)
+	_Roles_meta = ("as", LV_COMMON_INTERFACE)
 	_IsThinVolume_meta = ("b", LV_COMMON_INTERFACE)
 	_IsThinPool_meta = ("b", LV_COMMON_INTERFACE)
 	_Active_meta = ("b", LV_COMMON_INTERFACE)
@@ -279,6 +280,10 @@ class LvCommon(AutomatedProperties):
 	@property
 	def Tags(self):
 		return utils.parse_tags(self.state.Tags)
+
+	@property
+	def Roles(self):
+		return utils.parse_tags(self.state.role)
 
 	@property
 	def lvm_id(self):
