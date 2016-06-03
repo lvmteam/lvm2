@@ -1,5 +1,6 @@
-Version 2.02.155 - 
+Version 2.02.155 - 3rd June 2016
 ================================
+  Reject PV tags on pvmove cmdline because only 1 PV is supported. (2.02.141)
   Fix compilation error when building with configure --disable-devmapper.
   Fix lvmconfig --type diff to display complete diff if config cascade used.
   Automatically filter out partitioned loop devices with partscan (losetup -P).
