@@ -3375,6 +3375,11 @@ int process_each_pv(struct cmd_context *cmd,
 		return ret;
 	}
 
+	if ((cmd->command->flags & DISALLOW_TAG_ARGS) && !dm_list_empty(&arg_tags)) {
+		log_error("Tags cannot be used with this command.");
+		return ECMD_FAILED;
+	}
+
 	orphans_locked = lvmcache_vgname_is_locked(VG_ORPHANS);
 
 	process_all_pvs = dm_list_empty(&arg_pvnames) && dm_list_empty(&arg_tags);

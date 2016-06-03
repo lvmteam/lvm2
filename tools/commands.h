@@ -874,9 +874,11 @@ xx(pvdisplay,
    select_ARG, separator_ARG, shared_ARG, short_ARG, sort_ARG, unbuffered_ARG,
    units_ARG)
 
+/* ALL_VGS_IS_DEFAULT is for polldaemon to find pvmoves in-progress using process_each_vg. */
+
 xx(pvmove,
    "Move extents from one physical volume to another",
-   ALL_VGS_IS_DEFAULT,	/* For polldaemon to find pvmoves in-progress using process_each_vg. */
+   ALL_VGS_IS_DEFAULT | DISALLOW_TAG_ARGS,
    "pvmove\n"
    "\t[--abort]\n"
    "\t[--alloc AllocationPolicy]\n"
