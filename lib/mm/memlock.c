@@ -72,6 +72,11 @@ void memlock_reset(void)
 	return;
 }
 
+int memlock_count_daemon(void)
+{
+	return 0;
+}
+
 #else				/* DEVMAPPER_SUPPORT */
 
 static size_t _size_stack;
@@ -645,9 +650,9 @@ void memlock_unlock(struct cmd_context *cmd)
 	_unlock_mem_if_possible(cmd);
 }
 
-#endif
-
 int memlock_count_daemon(void)
 {
 	return _memlock_count_daemon;
 }
+
+#endif

@@ -1,5 +1,6 @@
 Version 2.02.155 - 
 ================================
+  Fix compilation error when building with configure --disable-devmapper.
   Fix lvmconfig --type diff to display complete diff if config cascade used.
   Automatically filter out partitioned loop devices with partscan (losetup -P).
   Fix lvm devtypes internal error if -S used with field name from pvs/vgs/lvs.

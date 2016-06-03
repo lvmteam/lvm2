@@ -253,8 +253,9 @@ int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
 int lv_cache_status(const struct logical_volume *cache_lv,
 		    struct lv_status_cache **status)
 {
+	return 0;
 }
-int lv_check_not_in_use(const struct logical_volume *lv)
+int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 {
         return 0;
 }
@@ -284,18 +285,6 @@ int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action)
 	return 0;
 }
 int lv_raid_message(const struct logical_volume *lv, const char *msg)
-{
-	return 0;
-}
-int lv_cache_block_info(struct logical_volume *lv,
-			uint32_t *chunk_size, uint64_t *dirty_count,
-			uint64_t *used_count, uint64_t *total_count)
-{
-	return 0;
-}
-int lv_cache_policy_info(struct logical_volume *lv,
-			 const char **policy_name, int *policy_argc,
-			 const char ***policy_argv)
 {
 	return 0;
 }
