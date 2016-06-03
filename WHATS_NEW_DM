@@ -104,7 +104,7 @@ Version 1.02.110 - 30th October 2015
   Correct use of max_write_behind parameter when generating raid target line.
   Fix dm-event systemd service to make sure it is executed before mounting.
 
-Version 1.02.109 - 22nd September 2016
+Version 1.02.109 - 22nd September 2015
 ======================================
   Update man pages for dmsetup and dmstats.
   Improve help text for dmsetup.
