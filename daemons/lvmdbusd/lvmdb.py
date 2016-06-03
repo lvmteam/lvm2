@@ -13,6 +13,7 @@ from collections import OrderedDict
 
 import pprint as prettyprint
 import os
+import sys
 
 try:
 	from . import cmdhandler
@@ -23,7 +24,7 @@ except SystemError:
 
 
 class DataStore(object):
-	def __init__(self):
+	def __init__(self, usejson=None):
 		self.pvs = {}
 		self.vgs = {}
 		self.lvs = {}
@@ -40,6 +41,11 @@ class DataStore(object):
 
 		# self.refresh()
 		self.num_refreshes = 0
+
+		if usejson is None:
+			self.json = cmdhandler.supports_json()
+		else:
+			self.json = usejson
 
 	@staticmethod
 	def _insert_record(table, key, record, allowed_multiple):
@@ -94,6 +100,58 @@ class DataStore(object):
 		return c_pvs, c_lookup, c_pvs_in_vgs
 
 	@staticmethod
+	def _parse_pvs_json(_all):
+
+		c_pvs = OrderedDict()
+		c_lookup = {}
+		c_pvs_in_vgs = {}
+
+		# Each item item in the report is a collection of information pertaining
+		# to the vg
+		for r in _all['report']:
+			tmp_pv = []
+
+			# Get the pv data for this VG.
+			if 'pv' in r:
+				tmp_pv.extend(r['pv'])
+
+				# Sort them
+				sorted_tmp_pv = sorted(tmp_pv, key=lambda pk: pk['pv_name'])
+
+				# Add them to result set
+				for p in sorted_tmp_pv:
+					c_pvs[p['pv_uuid']] = p
+
+				if 'pvseg' in r:
+					for s in r['pvseg']:
+						# TODO Why is json pvseg_start, not pv_seg_start?
+						r = c_pvs[s['pv_uuid']]
+						r.setdefault('pv_seg_start', []).append(s['pvseg_start'])
+						r.setdefault('pvseg_size', []).append(s['pvseg_size'])
+						r.setdefault('segtype', []).append(s['segtype'])
+
+				# TODO: Remove this bug work around when we have orphan segs.
+				for i in c_pvs.values():
+					if 'pv_seg_start' not in i:
+						i['pv_seg_start'] = '0'
+						i['pvseg_size'] = i['pv_pe_count']
+						i['segtype'] = 'free'
+
+		for p in c_pvs.values():
+			# Capture which PVs are associated with which VG
+			if p['vg_uuid'] not in c_pvs_in_vgs:
+				c_pvs_in_vgs[p['vg_uuid']] = []
+
+			if p['vg_name']:
+				c_pvs_in_vgs[p['vg_uuid']].append(
+					(p['pv_name'], p['pv_uuid']))
+
+			# Lookup for translating between /dev/<name> and pv uuid
+			c_lookup[p['pv_name']] = p['pv_uuid']
+
+		return c_pvs, c_lookup, c_pvs_in_vgs
+
+	@staticmethod
 	def _parse_vgs(_vgs):
 		vgs = sorted(_vgs, key=lambda vk: vk['vg_name'])
 
@@ -107,20 +165,31 @@ class DataStore(object):
 		return c_vgs, c_lookup
 
 	@staticmethod
-	def _parse_lvs(_lvs):
-		lvs = sorted(_lvs, key=lambda vk: vk['lv_name'])
+	def _parse_vgs_json(_all):
 
-		c_lvs = OrderedDict()
-		c_lvs_in_vgs = {}
-		c_lvs_hidden = {}
-		c_lv_full_lookup = {}
+		tmp_vg = []
+		for r in _all['report']:
+			# Get the pv data for this VG.
+			if 'vg' in r:
+				tmp_vg.extend(r['vg'])
 
-		for i in lvs:
-			full_name = "%s/%s" % (i['vg_name'], i['lv_name'])
-			c_lv_full_lookup[full_name] = i['lv_uuid']
-			DataStore._insert_record(
-				c_lvs, i['lv_uuid'], i,
-				['seg_pe_ranges', 'segtype'])
+		# Sort for consistent output, however this is optional
+		vgs = sorted(tmp_vg, key=lambda vk: vk['vg_name'])
+
+		c_vgs = OrderedDict()
+		c_lookup = {}
+
+		for i in vgs:
+			c_lookup[i['vg_name']] = i['vg_uuid']
+			c_vgs[i['vg_uuid']] = i
+
+		return c_vgs, c_lookup
+
+	@staticmethod
+	def _parse_lvs_common(c_lvs, c_lv_full_lookup):
+
+		c_lvs_in_vgs = OrderedDict()
+		c_lvs_hidden = OrderedDict()
 
 		for i in c_lvs.values():
 			if i['vg_uuid'] not in c_lvs_in_vgs:
@@ -149,6 +218,55 @@ class DataStore(object):
 					(i['lv_uuid'], i['lv_name']))
 
 		return c_lvs, c_lvs_in_vgs, c_lvs_hidden, c_lv_full_lookup
+
+	@staticmethod
+	def _parse_lvs(_lvs):
+		lvs = sorted(_lvs, key=lambda vk: vk['lv_name'])
+
+		c_lvs = OrderedDict()
+		c_lv_full_lookup = OrderedDict()
+
+		for i in lvs:
+			full_name = "%s/%s" % (i['vg_name'], i['lv_name'])
+			c_lv_full_lookup[full_name] = i['lv_uuid']
+			DataStore._insert_record(
+				c_lvs, i['lv_uuid'], i,
+				['seg_pe_ranges', 'segtype'])
+
+		return DataStore._parse_lvs_common(c_lvs, c_lv_full_lookup)
+
+
+	@staticmethod
+	def _parse_lvs_json(_all):
+
+		c_lvs = OrderedDict()
+		c_lv_full_lookup = {}
+
+		# Each item item in the report is a collection of information pertaining
+		# to the vg
+		for r in _all['report']:
+			tmp_lv = []
+			# Get the lv data for this VG.
+			if 'lv' in r:
+				tmp_lv.extend(r['lv'])
+
+				# Sort them
+				sorted_tmp_lv = sorted(tmp_lv, key=lambda vk: vk['lv_name'])
+
+				# Add them to result set
+				for i in sorted_tmp_lv:
+					full_name = "%s/%s" % (i['vg_name'], i['lv_name'])
+					c_lv_full_lookup[full_name] = i['lv_uuid']
+					c_lvs[i['lv_uuid']] = i
+
+				# Add in the segment data
+				if 'seg' in r:
+					for s in r['seg']:
+						r = c_lvs[s['lv_uuid']]
+						r.setdefault('seg_pe_ranges', []).append(s['seg_pe_ranges'])
+						r.setdefault('segtype', []).append(s['segtype'])
+
+		return DataStore._parse_lvs_common(c_lvs, c_lv_full_lookup)
 
 	@staticmethod
 	def _make_list(l):
@@ -278,13 +396,22 @@ class DataStore(object):
 			log_debug("lvmdb - refresh entry")
 
 		# Grab everything first then parse it
-		_raw_pvs = cmdhandler.pv_retrieve_with_segs()
-		_raw_vgs = cmdhandler.vg_retrieve(None)
-		_raw_lvs = cmdhandler.lv_retrieve_with_segments()
+		if self.json:
+			# Do a single lvm retrieve for everything in json
+			a = cmdhandler.lvm_full_report_json()
 
-		_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs(_raw_pvs)
-		_vgs, _vgs_lookup = self._parse_vgs(_raw_vgs)
-		_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs(_raw_lvs)
+			_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs_json(a)
+			_vgs, _vgs_lookup = self._parse_vgs_json(a)
+			_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs_json(a)
+
+		else:
+			_raw_pvs = cmdhandler.pv_retrieve_with_segs()
+			_raw_vgs = cmdhandler.vg_retrieve(None)
+			_raw_lvs = cmdhandler.lv_retrieve_with_segments()
+
+			_pvs, _pvs_lookup, _pvs_in_vgs = self._parse_pvs(_raw_pvs)
+			_vgs, _vgs_lookup = self._parse_vgs(_raw_vgs)
+			_lvs, _lvs_in_vgs, _lvs_hidden, _lvs_lookup = self._parse_lvs(_raw_lvs)
 
 		# Set all
 		self.pvs = _pvs
@@ -389,12 +516,20 @@ class DataStore(object):
 if __name__ == "__main__":
 	pp = prettyprint.PrettyPrinter(indent=4)
 
-	ds = DataStore()
+	use_json = False
+
+	if len(sys.argv) != 1:
+		print(len(sys.argv))
+		use_json = True
+
+	ds = DataStore(use_json)
 	ds.refresh()
 
+	print("PVS")
 	for v in ds.pvs.values():
 		pp.pprint(v)
 
+	print("VGS")
 	for v in ds.vgs.values():
 		pp.pprint(v)
 

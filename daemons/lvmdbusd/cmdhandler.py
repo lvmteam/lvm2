@@ -22,6 +22,11 @@ except SystemError:
 	from utils import pv_dest_ranges, log_debug, log_error
 	from lvm_shell_proxy import LVMShellProxy
 
+try:
+	import simplejson as json
+except ImportError:
+	import json
+
 SEP = '{|}'
 
 total_time = 0.0
@@ -424,6 +429,55 @@ def lv_detach_cache(lv_full_name, detach_options, destroy_cache):
 	cmd.extend(["--yes", "--force"])
 	cmd.extend([option, lv_full_name])
 	return call(cmd)
+
+
+def supports_json():
+	cmd = ['help']
+	rc, out, err = call(cmd)
+	if rc == 0:
+		if 'fullreport' in err:
+			return True
+	return False
+
+
+def lvm_full_report_json():
+	pv_columns = ['pv_name', 'pv_uuid', 'pv_fmt', 'pv_size', 'pv_free',
+					'pv_used', 'dev_size', 'pv_mda_size', 'pv_mda_free',
+					'pv_ba_start', 'pv_ba_size', 'pe_start', 'pv_pe_count',
+					'pv_pe_alloc_count', 'pv_attr', 'pv_tags', 'vg_name',
+					'vg_uuid']
+
+	pv_seg_columns = ['pv_seg_start', 'pv_seg_size', 'segtype',
+					  'pv_uuid', 'lv_uuid', 'pv_name']
+
+	vg_columns = ['vg_name', 'vg_uuid', 'vg_fmt', 'vg_size', 'vg_free',
+					'vg_sysid', 'vg_extent_size', 'vg_extent_count',
+					'vg_free_count', 'vg_profile', 'max_lv', 'max_pv',
+					'pv_count', 'lv_count', 'snap_count', 'vg_seqno',
+					'vg_mda_count', 'vg_mda_free', 'vg_mda_size',
+					'vg_mda_used_count', 'vg_attr', 'vg_tags']
+
+	lv_columns = ['lv_uuid', 'lv_name', 'lv_path', 'lv_size',
+				'vg_name', 'pool_lv_uuid', 'pool_lv', 'origin_uuid',
+				'origin', 'data_percent',
+				'lv_attr', 'lv_tags', 'vg_uuid', 'lv_active', 'data_lv',
+				'metadata_lv', 'lv_parent', 'lv_role', 'lv_layout']
+
+	lv_seg_columns = ['seg_pe_ranges', 'segtype', 'lv_uuid']
+
+	cmd = _dc('fullreport', [
+		'-o', '/pv/' + ','.join(pv_columns),
+		'-o', '/vg/' + ','.join(vg_columns),
+		'-o', '/lv/' + ','.join(lv_columns),
+		'-o', '/seg/' + ','.join(lv_seg_columns),
+		'-o', '/pvseg/' + ','.join(pv_seg_columns),
+		'--reportformat', 'json'
+	])
+
+	rc, out, err = call(cmd)
+	if rc == 0:
+		return json.loads(out)
+	return None
 
 
 def pv_retrieve_with_segs(device=None):
