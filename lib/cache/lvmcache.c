@@ -1519,6 +1519,16 @@ const char *lvmcache_pvid_from_devname(struct cmd_context *cmd,
 	return dev->pvid;
 }
 
+int lvmcache_pvid_in_unchosen_duplicates(const char *pvid)
+{
+	struct device_list *devl;
+
+	dm_list_iterate_items(devl, &_unused_duplicate_devs) {
+		if (!strncmp(devl->dev->pvid, pvid, ID_LEN))
+			return 1;
+	}
+	return 0;
+}
 
 static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 {

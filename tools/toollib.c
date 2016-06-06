@@ -3908,6 +3908,15 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	}
 
 	/*
+	 * Don't allow using a device with duplicates.
+	 */
+	if (lvmcache_pvid_in_unchosen_duplicates(pd->dev->pvid)) {
+		log_error("Cannot use device %s with duplicates.", pd->name);
+		dm_list_move(&pp->arg_fail, &pd->list);
+		return 1;
+	}
+
+	/*
 	 * What kind of device is this: an orphan PV, an uninitialized/unused
 	 * device, a PV used in a VG.
 	 */
