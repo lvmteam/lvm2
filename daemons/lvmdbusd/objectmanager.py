@@ -124,8 +124,8 @@ class ObjectManager(AutomatedProperties):
 		with self.rlock:
 			path, props = dbus_object.emit_data()
 
-			# print 'Registering object path %s for %s' %
-			# (path, dbus_object.lvm_id)
+			# print('Registering object path %s for %s' %
+			#		(path, dbus_object.lvm_id))
 
 			# We want fast access to the object by a number of different ways
 			# so we use multiple hashs with different keys
