@@ -690,8 +690,11 @@ static int _vginfo_is_invalid(struct lvmcache_vginfo *vginfo)
 /*
  * If valid_only is set, data will only be returned if the cached data is
  * known still to be valid.
+ *
+ * When the device being worked with is known, pass that dev as the second arg.
+ * This ensures that when duplicates exist, the wrong dev isn't used.
  */
-struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, int valid_only)
+struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, struct device *dev, int valid_only)
 {
 	struct lvmcache_info *info;
 	char id[ID_LEN + 1] __attribute__((aligned(8)));
@@ -704,6 +707,15 @@ struct lvmcache_info *lvmcache_info_from_pvid(const char *pvid, int valid_only)
 
 	if (!(info = dm_hash_lookup(_pvid_hash, id)))
 		return NULL;
+
+	/*
+	 * When handling duplicate PVs, more than one device can have this pvid.
+	 */
+	if (dev && info->dev && (info->dev != dev)) {
+		log_debug_cache("Ignoring lvmcache info for dev %s because dev %s was requested for PVID %s.",
+				dev_name(info->dev), dev_name(dev), id);
+		return NULL;
+	}
 
 	if (valid_only && !_info_is_valid(info))
 		return NULL;
@@ -733,7 +745,7 @@ char *lvmcache_vgname_from_pvid(struct cmd_context *cmd, const char *pvid)
 		return NULL;
 	}
 
-	info = lvmcache_info_from_pvid(pvid, 0);
+	info = lvmcache_info_from_pvid(pvid, NULL, 0);
 	if (!info)
 		return_NULL;
 
@@ -868,7 +880,7 @@ next:
 	 * Find the device for the pvid that's currently in lvmcache.
 	 */
 
-	if (!(info = lvmcache_info_from_pvid(alt->dev->pvid, 0))) {
+	if (!(info = lvmcache_info_from_pvid(alt->dev->pvid, NULL, 0))) {
 		/* This shouldn't happen */
 		log_warn("WARNING: PV %s on duplicate device %s not found in cache.",
 			 alt->dev->pvid, dev_name(alt->dev));
@@ -1110,7 +1122,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 
 		dm_list_iterate_items(devl, &del_cache_devs) {
 			log_debug_cache("Drop duplicate device %s in lvmcache", dev_name(devl->dev));
-			if ((info = lvmcache_info_from_pvid(devl->dev->pvid, 0)))
+			if ((info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0)))
 				lvmcache_del(info);
 		}
 
@@ -1381,7 +1393,7 @@ static struct device *_device_from_pvid(const struct id *pvid,
 	struct lvmcache_info *info;
 	struct label *label;
 
-	if ((info = lvmcache_info_from_pvid((const char *) pvid, 0))) {
+	if ((info = lvmcache_info_from_pvid((const char *) pvid, NULL, 0))) {
 		if (lvmetad_used()) {
 			if (info->label && label_sector)
 				*label_sector = info->label->sector;
@@ -1962,7 +1974,7 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s) - 1);
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
-		if ((info = lvmcache_info_from_pvid(pvid_s, 0)) &&
+		if ((info = lvmcache_info_from_pvid(pvid_s, pvl->pv->dev, 0)) &&
 		    !lvmcache_update_vgname_and_id(info, &vgsummary))
 			return_0;
 	}
@@ -2072,12 +2084,15 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 
 	/*
 	 * Find existing info struct in _pvid_hash or create a new one.
+	 *
+	 * Don't pass the known "dev" as an arg here.  The mismatching
+	 * devs for the duplicate case is checked below.
 	 */
 
-	info = lvmcache_info_from_pvid(pvid_s, 0);
+	info = lvmcache_info_from_pvid(pvid_s, NULL, 0);
 
 	if (!info)
-		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		info = lvmcache_info_from_pvid(dev->pvid, NULL, 0);
 
 	if (!info) {
 		info = _create_info(labeller, dev);
@@ -2262,7 +2277,7 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans, int reset)
 
 int lvmcache_pvid_is_locked(const char *pvid) {
 	struct lvmcache_info *info;
-	info = lvmcache_info_from_pvid(pvid, 0);
+	info = lvmcache_info_from_pvid(pvid, NULL, 0);
 	if (!info || !info->vginfo)
 		return 0;
 

@@ -184,7 +184,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 
       out:
 	if (!found) {
-		if ((info = lvmcache_info_from_pvid(dev->pvid, 0)))
+		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
 		log_very_verbose("%s: No label detected", dev_name(dev));
 	}
@@ -271,16 +271,18 @@ int label_read(struct device *dev, struct label **result,
 	struct lvmcache_info *info;
 	int r = 0;
 
-	if ((info = lvmcache_info_from_pvid(dev->pvid, 1))) {
-		log_debug_devs("Using cached label for %s", dev_name(dev));
+	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
+		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
 		*result = lvmcache_get_label(info);
 		return 1;
 	}
 
+	log_debug_devs("Reading label from device %s", dev_name(dev));
+
 	if (!dev_open_readonly(dev)) {
 		stack;
 
-		if ((info = lvmcache_info_from_pvid(dev->pvid, 0)))
+		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
 
 		return r;
@@ -355,7 +357,7 @@ int label_verify(struct device *dev)
 	int r = 0;
 
 	if (!dev_open_readonly(dev)) {
-		if ((info = lvmcache_info_from_pvid(dev->pvid, 0)))
+		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
 		return_0;
 	}

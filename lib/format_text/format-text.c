@@ -453,7 +453,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				   "not match expected name %s.", vgname);
 
       bad:
-	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, 0)) &&
+	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, dev_area->dev, 0)) &&
 	    !lvmcache_update_vgname_and_id(info, &vgsummary_orphan))
 		stack;
 
@@ -1447,7 +1447,7 @@ static int _text_pv_needs_rewrite(const struct format_type *fmt, struct physical
 	if (!pv->is_labelled)
 		return 1;
 
-	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, 0))) {
+	if (!(info = lvmcache_info_from_pvid((const char *)&pv->id, pv->dev, 0))) {
 		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
 		return 0;
 	}
@@ -1526,10 +1526,10 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		return_0;
 
 	if (lvmetad_used()) {
-		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 		if (!info && !lvmetad_pv_lookup_by_dev(fmt->cmd, dev, NULL))
 			return 0;
-		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 	} else {
 		struct label *label;
 		if (!(label_read(dev, &label, UINT64_C(0))))
@@ -1815,7 +1815,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 	 */
 	else {
 		if (!pv->dev ||
-		    !(info = lvmcache_info_from_pvid(pv->dev->pvid, 0))) {
+		    !(info = lvmcache_info_from_pvid(pv->dev->pvid, pv->dev, 0))) {
 			log_error("PV %s missing from cache", pv_dev_name(pv));
 			return 0;
 		}

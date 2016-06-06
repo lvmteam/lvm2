@@ -937,7 +937,7 @@ static int _pv_update_struct_pv(struct physical_volume *pv, struct format_instan
 {
 	struct lvmcache_info *info;
 
-	if ((info = lvmcache_info_from_pvid((const char *)&pv->id, 0))) {
+	if ((info = lvmcache_info_from_pvid((const char *)&pv->id, pv->dev, 0))) {
 		pv->label_sector = lvmcache_get_label(info)->sector;
 		pv->dev = lvmcache_device(info);
 		if (!pv->dev)
@@ -1175,7 +1175,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 		if ((num = strchr(mda_id, '_'))) {
 			*num = 0;
 			++num;
-			if ((info = lvmcache_info_from_pvid(mda_id, 0))) {
+			if ((info = lvmcache_info_from_pvid(mda_id, NULL, 0))) {
 				memset(&baton, 0, sizeof(baton));
 				baton.find = atoi(num);
 				baton.ignore = mda_is_ignored(mda);
@@ -1496,7 +1496,7 @@ int lvmetad_pv_found(struct cmd_context *cmd, const struct id *pvid, struct devi
 	if (!pvmeta)
 		return_0;
 
-	info = lvmcache_info_from_pvid((const char *)pvid, 0);
+	info = lvmcache_info_from_pvid((const char *)pvid, dev, 0);
 
 	if (!(pvmeta->root = make_config_node(pvmeta, "pv", NULL, NULL))) {
 		dm_config_destroy(pvmeta);
@@ -1682,7 +1682,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 		if (!pvl->pv->dev)
 			continue;
 
-		if (!(info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, 0))) {
+		if (!(info = lvmcache_info_from_pvid((const char *)&pvl->pv->id, pvl->pv->dev, 0))) {
 			log_error("Failed to find cached info for PV %s.", pv_dev_name(pvl->pv));
 			return NULL;
 		}

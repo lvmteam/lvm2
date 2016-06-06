@@ -160,7 +160,7 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
 	dm_list_del(&pvl->list);
 
 	pvl->pv->vg = vg->fid->fmt->orphan_vg; /* orphan */
-	if ((info = lvmcache_info_from_pvid((const char *) &pvl->pv->id, 0)))
+	if ((info = lvmcache_info_from_pvid((const char *) &pvl->pv->id, pvl->pv->dev, 0)))
 		lvmcache_fid_add_mdas(info, vg->fid->fmt->orphan_vg->fid,
 				      (const char *) &pvl->pv->id, ID_LEN);
 	pv_set_fid(pvl->pv, vg->fid->fmt->orphan_vg->fid);
@@ -4035,7 +4035,7 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 		if (is_missing_pv(pvl->pv))
 			continue;
 
-		if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, 0))) {
+		if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, pvl->pv->dev, 0))) {
 			log_error("Failed to find cached info for PV %s.", pv_dev_name(pvl->pv));
 			goto out;
 		}
@@ -4313,7 +4313,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				 * Check it's an orphan without metadata area
 				 * not ignored.
 				 */
-				if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, 1)) ||
+				if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, pvl->pv->dev, 1)) ||
 				    !lvmcache_is_orphan(info)) {
 					inconsistent_pvs = 1;
 					break;
@@ -4917,7 +4917,7 @@ const char *find_vgname_from_pvid(struct cmd_context *cmd,
 	vgname = lvmcache_vgname_from_pvid(cmd, pvid);
 
 	if (is_orphan_vg(vgname)) {
-		if (!(info = lvmcache_info_from_pvid(pvid, 0))) {
+		if (!(info = lvmcache_info_from_pvid(pvid, NULL, 0))) {
 			return_NULL;
 		}
 		/*
@@ -4975,7 +4975,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 		return_NULL;
 
 	if (lvmetad_used()) {
-		info = lvmcache_info_from_pvid(dev->pvid, 0);
+		info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 		if (!info) {
 			if (!lvmetad_pv_lookup_by_dev(cmd, dev, &found))
 				return_NULL;
@@ -4985,7 +4985,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 						  pv_name);
 				return NULL;
 			}
-			if (!(info = lvmcache_info_from_pvid(dev->pvid, 0))) {
+			if (!(info = lvmcache_info_from_pvid(dev->pvid, dev, 0))) {
 				if (warn_flags & WARN_PV_READ)
 					log_error("No cache info in lvmetad cache for %s.",
 						  pv_name);
