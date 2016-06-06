@@ -245,16 +245,10 @@ class DataStore(object):
 		# Each item item in the report is a collection of information pertaining
 		# to the vg
 		for r in _all['report']:
-			tmp_lv = []
 			# Get the lv data for this VG.
 			if 'lv' in r:
-				tmp_lv.extend(r['lv'])
-
-				# Sort them
-				sorted_tmp_lv = sorted(tmp_lv, key=lambda vk: vk['lv_name'])
-
 				# Add them to result set
-				for i in sorted_tmp_lv:
+				for i in r['lv']:
 					full_name = "%s/%s" % (i['vg_name'], i['lv_name'])
 					c_lv_full_lookup[full_name] = i['lv_uuid']
 					c_lvs[i['lv_uuid']] = i
