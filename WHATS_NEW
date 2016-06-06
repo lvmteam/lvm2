@@ -1,5 +1,6 @@
 Version 2.02.156 - 
 ================================
+  Fix regression in blkdeactivate causing dm and md devices to be skipped. (2.02.155)
 
 Version 2.02.155 - 3rd June 2016
 ================================

@@ -193,8 +193,7 @@ deactivate_holders () {
 }
 
 deactivate_dm () {
-	local name
-	name=$(printf "%s" "$name")
+	local name=$(printf "%s" "$name")
 	test -b "$DEV_DIR/mapper/$name" || return 0
 	test -z ${SKIP_DEVICE_LIST["$kname"]} || return 1
 
@@ -263,8 +262,7 @@ deactivate_lvm () {
 }
 
 deactivate_md () {
-	local name
-	name=$(printf "%s" "$name")
+	local name=$(printf "%s" "$name")
 	test -b "$DEV_DIR/$name" || return 0
 	test -z ${SKIP_DEVICE_LIST["$kname"]} || return 1
 
