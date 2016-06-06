@@ -311,6 +311,23 @@ class LvCommon(AutomatedProperties):
 
 # noinspection PyPep8Naming
 class Lv(LvCommon):
+	def _fetch_hidden(self, name):
+
+		# The name is vg/name
+		full_name = "%s/%s" % (self.vg_name_lookup(), name)
+
+		o = cfg.om.get_object_by_lvm_id(full_name)
+		if o:
+			return o.dbus_object_path()
+
+		return '/'
+
+	def _get_data_meta(self):
+
+		# Get the data
+		return (self._fetch_hidden(self.state.data_lv),
+				self._fetch_hidden(self.state.metadata_lv))
+
 	# noinspection PyUnusedLocal,PyPep8Naming
 	def __init__(self, object_path, object_state):
 		super(Lv, self).__init__(object_path, object_state)
@@ -634,23 +651,6 @@ class LvThinPool(Lv):
 	_DataLv_meta = ("o", THIN_POOL_INTERFACE)
 	_MetaDataLv_meta = ("o", THIN_POOL_INTERFACE)
 
-	def _fetch_hidden(self, name):
-
-		# The name is vg/name
-		full_name = "%s/%s" % (self.vg_name_lookup(), name)
-
-		o = cfg.om.get_object_by_lvm_id(full_name)
-		if o:
-			return o.dbus_object_path()
-
-		return '/'
-
-	def _get_data_meta(self):
-
-		# Get the data
-		return (self._fetch_hidden(self.state.data_lv),
-				self._fetch_hidden(self.state.metadata_lv))
-
 	def __init__(self, object_path, object_state):
 		super(LvThinPool, self).__init__(object_path, object_state)
 		self.set_interface(THIN_POOL_INTERFACE)
@@ -707,9 +707,21 @@ class LvThinPool(Lv):
 
 # noinspection PyPep8Naming
 class LvCachePool(Lv):
+	_DataLv_meta = ("o", CACHE_POOL_INTERFACE)
+	_MetaDataLv_meta = ("o", CACHE_POOL_INTERFACE)
+
 	def __init__(self, object_path, object_state):
 		super(LvCachePool, self).__init__(object_path, object_state)
 		self.set_interface(CACHE_POOL_INTERFACE)
+		self._data_lv, self._metadata_lv = self._get_data_meta()
+
+	@property
+	def DataLv(self):
+		return self._data_lv
+
+	@property
+	def MetaDataLv(self):
+		return self._metadata_lv
 
 	@staticmethod
 	def _cache_lv(lv_uuid, lv_name, lv_object_path, cache_options):
