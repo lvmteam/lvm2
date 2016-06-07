@@ -3546,13 +3546,6 @@ int vg_write(struct volume_group *vg)
 	if (!_vg_update_vg_precommitted(vg)) /* prepare precommited */
 		return_0;
 
-	/*
-	 * If precommit is not supported, changes take effect immediately.
-	 * FIXME Replace with a more-accurate FMT_COMMIT flag.
-	 */
-	if (!(vg->fid->fmt->features & FMT_PRECOMMIT) && !lvmetad_vg_update(vg))
-		return_0;
-
 	lockd_vg_update(vg);
 
 	return 1;
