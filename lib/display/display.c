@@ -831,50 +831,102 @@ void display_name_error(name_error_t name_error)
  * Prompt for y or n from stdin.
  * Defaults to 'no' in silent mode.
  * All callers should support --yes and/or --force to override this.
+ *
+ * Accepted are either _yes[] or _no[] strings or just their outset.
+ * When running without 'tty' stdin is printed to stderr.
+ * 'Yes' is accepted ONLY with '\n'.
  */
 char yes_no_prompt(const char *prompt, ...)
 {
-	int c = 0, ret = 0, cb = 0;
+	/* Lowercase Yes/No strings */
+	static const char _yes[] = "yes";
+	static const char _no[] = "no";
+	const char *answer = NULL;
+	int c = silent_mode() ? EOF : 0;
+	int i, ret = 0, sig = 0;
+	char buf[12];
 	va_list ap;
 
 	sigint_allow();
-	do {
-		if (c == '\n' || !c) {
+
+	for (;;) {
+		if (!ret) {
+			/* Show prompt */
 			va_start(ap, prompt);
 			vfprintf(stderr, prompt, ap);
 			va_end(ap);
 			fflush(stderr);
-			if (silent_mode()) {
-				fputc('n', stderr);
-				ret = 'n';
+
+			if (c == EOF)
 				break;
-			}
-			ret = 0;
+
+			i = 0;
+			answer = NULL;
 		}
+
+	nextchar:
+		if ((sig = sigint_caught()))
+			break;	/* Check if already interrupted before getchar() */
 
 		if ((c = getchar()) == EOF) {
-			ret = 'n'; /* SIGINT */
-			cb = 1;
-			break;
+			/* SIGNAL or no chars on stdin (missing '\n') or ^D */
+			if (!i)
+				break; /* Just shown prompt,-> print [n]\n */
+
+			goto invalid; /* Note:  c holds EOF */
 		}
 
+		if ((i < (sizeof(buf) - 4)) && isprint(c))
+			buf[i++] = c;
+
 		c = tolower(c);
-		if ((c == 'y') || (c == 'n')) {
-			/* If both 'y' and 'n' given, begin again. */
-			if (ret && c != ret)
-				ret = -1;
-			else
-				ret = c;
-		}
-	} while (ret < 1 || c != '\n');
+
+		if ((ret > 0) && (c == answer[0]))
+			answer++;	/* Matching, next char */
+		else if (c == '\n') {
+			if (feof(stdin))
+				fputc('\n', stderr);
+			if (ret > 0)
+				break;	/* Answered */
+	invalid:
+			if (i >= (sizeof(buf) - 4)) {
+				/* '...'  for missing input */
+				i = sizeof(buf) - 1;
+				buf[i - 1] = buf[i - 2] = buf[i - 3] = '.';
+			}
+			buf[i] = 0;
+			log_warn("WARNING: Invalid input '%s'.", buf);
+			ret = 0;	/* Otherwise refresh prompt */
+		} else if (!ret && (c == _yes[0])) {
+			ret = 'y';
+			answer = _yes + 1;	/* Expecting 'Yes' */
+		} else if (!ret && (c == _no[0])) {
+			ret = 'n';
+			answer = _no + 1;	/* Expecting 'No' */
+		} else if (!ret && isspace(c)) {
+			/* Ignore any whitespace before */
+			--i;
+			goto nextchar;
+		} else if ((ret > 0) && isspace(c)) {
+			/* Ignore any whitespace after */
+			while (*answer)
+				answer++; /* jump to end-of-word */
+		} else
+			ret = -1;	/* Read till '\n' and refresh */
+	}
 
 	sigint_restore();
 
-	if (cb && !sigint_caught())
-		fputc(ret, stderr);
-
-	if (c != '\n')
-		fputc('\n', stderr);
+	/* For other then Yes answer check there is really no interrupt */
+	if (sig || sigint_caught()) {
+		stack;
+		ret = 'n';
+	} else if (c == EOF) {
+		fputs("[n]\n", stderr);
+		ret = 'n';
+	} else
+		/* Not knowing if it's terminal, makes this hard.... */
+		log_verbose("Accepted input: [%c]", ret);
 
 	return ret;
 }
