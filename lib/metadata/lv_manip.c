@@ -4377,8 +4377,6 @@ static int _request_confirmation(const struct volume_group *vg,
 				  display_lvname(lv));
 			return 0;
 		}
-		if (sigint_caught())
-			return_0;
 	}
 
 	return 1;
