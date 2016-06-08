@@ -86,7 +86,8 @@ int lvmetad_vg_update_finish(struct volume_group *vg);
  * only needed during vgremove, which does not wipe PV labels and therefore
  * cannot mark the PVs as gone.
  */
-int lvmetad_vg_remove(struct volume_group *vg);
+int lvmetad_vg_remove_pending(struct volume_group *vg);
+int lvmetad_vg_remove_finish(struct volume_group *vg);
 
 /*
  * Notify lvmetad that a PV has been found. It is not an error if the PV is
@@ -174,7 +175,8 @@ void lvmetad_clear_disabled(struct cmd_context *cmd);
 #    define lvmetad_vg_update(vg)	(1)
 #    define lvmetad_vg_update_pending(vg)	(1)
 #    define lvmetad_vg_update_finish(vg)	(1)
-#    define lvmetad_vg_remove(vg)	(1)
+#    define lvmetad_vg_remove_pending(vg)	(1)
+#    define lvmetad_vg_remove_finish(vg)	(1)
 #    define lvmetad_pv_found(cmd, pvid, dev, fmt, label_sector, vg, found_vgnames, changed_vgnames)	(1)
 #    define lvmetad_pv_gone(devno, pv_name)	(1)
 #    define lvmetad_pv_gone_by_dev(dev)	(1)

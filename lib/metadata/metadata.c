@@ -568,6 +568,11 @@ int vg_remove_direct(struct volume_group *vg)
 	struct pv_list *pvl;
 	int ret = 1;
 
+	if (!lvmetad_vg_remove_pending(vg)) {
+		log_error("Failed to update lvmetad for pending remove.");
+		return 0;
+	}
+
 	if (!vg_remove_mdas(vg)) {
 		log_error("vg_remove_mdas %s failed", vg->name);
 		return 0;
@@ -599,8 +604,7 @@ int vg_remove_direct(struct volume_group *vg)
 		}
 	}
 
-	/* FIXME Handle partial failures from above. */
-	if (!lvmetad_vg_remove(vg))
+	if (!lvmetad_vg_remove_finish(vg))
 		stack;
 
 	lockd_vg_update(vg);

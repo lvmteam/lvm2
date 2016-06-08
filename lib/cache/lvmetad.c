@@ -648,10 +648,9 @@ static int _lvmetad_handle_reply(daemon_reply reply, const char *id, const char 
 		action = "set VG info";
 	else if (!strcmp(id, "vg_update"))
 		action = "update VG";
-	else if (!strcmp(id, "vg_remove")) {
+	else if (!strcmp(id, "vg_remove"))
 		action = "remove VG";
-		action_modifies = 1;
-	} else if (!strcmp(id, "pv_found")) {
+	else if (!strcmp(id, "pv_found")) {
 		action = "update PV";
 		action_modifies = 1;
 	} else if (!strcmp(id, "pv_gone")) {
@@ -1272,7 +1271,36 @@ int lvmetad_vg_update_finish(struct volume_group *vg)
 	return 1;
 }
 
-int lvmetad_vg_remove(struct volume_group *vg)
+int lvmetad_vg_remove_pending(struct volume_group *vg)
+{
+	char uuid[64] __attribute__((aligned(8)));
+	daemon_reply reply;
+
+	if (!lvmetad_used() || test_mode())
+		return 1; /* fake it */
+
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
+		return_0;
+
+	/* Sending version/seqno 0 in set_vg_info will set the INVALID flag. */
+
+	log_debug_lvmetad("Sending lvmetad pending remove VG %s", vg->name);
+	reply = _lvmetad_send(vg->cmd, "set_vg_info",
+			      "name = %s", vg->name,
+			      "uuid = %s", uuid,
+			      "version = %d", 0,
+			      NULL);
+
+	if (!_lvmetad_handle_reply(reply, "set_vg_info", vg->name, NULL)) {
+		daemon_reply_destroy(reply);
+		return_0;
+	}
+
+	daemon_reply_destroy(reply);
+	return 1;
+}
+
+int lvmetad_vg_remove_finish(struct volume_group *vg)
 {
 	char uuid[64];
 	daemon_reply reply;
