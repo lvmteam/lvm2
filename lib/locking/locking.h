@@ -198,8 +198,10 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	rr; \
 })
 
-#define unlock_vg(cmd, vol)	\
+#define unlock_vg(cmd, vg, vol)	\
 	do { \
+		if (vg && !lvmetad_vg_update_finish(vg)) \
+			stack; \
 		if (is_real_vg(vol) && !sync_dev_names(cmd)) \
 			stack; \
 		if (!lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL)) \
@@ -207,7 +209,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 	} while (0)
 #define unlock_and_release_vg(cmd, vg, vol) \
 	do { \
-		unlock_vg(cmd, vol); \
+		unlock_vg(cmd, vg, vol); \
 		release_vg(vg); \
 	} while (0)
 

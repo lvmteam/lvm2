@@ -204,6 +204,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	destroy_processing_handle(cmd, handle);
 
 	if (!restoremissing)
-		unlock_vg(cmd, VG_ORPHANS);
+		unlock_vg(cmd, NULL, VG_ORPHANS);
 	return ret;
 }

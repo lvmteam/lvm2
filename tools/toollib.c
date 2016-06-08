@@ -1962,7 +1962,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		}
 
 		if (!vg_read_error(vg) && !already_locked)
-			unlock_vg(cmd, vg_name);
+			unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
 		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
@@ -2826,7 +2826,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 			ret_max = ret;
 
 		if (!already_locked)
-			unlock_vg(cmd, vg_name);
+			unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
 		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
@@ -3501,7 +3501,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			ret_max = ret;
 
 		if (!skip && !already_locked)
-			unlock_vg(cmd, vg->name);
+			unlock_vg(cmd, vg, vg->name);
 endvg:
 		release_vg(vg);
 		if (!lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
@@ -4654,7 +4654,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * the questions, reacquire the orphans lock, verify that the PVs were
 	 * not used during the questions, then do the create steps.
 	 */
-	unlock_vg(cmd, VG_ORPHANS);
+	unlock_vg(cmd, NULL, VG_ORPHANS);
 
 	/*
 	 * Process prompts that require asking the user.  The orphans lock is
@@ -4941,7 +4941,7 @@ do_command:
 	return 1;
 
 bad:
-	unlock_vg(cmd, VG_ORPHANS);
+	unlock_vg(cmd, NULL, VG_ORPHANS);
 out:
 	return 0;
 }

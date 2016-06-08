@@ -22,6 +22,7 @@
 #include "lvm_misc.h"
 #include "lvm2app.h"
 #include "display.h"
+#include "lvmetad.h"
 
 int lvm_vg_add_tag(vg_t vg, const char *tag)
 {
@@ -84,14 +85,14 @@ static int _lvm_vg_extend(vg_t vg, const char *device)
 
 	pvcreate_params_set_defaults(&pp);
 	if (!vg_extend(vg, 1, &device, &pp)) {
-		unlock_vg(vg->cmd, VG_ORPHANS);
+		unlock_vg(vg->cmd, NULL, VG_ORPHANS);
 		return -1;
 	}
 	/*
 	 * FIXME: Either commit to disk, or keep holding VG_ORPHANS and
 	 * release in lvm_vg_close().
 	 */
-	unlock_vg(vg->cmd, VG_ORPHANS);
+	unlock_vg(vg->cmd, NULL, VG_ORPHANS);
 	return 0;
 }
 
@@ -165,7 +166,7 @@ static int _lvm_vg_write(vg_t vg)
 			/* FIXME: do pvremove / label_remove()? */
 		}
 		dm_list_init(&vg->removed_pvs);
-		unlock_vg(vg->cmd, VG_ORPHANS);
+		unlock_vg(vg->cmd, NULL, VG_ORPHANS);
 	}
 
 	return 0;

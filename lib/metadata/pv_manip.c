@@ -854,7 +854,7 @@ int pvremove_many(struct cmd_context *cmd, struct dm_list *pv_names,
 	}
 
 out:
-	unlock_vg(cmd, VG_ORPHANS);
+	unlock_vg(cmd, NULL, VG_ORPHANS);
 
 	if (pvslist)
 		dm_list_iterate_items(pvl, pvslist)

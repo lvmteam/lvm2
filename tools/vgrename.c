@@ -161,7 +161,7 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	if (!backup_remove(cmd, vg_name))
 		stack;
 
-	unlock_vg(cmd, vp->vg_name_new);
+	unlock_vg(cmd, vg, vp->vg_name_new);
 	vp->unlock_new_name = 0;
 
 	log_print_unless_silent("Volume group \"%s\" successfully renamed to \"%s\"",
@@ -169,7 +169,7 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	return 1;
 
  error:
-	unlock_vg(cmd, vp->vg_name_new);
+	unlock_vg(cmd, vg, vp->vg_name_new);
 	vp->unlock_new_name = 0;
 
 	lockd_rename_vg_final(cmd, vg, 0);
@@ -250,7 +250,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Needed if process_each_vg returns error before calling _single. */
 	if (vp.unlock_new_name)
-		unlock_vg(cmd, vg_name_new);
+		unlock_vg(cmd, NULL, vg_name_new);
 
 	destroy_processing_handle(cmd, handle);
 	return ret;

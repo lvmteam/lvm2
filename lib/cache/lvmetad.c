@@ -644,10 +644,11 @@ static int _lvmetad_handle_reply(daemon_reply reply, const char *id, const char 
 		action = "clear info about all PVs";
 	else if (!strcmp(id, "vg_clear_outdated_pvs"))
 		action = "clear the list of outdated PVs";
-	else if (!strcmp(id, "vg_update")) {
+	else if (!strcmp(id, "set_vg_info"))
+		action = "set VG info";
+	else if (!strcmp(id, "vg_update"))
 		action = "update VG";
-		action_modifies = 1;
-	} else if (!strcmp(id, "vg_remove")) {
+	else if (!strcmp(id, "vg_remove")) {
 		action = "remove VG";
 		action_modifies = 1;
 	} else if (!strcmp(id, "pv_found")) {
@@ -1073,7 +1074,13 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 			log_debug_lvmetad("Rescan VG %s because no lvmlockd lock is held", vgname);
 			rescan = 1;
 		} else if (dm_config_find_node(reply.cft->root, "vg_invalid")) {
-			log_debug_lvmetad("Rescan VG %s because lvmetad returned invalid", vgname);
+			if (!is_lockd_type(vg->lock_type)) {
+				/* Can happen if a previous command failed/crashed without updating lvmetad. */
+				log_warn("WARNING: Reading VG %s from disk because lvmetad metadata is invalid.", vgname);
+			} else {
+				/* This is normal when the VG was modified by another host. */
+				log_debug_lvmetad("Rescan VG %s because lvmetad returned invalid", vgname);
+			}
 			rescan = 1;
 		}
 
@@ -1137,32 +1144,98 @@ static int _fixup_ignored(struct metadata_area *mda, void *baton) {
 	return 1;
 }
 
-int lvmetad_vg_update(struct volume_group *vg)
-{
-	daemon_reply reply;
-	struct dm_hash_node *n;
-	struct metadata_area *mda;
-	char mda_id[128], *num;
-	struct pv_list *pvl;
-	struct lvmcache_info *info;
-	struct _fixup_baton baton;
+/*
+ * After the VG is written to disk, but before it's committed,
+ * lvmetad is told the new seqno.  lvmetad sets the INVALID
+ * flag on the cached VG and saves the new seqno.
+ *
+ * After the VG is committed on disk, the command sends the
+ * new VG metadata, containing the new seqno.  lvmetad sees
+ * that it has the updated metadata and clears the INVALID
+ * flag on the cached VG.
+ *
+ * If the command fails after committing the metadata on disk
+ * but before sending the new metadata to lvmetad, then the
+ * next command that asks lvmetad for the metadata will get
+ * back the INVALID flag.  That command will then read the
+ * VG metadata from disk to use, and will send the latest
+ * metadata from disk to lvmetad which will clear the
+ * INVALID flag.
+ */
 
-	if (!vg)
-		return 0;
+int lvmetad_vg_update_pending(struct volume_group *vg)
+{
+	char uuid[64] __attribute__((aligned(8)));
+	daemon_reply reply;
 
 	if (!lvmetad_used() || test_mode())
 		return 1; /* fake it */
 
-	if (!vg->cft_precommitted) {
-		log_error(INTERNAL_ERROR "VG update without precommited");
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
+		return_0;
+
+	log_debug_lvmetad("Sending lvmetad pending VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
+	reply = _lvmetad_send(vg->cmd, "set_vg_info",
+			      "name = %s", vg->name,
+			      "uuid = %s", uuid,
+			      "version = %"PRId64, (int64_t)vg->seqno,
+			      NULL);
+
+	if (!_lvmetad_handle_reply(reply, "set_vg_info", vg->name, NULL)) {
+		daemon_reply_destroy(reply);
+		return_0;
+	}
+
+	vg->lvmetad_update_pending = 1;
+
+	daemon_reply_destroy(reply);
+	return 1;
+}
+
+int lvmetad_vg_update_finish(struct volume_group *vg)
+{
+	char uuid[64] __attribute__((aligned(8)));
+	daemon_reply reply;
+	struct dm_hash_node *n;
+	struct metadata_area *mda;
+	char mda_id[128], *num;
+	struct dm_config_tree *vgmeta;
+	struct pv_list *pvl;
+	struct lvmcache_info *info;
+	struct _fixup_baton baton;
+
+	if (!vg->lvmetad_update_pending)
+		return 1;
+
+	if (!(vg->fid->fmt->features & FMT_PRECOMMIT))
+		return 1;
+
+	if (!lvmetad_used() || test_mode())
+		return 1; /* fake it */
+
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
+		return_0;
+
+	if (!(vgmeta = export_vg_to_config_tree(vg))) {
+		log_error("Failed to export VG to config tree.");
 		return 0;
 	}
 
-	log_debug_lvmetad("Sending lvmetad updated metadata for VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
-	reply = _lvmetad_send(vg->cmd, "vg_update", "vgname = %s", vg->name,
-			      "metadata = %t", vg->cft_precommitted, NULL);
+	log_debug_lvmetad("Sending lvmetad updated VG %s (seqno %" PRIu32 ")", vg->name, vg->seqno);
+	reply = _lvmetad_send(vg->cmd, "vg_update",
+			      "vgname = %s", vg->name,
+			      "metadata = %t", vgmeta,
+			      NULL);
+
+	dm_config_destroy(vgmeta);
 
 	if (!_lvmetad_handle_reply(reply, "vg_update", vg->name, NULL)) {
+		/*
+		 * In this failure case, the VG cached in lvmetad remains in
+		 * the INVALID state (from lvmetad_vg_update_pending).
+		 * A subsequent command will see INVALID, ignore the cached
+		 * copy, read the VG from disk, and update the cached copy.
+		 */
 		daemon_reply_destroy(reply);
 		return 0;
 	}
@@ -1195,6 +1268,7 @@ int lvmetad_vg_update(struct volume_group *vg)
 			return 0;
 	}
 
+	vg->lvmetad_update_pending = 0;
 	return 1;
 }
 
@@ -1206,6 +1280,8 @@ int lvmetad_vg_remove(struct volume_group *vg)
 
 	if (!lvmetad_used() || test_mode())
 		return 1; /* just fake it */
+
+	vg->lvmetad_update_pending = 0;
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
 		return_0;
@@ -1887,10 +1963,6 @@ scan_more:
 
 		/*
 		 * Update lvmetad with the newly read version of the VG.
-		 * The "precommitted" name is a misnomer in this case,
-		 * but that is the field which lvmetad_vg_update() uses
-		 * to send the metadata cft to lvmetad.
-		 *
 		 * When the seqno is unchanged the cached VG can be left.
 		 */
 		if (save_seqno != vg->seqno) {
@@ -1905,10 +1977,13 @@ scan_more:
 			log_debug_lvmetad("Rescan VG %s updating lvmetad from seqno %u to seqno %u.",
 					  vg->name, vg->seqno, save_seqno);
 
-			vg_ret->cft_precommitted = vgmeta_ret;
-			if (!lvmetad_vg_update(vg_ret))
+			/*
+			 * If this vg_update fails the cached metadata in
+			 * lvmetad will remain invalid.
+			 */
+			vg_ret->lvmetad_update_pending = 1;
+			if (!lvmetad_vg_update_finish(vg_ret))
 				log_error("Failed to update lvmetad with new VG meta");
-			vg_ret->cft_precommitted = NULL;
 		}
 		dm_config_destroy(vgmeta_ret);
 	}

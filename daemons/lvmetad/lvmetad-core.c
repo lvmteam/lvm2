@@ -2464,10 +2464,10 @@ static response set_vg_info(lvmetad_state *s, request r)
 {
 	struct dm_config_tree *vg;
 	struct vg_info *info;
-	const char *name;
-	const char *uuid;
+	const char *name = NULL;
+	const char *uuid = NULL;
 	const int64_t new_version = daemon_request_int(r, "version", -1);
-	int64_t cache_version;
+	int64_t cache_version = -1;
 
 	if (new_version == -1)
 		goto out;
@@ -2500,6 +2500,9 @@ vers:
 	if (cache_version != -1 && new_version != -1 && cache_version >= new_version)
 		goto out;
 inval:
+	DEBUGLOG(s, "set info VG name %s uuid %s cache_version %d new_version %d",
+		 name ?: "none", uuid ?: "none", (int)cache_version, (int)new_version);
+
 	info = dm_hash_lookup(s->vgid_to_info, uuid);
 	if (!info) {
 		info = malloc(sizeof(struct vg_info));

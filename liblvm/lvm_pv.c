@@ -22,6 +22,7 @@
 #include "locking.h"
 #include "toolcontext.h"
 #include "lvm_misc.h"
+#include "lvmetad.h"
 
 struct lvm_pv_create_params
 {
@@ -205,7 +206,7 @@ int lvm_list_pvs_free(struct dm_list *pvlist)
 		dm_list_iterate_items(pvl, &to_delete->pvslist)
 			free_pv_fid(pvl->pv);
 
-		unlock_vg(to_delete->cmd, VG_GLOBAL);
+		unlock_vg(to_delete->cmd, NULL, VG_GLOBAL);
 		to_delete->magic = 0xA5A5A5A5;
 
 		restore_user_env(&e);
@@ -437,7 +438,7 @@ static int _pv_create(pv_create_params_t params)
 	if (!(pvcreate_vol(cmd, params->pv_name, &params->pv_p, 1)))
 		rc = -1;
 
-	unlock_vg(cmd, VG_ORPHANS);
+	unlock_vg(cmd, NULL, VG_ORPHANS);
 	return rc;
 }
 

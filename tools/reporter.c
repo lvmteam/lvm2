@@ -1171,7 +1171,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 		dm_report_output(report_handle);
 
 	if (lock_global)
-		unlock_vg(cmd, VG_GLOBAL);
+		unlock_vg(cmd, NULL, VG_GLOBAL);
 out:
 	if (report_handle) {
 		if (report_in_group && !dm_report_group_pop(handle->report_group))

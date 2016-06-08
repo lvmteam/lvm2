@@ -125,6 +125,6 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 			maxret = ret;
 	}
 
-	unlock_vg(cmd, VG_GLOBAL);
+	unlock_vg(cmd, NULL, VG_GLOBAL);
 	return maxret;
 }

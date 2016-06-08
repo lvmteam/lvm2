@@ -112,7 +112,7 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 			      NULL, _pvdisplay_single);
 
 	if (lock_global)
-		unlock_vg(cmd, VG_GLOBAL);
+		unlock_vg(cmd, NULL, VG_GLOBAL);
 
 	return ret;
 }

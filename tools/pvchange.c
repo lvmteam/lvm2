@@ -255,7 +255,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	ret = process_each_pv(cmd, argc, argv, NULL, 0, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, handle, _pvchange_single);
 
 	if (!argc)
-		unlock_vg(cmd, VG_GLOBAL);
+		unlock_vg(cmd, NULL, VG_GLOBAL);
 
 	log_print_unless_silent("%d physical volume%s changed / %d physical volume%s not changed",
 				params.done, params.done == 1 ? "" : "s",

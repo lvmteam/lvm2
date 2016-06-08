@@ -536,7 +536,7 @@ out:
 
 	if (!sync_local_dev_names(cmd))
 		stack;
-	unlock_vg(cmd, VG_GLOBAL);
+	unlock_vg(cmd, NULL, VG_GLOBAL);
 	return ret;
 }
 
@@ -654,7 +654,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 					params.new_pvs_found, display_size(cmd, params.size_new));
 
 out:
-	unlock_vg(cmd, VG_GLOBAL);
+	unlock_vg(cmd, NULL, VG_GLOBAL);
 	destroy_processing_handle(cmd, handle);
 
 	return ret;

@@ -17,6 +17,7 @@
 #include "metadata.h"
 #include "segtype.h"
 #include "toolcontext.h"
+#include "lvmetad.h"
 
 /* Add lv as replicator_dev device */
 int replicator_dev_add_rimage(struct replicator_device *rdev,

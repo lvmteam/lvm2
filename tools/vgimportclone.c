@@ -333,9 +333,9 @@ retry_name:
 
 	ret = process_each_vg(cmd, 0, NULL, vp.old_vgname, NULL, READ_FOR_UPDATE | READ_ALLOW_EXPORTED, 0, handle, _vgimportclone_vg_single);
 
-	unlock_vg(cmd, vp.new_vgname);
+	unlock_vg(cmd, NULL, vp.new_vgname);
 out:
-	unlock_vg(cmd, VG_GLOBAL);
+	unlock_vg(cmd, NULL, VG_GLOBAL);
 	internal_filter_clear();
 	init_internal_filtering(0);
 	lvmcache_lock_ordering(1);

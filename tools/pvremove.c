@@ -58,7 +58,7 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 		ret = ECMD_FAILED;
 	else {
 		/* pvcreate_each_device returns with orphans locked */
-		unlock_vg(cmd, VG_ORPHANS);
+		unlock_vg(cmd, NULL, VG_ORPHANS);
 		ret = ECMD_PROCESSED;
 	}
 

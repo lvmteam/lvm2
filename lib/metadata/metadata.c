@@ -629,7 +629,7 @@ int vg_remove(struct volume_group *vg)
 
 	ret = vg_remove_direct(vg);
 
-	unlock_vg(vg->cmd, VG_ORPHANS);
+	unlock_vg(vg->cmd, vg, VG_ORPHANS);
 	return ret;
 }
 
@@ -3548,6 +3548,17 @@ int vg_write(struct volume_group *vg)
 
 	lockd_vg_update(vg);
 
+	/*
+	 * This tells lvmetad the new seqno it should expect to receive
+	 * the metadata for after the commit.  The cached VG will be
+	 * invalid in lvmetad until this command sends the new metadata
+	 * after it's committed.
+	 */
+	if (!lvmetad_vg_update_pending(vg)) {
+		log_error("Failed to prepare new VG metadata in lvmetad cache.");
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -3598,10 +3609,6 @@ int vg_commit(struct volume_group *vg)
 		return cache_updated;
 	}
 
-	/* Skip if we already did this in vg_write */
-	if ((vg->fid->fmt->features & FMT_PRECOMMIT) && !lvmetad_vg_update(vg))
-		return_0;
-
 	cache_updated = _vg_commit_mdas(vg);
 
 	set_vg_notify(vg->cmd);
@@ -3640,6 +3647,14 @@ void vg_revert(struct volume_group *vg)
 {
 	struct metadata_area *mda;
 	struct lv_list *lvl;
+
+	/*
+	 * This will leave the cached copy in lvmetad INVALID (from
+	 * lvmetad_vg_update_pending) and means the VG will be reread from disk
+	 * to update the lvmetad copy, which is what we want to ensure that the
+	 * cached copy is correct.
+	 */
+	vg->lvmetad_update_pending = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		if (lvl->lv->new_lock_args) {
@@ -5465,7 +5480,7 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 	int consistent = 1;
 	struct volume_group *vg;
 
-	unlock_vg(cmd, vg_name);
+	unlock_vg(cmd, NULL, vg_name);
 
 	dev_close_all();
 
@@ -5473,13 +5488,13 @@ static struct volume_group *_recover_vg(struct cmd_context *cmd,
 		return_NULL;
 
 	if (!(vg = vg_read_internal(cmd, vg_name, vgid, WARN_PV_READ, &consistent))) {
-		unlock_vg(cmd, vg_name);
+		unlock_vg(cmd, NULL, vg_name);
 		return_NULL;
 	}
 
 	if (!consistent) {
 		release_vg(vg);
-		unlock_vg(cmd, vg_name);
+		unlock_vg(cmd, NULL, vg_name);
 		return_NULL;
 	}
 
@@ -5825,7 +5840,7 @@ static struct volume_group *_vg_lock_and_read(struct cmd_context *cmd, const cha
 
 bad:
 	if (!already_locked)
-		unlock_vg(cmd, vg_name);
+		unlock_vg(cmd, vg, vg_name);
 
 bad_no_unlock:
 	return _vg_make_handle(cmd, vg, failure);
@@ -5926,7 +5941,7 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 				 * FIXME: Disallow calling this function if
 				 * critical_section() is true.
 				 */
-				unlock_vg(cmd, vgname);
+				unlock_vg(cmd, NULL, vgname);
 				return FAILED_LOCKING;
 			}
 			lvmcache_force_next_label_scan();
@@ -5939,7 +5954,7 @@ uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname)
 	}
 
 	/* Found vgname so cannot reserve. */
-	unlock_vg(cmd, vgname);
+	unlock_vg(cmd, NULL, vgname);
 	return FAILED_EXIST;
 }
 
