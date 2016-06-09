@@ -85,10 +85,11 @@ history for all yet uncollected results of polling operations already finished
 including reason.
 .TP
 .B \-s
-Gather system info and context. Currently, this encompasses systemd info
-and context only: overall state of systemd units present in the system,
-more detailed status of units controlling LVM functionality and the content
-of systemd journal for current boot.
+Gather system info and context. Currently, this encompasses info gathered
+by calling lsblk command and various systemd info and context: overall state
+of systemd units present in the system, more detailed status of units
+controlling LVM functionality and the content of systemd journal for
+current boot.
 .TP
 .B \-u
 Gather udev info and context: /etc/udev/udev.conf file, udev daemon version

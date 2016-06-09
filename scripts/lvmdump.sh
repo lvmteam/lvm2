@@ -252,13 +252,22 @@ if (( $sysreport )); then
 
 	SYSTEMCTL=$(which systemctl 2>> $log)
 	JOURNALCTL=$(which journalctl 2>> $log)
+	LSBLK=$(which lsblk 2>> $log)
+
+	log "$MKDIR -p \"$sysreport_dir\""
+
+	if test -z "LSBLK"; then
+		myecho "WARNING: lsblk not found"
+	else
+		log "$LSBLK -O >> \"$sysreport_dir/lsblk\""
+		log "$LSBLK -s >> \"$sysreport_dir/lsblk_s\""
+	fi
 
 	if test -z "$SYSTEMCTL"; then
 		myecho "WARNING: systemctl not found"
 	elif test -z "$JOURNALCTL"; then
 		myecho "WARNING: journalctl not found"
 	else
-		log "$MKDIR -p \"$sysreport_dir\""
 		log "$JOURNALCTL -b --no-pager -o short-precise > \"$sysreport_dir/journal_content\" 2>> \"$log\""
 		log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise dm-event.socket dm-event.service \
 						   lvm2-monitor.service \
