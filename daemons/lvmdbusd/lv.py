@@ -24,6 +24,39 @@ from . import background
 from .utils import round_size
 
 
+# Try and build a key for a LV, so that we sort the LVs with least dependencies
+# first.  This may be error prone because of the flexibility LVM
+# provides and what you can stack.
+def get_key(i):
+
+	name = i['lv_name']
+	parent = i['lv_parent']
+	pool = i['pool_lv']
+	a1 = ""
+	a2 = ""
+
+	if name[0] == '[':
+		a1 = '#'
+
+	# We have a parent
+	if parent:
+		# Check if parent is hidden
+		if parent[0] == '[':
+			a2 = '##'
+		else:
+			a2 = '#'
+
+	# If a LV has a pool, then it should be sorted/loaded after the pool
+	# lv, unless it's a hidden too, then after other hidden, but before visible
+	if pool:
+		if pool[0] != '[':
+			a2 += '~'
+		else:
+			a1 = '$' + a1
+
+	return "%s%s%s" % (a1, a2, name)
+
+
 # noinspection PyUnusedLocal
 def lvs_state_retrieve(selection, cache_refresh=True):
 	rc = []
@@ -31,7 +64,13 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 	if cache_refresh:
 		cfg.db.refresh()
 
-	for l in cfg.db.fetch_lvs(selection):
+	# When building up the model, it's best to process LVs with the least
+	# dependencies to those that are dependant upon other LVs.  Otherwise, when
+	# we are trying to gather information we could be in a position where we
+	# don't have information available yet.
+	lvs = sorted(cfg.db.fetch_lvs(selection), key=get_key)
+
+	for l in lvs:
 		rc.append(LvState(
 			l['lv_uuid'], l['lv_name'],
 			l['lv_path'], n(l['lv_size']),
