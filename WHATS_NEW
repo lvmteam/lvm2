@@ -1,10 +1,9 @@
-Version 2.02.156 - 
-================================
+Version 2.02.156 - 11th June 2016
+=================================
   Don't allow duplicate orphan PVs to be used with vgcreate/vgextend/pvcreate.
   Improve handling of lvmetad update failures.
   Yes/No prompt accepts '^[ ^t]*([Yy]([Ee]([Ss]|)|)|[Nn]([Oo]|))[ ^t]*$'.
   If available, also collect output from lsblk command when running lvmdump -s.
-  Fix regression in blkdeactivate causing dm and md devices to be skipped. (2.02.155)
 
 Version 2.02.155 - 3rd June 2016
 ================================
