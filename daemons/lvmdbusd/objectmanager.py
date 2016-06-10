@@ -185,6 +185,17 @@ class ObjectManager(AutomatedProperties):
 				return self.get_object_by_path(self._id_to_object_path[lvm_id])
 			return None
 
+	def get_object_path_by_lvm_id(self, lvm_id):
+		"""
+		Given an lvm identifier, return the object path for it
+		:param lvm_id: The lvm identifier
+		:return: Object path or '/' if not found
+		"""
+		with self.rlock:
+			if lvm_id in self._id_to_object_path:
+				return self._id_to_object_path[lvm_id]
+			return '/'
+
 	def _uuid_verify(self, path, uuid, lvm_id):
 		"""
 		Ensure uuid is present for a successful lvm_id lookup

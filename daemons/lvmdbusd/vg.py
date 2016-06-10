@@ -144,13 +144,8 @@ class Vg(AutomatedProperties):
 
 	@staticmethod
 	def fetch_new_lv(vg_name, lv_name):
-		full_name = "%s/%s" % (vg_name, lv_name)
-
 		cfg.load()
-		l = cfg.om.get_object_by_lvm_id(full_name)
-		created_lv = l.dbus_object_path()
-
-		return created_lv
+		return cfg.om.get_object_by_lvm_id("%s/%s" % (vg_name, lv_name))
 
 	@staticmethod
 	def _rename(uuid, vg_name, new_name, rename_options):

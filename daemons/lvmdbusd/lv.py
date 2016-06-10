@@ -354,12 +354,7 @@ class Lv(LvCommon):
 
 		# The name is vg/name
 		full_name = "%s/%s" % (self.vg_name_lookup(), name)
-
-		o = cfg.om.get_object_by_lvm_id(full_name)
-		if o:
-			return o.dbus_object_path()
-
-		return '/'
+		return cfg.om.get_object_path_by_lvm_id(full_name)
 
 	def _get_data_meta(self):
 
@@ -783,8 +778,7 @@ class LvCachePool(Lv):
 				cfg.om.remove_object(lv_to_cache, emit_signal=True)
 				cfg.load()
 
-				lv_converted = \
-					cfg.om.get_object_by_lvm_id(fcn).dbus_object_path()
+				lv_converted = cfg.om.get_object_path_by_lvm_id(fcn)
 
 			else:
 				raise dbus.exceptions.DBusException(
@@ -847,9 +841,7 @@ class LvCacheLv(Lv):
 				cfg.om.remove_object(dbo, emit_signal=True)
 				cfg.load()
 
-				uncached_lv_path = \
-					cfg.om.get_object_by_lvm_id(lv_name).dbus_object_path()
-
+				uncached_lv_path = cfg.om.get_object_path_by_lvm_id(lv_name)
 			else:
 				raise dbus.exceptions.DBusException(
 					LV_INTERFACE,
