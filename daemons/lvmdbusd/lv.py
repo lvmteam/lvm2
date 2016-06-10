@@ -100,7 +100,7 @@ class LvState(State):
 		rc = []
 		for pv in sorted(cfg.db.lv_contained_pv(uuid)):
 			(pv_uuid, pv_name, pv_segs) = pv
-			pv_obj = cfg.om.get_object_path_by_lvm_id(
+			pv_obj = cfg.om.get_object_path_by_uuid_lvm_id(
 				pv_uuid, pv_name, gen_new=False)
 			rc.append((pv_obj, pv_segs))
 
@@ -123,7 +123,7 @@ class LvState(State):
 
 		for l in cfg.db.hidden_lvs(self.Uuid):
 			full_name = "%s/%s" % (vg_name, l[1])
-			op = cfg.om.get_object_path_by_lvm_id(
+			op = cfg.om.get_object_path_by_uuid_lvm_id(
 				l[0], full_name, gen_new=False)
 			assert op
 			rc.append(op)
@@ -143,7 +143,7 @@ class LvState(State):
 		else:
 			self._segs.extend(set(segtypes))
 
-		self.Vg = cfg.om.get_object_path_by_lvm_id(
+		self.Vg = cfg.om.get_object_path_by_uuid_lvm_id(
 			vg_uuid, vg_name, vg_obj_path_generate)
 
 		self.Devices = LvState._pv_devices(self.Uuid)
@@ -151,7 +151,7 @@ class LvState(State):
 		if PoolLv:
 			gen = utils.lv_object_path_method(Name, (Attr, layout, role))
 
-			self.PoolLv = cfg.om.get_object_path_by_lvm_id(
+			self.PoolLv = cfg.om.get_object_path_by_uuid_lvm_id(
 				pool_lv_uuid, '%s/%s' % (vg_name, PoolLv),
 				gen)
 		else:
@@ -159,7 +159,7 @@ class LvState(State):
 
 		if OriginLv:
 			self.OriginLv = \
-				cfg.om.get_object_path_by_lvm_id(
+				cfg.om.get_object_path_by_uuid_lvm_id(
 					origin_uuid, '%s/%s' % (vg_name, OriginLv),
 					vg_obj_path_generate)
 		else:
@@ -192,7 +192,7 @@ class LvState(State):
 
 	def create_dbus_object(self, path):
 		if not path:
-			path = cfg.om.get_object_path_by_lvm_id(
+			path = cfg.om.get_object_path_by_uuid_lvm_id(
 				self.Uuid, self.lvm_id, self._object_path_create())
 
 		obj_ctor = self._object_type_create()

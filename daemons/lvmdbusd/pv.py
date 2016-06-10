@@ -65,7 +65,7 @@ class PvState(State):
 				full_name = "%s/%s" % (vg_name, lv_name)
 
 				path_create = lv_object_path_method(lv_name, meta)
-				lv_path = cfg.om.get_object_path_by_lvm_id(
+				lv_path = cfg.om.get_object_path_by_uuid_lvm_id(
 					lv_uuid, full_name, path_create)
 
 				rc.append((lv_path, segs))
@@ -83,7 +83,7 @@ class PvState(State):
 		self.lv = self._lv_object_list(vg_name)
 
 		if vg_name:
-			self.vg_path = cfg.om.get_object_path_by_lvm_id(
+			self.vg_path = cfg.om.get_object_path_by_uuid_lvm_id(
 				vg_uuid, vg_name, vg_obj_path_generate)
 		else:
 			self.vg_path = '/'
@@ -93,8 +93,8 @@ class PvState(State):
 
 	def create_dbus_object(self, path):
 		if not path:
-			path = cfg.om.get_object_path_by_lvm_id(self.Uuid, self.Name,
-													pv_obj_path_generate)
+			path = cfg.om.get_object_path_by_uuid_lvm_id(self.Uuid, self.Name,
+														pv_obj_path_generate)
 		return Pv(path, self)
 
 	# noinspection PyMethodMayBeStatic

@@ -66,7 +66,7 @@ class VgState(State):
 
 			gen = utils.lv_object_path_method(lv_name, meta)
 
-			lv_path = cfg.om.get_object_path_by_lvm_id(
+			lv_path = cfg.om.get_object_path_by_uuid_lvm_id(
 				lv_uuid, full_name, gen)
 			rc.append(lv_path)
 		return dbus.Array(rc, signature='o')
@@ -75,7 +75,7 @@ class VgState(State):
 		rc = []
 		for p in cfg.db.pvs_in_vg(self.Uuid):
 			(pv_name, pv_uuid) = p
-			rc.append(cfg.om.get_object_path_by_lvm_id(
+			rc.append(cfg.om.get_object_path_by_uuid_lvm_id(
 				pv_uuid, pv_name, pv_obj_path_generate))
 		return dbus.Array(rc, signature='o')
 
@@ -90,7 +90,7 @@ class VgState(State):
 
 	def create_dbus_object(self, path):
 		if not path:
-			path = cfg.om.get_object_path_by_lvm_id(
+			path = cfg.om.get_object_path_by_uuid_lvm_id(
 				self.Uuid, self.Name, vg_obj_path_generate)
 		return Vg(path, self)
 

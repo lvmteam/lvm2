@@ -173,7 +173,7 @@ class ObjectManager(AutomatedProperties):
 	def get_object_by_uuid_lvm_id(self, uuid, lvm_id):
 		with self.rlock:
 			return self.get_object_by_path(
-				self.get_object_path_by_lvm_id(uuid, lvm_id, None, False))
+				self.get_object_path_by_uuid_lvm_id(uuid, lvm_id, None, False))
 
 	def get_object_by_lvm_id(self, lvm_id):
 		"""
@@ -212,8 +212,8 @@ class ObjectManager(AutomatedProperties):
 		self._uuid_verify(path, uuid, lvm_identifier)
 		return path
 
-	def get_object_path_by_lvm_id(self, uuid, lvm_id, path_create=None,
-								gen_new=True):
+	def get_object_path_by_uuid_lvm_id(self, uuid, lvm_id, path_create=None,
+									   gen_new=True):
 		"""
 		For a given lvm asset return the dbus object registered to it.  If the
 		object is not found and gen_new == True and path_create is a valid
