@@ -1,3 +1,6 @@
+Version 2.02.157 - 
+=================================
+
 Version 2.02.156 - 11th June 2016
 =================================
   Don't allow duplicate orphan PVs to be used with vgcreate/vgextend/pvcreate.
