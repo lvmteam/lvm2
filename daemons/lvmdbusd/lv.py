@@ -176,8 +176,6 @@ class LvState(State):
 			self.Name, (self.Attr, self.layout, self.role))
 
 	def _object_type_create(self):
-		if self.Name[0] == '[':
-			return LvCommon
 		if self.Attr[0] == 't':
 			return LvThinPool
 		elif self.Attr[0] == 'C':
@@ -185,6 +183,8 @@ class LvState(State):
 				return LvCachePool
 			else:
 				return LvCacheLv
+		elif self.Name[0] == '[':
+			return LvCommon
 		elif self.OriginLv != '/':
 			return LvSnapShot
 		else:
