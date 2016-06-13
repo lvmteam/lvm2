@@ -3462,6 +3462,19 @@ static int _dm_stats_aux_data_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, (const char * const *) &aux_data);
 }
 
+static int _dm_stats_name_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute__((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute__((unused)))
+{
+	const struct dm_stats *dms = (const struct dm_stats *) data;
+	const char *stats_name;
+	if (!(stats_name = dm_stats_get_alias(dms, DM_STATS_REGION_CURRENT)))
+		return_0;
+
+	return dm_report_field_string(rh, field, (const char * const *) &stats_name);
+}
+
 static int _dm_stats_precise_disp(struct dm_report *rh,
 				  struct dm_pool *mem __attribute__((unused)),
 				  struct dm_report_field *field, const void *data,
@@ -4229,6 +4242,7 @@ FIELD_F(STATS_META, STR, "Precise", 7, dm_stats_precise, "precise", "Set if nano
 FIELD_F(STATS_META, STR, "#Bins", 9, dm_stats_hist_bins, "hist_bins", "The number of histogram bins configured.")
 FIELD_F(STATS_META, STR, "Histogram Bounds", 16, dm_stats_hist_bounds, "hist_bounds", "Latency histogram bin boundaries.")
 FIELD_F(STATS_META, STR, "Histogram Ranges", 16, dm_stats_hist_ranges, "hist_ranges", "Latency histogram bin ranges.")
+FIELD_F(STATS, STR, "Name", 16, dm_stats_name, "stats_name", "Stats name of current row.")
 {0, 0, 0, 0, "", "", NULL, NULL},
 /* *INDENT-ON* */
 };
