@@ -25,22 +25,6 @@ aux have_thin 1 0 0 || skip
 test -n "$LVM_TEST_THIN_RESTORE_CMD" || LVM_TEST_THIN_RESTORE_CMD=$(which thin_restore) || skip
 "$LVM_TEST_THIN_RESTORE_CMD" -V || skip
 
-#
-# Temporary solution to create some occupied thin metadata
-# This heavily depends on thin metadata output format to stay as is.
-# Currently it expects 2MB thin metadata and 200MB data volume size
-# Argument specifies how many devices should be created.
-fake_metadata_() {
-	echo '<superblock uuid="" time="1" transaction="'$2'" data_block_size="128" nr_data_blocks="3200">'
-	for i in $(seq 1 $1)
-	do
-		echo ' <device dev_id="'$i'" mapped_blocks="37" transaction="0" creation_time="0" snap_time="1">'
-		echo '  <range_mapping origin_begin="0" data_begin="0" length="37" time="0"/>'
-		echo ' </device>'
-	done
-	echo "</superblock>"
-}
-
 aux have_thin 1 10 0 || skip
 
 aux prepare_pvs 3 256
@@ -50,7 +34,7 @@ vgcreate -s 1M $vg $(cat DEVICES)
 aux lvmconf 'activation/thin_pool_autoextend_percent = 30' \
 	    'activation/thin_pool_autoextend_threshold = 70'
 
-fake_metadata_ 400 0 >data
+aux prepare_thin_metadata 400 0 | tee data
 lvcreate -L200 -T $vg/pool
 lvchange -an $vg
 

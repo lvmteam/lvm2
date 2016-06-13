@@ -16,24 +16,6 @@ SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-
-# TODO - aux/get support for this....
-fake_metadata_() {
-	echo '<superblock uuid="" time="0" transaction="'$2'" data_block_size="128" nr_data_blocks="3200">'
-	echo ' <device dev_id="1" mapped_blocks="0" transaction="0" creation_time="0" snap_time="0">'
-	echo ' </device>'
-	for i in $(seq 10 $1)
-	do
-		echo ' <device dev_id="'$i'" mapped_blocks="30" transaction="0" creation_time="0" snap_time="0">'
-		echo '  <range_mapping origin_begin="0" data_begin="0" length="29" time="0"/>'
-		echo ' </device>'
-		set +x
-	done
-	echo "</superblock>"
-	set -x
-}
-
-
 . lib/inittest
 
 #
@@ -85,7 +67,7 @@ aux lvmconf 'global/thin_check_executable = ""'
 
 # Prepare some fake metadata prefilled to ~100%
 lvcreate -L2 -n $lv1 $vg # tmp for metadata
-fake_metadata_ 500 1 >data
+aux prepare_thin_metadata 500 1 | tee data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata

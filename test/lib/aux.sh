@@ -354,6 +354,29 @@ prepare_lvmdbusd() {
 	echo ok
 }
 
+#
+# Temporary solution to create some occupied thin metadata
+# This heavily depends on thin metadata output format to stay as is.
+# Currently it expects 2MB thin metadata and 200MB data volume size
+# Argument specifies how many devices should be created.
+#
+prepare_thin_metadata() {
+	local devices=$1
+	local transaction_id=${2:-0}
+	local data_block_size=${3:-128}
+	local nr_data_blocks=${4:-3200}
+	local i
+
+	echo '<superblock uuid="" time="1" transaction="'$transaction_id'" data_block_size="'$data_block_size'" nr_data_blocks="'$nr_data_blocks'">'
+	for i in $(seq 1 $devices)
+	do
+		echo ' <device dev_id="'$i'" mapped_blocks="37" transaction="'$i'" creation_time="0" snap_time="1">'
+		echo '  <range_mapping origin_begin="0" data_begin="0" length="37" time="0"/>'
+		echo ' </device>'
+	done
+	echo "</superblock>"
+}
+
 teardown_devs_prefixed() {
 	local prefix=$1
 	local stray=${2:-0}
