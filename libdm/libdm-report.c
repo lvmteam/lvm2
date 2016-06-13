@@ -3984,6 +3984,8 @@ static int _alloc_rh_selection(struct dm_report *rh)
 	return 1;
 }
 
+#define SPECIAL_SELECTION_ALL "all"
+
 static int _report_set_selection(struct dm_report *rh, const char *selection, int add_new_fields)
 {
 	struct selection_node *root = NULL;
@@ -3999,7 +4001,7 @@ static int _report_set_selection(struct dm_report *rh, const char *selection, in
 			goto_bad;
 	}
 
-	if (!selection)
+	if (!selection || !strcasecmp(selection, SPECIAL_SELECTION_ALL))
 		return 1;
 
 	rh->selection->add_new_fields = add_new_fields;
