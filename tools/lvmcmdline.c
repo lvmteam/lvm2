@@ -1599,6 +1599,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	init_dmeventd_monitor(monitoring);
 
 	log_debug("Processing: %s", cmd->cmd_line);
+	log_debug("Command pid: %d", getpid());
 	log_debug("system ID: %s", cmd->system_id ? : "");
 
 #ifdef O_DIRECT_SUPPORT
