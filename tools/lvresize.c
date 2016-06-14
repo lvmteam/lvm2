@@ -101,13 +101,13 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	}
 
 	if (lp->resize == LV_EXTEND && lp->sign == SIGN_MINUS) {
-		log_error("Negative argument not permitted - use lvreduce");
+		log_error("Negative argument not permitted - use lvreduce.");
 		return 0;
 	}
 
 	if (lp->resize == LV_REDUCE &&
 	    ((lp->sign == SIGN_PLUS) || (lp->poolmetadatasign == SIGN_PLUS))) {
-		log_error("Positive sign not permitted - use lvextend");
+		log_error("Positive sign not permitted - use lvextend.");
 		return 0;
 	}
 
@@ -115,7 +115,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	lp->nofsck = arg_is_set(cmd, nofsck_ARG);
 
 	if (!argc) {
-		log_error("Please provide the logical volume name");
+		log_error("Please provide the logical volume name.");
 		return 0;
 	}
 
@@ -191,8 +191,8 @@ static int _lvresize_single(struct cmd_context *cmd, const char *vg_name,
 
 	/* Does LV exist? */
 	if (!(lv = find_lv(vg, lp->lv_name))) {
-		log_error("Logical volume %s not found in volume group %s",
-			  lp->lv_name, lp->vg_name);
+		log_error("Logical volume %s not found in volume group %s.",
+			  lp->lv_name, vg->name);
 		goto out;
 	}
 

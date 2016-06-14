@@ -206,7 +206,7 @@ int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 	    seg->segtype->ops->target_present &&
 	    !seg->segtype->ops->target_present(lv->vg->cmd, NULL, &attr)) {
 		log_error("%s: Required device-mapper target(s) not "
-			  "detected in your kernel", seg->segtype->name);
+			  "detected in your kernel.", seg->segtype->name);
 		return 0;
 	}
 
@@ -753,7 +753,7 @@ int check_new_thin_pool(const struct logical_volume *pool_lv)
 		return 0;
 	}
 
-	log_verbose("Deactivating public thin pool %s",
+	log_verbose("Deactivating public thin pool %s.",
 		    display_lvname(pool_lv));
 
 	/* Prevent any 'race' with in-use thin pool and always deactivate */

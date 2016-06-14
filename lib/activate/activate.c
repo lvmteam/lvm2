@@ -1394,7 +1394,7 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 		if (lv_is_visible(lvl->lv))
 			count += (_lv_open_count(vg->cmd, lvl->lv) > 0);
 
-	log_debug_activation("Counted %d open LVs in VG %s", count, vg->name);
+	log_debug_activation("Counted %d open LVs in VG %s.", count, vg->name);
 
 	return count;
 }

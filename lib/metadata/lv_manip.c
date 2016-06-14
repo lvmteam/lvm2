@@ -4347,7 +4347,7 @@ static int _request_confirmation(const struct volume_group *vg,
 	struct lvinfo info = { 0 };
 
 	if (!lv_info(vg->cmd, lv, 0, &info, 1, 0) && driver_version(NULL, 0)) {
-		log_error("lv_info failed: aborting");
+		log_error("lv_info failed: aborting.");
 		return 0;
 	}
 
@@ -4373,7 +4373,7 @@ static int _request_confirmation(const struct volume_group *vg,
 	if (!lp->ac_force) {
 		if (yes_no_prompt("Do you really want to reduce %s? [y/n]: ",
 				  display_lvname(lv)) == 'n') {
-			log_error("Logical volume %s NOT reduced",
+			log_error("Logical volume %s NOT reduced.",
 				  display_lvname(lv));
 			return 0;
 		}
@@ -4890,7 +4890,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 
 	/* FIXME Support LVs with mixed segment types */
 	if (lp->segtype != get_segtype_from_string(cmd, lp->ac_type ? : lp->segtype->name)) {
-		log_error("VolumeType does not match (%s)", lp->segtype->name);
+		log_error("VolumeType does not match (%s).", lp->segtype->name);
 		return 0;
 	}
 
@@ -5174,8 +5174,7 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 {
 	if (lv_is_origin(lv)) {
 		if (lp->resize == LV_REDUCE) {
-			log_error("Snapshot origin volumes cannot be reduced "
-				  "in size yet.");
+			log_error("Snapshot origin volumes cannot be reduced in size yet.");
 			return 0;
 		}
 
@@ -5273,6 +5272,8 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 			      lp->extents - lv->le_count,
 			      pvh, alloc, lp->approx_alloc))
 		return_NULL;
+	/* Check for over provisioning only when lv_extend() passed,
+	 * ATM this check does not fail */
 	else if (!pool_check_overprovisioning(lv))
 		return_NULL;
 
