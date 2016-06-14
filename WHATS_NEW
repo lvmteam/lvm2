@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Use 'orphan' object type in cmd log for groups to collect PVs not yet in VGs.
   Add lvm lastlog command for query and display of last cmd's log in lvm shell.
   Report per-object return codes via cmd log while processing multiple objects.
   Annotate processing code with log report hooks for per-object command log.

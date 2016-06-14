@@ -1894,11 +1894,14 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		notfound = 0;
 
 		uuid[0] = '\0';
-		if (vg_uuid && !is_orphan_vg(vg_name) &&
-		    !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
-			stack;
-
-		log_set_report_object_name_and_id(vg_name, uuid);
+		if (is_orphan_vg(vg_name)) {
+			log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_ORPHAN);
+			log_set_report_object_name_and_id(vg_name + sizeof(VG_ORPHANS), uuid);
+		} else {
+			if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
+				stack;
+			log_set_report_object_name_and_id(vg_name, uuid);
+		}
 
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
@@ -3306,7 +3309,8 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		goto_out;
 	}
 
-	log_set_report_object_group_and_group_id(vg->name, vg_uuid);
+	if (!is_orphan_vg(vg->name))
+		log_set_report_object_group_and_group_id(vg->name, vg_uuid);
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
@@ -3430,11 +3434,14 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 		notfound = 0;
 
 		uuid[0] = '\0';
-		if (vg_uuid && !is_orphan_vg(vg_name) &&
-		    !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
-			stack;
-
-		log_set_report_object_name_and_id(vg_name, uuid);
+		if (is_orphan_vg(vg_name)) {
+			log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_ORPHAN);
+			log_set_report_object_name_and_id(vg_name + sizeof(VG_ORPHANS), uuid);
+		} else {
+			if (vg_uuid && !id_write_format((const struct id*)vg_uuid, uuid, sizeof(uuid)))
+				stack;
+			log_set_report_object_name_and_id(vg_name, uuid);
+		}
 
 		if (sigint_caught()) {
 			ret_max = ECMD_FAILED;
@@ -3750,7 +3757,8 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	if (!id_write_format(&vg->id, vg_uuid, sizeof(vg_uuid)))
 		stack;
 
-	log_set_report_object_group_and_group_id(vg->name, vg_uuid);
+	if (!is_orphan_vg(vg->name))
+		log_set_report_object_group_and_group_id(vg->name, vg_uuid);
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv_uuid[0] = '\0';
