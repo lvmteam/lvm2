@@ -467,8 +467,7 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 	};
 	struct saved_env e = store_user_env(lv->vg->cmd);
 
-	if (!lv_resize_prepare(lv->vg->cmd, lv, &lp, &lv->vg->pvs) ||
-	    !lv_resize(lv->vg->cmd, lv, &lp, &lv->vg->pvs)) {
+	if (!lv_resize(lv, &lp, &lv->vg->pvs)) {
 		/* FIXME Improve msg */
 		log_error("LV resize failed.");
 		/* FIXME Define consistent symbolic return codes */

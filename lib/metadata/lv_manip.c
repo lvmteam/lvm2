@@ -4336,10 +4336,10 @@ static int _validate_stripesize(const struct volume_group *vg,
 	return 1;
 }
 
-static int _request_confirmation(const struct volume_group *vg,
-				 const struct logical_volume *lv,
+static int _request_confirmation(const struct logical_volume *lv,
 				 const struct lvresize_params *lp)
 {
+	const struct volume_group *vg = lv->vg;
 	struct lvinfo info = { 0 };
 
 	if (!lv_info(vg->cmd, lv, 0, &info, 1, 0) && driver_version(NULL, 0)) {
@@ -4766,10 +4766,11 @@ static int _lvresize_adjust_size(struct volume_group *vg,
 /*
  * If percent options were used, convert them into actual numbers of extents.
  */
-static int _lvresize_extents_from_percent(struct logical_volume *lv, struct lvresize_params *lp,
+static int _lvresize_extents_from_percent(const struct logical_volume *lv,
+					  struct lvresize_params *lp,
 					  struct dm_list *pvh)
 {
-	struct volume_group *vg = lv->vg;
+	const struct volume_group *vg = lv->vg;
 	uint32_t pv_extent_count;
 	uint32_t old_extents = lp->extents;
 
@@ -4859,10 +4860,12 @@ static uint32_t _lv_pe_count(struct logical_volume *lv)
 }
 
 /* FIXME Avoid having variables like lp->extents mean different things at different places */
-static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volume *lv, 
-				    struct lvresize_params *lp, struct dm_list *pvh)
+static int _lvresize_adjust_extents(struct logical_volume *lv,
+				    struct lvresize_params *lp,
+				    struct dm_list *pvh)
 {
 	struct volume_group *vg = lv->vg;
+	struct cmd_context *cmd = vg->cmd;
 	uint32_t logical_extents_used = 0;
 	uint32_t physical_extents_used = 0;
 	uint32_t seg_stripes = 0, seg_stripesize = 0;
@@ -5173,7 +5176,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 }
 
 static int _lvresize_check_type(const struct logical_volume *lv,
-				struct lvresize_params *lp)
+				const struct lvresize_params *lp)
 {
 	if (lv_is_origin(lv)) {
 		if (lp->resize == LV_REDUCE) {
@@ -5210,12 +5213,12 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 	return 1;
 }
 
-static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
-					       struct logical_volume *lv,
+static struct logical_volume *_lvresize_volume(struct logical_volume *lv,
 					       struct lvresize_params *lp,
 					       struct dm_list *pvh)
 {
 	struct volume_group *vg = lv->vg;
+	struct cmd_context *cmd = vg->cmd;
 	struct logical_volume *lock_lv = NULL;
 	struct lv_segment *seg = NULL;
 	uint32_t old_extents;
@@ -5235,7 +5238,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 
 	/* Request confirmation before operations that are often mistakes. */
 	if ((lp->resizefs || (lp->resize == LV_REDUCE)) &&
-	    !_request_confirmation(vg, lv, lp))
+	    !_request_confirmation(lv, lp))
 		return_NULL;
 
 	if (lp->resizefs) {
@@ -5304,8 +5307,9 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 	return lock_lv;
 }
 
-int lv_resize_prepare(struct cmd_context *cmd, struct logical_volume *lv,
-		      struct lvresize_params *lp, struct dm_list *pvh)
+static int _lvresize_prepare(struct logical_volume *lv,
+			     struct lvresize_params *lp,
+			     struct dm_list *pvh)
 {
 	if (!_lvresize_check_lv(lv, lp))
 		return_0;
@@ -5319,7 +5323,7 @@ int lv_resize_prepare(struct cmd_context *cmd, struct logical_volume *lv,
 	else if (lp->extents && !_lvresize_extents_from_percent(lv, lp, pvh))
 		return_0;
 
-	if (lp->extents && !_lvresize_adjust_extents(cmd, lv, lp, pvh))
+	if (lp->extents && !_lvresize_adjust_extents(lv, lp, pvh))
 		return_0;
 
 	if ((lp->extents == lv->le_count) && lp->use_policies) {
@@ -5338,13 +5342,17 @@ int lv_resize_prepare(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 }
 
-/* lv_resize_prepare MUST be called before this */
-int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
-	      struct lvresize_params *lp, struct dm_list *pvh)
+int lv_resize(struct logical_volume *lv,
+	      struct lvresize_params *lp,
+	      struct dm_list *pvh)
 {
 	struct volume_group *vg = lv->vg;
+	struct cmd_context *cmd = vg->cmd;
 	struct logical_volume *lock_lv = NULL;
 	int inactive = 0;
+
+	if (!_lvresize_prepare(lv, lp, pvh))
+		return_0;
 
 	if (lv_is_cache_type(lv)) {
 		log_error("Unable to resize logical volumes of cache type.");
@@ -5359,7 +5367,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		return_0;
 
 	if (lp->extents &&
-	    !(lock_lv = _lvresize_volume(cmd, lv, lp, pvh)))
+	    !(lock_lv = _lvresize_volume(lv, lp, pvh)))
 		return_0;
 
 	if (lp->poolmetadataextents) {

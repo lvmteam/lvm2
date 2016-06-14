@@ -376,8 +376,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		.sizeargs = 1,
 	};
 
-	if (!lv_resize_prepare(cmd, lv, &lp, &vg->pvs) ||
-	    !lv_resize(cmd, lv, &lp, &vg->pvs)) {
+	if (!lv_resize(lv, &lp, &vg->pvs)) {
 		log_error("Extend LV %s to size %s failed.",
 			  display_lvname(lv), display_size(cmd, lp.size));
 		return 0;

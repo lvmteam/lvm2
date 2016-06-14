@@ -693,10 +693,9 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_to);
 uint32_t vg_lock_newname(struct cmd_context *cmd, const char *vgname);
 
-int lv_resize_prepare(struct cmd_context *cmd, struct logical_volume *lv,
-		      struct lvresize_params *lp, struct dm_list *pvh);
-int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
-	      struct lvresize_params *lp, struct dm_list *pvh);
+int lv_resize(struct logical_volume *lv,
+	      struct lvresize_params *lp,
+	      struct dm_list *pvh);
 
 /*
  * Return a handle to VG metadata.

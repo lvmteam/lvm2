@@ -175,12 +175,7 @@ static int _lvresize_single(struct cmd_context *cmd, const char *vg_name,
 	if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc, lp->argv, 1) : &vg->pvs))
 		goto_out;
 
-	if (!lv_resize_prepare(cmd, lv, lp, pvh)) {
-		ret = EINVALID_CMD_LINE;
-		goto_out;
-	}
-
-	if (!lv_resize(cmd, lv, lp, pvh))
+	if (!lv_resize(lv, lp, pvh))
 		goto_out;
 
 	ret = ECMD_PROCESSED;
