@@ -1285,6 +1285,7 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 		case CMDLOG:
 			single_args->keys = find_config_tree_str(cmd, log_command_log_sort_CFG, NULL);
 			single_args->options = find_config_tree_str(cmd, log_command_log_cols_CFG, NULL);
+			single_args->selection = find_config_tree_str(cmd, log_command_log_selection_CFG, NULL);
 			break;
 		default:
 			log_error(INTERNAL_ERROR "_report: unknown report type.");
