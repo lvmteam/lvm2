@@ -547,6 +547,18 @@ cfg_runtime(allocation_thin_pool_chunk_size_CFG, "thin_pool_chunk_size", allocat
 cfg(allocation_physical_extent_size_CFG, "physical_extent_size", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_EXTENT_SIZE, vsn(2, 2, 112), NULL, 0, NULL,
 	"Default physical extent size in KiB to use for new VGs.\n")
 
+cfg(log_command_log_sort_CFG, "command_log_sort", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_COMMAND_LOG_SORT, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to sort by when reporting command log.\n"
+	"Possible fields are: log_seq_num, log_type, log_context, log_object_type,\n"
+	"log_object_name, log_object_id, log_object_group, log_object_group_id,\n"
+	"log_message, log_errno, log_ret_code.\n")
+
+cfg(log_command_log_cols_CFG, "command_log_cols", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_COMMAND_LOG_COLS, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to report when reporting command log.\n"
+	"Possible fields are: log_seq_num, log_type, log_context, log_object_type,\n"
+	"log_object_name, log_object_id, log_object_group, log_object_group_id,\n"
+	"log_message, log_errno, log_ret_code.\n")
+
 cfg(log_verbose_CFG, "verbose", log_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_VERBOSE, vsn(1, 0, 0), NULL, 0, NULL,
 	"Controls the messages sent to stdout or stderr.\n")
 

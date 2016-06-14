@@ -963,8 +963,8 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args)
 				args->options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
 			break;
 		case CMDLOG:
-			args->keys = DEFAULT_COMMAND_LOG_SORT;
-			args->options = DEFAULT_COMMAND_LOG_COLS;
+			args->keys = find_config_tree_str(cmd, log_command_log_sort_CFG, NULL);
+			args->options = find_config_tree_str(cmd, log_command_log_cols_CFG, NULL);
 			break;
 		default:
 			log_error(INTERNAL_ERROR "_report: unknown report type.");

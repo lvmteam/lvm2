@@ -478,6 +478,22 @@ allocation {
 # How LVM log information is reported.
 log {
 
+	# Configuration option log/command_log_sort.
+	# List of columns to sort by when reporting command log.
+	# Possible fields are: log_seq_num, log_type, log_context, log_object_type,
+	# log_object_name, log_object_id, log_object_group, log_object_group_id,
+	# log_message, log_errno, log_ret_code.
+	# This configuration option has an automatic default value.
+	# command_log_sort = "log_seq_num"
+
+	# Configuration option log/command_log_cols.
+	# List of columns to report when reporting command log.
+	# Possible fields are: log_seq_num, log_type, log_context, log_object_type,
+	# log_object_name, log_object_id, log_object_group, log_object_group_id,
+	# log_message, log_errno, log_ret_code.
+	# This configuration option has an automatic default value.
+	# command_log_cols = "log_seq_num,log_type,log_context,log_object_type,log_object_name,log_object_id,log_object_group,log_object_group_id,log_message,log_errno,log_ret_code"
+
 	# Configuration option log/verbose.
 	# Controls the messages sent to stdout or stderr.
 	verbose = 0
