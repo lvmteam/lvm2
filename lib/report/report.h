@@ -93,7 +93,9 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 int report_get_single_selection(struct cmd_context *cmd, const char **selection);
 void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_type,
 				const char *selection);
-const char *report_get_field_prefix(report_type_t report_type);
+int report_get_prefix_and_desc(report_type_t report_type_id,
+			       const char **report_prefix,
+			       const char **report_desc);
 int report_for_selection(struct cmd_context *cmd,
 			 struct processing_handle *parent_handle,
 			 struct physical_volume *pv,

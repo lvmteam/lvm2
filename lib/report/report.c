@@ -3769,7 +3769,9 @@ void *report_init_for_selection(struct cmd_context *cmd,
 					     cmd);
 }
 
-const char *report_get_field_prefix(report_type_t report_type_id)
+int report_get_prefix_and_desc(report_type_t report_type_id,
+			       const char **report_prefix,
+			       const char **report_desc)
 {
 	const struct dm_report_object_type *report_types, *report_type;
 
@@ -3781,11 +3783,15 @@ const char *report_get_field_prefix(report_type_t report_type_id)
 		report_types = _report_types;
 
 	for (report_type = report_types; report_type->id; report_type++) {
-		if (report_type_id & report_type->id)
-			return report_type->prefix;
+		if (report_type_id & report_type->id) {
+			*report_prefix = report_type->prefix;
+			*report_desc = report_type->desc;
+			return 1;
+		}
 	}
 
-	return "";
+	*report_prefix = *report_desc = "";
+	return 0;
 }
 
 /*

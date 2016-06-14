@@ -985,9 +985,10 @@ int report_get_single_selection(struct cmd_context *cmd, const char **selection)
 	return _do_report_get_selection(cmd, NULL, NULL, expected_idxs, selection);
 }
 
-static int _set_report_prefix_and_name(struct single_report_args *single_args)
+static int _set_report_prefix_and_name(struct report_args *args,
+				       struct single_report_args *single_args)
 {
-	const char *report_prefix;
+	const char *report_prefix, *report_desc;
 	size_t len;
 
 	if (single_args->report_type == FULL) {
@@ -996,7 +997,8 @@ static int _set_report_prefix_and_name(struct single_report_args *single_args)
 		return 1;
 	}
 
-	report_prefix = report_get_field_prefix(single_args->report_type);
+	(void) report_get_prefix_and_desc(single_args->report_type,
+					  &report_prefix, &report_desc);
 	len = strlen(report_prefix);
 	if (report_prefix[len - 1] == '_')
 		len--;
@@ -1012,7 +1014,11 @@ static int _set_report_prefix_and_name(struct single_report_args *single_args)
 		return 0;
 	}
 	single_args->report_prefix[len] = '\0';
-	single_args->report_name = single_args->report_prefix;
+
+	if (args->report_group_type != DM_REPORT_GROUP_BASIC)
+		single_args->report_name = single_args->report_prefix;
+	else
+		single_args->report_name = report_desc;
 
 	return 1;
 }
@@ -1211,7 +1217,7 @@ out:
 		args->single_args[REPORT_IDX_FULL_ ## type].report_type = type; \
 		args->single_args[REPORT_IDX_FULL_ ## type].keys = find_config_tree_str(cmd, report_ ## name ## _sort_full_CFG, NULL); \
 		args->single_args[REPORT_IDX_FULL_ ## type].options = find_config_tree_str(cmd, report_ ## name ## _cols_full_CFG, NULL); \
-		if (!_set_report_prefix_and_name(&args->single_args[REPORT_IDX_FULL_ ## type])) \
+		if (!_set_report_prefix_and_name(args, &args->single_args[REPORT_IDX_FULL_ ## type])) \
 			return_0; \
 	} while (0)
 
@@ -1228,7 +1234,7 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 	/* Check PV specifics and do extra changes/actions if needed. */
 	_check_pv_list(cmd, args, single_args);
 
-	if (!_set_report_prefix_and_name(single_args))
+	if (!_set_report_prefix_and_name(args, single_args))
 		return_0;
 
 	switch (single_args->report_type) {
@@ -1472,7 +1478,7 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 			 * We reusing existing log report handle.
 			 * Just get report's name and prefix now.
 			 */
-			if (!_set_report_prefix_and_name(single_args))
+			if (!_set_report_prefix_and_name(&args, single_args))
 				goto_bad;
 		}
 
