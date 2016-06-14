@@ -37,6 +37,15 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->extents = 0;
 		lp->sign = SIGN_PLUS;
 		lp->percent = PERCENT_LV;
+
+		if (arg_from_list_is_set(cmd, NULL,
+					 chunksize_ARG, extents_ARG,
+					 poolmetadatasize_ARG,
+					 regionsize_ARG,
+					 size_ARG,
+					 stripes_ARG, stripesize_ARG,
+					 -1))
+			log_print_unless_silent("Ignoring size parameters with --use-policies.");
 	} else {
 		/*
 		 * Allow omission of extents and size if the user has given us
