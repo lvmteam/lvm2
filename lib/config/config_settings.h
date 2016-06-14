@@ -1743,6 +1743,46 @@ cfg(report_pvsegs_cols_verbose_CFG, "pvsegs_cols_verbose", report_CFG_SECTION, C
 	"List of columns to sort by when reporting 'pvs --segments' command in verbose mode.\n"
 	"See 'pvs --segments -o help' for the list of possible fields.\n")
 
+cfg(report_vgs_cols_full_CFG, "vgs_cols_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_VGS_COLS_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to report for lvm fullreport's 'vgs' subreport.\n"
+	"See 'vgs -o help' for the list of possible fields.\n")
+
+cfg(report_pvs_cols_full_CFG, "pvs_cols_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_PVS_COLS_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to report for lvm fullreport's 'vgs' subreport.\n"
+	"See 'pvs -o help' for the list of possible fields.\n")
+
+cfg(report_lvs_cols_full_CFG, "lvs_cols_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_LVS_COLS_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to report for lvm fullreport's 'lvs' subreport.\n"
+	"See 'lvs -o help' for the list of possible fields.\n")
+
+cfg(report_pvsegs_cols_full_CFG, "pvsegs_cols_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_PVSEGS_COLS_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to report for lvm fullreport's 'pvseg' subreport.\n"
+	"See 'pvs --segments -o help' for the list of possible fields.\n")
+
+cfg(report_segs_cols_full_CFG, "segs_cols_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_SEGS_COLS_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to report for lvm fullreport's 'seg' subreport.\n"
+	"See 'lvs --segments -o help' for the list of possible fields.\n")
+
+cfg(report_vgs_sort_full_CFG, "vgs_sort_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_VGS_SORT_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to sort by when reporting lvm fullreport's 'vgs' subreport.\n"
+	"See 'vgs -o help' for the list of possible fields.\n")
+
+cfg(report_pvs_sort_full_CFG, "pvs_sort_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_PVS_SORT_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to sort by when reporting lvm fullreport's 'vgs' subreport.\n"
+	"See 'pvs -o help' for the list of possible fields.\n")
+
+cfg(report_lvs_sort_full_CFG, "lvs_sort_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_LVS_SORT_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to sort by when reporting lvm fullreport's 'lvs' subreport.\n"
+	"See 'lvs -o help' for the list of possible fields.\n")
+
+cfg(report_pvsegs_sort_full_CFG, "pvsegs_sort_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_PVSEGS_SORT_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to sort by when reporting for lvm fullreport's 'pvseg' subreport.\n"
+	"See 'pvs --segments -o help' for the list of possible fields.\n")
+
+cfg(report_segs_sort_full_CFG, "segs_sort_full", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_SEGS_SORT_FULL, vsn(2, 2, 158), NULL, 0, NULL,
+	"List of columns to sort by when reporting lvm fullreport's 'seg' subreport.\n"
+	"See 'lvs --segments -o help' for the list of possible fields.\n")
+
 cfg(report_mark_hidden_devices_CFG, "mark_hidden_devices", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 1, vsn(2, 2, 140), NULL, 0, NULL,
 	"Use brackets [] to mark hidden devices.\n")
 

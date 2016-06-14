@@ -1055,11 +1055,11 @@ out:
 	return r;
 }
 
-#define _set_full_report_single(args,type,name) \
+#define _set_full_report_single(cmd,args,type,name) \
 	do { \
 		args->single_args[REPORT_IDX_FULL_ ## type].report_type = type; \
-		args->single_args[REPORT_IDX_FULL_ ## type].keys = DEFAULT_ ## type ## _SORT_FULL; \
-		args->single_args[REPORT_IDX_FULL_ ## type].options = DEFAULT_ ## type ## _COLS_FULL; \
+		args->single_args[REPORT_IDX_FULL_ ## type].keys = find_config_tree_str(cmd, report_ ## name ## _sort_full_CFG, NULL); \
+		args->single_args[REPORT_IDX_FULL_ ## type].options = find_config_tree_str(cmd, report_ ## name ## _cols_full_CFG, NULL); \
 		if (!_set_report_prefix_and_name(&args->single_args[REPORT_IDX_FULL_ ## type])) \
 			return_0; \
 	} while (0)
@@ -1125,11 +1125,11 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 				single_args->options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
 			break;
 		case FULL:
-			_set_full_report_single(args, VGS, vgs);
-			_set_full_report_single(args, LVS, lvs);
-			_set_full_report_single(args, PVS, pvs);
-			_set_full_report_single(args, PVSEGS, pvsegs);
-			_set_full_report_single(args, SEGS, segs);
+			_set_full_report_single(cmd, args, VGS, vgs);
+			_set_full_report_single(cmd, args, LVS, lvs);
+			_set_full_report_single(cmd, args, PVS, pvs);
+			_set_full_report_single(cmd, args, PVSEGS, pvsegs);
+			_set_full_report_single(cmd, args, SEGS, segs);
 			break;
 		case CMDLOG:
 			single_args->keys = find_config_tree_str(cmd, log_command_log_sort_CFG, NULL);

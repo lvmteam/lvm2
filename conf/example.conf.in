@@ -1900,6 +1900,66 @@ activation {
 	# This configuration option has an automatic default value.
 	# pvsegs_cols_verbose = "pv_name,vg_name,pv_fmt,pv_attr,pv_size,pv_free,pvseg_start,pvseg_size,lv_name,seg_start_pe,segtype,seg_pe_ranges"
 
+	# Configuration option report/vgs_cols_full.
+	# List of columns to report for lvm fullreport's 'vgs' subreport.
+	# See 'vgs -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# vgs_cols_full = "vg_all"
+
+	# Configuration option report/pvs_cols_full.
+	# List of columns to report for lvm fullreport's 'vgs' subreport.
+	# See 'pvs -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# pvs_cols_full = "pv_all"
+
+	# Configuration option report/lvs_cols_full.
+	# List of columns to report for lvm fullreport's 'lvs' subreport.
+	# See 'lvs -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# lvs_cols_full = "lv_all"
+
+	# Configuration option report/pvsegs_cols_full.
+	# List of columns to report for lvm fullreport's 'pvseg' subreport.
+	# See 'pvs --segments -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# pvsegs_cols_full = "pvseg_all,pv_uuid,lv_uuid"
+
+	# Configuration option report/segs_cols_full.
+	# List of columns to report for lvm fullreport's 'seg' subreport.
+	# See 'lvs --segments -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# segs_cols_full = "seg_all,lv_uuid"
+
+	# Configuration option report/vgs_sort_full.
+	# List of columns to sort by when reporting lvm fullreport's 'vgs' subreport.
+	# See 'vgs -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# vgs_sort_full = "vg_name"
+
+	# Configuration option report/pvs_sort_full.
+	# List of columns to sort by when reporting lvm fullreport's 'vgs' subreport.
+	# See 'pvs -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# pvs_sort_full = "pv_name"
+
+	# Configuration option report/lvs_sort_full.
+	# List of columns to sort by when reporting lvm fullreport's 'lvs' subreport.
+	# See 'lvs -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# lvs_sort_full = "vg_name,lv_name"
+
+	# Configuration option report/pvsegs_sort_full.
+	# List of columns to sort by when reporting for lvm fullreport's 'pvseg' subreport.
+	# See 'pvs --segments -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# pvsegs_sort_full = "pv_uuid,pvseg_start"
+
+	# Configuration option report/segs_sort_full.
+	# List of columns to sort by when reporting lvm fullreport's 'seg' subreport.
+	# See 'lvs --segments -o help' for the list of possible fields.
+	# This configuration option has an automatic default value.
+	# segs_sort_full = "lv_uuid,seg_start"
+
 	# Configuration option report/mark_hidden_devices.
 	# Use brackets [] to mark hidden devices.
 	# This configuration option has an automatic default value.
