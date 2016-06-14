@@ -1073,14 +1073,14 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
 	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
 	const char *format_str = arg_str_value(cmd, reportformat_ARG, config_set ? config_format_str : NULL);
+	int report_command_log = find_config_tree_bool(cmd, log_report_command_log_CFG, NULL);
 	struct report_args args = {0};
 	struct dm_report_group *new_report_group;
 	struct dm_report *tmp_log_rh = NULL;
 
-	if (!format_str) {
-		args.report_group_type = DM_REPORT_GROUP_SINGLE;
-	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_BASIC)) {
-		args.report_group_type = DM_REPORT_GROUP_BASIC;
+	if (!format_str || !strcmp(format_str, REPORT_FORMAT_NAME_BASIC)) {
+		args.report_group_type = report_command_log ? DM_REPORT_GROUP_BASIC
+							    : DM_REPORT_GROUP_SINGLE;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON;
 	} else {
@@ -1099,16 +1099,23 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 		return 0;
 	}
 
-	if (!*log_rh) {
-		args.report_type = CMDLOG;
-		if (!_config_report(cmd, &args))
-			goto_bad;
+	if (report_command_log) {
+		if (!*log_rh) {
+			args.report_type = CMDLOG;
+			if (!_config_report(cmd, &args))
+				goto_bad;
 
-		if (!(tmp_log_rh = report_init(NULL, args.options, args.keys, &args.report_type,
-						  args.separator, args.aligned, args.buffered, args.headings,
-						  args.field_prefixes, args.quoted, args.columns_as_rows,
-						  args.selection))) {
-			log_error("Failed to create log report.");
+			if (!(tmp_log_rh = report_init(NULL, args.options, args.keys, &args.report_type,
+							  args.separator, args.aligned, args.buffered, args.headings,
+							  args.field_prefixes, args.quoted, args.columns_as_rows,
+							  args.selection))) {
+				log_error("Failed to create log report.");
+				goto bad;
+			}
+		}
+
+		if (!(dm_report_group_push(new_report_group, *log_rh ? : tmp_log_rh, log_report_name))) {
+			log_error("Failed to add log report to report group.");
 			goto bad;
 		}
 	}

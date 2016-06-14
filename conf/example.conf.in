@@ -478,6 +478,13 @@ allocation {
 # How LVM log information is reported.
 log {
 
+	# Configuration option log/report_command_log.
+	# If enabled, LVM will collect log during command processing.
+	# After that the log is reported using current output format
+	# as defined by report/output_format setting.
+	# This configuration option has an automatic default value.
+	# report_command_log = 0
+
 	# Configuration option log/command_log_sort.
 	# List of columns to sort by when reporting command log.
 	# Possible fields are: log_seq_num, log_type, log_context, log_object_type,

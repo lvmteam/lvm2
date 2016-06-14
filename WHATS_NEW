@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Add log/report_command_log to lvm.conf to enable or disable cmd log report.
   Add log/report_output_format to lvm.conf for default report output format.
   Recognize --reportformat {basic|json} option to select report output format.
   Add log/command_log_{sort,cols} to lvm.conf to configure command log report.
