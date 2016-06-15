@@ -315,7 +315,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&found_vgnames);
 	dm_list_init(&pp.changed_vgnames);
 
-	if (!lvmetad_used()) {
+	if (!lvmetad_used() && !arg_is_set(cmd, activate_ARG)) {
 		log_verbose("Ignoring pvscan --cache command because lvmetad is not in use.");
 		return ret;
 	}
@@ -339,6 +339,13 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_READ, NULL)) {
 		log_error("Unable to obtain global lock.");
 		return ECMD_FAILED;
+	}
+
+	if (!lvmetad_used() && do_activate) {
+		log_verbose("Activating all VGs without lvmetad running.");
+		all_vgs = 1;
+		devno_args = 0;
+		goto activate;
 	}
 
 	/*
