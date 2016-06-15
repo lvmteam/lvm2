@@ -54,6 +54,7 @@ struct report_args {
 	int columns_as_rows;
 	const char *separator;
 	struct volume_group *full_report_vg;
+	int log_only;
 	struct single_report_args single_args[REPORT_IDX_COUNT];
 };
 
@@ -1047,7 +1048,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 				    &lv_segment_status_needed, &report_type))
 		goto_out;
 
-	if (handle->report_group) {
+	if (!(args->log_only && (single_args->report_type != CMDLOG))) {
 		if (!dm_report_group_push(handle->report_group, report_handle, (void *) single_args->report_name))
 			goto_out;
 		report_in_group = 1;
@@ -1160,7 +1161,8 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 			log_error("Failed to compact given columns in report output.");
 	}
 
-	dm_report_output(report_handle);
+	if (!(args->log_only && (single_args->report_type != CMDLOG)))
+		dm_report_output(report_handle);
 
 	if (lock_global)
 		unlock_vg(cmd, VG_GLOBAL);
@@ -1189,7 +1191,7 @@ static int _full_report_single(struct cmd_context *cmd,
 
 	args->full_report_vg = vg;
 
-	if (!dm_report_group_push(handle->report_group, NULL, NULL))
+	if (!args->log_only && !dm_report_group_push(handle->report_group, NULL, NULL))
 		goto out;
 
 	if (orphan) {
@@ -1205,7 +1207,7 @@ static int _full_report_single(struct cmd_context *cmd,
 			stack;
 	}
 
-	if (!dm_report_group_pop(handle->report_group))
+	if (!args->log_only && !dm_report_group_pop(handle->report_group))
 		goto_out;
 out:
 	args->full_report_vg = NULL;
@@ -1360,13 +1362,14 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 	handle->include_historical_lvs = cmd->include_historical_lvs;
 
 	args.report_group_type = handle->report_group_type;
+	args.log_only = handle->log_only;
 
 	if (!_config_report(cmd, &args, single_args)) {
 		destroy_processing_handle(cmd, handle);
 		return_ECMD_FAILED;
 	}
 
-	if (!dm_report_group_push(handle->report_group, NULL, report_name)) {
+	if (!args.log_only && !dm_report_group_push(handle->report_group, NULL, report_name)) {
 		log_error("Failed to add main report section to report group.");
 		destroy_processing_handle(cmd, handle);
 		return ECMD_FAILED;
@@ -1426,20 +1429,23 @@ int devtypes(struct cmd_context *cmd, int argc, char **argv)
 
 int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_group_type,
 		       struct dm_report_group **report_group, struct dm_report **log_rh,
-		       log_report_t *saved_log_report_state)
+		       int *log_only, log_report_t *saved_log_report_state)
 {
 	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
 	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
 	const char *format_str = arg_str_value(cmd, reportformat_ARG, config_set ? config_format_str : NULL);
-	int report_command_log = find_config_tree_bool(cmd, log_report_command_log_CFG, NULL);
+	int report_command_log;
 	struct report_args args = {0};
 	struct single_report_args *single_args;
 	struct dm_report_group *new_report_group;
 	struct dm_report *tmp_log_rh = NULL;
 
+	args.log_only = arg_is_set(cmd, logonly_ARG) || *log_rh;
+	report_command_log = args.log_only || find_config_tree_bool(cmd, log_report_command_log_CFG, NULL);
+
 	if (!format_str || !strcmp(format_str, REPORT_FORMAT_NAME_BASIC)) {
-		args.report_group_type = report_command_log ? DM_REPORT_GROUP_BASIC
-							    : DM_REPORT_GROUP_SINGLE;
+		args.report_group_type = (report_command_log && !args.log_only) ? DM_REPORT_GROUP_BASIC
+										: DM_REPORT_GROUP_SINGLE;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON;
 	} else {
@@ -1452,6 +1458,8 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 
 	if (report_group_type)
 		*report_group_type = args.report_group_type;
+	if (log_only)
+		*log_only = args.log_only;
 
 	if (!(new_report_group = dm_report_group_create(args.report_group_type, NULL))) {
 		log_error("Failed to create report group.");
@@ -1517,7 +1525,7 @@ int lastlog(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (!report_format_init(cmd, NULL, &report_group, &cmd->log_rh, NULL))
+	if (!report_format_init(cmd, NULL, &report_group, &cmd->log_rh, NULL, NULL))
 		goto_out;
 
 	if (arg_count(cmd, select_ARG) &&

@@ -149,6 +149,7 @@ xx(fullreport,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--nameprefixes]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
@@ -169,10 +170,10 @@ xx(fullreport,
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
    aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
-   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG, nolocking_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, reportformat_ARG,
-   rows_ARG, select_ARG, separator_ARG, shared_ARG, sort_ARG, trustcache_ARG,
-   unbuffered_ARG, units_ARG, unquoted_ARG)
+   ignoreskippedcluster_ARG, logonly_ARG, nameprefixes_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG,
+   reportformat_ARG, rows_ARG, select_ARG, separator_ARG, shared_ARG,
+   sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(lastlog,
    "Display last command's log report",
@@ -486,6 +487,7 @@ xx(lvdisplay,
    "\t[-H|--history]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
    "\t[-o|--options [+|-|#]Field[,Field]]\n"
@@ -504,7 +506,7 @@ xx(lvdisplay,
 
     aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG, foreign_ARG,
     history_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
-    maps_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG,
+    logonly_ARG, maps_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG,
     partial_ARG, readonly_ARG, reportformat_ARG, segments_ARG, select_ARG,
     separator_ARG, shared_ARG, unbuffered_ARG, units_ARG)
 
@@ -730,6 +732,7 @@ xx(lvs,
    "\t[-H|--history]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--nameprefixes]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
@@ -751,11 +754,11 @@ xx(lvs,
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
    aligned_ARG, all_ARG, binary_ARG, configreport_ARG, foreign_ARG, history_ARG,
-   ignorelockingfailure_ARG, ignoreskippedcluster_ARG, nameprefixes_ARG,
-   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
-   readonly_ARG, reportformat_ARG, rows_ARG, segments_ARG, select_ARG,
-   separator_ARG, shared_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG,
-   units_ARG, unquoted_ARG)
+   ignorelockingfailure_ARG, ignoreskippedcluster_ARG, logonly_ARG,
+   nameprefixes_ARG, noheadings_ARG, nolocking_ARG, nosuffix_ARG,
+   options_ARG, partial_ARG, readonly_ARG, reportformat_ARG, rows_ARG,
+   segments_ARG, select_ARG, separator_ARG, shared_ARG, sort_ARG,
+   trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -918,6 +921,7 @@ xx(pvdisplay,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
    "\t[-o|--options [+|-|#]Field[,Field]]\n"
@@ -933,7 +937,7 @@ xx(pvdisplay,
    "\t[PhysicalVolumePath [PhysicalVolumePath...]]\n",
 
    aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG, foreign_ARG,
-   ignorelockingfailure_ARG, ignoreskippedcluster_ARG, maps_ARG,
+   ignorelockingfailure_ARG, ignoreskippedcluster_ARG, logonly_ARG, maps_ARG,
    noheadings_ARG, nosuffix_ARG, options_ARG, readonly_ARG, reportformat_ARG,
    select_ARG, separator_ARG, shared_ARG, short_ARG, sort_ARG, unbuffered_ARG,
    units_ARG)
@@ -1014,6 +1018,7 @@ xx(pvs,
    "\t[-h|-?|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--nameprefixes]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
@@ -1035,10 +1040,11 @@ xx(pvs,
    "\t[PhysicalVolume [PhysicalVolume...]]\n",
 
    aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
-   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG, nolocking_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, reportformat_ARG,
-   rows_ARG, segments_ARG, select_ARG, separator_ARG, shared_ARG, sort_ARG,
-   trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
+   ignoreskippedcluster_ARG, logonly_ARG, nameprefixes_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG,
+   reportformat_ARG, rows_ARG, segments_ARG, select_ARG, separator_ARG,
+   shared_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG,
+   unquoted_ARG)
 
 xx(pvscan,
    "List all physical volumes",
@@ -1265,6 +1271,7 @@ xx(vgdisplay,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
    "\t[-o|--options [+|-|#]Field[,Field]]\n"
@@ -1282,9 +1289,9 @@ xx(vgdisplay,
 
    activevolumegroups_ARG, aligned_ARG, binary_ARG, colon_ARG, columns_ARG,
    foreign_ARG, ignorelockingfailure_ARG, ignoreskippedcluster_ARG,
-   noheadings_ARG, nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG,
-   reportformat_ARG, select_ARG, shared_ARG, short_ARG, separator_ARG,
-   sort_ARG, unbuffered_ARG, units_ARG)
+   logonly_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, partial_ARG,
+   readonly_ARG, reportformat_ARG, select_ARG, shared_ARG, short_ARG,
+   separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
@@ -1446,6 +1453,7 @@ xx(vgs,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoreskippedcluster]\n"
+   "\t[--logonly]\n"
    "\t[--nameprefixes]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
@@ -1466,10 +1474,10 @@ xx(vgs,
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
    aligned_ARG, all_ARG, binary_ARG, foreign_ARG, ignorelockingfailure_ARG,
-   ignoreskippedcluster_ARG, nameprefixes_ARG, noheadings_ARG, nolocking_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG, reportformat_ARG,
-   rows_ARG, select_ARG, separator_ARG, shared_ARG, sort_ARG, trustcache_ARG,
-   unbuffered_ARG, units_ARG, unquoted_ARG)
+   ignoreskippedcluster_ARG, logonly_ARG, nameprefixes_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, readonly_ARG,
+   reportformat_ARG, rows_ARG, select_ARG, separator_ARG, shared_ARG,
+   sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG, unquoted_ARG)
 
 xx(vgscan,
    "Search for all volume groups",

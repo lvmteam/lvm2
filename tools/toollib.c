@@ -1733,7 +1733,8 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct
 
 	if (!parent_handle) {
 		if (!report_format_init(cmd, &handle->report_group_type, &handle->report_group,
-					&handle->log_rh, &handle->saved_log_report_state)) {
+					&handle->log_rh, &handle->log_only,
+					&handle->saved_log_report_state)) {
 			dm_pool_free(cmd->mem, handle);
 			return NULL;
 		}
