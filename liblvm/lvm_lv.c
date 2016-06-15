@@ -457,7 +457,6 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 {
 	int rc = 0;
 	struct lvresize_params lp = {
-		.lv_name = lv->name,
 		.sign = SIGN_NONE,
 		.percent = PERCENT_NONE,
 		.resize = LV_ANY,

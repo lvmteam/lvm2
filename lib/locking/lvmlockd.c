@@ -367,7 +367,6 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 {
 	struct logical_volume *lv = vg->sanlock_lv;
 	struct lvresize_params lp = {
-		.lv_name = vg->sanlock_lv->name,
 		.sign = SIGN_NONE,
 		.size = lv->size + ((extend_mb * 1024 * 1024) / SECTOR_SIZE),
 		.percent = PERCENT_NONE,
