@@ -18,21 +18,19 @@
 static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 			    struct lvresize_params *lp)
 {
-	const char *cmd_name;
+	const char *cmd_name = command_name(cmd);
 	char *st;
-	int use_policy = arg_is_set(cmd, usepolicies_ARG);
 
-	lp->sign = SIGN_NONE;
-	lp->poolmetadatasign = SIGN_NONE;
-	lp->resize = LV_ANY;
-
-	cmd_name = command_name(cmd);
 	if (!strcmp(cmd_name, "lvreduce"))
 		lp->resize = LV_REDUCE;
-	if (!strcmp(cmd_name, "lvextend"))
+	else if (!strcmp(cmd_name, "lvextend"))
 		lp->resize = LV_EXTEND;
+	else
+		lp->resize = LV_ANY;
 
-	if (use_policy) {
+	lp->sign = lp->poolmetadatasign = SIGN_NONE;
+
+	if ((lp->ac_policy = arg_is_set(cmd, usepolicies_ARG))) {
 		/* do nothing; _lvresize will handle --use-policies itself */
 		lp->extents = 0;
 		lp->sign = SIGN_PLUS;
