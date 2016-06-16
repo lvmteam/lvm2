@@ -4485,6 +4485,11 @@ out:
 	return r;
 }
 
+static int _report_group_create_single(struct dm_report_group *group)
+{
+	return 1;
+}
+
 struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data)
 {
 	struct dm_report_group *group;
@@ -4513,6 +4518,10 @@ struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void
 	dm_list_add_h(&group->items, &item->list);
 
 	switch (type) {
+		case DM_REPORT_GROUP_SINGLE:
+			if (!_report_group_create_single(group))
+				goto_bad;
+			break;
 		default:
 			goto_bad;
 	}
@@ -4521,6 +4530,25 @@ struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void
 bad:
 	dm_pool_destroy(mem);
 	return NULL;
+}
+
+static int _report_group_push_single(struct report_group_item *item, void *data)
+{
+	struct report_group_item *item_iter;
+	unsigned count = 0;
+
+	dm_list_iterate_items(item_iter, &item->group->items) {
+		if (item_iter->report)
+			count++;
+	}
+
+	if (count > 1) {
+		log_error("dm_report: unable to add more than one report "
+			  "to current report group");
+		return 0;
+	}
+
+	return 1;
 }
 
 int dm_report_group_push(struct dm_report_group *group, struct dm_report *report, void *data)
@@ -4552,6 +4580,10 @@ int dm_report_group_push(struct dm_report_group *group, struct dm_report *report
 	dm_list_add_h(&group->items, &item->list);
 
 	switch (group->type) {
+		case DM_REPORT_GROUP_SINGLE:
+			if (!_report_group_push_single(item, data))
+				goto_bad;
+			break;
 		default:
 			goto_bad;
 	}
@@ -4561,6 +4593,11 @@ bad:
 	dm_list_del(&item->list);
 	dm_pool_free(group->mem, item);
 	return 0;
+}
+
+static int _report_group_pop_single(struct report_group_item *item)
+{
+	return 1;
 }
 
 int dm_report_group_pop(struct dm_report_group *group)
@@ -4576,6 +4613,10 @@ int dm_report_group_pop(struct dm_report_group *group)
 	}
 
 	switch (group->type) {
+		case DM_REPORT_GROUP_SINGLE:
+			if (!_report_group_pop_single(item))
+				return_0;
+			break;
 		default:
 			return 0;
         }
@@ -4591,6 +4632,11 @@ int dm_report_group_pop(struct dm_report_group *group)
 		item->parent->store.finished_count++;
 
 	dm_pool_free(group->mem, item);
+	return 1;
+}
+
+static int _report_group_destroy_single(void)
+{
 	return 1;
 }
 
@@ -4610,6 +4656,10 @@ int dm_report_group_destroy(struct dm_report_group *group)
 	}
 
 	switch (group->type) {
+		case DM_REPORT_GROUP_SINGLE:
+			if (!_report_group_destroy_single())
+				goto_out;
+			break;
 		default:
 			goto_out;
         }
