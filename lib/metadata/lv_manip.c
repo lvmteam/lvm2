@@ -4785,7 +4785,7 @@ static int _lvresize_extents_from_percent(struct logical_volume *lv, struct lvre
 							 (lp->sign != SIGN_MINUS));
 			break;
 		case PERCENT_PVS:
-			if (lp->argc) {
+			if (pvh != &vg->pvs) {
 				pv_extent_count = pv_list_extents_free(pvh);
 				lp->extents = percent_of_extents(lp->extents, pv_extent_count,
 								 (lp->sign != SIGN_MINUS));
@@ -5228,7 +5228,7 @@ static struct logical_volume *_lvresize_volume(struct cmd_context *cmd,
 	}
 	alloc = lp->alloc ? : lv->alloc;
 
-	if ((lp->resize == LV_REDUCE) && lp->argc)
+	if ((lp->resize == LV_REDUCE) && (pvh != &vg->pvs))
 		log_print_unless_silent("Ignoring PVs on command line when reducing.");
 
 	/* Request confirmation before operations that are often mistakes. */
