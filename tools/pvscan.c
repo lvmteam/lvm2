@@ -306,7 +306,7 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	int devno_args = 0;
 	struct arg_value_group_list *current_group;
 	dev_t devno;
-	int do_activate = 0;
+	int do_activate;
 	int all_vgs = 0;
 	int remove_errors = 0;
 	int add_errors = 0;
@@ -315,17 +315,21 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&found_vgnames);
 	dm_list_init(&pp.changed_vgnames);
 
-	if (!lvmetad_used() && !arg_is_set(cmd, activate_ARG)) {
-		log_verbose("Ignoring pvscan --cache command because lvmetad is not in use.");
+	do_activate = arg_is_set(cmd, activate_ARG);
+
+	if (!lvmetad_used() && !do_activate) {
+		log_verbose("Ignoring pvscan --cache because lvmetad is not in use.");
 		return ret;
 	}
 
-	if (arg_is_set(cmd, activate_ARG)) {
-		if (arg_uint_value(cmd, activate_ARG, CHANGE_AAY) != CHANGE_AAY) {
-			log_error("Only --activate ay allowed with pvscan.");
-			return 0;
-		}
-		do_activate = 1;
+	if (do_activate && (arg_uint_value(cmd, activate_ARG, CHANGE_AAY) != CHANGE_AAY)) {
+		log_error("Only --activate ay allowed with pvscan.");
+		return 0;
+	}
+
+	if (!lvmetad_used() && do_activate && !find_config_tree_bool(cmd, global_use_lvmetad_CFG, NULL)) {
+		log_verbose("Ignoring pvscan --cache -aay because lvmetad is not in use.");
+		return ret;
 	}
 
 	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG))
@@ -341,8 +345,13 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!lvmetad_used() && do_activate) {
-		log_verbose("Activating all VGs without lvmetad running.");
+	/*
+	 * This a special case where use_lvmetad=1 in lvm.conf but pvscan
+	 * cannot use lvmetad for some reason.  In this case pvscan should
+	 * still activate LVs even though it's not updating the cache.
+	 */
+	if (do_activate && !lvmetad_used()) {
+		log_verbose("Activating all VGs without lvmetad.");
 		all_vgs = 1;
 		devno_args = 0;
 		goto activate;
