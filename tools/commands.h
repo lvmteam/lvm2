@@ -714,6 +714,7 @@ xx(lvs,
    "\t[--aligned]\n"
    "\t[--binary]\n"
    "\t[--commandprofile ProfileName]\n"
+   "\t[--configreport ReportName]\n"
    "\t[-d|--debug]\n"
    "\t[--foreign]\n"
    "\t[-h|--help]\n"
@@ -740,7 +741,7 @@ xx(lvs,
    "\t[--version]\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-   aligned_ARG, all_ARG, binary_ARG, foreign_ARG, history_ARG,
+   aligned_ARG, all_ARG, binary_ARG, configreport_ARG, foreign_ARG, history_ARG,
    ignorelockingfailure_ARG, ignoreskippedcluster_ARG, nameprefixes_ARG,
    noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
    readonly_ARG, reportformat_ARG, rows_ARG, segments_ARG, select_ARG,
