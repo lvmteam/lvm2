@@ -609,7 +609,6 @@ struct lvresize_params {
 
 	uint64_t poolmetadata_size;
 	sign_t poolmetadata_sign;
-	uint32_t poolmetadataextents;
 
 	/* Per LV applied parameters */
 
