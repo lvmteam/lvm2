@@ -14,10 +14,12 @@
  */
 
 #include "tools.h"
+#include "lvmetad-client.h"
 
 int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *vg_name = NULL;
+	int lvmetad_rescan = 0;
 
 	if (argc == 1) {
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
@@ -44,7 +46,21 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_PROCESSED;
 	}
 
-	lvmcache_seed_infos_from_lvmetad(cmd);
+	/*
+	 * lvmetad does not handle a VG being restored, which would require
+	 * vg_remove of the existing VG, then vg_update of the restored VG.  A
+	 * command failure after removing the existing VG from lvmetad would
+	 * not be easily recovered from.  So, disable the lvmetad cache before
+	 * doing the restore.  After the VG is restored on disk, rescan
+	 * metadata from disk to populate lvmetad from scratch which will pick
+	 * up the VG that was restored on disk.
+	 */
+
+	if (lvmetad_used()) {
+		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_VGRESTORE);
+		lvmetad_disconnect();
+		lvmetad_rescan = 1;
+	}
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE, NULL)) {
 		log_error("Unable to lock volume group %s", vg_name);
@@ -74,5 +90,19 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 
 	unlock_vg(cmd, VG_ORPHANS);
 	unlock_vg(cmd, vg_name);
+
+	if (lvmetad_rescan) {
+		if (!lvmetad_connect(cmd)) {
+			log_warn("WARNING: Failed to connect to lvmetad.");
+			log_warn("WARNING: Update lvmetad with pvscan --cache.");
+			goto out;
+		}
+		if (!lvmetad_pvscan_all_devs(cmd, 1)) {
+			log_warn("WARNING: Failed to scan devices.");
+			log_warn("WARNING: Update lvmetad with pvscan --cache.");
+			goto out;
+		}
+	}
+out:
 	return ECMD_PROCESSED;
 }

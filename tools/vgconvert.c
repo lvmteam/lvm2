@@ -126,7 +126,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	log_verbose("Writing metadata for VG %s using format %s", vg_name,
 		    cmd->fmt->name);
 
-	if (!backup_restore_vg(cmd, vg, 0, 1, &pva)) {
+	if (!backup_restore_vg(cmd, vg, 1, &pva)) {
 		log_error("Conversion failed for volume group %s.", vg_name);
 		log_error("Use pvcreate and vgcfgrestore to repair from "
 			  "archived metadata.");

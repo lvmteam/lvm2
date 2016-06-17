@@ -2726,6 +2726,9 @@ int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DUPLICATES)) {
 			*reason = "duplicate PVs were found";
 
+		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_VGRESTORE)) {
+			*reason = "vgcfgrestore is restoring VG metadata";
+
 		} else {
 			*reason = "<unknown>";
 		}

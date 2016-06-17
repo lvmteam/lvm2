@@ -359,9 +359,7 @@ static int _restore_vg_should_write_pv(struct physical_volume *pv, int do_pvcrea
 
 /* ORPHAN and VG locks held before calling this */
 int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
-		      int drop_lvmetad,
-		      int do_pvcreate,
-		      struct pv_create_args *pva)
+		      int do_pvcreate, struct pv_create_args *pva)
 {
 	struct dm_list new_pvs;
 	struct pv_list *pvl, *new_pvl;
@@ -502,16 +500,6 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 	if (!vg_write(vg))
 		return_0;
 
-	if (drop_lvmetad && lvmetad_used()) {
-		struct volume_group *vg_lvmetad = lvmetad_vg_lookup(cmd, vg->name, NULL);
-		if (vg_lvmetad) {
-			/* FIXME Cope with failure to update lvmetad */
-			if (!lvmetad_vg_remove(vg_lvmetad))
-				stack;
-			release_vg(vg_lvmetad);
-		}
-	}
-
 	if (!vg_commit(vg))
 		return_0;
 
@@ -550,7 +538,7 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 
 	missing_pvs = vg_missing_pv_count(vg);
 	if (missing_pvs == 0)
-		r = backup_restore_vg(cmd, vg, 1, 0, NULL);
+		r = backup_restore_vg(cmd, vg, 0, NULL);
 	else
 		log_error("Cannot restore Volume Group %s with %i PVs "
 			  "marked as missing.", vg->name, missing_pvs);
