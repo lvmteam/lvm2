@@ -237,8 +237,10 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	vp.force = arg_count(cmd, force_ARG);
 
 	/* Needed to change the set of orphan PVs. */
-	if (!lockd_gl(cmd, "ex", 0))
-		return_ECMD_FAILED;
+	if (!lockd_gl(cmd, "ex", 0)) {
+		ret = ECMD_FAILED;
+		goto_out;
+	}
 	cmd->lockd_gl_disable = 1;
 
 	cmd->handles_missing_pvs = 1;
@@ -259,6 +261,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		ret = ECMD_FAILED;
 out:
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
+	destroy_processing_handle(cmd, handle);
 
 	return ret;
 }

@@ -655,6 +655,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 out:
 	unlock_vg(cmd, VG_GLOBAL);
+	destroy_processing_handle(cmd, handle);
 
 	return ret;
 }
