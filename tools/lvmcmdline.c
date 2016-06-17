@@ -53,7 +53,7 @@ extern char *optarg;
  * Table of valid switches
  */
 static struct arg_props _arg_props[ARG_COUNT + 1] = {
-#define arg(a, b, c, d, e) {b, "", "--" c, d, e},
+#define arg(a, b, c, d, e, f) {b, "", "--" c, d, e, f},
 #include "args.h"
 #undef arg
 };
@@ -920,14 +920,22 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 		av = &cmd->arg_values[arg];
 
 		if (a->flags & ARG_GROUPABLE) {
-			/* Start a new group of arguments the first time or if a non-countable argument is repeated. */
-			if (!current_group || (current_group->arg_values[arg].count && !(a->flags & ARG_COUNTABLE))) {
+			/*
+			 * Start a new group of arguments:
+			 *   - the first time,
+			 *   - or if a non-countable argument is repeated,
+			 *   - or if argument has higher priority than current group.
+			 */
+			if (!current_group ||
+			    (current_group->arg_values[arg].count && !(a->flags & ARG_COUNTABLE)) ||
+			    (current_group->prio < a->prio)) {
 				/* FIXME Reduce size including only groupable args */
 				if (!(current_group = dm_pool_zalloc(cmd->mem, sizeof(struct arg_value_group_list) + sizeof(*cmd->arg_values) * ARG_COUNT))) {
 					log_fatal("Unable to allocate memory for command line arguments.");
 					return 0;
 				}
 
+				current_group->prio = a->prio;
 				dm_list_add(&cmd->arg_value_groups, &current_group->list);
 			}
 			/* Maintain total argument count as well as count within each group */

@@ -59,7 +59,7 @@ typedef int (*command_fn) (struct cmd_context * cmd, int argc, char **argv);
 
 /* define the enums for the command line switches */
 enum {
-#define arg(a, b, c, d, e) a ,
+#define arg(a, b, c, d, e, f) a ,
 #include "args.h"
 #undef arg
 };
@@ -87,11 +87,13 @@ struct arg_props {
 
 	int (*fn) (struct cmd_context *cmd, struct arg_values *av);
 	uint32_t flags;
+	uint32_t prio;
 };
 
 struct arg_value_group_list {
         struct dm_list list;
         struct arg_values arg_values[0];
+	uint32_t prio;
 };
 
 #define CACHE_VGMETADATA	0x00000001

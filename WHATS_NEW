@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Add support for priorities on grouping command arguments.
   Add report/{pvs,vgs,lvs,pvsegs,segs}_{cols,sort}_full to lvm.conf.
   Add lvm fullreport command for joined PV, VG, LV and segment report per VG.
   Integrate report group handling and cmd log report into cmd processing code.
