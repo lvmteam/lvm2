@@ -5004,7 +5004,6 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 				seg_size = lp->extents - existing_logical_extents;	// Recalculate
 				if (lp->extents == existing_logical_extents) {
 					/* Signal that normal resizing is not required */
-					lp->sizeargs = 0;
 					return 1;
 				}
 			}

@@ -607,7 +607,6 @@ struct lvresize_params {
 
 	const struct segment_type *segtype;
 
-	int sizeargs;
 	uint64_t poolmetadata_size;
 	sign_t poolmetadata_sign;
 	uint32_t poolmetadataextents;

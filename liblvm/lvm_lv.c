@@ -463,7 +463,6 @@ int lvm_lv_resize(const lv_t lv, uint64_t new_size)
 		.resize = LV_ANY,
 		.size = new_size >> SECTOR_SHIFT,
 		.force = 1,	/* Assume the user has a good backup? */
-		.sizeargs = 1,
 	};
 	struct saved_env e = store_user_env(lv->vg->cmd);
 
