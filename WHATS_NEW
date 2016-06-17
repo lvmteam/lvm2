@@ -1,3 +1,6 @@
+Version 2.02.158 - 
+=================================
+
 Version 2.02.157 - 17th June 2016
 =================================
   Change pvscan --cache -aay to scan locally if lvmetad fails.
