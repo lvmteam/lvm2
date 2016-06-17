@@ -372,7 +372,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		.size = lv->size + ((extend_mb * 1024 * 1024) / SECTOR_SIZE),
 		.percent = PERCENT_NONE,
 		.resize = LV_EXTEND,
-		.ac_force = 1,
+		.force = 1,
 		.sizeargs = 1,
 	};
 
