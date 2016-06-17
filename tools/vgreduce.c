@@ -217,6 +217,11 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 	argc--;
 
+	/* Needed to change the set of orphan PVs. */
+	if (!lockd_gl(cmd, "ex", 0))
+		return_ECMD_FAILED;
+	cmd->lockd_gl_disable = 1;
+
 	if (!(handle = init_processing_handle(cmd))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
@@ -235,13 +240,6 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	 */
 
 	vp.force = arg_count(cmd, force_ARG);
-
-	/* Needed to change the set of orphan PVs. */
-	if (!lockd_gl(cmd, "ex", 0)) {
-		ret = ECMD_FAILED;
-		goto_out;
-	}
-	cmd->lockd_gl_disable = 1;
 
 	cmd->handles_missing_pvs = 1;
 
