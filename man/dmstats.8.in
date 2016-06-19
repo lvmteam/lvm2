@@ -192,11 +192,6 @@ The second argument is the \fIdevice name\fP,
 Further options permit the selection of regions, output format
 control, and reporting behaviour.
 
-When the program is run using the '\fBdmstats\fP' alias, the command
-\fBmust\fP be the first argument and any switches and options should be
-specified following the command itself. This limitation is not present
-when run as '\fBdmsetup stats\fP'.
-
 When no device argument is given dmstats will by default operate on all
 device-mapper devices present. The \fBcreate\fP and \fBdelete\fP
 commands require the use of \fB\-\-alldevices\fP when used in this way.
