@@ -935,38 +935,97 @@ const char *dm_stats_get_region_program_id(const struct dm_stats *dms,
 const char *dm_stats_get_region_aux_data(const struct dm_stats *dms,
 					 uint64_t region_id);
 
+typedef enum {
+	DM_STATS_OBJECT_TYPE_NONE,
+	DM_STATS_OBJECT_TYPE_AREA,
+	DM_STATS_OBJECT_TYPE_REGION,
+	DM_STATS_OBJECT_TYPE_GROUP
+} dm_stats_obj_type_t;
+
 /*
  * Statistics cursor
  *
  * A dm_stats handle maintains an optional cursor into the statistics
- * regions and areas that it stores. Iterators are provided to visit
- * each region, or each area in a handle and accessor methods are
- * provided to obtain properties and values for the region or area
- * at the current cursor position.
+ * tables that it stores. Iterators are provided to visit each region,
+ * area, or group in a handle and accessor methods are provided to
+ * obtain properties and values for the object at the current cursor
+ * position.
  *
- * Using the cursor simplifies walking all regions or areas when the
- * region table is sparse (i.e. contains some present and some
- * non-present region_id values either due to program_id filtering
- * or the ordering of region creation and deletion).
+ * Using the cursor simplifies walking all regions or groups when
+ * the tables are sparse (i.e. contains some present and some
+ * non-present region_id or group_id values either due to program_id
+ * filtering or the ordering of region and group creation and deletion).
+ *
+ * Simple macros are provided to visit each area, region, or group,
+ * contained in a handle and applications are encouraged to use these
+ * where possible.
  */
 
 /*
- * Initialise the cursor of a dm_stats handle to address the first
- * present region. It is valid to attempt to walk a NULL stats handle
- * or a handle containing no present regions; in this case any call to
- * dm_stats_walk_next() becomes a no-op and all calls to
- * dm_stats_walk_end() return true.
+ * Walk flags are used to initialise a dm_stats handle's cursor control
+ * and to select region or group aggregation when calling a metric or
+ * counter property method with immediate group, region, and area ID
+ * values.
+ *
+ * Walk flags are stored in the uppermost word of a uint64_t so that
+ * a region_id or group_id may be encoded in the lower bits. This
+ * allows an aggregate region_id or group_id to be specified when
+ * retrieving counter or metric values.
+ *
+ * Flags may be ORred together when used to initialise a dm_stats_walk:
+ * the resulting walk will visit instance of each type specified by
+ * the flag combination.
+ */
+#define DM_STATS_WALK_AREA   0x1000000000000
+#define DM_STATS_WALK_REGION 0x2000000000000
+#define DM_STATS_WALK_GROUP  0x4000000000000
+
+#define DM_STATS_WALK_ALL    0x7000000000000
+#define DM_STATS_WALK_DEFAULT (DM_STATS_WALK_AREA | DM_STATS_WALK_REGION)
+
+/*
+ * Skip regions from a DM_STATS_WALK_REGION that contain only a single
+ * area: in this case the region's aggregate values are identical to
+ * the values of the single contained area. Setting this flag will
+ * suppress these duplicate entries during a dm_stats_walk_* with the
+ * DM_STATS_WALK_REGION flag set.
+ */
+#define DM_STATS_WALK_SKIP_SINGLE_AREA   0x8000000000000
+
+/*
+ * Initialise the cursor control of a dm_stats handle for the specified
+ * walk type(s). Including a walk flag in the flags argument will cause
+ * any subsequent walk to visit that type of object (until the next
+ * call to dm_stats_walk_init()).
+ */
+int dm_stats_walk_init(struct dm_stats *dms, uint64_t flags);
+
+/*
+ * Set the cursor of a dm_stats handle to address the first present
+ * group, region, or area of the currently configured walk. It is
+ * valid to attempt to walk a NULL stats handle or a handle containing
+ * no present regions; in this case any call to dm_stats_walk_next()
+ * becomes a no-op and all calls to dm_stats_walk_end() return true.
  */
 void dm_stats_walk_start(struct dm_stats *dms);
 
 /*
  * Advance the statistics cursor to the next area, or to the next
- * present region if at the end of the current region.
+ * present region if at the end of the current region. If the end of
+ * the region, area, or group tables is reached a subsequent call to
+ * dm_stats_walk_end() will return 1 and dm_stats_object_type() called
+ * on the location will return DM_STATS_OBJECT_TYPE_NONE,
  */
 void dm_stats_walk_next(struct dm_stats *dms);
 
 /*
- * Advance the statistics cursor to the next region.
+ * Force the statistics cursor to advance to the next region. This will
+ * stop any in-progress area walk (by clearing DM_STATS_WALK_AREA) and
+ * advance the cursor to the next present region, the first present
+ * group (if DM_STATS_GROUP_WALK is set), or to the end. In this case a
+ * subsequent call to dm_stats_walk_end() will return 1 and a call to
+ * dm_stats_object_type() for the location will return
+ * DM_STATS_OBJECT_TYPE_NONE.
  */
 void dm_stats_walk_next_region(struct dm_stats *dms);
 
@@ -974,6 +1033,24 @@ void dm_stats_walk_next_region(struct dm_stats *dms);
  * Test whether the end of a statistics walk has been reached.
  */
 int dm_stats_walk_end(struct dm_stats *dms);
+
+/*
+ * Return the type of object at the location specified by region_id
+ * and area_id. If either region_id or area_id uses one of the special
+ * values DM_STATS_REGION_CURRENT or DM_STATS_AREA_CURRENT the
+ * corresponding region or area identifier will be taken from the
+ * current cursor location. If the cursor location or the value encoded
+ * by region_id and area_id indicates an aggregate region or group,
+ * this will be reflected in the value returned.
+ */
+dm_stats_obj_type_t dm_stats_object_type(const struct dm_stats *dms,
+					 uint64_t region_id,
+					 uint64_t area_id);
+
+/*
+ * Return the type of object at the current stats cursor location.
+ */
+dm_stats_obj_type_t dm_stats_current_object_type(const struct dm_stats *dms);
 
 /*
  * Stats iterators
@@ -996,7 +1073,8 @@ int dm_stats_walk_end(struct dm_stats *dms);
  * executed.
  */
 #define dm_stats_foreach_region(dms)				\
-for (dm_stats_walk_start((dms));				\
+for (dm_stats_walk_init((dms), DM_STATS_WALK_REGION),		\
+     dm_stats_walk_start((dms));				\
      !dm_stats_walk_end((dms)); dm_stats_walk_next_region((dms)))
 
 /*
@@ -1006,8 +1084,22 @@ for (dm_stats_walk_start((dms));				\
  * be executed.
  */
 #define dm_stats_foreach_area(dms)				\
-for (dm_stats_walk_start((dms));				\
+for (dm_stats_walk_init((dms), DM_STATS_WALK_AREA),		\
+     dm_stats_walk_start((dms));				\
      !dm_stats_walk_end((dms)); dm_stats_walk_next((dms)))
+
+/*
+ * Iterate over the regions table visiting each group. Metric and
+ * counter methods will return values for the group.
+ *
+ * If the group table is empty or unpopulated the loop body will not
+ * be executed.
+ */
+#define dm_stats_foreach_group(dms)				\
+for (dm_stats_walk_init((dms), DM_STATS_WALK_GROUP),		\
+     dm_stats_group_walk_start(dms);				\
+     !dm_stats_group_walk_end(dms);				\
+     dm_stats_group_walk_next(dms))
 
 /*
  * Start a walk iterating over the regions contained in dm_stats handle
@@ -1132,6 +1224,7 @@ int dm_stats_set_alias(struct dm_stats *dms, uint64_t group_id,
  */
 const char *dm_stats_get_alias(const struct dm_stats *dms, uint64_t id);
 
+#define DM_STATS_GROUP_NONE UINT64_MAX
 /*
  * Return the group_id that the specified region_id belongs to, or the
  * special value DM_STATS_GROUP_NONE if the region does not belong
