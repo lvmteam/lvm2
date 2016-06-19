@@ -3264,11 +3264,16 @@ static int _dm_stats_region_id_disp(struct dm_report *rh,
 				    void *private __attribute__((unused)))
 {
 	const struct dm_stats *dms = (const struct dm_stats *) data;
-	uint64_t region_id = dm_stats_get_current_region(dms);
+	uint64_t group_id, region_id = dm_stats_get_current_region(dms);
+	char *group_buf = NULL, *repstr;
 
 	if (dm_stats_current_object_type(dms) == DM_STATS_OBJECT_TYPE_GROUP) {
-		/* FIXME: output group region list and use group_id as sortval. */
-		dm_report_field_set_value(field, "-", &region_id);
+		group_id = dm_stats_get_group_id(dms, dm_stats_get_current_region(dms));
+		if (!dm_stats_get_group_descriptor(dms, group_id, &group_buf))
+			return 0;
+		/* group_buf will disappear with the current handle */
+		repstr = dm_pool_strdup(mem, group_buf);
+		dm_report_field_set_value(field, repstr, &group_id);
 		return 1;
 	}
 
