@@ -4965,16 +4965,20 @@ static int _stats_delete(CMD_ARGS)
 		goto out;
 	}
 
-	dm_stats_walk_do(dms) {
-		if (_switches[ALL_REGIONS_ARG])
+	if (_switches[ALL_REGIONS_ARG]) {
+		dm_stats_walk_do(dms) {
 			region_id = dm_stats_get_current_region(dms);
-		if (!dm_stats_delete_region(dms, region_id)) {
-			log_error("Could not delete statistics region.");
-			goto out;
-		}
+			if (!dm_stats_delete_region(dms, region_id)) {
+				log_error("Could not delete statistics region.");
+				goto out;
+			}
+			log_info("Deleted statistics region %" PRIu64, region_id);
+			dm_stats_walk_next_region(dms);
+		} dm_stats_walk_while(dms);
+	} else {
+		dm_stats_delete_region(dms, region_id);
 		log_info("Deleted statistics region %" PRIu64, region_id);
-		dm_stats_walk_next_region(dms);
-	} dm_stats_walk_while(dms);
+	}
 
 	r = 1;
 
