@@ -300,6 +300,7 @@ const char *log_get_report_object_type_name(log_report_object_type_t object_type
 	static const char *log_object_type_names[LOG_REPORT_OBJECT_TYPE_COUNT] = {[LOG_REPORT_OBJECT_TYPE_NULL] = "",
 										  [LOG_REPORT_OBJECT_TYPE_ORPHAN] = "orphan",
 										  [LOG_REPORT_OBJECT_TYPE_PV] = "pv",
+										  [LOG_REPORT_OBJECT_TYPE_LABEL] = "label",
 										  [LOG_REPORT_OBJECT_TYPE_VG] = "vg",
 										  [LOG_REPORT_OBJECT_TYPE_LV] = "lv"};
 	return log_object_type_names[object_type];

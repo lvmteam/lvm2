@@ -1456,6 +1456,7 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		       struct processing_handle *handle,
 		       process_single_label_fn_t process_single_label)
 {
+	log_report_t saved_log_report_state = log_get_report_state();
 	struct label *label;
 	struct dev_iter *iter;
 	struct device *dev;
@@ -1463,6 +1464,8 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 	int ret_max = ECMD_PROCESSED;
 	int ret;
 	int opt = 0;
+
+	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_LABEL);
 
 	if (argc) {
 		for (; opt < argc; opt++) {
@@ -1473,6 +1476,8 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			}
 
+			log_set_report_object_name_and_id(dev_name(dev), NULL);
+
 			if (!label_read(dev, &label, 0)) {
 				log_error("No physical volume label read from %s.",
 					  argv[opt]);
@@ -1481,20 +1486,24 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 			}
 
 			ret = process_single_label(cmd, label, handle);
+			report_log_ret_code(ret);
 
 			if (ret > ret_max)
 				ret_max = ret;
+
+			log_set_report_object_name_and_id(NULL, NULL);
 
 			if (sigint_caught())
 				break;
 		}
 
-		return ret_max;
+		goto out;
 	}
 
 	if (!(iter = dev_iter_create(cmd->full_filter, 1))) {
 		log_error("dev_iter creation failed.");
-		return ECMD_FAILED;
+		ret_max = ECMD_FAILED;
+		goto out;
 	}
 
 	while ((dev = dev_iter_get(iter)))
@@ -1502,17 +1511,23 @@ int process_each_label(struct cmd_context *cmd, int argc, char **argv,
 		if (!label_read(dev, &label, 0))
 			continue;
 
+		log_set_report_object_name_and_id(dev_name(label->dev), NULL);
+
 		ret = process_single_label(cmd, label, handle);
+		report_log_ret_code(ret);
 
 		if (ret > ret_max)
 			ret_max = ret;
+
+		log_set_report_object_name_and_id(NULL, NULL);
 
 		if (sigint_caught())
 			break;
 	}
 
 	dev_iter_destroy(iter);
-
+out:
+	log_restore_report_state(saved_log_report_state);
 	return ret_max;
 }
 
