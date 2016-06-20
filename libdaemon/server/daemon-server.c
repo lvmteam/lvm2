@@ -490,8 +490,10 @@ static int handle_connect(daemon_state s)
 	socklen_t sl = sizeof(sockaddr);
 
 	client.socket_fd = accept(s.socket_fd, (struct sockaddr *) &sockaddr, &sl);
-	if (client.socket_fd < 0)
+	if (client.socket_fd < 0) {
+		ERROR(&s, "Failed to accept connection.");
 		return 0;
+	}
 
 	 if (fcntl(client.socket_fd, F_SETFD, FD_CLOEXEC))
 		WARN(&s, "setting CLOEXEC on client socket fd %d failed", client.socket_fd);
@@ -510,8 +512,10 @@ static int handle_connect(daemon_state s)
 	ts->s = s;
 	ts->client = client;
 
-	if (pthread_create(&ts->client.thread_id, NULL, client_thread, ts))
+	if (pthread_create(&ts->client.thread_id, NULL, client_thread, ts)) {
+		ERROR(&s, "Failed to create client thread.");
 		return 0;
+	}
 
 	return 1;
 }
@@ -622,7 +626,7 @@ void daemon_start(daemon_state s)
 		if (!s.daemon_init(&s))
 			failed = 1;
 
-	while (!_shutdown_requested && !failed) {
+	while (!failed) {
 		_reset_timeout(s);
 		FD_ZERO(&in);
 		FD_SET(s.socket_fd, &in);
@@ -630,11 +634,13 @@ void daemon_start(daemon_state s)
 			perror("select error");
 		if (FD_ISSET(s.socket_fd, &in)) {
 			timeout_count = 0;
-			if (!_shutdown_requested && !handle_connect(s))
-				ERROR(&s, "Failed to handle a client connection.");
+			handle_connect(s);
 		}
 
 		reap(s, 0);
+
+		if (_shutdown_requested && !s.threads->next)
+			break;
 
 		/* s.idle == NULL equals no shutdown on timeout */
 		if (_is_idle(s)) {
