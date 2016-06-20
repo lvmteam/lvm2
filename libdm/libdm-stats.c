@@ -1003,7 +1003,7 @@ bad:
 	return 0;
 }
 
-static void _stats_walk_next(const struct dm_stats *dms, int region,
+static void _stats_walk_next(const struct dm_stats *dms, int skip_region,
 			     uint64_t *cur_r, uint64_t *cur_a)
 {
 	struct dm_stats_region *cur;
@@ -1015,17 +1015,16 @@ static void _stats_walk_next(const struct dm_stats *dms, int region,
 	cur = dms->regions + *cur_r;
 	present = _stats_region_present(cur);
 
-	if (region && present)
+	if (skip_region && present)
 		*cur_a = _nr_areas_region(cur);
 
-	if (region || !present || ++(*cur_a) == _nr_areas_region(cur)) {
+	if (skip_region || !present || ++(*cur_a) == _nr_areas_region(cur)) {
 		*cur_a = 0;
 		while(!dm_stats_region_present(dms, ++(*cur_r))
 		      && *cur_r < dms->max_region)
 			; /* keep walking until a present region is found
 			   * or the end of the table is reached. */
 	}
-
 }
 
 static void _stats_walk_start(const struct dm_stats *dms,
