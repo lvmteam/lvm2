@@ -339,6 +339,11 @@ static int _restore_vg_should_write_pv(struct physical_volume *pv, int do_pvcrea
 	if (!(pv->fmt->features & FMT_PV_FLAGS))
 		return 0;
 
+	if (!pv->dev) {
+		log_error("Failed to find device for PV.");
+		return -1;
+	}
+
 	if (!(info = lvmcache_info_from_pvid(pv->dev->pvid, pv->dev, 0))) {
 		log_error("Failed to find cached info for PV %s.", pv_dev_name(pv));
 		return -1;
