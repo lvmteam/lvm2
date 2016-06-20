@@ -747,6 +747,14 @@ static report_idx_t _get_report_idx_from_name(report_type_t report_type, const c
 	if (!name || !*name)
 		return REPORT_IDX_NULL;
 
+	/* Change to basic report type for comparison. */
+	if (report_type == LABEL)
+		report_type = PVS;
+	else if (report_type == SEGS)
+		report_type = LVS;
+	else if (report_type == PVSEGS)
+		report_type = PVSEGS;
+
 	if (!strcasecmp(name, "log"))
 		idx = REPORT_IDX_LOG;
 	else if (!strcasecmp(name, "vg"))
@@ -755,10 +763,12 @@ static report_idx_t _get_report_idx_from_name(report_type_t report_type, const c
 		idx = _get_report_idx(report_type, PVS);
 	else if (!strcasecmp(name, "lv"))
 		idx = _get_report_idx(report_type, LVS);
-	else if (!strcasecmp(name, "pvseg"))
-		idx = _get_report_idx(report_type, PVSEGS);
-	else if (!strcasecmp(name, "seg"))
-		idx = _get_report_idx(report_type, SEGS);
+	else if (!strcasecmp(name, "pvseg")) {
+		idx = (report_type == FULL) ? _get_report_idx(report_type, PVSEGS)
+					    : _get_report_idx(report_type, PVS);
+	} else if (!strcasecmp(name, "seg"))
+		idx = (report_type == FULL) ? _get_report_idx(report_type, SEGS)
+					    : _get_report_idx(report_type, LVS);
 	else {
 		idx = REPORT_IDX_NULL;
 		log_error("Unknonwn report specifier in "
