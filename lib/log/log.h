@@ -41,16 +41,16 @@
 
 #define EUNCLASSIFIED -1	/* Generic error code */
 
-#define _LOG_STDERR 128 /* force things to go to stderr, even if loglevel
-			   would make them go to stdout */
-#define _LOG_ONCE 256 /* downgrade to NOTICE if this has been already logged */
-#define _LOG_BYPASS_REPORT 512 /* do not log through report even if report available */
-#define _LOG_DEBUG 7
-#define _LOG_INFO 6
-#define _LOG_NOTICE 5
-#define _LOG_WARN 4
-#define _LOG_ERR 3
-#define _LOG_FATAL 2
+#define _LOG_FATAL         0x0002
+#define _LOG_ERR           0x0003
+#define _LOG_WARN          0x0004
+#define _LOG_NOTICE        0x0005
+#define _LOG_INFO          0x0006
+#define _LOG_DEBUG         0x0007
+#define _LOG_STDERR        0x0080 /* force things to go to stderr, even if loglevel would make them go to stdout */
+#define _LOG_ONCE          0x0100 /* downgrade to NOTICE if this has been already logged */
+#define _LOG_BYPASS_REPORT 0x0200 /* do not log through report even if report available */
+
 #define INTERNAL_ERROR "Internal error: "
 
 /*
