@@ -479,30 +479,51 @@ allocation {
 log {
 
 	# Configuration option log/report_command_log.
-	# If enabled, LVM will collect log during command processing.
-	# After that the log is reported using current output format
-	# as defined by report/output_format setting.
+	# Enable or disable LVM log reporting.
+	# If enabled, LVM will collect a log of operations, messages,
+	# per-object return codes with object identification and associated
+	# error numbers (errnos) during LVM command processing. Then the
+	# log is either reported solely or in addition to any existing
+	# reports, depending on LVM command used. If it is a reporting command
+	# (e.g. pvs, vgs, lvs, lvm fullreport), then the log is reported in
+	# addition to any existing reports. Otherwise, there's only log report
+	# on output. For all applicable LVM commands, you can request that
+	# the output has only log report by using --logonly command line
+	# option. Use log/command_log_cols and log/command_log_sort settings
+	# to define fields to display and sort fields for the log report.
+	# You can also use log/command_log_selection to define selection
+	# criteria used each time the log is reported.
 	# This configuration option has an automatic default value.
 	# report_command_log = 0
 
 	# Configuration option log/command_log_sort.
 	# List of columns to sort by when reporting command log.
-	# Possible fields are: log_seq_num, log_type, log_context, log_object_type,
-	# log_object_name, log_object_id, log_object_group, log_object_group_id,
-	# log_message, log_errno, log_ret_code.
+	# See <lvm command> --logonly --configreport log -o help
+	# for the list of possible fields.
 	# This configuration option has an automatic default value.
 	# command_log_sort = "log_seq_num"
 
 	# Configuration option log/command_log_cols.
 	# List of columns to report when reporting command log.
-	# Possible fields are: log_seq_num, log_type, log_context, log_object_type,
-	# log_object_name, log_object_id, log_object_group, log_object_group_id,
-	# log_message, log_errno, log_ret_code.
+	# See <lvm command> --logonly --configreport log -o help
+	# for the list of possible fields.
 	# This configuration option has an automatic default value.
 	# command_log_cols = "log_seq_num,log_type,log_context,log_object_type,log_object_name,log_object_id,log_object_group,log_object_group_id,log_message,log_errno,log_ret_code"
 
 	# Configuration option log/command_log_selection.
 	# Selection criteria used when reporting command log.
+	# You can define selection criteria that are applied each
+	# time log is reported. This way, it is possible to control the
+	# amount of log that is displayed on output and you can select
+	# only parts of the log that are important for you. To define
+	# selection criteria, use fields from log report. See also
+	# <lvm command> --logonly --configreport log -S help for the
+	# list of possible fields and selection operators. You can also
+	# define selection criteria for log report on command line directly
+	# using <lvm command> --configreport log -S <selection criteria>
+	# which has precedence over log/command_log_selection setting.
+	# For more information about selection criteria in general, see
+	# lvm(8) man page.
 	# This configuration option has an automatic default value.
 	# command_log_selection = "!(log_type=status && message=success)"
 
@@ -1580,10 +1601,16 @@ activation {
 # report {
 
 	# Configuration option report/output_format.
-	# Format of LVM2 command report output.
+	# Format of LVM command's report output.
+	# If there is more than one report per command, then the format
+	# is applied for all reports. You can also change output format
+	# directly on command line using --reportformat option which
+	# has precedence over log/output_format setting.
 	# Accepted values:
 	#   basic
-	#     Original format with columns and rows.
+	#     Original format with columns and rows. If there is more than
+	#     one report per command, each report is prefixed with report's
+	#     name for identification.
 	#   json
 	#     JSON format.
 	# This configuration option has an automatic default value.

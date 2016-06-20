@@ -548,24 +548,45 @@ cfg(allocation_physical_extent_size_CFG, "physical_extent_size", allocation_CFG_
 	"Default physical extent size in KiB to use for new VGs.\n")
 
 cfg(log_report_command_log_CFG, "report_command_log", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_COMMAND_LOG_REPORT, vsn(2, 2, 158), NULL, 0, NULL,
-	"If enabled, LVM will collect log during command processing.\n"
-	"After that the log is reported using current output format\n"
-	"as defined by report/output_format setting.\n")
+	"Enable or disable LVM log reporting.\n"
+	"If enabled, LVM will collect a log of operations, messages,\n"
+	"per-object return codes with object identification and associated\n"
+	"error numbers (errnos) during LVM command processing. Then the\n"
+	"log is either reported solely or in addition to any existing\n"
+	"reports, depending on LVM command used. If it is a reporting command\n"
+	"(e.g. pvs, vgs, lvs, lvm fullreport), then the log is reported in\n"
+	"addition to any existing reports. Otherwise, there's only log report\n"
+	"on output. For all applicable LVM commands, you can request that\n"
+	"the output has only log report by using --logonly command line\n"
+	"option. Use log/command_log_cols and log/command_log_sort settings\n"
+	"to define fields to display and sort fields for the log report.\n"
+	"You can also use log/command_log_selection to define selection\n"
+	"criteria used each time the log is reported.\n")
 
 cfg(log_command_log_sort_CFG, "command_log_sort", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_COMMAND_LOG_SORT, vsn(2, 2, 158), NULL, 0, NULL,
 	"List of columns to sort by when reporting command log.\n"
-	"Possible fields are: log_seq_num, log_type, log_context, log_object_type,\n"
-	"log_object_name, log_object_id, log_object_group, log_object_group_id,\n"
-	"log_message, log_errno, log_ret_code.\n")
+	"See <lvm command> --logonly --configreport log -o help\n"
+	"for the list of possible fields.\n")
 
 cfg(log_command_log_cols_CFG, "command_log_cols", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_COMMAND_LOG_COLS, vsn(2, 2, 158), NULL, 0, NULL,
 	"List of columns to report when reporting command log.\n"
-	"Possible fields are: log_seq_num, log_type, log_context, log_object_type,\n"
-	"log_object_name, log_object_id, log_object_group, log_object_group_id,\n"
-	"log_message, log_errno, log_ret_code.\n")
+	"See <lvm command> --logonly --configreport log -o help\n"
+	"for the list of possible fields.\n")
 
 cfg(log_command_log_selection_CFG, "command_log_selection", log_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_COMMAND_LOG_SELECTION, vsn(2, 2, 158), NULL, 0, NULL,
-	"Selection criteria used when reporting command log.\n")
+	"Selection criteria used when reporting command log.\n"
+	"You can define selection criteria that are applied each\n"
+	"time log is reported. This way, it is possible to control the\n"
+	"amount of log that is displayed on output and you can select\n"
+	"only parts of the log that are important for you. To define\n"
+	"selection criteria, use fields from log report. See also\n"
+	"<lvm command> --logonly --configreport log -S help for the\n"
+	"list of possible fields and selection operators. You can also\n"
+	"define selection criteria for log report on command line directly\n"
+	"using <lvm command> --configreport log -S <selection criteria>\n"
+	"which has precedence over log/command_log_selection setting.\n"
+	"For more information about selection criteria in general, see\n"
+	"lvm(8) man page.\n")
 
 cfg(log_verbose_CFG, "verbose", log_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_VERBOSE, vsn(1, 0, 0), NULL, 0, NULL,
 	"Controls the messages sent to stdout or stderr.\n")
@@ -1483,10 +1504,16 @@ cfg(disk_area_size_CFG, "size", disk_area_CFG_SUBSECTION, CFG_UNSUPPORTED | CFG_
 cfg(disk_area_id_CFG, "id", disk_area_CFG_SUBSECTION, CFG_UNSUPPORTED | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(1, 0, 0), NULL, 0, NULL, NULL)
 
 cfg(report_output_format_CFG, "output_format", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_REP_OUTPUT_FORMAT, vsn(2, 2, 158), NULL, 0, NULL,
-	"Format of LVM2 command report output.\n"
+	"Format of LVM command's report output.\n"
+	"If there is more than one report per command, then the format\n"
+	"is applied for all reports. You can also change output format\n"
+	"directly on command line using --reportformat option which\n"
+	"has precedence over log/output_format setting.\n"
 	"Accepted values:\n"
 	"  basic\n"
-	"    Original format with columns and rows.\n"
+	"    Original format with columns and rows. If there is more than\n"
+	"    one report per command, each report is prefixed with report's\n"
+	"    name for identification.\n"
 	"  json\n"
 	"    JSON format.\n")
 
