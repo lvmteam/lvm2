@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Switch to log_warn() for failing activation status query.
   Refactor lvconvert argument handling code.
   Add --logonly option to report only cmd log for a command, not other reports.
   Add log/command_log_selection to configure default selection used on cmd log.

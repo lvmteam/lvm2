@@ -1454,9 +1454,9 @@ static int _lv_is_active(const struct logical_volume *lv,
 	 * Old users of this function will never be affected by this,
 	 * since they are only concerned about active vs. not active.
 	 * New users of this function who specifically ask for 'exclusive'
-	 * will be given an error message.
+	 * will be given a warning message.
 	 */
-	log_error("Unable to determine exclusivity of %s.", display_lvname(lv));
+	log_warn("WARNING: Unable to determine exclusivity of %s.", display_lvname(lv));
 
 	e = 0;
 
