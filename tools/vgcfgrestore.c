@@ -20,6 +20,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *vg_name = NULL;
 	int lvmetad_rescan = 0;
+	int ret;
 
 	if (argc == 1) {
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
@@ -83,20 +84,24 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		unlock_vg(cmd, VG_ORPHANS);
 		unlock_vg(cmd, vg_name);
 		log_error("Restore failed.");
-		return ECMD_FAILED;
+		ret = ECMD_FAILED;
+		goto rescan;
 	}
 
+	ret = ECMD_PROCESSED;
 	log_print_unless_silent("Restored volume group %s", vg_name);
 
 	unlock_vg(cmd, VG_ORPHANS);
 	unlock_vg(cmd, vg_name);
-
+rescan:
 	if (lvmetad_rescan) {
 		if (!lvmetad_connect(cmd)) {
 			log_warn("WARNING: Failed to connect to lvmetad.");
 			log_warn("WARNING: Update lvmetad with pvscan --cache.");
 			goto out;
 		}
+		if (!refresh_filters(cmd))
+			stack;
 		if (!lvmetad_pvscan_all_devs(cmd, 1)) {
 			log_warn("WARNING: Failed to scan devices.");
 			log_warn("WARNING: Update lvmetad with pvscan --cache.");
@@ -104,5 +109,5 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 out:
-	return ECMD_PROCESSED;
+	return ret;
 }
