@@ -468,11 +468,11 @@ static struct volume_group *_vgsplit_from(struct cmd_context *cmd,
  */
 static int new_vg_option_specified(struct cmd_context *cmd)
 {
-	return(arg_count(cmd, clustered_ARG) ||
-	       arg_count(cmd, alloc_ARG) ||
-	       arg_count(cmd, maxphysicalvolumes_ARG) ||
-	       arg_count(cmd, maxlogicalvolumes_ARG) ||
-	       arg_count(cmd, vgmetadatacopies_ARG));
+	return(arg_is_set(cmd, clustered_ARG) ||
+	       arg_is_set(cmd, alloc_ARG) ||
+	       arg_is_set(cmd, maxphysicalvolumes_ARG) ||
+	       arg_is_set(cmd, maxlogicalvolumes_ARG) ||
+	       arg_is_set(cmd, vgmetadatacopies_ARG));
 }
 
 int vgsplit(struct cmd_context *cmd, int argc, char **argv)
@@ -487,13 +487,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	const char *lv_name;
 	int lock_vg_from_first = 1;
 
-	if ((arg_count(cmd, name_ARG) + argc) < 3) {
+	if ((arg_is_set(cmd, name_ARG) + argc) < 3) {
 		log_error("Existing VG, new VG and either physical volumes "
 			  "or logical volume required.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, name_ARG) && (argc > 2)) {
+	if (arg_is_set(cmd, name_ARG) && (argc > 2)) {
 		log_error("A logical volume name cannot be given with "
 			  "physical volumes.");
 		return ECMD_FAILED;
@@ -503,7 +503,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
 		return_ECMD_FAILED;
 
-	if (arg_count(cmd, name_ARG))
+	if (arg_is_set(cmd, name_ARG))
 		lv_name = arg_value(cmd, name_ARG);
 	else
 		lv_name = NULL;

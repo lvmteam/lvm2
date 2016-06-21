@@ -46,7 +46,7 @@ static int _pvscan_display_single(struct cmd_context *cmd,
 	const char *pvdevname = pv_dev_name(pv);
 
 	/* short listing? */
-	if (arg_count(cmd, short_ARG) > 0) {
+	if (arg_is_set(cmd, short_ARG)) {
 		log_print_unless_silent("%s", pvdevname);
 		return ECMD_PROCESSED;
 	}
@@ -65,7 +65,7 @@ static int _pvscan_display_single(struct cmd_context *cmd,
 	pv_len = params->pv_max_name_len;
 	memset(params->pv_tmp_name, 0, params->pv_tmp_namelen);
 
-	if (arg_count(cmd, uuid_ARG)) {
+	if (arg_is_set(cmd, uuid_ARG)) {
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
 			stack;
 			return ECMD_FAILED;
@@ -106,8 +106,8 @@ static int _pvscan_single(struct cmd_context *cmd, struct volume_group *vg,
 {
 	struct pvscan_params *params = (struct pvscan_params *)handle->custom_handle;
 
-	if ((arg_count(cmd, exported_ARG) && !(pv_status(pv) & EXPORTED_VG)) ||
-	    (arg_count(cmd, novolumegroup_ARG) && (!is_orphan(pv)))) {
+	if ((arg_is_set(cmd, exported_ARG) && !(pv_status(pv) & EXPORTED_VG)) ||
+	    (arg_is_set(cmd, novolumegroup_ARG) && (!is_orphan(pv)))) {
 		return ECMD_PROCESSED;
 
 	}
@@ -332,10 +332,10 @@ static int _pvscan_cache(struct cmd_context *cmd, int argc, char **argv)
 		return ret;
 	}
 
-	if (arg_count(cmd, major_ARG) + arg_count(cmd, minor_ARG))
+	if (arg_is_set(cmd, major_ARG) + arg_is_set(cmd, minor_ARG))
 		devno_args = 1;
 
-	if (devno_args && (!arg_count(cmd, major_ARG) || !arg_count(cmd, minor_ARG))) {
+	if (devno_args && (!arg_is_set(cmd, major_ARG) || !arg_is_set(cmd, minor_ARG))) {
 		log_error("Both --major and --minor required to identify devices.");
 		return EINVALID_CMD_LINE;
 	}
@@ -587,7 +587,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	const char *reason = NULL;
 	int ret;
 
-	if (arg_count(cmd, cache_long_ARG))
+	if (arg_is_set(cmd, cache_long_ARG))
 		return _pvscan_cache(cmd, argc, argv);
 
 	if (argc) {
@@ -595,24 +595,24 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, activate_ARG)) {
+	if (arg_is_set(cmd, activate_ARG)) {
 		log_error("--activate is only valid with --cache.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, major_ARG) || arg_count(cmd, minor_ARG)) {
+	if (arg_is_set(cmd, major_ARG) || arg_is_set(cmd, minor_ARG)) {
 		log_error("--major and --minor are only valid with --cache.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, novolumegroup_ARG) && arg_count(cmd, exported_ARG)) {
+	if (arg_is_set(cmd, novolumegroup_ARG) && arg_is_set(cmd, exported_ARG)) {
 		log_error("Options -e and -n are incompatible");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, exported_ARG) || arg_count(cmd, novolumegroup_ARG))
+	if (arg_is_set(cmd, exported_ARG) || arg_is_set(cmd, novolumegroup_ARG))
 		log_warn("WARNING: only considering physical volumes %s",
-			  arg_count(cmd, exported_ARG) ?
+			  arg_is_set(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
 	/* Needed because this command has NO_LVMETAD_AUTOSCAN. */

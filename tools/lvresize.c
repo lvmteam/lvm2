@@ -20,7 +20,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 {
 	const char *cmd_name;
 	char *st;
-	int use_policy = arg_count(cmd, usepolicies_ARG);
+	int use_policy = arg_is_set(cmd, usepolicies_ARG);
 
 	lp->sign = SIGN_NONE;
 	lp->poolmetadatasign = SIGN_NONE;
@@ -45,7 +45,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		 * If only --poolmetadatasize is specified with list of PVs,
 		 * then metadata will be extended there.
 		 */
-		lp->sizeargs = arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG);
+		lp->sizeargs = arg_is_set(cmd, extents_ARG) + arg_is_set(cmd, size_ARG);
 
 		if (arg_from_list_is_zero(cmd, "may not be zero",
 					  chunksize_ARG, extents_ARG,
@@ -57,7 +57,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 					  -1))
 			return_0;
 
-		if (arg_count(cmd, poolmetadatasize_ARG)) {
+		if (arg_is_set(cmd, poolmetadatasize_ARG)) {
 			lp->poolmetadatasize = arg_uint64_value(cmd, poolmetadatasize_ARG, 0);
 			lp->poolmetadatasign = arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE);
 			if (lp->poolmetadatasign == SIGN_MINUS) {
@@ -73,20 +73,20 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 			lp->sizeargs = !lp->poolmetadatasize ? 1 : 0;
 		} else if ((lp->sizeargs != 1) &&
 			   ((lp->sizeargs == 2) ||
-			    !arg_count(cmd, poolmetadatasize_ARG))) {
+			    !arg_is_set(cmd, poolmetadatasize_ARG))) {
 			log_error("Please specify either size or extents but not "
 				  "both.");
 			return 0;
 		}
 
-		if (arg_count(cmd, extents_ARG)) {
+		if (arg_is_set(cmd, extents_ARG)) {
 			lp->extents = arg_uint_value(cmd, extents_ARG, 0);
 			lp->sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
 			lp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
 		}
 
 		/* Size returned in kilobyte units; held in sectors */
-		if (arg_count(cmd, size_ARG)) {
+		if (arg_is_set(cmd, size_ARG)) {
 			lp->size = arg_uint64_value(cmd, size_ARG, 0);
 			lp->sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
 			lp->percent = PERCENT_NONE;
@@ -134,15 +134,15 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	lp->argc = argc;
 	lp->argv = argv;
 
-	lp->ac_policy = arg_count(cmd, usepolicies_ARG);
-	lp->ac_stripes = arg_count(cmd, stripes_ARG);
+	lp->ac_policy = arg_is_set(cmd, usepolicies_ARG);
+	lp->ac_stripes = arg_is_set(cmd, stripes_ARG);
 	if (lp->ac_stripes) {
 		lp->ac_stripes_value = arg_uint_value(cmd, stripes_ARG, 1);
 	} else {
 		lp->ac_stripes_value = 0;
 	}
 
-	lp->ac_mirrors = arg_count(cmd, mirrors_ARG);
+	lp->ac_mirrors = arg_is_set(cmd, mirrors_ARG);
 
 	if (lp->ac_mirrors) {
 		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS) {
@@ -155,7 +155,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->ac_mirrors_value = 0;
 	}
 
-	lp->ac_stripesize = arg_count(cmd, stripesize_ARG);
+	lp->ac_stripesize = arg_is_set(cmd, stripesize_ARG);
 	if (lp->ac_stripesize) {
 		if (arg_sign_value(cmd, stripesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Stripesize may not be negative.");
@@ -165,7 +165,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->ac_stripesize_value = arg_uint64_value(cmd, stripesize_ARG, 0);
 	}
 
-	lp->ac_no_sync = arg_count(cmd, nosync_ARG);
+	lp->ac_no_sync = arg_is_set(cmd, nosync_ARG);
 	lp->ac_alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, 0);
 
 	lp->ac_type = arg_str_value(cmd, type_ARG, NULL);

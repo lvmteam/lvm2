@@ -108,7 +108,7 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, discards_ARG)) {
+	if (arg_is_set(cmd, discards_ARG)) {
 		discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_IGNORE);
 		if (discards != first_seg(lv)->discards) {
 			if (((discards == THIN_DISCARDS_IGNORE) ||
@@ -124,7 +124,7 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 				  lv->name, get_pool_discards_name(discards));
 	}
 
-	if (arg_count(cmd, zero_ARG)) {
+	if (arg_is_set(cmd, zero_ARG)) {
 		val = arg_uint_value(cmd, zero_ARG, 1);
 		if (val != first_seg(lv)->zero_new_blocks) {
 			first_seg(lv)->zero_new_blocks = val;
@@ -200,7 +200,7 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 		return ECMD_FAILED;
 	}
 
-	if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))
+	if (lv_activation_skip(lv, activate, arg_is_set(cmd, ignoreactivationskip_ARG)))
 		return 1;
 
 	if (lv_is_cow(lv) && !lv_is_virtual_origin(origin_from_cow(lv)))
@@ -350,7 +350,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 			return 0;
 		}
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Do you really want to deactivate "
 				  "logical volume %s to resync it? [y/n]: ",
 				  lv->name) == 'n') {
@@ -625,8 +625,8 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 			    display_lvname(lv));
 	} else {
 		if (lv_is_active(lv)) {
-			if (!arg_count(cmd, force_ARG) &&
-			    !arg_count(cmd, yes_ARG) &&
+			if (!arg_is_set(cmd, force_ARG) &&
+			    !arg_is_set(cmd, yes_ARG) &&
 			    yes_no_prompt("Logical volume %s will be "
 					  "deactivated temporarily. "
 					  "Continue? [y/n]: ", lv->name) == 'n') {
@@ -760,11 +760,11 @@ static int _lvchange_writemostly(struct logical_volume *lv)
 
 	if (!seg_is_raid1(raid_seg)) {
 		log_error("--write%s can only be used with 'raid1' segment type",
-			  arg_count(cmd, writemostly_ARG) ? "mostly" : "behind");
+			  arg_is_set(cmd, writemostly_ARG) ? "mostly" : "behind");
 		return 0;
 	}
 
-	if (arg_count(cmd, writebehind_ARG))
+	if (arg_is_set(cmd, writebehind_ARG))
 		raid_seg->writebehind = arg_uint_value(cmd, writebehind_ARG, 0);
 
 	if ((pv_count = arg_count(cmd, writemostly_ARG))) {
@@ -858,10 +858,10 @@ static int _lvchange_recovery_rate(struct logical_volume *lv)
 		return 0;
 	}
 
-	if (arg_count(cmd, minrecoveryrate_ARG))
+	if (arg_is_set(cmd, minrecoveryrate_ARG))
 		raid_seg->min_recovery_rate =
 			arg_uint_value(cmd, minrecoveryrate_ARG, 0) / 2;
-	if (arg_count(cmd, maxrecoveryrate_ARG))
+	if (arg_is_set(cmd, maxrecoveryrate_ARG))
 		raid_seg->max_recovery_rate =
 			arg_uint_value(cmd, maxrecoveryrate_ARG, 0) / 2;
 
@@ -885,11 +885,11 @@ static int _lvchange_profile(struct logical_volume *lv)
 
 	old_profile_name = lv->profile ? lv->profile->name : "(inherited)";
 
-	if (arg_count(lv->vg->cmd, detachprofile_ARG)) {
+	if (arg_is_set(lv->vg->cmd, detachprofile_ARG)) {
 		new_profile_name = "(inherited)";
 		lv->profile = NULL;
 	} else {
-		if (arg_count(lv->vg->cmd, metadataprofile_ARG))
+		if (arg_is_set(lv->vg->cmd, metadataprofile_ARG))
 			new_profile_name = arg_str_value(lv->vg->cmd, metadataprofile_ARG, NULL);
 		else
 			new_profile_name = arg_str_value(lv->vg->cmd, profile_ARG, NULL);
@@ -971,7 +971,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_pvmove(lv)) {
 		log_error("Unable to change pvmove LV %s", lv->name);
-		if (arg_count(cmd, activate_ARG))
+		if (arg_is_set(cmd, activate_ARG))
 			log_error("Use 'pvmove --abort' to abandon a pvmove");
 		return ECMD_FAILED;
 	}
@@ -988,15 +988,15 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* If LV is sparse, activate origin instead */
-	if (arg_count(cmd, activate_ARG) && lv_is_cow(lv) &&
+	if (arg_is_set(cmd, activate_ARG) && lv_is_cow(lv) &&
 	    lv_is_virtual_origin(origin = origin_from_cow(lv)))
 		lv = origin;
 
 	if ((lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv) ||
 	     lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) &&
-	    !arg_count(cmd, activate_ARG) &&
-	    !arg_count(cmd, permission_ARG) &&
-	    !arg_count(cmd, setactivationskip_ARG))
+	    !arg_is_set(cmd, activate_ARG) &&
+	    !arg_is_set(cmd, permission_ARG) &&
+	    !arg_is_set(cmd, setactivationskip_ARG))
 	    /* Rest can be changed for stacked thin pool meta/data volumes */
 	    ;
 	else if (!lv_is_visible(lv) && !lv_is_virtual_origin(lv)) {
@@ -1005,7 +1005,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_cow(lv) && arg_count(cmd, activate_ARG)) {
+	if (lv_is_cow(lv) && arg_is_set(cmd, activate_ARG)) {
 		origin = origin_from_cow(lv);
 		if (origin->origin_count < 2)
 			snaps_msg[0] = '\0';
@@ -1016,7 +1016,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		}
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    (yes_no_prompt("Change of snapshot %s will also change its "
 				   "origin %s%s. Proceed? [y/n]: ",
 				   display_lvname(lv), display_lvname(origin),
@@ -1031,12 +1031,12 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, persistent_ARG) && lv_is_pool(lv)) {
+	if (arg_is_set(cmd, persistent_ARG) && lv_is_pool(lv)) {
 		log_error("Persistent major and minor numbers are not supported with pools.");
 		return ECMD_FAILED;
 	}
 
-	if (!arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG)) {
+	if (!arg_is_set(cmd, activate_ARG) && !arg_is_set(cmd, refresh_ARG)) {
 		/*
 		 * If a persistent lv lock already exists from activation
 		 * (with the needed mode or higher), this will be a no-op.
@@ -1061,12 +1061,12 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	 *
 	 * Do not initiate any polling if --sysinit option is used.
 	 */
-	init_background_polling(arg_count(cmd, sysinit_ARG) ? 0 :
+	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 :
 						arg_int_value(cmd, poll_ARG,
 						DEFAULT_BACKGROUND_POLLING));
 
 	/* access permission change */
-	if (arg_count(cmd, permission_ARG)) {
+	if (arg_is_set(cmd, permission_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_permission(cmd, lv);
@@ -1074,7 +1074,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* allocation policy change */
-	if (arg_count(cmd, contiguous_ARG) || arg_count(cmd, alloc_ARG)) {
+	if (arg_is_set(cmd, contiguous_ARG) || arg_is_set(cmd, alloc_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_alloc(cmd, lv);
@@ -1082,7 +1082,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* error when full change */
-	if (arg_count(cmd, errorwhenfull_ARG)) {
+	if (arg_is_set(cmd, errorwhenfull_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_errorwhenfull(cmd, lv);
@@ -1090,7 +1090,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* read ahead sector change */
-	if (arg_count(cmd, readahead_ARG)) {
+	if (arg_is_set(cmd, readahead_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_readahead(cmd, lv);
@@ -1098,15 +1098,15 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* persistent device number change */
-	if (arg_count(cmd, persistent_ARG)) {
+	if (arg_is_set(cmd, persistent_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_persistent(cmd, lv);
 		docmds++;
 	}
 
-	if (arg_count(cmd, discards_ARG) ||
-	    arg_count(cmd, zero_ARG)) {
+	if (arg_is_set(cmd, discards_ARG) ||
+	    arg_is_set(cmd, zero_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_pool_update(cmd, lv);
@@ -1114,7 +1114,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* add tag */
-	if (arg_count(cmd, addtag_ARG)) {
+	if (arg_is_set(cmd, addtag_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_tag(cmd, lv, addtag_ARG);
@@ -1122,7 +1122,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* del tag */
-	if (arg_count(cmd, deltag_ARG)) {
+	if (arg_is_set(cmd, deltag_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_tag(cmd, lv, deltag_ARG);
@@ -1130,7 +1130,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* change writemostly/writebehind */
-	if (arg_count(cmd, writemostly_ARG) || arg_count(cmd, writebehind_ARG)) {
+	if (arg_is_set(cmd, writemostly_ARG) || arg_is_set(cmd, writebehind_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_writemostly(lv);
@@ -1138,8 +1138,8 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* change [min|max]_recovery_rate */
-	if (arg_count(cmd, minrecoveryrate_ARG) ||
-	    arg_count(cmd, maxrecoveryrate_ARG)) {
+	if (arg_is_set(cmd, minrecoveryrate_ARG) ||
+	    arg_is_set(cmd, maxrecoveryrate_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_recovery_rate(lv);
@@ -1147,15 +1147,15 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* change configuration profile */
-	if (arg_count(cmd, profile_ARG) || arg_count(cmd, metadataprofile_ARG) ||
-	    arg_count(cmd, detachprofile_ARG)) {
+	if (arg_is_set(cmd, profile_ARG) || arg_is_set(cmd, metadataprofile_ARG) ||
+	    arg_is_set(cmd, detachprofile_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_profile(lv);
 		docmds++;
 	}
 
-	if (arg_count(cmd, setactivationskip_ARG)) {
+	if (arg_is_set(cmd, setactivationskip_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_activation_skip(lv);
@@ -1163,7 +1163,7 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (arg_is_set(cmd, cachemode_ARG) ||
-	    arg_count(cmd, cachepolicy_ARG) || arg_count(cmd, cachesettings_ARG)) {
+	    arg_is_set(cmd, cachepolicy_ARG) || arg_is_set(cmd, cachesettings_ARG)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
 		doit += _lvchange_cache(cmd, lv);
@@ -1173,27 +1173,27 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (doit)
 		log_print_unless_silent("Logical volume %s changed.", display_lvname(lv));
 
-	if (arg_count(cmd, resync_ARG) &&
+	if (arg_is_set(cmd, resync_ARG) &&
 	    !_lvchange_resync(cmd, lv))
 		return_ECMD_FAILED;
 
-	if (arg_count(cmd, syncaction_ARG) &&
+	if (arg_is_set(cmd, syncaction_ARG) &&
 	    !lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL)))
 		return_ECMD_FAILED;
 
 	/* activation change */
-	if (arg_count(cmd, activate_ARG)) {
+	if (arg_is_set(cmd, activate_ARG)) {
 		if (!_lvchange_activate(cmd, lv))
 			return_ECMD_FAILED;
-	} else if (arg_count(cmd, refresh_ARG)) {
+	} else if (arg_is_set(cmd, refresh_ARG)) {
 		if (!_lvchange_refresh(cmd, lv))
 			return_ECMD_FAILED;
 	} else {
-		if (arg_count(cmd, monitor_ARG) &&
+		if (arg_is_set(cmd, monitor_ARG) &&
 		    !_lvchange_monitoring(cmd, lv))
 			return_ECMD_FAILED;
 
-		if (arg_count(cmd, poll_ARG) &&
+		if (arg_is_set(cmd, poll_ARG) &&
 		    !_lvchange_background_polling(cmd, lv))
 			return_ECMD_FAILED;
 	}
@@ -1243,27 +1243,27 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	int update = update_partial_safe || update_partial_unsafe;
 
 	if (!update &&
-	    !arg_count(cmd, activate_ARG) && !arg_count(cmd, refresh_ARG) &&
-	    !arg_count(cmd, monitor_ARG) && !arg_count(cmd, poll_ARG)) {
+	    !arg_is_set(cmd, activate_ARG) && !arg_is_set(cmd, refresh_ARG) &&
+	    !arg_is_set(cmd, monitor_ARG) && !arg_is_set(cmd, poll_ARG)) {
 		log_error("Need 1 or more of -a, -C, -M, -p, -r, -Z, "
 			  "--resync, --refresh, --alloc, --addtag, --deltag, "
 			  "--monitor, --poll or --discards");
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((arg_count(cmd, profile_ARG) || arg_count(cmd, metadataprofile_ARG)) &&
-	     arg_count(cmd, detachprofile_ARG)) {
+	if ((arg_is_set(cmd, profile_ARG) || arg_is_set(cmd, metadataprofile_ARG)) &&
+	     arg_is_set(cmd, detachprofile_ARG)) {
 		log_error("Only one of --metadataprofile and --detachprofile permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, activate_ARG) && arg_count(cmd, refresh_ARG)) {
+	if (arg_is_set(cmd, activate_ARG) && arg_is_set(cmd, refresh_ARG)) {
 		log_error("Only one of -a and --refresh permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
-	     arg_count(cmd, sysinit_ARG)) && update) {
+	if ((arg_is_set(cmd, ignorelockingfailure_ARG) ||
+	     arg_is_set(cmd, sysinit_ARG)) && update) {
 		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
 		return EINVALID_CMD_LINE;
 	}
@@ -1276,23 +1276,23 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((arg_count(cmd, minor_ARG) || arg_count(cmd, major_ARG)) &&
-	    !arg_count(cmd, persistent_ARG)) {
+	if ((arg_is_set(cmd, minor_ARG) || arg_is_set(cmd, major_ARG)) &&
+	    !arg_is_set(cmd, persistent_ARG)) {
 		log_error("--major and --minor require -My");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, minor_ARG) && argc != 1) {
+	if (arg_is_set(cmd, minor_ARG) && argc != 1) {
 		log_error("Only give one logical volume when specifying minor");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, contiguous_ARG) && arg_count(cmd, alloc_ARG)) {
+	if (arg_is_set(cmd, contiguous_ARG) && arg_is_set(cmd, alloc_ARG)) {
 		log_error("Only one of --alloc and --contiguous permitted");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, poll_ARG) && arg_count(cmd, sysinit_ARG)) {
+	if (arg_is_set(cmd, poll_ARG) && arg_is_set(cmd, sysinit_ARG)) {
 		log_error("Only one of --poll and --sysinit permitted");
 		return EINVALID_CMD_LINE;
 	}
@@ -1304,7 +1304,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	 * not neet to be running at this moment yet - it could be
 	 * just too early during system initialization time.
 	 */
-	if (arg_count(cmd, sysinit_ARG) && (arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY)) {
+	if (arg_is_set(cmd, sysinit_ARG) && (arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY)) {
 		if (lvmetad_used()) {
 			log_warn("WARNING: lvmetad is active, skipping direct activation during sysinit");
 			return ECMD_PROCESSED;
@@ -1324,7 +1324,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	 * are cases where lvchange does not modify the vg, so they can use
 	 * the sh lock mode.
 	 */
-	if (arg_count(cmd, activate_ARG) || arg_count(cmd, refresh_ARG)) {
+	if (arg_is_set(cmd, activate_ARG) || arg_is_set(cmd, refresh_ARG)) {
 		cmd->lockd_vg_default_sh = 1;
 		/* Allow deactivating if locks fail. */
 		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))

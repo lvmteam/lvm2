@@ -141,7 +141,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_warn("WARNING: Setting maxphysicalvolumes to %d "
 			 "(0 means unlimited)", vg->max_pv);
 
-	if (arg_count(cmd, addtag_ARG)) {
+	if (arg_is_set(cmd, addtag_ARG)) {
 		dm_list_iterate_items(current_group, &cmd->arg_value_groups) {
 			if (!grouped_arg_is_set(current_group->arg_values, addtag_ARG))
 				continue;

@@ -18,7 +18,7 @@
 static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
 			     struct processing_handle *handle __attribute__((unused)))
 {
-	if (arg_count(cmd, refresh_ARG) && lv_is_visible(lv))
+	if (arg_is_set(cmd, refresh_ARG) && lv_is_visible(lv))
 		if (!lv_refresh(cmd, lv))
 			return_ECMD_FAILED;
 

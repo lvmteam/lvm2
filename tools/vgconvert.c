@@ -157,26 +157,26 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, metadatacopies_ARG)) {
+	if (arg_is_set(cmd, metadatacopies_ARG)) {
 		log_error("Invalid option --metadatacopies, "
 			  "use --pvmetadatacopies instead.");
 		return EINVALID_CMD_LINE;
 	}
 	if (!(cmd->fmt->features & FMT_MDAS) &&
-	    (arg_count(cmd, pvmetadatacopies_ARG) ||
-	     arg_count(cmd, metadatasize_ARG))) {
+	    (arg_is_set(cmd, pvmetadatacopies_ARG) ||
+	     arg_is_set(cmd, metadatasize_ARG))) {
 		log_error("Metadata parameters only apply to text format");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, pvmetadatacopies_ARG) &&
+	if (arg_is_set(cmd, pvmetadatacopies_ARG) &&
 	    arg_int_value(cmd, pvmetadatacopies_ARG, -1) > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (!(cmd->fmt->features & FMT_BAS) &&
-		arg_count(cmd, bootloaderareasize_ARG)) {
+		arg_is_set(cmd, bootloaderareasize_ARG)) {
 		log_error("Bootloader area parameters only apply to text format");
 		return EINVALID_CMD_LINE;
 	}

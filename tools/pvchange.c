@@ -31,7 +31,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	int allocatable = arg_int_value(cmd, allocatable_ARG, 0);
 	int mda_ignore = arg_int_value(cmd, metadataignore_ARG, 0);
-	int tagargs = arg_count(cmd, addtag_ARG) + arg_count(cmd, deltag_ARG);
+	int tagargs = arg_is_set(cmd, addtag_ARG) + arg_is_set(cmd, deltag_ARG);
 
 	params->total++;
 
@@ -51,7 +51,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 				  vg->name);
 			goto bad;
 		}
-		if (arg_count(cmd, uuid_ARG)) {
+		if (arg_is_set(cmd, uuid_ARG)) {
 			log_error("Resolve duplicate PV UUIDs with vgimportclone (or filters).");
 			goto bad;
 		}
@@ -64,7 +64,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 				  "support tags", pv_name);
 			goto bad;
 		}
-		if (arg_count(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
+		if (arg_is_set(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
 			log_error("Volume group containing %s has active "
 				  "logical volumes", pv_name);
 			goto bad;
@@ -88,7 +88,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (arg_count(cmd, allocatable_ARG)) {
+	if (arg_is_set(cmd, allocatable_ARG)) {
 		if (is_orphan(pv) &&
 		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
 			log_error("Allocatability not supported by orphan "
@@ -129,16 +129,16 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (tagargs) {
 		/* tag or deltag */
-		if (arg_count(cmd, addtag_ARG) && !change_tag(cmd, NULL, NULL, pv, addtag_ARG))
+		if (arg_is_set(cmd, addtag_ARG) && !change_tag(cmd, NULL, NULL, pv, addtag_ARG))
 			goto_bad;
 
-		if (arg_count(cmd, deltag_ARG) && !change_tag(cmd, NULL, NULL, pv, deltag_ARG))
+		if (arg_is_set(cmd, deltag_ARG) && !change_tag(cmd, NULL, NULL, pv, deltag_ARG))
 			goto_bad;
 	
 		done = 1;
 	}
 
-	if (arg_count(cmd, metadataignore_ARG)) {
+	if (arg_is_set(cmd, metadataignore_ARG)) {
 		if ((vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
 		    (arg_count(cmd, force_ARG) == PROMPT) &&
 		    yes_no_prompt("Override preferred number of copies "
@@ -151,7 +151,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 		done = 1;
 	} 
 
-	if (arg_count(cmd, uuid_ARG)) {
+	if (arg_is_set(cmd, uuid_ARG)) {
 		/* --uuid: Change PV ID randomly */
 		memcpy(&pv->old_id, &pv->id, sizeof(pv->id));
 		if (!id_create(&pv->id)) {
@@ -207,9 +207,9 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct processing_handle *handle = NULL;
 	int ret;
 
-	if (!(arg_count(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
-	    arg_is_set(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) +
-	    arg_count(cmd, metadataignore_ARG))) {
+	if (!(arg_is_set(cmd, allocatable_ARG) + arg_is_set(cmd, addtag_ARG) +
+	    arg_is_set(cmd, deltag_ARG) + arg_is_set(cmd, uuid_ARG) +
+	    arg_is_set(cmd, metadataignore_ARG))) {
 		log_error("Please give one or more of -x, -uuid, "
 			  "--addtag, --deltag or --metadataignore");
 		ret = EINVALID_CMD_LINE;
@@ -224,13 +224,13 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &params;
 
-	if (!(arg_count(cmd, all_ARG)) && !argc && !handle->internal_report_for_select) {
+	if (!(arg_is_set(cmd, all_ARG)) && !argc && !handle->internal_report_for_select) {
 		log_error("Please give a physical volume path or use --select for selection.");
 		ret = EINVALID_CMD_LINE;
 		goto out;
 	}
 
-	if (arg_count(cmd, all_ARG) && argc) {
+	if (arg_is_set(cmd, all_ARG) && argc) {
 		log_error("Option --all and PhysicalVolumePath are exclusive.");
 		ret = EINVALID_CMD_LINE;
 		goto out;

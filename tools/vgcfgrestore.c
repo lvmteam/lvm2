@@ -28,7 +28,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Volume group name \"%s\" is invalid", vg_name);
 			return EINVALID_CMD_LINE;
 		}
-	} else if (!(arg_count(cmd, list_ARG) && arg_count(cmd, file_ARG))) {
+	} else if (!(arg_is_set(cmd, list_ARG) && arg_is_set(cmd, file_ARG))) {
 		log_error("Please specify a *single* volume group to restore.");
 		return EINVALID_CMD_LINE;
 	}
@@ -37,8 +37,8 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	 * FIXME: overloading the -l arg for now to display a
 	 * list of archive files for a particular vg
 	 */
-	if (arg_count(cmd, list_ARG)) {
-		if (!(arg_count(cmd,file_ARG) ?
+	if (arg_is_set(cmd, list_ARG)) {
+		if (!(arg_is_set(cmd,file_ARG) ?
 			    archive_display_file(cmd,
 				arg_str_value(cmd, file_ARG, "")) :
 			    archive_display(cmd, vg_name)))
@@ -76,7 +76,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 
 	cmd->handles_unknown_segments = 1;
 
-	if (!(arg_count(cmd, file_ARG) ?
+	if (!(arg_is_set(cmd, file_ARG) ?
 	      backup_restore_from_file(cmd, vg_name,
 				       arg_str_value(cmd, file_ARG, ""),
 				       arg_count(cmd, force_long_ARG)) :

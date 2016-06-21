@@ -235,7 +235,7 @@ static int _segs_with_info_and_status_single(struct cmd_context *cmd, struct lv_
 static int _lvsegs_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  struct processing_handle *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
+	if (!arg_is_set(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
 	return process_each_segment_in_lv(cmd, lv, handle, _segs_single);
@@ -244,7 +244,7 @@ static int _lvsegs_single(struct cmd_context *cmd, struct logical_volume *lv,
 static int _lvsegs_with_info_single(struct cmd_context *cmd, struct logical_volume *lv,
 				    struct processing_handle *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
+	if (!arg_is_set(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
 	return process_each_segment_in_lv(cmd, lv, handle, _segs_with_info_single);
@@ -253,7 +253,7 @@ static int _lvsegs_with_info_single(struct cmd_context *cmd, struct logical_volu
 static int _lvsegs_with_status_single(struct cmd_context *cmd, struct logical_volume *lv,
 				      struct processing_handle *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
+	if (!arg_is_set(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
 	return process_each_segment_in_lv(cmd, lv, handle, _segs_with_status_single);
@@ -262,7 +262,7 @@ static int _lvsegs_with_status_single(struct cmd_context *cmd, struct logical_vo
 static int _lvsegs_with_info_and_status_single(struct cmd_context *cmd, struct logical_volume *lv,
 					       struct processing_handle *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
+	if (!arg_is_set(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
 	return process_each_segment_in_lv(cmd, lv, handle, _segs_with_info_and_status_single);
@@ -810,7 +810,7 @@ static int _get_report_options(struct cmd_context *cmd,
 	report_idx_t idx = REPORT_IDX_SINGLE;
 	int r = ECMD_FAILED;
 
-	if (!arg_count(cmd, options_ARG))
+	if (!arg_is_set(cmd, options_ARG))
 		return ECMD_PROCESSED;
 
 	if (!(mem = dm_pool_create("report_options", 128))) {
@@ -1252,21 +1252,21 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 	switch (single_args->report_type) {
 		case DEVTYPES:
 			single_args->keys = find_config_tree_str(cmd, report_devtypes_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
+			if (!arg_is_set(cmd, verbose_ARG))
 				single_args->options = find_config_tree_str(cmd, report_devtypes_cols_CFG, NULL);
 			else
 				single_args->options = find_config_tree_str(cmd, report_devtypes_cols_verbose_CFG, NULL);
 			break;
 		case LVS:
 			single_args->keys = find_config_tree_str(cmd, report_lvs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
+			if (!arg_is_set(cmd, verbose_ARG))
 				single_args->options = find_config_tree_str(cmd, report_lvs_cols_CFG, NULL);
 			else
 				single_args->options = find_config_tree_str(cmd, report_lvs_cols_verbose_CFG, NULL);
 			break;
 		case VGS:
 			single_args->keys = find_config_tree_str(cmd, report_vgs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
+			if (!arg_is_set(cmd, verbose_ARG))
 				single_args->options = find_config_tree_str(cmd, report_vgs_cols_CFG, NULL);
 			else
 				single_args->options = find_config_tree_str(cmd, report_vgs_cols_verbose_CFG, NULL);
@@ -1274,21 +1274,21 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 		case LABEL:
 		case PVS:
 			single_args->keys = find_config_tree_str(cmd, report_pvs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
+			if (!arg_is_set(cmd, verbose_ARG))
 				single_args->options = find_config_tree_str(cmd, report_pvs_cols_CFG, NULL);
 			else
 				single_args->options = find_config_tree_str(cmd, report_pvs_cols_verbose_CFG, NULL);
 			break;
 		case SEGS:
 			single_args->keys = find_config_tree_str(cmd, report_segs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
+			if (!arg_is_set(cmd, verbose_ARG))
 				single_args->options = find_config_tree_str(cmd, report_segs_cols_CFG, NULL);
 			else
 				single_args->options = find_config_tree_str(cmd, report_segs_cols_verbose_CFG, NULL);
 			break;
 		case PVSEGS:
 			single_args->keys = find_config_tree_str(cmd, report_pvsegs_sort_CFG, NULL);
-			if (!arg_count(cmd, verbose_ARG))
+			if (!arg_is_set(cmd, verbose_ARG))
 				single_args->options = find_config_tree_str(cmd, report_pvsegs_cols_CFG, NULL);
 			else
 				single_args->options = find_config_tree_str(cmd, report_pvsegs_cols_verbose_CFG, NULL);
@@ -1325,21 +1325,21 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 		return_0;
 
 	args->separator = arg_str_value(cmd, separator_ARG, args->separator);
-	if (arg_count(cmd, separator_ARG))
+	if (arg_is_set(cmd, separator_ARG))
 		args->aligned = 0;
-	if (arg_count(cmd, aligned_ARG))
+	if (arg_is_set(cmd, aligned_ARG))
 		args->aligned = 1;
-	if (arg_count(cmd, unbuffered_ARG) && !arg_count(cmd, sort_ARG))
+	if (arg_is_set(cmd, unbuffered_ARG) && !arg_is_set(cmd, sort_ARG))
 		args->buffered = 0;
-	if (arg_count(cmd, noheadings_ARG))
+	if (arg_is_set(cmd, noheadings_ARG))
 		args->headings = 0;
-	if (arg_count(cmd, nameprefixes_ARG)) {
+	if (arg_is_set(cmd, nameprefixes_ARG)) {
 		args->aligned = 0;
 		args->field_prefixes = 1;
 	}
-	if (arg_count(cmd, unquoted_ARG))
+	if (arg_is_set(cmd, unquoted_ARG))
 		args->quoted = 0;
-	if (arg_count(cmd, rows_ARG))
+	if (arg_is_set(cmd, rows_ARG))
 		args->columns_as_rows = 1;
 
 	return 1;
@@ -1399,7 +1399,7 @@ int lvs(struct cmd_context *cmd, int argc, char **argv)
 {
 	report_type_t type;
 
-	if (arg_count(cmd, segments_ARG))
+	if (arg_is_set(cmd, segments_ARG))
 		type = SEGS;
 	else
 		type = LVS;
@@ -1416,7 +1416,7 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 {
 	report_type_t type;
 
-	if (arg_count(cmd, segments_ARG))
+	if (arg_is_set(cmd, segments_ARG))
 		type = PVSEGS;
 	else
 		type = LABEL;
@@ -1538,7 +1538,7 @@ int lastlog(struct cmd_context *cmd, int argc, char **argv)
 	if (!report_format_init(cmd, NULL, &report_group, &cmd->log_rh, NULL, NULL))
 		goto_out;
 
-	if (arg_count(cmd, select_ARG) &&
+	if (arg_is_set(cmd, select_ARG) &&
 	    !_do_report_get_selection(cmd, NULL, NULL, expected_idxs, &selection))
 		goto_out;
 

@@ -63,17 +63,17 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *reason = NULL;
 
-	if (!argc && !arg_count(cmd, all_ARG) && !arg_is_set(cmd, select_ARG)) {
+	if (!argc && !arg_is_set(cmd, all_ARG) && !arg_is_set(cmd, select_ARG)) {
 		log_error("Please supply volume groups or -S for selection or use -a for all.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, all_ARG) && (argc || arg_is_set(cmd, select_ARG))) {
+	if (arg_is_set(cmd, all_ARG) && (argc || arg_is_set(cmd, select_ARG))) {
 		log_error("No arguments permitted when using -a for all.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, force_ARG)) {
+	if (arg_is_set(cmd, force_ARG)) {
 		/*
 		 * The volume group cannot be repaired unless it is first
 		 * imported.  If we don't allow the user a way to import the

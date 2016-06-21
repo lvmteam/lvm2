@@ -27,25 +27,25 @@ static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
 {
 	pp->restorefile = arg_str_value(cmd, restorefile_ARG, NULL);
 
-	if (arg_count(cmd, restorefile_ARG) && !arg_count(cmd, uuidstr_ARG)) {
+	if (arg_is_set(cmd, restorefile_ARG) && !arg_is_set(cmd, uuidstr_ARG)) {
 		log_error("--uuid is required with --restorefile");
 		return 0;
 	}
 
-	if (!arg_count(cmd, restorefile_ARG) && arg_count(cmd, uuidstr_ARG)) {
-		if (!arg_count(cmd, norestorefile_ARG) &&
+	if (!arg_is_set(cmd, restorefile_ARG) && arg_is_set(cmd, uuidstr_ARG)) {
+		if (!arg_is_set(cmd, norestorefile_ARG) &&
 		    find_config_tree_bool(cmd, devices_require_restorefile_with_uuid_CFG, NULL)) {
 			log_error("--restorefile is required with --uuid");
 			return 0;
 		}
 	}
 
-	if (arg_count(cmd, uuidstr_ARG) && argc != 1) {
+	if (arg_is_set(cmd, uuidstr_ARG) && argc != 1) {
 		log_error("Can only set uuid on one volume at once");
 		return 0;
 	}
 
-	if (arg_count(cmd, uuidstr_ARG)) {
+	if (arg_is_set(cmd, uuidstr_ARG)) {
 		pp->uuid_str = arg_str_value(cmd, uuidstr_ARG, "");
 		if (!id_read_format(&pp->pva.id, pp->uuid_str))
 			return 0;
@@ -58,7 +58,7 @@ static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
 	}
 	pp->pva.size = arg_uint64_value(cmd, physicalvolumesize_ARG, UINT64_C(0));
 
-	if (arg_count(cmd, restorefile_ARG) || arg_count(cmd, uuidstr_ARG))
+	if (arg_is_set(cmd, restorefile_ARG) || arg_is_set(cmd, uuidstr_ARG))
 		pp->zero = 0;
 	return 1;
 }

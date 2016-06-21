@@ -493,7 +493,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 	if (!lv_add_mirrors(cmd, lv_mirr, 1, 1, 0, 0, log_count,
 			    allocatable_pvs, alloc,
-			    (arg_count(cmd, atomic_ARG)) ?
+			    (arg_is_set(cmd, atomic_ARG)) ?
 			    MIRROR_BY_SEGMENTED_LV : MIRROR_BY_SEG)) {
 		log_error("Failed to convert pvmove LV to mirrored");
 		return_NULL;
@@ -862,7 +862,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		pp.pv_count = argc;
 		pp.pv_names = argv;
 
-		if (arg_count(cmd, name_ARG)) {
+		if (arg_is_set(cmd, name_ARG)) {
 			if (!(pp.lv_name_arg = dm_pool_strdup(cmd->mem, arg_value(cmd, name_ARG))))  {
 				log_error("Failed to clone LV name.");
 				return ECMD_FAILED;

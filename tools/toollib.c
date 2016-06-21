@@ -801,10 +801,10 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_count(cmd, metadatacopies_ARG))
+	if (arg_is_set(cmd, metadatacopies_ARG))
 		vp_new->vgmetadatacopies = arg_int_value(cmd, metadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
-	else if (arg_count(cmd, vgmetadatacopies_ARG))
+	else if (arg_is_set(cmd, vgmetadatacopies_ARG))
 		vp_new->vgmetadatacopies = arg_int_value(cmd, vgmetadatacopies_ARG,
 							DEFAULT_VGMETADATACOPIES);
 	else
@@ -1175,18 +1175,18 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
 {
 	*monitoring_mode = DEFAULT_DMEVENTD_MONITOR;
 
-	if (arg_count(cmd, monitor_ARG) &&
-	    (arg_count(cmd, ignoremonitoring_ARG) ||
-	     arg_count(cmd, sysinit_ARG))) {
+	if (arg_is_set(cmd, monitor_ARG) &&
+	    (arg_is_set(cmd, ignoremonitoring_ARG) ||
+	     arg_is_set(cmd, sysinit_ARG))) {
 		log_error("--ignoremonitoring or --sysinit option not allowed with --monitor option.");
 		return 0;
 	}
 
-	if (arg_count(cmd, monitor_ARG))
+	if (arg_is_set(cmd, monitor_ARG))
 		*monitoring_mode = arg_int_value(cmd, monitor_ARG,
 						 DEFAULT_DMEVENTD_MONITOR);
-	else if (is_static() || arg_count(cmd, ignoremonitoring_ARG) ||
-		 arg_count(cmd, sysinit_ARG) ||
+	else if (is_static() || arg_is_set(cmd, ignoremonitoring_ARG) ||
+		 arg_is_set(cmd, sysinit_ARG) ||
 		 !find_config_tree_bool(cmd, activation_monitoring_CFG, NULL))
 		*monitoring_mode = DMEVENTD_MONITOR_IGNORE;
 
@@ -1246,13 +1246,13 @@ int get_pool_params(struct cmd_context *cmd,
 				 display_size(cmd, *chunk_size));
 	}
 
-	if (arg_count(cmd, poolmetadatasize_ARG)) {
+	if (arg_is_set(cmd, poolmetadatasize_ARG)) {
 		if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative pool metadata size is invalid.");
 			return 0;
 		}
 
-		if (arg_count(cmd, poolmetadata_ARG)) {
+		if (arg_is_set(cmd, poolmetadata_ARG)) {
 			log_error("Please specify either metadata logical volume or its size.");
 			return 0;
 		}
@@ -1260,7 +1260,7 @@ int get_pool_params(struct cmd_context *cmd,
 		*passed_args |= PASS_ARG_POOL_METADATA_SIZE;
 		*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG,
 						       UINT64_C(0));
-	} else if (arg_count(cmd, poolmetadata_ARG))
+	} else if (arg_is_set(cmd, poolmetadata_ARG))
 		*passed_args |= PASS_ARG_POOL_METADATA_SIZE; /* fixed size */
 
 	/* TODO: default in lvm.conf ? */
@@ -1312,7 +1312,7 @@ static int _validate_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes, uint32_t *stripe_size)
 {
 	/* stripes_long_ARG takes precedence (for lvconvert) */
-	*stripes = arg_uint_value(cmd, arg_count(cmd, stripes_long_ARG) ? stripes_long_ARG : stripes_ARG, 1);
+	*stripes = arg_uint_value(cmd, arg_is_set(cmd, stripes_long_ARG) ? stripes_long_ARG : stripes_ARG, 1);
 
 	*stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 	if (*stripe_size) {
@@ -2398,11 +2398,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 		/* Skip availability change for non-virt snaps when processing all LVs */
 		/* FIXME: pass process_all to process_single_lv() */
-		if (process_all && arg_count(cmd, activate_ARG) &&
+		if (process_all && arg_is_set(cmd, activate_ARG) &&
 		    lv_is_cow(lvl->lv) && !lv_is_virtual_origin(origin_from_cow(lvl->lv)))
 			continue;
 
-		if (lv_is_virtual_origin(lvl->lv) && !arg_count(cmd, all_ARG)) {
+		if (lv_is_virtual_origin(lvl->lv) && !arg_is_set(cmd, all_ARG)) {
 			if (lvargs_supplied &&
 			    str_list_match_item(arg_lvnames, lvl->lv->name))
 				log_print_unless_silent("Ignoring virtual origin logical volume %s.",
@@ -2414,7 +2414,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		 * Only let hidden LVs through if --all was used or the LVs 
 		 * were specifically named on the command line.
 		 */
-		if (!lvargs_supplied && !lv_is_visible(lvl->lv) && !arg_count(cmd, all_ARG))
+		if (!lvargs_supplied && !lv_is_visible(lvl->lv) && !arg_is_set(cmd, all_ARG))
 			continue;
 
 		/*
@@ -2422,7 +2422,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		 * it is named on the command line.
 		 */
 		if (lv_is_lockd_sanlock_lv(lvl->lv)) {
-			if (arg_count(cmd, all_ARG) ||
+			if (arg_is_set(cmd, all_ARG) ||
 			    (lvargs_supplied && str_list_match_item(arg_lvnames, lvl->lv->name))) {
 				log_very_verbose("Processing lockd_sanlock_lv %s/%s.", vg->name, lvl->lv->name);
 			} else {
@@ -3840,29 +3840,29 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 	}
 
 	if (!(cmd->fmt->features & FMT_MDAS) &&
-	    (arg_count(cmd, pvmetadatacopies_ARG) ||
-	     arg_count(cmd, metadatasize_ARG)   ||
-	     arg_count(cmd, dataalignment_ARG)  ||
-	     arg_count(cmd, dataalignmentoffset_ARG))) {
+	    (arg_is_set(cmd, pvmetadatacopies_ARG) ||
+	     arg_is_set(cmd, metadatasize_ARG)   ||
+	     arg_is_set(cmd, dataalignment_ARG)  ||
+	     arg_is_set(cmd, dataalignmentoffset_ARG))) {
 		log_error("Metadata and data alignment parameters only "
 			  "apply to text format.");
 		return 0;
 	}
 
 	if (!(cmd->fmt->features & FMT_BAS) &&
-	    arg_count(cmd, bootloaderareasize_ARG)) {
+	    arg_is_set(cmd, bootloaderareasize_ARG)) {
 		log_error("Bootloader area parameters only "
 			  "apply to text format.");
 		return 0;
 	}
 
-	if (arg_count(cmd, metadataignore_ARG))
+	if (arg_is_set(cmd, metadataignore_ARG))
 		pp->pva.metadataignore = arg_int_value(cmd, metadataignore_ARG,
 						   DEFAULT_PVMETADATAIGNORE);
 	else
 		pp->pva.metadataignore = find_config_tree_bool(cmd, metadata_pvmetadataignore_CFG, NULL);
 
-	if (arg_count(cmd, pvmetadatacopies_ARG) &&
+	if (arg_is_set(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
 	    pp->pva.metadataignore) {
 		log_error("metadataignore only applies to metadatacopies > 0");

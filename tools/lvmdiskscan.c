@@ -108,7 +108,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	pv_disks_found = 0;
 	pv_parts_found = 0;
 
-	if (arg_count(cmd, lvmpartition_ARG))
+	if (arg_is_set(cmd, lvmpartition_ARG))
 		log_warn("WARNING: only considering LVM devices");
 
 	max_len = _get_max_dev_name_len(cmd->full_filter);
@@ -132,7 +132,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 			continue;
 		}
 		/* If user just wants PVs we are done */
-		if (arg_count(cmd, lvmpartition_ARG))
+		if (arg_is_set(cmd, lvmpartition_ARG))
 			continue;
 
 		/* What other device is it? */
@@ -142,7 +142,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	dev_iter_destroy(iter);
 
 	/* Display totals */
-	if (!arg_count(cmd, lvmpartition_ARG)) {
+	if (!arg_is_set(cmd, lvmpartition_ARG)) {
 		log_print("%d disk%s",
 			  disks_found, disks_found == 1 ? "" : "s");
 		log_print("%d partition%s",

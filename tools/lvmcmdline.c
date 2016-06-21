@@ -82,7 +82,7 @@ int arg_from_list_is_set(const struct cmd_context *cmd, const char *err_found, .
 	va_list ap;
 
 	va_start(ap, err_found);
-	while ((arg = va_arg(ap, int)) != -1 && !arg_count(cmd, arg))
+	while ((arg = va_arg(ap, int)) != -1 && !arg_is_set(cmd, arg))
 		/* empty */;
 	va_end(ap);
 
@@ -116,7 +116,7 @@ int arg_outside_list_is_set(const struct cmd_context *cmd, const char *err_found
 		case yes_ARG:
 			continue;
 		}
-		if (!arg_count(cmd, i))
+		if (!arg_is_set(cmd, i))
 			continue; /* unset */
 		va_start(ap, err_found);
 		while (((arg = va_arg(ap, int)) != -1) && (arg != i))
@@ -187,7 +187,7 @@ const char *arg_value(const struct cmd_context *cmd, int a)
 
 const char *arg_str_value(const struct cmd_context *cmd, int a, const char *def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].value : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].value : def;
 }
 
 const char *grouped_arg_str_value(const struct arg_values *av, int a, const char *def)
@@ -217,39 +217,39 @@ int32_t first_grouped_arg_int_value(const struct cmd_context *cmd, int a, const 
 int32_t arg_int_value(const struct cmd_context *cmd, int a, const int32_t def)
 {
 	return (_cmdline.arg_props[a].flags & ARG_GROUPABLE) ?
-		first_grouped_arg_int_value(cmd, a, def) : (arg_count(cmd, a) ? cmd->arg_values[a].i_value : def);
+		first_grouped_arg_int_value(cmd, a, def) : (arg_is_set(cmd, a) ? cmd->arg_values[a].i_value : def);
 }
 
 uint32_t arg_uint_value(const struct cmd_context *cmd, int a, const uint32_t def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].ui_value : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].ui_value : def;
 }
 
 int64_t arg_int64_value(const struct cmd_context *cmd, int a, const int64_t def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].i64_value : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].i64_value : def;
 }
 
 uint64_t arg_uint64_value(const struct cmd_context *cmd, int a, const uint64_t def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].ui64_value : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].ui64_value : def;
 }
 
 /* No longer used.
 const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].ptr : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].ptr : def;
 }
 */
 
 sign_t arg_sign_value(const struct cmd_context *cmd, int a, const sign_t def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].sign : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].sign : def;
 }
 
 percent_type_t arg_percent_value(const struct cmd_context *cmd, int a, const percent_type_t def)
 {
-	return arg_count(cmd, a) ? cmd->arg_values[a].percent : def;
+	return arg_is_set(cmd, a) ? cmd->arg_values[a].percent : def;
 }
 
 int arg_count_increment(struct cmd_context *cmd, int a)
@@ -993,7 +993,7 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 	struct arg_values *av;
 	struct arg_value_group_list *current_group;
 
-	if (arg_count(cmd, oldarg) && arg_count(cmd, newarg)) {
+	if (arg_is_set(cmd, oldarg) && arg_is_set(cmd, newarg)) {
 		log_error("%s and %s are synonyms.  Please only supply one.",
 			  _cmdline.arg_props[oldarg].long_arg, _cmdline.arg_props[newarg].long_arg);
 		return 0;
@@ -1001,12 +1001,12 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 
 	/* Not groupable? */
 	if (!(_cmdline.arg_props[oldarg].flags & ARG_GROUPABLE)) {
-		if (arg_count(cmd, oldarg))
+		if (arg_is_set(cmd, oldarg))
 			_copy_arg_values(cmd->arg_values, oldarg, newarg);
 		return 1;
 	}
 
-	if (arg_count(cmd, oldarg))
+	if (arg_is_set(cmd, oldarg))
 		cmd->arg_values[newarg].count = cmd->arg_values[oldarg].count;
 
 	/* Groupable */
@@ -1050,23 +1050,23 @@ static int _get_settings(struct cmd_context *cmd)
 
 	cmd->current_settings = cmd->default_settings;
 
-	if (arg_count(cmd, debug_ARG))
+	if (arg_is_set(cmd, debug_ARG))
 		cmd->current_settings.debug = _LOG_FATAL +
 		    (arg_count(cmd, debug_ARG) - 1);
 
-	if (arg_count(cmd, verbose_ARG))
+	if (arg_is_set(cmd, verbose_ARG))
 		cmd->current_settings.verbose = arg_count(cmd, verbose_ARG);
 
-	if (arg_count(cmd, quiet_ARG)) {
+	if (arg_is_set(cmd, quiet_ARG)) {
 		cmd->current_settings.debug = 0;
 		cmd->current_settings.verbose = 0;
 		cmd->current_settings.silent = (arg_count(cmd, quiet_ARG) > 1) ? 1 : 0;
 	}
 
-	if (arg_count(cmd, test_ARG))
-		cmd->current_settings.test = arg_count(cmd, test_ARG);
+	if (arg_is_set(cmd, test_ARG))
+		cmd->current_settings.test = arg_is_set(cmd, test_ARG);
 
-	if (arg_count(cmd, driverloaded_ARG)) {
+	if (arg_is_set(cmd, driverloaded_ARG)) {
 		cmd->current_settings.activation =
 		    arg_int_value(cmd, driverloaded_ARG,
 				  cmd->default_settings.activation);
@@ -1076,7 +1076,7 @@ static int _get_settings(struct cmd_context *cmd)
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
 	cmd->current_settings.cache_vgmetadata = cmd->command->flags & CACHE_VGMETADATA ? 1 : 0;
 
-	if (arg_count(cmd, readonly_ARG)) {
+	if (arg_is_set(cmd, readonly_ARG)) {
 		cmd->current_settings.activation = 0;
 		cmd->current_settings.archive = 0;
 		cmd->current_settings.backup = 0;
@@ -1091,18 +1091,18 @@ static int _get_settings(struct cmd_context *cmd)
 	if (!activation_mode)
 		activation_mode = DEFAULT_ACTIVATION_MODE;
 
-	if (arg_count(cmd, activationmode_ARG)) {
+	if (arg_is_set(cmd, activationmode_ARG)) {
 		activation_mode = arg_str_value(cmd, activationmode_ARG,
 						activation_mode);
 
 		/* complain only if the two arguments conflict */
-		if (arg_count(cmd, partial_ARG) &&
+		if (arg_is_set(cmd, partial_ARG) &&
 		    strcmp(activation_mode, "partial")) {
 			log_error("--partial and --activationmode are mutually"
 				  " exclusive arguments");
 			return EINVALID_CMD_LINE;
 		}
-	} else if (arg_count(cmd, partial_ARG))
+	} else if (arg_is_set(cmd, partial_ARG))
 		activation_mode = "partial";
 
 	if (!strcmp(activation_mode, "partial")) {
@@ -1115,7 +1115,7 @@ static int _get_settings(struct cmd_context *cmd)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, ignorelockingfailure_ARG) || arg_count(cmd, sysinit_ARG))
+	if (arg_is_set(cmd, ignorelockingfailure_ARG) || arg_is_set(cmd, sysinit_ARG))
 		init_ignorelockingfailure(1);
 	else
 		init_ignorelockingfailure(0);
@@ -1133,10 +1133,10 @@ static int _get_settings(struct cmd_context *cmd)
 	 */
 	cmd->vg_read_print_access_error = 1;
 		
-	if (arg_count(cmd, nosuffix_ARG))
+	if (arg_is_set(cmd, nosuffix_ARG))
 		cmd->current_settings.suffix = 0;
 
-	if (arg_count(cmd, units_ARG))
+	if (arg_is_set(cmd, units_ARG))
 		if (!(cmd->current_settings.unit_factor =
 		      dm_units_to_factor(arg_str_value(cmd, units_ARG, ""),
 					 &cmd->current_settings.unit_type, 1, NULL))) {
@@ -1144,11 +1144,11 @@ static int _get_settings(struct cmd_context *cmd)
 			return EINVALID_CMD_LINE;
 		}
 
-	if (arg_count(cmd, binary_ARG))
+	if (arg_is_set(cmd, binary_ARG))
 		cmd->report_binary_values_as_numeric = 1;
 
-	if (arg_count(cmd, trustcache_ARG)) {
-		if (arg_count(cmd, all_ARG)) {
+	if (arg_is_set(cmd, trustcache_ARG)) {
+		if (arg_is_set(cmd, all_ARG)) {
 			log_error("--trustcache is incompatible with --all");
 			return EINVALID_CMD_LINE;
 		}
@@ -1158,7 +1158,7 @@ static int _get_settings(struct cmd_context *cmd)
 	} else
 		init_trust_cache(0);
 
-	if (arg_count(cmd, noudevsync_ARG))
+	if (arg_is_set(cmd, noudevsync_ARG))
 		cmd->current_settings.udev_sync = 0;
 
 	/* Handle synonyms */
@@ -1186,12 +1186,12 @@ static int _get_settings(struct cmd_context *cmd)
 
 static int _process_common_commands(struct cmd_context *cmd)
 {
-	if (arg_count(cmd, help_ARG) || arg_count(cmd, help2_ARG)) {
+	if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG)) {
 		_usage(cmd->command->name);
 		return ECMD_PROCESSED;
 	}
 
-	if (arg_count(cmd, version_ARG)) {
+	if (arg_is_set(cmd, version_ARG)) {
 		return version(cmd, 0, (char **) NULL);
 	}
 
@@ -1325,14 +1325,14 @@ static int _prepare_profiles(struct cmd_context *cmd)
 				   env_cmd_profile_name);
 	}
 
-	if (!arg_count(cmd, profile_ARG) &&
-	    !arg_count(cmd, commandprofile_ARG) &&
-	    !arg_count(cmd, metadataprofile_ARG) &&
+	if (!arg_is_set(cmd, profile_ARG) &&
+	    !arg_is_set(cmd, commandprofile_ARG) &&
+	    !arg_is_set(cmd, metadataprofile_ARG) &&
 	    !env_cmd_profile_name)
 		/* nothing to do */
 		return 1;
 
-	if (arg_count(cmd, profile_ARG)) {
+	if (arg_is_set(cmd, profile_ARG)) {
 		/*
 		 * If --profile is used with dumpconfig, it's used
 		 * to dump the profile without the profile being applied.
@@ -1351,7 +1351,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 		    !strcmp(cmd->command->name, "vgcreate") ||
 		    !strcmp(cmd->command->name, "lvchange") ||
 		    !strcmp(cmd->command->name, "vgchange")) {
-			if (arg_count(cmd, metadataprofile_ARG)) {
+			if (arg_is_set(cmd, metadataprofile_ARG)) {
 				log_error("Only one of --profile or "
 					  " --metadataprofile allowed.");
 				return 0;
@@ -1360,7 +1360,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 			source_name = _metadata_profile_source_name;
 		}
 		else {
-			if (arg_count(cmd, commandprofile_ARG)) {
+			if (arg_is_set(cmd, commandprofile_ARG)) {
 				log_error("Only one of --profile or "
 					  "--commandprofile allowed.");
 				return 0;
@@ -1401,8 +1401,8 @@ static int _prepare_profiles(struct cmd_context *cmd)
 
 	}
 
-	if (arg_count(cmd, commandprofile_ARG) || env_cmd_profile_name) {
-		if (arg_count(cmd, commandprofile_ARG)) {
+	if (arg_is_set(cmd, commandprofile_ARG) || env_cmd_profile_name) {
+		if (arg_is_set(cmd, commandprofile_ARG)) {
 			/*
 			 * Prefer command profile specified on command
 			 * line over the profile specified via
@@ -1429,7 +1429,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 	}
 
 
-	if (arg_count(cmd, metadataprofile_ARG)) {
+	if (arg_is_set(cmd, metadataprofile_ARG)) {
 		name = arg_str_value(cmd, metadataprofile_ARG, NULL);
 		source_name = _metadata_profile_source_name;
 
@@ -1457,7 +1457,7 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 	const char *lvmlockd_socket;
 	int use_lvmlockd = find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL);
 
-	if (use_lvmlockd && arg_count(cmd, nolocking_ARG)) {
+	if (use_lvmlockd && arg_is_set(cmd, nolocking_ARG)) {
 		/* --nolocking is only allowed with vgs/lvs/pvs commands */
 		cmd->lockd_gl_disable = 1;
 		cmd->lockd_vg_disable = 1;
@@ -1555,7 +1555,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	set_cmd_name(cmd->command->name);
 
-	if (arg_count(cmd, backgroundfork_ARG)) {
+	if (arg_is_set(cmd, backgroundfork_ARG)) {
 		if (!become_daemon(cmd, 1)) {
 			/* parent - quit immediately */
 			ret = ECMD_PROCESSED;
@@ -1563,13 +1563,13 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (arg_count(cmd, config_ARG))
+	if (arg_is_set(cmd, config_ARG))
 		if (!override_config_tree_from_string(cmd, arg_str_value(cmd, config_ARG, ""))) {
 			ret = EINVALID_CMD_LINE;
 			goto_out;
 		}
 
-	if (arg_count(cmd, config_ARG) || !cmd->initialized.config || config_files_changed(cmd)) {
+	if (arg_is_set(cmd, config_ARG) || !cmd->initialized.config || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			if ((config_string_cft = remove_config_tree_by_source(cmd, CONFIG_STRING)))
@@ -1593,7 +1593,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) && !init_filters(cmd, !refresh_done))
 		return_ECMD_FAILED;
 
-	if (arg_count(cmd, readonly_ARG))
+	if (arg_is_set(cmd, readonly_ARG))
 		cmd->metadata_read_only = 1;
 
 	if ((ret = _get_settings(cmd)))
@@ -1636,7 +1636,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	if (_cmd_no_meta_proc(cmd))
 		locking_type = 0;
-	else if (arg_count(cmd, readonly_ARG)) {
+	else if (arg_is_set(cmd, readonly_ARG)) {
 		if (find_config_tree_bool(cmd, global_use_lvmlockd_CFG, NULL)) {
 			/*
 			 * FIXME: we could use locking_type 5 here if that didn't
@@ -1654,12 +1654,12 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 			lvmetad_make_unused(cmd);
 			log_verbose("Not using lvmetad because read-only is set.");
 		}
-	} else if (arg_count(cmd, nolocking_ARG))
+	} else if (arg_is_set(cmd, nolocking_ARG))
 		locking_type = 0;
 	else
 		locking_type = -1;
 
-	if (!init_locking(locking_type, cmd, _cmd_no_meta_proc(cmd) || arg_count(cmd, sysinit_ARG))) {
+	if (!init_locking(locking_type, cmd, _cmd_no_meta_proc(cmd) || arg_is_set(cmd, sysinit_ARG))) {
 		ret = ECMD_FAILED;
 		goto_out;
 	}

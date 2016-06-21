@@ -114,7 +114,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (lv_is_replicator_dev(lv) && (lv != first_replicator_dev(lv)))
 			continue;
 
-		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))
+		if (lv_activation_skip(lv, activate, arg_is_set(cmd, ignoreactivationskip_ARG)))
 			continue;
 
 		if ((activate == CHANGE_AAY) &&
@@ -346,7 +346,7 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 		}
 	}
 
-	if (clustered && !arg_count(cmd, yes_ARG)) {
+	if (clustered && !arg_is_set(cmd, yes_ARG)) {
 		if (!clvmd_is_running()) {
 			if (yes_no_prompt("LVM cluster daemon (clvmd) is not running. "
 					  "Make volume group \"%s\" clustered "
@@ -501,11 +501,11 @@ static int _vgchange_profile(struct cmd_context *cmd,
 
 	old_profile_name = vg->profile ? vg->profile->name : "(no profile)";
 
-	if (arg_count(cmd, detachprofile_ARG)) {
+	if (arg_is_set(cmd, detachprofile_ARG)) {
 		new_profile_name = "(no profile)";
 		vg->profile = NULL;
 	} else {
-		if (arg_count(cmd, metadataprofile_ARG))
+		if (arg_is_set(cmd, metadataprofile_ARG))
 			new_profile_name = arg_str_value(cmd, metadataprofile_ARG, NULL);
 		else
 			new_profile_name = arg_str_value(cmd, profile_ARG, NULL);
@@ -769,7 +769,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 	if (!*system_id && cmd->system_id && strcmp(system_id, cmd->system_id)) {
 		log_warn("WARNING: Removing the system ID allows unsafe access from other hosts.");
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Remove system ID %s from volume group %s? [y/n]: ",
 				  vg->system_id, vg->name) == 'n') {
 			log_error("System ID of volume group %s not changed.", vg->name);
@@ -792,7 +792,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg)
 		log_warn("WARNING: Volume group %s might become inaccessible from this machine.",
 			 vg->name);
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Set foreign system ID %s on volume group %s? [y/n]: ",
 				  system_id, vg->name) == 'n') {
 			log_error("Volume group %s system ID not changed.", vg->name);
@@ -930,12 +930,12 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	 *
 	 * Do not initiate any polling if --sysinit option is used.
 	 */
-	init_background_polling(arg_count(cmd, sysinit_ARG) ? 0 :
+	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 :
 						arg_int_value(cmd, poll_ARG,
 						DEFAULT_BACKGROUND_POLLING));
 
 	for (i = 0; i < DM_ARRAY_SIZE(_vgchange_args); ++i) {
-		if (arg_count(cmd, _vgchange_args[i].arg)) {
+		if (arg_is_set(cmd, _vgchange_args[i].arg)) {
 			if (!archive(vg))
 				return_ECMD_FAILED;
 			if (!_vgchange_args[i].fn(cmd, vg))
@@ -977,27 +977,27 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			}
 	}
 
-	if (arg_count(cmd, activate_ARG)) {
+	if (arg_is_set(cmd, activate_ARG)) {
 		if (!vgchange_activate(cmd, vg, (activation_change_t)
 				       arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
 			return_ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, refresh_ARG)) {
+	if (arg_is_set(cmd, refresh_ARG)) {
 		/* refreshes the visible LVs (which starts polling) */
 		if (!_vgchange_refresh(cmd, vg))
 			return_ECMD_FAILED;
 	}
 
-	if (!arg_count(cmd, activate_ARG) &&
-	    !arg_count(cmd, refresh_ARG) &&
-	    arg_count(cmd, monitor_ARG)) {
+	if (!arg_is_set(cmd, activate_ARG) &&
+	    !arg_is_set(cmd, refresh_ARG) &&
+	    arg_is_set(cmd, monitor_ARG)) {
 		/* -ay* will have already done monitoring changes */
 		if (!_vgchange_monitoring(cmd, vg))
 			return_ECMD_FAILED;
 	}
 
-	if (!arg_count(cmd, refresh_ARG) &&
+	if (!arg_is_set(cmd, refresh_ARG) &&
 	    !vgchange_background_polling(cmd, vg))
 			return_ECMD_FAILED;
 
@@ -1096,31 +1096,31 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	int ret;
 
 	int noupdate =
-		arg_count(cmd, activate_ARG) ||
-		arg_count(cmd, lockstart_ARG) ||
-		arg_count(cmd, lockstop_ARG) ||
-		arg_count(cmd, monitor_ARG) ||
-		arg_count(cmd, poll_ARG) ||
-		arg_count(cmd, refresh_ARG);
+		arg_is_set(cmd, activate_ARG) ||
+		arg_is_set(cmd, lockstart_ARG) ||
+		arg_is_set(cmd, lockstop_ARG) ||
+		arg_is_set(cmd, monitor_ARG) ||
+		arg_is_set(cmd, poll_ARG) ||
+		arg_is_set(cmd, refresh_ARG);
 
 	int update_partial_safe =
-		arg_count(cmd, deltag_ARG) ||
-		arg_count(cmd, addtag_ARG) ||
-		arg_count(cmd, metadataprofile_ARG) ||
-		arg_count(cmd, profile_ARG) ||
-		arg_count(cmd, detachprofile_ARG);
+		arg_is_set(cmd, deltag_ARG) ||
+		arg_is_set(cmd, addtag_ARG) ||
+		arg_is_set(cmd, metadataprofile_ARG) ||
+		arg_is_set(cmd, profile_ARG) ||
+		arg_is_set(cmd, detachprofile_ARG);
 
 	int update_partial_unsafe =
-		arg_count(cmd, logicalvolume_ARG) ||
-		arg_count(cmd, maxphysicalvolumes_ARG) ||
-		arg_count(cmd, resizeable_ARG) ||
-		arg_count(cmd, uuid_ARG) ||
-		arg_count(cmd, physicalextentsize_ARG) ||
-		arg_count(cmd, clustered_ARG) ||
-		arg_count(cmd, alloc_ARG) ||
-		arg_count(cmd, vgmetadatacopies_ARG) ||
-		arg_count(cmd, locktype_ARG) ||
-		arg_count(cmd, systemid_ARG);
+		arg_is_set(cmd, logicalvolume_ARG) ||
+		arg_is_set(cmd, maxphysicalvolumes_ARG) ||
+		arg_is_set(cmd, resizeable_ARG) ||
+		arg_is_set(cmd, uuid_ARG) ||
+		arg_is_set(cmd, physicalextentsize_ARG) ||
+		arg_is_set(cmd, clustered_ARG) ||
+		arg_is_set(cmd, alloc_ARG) ||
+		arg_is_set(cmd, vgmetadatacopies_ARG) ||
+		arg_is_set(cmd, locktype_ARG) ||
+		arg_is_set(cmd, systemid_ARG);
 
 	int update = update_partial_safe || update_partial_unsafe;
 
@@ -1129,49 +1129,49 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((arg_count(cmd, profile_ARG) || arg_count(cmd, metadataprofile_ARG)) &&
-	     arg_count(cmd, detachprofile_ARG)) {
+	if ((arg_is_set(cmd, profile_ARG) || arg_is_set(cmd, metadataprofile_ARG)) &&
+	     arg_is_set(cmd, detachprofile_ARG)) {
 		log_error("Only one of --metadataprofile and --detachprofile permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, activate_ARG) && arg_count(cmd, refresh_ARG)) {
+	if (arg_is_set(cmd, activate_ARG) && arg_is_set(cmd, refresh_ARG)) {
 		log_error("Only one of -a and --refresh permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((arg_count(cmd, ignorelockingfailure_ARG) ||
-	     arg_count(cmd, sysinit_ARG)) && update) {
+	if ((arg_is_set(cmd, ignorelockingfailure_ARG) ||
+	     arg_is_set(cmd, sysinit_ARG)) && update) {
 		log_error("Only -a permitted with --ignorelockingfailure and --sysinit");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, activate_ARG) &&
-	    (arg_count(cmd, monitor_ARG) || arg_count(cmd, poll_ARG))) {
+	if (arg_is_set(cmd, activate_ARG) &&
+	    (arg_is_set(cmd, monitor_ARG) || arg_is_set(cmd, poll_ARG))) {
 		if (!is_change_activating((activation_change_t) arg_uint_value(cmd, activate_ARG, 0))) {
 			log_error("Only -ay* allowed with --monitor or --poll.");
 			return EINVALID_CMD_LINE;
 		}
 	}
 
-	if (arg_count(cmd, poll_ARG) && arg_count(cmd, sysinit_ARG)) {
+	if (arg_is_set(cmd, poll_ARG) && arg_is_set(cmd, sysinit_ARG)) {
 		log_error("Only one of --poll and --sysinit permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((arg_count(cmd, activate_ARG) == 1) &&
-	    arg_count(cmd, autobackup_ARG)) {
+	if (arg_is_set(cmd, activate_ARG) &&
+	    arg_is_set(cmd, autobackup_ARG)) {
 		log_error("-A option not necessary with -a option");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, maxphysicalvolumes_ARG) &&
+	if (arg_is_set(cmd, maxphysicalvolumes_ARG) &&
 	    arg_sign_value(cmd, maxphysicalvolumes_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("MaxPhysicalVolumes may not be negative");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, physicalextentsize_ARG) &&
+	if (arg_is_set(cmd, physicalextentsize_ARG) &&
 	    arg_sign_value(cmd, physicalextentsize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical extent size may not be negative");
 		return EINVALID_CMD_LINE;
@@ -1184,14 +1184,14 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	 * not neet to be running at this moment yet - it could be
 	 * just too early during system initialization time.
 	 */
-	if (arg_count(cmd, sysinit_ARG) && (arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY)) {
+	if (arg_is_set(cmd, sysinit_ARG) && (arg_uint_value(cmd, activate_ARG, 0) == CHANGE_AAY)) {
 		if (lvmetad_used()) {
 			log_warn("WARNING: lvmetad is active, skipping direct activation during sysinit");
 			return ECMD_PROCESSED;
 		}
 	}
 
-	if (arg_count(cmd, clustered_ARG) && !argc && !arg_count(cmd, yes_ARG) &&
+	if (arg_is_set(cmd, clustered_ARG) && !argc && !arg_is_set(cmd, yes_ARG) &&
 	    (yes_no_prompt("Change clustered property of all volumes groups? [y/n]: ") == 'n')) {
 		log_error("No volume groups changed.");
 		return ECMD_FAILED;

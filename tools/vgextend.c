@@ -82,7 +82,7 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 	uint32_t mda_used;
 	int ret = ECMD_FAILED;
 
-	if (arg_count(cmd, metadataignore_ARG) &&
+	if (arg_is_set(cmd, metadataignore_ARG) &&
 	    (pp->force == PROMPT) && !pp->yes &&
 	    (vg_mda_copies(vg) != VGMETADATACOPIES_UNMANAGED) &&
 	    (yes_no_prompt("Override preferred number of copies of VG %s metadata? [y/n]: ", vg_name) == 'n')) {
@@ -96,7 +96,7 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 	if (!vg_extend_each_pv(vg, pp))
 		goto_out;
 
-	if (arg_count(cmd, metadataignore_ARG)) {
+	if (arg_is_set(cmd, metadataignore_ARG)) {
 		mda_copies = vg_mda_copies(vg);
 		mda_used = vg_mda_used_count(vg);
 
@@ -136,7 +136,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, metadatacopies_ARG)) {
+	if (arg_is_set(cmd, metadatacopies_ARG)) {
 		log_error("Invalid option --metadatacopies, "
 			  "use --pvmetadatacopies instead.");
 		return EINVALID_CMD_LINE;

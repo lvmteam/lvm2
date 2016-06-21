@@ -20,9 +20,9 @@ static int _get_vsn(struct cmd_context *cmd, uint16_t *version_int)
 	const char *vsn;
 	unsigned int major, minor, patchlevel;
 
-	if (arg_count(cmd, atversion_ARG))
+	if (arg_is_set(cmd, atversion_ARG))
 		vsn = arg_str_value(cmd, atversion_ARG, NULL);
-	else if (arg_count(cmd, sinceversion_ARG))
+	else if (arg_is_set(cmd, sinceversion_ARG))
 		vsn = arg_str_value(cmd, sinceversion_ARG, NULL);
 	else
 		vsn = LVM_VERSION;
@@ -98,7 +98,7 @@ static int _config_validate(struct cmd_context *cmd, struct dm_config_tree *cft)
 int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *file = arg_str_value(cmd, file_ARG, NULL);
-	const char *type = arg_str_value(cmd, configtype_ARG, arg_count(cmd, list_ARG) ? "list" : "current");
+	const char *type = arg_str_value(cmd, configtype_ARG, arg_is_set(cmd, list_ARG) ? "list" : "current");
 	struct config_def_tree_spec tree_spec = {0};
 	struct dm_config_tree *cft = NULL;
 	struct cft_check_handle *cft_check_handle = NULL;
@@ -107,43 +107,43 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 	tree_spec.cmd = cmd;
 
-	if (arg_count(cmd, configtype_ARG) && arg_count(cmd, validate_ARG)) {
+	if (arg_is_set(cmd, configtype_ARG) && arg_is_set(cmd, validate_ARG)) {
 		log_error("Only one of --type and --validate permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, configtype_ARG) && arg_count(cmd, list_ARG)) {
+	if (arg_is_set(cmd, configtype_ARG) && arg_is_set(cmd, list_ARG)) {
 		log_error("Only one of --type and --list permitted.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, atversion_ARG)) {
-		if (arg_count(cmd, sinceversion_ARG)) {
+	if (arg_is_set(cmd, atversion_ARG)) {
+		if (arg_is_set(cmd, sinceversion_ARG)) {
 			log_error("Only one of --atversion and --sinceversion permitted.");
 			return EINVALID_CMD_LINE;
 		}
 
-		if (!arg_count(cmd, configtype_ARG) && !arg_count(cmd, list_ARG)) {
+		if (!arg_is_set(cmd, configtype_ARG) && !arg_is_set(cmd, list_ARG)) {
 			log_error("--atversion requires --type or --list");
 			return EINVALID_CMD_LINE;
 		}
-	} else if (arg_count(cmd, sinceversion_ARG)) {
-		if (!arg_count(cmd, configtype_ARG) || strcmp(type, "new")) {
+	} else if (arg_is_set(cmd, sinceversion_ARG)) {
+		if (!arg_is_set(cmd, configtype_ARG) || strcmp(type, "new")) {
 			log_error("--sinceversion requires --type new");
 			return EINVALID_CMD_LINE;
 		}
 	}
 
-	if (arg_count(cmd, ignoreadvanced_ARG))
+	if (arg_is_set(cmd, ignoreadvanced_ARG))
 		tree_spec.ignoreadvanced = 1;
 
-	if (arg_count(cmd, ignoreunsupported_ARG)) {
-		if (arg_count(cmd, showunsupported_ARG)) {
+	if (arg_is_set(cmd, ignoreunsupported_ARG)) {
+		if (arg_is_set(cmd, showunsupported_ARG)) {
 			log_error("Only one of --ignoreunsupported and --showunsupported permitted.");
 			return EINVALID_CMD_LINE;
 		}
 		tree_spec.ignoreunsupported = 1;
-	} else if (arg_count(cmd, showunsupported_ARG)) {
+	} else if (arg_is_set(cmd, showunsupported_ARG)) {
 		tree_spec.ignoreunsupported = 0;
 	} else if (strcmp(type, "current") && strcmp(type, "diff")) {
 		/*
@@ -165,28 +165,28 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		 * is lower than the version in which the
 		 * setting was deprecated.
 		 */
-		if (!arg_count(cmd, showdeprecated_ARG))
+		if (!arg_is_set(cmd, showdeprecated_ARG))
 			tree_spec.ignoredeprecated = 1;
 	}
 
-	if (arg_count(cmd, ignorelocal_ARG))
+	if (arg_is_set(cmd, ignorelocal_ARG))
 		tree_spec.ignorelocal = 1;
 
 	if (!strcmp(type, "current") || !strcmp(type, "full")) {
-		if (arg_count(cmd, atversion_ARG)) {
+		if (arg_is_set(cmd, atversion_ARG)) {
 			log_error("--atversion has no effect with --type %s", type);
 			return EINVALID_CMD_LINE;
 		}
 
-		if ((arg_count(cmd, ignoreunsupported_ARG) ||
-		    arg_count(cmd, ignoreadvanced_ARG)) &&
+		if ((arg_is_set(cmd, ignoreunsupported_ARG) ||
+		    arg_is_set(cmd, ignoreadvanced_ARG)) &&
 		    !strcmp(type, "current")) {
 			/* FIXME: allow these even for --type current */
 			log_error("--ignoreadvanced and --ignoreunsupported has "
 				  "no effect with --type current");
 			return EINVALID_CMD_LINE;
 		}
-	} else if (arg_count(cmd, mergedconfig_ARG)) {
+	} else if (arg_is_set(cmd, mergedconfig_ARG)) {
 		log_error("--mergedconfig has no effect without --type current or --type full");
 		return EINVALID_CMD_LINE;
 	}
@@ -199,7 +199,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	 * but it is used just for dumping the profile content and not for
 	 * application.
 	 */
-	if (arg_count(cmd, profile_ARG) &&
+	if (arg_is_set(cmd, profile_ARG) &&
 	    (!(profile = add_profile(cmd, arg_str_value(cmd, profile_ARG, NULL), CONFIG_PROFILE_COMMAND)) ||
 	    !override_config_tree_from_profile(cmd, profile))) {
 		log_error("Failed to load profile %s.", arg_str_value(cmd, profile_ARG, NULL));
@@ -210,7 +210,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 	 * Set the 'cft' to work with based on whether we need the plain
 	 * config tree or merged config tree cascade if --mergedconfig is used.
 	 */
-	if ((arg_count(cmd, mergedconfig_ARG) || !strcmp(type, "full") || !strcmp(type, "diff")) && cmd->cft->cascade) {
+	if ((arg_is_set(cmd, mergedconfig_ARG) || !strcmp(type, "full") || !strcmp(type, "diff")) && cmd->cft->cascade) {
 		if (!_merge_config_cascade(cmd, cmd->cft, &cft)) {
 			log_error("Failed to merge configuration.");
 			r = ECMD_FAILED;
@@ -220,7 +220,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		cft = cmd->cft;
 	tree_spec.current_cft = cft;
 
-	if (arg_count(cmd, validate_ARG)) {
+	if (arg_is_set(cmd, validate_ARG)) {
 		if (_config_validate(cmd, cft)) {
 			log_print("LVM configuration valid.");
 			goto out;
@@ -231,9 +231,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (!strcmp(type, "list") || arg_count(cmd, list_ARG)) {
+	if (!strcmp(type, "list") || arg_is_set(cmd, list_ARG)) {
 		tree_spec.type = CFG_DEF_TREE_LIST;
-		if (arg_count(cmd, withcomments_ARG)) {
+		if (arg_is_set(cmd, withcomments_ARG)) {
 			log_error("--withcomments has no effect with --type list");
 			return EINVALID_CMD_LINE;
 		}
@@ -270,7 +270,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 	else if (!strcmp(type, "new")) {
-		tree_spec.type = arg_count(cmd, sinceversion_ARG) ? CFG_DEF_TREE_NEW_SINCE
+		tree_spec.type = arg_is_set(cmd, sinceversion_ARG) ? CFG_DEF_TREE_NEW_SINCE
 								  : CFG_DEF_TREE_NEW;
 		/* new type does not require check status */
 	}
@@ -294,17 +294,17 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (arg_count(cmd, withsummary_ARG) || arg_count(cmd, list_ARG))
+	if (arg_is_set(cmd, withsummary_ARG) || arg_is_set(cmd, list_ARG))
 		tree_spec.withsummary = 1;
-	if (arg_count(cmd, withcomments_ARG))
+	if (arg_is_set(cmd, withcomments_ARG))
 		tree_spec.withcomments = 1;
-	if (arg_count(cmd, unconfigured_ARG))
+	if (arg_is_set(cmd, unconfigured_ARG))
 		tree_spec.unconfigured = 1;
 
-	if (arg_count(cmd, withversions_ARG))
+	if (arg_is_set(cmd, withversions_ARG))
 		tree_spec.withversions = 1;
 
-	if (arg_count(cmd, withspaces_ARG))
+	if (arg_is_set(cmd, withspaces_ARG))
 		tree_spec.withspaces = 1;
 
 	if (cft_check_handle)

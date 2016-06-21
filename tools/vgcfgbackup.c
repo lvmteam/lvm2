@@ -54,7 +54,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	char **last_filename = (char **)handle->custom_handle;
 	char *filename;
 
-	if (arg_count(cmd, file_ARG)) {
+	if (arg_is_set(cmd, file_ARG)) {
 		if (!(filename = _expand_filename(arg_value(cmd, file_ARG),
 						  vg->name, last_filename)))
 			return_ECMD_FAILED;

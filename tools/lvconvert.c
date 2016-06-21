@@ -191,7 +191,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 
 	if (!lp->merge_mirror &&
 	    !lp->repair &&
-	    !arg_count(cmd, splitmirrors_ARG) &&
+	    !arg_is_set(cmd, splitmirrors_ARG) &&
 	    !strstr(lp->lv_name, "_tdata") &&
 	    !strstr(lp->lv_name, "_tmeta") &&
 	    !strstr(lp->lv_name, "_cdata") &&
@@ -238,7 +238,7 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 		return 1;
 
 	if (!strcmp(type_str, "mirror")) {
-		if (!arg_count(cmd, mirrors_ARG)) {
+		if (!arg_is_set(cmd, mirrors_ARG)) {
 			log_error("Conversions to --type mirror require -m/--mirrors");
 			return 0;
 		}
@@ -258,11 +258,11 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 
 /* -s/--snapshot and --type snapshot are synonyms */
 static int _snapshot_type_requested(struct cmd_context *cmd, const char *type_str) {
-	return (arg_count(cmd, snapshot_ARG) || !strcmp(type_str, "snapshot"));
+	return (arg_is_set(cmd, snapshot_ARG) || !strcmp(type_str, "snapshot"));
 }
 /* mirror/raid* (1,10,4,5,6 and their variants) reshape */
 static int _mirror_or_raid_type_requested(struct cmd_context *cmd, const char *type_str) {
-	return (arg_count(cmd, mirrors_ARG) || !strncmp(type_str, "raid", 4) || !strcmp(type_str, "mirror"));
+	return (arg_is_set(cmd, mirrors_ARG) || !strncmp(type_str, "raid", 4) || !strcmp(type_str, "mirror"));
 }
 
 static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
@@ -379,7 +379,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!_check_conversion_type(cmd, type_str))
 		return_0;
 
-	if (arg_count(cmd, repair_ARG)) {
+	if (arg_is_set(cmd, repair_ARG)) {
 		if (arg_outside_list_is_set(cmd, "cannot be used with --repair",
 					    repair_ARG,
 					    alloc_ARG, usepolicies_ARG,
@@ -432,25 +432,25 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->uncache = 1;
 	}
 
-	if ((_snapshot_type_requested(cmd, type_str) || arg_count(cmd, merge_ARG)) &&
-	    (arg_count(cmd, mirrorlog_ARG) || _mirror_or_raid_type_requested(cmd, type_str) ||
-	     lp->repair || arg_count(cmd, thinpool_ARG))) {
+	if ((_snapshot_type_requested(cmd, type_str) || arg_is_set(cmd, merge_ARG)) &&
+	    (arg_is_set(cmd, mirrorlog_ARG) || _mirror_or_raid_type_requested(cmd, type_str) ||
+	     lp->repair || arg_is_set(cmd, thinpool_ARG))) {
 		log_error("--snapshot/--type snapshot or --merge argument "
 			  "cannot be mixed with --mirrors/--type mirror/--type raid*, "
 			  "--mirrorlog, --repair or --thinpool.");
 		return 0;
 	}
 
-	if ((arg_count(cmd, stripes_long_ARG) || arg_count(cmd, stripesize_ARG)) &&
+	if ((arg_is_set(cmd, stripes_long_ARG) || arg_is_set(cmd, stripesize_ARG)) &&
 	    !(_mirror_or_raid_type_requested(cmd, type_str) ||
 	      lp->repair ||
-	      arg_count(cmd, thinpool_ARG))) {
+	      arg_is_set(cmd, thinpool_ARG))) {
 		log_error("--stripes or --stripesize argument is only valid "
 			  "with --mirrors/--type mirror/--type raid*, --repair and --thinpool");
 		return 0;
 	}
 
-	if (arg_count(cmd, cache_ARG))
+	if (arg_is_set(cmd, cache_ARG))
 		lp->cache = 1;
 
 	if (!strcmp(type_str, "cache"))
@@ -463,7 +463,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		type_str = "cache";
 	}
 
-	if (arg_count(cmd, thin_ARG))
+	if (arg_is_set(cmd, thin_ARG))
 		lp->thin = 1;
 
 	if (!strcmp(type_str, "thin"))
@@ -479,11 +479,11 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!_read_pool_params(cmd, &argc, &argv, type_str, lp))
 		return_0;
 
-	if (!arg_count(cmd, background_ARG))
+	if (!arg_is_set(cmd, background_ARG))
 		lp->wait_completion = 1;
 
 	if (_snapshot_type_requested(cmd, type_str)) {
-		if (arg_count(cmd, merge_ARG)) {
+		if (arg_is_set(cmd, merge_ARG)) {
 			log_error("--snapshot and --merge are mutually exclusive.");
 			return 0;
 		}
@@ -499,14 +499,14 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	 * intent to keep the mimage that is detached, rather than
 	 * discarding it.
 	 */
-	} else if (arg_count(cmd, splitmirrors_ARG)) {
+	} else if (arg_is_set(cmd, splitmirrors_ARG)) {
 		if (_mirror_or_raid_type_requested(cmd, type_str)) {
 			log_error("--mirrors/--type mirror/--type raid* and --splitmirrors are "
 				  "mutually exclusive.");
 			return 0;
 		}
-		if (!arg_count(cmd, name_ARG) &&
-		    !arg_count(cmd, trackchanges_ARG)) {
+		if (!arg_is_set(cmd, name_ARG) &&
+		    !arg_is_set(cmd, trackchanges_ARG)) {
 			log_error("Please name the new logical volume using '--name'");
 			return 0;
 		}
@@ -515,20 +515,20 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->keep_mimages = 1;
 		lp->mirrors = arg_uint_value(cmd, splitmirrors_ARG, 0);
 		lp->mirrors_sign = SIGN_MINUS;
-	} else if (arg_count(cmd, name_ARG)) {
+	} else if (arg_is_set(cmd, name_ARG)) {
 		log_error("The 'name' argument is only valid"
 			  " with --splitmirrors");
 		return 0;
 	}
 
-	if (arg_count(cmd, merge_ARG)) {
+	if (arg_is_set(cmd, merge_ARG)) {
 		if ((argc == 1) && strstr(argv[0], "_rimage_"))
 			lp->merge_mirror = 1;
 		else
 			lp->merge = 1;
 	}
 
-	if (arg_count(cmd, mirrors_ARG)) {
+	if (arg_is_set(cmd, mirrors_ARG)) {
 		/*
 		 * --splitmirrors has been chosen as the mechanism for
 		 * specifying the intent of detaching and keeping a mimage
@@ -561,17 +561,17 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->origin_name = argv[0];
 		argv++, argc--;
 
-		if (arg_count(cmd, regionsize_ARG)) {
+		if (arg_is_set(cmd, regionsize_ARG)) {
 			log_error("--regionsize is only available with mirrors");
 			return 0;
 		}
 
-		if (arg_count(cmd, stripesize_ARG) || arg_count(cmd, stripes_long_ARG)) {
+		if (arg_is_set(cmd, stripesize_ARG) || arg_is_set(cmd, stripes_long_ARG)) {
 			log_error("--stripes and --stripesize are only available with striped mirrors");
 			return 0;
 		}
 
-		if (arg_count(cmd, chunksize_ARG) &&
+		if (arg_is_set(cmd, chunksize_ARG) &&
 		    (arg_sign_value(cmd, chunksize_ARG, SIGN_NONE) == SIGN_MINUS)) {
 			log_error("Negative chunk size is invalid.");
 			return 0;
@@ -592,7 +592,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->zero = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED)
 			? 0 : arg_int_value(cmd, zero_ARG, 1);
 
-	} else if (arg_count(cmd, replace_ARG)) { /* RAID device replacement */
+	} else if (arg_is_set(cmd, replace_ARG)) { /* RAID device replacement */
 		lp->replace_pv_count = arg_count(cmd, replace_ARG);
 		lp->replace_pvs = dm_pool_alloc(cmd->mem, sizeof(char *) * lp->replace_pv_count);
 		if (!lp->replace_pvs)
@@ -616,12 +616,12 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		   arg_is_set(cmd, repair_ARG) ||
 		   arg_is_set(cmd, mirrorlog_ARG) ||
 		   arg_is_set(cmd, corelog_ARG)) { /* Mirrors (and some RAID functions) */
-		if (arg_count(cmd, chunksize_ARG)) {
+		if (arg_is_set(cmd, chunksize_ARG)) {
 			log_error("--chunksize is only available with snapshots or pools.");
 			return 0;
 		}
 
-		if (arg_count(cmd, zero_ARG)) {
+		if (arg_is_set(cmd, zero_ARG)) {
 			log_error("--zero is only available with snapshots or thin pools.");
 			return 0;
 		}
@@ -631,7 +631,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		 * Checked when we know the state of the LV being converted.
 		 */
 
-		if (arg_count(cmd, regionsize_ARG)) {
+		if (arg_is_set(cmd, regionsize_ARG)) {
 			if (arg_sign_value(cmd, regionsize_ARG, SIGN_NONE) ==
 				    SIGN_MINUS) {
 				log_error("Negative regionsize is invalid");
@@ -671,12 +671,12 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
 			return_0;
 
-		if (arg_count(cmd, mirrors_ARG) && !lp->mirrors) {
+		if (arg_is_set(cmd, mirrors_ARG) && !lp->mirrors) {
 			/* down-converting to linear/stripe? */
 			if (!(lp->segtype =
 			      get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
 				return_0;
-		} else if (arg_count(cmd, type_ARG)) {
+		} else if (arg_is_set(cmd, type_ARG)) {
 			/* changing mirror type? */
 			if (!(lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL)))))
 				return_0;
@@ -945,7 +945,7 @@ static void _lvconvert_mirrors_repair_ask(struct cmd_context *cmd,
 	int force = arg_count(cmd, force_ARG);
 	int yes = arg_count(cmd, yes_ARG);
 
-	if (arg_count(cmd, usepolicies_ARG)) {
+	if (arg_is_set(cmd, usepolicies_ARG)) {
 		leg_policy = find_config_tree_str(cmd, activation_mirror_image_fault_policy_CFG, NULL);
 		log_policy = find_config_tree_str(cmd, activation_mirror_log_fault_policy_CFG, NULL);
 		*replace_mirrors = strcmp(leg_policy, "remove");
@@ -1139,7 +1139,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	*old_mimage_count = lv_mirror_count(lv);
 	*old_log_count = _get_log_count(lv);
 
-	if (is_lockd_type(lv->vg->lock_type) && arg_count(cmd, splitmirrors_ARG)) {
+	if (is_lockd_type(lv->vg->lock_type) && arg_is_set(cmd, splitmirrors_ARG)) {
 		/* FIXME: we need to create a lock for the new LV. */
 		log_error("Unable to split mirrors in VG with lock_type %s", lv->vg->lock_type);
 		return 0;
@@ -1150,9 +1150,9 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	 *
 	 * If called with no argument, try collapsing the resync layers
 	 */
-	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
-	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG) &&
-	    !arg_count(cmd, splitmirrors_ARG) && !lp->repair) {
+	if (!arg_is_set(cmd, mirrors_ARG) && !arg_is_set(cmd, mirrorlog_ARG) &&
+	    !arg_is_set(cmd, corelog_ARG) && !arg_is_set(cmd, regionsize_ARG) &&
+	    !arg_is_set(cmd, splitmirrors_ARG) && !lp->repair) {
 		*new_mimage_count = *old_mimage_count;
 		*new_log_count = *old_log_count;
 
@@ -1164,7 +1164,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	/*
 	 * Adjusting mimage count?
 	 */
-	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, splitmirrors_ARG))
+	if (!arg_is_set(cmd, mirrors_ARG) && !arg_is_set(cmd, splitmirrors_ARG))
 		lp->mirrors = *old_mimage_count;
 	else if (lp->mirrors_sign == SIGN_PLUS)
 		lp->mirrors = *old_mimage_count + lp->mirrors;
@@ -1207,7 +1207,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	 * position that the user would like a 'disk' log.
 	 */
 	*new_log_count = (*old_mimage_count > 1) ? *old_log_count : 1;
-	if (!arg_count(cmd, corelog_ARG) && !arg_count(cmd, mirrorlog_ARG))
+	if (!arg_is_set(cmd, corelog_ARG) && !arg_is_set(cmd, mirrorlog_ARG))
 		return 1;
 
 	*new_log_count = arg_int_value(cmd, mirrorlog_ARG,
@@ -1227,7 +1227,7 @@ static int _lvconvert_mirrors_parse_params(struct cmd_context *cmd,
 	/*
 	 * Region size must not change on existing mirrors
 	 */
-	if (arg_count(cmd, regionsize_ARG) && lv_is_mirrored(lv) &&
+	if (arg_is_set(cmd, regionsize_ARG) && lv_is_mirrored(lv) &&
 	    (lp->region_size != first_seg(lv)->region_size)) {
 		log_error("Mirror log region size cannot be changed on "
 			  "an existing mirror.");
@@ -1395,7 +1395,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 		/* Reduce number of mirrors */
 		if (lp->keep_mimages) {
-			if (arg_count(cmd, trackchanges_ARG)) {
+			if (arg_is_set(cmd, trackchanges_ARG)) {
 				log_error("--trackchanges is not available "
 					  "to 'mirror' segment type");
 				return 0;
@@ -1559,7 +1559,7 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 			 original_logs - _get_log_count(lv), original_logs,
 			 display_lvname(lv));
 
-	/* if (!arg_count(cmd, use_policies_ARG) && (lp->mirrors != old_mimage_count
+	/* if (!arg_is_set(cmd, use_policies_ARG) && (lp->mirrors != old_mimage_count
 						  || log_count != old_log_count))
 						  return 0; */
 
@@ -1679,7 +1679,7 @@ static void _lvconvert_raid_repair_ask(struct cmd_context *cmd,
 
 	*replace_dev = 1;
 
-	if (arg_count(cmd, usepolicies_ARG)) {
+	if (arg_is_set(cmd, usepolicies_ARG)) {
 		dev_policy = find_config_tree_str(cmd, activation_raid_fault_policy_CFG, NULL);
 
 		if (!strcmp(dev_policy, "allocate") ||
@@ -1706,11 +1706,11 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	struct lv_segment *seg = first_seg(lv);
 	dm_percent_t sync_percent;
 
-	if (!arg_count(cmd, type_ARG))
+	if (!arg_is_set(cmd, type_ARG))
 		lp->segtype = seg->segtype;
 
 	/* Can only change image count for raid1 and linear */
-	if (arg_count(cmd, mirrors_ARG) &&
+	if (arg_is_set(cmd, mirrors_ARG) &&
 	    !seg_is_mirrored(seg) && !seg_is_linear(seg)) {
 		log_error("'--mirrors/-m' is not compatible with %s",
 			  lvseg_name(seg));
@@ -1727,13 +1727,13 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return 0;
 	}
 
-	if (seg_is_linear(seg) && !lp->merge_mirror && !arg_count(cmd, mirrors_ARG)) {
+	if (seg_is_linear(seg) && !lp->merge_mirror && !arg_is_set(cmd, mirrors_ARG)) {
 		log_error("Raid conversions require -m/--mirrors");
 		return 0;
 	}
 
 	/* Change number of RAID1 images */
-	if (arg_count(cmd, mirrors_ARG) || arg_count(cmd, splitmirrors_ARG)) {
+	if (arg_is_set(cmd, mirrors_ARG) || arg_is_set(cmd, splitmirrors_ARG)) {
 		image_count = lv_raid_image_count(lv);
 		if (lp->mirrors_sign == SIGN_PLUS)
 			image_count += lp->mirrors;
@@ -1744,7 +1744,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 
 		if (image_count < 1) {
 			log_error("Unable to %s images by specified amount",
-				  arg_count(cmd, splitmirrors_ARG) ?
+				  arg_is_set(cmd, splitmirrors_ARG) ?
 				  "split" : "reduce");
 			return 0;
 		}
@@ -1753,20 +1753,20 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (lp->merge_mirror)
 		return lv_raid_merge(lv);
 
-	if (arg_count(cmd, trackchanges_ARG))
+	if (arg_is_set(cmd, trackchanges_ARG))
 		return lv_raid_split_and_track(lv, lp->pvh);
 
-	if (arg_count(cmd, splitmirrors_ARG))
+	if (arg_is_set(cmd, splitmirrors_ARG))
 		return lv_raid_split(lv, lp->lv_split_name,
 				     image_count, lp->pvh);
 
-	if (arg_count(cmd, mirrors_ARG))
+	if (arg_is_set(cmd, mirrors_ARG))
 		return lv_raid_change_image_count(lv, image_count, lp->pvh);
 
-	if (arg_count(cmd, type_ARG))
+	if (arg_is_set(cmd, type_ARG))
 		return lv_raid_reshape(lv, lp->segtype);
 
-	if (arg_count(cmd, replace_ARG))
+	if (arg_is_set(cmd, replace_ARG))
 		return lv_raid_replace(lv, lp->replace_pvh, lp->pvh);
 
 	if (lp->repair) {
@@ -1815,7 +1815,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		}
 
 		/* "warn" if policy not set to replace */
-		if (arg_count(cmd, usepolicies_ARG))
+		if (arg_is_set(cmd, usepolicies_ARG))
 			log_warn("Use 'lvconvert --repair %s/%s' to replace "
 				 "failed device.", lv->vg->name, lv->name);
 		return 1;
@@ -2905,7 +2905,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		seg = first_seg(pool_lv);
 
 		/* Normally do NOT change chunk size when swapping */
-		if (arg_count(cmd, chunksize_ARG) &&
+		if (arg_is_set(cmd, chunksize_ARG) &&
 		    (lp->chunk_size != seg->chunk_size) &&
 		    !dm_list_empty(&pool_lv->segs_using_this_lv)) {
 			if (lp->force == PROMPT) {
@@ -2934,9 +2934,9 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		if (metadata_lv->le_count < lp->pool_metadata_extents)
 			log_print_unless_silent("Continuing with swap...");
 
-		if (!arg_count(cmd, discards_ARG))
+		if (!arg_is_set(cmd, discards_ARG))
 			lp->discards = seg->discards;
-		if (!arg_count(cmd, zero_ARG))
+		if (!arg_is_set(cmd, zero_ARG))
 			lp->zero = seg->zero_new_blocks;
 
 		if (!lp->yes &&
@@ -3321,7 +3321,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_PROCESSED;
 		}
 		if (!lv_is_mirrored(lv) && !lv_is_raid(lv)) {
-			if (arg_count(cmd, usepolicies_ARG))
+			if (arg_is_set(cmd, usepolicies_ARG))
 				return ECMD_PROCESSED; /* nothing to be done here */
 			log_error("Cannot repair logical volume %s of segtype %s.",
 				  display_lvname(lv), lvseg_name(first_seg(lv)));
@@ -3331,7 +3331,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* forward splitmirror operations to the cache origin, which may be raid
 	 * or old-style mirror */
-	if (arg_count(cmd, splitmirrors_ARG) && lv_is_cache_type(lv)
+	if (arg_is_set(cmd, splitmirrors_ARG) && lv_is_cache_type(lv)
 	    && (origin = seg_lv(first_seg(lv), 0)) && lv_is_cache_origin(origin)) {
 		log_warn("WARNING: Selected operation does not work with cache-type LVs.");
 		log_warn("WARNING: Proceeding using the cache origin volume %s instead.",
@@ -3348,7 +3348,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		 * the segtype was not specified, then we need
 		 * to consult the default.
 		 */
-		if (arg_count(cmd, mirrors_ARG) && !lv_is_mirrored(lv)) {
+		if (arg_is_set(cmd, mirrors_ARG) && !lv_is_mirrored(lv)) {
 			if (!(lp->segtype = get_segtype_from_string(cmd, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL))))
 				return_ECMD_FAILED;
 		}
@@ -3382,10 +3382,10 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 			return_ECMD_FAILED;
 
 		/* If repairing and using policies, remove missing PVs from VG */
-		if (lp->repair && arg_count(cmd, usepolicies_ARG))
+		if (lp->repair && arg_is_set(cmd, usepolicies_ARG))
 			_remove_missing_empty_pv(lv->vg, failed_pvs);
-	} else if (arg_count(cmd, mirrors_ARG) ||
-		   arg_count(cmd, splitmirrors_ARG) ||
+	} else if (arg_is_set(cmd, mirrors_ARG) ||
+		   arg_is_set(cmd, splitmirrors_ARG) ||
 		   lv_is_mirrored(lv)) {
 		if (!archive(lv->vg))
 			return_ECMD_FAILED;
@@ -3397,7 +3397,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 			return_ECMD_FAILED;
 
 		/* If repairing and using policies, remove missing PVs from VG */
-		if (lp->repair && arg_count(cmd, usepolicies_ARG))
+		if (lp->repair && arg_is_set(cmd, usepolicies_ARG))
 			_remove_missing_empty_pv(lv->vg, failed_pvs);
 	}
 
