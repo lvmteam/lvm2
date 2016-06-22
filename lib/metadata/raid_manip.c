@@ -1469,8 +1469,13 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
  *
  * Returns: 1 on success, 0 on failure
  */
-int lv_raid_reshape(struct logical_volume *lv,
-		    const struct segment_type *new_segtype)
+int lv_raid_convert(struct logical_volume *lv,
+		    const struct segment_type *new_segtype,
+		    int yes, int force,
+		    unsigned new_image_count,
+		    const unsigned new_stripes,
+		    const unsigned new_stripe_size,
+		    struct dm_list *allocate_pvs)
 {
 	struct lv_segment *seg = first_seg(lv);
 

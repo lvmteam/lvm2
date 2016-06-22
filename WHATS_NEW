@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Refactor lvconvert argument handling code.
   Add --logonly option to report only cmd log for a command, not other reports.
   Add log/command_log_selection to configure default selection used on cmd log.
   Use 'orphan' object type in cmd log for groups to collect PVs not yet in VGs.
