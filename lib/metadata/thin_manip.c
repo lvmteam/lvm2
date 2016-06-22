@@ -451,9 +451,15 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 
 	if (activate) {
 		/* If the pool is not active, do activate deactivate */
+		monitored = dmeventd_monitor_mode();
+		init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
 		if (!lv_is_active(lv)) {
-			monitored = dmeventd_monitor_mode();
-			init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
+			/*
+			 * FIXME:
+			 *   Rewrite activation code to handle whole tree of thinLVs
+			 *   as this version has major problem when it does not know
+			 *   which Node has pool active.
+			 */
 			if (!activate_lv_excl(lv->vg->cmd, lv)) {
 				init_dmeventd_monitor(monitored);
 				return_0;
@@ -481,13 +487,12 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 			}
 		}
 
-		if (activate) {
-			if (!deactivate_lv(lv->vg->cmd, lv)) {
-				log_error("Failed to deactivate %s.", display_lvname(lv));
-				ret = 0;
-			}
-			init_dmeventd_monitor(monitored);
+		if (activate &&
+		    !deactivate_lv(lv->vg->cmd, lv)) {
+			log_error("Failed to deactivate %s.", display_lvname(lv));
+			ret = 0;
 		}
+		init_dmeventd_monitor(monitored);
 
 		/* Unlock memory if possible */
 		memlock_unlock(lv->vg->cmd);
