@@ -1,5 +1,10 @@
 Version 1.02.129 - 
 =================================
+  Update default dmstats field selections for groups.
+  Add 'obj_type', 'group_id', and 'statsname' fields to dmstats reports.
+  Add --area, --region, and --group to dmstats to control object selection.
+  Add --alias, --groupid, --regions to dmstats for group creation and deletion.
+  Add 'group' and 'ungroup' commands to dmstats.
   Allow dm_stats_delete_group() to optionally delete all group members.
   Add dm_stats_get_object_type() to return the type of object present.
   Add dm_stats_walk_init() allowing control of objects visited by walks.

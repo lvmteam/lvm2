@@ -1,4 +1,4 @@
-.TH DMSTATS 8 "Jul 25 2015" "Linux" "MAINTENANCE COMMANDS"
+.TH DMSTATS 8 "Jun 23 2016" "Linux" "MAINTENANCE COMMANDS"
 
 .de OPT_PROGRAMS
 .  RB \%[ \-\-allprograms | \-\-programid
@@ -110,6 +110,20 @@ dmstats \(em device-mapper statistics management
 .
 .HP
 .B dmstats
+.de CMD_GROUP
+.  ad l
+.  BR group
+.  RI [ device_name ]
+.  RB [ \-\-alias
+.  IR name ]
+.  RB [ \-\-alldevices ]
+.  RB [ \-\-regions
+.  IR regions ]
+.  ad b
+..
+.CMD_GROUP
+.HP
+.B dmstats
 .de CMD_HELP
 .  ad l
 .  BR help
@@ -126,6 +140,8 @@ dmstats \(em device-mapper statistics management
 .  RI [ device_name ]
 .  RB [ \-\-histogram ]
 .  OPT_PROGRAMS
+.  RB [ \-\-statstype
+.  IR type_list ]
 .  RB [ \-\-units
 .  IR units ]
 .  RB \%[ \-\-nosuffix ]
@@ -167,6 +183,8 @@ dmstats \(em device-mapper statistics management
 .  IR sort_fields ]
 .  RB [ \-S | \-\-select
 .  IR selection ]
+.  RB [ \-\-statstype
+.  IR type_list ]
 .  RB [ \-\-units
 .  IR units ]
 .  RB [ \-\-nosuffix ]
@@ -174,6 +192,18 @@ dmstats \(em device-mapper statistics management
 .  ad b
 ..
 .CMD_REPORT
+.HP
+.B dmstats
+.de CMD_UNGROUP
+.  ad l
+.  BR ungroup
+.  RI [ device_name ]
+.  RB [ \-\-alldevices ]
+.  RB [ \-\-groupid
+.  IR id ]
+.  ad b
+..
+.CMD_UNGROUP
 .
 .PD
 .ad b
@@ -197,6 +227,12 @@ device-mapper devices present. The \fBcreate\fP and \fBdelete\fP
 commands require the use of \fB\-\-alldevices\fP when used in this way.
 .
 .SH OPTIONS
+.
+.HP
+.BR \-\-alias
+.IR name
+.br
+Specify an alias name for a group.
 .
 .HP
 .BR \-\-alldevices
@@ -248,6 +284,12 @@ When printing statistics counters, also atomically reset them to zero.
 .br
 Specify the iteration count for repeating reports. If the count
 argument is zero reports will continue to repeat until interrupted.
+.
+.HP
+.BR \-\-groupid
+.IR id
+.br
+Specify the group to operate on.
 .
 .HP
 .BR \-\-bounds
@@ -346,6 +388,14 @@ default program ID for dmstats-managed regions is "dmstats".
 Specify the region to operate on.
 .
 .HP
+.BR \-\-regions
+.IR region_list
+.br
+Specify a list of regions to group. The group list is a comma-separated
+list of region identifiers. Continuous sequences of identifiers may be
+expressed as a hyphen separated range, for example: '1-10'.
+.
+.HP
 .BR \-\-relative
 .br
 If displaying the histogram report show relative (percentage) values
@@ -377,6 +427,20 @@ optional suffix selects units of:
 Create a new statistics region for each target contained in the target
 device. This causes a separate region to be allocated for each segment
 of the device.
+.
+.HP
+.BR \-\-statstype
+.IR type_list
+.br
+Filter the types of statistics object included in a report or listing
+according to the provided list. A report may include areas, regions,
+and user-defined groups of regions that report aggregate data for all
+group members.
+
+The list may be a single object type, a comma separated list of types,
+or the special value 'all'.
+
+The currently available object types are 'area', 'region' and 'group'.
 .
 .HP
 .BR \-\-units
@@ -461,6 +525,28 @@ All regions registered on a device may be removed using
 
 To remove all regions on all devices both \fB\-\-allregions\fP and
 \fB\-\-alldevices\fP must be used.
+
+If a \fB\-\-groupid\fP is given instead of a \fB\-\-regionid\fP the
+command will attempt to delete the group and all regions that it
+contains.
+
+If a deleted region is the first member of a group of regions the group
+will also be removed.
+.
+.HP
+.CMD_GROUP
+.br
+Combine one or more statistics regions on the specified device into a
+group.
+
+The list of regions to be grouped is specified with \fB\-\-regions\fP
+and an optional alias may be assigned with \fB\-\-alias\fP. The set of
+regions is given as a comma-separated list of region identifiers. A
+continuous range of identifers spanning from \fBR1\fP to \fBR2\fP may
+be expressed as '\fBR1\fP-\fBR2\fP'.
+
+On success the group list and newly created \fBgroup_id\fP are
+printed to stdout.
 .
 .HP
 .CMD_HELP
@@ -471,16 +557,23 @@ the list of report fields.
 .HP
 .CMD_LIST
 .br
-List the statistics regions registered on the device. If the
-\fB\-\-allprograms\fP switch is given all regions will be listed
+List the statistics regions, areas, or groups registered on the device.
+If the \fB\-\-allprograms\fP switch is given all regions will be listed
 regardless of region program ID values.
 
-If \fB\-v\fP or \fB\-\-verbose\fP is given the report will include
-a row of information for each area contained in each region displayed.
+By default only regions and groups are included in list output. If
+\fB\-v\fP or \fB\-\-verbose\fP is given the report will also include a
+row of information for each configured group and for each area contained
+in each region displayed (regions that contain a single area are by
+default omitted from the verbose list since their properties are
+identical to the area that they contain - to view all regions regardless
+of the number of areas they contain use \fB\-\-statstype\fP).
+
+Specific combinations of objects may be selected using the
+\fB\-\-statstype\fP option.
 
 If \fB\-\-histogram\fP is given the report will include the bin count
 and latency boundary values for any configured histograms.
-.
 .HP
 .CMD_PRINT
 .br
@@ -490,7 +583,7 @@ present regions.
 .HP
 .CMD_REPORT
 .br
-Start a report for the specified region or for all present regions. If
+Start a report for the specified object or for all present objects. If
 the count argument is specified, the report will repeat at a fixed
 interval set by the \fB\-\-interval\fP option. The default interval is
 one second.
@@ -503,18 +596,40 @@ values and latency boundaries.
 
 If the \fB\-\-relative\fP is used the default histogram field displays
 bin values as a percentage of the total number of I/Os.
+
+Object types (areas, regions and groups) are selected using the
+\fB\-\-statstype\fP option.
 .
-.SH REGIONS AND AREAS
+.HP
+.CMD_UNGROUP
+.br
+Remove an existing group and return all the group's regions to their
+original state.
+
+The group to be removed is specified using \fB\-\-groupid\fP.
+.
+.SH REGIONS, AREAS, AND GROUPS
 .
 The device-mapper statistics facility allows separate performance
 counters to be maintained for arbitrary regions of devices. A region may
 span any range: from a single sector to the whole device. A region may
 be further sub-divided into a number of distinct areas (one or more),
-each with its own counter set.
+each with its own counter set. In this case a summary value for the
+entire region is also available for use in reports.
+
+In addition, one or more regions on one device can be combined into
+a statistics group allowing reporting of aggregate values for all
+regions and areas making up the group.
 
 By default new regions span the entire device. The \fB\-\-start\fP and
 \fB\-\-length\fP options allows a region of any size to be placed at any
 location on the device.
+
+Using offsets it is possible to create regions that map individual
+objects within a block device (for example: partitions, files in a file
+system, or stripes or other structures in a RAID volume). Groups allow
+several non-contiguous regions to be assembled together for reporting
+and data aggregation.
 
 A region may be either divided into the specified number of equal-sized
 areas, or into areas of the given size by specifying one of
@@ -531,6 +646,19 @@ values).
 
 Depending on the sequence of create and delete operations, gaps may
 exist in the sequence of \fBregion_id\fP values for a particular device.
+
+The \fBregion_id\fP should be treated as an opaque identifier used to
+reference the region.
+.
+.P
+.B Group identifiers
+.P
+Groups are also assigned an integer identifier at creation time;
+like region identifiers, group identifiers are unique within the
+containing device.
+
+The \fBgroup_id\fP should be treated as an opaque identifier used to
+reference the group.
 .
 .SH REPORT FIELDS
 .
@@ -591,10 +719,10 @@ Percentage of CPU time during which I/O requests were issued to the
 device (bandwidth utilization for the device). Device saturation occurs
 when this value is close to 100%.
 .
-.SS Region and area meta fields
+.SS Group, region and area meta fields
 .
-Meta fields provide information about the region or area that the
-statistics values relate to. This includes the region and area
+Meta fields provide information about the groups, regions, or areas that
+the statistics values relate to. This includes the region and area
 identifier, start, length, and counts, as well as the program ID and
 auxiliary data values.
 .TP
@@ -635,6 +763,10 @@ The program ID value associated with this region.
 .TP
 .B aux_data
 The auxiliary data value associated with this region.
+.TP
+.B group_id
+Group identifier. This is a non-negative integer returned by the dmstats
+\fBgroup\fP command when a statistics group is created.
 .TP
 .B interval_ns
 The estimated interval over which the current counter values have
