@@ -554,10 +554,9 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->replace = 1;
 
 	/* If no other case was identified, then use of --stripes means --type striped */
-	if (!arg_is_set(cmd, type_ARG) && !lp->merge && !lp->splitsnapshot &&
+	if (!arg_is_set(cmd, type_ARG) && !*lp->type_str && !lp->merge && !lp->splitsnapshot &&
 	    !lp->splitcache && !lp->split && !lp->snapshot && !lp->uncache && !lp->cache && !lp->thin &&
-	    !lp->replace && !_mirror_or_raid_type_requested(cmd, lp->type_str) &&
-	    !lp->repair && !lp->mirrorlog && !lp->corelog &&
+	    !lp->replace && !lp->repair && !lp->mirrorlog && !lp->corelog &&
 	    (arg_is_set(cmd, stripes_long_ARG) || arg_is_set(cmd, stripesize_ARG)))
 		lp->type_str = "striped";
 
@@ -750,7 +749,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 			/* changing mirror type? */
 			if (!(lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL)))))
 				return_0;
-		} /* else segtype will default to current type */
+		} 
 	} else if (_raid0_type_requested(cmd, lp->type_str) || _striped_type_requested(cmd, lp->type_str)) { /* striped or raid0 */
 		if (arg_from_list_is_set(cmd, "cannot be used with --type raid0 or --type striped",
 					 chunksize_ARG, corelog_ARG, mirrors_ARG, mirrorlog_ARG, regionsize_ARG, zero_ARG,
@@ -762,7 +761,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
 			return_0;
-	}
+	} /* else segtype will default to current type */
 
 	lp->force = arg_count(cmd, force_ARG);
 	lp->yes = arg_count(cmd, yes_ARG);
@@ -1790,7 +1789,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	struct lv_segment *seg = first_seg(lv);
 	dm_percent_t sync_percent;
 
-	if (!arg_is_set(cmd, type_ARG))
+	if (!lp->segtype)
 		lp->segtype = seg->segtype;
 
 	/* Can only change image count for raid1 and linear */
