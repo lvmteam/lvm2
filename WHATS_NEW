@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Pool metadata lvresize uses now same code as resize of normal volume.
   Log system error when locking dir cannot be accessed.
   Preserve monitoring status when updating thin-pool metadata.
   Rerurn 0 (inactive) when status cannot be queried in _lv_active().
