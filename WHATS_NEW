@@ -1,5 +1,6 @@
 Version 2.02.158 - 
 =================================
+  Rerurn 0 (inactive) when status cannot be queried in _lv_active().
   Switch to log_warn() for failing activation status query.
   Refactor lvconvert argument handling code.
   Add --logonly option to report only cmd log for a command, not other reports.

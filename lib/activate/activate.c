@@ -1266,8 +1266,10 @@ static int _lv_active(struct cmd_context *cmd, const struct logical_volume *lv)
 	struct lvinfo info;
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0)) {
-		stack;
-		return -1;
+		log_debug("Cannot determine activation status of %s%s.",
+			  display_lvname(lv),
+			  activation() ? "" : " (no device driver)");
+		return 0;
 	}
 
 	return info.exists;
