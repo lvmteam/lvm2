@@ -67,7 +67,7 @@ aux lvmconf 'global/thin_check_executable = ""'
 
 # Prepare some fake metadata prefilled to ~100%
 lvcreate -L2 -n $lv1 $vg # tmp for metadata
-aux prepare_thin_metadata 500 1 | tee data
+aux prepare_thin_metadata 490 1 | tee data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
