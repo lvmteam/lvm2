@@ -1484,8 +1484,8 @@ int lvmetad_pv_found(struct cmd_context *cmd, const struct id *pvid, struct devi
 	daemon_reply reply;
 	struct lvmcache_info *info;
 	struct dm_config_tree *pvmeta, *vgmeta;
-	const char *status, *vgname;
-	int64_t changed;
+	const char *status = NULL, *vgname = NULL;
+	int64_t changed = 0;
 	int result;
 
 	if (!lvmetad_used() || test_mode())
