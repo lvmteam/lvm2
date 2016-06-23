@@ -30,8 +30,8 @@ not lvextend -l 10 -L 64m $vg/$lv "$dev1" 2>err
 grep "Please specify either size or extents but not both." err
 
 # 'lvextend accepts no size or extents but one PV - bz154691'
-lvextend $vg/$lv "$dev1" >out
-grep "Logical volume $lv successfully resized" out
+lvextend $vg/$lv "$dev1" | tee out
+grep "Logical volume $vg/$lv successfully resized" out
 check pv_field "$dev1" pv_free "0"
 
 lvremove -f $vg/$lv
@@ -47,8 +47,8 @@ lvremove -f $vg/$lv
 lvcreate -L 64m -n $lv $vg
 
 # 'lvextend accepts no size but extents 100%PVS and two PVs - bz154691'
-lvextend -l +100%PVS $vg/$lv "$dev1" "$dev2" >out
-grep "Logical volume $lv successfully resized" out
+lvextend -l +100%PVS $vg/$lv "$dev1" "$dev2" | tee out
+grep "Logical volume $vg/$lv successfully resized" out
 check pv_field "$dev1" pv_free "0"
 check pv_field "$dev2" pv_free "0"
 
@@ -80,8 +80,8 @@ check lv_field $vg/$lv lv_size "48.00m"
 
 # 'lvextend with partially allocated PVs and extents 100%PVS with PE ranges'
 extend_pvs=$(for i in $(seq 0 6 18); do echo -n "$dev1:$i-$(($i + 2)) "; done)
-lvextend -l +100%PVS $vg/$lv $extend_pvs >out
-grep "Logical volume $lv successfully resized" out
+lvextend -l +100%PVS $vg/$lv $extend_pvs | tee out
+grep "Logical volume $vg/$lv successfully resized" out
 check lv_field $vg/$lv lv_size "72.00m"
 
 # Simple seg_count validation; initially create the LV with half the # of
