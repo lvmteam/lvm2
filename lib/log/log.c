@@ -540,6 +540,25 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	va_end(ap);
 }
 
+void print_log_libdm(int level, const char *file, int line, int dm_errno_or_class,
+		     const char *format, ...)
+{
+	va_list ap;
+
+	/*
+	 * Bypass report if printing output from libdm and if we have
+	 * LOG_WARN level and it's not going to stderr (so we're
+	 * printing common message that is not an error/warning).
+	*/
+	if (!(level & _LOG_STDERR) &&
+	    ((level & ~(_LOG_STDERR|_LOG_ONCE|_LOG_BYPASS_REPORT)) == _LOG_WARN))
+		level |= _LOG_BYPASS_REPORT;
+
+	va_start(ap, format);
+	_vprint_log(level, file, line, dm_errno_or_class, format, ap);
+	va_end(ap);
+}
+
 log_report_t log_get_report_state(void)
 {
 	return _log_report;
