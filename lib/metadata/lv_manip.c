@@ -4452,7 +4452,7 @@ static uint32_t _adjust_amount(dm_percent_t percent, int policy_threshold, int p
 	percent = (percent / policy_threshold + (DM_PERCENT_1 - 1) / 100) / (DM_PERCENT_1 / 100) - 100;
 
 	/* Use it if current policy amount is smaller */
-	return (policy_amount < percent) ? (uint32_t) policy_amount : (uint32_t) percent;
+	return (policy_amount < percent) ? (uint32_t) percent : (uint32_t) policy_amount;
 }
 
 static int _lvresize_adjust_policy(const struct logical_volume *lv,
@@ -5241,7 +5241,10 @@ int lv_resize(struct logical_volume *lv,
 		return_0;
 
 	if (lp->use_policies) {
-		lp->percent = SIGN_PLUS;
+		lp->extents = 0;
+		lp->sign = SIGN_PLUS;
+		lp->percent = PERCENT_LV;
+
 		aux_lp = *lp;
 		if (!_lvresize_adjust_policy(lv, &lp->extents, &aux_lp.extents))
 			return_0;

@@ -34,11 +34,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	lp->sign = lp->poolmetadata_sign = SIGN_NONE;
 
 	if ((lp->use_policies = arg_is_set(cmd, usepolicies_ARG))) {
-		/* do nothing; _lvresize will handle --use-policies itself */
-		lp->extents = 0;
-		lp->sign = SIGN_PLUS;
-		lp->percent = PERCENT_LV;
-
+		/* do nothing; lv_resize will handle --use-policies itself */
 		if (arg_from_list_is_set(cmd, NULL,
 					 chunksize_ARG, extents_ARG,
 					 poolmetadatasize_ARG,
