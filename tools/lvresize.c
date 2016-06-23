@@ -113,7 +113,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 
 	lp->lv_name = argv[0];
 
-	if (!validate_restricted_lvname_param(cmd, &lp->vg_name, &lp->lv_name))
+	if (!validate_lvname_param(cmd, &lp->vg_name, &lp->lv_name))
 		return_0;
 
 	/* Check for $LVM_VG_NAME */
