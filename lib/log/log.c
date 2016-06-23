@@ -306,8 +306,9 @@ const char *log_get_report_object_type_name(log_report_object_type_t object_type
 	return log_object_type_names[object_type];
 }
 
-void print_log(int level, const char *file, int line, int dm_errno_or_class,
-	       const char *format, ...)
+__attribute__ ((format(printf, 5, 0)))
+static void _vprint_log(int level, const char *file, int line, int dm_errno_or_class,
+			const char *format, va_list orig_ap)
 {
 	va_list ap;
 	char buf[1024], message[4096];
@@ -360,7 +361,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	    (_store_errmsg && (level <= _LOG_ERR)) ||
 	    (_log_report.report && !log_bypass_report && (use_stderr || (level <=_LOG_WARN))) ||
 	    log_once) {
-		va_start(ap, format);
+		va_copy(ap, orig_ap);
 		n = vsnprintf(message, sizeof(message), trformat, ap);
 		va_end(ap);
 
@@ -445,7 +446,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 			default: /* nothing to do */;
 			}
 
-		va_start(ap, format);
+		va_copy(ap, orig_ap);
 		switch (level) {
 		case _LOG_DEBUG:
 			if (verbose_level() < _LOG_DEBUG)
@@ -480,7 +481,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		fprintf(_log_file, "%s:%d %s%s", file, line, log_command_name(),
 			_msg_prefix);
 
-		va_start(ap, format);
+		va_copy(ap, orig_ap);
 		vfprintf(_log_file, trformat, ap);
 		va_end(ap);
 
@@ -489,7 +490,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 	}
 
 	if (_syslog && (_log_while_suspended || !critical_section())) {
-		va_start(ap, format);
+		va_copy(ap, orig_ap);
 		vsyslog(level, trformat, ap);
 		va_end(ap);
 	}
@@ -509,7 +510,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 
 		bufused += n;		/* n does not include '\0' */
 
-		va_start(ap, format);
+		va_copy(ap, orig_ap);
 		n = vsnprintf(buf + bufused, sizeof(buf) - bufused,
 			      trformat, ap);
 		va_end(ap);
@@ -527,6 +528,16 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 		dev_append(&_log_dev, sizeof(buf), buf);
 		_already_logging = 0;
 	}
+}
+
+void print_log(int level, const char *file, int line, int dm_errno_or_class,
+	       const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	_vprint_log(level, file, line, dm_errno_or_class, format, ap);
+	va_end(ap);
 }
 
 log_report_t log_get_report_state(void)
