@@ -1166,7 +1166,7 @@ bad:
  * If lvmetad is used, there are three filter chains:
  *
  *   - cmd->lvmetad_filter - the lvmetad filter chain used when scanning devs for lvmetad update:
- *     sysfs filter -> global regex filter -> type filter ->
+ *     sysfs filter -> internal filter -> global regex filter -> type filter ->
  *     usable device filter(FILTER_MODE_PRE_LVMETAD) ->
  *     mpath component filter -> partitioned filter ->
  *     md component filter -> fw raid filter
@@ -1180,7 +1180,7 @@ bad:
  * If lvmetad is not used, there's just one filter chain:
  *
  *   - cmd->filter == cmd->full_filter:
- *     persistent filter -> sysfs filter -> global regex filter ->
+ *     persistent filter -> sysfs filter -> internal filter -> global regex filter ->
  *     regex_filter -> type filter -> usable device filter(FILTER_MODE_NO_LVMETAD) ->
  *     mpath component filter -> partitioned filter -> md component filter -> fw raid filter
  *
