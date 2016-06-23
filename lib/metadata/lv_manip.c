@@ -5000,7 +5000,7 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 
 		if (seg_size >= (MAX_EXTENT_COUNT - existing_logical_extents)) {
 			log_error("Unable to extend %s by %u logical extents: exceeds limit (%u).",
-				  lp->lv_name, seg_size, MAX_EXTENT_COUNT);
+				  display_lvname(lv), seg_size, MAX_EXTENT_COUNT);
 			return 0;
 		}
 
@@ -5029,7 +5029,8 @@ static int _lvresize_adjust_extents(struct cmd_context *cmd, struct logical_volu
 
 		if (lp->sign == SIGN_MINUS)  {
 			if (lp->extents >= existing_extents) {
-				log_error("Unable to reduce %s below 1 extent.", lp->lv_name);
+				log_error("Unable to reduce %s below 1 extent.",
+					  display_lvname(lv));
 				return 0;
 			}
 			new_extents = existing_extents - lp->extents;
@@ -5407,7 +5408,8 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	log_print_unless_silent("Logical volume %s successfully resized.", lp->lv_name);
+	log_print_unless_silent("Logical volume %s successfully resized.",
+				display_lvname(lv));
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
 	    !_fsadm_cmd(cmd, vg, lp, FSADM_CMD_RESIZE, NULL))
@@ -6068,19 +6070,22 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 			if (lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) &&
 			    info.exists && info.live_table) {
 				if (!lv_snapshot_percent(lv, &snap_percent)) {
-					log_error("Failed to obtain merging snapshot progress percentage for logical volume %s.",
-						  lv->name);
+					log_error("Failed to obtain merging snapshot progress "
+						  "percentage for logical volume %s.",
+						  display_lvname(lv));
 					return 0;
 				}
 				if ((snap_percent != DM_PERCENT_INVALID) &&
 				     (snap_percent != LVM_PERCENT_MERGE_FAILED)) {
-					log_error("Can't remove merging snapshot logical volume \"%s\"",
-						  lv->name);
+					log_error("Can't remove merging snapshot logical volume %s.",
+						  display_lvname(lv));
 					return 0;
 				} else if ((snap_percent == LVM_PERCENT_MERGE_FAILED) &&
-					 (force == PROMPT) &&
-					 yes_no_prompt("Removing snapshot \"%s\" that failed to merge may leave origin \"%s\" inconsistent. "
-						       "Proceed? [y/n]: ", lv->name, origin_from_cow(lv)->name) == 'n')
+					   (force == PROMPT) &&
+					   yes_no_prompt("Removing snapshot %s that failed to merge "
+							 "may leave origin %s inconsistent. Proceed? [y/n]: ",
+							 display_lvname(lv),
+							 display_lvname(origin_from_cow(lv))) == 'n')
                                         goto no_remove;
 			}
 		} else if (!level && lv_is_virtual_origin(origin = origin_from_cow(lv)))
@@ -6108,22 +6113,22 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 
 	if (lv_is_merging_origin(lv)) {
 		if (!deactivate_lv(cmd, lv)) {
-			log_error("Unable to fully deactivate merging origin \"%s\".",
-				  lv->name);
+			log_error("Unable to fully deactivate merging origin %s.",
+				  display_lvname(lv));
 			return 0;
 		}
 		if (!lv_remove_with_dependencies(cmd, find_snapshot(lv)->lv,
 						 force, level + 1)) {
-			log_error("Unable to remove merging origin \"%s\".",
-				  lv->name);
+			log_error("Unable to remove merging origin %s.",
+				  display_lvname(lv));
 			return 0;
 		}
 	}
 
 	if (!level && lv_is_merging_thin_snapshot(lv)) {
 		/* Merged snapshot LV is no longer available for the user */
-		log_error("Unable to remove \"%s\", volume is merged to \"%s\".",
-			  lv->name, first_seg(lv)->merge_lv->name);
+		log_error("Unable to remove %s, volume is merged to %s.",
+			  display_lvname(lv), display_lvname(first_seg(lv)->merge_lv));
 		return 0;
 	}
 
@@ -6139,10 +6144,10 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	    (force == PROMPT)) {
 		dm_list_iterate_items(lvl, &lv->vg->lvs)
 			if (lv_is_pool_metadata(lvl->lv)) {
-				if (yes_no_prompt("Removal of pool metadata spare logical volume"
-						  " \"%s\" disables automatic recovery attempts"
-						  " after damage to a thin or cache pool."
-						  " Proceed? [y/n]: ", lv->name) == 'n')
+				if (yes_no_prompt("Removal of pool metadata spare logical volume "
+						  "%s disables automatic recovery attempts "
+						  "after damage to a thin or cache pool. "
+						  "Proceed? [y/n]: ", display_lvname(lv)) == 'n')
 					goto no_remove;
 				break;
 			}
@@ -6151,7 +6156,7 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	return lv_remove_single(cmd, lv, force, 0);
 
 no_remove:
-	log_error("Logical volume \"%s\" not removed.", lv->name);
+	log_error("Logical volume %s not removed.", display_lvname(lv));
 
 	return 0;
 }
@@ -6229,16 +6234,16 @@ static int _split_parent_area(struct lv_segment *seg, uint32_t s,
 	while (parent_area_len > 0) {
 		/* Find the layer segment pointed at */
 		if (!(spvs = _find_seg_pvs_by_le(layer_seg_pvs, layer_le))) {
-			log_error("layer segment for %s:%" PRIu32 " not found",
-				  seg->lv->name, parent_le);
+			log_error("layer segment for %s:" FMTu32 " not found.",
+				  display_lvname(seg->lv), parent_le);
 			return 0;
 		}
 
 		if (spvs->le != layer_le) {
 			log_error("Incompatible layer boundary: "
-				  "%s:%" PRIu32 "[%" PRIu32 "] on %s:%" PRIu32,
-				  seg->lv->name, parent_le, s,
-				  seg_lv(seg, s)->name, layer_le);
+				  "%s:" FMTu32 "[" FMTu32 "] on %s:" FMTu32 ".",
+				  display_lvname(seg->lv), parent_le, s,
+				  display_lvname(seg_lv(seg, s)), layer_le);
 			return 0;
 		}
 

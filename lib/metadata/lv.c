@@ -1432,49 +1432,50 @@ int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 	
 	if (is_change_activating(activate) &&
 	    !lockd_lv(cmd, lv, ay_with_mode, LDLV_PERSISTENT)) {
-		log_error("Failed to lock logical volume %s/%s", lv->vg->name, lv->name);
+		log_error("Failed to lock logical volume %s.", display_lvname(lv));
 		return 0;
 	}
 
 	switch (activate) {
 	case CHANGE_AN:
 deactivate:
-		log_verbose("Deactivating logical volume \"%s\"", lv->name);
+		log_verbose("Deactivating logical volume %s.", display_lvname(lv));
 		if (!deactivate_lv(cmd, lv))
 			return_0;
 		break;
 	case CHANGE_ALN:
 		if (vg_is_clustered(lv->vg) && (needs_exclusive || _lv_is_exclusive(lv))) {
 			if (!lv_is_active_locally(lv)) {
-				log_error("Cannot deactivate remotely exclusive device locally.");
+				log_error("Cannot deactivate remotely exclusive device %s locally.",
+					  display_lvname(lv));
 				return 0;
 			}
 			/* Unlock whole exclusive activation */
 			goto deactivate;
 		}
-		log_verbose("Deactivating logical volume \"%s\" locally.",
-			    lv->name);
+		log_verbose("Deactivating logical volume %s locally.",
+			    display_lvname(lv));
 		if (!deactivate_lv_local(cmd, lv))
 			return_0;
 		break;
 	case CHANGE_ALY:
 	case CHANGE_AAY:
 		if (needs_exclusive || _lv_is_exclusive(lv)) {
-			log_verbose("Activating logical volume \"%s\" exclusively locally.",
-				    lv->name);
+			log_verbose("Activating logical volume %s exclusively locally.",
+				    display_lvname(lv));
 			if (!activate_lv_excl_local(cmd, lv))
 				return_0;
 		} else {
-			log_verbose("Activating logical volume \"%s\" locally.",
-				    lv->name);
+			log_verbose("Activating logical volume %s locally.",
+				    display_lvname(lv));
 			if (!activate_lv_local(cmd, lv))
 				return_0;
 		}
 		break;
 	case CHANGE_AEY:
 exclusive:
-		log_verbose("Activating logical volume \"%s\" exclusively.",
-			    lv->name);
+		log_verbose("Activating logical volume %s exclusively.",
+			    display_lvname(lv));
 		if (!activate_lv_excl(cmd, lv))
 			return_0;
 		break;
@@ -1483,14 +1484,14 @@ exclusive:
 	default:
 		if (needs_exclusive || _lv_is_exclusive(lv))
 			goto exclusive;
-		log_verbose("Activating logical volume \"%s\".", lv->name);
+		log_verbose("Activating logical volume %s.", display_lvname(lv));
 		if (!activate_lv(cmd, lv))
 			return_0;
 	}
 
 	if (!is_change_activating(activate) &&
 	    !lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
-		log_error("Failed to unlock logical volume %s/%s", lv->vg->name, lv->name);
+		log_error("Failed to unlock logical volume %s.", display_lvname(lv));
 
 	return 1;
 }
@@ -1549,7 +1550,8 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 		/* Find any active LV from the pool */
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
 			if (lv_is_active(sl->seg->lv)) {
-				log_debug("Thin volume \"%s\" is active.", sl->seg->lv->name);
+				log_debug_activation("Thin volume %s is active.",
+						     display_lvname(lv));
 				return sl->seg->lv;
 			}
 

@@ -171,7 +171,8 @@ int pool_is_active(const struct logical_volume *lv)
 	const struct seg_list *sl;
 
 	if (!lv_is_thin_pool(lv)) {
-		log_error(INTERNAL_ERROR "pool_is_active called with non-pool LV %s.", lv->name);
+		log_error(INTERNAL_ERROR "pool_is_active called with non-pool volume %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -182,7 +183,8 @@ int pool_is_active(const struct logical_volume *lv)
 
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
 			if (lv_is_active(sl->seg->lv)) {
-				log_debug("Thin volume \"%s\" is active.", sl->seg->lv->name);
+				log_debug_activation("Pool's thin volume %s is active.",
+						     display_lvname(sl->seg->lv));
 				return 1;
 			}
 	} else if (lv_info(lv->vg->cmd, lv, 1, &info, 0, 0) && info.exists)
