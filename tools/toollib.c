@@ -1655,7 +1655,7 @@ int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_na
 	if (lv_name && *lv_name && !apply_lvname_restrictions(*lv_name))
 		return_0;
 
-	return -1;
+	return 1;
 }
 
 /*
