@@ -158,13 +158,11 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd,
 	(void) dm_prepare_selinux_context(NULL, 0);
 
 	if (!r)
-		return_0;
+		return 0;
 
 	/* Trap a read-only file system */
-	if ((access(_lock_dir, R_OK | W_OK | X_OK) == -1) && (errno == EROFS)) {
-		log_sys_error("access", _lock_dir);
+	if ((access(_lock_dir, R_OK | W_OK | X_OK) == -1) && (errno == EROFS))
 		return 0;
-	}
 
 	return 1;
 }
