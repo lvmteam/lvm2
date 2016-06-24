@@ -53,6 +53,16 @@ for common options.
 .B \-\-aligned
 Use with \fB\-\-separator\fP to align the output columns.
 .TP
+.B \-\-all
+Include information in the output about internal Logical Volumes that
+are components of normally-accessible Logical Volumes, such as mirrors,
+but which are not independently accessible (e.g. not mountable).
+The names of such Logical Volumes are enclosed within square brackets
+in the output.  For example, after creating a mirror using
+.B lvcreate -m1 \-\-mirrorlog disk
+, this option will reveal three internal Logical
+Volumes, with suffixes mimage_0, mimage_1, and mlog.
+.TP
 .B \-\-binary
 Use binary values "0" or "1" instead of descriptive literal values
 for columns that have exactly two valid values to report (not counting
@@ -66,16 +76,6 @@ If \fB\-\-configreport\fP option is not used to identify a report, then
 command's main report is assumed. The log report is available only if
 enabled by \fBlog/report_command_log\fP \fBlvm.conf\fP(5) setting or
 if \fB\-\-logonly\fP option is used.
-.TP
-.B \-\-all
-Include information in the output about internal Logical Volumes that
-are components of normally-accessible Logical Volumes, such as mirrors,
-but which are not independently accessible (e.g. not mountable).
-The names of such Logical Volumes are enclosed within square brackets
-in the output.  For example, after creating a mirror using
-.B lvcreate -m1 \-\-mirrorlog disk
-, this option will reveal three internal Logical
-Volumes, with suffixes mimage_0, mimage_1, and mlog.
 .TP
 .B \-H ", " \-\-history
 Include historical logical volumes in the output.
