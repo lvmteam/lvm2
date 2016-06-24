@@ -7,6 +7,8 @@ vgdisplay \(em display attributes of volume groups
 .RB [ \-c | \-\-colon ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-s | \-\-short ]
 .RB [ \-S | \-\-select
 .IR Selection ]
@@ -30,19 +32,25 @@ vgdisplay \(em display attributes of volume groups
 .RB [ \-\-binary ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
+.RB [[ \-\-configreport
+.IR ReportName ]
+.RB [ \-o | \-\-options
+.RI [ + | \- | # ] Field1 [, Field2 ...]
+.RB [ \-O | \-\-sort
+.RI [ + | \- ] Key1 [, Key2 ...]]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB ...]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-ignoreskippedcluster ]
+.RB [ \-\-logonly ]
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
-.RB [ \-o|\-\-options
-.RI [ + | \- | # ] Field1 [ ,Field2 ...]]
-.RB [ \-O | \-\-sort
-.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]
-.RB [ \-S | \-\-select
-.IR Selection ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-separator
 .IR Separator ]
 .RB [ \-\-unbuffered ]

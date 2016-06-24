@@ -17,6 +17,8 @@ lvresize \(em resize a logical volume
 .RI [ + ] MetadataVolumeSize [ bBsSkKmMgG ]]
 .RB [ \-f | \-\-force ]
 .RB [ \-n | \-\-nofsck ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-r | \-\-resizefs ]
 .IR LogicalVolume { Name | Path }
 .RI [ PhysicalVolumePath [ :PE [ \-PE ]]...]

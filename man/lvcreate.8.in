@@ -93,6 +93,8 @@ lvcreate \- create a logical volume in an existing volume group
 .IR Rate ]
 .RB [ \-r | \-\-readahead
 .RB { \fIReadAheadSectors | auto | none }]
+.RB [ \-\-reportformat
+.RB {basic | json}]
 .RB \%[ \-k | \-\-setactivationskip
 .RB { y | n }]
 .RB [ \-s | \-\-snapshot ]
@@ -133,6 +135,8 @@ lvcreate \- create a logical volume in an existing volume group
 .RB { y | n }]
 .RB [ \-n | \-\-name
 .IR SnapshotLogicalVolumeName ]
+.RB [ \-\-reportformat
+.RB {basic | json}]
 .BR \-s | \-\-snapshot | \-H | \-\-cache
 .RI \%{[ VolumeGroup \fB/\fP] OriginalLogicalVolume
 .RB \%[ \-V | \-\-virtualsize

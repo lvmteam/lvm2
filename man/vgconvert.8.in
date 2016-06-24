@@ -18,6 +18,8 @@ vgconvert \- convert volume group metadata format
 .IR NumberOfCopies ]
 .RB [ \-\-metadatasize
 .IR size ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-version ]
 .I VolumeGroupName
 .RI [ VolumeGroupName ...]

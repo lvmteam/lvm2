@@ -49,6 +49,8 @@ vgchange \(em change attributes of a volume group
 .RB [ \-P | \-\-partial ]
 .RB [ \-s | \-\-physicalextentsize
 .IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-S | \-\-select
 .IR Selection ]
 .RB [ \-\-systemid

@@ -8,6 +8,8 @@ vgmknodes \(em recreate volume group directory and logical volume special files
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-\-refresh ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-v | \-\-verbose ]
 .RI [[ VolumeGroupName | LogicalVolumePath ]...]
 .SH DESCRIPTION

@@ -14,6 +14,8 @@ lvdisplay \(em display attributes of a logical volume
 .RB [ \-\-maps ]
 .RB [ \-\-nosuffix ]
 .RB [ \-P | \-\-partial ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-S | \-\-select
 .IR Selection ]
 .RB [ \-\-units
@@ -30,20 +32,26 @@ lvdisplay \(em display attributes of a logical volume
 .RB [ \-a | \-\-all ]
 .RB [ \-\-commandprofile
 .IR ProfileName ]
+.RB [[ \-\-configreport
+.IR ReportName ]
+.RB [ \-o | \-\-options
+.RI [ + | \- | # ] Field1 [, Field2 ...]
+.RB [ \-O | \-\-sort
+.RI [ + | \- ] Key1 [, Key2 ...]]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB ...]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-\-ignoreskippedcluster ]
+.RB [ \-\-logonly ]
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
-.RB [ \-o | \-\-options
-.RI [ + | \- | # ] Field [ ,Field ...]]
-.RB [ \-O | \-\-sort
-.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...]]
 .RB [ \-P | \-\-partial ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-segments ]
-.RB [ \-S | \-\-select
-.IR Selection ]
 .RB [ \-\-separator
 .IR Separator ]
 .RB [ \-\-unbuffered ]

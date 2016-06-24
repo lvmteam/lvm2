@@ -10,6 +10,8 @@ pvresize \(em resize a disk or partition in use by LVM2
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-setphysicalvolumesize
 .IR size ]
 .I PhysicalVolume 

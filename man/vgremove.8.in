@@ -9,6 +9,8 @@ vgremove \(em remove a volume group
 .RB [ \-f | \-\-force ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-noudevsync ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-S | \-\-select
 .IR Selection ]
 .RB [ \-t | \-\-test ]

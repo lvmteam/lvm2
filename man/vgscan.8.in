@@ -11,6 +11,8 @@ vgscan \(em scan all disks for volume groups and rebuild caches
 .RB [ \-\-mknodes ]
 .RB [ \-\-notifydbus ]
 .RB [ \-P | \-\-partial ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-v | \-\-verbose ]
 .SH DESCRIPTION
 vgscan scans all SCSI, (E)IDE disks, multiple devices and a bunch

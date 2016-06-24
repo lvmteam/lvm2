@@ -76,6 +76,8 @@ lvchange \(em change attributes of a logical volume
 .RB [ \-r | \-\-readahead
 .RB { \fIReadAheadSectors | auto | none }]
 .RB [ \-\-refresh ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-resync ]
 .RB [ \-S | \-\-select
 .IR Selection ]

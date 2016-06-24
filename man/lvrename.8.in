@@ -14,6 +14,8 @@ lvrename \(em rename a logical volume
 .RB [ \-\-version ]
 .RB [ \-f | \-\-force ]
 .RB [ \-\-noudevsync ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RI { OldLogicalVolume { Name | Path }
 .IR NewLogicalVolume { Name | Path }
 |

@@ -13,6 +13,8 @@ pvscan \(em scan all disks for physical volumes
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-e | \-\-exported ]
 .RB [ \-n | \-\-novolumegroup ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-s | \-\-short ]
 .RB [ \-u | \-\-uuid ]
 .BR
@@ -23,6 +25,8 @@ pvscan \(em scan all disks for physical volumes
 .B \-\-cache
 .RB [ \-a | \-\-activate " " \fIay ]
 .RB [ \-b | \-\-background ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-major
 .I major
 .B \-\-minor

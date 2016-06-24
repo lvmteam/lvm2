@@ -9,6 +9,8 @@ vgrename \(em rename a volume group
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .IR OldVolumeGroup { Path | Name | UUID }

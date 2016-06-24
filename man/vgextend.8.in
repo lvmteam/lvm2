@@ -9,6 +9,8 @@ vgextend \(em add physical volumes to a volume group
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-restoremissing ]
 .RB [ \-f | \-\-force ]
 .RB [ \-t | \-\-test ]

@@ -11,6 +11,8 @@ vgreduce \(em reduce a volume group
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-removemissing ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .I VolumeGroupName

@@ -12,6 +12,8 @@ pvremove \(em remove a physical volume
 .RB [ \-\-version ]
 .RB [ \-f [ f ]| \-\-force 
 .RB [ \-\-force ]]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-y | \-\-yes ]
 .I PhysicalVolume
 .RI [ PhysicalVolume ...]

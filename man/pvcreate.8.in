@@ -31,6 +31,8 @@ pvcreate \(em initialize a disk or partition for use by LVM
 .RB [ \-\-restorefile
 .IR file ]
 .RB [ \-\-norestorefile ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-setphysicalvolumesize
 .IR size ]
 .RB [ \-u | \-\-uuid

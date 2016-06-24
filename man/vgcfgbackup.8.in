@@ -11,6 +11,8 @@ vgcfgbackup \(em backup volume group descriptor area
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-P | \-\-partial ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-v | \-\-verbose ]
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION

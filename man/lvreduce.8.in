@@ -20,6 +20,8 @@ lvreduce \(em reduce the size of a logical volume
 .BR \-L | \-\-size
 .RI [ \- ] LogicalVolumeSize [ bBsSkKmMgGtTpPeE ]}
 .RB [ \-n | \-\-nofsck ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-r | \-\-resizefs ]
 .IR LogicalVolume { Name | Path }
 .SH DESCRIPTION

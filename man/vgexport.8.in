@@ -8,6 +8,8 @@ vgexport \- make volume groups unknown to the system
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-S | \-\-select
 .IR Selection ]
 .RB [ \-v | \-\-verbose ]

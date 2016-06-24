@@ -24,6 +24,8 @@ lvextend \(em extend the size of a logical volume
 .RB [ \-n | \-\-nofsck ]
 .RB [ \-\-noudevsync]
 .RB [ \-r | \-\-resizefs ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-use\-policies ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]

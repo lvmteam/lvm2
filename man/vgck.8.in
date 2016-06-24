@@ -7,6 +7,8 @@ vgck \(em check volume group metadata
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-v | \-\-verbose ]
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION

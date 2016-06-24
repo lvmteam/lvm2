@@ -12,6 +12,8 @@ pvdisplay \- display attributes of a physical volume
 .RB [ \-\-ignoreskippedcluster ]
 .RB [ \-\-maps ]
 .RB [ \-\-nosuffix ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-s | \-\-short ]
 .RB [ \-S | \-\-select
 .IR Selection ]
@@ -30,19 +32,24 @@ pvdisplay \- display attributes of a physical volume
 .RB [ \-\-binary ]
 .RB [ \-a | \-\-all ]
 .RB [ \-\-commandprofile
+.RB [[ \-\-configreport
+.IR ReportName ]
+.RB [ \-o | \-\-options
+.RI [ + | \- | # ] Field1 [, Field2 ...]
+.RB [ \-O | \-\-sort
+.RI [ + | \- ] Key1 [, Key2 ...]]
+.RB [ \-S | \-\-select
+.IR Selection ]
+.RB ...]
 .IR ProfileName ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
+.RB [ \-\-logonly ]
 .RB [ \-\-noheadings ]
 .RB [ \-\-nosuffix ]
-.RB [ \-o | \-\-options
-.RI [ + | \- | # ] Field [ ,Field ...]]
-.RB [ \-O | \-\-sort
-.RI [ + | \- ] Key1 [ , [ + | \- ] Key2 ...
-.RI ]]
-.RB [ \-S | \-\-select
-.IR Selection ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-separator
 .IR Separator ]
 .RB [ \-\-unbuffered ]

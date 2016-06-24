@@ -466,6 +466,16 @@ for any other command (with the exception of \fBlvmconfig\fP command where the
 \fB\-\-profile\fP has special meaning, see \fBlvmconfig\fP(8) for more information).
 .
 .HP
+.BR \-\-reportformat
+.IR {basic|json}
+.br
+Overrides current output format for reports which is defined globally by
+\fBreport/output_format\fP configuration setting in \fBlvm.conf\fP(5).
+The \fBbasic\fP format is the original format with columns and rows and
+if there is more than one report per command, each report is prefixed
+with report's name for identification. The \fBjson\fP stands for report
+output in JSON format.
+.HP
 .BR \-\-config
 .IR ConfigurationString
 .br

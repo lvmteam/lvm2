@@ -11,6 +11,8 @@ lvscan \(em scan (all disks) for Logical Volumes
 .RB [ \-h | \-\-help ]
 .RB [ \-\-ignorelockingfailure ]
 .RB [ \-P | \-\-partial ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-v | \-\-verbose ]
 .SH DESCRIPTION
 lvscan scans all known volume groups or all supported LVM block devices

@@ -27,6 +27,8 @@ vgcreate \(em create a volume group
 .IR NumberOfCopies | unmanaged | all ]
 .RB [ \-s | \-\-physicalextentsize
 .IR PhysicalExtentSize [ bBsSkKmMgGtTpPeE ]]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-\-shared ]
 .RB [ \-\-systemid
 .IR SystemID ]

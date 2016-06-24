@@ -6,6 +6,8 @@ vgimport \(em make exported volume groups known to the system
 .RB [ \-a | \-\-all ]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-? | \-\-help ]
+.RB [ \-\-reportformat
+.RB { basic | json }]
 .RB [ \-S | \-\-select
 .IR Selection ]
 .RB [ \-v | \-\-verbose ]
