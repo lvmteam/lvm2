@@ -508,7 +508,7 @@ xx(lvdisplay,
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
     aligned_ARG, all_ARG, binary_ARG, colon_ARG, columns_ARG,
-    configreport_ARG< foreign_ARG, history_ARG, ignorelockingfailure_ARG,
+    configreport_ARG, foreign_ARG, history_ARG, ignorelockingfailure_ARG,
     ignoreskippedcluster_ARG, logonly_ARG, maps_ARG, noheadings_ARG,
     nosuffix_ARG, options_ARG, sort_ARG, partial_ARG, readonly_ARG,
     reportformat_ARG, segments_ARG, select_ARG, separator_ARG,
