@@ -158,7 +158,7 @@ xx(fullreport,
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial]\n"
    "\t[--readonly]\n"
-   "\t[--reportformat {json}]\n"
+   "\t[--reportformat {basic|json}]\n"
    "\t[--rows]\n"
    "\t[-S|--select Selection]\n"
    "\t[--separator Separator]\n"
@@ -181,7 +181,7 @@ xx(lastlog,
    "Display last command's log report",
    PERMITTED_READ_ONLY | NO_METADATA_PROCESSING,
    "log\n"
-   "\t[--reportformat {json}]\n"
+   "\t[--reportformat {basic|json}]\n"
    "\t[-S|--select Selection]\n",
 
    reportformat_ARG, select_ARG)
@@ -472,6 +472,7 @@ xx(lvdisplay,
    "\t[--nosuffix]\n"
    "\t[-P|--partial]\n"
    "\t[--readonly]\n"
+   "\t[--reportformat {basic|json}]\n"
    "\t[-S|--select Selection]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
    "\t[-v|--verbose]\n"
@@ -908,6 +909,7 @@ xx(pvdisplay,
    "\t[-m|--maps]\n"
    "\t[--nosuffix]\n"
    "\t[--readonly]\n"
+   "\t[--reportformat {basic|json}]\n"
    "\t[-S|--select Selection]\n"
    "\t[-s|--short]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
@@ -1263,6 +1265,7 @@ xx(vgdisplay,
    "\t[--nosuffix]\n"
    "\t[-P|--partial]\n"
    "\t[--readonly]\n"
+   "\t[--reportformat {basic|json}]\n"
    "\t[-S|--select Selection]\n"
    "\t[--units hHbBsSkKmMgGtTpPeE]\n"
    "\t[--version]\n"
