@@ -1,3 +1,6 @@
+Version 2.02.159 - 
+=================================
+
 Version 2.02.158 - 25th June 2016
 =================================
   Pool metadata lvresize uses now same code as resize of normal volume.
