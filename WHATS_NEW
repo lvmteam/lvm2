@@ -1,10 +1,13 @@
-Version 2.02.158 - 
+Version 2.02.158 - 25th June 2016
 =================================
   Pool metadata lvresize uses now same code as resize of normal volume.
   Preserve monitoring status when updating thin-pool metadata.
   Return 0 (inactive) when status cannot be queried in _lv_active().
   Switch to log_warn() for failing activation status query.
+  Replace vgimportclone script with binary.
+  While lvmetad is shutting down, continue handling all connections cleanly.
   Refactor lvconvert argument handling code.
+  Notify lvmetad when vgcfgrestore changes VG metadata.
   Add --logonly option to report only cmd log for a command, not other reports.
   Add log/command_log_selection to configure default selection used on cmd log.
   Use 'orphan' object type in cmd log for groups to collect PVs not yet in VGs.

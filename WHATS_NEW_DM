@@ -1,4 +1,4 @@
-Version 1.02.128 -
+Version 1.02.128 - 25th June 2016
 =================================
   Recognize 'all' keyword used in selection as synonym for "" (no selection).
   Add dm_report_set_selection to set selection for multiple output of report.
