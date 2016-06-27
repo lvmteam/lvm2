@@ -1031,6 +1031,7 @@ retry:
 			log_error("lvmetad_open reconnect error %d", err);
 			memset(&reply, 0, sizeof(reply));
 			reply.error = err;
+			va_end(ap);
 			return reply;
 		} else {
 			log_debug("lvmetad reconnected");
