@@ -25,7 +25,8 @@
  */
 #define RH_SORT_REQUIRED	0x00000100
 #define RH_HEADINGS_PRINTED	0x00000200
-#define RH_ALREADY_REPORTED	0x00000400
+#define RH_FIELD_CALC_NEEDED	0x00000400
+#define RH_ALREADY_REPORTED	0x00000800
 
 struct selection {
 	struct dm_pool *mem;
@@ -1281,6 +1282,8 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 	if (output_flags & DM_REPORT_OUTPUT_BUFFERED)
 		rh->flags |= RH_SORT_REQUIRED;
+
+	rh->flags |= RH_FIELD_CALC_NEEDED;
 
 	dm_list_init(&rh->field_props);
 	dm_list_init(&rh->rows);
@@ -4032,6 +4035,7 @@ static void _reset_field_props(struct dm_report *rh)
 	struct field_properties *fp;
 	dm_list_iterate_items(fp, &rh->field_props)
 		fp->width = fp->initial_width;
+	rh->flags |= RH_FIELD_CALC_NEEDED;
 }
 
 int dm_report_set_selection(struct dm_report *rh, const char *selection)
@@ -4188,11 +4192,45 @@ static int _report_headings(struct dm_report *rh)
 	return 0;
 }
 
+static int _should_display_row(struct row *row)
+{
+	return row->field_sel_status || row->selected;
+}
+
+static void _recalculate_fields(struct dm_report *rh)
+{
+	struct row *row;
+	struct dm_report_field *field;
+	size_t len;
+
+	dm_list_iterate_items(row, &rh->rows) {
+		dm_list_iterate_items(field, &row->fields) {
+			if ((rh->flags & RH_SORT_REQUIRED) &&
+			    (field->props->flags & FLD_SORT_KEY)) {
+				(*row->sort_fields)[field->props->sort_posn] = field;
+			}
+
+			if (_should_display_row(row)) {
+				len = (int) strlen(field->report_string);
+				if ((len > field->props->width))
+					field->props->width = len;
+
+			}
+		}
+	}
+
+	rh->flags &= ~RH_FIELD_CALC_NEEDED;
+}
+
 int dm_report_column_headings(struct dm_report *rh)
 {
 	/* Columns-as-rows does not use _report_headings. */
 	if (rh->flags & DM_REPORT_OUTPUT_COLUMNS_AS_ROWS)
 		return 1;
+
+	if (rh->flags & RH_FIELD_CALC_NEEDED)
+		_recalculate_fields(rh);
+
 	return _report_headings(rh);
 }
 
@@ -4244,11 +4282,6 @@ static int _row_compare(const void *a, const void *b)
 	}
 
 	return 0;		/* Identical */
-}
-
-static int _should_display_row(struct row *row)
-{
-	return row->field_sel_status || row->selected;
 }
 
 static int _sort_rows(struct dm_report *rh)
@@ -4701,9 +4734,6 @@ static int _print_basic_report_header(struct dm_report *rh)
 
 int dm_report_output(struct dm_report *rh)
 {
-	struct row *row;
-	struct dm_report_field *field;
-	size_t len;
 	int r = 0;
 
 	if (_is_json_report(rh) &&
@@ -4715,21 +4745,8 @@ int dm_report_output(struct dm_report *rh)
 		goto out;
 	}
 
-	dm_list_iterate_items(row, &rh->rows) {
-		dm_list_iterate_items(field, &row->fields) {
-			if ((rh->flags & RH_SORT_REQUIRED) &&
-			    (field->props->flags & FLD_SORT_KEY)) {
-				(*row->sort_fields)[field->props->sort_posn] = field;
-			}
-
-			if (_should_display_row(row)) {
-				len = (int) strlen(field->report_string);
-				if ((len > field->props->width))
-					field->props->width = len;
-
-			}
-		}
-	}
+	if (rh->flags & RH_FIELD_CALC_NEEDED)
+		_recalculate_fields(rh);
 
 	if ((rh->flags & RH_SORT_REQUIRED))
 		_sort_rows(rh);
