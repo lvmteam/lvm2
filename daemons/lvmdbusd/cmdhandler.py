@@ -447,7 +447,7 @@ def lvm_full_report_json():
 					'pv_pe_alloc_count', 'pv_attr', 'pv_tags', 'vg_name',
 					'vg_uuid']
 
-	pv_seg_columns = ['pv_seg_start', 'pv_seg_size', 'segtype',
+	pv_seg_columns = ['pvseg_start', 'pvseg_size', 'segtype',
 					  'pv_uuid', 'lv_uuid', 'pv_name']
 
 	vg_columns = ['vg_name', 'vg_uuid', 'vg_fmt', 'vg_size', 'vg_free',
@@ -491,7 +491,7 @@ def pv_retrieve_with_segs(device=None):
 				'pv_used', 'dev_size', 'pv_mda_size', 'pv_mda_free',
 				'pv_ba_start', 'pv_ba_size', 'pe_start', 'pv_pe_count',
 				'pv_pe_alloc_count', 'pv_attr', 'pv_tags', 'vg_name',
-				'vg_uuid', 'pv_seg_start', 'pvseg_size', 'segtype']
+				'vg_uuid', 'pvseg_start', 'pvseg_size', 'segtype']
 
 	# Lvm has some issues where it returns failure when querying pvs when other
 	# operations are in process, see:

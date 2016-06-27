@@ -83,7 +83,7 @@ class DataStore(object):
 		for p in pvs:
 			DataStore._insert_record(
 				c_pvs, p['pv_uuid'], p,
-				['pv_seg_start', 'pvseg_size', 'segtype'])
+				['pvseg_start', 'pvseg_size', 'segtype'])
 
 		for p in c_pvs.values():
 			# Capture which PVs are associated with which VG
@@ -124,16 +124,15 @@ class DataStore(object):
 
 				if 'pvseg' in r:
 					for s in r['pvseg']:
-						# TODO Why is json pvseg_start, not pv_seg_start?
 						r = c_pvs[s['pv_uuid']]
-						r.setdefault('pv_seg_start', []).append(s['pvseg_start'])
+						r.setdefault('pvseg_start', []).append(s['pvseg_start'])
 						r.setdefault('pvseg_size', []).append(s['pvseg_size'])
 						r.setdefault('segtype', []).append(s['segtype'])
 
 				# TODO: Remove this bug work around when we have orphan segs.
 				for i in c_pvs.values():
-					if 'pv_seg_start' not in i:
-						i['pv_seg_start'] = '0'
+					if 'pvseg_start' not in i:
+						i['pvseg_start'] = '0'
 						i['pvseg_size'] = i['pv_pe_count']
 						i['segtype'] = 'free'
 
@@ -469,7 +468,7 @@ class DataStore(object):
 
 	def pv_pe_segments(self, pv_uuid):
 		pv = self.pvs[pv_uuid]
-		return list(zip(pv['pv_seg_start'], pv['pvseg_size']))
+		return list(zip(pv['pvseg_start'], pv['pvseg_size']))
 
 	def pv_contained_lv(self, pv_device):
 		rc = []
