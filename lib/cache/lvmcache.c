@@ -2137,7 +2137,6 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 	char uuid[64] __attribute__((aligned(8)));
 	struct lvmcache_vgsummary vgsummary = { 0 };
-	const struct format_type *fmt = labeller->fmt;
 	struct lvmcache_info *info;
 	struct lvmcache_info *info_lookup;
 	struct device_list *devl;
@@ -2178,7 +2177,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller,
 
 			if (!_found_duplicate_pvs && lvmetad_used()) {
 				log_warn("WARNING: Disabling lvmetad cache which does not support duplicate PVs."); 
-				lvmetad_set_disabled(fmt->cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
+				lvmetad_set_disabled(labeller->fmt->cmd, LVMETAD_DISABLE_REASON_DUPLICATES);
 			}
 			_found_duplicate_pvs = 1;
 
