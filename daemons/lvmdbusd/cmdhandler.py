@@ -467,11 +467,11 @@ def lvm_full_report_json():
 
 	cmd = _dc('fullreport', [
 		'-a',		# Need hidden too
-		'-o', '/pv/' + ','.join(pv_columns),
-		'-o', '/vg/' + ','.join(vg_columns),
-		'-o', '/lv/' + ','.join(lv_columns),
-		'-o', '/seg/' + ','.join(lv_seg_columns),
-		'-o', '/pvseg/' + ','.join(pv_seg_columns),
+		'--configreport', 'pv', '-o', ','.join(pv_columns),
+		'--configreport', 'vg', '-o', ','.join(vg_columns),
+		'--configreport', 'lv', '-o', ','.join(lv_columns),
+		'--configreport', 'seg', '-o', ','.join(lv_seg_columns),
+		'--configreport', 'pvseg', '-o', ','.join(pv_seg_columns),
 		'--reportformat', 'json'
 	])
 
