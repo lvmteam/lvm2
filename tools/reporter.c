@@ -815,7 +815,7 @@ static int _get_report_options(struct cmd_context *cmd,
 
 	if (!(mem = dm_pool_create("report_options", 128))) {
 		log_error("Failed to create temporary mempool to process report options.");
-		goto out;
+		return ECMD_FAILED;
 	}
 
 	if (single_args->report_type == CMDLOG) {

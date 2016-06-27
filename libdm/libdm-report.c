@@ -4001,7 +4001,7 @@ static int _report_set_selection(struct dm_report *rh, const char *selection, in
 			goto_bad;
 	}
 
-	if (!selection || !strcasecmp(selection, SPECIAL_SELECTION_ALL))
+	if (!selection || !selection[0] || !strcasecmp(selection, SPECIAL_SELECTION_ALL))
 		return 1;
 
 	rh->selection->add_new_fields = add_new_fields;
@@ -4742,7 +4742,7 @@ int dm_report_output(struct dm_report *rh)
 	else
 		r = _output_as_columns(rh);
 out:
-	if (r && rh && rh->group_item)
+	if (r && rh->group_item)
 		rh->group_item->output_done = 1;
 	return r;
 }

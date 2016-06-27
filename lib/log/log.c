@@ -277,7 +277,7 @@ static const char *_get_log_level_name(int use_stderr, int level)
 						"fatal", /* _LOG_FATAL */
 						"error", /* _LOG_ERROR */
 						"warn",  /* _LOG_WARN */
-						"notice" /* _LOG_NOTICE */
+						"notice",/* _LOG_NOTICE */
 						"info",  /* _LOG_INFO */
 						"debug"  /* _LOG_DEBUG */
 						};

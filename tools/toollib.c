@@ -3439,7 +3439,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	int skip;
 	int notfound;
 	int already_locked;
-	int do_report_ret_code;
+	int do_report_ret_code = 1;
 
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_VG);
 
