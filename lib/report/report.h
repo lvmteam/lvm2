@@ -90,7 +90,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  int aligned, int buffered, int headings, int field_prefixes,
 		  int quoted, int columns_as_rows, const char *selection,
 		  int multiple_output);
-int report_get_single_selection(struct cmd_context *cmd, const char **selection);
+int report_get_single_selection(struct cmd_context *cmd, report_type_t report_type, const char **selection);
 void *report_init_for_selection(struct cmd_context *cmd, report_type_t *report_type,
 				const char *selection);
 int report_get_prefix_and_desc(report_type_t report_type_id,

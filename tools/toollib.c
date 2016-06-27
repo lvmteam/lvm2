@@ -1771,7 +1771,7 @@ int init_selection_handle(struct cmd_context *cmd, struct processing_handle *han
 		return 0;
 	}
 
-	if (!report_get_single_selection(cmd, &selection))
+	if (!report_get_single_selection(cmd, initial_report_type, &selection))
 		return_0;
 
 	sh->report_type = initial_report_type;
