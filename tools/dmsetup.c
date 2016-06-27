@@ -4189,8 +4189,8 @@ FIELD_F(STATS, NUM, "Interval", 8, dm_stats_sample_interval, "interval", "Sampli
 
 /* Stats report meta-fields */
 FIELD_F(STATS_META, NUM, "RgID", 4, dm_stats_region_id, "region_id", "Region ID.")
-FIELD_F(STATS_META, SIZ, "RgStart", 5, dm_stats_region_start, "region_start", "Region start.")
-FIELD_F(STATS_META, SIZ, "RgSize", 5, dm_stats_region_len, "region_len", "Region length.")
+FIELD_F(STATS_META, SIZ, "RgStart", 7, dm_stats_region_start, "region_start", "Region start.")
+FIELD_F(STATS_META, SIZ, "RgSize", 6, dm_stats_region_len, "region_len", "Region length.")
 FIELD_F(STATS_META, NUM, "ArID", 4, dm_stats_area_id, "area_id", "Area ID.")
 FIELD_F(STATS_META, SIZ, "ArStart", 7, dm_stats_area_start, "area_start", "Area offset from start of device.")
 FIELD_F(STATS_META, SIZ, "ArSize", 6, dm_stats_area_len, "area_len", "Area length.")
