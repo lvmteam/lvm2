@@ -234,7 +234,6 @@ class DataStore(object):
 
 		return DataStore._parse_lvs_common(c_lvs, c_lv_full_lookup)
 
-
 	@staticmethod
 	def _parse_lvs_json(_all):
 

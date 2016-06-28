@@ -224,7 +224,7 @@ class ObjectManager(AutomatedProperties):
 		return path
 
 	def get_object_path_by_uuid_lvm_id(self, uuid, lvm_id, path_create=None,
-									   gen_new=True):
+										gen_new=True):
 		"""
 		For a given lvm asset return the dbus object registered to it.  If the
 		object is not found and gen_new == True and path_create is a valid

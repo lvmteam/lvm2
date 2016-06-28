@@ -448,7 +448,7 @@ def lvm_full_report_json():
 					'vg_uuid']
 
 	pv_seg_columns = ['pvseg_start', 'pvseg_size', 'segtype',
-					  'pv_uuid', 'lv_uuid', 'pv_name']
+						'pv_uuid', 'lv_uuid', 'pv_name']
 
 	vg_columns = ['vg_name', 'vg_uuid', 'vg_fmt', 'vg_size', 'vg_free',
 					'vg_sysid', 'vg_extent_size', 'vg_extent_count',
