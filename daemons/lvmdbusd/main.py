@@ -101,6 +101,10 @@ def main():
 						help="Dump debug messages", default=False,
 						dest='debug')
 
+	parser.add_argument("--nojson", action='store_false',
+						help="Do not use LVM JSON output", default=None,
+						dest='use_json')
+
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
 
 	# Ensure that we get consistent output for parsing stdout/stderr
@@ -137,7 +141,7 @@ def main():
 
 	cfg.load = load
 
-	cfg.db = lvmdb.DataStore()
+	cfg.db = lvmdb.DataStore(args.use_json)
 
 	# Start up thread to monitor pv moves
 	thread_list.append(
