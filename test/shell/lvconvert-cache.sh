@@ -144,7 +144,7 @@ lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
 
 # unsupported yet
 fail lvconvert --repair $vg/cpool 2>&1 | tee out
-grep "not yet implemented" out
+grep "Cannot convert internal LV" out
 
 lvremove -f $vg
 

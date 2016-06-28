@@ -85,9 +85,12 @@ offset=$(( offset + 2 ))
 # update in case  mirror ever gets faster and allows parallel read
 aux delay_dev "$dev2" 0 2000 ${offset}:1
 lvcreate -aey -l5 -Zn -Wn --type mirror --regionsize 16K -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
+# FIXME: add a new explicit option to define the polling behavior
+# done here with 'lvconvert vg/lv'.  That option can specify
+# that the command succeeds even if the LV doesn't need polling.
 should not lvconvert -m-1 $vg/$lv1 "$dev1"
 aux enable_dev "$dev2"
-lvconvert $vg/$lv1 # wait
+should lvconvert $vg/$lv1 # wait
 lvconvert -m2 $vg/$lv1 "$dev1" "$dev2" "$dev4" "$dev3:0" # If the above "should" failed...
 
 aux wait_for_sync $vg $lv1
@@ -113,7 +116,7 @@ LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # Next convert should fail b/c we can't have 2 at once
 should not lvconvert -m+1 $vg/$lv1 "$dev5"
 aux enable_dev "$dev4"
-lvconvert $vg/$lv1 # wait
+should lvconvert $vg/$lv1 # wait
 lvconvert -m2 $vg/$lv1 # In case the above "should" actually failed
 
 check mirror $vg $lv1 "$dev3"
@@ -156,7 +159,7 @@ lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE
 lvchange -an $vg/$lv1
 lvconvert -m+1 $vg/$lv1 "$dev4"
 lvchange -aey $vg/$lv1
-lvconvert $vg/$lv1 # wait
+should lvconvert $vg/$lv1 # wait
 check mirror $vg $lv1 "$dev3"
 check mirror_no_temporaries $vg $lv1
 lvremove -ff $vg
@@ -168,7 +171,7 @@ lvremove -ff $vg
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 lvconvert -m-1 $vg/$lv1 "$dev4"
-lvconvert $vg/$lv1 # wait
+should lvconvert $vg/$lv1 # wait
 
 check mirror $vg $lv1 "$dev3"
 check mirror_no_temporaries $vg $lv1
@@ -179,7 +182,7 @@ lvremove -ff $vg
 lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+2 -b $vg/$lv1 "$dev4" "$dev5"
 lvconvert -m-1 $vg/$lv1 "$dev4"
-lvconvert $vg/$lv1 # wait
+should lvconvert $vg/$lv1 # wait
 
 check mirror $vg $lv1 "$dev3"
 check mirror_no_temporaries $vg $lv1
@@ -192,9 +195,9 @@ LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
 # lvconvert-mirror-updown.sh tests this errornous case separately
-lvconvert $vg/$lv1
+should lvconvert $vg/$lv1
 lvconvert -m-1 $vg/$lv1 "$dev2"
-lvconvert $vg/$lv1
+should lvconvert $vg/$lv1
 
 check mirror $vg $lv1 "$dev3"
 check mirror_no_temporaries $vg $lv1
@@ -207,9 +210,9 @@ LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
 # FIXME: Extra wait here for mirror upconvert synchronization
 # otherwise we may fail her on parallel upconvert and downconvert
 # lvconvert-mirror-updown.sh tests this errornous case separately
-lvconvert $vg/$lv1
+should lvconvert $vg/$lv1
 lvconvert -m-1 $vg/$lv1 "$dev2"
-lvconvert $vg/$lv1
+should lvconvert $vg/$lv1
 
 check mirror $vg $lv1 "$dev3"
 check mirror_no_temporaries $vg $lv1
