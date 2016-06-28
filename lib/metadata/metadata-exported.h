@@ -1196,7 +1196,6 @@ int lv_raid_merge(struct logical_volume *lv);
 int lv_raid_convert(struct logical_volume *lv,
 		    const struct segment_type *new_segtype,
 		    int yes, int force,
-		    const unsigned image_count,
 		    const unsigned stripes,
 		    const unsigned new_stripe_size,
 		    struct dm_list *allocate_pvs);
