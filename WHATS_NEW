@@ -1,5 +1,6 @@
 Version 2.02.159 - 
 =================================
+  Support conversions between striped and raid0 segment types.
   Add infrastructure for raid takeover lvconvert options.
 
 Version 2.02.158 - 25th June 2016

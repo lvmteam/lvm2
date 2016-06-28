@@ -27,6 +27,8 @@
 		     (void) (&_a == &_b); \
 		     _a > _b ? _a : _b; })
 
+#define is_power_of_2(n) ((n) && !((n) & ((n) - 1)))
+
 #if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6)
 #define uninitialized_var(x) x
 #else

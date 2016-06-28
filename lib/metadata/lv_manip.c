@@ -3301,7 +3301,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 void alloc_destroy(struct alloc_handle *ah)
 {
-	dm_pool_destroy(ah->mem);
+	if (ah)
+		dm_pool_destroy(ah->mem);
 }
 
 /*

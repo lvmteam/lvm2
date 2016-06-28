@@ -222,6 +222,8 @@ struct segtype_handler {
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 					     const char *str);
+struct segment_type *get_segtype_from_flag(struct cmd_context *cmd,
+					   uint64_t flag);
 
 struct segtype_library;
 int lvm_register_segtype(struct segtype_library *seglib,

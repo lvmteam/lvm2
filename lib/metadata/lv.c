@@ -577,14 +577,14 @@ char *lv_name_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 char *lv_fullname_dup(struct dm_pool *mem, const struct logical_volume *lv)
 {
-        char lvfullname[NAME_LEN * 2 + 2];
+	char lvfullname[NAME_LEN * 2 + 2];
 
-        if (dm_snprintf(lvfullname, sizeof(lvfullname), "%s/%s", lv->vg->name, lv->name) < 0) {
-                log_error("lvfullname snprintf failed");
-                return NULL;
-        }
+	if (dm_snprintf(lvfullname, sizeof(lvfullname), "%s/%s", lv->vg->name, lv->name) < 0) {
+		log_error("lvfullname snprintf failed");
+		return NULL;
+	}
 
-        return dm_pool_strdup(mem, lvfullname);
+	return dm_pool_strdup(mem, lvfullname);
 }
 
 struct logical_volume *lv_parent(const struct logical_volume *lv)
@@ -930,7 +930,7 @@ char *lv_dmpath_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	if (!*lv->vg->name)
 		return dm_pool_strdup(mem, "");
 
-        if (!(name = dm_build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
+	if (!(name = dm_build_dm_name(mem, lv->vg->name, lv->name, NULL))) {
 		log_error("dm_build_dm_name failed");
 		return NULL;
 	}
@@ -1580,4 +1580,20 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 struct profile *lv_config_profile(const struct logical_volume *lv)
 {
 	return lv->profile ? : lv->vg->profile;
+}
+
+int lv_has_constant_stripes(struct logical_volume *lv)
+{
+	uint32_t previous_area_count = 0;
+	struct lv_segment *seg;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		if (!seg_is_striped(seg))
+			return 0;
+		if (previous_area_count && previous_area_count != seg->area_count)
+			return 0;
+		previous_area_count = seg->area_count;
+	}
+
+	return 1;
 }

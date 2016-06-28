@@ -415,6 +415,10 @@ struct logical_volume *alloc_lv(struct dm_pool *mem);
  */
 int check_lv_segments(struct logical_volume *lv, int complete_vg);
 
+/*
+ * Does every LV segment have the same number of stripes?
+ */
+int lv_has_constant_stripes(struct logical_volume *lv);
 
 /*
  * Checks that a replicator segment is correct.
