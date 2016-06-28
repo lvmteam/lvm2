@@ -110,7 +110,7 @@ def call_lvm(command, debug=False):
 		_debug_c(command, process.returncode, (stdout_text, stderr_text))
 
 	if process.returncode == 0:
-		if cfg.DEBUG and out[1] and len(out[1]):
+		if cfg.DEBUG and out[1] and len(out[1]) and 'help' not in command:
 			log_error('WARNING: lvm is out-putting text to STDERR on success!')
 			_debug_c(command, process.returncode, (stdout_text, stderr_text))
 
