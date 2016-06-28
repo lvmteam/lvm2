@@ -29,7 +29,7 @@ class RequestEntry(object):
 		self.lock = threading.RLock()
 		self.done = False
 		self._result = None
-		self._job = False
+		self._job = None
 		self._rc = 0
 		self._rc_error = None
 		self._return_tuple = return_tuple
