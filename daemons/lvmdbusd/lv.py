@@ -472,8 +472,6 @@ class Lv(LvCommon):
 			# it is a thin lv
 			if not dbo.IsThinVolume:
 				if optional_size == 0:
-					# TODO: Should we pick a sane default or force user to
-					# make a decision?
 					space = dbo.SizeBytes / 80
 					remainder = space % 512
 					optional_size = space + 512 - remainder
