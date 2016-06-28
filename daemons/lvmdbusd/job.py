@@ -17,7 +17,7 @@ import threading
 
 # noinspection PyPep8Naming
 class JobState(object):
-	def __init__(self, request):
+	def __init__(self, request=None):
 		self.rlock = threading.RLock()
 
 		self._percent = 0

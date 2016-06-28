@@ -20,6 +20,7 @@ from .loader import common
 from .state import State
 from . import background
 from .utils import round_size
+from .job import JobState
 
 
 # noinspection PyUnusedLocal
@@ -352,12 +353,20 @@ class Vg(AutomatedProperties):
 	@dbus.service.method(
 		dbus_interface=VG_INTERFACE,
 		in_signature='o(tt)a(ott)ia{sv}',
-		out_signature='o')
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
 	def Move(self, pv_src_obj, pv_source_range, pv_dests_and_ranges,
-			tmo, move_options):
-		return background.move(
-			VG_INTERFACE, None, pv_src_obj, pv_source_range,
-			pv_dests_and_ranges, move_options, tmo)
+			tmo, move_options, cb, cbe):
+
+		job_state = JobState()
+
+		r = RequestEntry(
+				tmo, background.move,
+				(VG_INTERFACE, None, pv_src_obj, pv_source_range,
+				pv_dests_and_ranges, move_options, job_state), cb, cbe, False,
+				job_state)
+
+		cfg.worker_q.put(r)
 
 	@staticmethod
 	def _lv_create(uuid, vg_name, name, size_bytes, pv_dests_and_ranges,

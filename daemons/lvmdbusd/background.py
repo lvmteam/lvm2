@@ -43,40 +43,22 @@ def lv_merge_cmd(merge_options, lv_full_name):
 	return cmd
 
 
-def _create_background_dbus_job(job_state):
-	job_obj = Job(None, job_state)
-	cfg.om.register_object(job_obj)
-	return job_obj.dbus_object_path()
-
-
-def _move_merge(interface_name, cmd, time_out):
-	# Create job object to be used while running the command
-	rc = '/'
-	job_state = JobState(None)
+def _move_merge(interface_name, cmd, job_state):
 	add(cmd, job_state)
 
-	if time_out == -1:
-		# Waiting forever
-		done = job_state.Wait(time_out)
-		if not done:
-			ec, err_msg = job_state.GetError
-			raise dbus.exceptions.DBusException(
-				interface_name,
-				'Exit code %s, stderr = %s' % (str(ec), err_msg))
-	elif time_out == 0:
-		# Immediately create and return a job
-		rc = _create_background_dbus_job(job_state)
-	else:
-		# Willing to wait for a bit
-		done = job_state.Wait(time_out)
-		if not done:
-			rc = _create_background_dbus_job(job_state)
+	done = job_state.Wait(-1)
+	if not done:
+		ec, err_msg = job_state.GetError
+		raise dbus.exceptions.DBusException(
+			interface_name,
+			'Exit code %s, stderr = %s' % (str(ec), err_msg))
 
-	return rc
+	cfg.load()
+	return '/'
 
 
 def move(interface_name, lv_name, pv_src_obj, pv_source_range,
-			pv_dests_and_ranges, move_options, time_out):
+			pv_dests_and_ranges, move_options, job_state):
 	"""
 	Common code for the pvmove handling.
 	:param interface_name:  What dbus interface we are providing for
@@ -85,8 +67,8 @@ def move(interface_name, lv_name, pv_src_obj, pv_source_range,
 	:param pv_source_range: (0,0 to ignore, else start, end segments)
 	:param pv_dests_and_ranges: Array of PV object paths and start/end segs
 	:param move_options: Hash with optional arguments
-	:param time_out:
-	:return: Object path to job object
+	:param job_state: Used to convey information about jobs between processes
+	:return: '/' When complete, the empty object path
 	"""
 	pv_dests = []
 	pv_src = cfg.om.get_object_by_path(pv_src_obj)
@@ -112,18 +94,18 @@ def move(interface_name, lv_name, pv_src_obj, pv_source_range,
 								pv_source_range,
 								pv_dests)
 
-		return _move_merge(interface_name, cmd, time_out)
+		return _move_merge(interface_name, cmd, job_state)
 	else:
 		raise dbus.exceptions.DBusException(
 			interface_name, 'pv_src_obj (%s) not found' % pv_src_obj)
 
 
-def merge(interface_name, lv_uuid, lv_name, merge_options, time_out):
+def merge(interface_name, lv_uuid, lv_name, merge_options, job_state):
 	# Make sure we have a dbus object representing it
 	dbo = cfg.om.get_object_by_uuid_lvm_id(lv_uuid, lv_name)
 	if dbo:
 		cmd = lv_merge_cmd(merge_options, dbo.lvm_id)
-		return _move_merge(interface_name, cmd, time_out)
+		return _move_merge(interface_name, cmd, job_state)
 	else:
 		raise dbus.exceptions.DBusException(
 			interface_name,
@@ -141,17 +123,6 @@ def background_reaper():
 						_thread_list.pop(i)
 
 		time.sleep(3)
-
-
-def process_background_result(job_object, exit_code, error_msg):
-	cfg.load()
-	job_object.set_result(exit_code, error_msg)
-	return None
-
-
-# noinspection PyUnusedLocal
-def empty_cb(disregard):
-	pass
 
 
 def background_execute(command, background_job, skip_first_line=False):
@@ -181,23 +152,15 @@ def background_execute(command, background_job, skip_first_line=False):
 		if process.returncode == 0:
 			background_job.Percent = 100
 
-		# Queue up the result so that it gets executed in same thread as others.
-		r = RequestEntry(
-			-1, process_background_result,
-			(background_job, process.returncode, out[1]),
-			empty_cb, empty_cb, False)
-		cfg.worker_q.put(r)
+		background_job.set_result(process.returncode, out[1])
+
 	except Exception:
-		# In the unlikely event that we blew up, lets notify fill out the
-		# job object so that the client doesn't hang potentially forever!
+		# In the unlikely event that we blow up, we need to unblock caller which
+		# is waiting on an answer.
 		st = traceback.format_exc()
 		error = "Exception in background thread: \n%s" % st
 		log_error(error)
-		r = RequestEntry(
-			-1, process_background_result,
-			(background_job, 1, error),
-			empty_cb, empty_cb, False)
-		cfg.worker_q.put(r)
+		background_job.set_result(1, error)
 
 
 def add(command, reporting_job):

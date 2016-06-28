@@ -22,6 +22,7 @@ from .loader import common
 from .state import State
 from . import background
 from .utils import round_size
+from .job import JobState
 
 
 # Try and build a key for a LV, so that we sort the LVs with least dependencies
@@ -444,14 +445,21 @@ class Lv(LvCommon):
 	@dbus.service.method(
 		dbus_interface=LV_INTERFACE,
 		in_signature='o(tt)a(ott)ia{sv}',
-		out_signature='o')
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
 	def Move(self, pv_src_obj, pv_source_range,
 				pv_dests_and_ranges,
-				tmo, move_options):
-		return background.move(
-			LV_INTERFACE, self.lvm_id, pv_src_obj,
-			pv_source_range, pv_dests_and_ranges,
-			move_options, tmo)
+				tmo, move_options, cb, cbe):
+
+		job_state = JobState()
+
+		r = RequestEntry(
+				tmo, background.move,
+				(LV_INTERFACE, self.lvm_id, pv_src_obj, pv_source_range,
+				pv_dests_and_ranges, move_options, job_state), cb, cbe, False,
+				job_state)
+
+		cfg.worker_q.put(r)
 
 	@staticmethod
 	def _snap_shot(lv_uuid, lv_name, name, optional_size,
@@ -875,7 +883,13 @@ class LvSnapShot(Lv):
 	@dbus.service.method(
 		dbus_interface=SNAPSHOT_INTERFACE,
 		in_signature='ia{sv}',
-		out_signature='o')
-	def Merge(self, tmo, merge_options):
-		return background.merge(SNAPSHOT_INTERFACE, self.Uuid, self.lvm_id,
-								merge_options, tmo)
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
+	def Merge(self, tmo, merge_options, cb, cbe):
+		job_state = JobState()
+
+		r = RequestEntry(tmo, background.merge,
+							(SNAPSHOT_INTERFACE, self.Uuid, self.lvm_id,
+							merge_options, job_state), cb, cbe, False,
+							job_state)
+		cfg.worker_q.put(r)

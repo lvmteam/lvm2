@@ -18,7 +18,7 @@ from .utils import log_error
 
 class RequestEntry(object):
 	def __init__(self, tmo, method, arguments, cb, cb_error,
-			return_tuple=True):
+			return_tuple=True, job_state=None):
 		self.tmo = tmo
 		self.method = method
 		self.arguments = arguments
@@ -33,6 +33,7 @@ class RequestEntry(object):
 		self._rc = 0
 		self._rc_error = None
 		self._return_tuple = return_tuple
+		self._job_state = job_state
 
 		if self.tmo < 0:
 			# Client is willing to block forever
@@ -53,7 +54,7 @@ class RequestEntry(object):
 		r.timer_expired()
 
 	def _return_job(self):
-		self._job = Job(self)
+		self._job = Job(self, self._job_state)
 		cfg.om.register_object(self._job, True)
 		if self._return_tuple:
 			self.cb(('/', self._job.dbus_object_path()))
