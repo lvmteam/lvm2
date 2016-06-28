@@ -13,9 +13,7 @@ from . import cfg
 import time
 from .cmdhandler import options_to_cli_args
 import dbus
-from .job import Job, JobState
-from .utils import pv_range_append, pv_dest_ranges, log_debug, log_error
-from .request import RequestEntry
+from .utils import pv_range_append, pv_dest_ranges, log_error
 import traceback
 
 _rlock = threading.RLock()
@@ -125,7 +123,7 @@ def background_reaper():
 		time.sleep(3)
 
 
-def background_execute(command, background_job, skip_first_line=False):
+def background_execute(command, background_job):
 
 	# Wrap this whole operation in an exception handler, otherwise if we
 	# hit a code bug we will silently exit this thread without anyone being
