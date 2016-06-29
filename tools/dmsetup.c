@@ -703,13 +703,16 @@ static int _update_interval_times(void)
 {
 	static struct dm_timestamp *this_timestamp = NULL;
 	uint64_t delta_t, interval_num = _interval_num();
-	int r = 0;
+	int r = 1;
 
 	/*
 	 * Clock shutdown for exit - nothing to do.
 	 */
-	if (_timer_fd == TIMER_STOPPED && !_cycle_timestamp)
-		return 1;
+	if ((_timer_fd == TIMER_STOPPED) && !_cycle_timestamp)
+		goto out;
+
+	/* clock is running */
+	r = 0;
 
 	/*
          * Current timestamp. If _new_interval is set this is used as
@@ -780,7 +783,8 @@ static int _update_interval_times(void)
 	r = 1;
 
 out:
-	if (!r || _timer_fd == TIMER_STOPPED) {
+	/* timer stopped or never started */
+	if (!r || _timer_fd < 0) {
 		/* The _cycle_timestamp has not yet been allocated if we
 		 * fail to obtain this_timestamp on the first interval.
 		 */
