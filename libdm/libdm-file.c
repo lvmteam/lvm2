@@ -97,10 +97,8 @@ int dm_create_dir(const char *dir)
 	if (stat(dir, &info) == 0 && S_ISDIR(info.st_mode))
 		return 1;
 
-	if (!_create_dir_recursive(dir)) {
-		log_error("Failed to create directory %s.", dir);
-		return 0;
-	}
+	if (!_create_dir_recursive(dir))
+		return_0;
 
 	return 1;
 }
