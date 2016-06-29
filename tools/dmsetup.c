@@ -5122,7 +5122,7 @@ static int _stats_report(CMD_ARGS)
 		_statstype |= (DM_STATS_WALK_ALL
 			       | DM_STATS_WALK_SKIP_SINGLE_AREA);
 
-	if (!strcmp(subcommand, "report"))
+	if (!strcmp(subcommand, "report") && !_switches[STATSTYPE_ARG])
 		/* suppress duplicate rows of output */
 		_statstype |= (DM_STATS_WALK_ALL
 			       | DM_STATS_WALK_SKIP_SINGLE_AREA);
