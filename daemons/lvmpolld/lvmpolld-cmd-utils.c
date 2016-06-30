@@ -31,7 +31,7 @@ const char *polling_op(enum poll_type type)
 
 static int add_to_cmd_arr(const char ***cmdargv, const char *str, unsigned *ind)
 {
-	const char **newargv = *cmdargv;
+	const char **newargv;
 
 	if (*ind && !(*ind % MIN_ARGV_SIZE)) {
 		newargv = dm_realloc(*cmdargv, (*ind / MIN_ARGV_SIZE + 1) * MIN_ARGV_SIZE * sizeof(char *));

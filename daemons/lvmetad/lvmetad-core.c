@@ -2646,7 +2646,7 @@ static response dump(lvmetad_state *s)
 
 static response handler(daemon_state s, client_handle h, request r)
 {
-	response res = { 0 };
+	response res;
 	lvmetad_state *state = s.private;
 	char prev_token[128] = { 0 };
 	const char *rq;
