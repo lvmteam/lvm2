@@ -1286,6 +1286,35 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
 				  uint64_t group_id, char **buf);
 
 /*
+ * Create regions that correspond to the extents of a file in the
+ * filesystem and optionally place them into a group.
+ *
+ * File descriptor fd must reference a regular file, open for reading,
+ * in a local file system that supports the FIEMAP ioctl and that
+ * returns data describing the physical location of extents.
+ *
+ * The file descriptor can be closed by the caller following the call
+ * to dm_stats_create_regions_from_fd().
+ *
+ * The function returns a pointer to an array of uint64_t containing
+ * the IDs of the newly created regions. The array is terminated by the
+ * value DM_STATS_REGIONS_ALL and should be freed using dm_free() when
+ * no longer required.
+ *
+ * Unless nogroup is non-zero the regions will be placed into a group
+ * and the group alias is set to the value supplied.
+ *
+ * The group_id for the new group is equal to the region_id value in
+ * the first array element.
+ *
+ * File mapped histograms will be supported in a future version.
+ */
+uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
+					  int group, int precise,
+					  struct dm_histogram *bounds,
+					  const char *alias);
+
+/*
  * Call this to actually run the ioctl.
  */
 int dm_task_run(struct dm_task *dmt);
