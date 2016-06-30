@@ -573,6 +573,12 @@ static int clog_ctr(struct dm_ulog_request *rq)
 	for (argc = 0, p = rq->data; (p = strstr(p, " ")); p++, argc++)
 		*p = '\0';
 
+	if (!argc) {
+		LOG_ERROR("Received constructor request with bad data %s",
+			  rq->data);
+		return -EINVAL;
+	}
+
 	argv = malloc(argc * sizeof(char *));
 	if (!argv)
 		return -ENOMEM;
