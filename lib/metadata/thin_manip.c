@@ -588,7 +588,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile);
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
-	    (*chunk_size & (*chunk_size - 1))) {
+	    !is_power_of_2(*chunk_size)) {
 		log_error("Chunk size must be a power of 2 for this thin target version.");
 		return 0;
 	}

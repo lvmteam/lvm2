@@ -379,7 +379,7 @@ int vg_check_new_extent_size(const struct format_type *fmt, uint32_t new_extent_
 	}
 
 	if ((fmt->features & FMT_NON_POWER2_EXTENTS)) {
-		if ((new_extent_size & (new_extent_size - 1)) &&
+		if (!is_power_of_2(new_extent_size) &&
 		    (new_extent_size % MIN_NON_POWER2_EXTENT_SIZE)) {
 			log_error("Physical Extent size must be a multiple of %s when not a power of 2.",
 				  display_size(fmt->cmd, (uint64_t) MIN_NON_POWER2_EXTENT_SIZE));
@@ -389,7 +389,7 @@ int vg_check_new_extent_size(const struct format_type *fmt, uint32_t new_extent_
 	}
 
 	/* Apply original format1 restrictions */
-	if ((new_extent_size & (new_extent_size - 1))) {
+	if (!is_power_of_2(new_extent_size)) {
 		log_error("Metadata format only supports Physical Extent sizes that are powers of 2.");
 		return 0;
 	}

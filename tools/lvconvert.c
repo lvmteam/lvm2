@@ -650,7 +650,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 
 		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
 		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
-		    (lp->chunk_size & (lp->chunk_size - 1))) {
+		    !is_power_of_2(lp->chunk_size)) {
 			log_error("Chunk size must be a power of 2 in the "
 				  "range 4K to 512K");
 			return 0;
@@ -724,7 +724,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 			return 0;
 		}
 
-		if (lp->region_size & (lp->region_size - 1)) {
+		if (!is_power_of_2(lp->region_size)) {
 			log_error("Region size (%" PRIu32
 				  ") must be a power of 2", lp->region_size);
 			return 0;

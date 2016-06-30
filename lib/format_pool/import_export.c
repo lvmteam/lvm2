@@ -181,7 +181,7 @@ static int _add_stripe_seg(struct dm_pool *mem,
 	unsigned j;
 	uint32_t area_len;
 
-	if (usp->striping & (usp->striping - 1)) {
+	if (!is_power_of_2(usp->striping)) {
 		log_error("Stripe size must be a power of 2");
 		return 0;
 	}

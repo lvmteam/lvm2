@@ -712,7 +712,7 @@ int get_default_region_size(struct cmd_context *cmd)
 {
 	int region_size = _get_default_region_size(cmd);
 
-	if (region_size & (region_size - 1)) {
+	if (!is_power_of_2(region_size)) {
 		region_size = _round_down_pow2(region_size);
 		log_verbose("Reducing region size to %u kiB (power of 2).",
 			    region_size / 2);
@@ -4329,7 +4329,7 @@ static int _validate_stripesize(const struct volume_group *vg,
 		lp->stripe_size = vg->extent_size;
 	}
 
-	if (lp->stripe_size & (lp->stripe_size - 1)) {
+	if (!is_power_of_2(lp->stripe_size)) {
 		log_error("Stripe size must be power of 2.");
 		return 0;
 	}

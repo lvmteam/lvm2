@@ -271,7 +271,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 	}
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
-	    (seg->chunk_size & (seg->chunk_size - 1))) {
+	    !is_power_of_2(seg->chunk_size)) {
 		log_error("Thin pool target does not support %s chunk size (needs"
 			  " kernel >= 3.6).", display_size(cmd, seg->chunk_size));
 		return 0;
@@ -311,7 +311,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 		/* Use ignore for discards ignore or non-power-of-2 chunk_size and <1.5 target */
 		/* FIXME: Check whether underlying dev supports discards */
 		if (((!(attr & THIN_FEATURE_DISCARDS_NON_POWER_2) &&
-		      (seg->chunk_size & (seg->chunk_size - 1))) ||
+		      !is_power_of_2(seg->chunk_size)) ||
 		     (seg->discards == THIN_DISCARDS_IGNORE))) {
 			if (!dm_tree_node_set_thin_pool_discard(node, 1, 0))
 				return_0;

@@ -1294,7 +1294,7 @@ static int _validate_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
 	}
 
 	if (*stripes > 1 && (*stripe_size < STRIPE_SIZE_MIN ||
-			     *stripe_size & (*stripe_size - 1))) {
+			     !is_power_of_2(*stripe_size))) {
 		log_error("Invalid stripe size %s.",
 			  display_size(cmd, (uint64_t) *stripe_size));
 		return 0;
