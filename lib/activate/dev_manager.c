@@ -1599,6 +1599,12 @@ static int _dev_manager_lv_rmnodes(const struct logical_volume *lv)
 	return fs_del_lv(lv);
 }
 
+static int _lv_has_mknode(const struct logical_volume *lv)
+{
+	return (lv_is_visible(lv) &&
+		(!lv_is_thin_pool(lv) || lv_is_new_thin_pool(lv)));
+}
+
 int dev_manager_mknodes(const struct logical_volume *lv)
 {
 	struct dm_info dminfo;
@@ -1610,7 +1616,7 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 
 	if ((r = _info_run(MKNODES, name, NULL, &dminfo, NULL, NULL, 0, 0, 0, 0))) {
 		if (dminfo.exists) {
-			if (lv_is_visible(lv))
+			if (_lv_has_mknode(lv))
 				r = _dev_manager_lv_mknodes(lv);
 		} else
 			r = _dev_manager_lv_rmnodes(lv);
@@ -2993,7 +2999,7 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 				r = 0;
 			continue;
 		}
-		if (lv_is_visible(lvlayer->lv)) {
+		if (_lv_has_mknode(lvlayer->lv)) {
 			if (!_dev_manager_lv_mknodes(lvlayer->lv))
 				r = 0;
 			continue;

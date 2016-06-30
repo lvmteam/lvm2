@@ -24,6 +24,8 @@ aux have_thin 1 3 0 || skip
 aux prepare_vg 2 33
 
 lvcreate -L32 -T $vg/pool
+# check there is link node for UNUSED thin-pool
+test -e "$DM_DEV_DIR/$vg/pool"
 
 # leave 12M free space
 lvcreate -an -n $lv1 -L16 $vg 2>&1 | tee out
@@ -31,6 +33,8 @@ vgs $vg
 
 lvcreate -n thin1 -V30 $vg/pool 2>&1 | tee out
 not grep "WARNING: Sum" out
+# check again link node is now gone for a USED thin-pool
+test ! -e "$DM_DEV_DIR/$vg/pool"
 
 # Pool gets overprovisioned
 lvcreate -an -n thin2 -V4 $vg/pool 2>&1 | tee out
