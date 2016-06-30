@@ -3718,8 +3718,12 @@ static int _convert_cache_volume(struct cmd_context *cmd, struct logical_volume 
 	if (arg_is_set(cmd, splitmirrors_ARG))
 		return _convert_cache_volume_splitmirrors(cmd, lv, lp);
 
-	if (new_type && !strcmp(new_type, "thin-pool"))
+	/* The --thinpool alias is ambiguous and not preferred. */
+
+	if ((new_type && !strcmp(new_type, "thin-pool")) || arg_is_set(cmd, thinpool_ARG))
 		return _convert_cache_volume_thin_pool(cmd, lv, lp);
+
+	/* The --thinpool alias for --type thin-pool is not preferred, so not shown. */
 
 	log_error("Operation not permitted on cache LV %s", display_lvname(lv));
 	log_error("Operations permitted on a cache LV are:\n"
