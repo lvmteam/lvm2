@@ -1,5 +1,6 @@
 Version 2.02.159 - 
 =================================
+  Add raid0_meta segment type that provides metadata space for raid conversions.
   Fix created link for a used pool for vgmknode.
   Introduce and use is_power_of_2 macro.
   Support conversions between striped and raid0 segment types.

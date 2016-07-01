@@ -115,6 +115,7 @@ enum {
 	LV_TYPE_SPARE,
 	LV_TYPE_VIRTUAL,
 	LV_TYPE_RAID0,
+	LV_TYPE_RAID0_META,
 	LV_TYPE_RAID1,
 	LV_TYPE_RAID10,
 	LV_TYPE_RAID4,
@@ -164,6 +165,7 @@ static const char *_lv_type_names[] = {
 	[LV_TYPE_SPARE] =				"spare",
 	[LV_TYPE_VIRTUAL] =				"virtual",
 	[LV_TYPE_RAID0] =				SEG_TYPE_NAME_RAID0,
+	[LV_TYPE_RAID0_META] =				SEG_TYPE_NAME_RAID0_META,
 	[LV_TYPE_RAID1] =				SEG_TYPE_NAME_RAID1,
 	[LV_TYPE_RAID10] =				SEG_TYPE_NAME_RAID10,
 	[LV_TYPE_RAID4] =				SEG_TYPE_NAME_RAID4,
@@ -929,6 +931,7 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	}
 
 	if (segtype_is_raid(segtype) &&
+	    !segtype_is_raid0(segtype) &&
 	    !(seg->meta_areas = dm_pool_zalloc(mem, areas_sz))) {
 		dm_pool_free(mem, seg); /* frees everything alloced since seg */
 		return_NULL;
@@ -3809,7 +3812,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	if (seg_is_raid(seg)) {
 		stripes = 1;
 		stripe_size = 0;
-		if (seg_is_raid0(seg))
+		if (seg_is_any_raid0(seg))
 			area_multiple = seg->area_count;
 	}
 
@@ -3960,14 +3963,19 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, 0u, extents, segtype);
 
-	if (!lv->le_count && segtype_is_pool(segtype)) {
-		/*
-		 * Pool allocations treat the metadata device like a mirror log.
-		 */
-		/* FIXME Support striped metadata pool */
-		log_count = 1;
-	} else if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype) && !lv->le_count)
-		log_count = mirrors * stripes;
+	if (!lv->le_count) {
+		if (segtype_is_pool(segtype))
+			/*
+			 * Pool allocations treat the metadata device like a mirror log.
+			 */
+			/* FIXME Support striped metadata pool */
+			log_count = 1;
+		else if (segtype_is_raid0_meta(segtype))
+			/* Extend raid0 metadata LVs too */
+			log_count = stripes;
+		else if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
+			log_count = mirrors * stripes;
+	}
 	/* FIXME log_count should be 1 for mirrors */
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
@@ -4961,7 +4969,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 						seg_size /= seg_mirrors;
 					lp->extents = logical_extents_used + seg_size;
 					break;
-				}
+			}
 			} else if (new_extents <= logical_extents_used + seg_logical_extents) {
 				seg_size = new_extents - logical_extents_used;
 				lp->extents = new_extents;

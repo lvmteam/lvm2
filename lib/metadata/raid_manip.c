@@ -22,6 +22,17 @@
 #include "lv_alloc.h"
 #include "lvm-string.h"
 
+static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
+{
+	if (new_stripes && new_stripes != first_seg(lv)->area_count) {
+		log_error("Cannot restripe LV %s from %" PRIu32 " to %u stripes during conversion.",
+			  display_lvname(lv), first_seg(lv)->area_count, new_stripes);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 				     struct logical_volume **tracking)
 {
@@ -87,6 +98,9 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 static int _raid_in_sync(struct logical_volume *lv)
 {
 	dm_percent_t sync_percent;
+
+	if (seg_is_striped(first_seg(lv)))
+		return 1;
 
 	if (!lv_raid_percent(lv, &sync_percent)) {
 		log_error("Unable to determine sync status of %s/%s.",
@@ -517,7 +531,8 @@ static int _alloc_image_components(struct logical_volume *lv,
  * be allocated from the same PV(s) as the data device.
  */
 static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
-			       struct logical_volume **meta_lv)
+			       struct logical_volume **meta_lv,
+			       struct dm_list *allocate_pvs)
 {
 	struct dm_list allocatable_pvs;
 	struct alloc_handle *ah;
@@ -525,6 +540,9 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 	char *p, base_name[NAME_LEN];
 
 	dm_list_init(&allocatable_pvs);
+
+	if (!allocate_pvs)
+		allocate_pvs = &allocatable_pvs;
 
 	if (!seg_is_linear(seg)) {
 		log_error(INTERNAL_ERROR "Unable to allocate RAID metadata "
@@ -603,7 +621,7 @@ static int _raid_add_images(struct logical_volume *lv,
 			return 0;
 		}
 
-		if (!_alloc_rmeta_for_lv(lv, &lvl->lv))
+		if (!_alloc_rmeta_for_lv(lv, &lvl->lv, NULL))
 			return_0;
 
 		dm_list_add(&meta_lvs, &lvl->list);
@@ -845,7 +863,7 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
  *	  Otherwise, leave the [meta_]areas as AREA_UNASSIGNED and
  *	  seg->area_count unchanged.
  * @extracted_[meta|data]_lvs:  The LVs removed from the array.  If 'shift'
- *		              is set, then there will likely be name conflicts.
+ *			      is set, then there will likely be name conflicts.
  *
  * This function extracts _both_ portions of the indexed image.  It
  * does /not/ commit the results.  (IOW, erroring-out requires no unwinding
@@ -1401,7 +1419,7 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	for (s = 0; s < seg->area_count; s++) {
 		log_debug_metadata("Allocating new metadata LV for %s",
 				   seg_lv(seg, s)->name);
-		if (!_alloc_rmeta_for_lv(seg_lv(seg, s), &(lvl_array[s].lv))) {
+		if (!_alloc_rmeta_for_lv(seg_lv(seg, s), &(lvl_array[s].lv), NULL)) {
 			log_error("Failed to allocate metadata LV for %s in %s",
 				  seg_lv(seg, s)->name, lv->name);
 			return 0;
@@ -1813,6 +1831,205 @@ static int _eliminate_extracted_lvs(struct volume_group *vg, struct dm_list *rem
 {
 	return _eliminate_extracted_lvs_optional_write_vg(vg, removal_lvs, 1);
 }
+
+static int _avoid_pvs_of_lv(struct logical_volume *lv, void *data)
+{
+	struct dm_list *allocate_pvs = (struct dm_list *) data;
+	struct pv_list *pvl;
+
+	dm_list_iterate_items(pvl, allocate_pvs)
+		if (!lv_is_partial(lv) && lv_is_on_pv(lv, pvl->pv))
+			pvl->pv->status |= PV_ALLOCATION_PROHIBITED;
+
+	return 1;
+}
+
+/*
+ * Prevent any PVs holding other image components of @lv from being used for allocation
+ * by setting the internal PV_ALLOCATION_PROHIBITED flag to use it to avoid generating
+ * pv maps for those PVs.
+ */
+static int _avoid_pvs_with_other_images_of_lv(struct logical_volume *lv, struct dm_list *allocate_pvs)
+{
+	return for_each_sub_lv(lv, _avoid_pvs_of_lv, allocate_pvs);
+}
+
+static void _clear_allocation_prohibited(struct dm_list *pvs)
+{
+	struct pv_list *pvl;
+
+	if (pvs)
+		dm_list_iterate_items(pvl, pvs)
+			pvl->pv->status &= ~PV_ALLOCATION_PROHIBITED;
+}
+
+/*
+ * Allocate metadata devs for all @new_data_devs and link them to list @new_meta_lvs
+ */
+static int _alloc_rmeta_devs_for_rimage_devs(struct logical_volume *lv,
+					     struct dm_list *new_data_lvs,
+					     struct dm_list *new_meta_lvs,
+					     struct dm_list *allocate_pvs)
+{
+	uint32_t a = 0, raid_devs = dm_list_size(new_data_lvs);
+	struct lv_list *lvl, *lvl1, *lvl_array;
+
+	if (!raid_devs)
+		return_0;
+
+	if (!(lvl_array = dm_pool_zalloc(lv->vg->vgmem, raid_devs * sizeof(*lvl_array))))
+		return_0;
+
+	dm_list_iterate_items(lvl, new_data_lvs) {
+		log_debug_metadata("Allocating new metadata LV for %s", lvl->lv->name);
+
+		if (!_alloc_rmeta_for_lv(lvl->lv, &lvl_array[a].lv, allocate_pvs)) {
+			log_error("Failed to allocate metadata LV for %s in %s",
+				  lvl->lv->name, lv->vg->name);
+			return 0;
+		}
+
+		dm_list_add(new_meta_lvs, &lvl_array[a++].list);
+		
+		dm_list_iterate_items(lvl1, new_meta_lvs)
+			if (!_avoid_pvs_with_other_images_of_lv(lvl1->lv, allocate_pvs))
+				return_0;
+	}
+
+	_clear_allocation_prohibited(allocate_pvs);
+
+	return 1;
+}
+
+/*
+ * Allocate metadata devs for all data devs of an LV
+ */
+static int _alloc_rmeta_devs_for_lv(struct logical_volume *lv,
+				    struct dm_list *meta_lvs,
+				    struct dm_list *allocate_pvs)
+{
+	uint32_t s;
+	struct lv_list *lvl_array;
+	struct dm_list data_lvs;
+	struct lv_segment *seg = first_seg(lv);
+
+	dm_list_init(&data_lvs);
+
+	if (!(seg->meta_areas = dm_pool_zalloc(lv->vg->vgmem, seg->area_count * sizeof(*seg->meta_areas))))
+		return 0;
+
+	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem, seg->area_count * sizeof(*lvl_array))))
+		return_0;
+
+	for (s = 0; s < seg->area_count; s++) {
+		lvl_array[s].lv = seg_lv(seg, s);
+		dm_list_add(&data_lvs, &lvl_array[s].list);
+	}
+
+	if (!_alloc_rmeta_devs_for_rimage_devs(lv, &data_lvs, meta_lvs, allocate_pvs)) {
+		log_error("Failed to allocate metadata LVs for %s", lv->name);
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Add metadata areas to raid0
+ */
+static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm_list *allocate_pvs)
+{
+	struct lv_segment *seg = first_seg(lv);
+	struct dm_list meta_lvs;
+
+	dm_list_init(&meta_lvs);
+
+	log_debug_metadata("Allocating metadata LVs for %s", display_lvname(lv));
+	if (!_alloc_rmeta_devs_for_lv(lv, &meta_lvs, allocate_pvs)) {
+		log_error("Failed to allocate metadata LVs for %s", display_lvname(lv));
+		return_0;
+	}
+
+	/* Metadata LVs must be cleared before being added to the array */
+	log_debug_metadata("Clearing newly allocated metadata LVs for %s", display_lvname(lv));
+	if (!_clear_lvs(&meta_lvs)) {
+		log_error("Failed to initialize metadata LVs for %s", display_lvname(lv));
+		return_0;
+	}
+
+	/* Set segment areas for metadata sub_lvs */
+	log_debug_metadata("Adding newly allocated metadata LVs to %s", display_lvname(lv));
+	if (!_add_image_component_list(seg, 1, 0, &meta_lvs, 0)) {
+		log_error("Failed to add newly allocated metadata LVs to %s", display_lvname(lv));
+		return_0;
+	}
+
+	return 1;
+}
+
+/*
+ * Add/remove metadata areas to/from raid0
+ */
+static int _raid0_add_or_remove_metadata_lvs(struct logical_volume *lv,
+					     int update_and_reload,
+					     struct dm_list *allocate_pvs,
+					     struct dm_list *removal_lvs)
+{
+	uint64_t new_raid_type_flag;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (removal_lvs) {
+		if (seg->meta_areas) {
+			if (!_extract_image_component_list(seg, RAID_META, 0, removal_lvs))
+				return_0;
+			seg->meta_areas = NULL;
+		}
+		new_raid_type_flag = SEG_RAID0;
+	} else {
+		if (!_alloc_and_add_rmeta_devs_for_lv(lv, allocate_pvs))
+			return 0;
+
+		new_raid_type_flag = SEG_RAID0_META;
+	}
+
+	if (!(seg->segtype = get_segtype_from_flag(lv->vg->cmd, new_raid_type_flag)))
+		return_0;
+
+	if (update_and_reload) {
+		if (!lv_update_and_reload_origin(lv))
+			return_0;
+
+		/* If any residual LVs, eliminate them, write VG, commit it and take a backup */
+		return _eliminate_extracted_lvs(lv->vg, removal_lvs);
+	}
+
+	return 1;
+}
+
+static int _raid0_meta_change_wrapper(struct logical_volume *lv,
+				     const struct segment_type *new_segtype,
+				     uint32_t new_stripes,
+				     int yes, int force, int alloc_metadata_devs,
+				     struct dm_list *allocate_pvs)
+{
+	struct dm_list removal_lvs;
+
+	dm_list_init(&removal_lvs);
+
+	if (!_check_restriping(new_stripes, lv))
+		return_0;
+
+	if (!archive(lv->vg))
+		return_0;
+
+	if (alloc_metadata_devs)
+		return _raid0_add_or_remove_metadata_lvs(lv, 1, allocate_pvs, NULL);
+	else
+		return _raid0_add_or_remove_metadata_lvs(lv, 1, allocate_pvs, &removal_lvs);
+}
+
+
+
 /*
  * Convert a RAID0 set to striped
  */
@@ -1821,6 +2038,11 @@ static int _convert_raid0_to_striped(struct logical_volume *lv,
 				     struct dm_list *removal_lvs)
 {
 	struct lv_segment *seg = first_seg(lv);
+
+	/* Remove metadata devices */
+	if (seg_is_raid0_meta(seg) &&
+	    !_raid0_add_or_remove_metadata_lvs(lv, 0 /* update_and_reload */, NULL, removal_lvs))
+		return_0;
 
 	/* Move the AREA_PV areas across to new top-level segments of type "striped" */
 	if (!_raid0_to_striped_retrieve_segments_and_lvs(lv, removal_lvs)) {
@@ -1851,6 +2073,7 @@ static int _convert_raid0_to_striped(struct logical_volume *lv,
  * Optionally updates metadata and reloads mappings.
  */
 static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
+						    int alloc_metadata_devs,
 						    int update_and_reload,
 						    struct dm_list *allocate_pvs)
 {
@@ -1924,11 +2147,17 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 
 	lv->status |= RAID;
 
+	/* Allocate metadata LVs if requested */
+	if (alloc_metadata_devs && !_raid0_add_or_remove_metadata_lvs(lv, 0, allocate_pvs, NULL))
+		return NULL;
+
 	if (update_and_reload && !lv_update_and_reload(lv))
 		return NULL;
 
 	return raid0_seg;
 }
+
+/************************************************/
 
 /*
  * Individual takeover functions.
@@ -1959,7 +2188,9 @@ static int _takeover_noop(TAKEOVER_FN_ARGS)
 static int _takeover_unsupported(TAKEOVER_FN_ARGS)
 {
 	log_error("Converting the segment type for %s from %s to %s is not supported.",
-		  display_lvname(lv), lvseg_name(first_seg(lv)), new_segtype->name);
+		  display_lvname(lv), lvseg_name(first_seg(lv)),
+		  (segtype_is_striped(new_segtype) && !segtype_is_any_raid0(new_segtype) &&
+		   (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
 
 	return 0;
 }
@@ -1975,10 +2206,12 @@ static int _takeover_not_possible(takeover_fn_t takeover_fn)
 	return 0;
 }
 
-static int _takeover_unsupported_yet(const struct logical_volume *lv, const struct segment_type *new_segtype)
+static int _takeover_unsupported_yet(const struct logical_volume *lv, const unsigned new_stripes, const struct segment_type *new_segtype)
 {
 	log_error("Converting the segment type for %s from %s to %s is not supported yet.",
-		  display_lvname(lv), lvseg_name(first_seg(lv)), new_segtype->name);
+		  display_lvname(lv), lvseg_name(first_seg(lv)),
+		  (segtype_is_striped(new_segtype) && !segtype_is_any_raid0(new_segtype) &&
+		   (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
 
 	return 0;
 }
@@ -1988,32 +2221,32 @@ static int _takeover_unsupported_yet(const struct logical_volume *lv, const stru
  */
 static int _takeover_from_linear_to_raid0(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_linear_to_raid1(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_linear_to_raid10(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_linear_to_raid45(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_mirrored_to_raid0(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_mirrored_to_raid0_meta(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_mirrored_to_raid1(TAKEOVER_FN_ARGS)
@@ -2023,217 +2256,246 @@ static int _takeover_from_mirrored_to_raid1(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_mirrored_to_raid10(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_mirrored_to_raid45(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid0_to_linear(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid0_to_mirrored(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
-
 static int _takeover_from_raid0_to_raid0_meta(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	if (!_raid0_meta_change_wrapper(lv, new_segtype, new_stripes, yes, force, 1, allocate_pvs))
+		return_0;
+
+	return 1;
 }
 
 static int _takeover_from_raid0_to_raid1(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid0_to_raid10(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid0_to_raid45(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid0_to_raid6(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
-static int _takeover_from_raid0_to_striped(TAKEOVER_FN_ARGS)
+static int _raid0_to_striped_wrapper(struct logical_volume *lv,
+				     const struct segment_type *new_segtype,
+				     uint32_t new_stripes,
+				     int yes, int force,
+				     struct dm_list *allocate_pvs)
 {
 	struct dm_list removal_lvs;
 
 	dm_list_init(&removal_lvs);
 
-        /* Archive metadata */
-	if (!archive(lv->vg))
+	if (!_check_restriping(new_stripes, lv))
 		return_0;
 
-	/* FIXME update_and_reload is only needed if the LV is already active */
-	return _convert_raid0_to_striped(lv, 1, &removal_lvs);
-}
-
-/*
-static int _takeover_from_raid0_meta_to_linear(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_mirrored(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_raid0(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_raid1(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_raid10(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_raid45(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_raid6(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid0_meta_to_striped(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-*/
-
-static int _takeover_from_raid1_to_linear(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_mirrored(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_raid0(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_raid0_meta(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_raid1(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_raid10(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_raid45(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid1_to_striped(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_linear(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_mirrored(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_raid0(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_raid0_meta(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_raid1(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_raid54(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_raid6(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid45_to_striped(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid6_to_raid0(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid6_to_raid0_meta(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid6_to_raid45(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _takeover_from_raid6_to_striped(TAKEOVER_FN_ARGS)
-{
-	return _takeover_unsupported_yet(lv, new_segtype);
-}
-
-static int _striped_to_raid0_wrapper(struct logical_volume *lv,
-				     const struct segment_type *new_segtype,
-				     int yes, int force, int alloc_metadata_devs,
-				     struct dm_list *allocate_pvs)
-{
 	/* Archive metadata */
 	if (!archive(lv->vg))
 		return_0;
 
 	/* FIXME update_and_reload is only needed if the LV is already active */
 	/* FIXME Some of the validation in here needs moving before the archiving */
-	if (!_convert_striped_to_raid0(lv, 1 /* update_and_reload */, allocate_pvs))
+	if (!_convert_raid0_to_striped(lv, 1 /* update_and_reload */, &removal_lvs))
+		return_0;
+
+	return 1;
+}
+
+static int _takeover_from_raid0_to_striped(TAKEOVER_FN_ARGS)
+{
+	if (!_raid0_to_striped_wrapper(lv, new_segtype, new_stripes, yes, force, allocate_pvs))
+		return_0;
+
+	return 1;
+}
+
+static int _takeover_from_raid0_meta_to_linear(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid0_meta_to_mirrored(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid0_meta_to_raid0(TAKEOVER_FN_ARGS)
+{
+	if (!_raid0_meta_change_wrapper(lv, new_segtype, new_stripes, yes, force, 0, allocate_pvs))
+		return_0;
+
+	return 1;
+}
+
+static int _takeover_from_raid0_meta_to_raid1(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid0_meta_to_raid10(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid0_meta_to_raid45(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid0_meta_to_raid6(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid0_meta_to_striped(TAKEOVER_FN_ARGS)
+{
+	if (!_raid0_to_striped_wrapper(lv, new_segtype, new_stripes, yes, force, allocate_pvs))
+		return_0;
+
+	return 1;
+}
+
+static int _takeover_from_raid1_to_linear(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_mirrored(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_raid0(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_raid0_meta(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_raid1(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_raid10(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_raid45(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid1_to_striped(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_linear(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_mirrored(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_raid0(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_raid0_meta(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_raid1(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_raid54(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_raid6(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid45_to_striped(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid6_to_raid0(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid6_to_raid0_meta(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid6_to_raid45(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _takeover_from_raid6_to_striped(TAKEOVER_FN_ARGS)
+{
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+}
+
+static int _striped_to_raid0_wrapper(struct logical_volume *lv,
+				     const struct segment_type *new_segtype,
+				     uint32_t new_stripes,
+				     int yes, int force, int alloc_metadata_devs,
+				     struct dm_list *allocate_pvs)
+{
+	if (!_check_restriping(new_stripes, lv))
+		return_0;
+
+	/* Archive metadata */
+	if (!archive(lv->vg))
+		return_0;
+
+	/* FIXME update_and_reload is only needed if the LV is already active */
+	/* FIXME Some of the validation in here needs moving before the archiving */
+	if (!_convert_striped_to_raid0(lv, alloc_metadata_devs, 1 /* update_and_reload */, allocate_pvs))
 		return_0;
 
 	return 1;
@@ -2241,88 +2503,94 @@ static int _striped_to_raid0_wrapper(struct logical_volume *lv,
 
 static int _takeover_from_striped_to_raid0(TAKEOVER_FN_ARGS)
 {
-	return _striped_to_raid0_wrapper(lv, new_segtype, yes, force, 0, allocate_pvs);
+	if (!_striped_to_raid0_wrapper(lv, new_segtype, new_stripes, yes, force, 0, allocate_pvs))
+		return_0;
+
+	return 1;
 }
 
 static int _takeover_from_striped_to_raid01(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_striped_to_raid0_meta(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	if (!_striped_to_raid0_wrapper(lv, new_segtype, new_stripes, yes, force, 1, allocate_pvs))
+		return_0;
+
+	return 1;
 }
 
 static int _takeover_from_striped_to_raid10(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_striped_to_raid45(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_striped_to_raid6(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 /*
 static int _takeover_from_raid01_to_raid01(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid01_to_raid10(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid01_to_striped(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_linear(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_mirrored(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_raid0(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_raid01(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_raid0_meta(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_raid1(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_raid10(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
 static int _takeover_from_raid10_to_striped(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_segtype);
+	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 */
 
@@ -2336,11 +2604,10 @@ static unsigned _segtype_ix(const struct segment_type *segtype, uint32_t area_co
 	int i = 2, j;
 
 	/* Linear special case */
-	if (segtype_is_striped(segtype)) {
+	if (segtype_is_striped(segtype) && !segtype_is_any_raid0(segtype)) {
 		if (area_count == 1)
 			return 0;	/* linear */
-		if (!segtype_is_raid0(segtype))
-			return 1;	/* striped */
+		return 1;	/* striped */
 	}
 
 	while ((j = _segtype_index[i++]))
@@ -2401,10 +2668,13 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!_check_max_raid_devices(new_image_count))
-		return_0;
-
 	stripes = new_stripes ?: _data_rimages_count(seg, seg->area_count);
+
+	if (segtype_is_striped(new_segtype))
+		new_image_count = stripes;
+
+	if (segtype_is_raid(new_segtype) && !_check_max_raid_devices(new_image_count))
+		return_0;
 
 	/* FIXME Ensure caller does *not* set wrong default value! */
 	/* Define new stripe size if not passed in */
@@ -2414,7 +2684,12 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	/* Exit without doing activation checks if the combination isn't possible */
 	if (_takeover_not_possible(takeover_fn))
-		return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, new_stripe_size, allocate_pvs);
+		return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, stripe_size, allocate_pvs);
+
+	log_verbose("Converting %s from %s to %s.",
+		    display_lvname(lv), lvseg_name(first_seg(lv)),
+		    (segtype_is_striped(new_segtype) && !segtype_is_any_raid0(new_segtype) &&
+		    (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
 
 	/* FIXME If not active, prompt and activate */
 	/* FIXME Some operations do not require the LV to be active */
@@ -2439,7 +2714,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
-	return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, new_stripe_size, allocate_pvs);
+	return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, stripe_size, allocate_pvs);
 }
 
 static int _remove_partial_multi_segment_image(struct logical_volume *lv,
@@ -2518,28 +2793,6 @@ has_enough_space:
 		return_0;
 
 	return 1;
-}
-
-static int _avoid_pvs_of_lv(struct logical_volume *lv, void *data)
-{
-	struct dm_list *allocate_pvs = (struct dm_list *) data;
-	struct pv_list *pvl;
-
-	dm_list_iterate_items(pvl, allocate_pvs)
-		if (!lv_is_partial(lv) && lv_is_on_pv(lv, pvl->pv))
-			pvl->pv->status |= PV_ALLOCATION_PROHIBITED;
-
-	return 1;
- }
-
-/*
- * Prevent any PVs holding other image components of @lv from being used for allocation
- * by setting the internal PV_ALLOCATION_PROHIBITED flag to use it to avoid generating
- * pv maps for those PVs.
- */
-static int _avoid_pvs_with_other_images_of_lv(struct logical_volume *lv, struct dm_list *allocate_pvs)
-{
-	return for_each_sub_lv(lv, _avoid_pvs_of_lv, allocate_pvs);
 }
 
 /*

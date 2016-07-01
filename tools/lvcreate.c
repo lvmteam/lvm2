@@ -547,6 +547,13 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
 		lp->mirrors = seg_is_mirrored(lp) ? 2 : 1;
 
+	if (lp->stripes < 2 && segtype_is_any_raid0(lp->segtype))
+		if (arg_count(cmd, stripes_ARG)) {
+			/* User supplied the bad argument */
+			log_error("Segment type %s requires 2 or more stripes.", lp->segtype->name);
+			return 0;
+		}
+
 	lp->nosync = arg_is_set(cmd, nosync_ARG);
 
 	if (!(lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0)) &&
@@ -1238,12 +1245,13 @@ static int _check_raid_parameters(struct volume_group *vg,
 				  lp->segtype->name);
 			return 0;
 		}
-	} else if (segtype_is_raid10(lp->segtype)) {
+	} else if (segtype_is_any_raid0(lp->segtype) ||
+		   segtype_is_raid10(lp->segtype)) {
 		if (!arg_is_set(cmd, stripes_ARG))
 			lp->stripes = devs / lp->mirrors;
 		if (lp->stripes < 2) {
-			log_error("Unable to create RAID10 LV,"
-				  " insufficient number of devices.");
+			log_error("Unable to create RAID(1)0 LV: "
+				  "insufficient number of devices.");
 			return 0;
 		}
 	}

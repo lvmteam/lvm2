@@ -153,7 +153,7 @@ static int _raid_text_import(struct lv_segment *seg,
 		}
 	}
 
-	if (!dm_config_get_list(sn, seg_is_any_raid0(seg) ? "raid0_lvs" : "raids", &cv)) {
+	if (!dm_config_get_list(sn, seg_is_raid0(seg) ? "raid0_lvs" : "raids", &cv)) {
 		log_error("Couldn't find RAID array for "
 			  "segment %s of logical volume %s.",
 			  dm_config_parent_name(sn), seg->lv->name);
@@ -179,7 +179,7 @@ static int _raid_text_export_raid0(const struct lv_segment *seg, struct formatte
 	if (seg->stripe_size)
 		outf(f, "stripe_size = %" PRIu32, seg->stripe_size);
 
-	return out_areas(f, seg, "raid0_lv");
+	return out_areas(f, seg, seg_is_raid0(seg) ? "raid0_lv" : "raid");
 }
 
 static int _raid_text_export_raid(const struct lv_segment *seg, struct formatter *f)
@@ -469,19 +469,20 @@ static const struct raid_type {
 	unsigned parity;
 	uint64_t extra_flags;
 } _raid_types[] = {
-	{ SEG_TYPE_NAME_RAID0,    0, SEG_RAID0 | SEG_AREAS_STRIPED },
-	{ SEG_TYPE_NAME_RAID1,    0, SEG_RAID1 | SEG_AREAS_MIRRORED },
-	{ SEG_TYPE_NAME_RAID10,   0, SEG_RAID10 | SEG_AREAS_MIRRORED },
-	{ SEG_TYPE_NAME_RAID4,    1, SEG_RAID4 },
-	{ SEG_TYPE_NAME_RAID5,    1, SEG_RAID5 },
-	{ SEG_TYPE_NAME_RAID5_LA, 1, SEG_RAID5_LA },
-	{ SEG_TYPE_NAME_RAID5_LS, 1, SEG_RAID5_LS },
-	{ SEG_TYPE_NAME_RAID5_RA, 1, SEG_RAID5_RA },
-	{ SEG_TYPE_NAME_RAID5_RS, 1, SEG_RAID5_RS },
-	{ SEG_TYPE_NAME_RAID6,    2, SEG_RAID6 },
-	{ SEG_TYPE_NAME_RAID6_NC, 2, SEG_RAID6_NC },
-	{ SEG_TYPE_NAME_RAID6_NR, 2, SEG_RAID6_NR },
-	{ SEG_TYPE_NAME_RAID6_ZR, 2, SEG_RAID6_ZR }
+	{ SEG_TYPE_NAME_RAID0,      0, SEG_RAID0 | SEG_AREAS_STRIPED },
+	{ SEG_TYPE_NAME_RAID0_META, 0, SEG_RAID0_META | SEG_AREAS_STRIPED },
+	{ SEG_TYPE_NAME_RAID1,      0, SEG_RAID1 | SEG_AREAS_MIRRORED },
+	{ SEG_TYPE_NAME_RAID10,     0, SEG_RAID10 | SEG_AREAS_MIRRORED },
+	{ SEG_TYPE_NAME_RAID4,      1, SEG_RAID4 },
+	{ SEG_TYPE_NAME_RAID5,      1, SEG_RAID5 },
+	{ SEG_TYPE_NAME_RAID5_LA,   1, SEG_RAID5_LA },
+	{ SEG_TYPE_NAME_RAID5_LS,   1, SEG_RAID5_LS },
+	{ SEG_TYPE_NAME_RAID5_RA,   1, SEG_RAID5_RA },
+	{ SEG_TYPE_NAME_RAID5_RS,   1, SEG_RAID5_RS },
+	{ SEG_TYPE_NAME_RAID6,      2, SEG_RAID6 },
+	{ SEG_TYPE_NAME_RAID6_NC,   2, SEG_RAID6_NC },
+	{ SEG_TYPE_NAME_RAID6_NR,   2, SEG_RAID6_NR },
+	{ SEG_TYPE_NAME_RAID6_ZR,   2, SEG_RAID6_ZR }
 };
 
 static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,

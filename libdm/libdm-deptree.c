@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -43,6 +43,7 @@ enum {
 	SEG_THIN_POOL,
 	SEG_THIN,
 	SEG_RAID0,
+	SEG_RAID0_META,
 	SEG_RAID1,
 	SEG_RAID10,
 	SEG_RAID4,
@@ -76,6 +77,7 @@ static const struct {
 	{ SEG_THIN_POOL, "thin-pool"},
 	{ SEG_THIN, "thin"},
 	{ SEG_RAID0, "raid0"},
+	{ SEG_RAID0_META, "raid0_meta"},
 	{ SEG_RAID1, "raid1"},
 	{ SEG_RAID10, "raid10"},
 	{ SEG_RAID4, "raid4"},
@@ -2134,6 +2136,7 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 			}
 			break;
 		case SEG_RAID0:
+		case SEG_RAID0_META:
 		case SEG_RAID1:
 		case SEG_RAID10:
 		case SEG_RAID4:
@@ -2353,6 +2356,7 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	uint32_t i;
 	int param_count = 1; /* mandatory 'chunk size'/'stripe size' arg */
 	int pos = 0;
+	unsigned type = seg->type;
 
 	if ((seg->flags & DM_NOSYNC) || (seg->flags & DM_FORCESYNC))
 		param_count++;
@@ -2366,10 +2370,14 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	param_count += _get_params_count(seg->rebuilds);
 	param_count += _get_params_count(seg->writemostly);
 
-	if ((seg->type == SEG_RAID1) && seg->stripe_size)
+	if ((type == SEG_RAID1) && seg->stripe_size)
 		log_error("WARNING: Ignoring RAID1 stripe size");
 
-	EMIT_PARAMS(pos, "%s %d %u", _dm_segtypes[seg->type].target,
+	/* Kernel only expects "raid0", not "raid0_meta" */
+	if (type == SEG_RAID0_META)
+		type = SEG_RAID0;
+
+	EMIT_PARAMS(pos, "%s %d %u", _dm_segtypes[type].target,
 		    param_count, seg->stripe_size);
 
 	if (seg->flags & DM_NOSYNC)
@@ -2576,6 +2584,7 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 			    seg->iv_offset : *seg_start);
 		break;
 	case SEG_RAID0:
+	case SEG_RAID0_META:
 	case SEG_RAID1:
 	case SEG_RAID10:
 	case SEG_RAID4:
@@ -3853,6 +3862,7 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 
 	switch (seg->type) {
 	case SEG_RAID0:
+	case SEG_RAID0_META:
 	case SEG_RAID1:
 	case SEG_RAID4:
 	case SEG_RAID5_LA:

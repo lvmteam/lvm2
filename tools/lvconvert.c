@@ -285,7 +285,7 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 	}
 
 	/* FIXME: Check thin-pool and thin more thoroughly! */
-	if (!strcmp(type_str, "snapshot") ||
+	if (!strcmp(type_str, "snapshot") || !strcmp(type_str, "linear") ||
 	    !strcmp(type_str, "striped") ||
 	    !strncmp(type_str, "raid", 4) ||
 	    !strcmp(type_str, "cache-pool") || !strcmp(type_str, "cache") ||
@@ -304,7 +304,7 @@ static int _snapshot_type_requested(struct cmd_context *cmd, const char *type_st
 
 static int _raid0_type_requested(struct cmd_context *cmd, const char *type_str)
 {
-	return (!strcmp(type_str, "raid0"));
+	return (!strcmp(type_str, "raid0") || !strcmp(type_str, "raid0_meta"));
 }
 
 /* mirror/raid* (1,10,4,5,6 and their variants) reshape */
@@ -316,7 +316,12 @@ static int _mirror_or_raid_type_requested(struct cmd_context *cmd, const char *t
 
 static int _striped_type_requested(struct cmd_context *cmd, const char *type_str)
 {
-	return (!strcmp(type_str, "striped"));
+	return (!strcmp(type_str, SEG_TYPE_NAME_STRIPED) || !strcmp(type_str, SEG_TYPE_NAME_LINEAR));
+}
+
+static int _linear_type_requested(const char *type_str)
+{
+	return (!strcmp(type_str, SEG_TYPE_NAME_LINEAR));
 }
 
 static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
@@ -584,7 +589,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	     lp->repair || arg_is_set(cmd, thinpool_ARG) || _raid0_type_requested(cmd, lp->type_str) ||
 	     _striped_type_requested(cmd, lp->type_str))) {
 		log_error("--snapshot/--type snapshot or --merge argument "
-			  "cannot be mixed with --mirrors/--type mirror/--type raid*/--stripes/--type striped, "
+			  "cannot be mixed with --mirrors/--type mirror/--type raid*/--stripes/--type striped/--type linear, "
 			  "--mirrorlog, --repair or --thinpool.");
 		return 0;
 	}
@@ -593,7 +598,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	    !(_mirror_or_raid_type_requested(cmd, lp->type_str) || _striped_type_requested(cmd, lp->type_str) ||
 	      _raid0_type_requested(cmd, lp->type_str) || lp->repair || arg_is_set(cmd, thinpool_ARG))) {
 		log_error("--stripes or --stripesize argument is only valid "
-			  "with --mirrors/--type mirror/--type raid*/--type striped, --repair and --thinpool");
+			  "with --mirrors/--type mirror/--type raid*/--type striped/--type linear, --repair and --thinpool");
 		return 0;
 	}
 
@@ -769,14 +774,19 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 			if (!(lp->segtype = get_segtype_from_string(cmd, arg_str_value(cmd, type_ARG, find_config_tree_str(cmd, global_mirror_segtype_default_CFG, NULL)))))
 				return_0;
 		} 
-	} else if (_raid0_type_requested(cmd, lp->type_str) || _striped_type_requested(cmd, lp->type_str)) { /* striped or raid0 */
-		if (arg_from_list_is_set(cmd, "cannot be used with --type raid0 or --type striped",
+	} else if (_raid0_type_requested(cmd, lp->type_str) || _striped_type_requested(cmd, lp->type_str)) { /* striped or linear or raid0 */
+		if (arg_from_list_is_set(cmd, "cannot be used with --type raid0 or --type striped or --type linear",
 					 chunksize_ARG, corelog_ARG, mirrors_ARG, mirrorlog_ARG, regionsize_ARG, zero_ARG,
 					 -1))
 			return_0;
 
 		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
 			return_0;
+
+		/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */
+		/* The default keeps existing number of stripes, handled inside the library code */
+		if (!arg_is_set(cmd, stripes_long_ARG) && !_linear_type_requested(lp->type_str))
+			lp->stripes = 0;
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
 			return_0;
