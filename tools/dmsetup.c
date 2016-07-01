@@ -5034,7 +5034,7 @@ static int _stats_delete(CMD_ARGS)
 		} dm_stats_walk_while(dms);
 	} else {
 		dm_stats_delete_region(dms, region_id);
-		log_info("Deleted statistics region %" PRIu64, region_id);
+		log_info("Deleted statistics region " FMTu64 ".\n", region_id);
 	}
 
 	r = 1;
