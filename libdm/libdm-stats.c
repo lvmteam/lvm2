@@ -1969,8 +1969,8 @@ static int _stats_remove_region_id_from_group(struct dm_stats *dms,
 					      uint64_t region_id)
 {
 	struct dm_stats_region *region = &dms->regions[region_id];
-	dm_bitset_t regions = dms->groups[region_id].regions;
 	uint64_t group_id = region->group_id;
+	dm_bitset_t regions = dms->groups[group_id].regions;
 
 	if (!_stats_region_is_grouped(dms, region_id))
 		return_0;
@@ -3770,8 +3770,13 @@ bad:
 /*
  * Remove the specified group_id.
  */
-int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id)
+int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id,
+			  int remove_regions)
 {
+	struct dm_stats_region *leader;
+	dm_bitset_t regions;
+	uint64_t i;
+
 	if (group_id > dms->max_region) {
 		log_error("Invalid group ID: " FMTu64, group_id);
 		return 0;
@@ -3782,11 +3787,27 @@ int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id)
 		return 0;
 	}
 
+	regions = dms->groups[group_id].regions;
+	leader = &dms->regions[group_id];
+
+	/* delete all but the group leader */
+	for (i = (*regions - 1); i > leader->region_id; i--) {
+		if (dm_bit(regions, i)) {
+			dm_bit_clear(regions, i);
+			if (remove_regions && !dm_stats_delete_region(dms, i))
+				log_warn("Failed to delete region "
+					 FMTu64 " on %s.", i, dms->name);
+		}
+	}
+
 	_stats_clear_group_regions(dms, group_id);
 	_stats_group_destroy(&dms->groups[group_id]);
 
-	if (!_stats_set_aux(dms, group_id, dms->regions[group_id].aux_data))
+	if (remove_regions)
+		return dm_stats_delete_region(dms, group_id);
+	else if (!_stats_set_aux(dms, group_id, leader->aux_data))
 		return 0;
+
 	return 1;
 }
 

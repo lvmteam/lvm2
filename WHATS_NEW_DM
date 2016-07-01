@@ -1,5 +1,6 @@
 Version 1.02.129 - 
 =================================
+  Allow dm_stats_delete_group() to optionally delete all group members.
   Add dm_stats_get_object_type() to return the type of object present.
   Add dm_stats_walk_init() allowing control of objects visited by walks.
   Add dm_stats_get_group_descriptor() to return the member list as a string.

@@ -1205,9 +1205,12 @@ int dm_stats_create_group(struct dm_stats *dms, const char *group,
 			  const char *alias, uint64_t *group_id);
 
 /*
- * Remove the specified group_id.
+ * Remove the specified group_id. If the remove argument is zero the
+ * group will be removed but the regions that it contained will remain.
+ * If remove is non-zero then all regions that belong to the group will
+ * also be removed.
  */
-int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id);
+int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id, int remove);
 
 /*
  * Set an alias for this group or region. The alias will be returned
