@@ -37,13 +37,17 @@ percent_() {
 aux have_thin 1 0 0 || skip
 which mkfs.ext4 || skip
 
+# Use our mkfs config file to get approximately same results
+# TODO: maybe use it for all test via some 'prepare' function
+export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
+
 aux prepare_dmeventd
 aux prepare_pvs 2 64
 
 vgcreate $vg -s 64K $(cat DEVICES)
 
 # Create named pool only
-lvcreate --errorwhenfull y -L2100K -T $vg/pool
+lvcreate --errorwhenfull y -L2 -T $vg/pool
 
 POOL="$vg-pool"
 THIN="${PREFIX}_thin"
@@ -65,7 +69,7 @@ dmsetup table
 dmsetup info -c
 
 mkdir "$MOUNT_DIR"
-# This mkfs fills 2.2MB pool over 95%
+# This mkfs should fill 2MB pool over 95%
 # no autoresize is configured
 mkfs.ext4 "$DM_DEV_DIR/mapper/$THIN"
 test $(percent_) -gt 95
@@ -78,7 +82,7 @@ test $(percent_) -gt 95
 aux lvmconf 'activation/thin_pool_autoextend_percent = 10' \
 	    'activation/thin_pool_autoextend_threshold = 75'
 
-# Give it some time to left dmeventd do some work
+# Give it some time to left dmeventd do some (failing to resize) work
 sleep 20
 
 # And check foreign thin device is still mounted

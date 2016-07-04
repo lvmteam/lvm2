@@ -16,6 +16,17 @@ SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
+mntdir="${PREFIX}mnt with space"
+mntusedir="${PREFIX}mntuse"
+
+cleanup_mounted_and_teardown()
+{
+	umount "$mntdir" 2>/dev/null || true
+	umount "$mntusedir" 2>/dev/null || true
+	vgremove -ff $vg
+	aux teardown
+}
+
 is_lv_opened_()
 {
 	test $(get lv_field "$1" lv_device_open --binary) = "1"
@@ -26,7 +37,8 @@ is_lv_opened_()
 #
 # Main
 #
-which mkfs.ext2 || skip
+which mkfs.ext4 || skip
+export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 
 aux have_thin 1 0 0 || skip
 
@@ -38,18 +50,17 @@ aux lvmconf "activation/thin_pool_autoextend_percent = 0" \
 
 aux prepare_vg 2
 
-mntdir="${PREFIX}mnt with space"
-mntusedir="${PREFIX}mntuse"
 
 lvcreate -L8M -V8M -n $lv1 -T $vg/pool
 lvcreate -V8M -n $lv2 -T $vg/pool
 
-mkfs.ext2 "$DM_DEV_DIR/$vg/$lv1"
-mkfs.ext2 "$DM_DEV_DIR/$vg/$lv2"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv2"
 
 lvchange --monitor y $vg/pool
 
 mkdir "$mntdir" "$mntusedir"
+trap 'cleanup_mounted_and_teardown' EXIT
 mount "$DM_DEV_DIR/mapper/$vg-$lv1" "$mntdir"
 mount "$DM_DEV_DIR/mapper/$vg-$lv2" "$mntusedir"
 
@@ -64,8 +75,10 @@ sync
 sleep 60 < "$mntusedir/file$$" &
 PID_SLEEP=$!
 
-# Fill pool above 70%
-dd if=/dev/zero of="$mntdir/file$$" bs=1M count=6 conv=fdatasync
+lvs -a $vg
+# Fill pool above 95%  (to cause 'forced lazy umount)
+dd if=/dev/zero of="$mntdir/file$$" bs=256K count=20 conv=fdatasync
+sync
 lvs -a $vg
 
 # Could loop here for a few secs so dmeventd can do some work
@@ -77,6 +90,8 @@ for i in $(seq 1 12) ; do
 	sleep 1
 done
 
+lvs -a $vg
+
 is_lv_opened_ "$vg/$lv2" || \
 	die "$mntusedir is not mounted here (sleep already expired??)"
 
@@ -84,10 +99,7 @@ is_lv_opened_ "$vg/$lv2" || \
 kill $PID_SLEEP
 wait
 
-is_lv_opened_ "$vg/$lv2" && {
+not is_lv_opened_ "$vg/$lv2" || {
 	mount
 	die "$mntusedir should have been unmounted by dmeventd!"
 }
-
-vgremove -f $vg
-
