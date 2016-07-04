@@ -94,7 +94,7 @@ static int _has_unmountable_prefix(int major, int minor)
 		goto out;
 
 #if THIN_DEBUG
-	log_debug("Found LV (%u:%u) %s.",  major, minor, uuid);
+	log_debug("Found logical volume %s (%u:%u).", uuid, major, minor);
 #endif
 	r = 1;
 out:
@@ -246,13 +246,18 @@ static int _umount_device(char *buffer, unsigned major, unsigned minor,
 			  char *target, void *cb_data)
 {
 	struct mountinfo_s *data = cb_data;
+	char *words[10];
 
 	if ((major == data->info.major) && dm_bit(data->minors, minor)) {
-		log_info("Unmounting thin volume %s from %s.",
-			 data->device, target);
+		if (dm_split_words(buffer, DM_ARRAY_SIZE(words), 0, words) < DM_ARRAY_SIZE(words))
+			words[9] = NULL; /* just don't show device name */
+		log_info("Unmounting thin %s (%d:%d) of thin-pool %s (%u:%u) from mount point \"%s\".",
+			 words[9] ? : "", major, minor, data->device,
+			 data->info.major, data->info.minor,
+			 target);
 		if (!_run(UMOUNT_COMMAND, "-fl", target, NULL))
-			log_error("Failed to umount thin %s from %s: %s.",
-				  data->device, target, strerror(errno));
+			log_error("Failed to lazy umount thin %s (%d:%d) from %s: %s.",
+				  words[9], major, minor, target, strerror(errno));
 	}
 
 	return 1;
