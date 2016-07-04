@@ -158,8 +158,8 @@ struct dm_stats *dm_stats_create(const char *program_id)
 		dms->program_id = dm_strdup(program_id);
 
 	if (!dms->program_id) {
-		dm_pool_destroy(dms->hist_mem);
-		goto_bad;
+		log_error("Could not allocate memory for program_id");
+		goto bad;
 	}
 
 	dms->major = -1;
