@@ -4745,7 +4745,7 @@ static uint64_t _nr_areas_from_step(uint64_t len, int64_t step)
 		return (uint64_t)(-step);
 
 	/* --areasize - cast step to unsigned as it cannot be -ve here. */
-	return (len / (step ? : len)) + !!(len % (uint64_t) step);
+	return (len / step) + !!(len % (uint64_t) step);
 }
 
 /*
