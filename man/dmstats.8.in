@@ -609,6 +609,9 @@ regions is given as a comma-separated list of region identifiers. A
 continuous range of identifers spanning from \fBR1\fP to \fBR2\fP may
 be expressed as '\fBR1\fP-\fBR2\fP'.
 
+Regions that have a histogram configured can be grouped: in this case
+the number of histogram bins and their bounds must match exactly.
+
 On success the group list and newly created \fBgroup_id\fP are
 printed to stdout.
 .
