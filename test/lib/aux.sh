@@ -419,7 +419,8 @@ teardown_devs_prefixed() {
 		while num_devs=$(dm_table | grep "$prefix" | wc -l) && \
 		    test $num_devs -lt $num_remaining_devs -a $num_devs -ne 0; do
 			test "$stray" -eq 0 || echo "Removing $num_devs stray mapped devices with names beginning with $prefix: "
-			for dm in $(dm_info name --sort open | grep "$prefix") ; do
+                        # HACK: sort also by minors - so we try to close 'possibly later' created device first
+			for dm in $(dm_info name --sort open,-minor | grep "$prefix") ; do
 				dmsetup remove -f "$dm" || true
 			done
 			num_remaining_devs=$num_devs
