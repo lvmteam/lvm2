@@ -28,7 +28,6 @@
 #include "str_list.h"
 #include "defaults.h"
 #include "lvm-exec.h"
-#include "lvm-signal.h"
 #include "memlock.h"
 #include "lvmlockd.h"
 

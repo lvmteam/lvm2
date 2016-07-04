@@ -22,7 +22,6 @@
 #include "memlock.h"
 #include "toolcontext.h"
 #include "locking.h"
-#include "lvmetad-client.h"
 
 #include <unistd.h>
 
