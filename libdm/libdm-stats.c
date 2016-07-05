@@ -1930,7 +1930,7 @@ out:
 int dm_stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 			   uint64_t start, uint64_t len, int64_t step,
 			   int precise, struct dm_histogram *bounds,
-			   const char *program_id, const char *aux_data)
+			   const char *program_id, const char *user_data)
 {
 	char *hist_arg = NULL;
 	int r = 0;
@@ -1946,7 +1946,7 @@ int dm_stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	}
 
 	r = _stats_create_region(dms, region_id, start, len, step,
-				 precise, hist_arg, program_id, aux_data);
+				 precise, hist_arg, program_id, user_data);
 	dm_free(hist_arg);
 
 out:
