@@ -1399,7 +1399,7 @@ int dm_stats_walk_init(struct dm_stats *dms, uint64_t flags)
 
 	if (flags & ~DM_STATS_WALK_MASK) {
 		log_error("Unknown value in walk flags: 0x" FMTx64,
-			  flags & ~DM_STATS_WALK_MASK);
+			  (uint64_t) (flags & ~DM_STATS_WALK_MASK));
 		return 0;
 	}
 	dms->walk_flags = flags;
