@@ -190,10 +190,6 @@ static int _move_snapshots(struct volume_group *vg_from,
 		if (!(lv->status & SNAPSHOT))
 			continue;
 
-		/* Ignore, if no allocations on PVs of @vg_to */
-		if (!lv_is_on_pvs(lv, &vg_to->pvs))
-			continue;
-
 		dm_list_iterate_items(seg, &lv->segments) {
 			cow_from = _lv_is_in_vg(vg_from, seg->cow);
 			origin_from = _lv_is_in_vg(vg_from, seg->origin);
@@ -680,15 +676,16 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!(_move_mirrors(vg_from, vg_to)))
 		goto_bad;
 
-	/* Move required snapshots across */
-	if (!(_move_snapshots(vg_from, vg_to)))
-		goto_bad;
-
 	/* Move required pools across */
 	if (!(_move_thins(vg_from, vg_to)))
 		goto_bad;
 
+	/* Move required cache LVs across */
 	if (!(_move_cache(vg_from, vg_to)))
+		goto_bad;
+
+	/* Move required snapshots across */
+	if (!(_move_snapshots(vg_from, vg_to)))
 		goto_bad;
 
 	/* Split metadata areas and check if both vgs have at least one area */
