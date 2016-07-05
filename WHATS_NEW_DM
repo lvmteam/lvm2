@@ -1,5 +1,5 @@
-Version 1.02.129 - 
-=================================
+Version 1.02.129 - 6th July 2016
+================================
   Update default dmstats field selections for groups.
   Add 'obj_type', 'group_id', and 'statsname' fields to dmstats reports.
   Add --area, --region, and --group to dmstats to control object selection.
