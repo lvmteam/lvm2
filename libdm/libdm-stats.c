@@ -2227,7 +2227,7 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 
 	/* successful list but no regions registered */
 	if (!dms->nr_regions)
-		return_0;
+		return 0;
 
 	dms->walk_flags = DM_STATS_WALK_REGION;
 	dm_stats_walk_start(dms);
