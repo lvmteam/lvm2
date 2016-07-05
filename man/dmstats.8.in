@@ -87,8 +87,8 @@ dmstats \(em device-mapper statistics management
 .  IR start_sector
 .  BR \-\-length
 .  IR length | \fB\-\-segments ]
-.  RB \%[ \-\-auxdata
-.  IR data ]
+.  RB \%[ \-\-userdata
+.  IR user_data ]
 .  RB [ \-\-programid
 .  IR id ]
 .  ad b
@@ -268,8 +268,8 @@ optional suffix selects units of:
 .HELP_UNITS
 .
 .HP
-.BR \-\-auxdata
-.IR aux_data
+.BR \-\-userdata
+.IR user_data
 .br
 Specify user data (a word) to be stored with a new region. The value
 is added to any internal auxilliary data (for example, group
