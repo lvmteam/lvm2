@@ -2132,8 +2132,12 @@ void dm_stats_buffer_destroy(struct dm_stats *dms, char *buffer)
 
 uint64_t dm_stats_get_nr_regions(const struct dm_stats *dms)
 {
-	if (!dms || !dms->regions)
+	if (!dms)
 		return_0;
+
+	if (!dms->regions)
+		return 0;
+
 	return dms->nr_regions;
 }
 
