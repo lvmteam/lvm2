@@ -4609,6 +4609,22 @@ static int _bind_stats_device(struct dm_stats *dms, const char *name)
 	return 1;
 }
 
+static int _stats_clear_one_region(struct dm_stats *dms, uint64_t region_id)
+{
+
+	if (!dm_stats_region_present(dms, region_id)) {
+		log_error("No such region: %"PRIu64".", region_id);
+		return 0;
+	}
+	if (!dm_stats_clear_region(dms, region_id)) {
+		log_error("Clearing statistics region %"PRIu64" failed.",
+			  region_id);
+		return 0;
+	}
+	log_info("Cleared statistics region %"PRIu64".", region_id);
+	return 1;
+}
+
 static int _stats_clear_regions(struct dm_stats *dms, uint64_t region_id)
 {
 	int allregions = (region_id == DM_STATS_REGIONS_ALL);
@@ -4619,23 +4635,14 @@ static int _stats_clear_regions(struct dm_stats *dms, uint64_t region_id)
 	if (!dm_stats_get_nr_regions(dms))
 		return 1;
 
-	dm_stats_walk_init(dms, DM_STATS_WALK_REGION);
-	dm_stats_walk_do(dms) {
-		if (allregions)
-			region_id = dm_stats_get_current_region(dms);
+	if (!allregions)
+		return _stats_clear_one_region(dms, region_id);
 
-		if (!dm_stats_region_present(dms, region_id)) {
-			log_error("No such region: %"PRIu64".", region_id);
-			return 0;
-		}
-		if (!dm_stats_clear_region(dms, region_id)) {
-			log_error("Clearing statistics region %"PRIu64" failed.",
-				  region_id);
-			return 0;
-		}
-		log_info("Cleared statistics region %"PRIu64".", region_id);
-		dm_stats_walk_next(dms);
-	} dm_stats_walk_while(dms);
+	dm_stats_foreach_region(dms) {
+		region_id = dm_stats_get_current_region(dms);
+		if (!_stats_clear_one_region(dms, region_id))
+			return_0;
+	}
 
 	return 1;
 }
