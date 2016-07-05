@@ -3482,16 +3482,16 @@ static int _dm_stats_program_id_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, (const char * const *) &program_id);
 }
 
-static int _dm_stats_aux_data_disp(struct dm_report *rh,
-				     struct dm_pool *mem __attribute__((unused)),
-				     struct dm_report_field *field, const void *data,
-				     void *private __attribute__((unused)))
+static int _dm_stats_user_data_disp(struct dm_report *rh,
+				    struct dm_pool *mem __attribute__((unused)),
+				    struct dm_report_field *field, const void *data,
+				    void *private __attribute__((unused)))
 {
 	const struct dm_stats *dms = (const struct dm_stats *) data;
-	const char *aux_data;
-	if (!(aux_data = dm_stats_get_current_region_aux_data(dms)))
+	const char *user_data;
+	if (!(user_data = dm_stats_get_current_region_aux_data(dms)))
 		return_0;
-	return dm_report_field_string(rh, field, (const char * const *) &aux_data);
+	return dm_report_field_string(rh, field, (const char * const *) &user_data);
 }
 
 static int _dm_stats_name_disp(struct dm_report *rh,
@@ -4280,7 +4280,7 @@ FIELD_F(STATS_META, SIZ, "ArOff", 5, dm_stats_area_offset, "area_offset", "Area 
 FIELD_F(STATS_META, NUM, "#Areas", 6, dm_stats_area_count, "area_count", "Area count.")
 FIELD_F(STATS_META, NUM, "GrpID", 5, dm_stats_group_id, "group_id", "Group ID.")
 FIELD_F(STATS_META, STR, "ProgID", 6, dm_stats_program_id, "program_id", "Program ID.")
-FIELD_F(STATS_META, STR, "AuxDat", 6, dm_stats_aux_data, "aux_data", "Auxiliary data.")
+FIELD_F(STATS_META, STR, "UserData", 8, dm_stats_user_data, "user_data", "Auxiliary data.")
 FIELD_F(STATS_META, STR, "Precise", 7, dm_stats_precise, "precise", "Set if nanosecond precision counters are enabled.")
 FIELD_F(STATS_META, STR, "#Bins", 9, dm_stats_hist_bins, "hist_bins", "The number of histogram bins configured.")
 FIELD_F(STATS_META, STR, "Histogram Bounds", 16, dm_stats_hist_bounds, "hist_bounds", "Latency histogram bin boundaries.")
@@ -4760,7 +4760,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 				    uint64_t len, int64_t step,
 				    int segments,
 				    const char *program_id,
-				    const char *aux_data)
+				    const char *user_data)
 {
 	uint64_t this_start = 0, this_len = len, region_id = UINT64_C(0);
 	const char *devname = NULL, *histogram = _string_args[BOUNDS_ARG];
@@ -4821,7 +4821,7 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 			if (!dm_stats_create_region(dms, &region_id,
 						    this_start, this_len, step,
 						    precise, bounds,
-						    program_id, aux_data)) {
+						    program_id, user_data)) {
 				log_error("%s: Could not create statistics region.",
 					  devname);
 				goto out;
@@ -4844,7 +4844,7 @@ out:
 static int _stats_create(CMD_ARGS)
 {
 	struct dm_stats *dms;
-	const char *name, *aux_data = "", *program_id = DM_STATS_PROGRAM_ID;
+	const char *name, *user_data = "", *program_id = DM_STATS_PROGRAM_ID;
 	uint64_t start = 0, len = 0, areas = 0, area_size = 0;
 	int64_t step = 0;
 
@@ -4926,7 +4926,7 @@ static int _stats_create(CMD_ARGS)
 		program_id = DM_STATS_PROGRAM_ID;
 
 	if (_switches[AUX_DATA_ARG])
-		aux_data = _string_args[AUX_DATA_ARG];
+		user_data = _string_args[AUX_DATA_ARG];
 
 	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
 		return_0;
@@ -4956,7 +4956,7 @@ static int _stats_create(CMD_ARGS)
 
 	return _do_stats_create_regions(dms, name, start, len, step,
 					_switches[SEGMENTS_ARG],
-					program_id, aux_data);
+					program_id, user_data);
 
 bad:
 	dm_stats_destroy(dms);

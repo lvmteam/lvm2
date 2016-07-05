@@ -271,8 +271,10 @@ optional suffix selects units of:
 .BR \-\-auxdata
 .IR aux_data
 .br
-Specify auxilliary data (a string) to be stored with a new region.
-.
+Specify user data (a word) to be stored with a new region. The value
+is added to any internal auxilliary data (for example, group
+information), and stored with the region in the aux_data field provided
+by the kernel. Whitespace is not permitted.
 .HP
 .BR \-\-clear
 .br
@@ -501,9 +503,9 @@ one milisecond can only be used when precise timestamps are enabled: if
 \fB\-\-precise\fP is not given and values less than one milisecond are
 used it will be enabled automatically.
 
-An optional \fBprogram_id\fP or \fBaux_data\fP string may be associated
+An optional \fBprogram_id\fP or \fBuser_data\fP string may be associated
 with the region. A \fBprogram_id\fP may then be used to select regions
-for subsequent list, print, and report operations. The \fBaux_data\fP
+for subsequent list, print, and report operations. The \fBuser_data\fP
 stores an arbitrary string and is not used by dmstats or the
 device-mapper kernel statistics subsystem.
 
@@ -724,7 +726,7 @@ when this value is close to 100%.
 Meta fields provide information about the groups, regions, or areas that
 the statistics values relate to. This includes the region and area
 identifier, start, length, and counts, as well as the program ID and
-auxiliary data values.
+user data values.
 .TP
 .B region_id
 Region identifier. This is a non-negative integer returned by the kernel
@@ -761,8 +763,8 @@ The number of areas in this region.
 .B program_id
 The program ID value associated with this region.
 .TP
-.B aux_data
-The auxiliary data value associated with this region.
+.B user_data
+The user data value associated with this region.
 .TP
 .B group_id
 Group identifier. This is a non-negative integer returned by the dmstats
