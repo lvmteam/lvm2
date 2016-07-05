@@ -1010,11 +1010,11 @@ typedef enum {
  * the resulting walk will visit instance of each type specified by
  * the flag combination.
  */
-#define DM_STATS_WALK_AREA   0x1000000000000
-#define DM_STATS_WALK_REGION 0x2000000000000
-#define DM_STATS_WALK_GROUP  0x4000000000000
+#define DM_STATS_WALK_AREA   0x1000000000000ULL
+#define DM_STATS_WALK_REGION 0x2000000000000ULL
+#define DM_STATS_WALK_GROUP  0x4000000000000ULL
 
-#define DM_STATS_WALK_ALL    0x7000000000000
+#define DM_STATS_WALK_ALL    0x7000000000000ULL
 #define DM_STATS_WALK_DEFAULT (DM_STATS_WALK_AREA | DM_STATS_WALK_REGION)
 
 /*
@@ -1024,7 +1024,7 @@ typedef enum {
  * suppress these duplicate entries during a dm_stats_walk_* with the
  * DM_STATS_WALK_REGION flag set.
  */
-#define DM_STATS_WALK_SKIP_SINGLE_AREA   0x8000000000000
+#define DM_STATS_WALK_SKIP_SINGLE_AREA   0x8000000000000ULL
 
 /*
  * Initialise the cursor control of a dm_stats handle for the specified
