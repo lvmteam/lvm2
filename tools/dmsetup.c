@@ -5029,16 +5029,14 @@ static int _stats_delete(CMD_ARGS)
 			goto out;
 		}
 	} else if (_switches[ALL_REGIONS_ARG]) {
-		dm_stats_walk_init(dms, DM_STATS_WALK_REGION);
-		dm_stats_walk_do(dms) {
+		dm_stats_foreach_region(dms) {
 			region_id = dm_stats_get_current_region(dms);
 			if (!dm_stats_delete_region(dms, region_id)) {
 				log_error("Could not delete statistics region.");
 				goto out;
 			}
 			log_info("Deleted statistics region %" PRIu64, region_id);
-			dm_stats_walk_next(dms);
-		} dm_stats_walk_while(dms);
+		}
 	} else {
 		dm_stats_delete_region(dms, region_id);
 		log_info("Deleted statistics region " FMTu64 ".\n", region_id);
