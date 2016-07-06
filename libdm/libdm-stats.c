@@ -3767,7 +3767,11 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 				  FMTu64, i, dms->regions[i].group_id);
 			goto bad;
 		}
-
+		if (dms->regions[i].bounds) {
+			log_error("Region ID %d: grouping regions with "
+				  "histograms is not yet supported", i);
+			goto bad;
+		}
 		if (dms->regions[i].timescale == 1)
 			precise++;
 
