@@ -879,7 +879,8 @@ static int _pv_populate_lvmcache(struct cmd_context *cmd,
 		if (!id_read_format(&vgid, vgid_txt))
 			return_0;
 	} else
-		strcpy((char*)&vgid, fmt->orphan_vg_name);
+		/* NB uuid is short and NUL-terminated. */
+		(void) dm_strncpy((char*)&vgid, fmt->orphan_vg_name, sizeof(vgid));
 
 	if (!vgname)
 		vgname = fmt->orphan_vg_name;
@@ -1245,7 +1246,7 @@ int lvmetad_vg_update_finish(struct volume_group *vg)
 		dm_hash_get_first(vg->fid->metadata_areas_index) : NULL;
 	while (n) {
 		mda = dm_hash_get_data(vg->fid->metadata_areas_index, n);
-		strcpy(mda_id, dm_hash_get_key(vg->fid->metadata_areas_index, n));
+		(void) dm_strncpy(mda_id, dm_hash_get_key(vg->fid->metadata_areas_index, n), sizeof(mda_id));
 		if ((num = strchr(mda_id, '_'))) {
 			*num = 0;
 			++num;

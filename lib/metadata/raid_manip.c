@@ -1578,7 +1578,12 @@ static uint32_t _min_sublv_area_at_le(struct lv_segment *seg, uint32_t area_le)
 
 	/* Find smallest segment of each of the data image LVs at offset area_le */
 	for (s = 0; s < seg->area_count; s++) {
-		seg1 = find_seg_by_le(seg_lv(seg, s), area_le);
+		if (!(seg1 = find_seg_by_le(seg_lv(seg, s), area_le))) {
+			log_error("Failed to find segment for %s extent %" PRIu32,
+				  seg_lv(seg, s)->name, area_le);
+			return 0;
+		}
+
 		area_len = min(area_len, seg1->len);
 	}
 
@@ -1734,7 +1739,8 @@ static int _raid0_to_striped_retrieve_segments_and_lvs(struct logical_volume *lv
 	 */
 	area_le = le = 0;
 	while (le < lv->le_count) {
-		area_len = _min_sublv_area_at_le(seg, area_le);
+		if (!(area_len = _min_sublv_area_at_le(seg, area_le)))
+			return_0;
 		area_le += area_len;
 
 		if (!_split_area_lvs_segments(seg, area_le) ||
@@ -1748,7 +1754,11 @@ static int _raid0_to_striped_retrieve_segments_and_lvs(struct logical_volume *lv
 	area_le = 0;
 	dm_list_iterate_items(seg_to, &new_segments) {
 		for (s = 0; s < seg->area_count; s++) {
-			data_seg = find_seg_by_le(seg_lv(seg, s), area_le);
+			if (!(data_seg = find_seg_by_le(seg_lv(seg, s), area_le))) {
+				log_error("Failed to find segment for %s extent %" PRIu32,
+					  seg_lv(seg, s)->name, area_le);
+				return 0;
+			}
 
 			/* Move the respective area across to our new segments area */
 			if (!move_lv_segment_area(seg_to, s, data_seg, 0))
@@ -1816,10 +1826,14 @@ static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 	if (!_deactivate_and_remove_lvs(vg, removal_lvs))
 		return_0;
 
-	dm_list_init(removal_lvs);
-
 	/* Wait for events following any deactivation. */
-	sync_local_dev_names(vg->cmd);
+	if (!sync_local_dev_names(vg->cmd)) {
+		log_error("Failed to sync local devices after removing %u LVs in VG %s.",
+			  dm_list_size(removal_lvs), vg->name);
+		return 0;
+	}
+
+	dm_list_init(removal_lvs);
 
 	if (vg_write_requested && !_vg_write_commit_backup(vg))
 		return_0;
