@@ -1,3 +1,6 @@
+Version 2.02.160 -
+================================
+
 Version 2.02.159 - 6th July 2016
 ================================
   Add raid0_meta segment type that provides metadata space for raid conversions.
