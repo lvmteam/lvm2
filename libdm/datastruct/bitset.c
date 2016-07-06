@@ -153,7 +153,7 @@ scan:
 
 			if (c == '-') {
 				if (at_start || in_range)
-					return_0;
+					goto_bad;
 				b = 0;
 				in_range = 1;
 				at_start = 1;
