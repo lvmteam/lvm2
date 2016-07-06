@@ -3179,7 +3179,7 @@ struct dm_histogram *dm_stats_get_histogram(const struct dm_stats *dms,
 
 	/* FIXME return histogram sum? Requires bounds check at group time */
 	if (region_id & DM_STATS_WALK_GROUP) {
-		log_warn("Group histogram data is not supported");
+		log_err_once("Group histogram data is not supported");
 		return NULL;
 	}
 
