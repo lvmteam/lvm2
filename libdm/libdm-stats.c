@@ -692,7 +692,7 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 	}
 
 	/* separate group tag from user aux_data */
-	if (strlen(end))
+	if ((strlen(end) > 1) || strncmp(end, "-", 1))
 		c = dm_strdup(end);
 	else
 		c = dm_strdup("");
