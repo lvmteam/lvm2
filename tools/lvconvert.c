@@ -1705,6 +1705,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 			      struct logical_volume *lv,
 			      struct lvconvert_params *lp)
 {
+	const char *new_type;
 	uint32_t old_mimage_count;
 	uint32_t old_log_count;
 	uint32_t new_mimage_count;
@@ -1731,6 +1732,16 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 		log_error("Mirrors are not yet supported on cache LVs %s.",
 			  display_lvname(lv));
 		return 0;
+	}
+
+	if ((new_type = arg_str_value(cmd, type_ARG, NULL)) &&
+	    !strcmp(new_type, SEG_TYPE_NAME_LINEAR)) {
+		if (arg_is_set(cmd, mirrors_ARG) && (arg_uint_value(cmd, mirrors_ARG, 0) != 0)) {
+			log_error("Cannot specify mirrors with linear type.");
+			return 0;
+		}
+		lp->mirrors_supplied = 1;
+		lp->mirrors = 0;
 	}
 
 	/* Adjust mimage and/or log count */
@@ -3615,6 +3626,20 @@ static int _convert_mirror_repair(struct cmd_context *cmd, struct logical_volume
 }
 
 /*
+ * Convert mirror LV to linear LV.
+ * lvconvert --type linear LV
+ *
+ * Alternate syntax:
+ * lvconvert --mirrors 0 LV
+ */
+
+static int _convert_mirror_linear(struct cmd_context *cmd, struct logical_volume *lv,
+			          struct lvconvert_params *lp)
+{
+	return _lvconvert_mirrors(cmd, lv, lp);
+}
+
+/*
  * Convert mirror LV to raid1 LV.
  * lvconvert --type raid1 LV
  *
@@ -4126,6 +4151,9 @@ static int _convert_mirror(struct cmd_context *cmd, struct logical_volume *lv,
 	if (arg_is_set(cmd, repair_ARG))
 		return _convert_mirror_repair(cmd, lv, lp);
 
+	if (new_type && !strcmp(new_type, SEG_TYPE_NAME_LINEAR))
+		return _convert_mirror_linear(cmd, lv, lp);
+
 	if (new_type && new_segtype && segtype_is_raid(new_segtype))
 		return _convert_mirror_raid(cmd, lv, lp);
 
@@ -4152,6 +4180,7 @@ static int _convert_mirror(struct cmd_context *cmd, struct logical_volume *lv,
 		  "  --splitmirrors\n"
 		  "  --mirrorlog\n"
 		  "  --repair\n"
+		  "  --type linear\n"
 		  "  --type raid*\n");
 	return 0;
 }
