@@ -1479,11 +1479,12 @@ static void _stats_walk_end_areas(const struct dm_stats *dms, uint64_t *flags,
 		*cur_a = DM_STATS_WALK_REGION;
 		*cur_r = DM_STATS_REGION_NOT_PRESENT;
 		_stats_walk_next_present(dms, flags, cur_r, cur_a, cur_g);
-		if (!_stats_walk_any_unskipped(dms, flags, cur_r, cur_a))
+		if (!_stats_walk_any_unskipped(dms, flags, cur_r, cur_a)) {
 			/* no more regions */
 			*flags &= ~DM_STATS_WALK_REGION;
 			if (!(*flags & DM_STATS_WALK_GROUP))
 				*cur_r = dms->max_region;
+		}
 	}
 
 	if (*flags & DM_STATS_WALK_REGION)
