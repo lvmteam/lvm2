@@ -2600,11 +2600,15 @@ static int _average_rd_wait_time(const struct dm_stats *dms, double *await,
 
 	rd_io_ticks = dm_stats_get_counter(dms, DM_STATS_READ_NSECS,
 					   region_id, area_id);
-
 	nr_rd_ios = dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
 					 region_id, area_id);
 
-	if (rd_io_ticks > 0)
+	/*
+	 * If rd_io_ticks is > 0 this should imply that nr_rd_ios is
+	 * also > 0 (unless a kernel bug exists). Test for both here
+	 * before using the IO count as a divisor (Coverity).
+	 */
+	if (rd_io_ticks > 0 && nr_rd_ios > 0)
 		*await = (double) rd_io_ticks / (double) nr_rd_ios;
 	else
 		*await = 0.0;
@@ -2622,7 +2626,12 @@ static int _average_wr_wait_time(const struct dm_stats *dms, double *await,
 	nr_wr_ios = dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
 					 region_id, area_id);
 
-	if (wr_io_ticks > 0)
+	/*
+	 * If wr_io_ticks is > 0 this should imply that nr_wr_ios is
+	 * also > 0 (unless a kernel bug exists). Test for both here
+	 * before using the IO count as a divisor (Coverity).
+	 */
+	if (wr_io_ticks > 0 && nr_wr_ios > 0)
 		*await = (double) wr_io_ticks / (double) nr_wr_ios;
 	else
 		*await = 0.0;
