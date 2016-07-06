@@ -2656,9 +2656,18 @@ static int _utilization(const struct dm_stats *dms, double *util,
 	 * for the last interval; do not allow a value > 100% utilization
 	 * to be passed to a dm_make_percent() call. We expect to see these
 	 * at startup if counters have not been cleared before the first read.
+	 *
+	 * A zero interval_ns is also an error since metrics cannot be
+	 * calculated without a defined interval - return zero and emit a
+	 * backtrace in this case.
 	 */
 	io_nsecs = dm_stats_get_counter(dms, DM_STATS_IO_NSECS,
 					region_id, area_id);
+
+	if (!interval_ns) {
+		*util = 0.0;
+		return_0;
+	}
 
 	io_nsecs = ((io_nsecs < interval_ns) ? io_nsecs : interval_ns);
 
