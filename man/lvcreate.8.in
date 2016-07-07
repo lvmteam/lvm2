@@ -329,18 +329,19 @@ is specified.
 .IR LogicalExtentsNumber \c
 .RB [ % { VG | PVS | FREE | ORIGIN }]
 .br
-The size of the new LV in logical extents.  The number of physical extents
-allocated may be different, and depends on the LV type, e.g.  mirroring.
-The number of logical extents can also be expressed as a percentage of the
-total space in the Volume Group with the suffix \fB%VG\fP, as a percentage
-of the remaining free space in the Volume Group with the suffix
-\fB%FREE\fP, as a percentage of the remaining free space for the specified
-PhysicalVolume(s) with the suffix \fB%PVS\fP, or (for a snapshot) as a
-percentage of the total space in the Origin Logical Volume with the suffix
-\fB%ORIGIN\fP (i.e. \fB100%ORIGIN\fP provides space for the whole origin).
-When expressed as a percentage, the number is treated as an approximate
-upper limit, and the actual size of the LV (in logical extents) may be
-less.
+Specifies the size of the new LV in logical extents.  The number of
+physical extents allocated may be different, and depends on the LV type.
+Certain LV types require more physical extents for data redundancy or
+metadata.  An alternate syntax allows the size to be determined indirectly
+as a percentage of the size of a related VG, LV, or set of PVs.  The
+suffix \fB%VG\fP denotes the total size of the VG, the suffix \fB%FREE\fP
+the remaining free space in the VG, and the suffix \fB%PVS\fP the free
+space in the specified Physical Volumes.  For a snapshot, the upper bound
+can be expressed as a percentage of the total size of the Origin Logical
+Volume with the suffix \fB%ORIGIN\fP (\fB100%ORIGIN\fP provides space for
+the whole origin).  When expressed as a percentage, the number is treated
+as an approximate upper limit, and the final size of the LV is not known
+until the command is complete.
 .
 .HP
 .BR \-j | \-\-major
