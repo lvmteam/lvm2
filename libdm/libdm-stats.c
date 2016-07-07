@@ -1980,7 +1980,6 @@ static int _stats_remove_region_id_from_group(struct dm_stats *dms,
 
 	/* removing group leader? */
 	if (region_id == group_id) {
-		dms->groups[group_id].group_id = DM_STATS_GROUP_NOT_PRESENT;
 		_stats_clear_group_regions(dms, group_id);
 		_stats_group_destroy(&dms->groups[group_id]);
 	}
