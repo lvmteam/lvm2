@@ -148,8 +148,6 @@ dmstats \(em device-mapper statistics management
 .  RI [ device_name ]
 .  RB [ \-\-histogram ]
 .  OPT_PROGRAMS
-.  RB [ \-\-statstype
-.  IR type_list ]
 .  RB [ \-\-units
 .  IR units ]
 .  OPT_OBJECTS
@@ -193,8 +191,6 @@ dmstats \(em device-mapper statistics management
 .  IR sort_fields ]
 .  RB [ \-S | \-\-select
 .  IR selection ]
-.  RB [ \-\-statstype
-.  IR type_list ]
 .  RB [ \-\-units
 .  IR units ]
 .  RB [ \-\-nosuffix ]
@@ -469,20 +465,6 @@ the \fB\-\-nogroup\fP option is given. When grouping is enabled a group
 alias may be specified using the \fB\-\-alias\fP option.
 .
 .HP
-.BR \-\-statstype
-.IR type_list
-.br
-Filter the types of statistics object included in a report or listing
-according to the provided list. A report may include areas, regions,
-and user-defined groups of regions that report aggregate data for all
-group members.
-
-The list may be a single object type, a comma separated list of types,
-or the special value 'all'.
-
-The currently available object types are 'area', 'region' and 'group'.
-.
-.HP
 .BR \-\-units
 .RI [ units ] \c
 .RB [ h | H | \c
@@ -578,8 +560,8 @@ By default regions that map a file are placed into a group and the
 group alias is set to the basename of the file. This behaviour can be
 overridden with the \fB\-\-alias\fP and \fB\-\-nogroup\fP options.
 
-To display only group information when listing and reporting, use the
-\fB\-\-statstype\fP option with the 'group' type.
+Use the \fB\-\-group\fP option to only display information for groups
+when listing and reporting.
 .
 .HP
 .CMD_DELETE
@@ -635,13 +617,13 @@ regardless of region program ID values.
 By default only regions and groups are included in list output. If
 \fB\-v\fP or \fB\-\-verbose\fP is given the report will also include a
 row of information for each configured group and for each area contained
-in each region displayed (regions that contain a single area are by
-default omitted from the verbose list since their properties are
-identical to the area that they contain - to view all regions regardless
-of the number of areas they contain use \fB\-\-statstype\fP).
+in each region displayed.
 
-Specific combinations of objects may be selected using the
-\fB\-\-statstype\fP option.
+Regions that contain a single area are by default omitted from the
+verbose list since their properties are identical to the area that they
+contain - to view all regions regardless of the number of areas present
+use \fB\-\-region\fP). To also view the areas contained within regions
+use \fB\-\-area\fP.
 
 If \fB\-\-histogram\fP is given the report will include the bin count
 and latency boundary values for any configured histograms.
@@ -668,8 +650,9 @@ values and latency boundaries.
 If the \fB\-\-relative\fP is used the default histogram field displays
 bin values as a percentage of the total number of I/Os.
 
-Object types (areas, regions and groups) are selected using the
-\fB\-\-statstype\fP option.
+Object types (areas, regions and groups) to include in the report are
+selected using the \fB\-\-area\fP, \fB\-\-region\fP, and \fB\-\-group\fP
+options.
 .
 .HP
 .CMD_UNGROUP
