@@ -1,5 +1,7 @@
 Version 1.02.131 -
 ================================
+  Automatically group regions with 'create --segments' unless --nogroup.
+  Fix resource leak when deleting the first member of a group.
   Allow --bounds with 'create --filemap' for dmstats.
   Enable creation of filemap regions with histograms.
   Enable histogram aggregation for regions with more than one area.
