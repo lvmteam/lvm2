@@ -4882,7 +4882,9 @@ static char *_get_abspath(const char *path)
 static int _stats_create_file(CMD_ARGS)
 {
 	const char *alias, *program_id = DM_STATS_PROGRAM_ID;
+	const char *histogram = _string_args[BOUNDS_ARG];
 	uint64_t *regions, *region, count = 0;
+	struct dm_histogram *bounds = NULL;
 	char *path, *abspath = NULL;
 	int group, fd, precise;
 	struct dm_stats *dms;
@@ -4904,11 +4906,6 @@ static int _stats_create_file(CMD_ARGS)
 
 	if (_switches[USER_DATA_ARG]) {
 		log_error("--userdata is not yet supported with --filemap.");
-		return 0;
-	}
-
-	if (_switches[BOUNDS_ARG]) {
-		log_error("--bounds is not yet supported with --filemap.");
 		return 0;
 	}
 
@@ -4944,6 +4941,9 @@ static int _stats_create_file(CMD_ARGS)
 			return 0;
 		}
 	}
+
+	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram)))
+		return_0;
 
 	if (_switches[PROGRAM_ID_ARG])
 		program_id = _string_args[PROGRAM_ID_ARG];
@@ -4988,7 +4988,7 @@ static int _stats_create_file(CMD_ARGS)
 	}
 
 	regions = dm_stats_create_regions_from_fd(dms, fd, group, precise,
-						  NULL, alias);
+						  bounds, alias);
 
 	if (close(fd))
 		log_error("Error closing %s", path);
