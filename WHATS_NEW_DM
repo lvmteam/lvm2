@@ -1,5 +1,11 @@
 Version 1.02.131 -
 ================================
+  Allow --bounds with 'create --filemap' for dmstats.
+  Enable creation of filemap regions with histograms.
+  Enable histogram aggregation for regions with more than one area.
+  Enable histogram aggregation for groups of regions.
+  Add a --filemap option to 'dmstats create' to allow mapping of files.
+  Add dm_stats_create_regions_from_fd() to map file extents to regions.
 
 Version 1.02.130 - 6th July 2016
 ================================
