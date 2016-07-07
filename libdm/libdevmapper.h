@@ -1146,15 +1146,17 @@ for (dm_stats_walk_init((dms), DM_STATS_WALK_GROUP),		\
  * empty.
  */
 #define dm_stats_walk_do(dms)					\
-dm_stats_walk_start((dms));					\
-do
+do {								\
+	dm_stats_walk_start((dms));				\
+	do
 
 /*
  * Start a 'while' style loop or end a 'do..while' loop iterating over the
  * regions contained in dm_stats handle 'dms'.
  */
 #define dm_stats_walk_while(dms)				\
-while(!dm_stats_walk_end((dms)))
+	while(!dm_stats_walk_end((dms)));			\
+} while (0)
 
 /*
  * Cursor relative property methods
