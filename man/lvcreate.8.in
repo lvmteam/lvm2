@@ -336,12 +336,13 @@ metadata.  An alternate syntax allows the size to be determined indirectly
 as a percentage of the size of a related VG, LV, or set of PVs.  The
 suffix \fB%VG\fP denotes the total size of the VG, the suffix \fB%FREE\fP
 the remaining free space in the VG, and the suffix \fB%PVS\fP the free
-space in the specified Physical Volumes.  For a snapshot, the upper bound
+space in the specified Physical Volumes.  For a snapshot, the size
 can be expressed as a percentage of the total size of the Origin Logical
 Volume with the suffix \fB%ORIGIN\fP (\fB100%ORIGIN\fP provides space for
-the whole origin).  When expressed as a percentage, the number is treated
-as an approximate upper limit, and the final size of the LV is not known
-until the command is complete.
+the whole origin).
+When expressed as a percentage, the size defines an upper limit for the
+number of logical extents in the new LV. The precise number of logical
+extents in the new LV is not determined until the command has completed.
 .
 .HP
 .BR \-j | \-\-major
