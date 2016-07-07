@@ -460,9 +460,13 @@ optional suffix selects units of:
 .HP
 .BR \-\-segments
 .br
-Create a new statistics region for each target contained in the target
-device. This causes a separate region to be allocated for each segment
-of the device.
+When used with \fBcreate\fP, create a new statistics region for each
+target contained in the given device(s). This causes a separate region
+to be allocated for each segment of the device.
+
+The newly created regions are automatically placed into a group unless
+the \fB\-\-nogroup\fP option is given. When grouping is enabled a group
+alias may be specified using the \fB\-\-alias\fP option.
 .
 .HP
 .BR \-\-statstype
