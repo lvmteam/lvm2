@@ -4247,6 +4247,7 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 {
 	struct _extent *extents = NULL;
 	uint64_t *regions = NULL, i;
+	char *hist_arg = NULL;
 	struct statfs fsbuf;
 	struct stat buf;
 
@@ -4279,6 +4280,12 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 	if (!(extents = _stats_get_extents_for_file(dms->mem, fd, count)))
 		return_0;
 
+        if (bounds) {
+                /* _build_histogram_arg enables precise if vals < 1ms. */
+                if (!(hist_arg = _build_histogram_arg(bounds, &precise)))
+                        goto_out;
+        }
+
 	/* make space for end-of-table marker */
 	if (!(regions = dm_malloc((1 + *count) * sizeof(*regions)))) {
 		log_error("Could not allocate memory for region IDs.");
@@ -4286,9 +4293,9 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 	}
 
 	for (i = 0; i < *count; i++) {
-		if (!_stats_create_region(dms, regions + i,
-					  extents[i].start, extents[i].len, -1,
-					  precise, NULL, dms->program_id, "")) {
+		if (!_stats_create_region(dms, regions + i, extents[i].start,
+					  extents[i].len, -1, precise, hist_arg,
+					  dms->program_id, "")) {
 			log_error("Failed to create region " FMTu64 " of "
 				  FMTu64 " at " FMTu64 ".", i, *count,
 				  extents[i].start);
@@ -4320,12 +4327,6 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 					  const char *alias)
 {
 	uint64_t *regions, count = 0;
-
-	if (bounds) {
-		log_error("File mapped groups with histograms are not "
-			  "yet supported.");
-		return NULL;
-	}
 
 	if (alias && !group) {
 		log_error("Cannot set alias without grouping regions.");
