@@ -18,6 +18,7 @@
 #include "memlock.h"
 #include "defaults.h"
 #include "report.h"
+#include "lvm-file.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -58,6 +59,154 @@ static log_report_t _log_report = {
 	.object_name = NULL,
 	.object_group = NULL
 };
+
+#define LOG_STREAM_BUFFER_SIZE 4096
+
+struct log_stream_item {
+	FILE *stream;
+	char *buffer;
+};
+
+struct log_stream {
+	struct log_stream_item out;
+	struct log_stream_item err;
+	struct log_stream_item report;
+} _log_stream = {{NULL, NULL},
+		 {NULL, NULL},
+		 {NULL, NULL}};
+
+#define out_stream (_log_stream.out.stream ? : stdout)
+#define err_stream (_log_stream.err.stream ? : stderr)
+#define report_stream (_log_stream.report.stream ? : stdout)
+
+static int _set_custom_log_stream(struct log_stream_item *stream_item, int custom_fd)
+{
+	FILE *final_stream = NULL;
+	int flags;
+	int r = 1;
+
+	if (custom_fd < 0)
+		goto out;
+
+	if (is_valid_fd(custom_fd)) {
+		if ((flags = fcntl(custom_fd, F_GETFL)) > 0) {
+			if ((flags & O_ACCMODE) == O_RDONLY) {
+				log_error("File descriptor %d already open in read-only "
+					  "mode, expected write-only or read-write mode.",
+					   (int) custom_fd);
+				r = 0;
+				goto out;
+			}
+		}
+
+		if (custom_fd == STDIN_FILENO) {
+			log_error("Can't set standard input for log output.");
+			r = 0;
+			goto out;
+		}
+
+		if (custom_fd == STDOUT_FILENO) {
+			final_stream = stdout;
+			goto out;
+		}
+
+		if (custom_fd == STDERR_FILENO) {
+			final_stream = stderr;
+			goto out;
+		}
+	}
+
+	if (!(final_stream = fdopen(custom_fd, "w"))) {
+		log_error("Failed to open stream for file descriptor %d.",
+			  (int) custom_fd);
+		r = 0;
+		goto out;
+	}
+
+	if (!(stream_item->buffer = dm_malloc(LOG_STREAM_BUFFER_SIZE))) {
+		log_error("Failed to allocate buffer for stream on file "
+			  "descriptor %d.", (int) custom_fd);
+	} else {
+		if (setvbuf(final_stream, stream_item->buffer, _IOLBF, LOG_STREAM_BUFFER_SIZE)) {
+			log_sys_error("setvbuf", "");
+			dm_free(stream_item->buffer);
+			stream_item->buffer = NULL;
+		}
+	}
+out:
+	stream_item->stream = final_stream;
+	return r;
+}
+
+int init_custom_log_streams(struct custom_fds *custom_fds)
+{
+	return _set_custom_log_stream(&_log_stream.out, custom_fds->out) &&
+	       _set_custom_log_stream(&_log_stream.err, custom_fds->err) &&
+	       _set_custom_log_stream(&_log_stream.report, custom_fds->report);
+}
+
+static void _check_and_replace_standard_log_streams(FILE *old_stream, FILE *new_stream)
+{
+	if (_log_stream.out.stream == old_stream)
+		_log_stream.out.stream = new_stream;
+
+	if (_log_stream.err.stream == old_stream)
+		_log_stream.err.stream = new_stream;
+
+	if (_log_stream.report.stream == old_stream)
+		_log_stream.report.stream = new_stream;
+}
+
+/*
+ * Close and reopen standard stream on file descriptor fd.
+ */
+int reopen_standard_stream(FILE **stream, const char *mode)
+{
+	int fd, fd_copy, new_fd;
+	const char *name;
+	FILE *old_stream = *stream;
+	FILE *new_stream;
+
+	if (old_stream == stdin) {
+		fd = STDIN_FILENO;
+		name = "stdin";
+	} else if (old_stream == stdout) {
+		fd = STDOUT_FILENO;
+		name = "stdout";
+	} else if (old_stream == stderr) {
+		fd = STDERR_FILENO;
+		name = "stderr";
+	} else {
+		log_error(INTERNAL_ERROR "reopen_standard_stream called on non-standard stream");
+		return 0;
+	}
+
+	if ((fd_copy = dup(fd)) < 0) {
+		log_sys_error("dup", name);
+		return 0;
+	}
+
+	if (fclose(old_stream))
+		log_sys_error("fclose", name);
+
+	if ((new_fd = dup2(fd_copy, fd)) < 0)
+		log_sys_error("dup2", name);
+	else if (new_fd != fd)
+		log_error("dup2(%d, %d) returned %d", fd_copy, fd, new_fd);
+
+	if (close(fd_copy) < 0)
+		log_sys_error("close", name);
+
+	if (!(new_stream = fdopen(fd, mode))) {
+		log_sys_error("fdopen", name);
+		return 0;
+	}
+
+	_check_and_replace_standard_log_streams(old_stream, new_stream);
+
+	*stream = new_stream;
+	return 1;
+}
 
 void init_log_fn(lvm2_log_fn_t log_fn)
 {
@@ -207,10 +356,10 @@ void fin_log(void)
 	if (_log_to_file) {
 		if (dm_fclose(_log_file)) {
 			if (errno)
-			      fprintf(stderr, "failed to write log file: %s\n",
+			      fprintf(err_stream, "failed to write log file: %s\n",
 				      strerror(errno));
 			else
-			      fprintf(stderr, "failed to write log file\n");
+			      fprintf(err_stream, "failed to write log file\n");
 
 		}
 		_log_to_file = 0;
@@ -378,8 +527,8 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		/* When newer glibc returns >= sizeof(locn), we will just log what
                  * has fit into buffer, it's '\0' terminated string */
 		if (n < 0) {
-			fprintf(stderr, _("vsnprintf failed: skipping external "
-					"logging function"));
+			fprintf(err_stream, _("vsnprintf failed: skipping external "
+					      "logging function"));
 			goto log_it;
 		}
 	}
@@ -426,7 +575,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 				   _log_report.object_name, _log_report.object_id,
 				   _log_report.object_group, _log_report.object_group_id,
 				   message, _lvm_errno, 0))
-			fprintf(stderr, _("failed to report cmdstatus"));
+			fprintf(err_stream, _("failed to report cmdstatus"));
 		else
 			logged_via_report = 1;
 
@@ -468,10 +617,10 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 				break;
 			/* fall through */
 		default:
-			/* Typically only log_warn goes to stdout */
-			stream = (use_stderr || (level != _LOG_WARN)) ? stderr : stdout;
-			if (stream == stderr)
-				fflush(stdout);
+			/* Typically only log_warn goes to out_stream */
+			stream = (use_stderr || (level != _LOG_WARN)) ? err_stream : out_stream;
+			if (stream == err_stream)
+				fflush(out_stream);
 			fprintf(stream, "%s%s%s%s", buf, log_command_name(),
 				_msg_prefix, indent_spaces);
 			vfprintf(stream, trformat, ap);
@@ -556,6 +705,7 @@ void print_log(int level, const char *file, int line, int dm_errno_or_class,
 void print_log_libdm(int level, const char *file, int line, int dm_errno_or_class,
 		     const char *format, ...)
 {
+	FILE *orig_out_stream = out_stream;
 	va_list ap;
 
 	/*
@@ -567,9 +717,13 @@ void print_log_libdm(int level, const char *file, int line, int dm_errno_or_clas
 	    ((level & ~(_LOG_STDERR|_LOG_ONCE|_LOG_BYPASS_REPORT)) == _LOG_WARN))
 		level |= _LOG_BYPASS_REPORT;
 
+	_log_stream.out.stream = report_stream;
+
 	va_start(ap, format);
 	_vprint_log(level, file, line, dm_errno_or_class, format, ap);
 	va_end(ap);
+
+	_log_stream.out.stream = orig_out_stream;
 }
 
 log_report_t log_get_report_state(void)

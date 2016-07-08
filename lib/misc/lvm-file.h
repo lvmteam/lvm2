@@ -16,6 +16,12 @@
 #ifndef _LVM_FILE_H
 #define _LVM_FILE_H
 
+struct custom_fds {
+	int out;
+	int err;
+	int report;
+};
+
 /*
  * Create a temporary filename, and opens a descriptor to the file.
  */

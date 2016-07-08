@@ -1838,6 +1838,39 @@ static int _check_standard_fds(void)
 	return 1;
 }
 
+#define LVM_OUT_FD_ENV_VAR_NAME    "LVM_OUT_FD"
+#define LVM_ERR_FD_ENV_VAR_NAME    "LVM_ERR_FD"
+#define LVM_REPORT_FD_ENV_VAR_NAME "LVM_REPORT_FD"
+
+static int _do_get_custom_fd(const char *env_var_name, int *fd)
+{
+	const char *str;
+	char *endptr;
+	int tmp_fd;
+
+	*fd = -1;
+
+	if (!(str = getenv(env_var_name)))
+		return 1;
+
+	errno = 0;
+	tmp_fd = strtol(str, &endptr, 10);
+	if (errno || *endptr || (tmp_fd < 0) || (tmp_fd > INT_MAX)) {
+		log_error("%s: invalid file descriptor.", env_var_name);
+		return 0;
+	}
+
+	*fd = tmp_fd;
+	return 1;
+}
+
+static int _get_custom_fds(struct custom_fds *custom_fds)
+{
+	return _do_get_custom_fd(LVM_OUT_FD_ENV_VAR_NAME, &custom_fds->out) &&
+	       _do_get_custom_fd(LVM_ERR_FD_ENV_VAR_NAME, &custom_fds->err) &&
+	       _do_get_custom_fd(LVM_REPORT_FD_ENV_VAR_NAME, &custom_fds->report);
+}
+
 static const char *_get_cmdline(pid_t pid)
 {
 	static char _proc_cmdline[32];
@@ -1905,7 +1938,7 @@ static void _close_descriptor(int fd, unsigned suppress_warnings,
 	fprintf(stderr, " Parent PID %" PRIpid_t ": %s\n", ppid, parent_cmdline);
 }
 
-static int _close_stray_fds(const char *command)
+static int _close_stray_fds(const char *command, struct custom_fds *custom_fds)
 {
 #ifndef VALGRIND_POOL
 	struct rlimit rlim;
@@ -1939,17 +1972,27 @@ static int _close_stray_fds(const char *command)
 			return 1;
 		}
 
-		for (fd = 3; fd < (int)rlim.rlim_cur; fd++)
-			_close_descriptor(fd, suppress_warnings, command, ppid,
-					  parent_cmdline);
+		for (fd = 3; fd < (int)rlim.rlim_cur; fd++) {
+			if ((fd != custom_fds->out) &&
+			    (fd != custom_fds->err) &&
+			    (fd != custom_fds->report)) {
+				_close_descriptor(fd, suppress_warnings, command, ppid,
+						  parent_cmdline);
+			}
+		}
 		return 1;
 	}
 
 	while ((dirent = readdir(d))) {
 		fd = atoi(dirent->d_name);
-		if (fd > 2 && fd != dirfd(d))
+		if ((fd > 2) &&
+		    (fd != dirfd(d)) &&
+		    (fd != custom_fds->out) &&
+		    (fd != custom_fds->err) &&
+		    (fd != custom_fds->report)) {
 			_close_descriptor(fd, suppress_warnings,
 					  command, ppid, parent_cmdline);
+		}
 	}
 
 	if (closedir(d))
@@ -2111,6 +2154,7 @@ int lvm2_main(int argc, char **argv)
 {
 	const char *base;
 	int ret, alias = 0;
+	struct custom_fds custom_fds;
 	struct cmd_context *cmd;
 
 	if (!argv)
@@ -2124,7 +2168,13 @@ int lvm2_main(int argc, char **argv)
 	if (!_check_standard_fds())
 		return -1;
 
-	if (!_close_stray_fds(base))
+	if (!_get_custom_fds(&custom_fds))
+		return -1;
+
+	if (!_close_stray_fds(base, &custom_fds))
+		return -1;
+
+	if (!init_custom_log_streams(&custom_fds))
 		return -1;
 
 	if (is_static() && strcmp(base, "lvm.static") &&

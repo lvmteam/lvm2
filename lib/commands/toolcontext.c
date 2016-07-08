@@ -1650,37 +1650,6 @@ static void _init_globals(struct cmd_context *cmd)
 }
 
 /*
- * Close and reopen stream on file descriptor fd.
- */
-static int _reopen_stream(FILE *stream, int fd, const char *mode, const char *name, FILE **new_stream)
-{
-	int fd_copy, new_fd;
-
-	if ((fd_copy = dup(fd)) < 0) {
-		log_sys_error("dup", name);
-		return 0;
-	}
-
-	if (fclose(stream))
-		log_sys_error("fclose", name);
-
-	if ((new_fd = dup2(fd_copy, fd)) < 0)
-		log_sys_error("dup2", name);
-	else if (new_fd != fd)
-		log_error("dup2(%d, %d) returned %d", fd_copy, fd, new_fd);
-
-	if (close(fd_copy) < 0)
-		log_sys_error("close", name);
-
-	if (!(*new_stream = fdopen(fd, mode))) {
-		log_sys_error("fdopen", name);
-		return 0;
-	}
-
-	return 1;
-}
-
-/*
  * init_connections();
  *   _init_lvmetad();
  *     lvmetad_disconnect();  (close previous connection)
@@ -1835,7 +1804,6 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 				       unsigned set_filters)
 {
 	struct cmd_context *cmd;
-	FILE *new_stream;
 	int flags;
 
 #ifdef M_MMAP_MAX
@@ -1885,9 +1853,8 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		if (is_valid_fd(STDIN_FILENO) &&
 		    ((flags = fcntl(STDIN_FILENO, F_GETFL)) > 0) &&
 		    (flags & O_ACCMODE) != O_WRONLY) {
-			if (!_reopen_stream(stdin, STDIN_FILENO, "r", "stdin", &new_stream))
+			if (!reopen_standard_stream(&stdin, "r"))
 				goto_out;
-			stdin = new_stream;
 			if (setvbuf(stdin, cmd->linebuffer, _IOLBF, linebuffer_size)) {
 				log_sys_error("setvbuf", "");
 				goto out;
@@ -1897,9 +1864,8 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		if (is_valid_fd(STDOUT_FILENO) &&
 		    ((flags = fcntl(STDOUT_FILENO, F_GETFL)) > 0) &&
 		    (flags & O_ACCMODE) != O_RDONLY) {
-			if (!_reopen_stream(stdout, STDOUT_FILENO, "w", "stdout", &new_stream))
+			if (!reopen_standard_stream(&stdout, "w"))
 				goto_out;
-			stdout = new_stream;
 			if (setvbuf(stdout, cmd->linebuffer + linebuffer_size,
 				     _IOLBF, linebuffer_size)) {
 				log_sys_error("setvbuf", "");
@@ -1911,7 +1877,6 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 		/* Without buffering, must not use stdin/stdout */
 		init_silent(1);
 #endif
-
 	/*
 	 * Environment variable LVM_SYSTEM_DIR overrides this below.
 	 */
@@ -2227,7 +2192,6 @@ int refresh_toolcontext(struct cmd_context *cmd)
 void destroy_toolcontext(struct cmd_context *cmd)
 {
 	struct dm_config_tree *cft_cmdline;
-	FILE *new_stream;
 	int flags;
 
 	if (cmd->dump_filter && cmd->filter && cmd->filter->dump &&
@@ -2266,20 +2230,18 @@ void destroy_toolcontext(struct cmd_context *cmd)
 		if (is_valid_fd(STDIN_FILENO) &&
 		    ((flags = fcntl(STDIN_FILENO, F_GETFL)) > 0) &&
 		    (flags & O_ACCMODE) != O_WRONLY) {
-			if (_reopen_stream(stdin, STDIN_FILENO, "r", "stdin", &new_stream)) {
-				stdin = new_stream;
+			if (reopen_standard_stream(&stdin, "r"))
 				setlinebuf(stdin);
-			} else
+			else
 				cmd->linebuffer = NULL;	/* Leave buffer in place (deliberate leak) */
 		}
 
 		if (is_valid_fd(STDOUT_FILENO) &&
 		    ((flags = fcntl(STDOUT_FILENO, F_GETFL)) > 0) &&
 		    (flags & O_ACCMODE) != O_RDONLY) {
-			if (_reopen_stream(stdout, STDOUT_FILENO, "w", "stdout", &new_stream)) {
-				stdout = new_stream;
+			if (reopen_standard_stream(&stdout, "w"))
 				setlinebuf(stdout);
-			} else
+			else
 				cmd->linebuffer = NULL;	/* Leave buffer in place (deliberate leak) */
 		}
 

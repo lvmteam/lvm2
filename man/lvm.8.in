@@ -748,6 +748,15 @@ All tools return a status code of zero on success or non-zero on failure.
 Directory containing \fI.lvm_history\fP if the internal readline
 shell is invoked.
 .TP
+.B LVM_OUT_FD
+File descriptor to use for common output from LVM commands.
+.TP
+.B LVM_ERR_FD
+File descriptor to use for error output from LVM commands.
+.TP
+.B LVM_REPORT_FD
+File descriptor to use for report output from LVM commands.
+.TP
 .B LVM_COMMAND_PROFILE
 Name of default command profile to use for LVM commands. This profile
 is overriden by direct use of \fB\-\-commandprofile\fP command line option.
