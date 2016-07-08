@@ -3653,8 +3653,6 @@ static int _convert_mirror_linear(struct cmd_context *cmd, struct logical_volume
 /*
  * Convert mirror LV to raid1 LV.
  * lvconvert --type raid1 LV
- *
- * FIXME: this is not yet implemented in the raid code.
  */
 
 static int _convert_mirror_raid(struct cmd_context *cmd, struct logical_volume *lv,
@@ -3846,8 +3844,6 @@ static int _convert_raid_raid(struct cmd_context *cmd, struct logical_volume *lv
 /*
  * Convert a raid* LV to a striped LV.
  * lvconvert --type striped LV
- *
- * FIXME: this is not yet implemented in the raid code.
  */
 
 static int _convert_raid_striped(struct cmd_context *cmd, struct logical_volume *lv,
@@ -3859,8 +3855,6 @@ static int _convert_raid_striped(struct cmd_context *cmd, struct logical_volume 
 /*
  * Convert a raid* LV to a linear LV.
  * lvconvert --type linear LV
- *
- * FIXME: this is not yet implemented in the raid code.
  */
 
 static int _convert_raid_linear(struct cmd_context *cmd, struct logical_volume *lv,
