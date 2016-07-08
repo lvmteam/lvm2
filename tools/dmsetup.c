@@ -5034,7 +5034,7 @@ static int _stats_create_file(CMD_ARGS)
 	fd = open(abspath, O_RDONLY);
 
 	if (fd < 0) {
-		log_error("Could not open %s for reading", path);
+		log_error("Could not open %s for reading", abspath);
 		goto bad;
 	}
 
@@ -5060,12 +5060,12 @@ static int _stats_create_file(CMD_ARGS)
 						  bounds, alias);
 
 	if (close(fd))
-		log_error("Error closing %s", path);
+		log_error("Error closing %s", abspath);
 
 	fd = -1;
 
 	if (!regions) {
-		log_error("Could not create regions from file %s", path);
+		log_error("Could not create regions from file %s", abspath);
 		goto bad;
 	}
 
