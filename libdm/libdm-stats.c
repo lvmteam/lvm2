@@ -4137,6 +4137,12 @@ static int _stats_add_extent(struct dm_pool *mem, struct fiemap_extent *fm_ext,
 
 }
 
+/* test for the boundary of an extent */
+#define ext_boundary(ext, exp, exp_dense)	\
+(((ext).fe_logical != 0) &&			\
+((ext).fe_physical != (exp)) &&			\
+((ext).fe_physical != (exp_dense)))
+
 /*
  * Read the extents of an open file descriptor into a table of struct _extent.
  *
@@ -4198,9 +4204,7 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 					 fm_last.fe_length;
 			expected = fm_last.fe_physical +
 				   fm_ext[i].fe_logical - fm_last.fe_logical;
-			if ((fm_ext[i].fe_logical != 0)
-			    && (fm_ext[i].fe_physical != expected)
-			    && (fm_ext[i].fe_physical != expected_dense)) {
+			if (ext_boundary(fm_ext[i], expected, expected_dense)) {
 				tot_extents++;
 				if (!_stats_add_extent(mem, fm_ext + i,
 						       tot_extents - 1))
