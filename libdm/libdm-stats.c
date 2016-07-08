@@ -3106,6 +3106,7 @@ int dm_stats_set_alias(struct dm_stats *dms, uint64_t group_id, const char *alia
 	return 1;
 
 bad:
+	dm_free((char *) group->alias);
 	group->alias = old_alias;
 	return 0;
 }
