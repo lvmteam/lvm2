@@ -4208,7 +4208,7 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 				tot_extents++;
 				if (!_stats_add_extent(mem, fm_ext + i,
 						       tot_extents - 1))
-					goto bad;
+					goto_bad;
 			} else {
 				expected = 0;
 				if (!tot_extents)
@@ -4216,7 +4216,7 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 				if (fm_ext[i].fe_logical == 0)
 					if (!_stats_add_extent(mem, fm_ext + i,
 							       tot_extents - 1))
-						goto bad;
+						goto_bad;
 			}
 			num += tot_extents;
 			if (fm_ext[i].fe_flags & FIEMAP_EXTENT_LAST)
