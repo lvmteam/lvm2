@@ -4372,6 +4372,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		    !lv_is_cache_pool_data(lv) &&
 		    !lv_is_thin_pool_metadata(lv) &&
 		    !lv_is_thin_pool_data(lv) &&
+		    !lv_is_used_cache_pool(lv) &&
 		    !lv_is_raid_image(lv)) {
 			log_error("Cannot convert internal LV %s.", display_lvname(lv));
 			ret = 0;
