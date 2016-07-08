@@ -38,6 +38,8 @@
 #define STATS_ROW_BUF_LEN 4096
 #define STATS_MSG_BUF_LEN 1024
 
+#define SECTOR_SHIFT 9L
+
 /* Histogram bin */
 struct dm_histogram_bin {
 	uint64_t upper; /* Upper bound on this bin. */
@@ -4120,8 +4122,8 @@ static int _stats_add_extent(struct dm_pool *mem, struct fiemap_extent *fm_ext,
 	memset(&extent.list, 0, sizeof(extent.list));
 
 	/* convert bytes to dm (512b) sectors */
-	extent.start = fm_ext->fe_physical >> 9;
-	extent.len = fm_ext->fe_length >> 9;
+	extent.start = fm_ext->fe_physical >> SECTOR_SHIFT;
+	extent.len = fm_ext->fe_length >> SECTOR_SHIFT;
 
 	extent.id = id;
 
