@@ -4076,9 +4076,9 @@ static int _convert_thin_pool(struct cmd_context *cmd, struct logical_volume *lv
 
 	log_error("Operation not permitted on thin pool LV %s", display_lvname(lv));
 	log_error("Operations permitted on a thin pool LV are:\n"
-		  "  --splitcache           (operates on cache sub LV)\n"
-		  "  --uncache              (operates on cache sub LV)\n"
-		  "  --type cache | --cache (operates on data sub LV)\n"
+		  "  --splitcache  (operates on cache sub LV)\n"
+		  "  --uncache     (operates on cache sub LV)\n"
+		  "  --type cache  (operates on data sub LV)\n"
 		  "  --repair\n");
 	return 0;
 }
@@ -4137,7 +4137,7 @@ static int _convert_cache_pool(struct cmd_context *cmd, struct logical_volume *l
 
 	log_error("Operation not permitted on cache pool LV %s", display_lvname(lv));
 	log_error("Operations permitted on a cache pool LV are:\n"
-		  "  --splitcache        (operates on cache LV)\n");
+		  "  --splitcache    (operates on cache LV)\n");
 	return 0;
 }
 
@@ -4255,9 +4255,9 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 		  "  --merge\n"
 		  "  --repair\n"
 		  "  --replace\n"
-		  "  --type snapshot | --snapshot\n"
-		  "  --type thin | --thin\n"
-		  "  --type cache | --cache\n"
+		  "  --type snapshot\n"
+		  "  --type thin\n"
+		  "  --type cache\n"
 		  "  --type thin-pool\n"
 		  "  --type cache-pool\n"
 		  "  --type raid*\n"
@@ -4316,13 +4316,13 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 	log_error("Operation not permitted on striped or linear LV %s", display_lvname(lv));
 	log_error("Operations permitted on a striped or linear LV are:\n"
 		  "  --merge\n"
-		  "  --type snapshot | --snapshot\n"
-		  "  --type thin | --thin\n"
-		  "  --type cache | --cache\n"
+		  "  --type snapshot\n"
+		  "  --type thin\n"
+		  "  --type cache\n"
 		  "  --type thin-pool\n"
 		  "  --type cache-pool\n"
-		  "  --type mirror | --mirrors\n"
-		  "  --type raid* | --mirrors\n");
+		  "  --type mirror\n"
+		  "  --type raid*\n");
 	return 0;
 }
 
