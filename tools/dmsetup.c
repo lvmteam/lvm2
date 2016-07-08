@@ -4979,18 +4979,19 @@ static int _stats_create_file(CMD_ARGS)
 	}
 
 	/* _stats_create_file does not use _process_all() */
-	if (names) {
-		log_error("Device argument not compatible with --filemap.");
+	if (names || !argc) {
+		log_error("--filemap requires a file path argument");
 		return 0;
 	} else {
-		if (argc || _switches[UUID_ARG] || _switches[MAJOR_ARG]) {
-			log_error("--uuid, --major, and device argument are "
-				  "incompatible with --filemap.");
-			return 0;
-		}
-		if (_switches[ALL_DEVICES_ARG]) {
-			log_error("--alldevices is incompatible with "
-				  "--filemap.");
+		if (argc)
+			path = argv[0];
+		else {
+			if (_switches[UUID_ARG] || _switches[MAJOR_ARG])
+				log_error("--uuid and --major are incompatible "
+					  "with --filemap.");
+			if (_switches[ALL_DEVICES_ARG])
+				log_error("--alldevices is incompatible with "
+					  "--filemap.");
 			return 0;
 		}
 	}
@@ -5019,7 +5020,6 @@ static int _stats_create_file(CMD_ARGS)
 	if (!strlen(program_id) && !_switches[FORCE_ARG])
 		program_id = DM_STATS_PROGRAM_ID;
 
-	path = _string_args[FILEMAP_ARG];
 	precise = _int_args[PRECISE_ARG];
 	group = !_switches[NOGROUP_ARG];
 
@@ -5069,9 +5069,8 @@ static int _stats_create_file(CMD_ARGS)
 		goto bad;
 	}
 
-	for (region = regions; *region != DM_STATS_REGIONS_ALL; region++) {
+	for (region = regions; *region != DM_STATS_REGIONS_ALL; region++)
 		count++;
-	}
 
 	if (group) {
 		printf("%s: Created new group with "FMTu64" region(s) as "
@@ -6230,7 +6229,7 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		{"deferred", 0, &ind, DEFERRED_ARG},
 		{"select", 1, &ind, SELECT_ARG},
 		{"exec", 1, &ind, EXEC_ARG},
-		{"filemap", 1, &ind, FILEMAP_ARG},
+		{"filemap", 0, &ind, FILEMAP_ARG},
 		{"force", 0, &ind, FORCE_ARG},
 		{"gid", 1, &ind, GID_ARG},
 		{"group", 0, &ind, GROUP_ARG},
@@ -6395,10 +6394,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 			_switches[CLEAR_ARG]++;
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
-		if (ind == FILEMAP_ARG) {
+		if (ind == FILEMAP_ARG)
 			_switches[FILEMAP_ARG]++;
-			_string_args[FILEMAP_ARG] = optarg;
-		}
 		if (c == 'f' || ind == FORCE_ARG)
 			_switches[FORCE_ARG]++;
 		if (c == 'r' || ind == READ_ONLY)
