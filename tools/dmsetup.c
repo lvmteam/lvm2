@@ -5040,7 +5040,10 @@ static int _stats_delete(CMD_ARGS)
 			log_info("Deleted statistics region %" PRIu64, region_id);
 		}
 	} else {
-		dm_stats_delete_region(dms, region_id);
+		if (!dm_stats_delete_region(dms, region_id)) {
+			log_error("Could not delete statistics region");
+			goto out;
+		}
 		log_info("Deleted statistics region " FMTu64 ".\n", region_id);
 	}
 
