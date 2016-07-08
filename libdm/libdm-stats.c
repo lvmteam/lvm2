@@ -37,6 +37,7 @@
 
 #define STATS_ROW_BUF_LEN 4096
 #define STATS_MSG_BUF_LEN 1024
+#define STATS_FIE_BUF_LEN 2048
 
 #define SECTOR_SHIFT 9L
 
@@ -4147,7 +4148,7 @@ static int _stats_add_extent(struct dm_pool *mem, struct fiemap_extent *fm_ext,
 static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 						   uint64_t *count)
 {
-	uint64_t buf[2048];
+	uint64_t buf[STATS_FIE_BUF_LEN];
 	struct fiemap *fiemap = (struct fiemap *)buf;
 	struct fiemap_extent *fm_ext = &fiemap->fm_extents[0];
 	struct fiemap_extent fm_last = {0};
