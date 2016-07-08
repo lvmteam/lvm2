@@ -103,7 +103,7 @@ AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
   sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h \
   unistd.h], , [AC_MSG_ERROR(bailing out)])
 
-AC_CHECK_HEADERS(termios.h sys/statvfs.h sys/timerfd.h)
+AC_CHECK_HEADERS(termios.h sys/statvfs.h sys/timerfd.h linux/magic.h linux/fiemap.h)
 
 case "$host_os" in
 	linux*)

@@ -264,8 +264,14 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
+/* Define to 1 if you have the <linux/fiemap.h> header file. */
+#undef HAVE_LINUX_FIEMAP_H
+
 /* Define to 1 if you have the <linux/fs.h> header file. */
 #undef HAVE_LINUX_FS_H
+
+/* Define to 1 if you have the <linux/magic.h> header file. */
+#undef HAVE_LINUX_MAGIC_H
 
 /* Define to 1 if you have the <locale.h> header file. */
 #undef HAVE_LOCALE_H

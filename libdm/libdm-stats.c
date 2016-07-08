@@ -21,9 +21,18 @@
 
 #include <sys/ioctl.h>
 #include <sys/vfs.h> /* fstatfs */
-#include <linux/fs.h> /* FS_IOC_FIEMAP */
-#include <linux/fiemap.h> /* fiemap */
-#include <linux/magic.h> /* BTRFS_SUPER_MAGIC */
+
+#ifdef __linux__
+  #include <linux/fs.h> /* FS_IOC_FIEMAP */
+#endif
+
+#ifdef HAVE_LINUX_FIEMAP_H
+  #include <linux/fiemap.h> /* fiemap */
+#endif
+
+#ifdef HAVE_LINUX_MAGIC_H
+  #include <linux/magic.h> /* BTRFS_SUPER_MAGIC */
+#endif
 
 #define DM_STATS_REGION_NOT_PRESENT UINT64_MAX
 #define DM_STATS_GROUP_NOT_PRESENT DM_STATS_GROUP_NONE
@@ -4064,6 +4073,7 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
 	return 1;
 }
 
+#ifdef HAVE_LINUX_FIEMAP_H
 /*
  * Group a table of region_ids corresponding to the extents of a file.
  */
@@ -4258,6 +4268,7 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 	struct statfs fsbuf;
 	struct stat buf;
 
+#ifdef BTRFS_SUPER_MAGIC
 	if (fstatfs(fd, &fsbuf)) {
 		log_error("fstatfs failed for fd %d", fd);
 		return 0;
@@ -4268,6 +4279,7 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 			  "physical FIEMAP extent data.");
 		return 0;
 	}
+#endif
 
 	if (fstat(fd, &buf)) {
 		log_error("fstat failed for fd %d", fd);
@@ -4359,6 +4371,17 @@ out:
 	dm_free(regions);
 	return NULL;
 }
+
+#else /* HAVE_LINUX_FIEMAP */
+uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
+					  int group, int precise,
+					  struct dm_histogram *bounds,
+					  const char *alias)
+{
+	log_error("File mapping requires FIEMAP ioctl support.");
+	return 0;
+}
+#endif /* HAVE_LINUX_FIEMAP */
 
 /*
  * Backward compatible dm_stats_create_region() implementations.
