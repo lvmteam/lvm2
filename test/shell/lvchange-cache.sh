@@ -68,6 +68,10 @@ grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=4' out
 
+# Skip these test on older cache driver as it shows errors with these lvchanges
+# device-mapper: space map common: index_check failed: blocknr 17179869216 != wanted 11
+if aux have_cache 1 5 0 ; then
+
 lvchange --cachesettings migration_threshold=233 --cachesettings sequential_threshold=13 --cachesettings random_threshold=1 $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=233' out
@@ -79,6 +83,8 @@ get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=4' out
+
+fi
 
 else
 # When MQ is emulated by SMQ policy it does not hold settings.
