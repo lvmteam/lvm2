@@ -778,6 +778,11 @@ followed by the process ID and a startup timestamp using
 this format string "_%s_%d_%llu".  When set, each process logs to a
 separate file.
 .TP
+.B LVM_LOG_FILE_MAX_LINES
+A max number of lines to be printed to log file before
+the application aborts. Useful for testing to prevent creation
+of too big log files from spinning command.
+.TP
 .B LVM_EXPECTED_EXIT_STATUS
 The status anticipated when the process exits.  Use ">N" to match any
 status greater than N.  If the actual exit status matches and a log

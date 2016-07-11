@@ -31,6 +31,8 @@ static struct dm_str_list _log_dev_alias;
 
 static int _syslog = 0;
 static int _log_to_file = 0;
+static uint64_t _log_file_max_lines = 0;
+static uint64_t _log_file_lines = 0;
 static int _log_direct = 0;
 static int _log_while_suspended = 0;
 static int _indent = 1;
@@ -111,6 +113,14 @@ void init_log_file(const char *log_file, int append)
 
 		if (st && fclose(st))
 			log_sys_debug("fclose", statfile);
+
+		if ((env = getenv("LVM_LOG_FILE_MAX_LINES"))) {
+			if (sscanf(env, FMTu64, &_log_file_max_lines) != 1) {
+				log_warn("WARNING: Ingnoring incorrect LVM_LOG_MAX_LINES envvar \"%s\".", env);
+				_log_file_max_lines = 0;
+			}
+			_log_file_lines = 0;
+		}
 	}
 
 no_epoch:
@@ -487,6 +497,9 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 
 		fputc('\n', _log_file);
 		fflush(_log_file);
+
+		if (_log_file_max_lines && ++_log_file_lines >= _log_file_max_lines)
+			fatal_internal_error = 1;
 	}
 
 	if (_syslog && (_log_while_suspended || !critical_section())) {
