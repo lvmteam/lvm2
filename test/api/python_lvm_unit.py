@@ -906,7 +906,6 @@ class TestLvm(unittest.TestCase):
 		pvmeta_copies = [0, 1, 2]
 		pvmeta_size = [0, 255, 512, 1024]
 		data_alignment = [0, 2048, 4096]
-		data_alignment_offset = [1, 1, 1]
 		zero = [0, 1]
 
 		device_names = TestLvm._get_pv_device_names()
@@ -927,27 +926,13 @@ class TestLvm(unittest.TestCase):
 
 		#Try a number of combinations and permutations
 		for s in size:
-			lvm.pvCreate(d, s)
-			lvm.pvRemove(d)
 			for copies in pvmeta_copies:
-				lvm.pvCreate(d, s, copies)
-				lvm.pvRemove(d)
 				for pv_size in pvmeta_size:
-					lvm.pvCreate(d, s, copies, pv_size)
-					lvm.pvRemove(d)
 					for align in data_alignment:
-						lvm.pvCreate(d, s, copies, pv_size, align)
-						lvm.pvRemove(d)
-						for align_offset in data_alignment_offset:
-							lvm.pvCreate(
-								d, s, copies, pv_size, align,
-								align * align_offset)
+						for z in zero:
+							lvm.pvCreate(d, s, copies, pv_size, align,
+								     align, z)
 							lvm.pvRemove(d)
-							for z in zero:
-								lvm.pvCreate(
-									d, s, copies, pv_size, align,
-									align * align_offset, z)
-								lvm.pvRemove(d)
 
 		#Restore
 		for d in device_names:
