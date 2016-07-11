@@ -1784,7 +1784,7 @@ static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct vo
 	struct dm_list pvs_scan;
 	struct dm_list pvs_drop;
 	struct dm_list pvs_new;
-	struct lvmcache_info *info;
+	struct lvmcache_info *info = NULL;
 	struct format_instance *fid;
 	struct format_instance_ctx fic = { .type = 0 };
 	struct _lvmetad_pvscan_baton baton;

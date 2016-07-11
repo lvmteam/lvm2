@@ -1726,7 +1726,7 @@ static int _raid0_to_striped_retrieve_segments_and_lvs(struct logical_volume *lv
 						       struct dm_list *removal_lvs)
 {
 	uint32_t s, area_le, area_len, le;
-	struct lv_segment *data_seg, *seg, *seg_to;
+	struct lv_segment *data_seg = NULL, *seg, *seg_to;
 	struct dm_list new_segments;
 
 	seg = first_seg(lv);
