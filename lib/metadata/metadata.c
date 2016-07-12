@@ -4641,7 +4641,8 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 		dev = dl->dev;
 		if (!(dev->flags & DEV_ASSUMED_FOR_LV)) {
 			if (!found_inconsistent) {
-				dm_pool_begin_object(mem, 32);
+				if (!dm_pool_begin_object(mem, 32))
+					return_0;
 				found_inconsistent = 1;
 			} else {
 				if (!dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1))
@@ -4674,7 +4675,8 @@ static int _check_devs_used_correspond_with_lv(struct dm_pool *mem, struct dm_li
 				}
 				if (!(dev->flags & DEV_USED_FOR_LV)) {
 					if (!found_inconsistent) {
-						dm_pool_begin_object(mem, 32);
+						if (!dm_pool_begin_object(mem, 32))
+                                                        return_0;
 						found_inconsistent = 1;
 					} else {
 						if (!dm_pool_grow_object(mem, DEV_LIST_DELIM, sizeof(DEV_LIST_DELIM) - 1))

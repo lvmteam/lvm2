@@ -861,7 +861,7 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 
 	/* update_pvid_to_vgid will clear/free the pvid_to_vgid hash */
 	if (update_pvids && meta_lookup)
-		_update_pvid_to_vgid(s, meta_lookup, "#orphan", 0);
+		(void) _update_pvid_to_vgid(s, meta_lookup, "#orphan", 0);
 
 	/* free the unmapped data */
 
