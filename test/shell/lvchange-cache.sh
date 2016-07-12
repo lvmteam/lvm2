@@ -39,6 +39,10 @@ lvchange --cachepolicy mq --cachesettings migration_threshold=333 $vg/corigin
 check lv_field $vg/corigin kernel_cache_policy "mq"
 get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
 
+# Skip these test on older cache driver as it shows errors with these lvchanges
+# device-mapper: space map common: index_check failed: blocknr 17179869216 != wanted 11
+if aux have_cache 1 5 0 ; then
+
 lvchange --refresh $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
 lvchange -an $vg
@@ -67,10 +71,6 @@ get lv_field $vg/corigin kernel_cache_settings | tee out
 grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=4' out
-
-# Skip these test on older cache driver as it shows errors with these lvchanges
-# device-mapper: space map common: index_check failed: blocknr 17179869216 != wanted 11
-if aux have_cache 1 5 0 ; then
 
 lvchange --cachesettings migration_threshold=233 --cachesettings sequential_threshold=13 --cachesettings random_threshold=1 $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | tee out
