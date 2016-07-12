@@ -46,7 +46,7 @@ static int _lv_tree_move(struct dm_list *lvh,
 
 	/* Update the list pointer refering to the item moving to @vg_to. */
 	if (lvh == *lvht)
-		*lvht = lvh->n;
+		*lvht = dm_list_next(lvh, lvh);
 
 	dm_list_move(&vg_to->lvs, lvh);
 	lv->vg = vg_to;
