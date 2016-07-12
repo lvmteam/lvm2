@@ -326,8 +326,9 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 
 	dm_list_init(&device_list);
 
-	if (!seg_is_mirror(seg) && !seg_is_raid(seg)) {
-		log_error("Unable to resync %s.  It is not RAID or mirrored.",
+	if (seg_is_any_raid0(seg) ||
+	    (!seg_is_mirror(seg) && !seg_is_raid(seg))) {
+		log_error("Unable to resync %s.  It is not RAID4/5/6/10 or mirrored.",
 			  display_lvname(lv));
 		return 0;
 	}
@@ -1179,9 +1180,17 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	    !_lvchange_resync(cmd, lv))
 		return_ECMD_FAILED;
 
-	if (arg_is_set(cmd, syncaction_ARG) &&
-	    !lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL)))
-		return_ECMD_FAILED;
+	if (arg_is_set(cmd, syncaction_ARG)) {
+		struct lv_segment *seg = first_seg(lv);
+
+		if (seg_is_any_raid0(seg)) {
+			log_error("Unable to sync raid0 LV %s.", display_lvname(lv));
+			return_ECMD_FAILED;
+		}
+		
+		if (!lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL)))
+			return_ECMD_FAILED;
+	}
 
 	/* activation change */
 	if (arg_is_set(cmd, activate_ARG)) {
