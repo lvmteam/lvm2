@@ -20,11 +20,8 @@ static int _get_vsn(struct cmd_context *cmd, uint16_t *version_int)
 	const char *vsn;
 	unsigned int major, minor, patchlevel;
 
-	if (arg_is_set(cmd, atversion_ARG))
-		vsn = arg_str_value(cmd, atversion_ARG, NULL);
-	else if (arg_is_set(cmd, sinceversion_ARG))
-		vsn = arg_str_value(cmd, sinceversion_ARG, NULL);
-	else
+	if (!(vsn = arg_str_value(cmd, atversion_ARG, NULL)) &&
+	    !(vsn = arg_str_value(cmd, sinceversion_ARG, NULL)))
 		vsn = LVM_VERSION;
 
 	if (sscanf(vsn, "%u.%u.%u", &major, &minor, &patchlevel) != 3) {
