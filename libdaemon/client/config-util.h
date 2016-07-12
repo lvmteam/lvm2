@@ -26,7 +26,7 @@ int buffer_append_f(struct buffer *buf, ...);
 int buffer_append(struct buffer *buf, const char *string);
 void buffer_init(struct buffer *buf);
 void buffer_destroy(struct buffer *buf);
-int buffer_realloc(struct buffer *buf, int required);
+int buffer_realloc(struct buffer *buf, int needed);
 
 int buffer_line(const char *line, void *baton);
 

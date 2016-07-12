@@ -78,7 +78,7 @@ daemon_handle daemon_open(daemon_info i);
  * be ignored even if non-NULL). If the buffer is NULL, the cft is required to
  * be a valid pointer, and is used to build up the request.
  */
-daemon_reply daemon_send(daemon_handle h, daemon_request r);
+daemon_reply daemon_send(daemon_handle h, daemon_request rq);
 
 /*
  * A simple interface to daemon_send. This function just takes the command id
