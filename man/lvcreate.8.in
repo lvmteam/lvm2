@@ -720,16 +720,17 @@ device sizes (GiB), thin provisioning should be used for this case.
 .BR \-W | \-\-wipesignatures
 .RB { y | n }
 .br
-Controls wiping of detected signatures on newly created Logical Volume.
-If this option is not specified, then by default signature wiping is done
-each time the zeroing (
-.BR \-Z | \-\-zero
-) is done. This default behaviour
+Controls detection and subsequent wiping of signatures on newly created
+Logical Volume. There's a prompt for each signature detected to confirm
+its wiping (unless \fB--yes\fP is used where LVM assumes 'yes' answer
+for each prompt automatically). If this option is not specified, then by
+default \fB-W\fP | \fB--wipesignatures y\fP is assumed each time the
+zeroing is done (\fB\-Z\fP | \fB\-\-zero y\fP). This default behaviour
 can be controlled by \fB\%allocation/wipe_signatures_when_zeroing_new_lvs\fP
 setting found in
 .BR lvm.conf (5).
 .br
-If blkid wiping is used \fBallocation/use_blkid_wiping\fP setting in
+If blkid wiping is used (\fBallocation/use_blkid_wiping\fP setting in
 .BR lvm.conf (5))
 and LVM2 is compiled with blkid wiping support, then \fBblkid\fP(8) library is used
 to detect the signatures (use \fBblkid \-k\fP command to list the signatures that are recognized).
