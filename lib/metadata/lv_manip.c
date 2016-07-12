@@ -4989,14 +4989,14 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 	/* At this point, lp->extents should hold the correct NEW logical size required. */
 
 	if (!lp->extents) {
-		log_error("New size of 0 not permitted");
+		log_error("New size of 0 not permitted.");
 		return 0;
 	}
 
 	if (lp->extents == existing_logical_extents) {
 		if (!lp->resizefs) {
-			log_error("New size (%d extents) matches existing size "
-				  "(%d extents)", lp->extents, existing_logical_extents);
+			log_error("New size (%d extents) matches existing size (%d extents).",
+				  lp->extents, existing_logical_extents);
 			return 0;
 		}
 		lp->resize = LV_EXTEND; /* lets pretend zero size extension */
@@ -5005,7 +5005,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 	/* Perform any rounding to produce complete stripes. */
 	if (lp->stripes > 1) {
 		if (lp->stripe_size < STRIPE_SIZE_MIN) {
-			log_error("Invalid stripe size %s",
+			log_error("Invalid stripe size %s.",
 				  display_size(cmd, (uint64_t) lp->stripe_size));
 			return 0;
 		}
@@ -5024,7 +5024,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 		     (vg->free_count >= (lp->extents - existing_logical_extents - size_rest +
 					 stripes_extents)))) {
 			log_print_unless_silent("Rounding size (%d extents) up to stripe "
-						"boundary size for segment (%d extents)",
+						"boundary size for segment (%d extents).",
 						lp->extents,
 						lp->extents - size_rest + stripes_extents);
 			lp->extents = lp->extents - size_rest + stripes_extents;
@@ -5088,7 +5088,7 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 
 		if (lv_is_active(lv)) {
 			log_error("Snapshot origin volumes can be resized "
-				  "only while inactive: try lvchange -an");
+				  "only while inactive: try lvchange -an.");
 			return 0;
 		}
 	}
