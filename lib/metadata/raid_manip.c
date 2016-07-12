@@ -3090,8 +3090,11 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 		    (!seg->meta_areas || !seg_metalv(seg, s) || !lv_is_partial(seg_metalv(seg, s))))
 			continue;
 
-		log_debug("Replacing %s and %s segments with error target",
-			  seg_lv(seg, s)->name, seg_metalv(seg, s)->name);
+		log_debug("Replacing %s segments with error target",
+			  display_lvname(seg_lv(seg, s)));
+		if (seg->meta_areas && seg_metalv(seg, s))
+			log_debug("Replacing %s segments with error target",
+				  display_lvname(seg_metalv(seg, s)));
 		if (!replace_lv_with_error_segment(seg_lv(seg, s))) {
 			log_error("Failed to replace %s's extents with error target.",
 				  display_lvname(seg_lv(seg, s)));
