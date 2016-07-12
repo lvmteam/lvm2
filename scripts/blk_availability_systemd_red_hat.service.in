@@ -7,7 +7,7 @@ Conflicts=shutdown.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/true
-ExecStop=@sbindir@/blkdeactivate -u -l wholevg
+ExecStop=@sbindir@/blkdeactivate -u -l wholevg -m disablequeueing
 RemainAfterExit=yes
 
 [Install]

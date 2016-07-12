@@ -7,6 +7,7 @@ blkdeactivate \(em utility to deactivate block devices
 .RB [ \-e ]
 .RB [ \-h ]
 .RB [ \-l \  \fIlvm_options\fP ]
+.RB [ \-m \  \fImpath_options\fP ]
 .RB [ \-u ]
 .RB [ \-v ]
 .RI [ device ]
@@ -51,6 +52,16 @@ Deactivating Volume Group as a whole takes less time than deactivating each
 Logical Volume separately.
 .RE
 .TP
+.BR \-m ", " \-\-mpathoption \ \fImpath_options\fP
+Comma separated list of device-mapper multipath specific options:
+.RS
+.IP \fIdisablequeueing\fP
+Disable queueing on all multipath devices first before deactivation.
+This avoids a situation where blkdeactivate may end up waiting if
+all paths are unavailable for any underlying device-mapper multipath
+device.
+.RE
+.TP
 .BR \-u ", " \-\-umount
 Unmount a mounted device before trying to deactivate it.
 Without this option used, a device that is mounted is not deactivated.
@@ -90,4 +101,5 @@ of device-mapper devices in case the deactivation fails and force removal.
 .BR lsblk (8),
 .BR lvm (8),
 .BR mdadm (8),
+.BR multipathd (8),
 .BR umount (8)

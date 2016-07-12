@@ -33,7 +33,7 @@
 
 sbindir=@sbindir@
 script=blkdeactivate
-options="-u -l wholevg"
+options="-u -l wholevg -m disablequeueing"
 
 LOCK_FILE="/var/lock/subsys/blk-availability"
 

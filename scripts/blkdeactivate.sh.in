@@ -38,6 +38,7 @@ UMOUNT="/bin/umount"
 DMSETUP="@sbindir@/dmsetup"
 LVM="@sbindir@/lvm"
 MDADM="@sbindir@/mdadm"
+MPATHD="/sbin/multipathd"
 
 if $UMOUNT --help | grep -- "--all-targets" >$DEV_DIR/null; then
 	UMOUNT_OPTS="--all-targets "
@@ -49,6 +50,7 @@ fi
 DMSETUP_OPTS=""
 LVM_OPTS=""
 MDADM_OPTS=""
+MPATHD_OPTS=""
 
 LSBLK="/bin/lsblk -r --noheadings -o TYPE,KNAME,NAME,MOUNTPOINT"
 LSBLK_VARS="local devtype local kname local name local mnt"
@@ -67,6 +69,9 @@ DO_UMOUNT=0
 LVM_DO_WHOLE_VG=0
 # Do not retry LV deactivation by default.
 LVM_CONFIG="activation{retry_deactivation=0}"
+
+# Do not disable queueing if set on multipath devices.
+MPATHD_DO_DISABLEQUEUEING=0
 
 #
 # List of device names and/or VGs to be skipped.
@@ -107,20 +112,23 @@ usage() {
 	echo "      If devices are specified, deactivate only supplied devices and their holders."
 	echo
 	echo "  Options:"
-	echo "    -e | --errors                Show errors reported from tools"
-	echo "    -h | --help                  Show this help message"
-	echo "    -d | --dmoption  DM_OPTIONS  Comma separated DM specific options"
-	echo "    -l | --lvmoption LVM_OPTIONS Comma separated LVM specific options"
-	echo "    -u | --umount                Unmount the device if mounted"
-	echo "    -v | --verbose               Verbose mode (also implies -e)"
+	echo "    -e | --errors                    Show errors reported from tools"
+	echo "    -h | --help                      Show this help message"
+	echo "    -d | --dmoption    DM_OPTIONS    Comma separated DM specific options"
+	echo "    -l | --lvmoption   LVM_OPTIONS   Comma separated LVM specific options"
+	echo "    -m | --mpathoption MPATH_OPTIONS Comma separated DM-multipath specific options"
+	echo "    -u | --umount                    Unmount the device if mounted"
+	echo "    -v | --verbose                   Verbose mode (also implies -e)"
 	echo
 	echo "  Device specific options:"
 	echo "    DM_OPTIONS:"
-	echo "      retry    retry removal several times in case of failure"
-	echo "      force    force device removal"
+	echo "      retry           retry removal several times in case of failure"
+	echo "      force           force device removal"
 	echo "    LVM_OPTIONS:"
-	echo "      retry    retry removal several times in case of failure"
-	echo "      wholevg  deactivate the whole VG when processing an LV"
+	echo "      retry           retry removal several times in case of failure"
+	echo "      wholevg         deactivate the whole VG when processing an LV"
+	echo "    MPATH_OPTIONS:"
+	echo "      disablequeueing disable queueing on all DM-multipath devices first"
 
 	exit
 }
@@ -312,6 +320,11 @@ deactivate_all() {
 
 	echo "Deactivating block devices:"
 
+	test $MPATHD_RUNNING -eq 1 && {
+		echo -n "  [DM]: disabling queueing on all multipath devices... "
+		eval $MPATHD $MPATHD_OPTS disablequeueing maps $ERR | grep '^ok$' >$DEV_DIR/null && echo "done" || echo "failed"
+	}
+
 	if test $# -eq 0; then
 		#######################
 		# Process all devices #
@@ -406,6 +419,20 @@ get_lvmopts() {
 	IFS=$ORIG_IFS
 }
 
+get_mpathopts() {
+	ORIG_IFS=$IFS; IFS=','
+
+	for opt in $1; do
+		case "$opt" in
+			"") ;;
+			"disablequeueing") MPATHD_DO_DISABLEQUEUEING=1 ;;
+			*) echo "$opt: unknown DM-multipath option"
+		esac
+	done
+
+	IFS=$ORIG_IFS
+}
+
 set_env() {
 	if test "$ERRORS" -eq "1"; then
 		unset ERR
@@ -419,6 +446,7 @@ set_env() {
 		DMSETUP_OPTS+="-vvvv"
 		LVM_OPTS+="-vvvv"
 		MDADM_OPTS+="-vv"
+		MPATHD_OPTS+="-v 3"
 	else
 		OUT="1>$DEV_DIR/null"
 	fi
@@ -434,6 +462,15 @@ set_env() {
 	else
 		MDADM_AVAILABLE=0
 	fi
+
+	MPATHD_RUNNING=0
+	test $MPATHD_DO_DISABLEQUEUEING -eq 1 && {
+		if test -f $MPATHD; then
+			if eval $MPATHD show daemon $ERR | grep "running" >$DEVDIR/null; then
+				MPATHD_RUNNING=1
+			fi
+		fi
+	}
 }
 
 while test $# -ne 0; do
@@ -443,6 +480,7 @@ while test $# -ne 0; do
 		"-h"|"--help") usage ;;
 		"-d"|"--dmoption ") get_dmopts "$2" ; shift ;;
 		"-l"|"--lvmoption ") get_lvmopts "$2" ; shift ;;
+		"-m"|"--mpathoption ") get_mpathopts "$2" ; shift ;;
 		"-u"|"--umount") DO_UMOUNT=1 ;;
 		"-v"|"--verbose") VERBOSE=1 ; ERRORS=1 ;;
 		"-vv") VERBOSE=1 ; ERRORS=1 ; set -x ;;
