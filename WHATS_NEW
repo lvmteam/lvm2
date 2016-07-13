@@ -1,5 +1,6 @@
 Version 2.02.161 - 
 ================================
+  Fix lvresize of filesystem when LV has already right size (2.02.141).
   New LVM_LOG_FILE_MAX_LINES env var to limit max size of created logs.
 
 Version 2.02.160 - 6th July 2016
