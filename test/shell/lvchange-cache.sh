@@ -33,15 +33,15 @@ not lvchange --cachesettings foo=bar $vg/noncache
 lvchange --cachepolicy cleaner $vg/corigin
 check lv_field  $vg/corigin kernel_cache_policy "cleaner"
 
+# Skip these test on older cache driver as it shows errors with these lvchanges
+# device-mapper: space map common: index_check failed: blocknr 17179869216 != wanted 11
+if aux have_cache 1 5 0 ; then
+
 lvchange --cachepolicy mq --cachesettings migration_threshold=333 $vg/corigin
 
 # TODO once mq->smq happens we will get here some 0 for mq settings
 check lv_field $vg/corigin kernel_cache_policy "mq"
 get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
-
-# Skip these test on older cache driver as it shows errors with these lvchanges
-# device-mapper: space map common: index_check failed: blocknr 17179869216 != wanted 11
-if aux have_cache 1 5 0 ; then
 
 lvchange --refresh $vg/corigin
 get lv_field $vg/corigin kernel_cache_settings | grep 'migration_threshold=333'
@@ -84,12 +84,12 @@ grep 'migration_threshold=2048' out
 grep 'sequential_threshold=13' out
 grep 'random_threshold=4' out
 
-fi
-
 else
 # When MQ is emulated by SMQ policy it does not hold settings.
 # So just skip testing of param changes when sequential_threshold=0
 grep 'sequential_threshold=0' out
 fi
+
+fi  # have_cache 1 5 0
 
 vgremove -f $vg
