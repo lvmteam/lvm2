@@ -458,16 +458,28 @@ static int _read_mirror_params(struct cmd_context *cmd,
 static int _read_raid_params(struct cmd_context *cmd,
 			     struct lvcreate_params *lp)
 {
-	if ((lp->stripes < 2) && segtype_is_raid10(lp->segtype)) {
-		if (arg_is_set(cmd, stripes_ARG)) {
-			/* User supplied the bad argument */
-			log_error("Segment type 'raid10' requires 2 or more stripes.");
-			return 0;
-		}
-		/* No stripe argument was given - default to 2 */
-		lp->stripes = 2;
-		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
+	if (lp->stripes < 2) {
+		if (segtype_is_raid10(lp->segtype)) {
+			if (arg_is_set(cmd, stripes_ARG)) {
+				/* User supplied the bad argument */
+				log_error("Segment type 'raid10' requires 2 or more stripes.");
+				return 0;
+			}
+			/* No stripe argument was given - default to 2 */
+			/* FIXME: this needs to change to 3 once we support odd numbers of stripes */
+			lp->stripes = 2;
+		} else if (segtype_is_any_raid6(lp->segtype))
+			lp->stripes = 3;
+		else if (segtype_is_raid4(lp->segtype) ||
+			 segtype_is_any_raid5(lp->segtype) ||
+			 segtype_is_any_raid0(lp->segtype))
+			lp->stripes = 2;
+		else
+			lp->stripes = 1;
 	}
+
+	if (lp->stripes > 1)
+		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
 
 	/*
 	 * RAID1 does not take a stripe arg
@@ -1219,43 +1231,31 @@ static int _check_raid_parameters(struct volume_group *vg,
 				  struct lvcreate_params *lp,
 				  struct lvcreate_cmdline_params *lcp)
 {
-	unsigned devs = lcp->pv_count ? : dm_list_size(&vg->pvs);
 	struct cmd_context *cmd = vg->cmd;
 
 	if (!seg_is_mirrored(lp) && !lp->stripe_size)
 		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
 
-	if (seg_is_any_raid0(lp)) {
+	if (segtype_is_any_raid0(lp->segtype) ||
+	    segtype_is_raid4(lp->segtype) ||
+	    segtype_is_any_raid5(lp->segtype)) {
 		if (lp->stripes < 2) {
-			log_error("Segment type 'raid0' requires 2 or more stripes.");
+			log_error("Segment type \'%s\' requires 2 or more stripes.", lp->segtype->name);
 			return 0;
 		}
-	} else if (!seg_is_mirrored(lp)) {
-		/*
-		 * If number of devices was not supplied, we can infer from
-		 * the PVs given.
-		 */
-		if (!arg_is_set(cmd, stripes_ARG) &&
-		    (devs > 2 * lp->segtype->parity_devs))
-			lp->stripes = devs - lp->segtype->parity_devs;
-
-		if (lp->stripes <= lp->segtype->parity_devs) {
-			log_error("Number of stripes must be at least %d for %s",
-				  lp->segtype->parity_devs + 1,
-				  lp->segtype->name);
+	} else if (segtype_is_any_raid6(lp->segtype)) {
+		if (lp->stripes < 3) {
+			log_error("Segment type \'%s\' requires 3 or more stripes.", lp->segtype->name);
 			return 0;
 		}
-	} else if (segtype_is_any_raid0(lp->segtype) ||
-		   segtype_is_raid10(lp->segtype)) {
-		if (!arg_is_set(cmd, stripes_ARG))
-			lp->stripes = devs / lp->mirrors;
+	} else if (segtype_is_raid10(lp->segtype)) {
 		if (lp->stripes < 2) {
-			log_error("Unable to create RAID(1)0 LV: "
-				  "insufficient number of devices.");
+			log_error("Unable to create %s LV: "
+				  "insufficient number of devices.", lp->segtype->name);
 			return 0;
 		}
 	}
-	/* 'mirrors' defaults to 2 - not the number of PVs supplied */
+	/* 'mirrors' defaults to 2 */
 
 	return 1;
 }
