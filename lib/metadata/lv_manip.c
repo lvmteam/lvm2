@@ -3921,14 +3921,16 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 
 	/*
 	 * The MD bitmap is limited to being able to track 2^21 regions.
-	 * The region_size must be adjusted to meet that criteria.
+	 * The region_size must be adjusted to meet that criteria
+	 * unless raid0/raid0_meta, which doesn't have a bitmap.
 	 */
-	while (seg_is_raid(seg) && (seg->region_size < (lv->size / (1 << 21)))) {
-		seg->region_size *= 2;
-		log_very_verbose("Adjusting RAID region_size from %uS to %uS"
-				 " to support large LV size",
-				 seg->region_size/2, seg->region_size);
-	}
+	if (seg_is_raid(seg) && !seg_is_any_raid0(seg))
+		while (seg->region_size < (lv->size / (1 << 21))) {
+			seg->region_size *= 2;
+			log_very_verbose("Adjusting RAID region_size from %uS to %uS"
+					 " to support large LV size",
+					 seg->region_size/2, seg->region_size);
+		}
 
 	return 1;
 }
