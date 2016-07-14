@@ -142,10 +142,10 @@ if (( $advanced )); then
 	log "\"$LVM\" pvscan -v >> \"$dir/pvscan\" 2>> \"$log\""
 
 	myecho "  lvs..."
-	log "\"$LVM\" lvs -a -H -o +devices >> \"$dir/lvs\" 2>> \"$log\""
+	log "\"$LVM\" lvs -a -H -o +devices,kernel_major,kernel_minor >> \"$dir/lvs\" 2>> \"$log\""
 
 	myecho "  pvs..."
-	log "\"$LVM\" pvs -a -v >> \"$dir/pvs\" 2>> \"$log\""
+	log "\"$LVM\" pvs -a -o +major,minor -v >> \"$dir/pvs\" 2>> \"$log\""
 
 	myecho "  vgs..."
 	log "\"$LVM\" vgs -v >> \"$dir/vgs\" 2>> \"$log\""
