@@ -3161,7 +3161,7 @@ static int _lvinitialimagesync_disp(struct dm_report *rh, struct dm_pool *mem,
 	int initial_image_sync;
 
 	if (lv_is_raid(lv) || lv_is_mirrored(lv))
-		initial_image_sync = (lv->status & LV_NOTSYNCED) == 0;
+		initial_image_sync = !lv_is_not_synced(lv);
 	else
 		initial_image_sync = 0;
 

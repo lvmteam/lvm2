@@ -218,6 +218,7 @@
 #define lv_is_mirror_log(lv)	(((lv)->status & MIRROR_LOG) ? 1 : 0)
 #define lv_is_mirror(lv)	(((lv)->status & MIRROR) ? 1 : 0)
 #define lv_is_mirror_type(lv)	(((lv)->status & (MIRROR | MIRROR_LOG | MIRROR_IMAGE)) ? 1 : 0)
+#define lv_is_not_synced(lv)	(((lv)->status & LV_NOTSYNCED) ? 1 : 0)
 
 #define lv_is_pending_delete(lv) (((lv)->status & LV_PENDING_DELETE) ? 1 : 0)
 #define lv_is_error_when_full(lv) (((lv)->status & LV_ERROR_WHEN_FULL) ? 1 : 0)

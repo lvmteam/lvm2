@@ -4027,7 +4027,7 @@ int lv_extend(struct logical_volume *lv,
 		 */
 		if (old_extents &&
 		    segtype_is_mirrored(segtype) &&
-		    (lv->status & LV_NOTSYNCED)) {
+		    (lv_is_not_synced(lv))) {
 			dm_percent_t sync_percent = DM_PERCENT_INVALID;
 
 			if (!lv_is_active_locally(lv)) {

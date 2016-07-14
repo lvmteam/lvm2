@@ -590,7 +590,7 @@ static int _raid_add_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct lv_segment_area *new_areas;
 
-	if (lv->status & LV_NOTSYNCED) {
+	if (lv_is_not_synced(lv)) {
 		log_error("Can't add image to out-of-sync RAID LV:"
 			  " use 'lvchange --resync' first.");
 		return 0;

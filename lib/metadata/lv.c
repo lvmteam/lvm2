@@ -1140,9 +1140,9 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 	else if (lv_is_cache_type(lv))
 		repstr[0] = 'C';
 	else if (lv_is_raid(lv))
-		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'R' : 'r';
+		repstr[0] = (lv_is_not_synced(lv)) ? 'R' : 'r';
 	else if (lv_is_mirror(lv))
-		repstr[0] = (lv->status & LV_NOTSYNCED) ? 'M' : 'm';
+		repstr[0] = (lv_is_not_synced(lv)) ? 'M' : 'm';
 	else if (lv_is_thin_volume(lv))
 		repstr[0] = lv_is_merging_origin(lv) ?
 			'O' : (lv_is_merging_thin_snapshot(lv) ? 'S' : 'V');

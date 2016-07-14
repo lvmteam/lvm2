@@ -1418,7 +1418,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 	 * Up-convert m-way mirror to n-way mirror
 	 */
 	if (new_mimage_count > old_mimage_count) {
-		if (lv->status & LV_NOTSYNCED) {
+		if (lv_is_not_synced(lv)) {
 			log_error("Can't add mirror to out-of-sync mirrored "
 				  "LV: use lvchange --resync first.");
 			return 0;
