@@ -49,4 +49,12 @@ void copy_systemid_chars(const char *src, char *dst);
 int apply_lvname_restrictions(const char *name);
 int is_reserved_lvname(const char *name);
 
+/*
+ * Provided with a NULL-terminated argument list of const char *
+ * substrings that might be contained within the string str, use
+ * strstr() to search str for each in turn and return a pointer to the
+ * first match or else NULL.
+ */
+char *first_substring(const char *str, ...);
+
 #endif
