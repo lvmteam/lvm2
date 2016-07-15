@@ -319,7 +319,7 @@ error:
 	goto out;
 }
 
-static void remove_lockfile(const char *file)
+static void _remove_lockfile(const char *file)
 {
 	if (unlink(file))
 		perror("unlink failed");
@@ -418,7 +418,7 @@ end:
 	return res;
 }
 
-static response builtin_handler(daemon_state s, client_handle h, request r)
+static response _builtin_handler(daemon_state s, client_handle h, request r)
 {
 	const char *rq = daemon_request_str(r, "request", "NONE");
 	response res = { .error = EPROTO };
@@ -432,7 +432,7 @@ static response builtin_handler(daemon_state s, client_handle h, request r)
 	return res;
 }
 
-static void *client_thread(void *state)
+static void *_client_thread(void *state)
 {
 	thread_state *ts = state;
 	request req;
@@ -451,7 +451,7 @@ static void *client_thread(void *state)
 		else
 			daemon_log_cft(ts->s.log, DAEMON_LOG_WIRE, "<- ", req.cft->root);
 
-		res = builtin_handler(ts->s, ts->client, req);
+		res = _builtin_handler(ts->s, ts->client, req);
 
 		if (res.error == EPROTO) /* Not a builtin, delegate to the custom handler. */
 			res = ts->s.handler(ts->s, ts->client, req);
@@ -512,7 +512,7 @@ static int handle_connect(daemon_state s)
 	ts->s = s;
 	ts->client = client;
 
-	if (pthread_create(&ts->client.thread_id, NULL, client_thread, ts)) {
+	if (pthread_create(&ts->client.thread_id, NULL, _client_thread, ts)) {
 		ERROR(&s, "Failed to create client thread.");
 		return 0;
 	}
@@ -520,7 +520,7 @@ static int handle_connect(daemon_state s)
 	return 1;
 }
 
-static void reap(daemon_state s, int waiting)
+static void _reap(daemon_state s, int waiting)
 {
 	thread_state *last = s.threads, *ts = last->next;
 	void *rv;
@@ -637,7 +637,7 @@ void daemon_start(daemon_state s)
 			handle_connect(s);
 		}
 
-		reap(s, 0);
+		_reap(s, 0);
 
 		if (_shutdown_requested && !s.threads->next)
 			break;
@@ -653,7 +653,7 @@ void daemon_start(daemon_state s)
 	}
 
 	INFO(&s, "%s waiting for client threads to finish", s.name);
-	reap(s, 1);
+	_reap(s, 1);
 out:
 	/* If activated by systemd, do not unlink the socket - systemd takes care of that! */
 	if (!_systemd_activation && s.socket_fd >= 0)
@@ -672,7 +672,7 @@ out:
 
 	closelog(); /* FIXME */
 	if (s.pidfile)
-		remove_lockfile(s.pidfile);
+		_remove_lockfile(s.pidfile);
 	if (failed)
 		exit(1);
 }
