@@ -205,9 +205,6 @@ The
 type refers to one of many raid levels, e.g.
 .B raid1,
 .B raid5.
-See
-.BR lvmraid (7)
-for a full list.
 
 .SS LV layers
 
@@ -328,7 +325,7 @@ VG/StripedLV
 Convert StripedLV to type raid*.
 .br
 \[bu]
-Required options depend on the raid level, see lvmraid(7).
+Required options depend on the raid level.
 
 .SS Operations on RaidLV with type raid*:
 
@@ -453,7 +450,7 @@ VG/RaidLV
 Convert RaidLV to use a different raid level.
 .br
 \[bu]
-Required options depend on the raid level, see lvmraid(7).
+Required options depend on the raid level.
 
 .B lvconvert \-\-type striped
 VG/RaidLV
@@ -514,7 +511,7 @@ VG/MirrorLV
 Convert MirrorLV to type raid*.
 .br
 \[bu]
-Required options depend on the raid level, see lvmraid(7).
+Required options depend on the raid level.
 
 .SS Operations on CachePoolLV with type cache\-pool:
 
@@ -918,8 +915,6 @@ Use \fB\-f\fP if you do not want any replacement.  You may use
 \fB\-\-use\-policies\fP to use the device replacement policy specified in
 \fBlvm.conf\fP(5), see \fBactivation/mirror_log_fault_policy\fP or
 \fBactivation/mirror_device_fault_policy\fP.
-Also see
-.BR lvmraid (7).
 
 When used with a thin pool LV, this option automates the use of the
 \fBthin_repair\fP(8) tool on the thin pool.  This repairs a very limitted
@@ -937,10 +932,7 @@ Also see
 Remove the specified device \fIPhysicalVolume\fP and replace it with one
 that is available in the VG, or from a specific list of PVs specified on
 the command line following the LV name. This option may be repeated multiple
-times depending on the RaidLV type.  See
-.BR lvmraid (7)
-for specific limits on device replacement for each raid level.
-(This option only applies to \fBraid*\fP LV types.)
+times depending on the RaidLV type.
 .
 .HP
 .BR \-s ,
