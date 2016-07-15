@@ -660,6 +660,10 @@ out:
 		if (unlink(s.socket_path))
 			perror("unlink error");
 
+	if (s.socket_fd >= 0)
+		if (close(s.socket_fd))
+			perror("scoket close");
+
 	if (s.daemon_fini)
 		if (!s.daemon_fini(&s))
 			failed = 1;
