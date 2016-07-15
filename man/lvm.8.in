@@ -779,9 +779,8 @@ this format string "_%s_%d_%llu".  When set, each process logs to a
 separate file.
 .TP
 .B LVM_LOG_FILE_MAX_LINES
-A max number of lines to be printed to log file before
-the application aborts. Useful for testing to prevent creation
-of too big log files from spinning command.
+If more than this number of lines are sent to the log file, the command gets
+aborted.  Automated tests use this to terminate looping commands.
 .TP
 .B LVM_EXPECTED_EXIT_STATUS
 The status anticipated when the process exits.  Use ">N" to match any

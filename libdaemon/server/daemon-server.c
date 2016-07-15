@@ -662,7 +662,7 @@ out:
 
 	if (s.socket_fd >= 0)
 		if (close(s.socket_fd))
-			perror("scoket close");
+			perror("socket close");
 
 	if (s.daemon_fini)
 		if (!s.daemon_fini(&s))

@@ -1,5 +1,5 @@
-Version 1.02.131 -
-================================
+Version 1.02.131 - 15th July 2016
+=================================
   Disable queueing on mpath devs in blk-availability systemd service/initscript.
   Add new -m|--mpathoption disablequeueing to blkdeactivate.
   Automatically group regions with 'create --segments' unless --nogroup.
