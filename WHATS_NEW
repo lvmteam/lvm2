@@ -1,3 +1,6 @@
+Version 2.02.162 - 
+=================================
+
 Version 2.02.161 - 15th July 2016
 =================================
   Prohibit some lvchange/lvresize that were failing on raid0 volumes.
