@@ -2829,6 +2829,12 @@ int lv_raid_replace(struct logical_volume *lv,
 	struct lv_list *lvl;
 	char *tmp_names[raid_seg->area_count * 2];
 
+	if (seg_is_any_raid0(raid_seg)) {
+		log_error("Can't replace any devices in %s LV %s",
+			  lvseg_name(raid_seg), display_lvname(lv));
+		return 0;
+	}
+
 	dm_list_init(&old_lvs);
 	dm_list_init(&new_meta_lvs);
 	dm_list_init(&new_data_lvs);
