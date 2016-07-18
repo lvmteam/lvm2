@@ -805,6 +805,10 @@ int dm_stats_get_region_nr_histogram_bins(const struct dm_stats *dms,
  * magnitude is one milisecond: attempting to use a histogram with a
  * boundary less than one milisecond when creating a region will cause
  * the region to be created with the precise_timestamps feature enabled.
+ *
+ * On sucess a pointer to the struct dm_histogram representing the
+ * bounds values is returned, or NULL in the case of error. The returned
+ * pointer should be freed using dm_free() when no longer required.
  */
 struct dm_histogram *dm_histogram_bounds_from_string(const char *bounds_str);
 
