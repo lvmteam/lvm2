@@ -4842,14 +4842,14 @@ static int _do_stats_create_regions(struct dm_stats *dms,
 	struct dm_info info;
 	void *next = NULL;
 
-	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram)))
-		return_0;
-
 	if (_switches[ALIAS_ARG] && _switches[NOGROUP_ARG]) {
 		log_error("Cannot set alias with --nogroup.");
 		dm_stats_destroy(dms);
 		return 0;
 	}
+
+	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram)))
+		return_0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TABLE))) {
 		dm_histogram_bounds_destroy(bounds);
