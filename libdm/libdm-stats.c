@@ -4323,6 +4323,8 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 	}
 	regions[*count] = DM_STATS_REGION_NOT_PRESENT;
 
+	if (bounds)
+		dm_free(hist_arg);
 	dm_pool_free(dms->mem, extents);
 	return regions;
 
@@ -4335,6 +4337,7 @@ out_remove:
 
 out:
 	dm_pool_free(dms->mem, extents);
+	dm_free(hist_arg);
 	dm_free(regions);
 	return NULL;
 }
