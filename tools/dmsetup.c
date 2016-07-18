@@ -4978,23 +4978,23 @@ static int _stats_create_file(CMD_ARGS)
 		return 0;
 	}
 
+	if (_switches[UUID_ARG] || _switches[MAJOR_ARG]) {
+		log_error("--uuid and --major are incompatible with --filemap.");
+		return 0;
+	}
+
+	if (_switches[ALL_DEVICES_ARG]) {
+		log_error("--alldevices is incompatible with --filemap.");
+		return 0;
+	}
+
 	/* _stats_create_file does not use _process_all() */
-	if (names || !argc) {
+	if (!argc) {
 		log_error("--filemap requires a file path argument");
 		return 0;
-	} else {
-		if (argc)
-			path = argv[0];
-		else {
-			if (_switches[UUID_ARG] || _switches[MAJOR_ARG])
-				log_error("--uuid and --major are incompatible "
-					  "with --filemap.");
-			if (_switches[ALL_DEVICES_ARG])
-				log_error("--alldevices is incompatible with "
-					  "--filemap.");
-			return 0;
-		}
 	}
+
+	path = argv[0];
 
 	if (_switches[PRECISE_ARG]) {
 		if (!dm_stats_driver_supports_precise()) {
