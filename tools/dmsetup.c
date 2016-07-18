@@ -5012,8 +5012,15 @@ static int _stats_create_file(CMD_ARGS)
 		}
 	}
 
-	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram)))
+	if (!(abspath = _get_abspath(path))) {
+		log_error("Could not canonicalize file name: %s", path);
+		return 0;
+	}
+
+	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram))) {
+		dm_free(abspath);
 		return_0;
+	}
 
 	if (_switches[PROGRAM_ID_ARG])
 		program_id = _string_args[PROGRAM_ID_ARG];
@@ -5022,11 +5029,6 @@ static int _stats_create_file(CMD_ARGS)
 
 	precise = _int_args[PRECISE_ARG];
 	group = !_switches[NOGROUP_ARG];
-
-	if (!(abspath = _get_abspath(path))) {
-		log_error("Could not canonicalize file name: %s", path);
-		return 0;
-	}
 
 	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
 		return_0;
@@ -5089,8 +5091,7 @@ static int _stats_create_file(CMD_ARGS)
 	return 1;
 
 bad:
-	if (abspath)
-		dm_free(abspath);
+	dm_free(abspath);
 
 	if ((fd > -1) && close(fd))
 		log_error("Error closing %s", path);
