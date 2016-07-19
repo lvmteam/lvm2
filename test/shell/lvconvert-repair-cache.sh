@@ -101,6 +101,9 @@ sync
 # Seriously damage cache metadata
 aux error_dev "$dev1" 2054:2
 
+# flushing status
+dmsetup status $vg-$lv1
+
 # On fixed kernel we get instant Fail here
 get lv_field  $vg/$lv1 lv_attr | tee out
 grep "Cwi-a-C-F-" out || {
