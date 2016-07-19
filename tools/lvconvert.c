@@ -2122,15 +2122,17 @@ static int _lvconvert_uncache(struct cmd_context *cmd,
 				return 0;
 			}
 			log_warn("WARNING: Uncaching of partially missing writethrough cache volume %s might destroy your data.",
-				 display_lvname(first_seg(seg->pool_lv)->metadata_lv));
+				 display_lvname(lv));
 		}
 
 		if (!lp->yes &&
-		    yes_no_prompt("Do you really want to uncache %s? with missing LVs [y/n]: ",
+		    yes_no_prompt("Do you really want to uncache %s with missing LVs? [y/n]: ",
 				  display_lvname(lv)) == 'n') {
 			log_error("Conversion aborted.");
 			return 0;
 		}
+		cmd->handles_missing_pvs = 1;
+		cmd->partial_activation = 1;
 	}
 
 	if (lvremove_single(cmd, remove_lv, NULL) != ECMD_PROCESSED)

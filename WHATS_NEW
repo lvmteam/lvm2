@@ -1,5 +1,6 @@
 Version 2.02.162 - 
 =================================
+  Enabled lvconvert --uncache to work with partial VG.
 
 Version 2.02.161 - 15th July 2016
 =================================
