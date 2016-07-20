@@ -4201,7 +4201,9 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 	if ((new_type && !strcmp(new_type, SEG_TYPE_NAME_THIN_POOL)) || arg_is_set(cmd, thinpool_ARG))
 		return _convert_raid_thin_pool(cmd, lv, lp);
 
-	if (new_type && !strcmp(new_type, SEG_TYPE_NAME_CACHE_POOL))
+	/* Using --cachepool is ambiguous and not preferred. */
+
+	if ((new_type && !strcmp(new_type, SEG_TYPE_NAME_CACHE_POOL)) || arg_is_set(cmd, cachepool_ARG))
 		return _convert_raid_cache_pool(cmd, lv, lp);
 
 	if (new_type && new_segtype && segtype_is_raid(new_segtype))
@@ -4261,7 +4263,9 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 	if ((new_type && !strcmp(new_type, SEG_TYPE_NAME_THIN_POOL)) || arg_is_set(cmd, thinpool_ARG))
 		return _convert_striped_thin_pool(cmd, lv, lp);
 
-	if (new_type && !strcmp(new_type, SEG_TYPE_NAME_CACHE_POOL))
+	/* Using --cachepool is ambiguous and not preferred. */
+
+	if ((new_type && !strcmp(new_type, SEG_TYPE_NAME_CACHE_POOL)) || arg_is_set(cmd, cachepool_ARG))
 		return _convert_striped_cache_pool(cmd, lv, lp);
 
 	if (new_type && !strcmp(new_type, SEG_TYPE_NAME_MIRROR))
