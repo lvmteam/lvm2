@@ -466,7 +466,7 @@ set_env() {
 	MPATHD_RUNNING=0
 	test $MPATHD_DO_DISABLEQUEUEING -eq 1 && {
 		if test -f $MPATHD; then
-			if eval $MPATHD show daemon $ERR | grep "running" >$DEVDIR/null; then
+			if eval $MPATHD show daemon $ERR | grep "running" >$DEV_DIR/null; then
 				MPATHD_RUNNING=1
 			fi
 		fi
