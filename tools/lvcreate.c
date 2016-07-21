@@ -486,7 +486,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 		}
 
 	} else if (lp->stripes < 2)
-		/* No stripe argument was given */
+		/* No stripes argument was given */
 		lp->stripes = seg_is_any_raid6(lp) ? 3 : 2;
 
 	if (seg_is_raid1(lp)) {
@@ -577,7 +577,8 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
+	if (arg_is_set(cmd, stripesize_ARG))
+		lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 
 	if (!is_power_of_2(lp->region_size)) {
 		log_error("Region size (%" PRIu32 ") must be a power of 2",
