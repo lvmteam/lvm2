@@ -92,9 +92,9 @@ OPTIONS:
 .B \-\-type striped
 .br
 .B \-\-type snapshot
-.R |
+|
 .B \-\-snapshot
-.R |
+|
 .B \-s
 .br
 .B \-\-type mirror
@@ -102,15 +102,15 @@ OPTIONS:
 .B \-\-type raid*
 .br
 .B \-\-type thin
-.R |
+|
 .B \-\-thin
-.R |
+|
 .B \-T
 .br
 .B \-\-type cache
-.R |
+|
 .B \-\-cache
-.R |
+|
 .B \-H
 .br
 .B \-\-type thin\-pool
