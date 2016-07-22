@@ -19,7 +19,7 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 aux have_thin 1 0 0 || skip
 aux have_raid 1 3 0 || skip
 
-aux prepare_vg 3
+aux prepare_vg 6
 
 lvcreate --type raid1 -l2 --nosync -n pool $vg
 lvconvert --yes --thinpool $vg/pool "$dev3"
@@ -31,5 +31,21 @@ lvextend -l+3 $vg/pool
 
 check lv_field $vg/pool seg_size_pe "5"
 check lv_field $vg/pool_tdata seg_size_pe "5" -a
+
+lvremove -f $vg
+
+# check 'raid10' resize works for pool metadata resize
+# https://bugzilla.redhat.com/1075644
+lvcreate --type raid10 -m1 -L5 -i3 --nosync -n pool $vg
+lvcreate --type raid10 -m1 -L3 -i3 --nosync -n meta $vg
+lvconvert --yes --thinpool $vg/pool --poolmetadata $vg/meta
+
+check lv_field $vg/pool_tdata lv_size "6.00m" -a
+check lv_field $vg/pool_tmeta lv_size "3.00m" -a
+
+lvextend --poolmetadatasize +1 --size +1 $vg/pool
+
+check lv_field $vg/pool_tdata lv_size "7.50m" -a
+check lv_field $vg/pool_tmeta lv_size "4.50m" -a
 
 vgremove -ff $vg
