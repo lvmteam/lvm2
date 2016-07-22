@@ -372,7 +372,7 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 	} else {
 		if (arg_from_list_is_set(cmd, "is valid only with thin pools",
 					 discards_ARG, originname_ARG, thinpool_ARG,
-					 zero_ARG, -1))
+					 -1))
 			return_0;
 		if (lp->thin) {
 			log_error("--thin requires --thinpool.");
@@ -420,6 +420,7 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 
 	} else if (arg_from_list_is_set(cmd, "is valid only with pools",
 					poolmetadatasize_ARG, poolmetadataspare_ARG,
+					zero_ARG,
 					-1))
 		return_0;
 
@@ -2970,8 +2971,34 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		if (!metadata_lv) {
 			if (arg_from_list_is_set(cmd, "is invalid with existing pool",
 						 chunksize_ARG, discards_ARG,
-						 zero_ARG, poolmetadatasize_ARG, -1))
+						 poolmetadatasize_ARG, -1))
 				return_0;
+
+			if (lp->thin &&
+			    arg_from_list_is_set(cmd, "is invalid with existing thin pool",
+						 zero_ARG, -1))
+				return_0;
+
+			if (lp->cache) {
+				/* Check is user has not requested -Zn */
+				if (!arg_int_value(cmd, zero_ARG, 1)) {
+					/* Note: requires rather deep know-how to skip zeroing
+					 * so show major warnings */
+					log_warn("WARNING: Reusing old cache pool metadata %s to "
+						 "for volume caching.",
+						 display_lvname(pool_lv));
+					log_warn("THIS MAY DESTROY YOUR DATA (filesystem etc.)");
+
+					if (!lp->yes &&
+					    yes_no_prompt("Do you really want to keep old metadata for "
+							  "cache pool volume %s? [y/n]: ",
+							  display_lvname(pool_lv)) == 'n') {
+						log_error("Conversion aborted.");
+						return 0;
+					}
+				} else if (!wipe_cache_pool(pool_lv))
+					return_0;
+			}
 
 			if (lp->thin || lp->cache)
 				/* already pool, can continue converting volume */
