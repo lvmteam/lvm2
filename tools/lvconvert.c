@@ -3913,7 +3913,7 @@ static int _convert_striped_thin(struct cmd_context *cmd, struct logical_volume 
 {
 	/* lvconvert --thin includes an implicit conversion of the thinpool arg to type thin-pool. */
 	if (!_lvconvert_pool(cmd, lv, lp)) {
-		log_error("Implicit conversion of --thinpool arg to type thin-pool failed.");
+		log_error("Conversion of --thinpool arg to type thin-pool failed.");
 		return 0;
 	}
 
@@ -3939,7 +3939,7 @@ static int _convert_striped_cache(struct cmd_context *cmd, struct logical_volume
 {
 	/* lvconvert --cache includes an implicit conversion of the cachepool arg to type cache-pool. */
 	if (!_lvconvert_pool(cmd, lv, lp)) {
-		log_error("Implicit conversion of --cachepool arg to type cache-pool failed.");
+		log_error("Conversion of --cachepool arg to type cache-pool failed.");
 		return 0;
 	}
 
