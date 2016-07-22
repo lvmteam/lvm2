@@ -1971,8 +1971,9 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		mode = def_mode;
 
 	if (mode && !strcmp(mode, "sh") && (flags & LDLV_MODE_NO_SH)) {
-		log_error("Shared activation not compatible with LV type: %s/%s",
-			  vg->name, lv_name);
+		struct logical_volume *lv = find_lv(vg, lv_name);
+		log_error("Shared activation not compatible with LV type %s of %s/%s",
+			  lv ? lvseg_name(first_seg(lv)) : "", vg->name, lv_name);
 		return 0;
 	}
 
