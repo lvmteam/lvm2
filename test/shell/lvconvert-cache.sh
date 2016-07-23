@@ -73,7 +73,7 @@ lvremove -ff $vg
 
 lvcreate -L 2 -n $lv1 $vg
 lvcreate --type cache-pool -l 1 -n ${lv1}_cachepool $vg
-lvconvert --cache --cachepool $vg/${lv1}_cachepool --cachemode writeback $vg/$lv1
+lvconvert --cache --cachepool $vg/${lv1}_cachepool --cachemode writeback -Zy $vg/$lv1
 check lv_field $vg/$lv1 cache_mode "writeback"
 dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 
@@ -81,7 +81,7 @@ dmsetup table ${vg}-$lv1 | grep cache  # ensure it is loaded in kernel
 #lvconvert --cachepool $vg/${lv1}_cachepool --poolmetadatasize 20 "$dev3"
 
 
-fail lvconvert --type cache --cachepool $vg/${lv1}_cachepool $vg/$lv1
+fail lvconvert --type cache --cachepool $vg/${lv1}_cachepool -Zy $vg/$lv1
 
 # Test --splitcache leaves both cache origin and cache pool
 lvconvert --splitcache $vg/$lv1

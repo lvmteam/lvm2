@@ -57,7 +57,7 @@ aux enable_dev "$dev1"
 ##################
 
 lvcreate --type cache-pool -L10 $vg/cpool "$dev1"
-lvconvert -H --cachemode writethrough --cachepool $vg/cpool $lv1
+lvconvert -H --cachemode writethrough --cachepool $vg/cpool -Zy $lv1
 
 aux disable_dev "$dev2"
 

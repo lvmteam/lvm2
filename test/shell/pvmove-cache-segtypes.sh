@@ -153,7 +153,7 @@ lvconvert --yes --type cache-pool $vg/cachepool --poolmetadata $vg/meta
 # RAID for thin pool data LV
 lvcreate --type raid1 -m 1 -L 8 -n thinpool $vg "$dev3" "$dev4"
 # Convert thin pool data to a cached LV
-lvconvert --type cache $vg/thinpool --cachepool $vg/cachepool
+lvconvert --type cache -Zy $vg/thinpool --cachepool $vg/cachepool
 # Create simple thin pool meta
 lvcreate -L 2M -n meta $vg "$dev1"
 # Use thin pool data LV to build a thin pool

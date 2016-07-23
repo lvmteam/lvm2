@@ -27,7 +27,7 @@ aux prepare_vg 5 80
 # lvcreate RAID1 origin, lvcreate cache-pool, and lvconvert to cache
 lvcreate --type raid1 -m 1 --nosync -l 2 -n $lv1 $vg
 lvcreate --type cache-pool -l 1 -n ${lv1}_cachepool $vg
-lvconvert --cache --cachepool $vg/${lv1}_cachepool $vg/$lv1
+lvconvert --cache -Zy --cachepool $vg/${lv1}_cachepool $vg/$lv1
 check lv_exists $vg/${lv1}_corig_rimage_0 # ensure images are properly renamed
 dmsetup table ${vg}-$lv1 | grep cache   # ensure it is loaded in kernel
 lvremove -f $vg
