@@ -2998,24 +2998,28 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 				return_0;
 
 			if (lp->cache) {
-				/* Check is user has not requested -Zn */
-				if (!arg_int_value(cmd, zero_ARG, 1)) {
-					/* Note: requires rather deep know-how to skip zeroing
-					 * so show major warnings */
-					log_warn("WARNING: Reusing old cache pool metadata %s to "
-						 "for volume caching.",
-						 display_lvname(pool_lv));
-					log_warn("THIS MAY DESTROY YOUR DATA (filesystem etc.)");
-
+				/* Check is user requested zeroing logic via [-Z y|n] */
+				if (!arg_is_set(cmd, zero_ARG)) {
+					/* Note: requires rather deep know-how to skip zeroing */
 					if (!lp->yes &&
-					    yes_no_prompt("Do you really want to keep old metadata for "
+					    yes_no_prompt("Do you want wipe existing metadata of "
 							  "cache pool volume %s? [y/n]: ",
 							  display_lvname(pool_lv)) == 'n') {
 						log_error("Conversion aborted.");
+						log_error("To preserve cache metadata add option \"--zero n\".");
+						log_warn("WARNING: Reusing mismatched cache pool metadata "
+							 "MAY DESTROY YOUR DATA!");
 						return 0;
 					}
-				} else if (!wipe_cache_pool(pool_lv))
-					return_0;
+					/* Wiping confirmed, go ahead */
+					if (!wipe_cache_pool(pool_lv))
+						return_0;
+				} else if (arg_int_value(cmd, zero_ARG, 0)) {
+					if (!wipe_cache_pool(pool_lv)) /* Wipe according to -Z y|n */
+						return_0;
+				} else
+					log_warn("WARNING: Reusing cache pool metadata %s "
+						 "for volume caching.", display_lvname(pool_lv));
 			}
 
 			if (lp->thin || lp->cache)
