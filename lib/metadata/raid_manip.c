@@ -2171,7 +2171,7 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	int force,				\
 	unsigned new_image_count,		\
 	const unsigned new_stripes,		\
-	unsigned new_stripe_size,		\
+	uint32_t new_stripe_size,		\
 	struct dm_list *allocate_pvs
 
 typedef int (*takeover_fn_t)(TAKEOVER_FN_ARGS);
