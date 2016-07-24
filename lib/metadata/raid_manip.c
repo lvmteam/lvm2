@@ -33,6 +33,40 @@ static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
 	return 1;
 }
 
+/* Check that all lv has segments have exactly the required number of areas */
+static int _check_num_areas_in_lv_segments(struct logical_volume *lv, unsigned num_areas)
+{
+	struct lv_segment *seg;
+
+	dm_list_iterate_items(seg, &lv->segments)
+		if (seg->area_count != num_areas) {
+			log_error("For this operation LV %s needs exactly %u data areas per segment.",
+				  display_lvname(lv), num_areas);
+			return 0;
+		}
+
+	return 1;
+}
+
+/* Ensure region size exceeds the minimum for lv */
+static void _ensure_min_region_size(const struct logical_volume *lv)
+{
+	struct lv_segment *seg = first_seg(lv);
+	uint32_t min_region_size, region_size;
+
+	/* MD's bitmap is limited to tracking 2^21 regions */
+	min_region_size = lv->size / (1 << 21);
+	region_size = seg->region_size;
+
+	while (region_size < min_region_size)
+		region_size *= 2;
+
+	if (seg->region_size != region_size) {
+		log_very_verbose("Setting region_size to %u for %s", seg->region_size, display_lvname(lv));
+		seg->region_size = region_size;
+	}
+}
+
 /*
  * Check for maximum number of raid devices.
  * Constrained by kernel MD maximum device limits _and_ dm-raid superblock
@@ -41,11 +75,36 @@ static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
 static int _check_max_raid_devices(uint32_t image_count)
 {
 	if (image_count > DEFAULT_RAID_MAX_IMAGES) {
-		log_error("Unable to handle arrays with more than %u devices",
+		log_error("Unable to handle raid arrays with more than %u devices",
 			  DEFAULT_RAID_MAX_IMAGES);
 		return 0;
 	}
+
 	return 1;
+}
+
+static int _check_max_mirror_devices(uint32_t image_count)
+{
+	if (image_count > DEFAULT_MIRROR_MAX_IMAGES) {
+		log_error("Unable to handle mirrors with more than %u devices",
+			  DEFAULT_MIRROR_MAX_IMAGES);
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Fix up LV region_size if not yet set.
+ */
+/* FIXME Check this happens exactly once at the right place. */
+static void _check_and_adjust_region_size(const struct logical_volume *lv)
+{
+	struct lv_segment *seg = first_seg(lv);
+
+	seg->region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
+
+	return _ensure_min_region_size(lv);
 }
 
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
