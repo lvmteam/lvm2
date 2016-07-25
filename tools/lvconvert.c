@@ -59,6 +59,8 @@ struct lvconvert_params {
 	int merge_snapshot;	/* merge is also set */
 	int merge_mirror;	/* merge is also set */
 
+	int track_changes;	/* keep_mimages is also set (--splitmirrors) */
+
 	int poolmetadataspare;
 	int force;
 	int yes;
@@ -77,7 +79,7 @@ struct lvconvert_params {
 
 	uint32_t mirrors;
 	sign_t mirrors_sign;
-	uint32_t keep_mimages;
+	uint32_t keep_mimages;	/* --splitmirrors */
 	uint32_t stripes;
 	uint32_t stripe_size;
 	uint32_t read_ahead;
@@ -335,7 +337,7 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 		    strcmp(lp->type_str, "cache") &&
 		    strcmp(lp->type_str, "cache-pool")) {
 			log_error("--cachepool argument is only valid with "
-				  " the cache or cache-pool segment type.");
+				  "the cache or cache-pool segment type.");
 			return 0;
 		}
 		cachepool = 1;
@@ -347,7 +349,7 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 		    strcmp(lp->type_str, "thin") &&
 		    strcmp(lp->type_str, "thin-pool")) {
 			log_error("--thinpool argument is only valid with "
-				  " the thin or thin-pool segment type.");
+				  "the thin or thin-pool segment type.");
 			return 0;
 		}
 		thinpool = 1;
@@ -542,6 +544,9 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->snapshot = 1;
 	}
 
+	if (arg_is_set(cmd, trackchanges_ARG))
+		lp->track_changes = 1;
+
 	if (lp->split) {
 		lp->lv_split_name = arg_str_value(cmd, name_ARG, NULL);
 
@@ -557,8 +562,8 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 				  "mutually exclusive.");
 			return 0;
 		}
-		if (!arg_is_set(cmd, name_ARG) &&
-		    !arg_is_set(cmd, trackchanges_ARG)) {
+
+		if (!arg_is_set(cmd, name_ARG) && !lp->track_changes) {
 			log_error("Please name the new logical volume using '--name'");
 			return 0;
 		}
@@ -567,10 +572,15 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->keep_mimages = 1;
 		lp->mirrors = arg_uint_value(cmd, splitmirrors_ARG, 0);
 		lp->mirrors_sign = SIGN_MINUS;
-	} else if (arg_is_set(cmd, name_ARG)) {
-		log_error("The 'name' argument is only valid"
-			  " with --splitmirrors");
-		return 0;
+	} else {
+		if (lp->track_changes) {
+			log_error("--trackchanges is only valid with --splitmirrors.");
+			return 0;
+		}
+		if (arg_is_set(cmd, name_ARG)) {
+			log_error("The 'name' argument is only valid with --splitmirrors");
+			return 0;
+		}
 	}
 
 	if (arg_is_set(cmd, merge_ARG))
@@ -1504,7 +1514,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 		/* Reduce number of mirrors */
 		if (lp->keep_mimages) {
-			if (arg_is_set(cmd, trackchanges_ARG)) {
+			if (lp->track_changes) {
 				log_error("--trackchanges is not available "
 					  "to 'mirror' segment type.");
 				return 0;
@@ -1889,7 +1899,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (lp->merge_mirror)
 		return lv_raid_merge(lv);
 
-	if (arg_is_set(cmd, trackchanges_ARG))
+	if (lp->track_changes)
 		return lv_raid_split_and_track(lv, lp->pvh);
 
 	if (lp->keep_mimages)
@@ -1933,8 +1943,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		}
 
 		if (sync_percent != DM_PERCENT_100) {
-			log_warn("WARNING: %s is not in-sync.",
-				 display_lvname(lv));
+			log_warn("WARNING: %s is not in-sync.", display_lvname(lv));
 			log_warn("WARNING: Portions of the array may be unrecoverable.");
 
 			/*
@@ -1957,8 +1966,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 				return 0;
 			}
 
-			log_print_unless_silent("Faulty devices in %s successfully"
-						" replaced.", display_lvname(lv));
+			log_print_unless_silent("Faulty devices in %s successfully replaced.",
+						display_lvname(lv));
 			return 1;
 		}
 
