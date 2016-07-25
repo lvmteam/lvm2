@@ -4047,10 +4047,8 @@ static int _convert_thin_pool(struct cmd_context *cmd, struct logical_volume *lv
 	if (arg_is_set(cmd, splitcache_ARG))
 		return _convert_thin_pool_splitcache(cmd, lv, lp);
 
-	if (arg_is_set(cmd, split_ARG)) {
-		log_warn("WARNING: Using --splitcache which has replaced the --split option.");
+	if (arg_is_set(cmd, split_ARG))
 		return _convert_thin_pool_splitcache(cmd, lv, lp);
-	}
 
 	if (arg_is_set(cmd, uncache_ARG))
 		return _convert_thin_pool_uncache(cmd, lv, lp);
@@ -4084,10 +4082,8 @@ static int _convert_cache_volume(struct cmd_context *cmd, struct logical_volume 
 	if (arg_is_set(cmd, splitcache_ARG))
 		return _convert_cache_volume_splitcache(cmd, lv, lp);
 
-	if (arg_is_set(cmd, split_ARG)) {
-		log_warn("WARNING: Using --splitcache which has replaced the --split option.");
+	if (arg_is_set(cmd, split_ARG))
 		return _convert_cache_volume_splitcache(cmd, lv, lp);
-	}
 
 	if (arg_is_set(cmd, uncache_ARG))
 		return _convert_cache_volume_uncache(cmd, lv, lp);
@@ -4117,10 +4113,8 @@ static int _convert_cache_pool(struct cmd_context *cmd, struct logical_volume *l
 	if (arg_is_set(cmd, splitcache_ARG))
 		return _convert_cache_pool_splitcache(cmd, lv, lp);
 
-	if (arg_is_set(cmd, split_ARG)) {
-		log_warn("WARNING: Using --splitcache which has replaced the --split option.");
+	if (arg_is_set(cmd, split_ARG))
 		return _convert_cache_pool_splitcache(cmd, lv, lp);
-	}
 
 	/* FIXME: swapping the cache pool metadata LV needs a specific option like --swapmetadata */
 	if (arg_is_set(cmd, poolmetadata_ARG))
