@@ -181,9 +181,29 @@ static void _write_history(void)
 		log_very_verbose("Couldn't write history to %s.", hist_file);
 }
 
+static int _log_shell_command_status(struct cmd_context *cmd, int ret_code)
+{
+	log_report_t log_state;
+
+	if (!cmd->log_rh)
+		return 1;
+
+	log_state = log_get_report_state();
+
+	return report_cmdlog(cmd->log_rh, REPORT_OBJECT_CMDLOG_NAME,
+			     log_get_report_context_name(log_state.context),
+			     log_get_report_object_type_name(log_state.object_type),
+			     log_state.object_name, log_state.object_id,
+			     log_state.object_group, log_state.object_group_id,
+			     ret_code == ECMD_PROCESSED ? REPORT_OBJECT_CMDLOG_SUCCESS
+							: REPORT_OBJECT_CMDLOG_FAILURE,
+			     stored_errno(), ret_code);
+}
+
 int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 {
-	int argc, ret;
+	log_report_t saved_log_report_state = log_get_report_state();
+	int is_lastlog_cmd, argc, ret;
 	char *input = NULL, *args[MAX_ARGS], **argv;
 
 	rl_readline_name = "lvm";
@@ -194,7 +214,11 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	_cmdline = cmdline;
 
 	cmd->is_interactive = 1;
+	log_set_report_context(LOG_REPORT_CONTEXT_SHELL);
+	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_CMD);
+
 	while (1) {
+		log_set_report_object_name_and_id(NULL, NULL);
 		free(input);
 		input = readline("lvm> ");
 
@@ -229,13 +253,17 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 		if (!argc)
 			continue;
 
+		log_set_report_object_name_and_id(argv[0], NULL);
+
 		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit")) {
 			remove_history(history_length - 1);
 			log_error("Exiting.");
 			break;
 		}
 
-		if (cmd->log_rh && strcmp(argv[0], "lastlog")) {
+		is_lastlog_cmd = !strcmp(argv[0], "lastlog");
+
+		if (cmd->log_rh && !is_lastlog_cmd) {
 			/* drop old log report */
 			dm_report_free(cmd->log_rh);
 			cmd->log_rh = NULL;
@@ -251,7 +279,12 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 			log_error("Command failed with status code %d.", ret);
 		}
 		_write_history();
+
+		if (!is_lastlog_cmd)
+			_log_shell_command_status(cmd, ret);
 	}
+
+	log_restore_report_state(saved_log_report_state);
 	cmd->is_interactive = 0;
 
 	free(input);

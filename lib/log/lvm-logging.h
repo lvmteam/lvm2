@@ -77,12 +77,14 @@ void syslog_suppress(int suppress);
 /* Hooks to handle logging through report. */
 typedef enum {
 	LOG_REPORT_CONTEXT_NULL,
+	LOG_REPORT_CONTEXT_SHELL,
 	LOG_REPORT_CONTEXT_PROCESSING,
 	LOG_REPORT_CONTEXT_COUNT
 } log_report_context_t;
 
 typedef enum {
 	LOG_REPORT_OBJECT_TYPE_NULL,
+	LOG_REPORT_OBJECT_TYPE_CMD,
 	LOG_REPORT_OBJECT_TYPE_ORPHAN,
 	LOG_REPORT_OBJECT_TYPE_PV,
 	LOG_REPORT_OBJECT_TYPE_LABEL,
@@ -100,6 +102,10 @@ typedef struct log_report {
 	const char *object_group;
 	const char *object_group_id;
 } log_report_t;
+
+#define LOG_STATUS_NAME "status"
+#define LOG_STATUS_SUCCESS "success"
+#define LOG_STATUS_FAILURE "failure"
 
 log_report_t log_get_report_state(void);
 void log_restore_report_state(log_report_t log_report);
