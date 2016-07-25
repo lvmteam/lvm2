@@ -1894,6 +1894,13 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 				  lp->keep_mimages ? "split" : "reduce");
 			return 0;
 		}
+
+		/* --trackchanges requires --splitmirrors which always has SIGN_MINUS */
+		if (lp->track_changes && lp->mirrors != 1) {
+                        log_error("Exactly one image must be split off from %s when tracking changes.",
+				  display_lvname(lv));
+                        return 0;
+                }
 	}
 
 	if (lp->merge_mirror)
@@ -1903,8 +1910,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return lv_raid_split_and_track(lv, lp->pvh);
 
 	if (lp->keep_mimages)
-		return lv_raid_split(lv, lp->lv_split_name,
-				     image_count, lp->pvh);
+		return lv_raid_split(lv, lp->lv_split_name, image_count, lp->pvh);
 
 	if (lp->mirrors_supplied)
 		return lv_raid_change_image_count(lv, image_count, lp->pvh);
