@@ -1654,6 +1654,9 @@ static int res_able(struct lockspace *ls, struct resource *r,
 	}
 
 	rv = lm_able_gl_sanlock(ls, act->op == LD_OP_ENABLE);
+
+	if (!rv && (act->op == LD_OP_ENABLE))
+		gl_vg_removed = 0;
 out:
 	return rv;
 }
@@ -2627,8 +2630,10 @@ out_act:
 
 	if (free_vg && ls->sanlock_gl_enabled && act_op_free) {
 		pthread_mutex_lock(&lockspaces_mutex);
-		if (other_sanlock_vgs_exist(ls))
+		if (other_sanlock_vgs_exist(ls)) {
 			act_op_free->flags |= LD_AF_WARN_GL_REMOVED;
+			gl_vg_removed = 1;
+		}
 		pthread_mutex_unlock(&lockspaces_mutex);
 	}
 
@@ -3668,7 +3673,7 @@ static int client_send_result(struct client *cl, struct action *act)
 	if (act->flags & LD_AF_DUP_GL_LS)
 		strcat(result_flags, "DUP_GL_LS,");
 
-	if (act->flags & LD_AF_WARN_GL_REMOVED)
+	if ((act->flags & LD_AF_WARN_GL_REMOVED) || gl_vg_removed)
 		strcat(result_flags, "WARN_GL_REMOVED,");
 	
 	if (act->op == LD_OP_INIT) {

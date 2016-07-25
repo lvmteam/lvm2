@@ -969,6 +969,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 {
 	char uuid[64] __attribute__((aligned(8)));
 	daemon_reply reply;
+	uint32_t lockd_flags = 0;
 	int host_id = 0;
 	int result;
 	int ret;
@@ -1018,12 +1019,15 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int start_i
 				"opts = %s", start_init ? "start_init" : "none",
 				NULL);
 
-	if (!_lockd_result(reply, &result, NULL)) {
+	if (!_lockd_result(reply, &result, &lockd_flags)) {
 		ret = 0;
 		result = -ELOCKD;
 	} else {
 		ret = (result < 0) ? 0 : 1;
 	}
+
+	if (lockd_flags & LD_RF_WARN_GL_REMOVED)
+		cmd->lockd_gl_removed = 1;
 
 	switch (result) {
 	case 0:
@@ -1139,6 +1143,11 @@ int lockd_start_wait(struct cmd_context *cmd)
 	 */
 
 	daemon_reply_destroy(reply);
+
+	if (cmd->lockd_gl_removed) {
+		log_error("Missing global lock: global lock was lost by removing a previous VG.");
+		log_error("To enable the global lock in another VG, see lvmlockctl --gl-enable.");
+	}
 
 	return ret;
 }
@@ -1552,6 +1561,12 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 		if (result == -ELOCKIO || result == -EVGKILLED) {
 			log_warn("Skipping global lock: storage %s for sanlock leases",
 				  result == -ELOCKIO ? "errors" : "failed");
+			force_cache_update = 1;
+			goto allow;
+		}
+
+		if ((lockd_flags & LD_RF_NO_GL_LS) && (lockd_flags & LD_RF_WARN_GL_REMOVED)) {
+			log_warn("Skipping global lock: VG with global lock was removed");
 			force_cache_update = 1;
 			goto allow;
 		}
