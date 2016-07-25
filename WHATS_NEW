@@ -1,5 +1,6 @@
 Version 2.02.162 - 
 =================================
+  Add note about lastlog built-in command to lvm man page.
   Fix unrecognised segtype flag message.
   lvconvert reuse cachepool metadade now ONLY with -Zn and clear otherwise.
   Enabled lvconvert --uncache to work with partial VG.

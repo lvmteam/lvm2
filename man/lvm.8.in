@@ -68,6 +68,10 @@ Display recognised metadata formats.
 .B help
 Display the help text.
 .TP
+.B lastlog
+Display log report of last command run in LVM shell
+if command log reporting is enabled.
+.TP
 .B lvpoll
 Complete lvmpolld operations (Internal command).
 .TP
