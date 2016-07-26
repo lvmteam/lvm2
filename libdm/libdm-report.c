@@ -4320,6 +4320,7 @@ static int _sort_rows(struct dm_report *rh)
 #define JSON_OBJECT_END        "}"
 #define JSON_ARRAY_START       "["
 #define JSON_ARRAY_END         "]"
+#define JSON_ESCAPE_CHAR       "\\"
 
 #define UNABLE_TO_EXTEND_OUTPUT_LINE_MSG "dm_report: Unable to extend output line"
 
@@ -4346,6 +4347,7 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 	int32_t width;
 	uint32_t align;
 	const char *repstr;
+	const char *p1_repstr, *p2_repstr;
 	char *buf = NULL;
 	size_t buf_size = 0;
 
@@ -4393,9 +4395,33 @@ static int _output_field(struct dm_report *rh, struct dm_report_field *field)
 	repstr = field->report_string;
 	width = field->props->width;
 	if (!(rh->flags & DM_REPORT_OUTPUT_ALIGNED)) {
-		if (!dm_pool_grow_object(rh->mem, repstr, 0)) {
-			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-			return 0;
+		if (_is_json_report(rh)) {
+			/* Escape any JSON_QUOTE that may appear in reported string. */
+			p1_repstr = repstr;
+			while ((p2_repstr = strstr(p1_repstr, JSON_QUOTE))) {
+				if (p2_repstr > p1_repstr) {
+					if (!dm_pool_grow_object(rh->mem, p1_repstr, p2_repstr - p1_repstr)) {
+						log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+						return 0;
+					}
+				}
+				if (!dm_pool_grow_object(rh->mem, JSON_ESCAPE_CHAR, 1) ||
+				    !dm_pool_grow_object(rh->mem, JSON_QUOTE, 1)) {
+					log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+					return 0;
+				}
+				p1_repstr = p2_repstr + 1;
+			}
+
+			if (!dm_pool_grow_object(rh->mem, p1_repstr, 0)) {
+				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+				return 0;
+			}
+		} else {
+			if (!dm_pool_grow_object(rh->mem, repstr, 0)) {
+				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+				return 0;
+			}
 		}
 	} else {
 		if (!(align = field->props->flags & DM_REPORT_FIELD_ALIGN_MASK))
