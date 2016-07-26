@@ -1,5 +1,6 @@
 Version 2.02.162 - 
 =================================
+  Fix automatic updates of PV extension headers to newest version.
   Improve lvconvert --trackchanges validation to require --splitmirrors 1.
   Add note about lastlog built-in command to lvm man page.
   Fix unrecognised segtype flag message.

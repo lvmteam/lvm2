@@ -3297,7 +3297,7 @@ static int _pv_in_pv_list(struct physical_volume *pv, struct dm_list *head)
  * Check if any of the PVs in VG still contain old PV headers
  * and if yes, schedule them for PV header update.
  */
-static int _check_old_pv_ext_for_vg(struct volume_group *vg)
+static int _vg_update_old_pv_ext_if_needed(struct volume_group *vg)
 {
 	struct pv_list *pvl, *new_pvl;
 	int pv_needs_rewrite;
@@ -3330,7 +3330,15 @@ static int _check_old_pv_ext_for_vg(struct volume_group *vg)
 			}
 			new_pvl->pv = pvl->pv;
 			dm_list_add(&vg->pv_write_list, &new_pvl->list);
+			log_debug("PV %s has old extension header, updating to newest version.",
+				  pv_dev_name(pvl->pv));
 		}
+	}
+
+	if (!dm_list_empty(&vg->pv_write_list) &&
+	    (!vg_write(vg) || !vg_commit(vg))) {
+		log_error("Failed to update old PV extension headers in VG %s.", vg->name);
+		return 0;
 	}
 
 	return 1;
@@ -3460,11 +3468,6 @@ int vg_write(struct volume_group *vg)
 
 	if (!vg_mda_used_count(vg)) {
 		log_error("Aborting vg_write: No metadata areas to write to!");
-		return 0;
-	}
-
-	if (!(_check_old_pv_ext_for_vg(vg))) {
-		log_error("Failed to schedule physical volume header update.");
 		return 0;
 	}
 
@@ -4139,6 +4142,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	int inconsistent_mdas = 0;
 	int inconsistent_mda_count = 0;
 	int strip_historical_lvs = *consistent;
+	int update_old_pv_ext = *consistent;
 	unsigned use_precommitted = precommitted;
 	struct dm_list *pvids;
 	struct pv_list *pvl;
@@ -4175,8 +4179,18 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
                         }
 		}
 
-		if (correct_vg && strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg))
-			return_NULL;
+
+		if (correct_vg) {
+			if (update_old_pv_ext && !_vg_update_old_pv_ext_if_needed(correct_vg)) {
+				release_vg(correct_vg);
+				return_NULL;
+			}
+
+			if (strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg)) {
+				release_vg(correct_vg);
+				return_NULL;
+			}
+		}
 
 		return correct_vg;
 	}
@@ -4616,8 +4630,17 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	*consistent = !inconsistent_pvs;
 
-	if (*consistent && correct_vg && strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg))
-		return_NULL;
+	if (correct_vg && *consistent) {
+		if (update_old_pv_ext && !_vg_update_old_pv_ext_if_needed(correct_vg)) {
+			release_vg(correct_vg);
+			return_NULL;
+		}
+
+		if (strip_historical_lvs && !vg_strip_outdated_historical_lvs(correct_vg)) {
+			release_vg(correct_vg);
+			return_NULL;
+		}
+	}
 
 	return correct_vg;
 }
