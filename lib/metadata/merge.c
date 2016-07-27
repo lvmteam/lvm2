@@ -118,8 +118,9 @@ static void _check_raid_region_recovery(struct lv_segment *seg, int *error_count
 		raid_seg_error("zero region_size");
 	if (!is_power_of_2(seg->region_size))
 		raid_seg_error_val("non power of 2 region size", seg->region_size);
-	/* min/max recovery rate may be zero but min may not be larger than max*/
-	if (seg->min_recovery_rate > seg->max_recovery_rate)
+	/* min/max recovery rate may be zero but min may not be larger than max if set */
+	if (seg->max_recovery_rate &&
+	    seg->min_recovery_rate > seg->max_recovery_rate)
 		raid_seg_error_val("min recovery larger than max recovery larger", seg->min_recovery_rate);
 }
 
