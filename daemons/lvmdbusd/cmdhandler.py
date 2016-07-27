@@ -411,7 +411,7 @@ def lv_cache_lv(cache_pool_full_name, lv_full_name, cache_options):
 	# lvconvert --type cache --cachepool VG/CachePoolLV VG/OriginLV
 	cmd = ['lvconvert']
 	cmd.extend(options_to_cli_args(cache_options))
-	cmd.extend(['--type', 'cache', '--cachepool',
+	cmd.extend(['-y', '--type', 'cache', '--cachepool',
 				cache_pool_full_name, lv_full_name])
 	return call(cmd)
 
