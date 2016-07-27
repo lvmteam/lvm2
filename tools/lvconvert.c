@@ -2679,6 +2679,7 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 		.lv_name = lp->origin_name,
 		.major = -1,
 		.minor = -1,
+		.suppress_zero_warn = 1, /* Suppress warning for this thin */
 		.permission = LVM_READ,
 		.pool_name = pool_lv->name,
 		.pvh = &vg->pvs,
@@ -2735,7 +2736,9 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 	if (!archive(vg))
 		return_0;
 
-	/* New thin LV needs to be created (all messages sent to pool) */
+	/* New thin LV needs to be created (all messages sent to pool)
+	 * In this case thin volume is created READ-ONLY and
+	 * also warn about not zeroing is suppressed. */
 	if (!(torigin_lv = lv_create_single(vg, &lvc)))
 		return_0;
 

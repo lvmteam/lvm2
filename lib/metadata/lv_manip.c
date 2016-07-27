@@ -7592,7 +7592,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		goto deactivate_and_revert_new_lv;
 	}
 
-	if (_should_wipe_lv(lp, lv, 1)) {
+	if (_should_wipe_lv(lp, lv, !lp->suppress_zero_warn)) {
 		if (!wipe_lv(lv, (struct wipe_params)
 			     {
 				     .do_zero = lp->zero,

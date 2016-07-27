@@ -1,5 +1,6 @@
 Version 2.02.162 - 
 =================================
+  Suppress not zeroing warn when converting to thin LV for non-zeroing tpool.
   Fix automatic updates of PV extension headers to newest version.
   Improve lvconvert --trackchanges validation to require --splitmirrors 1.
   Add note about lastlog built-in command to lvm man page.
