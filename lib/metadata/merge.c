@@ -192,8 +192,6 @@ static void _check_non_raid_seg_members(struct lv_segment *seg, int *error_count
 		raid_seg_error("non-zero cow LV");
 	if (!dm_list_empty(&seg->origin_list)) /* snap */
 		raid_seg_error("non-zero origin_list");
-	if (seg->extents_copied)
-		raid_seg_error("non-zero extents_copied");
 	if (seg->log_lv)
 		raid_seg_error("non-zero log LV");
 	if (seg->segtype_private)
@@ -255,6 +253,9 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 
 	if (!seg->areas)
 		raid_seg_error("zero areas");
+
+	if (seg->extents_copied > seg->area_len)
+		raid_seg_error_val("extents_copied too large", seg->extents_copied);
 
 	/* Default still 8, change! */
 	if (seg->area_count > DEFAULT_RAID_MAX_IMAGES) {

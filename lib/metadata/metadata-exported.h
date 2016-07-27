@@ -463,7 +463,7 @@ struct lv_segment {
 	struct logical_volume *cow;
 	struct dm_list origin_list;
 	uint32_t region_size;	/* For mirrors, replicators - in sectors */
-	uint32_t extents_copied;
+	uint32_t extents_copied;/* Number of extents synced for raids/mirrors */
 	struct logical_volume *log_lv;
 	struct lv_segment *pvmove_source_seg;
 	void *segtype_private;
