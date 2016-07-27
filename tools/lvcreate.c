@@ -529,25 +529,12 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 					struct lvcreate_params *lp)
 {
 	int pagesize = lvm_getpagesize();
-	unsigned max_images;
-	const char *segtype_name;
+	unsigned max_images = segtype_is_raid(lp->segtype) ? DEFAULT_RAID_MAX_IMAGES :
+							     DEFAULT_MIRROR_MAX_IMAGES;
 
 	/* Common mirror and raid params */
 	if (arg_is_set(cmd, mirrors_ARG)) {
 		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
-		if (segtype_is_raid1(lp->segtype)) {
-			segtype_name = SEG_TYPE_NAME_RAID1;
-			max_images = DEFAULT_RAID_MAX_IMAGES;
-		} else {
-			segtype_name = SEG_TYPE_NAME_MIRROR;
-			max_images = DEFAULT_MIRROR_MAX_IMAGES;
-		}
-
-		if (lp->mirrors > max_images) {
-			log_error("Only up to %u images in %s supported currently.",
-				  max_images, segtype_name);
-			return 0;
-		}
 
 		if ((lp->mirrors > 2) && segtype_is_raid10(lp->segtype)) {
 			/*
@@ -570,6 +557,12 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 	} else
 		/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
 		lp->mirrors = seg_is_mirrored(lp) ? 2 : 1;
+
+	if (max(lp->mirrors, lp->stripes) > max_images) {
+		log_error("Only up to %u images in %s supported currently.",
+			  max_images, lp->segtype->name);
+		return 0;
+	}
 
 	lp->nosync = arg_is_set(cmd, nosync_ARG);
 
