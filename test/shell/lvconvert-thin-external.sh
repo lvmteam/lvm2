@@ -167,5 +167,13 @@ lvcreate -l100 -n thin $vg
 lvconvert --yes --thin --thinpool $vg/pool $vg/thin --originname thin-origin
 check lv_field $vg/thin segtype thin
 check lv_field $vg/thin-origin segtype linear
+lvremove -ff $vg
+
+# Test conversion with non-zeroing thin-pool, should not WARN about zeroing
+lvcreate -l50 -n pool $vg
+lvcreate -l100 -n thin $vg
+lvconvert --yes --thin --thinpool $vg/pool $vg/thin --zero n --originname thin-origin 2>&1 | tee out
+not grep "not zeroed" out
+check lv_field $vg/pool zero ""
 
 vgremove -ff $vg
