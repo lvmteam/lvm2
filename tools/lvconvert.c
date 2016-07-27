@@ -2851,6 +2851,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 	struct id lockd_data_id;
 	struct id lockd_meta_id;
 	char metadata_name[NAME_LEN], data_name[NAME_LEN];
+	int zero_metadata = 1;
 	int activate_pool;
 
 	if (lp->pool_data_name) {
@@ -3091,12 +3092,26 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			return 0;
 		}
 	} else {
-		log_warn("WARNING: Converting logical volume %s%s%s to pool's data%s.",
+		/* Only cache pool conversion may suppress metadata zeroing
+		 * TODO: Maybe similar support could be useful for thin-pool, but --zero
+		 * is already overloade and we would also need to possibly match transaction Id. */
+		if (segtype_is_cache_pool(lp->segtype) && metadata_lv)
+			/* Check is user requested zeroing logic via [-Z y|n] (default is yes) */
+			zero_metadata = arg_int_value(cmd, zero_ARG, 1);
+
+		log_warn("WARNING: Converting logical volume %s%s%s to %s pool's data%s %s metadata wiping.",
 			 display_lvname(pool_lv),
 			 metadata_lv ? " and " : "",
 			 metadata_lv ? display_lvname(metadata_lv) : "",
-			 metadata_lv ? " and metadata volumes" : " volume");
-		log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
+			 segtype_is_cache_pool(lp->segtype) ? "cache" : "thin",
+			 metadata_lv ? " and metadata volumes" : " volume",
+			 zero_metadata ? "with" : "WITHOUT");
+
+		if (zero_metadata)
+			log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
+		else /* ATM supported only for cache pools */
+			log_warn("WARNING: Using mismatched cache pool metadata "
+				 "MAY DESTROY YOUR DATA!");
 
 		if (!lp->yes &&
 		    yes_no_prompt("Do you really want to convert %s%s%s? [y/n]: ",
@@ -3168,15 +3183,17 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			goto mda_write;
 		}
 
-		metadata_lv->status |= LV_TEMPORARY;
-		if (!activate_lv_local(cmd, metadata_lv)) {
-			log_error("Aborting. Failed to activate metadata lv.");
-			return 0;
-		}
+		if (zero_metadata) {
+			metadata_lv->status |= LV_TEMPORARY;
+			if (!activate_lv_local(cmd, metadata_lv)) {
+				log_error("Aborting. Failed to activate metadata lv.");
+				return 0;
+			}
 
-		if (!wipe_lv(metadata_lv, (struct wipe_params) { .do_zero = 1 })) {
-			log_error("Aborting. Failed to wipe metadata lv.");
-			return 0;
+			if (!wipe_lv(metadata_lv, (struct wipe_params) { .do_zero = 1 })) {
+				log_error("Aborting. Failed to wipe metadata lv.");
+				return 0;
+			}
 		}
 	}
 
