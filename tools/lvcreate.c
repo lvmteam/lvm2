@@ -506,7 +506,9 @@ static int _read_raid_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!seg_is_any_raid0(lp)) {
+	if (seg_is_any_raid0(lp))
+		lp->region_size = 0;
+	else {
 		/* Rates are recorded in kiB/sec/disk, not sectors/sec/disk */
 		lp->min_recovery_rate = arg_uint_value(cmd, minrecoveryrate_ARG, 0) / 2;
 		lp->max_recovery_rate = arg_uint_value(cmd, maxrecoveryrate_ARG, 0) / 2;

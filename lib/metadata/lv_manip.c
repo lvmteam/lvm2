@@ -949,6 +949,7 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	seg->extents_copied = extents_copied;
 	seg->pvmove_source_seg = pvmove_source_seg;
 	dm_list_init(&seg->tags);
+	dm_list_init(&seg->origin_list);
 	dm_list_init(&seg->thin_messages);
 
 	if (log_lv && !attach_mirror_log(seg, log_lv))
