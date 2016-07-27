@@ -13,7 +13,7 @@ from . import cfg
 import time
 from .cmdhandler import options_to_cli_args
 import dbus
-from .utils import pv_range_append, pv_dest_ranges, log_error
+from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
 import traceback
 
 _rlock = threading.RLock()
@@ -118,6 +118,7 @@ def background_reaper():
 				for i in range(num_threads, -1, -1):
 					_thread_list[i].join(0)
 					if not _thread_list[i].is_alive():
+						log_debug("Removing thread: %s" % _thread_list[i].name)
 						_thread_list.pop(i)
 
 		time.sleep(3)
@@ -171,3 +172,30 @@ def add(command, reporting_job):
 
 	with _rlock:
 		_thread_list.append(t)
+
+
+def wait_thread(job, timeout, cb, cbe):
+	# We need to put the wait on it's own thread, so that we don't block the
+	# entire dbus queue processing thread
+	try:
+		cb(job.state.Wait(timeout))
+	except Exception as e:
+		cbe("Wait exception: %s" % str(e))
+	return 0
+
+
+def add_wait(job, timeout, cb, cbe):
+
+	if timeout == 0:
+		# Users are basically polling, do not create thread
+		cb(job.Complete)
+	else:
+		t = threading.Thread(
+			target=wait_thread,
+			name="thread job.Wait: %s" % job.dbus_object_path(),
+			args=(job, timeout, cb, cbe)
+		)
+
+		t.start()
+		with _rlock:
+			_thread_list.append(t)

@@ -13,6 +13,7 @@ from . import cfg
 from .cfg import JOB_INTERFACE
 import dbus
 import threading
+from . import background
 
 
 # noinspection PyPep8Naming
@@ -152,9 +153,10 @@ class Job(AutomatedProperties):
 
 	@dbus.service.method(dbus_interface=JOB_INTERFACE,
 							in_signature='i',
-							out_signature='b')
-	def Wait(self, timeout):
-		return self.state.Wait(timeout)
+							out_signature='b',
+							async_callbacks=('cb', 'cbe'))
+	def Wait(self, timeout, cb, cbe):
+		background.add_wait(self, timeout, cb, cbe)
 
 	@property
 	def Result(self):
