@@ -1173,7 +1173,7 @@ name of ExampleLV.
 .B lvconvert \-\-type thin \-\-thinpool VG/ThinPoolLV
 .br
 .RS
-.B \-\-originname NewExternalOriginLV \-\-thin VG/ExampleLV
+.B \-\-originname NewExternalOriginLV VG/ExampleLV
 .RE
 
 .I Example
