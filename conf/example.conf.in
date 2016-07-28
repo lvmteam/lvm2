@@ -381,7 +381,8 @@ allocation {
 	# Stripe across all PVs when RAID stripes are not specified.
 	# If enabled, all PVs in the VG or on the command line are used for raid0/4/5/6/10
 	# when the command does not specify the number of stripes to use.
-	raid_stripe_all_devices = 0
+	# This configuration option has an automatic default value.
+	# raid_stripe_all_devices = 0
 
 	# Configuration option allocation/cache_pool_metadata_require_separate_pvs.
 	# Cache pool metadata and data will always use different PVs.
