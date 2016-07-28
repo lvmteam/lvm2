@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -176,6 +176,22 @@ lv_devices $vg raid5 3
 lvcreate --type raid6 -l3 -an -Zn -n raid6 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 lv_devices $vg raid6 5
 lvremove -ff $vg
+
+# Implicit count comes from total #PVs in VG (always 2 for mirror though)
+# Defaults -i2 even though more PVs listed
+lvcreate --type raid1 -l1 -an -Zn -n raid1 $vg
+lv_devices $vg raid1 2
+lvcreate --type raid5 -l2 -an -Zn -n raid5 $vg
+lv_devices $vg raid5 3
+lvcreate --type raid6 -l3 -an -Zn -n raid6 $vg
+lv_devices $vg raid6 5
+lvremove -ff $vg
+
+
+########################################################
+# Try again with backward compatible old logic applied #
+########################################################
+aux lvmconf 'allocation/raid_stripe_all_devices = 1'
 
 # Implicit count comes from total #PVs in VG (always 2 for mirror though)
 lvcreate --type raid1 -l1 -an -Zn -n raid1 $vg

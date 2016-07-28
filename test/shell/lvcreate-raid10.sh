@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -67,16 +67,32 @@ lvremove -ff $vg
 not lvcreate --type raid10 -l2 $vg "$dev1" "$dev2" "$dev3"
 
 # Implicit count comes from #PVs given (always 2-way mirror)
+# Defaults -i2, which works with 4 PVs listed
 lvcreate --type raid10 -l2 -an -Zn -n raid10 $vg "$dev1" "$dev2" "$dev3" "$dev4"
 lv_devices $vg raid10 4
-lvremove -ff $vg
 
-# Implicit count comes from total #PVs in VG (always 2 for mirror though)
-lvcreate --type raid10 -l2 -an -Zn -n raid10 $vg
-lv_devices $vg raid10 6
+# Defaults -i2 even though more PVs listed
+lvcreate --type raid10 -l2 -an -Zn -n raid10_6 $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
+lv_devices $vg raid10_6 4
+
 lvremove -ff $vg
 
 #
 # FIXME: Add tests that specify particular PVs to use for creation
 #
+
+
+########################################################
+# Try again with backward compatible old logic applied #
+########################################################
+aux lvmconf 'allocation/raid_stripe_all_devices = 1'
+
+# Implicit count comes from #PVs given (always 2-way mirror)
+lvcreate --type raid10 -l2 -an -Zn -n raid10 $vg "$dev1" "$dev2" "$dev3" "$dev4"
+lv_devices $vg raid10 4
+
+# Implicit count comes from total #PVs in VG (always 2 for mirror though)
+lvcreate --type raid10 -l2 -an -Zn -n raid10_vg $vg
+lv_devices $vg raid10_vg 6
+
 vgremove -ff $vg
