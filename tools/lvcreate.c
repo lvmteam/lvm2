@@ -572,6 +572,11 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/*
+	 * FIXME This is working around a bug in get_stripe_params() where 
+	 * stripes is incorrectly assumed to be 1 when it is not supplied
+	 * leading to the actual value of stripesize getting lost.
+	 */
 	if (arg_is_set(cmd, stripesize_ARG))
 		lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 

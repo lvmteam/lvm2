@@ -1,5 +1,6 @@
-Version 2.02.162 - 
+Version 2.02.162 - 28th July 2016
 =================================
+  Extend vg_validate also to check raid configurations thoroughly.
   Support lvconvert -Zn also when doing full cache pool conversion.
   Suppress not zeroing warn when converting to thin LV for non-zeroing tpool.
   Fix automatic updates of PV extension headers to newest version.
@@ -7,7 +8,11 @@ Version 2.02.162 -
   Add note about lastlog built-in command to lvm man page.
   Fix unrecognised segtype flag message.
   lvconvert not clears cache pool metadata ONLY with -Zn.
+  Add allocation/raid_stripe_all_devices to reinstate previous behaviour.
+  Create raid stripes across fixed small numbers of PVs instead of all PVs.
   Enabled lvconvert --uncache to work with partial VG.
+  Disallow lvconvert --replace with raid0* LVs.
+  Fix some lvmetad changed VG metadata notifications that sent uncommitted data.
 
 Version 2.02.161 - 15th July 2016
 =================================

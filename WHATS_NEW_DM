@@ -1,4 +1,4 @@
-Version 1.02.132 - 
+Version 1.02.132 - 28th July 2016
 =================================
   Fix json reporting to escape '"' character that may appear in reported string.
 
