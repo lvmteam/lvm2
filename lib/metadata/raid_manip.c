@@ -862,7 +862,7 @@ to be left for these sub-lvs.
 	dm_list_iterate_items(lvl, &data_lvs)
 		lv_set_hidden(lvl->lv);
 
-	if (!lv_update_and_reload_origin(lv))
+	if (!lv_update_and_reload(lv))
 		return_0;
 
 	/*
