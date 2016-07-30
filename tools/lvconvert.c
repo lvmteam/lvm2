@@ -331,6 +331,7 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 {
 	int cachepool = 0;
 	int thinpool = 0;
+	struct segment_type *segtype;
 
 	if ((lp->pool_data_name = arg_str_value(cmd, cachepool_ARG, NULL))) {
 		if (lp->type_str[0] &&
@@ -388,10 +389,10 @@ static int _read_pool_params(struct cmd_context *cmd, int *pargc, char ***pargv,
 					 splitmirrors_ARG, splitsnapshot_ARG, -1))
 			return_0;
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
+		if (!(segtype = get_segtype_from_string(cmd, lp->type_str)))
 			return_0;
 
-		if (!get_pool_params(cmd, lp->segtype, &lp->passed_args,
+		if (!get_pool_params(cmd, segtype, &lp->passed_args,
 				     &lp->pool_metadata_size,
 				     &lp->poolmetadataspare,
 				     &lp->chunk_size, &lp->discards,
@@ -528,7 +529,6 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->type_str = SEG_TYPE_NAME_THIN;
 	}
 
-	/* May set lp->segtype */
 	if (!_read_pool_params(cmd, &argc, &argv, lp))
 		return_0;
 
@@ -796,17 +796,6 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 
 	lp->pv_count = argc;
 	lp->pvs = argv;
-
-	/* If we have type_str, set up the segtype to match. */
-	if (*lp->type_str && !(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
-		return_0;
-
-	if (activation() && lp->segtype && lp->segtype->ops->target_present &&
-	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
-		log_error("%s: Required device-mapper target(s) not "
-			  "detected in your kernel.", lp->segtype->name);
-		return 0;
-	}
 
 	return 1;
 }
@@ -4372,9 +4361,18 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	/* If we don't have a specific new segtype to use, keep the existing one. */
-	if (!lp->segtype)
+	/* Set up segtype either from type_str or else to match the existing one. */
+	if (!*lp->type_str)
 		lp->segtype = seg->segtype;
+	else if (!(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
+		return_0;
+
+	if (activation() && lp->segtype && lp->segtype->ops->target_present &&
+	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel.", lp->segtype->name);
+		return 0;
+	}
 
 	/* Process striping parameters */
 	/* FIXME This is incomplete */
