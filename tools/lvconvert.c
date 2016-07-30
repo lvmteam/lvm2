@@ -808,23 +808,6 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		return 0;
 	}
 
-	/* Process striping parameters */
-	/* FIXME This is incomplete */
-	if (_mirror_or_raid_type_requested(cmd, lp->type_str) || _raid0_type_requested(lp->type_str) ||
-	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
-		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size))
-			return_0;
-
-		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
-			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */
-			/* The default keeps existing number of stripes, handled inside the library code */
-			if (!arg_is_set(cmd, stripes_long_ARG) && !_linear_type_requested(lp->type_str))
-				lp->stripes = 0;
-	}
-
-	if (lp->snapshot)
-		lp->zero = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? 0 : arg_int_value(cmd, zero_ARG, 1);
-
 	return 1;
 }
 
@@ -4392,6 +4375,23 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	/* If we don't have a specific new segtype to use, keep the existing one. */
 	if (!lp->segtype)
 		lp->segtype = seg->segtype;
+
+	/* Process striping parameters */
+	/* FIXME This is incomplete */
+	if (_mirror_or_raid_type_requested(cmd, lp->type_str) || _raid0_type_requested(lp->type_str) ||
+	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
+		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size))
+			return_0;
+
+		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
+			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */
+			/* The default keeps existing number of stripes, handled inside the library code */
+			if (!arg_is_set(cmd, stripes_long_ARG) && !_linear_type_requested(lp->type_str))
+				lp->stripes = 0;
+	}
+
+	if (lp->snapshot)
+		lp->zero = (lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? 0 : arg_int_value(cmd, zero_ARG, 1);
 
 	/*
 	 * Each LV type that can be converted.
