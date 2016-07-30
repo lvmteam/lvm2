@@ -812,11 +812,10 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	/* FIXME This is incomplete */
 	if (_mirror_or_raid_type_requested(cmd, lp->type_str) || _raid0_type_requested(lp->type_str) ||
 	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
-		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
+		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size))
 			return_0;
 
 		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
-
 			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */
 			/* The default keeps existing number of stripes, handled inside the library code */
 			if (!arg_is_set(cmd, stripes_long_ARG) && !_linear_type_requested(lp->type_str))
@@ -3145,7 +3144,8 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 		if (!_lvconvert_update_pool_params(pool_lv, lp))
 			return_0;
 
-		if (!get_stripe_params(cmd, &lp->stripes, &lp->stripe_size))
+		if (!get_stripe_params(cmd, get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED),
+				       &lp->stripes, &lp->stripe_size))
 			return_0;
 
 		if (!archive(vg))

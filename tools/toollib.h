@@ -201,8 +201,8 @@ int get_pool_params(struct cmd_context *cmd,
 		    thin_discards_t *discards,
 		    int *zero);
 
-int get_stripe_params(struct cmd_context *cmd, uint32_t *stripes,
-		      uint32_t *stripe_size);
+int get_stripe_params(struct cmd_context *cmd, const struct segment_type *segtype,
+		      uint32_t *stripes, uint32_t *stripe_size);
 
 int get_cache_params(struct cmd_context *cmd,
 		     cache_mode_t *cache_mode,

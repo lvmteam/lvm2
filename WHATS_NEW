@@ -1,5 +1,6 @@
 Version 2.02.163 - 
 =================================
+  Unify stripe size validation into get_stripe_params to catch missing cases.
   Further lvconvert validation logic refactoring.
 
 Version 2.02.162 - 28th July 2016

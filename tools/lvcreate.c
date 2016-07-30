@@ -495,9 +495,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 				  lp->segtype->name);
 			return 0;
 		}
-
-	} else if (!lp->stripe_size)
-		lp->stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
+	}
 
 	if (arg_is_set(cmd, mirrors_ARG) && segtype_is_raid(lp->segtype) &&
 	    !segtype_is_raid1(lp->segtype) && !segtype_is_raid10(lp->segtype)) {
@@ -571,14 +569,6 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		log_error("regionsize in configuration file is invalid.");
 		return 0;
 	}
-
-	/*
-	 * FIXME This is working around a bug in get_stripe_params() where 
-	 * stripes is incorrectly assumed to be 1 when it is not supplied
-	 * leading to the actual value of stripesize getting lost.
-	 */
-	if (arg_is_set(cmd, stripesize_ARG))
-		lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 
 	if (!is_power_of_2(lp->region_size)) {
 		log_error("Region size (%" PRIu32 ") must be a power of 2",
@@ -1044,7 +1034,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 	if (!_lvcreate_name_params(cmd, &argc, &argv, lp) ||
 	    !_read_size_params(cmd, lp, lcp) ||
-	    !get_stripe_params(cmd, &lp->stripes, &lp->stripe_size) ||
+	    !get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size) ||
 	    (lp->create_pool &&
 	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
