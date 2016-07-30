@@ -4273,7 +4273,7 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!strcmp(lp->type_str, SEG_TYPE_NAME_SNAPSHOT) || arg_is_set(cmd, snapshot_ARG))
 		return _convert_striped_snapshot(cmd, lv, lp);
 
-	if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN) || arg_is_set(cmd, thin_ARG))
+	if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN) || lp->thin)
 		return _convert_striped_thin(cmd, lv, lp);
 
 	if (!strcmp(lp->type_str, SEG_TYPE_NAME_CACHE) || arg_is_set(cmd, cache_ARG))
