@@ -133,6 +133,8 @@ struct dev_manager;
 
 #define segtype_supports_stripe_size(segtype)	\
 	((segtype_is_striped(segtype) || segtype_is_mirror(segtype) || \
+	  segtype_is_cache(segtype) || segtype_is_cache_pool(segtype) || \
+	  segtype_is_thin(segtype) || segtype_is_snapshot(segtype) || \
 	  (segtype_is_raid(segtype) && !segtype_is_raid1(segtype))) ? 1 : 0)
 
 #define seg_is_cache(seg)	segtype_is_cache((seg)->segtype)
