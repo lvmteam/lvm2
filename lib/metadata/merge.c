@@ -391,7 +391,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 	dm_list_iterate_items(seg, &lv->segments) {
 		seg_count++;
 
-		if (seg_is_raid(seg))
+		if (complete_vg && seg_is_raid(seg))
 			 _check_raid_seg(seg, &error_count);
 		
 		if (seg->le != le) {
