@@ -1365,7 +1365,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				  uint32_t new_log_count)
 {
 	uint32_t region_size;
-	struct lv_segment *seg;
+	struct lv_segment *seg = first_seg(lv);
 	struct logical_volume *layer_lv;
 	uint32_t old_mimage_count = lv_mirror_count(lv);
 	uint32_t old_log_count = _get_log_count(lv);
@@ -1378,13 +1378,11 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 
 	region_size = adjusted_mirror_region_size(lv->vg->extent_size,
 						  lv->le_count,
-						  lp->region_size, 0,
+						  lp->region_size ? : seg->region_size, 0,
 						  vg_is_clustered(lv->vg));
 
 	if (!operable_pvs)
 		operable_pvs = lp->pvh;
-
-	seg = first_seg(lv);
 
 	/*
 	 * Up-convert from linear to mirror
@@ -1604,6 +1602,10 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 
 	failed_mimages = _failed_mirrors_count(lv);
 	failed_logs = _failed_logs_count(lv);
+
+	/* Retain existing region size in case we need it later */
+	if (!lp->region_size)
+		lp->region_size = first_seg(lv)->region_size;
 
 	if (!mirror_remove_missing(cmd, lv, 0))
 		return_0;
