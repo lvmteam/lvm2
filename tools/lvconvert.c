@@ -626,7 +626,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 
 	/* We should have caught all these cases already. */
 	if (lp->merge + lp->splitsnapshot + lp->splitcache + lp->split + lp->uncache +
-	    lp->cache + lp->thin + lp->keep_mimages + lp->snapshot + lp->replace > 1) {
+	    lp->cache + lp->thin + lp->keep_mimages + lp->snapshot + lp->replace + lp->repair > 1) {
 		log_error(INTERNAL_ERROR "Unexpected combination of incompatible options selected.");
 		return 0;
 	}
@@ -643,7 +643,8 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	 *   lp->keep_mimages
 	 *   lp->snapshot
 	 *   lp->replace
-	 *   --type mirror|raid  lp->repair lp->mirrorlog lp->corelog
+	 *   lp->repair
+	 *   --type mirror|raid  lp->mirrorlog lp->corelog
 	 *   --type raid0|striped
 	 */
 	if (lp->merge) {	/* Snapshot or mirror merge */
@@ -722,8 +723,10 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 								    tmp_str)))
 				return_0;
 		}
-	} else if (_mirror_or_raid_type_requested(cmd, lp->type_str) ||
-		   lp->repair || lp->mirrorlog || lp->corelog) { /* Mirrors (and some RAID functions) */
+	} else if (lp->repair)
+		;
+	else if (_mirror_or_raid_type_requested(cmd, lp->type_str) ||
+		   lp->mirrorlog || lp->corelog) { /* Mirrors (and some RAID functions) */
 		if (arg_is_set(cmd, chunksize_ARG)) {
 			log_error("--chunksize is only available with snapshots or pools.");
 			return 0;
