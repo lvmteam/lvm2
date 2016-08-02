@@ -121,7 +121,7 @@ static void _check_raid_region_recovery(struct lv_segment *seg, int *error_count
 	/* min/max recovery rate may be zero but min may not be larger than max if set */
 	if (seg->max_recovery_rate &&
 	    seg->min_recovery_rate > seg->max_recovery_rate)
-		raid_seg_error_val("min recovery larger than max recovery larger", seg->min_recovery_rate);
+		raid_seg_error_val("min recovery larger than max recovery", seg->min_recovery_rate);
 }
 
 /* Check raid1 segment properties in @seg */
