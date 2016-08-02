@@ -38,12 +38,10 @@
  */
 
 struct lvconvert_params {
-	/* Exactly one of these options is chosen */
+	/* Exactly one of these 12 command categories is determined */
 	int merge;		/* Either merge_snapshot or merge_mirror is also set */
 	int cache;
-	int corelog;
-	int mirrorlog;
-	int mirrors_supplied;	/* When type_str is not set, this may be set with keep_mimages for --splitmirrors */
+	int keep_mimages;	/* --splitmirrors */
 	int repair;
 	int replace;
 	int snapshot;
@@ -52,6 +50,12 @@ struct lvconvert_params {
 	int splitsnapshot;
 	int thin;
 	int uncache;
+	int other_conversion;	/* Everything else */
+
+	int corelog;		/* Equivalent to --mirrorlog core */
+	int mirrorlog;		/* Only one of corelog and mirrorlog may be set */
+
+	int mirrors_supplied;	/* When type_str is not set, this may be set with keep_mimages for --splitmirrors */
 	const char *type_str;	/* When this is set, mirrors_supplied may optionally also be set */
 				/* Holds what you asked for based on --type or other arguments, else "" */
 
@@ -80,7 +84,6 @@ struct lvconvert_params {
 
 	uint32_t mirrors;
 	sign_t mirrors_sign;
-	uint32_t keep_mimages;	/* --splitmirrors */
 	uint32_t stripes;
 	uint32_t stripe_size;
 	uint32_t read_ahead;
@@ -629,7 +632,8 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	    lp->cache + lp->thin + lp->keep_mimages + lp->snapshot + lp->replace + lp->repair > 1) {
 		log_error(INTERNAL_ERROR "Unexpected combination of incompatible options selected.");
 		return 0;
-	}
+	} else
+		lp->other_conversion = 1;
 
 	/*
 	 * Final checking of each case:
