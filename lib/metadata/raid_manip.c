@@ -2231,6 +2231,7 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	unsigned new_image_count,		\
 	const unsigned new_stripes,		\
 	uint32_t new_stripe_size,		\
+	const uint32_t new_region_size,		\
 	struct dm_list *allocate_pvs
 
 typedef int (*takeover_fn_t)(TAKEOVER_FN_ARGS);
@@ -2737,6 +2738,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		    int yes, int force,
 		    const unsigned new_stripes,
 		    const unsigned new_stripe_size,
+		    const uint32_t new_region_size,
 		    struct dm_list *allocate_pvs)
 {
 	struct lv_segment *seg = first_seg(lv);
@@ -2765,7 +2767,8 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	/* Exit without doing activation checks if the combination isn't possible */
 	if (_takeover_not_possible(takeover_fn))
-		return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, stripe_size, allocate_pvs);
+		return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, stripe_size,
+				   new_region_size, allocate_pvs);
 
 	log_verbose("Converting %s from %s to %s.",
 		    display_lvname(lv), lvseg_name(first_seg(lv)),
@@ -2795,7 +2798,8 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
-	return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, stripe_size, allocate_pvs);
+	return takeover_fn(lv, new_segtype, yes, force, new_image_count, new_stripes, stripe_size,
+			   new_region_size, allocate_pvs);
 }
 
 static int _remove_partial_multi_segment_image(struct logical_volume *lv,

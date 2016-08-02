@@ -1900,7 +1900,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			log_error("RAID module does not support RAID0.");
 			return 0;
 		}
-		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size, lp->pvh))
+		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size,
+				     lp->region_size, lp->pvh))
 			return_0;
 		log_print_unless_silent("Logical volume %s successfully converted.",
 					display_lvname(lv));
