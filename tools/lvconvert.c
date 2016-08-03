@@ -1853,7 +1853,12 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 	if (seg_is_linear(seg) && !lp->merge_mirror && !lp->mirrors_supplied) {
-		log_error("Raid conversions require -m/--mirrors.");
+		if (_raid0_type_requested(lp->type_str))
+			log_error("Linear LV %s cannot be converted to %s.",
+				  display_lvname(lv), lp->type_str);
+		else
+			log_error("Raid conversions of LV %s require -m/--mirrors.",
+				  display_lvname(lv));
 		goto try_new_takeover_or_reshape;
 	}
 
