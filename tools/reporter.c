@@ -1055,7 +1055,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 		goto_out;
 
 	if (!(args->log_only && (single_args->report_type != CMDLOG))) {
-		if (!dm_report_group_push(handle->report_group, report_handle, (void *) single_args->report_name))
+		if (!dm_report_group_push(cmd->cmd_report.report_group, report_handle, (void *) single_args->report_name))
 			goto_out;
 		report_in_group = 1;
 	}
@@ -1174,7 +1174,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 		unlock_vg(cmd, NULL, VG_GLOBAL);
 out:
 	if (report_handle) {
-		if (report_in_group && !dm_report_group_pop(handle->report_group))
+		if (report_in_group && !dm_report_group_pop(cmd->cmd_report.report_group))
 			stack;
 		dm_report_free(report_handle);
 	}
@@ -1197,7 +1197,7 @@ static int _full_report_single(struct cmd_context *cmd,
 
 	args->full_report_vg = vg;
 
-	if (!args->log_only && !dm_report_group_push(handle->report_group, NULL, NULL))
+	if (!args->log_only && !dm_report_group_push(cmd->cmd_report.report_group, NULL, NULL))
 		goto out;
 
 	if (orphan) {
@@ -1213,7 +1213,7 @@ static int _full_report_single(struct cmd_context *cmd,
 			stack;
 	}
 
-	if (!args->log_only && !dm_report_group_pop(handle->report_group))
+	if (!args->log_only && !dm_report_group_pop(cmd->cmd_report.report_group))
 		goto_out;
 out:
 	args->full_report_vg = NULL;
@@ -1367,15 +1367,15 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 	handle->internal_report_for_select = 0;
 	handle->include_historical_lvs = cmd->include_historical_lvs;
 
-	args.report_group_type = handle->report_group_type;
-	args.log_only = handle->log_only;
+	args.report_group_type = cmd->cmd_report.report_group_type;
+	args.log_only = cmd->cmd_report.log_only;
 
 	if (!_config_report(cmd, &args, single_args)) {
 		destroy_processing_handle(cmd, handle);
 		return_ECMD_FAILED;
 	}
 
-	if (!args.log_only && !dm_report_group_push(handle->report_group, NULL, report_name)) {
+	if (!args.log_only && !dm_report_group_push(cmd->cmd_report.report_group, NULL, report_name)) {
 		log_error("Failed to add main report section to report group.");
 		destroy_processing_handle(cmd, handle);
 		return ECMD_FAILED;
@@ -1433,9 +1433,7 @@ int devtypes(struct cmd_context *cmd, int argc, char **argv)
 #define REPORT_FORMAT_NAME_BASIC "basic"
 #define REPORT_FORMAT_NAME_JSON "json"
 
-int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_group_type,
-		       struct dm_report_group **report_group, struct dm_report **log_rh,
-		       int *log_only, log_report_t *saved_log_report_state)
+int report_format_init(struct cmd_context *cmd)
 {
 	int config_set = find_config_tree_node(cmd, report_output_format_CFG, NULL) != NULL;
 	const char *config_format_str = find_config_tree_str(cmd, report_output_format_CFG, NULL);
@@ -1446,7 +1444,7 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 	struct dm_report_group *new_report_group;
 	struct dm_report *tmp_log_rh = NULL;
 
-	args.log_only = arg_is_set(cmd, logonly_ARG) || *log_rh;
+	args.log_only = arg_is_set(cmd, logonly_ARG);
 	report_command_log = args.log_only || find_config_tree_bool(cmd, log_report_command_log_CFG, NULL);
 
 	if (!format_str || !strcmp(format_str, REPORT_FORMAT_NAME_BASIC)) {
@@ -1462,10 +1460,8 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 		return 0;
 	}
 
-	if (report_group_type)
-		*report_group_type = args.report_group_type;
-	if (log_only)
-		*log_only = args.log_only;
+	cmd->cmd_report.report_group_type = args.report_group_type;
+	cmd->cmd_report.log_only = args.log_only;
 
 	if (!(new_report_group = dm_report_group_create(args.report_group_type, NULL))) {
 		log_error("Failed to create report group.");
@@ -1476,40 +1472,33 @@ int report_format_init(struct cmd_context *cmd, dm_report_group_type_t *report_g
 		single_args = &args.single_args[REPORT_IDX_LOG];
 		single_args->report_type = CMDLOG;
 
-		if (!*log_rh) {
-			if (!_config_report(cmd, &args, single_args))
-				goto_bad;
+		if (!_config_report(cmd, &args, single_args))
+			goto_bad;
 
-			if (!(tmp_log_rh = report_init(NULL, single_args->options, single_args->keys, &single_args->report_type,
-							  args.separator, args.aligned, args.buffered, args.headings,
-							  args.field_prefixes, args.quoted, args.columns_as_rows,
-							  single_args->selection, 1))) {
-				log_error("Failed to create log report.");
-				goto bad;
-			}
-		} else {
-			/*
-			 * We reusing existing log report handle.
-			 * Just get report's name and prefix now.
-			 */
-			if (!_set_report_prefix_and_name(&args, single_args))
-				goto_bad;
+		if (!(tmp_log_rh = report_init(NULL, single_args->options, single_args->keys, &single_args->report_type,
+						  args.separator, args.aligned, args.buffered, args.headings,
+						  args.field_prefixes, args.quoted, args.columns_as_rows,
+						  single_args->selection, 1))) {
+			log_error("Failed to create log report.");
+			goto bad;
 		}
 
-		if (!(dm_report_group_push(new_report_group, tmp_log_rh ? : *log_rh, (void *) single_args->report_name))) {
+		if (!(dm_report_group_push(new_report_group, tmp_log_rh, (void *) single_args->report_name))) {
 			log_error("Failed to add log report to report group.");
+			goto bad;
+		}
+
+		cmd->cmd_report.log_rh = tmp_log_rh;
+		if (!(cmd->cmd_report.log_name = dm_pool_strdup(cmd->libmem, single_args->report_name))) {
+			log_error("Failed to set log report name for command context.");
 			goto bad;
 		}
 	}
 
-	*report_group = new_report_group;
-	if (tmp_log_rh)
-		*log_rh = tmp_log_rh;
+	cmd->cmd_report.report_group = new_report_group;
+	cmd->cmd_report.saved_log_report_state = log_get_report_state();
+	log_set_report(cmd->cmd_report.log_rh);
 
-	if (saved_log_report_state) {
-		*saved_log_report_state = log_get_report_state();
-		log_set_report(*log_rh);
-	}
 	return 1;
 bad:
 	if (!dm_report_group_destroy(new_report_group))
@@ -1525,23 +1514,20 @@ int lastlog(struct cmd_context *cmd, int argc, char **argv)
 	const char *selection;
 	int r = ECMD_FAILED;
 
-	if (!cmd->log_rh) {
+	if (!cmd->cmd_report.log_rh) {
 		log_error("No log report stored.");
 		goto out;
 	}
 
-	if (!report_format_init(cmd, NULL, &report_group, &cmd->log_rh, NULL, NULL))
-		goto_out;
-
 	if (!_do_report_get_selection(cmd, CMDLOG, 1, NULL, &selection))
 		goto_out;
 
-	if (!dm_report_set_selection(cmd->log_rh, selection)) {
+	if (!dm_report_set_selection(cmd->cmd_report.log_rh, selection)) {
 		log_error("Failed to set selection for log report.");
 		goto out;
 	}
 
-	if (!dm_report_output(cmd->log_rh) ||
+	if (!dm_report_output(cmd->cmd_report.log_rh) ||
 	    !dm_report_group_pop(report_group))
 		goto_out;
 

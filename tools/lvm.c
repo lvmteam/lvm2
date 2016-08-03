@@ -185,12 +185,12 @@ static int _log_shell_command_status(struct cmd_context *cmd, int ret_code)
 {
 	log_report_t log_state;
 
-	if (!cmd->log_rh)
+	if (!cmd->cmd_report.log_rh)
 		return 1;
 
 	log_state = log_get_report_state();
 
-	return report_cmdlog(cmd->log_rh, REPORT_OBJECT_CMDLOG_NAME,
+	return report_cmdlog(cmd->cmd_report.log_rh, REPORT_OBJECT_CMDLOG_NAME,
 			     log_get_report_context_name(log_state.context),
 			     log_get_report_object_type_name(log_state.object_type),
 			     log_state.object_name, log_state.object_id,
@@ -263,10 +263,10 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 
 		is_lastlog_cmd = !strcmp(argv[0], "lastlog");
 
-		if (cmd->log_rh && !is_lastlog_cmd) {
+		if (cmd->cmd_report.log_rh && !is_lastlog_cmd) {
 			/* drop old log report */
-			dm_report_free(cmd->log_rh);
-			cmd->log_rh = NULL;
+			dm_report_free(cmd->cmd_report.log_rh);
+			cmd->cmd_report.log_rh = NULL;
 		}
 
 		ret = lvm_run_command(cmd, argc, argv);

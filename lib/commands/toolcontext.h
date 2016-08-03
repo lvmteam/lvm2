@@ -66,6 +66,15 @@ struct cmd_context_initialized_parts {
 	unsigned connections:1;
 };
 
+struct cmd_report {
+	int log_only;
+	dm_report_group_type_t report_group_type;
+	struct dm_report_group *report_group;
+	struct dm_report *log_rh;
+	const char *log_name;
+	log_report_t saved_log_report_state;
+};
+
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
 struct cmd_context {
@@ -186,9 +195,9 @@ struct cmd_context {
 	char proc_dir[PATH_MAX];
 
 	/*
-	 * Command log reporting.
+	 * Reporting.
 	 */
-	struct dm_report *log_rh;		/* keep log report of last cmd for further queries if cmd line is interactive (e.g. lvm shell) */
+	struct cmd_report cmd_report;
 
 	/*
 	 * Buffers.

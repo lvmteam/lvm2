@@ -1754,15 +1754,13 @@ struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct
 	handle->internal_report_for_select = arg_is_set(cmd, select_ARG);
 	handle->include_historical_lvs = cmd->include_historical_lvs;
 
-	if (!parent_handle) {
-		if (!report_format_init(cmd, &handle->report_group_type, &handle->report_group,
-					&handle->log_rh, &handle->log_only,
-					&handle->saved_log_report_state)) {
+	if (!parent_handle && !cmd->cmd_report.report_group) {
+		if (!report_format_init(cmd)) {
 			dm_pool_free(cmd->mem, handle);
 			return NULL;
 		}
 	} else
-		handle->saved_log_report_state = log_get_report_state();
+		cmd->cmd_report.saved_log_report_state = log_get_report_state();
 
 	log_set_report_context(LOG_REPORT_CONTEXT_PROCESSING);
 	return handle;
@@ -1798,19 +1796,13 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 		if (handle->selection_handle && handle->selection_handle->selection_rh)
 			dm_report_free(handle->selection_handle->selection_rh);
 
-		log_restore_report_state(handle->saved_log_report_state);
+		log_restore_report_state(cmd->cmd_report.saved_log_report_state);
 
-		if (!dm_report_group_destroy(handle->report_group))
+		if (!dm_report_group_destroy(cmd->cmd_report.report_group))
 			stack;
-		if (handle->log_rh) {
-			if (cmd->is_interactive) {
-				/*
-				 * Keep log report if we're interactive so
-				 * we can do further queries on this report.
-				 */
-				cmd->log_rh = handle->log_rh;
-			} else
-				dm_report_free(handle->log_rh);
+		if (!cmd->is_interactive && cmd->cmd_report.log_rh) {
+			dm_report_free(cmd->cmd_report.log_rh);
+			cmd->cmd_report.log_rh = NULL;
 		}
 		/*
 		 * TODO: think about better alternatives:
