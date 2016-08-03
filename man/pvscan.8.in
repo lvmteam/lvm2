@@ -79,7 +79,7 @@ When given specific device name arguments, pvscan \-\-cache will only
 read the named devices.
 
 .IP \[bu] 2
-LVM udev rules and systemd services are used to intiate automatic device
+LVM udev rules and systemd services are used to initiate automatic device
 scanning.
 
 .IP \[bu] 2
@@ -99,8 +99,8 @@ if the global_filter has changed, then all devices must be rescanned
 for metadata with the command pvscan \-\-cache.
 
 .IP \[bu] 2
-lvmetad ignores older metadata formats, e.g. lvm1, and should not be
-used if they exist.
+lvmetad does not cache older metadata formats, e.g. lvm1, and will
+be temporarily disabled if they are seen.
 
 .IP \[bu] 2
 To notify lvmetad about a device that is no longer present, the major and
