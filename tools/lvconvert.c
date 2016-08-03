@@ -1839,7 +1839,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (lp->mirrors_supplied && !seg_is_mirrored(seg) && !seg_is_linear(seg)) {
 		log_error("'--mirrors/-m' is not compatible with %s.",
 			  lvseg_name(seg));
-		return 0;
+		goto try_new_takeover_or_reshape;
 	}
 
 	if (!_lvconvert_validate_thin(lv, lp))
@@ -1849,12 +1849,12 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		log_error("Unable to convert %s from %s to %s.",
 			  display_lvname(lv), lvseg_name(seg),
 			  lp->segtype->name);
-		return 0;
+		goto try_new_takeover_or_reshape;
 	}
 
 	if (seg_is_linear(seg) && !lp->merge_mirror && !lp->mirrors_supplied) {
 		log_error("Raid conversions require -m/--mirrors.");
-		return 0;
+		goto try_new_takeover_or_reshape;
 	}
 
 	/* Change number of RAID1 images */
@@ -1964,6 +1964,11 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 	log_error("Conversion operation not yet supported.");
+
+try_new_takeover_or_reshape:
+	;
+
+	/* FIXME New takeover and reshape code is called from here */
 
 	return 0;
 }
