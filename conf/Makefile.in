@@ -24,7 +24,8 @@ PROFILES=$(PROFILE_TEMPLATES) \
 	$(srcdir)/cache-mq.profile \
 	$(srcdir)/cache-smq.profile \
 	$(srcdir)/thin-generic.profile \
-	$(srcdir)/thin-performance.profile
+	$(srcdir)/thin-performance.profile \
+	$(srcdir)/lvmdbusd.profile
 
 include $(top_builddir)/make.tmpl
 
