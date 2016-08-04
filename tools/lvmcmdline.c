@@ -63,12 +63,12 @@ static struct cmdline_context _cmdline;
 /* Command line args */
 unsigned arg_count(const struct cmd_context *cmd, int a)
 {
-	return cmd->arg_values[a].count;
+	return cmd->arg_values ? cmd->arg_values[a].count : 0;
 }
 
 unsigned grouped_arg_count(const struct arg_values *av, int a)
 {
-	return av[a].count;
+	return av ? av[a].count : 0;
 }
 
 unsigned arg_is_set(const struct cmd_context *cmd, int a)
@@ -182,7 +182,7 @@ const char *arg_long_option_name(int a)
 
 const char *arg_value(const struct cmd_context *cmd, int a)
 {
-	return cmd->arg_values[a].value;
+	return cmd->arg_values ? cmd->arg_values[a].value : NULL;
 }
 
 const char *arg_str_value(const struct cmd_context *cmd, int a, const char *def)
