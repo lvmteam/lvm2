@@ -4674,6 +4674,14 @@ static struct report_group_item *_get_topmost_report_group_item(struct dm_report
 	return item;
 }
 
+static void _json_output_start(struct dm_report_group *group)
+{
+	if (!group->indent) {
+		log_print(JSON_OBJECT_START);
+		group->indent += JSON_INDENT_UNIT;
+	}
+}
+
 static int _json_output_array_start(struct dm_pool *mem, struct report_group_item *item)
 {
 	const char *name = (const char *) item->data;
@@ -4713,6 +4721,8 @@ bad:
 
 static int _prepare_json_report_output(struct dm_report *rh)
 {
+	_json_output_start(rh->group_item->group);
+
 	if (rh->group_item->output_done && dm_list_empty(&rh->rows))
 		return 1;
 
@@ -4795,23 +4805,6 @@ void dm_report_destroy_rows(struct dm_report *rh)
 	_destroy_rows(rh);
 }
 
-static int _report_group_create_single(struct dm_report_group *group)
-{
-	return 1;
-}
-
-static int _report_group_create_basic(struct dm_report_group *group)
-{
-	return 1;
-}
-
-static int _report_group_create_json(struct dm_report_group *group)
-{
-	log_print(JSON_OBJECT_START);
-	group->indent += JSON_INDENT_UNIT;
-	return 1;
-}
-
 struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data)
 {
 	struct dm_report_group *group;
@@ -4838,23 +4831,6 @@ struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void
 	}
 
 	dm_list_add_h(&group->items, &item->list);
-
-	switch (type) {
-		case DM_REPORT_GROUP_SINGLE:
-			if (!_report_group_create_single(group))
-				goto_bad;
-			break;
-		case DM_REPORT_GROUP_BASIC:
-			if (!_report_group_create_basic(group))
-				goto_bad;
-			break;
-		case DM_REPORT_GROUP_JSON:
-			if (!_report_group_create_json(group))
-				goto_bad;
-			break;
-		default:
-			goto_bad;
-	}
 
 	return group;
 bad:
@@ -4907,6 +4883,7 @@ static int _report_group_push_json(struct report_group_item *item, const char *n
 					 DM_REPORT_OUTPUT_COLUMNS_AS_ROWS);
 		item->report->flags |= DM_REPORT_OUTPUT_BUFFERED;
 	} else {
+		_json_output_start(item->group);
 		if (name) {
 			if (!_json_output_array_start(item->group->mem, item))
 				return_0;
@@ -5061,8 +5038,9 @@ static int _report_group_destroy_basic(void)
 	return 1;
 }
 
-static int _report_group_destroy_json(void)
+static int _report_group_destroy_json(struct dm_report_group *group)
 {
+	_json_output_start(group);
 	log_print(JSON_OBJECT_END);
 	return 1;
 }
@@ -5092,7 +5070,7 @@ int dm_report_group_destroy(struct dm_report_group *group)
 				goto_out;
 			break;
 		case DM_REPORT_GROUP_JSON:
-			if (!_report_group_destroy_json())
+			if (!_report_group_destroy_json(group))
 				goto_out;
 			break;
 		default:
