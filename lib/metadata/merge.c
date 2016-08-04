@@ -97,6 +97,9 @@ static void _check_raid0_seg(struct lv_segment *seg, int *error_count)
 	if (seg_is_raid0_meta(seg) &&
 	    !seg->meta_areas)
 		raid_seg_error("no meta areas");
+	if (!seg_is_raid0_meta(seg) &&
+	    seg->meta_areas)
+		raid_seg_error("meta areas");
 	if (!seg->stripe_size)
 		raid_seg_error("zero stripe size");
 	if (!is_power_of_2(seg->stripe_size))
@@ -289,8 +292,10 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 	/* Check for any MetaLV flaws like non-existing ones or size variations */
 	if (seg->meta_areas)
 		for (area_len = s = 0; s < seg->area_count; s++) {
-			if (seg_metatype(seg, s) != AREA_LV)
+			if (seg_metatype(seg, s) != AREA_LV) {
 				raid_seg_error("no MetaLV");
+				continue;
+			}
 			if (!lv_is_raid_metadata(seg_metalv(seg, s)))
 				raid_seg_error("MetaLV without RAID metadata flag");
 			if (area_len &&

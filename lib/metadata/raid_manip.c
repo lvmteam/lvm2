@@ -1701,7 +1701,8 @@ static int _extract_image_component_list(struct lv_segment *seg,
  */
 static int _alloc_rmeta_devs_for_lv(struct logical_volume *lv,
 				    struct dm_list *meta_lvs,
-				    struct dm_list *allocate_pvs)
+				    struct dm_list *allocate_pvs,
+				    struct lv_segment_area **seg_meta_areas)
 {
 	uint32_t s;
 	struct lv_list *lvl_array;
@@ -1710,7 +1711,7 @@ static int _alloc_rmeta_devs_for_lv(struct logical_volume *lv,
 
 	dm_list_init(&data_lvs);
 
-	if (!(seg->meta_areas = dm_pool_zalloc(lv->vg->vgmem, seg->area_count * sizeof(*seg->meta_areas))))
+	if (!(*seg_meta_areas = dm_pool_zalloc(lv->vg->vgmem, seg->area_count * sizeof(*seg->meta_areas))))
 		return 0;
 
 	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem, seg->area_count * sizeof(*lvl_array))))
@@ -1736,11 +1737,12 @@ static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm
 {
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list meta_lvs;
+	struct lv_segment_area *seg_meta_areas;
 
 	dm_list_init(&meta_lvs);
 
 	log_debug_metadata("Allocating metadata LVs for %s", display_lvname(lv));
-	if (!_alloc_rmeta_devs_for_lv(lv, &meta_lvs, allocate_pvs)) {
+	if (!_alloc_rmeta_devs_for_lv(lv, &meta_lvs, allocate_pvs, &seg_meta_areas)) {
 		log_error("Failed to allocate metadata LVs for %s", display_lvname(lv));
 		return_0;
 	}
@@ -1753,6 +1755,7 @@ static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm
 	}
 
 	/* Set segment areas for metadata sub_lvs */
+	seg->meta_areas = seg_meta_areas;
 	log_debug_metadata("Adding newly allocated metadata LVs to %s", display_lvname(lv));
 	if (!_add_image_component_list(seg, 1, 0, &meta_lvs, 0)) {
 		log_error("Failed to add newly allocated metadata LVs to %s", display_lvname(lv));
