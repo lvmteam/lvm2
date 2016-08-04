@@ -4337,7 +4337,14 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
  *	 for each arg_is_set(operation)
  *	     _convert_lvtype_operation();
  *
+ * FIXME: this code (identifying/routing each unique operation through
+ * _convert_lvtype_op) was designed to work based on the new type that
+ * the user entered after --type, not the final segment type in lp->type_str.
+ * Sometimes the two differ because tricks are played with lp->type_str.
+ * So, when the use of arg_type_str(type_ARG) here was replaced with
+ * lp->type_str, some commands are no longer identified/routed correctly.
  */
+
 static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		      struct lvconvert_params *lp)
 {
