@@ -209,7 +209,8 @@ static void _discard_log_report_content(struct cmd_context *cmd)
 int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
-	int is_lastlog_cmd, argc, ret;
+	char *orig_command_log_selection = NULL;
+	int is_lastlog_cmd = 0, argc, ret;
 	char *input = NULL, *args[MAX_ARGS], **argv;
 
 	rl_readline_name = "lvm";
@@ -223,10 +224,21 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	if (!report_format_init(cmd))
 		return_ECMD_FAILED;
 
+	orig_command_log_selection = dm_pool_strdup(cmd->libmem, find_config_tree_str(cmd, log_command_log_selection_CFG, NULL));
 	log_set_report_context(LOG_REPORT_CONTEXT_SHELL);
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_CMD);
 
 	while (1) {
+		if (cmd->cmd_report.log_rh) {
+			/*
+			 * If previous command was lastlog, reset log report selection to
+			 * its original value as set by log/command_log_selection config setting.
+			 */
+			if (is_lastlog_cmd &&
+			    !dm_report_set_selection(cmd->cmd_report.log_rh, orig_command_log_selection))
+				log_error("Failed to reset log report selection.");
+		}
+
 		log_set_report(cmd->cmd_report.log_rh);
 		log_set_report_object_name_and_id(NULL, NULL);
 
