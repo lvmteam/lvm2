@@ -5028,57 +5028,40 @@ int dm_report_group_pop(struct dm_report_group *group)
 	return 1;
 }
 
-static int _report_group_destroy_single(void)
+int dm_report_group_output_and_pop_all(struct dm_report_group *group)
 {
-	return 1;
-}
+	struct report_group_item *item, *tmp_item;
 
-static int _report_group_destroy_basic(void)
-{
-	return 1;
-}
+	dm_list_iterate_items_safe(item, tmp_item, &group->items) {
+		if (!item->parent) {
+			item->store.finished_count = 0;
+			continue;
+		}
+		if (item->report && !dm_report_output(item->report))
+			return_0;
+		if (!dm_report_group_pop(group))
+			return_0;
+	}
 
-static int _report_group_destroy_json(struct dm_report_group *group)
-{
-	_json_output_start(group);
-	log_print(JSON_OBJECT_END);
+	if (group->type == DM_REPORT_GROUP_JSON) {
+		_json_output_start(group);
+		log_print(JSON_OBJECT_END);
+		group->indent -= JSON_INDENT_UNIT;
+	}
+
 	return 1;
 }
 
 int dm_report_group_destroy(struct dm_report_group *group)
 {
-	struct report_group_item *item, *tmp_item;
-	int r = 0;
+	int r = 1;
 
 	if (!group)
 		return 1;
 
-	dm_list_iterate_items_safe(item, tmp_item, &group->items) {
-		if (item->report && !dm_report_output(item->report))
-			goto_out;
-		if (!dm_report_group_pop(group))
-			goto_out;
-	}
+	if (!dm_report_group_output_and_pop_all(group))
+		r = 0;
 
-	switch (group->type) {
-		case DM_REPORT_GROUP_SINGLE:
-			if (!_report_group_destroy_single())
-				goto_out;
-			break;
-		case DM_REPORT_GROUP_BASIC:
-			if (!_report_group_destroy_basic())
-				goto_out;
-			break;
-		case DM_REPORT_GROUP_JSON:
-			if (!_report_group_destroy_json(group))
-				goto_out;
-			break;
-		default:
-			goto_out;
-        }
-
-	r = 1;
-out:
 	dm_pool_destroy(group->mem);
 	return r;
 }

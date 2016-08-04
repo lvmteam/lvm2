@@ -2974,6 +2974,7 @@ typedef enum {
 struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void *data);
 int dm_report_group_push(struct dm_report_group *group, struct dm_report *report, void *data);
 int dm_report_group_pop(struct dm_report_group *group);
+int dm_report_group_output_and_pop_all(struct dm_report_group *group);
 int dm_report_group_destroy(struct dm_report_group *group);
 
 /*
