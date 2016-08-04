@@ -4790,6 +4790,11 @@ out:
 	return r;
 }
 
+void dm_report_destroy_rows(struct dm_report *rh)
+{
+	_destroy_rows(rh);
+}
+
 static int _report_group_create_single(struct dm_report_group *group)
 {
 	return 1;

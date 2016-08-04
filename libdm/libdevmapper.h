@@ -2907,6 +2907,11 @@ int dm_report_compact_given_fields(struct dm_report *rh, const char *fields);
  */
 int dm_report_is_empty(struct dm_report *rh);
 
+/*
+ * Destroy report content without doing output.
+ */
+void dm_report_destroy_rows(struct dm_report *rh);
+
 int dm_report_output(struct dm_report *rh);
 
 /*
