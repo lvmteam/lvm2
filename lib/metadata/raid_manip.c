@@ -2253,7 +2253,7 @@ static int _takeover_unsupported(TAKEOVER_FN_ARGS)
 {
 	log_error("Converting the segment type for %s from %s to %s is not supported.",
 		  display_lvname(lv), lvseg_name(first_seg(lv)),
-		  (segtype_is_striped(new_segtype) && !segtype_is_any_raid0(new_segtype) &&
+		  (segtype_is_striped_target(new_segtype) &&
 		   (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
 
 	return 0;
@@ -2263,7 +2263,7 @@ static int _takeover_unsupported_yet(const struct logical_volume *lv, const unsi
 {
 	log_error("Converting the segment type for %s from %s to %s is not supported yet.",
 		  display_lvname(lv), lvseg_name(first_seg(lv)),
-		  (segtype_is_striped(new_segtype) && !segtype_is_any_raid0(new_segtype) &&
+		  (segtype_is_striped_target(new_segtype) &&
 		   (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
 
 	return 0;
@@ -2701,7 +2701,7 @@ static unsigned _segtype_ix(const struct segment_type *segtype, uint32_t area_co
 	int i = 2, j;
 
 	/* Linear special case */
-	if (segtype_is_striped(segtype) && !segtype_is_any_raid0(segtype)) {
+	if (segtype_is_striped_target(segtype)) {
 		if (area_count == 1)
 			return 0;	/* linear */
 		return 1;	/* striped */
@@ -2772,7 +2772,7 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	log_verbose("Converting %s from %s to %s.",
 		    display_lvname(lv), lvseg_name(first_seg(lv)),
-		    (segtype_is_striped(new_segtype) && !segtype_is_any_raid0(new_segtype) &&
+		    (segtype_is_striped_target(new_segtype) &&
 		    (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
 
 	/* FIXME If not active, prompt and activate */

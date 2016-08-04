@@ -1925,8 +1925,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
-		if (!seg_is_striped(seg) && !seg_is_any_raid0(seg) &&
-		    !lv_raid_percent(lv, &sync_percent)) {
+		if (!seg_is_striped(seg) && !lv_raid_percent(lv, &sync_percent)) {
 			log_error("Unable to determine sync status of %s.",
 				  display_lvname(lv));
 			return 0;

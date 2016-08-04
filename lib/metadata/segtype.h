@@ -68,6 +68,8 @@ struct dev_manager;
 #define SEG_RAID6_N_6		0x0000000800000000ULL
 #define SEG_RAID6		SEG_RAID6_ZR
 
+#define SEG_STRIPED_TARGET	0x0000008000000000ULL
+
 #define SEG_UNKNOWN		0x8000000000000000ULL
 
 #define SEG_TYPE_NAME_LINEAR		"linear"
@@ -98,6 +100,7 @@ struct dev_manager;
 #define SEG_TYPE_NAME_RAID6_ZR		"raid6_zr"
 
 #define segtype_is_linear(segtype)	(!strcmp(segtype->name, SEG_TYPE_NAME_LINEAR))
+#define segtype_is_striped_target(segtype)	((segtype)->flags & SEG_STRIPED_TARGET ? 1 : 0)
 #define segtype_is_cache(segtype)	((segtype)->flags & SEG_CACHE ? 1 : 0)
 #define segtype_is_cache_pool(segtype)	((segtype)->flags & SEG_CACHE_POOL ? 1 : 0)
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
@@ -137,6 +140,7 @@ struct dev_manager;
 	  segtype_is_thin(segtype) || segtype_is_snapshot(segtype) || \
 	  (segtype_is_raid(segtype) && !segtype_is_raid1(segtype))) ? 1 : 0)
 
+#define seg_is_striped_target(seg)	segtype_is_striped_target((seg)->segtype)
 #define seg_is_cache(seg)	segtype_is_cache((seg)->segtype)
 #define seg_is_cache_pool(seg)	segtype_is_cache_pool((seg)->segtype)
 #define seg_is_linear(seg)	(seg_is_striped(seg) && ((seg)->area_count == 1))
