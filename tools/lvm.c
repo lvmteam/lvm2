@@ -200,6 +200,12 @@ static int _log_shell_command_status(struct cmd_context *cmd, int ret_code)
 			     stored_errno(), ret_code);
 }
 
+static void _discard_log_report_content(struct cmd_context *cmd)
+{
+	if (cmd->cmd_report.log_rh)
+		dm_report_destroy_rows(cmd->cmd_report.log_rh);
+}
+
 int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
@@ -210,63 +216,74 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	rl_attempted_completion_function = (rl_completion_func_t *) _completion;
 
 	_read_history(cmd);
-
 	_cmdline = cmdline;
 
 	cmd->is_interactive = 1;
+
+	if (!report_format_init(cmd))
+		return_ECMD_FAILED;
+
 	log_set_report_context(LOG_REPORT_CONTEXT_SHELL);
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_CMD);
 
 	while (1) {
+		log_set_report(cmd->cmd_report.log_rh);
 		log_set_report_object_name_and_id(NULL, NULL);
+
 		free(input);
 		input = readline("lvm> ");
 
 		/* EOF */
 		if (!input) {
+			_discard_log_report_content(cmd);
 			/* readline sends prompt to stdout */
 			printf("\n");
 			break;
 		}
 
 		/* empty line */
-		if (!*input)
+		if (!*input) {
+			_discard_log_report_content(cmd);
 			continue;
+		}
 
 		add_history(input);
 
 		argv = args;
 
 		if (lvm_split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+			_discard_log_report_content(cmd);
 			log_error("Too many arguments, sorry.");
 			continue;
 		}
 
-		if (!argc)
+		if (!argc) {
+			_discard_log_report_content(cmd);
 			continue;
+		}
 
 		if (!strcmp(argv[0], "lvm")) {
 			argv++;
 			argc--;
 		}
 
-		if (!argc)
+		if (!argc) {
+			_discard_log_report_content(cmd);
 			continue;
+		}
 
 		log_set_report_object_name_and_id(argv[0], NULL);
 
+		is_lastlog_cmd = !strcmp(argv[0], "lastlog");
+
+		if (!is_lastlog_cmd)
+			_discard_log_report_content(cmd);
+
 		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit")) {
+			_discard_log_report_content(cmd);
 			remove_history(history_length - 1);
 			log_error("Exiting.");
 			break;
-		}
-
-		is_lastlog_cmd = !strcmp(argv[0], "lastlog");
-
-		if (cmd->cmd_report.log_rh && !is_lastlog_cmd) {
-			/* drop old log report */
-			dm_report_free(cmd->cmd_report.log_rh);
-			cmd->cmd_report.log_rh = NULL;
 		}
 
 		ret = lvm_run_command(cmd, argc, argv);
@@ -282,12 +299,35 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 
 		if (!is_lastlog_cmd)
 			_log_shell_command_status(cmd, ret);
+
+		log_set_report(NULL);
+		dm_report_group_output_and_pop_all(cmd->cmd_report.report_group);
+
+		if (cmd->cmd_report.log_rh &&
+		    !(dm_report_group_push(cmd->cmd_report.report_group,
+					   cmd->cmd_report.log_rh,
+					   (void *) cmd->cmd_report.log_name))) {
+			log_set_report(NULL);
+			log_error("Failed to add log report.");
+			break;
+		}
 	}
 
 	log_restore_report_state(saved_log_report_state);
 	cmd->is_interactive = 0;
 
 	free(input);
+
+	if (cmd->cmd_report.report_group) {
+		dm_report_group_destroy(cmd->cmd_report.report_group);
+		cmd->cmd_report.report_group = NULL;
+	}
+
+	if (cmd->cmd_report.log_rh) {
+		dm_report_free(cmd->cmd_report.log_rh);
+		cmd->cmd_report.report_group = NULL;
+	}
+
 	return 0;
 }
 

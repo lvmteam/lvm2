@@ -1387,6 +1387,11 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 	} else
 		r = _do_report(cmd, handle, &args, single_args);
 
+	if (!args.log_only && !dm_report_group_pop(cmd->cmd_report.report_group)) {
+		log_error("Failed to finalize main report section in report group.");
+		r = ECMD_FAILED;
+	}
+
 	destroy_processing_handle(cmd, handle);
 	return r;
 }
@@ -1508,32 +1513,22 @@ bad:
 	return 0;
 }
 
-int lastlog(struct cmd_context *cmd, int argc, char **argv)
+int lastlog(struct cmd_context *cmd, int argc __attribute((unused)), char **argv __attribute__((unused)))
 {
-	struct dm_report_group *report_group = NULL;
 	const char *selection;
-	int r = ECMD_FAILED;
 
 	if (!cmd->cmd_report.log_rh) {
 		log_error("No log report stored.");
-		goto out;
+		return ECMD_FAILED;
 	}
 
 	if (!_do_report_get_selection(cmd, CMDLOG, 1, NULL, &selection))
-		goto_out;
+		return_ECMD_FAILED;
 
 	if (!dm_report_set_selection(cmd->cmd_report.log_rh, selection)) {
 		log_error("Failed to set selection for log report.");
-		goto out;
+		return ECMD_FAILED;
 	}
 
-	if (!dm_report_output(cmd->cmd_report.log_rh) ||
-	    !dm_report_group_pop(report_group))
-		goto_out;
-
-	r = ECMD_PROCESSED;
-out:
-	if (!dm_report_group_destroy(report_group))
-		stack;
-	return r;
+	return ECMD_PROCESSED;
 }

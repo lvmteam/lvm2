@@ -2218,11 +2218,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	if (cmd->cft_def_hash)
 		dm_hash_destroy(cmd->cft_def_hash);
 
-	if (cmd->cmd_report.log_rh) {
-		dm_report_free(cmd->cmd_report.log_rh);
-		cmd->cmd_report.log_rh = NULL;
-	}
-
 	if (cmd->libmem)
 		dm_pool_destroy(cmd->libmem);
 

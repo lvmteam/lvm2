@@ -1798,11 +1798,15 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 
 		log_restore_report_state(cmd->cmd_report.saved_log_report_state);
 
-		if (!dm_report_group_destroy(cmd->cmd_report.report_group))
-			stack;
-		if (!cmd->is_interactive && cmd->cmd_report.log_rh) {
-			dm_report_free(cmd->cmd_report.log_rh);
-			cmd->cmd_report.log_rh = NULL;
+		if (!cmd->is_interactive) {
+			if (!dm_report_group_destroy(cmd->cmd_report.report_group))
+				stack;
+			cmd->cmd_report.report_group = NULL;
+
+			if (cmd->cmd_report.log_rh) {
+				dm_report_free(cmd->cmd_report.log_rh);
+				cmd->cmd_report.log_rh = NULL;
+			}
 		}
 		/*
 		 * TODO: think about better alternatives:
