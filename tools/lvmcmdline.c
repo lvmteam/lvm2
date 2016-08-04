@@ -1395,6 +1395,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 			cmd->profile_params->global_metadata_profile = profile;
 		}
 
+		remove_config_tree_by_source(cmd, source);
 		if (!override_config_tree_from_profile(cmd, profile)) {
 			log_error(_failed_to_apply_profile_msg, source_name, name);
 			return 0;
@@ -1420,6 +1421,8 @@ static int _prepare_profiles(struct cmd_context *cmd)
 			log_error(_failed_to_add_profile_msg, source_name, name);
 			return 0;
 		}
+
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE_COMMAND);
 		if (!override_config_tree_from_profile(cmd, profile)) {
 			log_error(_failed_to_apply_profile_msg, source_name, name);
 			return 0;
@@ -1438,6 +1441,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 			log_error(_failed_to_add_profile_msg, source_name, name);
 			return 0;
 		}
+		remove_config_tree_by_source(cmd, CONFIG_PROFILE_METADATA);
 		if (!override_config_tree_from_profile(cmd, profile)) {
 			log_error(_failed_to_apply_profile_msg, source_name, name);
 			return 0;
@@ -2217,6 +2221,10 @@ int lvm2_main(int argc, char **argv)
 #ifdef READLINE_SUPPORT
 	if (!alias && argc == 1) {
 		_nonroot_warning();
+		if (!_prepare_profiles(cmd)) {
+			ret = ECMD_FAILED;
+			goto out;
+		}
 		ret = lvm_shell(cmd, &_cmdline);
 		goto out;
 	}
