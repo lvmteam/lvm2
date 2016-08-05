@@ -1,10 +1,10 @@
 Version 2.02.163 - 
 =================================
+  Add "--rebuild PV" option to lvchange to allow for PV selective rebuilds.
   Preserve existing mirror region size when using --repair.
   Forbid stripe parameters with lvconvert --repair.
   Unify stripe size validation into get_stripe_params to catch missing cases.
   Further lvconvert validation logic refactoring.
-  Add "--rebuild PV" option to lvchange to allow for PV selective rebuilds.
 
 Version 2.02.162 - 28th July 2016
 =================================
