@@ -86,6 +86,7 @@ struct lvconvert_params {
 	sign_t mirrors_sign;
 	uint32_t stripes;
 	uint32_t stripe_size;
+	uint32_t stripe_size_supplied;
 	uint32_t read_ahead;
 	cache_mode_t cache_mode; /* cache */
 	const char *policy_name; /* cache */
@@ -1905,7 +1906,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			log_error("RAID module does not support RAID0.");
 			return 0;
 		}
-		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size,
+		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
 				     lp->region_size, lp->pvh))
 			return_0;
 		log_print_unless_silent("Logical volume %s successfully converted.",
@@ -4405,6 +4406,8 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
 		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size))
 			return_0;
+		/* FIXME Move this into the get function */
+		lp->stripe_size_supplied = arg_is_set(cmd, stripesize_ARG);
 
 		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
 			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */

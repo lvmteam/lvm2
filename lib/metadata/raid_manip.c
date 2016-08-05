@@ -2744,6 +2744,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		    const struct segment_type *new_segtype,
 		    int yes, int force,
 		    const unsigned new_stripes,
+		    const unsigned new_stripe_size_supplied,
 		    const unsigned new_stripe_size,
 		    const uint32_t new_region_size,
 		    struct dm_list *allocate_pvs)
@@ -2758,17 +2759,17 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
-	stripes = new_stripes ?: _data_rimages_count(seg, seg->area_count);
+	stripes = new_stripes ? : _data_rimages_count(seg, seg->area_count);
+
+	/* FIXME Ensure caller does *not* set wrong default value! */
+	/* Define new stripe size if not passed in */
+	stripe_size = new_stripe_size ? : seg->stripe_size;
 
 	if (segtype_is_striped(new_segtype))
 		new_image_count = stripes;
 
 	if (segtype_is_raid(new_segtype) && !_check_max_raid_devices(new_image_count))
 		return_0;
-
-	/* FIXME Ensure caller does *not* set wrong default value! */
-	/* Define new stripe size if not passed in */
-	stripe_size = new_stripe_size ?: seg->stripe_size;
 
 	takeover_fn = _get_takeover_fn(first_seg(lv), new_segtype, new_image_count);
 

@@ -1200,6 +1200,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		    const struct segment_type *new_segtype,
 		    int yes, int force,
 		    const unsigned stripes,
+		    const unsigned new_stripe_size_supplied,
 		    const unsigned new_stripe_size,
 		    const uint32_t new_region_size,
 		    struct dm_list *allocate_pvs);
