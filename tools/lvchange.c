@@ -750,6 +750,60 @@ static int _lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv, int
 	return 1;
 }
 
+static int _lvchange_rebuild(struct logical_volume *lv)
+{
+	int pv_count, i = 0;
+	char **rebuild_pvs;
+	const char *tmp_str;
+	struct dm_list *rebuild_pvh = NULL;
+	struct arg_value_group_list *group;
+	struct volume_group *vg = lv->vg;
+	struct cmd_context *cmd = vg->cmd;
+	struct lv_segment *raid_seg = first_seg(lv);
+
+	if (!seg_is_raid(raid_seg) || seg_is_any_raid0(raid_seg)) {
+		log_error("--rebuild can only be used with 'raid4/5/6/10' segment types.");
+		return 0;
+	}
+
+	if (!(pv_count = arg_count(cmd, rebuild_ARG))) {
+		log_error("No --rebuild found!");
+		return 0;
+	}
+
+	if (!arg_is_set(cmd, yes_ARG) &&
+	    yes_no_prompt("Do you really want to rebuild %u PVs "
+			  "of logical volume %s [y/n]: ",
+			  pv_count, display_lvname(lv)) == 'n') {
+		log_error("Logical volume %s not rebuild.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	/* rebuild can be specified more than once */
+	if (!(rebuild_pvs = dm_pool_alloc(vg->vgmem, sizeof(char *) * pv_count)))
+		return_0;
+
+	dm_list_iterate_items(group, &cmd->arg_value_groups) {
+		if (!grouped_arg_is_set(group->arg_values, rebuild_ARG))
+			continue;
+
+		if (!(tmp_str = grouped_arg_str_value(group->arg_values,
+						      rebuild_ARG, NULL)))
+			return_0;
+
+		if (!(rebuild_pvs[i++] = dm_pool_strdup(cmd->mem, tmp_str)))
+                               return_0;
+	}
+
+	if (!(rebuild_pvh = create_pv_list(cmd->mem, vg,
+					   pv_count, rebuild_pvs, 0)))
+		return_ECMD_FAILED;
+
+	/* Rebuild PVs listed on @rebuild_pvh */
+	return lv_raid_rebuild(lv, rebuild_pvh);
+}
+
 static int _lvchange_writemostly(struct logical_volume *lv)
 {
 	int s, pv_count, i = 0;
@@ -1132,6 +1186,14 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		docmds++;
 	}
 
+	/* rebuild selected PVs */
+	if (arg_is_set(cmd, rebuild_ARG)) {
+		if (!archive(lv->vg))
+			return_ECMD_FAILED;
+		doit += _lvchange_rebuild(lv);
+		docmds++;
+	}
+
 	/* change writemostly/writebehind */
 	if (arg_is_set(cmd, writemostly_ARG) || arg_is_set(cmd, writebehind_ARG)) {
 		if (!archive(lv->vg))
@@ -1245,6 +1307,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 				     errorwhenfull_ARG,
 				     maxrecoveryrate_ARG,
 				     minrecoveryrate_ARG,
+				     rebuild_ARG,
 				     resync_ARG,
 				     syncaction_ARG,
 				     writebehind_ARG,

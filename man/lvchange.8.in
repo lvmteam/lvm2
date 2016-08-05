@@ -25,6 +25,8 @@ lvchange \(em change attributes of a logical volume
 .IR AllocationPolicy ]
 .RB [ \-A | \-\-autobackup
 .RB { y | n }]
+.RB [ \-\-rebuild
+.IR PhysicalVolume ]
 .RB [ \-\-cachemode
 .RB { passthrough | writeback | writethrough }]
 .RB [ \-\-cachepolicy
@@ -325,6 +327,31 @@ process from its last checkpoint.  However, it may not be appropriate to
 immediately poll a logical volume when it is activated, use
 \fB\-\-poll n\fP to defer and then \fB\-\-poll y\fP to restart the process.
 .
+.HP
+.BR \-\- [ raid ] rebuild 
+.BR \fIPhysicalVolume
+.br
+Option can be repeated multiple times.
+Selects PhysicalVolume(s) to be rebuild in a RaidLV.
+Use this option instead of
+.BR \-\-resync
+or
+.BR \-\- [ raid ] syncaction
+\fBrepair\fP in case the PVs with corrupted data are known and their data
+should be reconstructed rather than reconstructing default (rotating) data.
+.br
+E.g. in a raid1 mirror, the master leg on /dev/sda may hold corrupt data due
+to a known transient disk error, thus
+.br
+\fBlvchange --rebuild /dev/sda LV\fP
+.br
+will request the master leg to be rebuild rather than rebuilding
+all other legs from the master.
+On a raid5 with rotating data and parity
+.br
+\fBlvchange --rebuild /dev/sda LV\fP
+.br
+will rebuild all data and parity blocks in the stripe on /dev/sda.
 .HP
 .BR \-\- [ raid ] maxrecoveryrate
 .BR \fIRate [ b | B | s | S | k | K | m | M | g | G ]

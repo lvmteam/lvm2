@@ -195,6 +195,7 @@ xx(lvchange,
    "\t[--activationmode {complete|degraded|partial}"
    "\t[--addtag <Tag>]\n"
    "\t[--alloc <AllocationPolicy>]\n"
+   "\t[--rebuild PhysicalVolume]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[--cachemode <CacheMode>]\n"
    "\t[--cachepolicy <policyname>] [--cachesettings <parameter=value>]\n"
@@ -244,10 +245,10 @@ xx(lvchange,
    ignoreskippedcluster_ARG, major_ARG, metadataprofile_ARG, minor_ARG,
    monitor_ARG, minrecoveryrate_ARG, maxrecoveryrate_ARG, noudevsync_ARG,
    partial_ARG, permission_ARG, persistent_ARG, poll_ARG,
-   raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG, raidsyncaction_ARG,
-   raidwritebehind_ARG, raidwritemostly_ARG, readahead_ARG, reportformat_ARG,
-   resync_ARG, refresh_ARG, select_ARG, setactivationskip_ARG, syncaction_ARG,
-   sysinit_ARG, test_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
+   raidrebuild_ARG, raidminrecoveryrate_ARG, raidmaxrecoveryrate_ARG,
+   raidsyncaction_ARG, raidwritebehind_ARG, raidwritemostly_ARG, readahead_ARG,
+   reportformat_ARG, rebuild_ARG, resync_ARG, refresh_ARG, select_ARG, setactivationskip_ARG,
+   syncaction_ARG, sysinit_ARG, test_ARG, writebehind_ARG, writemostly_ARG, zero_ARG)
 
 #define COMMON_OPTS \
 	"\t[--commandprofile <ProfileName>] [-d|--debug] [-h|-?|--help]\n" \
@@ -259,6 +260,7 @@ xx(lvconvert,
    "lvconvert "
    "[-m|--mirrors <Mirrors> [--mirrorlog {disk|core|mirrored}|--corelog]]\n"
    "\t[--type <SegmentType>]\n"
+   "\t[--rebuild PhysicalVolume]\n"
    "\t[--repair [--use-policies]]\n"
    "\t[--replace PhysicalVolume]\n"
    "\t[-R|--regionsize <MirrorLogRegionSize>]\n"

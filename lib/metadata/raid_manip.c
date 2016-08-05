@@ -2889,16 +2889,24 @@ has_enough_space:
 }
 
 /*
- * lv_raid_replace
+ * Helper:
+ *
+ * _lv_raid_rebuild_or_replace
  * @lv
  * @remove_pvs
  * @allocate_pvs
+ * @rebuild
  *
- * Replace the specified PVs.
+ * Rebuild the specified PVs on @remove_pvs if rebuild != 0;
+ * @allocate_pvs not accessed for rebuild.
+ *
+ * Replace the specified PVs on @remove_pvs if rebuild == 0;
+ * new SubLVS are allocated on PVs on list @allocate_pvs.
  */
-int lv_raid_replace(struct logical_volume *lv,
-		    struct dm_list *remove_pvs,
-		    struct dm_list *allocate_pvs)
+static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
+				       struct dm_list *remove_pvs,
+				       struct dm_list *allocate_pvs,
+				       int rebuild)
 {
 	int partial_segment_removed = 0;
 	uint32_t s, sd, match_count = 0;
@@ -2907,6 +2915,7 @@ int lv_raid_replace(struct logical_volume *lv,
 	struct lv_segment *raid_seg = first_seg(lv);
 	struct lv_list *lvl;
 	char *tmp_names[raid_seg->area_count * 2];
+	const char *action_str = rebuild ? "rebuild" : "replace";
 
 	if (seg_is_any_raid0(raid_seg)) {
 		log_error("Can't replace any devices in %s LV %s",
@@ -2951,28 +2960,33 @@ int lv_raid_replace(struct logical_volume *lv,
 		if (lv_is_virtual(seg_lv(raid_seg, s)) ||
 		    lv_is_virtual(seg_metalv(raid_seg, s)) ||
 		    lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
-		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs))
+		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs)) {
 			match_count++;
+			if (rebuild) {
+				seg_lv(raid_seg, s)->status |= LV_REBUILD;
+				seg_metalv(raid_seg, s)->status |= LV_REBUILD;
+			}
+		}
 	}
 
 	if (!match_count) {
-		log_verbose("%s/%s does not contain devices specified"
-			    " for replacement", lv->vg->name, lv->name);
+		log_print_unless_silent("%s/%s does not contain devices specified"
+					" to %s", display_lvname(lv), action_str);
 		return 1;
 	} else if (match_count == raid_seg->area_count) {
-		log_error("Unable to remove all PVs from %s/%s at once.",
-			  lv->vg->name, lv->name);
+		log_error("Unable to %s all PVs from %s/%s at once.",
+			  action_str, lv->vg->name, lv->name);
 		return 0;
 	} else if (raid_seg->segtype->parity_devs &&
 		   (match_count > raid_seg->segtype->parity_devs)) {
-		log_error("Unable to replace more than %u PVs from (%s) %s/%s",
-			  raid_seg->segtype->parity_devs,
+		log_error("Unable to %s more than %u PVs from (%s) %s/%s",
+			  action_str, raid_seg->segtype->parity_devs,
 			  lvseg_name(raid_seg),
 			  lv->vg->name, lv->name);
 		return 0;
 	} else if (seg_is_raid10(raid_seg)) {
 		uint32_t i, rebuilds_per_group = 0;
-		/* FIXME: We only support 2-way mirrors in RAID10 currently */
+		/* FIXME: We only support 2-way mirrors (i.e. 2 data copies) in RAID10 currently */
 		uint32_t copies = 2;
 
 		for (i = 0; i < raid_seg->area_count * copies; i++) {
@@ -2985,12 +2999,15 @@ int lv_raid_replace(struct logical_volume *lv,
 			    lv_is_virtual(seg_metalv(raid_seg, s)))
 				rebuilds_per_group++;
 			if (rebuilds_per_group >= copies) {
-				log_error("Unable to replace all the devices "
-					  "in a RAID10 mirror group.");
+				log_error("Unable to %s all the devices "
+					  "in a RAID10 mirror group.", action_str);
 				return 0;
 			}
 		}
 	}
+
+	if (rebuild)
+		goto skip_alloc;
 
 	/* Prevent any PVs holding image components from being used for allocation */
 	if (!_avoid_pvs_with_other_images_of_lv(lv, allocate_pvs)) {
@@ -3122,9 +3139,11 @@ try_again:
 			tmp_names[s] = tmp_names[sd] = NULL;
 	}
 
+skip_alloc:
 	if (!lv_update_and_reload_origin(lv))
 		return_0;
 
+	/* @old_lvs is empty in case of a rebuild */
 	dm_list_iterate_items(lvl, &old_lvs) {
 		if (!deactivate_lv(lv->vg->cmd, lvl->lv))
 			return_0;
@@ -3132,21 +3151,55 @@ try_again:
 			return_0;
 	}
 
-	/* Update new sub-LVs to correct name and clear REBUILD flag */
+	/* Clear REBUILD flag */
 	for (s = 0; s < raid_seg->area_count; s++) {
-		sd = s + raid_seg->area_count;
-		if (tmp_names[s] && tmp_names[sd]) {
-			seg_metalv(raid_seg, s)->name = tmp_names[s];
-			seg_lv(raid_seg, s)->name = tmp_names[sd];
-			seg_metalv(raid_seg, s)->status &= ~LV_REBUILD;
-			seg_lv(raid_seg, s)->status &= ~LV_REBUILD;
-		}
+		seg_lv(raid_seg, s)->status &= ~LV_REBUILD;
+		seg_metalv(raid_seg, s)->status &= ~LV_REBUILD;
 	}
+
+	/* If replace, correct name(s) */
+	if (!rebuild)
+		for (s = 0; s < raid_seg->area_count; s++) {
+			sd = s + raid_seg->area_count;
+			if (tmp_names[s] && tmp_names[sd]) {
+				seg_metalv(raid_seg, s)->name = tmp_names[s];
+				seg_lv(raid_seg, s)->name = tmp_names[sd];
+			}
+		}
 
 	if (!lv_update_and_reload_origin(lv))
 		return_0;
 
 	return 1;
+}
+
+/*
+ * lv_raid_rebuild
+ * @lv
+ * @remove_pvs
+ *
+ * Rebuild the specified PVs of @lv on @remove_pvs.
+ */
+int lv_raid_rebuild(struct logical_volume *lv,
+		    struct dm_list *rebuild_pvs)
+{
+	return _lv_raid_rebuild_or_replace(lv, rebuild_pvs, NULL, 1);
+}
+
+/*
+ * lv_raid_replace
+ * @lv
+ * @remove_pvs
+ * @allocate_pvs
+ *
+ * Replace the specified PVs on @remove_pvs of @lv
+ * allocating new SubLVs from PVs on list @allocate_pvs.
+ */
+int lv_raid_replace(struct logical_volume *lv,
+		    struct dm_list *remove_pvs,
+		    struct dm_list *allocate_pvs)
+{
+	return _lv_raid_rebuild_or_replace(lv, remove_pvs, allocate_pvs, 0);
 }
 
 int lv_raid_remove_missing(struct logical_volume *lv)

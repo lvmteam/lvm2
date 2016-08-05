@@ -1265,6 +1265,12 @@ wait_for_sync() {
 	return 1
 }
 
+# aux check_status_chars $vg $lv "Aaaaa"
+check_status_chars() {
+	[ `dmsetup status $1-$2|awk '{print $6}'` = $3 ] && return
+	return 1
+}
+
 # Check if tests are running on 64bit architecture
 can_use_16T() {
 	test "$(getconf LONG_BIT)" -eq 64
