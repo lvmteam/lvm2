@@ -2970,7 +2970,7 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 	}
 
 	if (!match_count) {
-		log_print_unless_silent("%s/%s does not contain devices specified"
+		log_print_unless_silent("%s does not contain devices specified"
 					" to %s", display_lvname(lv), action_str);
 		return 1;
 	} else if (match_count == raid_seg->area_count) {
