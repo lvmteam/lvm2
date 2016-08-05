@@ -47,7 +47,7 @@ struct segment_type *get_segtype_from_flag(struct cmd_context *cmd, uint64_t fla
 		if (flag & segtype->flags)
 			return segtype;
 
-	log_error(INTERNAL_ERROR "Unrecognised segment type flag 0x%" PRIx64, flag);
+	log_error(INTERNAL_ERROR "Unrecognised segment type flag 0x%016" PRIx64, flag);
 
 	return NULL;
 }
