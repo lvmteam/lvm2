@@ -311,17 +311,9 @@ static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
 	if (!type_str || !*type_str)
 		return 1;
 
-	if (!strcmp(type_str, SEG_TYPE_NAME_MIRROR)) {
-		if (!arg_is_set(cmd, mirrors_ARG)) {
-			log_error("Conversions to --type mirror require -m/--mirrors");
-			return 0;
-		}
-		return 1;
-	}
-
 	/* FIXME: Check thin-pool and thin more thoroughly! */
 	if (!strcmp(type_str, SEG_TYPE_NAME_SNAPSHOT) || _striped_type_requested(type_str) ||
-	    !strncmp(type_str, SEG_TYPE_NAME_RAID, 4) ||
+	    !strncmp(type_str, SEG_TYPE_NAME_RAID, 4) || !strcmp(type_str, SEG_TYPE_NAME_MIRROR) ||
 	    !strcmp(type_str, SEG_TYPE_NAME_CACHE_POOL) || !strcmp(type_str, SEG_TYPE_NAME_CACHE) ||
 	    !strcmp(type_str, SEG_TYPE_NAME_THIN_POOL) || !strcmp(type_str, SEG_TYPE_NAME_THIN))
 		return 1;
@@ -1770,6 +1762,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	if (!lp->need_polling)
 		log_print_unless_silent("Logical volume %s converted.",
 					display_lvname(lv));
+	else
+		log_print_unless_silent("Logical volume %s being converted.",
+					display_lvname(lv));
 
 	backup(lv->vg);
 
@@ -1837,29 +1832,35 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 	/* Can only change image count for raid1 and linear */
-	if (lp->mirrors_supplied && !seg_is_mirrored(seg) && !seg_is_linear(seg)) {
-		log_error("'--mirrors/-m' is not compatible with %s.",
-			  lvseg_name(seg));
-		goto try_new_takeover_or_reshape;
+	if (lp->mirrors_supplied) {
+		if (_raid0_type_requested(lp->type_str)) {
+			log_error("--mirrors/-m is not compatible with conversion to %s.",
+				  lp->type_str);
+			return 0;
+		}
+		if (!seg_is_mirrored(seg) && !seg_is_linear(seg)) {
+			log_error("--mirrors/-m is not compatible with %s.",
+				  lvseg_name(seg));
+			return 0;
+		}
 	}
 
 	if (!_lvconvert_validate_thin(lv, lp))
 		return_0;
 
-	if (!_is_valid_raid_conversion(seg->segtype, lp->segtype)) {
-		log_error("Unable to convert %s from %s to %s.",
-			  display_lvname(lv), lvseg_name(seg),
-			  lp->segtype->name);
+	if (!_is_valid_raid_conversion(seg->segtype, lp->segtype))
 		goto try_new_takeover_or_reshape;
-	}
 
 	if (seg_is_linear(seg) && !lp->merge_mirror && !lp->mirrors_supplied) {
-		if (_raid0_type_requested(lp->type_str))
+		if (_raid0_type_requested(lp->type_str)) {
 			log_error("Linear LV %s cannot be converted to %s.",
 				  display_lvname(lv), lp->type_str);
-		else
+			return 0;
+		} else if (!strcmp(lp->type_str, SEG_TYPE_NAME_RAID1)) {
 			log_error("Raid conversions of LV %s require -m/--mirrors.",
 				  display_lvname(lv));
+			return 0;
+		}
 		goto try_new_takeover_or_reshape;
 	}
 
@@ -1896,19 +1897,38 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (lp->keep_mimages)
 		return lv_raid_split(lv, lp->lv_split_name, image_count, lp->pvh);
 
-	if (lp->mirrors_supplied)
-		return lv_raid_change_image_count(lv, image_count, lp->pvh);
+	if (lp->mirrors_supplied) {
+		if (!*lp->type_str || !strcmp(lp->type_str, SEG_TYPE_NAME_RAID1) || !strcmp(lp->type_str, SEG_TYPE_NAME_LINEAR)) {
+			if (!lv_raid_change_image_count(lv, image_count, lp->pvh))
+				return_0;
+
+			log_print_unless_silent("Logical volume %s successfully converted.",
+						display_lvname(lv));
+
+			return 1;
+		}
+		goto try_new_takeover_or_reshape;
+	} else if (!*lp->type_str || seg->segtype == lp->segtype) {
+		log_error("Conversion operation not yet supported.");
+		return 0;
+	}
 
 	if ((seg_is_linear(seg) || seg_is_striped(seg) || seg_is_mirrored(seg) || lv_is_raid(lv)) &&
 	    (lp->type_str && lp->type_str[0])) {
+		/* Activation is required later which precludes existing unsupported raid0 segment */
 		if (segtype_is_any_raid0(lp->segtype) &&
 		    !(lp->target_attr & RAID_FEATURE_RAID0)) {
 			log_error("RAID module does not support RAID0.");
 			return 0;
 		}
+
+		if (!arg_is_set(cmd, stripes_long_ARG))
+			lp->stripes = 0;
+
 		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
 				     lp->region_size, lp->pvh))
 			return_0;
+
 		log_print_unless_silent("Logical volume %s successfully converted.",
 					display_lvname(lv));
 		return 1;
@@ -1968,13 +1988,27 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return 1;
 	}
 
-	log_error("Conversion operation not yet supported.");
 
 try_new_takeover_or_reshape:
-	;
 
-	/* FIXME New takeover and reshape code is called from here */
+	/* FIXME This needs changing globally. */
+	if (!arg_is_set(cmd, stripes_long_ARG))
+		lp->stripes = 0;
 
+	/* Only let raid4 through for now. */
+	if (lp->type_str && lp->type_str[0] && lp->segtype != seg->segtype &&
+	    ((seg_is_raid4(seg) && seg_is_striped(lp) && lp->stripes > 1) ||
+	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp)))) {
+		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
+				     lp->region_size, lp->pvh))
+			return_0;
+
+		log_print_unless_silent("Logical volume %s successfully converted.",
+					display_lvname(lv));
+		return 1;
+	}
+
+	log_error("Conversion operation not yet supported.");
 	return 0;
 }
 
@@ -2408,9 +2442,6 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 
 	if (!archive(lv->vg))
 		return_0;
-
-	// FIXME: allow origin to be specified
-	// FIXME: verify snapshot is descendant of specified origin
 
 	/*
 	 * Prevent merge with open device(s) as it would likely lead
@@ -4240,7 +4271,7 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!strcmp(lp->type_str, SEG_TYPE_NAME_CACHE_POOL) || arg_is_set(cmd, cachepool_ARG))
 		return _convert_raid_cache_pool(cmd, lv, lp);
 
-	if (segtype_is_raid(lp->segtype))
+	if (segtype_is_raid(lp->segtype) || segtype_is_mirror(lp->segtype))
 		return _convert_raid_raid(cmd, lv, lp);
 
 	if (!strcmp(lp->type_str, SEG_TYPE_NAME_STRIPED))
@@ -4264,6 +4295,7 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 		  "  --type thin-pool\n"
 		  "  --type cache-pool\n"
 		  "  --type raid*\n"
+		  "  --type mirror\n"
 		  "  --type striped\n"
 		  "  --type linear\n");
 	return 0;
@@ -4328,6 +4360,7 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 /*
+ * Main entry point.
  * lvconvert performs a specific <operation> on a specific <lv_type>.
  *
  * The <operation> is specified by command line args.
@@ -4345,7 +4378,6 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
  * So, when the use of arg_type_str(type_ARG) here was replaced with
  * lp->type_str, some commands are no longer identified/routed correctly.
  */
-
 static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		      struct lvconvert_params *lp)
 {
@@ -4393,6 +4425,13 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	else if (!(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
 		return_0;
 
+	if (!strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
+		if (!lp->mirrors_supplied && !seg_is_raid1(seg)) {
+			log_error("Conversions to --type mirror require -m/--mirrors");
+			return 0;
+		}
+	}
+
 	if (activation() && lp->segtype && lp->segtype->ops->target_present &&
 	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
 		log_error("%s: Required device-mapper target(s) not "
@@ -4404,6 +4443,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	/* FIXME This is incomplete */
 	if (_mirror_or_raid_type_requested(cmd, lp->type_str) || _raid0_type_requested(lp->type_str) ||
 	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
+		/* FIXME Handle +/- adjustments too? */
 		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size))
 			return_0;
 		/* FIXME Move this into the get function */
@@ -4412,7 +4452,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
 			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */
 			/* The default keeps existing number of stripes, handled inside the library code */
-			if (!arg_is_set(cmd, stripes_long_ARG) && !_linear_type_requested(lp->type_str))
+			if (!arg_is_set(cmd, stripes_long_ARG))
 				lp->stripes = 0;
 	}
 
