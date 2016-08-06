@@ -1,5 +1,6 @@
 Version 2.02.163 - 
 =================================
+  Report supported conversions when asked for unsupported raid lvconvert.
   Add "--rebuild PV" option to lvchange to allow for PV selective rebuilds.
   Preserve existing mirror region size when using --repair.
   Forbid stripe parameters with lvconvert --repair.
