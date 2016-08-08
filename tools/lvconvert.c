@@ -1700,6 +1700,11 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	uint32_t new_mimage_count;
 	uint32_t new_log_count;
 
+	if (*lp->type_str && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
+		log_error("--corelog and --mirrorlog is only compatible with --type mirror");
+		return 0;
+	}
+
 	if (lp->merge_mirror) {
 		log_error("Unable to merge mirror images"
 			  "of segment type 'mirror'.");
@@ -1888,6 +1893,11 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		}
 	}
 
+	if ((lp->corelog || lp->mirrorlog) && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
+		log_error("--corelog and --mirrorlog is only compatible with --type mirror");
+		return 0;
+	}
+
 	if (lp->merge_mirror)
 		return lv_raid_merge(lv);
 
@@ -1898,7 +1908,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return lv_raid_split(lv, lp->lv_split_name, image_count, lp->pvh);
 
 	if (lp->mirrors_supplied) {
-		if (!*lp->type_str || !strcmp(lp->type_str, SEG_TYPE_NAME_RAID1) || !strcmp(lp->type_str, SEG_TYPE_NAME_LINEAR)) {
+		if (!*lp->type_str || !strcmp(lp->type_str, SEG_TYPE_NAME_RAID1) || !strcmp(lp->type_str, SEG_TYPE_NAME_LINEAR) ||
+		    (!strcmp(lp->type_str, SEG_TYPE_NAME_STRIPED) && image_count == 1)) {
 			if (!lv_raid_change_image_count(lv, image_count, lp->pvh))
 				return_0;
 
