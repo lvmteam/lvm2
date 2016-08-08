@@ -48,6 +48,7 @@ struct profile_params {
 	struct profile *global_metadata_profile; /* profile (as given by --metadataprofile cmd arg) that overrides any other VG/LV-based profile */
 	struct dm_list profiles_to_load;         /* list of profiles which are only added, but still need to be loaded for any use */
 	struct dm_list profiles;                 /* list of profiles which are loaded already and which are ready for use */
+	struct profile *shell_profile;           /* master profile used in interactive/shell mode */
 };
 
 #define CFG_PATH_MAX_LEN 128
@@ -98,31 +99,34 @@ typedef union {
 
 
 /* whether the configuration item name is variable */
-#define CFG_NAME_VARIABLE	0x001
+#define CFG_NAME_VARIABLE        0x0001
 /* whether empty value is allowed */
-#define CFG_ALLOW_EMPTY		0x002
+#define CFG_ALLOW_EMPTY          0x0002
 /* whether the configuration item is for advanced use only */
-#define CFG_ADVANCED		0x004
+#define CFG_ADVANCED             0x0004
 /* whether the configuration item is not officially supported */
-#define CFG_UNSUPPORTED		0x008
+#define CFG_UNSUPPORTED          0x0008
 /* whether the configuration item is customizable by a profile */
-#define CFG_PROFILABLE		0x010
-/* whether the configuration item is customizable by a profile */
-/* and whether it can be attached to VG/LV metadata at the same time
+#define CFG_PROFILABLE           0x0010
+/* whether the configuration item is customizable by a profile
+ * and whether it can be attached to VG/LV metadata at the same time
  * The CFG_PROFILABLE_METADATA flag incorporates CFG_PROFILABLE flag!!! */
-#define CFG_PROFILABLE_METADATA 0x030
+#define CFG_PROFILABLE_METADATA  0x0030
 /* whether the default value is undefned */
-#define CFG_DEFAULT_UNDEFINED	0x040
+#define CFG_DEFAULT_UNDEFINED    0x0040
 /* whether the default value is commented out on output */
-#define CFG_DEFAULT_COMMENTED	0x080
+#define CFG_DEFAULT_COMMENTED    0x0080
 /* whether the default value is calculated during run time */
-#define CFG_DEFAULT_RUN_TIME	0x100
+#define CFG_DEFAULT_RUN_TIME     0x0100
 /* whether the configuration setting is disabled (and hence defaults always used) */
-#define CFG_DISABLED		0x200
+#define CFG_DISABLED             0x0200
 /* whether to print integers in octal form (prefixed by "0") */
-#define CFG_FORMAT_INT_OCTAL	0x400
+#define CFG_FORMAT_INT_OCTAL     0x0400
 /* whether to disable checks for the whole config section subtree */
-#define CFG_SECTION_NO_CHECK	0x800
+#define CFG_SECTION_NO_CHECK     0x0800
+/* whether to disallow a possibility to override configuration
+ * setting for commands run interactively (e.g. in lvm shell) */
+#define CFG_DISALLOW_INTERACTIVE 0x1000
 
 /* configuration definition item structure */
 typedef struct cfg_def_item {
@@ -212,6 +216,7 @@ struct cft_check_handle {
 	unsigned check_diff:1;		/* check if the value used differs from default one */
 	unsigned ignoreadvanced:1;	/* do not include advnced configs */
 	unsigned ignoreunsupported:1;	/* do not include unsupported configs */
+	uint16_t disallowed_flags;	/* set of disallowed flags */
 	uint8_t status[CFG_COUNT];	/* flags for each configuration item - the result of the check */
 };
 

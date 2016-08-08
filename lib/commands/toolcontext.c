@@ -950,6 +950,9 @@ static void _destroy_config(struct cmd_context *cmd)
 		 * they will get loaded again automatically.
 		 */
 		dm_list_iterate_items_safe(profile, tmp_profile, &cmd->profile_params->profiles) {
+			if (cmd->is_interactive && (profile == cmd->profile_params->shell_profile))
+				continue;
+
 			config_destroy(profile->cft);
 			profile->cft = NULL;
 			dm_list_move(&cmd->profile_params->profiles_to_load, &profile->list);

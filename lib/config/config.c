@@ -385,6 +385,13 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (cmd->is_interactive &&
+	    !config_force_check(cmd, CONFIG_STRING, cft_new)) {
+		log_error("Ignoring invalid configuration string.");
+		dm_config_destroy(cft_new);
+		return_0;
+	}
+
 	if (!(cs = dm_pool_zalloc(cft_new->mem, sizeof(struct config_source)))) {
 		log_error("Failed to allocate config source.");
 		dm_config_destroy(cft_new);
@@ -984,6 +991,20 @@ static int _config_def_check_node_is_profilable(struct cft_check_handle *handle,
 	return 1;
 }
 
+static int _config_def_check_node_is_allowed(struct cft_check_handle *handle,
+					     const char *rp, struct dm_config_node *cn,
+					     const cfg_def_item_t *def)
+{
+	if (handle->disallowed_flags & def->flags) {
+		log_warn_suppress(handle->suppress_messages,
+				  "Configuration %s \"%s\" is not allowed here.",
+				  cn->v ? "option" : "section", rp);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _config_def_check_node(struct cft_check_handle *handle,
 				  const char *vp, char *pvp, char *rp, char *prp,
 				  size_t buf_size, struct dm_config_node *cn)
@@ -1032,6 +1053,9 @@ static int _config_def_check_node(struct cft_check_handle *handle,
 	 */
 	if (_is_profile_based_config_source(handle->source) &&
 	    !_config_def_check_node_is_profilable(handle, rp, cn, def))
+		return_0;
+
+	if (!_config_def_check_node_is_allowed(handle, rp, cn, def))
 		return_0;
 
 	handle->status[def->id] |= CFG_VALID;
@@ -2129,6 +2153,13 @@ int config_force_check(struct cmd_context *cmd, config_source_t source, struct d
 	handle->force_check = 1;
 	/* provide warning messages only if config/checks=1 */
 	handle->suppress_messages = !find_config_tree_bool(cmd, config_checks_CFG, NULL);
+
+	/*
+	 * Some settings can't be changed if we're running commands interactively
+	 * within lvm shell so check for them in case we're in this interactive mode.
+	 */
+	if (cmd->is_interactive)
+		handle->disallowed_flags |= CFG_DISALLOW_INTERACTIVE;
 
 	r = config_def_check(handle);
 

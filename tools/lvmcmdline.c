@@ -1430,6 +1430,9 @@ static int _prepare_profiles(struct cmd_context *cmd)
 
 		log_debug(_setting_global_profile_msg, _command_profile_source_name, profile->name);
 		cmd->profile_params->global_command_profile = profile;
+
+		if (!cmd->arg_values)
+			cmd->profile_params->shell_profile = profile;
 	}
 
 

@@ -52,6 +52,7 @@
  *                                 CFG_DISABLED - configuration is disabled (defaults always used)
  *                                 CFG_FORMAT_INT_OCTAL - print integer number in octal form (also prefixed by "0")
  *                                 CFG_SECTION_NO_CHECK - do not check content of the section at all - use with care!!!
+ *                                 CFG_DISALLOW_INTERACTIVE - disallow configuration node for use in interactive environment (e.g. cmds run in lvm shell)
  *
  * type:		       Allowed type for the value of simple configuation setting, one of:
  *                                 CFG_TYPE_BOOL
