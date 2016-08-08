@@ -509,7 +509,7 @@ regions (with the exception of in-flight IO counters).
 Creates one or more new statistics regions on the specified device(s).
 
 The region will span the entire device unless \fB\-\-start\fP and
-\fB\-\-length\fP or \fB\-\-target\fP are given. The \fB\-\-start\fP and
+\fB\-\-length\fP or \fB\-\-segments\fP are given. The \fB\-\-start\fP an
 \fB\-\-length\fP options allow a region of arbitrary length to be placed
 at an arbitrary offset into the device. The \fB\-\-segments\fP option
 causes a new region to be created for each target in the corresponding
