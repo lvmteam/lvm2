@@ -600,6 +600,11 @@ the number of histogram bins and their bounds must match exactly.
 
 On success the group list and newly created \fBgroup_id\fP are
 printed to stdout.
+
+The group metadata is stored with the first (lowest numbered)
+\fBregion_id\fP in the group: deleting this region will also delete
+the group and other group members will be returned to their prior
+state.
 .
 .HP
 .CMD_HELP
@@ -672,8 +677,16 @@ each with its own counter set. In this case a summary value for the
 entire region is also available for use in reports.
 
 In addition, one or more regions on one device can be combined into
-a statistics group allowing reporting of aggregate values for all
-regions and areas making up the group.
+a statistics group. Groups allow several regions to be aggregated and
+reported as a single entity; counters for all regions and areas are
+summed and used to report totals for all group members. Groups also
+permit the assignment of an optional alias, allowing meaningful names
+to be associated with sets of regions.
+
+The group metadata is stored with the first (lowest numbered)
+\fBregion_id\fP in the group: deleting this region will also delete
+the group and other group members will be returned to their prior
+state.
 
 By default new regions span the entire device. The \fB\-\-start\fP and
 \fB\-\-length\fP options allows a region of any size to be placed at any
