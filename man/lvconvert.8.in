@@ -452,6 +452,12 @@ Convert RaidLV to use a different raid level.
 \[bu]
 Required options depend on the raid level.
 
+.B lvconvert \-\-type mirror
+VG/RaidLV
+.br
+\[bu]
+Convert RaidLV to type mirror.
+
 .B lvconvert \-\-type striped
 VG/RaidLV
 .br
