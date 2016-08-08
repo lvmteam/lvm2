@@ -2113,7 +2113,7 @@ bad:
 	return NULL;
 }
 
-static int _check_profile(struct cmd_context *cmd, struct profile *profile)
+int config_force_check(struct cmd_context *cmd, config_source_t source, struct dm_config_tree *cft)
 {
 	struct cft_check_handle *handle;
 	int r;
@@ -2124,9 +2124,8 @@ static int _check_profile(struct cmd_context *cmd, struct profile *profile)
 	}
 
 	handle->cmd = cmd;
-	handle->cft = profile->cft;
-	handle->source = profile->source;
-	/* the check is compulsory - allow only profilable items in a profile config! */
+	handle->cft = cft;
+	handle->source = source;
 	handle->force_check = 1;
 	/* provide warning messages only if config/checks=1 */
 	handle->suppress_messages = !find_config_tree_bool(cmd, config_checks_CFG, NULL);
@@ -2252,7 +2251,7 @@ int load_profile(struct cmd_context *cmd, struct profile *profile) {
 	 * messages to be suppressed, but the check itself is always done
 	 * for profiles!
 	 */
-	if (!_check_profile(cmd, profile)) {
+	if (!config_force_check(cmd, profile->source, profile->cft)) {
 		log_error("Ignoring invalid %s %s.",
 			  _config_source_names[profile->source], profile->name);
 		config_destroy(profile->cft);
