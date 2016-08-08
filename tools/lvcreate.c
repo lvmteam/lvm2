@@ -562,7 +562,10 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	lp->nosync = arg_is_set(cmd, nosync_ARG);
+	if ((lp->nosync = arg_is_set(cmd, nosync_ARG)) && seg_is_any_raid6(lp)) {
+		log_error("nosync option prohibited on RAID6");
+		return 0;
+	}
 
 	if (!(lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0)) &&
 	    ((lp->region_size = get_default_region_size(cmd)) <= 0)) {

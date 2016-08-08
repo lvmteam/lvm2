@@ -381,10 +381,11 @@ would result in a mirror with two-sides; that is,
 a linear volume plus one copy.
 
 Specifying the optional argument \fB\-\-nosync\fP will cause the creation
-of the mirror to skip the initial resynchronization.  Any data written
-afterwards will be mirrored, but the original contents will not be
-copied.  This is useful for skipping a potentially long and resource
-intensive initial sync of an empty device.
+of the mirror LV to skip the initial resynchronization.  Any data written
+afterwards will be mirrored, but the original contents will not be copied.
+
+This is useful for skipping a potentially long and resource intensive initial
+sync of an empty mirrored RaidLV.
 
 There are two implementations of mirroring which can be used and correspond
 to the "\fIraid1\fP" and "\fImirror\fP" segment types.
@@ -440,7 +441,21 @@ Without this option a default name of "lvol#" will be generated where
 .HP
 .BR \-\-nosync
 .br
-Causes the creation of the mirror to skip the initial resynchronization.
+Causes the creation of mirror, raid1, raid4, raid5 and raid10 to skip the
+initial resynchronization.  In case of mirror, raid1 and raid10, any data
+written afterwards will be mirrored, but the original contents will not be
+copied.  In case of raid4 and raid5, no parity blocks will be written,
+though any data written afterwards will cause parity blocks to be stored.
+.br
+This is useful for skipping a potentially long and resource intensive initial
+sync of an empty mirror/raid1/raid4/raid5 and raid10 LV.
+.br
+This option is not valid for raid6, because raid6 relies on proper parity
+(P and Q Syndromes) being created during initial synchronization in order
+to reconstruct proper user date in case of device failures.
+
+raid0 and raid0_meta don't provide any data copies or parity support
+and thus don't support initial resynchronization.
 .
 .HP
 .BR \-\-noudevsync
@@ -621,12 +636,14 @@ to the command.
 .br
 Note the current limitation of 8 stripes total in any RaidLV including parity devices.
 
+See the \fB\-\-nosync\fP option to optionally avoid initial syncrhonization of RaidLVs.
+
 Two implementations of basic striping are available in the kernel.
 The original device-mapper implementation is the default and should
 normally be used.  The alternative implementation using MD, available
 since version 1.7 of the RAID device-mapper kernel target (kernel
 version 4.2) is provided to facilitate the development of new RAID
-features.  It may be accessed with \fB--type raid0\fP, but is best
+features.  It may be accessed with \fB--type raid0[_meta]\fP, but is best
 avoided at present because of assorted restrictions on resizing and converting
 such devices.
 .HP
