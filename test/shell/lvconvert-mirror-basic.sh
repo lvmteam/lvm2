@@ -97,7 +97,15 @@ test_lvconvert() {
 		alloc="--alloc anywhere"
 	fi
 
-	lvconvert --type mirror -m $finish_count --mirrorlog $finish_log_type \
+	# --mirrorlog is invalid with -m0
+	if [ "$finish_count" -eq 0 ]; then
+		mirrorlog=""
+		finish_log_type=""
+	else
+		mirrorlog="--mirrorlog"
+	fi
+
+	lvconvert --type mirror -m $finish_count $mirrorlog $finish_log_type \
 		$vg/$lv1 $alloc
 
 	test $active || lvchange -aey $vg/$lv1

@@ -1700,8 +1700,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	uint32_t new_mimage_count;
 	uint32_t new_log_count;
 
-	if (*lp->type_str && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
-		log_error("--corelog and --mirrorlog is only compatible with --type mirror");
+	if ((lp->corelog || lp->mirrorlog) && *lp->type_str && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
+		log_error("--corelog and --mirrorlog are only compatible with mirror devices");
 		return 0;
 	}
 
@@ -1894,7 +1894,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 	if ((lp->corelog || lp->mirrorlog) && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
-		log_error("--corelog and --mirrorlog is only compatible with --type mirror");
+		log_error("--corelog and --mirrorlog are only compatible with mirror devices");
 		return 0;
 	}
 
