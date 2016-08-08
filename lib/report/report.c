@@ -38,6 +38,9 @@ struct lvm_report_object {
 	struct label *label;
 };
 
+static uint32_t log_seqnum = 1;
+
+
 /*
  *  Enum for field_num index to use in per-field reserved value definition.
  *  Each field is represented by enum value with name "field_<id>" where <id>
@@ -3867,9 +3870,7 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 		  const char *object_group_id, const char *msg,
 		  int current_errno, int ret_code)
 {
-	static uint32_t seq_num = 1;
-
-	struct cmd_log_item log_item = {seq_num++, type, context, object_type_name,
+	struct cmd_log_item log_item = {log_seqnum++, type, context, object_type_name,
 					object_name ? : "", object_id ? : "",
 					object_group ? : "", object_group_id ? : "",
 					msg ? : "", current_errno, ret_code};
@@ -3878,6 +3879,11 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 		return dm_report_object(handle, &log_item);
 
 	return 1;
+}
+
+void report_reset_cmdlog_seqnum(void)
+{
+	log_seqnum = 1;
 }
 
 int report_current_object_cmdlog(const char *type, const char *msg, int32_t ret_code)

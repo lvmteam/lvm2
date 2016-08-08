@@ -111,6 +111,7 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 		  const char *object_id, const char *object_group,
 		  const char *object_group_id, const char *msg,
 		  int current_errno, int ret_code);
+void report_reset_cmdlog_seqnum(void);
 #define REPORT_OBJECT_CMDLOG_NAME "status"
 #define REPORT_OBJECT_CMDLOG_SUCCESS "success"
 #define REPORT_OBJECT_CMDLOG_FAILURE "failure"

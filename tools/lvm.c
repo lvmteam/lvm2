@@ -229,6 +229,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	log_set_report_object_type(LOG_REPORT_OBJECT_TYPE_CMD);
 
 	while (1) {
+		report_reset_cmdlog_seqnum();
 		if (cmd->cmd_report.log_rh) {
 			/*
 			 * If previous command was lastlog, reset log report selection to
