@@ -1734,9 +1734,12 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	config_profile_metadata_cft = remove_config_tree_by_source(cmd, CONFIG_PROFILE_METADATA);
 	cmd->profile_params->global_metadata_profile = NULL;
 
-	if (config_string_cft || config_profile_command_cft || config_profile_metadata_cft) {
+	if (config_string_cft) {
 		/* Move this? */
 		if (!refresh_toolcontext(cmd))
+			stack;
+	} else if (config_profile_command_cft || config_profile_metadata_cft) {
+		if (!process_profilable_config(cmd))
 			stack;
 	}
 

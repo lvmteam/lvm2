@@ -1,5 +1,6 @@
 Version 2.02.163 - 
 =================================
+  Do not refresh whole cmd context if profile dropped after processing LVM cmd.
   Support straightforward lvconvert between striped and raid4 LVs.
   Support straightforward lvconvert between raid1 and mirror LVs.
   Report supported conversions when asked for unsupported raid lvconvert.
