@@ -65,6 +65,10 @@ The same as \fBlvmconfig\fP(8) below.
 .B formats
 Display recognised metadata formats.
 .TP
+.B fullreport
+Report information about PVs, PV segments, VGs, LVs and LV segments,
+all at once.
+.TP
 .B help
 Display the help text.
 .TP
