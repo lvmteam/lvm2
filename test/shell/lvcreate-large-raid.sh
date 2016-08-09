@@ -109,4 +109,5 @@ lvremove -ff $vg1
 
 # bz837927 END
 
+vgremove -ff $vg1
 vgremove -ff $vg
