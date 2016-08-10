@@ -1853,7 +1853,7 @@ static int _do_get_custom_fd(const char *env_var_name, int *fd)
 {
 	const char *str;
 	char *endptr;
-	int tmp_fd;
+	long int tmp_fd;
 
 	*fd = -1;
 
