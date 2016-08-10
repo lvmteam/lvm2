@@ -1,5 +1,10 @@
-Version 2.02.163 - 
-=================================
+Version 2.02.163 - 10th August 2016
+===================================
+  Add profile for lvmdbusd which uses lvm shell json report output.
+  Restrict in-command modification of some parms in lvm shell.
+  Apply LVM_COMMAND_PROFILE early for lvm shell.
+  Refactor reporting so lvm shell log report collects whole of cmd execution.
+  Support LVM_*_FD envvars to redirect output to file descriptors.
   Limit use of --corelog and --mirrorlog to mirrors in lvconvert.
   Reject --nosync option for RAID6 LVs in lvcreate.
   Do not refresh whole cmd context if profile dropped after processing LVM cmd.

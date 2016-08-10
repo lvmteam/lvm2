@@ -1,5 +1,7 @@
-Version 1.02.133 - 
-=================================
+Version 1.02.133 - 10th August 2016
+===================================
+  Add dm_report_destroy_rows/dm_report_group_output_and_pop_all for lvm shell.
+  Adjust group handling and json production for lvm shell.
 
 Version 1.02.132 - 28th July 2016
 =================================
