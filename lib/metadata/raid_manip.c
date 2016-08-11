@@ -108,6 +108,22 @@ static void _check_and_adjust_region_size(const struct logical_volume *lv)
 	return _ensure_min_region_size(lv);
 }
 
+/* Strip any raid suffix off LV name */
+static char *_top_level_raid_lv_name(struct logical_volume *lv)
+{
+	char *new_lv_name, *suffix;
+
+	if (!(new_lv_name = dm_pool_strdup(lv->vg->vgmem, lv->name))) {
+		log_error("Failed to allocate string for new LV name.");
+		return NULL;
+	}
+        
+	if ((suffix = first_substring(new_lv_name, "_rimage_", "_mimage_", NULL)))
+		*suffix = '\0';
+
+	return new_lv_name;
+}
+
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 				     struct logical_volume **tracking)
 {
@@ -679,7 +695,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 	struct dm_list allocatable_pvs;
 	struct alloc_handle *ah;
 	struct lv_segment *seg = first_seg(data_lv);
-	char *p, base_name[NAME_LEN];
+	char *base_name;
 
 	dm_list_init(&allocatable_pvs);
 
@@ -699,9 +715,8 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
-	(void) dm_strncpy(base_name, data_lv->name, sizeof(base_name));
-	if ((p = strstr(base_name, "_mimage_")))
-		*p = '\0';
+	if (!(base_name = _top_level_raid_lv_name(data_lv)))
+		return_0;
 
 	if (!(ah = allocate_extents(data_lv->vg, NULL, seg->segtype, 0, 1, 0,
 				    seg->region_size,
