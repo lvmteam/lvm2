@@ -115,6 +115,7 @@ fi
 %{_mandir}/man8/lvmconfig.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
 %{_mandir}/man8/lvmdump.8.gz
+%{_mandir}/man8/lvm-fullreport.8.gz
 %{_mandir}/man8/lvmsadc.8.gz
 %{_mandir}/man8/lvmsar.8.gz
 %{_mandir}/man8/lvreduce.8.gz
@@ -179,6 +180,7 @@ fi
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/thin-performance.profile
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/cache-mq.profile
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/cache-smq.profile
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/profile/lvmdbusd.profile
 %dir %{_sysconfdir}/lvm/backup
 %dir %{_sysconfdir}/lvm/cache
 %dir %{_sysconfdir}/lvm/archive
