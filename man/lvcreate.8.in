@@ -399,6 +399,9 @@ to configure default mirror segment type.
 The options
 \fB\-\-mirrorlog\fP and \fB\-\-corelog\fP apply
 to the legacy "\fImirror\fP" segment type only.
+
+Note the current maxima for mirrors are 7 for "mirror" providing
+8 mirror legs and 9 for "raid1" providing 10 legs.
 .
 .HP
 .BR \-\-mirrorlog
@@ -633,8 +636,12 @@ section of \fBlvm.conf (5)\fP or add
 \fB\-\-config allocation/raid_stripe_all_devices=1\fP
 .br
 to the command.
-.br
-Note the current limitation of 8 stripes total in any RaidLV including parity devices.
+
+Note the current maxima for stripes depend on the created RAID type.
+For raid10, the maximum of stripes is 32,
+for raid0, it is 64,
+for raid4/5, it is 63
+and for raid6 it is 62.
 
 See the \fB\-\-nosync\fP option to optionally avoid initial syncrhonization of RaidLVs.
 

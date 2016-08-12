@@ -66,8 +66,13 @@
 #define DEFAULT_MIRROR_LOG_FAULT_POLICY "allocate"
 #define DEFAULT_MIRROR_IMAGE_FAULT_POLICY "remove"
 #define DEFAULT_MIRROR_MAX_IMAGES 8 /* limited by kernel DM_KCOPYD_MAX_REGIONS */
-// FIXME Increase this to 64
-#define DEFAULT_RAID_MAX_IMAGES 8 /* limited by kernel failed devices bitfield in superblock (raid4/5/6 max 253) */
+/* Limited by kernel failed devices bitfield in superblock (raid4/5/6 MD max 253) */
+/*
+ * FIXME: Increase these to 64 and further to the MD maximum
+ *	  once the SubLVs split and name shift got enhanced
+ */
+#define DEFAULT_RAID1_MAX_IMAGES 10
+#define DEFAULT_RAID_MAX_IMAGES 64
 #define DEFAULT_ALLOCATION_STRIPE_ALL_DEVICES 0 /* Don't stripe across all devices if not -i/--stripes given */
 
 #define DEFAULT_RAID_FAULT_POLICY "warn"

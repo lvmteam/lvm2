@@ -1910,6 +1910,11 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	if (lp->mirrors_supplied) {
 		if (!*lp->type_str || !strcmp(lp->type_str, SEG_TYPE_NAME_RAID1) || !strcmp(lp->type_str, SEG_TYPE_NAME_LINEAR) ||
 		    (!strcmp(lp->type_str, SEG_TYPE_NAME_STRIPED) && image_count == 1)) {
+			if (image_count > DEFAULT_RAID1_MAX_IMAGES) {
+				log_error("Only up to %u mirrors in %s LV %s supported currently.",
+					  DEFAULT_RAID1_MAX_IMAGES, lp->segtype->name, display_lvname(lv));
+				return 0;
+			}
 			if (!lv_raid_change_image_count(lv, image_count, lp->pvh))
 				return_0;
 

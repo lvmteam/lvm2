@@ -338,6 +338,8 @@ VG/RaidLV
 \[bu]
 Change the number of images in raid1 RaidLV.
 
+Note the current maximum is 9 providing 10 raid1 legs.
+
 .B lvconvert \-\-splitmirrors
 Number
 VG/RaidLV

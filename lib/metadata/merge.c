@@ -261,10 +261,17 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 	if (seg->extents_copied > seg->area_len)
 		raid_seg_error_val("extents_copied too large", seg->extents_copied);
 
-	/* Default still 8, change! */
-	if (seg->area_count > DEFAULT_RAID_MAX_IMAGES) {
+	/* Default < 10, change once raid1 split shift and rename SubLVs works! */
+	if (seg_is_raid1(seg)) {
+		if (seg->area_count > DEFAULT_RAID1_MAX_IMAGES) {
+			log_error("LV %s invalid: maximum supported areas %u (is %u) for %s segment",
+			  	seg->lv->name, DEFAULT_RAID1_MAX_IMAGES, seg->area_count, lvseg_name(seg));
+				if ((*error_count)++ > ERROR_MAX)
+					return;
+		}
+	} else if (seg->area_count > DEFAULT_RAID_MAX_IMAGES) {
 		log_error("LV %s invalid: maximum supported areas %u (is %u) for %s segment",
-			  seg->lv->name, DEFAULT_RAID_MAX_IMAGES, seg->area_count, lvseg_name(seg));
+		  	seg->lv->name, DEFAULT_RAID_MAX_IMAGES, seg->area_count, lvseg_name(seg));
 			if ((*error_count)++ > ERROR_MAX)
 				return;
 	}

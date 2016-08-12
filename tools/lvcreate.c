@@ -527,8 +527,21 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 					struct lvcreate_params *lp)
 {
 	int pagesize = lvm_getpagesize();
-	unsigned max_images = segtype_is_raid(lp->segtype) ? DEFAULT_RAID_MAX_IMAGES :
-							     DEFAULT_MIRROR_MAX_IMAGES;
+	unsigned max_images;
+
+	if (seg_is_raid(lp)) {
+		if (seg_is_raid1(lp))
+			max_images = DEFAULT_RAID1_MAX_IMAGES;
+		else {
+			max_images = DEFAULT_RAID_MAX_IMAGES;
+			if (seg_is_raid4(lp) ||
+			    seg_is_any_raid5(lp))
+				max_images--;
+			else if (seg_is_any_raid6(lp))
+				max_images -= 2;
+		}
+	} else
+		max_images = DEFAULT_MIRROR_MAX_IMAGES;
 
 	/* Common mirror and raid params */
 	if (arg_is_set(cmd, mirrors_ARG)) {
@@ -556,8 +569,19 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		/* Default to 2 mirrored areas if '--type mirror|raid1|raid10' */
 		lp->mirrors = seg_is_mirrored(lp) ? 2 : 1;
 
-	if (max(lp->mirrors, lp->stripes) > max_images) {
-		log_error("Only up to %u images in %s supported currently.",
+	/* FIMXE: raid10 check has to change once we support data copies and odd numbers of stripes */
+	if (seg_is_raid10(lp) && lp->mirrors * lp->stripes > max_images) {
+		log_error("Only up to %u stripes in %s supported currently.",
+			  max_images, lp->segtype->name);
+		return 0;
+	} else if (seg_is_mirrored(lp)) {
+		if (lp->mirrors > max_images) {
+			log_error("Only up to %u mirrors in %s supported currently.",
+				  max_images, lp->segtype->name);
+			return 0;
+		}
+	} else if (lp->stripes > max_images) {
+		log_error("Only up to %u stripes in %s supported currently.",
 			  max_images, lp->segtype->name);
 		return 0;
 	}
