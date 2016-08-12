@@ -176,14 +176,22 @@ static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
 	return 1;
 }
 
+/* HM Helper: prohibit allocation on @pv if @lv already has segments allocated on it */
+static int _avoid_pv_of_lv(struct logical_volume *lv, struct physical_volume *pv)
+{
+	if (!lv_is_partial(lv) && lv_is_on_pv(lv, pv))
+		pv->status |= PV_ALLOCATION_PROHIBITED;
+
+	return 1;
+}
+
 static int _avoid_pvs_of_lv(struct logical_volume *lv, void *data)
 {
 	struct dm_list *allocate_pvs = (struct dm_list *) data;
 	struct pv_list *pvl;
 
 	dm_list_iterate_items(pvl, allocate_pvs)
-		if (!lv_is_partial(lv) && lv_is_on_pv(lv, pvl->pv))
-			pvl->pv->status |= PV_ALLOCATION_PROHIBITED;
+		_avoid_pv_of_lv(lv, pvl->pv);
 
 	return 1;
 }
@@ -195,7 +203,15 @@ static int _avoid_pvs_of_lv(struct logical_volume *lv, void *data)
  */
 static int _avoid_pvs_with_other_images_of_lv(struct logical_volume *lv, struct dm_list *allocate_pvs)
 {
-	return for_each_sub_lv(lv, _avoid_pvs_of_lv, allocate_pvs);
+	/* HM FIXME: check fails in case we will ever have mixed AREA_PV/AREA_LV segments */
+	if ((seg_type(first_seg(lv), 0) == AREA_PV ? _avoid_pvs_of_lv(lv, allocate_pvs):
+						     for_each_sub_lv(lv, _avoid_pvs_of_lv, allocate_pvs)))
+		return 1;
+
+	log_error("Failed to prevent PVs holding image components "
+		  "from LV %s being used for allocation.",
+		  display_lvname(lv));
+	return 0;
 }
 
 static void _clear_allocation_prohibited(struct dm_list *pvs)
@@ -1595,7 +1611,7 @@ static int _alloc_rmeta_devs_for_rimage_devs(struct logical_volume *lv,
 		}
 
 		dm_list_add(new_meta_lvs, &lvl_array[a++].list);
-		
+
 		dm_list_iterate_items(lvl1, new_meta_lvs)
 			if (!_avoid_pvs_with_other_images_of_lv(lvl1->lv, allocate_pvs))
 				return_0;
