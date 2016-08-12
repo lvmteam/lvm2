@@ -1067,9 +1067,16 @@ struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *l
 * Useful functions for managing snapshots.
 */
 int lv_is_origin(const struct logical_volume *lv);
+#define lv_is_thick_origin lv_is_origin
+
 int lv_is_thin_origin(const struct logical_volume *lv, unsigned *snap_count);
-int lv_is_cache_origin(const struct logical_volume *lv);
+int lv_is_thin_snapshot(const struct logical_volume *lv);
+
 int lv_is_cow(const struct logical_volume *lv);
+#define lv_is_thick_snapshot lv_is_cow
+
+int lv_is_cache_origin(const struct logical_volume *lv);
+
 int lv_is_merging_cow(const struct logical_volume *cow);
 uint32_t cow_max_extents(const struct logical_volume *origin, uint32_t chunk_size);
 int cow_has_min_chunks(const struct volume_group *vg, uint32_t cow_extents, uint32_t chunk_size);

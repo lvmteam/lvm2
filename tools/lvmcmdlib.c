@@ -30,11 +30,11 @@ void *cmdlib_lvm2_init(unsigned static_compile)
 {
 	struct cmd_context *cmd;
 
-	lvm_register_commands();
-
 	init_is_static(static_compile);
 	if (!(cmd = init_lvm(1, 1)))
 		return NULL;
+
+	lvm_register_commands();
 
 	return (void *) cmd;
 }

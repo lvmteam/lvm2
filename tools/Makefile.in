@@ -76,6 +76,7 @@ SOURCES2 =\
 
 TARGETS =\
 	.commands \
+	command-lines.h \
 	liblvm2cmd.a \
 	lvm
 
@@ -99,7 +100,8 @@ LIB_VERSION = $(LIB_VERSION_LVM)
 CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
 	liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION) lvm-static.o \
 	liblvm2cmd-static.a dmsetup.static lvm.static \
-	$(LDDEPS) .exported_symbols_generated
+	$(LDDEPS) .exported_symbols_generated \
+	ccmd command-lines.h command-lines-count.h
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION)
@@ -170,6 +172,13 @@ liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION): liblvm2cmd.$(LIB_SUFFIX)
 .commands: $(srcdir)/commands.h $(srcdir)/cmdnames.h Makefile
 	$(CC) -E -P $(srcdir)/cmdnames.h 2> /dev/null | \
 		egrep -v '^ *(|#.*|config|devtypes|dumpconfig|formats|fullreport|help|lastlog|lvpoll|pvdata|segtypes|systemid|tags|version) *$$' > .commands
+
+ccmd: create-commands.c
+	$(CC) create-commands.c -o ccmd
+
+command-lines.h: ccmd
+	./ccmd --output struct command-lines.in > command-lines.h
+	./ccmd --output count command-lines.in > command-lines-count.h
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))

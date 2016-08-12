@@ -88,10 +88,18 @@ struct cmd_context {
 	 * Command line and arguments.
 	 */
 	const char *cmd_line;
+	const char *name; /* needed before cmd->command is set */
 	struct command *command;
 	char **argv;
-	struct arg_values *arg_values;
+	struct arg_values *opt_arg_values;
 	struct dm_list arg_value_groups;
+
+	/*
+	 * Position args remaining after command name
+	 * and --options are removed from original argc/argv.
+	 */
+	int position_argc;
+	char **position_argv;
 
 	/*
 	 * Format handlers.

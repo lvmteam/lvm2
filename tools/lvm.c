@@ -45,9 +45,9 @@ static char *_list_cmds(const char *text, int state)
 		len = strlen(text);
 	}
 
-	while (i < _cmdline->num_commands)
-		if (!strncmp(text, _cmdline->commands[i++].name, len))
-			return strdup(_cmdline->commands[i - 1].name);
+	while (i < _cmdline->num_command_names)
+		if (!strncmp(text, _cmdline->command_names[i++].name, len))
+			return strdup(_cmdline->command_names[i - 1].name);
 
 	return NULL;
 }
@@ -57,7 +57,7 @@ static char *_list_args(const char *text, int state)
 {
 	static int match_no = 0;
 	static size_t len = 0;
-	static struct command *com;
+	static struct command_name *cname;
 
 	/* Initialise if this is a new completion attempt */
 	if (!state) {
@@ -65,40 +65,40 @@ static char *_list_args(const char *text, int state)
 		int j;
 
 		match_no = 0;
-		com = NULL;
+		cname = NULL;
 		len = strlen(text);
 
 		/* Find start of first word in line buffer */
 		while (isspace(*s))
 			s++;
 
-		/* Look for word in list of commands */
-		for (j = 0; j < _cmdline->num_commands; j++) {
+		/* Look for word in list of command names */
+		for (j = 0; j < _cmdline->num_command_names; j++) {
 			const char *p;
 			char *q = s;
 
-			p = _cmdline->commands[j].name;
+			p = _cmdline->command_names[j].name;
 			while (*p == *q) {
 				p++;
 				q++;
 			}
 			if ((!*p) && *q == ' ') {
-				com = _cmdline->commands + j;
+				cname = _cmdline->command_names + j;
 				break;
 			}
 		}
 	}
 
-	if (!com)
+	if (!cname)
 		return NULL;
 
 	/* Short form arguments */
 	if (len < 3) {
-		while (match_no < com->num_args) {
+		while (match_no < cname->num_args) {
 			char s[3];
 			char c;
 			if (!(c = (_cmdline->arg_props +
-				   com->valid_args[match_no++])->short_arg))
+				   cname->valid_args[match_no++])->short_arg))
 				continue;
 
 			sprintf(s, "-%c", c);
@@ -108,13 +108,13 @@ static char *_list_args(const char *text, int state)
 	}
 
 	/* Long form arguments */
-	if (match_no < com->num_args)
-		match_no = com->num_args;
+	if (match_no < cname->num_args)
+		match_no = cname->num_args;
 
-	while (match_no - com->num_args < com->num_args) {
+	while (match_no - cname->num_args < cname->num_args) {
 		const char *l;
 		l = (_cmdline->arg_props +
-		     com->valid_args[match_no++ - com->num_args])->long_arg;
+		     cname->valid_args[match_no++ - cname->num_args])->long_arg;
 		if (*(l + 2) && !strncmp(text, l, len))
 			return strdup(l);
 	}

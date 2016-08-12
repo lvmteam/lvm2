@@ -482,6 +482,9 @@ static int _vgchange_metadata_copies(struct cmd_context *cmd,
 {
 	uint32_t mda_copies = arg_uint_value(cmd, vgmetadatacopies_ARG, DEFAULT_VGMETADATACOPIES);
 
+	log_warn("vgchange_metadata_copies new %u vg_mda_copies %u D %u",
+		 mda_copies, vg_mda_copies(vg), DEFAULT_VGMETADATACOPIES);
+
 	if (mda_copies == vg_mda_copies(vg)) {
 		if (vg_mda_copies(vg) == VGMETADATACOPIES_UNMANAGED)
 			log_warn("Number of metadata copies for VG %s is already unmanaged.",

@@ -58,13 +58,13 @@ lvchange -an $vg/$lv1
 # conversion fails for mirror segment type
 fail lvconvert --thinpool $vg/$lv1
 # cannot use same LV
-invalid lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
+not lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
 
 prepare_lvs
 
 # conversion fails for internal volumes
 # can't use --readahead with --poolmetadata
-invalid lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
+not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
 prepare_lvs

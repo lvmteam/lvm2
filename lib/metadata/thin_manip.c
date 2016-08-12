@@ -752,6 +752,19 @@ int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snap_count)
 	return r;
 }
 
+int lv_is_thin_snapshot(const struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	if (!lv_is_thin_volume(lv))
+		return 0;
+
+	if ((seg = first_seg(lv)) && (seg->origin || seg->external_lv))
+		return 1;
+
+	return 0;
+}
+
 /*
  * Explict check of new thin pool for usability
  *

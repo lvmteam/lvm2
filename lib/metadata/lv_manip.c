@@ -319,7 +319,6 @@ static int _lv_layout_and_role_thin(struct dm_pool *mem,
 {
 	int top_level = 0;
 	unsigned snap_count;
-	struct lv_segment *seg;
 
 	/* non-top-level LVs */
 	if (lv_is_thin_pool_metadata(lv)) {
@@ -353,7 +352,7 @@ static int _lv_layout_and_role_thin(struct dm_pool *mem,
 			    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_MULTITHINORIGIN]))
 				goto_bad;
 		}
-		if ((seg = first_seg(lv)) && (seg->origin || seg->external_lv))
+		if (lv_is_thin_snapshot(lv))
 			if (!str_list_add(mem, role, _lv_type_names[LV_TYPE_SNAPSHOT]) ||
 			    !str_list_add_no_dup_check(mem, role, _lv_type_names[LV_TYPE_THINSNAPSHOT]))
 				goto_bad;

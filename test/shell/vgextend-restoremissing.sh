@@ -23,7 +23,6 @@ lvcreate -l 1 -n lv1 $vg "$dev1"
 invalid vgextend
 # --metadatacopies => use --pvmetadatacopies
 invalid vgextend --metadatacopies 3 $vg "$dev1" 2>&1 | tee out
-grep -- "use --pvmetadatacopies" out
 
 # VG name should exist
 fail vgextend --restoremissing $vg-invalid "$dev1"

@@ -19,10 +19,11 @@
 struct cmd_context;
 
 struct cmdline_context {
-        struct arg_props *arg_props;
-        struct command *commands;
-        int num_commands;
-        int commands_size;
+	struct arg_props *arg_props;
+	struct command *commands;
+	int num_commands;
+	struct command_name *command_names;
+	int num_command_names;
 };
 
 int lvm2_main(int argc, char **argv);

@@ -50,19 +50,40 @@
 #define CMD_LEN 256
 #define MAX_ARGS 64
 
-/* command functions */
-typedef int (*command_fn) (struct cmd_context * cmd, int argc, char **argv);
+/* define the enums for the values accepted by command line --options, foo_VAL */
+enum {
+#define val(a, b, c, d) a ,
+#include "vals.h"
+#undef val
+};
 
-#define xx(a, b...) int a(struct cmd_context *cmd, int argc, char **argv);
-#include "commands.h"
-#undef xx
-
-/* define the enums for the command line switches */
+/* define the enums for the command line --options, foo_ARG */
 enum {
 #define arg(a, b, c, d, e, f) a ,
 #include "args.h"
 #undef arg
 };
+
+/* command functions */
+#define xx(a, b...) int a(struct cmd_context *cmd, int argc, char **argv);
+#include "commands.h"
+#undef xx
+
+/* define enums for LV properties, foo_LVP */
+enum {
+#define lvp(a, b, c) a ,
+#include "lv_props.h"
+#undef lvp
+};
+
+/* define enums for LV types, foo_LVT */
+enum {
+#define lvt(a, b, c) a ,
+#include "lv_types.h"
+#undef lvt
+};
+
+#include "command.h"
 
 #define ARG_COUNTABLE 0x00000001	/* E.g. -vvvv */
 #define ARG_GROUPABLE 0x00000002	/* E.g. --addtag */
@@ -79,13 +100,13 @@ struct arg_values {
 /*	void *ptr; // Currently not used. */
 };
 
-/* a global table of possible arguments */
+/* a global table of possible --option's */
 struct arg_props {
+	int arg_enum; /* foo_ARG from args.h */
 	const char short_arg;
 	char _padding[7];
 	const char *long_arg;
-
-	int (*fn) (struct cmd_context *cmd, struct arg_values *av);
+	int val_enum; /* foo_VAL from vals.h */
 	uint32_t flags;
 	uint32_t prio;
 };
@@ -94,6 +115,29 @@ struct arg_value_group_list {
         struct dm_list list;
         struct arg_values arg_values[0];
 	uint32_t prio;
+};
+
+/* a global table of possible --option values */
+struct val_props {
+	int val_enum; /* foo_VAL from vals.h */
+	int (*fn) (struct cmd_context *cmd, struct arg_values *av);
+	const char *name;
+	const char *usage;
+};
+
+/* a global table of possible LV properties */
+struct lv_props {
+	int lvp_enum; /* is_foo_LVP from lv_props.h */
+	const char *name; /* "lv_is_foo" used in command-lines.in */
+	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
+};
+
+/* a global table of possible LV types */
+/* (as exposed externally in command line interface, not exactly as internal segtype is used) */
+struct lv_types {
+	int lvt_enum; /* is_foo_LVT from lv_types.h */
+	const char *name; /* "foo" used in command-lines.in, i.e. LV_foo */
+	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
 };
 
 #define CACHE_VGMETADATA	0x00000001
@@ -118,19 +162,6 @@ struct arg_value_group_list {
 #define ENABLE_DUPLICATE_DEVS    0x00000400
 /* Command does not accept tags as args. */
 #define DISALLOW_TAG_ARGS        0x00000800
- 
-/* a register of the lvm commands */
-struct command {
-	const char *name;
-	const char *desc;
-	const char *usage;
-	command_fn fn;
-
-	unsigned flags;
-
-	int num_args;
-	int *valid_args;
-};
 
 void usage(const char *name);
 
@@ -158,7 +189,15 @@ int segtype_arg(struct cmd_context *cmd, struct arg_values *av);
 int alloc_arg(struct cmd_context *cmd, struct arg_values *av);
 int locktype_arg(struct cmd_context *cmd, struct arg_values *av);
 int readahead_arg(struct cmd_context *cmd, struct arg_values *av);
+int vgmetadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int pvmetadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 int metadatacopies_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int polloperation_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int writemostly_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int syncaction_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int reportformat_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int configreport_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
+int configtype_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av);
 
 /* we use the enums to access the switches */
 unsigned arg_count(const struct cmd_context *cmd, int a);
@@ -199,5 +238,8 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		       activation_change_t activate);
 
 int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg);
+
+struct lv_props *get_lv_prop(int lvp_enum);
+struct lv_types *get_lv_type(int lvt_enum);
 
 #endif
