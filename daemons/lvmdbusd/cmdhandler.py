@@ -12,6 +12,7 @@ import time
 import threading
 from itertools import chain
 import collections
+import traceback
 
 try:
 	from . import cfg
@@ -119,27 +120,22 @@ def call_lvm(command, debug=False):
 
 def _shell_cfg():
 	global _t_call
-	log_debug('Using lvm shell!')
-	lvm_shell = LVMShellProxy()
-	_t_call = lvm_shell.call_lvm
-
-
-if cfg.USE_SHELL:
-	_shell_cfg()
-else:
-	_t_call = call_lvm
+	try:
+		lvm_shell = LVMShellProxy()
+		_t_call = lvm_shell.call_lvm
+		cfg.USE_SHELL = True
+	except Exception:
+		_t_call = call_lvm
+		log_error(traceback.format_exc())
+		log_error("Unable to utilize lvm shell, dropping back to fork & exec")
 
 
 def set_execution(shell):
 	global _t_call
 	with cmd_lock:
-		_t_call = None
+		_t_call = call_lvm
 		if shell:
-			log_debug('Using lvm shell!')
-			lvm_shell = LVMShellProxy()
-			_t_call = lvm_shell.call_lvm
-		else:
-			_t_call = call_lvm
+			_shell_cfg()
 
 
 def time_wrapper(command, debug=False):
@@ -219,6 +215,13 @@ def pv_remove(device, remove_options):
 	return call(cmd)
 
 
+def _qt(tag_name):
+	# When running in lvm shell you need to quote the tags
+	if cfg.USE_SHELL:
+		return '"%s"' % tag_name
+	return tag_name
+
+
 def _tag(operation, what, add, rm, tag_options):
 	cmd = [operation]
 	cmd.extend(options_to_cli_args(tag_options))
@@ -229,9 +232,11 @@ def _tag(operation, what, add, rm, tag_options):
 		cmd.append(what)
 
 	if add:
-		cmd.extend(list(chain.from_iterable(('--addtag', x) for x in add)))
+		cmd.extend(list(chain.from_iterable(
+			('--addtag', _qt(x)) for x in add)))
 	if rm:
-		cmd.extend(list(chain.from_iterable(('--deltag', x) for x in rm)))
+		cmd.extend(list(chain.from_iterable(
+			('--deltag', _qt(x)) for x in rm)))
 
 	return call(cmd, False)
 
@@ -435,8 +440,11 @@ def supports_json():
 	cmd = ['help']
 	rc, out, err = call(cmd)
 	if rc == 0:
-		if 'fullreport' in err:
+		if cfg.USE_SHELL:
 			return True
+		else:
+			if 'fullreport' in err:
+				return True
 	return False
 
 
@@ -477,7 +485,14 @@ def lvm_full_report_json():
 
 	rc, out, err = call(cmd)
 	if rc == 0:
-		return json.loads(out)
+		# With the current implementation, if we are using the shell then we
+		# are using JSON and JSON is returned back to us as it was parsed to
+		# figure out if we completed OK or not
+		if cfg.USE_SHELL:
+			assert(type(out) == dict)
+			return out
+		else:
+			return json.loads(out)
 	return None
 
 

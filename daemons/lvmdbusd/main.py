@@ -100,10 +100,12 @@ def main():
 	parser.add_argument("--debug", action='store_true',
 						help="Dump debug messages", default=False,
 						dest='debug')
-
 	parser.add_argument("--nojson", action='store_false',
 						help="Do not use LVM JSON output", default=None,
 						dest='use_json')
+	parser.add_argument("--lvmshell", action='store_true',
+						help="Use the lvm shell, not fork & exec lvm", default=False,
+						dest='use_lvm_shell')
 
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
 
@@ -113,6 +115,7 @@ def main():
 	args = parser.parse_args()
 
 	cfg.DEBUG = args.debug
+	cmdhandler.set_execution(args.use_lvm_shell)
 
 	# List of threads that we start up
 	thread_list = []
@@ -159,7 +162,7 @@ def main():
 
 	end = time.time()
 	log_debug(
-		'Service ready! total time= %.2f, lvm time= %.2f count= %d' %
+		'Service ready! total time= %.4f, lvm time= %.4f count= %d' %
 		(end - start, cmdhandler.total_time, cmdhandler.total_count),
 		'bg_black', 'fg_light_green')
 
