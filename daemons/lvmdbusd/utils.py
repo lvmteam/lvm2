@@ -13,6 +13,7 @@ import inspect
 import ctypes
 import os
 import string
+import datetime
 
 import dbus
 import dbus.service
@@ -243,7 +244,13 @@ def _common_log(msg, *attributes):
 	cfg.stdout_lock.acquire()
 	tid = ctypes.CDLL('libc.so.6').syscall(186)
 
-	msg = "%d:%d - %s" % (os.getpid(), tid, msg)
+	if STDOUT_TTY:
+		msg = "%s: %d:%d - %s" % \
+			(datetime.datetime.now().strftime("%b %d %H:%M:%S.%f"),
+			os.getpid(), tid, msg)
+
+	else:
+		msg = "%d:%d - %s" % (os.getpid(), tid, msg)
 
 	if STDOUT_TTY and attributes:
 		print(color(msg, *attributes))
