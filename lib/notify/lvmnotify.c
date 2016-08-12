@@ -73,7 +73,7 @@ void lvmnotify_send(struct cmd_context *cmd)
 out:
 	sd_bus_error_free(&error);
 	sd_bus_message_unref(m);
-	sd_bus_unref(bus);
+	sd_bus_flush_close_unref(bus);
 }
 
 void set_vg_notify(struct cmd_context *cmd)
