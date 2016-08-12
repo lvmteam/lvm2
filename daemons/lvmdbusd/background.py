@@ -15,6 +15,7 @@ from .cmdhandler import options_to_cli_args
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
 import traceback
+import os
 
 _rlock = threading.RLock()
 _thread_list = list()
@@ -130,8 +131,16 @@ def background_execute(command, background_job):
 	# hit a code bug we will silently exit this thread without anyone being
 	# the wiser.
 	try:
+		# We need to execute these command stand alone by forking & exec'ing
+		# the command always!
+		command.insert(0, cfg.LVM_CMD)
 		process = subprocess.Popen(command, stdout=subprocess.PIPE,
+								   env=os.environ,
 									stderr=subprocess.PIPE, close_fds=True)
+
+		log_debug("Background process for %s is %d" %
+				  (str(command), process.pid))
+
 		lines_iterator = iter(process.stdout.readline, b"")
 		for line in lines_iterator:
 			line_str = line.decode("utf-8")
@@ -150,8 +159,12 @@ def background_execute(command, background_job):
 
 		if process.returncode == 0:
 			background_job.Percent = 100
+		else:
+			log_error("Failed to execute background job %s, STDERR= %s"
+					  % (str(command), out[1]))
 
 		background_job.set_result(process.returncode, out[1])
+		log_debug("Background process %d complete!" % process.pid)
 
 	except Exception:
 		# In the unlikely event that we blow up, we need to unblock caller which
