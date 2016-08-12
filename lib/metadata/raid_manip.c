@@ -1604,10 +1604,21 @@ static int _alloc_rmeta_devs_for_rimage_devs(struct logical_volume *lv,
 	dm_list_iterate_items(lvl, new_data_lvs) {
 		log_debug_metadata("Allocating new metadata LV for %s", lvl->lv->name);
 
-		if (!_alloc_rmeta_for_lv(lvl->lv, &lvl_array[a].lv, allocate_pvs)) {
-			log_error("Failed to allocate metadata LV for %s in %s",
-				  lvl->lv->name, lv->vg->name);
-			return 0;
+		/*
+		 * Try to collocate with DataLV first and
+		 * if that fails allocate on different PV.
+		 */
+		if (!_alloc_rmeta_for_lv(lvl->lv, &lvl_array[a].lv,
+					 allocate_pvs != &lv->vg->pvs ? allocate_pvs : NULL)) {
+			dm_list_iterate_items(lvl1, new_meta_lvs)
+				if (!_avoid_pvs_with_other_images_of_lv(lvl1->lv, allocate_pvs))
+					return_0;
+
+			if (!_alloc_rmeta_for_lv(lvl->lv, &lvl_array[a].lv, allocate_pvs)) {
+				log_error("Failed to allocate metadata LV for %s in %s",
+					  lvl->lv->name, lv->vg->name);
+				return 0;
+			}
 		}
 
 		dm_list_add(new_meta_lvs, &lvl_array[a++].list);
