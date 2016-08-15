@@ -53,6 +53,15 @@ lvcreate -l 4 --type raid10 -i 2 -m 1 -n $lv1 $vg \
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 aux mkdev_md5sum $vg $lv1
+
+# Check collocation of SubLVs is prohibited
+not pvmove $mode -n ${lv1}_rimage_0 "$dev1" "$dev2"
+check lv_tree_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
+not pvmove $mode -n ${lv1}_rimage_1 "$dev2" "$dev1"
+check lv_tree_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
+not pvmove $mode -n ${lv1}_rmeta_0 "$dev1" "$dev3"
+check lv_tree_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
+
 pvmove $mode "$dev1" "$dev5"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check lv_tree_on $vg $lv1 "$dev2" "$dev3" "$dev4" "$dev5"

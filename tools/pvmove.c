@@ -163,7 +163,8 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 	/* Give up with success unless @lv_name _and_ valid raid segment type */
 	if (!lv_name || !*lv_name ||
 	    !seg_is_raid(first_seg(lv)) ||
-	    seg_is_raid0(first_seg(lv)))
+	    seg_is_raid0(first_seg(lv)) ||
+	    !strcmp(lv->name, lv_name))
 		return 1;
 
 	dm_list_init(&untrim_list);
@@ -427,6 +428,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
  			 * for collocation (e.g. *rmeta_0 -> *rimage_0).
  			 *
  			 * Callee checks for lv_name and valid raid segment type.
+ 			 *
+ 			 * FIXME: don't rely on namespace
  			 */
 			if (!_remove_sibling_pvs_from_trim_list(lv, lv_name, &trim_list))
 				return_NULL;
