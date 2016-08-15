@@ -1,5 +1,8 @@
-Version 2.02.164 -
+Version 2.02.164 - 15th August 2016
 ===================================
+  Fix selection of PVs when allocating raid0_meta.
+  Fix sdbus socket leak leading to hang in lvmnotify.
+  Specify max stripes for raid LV types: raid0:64; 1:10; 4,5:63; 6:62; 10:32.
   Avoid double suffix when naming _rmeta LV paired with _rimage LV.
 
 Version 2.02.163 - 10th August 2016
