@@ -1281,10 +1281,12 @@ static int _validate_stripe_params(struct cmd_context *cmd, const struct segment
 	if (!stripe_size_required && *stripe_size) {
 		log_print_unless_silent("Ignoring stripesize argument for %s devices.", segtype->name);
 		*stripe_size = 0;
-	} else if (segtype_is_striped(segtype) && *stripes == 1 && *stripe_size) {
-		log_print_unless_silent("Ignoring stripesize argument with single stripe.");
+	} else if (*stripes == 1 && (segtype_is_striped(segtype) || segtype_is_mirror(segtype))) {
 		stripe_size_required = 0;
-		*stripe_size = 0;
+		if (*stripe_size) {
+			log_print_unless_silent("Ignoring stripesize argument with single stripe.");
+			*stripe_size = 0;
+		}
 	}
 
 	if (stripe_size_required) {
