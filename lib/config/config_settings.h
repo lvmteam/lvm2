@@ -23,6 +23,11 @@
  * - define a configuration array of one or more types:
  *   cfg_array(id, name, parent, flags, types, default_value, since_version, unconfigured_default_value, deprecated_since_version, deprecation_comment, comment)
  *
+ * - define a configuration setting where the default value is evaluated in runtime
+ *   cfg_runtime(id, name, parent, flags, type, since_version, deprecated_since_version, deprecation_comment, comment)
+ *   (for each cfg_runtime, you need to define 'get_default_<name>(struct cmd_context *cmd, struct profile *profile)' function
+ *    to get the default value in runtime - usually, these functions are placed in config.[ch] file)
+ *
  *
  * If default value can't be assigned statically because it depends on some
  * run-time checks or if it depends on other settings already defined,
