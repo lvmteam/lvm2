@@ -1272,6 +1272,7 @@ uint32_t find_free_lvnum(struct logical_volume *lv);
 dm_percent_t copy_percent(const struct logical_volume *lv_mirr);
 char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len);
+char *top_level_lv_name(struct volume_group *vg, const char *lv_name);
 
 struct generic_logical_volume *get_or_create_glv(struct dm_pool *mem, struct logical_volume *lv, int *glv_created);
 struct glv_list *get_or_create_glvl(struct dm_pool *mem, struct logical_volume *lv, int *glv_created);

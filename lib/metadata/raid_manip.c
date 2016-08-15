@@ -109,16 +109,17 @@ static void _check_and_adjust_region_size(const struct logical_volume *lv)
 }
 
 /* Strip any raid suffix off LV name */
-static char *_top_level_raid_lv_name(struct logical_volume *lv)
+char *top_level_lv_name(struct volume_group *vg, const char *lv_name)
 {
 	char *new_lv_name, *suffix;
 
-	if (!(new_lv_name = dm_pool_strdup(lv->vg->vgmem, lv->name))) {
+	if (!(new_lv_name = dm_pool_strdup(vg->vgmem, lv_name))) {
 		log_error("Failed to allocate string for new LV name.");
 		return NULL;
 	}
         
-	if ((suffix = first_substring(new_lv_name, "_rimage_", "_mimage_", NULL)))
+	if ((suffix = first_substring(new_lv_name, "_rimage_", "_rmeta_",
+						   "_mimage_", "_mlog_", NULL)))
 		*suffix = '\0';
 
 	return new_lv_name;
@@ -731,7 +732,7 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
-	if (!(base_name = _top_level_raid_lv_name(data_lv)))
+	if (!(base_name = top_level_lv_name(data_lv->vg, data_lv->name)))
 		return_0;
 
 	if (!(ah = allocate_extents(data_lv->vg, NULL, seg->segtype, 0, 1, 0,

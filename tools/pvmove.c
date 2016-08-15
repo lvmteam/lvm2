@@ -145,6 +145,74 @@ static struct dm_list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 }
 
 /*
+ * If @lv_name's a RAID SubLV, check for any PVs
+ * on @trim_list holding it's sibling (rimage/rmeta)
+ * and remove it from the @trim_list in order to allow
+ * for pvmove collocation of DataLV/MetaLV pairs.
+ */
+static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
+					      const char *lv_name,
+					      struct dm_list *trim_list)
+{
+	char *idx, *suffix, *sublv_name;
+	size_t len;
+	struct logical_volume *sublv;
+	struct dm_list untrim_list, *pvh1, *pvh2;
+	struct pv_list *pvl1, *pvl2;
+
+	/* Give up with success unless @lv_name _and_ valid raid segment type */
+	if (!lv_name || !*lv_name ||
+	    !seg_is_raid(first_seg(lv)) ||
+	    seg_is_raid0(first_seg(lv)))
+		return 1;
+
+	dm_list_init(&untrim_list);
+
+	if (!(suffix = first_substring(lv_name, "_rimage_", "_rmeta_", NULL)))
+		return 0;
+
+	if (!(idx = strstr(suffix + 1, "_")))
+		return 0;
+	idx++;
+
+	/* + 2 for the longer rimage string */
+	if (!(sublv_name = dm_pool_alloc(lv->vg->cmd->mem, strlen(lv_name + 2))))
+		return_0;
+
+	/* Create the siblings name (e.g. "raidlv_rmeta_N" -> "raidlv_rimage_N" */
+	len = suffix - lv_name;
+	strncpy(sublv_name, lv_name, len);
+	sprintf(sublv_name + len, strstr(suffix, "_rimage_") ? "_rmeta_%s" : "_rimage_%s", idx);
+
+	if (!(sublv = find_lv(lv->vg, sublv_name))) {
+		log_error("Can't find sub LV %s?", sublv_name);
+		return_0;
+	}
+
+	if (!get_pv_list_for_lv(lv->vg->cmd->mem, sublv, &untrim_list)) {
+		log_error("Can't find PVs for sub LV %s?", sublv_name);
+		return_0;
+	}
+
+	dm_list_iterate(pvh1, &untrim_list) {
+		pvl1 = dm_list_item(pvh1, struct pv_list);
+
+		dm_list_iterate(pvh2, trim_list) {
+			pvl2 = dm_list_item(pvh2, struct pv_list);
+
+			if (pvl1->pv == pvl2->pv) {
+				log_debug("Removing PV %s from trim list",
+					  pvl2->pv->dev->pvid);
+				dm_list_del(&pvl2->list);
+				break;
+			}
+		}
+	}
+
+	return 1;
+}
+
+/*
  * _trim_allocatable_pvs
  * @alloc_list
  * @trim_list
@@ -324,7 +392,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (lv == lv_mirr)
 			continue;
 
-		if (lv_name && strcmp(lv->name, lv_name))
+		if (lv_name && strcmp(lv->name, top_level_lv_name(vg, lv_name)))
 			continue;
 
 		/*
@@ -334,7 +402,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		 *
 		 * Allow clustered mirror, but not raid mirror.
 		 */
-		if (vg_is_clustered(lv->vg) && !lv_is_mirror_type(lv))
+		if (vg_is_clustered(vg) && !lv_is_mirror_type(lv))
 			continue;
 
 		if (!lv_is_on_pvs(lv, source_pvl))
@@ -351,8 +419,16 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		    seg_is_mirrored(first_seg(lv))) {
 			dm_list_init(&trim_list);
 
-			if (!get_pv_list_for_lv(lv->vg->cmd->mem,
-						lv, &trim_list))
+			if (!get_pv_list_for_lv(vg->cmd->mem, lv, &trim_list))
+				return_NULL;
+
+			/*
+ 			 * Remove any PVs holding SubLV siblings to allow
+ 			 * for collocation (e.g. *rmeta_0 -> *rimage_0).
+ 			 *
+ 			 * Callee checks for lv_name and valid raid segment type.
+ 			 */
+			if (!_remove_sibling_pvs_from_trim_list(lv, lv_name, &trim_list))
 				return_NULL;
 
 			if (!_trim_allocatable_pvs(allocatable_pvs,
@@ -370,6 +446,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		lv = lvl->lv;
 		if (lv == lv_mirr)
 			continue;
+
 		if (lv_name) {
 			if (strcmp(lv->name, lv_name) && !sub_lv_of(lv, lv_name))
 				continue;
