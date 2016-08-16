@@ -331,7 +331,7 @@ static int _move_thins(struct volume_group *vg_from,
 			data_lv = seg_lv(first_seg(seg->pool_lv), 0);
 
 			/* Ignore, if no allocations on PVs of @vg_to */
-			if (!lv_is_on_pvs(data_lv, &vg_to->pvs) ||
+			if (!lv_is_on_pvs(data_lv, &vg_to->pvs) &&
 			    (seg->external_lv && !lv_is_on_pvs(seg->external_lv, &vg_to->pvs)))
 				continue;
 
