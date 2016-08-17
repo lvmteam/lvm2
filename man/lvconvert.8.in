@@ -611,6 +611,9 @@ VG/ThinPoolLV
 Convert the data portion of ThinPoolLV to type cache.
 .br
 \[bu]
+Requires \-\-cachepool to specify the cache pool to use.
+.br
+\[bu]
 Operates on the data sub LV of the thin pool LV.
 .br
 \[bu]
