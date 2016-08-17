@@ -338,8 +338,6 @@ VG/RaidLV
 \[bu]
 Change the number of images in raid1 RaidLV.
 
-Note the current maximum is 9 providing 10 raid1 legs.
-
 .B lvconvert \-\-splitmirrors
 Number
 VG/RaidLV
@@ -806,6 +804,8 @@ Using \fBmirrored\fP will create a persistent log that is itself mirrored.
 Specifies the number mirror images in addition to the original LV image,
 e.g. \fB\-\-mirrors 1\fP means two copies of the data, the original and
 one mirror image.
+
+The current maximum is 9 providing 10 raid1 images.
 
 This option is required when converting an LV to a \fBraid1\fP or
 \fBmirror\fP LV.
