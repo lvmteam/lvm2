@@ -17,6 +17,7 @@
 
 #ifdef __linux__
 
+#include <sys/sysmacros.h>
 #include <dirent.h>
 
 static int _locate_sysfs_blocks(const char *sysfs_dir, char *path, size_t len,

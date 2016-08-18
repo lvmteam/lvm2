@@ -19,6 +19,7 @@
 
 #include "math.h" /* log10() */
 
+#include <sys/sysmacros.h>
 #include <sys/ioctl.h>
 #include <sys/vfs.h> /* fstatfs */
 
