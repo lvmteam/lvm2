@@ -50,6 +50,7 @@
 @top_srcdir@/lib/misc/lvm-file.h
 @top_srcdir@/lib/misc/lvm-flock.h
 @top_srcdir@/lib/misc/lvm-globals.h
+@top_srcdir@/lib/misc/lvm-maths.h
 @top_srcdir@/lib/misc/lvm-percent.h
 @top_srcdir@/lib/misc/lvm-signal.h
 @top_srcdir@/lib/misc/lvm-string.h

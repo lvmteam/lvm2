@@ -430,28 +430,6 @@ int validate_pool_chunk_size(struct cmd_context *cmd,
 	return r;
 }
 
-/* Greatest common divisor */
-static unsigned long _gcd(unsigned long n1, unsigned long n2)
-{
-	unsigned long remainder;
-
-	do {
-		remainder = n1 % n2;
-		n1 = n2;
-		n2 = remainder;
-	} while (n2);
-
-	return n1;
-}
-
-/* Least common multiple */
-static unsigned long _lcm(unsigned long n1, unsigned long n2)
-{
-	if (!n1 || !n2)
-		return 0;
-	return (n1 * n2) / _gcd(n1, n2);
-}
-
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 					       int passed_args,
 					       int chunk_size_calc_policy)
@@ -497,7 +475,7 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 				continue;
 
 			if (previous_hint)
-				hint = _lcm(previous_hint, hint);
+				hint = lcm(previous_hint, hint);
 			previous_hint = hint;
 			break;
 		case AREA_LV:

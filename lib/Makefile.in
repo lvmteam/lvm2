@@ -112,6 +112,7 @@ SOURCES =\
 	misc/lvm-file.c \
 	misc/lvm-flock.c \
 	misc/lvm-globals.c \
+	misc/lvm-maths.c \
 	misc/lvm-signal.c \
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \

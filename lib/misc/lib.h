@@ -89,6 +89,7 @@
 #  include "lvm-logging.h"
 #  include "lvm-globals.h"
 #  include "lvm-wrappers.h"
+#  include "lvm-maths.h"
 #endif
 
 #include <unistd.h>
