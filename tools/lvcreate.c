@@ -470,8 +470,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 					return 0;
 				}
 
-				log_warn("Adjusting stripes to the minimum of 2 for %s.",
-					 lp->segtype->name);
+				log_verbose("Using 2 stripes for %s.", lp->segtype->name);
 				lp->stripes = 2;
 			}
 
@@ -497,7 +496,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 			return 0;
 		}
 
-		log_warn("Adjusting stripes to the minimum of 3 for %s.", lp->segtype->name);
+		log_verbose("Using 3 stripes for %s.", lp->segtype->name);
 		lp->stripes = 3;
 	} else if (lp->stripes < 2) {
 		if (lp->stripes_supplied) {
@@ -505,7 +504,7 @@ static int _read_raid_params(struct cmd_context *cmd,
 			return 0;
 		}
 
-		log_warn("Adjusting stripes to the minimum of 2 for %s.", lp->segtype->name);
+		log_verbose("Using 2 stripes for %s.", lp->segtype->name);
 		lp->stripes = 2;
 	}
 
