@@ -86,7 +86,8 @@ struct lvconvert_params {
 	sign_t mirrors_sign;
 	uint32_t stripes;
 	uint32_t stripe_size;
-	uint32_t stripe_size_supplied;
+	unsigned stripes_supplied;
+	unsigned stripe_size_supplied;
 	uint32_t read_ahead;
 	cache_mode_t cache_mode; /* cache */
 	const char *policy_name; /* cache */
@@ -3183,7 +3184,7 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 			return_0;
 
 		if (!get_stripe_params(cmd, get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED),
-				       &lp->stripes, &lp->stripe_size))
+				       &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied))
 			return_0;
 
 		if (!archive(vg))
@@ -4473,10 +4474,8 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	if (_mirror_or_raid_type_requested(cmd, lp->type_str) || _raid0_type_requested(lp->type_str) ||
 	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
 		/* FIXME Handle +/- adjustments too? */
-		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size))
+		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied))
 			return_0;
-		/* FIXME Move this into the get function */
-		lp->stripe_size_supplied = arg_is_set(cmd, stripesize_ARG);
 
 		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
 			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */

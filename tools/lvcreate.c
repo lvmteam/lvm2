@@ -1061,7 +1061,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 
 	if (!_lvcreate_name_params(cmd, &argc, &argv, lp) ||
 	    !_read_size_params(cmd, lp, lcp) ||
-	    !get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size) ||
+	    !get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied) ||
 	    (lp->create_pool &&
 	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,

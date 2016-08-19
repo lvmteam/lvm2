@@ -945,6 +945,9 @@ struct lvcreate_params {
 	uint32_t chunk_size; /* snapshot */
 	uint32_t region_size; /* mirror */
 
+	unsigned stripes_supplied; /* striped */
+	unsigned stripe_size_supplied; /* striped */
+
 	uint32_t mirrors; /* mirror */
 
 	uint32_t min_recovery_rate; /* RAID */
