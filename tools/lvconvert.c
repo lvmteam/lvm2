@@ -1963,7 +1963,13 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
-		if (!seg_is_striped(seg) && !lv_raid_percent(lv, &sync_percent)) {
+		if (seg_is_striped(seg)) {
+			log_error("Cannot repair LV %s of type raid0.",
+				  display_lvname(lv));
+			return 0;
+		}
+
+		if (!lv_raid_percent(lv, &sync_percent)) {
 			log_error("Unable to determine sync status of %s.",
 				  display_lvname(lv));
 			return 0;

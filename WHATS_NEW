@@ -1,5 +1,6 @@
 Version 2.02.165 - 
 ===================================
+  Don't allow lvconvert --repair on raid0 devices.
   No longer adjust incorrect number of raid stripes supplied to lvcreate.
   Move lcm and gcd to lib/misc.
   Suppress some unnecessary --stripesize parameter warnings.
