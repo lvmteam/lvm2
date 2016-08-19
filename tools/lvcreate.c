@@ -464,6 +464,12 @@ static int _read_raid_params(struct cmd_context *cmd,
 				/*
 				 * RAID10 needs at least 4 stripes
 				 */
+				if (lp->stripes_supplied) {
+					log_error("Minimum of 2 stripes required for %s.",
+						  lp->segtype->name);
+					return 0;
+				}
+
 				log_warn("Adjusting stripes to the minimum of 2 for %s.",
 					 lp->segtype->name);
 				lp->stripes = 2;
@@ -480,14 +486,28 @@ static int _read_raid_params(struct cmd_context *cmd,
 			/*
 			 * RAID1 does not take a stripe arg
 			 */
-			log_error("Stripe argument cannot be used with segment type, %s",
+			log_error("Stripes argument cannot be used with segment type, %s",
 				  lp->segtype->name);
 			return 0;
 		}
 
-	} else if (lp->stripes < 2)
-		/* No stripes argument was given */
-		lp->stripes = seg_is_any_raid6(lp) ? 3 : 2;
+	} else if (seg_is_any_raid6(lp) && lp->stripes < 3) {
+		if (lp->stripes_supplied) {
+			log_error("Minimum of 3 stripes required for %s.", lp->segtype->name);
+			return 0;
+		}
+
+		log_warn("Adjusting stripes to the minimum of 3 for %s.", lp->segtype->name);
+		lp->stripes = 3;
+	} else if (lp->stripes < 2) {
+		if (lp->stripes_supplied) {
+			log_error("Minimum of 2 stripes required for %s.", lp->segtype->name);
+			return 0;
+		}
+
+		log_warn("Adjusting stripes to the minimum of 2 for %s.", lp->segtype->name);
+		lp->stripes = 2;
+	}
 
 	if (seg_is_raid1(lp)) {
 		if (lp->stripe_size) {
