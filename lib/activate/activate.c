@@ -1853,7 +1853,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			continue;
 
 		if (new_unmonitor) {
-			if (!target_register_events(cmd, dso, lv, 0, 0, 0)) {
+			if (!target_register_events(cmd, dso, lv, 0, 0, 10)) {
 				log_error("%s: segment unmonitoring failed.",
 					  display_lvname(lv));
  
