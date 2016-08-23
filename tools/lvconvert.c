@@ -1849,6 +1849,11 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 				  lvseg_name(seg));
 			return 0;
 		}
+		if (seg_is_raid10(seg)) {
+			log_error("--mirrors/-m cannot be changed with %s.",
+				  lvseg_name(seg));
+			return 0;
+		}
 	}
 
 	if (!_lvconvert_validate_thin(lv, lp))
