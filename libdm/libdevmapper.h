@@ -216,6 +216,7 @@ int dm_task_set_major_minor(struct dm_task *dmt, int major, int minor, int allow
 int dm_task_set_uid(struct dm_task *dmt, uid_t uid);
 int dm_task_set_gid(struct dm_task *dmt, gid_t gid);
 int dm_task_set_mode(struct dm_task *dmt, mode_t mode);
+/* See also description for DM_UDEV_DISABLE_LIBRARY_FALLBACK flag! */
 int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags);
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
 int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads, const char *sectors, const char *start);
@@ -3496,7 +3497,18 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft);
  * DM_UDEV_DISABLE_LIBRARY_FALLBACK is set in case we need to disable
  * libdevmapper's node management. We will rely on udev completely
  * and there will be no fallback action provided by libdevmapper if
- * udev does something improperly.
+ * udev does something improperly. Using the library fallback code has
+ * a consequence that you need to take into account: any device node
+ * or symlink created without udev is not recorded in udev database
+ * which other applications may read to get complete list of devices.
+ * For this reason, use of DM_UDEV_DISABLE_LIBRARY_FALLBACK is
+ * recommended on systems where udev is used. Keep library fallback
+ * enabled just for exceptional cases where you need to debug udev-related
+ * problems. If you hit such problems, please contact us through upstream
+ * LVM2 development mailing list (see also README file). This flag is
+ * currently not set by default in libdevmapper so you need to set it
+ * explicitly if you're sure that udev is behaving correctly on your
+ * setups.
  */
 #define DM_UDEV_DISABLE_LIBRARY_FALLBACK 0x0020
 /*
