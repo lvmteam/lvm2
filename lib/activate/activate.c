@@ -1831,52 +1831,43 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		if (monitor) {
 			if (monitored)
 				log_verbose("%s already monitored.", display_lvname(lv));
-			else if (seg->segtype->ops->target_monitor_events)
+			else if (seg->segtype->ops->target_monitor_events) {
+				log_verbose("Monitoring %s%s", display_lvname(lv), test_mode() ? " [Test mode: skipping this]" : "");
 				monitor_fn = seg->segtype->ops->target_monitor_events;
+			}
 		} else {
 			if (!monitored)
 				log_verbose("%s already not monitored.", display_lvname(lv));
-			else if (*dso)
+			else if (*dso) {
 				/*
 				 * Divert unmonitor away from code that depends on the new segment
 				 * type instead of the existing one if it's changing.
 				 */
+				log_verbose("Not monitoring %s with %s%s", display_lvname(lv), dso, test_mode() ? " [Test mode: skipping this]" : "");
 				new_unmonitor = 1;
-			else if (seg->segtype->ops->target_unmonitor_events)
-				monitor_fn = seg->segtype->ops->target_unmonitor_events;
+			}
 		}
 
+		/* FIXME Test mode should really continue a bit further. */
+		if (test_mode())
+			continue;
+
 		if (new_unmonitor) {
-			log_verbose("Not monitoring %s with %s%s", display_lvname(lv), dso, test_mode() ? " [Test mode: skipping this]" : "");
-
-			/* FIXME Test mode should really continue a bit further. */
-			if (test_mode())
-				return 1;
-
 			if (!target_register_events(cmd, dso, lv, 0, 0, 0)) {
 				log_error("%s: segment unmonitoring failed.",
 					  display_lvname(lv));
  
 				return 0;
 			}
-
-		} else if (!monitor_fn)
-			continue;
-		else if (monitor_fn) {
-			log_verbose("%sonitoring %s%s", monitor ? "M" : "Not m", display_lvname(lv),
-				    test_mode() ? " [Test mode: skipping this]" : "");
-
-			/* FIXME Test mode should really continue a bit further. */
-			if (test_mode())
-				continue;
-
+		} else if (monitor_fn) {
 			/* FIXME specify events */
 			if (!monitor_fn(seg, 0)) {
 				log_error("%s: %s segment monitoring function failed.",
 					  display_lvname(lv), seg->segtype->name);
 				return 0;
 			}
-		}
+		} else
+			continue;
 
 		/* Check [un]monitor results */
 		/* Try a couple times if pending, but not forever... */
