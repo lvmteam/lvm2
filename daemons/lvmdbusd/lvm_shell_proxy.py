@@ -203,6 +203,12 @@ class LVMShellProxy(object):
 
 		return rc, json_result, error_msg
 
+	def exit_shell(self):
+		try:
+			self._write_cmd('exit\n')
+		except Exception as e:
+			log_error(str(e))
+
 	def __del__(self):
 		try:
 			self.lvm_shell.terminate()

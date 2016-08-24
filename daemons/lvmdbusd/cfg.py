@@ -24,14 +24,18 @@ om = None
 # This is the global bus connection
 bus = None
 
+# Command line args
+args = None
+
+# Set to true if we are depending on external events for updates
+ee = False
+
 # Shared state variable across all processes
 run = multiprocessing.Value('i', 1)
 
-# Debug
-DEBUG = True
-
-# Use lvm shell
-USE_SHELL = False
+# If this is set to true, the current setup support lvm shell and we are
+# running in that mode of operation
+SHELL_IN_USE = None
 
 # Lock used by pprint
 stdout_lock = multiprocessing.Lock()

@@ -17,7 +17,7 @@ from . import cmdhandler
 from .fetch import load_pvs, load_vgs
 from .request import RequestEntry
 from .refresh import event_add
-
+from . import udevwatch
 
 # noinspection PyPep8Naming
 class Manager(AutomatedProperties):
@@ -181,6 +181,13 @@ class Manager(AutomatedProperties):
 		in_signature='s', out_signature='i')
 	def ExternalEvent(self, command):
 
+		# If a user didn't explicitly specify udev, we will turn it off now.
+		if not cfg.args.use_udev:
+			if udevwatch.remove():
+				utils.log_debug("ExternalEvent received, disabling "
+								"udev monitoring")
+				# We are dependent on external events now to stay current!
+				cfg.ee = True
 		event_add((command,))
 		return dbus.Int32(0)
 

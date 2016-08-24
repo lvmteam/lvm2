@@ -8,10 +8,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import pyudev
+import threading
 from .refresh import event_add
 from . import cfg
 
 observer = None
+observer_lock = threading.RLock()
 
 
 # noinspection PyUnusedLocal
@@ -40,15 +42,20 @@ def filter_event(action, device):
 
 
 def add():
-	global observer
-	context = pyudev.Context()
-	monitor = pyudev.Monitor.from_netlink(context)
-	monitor.filter_by('block')
-	observer = pyudev.MonitorObserver(monitor, filter_event)
-	observer.start()
+	with observer_lock:
+		global observer
+		context = pyudev.Context()
+		monitor = pyudev.Monitor.from_netlink(context)
+		monitor.filter_by('block')
+		observer = pyudev.MonitorObserver(monitor, filter_event)
+		observer.start()
 
 
 def remove():
-	global observer
-	observer.stop()
-	observer = None
+	with observer_lock:
+		global observer
+		if observer:
+			observer.stop()
+			observer = None
+			return True
+		return False

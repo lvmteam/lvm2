@@ -92,6 +92,7 @@ def process_request():
 
 
 def main():
+	start = time.time()
 	# Add simple command line handling
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--udev", action='store_true',
@@ -112,15 +113,12 @@ def main():
 	# Ensure that we get consistent output for parsing stdout/stderr
 	os.environ["LC_ALL"] = "C"
 
-	args = parser.parse_args()
+	cfg.args = parser.parse_args()
 
-	cfg.DEBUG = args.debug
-	cmdhandler.set_execution(args.use_lvm_shell)
+	cmdhandler.set_execution(cfg.args.use_lvm_shell)
 
 	# List of threads that we start up
 	thread_list = []
-
-	start = time.time()
 
 	# Install signal handlers
 	for s in [signal.SIGHUP, signal.SIGINT]:
@@ -144,7 +142,7 @@ def main():
 
 	cfg.load = load
 
-	cfg.db = lvmdb.DataStore(args.use_json)
+	cfg.db = lvmdb.DataStore(cfg.args.use_json)
 
 	# Start up thread to monitor pv moves
 	thread_list.append(
@@ -160,23 +158,25 @@ def main():
 		process.damon = True
 		process.start()
 
+	# Add udev watching
+	if cfg.args.use_udev:
+		log_debug('Utilizing udev to trigger updates')
+
+	# In all cases we are going to monitor for udev until we get an
+	# ExternalEvent.  In the case where we get an external event and the user
+	# didn't specify --udev we will stop monitoring udev
+	udevwatch.add()
+
 	end = time.time()
 	log_debug(
 		'Service ready! total time= %.4f, lvm time= %.4f count= %d' %
 		(end - start, cmdhandler.total_time, cmdhandler.total_count),
 		'bg_black', 'fg_light_green')
 
-	# Add udev watching
-	if args.use_udev:
-		log_debug('Utilizing udev to trigger updates')
-		udevwatch.add()
-
 	try:
 		if cfg.run.value != 0:
 			cfg.loop.run()
-
-			if args.use_udev:
-				udevwatch.remove()
+			udevwatch.remove()
 
 			for process in thread_list:
 				process.join()

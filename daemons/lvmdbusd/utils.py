@@ -265,7 +265,7 @@ def _common_log(msg, *attributes):
 # @param msg    Message to output to stdout
 # @return None
 def log_debug(msg, *attributes):
-	if cfg.DEBUG:
+	if cfg.args.debug:
 		_common_log(msg, *attributes)
 
 
