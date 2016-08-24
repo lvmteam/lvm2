@@ -69,7 +69,7 @@ class PvState(State):
 					lv_uuid, full_name, path_create)
 
 				rc.append((lv_path, segs))
-		return dbus.Array(rc, signature="(oa(tts))")
+		return rc
 
 	# noinspection PyUnusedLocal,PyPep8Naming
 	def __init__(self, lvm_path, Uuid, Name,
@@ -241,26 +241,20 @@ class Pv(AutomatedProperties):
 	@property
 	def PeSegments(self):
 		if len(self.state.pe_segments):
-			return self.state.pe_segments
-		return dbus.Array([], '(tt)')
+			return dbus.Array(self.state.pe_segments, signature='(tt)')
+		return dbus.Array([], 'a(tt)')
 
 	@property
 	def Exportable(self):
-		if self.state.attr[1] == 'x':
-			return True
-		return False
+		return dbus.Boolean(self.state.attr[1] == 'x')
 
 	@property
 	def Allocatable(self):
-		if self.state.attr[0] == 'a':
-			return True
-		return False
+		return dbus.Boolean(self.state.attr[0] == 'a')
 
 	@property
 	def Missing(self):
-		if self.state.attr[2] == 'm':
-			return True
-		return False
+		return dbus.Boolean(self.state.attr[2] == 'm')
 
 	def object_path(self):
 		return self._object_path
@@ -275,8 +269,8 @@ class Pv(AutomatedProperties):
 
 	@property
 	def Lv(self):
-		return self.state.lv
+		return dbus.Array(self.state.lv, signature="(oa(tts))")
 
 	@property
 	def Vg(self):
-		return self.state.vg_path
+		return dbus.ObjectPath(self.state.vg_path)

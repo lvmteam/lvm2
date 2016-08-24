@@ -21,7 +21,7 @@ from . import udevwatch
 
 # noinspection PyPep8Naming
 class Manager(AutomatedProperties):
-	_Version_meta = ("t", MANAGER_INTERFACE)
+	_Version_meta = ("s", MANAGER_INTERFACE)
 
 	def __init__(self, object_path):
 		super(Manager, self).__init__(object_path)
@@ -29,7 +29,7 @@ class Manager(AutomatedProperties):
 
 	@property
 	def Version(self):
-		return '1.0.0'
+		return dbus.String('1.0.0')
 
 	@staticmethod
 	def _pv_create(device, create_options):

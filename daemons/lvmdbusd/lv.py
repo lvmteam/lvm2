@@ -252,14 +252,16 @@ class LvCommon(AutomatedProperties):
 					'V': 'thin Volume', 't': 'thin pool', 'T': 'Thin pool data',
 					'e': 'raid or pool metadata or pool metadata spare',
 					'-': 'Unspecified'}
-		return (self.state.Attr[0], type_map[self.state.Attr[0]])
+		return dbus.Struct((self.state.Attr[0], type_map[self.state.Attr[0]]),
+						   signature="as")
 
 	@property
 	def Permissions(self):
 		type_map = {'w': 'writable', 'r': 'read-only',
 					'R': 'Read-only activation of non-read-only volume',
 					'-': 'Unspecified'}
-		return (self.state.Attr[1], type_map[self.state.Attr[1]])
+		return dbus.Struct((self.state.Attr[1], type_map[self.state.Attr[1]]),
+						   signature="(ss)")
 
 	@property
 	def AllocationPolicy(self):
@@ -268,11 +270,12 @@ class LvCommon(AutomatedProperties):
 					'i': 'inherited', 'I': 'inherited locked',
 					'l': 'cling', 'L': 'cling locked',
 					'n': 'normal', 'N': 'normal locked', '-': 'Unspecified'}
-		return (self.state.Attr[2], type_map[self.state.Attr[2]])
+		return dbus.Struct((self.state.Attr[2], type_map[self.state.Attr[2]]),
+						   signature="(ss)")
 
 	@property
 	def FixedMinor(self):
-		return self.state.Attr[3] == 'm'
+		return dbus.Boolean(self.state.Attr[3] == 'm')
 
 	@property
 	def State(self):
@@ -283,29 +286,32 @@ class LvCommon(AutomatedProperties):
 					'd': 'mapped device present without  tables',
 					'i': 'mapped device present with inactive table',
 					'X': 'unknown', '-': 'Unspecified'}
-		return (self.state.Attr[4], type_map[self.state.Attr[4]])
+		return dbus.Struct((self.state.Attr[4], type_map[self.state.Attr[4]]),
+						   signature="(ss)")
 
 	@property
 	def TargetType(self):
 		type_map = {'C': 'Cache', 'm': 'mirror', 'r': 'raid',
 					's': 'snapshot', 't': 'thin', 'u': 'unknown',
 					'v': 'virtual', '-': 'Unspecified'}
-		return (self.state.Attr[6], type_map[self.state.Attr[6]])
+		return dbus.Struct((self.state.Attr[6], type_map[self.state.Attr[6]]),
+						   signature="(ss)")
 
 	@property
 	def ZeroBlocks(self):
-		return self.state.Attr[7] == 'z'
+		return dbus.Boolean(self.state.Attr[7] == 'z')
 
 	@property
 	def Health(self):
 		type_map = {'p': 'partial', 'r': 'refresh',
 					'm': 'mismatches', 'w': 'writemostly',
 					'X': 'X unknown', '-': 'Unspecified'}
-		return (self.state.Attr[8], type_map[self.state.Attr[8]])
+		return dbus.Struct((self.state.Attr[8], type_map[self.state.Attr[8]]),
+						   signature="(ss)")
 
 	@property
 	def SkipActivation(self):
-		return self.state.Attr[9] == 'k'
+		return dbus.Boolean(self.state.Attr[9] == 'k')
 
 	def vg_name_lookup(self):
 		return self.state.vg_name_lookup()
@@ -331,15 +337,15 @@ class LvCommon(AutomatedProperties):
 
 	@property
 	def IsThinVolume(self):
-		return self.state.Attr[0] == 'V'
+		return dbus.Boolean(self.state.Attr[0] == 'V')
 
 	@property
 	def IsThinPool(self):
-		return self.state.Attr[0] == 't'
+		return dbus.Boolean(self.state.Attr[0] == 't')
 
 	@property
 	def Active(self):
-		return self.state.active == "active"
+		return dbus.Boolean(self.state.active == "active")
 
 	@dbus.service.method(
 		dbus_interface=LV_COMMON_INTERFACE,
@@ -698,11 +704,11 @@ class LvThinPool(Lv):
 
 	@property
 	def DataLv(self):
-		return self._data_lv
+		return dbus.ObjectPath(self._data_lv)
 
 	@property
 	def MetaDataLv(self):
-		return self._metadata_lv
+		return dbus.ObjectPath(self._metadata_lv)
 
 	@staticmethod
 	def _lv_create(lv_uuid, lv_name, name, size_bytes, create_options):
@@ -757,11 +763,11 @@ class LvCachePool(Lv):
 
 	@property
 	def DataLv(self):
-		return self._data_lv
+		return dbus.ObjectPath(self._data_lv)
 
 	@property
 	def MetaDataLv(self):
-		return self._metadata_lv
+		return dbus.ObjectPath(self._metadata_lv)
 
 	@staticmethod
 	def _cache_lv(lv_uuid, lv_name, lv_object_path, cache_options):
@@ -826,7 +832,7 @@ class LvCacheLv(Lv):
 
 	@property
 	def CachePool(self):
-		return self.state.PoolLv
+		return dbus.ObjectPath(self.state.PoolLv)
 
 	@staticmethod
 	def _detach_lv(lv_uuid, lv_name, detach_options, destroy_cache):

@@ -78,7 +78,7 @@ class VgState(State):
 			(pv_name, pv_uuid) = p
 			rc.append(cfg.om.get_object_path_by_uuid_lvm_id(
 				pv_uuid, pv_name, pv_obj_path_generate))
-		return dbus.Array(rc, signature='o')
+		return rc
 
 	def __init__(self, Uuid, Name, Fmt,
 			SizeBytes, FreeBytes, SysId, ExtentSizeBytes,
@@ -840,9 +840,7 @@ class Vg(AutomatedProperties):
 		cfg.worker_q.put(r)
 
 	def _attribute(self, pos, ch):
-		if self.state.attr[pos] == ch:
-			return True
-		return False
+		return dbus.Boolean(self.state.attr[pos] == ch)
 
 	@dbus.service.method(
 		dbus_interface=VG_INTERFACE,
@@ -908,11 +906,11 @@ class Vg(AutomatedProperties):
 
 	@property
 	def Pvs(self):
-		return self.state.Pvs
+		return dbus.Array(self.state.Pvs, signature='o')
 
 	@property
 	def Lvs(self):
-		return self.state.Lvs
+		return dbus.Array(self.state.Lvs, signature='o')
 
 	@property
 	def lvm_id(self):

@@ -121,7 +121,7 @@ class Job(AutomatedProperties):
 
 	@property
 	def Percent(self):
-		return self.state.Percent
+		return dbus.Byte(int(self.state.Percent))
 
 	@Percent.setter
 	def Percent(self, value):
@@ -129,7 +129,7 @@ class Job(AutomatedProperties):
 
 	@property
 	def Complete(self):
-		return self.state.Complete
+		return dbus.Boolean(self.state.Complete)
 
 	@Complete.setter
 	def Complete(self, value):
@@ -137,7 +137,7 @@ class Job(AutomatedProperties):
 
 	@property
 	def GetError(self):
-		return self.state.GetError
+		return dbus.Struct(self.state.GetError, signature="(is)")
 
 	def set_result(self, ec, msg):
 		self.state.set_result(ec, msg)
@@ -160,7 +160,7 @@ class Job(AutomatedProperties):
 
 	@property
 	def Result(self):
-		return self.state.Result
+		return dbus.ObjectPath(self.state.Result)
 
 	@property
 	def lvm_id(self):
