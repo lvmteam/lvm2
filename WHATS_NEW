@@ -1,5 +1,6 @@
 Version 2.02.165 - 
 ===================================
+  Do not monitor cache-pool metadata when LV is just being cleared.
   Add allocation/cache_pool_max_chunks to prevent misuse of cache target.
   Give error not segfault in lvconvert --splitmirrors when PV lies outside LV.
   Fix typo in report/columns_as_rows config option name recognition (2.02.99).

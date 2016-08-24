@@ -1724,6 +1724,23 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		return 1;
 
 	/*
+	 * Activation of unused cache-pool activates metadata device as
+	 * a public LV  for clearing purpose.
+	 * FIXME:
+	 *  As VG lock is held across whole operation unmonitored volume
+	 *  is usually OK since dmeventd couldn't do anything.
+	 *  However in case command would have crashed, such LV is
+	 *  left unmonitored and may potentially require dmeventd.
+	 */
+	if ((lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) &&
+	    !lv_is_used_cache_pool((find_pool_seg(first_seg(lv))->lv))) {
+		log_debug_activation("Skipping %smonitor of %s.%s",
+				     (monitor) ? "" : "un", display_lvname(lv),
+				     (monitor) ? " Cache pool activation for clearing only." : "");
+		return 1;
+	}
+
+	/*
 	 * Allow to unmonitor thin pool via explicit pool unmonitor
 	 * or unmonitor before the last thin pool user deactivation
 	 * Skip unmonitor, if invoked via deactivation of thin volume
