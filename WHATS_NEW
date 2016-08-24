@@ -1,6 +1,6 @@
 Version 2.02.165 - 
 ===================================
-  Disallow segtype and mirror conversions of raid10 volumes.
+  Disallow mirror conversions of raid10 volumes.
   Fix dmeventd unmonitoring when segment type (and dso) changes.
   Don't allow lvconvert --repair on raid0 devices or attempt to monitor them.
   No longer adjust incorrect number of raid stripes supplied to lvcreate.

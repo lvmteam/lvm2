@@ -1674,49 +1674,6 @@ static void _init_alloc_parms(struct alloc_handle *ah,
 		alloc_parms->flags |= A_CAN_SPLIT;
 }
 
-static int _log_parallel_areas(struct dm_pool *mem, struct dm_list *parallel_areas)
-{
-	struct seg_pvs *spvs;
-	struct pv_list *pvl;
-	char *pvnames;
-
-	if (!parallel_areas)
-		return 1;
-
-	dm_list_iterate_items(spvs, parallel_areas) {
-		if (!dm_pool_begin_object(mem, 256)) {
-			log_error("dm_pool_begin_object failed");
-			return 0;
-		}
-
-		dm_list_iterate_items(pvl, &spvs->pvs) {
-			if (!dm_pool_grow_object(mem, pv_dev_name(pvl->pv), strlen(pv_dev_name(pvl->pv)))) {
-				log_error("dm_pool_grow_object failed");
-				dm_pool_abandon_object(mem);
-				return 0;
-			}
-			if (!dm_pool_grow_object(mem, " ", 1)) {
-				log_error("dm_pool_grow_object failed");
-				dm_pool_abandon_object(mem);
-				return 0;
-			}
-		}
-
-		if (!dm_pool_grow_object(mem, "\0", 1)) {
-			log_error("dm_pool_grow_object failed");
-			dm_pool_abandon_object(mem);
-			return 0;
-		}
-
-		pvnames = dm_pool_end_object(mem);
-		log_debug_alloc("Parallel PVs at LE %" PRIu32 " length %" PRIu32 ": %s",
-				spvs->le, spvs->len, pvnames);
-		dm_pool_free(mem, pvnames);
-	}
-
-	return 1;
-}
-
 /* Handles also stacking */
 static int _setup_lv_size(struct logical_volume *lv, uint32_t extents)
 {
@@ -2196,6 +2153,49 @@ static int _pvs_have_matching_tag(const struct dm_config_node *cling_tag_list_cn
 static int _has_matching_pv_tag(struct pv_match *pvmatch, struct pv_segment *pvseg, struct pv_area *pva)
 {
 	return _pvs_have_matching_tag(pvmatch->cling_tag_list_cn, pvseg->pv, pva->map->pv);
+}
+
+static int _log_parallel_areas(struct dm_pool *mem, struct dm_list *parallel_areas)
+{
+	struct seg_pvs *spvs;
+	struct pv_list *pvl;
+	char *pvnames;
+
+	if (!parallel_areas)
+		return 1;
+
+	dm_list_iterate_items(spvs, parallel_areas) {
+		if (!dm_pool_begin_object(mem, 256)) {
+			log_error("dm_pool_begin_object failed");
+			return 0;
+		}
+
+		dm_list_iterate_items(pvl, &spvs->pvs) {
+			if (!dm_pool_grow_object(mem, pv_dev_name(pvl->pv), strlen(pv_dev_name(pvl->pv)))) {
+				log_error("dm_pool_grow_object failed");
+				dm_pool_abandon_object(mem);
+				return 0;
+			}
+			if (!dm_pool_grow_object(mem, " ", 1)) {
+				log_error("dm_pool_grow_object failed");
+				dm_pool_abandon_object(mem);
+				return 0;
+			}
+		}
+
+		if (!dm_pool_grow_object(mem, "\0", 1)) {
+			log_error("dm_pool_grow_object failed");
+			dm_pool_abandon_object(mem);
+			return 0;
+		}
+
+		pvnames = dm_pool_end_object(mem);
+		log_debug_alloc("Parallel PVs at LE %" PRIu32 " length %" PRIu32 ": %s",
+				spvs->le, spvs->len, pvnames);
+		dm_pool_free(mem, pvnames);
+	}
+
+	return 1;
 }
 
 /*
