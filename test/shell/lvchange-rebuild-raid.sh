@@ -19,7 +19,10 @@ aux have_raid 1 3 2 || skip
 aux prepare_vg 8
 
 # Delay 1st leg so that rebuilding status characters can be read
-aux delay_dev "$dev1" 0 3
+for d in "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6" "$dev7" "$dev8"
+do
+	aux delay_dev $d 0 3
+done
 
 # rhbz 1064592
 
