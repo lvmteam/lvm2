@@ -516,6 +516,11 @@ cfg_runtime(allocation_cache_pool_chunk_size_CFG, "cache_pool_chunk_size", alloc
 	"on the smaller end of the spectrum. Supported values range from\n"
 	"32KiB to 1GiB in multiples of 32.\n")
 
+cfg(allocation_cache_pool_max_chunks_CFG, "cache_pool_max_chunks", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_UNDEFINED, CFG_TYPE_INT, 0, vsn(2, 2, 165), NULL, 0, NULL,
+	"The maximum number of chunks in a cache pool.\n"
+	"For cache target v1.9 the recommended maximumm is 1000000 chunks.\n"
+	"Using cache pool with more chunks may degrade cache performance.\n")
+
 cfg(allocation_thin_pool_metadata_require_separate_pvs_CFG, "thin_pool_metadata_require_separate_pvs", allocation_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_METADATA_REQUIRE_SEPARATE_PVS, vsn(2, 2, 89), NULL, 0, NULL,
 	"Thin pool metdata and data will always use different PVs.\n")
 

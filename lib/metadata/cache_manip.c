@@ -161,9 +161,40 @@ int update_cache_pool_params(const struct segment_type *segtype,
 	uint64_t min_meta_size;
 	uint32_t extent_size = vg->extent_size;
 	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
+	uint64_t pool_data_size = (uint64_t) pool_data_extents * extent_size;
+	uint64_t max_chunks =
+		get_default_allocation_cache_pool_max_chunks_CFG(vg->cmd, vg->profile);
+	/* min chunk size in a multiple of DM_CACHE_MIN_DATA_BLOCK_SIZE */
+	uint64_t min_chunk_size = (((pool_data_size + max_chunks - 1) / max_chunks +
+				    DM_CACHE_MIN_DATA_BLOCK_SIZE - 1) /
+				   DM_CACHE_MIN_DATA_BLOCK_SIZE) * DM_CACHE_MIN_DATA_BLOCK_SIZE;
 
-	if (!(passed_args & PASS_ARG_CHUNK_SIZE))
+	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
 		*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
+		if (*chunk_size < min_chunk_size) {
+			/*
+			 * When using more then 'standard' default,
+			 * keep user informed he might be using things in untintended direction
+			 */
+			log_print_unless_silent("Using %s chunk size instead of default %s, "
+						"so cache pool has less then " FMTu64 " chunks.",
+						display_size(vg->cmd, min_chunk_size),
+						display_size(vg->cmd, *chunk_size),
+						max_chunks);
+			*chunk_size = min_chunk_size;
+		} else
+			log_verbose("Setting chunk size to %s.",
+				    display_size(vg->cmd, *chunk_size));
+	} else if (*chunk_size < min_chunk_size) {
+		log_error("Chunk size %s is less then required minimal chunk size %s "
+			  "for a cache pool of %s size and limit " FMTu64 " chunks.",
+			  display_size(vg->cmd, *chunk_size),
+			  display_size(vg->cmd, min_chunk_size),
+			  display_size(vg->cmd, pool_data_size),
+			  max_chunks);
+		log_error("To allow use of more chunks, see setting allocation/cache_pool_max_chunks.");
+		return 0;
+	}
 
 	if (!validate_pool_chunk_size(vg->cmd, segtype, *chunk_size))
 		return_0;
@@ -204,18 +235,39 @@ int update_cache_pool_params(const struct segment_type *segtype,
  */
 int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size)
 {
+	struct volume_group *vg = pool_lv->vg;
+	uint64_t max_chunks = get_default_allocation_cache_pool_max_chunks_CFG(vg->cmd, vg->profile);
 	uint64_t min_size = _cache_min_metadata_size(pool_lv->size, chunk_size);
+	uint64_t chunks = pool_lv->size / chunk_size;
+	int r = 1;
 
 	if (min_size > first_seg(pool_lv)->metadata_lv->size) {
-		log_error("Cannot use chunk size %s with cache pool %s. "
-			  "Minimal required size for metadata is %s.",
-			  display_size(pool_lv->vg->cmd, chunk_size),
+		log_error("Cannot use chunk size %s with cache pool %s metadata size %s.",
+			  display_size(vg->cmd, chunk_size),
 			  display_lvname(pool_lv),
-			  display_size(pool_lv->vg->cmd, min_size));
-		return 0;
+			  display_size(vg->cmd, first_seg(pool_lv)->metadata_lv->size));
+		log_error("Minimal size for cache pool %s metadata with chunk size %s would be %s.",
+			  display_lvname(pool_lv),
+			  display_size(vg->cmd, chunk_size),
+			  display_size(vg->cmd, min_size));
+		r = 0;
 	}
 
-	return 1;
+	if (chunks > max_chunks) {
+		log_error("Cannot use too small chunk size %s with cache pool %s data volume size %s.",
+			  display_size(vg->cmd, chunk_size),
+			  display_lvname(pool_lv),
+			  display_size(pool_lv->vg->cmd, pool_lv->size));
+		log_error("Maximum configured chunks for a cache pool is " FMTu64 ".",
+			  max_chunks);
+		log_error("Use smaller cache pool (<%s) or bigger cache chunk size (>=%s) or enable higher "
+			  "values in 'allocation/cache_pool_max_chunks'.",
+			  display_size(vg->cmd, chunk_size * max_chunks),
+			  display_size(vg->cmd, pool_lv->size / max_chunks));
+		r = 0;
+	}
+
+	return r;
 }
 /*
  * Validate arguments for converting origin into cached volume with given cache pool.

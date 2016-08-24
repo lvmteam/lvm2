@@ -307,5 +307,6 @@ int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, st
 #define get_default_unconfigured_allocation_cache_pool_chunk_size_CFG NULL
 const char *get_default_allocation_cache_policy_CFG(struct cmd_context *cmd, struct profile *profile);
 #define get_default_unconfigured_allocation_cache_policy_CFG NULL
+uint64_t get_default_allocation_cache_pool_max_chunks_CFG(struct cmd_context *cmd, struct profile *profile);
 
 #endif

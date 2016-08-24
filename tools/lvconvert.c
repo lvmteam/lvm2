@@ -3037,16 +3037,22 @@ static int _lvconvert_pool(struct cmd_context *cmd,
 
 		if (!metadata_lv) {
 			if (arg_from_list_is_set(cmd, "is invalid with existing pool",
-						 chunksize_ARG, discards_ARG,
+						 discards_ARG,
 						 poolmetadatasize_ARG, -1))
 				return_0;
 
 			if (lp->thin &&
 			    arg_from_list_is_set(cmd, "is invalid with existing thin pool",
-						 zero_ARG, -1))
+						 chunksize_ARG, zero_ARG, -1))
 				return_0;
 
 			if (lp->cache) {
+				if (!lp->chunk_size)
+					lp->chunk_size = first_seg(pool_lv)->chunk_size;
+
+				if (!validate_lv_cache_chunk_size(pool_lv, lp->chunk_size))
+					return_0;
+
 				/* Check is user requested zeroing logic via [-Z y|n] */
 				if (!arg_is_set(cmd, zero_ARG)) {
 					/* Note: requires rather deep know-how to skip zeroing */

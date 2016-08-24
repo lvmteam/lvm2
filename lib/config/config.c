@@ -2461,3 +2461,25 @@ int get_default_allocation_cache_pool_chunk_size_CFG(struct cmd_context *cmd, st
 {
 	return DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
 }
+
+uint64_t get_default_allocation_cache_pool_max_chunks_CFG(struct cmd_context *cmd, struct profile *profile)
+{
+	static int _warn_max_chunks = 0;
+	/*
+	 * TODO: In future may depend on the cache target version,
+	 *       newer targets may scale better.
+	 */
+	uint64_t default_max_chunks = DEFAULT_CACHE_POOL_MAX_CHUNKS;
+	uint64_t max_chunks = find_config_tree_int(cmd, allocation_cache_pool_max_chunks_CFG, profile);
+
+	if (!max_chunks)
+		max_chunks = default_max_chunks;
+	else if (max_chunks > default_max_chunks)
+		/* Still warn the user when the value is tweaked above recommended level */
+		/* Maybe drop to log_verbose... */
+		log_warn_suppress(_warn_max_chunks++, "WARNING: Configured cache_pool_max_chunks value "
+				  FMTu64 " is higher then recommended " FMTu64 ".",
+				  max_chunks, default_max_chunks);
+
+	return max_chunks;
+}
