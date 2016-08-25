@@ -1107,10 +1107,13 @@ class TestDbusService(unittest.TestCase):
 				vg_proxy.Vg.LvCreateLinear(r + rs(8, '_lv'),
 					mib(4), False, -1, {})
 
-	_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._-+/=!:&#"
+	# Wait until BZ https://bugzilla.redhat.com/show_bug.cgi?id=1370002
+	# is corrected before we add '-' in the allowable character set
+	#_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._-+/=!:&#"
+	_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._+/=!:&#"
 
 	def _invalid_tag_characters(self):
-		bad_tag_ch_set = set(string.printable) - set(self._ALLOWABLE_TAG_CH)
+		bad_tag_ch_set = set(string.printable) - set(self._ALLOWABLE_TAG_CH + '-')
 		return ''.join(bad_tag_ch_set)
 
 	def test_invalid_tags(self):
