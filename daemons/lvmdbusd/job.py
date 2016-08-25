@@ -105,7 +105,7 @@ class JobState(object):
 
 # noinspection PyPep8Naming
 class Job(AutomatedProperties):
-	_Percent_meta = ('y', JOB_INTERFACE)
+	_Percent_meta = ('d', JOB_INTERFACE)
 	_Complete_meta = ('b', JOB_INTERFACE)
 	_Result_meta = ('o', JOB_INTERFACE)
 	_GetError_meta = ('(is)', JOB_INTERFACE)
@@ -121,7 +121,7 @@ class Job(AutomatedProperties):
 
 	@property
 	def Percent(self):
-		return dbus.Byte(int(self.state.Percent))
+		return dbus.Double(float(self.state.Percent))
 
 	@Percent.setter
 	def Percent(self, value):
