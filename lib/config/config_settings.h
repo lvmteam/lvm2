@@ -1571,7 +1571,7 @@ cfg(report_prefixes_CFG, "prefixes", report_CFG_SECTION, CFG_PROFILABLE | CFG_DE
 cfg(report_quoted_CFG, "quoted", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_QUOTED, vsn(2, 2, 39), NULL, 0, NULL,
 	"Quote field values when using field name prefixes.\n")
 
-cfg(report_colums_as_rows_CFG, "colums_as_rows", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_COLUMNS_AS_ROWS, vsn(1, 0, 0), NULL, 0, NULL,
+cfg(report_columns_as_rows_CFG, "columns_as_rows", report_CFG_SECTION, CFG_PROFILABLE | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_REP_COLUMNS_AS_ROWS, vsn(1, 0, 0), NULL, 0, NULL,
 	"Output each column as a row.\n"
 	"If set, this also implies report/prefixes=1.\n")
 

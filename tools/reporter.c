@@ -1237,7 +1237,7 @@ static int _config_report(struct cmd_context *cmd, struct report_args *args, str
 	args->separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
 	args->field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG, NULL);
 	args->quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);
-	args->columns_as_rows = find_config_tree_bool(cmd, report_colums_as_rows_CFG, NULL);
+	args->columns_as_rows = find_config_tree_bool(cmd, report_columns_as_rows_CFG, NULL);
 
 	/* Check PV specifics and do extra changes/actions if needed. */
 	_check_pv_list(cmd, args, single_args);

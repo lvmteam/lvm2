@@ -39,7 +39,7 @@ report {
 	list_item_separator=","
 	prefixes=0
 	quoted=1
-	colums_as_rows=0
+	columns_as_rows=0
 	binary_values_as_numeric=0
 	time_format="%Y-%m-%d %T %z"
 	devtypes_sort="devtype_name"
