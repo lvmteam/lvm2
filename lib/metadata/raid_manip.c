@@ -1497,7 +1497,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		break;
 	}
 
-	if (s >= (int) seg->area_count) {
+	if (s < 0) {
 		log_error("Unable to find image to satisfy request");
 		return 0;
 	}

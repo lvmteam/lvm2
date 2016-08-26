@@ -1,5 +1,6 @@
 Version 2.02.165 - 
 ===================================
+  Give error not segfault in lvconvert --splitmirrors when PV lies outside LV.
   Fix typo in report/columns_as_rows config option name recognition (2.02.99).
   Avoid PV tags when checking allocation against parallel PVs.
   Disallow mirror conversions of raid10 volumes.
