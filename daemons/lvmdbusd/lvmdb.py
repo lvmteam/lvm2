@@ -15,12 +15,8 @@ import pprint as prettyprint
 import os
 import sys
 
-try:
-	from . import cmdhandler
-	from .utils import log_debug, log_error
-except SystemError:
-	import cmdhandler
-	from utils import log_debug
+from lvmdbusd import cmdhandler
+from lvmdbusd.utils import log_debug, log_error
 
 
 class DataStore(object):

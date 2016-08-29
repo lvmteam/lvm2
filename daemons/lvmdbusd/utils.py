@@ -18,11 +18,8 @@ import datetime
 import dbus
 import dbus.service
 import dbus.mainloop.glib
+from lvmdbusd import cfg
 
-try:
-	from . import cfg
-except SystemError:
-	import cfg
 
 STDOUT_TTY = os.isatty(sys.stdout.fileno())
 

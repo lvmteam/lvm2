@@ -23,18 +23,13 @@ import select
 import copy
 
 try:
-	from simplejson.scanner import JSONDecodeError
 	import simplejson as json
 except ImportError:
 	import json
 
 
-try:
-	from .cfg import LVM_CMD
-	from .utils import log_debug, log_error
-except:
-	from cfg import LVM_CMD
-	from utils import log_debug, log_error
+from lvmdbusd.cfg import LVM_CMD
+from lvmdbusd.utils import log_debug, log_error
 
 SHELL_PROMPT = "lvm> "
 
