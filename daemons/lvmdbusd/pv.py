@@ -55,9 +55,6 @@ class PvState(State):
 		return self.lvm_path
 
 	def _lv_object_list(self, vg_name):
-
-		# Note we are returning "a(oa(tts))"
-
 		rc = []
 		if vg_name:
 			for lv in sorted(cfg.db.pv_contained_lv(self.lvm_id)):
@@ -242,7 +239,7 @@ class Pv(AutomatedProperties):
 	def PeSegments(self):
 		if len(self.state.pe_segments):
 			return dbus.Array(self.state.pe_segments, signature='(tt)')
-		return dbus.Array([], 'a(tt)')
+		return dbus.Array([], '(tt)')
 
 	@property
 	def Exportable(self):
