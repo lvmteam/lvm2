@@ -337,7 +337,7 @@ prepare_lvmdbusd() {
 	fi
 
 	echo "preparing lvmdbusd..."
-	"$daemon" --debug --udev > debug.log_LVMDBUSD_out 2>&1 &
+	"$daemon" --debug  > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
 
 	sleep 1
