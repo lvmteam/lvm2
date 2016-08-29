@@ -525,7 +525,7 @@ int update_pool_params(const struct segment_type *segtype,
 		return 0;
 	}
 
-	log_verbose("Using pool metadata size %s.",
+	log_verbose("Preferred pool metadata size %s.",
 		    display_size(vg->cmd, (uint64_t)*pool_metadata_extents * vg->extent_size));
 
 	return 1;
