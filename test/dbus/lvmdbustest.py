@@ -1107,13 +1107,10 @@ class TestDbusService(unittest.TestCase):
 				vg_proxy.Vg.LvCreateLinear(r + rs(8, '_lv'),
 					mib(4), False, -1, {})
 
-	# Wait until BZ https://bugzilla.redhat.com/show_bug.cgi?id=1370002
-	# is corrected before we add '-' in the allowable character set
-	#_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._-+/=!:&#"
-	_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._+/=!:&#"
+	_ALLOWABLE_TAG_CH = string.ascii_letters + string.digits + "._-+/=!:&#"
 
 	def _invalid_tag_characters(self):
-		bad_tag_ch_set = set(string.printable) - set(self._ALLOWABLE_TAG_CH + '-')
+		bad_tag_ch_set = set(string.printable) - set(self._ALLOWABLE_TAG_CH)
 		return ''.join(bad_tag_ch_set)
 
 	def test_invalid_tags(self):
@@ -1149,6 +1146,22 @@ class TestDbusService(unittest.TestCase):
 
 			self.assertEqual(i, len(vg_proxy.Vg.Tags), "%d != %d" %
 				(i, len(vg_proxy.Vg.Tags)))
+
+	def test_tag_regression(self):
+		mgr = self.objs[MANAGER_INT][0].Manager
+		pv_paths = [self.objs[PV_INT][0].object_path]
+
+		vg_path = mgr.VgCreate("test", pv_paths, -1, {})[0]
+		vg_proxy = ClientProxy(self.bus, vg_path)
+
+		tag = '--h/K.6g0A4FOEatf3+k_nI/Yp&L_u2oy-=j649x:+dUcYWPEo6.IWT0c'
+
+		r = vg_proxy.Vg.TagsAdd([tag], -1, {})
+		self.assertTrue(r == '/')
+		vg_proxy.update()
+
+		self.assertTrue(tag in vg_proxy.Vg.Tags, "%s not in %s" %
+						(tag, str(vg_proxy.Vg.Tags)))
 
 
 if __name__ == '__main__':
