@@ -115,7 +115,6 @@ class LVMShellProxy(object):
 		local_env["LVM_REPORT_FD"] = "32"
 		local_env["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 
-
 		flags = fcntl(self.report_r, F_GETFL)
 		fcntl(self.report_r, F_SETFL, flags | os.O_NONBLOCK)
 
@@ -223,7 +222,7 @@ if __name__ == "__main__":
 				end = time.time()
 
 				print(("RC: %d" % ret))
-				#print(("OUT:\n%s" % out))
+				# print(("OUT:\n%s" % out))
 				print(("ERR:\n%s" % err))
 
 				print("Command     = %f seconds" % (end - start))

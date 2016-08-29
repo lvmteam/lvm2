@@ -135,11 +135,11 @@ def background_execute(command, background_job):
 		# the command always!
 		command.insert(0, cfg.LVM_CMD)
 		process = subprocess.Popen(command, stdout=subprocess.PIPE,
-								   env=os.environ,
+									env=os.environ,
 									stderr=subprocess.PIPE, close_fds=True)
 
 		log_debug("Background process for %s is %d" %
-				  (str(command), process.pid))
+					(str(command), process.pid))
 
 		lines_iterator = iter(process.stdout.readline, b"")
 		for line in lines_iterator:
@@ -149,8 +149,8 @@ def background_execute(command, background_job):
 			try:
 				if line_str.count(':') == 2:
 					(device, ignore, percentage) = line_str.split(':')
-					background_job.Percent = \
-						round(float(percentage.strip()[:-1]), 1)
+					background_job.Percent = round(
+						float(percentage.strip()[:-1]), 1)
 			except ValueError:
 				log_error("Trying to parse percentage which failed for %s" %
 					line_str)
@@ -161,7 +161,7 @@ def background_execute(command, background_job):
 			background_job.Percent = 100
 		else:
 			log_error("Failed to execute background job %s, STDERR= %s"
-					  % (str(command), out[1]))
+						% (str(command), out[1]))
 
 		background_job.set_result(process.returncode, out[1])
 		log_debug("Background process %d complete!" % process.pid)

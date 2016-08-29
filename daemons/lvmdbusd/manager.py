@@ -19,6 +19,7 @@ from .request import RequestEntry
 from .refresh import event_add
 from . import udevwatch
 
+
 # noinspection PyPep8Naming
 class Manager(AutomatedProperties):
 	_Version_meta = ("s", MANAGER_INTERFACE)

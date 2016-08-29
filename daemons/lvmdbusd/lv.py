@@ -260,7 +260,7 @@ class LvCommon(AutomatedProperties):
 					'e': 'raid or pool metadata or pool metadata spare',
 					'-': 'Unspecified'}
 		return dbus.Struct((self.state.Attr[0], type_map[self.state.Attr[0]]),
-						   signature="as")
+						signature="as")
 
 	@property
 	def Permissions(self):
@@ -268,7 +268,7 @@ class LvCommon(AutomatedProperties):
 					'R': 'Read-only activation of non-read-only volume',
 					'-': 'Unspecified'}
 		return dbus.Struct((self.state.Attr[1], type_map[self.state.Attr[1]]),
-						   signature="(ss)")
+						signature="(ss)")
 
 	@property
 	def AllocationPolicy(self):
@@ -278,7 +278,7 @@ class LvCommon(AutomatedProperties):
 					'l': 'cling', 'L': 'cling locked',
 					'n': 'normal', 'N': 'normal locked', '-': 'Unspecified'}
 		return dbus.Struct((self.state.Attr[2], type_map[self.state.Attr[2]]),
-						   signature="(ss)")
+						signature="(ss)")
 
 	@property
 	def FixedMinor(self):
@@ -294,7 +294,7 @@ class LvCommon(AutomatedProperties):
 					'i': 'mapped device present with inactive table',
 					'X': 'unknown', '-': 'Unspecified'}
 		return dbus.Struct((self.state.Attr[4], type_map[self.state.Attr[4]]),
-						   signature="(ss)")
+						signature="(ss)")
 
 	@property
 	def TargetType(self):
@@ -302,7 +302,7 @@ class LvCommon(AutomatedProperties):
 					's': 'snapshot', 't': 'thin', 'u': 'unknown',
 					'v': 'virtual', '-': 'Unspecified'}
 		return dbus.Struct((self.state.Attr[6], type_map[self.state.Attr[6]]),
-						   signature="(ss)")
+						signature="(ss)")
 
 	@property
 	def ZeroBlocks(self):
@@ -314,7 +314,7 @@ class LvCommon(AutomatedProperties):
 					'm': 'mismatches', 'w': 'writemostly',
 					'X': 'X unknown', '-': 'Unspecified'}
 		return dbus.Struct((self.state.Attr[8], type_map[self.state.Attr[8]]),
-						   signature="(ss)")
+					signature="(ss)")
 
 	@property
 	def SkipActivation(self):

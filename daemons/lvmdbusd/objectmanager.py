@@ -125,7 +125,7 @@ class ObjectManager(AutomatedProperties):
 			path, props = dbus_object.emit_data()
 
 			# print('Registering object path %s for %s' %
-			#		(path, dbus_object.lvm_id))
+			# (path, dbus_object.lvm_id))
 
 			# We want fast access to the object by a number of different ways
 			# so we use multiple hashs with different keys

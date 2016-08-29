@@ -96,20 +96,24 @@ def main():
 	start = time.time()
 	# Add simple command line handling
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--udev", action='store_true',
-						help="Use udev for updating state", default=False,
-						dest='use_udev')
-	parser.add_argument("--debug", action='store_true',
-						help="Dump debug messages", default=False,
-						dest='debug')
-	parser.add_argument("--nojson", action='store_false',
-						help="Do not use LVM JSON output (Note: This "
-							"does not work with --lvmshell", default=True,
-						dest='use_json')
-	parser.add_argument("--lvmshell", action='store_true',
-						help="Use the lvm shell, not fork & exec lvm",
-						default=False,
-						dest='use_lvm_shell')
+	parser.add_argument(
+		"--udev", action='store_true',
+		help="Use udev for updating state",
+		default=False,
+		dest='use_udev')
+	parser.add_argument(
+		"--debug", action='store_true',
+		help="Dump debug messages", default=False,
+		dest='debug')
+	parser.add_argument(
+		"--nojson", action='store_false',
+		help="Do not use LVM JSON output (disables lvmshell)", default=True,
+		dest='use_json')
+	parser.add_argument(
+		"--lvmshell", action='store_true',
+		help="Use the lvm shell, not fork & exec lvm",
+		default=False,
+		dest='use_lvm_shell')
 
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
 
