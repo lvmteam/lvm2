@@ -103,7 +103,14 @@ class LvState(State):
 			(pv_uuid, pv_name, pv_segs) = pv
 			pv_obj = cfg.om.get_object_path_by_uuid_lvm_id(
 				pv_uuid, pv_name, gen_new=False)
-			rc.append((pv_obj, pv_segs))
+
+			segs_decorate = []
+			for i in pv_segs:
+				segs_decorate.append((dbus.UInt64(i[0]),
+									dbus.UInt64(i[1]),
+									dbus.String(i[2])))
+
+			rc.append((dbus.ObjectPath(pv_obj), segs_decorate))
 
 		return dbus.Array(rc, signature="(oa(tts))")
 
@@ -127,7 +134,7 @@ class LvState(State):
 			op = cfg.om.get_object_path_by_uuid_lvm_id(
 				l[0], full_name, gen_new=False)
 			assert op
-			rc.append(op)
+			rc.append(dbus.ObjectPath(op))
 		return rc
 
 	def __init__(self, Uuid, Name, Path, SizeBytes,
@@ -140,9 +147,9 @@ class LvState(State):
 		# value
 		self._segs = dbus.Array([], signature='s')
 		if not isinstance(segtypes, list):
-			self._segs.append(segtypes)
+			self._segs.append(dbus.String(segtypes))
 		else:
-			self._segs.extend(set(segtypes))
+			self._segs.extend([dbus.String(x) for x in set(segtypes)])
 
 		self.Vg = cfg.om.get_object_path_by_uuid_lvm_id(
 			vg_uuid, vg_name, vg_obj_path_generate)
