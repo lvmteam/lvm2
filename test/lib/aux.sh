@@ -329,7 +329,6 @@ prepare_lvmdbusd() {
 	which python3 >/dev/null || skip "Missing python3"
 	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
 
-        # TODO: Tests should use session bus instead of system bus
 	# Copy the needed file to run on the system bus if it doesn't
 	# already exist
 	if [ ! -f /etc/dbus-1/system.d/com.redhat.lvmdbus1.conf ]; then
