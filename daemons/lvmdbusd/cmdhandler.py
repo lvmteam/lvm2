@@ -38,10 +38,6 @@ total_count = 0
 # at the same time.
 cmd_lock = threading.RLock()
 
-# The actual method which gets called to invoke the lvm command, can vary
-# from forking a new process to using lvm shell
-_t_call = None
-
 
 class LvmExecutionMeta(object):
 
@@ -113,12 +109,16 @@ def call_lvm(command, debug=False):
 		_debug_c(command, process.returncode, (stdout_text, stderr_text))
 
 	if process.returncode == 0:
-		if cfg.args.debug and out[1] and len(out[1]) and 'help' not in command:
+		if cfg.args and cfg.args.debug and out[1] and len(out[1]) and \
+				'help' not in command:
 			log_error('WARNING: lvm is out-putting text to STDERR on success!')
 			_debug_c(command, process.returncode, (stdout_text, stderr_text))
 
 	return process.returncode, stdout_text, stderr_text
 
+# The actual method which gets called to invoke the lvm command, can vary
+# from forking a new process to using lvm shell
+_t_call = call_lvm
 
 def _shell_cfg():
 	global _t_call
