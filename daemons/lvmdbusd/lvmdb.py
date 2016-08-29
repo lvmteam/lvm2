@@ -24,7 +24,7 @@ except SystemError:
 
 
 class DataStore(object):
-	def __init__(self, usejson=None):
+	def __init__(self, usejson=True):
 		self.pvs = {}
 		self.vgs = {}
 		self.lvs = {}
@@ -42,7 +42,7 @@ class DataStore(object):
 		# self.refresh()
 		self.num_refreshes = 0
 
-		if usejson is None:
+		if usejson:
 			self.json = cmdhandler.supports_json()
 		else:
 			self.json = usejson

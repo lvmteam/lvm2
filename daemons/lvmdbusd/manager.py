@@ -167,14 +167,14 @@ class Manager(AutomatedProperties):
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
-		in_signature='b')
+		in_signature='b', out_signature='b')
 	def UseLvmShell(self, yes_no):
 		"""
 		Allow the client to enable/disable lvm shell, used for testing
 		:param yes_no:
 		:return: Nothing
 		"""
-		cmdhandler.set_execution(yes_no)
+		return dbus.Boolean(cmdhandler.set_execution(yes_no))
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,

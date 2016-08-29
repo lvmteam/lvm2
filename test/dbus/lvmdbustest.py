@@ -50,7 +50,7 @@ def set_execution(lvmshell):
 	lvm_manager = dbus.Interface(bus.get_object(
 		BUSNAME, "/com/redhat/lvmdbus1/Manager"),
 		"com.redhat.lvmdbus1.Manager")
-	lvm_manager.UseLvmShell(lvmshell)
+	return lvm_manager.UseLvmShell(lvmshell)
 
 
 # noinspection PyUnresolvedReferences
@@ -1155,13 +1155,18 @@ if __name__ == '__main__':
 	# Test forking & exec new each time
 	test_shell = os.getenv('LVM_DBUS_TEST_SHELL', 1)
 
+	# Default to no lvm shell
 	set_execution(False)
 
 	if test_shell == 0:
 		unittest.main(exit=True)
 	else:
+		print('\n *** Testing fork & exec *** \n')
 		unittest.main(exit=False)
 		# Test lvm shell
 		print('\n *** Testing lvm shell *** \n')
-		set_execution(True)
-		unittest.main()
+		if set_execution(True):
+			unittest.main()
+		else:
+			print("WARNING: Unable to dynamically configure "
+				"service to use lvm shell!")

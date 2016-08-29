@@ -25,9 +25,10 @@ from .background import background_reaper
 import traceback
 import queue
 from . import udevwatch
-from .utils import log_debug
+from .utils import log_debug, log_error
 import argparse
 import os
+import sys
 from .refresh import handle_external_event, event_complete
 
 
@@ -102,10 +103,12 @@ def main():
 						help="Dump debug messages", default=False,
 						dest='debug')
 	parser.add_argument("--nojson", action='store_false',
-						help="Do not use LVM JSON output", default=None,
+						help="Do not use LVM JSON output (Note: This "
+							"does not work with --lvmshell", default=True,
 						dest='use_json')
 	parser.add_argument("--lvmshell", action='store_true',
-						help="Use the lvm shell, not fork & exec lvm", default=False,
+						help="Use the lvm shell, not fork & exec lvm",
+						default=False,
 						dest='use_lvm_shell')
 
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
@@ -114,6 +117,10 @@ def main():
 	os.environ["LC_ALL"] = "C"
 
 	cfg.args = parser.parse_args()
+
+	if cfg.args.use_lvm_shell and not cfg.args.use_json:
+		log_error("You cannot specify --lvmshell and --nojson")
+		sys.exit(1)
 
 	cmdhandler.set_execution(cfg.args.use_lvm_shell)
 

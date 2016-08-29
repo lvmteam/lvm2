@@ -126,11 +126,13 @@ def _shell_cfg():
 		lvm_shell = LVMShellProxy()
 		_t_call = lvm_shell.call_lvm
 		cfg.SHELL_IN_USE = lvm_shell
+		return True
 	except Exception:
 		_t_call = call_lvm
 		cfg.SHELL_IN_USE = None
 		log_error(traceback.format_exc())
 		log_error("Unable to utilize lvm shell, dropping back to fork & exec")
+		return False
 
 
 def set_execution(shell):
@@ -139,7 +141,7 @@ def set_execution(shell):
 		# If the user requested lvm shell and we are currently setup that
 		# way, just return
 		if cfg.SHELL_IN_USE and shell:
-			return
+			return True
 		else:
 			if not shell and cfg.SHELL_IN_USE:
 				cfg.SHELL_IN_USE.exit_shell()
@@ -147,7 +149,11 @@ def set_execution(shell):
 
 		_t_call = call_lvm
 		if shell:
-			_shell_cfg()
+			if cfg.args.use_json:
+				return _shell_cfg()
+			else:
+				return False
+		return True
 
 
 def time_wrapper(command, debug=False):
