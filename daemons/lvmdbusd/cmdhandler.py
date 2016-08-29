@@ -235,10 +235,7 @@ def pv_remove(device, remove_options):
 
 
 def _qt(tag_name):
-	# When running in lvm shell you need to quote the tags
-	if cfg.SHELL_IN_USE:
-		return '"%s"' % tag_name
-	return tag_name
+	return '@%s' % tag_name
 
 
 def _tag(operation, what, add, rm, tag_options):
