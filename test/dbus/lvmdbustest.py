@@ -1153,7 +1153,7 @@ class TestDbusService(unittest.TestCase):
 
 if __name__ == '__main__':
 	# Test forking & exec new each time
-	test_shell = os.getenv('LVM_DBUS_TEST_SHELL', 0)
+	test_shell = os.getenv('LVM_DBUS_TEST_SHELL', 1)
 
 	set_execution(False)
 
