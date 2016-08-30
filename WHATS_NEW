@@ -1,5 +1,6 @@
 Version 2.02.165 - 
 ===================================
+  Use lsblk -s and lsblk -O in lvmdump only if these options are supported.
   Fix number of stripes shown in lvcreate raid10 message when too many.
   Do not monitor cache-pool metadata when LV is just being cleared.
   Add allocation/cache_pool_max_chunks to prevent misuse of cache target.

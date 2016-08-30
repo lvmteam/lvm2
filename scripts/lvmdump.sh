@@ -28,6 +28,7 @@ PS=ps # need alx
 SED=sed
 DD=dd
 CUT=cut
+GREP=grep
 DATE=date
 BASENAME=basename
 UDEVADM=udevadm
@@ -259,8 +260,14 @@ if (( $sysreport )); then
 	if test -z "LSBLK"; then
 		myecho "WARNING: lsblk not found"
 	else
-		log "$LSBLK -O >> \"$sysreport_dir/lsblk\""
-		log "$LSBLK -s >> \"$sysreport_dir/lsblk_s\""
+		if $LSBLK --help | $GREP -- --output-all >/dev/null; then
+			log "$LSBLK -O >> \"$sysreport_dir/lsblk_O\""
+		else
+			log "$LSBLK >> \"$sysreport_dir/lsblk\""
+		fi
+		if $LSBLK --help | $GREP -- --inverse >/dev/null; then
+			log "$LSBLK -s >> \"$sysreport_dir/lsblk_s\""
+		fi
 	fi
 
 	if test -z "$SYSTEMCTL"; then
@@ -281,7 +288,7 @@ if (( $sysreport )); then
 						   lvm2-activation-net.service \
 						   > \"$sysreport_dir/systemd_lvm2_services_status\" 2>> \"$log\""
 		log "$SYSTEMCTL list-units -l -a --no-legend --no-pager > \"$sysreport_dir/systemd_unit_list\" 2>> \"$log\""
-		for unit in $(cat $sysreport_dir/systemd_unit_list | grep lvm2-pvscan | cut -d " " -f 1); do
+		for unit in $(cat $sysreport_dir/systemd_unit_list | $GREP lvm2-pvscan | cut -d " " -f 1); do
 			log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise $unit >> \"$sysreport_dir/systemd_lvm2_pvscan_service_status\""
 		done
 	fi
