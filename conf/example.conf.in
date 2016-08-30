@@ -428,6 +428,12 @@ allocation {
 	# 32KiB to 1GiB in multiples of 32.
 	# This configuration option does not have a default value defined.
 
+	# Configuration option allocation/cache_pool_max_chunks.
+	# The maximum number of chunks in a cache pool.
+	# For cache target v1.9 the recommended maximumm is 1000000 chunks.
+	# Using cache pool with more chunks may degrade cache performance.
+	# This configuration option does not have a default value defined.
+
 	# Configuration option allocation/thin_pool_metadata_require_separate_pvs.
 	# Thin pool metdata and data will always use different PVs.
 	thin_pool_metadata_require_separate_pvs = 0
@@ -1684,11 +1690,11 @@ activation {
 	# This configuration option has an automatic default value.
 	# quoted = 1
 
-	# Configuration option report/colums_as_rows.
+	# Configuration option report/columns_as_rows.
 	# Output each column as a row.
 	# If set, this also implies report/prefixes=1.
 	# This configuration option has an automatic default value.
-	# colums_as_rows = 0
+	# columns_as_rows = 0
 
 	# Configuration option report/binary_values_as_numeric.
 	# Use binary values 0 or 1 instead of descriptive literal values.
