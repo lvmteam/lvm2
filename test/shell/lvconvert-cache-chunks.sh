@@ -10,6 +10,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # Exercise number of cache chunks in cache pool
+# Skips creation of real cached device for older cache targets...
 
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
@@ -34,8 +35,11 @@ lvcreate -L1M -n $lv1 $vg
 # Not let pass small chunks when caching origin
 fail lvconvert -H --chunksize 128K --cachepool $vg/cpool $vg/$lv1
 
-# Though 2M is valid
-lvconvert -y -H  --chunksize 2M --cachepool $vg/cpool $vg/$lv1
+# Thought 2M is valid
+if aux have_cache 1 8 0 ; then
+	# Without SMQ we run out of kernel memory easily
+	lvconvert -y -H  --chunksize 2M --cachepool $vg/cpool $vg/$lv1
+fi
 
 lvremove -f $vg
 
@@ -46,8 +50,10 @@ lvcreate -L1T -n cpool $vg
 # Not allowed to create more then 10e6 chunks
 fail lvconvert -y --type cache-pool --chunksize 128K $vg/cpool
 
-# Let operation pass when max_chunk limit is raised
-lvconvert -y --type cache-pool --chunksize 128K $vg/cpool \
-	--config 'allocation/cache_pool_max_chunks=10000000'
+if aux have_cache 1 8 0 ; then
+	# Let operation pass when max_chunk limit is raised
+	lvconvert -y --type cache-pool --chunksize 128K $vg/cpool \
+		--config 'allocation/cache_pool_max_chunks=10000000'
+fi
 
 vgremove -f $vg
