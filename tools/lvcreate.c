@@ -591,7 +591,7 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 	/* FIMXE: raid10 check has to change once we support data copies and odd numbers of stripes */
 	if (seg_is_raid10(lp) && lp->mirrors * lp->stripes > max_images) {
 		log_error("Only up to %u stripes in %s supported currently.",
-			  max_images, lp->segtype->name);
+			  max_images / lp->mirrors, lp->segtype->name);
 		return 0;
 	} else if (seg_is_mirrored(lp)) {
 		if (lp->mirrors > max_images) {
