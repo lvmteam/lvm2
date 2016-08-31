@@ -251,7 +251,7 @@ static int _umount_device(char *buffer, unsigned major, unsigned minor,
 	if ((major == data->info.major) && dm_bit(data->minors, minor)) {
 		if (dm_split_words(buffer, DM_ARRAY_SIZE(words), 0, words) < DM_ARRAY_SIZE(words))
 			words[9] = NULL; /* just don't show device name */
-		log_info("Unmounting thin %s (%d:%d) of thin-pool %s (%u:%u) from mount point \"%s\".",
+		log_info("Unmounting thin %s (%d:%d) of thin pool %s (%u:%u) from mount point \"%s\".",
 			 words[9] ? : "", major, minor, data->device,
 			 data->info.major, data->info.minor,
 			 target);
@@ -429,7 +429,7 @@ out:
 
 	if (state->fails >= MAX_FAILS) {
 		log_warn("WARNING: Dropping monitoring of %s. "
-			 "lvm2 command fails too often (%u times in raw).",
+			 "lvm2 command fails too often (%u times in row).",
 			 device, state->fails);
 		pthread_kill(pthread_self(), SIGALRM);
 	}
@@ -458,11 +458,11 @@ int register_device(const char *device,
 	state->data_percent_check = CHECK_MINIMUM;
 	*user = state;
 
-	log_info("Monitoring thin %s.", device);
+	log_info("Monitoring thin pool %s.", device);
 
 	return 1;
 bad:
-	log_error("Failed to monitor thin %s.", device);
+	log_error("Failed to monitor thin pool %s.", device);
 
 	return 0;
 }
@@ -476,7 +476,7 @@ int unregister_device(const char *device,
 	struct dso_state *state = *user;
 
 	dmeventd_lvm2_exit_with_pool(state);
-	log_info("No longer monitoring thin %s.", device);
+	log_info("No longer monitoring thin pool %s.", device);
 
 	return 1;
 }
