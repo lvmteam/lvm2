@@ -2040,64 +2040,6 @@ out:
 	return vg_ret;
 }
 
-#ifdef UDEV_SYNC_SUPPORT
-static int _dev_is_mpath_component(struct udev *udev_context, struct device *dev)
-{
-	struct udev_device *udev_device = NULL;
-	const char *value;
-	int initialized = 0;
-	int i;
-	int ret = 0;
-
-	if (!udev_context) {
-		log_debug("_dev_is_mpath_component: device %s: no udev context", dev_name(dev));
-		return_0;
-	}
-	
-	for (i = 1; i <= 10; i++) {
-		if (udev_device)
-			udev_device_unref(udev_device);
-
-		if (!(udev_device = udev_device_new_from_devnum(udev_context, 'b', dev->dev))) {
-			log_debug("_dev_is_mpath_component: device %s: no udev device", dev_name(dev));
-			return 0;
-		}
-
-		if (udev_device_get_is_initialized(udev_device)) {
-			initialized = 1;
-			break;
-		} else {
-			log_debug("_dev_is_mpath_component: device %s: not initialized (%d)", dev_name(dev), i);
-			initialized = 0;
-		}
-		usleep(100000);
-	}
-
-	if (!initialized) {
-		log_debug("_dev_is_mpath_component: device %s: not initialized even after waiting", dev_name(dev));
-		goto_out;
-	}
-
-	value = udev_device_get_property_value(udev_device, DEV_EXT_UDEV_BLKID_TYPE);
-
-	if (value && !strcmp(value, DEV_EXT_UDEV_BLKID_TYPE_MPATH)) {
-		log_debug("Dev %s is mpath component (%s)", dev_name(dev), value);
-		ret = 1;
-		goto out;
-	}
-
-	value = udev_device_get_property_value(udev_device, DEV_EXT_UDEV_MPATH_DEVICE_PATH);
-	if (value && !strcmp(value, "1")) {
-		log_debug("Dev %s is mpath component (device path)", dev_name(dev));
-		ret = 1;
-		goto out;
-	}
-out:
-	udev_device_unref(udev_device);
-	return ret;
-}
-#endif
-
 int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 			  struct dm_list *found_vgnames,
 			  struct dm_list *changed_vgnames)
@@ -2113,14 +2055,10 @@ int lvmetad_pvscan_single(struct cmd_context *cmd, struct device *dev,
 		return 0;
 	}
 
-#ifdef UDEV_SYNC_SUPPORT
-	struct udev *udev_context = udev_get_library_context();
-
-	if (_dev_is_mpath_component(udev_context, dev)) {
+	if (udev_dev_is_mpath_component(dev)) {
 		log_debug("Ignore multipath component for pvscan.");
 		return 1;
 	}
-#endif
 
 	if (!label_read(dev, &label, 0)) {
 		log_print_unless_silent("No PV label found on %s.", dev_name(dev));

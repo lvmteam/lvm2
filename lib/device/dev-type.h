@@ -59,6 +59,7 @@ int dev_is_md(struct device *dev, uint64_t *sb);
 int dev_is_swap(struct device *dev, uint64_t *signature);
 int dev_is_luks(struct device *dev, uint64_t *signature);
 int dasd_is_cdl_formatted(struct device *dev);
+int udev_dev_is_mpath_component(struct device *dev);
 
 /* Signature wiping. */
 #define TYPE_LVM1_MEMBER	0x001

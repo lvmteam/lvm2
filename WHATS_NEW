@@ -1,5 +1,6 @@
 Version 2.02.165 - 
 ===================================
+  Use udev db to check for mpath components before running pvscan for lvmetad.
   Use lsblk -s and lsblk -O in lvmdump only if these options are supported.
   Fix number of stripes shown in lvcreate raid10 message when too many.
   Do not monitor cache-pool metadata when LV is just being cleared.
