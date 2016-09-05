@@ -24,10 +24,6 @@
 #include "lvm-signal.h"
 #include "lvmlockd.h"
 #include "str_list.h"
-#ifdef UDEV_SYNC_SUPPORT
-#include <libudev.h>
-#include "dev-ext-udev-constants.h"
-#endif
 
 #include <time.h>
 
