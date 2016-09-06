@@ -730,11 +730,6 @@ those PVs can be reconstructed with:
 The rebuild option can be repeated with different PVs to replace the data
 on multiple PVs.
 
-For example, in a raid1 LV, the master mirror image on PV1 may have
-corrupt data to due a transient disk error.  In this case, \-\-rebuild PV1
-reconstructs data on the master image rather than rebuilding all other
-images from the master image.
-
 
 .SH Monitoring
 
