@@ -1024,8 +1024,13 @@ int udev_dev_is_mpath_component(struct device *dev)
 			return 0;
 		}
 
+#ifdef HAVE_LIBUDEV_UDEV_DEVICE_GET_IS_INITIALIZED
 		if ((initialized = udev_device_get_is_initialized(udev_device)))
 			break;
+#else
+		if ((initialized = (udev_device_get_property_value(udev_device, DEV_EXT_UDEV_DEVLINKS) != NULL)))
+			break;
+#endif
 
 		log_debug("Device %s not initialized in udev database (%u/%u, %u microseconds).", dev_name(dev),
 			   i + 1, UDEV_DEV_IS_MPATH_COMPONENT_ITERATION_COUNT,

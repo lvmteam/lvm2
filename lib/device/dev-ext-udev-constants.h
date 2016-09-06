@@ -36,6 +36,9 @@
 #define DEV_EXT_UDEV_DEVTYPE			"DEVTYPE"
 #define DEV_EXT_UDEV_DEVTYPE_DISK		"disk"
 
+/* the list of symlinks associated with device node */
+#define DEV_EXT_UDEV_DEVLINKS			"DEVLINKS"
+
 /*
  * DEV_EXT_UDEV_MPATH_DEVICE_PATH is set by multipath in udev db
  * with value either 0 or 1. The same functionality as
