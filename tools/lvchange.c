@@ -1049,6 +1049,18 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	    lv_is_virtual_origin(origin = origin_from_cow(lv)))
 		lv = origin;
 
+	/* Use cache origin LV for 'raid' actions */
+	if (lv_is_cache(lv) &&
+	    arg_from_list_is_set(cmd, NULL,
+				 /* FIXME: we want to support more ops here */
+				 //resync_ARG,
+				 syncaction_ARG,
+				 -1)) {
+		lv = seg_lv(first_seg(lv), 0);
+		log_debug("Using cache origin volume %s for lvchange instead.",
+			  display_lvname(lv));
+	}
+
 	if ((lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv) ||
 	     lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) &&
 	    !arg_is_set(cmd, activate_ARG) &&
@@ -1056,7 +1068,22 @@ static int _lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	    !arg_is_set(cmd, setactivationskip_ARG))
 	    /* Rest can be changed for stacked thin pool meta/data volumes */
 	    ;
-	else if (!lv_is_visible(lv) && !lv_is_virtual_origin(lv)) {
+	else if (lv_is_cache_origin(lv) && lv_is_raid(lv)) {
+		if (vg_is_clustered(lv->vg)) {
+			log_error("Unable to change internal LV %s directly in a cluster.",
+				  display_lvname(lv));
+			return ECMD_FAILED;
+		}
+		/*
+		 * FIXME:  For now, we don't want to allow all kinds of
+		 * operations on this cache origin sub-LV.  We are going
+		 * to restrict it to non-clustered, RAID.  This way, we
+		 * can change the syncaction as needed (e.g. initiate
+		 * scrubbing).
+		 *
+		 * Later pass all 'cache' actions on cache origin.
+		 */
+	} else if (!lv_is_visible(lv) && !lv_is_virtual_origin(lv)) {
 		log_error("Unable to change internal LV %s directly.",
 			  display_lvname(lv));
 		return ECMD_FAILED;
