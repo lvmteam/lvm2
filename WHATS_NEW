@@ -1,8 +1,10 @@
-Version 2.02.165 - 
-===================================
+Version 2.02.165 - 7th September 2016
+=====================================
+  Add lvmraid(7) man page.
   Use udev db to check for mpath components before running pvscan for lvmetad.
   Use lsblk -s and lsblk -O in lvmdump only if these options are supported.
   Fix number of stripes shown in lvcreate raid10 message when too many.
+  Change lvmdbusd to use new lvm shell facilities.
   Do not monitor cache-pool metadata when LV is just being cleared.
   Add allocation/cache_pool_max_chunks to prevent misuse of cache target.
   Give error not segfault in lvconvert --splitmirrors when PV lies outside LV.
@@ -13,6 +15,8 @@ Version 2.02.165 -
   Don't allow lvconvert --repair on raid0 devices or attempt to monitor them.
   No longer adjust incorrect number of raid stripes supplied to lvcreate.
   Move lcm and gcd to lib/misc.
+  Fix vgsplit of external origins. (2.02.162)
+  Prohibit creation of RAID LVs unless VG extent size is at least the page size.
   Suppress some unnecessary --stripesize parameter warnings.
   Fix 'pvmove -n name ...' to prohibit collocation of RAID SubLVs
 

@@ -1,5 +1,6 @@
-Version 1.02.134 - 
-===================================
+Version 1.02.134 - 7th September 2016
+=====================================
+  Improve explanation of udev fallback in libdevmapper.h.
 
 Version 1.02.133 - 10th August 2016
 ===================================
