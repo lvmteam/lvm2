@@ -16,6 +16,7 @@
 #include "dmeventd_lvm.h"
 #include "libdevmapper-event.h"
 
+#include <sys/sysmacros.h>
 #include <sys/wait.h>
 #include <stdarg.h>
 #include <pthread.h>

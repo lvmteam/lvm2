@@ -12,6 +12,7 @@
 #include "logging.h"
 #include "functions.h"
 
+#include <sys/sysmacros.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
