@@ -744,6 +744,11 @@ without % suffix), string.
 .SH DIAGNOSTICS
 .
 All tools return a status code of zero on success or non-zero on failure.
+The non-zero codes distinguish only between the broad categories of
+unrecognised commands, problems processing the command line arguments
+and any other failures.  As LVM remains under active development, the
+code used in a specific case occasionally changes between releases.
+Message text may also change.
 .
 .SH ENVIRONMENT VARIABLES
 .
