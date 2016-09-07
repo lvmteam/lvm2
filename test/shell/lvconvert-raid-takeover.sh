@@ -23,7 +23,7 @@ aux prepare_vg 9 288
 # aux delay_dev "$dev1" 0 1
 
 # Create 3-way mirror
-lvcreate --yes --type mirror -m 2 -L 256M -n $lv1 $vg
+lvcreate --yes --type mirror -m 2 -L 64M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 3
 echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
