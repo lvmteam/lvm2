@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Restore reporting of metadata usage for cache volumes (2.02.155).
   Support raid scrubbing on cache origin LV.
 
 Version 2.02.165 - 7th September 2016

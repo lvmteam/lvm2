@@ -89,6 +89,12 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 
 static void _choose_lv_segment_for_status_report(const struct logical_volume *lv, const struct lv_segment **lv_seg)
 {
+	if (lv_is_used_cache_pool(lv)) {
+		/* For a used cache pool, choose cache volume segment */
+		*lv_seg = get_only_segment_using_this_lv(lv);
+		return;
+	}
+
 	/*
 	 * By default, take the first LV segment to report status for.
 	 * If there's any other specific segment that needs to be
@@ -115,8 +121,9 @@ static int _do_info_and_status(struct cmd_context *cmd,
 	if (do_status) {
 		if (!(status->seg_status.mem = dm_pool_create("reporter_pool", 1024)))
 			return_0;
-		if (!lv_seg)
+		if (!lv_seg || seg_is_used_cache_pool(lv_seg))
 			_choose_lv_segment_for_status_report(lv, &lv_seg);
+
 		if (do_info) {
 			/* both info and status */
 			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, use_layer, status, 1, 1);
@@ -124,6 +131,11 @@ static int _do_info_and_status(struct cmd_context *cmd,
 			if (use_layer && status->info_ok &&
 			    !lv_info(cmd, lv, 0, NULL, 0, 0))
 				memset(&status->info,  0, sizeof(status->info));
+			/* for inactive cache reset lvinfo for its struct for cache-pool */
+			if (lv_is_used_cache_pool(lv) && !status->info_ok) {
+				memset(&status->info,  0, sizeof(status->info));
+				status->info_ok = 1;
+			}
 		} else
 			/* status only */
 			status->info_ok = lv_status(cmd, lv_seg, use_layer, &status->seg_status);

@@ -2939,6 +2939,7 @@ static int _metadatapercent_disp(struct dm_report *rh,
 	dm_percent_t percent = DM_PERCENT_INVALID;
 
 	if (lv_is_thin_pool(lvdm->lv) ||
+	    lv_is_cache(lvdm->lv) ||
 	    lv_is_used_cache_pool(lvdm->lv))
 		percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_METADATA);
 
