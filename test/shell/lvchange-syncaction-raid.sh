@@ -14,6 +14,12 @@
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
+
+# Current support for syncaction in cluster is broken
+# might get fixed one day though
+# meanwhile skipped
+SKIP_WITH_CLVMD=1
+
 . lib/inittest
 
 # Proper mismatch count 1.5.2+ upstream, 1.3.5 < x < 1.4.0 in RHEL6
