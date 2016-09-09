@@ -114,7 +114,7 @@ static dm_percent_t _data_percent(const struct logical_volume *lv)
 			stack;
 			return DM_PERCENT_INVALID;
 		}
-		percent = status->dirty_usage;
+		percent = status->data_usage;
 		dm_pool_destroy(status->mem);
 		return percent;
 	}
@@ -135,7 +135,7 @@ static dm_percent_t _metadata_percent(const struct logical_volume *lv)
 			stack;
 			return DM_PERCENT_INVALID;
 		}
-		percent = status->dirty_usage;
+		percent = status->metadata_usage;
 		dm_pool_destroy(status->mem);
 		return percent;
 	}

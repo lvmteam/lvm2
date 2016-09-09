@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Fix lvm2api reporting of cache data and metadata percent.
   Restore reporting of metadata usage for cache volumes (2.02.155).
   Support raid scrubbing on cache origin LV.
 
