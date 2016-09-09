@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Report 0% as dirty (copy%) for cache without any used block.
   Fix lvm2api reporting of cache data and metadata percent.
   Restore reporting of metadata usage for cache volumes (2.02.155).
   Support raid scrubbing on cache origin LV.

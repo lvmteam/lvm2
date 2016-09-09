@@ -85,15 +85,15 @@ lvremove -f $vg
 lvcreate --type cache-pool  -L1 $vg/cpool
 lvcreate -H -L4 -n $lv1 $vg/cpool
 
-check lv_field $vg/$lv1 copy_percent "100.00"
+check lv_field $vg/$lv1 copy_percent "0.00"
 check lv_field $vg/$lv1 data_percent "0.00"
 check lv_field $vg/$lv1 metadata_percent "0.78"
-check lv_field $vg/cpool copy_percent "100.00"
+check lv_field $vg/cpool copy_percent "0.00"
 check lv_field $vg/cpool data_percent "0.00"
 check lv_field $vg/cpool metadata_percent "0.78"
 # check we also display percent value for segmented output (-o+devices)
 lvs -a -o+devices $vg/cpool | tee out
-grep "100.00" out
+grep "0.00" out
 lvremove -f $vg
 
 

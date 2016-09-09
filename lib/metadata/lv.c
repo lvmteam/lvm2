@@ -366,8 +366,9 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 		else {
 			switch (type) {
 			case PERCENT_GET_DIRTY:
-				p = dm_make_percent(s->cache->dirty_blocks,
-						    s->cache->used_blocks);
+				p = (s->cache->used_blocks) ?
+					dm_make_percent(s->cache->dirty_blocks,
+							s->cache->used_blocks) : DM_PERCENT_0;
 				break;
 			case PERCENT_GET_METADATA:
 				p = dm_make_percent(s->cache->metadata_used_blocks,
