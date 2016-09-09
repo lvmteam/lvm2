@@ -1432,7 +1432,7 @@ int dev_manager_cache_status(struct dev_manager *dm,
 							c->total_blocks);
 		(*status)->metadata_usage = dm_make_percent(c->metadata_used_blocks,
 							    c->metadata_total_blocks);
-		(*status)->dirty_usage = (s->cache->used_blocks) ?
+		(*status)->dirty_usage = (c->used_blocks) ?
 			dm_make_percent(c->dirty_blocks,
 					c->used_blocks) : DM_PERCENT_0;
 	}
