@@ -88,15 +88,4 @@ aux wait_for_sync $vg $lv1
 # Retest mistmatch exists
 check lv_field $vg/$lv1 raid_mismatch_count "128"
 
-lvremove -ff $vg
-
-# Bug 1169495 - RFE: allow raid scrubbing on cache origin raid volumes
-# lvcreate RAID1 origin, lvcreate cache-pool, and lvconvert to cache
-#  then test that the origin can be scrubbed.
-lvcreate --type raid1 -m 1 --nosync -l 2 -n $lv1 $vg
-lvcreate --type cache-pool -l 1 -n ${lv1}_cachepool $vg
-lvconvert --cache -Zy --cachepool $vg/${lv1}_cachepool $vg/$lv1
-lvchange --syncaction check $vg/${lv1}_corig
-# Check may go too quickly to verify with check of syncaction
-
 vgremove -ff $vg
