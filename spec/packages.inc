@@ -99,6 +99,7 @@ fi
 %endif
 %{_mandir}/man5/lvm.conf.5.gz
 %{_mandir}/man7/lvmsystemid.7.gz
+%{_mandir}/man7/lvmreport.7.gz
 %{_mandir}/man7/lvmraid.7.gz
 %{_mandir}/man8/blkdeactivate.8.gz
 %{_mandir}/man8/fsadm.8.gz
