@@ -1707,7 +1707,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	uint32_t s;
 	static const struct lv_activate_opts zlaopts = { 0 };
 	struct lvinfo info;
-	const char *dso;
+	const char *dso = NULL;
 	int new_unmonitor;
 
 	if (!laopts)
@@ -1855,7 +1855,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		} else {
 			if (!monitored)
 				log_verbose("%s already not monitored.", display_lvname(lv));
-			else if (*dso) {
+			else if (dso && *dso) {
 				/*
 				 * Divert unmonitor away from code that depends on the new segment
 				 * type instead of the existing one if it's changing.
