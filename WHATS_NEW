@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Add lvmreport(7) man page.
   Don't install lvmraid(7) man page when raid excluded. (2.02.165)
   Report 0% as dirty (copy%) for cache without any used block.
   Fix lvm2api reporting of cache data and metadata percent.
