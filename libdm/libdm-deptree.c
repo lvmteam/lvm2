@@ -1783,7 +1783,7 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 			if (!(r = _node_send_messages(child, uuid_prefix, uuid_prefix_len, 1)))
 				stack;
 			else {
-				log_debug_activation("Sent messages to thin-pool %s."
+				log_debug_activation("Sent messages to thin-pool %s and "
 						     "skipping suspend of its children.",
 						     _node_name(child));
 				child->props.skip_suspend++;
