@@ -43,20 +43,20 @@ done
 # 200 TiB raid1
 lvcreate --type raid1 -m 1 -L 200T -n $lv1 $vg1 --nosync
 check lv_field $vg1/$lv1 size "200.00t"
-check raid_leg_status_is $vg1 $lv1 "AA"
+check raid_leg_status $vg1 $lv1 "AA"
 lvremove -ff $vg1
 
 # 1 PiB raid1
 lvcreate --type raid1 -m 1 -L 1P -n $lv1 $vg1 --nosync
 check lv_field $vg1/$lv1 size "1.00p"
-check raid_leg_status_is $vg1 $lv1 "AA"
+check raid_leg_status $vg1 $lv1 "AA"
 lvremove -ff $vg1
 
 # 750 TiB raid4/5
 for segtype in raid4 raid5; do
         lvcreate --type $segtype -i 3 -L 750T -n $lv1 $vg1 --nosync
         check lv_field $vg1/$lv1 size "750.00t"
-        check raid_leg_status_is $vg1 $lv1 "AAAA"
+        check raid_leg_status $vg1 $lv1 "AAAA"
         lvremove -ff $vg1
 done
 
@@ -65,10 +65,10 @@ done
 #
 lvcreate --type raid1 -m 1 -L 200T -n $lv1 $vg1 --nosync
 check lv_field $vg1/$lv1 size "200.00t"
-check raid_leg_status_is $vg1 $lv1 "AA"
+check raid_leg_status $vg1 $lv1 "AA"
 lvextend -L +200T $vg1/$lv1
 check lv_field $vg1/$lv1 size "400.00t"
-check raid_leg_status_is $vg1 $lv1 "AA"
+check raid_leg_status $vg1 $lv1 "AA"
 lvremove -ff $vg1
 
 
@@ -80,16 +80,16 @@ fi
 # 750 TiB raid6
 lvcreate --type raid6 -i 3 -L 750T -n $lv1 $vg1
 check lv_field $vg1/$lv1 size "750.00t"
-check raid_leg_status_is $vg1 $lv1 "aaaaa"
+check raid_leg_status $vg1 $lv1 "aaaaa"
 lvremove -ff $vg1
 
 # 1 PiB raid6, then extend up to 2 PiB
 lvcreate --type raid6 -i 3 -L 1P -n $lv1 $vg1
 check lv_field $vg1/$lv1 size "1.00p"
-check raid_leg_status_is $vg1 $lv1 "aaaaa"
+check raid_leg_status $vg1 $lv1 "aaaaa"
 lvextend -L +1P $vg1/$lv1
 check lv_field $vg1/$lv1 size "2.00p"
-check raid_leg_status_is $vg1 $lv1 "aaaaa"
+check raid_leg_status $vg1 $lv1 "aaaaa"
 lvremove -ff $vg1
 
 #
@@ -98,7 +98,7 @@ lvremove -ff $vg1
 lvcreate -aey -L 200T -n $lv1 $vg1
 lvconvert --type raid1 -m 1 $vg1/$lv1
 check lv_field $vg1/$lv1 size "200.00t"
-check raid_leg_status_is $vg1 $lv1 "aa"
+check raid_leg_status $vg1 $lv1 "aa"
 lvremove -ff $vg1
 
 # bz837927 END

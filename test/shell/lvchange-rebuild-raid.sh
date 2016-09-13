@@ -40,12 +40,12 @@ aux wait_for_sync $vg $lv1
 
 # Rebuild 1st and 3nd device from different mirror groups is fine.
 lvchange --yes --rebuild "$dev1" --rebuild "$dev3" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "aAaAAAAA"
+check raid_leg_status $vg $lv1 "aAaAAAAA"
 aux wait_for_sync $vg $lv1
 
 # Rebuild devices 1, 3, 6 from different mirror groups is fine.
 lvchange --yes --rebuild "$dev1" --rebuild "$dev3" --rebuild "$dev6" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "aAaAAaAA"
+check raid_leg_status $vg $lv1 "aAaAAaAA"
 aux wait_for_sync $vg $lv1
 
 # Rebuild devices 1, 3, 5 and 6 with 5+6 being
@@ -56,12 +56,12 @@ aux wait_for_sync $vg $lv1
 
 # Rebuild devices 1, 3, 5 and 7 from different mirror groups is fine.
 lvchange --yes --rebuild "$dev1" --rebuild "$dev3" --rebuild "$dev5" --rebuild "$dev7" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "aAaAaAaA"
+check raid_leg_status $vg $lv1 "aAaAaAaA"
 aux wait_for_sync $vg $lv1
 
 # Rebuild devices 2, 4, 6 and 8 from different mirror groups is fine.
 lvchange --yes --rebuild "$dev2" --rebuild "$dev4" --rebuild "$dev6" --rebuild "$dev8" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "AaAaAaAa"
+check raid_leg_status $vg $lv1 "AaAaAaAa"
 aux wait_for_sync $vg $lv1
 
 ##############################################
@@ -79,17 +79,17 @@ aux wait_for_sync $vg $lv1
 # Rebuilding all but the raid1 master leg is fine.
 lvchange --yes --rebuild "$dev2" --rebuild "$dev3" --rebuild "$dev4" \
 	       --rebuild "$dev5" --rebuild "$dev6" --rebuild "$dev7" --rebuild "$dev8" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "Aaaaaaaa"
+check raid_leg_status $vg $lv1 "Aaaaaaaa"
 aux wait_for_sync $vg $lv1
 
 # Rebuilding the raid1 master leg is fine.
 lvchange --yes --rebuild "$dev1" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "aAAAAAAA"
+check raid_leg_status $vg $lv1 "aAAAAAAA"
 aux wait_for_sync $vg $lv1
 
 # Rebuild legs on devices 2, 4, 6 and 8 is fine.
 lvchange --yes --rebuild "$dev2" --rebuild "$dev4" --rebuild "$dev6" --rebuild "$dev8" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "AaAaAaAa"
+check raid_leg_status $vg $lv1 "AaAaAaAa"
 aux wait_for_sync $vg $lv1
 
 ##############################################
@@ -111,18 +111,18 @@ aux wait_for_sync $vg $lv1
 
 # Rebuilding any 1 raid6 stripe is fine.
 lvchange --yes --rebuild "$dev2" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "AaAAAA"
+check raid_leg_status $vg $lv1 "AaAAAA"
 aux wait_for_sync $vg $lv1
 lvchange --yes --rebuild "$dev5"  $vg/$lv1
-check raid_leg_status_is $vg $lv1 "AAAAaA"
+check raid_leg_status $vg $lv1 "AAAAaA"
 aux wait_for_sync $vg $lv1
 
 # Rebuilding any 2 raid6 stripes is fine.
 lvchange --yes --rebuild "$dev2" --rebuild "$dev4" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "AaAaAA"
+check raid_leg_status $vg $lv1 "AaAaAA"
 aux wait_for_sync $vg $lv1
 lvchange --yes --rebuild "$dev1" --rebuild "$dev5" $vg/$lv1
-check raid_leg_status_is $vg $lv1 "aAAAaA"
+check raid_leg_status $vg $lv1 "aAAAaA"
 aux wait_for_sync $vg $lv1
 
 vgremove -ff $vg
