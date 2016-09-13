@@ -72,9 +72,12 @@ int main(int args, char **argv) {
 		fprintf(stderr, "Could not fork\n");
 		return FAILURE;
 	} else if (pid == 0) { 	/* child */
-		if (!strcmp(argv[0], "not"))
+		if (!strcmp(argv[0], "not")) {
 			val = ">1";
-		else if (!strcmp(argv[0], "invalid"))
+			/* Redirect 'expected' error output */
+			fflush(stderr);
+			dup2(fileno(stdout), fileno(stderr));
+		} else if (!strcmp(argv[0], "invalid"))
 			val = "3";
 		else if (!strcmp(argv[0], "fail"))
 			val = "5";
