@@ -1918,15 +1918,44 @@ scan_more:
 			vgmeta_ret = vgmeta;
 			save_dev = devl->dev;
 		} else {
-			if (compare_config(vgmeta_ret->root, vgmeta->root)) {
+			struct dm_config_node *meta1 = vgmeta_ret->root;
+			struct dm_config_node *meta2 = vgmeta->root;
+			struct dm_config_node *sib1 = meta1->sib;
+			struct dm_config_node *sib2 = meta2->sib;
+
+			/*
+			 * Do not compare the extraneous data that
+			 * export_vg_to_config_tree() inserts next to the
+			 * actual VG metadata.  This includes creation_time
+			 * which may not match since it is generated separately
+			 * for each call to create the config tree.
+			 *
+			 * We're saving the sibling pointer and restoring it
+			 * after the compare because we're unsure if anything
+			 * later might want it.
+			 *
+			 * FIXME: make it clearer what we're doing here, e.g.
+			 * pass a parameter to export_vg_to_config_tree()
+			 * telling it to skip the extraneous data, or something.
+			 * It's very non-obvious that setting sib=NULL does that.
+			 */
+			meta1->sib = NULL;
+			meta2->sib = NULL;
+
+			if (compare_config(meta1, meta2)) {
 				log_error("VG %s metadata comparison failed for device %s vs %s",
 					  vg->name, dev_name(devl->dev), save_dev ? dev_name(save_dev) : "none");
 				_log_debug_inequality(vg->name, vgmeta_ret->root, vgmeta->root);
+
+				meta1->sib = sib1;
+				meta2->sib = sib2;
 				dm_config_destroy(vgmeta);
 				dm_config_destroy(vgmeta_ret);
 				release_vg(baton.vg);
 				return NULL;
 			}
+			meta1->sib = sib1;
+			meta2->sib = sib2;
 			dm_config_destroy(vgmeta);
 		}
 
