@@ -86,11 +86,12 @@ lvcreate --type cache-pool  -L1 $vg/cpool
 lvcreate -H -L4 -n $lv1 $vg/cpool
 
 check lv_field $vg/$lv1 copy_percent "0.00"
-check lv_field $vg/$lv1 data_percent "0.00"
-check lv_field $vg/$lv1 metadata_percent "0.78"
+# there should be something present (value differs per policy version)
+test -n "$(get lv_field $vg/$lv1 data_percent)"
+test -n "$(get lv_field $vg/$lv1 metadata_percent)"
 check lv_field $vg/cpool copy_percent "0.00"
-check lv_field $vg/cpool data_percent "0.00"
-check lv_field $vg/cpool metadata_percent "0.78"
+test -n "$(get lv_field $vg/cpool data_percent)"
+test -n "$(get lv_field $vg/cpool metadata_percent)"
 # check we also display percent value for segmented output (-o+devices)
 lvs -a -o+devices $vg/cpool | tee out
 grep "0.00" out
