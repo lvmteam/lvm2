@@ -32,7 +32,7 @@ do
 done
 
 # raid1 supports resynchronization
-lvcreate --yes --type raid1 -m 2 -l 1 -n $lv1 $vg
+lvcreate --yes --type raid1 -m 2 -l 2 -n $lv1 $vg
 check raid_leg_status $vg $lv1 "aaa"
 aux wait_for_sync $vg $lv1
 check raid_leg_status $vg $lv1 "AAA"
@@ -46,20 +46,19 @@ lvremove --yes $vg/$lv1
 for r in raid4 raid5
 do 
 	# raid4/5 support resynchronization
-	lvcreate --yes --type $r -i 3 -l 1 -n $lv1 $vg
+	lvcreate --yes --type $r -i 3 -l 2 -n $lv1 $vg
 	check raid_leg_status $vg $lv1 "aaaa"
 	aux wait_for_sync $vg $lv1
 	check raid_leg_status $vg $lv1 "AAAA"
-	lvremove --yes $vg/$lv1
 
 	# raid4/5 support --nosync
-	lvcreate --yes --type $r --nosync -i 3 -l 1 -n $lv1 $vg
-	check raid_leg_status $vg $lv1 "AAAA"
-	lvremove --yes $vg/$lv1
+	lvcreate --yes --type $r --nosync -i 3 -l 1 -n $lv2 $vg
+	check raid_leg_status $vg $lv2 "AAAA"
+	lvremove --yes $vg
 done
 
 # raid6 supports resynchronization
-lvcreate --yes --type raid6 -i 3 -l 1 -n $lv1 $vg
+lvcreate --yes --type raid6 -i 3 -l 2 -n $lv1 $vg
 check raid_leg_status $vg $lv1 "aaaaa"
 aux wait_for_sync $vg $lv1
 check raid_leg_status $vg $lv1 "AAAAA"
@@ -69,7 +68,7 @@ lvremove --yes $vg/$lv1
 not lvcreate --yes --type raid6 --nosync -i 3 -l 1 -n $lv1 $vg
 
 # raid10 supports resynchronization
-lvcreate --yes --type raid10 -m 1 -i 3 -l 1 -n $lv1 $vg
+lvcreate --yes --type raid10 -m 1 -i 3 -l 2 -n $lv1 $vg
 check raid_leg_status $vg $lv1 "aaaaaa"
 aux wait_for_sync $vg $lv1
 check raid_leg_status $vg $lv1 "AAAAAA"
