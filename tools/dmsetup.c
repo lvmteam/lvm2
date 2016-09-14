@@ -4951,12 +4951,12 @@ static char *_get_abspath(const char *path)
 static int _stats_create_file(CMD_ARGS)
 {
 	const char *alias, *program_id = DM_STATS_PROGRAM_ID;
-	const char *histogram = _string_args[BOUNDS_ARG];
+	const char *bounds_str = _string_args[BOUNDS_ARG];
 	uint64_t *regions, *region, count = 0;
 	struct dm_histogram *bounds = NULL;
 	char *path, *abspath = NULL;
+	struct dm_stats *dms = NULL;
 	int group, fd, precise;
-	struct dm_stats *dms;
 
 	if (_switches[AREAS_ARG] || _switches[AREA_SIZE_ARG]) {
 		log_error("--filemap is incompatible with --areas and --area-size.");
@@ -5017,7 +5017,8 @@ static int _stats_create_file(CMD_ARGS)
 		return 0;
 	}
 
-	if (histogram && !(bounds = dm_histogram_bounds_from_string(histogram))) {
+	if (bounds_str
+	    && !(bounds = dm_histogram_bounds_from_string(bounds_str))) {
 		dm_free(abspath);
 		return_0;
 	}
@@ -5031,7 +5032,7 @@ static int _stats_create_file(CMD_ARGS)
 	group = !_switches[NOGROUP_ARG];
 
 	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
-		return_0;
+		goto_bad;
 
 	fd = open(abspath, O_RDONLY);
 
@@ -5087,16 +5088,20 @@ static int _stats_create_file(CMD_ARGS)
 
 	dm_free(regions);
 	dm_free(abspath);
+	dm_free(bounds);
 	dm_stats_destroy(dms);
 	return 1;
 
 bad:
 	dm_free(abspath);
+	dm_free(bounds);
 
 	if ((fd > -1) && close(fd))
 		log_error("Error closing %s", path);
 
-	dm_stats_destroy(dms);
+	if (dms)
+		dm_stats_destroy(dms);
+
 	return 0;
 }
 
