@@ -37,6 +37,12 @@ TR=tr
 SOCAT=socat # either socat or nc is needed for dumping lvmetad state
 NC=nc
 
+if test "@ODIRECT@" = yes; then
+    DDFLAGS='iflag=direct oflag=direct'
+else
+    DDFLAGS=
+fi
+
 # user may override lvm and dmsetup location by setting LVM_BINARY
 # and DMSETUP_BINARY respectively
 LVM=${LVM_BINARY-lvm}
@@ -241,7 +247,7 @@ if (( $metadata )); then
 		pe_start="$(echo $line | $CUT -d, -f2)"
 		name="$($BASENAME "$pv")"
 		myecho "  $pv"
-		log "$DD if=$pv \"of=$dir/metadata/$name\" bs=512 count=$pe_start 2>> \"$log\""
+		log "$DD if=$pv \"of=$dir/metadata/$name\" $DDFLAGS bs=512 count=$pe_start 2>> \"$log\""
 	done
 fi
 
