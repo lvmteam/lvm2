@@ -65,6 +65,11 @@
    %global enable_lockd_sanlock 0
   %endif
  %endif
+%else
+ %if %{fedora} >= 22
+  %service lvmlockd 1
+  %global enable_lockd_dlm 1
+ %endif
 %endif
 
 ##############################################################
