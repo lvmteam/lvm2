@@ -7156,7 +7156,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (!lp->extents && !seg_is_thin_volume(lp)) {
 		log_error(INTERNAL_ERROR "Unable to create new logical volume with no extents.");
-		return_NULL;
+		return NULL;
 	}
 
 	if ((seg_is_pool(lp) || seg_is_cache(lp)) &&
