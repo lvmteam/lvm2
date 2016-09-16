@@ -3085,6 +3085,15 @@ static int _allocate(struct alloc_handle *ah,
 		if (!_find_max_parallel_space_for_one_policy(ah, &alloc_parms, pvms, &alloc_state))
 			goto_out;
 
+		/* As a workaround, if only the log is missing now, fall through and try later policies up to normal. */
+		/* FIXME Change the core algorithm so the log extents cling to parallel LVs instead of avoiding them. */
+		if (alloc_state.allocated == ah->new_extents &&
+		    alloc_state.log_area_count_still_needed &&
+		    ah->alloc < ALLOC_NORMAL) {
+			ah->alloc = ALLOC_NORMAL;
+			continue;
+		}
+
 		if ((alloc_state.allocated == ah->new_extents &&
 		     !alloc_state.log_area_count_still_needed) ||
 		    (!can_split && (alloc_state.allocated != old_allocated)))
