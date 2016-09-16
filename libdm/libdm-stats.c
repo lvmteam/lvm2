@@ -1543,7 +1543,7 @@ static int _stats_walk_end(const struct dm_stats *dms, uint64_t *flags,
 	}
 
 	if (*flags & DM_STATS_WALK_GROUP) {
-		if (*cur_g < dms->max_region)
+		if (*cur_g <= dms->max_region)
 			goto out;
 		*flags &= ~DM_STATS_WALK_GROUP;
 	}
