@@ -14,7 +14,7 @@
 # on those systems.
 
 # A macro to pull in an include file from an appropriate location.
-%define import() %include %(test -e %{S:%1} && echo %{S:%1} || echo %{_sourcedir}/%1)
+%global import() %%include %%(test -e %%{S:%%1} && echo %%{S:%%1} || echo %%{_sourcedir}/%%1)
 
 %import source.inc
 
