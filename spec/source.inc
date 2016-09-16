@@ -50,19 +50,19 @@
 
 %if %{fedora} >= 24 || %{rhel} >= 7
  %service lvmlockd 1
- %define sanlock_version 3.3.0-1
- %define enable_lockd_dlm 1
- %define enable_lockd_sanlock 1
+ %global sanlock_version 3.3.0-1
+ %global enable_lockd_dlm 1
+ %global enable_lockd_sanlock 1
  %if %{rhel}
   %ifarch i686 x86_64 s390x
    %global buildreq_lockd_dlm dlm-devel >= %{dlm_version}
   %else
-   %define enable_lockd_dlm 0
+   %global enable_lockd_dlm 0
   %endif
   %ifarch x86_64 ppc64le ppc64 aarch64
    %global buildreq_lockd_sanlock sanlock-devel >= %{sanlock_version}
   %else
-   %define enable_lockd_sanlock 0
+   %global enable_lockd_sanlock 0
   %endif
  %endif
 %endif
@@ -140,7 +140,7 @@
 # same as FC 16 above, only with older udev
 
 %if %{rhel} == 6
-%define req_udev udev >= 147-2
+%global req_udev udev >= 147-2
 %global req_dm_persistent device-mapper-persistent-data >= 0.1.4
 %endif
 
@@ -149,7 +149,7 @@
 # Do not reset Release to 1 unless both lvm2 and device-mapper
 # versions are increased together.
 
-%define device_mapper_version 1.02.97
+%global device_mapper_version 1.02.97
 
 Summary: Userland logical volume management tools
 Name: lvm2
