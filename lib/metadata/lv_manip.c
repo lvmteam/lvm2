@@ -4515,6 +4515,7 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 {
 	struct cmd_context *cmd = lv->vg->cmd;
 	dm_percent_t percent;
+	dm_percent_t min_threshold;
 	int policy_threshold, policy_amount;
 
 	*amount = *meta_amount = 0;
@@ -4562,7 +4563,10 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 		if (!lv_thin_pool_percent(lv, 1, &percent))
 			return_0;
 
-		*meta_amount = _adjust_amount(percent, policy_threshold, policy_amount);
+		/* Resize below the minimal usable value */
+		min_threshold = pool_metadata_min_threshold(first_seg(lv)) / DM_PERCENT_1;
+		*meta_amount = _adjust_amount(percent, (min_threshold < policy_threshold) ?
+					      min_threshold : policy_threshold, policy_amount);
 
 		if (!lv_thin_pool_percent(lv, 0, &percent))
 			return_0;

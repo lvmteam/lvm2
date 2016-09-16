@@ -501,6 +501,7 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 int lv_is_merging_thin_snapshot(const struct logical_volume *lv);
 int pool_has_message(const struct lv_segment *seg,
 		     const struct logical_volume *lv, uint32_t device_id);
+int pool_metadata_min_threshold(const struct lv_segment *pool_seg);
 int pool_below_threshold(const struct lv_segment *pool_seg);
 int pool_check_overprovisioning(const struct logical_volume *lv);
 int create_pool(struct logical_volume *lv, const struct segment_type *segtype,

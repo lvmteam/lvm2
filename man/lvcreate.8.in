@@ -501,6 +501,9 @@ Supported values are in range between 2MiB and 16GiB for thin pool,
 and upto 16GiB for cache pool. The minimum value is computed from pool's
 data size.
 Default value for thin pool is (Pool_LV_size / Pool_LV_chunk_size * 64b).
+To work with a thin pool, there should be at least 25% of free space
+when the size of metadata is smaller then 16MiB,
+or at least 4MiB of free space otherwise.
 Default unit is megabytes.
 .
 .HP

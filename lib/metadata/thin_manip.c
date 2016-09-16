@@ -215,9 +215,29 @@ int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 	return (attr & feature) ? 1 : 0;
 }
 
+int pool_metadata_min_threshold(const struct lv_segment *pool_seg)
+{
+	/*
+	 * Hardcoded minimal requirment for thin pool target.
+	 *
+	 * In the metadata LV there should be minimum from either 4MiB of free space
+	 * or at least 25% of free space, which applies when the size of thin pool's
+	 * metadata is less then 16MiB.
+	 */
+	const dm_percent_t meta_min = DM_PERCENT_1 * 25;
+	dm_percent_t meta_free = dm_make_percent(((4096 * 1024) >> SECTOR_SHIFT),
+						pool_seg->metadata_lv->size);
+
+	if (meta_min < meta_free)
+		meta_free = meta_min;
+
+	return DM_PERCENT_100 - meta_free;
+}
+
 int pool_below_threshold(const struct lv_segment *pool_seg)
 {
 	dm_percent_t percent;
+	dm_percent_t min_threshold = pool_metadata_min_threshold(pool_seg);
 	dm_percent_t threshold = DM_PERCENT_1 *
 		find_config_tree_int(pool_seg->lv->vg->cmd, activation_thin_pool_autoextend_threshold_CFG,
 				     lv_config_profile(pool_seg->lv));
@@ -226,7 +246,7 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 	if (!lv_thin_pool_percent(pool_seg->lv, 0, &percent))
 		return_0;
 
-	if (percent > threshold) {
+	if (percent > threshold || percent >= DM_PERCENT_100) {
 		log_debug("Threshold configured for free data space in "
 			  "thin pool %s has been reached (%.2f%% >= %.2f%%).",
 			  display_lvname(pool_seg->lv),
@@ -238,6 +258,18 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 	/* Metadata */
 	if (!lv_thin_pool_percent(pool_seg->lv, 1, &percent))
 		return_0;
+
+
+	if (percent >= min_threshold) {
+		log_warn("WARNING: Remaining free space in metadata of thin pool %s "
+			 "is too low (%.2f%% >= %.2f%%). "
+			 "Resize is recommended.",
+			 display_lvname(pool_seg->lv),
+			 dm_percent_to_float(percent),
+			 dm_percent_to_float(min_threshold));
+		return 0;
+	}
+
 
 	if (percent > threshold) {
 		log_debug("Threshold configured for free metadata space in "
