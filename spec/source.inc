@@ -48,9 +48,9 @@
 %global req_udev udev >= 181-1
 
 
-%if %{fedora} >= 22 || %{rhel} >= 7
+%if %{fedora} >= 24 || %{rhel} >= 7
  %service lvmlockd 1
- %define sanlock_version 3.2.4-1
+ %define sanlock_version 3.3.0-1
  %define enable_lockd_dlm 1
  %define enable_lockd_sanlock 1
  %if %{rhel}
