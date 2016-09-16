@@ -387,6 +387,17 @@ class TestDbusService(unittest.TestCase):
 			(rs(8, '_lv'), mib(4),
 			dbus.Array([], '(ott)'), -1, {}), vg)
 
+	def test_lv_create_job(self):
+
+		vg = self._vg_create().Vg
+		(object_path, job_path) = vg.LvCreate(rs(8, '_lv'), mib(4),
+			dbus.Array([], '(ott)'), 0, {})
+
+		self.assertTrue(object_path == '/')
+		self.assertTrue(job_path != '/')
+		object_path = self._wait_for_job(job_path)
+		self.assertTrue(object_path != '/')
+
 	def test_lv_create_linear(self):
 
 		vg = self._vg_create().Vg

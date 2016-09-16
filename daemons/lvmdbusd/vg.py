@@ -146,7 +146,7 @@ class Vg(AutomatedProperties):
 	@staticmethod
 	def fetch_new_lv(vg_name, lv_name):
 		cfg.load()
-		return cfg.om.get_object_by_lvm_id("%s/%s" % (vg_name, lv_name))
+		return cfg.om.get_object_path_by_lvm_id("%s/%s" % (vg_name, lv_name))
 
 	@staticmethod
 	def _rename(uuid, vg_name, new_name, rename_options):
