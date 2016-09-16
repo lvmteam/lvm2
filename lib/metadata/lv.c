@@ -1547,7 +1547,7 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 	if (lv_is_cow(lv))
 		return lv_lock_holder(origin_from_cow(lv));
 
-	if (lv_is_thin_pool(lv))
+	if (lv_is_thin_pool(lv)) {
 		/* Find any active LV from the pool */
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
 			if (lv_is_active(sl->seg->lv)) {
@@ -1555,6 +1555,8 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 						     display_lvname(lv));
 				return sl->seg->lv;
 			}
+		return lv;
+	}
 
 	/* RAID changes visibility of splitted LVs but references them still as leg/meta */
 	if ((lv_is_raid_image(lv) || lv_is_raid_metadata(lv)) && lv_is_visible(lv))
