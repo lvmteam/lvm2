@@ -131,7 +131,7 @@ class RequestEntry(object):
 				self._job = None
 
 	def register_error(self, error_rc, error_message, error_exception):
-		self._reg_ending(None, error_rc, error_message, error_exception)
+		self._reg_ending('/', error_rc, error_message, error_exception)
 
 	def register_result(self, result):
 		self._reg_ending(result)
