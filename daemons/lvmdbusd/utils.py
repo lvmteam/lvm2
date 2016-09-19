@@ -147,17 +147,27 @@ def add_properties(xml, interface, props):
 	:param props:       Output from get_properties
 	:return: updated XML string
 	"""
-	root = Et.fromstring(xml)
-
 	if props:
+		root = Et.fromstring(xml)
+		interface_element = None
 
+		# Check to see if interface is present
 		for c in root:
-			# print c.attrib['name']
 			if c.attrib['name'] == interface:
-				for p in props:
-					temp = '<property type="%s" name="%s" access="%s"/>\n' % \
-						(p['p_t'], p['p_name'], p['p_access'])
-					c.append(Et.fromstring(temp))
+				interface_element = c
+				break
+
+		# Interface is not present, lets create it so we have something to
+		# attach the properties too
+		if interface_element is None:
+			interface_element = Et.Element("interface", name=interface)
+			root.append(interface_element)
+
+		# Add the properties
+		for p in props:
+			temp = '<property type="%s" name="%s" access="%s"/>\n' % \
+				(p['p_t'], p['p_name'], p['p_access'])
+			interface_element.append(Et.fromstring(temp))
 
 		return Et.tostring(root, encoding='utf8')
 	return xml

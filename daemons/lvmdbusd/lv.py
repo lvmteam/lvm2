@@ -354,13 +354,6 @@ class LvCommon(AutomatedProperties):
 	def Active(self):
 		return dbus.Boolean(self.state.active == "active")
 
-	@dbus.service.method(
-		dbus_interface=LV_COMMON_INTERFACE,
-		in_signature='ia{sv}',
-		out_signature='o')
-	def _Future(self, tmo, open_options):
-		raise dbus.exceptions.DBusException(LV_COMMON_INTERFACE, 'Do not use!')
-
 
 # noinspection PyPep8Naming
 class Lv(LvCommon):
