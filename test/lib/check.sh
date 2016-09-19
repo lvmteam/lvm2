@@ -400,6 +400,11 @@ raid_leg_status() {
 		die "$1-$2 status $val != $3  ($st)"
 }
 
+grep_dmsetup() {
+	dmsetup $1 $2 | tee out
+	grep "${@:3}" out || die "Expected output from dmsetup $1 not found!"
+}
+
 #set -x
 unset LVM_VALGRIND
 "$@"
