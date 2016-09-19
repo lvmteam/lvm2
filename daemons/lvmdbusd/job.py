@@ -49,8 +49,6 @@ class JobState(object):
 		with self.rlock:
 			if self._request:
 				self._complete = self._request.is_done()
-				if self._complete:
-					self._percent = 100
 
 			return self._complete
 
@@ -58,6 +56,7 @@ class JobState(object):
 	def Complete(self, value):
 		with self.rlock:
 			self._complete = value
+			self._percent = 100
 			self._cond.notify_all()
 
 	@property
