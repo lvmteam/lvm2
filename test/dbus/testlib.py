@@ -103,7 +103,7 @@ class DbusIntrospection(object):
 
 def btsr(value):
 	t = type(value)
-	if t ==  dbus.Boolean:
+	if t == dbus.Boolean:
 		return 'b'
 	elif t == dbus.ObjectPath:
 		return 'o'
@@ -153,6 +153,7 @@ def verify_type(value, dbus_str_rep):
 								(dbus_str_rep, actual_str_rep,
 								str(type(value))))
 
+
 class RemoteObject(object):
 	def _set_props(self, props=None):
 		# print 'Fetching properties'
@@ -177,7 +178,8 @@ class RemoteObject(object):
 					self.introspect[self.interface]['properties'][kl]['p_type'])
 				setattr(self, kl, vl)
 
-	def __init__(self, specified_bus, object_path, interface, introspect, properties=None):
+	def __init__(self, specified_bus, object_path, interface, introspect,
+				 properties=None):
 		self.object_path = object_path
 		self.interface = interface
 		self.bus = specified_bus
@@ -196,13 +198,14 @@ class RemoteObject(object):
 
 	def _wrapper(self, _method_name, *args, **kwargs):
 		result = getattr(self.dbus_method, _method_name)(*args, **kwargs)
-		#print("DEBUG: %s.%s result %s" %
-		#	(self.interface, _method_name, str(type(result))))
+		# print("DEBUG: %s.%s result %s" %
+		# (self.interface, _method_name, str(type(result))))
 
-		if 'RETURN_VALUE' in \
-				self.introspect[self.interface]['methods'][_method_name]:
-			r_type = self.introspect[self.interface]['methods'] \
-				[_method_name]['RETURN_VALUE']['a_type']
+		if 'RETURN_VALUE' in self.introspect[
+				self.interface]['methods'][_method_name]:
+			r_type = self.introspect[
+				self.interface]['methods'][
+				_method_name]['RETURN_VALUE']['a_type']
 
 			verify_type(result, r_type)
 
