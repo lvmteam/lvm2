@@ -1015,7 +1015,7 @@ class TestDbusService(unittest.TestCase):
 
 		block_path = []
 		for d in devices:
-			block_path.append(d['DEVNAME'])
+			block_path.append(d.properties['DEVNAME'])
 
 		self.assertEqual(
 			self.handle_return(
@@ -1028,7 +1028,7 @@ class TestDbusService(unittest.TestCase):
 
 		mm = []
 		for d in devices:
-			mm.append((int(d['MAJOR']), int(d['MINOR'])))
+			mm.append((int(d.properties['MAJOR']), int(d.properties['MINOR'])))
 
 		self.assertEqual(
 
