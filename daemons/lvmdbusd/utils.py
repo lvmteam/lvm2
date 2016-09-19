@@ -16,8 +16,6 @@ import string
 import datetime
 
 import dbus
-import dbus.service
-import dbus.mainloop.glib
 from lvmdbusd import cfg
 
 

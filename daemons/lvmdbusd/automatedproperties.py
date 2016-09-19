@@ -8,6 +8,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import dbus
+import dbus.service
 from . import cfg
 from .utils import get_properties, add_properties, get_object_property_diff, \
 	log_debug

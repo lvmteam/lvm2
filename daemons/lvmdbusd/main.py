@@ -16,6 +16,7 @@ from . import cmdhandler
 import time
 import signal
 import dbus
+import dbus.mainloop.glib
 from . import lvmdb
 # noinspection PyUnresolvedReferences
 from gi.repository import GLib
