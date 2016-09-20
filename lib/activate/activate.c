@@ -1774,7 +1774,8 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	/*
 	 * In case this LV is a snapshot origin, we instead monitor
 	 * each of its respective snapshots.  The origin itself may
-	 * also need to be monitored if it is a mirror, for example.
+	 * also need to be monitored if it is a mirror, for example,
+	 * so fall through to process it afterwards.
 	 */
 	if (!laopts->origin_only && lv_is_origin(lv))
 		dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
@@ -1835,7 +1836,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 		if (!monitor)
 			/* When unmonitoring, obtain existing dso being used. */
-			monitored = _device_registered_with_dmeventd(cmd, seg->lv, &pending, &dso);
+			monitored = _device_registered_with_dmeventd(cmd, seg_is_snapshot(seg) ? seg->cow : seg->lv, &pending, &dso);
 		else
 			monitored = seg->segtype->ops->target_monitored(seg, &pending);
 
@@ -1870,7 +1871,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			continue;
 
 		if (new_unmonitor) {
-			if (!target_register_events(cmd, dso, lv, 0, 0, 10)) {
+			if (!target_register_events(cmd, dso, seg_is_snapshot(seg) ? seg->cow : lv, 0, 0, 10)) {
 				log_error("%s: segment unmonitoring failed.",
 					  display_lvname(lv));
  
