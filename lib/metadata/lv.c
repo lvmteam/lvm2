@@ -537,8 +537,8 @@ struct logical_volume *lv_origin_lv(const struct logical_volume *lv)
 
 	if (lv_is_cow(lv))
 		origin = origin_from_cow(lv);
-	else if (lv_is_cache(lv) && first_seg(lv)->origin)
-		origin = first_seg(lv)->origin;
+	else if (lv_is_cache(lv) && !lv_is_pending_delete(lv))
+		origin = seg_lv(first_seg(lv), 0);
 	else if (lv_is_thin_volume(lv) && first_seg(lv)->origin)
 		origin = first_seg(lv)->origin;
 	else if (lv_is_thin_volume(lv) && first_seg(lv)->external_lv)

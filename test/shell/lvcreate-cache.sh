@@ -85,6 +85,7 @@ lvremove -f $vg
 lvcreate --type cache-pool  -L1 $vg/cpool
 lvcreate -H -L4 -n $lv1 $vg/cpool
 
+check lv_field $vg/$lv1 origin "[${lv1}_corig]"
 check lv_field $vg/$lv1 copy_percent "0.00"
 # there should be something present (value differs per policy version)
 test -n "$(get lv_field $vg/$lv1 data_percent)"

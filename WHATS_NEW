@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Fix reported origin lv field for cache volumes. (2.02.133)
   Always specify snapshot cow LV for monitoring not internal LV. (2.02.165)
   Fix lvchange --discard|--zero for active thin-pool.
   Enforce 4MiB or 25% metadata free space for thin pool operations.
