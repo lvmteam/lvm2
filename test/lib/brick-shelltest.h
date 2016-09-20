@@ -571,7 +571,7 @@ struct KMsg : Source {
         // Can't use kmsg on kernels pre 3.5, read /var/log/messages
         if ( ( ::uname(&uts) == 0 ) &&
             ( ::sscanf( uts.release, "%u.%u.%u", &kmaj, &kmin, &krel ) == 3 ) &&
-            ( ( kmaj < 5 ) || ( ( kmaj == 3 ) && ( kmin < 5 ) ) ) )
+            ( ( kmaj < 3 ) || ( ( kmaj == 3 ) && ( kmin < 5 ) ) ) )
             can_clear = false, read_msg = "/var/log/messages";
 
         if ( ( fd = open(read_msg, O_RDONLY | O_NONBLOCK)) < 0 ) {
