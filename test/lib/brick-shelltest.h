@@ -75,6 +75,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/klog.h>
+#include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
 #endif
@@ -484,8 +485,12 @@ struct FileSink : FdSink {
     }
 };
 
+#define BRICK_SYSLOG_ACTION_READ           2
+#define BRICK_SYSLOG_ACTION_READ_ALL       3
 #define BRICK_SYSLOG_ACTION_READ_CLEAR     4
 #define BRICK_SYSLOG_ACTION_CLEAR          5
+#define BRICK_SYSLOG_ACTION_SIZE_UNREAD    9
+#define BRICK_SYSLOG_ACTION_SIZE_BUFFER   10
 
 struct Source {
     int fd;
@@ -553,10 +558,24 @@ struct FileSource : Source {
 
 struct KMsg : Source {
     bool can_clear;
+    bool syslog;
+    ssize_t buffer_size;
 
-    KMsg() : can_clear( strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0") ) {
+    KMsg() : can_clear( strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0") ),
+        buffer_size(128 * 1024)
+    {
 #ifdef __unix
-        if ( (fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0 ) {
+        struct utsname uts;
+        unsigned kmaj, kmin, krel;
+
+        // Can't use kmsg on kernels pre 3.5, relay on syslog for that case
+        syslog = ( ( ::uname(&uts) == 0 ) &&
+                   ( ::sscanf( uts.release, "%u.%u.%u", &kmaj, &kmin, &krel ) == 3 ) &&
+                   ( ( kmaj < 3 ) || ( ( kmaj == 3 ) && ( kmin < 5 ) ) ) );
+
+        if ( syslog )
+            buffer_size = klogctl( BRICK_SYSLOG_ACTION_SIZE_BUFFER, NULL, 0 );
+        else if ( (fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK)) < 0 ) {
             if (errno != ENOENT) /* Older kernels (<3.5) do not support /dev/kmsg */
                 perror("opening /dev/kmsg");
             if ( klogctl( BRICK_SYSLOG_ACTION_CLEAR, 0, 0 ) < 0 )
@@ -573,14 +592,18 @@ struct KMsg : Source {
     void sync( Sink *s ) {
 #ifdef __unix
         ssize_t sz;
-        char buf[ 128 * 1024 ];
+        char buf[ buffer_size ];
 
-        if ( dev_kmsg() ) {
-            while ( (sz = ::read(fd, buf, sizeof(buf) - 1)) > 0 )
+        if ( syslog ) {
+            while ( klogctl(BRICK_SYSLOG_ACTION_SIZE_UNREAD, NULL, 0 ) > 0 &&
+                    ( sz = klogctl( BRICK_SYSLOG_ACTION_READ, buf, ( int ) buffer_size ) ) > 0 )
+                s->push( std::string( buf, sz ) );
+        } else if ( dev_kmsg() ) {
+            while ( (sz = ::read(fd, buf, buffer_size)) > 0 )
                 s->push( std::string( buf, sz ) );
         } else if ( can_clear ) {
-            while ( (sz = klogctl( BRICK_SYSLOG_ACTION_READ_CLEAR, buf,
-                                   sizeof(buf) - 1 )) > 0 )
+            while ( ( sz = klogctl( BRICK_SYSLOG_ACTION_READ_CLEAR, buf,
+                                   ( int)  buffer_size ) ) > 0 )
                 s->push( std::string( buf, sz ) );
             if ( sz < 0 && errno == EPERM )
                 can_clear = false;

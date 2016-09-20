@@ -219,6 +219,7 @@ dm_table() {
 }
 
 skip() {
+	set +vx # debug off
 	if test "$#" -eq 0; then
 		stacktrace
 	else
