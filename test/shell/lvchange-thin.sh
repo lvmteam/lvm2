@@ -29,7 +29,12 @@ lvcreate -L10M -T $vg/pool
 # Check change operations on a thin-pool without any thin LV
 #
 # discards_ARG  (default is passdown)
-check grep_dmsetup status $vg-pool " discard_passdown"
+check grep_dmsetup status $vg-pool " discard_passdown" || {
+	# trace device layout
+	grep -r "" /sys/block/*
+	die "Device was expected to support passdown"
+}
+
 lvchange -vvvv --discards nopassdown $vg/pool
 check grep_dmsetup table $vg-pool " no_discard_passdown"
 check grep_dmsetup status $vg-pool " no_discard_passdown"
