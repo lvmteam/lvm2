@@ -3658,7 +3658,7 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!mirror_in_sync() && !_raid_in_sync(lv)) {
+	if (!_raid_in_sync(lv)) {
 		log_error("Unable to replace devices in %s/%s while it is"
 			  " not in-sync.", lv->vg->name, lv->name);
 		return 0;

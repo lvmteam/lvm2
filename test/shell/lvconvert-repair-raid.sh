@@ -22,11 +22,52 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 
 aux prepare_vg 8
 
+function delay
+{
+	for d in $(< DEVICES)
+	do
+		aux delay_dev "$d" 0 $1 $(get first_extent_sector "$d")
+	done
+}
+
 # It's possible small raid arrays do have problems with reporting in-sync.
 # So try bigger size
+RAID_SIZE=32
+
+# Fast sync and repair afterwards
+delay 0
+
+# RAID1 dual-leg single replace after initial sync
+lvcreate --type raid1 -m 1 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2"
+aux wait_for_sync $vg $lv1
+aux disable_dev "$dev2"
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev2"
+vgextend $vg "$dev2"
+lvremove -ff $vg/$lv1
+
+# Delayed sync to allow for repair during rebuild
+delay 50
+
+# RAID1 triple-leg single replace during initial sync
+lvcreate --type raid1 -m 2 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2" "$dev3"
+aux disable_dev "$dev2" "$dev3"
+not lvconvert -y --repair $vg/$lv1
+aux wait_for_sync $vg $lv1
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev2" "$dev3"
+vgextend $vg "$dev2" "$dev3"
+lvremove -ff $vg/$lv1
+
+
+# Larger RAID size possible for striped RAID
 RAID_SIZE=64
 
-# RAID5 single replace
+# Fast sync and repair afterwards
+delay 0
+# RAID5 single replace after initial sync
 lvcreate --type raid5 -i 2 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 aux wait_for_sync $vg $lv1
 aux disable_dev "$dev3"
@@ -34,16 +75,69 @@ lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
 aux enable_dev "$dev3"
 vgextend $vg "$dev3"
-lvremove -ff $vg
+lvremove -ff $vg/$lv1
 
-# RAID6 double replace
+# Delayed sync to allow for repair during rebuild
+delay 50
+
+# RAID5 single replace during initial sync
+lvcreate --type raid5 -i 2 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2" "$dev3"
+aux disable_dev "$dev3"
+not lvconvert -y --repair $vg/$lv1
+aux wait_for_sync $vg $lv1
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev3"
+vgextend $vg "$dev3"
+lvremove -ff $vg/$lv1
+
+# Fast sync and repair afterwards
+delay 0
+
+# RAID6 double replace after initial sync
 lvcreate --type raid6 -i 3 -L $RAID_SIZE -n $lv1 $vg \
     "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 aux wait_for_sync $vg $lv1
 aux disable_dev "$dev4" "$dev5"
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
-aux enable_dev "$dev4"
-aux enable_dev "$dev5"
+aux enable_dev "$dev4" "$dev5"
 vgextend $vg "$dev4" "$dev5"
+lvremove -ff $vg/$lv1
+
+# Delayed sync to allow for repair during rebuild
+delay 50
+
+# RAID6 single replace after initial sync
+lvcreate --type raid6 -i 3 -L $RAID_SIZE -n $lv1 $vg \
+    "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
+aux disable_dev "$dev4"
+not lvconvert -y --repair $vg/$lv1
+delay 0 # Fast sync and repair afterwards
+aux disable_dev "$dev4" # Need to disable again after changing delay
+aux wait_for_sync $vg $lv1
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev4"
+vgextend $vg "$dev4"
+lvremove -ff $vg/$lv1
+
+# Delayed sync to allow for repair during rebuild
+delay 50
+
+# RAID10 single replace after initial sync
+lvcreate --type raid10 -m 1 -i 2 -L $RAID_SIZE -n $lv1 $vg \
+    "$dev1" "$dev2" "$dev3" "$dev4"
+aux disable_dev "$dev4"
+not lvconvert -y --repair $vg/$lv1
+delay 0 # Fast sync and repair afterwards
+aux disable_dev "$dev4" # Need to disable again after changing delay
+aux disable_dev "$dev1"
+aux wait_for_sync $vg $lv1
+lvconvert -y --repair $vg/$lv1
+vgreduce --removemissing $vg
+aux enable_dev "$dev4"
+vgextend $vg "$dev4"
+lvremove -ff $vg/$lv1
+
 vgremove -ff $vg

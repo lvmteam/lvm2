@@ -1018,12 +1018,6 @@ int lv_raid_image_in_sync(const struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!lv_raid_percent(raid_seg->lv, &percent))
-		return_0;
-
-	if (percent == DM_PERCENT_100)
-		return 1;
-
 	/* Find out which sub-LV this is. */
 	for (s = 0; s < raid_seg->area_count; s++)
 		if (seg_lv(raid_seg, s) == lv)

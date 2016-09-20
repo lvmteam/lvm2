@@ -1974,24 +1974,6 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
-		if (!lv_raid_percent(lv, &sync_percent)) {
-			log_error("Unable to determine sync status of %s.",
-				  display_lvname(lv));
-			return 0;
-		}
-
-		if (sync_percent != DM_PERCENT_100) {
-			log_warn("WARNING: %s is not in-sync.", display_lvname(lv));
-			log_warn("WARNING: Portions of the array may be unrecoverable.");
-
-			/*
-			 * The kernel will not allow a device to be replaced
-			 * in an array that is not in-sync unless we override
-			 * by forcing the array to be considered "in-sync".
-			 */
-			init_mirror_in_sync(1);
-		}
-
 		_lvconvert_raid_repair_ask(cmd, lp, &replace);
 
 		if (replace) {

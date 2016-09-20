@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,14 +13,20 @@
  */
 
 #include "lib.h"
+#include "defaults.h"
 #include "dmeventd_lvm.h"
 #include "libdevmapper-event.h"
+
+/* Hold enough elements for the mximum number of RAID images */
+#define	RAID_DEVS_ELEMS	((DEFAULT_RAID_MAX_IMAGES + 63) / 64)
 
 struct dso_state {
 	struct dm_pool *mem;
 	char cmd_lvscan[512];
 	char cmd_lvconvert[512];
+	uint64_t raid_devs[RAID_DEVS_ELEMS];
 	int failed;
+	int warned;
 };
 
 DM_EVENT_LOG_FN("raid")
@@ -31,19 +37,38 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 {
 	struct dm_status_raid *status;
 	const char *d;
+	int dead = 0, r = 1;
 
 	if (!dm_get_status_raid(state->mem, params, &status)) {
 		log_error("Failed to process status line for %s.", device);
 		return 0;
 	}
 
-	if ((d = strchr(status->dev_health, 'D'))) {
+	d = status->dev_health;
+	while ((d = strchr(d, 'D'))) {
+		uint32_t dev = (uint32_t)(d - status->dev_health);
+
+		if (!(state->raid_devs[dev / 64] & (1 << (dev % 64))))
+			log_error("Device #%u of %s array, %s, has failed.",
+				  dev, status->raid_type, device);
+
+		state->raid_devs[dev / 64] |= (1 << (dev % 64));
+		d++;
+		dead = 1;
+	}
+
+	if (dead) {
+		if (status->insync_regions < status->total_regions) {
+			if (!state->warned)
+				log_warn("WARNING: waiting for resynchronization to finish "
+					 "before initiating repair on RAID device %s", device);
+
+			state->warned = 1;
+			goto out; /* Not yet done syncing with accessible devices */
+		}
+
 		if (state->failed)
 			goto out; /* already reported */
-
-		log_error("Device #%d of %s array, %s, has failed.",
-			  (int)(d - status->dev_health),
-			  status->raid_type, device);
 
 		state->failed = 1;
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvscan))
@@ -52,8 +77,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 		/* if repair goes OK, report success even if lvscan has failed */
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvconvert)) {
 			log_info("Repair of RAID device %s failed.", device);
-			dm_pool_free(state->mem, status);
-			return 0;
+			r = 0;
 		}
 	} else {
 		state->failed = 0;
@@ -64,7 +88,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 out:
 	dm_pool_free(state->mem, status);
 
-	return 1;
+	return r;
 }
 
 void process_event(struct dm_task *dmt,
