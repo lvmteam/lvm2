@@ -4956,7 +4956,7 @@ static int _stats_create_file(CMD_ARGS)
 	struct dm_histogram *bounds = NULL;
 	char *path, *abspath = NULL;
 	struct dm_stats *dms = NULL;
-	int group, fd, precise;
+	int group, fd = -1, precise;
 
 	if (_switches[AREAS_ARG] || _switches[AREA_SIZE_ARG]) {
 		log_error("--filemap is incompatible with --areas and --area-size.");
