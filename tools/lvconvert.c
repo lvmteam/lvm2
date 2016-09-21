@@ -1826,7 +1826,6 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	struct dm_list *failed_pvs;
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct lv_segment *seg = first_seg(lv);
-	dm_percent_t sync_percent;
 
 	if (_linear_type_requested(lp->type_str)) {
 		if (arg_is_set(cmd, mirrors_ARG) && (arg_uint_value(cmd, mirrors_ARG, 0) != 0)) {

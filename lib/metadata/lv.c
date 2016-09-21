@@ -988,7 +988,6 @@ int lv_mirror_image_in_sync(const struct logical_volume *lv)
 int lv_raid_image_in_sync(const struct logical_volume *lv)
 {
 	unsigned s;
-	dm_percent_t percent;
 	char *raid_health;
 	struct lv_segment *seg, *raid_seg = NULL;
 
