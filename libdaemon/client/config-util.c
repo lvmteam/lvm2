@@ -161,6 +161,21 @@ void chain_node(struct dm_config_node *cn,
 
 }
 
+struct dm_config_tree *config_tree_from_string_without_dup_node_check(const char *config_settings)
+{
+	struct dm_config_tree *cft;
+
+	if (!(cft = dm_config_create()))
+		return_NULL;
+
+	if (!dm_config_parse_without_dup_node_check(cft, config_settings, config_settings + strlen(config_settings))) {
+		dm_config_destroy(cft);
+		return_NULL;
+	}
+
+	return cft;
+}
+
 struct dm_config_node *make_config_node(struct dm_config_tree *cft,
 					const char *key,
 					struct dm_config_node *parent,

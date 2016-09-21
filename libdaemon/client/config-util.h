@@ -66,4 +66,6 @@ struct dm_config_node *config_make_nodes(struct dm_config_tree *cft,
 					 struct dm_config_node *pre_sib,
 					 ...);
 
+struct dm_config_tree *config_tree_from_string_without_dup_node_check(const char *config_settings);
+
 #endif /* _LVM_DAEMON_CONFIG_UTIL_H */
