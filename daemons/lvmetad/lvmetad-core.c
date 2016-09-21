@@ -599,7 +599,7 @@ static void mark_outdated_pv(lvmetad_state *s, const char *vgid, const char *pvi
 
 	outdated_pvs = dm_hash_lookup(s->vgid_to_outdated_pvs, vgid);
 	if (!outdated_pvs) {
-		if (!(outdated_pvs = dm_config_from_string("outdated_pvs/pv_list = []")) ||
+		if (!(outdated_pvs = config_tree_from_string_without_dup_node_check("outdated_pvs/pv_list = []")) ||
 		    !(cft_vgid = make_text_node(outdated_pvs, "vgid", dm_pool_strdup(outdated_pvs->mem, vgid),
 						outdated_pvs->root, NULL)))
 			abort();

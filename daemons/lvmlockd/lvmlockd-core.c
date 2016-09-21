@@ -4431,7 +4431,7 @@ static void client_recv_action(struct client *cl)
 		return;
 	}
 
-	req.cft = dm_config_from_string(req.buffer.mem);
+	req.cft = config_tree_from_string_without_dup_node_check(req.buffer.mem);
 	if (!req.cft) {
 		log_error("client recv %u config_from_string error", cl->id);
 		buffer_destroy(&req.buffer);

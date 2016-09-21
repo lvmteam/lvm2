@@ -1275,7 +1275,7 @@ struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname
 	/* Build config tree from vgmetadata, if not yet cached */
 	if (!vginfo->cft &&
 	    !(vginfo->cft =
-	      dm_config_from_string(vginfo->vgmetadata)))
+	      config_tree_from_string_without_dup_node_check(vginfo->vgmetadata)))
 		goto_bad;
 
 	if (!(vg = import_vg_from_config_tree(vginfo->cft, fid)))

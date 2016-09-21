@@ -22,6 +22,7 @@
 #include "text_export.h"
 #include "lvm-version.h"
 #include "toolcontext.h"
+#include "config-util.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -1077,7 +1078,7 @@ struct dm_config_tree *export_vg_to_config_tree(struct volume_group *vg)
 		return_NULL;
 	}
 
-	if (!(vg_cft = dm_config_from_string(buf))) {
+	if (!(vg_cft = config_tree_from_string_without_dup_node_check(buf))) {
 		log_error("Error parsing metadata for VG %s.", vg->name);
 		dm_free(buf);
 		return_NULL;

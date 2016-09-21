@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Use dm_config_parse_without_dup_node_check() to speedup metadata reading.
   Fix lvconvert --repair regression
   Fix reported origin lv field for cache volumes. (2.02.133)
   Always specify snapshot cow LV for monitoring not internal LV. (2.02.165)
