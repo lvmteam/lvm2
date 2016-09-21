@@ -56,7 +56,7 @@ int text_vgsummary_import(const struct format_type *fmt,
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
 					 offset2, size2, checksum_fn,
 					 vgsummary->mda_checksum,
-					 checksum_only))) {
+					 checksum_only, 1))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
 	}
@@ -130,7 +130,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	if ((!dev && !config_file_read(cft)) ||
 	    (dev && !config_file_read_fd(cft, dev, offset, size,
 					 offset2, size2, checksum_fn, checksum,
-					 skip_parse)))
+					 skip_parse, 1)))
 		goto_out;
 
 	if (skip_parse) {

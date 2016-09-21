@@ -1386,7 +1386,7 @@ int get_cache_params(struct cmd_context *cmd,
 						  NULL)))
 			goto_out;
 
-		if (!dm_config_parse(current, str, str + strlen(str)))
+		if (!dm_config_parse_without_dup_node_check(current, str, str + strlen(str)))
 			goto_out;
 	}
 

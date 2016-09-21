@@ -496,7 +496,7 @@ int override_config_tree_from_profile(struct cmd_context *cmd,
 int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum,
-			int checksum_only)
+			int checksum_only, int no_dup_node_check)
 {
 	char *fb, *fe;
 	int r = 0;
@@ -547,8 +547,13 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 
 	if (!checksum_only) {
 		fe = fb + size + size2;
-		if (!dm_config_parse(cft, fb, fe))
-			goto_out;
+		if (no_dup_node_check) {
+			if (!dm_config_parse_without_dup_node_check(cft, fb, fe))
+				goto_out;
+		} else {
+			if (!dm_config_parse(cft, fb, fe))
+				goto_out;
+		}
 	}
 
 	r = 1;
@@ -596,7 +601,7 @@ int config_file_read(struct dm_config_tree *cft)
 	}
 
 	r = config_file_read_fd(cft, cf->dev, 0, (size_t) info.st_size, 0, 0,
-				(checksum_fn_t) NULL, 0, 0);
+				(checksum_fn_t) NULL, 0, 0, 0);
 
 	if (!cf->keep_open) {
 		if (!dev_close(cf->dev))
