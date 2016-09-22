@@ -60,7 +60,10 @@ lvconvert --yes --type cache-pool --poolmetadata $vg/cpool_meta $vg/cpool
 lvcreate -n corigin --type cache --cachepool $vg/cpool -l 10
 
 lvchange --syncaction repair $vg/cpool_cmeta
+aux wait_for_sync $vg cpool_cmeta
+
 lvchange --syncaction repair $vg/cpool_cdata
+aux wait_for_sync $vg cpool_cdata
 
 lvconvert --repair -y $vg/cpool_cmeta
 lvconvert --repair -y $vg/cpool_cdata
