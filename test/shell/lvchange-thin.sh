@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2013-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -25,24 +25,31 @@ vgcreate -s 128k $vg2 "$dev3"
 
 lvcreate -L10M -T $vg/pool
 
+# When PV does not support discard
+# tests for checking thin-pool discard passdown are skipped
+pvmajor=$(get pv_field "$dev1" major)
+pvminor=$(get pv_field "$dev1" minor)
+test "$(< /sys/dev/block/$pvmajor\:$pvminor/queue/discard_granularity)" -ne "0" || \
+        no_discard=1
+
 #
 # Check change operations on a thin-pool without any thin LV
 #
 # discards_ARG  (default is passdown)
-check grep_dmsetup status $vg-pool " discard_passdown" || {
+test -n "$no_discard" || check grep_dmsetup status $vg-pool " discard_passdown" || {
 	# trace device layout
 	grep -r "" /sys/block/*
 	die "Device was expected to support passdown"
 }
 
-lvchange -vvvv --discards nopassdown $vg/pool
+lvchange --discards nopassdown $vg/pool
 check grep_dmsetup table $vg-pool " no_discard_passdown"
-check grep_dmsetup status $vg-pool " no_discard_passdown"
+test -n "$no_discard" || check grep_dmsetup status $vg-pool " no_discard_passdown"
 
 lvchange --discards passdown $vg/pool
 check grep_dmsetup table $vg-pool -v "passdown"
-check grep_dmsetup status $vg-pool " discard_passdown"
-
+test -n "$no_discard" || check grep_dmsetup status $vg-pool " discard_passdown"
+exit
 # zero_ARG  (default is 'yes')
 check grep_dmsetup table $vg-pool -v "zeroing"
 lvchange --zero n $vg/pool
@@ -112,10 +119,10 @@ lvchange --deltag foo $vg/pool
 # discards_ARG
 lvchange --discards nopassdown $vg/pool
 check grep_dmsetup table $vg-pool-tpool " no_discard_passdown"
-check grep_dmsetup status $vg-pool-tpool " no_discard_passdown"
+test -n "$no_discard" || check grep_dmsetup status $vg-pool-tpool " no_discard_passdown"
 lvchange --discards passdown $vg/pool
 check grep_dmsetup table $vg-pool-tpool -v "passdown"
-check grep_dmsetup status $vg-pool-tpool " discard_passdown"
+test -n "$no_discard" || check grep_dmsetup status $vg-pool-tpool " discard_passdown"
 
 # zero_ARG
 lvchange --zero n $vg/pool
