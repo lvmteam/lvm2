@@ -1787,8 +1787,25 @@ struct cmd_context *create_config_context(void)
 		goto_out;
 
 	dm_list_init(&cmd->config_files);
+	dm_list_init(&cmd->tags);
 
 	if (!_init_lvm_conf(cmd))
+		goto_out;
+
+	if (!_init_hostname(cmd))
+		goto_out;
+
+	if (!_init_tags(cmd, cmd->cft))
+		goto_out;
+
+	/* Load lvmlocal.conf */
+	if (*cmd->system_dir && !_load_config_file(cmd, "", 1))
+		goto_out;
+
+	if (!_init_tag_configs(cmd))
+		goto_out;
+
+	if (!(cmd->cft = _merge_config_files(cmd, cmd->cft)))
 		goto_out;
 
 	return cmd;

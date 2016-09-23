@@ -1,5 +1,6 @@
 Version 2.02.166 - 
 =====================================
+  Fix lvm2-activation-generator to read all LVM2 config sources. (2.02.155)
   Fix lvchange-rebuild-raid.sh to cope with older target versions.
   Use dm_config_parse_without_dup_node_check() to speedup metadata reading.
   Fix lvconvert --repair regression
