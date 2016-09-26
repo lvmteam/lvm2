@@ -1,5 +1,6 @@
 Version 1.02.135 - 
 =====================================
+  Fix man entry for dmsetup status.
   Introduce new dm_config_parse_without_dup_node_check().
 
 Version 1.02.134 - 7th September 2016

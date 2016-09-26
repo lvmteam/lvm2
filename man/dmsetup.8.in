@@ -787,14 +787,14 @@ The precise encoding might change without notice in any future
 release, so we recommend you always decode using the current version of
 this command.
 .HP
-.BR stats " " \fIcommand " [" \fIoptions ]
+.CMD_STATS
 .br
 Manages IO statistics regions for devices.
 See
 .BR dmstats (8)
 for more details.
 .HP
-.CMD_STATS
+.CMD_STATUS
 .br
 Outputs status information for each of the device's targets.
 With \fB\-\-target\fP, only information relating to the specified target type
