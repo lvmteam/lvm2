@@ -137,7 +137,7 @@ static int generate_unit(const char *dir, int unit, int sysinit_needed)
 			fputs("After=systemd-udev-settle.service\n"
 			      "Before=cryptsetup.target\n", f);
 		} else
-			fprintf(f, "After= %s cryptsetup.target\n", unit_names[UNIT_EARLY]);
+			fprintf(f, "After=%s cryptsetup.target\n", unit_names[UNIT_EARLY]);
 
 		fputs("Before=local-fs-pre.target shutdown.target\n"
 		      "Wants=systemd-udev-settle.service\n\n"
