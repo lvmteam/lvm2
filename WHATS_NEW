@@ -1,3 +1,6 @@
+Version 2.02.167 - 
+======================================
+
 Version 2.02.166 - 26th September 2016
 ======================================
   Fix lvm2-activation-generator to read all LVM2 config sources. (2.02.155)
