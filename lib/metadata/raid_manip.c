@@ -776,6 +776,11 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_active(lv_lock_holder(lv)) && (old_count == 1) && (lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv))) {
+		log_error("Can't add image to active thin pool LV %s yet. Deactivate first.", display_lvname(lv));
+		return 0;
+	}
+
 	if (!archive(lv->vg))
 		return_0;
 

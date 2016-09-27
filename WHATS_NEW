@@ -1,5 +1,6 @@
 Version 2.02.167 - 
 ======================================
+  Disable lvconvert of thin pool to raid while active.
   Disable systemd service start rate limiting for lvm2-pvscan@.service.
 
 Version 2.02.166 - 26th September 2016
