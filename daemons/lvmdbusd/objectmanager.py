@@ -12,8 +12,9 @@ import threading
 import traceback
 import dbus
 import os
+import copy
 from . import cfg
-from .utils import log_debug, pv_obj_path_generate
+from .utils import log_debug, pv_obj_path_generate, log_error
 from .automatedproperties import AutomatedProperties
 
 
@@ -69,6 +70,31 @@ class ObjectManager(AutomatedProperties):
 	def InterfacesRemoved(self, object_path, interface_list):
 		log_debug(('SIGNAL: InterfacesRemoved(%s, %s)' %
 			(str(object_path), str(interface_list))))
+
+	def validate_lookups(self):
+		with self.rlock:
+			tmp_lookups = copy.deepcopy(self._id_to_object_path)
+
+			# iterate over all we know, removing from the copy.  If all is well
+			# we will have zero items left over
+			for path, md in self._objects.items():
+				obj, lvm_id, uuid = md
+
+				if lvm_id:
+					assert path == tmp_lookups[lvm_id]
+					del tmp_lookups[lvm_id]
+
+				if uuid:
+					assert path == tmp_lookups[uuid]
+					del tmp_lookups[uuid]
+
+			rc = len(tmp_lookups)
+			if rc:
+				# Error condition
+				log_error("_id_to_object_path has extraneous lookups!")
+				for key, path in tmp_lookups.items():
+					log_error("Key= %s, path= %s" % (key, path))
+		return rc
 
 	def _lookup_add(self, obj, path, lvm_id, uuid):
 		"""

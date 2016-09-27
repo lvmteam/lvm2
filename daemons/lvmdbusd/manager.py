@@ -115,6 +115,10 @@ class Manager(AutomatedProperties):
 
 		# This is a diagnostic and should not be run in normal operation, so
 		# lets remove the log entries for refresh as it's implied.
+
+		# Run an internal diagnostic on the object manager look up tables
+		lc = cfg.om.validate_lookups()
+
 		rc = cfg.load(log=False)
 
 		if rc != 0:
@@ -122,7 +126,7 @@ class Manager(AutomatedProperties):
 							'bg_black', 'fg_light_red')
 		else:
 			utils.log_debug('Manager.Refresh - exit %d' % (rc))
-		return rc
+		return rc + lc
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
