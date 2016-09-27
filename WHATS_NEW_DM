@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Fix stats walk segfault with dmsetup older than v1.02.129
 
 Version 1.02.135 - 26th September 2016
 ======================================

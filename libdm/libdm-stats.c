@@ -1526,9 +1526,6 @@ static void _stats_walk_end_areas(const struct dm_stats *dms, uint64_t *flags,
 static int _stats_walk_end(const struct dm_stats *dms, uint64_t *flags,
 			   uint64_t *cur_r, uint64_t *cur_a, uint64_t *cur_g)
 {
-	if (!dms || !dms->regions)
-		return 1;
-
 	if (*flags & DM_STATS_WALK_AREA) {
 		_stats_walk_end_areas(dms, flags, cur_r, cur_a, cur_g);
 		goto out;
@@ -1553,6 +1550,9 @@ out:
 
 int dm_stats_walk_end(struct dm_stats *dms)
 {
+	if (!dms || !dms->regions)
+		return 1;
+
 	if (_stats_walk_end(dms, &dms->cur_flags,
 			    &dms->cur_region, &dms->cur_area,
 			    &dms->cur_group)) {
