@@ -1550,7 +1550,7 @@ out:
 
 int dm_stats_walk_end(struct dm_stats *dms)
 {
-	if (!dms || !dms->regions)
+	if (!dms)
 		return 1;
 
 	if (_stats_walk_end(dms, &dms->cur_flags,
@@ -2020,26 +2020,47 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 {
 	char msg[STATS_MSG_BUF_LEN];
 	struct dm_task *dmt;
+	int listed = 0;
 
 	if (!_stats_bound(dms))
 		return_0;
 
-	if (!dms->regions && !dm_stats_list(dms, dms->program_id)) {
+	/*
+	 * To correctly delete a region, that may be part of a group, a
+	 * listed handle is required, since the region may need to be
+	 * removed from another region's group descriptor; earlier
+	 * versions of the region deletion interface do not have this
+	 * requirement since there are no dependencies between regions.
+	 *
+	 * Listing a previously unlisted handle has numerous
+	 * side-effects on other calls and operations (e.g. stats
+	 * walks), especially when returning to a function that depends
+	 * on the state of the region table, or statistics cursor.
+	 *
+	 * To avoid changing the semantics of the API, and the need for
+	 * a versioned symbol, maintain a flag indicating when a listing
+	 * has been carried out, and drop the region table before
+	 * returning.
+	 *
+	 * This ensures compatibility with programs compiled against
+	 * earlier versions of libdm.
+	 */
+	if (!dms->regions && !(listed = dm_stats_list(dms, dms->program_id))) {
 		log_error("Could not obtain region list while deleting "
 			  "region ID " FMTu64, region_id);
-		return 0;
+		goto bad;
 	}
 
 	if (!dm_stats_get_nr_areas(dms)) {
 		log_error("Could not delete region ID " FMTu64 ": "
 			  "no regions found", region_id);
-		return 0;
+		goto bad;
 	}
 
 	/* includes invalid and special region_id values */
 	if (!dm_stats_region_present(dms, region_id)) {
 		log_error("Region ID " FMTu64 " does not exist", region_id);
-		return 0;
+		goto bad;
 	}
 
 	if(_stats_region_is_grouped(dms, region_id))
@@ -2047,12 +2068,12 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 			log_error("Could not remove region ID " FMTu64 " from "
 				  "group ID " FMTu64,
 				  region_id, dms->regions[region_id].group_id);
-			return 0;
+			goto bad;
 		}
 
 	if (!dm_snprintf(msg, sizeof(msg), "@stats_delete " FMTu64, region_id)) {
 		log_error("Could not prepare @stats_delete message.");
-		return 0;
+		goto bad;
 	}
 
 	dmt = _stats_send_message(dms, msg);
@@ -2060,10 +2081,19 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 		return_0;
 	dm_task_destroy(dmt);
 
-	/* wipe region and mark as not present */
-	_stats_region_destroy(&dms->regions[region_id]);
+	if (!listed)
+		/* wipe region and mark as not present */
+		_stats_region_destroy(&dms->regions[region_id]);
+	else
+		/* return handle to prior state */
+		_stats_regions_destroy(dms);
 
 	return 1;
+bad:
+	if (listed)
+		_stats_regions_destroy(dms);
+
+	return 0;
 }
 
 int dm_stats_clear_region(struct dm_stats *dms, uint64_t region_id)
