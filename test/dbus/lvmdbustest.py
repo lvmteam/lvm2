@@ -1294,7 +1294,8 @@ if __name__ == '__main__':
 	# Default to no lvm shell
 	set_execution(False)
 
-	if test_shell == 0:
+	if int(test_shell) == 0:
+		print('\n Shortened fork & exec test ***\n')
 		unittest.main(exit=True)
 	else:
 		print('\n *** Testing fork & exec *** \n')
