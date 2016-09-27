@@ -337,8 +337,16 @@ class TestDbusService(unittest.TestCase):
 			if len(h_lv.HiddenLvs) > 0:
 				self._verify_hidden_lookups(h_lv, vgname)
 
-			# print("Hidden check %s %s" % (h, h_lv.Name))
 			full_name = "%s/%s" % (vgname, h_lv.Name)
+			# print("Hidden check %s" % (full_name))
+			lookup_path = mgr.LookUpByLvmId(full_name)
+			self.assertTrue(lookup_path != '/')
+			self.assertTrue(lookup_path == h_lv.object_path)
+
+			# Lets's strip off the '[ ]' and make sure we can find
+			full_name = "%s/%s" % (vgname, h_lv.Name[1:-1])
+			# print("Hidden check %s" % (full_name))
+
 			lookup_path = mgr.LookUpByLvmId(full_name)
 			self.assertTrue(lookup_path != '/')
 			self.assertTrue(lookup_path == h_lv.object_path)
