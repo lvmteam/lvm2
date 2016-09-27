@@ -13,7 +13,7 @@ import traceback
 import dbus
 import os
 from . import cfg
-from .utils import log_debug
+from .utils import log_debug, pv_obj_path_generate
 from .automatedproperties import AutomatedProperties
 
 
@@ -75,7 +75,7 @@ class ObjectManager(AutomatedProperties):
 		Store information about what we added to the caches so that we
 		can remove it cleanly
 		:param obj:     The dbus object we are storing
-		:param lvm_id:  The user name for the asset
+		:param lvm_id:  The lvm id for the asset
 		:param uuid:    The uuid for the asset
 		:return:
 		"""
@@ -85,7 +85,12 @@ class ObjectManager(AutomatedProperties):
 		self._lookup_remove(path)
 
 		self._objects[path] = (obj, lvm_id, uuid)
-		self._id_to_object_path[lvm_id] = path
+
+		# Make sure we have one or the other
+		assert lvm_id or uuid
+
+		if lvm_id:
+			self._id_to_object_path[lvm_id] = path
 
 		if uuid:
 			self._id_to_object_path[uuid] = path
@@ -94,8 +99,13 @@ class ObjectManager(AutomatedProperties):
 		# Note: Only called internally, lock implied
 		if obj_path in self._objects:
 			(obj, lvm_id, uuid) = self._objects[obj_path]
-			del self._id_to_object_path[lvm_id]
-			del self._id_to_object_path[uuid]
+
+			if lvm_id in self._id_to_object_path:
+				del self._id_to_object_path[lvm_id]
+
+			if uuid in self._id_to_object_path:
+				del self._id_to_object_path[uuid]
+
 			del self._objects[obj_path]
 
 	def lookup_update(self, dbus_obj, new_uuid, new_lvm_id):
@@ -206,7 +216,8 @@ class ObjectManager(AutomatedProperties):
 		:return: None
 		"""
 		# This gets called when we found an object based on lvm_id, ensure
-		# uuid is correct too, as they can change
+		# uuid is correct too, as they can change. There is no durable
+		# non-changeable name in lvm
 		if lvm_id != uuid:
 			if uuid and uuid not in self._id_to_object_path:
 				obj = self.get_object_by_path(path)
@@ -221,12 +232,14 @@ class ObjectManager(AutomatedProperties):
 		:param lvm_id:		lvm_id to verify
 		:return: None
 		"""
-		# This gets called when we found an object based on lvm_id, ensure
-		# uuid is correct too, as they can change
+		# This gets called when we found an object based on uuid, ensure
+		# lvm_id is correct too, as they can change.  There is no durable
+		# non-changeable name in lvm
 		if lvm_id != uuid:
 			if lvm_id and lvm_id not in self._id_to_object_path:
 				obj = self.get_object_by_path(path)
 				self._lookup_add(obj, path, lvm_id, uuid)
+
 	def _id_lookup(self, the_id):
 		path = None
 
@@ -276,6 +289,12 @@ class ObjectManager(AutomatedProperties):
 			else:
 				# We have a uuid and a lvm_id we can do sanity checks to ensure
 				# that they are consistent
+
+				# If a PV is missing it's device path is '[unknown]'.  When
+				# we see the lvm_id as such we will re-assign to None
+				if path_create == pv_obj_path_generate and \
+						lvm_id == '[unknown]':
+					lvm_id = None
 
 				# Lets check for the uuid first
 				path = self._id_lookup(uuid)
