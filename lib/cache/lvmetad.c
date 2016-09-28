@@ -2061,7 +2061,8 @@ scan_more:
 		dm_config_destroy(vgmeta_ret);
 	}
 out:
-	log_debug_lvmetad("Rescan VG %s done (seqno %u).", vg_ret->name, vg_ret->seqno);
+	if (vg_ret)
+		log_debug_lvmetad("Rescan VG %s done (seqno %u).", vg_ret->name, vg_ret->seqno);
 	return vg_ret;
 }
 
