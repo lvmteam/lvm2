@@ -101,8 +101,7 @@ class LvState(State):
 		rc = []
 		for pv in sorted(cfg.db.lv_contained_pv(uuid)):
 			(pv_uuid, pv_name, pv_segs) = pv
-			pv_obj = cfg.om.get_object_path_by_uuid_lvm_id(
-				pv_uuid, pv_name, gen_new=False)
+			pv_obj = cfg.om.get_object_path_by_uuid_lvm_id(pv_uuid, pv_name)
 
 			segs_decorate = []
 			for i in pv_segs:
@@ -131,8 +130,7 @@ class LvState(State):
 
 		for l in cfg.db.hidden_lvs(self.Uuid):
 			full_name = "%s/%s" % (vg_name, l[1])
-			op = cfg.om.get_object_path_by_uuid_lvm_id(
-				l[0], full_name, gen_new=False)
+			op = cfg.om.get_object_path_by_uuid_lvm_id(l[0], full_name)
 			assert op
 			rc.append(dbus.ObjectPath(op))
 		return rc
@@ -160,8 +158,7 @@ class LvState(State):
 			gen = utils.lv_object_path_method(Name, (Attr, layout, role))
 
 			self.PoolLv = cfg.om.get_object_path_by_uuid_lvm_id(
-				pool_lv_uuid, '%s/%s' % (vg_name, PoolLv),
-				gen)
+				pool_lv_uuid, '%s/%s' % (vg_name, PoolLv), gen)
 		else:
 			self.PoolLv = '/'
 

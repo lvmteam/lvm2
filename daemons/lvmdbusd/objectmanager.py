@@ -209,7 +209,7 @@ class ObjectManager(AutomatedProperties):
 	def get_object_by_uuid_lvm_id(self, uuid, lvm_id):
 		with self.rlock:
 			return self.get_object_by_path(
-				self.get_object_path_by_uuid_lvm_id(uuid, lvm_id, None, False))
+				self.get_object_path_by_uuid_lvm_id(uuid, lvm_id))
 
 	def get_object_by_lvm_id(self, lvm_id):
 		"""
@@ -289,23 +289,27 @@ class ObjectManager(AutomatedProperties):
 							path = self._id_to_object_path[int_lvm_id]
 		return path
 
-	def get_object_path_by_uuid_lvm_id(self, uuid, lvm_id, path_create=None,
-										gen_new=True):
+	def get_object_path_by_uuid_lvm_id(self, uuid, lvm_id, path_create=None):
 		"""
-		For a given lvm asset return the dbus object registered to it.  If the
-		object is not found and gen_new == True and path_create is a valid
-		function we will create a new path, register it and return it.
-		:param uuid: The uuid for the lvm object
-		:param lvm_id: The lvm name
-		:param path_create: If true create an object path if not found
-		:param gen_new: The function used to create the new path
+		For a given lvm asset return the dbus object path registered for it.
+		This method first looks up by uuid and then by lvm_id.  You
+		can search by just one by setting uuid == lvm_id (uuid or lvm_id).
+		If the object is not found and path_create is a not None, the
+		path_create function will be called to create a new object path and
+		register it with the object manager for the specified uuid & lvm_id.
+		Note: If path create is not None, uuid and lvm_id cannot be equal
+		:param uuid: The uuid for the lvm object we are searching for
+		:param lvm_id: The lvm name (eg. pv device path, vg name, lv full name)
+		:param path_create: If not None, create the path using this function if
+				we fail to find the object by uuid or lvm_id.
+		:returns None if lvm asset not found and path_create == None otherwise
+				a valid dbus object path
 		"""
 		with self.rlock:
 			assert lvm_id
 			assert uuid
 
-			if gen_new:
-				assert path_create
+			if path_create:
 				assert uuid != lvm_id
 
 			# Check for Manager.LookUpByLvmId query, we cannot
@@ -335,7 +339,7 @@ class ObjectManager(AutomatedProperties):
 						self._uuid_verify(path, uuid, lvm_id)
 					else:
 						# We have exhausted all lookups, let's create if we can
-						if gen_new:
+						if path_create:
 							path = path_create()
 							self._lookup_add(None, path, lvm_id, uuid)
 

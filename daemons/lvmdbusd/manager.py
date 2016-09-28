@@ -37,8 +37,7 @@ class Manager(AutomatedProperties):
 
 		# Check to see if we are already trying to create a PV for an existing
 		# PV
-		pv = cfg.om.get_object_path_by_uuid_lvm_id(
-			device, device, None, False)
+		pv = cfg.om.get_object_path_by_uuid_lvm_id(device, device)
 		if pv:
 			raise dbus.exceptions.DBusException(
 				MANAGER_INTERFACE, "PV Already exists!")
@@ -164,8 +163,7 @@ class Manager(AutomatedProperties):
 		:param key: The lookup value
 		:return: Return the object path.  If object not found you will get '/'
 		"""
-		p = cfg.om.get_object_path_by_uuid_lvm_id(
-			key, key, gen_new=False)
+		p = cfg.om.get_object_path_by_uuid_lvm_id(key, key)
 		if p:
 			return p
 		return '/'
