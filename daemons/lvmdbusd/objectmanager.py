@@ -320,10 +320,12 @@ class ObjectManager(AutomatedProperties):
 				# We have a uuid and a lvm_id we can do sanity checks to ensure
 				# that they are consistent
 
-				# If a PV is missing it's device path is '[unknown]'.  When
-				# we see the lvm_id as such we will re-assign to None
+				# If a PV is missing it's device path is '[unknown]' or some
+				# other text derivation of unknown.  When we find that a PV is
+				# missing we will clear out the lvm_id as it's likely not unique
+				# and thus not useful and potentially harmful for lookups.
 				if path_create == pv_obj_path_generate and \
-						lvm_id == '[unknown]':
+						cfg.db.pv_missing(uuid):
 					lvm_id = None
 
 				# Lets check for the uuid first
