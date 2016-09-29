@@ -42,6 +42,7 @@ dmsetup suspend $vg-$lv1
 
 # now this should pass without blocking
 dmsetup suspend --noflush --nolockfs $vg1-snap &
+DMPID=$!
 #dmsetup suspend $vg1-snap &
 
 sleep .5
@@ -55,20 +56,28 @@ dmsetup resume $vg-$lv1
 # otherwise --noudevsync would be needed
 dmsetup resume $vg1-snap
 
+# Expecting success from 'dmsetup'
+wait $DMPID
+
 
 # Try how force removal works
 dmsetup suspend $vg-$lv1
 # needs to fail as device is still open
 not dmsetup remove --force $vg1-snap &
+DMPID=$!
 
+# on older snapshot target 'remove' will wait till $lv1 is resumed
+if aux target_at_least dm-snapshot 1 6 0 ; then
 sleep .5
 
 dmsetup table $vg1-snap | tee out
 should grep -i error out
+fi
 
 dmsetup resume $vg-$lv1
 
-wait
+# Expecting success from 'not dmsetup'
+wait $DMPID
 
 # check it really is now 'error' target
 dmsetup table $vg1-snap | tee out
