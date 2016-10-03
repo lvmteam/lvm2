@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Check and report pthread_sigmask() failure in dmeventd.
   Check mem alloc fail in _canonicalize_field_ids().
   Use unsigned math when checking more then 31 legs of raid.
   Fix 'dmstats delete' with dmsetup older than v1.02.129

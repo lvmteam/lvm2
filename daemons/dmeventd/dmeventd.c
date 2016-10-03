@@ -829,17 +829,6 @@ static void _print_sigset(const char *prefix, const sigset_t *sigset)
 }
 #endif
 
-static sigset_t _unblock_sigalrm(void)
-{
-	sigset_t set, old;
-
-	sigemptyset(&set);
-	sigaddset(&set, SIGALRM);
-	pthread_sigmask(SIG_UNBLOCK, &set, &old);
-
-	return old;
-}
-
 enum {
 	DM_WAIT_RETRY,
 	DM_WAIT_INTR,
@@ -849,7 +838,7 @@ enum {
 /* Wait on a device until an event occurs. */
 static int _event_wait(struct thread_status *thread)
 {
-	sigset_t set;
+	sigset_t set, old;
 	int ret = DM_WAIT_RETRY;
 	struct dm_info info;
 
@@ -859,7 +848,12 @@ static int _event_wait(struct thread_status *thread)
 	 * This is so that you can break out of waiting on an event,
 	 * either for a timeout event, or to cancel the thread.
 	 */
-	set = _unblock_sigalrm();
+	sigemptyset(&set);
+	sigaddset(&set, SIGALRM);
+	if (pthread_sigmask(SIG_UNBLOCK, &set, &old) != 0) {
+		log_sys_error("pthread_sigmask", "unblock alarm");
+		return ret; /* What better */
+	}
 
 	if (dm_task_run(thread->wait_task)) {
 		thread->current_events |= DM_EVENT_DEVICE_ERROR;
@@ -883,10 +877,11 @@ static int _event_wait(struct thread_status *thread)
 		}
 	}
 
-	pthread_sigmask(SIG_SETMASK, &set, NULL);
+	if (pthread_sigmask(SIG_SETMASK, &old, NULL) != 0)
+		log_sys_error("pthread_sigmask", "block alarm");
 
 #ifdef DEBUG_SIGNALS
-	_print_sigset("dmeventd blocking ", &set);
+	_print_sigset("dmeventd blocking ", &old);
 #endif
 	DEBUGLOG("Completed waitevent task for %s.", thread->device.name);
 
