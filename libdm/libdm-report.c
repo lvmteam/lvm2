@@ -1228,7 +1228,10 @@ static int _canonicalize_field_ids(struct dm_report *rh)
 			return_0;
 
 		if (differs) {
-			canonical_field_dup = dm_pool_strdup(rh->mem, canonical_field);
+			if (!(canonical_field_dup = dm_pool_strdup(rh->mem, canonical_field))) {
+				log_error("_canonicalize_field_dup: dm_pool_alloc failed.");
+				return 0;
+			}
 			rh->canonical_field_ids[i] = canonical_field_dup;
 		} else
 			rh->canonical_field_ids[i] = rh->fields[i].id;
