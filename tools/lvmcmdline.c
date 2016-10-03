@@ -1049,18 +1049,22 @@ static int _get_settings(struct cmd_context *cmd)
 	const char *activation_mode;
 
 	cmd->current_settings = cmd->default_settings;
-	cmd->current_settings.verbose = arg_count(cmd, verbose_ARG);
-	cmd->current_settings.test = arg_is_set(cmd, test_ARG);
 
 	if (arg_is_set(cmd, debug_ARG))
 		cmd->current_settings.debug = _LOG_FATAL +
 		    (arg_count(cmd, debug_ARG) - 1);
+
+	if (arg_is_set(cmd, verbose_ARG))
+		cmd->current_settings.verbose = arg_count(cmd, verbose_ARG);
 
 	if (arg_is_set(cmd, quiet_ARG)) {
 		cmd->current_settings.debug = 0;
 		cmd->current_settings.verbose = 0;
 		cmd->current_settings.silent = (arg_count(cmd, quiet_ARG) > 1) ? 1 : 0;
 	}
+
+	if (arg_is_set(cmd, test_ARG))
+		cmd->current_settings.test = arg_is_set(cmd, test_ARG);
 
 	if (arg_is_set(cmd, driverloaded_ARG)) {
 		cmd->current_settings.activation =
