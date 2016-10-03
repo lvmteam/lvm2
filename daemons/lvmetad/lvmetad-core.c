@@ -1249,8 +1249,8 @@ static int _update_metadata(lvmetad_state *s, const char *arg_name, const char *
 	const char *old_vgid = NULL;
 	const char *new_vgid = NULL;
 	const char *new_metadata_vgid;
+	int new_seq;
 	int old_seq = -1;
-	int new_seq = -1;
 	int needs_repair = 0;
 	int abort_daemon = 0;
 	int retval = 0;

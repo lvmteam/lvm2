@@ -472,7 +472,7 @@ static int _check_pool_create(const struct logical_volume *lv)
 
 int update_pool_lv(struct logical_volume *lv, int activate)
 {
-	int monitored = DMEVENTD_MONITOR_IGNORE;
+	int monitored;
 	int ret = 1;
 
 	if (!lv_is_thin_pool(lv)) {

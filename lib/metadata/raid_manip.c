@@ -956,7 +956,7 @@ static int _raid_add_images(struct logical_volume *lv,
 			    int commit, int use_existing_area_len)
 {
 	int rebuild_flag_cleared = 0;
-	struct lv_segment *seg = first_seg(lv);
+	struct lv_segment *seg;
 	uint32_t s;
 
 	if (!_raid_add_images_without_commit(lv, new_count, pvs, use_existing_area_len))

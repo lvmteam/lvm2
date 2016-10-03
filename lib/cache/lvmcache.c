@@ -858,7 +858,7 @@ static void _choose_preferred_devs(struct cmd_context *cmd,
 				   struct dm_list *add_cache_devs)
 {
 	char uuid[64] __attribute__((aligned(8)));
-	const char *reason = "none";
+	const char *reason;
 	struct dm_list altdevs;
 	struct dm_list new_unused;
 	struct dev_types *dt = cmd->dev_types;
