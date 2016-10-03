@@ -48,11 +48,11 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 	while ((d = strchr(d, 'D'))) {
 		uint32_t dev = (uint32_t)(d - status->dev_health);
 
-		if (!(state->raid_devs[dev / 64] & (1 << (dev % 64))))
+		if (!(state->raid_devs[dev / 64] & (UINT64_C(1) << (dev % 64))))
 			log_error("Device #%u of %s array, %s, has failed.",
 				  dev, status->raid_type, device);
 
-		state->raid_devs[dev / 64] |= (1 << (dev % 64));
+		state->raid_devs[dev / 64] |= (UINT64_C(1) << (dev % 64));
 		d++;
 		dead = 1;
 	}

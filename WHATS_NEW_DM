@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Use unsigned math when checking more then 31 legs of raid.
   Fix 'dmstats delete' with dmsetup older than v1.02.129
   Fix stats walk segfault with dmsetup older than v1.02.129
 
