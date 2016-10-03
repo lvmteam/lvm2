@@ -4460,7 +4460,8 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (activation() && lp->segtype && lp->segtype->ops->target_present &&
+	/* lv->segtype can't be NULL */
+	if (activation() && lp->segtype->ops->target_present &&
 	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel.", lp->segtype->name);
