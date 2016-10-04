@@ -3264,9 +3264,12 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 		 * Don't pass dev to lvmcache_info_from_pvid because we looking
 		 * for the chosen/preferred dev for this pvid.
 		 */
-		info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0);
-		if (info)
-			vgname = lvmcache_vgname_from_info(info);
+		if (!(info = lvmcache_info_from_pvid(devl->dev->pvid, NULL, 0))) {
+			log_error(INTERNAL_ERROR "No info for pvid");
+			return_ECMD_FAILED;
+		}
+
+		vgname = lvmcache_vgname_from_info(info);
 		if (vgname)
 			vgid = lvmcache_vgid_from_vgname(cmd, vgname);
 		if (vgid)
