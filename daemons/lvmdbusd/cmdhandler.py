@@ -485,7 +485,9 @@ def lvm_full_report_json():
 				'vg_name', 'pool_lv_uuid', 'pool_lv', 'origin_uuid',
 				'origin', 'data_percent',
 				'lv_attr', 'lv_tags', 'vg_uuid', 'lv_active', 'data_lv',
-				'metadata_lv', 'lv_parent', 'lv_role', 'lv_layout']
+				'metadata_lv', 'lv_parent', 'lv_role', 'lv_layout',
+				'snap_percent', 'metadata_percent', 'copy_percent',
+				'sync_percent', 'lv_metadata_size']
 
 	lv_seg_columns = ['seg_pe_ranges', 'segtype', 'lv_uuid']
 
@@ -735,7 +737,9 @@ def lv_retrieve_with_segments():
 				'origin', 'data_percent',
 				'lv_attr', 'lv_tags', 'vg_uuid', 'lv_active', 'data_lv',
 				'metadata_lv', 'seg_pe_ranges', 'segtype', 'lv_parent',
-				'lv_role', 'lv_layout']
+				'lv_role', 'lv_layout',
+			    'snap_percent', 'metadata_percent', 'copy_percent',
+			    'sync_percent', 'lv_metadata_size']
 
 	cmd = _dc('lvs', ['-a', '-o', ','.join(columns)])
 	rc, out, err = call(cmd)

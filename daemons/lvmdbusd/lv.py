@@ -81,7 +81,12 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 			n32(l['data_percent']), l['lv_attr'],
 			l['lv_tags'], l['lv_active'], l['data_lv'],
 			l['metadata_lv'], l['segtype'], l['lv_role'],
-			l['lv_layout']))
+			l['lv_layout'],
+			n32(l['snap_percent']),
+			n32(l['metadata_percent']),
+			n32(l['copy_percent']),
+			n32(l['sync_percent']),
+			n(l['lv_metadata_size'])))
 	return rc
 
 
@@ -138,7 +143,8 @@ class LvState(State):
 	def __init__(self, Uuid, Name, Path, SizeBytes,
 			vg_name, vg_uuid, pool_lv_uuid, PoolLv,
 			origin_uuid, OriginLv, DataPercent, Attr, Tags, active,
-			data_lv, metadata_lv, segtypes, role, layout):
+			data_lv, metadata_lv, segtypes, role, layout, SnapPercent,
+			MetaDataPercent, CopyPercent, SyncPercent, MetaDataSizeBytes):
 		utils.init_class_from_arguments(self)
 
 		# The segtypes is possibly an array with potentially dupes or a single
@@ -214,13 +220,19 @@ class LvState(State):
 @utils.dbus_property(LV_COMMON_INTERFACE, 'Name', 's')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'Path', 's')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'SizeBytes', 't')
-@utils.dbus_property(LV_COMMON_INTERFACE, 'DataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'SegType', 'as')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'Vg', 'o')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'OriginLv', 'o')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'PoolLv', 'o')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'Devices', "a(oa(tts))")
 @utils.dbus_property(LV_COMMON_INTERFACE, 'HiddenLvs', "ao")
+@utils.dbus_property(LV_COMMON_INTERFACE, 'Attr', 's')
+@utils.dbus_property(LV_COMMON_INTERFACE, 'DataPercent', 'u')
+@utils.dbus_property(LV_COMMON_INTERFACE, 'SnapPercent', 'u')
+@utils.dbus_property(LV_COMMON_INTERFACE, 'MetaDataPercent', 'u')
+@utils.dbus_property(LV_COMMON_INTERFACE, 'CopyPercent', 'u')
+@utils.dbus_property(LV_COMMON_INTERFACE, 'SyncPercent', 'u')
+@utils.dbus_property(LV_COMMON_INTERFACE, 'MetaDataSizeBytes', 't')
 class LvCommon(AutomatedProperties):
 	_Tags_meta = ("as", LV_COMMON_INTERFACE)
 	_Roles_meta = ("as", LV_COMMON_INTERFACE)
