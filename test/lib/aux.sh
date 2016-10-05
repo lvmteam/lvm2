@@ -325,8 +325,8 @@ prepare_lvmdbusd() {
 		daemon="$(which lvmdbusd || :)"
 	fi
 	[[ -n $daemon && -x $daemon ]] || skip "The daemon is missing"
-
 	which python3 >/dev/null || skip "Missing python3"
+
 	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
 
 	# Copy the needed file to run on the system bus if it doesn't
@@ -336,6 +336,8 @@ prepare_lvmdbusd() {
 	fi
 
 	echo "preparing lvmdbusd..."
+	lvmconf "global/notify_dbus = 1"
+
 	"$daemon" --debug  > debug.log_LVMDBUSD_out 2>&1 &
 	local pid=$!
 
@@ -1079,6 +1081,7 @@ devices/global_filter = [ "a|$DM_DEV_DIR/mapper/.*pv[0-9_]*$|", "r|.*|" ]
 devices/md_component_detection  = 0
 devices/scan = "$DM_DEV_DIR"
 devices/sysfs_scan = 1
+devices/write_cache_state = 0
 global/abort_on_internal_errors = 1
 global/cache_check_executable = "$LVM_TEST_CACHE_CHECK_CMD"
 global/cache_dump_executable = "$LVM_TEST_CACHE_DUMP_CMD"
@@ -1088,6 +1091,7 @@ global/fallback_to_local_locking = 0
 global/library_dir = "$TESTDIR/lib"
 global/locking_dir = "$TESTDIR/var/lock/lvm"
 global/locking_type=$LVM_TEST_LOCKING
+global/notify_dbus = 0
 global/si_unit_consistency = 1
 global/thin_check_executable = "$LVM_TEST_THIN_CHECK_CMD"
 global/thin_dump_executable = "$LVM_TEST_THIN_DUMP_CMD"
