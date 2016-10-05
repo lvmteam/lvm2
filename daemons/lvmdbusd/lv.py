@@ -86,7 +86,9 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 			n32(l['metadata_percent']),
 			n32(l['copy_percent']),
 			n32(l['sync_percent']),
-			n(l['lv_metadata_size'])))
+			n(l['lv_metadata_size']),
+			l['move_pv'],
+			l['move_pv_uuid']))
 	return rc
 
 
@@ -144,7 +146,8 @@ class LvState(State):
 			vg_name, vg_uuid, pool_lv_uuid, PoolLv,
 			origin_uuid, OriginLv, DataPercent, Attr, Tags, active,
 			data_lv, metadata_lv, segtypes, role, layout, SnapPercent,
-			MetaDataPercent, CopyPercent, SyncPercent, MetaDataSizeBytes):
+			MetaDataPercent, CopyPercent, SyncPercent, MetaDataSizeBytes,
+			move_pv, move_pv_uuid):
 		utils.init_class_from_arguments(self)
 
 		# The segtypes is possibly an array with potentially dupes or a single
@@ -248,12 +251,25 @@ class LvCommon(AutomatedProperties):
 	_FixedMinor_meta = ('b', LV_COMMON_INTERFACE)
 	_ZeroBlocks_meta = ('b', LV_COMMON_INTERFACE)
 	_SkipActivation_meta = ('b', LV_COMMON_INTERFACE)
+	_MovePv_meta = ('o', LV_COMMON_INTERFACE)
+
+	def _get_move_pv(self):
+		path = None
+
+		# It's likely that the move_pv is empty
+		if self.state.move_pv_uuid and self.state.move_pv:
+			path = cfg.om.get_object_path_by_uuid_lvm_id(
+				self.state.move_pv_uuid, self.state.move_pv)
+		if not path:
+			path = '/'
+		return path
 
 	# noinspection PyUnusedLocal,PyPep8Naming
 	def __init__(self, object_path, object_state):
 		super(LvCommon, self).__init__(object_path, lvs_state_retrieve)
 		self.set_interface(LV_COMMON_INTERFACE)
 		self.state = object_state
+		self._move_pv = self._get_move_pv()
 
 	@property
 	def VolumeType(self):
@@ -362,6 +378,10 @@ class LvCommon(AutomatedProperties):
 	@property
 	def Active(self):
 		return dbus.Boolean(self.state.active == "active")
+
+	@property
+	def MovePv(self):
+		return dbus.ObjectPath(self._move_pv)
 
 
 # noinspection PyPep8Naming
