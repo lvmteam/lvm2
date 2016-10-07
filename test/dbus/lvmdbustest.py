@@ -807,6 +807,11 @@ class TestDbusService(unittest.TestCase):
 
 		yes = False
 
+		for pp in self.objs[PV_INT]:
+			if '/dev/sd' not in pp.Pv.Name:
+				std_err_print("Skipping test_job_handling_timer on loopback")
+				return
+
 		# This may not pass
 		for i in [48, 64, 128]:
 			yes = self._test_expired_timer(i)
