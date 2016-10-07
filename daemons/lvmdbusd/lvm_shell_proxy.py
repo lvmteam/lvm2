@@ -129,20 +129,24 @@ class LVMShellProxy(object):
 			[LVM_CMD + " 32>%s" % tmp_file],
 			stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=local_env,
 			stderr=subprocess.PIPE, close_fds=True, shell=True)
-		flags = fcntl(self.lvm_shell.stdout, F_GETFL)
-		fcntl(self.lvm_shell.stdout, F_SETFL, flags | os.O_NONBLOCK)
-		flags = fcntl(self.lvm_shell.stderr, F_GETFL)
-		fcntl(self.lvm_shell.stderr, F_SETFL, flags | os.O_NONBLOCK)
 
-		# wait for the first prompt
-		errors = self._read_until_prompt()[2]
-		if errors and len(errors):
-			raise RuntimeError(errors)
+		try:
+			flags = fcntl(self.lvm_shell.stdout, F_GETFL)
+			fcntl(self.lvm_shell.stdout, F_SETFL, flags | os.O_NONBLOCK)
+			flags = fcntl(self.lvm_shell.stderr, F_GETFL)
+			fcntl(self.lvm_shell.stderr, F_SETFL, flags | os.O_NONBLOCK)
 
-		# These will get deleted when the FD count goes to zero so we can be
-		# sure to clean up correctly no matter how we finish
-		os.unlink(tmp_file)
-		os.rmdir(tmp_dir)
+			# wait for the first prompt
+			errors = self._read_until_prompt()[2]
+			if errors and len(errors):
+				raise RuntimeError(errors)
+		except:
+			raise
+		finally:
+			# These will get deleted when the FD count goes to zero so we can be
+			# sure to clean up correctly no matter how we finish
+			os.unlink(tmp_file)
+			os.rmdir(tmp_dir)
 
 	def get_error_msg(self):
 		# We got an error, lets go fetch the error message
