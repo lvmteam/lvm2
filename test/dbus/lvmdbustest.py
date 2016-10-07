@@ -1294,8 +1294,25 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(tag in vg_proxy.Vg.Tags, "%s not in %s" %
 						(tag, str(vg_proxy.Vg.Tags)))
 
+class AggregateResults(object):
+
+	def __init__(self):
+		self.no_errors = True
+
+	def register_result(self, result):
+		if not result.result.wasSuccessful():
+			self.no_errors = False
+
+	def exit_run(self):
+		if self.no_errors:
+			sys.exit(0)
+		sys.exit(1)
+
 
 if __name__ == '__main__':
+
+	r = AggregateResults()
+
 	# Test forking & exec new each time
 	test_shell = os.getenv('LVM_DBUS_TEST_SHELL', 1)
 
@@ -1304,19 +1321,21 @@ if __name__ == '__main__':
 
 	if int(test_shell) == 0:
 		print('\n Shortened fork & exec test ***\n')
-		unittest.main(exit=True)
+		r.register_result(unittest.main(exit=False))
 	else:
 		print('\n *** Testing fork & exec *** \n')
-		unittest.main(exit=False)
+		r.register_result(unittest.main(exit=False))
 		g_tmo = 15
-		unittest.main(exit=False)
+		r.register_result(unittest.main(exit=False))
 		# Test lvm shell
 		print('\n *** Testing lvm shell *** \n')
 		if set_execution(True):
 			g_tmo = 0
-			unittest.main(exit=False)
+			r.register_result(unittest.main(exit=False))
 			g_tmo = 15
-			unittest.main()
+			r.register_result(unittest.main(exit=False))
 		else:
 			print("WARNING: Unable to dynamically configure "
 				"service to use lvm shell!")
+
+	r.exit_run()
