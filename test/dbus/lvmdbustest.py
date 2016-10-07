@@ -1298,6 +1298,7 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(tag in vg_proxy.Vg.Tags, "%s not in %s" %
 						(tag, str(vg_proxy.Vg.Tags)))
 
+
 class AggregateResults(object):
 
 	def __init__(self):
@@ -1306,6 +1307,9 @@ class AggregateResults(object):
 	def register_result(self, result):
 		if not result.result.wasSuccessful():
 			self.no_errors = False
+
+	def register_fail(self):
+		self.no_errors = False
 
 	def exit_run(self):
 		if self.no_errors:
@@ -1339,6 +1343,7 @@ if __name__ == '__main__':
 			g_tmo = 15
 			r.register_result(unittest.main(exit=False))
 		else:
+			r.register_fail()
 			std_err_print("ERROR: Unable to dynamically configure "
 				"service to use lvm shell!")
 
