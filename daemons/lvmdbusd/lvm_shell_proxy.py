@@ -75,6 +75,8 @@ class LVMShellProxy(object):
 								report += tmp.decode("utf-8")
 								if len(tmp) != 16384:
 									break
+							else:
+								break
 
 					elif r == self.lvm_shell.stderr.fileno():
 						while True:
@@ -83,6 +85,10 @@ class LVMShellProxy(object):
 								stderr += tmp.decode("utf-8")
 							else:
 								break
+
+				# Check to see if the lvm process died on us
+				if self.lvm_shell.poll():
+					raise Exception(self.lvm_shell.returncode, "%s" % stderr)
 
 			except IOError as ioe:
 				log_debug(str(ioe))
@@ -171,6 +177,11 @@ class LVMShellProxy(object):
 		error_msg = ""
 		json_result = ""
 
+		if self.lvm_shell.poll():
+			raise Exception(
+				self.lvm_shell.returncode,
+				"Underlying lvm shell process is not present!")
+
 		# create the command string
 		cmd = " ".join(_quote_arg(arg) for arg in argv)
 		cmd += "\n"
@@ -222,7 +233,7 @@ if __name__ == "__main__":
 				end = time.time()
 
 				print(("RC: %d" % ret))
-				# print(("OUT:\n%s" % out))
+				print(("OUT:\n%s" % out))
 				print(("ERR:\n%s" % err))
 
 				print("Command     = %f seconds" % (end - start))
