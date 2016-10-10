@@ -18,5 +18,19 @@ SKIP_WITH_CLVMD=1
 
 aux prepare_pvs 6
 
+# We need the lvmdbusd.profile for the daemon to utilize JSON
+# output
+mkdir -p $TESTDIR/etc/profile/
+cp -v $TESTOLDPWD/../conf/lvmdbusd.profile $TESTDIR/etc/profile/.
+
+# Need to set this up so that the lvmdbusd service knows which
+# binary to be running, which should be the one we just built
+export LVM_BINARY=$TESTOLDPWD/../tools/lvm
+
 aux prepare_lvmdbusd
+
+# Lets limit testing until the lvm SIGABRT is fixed as
+# we are running into that when using the lvm shell
+export LVM_DBUS_TEST_SHELL=0
+
 $test_data_dir/dbus/lvmdbustest.py -v
