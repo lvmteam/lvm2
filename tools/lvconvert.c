@@ -236,6 +236,12 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 		return 0;
 	}
 
+	/*
+	 * FIXME: avoid this distinct validation out of scope of _convert_*()
+	 *
+ 	 *        We should not rely on namespace here any more!
+ 	 *        It is the duty of lvcreate/lvrename to avoid reserved names.
+ 	 */
 	if (!lp->merge_mirror &&
 	    !lp->repair &&
 	    !lp->keep_mimages &&
@@ -243,6 +249,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 	    !strstr(lp->lv_name, "_tmeta") &&
 	    !strstr(lp->lv_name, "_cdata") &&
 	    !strstr(lp->lv_name, "_cmeta") &&
+	    !strstr(lp->lv_name, "_corig") &&
 	    !apply_lvname_restrictions(lp->lv_name))
 		return_0;
 
@@ -4262,14 +4269,34 @@ static int _convert_mirror(struct cmd_context *cmd, struct logical_volume *lv,
 static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 			 struct lvconvert_params *lp)
 {
+	/* Permitted convert options on visible or hidden RaidLVs */
+	const char *permitted_options = lv_is_visible(lv) ?
+	  	"  --mirrors\n"
+	  	"  --splitmirrors\n"
+	  	"  --merge\n"
+	  	"  --repair\n"
+	  	"  --replace\n"
+	  	"  --type snapshot\n"
+	  	"  --type thin\n"
+	  	"  --type cache\n"
+	  	"  --type thin-pool\n"
+	  	"  --type cache-pool\n"
+	  	"  --type raid*\n"
+	  	"  --type mirror\n"
+	  	"  --type striped\n"
+	  	"  --type linear\n"
+		:
+	  	"  --mirrors\n"
+	  	"  --repair\n"
+	  	"  --replace\n"
+	  	"  --type raid*\n"
+	  	"  --type mirror\n"
+	  	"  --type striped\n"
+	  	"  --type linear\n";
+
+	/* Applicable to any hidden _or_ visible LVs. */
 	if (arg_is_set(cmd, mirrors_ARG))
 		return _convert_raid_number(cmd, lv, lp);
-
-	if (arg_is_set(cmd, splitmirrors_ARG))
-		return _convert_raid_splitmirrors(cmd, lv, lp);
-
-	if (arg_is_set(cmd, merge_ARG))
-		return _convert_raid_merge(cmd, lv, lp);
 
 	if (arg_is_set(cmd, repair_ARG))
 		return _convert_raid_repair(cmd, lv, lp);
@@ -4277,27 +4304,13 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 	if (arg_is_set(cmd, replace_ARG))
 		return _convert_raid_replace(cmd, lv, lp);
 
-	if (!strcmp(lp->type_str, SEG_TYPE_NAME_SNAPSHOT) || arg_is_set(cmd, snapshot_ARG))
-		return _convert_raid_snapshot(cmd, lv, lp);
+	if (segtype_is_raid(lp->segtype)) {
+		/* Only --type allowed on hidden RaidLV. */
+		if (!lv_is_visible(lv) && !arg_is_set(cmd, type_ARG))
+			goto out;
 
-	if (lp->thin)
-		return _convert_raid_thin(cmd, lv, lp);
-
-	if (lp->cache)
-		return _convert_raid_cache(cmd, lv, lp);
-
-	/* Using --thinpool is ambiguous and not preferred. */
-
-	if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN_POOL) || arg_is_set(cmd, thinpool_ARG))
-		return _convert_raid_thin_pool(cmd, lv, lp);
-
-	/* Using --cachepool is ambiguous and not preferred. */
-
-	if (!strcmp(lp->type_str, SEG_TYPE_NAME_CACHE_POOL) || arg_is_set(cmd, cachepool_ARG))
-		return _convert_raid_cache_pool(cmd, lv, lp);
-
-	if (segtype_is_raid(lp->segtype))
 		return _convert_raid_raid(cmd, lv, lp);
+	}
 
 	if (segtype_is_mirror(lp->segtype))
 		return _convert_raid_mirror(cmd, lv, lp);
@@ -4308,24 +4321,39 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 	if (_linear_type_requested(lp->type_str))
 		return _convert_raid_linear(cmd, lv, lp);
 
-	/* The --thinpool alternative for --type thin-pool is not preferred, so not shown. */
+	/* Applicable to visible LVs only. */
+	if (lv_is_visible(lv)) {
+		if (arg_is_set(cmd, splitmirrors_ARG))
+			return _convert_raid_splitmirrors(cmd, lv, lp);
 
+		if (arg_is_set(cmd, merge_ARG))
+			return _convert_raid_merge(cmd, lv, lp);
+
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_SNAPSHOT) || arg_is_set(cmd, snapshot_ARG))
+			return _convert_raid_snapshot(cmd, lv, lp);
+
+		if (lp->thin)
+			return _convert_raid_thin(cmd, lv, lp);
+
+		if (lp->cache)
+			return _convert_raid_cache(cmd, lv, lp);
+
+		/* Using --thinpool is ambiguous and not preferred. */
+
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN_POOL) || arg_is_set(cmd, thinpool_ARG))
+			return _convert_raid_thin_pool(cmd, lv, lp);
+
+		/* Using --cachepool is ambiguous and not preferred. */
+
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_CACHE_POOL) || arg_is_set(cmd, cachepool_ARG))
+			return _convert_raid_cache_pool(cmd, lv, lp);
+
+		/* The --thinpool alternative for --type thin-pool is not preferred, so not shown. */
+	}
+
+out:
 	log_error("Operation not permitted on raid LV %s.", display_lvname(lv));
-	log_error("Operations permitted on a raid LV are:\n"
-		  "  --mirrors\n"
-		  "  --splitmirrors\n"
-		  "  --merge\n"
-		  "  --repair\n"
-		  "  --replace\n"
-		  "  --type snapshot\n"
-		  "  --type thin\n"
-		  "  --type cache\n"
-		  "  --type thin-pool\n"
-		  "  --type cache-pool\n"
-		  "  --type raid*\n"
-		  "  --type mirror\n"
-		  "  --type striped\n"
-		  "  --type linear\n");
+	log_error("Operations permitted on a raid LV are:\n%s", permitted_options);
 	return 0;
 }
 
@@ -4440,7 +4468,8 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		    !lv_is_thin_pool_metadata(lv) &&
 		    !lv_is_thin_pool_data(lv) &&
 		    !lv_is_used_cache_pool(lv) &&
-		    !lv_is_raid_image(lv)) {
+		    !lv_is_mirrored(lv) &&
+		    !lv_is_raid(lv)) {
 			log_error("Cannot convert internal LV %s.", display_lvname(lv));
 			ret = 0;
 			goto out;
