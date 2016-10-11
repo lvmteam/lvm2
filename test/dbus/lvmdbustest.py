@@ -29,8 +29,9 @@ else:
 	bus = dbus.SystemBus(mainloop=DBusGMainLoop())
 
 
-def std_err_print(*args, **kwargs):
-	print(*args, file=sys.stderr, **kwargs)
+def std_err_print(*args):
+	sys.stderr.write(' '.join(map(str, args)) + '\n')
+	sys.stderr.flush()
 
 
 def get_objects():
