@@ -314,9 +314,14 @@ static int _striped_type_requested(const char *type_str)
 	return (!strcmp(type_str, SEG_TYPE_NAME_STRIPED) || _linear_type_requested(type_str));
 }
 
-static int _check_conversion_type(struct cmd_context *cmd, const char *type_str)
+static int _read_conversion_type(struct cmd_context *cmd,
+				 struct lvconvert_params *lp)
 {
-	if (!type_str || !*type_str)
+
+	const char *type_str = arg_str_value(cmd, type_ARG, "");
+
+	lp->type_str =  type_str;
+	if (!lp->type_str[0])
 		return 1;
 
 	/* FIXME: Check thin-pool and thin more thoroughly! */
@@ -443,9 +448,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	int region_size;
 	int pagesize = lvm_getpagesize();
 
-	lp->type_str = arg_str_value(cmd, type_ARG, "");
-
-	if (*lp->type_str && !_check_conversion_type(cmd, lp->type_str))
+	if (!_read_conversion_type(cmd, lp))
 		return_0;
 
 	/* If --repair, check for incompatible args. */
