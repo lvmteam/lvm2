@@ -32,8 +32,7 @@ THINPOOL_LV_PATH = '/' + THINPOOL_INT.replace('.', '/')
 
 
 def rs(length, suffix, character_set=string.ascii_lowercase):
-	return ''.join(random.choice(character_set)
-				for _ in range(length)) + suffix
+	return ''.join(random.choice(character_set) for _ in range(length)) + suffix
 
 
 def mib(s):
@@ -50,8 +49,7 @@ class DbusIntrospection(object):
 		for c in root:
 			if c.tag == "interface":
 				in_f = c.attrib['name']
-				interfaces[in_f] = \
-					dict(methods=OrderedDict(), properties={})
+				interfaces[in_f] = dict(methods=OrderedDict(), properties={})
 				for nested in c:
 					if nested.tag == "method":
 						mn = nested.attrib['name']
@@ -71,7 +69,8 @@ class DbusIntrospection(object):
 									v = dict(
 											name=mn,
 											a_dir=arg_dir,
-											a_type=arg_type)
+											a_type=arg_type
+									)
 									interfaces[in_f]['methods'][mn][n] = v
 
 					elif nested.tag == 'property':
@@ -148,10 +147,9 @@ def verify_type(value, dbus_str_rep):
 		# print("%s ~= %s" % (dbus_str_rep, actual_str_rep))
 		# Unless we have a full filled out type we won't match exactly
 		if not dbus_str_rep.startswith(actual_str_rep):
-			raise RuntimeError("Incorrect type, expected= %s actual "
-								"= %s object= %s" %
-								(dbus_str_rep, actual_str_rep,
-								str(type(value))))
+			raise RuntimeError(
+				"Incorrect type, expected= %s actual = %s object= %s" %
+				(dbus_str_rep, actual_str_rep, str(type(value))))
 
 
 class RemoteObject(object):
@@ -174,12 +172,14 @@ class RemoteObject(object):
 		if props:
 			for kl, vl in list(props.items()):
 				# Verify type is correct!
-				verify_type(vl,
+				verify_type(
+					vl,
 					self.introspect[self.interface]['properties'][kl]['p_type'])
 				setattr(self, kl, vl)
 
-	def __init__(self, specified_bus, object_path, interface, introspect,
-				 properties=None):
+	def __init__(
+			self, specified_bus, object_path, interface, introspect,
+			properties=None):
 		self.object_path = object_path
 		self.interface = interface
 		self.bus = specified_bus
@@ -238,11 +238,11 @@ class ClientProxy(object):
 			# print('Client proxy has interface: %s %s' % (k, sn))
 
 			if interface and interface == k and props is not None:
-				ro = RemoteObject(specified_bus, object_path, k,
-								  self.intro_spect, props)
+				ro = RemoteObject(
+					specified_bus, object_path, k, self.intro_spect, props)
 			else:
-				ro = RemoteObject(specified_bus, object_path, k,
-								  self.intro_spect)
+				ro = RemoteObject(
+					specified_bus, object_path, k, self.intro_spect)
 
 			setattr(self, sn, ro)
 
