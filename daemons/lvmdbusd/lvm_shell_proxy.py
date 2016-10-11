@@ -121,6 +121,10 @@ class LVMShellProxy(object):
 		local_env["LVM_REPORT_FD"] = "32"
 		local_env["LVM_COMMAND_PROFILE"] = "lvmdbusd"
 
+		# Disable the abort logic if lvm logs too much, which easily happens
+		# when utilizing the lvm shell.
+		local_env["LVM_LOG_FILE_MAX_LINES"] = "0"
+
 		flags = fcntl(self.report_r, F_GETFL)
 		fcntl(self.report_r, F_SETFL, flags | os.O_NONBLOCK)
 

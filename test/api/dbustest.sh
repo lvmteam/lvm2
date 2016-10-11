@@ -29,8 +29,4 @@ export LVM_BINARY=$TESTOLDPWD/../tools/lvm
 
 aux prepare_lvmdbusd
 
-# Lets limit testing until the lvm SIGABRT is fixed as
-# we are running into that when using the lvm shell
-export LVM_DBUS_TEST_SHELL=0
-
 $test_data_dir/dbus/lvmdbustest.py -v
