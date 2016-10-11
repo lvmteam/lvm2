@@ -4446,13 +4446,11 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_locked(lv)) {
 		log_error("Cannot convert locked LV %s.", display_lvname(lv));
-		ret = 0;
 		goto out;
 	}
 
 	if (lv_is_pvmove(lv)) {
 		log_error("Cannot convert pvmove LV %s.", display_lvname(lv));
-		ret = 0;
 		goto out;
 	}
 
@@ -4471,7 +4469,6 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 		    !lv_is_mirrored(lv) &&
 		    !lv_is_raid(lv)) {
 			log_error("Cannot convert internal LV %s.", display_lvname(lv));
-			ret = 0;
 			goto out;
 		}
 	}
@@ -4480,12 +4477,12 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!*lp->type_str)
 		lp->segtype = seg->segtype;
 	else if (!(lp->segtype = get_segtype_from_string(cmd, lp->type_str)))
-		return_0;
+		goto_out;
 
 	if (!strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
 		if (!lp->mirrors_supplied && !seg_is_raid1(seg)) {
 			log_error("Conversions to --type mirror require -m/--mirrors");
-			return 0;
+			goto out;
 		}
 	}
 
@@ -4494,7 +4491,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	    !lp->segtype->ops->target_present(cmd, NULL, &lp->target_attr)) {
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel.", lp->segtype->name);
-		return 0;
+		goto out;
 	}
 
 	/* Process striping parameters */
@@ -4503,7 +4500,7 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	    _striped_type_requested(lp->type_str) || lp->repair || lp->mirrorlog || lp->corelog) {
 		/* FIXME Handle +/- adjustments too? */
 		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied))
-			return_0;
+			goto_out;
 
 		if (_raid0_type_requested(lp->type_str) || _striped_type_requested(lp->type_str))
 			/* FIXME Shouldn't need to override get_stripe_params which defaults to 1 stripe (i.e. linear)! */
@@ -4569,7 +4566,6 @@ static int _lvconvert(struct cmd_context *cmd, struct logical_volume *lv,
 	 * reach here, but this covers anything that was missed.
 	 */
 	log_error("Cannot convert LV %s.", display_lvname(lv));
-	ret = 0;
 
 out:
 	return ret ? ECMD_PROCESSED : ECMD_FAILED;
