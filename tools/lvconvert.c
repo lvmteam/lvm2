@@ -4272,28 +4272,29 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 	/* Permitted convert options on visible or hidden RaidLVs */
 	/* The --thinpool alternative for --type thin-pool is not preferred, so not shown. */
 	const char *permitted_options = lv_is_visible(lv) ?
-	  	"  --mirrors\n"
-	  	"  --splitmirrors\n"
-	  	"  --merge\n"
-	  	"  --repair\n"
-	  	"  --replace\n"
-	  	"  --type snapshot\n"
-	  	"  --type thin\n"
-	  	"  --type cache\n"
-	  	"  --type thin-pool\n"
-	  	"  --type cache-pool\n"
-	  	"  --type raid*\n"
-	  	"  --type mirror\n"
-	  	"  --type striped\n"
-	  	"  --type linear\n"
+		"  --mirrors\n"
+		"  --splitmirrors\n"
+		"  --merge\n"
+		"  --repair\n"
+		"  --replace\n"
+		"  --type snapshot\n"
+		"  --type thin\n"
+		"  --type cache\n"
+		"  --type thin-pool\n"
+		"  --type cache-pool\n"
+		"  --type raid*\n"
+		"  --type mirror\n"
+		"  --type striped\n"
+		"  --type linear\n"
 		:
-	  	"  --mirrors\n"
-	  	"  --repair\n"
-	  	"  --replace\n"
-	  	"  --type raid*\n"
-	  	"  --type mirror\n"
-	  	"  --type striped\n"
-	  	"  --type linear\n";
+		"  --mirrors\n"
+		"  --splitmirrors\n"
+		"  --repair\n"
+		"  --replace\n"
+		"  --type raid*\n"
+		"  --type mirror\n"
+		"  --type striped\n"
+		"  --type linear\n";
 
 	/* Applicable to any hidden _or_ visible LVs. */
 	if (arg_is_set(cmd, mirrors_ARG))
@@ -4304,6 +4305,9 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (arg_is_set(cmd, replace_ARG))
 		return _convert_raid_replace(cmd, lv, lp);
+
+	if (arg_is_set(cmd, splitmirrors_ARG))
+		return _convert_raid_splitmirrors(cmd, lv, lp);
 
 	if (segtype_is_raid(lp->segtype)) {
 		/* Only --type allowed on hidden RaidLV. */
@@ -4324,9 +4328,6 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* Applicable to visible LVs only. */
 	if (lv_is_visible(lv)) {
-		if (arg_is_set(cmd, splitmirrors_ARG))
-			return _convert_raid_splitmirrors(cmd, lv, lp);
-
 		if (lp->merge)
 			return _convert_raid_merge(cmd, lv, lp);
 
