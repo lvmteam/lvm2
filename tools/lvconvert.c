@@ -50,8 +50,6 @@ struct lvconvert_params {
 	int splitsnapshot;
 	int thin;
 	int uncache;
-	int other_conversion;	/* Everything else */
-
 	int corelog;		/* Equivalent to --mirrorlog core */
 	int mirrorlog;		/* Only one of corelog and mirrorlog may be set */
 
@@ -644,8 +642,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	    lp->cache + lp->thin + lp->keep_mimages + lp->snapshot + lp->replace + lp->repair > 1) {
 		log_error(INTERNAL_ERROR "Unexpected combination of incompatible options selected.");
 		return 0;
-	} else
-		lp->other_conversion = 1;
+	}
 
 	/*
 	 * Final checking of each case:
