@@ -451,6 +451,30 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!_read_conversion_type(cmd, lp))
 		return_0;
 
+	if (!arg_is_set(cmd, background_ARG))
+		lp->wait_completion = 1;
+
+	if (arg_is_set(cmd, corelog_ARG))
+		lp->corelog = 1;
+
+	if (arg_is_set(cmd, mirrorlog_ARG)) {
+		if (lp->corelog) {
+			log_error("--mirrorlog and --corelog are incompatible.");
+			return 0;
+		}
+		lp->mirrorlog = 1;
+	}
+
+	if (arg_is_set(cmd, merge_ARG)) {
+		if (arg_outside_list_is_set(cmd, "cannot be used with --merge",
+					    merge_ARG,
+					    background_ARG, interval_ARG,
+					    force_ARG, noudevsync_ARG, test_ARG,
+					    -1))
+			return_0;
+		lp->merge = 1;
+	}
+
 	/* If --repair, check for incompatible args. */
 	if (arg_is_set(cmd, repair_ARG)) {
 		if (arg_outside_list_is_set(cmd, "cannot be used with --repair",
@@ -462,15 +486,8 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		lp->repair = 1;
 	}
 
-	if (arg_is_set(cmd, mirrorlog_ARG))
-		lp->mirrorlog = 1;
-	if (arg_is_set(cmd, corelog_ARG))
-		lp->corelog = 1;
-
-	if (lp->mirrorlog && lp->corelog) {
-		log_error("--mirrorlog and --corelog are incompatible.");
-		return 0;
-	}
+	if (arg_is_set(cmd, replace_ARG))
+		lp->replace = 1;
 
 	if (arg_is_set(cmd, split_ARG)) {
 		if (arg_outside_list_is_set(cmd, "cannot be used with --split",
@@ -499,6 +516,9 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 			return_0;
 		lp->splitsnapshot = 1;
 	}
+
+	if (arg_is_set(cmd, trackchanges_ARG))
+		lp->track_changes = 1;
 
 	if (arg_is_set(cmd, uncache_ARG)) {
 		if (arg_outside_list_is_set(cmd, "cannot be used with --uncache",
@@ -538,20 +558,14 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!_read_pool_params(cmd, &argc, &argv, lp))
 		return_0;
 
-	if (!arg_is_set(cmd, background_ARG))
-		lp->wait_completion = 1;
-
 	if (_snapshot_type_requested(cmd, lp->type_str)) {
-		if (arg_is_set(cmd, merge_ARG)) {
+		if (lp->merge) {
 			log_error("--snapshot and --merge are mutually exclusive.");
 			return 0;
 		}
 
 		lp->snapshot = 1;
 	}
-
-	if (arg_is_set(cmd, trackchanges_ARG))
-		lp->track_changes = 1;
 
 	if (lp->split) {
 		lp->lv_split_name = arg_str_value(cmd, name_ARG, NULL);
@@ -588,12 +602,6 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 			return 0;
 		}
 	}
-
-	if (arg_is_set(cmd, merge_ARG))
-		lp->merge = 1;
-
-	if (arg_is_set(cmd, replace_ARG))
-		lp->replace = 1;
 
 	/* If no other case was identified, then use of --stripes means --type striped */
 	if (!arg_is_set(cmd, type_ARG) && !*lp->type_str && !lp->merge && !lp->splitsnapshot &&
@@ -655,14 +663,9 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 	 *   --type mirror|raid  lp->mirrorlog lp->corelog
 	 *   --type raid0|striped
 	 */
-	if (lp->merge) {	/* Snapshot or mirror merge */
-		if (arg_outside_list_is_set(cmd, "cannot be used with --merge",
-					    merge_ARG,
-					    background_ARG, interval_ARG,
-					    force_ARG, noudevsync_ARG, test_ARG,
-					    -1))
-			return_0;
-	} else if (lp->splitsnapshot)	/* Destroy snapshot retaining cow as separate LV */
+	if (lp->merge)			/* Snapshot or mirror merge */
+                ;
+	else if (lp->splitsnapshot)	/* Destroy snapshot retaining cow as separate LV */
 		;
 	else if (lp->splitcache)
 		;
