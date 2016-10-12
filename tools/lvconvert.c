@@ -4180,7 +4180,7 @@ static int _convert_cache_volume(struct cmd_context *cmd, struct logical_volume 
 	if (arg_is_set(cmd, splitmirrors_ARG))
 		return _convert_cache_volume_splitmirrors(cmd, lv, lp);
 
-	if (segtype_is_thin_pool(lp->segtype) ||
+	if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN_POOL) ||
 	    arg_is_set(cmd, thinpool_ARG))
 		return _convert_cache_volume_thin_pool(cmd, lv, lp);
 
@@ -4340,11 +4340,11 @@ static int _convert_raid(struct cmd_context *cmd, struct logical_volume *lv,
 		if (lp->cache)
 			return _convert_raid_cache(cmd, lv, lp);
 
-		if (segtype_is_thin_pool(lp->segtype) ||
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN_POOL) ||
 		    arg_is_set(cmd, thinpool_ARG))
 			return _convert_raid_thin_pool(cmd, lv, lp);
 
-		if (segtype_is_cache_pool(lp->segtype) ||
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_CACHE_POOL)  ||
 		    arg_is_set(cmd, cachepool_ARG))
 			return _convert_raid_cache_pool(cmd, lv, lp);
 	}
@@ -4365,7 +4365,7 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lp->merge)
 		return _convert_striped_merge(cmd, lv, lp);
 
-	if (lp->snapshot || segtype_is_snapshot(lp->segtype))
+	if (lp->snapshot || !strcmp(lp->type_str, SEG_TYPE_NAME_SNAPSHOT))
 		return _convert_striped_snapshot(cmd, lv, lp);
 
 	if (lp->thin)
@@ -4374,11 +4374,11 @@ static int _convert_striped(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lp->cache)
 		return _convert_striped_cache(cmd, lv, lp);
 
-	if (segtype_is_thin_pool(lp->segtype) ||
+	if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN_POOL) ||
 	    arg_is_set(cmd, thinpool_ARG))
 		return _convert_striped_thin_pool(cmd, lv, lp);
 
-	if (segtype_is_cache_pool(lp->segtype) ||
+	if (!strcmp(lp->type_str, SEG_TYPE_NAME_CACHE_POOL) ||
 	    arg_is_set(cmd, cachepool_ARG))
 		return _convert_striped_cache_pool(cmd, lv, lp);
 
