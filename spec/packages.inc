@@ -609,9 +609,6 @@ of device-mapper devices.
 %if %{enable_systemd}
 systemctl preset dm-event.socket > /dev/null 2>&1 || :
 %endif
-if [ -e %{_default_pid_dir}/dmeventd.pid ]; then
-        %{_sbindir}/dmeventd -R || echo "Failed to restart dmeventd daemon. Please, try manual restart."
-fi
 
 %preun -n device-mapper-event
 %if %{enable_systemd}
@@ -624,6 +621,11 @@ fi
 %postun -n device-mapper-event
 if [ $1 = 0 ]; then
 %daemon_reload
+fi
+
+%posttrans -n device-mapper-event
+if [ -e %{_default_pid_dir}/dmeventd.pid ]; then
+        %{_sbindir}/dmeventd -R || echo "Failed to restart dmeventd daemon. Please, try manual restart."
 fi
 
 %files -n device-mapper-event
