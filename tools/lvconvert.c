@@ -534,6 +534,7 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		if (arg_outside_list_is_set(cmd, "cannot be used with --repair",
 					    repair_ARG,
 					    alloc_ARG, usepolicies_ARG,
+					    background_ARG, interval_ARG,
 					    force_ARG, noudevsync_ARG, test_ARG,
 					    -1))
 			return_0;

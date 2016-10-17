@@ -365,6 +365,9 @@ See corresponding operation --splitmirrors.
 VG/RaidLV
 .br
 \[bu]
+Options \-\-background, \-\-interval.
+.br
+\[bu]
 Replace failed PVs in RaidLV.
 
 .B lvconvert \-\-replace
@@ -500,6 +503,9 @@ Change the type of log used by MirrorLV.
 
 .B lvconvert \-\-repair
 VG/MirrorLV
+.br
+\[bu]
+Options \-\-background, \-\-interval.
 .br
 \[bu]
 Replace failed PVs in MirrorLV.
