@@ -77,6 +77,9 @@ help:
 	@echo "  check_cluster		Run tests with cluster daemon."
 	@echo "  check_lvmetad		Run tests with lvmetad daemon."
 	@echo "  check_lvmpolld         Run tests with lvmpolld daemon."
+	@echo "  check_cluster_lvmpolld Run tests with clvmd and lvmpolld daemon."
+	@echo "  check_lvmetad_lvmpolld Run tests with lvmetad and lvmpolld daemon."
+	@echo "  check_all_lvmpolld     Run all tests with lvmpolld daemon."
 	@echo "  check_lvmlockd_sanlock Run tests with lvmlockd and sanlock."
 	@echo "  check_lvmlockd_dlm     Run tests with lvmlockd and dlm."
 	@echo "  check_lvmlockd_test    Run tests with lvmlockd --test."
@@ -144,6 +147,21 @@ endif
 
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 check_lvmpolld: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours ndev-lvmpolld --only $(T) --skip $(S)
+
+check_cluster_lvmpolld: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours ndev-cluster-lvmpolld --only $(T) --skip $(S)
+
+check_lvmetad_lvmpolld: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir results \
+		--flavours ndev-lvmetad-lvmpolld --only $(T) --skip $(S)
+
+check_all_lvmpolld: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir results \
 		--flavours ndev-lvmpolld,ndev-cluster-lvmpolld,ndev-lvmetad-lvmpolld --only $(T) --skip $(S)
