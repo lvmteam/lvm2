@@ -2707,6 +2707,9 @@ static int _add_dep(CMD_ARGS)
 
 /*
  * Create and walk dependency tree
+ *
+ * An incomplete _dtree may still be used by the caller,
+ * but the error must be reported.
  */
 static int _build_whole_deptree(const struct command *cmd)
 {
@@ -2724,12 +2727,14 @@ static int _build_whole_deptree(const struct command *cmd)
 
 static int _display_tree(CMD_ARGS)
 {
-	if (!_build_whole_deptree(cmd))
-		return_0;
+	int r;
 
-	_display_tree_walk_children(dm_tree_find_node(_dtree, 0, 0), 0);
+	r = _build_whole_deptree(cmd);
 
-	return 1;
+	if (_dtree)
+		_display_tree_walk_children(dm_tree_find_node(_dtree, 0, 0), 0);
+
+	return r;
 }
 
 /*
@@ -4471,9 +4476,14 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 				selection, NULL, NULL)))
 		goto_out;
 
-	if ((_report_type & DR_TREE) && cmd && !_build_whole_deptree(cmd)) {
-		err("Internal device dependency tree creation failed.");
-		goto out;
+	r = 1;
+
+	if ((_report_type & DR_TREE) && cmd) {
+		r = _build_whole_deptree(cmd);
+		if  (!_dtree) {
+			err("Internal device dependency tree creation failed.");
+			goto out;
+		}
 	}
 
 	if (!_switches[INTERVAL_ARG])
@@ -4483,8 +4493,6 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 
 	if (field_prefixes)
 		dm_report_set_output_field_name_prefix(_report, "dm_");
-
-	r = 1;
 
 out:
 	if (len)
@@ -6782,8 +6790,15 @@ unknown:
 		argc--, argv++;
 	}
 
-	if (_switches[COLS_ARG] && !_report_init(cmd, subcommand))
-		goto_out;
+	/* Default to success */
+	ret = 0;
+
+	if (_switches[COLS_ARG]) {
+		if (!_report_init(cmd, subcommand))
+			ret = 1;
+ 		if (!_report)
+			goto_out;
+	}
 
 	if (_switches[COUNT_ARG])
 		_count = ((uint32_t)_int_args[COUNT_ARG]) ? : UINT32_MAX;
@@ -6795,14 +6810,17 @@ unknown:
 						  &_disp_units);
 		if (!_disp_factor) {
 			log_error("Invalid --units argument.");
+			ret = 1;
 			goto out;
 		}
 	}
 
 	/* Start interval timer. */
 	if (_count > 1)
-		if (!_start_timer())
+		if (!_start_timer()) {
+			ret = 1;
 			goto_out;
+		}
 
 doit:
 	multiple_devices = (cmd->repeatable_cmd && argc != 1 &&
@@ -6819,17 +6837,18 @@ doit:
 			if (_count > 1 && r) {
 				printf("\n");
 				/* wait for --interval and update timestamps */
-				if (!_do_report_wait())
+				if (!_do_report_wait()) {
+					ret = 1;
 					goto_out;
+				}
 			}
 		}
 
-		if (!r)
+		if (!r) {
+			ret = 1;
 			goto_out;
+		}
 	} while (--_count);
-
-	/* Success */
-	ret = 0;
 
 out:
 	if (_report)

@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Still produce output when dmsetup dependency tree building finds dev missing.
   Check and report pthread_sigmask() failure in dmeventd.
   Check mem alloc fail in _canonicalize_field_ids().
   Use unsigned math when checking more then 31 legs of raid.
