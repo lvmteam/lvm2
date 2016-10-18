@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  Missing stripe filler now could be also 'zero'.
   lvconvert --repair accepts --interval and --background option.
   More efficiently prepare _rmeta devices when creating a new raid LV.
 

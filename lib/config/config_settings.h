@@ -1111,7 +1111,8 @@ cfg(activation_retry_deactivation_CFG, "retry_deactivation", activation_CFG_SECT
 cfg(activation_missing_stripe_filler_CFG, "missing_stripe_filler", activation_CFG_SECTION, CFG_ADVANCED, CFG_TYPE_STRING, DEFAULT_STRIPE_FILLER, vsn(1, 0, 0), NULL, 0, NULL,
 	"Method to fill missing stripes when activating an incomplete LV.\n"
 	"Using 'error' will make inaccessible parts of the device return I/O\n"
-	"errors on access. You can instead use a device path, in which case,\n"
+	"errors on access. Using 'zero' will return success (and zero) on I/O\n"
+	"You can instead use a device path, in which case,\n"
 	"that device will be used in place of missing stripes. Using anything\n"
 	"other than 'error' with mirrored or snapshotted volumes is likely to\n"
 	"result in data corruption.\n")

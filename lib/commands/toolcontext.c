@@ -640,7 +640,8 @@ static int _process_config(struct cmd_context *cmd)
 	if (!strcmp(cmd->stripe_filler, "/dev/ioerror") &&
 	    stat(cmd->stripe_filler, &st))
 		cmd->stripe_filler = "error";
-	else if (strcmp(cmd->stripe_filler, "error")) {
+	else if (strcmp(cmd->stripe_filler, "error") &&
+		 strcmp(cmd->stripe_filler, "zero")) {
 		if (stat(cmd->stripe_filler, &st)) {
 			log_warn("WARNING: activation/missing_stripe_filler = \"%s\" "
 				 "is invalid,", cmd->stripe_filler);

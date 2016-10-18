@@ -2250,8 +2250,8 @@ bad:
 	return NULL;
 }
 
-static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
-			       struct lv_segment *seg, int s)
+static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *dtree,
+				       struct lv_segment *seg, int s, int use_zero)
 {
 	char *dlid, *name;
 	char errid[32];
@@ -2262,13 +2262,15 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 	uint64_t size = (uint64_t) seg->len * seg->lv->vg->extent_size;
 
 	dm_list_iterate_items(seg_i, &seg->lv->segments) {
-		if (seg == seg_i)
+		if (seg == seg_i) {
 			segno = i;
+			break;
+		}
 		++i;
 	}
 
 	if (segno < 0) {
-		log_error("_add_error_device called with bad segment");
+		log_error(INTERNAL_ERROR "_add_error_or_zero_device called with bad segment.");
 		return NULL;
 	}
 
@@ -2291,8 +2293,13 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 		/* Create new node */
 		if (!(node = dm_tree_add_new_dev(dtree, name, dlid, 0, 0, 0, 0, 0)))
 			return_NULL;
-		if (!dm_tree_node_add_error_target(node, size))
-			return_NULL;
+
+		if (use_zero) {
+			if (!dm_tree_node_add_zero_target(node, size))
+				return_NULL;
+		} else
+			if (!dm_tree_node_add_error_target(node, size))
+				return_NULL;
 	} else {
 		/* Already exists */
 		if (!dm_tree_add_dev(dtree, info.major, info.minor)) {
@@ -2310,14 +2317,15 @@ static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
 {
 	char *dlid;
 	uint64_t extent_size = seg->lv->vg->extent_size;
+	int use_zero = !strcmp(dm->cmd->stripe_filler, TARGET_NAME_ZERO) ? 1 : 0;
 
-	if (!strcmp(dm->cmd->stripe_filler, TARGET_NAME_ERROR)) {
+	if (!strcmp(dm->cmd->stripe_filler, TARGET_NAME_ERROR) || use_zero) {
 		/*
 		 * FIXME, the tree pointer is first field of dm_tree_node, but
 		 * we don't have the struct definition available.
 		 */
 		struct dm_tree **tree = (struct dm_tree **) node;
-		if (!(dlid = _add_error_device(dm, *tree, seg, s)))
+		if (!(dlid = _add_error_or_zero_device(dm, *tree, seg, s, use_zero)))
 			return_0;
 		if (!dm_tree_node_add_target_area(node, NULL, dlid, extent_size * seg_le(seg, s)))
 			return_0;
