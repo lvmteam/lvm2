@@ -1937,7 +1937,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 1;
 		}
 		goto try_new_takeover_or_reshape;
-	} else if (!lp->repair && !lp->replace && (!*lp->type_str || seg->segtype == lp->segtype)) {
+	} else if (!lp->repair && !lp->replace && !*lp->type_str) {
 		log_error("Conversion operation not yet supported.");
 		return 0;
 	}
@@ -2005,28 +2005,18 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return 1;
 	}
 
-
 try_new_takeover_or_reshape:
-
 	/* FIXME This needs changing globally. */
 	if (!arg_is_set(cmd, stripes_long_ARG))
 		lp->stripes = 0;
 
-	/* Only let raid4 through for now. */
-	if (lp->type_str && lp->type_str[0] && lp->segtype != seg->segtype &&
-	    ((seg_is_raid4(seg) && seg_is_striped(lp) && lp->stripes > 1) ||
-	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp)))) {
-		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
-				     lp->region_size, lp->pvh))
-			return_0;
+	if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
+			     lp->region_size, lp->pvh))
+		return_0;
 
-		log_print_unless_silent("Logical volume %s successfully converted.",
-					display_lvname(lv));
-		return 1;
-	}
-
-	log_error("Conversion operation not yet supported.");
-	return 0;
+	log_print_unless_silent("Logical volume %s successfully converted.",
+				display_lvname(lv));
+	return 1;
 }
 
 static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volume *cow,

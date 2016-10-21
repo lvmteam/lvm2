@@ -1,5 +1,7 @@
 Version 2.02.167 - 
 ======================================
+  Add direct striped -> raid4 conversion
+  Fix raid4 parity image pair position on conversions from striped/raid0*
   Fix a few unconverted return code values for some lvconvert error path.
   Disable lvconvert of thin pool to raid while active.
   Disable systemd service start rate limiting for lvm2-pvscan@.service.
