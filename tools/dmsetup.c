@@ -5278,6 +5278,8 @@ static int _stats_delete(CMD_ARGS)
 		name = argv[0];
 	}
 
+	if (_switches[PROGRAM_ID_ARG])
+		program_id = _string_args[PROGRAM_ID_ARG];
 	if (_switches[ALL_PROGRAMS_ARG])
 		program_id = DM_STATS_ALL_PROGRAMS;
 
