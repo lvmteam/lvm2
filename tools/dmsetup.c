@@ -5323,7 +5323,7 @@ static int _stats_delete(CMD_ARGS)
 			log_error("Could not delete statistics region");
 			goto out;
 		}
-		log_info("Deleted statistics region " FMTu64 ".\n", region_id);
+		log_info("Deleted statistics region " FMTu64 ".", region_id);
 	}
 
 	r = 1;
