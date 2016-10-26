@@ -1611,7 +1611,7 @@ static int _udevcomplete_all(CMD_ARGS)
 	}
 
 	if (!_switches[YES_ARG]) {
-		log_warn("This operation will destroy all semaphores %s%.0d%swith keys "
+		log_warn("WARNING: This operation will destroy all semaphores %s%.0d%swith keys "
 			 "that have a prefix %" PRIu16 " (0x%" PRIx16 ").",
 			 age ? "older than " : "", age, age ? " minutes " : "",
 			 DM_COOKIE_MAGIC, DM_COOKIE_MAGIC);

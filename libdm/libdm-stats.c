@@ -3881,7 +3881,7 @@ merge:
 			continue;
 
 		if (_extents_overlap(ext, next)) {
-			log_warn("Warning: region IDs " FMTu64 " and "
+			log_warn("WARNING: region IDs " FMTu64 " and "
 				 FMTu64 " overlap. Some events will be "
 				 "counted twice.", ext->id, next->id);
 			/* merge larger extent into smaller */
@@ -4002,8 +4002,8 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 	}
 
 	if (precise && (precise != count))
-		log_warn("Grouping regions with different clock resolution: "
-			 "precision may be lost");
+		log_warn("WARNING: Grouping regions with different clock resolution: "
+			 "precision may be lost.");
 
 	if (!_stats_group_check_overlap(dms, regions, count))
 		log_very_verbose("Creating group with overlapping regions.");
@@ -4048,7 +4048,7 @@ int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id,
 		if (dm_bit(regions, i)) {
 			dm_bit_clear(regions, i);
 			if (remove_regions && !dm_stats_delete_region(dms, i))
-				log_warn("Failed to delete region "
+				log_warn("WARNING: Failed to delete region "
 					 FMTu64 " on %s.", i, dms->name);
 		}
 	}
