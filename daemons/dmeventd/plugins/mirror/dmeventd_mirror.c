@@ -73,8 +73,10 @@ static int _get_mirror_event(struct dso_state *state, char *params)
 	unsigned i;
 	struct dm_status_mirror *ms;
 
-	if (!dm_get_status_mirror(state->mem, params, &ms))
-		goto_out;
+	if (!dm_get_status_mirror(state->mem, params, &ms)) {
+		log_error("Unable to parse mirror status string.");
+		return ME_IGNORE;
+	}
 
 	/* Check for bad mirror devices */
 	for (i = 0; i < ms->dev_count; ++i)
@@ -95,11 +97,6 @@ static int _get_mirror_event(struct dso_state *state, char *params)
 	dm_pool_free(state->mem, ms);
 
 	return r;
-
-out:
-	log_error("Unable to parse mirror status string.");
-
-	return ME_IGNORE;
 }
 
 static int _remove_failed_devices(const char *cmd_lvscan, const char *cmd_lvconvert)
