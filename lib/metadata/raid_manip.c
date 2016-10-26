@@ -3056,7 +3056,7 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 		return 0;
 
 	if (!yes && yes_no_prompt("Are you sure you want to convert \"%s\" LV %s to \"%s\" "
-				  "type using all resilience? [y/n]: ",
+				  "type losing all resilience? [y/n]: ",
 				  lvseg_name(seg), display_lvname(lv), new_segtype->name) == 'n') {
 		log_error("Logical volume %s NOT converted to \"%s\"",
 			  display_lvname(lv), new_segtype->name);
