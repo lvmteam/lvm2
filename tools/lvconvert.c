@@ -1963,15 +1963,23 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 
 	if ((seg_is_linear(seg) || seg_is_striped(seg) || seg_is_mirrored(seg) || lv_is_raid(lv)) &&
 	    (lp->type_str && lp->type_str[0])) {
-		/* Activation is required later which precludes existing unsupported raid0 segment */
-		if (segtype_is_any_raid0(lp->segtype) &&
+		/* Activation is required later which precludes existing supported raid0 segment */
+		if ((seg_is_any_raid0(seg) || segtype_is_any_raid0(lp->segtype)) &&
 		    !(lp->target_attr & RAID_FEATURE_RAID0)) {
 			log_error("RAID module does not support RAID0.");
 			return 0;
 		}
 
+		/* Activation is required later which precludes existing supported raid4 segment */
 		if (!_raid4_conversion_supported(lv, lp))
 			return 0;
+
+		/* Activation is required later which precludes existing supported raid10 segment */
+		if ((seg_is_raid10(seg) || segtype_is_raid10(lp->segtype)) &&
+		    !(lp->target_attr & RAID_FEATURE_RAID10)) {
+			log_error("RAID module does not support RAID10.");
+			return 0;
+		}
 
 		if (!arg_is_set(cmd, stripes_long_ARG))
 			lp->stripes = 0;
