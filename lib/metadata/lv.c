@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1418,6 +1418,7 @@ int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 		     enum activation_change activate, int needs_exclusive)
 {
 	const char *ay_with_mode = NULL;
+	struct lv_segment *seg = first_seg(lv);
 
 	if (activate == CHANGE_ASY)
 		ay_with_mode = "sh";
@@ -1454,6 +1455,9 @@ deactivate:
 		break;
 	case CHANGE_ALY:
 	case CHANGE_AAY:
+		if (!raid4_is_supported(cmd, seg->segtype))
+			goto no_raid4;
+
 		if (needs_exclusive || _lv_is_exclusive(lv)) {
 			log_verbose("Activating logical volume %s exclusively locally.",
 				    display_lvname(lv));
@@ -1468,6 +1472,9 @@ deactivate:
 		break;
 	case CHANGE_AEY:
 exclusive:
+		if (!raid4_is_supported(cmd, seg->segtype))
+			goto no_raid4;
+
 		log_verbose("Activating logical volume %s exclusively.",
 			    display_lvname(lv));
 		if (!activate_lv_excl(cmd, lv))
@@ -1476,6 +1483,9 @@ exclusive:
 	case CHANGE_ASY:
 	case CHANGE_AY:
 	default:
+		if (!raid4_is_supported(cmd, seg->segtype))
+			goto no_raid4;
+
 		if (needs_exclusive || _lv_is_exclusive(lv))
 			goto exclusive;
 		log_verbose("Activating logical volume %s.", display_lvname(lv));
@@ -1488,6 +1498,10 @@ exclusive:
 		log_error("Failed to unlock logical volume %s.", display_lvname(lv));
 
 	return 1;
+
+no_raid4:
+	log_error("Failed to activate %s LV %s", lvseg_name(seg), display_lvname(lv));
+	return 0;
 }
 
 char *lv_active_dup(struct dm_pool *mem, const struct logical_volume *lv)

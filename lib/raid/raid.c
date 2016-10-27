@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -366,7 +366,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 
 	static int _raid_checked = 0;
 	static int _raid_present = 0;
-	static int _raid_attrs = 0;
+	static unsigned _raid_attrs = 0;
 	uint32_t maj, min, patchlevel;
 	unsigned i;
 
@@ -389,6 +389,12 @@ static int _raid_target_present(struct cmd_context *cmd,
 			else
 				log_very_verbose("Target raid does not support %s.",
 						 _features[i].feature);
+
+		if (!(maj == 1 && (min == 8 || (min == 9 && patchlevel == 0))))
+			_raid_attrs |= RAID_FEATURE_RAID4;
+		else
+			log_very_verbose("Target raid does not support %s.",
+					 SEG_TYPE_NAME_RAID4);
 	}
 
 	if (attributes)

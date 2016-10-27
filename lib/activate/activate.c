@@ -370,6 +370,11 @@ void activation_exit(void)
 {
 }
 
+int raid4_is_supported(struct cmd_context *cmd, const struct segment_type *segtype)
+{
+	return 1;
+}
+
 int lv_is_active(const struct logical_volume *lv)
 {
 	return 0;
@@ -1487,6 +1492,26 @@ out:
 			 (!skip_cluster_query && r) ? " remotely" : "");
 
 	return r || l;
+}
+
+/*
+ * Check if "raid4" @segtype is supported by kernel.
+ *
+ * if segment type is not raid4, return 1.
+ */
+int raid4_is_supported(struct cmd_context *cmd, const struct segment_type *segtype)
+{
+	unsigned attrs;
+
+	if (segtype_is_raid4(segtype) &&
+	    (!segtype->ops->target_present ||
+             !segtype->ops->target_present(cmd, NULL, &attrs) ||
+             !(attrs & RAID_FEATURE_RAID4))) {
+		log_error("RAID module does not support RAID4.");
+		return 0;
+	}
+
+	return 1;
 }
 
 int lv_is_active(const struct logical_volume *lv)

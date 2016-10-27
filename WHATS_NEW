@@ -1,5 +1,6 @@
 Version 2.02.167 - 
 ======================================
+  Prevent raid4 creation/conversion on non-supporting kernels
   Add direct striped -> raid4 conversion
   Fix raid4 parity image pair position on conversions from striped/raid0*
   Fix a few unconverted return code values for some lvconvert error path.

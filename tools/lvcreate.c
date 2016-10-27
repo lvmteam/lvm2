@@ -1054,6 +1054,12 @@ static int _lvcreate_params(struct cmd_context *cmd,
 			return 0;
 		}
 
+		if (segtype_is_raid4(lp->segtype) &&
+		    !(lp->target_attr & RAID_FEATURE_RAID4)) {
+			log_error("RAID module does not support RAID4.");
+			return 0;
+		}
+
 		if (segtype_is_raid10(lp->segtype) && !(lp->target_attr & RAID_FEATURE_RAID10)) {
 			log_error("RAID module does not support RAID10.");
 			return 0;

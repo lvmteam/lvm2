@@ -16,6 +16,8 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_raid 1 9 0 || skip
 
+[ `aux have_raid 1.9.1` ] && correct_raid4_layout=1
+
 aux prepare_vg 9 288
 
 # Delay 1st leg so that rebuilding status characters
@@ -99,6 +101,9 @@ check lv_field $vg/$lv3 stripes 3
 echo y | mkfs -t ext4 /dev/mapper/$vg-$lv3
 fsck -fn  /dev/mapper/$vg-$lv3
 
+if [ $correct_raid4_layout -eq 1 ]
+then
+
 # Create 3-way raid4
 lvcreate -y -aey --type raid4 -i 3 -L 64M -n $lv4 $vg
 check lv_field $vg/$lv4 segtype "raid4"
@@ -163,5 +168,13 @@ lvconvert -y --ty striped $vg/$lv1
 check lv_field $vg/$lv1 segtype "striped"
 check lv_field $vg/$lv1 stripes 3
 fsck -fn  /dev/mapper/$vg-$lv1
+
+else
+
+not lvcreate -y -aey --type raid4 -i 3 -L 64M -n $lv4 $vg
+not lvconvert -y --ty raid4 $vg/$lv1
+not lvconvert -y --ty raid4 $vg/$lv2
+
+fi
 
 vgremove -ff $vg

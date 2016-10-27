@@ -1828,6 +1828,25 @@ static void _lvconvert_raid_repair_ask(struct cmd_context *cmd,
 	}
 }
 
+/* Check for dm-raid target supporting raid4 conversion properly. */
+static int _raid4_conversion_supported(struct logical_volume *lv, struct lvconvert_params *lp)
+{
+	int ret = 1;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (seg_is_raid4(seg))
+		ret = raid4_is_supported(lv->vg->cmd, seg->segtype);
+	else if (segtype_is_raid4(lp->segtype))
+		ret = raid4_is_supported(lv->vg->cmd, lp->segtype);
+
+	if (ret)
+		return 1;
+
+	log_error("Cannot convert %s LV %s to %s.",
+		  lvseg_name(seg), display_lvname(lv), lp->segtype->name);
+	return 0;
+}
+
 static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *lp)
 {
 	int replace = 0, image_count = 0;
@@ -1951,6 +1970,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
+		if (!_raid4_conversion_supported(lv, lp))
+			return 0;
+
 		if (!arg_is_set(cmd, stripes_long_ARG))
 			lp->stripes = 0;
 
@@ -2007,6 +2029,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 
 
 try_new_takeover_or_reshape:
+
+	if (!_raid4_conversion_supported(lv, lp))
+		return 0;
 
 	/* FIXME This needs changing globally. */
 	if (!arg_is_set(cmd, stripes_long_ARG))
