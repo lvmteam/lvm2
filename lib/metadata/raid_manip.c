@@ -306,6 +306,9 @@ static int _raid_devs_sync_healthy(struct logical_volume *lv)
 	if (!_raid_in_sync(lv))
 		return 0;
 
+	if (!seg_is_raid1(first_seg(lv)))
+		return 1;
+
 	if (!lv_raid_dev_health(lv, &raid_health))
 		return_0;
 
