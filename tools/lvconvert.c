@@ -1994,7 +1994,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 	if (lp->replace)
-		return lv_raid_replace(lv, lp->replace_pvh, lp->pvh);
+		return lv_raid_replace(lv, lp->force, lp->replace_pvh, lp->pvh);
 
 	if (lp->repair) {
 		if (!lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
@@ -2017,7 +2017,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			if (!(failed_pvs = _failed_pv_list(lv->vg)))
 				return_0;
 
-			if (!lv_raid_replace(lv, failed_pvs, lp->pvh)) {
+			if (!lv_raid_replace(lv, lp->force, failed_pvs, lp->pvh)) {
 				log_error("Failed to replace faulty devices in %s.",
 					  display_lvname(lv));
 				return 0;
