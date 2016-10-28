@@ -16,6 +16,9 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_raid 1 3 0 || skip
 
+levels="5 6"
+aux have_raid4 && levels="4 5 6"
+
 aux prepare_pvs 6 80
 
 vgcreate -s 256K $vg $(cat DEVICES)
@@ -37,7 +40,7 @@ for deactivate in true false; do
 	#check raid_images_contiguous $vg $lv1
 
 # Extend and reduce 3-striped RAID 4/5/6
-	for i in 4 5 6 ; do
+	for i in $levels ; do
 		lvcreate --type raid$i -i 3 -l 3 -n $lv2 $vg
 
 		test $deactivate && {
@@ -59,7 +62,7 @@ done
 
 # Bug 1005434
 # Ensure extend is contiguous
-lvcreate --type raid4 -l 2 -i 2 -n $lv1 $vg "$dev4" "$dev5" "$dev6"
+lvcreate --type raid5 -l 2 -i 2 -n $lv1 $vg "$dev4" "$dev5" "$dev6"
 lvextend -l +2 --alloc contiguous $vg/$lv1
 check lv_tree_on $vg $lv1 "$dev4" "$dev5" "$dev6"
 

@@ -16,7 +16,7 @@ TEST_RAID=raid456
 aux raid456_replace_works || skip
 aux have_raid 1 5 2 || skip
 
-run_types raid4 -i 2 "$dev1" "$dev2" "$dev3" "$dev4"
+aux have_raid4 && run_types raid4 -i 2 "$dev1" "$dev2" "$dev3" "$dev4"
 run_types raid5 -i 2 "$dev1" "$dev2" "$dev3" "$dev4"
 run_types raid6 -i 3 "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
 

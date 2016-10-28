@@ -23,6 +23,9 @@ lv_devices() {
 ########################################################
 aux have_raid 1 3 0 || skip
 
+RAID4=""
+aux have_raid4 && RAID4=raid4
+
 aux prepare_pvs 6 20  # 6 devices for RAID10 (2-mirror,3-stripe) test
 vgcreate -s 512k $vg $(cat DEVICES)
 
@@ -54,7 +57,7 @@ aux wait_for_sync $vg $lv1
 lvremove -ff $vg
 
 # Create RAID 4/5/6 (explicit 3-stripe + parity devs)
-for i in raid4 \
+for i in $RAID4 \
 	raid5 raid5_ls raid5_la raid5_rs raid5_ra \
 	raid6 raid6_zr raid6_nr raid6_nc; do
 
@@ -64,7 +67,7 @@ for i in raid4 \
 done
 
 # Create RAID 4/5/6 (explicit 3-stripe + parity devs) - Set min/max recovery
-for i in raid4 \
+for i in $RAID4 \
 	raid5 raid5_ls raid5_la raid5_rs raid5_ra \
 	raid6 raid6_zr raid6_nr raid6_nc; do
 

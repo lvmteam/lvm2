@@ -21,6 +21,9 @@ aux can_use_16T || skip
 
 aux have_raid 1 3 0 || skip
 
+segtypes="raid5"
+aux have_raid4 && segtypes="raid4 raid5"
+
 # Prepare 5x ~1P sized devices
 aux prepare_pvs 5 1000000000
 
@@ -53,7 +56,7 @@ check raid_leg_status $vg1 $lv1 "AA"
 lvremove -ff $vg1
 
 # 750 TiB raid4/5
-for segtype in raid4 raid5; do
+for segtype in $segtypes; do
         lvcreate --type $segtype -i 3 -L 750T -n $lv1 $vg1 --nosync
         check lv_field $vg1/$lv1 size "750.00t"
         check raid_leg_status $vg1 $lv1 "AAAA"

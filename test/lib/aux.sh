@@ -1376,6 +1376,15 @@ have_raid() {
 	esac
 }
 
+have_raid4 () {
+	local r=1
+
+	have_raid 1 8 0 && r=0
+	have_raid 1 9 1 && r=1
+
+	return $r
+}
+
 have_cache() {
 	test "$CACHE" = shared -o "$CACHE" = internal || {
 		echo "Cache is not built-in." >&2

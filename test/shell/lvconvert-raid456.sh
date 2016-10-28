@@ -31,8 +31,11 @@ aux have_raid 1 3 0 || skip
 aux prepare_pvs 7  # 7 devices for 2 dev replacement of 5-dev RAID6
 vgcreate -s 256k $vg $(cat DEVICES)
 
+levels="5 6"
+aux have_raid4 && levels="4 5 6"
+
 # RAID 4/5/6 (can replace up to 'parity' devices)
-for i in 4 5 6; do
+for i in $levels; do
 	lvcreate --type raid$i -i 3 -l 3 -n $lv1 $vg
 
 	if [ $i -eq 6 ]; then

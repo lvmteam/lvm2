@@ -16,6 +16,9 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_raid 1 7 0 || skip
 
+segtypes=raid5
+aux have_raid4 && segtypes="raid4 raid5"
+
 aux prepare_vg 6
 
 
@@ -43,7 +46,7 @@ lvcreate --yes --type raid1 --nosync -m 2 -l 1 -n $lv1 $vg
 check raid_leg_status $vg $lv1 "AAA"
 lvremove --yes $vg/$lv1
 
-for r in raid4 raid5
+for r in $segtypes
 do 
 	# raid4/5 support resynchronization
 	lvcreate --yes --type $r -i 3 -l 2 -n $lv1 $vg
