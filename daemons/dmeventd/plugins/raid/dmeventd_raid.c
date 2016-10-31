@@ -76,7 +76,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 
 		/* if repair goes OK, report success even if lvscan has failed */
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvconvert)) {
-			log_info("Repair of RAID device %s failed.", device);
+			log_error("Repair of RAID device %s failed.", device);
 			r = 0;
 		}
 	} else {

@@ -168,7 +168,7 @@ static int _parse_dev(const char *file, FILE *fp, dev_t *result)
 	}
 
 	if (sscanf(buffer, "%u:%u", &major, &minor) != 2) {
-		log_info("sysfs device file not correct format");
+		log_error("Incorrect format for sysfs device file: %s.", file);
 		return 0;
 	}
 

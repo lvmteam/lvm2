@@ -40,7 +40,7 @@ static int _extract_pattern(struct dm_pool *mem, const char *pat,
 		break;
 
 	default:
-		log_info("pattern must begin with 'a' or 'r'");
+		log_error("Pattern must begin with 'a' or 'r'.");
 		return 0;
 	}
 	pat++;
@@ -77,7 +77,7 @@ static int _extract_pattern(struct dm_pool *mem, const char *pat,
 	 */
 	ptr = r + strlen(r) - 1;
 	if (*ptr != sep) {
-		log_info("invalid separator at end of regex");
+		log_error("Invalid separator at end of regex.");
 		return 0;
 	}
 	*ptr = '\0';

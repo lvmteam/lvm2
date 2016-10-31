@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Log failure of raid device with log_error level.
   Use dm_log_with_errno and translate runtime to dm_log only when needed.
   Make log messages from dm and lvm library differnt from dmeventd.
   Notice and Info messages are again logged from dmeventd and its plugins.
