@@ -107,7 +107,7 @@ static int _remove_failed_devices(const char *cmd_lvscan, const char *cmd_lvconv
 	int r;
 
 	if (!dmeventd_lvm2_run_with_lock(cmd_lvscan))
-		log_info("Re-scan of mirrored device failed.");
+		log_warn("WARNING: Re-scan of mirrored device failed.");
 
 	/* if repair goes OK, report success even if lvscan has failed */
 	r = dmeventd_lvm2_run_with_lock(cmd_lvconvert);
@@ -168,7 +168,7 @@ void process_event(struct dm_task *dmt,
 			break;
 		default:
 			/* FIXME Provide value then! */
-			log_info("Unknown event received.");
+			log_warn("WARNING: %s received unknown event.", device);
 		}
 	} while (next);
 }
