@@ -17,6 +17,8 @@ import datetime
 
 import dbus
 from lvmdbusd import cfg
+from gi.repository import GLib
+import threading
 
 
 STDOUT_TTY = os.isatty(sys.stdout.fileno())
@@ -494,3 +496,64 @@ def validate_tag(interface, tag):
 		raise dbus.exceptions.DBusException(
 			interface, 'tag (%s) contains invalid character, allowable set(%s)'
 			% (tag, _ALLOWABLE_TAG_CH))
+
+
+# The methods below which start with mt_* are used to execute the desired code
+# on the the main thread of execution to alleviate any issues the dbus-python
+# library with regards to multi-threaded access.  Essentially, we are trying to
+# ensure all dbus library interaction is done from the same thread!
+
+
+def _async_result(call_back, results):
+	log_debug('Results = %s' % str(results))
+	call_back(results)
+
+# Return result in main thread
+def mt_async_result(call_back, results):
+	GLib.idle_add(_async_result, call_back, results)
+
+
+# Run the supplied function and arguments on the main thread and wait for them
+# to complete while allowing the ability to get the return value too.
+#
+# Example:
+# result = MThreadRunner(foo, arg1, arg2).done()
+#
+class MThreadRunner(object):
+
+	@staticmethod
+	def runner(obj):
+		obj._run()
+		with obj.cond:
+			obj.function_complete = True
+			obj.cond.notify_all()
+
+	def __init__(self, function, *args):
+		self.f = function
+		self.rc = None
+		self.args = args
+		self.function_complete = False
+		self.cond = threading.Condition(threading.Lock())
+
+	def done(self):
+		GLib.idle_add(MThreadRunner.runner, self)
+		with self.cond:
+			if not self.function_complete:
+				self.cond.wait()
+		return self.rc
+
+	def _run(self):
+		if len(self.args):
+			self.rc = self.f(*self.args)
+		else:
+			self.rc = self.f()
+
+
+def _remove_objects(dbus_objects_rm):
+	for o in dbus_objects_rm:
+		cfg.om.remove_object(o, emit_signal=True)
+
+
+# Remove dbus objects from main thread
+def mt_remove_dbus_objects(objs):
+	MThreadRunner(_remove_objects, objs).done()

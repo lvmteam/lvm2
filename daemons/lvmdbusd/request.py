@@ -13,7 +13,7 @@ from gi.repository import GLib
 from .job import Job
 from . import cfg
 import traceback
-from .utils import log_error
+from .utils import log_error, mt_async_result
 
 
 class RequestEntry(object):
@@ -57,9 +57,9 @@ class RequestEntry(object):
 		self._job = Job(self, self._job_state)
 		cfg.om.register_object(self._job, True)
 		if self._return_tuple:
-			self.cb(('/', self._job.dbus_object_path()))
+			mt_async_result(self.cb, ('/', self._job.dbus_object_path()))
 		else:
-			self.cb(self._job.dbus_object_path())
+			mt_async_result(self.cb, self._job.dbus_object_path())
 
 	def run_cmd(self):
 		try:
@@ -110,9 +110,9 @@ class RequestEntry(object):
 				if error_rc == 0:
 					if self.cb:
 						if self._return_tuple:
-							self.cb((result, '/'))
+							mt_async_result(self.cb, (result, '/'))
 						else:
-							self.cb(result)
+							mt_async_result(self.cb, result)
 				else:
 					if self.cb_error:
 						if not error_exception:
@@ -123,7 +123,7 @@ class RequestEntry(object):
 							else:
 								error_exception = Exception(error_msg)
 
-						self.cb_error(error_exception)
+						mt_async_result(self.cb_error, error_exception)
 			else:
 				# We have a job and it's complete, indicate that it's done.
 				# TODO: We need to signal the job is done too.
