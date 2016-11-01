@@ -11,20 +11,37 @@ from .pv import load_pvs
 from .vg import load_vgs
 from .lv import load_lvs
 from . import cfg
+from .utils import MThreadRunner, log_debug
 
 
-def load(refresh=True, emit_signal=True, cache_refresh=True, log=True):
+def _main_thread_load(refresh=True, emit_signal=True):
 	num_total_changes = 0
 
+	num_total_changes += load_pvs(
+		refresh=refresh,
+		emit_signal=emit_signal,
+		cache_refresh=False)[1]
+	num_total_changes += load_vgs(
+		refresh=refresh,
+		emit_signal=emit_signal,
+		cache_refresh=False)[1]
+	num_total_changes += load_lvs(
+		refresh=refresh,
+		emit_signal=emit_signal,
+		cache_refresh=False)[1]
+
+	return num_total_changes
+
+
+def load(refresh=True, emit_signal=True, cache_refresh=True, log=True,
+			need_main_thread=True):
 	# Go through and load all the PVs, VGs and LVs
 	if cache_refresh:
 		cfg.db.refresh(log)
 
-	num_total_changes += load_pvs(refresh=refresh, emit_signal=emit_signal,
-									cache_refresh=False)[1]
-	num_total_changes += load_vgs(refresh=refresh, emit_signal=emit_signal,
-									cache_refresh=False)[1]
-	num_total_changes += load_lvs(refresh=refresh, emit_signal=emit_signal,
-									cache_refresh=False)[1]
+	if need_main_thread:
+		rc = MThreadRunner(_main_thread_load, refresh, emit_signal).done()
+	else:
+		rc = _main_thread_load(refresh, emit_signal)
 
-	return num_total_changes
+	return rc

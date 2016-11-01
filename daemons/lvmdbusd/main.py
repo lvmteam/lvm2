@@ -162,7 +162,7 @@ def main():
 	# Using a thread to process requests.
 	thread_list.append(threading.Thread(target=process_request))
 
-	cfg.load(refresh=False, emit_signal=False)
+	cfg.load(refresh=False, emit_signal=False, need_main_thread=False)
 	cfg.loop = GLib.MainLoop()
 
 	for process in thread_list:
