@@ -140,18 +140,18 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 					  sector + scan_sector);
 			}
 			if (xlate64(lh->sector_xl) != sector + scan_sector) {
-				log_info("%s: Label for sector %" PRIu64
-					 " found at sector %" PRIu64
-					 " - ignoring", dev_name(dev),
-					 (uint64_t)xlate64(lh->sector_xl),
-					 sector + scan_sector);
+				log_very_verbose("%s: Label for sector %" PRIu64
+						 " found at sector %" PRIu64
+						 " - ignoring", dev_name(dev),
+						 (uint64_t)xlate64(lh->sector_xl),
+						 sector + scan_sector);
 				continue;
 			}
 			if (calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
 				     ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)) !=
 			    xlate32(lh->crc_xl)) {
-				log_info("Label checksum incorrect on %s - "
-					 "ignoring", dev_name(dev));
+				log_very_verbose("Label checksum incorrect on %s - "
+						 "ignoring", dev_name(dev));
 				continue;
 			}
 			if (found)
@@ -243,8 +243,8 @@ int label_remove(struct device *dev)
 		}
 
 		if (wipe) {
-			log_info("%s: Wiping label at sector %" PRIu64,
-				 dev_name(dev), sector);
+			log_very_verbose("%s: Wiping label at sector %" PRIu64,
+					 dev_name(dev), sector);
 			if (!dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
 				       buf)) {
 				log_error("Failed to remove label from %s at "
@@ -333,9 +333,9 @@ int label_write(struct device *dev, struct label *label)
 	if (!dev_open(dev))
 		return_0;
 
-	log_info("%s: Writing label to sector %" PRIu64 " with stored offset %"
-		 PRIu32 ".", dev_name(dev), label->sector,
-		 xlate32(lh->offset_xl));
+	log_very_verbose("%s: Writing label to sector %" PRIu64 " with stored offset %"
+			 PRIu32 ".", dev_name(dev), label->sector,
+			 xlate32(lh->offset_xl));
 	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
 		r = 0;

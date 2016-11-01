@@ -1708,7 +1708,7 @@ int target_register_events(struct cmd_context *cmd, const char *dso, const struc
 	if (!r)
 		return_0;
 
-	log_info("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
+	log_very_verbose("%s %s for events", set ? "Monitored" : "Unmonitored", uuid);
 
 	return 1;
 }

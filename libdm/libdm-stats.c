@@ -4006,7 +4006,7 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 			 "precision may be lost");
 
 	if (!_stats_group_check_overlap(dms, regions, count))
-		log_info("Creating group with overlapping regions");
+		log_very_verbose("Creating group with overlapping regions.");
 
 	if (!_stats_create_group(dms, regions, alias, group_id))
 		goto bad;
@@ -4142,7 +4142,7 @@ static int _stats_group_file_regions(struct dm_stats *dms, uint64_t *region_ids,
 	 * returned by FIEMAP imply a kernel bug or a corrupt fs.
 	 */
 	if (!_stats_group_check_overlap(dms, regions, count))
-		log_info("Creating group with overlapping regions.");
+		log_very_verbose("Creating group with overlapping regions.");
 
 	if (!_stats_create_group(dms, regions, alias, &group_id))
 		goto bad;

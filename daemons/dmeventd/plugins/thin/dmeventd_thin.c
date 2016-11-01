@@ -301,7 +301,7 @@ out:
 static int _use_policy(struct dm_task *dmt, struct dso_state *state)
 {
 #if THIN_DEBUG
-	log_info("dmeventd executes: %s.", state->cmd_str);
+	log_debug("dmeventd executes: %s.", state->cmd_str);
 #endif
 	if (!dmeventd_lvm2_run_with_lock(state->cmd_str)) {
 		log_error("Failed to extend thin pool %s.",
