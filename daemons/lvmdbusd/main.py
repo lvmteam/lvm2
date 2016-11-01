@@ -156,9 +156,8 @@ def main():
 
 	cfg.db = lvmdb.DataStore(cfg.args.use_json)
 
-	# Start up thread to monitor pv moves
-	thread_list.append(
-		threading.Thread(target=background_reaper, name="pv_move_reaper"))
+	# Periodically call function to reap threads that are created
+	GLib.timeout_add(5000, background_reaper)
 
 	# Using a thread to process requests.
 	thread_list.append(threading.Thread(target=process_request))

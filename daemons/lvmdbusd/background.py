@@ -10,7 +10,6 @@
 import threading
 import subprocess
 from . import cfg
-import time
 from .cmdhandler import options_to_cli_args
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
@@ -112,17 +111,15 @@ def merge(interface_name, lv_uuid, lv_name, merge_options, job_state):
 
 
 def background_reaper():
-	while cfg.run.value != 0:
-		with _rlock:
-			num_threads = len(_thread_list) - 1
-			if num_threads >= 0:
-				for i in range(num_threads, -1, -1):
-					_thread_list[i].join(0)
-					if not _thread_list[i].is_alive():
-						log_debug("Removing thread: %s" % _thread_list[i].name)
-						_thread_list.pop(i)
-
-		time.sleep(3)
+	with _rlock:
+		num_threads = len(_thread_list) - 1
+		if num_threads >= 0:
+			for i in range(num_threads, -1, -1):
+				_thread_list[i].join(0)
+				if not _thread_list[i].is_alive():
+					log_debug("Reaping thread: %s" % _thread_list[i].name)
+					_thread_list.pop(i)
+	return True
 
 
 def background_execute(command, background_job):
