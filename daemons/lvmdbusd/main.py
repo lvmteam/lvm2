@@ -85,7 +85,7 @@ def process_request():
 					log_debug(
 						"Inspect method %s for too many refreshes" %
 						(str(req.method)))
-			log_debug("Complete ")
+			log_debug("Method complete ")
 		except queue.Empty:
 			pass
 		except Exception:
