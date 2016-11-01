@@ -42,12 +42,10 @@ class Manager(AutomatedProperties):
 			raise dbus.exceptions.DBusException(
 				MANAGER_INTERFACE, "PV Already exists!")
 
-		created_pv = []
 		rc, out, err = cmdhandler.pv_create(create_options, [device])
 		if rc == 0:
-			pvs = load_pvs([device], emit_signal=True)[0]
-			for p in pvs:
-				created_pv = p.dbus_object_path()
+			cfg.load()
+			created_pv = cfg.om.get_object_path_by_lvm_id(device)
 		else:
 			raise dbus.exceptions.DBusException(
 				MANAGER_INTERFACE,
@@ -80,20 +78,14 @@ class Manager(AutomatedProperties):
 					MANAGER_INTERFACE, 'object path = %s not found' % p)
 
 		rc, out, err = cmdhandler.vg_create(create_options, pv_devices, name)
-		created_vg = "/"
 
 		if rc == 0:
-			vgs = load_vgs([name], emit_signal=True)[0]
-			for v in vgs:
-				created_vg = v.dbus_object_path()
-
-			# Update the PVS
-			load_pvs(refresh=True, emit_signal=True, cache_refresh=False)
+			cfg.load()
+			return cfg.om.get_object_path_by_lvm_id(name)
 		else:
 			raise dbus.exceptions.DBusException(
 				MANAGER_INTERFACE,
 				'Exit code %s, stderr = %s' % (str(rc), err))
-		return created_vg
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,

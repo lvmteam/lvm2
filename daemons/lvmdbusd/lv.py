@@ -21,7 +21,7 @@ from .utils import n, n32
 from .loader import common
 from .state import State
 from . import background
-from .utils import round_size
+from .utils import round_size, mt_remove_dbus_objects
 from .job import JobState
 
 
@@ -415,7 +415,6 @@ class Lv(LvCommon):
 			rc, out, err = cmdhandler.lv_remove(lv_name, remove_options)
 
 			if rc == 0:
-				cfg.om.remove_object(dbo, True)
 				cfg.load()
 			else:
 				# Need to work on error handling, need consistent
@@ -515,15 +514,9 @@ class Lv(LvCommon):
 			rc, out, err = cmdhandler.vg_lv_snapshot(
 				lv_name, snapshot_options, name, optional_size)
 			if rc == 0:
-				return_path = '/'
+				cfg.load()
 				full_name = "%s/%s" % (dbo.vg_name_lookup(), name)
-				lvs = load_lvs([full_name], emit_signal=True)[0]
-				for l in lvs:
-					return_path = l.dbus_object_path()
-
-				# Refresh self and all included PVs
-				cfg.load(cache_refresh=False)
-				return return_path
+				return cfg.om.get_object_path_by_lvm_id(full_name)
 			else:
 				raise dbus.exceptions.DBusException(
 					LV_INTERFACE,
@@ -752,9 +745,8 @@ class LvThinPool(Lv):
 				lv_name, create_options, name, size_bytes)
 			if rc == 0:
 				full_name = "%s/%s" % (dbo.vg_name_lookup(), name)
-				lvs = load_lvs([full_name], emit_signal=True)[0]
-				for l in lvs:
-					lv_created = l.dbus_object_path()
+				cfg.load()
+				lv_created = cfg.om.get_object_path_by_lvm_id(full_name)
 			else:
 				raise dbus.exceptions.DBusException(
 					LV_INTERFACE,
@@ -816,8 +808,7 @@ class LvCachePool(Lv):
 				# When we cache an LV, the cache pool and the lv that is getting
 				# cached need to be removed from the object manager and
 				# re-created as their interfaces have changed!
-				cfg.om.remove_object(dbo, emit_signal=True)
-				cfg.om.remove_object(lv_to_cache, emit_signal=True)
+				mt_remove_dbus_objects((dbo, lv_to_cache))
 				cfg.load()
 
 				lv_converted = cfg.om.get_object_path_by_lvm_id(fcn)
@@ -879,8 +870,7 @@ class LvCacheLv(Lv):
 			if rc == 0:
 				# The cache pool gets removed as hidden and put back to
 				# visible, so lets delete
-				cfg.om.remove_object(cache_pool, emit_signal=True)
-				cfg.om.remove_object(dbo, emit_signal=True)
+				mt_remove_dbus_objects((cache_pool, dbo))
 				cfg.load()
 
 				uncached_lv_path = cfg.om.get_object_path_by_lvm_id(lv_name)

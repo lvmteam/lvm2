@@ -19,7 +19,7 @@ from .request import RequestEntry
 from .loader import common
 from .state import State
 from . import background
-from .utils import round_size
+from .utils import round_size, mt_remove_dbus_objects
 from .job import JobState
 
 
@@ -191,14 +191,7 @@ class Vg(AutomatedProperties):
 			rc, out, err = cmdhandler.vg_remove(vg_name, remove_options)
 
 			if rc == 0:
-				# Remove the VG
-				cfg.om.remove_object(dbo, True)
-
-				# If an LV has hidden LVs, things can get quite involved,
-				# especially if it's the last thin pool to get removed, so
-				# lets refresh all
 				cfg.load()
-
 			else:
 				# Need to work on error handling, need consistent
 				raise dbus.exceptions.DBusException(
@@ -605,9 +598,7 @@ class Vg(AutomatedProperties):
 			rc, out, err = create_method(
 				md.lv_full_name(), data.lv_full_name(), create_options)
 			if rc == 0:
-				cfg.om.remove_object(md, emit_signal=True)
-				cfg.om.remove_object(data, emit_signal=True)
-
+				mt_remove_dbus_objects((md, data))
 				cache_pool_lv = Vg.fetch_new_lv(vg_name, new_name)
 			else:
 				raise dbus.exceptions.DBusException(
