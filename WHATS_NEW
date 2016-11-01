@@ -1,5 +1,6 @@
 Version 2.02.167 - 
 ======================================
+  Fix blkdeactivate to deactivate dev stack if dev on top already unmounted.
   Prevent non-synced raid1 repair unless --force
   Prevent raid4 creation/conversion on non-supporting kernels
   Add direct striped -> raid4 conversion

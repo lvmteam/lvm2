@@ -34,6 +34,7 @@ TOOL=blkdeactivate
 DEV_DIR='/dev'
 SYS_BLK_DIR='/sys/block'
 
+MOUNTPOINT="/bin/mountpoint"
 UMOUNT="/bin/umount"
 DMSETUP="@sbindir@/dmsetup"
 LVM="@sbindir@/lvm"
@@ -157,9 +158,11 @@ device_umount_one() {
 		echo -n "  [UMOUNT]: unmounting $name ($kname) mounted on $mnt... "
 		if eval $UMOUNT $UMOUNT_OPTS "$(printf "%s" "$mnt")" $OUT $ERR; then
 			echo "done"
-		else
+		elif $MOUNTPOINT -q "$mnt"; then
 			echo "skipping"
 			add_device_to_skip_list
+		else
+			echo "already unmounted"
 		fi
 	else
 		echo "  [SKIP]: unmount of $name ($kname) mounted on $mnt"
