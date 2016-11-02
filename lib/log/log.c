@@ -67,7 +67,7 @@ struct log_stream_item {
 	char *buffer;
 };
 
-struct log_stream {
+static struct log_stream {
 	struct log_stream_item out;
 	struct log_stream_item err;
 	struct log_stream_item report;
