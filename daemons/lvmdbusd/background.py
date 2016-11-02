@@ -12,8 +12,7 @@ import subprocess
 from . import cfg
 from .cmdhandler import options_to_cli_args
 import dbus
-from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug, \
-	mt_async_result
+from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
 import traceback
 import os
 
@@ -184,29 +183,3 @@ def add(command, reporting_job):
 	with _rlock:
 		_thread_list.append(t)
 
-
-def wait_thread(job, timeout, cb, cbe):
-	# We need to put the wait on it's own thread, so that we don't block the
-	# entire dbus queue processing thread
-	try:
-		mt_async_result(cb, job.state.Wait(timeout))
-	except Exception as e:
-		mt_async_result(cbe, "Wait exception: %s" % str(e))
-	return 0
-
-
-def add_wait(job, timeout, cb, cbe):
-
-	if timeout == 0:
-		# Users are basically polling, do not create thread
-		mt_async_result(cb, job.Complete)
-	else:
-		t = threading.Thread(
-			target=wait_thread,
-			name="thread job.Wait: %s" % job.dbus_object_path(),
-			args=(job, timeout, cb, cbe)
-		)
-
-		t.start()
-		with _rlock:
-			_thread_list.append(t)
