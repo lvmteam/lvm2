@@ -194,6 +194,9 @@ static int _pvscan_autoactivate_single(struct cmd_context *cmd, const char *vg_n
 	if (vg_is_clustered(vg))
 		return ECMD_PROCESSED;
 
+	if (vg_is_exported(vg))
+		return ECMD_PROCESSED;
+
 	if (is_lockd_type(vg->lock_type))
 		return ECMD_PROCESSED;
 
