@@ -137,8 +137,7 @@ static void _default_log_line(int level,
 
 __attribute__((format(printf, 5, 6)))
 static void _default_log_with_errno(int level,
-	    const char *file __attribute__((unused)),
-	    int line __attribute__((unused)), int dm_errno_or_class,
+	    const char *file, int line, int dm_errno_or_class,
 	    const char *f, ...)
 {
 	va_list ap;
