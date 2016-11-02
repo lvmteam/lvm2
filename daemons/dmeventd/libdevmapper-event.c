@@ -868,11 +868,11 @@ void dm_event_log(const char *subsys, int level, const char *file,
 	static pthread_mutex_t _log_mutex = PTHREAD_MUTEX_INITIALIZER;
 	static time_t start = 0;
 	const char *indent = "";
-	FILE *stream = stdout;
+	FILE *stream = log_stderr(level) ? stderr : stdout;
 	int prio;
 	time_t now;
 
-	switch (level & ~(_LOG_STDERR | _LOG_ONCE)) {
+	switch (log_level(level)) {
 	case _LOG_DEBUG:
 		if (_debug_level < 3)
 			return;

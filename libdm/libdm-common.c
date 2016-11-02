@@ -114,9 +114,9 @@ static void _default_log_line(int level,
 	    const char *f, va_list ap)
 {
 	static int _abort_on_internal_errors = -1;
-	FILE *out = (level & _LOG_STDERR) ? stderr : stdout;
+	FILE *out = log_stderr(level) ? stderr : stdout;
 
-	level &= ~(_LOG_STDERR | _LOG_BYPASS_REPORT);
+	level = log_level(level);
 
 	if (level <= _LOG_WARN || _verbose) {
 		if (level < _LOG_WARN)

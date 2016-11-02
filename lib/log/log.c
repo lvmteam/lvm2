@@ -476,9 +476,9 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	int bufused, n;
 	const char *trformat;		/* Translated format string */
 	char *newbuf;
-	int use_stderr = level & _LOG_STDERR;
-	int log_once = level & _LOG_ONCE;
-	int log_bypass_report = level & _LOG_BYPASS_REPORT;
+	int use_stderr = log_stderr(level);
+	int log_once = log_once(level);
+	int log_bypass_report = log_bypass_report(level);
 	int fatal_internal_error = 0;
 	size_t msglen;
 	const char *indent_spaces = "";
@@ -489,7 +489,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	struct dm_report *orig_report;
 	int logged_via_report = 0;
 
-	level &= ~(_LOG_STDERR|_LOG_ONCE|_LOG_BYPASS_REPORT);
+	level = log_level(level);
 
 	if (_abort_on_internal_errors_env_present < 0) {
 		if ((env_str = getenv("DM_ABORT_ON_INTERNAL_ERRORS"))) {
@@ -715,8 +715,8 @@ void print_log_libdm(int level, const char *file, int line, int dm_errno_or_clas
 	 * LOG_WARN level and it's not going to stderr (so we're
 	 * printing common message that is not an error/warning).
 	*/
-	if (!(level & _LOG_STDERR) &&
-	    ((level & ~(_LOG_STDERR|_LOG_ONCE|_LOG_BYPASS_REPORT)) == _LOG_WARN))
+	if (!log_stderr(level) &&
+	    (log_level(level) == _LOG_WARN))
 		level |= _LOG_BYPASS_REPORT;
 
 	_log_stream.out.stream = report_stream;
