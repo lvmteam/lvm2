@@ -865,6 +865,7 @@ void dm_event_log(const char *subsys, int level, const char *file,
 		  int line, int dm_errno_or_class,
 		  const char *format, va_list ap)
 {
+	static int _abort_on_internal_errors = -1;
 	static pthread_mutex_t _log_mutex = PTHREAD_MUTEX_INITIALIZER;
 	static time_t start = 0;
 	const char *indent = "";
@@ -926,6 +927,15 @@ void dm_event_log(const char *subsys, int level, const char *file,
 	}
 
 	pthread_mutex_unlock(&_log_mutex);
+
+	if (_abort_on_internal_errors < 0)
+		/* Set when env DM_ABORT_ON_INTERNAL_ERRORS is not "0" */
+		_abort_on_internal_errors =
+			strcmp(getenv("DM_ABORT_ON_INTERNAL_ERRORS") ? : "0", "0");
+
+	if (_abort_on_internal_errors &&
+	    !strncmp(format, INTERNAL_ERROR, sizeof(INTERNAL_ERROR) - 1))
+		abort();
 }
 
 #if 0				/* left out for now */
