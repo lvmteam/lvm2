@@ -22,7 +22,6 @@ from . import lvmdb
 from gi.repository import GLib
 from .fetch import load
 from .manager import Manager
-from .background import background_reaper
 import traceback
 import queue
 from . import udevwatch
@@ -64,6 +63,7 @@ def _discard_pending_refreshes():
 
 def process_request():
 	while cfg.run.value != 0:
+		# noinspection PyBroadException
 		try:
 			req = cfg.worker_q.get(True, 5)
 
@@ -156,10 +156,8 @@ def main():
 
 	cfg.db = lvmdb.DataStore(cfg.args.use_json)
 
-	# Periodically call function to reap threads that are created
-	GLib.timeout_add(5000, background_reaper)
-
-	# Using a thread to process requests.
+	# Using a thread to process requests, we cannot hang the dbus library
+	# thread that is handling the dbus interface
 	thread_list.append(threading.Thread(target=process_request))
 
 	cfg.load(refresh=False, emit_signal=False, need_main_thread=False)

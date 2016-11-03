@@ -7,16 +7,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import threading
 import subprocess
 from . import cfg
 from .cmdhandler import options_to_cli_args
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
 import os
-
-_rlock = threading.RLock()
-_thread_list = list()
 
 
 def pv_move_lv_cmd(move_options, lv_full_name,
@@ -130,17 +126,3 @@ def merge(interface_name, lv_uuid, lv_name, merge_options, job_state):
 		raise dbus.exceptions.DBusException(
 			interface_name,
 			'LV with uuid %s and name %s not present!' % (lv_uuid, lv_name))
-
-
-def background_reaper():
-	with _rlock:
-		num_threads = len(_thread_list) - 1
-		if num_threads >= 0:
-			for i in range(num_threads, -1, -1):
-				_thread_list[i].join(0)
-				if not _thread_list[i].is_alive():
-					log_debug("Reaping thread: %s" % _thread_list[i].name)
-					_thread_list.pop(i)
-	return True
-
-
