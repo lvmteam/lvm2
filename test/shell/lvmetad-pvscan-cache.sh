@@ -24,6 +24,28 @@ pvscan --cache
 
 vgs | grep $vg1
 
+# Check that an LV cannot be activated by lvchange while VG is exported
+lvcreate -n $lv1 -l 4 -a n $vg1
+check lv_exists $vg1
+vgexport $vg1
+fail lvs $vg1
+fail lvchange -ay $vg1/$lv1
+vgimport $vg1
+check lv_exists $vg1
+check lv_field $vg/$lv1 lv_active ""
+
+# Check that an LV cannot be activated by pvscan while VG is exported
+vgexport $vg1
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+vgimport $vg1
+check lv_exists $vg1
+check lv_field $vg1/$lv1 lv_active ""
+pvscan --cache -aay "$dev1"
+pvscan --cache -aay "$dev2"
+check lv_field $vg1/$lv1 lv_active "active"
+lvchange -an $vg1/$lv1
+
 # When MDA is ignored on PV, do not read any VG
 # metadata from such PV as it may contain old
 # metadata which hasn't been updated for some
