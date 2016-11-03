@@ -174,7 +174,7 @@ void dm_log_init(dm_log_fn fn)
 
 int dm_log_is_non_default(void)
 {
-	return (dm_log == _default_log) ? 0 : 1;
+	return (dm_log == _default_log && dm_log_with_errno == _default_log_with_errno) ? 0 : 1;
 }
 
 void dm_log_with_errno_init(dm_log_with_errno_fn fn)

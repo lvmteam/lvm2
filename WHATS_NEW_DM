@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Report as non default dm logging also when logging with errno was changed.
   Use log_level() macro to consistently decode message log level in dmeventd.
   Still produce output when dmsetup dependency tree building finds dev missing.
   Check and report pthread_sigmask() failure in dmeventd.
