@@ -99,13 +99,28 @@ static time_t _idle_since = 0;
 static char **_initial_registrations = 0;
 
 /* FIXME Make configurable at runtime */
-__attribute__((format(printf, 4, 5)))
-static void _dmeventd_log(int level, const char *file, int line,
-			  const char *format, ...)
+
+/* All libdm messages */
+__attribute__((format(printf, 5, 6)))
+static void _libdm_log(int level, const char *file, int line,
+		       int dm_errno_or_class, const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	dm_event_log("dm", level, file, line, 0, format, ap);
+	dm_event_log("#dm", level, file, line, dm_errno_or_class, format, ap);
+	va_end(ap);
+}
+
+/* All dmeventd messages */
+#undef LOG_MESG
+#define LOG_MESG(l, f, ln, e, x...) _dmeventd_log(l, f, ln, e, ## x)
+__attribute__((format(printf, 5, 6)))
+static void _dmeventd_log(int level, const char *file, int line,
+			  int dm_errno_or_class, const char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	dm_event_log("dmeventd", level, file, line, dm_errno_or_class, format, ap);
 	va_end(ap);
 }
 
@@ -2191,7 +2206,7 @@ int main(int argc, char *argv[])
 		openlog("dmeventd", LOG_PID, LOG_DAEMON);
 
 	dm_event_log_set(_debug_level, _use_syslog);
-	dm_log_init(_dmeventd_log);
+	dm_log_with_errno_init(_libdm_log);
 
 	(void) dm_prepare_selinux_context(DMEVENTD_PIDFILE, S_IFREG);
 	if (dm_create_lockfile(DMEVENTD_PIDFILE) == 0)

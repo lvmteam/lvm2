@@ -1,5 +1,6 @@
 Version 1.02.136 - 
 ======================================
+  Make log messages from dm and lvm library differnt from dmeventd.
   Notice and Info messages are again logged from dmeventd and its plugins.
   Dmeventd now also respects DM_ABORT_ON_INTERNAL_ERRORS as libdm based tool.
   Report as non default dm logging also when logging with errno was changed.

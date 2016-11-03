@@ -32,7 +32,7 @@ static int _register_count = 0;
 static struct dm_pool *_mem_pool = NULL;
 static void *_lvm_handle = NULL;
 
-DM_EVENT_LOG_FN("lvm")
+DM_EVENT_LOG_FN("#lvm")
 
 static void _lvm2_print_log(int level, const char *file, int line,
 			    int dm_errno_or_class, const char *msg)
