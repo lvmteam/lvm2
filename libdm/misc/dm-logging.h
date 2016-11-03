@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,16 +18,10 @@
 
 #include "libdevmapper.h"
 
-extern dm_log_fn dm_log;
 extern dm_log_with_errno_fn dm_log_with_errno;
 
 #define LOG_MESG(l, f, ln, e, x...) \
-	do { \
-		if (dm_log_is_non_default()) \
-			dm_log(l, f, ln, ## x); \
-		else \
-			dm_log_with_errno(l, f, ln, e, ## x); \
-	} while (0)
+	dm_log_with_errno(l, f, ln, e, ## x)
 
 #define LOG_LINE(l, x...) LOG_MESG(l, __FILE__, __LINE__, 0, ## x)
 #define LOG_LINE_WITH_ERRNO(l, e, x...) LOG_MESG(l, __FILE__, __LINE__, e, ## x)
