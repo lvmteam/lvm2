@@ -872,22 +872,31 @@ void dm_event_log(const char *subsys, int level, const char *file,
 	FILE *stream = log_stderr(level) ? stderr : stdout;
 	int prio;
 	time_t now;
+	int log_with_debug = 0;
+
+	if (subsys[0] == '#') {
+		/* Subsystems starting with '#' are logged
+		 * only when debugging is enabled. */
+		log_with_debug++;
+		subsys++;
+	}
 
 	switch (log_level(level)) {
 	case _LOG_DEBUG:
+		/* Never shown without -ddd */
 		if (_debug_level < 3)
 			return;
 		prio = LOG_DEBUG;
 		indent = "      ";
 		break;
 	case _LOG_INFO:
-		if (_debug_level < 2)
+		if (log_with_debug && _debug_level < 2)
 			return;
 		prio = LOG_INFO;
 		indent = "    ";
 		break;
 	case _LOG_NOTICE:
-		if (_debug_level < 1)
+		if (log_with_debug && _debug_level < 1)
 			return;
 		prio = LOG_NOTICE;
 		indent = "  ";
@@ -913,12 +922,13 @@ void dm_event_log(const char *subsys, int level, const char *file,
 		if (!start)
 			start = now;
 		now -= start;
-		fprintf(stream, "[%2d:%02d] %8x:%-6s%s",
-			(int)now / 60, (int)now % 60,
-			// TODO: Maybe use shorter ID
-			// ((int)(pthread_self()) >> 6) & 0xffff,
-			(int)pthread_self(), subsys,
-			(_debug_level > 3) ? "" : indent);
+		if (_debug_level)
+			fprintf(stream, "[%2d:%02d] %8x:%-6s%s",
+				(int)now / 60, (int)now % 60,
+				// TODO: Maybe use shorter ID
+				// ((int)(pthread_self()) >> 6) & 0xffff,
+				(int)pthread_self(), subsys,
+				(_debug_level > 3) ? "" : indent);
 		if (_debug_level > 3)
 			fprintf(stream, "%28s:%4d %s", file, line, indent);
 		vfprintf(stream, _(format), ap);
