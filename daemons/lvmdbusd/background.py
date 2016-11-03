@@ -13,7 +13,6 @@ from . import cfg
 from .cmdhandler import options_to_cli_args
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
-import traceback
 import os
 
 _rlock = threading.RLock()
@@ -41,15 +40,40 @@ def lv_merge_cmd(merge_options, lv_full_name):
 	return cmd
 
 
-def _move_merge(interface_name, cmd, job_state):
-	add(cmd, job_state)
+def _move_merge(interface_name, command, job_state):
+	# We need to execute these command stand alone by forking & exec'ing
+	# the command always as we will be getting periodic output from them on
+	# the status of the long running operation.
+	command.insert(0, cfg.LVM_CMD)
+	process = subprocess.Popen(command, stdout=subprocess.PIPE,
+								env=os.environ,
+								stderr=subprocess.PIPE, close_fds=True)
 
-	done = job_state.Wait(-1)
-	if not done:
-		ec, err_msg = job_state.GetError
+	log_debug("Background process for %s is %d" %
+				(str(command), process.pid))
+
+	lines_iterator = iter(process.stdout.readline, b"")
+	for line in lines_iterator:
+		line_str = line.decode("utf-8")
+
+		# Check to see if the line has the correct number of separators
+		try:
+			if line_str.count(':') == 2:
+				(device, ignore, percentage) = line_str.split(':')
+				job_state.Percent = round(
+					float(percentage.strip()[:-1]), 1)
+		except ValueError:
+			log_error("Trying to parse percentage which failed for %s" %
+				line_str)
+
+	out = process.communicate()
+
+	if process.returncode == 0:
+		job_state.Percent = 100
+	else:
 		raise dbus.exceptions.DBusException(
 			interface_name,
-			'Exit code %s, stderr = %s' % (str(ec), err_msg))
+			'Exit code %s, stderr = %s' % (str(process.returncode), out[1]))
 
 	cfg.load()
 	return '/'
@@ -84,8 +108,6 @@ def move(interface_name, lv_name, pv_src_obj, pv_source_range,
 
 				pv_dests.append((pv_dbus_obj.lvm_id, pr[1], pr[2]))
 
-		# Generate the command line for this command, but don't
-		# execute it.
 		cmd = pv_move_lv_cmd(move_options,
 								lv_name,
 								pv_src.lvm_id,
@@ -121,65 +143,4 @@ def background_reaper():
 					_thread_list.pop(i)
 	return True
 
-
-def background_execute(command, background_job):
-
-	# Wrap this whole operation in an exception handler, otherwise if we
-	# hit a code bug we will silently exit this thread without anyone being
-	# the wiser.
-	try:
-		# We need to execute these command stand alone by forking & exec'ing
-		# the command always!
-		command.insert(0, cfg.LVM_CMD)
-		process = subprocess.Popen(command, stdout=subprocess.PIPE,
-									env=os.environ,
-									stderr=subprocess.PIPE, close_fds=True)
-
-		log_debug("Background process for %s is %d" %
-					(str(command), process.pid))
-
-		lines_iterator = iter(process.stdout.readline, b"")
-		for line in lines_iterator:
-			line_str = line.decode("utf-8")
-
-			# Check to see if the line has the correct number of separators
-			try:
-				if line_str.count(':') == 2:
-					(device, ignore, percentage) = line_str.split(':')
-					background_job.Percent = round(
-						float(percentage.strip()[:-1]), 1)
-			except ValueError:
-				log_error("Trying to parse percentage which failed for %s" %
-					line_str)
-
-		out = process.communicate()
-
-		if process.returncode == 0:
-			background_job.Percent = 100
-		else:
-			log_error("Failed to execute background job %s, STDERR= %s"
-						% (str(command), out[1]))
-
-		background_job.set_result(process.returncode, out[1])
-		log_debug("Background process %d complete!" % process.pid)
-
-	except Exception:
-		# In the unlikely event that we blow up, we need to unblock caller which
-		# is waiting on an answer.
-		st = traceback.format_exc()
-		error = "Exception in background thread: \n%s" % st
-		log_error(error)
-		background_job.set_result(1, error)
-
-
-def add(command, reporting_job):
-	# Create the thread, get it running and then add it to the list
-	t = threading.Thread(
-		target=background_execute,
-		name="thread: " + ' '.join(command),
-		args=(command, reporting_job))
-	t.start()
-
-	with _rlock:
-		_thread_list.append(t)
 

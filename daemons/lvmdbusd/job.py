@@ -66,7 +66,6 @@ class JobState(object):
 		self._percent = 0
 		self._complete = False
 		self._request = request
-		self._cond = threading.Condition(self.rlock)
 		self._ec = 0
 		self._stderr = ''
 		self._waiting_clients = []
@@ -100,7 +99,6 @@ class JobState(object):
 		with self.rlock:
 			self._complete = value
 			self._percent = 100
-			self._cond.notify_all()
 			self.notify_waiting_clients()
 
 	@property
@@ -115,28 +113,9 @@ class JobState(object):
 			else:
 				return (-1, 'Job is not complete!')
 
-	def set_result(self, ec, msg):
-		with self.rlock:
-			self.Complete = True
-			self._ec = ec
-			self._stderr = msg
-
 	def dtor(self):
 		with self.rlock:
 			self._request = None
-
-	def Wait(self, timeout):
-		try:
-			with self._cond:
-				# Check to see if we are done, before we wait
-				if not self.Complete:
-					if timeout != -1:
-						self._cond.wait(timeout)
-					else:
-						self._cond.wait()
-				return self.Complete
-		except RuntimeError:
-			return False
 
 	@property
 	def Result(self):
@@ -175,6 +154,7 @@ class JobState(object):
 
 			self._waiting_clients = []
 
+
 # noinspection PyPep8Naming
 class Job(AutomatedProperties):
 	_Percent_meta = ('d', JOB_INTERFACE)
@@ -195,10 +175,6 @@ class Job(AutomatedProperties):
 	def Percent(self):
 		return dbus.Double(float(self.state.Percent))
 
-	@Percent.setter
-	def Percent(self, value):
-		self.state.Percent = value
-
 	@property
 	def Complete(self):
 		return dbus.Boolean(self.state.Complete)
@@ -210,9 +186,6 @@ class Job(AutomatedProperties):
 	@property
 	def GetError(self):
 		return dbus.Struct(self.state.GetError, signature="(is)")
-
-	def set_result(self, ec, msg):
-		self.state.set_result(ec, msg)
 
 	@dbus.service.method(dbus_interface=JOB_INTERFACE)
 	def Remove(self):
