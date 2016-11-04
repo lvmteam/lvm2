@@ -14,19 +14,21 @@ import functools
 import xml.etree.ElementTree as Et
 from collections import OrderedDict
 import dbus
+import os
 
-BUSNAME = "com.redhat.lvmdbus1"
-MANAGER_INT = BUSNAME + '.Manager'
-MANAGER_OBJ = '/' + BUSNAME.replace('.', '/') + '/Manager'
-PV_INT = BUSNAME + ".Pv"
-VG_INT = BUSNAME + ".Vg"
-LV_INT = BUSNAME + ".Lv"
-THINPOOL_INT = BUSNAME + ".ThinPool"
-SNAPSHOT_INT = BUSNAME + ".Snapshot"
-LV_COMMON_INT = BUSNAME + ".LvCommon"
-JOB_INT = BUSNAME + ".Job"
-CACHE_POOL_INT = BUSNAME + ".CachePool"
-CACHE_LV_INT = BUSNAME + ".CachedLv"
+BUS_NAME = os.getenv('LVM_DBUS_NAME', 'com.redhat.lvmdbus1')
+BASE_INTERFACE = 'com.redhat.lvmdbus1'
+MANAGER_INT = BASE_INTERFACE + '.Manager'
+MANAGER_OBJ = '/' + BASE_INTERFACE.replace('.', '/') + '/Manager'
+PV_INT = BASE_INTERFACE + ".Pv"
+VG_INT = BASE_INTERFACE + ".Vg"
+LV_INT = BASE_INTERFACE + ".Lv"
+THINPOOL_INT = BASE_INTERFACE + ".ThinPool"
+SNAPSHOT_INT = BASE_INTERFACE + ".Snapshot"
+LV_COMMON_INT = BASE_INTERFACE + ".LvCommon"
+JOB_INT = BASE_INTERFACE + ".Job"
+CACHE_POOL_INT = BASE_INTERFACE + ".CachePool"
+CACHE_LV_INT = BASE_INTERFACE + ".CachedLv"
 
 THINPOOL_LV_PATH = '/' + THINPOOL_INT.replace('.', '/')
 
@@ -162,7 +164,7 @@ class RemoteObject(object):
 			for i in range(0, 3):
 				try:
 					prop_fetch = dbus.Interface(self.bus.get_object(
-						BUSNAME, self.object_path),
+						BUS_NAME, self.object_path),
 						'org.freedesktop.DBus.Properties')
 					props = prop_fetch.GetAll(self.interface)
 					break
@@ -186,7 +188,7 @@ class RemoteObject(object):
 		self.introspect = introspect
 
 		self.dbus_method = dbus.Interface(specified_bus.get_object(
-			BUSNAME, self.object_path), self.interface)
+			BUS_NAME, self.object_path), self.interface)
 
 		self._set_props(properties)
 
@@ -222,7 +224,7 @@ class ClientProxy(object):
 
 	def __init__(self, specified_bus, object_path, interface=None, props=None):
 		i = dbus.Interface(specified_bus.get_object(
-			BUSNAME, object_path), 'org.freedesktop.DBus.Introspectable')
+			BUS_NAME, object_path), 'org.freedesktop.DBus.Introspectable')
 
 		introspection_xml = i.Introspect()
 

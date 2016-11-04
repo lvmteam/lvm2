@@ -17,7 +17,6 @@ import unittest
 import sys
 import time
 import pyudev
-import os
 from testlib import *
 
 g_tmo = 0
@@ -56,7 +55,7 @@ def get_objects():
 		CACHE_POOL_INT: [], CACHE_LV_INT: []}
 
 	manager = dbus.Interface(bus.get_object(
-		BUSNAME, "/com/redhat/lvmdbus1"),
+		BUS_NAME, "/com/redhat/lvmdbus1"),
 		"org.freedesktop.DBus.ObjectManager")
 
 	objects = manager.GetManagedObjects()
@@ -71,7 +70,7 @@ def get_objects():
 
 def set_execution(lvmshell):
 	lvm_manager = dbus.Interface(bus.get_object(
-		BUSNAME, "/com/redhat/lvmdbus1/Manager"),
+		BUS_NAME, "/com/redhat/lvmdbus1/Manager"),
 		"com.redhat.lvmdbus1.Manager")
 	return lvm_manager.UseLvmShell(lvmshell)
 

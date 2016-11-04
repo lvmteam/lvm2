@@ -10,7 +10,7 @@
 from . import cfg
 from . import objectmanager
 from . import utils
-from .cfg import BASE_INTERFACE, BASE_OBJ_PATH, MANAGER_OBJ_PATH
+from .cfg import BUS_NAME, BASE_INTERFACE, BASE_OBJ_PATH, MANAGER_OBJ_PATH
 import threading
 from . import cmdhandler
 import time
@@ -148,7 +148,7 @@ def main():
 		cfg.bus = dbus.SystemBus()
 	# The base name variable needs to exist for things to work.
 	# noinspection PyUnusedLocal
-	base_name = dbus.service.BusName(BASE_INTERFACE, cfg.bus)
+	base_name = dbus.service.BusName(BUS_NAME, cfg.bus)
 	cfg.om = Lvm(BASE_OBJ_PATH)
 	cfg.om.register_object(Manager(MANAGER_OBJ_PATH))
 
