@@ -53,7 +53,8 @@ delay 50
 # RAID1 triple-leg single replace during initial sync
 lvcreate --type raid1 -m 2 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 aux disable_dev "$dev2" "$dev3"
-not lvconvert -y --repair $vg/$lv1
+# FIXME 2016/11/04 AGK: Disabled next line as it fails to guarantee it is not already in sync.
+#not lvconvert -y --repair $vg/$lv1
 aux wait_for_sync $vg $lv1
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
