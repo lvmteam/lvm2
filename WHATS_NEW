@@ -1,5 +1,5 @@
-Version 2.02.167 - 
-======================================
+Version 2.02.167 - 5th November 2016
+====================================
   Use log_error in regex and sysfs filter to describe reason of failure.
   Fix blkdeactivate to deactivate dev stack if dev on top already unmounted.
   Prevent non-synced raid1 repair unless --force
