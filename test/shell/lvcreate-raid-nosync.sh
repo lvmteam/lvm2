@@ -24,12 +24,12 @@ aux prepare_vg 6
 
 # Delay 1st leg so that rebuilding status characters
 #  can be read before resync finished too quick.
-aux delay_dev "$dev1" 0 10 $(get first_extent_sector "$dev1")
+aux delay_dev "$dev1" 0 50 $(get first_extent_sector "$dev1")
 
 # raid0/raid0_meta don't support resynchronization
 for r in raid0 raid0_meta
 do
-	lvcreate --yes --type raid0 -i 3 -l 1 -n $lv1 $vg
+	lvcreate --yes --type $r -i 3 -l 1 -n $lv1 $vg
 	check raid_leg_status $vg $lv1 "AAA"
 	lvremove --yes $vg/$lv1
 done
@@ -47,7 +47,7 @@ check raid_leg_status $vg $lv1 "AAA"
 lvremove --yes $vg/$lv1
 
 for r in $segtypes
-do 
+do
 	# raid4/5 support resynchronization
 	lvcreate --yes --type $r -i 3 -l 2 -n $lv1 $vg
 	check raid_leg_status $vg $lv1 "aaaa"
