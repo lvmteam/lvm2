@@ -2305,7 +2305,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 		if (!dm_tree_add_dev(dtree, info.major, info.minor)) {
 			log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree.",
 				  info.major, info.minor);
-			return_NULL;
+			return NULL;
 		}
 	}
 
@@ -2833,7 +2833,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-        /* Even unused thin-pool still needs to get layered  UUID -suffix */
+	/* Even unused thin-pool still needs to get layered  UUID -suffix */
 	if (!layer && lv_is_new_thin_pool(lv))
 		layer = lv_layer(lv);
 
