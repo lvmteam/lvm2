@@ -25,7 +25,8 @@ which "$FSCK" || skip
 #
 # Main
 #
-aux have_cache 1 5 0 || skip
+# older versions of cache target reported unreliably write failures
+aux have_cache 1 7 0 || skip
 
 aux prepare_vg 4
 
