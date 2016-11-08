@@ -3844,6 +3844,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	uint32_t fa, s;
 	int clear_metadata = 0;
 	uint32_t area_multiple = 1;
+	int fail;
 
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED)))
 		return_0;
@@ -3917,45 +3918,60 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 			return_0;
 
-		for (s = 0; s < seg->area_count; s++) {
-			meta_lv = seg_metalv(seg, s);
+		if (test_mode())
+			log_verbose("Test mode: Skipping wiping of metadata areas.");
+		else {
+			fail = 0;
+			/* Activate all rmeta devices locally first (more efficient) */
+			for (s = 0; !fail && s < seg->area_count; s++) {
+				meta_lv = seg_metalv(seg, s);
 
-			if (test_mode()) {
-				lv_set_hidden(meta_lv);
-				continue;
+				if (!activate_lv_local(meta_lv->vg->cmd, meta_lv)) {
+					log_error("Failed to activate %s for clearing.",
+						  display_lvname(meta_lv));
+					fail = 1;
+				}
 			}
 
-			/* For clearing, simply activate locally */
-			if (!activate_lv_local(meta_lv->vg->cmd, meta_lv)) {
-				log_error("Failed to activate %s/%s for clearing",
-					  meta_lv->vg->name, meta_lv->name);
-				return 0;
+			/* Clear all rmeta devices */
+			for (s = 0; !fail && s < seg->area_count; s++) {
+				meta_lv = seg_metalv(seg, s);
+
+				log_verbose("Clearing metadata area of %s.",
+					    display_lvname(meta_lv));
+				/*
+				 * Rather than wiping meta_lv->size, we can simply
+				 * wipe '1' to remove the superblock of any previous
+				 * RAID devices.  It is much quicker.
+				 */
+				if (!wipe_lv(meta_lv, (struct wipe_params)
+					     { .do_zero = 1, .zero_sectors = 1 })) {
+					stack;
+					fail = 1;
+				}
 			}
 
-			log_verbose("Clearing metadata area of %s",
-				    display_lvname(meta_lv));
-			/*
-			 * Rather than wiping meta_lv->size, we can simply
-			 * wipe '1' to remove the superblock of any previous
-			 * RAID devices.  It is much quicker.
-			 */
-			if (!wipe_lv(meta_lv, (struct wipe_params)
-				     { .do_zero = 1, .zero_sectors = 1 })) {
-				log_error("Failed to zero %s/%s",
-					  meta_lv->vg->name, meta_lv->name);
-				return 0;
+			/* Deactivate all rmeta devices */
+			for (s = 0; s < seg->area_count; s++) {
+				meta_lv = seg_metalv(seg, s);
+
+				if (!deactivate_lv(meta_lv->vg->cmd, meta_lv)) {
+					log_error("Failed to deactivate %s after clearing.",
+						  display_lvname(meta_lv));
+					fail = 1;
+				}
+
+				/* Wipe any temporary tags required for activation. */
+				str_list_wipe(&meta_lv->tags);
 			}
 
-			if (!deactivate_lv(meta_lv->vg->cmd, meta_lv)) {
-				log_error("Failed to deactivate %s/%s",
-					  meta_lv->vg->name, meta_lv->name);
-				return 0;
-			}
-			lv_set_hidden(meta_lv);
-
-			/* Wipe any temporary tags required for activation. */
-			str_list_wipe(&meta_lv->tags);
+			if (fail)
+				/* Fail, after trying to deactivate all we could */
+				return_0;
 		}
+
+		for (s = 0; s < seg->area_count; s++)
+			lv_set_hidden(seg_metalv(seg, s));
 	}
 
 	seg->area_len += extents / area_multiple;

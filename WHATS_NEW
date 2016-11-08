@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  More efficiently prepare _rmeta devices when creating a new raid LV.
 
 Version 2.02.167 - 5th November 2016
 ====================================
