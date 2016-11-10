@@ -11,7 +11,10 @@ from .pv import load_pvs
 from .vg import load_vgs
 from .lv import load_lvs
 from . import cfg
-from .utils import MThreadRunner, log_debug
+from .utils import MThreadRunner, log_debug, log_error
+import threading
+import queue
+import traceback
 
 
 def _main_thread_load(refresh=True, emit_signal=True):
@@ -45,3 +48,112 @@ def load(refresh=True, emit_signal=True, cache_refresh=True, log=True,
 		rc = _main_thread_load(refresh, emit_signal)
 
 	return rc
+
+
+# Even though lvm can handle multiple changes concurrently it really doesn't
+# make sense to make a 1-1 fetch of data for each change of lvm because when
+# we fetch the data once all previous changes are reflected.
+class StateUpdate(object):
+
+	class UpdateRequest(object):
+
+		def __init__(self, refresh, emit_signal, cache_refresh, log,
+						need_main_thread):
+			self.is_done = False
+			self.refresh = refresh
+			self.emit_signal = emit_signal
+			self.cache_refresh = cache_refresh
+			self.log = log
+			self.need_main_thread = need_main_thread
+			self.result = None
+			self.cond = threading.Condition(threading.Lock())
+
+		def done(self):
+			with self.cond:
+				if not self.is_done:
+					self.cond.wait()
+			return self.result
+
+		def set_result(self, result):
+			with self.cond:
+				self.result = result
+				self.is_done = True
+				self.cond.notify_all()
+
+	@staticmethod
+	def update_thread(obj):
+		while cfg.run.value != 0:
+			# noinspection PyBroadException
+			try:
+				queued_requests = []
+				refresh = True
+				emit_signal = True
+				cache_refresh = True
+				log = True
+				need_main_thread = True
+
+				with obj.lock:
+					wait = not obj.deferred
+					obj.deferred = False
+
+				if wait:
+					queued_requests.append(obj.queue.get(True, 2))
+
+				# Ok we have one or the deferred queue has some,
+				# check if any others
+				try:
+					while True:
+						queued_requests.append(obj.queue.get(False))
+
+				except queue.Empty:
+					pass
+
+				log_debug("Processing %d updates!" % len(queued_requests))
+
+				# We have what we can, run the update with the needed options
+				for i in queued_requests:
+					if not i.refresh:
+						refresh = False
+					if not i.emit_signal:
+						emit_signal = False
+					if not i.cache_refresh:
+						cache_refresh = False
+					if not i.log:
+						log = False
+					if not i.need_main_thread:
+						need_main_thread = False
+
+				num_changes = load(refresh, emit_signal, cache_refresh, log,
+									need_main_thread)
+				# Update is done, let everyone know!
+				for i in queued_requests:
+					i.set_result(num_changes)
+
+			except queue.Empty:
+				pass
+			except Exception:
+				st = traceback.format_exc()
+				log_error("update_thread exception: \n%s" % st)
+
+	def __init__(self):
+		self.lock = threading.RLock()
+		self.queue = queue.Queue()
+		self.deferred = False
+
+		# Do initial load
+		load(refresh=False, emit_signal=False, need_main_thread=False)
+
+		self.thread = threading.Thread(target=StateUpdate.update_thread,
+										args=(self,))
+
+	def load(self, refresh=True, emit_signal=True, cache_refresh=True,
+					log=True, need_main_thread=True):
+		# Place this request on the queue and wait for it to be completed
+		req = StateUpdate.UpdateRequest(refresh, emit_signal, cache_refresh,
+										log, need_main_thread)
+		self.queue.put(req)
+		return req.done()
+
+	def event(self):
+		with self.lock:
+			self.deferred = True

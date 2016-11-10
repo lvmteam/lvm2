@@ -14,9 +14,7 @@ from .cfg import MANAGER_INTERFACE
 import dbus
 from . import cfg
 from . import cmdhandler
-from .fetch import load_pvs, load_vgs
 from .request import RequestEntry
-from .refresh import event_add
 from . import udevwatch
 
 
@@ -183,7 +181,8 @@ class Manager(AutomatedProperties):
 								"udev monitoring")
 				# We are dependent on external events now to stay current!
 				cfg.ee = True
-		event_add((command,))
+		utils.log_debug("ExternalEvent %s" % command)
+		cfg.event()
 		return dbus.Int32(0)
 
 	@staticmethod

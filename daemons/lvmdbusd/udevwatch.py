@@ -9,7 +9,6 @@
 
 import pyudev
 import threading
-from .refresh import event_add
 from . import cfg
 
 observer = None
@@ -38,7 +37,7 @@ def filter_event(action, device):
 		refresh = True
 
 	if refresh:
-		event_add(('udev',))
+		cfg.event()
 
 
 def add():

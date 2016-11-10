@@ -78,6 +78,7 @@ hidden_lv = itertools.count()
 
 # Used to prevent circular imports...
 load = None
+event = None
 
 # Global cached state
 db = None

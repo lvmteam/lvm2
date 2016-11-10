@@ -20,7 +20,7 @@ import dbus.mainloop.glib
 from . import lvmdb
 # noinspection PyUnresolvedReferences
 from gi.repository import GLib
-from .fetch import load
+from .fetch import StateUpdate
 from .manager import Manager
 import traceback
 import queue
@@ -29,7 +29,6 @@ from .utils import log_debug, log_error
 import argparse
 import os
 import sys
-from .refresh import handle_external_event, event_complete
 
 
 class Lvm(objectmanager.ObjectManager):
@@ -37,54 +36,15 @@ class Lvm(objectmanager.ObjectManager):
 		super(Lvm, self).__init__(object_path, BASE_INTERFACE)
 
 
-def _discard_pending_refreshes():
-	# We just handled a refresh, if we have any in the queue they can be
-	# removed because by definition they are older than the refresh we just did.
-	# As we limit the number of refreshes getting into the queue
-	# we should only ever have one to remove.
-	requests = []
-	while not cfg.worker_q.empty():
-		try:
-			r = cfg.worker_q.get(block=False)
-			if r.method != handle_external_event:
-				requests.append(r)
-			else:
-				# Make sure we make this event complete even though it didn't
-				# run, otherwise no other events will get processed
-				event_complete()
-				break
-		except queue.Empty:
-			break
-
-	# Any requests we removed, but did not discard need to be re-queued
-	for r in requests:
-		cfg.worker_q.put(r)
-
-
 def process_request():
 	while cfg.run.value != 0:
 		# noinspection PyBroadException
 		try:
 			req = cfg.worker_q.get(True, 5)
-
-			start = cfg.db.num_refreshes
-
 			log_debug(
 				"Running method: %s with args %s" %
 				(str(req.method), str(req.arguments)))
 			req.run_cmd()
-
-			end = cfg.db.num_refreshes
-
-			num_refreshes = end - start
-
-			if num_refreshes > 0:
-				_discard_pending_refreshes()
-
-				if num_refreshes > 1:
-					log_debug(
-						"Inspect method %s for too many refreshes" %
-						(str(req.method)))
 			log_debug("Method complete ")
 		except queue.Empty:
 			pass
@@ -152,20 +112,25 @@ def main():
 	cfg.om = Lvm(BASE_OBJ_PATH)
 	cfg.om.register_object(Manager(MANAGER_OBJ_PATH))
 
-	cfg.load = load
-
 	cfg.db = lvmdb.DataStore(cfg.args.use_json)
 
 	# Using a thread to process requests, we cannot hang the dbus library
 	# thread that is handling the dbus interface
 	thread_list.append(threading.Thread(target=process_request))
 
-	cfg.load(refresh=False, emit_signal=False, need_main_thread=False)
+	# Have a single thread handling updating lvm and the dbus model so we don't
+	# have multiple threads doing this as the same time
+	updater = StateUpdate()
+	thread_list.append(updater.thread)
+
+	cfg.load = updater.load
+	cfg.event = updater.event
+
 	cfg.loop = GLib.MainLoop()
 
-	for process in thread_list:
-		process.damon = True
-		process.start()
+	for thread in thread_list:
+		thread.damon = True
+		thread.start()
 
 	# Add udev watching
 	if cfg.args.use_udev:
@@ -187,8 +152,8 @@ def main():
 			cfg.loop.run()
 			udevwatch.remove()
 
-			for process in thread_list:
-				process.join()
+			for thread in thread_list:
+				thread.join()
 	except KeyboardInterrupt:
 		utils.handler(signal.SIGINT, None)
 	return 0
