@@ -6852,6 +6852,7 @@ doit:
 		}
 	} while (--_count);
 
+	ret = 0;
 out:
 	if (_report)
 		dm_report_free(_report);
