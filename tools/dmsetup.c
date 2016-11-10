@@ -6798,7 +6798,7 @@ unknown:
 	if (_switches[COLS_ARG]) {
 		if (!_report_init(cmd, subcommand))
 			ret = 1;
- 		if (!_report)
+		if (ret || !_report)
 			goto_out;
 	}
 
@@ -6852,7 +6852,6 @@ doit:
 		}
 	} while (--_count);
 
-	ret = 0;
 out:
 	if (_report)
 		dm_report_free(_report);
@@ -6865,5 +6864,5 @@ out:
 	if (_initial_timestamp)
 		dm_timestamp_destroy(_initial_timestamp);
 
-	return ret;
+	return (_switches[HELP_ARG] || _switches[VERSION_ARG]) ? 0 : ret;
 }
