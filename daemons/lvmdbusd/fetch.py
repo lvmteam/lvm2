@@ -108,7 +108,9 @@ class StateUpdate(object):
 				except queue.Empty:
 					pass
 
-				log_debug("Processing %d updates!" % len(queued_requests))
+				if len(queued_requests) > 1:
+					log_debug("Processing %d updates!" % len(queued_requests),
+							'bg_black', 'fg_light_green')
 
 				# We have what we can, run the update with the needed options
 				for i in queued_requests:

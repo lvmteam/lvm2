@@ -13,6 +13,7 @@ from .cmdhandler import options_to_cli_args
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
 import os
+import threading
 
 
 def pv_move_lv_cmd(move_options, lv_full_name,
@@ -126,3 +127,16 @@ def merge(interface_name, lv_uuid, lv_name, merge_options, job_state):
 		raise dbus.exceptions.DBusException(
 			interface_name,
 			'LV with uuid %s and name %s not present!' % (lv_uuid, lv_name))
+
+
+def _run_cmd(req):
+	log_debug(
+		"_run_cmd: Running method: %s with args %s" %
+		(str(req.method), str(req.arguments)))
+	req.run_cmd()
+	log_debug("_run_cmd: complete!")
+
+
+def cmd_runner(request):
+	t = threading.Thread(target=_run_cmd, args=(request,))
+	t.start()

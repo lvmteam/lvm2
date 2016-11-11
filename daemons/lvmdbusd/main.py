@@ -87,8 +87,6 @@ def main():
 		log_error("You cannot specify --lvmshell and --nojson")
 		sys.exit(1)
 
-	cmdhandler.set_execution(cfg.args.use_lvm_shell)
-
 	# List of threads that we start up
 	thread_list = []
 
@@ -101,6 +99,8 @@ def main():
 
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	dbus.mainloop.glib.threads_init()
+
+	cmdhandler.set_execution(cfg.args.use_lvm_shell)
 
 	if use_session:
 		cfg.bus = dbus.SessionBus()

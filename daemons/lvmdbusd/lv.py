@@ -494,7 +494,7 @@ class Lv(LvCommon):
 				pv_dests_and_ranges, move_options, job_state), cb, cbe, False,
 				job_state)
 
-		cfg.worker_q.put(r)
+		background.cmd_runner(r)
 
 	@staticmethod
 	def _snap_shot(lv_uuid, lv_name, name, optional_size,
@@ -916,4 +916,4 @@ class LvSnapShot(Lv):
 							(SNAPSHOT_INTERFACE, self.Uuid, self.lvm_id,
 							merge_options, job_state), cb, cbe, False,
 							job_state)
-		cfg.worker_q.put(r)
+		background.cmd_runner(r)
