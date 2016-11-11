@@ -40,13 +40,14 @@ snap_and_merge() {
 	kill $SLEEP_PID
 
 	aux delay_dev "$dev1"  0 200 $(get first_extent_sector "$dev1"):
-	lvchange --refresh $vg/$lv1
+	lvchange --poll n --refresh $vg/$lv1
 	dmsetup table
 	lvs -a -o+lv_merging,lv_merge_failed $vg
 	sleep 1
 	check lv_attr_bit state $vg/$lv1 "a"
 	check lv_attr_bit state $vg/$lv2 "a"
 	aux error_dev "$dev2" $(get first_extent_sector "$dev2"):
+	aux enable_dev "$dev1"
 	# delay to let snapshot merge 'discover' failing COW device
 	sleep 1
 	sync
@@ -56,7 +57,7 @@ snap_and_merge() {
 	check lv_attr_bit state $vg/$lv2 "m"
 
 	# device OK and running in full speed
-	aux enable_dev "$dev1" "$dev2"
+	aux enable_dev "$dev2"
 
 	# reactivate so merge can finish
 	lvchange -an $vg
