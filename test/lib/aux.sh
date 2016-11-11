@@ -1063,7 +1063,7 @@ generate_config() {
             cat > "$config_values" <<-EOF
 activation/checks = 1
 activation/monitoring = 0
-activation/polling_interval = 0
+activation/polling_interval = 1
 activation/retry_deactivation = 1
 activation/snapshot_autoextend_percent = 50
 activation/snapshot_autoextend_threshold = 50
