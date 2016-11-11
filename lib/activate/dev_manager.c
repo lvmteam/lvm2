@@ -2283,7 +2283,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 				      seg->lv->name, errid)))
 		return_NULL;
 
-	log_debug_activation("Getting device info for %s [%s]", name, dlid);
+	log_debug_activation("Getting device info for %s [%s].", name, dlid);
 	if (!_info(dm->cmd, dlid, 1, 0, &info, NULL, NULL)) {
 		log_error("Failed to get info for %s [%s].", name, dlid);
 		return 0;
@@ -2303,7 +2303,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 	} else {
 		/* Already exists */
 		if (!dm_tree_add_dev(dtree, info.major, info.minor)) {
-			log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
+			log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree.",
 				  info.major, info.minor);
 			return_NULL;
 		}
