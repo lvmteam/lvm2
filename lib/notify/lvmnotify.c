@@ -15,6 +15,7 @@
 #define LVM_DBUS_DESTINATION "com.redhat.lvmdbus1"
 #define LVM_DBUS_PATH        "/com/redhat/lvmdbus1/Manager"
 #define LVM_DBUS_INTERFACE   "com.redhat.lvmdbus1.Manager"
+#define SD_BUS_NO_SUCH_UNIT_ERROR "org.freedesktop.systemd1.NoSuchUnit"
 
 #ifdef NOTIFYDBUS_SUPPORT
 #include <systemd/sd-bus.h>
@@ -26,6 +27,7 @@ int lvmnotify_is_supported(void)
 
 void lvmnotify_send(struct cmd_context *cmd)
 {
+	static const char _dbus_notification_failed_msg[] = "D-Bus notification failed";
 	sd_bus *bus = NULL;
 	sd_bus_message *m = NULL;
 	sd_bus_error error = SD_BUS_ERROR_NULL;
@@ -61,7 +63,10 @@ void lvmnotify_send(struct cmd_context *cmd)
 				 cmd_name);
 
 	if (ret < 0) {
-		log_warn("WARNING: D-Bus notification failed: %s", error.message);
+		if (sd_bus_error_has_name(&error, SD_BUS_NO_SUCH_UNIT_ERROR))
+			log_debug_dbus("%s: %s", _dbus_notification_failed_msg, error.message);
+		else
+			log_warn("WARNING: %s: %s", _dbus_notification_failed_msg, error.message);
 		goto out;
 	}
 

@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  Only log msg as debug if lvm2-lvmdbusd unit missing for D-Bus notification.
   Missing stripe filler now could be also 'zero'.
   lvconvert --repair accepts --interval and --background option.
   More efficiently prepare _rmeta devices when creating a new raid LV.
