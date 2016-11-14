@@ -76,7 +76,7 @@ test_pvmove_resume() {
 	aux enable_dev "$dev2"
 
 	i=0
-	while get lv_field $vg name -a | grep "^pvmove"; do
+	while get lv_field $vg name -a | egrep "^\[?pvmove"; do
 		# wait for 30 secs at max
 		test $i -ge 300 && die "Pvmove is too slow or does not progress."
 		sleep .1
