@@ -1055,7 +1055,6 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 	seg_type(seg, idx) = AREA_UNASSIGNED;
 	seg_metatype(seg, idx) = AREA_UNASSIGNED;
 
-	/* FIXME Remove duplicated prefix? */
 	if (!(data_lv->name = _generate_raid_name(data_lv, "extracted", -1)))
 		return_0;
 
