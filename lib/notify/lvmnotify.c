@@ -15,7 +15,8 @@
 #define LVM_DBUS_DESTINATION "com.redhat.lvmdbus1"
 #define LVM_DBUS_PATH        "/com/redhat/lvmdbus1/Manager"
 #define LVM_DBUS_INTERFACE   "com.redhat.lvmdbus1.Manager"
-#define SD_BUS_NO_SUCH_UNIT_ERROR "org.freedesktop.systemd1.NoSuchUnit"
+#define SD_BUS_SYSTEMD_NO_SUCH_UNIT_ERROR "org.freedesktop.systemd1.NoSuchUnit"
+#define SD_BUS_DBUS_SERVICE_UNKNOWN_ERROR "org.freedesktop.DBus.Error.ServiceUnknown"
 
 #ifdef NOTIFYDBUS_SUPPORT
 #include <systemd/sd-bus.h>
@@ -63,7 +64,8 @@ void lvmnotify_send(struct cmd_context *cmd)
 				 cmd_name);
 
 	if (ret < 0) {
-		if (sd_bus_error_has_name(&error, SD_BUS_NO_SUCH_UNIT_ERROR))
+		if (sd_bus_error_has_name(&error, SD_BUS_SYSTEMD_NO_SUCH_UNIT_ERROR) ||
+		    sd_bus_error_has_name(&error, SD_BUS_DBUS_SERVICE_UNKNOWN_ERROR))
 			log_debug_dbus("%s: %s", _dbus_notification_failed_msg, error.message);
 		else
 			log_warn("WARNING: %s: %s", _dbus_notification_failed_msg, error.message);
