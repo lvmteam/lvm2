@@ -327,7 +327,9 @@ struct dm_status_raid {
 	uint64_t mismatch_count;
 	uint32_t dev_count;
 	char *raid_type;
+	/* A - alive,  a - alive not in-sync,  D - dead/failed */
 	char *dev_health;
+	/* idle, frozen, resync, recover, check, repair */
 	char *sync_action;
 };
 
