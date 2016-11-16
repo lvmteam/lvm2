@@ -158,16 +158,22 @@ class Manager(AutomatedProperties):
 			return p
 		return '/'
 
+	@staticmethod
+	def _use_lvm_shell(yes_no):
+		return dbus.Boolean(cmdhandler.set_execution(yes_no))
+
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
-		in_signature='b', out_signature='b')
-	def UseLvmShell(self, yes_no):
+		in_signature='b', out_signature='b',
+		async_callbacks=('cb', 'cbe'))
+	def UseLvmShell(self, yes_no, cb, cbe):
 		"""
 		Allow the client to enable/disable lvm shell, used for testing
 		:param yes_no:
 		:return: Nothing
 		"""
-		return dbus.Boolean(cmdhandler.set_execution(yes_no))
+		r = RequestEntry(-1, Manager._use_lvm_shell, (yes_no,), cb, cbe, False)
+		cfg.worker_q.put(r)
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
