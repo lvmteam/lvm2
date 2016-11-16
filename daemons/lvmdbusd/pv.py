@@ -18,7 +18,7 @@ from .utils import vg_obj_path_generate, n, pv_obj_path_generate, \
 from .loader import common
 from .request import RequestEntry
 from .state import State
-from .utils import round_size, mt_remove_dbus_objects
+from .utils import round_size
 
 
 # noinspection PyUnusedLocal
@@ -140,7 +140,7 @@ class Pv(AutomatedProperties):
 		if dbo:
 			rc, out, err = cmdhandler.pv_remove(pv_name, remove_options)
 			if rc == 0:
-				mt_remove_dbus_objects((dbo,))
+				cfg.load()
 			else:
 				# Need to work on error handling, need consistent
 				raise dbus.exceptions.DBusException(
