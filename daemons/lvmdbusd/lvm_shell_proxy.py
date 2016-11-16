@@ -202,12 +202,20 @@ class LVMShellProxy(object):
 
 		# Parse the report to see what happened
 		if report and len(report):
-			json_result = json.loads(report)
-			if 'log' in json_result:
-				if json_result['log'][-1:][0]['log_ret_code'] == '1':
-					rc = 0
-				else:
-					error_msg = self.get_error_msg()
+			try:
+				json_result = json.loads(report)
+				if 'log' in json_result:
+					if json_result['log'][-1:][0]['log_ret_code'] == '1':
+						rc = 0
+					else:
+						error_msg = self.get_error_msg()
+			except ValueError:
+				# The json is bad?, lets dump out for debug
+				with open('/tmp/json_bad', 'w') as debug:
+					debug.write(report)
+
+				# Bubble up the invalid json.
+				error_msg = "Invalid json %s" % report
 
 		if debug or rc != 0:
 			log_error(('CMD: %s' % cmd))
