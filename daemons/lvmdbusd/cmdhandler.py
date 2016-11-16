@@ -732,8 +732,8 @@ def lv_retrieve_with_segments():
 				'lv_attr', 'lv_tags', 'vg_uuid', 'lv_active', 'data_lv',
 				'metadata_lv', 'seg_pe_ranges', 'segtype', 'lv_parent',
 				'lv_role', 'lv_layout',
-			    'snap_percent', 'metadata_percent', 'copy_percent',
-			    'sync_percent', 'lv_metadata_size', 'move_pv', 'move_pv_uuid']
+				'snap_percent', 'metadata_percent', 'copy_percent',
+				'sync_percent', 'lv_metadata_size', 'move_pv', 'move_pv_uuid']
 
 	cmd = _dc('lvs', ['-a', '-o', ','.join(columns)])
 	rc, out, err = call(cmd)

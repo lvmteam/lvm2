@@ -17,6 +17,7 @@ import datetime
 
 import dbus
 from lvmdbusd import cfg
+# noinspection PyUnresolvedReferences
 from gi.repository import GLib
 import threading
 
@@ -507,6 +508,7 @@ def validate_tag(interface, tag):
 def _async_result(call_back, results):
 	log_debug('Results = %s' % str(results))
 	call_back(results)
+
 
 # Return result in main thread
 def mt_async_result(call_back, results):
