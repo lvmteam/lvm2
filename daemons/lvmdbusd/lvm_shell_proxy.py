@@ -42,16 +42,19 @@ def _quote_arg(arg):
 
 
 class LVMShellProxy(object):
-	def _read_until_prompt(self):
+	def _read_until_prompt(self, no_output=False):
 		stdout = ""
 		report = ""
 		stderr = ""
+		keep_reading = True
+		extra_passes = 2
 
 		# Try reading from all FDs to prevent one from filling up and causing
-		# a hang.  We are also assuming that we won't get the lvm prompt back
+		# a hang.  We were assuming that we won't get the lvm prompt back
 		# until we have already received all the output from stderr and the
-		# report descriptor too.
-		while not stdout.endswith(SHELL_PROMPT):
+		# report descriptor too, this is an incorrect assumption.  Lvm will
+		# return the prompt before we get the report!
+		while keep_reading:
 			try:
 				rd_fd = [
 					self.lvm_shell.stdout.fileno(),
@@ -89,6 +92,22 @@ class LVMShellProxy(object):
 				# Check to see if the lvm process died on us
 				if self.lvm_shell.poll():
 					raise Exception(self.lvm_shell.returncode, "%s" % stderr)
+
+				if stdout.endswith(SHELL_PROMPT):
+					# It appears that lvm doesn't write the report and flush
+					# that before it writes the shell prompt as occasionally
+					# we get the prompt with no report.
+					if no_output:
+						keep_reading = False
+					else:
+						# Most of the time we have data, if we have none lets
+						# take another spin and hope we get it.
+						if len(report) != 0:
+							keep_reading = False
+						else:
+							extra_passes -= 1
+							if extra_passes <= 0:
+								keep_reading = False
 
 			except IOError as ioe:
 				log_debug(str(ioe))
@@ -141,7 +160,7 @@ class LVMShellProxy(object):
 			fcntl(self.lvm_shell.stderr, F_SETFL, flags | os.O_NONBLOCK)
 
 			# wait for the first prompt
-			errors = self._read_until_prompt()[2]
+			errors = self._read_until_prompt(no_output=True)[2]
 			if errors and len(errors):
 				raise RuntimeError(errors)
 		except:
