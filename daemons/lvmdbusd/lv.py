@@ -738,15 +738,13 @@ class LvThinPool(Lv):
 		# Make sure we have a dbus object representing it
 		dbo = cfg.om.get_object_by_uuid_lvm_id(lv_uuid, lv_name)
 
-		lv_created = '/'
-
 		if dbo:
 			rc, out, err = cmdhandler.lv_lv_create(
 				lv_name, create_options, name, size_bytes)
 			if rc == 0:
 				full_name = "%s/%s" % (dbo.vg_name_lookup(), name)
 				cfg.load()
-				lv_created = cfg.om.get_object_path_by_lvm_id(full_name)
+				return cfg.om.get_object_path_by_lvm_id(full_name)
 			else:
 				raise dbus.exceptions.DBusException(
 					LV_INTERFACE,
@@ -756,7 +754,6 @@ class LvThinPool(Lv):
 				LV_INTERFACE,
 				'LV with uuid %s and name %s not present!' %
 				(lv_uuid, lv_name))
-		return lv_created
 
 	@dbus.service.method(
 		dbus_interface=THIN_POOL_INTERFACE,
