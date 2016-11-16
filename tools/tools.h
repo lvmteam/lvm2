@@ -242,4 +242,13 @@ int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg
 struct lv_props *get_lv_prop(int lvp_enum);
 struct lv_types *get_lv_type(int lvt_enum);
 
+int lvchange_properties_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_refresh_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_resync_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_syncaction_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_rebuild_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_monitor_poll_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvchange_persistent_cmd(struct cmd_context *cmd, int argc, char **argv);
+
 #endif

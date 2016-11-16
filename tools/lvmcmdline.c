@@ -113,6 +113,15 @@ static struct cmdline_context _cmdline;
  */
 struct command_function command_functions[COMMAND_ID_COUNT] = {
 	{ lvmconfig_general_CMD, lvmconfig },
+	{ lvchange_properties_CMD, lvchange_properties_cmd },
+	{ lvchange_resync_CMD, lvchange_resync_cmd },
+	{ lvchange_syncaction_CMD, lvchange_syncaction_cmd },
+	{ lvchange_rebuild_CMD, lvchange_rebuild_cmd },
+	{ lvchange_activate_CMD, lvchange_activate_cmd },
+	{ lvchange_refresh_CMD, lvchange_refresh_cmd },
+	{ lvchange_monitor_CMD, lvchange_monitor_poll_cmd },
+	{ lvchange_poll_CMD, lvchange_monitor_poll_cmd },
+	{ lvchange_persistent_CMD, lvchange_persistent_cmd },
 };
 #if 0
 	/* all raid-related type conversions */
