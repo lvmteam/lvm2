@@ -19,6 +19,7 @@
 #ifdef DEBUG
 #include <ctype.h>
 
+__attribute__ ((__unused__))
 static void _regex_print(struct rx_node *rx, int depth, unsigned show_nodes)
 {
 	int i, numchars;
