@@ -1484,7 +1484,8 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		 */
 		if (lv_is_origin(lv)) {
 			log_error("Can't add additional mirror images to "
-				  "mirrors that are under snapshots,");
+				  "mirror %s which is under snapshots.",
+				  display_lvname(lv));
 			return 0;
 		}
 
@@ -1767,13 +1768,12 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	uint32_t new_log_count;
 
 	if ((lp->corelog || lp->mirrorlog) && *lp->type_str && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
-		log_error("--corelog and --mirrorlog are only compatible with mirror devices");
+		log_error("--corelog and --mirrorlog are only compatible with mirror devices.");
 		return 0;
 	}
 
 	if (lp->merge_mirror) {
-		log_error("Unable to merge mirror images"
-			  "of segment type 'mirror'.");
+		log_error("Unable to merge mirror images of segment type 'mirror'.");
 		return 0;
 	}
 

@@ -1132,14 +1132,15 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			   struct logical_volume *lv, uint32_t le,
 			   uint64_t status)
 {
-	log_very_verbose("Stack %s:%" PRIu32 "[%" PRIu32 "] on LV %s:%" PRIu32,
-			 seg->lv->name, seg->le, area_num, lv->name, le);
+	log_very_verbose("Stack %s:" FMTu32 "[" FMTu32 "] on LV %s:" FMTu32 ".",
+			 display_lvname(seg->lv), seg->le, area_num,
+			 display_lvname(lv), le);
 
 	if (status & RAID_META) {
 		seg->meta_areas[area_num].type = AREA_LV;
 		seg_metalv(seg, area_num) = lv;
 		if (le) {
-			log_error(INTERNAL_ERROR "Meta le != 0");
+			log_error(INTERNAL_ERROR "Meta le != 0.");
 			return 0;
 		}
 		seg_metale(seg, area_num) = 0;
@@ -3617,16 +3618,16 @@ int lv_add_mirror_areas(struct alloc_handle *ah,
 
 	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
 		if (!(seg = find_seg_by_le(lv, current_le))) {
-			log_error("Failed to find segment for %s extent %"
-				  PRIu32, lv->name, current_le);
+			log_error("Failed to find segment for %s extent " FMTu32 ".",
+				  display_lvname(lv), current_le);
 			return 0;
 		}
 
 		/* Allocator assures aa[0].len <= seg->area_len */
 		if (aa[0].len < seg->area_len) {
 			if (!lv_split_segment(lv, seg->le + aa[0].len)) {
-				log_error("Failed to split segment at %s "
-					  "extent %" PRIu32, lv->name, le);
+				log_error("Failed to split segment at %s extent " FMTu32 ".",
+					  display_lvname(lv), le);
 				return 0;
 			}
 		}
@@ -3675,7 +3676,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 	seg = first_seg(lv);
 
 	if (dm_list_size(&lv->segments) != 1 || seg_type(seg, 0) != AREA_LV) {
-		log_error("Mirror layer must be inserted before adding mirrors");
+		log_error("Mirror layer must be inserted before adding mirrors.");
 		return 0;
 	}
 
@@ -3685,7 +3686,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 			return_0;
 
 	if (region_size && region_size != seg->region_size) {
-		log_error("Conflicting region_size");
+		log_error("Conflicting region_size.");
 		return 0;
 	}
 
@@ -3694,7 +3695,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 
 	if (!_lv_segment_add_areas(lv, seg, new_area_count)) {
 		log_error("Failed to allocate widened LV segment for %s.",
-			  lv->name);
+			  display_lvname(lv));
 		return 0;
 	}
 

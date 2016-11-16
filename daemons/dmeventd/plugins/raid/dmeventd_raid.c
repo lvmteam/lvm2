@@ -61,7 +61,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 		if (status->insync_regions < status->total_regions) {
 			if (!state->warned)
 				log_warn("WARNING: waiting for resynchronization to finish "
-					 "before initiating repair on RAID device %s", device);
+					 "before initiating repair on RAID device %s.", device);
 
 			state->warned = 1;
 			goto out; /* Not yet done syncing with accessible devices */

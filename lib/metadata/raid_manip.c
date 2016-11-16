@@ -283,8 +283,8 @@ static int _raid_in_sync(struct logical_volume *lv)
 		 * https://bugzilla.redhat.com/1210637
 		 */
 		if (!lv_raid_percent(lv, &sync_percent)) {
-			log_error("Unable to determine sync status of %s/%s.",
-				  lv->vg->name, lv->name);
+			log_error("Unable to determine sync status of %s.",
+				  display_lvname(lv));
 			return 0;
 		}
 		if (sync_percent > DM_PERCENT_0)
