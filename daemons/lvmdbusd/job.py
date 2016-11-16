@@ -8,11 +8,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .automatedproperties import AutomatedProperties
-from .utils import job_obj_path_generate, mt_async_result, log_debug
+from .utils import job_obj_path_generate, mt_async_result
 from . import cfg
 from .cfg import JOB_INTERFACE
 import dbus
 import threading
+# noinspection PyUnresolvedReferences
 from gi.repository import GLib
 
 
