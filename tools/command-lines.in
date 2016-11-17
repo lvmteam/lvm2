@@ -547,7 +547,7 @@ DESC: Combine LV with a previously split snapshot LV.
 # and the LV type is known.
 
 lvconvert --repair LV_raid_mirror_thinpool
-OO: --usepolicies, OO_LVCONVERT
+OO: --usepolicies, --interval Number, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_repair_pvs_or_thinpool
 DESC: Replace failed PVs in a raid or mirror LV.
