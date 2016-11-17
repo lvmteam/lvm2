@@ -15,14 +15,9 @@ import collections
 import traceback
 import os
 
-try:
-	from . import cfg
-	from .utils import pv_dest_ranges, log_debug, log_error
-	from .lvm_shell_proxy import LVMShellProxy
-except SystemError:
-	import cfg
-	from utils import pv_dest_ranges, log_debug, log_error
-	from lvm_shell_proxy import LVMShellProxy
+from lvmdbusd import cfg
+from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error
+from lvmdbusd.lvm_shell_proxy import LVMShellProxy
 
 try:
 	import simplejson as json
@@ -117,6 +112,7 @@ _t_call = call_lvm
 
 def _shell_cfg():
 	global _t_call
+	# noinspection PyBroadException
 	try:
 		lvm_shell = LVMShellProxy()
 		_t_call = lvm_shell.call_lvm
@@ -750,4 +746,4 @@ if __name__ == '__main__':
 	pv_data = pv_retrieve_with_segs()
 
 	for p in pv_data:
-		log_debug(str(p))
+		print(str(p))
