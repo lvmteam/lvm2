@@ -2241,7 +2241,11 @@ static int _dm_stats_populate_region(struct dm_stats *dms, uint64_t region_id,
 	if (!_stats_bound(dms))
 		return_0;
 
-	if (!region || !_stats_parse_region(dms, resp, region, region->timescale)) {
+	if (!region) {
+		log_error("Cannot populate empty handle before dm_stats_list().");
+		return 0;
+	}
+	if (!_stats_parse_region(dms, resp, region, region->timescale)) {
 		log_error("Could not parse @stats_print message response.");
 		return 0;
 	}
