@@ -229,10 +229,6 @@ class LVMShellProxy(object):
 					else:
 						error_msg = self.get_error_msg()
 			except ValueError:
-				# The json is bad?, lets dump out for debug
-				with open('/tmp/json_bad', 'w') as debug:
-					debug.write(report)
-
 				# Bubble up the invalid json.
 				error_msg = "Invalid json %s" % report
 
