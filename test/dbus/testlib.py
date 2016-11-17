@@ -15,6 +15,7 @@ import xml.etree.ElementTree as Et
 from collections import OrderedDict
 import dbus
 import os
+import sys
 
 BUS_NAME = os.getenv('LVM_DBUS_NAME', 'com.redhat.lvmdbus1')
 BASE_INTERFACE = 'com.redhat.lvmdbus1'
@@ -41,6 +42,11 @@ def rs(length, suffix, character_set=string.ascii_lowercase):
 
 def mib(s):
 	return 1024 * 1024 * s
+
+
+def std_err_print(*args):
+	sys.stderr.write(' '.join(map(str, args)) + '\n')
+	sys.stderr.flush()
 
 
 class DbusIntrospection(object):

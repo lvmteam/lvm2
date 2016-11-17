@@ -14,10 +14,10 @@ import dbus
 # noinspection PyUnresolvedReferences
 from dbus.mainloop.glib import DBusGMainLoop
 import unittest
-import sys
 import time
 import pyudev
 from testlib import *
+import testlib
 
 g_tmo = 0
 
@@ -44,12 +44,7 @@ else:
 # validation to limit the massive amount of introspection calls we make as
 # that method prevents things from executing concurrently
 if pv_device_list:
-	validate_introspection = False
-
-
-def std_err_print(*args):
-	sys.stderr.write(' '.join(map(str, args)) + '\n')
-	sys.stderr.flush()
+	testlib.validate_introspection = False
 
 
 def vg_n():
