@@ -170,6 +170,8 @@ class Manager(AutomatedProperties):
 		"""
 		Allow the client to enable/disable lvm shell, used for testing
 		:param yes_no:
+		:param cb:	dbus python call back parameter, not client visible
+		:param cbe:	dbus python error call back parameter, not client visible
 		:return: Nothing
 		"""
 		r = RequestEntry(-1, Manager._use_lvm_shell, (yes_no,), cb, cbe, False)
