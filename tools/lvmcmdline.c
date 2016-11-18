@@ -123,9 +123,14 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 	{ lvchange_poll_CMD, lvchange_monitor_poll_cmd },
 	{ lvchange_persistent_CMD, lvchange_persistent_cmd },
 
-	/* lvconvert utilities related to snapshots and repair. */
+	/* lvconvert utilities related to repair. */
 	{ lvconvert_repair_pvs_or_thinpool_CMD,	lvconvert_repair_pvs_or_thinpool_cmd },
 	{ lvconvert_replace_pv_CMD, lvconvert_replace_pv_cmd },
+
+	/* lvconvert utilities related to snapshots. */
+	{ lvconvert_split_cow_snapshot_CMD, lvconvert_split_snapshot_cmd },
+	{ lvconvert_merge_snapshot_CMD, lvconvert_merge_snapshot_cmd },
+	{ lvconvert_combine_split_snapshot_CMD, lvconvert_combine_split_snapshot_cmd },
 };
 #if 0
 	/* all raid-related type conversions */
@@ -147,11 +152,9 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 	{ lvconvert_split_and_delete_cachepool_CMD,	lvconvert_split_and_delete_cachepool_fn },
 	{ lvconvert_swap_pool_metadata_CMD,		lvconvert_swap_pool_metadata_fn },
 
-	/* utilities related to snapshots and repair. */
+	/* other misc. */
 
 	{ lvconvert_merge_CMD,				lvconvert_merge_fn },
-	{ lvconvert_combine_split_snapshot_CMD,		lvconvert_combine_split_snapshot_fn },
-	{ lvconvert_split_cow_snapshot_CMD,		lvconvert_split_cow_snapshot_fn },
 	{ lvconvert_poll_start_CMD,			lvconvert_poll_start_fn },
 
 #endif

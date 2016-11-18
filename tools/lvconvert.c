@@ -1999,34 +1999,13 @@ try_new_takeover_or_reshape:
 	return 0;
 }
 
-static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volume *cow,
-				    struct lvconvert_params *lp)
+static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volume *cow)
 {
 	struct volume_group *vg = cow->vg;
 	const char *cow_name = display_lvname(cow);
 
-	if (!lv_is_cow(cow)) {
-		log_error("%s is not a snapshot.", cow_name);
-		return 0;
-	}
-
-	if (lv_is_origin(cow) || lv_is_external_origin(cow)) {
-		log_error("Unable to split LV %s that is a snapshot origin.", cow_name);
-		return 0;
-	}
-
-	if (lv_is_merging_cow(cow)) {
-		log_error("Unable to split off snapshot %s being merged into its origin.", cow_name);
-		return 0;
-	}
-
 	if (lv_is_virtual_origin(origin_from_cow(cow))) {
 		log_error("Unable to split off snapshot %s with virtual origin.", cow_name);
-		return 0;
-	}
-
-	if (lv_is_thin_pool(cow) || lv_is_pool_metadata_spare(cow)) {
-		log_error("Unable to split off LV %s needed by thin volume(s).", cow_name);
 		return 0;
 	}
 
@@ -2041,19 +2020,12 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return 0;
 	}
 
-	if (!vg_check_status(vg, LVM_WRITE))
-		return_0;
-
-	if (lv_is_pvmove(cow) || lv_is_mirror_type(cow) || lv_is_raid_type(cow) || lv_is_thin_type(cow)) {
-		log_error("LV %s type is unsupported with --splitsnapshot.", display_lvname(cow));
-		return 0;
-	}
-
 	if (lv_is_active_locally(cow)) {
 		if (!lv_check_not_in_use(cow, 1))
 			return_0;
 
-		if ((lp->force == PROMPT) && !lp->yes &&
+		if ((arg_count(cmd, force_ARG) == PROMPT) &&
+		    !arg_count(cmd, yes_ARG) &&
 		    lv_is_visible(cow) &&
 		    lv_is_active(cow)) {
 			if (yes_no_prompt("Do you really want to split off active "
@@ -2172,36 +2144,16 @@ static int _lvconvert_uncache(struct cmd_context *cmd,
 
 static int _lvconvert_snapshot(struct cmd_context *cmd,
 			       struct logical_volume *lv,
-			       struct lvconvert_params *lp)
+			       const char *origin_name)
 {
 	struct logical_volume *org;
 	const char *snap_name = display_lvname(lv);
+	uint32_t chunk_size;
+	int zero;
 
-	if (lv_is_cache_type(lv)) {
-		log_error("Snapshots are not yet supported with cache type LVs %s.",
-			  snap_name);
-		return 0;
-	}
-
-	if (lv_is_mirrored(lv)) {
-		log_error("Unable to convert mirrored LV %s into a snapshot.", snap_name);
-		return 0;
-	}
-
-	if (lv_is_origin(lv)) {
-		/* Unsupported stack */
-		log_error("Unable to convert origin %s into a snapshot.", snap_name);
-		return 0;
-	}
-
-	if (lv_is_pool(lv)) {
-		log_error("Unable to convert pool LVs %s into a snapshot.", snap_name);
-		return 0;
-	}
-
-	if (!(org = find_lv(lv->vg, lp->origin_name))) {
+	if (!(org = find_lv(lv->vg, origin_name))) {
 		log_error("Couldn't find origin volume %s in Volume group %s.",
-			  lp->origin_name, lv->vg->name);
+			  origin_name, lv->vg->name);
 		return 0;
 	}
 
@@ -2210,22 +2162,36 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!cow_has_min_chunks(lv->vg, lv->le_count, lp->chunk_size))
+	chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
+	if (chunk_size < 8 || chunk_size > 1024 || !is_power_of_2(chunk_size)) {
+		log_error("Chunk size must be a power of 2 in the range 4K to 512K.");
+		return 0;
+	}
+	log_verbose("Setting chunk size to %s.", display_size(cmd, chunk_size));
+
+	if (!cow_has_min_chunks(lv->vg, lv->le_count, chunk_size))
 		return_0;
 
-	if (lv_is_locked(org) ||
-	    (lv_is_cache_type(org) && !lv_is_cache(org)) ||
+	/*
+	 * check_lv_rules() checks cannot be done via command definition
+	 * rules because this LV is not processed by process_each_lv.
+	 */
+	if (lv_is_locked(org) || lv_is_pvmove(org)) {
+		log_error("Unable to use LV %s as snapshot origin: LV is %s.",
+			  display_lvname(lv), lv_is_locked(org) ? "locked" : "pvmove");
+		return 0;
+	}
+
+	/*
+	 * check_lv_types() checks cannot be done via command definition
+	 * LV_foo specification because this LV is not processed by process_each_lv.
+	 */
+	if ((lv_is_cache_type(org) && !lv_is_cache(org)) ||
 	    lv_is_thin_type(org) ||
-	    lv_is_pvmove(org) ||
 	    lv_is_mirrored(org) ||
 	    lv_is_cow(org)) {
-		log_error("Unable to convert an LV into a snapshot of a %s LV.",
-			  lv_is_locked(org) ? "locked" :
-			  lv_is_cache_type(org) ? "cache type" :
-			  lv_is_thin_type(org) ? "thin type" :
-			  lv_is_pvmove(org) ? "pvmove" :
-			  lv_is_mirrored(org) ? "mirrored" :
-			  "snapshot");
+		log_error("Unable to use LV %s as snapshot origin: invald LV type.",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -2233,7 +2199,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		 snap_name);
 	log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 
-	if (!lp->yes &&
+	if (!arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
 			  snap_name) == 'n') {
 		log_error("Conversion aborted.");
@@ -2245,7 +2211,12 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lp->zero || !(lv->status & LVM_WRITE))
+	if (first_seg(lv)->segtype->flags & SEG_CANNOT_BE_ZEROED)
+		zero = 0;
+	else
+		zero = arg_int_value(cmd, zero_ARG, 1);
+
+	if (!zero || !(lv->status & LVM_WRITE))
 		log_warn("WARNING: %s not zeroed.", snap_name);
 	else {
 		lv->status |= LV_TEMPORARY;
@@ -2265,7 +2236,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	if (!archive(lv->vg))
 		return_0;
 
-	if (!vg_add_snapshot(org, lv, NULL, org->le_count, lp->chunk_size)) {
+	if (!vg_add_snapshot(org, lv, NULL, org->le_count, chunk_size)) {
 		log_error("Couldn't create snapshot.");
 		return 0;
 	}
@@ -2281,36 +2252,13 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 
 static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 					 struct logical_volume *lv,
-					 struct lvconvert_params *lp)
+					 struct logical_volume **lv_to_poll)
 {
 	int merge_on_activate = 0;
 	struct logical_volume *origin = origin_from_cow(lv);
 	struct lv_segment *snap_seg = find_snapshot(lv);
 	struct lvinfo info;
 	dm_percent_t snap_percent;
-
-	/* Check if merge is possible */
-	if (!lv_is_cow(lv)) {
-		log_error("\"%s\" is not a mergeable logical volume.",
-			  lv->name);
-		return 0;
-	}
-
-	if (lv_is_merging_cow(lv)) {
-		log_error("Snapshot %s is already merging.", lv->name);
-		return 0;
-	}
-
-	if (lv_is_merging_origin(origin)) {
-		log_error("Snapshot %s is already merging into the origin.",
-			  find_snapshot(origin)->cow->name);
-		return 0;
-	}
-
-	if (lv_is_virtual_origin(origin)) {
-		log_error("Snapshot %s has virtual origin.", lv->name);
-		return 0;
-	}
 
 	if (lv_is_external_origin(origin_from_cow(lv))) {
 		log_error("Cannot merge snapshot \"%s\" into "
@@ -2375,13 +2323,17 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		if (!lv_update_and_reload(origin))
 			return_0;
 
-		if (lv_has_target_type(origin->vg->vgmem, origin, NULL,
+		if (!lv_has_target_type(origin->vg->vgmem, origin, NULL,
 				       TARGET_NAME_SNAPSHOT_MERGE)) {
-			lp->need_polling = 1;
-			lp->lv_to_poll = origin;
-		} else
 			/* Race during table reload prevented merging */
 			merge_on_activate = 1;
+
+		} else if (!lv_info(cmd, origin, 0, &info, 0, 0) || !info.exists) {
+			log_print_unless_silent("Conversion starts after activation.");
+			merge_on_activate = 1;
+		} else {
+			*lv_to_poll = origin;
+		}
 	}
 
 	if (merge_on_activate)
@@ -3447,7 +3399,7 @@ static int _lvconvert_cache(struct cmd_context *cmd,
 static int _convert_cow_snapshot_splitsnapshot(struct cmd_context *cmd, struct logical_volume *lv,
 					       struct lvconvert_params *lp)
 {
-	return _lvconvert_splitsnapshot(cmd, lv, lp);
+	return _lvconvert_splitsnapshot(cmd, lv);
 }
 
 /*
@@ -3457,7 +3409,7 @@ static int _convert_cow_snapshot_splitsnapshot(struct cmd_context *cmd, struct l
 static int _convert_cow_snapshot_merge(struct cmd_context *cmd, struct logical_volume *lv,
 				       struct lvconvert_params *lp)
 {
-	return _lvconvert_merge_old_snapshot(cmd, lv, lp);
+	/* return _lvconvert_merge_old_snapshot(cmd, lv, lp); */
 }
 
 /*
@@ -3797,7 +3749,7 @@ static int _convert_raid_merge(struct cmd_context *cmd, struct logical_volume *l
 static int _convert_raid_snapshot(struct cmd_context *cmd, struct logical_volume *lv,
 				  struct lvconvert_params *lp)
 {
-	return _lvconvert_snapshot(cmd, lv, lp);
+	return _lvconvert_snapshot(cmd, lv, lp->origin_name);
 }
 
 /*
@@ -3936,7 +3888,7 @@ static int _convert_striped_merge(struct cmd_context *cmd, struct logical_volume
 static int _convert_striped_snapshot(struct cmd_context *cmd, struct logical_volume *lv,
 				     struct lvconvert_params *lp)
 {
-	return _lvconvert_snapshot(cmd, lv, lp);
+	return _lvconvert_snapshot(cmd, lv, lp->origin_name);
 }
 
 /*
@@ -4681,6 +4633,11 @@ struct lvconvert_result {
 	struct dm_list poll_idls;
 };
 
+
+/*
+ * repair-related lvconvert utilities
+ */
+
 static int _lvconvert_repair_pvs_mirror(struct cmd_context *cmd, struct logical_volume *lv,
 			struct processing_handle *handle,
 			struct dm_list *use_pvh)
@@ -4878,11 +4835,12 @@ int lvconvert_repair_pvs_or_thinpool_cmd(struct cmd_context *cmd, int argc, char
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
 
 	if (lr.need_polling) {
-		dm_list_iterate_items(idl, &lr.poll_idls)
+		dm_list_iterate_items(idl, &lr.poll_idls) {
 			poll_ret = _lvconvert_poll_by_id(cmd, idl->id,
 						arg_is_set(cmd, background_ARG), 0, 0);
-		if (poll_ret > ret)
-			ret = poll_ret;
+			if (poll_ret > ret)
+				ret = poll_ret;
+		}
 	}
 
 	destroy_processing_handle(cmd, handle);
@@ -4954,5 +4912,154 @@ int lvconvert_replace_pv_cmd(struct cmd_context *cmd, int argc, char **argv)
 	destroy_processing_handle(cmd, handle);
 
 	return ret;
+}
+
+
+/*
+ * snapshot-related lvconvert utilities
+ */
+
+
+/*
+ * Merge a COW snapshot LV into its origin.
+ */
+
+static int _lvconvert_merge_snapshot_single(struct cmd_context *cmd,
+                                       struct logical_volume *lv,
+                                       struct processing_handle *handle)
+{
+	struct lvconvert_result *lr = (struct lvconvert_result *) handle->custom_handle;
+	struct logical_volume *lv_to_poll = NULL;
+	struct convert_poll_id_list *idl;
+
+	if (!_lvconvert_merge_old_snapshot(cmd, lv, &lv_to_poll))
+		return_ECMD_FAILED;
+
+	if (lv_to_poll) {
+		if (!(idl = _convert_poll_id_list_create(cmd, lv_to_poll)))
+			return_ECMD_FAILED;
+		dm_list_add(&lr->poll_idls, &idl->list);
+		lr->need_polling = 1;
+	}
+
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_merge_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	struct lvconvert_result lr = { 0 };
+	struct convert_poll_id_list *idl;
+	int ret, poll_ret;
+
+	dm_list_init(&lr.poll_idls);
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &lr;
+
+	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			      handle, NULL, &_lvconvert_merge_snapshot_single);
+
+	if (lr.need_polling) {
+		dm_list_iterate_items(idl, &lr.poll_idls) {
+			poll_ret = _lvconvert_poll_by_id(cmd, idl->id,
+						arg_is_set(cmd, background_ARG), 1, 0);
+			if (poll_ret > ret)
+				ret = poll_ret;
+		}
+	}
+
+	destroy_processing_handle(cmd, handle);
+
+	return ret;
+}
+
+/*
+ * Separate a COW snapshot from its origin.
+ *
+ * lvconvert --splitsnapshot LV_snapshot
+ * lvconvert_split_cow_snapshot
+ */
+
+static int _lvconvert_split_snapshot_single(struct cmd_context *cmd,
+                                       struct logical_volume *lv,
+                                       struct processing_handle *handle)
+{
+	if (!_lvconvert_splitsnapshot(cmd, lv))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_split_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_split_snapshot_single);
+}
+
+/*
+ * Combine two LVs that were once an origin/cow pair of LVs, were then
+ * separated with --splitsnapshot, and now with this command are combined again
+ * into the origin/cow pair.
+ *
+ * This is an obscure command that has little to no real uses.
+ *
+ * The command has unusual handling of position args.  The first position arg
+ * will become the origin LV, and is not processed by process_each_lv.  The
+ * second position arg will become the cow LV and is processed by
+ * process_each_lv.
+ *
+ * The single function can grab the origin LV from position_argv[0].
+ *
+ * begin with an ordinary LV foo:
+ * lvcreate -n foo -L 1 vg
+ *
+ * create a cow snapshot of foo named foosnap:
+ * lvcreate -s -L 1 -n foosnap vg/foo
+ *
+ * now, foo is an "origin LV" and foosnap is a "cow LV"
+ * (foosnap matches LV_snapshot aka lv_is_cow)
+ *
+ * split the two LVs apart:
+ * lvconvert --splitsnapshot vg/foosnap
+ *
+ * now, foo is *not* an origin LV and foosnap is *not* a cow LV
+ * (foosnap does not match LV_snapshot)
+ *
+ * now, combine the two LVs again:
+ * lvconvert --snapshot vg/foo vg/foosnap
+ *
+ * after this, foosnap will match LV_snapshot again.
+ *
+ * FIXME: when splitsnapshot is run, the previous cow LV should be
+ * flagged in the metadata somehow, and then that flag should be
+ * required here.  As it is now, the first and second args
+ * (origin and cow) can be swapped and nothing catches it.
+ */
+
+static int _lvconvert_combine_split_snapshot_single(struct cmd_context *cmd,
+                                       struct logical_volume *lv,
+                                       struct processing_handle *handle)
+{
+	const char *origin_name = cmd->position_argv[0];
+
+	/* If origin_name includes VG name, the VG name is removed. */
+	if (!validate_lvname_param(cmd, &lv->vg->name, &origin_name))
+		return_ECMD_FAILED;
+
+	if (!_lvconvert_snapshot(cmd, lv, origin_name))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	return process_each_lv(cmd, 1, cmd->position_argv + 1, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_combine_split_snapshot_single);
 }
 

@@ -33,7 +33,7 @@ lvcreate -L3 -n cow $vg
 not lvconvert -s cow $vg/$lv1
 
 # Use cached LV with 'striped' cow volume
-lvconvert -y -s $vg/$lv1 cow
+lvconvert -y -s $vg/$lv1 $vg/cow
 check lv_field $vg/cow segtype linear
 check lv_field $vg/$lv1 segtype cache
 

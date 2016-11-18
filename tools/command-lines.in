@@ -476,9 +476,6 @@ FLAGS: SECONDARY_SYNTAX
 
 ---
 
-# lvconvert utilities related to snapshots and repair.
-# Create a new command set for these and migrate them out of lvconvert?
-
 # FIXME: lvconvert --merge is an extremely ambiguous command.
 # It can do very different operations, but which one depends
 # on knowing the LV type.  So, the command doesn't know what
@@ -509,28 +506,60 @@ ID: lvconvert_merge
 DESC: Merge LV that was previously split from a mirror.
 DESC: Merge thin LV into its origin LV.
 DESC: Merge COW snapshot LV into its origin.
-RULE: all not lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
 
 ---
 
-# FIXME: by using two different positional args, this is the
-# single violation of the standard method of using process_each_lv().
-# Before calling process_each, it steals the first positional arg
-# and adjusts argv/argc so it's not seen by process_each.
+# lvconvert snapshot-related utilities
+# Create a new command set for these and migrate them out of lvconvert?
+
+lvconvert --mergesnapshot LV_snapshot ...
+OO: --background, --interval Number, OO_LVCONVERT
+ID: lvconvert_merge_snapshot
+DESC: Merge LV that was previously split from a mirror.
+RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+RULE: all and lv_is_visible
+
+---
+
+lvconvert --splitsnapshot LV_snapshot
+OO: OO_LVCONVERT
+ID: lvconvert_split_cow_snapshot
+DESC: Separate a COW snapshot from its origin LV.
+RULE: all not lv_is_locked lv_is_pvmove lv_is_origin lv_is_external_origin lv_is_merging_cow
+
+---
+
+# NB: an unsual use of position args here, the first pos arg
+# (will become origin LV) is not passed to process_each,
+# the second pos arg (will become cow LV) is given to
+# process_each.  Because the first pos LV is not handled
+# by process_each_lv, it cannot be checked against this
+# command def, so a specific LV type in the first pos
+# will not be checked.
 
 # alternate form of lvconvert --snapshot
-lvconvert --type snapshot LV_linear_striped_raid LV_snapshot
+lvconvert --type snapshot LV LV_linear
 OO: --snapshot, --chunksize SizeKB, --zero Bool, OO_LVCONVERT
 ID: lvconvert_combine_split_snapshot
-DESC: Combine LV with a previously split snapshot LV.
+DESC: Combine a former COW snapshot (second arg) with a former
+DESC: origin LV (first arg) to reverse a splitsnapshot command.
 FLAGS: SECONDARY_SYNTAX
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all and lv_is_visible
 
-lvconvert --snapshot LV_linear_striped_raid LV_snapshot
+lvconvert --snapshot LV LV_linear
 OO: --type snapshot, --chunksize SizeKB, --zero Bool, OO_LVCONVERT
 ID: lvconvert_combine_split_snapshot
-DESC: Combine LV with a previously split snapshot LV.
+DESC: Combine a former COW snapshot (second arg) with a former
+DESC: origin LV (first arg) to reverse a splitsnapshot command.
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all and lv_is_visible
 
 ---
+
+# lvconvert repair/replace utilitiles
+# Create a new command set for these and migrate them out of lvconvert?
 
 # FIXME: use specific option names to distinguish these two
 # very different commands, e.g.
@@ -552,21 +581,14 @@ OP: PV ...
 ID: lvconvert_repair_pvs_or_thinpool
 DESC: Replace failed PVs in a raid or mirror LV.
 DESC: Repair a thin pool.
-
----
+RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --replace PV LV_raid
 OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_replace_pv
 DESC: Replace specific PV(s) in a raid* LV with another PV.
-
----
-
-lvconvert --splitsnapshot LV_snapshot
-OO: OO_LVCONVERT
-ID: lvconvert_split_cow_snapshot
-DESC: Separate a COW snapshot from its origin LV.
+RULE: all not lv_is_locked lv_is_pvmove
 
 ---
 

@@ -54,7 +54,7 @@ mkdir test_mnt
 
 setup_merge_ $vg1 $lv1
 mount "$(lvdev_ $vg1 $lv1)" test_mnt
-lvconvert --merge $vg1/$(snap_lv_name_ $lv1)
+lvconvert --mergesnapshot $vg1/$(snap_lv_name_ $lv1)
 umount test_mnt
 vgchange -an $vg1
 
