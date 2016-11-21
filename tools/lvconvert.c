@@ -2068,6 +2068,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
+		if (!lv_check_transient(lv)) /* TODO check this in lib for all commands? */
+			stack; /* TODO: break here upon fail or always try to fix it? */
+
 		_lvconvert_raid_repair_ask(cmd, lp, &replace);
 
 		if (replace) {

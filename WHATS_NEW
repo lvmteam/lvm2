@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  Use transient raid check before repairing raid volume.
   Implement transient status check for raid volumes.
   Only log msg as debug if lvm2-lvmdbusd unit missing for D-Bus notification.
   Missing stripe filler now could be also 'zero'.
