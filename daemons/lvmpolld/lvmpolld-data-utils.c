@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <signal.h>
 
+static const char LVM_SYSTEM_DIR[] = "LVM_SYSTEM_DIR=";
+
 static char *_construct_full_lvname(const char *vgname, const char *lvname)
 {
 	char *name;
@@ -52,7 +54,7 @@ static char *_construct_lvm_system_dir_env(const char *sysdir)
 
 	*env = '\0';
 
-	if (sysdir && dm_snprintf(env, l, "LVM_SYSTEM_DIR=%s", sysdir) < 0) {
+	if (sysdir && dm_snprintf(env, l, "%s%s", LVM_SYSTEM_DIR, sysdir) < 0) {
 		dm_free(env);
 		env = NULL;
 	}
@@ -259,8 +261,8 @@ static void _pdlv_locked_dump(struct buffer *buff, const struct lvmpolld_lv *pdl
 		buffer_append(buff, tmp);
 	if (dm_snprintf(tmp, sizeof(tmp), "\t\tlvm_command_interval=\"%s\"\n", pdlv->sinterval ?: "<undefined>") > 0)
 		buffer_append(buff, tmp);
-	if (dm_snprintf(tmp, sizeof(tmp), "\t\tLVM_SYSTEM_DIR=\"%s\"\n",
-			(*pdlv->lvm_system_dir_env ? (pdlv->lvm_system_dir_env + strlen("LVM_SYSTEM_DIR=")) : "<undefined>")) > 0)
+	if (dm_snprintf(tmp, sizeof(tmp), "\t\t%s\"%s\"\n", LVM_SYSTEM_DIR,
+			(*pdlv->lvm_system_dir_env ? (pdlv->lvm_system_dir_env + (sizeof(LVM_SYSTEM_DIR) - 1)) : "<undefined>")) > 0)
 		buffer_append(buff, tmp);
 	if (dm_snprintf(tmp, sizeof(tmp), "\t\tlvm_command_pid=%d\n", pdlv->cmd_pid) > 0)
 		buffer_append(buff, tmp);
