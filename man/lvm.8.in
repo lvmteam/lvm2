@@ -328,7 +328,7 @@ For reporting commands, display only rows that match \fISelection\fP criteria.
 All rows are displayed with the additional "selected" column (\fB-o selected\fP)
 showing 1 if the row matches the \fISelection\fP and 0 otherwise. For non-reporting
 commands which process LVM entities, the selection can be used to match items
-to process. See \fBSELECTION CRITERIA\fP section of this man page for more
+to process. See \fBSelection\fP section in \fBlvmreport\fP(7)  man page for more
 information about the way the selection criteria are constructed.
 .
 .HP
@@ -639,108 +639,6 @@ volume types are an example of this.  Other logical volume types may
 require more than one command to create.  The cache (\fBlvmcache\fP(7))
 and thin provisioning (\fBlvmthin\fP(7)) types are examples of this.
 .
-.SH SELECTION CRITERIA
-.
-The selection criteria are a set of \fBstatements\fP combined by \fBlogical
-and grouping operators\fP. The \fBstatement\fP consists of \fBcolumn\fP
-name for which a set of valid \fBvalues\fP is defined using
-\fBcomparison operators\fP. For complete list of column names (fields)
-that can be used in selection, see the output of \fB<lvm reporting command> -S help\fP.
-.P
-.SS Comparison operators \fR(cmp_op)
-.sp
-.PD 0
-.TP
-.B =~
-Matching regular expression.
-.TP
-.B !~
-Not matching regular expression.
-.TP
-.B =
-Equal to.
-.TP
-.B !=
-Not equal to.
-.TP
-.B >=
-Greater than or equal to.
-.TP
-.B >
-Greater than
-.TP
-.B <=
-Less than or equal to.
-.TP
-.B <
-Less than.
-.PD
-.P
-.SS Binary logical operators \fR(cmp_log)
-.sp
-.PD 0
-.TP
-.B &&
-All fields must match
-.TP
-.B ,
-All fields must match
-.TP
-.B ||
-At least one field must match
-.TP
-.B #
-At least one field must match
-.PD
-.P
-.SS Unary logical operators
-.TP
-.B !
-Logical negation
-.P
-.SS Grouping operators
-.sp
-.PD 0
-.TP
-.B (
-Left parenthesis
-.TP
-.B )
-Right parenthesis
-.TP
-.B [
-List start
-.TP
-.B ]
-List end
-.TP
-.B {
-List subset start
-.TP
-.B }
-List subset end
-.PD
-.SS Informal grammar specification
-.HP
-.BR STATEMENT " = " column " cmp_op " VALUE " | " \%STATEMENT " log_op " STATEMENT " | " \%(STATEMENT) " | " \%!(STATEMENT)
-.br
-.HP
-.BR VALUE " = " [VALUE " log_op " VALUE]
-.br
-For list-based types: string list. Matches strictly.
-The log_op must always be of one type within the whole list value.
-.HP
-.BR VALUE " = " {VALUE " log_op " VALUE}
-.br
-For list-based types: string list. Matches a subset.
-The log_op must always be of one type within the whole list value.
-.HP
-.BR VALUE " = " value
-.br
-For scalar types: number (integer), size (floating point number
-with size unit suffix), percent (floating point number with or
-without % suffix), string.
-.
 .SH DIAGNOSTICS
 .
 All tools return a status code of zero on success or non-zero on failure.
@@ -835,6 +733,7 @@ directly.
 .nh
 .BR lvm.conf (5),
 .BR lvmcache (7),
+.BR lvmreport(7),
 .BR lvmthin (7),
 .BR clvmd (8),
 .BR dmsetup (8),
