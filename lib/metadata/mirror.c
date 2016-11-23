@@ -793,9 +793,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 		detached_log_lv = detach_mirror_log(mirrored_seg);
 		if (!remove_layer_from_lv(lv, sub_lv))
 			return_0;
-		lv->status &= ~MIRROR;
-		lv->status &= ~MIRRORED;
-		lv->status &= ~LV_NOTSYNCED;
+		lv->status &= ~(MIRROR | MIRRORED | LV_NOTSYNCED);
 	}
 
 	/*
@@ -965,16 +963,14 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			log_error("Failed to add mirror images.");
 			return 0;
 		}
-                /*
-                 * No longer a mirror? Even though new_area_count was 1,
-                 * _merge_mirror_images may have resulted into lv being still a
-                 * mirror. Fix up the flags if we only have one image left.
-                 */
-                if (lv_mirror_count(lv) == 1) {
-                    lv->status &= ~MIRROR;
-                    lv->status &= ~MIRRORED;
-                    lv->status &= ~LV_NOTSYNCED;
-                }
+		/*
+		 * No longer a mirror? Even though new_area_count was 1,
+		 * _merge_mirror_images may have resulted into lv being still a
+		 * mirror. Fix up the flags if we only have one image left.
+		 */
+		if (lv_mirror_count(lv) == 1)
+			lv->status &= ~(MIRROR | MIRRORED | LV_NOTSYNCED);
+
 		mirrored_seg = first_seg(lv);
 		if (remove_log && !detached_log_lv)
 			detached_log_lv = detach_mirror_log(mirrored_seg);
@@ -988,9 +984,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		/* All mirror images are gone.
 		 * It can happen for vgreduce --removemissing. */
 		detached_log_lv = detach_mirror_log(mirrored_seg);
-		lv->status &= ~MIRROR;
-		lv->status &= ~MIRRORED;
-		lv->status &= ~LV_NOTSYNCED;
+		lv->status &= ~(MIRROR | MIRRORED | LV_NOTSYNCED);
 		if (!replace_lv_with_error_segment(lv))
 			return_0;
 	} else if (remove_log)
