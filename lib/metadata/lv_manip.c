@@ -6574,7 +6574,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	if (lv_is_active_exclusive_locally(lv_where))
 		exclusive = 1;
 
-	if (lv_is_active(lv_where) && strstr(name, "_mimagetmp")) {
+	if (lv_is_active(lv_where) && strstr(name, MIRROR_SYNC_LAYER)) {
 		log_very_verbose("Creating transient LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
 
 		segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_ERROR);
