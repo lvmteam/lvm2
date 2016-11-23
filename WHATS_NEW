@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  Use lv_update_and_reload() inside mirror code where it applies.
   Preserve mirrored status for temporary layered mirrors.
   Use transient raid check before repairing raid volume.
   Implement transient status check for raid volumes.
