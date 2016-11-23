@@ -1883,7 +1883,9 @@ static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 		return_0;
 
 	if (!lv_add_mirror_lvs(lv, img_lvs, mirrors,
-			       MIRROR_IMAGE | (lv->status & LOCKED),
+			       /* Pass through MIRRORED & LOCKED status flag
+				* TODO: Any other would be needed ?? */
+			       MIRROR_IMAGE | (lv->status & (MIRRORED | LOCKED)),
 			       region_size)) {
 		log_error("Aborting. Failed to add mirror segment. "
 			  "Remove new LV and retry.");

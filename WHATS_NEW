@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  Preserve mirrored status for temporary layered mirrors.
   Use transient raid check before repairing raid volume.
   Implement transient status check for raid volumes.
   Only log msg as debug if lvm2-lvmdbusd unit missing for D-Bus notification.
