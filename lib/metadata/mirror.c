@@ -1822,7 +1822,7 @@ static int _form_mirror(struct cmd_context *cmd, struct alloc_handle *ah,
 	if (dm_list_size(&lv->segments) != 1 ||
 	    seg_type(first_seg(lv), 0) != AREA_LV)
 		if (!insert_layer_for_lv(cmd, lv, 0, "_mimage_%d"))
-			return 0;
+			return_0;
 
 	/*
 	 * create mirror image LVs

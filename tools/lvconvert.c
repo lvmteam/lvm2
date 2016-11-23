@@ -1806,7 +1806,7 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	if (!_lvconvert_mirrors_parse_params(cmd, lv, lp,
 					     &old_mimage_count, &old_log_count,
 					     &new_mimage_count, &new_log_count))
-		return 0;
+		return_0;
 
 	if (((old_mimage_count < new_mimage_count && old_log_count > new_log_count) ||
 	     (old_mimage_count > new_mimage_count && old_log_count < new_log_count)) &&
@@ -1827,7 +1827,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
 				    new_mimage_count, new_log_count))
-		return 0;
+		return_0;
+
+	backup(lv->vg);
 
 	if (!lp->need_polling)
 		log_print_unless_silent("Logical volume %s converted.",
@@ -1835,8 +1837,6 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 	else
 		log_print_unless_silent("Logical volume %s being converted.",
 					display_lvname(lv));
-
-	backup(lv->vg);
 
 	return 1;
 }
@@ -2028,7 +2028,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 
 		/* Activation is required later which precludes existing supported raid4 segment */
 		if (!_raid4_conversion_supported(lv, lp))
-			return 0;
+			return_0;
 
 		/* Activation is required later which precludes existing supported raid10 segment */
 		if ((seg_is_raid10(seg) || segtype_is_raid10(lp->segtype)) &&
