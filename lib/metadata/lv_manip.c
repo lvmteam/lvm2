@@ -3668,12 +3668,10 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 		      uint32_t num_extra_areas,
 		      uint64_t status, uint32_t region_size)
 {
-	struct lv_segment *seg;
-	uint32_t old_area_count, new_area_count;
 	uint32_t m;
+	uint32_t old_area_count, new_area_count;
 	struct segment_type *mirror_segtype;
-
-	seg = first_seg(lv);
+	struct lv_segment *seg = first_seg(lv);
 
 	if (dm_list_size(&lv->segments) != 1 || seg_type(seg, 0) != AREA_LV) {
 		log_error(INTERNAL_ERROR "Mirror layer must be inserted before adding mirrors.");
