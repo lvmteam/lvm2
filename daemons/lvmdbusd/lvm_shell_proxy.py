@@ -64,13 +64,9 @@ class LVMShellProxy(object):
 
 				for r in ready[0]:
 					if r == self.lvm_shell.stdout.fileno():
-						while True:
-							tmp = self.lvm_shell.stdout.read()
-							if tmp:
-								stdout += tmp.decode("utf-8")
-							else:
-								break
-
+						tmp = self.lvm_shell.stdout.read()
+						if tmp:
+							stdout += tmp.decode("utf-8")
 					elif r == self.report_r:
 						while True:
 							tmp = os.read(self.report_r, 16384)
@@ -82,12 +78,9 @@ class LVMShellProxy(object):
 								break
 
 					elif r == self.lvm_shell.stderr.fileno():
-						while True:
-							tmp = self.lvm_shell.stderr.read()
-							if tmp:
-								stderr += tmp.decode("utf-8")
-							else:
-								break
+						tmp = self.lvm_shell.stderr.read()
+						if tmp:
+							stderr += tmp.decode("utf-8")
 
 				# Check to see if the lvm process died on us
 				if self.lvm_shell.poll():
