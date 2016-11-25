@@ -41,11 +41,11 @@ ifeq ("@BUILD_LVMPOLLD@", "yes")
 endif
 
 ifeq ("@BUILD_LVMLOCKD@", "yes")
-  SUBDIRS += lvmlockd 
+  SUBDIRS += lvmlockd
 endif
 
 ifeq ("@BUILD_LVMDBUSD@", "yes")
-  SUBDIRS += lvmdbusd 
+  SUBDIRS += lvmdbusd
 endif
 
 ifeq ($(MAKECMDGOALS),distclean)

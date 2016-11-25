@@ -33,7 +33,6 @@ LVMDBUS_SRCDIR_FILES = \
 	manager.py \
 	objectmanager.py \
 	pv.py \
-	refresh.py \
 	request.py \
 	state.py \
 	udevwatch.py \
