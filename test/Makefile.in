@@ -233,7 +233,7 @@ install: .tests-stamp lib/paths-installed
 		dm-version-expected \
 		version-expected \
 		$(DATADIR)/lib
-	@for i in cache-mq cache-smq thin-performance ; do \
+	@for i in cache-mq cache-smq thin-performance lvmdbusd ; do \
 		echo "$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib"; \
 		$(INSTALL_DATA) $(abs_top_srcdir)/conf/$$i.profile $(DATADIR)/lib; done
 	cd lib && $(INSTALL_SCRIPT) $(LIB_SHARED) $(DATADIR)/lib
@@ -295,14 +295,12 @@ lib/paths-installed: lib/paths-common
 	$(RM) $@-t
 	cat lib/paths-common > $@-t
 	echo 'installed_testsuite=1' >> $@-t
-	echo 'test_data_dir="@datadir@/lvm2-testsuite"' >> $@-t
 	echo 'export PATH=@libexecdir@/lvm2-testsuite:@datadir@/lvm2-testsuite/lib:@datadir@/lvm2-testsuite/api:$$PATH' >> $@-t
 	mv $@-t $@
 
 lib/paths: lib/paths-common
 	$(RM) $@-t
 	cat lib/paths-common > $@-t
-	echo 'test_data_dir="$(abs_top_builddir)/test"' >> $@-t
 	echo 'top_srcdir="$(top_srcdir)"' >> $@-t
 	echo 'abs_top_builddir="$(abs_top_builddir)"' >> $@-t
 	echo 'abs_top_srcdir="$(abs_top_srcdir)"' >> $@-t
@@ -338,6 +336,7 @@ LIB = $(addprefix lib/, $(LIB_SHARED) $(LIB_LOCAL) $(LIB_NOT) $(LIB_LINK_NOT) $(
 		daemons/lvmpolld/lvmpolld ; do \
 		$(LN_S) -f $(abs_top_builddir)/$$i lib/; done
 	$(LN_S) -f $(abs_top_builddir)/tools/dmsetup lib/dmstats
+	$(LN_S) -f $(abs_top_srcdir)/conf/lvmdbusd.profile lib/
 	$(LN_S) -f $(abs_top_srcdir)/conf/thin-performance.profile lib/
 	$(LN_S) -f $(abs_top_srcdir)/scripts/fsadm.sh lib/fsadm
 	test "$(srcdir)" = . || for i in $(LIB_LVMLOCKD_CONF); do \
@@ -351,7 +350,7 @@ endif
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
 	$(CMDS) clvmd dmeventd dmsetup dmstats lvmetad lvmpolld \
-	harness thin-performance.profile fsadm \
+	harness lvmdbusd.profile thin-performance.profile fsadm \
 	dm-version-expected version-expected \
 	paths-installed paths-installed-t paths-common paths-common-t)
 

@@ -39,7 +39,7 @@ which mkfs.ext4 || skip
 
 # Use our mkfs config file to get approximately same results
 # TODO: maybe use it for all test via some 'prepare' function
-export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
+export MKE2FS_CONFIG="$TESTOLDPWD/lib/mke2fs.conf"
 
 aux prepare_dmeventd
 aux prepare_pvs 2 64
