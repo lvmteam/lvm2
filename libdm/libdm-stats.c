@@ -1841,7 +1841,7 @@ static int _stats_set_aux(struct dm_stats *dms,
 		if (!group_tag) {
 			log_error("Could not build group descriptor for "
 				  "region ID " FMTu64, region_id);
-			goto_bad;
+			goto bad;
 		}
 	}
 

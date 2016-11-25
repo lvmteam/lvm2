@@ -840,13 +840,13 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 						  (const struct volume_group *) vg,
 						  &max_phys_block_size))) {
 			log_error("PV %s has wrong block size", pv_dev_name(pvl->pv));
-			return_0;
+			return 0;
 		}
 
 		if (!add_pv_to_vg(vg, pv_dev_name(pvl->pv), pvl->pv, 0)) {
 			log_error("PV %s cannot be added to VG %s.",
 				  pv_dev_name(pvl->pv), vg->name);
-			return_0;
+			return 0;
 		}
 	}
 

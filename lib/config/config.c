@@ -389,7 +389,7 @@ int override_config_tree_from_string(struct cmd_context *cmd,
 	    !config_force_check(cmd, CONFIG_STRING, cft_new)) {
 		log_error("Ignoring invalid configuration string.");
 		dm_config_destroy(cft_new);
-		return_0;
+		return 0;
 	}
 
 	if (!(cs = dm_pool_zalloc(cft_new->mem, sizeof(struct config_source)))) {

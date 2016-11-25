@@ -732,7 +732,7 @@ static int _read_historical_lvnames(struct format_instance *fid __attribute__((u
 
 	if (!(hlvn = hlvn->child)) {
 		log_error("Empty removed logical volume section.");
-		goto_bad;
+		goto bad;
 	}
 
 	if (!_read_id(&glv->historical->lvid.id[1], hlvn, "id")) {

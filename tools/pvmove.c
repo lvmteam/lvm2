@@ -187,12 +187,12 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 
 	if (!(sublv = find_lv(lv->vg, sublv_name))) {
 		log_error("Can't find sub LV %s?", sublv_name);
-		return_0;
+		return 0;
 	}
 
 	if (!get_pv_list_for_lv(lv->vg->cmd->mem, sublv, &untrim_list)) {
 		log_error("Can't find PVs for sub LV %s?", sublv_name);
-		return_0;
+		return 0;
 	}
 
 	dm_list_iterate(pvh1, &untrim_list) {

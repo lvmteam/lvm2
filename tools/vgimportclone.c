@@ -75,12 +75,12 @@ static int _vgimportclone_vg_single(struct cmd_context *cmd, const char *vg_name
 
 	if (vg_is_exported(vg) && !vp->import_vg) {
 		log_error("VG %s is exported, use the --import option.", vg->name);
-		goto_bad;
+		goto bad;
 	}
 
 	if (vg_status(vg) & PARTIAL_VG) {
 		log_error("VG %s is partial, it must be complete.", vg->name);
-		goto_bad;
+		goto bad;
 	}
 
 	/*
@@ -121,7 +121,7 @@ static int _vgimportclone_vg_single(struct cmd_context *cmd, const char *vg_name
 			log_error("PV with UUID %s is part of VG %s, but is not included in the devices to import.",
 				   uuid, vg->name);
 			log_error("All PVs in the VG must be imported together.");
-			goto_bad;
+			goto bad;
 		}
 	}
 
@@ -130,7 +130,7 @@ static int _vgimportclone_vg_single(struct cmd_context *cmd, const char *vg_name
 			/* device arg is not in the VG. */
 			log_error("Device %s was not found in VG %s.", dev_name(vd->dev), vg->name);
 			log_error("The devices to import must match the devices in the VG.");
-			goto_bad;
+			goto bad;
 		}
 	}
 
@@ -245,7 +245,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 
 	if (vp.found_args != argc) {
 		log_error("Failed to find all devices.");
-		goto_out;
+		goto out;
 	}
 
 	/*
@@ -256,12 +256,12 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_iterate_items(vd, &vp.arg_import) {
 		if (!(info = lvmcache_info_from_pvid(vd->dev->pvid, NULL, 0))) {
 			log_error("Failed to find PVID for device %s in lvmcache.", dev_name(vd->dev));
-			goto_out;
+			goto out;
 		}
 
 		if (!(vgname = lvmcache_vgname_from_info(info))) {
 			log_error("Failed to find VG name for device %s in lvmcache.", dev_name(vd->dev));
-			goto_out;
+			goto out;
 		}
 
 		if (!vp.old_vgname) {
@@ -270,7 +270,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 		} else {
 			if (strcmp(vp.old_vgname, vgname)) {
 				log_error("Devices must be from the same VG.");
-				goto_out;
+				goto out;
 			}
 		}
 	}
@@ -360,4 +360,3 @@ out:
 
 	return ret;
 }
-

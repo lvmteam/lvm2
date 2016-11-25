@@ -691,9 +691,11 @@ static int _do_usleep_wait(void)
 	if (usleep(this_interval / NSEC_PER_USEC)) {
 		if (errno == EINTR)
 			log_error("Report interval interrupted by signal.");
-		if (errno == EINVAL)
+		else if (errno == EINVAL)
 			log_error("Report interval too short.");
-		return_0;
+		else
+			stack; /* other reason */
+		return 0;
 	}
 
 	if (_count == 2) {

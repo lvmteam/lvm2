@@ -997,7 +997,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 
 	if (!(cn = find_config_tree_array(cmd, devices_scan_CFG, NULL))) {
 		log_error(INTERNAL_ERROR "Unable to find configuration for devices/scan.");
-		return_0;
+		return 0;
 	}
 
 	for (cv = cn->v; cv; cv = cv->next) {

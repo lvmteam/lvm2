@@ -1591,7 +1591,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
 		if (!handle_sanlock_lv(cmd, vg)) {
 			log_error("No space for sanlock lock, extend the internal lvmlock LV.");
-			goto_out;
+			goto out;
 		}
 	}
 

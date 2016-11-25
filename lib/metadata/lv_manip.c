@@ -1014,7 +1014,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		*/
 		if (area_reduction != seg->area_len) {
 			log_error("Unable to reduce RAID LV - operation not implemented.");
-			return_0;
+			return 0;
 		} else {
 			if (!lv_remove(lv)) {
 				log_error("Failed to remove RAID image %s",

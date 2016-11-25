@@ -1863,14 +1863,14 @@ static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm
 	log_debug_metadata("Allocating metadata LVs for %s", display_lvname(lv));
 	if (!_alloc_rmeta_devs_for_lv(lv, &meta_lvs, allocate_pvs, &seg_meta_areas)) {
 		log_error("Failed to allocate metadata LVs for %s", display_lvname(lv));
-		return_0;
+		return 0;
 	}
 
 	/* Metadata LVs must be cleared before being added to the array */
 	log_debug_metadata("Clearing newly allocated metadata LVs for %s", display_lvname(lv));
 	if (!_clear_lvs(&meta_lvs)) {
 		log_error("Failed to initialize metadata LVs for %s", display_lvname(lv));
-		return_0;
+		return 0;
 	}
 
 	/* Set segment areas for metadata sub_lvs */
@@ -1878,7 +1878,7 @@ static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm
 	log_debug_metadata("Adding newly allocated metadata LVs to %s", display_lvname(lv));
 	if (!_add_image_component_list(seg, 1, 0, &meta_lvs, 0)) {
 		log_error("Failed to add newly allocated metadata LVs to %s", display_lvname(lv));
-		return_0;
+		return 0;
 	}
 
 	return 1;
@@ -3663,13 +3663,13 @@ static int _set_convenient_raid456_segtype_to(const struct lv_segment *seg_from,
 	} else if (seg_is_any_raid5(seg_from) &&
 		   segtype_is_any_raid6(*segtype)) {
 			log_error("Conversion not supported.");
-		return_0;
+		return 0;
 
 	/* ... and raid6 -> raid5 */
 	} else if (seg_is_any_raid6(seg_from) &&
 		   segtype_is_any_raid5(*segtype)) {
 			log_error("Conversion not supported.");
-		return_0;
+		return 0;
 	}
 
 	return 1;

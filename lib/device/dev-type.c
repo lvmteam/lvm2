@@ -1009,7 +1009,7 @@ int udev_dev_is_mpath_component(struct device *dev)
 
 	if (!udev_context) {
 		log_warn("WARNING: No udev context available to check if device %s is multipath component.", dev_name(dev));
-		return_0;
+		return 0;
 	}
 
 	while (1) {

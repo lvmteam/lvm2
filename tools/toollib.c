@@ -2474,7 +2474,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!(final_lvl = dm_pool_zalloc(cmd->mem, sizeof(struct lv_list)))) {
 			log_error("Failed to allocate final LV list item.");
 			ret_max = ECMD_FAILED;
-			goto_out;
+			goto out;
 		}
 		final_lvl->lv = lvl->lv;
 		dm_list_add(&final_lvs, &final_lvl->list);
@@ -4710,7 +4710,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE, NULL)) {
 		log_error("Can't get lock for orphan PVs.");
-		goto_out;
+		goto out;
 	}
 
 	/*
@@ -4742,7 +4742,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 
 	if (dm_list_empty(&pp->arg_process)) {
 		log_debug("No devices to process.");
-		goto_bad;
+		goto bad;
 	}
 
 do_command:
@@ -4789,7 +4789,7 @@ do_command:
 
 		if (!(orphan_vg = vg_read_internal(cmd, pp->orphan_vg_name, NULL, 0, &consistent))) {
 			log_error("Cannot read orphans VG %s.", pp->orphan_vg_name);
-			goto_bad;
+			goto bad;
 		}
 
 		dm_list_iterate_items_safe(pd, pd2, &pp->arg_create) {
