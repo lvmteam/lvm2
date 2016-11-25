@@ -451,17 +451,16 @@ static int _add_pe_range(struct dm_pool *mem, const char *pvname,
 {
 	struct pe_range *per;
 
-	log_debug("Adding PE range: start PE %" PRIu32 " length %" PRIu32
-		  " on %s.", start, count, pvname);
+	log_debug("Adding PE range: start PE " FMTu32 " length " FMTu32 " on %s.",
+		  start, count, pvname);
 
 	/* Ensure no overlap with existing areas */
 	dm_list_iterate_items(per, pe_ranges) {
 		if (((start < per->start) && (start + count - 1 >= per->start)) ||
 		    ((start >= per->start) &&
 			(per->start + per->count - 1) >= start)) {
-			log_error("Overlapping PE ranges specified (%" PRIu32
-				  "-%" PRIu32 ", %" PRIu32 "-%" PRIu32 ")"
-				  " on %s.",
+			log_error("Overlapping PE ranges specified (" FMTu32
+				  "-" FMTu32 ", " FMTu32 "-" FMTu32 ") on %s.",
 				  start, start + count - 1, per->start,
 				  per->start + per->count - 1, pvname);
 			return 0;
@@ -637,7 +636,7 @@ struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int
 
 	/* Build up list of PVs */
 	if (!(r = dm_pool_alloc(mem, sizeof(*r)))) {
-		log_error("Allocation of list failed");
+		log_error("Allocation of list failed.");
 		return NULL;
 	}
 	dm_list_init(r);

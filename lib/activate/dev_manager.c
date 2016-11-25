@@ -424,7 +424,7 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 		return_0;
 
 	if (!dm_task_run(dmt)) {
-		log_error("Failed to get state of snapshot or snapshot origin device");
+		log_error("Failed to get state of snapshot or snapshot origin device.");
 		goto out;
 	}
 
@@ -432,13 +432,13 @@ static int _ignore_suspended_snapshot_component(struct device *dev)
 		next = dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 		if (!target_type || !strcmp(target_type, TARGET_NAME_SNAPSHOT)) {
 			if (!params || sscanf(params, "%d:%d %d:%d", &major1, &minor1, &major2, &minor2) != 4) {
-				log_error("Incorrect snapshot table found");
+				log_error("Incorrect snapshot table found.");
 				goto out;
 			}
 			r = r || _device_is_suspended(major1, minor1) || _device_is_suspended(major2, minor2);
 		} else if (!strcmp(target_type, TARGET_NAME_SNAPSHOT_ORIGIN)) {
 			if (!params || sscanf(params, "%d:%d", &major1, &minor1) != 2) {
-				log_error("Incorrect snapshot-origin table found");
+				log_error("Incorrect snapshot-origin table found.");
 				goto out;
 			}
 			r = r || _device_is_suspended(major1, minor1);

@@ -1596,7 +1596,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (seg_is_thin_volume(lp))
-		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s",
+		log_verbose("Making thin LV %s in pool %s in VG %s%s%s using segtype %s.",
 			    lp->lv_name ? : "with generated name",
 			    lp->pool_name ? : "with generated name", lp->vg_name,
 			    lp->snapshot ? " as snapshot of " : "",

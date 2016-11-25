@@ -828,18 +828,18 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 	struct pv_list *pvl;
 	unsigned int max_phys_block_size = 0;
 
-	log_debug_metadata("Adding PVs to VG %s", vg->name);
+	log_debug_metadata("Adding PVs to VG %s.", vg->name);
 
 	if (_vg_bad_status_bits(vg, RESIZEABLE_VG))
 		return_0;
 
 	dm_list_iterate_items(pvl, &pp->pvs) {
-		log_debug_metadata("Adding PV %s to VG %s", pv_dev_name(pvl->pv), vg->name);
+		log_debug_metadata("Adding PV %s to VG %s.", pv_dev_name(pvl->pv), vg->name);
 
 		if (!(check_dev_block_size_for_vg(pvl->pv->dev,
 						  (const struct volume_group *) vg,
 						  &max_phys_block_size))) {
-			log_error("PV %s has wrong block size", pv_dev_name(pvl->pv));
+			log_error("PV %s has wrong block size.", pv_dev_name(pvl->pv));
 			return 0;
 		}
 

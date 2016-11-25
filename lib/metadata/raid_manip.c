@@ -1860,24 +1860,24 @@ static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm
 
 	dm_list_init(&meta_lvs);
 
-	log_debug_metadata("Allocating metadata LVs for %s", display_lvname(lv));
+	log_debug_metadata("Allocating metadata LVs for %s.", display_lvname(lv));
 	if (!_alloc_rmeta_devs_for_lv(lv, &meta_lvs, allocate_pvs, &seg_meta_areas)) {
-		log_error("Failed to allocate metadata LVs for %s", display_lvname(lv));
+		log_error("Failed to allocate metadata LVs for %s.", display_lvname(lv));
 		return 0;
 	}
 
 	/* Metadata LVs must be cleared before being added to the array */
-	log_debug_metadata("Clearing newly allocated metadata LVs for %s", display_lvname(lv));
+	log_debug_metadata("Clearing newly allocated metadata LVs for %s.", display_lvname(lv));
 	if (!_clear_lvs(&meta_lvs)) {
-		log_error("Failed to initialize metadata LVs for %s", display_lvname(lv));
+		log_error("Failed to initialize metadata LVs for %s.", display_lvname(lv));
 		return 0;
 	}
 
 	/* Set segment areas for metadata sub_lvs */
 	seg->meta_areas = seg_meta_areas;
-	log_debug_metadata("Adding newly allocated metadata LVs to %s", display_lvname(lv));
+	log_debug_metadata("Adding newly allocated metadata LVs to %s.", display_lvname(lv));
 	if (!_add_image_component_list(seg, 1, 0, &meta_lvs, 0)) {
-		log_error("Failed to add newly allocated metadata LVs to %s", display_lvname(lv));
+		log_error("Failed to add newly allocated metadata LVs to %s.", display_lvname(lv));
 		return 0;
 	}
 

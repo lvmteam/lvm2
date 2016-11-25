@@ -736,11 +736,11 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
 		}
 	}
 
-	log_very_verbose("Adding %s:%" PRIu32 " as an user of %s",
-			 seg->lv->name, seg->le, lv->name);
+	log_very_verbose("Adding %s:" FMTu32 " as an user of %s.",
+			 display_lvname(seg->lv), seg->le, display_lvname(lv));
 
 	if (!(sl = dm_pool_zalloc(lv->vg->vgmem, sizeof(*sl)))) {
-		log_error("Failed to allocate segment list");
+		log_error("Failed to allocate segment list.");
 		return 0;
 	}
 
@@ -762,16 +762,16 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv,
 		if (sl->count > 1)
 			sl->count--;
 		else {
-			log_very_verbose("%s:%" PRIu32 " is no longer a user "
-					 "of %s", seg->lv->name, seg->le,
-					 lv->name);
+			log_very_verbose("%s:" FMTu32 " is no longer a user of %s.",
+					 display_lvname(seg->lv), seg->le,
+					 display_lvname(lv));
 			dm_list_del(&sl->list);
 		}
 		return 1;
 	}
 
-	log_error(INTERNAL_ERROR "Segment %s:%u is not a user of %s.",
-                  seg->lv->name, seg->le, lv->name);
+	log_error(INTERNAL_ERROR "Segment %s:" FMTu32 " is not a user of %s.",
+		  display_lvname(seg->lv), seg->le, display_lvname(lv));
 	return 0;
 }
 
@@ -798,8 +798,9 @@ struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *l
 
 		if (sl->count != 1) {
 			log_error("%s is expected to have only one segment using it, "
-				  "while %s:%" PRIu32 " uses it %d times.",
-				  display_lvname(lv), sl->seg->lv->name, sl->seg->le, sl->count);
+				  "while %s:" FMTu32 " uses it %d times.",
+				  display_lvname(lv), display_lvname(sl->seg->lv),
+				  sl->seg->le, sl->count);
 			return NULL;
 		}
 
@@ -890,7 +891,7 @@ static uint32_t _round_to_stripe_boundary(struct volume_group *vg, uint32_t exte
 	/* Round up extents to stripe divisible amount */
 	if ((size_rest = extents % stripes)) {
 		new_extents += extend ? stripes - size_rest : -size_rest;
-		log_print_unless_silent("Rounding size %s (%d extents) up to stripe boundary size %s (%d extents).",
+		log_print_unless_silent("Rounding size %s (%u extents) up to stripe boundary size %s (%u extents).",
 					display_size(vg->cmd, (uint64_t) extents * vg->extent_size), extents,
 					display_size(vg->cmd, (uint64_t) new_extents * vg->extent_size), new_extents);
 	}
@@ -1017,8 +1018,8 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 			return 0;
 		} else {
 			if (!lv_remove(lv)) {
-				log_error("Failed to remove RAID image %s",
-					  lv->name);
+				log_error("Failed to remove RAID image %s.",
+					  display_lvname(lv));
 				return 0;
 			}
 		}
@@ -1027,8 +1028,8 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 		if (seg->meta_areas && seg_metalv(seg, s) && (area_reduction == seg->area_len)) {
 			if (!lv_reduce(seg_metalv(seg, s),
 				       seg_metalv(seg, s)->le_count)) {
-				log_error("Failed to remove RAID meta-device %s",
-					  seg_metalv(seg, s)->name);
+				log_error("Failed to remove RAID meta-device %s.",
+					  display_lvname(seg_metalv(seg, s)));
 				return 0;
 			}
 		}
@@ -1036,13 +1037,14 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 	}
 
 	if (area_reduction == seg->area_len) {
-		log_very_verbose("Remove %s:%" PRIu32 "[%" PRIu32 "] from "
-				 "the top of LV %s:%" PRIu32,
-				 seg->lv->name, seg->le, s,
-				 lv->name, seg_le(seg, s));
+		log_very_verbose("Remove %s:" FMTu32 "[" FMTu32 "] from "
+				 "the top of LV %s:" FMTu32 ".",
+				 display_lvname(seg->lv), seg->le, s,
+				 display_lvname(lv), seg_le(seg, s));
 
 		if (!remove_seg_from_segs_using_this_lv(lv, seg))
 			return_0;
+
 		seg_lv(seg, s) = NULL;
 		seg_le(seg, s) = 0;
 		seg_type(seg, s) = AREA_UNASSIGNED;
@@ -3480,7 +3482,7 @@ static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
 					seg->area_count, seg->area_len,
 					seg->chunk_size, region_size,
 					seg->extents_copied, NULL))) {
-		log_error("Couldn't allocate converted LV segment");
+		log_error("Couldn't allocate converted LV segment.");
 		return NULL;
 	}
 
@@ -3513,13 +3515,14 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 
 	if (!lv_is_pvmove(lv)) {
 		log_error(INTERNAL_ERROR
-			  "Non-pvmove LV, %s, passed as argument", lv->name);
+			  "Non-pvmove LV, %s, passed as argument.",
+			  display_lvname(lv));
 		return 0;
 	}
 
 	if (seg_type(first_seg(lv), 0) != AREA_PV) {
 		log_error(INTERNAL_ERROR
-			  "Bad segment type for first segment area");
+			  "Bad segment type for first segment area.");
 		return 0;
 	}
 
@@ -3530,8 +3533,8 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	 */
 	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
 		if (!(seg = find_seg_by_le(lv, current_le))) {
-			log_error("Failed to find segment for %s extent %"
-				  PRIu32, lv->name, current_le);
+			log_error("Failed to find segment for %s extent " FMTu32 ".",
+				  display_lvname(lv), current_le);
 			return 0;
 		}
 
@@ -3539,7 +3542,8 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 		if (aa[0].len < seg->area_len) {
 			if (!lv_split_segment(lv, seg->le + aa[0].len)) {
 				log_error("Failed to split segment at %s "
-					  "extent %" PRIu32, lv->name, le);
+					  "extent " FMTu32 ".",
+					  display_lvname(lv), le);
 				return 0;
 			}
 		}
@@ -3549,8 +3553,8 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 	current_le = le;
 
 	if (!insert_layer_for_lv(lv->vg->cmd, lv, PVMOVE, "_mimage_0")) {
-		log_error("Failed to build pvmove LV-type mirror, %s",
-			  lv->name);
+		log_error("Failed to build pvmove LV-type mirror %s.",
+			  display_lvname(lv));
 		return 0;
 	}
 	orig_lv = seg_lv(first_seg(lv), 0);
@@ -3571,8 +3575,8 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 
 	dm_list_iterate_items(aa, &ah->alloced_areas[0]) {
 		if (!(seg = find_seg_by_le(orig_lv, current_le))) {
-			log_error("Failed to find segment for %s extent %"
-				  PRIu32, lv->name, current_le);
+			log_error("Failed to find segment for %s extent " FMTu32 ".",
+				  display_lvname(lv), current_le);
 			return 0;
 		}
 
