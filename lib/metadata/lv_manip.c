@@ -1033,6 +1033,7 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 				return 0;
 			}
 		}
+
 		return 1;
 	}
 

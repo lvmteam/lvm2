@@ -3662,13 +3662,13 @@ static int _set_convenient_raid456_segtype_to(const struct lv_segment *seg_from,
 	/* Got to do check for raid5 -> raid6 ... */
 	} else if (seg_is_any_raid5(seg_from) &&
 		   segtype_is_any_raid6(*segtype)) {
-			log_error("Conversion not supported.");
+		log_error("Conversion not supported.");
 		return 0;
 
 	/* ... and raid6 -> raid5 */
 	} else if (seg_is_any_raid6(seg_from) &&
 		   segtype_is_any_raid5(*segtype)) {
-			log_error("Conversion not supported.");
+		log_error("Conversion not supported.");
 		return 0;
 	}
 
