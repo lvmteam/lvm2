@@ -10,10 +10,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #
-# This file is part of LVM2.
-# It is required for the proper handling of failures of LVM2 mirror
-# devices that were created using the -m option of lvcreate.
-#
+# This script is responsible for executing blkdeactivate at shutdown
+# to properly unmount filesystems and deactivate device stacks containing
+# device-mapper devices (including plain device-mapper devices, LVM2 and
+# multipath devices) and MD devices.
 #
 # chkconfig: 12345 25 75
 # description: Controls availability of block devices
