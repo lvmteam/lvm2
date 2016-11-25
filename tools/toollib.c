@@ -578,18 +578,18 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 
 	pvname = pv_dev_name(pvl->pv);
 	if (allocatable_only && !(pvl->pv->status & ALLOCATABLE_PV)) {
-		log_warn("Physical volume %s not allocatable.", pvname);
+		log_warn("WARNING: Physical volume %s not allocatable.", pvname);
 		return 1;
 	}
 
 	if (allocatable_only && is_missing_pv(pvl->pv)) {
-		log_warn("Physical volume %s is missing.", pvname);
+		log_warn("WARNING: Physical volume %s is missing.", pvname);
 		return 1;
 	}
 
 	if (allocatable_only &&
 	    (pvl->pv->pe_count == pvl->pv->pe_alloc_count)) {
-		log_warn("No free extents on physical volume \"%s\".", pvname);
+		log_warn("WARNING: No free extents on physical volume \"%s\".", pvname);
 		return 1;
 	}
 
