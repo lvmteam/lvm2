@@ -34,6 +34,7 @@ static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
 	return 1;
 }
 
+__attribute__ ((__unused__))
 /* Check that all lv has segments have exactly the required number of areas */
 static int _check_num_areas_in_lv_segments(struct logical_volume *lv, unsigned num_areas)
 {
