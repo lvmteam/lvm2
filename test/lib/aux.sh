@@ -322,9 +322,9 @@ prepare_lvmdbusd() {
 		# Setup the python path so we can run
 		export PYTHONPATH=$abs_top_builddir/daemons
 	else
-		daemon="$(which lvmdbusd || :)"
+		daemon=$(which lvmdbusd || :)
 	fi
-	[[ -n $daemon && -x $daemon ]] || skip "The daemon is missing"
+	[[ -n "$daemon" && -x "$daemon" ]] || skip "The daemon is missing"
 	which python3 >/dev/null || skip "Missing python3"
 
 	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
