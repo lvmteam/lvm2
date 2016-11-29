@@ -101,8 +101,6 @@ class LVMShellProxy(object):
 									keep_reading = False
 								except ValueError:
 									pass
-						else:
-							log_error("RACE!", 'bg_black', 'fg_light_red')
 
 						if keep_reading:
 							extra_passes -= 1
