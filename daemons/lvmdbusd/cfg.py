@@ -38,7 +38,6 @@ SHELL_IN_USE = None
 # Lock used by pprint
 stdout_lock = multiprocessing.Lock()
 
-kick_q = multiprocessing.Queue()
 worker_q = queue.Queue()
 
 # Main event loop
