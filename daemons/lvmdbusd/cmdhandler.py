@@ -353,7 +353,8 @@ def vg_lv_create_raid(vg_name, create_options, name, raid_type, size_bytes,
 								size_bytes, num_stripes, stripe_size_kb)
 
 
-def vg_lv_create_mirror(vg_name, create_options, name, size_bytes, num_copies):
+def vg_lv_create_mirror(
+		vg_name, create_options, name, size_bytes, num_copies):
 	cmd = ['lvcreate']
 	cmd.extend(options_to_cli_args(create_options))
 
