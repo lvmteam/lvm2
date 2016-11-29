@@ -119,5 +119,5 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 		 */
 	}
 
-	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, &lvscan_single);
+	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, NULL, &lvscan_single);
 }

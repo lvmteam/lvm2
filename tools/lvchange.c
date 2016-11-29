@@ -1434,5 +1434,5 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_lv(cmd, argc, argv, NULL, NULL,
 			       update ? READ_FOR_UPDATE : 0, NULL,
-			       &_lvchange_single);
+			       NULL, &_lvchange_single);
 }

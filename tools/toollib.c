@@ -2924,6 +2924,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct dm_list *arg_lvnames, const struct dm_list *tags_in,
 			  int stop_on_error,
 			  struct processing_handle *handle,
+			  check_single_lv_fn_t check_single_lv,
 			  process_single_lv_fn_t process_single_lv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
@@ -3124,6 +3125,12 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 					  display_lvname(lvl->lv));
 				ret_max = ECMD_FAILED;
 			} 
+			continue;
+		}
+
+		if (check_single_lv && !check_single_lv(cmd, lvl->lv, handle, lv_is_named_arg)) {
+			if (lv_is_named_arg)
+				ret_max = ECMD_FAILED;
 			continue;
 		}
 
@@ -3363,6 +3370,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 				     struct dm_list *arg_lvnames,
 				     struct dm_list *arg_tags,
 				     struct processing_handle *handle,
+				     check_single_lv_fn_t check_single_lv,
 				     process_single_lv_fn_t process_single_lv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
@@ -3455,7 +3463,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 			goto endvg;
 
 		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg, 0,
-					    handle, process_single_lv);
+					    handle, check_single_lv, process_single_lv);
 		if (ret != ECMD_PROCESSED)
 			stack;
 		report_log_ret_code(ret);
@@ -3486,6 +3494,7 @@ int process_each_lv(struct cmd_context *cmd,
 		    const char *one_vgname, const char *one_lvname,
 		    uint32_t read_flags,
 		    struct processing_handle *handle,
+		    check_single_lv_fn_t check_single_lv,
 		    process_single_lv_fn_t process_single_lv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
@@ -3601,7 +3610,7 @@ int process_each_lv(struct cmd_context *cmd,
 		_choose_vgs_to_process(cmd, &arg_vgnames, &vgnameids_on_system, &vgnameids_to_process);
 
 	ret = _process_lv_vgnameid_list(cmd, read_flags, &vgnameids_to_process, &arg_vgnames, &arg_lvnames,
-					&arg_tags, handle, process_single_lv);
+					&arg_tags, handle, check_single_lv, process_single_lv);
 
 	if (ret > ret_max)
 		ret_max = ret;

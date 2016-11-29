@@ -33,5 +33,5 @@ int vgmknodes(struct cmd_context *cmd, int argc, char **argv)
 	if (!lv_mknodes(cmd, NULL))
 		return_ECMD_FAILED;
 
-	return process_each_lv(cmd, argc, argv, NULL, NULL, LCK_VG_READ, NULL, &_vgmknodes_single);
+	return process_each_lv(cmd, argc, argv, NULL, NULL, LCK_VG_READ, NULL, NULL, &_vgmknodes_single);
 }

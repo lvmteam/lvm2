@@ -545,14 +545,14 @@ static int _report_all_in_vg(struct cmd_context *cmd, struct processing_handle *
 			r = _vgs_single(cmd, vg->name, vg, handle);
 			break;
 		case LVS:
-			r = process_each_lv_in_vg(cmd, vg, NULL, NULL, 0, handle,
+			r = process_each_lv_in_vg(cmd, vg, NULL, NULL, 0, handle, NULL,
 						  do_lv_info && !do_lv_seg_status ? &_lvs_with_info_single :
 						  !do_lv_info && do_lv_seg_status ? &_lvs_with_status_single :
 						  do_lv_info && do_lv_seg_status ? &_lvs_with_info_and_status_single :
 										   &_lvs_single);
 			break;
 		case SEGS:
-			r = process_each_lv_in_vg(cmd, vg, NULL, NULL, 0, handle,
+			r = process_each_lv_in_vg(cmd, vg, NULL, NULL, 0, handle, NULL,
 						  do_lv_info && !do_lv_seg_status ? &_lvsegs_with_info_single :
 						  !do_lv_info && do_lv_seg_status ? &_lvsegs_with_status_single :
 						  do_lv_info && do_lv_seg_status ? &_lvsegs_with_info_and_status_single :
@@ -1127,7 +1127,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 			if (args->full_report_vg)
 				r = _report_all_in_vg(cmd, handle, args->full_report_vg, LVS, lv_info_needed, lv_segment_status_needed);
 			else
-				r = process_each_lv(cmd, args->argc, args->argv, NULL, NULL, 0, handle,
+				r = process_each_lv(cmd, args->argc, args->argv, NULL, NULL, 0, handle, NULL,
 						    lv_info_needed && !lv_segment_status_needed ? &_lvs_with_info_single :
 						    !lv_info_needed && lv_segment_status_needed ? &_lvs_with_status_single :
 						    lv_info_needed && lv_segment_status_needed ? &_lvs_with_info_and_status_single :
@@ -1161,7 +1161,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 			if (args->full_report_vg)
 				r = _report_all_in_vg(cmd, handle, args->full_report_vg, SEGS, lv_info_needed, lv_segment_status_needed);
 			else
-				r = process_each_lv(cmd, args->argc, args->argv, NULL, NULL, 0, handle,
+				r = process_each_lv(cmd, args->argc, args->argv, NULL, NULL, 0, handle, NULL,
 						    lv_info_needed && !lv_segment_status_needed ? &_lvsegs_with_info_single :
 						    !lv_info_needed && lv_segment_status_needed ? &_lvsegs_with_status_single :
 						    lv_info_needed && lv_segment_status_needed ? &_lvsegs_with_info_and_status_single :

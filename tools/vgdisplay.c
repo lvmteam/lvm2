@@ -38,7 +38,7 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 		vgdisplay_extents(vg);
 
 		process_each_lv_in_vg(cmd, vg, NULL, NULL, 0, NULL,
-				      (process_single_lv_fn_t)lvdisplay_full);
+				      NULL, (process_single_lv_fn_t)lvdisplay_full);
 
 		log_print("--- Physical volumes ---");
 		process_each_pv_in_vg(cmd, vg, NULL,

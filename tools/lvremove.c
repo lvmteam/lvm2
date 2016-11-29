@@ -27,5 +27,5 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 	cmd->include_historical_lvs = 1;
 
 	return process_each_lv(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE, NULL,
-			       &lvremove_single);
+			       NULL, &lvremove_single);
 }

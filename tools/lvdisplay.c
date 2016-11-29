@@ -58,5 +58,5 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, &_lvdisplay_single);
+	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, NULL, &_lvdisplay_single);
 }

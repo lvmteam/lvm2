@@ -62,7 +62,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		}
 
 		if ((ret = process_each_lv_in_vg(cmd, vg, NULL, NULL, 1, &void_handle,
-						 (process_single_lv_fn_t)lvremove_single)) != ECMD_PROCESSED) {
+						 NULL, (process_single_lv_fn_t)lvremove_single)) != ECMD_PROCESSED) {
 			stack;
 			return ret;
 		}

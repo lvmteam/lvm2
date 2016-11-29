@@ -98,6 +98,18 @@ typedef int (*process_single_pvseg_fn_t) (struct cmd_context * cmd,
 					  struct pv_segment * pvseg,
 					  struct processing_handle *handle);
 
+/*
+ * Called prior to process_single_lv() to decide if the LV should be
+ * processed.  If this returns 0, the LV is not processed.
+ *
+ * This can evaluate the combination of command definition and
+ * the LV object to decide if the combination is allowed.
+ */
+typedef int (*check_single_lv_fn_t) (struct cmd_context *cmd,
+				     struct logical_volume *lv,
+				     struct processing_handle *handle,
+				     int lv_is_named_arg);
+
 int process_each_vg(struct cmd_context *cmd,
 	            int argc, char **argv,
 		    const char *one_vgname,
@@ -125,6 +137,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		    const char *one_vgname, const char *one_lvname,
 		    uint32_t flags, struct processing_handle *handle,
+		    check_single_lv_fn_t check_single_lv,
 		    process_single_lv_fn_t process_single_lv);
 
 
@@ -141,6 +154,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct dm_list *arg_lvnames, const struct dm_list *tagsl,
 			  int stop_on_error, struct processing_handle *handle,
+			  check_single_lv_fn_t check_single_lv,
 			  process_single_lv_fn_t process_single_lv);
 
 struct processing_handle *init_processing_handle(struct cmd_context *cmd, struct processing_handle *parent_handle);
