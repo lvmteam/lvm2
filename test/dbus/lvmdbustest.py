@@ -30,6 +30,12 @@ use_session = os.getenv('LVM_DBUSD_USE_SESSION', False)
 # Only use the devices listed in the ENV variable
 pv_device_list = os.getenv('LVM_DBUSD_PV_DEVICE_LIST', None)
 
+# Default is to test all modes
+# 0 == Only test fork & exec mode
+# 1 == Test both fork & exec & lvm shell mode (default)
+# Other == Test just lvm shell mode
+test_shell = os.getenv('LVM_DBUSD_TEST_MODE', 1)
+
 # Empty options dictionary (EOD)
 EOD = dbus.Dictionary({}, signature=dbus.Signature('sv'))
 # Base interfaces on LV objects
@@ -1661,10 +1667,6 @@ class AggregateResults(object):
 if __name__ == '__main__':
 
 	r = AggregateResults()
-
-	# Default is to test all modes
-	test_shell = os.getenv('LVM_DBUS_TEST_SHELL', 1)
-
 	mode = int(test_shell)
 
 	if mode == 0:
