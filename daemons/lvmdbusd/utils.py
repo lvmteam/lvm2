@@ -525,6 +525,7 @@ class MThreadRunner(object):
 
 	@staticmethod
 	def runner(obj):
+		# noinspection PyProtectedMember
 		obj._run()
 		with obj.cond:
 			obj.function_complete = True
