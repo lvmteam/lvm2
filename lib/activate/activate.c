@@ -794,17 +794,17 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 	if (!activation())
 		return 0;
 
-	if (lv == lv_seg->lv)
-		return _lv_info(cmd, lv, use_layer, &status->info, lv_seg, &status->seg_status,
-				with_open_count, with_read_ahead);
+	if (lv != lv_seg->lv)
+		/*
+		 * If the info is requested for an LV and segment
+		 * status for segment that belong to another LV,
+		 * we need to acquire info and status separately!
+		 */
+		return _lv_info(cmd, lv, use_layer, &status->info, NULL, NULL, with_open_count, with_read_ahead) &&
+			_lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, &status->seg_status, 0, 0);
 
-	/*
-	 * If the info is requested for an LV and segment
-	 * status for segment that belong to another LV,
-	 * we need to acquire info and status separately!
-	 */
-	return _lv_info(cmd, lv, use_layer, &status->info, NULL, NULL, with_open_count, with_read_ahead) &&
-	       _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, &status->seg_status, 0, 0);
+	return _lv_info(cmd, lv, use_layer, &status->info, lv_seg, &status->seg_status,
+			with_open_count, with_read_ahead);
 }
 
 #define OPEN_COUNT_CHECK_RETRIES 25
