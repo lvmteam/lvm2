@@ -1382,7 +1382,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 	return 1;
 }
 
-int lv_refresh_suspend_resume(const struct logical_volume *lv)
+static int _lv_refresh_suspend_resume(const struct logical_volume *lv)
 {
 	struct cmd_context *cmd = lv->vg->cmd;
 	int r = 1;
@@ -1405,6 +1405,33 @@ int lv_refresh_suspend_resume(const struct logical_volume *lv)
 	}
 
 	return r;
+}
+
+int lv_refresh_suspend_resume(const struct logical_volume *lv)
+{
+	/*
+	 * FIXME:
+	 *
+	 * in case of RAID, refresh the SubLVs before
+	 * refreshing the top-level one in order to cope
+	 * with transient failures of SubLVs.
+	 */
+	if (lv_is_raid(lv)) {
+		uint32_t s;
+		struct lv_segment *seg = first_seg(lv);
+
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) == AREA_LV &&
+			    !_lv_refresh_suspend_resume(seg_lv(seg, s)))
+				return 0;
+			if (seg->meta_areas &&
+			    seg_metatype(seg, s) == AREA_LV &&
+			    !_lv_refresh_suspend_resume(seg_metalv(seg, s)))
+				return 0;
+		}
+	}
+
+	return _lv_refresh_suspend_resume(lv);
 }
 
 /*
