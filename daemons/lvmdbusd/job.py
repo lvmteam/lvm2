@@ -8,7 +8,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .automatedproperties import AutomatedProperties
-from .utils import job_obj_path_generate, mt_async_result
+from .utils import job_obj_path_generate, mt_async_result, mt_run_no_wait
 from . import cfg
 from .cfg import JOB_INTERFACE
 import dbus
@@ -180,9 +180,15 @@ class Job(AutomatedProperties):
 	def Complete(self):
 		return dbus.Boolean(self.state.Complete)
 
+	@staticmethod
+	def _signal_complete(obj):
+		obj.PropertiesChanged(
+			JOB_INTERFACE, dict(Complete=dbus.Boolean(obj.state.Complete)), [])
+
 	@Complete.setter
 	def Complete(self, value):
 		self.state.Complete = value
+		mt_run_no_wait(Job._signal_complete, self)
 
 	@property
 	def GetError(self):

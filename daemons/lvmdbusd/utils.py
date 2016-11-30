@@ -515,6 +515,11 @@ def mt_async_result(call_back, results):
 	GLib.idle_add(_async_result, call_back, results)
 
 
+# Take the supplied function and run it on the main thread and not wait for
+# a result!
+def mt_run_no_wait(function, param):
+	GLib.idle_add(function, param)
+
 # Run the supplied function and arguments on the main thread and wait for them
 # to complete while allowing the ability to get the return value too.
 #

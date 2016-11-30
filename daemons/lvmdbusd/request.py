@@ -126,7 +126,6 @@ class RequestEntry(object):
 						mt_async_result(self.cb_error, error_exception)
 			else:
 				# We have a job and it's complete, indicate that it's done.
-				# TODO: We need to signal the job is done too.
 				self._job.Complete = True
 				self._job = None
 
