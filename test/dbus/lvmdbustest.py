@@ -1132,23 +1132,17 @@ class TestDbusService(unittest.TestCase):
 				"Expected %s != Actual %s" % (str(p), str(vg.MaxLv)))
 
 	def test_vg_uuid_gen(self):
-		# TODO renable test case when
-		# https://bugzilla.redhat.com/show_bug.cgi?id=1264169 gets fixed
-		# This was tested with lvmetad disabled and we passed
-		std_err_print("\nSkipping Vg.UuidGenerate until BZ: 1264169 resolved\n")
-
-		if False:
-			vg = self._vg_create().Vg
-			prev_uuid = vg.Uuid
-			rc = self.handle_return(
-				vg.UuidGenerate(
-					dbus.Int32(g_tmo),
-					EOD))
-			self.assertEqual(rc, '/')
-			vg.update()
-			self.assertTrue(
-				vg.Uuid != prev_uuid,
-				"Expected %s != Actual %s" % (vg.Uuid, prev_uuid))
+		vg = self._vg_create().Vg
+		prev_uuid = vg.Uuid
+		rc = self.handle_return(
+			vg.UuidGenerate(
+				dbus.Int32(g_tmo),
+				EOD))
+		self.assertEqual(rc, '/')
+		vg.update()
+		self.assertTrue(
+			vg.Uuid != prev_uuid,
+			"Expected %s != Actual %s" % (vg.Uuid, prev_uuid))
 
 	def test_vg_activate_deactivate(self):
 		vg = self._vg_create().Vg
