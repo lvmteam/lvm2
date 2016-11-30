@@ -1,5 +1,5 @@
-Version 2.02.168 - 
-====================================
+Version 2.02.168 - 30th November 2016
+=====================================
   Display correct sync_percent on large RaidLVs
   lvmdbusd --blackboxsize <n> added, used to override default size of 16
   Allow a transiently failed RaidLV to be refreshed
@@ -8,6 +8,7 @@ Version 2.02.168 -
   Use transient raid check before repairing raid volume.
   Implement transient status check for raid volumes.
   Only log msg as debug if lvm2-lvmdbusd unit missing for D-Bus notification.
+  Avoid duplicated underscore in name of extracted LV image.
   Missing stripe filler now could be also 'zero'.
   lvconvert --repair accepts --interval and --background option.
   More efficiently prepare _rmeta devices when creating a new raid LV.
