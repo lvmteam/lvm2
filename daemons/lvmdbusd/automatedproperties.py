@@ -159,10 +159,7 @@ class AutomatedProperties(dbus.service.Object):
 			cfg.om.lookup_update(self, new_id[0], new_id[1])
 
 		# Grab the properties values, then replace the state of the object
-		# and retrieve the new values
-		# TODO: We need to add locking to prevent concurrent access to the
-		# properties so that a client is not accessing while we are
-		# replacing.
+		# and retrieve the new values.
 		o_prop = get_properties(self)
 		self.state = new_state
 		n_prop = get_properties(self)
