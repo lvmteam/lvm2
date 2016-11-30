@@ -528,7 +528,6 @@ class TestDbusService(unittest.TestCase):
 
 		if path:
 			lv = ClientProxy(self.bus, path, interfaces=proxy_interfaces)
-			# TODO verify object properties
 
 		# We are quick enough now that we can get VolumeType changes from
 		# 'I' to 'i' between the time it takes to create a RAID and it returns
@@ -885,8 +884,6 @@ class TestDbusService(unittest.TestCase):
 		self.assertEqual(rc, '/')
 		self._check_consistency()
 
-		# Test Vg.Move
-		# TODO Test this more!
 		vg.update()
 		lv.update()
 
