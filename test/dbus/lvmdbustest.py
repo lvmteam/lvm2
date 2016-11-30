@@ -717,7 +717,6 @@ class TestDbusService(unittest.TestCase):
 
 	# noinspection PyUnresolvedReferences
 	def _wait_for_job(self, j_path):
-		import time
 		rc = None
 		j = ClientProxy(self.bus, j_path, interfaces=(JOB_INT, )).Job
 
