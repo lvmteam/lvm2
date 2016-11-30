@@ -1,5 +1,6 @@
 Version 2.02.168 - 
 ====================================
+  Display correct sync_percent on large RaidLVs
   lvmdbusd --blackboxsize <n> added, used to override default size of 16
   Allow a transiently failed RaidLV to be refreshed
   Use lv_update_and_reload() inside mirror code where it applies.

@@ -342,7 +342,7 @@ static int _raid_target_percent(void **target_state,
 	*total_denominator += denominator;
 
 	if (seg)
-		seg->extents_copied = seg->area_len * numerator / denominator;
+		seg->extents_copied = (uint64_t) seg->area_len * dm_make_percent(numerator, denominator) / DM_PERCENT_100;
 
 	*percent = dm_make_percent(numerator, denominator);
 
