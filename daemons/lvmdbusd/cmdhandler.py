@@ -55,18 +55,19 @@ class LvmExecutionMeta(object):
 
 class LvmFlightRecorder(object):
 
-	def __init__(self):
-		self.queue = collections.deque(maxlen=16)
+	def __init__(self, size=16):
+		self.queue = collections.deque(maxlen=size)
 
 	def add(self, lvm_exec_meta):
 		self.queue.append(lvm_exec_meta)
 
 	def dump(self):
 		with cmd_lock:
-			log_error("LVM dbus flight recorder START")
-			for c in self.queue:
-				log_error(str(c))
-			log_error("LVM dbus flight recorder END")
+			if len(self.queue):
+				log_error("LVM dbus flight recorder START")
+				for c in self.queue:
+					log_error(str(c))
+				log_error("LVM dbus flight recorder END")
 
 
 cfg.blackbox = LvmFlightRecorder()

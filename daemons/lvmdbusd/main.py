@@ -29,6 +29,7 @@ from .utils import log_debug, log_error
 import argparse
 import os
 import sys
+from .cmdhandler import LvmFlightRecorder
 
 
 class Lvm(objectmanager.ObjectManager):
@@ -75,6 +76,12 @@ def main():
 		help="Use the lvm shell, not fork & exec lvm",
 		default=False,
 		dest='use_lvm_shell')
+	parser.add_argument(
+		"--blackboxsize",
+		help="Size of the black box flight recorder, 0 to disable",
+		default=10,
+		type=int,
+		dest='bb_size')
 
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
 
@@ -82,6 +89,11 @@ def main():
 	os.environ["LC_ALL"] = "C"
 
 	cfg.args = parser.parse_args()
+
+	# We create a flight recorder in cmdhandler too, but we replace it here
+	# as the user may be specifying a different size.  The default one in
+	# cmdhandler is for when we are running other code with a different main.
+	cfg.blackbox = LvmFlightRecorder(cfg.args.bb_size)
 
 	if cfg.args.use_lvm_shell and not cfg.args.use_json:
 		log_error("You cannot specify --lvmshell and --nojson")
@@ -118,8 +130,8 @@ def main():
 	# thread that is handling the dbus interface
 	thread_list.append(threading.Thread(target=process_request))
 
-	# Have a single thread handling updating lvm and the dbus model so we don't
-	# have multiple threads doing this as the same time
+	# Have a single thread handling updating lvm and the dbus model so we
+	# don't have multiple threads doing this as the same time
 	updater = StateUpdate()
 	thread_list.append(updater.thread)
 
