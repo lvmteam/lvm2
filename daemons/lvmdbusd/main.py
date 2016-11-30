@@ -54,6 +54,14 @@ def process_request():
 			utils.log_error("process_request exception: \n%s" % st)
 
 
+def check_bb_size(value):
+	v = int(value)
+	if v < 0:
+		raise argparse.ArgumentTypeError(
+			"positive integers only ('%s' invalid)" % value)
+	return v
+
+
 def main():
 	start = time.time()
 	# Add simple command line handling
@@ -80,7 +88,7 @@ def main():
 		"--blackboxsize",
 		help="Size of the black box flight recorder, 0 to disable",
 		default=10,
-		type=int,
+		type=check_bb_size,
 		dest='bb_size')
 
 	use_session = os.getenv('LVMDBUSD_USE_SESSION', False)
