@@ -203,9 +203,8 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 	struct dm_task *dmt;
 	int dmtask;
 	void *target = NULL;
-	uint64_t target_start, target_length;
-	char *target_name, *target_params, *params_to_process = NULL;
-	uint32_t extent_size;
+	uint64_t target_start, target_length, start, length;
+	char *target_name, *target_params;
 	int with_flush = 1; /* TODO: arg for _info_run */
 
 	switch (type) {
@@ -240,21 +239,24 @@ static int _info_run(info_type_t type, const char *name, const char *dlid,
 	} else if (read_ahead)
 		*read_ahead = DM_READ_AHEAD_NONE;
 
-	if (type == STATUS) {
-		extent_size = seg_status->seg->lv->vg->extent_size;
+	/* Query status only for active device */
+	if ((type == STATUS) && dminfo->exists) {
+		start = length = seg_status->seg->lv->vg->extent_size;
+		start *= seg_status->seg->le;
+		length *= seg_status->seg->len;
+
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,
 						    &target_length, &target_name, &target_params);
-			if (((uint64_t) seg_status->seg->le * extent_size == target_start) &&
-			    ((uint64_t) seg_status->seg->len * extent_size == target_length)) {
-				params_to_process = target_params;
-				break;
-			}
+
+			if ((start == target_start) && (length == target_length))
+				break; /* Keep target_params when matching segment is found */
+
+			target_params = NULL; /* Marking this target_params unusable */
 		} while (target);
 
-		if (params_to_process &&
-		    !_get_segment_status_from_target_params(target_name, params_to_process, seg_status))
-			goto_out;
+		if (!_get_segment_status_from_target_params(target_name, target_params, seg_status))
+			stack;
 	}
 
 	r = 1;
