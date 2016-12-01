@@ -3363,30 +3363,26 @@ static int _lvmergefailed_disp(struct dm_report *rh, struct dm_pool *mem,
 			       struct dm_report_field *field,
 			       const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	dm_percent_t snap_percent;
-	int merge_failed;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (!lv_is_cow(lv) || !lv_snapshot_percent(lv, &snap_percent))
+	if (lvdm->seg_status.type != SEG_STATUS_SNAPSHOT)
 		return _binary_undef_disp(rh, mem, field, private);
 
-	merge_failed = snap_percent == LVM_PERCENT_MERGE_FAILED;
-	return _binary_disp(rh, mem, field, merge_failed, GET_FIRST_RESERVED_NAME(lv_merge_failed_y), private);
+	return _binary_disp(rh, mem, field, lvdm->seg_status.snapshot->merge_failed,
+			    GET_FIRST_RESERVED_NAME(lv_merge_failed_y), private);
 }
 
 static int _lvsnapshotinvalid_disp(struct dm_report *rh, struct dm_pool *mem,
 				   struct dm_report_field *field,
 				   const void *data, void *private)
 {
-	const struct logical_volume *lv = (const struct logical_volume *) data;
-	dm_percent_t snap_percent;
-	int snap_invalid;
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
 
-	if (!lv_is_cow(lv))
+	if (lvdm->seg_status.type != SEG_STATUS_SNAPSHOT)
 		return _binary_undef_disp(rh, mem, field, private);
 
-	snap_invalid = !lv_snapshot_percent(lv, &snap_percent) || snap_percent == DM_PERCENT_INVALID;
-	return _binary_disp(rh, mem, field, snap_invalid, GET_FIRST_RESERVED_NAME(lv_snapshot_invalid_y), private);
+	return _binary_disp(rh, mem, field, lvdm->seg_status.snapshot->invalid,
+			    GET_FIRST_RESERVED_NAME(lv_snapshot_invalid_y), private);
 }
 
 static int _lvsuspended_disp(struct dm_report *rh, struct dm_pool *mem,
