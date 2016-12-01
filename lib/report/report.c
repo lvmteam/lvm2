@@ -2936,12 +2936,16 @@ static int _metadatapercent_disp(struct dm_report *rh,
 				 const void *data, void *private)
 {
 	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
-	dm_percent_t percent = DM_PERCENT_INVALID;
+	dm_percent_t percent;
 
-	if (lv_is_thin_pool(lvdm->lv) ||
-	    lv_is_cache(lvdm->lv) ||
-	    lv_is_used_cache_pool(lvdm->lv))
+	switch (lvdm->seg_status.type) {
+	case SEG_STATUS_CACHE:
+	case SEG_STATUS_THIN_POOL:
 		percent = lvseg_percent_with_info_and_seg_status(lvdm, PERCENT_GET_METADATA);
+		break;
+	default:
+                percent = DM_PERCENT_INVALID;
+	}
 
 	return dm_report_field_percent(rh, field, &percent);
 }

@@ -1184,7 +1184,8 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 	if (lv_is_historical(lv)) {
 		repstr[4] = 'h';
 		repstr[5] = '-';
-	} else if (!activation() || !lvdm->info_ok) {
+	} else if (!activation() || !lvdm->info_ok ||
+		   (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)) {
 		repstr[4] = 'X';		/* Unknown */
 		repstr[5] = 'X';		/* Unknown */
 	} else if (lvdm->info.exists) {
@@ -1216,8 +1217,10 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 		/* 'c' when cache/thin-pool is active with needs_check flag
 		 * 'C' for suspend */
 		if ((lv_is_thin_pool(lv) &&
+		     (lvdm->seg_status.type == SEG_STATUS_THIN_POOL) &&
 		     lvdm->seg_status.thin_pool->needs_check) ||
 		    (lv_is_cache(lv) &&
+		     (lvdm->seg_status.type == SEG_STATUS_CACHE) &&
 		     lvdm->seg_status.cache->needs_check))
 			repstr[4] = lvdm->info.suspended ? 'C' : 'c';
 
@@ -1259,6 +1262,10 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 		repstr[7] = '-';
 
 	repstr[8] = '-';
+	/* TODO: also convert raid health
+	 * lv_is_raid_type() is to wide
+	 * NOTE: snapshot origin is 'mostly' showing it's layered status
+	 */
 	if (lv_is_partial(lv))
 		repstr[8] = 'p';
 	else if (lv_is_raid_type(lv)) {
@@ -1272,31 +1279,23 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
-	} else if (lv_is_cache(lv) &&
-		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
-		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
-			repstr[8] = 'X'; /* Unknown */
-		else if (lvdm->seg_status.cache->fail)
+	} else if (lvdm->seg_status.type == SEG_STATUS_CACHE) {
+		if (lvdm->seg_status.cache->fail)
 			repstr[8] = 'F';
 		else if (lvdm->seg_status.cache->read_only)
 			repstr[8] = 'M';
-	} else if (lv_is_thin_pool(lv) &&
-		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
-		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
-			repstr[8] = 'X'; /* Unknown */
-		else if (lvdm->seg_status.thin_pool->fail)
+	} else if (lvdm->seg_status.type == SEG_STATUS_THIN_POOL) {
+		if (lvdm->seg_status.thin_pool->fail)
 			repstr[8] = 'F';
 		else if (lvdm->seg_status.thin_pool->out_of_data_space)
 			repstr[8] = 'D';
 		else if (lvdm->seg_status.thin_pool->read_only)
 			repstr[8] = 'M';
-	} else if (lv_is_thin_volume(lv) &&
-		   (lvdm->seg_status.type != SEG_STATUS_NONE)) {
-		if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
-			repstr[8] = 'X'; /* Unknown */
-		else if (lvdm->seg_status.thin->fail)
+	} else if (lvdm->seg_status.type == SEG_STATUS_THIN) {
+		if (lvdm->seg_status.thin->fail)
 			repstr[8] = 'F';
-	}
+	} else if (lvdm->seg_status.type == SEG_STATUS_UNKNOWN)
+		repstr[8] = 'X'; /* Unknown */
 
 	if (lv->status & LV_ACTIVATION_SKIP)
 		repstr[9] = 'k';
