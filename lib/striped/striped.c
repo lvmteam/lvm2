@@ -159,6 +159,11 @@ static int _striped_merge_segments(struct lv_segment *seg1, struct lv_segment *s
 }
 
 #ifdef DEVMAPPER_SUPPORT
+static int _striped_target_status_compatible(const char *type)
+{
+	return (strcmp(type, TARGET_NAME_LINEAR) == 0);
+}
+
 static int _striped_add_target_line(struct dev_manager *dm,
 				struct dm_pool *mem __attribute__((unused)),
 				struct cmd_context *cmd __attribute__((unused)),
@@ -218,6 +223,7 @@ static struct segtype_handler _striped_ops = {
 	.text_export = _striped_text_export,
 	.merge_segments = _striped_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
+	.target_status_compatible = _striped_target_status_compatible,
 	.add_target_line = _striped_add_target_line,
 	.target_present = _striped_target_present,
 #endif

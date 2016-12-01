@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Implement compatible target function for stripe segment.
   Use status info to report merge failed and snapshot invalid lvs fields.
 
 Version 2.02.168 - 30th November 2016
