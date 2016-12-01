@@ -655,6 +655,10 @@ int target_present(struct cmd_context *cmd, const char *target_name,
 				      &maj, &min, &patchlevel);
 }
 
+/*
+ * When '*info' is NULL, returns 1 only when LV is active.
+ * When '*info' != NULL, returns 1 when info structure is populated.
+ */
 static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 		    int use_layer, struct lvinfo *info,
 		    const struct lv_segment *seg,

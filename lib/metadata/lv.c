@@ -258,6 +258,7 @@ char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *se
 	ret = lvseg_kernel_discards_dup_with_info_and_seg_status(mem, &status);
 bad:
 	dm_pool_destroy(status.seg_status.mem);
+
 	return ret;
 }
 
