@@ -728,15 +728,13 @@ int dev_manager_info(struct cmd_context *cmd, const struct logical_volume *lv,
 		     struct lv_seg_status *seg_status)
 {
 	char *dlid, *name;
-	int r;
+	int r = 0;
 
 	if (!(name = dm_build_dm_name(cmd->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-	if (!(dlid = build_dm_uuid(cmd->mem, lv, layer))) {
-		r = 0;
+	if (!(dlid = build_dm_uuid(cmd->mem, lv, layer)))
 		goto_out;
-	}
 
 	log_debug_activation("Getting device info for %s [%s].", name, dlid);
 	r = _info(cmd, dlid, with_open_count, with_read_ahead,
@@ -1446,13 +1444,13 @@ int dev_manager_thin_pool_percent(struct dev_manager *dm,
 {
 	char *name;
 	const char *dlid;
+	const char *layer = lv_layer(lv);
 
 	/* Build a name for the top layer */
-	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name,
-				      lv_layer(lv))))
+	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
 
-	if (!(dlid = build_dm_uuid(dm->mem, lv, lv_layer(lv))))
+	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
 		return_0;
 
 	log_debug_activation("Getting device status percentage for %s.", name);
