@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Report log_warn when status cannot be parsed.
   Test segment type before accessing segment members when checking status.
   Implement compatible target function for stripe segment.
   Use status info to report merge failed and snapshot invalid lvs fields.

@@ -126,7 +126,14 @@ static int _get_segment_status_from_target_params(const char *target_name,
 {
 	struct segment_type *segtype;
 
-	seg_status->type = SEG_STATUS_UNKNOWN;
+	seg_status->type = SEG_STATUS_UNKNOWN; /* Parsing failed */
+
+	if (!params) {
+		log_warn("WARNING: Cannot find matching %s segment for %s.",
+			 seg_status->seg->segtype->name,
+			 display_lvname(seg_status->seg->lv));
+		return 0;
+	}
 
 	/*
 	 * TODO: Add support for other segment types too!
@@ -141,19 +148,14 @@ static int _get_segment_status_from_target_params(const char *target_name,
 		if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, TARGET_NAME_SNAPSHOT)))
 			return_0;
 	} else {
-		if (strcmp(target_name, TARGET_NAME_CACHE) &&
-		    strcmp(target_name, TARGET_NAME_SNAPSHOT) &&
-		    strcmp(target_name, TARGET_NAME_THIN_POOL) &&
-		    strcmp(target_name, TARGET_NAME_THIN))
-			return 1; /* TODO: Do not know how to handle yet */
-
 		if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name)))
 			return_0;
 
+		/* Validate segtype from DM table and lvm2 metadata */
 		if (segtype != seg_status->seg->segtype) {
-			log_error(INTERNAL_ERROR "_get_segment_status_from_target_params: "
-				  "segment type %s found does not match expected segment type %s",
-				  segtype->name, seg_status->seg->segtype->name);
+			log_warn("WARNING: segment type %s found does not match "
+				 "expected segment type %s.",
+				 segtype->name, seg_status->seg->segtype->name);
 			return 0;
 		}
 	}
@@ -178,10 +180,9 @@ static int _get_segment_status_from_target_params(const char *target_name,
 		if (!dm_get_status_snapshot(seg_status->mem, params, &seg_status->snapshot))
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
-	} else {
-		log_error(INTERNAL_ERROR "Unsupported segment type %s.", segtype->name);
-		return 0;
-	}
+	} else
+		/* Status not supported */
+		seg_status->type = SEG_STATUS_NONE;
 
 	return 1;
 }
