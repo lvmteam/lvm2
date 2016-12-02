@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Simplify internal _info_run() and use _setup_task_run() for mknod.
   Better API for internal function _setup_task_run.
   Avoid using lv_has_target_type() call within lv_info_with_seg_status.
   Simplify internal lv_info_with_seg_status API.
