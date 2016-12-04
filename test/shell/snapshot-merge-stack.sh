@@ -37,14 +37,17 @@ snap_and_merge() {
 	lvconvert -b --merge $vg/$lv2
 
 	lvs -a -o+lv_merging,lv_merge_failed $vg
+	get lv_field $vg/$lv1 lv_attr | grep "Owi-ao"
+	get lv_field $vg/$lv2 lv_attr | grep "Swi-a-s---"
 	kill $SLEEP_PID
 
 	aux delay_dev "$dev1"  0 200 $(get first_extent_sector "$dev1"):
 	lvchange --poll n --refresh $vg/$lv1
 	dmsetup table
-	lvs -a -o+lv_merging,lv_merge_failed $vg
+	lvs -av -o+lv_merging,lv_merge_failed $vg
+	# Origin is closed and snapshot merge could run
+	get lv_field $vg/$lv1 lv_attr | grep "Owi-a-"
 	sleep 1
-	check lv_attr_bit state $vg/$lv1 "a"
 	check lv_attr_bit state $vg/$lv2 "a"
 	aux error_dev "$dev2" $(get first_extent_sector "$dev2"):
 	aux enable_dev "$dev1"
