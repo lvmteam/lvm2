@@ -255,7 +255,8 @@ char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *se
 	if (!(status.info_ok = lv_info_with_seg_status(seg->lv->vg->cmd, seg, &status, 0, 0)))
 		goto_bad;
 
-	ret = lvseg_kernel_discards_dup_with_info_and_seg_status(mem, &status);
+	if (!(ret = lvseg_kernel_discards_dup_with_info_and_seg_status(mem, &status)))
+		stack;
 bad:
 	dm_pool_destroy(status.seg_status.mem);
 
