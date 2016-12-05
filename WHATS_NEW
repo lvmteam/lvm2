@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Decide which status is needed in one place for lv_info_with_seg_status.
   Fix matching of LV segment when checking for it info status.
   Report log_warn when status cannot be parsed.
   Test segment type before accessing segment members when checking status.

@@ -124,42 +124,41 @@ static int _get_segment_status_from_target_params(const char *target_name,
 						  const char *params,
 						  struct lv_seg_status *seg_status)
 {
-	struct segment_type *segtype;
+	const struct lv_segment *seg = seg_status->seg;
+	const struct segment_type *segtype = seg->segtype;
 
 	seg_status->type = SEG_STATUS_UNKNOWN; /* Parsing failed */
 
+	/* Switch to snapshot segtype status logic for merging origin */
+	/* This is 'dynamic' decision, both states are valid */
+	if (lv_is_merging_origin(seg->lv)) {
+		if (!strcmp(target_name, TARGET_NAME_SNAPSHOT_ORIGIN)) {
+			seg_status->type = SEG_STATUS_NONE;
+			return 1; /* Merge has not yet started */
+		}
+		if (!strcmp(target_name, TARGET_NAME_SNAPSHOT_MERGE) &&
+		    !(segtype = get_segtype_from_string(seg->lv->vg->cmd, TARGET_NAME_SNAPSHOT)))
+			return_0;
+		/* Merging, parse 'snapshot' status of merge progress */
+	}
+
 	if (!params) {
 		log_warn("WARNING: Cannot find matching %s segment for %s.",
-			 seg_status->seg->segtype->name,
-			 display_lvname(seg_status->seg->lv));
+			 segtype->name, display_lvname(seg_status->seg->lv));
 		return 0;
 	}
 
-	/*
-	 * TODO: Add support for other segment types too!
-	 * The segment to report status for must be properly
-	 * selected for all the other types - mainly make sure
-	 * linear/striped, old snapshots and raids have proper
-	 * segment selected for status!
-	 */
-	if (!strcmp(target_name, TARGET_NAME_SNAPSHOT_MERGE) &&
-	    lv_is_merging_origin(seg_status->seg->lv)) {
-		/* Snapshot merge has started, check snapshot status */
-		if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, TARGET_NAME_SNAPSHOT)))
-			return_0;
-	} else {
-		if (!(segtype = get_segtype_from_string(seg_status->seg->lv->vg->cmd, target_name)))
-			return_0;
-
-		/* Validate segtype from DM table and lvm2 metadata */
-		if (segtype != seg_status->seg->segtype) {
-			log_warn("WARNING: segment type %s found does not match "
-				 "expected segment type %s.",
-				 segtype->name, seg_status->seg->segtype->name);
-			return 0;
-		}
+	/* Validate target_name segtype from DM table with lvm2 metadata segtype */
+	if (strcmp(segtype->name, target_name) &&
+	    /* If kernel's type isn't an exact match is it compatible? */
+	    (!segtype->ops->target_status_compatible ||
+	     !segtype->ops->target_status_compatible(target_name))) {
+		log_warn(INTERNAL_ERROR "WARNING: Segment type %s found does not match expected type %s for %s.",
+			 target_name, segtype->name, display_lvname(seg_status->seg->lv));
+		return 0;
 	}
 
+	/* TODO: move into segtype method */
 	if (segtype_is_cache(segtype)) {
 		if (!dm_get_status_cache(seg_status->mem, params, &(seg_status->cache)))
 			return_0;
@@ -181,7 +180,10 @@ static int _get_segment_status_from_target_params(const char *target_name,
 			return_0;
 		seg_status->type = SEG_STATUS_SNAPSHOT;
 	} else
-		/* Status not supported */
+		/*
+		 * TODO: Add support for other segment types too!
+		 * Status not supported
+		 */
 		seg_status->type = SEG_STATUS_NONE;
 
 	return 1;

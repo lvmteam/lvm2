@@ -87,32 +87,12 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 	return ECMD_PROCESSED;
 }
 
-static void _choose_lv_segment_for_status_report(const struct logical_volume *lv, const struct lv_segment **lv_seg)
-{
-	if (lv_is_used_cache_pool(lv)) {
-		/* For a used cache pool, choose cache volume segment */
-		*lv_seg = get_only_segment_using_this_lv(lv);
-		return;
-	}
-
-	/*
-	 * By default, take the first LV segment to report status for.
-	 * If there's any other specific segment that needs to be
-	 * reported instead for the LV, choose it here and assign it
-	 * to lvdm->seg_status->seg. This is the segment whose
-	 * status line will be used for report exactly.
-	 */
-	*lv_seg = first_seg(lv);
-}
-
 static int _do_info_and_status(struct cmd_context *cmd,
 				const struct logical_volume *lv,
 				const struct lv_segment *lv_seg,
 				struct lv_with_info_and_seg_status *status,
 				int do_info, int do_status)
 {
-	unsigned use_layer = lv_is_thin_pool(lv) ? 1 : 0;
-
 	status->lv = lv;
 
 	if (lv_is_historical(lv))
@@ -121,27 +101,16 @@ static int _do_info_and_status(struct cmd_context *cmd,
 	if (do_status) {
 		if (!(status->seg_status.mem = dm_pool_create("reporter_pool", 1024)))
 			return_0;
-		if (!lv_seg || seg_is_used_cache_pool(lv_seg))
-			_choose_lv_segment_for_status_report(lv, &lv_seg);
 
-		if (do_info) {
+		if (do_info)
 			/* both info and status */
-			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, use_layer, status, 1, 1);
-			/* for inactive thin-pools reset lv info struct */
-			if (use_layer && status->info_ok &&
-			    !lv_info(cmd, lv, 0, NULL, 0, 0))
-				memset(&status->info,  0, sizeof(status->info));
-			/* for inactive cache reset lvinfo for its struct for cache-pool */
-			if (lv_is_used_cache_pool(lv) && !status->info_ok) {
-				memset(&status->info,  0, sizeof(status->info));
-				status->info_ok = 1;
-			}
-		} else
+			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, 0, status, 1, 1);
+		else
 			/* status only */
-			status->info_ok = lv_status(cmd, lv_seg, use_layer, &status->seg_status);
+			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, 0, status, 0, 0);
 	} else if (do_info)
 		/* info only */
-		status->info_ok = lv_info(cmd, lv, use_layer, &status->info, 1, 1);
+		status->info_ok = lv_info(cmd, lv, 0, &status->info, 1, 1);
 
 	return 1;
 }
