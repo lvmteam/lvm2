@@ -243,10 +243,7 @@ char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *se
 {
 	char *ret = NULL;
 	struct lv_with_info_and_seg_status status = {
-		.seg_status = {
-			.type = SEG_STATUS_NONE,
-			.seg = seg
-		},
+		.seg_status.type = SEG_STATUS_NONE
 	};
 
 	if (!lv_is_thin_pool(seg->lv))
@@ -416,8 +413,8 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 			else {
 				log_warn("WARNING: Thin volume %s maps %s while the size is only %s.",
 					 display_lvname(seg->lv),
-					 display_size(lvdm->lv->vg->cmd, s->thin->mapped_sectors),
-					 display_size(lvdm->lv->vg->cmd, csize));
+					 display_size(seg->lv->vg->cmd, s->thin->mapped_sectors),
+					 display_size(seg->lv->vg->cmd, csize));
 				/* Don't show nonsense numbers like i.e. 1000% full */
 				p = DM_PERCENT_100;
 			}
@@ -1312,7 +1309,6 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	char *ret = NULL;
 	struct lv_with_info_and_seg_status status = {
 		.seg_status.type = SEG_STATUS_NONE,
-		.lv = lv
 	};
 
 	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024)))
