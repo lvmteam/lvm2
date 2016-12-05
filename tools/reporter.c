@@ -88,14 +88,13 @@ static int _vgs_single(struct cmd_context *cmd __attribute__((unused)),
 }
 
 static int _do_info_and_status(struct cmd_context *cmd,
-				const struct logical_volume *lv,
 				const struct lv_segment *lv_seg,
 				struct lv_with_info_and_seg_status *status,
 				int do_info, int do_status)
 {
-	status->lv = lv;
+	status->lv = lv_seg->lv;
 
-	if (lv_is_historical(lv))
+	if (lv_is_historical(lv_seg->lv))
 		return 1;
 
 	if (do_status) {
@@ -104,13 +103,12 @@ static int _do_info_and_status(struct cmd_context *cmd,
 
 		if (do_info)
 			/* both info and status */
-			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, 0, status, 1, 1);
+			status->info_ok = lv_info_with_seg_status(cmd, lv_seg, status, 1, 1);
 		else
-			/* status only */
-			status->info_ok = lv_info_with_seg_status(cmd, lv, lv_seg, 0, status, 0, 0);
+			status->info_ok = lv_info_with_seg_status(cmd, lv_seg, status, 0, 0);
 	} else if (do_info)
 		/* info only */
-		status->info_ok = lv_info(cmd, lv, 0, &status->info, 1, 1);
+		status->info_ok = lv_info(cmd, status->lv, 0, &status->info, 1, 1);
 
 	return 1;
 }
@@ -126,7 +124,7 @@ static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 	};
 	int r = ECMD_FAILED;
 
-	if (!_do_info_and_status(cmd, lv, NULL, &status, do_info, do_status))
+	if (!_do_info_and_status(cmd, first_seg(lv), &status, do_info, do_status))
 		goto_out;
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
@@ -176,7 +174,7 @@ static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
 	};
 	int r = ECMD_FAILED;
 
-	if (!_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status))
+	if (!_do_info_and_status(cmd, seg, &status, do_info, do_status))
 		goto_out;
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
@@ -302,7 +300,7 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 		.lv = &_free_logical_volume
 	};
 
-	if (seg && !_do_info_and_status(cmd, seg->lv, seg, &status, do_info, do_status))
+	if (seg && !_do_info_and_status(cmd, seg, &status, do_info, do_status))
 		goto_out;
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,

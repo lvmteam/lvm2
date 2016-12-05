@@ -741,32 +741,24 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 }
 
 /*
- * Returns 1 if lv_seg_status structure populated,
- * else 0 on failure or if device not active locally.
- */
-int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
-	      int use_layer, struct lv_seg_status *lv_seg_status)
-{
-	if (!activation())
-		return 0;
-
-	return _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, lv_seg_status, 0, 0);
-}
-
-/*
- * Returns 1 if lv_with_info_and_seg_status structure populated,
+ * Returns 1 if lv_with_info_and_seg_status info structure populated,
  * else 0 on failure or if device not active locally.
  *
  * When seg_status parsing had troubles it will set type to SEG_STATUS_UNKNOWN.
  *
- * This is the same as calling lv_info and lv_status,
- * but* it's done in one go with one ioctl if possible!                                                             ]
+ * Using usually one ioctl to obtain info and status.
+ * More complex segment do collect info from one device,
+ * but status from another device.
+ *
+ * TODO: further improve with more statuses (i.e. snapshot's origin/merge)
  */
-int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
-			    const struct lv_segment *lv_seg, int use_layer,
+int lv_info_with_seg_status(struct cmd_context *cmd,
+			    const struct lv_segment *lv_seg,
 			    struct lv_with_info_and_seg_status *status,
 			    int with_open_count, int with_read_ahead)
 {
+	const struct logical_volume *lv = status->lv = lv_seg->lv;
+
 	if (!activation())
 		return 0;
 
@@ -774,22 +766,9 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 		/* INFO is not set as cache-pool cannot be active.
 		 * STATUS is collected from cache LV */
 		lv_seg = get_only_segment_using_this_lv(lv);
-		(void) _lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, &status->seg_status, 0, 0);
+		(void) _lv_info(cmd, lv_seg->lv, 0, NULL, lv_seg, &status->seg_status, 0, 0);
 		return 1;
 	}
-
-	/* By default, take the first LV segment to report status for. */
-	if (!lv_seg)
-		lv_seg = first_seg(lv);
-
-	if (lv != lv_seg->lv)
-		/*
-		 * If the info is requested for an LV and segment
-		 * status for segment that belong to another LV,
-		 * we need to acquire info and status separately!
-		 */
-		return _lv_info(cmd, lv, use_layer, &status->info, NULL, NULL, with_open_count, with_read_ahead) &&
-			_lv_info(cmd, lv_seg->lv, use_layer, NULL, lv_seg, &status->seg_status, 0, 0);
 
 	if (lv_is_thin_pool(lv)) {
 		/* Always collect status for '-tpool' */
@@ -824,7 +803,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 			 * When merge is in progress, query merging origin LV instead.
 			 * COW volume is already mapped as error target in this case.
 			 */
-			lv = origin_from_cow(lv);
+			status->lv = lv = origin_from_cow(lv);
 			lv_seg = first_seg(lv);
 			log_debug_activation("Snapshot merge is in progress, querying status of %s instead.",
 					     display_lvname(lv));
@@ -833,7 +812,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume
 			lv_seg = find_snapshot(lv);
 	}
 
-	return _lv_info(cmd, lv, use_layer, &status->info, lv_seg, &status->seg_status,
+	return _lv_info(cmd, lv, 0, &status->info, lv_seg, &status->seg_status,
 			with_open_count, with_read_ahead);
 }
 

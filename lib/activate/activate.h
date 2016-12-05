@@ -54,11 +54,12 @@ struct lv_seg_status {
 };
 
 struct lv_with_info_and_seg_status {
-	const struct logical_volume *lv;	/* input */
 	int info_ok;
+	const struct logical_volume *lv;        /* output */
 	struct lvinfo info;			/* output */
 	int seg_part_of_lv;			/* output */
-	struct lv_seg_status seg_status;	/* input/output, see lv_seg_status */
+	struct lv_seg_status seg_status;	/* output, see lv_seg_status */
+	/* TODO: add extra status for snapshot origin */
 };
 
 struct lv_activate_opts {
@@ -133,21 +134,14 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s, int use_layer,
 		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
 /*
- * Returns 1 if lv_seg_status structure has been populated,
- * else 0 on failure or if device not active locally.
- */
-int lv_status(struct cmd_context *cmd, const struct lv_segment *lv_seg,
-	      int use_layer, struct lv_seg_status *lv_seg_status);
-
-/*
  * Returns 1 if lv_info_and_seg_status structure has been populated,
  * else 0 on failure or if device not active locally.
  *
  * lv_info_with_seg_status is the same as calling lv_info and then lv_status,
  * but this fn tries to do that with one ioctl if possible.
  */
-int lv_info_with_seg_status(struct cmd_context *cmd, const struct logical_volume *lv,
-			    const struct lv_segment *lv_seg, int use_layer,
+int lv_info_with_seg_status(struct cmd_context *cmd,
+			    const struct lv_segment *lv_seg,
 			    struct lv_with_info_and_seg_status *status,
 			    int with_open_count, int with_read_ahead);
 

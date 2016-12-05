@@ -255,7 +255,7 @@ char *lvseg_kernel_discards_dup(struct dm_pool *mem, const struct lv_segment *se
 	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024)))
 		return_NULL;
 
-	if (!(status.info_ok = lv_info_with_seg_status(seg->lv->vg->cmd, seg->lv, seg, 1, &status, 0, 0)))
+	if (!(status.info_ok = lv_info_with_seg_status(seg->lv->vg->cmd, seg, &status, 0, 0)))
 		goto_bad;
 
 	ret = lvseg_kernel_discards_dup_with_info_and_seg_status(mem, &status);
@@ -407,7 +407,7 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 			/* TODO: expose highest mapped sector */
 			p = DM_PERCENT_INVALID;
 		else {
-			seg = first_seg(lvdm->lv);
+			seg = lvdm->seg_status.seg;
 			/* Pool allocates whole chunk so round-up to nearest one */
 			csize = first_seg(seg->pool_lv)->chunk_size;
 			csize = ((seg->lv->size + csize - 1) / csize) * csize;
@@ -1318,7 +1318,7 @@ char *lv_attr_dup(struct dm_pool *mem, const struct logical_volume *lv)
 	if (!(status.seg_status.mem = dm_pool_create("reporter_pool", 1024)))
 		return_0;
 
-	if (!(status.info_ok = lv_info_with_seg_status(lv->vg->cmd, lv, first_seg(lv), 1, &status, 1, 1)))
+	if (!(status.info_ok = lv_info_with_seg_status(lv->vg->cmd, first_seg(lv), &status, 1, 1)))
 		goto_bad;
 
 	ret = lv_attr_dup_with_info_and_seg_status(mem, &status);
