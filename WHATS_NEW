@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Avoid using lv_has_target_type() call within lv_info_with_seg_status.
   Simplify internal lv_info_with_seg_status API.
   Decide which status is needed in one place for lv_info_with_seg_status.
   Fix matching of LV segment when checking for it info status.

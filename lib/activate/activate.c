@@ -757,7 +757,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 			    struct lv_with_info_and_seg_status *status,
 			    int with_open_count, int with_read_ahead)
 {
-	const struct logical_volume *lv = status->lv = lv_seg->lv;
+	const struct logical_volume *olv, *lv = status->lv = lv_seg->lv;
 
 	if (!activation())
 		return 0;
@@ -780,36 +780,46 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 				status->info.exists = 0; /* So pool LV is not active */
 		}
 		return 1;
-	} else if (lv_is_origin(lv) &&
-		   (!lv_is_merging_origin(lv) ||
-		    !lv_has_target_type(cmd->mem, lv, NULL, TARGET_NAME_SNAPSHOT_MERGE))) {
+	} else if (lv_is_origin(lv)) {
 		/* Query segment status for 'layered' (-real) device most of the time,
 		 * only for merging snapshot, query its progress.
 		 * TODO: single LV may need couple status to be exposed at once....
 		 *       but this needs more logical background
 		 */
-		/* Show INFO for actual origin */
-		if (!_lv_info(cmd, lv, 0, &status->info, NULL, NULL, with_open_count, with_read_ahead))
+		/* Show INFO for actual origin and grab status for merging origin */
+		if (!_lv_info(cmd, lv, 0, &status->info, lv_seg,
+			      lv_is_merging_origin(lv) ? &status->seg_status : NULL,
+			      with_open_count, with_read_ahead))
 			return_0;
 
-		if (status->info.exists)
+		if (status->info.exists &&
+		    (status->seg_status.type != SEG_STATUS_SNAPSHOT)) /* Not merging */
 			/* Grab STATUS from layered -real */
 			(void) _lv_info(cmd, lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
 		return 1;
 	} else if (lv_is_cow(lv)) {
-		if (lv_is_merging_cow(lv) &&
-		    lv_has_target_type(cmd->mem, origin_from_cow(lv), NULL, TARGET_NAME_SNAPSHOT_MERGE)) {
-			/*
-			 * When merge is in progress, query merging origin LV instead.
-			 * COW volume is already mapped as error target in this case.
-			 */
-			status->lv = lv = origin_from_cow(lv);
-			lv_seg = first_seg(lv);
-			log_debug_activation("Snapshot merge is in progress, querying status of %s instead.",
-					     display_lvname(lv));
-		} else
-			/* Hadle fictional lvm2 snapshot and query snapshotX volume */
-			lv_seg = find_snapshot(lv);
+		if (lv_is_merging_cow(lv)) {
+			olv = origin_from_cow(lv);
+
+			if (!_lv_info(cmd, olv, 0, &status->info, first_seg(olv), &status->seg_status,
+				      with_open_count, with_read_ahead))
+				return_0;
+
+			if (status->seg_status.type == SEG_STATUS_SNAPSHOT) {
+				log_debug_activation("Snapshot merge is in progress, querying status of %s instead.",
+						     display_lvname(lv));
+				/*
+				 * When merge is in progress, query merging origin LV instead.
+				 * COW volume is already mapped as error target in this case.
+				 */
+				status->lv = olv;
+				return 1;
+			}
+
+			/* Merge not yet started, still a snapshot... */
+		}
+		/* Hadle fictional lvm2 snapshot and query snapshotX volume */
+		lv_seg = find_snapshot(lv);
 	}
 
 	return _lv_info(cmd, lv, 0, &status->info, lv_seg, &status->seg_status,
