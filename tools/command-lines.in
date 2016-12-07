@@ -384,18 +384,22 @@ DESC: Change the type of mirror log used by a mirror LV.
 # lvconvert utilities for creating/maintaining thin and cache objects.
 # Create a new command set for these and migrate them out of lvconvert?
 
-lvconvert --type thin --thinpool LV LV_linear_striped_raid
+lvconvert --type thin --thinpool LV LV_linear_striped_raid_cache
 OO: --thin, --originname LV_new, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
-DESC: Convert LV to type thin with an external origin.
+DESC: Convert LV to a thin LV, using the original LV as an external origin.
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked
 
 # alternate form of lvconvert --type thin
-lvconvert --thin --thinpool LV LV_linear_striped_raid
+lvconvert --thin --thinpool LV LV_linear_striped_raid_cache
 OO: --type thin, --originname LV_new, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
-DESC: Convert LV to type thin with an external origin
+DESC: Convert LV to a thin LV, using the original LV as an external origin.
 DESC: (variant, infers --type thin).
 FLAGS: SECONDARY_SYNTAX
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked
 
 ---
 
@@ -404,6 +408,7 @@ OO: --cache, --cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_vol
 DESC: Convert LV to type cache.
+RULE: all and lv_is_visible
 
 # alternate form of lvconvert --type cache
 lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool
@@ -412,6 +417,7 @@ OO: --type cache, --cachemode CacheMode, --cachepolicy String,
 ID: lvconvert_to_cache_vol
 DESC: Convert LV to type cache (variant, infers --type cache).
 FLAGS: SECONDARY_SYNTAX
+RULE: all and lv_is_visible
 
 ---
 
@@ -421,14 +427,18 @@ OO: --stripes_long Number, --stripesize SizeKB,
 OP: PV ...
 ID: lvconvert_to_thinpool
 DESC: Convert LV to type thin-pool.
+RULE: all and lv_is_visible
+RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
 
 # alternate form of lvconvert --type thin-pool
 # deprecated because of non-standard syntax (missing positional arg)
+# Commands in this form are converted to standard form so that
+# the validation of LV types and rules specified above will apply.
 lvconvert --thinpool LV_linear_striped_raid_cache
 OO: --type thin-pool, --stripes_long Number, --stripesize SizeKB,
 --discards Discards, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
-ID: lvconvert_to_thinpool
+ID: lvconvert_to_thinpool_noarg
 DESC: Convert LV to type thin-pool (variant, use --type thin-pool).
 FLAGS: SECONDARY_SYNTAX
 
@@ -443,10 +453,13 @@ DESC: Convert LV to type cache-pool.
 
 # alternate form of lvconvert --type cache-pool
 # deprecated because of non-standard syntax (missing positional arg)
+# Commands in this form are converted to standard form so that
+# the validation of LV types and rules specified above will apply.
 lvconvert --cachepool LV_linear_striped_raid
 OO: --type cache-pool, OO_LVCONVERT_POOL, OO_LVCONVERT,
 --cachemode CacheMode, --cachepolicy String, --cachesettings String
-ID: lvconvert_to_cachepool
+OP: PV ...
+ID: lvconvert_to_cachepool_noarg
 DESC: Convert LV to type cache-pool (variant, use --type cache-pool).
 FLAGS: SECONDARY_SYNTAX
 
@@ -461,18 +474,15 @@ DESC: Separate and keep the cache pool from a cache LV.
 
 lvconvert --uncache LV_cache_thinpool
 OO: OO_LVCONVERT
-ID: lvconvert_split_and_delete_cachepool
+ID: lvconvert_split_and_remove_cachepool
 DESC: Separate and delete the cache pool from a cache LV.
 
 ---
 
-# FIXME: add a new option defining this operation, e.g. --swapmetadata
-
-lvconvert --poolmetadata LV LV_thinpool_cachepool
-OO: OO_LVCONVERT
+lvconvert --swapmetadata --poolmetadata LV LV_thinpool_cachepool
+OO: --chunksize SizeKB, OO_LVCONVERT
 ID: lvconvert_swap_pool_metadata
-DESC: Swap metadata LV in a thin pool or cache pool (temporary command).
-FLAGS: SECONDARY_SYNTAX
+DESC: Swap metadata LV in a thin pool or cache pool (for repair only).
 
 ---
 
@@ -876,6 +886,15 @@ IO: --mirrors 0
 ID: lvcreate_thin_snapshot_of_external
 DESC: Create a thin LV that is a snapshot of an external origin LV
 DESC: (infers --type thin).
+
+---
+
+lvconvert --mergethin LV_thin ...
+OO: --background, --interval Number, OO_LVCONVERT
+ID: lvconvert_merge_thin
+DESC: Merge thin LV into its origin LV.
+RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+RULE: all and lv_is_visible
 
 ---
 

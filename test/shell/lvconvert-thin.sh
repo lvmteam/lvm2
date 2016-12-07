@@ -81,9 +81,9 @@ grep "Pool zeroing and large" err
 UUID=$(get lv_field $vg/$lv2 uuid)
 # Fail is pool is active
 # TODO  maybe detect inactive pool and deactivate
-fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
+fail lvconvert --swapmetadata --yes --poolmetadata $lv2 $vg/$lv1
 lvchange -an $vg
-lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
+lvconvert --swapmetadata --yes --poolmetadata $lv2 $vg/$lv1
 check lv_field $vg/${lv1}_tmeta uuid "$UUID"
 lvremove -f $vg
 
@@ -96,20 +96,20 @@ lvcreate -L1M -n $lv3 $vg
 # chunk size is bigger then size of thin pool data
 fail lvconvert --yes -c 1G --thinpool $vg/$lv3
 # stripes can't be used with poolmetadata
-invalid lvconvert --stripes 2 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+not lvconvert --stripes 2 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too small metadata (<2M)
 fail lvconvert --yes -c 64 --thinpool $vg/$lv1 --poolmetadata $vg/$lv3
 # too small chunk size fails
-invalid lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+not lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too big chunk size fails
-invalid lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+not lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # negative chunk size fails
-invalid lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+not lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # non multiple of 64KiB fails
-invalid lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+not lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
 # cannot use same LV for pool and convertion
-invalid lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
+not lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
 
 # Warning about smaller then suggested
 lvconvert --yes -c 256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 2>&1 | tee err
@@ -129,7 +129,7 @@ if test "$TSIZE" = 64T; then
 lvcreate -L24T -n $lv1 $vg
 # Warning about bigger then needed (24T data and 16G -> 128K chunk)
 lvconvert --yes -c 64 --thinpool $vg/$lv1 2>&1 | tee err
-grep "WARNING: Chunk size is too small" err
+grep "too small" err
 lvremove -f $vg
 fi
 

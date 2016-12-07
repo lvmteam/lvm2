@@ -134,30 +134,29 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 
 	/* lvconvert utility to trigger polling on an LV. */
 	{ lvconvert_start_poll_CMD, lvconvert_start_poll_cmd },
+
+	/* lvconvert utilities for creating/maintaining thin and cache objects. */
+	{ lvconvert_to_thinpool_CMD,			lvconvert_to_pool_cmd },
+	{ lvconvert_to_thinpool_noarg_CMD,		lvconvert_to_pool_noarg_cmd },
+	{ lvconvert_to_cachepool_CMD,			lvconvert_to_pool_cmd },
+	{ lvconvert_to_cachepool_noarg_CMD,		lvconvert_to_pool_noarg_cmd },
+	{ lvconvert_to_thin_with_external_CMD,		lvconvert_to_thin_with_external_cmd },
+	{ lvconvert_to_cache_vol_CMD,			lvconvert_to_cache_vol_cmd },
+	{ lvconvert_swap_pool_metadata_CMD,		lvconvert_swap_pool_metadata_cmd },
+	{ lvconvert_merge_thin_CMD,			lvconvert_merge_thin_cmd },
+	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_cachepool_cmd },
+	{ lvconvert_split_and_remove_cachepool_CMD,	lvconvert_split_cachepool_cmd },
 };
 
 #if 0
 	/* all raid-related type conversions */
-
 	{ lvconvert_raid_types_CMD,			lvconvert_raid_types_fn },
 
 	/* raid-related utilities (move into lvconvert_raid_types?) */
-
 	{ lvconvert_split_mirror_images_CMD,		lvconvert_split_mirror_images_fn },
 	{ lvconvert_change_mirrorlog_CMD,		lvconvert_change_mirrorlog_fn },
 
-	/* utilities for creating/maintaining thin and cache objects. */
-
-	{ lvconvert_to_thin_with_external_CMD,		lvconvert_to_thin_with_external_fn },
-	{ lvconvert_to_cache_vol_CMD,			lvconvert_to_cache_vol_fn },
-	{ lvconvert_to_thinpool_CMD,			lvconvert_to_thinpool_fn },
-	{ lvconvert_to_cachepool_CMD,			lvconvert_to_cachepool_fn },
-	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_and_keep_cachepool_fn },
-	{ lvconvert_split_and_delete_cachepool_CMD,	lvconvert_split_and_delete_cachepool_fn },
-	{ lvconvert_swap_pool_metadata_CMD,		lvconvert_swap_pool_metadata_fn },
-
-	/* other misc. */
-
+	/* directed to one of the other merges (snap,thin,mirror) when all are implemented */
 	{ lvconvert_merge_CMD,				lvconvert_merge_fn },
 #endif
 
@@ -1134,6 +1133,18 @@ struct lv_types *get_lv_type(int lvt_enum)
 	if (!lvt_enum)
 		return NULL;
 	return &_lv_types[lvt_enum];
+}
+
+struct command *get_command(int cmd_enum)
+{
+	int i;
+
+	for (i = 0; i < COMMAND_COUNT; i++) {
+		if (commands[i].command_line_enum == cmd_enum)
+			return &commands[i];
+	}
+
+	return NULL;
 }
 
 /*

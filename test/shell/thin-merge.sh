@@ -44,7 +44,7 @@ touch mntsnap/test_snap
 
 lvs -o+tags,thin_id $vg
 
-lvconvert --merge $vg/snap
+lvconvert --mergethin $vg/snap
 
 umount mnt
 
@@ -107,7 +107,7 @@ fsck -n "$DM_DEV_DIR/$vg/$lv1"
 check lv_not_exists $vg oldsnapof_${lv1}
 # Add old snapshot to thin snapshot
 lvcreate -s -L10 -n oldsnapof_snap $vg/snap
-lvconvert --merge $vg/snap
+lvconvert --mergethin $vg/snap
 lvremove -f $vg/oldsnapof_snap
 
 vgremove -ff $vg

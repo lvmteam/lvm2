@@ -2539,7 +2539,7 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 	return 0;
 }
 
-static int _get_lvt_enum(struct logical_volume *lv)
+int get_lvt_enum(struct logical_volume *lv)
 {
 	struct lv_segment *seg = first_seg(lv);
 
@@ -2700,7 +2700,7 @@ static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, i
 
 	ret = _lv_types_match(cmd, lv, cmd->command->required_pos_args[pos-1].def.lvt_bits, NULL, NULL);
 	if (!ret) {
-		int lvt_enum = _get_lvt_enum(lv);
+		int lvt_enum = get_lvt_enum(lv);
 		struct lv_types *type = get_lv_type(lvt_enum);
 		log_warn("Operation on LV %s which has invalid type %s.",
 			 display_lvname(lv), type ? type->name : "unknown");
@@ -2723,7 +2723,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 	int ret = 1;
 	int i;
 
-	lvt_enum = _get_lvt_enum(lv);
+	lvt_enum = get_lvt_enum(lv);
 	if (lvt_enum)
 		lvtype = get_lv_type(lvt_enum);
 

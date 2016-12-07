@@ -240,4 +240,6 @@ int validate_restricted_lvname_param(struct cmd_context *cmd, const char **vg_na
 int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
                     struct processing_handle *handle __attribute__((unused)));
 
+int get_lvt_enum(struct logical_volume *lv);
+
 #endif
