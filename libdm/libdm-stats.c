@@ -2051,7 +2051,7 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 		goto bad;
 	}
 
-	if (!dm_stats_get_nr_areas(dms)) {
+	if (!dm_stats_get_nr_regions(dms)) {
 		log_error("Could not delete region ID " FMTu64 ": "
 			  "no regions found", region_id);
 		goto bad;
