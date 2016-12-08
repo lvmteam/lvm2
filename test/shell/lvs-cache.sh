@@ -23,7 +23,7 @@ aux have_cache 1 3 0 || skip
 aux prepare_vg 5 8000
 
 # Use 10M origin size
-lvcreate -L10 -n $lv1 $vg
+lvcreate -aey -L10 -n $lv1 $vg
 lvcreate -H -L5 $vg/$lv1
 
 # replace 10M size with 5M size of cache device
