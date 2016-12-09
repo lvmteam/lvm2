@@ -38,7 +38,7 @@ lvchange -an $vg
 
 lvcreate -L2M -n $lv1 $vg
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
-lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 
 # Cannot resize if set to 0%
 not lvextend --use-policies --config 'activation{thin_pool_autoextend_percent = 0}' $vg/pool 2>&1 | tee err

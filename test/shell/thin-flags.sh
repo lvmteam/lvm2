@@ -71,7 +71,7 @@ aux prepare_thin_metadata 490 1 | tee data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
-lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 
 lvchange -ay $vg
 

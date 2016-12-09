@@ -60,7 +60,7 @@ check lv_field $vg/$lv2 cache_settings "random_threshold=56,sequential_threshold
 # Check swap of cache pool metadata
 lvconvert --yes --type cache-pool --poolmetadata $lv4 $vg/$lv3
 UUID=$(get lv_field $vg/$lv5 uuid)
-lvconvert --yes --cachepool $vg/$lv3 --poolmetadata $lv5
+lvconvert --yes --swapmetadata --poolmetadata $lv5 $vg/$lv3
 check lv_field $vg/${lv3}_cmeta uuid "$UUID"
 
 
@@ -108,30 +108,30 @@ lvcreate -an -Zn -L 8 -n $lv4 $vg
 invalid lvconvert --type cache --poolmetadata $vg/$lv2 $vg/$lv1
 
 # Cannot mix with thins
-invalid lvconvert --type cache --poolmetadata $vg/$lv2 --thinpool $vg/$lv1
-invalid lvconvert --type cache --thin --poolmetadata $vg/$lv2 $vg/$lv1
+not lvconvert --type cache --poolmetadata $vg/$lv2 --thinpool $vg/$lv1
+not lvconvert --type cache --thin --poolmetadata $vg/$lv2 $vg/$lv1
 
 # Undefined cached volume
-invalid lvconvert --type cache --cachepool $vg/$lv1
-invalid lvconvert --cache --cachepool $vg/$lv1
+not lvconvert --type cache --cachepool $vg/$lv1
+not lvconvert --cache --cachepool $vg/$lv1
 
 # Single vg is required
-invalid lvconvert --type cache --cachepool $vg/$lv1 --poolmetadata $vg1/$lv2 $vg/$lv3
-invalid lvconvert --type cache --cachepool $vg/$lv1 --poolmetadata $lv2 $vg1/$lv3
-invalid lvconvert --type cache --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2 $vg/$lv3
-invalid lvconvert --type cache-pool --poolmetadata $vg2/$lv2 $vg1/$lv1
+not lvconvert --type cache --cachepool $vg/$lv1 --poolmetadata $vg1/$lv2 $vg/$lv3
+not lvconvert --type cache --cachepool $vg/$lv1 --poolmetadata $lv2 $vg1/$lv3
+not lvconvert --type cache --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2 $vg/$lv3
+not lvconvert --type cache-pool --poolmetadata $vg2/$lv2 $vg1/$lv1
 
-invalid lvconvert --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2
+not lvconvert --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2
 
 # Invalid syntax, vg is unknown
-invalid lvconvert --yes --cachepool $lv3 --poolmetadata $lv4
+not lvconvert --yes --cachepool $lv3 --poolmetadata $lv4
 
 # Invalid chunk size is <32KiB >1GiB
-invalid lvconvert --type cache-pool --chunksize 16 --poolmetadata $lv2 $vg/$lv1
-invalid lvconvert --type cache-pool --chunksize 2G --poolmetadata $lv2 $vg/$lv1
+not lvconvert --type cache-pool --chunksize 16 --poolmetadata $lv2 $vg/$lv1
+not lvconvert --type cache-pool --chunksize 2G --poolmetadata $lv2 $vg/$lv1
 
 # Invalid chunk size is bigger then data size, needs to open VG
-fail lvconvert --yes --type cache-pool --chunksize 16M --poolmetadata $lv2 $vg/$lv1
+not lvconvert --yes --type cache-pool --chunksize 16M --poolmetadata $lv2 $vg/$lv1
 
 lvremove -f $vg
 
@@ -142,7 +142,7 @@ lvcreate --type cache-pool -an -v -L 2 -n cpool $vg
 lvcreate -H -L 4 -n corigin --cachepool $vg/cpool
 
 # unsupported yet
-fail lvconvert --repair $vg/cpool 2>&1 | tee out
+not lvconvert --repair $vg/cpool 2>&1 | tee out
 #grep "Cannot convert internal LV" out
 
 lvremove -f $vg
@@ -154,13 +154,13 @@ lvcreate --type cache-pool -L10 $vg/$lv1
 lvcreate --cache -L20 $vg/$lv1
 lvcreate -L10 -n $lv2 $vg
 
-fail lvconvert --yes --type cache $vg/$lv2 --cachepool $vg/$lv1
-fail lvconvert --yes --type cache $vg/$lv1 --cachepool $vg/$lv2
-fail lvconvert --yes --type cache-pool $vg/$lv1
-fail lvconvert --yes --type mirror -m1 $vg/$lv1
+not lvconvert --yes --type cache $vg/$lv2 --cachepool $vg/$lv1
+not lvconvert --yes --type cache $vg/$lv1 --cachepool $vg/$lv2
+not lvconvert --yes --type cache-pool $vg/$lv1
+not lvconvert --yes --type mirror -m1 $vg/$lv1
 not aux have_raid 1 0 0 || fail lvconvert --yes --type raid1 -m1 $vg/$lv1
-fail lvconvert --yes --type snapshot $vg/$lv1 $vg/$lv2
-fail lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv1
+not lvconvert --yes --type snapshot $vg/$lv1 $vg/$lv2
+not lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv1
 not aux have_thin 1 0 0 || fail lvconvert --yes -T --thinpool $vg/$lv2 $vg/$lv1
 
 lvremove -f $vg

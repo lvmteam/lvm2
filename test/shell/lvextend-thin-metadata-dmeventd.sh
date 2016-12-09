@@ -78,7 +78,7 @@ fake_metadata_ 400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
-lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --chunksize 64k --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 
 # Not alllowed when thin-pool metadata free space is <75% for 2M meta
 fail lvcreate -V20 $vg/pool
@@ -91,7 +91,7 @@ lvchange -an $vg/pool
 fake_metadata_ 7400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv2"
 # Swap volume with restored fake metadata
-lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv2
+lvconvert -y --chunksize 64k --swapmetadata --poolmetadata $vg/$lv2 $vg/pool
 lvchange -ay $vg/pool
 # Check generated metadata consume more then 88%
 test "$(meta_percent_)" -gt "88"
@@ -138,7 +138,7 @@ lvchange -an $vg/thin $vg/thin2 $vg/pool
 # Transaction_id is lower by 1 and there are no messages -> ERROR
 fake_metadata_ 10 0 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
-lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 not vgchange -ay $vg 2>&1 | tee out
 grep expected out
 
@@ -147,7 +147,7 @@ check inactive $vg pool_tmeta
 # Transaction_id is higher by 1
 fake_metadata_ 10 3 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
-lvconvert -y --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 not vgchange -ay $vg 2>&1 | tee out
 grep expected out
 
@@ -158,7 +158,7 @@ fake_metadata_ 400 2 >data
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
 # Swap volume with restored fake metadata
-lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --chunksize 64k --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 
 vgchange -ay $vg
 
@@ -173,7 +173,7 @@ fake_metadata_ 350 2 >data
 lvchange -ay $vg/$lv1
 "$LVM_TEST_THIN_RESTORE_CMD" -i data -o "$DM_DEV_DIR/mapper/$vg-$lv1"
 
-lvconvert -y --chunksize 64k --thinpool $vg/pool --poolmetadata $vg/$lv1
+lvconvert -y --chunksize 64k --swapmetadata --poolmetadata $vg/$lv1 $vg/pool
 lvchange -ay $vg/pool  $vg/$lv1
 lvs -a $vg
 
