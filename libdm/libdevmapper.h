@@ -1297,24 +1297,29 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  * filesystem and optionally place them into a group.
  *
  * File descriptor fd must reference a regular file, open for reading,
- * in a local file system that supports the FIEMAP ioctl and that
+ * in a local file system that supports the FIEMAP ioctl, and that
  * returns data describing the physical location of extents.
  *
  * The file descriptor can be closed by the caller following the call
  * to dm_stats_create_regions_from_fd().
  *
- * The function returns a pointer to an array of uint64_t containing
- * the IDs of the newly created regions. The array is terminated by the
- * value DM_STATS_REGIONS_ALL and should be freed using dm_free() when
- * no longer required.
- *
  * Unless nogroup is non-zero the regions will be placed into a group
- * and the group alias is set to the value supplied.
+ * and the group alias set to the value supplied (if alias is NULL no
+ * group alias will be assigned).
+ *
+ * On success the function returns a pointer to an array of uint64_t
+ * containing the IDs of the newly created regions. The region_id
+ * array is terminated by the value DM_STATS_REGION_NOT_PRESENT and
+ * should be freed using dm_free() when no longer required. On error
+ * NULL is returned.
+ *
+ * Following a call to dm_stats_create_regions_from_fd() the handle
+ * is guaranteed to be in a listed state, and to contain any region
+ * and group identifiers created by the operation.
  *
  * The group_id for the new group is equal to the region_id value in
  * the first array element.
  *
- * File mapped histograms will be supported in a future version.
  */
 uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 					  int group, int precise,

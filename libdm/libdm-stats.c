@@ -4323,8 +4323,8 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 					    struct dm_histogram *bounds,
 					    int precise, uint64_t *count)
 {
+	uint64_t *regions = NULL, i, max_region;
 	struct _extent *extents = NULL;
-	uint64_t *regions = NULL, i;
 	char *hist_arg = NULL;
 	struct statfs fsbuf;
 	struct stat buf;
@@ -4390,10 +4390,21 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 	return regions;
 
 out_remove:
-	/* clean up regions after create failure */
-	for (--i; i != DM_STATS_REGION_NOT_PRESENT; i--)
-		if (!dm_stats_delete_region(dms, regions[i]))
+	/* New region creation may begin to fail part-way through creating
+	 * a set of file mapped regions: in this case we need to roll back
+	 * the regions that were already created and return the handle to
+	 * a consistent state. A listed handle is required for this: use a
+	 * single list operation and call _stats_delete_region() directly
+	 * to avoid a @stats_list ioctl and list parsing for each region.
+	 */
+	dm_stats_list(dms, NULL);
+
+	max_region = i;
+	for (i = max_region - 1; i < max_region; i++)
+		if (!_stats_delete_region(dms, regions[i]))
 			log_error("Could not delete region " FMTu64 ".", i);
+
+	*count = 0;
 
 out:
 	dm_pool_free(dms->mem, extents);
@@ -4401,7 +4412,6 @@ out:
 	dm_free(regions);
 	return NULL;
 }
-
 
 uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 					  int group, int precise,
