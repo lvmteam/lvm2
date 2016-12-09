@@ -2018,10 +2018,34 @@ static int _stats_remove_region_id_from_group(struct dm_stats *dms,
 	return _stats_set_aux(dms, group_id, dms->regions[group_id].aux_data);
 }
 
-int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
+static int _stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 {
 	char msg[STATS_MSG_BUF_LEN];
 	struct dm_task *dmt;
+
+	if (_stats_region_is_grouped(dms, region_id))
+		if (!_stats_remove_region_id_from_group(dms, region_id)) {
+			log_error("Could not remove region ID " FMTu64 " from "
+				  "group ID " FMTu64,
+				  region_id, dms->regions[region_id].group_id);
+			return 0;
+		}
+
+	if (!dm_snprintf(msg, sizeof(msg), "@stats_delete " FMTu64, region_id)) {
+		log_error("Could not prepare @stats_delete message.");
+		return 0;
+	}
+
+	dmt = _stats_send_message(dms, msg);
+	if (!dmt)
+		return_0;
+	dm_task_destroy(dmt);
+
+	return 1;
+}
+
+int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
+{
 	int listed = 0;
 
 	if (!_stats_bound(dms))
@@ -2065,23 +2089,8 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 		goto bad;
 	}
 
-	if(_stats_region_is_grouped(dms, region_id))
-		if (!_stats_remove_region_id_from_group(dms, region_id)) {
-			log_error("Could not remove region ID " FMTu64 " from "
-				  "group ID " FMTu64,
-				  region_id, dms->regions[region_id].group_id);
-			goto bad;
-		}
-
-	if (!dm_snprintf(msg, sizeof(msg), "@stats_delete " FMTu64, region_id)) {
-		log_error("Could not prepare @stats_delete message.");
+	if (!_stats_delete_region(dms, region_id))
 		goto bad;
-	}
-
-	dmt = _stats_send_message(dms, msg);
-	if (!dmt)
-		return_0;
-	dm_task_destroy(dmt);
 
 	if (!listed)
 		/* wipe region and mark as not present */
