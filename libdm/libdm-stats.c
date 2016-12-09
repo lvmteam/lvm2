@@ -378,6 +378,7 @@ static void _stats_groups_destroy(struct dm_stats *dms)
 	for (i = dms->max_region; (i != DM_STATS_REGION_NOT_PRESENT); i--)
 		_stats_group_destroy(&dms->groups[i]);
 	dm_pool_free(dms->group_mem, dms->groups);
+	dms->groups = NULL;
 }
 
 static int _set_stats_device(struct dm_stats *dms, struct dm_task *dmt)
