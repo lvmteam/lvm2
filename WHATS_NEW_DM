@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Validation vsnprintf result in runtime translate of dm_log (1.02.136).
   Separate filemap extent allocation from region table.
   Fix segmentation fault when filemap region creation fails
   Fix performance of region cleanup for failed filemap creation.
