@@ -271,4 +271,8 @@ int lvconvert_swap_pool_metadata_cmd(struct cmd_context *cmd, int argc, char **a
 int lvconvert_merge_thin_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_split_cachepool_cmd(struct cmd_context *cmd, int argc, char **argv);
 
+int lvconvert_merge_mirror_images_cmd(struct cmd_context *cmd, int argc, char **argv);
+
+int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv);
+
 #endif

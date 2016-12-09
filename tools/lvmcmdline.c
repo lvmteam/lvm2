@@ -146,19 +146,23 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 	{ lvconvert_merge_thin_CMD,			lvconvert_merge_thin_cmd },
 	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_cachepool_cmd },
 	{ lvconvert_split_and_remove_cachepool_CMD,	lvconvert_split_cachepool_cmd },
-};
+
+	/* lvconvert utilities for raid/mirror */
+	{ lvconvert_merge_mirror_images_CMD,		lvconvert_merge_mirror_images_cmd },
+#if 0
+	{ lvconvert_split_mirror_images_CMD,		lvconvert_split_mirror_images_cmd },
+	{ lvconvert_change_mirrorlog_CMD,		lvconvert_change_mirrorlog_cmd },
+#endif
+
+	/* redirected to merge_snapshot/merge_thin/merge_mirrors */
+	{ lvconvert_merge_CMD, lvconvert_merge_cmd },
 
 #if 0
 	/* all raid-related type conversions */
-	{ lvconvert_raid_types_CMD,			lvconvert_raid_types_fn },
-
-	/* raid-related utilities (move into lvconvert_raid_types?) */
-	{ lvconvert_split_mirror_images_CMD,		lvconvert_split_mirror_images_fn },
-	{ lvconvert_change_mirrorlog_CMD,		lvconvert_change_mirrorlog_fn },
-
-	/* directed to one of the other merges (snap,thin,mirror) when all are implemented */
-	{ lvconvert_merge_CMD,				lvconvert_merge_fn },
+	{ lvconvert_raid_types_CMD,			lvconvert_raid_types_cmd },
 #endif
+};
+
 
 /* Command line args */
 unsigned arg_count(const struct cmd_context *cmd, int a)

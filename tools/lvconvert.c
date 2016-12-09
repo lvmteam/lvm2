@@ -6399,3 +6399,75 @@ int lvconvert_split_cachepool_cmd(struct cmd_context *cmd, int argc, char **argv
 			       NULL, NULL, &_lvconvert_split_cachepool_single);
 }
 
+static int _lvconvert_merge_mirror_images_single(struct cmd_context *cmd,
+					  struct logical_volume *lv,
+					  struct processing_handle *handle)
+{
+	if (!lv_raid_merge(lv))
+		return ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_merge_mirror_images_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	cmd->command->flags &= ~GET_VGNAME_FROM_OPTIONS;
+
+	return process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_merge_mirror_images_single);
+}
+
+static int _lvconvert_merge_generic_single(struct cmd_context *cmd,
+					 struct logical_volume *lv,
+					 struct processing_handle *handle)
+{
+	int ret;
+
+	if (lv_is_cow(lv))
+		ret = _lvconvert_merge_snapshot_single(cmd, lv, handle);
+
+	else if (lv_is_thin_volume(lv))
+		ret = _lvconvert_merge_thin_single(cmd, lv, handle);
+
+	else
+		ret = _lvconvert_merge_mirror_images_single(cmd, lv, handle);
+
+	return ret;
+}
+
+int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	struct lvconvert_result lr = { 0 };
+	struct convert_poll_id_list *idl;
+	int ret, poll_ret;
+
+	dm_list_init(&lr.poll_idls);
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &lr;
+
+	cmd->command->flags &= ~GET_VGNAME_FROM_OPTIONS;
+
+	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			      handle, NULL, &_lvconvert_merge_generic_single);
+
+	/* polling is only used by merge_snapshot */
+	if (lr.need_polling) {
+		dm_list_iterate_items(idl, &lr.poll_idls) {
+			poll_ret = _lvconvert_poll_by_id(cmd, idl->id,
+						arg_is_set(cmd, background_ARG), 1, 0);
+			if (poll_ret > ret)
+				ret = poll_ret;
+		}
+	}
+
+	destroy_processing_handle(cmd, handle);
+
+	return ret;
+}
+

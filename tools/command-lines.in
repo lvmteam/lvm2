@@ -373,6 +373,12 @@ OP: PV ...
 ID: lvconvert_split_mirror_images
 DESC: Split images from a raid1 LV and track changes to origin.
 
+lvconvert --mergemirrors LV_linear_raid|VG|Tag ...
+OO: OO_LVCONVERT
+ID: lvconvert_merge_mirror_images
+DESC: Merge LV images that were split from a raid1 LV.
+RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+
 lvconvert --mirrorlog MirrorLog LV_mirror
 OO: OO_LVCONVERT
 OP: PV ...
@@ -486,37 +492,30 @@ DESC: Swap metadata LV in a thin pool or cache pool (for repair only).
 
 ---
 
-# FIXME: lvconvert --merge is an extremely ambiguous command.
+# lvconvert --merge is an extremely ambiguous command.
 # It can do very different operations, but which one depends
 # on knowing the LV type.  So, the command doesn't know what
 # it's actually doing until quite late, when processing a
-# single LV.
-#
-# Use different option names for different merge operations
-# so that we can have different command definitions,
-# different behaviors, different optional options, etc:
-#
-# lvconvert --merge-mirror LV_linear_striped_raid ...
-# DESC: Merge LV that was previously split from a mirror.
-#
-# lvconvert --merge-thin LV_thin
-# DESC: Merge thin LV into its origin LV.
-#
-# lvconvert --merge-snapshot LV_snapshot
-# DESC: Merge COW snapshot LV into its origin.
-#
-# Then we could add VG|Tag to --merge-mirror arg pos 1, because
-# "lvconvert --merge VG|Tag" is a terrible command.  It will do
-# different operations on each LV it finds, depending on the
-# current LV type.
+# single LV.  When passed a VG or tag, it will do different
+# operations on each LV it finds, depending on the current LV type.
 
 lvconvert --merge LV_linear_striped_raid_thin_snapshot|VG|Tag ...
 OO: --background, --interval Number, OO_LVCONVERT
 ID: lvconvert_merge
-DESC: Merge LV that was previously split from a mirror.
-DESC: Merge thin LV into its origin LV.
-DESC: Merge COW snapshot LV into its origin.
+DESC: Merge LV that was split from a mirror (variant, use --mergemirrors).
+DESC: Merge thin LV into its origin LV (variant, use --mergethin).
+DESC: Merge COW snapshot LV into its origin (variant, use --mergesnapshot).
 RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+FLAGS: SECONDARY_SYNTAX
+
+---
+
+lvconvert --mergethin LV_thin ...
+OO: OO_LVCONVERT
+ID: lvconvert_merge_thin
+DESC: Merge thin LV into its origin LV.
+RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
+RULE: all and lv_is_visible
 
 ---
 
@@ -526,7 +525,7 @@ RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origi
 lvconvert --mergesnapshot LV_snapshot ...
 OO: --background, --interval Number, OO_LVCONVERT
 ID: lvconvert_merge_snapshot
-DESC: Merge LV that was previously split from a mirror.
+DESC: Merge COW snapshot LV into its origin.
 RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
 RULE: all and lv_is_visible
 
@@ -886,15 +885,6 @@ IO: --mirrors 0
 ID: lvcreate_thin_snapshot_of_external
 DESC: Create a thin LV that is a snapshot of an external origin LV
 DESC: (infers --type thin).
-
----
-
-lvconvert --mergethin LV_thin ...
-OO: --background, --interval Number, OO_LVCONVERT
-ID: lvconvert_merge_thin
-DESC: Merge thin LV into its origin LV.
-RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
-RULE: all and lv_is_visible
 
 ---
 
