@@ -533,6 +533,11 @@ static int _vgchange_locktype(struct cmd_context *cmd,
 	struct logical_volume *lv;
 	int lv_lock_count = 0;
 
+	if (!lock_type) {
+		log_error(INTERNAL_ERROR "No locktype_ARG.");
+		return 0;
+	}
+
 	/*
 	 * This is a special/forced exception to change the lock type to none.
 	 * It's needed for recovery cases and skips the normal steps of undoing
