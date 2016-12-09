@@ -2745,7 +2745,8 @@ static response handler(daemon_state s, client_handle h, request r)
 							   "expected = %s", state->token,
 							   "received = %s", token,
 							   "update_pid = " FMTd64, (int64_t)state->update_pid,
-							   "reason = %s", "another command has populated the cache");
+							   "reason = %s", "another command has populated the cache",
+							   NULL);
 			}
 
 			DEBUGLOG(state, "token_update end len %d pid %d new token %s",
@@ -2778,7 +2779,8 @@ static response handler(daemon_state s, client_handle h, request r)
 					   "expected = %s", state->token,
 					   "received = %s", token,
 					   "update_pid = " FMTd64, (int64_t)state->update_pid,
-					   "reason = %s", "another command has populated the cache");
+					   "reason = %s", "another command has populated the cache",
+					   NULL);
 	}
 
 	/* If a pid doing update was cancelled, ignore its update messages. */
@@ -2793,7 +2795,8 @@ static response handler(daemon_state s, client_handle h, request r)
 					   "expected = %s", state->token,
 					   "received = %s", token,
 					   "update_pid = " FMTd64, (int64_t)state->update_pid,
-					   "reason = %s", "another command has populated the lvmetad cache");
+					   "reason = %s", "another command has populated the lvmetad cache",
+					   NULL);
 	}
 
 	pthread_mutex_unlock(&state->token_lock);
