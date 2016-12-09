@@ -38,6 +38,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 	struct dm_status_raid *status;
 	const char *d;
 	int dead = 0, r = 1;
+	uint32_t dev;
 
 	if (!dm_get_status_raid(state->mem, params, &status)) {
 		log_error("Failed to process status line for %s.", device);
@@ -46,24 +47,26 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 
 	d = status->dev_health;
 	while ((d = strchr(d, 'D'))) {
-		uint32_t dev = (uint32_t)(d - status->dev_health);
+		dev = (uint32_t)(d - status->dev_health);
 
-		if (!(state->raid_devs[dev / 64] & (UINT64_C(1) << (dev % 64))))
-			log_error("Device #%u of %s array, %s, has failed.",
-				  dev, status->raid_type, device);
+		if (!(state->raid_devs[dev / 64] & (UINT64_C(1) << (dev % 64)))) {
+			state->raid_devs[dev / 64] |= (UINT64_C(1) << (dev % 64));
+			log_warn("WARNING: Device #%u of %s array, %s, has failed.",
+				 dev, status->raid_type, device);
+		}
 
-		state->raid_devs[dev / 64] |= (UINT64_C(1) << (dev % 64));
 		d++;
 		dead = 1;
 	}
 
 	if (dead) {
 		if (status->insync_regions < status->total_regions) {
-			if (!state->warned)
+			if (!state->warned) {
+				state->warned = 1;
 				log_warn("WARNING: waiting for resynchronization to finish "
 					 "before initiating repair on RAID device %s.", device);
+			}
 
-			state->warned = 1;
 			goto out; /* Not yet done syncing with accessible devices */
 		}
 
