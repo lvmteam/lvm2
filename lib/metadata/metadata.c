@@ -2544,7 +2544,7 @@ static int _lv_mark_if_partial_collect(struct logical_volume *lv, void *data)
 static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
 {
 	unsigned s;
-	struct _lv_mark_if_partial_baton baton;
+	struct _lv_mark_if_partial_baton baton = { .partial = 0 };
 	struct lv_segment *lvseg;
 
 	dm_list_iterate_items(lvseg, &lv->segments) {
@@ -2556,7 +2556,6 @@ static int _lv_mark_if_partial_single(struct logical_volume *lv, void *data)
 		}
 	}
 
-	baton.partial = 0;
 	if (!_lv_each_dependency(lv, _lv_mark_if_partial_collect, &baton))
 		return_0;
 
