@@ -5386,6 +5386,8 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	};
 	struct processing_handle *handle = init_processing_handle(cmd, NULL);
 
+	cmd->command->flags &= ~GET_VGNAME_FROM_OPTIONS;
+
 	if (!handle) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;

@@ -3364,6 +3364,157 @@ static int _get_arg_lvnames(struct cmd_context *cmd,
 	return ret_max;
 }
 
+/*
+ * This is a non-standard way of finding vgname/lvname to process.  It exists
+ * because an earlier form of lvconvert did not follow the standard form, and
+ * came up with its own inconsistent approach.
+ *
+ * In this case, when the position arg is a single name, it is treated as an LV
+ * name (not a VG name).  This leaves the VG unknown.  So, other option values
+ * must be searched for a VG name.  If one of those option values contains a
+ * vgname/lvname value, then the VG name is extracted and used for the LV
+ * position arg.
+ *
+ * Other option values that are searched for a VG name are:
+ * --thinpool, --cachepool.
+ *
+ *  . command vg/lv1
+ *  . add vg to arg_vgnames
+ *  . add vg/lv1 to arg_lvnames
+ *
+ *  command lv1
+ *  . error: no vg name
+ *
+ *  command --option vg/lv1 vg/lv2
+ *  . verify both vg names match
+ *  . add vg to arg_vgnames
+ *  . add vg/lv2 to arg_lvnames
+ *
+ *  command --option lv1 lv2
+ *  . error: no vg name
+ *
+ *  command --option vg/lv1 lv2
+ *  . add vg to arg_vgnames
+ *  . add vg/lv2 to arg_lvnames
+ *
+ *  command --option lv1 vg/lv2
+ *  . add vg to arg_vgnames
+ *  . add vg/lv2 to arg_lvnames
+ */
+
+static int _get_arg_lvnames_using_options(struct cmd_context *cmd,
+			    		  int argc, char **argv,
+					  struct dm_list *arg_vgnames,
+					  struct dm_list *arg_lvnames,
+					  struct dm_list *arg_tags)
+{
+	const char *pos_name = NULL;
+	const char *arg_name = NULL;
+	const char *pos_vgname = NULL;
+	const char *opt_vgname = NULL;
+	const char *pos_lvname = NULL;
+	const char *use_vgname = NULL;
+	char *tmp_name;
+	char *split;
+	char *vglv;
+	size_t vglv_sz;
+
+	if (argc != 1) {
+		log_error("One LV position arg is required.");
+		return ECMD_FAILED;
+	}
+
+	if (!(pos_name = dm_pool_strdup(cmd->mem, argv[0]))) {
+		log_error("string alloc failed.");
+		return ECMD_FAILED;
+	}
+
+	if (*pos_name == '@') {
+		if (!validate_tag(pos_name + 1)) {
+			log_error("Skipping invalid tag %s.", pos_name);
+			return ECMD_FAILED;
+		}
+		if (!str_list_add(cmd->mem, arg_tags,
+				  dm_pool_strdup(cmd->mem, pos_name + 1))) {
+			log_error("strlist allocation failed.");
+			return ECMD_FAILED;
+		}
+		return ECMD_PROCESSED;
+	}
+
+	if ((split = strchr(pos_name, '/'))) {
+		pos_vgname = pos_name;
+		pos_lvname = split + 1;
+		*split = '\0';
+	} else {
+		pos_lvname = pos_name;
+		pos_vgname = NULL;
+	}
+
+	if (arg_is_set(cmd, thinpool_ARG))
+		arg_name = arg_str_value(cmd, thinpool_ARG, NULL);
+	else if (arg_is_set(cmd, cachepool_ARG))
+		arg_name = arg_str_value(cmd, cachepool_ARG, NULL);
+
+	if (!pos_vgname && !arg_name) {
+		log_error("Cannot find VG name for LV %s.", pos_lvname);
+		return ECMD_FAILED;
+	}
+
+	if (arg_name && (split = strchr(arg_name, '/'))) {
+		/* combined VG/LV */
+
+		if (!(tmp_name = dm_pool_strdup(cmd->mem, arg_name))) {
+			log_error("string alloc failed.");
+			return ECMD_FAILED;
+		}
+
+		if (!(split = strchr(tmp_name, '/')))
+			return ECMD_FAILED;
+
+		opt_vgname = tmp_name;
+		/* Don't care about opt lvname. */
+		/* opt_lvname = split + 1; */
+		*split = '\0';
+	} else {
+		/* Don't care about opt lvname. */
+		/* opt_lvname = arg_name; */
+		opt_vgname = NULL;
+	}
+
+	if (!pos_vgname && !opt_vgname) {
+		log_error("Cannot find VG name for LV %s.", pos_lvname);
+		return ECMD_FAILED;
+	}
+
+	if (pos_vgname && opt_vgname && strcmp(pos_vgname, opt_vgname)) {
+		log_error("VG name mismatch from position arg (%s) and option arg (%s).",
+			  pos_vgname, opt_vgname);
+		return ECMD_FAILED; 
+	}
+
+	use_vgname = pos_vgname ? pos_vgname : opt_vgname;
+
+	if (!str_list_add(cmd->mem, arg_vgnames, dm_pool_strdup(cmd->mem, use_vgname))) {
+		log_error("strlist allocation failed.");
+		return ECMD_FAILED;
+	}
+
+	vglv_sz = strlen(use_vgname) + strlen(pos_lvname) + 2;
+
+	if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
+	    dm_snprintf(vglv, vglv_sz, "%s/%s", use_vgname, pos_lvname) < 0) {
+		log_error("vg/lv string alloc failed.");
+		return ECMD_FAILED;
+	}
+	if (!str_list_add(cmd->mem, arg_lvnames, vglv)) {
+		log_error("strlist allocation failed.");
+		return ECMD_FAILED;
+	}
+
+	return ECMD_PROCESSED;
+}
+
 static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 				     struct dm_list *vgnameids_to_process,
 				     struct dm_list *arg_vgnames,
@@ -3523,7 +3674,12 @@ int process_each_lv(struct cmd_context *cmd,
 	/*
 	 * Find any LVs, VGs or tags explicitly provided on the command line.
 	 */
-	if ((ret = _get_arg_lvnames(cmd, argc, argv, one_vgname, one_lvname, &arg_vgnames, &arg_lvnames, &arg_tags) != ECMD_PROCESSED)) {
+	if (cmd->command->flags & GET_VGNAME_FROM_OPTIONS)
+		ret = _get_arg_lvnames_using_options(cmd, argc, argv, &arg_vgnames, &arg_lvnames, &arg_tags);
+	else
+		ret = _get_arg_lvnames(cmd, argc, argv, one_vgname, one_lvname, &arg_vgnames, &arg_lvnames, &arg_tags);
+
+	if (ret != ECMD_PROCESSED) {
 		ret_max = ret;
 		goto_out;
 	}

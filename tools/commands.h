@@ -47,7 +47,7 @@ xx(lvchange,
 
 xx(lvconvert,
    "Change logical volume layout",
-   0)
+   GET_VGNAME_FROM_OPTIONS)
 
 xx(lvcreate,
    "Create a logical volume",

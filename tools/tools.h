@@ -162,6 +162,8 @@ struct lv_types {
 #define ENABLE_DUPLICATE_DEVS    0x00000400
 /* Command does not accept tags as args. */
 #define DISALLOW_TAG_ARGS        0x00000800
+/* Command may need to find VG name in an option value. */
+#define GET_VGNAME_FROM_OPTIONS  0x00001000
 
 void usage(const char *name);
 
