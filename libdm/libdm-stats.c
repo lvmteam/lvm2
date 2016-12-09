@@ -347,6 +347,7 @@ static void _stats_regions_destroy(struct dm_stats *dms)
 	}
 
 	dm_pool_free(mem, dms->regions);
+	dms->regions = NULL;
 }
 
 static void _stats_group_destroy(struct dm_stats_group *group)
