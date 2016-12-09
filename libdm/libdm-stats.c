@@ -4382,10 +4382,9 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 
 out_remove:
 	/* clean up regions after create failure */
-	for (--i; i != DM_STATS_REGION_NOT_PRESENT; i--) {
-		if (!dm_stats_delete_region(dms, i))
+	for (--i; i != DM_STATS_REGION_NOT_PRESENT; i--)
+		if (!dm_stats_delete_region(dms, regions[i]))
 			log_error("Could not delete region " FMTu64 ".", i);
-	}
 
 out:
 	dm_pool_free(dms->mem, extents);
