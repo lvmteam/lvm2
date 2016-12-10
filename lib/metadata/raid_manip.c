@@ -379,10 +379,7 @@ static int _raid_remove_top_layer(struct logical_volume *lv,
 	return 1;
 }
 
-/*
- * _clear_lv
- * @lv
- *
+/* Makes on-disk metadata changes
  * If LV is active:
  *	clear first block of device
  * otherwise:
@@ -390,50 +387,15 @@ static int _raid_remove_top_layer(struct logical_volume *lv,
  *
  * Returns: 1 on success, 0 on failure
  */
-static int _clear_lv(struct logical_volume *lv)
-{
-	int was_active = lv_is_active_locally(lv);
-
-	if (test_mode())
-		return 1;
-
-	lv->status |= LV_TEMPORARY;
-	if (!was_active && !activate_lv_local(lv->vg->cmd, lv)) {
-		log_error("Failed to activate localy %s for clearing.",
-			  display_lvname(lv));
-		return 0;
-	}
-	lv->status &= ~LV_TEMPORARY;
-
-	log_verbose("Clearing metadata area of %s",
-		    display_lvname(lv));
-	/*
-	 * Rather than wiping lv->size, we can simply
-	 * wipe the first sector to remove the superblock of any previous
-	 * RAID devices.  It is much quicker.
-	 */
-	if (!wipe_lv(lv, (struct wipe_params) { .do_zero = 1, .zero_sectors = 1 })) {
-		log_error("Failed to zero %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	if (!was_active && !deactivate_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to deactivate %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	return 1;
-}
-
-/* Makes on-disk metadata changes */
 static int _clear_lvs(struct dm_list *lv_list)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg = NULL;
+	unsigned i = 0, sz = dm_list_size(lv_list);
+	char *was_active;
+	int r = 1;
 
-	if (dm_list_empty(lv_list)) {
+	if (!sz) {
 		log_debug_metadata(INTERNAL_ERROR "Empty list of LVs given for clearing.");
 		return 1;
 	}
@@ -447,6 +409,9 @@ static int _clear_lvs(struct dm_list *lv_list)
 		vg = lvl->lv->vg;
 	}
 
+	if (test_mode())
+		return 1;
+
 	/*
 	 * FIXME: only vg_[write|commit] if LVs are not already written
 	 * as visible in the LVM metadata (which is never the case yet).
@@ -454,11 +419,46 @@ static int _clear_lvs(struct dm_list *lv_list)
 	if (!vg || !vg_write(vg) || !vg_commit(vg))
 		return_0;
 
-	dm_list_iterate_items(lvl, lv_list)
-		if (!_clear_lv(lvl->lv))
-			return 0;
+	was_active = alloca(sz);
 
-	return 1;
+	dm_list_iterate_items(lvl, lv_list)
+		if (!(was_active[i++] = lv_is_active_locally(lvl->lv))) {
+			lvl->lv->status |= LV_TEMPORARY;
+			if (!activate_lv_excl_local(vg->cmd, lvl->lv)) {
+				log_error("Failed to activate localy %s for clearing.",
+					  display_lvname(lvl->lv));
+				r = 0;
+				goto out;
+			}
+			lvl->lv->status &= ~LV_TEMPORARY;
+		}
+
+	dm_list_iterate_items(lvl, lv_list) {
+		log_verbose("Clearing metadata area %s.", display_lvname(lvl->lv));
+		/*
+		 * Rather than wiping lv->size, we can simply
+		 * wipe the first sector to remove the superblock of any previous
+		 * RAID devices.  It is much quicker.
+		 */
+		if (!wipe_lv(lvl->lv, (struct wipe_params) { .do_zero = 1, .zero_sectors = 1 })) {
+			log_error("Failed to zero %s.", display_lvname(lvl->lv));
+			r = 0;
+			goto out;
+		}
+	}
+out:
+	/* TODO:   deactivation is only needed with clustered locking
+	 *         in normal case we should keep device active
+	 */
+	sz = 0;
+	dm_list_iterate_items(lvl, lv_list)
+		if ((i > sz) && !was_active[sz++] &&
+		    !deactivate_lv(vg->cmd, lvl->lv)) {
+			log_error("Failed to deactivate %s.", display_lvname(lvl->lv));
+			r = 0; /* continue deactivating */
+		}
+
+	return r;
 }
 
 /*
