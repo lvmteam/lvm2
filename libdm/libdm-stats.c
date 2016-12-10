@@ -4324,6 +4324,7 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 					    int precise, uint64_t *count)
 {
 	uint64_t *regions = NULL, i, max_region;
+	struct dm_pool *extent_mem = NULL;
 	struct _extent *extents = NULL;
 	char *hist_arg = NULL;
 	struct statfs fsbuf;
@@ -4357,8 +4358,18 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 		return 0;
 	}
 
-	if (!(extents = _stats_get_extents_for_file(dms->mem, fd, count)))
+	/* Use a temporary, private pool for the extent table. This avoids
+         * hijacking the dms->mem (region table) pool which would lead to
+         * interleaving temporary allocations with dm_stats_list() data,
+         * causing complications in the error path.
+         */
+	if (!(extent_mem = dm_pool_create("extents", sizeof(*extents))))
 		return_0;
+
+	if (!(extents = _stats_get_extents_for_file(extent_mem, fd, count))) {
+		dm_pool_destroy(extent_mem);
+		return_0;
+	}
 
         if (bounds) {
                 /* _build_histogram_arg enables precise if vals < 1ms. */
@@ -4386,7 +4397,8 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 
 	if (bounds)
 		dm_free(hist_arg);
-	dm_pool_free(dms->mem, extents);
+	dm_pool_free(extent_mem, extents);
+	dm_pool_destroy(extent_mem);
 	return regions;
 
 out_remove:
@@ -4407,7 +4419,8 @@ out_remove:
 	*count = 0;
 
 out:
-	dm_pool_free(dms->mem, extents);
+	dm_pool_free(extent_mem, extents);
+	dm_pool_destroy(extent_mem);
 	dm_free(hist_arg);
 	dm_free(regions);
 	return NULL;
