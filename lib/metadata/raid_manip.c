@@ -2207,6 +2207,7 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 				    int update_and_reload,
 				    struct dm_list *removal_lvs)
 {
+	struct logical_volume *log_lv;
 	struct lv_segment *seg = first_seg(lv);
 
 	if (!seg_is_raid1(seg)) {
@@ -2227,7 +2228,10 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 		return 0;
 	}
 
-	init_mirror_in_sync(new_image_count > seg->area_count ? 0 : 1);
+	if (!(log_lv = prepare_mirror_log(lv, (new_image_count <= seg->area_count) /* in sync */,
+					  new_region_size,
+					  allocate_pvs, lv->vg->alloc)))
+		return_0; /* TODO remove log_lv on error path */
 
 	/* Change image pair count to requested # of images */
 	if (new_image_count != seg->area_count) {
@@ -2255,11 +2259,8 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 	seg->status &= ~RAID;
 	lv->status |= (MIRROR | MIRRORED);
 
-	/* Add mirror_log LV (should happen in wih image allocation */
-	if (!add_mirror_log(lv->vg->cmd, lv, 1, seg->region_size, allocate_pvs, lv->vg->alloc)) {
-		log_error("Unable to add mirror log to %s.", display_lvname(lv));
-		return 0;
-	}
+	if (!attach_mirror_log(first_seg(lv), log_lv))
+		return_0;
 
 	return update_and_reload ? _lv_update_reload_fns_reset_eliminate_lvs(lv, removal_lvs) : 1;
 }

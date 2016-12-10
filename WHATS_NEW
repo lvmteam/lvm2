@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Fix lvconvert raid1 to mirror table reload order.
   Add internal function for separate mirror log preparation.
   Fix segfault in lvmetad from missing NULL in daemon_reply_simple.
   Simplify internal _info_run() and use _setup_task_run() for mknod.
