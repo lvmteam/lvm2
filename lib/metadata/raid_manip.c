@@ -1785,7 +1785,7 @@ static int _extract_image_component_error_seg(struct lv_segment *seg,
 	if (!remove_seg_from_segs_using_this_lv(lv, seg))
 		return_0;
 
-	if (!(lv->name = _generate_raid_name(lv, "extracted_", -1)))
+	if (!(lv->name = _generate_raid_name(lv, "extracted", -1)))
 		return_0;
 
 	if (set_error_seg && !replace_lv_with_error_segment(lv))

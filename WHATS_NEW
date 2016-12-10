@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Avoid adding extra '_' at end of raid extracted images or metadata.
   Optimize another _rmeta clearing code.
   Fix deactivation of raid orphan devices for clustered VG.
   Fix lvconvert raid1 to mirror table reload order.
