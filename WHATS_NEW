@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Fix deactivation of raid orphan devices for clustered VG.
   Fix lvconvert raid1 to mirror table reload order.
   Add internal function for separate mirror log preparation.
   Fix segfault in lvmetad from missing NULL in daemon_reply_simple.

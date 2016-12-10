@@ -248,6 +248,12 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 {
 	struct lv_list *lvl;
 
+	if (vg_is_clustered(vg))
+		/* Need to take lock for proper deactivation */
+		dm_list_iterate_items(lvl, removal_lvs)
+			if (!activate_lv_excl_local(vg->cmd, lvl->lv))
+				return_0;
+
 	dm_list_iterate_items(lvl, removal_lvs) {
 		if (!deactivate_lv(vg->cmd, lvl->lv))
 			return_0;
@@ -2968,6 +2974,12 @@ static int _clear_meta_lvs(struct logical_volume *lv)
 	    !lv_update_and_reload(lv))
 		return_0;
 
+	/* Note: detached rmeta are NOT renamed */
+	/* Grab locks first in case of clustered VG */
+	if (vg_is_clustered(lv->vg))
+		dm_list_iterate_items(lvl, &meta_lvs)
+			if (!activate_lv_excl_local(lv->vg->cmd, lvl->lv))
+				return_0;
 	/*
 	 * Now deactivate the MetaLVs before clearing, so
 	 * that _clear_lvs() will activate them visible.
