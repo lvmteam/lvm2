@@ -1,5 +1,8 @@
 Version 1.02.138 - 
 =====================================
+  Fix segmentation fault when filemap region creation fails
+  Fix performance of region cleanup for failed filemap creation.
+  Fix very slow region deletion with many regions.
 
 Version 1.02.137 - 30th November 2016
 =====================================
