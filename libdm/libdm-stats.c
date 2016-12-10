@@ -4323,7 +4323,7 @@ static uint64_t *_stats_create_file_regions(struct dm_stats *dms, int fd,
 					    struct dm_histogram *bounds,
 					    int precise, uint64_t *count)
 {
-	uint64_t *regions = NULL, i, max_region;
+	uint64_t *regions = NULL, i, fail_region;
 	struct dm_pool *extent_mem = NULL;
 	struct _extent *extents = NULL;
 	char *hist_arg = NULL;
@@ -4411,8 +4411,8 @@ out_remove:
 	 */
 	dm_stats_list(dms, NULL);
 
-	max_region = i;
-	for (i = max_region - 1; i < max_region; i++)
+	fail_region = i;
+	for (i = 0; i < fail_region; i++)
 		if (!_stats_delete_region(dms, regions[i]))
 			log_error("Could not delete region " FMTu64 ".", i);
 
