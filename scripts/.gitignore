@@ -3,6 +3,7 @@ blk_availability_systemd_red_hat.service
 blkdeactivate.sh
 clvmd_init_red_hat
 cmirrord_init_red_hat
+com.redhat.lvmdbus1.service
 dm_event_systemd_red_hat.service
 dm_event_systemd_red_hat.socket
 lvm2_activation_generator_systemd_red_hat
@@ -10,6 +11,7 @@ lvm2_cluster_activation_red_hat.sh
 lvm2_cluster_activation_systemd_red_hat.service
 lvm2_clvmd_systemd_red_hat.service
 lvm2_cmirrord_systemd_red_hat.service
+lvm2_lvmdbusd_systemd_red_hat.service
 lvm2_lvmetad_init_red_hat
 lvm2_lvmetad_systemd_red_hat.service
 lvm2_lvmetad_systemd_red_hat.socket
