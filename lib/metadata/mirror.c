@@ -1912,6 +1912,49 @@ int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv)
 	return add_seg_to_segs_using_this_lv(log_lv, seg);
 }
 
+/* Prepare disk mirror log for raid1->mirror conversion */
+struct logical_volume *prepare_mirror_log(struct logical_volume *lv,
+					  int in_sync, uint32_t region_size,
+					  struct dm_list *allocatable_pvs,
+					  alloc_policy_t alloc)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	const struct segment_type *segtype;
+	struct dm_list *parallel_areas;
+	struct alloc_handle *ah;
+	struct logical_volume *log_lv;
+
+	if (!(parallel_areas = build_parallel_areas_from_lv(lv, 0, 0)))
+		return_NULL;
+
+	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
+		return_NULL;
+
+	/* Allocate destination extents */
+	if (!(ah = allocate_extents(lv->vg, NULL, segtype,
+				    0, 0, 1, region_size,
+				    lv->le_count, allocatable_pvs,
+				    alloc, 0, parallel_areas))) {
+		log_error("Unable to allocate extents for mirror log.");
+		return NULL;
+	}
+
+	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name, "_mlog"))) {
+		log_error("Failed to create mirror log.");
+		goto out;
+	}
+
+	if (!_init_mirror_log(cmd, log_lv, in_sync, &lv->tags, 1)) {
+		log_error("Failed to initialise mirror log.");
+		log_lv = NULL;
+		goto out;
+	}
+out:
+	alloc_destroy(ah);
+
+	return log_lv;
+}
+
 int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 		   uint32_t log_count, uint32_t region_size,
 		   struct dm_list *allocatable_pvs, alloc_policy_t alloc)
