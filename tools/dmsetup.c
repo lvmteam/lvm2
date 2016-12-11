@@ -4957,16 +4957,8 @@ static char *_get_abspath(const char *path)
 	return _path;
 }
 
-static int _stats_create_file(CMD_ARGS)
+static int _stats_check_filemap_switches(void)
 {
-	const char *alias, *program_id = DM_STATS_PROGRAM_ID;
-	const char *bounds_str = _string_args[BOUNDS_ARG];
-	uint64_t *regions, *region, count = 0;
-	struct dm_histogram *bounds = NULL;
-	char *path, *abspath = NULL;
-	struct dm_stats *dms = NULL;
-	int group, fd = -1, precise;
-
 	if (_switches[AREAS_ARG] || _switches[AREA_SIZE_ARG]) {
 		log_error("--filemap is incompatible with --areas and --area-size.");
 		return 0;
@@ -4996,6 +4988,27 @@ static int _stats_create_file(CMD_ARGS)
 		log_error("--alldevices is incompatible with --filemap.");
 		return 0;
 	}
+
+	return 1;
+}
+
+static int _stats_create_file(CMD_ARGS)
+{
+	const char *alias, *program_id = DM_STATS_PROGRAM_ID;
+	const char *bounds_str = _string_args[BOUNDS_ARG];
+	uint64_t *regions, *region, count = 0;
+	struct dm_histogram *bounds = NULL;
+	char *path, *abspath = NULL;
+	struct dm_stats *dms = NULL;
+	int group, fd = -1, precise;
+
+	if (names) {
+		err("Device names are not compatibile with --filemap.");
+		return 0;
+	}
+
+	if (!_stats_check_filemap_switches())
+		return 0;
 
 	/* _stats_create_file does not use _process_all() */
 	if (!argc) {
@@ -5598,6 +5611,105 @@ out:
 	return r;
 }
 
+static int _stats_update_file(CMD_ARGS)
+{
+	uint64_t group_id, *region, *regions, count = 0;
+	const char *program_id = DM_STATS_PROGRAM_ID;
+	struct dm_stats *dms;
+	char *path, *abspath;
+	int fd = -1;
+
+	if (names) {
+		err("Device names are not compatibile with update_filemap.");
+		return 0;
+	}
+
+	if (!_stats_check_filemap_switches())
+		return 0;
+
+	/* _stats_update_file does not use _process_all() */
+	if (!argc) {
+		log_error("update_filemap requires a file path argument");
+		return 0;
+	}
+
+	if (!_switches[GROUP_ID_ARG]) {
+		err("--groupid is required to update a filemap group.");
+		return 0;
+	}
+
+	path = argv[0];
+
+	if (!(abspath = _get_abspath(path))) {
+		log_error("Could not canonicalize file name: %s", path);
+		return 0;
+	}
+
+	group_id = (uint64_t) _int_args[GROUP_ID_ARG];
+
+	if (_switches[PROGRAM_ID_ARG])
+		program_id = _string_args[PROGRAM_ID_ARG];
+	if (!strlen(program_id) && !_switches[FORCE_ARG])
+		program_id = DM_STATS_PROGRAM_ID;
+
+	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
+		goto_bad;
+
+	fd = open(abspath, O_RDONLY);
+
+	if (fd < 0) {
+		log_error("Could not open %s for reading", abspath);
+		goto bad;
+	}
+
+	if (!dm_stats_bind_from_fd(dms, fd))
+		goto_bad;
+
+	if (!strlen(program_id))
+		/* force creation of a region with no id */
+		dm_stats_set_program_id(dms, 1, NULL);
+
+	regions = dm_stats_update_regions_from_fd(dms, fd, group_id);
+
+	if (close(fd))
+		log_error("Error closing %s", abspath);
+
+	fd = -1;
+
+	if (!regions) {
+		log_error("Could not update regions from file %s", abspath);
+		goto bad;
+	}
+
+	for (region = regions; *region != DM_STATS_REGIONS_ALL; region++)
+		count++;
+
+	if (group_id != regions[0]) {
+		printf("Group ID changed from " FMTu64 " to " FMTu64,
+		       group_id, regions[0]);
+		group_id = regions[0];
+	}
+
+	printf("%s: Updated group ID " FMTu64 " with "FMTu64" region(s).\n",
+	       path, group_id, count);
+
+	dm_free(regions);
+	dm_free(abspath);
+	dm_stats_destroy(dms);
+	return 1;
+
+bad:
+	dm_free(abspath);
+
+	if ((fd > -1) && close(fd))
+		log_error("Error closing %s", path);
+
+	if (dms)
+		dm_stats_destroy(dms);
+
+	return 0;
+}
+
 /*
  * Command dispatch tables and usage.
  */
@@ -5678,6 +5790,7 @@ static struct command _stats_subcommands[] = {
 	{"print", PRINT_OPTS, 0, -1, 1, 0, _stats_print},
 	{"report", REPORT_OPTS "[<device...>]", 0, -1, 1, 0, _stats_report},
 	{"ungroup", "--groupid <id> " UNGROUP_OPTS, 1, -1, 1, 0, _stats_ungroup},
+	{"update_filemap", "--groupid <id> <file_path>", 1, 1, 0, 0, _stats_update_file},
 	{"version", "", 0, -1, 1, 0, _version},
 	{NULL, NULL, 0, 0, 0, 0, NULL}
 };
