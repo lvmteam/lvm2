@@ -83,38 +83,8 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			   struct dm_list *lvs_changed __attribute__((unused)),
 			   unsigned flags __attribute__((unused)))
 {
-	log_verbose("Updating volume group metadata.");
-	if (!vg_write(vg)) {
-		log_error("ABORTING: Volume group metadata update failed.");
-		return 0;
-	}
-
-	if (!suspend_lv(cmd, lv_mirr)) {
-		vg_revert(vg);
-		log_error("ABORTING: Temporary pvmove mirror reload failed.");
-		if (!revert_lv(cmd, lv_mirr))
-			stack;
-		return 0;
-	}
-
-	/* Commit on-disk metadata */
-	if (!vg_commit(vg)) {
-		log_error("ABORTING: Volume group metadata update failed.");
-		if (!resume_lv(cmd, lv_mirr))
-			log_error("Unable to reactivate logical volume \"%s\".",
-				  lv_mirr->name);
-		if (!revert_lv(cmd, lv_mirr))
-			stack;
-		return 0;
-	}
-
-	if (!resume_lv(cmd, lv_mirr)) {
-		log_error("Unable to reactivate logical volume \"%s\".",
-			  lv_mirr->name);
-		return 0;
-	}
-
-	backup(vg);
+	if (!lv_update_and_reload(lv_mirr))
+		return_0;
 
 	return 1;
 }
