@@ -49,7 +49,7 @@ test -n "$no_discard" || check grep_dmsetup status $vg-pool " no_discard_passdow
 lvchange --discards passdown $vg/pool
 check grep_dmsetup table $vg-pool -v "passdown"
 test -n "$no_discard" || check grep_dmsetup status $vg-pool " discard_passdown"
-exit
+
 # zero_ARG  (default is 'yes')
 check grep_dmsetup table $vg-pool -v "zeroing"
 lvchange --zero n $vg/pool
