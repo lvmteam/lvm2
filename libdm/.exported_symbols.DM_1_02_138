@@ -1,2 +1,3 @@
 dm_bit_get_last
 dm_bit_get_prev
+dm_bitset_parse_list

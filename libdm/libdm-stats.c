@@ -675,6 +675,7 @@ static void _check_group_regions_present(struct dm_stats *dms,
 #define DMS_GROUP_TAG_LEN (sizeof(DMS_GROUP_TAG) - 1)
 #define DMS_GROUP_SEP ':'
 #define DMS_AUX_SEP "#"
+
 static int _parse_aux_data_group(struct dm_stats *dms,
 				 struct dm_stats_region *region,
 				 struct dm_stats_group *group)
@@ -718,7 +719,7 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 		end = c + strlen(c);
 	*(end++) = '\0';
 
-	if (!(regions = dm_bitset_parse_list(c, NULL))) {
+	if (!(regions = dm_bitset_parse_list(c, NULL, 0))) {
 		log_error("Could not parse member list while "
 			  "reading group aux_data");
 		return 0;
@@ -3992,7 +3993,7 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 		return 0;
 	};
 
-	if (!(regions = dm_bitset_parse_list(members, NULL))) {
+	if (!(regions = dm_bitset_parse_list(members, NULL, 0))) {
 		log_error("Could not parse list: '%s'", members);
 		return 0;
 	}

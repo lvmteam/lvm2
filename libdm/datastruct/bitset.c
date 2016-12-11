@@ -145,7 +145,8 @@ int dm_bit_get_last(dm_bitset_t bs)
 /*
  * Based on the Linux kernel __bitmap_parselist from lib/bitmap.c
  */
-dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem)
+dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem,
+				 size_t min_num_bits)
 {
 	unsigned a, b;
 	int c, old_c, totaldigits, ndigits, nmaskbits;
@@ -221,6 +222,9 @@ scan:
 	} while (len && c == ',');
 
 	if (!mask) {
+		if (min_num_bits && (nmaskbits < min_num_bits))
+			nmaskbits = min_num_bits;
+
 		if (!(mask = dm_bitset_create(mem, nmaskbits)))
 			goto_bad;
 		str = start;
@@ -237,3 +241,19 @@ bad:
 	}
 	return NULL;
 }
+
+#if defined(__GNUC__)
+/*
+ * Maintain backward compatibility with older versions that did not
+ * accept a 'min_num_bits' argument to dm_bitset_parse_list().
+ */
+dm_bitset_t dm_bitset_parse_list_v1_02_129(const char *str, struct dm_pool *mem);
+dm_bitset_t dm_bitset_parse_list_v1_02_129(const char *str, struct dm_pool *mem)
+{
+	return dm_bitset_parse_list(str, mem, 0);
+}
+DM_EXPORT_SYMBOL(dm_bitset_parse_list, 1_02_129);
+
+#else /* if defined(__GNUC__) */
+
+#endif
