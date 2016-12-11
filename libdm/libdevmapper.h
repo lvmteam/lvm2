@@ -2069,6 +2069,8 @@ void dm_bit_and(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2);
 void dm_bit_union(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2);
 int dm_bit_get_first(dm_bitset_t bs);
 int dm_bit_get_next(dm_bitset_t bs, int last_bit);
+int dm_bit_get_last(dm_bitset_t bs);
+int dm_bit_get_prev(dm_bitset_t bs, int last_bit);
 
 #define DM_BITS_PER_INT (sizeof(int) * CHAR_BIT)
 

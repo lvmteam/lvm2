@@ -76,6 +76,13 @@ static int _test_word(uint32_t test, int bit)
 	return (tb ? ffs(tb) + bit - 1 : -1);
 }
 
+static int _test_word_rev(uint32_t test, int bit)
+{
+	uint32_t tb = test << (DM_BITS_PER_INT - 1 - bit);
+
+	return (tb ? bit - clz(tb) : -1);
+}
+
 int dm_bit_get_next(dm_bitset_t bs, int last_bit)
 {
 	int bit, word;
@@ -101,9 +108,38 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit)
 	return -1;
 }
 
+int dm_bit_get_prev(dm_bitset_t bs, int last_bit)
+{
+	int bit, word;
+	uint32_t test;
+
+	last_bit--;		/* otherwise we'll return the same bit again */
+
+	/*
+	 * bs[0] holds number of bits
+	 */
+	while (last_bit >= 0) {
+		word = last_bit >> INT_SHIFT;
+		test = bs[word + 1];
+		bit = last_bit & (DM_BITS_PER_INT - 1);
+
+		if ((bit = _test_word_rev(test, bit)) >= 0)
+			return (word * DM_BITS_PER_INT) + bit;
+
+		last_bit = (last_bit & ~(DM_BITS_PER_INT - 1)) - 1;
+	}
+
+	return -1;
+}
+
 int dm_bit_get_first(dm_bitset_t bs)
 {
 	return dm_bit_get_next(bs, -1);
+}
+
+int dm_bit_get_last(dm_bitset_t bs)
+{
+	return dm_bit_get_prev(bs, bs[0] + 1);
 }
 
 /*
