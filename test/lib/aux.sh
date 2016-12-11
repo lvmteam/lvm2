@@ -520,6 +520,8 @@ teardown() {
 
 	if test -f TESTNAME ; then
 
+	TEST_LEAKED_DEVICES=$(dmsetup table | grep "$PREFIX" | grep -v "${PREFIX}pv") || true
+
 	kill_tagged_processes
 
 	if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
@@ -566,6 +568,12 @@ teardown() {
 	echo -n .
 
 	fi
+
+	test -z "$TEST_LEAKED_DEVICES" || {
+		echo "Unexpected devices left dm table:"
+		echo "$TEST_LEAKED_DEVICES"
+		return 1
+	}
 
 	test -n "$TESTDIR" && {
 		cd "$TESTOLDPWD"
