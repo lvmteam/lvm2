@@ -157,16 +157,16 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	/* Unsuspend LVs */
+	if (!resume_lvs(cmd, lvs_changed))
+		stack;
+
 	/* Release mirror LV.  (No pending I/O because it's been suspended.) */
-	if (!resume_lv(cmd, lv_mirr)) {
+	if (!activate_lv_excl_local(cmd, lv_mirr)) {
 		log_error("Unable to reactivate logical volume \"%s\"",
 			  lv_mirr->name);
 		r = 0;
 	}
-
-	/* Unsuspend LVs */
-	if (!resume_lvs(cmd, lvs_changed))
-		stack;
 
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {
