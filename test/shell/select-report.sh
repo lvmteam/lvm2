@@ -218,3 +218,5 @@ sel lv '(lv_name=vol1 || lv_name=vol2) && lv_size < 8m' vol2
 sel lv '(lv_name=vol1 && lv_size=8m) && vg_tags=vg_tag2' vol1
 # negation of clause grouped by ( )
 sel lv '!(lv_name=vol1 || lv_name=vol2)' abc xyz orig snap
+
+vgremove -ff $vg1 $vg2 $vg3

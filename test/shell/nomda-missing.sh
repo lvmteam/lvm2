@@ -84,3 +84,5 @@ check active $vg linear2
 check active $vg linear12
 check active $vg mirror12
 check active $vg mirror123
+
+vgremove -ff $vg

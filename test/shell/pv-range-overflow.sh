@@ -32,3 +32,4 @@ grep "Logical volume bogus not found." err
 # 'run the offending pvmove command'
 not pvmove -v -n$lv "$dev1":4294967296 "$dev2"
 
+vgremove -ff $vg

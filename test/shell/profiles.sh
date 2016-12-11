@@ -131,3 +131,5 @@ lvm dumpconfig --type profilable-command --file etc/profile/generated.profile
 pvs --profile generated &> msg
 not grep "$MSG_NOT_PROFILABLE" msg
 not grep "$MSG_IGNORING_INVALID_CMD_PROFILE" msg
+
+vgremove -ff $vg1

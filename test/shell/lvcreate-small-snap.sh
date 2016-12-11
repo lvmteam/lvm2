@@ -32,3 +32,5 @@ grep "smaller" lvcreate.out
 not lvcreate -s -l 4 -n snapB $vg/one 2>&1 | tee lvcreate.out
 not grep "suspend origin one" lvcreate.out
 grep "smaller" lvcreate.out
+
+vgremove -ff $vg

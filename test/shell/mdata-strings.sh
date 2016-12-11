@@ -45,3 +45,5 @@ vgcreate $vg "$created"
 # 'no parse errors and VG really exists'
 vgs $vg 2>err
 not grep "Parse error" err
+
+dmsetup remove "${PREFIX}${pv_ugly}"

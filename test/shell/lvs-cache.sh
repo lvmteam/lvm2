@@ -88,3 +88,5 @@ lvremove -f $vg
 
 lvcreate -n foo -l 1 $vg
 lvs -a -S 'cache_policy=undefined' | grep foo
+
+vgremove -ff $vg

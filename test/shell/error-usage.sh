@@ -32,3 +32,5 @@ check lv_field $vg/$lv1 seg_size_pe "8"   # 8 * 256
 
 # FIXME should we print info we are ignoring stripping?
 lvextend -L+1 -I64 -i2 $vg/$lv1
+
+vgremove -ff $vg

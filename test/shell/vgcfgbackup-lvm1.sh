@@ -30,7 +30,7 @@ vgcreate -M1 -c n $vg $(cat DEVICES)
 lvcreate -l1 -n $lv1 $vg "$dev1"
 pvremove -ff -y "$dev2"
 not lvcreate -l1 -n $lv1 $vg "$dev3"
+lvchange -an $vg
 vgcfgbackup -f "backup.$$" $vg
 
 fi
-

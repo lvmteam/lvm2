@@ -50,3 +50,5 @@ check lv_field $vg/$lv1 lv_size "5.00" --units m --nosuffix
 # Try to resize again back up to the size of external origin
 lvresize -L+5 -f $vg/$lv1
 check lv_field $vg/$lv1 lv_size "10.00" --units m --nosuffix
+
+vgremove -ff $vg

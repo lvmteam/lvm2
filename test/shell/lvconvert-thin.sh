@@ -149,6 +149,5 @@ fail lvconvert --yes --type snapshot $vg/$lv1 $vg/$lv2
 fail lvconvert --yes --type snapshot $vg/$lv2 $vg/$lv1
 fail lvconvert --yes --type thin-pool $vg/$lv1
 
-lvremove -f $vg
-
 vgremove -ff $vg
+vgremove -ff $vg1

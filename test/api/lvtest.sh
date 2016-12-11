@@ -21,3 +21,5 @@ lvcreate -n test -l 5 $vg
 aux apitest lvtest $vg
 
 check lv_field $vg/test lv_name test
+
+vgremove -ff $vg

@@ -24,9 +24,10 @@ lvconvert --mirrorlog core $vg/mirror
 not lvconvert -m 1 --mirrorlog disk $vg/mirror "$dev3" 2>&1 | tee errs
 grep "two steps" errs
 
-test -e LOCAL_CLVMD && exit 0
+if test ! -e LOCAL_CLVMD ; then
 # FIXME  mirrored unsupported in cluster
 not lvconvert -m 1 --mirrorlog mirrored $vg/mirror "$dev3" "$dev4" 2>&1 | tee errs
 grep "two steps" errs
+fi
 
 vgremove -ff $vg

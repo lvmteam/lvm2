@@ -74,3 +74,5 @@ check vg_field $vg profile "thin-performance"
 check lv_field $vg/pool_performance_inherited profile ""
 $SHOULD check lv_field $vg/pool_performance_inherited chunk_size 1.00m
 check lv_field $vg/pool_performance_inherited zero ""
+
+vgremove -ff $vg

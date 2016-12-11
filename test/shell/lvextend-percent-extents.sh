@@ -108,3 +108,5 @@ lvremove -f $vg/$lv
 lvcreate -i2 -I 64k -l10 -n $lv $vg
 lvreduce -f -l1 $vg/$lv
 check lv_field $vg/$lv lv_size "8.00m"
+
+vgremove -ff $vg
