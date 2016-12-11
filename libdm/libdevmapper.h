@@ -1335,6 +1335,38 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 					  int group, int precise,
 					  struct dm_histogram *bounds,
 					  const char *alias);
+/*
+ * Update a group of regions that correspond to the extents of a file
+ * in the filesystem, adding and removing regions to account for
+ * allocation changes in the underlying file.
+ *
+ * File descriptor fd must reference a regular file, open for reading,
+ * in a local file system that supports the FIEMAP ioctl, and that
+ * returns data describing the physical location of extents.
+ *
+ * The file descriptor can be closed by the caller following the call
+ * to dm_stats_update_regions_from_fd().
+ *
+ * On success the function returns a pointer to an array of uint64_t
+ * containing the IDs of the updated regions (including any existing
+ * regions that were not modified by the call).
+ *
+ * The region_id array is terminated by the special value
+ * DM_STATS_REGION_NOT_PRESENT and should be freed using dm_free()
+ * when no longer required.
+ *
+ * On error NULL is returned.
+ *
+ * Following a call to dm_stats_update_regions_from_fd() the handle
+ * is guaranteed to be in a listed state, and to contain any region
+ * and group identifiers created by the operation.
+ *
+ * This function cannot be used with file mapped regions that are
+ * not members of a group: either group the regions, or remove them
+ * and re-map them with dm_stats_create_regions_from_fd().
+ */
+uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
+					  uint64_t group_id);
 
 /*
  * Call this to actually run the ioctl.
