@@ -100,3 +100,6 @@ vgreduce --removemissing --force $vg
 # Failed to activate new LV.
 
 should lvcreate -l1 $vg "$dev1"
+should not dmsetup remove ${vg}-lvol0
+
+vgremove -ff $vg

@@ -132,3 +132,7 @@ not "$FSCK" -n "$DM_DEV_DIR/$vg/$lv1"
 aux enable_dev "$dev1"
 
 vgremove -ff $vg
+
+# FIXME - device should not be here
+should not dmsetup remove ${vg}-cpool_cmeta-missing_0_0
+should not dmsetup remove ${vg}-cpool_cdata-missing_0_0
