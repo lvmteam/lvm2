@@ -548,17 +548,14 @@ static char *_generate_raid_name(struct logical_volume *lv,
 				 const char *suffix, int count)
 {
 	const char *format = (count >= 0) ? "%s_%s_%u" : "%s_%s";
-	size_t len = strlen(lv->name) + strlen(suffix) + ((count >= 0) ? 5 : 2);
-	char *name;
+	char name[NAME_LEN], *lvname;
 	int historical;
 
-	if (!(name = dm_pool_alloc(lv->vg->vgmem, len))) {
-		log_error("Failed to allocate new name.");
+	if (dm_snprintf(name, sizeof(name), format, lv->name, suffix, count) < 0) {
+		log_error("Failed to new raid name for %s.",
+			  display_lvname(lv));
 		return NULL;
 	}
-
-	if (dm_snprintf(name, len, format, lv->name, suffix, count) < 0)
-		return_NULL;
 
 	if (!validate_name(name)) {
 		log_error("New logical volume name \"%s\" is not valid.", name);
@@ -571,7 +568,12 @@ static char *_generate_raid_name(struct logical_volume *lv,
 		return NULL;
 	}
 
-	return name;
+	if (!(lvname = dm_pool_strdup(lv->vg->vgmem, name))) {
+		log_error("Failed to allocate new name.");
+		return NULL;
+	}
+
+	return lvname;
 }
 /*
  * Create an LV of specified type.  Set visible after creation.
