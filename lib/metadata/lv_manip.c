@@ -1417,17 +1417,23 @@ int lv_refresh_suspend_resume(const struct logical_volume *lv)
 	 * with transient failures of SubLVs.
 	 */
 	if (lv_is_raid(lv)) {
-		uint32_t s;
-		struct lv_segment *seg = first_seg(lv);
+		if (vg_is_clustered(lv->vg) &&
+		    lv_is_active_remotely(lv)) {
+			if (!_lv_refresh_suspend_resume(lv))
+				return 0;
+		} else {
+			uint32_t s;
+			struct lv_segment *seg = first_seg(lv);
 
-		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) == AREA_LV &&
-			    !_lv_refresh_suspend_resume(seg_lv(seg, s)))
-				return 0;
-			if (seg->meta_areas &&
-			    seg_metatype(seg, s) == AREA_LV &&
-			    !_lv_refresh_suspend_resume(seg_metalv(seg, s)))
-				return 0;
+			for (s = 0; s < seg->area_count; s++) {
+				if (seg_type(seg, s) == AREA_LV &&
+				    !_lv_refresh_suspend_resume(seg_lv(seg, s)))
+					return 0;
+				if (seg->meta_areas &&
+				    seg_metatype(seg, s) == AREA_LV &&
+				    !_lv_refresh_suspend_resume(seg_metalv(seg, s)))
+					return 0;
+			}
 		}
 	}
 
