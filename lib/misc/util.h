@@ -35,6 +35,47 @@
 #define uninitialized_var(x) x = x
 #endif
 
+/*
+ * GCC 3.4 adds a __builtin_clz, which uses the count leading zeros (clz)
+ * instruction on arches that have one. Provide a fallback using shifts
+ * and comparisons for older compilers.
+ */
+#ifdef HAVE___BUILTIN_CLZ
+#define clz(x) __builtin_clz((x))
+#else /* ifdef HAVE___BUILTIN_CLZ */
+unsigned _dm_clz(unsigned x)
+{
+	int n;
+
+	if ((int)x <= 0) return (~x >> 26) & 32;
+
+	n = 1;
+
+	if ((x >> 16) == 0) {
+		n = n + 16;
+		x = x << 16;
+	}
+
+	if ((x >> 24) == 0) {
+		n = n + 8;
+		x = x << 8;
+	}
+
+	if ((x >> 28) == 0) {
+		n = n + 4;
+		x = x << 4;
+	}
+
+	if ((x >> 30) == 0) {
+		n = n + 2;
+		x = x << 2;
+	}
+	n = n - (x >> 31);
+	return n;
+}
+#define clz(x) _dm_clz((x))
+#endif /* ifdef HAVE___BUILTIN_CLZ */
+
 #define KERNEL_VERSION(major, minor, release) (((major) << 16) + ((minor) << 8) + (release))
 
 /* Define some portable printing types */
