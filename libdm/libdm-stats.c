@@ -3880,6 +3880,12 @@ static int _stats_group_check_overlap(const struct dm_stats *dms,
 		i++;
 	}
 
+	/* A single region cannot overlap itself. */
+	if (i == 1) {
+		dm_pool_free(dms->mem, map);
+		return 1;
+	}
+
 	/* sort by extent.start */
 	qsort(map, count, sizeof(*map), _extent_start_compare);
 
@@ -3915,7 +3921,7 @@ merge:
 		goto merge;
 
 	dm_pool_free(dms->mem, map);
-	return overlap;
+	return (overlap == 0);
 }
 
 static void _stats_copy_histogram_bounds(struct dm_histogram *to,
