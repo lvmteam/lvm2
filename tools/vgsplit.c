@@ -112,7 +112,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
 		lv = dm_list_item(lvh, struct lv_list)->lv;
 
-		if ((lv->status & SNAPSHOT))
+		if (lv_is_snapshot(lv))
 			continue;
 
 		if (lv_is_raid(lv))
@@ -193,7 +193,7 @@ static int _move_snapshots(struct volume_group *vg_from,
 	dm_list_iterate_safe(lvh, lvht, &vg_from->lvs) {
 		lv = dm_list_item(lvh, struct lv_list)->lv;
 
-		if (!(lv->status & SNAPSHOT))
+		if (!lv_is_snapshot(lv))
 			continue;
 
 		dm_list_iterate_items(seg, &lv->segments) {

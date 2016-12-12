@@ -2402,7 +2402,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			goto_out;
 		}
 
-		if (lvl->lv->status & SNAPSHOT)
+		if (lv_is_snapshot(lvl->lv))
 			continue;
 
 		/* Skip availability change for non-virt snaps when processing all LVs */

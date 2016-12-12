@@ -56,7 +56,7 @@ static struct dm_hash_table *_create_lv_maps(struct dm_pool *mem,
 	}
 
 	dm_list_iterate_items(ll, &vg->lvs) {
-		if (ll->lv->status & SNAPSHOT)
+		if (lv_is_snapshot(ll->lv))
 			continue;
 
 		if (!(lvm = dm_pool_alloc(mem, sizeof(*lvm))))

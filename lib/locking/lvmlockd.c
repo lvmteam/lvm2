@@ -2651,7 +2651,7 @@ int lockd_lv_uses_lock(struct logical_volume *lv)
 	if (lv_is_cow(lv))
 		return 0;
 
-	if (lv->status & SNAPSHOT)
+	if (lv_is_snapshot(lv))
 		return 0;
 
 	/* FIXME: lv_is_virtual_origin ? */

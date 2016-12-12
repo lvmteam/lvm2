@@ -1139,7 +1139,8 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			 display_lvname(seg->lv), seg->le, area_num,
 			 display_lvname(lv), le);
 
-	if (status & RAID_META) {
+	lv->status |= status;
+	if (lv_is_raid_metadata(lv)) {
 		seg->meta_areas[area_num].type = AREA_LV;
 		seg_metalv(seg, area_num) = lv;
 		if (le) {
@@ -1152,7 +1153,6 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 		seg_lv(seg, area_num) = lv;
 		seg_le(seg, area_num) = le;
 	}
-	lv->status |= status;
 
 	if (!add_seg_to_segs_using_this_lv(lv, seg))
 		return_0;
@@ -4678,8 +4678,7 @@ static int _lvresize_check(struct logical_volume *lv,
 
 	if (lv_is_raid_image(lv) || lv_is_raid_metadata(lv)) {
 		log_error("Cannot resize a RAID %s directly",
-			  (lv->status & RAID_IMAGE) ? "image" :
-			  "metadata area");
+			  lv_is_raid_image(lv) ? "image" : "metadata area");
 		return 0;
 	}
 

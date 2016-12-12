@@ -97,7 +97,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
 		dm_list_iterate_items(lvl, &vg->lvs) {
 			lv = lvl->lv;
-			if (lv->status & SNAPSHOT)
+			if (lv_is_snapshot(lv))
 				continue;
 			if (lvnum_from_lvid(&lv->lvid) < MAX_RESTRICTED_LVS)
 				continue;

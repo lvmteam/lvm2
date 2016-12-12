@@ -135,7 +135,7 @@ static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 
 	*tracking = NULL;
 
-	if (!(lv->status & RAID))
+	if (!lv_is_raid(lv))
 		return 0;
 
 	for (s = 0; s < seg->area_count; s++)

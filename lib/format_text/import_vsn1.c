@@ -512,7 +512,7 @@ static int _read_segments(struct logical_volume *lv, const struct dm_config_node
 			count++;
 		}
 		/* FIXME Remove this restriction */
-		if ((lv->status & SNAPSHOT) && count > 1) {
+		if (lv_is_snapshot(lv) && count > 1) {
 			log_error("Only one segment permitted for snapshot");
 			return 0;
 		}

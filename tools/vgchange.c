@@ -107,11 +107,11 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			lv = origin_from_cow(lv);
 
 		/* Only request activation of snapshot origin devices */
-		if ((lv->status & SNAPSHOT) || lv_is_cow(lv))
+		if (lv_is_snapshot(lv) || lv_is_cow(lv))
 			continue;
 
 		/* Only request activation of mirror LV */
-		if ((lv->status & MIRROR_IMAGE) || (lv->status & MIRROR_LOG))
+		if (lv_is_mirror_image(lv) || lv_is_mirror_log(lv))
 			continue;
 
 		/* Only request activation of the first replicator-dev LV */

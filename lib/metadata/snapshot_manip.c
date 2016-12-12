@@ -121,7 +121,7 @@ int lv_is_visible(const struct logical_volume *lv)
 	if (lv_is_historical(lv))
 		return 1;
 
-	if (lv->status & SNAPSHOT)
+	if (lv_is_snapshot(lv))
 		return 0;
 
 	if (lv_is_cow(lv)) {

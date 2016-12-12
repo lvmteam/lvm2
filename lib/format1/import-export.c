@@ -510,7 +510,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		goto_out;
 
 	dm_list_iterate_items(ll, &vg->lvs) {
-		if (ll->lv->status & SNAPSHOT)
+		if (lv_is_snapshot(ll->lv))
 			continue;
 
 		if (!(lvdl = dm_pool_alloc(dl->mem, sizeof(*lvdl))))

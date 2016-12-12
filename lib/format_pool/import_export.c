@@ -267,7 +267,7 @@ int import_pool_segments(struct dm_list *lvs, struct dm_pool *mem,
 	dm_list_iterate_items(lvl, lvs) {
 		lv = lvl->lv;
 
-		if (lv->status & SNAPSHOT)
+		if (lv_is_snapshot(lv))
 			continue;
 
 		for (i = 0; i < subpools; i++) {
