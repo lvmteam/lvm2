@@ -341,6 +341,9 @@
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #undef HAVE_PTRDIFF_T
 
+/* Define to 1 if the compiler has the `__builtin_clz` builtin. */
+#undef HAVE___BUILTIN_CLZ
+
 /* Define to 1 if you have the <readline/history.h> header file. */
 #undef HAVE_READLINE_HISTORY_H
 
