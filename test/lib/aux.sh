@@ -520,7 +520,10 @@ teardown() {
 
 	if test -f TESTNAME ; then
 
-	TEST_LEAKED_DEVICES=$(dmsetup table | grep "$PREFIX" | grep -v "${PREFIX}pv") || true
+	if test ! -f SKIP_THIS_TEST ; then
+		# Evaluate left devices only for non-skipped tests
+		TEST_LEAKED_DEVICES=$(dmsetup table | grep "$PREFIX" | grep -v "${PREFIX}pv") || true
+	fi
 
 	kill_tagged_processes
 
