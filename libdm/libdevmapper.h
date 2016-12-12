@@ -2090,7 +2090,7 @@ int dm_bit_get_prev(dm_bitset_t bs, int last_bit);
    memset((bs) + 1, 0, ((*(bs) / DM_BITS_PER_INT) + 1) * sizeof(int))
 
 #define dm_bit_copy(bs1, bs2) \
-   memcpy((bs1) + 1, (bs2) + 1, ((*(bs1) / DM_BITS_PER_INT) + 1) * sizeof(int))
+   memcpy((bs1) + 1, (bs2) + 1, ((*(bs2) / DM_BITS_PER_INT) + 1) * sizeof(int))
 
 /*
  * Parse a string representation of a bitset into a dm_bitset_t. The
