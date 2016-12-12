@@ -54,12 +54,15 @@ class RequestEntry(object):
 		r.timer_expired()
 
 	def _return_job(self):
+		# Return job is only called when we create a request object or when
+		# we pop a timer.  In both cases we are running in the correct context
+		# and do not need to schedule the call back in main context.
 		self._job = Job(self, self._job_state)
 		cfg.om.register_object(self._job, True)
 		if self._return_tuple:
-			mt_async_result(self.cb, ('/', self._job.dbus_object_path()))
+			self.cb(('/', self._job.dbus_object_path()))
 		else:
-			mt_async_result(self.cb, self._job.dbus_object_path())
+			self.cb(self._job.dbus_object_path())
 
 	def run_cmd(self):
 		try:
