@@ -618,7 +618,7 @@ class Lv(LvCommon):
 			rc, out, err = cmdhandler.activate_deactivate(
 				'lvchange', lv_name, activate, control_flags, options)
 			if rc == 0:
-				dbo.refresh()
+				cfg.load()
 				return '/'
 			else:
 				raise dbus.exceptions.DBusException(
@@ -667,7 +667,7 @@ class Lv(LvCommon):
 			rc, out, err = cmdhandler.lv_tag(
 				lv_name, tags_add, tags_del, tag_options)
 			if rc == 0:
-				dbo.refresh()
+				cfg.load()
 				return '/'
 			else:
 				raise dbus.exceptions.DBusException(

@@ -727,7 +727,7 @@ class Vg(AutomatedProperties):
 			rc, out, err = cmdhandler.vg_tag(
 				vg_name, tags_add, tags_del, tag_options)
 			if rc == 0:
-				dbo.refresh()
+				cfg.load()
 				return '/'
 			else:
 				raise dbus.exceptions.DBusException(
@@ -780,7 +780,7 @@ class Vg(AutomatedProperties):
 		if dbo:
 			rc, out, err = method(vg_name, value, options)
 			if rc == 0:
-				dbo.refresh()
+				cfg.load()
 				return '/'
 			else:
 				raise dbus.exceptions.DBusException(
