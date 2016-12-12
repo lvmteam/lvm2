@@ -1,8 +1,9 @@
 Version 1.02.138 - 
 =====================================
+  Fix file mapping for extents with physically adjacent extents.
   Validation vsnprintf result in runtime translate of dm_log (1.02.136).
   Separate filemap extent allocation from region table.
-  Fix segmentation fault when filemap region creation fails
+  Fix segmentation fault when filemap region creation fails.
   Fix performance of region cleanup for failed filemap creation.
   Fix very slow region deletion with many regions.
 

@@ -4194,10 +4194,9 @@ static int _stats_add_extent(struct dm_pool *mem, struct fiemap_extent *fm_ext,
 }
 
 /* test for the boundary of an extent */
-#define ext_boundary(ext, exp, exp_dense)	\
-(((ext).fe_logical != 0) &&			\
-((ext).fe_physical != (exp)) &&			\
-((ext).fe_physical != (exp_dense)))
+#define ext_boundary(ext, exp)		\
+((ext).fe_logical != 0) &&		\
+((ext).fe_physical != (exp))
 
 /*
  * Read the extents of an open file descriptor into a table of struct _extent.
@@ -4213,10 +4212,9 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 	uint64_t *buf;
 	struct fiemap *fiemap = NULL;
 	struct fiemap_extent *fm_ext = NULL;
-	struct fiemap_extent fm_last = {0};
+	struct fiemap_extent fm_last = {0}, fm_pending = {0};
 	struct _extent *extents;
 	unsigned long long expected = 0;
-	unsigned long long expected_dense = 0;
 	unsigned long flags = 0;
 	unsigned int i, num = 0;
 	int tot_extents = 0, n = 0;
@@ -4264,30 +4262,50 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 			break;
 
 		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-			expected_dense = fm_last.fe_physical +
-					 fm_last.fe_length;
-			expected = fm_last.fe_physical +
-				   fm_ext[i].fe_logical - fm_last.fe_logical;
-			if (ext_boundary(fm_ext[i], expected, expected_dense)) {
+			expected = fm_last.fe_physical + fm_last.fe_length;
+
+			if (fm_ext[i].fe_flags & FIEMAP_EXTENT_LAST)
+				last = 1;
+
+			/* cannot map extents that are not yet allocated. */
+			if (fm_ext[i].fe_flags
+			    & (FIEMAP_EXTENT_UNKNOWN | FIEMAP_EXTENT_DELALLOC))
+				continue;
+
+			if (ext_boundary(fm_ext[i], expected)) {
 				tot_extents++;
-				if (!_stats_add_extent(mem, fm_ext + i,
-						       tot_extents - 1))
+				if (!_stats_add_extent(mem, &fm_pending,
+						       fm_pending.fe_flags))
 					goto_bad;
+				/* Begin a new pending extent. */
+				fm_pending.fe_flags = tot_extents - 1;
+				fm_pending.fe_physical = fm_ext[i].fe_physical;
+				fm_pending.fe_logical = fm_ext[i].fe_logical;
+				fm_pending.fe_length = fm_ext[i].fe_length;
 			} else {
 				expected = 0;
 				if (!tot_extents)
 					tot_extents = 1;
-				if (fm_ext[i].fe_logical == 0)
-					if (!_stats_add_extent(mem, fm_ext + i,
-							       tot_extents - 1))
-						goto_bad;
+				/* Begin a new pending extent for extent 0. */
+				if (fm_ext[i].fe_logical == 0) {
+					fm_pending.fe_flags = tot_extents - 1;
+					fm_pending.fe_physical = fm_ext[i].fe_physical;
+					fm_pending.fe_logical = fm_ext[i].fe_logical;
+					fm_pending.fe_length = fm_ext[i].fe_length;
+				} else
+					fm_pending.fe_length += fm_ext[i].fe_length;
 			}
 			num += tot_extents;
-			if (fm_ext[i].fe_flags & FIEMAP_EXTENT_LAST)
-				last = 1;
 			fm_last = fm_ext[i];
 			n++;
 		}
+
+		/*
+		 * If the file only has a single extent, no boundary is ever
+		 * detected to trigger addition of the first extent.
+		 */
+		if (fm_ext[i].fe_logical == 0)
+			_stats_add_extent(mem, &fm_pending, fm_pending.fe_flags);
 
 		fiemap->fm_start = (fm_ext[i - 1].fe_logical +
 				    fm_ext[i - 1].fe_length);
