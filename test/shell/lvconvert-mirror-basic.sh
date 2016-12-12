@@ -123,8 +123,7 @@ test_lvconvert() {
 	fi
 }
 
-aux prepare_pvs 5 5
-vgcreate -s 32k $vg $(cat DEVICES)
+aux prepare_vg 5 5
 
 MIRRORED="mirrored"
 # FIXME: Cluster is not supporting exlusive activation of mirrored log

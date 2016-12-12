@@ -42,9 +42,7 @@ which mkfs.ext4 || skip
 export MKE2FS_CONFIG="$TESTOLDPWD/lib/mke2fs.conf"
 
 aux prepare_dmeventd
-aux prepare_pvs 2 64
-
-vgcreate $vg -s 64K $(cat DEVICES)
+aux prepare_vg 2 64
 
 # Create named pool only
 lvcreate --errorwhenfull y -L2 -T $vg/pool

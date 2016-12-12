@@ -25,11 +25,9 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 #
 aux have_thin 1 1 0 || skip
 
-aux prepare_pvs 2 64
+aux prepare_vg 2 64
 
 aux extend_filter_LVMTEST
-
-vgcreate $vg -s 64K $(cat DEVICES)
 
 # Create named pool only
 lvcreate -l1 --discards ignore -T $vg/pool

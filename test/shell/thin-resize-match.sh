@@ -23,9 +23,7 @@ which md5sum || skip
 
 aux have_thin 1 0 0 || skip
 
-aux prepare_pvs 2 20
-
-vgcreate -s 512K $vg $(< DEVICES)
+aux prepare_vg 2 20
 
 lvcreate -L1M -V2M -n $lv1 -T $vg/pool
 

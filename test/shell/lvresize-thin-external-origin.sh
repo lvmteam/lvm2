@@ -23,9 +23,7 @@ aux have_thin 1 2 0 || skip
 # Pretend we miss the external_origin_extend feature
 aux lvmconf 'global/thin_disabled_features = [ "external_origin_extend" ]'
 
-aux prepare_pvs 2
-
-vgcreate -s 1M $vg $(cat DEVICES)
+aux prepare_vg 2
 
 lvcreate -L10 -n $lv1 $vg
 

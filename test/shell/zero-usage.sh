@@ -18,9 +18,7 @@ SKIP_WITH_LVMPOLLD=1
 
 which md5sum || skip
 
-aux prepare_pvs 1
-
-vgcreate -s 256k $vg $(cat DEVICES)
+aux prepare_vg 1
 
 lvcreate --type zero -L1 -n $lv1 $vg
 lvextend -L+1 $vg/$lv1

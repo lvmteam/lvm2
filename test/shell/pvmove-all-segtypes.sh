@@ -17,8 +17,7 @@ SKIP_WITH_LVMLOCKD=1
 
 which md5sum || skip
 
-aux prepare_pvs 5 20
-vgcreate -s 256k $vg $(cat DEVICES)
+aux prepare_vg 5 20
 
 # Each of the following tests does:
 # 1) Create two LVs - one linear and one other segment type

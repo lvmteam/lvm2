@@ -15,11 +15,13 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+# check we can talk to lvmetad
+(echo | aux lvmetad_talk) || skip
+
 aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"
 lvcreate -n bar -l 1 $vg1
 
-(echo | aux lvmetad_talk) || skip
 aux lvmetad_dump | tee lvmetad.txt
 
 grep $vg1 lvmetad.txt
