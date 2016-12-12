@@ -26,7 +26,7 @@ lvextend -L+1 $vg/$lv1
 check lv_field $vg/$lv1 lv_modules "error"
 check lv_field $vg/$lv1 segtype "error"
 check lv_field $vg/$lv1 seg_count "1"
-check lv_field $vg/$lv1 seg_size_pe "8"   # 8 * 256
+check lv_field $vg/$lv1 seg_size_pe "4"   # 4 * 512 => 2M
 
 # FIXME should we print info we are ignoring stripping?
 lvextend -L+1 -I64 -i2 $vg/$lv1

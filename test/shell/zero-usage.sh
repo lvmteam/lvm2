@@ -32,6 +32,6 @@ test "$sum1" = "$sum2"
 check lv_field $vg/$lv1 lv_modules "zero"
 check lv_field $vg/$lv1 segtype "zero"
 check lv_field $vg/$lv1 seg_count "1"
-check lv_field $vg/$lv1 seg_size_pe "8"   # 8 * 256
+check lv_field $vg/$lv1 seg_size_pe "4"   # 4 * 512
 
 vgremove -ff $vg
