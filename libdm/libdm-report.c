@@ -95,8 +95,8 @@ struct report_group_item {
 		uint32_t finished_count;
 	} store;
 	struct report_group_item *parent;
-	int output_done:1;
-	int needs_closing:1;
+	unsigned output_done:1;
+	unsigned needs_closing:1;
 	void *data;
 };
 
