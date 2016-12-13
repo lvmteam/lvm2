@@ -708,8 +708,14 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 	}
 
 	group->group_id = dm_bit_get_first(regions);
-	group->regions = regions;
+	if (group->group_id != region->region_id) {
+		log_error("Found invalid group descriptor in region " FMTu64
+			  " aux_data.", region->region_id);
+		group->group_id = DM_STATS_GROUP_NOT_PRESENT;
+		goto bad;
+	}
 
+	group->regions = regions;
 	group->alias = NULL;
 	if (strlen(alias)) {
 		group->alias = dm_strdup(alias);
