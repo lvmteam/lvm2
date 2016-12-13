@@ -623,7 +623,7 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 			break;
 		case AREA_LV:
 			/* FIXME This helper code should be target-independent! Check for metadata LV property. */
-			if (!(seg->status & RAID)) {
+			if (!seg_is_raid(seg)) {
 				outf(f, "\"%s\", %u%s",
 				     seg_lv(seg, s)->name,
 				     seg_le(seg, s),

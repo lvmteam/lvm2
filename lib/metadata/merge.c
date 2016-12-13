@@ -431,7 +431,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		}
 
 		if (complete_vg && seg->log_lv &&
-		    !seg_is_mirrored(seg) && !(seg->status & RAID_IMAGE)) {
+		    !seg_is_mirrored(seg) && lv_is_raid_image(lv)) {
 			log_error("LV %s: segment %u log LV %s is not a "
 				  "mirror log or a RAID image",
 				  lv->name, seg_count, seg->log_lv->name);
@@ -458,9 +458,9 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			}
 		}
 
-		if (complete_vg && seg->status & MIRROR_IMAGE) {
-			if (!find_mirror_seg(seg) ||
-			    !seg_is_mirrored(find_mirror_seg(seg))) {
+		if (complete_vg && lv_is_mirror_image(lv)) {
+			if (!(seg2 = find_mirror_seg(seg)) ||
+			    !seg_is_mirrored(seg2)) {
 				log_error("LV %s: segment %u mirror image "
 					  "is not mirrored",
 					  lv->name, seg_count);
