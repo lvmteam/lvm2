@@ -226,21 +226,6 @@ static void _clear_allocation_prohibited(struct dm_list *pvs)
 			pvl->pv->status &= ~PV_ALLOCATION_PROHIBITED;
 }
 
-/* FIXME Move this out */
-/* Write, commit and optionally backup metadata of vg */
-static int _vg_write_commit_backup(struct volume_group *vg)
-{
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		log_error("Failed to commit VG %s metadata.", vg->name);
-		return 0;
-	}
-
-	if (!backup(vg))
-		log_warn("WARNING: Backup of VG %s metadata failed. Continuing.", vg->name);
-
-	return 1;
-}
-
 /*
  * Deactivate and remove the LVs on removal_lvs list from vg.
  */
@@ -1898,8 +1883,12 @@ static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 
 	dm_list_init(removal_lvs);
 
-	if (vg_write_requested && !_vg_write_commit_backup(vg))
-		return_0;
+	if (vg_write_requested) {
+		if (!vg_write(vg) || !vg_commit(vg))
+			return_0;
+
+		backup(vg);
+	}
 
 	return 1;
 }
