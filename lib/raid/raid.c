@@ -167,7 +167,6 @@ static int _raid_text_import(struct lv_segment *seg,
 
 	if (seg_is_any_raid0(seg))
 		seg->area_len /= seg->area_count;
-	seg->status |= RAID;
 
 	return 1;
 }

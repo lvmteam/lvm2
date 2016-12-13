@@ -1701,7 +1701,7 @@ static int _alloc_and_add_new_striped_segment(struct logical_volume *lv,
 
 	/* Allocate a segment with seg->area_count areas */
 	if (!(new_seg = alloc_lv_segment(striped_segtype, lv, le, area_len * seg->area_count,
-					 seg->status & ~RAID,
+					 0,
 					 seg->stripe_size, NULL, seg->area_count,
 					 area_len, seg->chunk_size, 0, 0, NULL)))
 		return_0;
@@ -2150,7 +2150,6 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	lv->status &= ~MIRROR;
 	lv->status &= ~MIRRORED;
 	lv->status |= RAID;
-	seg->status |= RAID;
 
 	if (!lv_update_and_reload(lv))
 		return_0;
@@ -2220,7 +2219,6 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 	seg->segtype = new_segtype;
 	seg->region_size = new_region_size;
 	lv->status &= ~RAID;
-	seg->status &= ~RAID;
 	lv->status |= (MIRROR | MIRRORED);
 
 	if (!attach_mirror_log(first_seg(lv), log_lv))
@@ -2473,7 +2471,7 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	seg = first_seg(dm_list_item(dm_list_first(&data_lvs), struct lv_list)->lv);
 	if (!(raid0_seg = alloc_lv_segment(segtype, lv,
 					   0 /* le */, lv->le_count /* len */,
-					   seg->status | SEG_RAID,
+					   0,
 					   stripe_size, NULL /* log_lv */,
 					   area_count, area_len,
 					   0 /* chunk_size */,

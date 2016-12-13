@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Do not use LV RAID status bit for segment status.
   Check segtype directly instead of checking RAID in segment status. 
   Reusing exiting code for raid image removal.
   Fix pvmove leaving -pvmove0 error device in clustered VG.
