@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Reusing exiting code for raid image removal.
   Fix pvmove leaving -pvmove0 error device in clustered VG.
   Avoid adding extra '_' at end of raid extracted images or metadata.
   Optimize another _rmeta clearing code.

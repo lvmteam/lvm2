@@ -248,11 +248,10 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 {
 	struct lv_list *lvl;
 
-	if (vg_is_clustered(vg))
-		/* Need to take lock for proper deactivation */
-		dm_list_iterate_items(lvl, removal_lvs)
-			if (!activate_lv_excl_local(vg->cmd, lvl->lv))
-				return_0;
+	/* Need to take lock/resume for proper deactivation */
+	dm_list_iterate_items(lvl, removal_lvs)
+		if (!activate_lv_excl_local(vg->cmd, lvl->lv))
+			return_0;
 
 	dm_list_iterate_items(lvl, removal_lvs) {
 		if (!deactivate_lv(vg->cmd, lvl->lv))
@@ -1214,15 +1213,14 @@ static int _raid_remove_images(struct logical_volume *lv,
 			       struct dm_list *removal_lvs, int commit)
 {
 	struct dm_list removed_lvs;
-	struct lv_list *lvl;
-
-	dm_list_init(&removed_lvs);
 
 	if (!archive(lv->vg))
 		return_0;
 
-	if (!removal_lvs)
+	if (!removal_lvs) {
+		dm_list_init(&removed_lvs);
 		removal_lvs = &removed_lvs;
+	}
 
 	if (!_raid_extract_images(lv, 0, new_count, allocate_pvs, 1,
 				 removal_lvs, removal_lvs)) {
@@ -1245,48 +1243,8 @@ static int _raid_remove_images(struct logical_volume *lv,
 	if (!commit)
 		return 1;
 
-	if (!vg_write(lv->vg)) {
-		log_error("Failed to write changes for %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	if (!suspend_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to suspend %s before committing changes.",
-			  display_lvname(lv));
-		vg_revert(lv->vg);
-		return 0;
-	}
-
-	if (!vg_commit(lv->vg)) {
-		log_error("Failed to commit changes for %s.",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	/*
-	 * We activate the extracted sub-LVs first so they are renamed
-	 * and won't conflict with the remaining (possibly shifted)
-	 * sub-LVs.
-	 */
-	dm_list_iterate_items(lvl, removal_lvs) {
-		if (!activate_lv_excl_local(lv->vg->cmd, lvl->lv)) {
-			log_error("Failed to resume extracted LVs.");
-			return 0;
-		}
-	}
-
-	if (!resume_lv(lv->vg->cmd, lv)) {
-		log_error("Failed to resume %s after committing changes.",
-			  display_lvname(lv));
-		return 0;
-	}
-
-	if (!sync_local_dev_names(lv->vg->cmd)) {
-		log_error("Failed to sync local devices after committing changes for %s.",
-			  display_lvname(lv));
-		return 0;
-	}
+	if (!lv_update_and_reload(lv))
+		return_0;
 
 	/*
 	 * Eliminate the extracted LVs
