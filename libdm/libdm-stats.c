@@ -1716,9 +1716,7 @@ static size_t _stats_group_tag_fill(const struct dm_stats *dms,
 	int i, j, r, next, last = 0;
 	size_t used = 0;
 
-	i = dm_bit_get_first(regions);
-	for (; i >= 0; i = dm_bit_get_next(regions, i))
-		last = i;
+	last = dm_bit_get_last(regions);
 
 	i = dm_bit_get_first(regions);
 	for(; i >= 0; i = dm_bit_get_next(regions, i)) {
