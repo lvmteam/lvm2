@@ -4287,7 +4287,7 @@ static uint64_t _stats_map_extents(struct dm_pool *mem,
 	 * If the file only has a single extent, no boundary is ever
 	 * detected to trigger addition of the first extent.
 	 */
-	if (fm_ext[i].fe_logical == 0)
+	if (fm_ext[i - 1].fe_logical == 0)
 		_stats_add_extent(mem, fm_pending, nr_extents);
 
 	fiemap->fm_start = (fm_ext[i - 1].fe_logical +
