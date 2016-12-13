@@ -645,6 +645,23 @@ static void _stats_update_groups(struct dm_stats *dms)
 	}
 }
 
+static void _check_group_regions_present(struct dm_stats *dms,
+					 struct dm_stats_group *group)
+{
+	dm_bitset_t regions = group->regions;
+	int64_t i, group_id;
+
+	group_id = i = dm_bit_get_first(regions);
+
+	for (; i > 0; dm_bit_get_next(regions, i))
+		if (!_stats_region_present(&dms->regions[i])) {
+			log_warn("Group descriptor " FMTi64 " contains "
+				 "non-existent region_id " FMTi64 ".",
+				 group_id, i);
+			dm_bit_clear(regions, i);
+		}
+}
+
 /*
  * Parse a DMS_GROUP group descriptor embedded in a region's aux_data.
  *
@@ -1029,6 +1046,9 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 	dms->max_region = max_region - 1;
 	dms->regions = dm_pool_end_object(mem);
 	dms->groups = dm_pool_end_object(group_mem);
+
+	dm_stats_foreach_group(dms)
+		_check_group_regions_present(dms, &dms->groups[dms->cur_group]);
 
 	_stats_update_groups(dms);
 
@@ -1742,17 +1762,12 @@ bad:
 static size_t _stats_group_tag_len(const struct dm_stats *dms,
 				   dm_bitset_t regions)
 {
-	int i, j, next, nr_regions = 0;
+	int64_t i, j, next, nr_regions = 0;
 	size_t buflen = 0, id_len = 0;
 
 	/* check region ids and find last set bit */
 	i = dm_bit_get_first(regions);
 	for (; i >= 0; i = dm_bit_get_next(regions, i)) {
-		if (!dm_stats_region_present(dms, i)) {
-			log_error("Region identifier %d not found", i);
-			return 0;
-		}
-
 		/* length of region_id or range start in characters */
 		id_len = (i) ? 1 + (size_t) log10(i) : 1;
 		buflen += id_len;
