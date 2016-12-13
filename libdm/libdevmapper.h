@@ -1138,9 +1138,9 @@ for (dm_stats_walk_init((dms), DM_STATS_WALK_AREA),		\
  */
 #define dm_stats_foreach_group(dms)				\
 for (dm_stats_walk_init((dms), DM_STATS_WALK_GROUP),		\
-     dm_stats_group_walk_start(dms);				\
-     !dm_stats_group_walk_end(dms);				\
-     dm_stats_group_walk_next(dms))
+     dm_stats_walk_start(dms);					\
+     !dm_stats_walk_end(dms);					\
+     dm_stats_walk_next(dms))
 
 /*
  * Start a walk iterating over the regions contained in dm_stats handle
