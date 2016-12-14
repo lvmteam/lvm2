@@ -2681,12 +2681,15 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	/* Add any LVs used by this segment */
 	for (s = 0; s < seg->area_count; ++s) {
 		if ((seg_type(seg, s) == AREA_LV) &&
+		    /* do not bring up tracked image */
+		    !lv_is_raid_image_with_tracking(seg_lv(seg, s)) &&
 		    /* origin only for cache without pending delete */
 		    (!dm->track_pending_delete || !seg_is_cache(seg)) &&
 		    !_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s),
 					  laopts, NULL))
 			return_0;
 		if (seg_is_raid_with_meta(seg) && seg->meta_areas && seg_metalv(seg, s) &&
+		    !lv_is_raid_image_with_tracking(seg_lv(seg, s)) &&
 		    !_add_new_lv_to_dtree(dm, dtree, seg_metalv(seg, s),
 					  laopts, NULL))
 			return_0;

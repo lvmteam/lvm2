@@ -226,6 +226,7 @@
 
 #define lv_is_raid(lv)		(((lv)->status & RAID) ? 1 : 0)
 #define lv_is_raid_image(lv)	(((lv)->status & RAID_IMAGE) ? 1 : 0)
+#define lv_is_raid_image_with_tracking(lv)	((lv_is_raid_image(lv) && !((lv)->status & LVM_WRITE)) ? 1 : 0)
 #define lv_is_raid_metadata(lv)	(((lv)->status & RAID_META) ? 1 : 0)
 #define lv_is_raid_type(lv)	(((lv)->status & (RAID | RAID_IMAGE | RAID_META)) ? 1 : 0)
 
