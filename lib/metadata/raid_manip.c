@@ -163,22 +163,6 @@ uint32_t lv_raid_image_count(const struct logical_volume *lv)
 	return seg->area_count;
 }
 
-static int _activate_sublv_preserving_excl(struct logical_volume *top_lv,
-					   struct logical_volume *sub_lv)
-{
-	struct cmd_context *cmd = top_lv->vg->cmd;
-
-	/* If top RAID was EX, use EX */
-	if (lv_is_active_exclusive_locally(top_lv)) {
-		if (!activate_lv_excl_local(cmd, sub_lv))
-			return_0;
-	} else {
-		if (!activate_lv(cmd, sub_lv))
-			return_0;
-	}
-	return 1;
-}
-
 /* HM Helper: prohibit allocation on @pv if @lv already has segments allocated on it */
 static int _avoid_pv_of_lv(struct logical_volume *lv, struct physical_volume *pv)
 {
@@ -1553,7 +1537,8 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 				display_lvname(lv));
 
 	/* Activate the split (and tracking) LV */
-	if (!_activate_sublv_preserving_excl(lv, seg_lv(seg, s)))
+	/* Preserving exclusive local activation also for tracked LV */
+	if (!activate_lv_excl_local(lv->vg->cmd, seg_lv(seg, s)))
 		return_0;
 
 	log_print_unless_silent("Use 'lvconvert --merge %s' to merge back into %s.",
