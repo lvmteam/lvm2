@@ -19,7 +19,6 @@ from .utils import log_error, mt_async_result
 class RequestEntry(object):
 	def __init__(self, tmo, method, arguments, cb, cb_error,
 			return_tuple=True, job_state=None):
-		self.tmo = tmo
 		self.method = method
 		self.arguments = arguments
 		self.cb = cb
@@ -35,23 +34,27 @@ class RequestEntry(object):
 		self._return_tuple = return_tuple
 		self._job_state = job_state
 
-		if self.tmo < 0:
+		if tmo < 0:
 			# Client is willing to block forever
 			pass
 		elif tmo == 0:
 			self._return_job()
 		else:
-			self.timer_id = GLib.timeout_add_seconds(
-				tmo, RequestEntry._request_timeout, self)
+			# Note: using 990 instead of 1000 for second to ms conversion to
+			# account for overhead.  Goal is to return just before the
+			# timeout amount has expired.  Better to be a little early than
+			# late.
+			self.timer_id = GLib.timeout_add(
+				tmo * 990, RequestEntry._request_timeout, self)
 
 	@staticmethod
 	def _request_timeout(r):
 		"""
 		Method which gets called when the timer runs out!
 		:param r:  RequestEntry which timed out
-		:return: Nothing
+		:return: Result of timer_expired
 		"""
-		r.timer_expired()
+		return r.timer_expired()
 
 	def _return_job(self):
 		# Return job is only called when we create a request object or when
