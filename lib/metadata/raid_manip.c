@@ -1464,13 +1464,8 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	/*
 	 * Eliminate the residual LVs
 	 */
-	dm_list_iterate_items(lvl, &removal_lvs) {
-		if (!deactivate_lv(cmd, lvl->lv))
-			return_0;
-
-		if (!lv_remove(lvl->lv))
-			return_0;
-	}
+	if (!_deactivate_and_remove_lvs(lv->vg, &removal_lvs))
+                return_0;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;

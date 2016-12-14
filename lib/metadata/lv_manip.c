@@ -6258,12 +6258,12 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 
 int lv_update_and_reload(struct logical_volume *lv)
 {
-        return _lv_update_and_reload(lv, 0);
+	return _lv_update_and_reload(lv, 0);
 }
 
 int lv_update_and_reload_origin(struct logical_volume *lv)
 {
-        return _lv_update_and_reload(lv, 1);
+	return _lv_update_and_reload(lv, 1);
 }
 
 /*
