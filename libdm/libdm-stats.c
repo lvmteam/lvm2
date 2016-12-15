@@ -1083,6 +1083,9 @@ int dm_stats_list(struct dm_stats *dms, const char *program_id)
 	if (!_stats_set_name_cache(dms))
 		return_0;
 
+	if (dms->regions)
+		_stats_regions_destroy(dms);
+
 	r = dm_snprintf(msg, sizeof(msg), "@stats_list %s", program_id);
 
 	if (r < 0) {
