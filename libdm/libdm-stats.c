@@ -4878,6 +4878,154 @@ out:
 	return NULL;
 }
 
+#ifdef DMFILEMAPD
+static const char *_filemapd_mode_names[] = {
+	"inode",
+	"path",
+	NULL
+};
+
+dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str)
+{
+	dm_filemapd_mode_t mode = DM_FILEMAPD_FOLLOW_INODE;
+	const char **mode_name;
+
+	if (mode_str) {
+		for (mode_name = _filemapd_mode_names; *mode_name; mode_name++)
+			if (!strcmp(*mode_name, mode_str))
+				break;
+		if (*mode_name)
+			mode = DM_FILEMAPD_FOLLOW_INODE
+				+ (mode_name - _filemapd_mode_names);
+		else {
+			log_error("Could not parse dmfilemapd mode: %s",
+				  mode_str);
+			return DM_FILEMAPD_FOLLOW_NONE;
+		}
+	}
+	return mode;
+}
+
+#define DM_FILEMAPD "dmfilemapd"
+#define NR_FILEMAPD_ARGS 6
+/*
+ * Start dmfilemapd to monitor the specified file descriptor, and to
+ * update the group given by 'group_id' when the file's allocation
+ * changes.
+ *
+ * usage: dmfilemapd <fd> <group_id> <mode> [<foreground>[<log_level>]]
+ */
+int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
+			    dm_filemapd_mode_t mode, unsigned foreground,
+			    unsigned verbose)
+{
+	char fd_str[8], group_str[8], fg_str[2], verb_str[2];
+	const char *mode_str = _filemapd_mode_names[mode];
+	char *args[NR_FILEMAPD_ARGS + 1];
+	pid_t pid = 0;
+	int argc = 0;
+
+	if (fd < 0) {
+		log_error("dmfilemapd file descriptor must be "
+			  "non-negative: %d", fd);
+		return 0;
+	}
+
+	if (mode < DM_FILEMAPD_FOLLOW_INODE
+	    || mode > DM_FILEMAPD_FOLLOW_PATH) {
+		log_error("Invalid dmfilemapd mode argument: "
+			  "Must be DM_FILEMAPD_FOLLOW_INODE or "
+			  "DM_FILEMAPD_FOLLOW_PATH");
+		return 0;
+	}
+
+	if (foreground > 1) {
+		log_error("Invalid dmfilemapd foreground argument. "
+			  "Must be 0 or 1: %d.", foreground);
+		return 0;
+	}
+
+	if (verbose > 3) {
+		log_error("Invalid dmfilemapd verbose argument. "
+			  "Must be 0..3: %d.", verbose);
+		return 0;
+	}
+
+	/* set argv[0] */
+	args[argc++] = (char *) DM_FILEMAPD;
+
+	/* set <fd> */
+	if ((dm_snprintf(fd_str, sizeof(fd_str), "%d", fd)) < 0) {
+		log_error("Could not format fd argument.");
+		return 0;
+	}
+	args[argc++] = fd_str;
+
+	/* set <group_id> */
+	if ((dm_snprintf(group_str, sizeof(group_str), FMTu64, group_id)) < 0) {
+		log_error("Could not format group_id argument.");
+		return 0;
+	}
+	args[argc++] = group_str;
+
+	/* set <path> */
+	args[argc++] = (char *) path;
+
+	/* set <mode> */
+	args[argc++] = (char *) mode_str;
+
+	/* set <foreground> */
+	if ((dm_snprintf(fg_str, sizeof(fg_str), "%u", foreground)) < 0) {
+		log_error("Could not format foreground argument.");
+		return 0;
+	}
+	args[argc++] = fg_str;
+
+	/* set <verbose> */
+	if ((dm_snprintf(verb_str, sizeof(verb_str), "%u", verbose)) < 0) {
+		log_error("Could not format verbose argument.");
+		return 0;
+	}
+	args[argc++] = verb_str;
+
+	/* terminate args[argc] */
+	args[argc] = NULL;
+
+	log_very_verbose("Spawning daemon as '%s %d " FMTu64 " %s %s %u %u'",
+			 *args, fd, group_id, path, mode_str,
+			 foreground, verbose);
+
+	if (!foreground && ((pid = fork()) < 0)) {
+		log_error("Failed to fork dmfilemapd process.");
+		return 0;
+	}
+
+	if (pid > 0) {
+		log_very_verbose("Forked dmfilemapd process as pid %d", pid);
+		return 1;
+	}
+
+	execvp(args[0], args);
+	log_error("execvp() failed.");
+	if (!foreground)
+		_exit(127);
+	return 0;
+}
+# else /* !DMFILEMAPD */
+dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str)
+{
+	return 0;
+};
+
+int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
+			    dm_filemapd_mode_t mode, unsigned foreground,
+			    unsigned verbose)
+{
+	log_error("dmfilemapd support disabled.");
+	return 0;
+}
+#endif /* DMFILEMAPD */
+
 #else /* HAVE_LINUX_FIEMAP */
 
 uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
@@ -4891,6 +5039,13 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 
 uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 					  uint64_t group_id)
+{
+	log_error("File mapping requires FIEMAP ioctl support.");
+	return 0;
+}
+
+int dm_stats_start_filemapd(struct dm_stats *dms, int fd, uint64_t group_id,
+			    const char *path)
 {
 	log_error("File mapping requires FIEMAP ioctl support.");
 	return 0;

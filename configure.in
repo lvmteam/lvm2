@@ -1272,6 +1272,16 @@ AC_DEFINE_UNQUOTED(DEFAULT_USE_LVMPOLLD, [$DEFAULT_USE_LVMPOLLD],
 		   [Use lvmpolld by default.])
 
 ################################################################################
+dnl -- Check dmfilemapd
+AC_MSG_CHECKING(whether to build dmfilemapd)
+AC_ARG_ENABLE(dmfilemapd, AC_HELP_STRING([--enable-dmfilemapd],
+					 [enable the dmstats filemap daemon]),
+	      DMFILEMAPD=$enableval)
+AC_MSG_RESULT($DMFILEMAPD)
+BUILD_DMFILEMAPD=$DMFILEMAPD
+AC_DEFINE([DMFILEMAPD], 1, [Define to 1 to enable the device-mapper filemap daemon.])
+
+################################################################################
 dnl -- Build notifydbus
 AC_MSG_CHECKING(whether to build notifydbus)
 AC_ARG_ENABLE(notify-dbus,
@@ -1855,6 +1865,10 @@ if test "$UDEV_SYNC" = yes; then
 	AC_CHECK_HEADERS(sys/ipc.h sys/sem.h,,hard_bailout)
 fi
 
+if test "$DMFILEMAPD" = yes; then
+	AC_CHECK_HEADERS([sys/inotify.h],,hard_bailout)
+fi
+
 ################################################################################
 AC_PATH_TOOL(MODPROBE_CMD, modprobe)
 
@@ -1994,6 +2008,7 @@ AC_SUBST(BUILD_LVMPOLLD)
 AC_SUBST(BUILD_LVMLOCKD)
 AC_SUBST(BUILD_LOCKDSANLOCK)
 AC_SUBST(BUILD_LOCKDDLM)
+AC_SUBST(BUILD_DMFILEMAPD)
 AC_SUBST(BUILD_NOTIFYDBUS)
 AC_SUBST(CACHE)
 AC_SUBST(CFLAGS)
@@ -2043,6 +2058,7 @@ AC_SUBST(DLM_LIBS)
 AC_SUBST(DL_LIBS)
 AC_SUBST(DMEVENTD)
 AC_SUBST(DMEVENTD_PATH)
+AC_SUBST(DMFILEMAPD)
 AC_SUBST(DM_LIB_PATCHLEVEL)
 AC_SUBST(ELDFLAGS)
 AC_SUBST(FSADM)
@@ -2158,6 +2174,7 @@ daemons/dmeventd/plugins/raid/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 daemons/dmeventd/plugins/thin/Makefile
+daemons/dmfilemapd/Makefile
 daemons/lvmdbusd/Makefile
 daemons/lvmdbusd/path.py
 daemons/lvmetad/Makefile

@@ -48,8 +48,12 @@ ifeq ("@BUILD_LVMDBUSD@", "yes")
   SUBDIRS += lvmdbusd
 endif
 
+ifeq ("@BUILD_DMFILEMAPD@", "yes")
+  SUBDIRS += dmfilemapd
+endif
+
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS = clvmd cmirrord dmeventd lvmetad lvmpolld lvmlockd lvmdbusd
+  SUBDIRS = clvmd cmirrord dmeventd lvmetad lvmpolld lvmlockd lvmdbusd dmfilemapd
 endif
 
 include $(top_builddir)/make.tmpl

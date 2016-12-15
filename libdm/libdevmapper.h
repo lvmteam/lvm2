@@ -1369,6 +1369,69 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 					  uint64_t group_id);
 
+
+/*
+ * The file map monitoring daemon can monitor files in two distinct
+ * ways: the mode affects the behaviour of the daemon when a file
+ * under monitoring is renamed or unlinked, and the conditions which
+ * cause the daemon to terminate.
+ *
+ * In both modes, the daemon will always shut down when the group
+ * being monitored is deleted.
+ *
+ * Follow inode:
+ * The daemon follows the inode of the file, as it was at the time the
+ * daemon started. The file descriptor referencing the file is kept
+ * open at all times, and the daemon will exit when it detects that
+ * the file has been unlinked and it is the last holder of a reference
+ * to the file.
+ *
+ * This mode is useful if the file is expected to be renamed, or moved
+ * within the file system, while it is being monitored.
+ *
+ * Follow path:
+ * The daemon follows the path that was given on the daemon command
+ * line. The file descriptor referencing the file is re-opened on each
+ * iteration of the daemon, and the daemon will exit if no file exists
+ * at this location (a tolerance is allowed so that a brief delay
+ * between unlink() and creat() is permitted).
+ *
+ * This mode is useful if the file is updated by unlinking the original
+ * and placing a new file at the same path.
+ */
+
+typedef enum {
+	DM_FILEMAPD_FOLLOW_INODE,
+	DM_FILEMAPD_FOLLOW_PATH,
+	DM_FILEMAPD_FOLLOW_NONE
+} dm_filemapd_mode_t;
+
+/*
+ * Parse a string representation of a dmfilemapd mode.
+ *
+ * Returns a valid dm_filemapd_mode_t value on success, or
+ * DM_FILEMAPD_FOLLOW_NONE on error.
+ */
+dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str);
+
+/*
+ * Start the dmfilemapd filemap monitoring daemon for the specified
+ * file descriptor, group, and file system path. The daemon will
+ * monitor the file for allocation changes, and when a change is
+ * detected, call dm_stats_update_regions_from_fd() to update the
+ * mapped regions for the file.
+ *
+ * The mode parameter controls the behaviour of the daemon when the
+ * file being monitored is unlinked or moved: see the comments for
+ * dm_filemapd_mode_t for a full description and possible values.
+ *
+ * The daemon can be stopped at any time by sending SIGTERM to the
+ * daemon pid.
+ */
+int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
+			    dm_filemapd_mode_t mode, unsigned foreground,
+			    unsigned verbose);
+
 /*
  * Call this to actually run the ioctl.
  */

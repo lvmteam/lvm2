@@ -127,6 +127,9 @@
 /* Path to dmeventd pidfile. */
 #undef DMEVENTD_PIDFILE
 
+/* Define to 1 to enable the device-mapper filemap daemon. */
+#undef DMFILEMAPD
+
 /* Define to enable compat protocol */
 #undef DM_COMPAT
 
