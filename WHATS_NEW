@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Enable usage of cached volume as thin volume's external origin.
   Support cache volume activation with -real layer.
   Improve search of lock-holder for external origin and thin-pool.
   Support status checking of cache volume used in layer.

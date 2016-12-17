@@ -2825,7 +2825,6 @@ static int _lvconvert_thin(struct cmd_context *cmd,
 
 	if (lv_is_locked(lv) ||
 	    !lv_is_visible(lv) ||
-	    lv_is_cache_type(lv) ||
 	    lv_is_cow(lv) ||
 	    lv_is_pool(lv) ||
 	    lv_is_pool_data(lv) ||
@@ -3725,6 +3724,12 @@ static int _convert_cache_volume_splitmirrors(struct cmd_context *cmd, struct lo
  * Convert a cache LV to a thin pool (using the cache LV for thin pool data).
  * lvconvert --type thin-pool LV
  *
+ * Convert a cache LV to a thin volume with cached external origin using given
+ * thinpool tpLV (when not yet Thinpool convert it to thin-pool first).
+ * Conversion is 2-step process in this case.
+ * Only writethrough cacheLV can be converted as external origin is read-only.
+ * lvconvert --thin cacheLV --thinpool tpLV
+ *
  * Alternate syntax:
  * This is equivalent to above, but not preferred because it's ambiguous and inconsistent.
  * lvconvert --thinpool LV
@@ -3732,7 +3737,37 @@ static int _convert_cache_volume_splitmirrors(struct cmd_context *cmd, struct lo
 static int _convert_cache_volume_thin_pool(struct cmd_context *cmd, struct logical_volume *lv,
 					   struct lvconvert_params *lp)
 {
-	return _lvconvert_pool(cmd, lv, lp);
+	int is_clean;
+	const struct lv_segment *pool_seg;
+
+	if (!_lvconvert_pool(cmd, lv, lp))
+		return_0;
+
+	if (lv_is_cache(lv) && !lv_is_pool_data(lv)) {
+		pool_seg = first_seg(first_seg(lv)->pool_lv);
+		if (pool_seg->cache_mode != CACHE_MODE_WRITETHROUGH) {
+			log_error("Cannot convert cache volume %s with %s cache mode to external origin.",
+				  display_lvname(lv),
+				  get_cache_mode_name(pool_seg));
+			log_error("To proceed, run 'lvchange --cachemode writethrough %s'.",
+				  display_lvname(lv));
+			return 0;
+		}
+
+		if (!lv_cache_wait_for_clean(lv, &is_clean))
+			return_0;
+
+		if (!is_clean) {
+			log_error("Cache %s is not clean, refusing to convert to external origin.",
+				  display_lvname(lv));
+			return 0;
+		}
+
+		if (!_lvconvert_thin(cmd, lv, lp))
+			return_0;
+	}
+
+	return 1;
 }
 
 /*
