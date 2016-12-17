@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Improve reported lvs status for active external origin volume.
   Fix table load for splitted RAID LV and require explicit activation.
   Always active splitted RAID LV exclusively locally.
   Do not use LV RAID status bit for segment status.

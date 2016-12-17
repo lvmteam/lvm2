@@ -784,6 +784,13 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 				status->info.exists = 0; /* So pool LV is not active */
 		}
 		return 1;
+	} else if (lv_is_external_origin(lv)) {
+		if (!_lv_info(cmd, lv, 0, &status->info, NULL, NULL,
+			      with_open_count, with_read_ahead))
+			return_0;
+
+		(void) _lv_info(cmd, lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
+		return 1;
 	} else if (lv_is_origin(lv)) {
 		/* Query segment status for 'layered' (-real) device most of the time,
 		 * only for merging snapshot, query its progress.
