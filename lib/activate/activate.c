@@ -770,7 +770,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 		/* INFO is not set as cache-pool cannot be active.
 		 * STATUS is collected from cache LV */
 		lv_seg = get_only_segment_using_this_lv(lv);
-		(void) _lv_info(cmd, lv_seg->lv, 0, NULL, lv_seg, &status->seg_status, 0, 0);
+		(void) _lv_info(cmd, lv_seg->lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
 		return 1;
 	}
 
@@ -1171,7 +1171,7 @@ int lv_cache_status(const struct logical_volume *cache_lv,
 		return 0;
 	}
 
-	if (!lv_info(cache_lv->vg->cmd, cache_lv, 0, NULL, 0, 0)) {
+	if (!lv_info(cache_lv->vg->cmd, cache_lv, 1, NULL, 0, 0)) {
 		log_error("Cannot check status for locally inactive cache volume %s.",
 			  display_lvname(cache_lv));
 		return 0;
