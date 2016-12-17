@@ -212,6 +212,17 @@ dmstats \(em device-mapper statistics management
 .  ad b
 ..
 .CMD_UNGROUP
+.HP
+.B dmstats
+.de CMD_UPDATE_FILEMAP
+.  ad l
+.  BR update_filemap
+.  RI file_path
+.  RB [ \-\-groupid
+.  IR id ]
+.  ad b
+..
+.CMD_UPDATE_FILEMAP
 .
 .PD
 .ad b
@@ -668,6 +679,21 @@ Remove an existing group and return all the group's regions to their
 original state.
 
 The group to be removed is specified using \fB\-\-groupid\fP.
+.HP
+.CMD_UPDATE_FILEMAP
+.br
+Update a group of \fBdmstats\fP regions specified by \fBgroup_id\fP,
+that were previously created with \fB\-\-filemap\fP. This will add
+and remove regions to reflect changes in the allocated extents of
+the file on-disk, since the time that it was crated or last updated.
+
+Use of this command is not normally needed since the \fBdmfilemapd\fP
+daemon will automatically monitor filemap groups and perform these
+updates when required.
+
+If a filemapped group was created with \fB\-\-nominitor\fP, or the
+daemon has been killed, the \fBupdate_filemap\fP can be used to
+manually force an update.
 .
 .SH REGIONS, AREAS, AND GROUPS
 .
