@@ -1551,14 +1551,19 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 	if (lv_is_cow(lv))
 		return lv_lock_holder(origin_from_cow(lv));
 
-	if (lv_is_thin_pool(lv)) {
-		/* Find any active LV from the pool */
-		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-			if (lv_is_active(sl->seg->lv)) {
-				log_debug_activation("Thin volume %s is active.",
-						     display_lvname(lv));
-				return sl->seg->lv;
-			}
+	if (lv_is_thin_pool(lv) ||
+	    lv_is_external_origin(lv)) {
+		/* FIXME: Ensure cluster keeps thin-pool active exlusively.
+		 * External origin can be activated on more nodes (depends on type).
+		 */
+		if (!lv_is_active(lv))
+			/* Find any active LV from the pool or external origin */
+			dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+				if (lv_is_active(sl->seg->lv)) {
+					log_debug_activation("Thin volume %s is active.",
+							     display_lvname(lv));
+					return sl->seg->lv;
+				}
 		return lv;
 	}
 
@@ -1573,9 +1578,6 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 		    lv_is_thin_volume(sl->seg->lv) &&
 		    first_seg(lv)->pool_lv == sl->seg->pool_lv)
 			continue; /* Skip thin snaphost */
-		if (lv_is_external_origin(lv) &&
-		    lv_is_thin_volume(sl->seg->lv))
-			continue; /* Skip external origin */
 		if (lv_is_pending_delete(sl->seg->lv))
 			continue; /* Skip deleted LVs */
 		return lv_lock_holder(sl->seg->lv);
