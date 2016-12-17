@@ -2778,6 +2778,10 @@ static int _dm_tree_revert_activated(struct dm_tree_node *parent)
 
 	dm_list_iterate_items_gen(child, &parent->activated, activated_list) {
 		log_debug_activation("Reverting %s.", child->name);
+		if (child->callback) {
+			log_debug_activation("Dropping callback for %s.", child->name);
+			child->callback = NULL;
+		}
 		if (!_deactivate_node(child->name, child->info.major, child->info.minor,
 				      &child->dtree->cookie, child->udev_flags, 0)) {
 			log_error("Unable to deactivate %s (%" PRIu32

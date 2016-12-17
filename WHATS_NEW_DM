@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Do not try call callback when reverting activation on error path.
   Fix file mapping for extents with physically adjacent extents.
   Validation vsnprintf result in runtime translate of dm_log (1.02.136).
   Separate filemap extent allocation from region table.
