@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Extend metadata validation of external origin LV use count.
   Fix dm table when the last user of active external origin is removed.
   Improve reported lvs status for active external origin volume.
   Fix table load for splitted RAID LV and require explicit activation.

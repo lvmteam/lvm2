@@ -398,6 +398,18 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				inc_error_count;
 			}
 		}
+
+		if (lv_is_external_origin(lv)) {
+			seg_found = 0;
+			dm_list_iterate_items(sl, &lv->segs_using_this_lv)
+				if (sl->seg->external_lv == lv)
+					seg_found++;
+			if (seg_found != lv->external_count) {
+				log_error("LV %s: external origin count does not match.",
+					  lv->name);
+				inc_error_count;
+			}
+		}
 	}
 
 	dm_list_iterate_items(seg, &lv->segments) {
