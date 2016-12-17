@@ -1264,6 +1264,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	uint32_t count = extents;
 	uint32_t reduction;
 	struct logical_volume *pool_lv;
+	struct logical_volume *external_lv = NULL;
 
 	if (lv_is_merging_origin(lv)) {
 		log_debug_metadata("Dropping snapshot merge of %s to removed origin %s.",
@@ -1274,6 +1275,9 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 	dm_list_iterate_back_items(seg, &lv->segments) {
 		if (!count)
 			break;
+
+		if (seg->external_lv)
+			external_lv = seg->external_lv;
 
 		if (seg->len <= count) {
 			if (seg->merge_lv) {
@@ -1339,6 +1343,12 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 		return_0;
 	else if (lv->vg->fid->fmt->ops->lv_setup &&
 		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
+		return_0;
+
+	/* Removal of last user enforces refresh */
+	if (external_lv && !lv_is_external_origin(external_lv) &&
+	    lv_is_active(external_lv) &&
+	    !lv_update_and_reload(external_lv))
 		return_0;
 
 	return 1;
