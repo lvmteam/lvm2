@@ -383,7 +383,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 	const struct logical_volume *lock_lv = lv_lock_holder(cache_lv);
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct lv_status_cache *status;
-	int cleaner_policy;
+	int cleaner_policy, writeback;
 	uint64_t dirty_blocks;
 
 	*is_clean = 0;
@@ -402,14 +402,11 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 
 		cleaner_policy = !strcmp(status->cache->policy_name, "cleaner");
 		dirty_blocks = status->cache->dirty_blocks;
-
-		/* No clear policy and writeback mode means dirty */
-		if (!cleaner_policy &&
-		    (status->cache->feature_flags & DM_CACHE_FEATURE_WRITEBACK))
-			dirty_blocks++;
+		writeback = (status->cache->feature_flags & DM_CACHE_FEATURE_WRITEBACK);
 		dm_pool_destroy(status->mem);
 
-		if (!dirty_blocks)
+		/* Only clear when policy is Clear or mode != writeback */
+		if (!dirty_blocks && (cleaner_policy || !writeback))
 			break;
 
 		log_print_unless_silent("Flushing " FMTu64 " blocks for cache %s.",
@@ -418,6 +415,12 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 			/* TODO: Use centralized place */
 			usleep(500000);
 			continue;
+		}
+
+		if (!(cache_lv->status & LVM_WRITE)) {
+			log_warn("WARNING: Dirty blocks found on read-only cache volume %s.",
+				 display_lvname(cache_lv));
+			/* TODO: can we actually clean something? */
 		}
 
 		/* Switch to cleaner policy to flush the cache */

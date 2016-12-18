@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Avoid shifting by one number of blocks when clearing dirty cache volume.
   Extend metadata validation of external origin LV use count.
   Fix dm table when the last user of active external origin is removed.
   Improve reported lvs status for active external origin volume.
