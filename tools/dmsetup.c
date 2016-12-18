@@ -652,10 +652,7 @@ static int _do_timer_wait(void)
 
 static int _timer_running(void)
 {
-	/*
-	 * Clock shutdown for exit - nothing to do.
-	 */
-	return ((_timer_fd == TIMER_STOPPED) && !_cycle_timestamp);
+	return ((_timer_fd != TIMER_STOPPED) || _cycle_timestamp);
 }
 
 #else /* !HAVE_SYS_TIMERFD_H */
