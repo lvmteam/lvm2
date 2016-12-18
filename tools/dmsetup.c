@@ -264,7 +264,7 @@ static struct dm_tree *_dtree;
 static struct dm_report *_report;
 static report_type_t _report_type;
 static dev_name_t _dev_name_type;
-static uint32_t _count = 1; /* count of repeating reports */
+static uint64_t _count = 1; /* count of repeating reports */
 static struct dm_timestamp *_initial_timestamp = NULL;
 static uint64_t _disp_factor = 512; /* display sizes in sectors */
 static char _disp_units = 's';
@@ -557,7 +557,8 @@ static void _destroy_split_name(struct dm_split_name *split_name)
  */
 static uint64_t _interval_num(void)
 {
-	return 1 + (uint64_t) _int_args[COUNT_ARG] - _count;
+	uint64_t count_arg = _int_args[COUNT_ARG];
+	return ((uint64_t) _int_args[COUNT_ARG] - _count) + !!count_arg;
 }
 
 #ifdef HAVE_SYS_TIMERFD_H
@@ -6873,10 +6874,10 @@ unknown:
 			goto_out;
 	}
 
-	if (_switches[COUNT_ARG])
-		_count = ((uint32_t)_int_args[COUNT_ARG]) ? : UINT32_MAX;
-	else if (_switches[INTERVAL_ARG])
-		_count = UINT32_MAX;
+	if (_switches[COUNT_ARG] && _int_args[COUNT_ARG])
+		_count = (uint64_t)_int_args[COUNT_ARG];
+	else if (_switches[COUNT_ARG] || _switches[INTERVAL_ARG])
+		_count = UINT64_MAX;
 
 	if (_switches[UNITS_ARG]) {
 		_disp_factor = _factor_from_units(_string_args[UNITS_ARG],
