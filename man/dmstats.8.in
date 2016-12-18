@@ -155,7 +155,7 @@ dmstats \(em device-mapper statistics management
 .  OPT_OBJECTS
 .  RB \%[ \-\-nosuffix ]
 .  RB [ \-\-notimesuffix ]
-.  RB \%[ \-v | \-\-verbose [ \-v | \-\-verbose ]]
+.  RB \%[ \-v | \-\-verbose]
 .  ad b
 ..
 .CMD_LIST
