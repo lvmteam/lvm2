@@ -53,12 +53,14 @@ dmstats \(em device-mapper statistics management
 .de CMD_COMMAND
 .  ad l
 .  IR command
-.  RI [ device_name
-.  RB | \-\-uuid
-.  IR uuid | \fB\-\-major
+.  RI [ device_name |
+.  RB [ \-u | \-\-uuid
+.  IR uuid ]
+.  RB | [ \-\-major
 .  IR major
 .  BR \-\-minor
 .  IR minor ]
+.  RB \%[ \-v | \-\-verbose]
 .  ad b
 ..
 .CMD_COMMAND
