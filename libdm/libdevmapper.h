@@ -518,6 +518,16 @@ int dm_stats_bind_name(struct dm_stats *dms, const char *name);
 int dm_stats_bind_uuid(struct dm_stats *dms, const char *uuid);
 
 /*
+ * Bind a dm_stats handle to the device backing the file referenced
+ * by the specified file descriptor.
+ *
+ * File descriptor fd must reference a regular file, open for reading,
+ * in a local file system, backed by a device-mapper device, that
+ * supports the FIEMAP ioctl, and that returns data describing the
+ * physical location of extents.
+ */
+int dm_stats_bind_from_fd(struct dm_stats *dms, int fd);
+/*
  * Test whether the running kernel supports the precise_timestamps
  * feature. Presence of this feature also implies histogram support.
  * The library will check this call internally and fails any attempt

@@ -4640,24 +4640,6 @@ static int _bind_stats_device(struct dm_stats *dms, const char *name)
 	return 1;
 }
 
-static int _bind_stats_from_fd(struct dm_stats *dms, int fd)
-{
-	int major, minor;
-	struct stat buf;
-
-	if (fstat(fd, &buf)) {
-		log_error("fstat failed for fd %d.", fd);
-		return 0;
-	}
-
-	major = (int) MAJOR(buf.st_dev);
-	minor = (int) MINOR(buf.st_dev);
-
-	if (!dm_stats_bind_devno(dms, major, minor))
-		return_0;
-	return 1;
-}
-
 static int _stats_clear_one_region(struct dm_stats *dms, uint64_t region_id)
 {
 
@@ -5068,7 +5050,7 @@ static int _stats_create_file(CMD_ARGS)
 		goto bad;
 	}
 
-	if (!_bind_stats_from_fd(dms, fd))
+	if (!dm_stats_bind_from_fd(dms, fd))
 		goto_bad;
 
 	if (!strlen(program_id))

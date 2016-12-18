@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Add dm_stats_bind_from_fd() to bind a stats handle from a file descriptor.
   Do not try call callback when reverting activation on error path.
   Fix file mapping for extents with physically adjacent extents.
   Validation vsnprintf result in runtime translate of dm_log (1.02.136).
