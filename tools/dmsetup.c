@@ -286,7 +286,9 @@ static struct dm_timestamp *_start_timestamp = NULL;
 static uint64_t _interval = 0; /* configured interval in nsecs */
 static uint64_t _new_interval = 0; /* flag top-of-interval */
 static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
+#ifdef HAVE_SYS_TIMERFD_H
 static int _timer_fd = -1; /* timerfd file descriptor. */
+#endif /* HAVE_SYS_TIMERFD_H */
 
 /* Invalid fd value used to signal end-of-reporting. */
 #define TIMER_STOPPED -2
@@ -647,6 +649,14 @@ static int _do_timer_wait(void)
 	return _do_timerfd_wait();
 }
 
+static int _timer_running(void)
+{
+	/*
+	 * Clock shutdown for exit - nothing to do.
+	 */
+	return ((_timer_fd == TIMER_STOPPED) && !_cycle_timestamp);
+}
+
 #else /* !HAVE_SYS_TIMERFD_H */
 static int _start_usleep_timer(void)
 {
@@ -718,6 +728,11 @@ static int _do_timer_wait(void)
 	return _do_usleep_wait();
 }
 
+static int _timer_running(void)
+{
+	return (_start_timestamp != NULL);
+}
+
 #endif /* HAVE_SYS_TIMERFD_H */
 
 static int _update_interval_times(void)
@@ -729,7 +744,7 @@ static int _update_interval_times(void)
 	/*
 	 * Clock shutdown for exit - nothing to do.
 	 */
-	if ((_timer_fd == TIMER_STOPPED) && !_cycle_timestamp)
+	if (!_timer_running())
 		goto out;
 
 	/* clock is running */
@@ -805,7 +820,7 @@ static int _update_interval_times(void)
 
 out:
 	/* timer stopped or never started */
-	if (!r || _timer_fd < 0) {
+	if (!r || !_timer_running()) {
 		/* The _cycle_timestamp has not yet been allocated if we
 		 * fail to obtain this_timestamp on the first interval.
 		 */
