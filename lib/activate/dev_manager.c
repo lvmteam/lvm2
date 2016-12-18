@@ -2718,6 +2718,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	int save_pending_delete = dm->track_pending_delete;
 	int merge_in_progress = 0;
 
+	log_debug_activation("Adding new LV %s%s%s to dtree", display_lvname(lv),
+			     layer ? "-" : "", layer ? : "");
 	/* LV with pending delete is never put new into a table */
 	if (lv_is_pending_delete(lv) && !_cached_dm_info(dm->mem, dtree, lv, NULL))
 		return 1; /* Replace with error only when already exists */
