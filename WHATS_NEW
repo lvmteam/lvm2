@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Support cache volume activation with -real layer.
   Improve search of lock-holder for external origin and thin-pool.
   Support status checking of cache volume used in layer.
   Avoid shifting by one number of blocks when clearing dirty cache volume.
