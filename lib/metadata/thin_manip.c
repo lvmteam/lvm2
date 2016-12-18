@@ -99,6 +99,10 @@ int attach_thin_external_origin(struct lv_segment *seg,
 				    external_lv->name);
 			external_lv->status &= ~LVM_WRITE;
 		}
+
+		// TODO: should we mark even origin read-only ?
+		//if (lv_is_cache(external_lv)) /* read-only corigin of cache LV */
+		//	seg_lv(first_seg(external_lv), 0)->status &= ~LVM_WRITE;
 	}
 
 	return 1;
