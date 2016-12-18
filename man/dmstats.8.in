@@ -83,8 +83,8 @@ dmstats \(em device-mapper statistics management
 .  ad l
 .  BR create
 .  RB [ device_name...
-.  RB | file_path... ]
-.  RB [ \-\-alldevices ]
+.  RB | file_path...
+.  RB | [ \-\-alldevices ]]
 .  RB [ \-\-areas
 .  IR nr_areas | \fB\-\-areasize
 .  IR area_size ]
