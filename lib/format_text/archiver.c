@@ -35,6 +35,7 @@ struct archive_params {
 struct backup_params {
 	int enabled;
 	char *dir;
+	int suppress;
 };
 
 int archive_init(struct cmd_context *cmd, const char *dir,
@@ -235,7 +236,8 @@ static int _backup(struct volume_group *vg)
 int backup_locally(struct volume_group *vg)
 {
 	if (!vg->cmd->backup_params->enabled || !vg->cmd->backup_params->dir) {
-		log_warn("WARNING: This metadata update is NOT backed up");
+		log_warn_suppress(vg->cmd->backup_params->suppress++,
+				  "WARNING: This metadata update is NOT backed up.");
 		return 1;
 	}
 
