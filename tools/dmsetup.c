@@ -282,13 +282,15 @@ const char *_stats_types[] = {
 
 /* report timekeeping */
 static struct dm_timestamp *_cycle_timestamp = NULL;
+#ifndef HAVE_SYS_TIMERFD_H
 static struct dm_timestamp *_start_timestamp = NULL;
+#else /* HAVE_SYS_TIMERFD_H */
+static int _timer_fd = -1; /* timerfd file descriptor. */
+#endif /* !HAVE_SYS_TIMERFD_H */
+
 static uint64_t _interval = 0; /* configured interval in nsecs */
 static uint64_t _new_interval = 0; /* flag top-of-interval */
 static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
-#ifdef HAVE_SYS_TIMERFD_H
-static int _timer_fd = -1; /* timerfd file descriptor. */
-#endif /* HAVE_SYS_TIMERFD_H */
 
 /* Invalid fd value used to signal end-of-reporting. */
 #define TIMER_STOPPED -2
