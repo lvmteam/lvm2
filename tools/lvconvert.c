@@ -2167,7 +2167,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		return_0;
 
 	if (lv_is_pvmove(cow) || lv_is_mirror_type(cow) || lv_is_raid_type(cow) || lv_is_thin_type(cow)) {
-		log_error("LV %s type is unsupported with --splitsnapshot.", cow_name);
+		log_error("LV %s type is unsupported with --splitsnapshot.", display_lvname(cow));
 		return 0;
 	}
 
@@ -2179,8 +2179,8 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 		    lv_is_visible(cow) &&
 		    lv_is_active(cow)) {
 			if (yes_no_prompt("Do you really want to split off active "
-					  "logical volume %s? [y/n]: ", cow_name) == 'n') {
-				log_error("Logical volume %s not split.", cow_name);
+					  "logical volume %s? [y/n]: ", display_lvname(cow)) == 'n') {
+				log_error("Logical volume %s not split.", display_lvname(cow));
 				return 0;
 			}
 		}
@@ -2189,14 +2189,14 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 	if (!archive(vg))
 		return_0;
 
-	log_verbose("Splitting snapshot %s from its origin.", cow_name);
+	log_verbose("Splitting snapshot %s from its origin.", display_lvname(cow));
 
 	if (!vg_remove_snapshot(cow))
 		return_0;
 
 	backup(vg);
 
-	log_print_unless_silent("Logical Volume %s split from its origin.", cow_name);
+	log_print_unless_silent("Logical Volume %s split from its origin.", display_lvname(cow));
 
 	return 1;
 }
