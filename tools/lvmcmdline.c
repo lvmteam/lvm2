@@ -131,7 +131,11 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 	{ lvconvert_split_cow_snapshot_CMD, lvconvert_split_snapshot_cmd },
 	{ lvconvert_merge_snapshot_CMD, lvconvert_merge_snapshot_cmd },
 	{ lvconvert_combine_split_snapshot_CMD, lvconvert_combine_split_snapshot_cmd },
+
+	/* lvconvert utility to trigger polling on an LV. */
+	{ lvconvert_start_poll_CMD, lvconvert_start_poll_cmd },
 };
+
 #if 0
 	/* all raid-related type conversions */
 
@@ -155,8 +159,6 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 	/* other misc. */
 
 	{ lvconvert_merge_CMD,				lvconvert_merge_fn },
-	{ lvconvert_poll_start_CMD,			lvconvert_poll_start_fn },
-
 #endif
 
 /* Command line args */

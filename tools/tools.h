@@ -258,4 +258,6 @@ int lvconvert_merge_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv)
 int lvconvert_split_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv);
 
+int lvconvert_start_poll_cmd(struct cmd_context *cmd, int argc, char **argv);
+
 #endif

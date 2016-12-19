@@ -5063,3 +5063,60 @@ int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char
 			       NULL, NULL, &_lvconvert_combine_split_snapshot_single);
 }
 
+static int _lvconvert_start_poll_single(struct cmd_context *cmd,
+                                       struct logical_volume *lv,
+                                       struct processing_handle *handle)
+{
+	struct lvconvert_result *lr = (struct lvconvert_result *) handle->custom_handle;
+	struct convert_poll_id_list *idl;
+
+	if (!(idl = _convert_poll_id_list_create(cmd, lv)))
+		return_ECMD_FAILED;
+	dm_list_add(&lr->poll_idls, &idl->list);
+
+	lr->need_polling = 1;
+
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_start_poll_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	struct lvconvert_result lr = { 0 };
+	struct convert_poll_id_list *idl;
+	int saved_ignore_suspended_devices;
+	int ret, poll_ret;
+
+	dm_list_init(&lr.poll_idls);
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	handle->custom_handle = &lr;
+
+	saved_ignore_suspended_devices = ignore_suspended_devices();
+	init_ignore_suspended_devices(1);
+
+	cmd->handles_missing_pvs = 1;
+
+	ret = process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			      handle, NULL, &_lvconvert_start_poll_single);
+
+	init_ignore_suspended_devices(saved_ignore_suspended_devices);
+
+	if (lr.need_polling) {
+		dm_list_iterate_items(idl, &lr.poll_idls) {
+			poll_ret = _lvconvert_poll_by_id(cmd, idl->id,
+						arg_is_set(cmd, background_ARG), 0, 0);
+			if (poll_ret > ret)
+				ret = poll_ret;
+		}
+	}
+
+	destroy_processing_handle(cmd, handle);
+
+	return ret;
+}
+

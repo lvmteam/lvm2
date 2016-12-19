@@ -592,13 +592,22 @@ RULE: all not lv_is_locked lv_is_pvmove
 
 ---
 
-# FIXME: add a new option defining this operation, e.g. --poll-mirror
-# The purpose of this command is not entirely clear.
+# This command just (re)starts the polling process on the LV
+# to continue a previous conversion.
 
+lvconvert --startpoll LV_mirror
+OO: OO_LVCONVERT
+ID: lvconvert_start_poll
+DESC: Poll LV to continue conversion.
+RULE: all and lv_is_converting
+
+# alternate form of lvconvert --startpoll, this is only kept
+# for compat since this was how it used to be done.
 lvconvert LV_mirror
 OO: OO_LVCONVERT
-ID: lvconvert_poll_start
-DESC: Poll mirror LV to collapse resync layers.
+ID: lvconvert_start_poll
+DESC: Poll LV to continue conversion.
+RULE: all and lv_is_converting
 FLAGS: SECONDARY_SYNTAX
 
 ---
