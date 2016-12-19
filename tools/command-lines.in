@@ -337,24 +337,28 @@ OO: OO_LVCONVERT_RAID, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to striped.
+RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type mirror LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to type mirror (also see type raid1).
+RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type raid LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid.
+RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --mirrors SNumber LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
+RULE: all not lv_is_locked lv_is_pvmove
 
 ---
 
@@ -366,12 +370,14 @@ OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_split_mirror_images
 DESC: Split images from a raid1 or mirror LV and use them to create a new LV.
+RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --splitmirrors Number --trackchanges LV_raid1_cache
 OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_split_mirror_images
 DESC: Split images from a raid1 LV and track changes to origin.
+RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --mergemirrors LV_linear_raid|VG|Tag ...
 OO: OO_LVCONVERT
@@ -384,6 +390,7 @@ OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_change_mirrorlog
 DESC: Change the type of mirror log used by a mirror LV.
+RULE: all not lv_is_locked lv_is_pvmove
 
 ---
 

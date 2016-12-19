@@ -147,20 +147,17 @@ struct command_function command_functions[COMMAND_ID_COUNT] = {
 	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_cachepool_cmd },
 	{ lvconvert_split_and_remove_cachepool_CMD,	lvconvert_split_cachepool_cmd },
 
+	/* lvconvert raid-related type conversions */
+	{ lvconvert_raid_types_CMD,			lvconvert_raid_types_cmd },
+
 	/* lvconvert utilities for raid/mirror */
-	{ lvconvert_merge_mirror_images_CMD,		lvconvert_merge_mirror_images_cmd },
-#if 0
-	{ lvconvert_split_mirror_images_CMD,		lvconvert_split_mirror_images_cmd },
+	{ lvconvert_split_mirror_images_CMD,		lvconvert_split_mirror_images_cmd},
 	{ lvconvert_change_mirrorlog_CMD,		lvconvert_change_mirrorlog_cmd },
-#endif
+	{ lvconvert_merge_mirror_images_CMD,		lvconvert_merge_mirror_images_cmd },
 
 	/* redirected to merge_snapshot/merge_thin/merge_mirrors */
 	{ lvconvert_merge_CMD, lvconvert_merge_cmd },
 
-#if 0
-	/* all raid-related type conversions */
-	{ lvconvert_raid_types_CMD,			lvconvert_raid_types_cmd },
-#endif
 };
 
 
