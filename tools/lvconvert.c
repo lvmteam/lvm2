@@ -2336,7 +2336,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		return_0;
 
 	if (lv_is_locked(org) ||
-	    lv_is_cache_type(org) ||
+	    (lv_is_cache_type(org) && !lv_is_cache(org)) ||
 	    lv_is_thin_type(org) ||
 	    lv_is_pvmove(org) ||
 	    lv_is_mirrored(org) ||
@@ -3771,6 +3771,16 @@ static int _convert_cache_volume_thin_pool(struct cmd_context *cmd, struct logic
 }
 
 /*
+ * Convert/Recombine  cacheLV to be an origin for snapshot
+ * lvconvert --type snapshot cacheLV snapshotLV
+ */
+static int _convert_cache_volume_snapshot(struct cmd_context *cmd, struct logical_volume *lv,
+					  struct lvconvert_params *lp)
+{
+	return _lvconvert_snapshot(cmd, lv, lp);
+}
+
+/*
  * Split a cache volume from a cache pool LV.
  * lvconvert --splitcache LV
  */
@@ -4310,6 +4320,10 @@ static int _convert_cache_volume(struct cmd_context *cmd, struct logical_volume 
 	if (!strcmp(lp->type_str, SEG_TYPE_NAME_THIN_POOL) ||
 	    arg_is_set(cmd, thinpool_ARG))
 		return _convert_cache_volume_thin_pool(cmd, lv, lp);
+
+	if (!strcmp(lp->type_str, SEG_TYPE_NAME_SNAPSHOT) ||
+	    arg_is_set(cmd, snapshot_ARG))
+		return _convert_cache_volume_snapshot(cmd, lv, lp);
 
 	/* The --thinpool alternative for --type thin-pool is not preferred, so not shown. */
 

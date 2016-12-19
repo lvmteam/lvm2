@@ -7428,7 +7428,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				return NULL;
 			}
 
-			if (lv_is_cache_type(origin_lv)) {
+			if (lv_is_cache_type(origin_lv) && !lv_is_cache(origin_lv)) {
 				log_error("Snapshots of cache type volume %s "
 					  "is not supported.", display_lvname(origin_lv));
 				return NULL;
