@@ -50,6 +50,12 @@ not lvconvert --thin --thinpool $vg/tpool $vg/$lv1
 # Switch to 'writethrough' - this should be supported
 lvchange --cachemode writethrough $vg/$lv1
 
+# FIXME
+# systemd on fc23 'strikes-in' and unmounts  mnt
+# ATM the reason is unclear (bug in systemd, bad udev rules?)
+#   as a workaround mount again and 'WARN' test
+should not mount "$DM_DEV_DIR/$vg/$lv1" mnt
+
 lvconvert --thin $vg/$lv1 --originname extorg --thinpool $vg/tpool
 
 # check cache exist as extorg-real
