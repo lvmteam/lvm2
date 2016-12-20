@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Extend validation of metadata processing.
   Enable usage of cached volumes as snapshot origin LV.
   Fix displayed lv name when splitting snapshot (2.02.146).
   Warn about command not making metadata backup just once per command.
