@@ -2497,8 +2497,13 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 		if (!lv_update_and_reload(origin))
 			return_0;
 
-		lp->need_polling = 1;
-		lp->lv_to_poll = origin;
+		if (lv_has_target_type(origin->vg->vgmem, origin, NULL,
+				       TARGET_NAME_SNAPSHOT_MERGE)) {
+			lp->need_polling = 1;
+			lp->lv_to_poll = origin;
+		} else
+			/* Race during table reload prevented merging */
+			merge_on_activate = 1;
 	}
 
 	if (merge_on_activate)
