@@ -24,16 +24,6 @@ fill() {
 		die "Snapshot does not fit $1"
 }
 
-# Wait until device is opened
-wait_for_open_() {
-	for i in $(seq 1 50) ; do
-		test $(dmsetup info --noheadings -c -o open $1) -ne 0 && return
-		sleep 0.1
-	done
-
-	die "$1 expected to be openned, but it's not!"
-}
-
 cleanup_tail()
 {
 	test -z "$SLEEP_PID" || kill $SLEEP_PID || true
@@ -125,10 +115,7 @@ lvchange -ay $vg1
 check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
 
 # Test removal of opened (but unmounted) snapshot (device busy) for a while
-sleep 120 < "$DM_DEV_DIR/$vg1/$lv1" &
-SLEEP_PID=$!
-
-wait_for_open_ "$vg1-$lv1"
+SLEEP_PID=$(aux hold_device_open $vg1 $lv1 60)
 
 # Opened virtual snapshot device is not removable
 # it should retry device removal for a few seconds

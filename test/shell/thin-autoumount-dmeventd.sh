@@ -72,18 +72,18 @@ touch "$mntusedir/file$$"
 sync
 
 # Running 'keeper' process sleep holds the block device still in use
-sleep 60 < "$mntusedir/file$$" &
+sleep 60 < "$mntusedir/file$$" >/dev/null 2>&1 &
 PID_SLEEP=$!
 
 lvs -a $vg
 # Fill pool above 95%  (to cause 'forced lazy umount)
 dd if=/dev/zero of="$mntdir/file$$" bs=256K count=20 conv=fdatasync
-sync
+
 lvs -a $vg
 
 # Could loop here for a few secs so dmeventd can do some work
 # In the worst case check only happens every 10 seconds :(
-# With low water mark it should react way faster
+# With low water mark it quickly discovers overflow and umounts $vg/$lv1
 for i in $(seq 1 12) ; do
 	is_lv_opened_ "$vg/$lv1" || break
 	test $i -lt 12 || die "$mntdir should have been unmounted by dmeventd!"

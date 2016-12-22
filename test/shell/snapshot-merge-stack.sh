@@ -29,9 +29,7 @@ snap_and_merge() {
 	sync
 	lvs -a $vg
 
-	# keep device open to prevent instant merge
-	sleep 20 < "$DM_DEV_DIR/$vg/$lv1" &
-	SLEEP_PID=$!
+	SLEEP_PID=$(aux hold_device_open $vg $lv1 20)
 
 	# initiate background merge
 	lvconvert -b --merge $vg/$lv2
