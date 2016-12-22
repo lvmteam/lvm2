@@ -328,6 +328,7 @@ void process_event(struct dm_task *dmt,
 	char *params;
 	int needs_policy = 0;
 	int needs_umount = 0;
+	struct dm_task *new_dmt = NULL;
 
 #if THIN_DEBUG
 	log_debug("Watch for tp-data:%.2f%%  tp-metadata:%.2f%%.",
@@ -346,6 +347,28 @@ void process_event(struct dm_task *dmt,
 			goto out;
 
 		stack;
+
+		/*
+		 * Rather update oldish status
+		 * since after 'command' processing
+		 * percentage info could have changed a lot.
+		 * If we would get above UMOUNT_THRESH
+		 * we would wait for next sigalarm.
+		 */
+		if (!(new_dmt = dm_task_create(DM_DEVICE_STATUS)))
+			goto_out;
+
+		if (!dm_task_set_uuid(new_dmt, dm_task_get_uuid(dmt)))
+			goto_out;
+
+		/* Non-blocking status read */
+		if (!dm_task_no_flush(new_dmt))
+			log_warn("WARNING: Can't set no_flush for dm status.");
+
+		if (!dm_task_run(new_dmt))
+			goto_out;
+
+		dmt = new_dmt;
 	}
 
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
@@ -433,6 +456,9 @@ out:
 			 device, state->fails);
 		pthread_kill(pthread_self(), SIGALRM);
 	}
+
+	if (new_dmt)
+		dm_task_destroy(new_dmt);
 }
 
 int register_device(const char *device,
