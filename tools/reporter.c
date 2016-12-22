@@ -113,6 +113,40 @@ static int _do_info_and_status(struct cmd_context *cmd,
 	return 1;
 }
 
+/* Check if this is really merging origin.
+ * In such case, origin is gone, and user should see
+ * only data from merged snapshot. Important for thin. */
+static int _check_merging_origin(const struct logical_volume *lv,
+				 struct lv_with_info_and_seg_status *status,
+				 int *merged)
+{
+	uint32_t device_id;
+
+	*merged = 0;
+
+	switch (status->seg_status.type) {
+	case SEG_STATUS_THIN:
+		/* Get 'device_id' from active dm-table */
+		if (!lv_thin_device_id(lv, &device_id))
+			return_0;
+
+		if (lv->snapshot->device_id != device_id)
+			return 1;
+		break;
+	case SEG_STATUS_SNAPSHOT:
+		break;
+	default:
+		return 1;
+	}
+
+	/* Origin is gone */
+	log_debug_activation("Merge is progress, reporting merged LV %s.",
+			     display_lvname(lv->snapshot->lv));
+	*merged = 1;
+
+	return 1;
+}
+
 static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 					       const struct logical_volume *lv,
 					       int do_info, int do_status,
@@ -123,9 +157,21 @@ static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 		.seg_status.type = SEG_STATUS_NONE
 	};
 	int r = ECMD_FAILED;
+	int merged;
+
+	if (lv_is_merging_origin(lv))
+		/* Status is need to know which LV should be shown */
+		do_status = 1;
 
 	if (!_do_info_and_status(cmd, first_seg(lv), &status, do_info, do_status))
 		goto_out;
+
+	if (lv_is_merging_origin(lv)) {
+		if (!_check_merging_origin(lv, &status, &merged))
+		      goto_out;
+		if (merged)
+			lv = lv->snapshot->lv;
+	}
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
 			   lv->vg, lv, NULL, NULL, NULL, &status, NULL))
@@ -173,9 +219,21 @@ static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
 		.seg_status.type = SEG_STATUS_NONE
 	};
 	int r = ECMD_FAILED;
+	int merged;
+
+	if (lv_is_merging_origin(seg->lv))
+		/* Status is need to know which LV should be shown */
+		do_status = 1;
 
 	if (!_do_info_and_status(cmd, seg, &status, do_info, do_status))
 		goto_out;
+
+	if (lv_is_merging_origin(seg->lv)) {
+		if (!_check_merging_origin(seg->lv, &status, &merged))
+			goto_out;
+		if (merged)
+			seg = seg->lv->snapshot;
+	}
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
 			   seg->lv->vg, seg->lv, NULL, seg, NULL, &status, NULL))
