@@ -1491,6 +1491,27 @@ wait_pvmove_lv_ready() {
 	fi
 }
 
+# Holds device open with sleep which automatically expires after given timeout
+# Prints  PID of running holding sleep process in background
+hold_device_open() {
+	local vgname=$1
+	local lvname=$2
+	local sec=${3:-20} # default 20sec
+
+	sleep $sec < "$DM_DEV_DIR/$vgname/$lvname" >/dev/null 2>&1 &
+	SLEEP_PID=$!
+	# wait till device is openned
+	for i in $(seq 1 50) ; do
+		if test "$(dmsetup info --noheadings -c -o open $vgname-$lvname)" -ne 0 ; then
+			echo "$SLEEP_PID"
+			return
+		fi
+		sleep .1
+	done
+
+	die "$vgname-$lvname expected to be openned, but it's not!"
+}
+
 # return total memory size in kB units
 total_mem() {
 	while IFS=":" read -r a b ; do
