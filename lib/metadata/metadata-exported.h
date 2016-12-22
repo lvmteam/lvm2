@@ -198,7 +198,7 @@
 #define lv_is_partial(lv)	(((lv)->status & PARTIAL_LV) ? 1 : 0)
 #define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
 #define lv_is_merging(lv)	(((lv)->status & MERGING) ? 1 : 0)
-#define lv_is_merging_origin(lv) (lv_is_merging(lv))
+#define lv_is_merging_origin(lv) (lv_is_merging(lv) && (lv)->snapshot)
 #define lv_is_snapshot(lv)	(((lv)->status & SNAPSHOT) ? 1 : 0)
 #define lv_is_converting(lv)	(((lv)->status & CONVERTING) ? 1 : 0)
 #define lv_is_external_origin(lv)	(((lv)->external_count > 0) ? 1 : 0)
