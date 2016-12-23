@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2014 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2016 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -37,15 +37,24 @@ check lv_field $vg/snap thin_id "3"
 lvconvert --merge $vg/snap
 
 umount mnt
+
+check lv_field $vg/$lv1 thin_id "1"
+check lv_field $vg/pool transaction_id "3"
+
 vgchange -an $vg
 
 # Check reboot case
 vgchange -ay --sysinit $vg
-# Metadata are still not updated (--poll n)
-check lv_field $vg/$lv1 thin_id "1"
+
+# Check correct thin_id is shown after activation
+# even when metadata were not yet physically modified.
+# Merge take its place during activation,
+# but pool transaction_id still needs metadata update.
+check lv_field $vg/$lv1 thin_id "3"
 check lv_field $vg/pool transaction_id "3"
 
 # Check the metadata are updated after refresh
+#
 vgchange --refresh $vg
 check lv_field $vg/$lv1 thin_id "3"
 check lv_field $vg/pool transaction_id "4"
