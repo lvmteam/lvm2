@@ -440,6 +440,8 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 
 	if (!seg_is_pool(seg) &&
+	    /* FIXME: format_pool/import_export.c  _add_linear_seg() sets chunk_size */
+	    !seg_is_linear(seg) &&
 	    !seg_is_snapshot(seg)) {
 		if (seg->chunk_size)
 			seg_error("sets chunk_size");
