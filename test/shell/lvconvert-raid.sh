@@ -32,7 +32,8 @@ get_image_pvs() {
 aux have_raid 1 3 0 || skip
 
 aux prepare_pvs 9
-vgcreate -s 256k $vg $(cat DEVICES)
+# vgcreate -s 256k $vg $(cat DEVICES)
+vgcreate -s 2m $vg $(cat DEVICES)
 
 ###########################################
 # RAID1 convert tests
@@ -135,15 +136,27 @@ lvconvert --yes --splitmirrors 1 --name $lv2 $vg/$lv1 "$dev2"
 lvremove -ff $vg
 
 ###########################################
-# RAID1 split + trackchanges / merge
+# RAID1 split + trackchanges / merge with content check
 ###########################################
 # 3-way to 2-way/linear
-lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg
+lvcreate --type raid1 -m 2 -l 1 -n $lv1 $vg
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
+fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
 lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg ${lv1}_rimage_2
+fsck.ext4 -fn "$DM_DEV_DIR/mapper/$vg-${lv1}_rimage_2"
+dd of="$DM_DEV_DIR/$vg/$lv1" if=/dev/zero bs=512 oflag=direct count=`blockdev --getsz "$DM_DEV_DIR/$vg/$lv1"`
+not fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
+fsck.ext4 -fn "$DM_DEV_DIR/mapper/$vg-${lv1}_rimage_2"
+# FIXME: needed on tiny loop but not on real block backend ?
+lvchange --refresh $vg/$lv1
 lvconvert --merge $vg/${lv1}_rimage_2
+aux wait_for_sync $vg $lv1
+lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
+not fsck.ext4 -fn "$DM_DEV_DIR/mapper/$vg-${lv1}_rimage_2"
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 

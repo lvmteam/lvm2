@@ -1419,35 +1419,19 @@ static int _lv_refresh_suspend_resume(const struct logical_volume *lv)
 
 int lv_refresh_suspend_resume(const struct logical_volume *lv)
 {
-	/*
-	 * FIXME:
-	 *
-	 * in case of RAID, refresh the SubLVs before
-	 * refreshing the top-level one in order to cope
-	 * with transient failures of SubLVs.
-	 */
-	if (lv_is_raid(lv)) {
-		if (vg_is_clustered(lv->vg) &&
-		    lv_is_active_remotely(lv)) {
-			if (!_lv_refresh_suspend_resume(lv))
-				return 0;
-		} else {
-			uint32_t s;
-			struct lv_segment *seg = first_seg(lv);
+	if (!_lv_refresh_suspend_resume(lv))
+		return 0;
 
-			for (s = 0; s < seg->area_count; s++) {
-				if (seg_type(seg, s) == AREA_LV &&
-				    !_lv_refresh_suspend_resume(seg_lv(seg, s)))
-					return 0;
-				if (seg->meta_areas &&
-				    seg_metatype(seg, s) == AREA_LV &&
-				    !_lv_refresh_suspend_resume(seg_metalv(seg, s)))
-					return 0;
-			}
-		}
+	/*
+	 * Remove any transiently activated error
+	 * devices which arean't used any more.
+	 */
+	if (lv_is_raid(lv) && !lv_deactivate_any_missing_subdevs(lv)) {
+		log_error("Failed to remove temporary SubLVs from %s", display_lvname(lv));
+		return 0;
 	}
 
-	return _lv_refresh_suspend_resume(lv);
+	return 1;
 }
 
 /*

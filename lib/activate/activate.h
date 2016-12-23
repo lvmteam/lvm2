@@ -124,6 +124,8 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 
+int lv_deactivate_any_missing_subdevs(const struct logical_volume *lv);
+
 /*
  * Returns 1 if info structure has been populated, else 0 on failure.
  * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.

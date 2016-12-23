@@ -358,6 +358,10 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	return 1;
 }
+int lv_deactivate_any_missing_subdevs(const struct logical_volume *lv)
+{
+	return 1;
+}
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg)
 {
@@ -2571,6 +2575,77 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	fs_unlock();
 
 	return r;
+}
+
+/* Remove any existing, closed mapped device by @name */
+static int _remove_dm_dev_by_name(const char *name)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	struct dm_info info;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+		return_0;
+
+	/* Check, if the device exists. */
+	if (dm_task_set_name(dmt, name) && dm_task_run(dmt) && dm_task_get_info(dmt, &info)) {
+		dm_task_destroy(dmt);
+
+		/* Ignore non-existing or open dm devices */
+		if (!info.exists || info.open_count)
+			return 1;
+
+		if (!(dmt = dm_task_create(DM_DEVICE_REMOVE)))
+			return_0;
+
+		if (dm_task_set_name(dmt, name))
+			r = dm_task_run(dmt);
+	}
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+/* Work all segments of @lv removing any existing, closed "*-missing_N_0" sub devices. */
+static int _lv_remove_any_missing_subdevs(struct logical_volume *lv)
+{
+	if (lv) {
+		uint32_t seg_no = 0;
+		char name[257];
+		struct lv_segment *seg;
+
+		dm_list_iterate_items(seg, &lv->segments) {
+			if (seg->area_count != 1)
+				return_0;
+			if (dm_snprintf(name, sizeof(name), "%s-%s-missing_%u_0", seg->lv->vg->name, seg->lv->name, seg_no) < 0)
+				return 0;
+			if (!_remove_dm_dev_by_name(name))
+				return 0;
+
+			seg_no++;
+		}
+	}
+
+	return 1;
+}
+
+/* Remove any "*-missing_*" sub devices added by the activation layer for an rmate/rimage missing PV mapping */
+int lv_deactivate_any_missing_subdevs(const struct logical_volume *lv)
+{
+	uint32_t s;
+	struct lv_segment *seg = first_seg(lv);
+
+	for (s = 0; s < seg->area_count; s++) {
+		if (seg_type(seg, s) == AREA_LV &&
+		    !_lv_remove_any_missing_subdevs(seg_lv(seg, s)))
+			return 0;
+		if (seg->meta_areas && seg_metatype(seg, s) == AREA_LV &&
+		    !_lv_remove_any_missing_subdevs(seg_metalv(seg, s)))
+			return 0;
+	}
+
+	return 1;
 }
 
 /*
