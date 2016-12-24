@@ -5447,6 +5447,19 @@ int vg_flag_write_locked(struct volume_group *vg)
 	return 0;
 }
 
+static int _access_vg_clustered(struct cmd_context *cmd, const struct volume_group *vg)
+{
+	if (vg_is_clustered(vg) && !locking_is_clustered()) {
+		if (!cmd->ignore_clustered_vgs)
+			log_error("Skipping clustered volume group %s", vg->name);
+		else
+			log_verbose("Skipping clustered volume group %s", vg->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Performs a set of checks against a VG according to bits set in status
  * and returns FAILED_* bits for those that aren't acceptable.
@@ -5458,15 +5471,9 @@ static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
 {
 	uint32_t failure = 0;
 
-	if ((status & CLUSTERED) &&
-	    (vg_is_clustered(vg)) && !locking_is_clustered()) {
-		if (!vg->cmd->ignore_clustered_vgs)
-			log_error("Skipping clustered volume group %s", vg->name);
-		else
-			log_verbose("Skipping clustered volume group %s", vg->name);
+	if ((status & CLUSTERED) && !_access_vg_clustered(vg->cmd, vg))
 		/* Return because other flags are considered undefined. */
 		return FAILED_CLUSTERED;
-	}
 
 	if ((status & EXPORTED_VG) &&
 	    vg_is_exported(vg)) {
@@ -5553,19 +5560,6 @@ static int _allow_extra_system_id(struct cmd_context *cmd, const char *system_id
 	}
 
 	return 0;
-}
-
-static int _access_vg_clustered(struct cmd_context *cmd, struct volume_group *vg)
-{
-	if (vg_is_clustered(vg) && !locking_is_clustered()) {
-		if (!cmd->ignore_clustered_vgs)
-			log_error("Skipping clustered volume group %s", vg->name);
-		else
-			log_verbose("Skipping clustered volume group %s", vg->name);
-		return 0;
-	}
-
-	return 1;
 }
 
 static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg,
