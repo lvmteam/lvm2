@@ -3467,7 +3467,7 @@ int lv_add_segment(struct alloc_handle *ah,
 				     region_size))
 		return_0;
 
-	if ((segtype->flags & SEG_CAN_SPLIT) && !lv_merge_segments(lv)) {
+	if (segtype_can_split(segtype) && !lv_merge_segments(lv)) {
 		log_error("Couldn't merge segments after extending "
 			  "logical volume.");
 		return 0;
@@ -7048,7 +7048,7 @@ static int _should_wipe_lv(struct lvcreate_params *lp,
 			   struct logical_volume *lv, int warn)
 {
 	/* Unzeroable segment */
-	if (first_seg(lv)->segtype->flags & SEG_CANNOT_BE_ZEROED)
+	if (seg_cannot_be_zeroed(first_seg(lv)))
 		return 0;
 
 	/* Thin snapshot need not to be zeroed */
