@@ -398,7 +398,7 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 			if (!(seg->segtype->flags & SEG_FORMAT1_SUPPORT)) {
 				log_error("Segment type %s in LV %s: "
 					  "unsupported by format1",
-					  seg->segtype->name, lv->name);
+					  lvseg_name(seg), lv->name);
 				return 0;
 			}
 			if (seg_type(seg, s) != AREA_PV) {

@@ -1940,7 +1940,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 			/* FIXME specify events */
 			if (!monitor_fn(seg, 0)) {
 				log_error("%s: %s segment monitoring function failed.",
-					  display_lvname(lv), seg->segtype->name);
+					  display_lvname(lv), lvseg_name(seg));
 				return 0;
 			}
 		} else

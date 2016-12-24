@@ -431,7 +431,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	/* Separate mirror log or metadata devices so we can clear them */
 	if (!detach_metadata_devices(seg, &device_list)) {
 		log_error("Failed to clear %s %s for %s.",
-			  seg->segtype->name, seg_is_raid(seg) ?
+			  lvseg_name(seg), seg_is_raid(seg) ?
 			  "metadata area" : "mirror log", display_lvname(lv));
 		return 0;
 	}

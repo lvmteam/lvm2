@@ -2493,7 +2493,7 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 
 	if (!seg->segtype->ops->add_target_line) {
 		log_error(INTERNAL_ERROR "_emit_target cannot handle "
-			  "segment type %s.", seg->segtype->name);
+			  "segment type %s.", lvseg_name(seg));
 		return 0;
 	}
 

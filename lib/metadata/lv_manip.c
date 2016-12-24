@@ -4596,7 +4596,7 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 
 	if (!policy_amount) {
 		log_error("Can't extend %s with %s autoextend percent set to 0%%.",
-			  display_lvname(lv),  first_seg(lv)->segtype->name);
+			  display_lvname(lv),  lvseg_name(first_seg(lv)));
 		return 0;
 	}
 
