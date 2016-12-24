@@ -144,6 +144,12 @@ struct dev_manager;
 #define segtype_is_virtual(segtype)	((segtype)->flags & SEG_VIRTUAL ? 1 : 0)
 #define segtype_is_unknown(segtype)	((segtype)->flags & SEG_UNKNOWN ? 1 : 0)
 
+#define segtype_can_split(segtype)	((segtype)->flags & SEG_CAN_SPLIT ? 1 : 0)
+#define segtype_cannot_be_zeroed(segtype) ((segtype)->flags & SEG_CANNOT_BE_ZEROED ? 1 : 0)
+#define segtype_monitored(segtype)	((segtype)->flags & SEG_MONITORED ? 1 : 0)
+#define segtype_only_exclusive(segtype)	((segtype)->flags & SEG_ONLY_EXCLUSIVE ? 1 : 0)
+#define segtype_can_error_when_full(segtype)	((segtype)->flags & SEG_CAN_ERROR_WHEN_FULL ? 1 : 0)
+
 #define segtype_supports_stripe_size(segtype)	\
 	((segtype_is_striped(segtype) || segtype_is_mirror(segtype) || \
 	  segtype_is_cache(segtype) || segtype_is_cache_pool(segtype) || \
@@ -188,11 +194,11 @@ struct dev_manager;
 #define seg_is_thin_volume(seg)	segtype_is_thin_volume((seg)->segtype)
 #define seg_is_virtual(seg)	segtype_is_virtual((seg)->segtype)
 #define seg_unknown(seg)	segtype_is_unknown((seg)->segtype)
-#define seg_can_split(seg)	((seg)->segtype->flags & SEG_CAN_SPLIT ? 1 : 0)
-#define seg_cannot_be_zeroed(seg) ((seg)->segtype->flags & SEG_CANNOT_BE_ZEROED ? 1 : 0)
-#define seg_monitored(seg)	((seg)->segtype->flags & SEG_MONITORED ? 1 : 0)
-#define seg_only_exclusive(seg)	((seg)->segtype->flags & SEG_ONLY_EXCLUSIVE ? 1 : 0)
-#define seg_can_error_when_full(seg) ((seg)->segtype->flags & SEG_CAN_ERROR_WHEN_FULL ? 1 : 0)
+#define seg_can_split(seg)	segtype_can_split((seg)->segtype)
+#define seg_cannot_be_zeroed(seg)	segtype_cannot_be_zeroed((seg)->segtype)
+#define seg_monitored(seg)	segtype_monitored((seg)->segtype)
+#define seg_only_exclusive(seg)	segtype_only_exclusive((seg)->segtype)
+#define seg_can_error_when_full(seg)	segtype_can_error_when_full((seg)->segtype)
 
 struct segment_type {
 	struct dm_list list;		/* Internal */
