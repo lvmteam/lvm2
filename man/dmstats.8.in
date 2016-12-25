@@ -878,7 +878,7 @@ Count of writes merged this interval.
 .B write_sector_count
 Count of 512 byte sectors written this interval.
 .TP
-.B write_nsecs
+.B write_time
 Accumulated duration of all write requests (ns).
 .TP
 .B in_progress_count
