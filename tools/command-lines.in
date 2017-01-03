@@ -1335,7 +1335,7 @@ OO_VGCHANGE: --autobackup Bool, --ignoremonitoring, --ignoreskippedcluster,
 # because it can function as a required opt.
 
 OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
---logicalvolume Number, --maxphysicalvolumes Number, --alloc Alloc, --uuid,
+--logicalvolume Number, --maxphysicalvolumes Uint32, --alloc Alloc, --uuid,
 --clustered Bool, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --physicalextentsize SizeMB, --resizeable Bool, --systemid String, --locktype LockType,
 --profile String, --detachprofile, --metadataprofile String
@@ -1402,7 +1402,7 @@ ID: vgconvert_general
 
 vgcreate VG_new PV ...
 OO: --addtag Tag, --alloc Alloc, --autobackup Bool, --clustered Bool, --maxlogicalvolumes Number,
---maxphysicalvolumes Number, --metadataprofile String, --metadatatype MetadataType,
+--maxphysicalvolumes Uint32, --metadataprofile String, --metadatatype MetadataType,
 --physicalextentsize SizeMB, --force, --zero Bool, --labelsector Number,
 --metadatasize SizeMB, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --reportformat ReportFmt, --dataalignment SizeKB, --dataalignmentoffset SizeKB,
@@ -1535,7 +1535,7 @@ OO_VGSPLIT: --autobackup Bool
 
 # used only when the destination VG is new
 OO_VGSPLIT_NEW: --alloc Alloc, --clustered Bool,
---maxlogicalvolumes Number, --maxphysicalvolumes Number,
+--maxlogicalvolumes Number, --maxphysicalvolumes Uint32,
 --metadatatype MetadataType, --vgmetadatacopies MetadataCopiesVG
 
 vgsplit VG VG PV ...

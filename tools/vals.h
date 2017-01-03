@@ -99,6 +99,7 @@ val(conststr_VAL, NULL, "ConstString", "ERR")  /* used only for command defs */
 val(constnum_VAL, NULL, "ConstNumber", "ERR")  /* used only for command defs */
 val(bool_VAL, yes_no_arg, "Bool", "y|n")
 val(number_VAL, int_arg, "Number", NULL)
+val(uint32_VAL, uint32_arg, "Uint32", "Number")
 val(string_VAL, string_arg, "String", NULL)
 val(vg_VAL, string_arg, "VG", NULL)
 val(lv_VAL, string_arg, "LV", NULL)

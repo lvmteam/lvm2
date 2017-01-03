@@ -34,6 +34,7 @@ int size_kb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 int size_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 int size_mb_arg_with_percent(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 int int_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+int uint32_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 int int_arg_with_sign_and_percent(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 int major_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
