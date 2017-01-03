@@ -554,6 +554,14 @@ int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *
 	return 1;
 }
 
+int uint32_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!int_arg(cmd, av) || (av->ui64_value > UINT32_MAX))
+		return 0;
+
+	return 1;
+}
+
 int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	char *ptr;
