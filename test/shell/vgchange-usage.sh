@@ -53,6 +53,13 @@ not vgchange -p 2 $vg 2>err
 grep "MaxPhysicalVolumes is less than the current number $pv_count of PVs for" err
 check vg_field $vg max_pv 128
 
+# try some numbers around MAX limit (uint32)
+vgchange -p 4294967295 $vg
+invalid vgchange -p 4294967296 $vg
+invalid vgchange -p 18446744073709551615 $vg
+invalid vgchange -p 18446744073709551616 $vg
+check vg_field $vg max_pv 4294967295
+
 # vgchange -l MaxLogicalVolumes
 check vg_field $vg max_lv 0
 invalid vgchange -l -128 $vg
