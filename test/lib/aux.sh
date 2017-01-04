@@ -975,6 +975,31 @@ enable_dev() {
 	done
 }
 
+# Once there is $name.devtable
+# this is a quick way to restore to this table entry
+restore_from_devtable() {
+	local dev
+	local silent
+
+	if test "$1" = "--silent"; then
+	    silent=1
+	    shift
+	fi
+
+	rm -f debug.log strace.log
+	init_udev_transaction
+	for dev in "$@"; do
+		local name=$(echo "$dev" | sed -e 's,.*/,,')
+		dmsetup load "$name" "$name.devtable"
+		dmsetup resume "$name"
+	done
+	finish_udev_transaction
+
+	test -n "$silent" || for dev in "$@"; do
+		notify_lvmetad "$dev"
+	done
+}
+
 #
 # Convert device to device with errors
 # Takes the list of pairs of error segment from:len
