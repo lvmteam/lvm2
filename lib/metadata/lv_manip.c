@@ -6537,8 +6537,11 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	    parent_seg->area_count != 1 ||
 	    seg_type(parent_seg, 0) != AREA_LV ||
 	    layer_lv != seg_lv(parent_seg, 0) ||
-	    parent_lv->le_count != layer_lv->le_count)
-		return_0;
+	    parent_lv->le_count != layer_lv->le_count) {
+		log_error(INTERNAL_ERROR "Inconsistent sizes of layer %s.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	if (!lv_empty(parent_lv))
 		return_0;
