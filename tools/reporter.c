@@ -136,11 +136,14 @@ static int _check_merging_origin(const struct logical_volume *lv,
 	case SEG_STATUS_SNAPSHOT:
 		break;
 	default:
+		/* When inactive, it's technically merging */
+		if (status->info_ok && !status->info.exists)
+			break;
 		return 1;
 	}
 
 	/* Origin is gone */
-	log_debug_activation("Merge is progress, reporting merged LV %s.",
+	log_debug_activation("Merge is in progress, reporting merged LV %s.",
 			     display_lvname(lv->snapshot->lv));
 	*merged = 1;
 
