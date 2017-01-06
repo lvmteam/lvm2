@@ -171,7 +171,8 @@ device_umount_one() {
 }
 
 device_umount() {
-	test "$devtype" != "lvm" && test "${kname:0:3}" != "dm-" && return 0
+	test "$devtype" != "lvm" && test "${kname:0:3}" != "dm-" \
+          && test "${kname:0:2}" != "md" && return 0
 
 	# FINDMNT is defined only if umount --all-targets is not available.
 	# In that case, read the list of multiple mount points of one device

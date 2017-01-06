@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Also unmount mount point on top of MD device if using blkdeactivate -u.
   Restore check preventing resize of cache type volumes (2.02.158).
   Add missing udev sync when flushing dirty cache content.
   vgchange -p accepts only uint32 numbers.
