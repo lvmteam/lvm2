@@ -79,12 +79,15 @@ vgextend $vg "$dev3"
 lvremove -ff $vg/$lv1
 
 # Delayed sync to allow for repair during rebuild
-delay 50
+delay 60
 
 # RAID5 single replace during initial sync
 lvcreate --type raid5 -i 2 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 aux disable_dev "$dev3"
-not lvconvert -y --repair $vg/$lv1
+# FIXME: there is quite big sleep on several 'status' read retries
+# so over 3sec - it may actually finish full sync
+# Use 'should' for this test result.
+should not lvconvert -y --repair $vg/$lv1
 aux wait_for_sync $vg $lv1
 lvconvert -y --repair $vg/$lv1
 vgreduce --removemissing $vg
