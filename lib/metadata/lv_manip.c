@@ -6533,13 +6533,41 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	 * Before removal, the layer should be cleaned up,
 	 * i.e. additional segments and areas should have been removed.
 	 */
-	if (dm_list_size(&parent_lv->segments) != 1 ||
-	    parent_seg->area_count != 1 ||
-	    seg_type(parent_seg, 0) != AREA_LV ||
-	    layer_lv != seg_lv(parent_seg, 0) ||
-	    parent_lv->le_count != layer_lv->le_count) {
-		log_error(INTERNAL_ERROR "Inconsistent sizes of layer %s.",
-			  display_lvname(lv));
+	/* FIXME:
+	 *    These are all INTERNAL_ERROR, but ATM there is
+	 *    some internal API problem and this code is wrongle
+	 *    executed with certain mirror manipulations.
+	 *    So we need to fix mirror code first, then switch...
+	 */
+	if (dm_list_size(&parent_lv->segments) != 1) {
+		log_error("Invalid %d segments in %s, expected only 1.",
+			  dm_list_size(&parent_lv->segments),
+			  display_lvname(parent_lv));
+		return 0;
+	}
+
+	if (parent_seg->area_count != 1) {
+		log_error("Invalid %d area count(s) in %s, expected only 1.",
+			  parent_seg->area_count, display_lvname(parent_lv));
+		return 0;
+	}
+
+	if (seg_type(parent_seg, 0) != AREA_LV) {
+		log_error("Invalid seg_type %d in %s, expected LV.",
+			  seg_type(parent_seg, 0), display_lvname(parent_lv));
+		return 0;
+	}
+
+	if (layer_lv != seg_lv(parent_seg, 0)) {
+		log_error("Layer doesn't match segment in %s.",
+			  display_lvname(parent_lv));
+		return 0;
+	}
+
+	if (parent_lv->le_count != layer_lv->le_count) {
+		log_error("Inconsistent extent count (%u != %u) of layer %s.",
+			  parent_lv->le_count, layer_lv->le_count,
+			  display_lvname(parent_lv));
 		return 0;
 	}
 
