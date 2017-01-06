@@ -64,7 +64,7 @@ static struct val_props _val_props[VAL_COUNT + 1] = {
  * Table of valid --option's
  */
 static struct arg_props _arg_props[ARG_COUNT + 1] = {
-#define arg(a, b, c, d, e, f) {a, b, "", "--" c, d, e, f},
+#define arg(a, b, c, d, e, f, g) {a, b, "", "--" c, d, e, f, g},
 #include "args.h"
 #undef arg
 };

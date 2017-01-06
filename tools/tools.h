@@ -59,7 +59,7 @@ enum {
 
 /* define the enums for the command line --options, foo_ARG */
 enum {
-#define arg(a, b, c, d, e, f) a ,
+#define arg(a, b, c, d, e, f, g) a ,
 #include "args.h"
 #undef arg
 };
@@ -109,6 +109,7 @@ struct arg_props {
 	int val_enum; /* foo_VAL from vals.h */
 	uint32_t flags;
 	uint32_t prio;
+	const char *desc;
 };
 
 struct arg_value_group_list {
