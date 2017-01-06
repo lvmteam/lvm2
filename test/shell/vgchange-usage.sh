@@ -63,6 +63,11 @@ check vg_field $vg max_pv 4294967295
 # vgchange -l MaxLogicalVolumes
 check vg_field $vg max_lv 0
 invalid vgchange -l -128 $vg
+vgchange -l 4294967295 $vg
+invalid vgchange -l 4294967296 $vg
+invalid vgchange -l 18446744073709551615 $vg
+invalid vgchange -l 18446744073709551616 $vg
+check vg_field $vg max_lv 4294967295
 vgchange -l 128 $vg
 check vg_field $vg max_lv 128
 
