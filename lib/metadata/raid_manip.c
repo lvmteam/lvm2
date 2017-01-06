@@ -3952,9 +3952,6 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!archive(lv->vg))
-		return_0;
-
 	/*
 	 * How many sub-LVs are being removed?
 	 */
@@ -3972,6 +3969,9 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs)) {
 			match_count++;
 			if (rebuild) {
+				if ((match_count == 1) &&
+				    !archive(lv->vg))
+					return_0;
 				seg_lv(raid_seg, s)->status |= LV_REBUILD;
 				seg_metalv(raid_seg, s)->status |= LV_REBUILD;
 			}
@@ -4016,6 +4016,9 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 
 	if (rebuild)
 		goto skip_alloc;
+
+	if (!archive(lv->vg))
+		return_0;
 
 	/* Prevent any PVs holding image components from being used for allocation */
 	if (!_avoid_pvs_with_other_images_of_lv(lv, allocate_pvs)) {
