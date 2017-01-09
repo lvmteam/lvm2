@@ -665,7 +665,7 @@ global {
 
 	# Configuration option global/units.
 	# Default value for --units argument.
-	units = "h"
+	units = "r"
 
 	# Configuration option global/si_unit_consistency.
 	# Distinguish between powers of 1024 and 1000 bytes.

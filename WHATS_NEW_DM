@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Support new R|r human readable units output format.
   Thin dmeventd plugin reacts faster on lvextend failure path with umount.
   Add dm_stats_bind_from_fd() to bind a stats handle from a file descriptor.
   Do not try call callback when reverting activation on error path.
