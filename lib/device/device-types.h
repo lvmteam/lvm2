@@ -63,5 +63,6 @@ static const dev_known_type_t _dev_known_types[] = {
 	{"bcache", 1, "bcache block device cache"},
 	{"nvme", 64, "NVM Express"},
 	{"zvol", 16, "ZFS Zvols"},
+	{"VxDMP", 16, "Veritas Dynamic Multipathing"},
 	{"", 0, ""}
 };

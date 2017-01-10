@@ -125,6 +125,10 @@ struct dev_types *create_dev_types(const char *proc_dir,
 		if (!strncmp("emcpower", line + i, 8) && isspace(*(line + i + 8)))
 			dt->emcpower_major = line_maj;
 
+		/* Look for Veritas Dynamic Multipathing */
+		if (!strncmp("VxDMP", line + i, 5) && isspace(*(line + i + 5)))
+			dt->vxdmp_major = line_maj;
+
 		if (!strncmp("loop", line + i, 4) && isspace(*(line + i + 4)))
 			dt->loop_major = line_maj;
 
@@ -218,6 +222,9 @@ int dev_subsystem_part_major(struct dev_types *dt, struct device *dev)
 	if (MAJOR(dev->dev) == dt->power2_major)
 		return 1;
 
+	if (MAJOR(dev->dev) == dt->vxdmp_major)
+		return 1;
+
 	if ((MAJOR(dev->dev) == dt->blkext_major) &&
 	    dev_get_primary_dev(dt, dev, &primary_dev) &&
 	    (MAJOR(primary_dev) == dt->md_major))
@@ -245,6 +252,9 @@ const char *dev_subsystem_name(struct dev_types *dt, struct device *dev)
 
 	if (MAJOR(dev->dev) == dt->power2_major)
 		return "POWER2";
+
+	if (MAJOR(dev->dev) == dt->vxdmp_major)
+		return "VXDMP";
 
 	if (MAJOR(dev->dev) == dt->blkext_major)
 		return "BLKEXT";

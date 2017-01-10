@@ -41,6 +41,7 @@ struct dev_types {
 	int drbd_major;
 	int device_mapper_major;
 	int emcpower_major;
+	int vxdmp_major;
 	int power2_major;
 	int dasd_major;
 	int loop_major;
