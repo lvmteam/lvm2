@@ -1,3 +1,4 @@
+
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
 # Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
@@ -140,6 +141,8 @@ all: device-mapper
 CFLAGS_lvm.o += $(EXTRA_EXEC_CFLAGS)
 CFLAGS_lvmcmdline.o += $(VALGRIND_CFLAGS)
 
+INCLUDES += -I$(top_builddir)/tools
+
 lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $(OBJECTS) lvm.o \
 		$(LVMLIBS) $(READLINE_LIBS) $(LIBS) -rdynamic
@@ -173,12 +176,35 @@ liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION): liblvm2cmd.$(LIB_SUFFIX)
 	$(CC) -E -P $(srcdir)/cmdnames.h 2> /dev/null | \
 		egrep -v '^ *(|#.*|config|devtypes|dumpconfig|formats|fullreport|help|lastlog|lvpoll|pvdata|segtypes|systemid|tags|version) *$$' > .commands
 
-ccmd: create-commands.c
-	$(CC) create-commands.c -o ccmd
+ccmd: $(srcdir)/ccmd-main.c $(srcdir)/ccmd-util.c $(srcdir)/ccmd-man.c
+	$(CC) $(srcdir)/ccmd-main.c $(srcdir)/ccmd-util.c $(srcdir)/ccmd-man.c -o ccmd
 
-command-lines.h: ccmd
-	./ccmd --output struct command-lines.in > command-lines.h
-	./ccmd --output count command-lines.in > command-lines-count.h
+.DELETE_ON_ERROR:
+
+command-lines.h: $(srcdir)/command-lines.in ccmd
+	$(top_builddir)/tools/ccmd --output struct $(srcdir)/command-lines.in > $@
+
+command-lines-count.h: $(srcdir)/command-lines.in ccmd
+	$(top_builddir)/tools/ccmd --output count $(srcdir)/command-lines.in > $@
+
+# move properly to configure
+WC = /usr/bin/wc
+GREP = /bin/grep
+SORT = /bin/sort
+CUT = /bin/cut
+SED = /bin/sed
+
+# FIXME Add licence text from template file
+command-lines-count-new.h: $(srcdir)/command-lines.in ccmd Makefile
+	set -o pipefail && \
+	(echo -n "#define COMMAND_COUNT " && \
+	$(GREP) '^ID:' $(srcdir)/command-lines.in | $(WC) -l && \
+	echo -e "enum {\n\tno_CMD," && \
+	$(GREP) '^ID:' $(srcdir)/command-lines.in | $(CUT) -d\  -f2 | $(SORT) -u | $(SED) 's/\(.*\)/\t&_CMD,/' && \
+	echo -e "\tCOMMAND_ID_COUNT,\n};" \
+	) > $@
+
+$(SOURCES:%.c=%.d): command-lines.h command-lines-count.h
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
