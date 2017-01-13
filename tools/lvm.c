@@ -210,7 +210,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
 	char *orig_command_log_selection = NULL;
-	int is_lastlog_cmd = 0, argc, ret;
+	int is_lastlog_cmd = 0, argc, ret, i;
 	char *input = NULL, *args[MAX_ARGS], **argv;
 
 	rl_readline_name = "lvm";
@@ -261,6 +261,9 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 		}
 
 		add_history(input);
+
+		for (i = 0; i < MAX_ARGS; i++)
+			args[i] = NULL;
 
 		argv = args;
 
