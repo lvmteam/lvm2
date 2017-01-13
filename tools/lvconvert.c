@@ -4512,7 +4512,7 @@ static int _lvconvert_merge_mirror_images_single(struct cmd_context *cmd,
 int lvconvert_merge_mirror_images_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* arg can be a VG name, which is the standard option usage */
-	cmd->command->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
 
 	return process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
 			       NULL, &_lvconvert_visible_check, &_lvconvert_merge_mirror_images_single);
@@ -4552,7 +4552,7 @@ int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &lr;
 
-	cmd->command->flags &= ~GET_VGNAME_FROM_OPTIONS;
+	cmd->cname->flags &= ~GET_VGNAME_FROM_OPTIONS;
 
 	ret = process_each_lv(cmd, cmd->position_argc, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
 			      handle, NULL, &_lvconvert_merge_generic_single);

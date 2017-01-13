@@ -164,12 +164,8 @@ struct command {
 	const char *command_line_id;
 	int command_line_enum; /* <command_line_id>_CMD */
 
-	struct command_name *cname;
-
 	command_fn fn;                      /* old style */
 	struct command_function *functions; /* new style */
-
-	unsigned int flags; /* copied from command_name.flags from commands.h */
 
 	unsigned int cmd_flags; /* CMD_FLAG_ */
 

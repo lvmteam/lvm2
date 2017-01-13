@@ -284,7 +284,7 @@ static int _pvscan_autoactivate(struct cmd_context *cmd, struct pvscan_aa_params
 	handle->custom_handle = pp;
 
 	if (all_vgs) {
-		cmd->command->flags |= ALL_VGS_IS_DEFAULT;
+		cmd->cname->flags |= ALL_VGS_IS_DEFAULT;
 		pp->refresh_all = 1;
 	}
 

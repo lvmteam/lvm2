@@ -240,7 +240,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	 */
 
 	log_debug("Finding devices to import.");
-	cmd->command->flags |= ENABLE_DUPLICATE_DEVS;
+	cmd->cname->flags |= ENABLE_DUPLICATE_DEVS;
 	process_each_pv(cmd, argc, argv, NULL, 0, READ_ALLOW_EXPORTED, handle, _vgimportclone_pv_single);
 
 	if (vp.found_args != argc) {

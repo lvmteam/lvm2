@@ -89,6 +89,7 @@ struct cmd_context {
 	 */
 	const char *cmd_line;
 	const char *name; /* needed before cmd->command is set */
+	struct command_name *cname;
 	struct command *command;
 	char **argv;
 	struct arg_values *opt_arg_values;

@@ -1095,7 +1095,7 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 	 */
 
 	if (arg_is_set(cmd, systemid_ARG) || arg_is_set(cmd, locktype_ARG))
-		cmd->command->flags &= ~ALL_VGS_IS_DEFAULT;
+		cmd->cname->flags &= ~ALL_VGS_IS_DEFAULT;
 
 	if (arg_is_set(cmd, systemid_ARG) || arg_is_set(cmd, locktype_ARG)) {
 		/*

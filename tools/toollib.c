@@ -2093,7 +2093,7 @@ static void _choose_vgs_to_process(struct cmd_context *cmd,
 		 * matches the UUID of a VG.  (--select should generally
 		 * be used to select a VG by uuid instead.)
 		 */
-		if (!found && (cmd->command->flags & ALLOW_UUID_AS_NAME))
+		if (!found && (cmd->cname->flags & ALLOW_UUID_AS_NAME))
 			arg_is_uuid = id_read_format_try(&id, sl->str);
 
 		if (!found && arg_is_uuid) {
@@ -2162,7 +2162,7 @@ int process_each_vg(struct cmd_context *cmd,
 	struct dm_list arg_vgnames;		/* str_list */
 	struct dm_list vgnameids_on_system;	/* vgnameid_list */
 	struct dm_list vgnameids_to_process;	/* vgnameid_list */
-	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
+	int enable_all_vgs = (cmd->cname->flags & ALL_VGS_IS_DEFAULT);
 	int process_all_vgs_on_system = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -2209,7 +2209,7 @@ int process_each_vg(struct cmd_context *cmd,
 	 * label scan to be done.  get_vgnameids() will scan labels
 	 * (when not using lvmetad).
 	 */
-	if (cmd->command->flags & REQUIRES_FULL_LABEL_SCAN) {
+	if (cmd->cname->flags & REQUIRES_FULL_LABEL_SCAN) {
 		dev_cache_full_scan(cmd->full_filter);
 		lvmcache_force_next_label_scan();
 	}
@@ -3655,7 +3655,7 @@ int process_each_lv(struct cmd_context *cmd,
 	struct dm_list arg_lvnames;		/* str_list */
 	struct dm_list vgnameids_on_system;	/* vgnameid_list */
 	struct dm_list vgnameids_to_process;	/* vgnameid_list */
-	int enable_all_vgs = (cmd->command->flags & ALL_VGS_IS_DEFAULT);
+	int enable_all_vgs = (cmd->cname->flags & ALL_VGS_IS_DEFAULT);
 	int process_all_vgs_on_system = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -3674,7 +3674,7 @@ int process_each_lv(struct cmd_context *cmd,
 	/*
 	 * Find any LVs, VGs or tags explicitly provided on the command line.
 	 */
-	if (cmd->command->flags & GET_VGNAME_FROM_OPTIONS)
+	if (cmd->cname->flags & GET_VGNAME_FROM_OPTIONS)
 		ret = _get_arg_lvnames_using_options(cmd, argc, argv, &arg_vgnames, &arg_lvnames, &arg_tags);
 	else
 		ret = _get_arg_lvnames(cmd, argc, argv, one_vgname, one_lvname, &arg_vgnames, &arg_lvnames, &arg_tags);
@@ -4032,7 +4032,7 @@ static int _process_duplicate_pvs(struct cmd_context *cmd,
 		if (!process_all_devices && !dil)
 			continue;
 
-		if (!(cmd->command->flags & ENABLE_DUPLICATE_DEVS))
+		if (!(cmd->cname->flags & ENABLE_DUPLICATE_DEVS))
 			continue;
 
 		/*
@@ -4387,7 +4387,7 @@ int process_each_pv(struct cmd_context *cmd,
 		goto_out;
 	}
 
-	if ((cmd->command->flags & DISALLOW_TAG_ARGS) && !dm_list_empty(&arg_tags)) {
+	if ((cmd->cname->flags & DISALLOW_TAG_ARGS) && !dm_list_empty(&arg_tags)) {
 		log_error("Tags cannot be used with this command.");
 		return ECMD_FAILED;
 	}
@@ -4396,7 +4396,7 @@ int process_each_pv(struct cmd_context *cmd,
 
 	process_all_pvs = dm_list_empty(&arg_pvnames) && dm_list_empty(&arg_tags);
 
-	process_all_devices = process_all_pvs && (cmd->command->flags & ENABLE_ALL_DEVS) && all_is_set;
+	process_all_devices = process_all_pvs && (cmd->cname->flags & ENABLE_ALL_DEVS) && all_is_set;
 
 	/* Needed for a current listing of the global VG namespace. */
 	if (!only_this_vgname && !lockd_gl(cmd, "sh", 0)) {
@@ -5285,7 +5285,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct pv_list *vgpvl;
 	const char *pv_name;
 	int consistent = 0;
-	int must_use_all = (cmd->command->flags & MUST_USE_ALL_ARGS);
+	int must_use_all = (cmd->cname->flags & MUST_USE_ALL_ARGS);
 	int found;
 	unsigned i;
 

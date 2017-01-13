@@ -1092,7 +1092,6 @@ static void _define_commands(void)
 
 void lvm_register_commands(void)
 {
-	struct command_name *cname;
 	int i;
 
 	memset(&commands, 0, sizeof(commands));
@@ -1102,13 +1101,8 @@ void lvm_register_commands(void)
 	_cmdline.commands = commands;
 	_cmdline.num_commands = COMMAND_COUNT;
 
-	for (i = 0; i < COMMAND_COUNT; i++) {
-		if (!(cname = _find_command_name(commands[i].name)))
-			log_error(INTERNAL_ERROR "Failed to find command name %s.", commands[i].name);
-		commands[i].cname = cname;
-		commands[i].flags = cname->flags;
+	for (i = 0; i < COMMAND_COUNT; i++)
 		commands[i].functions = _find_command_function(commands[i].command_line_enum);
-	}
 
 	_cmdline.command_names = command_names;
 
@@ -2193,7 +2187,7 @@ static int _get_settings(struct cmd_context *cmd)
 
 	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
-	cmd->current_settings.cache_vgmetadata = cmd->command->flags & CACHE_VGMETADATA ? 1 : 0;
+	cmd->current_settings.cache_vgmetadata = cmd->cname->flags & CACHE_VGMETADATA ? 1 : 0;
 
 	if (arg_is_set(cmd, readonly_ARG)) {
 		cmd->current_settings.activation = 0;
@@ -2201,7 +2195,7 @@ static int _get_settings(struct cmd_context *cmd)
 		cmd->current_settings.backup = 0;
 	}
 
-	if (cmd->command->flags & LOCKD_VG_SH)
+	if (cmd->cname->flags & LOCKD_VG_SH)
 		cmd->lockd_vg_default_sh = 1;
 
 	cmd->partial_activation = 0;
@@ -2613,7 +2607,7 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 
 static int _cmd_no_meta_proc(struct cmd_context *cmd)
 {
-	return cmd->command->flags & NO_METADATA_PROCESSING;
+	return cmd->cname->flags & NO_METADATA_PROCESSING;
 }
 
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
@@ -2687,6 +2681,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	_apply_output_settings(cmd);
 
 	log_debug("Parsing: %s", cmd->cmd_line);
+
+	if (!(cmd->cname = _find_command_name(cmd->name))) {
+		log_error("Command name not found.\n");
+		return EINVALID_CMD_LINE;
+	}
 
 	if (!(cmd->command = _find_command(cmd, cmd->name, &argc, argv)))
 		return EINVALID_CMD_LINE;
@@ -2772,7 +2771,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (cmd->metadata_read_only &&
-	    !(cmd->command->flags & PERMITTED_READ_ONLY)) {
+	    !(cmd->cname->flags & PERMITTED_READ_ONLY)) {
 		log_error("%s: Command not permitted while global/metadata_read_only "
 			  "is set.", cmd->cmd_line);
 		goto out;
@@ -2832,7 +2831,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 * In this case, disable the *use* of lvmetad by this command, reverting to
 	 * disk scanning.
 	 */
-	if (lvmetad_used() && !(cmd->command->flags & NO_LVMETAD_AUTOSCAN)) {
+	if (lvmetad_used() && !(cmd->cname->flags & NO_LVMETAD_AUTOSCAN)) {
 		if (cmd->include_foreign_vgs || !lvmetad_token_matches(cmd)) {
 			if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, cmd->include_foreign_vgs ? 1 : 0)) {
 				log_warn("WARNING: Not using lvmetad because cache update failed.");
