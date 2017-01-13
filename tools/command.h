@@ -110,7 +110,6 @@ struct pos_arg {
 };
 
 /*
- *
  * Commands using a given command definition must follow a set
  * of rules.  If a given command+LV matches the conditions in
  * opts/lvt_bits/lvp_bits, then the checks are applied.
@@ -133,10 +132,11 @@ struct cmd_rule {
 	uint32_t rule;			/* RULE_INVALID, RULE_REQUIRE: check values must [not] be true */
 	int opts_count;			/* entries in opts[] */
 	int check_opts_count;		/* entries in check_opts[] */
-
 };
 
 /*
+ * Array sizes
+ *
  * CMD_RO_ARGS needs to accomodate a list of options,
  * of which one is required after which the rest are
  * optional.
@@ -152,8 +152,8 @@ struct cmd_rule {
  * one or more from required_opt_args is required,
  * then the rest are optional.
  */
-#define CMD_FLAG_ONE_REQUIRED_OPT   1
-#define CMD_FLAG_SECONDARY_SYNTAX   2
+#define CMD_FLAG_ONE_REQUIRED_OPT   1  /* lvchange/vgchage require one item from required_opt_args */
+#define CMD_FLAG_SECONDARY_SYNTAX   2  /* allows syntax variants to be suppressed in certain output */
 
 /* a register of the lvm commands */
 struct command {
@@ -197,11 +197,9 @@ struct command {
 	int rp_count;
 	int op_count;
 	int io_count;
-
-	/* used for processing current position */
-	int pos_count;
-
 	int rule_count;
+
+	int pos_count; /* temp counter used by create-command */
 };
 
 #endif
