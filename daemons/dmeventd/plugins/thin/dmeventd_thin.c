@@ -55,6 +55,8 @@ struct dso_state {
 	uint64_t known_metadata_size;
 	uint64_t known_data_size;
 	unsigned fails;
+	int restore_sigset;
+	sigset_t old_sigset;
 	pid_t pid;
 	char **argv;
 	char cmd_str[1024];
@@ -542,6 +544,41 @@ out:
 		dm_task_destroy(new_dmt);
 }
 
+/* Handle SIGCHLD for a thread */
+static void _sig_child(int signum __attribute__((unused)))
+{
+	/* empty SIG_IGN */;
+}
+
+/* Setup handler for SIGCHLD when executing external command
+ * to get quick 'waitpid()' reaction
+ * It will interrupt syscall just like SIGALRM and
+ * invoke process_event().
+ */
+static void _init_thread_signals(struct dso_state *state)
+{
+	struct sigaction act = { .sa_handler = _sig_child };
+	sigset_t my_sigset;
+
+	sigemptyset(&my_sigset);
+
+	if (sigaction(SIGCHLD, &act, NULL))
+		log_warn("WARNING: Failed to set SIGCHLD action.");
+	else if (sigaddset(&my_sigset, SIGCHLD))
+		log_warn("WARNING: Failed to add SIGCHLD to set.");
+	else if (pthread_sigmask(SIG_UNBLOCK, &my_sigset, &state->old_sigset))
+		log_warn("WARNING: Failed to unblock SIGCHLD.");
+	else
+		state->restore_sigset = 1;
+}
+
+static void _restore_thread_signals(struct dso_state *state)
+{
+	if (state->restore_sigset &&
+	    pthread_sigmask(SIG_SETMASK, &state->old_sigset, NULL))
+		log_warn("WARNING: Failed to block SIGCHLD.");
+}
+
 int register_device(const char *device,
 		    const char *uuid __attribute__((unused)),
 		    int major __attribute__((unused)),
@@ -575,6 +612,7 @@ int register_device(const char *device,
 		}
 
 		dm_split_words(str, maxcmd - 1, 0, state->argv);
+		_init_thread_signals(state);
 	}
 
 	state->metadata_percent_check = CHECK_MINIMUM;
@@ -618,6 +656,8 @@ int unregister_device(const char *device,
 
 	if (state->pid != -1)
 		log_warn("WARNING: Cannot kill child %d!", state->pid);
+
+	_restore_thread_signals(state);
 
 	dmeventd_lvm2_exit_with_pool(state);
 	log_info("No longer monitoring thin pool %s.", device);
