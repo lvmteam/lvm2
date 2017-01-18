@@ -83,7 +83,10 @@ int lvm2_run(void *handle, const char *cmdline)
 		memlock_inc_daemon(cmd);
 	} else if (!strcmp(cmdline, "_memlock_dec"))
 		memlock_dec_daemon(cmd);
-	else
+	else if (!strcmp(cmdline, "_dmeventd_thin_command")) {
+		if (setenv(cmdline, find_config_tree_str(cmd, dmeventd_thin_command_CFG, NULL), 1))
+			ret = ECMD_FAILED;
+	} else
 		ret = lvm_run_command(cmd, argc, argv);
 
       out:
