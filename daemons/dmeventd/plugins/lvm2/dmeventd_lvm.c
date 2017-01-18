@@ -121,6 +121,7 @@ int dmeventd_lvm2_run(const char *cmdline)
 int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 			  const char *cmd, const char *device)
 {
+	static char _internal_prefix[] =  "_dmeventd_";
 	char *vg = NULL, *lv = NULL, *layer;
 	int r;
 
@@ -134,6 +135,21 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 	if ((layer = strstr(lv, "_mimagetmp")) ||
 	    (layer = strstr(lv, "_mlog")))
 		*layer = '\0';
+
+	if (!strncmp(cmd, _internal_prefix, sizeof(_internal_prefix) - 1)) {
+		dmeventd_lvm2_lock();
+		/* output of internal command passed via env var */
+		if (!dmeventd_lvm2_run(cmd))
+			cmd = NULL;
+		else if ((cmd = getenv(cmd)))
+			cmd = dm_pool_strdup(mem, cmd); /* copy with lock */
+		dmeventd_lvm2_unlock();
+
+		if (!cmd) {
+			log_error("Unable to find configured command.");
+			return 0;
+		}
+	}
 
 	r = dm_snprintf(buffer, size, "%s %s/%s", cmd, vg, lv);
 
