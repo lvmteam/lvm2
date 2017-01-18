@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Introduce new dmeventd/thin_command configurable setting.
   Use new default units 'r' for displaying sizes.
   Also unmount mount point on top of MD device if using blkdeactivate -u.
   Restore check preventing resize of cache type volumes (2.02.158).

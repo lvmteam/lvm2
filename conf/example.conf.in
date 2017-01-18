@@ -2049,6 +2049,14 @@ dmeventd {
 	# warning is repeated when 85%, 90% and 95% of the pool is filled.
 	thin_library = "libdevmapper-event-lvm2thin.so"
 
+	# Configuration option dmeventd/thin_command.
+	# The plugin runs command with each 5% increment when thin-pool data volume
+	# or metadata volume gets above 50%.
+	# Command which starts with 'lvm ' prefix is internal lvm command.
+	# You can write your own handler to customise behaviour in more details.
+	# This configuration option has an automatic default value.
+	# thin_command = "lvm lvextend --use-policies"
+
 	# Configuration option dmeventd/executable.
 	# The full path to the dmeventd binary.
 	# This configuration option has an automatic default value.

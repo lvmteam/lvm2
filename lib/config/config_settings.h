@@ -1859,6 +1859,12 @@ cfg(dmeventd_thin_library_CFG, "thin_library", dmeventd_CFG_SECTION, 0, CFG_TYPE
 	"and emits a warning through syslog when the usage exceeds 80%. The\n"
 	"warning is repeated when 85%, 90% and 95% of the pool is filled.\n")
 
+cfg(dmeventd_thin_command_CFG, "thin_command", dmeventd_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DMEVENTD_THIN_COMMAND, vsn(2, 2, 169), NULL, 0, NULL,
+	"The plugin runs command with each 5% increment when thin-pool data volume\n"
+	"or metadata volume gets above 50%.\n"
+	"Command which starts with 'lvm ' prefix is internal lvm command.\n"
+	"You can write your own handler to customise behaviour in more details.\n")
+
 cfg(dmeventd_executable_CFG, "executable", dmeventd_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DMEVENTD_PATH, vsn(2, 2, 73), "@DMEVENTD_PATH@", 0, NULL,
 	"The full path to the dmeventd binary.\n")
 
