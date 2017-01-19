@@ -940,6 +940,8 @@ static int _opt_standard_to_synonym(const char *cmd_name, int opt)
 		return raidwritebehind_ARG;
 	case virtualsize_ARG:
 		return virtualoriginsize_ARG;
+	case splitcache_ARG:
+		return split_ARG;
 	case pvmetadatacopies_ARG:
 		if (!strncmp(cmd_name, "pv", 2))
 			return metadatacopies_ARG;
@@ -977,6 +979,8 @@ static int _opt_synonym_to_standard(const char *cmd_name, int opt)
 		return writebehind_ARG;
 	case virtualoriginsize_ARG:
 		return virtualsize_ARG;
+	case split_ARG:
+		return splitcache_ARG;
 	case metadatacopies_ARG:
 		if (!strncmp(cmd_name, "pv", 2))
 			return pvmetadatacopies_ARG;

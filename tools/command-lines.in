@@ -106,6 +106,7 @@
 # maxrecoveryrate (raidmaxrecoveryrate)
 # writebehind (raidwritebehind)
 # virtualsize (virtualoriginsize)
+# splitcache (split)
 # vgmetadatacopies (metadatacopies)
 # pvmetadatacopies (metadatacopies)
 #
