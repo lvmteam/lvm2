@@ -1156,7 +1156,8 @@ activation {
 	# Configuration option activation/missing_stripe_filler.
 	# Method to fill missing stripes when activating an incomplete LV.
 	# Using 'error' will make inaccessible parts of the device return I/O
-	# errors on access. You can instead use a device path, in which case,
+	# errors on access. Using 'zero' will return success (and zero) on I/O
+	# You can instead use a device path, in which case,
 	# that device will be used in place of missing stripes. Using anything
 	# other than 'error' with mirrored or snapshotted volumes is likely to
 	# result in data corruption.
