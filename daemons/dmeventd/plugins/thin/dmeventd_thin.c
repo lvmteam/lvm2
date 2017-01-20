@@ -357,8 +357,7 @@ int register_device(const char *device,
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_str,
 				   sizeof(state->cmd_str),
-				   "lvextend --use-policies",
-				   device)) {
+				   "_dmeventd_thin_command", device)) {
 		dmeventd_lvm2_exit_with_pool(state);
 		goto_bad;
 	}
