@@ -549,6 +549,8 @@ int register_device(const char *device,
 		    void **user)
 {
 	struct dso_state *state;
+	int maxcmd;
+	char *str;
 
 	if (!dmeventd_lvm2_init_with_pool("thin_pool_state", state))
 		goto_bad;
@@ -559,6 +561,20 @@ int register_device(const char *device,
 				   device)) {
 		dmeventd_lvm2_exit_with_pool(state);
 		goto_bad;
+	}
+
+	if (strncmp(state->cmd_str, "lvm ", 4)) {
+		maxcmd = 2; /* space for last NULL element */
+		for (str = state->cmd_str; *str; str++)
+			if (*str == ' ')
+				maxcmd++;
+		if (!(str = dm_pool_strdup(state->mem, state->cmd_str)) ||
+		    !(state->argv = dm_pool_zalloc(state->mem, maxcmd * sizeof(char *)))) {
+			log_error("Failed to allocate memory for command.");
+			goto bad;
+		}
+
+		dm_split_words(str, maxcmd - 1, 0, state->argv);
 	}
 
 	state->metadata_percent_check = CHECK_MINIMUM;
