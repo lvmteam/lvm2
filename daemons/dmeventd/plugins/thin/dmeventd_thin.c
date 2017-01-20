@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -55,6 +55,8 @@ struct dso_state {
 	uint64_t known_metadata_size;
 	uint64_t known_data_size;
 	unsigned fails;
+	pid_t pid;
+	char **argv;
 	char cmd_str[1024];
 };
 
@@ -302,19 +304,62 @@ out:
 		dm_bitset_destroy(data.minors);
 }
 
+static int _run_command(struct dso_state *state)
+{
+	char val[2][36];
+	char *env[] = { val[0], val[1], NULL };
+	int i;
+
+	if (state->data_percent) {
+		/* Prepare some known data to env vars for easy use */
+		(void) dm_snprintf(val[0], sizeof(val[0]), "DMEVENTD_THIN_POOL_DATA=%d",
+				   state->data_percent / DM_PERCENT_1);
+		(void) dm_snprintf(val[1], sizeof(val[1]), "DMEVENTD_THIN_POOL_METADATA=%d",
+				   state->metadata_percent / DM_PERCENT_1);
+	} else {
+		/* For an error event it's for a user to check status and decide */
+		env[0] = NULL;
+		log_debug("Error event processing");
+	}
+
+	log_verbose("Executing command: %s", state->cmd_str);
+
+	/* TODO:
+	 *   Support parallel run of 'task' and it's waitpid maintainence
+	 *   ATM we can't handle signaling of  SIGALRM
+	 *   as signalling is not allowed while 'process_event()' is running
+	 */
+	if (!(state->pid = fork())) {
+		/* child */
+		(void) close(0);
+		for (i = 3; i < 255; ++i) (void) close(i);
+		execve(state->argv[0], state->argv, env);
+		_exit(errno);
+	} else if (state->pid == -1) {
+		log_error("Can't fork command %s.", state->cmd_str);
+		state->fails = 1;
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _use_policy(struct dm_task *dmt, struct dso_state *state)
 {
 #if THIN_DEBUG
 	log_debug("dmeventd executes: %s.", state->cmd_str);
 #endif
+	if (state->argv)
+		return _run_command(state);
+
 	if (!dmeventd_lvm2_run_with_lock(state->cmd_str)) {
-		log_error("Failed to extend thin pool %s.",
-			  dm_task_get_name(dmt));
-		state->fails++;
+		log_error("Failed command for %s.", dm_task_get_name(dmt));
+		state->fails = 1;
 		return 0;
 	}
 
 	state->fails = 0;
+
 	return 1;
 }
 
