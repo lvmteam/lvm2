@@ -42,6 +42,22 @@ export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 
 aux have_thin 1 0 0 || skip
 
+aux lvmconf "dmeventd/thin_command = \"$PWD/testcmd.sh\""
+
+# Simple implementation of umount when lvextend fails
+cat <<- EOF >testcmd.sh
+#!/bin/sh
+
+echo "Data $DMEVENTD_THIN_POOL_DATA"
+echo "Metadata $DMEVENTD_THIN_POOL_METADATA"
+
+lvextend --use-policies $1 || {
+	umount --lazy "$mntdir"  || true
+	umount --lazy "$mntusedir" || true
+}
+EOF
+chmod +x testcmd.sh
+
 aux prepare_dmeventd
 
 # Use autoextend percent 0 - so extension fails and triggers umount...
