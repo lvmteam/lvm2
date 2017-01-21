@@ -16,6 +16,8 @@ SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
+. lib/inittest
+
 mntdir="${PREFIX}mnt with space"
 mntusedir="${PREFIX}mntuse"
 
@@ -32,8 +34,6 @@ is_lv_opened_()
 	test $(get lv_field "$1" lv_device_open --binary) = "1"
 }
 
-. lib/inittest
-
 #
 # Main
 #
@@ -48,15 +48,17 @@ aux lvmconf "dmeventd/thin_command = \"$PWD/testcmd.sh\""
 cat <<- EOF >testcmd.sh
 #!/bin/sh
 
-echo "Data $DMEVENTD_THIN_POOL_DATA"
-echo "Metadata $DMEVENTD_THIN_POOL_METADATA"
+echo "Data: \$DMEVENTD_THIN_POOL_DATA"
+echo "Metadata: \$DMEVENTD_THIN_POOL_METADATA"
 
-lvextend --use-policies $1 || {
-	umount --lazy "$mntdir"  || true
-	umount --lazy "$mntusedir" || true
+$TESTDIR/lib/lvextend --use-policies \$1 || {
+	umount "$mntdir"  || true
+	umount "$mntusedir" || true
 }
 EOF
 chmod +x testcmd.sh
+# Show prepared script
+cat testcmd.sh
 
 aux prepare_dmeventd
 
