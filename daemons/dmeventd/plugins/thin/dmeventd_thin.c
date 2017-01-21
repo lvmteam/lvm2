@@ -375,7 +375,8 @@ int register_device(const char *device,
 
 		dm_split_words(str, maxcmd - 1, 0, state->argv);
 		_init_thread_signals(state);
-	}
+	} else
+		memmove(state->cmd_str, state->cmd_str + 4, strlen(state->cmd_str + 4) + 1);
 
 	state->pid = -1;
 	*user = state;
