@@ -69,19 +69,23 @@ DM_EVENT_LOG_FN("thin")
 
 static int _run_command(struct dso_state *state)
 {
-	char val[2][36];
-	char *env[] = { val[0], val[1], NULL };
+	char val[3][36];
+	char *env[] = { val[0], val[1], val[2], NULL };
 	int i;
+
+	/* Mark for possible lvm2 command we are running from dmeventd
+	 * lvm2 will not try to talk back to dmeventd while processing it */
+	(void) dm_snprintf(val[0], sizeof(val[0]), "LVM_RUN_BY_DMEVENTD=1");
 
 	if (state->data_percent) {
 		/* Prepare some known data to env vars for easy use */
-		(void) dm_snprintf(val[0], sizeof(val[0]), "DMEVENTD_THIN_POOL_DATA=%d",
+		(void) dm_snprintf(val[1], sizeof(val[1]), "DMEVENTD_THIN_POOL_DATA=%d",
 				   state->data_percent / DM_PERCENT_1);
-		(void) dm_snprintf(val[1], sizeof(val[1]), "DMEVENTD_THIN_POOL_METADATA=%d",
+		(void) dm_snprintf(val[2], sizeof(val[2]), "DMEVENTD_THIN_POOL_METADATA=%d",
 				   state->metadata_percent / DM_PERCENT_1);
 	} else {
 		/* For an error event it's for a user to check status and decide */
-		env[0] = NULL;
+		env[1] = NULL;
 		log_debug("Error event processing");
 	}
 
