@@ -233,6 +233,7 @@ int config_files_changed(struct cmd_context *cmd);
 int init_lvmcache_orphans(struct cmd_context *cmd);
 int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache);
 int init_connections(struct cmd_context *cmd);
+int init_run_by_dmeventd(struct cmd_context *cmd);
 
 /*
  * A config context is a very light weight cmd struct that

@@ -1755,6 +1755,15 @@ bad:
 	return 0;
 }
 
+int init_run_by_dmeventd(struct cmd_context *cmd)
+{
+	init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
+	init_ignore_suspended_devices(1);
+	init_disable_dmeventd_monitoring(1); /* Lock settings */
+
+	return 0;
+}
+
 void destroy_config_context(struct cmd_context *cmd)
 {
 	_destroy_config(cmd);
