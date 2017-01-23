@@ -192,6 +192,9 @@ static int _get_env_vars(struct cmd_context *cmd)
 		}
 	}
 
+	if (strcmp((getenv("LVM_RUN_BY_DMEVENTD") ? : "0"), "1") == 0)
+		init_run_by_dmeventd(cmd);
+
 	return 1;
 }
 

@@ -668,6 +668,11 @@ File descriptor to use for report output from LVM commands.
 Name of default command profile to use for LVM commands. This profile
 is overriden by direct use of \fB\-\-commandprofile\fP command line option.
 .TP
+.B LVM_RUN_BY_DMEVENTD
+This variable is normally set by dmeventd plugin to inform lvm2 command
+it is running from dmeventd plugin so lvm2 takes some extra action
+to avoid comunication and deadlocks with dmeventd.
+.TP
 .B LVM_SYSTEM_DIR
 Directory containing \fBlvm.conf\fP(5) and other LVM system files.
 Defaults to "\fI#DEFAULT_SYS_DIR#\fP".
