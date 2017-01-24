@@ -1320,8 +1320,9 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  * On success the function returns a pointer to an array of uint64_t
  * containing the IDs of the newly created regions. The region_id
  * array is terminated by the value DM_STATS_REGION_NOT_PRESENT and
- * should be freed using dm_free() when no longer required. On error
- * NULL is returned.
+ * should be freed using dm_free() when no longer required.
+ *
+ * On error NULL is returned.
  *
  * Following a call to dm_stats_create_regions_from_fd() the handle
  * is guaranteed to be in a listed state, and to contain any region
@@ -1329,7 +1330,6 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  *
  * The group_id for the new group is equal to the region_id value in
  * the first array element.
- *
  */
 uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 					  int group, int precise,
