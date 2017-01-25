@@ -261,6 +261,9 @@ static int _stats_group_id_present(const struct dm_stats *dms, uint64_t id)
 {
 	struct dm_stats_group *group = NULL;
 
+	if (id == DM_STATS_GROUP_NOT_PRESENT)
+		return 0;
+
 	if (!dms || !dms->regions)
 		return_0;
 
