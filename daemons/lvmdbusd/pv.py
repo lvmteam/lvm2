@@ -135,23 +135,30 @@ class Pv(AutomatedProperties):
 	def _remove(pv_uuid, pv_name, remove_options):
 		# Remove the PV, if successful then remove from the model
 		# Make sure we have a dbus object representing it
-		dbo = cfg.om.get_object_by_uuid_lvm_id(pv_uuid, pv_name)
+		Pv.validate_dbus_object(pv_uuid, pv_name)
+		rc, out, err = cmdhandler.pv_remove(pv_name, remove_options)
+		Pv.handle_execute(rc, out, err)
+		return '/'
 
-		if dbo:
-			rc, out, err = cmdhandler.pv_remove(pv_name, remove_options)
-			if rc == 0:
-				cfg.load()
-			else:
-				# Need to work on error handling, need consistent
-				raise dbus.exceptions.DBusException(
-					PV_INTERFACE,
-					'Exit code %s, stderr = %s' % (str(rc), err))
+	@staticmethod
+	def handle_execute(rc, out, err):
+		if rc == 0:
+			cfg.load()
 		else:
+			# Need to work on error handling, need consistent
+			raise dbus.exceptions.DBusException(
+				PV_INTERFACE,
+				'Exit code %s, stderr = %s' % (str(rc), err))
+
+	@staticmethod
+	def validate_dbus_object(pv_uuid, pv_name):
+		dbo = cfg.om.get_object_by_uuid_lvm_id(pv_uuid, pv_name)
+		if not dbo:
 			raise dbus.exceptions.DBusException(
 				PV_INTERFACE,
 				'PV with uuid %s and name %s not present!' %
 				(pv_uuid, pv_name))
-		return '/'
+		return dbo
 
 	@dbus.service.method(
 		dbus_interface=PV_INTERFACE,
@@ -168,22 +175,11 @@ class Pv(AutomatedProperties):
 	@staticmethod
 	def _resize(pv_uuid, pv_name, new_size_bytes, resize_options):
 		# Make sure we have a dbus object representing it
-		dbo = cfg.om.get_object_by_uuid_lvm_id(pv_uuid, pv_name)
+		Pv.validate_dbus_object(pv_uuid, pv_name)
 
-		if dbo:
-			rc, out, err = cmdhandler.pv_resize(pv_name, new_size_bytes,
+		rc, out, err = cmdhandler.pv_resize(pv_name, new_size_bytes,
 												resize_options)
-			if rc == 0:
-				cfg.load()
-			else:
-				raise dbus.exceptions.DBusException(
-					PV_INTERFACE,
-					'Exit code %s, stderr = %s' % (str(rc), err))
-		else:
-			raise dbus.exceptions.DBusException(
-				PV_INTERFACE,
-				'PV with uuid %s and name %s not present!' %
-				(pv_uuid, pv_name))
+		Pv.handle_execute(rc, out, err)
 		return '/'
 
 	@dbus.service.method(
@@ -201,21 +197,10 @@ class Pv(AutomatedProperties):
 	@staticmethod
 	def _allocation_enabled(pv_uuid, pv_name, yes_no, allocation_options):
 		# Make sure we have a dbus object representing it
-		dbo = cfg.om.get_object_by_uuid_lvm_id(pv_uuid, pv_name)
-
-		if dbo:
-			rc, out, err = cmdhandler.pv_allocatable(
-				pv_name, yes_no, allocation_options)
-			if rc == 0:
-				cfg.load()
-			else:
-				raise dbus.exceptions.DBusException(
-					PV_INTERFACE, 'Exit code %s, stderr = %s' % (str(rc), err))
-		else:
-			raise dbus.exceptions.DBusException(
-				PV_INTERFACE,
-				'PV with uuid %s and name %s not present!' %
-				(pv_uuid, pv_name))
+		Pv.validate_dbus_object(pv_uuid, pv_name)
+		rc, out, err = cmdhandler.pv_allocatable(
+			pv_name, yes_no, allocation_options)
+		Pv.handle_execute(rc, out, err)
 		return '/'
 
 	@dbus.service.method(
