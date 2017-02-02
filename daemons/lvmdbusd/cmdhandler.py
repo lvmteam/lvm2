@@ -295,7 +295,7 @@ def vg_lv_snapshot(vg_name, snapshot_options, name, size_bytes):
 	return call(cmd)
 
 
-def vg_lv_create_linear(vg_name, create_options, name, size_bytes, thin_pool):
+def _vg_lv_create_common_cmd(create_options, size_bytes, thin_pool):
 	cmd = ['lvcreate']
 	cmd.extend(options_to_cli_args(create_options))
 
@@ -303,20 +303,18 @@ def vg_lv_create_linear(vg_name, create_options, name, size_bytes, thin_pool):
 		cmd.extend(['--size', str(size_bytes) + 'B'])
 	else:
 		cmd.extend(['--thin', '--size', str(size_bytes) + 'B'])
+	return cmd
+
+
+def vg_lv_create_linear(vg_name, create_options, name, size_bytes, thin_pool):
+	cmd = _vg_lv_create_common_cmd(create_options, size_bytes, thin_pool)
 	cmd.extend(['--name', name, vg_name])
 	return call(cmd)
 
 
 def vg_lv_create_striped(vg_name, create_options, name, size_bytes,
 							num_stripes, stripe_size_kb, thin_pool):
-	cmd = ['lvcreate']
-	cmd.extend(options_to_cli_args(create_options))
-
-	if not thin_pool:
-		cmd.extend(['--size', str(size_bytes) + 'B'])
-	else:
-		cmd.extend(['--thin', '--size', str(size_bytes) + 'B'])
-
+	cmd = _vg_lv_create_common_cmd(create_options, size_bytes, thin_pool)
 	cmd.extend(['--stripes', str(num_stripes)])
 
 	if stripe_size_kb != 0:
