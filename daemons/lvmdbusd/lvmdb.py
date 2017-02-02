@@ -69,18 +69,7 @@ class DataStore(object):
 			table[key] = record
 
 	@staticmethod
-	def _parse_pvs(_pvs):
-		pvs = sorted(_pvs, key=lambda pk: pk['pv_name'])
-
-		c_pvs = OrderedDict()
-		c_lookup = {}
-		c_pvs_in_vgs = {}
-
-		for p in pvs:
-			DataStore._insert_record(
-				c_pvs, p['pv_uuid'], p,
-				['pvseg_start', 'pvseg_size', 'segtype'])
-
+	def _pvs_parse_common(c_pvs, c_pvs_in_vgs, c_lookup):
 		for p in c_pvs.values():
 			# Capture which PVs are associated with which VG
 			if p['vg_uuid'] not in c_pvs_in_vgs:
@@ -93,6 +82,20 @@ class DataStore(object):
 			# Lookup for translating between /dev/<name> and pv uuid
 			c_lookup[p['pv_name']] = p['pv_uuid']
 
+	@staticmethod
+	def _parse_pvs(_pvs):
+		pvs = sorted(_pvs, key=lambda pk: pk['pv_name'])
+
+		c_pvs = OrderedDict()
+		c_lookup = {}
+		c_pvs_in_vgs = {}
+
+		for p in pvs:
+			DataStore._insert_record(
+				c_pvs, p['pv_uuid'], p,
+				['pvseg_start', 'pvseg_size', 'segtype'])
+
+		DataStore._pvs_parse_common(c_pvs, c_pvs_in_vgs, c_lookup)
 		return c_pvs, c_lookup, c_pvs_in_vgs
 
 	@staticmethod
@@ -132,17 +135,7 @@ class DataStore(object):
 						i['pvseg_size'] = i['pv_pe_count']
 						i['segtype'] = 'free'
 
-		for p in c_pvs.values():
-			# Capture which PVs are associated with which VG
-			if p['vg_uuid'] not in c_pvs_in_vgs:
-				c_pvs_in_vgs[p['vg_uuid']] = []
-
-			if p['vg_name']:
-				c_pvs_in_vgs[p['vg_uuid']].append(
-					(p['pv_name'], p['pv_uuid']))
-
-			# Lookup for translating between /dev/<name> and pv uuid
-			c_lookup[p['pv_name']] = p['pv_uuid']
+		DataStore._pvs_parse_common(c_pvs, c_pvs_in_vgs, c_lookup)
 
 		return c_pvs, c_lookup, c_pvs_in_vgs
 
