@@ -31,6 +31,16 @@ class Manager(AutomatedProperties):
 		return dbus.String('1.0.0')
 
 	@staticmethod
+	def handle_execute(rc, out, err):
+		if rc == 0:
+			cfg.load()
+		else:
+			# Need to work on error handling, need consistent
+			raise dbus.exceptions.DBusException(
+				MANAGER_INTERFACE,
+				'Exit code %s, stderr = %s' % (str(rc), err))
+
+	@staticmethod
 	def _pv_create(device, create_options):
 
 		# Check to see if we are already trying to create a PV for an existing
@@ -41,15 +51,8 @@ class Manager(AutomatedProperties):
 				MANAGER_INTERFACE, "PV Already exists!")
 
 		rc, out, err = cmdhandler.pv_create(create_options, [device])
-		if rc == 0:
-			cfg.load()
-			created_pv = cfg.om.get_object_path_by_lvm_id(device)
-		else:
-			raise dbus.exceptions.DBusException(
-				MANAGER_INTERFACE,
-				'Exit code %s, stderr = %s' % (str(rc), err))
-
-		return created_pv
+		Manager.handle_execute(rc, out, err)
+		return cfg.om.get_object_path_by_lvm_id(device)
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
@@ -76,14 +79,8 @@ class Manager(AutomatedProperties):
 					MANAGER_INTERFACE, 'object path = %s not found' % p)
 
 		rc, out, err = cmdhandler.vg_create(create_options, pv_devices, name)
-
-		if rc == 0:
-			cfg.load()
-			return cfg.om.get_object_path_by_lvm_id(name)
-		else:
-			raise dbus.exceptions.DBusException(
-				MANAGER_INTERFACE,
-				'Exit code %s, stderr = %s' % (str(rc), err))
+		Manager.handle_execute(rc, out, err)
+		return cfg.om.get_object_path_by_lvm_id(name)
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
@@ -200,15 +197,8 @@ class Manager(AutomatedProperties):
 			activate, cache, device_path,
 			major_minor, scan_options)
 
-		if rc == 0:
-			# This could potentially change the state quite a bit, so lets
-			# update everything to be safe
-			cfg.load()
-			return '/'
-		else:
-			raise dbus.exceptions.DBusException(
-				MANAGER_INTERFACE,
-				'Exit code %s, stderr = %s' % (str(rc), err))
+		Manager.handle_execute(rc, out, err)
+		return '/'
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
