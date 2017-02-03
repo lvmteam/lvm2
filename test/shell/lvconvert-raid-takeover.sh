@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2016 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2016,2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -120,6 +120,7 @@ check lv_field $vg/$lv4 segtype "striped"
 check lv_field $vg/$lv4 stripes 3
 fsck -fn  /dev/mapper/$vg-$lv4
 
+
 # Convert striped -> raid4
 lvconvert -y --ty raid4 $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid4"
@@ -128,6 +129,37 @@ fsck -fn  /dev/mapper/$vg-$lv1
 aux wait_for_sync $vg $lv1
 fsck -fn  /dev/mapper/$vg-$lv1
 
+# Convert raid4 -> raid5_n
+lvconvert -y --ty raid5_n $vg/$lv1
+check lv_field $vg/$lv1 segtype "raid5_n"
+check lv_field $vg/$lv1 stripes 4
+fsck -fn  /dev/mapper/$vg-$lv1
+aux wait_for_sync $vg $lv1
+fsck -fn  /dev/mapper/$vg-$lv1
+
+# Convert raid5 -> striped
+lvconvert -y --ty striped $vg/$lv1
+check lv_field $vg/$lv1 segtype "striped"
+check lv_field $vg/$lv1 stripes 3
+fsck -fn  /dev/mapper/$vg-$lv1
+
+# Convert striped -> raid5_n
+lvconvert -y --ty raid5_n $vg/$lv1
+check lv_field $vg/$lv1 segtype "raid5_n"
+check lv_field $vg/$lv1 stripes 4
+fsck -fn  /dev/mapper/$vg-$lv1
+aux wait_for_sync $vg $lv1
+fsck -fn  /dev/mapper/$vg-$lv1
+
+# Convert raid5_n -> raid4
+lvconvert -y --ty raid4 $vg/$lv1
+check lv_field $vg/$lv1 segtype "raid4"
+check lv_field $vg/$lv1 stripes 4
+fsck -fn  /dev/mapper/$vg-$lv1
+aux wait_for_sync $vg $lv1
+fsck -fn  /dev/mapper/$vg-$lv1
+
+
 # Convert raid0 -> raid4
 lvconvert -y --ty raid4 $vg/$lv2
 check lv_field $vg/$lv2 segtype "raid4"
@@ -135,6 +167,35 @@ check lv_field $vg/$lv2 stripes 4
 fsck -fn  /dev/mapper/$vg-$lv2
 aux wait_for_sync $vg $lv2
 fsck -fn  /dev/mapper/$vg-$lv2
+
+# Convert raid4 -> raid0
+lvconvert -y --ty raid0 $vg/$lv2
+check lv_field $vg/$lv2 segtype "raid0"
+check lv_field $vg/$lv2 stripes 3
+fsck -fn  /dev/mapper/$vg-$lv2
+
+# Convert raid0 -> raid5_n
+lvconvert -y --ty raid5_n $vg/$lv2
+check lv_field $vg/$lv2 segtype "raid5_n"
+check lv_field $vg/$lv2 stripes 4
+fsck -fn  /dev/mapper/$vg-$lv2
+aux wait_for_sync $vg $lv2
+fsck -fn  /dev/mapper/$vg-$lv2
+
+# Convert raid5_n -> raid0_meta
+lvconvert -y --ty raid0_meta $vg/$lv2
+check lv_field $vg/$lv2 segtype "raid0_meta"
+check lv_field $vg/$lv2 stripes 3
+fsck -fn  /dev/mapper/$vg-$lv2
+
+# Convert raid0_meta -> raid5_n
+lvconvert -y --ty raid5_n $vg/$lv2
+check lv_field $vg/$lv2 segtype "raid5_n"
+check lv_field $vg/$lv2 stripes 4
+fsck -fn  /dev/mapper/$vg-$lv2
+aux wait_for_sync $vg $lv2
+fsck -fn  /dev/mapper/$vg-$lv2
+
 
 # Convert raid4 -> raid0_meta
 lvconvert -y --ty raid0_meta $vg/$lv1

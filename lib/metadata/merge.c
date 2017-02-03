@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -148,7 +148,8 @@ static void _check_raid1_seg(struct lv_segment *seg, int *error_count)
 static void _check_raid45610_seg(struct lv_segment *seg, int *error_count)
 {
 	/* Checks applying to any raid4/5/6/10 */
-	if (!seg->meta_areas)
+	/* Allow raid4 + raid5_n to get activated w/o metadata (mandatory during conversion between them) */
+	if (!(seg_is_raid4(seg) || seg_is_raid5_n(seg)) && !seg->meta_areas)
 		raid_seg_error("no meta areas");
 	if (!seg->stripe_size)
 		raid_seg_error("zero stripe size");
@@ -610,7 +611,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				continue;
 			if (lv == seg_lv(seg, s))
 				seg_found++;
-			if (seg_is_raid_with_meta(seg) && (lv == seg_metalv(seg, s)))
+			if (seg->meta_areas && seg_is_raid_with_meta(seg) && (lv == seg_metalv(seg, s)))
 				seg_found++;
 		}
 		if (seg_is_replicator_dev(seg)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -87,13 +87,13 @@ static int _raid_text_import_areas(struct lv_segment *seg,
 		}
 
 		/* Metadata device comes first. */
-		if (!seg_is_raid0(seg)) {
-			if (!(lv = find_lv(seg->lv->vg, cv->v.str))) {
-				log_error("Couldn't find volume '%s' for segment '%s'.",
-					  cv->v.str ? : "NULL", seg_name);
-				return 0;
-			}
+		if (!(lv = find_lv(seg->lv->vg, cv->v.str))) {
+			log_error("Couldn't find volume '%s' for segment '%s'.",
+				  cv->v.str ? : "NULL", seg_name);
+			return 0;
+		}
 
+		if (strstr(lv->name, "_rmeta_")) {
 			if (!set_lv_segment_area_lv(seg, s, lv, 0, RAID_META))
 				return_0;
 			cv = cv->next;
@@ -537,6 +537,7 @@ static const struct raid_type {
 	{ SEG_TYPE_NAME_RAID10,     0, SEG_RAID10 | SEG_AREAS_MIRRORED },
 	{ SEG_TYPE_NAME_RAID4,      1, SEG_RAID4 },
 	{ SEG_TYPE_NAME_RAID5,      1, SEG_RAID5 },
+	{ SEG_TYPE_NAME_RAID5_N,    1, SEG_RAID5_N },
 	{ SEG_TYPE_NAME_RAID5_LA,   1, SEG_RAID5_LA },
 	{ SEG_TYPE_NAME_RAID5_LS,   1, SEG_RAID5_LS },
 	{ SEG_TYPE_NAME_RAID5_RA,   1, SEG_RAID5_RA },
