@@ -2227,7 +2227,7 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 		log_debug_metadata("Changing image count to %u on %s.",
 				   new_image_count, display_lvname(lv));
 		if (!_lv_raid_change_image_count(lv, new_image_count, allocate_pvs, removal_lvs, 0, 0))
-			return 0;
+			return_0;
 	}
 
 	/* Remove rmeta LVs */
@@ -2703,15 +2703,6 @@ static const char *_get_segtype_alias(const struct segment_type *segtype)
 	return "";
 }
 
-/* Return "linear" for striped segtype with 1 area instead of "striped" */
-static const char *_get_segtype_name(const struct segment_type *segtype, unsigned new_image_count)
-{
-	if (!segtype || (segtype_is_striped(segtype) && new_image_count == 1))
-		return "linear";
-
-	return segtype->name;
-}
-
 static int _log_possible_conversion_types(const struct logical_volume *lv, const struct segment_type *new_segtype)
 {
 	unsigned possible_conversions = 0;
@@ -2732,7 +2723,7 @@ static int _log_possible_conversion_types(const struct logical_volume *lv, const
 
 			log_error("Converting %s from %s%s%s%s is "
 				  "directly possible to the following layout%s:",
-				  display_lvname(lv), _get_segtype_name(seg->segtype, seg->area_count),
+				  display_lvname(lv), lvseg_name(seg),
 				  *alias ? " (same as " : "", alias, *alias ? ")" : "",
 				  possible_conversions > 1 ? "s" : "");
 
