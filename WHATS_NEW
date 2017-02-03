@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Support raid5_n segment type and conversions from/to it.
   Support new internal command _dmeventd_thin_command.
   Introduce new dmeventd/thin_command configurable setting.
   Use new default units 'r' for displaying sizes.
