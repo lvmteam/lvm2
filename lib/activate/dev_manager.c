@@ -3075,7 +3075,7 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 				     (laopts->origin_only) ? " origin-only" : "",
 				     display_lvname(lv));
 
-	/* Some LV can be used for top level tree */
+	/* Some LV cannot be used for top level tree */
 	/* TODO: add more.... */
 	if (lv_is_cache_pool(lv) && !dm_list_empty(&lv->segs_using_this_lv)) {
 		log_error(INTERNAL_ERROR "Cannot create tree for %s.",
