@@ -2534,11 +2534,7 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
  * Change the user's requested segment type to 
  * the appropriate more-refined one for takeover.
  *
- * raid0 can take over:
- *  raid4
- *
- * raid4 can take over:
- *  raid0 - if there is only one stripe zone
+ *  raid can takeover striped,raid0 if there is only one stripe zone
  */
 #define	ALLOW_NONE		0x0
 #define	ALLOW_STRIPES		0x2
@@ -2575,9 +2571,9 @@ static struct possible_takeover_reshape_type _possible_takeover_reshape_types[] 
 	  .current_areas = 1,
 	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
 
-	/* striped,raid0*,raid4,raid5_n <-> striped,raid0*,raid4,raid5_n */
-	{ .current_types  = SEG_STRIPED_TARGET|SEG_RAID0|SEG_RAID0_META|SEG_RAID4|SEG_RAID5_N,
-	  .possible_types = SEG_STRIPED_TARGET|SEG_RAID0|SEG_RAID0_META|SEG_RAID4|SEG_RAID5_N,
+	/* striped,raid0*,raid4,raid5_n,raid6_n_6 <-> striped,raid0*,raid4,raid5_n,raid6_n_6 */
+	{ .current_types  = SEG_STRIPED_TARGET|SEG_RAID0|SEG_RAID0_META|SEG_RAID4|SEG_RAID5_N|SEG_RAID6_N_6,
+	  .possible_types = SEG_STRIPED_TARGET|SEG_RAID0|SEG_RAID0_META|SEG_RAID4|SEG_RAID5_N|SEG_RAID6_N_6,
 	  .current_areas = ~0U,
 	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
 
@@ -3061,7 +3057,8 @@ static int _shift_parity_dev(struct lv_segment *seg)
 	return 1;
 }
 
-/* raid45 -> raid0* / striped */
+/* raid456 -> raid0* / striped */
+static int _raid45_to_raid54_wrapper(TAKEOVER_FN_ARGS);
 static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 {
 	int rename_sublvs = 0;
@@ -3084,8 +3081,9 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 		return 0;
 
 	if (!yes && yes_no_prompt("Are you sure you want to convert \"%s\" LV %s to \"%s\" "
-				  "type losing all resilience? [y/n]: ",
-				  lvseg_name(seg), display_lvname(lv), new_segtype->name) == 'n') {
+				  "type losing %s resilience? [y/n]: ",
+				  lvseg_name(seg), display_lvname(lv), new_segtype->name,
+				  segtype_is_striped(new_segtype) ? "all" : "some") == 'n') {
 		log_error("Logical volume %s NOT converted to \"%s\"",
 			  display_lvname(lv), new_segtype->name);
 		return 0;
@@ -3135,8 +3133,13 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 		   !_raid0_add_or_remove_metadata_lvs(lv, 0 /* update_and_reload */, allocate_pvs, &removal_lvs))
 		return_0;
 
+	if (segtype_is_raid4(new_segtype)) {
+		if (!(seg->segtype = get_segtype_from_flag(lv->vg->cmd, SEG_RAID5_N)))
+			return_0;
+	} else
+		seg->segtype = new_segtype;
+
 	seg->region_size = region_size;
-	seg->segtype = new_segtype;
 
 	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, &removal_lvs))
 		return_0;
@@ -3149,6 +3152,10 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 		if (!lv_update_and_reload(lv))
 			return_0;
 	}
+
+	if (segtype_is_raid4(new_segtype))
+		return _raid45_to_raid54_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count,
+						 1 /* data_copies */, 0, 0, 0, allocate_pvs);
 
 	return 1;
 }
@@ -3287,7 +3294,8 @@ static int _striped_or_raid0_to_raid45610_wrapper(TAKEOVER_FN_ARGS)
 
 	/* FIXME: restricted to raid4 and raid5_n for the time being... */
 	if (!segtype_is_raid4(new_segtype) &&
-	    !segtype_is_raid5_n(new_segtype)) {
+	    !segtype_is_raid5_n(new_segtype) &&
+	    !segtype_is_raid6_n_6(new_segtype)) {
 		/* Can't convert striped/raid0* to e.g. raid10_offset */
 		log_error("Can't convert %s to %s.", display_lvname(lv), new_segtype->name);
 		return 0;
@@ -3456,7 +3464,9 @@ static int _takeover_from_raid0_to_raid45(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_raid0_to_raid6(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _striped_or_raid0_to_raid45610_wrapper(lv, new_segtype, yes, force,
+						      first_seg(lv)->area_count + 2 /* new_image_count */,
+						      3 /* data_copies */, 0, 0, new_region_size, allocate_pvs);
 }
 
 static int _takeover_from_raid0_to_striped(TAKEOVER_FN_ARGS)
@@ -3504,7 +3514,9 @@ static int _takeover_from_raid0_meta_to_raid45(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_raid0_meta_to_raid6(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _striped_or_raid0_to_raid45610_wrapper(lv, new_segtype, yes, force,
+						      first_seg(lv)->area_count + 2 /* new_image_count */,
+						      3 /* data_copies */, 0, 0, new_region_size, allocate_pvs);
 }
 
 static int _takeover_from_raid0_meta_to_striped(TAKEOVER_FN_ARGS)
@@ -3587,7 +3599,17 @@ static int _takeover_from_raid45_to_raid54(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_raid45_to_raid6(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	if (seg_is_raid4(first_seg(lv))) {
+		struct segment_type *segtype = get_segtype_from_flag(lv->vg->cmd, SEG_RAID5_N);
+
+		if (!segtype ||
+		    !_raid45_to_raid54_wrapper(lv, segtype, yes, force, first_seg(lv)->area_count,
+					       1 /* data_copies */, 0, 0, 0, allocate_pvs))
+			return 0;
+	}
+	return _striped_or_raid0_to_raid45610_wrapper(lv, new_segtype, yes, force,
+						      first_seg(lv)->area_count + 1 /* new_image_count */,
+						      3 /* data_copies */, 0, 0, new_region_size, allocate_pvs);
 }
 
 static int _takeover_from_raid45_to_striped(TAKEOVER_FN_ARGS)
@@ -3597,22 +3619,26 @@ static int _takeover_from_raid45_to_striped(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_raid6_to_raid0(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _raid456_to_raid0_or_striped_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count - 2,
+						    1 /* data_copies */, 0, 0, 0, allocate_pvs);
 }
 
 static int _takeover_from_raid6_to_raid0_meta(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _raid456_to_raid0_or_striped_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count - 2,
+						    1 /* data_copies */, 0, 0, 0, allocate_pvs);
 }
 
 static int _takeover_from_raid6_to_raid45(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _raid456_to_raid0_or_striped_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count - 1,
+						    2 /* data_copies */, 0, 0, 0, allocate_pvs);
 }
 
 static int _takeover_from_raid6_to_striped(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _raid456_to_raid0_or_striped_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count - 2,
+						    2 /* data_copies */, 0, 0, 0, allocate_pvs);
 }
 
 static int _takeover_from_striped_to_raid0(TAKEOVER_FN_ARGS)
@@ -3649,7 +3675,9 @@ static int _takeover_from_striped_to_raid45(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_striped_to_raid6(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _striped_or_raid0_to_raid45610_wrapper(lv, new_segtype, yes, force,
+						      first_seg(lv)->area_count + 2 /* new_image_count */,
+						      3 /* data_copies */, 0, 0, new_region_size, allocate_pvs);
 }
 
 /*
