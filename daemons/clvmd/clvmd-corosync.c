@@ -532,6 +532,7 @@ static int _cluster_fd_callback(struct local_client *fd, char *buf, int len,
 static int _cluster_send_message(const void *buf, int msglen, const char *csid,
 				 const char *errtext)
 {
+	static pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
 	struct iovec iov[2];
 	cs_error_t err;
 	int target_node;
@@ -546,7 +547,10 @@ static int _cluster_send_message(const void *buf, int msglen, const char *csid,
 	iov[1].iov_base = (char *)buf;
 	iov[1].iov_len = msglen;
 
+	pthread_mutex_lock(&_mutex);
 	err = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 2);
+	pthread_mutex_unlock(&_mutex);
+
 	return cs_to_errno(err);
 }
 

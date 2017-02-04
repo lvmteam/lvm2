@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Avoid parallel usage of cpg_mcast_joined() in clvmd with corosync.
   Support raid6_{ls,rs,la,ra}_6 segment types and conversions from/to it.
   Support raid6_n_6 segment type and conversions from/to it.
   Support raid5_n segment type and conversions from/to it.
