@@ -19,7 +19,64 @@ aux have_raid 1 9 0 || skip
 correct_raid4_layout=0
 aux have_raid 1 9 1 && correct_raid4_layout=1
 
-aux prepare_vg 9 288
+aux prepare_vg 6 80
+
+function _lvcreate
+{
+	local level=$1
+	local req_stripes=$2
+	local stripes=$3
+	local size=$4
+	local vg=$5
+	local lv=$6
+
+	lvcreate -y -aey --type $level -i $req_stripes -L $size -n $lv $vg
+	check lv_field $vg/$lv segtype "$level"
+	check lv_field $vg/$lv stripes $stripes
+	echo y | mkfs -t ext4 /dev/mapper/$vg-$lv
+	fsck -fn  /dev/mapper/$vg-$lv
+}
+
+function _lvconvert
+{
+	local req_level=$1
+	local level=$2
+	local stripes=$3
+	local vg=$4
+	local lv=$5
+	local dont_wait=$6
+
+	lvconvert -y --ty $req_level $vg/$lv
+	[ $? -ne 0 ] && return $?
+	check lv_field $vg/$lv segtype "$level"
+	check lv_field $vg/$lv stripes $stripes
+	if [ -z "$dont_wait" ]
+	then
+		fsck -fn  /dev/mapper/$vg-$lv
+		aux wait_for_sync $vg $lv
+	fi
+	fsck -fn  /dev/mapper/$vg-$lv
+}
+
+function _invalid_raid5_conversions
+{
+	local lv=$1
+	local vg=$2
+
+	not _lvconvert striped 4 $vg $lv1
+	not _lvconvert raid0 raid0 4 $vg $lv1
+	not _lvconvert raid0_meta raid0_meta 4 $vg $lv1
+	not _lvconvert raid4 raid4 5 $vg $lv1
+	not _lvconvert raid5_ls raid5_ls 5 $vg $lv1
+	not _lvconvert raid5_rs raid5_rs 5 $vg $lv1
+	not _lvconvert raid5_la raid5_la 5 $vg $lv1
+	not _lvconvert raid5_ra raid5_ra 5 $vg $lv1
+	not _lvconvert raid6_zr raid6_zr 6 $vg $lv1
+	not _lvconvert raid6_nr raid6_nr 6 $vg $lv1
+	not _lvconvert raid6_nc raid6_nc 6 $vg $lv1
+	not _lvconvert raid6_n_6 raid6_n_6 6 $vg $lv1
+	not _lvconvert raid6 raid6_n_6 6 $vg $lv1
+}
 
 # Delay 1st leg so that rebuilding status characters
 #  can be read before resync finished too quick.
@@ -81,240 +138,149 @@ aux wait_for_sync $vg $lv1
 # Clean up
 lvremove --yes $vg/$lv1
 
-# Create 3-way striped
-lvcreate -y -aey --type striped -i 3 -L 64M -n $lv1 $vg
-check lv_field $vg/$lv1 segtype "striped"
-check lv_field $vg/$lv1 stripes 3
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Create 3-way raid0
-lvcreate -y -aey --type raid0 -i 3 -L 64M -n $lv2 $vg
-check lv_field $vg/$lv2 segtype "raid0"
-check lv_field $vg/$lv2 stripes 3
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv2
-fsck -fn  /dev/mapper/$vg-$lv2
-
-# Create 3-way raid0_meta
-lvcreate -y -aey --type raid0_meta -i 3 -L 64M -n $lv3 $vg
-check lv_field $vg/$lv3 segtype "raid0_meta"
-check lv_field $vg/$lv3 stripes 3
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv3
-fsck -fn  /dev/mapper/$vg-$lv3
 
 if [ $correct_raid4_layout -eq 1 ]
 then
 
-# Create 3-way raid4
-lvcreate -y -aey --type raid4 -i 3 -L 64M -n $lv4 $vg
-check lv_field $vg/$lv4 segtype "raid4"
-check lv_field $vg/$lv4 stripes 4
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv4
-fsck -fn  /dev/mapper/$vg-$lv4
-aux wait_for_sync $vg $lv4
-fsck -fn  /dev/mapper/$vg-$lv4
+#
+# Start out with raid4
+#
 
-# Convert raid4 -> striped (correct raid4 mapping test!)
-lvconvert -y --ty striped $vg/$lv4
-check lv_field $vg/$lv4 segtype "striped"
-check lv_field $vg/$lv4 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv4
-
-
-# Convert striped -> raid4
-lvconvert -y --ty raid4 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid4"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
+# Create 3-way striped raid4 (4 legs total)
+_lvcreate raid4 3 4 64M $vg $lv1
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert raid4 -> raid5_n
-lvconvert -y --ty raid5_n $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid5_n"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert raid5 -> striped
-lvconvert -y --ty striped $vg/$lv1
-check lv_field $vg/$lv1 segtype "striped"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert striped -> raid5_n
-lvconvert -y --ty raid5_n $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid5_n"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert raid5_n -> raid4
-lvconvert -y --ty raid4 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid4"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-
-
-# Convert raid0 -> raid4
-lvconvert -y --ty raid4 $vg/$lv2
-check lv_field $vg/$lv2 segtype "raid4"
-check lv_field $vg/$lv2 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv2
-aux wait_for_sync $vg $lv2
-fsck -fn  /dev/mapper/$vg-$lv2
-
-# Convert raid4 -> raid0
-lvconvert -y --ty raid0 $vg/$lv2
-check lv_field $vg/$lv2 segtype "raid0"
-check lv_field $vg/$lv2 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv2
-
-# Convert raid0 -> raid5_n
-lvconvert -y --ty raid5_n $vg/$lv2
-check lv_field $vg/$lv2 segtype "raid5_n"
-check lv_field $vg/$lv2 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv2
-aux wait_for_sync $vg $lv2
-fsck -fn  /dev/mapper/$vg-$lv2
-
-# Convert raid5_n -> raid0_meta
-lvconvert -y --ty raid0_meta $vg/$lv2
-check lv_field $vg/$lv2 segtype "raid0_meta"
-check lv_field $vg/$lv2 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv2
-
-# Convert raid0_meta -> raid5_n
-lvconvert -y --ty raid5_n $vg/$lv2
-check lv_field $vg/$lv2 segtype "raid5_n"
-check lv_field $vg/$lv2 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv2
-aux wait_for_sync $vg $lv2
-fsck -fn  /dev/mapper/$vg-$lv2
-
-
-# Convert raid4 -> raid0_meta
-lvconvert -y --ty raid0_meta $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid0_meta"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert raid0_meta -> raid4
-lvconvert -y --ty raid4 $vg/$lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-check lv_field $vg/$lv1 segtype "raid4"
-check lv_field $vg/$lv1 stripes 4
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert raid4 -> raid0
-lvconvert -y --ty raid0 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid0"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
-
-# Convert raid0 -> raid4
-lvconvert -y --ty raid4 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid4"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
 
 # Convert raid4 -> striped
-lvconvert -y --ty striped $vg/$lv1
-check lv_field $vg/$lv1 segtype "striped"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert striped striped 3 $vg $lv1 1
 
+# Convert striped -> raid4
+_lvconvert raid4 raid4 4 $vg $lv1
 
+# Convert raid4 -> raid5_n
+_lvconvert raid5 raid5_n 4 $vg $lv1 1
 
+# Convert raid5_n -> striped
+_lvconvert striped striped 3 $vg $lv1 1
+
+# Convert striped -> raid5_n
+_lvconvert raid5_n raid5_n 4 $vg $lv1
+
+# Convert raid5_n -> raid4
+_lvconvert raid4 raid4 4 $vg $lv1 1
+
+# Convert raid4 -> raid0
+_lvconvert raid0 raid0 3 $vg $lv1 1
+
+# Convert raid0 -> raid5_n
+_lvconvert raid5_n raid5_n 4 $vg $lv1
+
+# Convert raid5_n -> raid0_meta
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1 1
+
+# Convert raid0_meta -> raid5_n
+_lvconvert raid5 raid5_n 4 $vg $lv1
+
+# Convert raid4 -> raid0_meta
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1 1
+
+# Convert raid0_meta -> raid4
+_lvconvert raid4 raid4 4 $vg $lv1
+
+# Convert raid4 -> raid0
+_lvconvert raid0 raid0 3 $vg $lv1 1
+
+# Convert raid0 -> raid4
+_lvconvert raid4 raid4 4 $vg $lv1
+
+# Convert raid4 -> striped
+_lvconvert striped striped 3 $vg $lv1 1
 
 # Convert striped -> raid6_n_6
-lvconvert -y --ty raid6_n_6 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid6_n_6"
-check lv_field $vg/$lv1 stripes 5
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid6_n_6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> striped
-lvconvert -y --ty striped $vg/$lv1
-check lv_field $vg/$lv1 segtype "striped"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert striped striped 3 $vg $lv1 1
 
 # Convert striped -> raid6_n_6
-lvconvert -y --ty raid6_n_6 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid6_n_6"
-check lv_field $vg/$lv1 stripes 5
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid5_n
-lvconvert -y --ty raid5_n $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid5_n"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid5_n raid5_n 4 $vg $lv1 1
 
 # Convert raid5_n -> raid6_n_6
-lvconvert -y --ty raid6_n_6 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid6_n_6"
-check lv_field $vg/$lv1 stripes 5
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid6_n_6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid4
-lvconvert -y --ty raid4 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid4"
-check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid4 raid4 4 $vg $lv1 1
 
 # Convert raid4 -> raid6_n_6
-lvconvert -y --ty raid6_n_6 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid6_n_6"
-check lv_field $vg/$lv1 stripes 5
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid0
-lvconvert -y --ty raid0 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid0"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid0 raid0 3 $vg $lv1 1
 
 # Convert raid0 -> raid6_n_6
-lvconvert -y --ty raid6_n_6 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid6_n_6"
-check lv_field $vg/$lv1 stripes 5
-fsck -fn  /dev/mapper/$vg-$lv1
-aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid6_n_6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid0_meta
-lvconvert -y --ty raid0_meta $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid0_meta"
-check lv_field $vg/$lv1 stripes 3
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1 1
 
 # Convert raid0_meta -> raid6_n_6
-lvconvert -y --ty raid6_n_6 $vg/$lv1
-check lv_field $vg/$lv1 segtype "raid6_n_6"
-check lv_field $vg/$lv1 stripes 5
-fsck -fn  /dev/mapper/$vg-$lv1
+_lvconvert raid6 raid6_n_6 5 $vg $lv1
+
+# Clean up
+lvremove -y $vg
+
+# Create + convert 4-way raid5 variations
+_lvcreate raid5 4 5 64M $vg $lv1
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+_invalid_raid5_conversions $vg $lv1
+not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
+not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
+not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
+_lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
+_lvconvert raid5_ls raid5_ls 5 $vg $lv1 1
+lvremove -y $vg
+
+_lvcreate raid5_ls 4 5 64M $vg $lv1
+aux wait_for_sync $vg $lv1
+_invalid_raid5_conversions $vg $lv1
+not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
+not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
+not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
+_lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
+_lvconvert raid5_ls raid5_ls 5 $vg $lv1 1
+lvremove -y $vg
+
+_lvcreate raid5_rs 4 5 64M $vg $lv1
+aux wait_for_sync $vg $lv1
+_invalid_raid5_conversions $vg $lv1
+not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
+not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
+not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
+_lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
+_lvconvert raid5_rs raid5_rs 5 $vg $lv1 1
+lvremove -y $vg
+
+_lvcreate raid5_la 4 5 64M $vg $lv1
+aux wait_for_sync $vg $lv1
+_invalid_raid5_conversions $vg $lv1
+not _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
+not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
+not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
+_lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
+_lvconvert raid5_la raid5_la 5 $vg $lv1 1
+lvremove -y $vg
+
+_lvcreate raid5_ra 4 5 64M $vg $lv1
+aux wait_for_sync $vg $lv1
+_invalid_raid5_conversions $vg $lv1
+not _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
+not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
+not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
+_lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
+_lvconvert raid5_ra raid5_ra 5 $vg $lv1 1
+lvremove -y $vg
 
 else
 

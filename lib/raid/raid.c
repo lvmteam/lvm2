@@ -546,7 +546,11 @@ static const struct raid_type {
 	{ SEG_TYPE_NAME_RAID6_N_6,  2, SEG_RAID6_N_6 },
 	{ SEG_TYPE_NAME_RAID6_NC,   2, SEG_RAID6_NC },
 	{ SEG_TYPE_NAME_RAID6_NR,   2, SEG_RAID6_NR },
-	{ SEG_TYPE_NAME_RAID6_ZR,   2, SEG_RAID6_ZR }
+	{ SEG_TYPE_NAME_RAID6_ZR,   2, SEG_RAID6_ZR },
+	{ SEG_TYPE_NAME_RAID6_LS_6, 2, SEG_RAID6_LS_6 },
+	{ SEG_TYPE_NAME_RAID6_RS_6, 2, SEG_RAID6_RS_6 },
+	{ SEG_TYPE_NAME_RAID6_LA_6, 2, SEG_RAID6_LA_6 },
+	{ SEG_TYPE_NAME_RAID6_RA_6, 2, SEG_RAID6_RA_6 }
 };
 
 static struct segment_type *_init_raid_segtype(struct cmd_context *cmd,

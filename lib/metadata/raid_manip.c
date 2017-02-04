@@ -2577,6 +2577,31 @@ static struct possible_takeover_reshape_type _possible_takeover_reshape_types[] 
 	  .current_areas = ~0U,
 	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
 
+	/* raid5_ls <-> raid6_ls_6 */
+	{ .current_types  = SEG_RAID5_LS|SEG_RAID6_LS_6,
+	  .possible_types = SEG_RAID5_LS|SEG_RAID6_LS_6,
+	  .current_areas = ~0U,
+	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
+
+	/* raid5_rs -> raid6_rs_6 */
+	{ .current_types  = SEG_RAID5_RS|SEG_RAID6_RS_6,
+	  .possible_types = SEG_RAID5_RS|SEG_RAID6_RS_6,
+	  .current_areas = ~0U,
+	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
+
+	/* raid5_ls -> raid6_la_6 */
+	{ .current_types  = SEG_RAID5_LA|SEG_RAID6_LA_6,
+	  .possible_types = SEG_RAID5_LA|SEG_RAID6_LA_6,
+	  .current_areas = ~0U,
+	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
+
+	/* raid5_ls -> raid6_ra_6 */
+	{ .current_types  = SEG_RAID5_RA|SEG_RAID6_RA_6,
+	  .possible_types = SEG_RAID5_RA|SEG_RAID6_RA_6,
+	  .current_areas = ~0U,
+	  .options = ALLOW_NONE }, /* FIXME: ALLOW_REGION_SIZE */
+
+
 	/* mirror <-> raid1 with arbitrary number of legs */
 	{ .current_types  = SEG_MIRROR|SEG_RAID1,
 	  .possible_types = SEG_MIRROR|SEG_RAID1,
@@ -3068,14 +3093,6 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 
 	dm_list_init(&removal_lvs);
 
-	if (!seg_is_raid4(seg) &&
-	    !seg_is_raid5_n(seg) &&
-	    !seg_is_raid6_n_6(seg)) {
-		log_error("LV %s has to be of type raid4/raid5_n/raid6_n_6 to allow for this conversion.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	/* Necessary when convering to raid0/striped w/o redundancy? */
 	if (!_raid_in_sync(lv))
 		return 0;
@@ -3254,7 +3271,7 @@ static int _striped_to_raid0_wrapper(struct logical_volume *lv,
 	return 1;
 }
 
-/* Helper: striped/raid0* -> raid4/5/6/10 */
+/* Helper: striped/raid0* -> raid4/5/6/10, raid45 -> raid6 wrapper */
 static int _striped_or_raid0_to_raid45610_wrapper(TAKEOVER_FN_ARGS)
 {
 	uint32_t extents_copied, region_size, seg_len, stripe_size;
@@ -3263,24 +3280,8 @@ static int _striped_or_raid0_to_raid45610_wrapper(TAKEOVER_FN_ARGS)
 
 	dm_list_init(&removal_lvs);
 
-	if (!seg_is_striped_target(seg) &&
-	    !seg_is_any_raid0(seg) &&
-	    !seg_is_raid4(seg) &&
-	    !seg_is_any_raid5(seg)) {
-		log_error("Can't convert %s LV %s.", lvseg_name(seg), display_lvname(lv));
-		return 0;
-	}
-
 	if (seg_is_raid10(seg))
 		return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
-
-	if (!segtype_is_raid4(new_segtype) &&
-	    !segtype_is_raid5_n(new_segtype) &&
-	    !segtype_is_raid6_n_6(new_segtype)) {
-		/* Can't convert to e.g. raid10_offset */
-		log_error("Can't convert %s to %s.", display_lvname(lv), new_segtype->name);
-		return 0;
-	}
 
 	if (new_data_copies > new_image_count) {
 		log_error("N number of data_copies \"--mirrors N-1\" may not be larger than number of stripes.");
@@ -3289,15 +3290,6 @@ static int _striped_or_raid0_to_raid45610_wrapper(TAKEOVER_FN_ARGS)
 
 	if (new_stripes && new_stripes != seg->area_count) {
 		log_error("Can't restripe LV %s during conversion.", display_lvname(lv));
-		return 0;
-	}
-
-	/* FIXME: restricted to raid4 and raid5_n for the time being... */
-	if (!segtype_is_raid4(new_segtype) &&
-	    !segtype_is_raid5_n(new_segtype) &&
-	    !segtype_is_raid6_n_6(new_segtype)) {
-		/* Can't convert striped/raid0* to e.g. raid10_offset */
-		log_error("Can't convert %s to %s.", display_lvname(lv), new_segtype->name);
 		return 0;
 	}
 
@@ -3794,29 +3786,64 @@ static int _log_prohibited_option(const struct lv_segment *seg_from,
 static int _set_convenient_raid456_segtype_to(const struct lv_segment *seg_from,
 					      const struct segment_type **segtype)
 {
-	if (seg_is_striped(seg_from) || seg_is_raid4(seg_from)) {
+	size_t len = min(strlen((*segtype)->name), strlen(lvseg_name(seg_from)));
+	const struct segment_type *segtype_sav = *segtype;
+
+	/* Bail out if same RAID level is requested. */
+	if (!strncmp((*segtype)->name, lvseg_name(seg_from), len))
+		return 1;
+
+	/* Striped/raid0 -> raid5/6 */
+	if (seg_is_striped(seg_from) || seg_is_any_raid0(seg_from)) {
 		/* If this is any raid5 conversion request -> enforce raid5_n, because we convert from striped */
 		if (segtype_is_any_raid5(*segtype) &&
 		    !segtype_is_raid5_n(*segtype)) {
-			log_error("Conversion to raid5_n not yet supported.");
-			return 0;
+			if (!(*segtype = get_segtype_from_flag(seg_from->lv->vg->cmd, SEG_RAID5_N)))
+				return_0;
+			goto replaced;
 
 		/* If this is any raid6 conversion request -> enforce raid6_n_6, because we convert from striped */
 		} else if (segtype_is_any_raid6(*segtype) &&
 			   !segtype_is_raid6_n_6(*segtype)) {
-			log_error("Conversion to raid6_n_6 not yet supported.");
-			return 0;
+			if (!(*segtype = get_segtype_from_flag(seg_from->lv->vg->cmd, SEG_RAID6_N_6)))
+				return_0;
+			goto replaced;
 		}
 
-	/* ... and raid6 -> raid5 */
-	} else if ((seg_is_raid6_zr(seg_from) ||
-		    seg_is_raid6_nr(seg_from) ||
-		    seg_is_raid6_nc(seg_from)) &&
+	/* raid4 -> raid5_n */
+	} else if (seg_is_raid4(seg_from) &&
 		   segtype_is_any_raid5(*segtype)) {
-		log_error("Conversion not supported.");
-		return 0;
+		if (!(*segtype = get_segtype_from_flag(seg_from->lv->vg->cmd, SEG_RAID5_N)))
+			return_0;
+		goto replaced;
+
+	/* raid4/raid5_n -> striped/raid0/raid6 */
+	} else if ((seg_is_raid4(seg_from) || seg_is_raid5_n(seg_from)) &&
+		   !segtype_is_striped(*segtype) &&
+		   !segtype_is_any_raid0(*segtype) &&
+		   !segtype_is_raid4(*segtype) &&
+		   !segtype_is_raid5_n(*segtype) &&
+		   !segtype_is_raid6_n_6(*segtype)) {
+		if (!(*segtype = get_segtype_from_flag(seg_from->lv->vg->cmd, SEG_RAID6_N_6)))
+			return_0;
+		goto replaced;
+
+	/* ... and raid6 -> striped/raid0/raid4/raid5_n */
+	} else if (seg_is_raid6_n_6(seg_from) &&
+		   !segtype_is_striped(*segtype) &&
+		   !segtype_is_any_raid0(*segtype) &&
+		   !segtype_is_raid4(*segtype) &&
+		   !segtype_is_raid5_n(*segtype)) {
+		if (!(*segtype = get_segtype_from_flag(seg_from->lv->vg->cmd, SEG_RAID5_N)))
+			return_0;
+		goto replaced;
 	}
 
+	return 1;
+
+replaced:
+	log_warn("Replaced LV type %s with possible type %s.",
+		 segtype_sav->name, (*segtype)->name);
 	return 1;
 }
 

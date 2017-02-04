@@ -56,6 +56,10 @@ enum {
 	SEG_RAID6_ZR,
 	SEG_RAID6_NR,
 	SEG_RAID6_NC,
+	SEG_RAID6_LS_6,
+	SEG_RAID6_RS_6,
+	SEG_RAID6_LA_6,
+	SEG_RAID6_RA_6,
 };
 
 /* FIXME Add crypt and multipath support */
@@ -92,6 +96,11 @@ static const struct {
 	{ SEG_RAID6_ZR, "raid6_zr"},
 	{ SEG_RAID6_NR, "raid6_nr"},
 	{ SEG_RAID6_NC, "raid6_nc"},
+	{ SEG_RAID6_LS_6, "raid6_ls_6"},
+	{ SEG_RAID6_RS_6, "raid6_rs_6"},
+	{ SEG_RAID6_LA_6, "raid6_la_6"},
+	{ SEG_RAID6_RA_6, "raid6_ra_6"},
+
 
 	/*
 	 * WARNING: Since 'raid' target overloads this 1:1 mapping table
@@ -2153,6 +2162,10 @@ static int _emit_areas_line(struct dm_task *dmt __attribute__((unused)),
 		case SEG_RAID6_ZR:
 		case SEG_RAID6_NR:
 		case SEG_RAID6_NC:
+		case SEG_RAID6_LS_6:
+		case SEG_RAID6_RS_6:
+		case SEG_RAID6_LA_6:
+		case SEG_RAID6_RA_6:
 			if (!area->dev_node) {
 				EMIT_PARAMS(*pos, " -");
 				break;
@@ -2603,6 +2616,10 @@ static int _emit_segment_line(struct dm_task *dmt, uint32_t major,
 	case SEG_RAID6_ZR:
 	case SEG_RAID6_NR:
 	case SEG_RAID6_NC:
+	case SEG_RAID6_LS_6:
+	case SEG_RAID6_RS_6:
+	case SEG_RAID6_LA_6:
+	case SEG_RAID6_RA_6:
 		target_type_is_raid = 1;
 		r = _raid_emit_segment_line(dmt, major, minor, seg, seg_start,
 					    params, paramsize);
@@ -3886,6 +3903,10 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 	case SEG_RAID6_ZR:
 	case SEG_RAID6_NR:
 	case SEG_RAID6_NC:
+	case SEG_RAID6_LS_6:
+	case SEG_RAID6_RS_6:
+	case SEG_RAID6_LA_6:
+	case SEG_RAID6_RA_6:
 		break;
 	default:
 		log_error("dm_tree_node_add_null_area() called on an unsupported segment type");
