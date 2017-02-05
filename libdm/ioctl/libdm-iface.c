@@ -1851,10 +1851,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 		else {
 			if (_log_suppress || dmt->ioctl_errno == EINTR)
-				log_verbose("device-mapper: %s ioctl on %s%s%s%.0d%s%.0d%s%s "
+				log_verbose("device-mapper: %s ioctl on %s %s%s%.0d%s%.0d%s%s "
 					    "failed: %s",
-				    	    _cmd_data_v4[dmt->type].name,
-					    dmi->name, dmi->uuid, 
+					    _cmd_data_v4[dmt->type].name,
+					    dmi->name, dmi->uuid,
 					    dmt->major > 0 ? "(" : "",
 					    dmt->major > 0 ? dmt->major : 0,
 					    dmt->major > 0 ? ":" : "",
@@ -1863,10 +1863,10 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 					    dmt->major > 0 ? ")" : "",
 					    strerror(dmt->ioctl_errno));
 			else
-				log_error("device-mapper: %s ioctl on %s%s%s%.0d%s%.0d%s%s "
+				log_error("device-mapper: %s ioctl on %s %s%s%.0d%s%.0d%s%s "
 					  "failed: %s",
 					  _cmd_data_v4[dmt->type].name,
-					  dmi->name, dmi->uuid, 
+					  dmi->name, dmi->uuid,
 					  dmt->major > 0 ? "(" : "",
 					  dmt->major > 0 ? dmt->major : 0,
 					  dmt->major > 0 ? ":" : "",
