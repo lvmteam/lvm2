@@ -964,10 +964,10 @@ arg(stripesize_ARG, 'I', "stripesize", sizekb_VAL, 0, 0,
     "The amount of data that is written to one device before\n"
     "moving to the next in a striped LV.\n")
 
-arg(logicalvolume_ARG, 'l', "logicalvolume", number_VAL, 0, 0,
+arg(logicalvolume_ARG, 'l', "logicalvolume", uint32_VAL, 0, 0,
     "Sets the maximum number of LVs allowed in a VG.\n")
 
-arg(maxlogicalvolumes_ARG, 'l', "maxlogicalvolumes", number_VAL, 0, 0,
+arg(maxlogicalvolumes_ARG, 'l', "maxlogicalvolumes", uint32_VAL, 0, 0,
     "Sets the maximum number of LVs allowed in a VG.\n")
 
 arg(extents_ARG, 'l', "extents", numsignedper_VAL, 0, 0,
