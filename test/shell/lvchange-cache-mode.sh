@@ -38,8 +38,6 @@ done
 
 lvs -o+cache_dirty_blocks,cache_read_hits,cache_read_misses,cache_write_hits,cache_write_misses $vg/$lv1
 
-vgcfgbackup -f /tmp/ooo $vg
-
 
 #
 # Drop later, code loading dm tables directly without lvm
