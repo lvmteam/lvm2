@@ -2012,13 +2012,13 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 1;
 		}
 		goto try_new_takeover_or_reshape;
-	} else if (!lp->repair && !lp->replace && (!*lp->type_str || seg->segtype == lp->segtype)) {
+	} else if (!lp->repair && !lp->replace && !arg_is_set(cmd, regionsize_ARG) && (!*lp->type_str || seg->segtype == lp->segtype)) {
 		log_error("Conversion operation not yet supported.");
 		return 0;
 	}
 
 	if ((seg_is_linear(seg) || seg_is_striped(seg) || seg_is_mirrored(seg) || lv_is_raid(lv)) &&
-	    (lp->type_str && lp->type_str[0])) {
+	    ((lp->type_str && lp->type_str[0]) || arg_is_set(cmd, regionsize_ARG))) {
 		/* Activation is required later which precludes existing supported raid0 segment */
 		if ((seg_is_any_raid0(seg) || segtype_is_any_raid0(lp->segtype)) &&
 		    !(lp->target_attr & RAID_FEATURE_RAID0)) {

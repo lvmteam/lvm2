@@ -746,6 +746,27 @@ static int _alloc_image_components(struct logical_volume *lv,
 }
 
 /*
+ * HM Helper:
+ *
+ * Calculate absolute amount of metadata device extents based
+ * on @rimage_extents, @region_size and @extent_size.
+ */
+static uint32_t _raid_rmeta_extents(struct cmd_context *cmd, uint32_t rimage_extents,
+				    uint32_t region_size, uint32_t extent_size)
+{
+	uint64_t bytes, regions, sectors;
+
+	region_size = region_size ?: get_default_region_size(cmd);
+	regions = (uint64_t) rimage_extents * extent_size / region_size;
+
+	/* raid and bitmap superblocks + region bytes */
+	bytes = 2 * 4096 + dm_div_up(regions, 8);
+	sectors = dm_div_up(bytes, 512);
+
+	return dm_div_up(sectors, extent_size);
+}
+
+/*
  * _alloc_rmeta_for_lv
  * @lv
  *
@@ -3847,6 +3868,86 @@ replaced:
 	return 1;
 }
 
+/*
+ * HM Helper:
+ *
+ * Change region size on raid @lv to @region_size if
+ * different from current region_size and adjusted region size
+ */
+static int _region_size_change_requested(struct logical_volume *lv, int yes, uint32_t region_size)
+{
+	uint32_t old_region_size;
+	const char *seg_region_size_str;
+	struct lv_segment *seg = first_seg(lv);
+
+	/* Caller should ensure this */
+	if (!region_size)
+		return_0;
+
+	/* CLI validation prvides the check but be caucious... */
+	if (seg_is_any_raid0(seg))
+		return_0;
+
+	if (region_size == seg->region_size) {
+		log_warn("Region size wouldn't change on %s LV %s.",
+			  lvseg_name(seg), display_lvname(lv));
+		return 0;
+	}
+
+	if (region_size * 8 > lv->size) {
+		log_error("Requested region size too large for LV %s size %s.",
+			  display_lvname(lv), display_size(lv->vg->cmd, lv->size));
+		return 0;
+	}
+
+	if (region_size < seg->stripe_size) {
+		log_error("Region size for LV %s is smaller than stripe size.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	if (!_raid_in_sync(lv)) {
+		log_error("Unable to change region size on %s LV %s while it is not in-sync.",
+			  lvseg_name(seg), display_lvname(lv));
+		return 0;
+	}
+
+	old_region_size = seg->region_size;
+	seg->region_size = region_size;
+	seg_region_size_str = display_size(lv->vg->cmd, seg->region_size);
+	_check_and_adjust_region_size(lv);
+
+	if (seg->region_size == old_region_size) {
+		log_warn("Region size on %s did not change due to adjustment.",
+			 display_lvname(lv));
+		return 1;
+	}
+
+	if (!yes && yes_no_prompt("Do you really want to change the region_size %s of LV %s to %s? [y/n]: ",
+				  display_size(lv->vg->cmd, old_region_size),
+				  display_lvname(lv), seg_region_size_str) == 'n') {
+		log_error("Logical volume %s NOT converted", display_lvname(lv));
+		return 0;
+	}
+	if (sigint_caught())
+		return_0;
+
+	/* Check for new region size causing bitmap to still fit metadata image LV */
+	if (seg->meta_areas && seg_metatype(seg, 0) == AREA_LV && seg_metalv(seg, 0)->le_count <
+	    _raid_rmeta_extents(lv->vg->cmd, lv->le_count, seg->region_size, lv->vg->extent_size)) {
+		log_error("Region size %s on %s is too small for metadata LV size.",
+			  seg_region_size_str, display_lvname(lv));
+		return 0;
+	}
+
+	if (!lv_update_and_reload_origin(lv))
+		return_0;
+
+	log_warn("Changed region size on RAID LV %s to %s.",
+		 display_lvname(lv), seg_region_size_str);
+	return 1;
+}
+
 /* Check allowed conversion from seg_from to *segtype_to */
 static int _conversion_options_allowed(const struct lv_segment *seg_from,
 				       const struct segment_type **segtype_to,
@@ -3922,6 +4023,10 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	if (segtype_is_raid(new_segtype) && !_check_max_raid_devices(new_image_count))
 		return_0;
+
+	/* Change RAID region size */
+	if (new_region_size && new_region_size != seg->region_size)
+		return _region_size_change_requested(lv, yes, new_region_size);
 
 	/*
 	 * Check acceptible options mirrors, region_size,
