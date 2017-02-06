@@ -4584,7 +4584,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 					 int precise, uint64_t group_id,
 					 uint64_t *count, int *regroup)
 {
-	struct _extent *extents = NULL, *old_extents;
+	struct _extent *extents = NULL, *old_extents = NULL;
 	uint64_t *regions = NULL, fail_region;
 	struct dm_stats_group *group = NULL;
 	struct dm_pool *extent_mem = NULL;
@@ -4592,7 +4592,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 	char *hist_arg = NULL;
 	int update, num_bits;
 	struct statfs fsbuf;
-	int64_t nr_kept, i;
+	int64_t nr_kept = 0, i;
 	struct stat buf;
 
 	update = _stats_group_id_present(dms, group_id);
