@@ -21,7 +21,7 @@ lvt(thinpool_LVT, "thinpool", NULL)
 lvt(cache_LVT, "cache", NULL)
 lvt(cachepool_LVT, "cachepool", NULL)
 lvt(mirror_LVT, "mirror", NULL)
-lvt(raid_LVT, "raid", NULL)
+lvt(raid_LVT, "raid", NULL) /* any raid type */
 lvt(raid0_LVT, "raid0", NULL)
 lvt(raid1_LVT, "raid1", NULL)
 lvt(raid4_LVT, "raid4", NULL)

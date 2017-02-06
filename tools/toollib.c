@@ -2515,17 +2515,15 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 	case raid_LVT:
 		return lv_is_raid(lv);
 	case raid0_LVT:
-		return seg_is_raid0(seg);
+		return seg_is_any_raid0(seg);
 	case raid1_LVT:
 		return seg_is_raid1(seg);
 	case raid4_LVT:
 		return seg_is_raid4(seg);
-#if 0
 	case raid5_LVT:
-		return seg_is_raid5(seg);
+		return seg_is_any_raid5(seg);
 	case raid6_LVT:
-		return seg_is_raid6(seg);
-#endif
+		return seg_is_any_raid6(seg);
 	case raid10_LVT:
 		return seg_is_raid10(seg);
 	case error_LVT:
@@ -2566,18 +2564,16 @@ int get_lvt_enum(struct logical_volume *lv)
 		return mirror_LVT;
 	if (lv_is_raid(lv))
 		return raid_LVT;
-	if (seg_is_raid0(seg))
+	if (seg_is_any_raid0(seg))
 		return raid0_LVT;
 	if (seg_is_raid1(seg))
 		return raid1_LVT;
 	if (seg_is_raid4(seg))
 		return raid4_LVT;
-#if 0
-	if (seg_is_raid5(seg))
+	if (seg_is_any_raid5(seg))
 		return raid5_LVT;
-	if (seg_is_raid6(seg))
+	if (seg_is_any_raid6(seg))
 		return raid6_LVT;
-#endif
 	if (seg_is_raid10(seg))
 		return raid10_LVT;
 
