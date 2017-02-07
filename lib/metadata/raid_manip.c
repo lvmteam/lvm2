@@ -2196,7 +2196,7 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	lv->status &= ~MIRROR;
 	lv->status &= ~MIRRORED;
 	lv->status |= RAID;
-	seg->status |= RAID;
+	seg->status |= SEG_RAID;
 
 	if (!lv_update_and_reload(lv))
 		return_0;
@@ -3114,9 +3114,12 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 
 	dm_list_init(&removal_lvs);
 
-	/* Necessary when convering to raid0/striped w/o redundancy? */
-	if (!_raid_in_sync(lv))
+	/* Necessary when converting to raid0/striped w/o redundancy. */
+	if (!_raid_in_sync(lv)) {
+		log_error("Unable to convert %s while it is not in-sync.",
+			  display_lvname(lv));
 		return 0;
+	}
 
 	if (!yes && yes_no_prompt("Are you sure you want to convert \"%s\" LV %s to \"%s\" "
 				  "type losing %s resilience? [y/n]: ",
@@ -3224,7 +3227,7 @@ static int _raid45_to_raid54_wrapper(TAKEOVER_FN_ARGS)
 	}
 
 
-	/* Necessary when convering to raid0/striped w/o redundancy? */
+	/* Necessary when convering to raid0/striped w/o redundancy. */
 	if (!_raid_in_sync(lv)) {
 		log_error("Unable to convert %s while it is not in-sync.",
 			  display_lvname(lv));

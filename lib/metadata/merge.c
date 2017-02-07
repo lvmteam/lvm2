@@ -148,7 +148,14 @@ static void _check_raid1_seg(struct lv_segment *seg, int *error_count)
 static void _check_raid45610_seg(struct lv_segment *seg, int *error_count)
 {
 	/* Checks applying to any raid4/5/6/10 */
-	/* Allow raid4 + raid5_n to get activated w/o metadata (mandatory during conversion between them) */
+	/*
+	 * Allow raid4 + raid5_n to get activated w/o metadata.
+	 *
+	 * This is mandatory during conversion between them,
+	 * because switching the dedicated parity SubLVs
+	 * beginning <-> end changes the roles of all SubLVs
+	 * which the kernel would reject.
+	 */
 	if (!(seg_is_raid4(seg) || seg_is_raid5_n(seg)) && !seg->meta_areas)
 		raid_seg_error("no meta areas");
 	if (!seg->stripe_size)
