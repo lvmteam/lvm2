@@ -2913,8 +2913,6 @@ static int _raid1_to_mirrored_wrapper(TAKEOVER_FN_ARGS)
 			  display_lvname(lv), SEG_TYPE_NAME_MIRROR);
 		return 0;
 	}
-	if (sigint_caught())
-		return_0;
 
 	/* Archive metadata */
 	if (!archive(lv->vg))
@@ -3128,8 +3126,6 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 			  display_lvname(lv), new_segtype->name);
 		return 0;
 	}
-	if (sigint_caught())
-		return_0;
 
 	/* Archive metadata */
 	if (!archive(lv->vg))
@@ -3889,14 +3885,14 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, uin
 	if (!region_size)
 		return_0;
 
-	/* CLI validation prvides the check but be caucious... */
+	/* CLI validation provides the check but be caucious... */
 	if (seg_is_any_raid0(seg))
 		return_0;
 
 	if (region_size == seg->region_size) {
-		log_warn("Region size wouldn't change on %s LV %s.",
-			  lvseg_name(seg), display_lvname(lv));
-		return 0;
+		log_print_unless_silent("Region size wouldn't change on %s LV %s.",
+					lvseg_name(seg), display_lvname(lv));
+		return 1;
 	}
 
 	if (region_size * 8 > lv->size) {
@@ -3906,7 +3902,7 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, uin
 	}
 
 	if (region_size < seg->stripe_size) {
-		log_error("Region size for LV %s is smaller than stripe size.",
+		log_error("Requested region size for LV %s is smaller than stripe size.",
 			  display_lvname(lv));
 		return 0;
 	}
@@ -3918,15 +3914,7 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, uin
 	}
 
 	old_region_size = seg->region_size;
-	seg->region_size = region_size;
-	seg_region_size_str = display_size(lv->vg->cmd, seg->region_size);
-	_check_and_adjust_region_size(lv);
-
-	if (seg->region_size == old_region_size) {
-		log_warn("Region size on %s did not change due to adjustment.",
-			 display_lvname(lv));
-		return 1;
-	}
+	seg_region_size_str = display_size(lv->vg->cmd, region_size);
 
 	if (!yes && yes_no_prompt("Do you really want to change the region_size %s of LV %s to %s? [y/n]: ",
 				  display_size(lv->vg->cmd, old_region_size),
@@ -3934,8 +3922,15 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, uin
 		log_error("Logical volume %s NOT converted", display_lvname(lv));
 		return 0;
 	}
-	if (sigint_caught())
-		return_0;
+
+	seg->region_size = region_size;
+	_check_and_adjust_region_size(lv);
+
+	if (seg->region_size == old_region_size) {
+		log_warn("Region size on %s did not change due to adjustment.",
+			 display_lvname(lv));
+		return 1;
+	}
 
 	/* Check for new region size causing bitmap to still fit metadata image LV */
 	if (seg->meta_areas && seg_metatype(seg, 0) == AREA_LV && seg_metalv(seg, 0)->le_count <
