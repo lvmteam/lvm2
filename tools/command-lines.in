@@ -364,6 +364,13 @@ ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
 RULE: all not lv_is_locked lv_is_pvmove
 
+lvconvert --regionsize SizeMB LV_raid
+OO: OO_LVCONVERT
+ID: lvconvert_change_region_size
+DESC: Change the region size of an LV.
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not LV_raid0
+
 ---
 
 # lvconvert raid-related utilities

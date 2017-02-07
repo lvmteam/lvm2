@@ -4338,6 +4338,12 @@ int lv_raid_convert(struct logical_volume *lv,
 			   region_size, allocate_pvs);
 }
 
+int lv_raid_change_region_size(struct logical_volume *lv,
+		    int yes, int force, uint32_t new_region_size)
+{
+	return _region_size_change_requested(lv, yes, new_region_size);
+}
+
 static int _remove_partial_multi_segment_image(struct logical_volume *lv,
 					       struct dm_list *remove_pvs)
 {

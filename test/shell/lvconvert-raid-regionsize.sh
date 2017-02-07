@@ -27,7 +27,7 @@ function _test_regionsize
 	local vg=$4
 	local lv=$5
 
-	lvconvert --type $type --yes -R $regionsize $vg/$lv
+	lvconvert --yes -R $regionsize $vg/$lv
 	[ $? -ne 0 ] && return 1
 	check lv_field $vg/$lv regionsize "$regionsize_str"
 	fsck -fn "$DM_DEV_DIR/$vg/$lv"

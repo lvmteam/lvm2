@@ -4397,6 +4397,21 @@ out:
 	return ret;
 }
 
+static int _lvconvert_change_region_size_single(struct cmd_context *cmd, struct logical_volume *lv,
+			     struct processing_handle *handle)
+{
+	if (!lv_raid_change_region_size(lv, arg_is_set(cmd, yes_ARG), arg_count(cmd, force_ARG),
+			                arg_int_value(cmd, regionsize_ARG, 0)))
+		return ECMD_FAILED;
+	return ECMD_PROCESSED;
+}
+
+int lvconvert_change_region_size_cmd(struct cmd_context * cmd, int argc, char **argv)
+{
+	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			      NULL, &_lvconvert_visible_check, &_lvconvert_change_region_size_single);
+}
+
 /*
  * split mirror images
  */

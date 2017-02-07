@@ -152,6 +152,7 @@ struct command_function command_functions[CMD_COUNT] = {
 	{ lvconvert_split_mirror_images_CMD,		lvconvert_split_mirror_images_cmd},
 	{ lvconvert_change_mirrorlog_CMD,		lvconvert_change_mirrorlog_cmd },
 	{ lvconvert_merge_mirror_images_CMD,		lvconvert_merge_mirror_images_cmd },
+	{ lvconvert_change_region_size_CMD,		lvconvert_change_region_size_cmd },
 
 	/* redirected to merge_snapshot/merge_thin/merge_mirrors */
 	{ lvconvert_merge_CMD, lvconvert_merge_cmd },

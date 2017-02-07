@@ -284,6 +284,7 @@ int lvconvert_raid_types_cmd(struct cmd_context * cmd, int argc, char **argv);
 int lvconvert_split_mirror_images_cmd(struct cmd_context * cmd, int argc, char **argv);
 int lvconvert_merge_mirror_images_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_change_mirrorlog_cmd(struct cmd_context * cmd, int argc, char **argv);
+int lvconvert_change_region_size_cmd(struct cmd_context * cmd, int argc, char **argv);
 
 int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv);
 

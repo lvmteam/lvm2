@@ -1230,6 +1230,8 @@ uint32_t raid_rmeta_extents_delta(struct cmd_context *cmd,
 uint32_t raid_rimage_extents(const struct segment_type *segtype,
 			     uint32_t extents, uint32_t stripes, uint32_t data_copies);
 uint32_t raid_ensure_min_region_size(const struct logical_volume *lv, uint64_t raid_size, uint32_t region_size);
+int lv_raid_change_region_size(struct logical_volume *lv,
+                               int yes, int force, uint32_t new_region_size);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */
