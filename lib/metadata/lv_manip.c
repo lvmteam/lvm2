@@ -712,11 +712,18 @@ static int _round_down_pow2(int r)
 
 int get_default_region_size(struct cmd_context *cmd)
 {
+	int pagesize = lvm_getpagesize();
 	int region_size = _get_default_region_size(cmd);
 
 	if (!is_power_of_2(region_size)) {
 		region_size = _round_down_pow2(region_size);
 		log_verbose("Reducing region size to %u kiB (power of 2).",
+			    region_size / 2);
+	}
+
+	if (region_size % (pagesize >> SECTOR_SHIFT)) {
+		region_size = DEFAULT_RAID_REGION_SIZE * 2;
+		log_verbose("Using default region size %u kiB (multiple of page size).",
 			    region_size / 2);
 	}
 

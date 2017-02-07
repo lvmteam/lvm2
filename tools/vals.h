@@ -92,6 +92,10 @@
  * --size and other option args treat upper/lower letters
  * the same, all as 1024 SI base.  For this reason, we
  * should avoid suggesting the upper case letters.
+ *
+ * FIXME: negative numbers should be automatically rejected
+ * for anything but int_arg_with_sign(), e.g.
+ * size_mb_arg() should reject a negative number.
  */
 
 val(none_VAL, NULL, "None", "ERR")             /* unused, for enum value 0 */
@@ -113,6 +117,7 @@ val(discards_VAL, discards_arg, "Discards", "passdown|nopassdown|ignore")
 val(mirrorlog_VAL, mirrorlog_arg, "MirrorLog", "core|disk")
 val(sizekb_VAL, size_kb_arg, "SizeKB", "Number[k|unit]")
 val(sizemb_VAL, size_mb_arg, "SizeMB", "Number[m|unit]")
+val(regionsize_VAL, regionsize_arg, "RegionSize", "Number[m|unit]")
 val(numsigned_VAL, int_arg_with_sign, "SNumber", "[+|-]Number")
 val(numsignedper_VAL, int_arg_with_sign_and_percent, "SNumberP", "[+|-]Number[%VG|%PVS|%FREE]")
 val(permission_VAL, permission_arg, "Permission", "rw|r")

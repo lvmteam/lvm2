@@ -317,7 +317,7 @@ RULE: all not LV_thinpool LV_cachepool
 ---
 
 OO_LVCONVERT_RAID: --mirrors SNumber, --stripes_long Number,
---stripesize SizeKB, --regionsize SizeMB, --interval Number
+--stripesize SizeKB, --regionsize RegionSize, --interval Number
 
 OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB
@@ -364,7 +364,7 @@ ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
 RULE: all not lv_is_locked lv_is_pvmove
 
-lvconvert --regionsize SizeMB LV_raid
+lvconvert --regionsize RegionSize LV_raid
 OO: OO_LVCONVERT
 ID: lvconvert_change_region_size
 DESC: Change the region size of an LV.
@@ -655,7 +655,7 @@ OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksi
 OO_LVCREATE_THIN: --discards Discards, --errorwhenfull Bool
 
 OO_LVCREATE_RAID: --mirrors SNumber, --stripes Number, --stripesize SizeKB,
---regionsize SizeMB, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB
+--regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB
 
 ---
 
@@ -712,7 +712,7 @@ DESC: Create a striped LV (infers --type striped).
 ---
 
 lvcreate --type mirror --size SizeMB VG
-OO: --mirrors SNumber, --mirrorlog MirrorLog, --regionsize SizeMB, --stripes Number, OO_LVCREATE
+OO: --mirrors SNumber, --mirrorlog MirrorLog, --regionsize RegionSize, --stripes Number, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_mirror
 DESC: Create a mirror LV (also see --type raid1).

@@ -146,8 +146,6 @@ static int _read_conversion_type(struct cmd_context *cmd,
 static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 {
 	const char *vg_name = NULL;
-	int region_size;
-	int pagesize = lvm_getpagesize();
 
 	if (!_read_conversion_type(cmd, lp))
 		return_0;
@@ -249,45 +247,10 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 				return 0;
 			}
 
-			/*
-			 * --regionsize is only valid if converting an LV into a mirror.
-			 * Checked when we know the state of the LV being converted.
-			 */
-			if (arg_is_set(cmd, regionsize_ARG)) {
-				if (arg_sign_value(cmd, regionsize_ARG, SIGN_NONE) ==
-					    SIGN_MINUS) {
-					log_error("Negative regionsize is invalid.");
-					return 0;
-				}
+			if (arg_is_set(cmd, regionsize_ARG))
 				lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
-			} else {
-				region_size = get_default_region_size(cmd);
-				if (region_size < 0) {
-					log_error("Negative regionsize in "
-						  "configuration file is invalid.");
-					return 0;
-				}
-				lp->region_size = region_size;
-			}
-
-			if (lp->region_size % (pagesize >> SECTOR_SHIFT)) {
-				log_error("Region size (%" PRIu32 ") must be "
-					  "a multiple of machine memory "
-					  "page size (%d).",
-					  lp->region_size, pagesize >> SECTOR_SHIFT);
-				return 0;
-			}
-
-			if (!is_power_of_2(lp->region_size)) {
-				log_error("Region size (%" PRIu32
-					  ") must be a power of 2.", lp->region_size);
-				return 0;
-			}
-
-			if (!lp->region_size) {
-				log_error("Non-zero region size must be supplied.");
-				return 0;
-			}
+			else
+				lp->region_size = get_default_region_size(cmd);
 
 			/* FIXME man page says in one place that --type and --mirrors can't be mixed */
 			if (lp->mirrors_supplied && !lp->mirrors)

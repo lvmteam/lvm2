@@ -797,6 +797,45 @@ int readahead_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_va
 	return 1;
 }
 
+int regionsize_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	int pagesize = lvm_getpagesize();
+	uint32_t num;
+
+	if (!_size_arg(cmd, av, 2048, 0))
+		return 0;
+
+	if (av->sign == SIGN_MINUS) {
+		log_error("Region size may not be negative.");
+		return 0;
+	}
+
+	if (av->ui64_value > UINT32_MAX) {
+		log_error("Region size is too big (max %u).", UINT32_MAX);
+		return 0;
+	}
+
+	num = av->ui_value;
+
+	if (!num) {
+		log_error("Region size may not be zero.");
+		return 0;
+	}
+
+	if (num % (pagesize >> SECTOR_SHIFT)) {
+		log_error("Region size must be a multiple of machine memory page size (%d bytes).",
+			  pagesize);
+		return 0;
+	}
+
+	if (!is_power_of_2(num)) {
+		log_error("Region size must be a power of 2.");
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Non-zero, positive integer, "all", or "unmanaged"
  */

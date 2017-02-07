@@ -1221,14 +1221,15 @@ cfg_array(activation_read_only_volume_list_CFG, "read_only_volume_list", activat
 	"read_only_volume_list = [ \"vg1\", \"vg2/lvol1\", \"@tag1\", \"@*\" ]\n"
 	"#\n")
 
-cfg(activation_mirror_region_size_CFG, "mirror_region_size", activation_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_RAID_REGION_SIZE, vsn(1, 0, 0), NULL, vsn(2, 2, 99),
+ cfg(activation_mirror_region_size_CFG, "mirror_region_size", activation_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_RAID_REGION_SIZE, vsn(1, 0, 0), NULL, vsn(2, 2, 99),
 	"This has been replaced by the activation/raid_region_size setting.\n",
-        "Size in KiB of each copy operation when mirroring.\n")
+	"Size in KiB of each raid or mirror synchronization region.\n")
 
 cfg(activation_raid_region_size_CFG, "raid_region_size", activation_CFG_SECTION, 0, CFG_TYPE_INT, DEFAULT_RAID_REGION_SIZE, vsn(2, 2, 99), NULL, 0, NULL,
 	"Size in KiB of each raid or mirror synchronization region.\n"
-	"For raid or mirror segment types, this is the amount of data that is\n"
-	"copied at once when initializing, or moved at once by pvmove.\n")
+	"The clean/dirty state of data is tracked for each region.\n"
+	"The value is rounded down to a power of two if necessary, and\n"
+	"is ignored if it is not a multiple of the machine memory page size.\n")
 
 cfg(activation_error_when_full_CFG, "error_when_full", activation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_ERROR_WHEN_FULL, vsn(2, 2, 115), NULL, 0, NULL,
 	"Return errors if a thin pool runs out of space.\n"

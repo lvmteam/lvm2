@@ -545,7 +545,6 @@ static int _read_raid_params(struct cmd_context *cmd,
 static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 					struct lvcreate_params *lp)
 {
-	int pagesize = lvm_getpagesize();
 	unsigned max_images;
 
 	if (seg_is_raid(lp)) {
@@ -613,19 +612,6 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 	if (!(lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0)) &&
 	    ((lp->region_size = get_default_region_size(cmd)) <= 0)) {
 		log_error("regionsize in configuration file is invalid.");
-		return 0;
-	}
-
-	if (!is_power_of_2(lp->region_size)) {
-		log_error("Region size (%" PRIu32 ") must be a power of 2",
-			  lp->region_size);
-		return 0;
-	}
-
-	if (lp->region_size % (pagesize >> SECTOR_SHIFT)) {
-		log_error("Region size (%" PRIu32 ") must be a multiple of "
-			  "machine memory page size (%d)",
-			  lp->region_size, pagesize >> SECTOR_SHIFT);
 		return 0;
 	}
 
