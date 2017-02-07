@@ -1402,13 +1402,13 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 1;
 		}
 		goto try_new_takeover_or_reshape;
-	} else if (!arg_is_set(cmd, regionsize_ARG) && (!*lp->type_str || seg->segtype == lp->segtype)) {
+	} else if (!*lp->type_str || seg->segtype == lp->segtype) {
 		log_error("Conversion operation not yet supported.");
 		return 0;
 	}
 
 	if ((seg_is_linear(seg) || seg_is_striped(seg) || seg_is_mirrored(seg) || lv_is_raid(lv)) &&
-	    ((lp->type_str && lp->type_str[0]) || arg_is_set(cmd, regionsize_ARG))) {
+	    (lp->type_str && lp->type_str[0])) {
 		/* Activation is required later which precludes existing supported raid0 segment */
 		if ((seg_is_any_raid0(seg) || segtype_is_any_raid0(lp->segtype)) &&
 		    !(lp->target_attr & RAID_FEATURE_RAID0)) {
@@ -1430,12 +1430,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		if (!arg_is_set(cmd, stripes_long_ARG))
 			lp->stripes = 0;
 
-		/*
-		 * FIXME: arg_is_set() workaround for region size until the cli validation patches got merged;
-		 *	 i needs "--type raid*", because lp->region_size isn't set w/o it
-		 */
 		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
-				     arg_is_set(cmd, regionsize_ARG) ? lp->region_size : 0, lp->pvh))
+				     lp->region_size, lp->pvh))
 			return_0;
 
 		log_print_unless_silent("Logical volume %s successfully converted.",
@@ -1456,12 +1452,8 @@ try_new_takeover_or_reshape:
 	if (lp->type_str && lp->type_str[0] && lp->segtype != seg->segtype &&
 	    ((seg_is_raid4(seg) && seg_is_striped(lp) && lp->stripes > 1) ||
 	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp)))) {
-		/*
-		 * FIXME: arg_is_set() workaround for region size until the cli validation patches got merged;
-		 *	 i needs "--type raid*", because lp->region_size isn't set w/o it
-		 */
 		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
-				     arg_is_set(cmd, regionsize_ARG) ? lp->region_size : 0, lp->pvh))
+				     lp->region_size, lp->pvh))
 			return_0;
 
 		log_print_unless_silent("Logical volume %s successfully converted.",
