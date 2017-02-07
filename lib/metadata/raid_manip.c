@@ -2196,7 +2196,6 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	lv->status &= ~MIRROR;
 	lv->status &= ~MIRRORED;
 	lv->status |= RAID;
-	seg->status |= SEG_RAID;
 
 	if (!lv_update_and_reload(lv))
 		return_0;
