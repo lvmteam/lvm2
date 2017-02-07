@@ -7,7 +7,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA2110-1301 USA
 
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
@@ -44,13 +44,20 @@ function _lvconvert
 	local stripes=$3
 	local vg=$4
 	local lv=$5
-	local dont_wait=$6
+	local region_size=$6
+	local wait_and_check=1
+	local R=""
 
-	lvconvert -y --ty $req_level $vg/$lv
+	[ -n "$region_size" ] && R="-R $region_size"
+	[ "${level:0:7}" = "striped" ] && wait_and_check=0
+	[ "${level:0:5}" = "raid0" ] && wait_and_check=0
+
+
+	lvconvert -y --ty $req_level $R $vg/$lv
 	[ $? -ne 0 ] && return $?
 	check lv_field $vg/$lv segtype "$level"
 	check lv_field $vg/$lv stripes $stripes
-	if [ -z "$dont_wait" ]
+	if [ "$wait_and_check" -eq 1 ]
 	then
 		fsck -fn  /dev/mapper/$vg-$lv
 		aux wait_for_sync $vg $lv
@@ -60,8 +67,8 @@ function _lvconvert
 
 function _invalid_raid5_conversions
 {
-	local lv=$1
-	local vg=$2
+	local vg=$1
+	local lv=$2
 
 	not _lvconvert striped 4 $vg $lv1
 	not _lvconvert raid0 raid0 4 $vg $lv1
@@ -78,14 +85,15 @@ function _invalid_raid5_conversions
 	not _lvconvert raid6 raid6_n_6 6 $vg $lv1
 }
 
-# Delay 1st leg so that rebuilding status characters
+# Delayst leg so that rebuilding status characters
 #  can be read before resync finished too quick.
-# aux delay_dev "$dev1" 0 1
+# aux delay_dev "$dev1" 1
 
 # Create 3-way mirror
-lvcreate --yes -aey --type mirror -m 2 -L 64M -n $lv1 $vg
+lvcreate --yes -aey --type mirror -R 64K -m 2 -L 64M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 3
+check lv_field $vg/$lv1 regionsize "64.00k"
 echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
 aux wait_for_sync $vg $lv1
 fsck -fn  /dev/mapper/$vg-$lv1
@@ -99,15 +107,18 @@ aux wait_for_sync $vg $lv1
 fsck -fn  /dev/mapper/$vg-$lv1
 
 # Takeover 4-way mirror to raid1
-lvconvert --yes --type raid1 $vg/$lv1
+lvconvert --yes --type raid1 -R 64k $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 4
+check lv_field $vg/$lv1 regionsize "64.00k"
 fsck -fn  /dev/mapper/$vg-$lv1
 
 ## Convert 4-way raid1 to 5-way
-lvconvert -m 4 $vg/$lv1
+lvconvert -m 4 -R 128K $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 5
+# FIXME: once lv_raid_chanage_image_count() supports region_size changes
+not check lv_field $vg/$lv1 regionsize "128.00k"
 fsck -fn  /dev/mapper/$vg-$lv1
 aux wait_for_sync $vg $lv1
 fsck -fn  /dev/mapper/$vg-$lv1
@@ -128,9 +139,10 @@ check lv_field $vg/$lv1 stripes 2
 fsck -fn  /dev/mapper/$vg-$lv1
 
 # Convert 2-way raid1 to mirror
-lvconvert --yes --type mirror $vg/$lv1
+lvconvert --yes --type mirror -R 32K $vg/$lv1
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 2
+check lv_field $vg/$lv1 regionsize "32.00k"
 aux wait_for_sync $vg $lv1
 fsck -fn  /dev/mapper/$vg-$lv1
 aux wait_for_sync $vg $lv1
@@ -151,79 +163,81 @@ _lvcreate raid4 3 4 64M $vg $lv1
 aux wait_for_sync $vg $lv1
 
 # Convert raid4 -> striped
-_lvconvert striped striped 3 $vg $lv1 1
+_lvconvert striped striped 3 $vg $lv1
 
 # Convert striped -> raid4
-_lvconvert raid4 raid4 4 $vg $lv1
+_lvconvert raid4 raid4 4 $vg $lv1 64k
+check lv_field $vg/$lv1 regionsize "64.00k"
 
 # Convert raid4 -> raid5_n
-_lvconvert raid5 raid5_n 4 $vg $lv1 1
+_lvconvert raid5 raid5_n 4 $vg $lv1 128k
+check lv_field $vg/$lv1 regionsize "128.00k"
 
 # Convert raid5_n -> striped
-_lvconvert striped striped 3 $vg $lv1 1
+_lvconvert striped striped 3 $vg $lv1
 
 # Convert striped -> raid5_n
 _lvconvert raid5_n raid5_n 4 $vg $lv1
 
 # Convert raid5_n -> raid4
-_lvconvert raid4 raid4 4 $vg $lv1 1
+_lvconvert raid4 raid4 4 $vg $lv1
 
 # Convert raid4 -> raid0
-_lvconvert raid0 raid0 3 $vg $lv1 1
+_lvconvert raid0 raid0 3 $vg $lv1
 
 # Convert raid0 -> raid5_n
 _lvconvert raid5_n raid5_n 4 $vg $lv1
 
 # Convert raid5_n -> raid0_meta
-_lvconvert raid0_meta raid0_meta 3 $vg $lv1 1
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1
 
 # Convert raid0_meta -> raid5_n
 _lvconvert raid5 raid5_n 4 $vg $lv1
 
 # Convert raid4 -> raid0_meta
-_lvconvert raid0_meta raid0_meta 3 $vg $lv1 1
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1
 
 # Convert raid0_meta -> raid4
 _lvconvert raid4 raid4 4 $vg $lv1
 
 # Convert raid4 -> raid0
-_lvconvert raid0 raid0 3 $vg $lv1 1
+_lvconvert raid0 raid0 3 $vg $lv1
 
 # Convert raid0 -> raid4
 _lvconvert raid4 raid4 4 $vg $lv1
 
 # Convert raid4 -> striped
-_lvconvert striped striped 3 $vg $lv1 1
+_lvconvert striped striped 3 $vg $lv1
 
 # Convert striped -> raid6_n_6
 _lvconvert raid6_n_6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> striped
-_lvconvert striped striped 3 $vg $lv1 1
+_lvconvert striped striped 3 $vg $lv1
 
 # Convert striped -> raid6_n_6
 _lvconvert raid6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid5_n
-_lvconvert raid5_n raid5_n 4 $vg $lv1 1
+_lvconvert raid5_n raid5_n 4 $vg $lv1
 
 # Convert raid5_n -> raid6_n_6
 _lvconvert raid6_n_6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid4
-_lvconvert raid4 raid4 4 $vg $lv1 1
+_lvconvert raid4 raid4 4 $vg $lv1
 
 # Convert raid4 -> raid6_n_6
 _lvconvert raid6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid0
-_lvconvert raid0 raid0 3 $vg $lv1 1
+_lvconvert raid0 raid0 3 $vg $lv1
 
 # Convert raid0 -> raid6_n_6
 _lvconvert raid6_n_6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> raid0_meta
-_lvconvert raid0_meta raid0_meta 3 $vg $lv1 1
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1
 
 # Convert raid0_meta -> raid6_n_6
 _lvconvert raid6 raid6_n_6 5 $vg $lv1
@@ -239,7 +253,7 @@ not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
 not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
 not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
 _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
-_lvconvert raid5_ls raid5_ls 5 $vg $lv1 1
+_lvconvert raid5_ls raid5_ls 5 $vg $lv1
 lvremove -y $vg
 
 _lvcreate raid5_ls 4 5 64M $vg $lv1
@@ -249,7 +263,7 @@ not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
 not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
 not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
 _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
-_lvconvert raid5_ls raid5_ls 5 $vg $lv1 1
+_lvconvert raid5_ls raid5_ls 5 $vg $lv1
 lvremove -y $vg
 
 _lvcreate raid5_rs 4 5 64M $vg $lv1
@@ -259,7 +273,7 @@ not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
 not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
 not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
 _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
-_lvconvert raid5_rs raid5_rs 5 $vg $lv1 1
+_lvconvert raid5_rs raid5_rs 5 $vg $lv1
 lvremove -y $vg
 
 _lvcreate raid5_la 4 5 64M $vg $lv1
@@ -269,7 +283,7 @@ not _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
 not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
 not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
 _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
-_lvconvert raid5_la raid5_la 5 $vg $lv1 1
+_lvconvert raid5_la raid5_la 5 $vg $lv1
 lvremove -y $vg
 
 _lvcreate raid5_ra 4 5 64M $vg $lv1
@@ -279,7 +293,7 @@ not _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
 not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
 not _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
 _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
-_lvconvert raid5_ra raid5_ra 5 $vg $lv1 1
+_lvconvert raid5_ra raid5_ra 5 $vg $lv1
 lvremove -y $vg
 
 else

@@ -3180,7 +3180,7 @@ static int _raid456_to_raid0_or_striped_wrapper(TAKEOVER_FN_ARGS)
 	} else
 		seg->segtype = new_segtype;
 
-	seg->region_size = region_size;
+	seg->region_size = new_region_size ?: region_size;
 
 	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, &removal_lvs))
 		return_0;
@@ -3430,6 +3430,8 @@ static int _takeover_from_mirrored_to_raid0_meta(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_mirrored_to_raid1(TAKEOVER_FN_ARGS)
 {
+	first_seg(lv)->region_size = new_region_size;
+
 	return _convert_mirror_to_raid1(lv, new_segtype);
 }
 
@@ -3610,7 +3612,8 @@ static int _takeover_from_raid45_to_raid1(TAKEOVER_FN_ARGS)
 
 static int _takeover_from_raid45_to_raid54(TAKEOVER_FN_ARGS)
 {
-	return _raid45_to_raid54_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count, 2 /* data_copies */, 0, 0, 0, allocate_pvs);
+	return _raid45_to_raid54_wrapper(lv, new_segtype, yes, force, first_seg(lv)->area_count,
+					 2 /* data_copies */, 0, 0, new_region_size, allocate_pvs);
 }
 
 static int _takeover_from_raid45_to_raid6(TAKEOVER_FN_ARGS)
@@ -4002,7 +4005,8 @@ int lv_raid_convert(struct logical_volume *lv,
 		    const unsigned new_stripes,
 		    const unsigned new_stripe_size_supplied,
 		    const unsigned new_stripe_size,
-		    const uint32_t new_region_size,
+		    /* FIXME: workaround with volatile new_region_size until cli validation patches got merged */
+		    uint32_t new_region_size,
 		    struct dm_list *allocate_pvs)
 {
 	struct lv_segment *seg = first_seg(lv);
@@ -4028,8 +4032,18 @@ int lv_raid_convert(struct logical_volume *lv,
 		return_0;
 
 	/* Change RAID region size */
-	if (new_region_size && new_region_size != seg->region_size)
-		return _region_size_change_requested(lv, yes, new_region_size);
+	/*
+	 * FIXME: workaround with volatile new_region_size until the
+	 *	  cli validation patches got merged when we'll change
+	 *	  the API to have new_region_size_supplied to check for.
+	 */
+	if (new_region_size) {
+	       if (new_segtype == seg->segtype &&
+	           new_region_size != seg->region_size &&
+		   seg_is_raid(seg) && !seg_is_any_raid0(seg))
+			return _region_size_change_requested(lv, yes, new_region_size);
+	} else
+		new_region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
 
 	/*
 	 * Check acceptible options mirrors, region_size,
