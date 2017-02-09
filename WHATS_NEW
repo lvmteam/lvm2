@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Support shrinking of RaidLvs
   Support region size changes on existing RaidLVs
   Avoid parallel usage of cpg_mcast_joined() in clvmd with corosync.
   Support raid6_{ls,rs,la,ra}_6 segment types and conversions from/to it.

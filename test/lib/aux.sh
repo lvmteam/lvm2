@@ -1413,10 +1413,10 @@ have_raid() {
 }
 
 have_raid4 () {
-	local r=1
+	local r=0
 
-	have_raid 1 8 0 && r=0
-	have_raid 1 9 1 && r=1
+	have_raid 1 8 0 && r=1
+	have_raid 1 9 1 && r=0
 
 	return $r
 }

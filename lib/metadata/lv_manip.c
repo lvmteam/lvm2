@@ -891,8 +891,9 @@ static uint32_t _round_to_stripe_boundary(struct volume_group *vg, uint32_t exte
 	/* Round up extents to stripe divisible amount */
 	if ((size_rest = extents % stripes)) {
 		new_extents += extend ? stripes - size_rest : -size_rest;
-		log_print_unless_silent("Rounding size %s (%u extents) up to stripe boundary size %s (%u extents).",
+		log_print_unless_silent("Rounding size %s (%u extents) %s to stripe boundary size %s(%u extents).",
 					display_size(vg->cmd, (uint64_t) extents * vg->extent_size), extents,
+					new_extents < extents ? "down" : "up",
 					display_size(vg->cmd, (uint64_t) new_extents * vg->extent_size), new_extents);
 	}
 
@@ -967,6 +968,37 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	return seg;
 }
 
+/*
+ * Temporary helper to return number of data copies for
+ * RAID segment @seg until seg->data_copies got added
+ */
+static uint32_t _raid_data_copies(struct lv_segment *seg)
+{
+	/*
+	 * FIXME: needs to change once more than 2 are supported.
+	 *	  I.e. use seg->data_copies then
+	 */
+	if (seg_is_raid10(seg))
+		return 2;
+	else if (seg_is_raid1(seg))
+		return seg->area_count;
+
+	return seg->segtype->parity_devs + 1;
+}
+
+/* Data image count for RAID segment @seg */
+static uint32_t _raid_stripes_count(struct lv_segment *seg)
+{
+	/*
+	 * FIXME: raid10 needs to change once more than
+	 *	  2 data_copies and odd # of legs supported.
+	 */
+	if (seg_is_raid10(seg))
+		return seg->area_count / _raid_data_copies(seg);
+
+	return seg->area_count - seg->segtype->parity_devs;
+}
+
 static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t s,
 						uint32_t area_reduction, int with_discard)
 {
@@ -1007,32 +1039,40 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 	}
 
 	if (lv_is_raid_image(lv)) {
-		/*
-		 * FIXME: Use lv_reduce not lv_remove
-		 *  We use lv_remove for now, because I haven't figured out
-		 *  why lv_reduce won't remove the LV.
-		lv_reduce(lv, area_reduction);
-		*/
-		if (area_reduction != seg->area_len) {
-			log_error("Unable to reduce RAID LV - operation not implemented.");
+		/* Calculate the amount of extents to reduce per rmate/rimage LV */
+		uint32_t rimage_extents;
+
+		/* FIXME: avoid extra seg_is_*() conditonals */
+		area_reduction =_round_to_stripe_boundary(lv->vg, area_reduction,
+							  (seg_is_raid1(seg) || seg_is_any_raid0(seg)) ? 0 : _raid_stripes_count(seg), 0);
+		rimage_extents = raid_rimage_extents(seg->segtype, area_reduction, seg_is_any_raid0(seg) ? 0 : _raid_stripes_count(seg),
+						     seg_is_raid10(seg) ? 1 :_raid_data_copies(seg));
+		if (!rimage_extents)
 			return 0;
-		} else {
-			if (!lv_remove(lv)) {
-				log_error("Failed to remove RAID image %s.",
-					  display_lvname(lv));
+
+		if (seg->meta_areas) {
+			uint32_t meta_area_reduction;
+			struct logical_volume *mlv;
+			struct volume_group *vg = lv->vg;
+
+			if (seg_metatype(seg, s) != AREA_LV ||
+			    !(mlv = seg_metalv(seg, s)))
 				return 0;
-			}
+
+			meta_area_reduction = raid_rmeta_extents_delta(vg->cmd, lv->le_count, lv->le_count - rimage_extents,
+								       seg->region_size, vg->extent_size);
+			/* Limit for raid0_meta not having region size set */
+			if (meta_area_reduction > mlv->le_count ||
+			    !(lv->le_count - rimage_extents))
+				meta_area_reduction = mlv->le_count;
+
+			if (meta_area_reduction &&
+			    !lv_reduce(mlv, meta_area_reduction))
+				return_0; /* FIXME: any upper level reporting */
 		}
 
-		/* Remove metadata area if image has been removed */
-		if (seg->meta_areas && seg_metalv(seg, s) && (area_reduction == seg->area_len)) {
-			if (!lv_reduce(seg_metalv(seg, s),
-				       seg_metalv(seg, s)->le_count)) {
-				log_error("Failed to remove RAID meta-device %s.",
-					  display_lvname(seg_metalv(seg, s)));
-				return 0;
-			}
-		}
+		if (!lv_reduce(lv, rimage_extents))
+			return_0; /* FIXME: any upper level reporting */
 
 		return 1;
 	}
@@ -1439,6 +1479,13 @@ int lv_refresh_suspend_resume(const struct logical_volume *lv)
  */
 int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
+	struct lv_segment *seg = first_seg(lv);
+
+	/* Ensure stipe boundary extents on RAID LVs */
+	if (lv_is_raid(lv) && extents != lv->le_count)
+		extents =_round_to_stripe_boundary(lv->vg, extents,
+						   seg_is_raid1(seg) ? 0 : _raid_stripes_count(seg), 0);
+
 	return _lv_reduce(lv, extents, 1);
 }
 
@@ -3302,19 +3349,24 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	if (segtype_is_raid(segtype)) {
 		if (metadata_area_count) {
+			uint32_t cur_rimage_extents, new_rimage_extents;
+
 			if (metadata_area_count != area_count)
 				log_error(INTERNAL_ERROR
 					  "Bad metadata_area_count");
-			ah->metadata_area_count = area_count;
-			ah->alloc_and_split_meta = 1;
 
-			ah->log_len = RAID_METADATA_AREA_LEN;
-
+			/* Calculate log_len (i.e. length of each rmeta device) for RAID */
+			cur_rimage_extents = raid_rimage_extents(segtype, existing_extents, stripes, mirrors);
+			new_rimage_extents = raid_rimage_extents(segtype, existing_extents + new_extents, stripes, mirrors),
+			ah->log_len = raid_rmeta_extents_delta(cmd, cur_rimage_extents, new_rimage_extents,
+							       region_size, extent_size);
+			ah->metadata_area_count = metadata_area_count;
+			ah->alloc_and_split_meta = !!ah->log_len;
 			/*
 			 * We need 'log_len' extents for each
 			 * RAID device's metadata_area
 			 */
-			total_extents += (ah->log_len * ah->area_multiple);
+			total_extents += ah->log_len * (segtype_is_raid1(segtype) ? 1 : ah->area_multiple);
 		} else {
 			ah->log_area_count = 0;
 			ah->log_len = 0;
@@ -4011,19 +4063,6 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	if (!_setup_lv_size(lv, lv->le_count + extents))
 		return_0;
 
-	/*
-	 * The MD bitmap is limited to being able to track 2^21 regions.
-	 * The region_size must be adjusted to meet that criteria
-	 * unless raid0/raid0_meta, which doesn't have a bitmap.
-	 */
-	if (seg_is_raid(seg) && !seg_is_any_raid0(seg))
-		while (seg->region_size < (lv->size / (1 << 21))) {
-			seg->region_size *= 2;
-			log_very_verbose("Adjusting RAID region_size from %uS to %uS"
-					 " to support large LV size",
-					 seg->region_size/2, seg->region_size);
-		}
-
 	return 1;
 }
 
@@ -4070,6 +4109,22 @@ int lv_extend(struct logical_volume *lv,
 			log_count = mirrors * stripes;
 	}
 	/* FIXME log_count should be 1 for mirrors */
+
+	if (segtype_is_raid(segtype) && !segtype_is_any_raid0(segtype)) {
+		uint64_t lv_size = ((uint64_t) lv->le_count + extents) * lv->vg->extent_size;
+
+		/*
+		 * The MD bitmap is limited to being able to track 2^21 regions.
+		 * The region_size must be adjusted to meet that criteria
+		 * unless raid0/raid0_meta, which doesn't have a bitmap.
+		 */
+
+		region_size = raid_ensure_min_region_size(lv, lv_size, region_size);
+
+		if (first_seg(lv))
+			first_seg(lv)->region_size = region_size;
+
+	}
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors,
 				    log_count, region_size, extents,
@@ -4649,6 +4704,11 @@ static uint32_t lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 	if (seg_is_striped(seg)) {
 		*stripesize = seg->stripe_size;
 		return seg->area_count;
+	}
+
+	if (seg_is_raid(seg)) {
+		*stripesize = seg->stripe_size;
+		return _raid_stripes_count(seg);
 	}
 
 	*stripesize = 0;
@@ -5316,6 +5376,7 @@ int lv_resize(struct logical_volume *lv,
 	struct logical_volume *lock_lv = (struct logical_volume*) lv_lock_holder(lv);
 	struct logical_volume *aux_lv = NULL; /* Note: aux_lv never resizes fs */
 	struct lvresize_params aux_lp;
+	struct lv_segment *seg = first_seg(lv);
 	int activated = 0;
 	int ret = 0;
 	int status;
@@ -5357,6 +5418,11 @@ int lv_resize(struct logical_volume *lv,
 		}
 	}
 
+	/* Ensure stipe boundary extents! */
+	if (!lp->percent && lv_is_raid(lv))
+		lp->extents =_round_to_stripe_boundary(lv->vg, lp->extents,
+						       seg_is_raid1(seg) ? 0 : _raid_stripes_count(seg),
+						       lp->resize == LV_REDUCE ? 0 : 1);
 	if (aux_lv && !_lvresize_prepare(&aux_lv, &aux_lp, pvh))
 		return_0;
 

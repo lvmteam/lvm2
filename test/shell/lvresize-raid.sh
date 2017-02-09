@@ -16,8 +16,8 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_raid 1 3 0 || skip
 
-levels="5 6"
-aux have_raid4 && levels="4 5 6"
+levels="5 6 10"
+aux have_raid4 && levels="0 0_meta 4 $levels"
 
 aux prepare_pvs 6 80
 
@@ -39,9 +39,10 @@ for deactivate in true false; do
 
 	#check raid_images_contiguous $vg $lv1
 
-# Extend and reduce 3-striped RAID 4/5/6
+# Extend and reduce 3-striped RAID 4/5/6/10
 	for i in $levels ; do
 		lvcreate --type raid$i -i 3 -l 3 -n $lv2 $vg
+		check lv_field $vg/$lv2 "seg_size" "768.00k"
 
 		test $deactivate && {
 			aux wait_for_sync $vg $lv2
@@ -49,10 +50,12 @@ for deactivate in true false; do
 		}
 
 		lvresize -l +3 $vg/$lv2
+		check lv_field $vg/$lv2 "seg_size" "1.50m"
 
 		#check raid_images_contiguous $vg $lv1
 
 		should lvresize -y -l -3 $vg/$lv2
+		should check lv_field $vg/$lv2 "seg_size" "768.00k"
 
 		#check raid_images_contiguous $vg $lv1
 

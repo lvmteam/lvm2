@@ -20,7 +20,7 @@ aux raid456_replace_works || skip
 aux lvmconf 'allocation/maximise_cling = 0' \
 	    'allocation/mirror_logs_require_separate_pvs = 1'
 
-aux prepare_vg 8
+aux prepare_vg 8 80
 
 function delay
 {

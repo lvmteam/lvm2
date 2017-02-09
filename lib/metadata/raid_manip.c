@@ -50,24 +50,26 @@ static int _check_num_areas_in_lv_segments(struct logical_volume *lv, unsigned n
 	return 1;
 }
 
-/* Ensure region size exceeds the minimum for lv */
-static void _ensure_min_region_size(const struct logical_volume *lv)
+/*
+ * Ensure region size exceeds the minimum for @lv because
+ * MD's bitmap is limited to tracking 2^21 regions.
+ *
+ * Pass in @lv_size, because funcion can be called with an empty @lv.
+ */
+uint32_t raid_ensure_min_region_size(const struct logical_volume *lv, uint64_t lv_size, uint32_t region_size)
 {
-	struct lv_segment *seg = first_seg(lv);
-	uint32_t min_region_size, region_size;
-
-	/* MD's bitmap is limited to tracking 2^21 regions */
-	min_region_size = lv->size / (1 << 21);
-	region_size = seg->region_size;
+	uint32_t min_region_size = lv_size / (1 << 21);
+	uint32_t region_size_sav = region_size;
 
 	while (region_size < min_region_size)
 		region_size *= 2;
 
-	if (seg->region_size != region_size) {
-		log_very_verbose("Setting region_size to %u for %s.",
-				 seg->region_size, display_lvname(lv));
-		seg->region_size = region_size;
-	}
+	if (region_size != region_size_sav)
+		log_very_verbose("Adjusting region_size from %s to %s for %s.",
+				 display_size(lv->vg->cmd, region_size_sav),
+				 display_size(lv->vg->cmd, region_size),
+				 display_lvname(lv));
+	return region_size;
 }
 
 /*
@@ -106,8 +108,7 @@ static void _check_and_adjust_region_size(const struct logical_volume *lv)
 	struct lv_segment *seg = first_seg(lv);
 
 	seg->region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
-
-	return _ensure_min_region_size(lv);
+	seg->region_size = raid_ensure_min_region_size(lv, lv->size, seg->region_size);
 }
 
 /* Strip any raid suffix off LV name */
@@ -672,7 +673,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 		return_0;
 
 	if (seg_is_linear(seg))
-		region_size = get_default_region_size(lv->vg->cmd);
+		region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
 	else
 		region_size = seg->region_size;
 
@@ -757,13 +758,60 @@ static uint32_t _raid_rmeta_extents(struct cmd_context *cmd, uint32_t rimage_ext
 	uint64_t bytes, regions, sectors;
 
 	region_size = region_size ?: get_default_region_size(cmd);
-	regions = (uint64_t) rimage_extents * extent_size / region_size;
+	regions = ((uint64_t) rimage_extents) * extent_size / region_size;
 
 	/* raid and bitmap superblocks + region bytes */
 	bytes = 2 * 4096 + dm_div_up(regions, 8);
 	sectors = dm_div_up(bytes, 512);
 
 	return dm_div_up(sectors, extent_size);
+}
+
+/*
+ * Returns raid metadata device size _change_ in extents, algorithm from dm-raid ("raid" target) kernel code.
+ */
+uint32_t raid_rmeta_extents_delta(struct cmd_context *cmd,
+				  uint32_t rimage_extents_cur, uint32_t rimage_extents_new,
+				  uint32_t region_size, uint32_t extent_size)
+{
+	uint32_t rmeta_extents_cur = _raid_rmeta_extents(cmd, rimage_extents_cur, region_size, extent_size);
+	uint32_t rmeta_extents_new = _raid_rmeta_extents(cmd, rimage_extents_new, region_size, extent_size);
+
+	/* Need minimum size on LV creation */
+	if (!rimage_extents_cur)
+		return rmeta_extents_new;
+
+	/* Need current size on LV deletion */
+	if (!rimage_extents_new)
+		return rmeta_extents_cur;
+
+	if (rmeta_extents_new == rmeta_extents_cur)
+		return 0;
+
+	/* Extending/reducing... */
+	return rmeta_extents_new > rmeta_extents_cur ?
+		rmeta_extents_new - rmeta_extents_cur :
+		rmeta_extents_cur - rmeta_extents_new;
+}
+
+/* Calculate raid rimage extents required based on total @extents for @segtype, @stripes and @data_copies */
+uint32_t raid_rimage_extents(const struct segment_type *segtype,
+			     uint32_t extents, uint32_t stripes, uint32_t data_copies)
+{
+	uint64_t r;
+
+	if (!extents ||
+	    segtype_is_mirror(segtype) ||
+	    segtype_is_raid1(segtype))
+		return extents;
+
+	r = extents;
+	if (segtype_is_any_raid10(segtype))
+		r *= (data_copies ?: 1); /* Caller should ensure data_copies > 0 */
+
+	r = dm_div_up(r, stripes ?: 1); /* Caller should ensure stripes > 0 */
+
+	return r > UINT_MAX ? 0 : (uint32_t) r;
 }
 
 /*
@@ -806,7 +854,8 @@ static int _alloc_rmeta_for_lv(struct logical_volume *data_lv,
 
 	if (!(ah = allocate_extents(data_lv->vg, NULL, seg->segtype, 0, 1, 0,
 				    seg->region_size,
-				    1 /*RAID_METADATA_AREA_LEN*/,
+				    raid_rmeta_extents_delta(data_lv->vg->cmd, 0, data_lv->le_count,
+							     seg->region_size, data_lv->vg->extent_size),
 				    allocate_pvs, data_lv->alloc, 0, NULL)))
 		return_0;
 
@@ -866,6 +915,11 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 		/* A complete resync will be done, no need to mark each sub-lv */
 		status_mask = ~(LV_REBUILD);
 
+		/* FIXME: allow setting region size on upconvert from linear */
+		seg->region_size = get_default_region_size(lv->vg->cmd);
+		/* MD's bitmap is limited to tracking 2^21 regions */
+		seg->region_size = raid_ensure_min_region_size(lv, lv->size, seg->region_size);
+
 		if (!(lvl = dm_pool_alloc(lv->vg->vgmem, sizeof(*lvl)))) {
 			log_error("Memory allocation failed.");
 			return 0;
@@ -912,7 +966,9 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 		goto fail;
 
 	if (seg_is_linear(seg)) {
-		first_seg(lv)->status |= RAID_IMAGE;
+		uint32_t region_size = seg->region_size;
+
+		seg->status |= RAID_IMAGE;
 		if (!insert_layer_for_lv(lv->vg->cmd, lv,
 					 RAID | LVM_READ | LVM_WRITE,
 					 "_rimage_0"))
@@ -920,15 +976,8 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 
 		lv->status |= RAID;
 		seg = first_seg(lv);
+		seg->region_size = region_size;
 		seg_lv(seg, 0)->status |= RAID_IMAGE | LVM_READ | LVM_WRITE;
-		seg->region_size = get_default_region_size(lv->vg->cmd);
-
-		/* MD's bitmap is limited to tracking 2^21 regions */
-		while (seg->region_size < (lv->size / (1 << 21))) {
-			seg->region_size *= 2;
-			log_very_verbose("Setting RAID1 region_size to %uS.",
-					 seg->region_size);
-		}
 		if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
 			return_0;
 	}
@@ -3875,7 +3924,8 @@ replaced:
  * Change region size on raid @lv to @region_size if
  * different from current region_size and adjusted region size
  */
-static int _region_size_change_requested(struct logical_volume *lv, int yes, uint32_t region_size)
+static int _region_size_change_requested(struct logical_volume *lv, int yes, uint32_t region_size,
+					 struct dm_list *allocate_pvs)
 {
 	uint32_t old_region_size;
 	const char *seg_region_size_str;
@@ -3937,6 +3987,7 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, uin
 	    _raid_rmeta_extents(lv->vg->cmd, lv->le_count, seg->region_size, lv->vg->extent_size)) {
 		log_error("Region size %s on %s is too small for metadata LV size.",
 			  seg_region_size_str, display_lvname(lv));
+if (!lv_extend(lv, seg->segtype, seg->area_count - seg->segtype->parity_devs, seg->stripe_size, 1, seg->region_size, 0, allocate_pvs, lv->vg->alloc, 0))
 		return 0;
 	}
 
@@ -4035,7 +4086,7 @@ int lv_raid_convert(struct logical_volume *lv,
 	       if (new_segtype == seg->segtype &&
 	           new_region_size != seg->region_size &&
 		   seg_is_raid(seg) && !seg_is_any_raid0(seg))
-			return _region_size_change_requested(lv, yes, new_region_size);
+			return _region_size_change_requested(lv, yes, new_region_size, allocate_pvs);
 	} else
 		new_region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
 

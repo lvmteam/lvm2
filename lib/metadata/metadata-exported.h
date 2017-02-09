@@ -1217,6 +1217,12 @@ int lv_raid_replace(struct logical_volume *lv, int force,
 		    struct dm_list *remove_pvs, struct dm_list *allocate_pvs);
 int lv_raid_remove_missing(struct logical_volume *lv);
 int partial_raid_lv_supports_degraded_activation(const struct logical_volume *lv);
+uint32_t raid_rmeta_extents_delta(struct cmd_context *cmd,
+				  uint32_t rimage_extents_cur, uint32_t rimage_extents_new,
+				  uint32_t region_size, uint32_t extent_size);
+uint32_t raid_rimage_extents(const struct segment_type *segtype,
+			     uint32_t extents, uint32_t stripes, uint32_t data_copies);
+uint32_t raid_ensure_min_region_size(const struct logical_volume *lv, uint64_t lv_size, uint32_t region_size);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */
