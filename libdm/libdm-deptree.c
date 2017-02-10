@@ -2874,8 +2874,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		else if (child->props.size_changed < 0)
 			dnode->props.size_changed = -1;
 
-		/* Resume device immediately if it has parents and its size changed */
-		if (!dm_tree_node_num_children(child, 1) || !child->props.size_changed)
+		/* No resume for a device without parents or with unchanged or smaller size */
+		if (!dm_tree_node_num_children(child, 1) || (child->props.size_changed <= 0))
 			continue;
 
 		if (!node_created && (dm_list_size(&child->props.segs) == 1)) {

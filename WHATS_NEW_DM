@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Avoids immediate resume when preloaded device is smaller.
   Do not suppress kernel key description in dmsetup table output.
   Support configurable command executed from dmeventd thin plugin.
   Support new R|r human readable units output format.
