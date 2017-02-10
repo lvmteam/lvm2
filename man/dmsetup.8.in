@@ -820,8 +820,10 @@ Outputs the current table for the device in a format that can be fed
 back in using the create or load commands.
 With \fB\-\-target\fP, only information relating to the specified target type
 is displayed.
-Encryption keys are suppressed in the table output for the crypt
-target unless the \fB\-\-showkeys\fP parameter is supplied.
+Real encryption keys are suppressed in the table output for the crypt
+target unless the \fB\-\-showkeys\fP parameter is supplied. Kernel key
+references prefixed with \fB:\fP are not affected by the parameter and get
+displayed always.
 .
 .HP
 .CMD_TARGETS

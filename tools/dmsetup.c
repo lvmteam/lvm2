@@ -2197,8 +2197,15 @@ static int _status(CMD_ARGS)
 						c++;
 					if (*c)
 						c++;
-					while (*c && *c != ' ')
-						*c++ = '0';
+					/*
+					 * Do not suppress kernel key references prefixed
+					 * with colon ':'. Displaying those references is
+					 * harmless. crypt target supports kernel keys
+					 * starting with v1.15.0 (merged in kernel 4.10)
+					 */
+					if (*c != ':')
+						while (*c && *c != ' ')
+							*c++ = '0';
 				}
 				printf(FMTu64 " " FMTu64 " %s %s",
 				       start, length, target_type, params);
