@@ -50,6 +50,13 @@
 #define CMD_LEN 256
 #define MAX_ARGS 64
 
+/* define the enums for each unique ID in command defs in command-lines.in */
+enum {
+#define cmd(a, b) a ,
+#include "cmds.h"
+#undef cmd
+};
+
 /* define the enums for the values accepted by command line --options, foo_VAL */
 enum {
 #define val(a, b, c, d) a ,
@@ -84,6 +91,7 @@ enum {
 };
 
 #include "command.h"
+#include "command-count.h"
 
 #define ARG_COUNTABLE 0x00000001	/* E.g. -vvvv */
 #define ARG_GROUPABLE 0x00000002	/* E.g. --addtag */

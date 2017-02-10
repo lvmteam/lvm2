@@ -1,12 +1,15 @@
+# Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
+# Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
 #
-# When this file is changed, tools/command-lines.h
-# and tools/command-lines-count.h must be regenerated
-# with:
+# This file is part of LVM2.
 #
-# tools/create-commands --output count tools/command-lines.in > tools/command-lines-count.h
-# tools/create-commands --output struct tools/command-lines.in > tools/command-lines.h
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU Lesser General Public License v.2.1.
 #
-
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Syntax
 #
@@ -261,7 +264,7 @@ RULE: --permission not lv_is_external_origin lv_is_raid_metadata lv_is_raid_imag
 RULE: --alloc --contiguous --metadataprofile --permission --persistent --profile --readahead not lv_is_thick_origin
 RULE: --alloc --discards --zero --cachemode --cachepolicy --cachesettings not lv_is_partial
 
-# It's unfortunate that acativate needs to be optionally allowed here,
+# It's unfortunate that activate needs to be optionally allowed here,
 # like above, it was previouly allowed in combination.
 
 lvchange --resync VG|LV_raid_mirror|Tag|Select ...

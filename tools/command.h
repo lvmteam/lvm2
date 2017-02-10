@@ -22,21 +22,33 @@ struct cmd_context;
 typedef int (*command_fn) (struct cmd_context *cmd, int argc, char **argv);
 
 /* new per-command-line-id functions */
-typedef int (*command_line_fn) (struct cmd_context *cmd, int argc, char **argv);
+typedef int (*command_id_fn) (struct cmd_context *cmd, int argc, char **argv);
 
 struct command_function {
-	int command_line_enum;
-	command_line_fn fn;
+	int command_enum;
+	command_id_fn fn;
 };
+
+#define MAX_COMMAND_NAMES 64
 
 struct command_name {
 	const char *name;
 	const char *desc; /* general command description from commands.h */
 	unsigned int flags;
+	command_fn fn; /* old style */
 
 	/* union of {required,optional}_opt_args for all commands with this name */
-	int valid_args[ARG_COUNT];
+	int valid_args[ARG_COUNT]; /* used for getopt */
 	int num_args;
+
+	/* the following are for generating help and man page output */
+	int common_options[ARG_COUNT]; /* options common to all defs */
+	int all_options[ARG_COUNT];    /* union of options from all defs */
+	int variants;        /* number of command defs with this command name */
+	int variant_has_ro;  /* do variants use required_opt_args ? */
+	int variant_has_rp;  /* do variants use required_pos_args ? */
+	int variant_has_oo;  /* do variants use optional_opt_args ? */
+	int variant_has_op;  /* do variants use optional_pos_args ? */
 };
 
 /*
@@ -158,14 +170,13 @@ struct cmd_rule {
 /* a register of the lvm commands */
 struct command {
 	const char *name;
-	const char *desc; /* specific command description from command-lines.h */
-	const char *usage; /* excludes common options like --help, --debug */
-	const char *usage_common; /* includes commmon options like --help, --debug */
-	const char *command_line_id;
-	int command_line_enum; /* <command_line_id>_CMD */
+	const char *desc; /* specific command description from command-lines.in */
+	const char *command_id; /* ID string in command-lines.in */
+	int command_enum; /* <command_id>_CMD */
+	int command_index; /* position in commands[] */
 
-	command_fn fn;                      /* old style */
 	struct command_function *functions; /* new style */
+	command_fn fn;                      /* old style */
 
 	unsigned int cmd_flags; /* CMD_FLAG_ */
 
@@ -197,5 +208,10 @@ struct command {
 
 	int pos_count; /* temp counter used by create-command */
 };
+
+int define_commands(void);
+int command_id_to_enum(const char *str);
+void print_usage(struct command *cmd);
+void print_usage_common(struct command_name *cname, struct command *cmd);
 
 #endif

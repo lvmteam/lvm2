@@ -49,7 +49,6 @@ extern char *optarg;
 #  define OPTIND_INIT 1
 #endif
 
-#include "command-lines-count.h"
 
 /*
  * Table of valid --option values.
@@ -70,16 +69,6 @@ static struct arg_props _arg_props[ARG_COUNT + 1] = {
 };
 
 /*
- * Table of valid command names
- */
-#define MAX_COMMAND_NAMES 64
-struct command_name command_names[MAX_COMMAND_NAMES] = {
-#define xx(a, b, c...) { # a, b, c },
-#include "commands.h"
-#undef xx
-};
-
-/*
  * Table of LV properties
  */
 static struct lv_props _lv_props[LVP_COUNT + 1] = {
@@ -97,11 +86,20 @@ static struct lv_types _lv_types[LVT_COUNT + 1] = {
 #undef lvt
 };
 
+/*
+ * Table of command names
+ */
+struct command_name command_names[MAX_COMMAND_NAMES] = {
+#define xx(a, b, c...) { # a, b, c, a},
+#include "commands.h"
+#undef xx
+};
 
 /*
- * Table of valid command lines
+ * Table of commands (as defined in command-lines.in)
  */
-static struct command commands[COMMAND_COUNT];
+struct command commands[COMMAND_COUNT];
+
 static struct cmdline_context _cmdline;
 
 /*
@@ -111,7 +109,7 @@ static struct cmdline_context _cmdline;
  * to use these functions instead of the old per-command-name function.
  * For now, any command id not included here uses the old command fn.
  */
-struct command_function command_functions[COMMAND_ID_COUNT] = {
+struct command_function command_functions[CMD_COUNT] = {
 	{ lvmconfig_general_CMD, lvmconfig },
 	{ lvchange_properties_CMD, lvchange_properties_cmd },
 	{ lvchange_resync_CMD, lvchange_resync_cmd },
@@ -1061,7 +1059,7 @@ static void _set_valid_args_for_command_name(int ci)
 	command_names[ci].num_args = num_args;
 }
 
-static struct command_name *_find_command_name(const char *name)
+static struct command_name *find_command_name(const char *name)
 {
 	int i;
 	
@@ -1074,24 +1072,18 @@ static struct command_name *_find_command_name(const char *name)
 	return NULL;
 }
 
-static struct command_function *_find_command_function(int command_line_enum)
+static struct command_function *_find_command_id_function(int command_enum)
 {
 	int i;
 
-	if (!command_line_enum)
+	if (!command_enum)
 		return NULL;
 
-	for (i = 0; i < COMMAND_ID_COUNT; i++) {
-		if (command_functions[i].command_line_enum == command_line_enum)
+	for (i = 0; i < CMD_COUNT; i++) {
+		if (command_functions[i].command_enum == command_enum)
 			return &command_functions[i];
 	}
 	return NULL;
-}
-
-static void _define_commands(void)
-{
-/* command-lines.h defines command[] structs, generated from command-lines.in */
-#include "command-lines.h" /* generated from command-lines.in */
 }
 
 void lvm_register_commands(void)
@@ -1100,13 +1092,30 @@ void lvm_register_commands(void)
 
 	memset(&commands, 0, sizeof(commands));
 
-	_define_commands();
+	/*
+	 * populate commands[] array with command definitions
+	 * by parsing command-lines.in/command-lines-input.h
+	 */
+	if (!define_commands()) {
+		log_error("Failed to parse command definitions.");
+		return;
+	}
 
 	_cmdline.commands = commands;
 	_cmdline.num_commands = COMMAND_COUNT;
 
-	for (i = 0; i < COMMAND_COUNT; i++)
-		commands[i].functions = _find_command_function(commands[i].command_line_enum);
+	for (i = 0; i < COMMAND_COUNT; i++) {
+		commands[i].command_enum = command_id_to_enum(commands[i].command_id);
+
+		/* new style */
+		commands[i].functions = _find_command_id_function(commands[i].command_enum);
+
+		/* old style */
+		if (!commands[i].functions) {
+			struct command_name *cname = find_command_name(commands[i].name);
+			commands[i].fn = cname->fn;
+		}
+	}
 
 	_cmdline.command_names = command_names;
 
@@ -1139,7 +1148,7 @@ struct command *get_command(int cmd_enum)
 	int i;
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
-		if (commands[i].command_line_enum == cmd_enum)
+		if (commands[i].command_enum == cmd_enum)
 			return &commands[i];
 	}
 
@@ -1281,194 +1290,6 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 	}
 
 	return 0;
-}
-
-
-#define HELP_LINE_SIZE 1024
-
-static void _print_usage(const char *usage_str, int only_required)
-{
-	char buf[HELP_LINE_SIZE];
-	int optional_ui = 0;
-	int optional_pos_ui = 0;
-	int ui;
-	int bi;
-
-	if (!usage_str || !strlen(usage_str))
-		return;
-
-	/*
-	 * copy the required opt_args/pos_args
-	 *
- 	 * The optional portions of the usage string are enclosed
-	 * in [] and follow the required portions.
-	 *
-	 * The optional portion begins with [ followed by a space,
-	 * i.e. "[ " to distinguish the option usage which may
-	 * include [ in cases like --option Number[units].
-	 */
-
-	memset(buf, 0, sizeof(buf));
-	bi = 0;
-
-	for (ui = 0; ui < strlen(usage_str); ui++) {
-		if (!bi && ((usage_str[ui] == ' ') || (usage_str[ui] == '\n')))
-			continue;
-
-		/* The first "[ " indicates the start of the optional opt_args. */
-		if ((usage_str[ui] == '[') && (usage_str[ui+1] == ' ')) {
-			optional_ui = ui;
-			break;
-		}
-
-		if (usage_str[ui] == '\0')
-			break;
-
-		if (usage_str[ui] == '(') {
-			buf[bi++] = '\n';
-			buf[bi++] = '\t';
-		}
-
-		buf[bi++] = usage_str[ui];
-
-		if (usage_str[ui] == ')') {
-			buf[bi++] = '\n';
-			buf[bi++] = '\t';
-		}
-
-		if (usage_str[ui] == ',') {
-			buf[bi++] = '\n';
-			buf[bi++] = '\t';
-			buf[bi++] = ' ';
-		}
-
-		if (bi == (HELP_LINE_SIZE - 1))
-			break;
-	}
-
-	/*
-	 * print the required opt_args/pos_args
-	 */
-
-	if (bi)
-		log_print("%s", buf);
-
-	if (only_required)
-		return;
-
-	/*
-	 * copy the optional opt_args
-	 */
-
-	if (!optional_ui)
-		goto out;
-
-	memset(buf, 0, sizeof(buf));
-	bi = 0;
-
-	for (ui = optional_ui; ui < strlen(usage_str); ui++) {
-
-		/* The second "[ " indicates the start of the optional pos_args. */
-		if ((ui > optional_ui) && (usage_str[ui] == '[') && (usage_str[ui+1] == ' ')) {
-			optional_pos_ui = ui;
-			break;
-		}
-
-		if (usage_str[ui] == '\0')
-			break;
-		if (usage_str[ui] == '\n')
-			break;
-
-		if (!bi)
-			buf[bi++] = '\t';
-
-		buf[bi++] = usage_str[ui];
-
-		if (usage_str[ui] == ',') {
-			buf[bi++] = '\n';
-			buf[bi++] = '\t';
-			buf[bi++] = ' ';
-		}
-
-		if (bi == (HELP_LINE_SIZE - 1))
-			break;
-	}
-
-	/*
-	 * print the optional opt_args
-	 */
-
-	if (bi)
-		log_print("%s", buf);
-
-	/*
-	 * copy the optional pos_args
-	 */
-
-	if (!optional_pos_ui)
-		goto out;
-
-	memset(buf, 0, sizeof(buf));
-	bi = 0;
-
-	for (ui = optional_pos_ui; ui < strlen(usage_str); ui++) {
-		if (usage_str[ui] == '\0')
-			break;
-		if (usage_str[ui] == '\n')
-			break;
-
-		if (!bi)
-			buf[bi++] = '\t';
-
-		buf[bi++] = usage_str[ui];
-
-		if (bi == (HELP_LINE_SIZE - 1))
-			break;
-	}
-
-	/*
-	 * print the optional pos_args
-	 */
-
-	if (bi)
-		log_print("%s", buf);
- out:
-	return;
-}
-
-static void _print_description(int ci)
-{
-	const char *desc = _cmdline.commands[ci].desc;
-	char buf[HELP_LINE_SIZE] = {0};
-	int di = 0;
-	int bi = 0;
-
-	for (di = 0; di < strlen(desc); di++) {
-		if (!strncmp(&desc[di], "DESC:", 5)) {
-			if (bi) {
-				buf[bi] = '\0';
-				log_print("%s", buf);
-				memset(buf, 0, sizeof(buf));
-				bi = 0;
-			}
-			/* skip DESC: */
-			di += 5;
-			continue;
-		}
-
-		if (!bi && desc[di] == ' ')
-			continue;
-
-		buf[bi++] = desc[di];
-
-		if (bi == (HELP_LINE_SIZE - 1))
-			break;
-	}
-
-	if (bi) {
-		buf[bi] = '\0';
-		log_print("%s", buf);
-	}
 }
 
 /*
@@ -1683,7 +1504,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 		log_error("Failed to find a matching command definition.");
 		if (close_ro) {
 			log_warn("Closest command usage is:");
-			_print_usage(_cmdline.commands[close_i].usage, 1);
+			print_usage(&_cmdline.commands[close_i]);
 		}
 		return NULL;
 	}
@@ -1698,8 +1519,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 
 	if (best_unused_count) {
 		for (i = 0; i < best_unused_count; i++) {
-			log_error("Invalid option for command (%s %d): %s.",
-				  commands[best_i].command_line_id, best_i,
+			log_error("Invalid option for command: %s.",
 				  arg_long_option_name(best_unused_options[i]));
 		}
 		return NULL;
@@ -1729,8 +1549,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 			break;
 
 		if (count >= (commands[best_i].rp_count + commands[best_i].op_count)) {
-			log_error("Invalid positional argument for command (%s %d): %s.",
-				  commands[best_i].command_line_id, best_i, argv[count]);
+			log_error("Invalid positional argument for command: %s.", argv[count]);
 
 			/* FIXME: to warn/ignore, clear so it can't be used when processing. */
 			/*
@@ -1774,22 +1593,21 @@ out:
 			if (opts_match_count && (rule->rule == RULE_INVALID)) {
 				memset(buf, 0, sizeof(buf));
 				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
-				log_error("Invalid options for command (%s %d): %s",
-					  commands[best_i].command_line_id, best_i, buf);
+				log_error("Invalid options for command: %s", buf);
 				return NULL;
 			}
 
 			if (opts_unmatch_count && (rule->rule == RULE_REQUIRE)) {
 				memset(buf, 0, sizeof(buf));
 				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
-				log_error("Required options for command (%s %d): %s",
-					  commands[best_i].command_line_id, best_i, buf);
+				log_error("Required options for command: %s", buf);
 				return NULL;
 			}
 		}
 	}
 
-	log_debug("command line id: %s %d", commands[best_i].command_line_id, best_i);
+	log_debug("Using command index %d id %s enum %d.",
+		  best_i, commands[best_i].command_id, commands[best_i].command_enum);
 
 	return &commands[best_i];
 }
@@ -1801,8 +1619,8 @@ static void _short_usage(const char *name)
 
 static int _usage(const char *name, int help_count)
 {
-	struct command_name *cname = _find_command_name(name);
-	const char *usage_common = NULL;
+	struct command_name *cname = find_command_name(name);
+	struct command *cmd;
 	int i;
 
 	if (!cname) {
@@ -1812,28 +1630,20 @@ static int _usage(const char *name, int help_count)
 
 	log_print("%s - %s\n", name, cname->desc);
 
-	for (i = 0; i < _cmdline.num_commands; i++) {
+	for (i = 0; i < COMMAND_COUNT; i++) {
 		if (strcmp(_cmdline.commands[i].name, name))
 			continue;
 
 		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && (help_count < 3))
 			continue;
 
-		if (strlen(_cmdline.commands[i].desc))
-			_print_description(i);
-
-		usage_common = _cmdline.commands[i].usage_common;
-
-		_print_usage(_cmdline.commands[i].usage, 0);
-		log_print(" "); /* for built-in \n */
+		print_usage(&_cmdline.commands[i]);
+		cmd = &_cmdline.commands[i];
+		printf("\n");
 	}
 
 	/* Common options are printed once for all variants of a command name. */
-	if (usage_common) {
-		log_print("Common options:");
-		_print_usage(usage_common, 0);
-		log_print(" "); /* for built-in \n */
-	}
+	print_usage_common(cname, cmd);
 
 	if (help_count > 1) {
 		/*
@@ -1957,7 +1767,7 @@ static int _find_arg(const char *cmd_name, int goval)
 	int arg_enum;
 	int i;
 
-	if (!(cname = _find_command_name(cmd_name)))
+	if (!(cname = find_command_name(cmd_name)))
 		return -1;
 
 	for (i = 0; i < cname->num_args; i++) {
@@ -1989,7 +1799,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	int goval;    /* the number returned from getopt_long identifying what it found */
 	int i;
 
-	if (!(cname = _find_command_name(cmd->name)))
+	if (!(cname = find_command_name(cmd->name)))
 		return_0;
 
 	if (!(cmd->opt_arg_values = dm_pool_zalloc(cmd->mem, sizeof(*cmd->opt_arg_values) * ARG_COUNT))) {
@@ -2686,7 +2496,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	log_debug("Parsing: %s", cmd->cmd_line);
 
-	if (!(cmd->cname = _find_command_name(cmd->name))) {
+	if (!(cmd->cname = find_command_name(cmd->name))) {
 		log_error("Command name not found.\n");
 		return EINVALID_CMD_LINE;
 	}
@@ -2857,7 +2667,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (cmd->command->functions)
-		/* A command-line--specific function is used */
+		/* A command-line-specific function is used */
 		ret = cmd->command->functions->fn(cmd, argc, argv);
 	else
 		/* The old style command-name function is used */
@@ -3388,3 +3198,4 @@ int lvm2_main(int argc, char **argv)
 	lvm_fin(cmd);
 	return lvm_return_code(ret);
 }
+
