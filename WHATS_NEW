@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Support striped/raid0* <-> raid10_near conversions
   Support shrinking of RaidLvs
   Support region size changes on existing RaidLVs
   Avoid parallel usage of cpg_mcast_joined() in clvmd with corosync.

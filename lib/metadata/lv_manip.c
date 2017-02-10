@@ -5418,7 +5418,7 @@ int lv_resize(struct logical_volume *lv,
 		}
 	}
 
-	/* Ensure stipe boundary extents! */
+	/* Ensure stripe boundary extents! */
 	if (!lp->percent && lv_is_raid(lv))
 		lp->extents =_round_to_stripe_boundary(lv->vg, lp->extents,
 						       seg_is_raid1(seg) ? 0 : _raid_stripes_count(seg),

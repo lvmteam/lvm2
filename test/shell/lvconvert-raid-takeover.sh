@@ -19,7 +19,7 @@ aux have_raid 1 9 0 || skip
 correct_raid4_layout=0
 aux have_raid 1 9 1 && correct_raid4_layout=1
 
-aux prepare_vg 6 80
+aux prepare_vg 8 80
 
 function _lvcreate
 {
@@ -241,6 +241,27 @@ _lvconvert raid0_meta raid0_meta 3 $vg $lv1
 
 # Convert raid0_meta -> raid6_n_6
 _lvconvert raid6 raid6_n_6 5 $vg $lv1
+
+# Convert raid6_n_6 -> striped
+_lvconvert striped striped 3 $vg $lv1
+
+# Convert striped -> raid10
+_lvconvert raid10 raid10 6 $vg $lv1
+
+# Convert raid10 -> raid0
+_lvconvert raid0 raid0 3 $vg $lv1
+
+# Convert raid0 -> raid10
+_lvconvert raid10 raid10 6 $vg $lv1
+
+# Convert raid10 -> raid0
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1
+
+# Convert raid0_meta -> raid10
+_lvconvert raid10 raid10 6 $vg $lv1
+
+# Convert raid10 -> striped
+_lvconvert striped striped 3 $vg $lv1
 
 # Clean up
 lvremove -y $vg

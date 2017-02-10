@@ -19,7 +19,7 @@ aux have_raid 1 3 0 || skip
 levels="5 6 10"
 aux have_raid4 && levels="0 0_meta 4 $levels"
 
-aux prepare_pvs 6 80
+aux prepare_pvs 6
 
 vgcreate -s 256K $vg $(cat DEVICES)
 

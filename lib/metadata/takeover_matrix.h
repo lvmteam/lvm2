@@ -112,7 +112,7 @@ static takeover_fn_t _takeover_fns[][11] = {
         /* raid1      */ { r1__lin,  r1__str,  r1__mir,  r1__r0,  r1__r0m,  r1__r1,  r1__r45,  X     ,  r1__r10,  X      , X },
         /* raid4/5    */ { r45_lin,  r45_str,  r45_mir,  r45_r0,  r45_r0m,  r45_r1,  r45_r54,  r45_r6,  X      ,  X      , X },
         /* raid6      */ { X      ,  r6__str,  X      ,  r6__r0,  r6__r0m,  X     ,  r6__r45,  X     ,  X      ,  X      , X },
-        /* raid10     */ // { r10_lin,  r10_str,  r10_mir,  r10_r0,  r10_r0m,  r10_r1,  X      ,  X     ,  r10_r10,  r10_r01, X },
+        /* raid10     */ { r10_lin,  r10_str,  r10_mir,  r10_r0,  r10_r0m,  r10_r1,  X      ,  X     ,  X      ,  X	 , X },
         /* raid01     */ // { X      ,  r01_str,  X      ,  X     ,  X      ,  X     ,  X      ,  X     ,  r01_r10,  r01_r01, X },
         /* other      */ { X      ,  X      ,  X      ,  X     ,  X      ,  X     ,  X      ,  X     ,  X      ,  X      , X },
 };
