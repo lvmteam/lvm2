@@ -4122,8 +4122,7 @@ replaced:
  * Change region size on raid @lv to @region_size if
  * different from current region_size and adjusted region size
  */
-static int _region_size_change_requested(struct logical_volume *lv, int yes, const uint32_t region_size,
-					 struct dm_list *allocate_pvs)
+static int _region_size_change_requested(struct logical_volume *lv, int yes, const uint32_t region_size)
 {
 	uint32_t old_region_size;
 	const char *seg_region_size_str;
@@ -4185,7 +4184,6 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, con
 	    _raid_rmeta_extents(lv->vg->cmd, lv->le_count, seg->region_size, lv->vg->extent_size)) {
 		log_error("Region size %s on %s is too small for metadata LV size.",
 			  seg_region_size_str, display_lvname(lv));
-if (!lv_extend(lv, seg->segtype, seg->area_count - seg->segtype->parity_devs, seg->stripe_size, 1, seg->region_size, 0, allocate_pvs, lv->vg->alloc, 0))
 		return 0;
 	}
 
@@ -4290,7 +4288,7 @@ int lv_raid_convert(struct logical_volume *lv,
 	       if (new_segtype == seg->segtype &&
 	           new_region_size != seg->region_size &&
 		   seg_is_raid(seg) && !seg_is_any_raid0(seg))
-			return _region_size_change_requested(lv, yes, new_region_size, allocate_pvs);
+			return _region_size_change_requested(lv, yes, new_region_size);
 	} else
 		region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
 
