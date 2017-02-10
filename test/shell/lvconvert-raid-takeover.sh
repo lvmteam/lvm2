@@ -163,6 +163,7 @@ _lvcreate raid4 3 4 64M $vg $lv1
 aux wait_for_sync $vg $lv1
 
 # Convert raid4 -> striped
+not _lvconvert striped striped 3 $vg $lv1 512k
 _lvconvert striped striped 3 $vg $lv1
 
 # Convert striped -> raid4
@@ -195,6 +196,7 @@ _lvconvert raid0_meta raid0_meta 3 $vg $lv1
 _lvconvert raid5 raid5_n 4 $vg $lv1
 
 # Convert raid4 -> raid0_meta
+not _lvconvert raid0_meta raid0_meta 3 $vg $lv1 256k
 _lvconvert raid0_meta raid0_meta 3 $vg $lv1
 
 # Convert raid0_meta -> raid4
@@ -243,12 +245,14 @@ _lvconvert raid0_meta raid0_meta 3 $vg $lv1
 _lvconvert raid6 raid6_n_6 5 $vg $lv1
 
 # Convert raid6_n_6 -> striped
+not _lvconvert striped striped 3 $vg $lv1 128k
 _lvconvert striped striped 3 $vg $lv1
 
 # Convert striped -> raid10
 _lvconvert raid10 raid10 6 $vg $lv1
 
 # Convert raid10 -> raid0
+not _lvconvert raid0 raid0 3 $vg $lv1 64k
 _lvconvert raid0 raid0 3 $vg $lv1
 
 # Convert raid0 -> raid10
@@ -261,6 +265,7 @@ _lvconvert raid0_meta raid0_meta 3 $vg $lv1
 _lvconvert raid10 raid10 6 $vg $lv1
 
 # Convert raid10 -> striped
+not _lvconvert striped striped 3 $vg $lv1 256k
 _lvconvert striped striped 3 $vg $lv1
 
 # Clean up
