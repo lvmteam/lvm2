@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2012,2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -17,7 +17,8 @@ SKIP_WITH_LVMPOLLD=1
 aux have_raid 1 3 0 || skip
 
 levels="5 6 10"
-aux have_raid4 && levels="0 0_meta 4 $levels"
+aux have_raid4 && levels="4 $levels"
+aux have_raid 1 7 0 && levels="0 0_meta $levels"
 
 aux prepare_pvs 6
 
