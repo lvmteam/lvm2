@@ -154,6 +154,32 @@ This timeout will be ignored if you start \fBclvmd\fP with the \fB\-d\fP.
 .br
 Display the version of the cluster LVM daemon.
 .
+.SH NOTES
+.
+.SS Activation
+.
+In a clustered VG, clvmd is used for activation, and the following values are
+possible with \fBlvchange/vgchange -a\fP:
+.IP \fBy\fP|\fBsy\fP
+clvmd activates the LV in shared mode (with a shared lock),
+allowing multiple nodes to activate the LV concurrently.
+If the LV type prohibits shared access, such as an LV with a snapshot,
+an exclusive lock is automatically used instead.
+clvmd attempts to activate the LV concurrently on all nodes.
+.IP \fBey\fP
+clvmd activates the LV in exclusive mode (with an exclusive lock),
+allowing a single node to activate the LV.
+clvmd attempts to activate the LV concurrently on all nodes, but only
+one will succeed.
+.IP \fBly\fP
+clvmd attempts to activate the LV only on the local node.
+If the LV type allows concurrent access, then shared mode is used,
+otherwise exclusive.
+.IP \fBn\fP
+clvmd deactivates the LV on all nodes.
+.IP \fBln\fP
+clvmd deactivates the LV on the local node.
+.
 .SH ENVIRONMENT VARIABLES
 .TP
 .B LVM_CLVMD_BINARY

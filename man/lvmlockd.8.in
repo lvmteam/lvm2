@@ -573,24 +573,36 @@ To place the lvmlock LV on a specific device, create the VG with only that
 device, then use vgextend to add other devices.
 
 
-.SS shared LVs
+.SS LV activation
 
-When an LV is used concurrently from multiple hosts (e.g. by a
-multi\-host/cluster application or file system), the LV can be activated
-on multiple hosts concurrently using a shared lock.
+In a shared VG, activation changes involve locking through lvmlockd, and
+the following values are possible with lvchange/vgchange -a:
 
-To activate the LV with a shared lock:  lvchange \-asy vg/lv.
+.IP \fBy\fP|\fBey\fP
+The command activates the LV in exclusive mode, allowing a single host
+to activate the LV.  Before activating the LV, the command uses lvmlockd
+to acquire an exclusive lock on the LV.  If the lock cannot be acquired,
+the LV is not activated and an error is reported.  This would happen if
+the LV is active on another host.
 
-With lvmlockd, an unspecified activation mode is always exclusive, i.e.
-\-ay defaults to \-aey.
-
-If the LV type does not allow the LV to be used concurrently from multiple
-hosts, then a shared activation lock is not allowed and the lvchange
-command will report an error.  LV types that cannot be used concurrently
+.IP \fBsy\fP
+The command activates the LV in shared mode, allowing multiple hosts to
+activate the LV concurrently.  Before activating the LV, the
+command uses lvmlockd to acquire a shared lock on the LV.  If the lock
+cannot be acquired, the LV is not activated and an error is reported.
+This would happen if the LV is active exclusively on another host.  If the
+LV type prohibits shared access, such as a snapshot, the command will
+report an error and fail.
+The shared mode is intended for a multi\-host/cluster application or
+file system.
+LV types that cannot be used concurrently
 from multiple hosts include thin, cache, raid, mirror, and snapshot.
-
 lvextend on LV with shared locks is not yet allowed.  The LV must be
 deactivated, or activated exclusively to run lvextend.
+
+.IP \fBn\fP
+The command deactivates the LV.  After deactivating the LV, the command
+uses lvmlockd to release the current lock on the LV.
 
 
 .SS recover from lost PV holding sanlock locks

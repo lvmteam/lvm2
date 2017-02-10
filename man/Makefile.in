@@ -31,18 +31,20 @@ LVMRAIDMAN = lvmraid.7
 
 MAN5=lvm.conf.5
 MAN7=lvmsystemid.7 lvmreport.7 
-MAN8=lvm-config.8 lvm-dumpconfig.8 lvm-fullreport.8 lvm-lvpoll.8 \
-	lvchange.8 lvmconfig.8 lvconvert.8 lvcreate.8 lvdisplay.8 lvextend.8 \
-	lvm.8 lvmchange.8 lvmconf.8 lvmdiskscan.8 lvmdump.8 lvmsadc.8 lvmsar.8 \
+MAN8=lvm.8 lvmconf.8 lvmdump.8
+MAN8DM=dmsetup.8 dmstats.8
+MAN8CLUSTER=
+MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
+
+MAN8GEN=lvm-config.8 lvm-dumpconfig.8 lvm-fullreport.8 lvm-lvpoll.8 \
+	lvcreate.8 lvchange.8 lvmconfig.8 lvconvert.8 lvdisplay.8 lvextend.8 \
 	lvreduce.8 lvremove.8 lvrename.8 lvresize.8 lvs.8 \
 	lvscan.8 pvchange.8 pvck.8 pvcreate.8 pvdisplay.8 pvmove.8 pvremove.8 \
 	pvresize.8 pvs.8 pvscan.8 vgcfgbackup.8 vgcfgrestore.8 vgchange.8 \
 	vgck.8 vgcreate.8 vgconvert.8 vgdisplay.8 vgexport.8 vgextend.8 \
 	vgimport.8 vgimportclone.8 vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 \
-	vgrename.8 vgs.8 vgscan.8 vgsplit.8
-MAN8DM=dmsetup.8 dmstats.8
-MAN8CLUSTER=
-MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
+	vgrename.8 vgs.8 vgscan.8 vgsplit.8 \
+	lvmsar.8 lvmsadc.8 lvmdiskscan.8 lvmchange.8
 
 ifeq ($(MAKECMDGOALS),all_man)
   MAN_ALL="yes"
@@ -113,8 +115,8 @@ MAN8DIR=$(mandir)/man8
 
 include $(top_builddir)/make.tmpl
 
-CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) \
-	$(MAN8SYSTEMD_GENERATORS) $(MAN8DM)
+CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8GEN) $(MAN8CLUSTER) \
+	$(MAN8SYSTEMD_GENERATORS) $(MAN8DM) *.gen man-generator
 DISTCLEAN_TARGETS+=$(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) \
 	$(LVMETADMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(CLVMDMAN) $(CMIRRORDMAN) \
 	$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMDBUSDMAN) $(LVMRAIDMAN)
@@ -125,11 +127,11 @@ all: man device-mapper
 
 device-mapper: $(MAN8DM)
 
-man: $(MAN5) $(MAN7) $(MAN8) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS)
+man: $(MAN5) $(MAN7) $(MAN8) $(MAN8GEN) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS)
 
 all_man: man
 
-$(MAN5) $(MAN7) $(MAN8) $(MAN8DM) $(MAN8CLUSTER):	Makefile
+$(MAN5) $(MAN7) $(MAN8) $(MAN8GEN) $(MAN8DM) $(MAN8CLUSTER):	Makefile
 
 Makefile: Makefile.in
 	@:
@@ -140,6 +142,18 @@ Makefile: Makefile.in
 	  *) echo "Creating $@" ; $(SED) -e "s+#VERSION#+$(LVM_VERSION)+;s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+;s+#DEFAULT_ARCHIVE_DIR#+$(DEFAULT_ARCHIVE_DIR)+;s+#DEFAULT_BACKUP_DIR#+$(DEFAULT_BACKUP_DIR)+;s+#DEFAULT_PROFILE_DIR#+$(DEFAULT_PROFILE_DIR)+;s+#DEFAULT_CACHE_DIR#+$(DEFAULT_CACHE_DIR)+;s+#DEFAULT_LOCK_DIR#+$(DEFAULT_LOCK_DIR)+;s+#CLVMD_PATH#+@CLVMD_PATH@+;s+#LVM_PATH#+@LVM_PATH@+;s+#DEFAULT_RUN_DIR#+@DEFAULT_RUN_DIR@+;s+#DEFAULT_PID_DIR#+@DEFAULT_PID_DIR@+;s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+;s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+;" $< > $@ ;; \
 	esac
 
+man-generator:
+	$(CC) -DMAN_PAGE_GENERATOR -I$(top_builddir)/tools $(CFLAGS) $(top_srcdir)/tools/command.c -o $@
+	- ./man-generator lvmconfig > test.gen
+	if [ ! -s test.gen ] ; then cp genfiles/*.gen $(top_builddir)/man; fi;
+
+$(MAN8GEN): man-generator
+	echo "Generating $@" ;
+	if [ ! -e $@.gen ]; then ./man-generator $(basename $@) $(top_srcdir)/man/$@.des > $@.gen; fi
+	if [ -f $(top_srcdir)/man/$@.end ]; then cat $(top_srcdir)/man/$@.end >> $@.gen; fi;
+	cat $(top_srcdir)/man/see_also.end >> $@.gen
+	$(SED) -e "s+#VERSION#+$(LVM_VERSION)+;s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+;s+#DEFAULT_ARCHIVE_DIR#+$(DEFAULT_ARCHIVE_DIR)+;s+#DEFAULT_BACKUP_DIR#+$(DEFAULT_BACKUP_DIR)+;s+#DEFAULT_PROFILE_DIR#+$(DEFAULT_PROFILE_DIR)+;s+#DEFAULT_CACHE_DIR#+$(DEFAULT_CACHE_DIR)+;s+#DEFAULT_LOCK_DIR#+$(DEFAULT_LOCK_DIR)+;s+#CLVMD_PATH#+@CLVMD_PATH@+;s+#LVM_PATH#+@LVM_PATH@+;s+#DEFAULT_RUN_DIR#+@DEFAULT_RUN_DIR@+;s+#DEFAULT_PID_DIR#+@DEFAULT_PID_DIR@+;s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+;s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+;" $@.gen > $@
+
 install_man5: $(MAN5)
 	$(INSTALL) -d $(MAN5DIR)
 	$(INSTALL_DATA) $(MAN5) $(MAN5DIR)/
@@ -148,9 +162,10 @@ install_man7: $(MAN7)
 	$(INSTALL) -d $(MAN7DIR)
 	$(INSTALL_DATA) $(MAN7) $(MAN7DIR)/
 
-install_man8: $(MAN8)
+install_man8: $(MAN8) $(MAN8GEN)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8) $(MAN8DIR)/
+	$(INSTALL_DATA) $(MAN8GEN) $(MAN8DIR)/
 
 install_lvm2: install_man5 install_man7 install_man8
 

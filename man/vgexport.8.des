@@ -1,0 +1,8 @@
+vgexport makes inactive VGs unknown to the system. In this state, all the
+PVs in the VG can be moved to a different system, from which
+\fBvgimport\fP can then be run.
+
+Most LVM tools ignore exported VGs.
+
+vgexport clears the VG system ID, and vgimport sets the VG system ID to
+match the host running vgimport (if the host has a system ID).

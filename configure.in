@@ -86,6 +86,8 @@ AC_PROG_RANLIB
 AC_PATH_TOOL(CFLOW_CMD, cflow)
 AC_PATH_TOOL(CSCOPE_CMD, cscope)
 AC_PATH_TOOL(CHMOD, chmod)
+AC_PATH_TOOL(WC, wc)
+AC_PATH_TOOL(SORT, sort)
 
 ################################################################################
 dnl -- Check for header files.

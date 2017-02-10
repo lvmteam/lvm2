@@ -1,0 +1,2 @@
+pvremove wipes the label on a device so that LVM will no longer recognise
+it as a PV.
