@@ -7,7 +7,10 @@ lvmsadc \(em LVM system activity data collector
 .B lvmsadc
 
 .SH "DESCRIPTION"
-lvmsadc is not currently supported under LVM2.
+lvmsadc is not currently supported under LVM2: the device-mapper statistics
+facility provides similar performance metrics using the \fBdmstats(8)\fP
+command.
 
 .SH "SEE ALSO"
+.BR dmstats (8)
 .BR lvm (8)

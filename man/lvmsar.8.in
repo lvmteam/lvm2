@@ -7,7 +7,10 @@ lvmsar \(em LVM system activity reporter
 .B lvmsar
 
 .SH "DESCRIPTION"
-lvmsar is not currently supported under LVM2.
+lvmsar is not currently supported under LVM2: the device-mapper statistics
+facility provides similar performance metrics using the \fBdmstats(8)\fP
+command.
 
 .SH "SEE ALSO"
+.BR dmstats (8)
 .BR lvm (8)
