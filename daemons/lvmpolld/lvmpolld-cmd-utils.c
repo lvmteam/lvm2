@@ -19,10 +19,12 @@
 
 #define MIN_ARGV_SIZE  8
 
-static const char *const const polling_ops[] = { [PVMOVE] = LVMPD_REQ_PVMOVE,
-						 [CONVERT] = LVMPD_REQ_CONVERT,
-						 [MERGE] = LVMPD_REQ_MERGE,
-						 [MERGE_THIN] = LVMPD_REQ_MERGE_THIN };
+static const char *const polling_ops[] = {
+	[PVMOVE] = LVMPD_REQ_PVMOVE,
+	[CONVERT] = LVMPD_REQ_CONVERT,
+	[MERGE] = LVMPD_REQ_MERGE,
+	[MERGE_THIN] = LVMPD_REQ_MERGE_THIN
+};
 
 const char *polling_op(enum poll_type type)
 {
