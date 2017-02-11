@@ -4842,7 +4842,7 @@ uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 		if (!bounds) {
 			log_error("Could not allocate memory for group "
 				  "histogram bounds.");
-			return NULL;
+			goto out;
 		}
 		_stats_copy_histogram_bounds(bounds,
 					     dms->regions[group_id].bounds);
@@ -4869,6 +4869,8 @@ uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 bad:
 	_stats_cleanup_region_ids(dms, regions, count);
 	dm_free(bounds);
+	dm_free(regions);
+out:
 	dm_free((char *) alias);
 	return NULL;
 }
