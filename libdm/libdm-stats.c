@@ -4725,7 +4725,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 
 	dm_pool_free(extent_mem, extents);
 	dm_pool_destroy(extent_mem);
-	dm_free(hist_arg);
+
 	return regions;
 
 out_remove:
