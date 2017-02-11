@@ -21,7 +21,6 @@
 #include "activate.h"
 #include "lv_alloc.h"
 #include "lvm-string.h"
-#include "lvm-signal.h"
 
 static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
 {

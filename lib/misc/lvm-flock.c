@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "config.h"
-#include "lvm-file.h"
 #include "lvm-flock.h"
 #include "lvm-signal.h"
 #include "locking.h"

@@ -18,7 +18,6 @@
 
 #include <sys/wait.h>
 #include <stdarg.h>
-#include <pthread.h>
 
 /* TODO - move this mountinfo code into library to be reusable */
 #ifdef __linux__
