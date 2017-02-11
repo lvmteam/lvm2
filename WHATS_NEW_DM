@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Add extra memory page when limiting pthread stack size in dmeventd.
   Avoids immediate resume when preloaded device is smaller.
   Do not suppress kernel key description in dmsetup table output.
   Support configurable command executed from dmeventd thin plugin.

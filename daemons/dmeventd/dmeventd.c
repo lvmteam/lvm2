@@ -468,7 +468,7 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 	/*
 	 * We use a smaller stack since it gets preallocated in its entirety
 	 */
-	pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE);
+	pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE + getpagesize());
 
 	/*
 	 * If no-one will be waiting, we need to detach.

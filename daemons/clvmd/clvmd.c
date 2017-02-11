@@ -517,7 +517,7 @@ int main(int argc, char *argv[])
 	/* Initialise the LVM thread variables */
 	dm_list_init(&lvm_cmd_head);
 	if (pthread_attr_init(&stack_attr) ||
-	    pthread_attr_setstacksize(&stack_attr, STACK_SIZE)) {
+	    pthread_attr_setstacksize(&stack_attr, STACK_SIZE + getpagesize())) {
 		log_sys_error("pthread_attr_init", "");
 		exit(1);
 	}

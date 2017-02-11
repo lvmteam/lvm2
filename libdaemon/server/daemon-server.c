@@ -42,7 +42,7 @@ static int _pthread_create(pthread_t *t, void *(*fun)(void *), void *arg, int st
 	/*
 	 * We use a smaller stack since it gets preallocated in its entirety
 	 */
-	pthread_attr_setstacksize(&attr, stacksize);
+	pthread_attr_setstacksize(&attr, stacksize + getpagesize());
 	return pthread_create(t, &attr, fun, arg);
 }
 #endif

@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Add extra memory page when limiting pthread stack size in clvmd.
   Support striped/raid0* <-> raid10_near conversions
   Support shrinking of RaidLvs
   Support region size changes on existing RaidLVs
