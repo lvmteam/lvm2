@@ -4557,7 +4557,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 		log_error("Could not finalize region extent table.");
 		goto out;
 	}
-	log_very_verbose("Kept %ld of %ld old extents",
+	log_very_verbose("Kept " FMTi64 " of " FMTi64 " old extents",
 			 nr_kept, nr_old);
 	log_very_verbose("Found " FMTu64 " new extents",
 			 *count - nr_kept);
