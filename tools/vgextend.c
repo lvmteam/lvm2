@@ -49,7 +49,7 @@ static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unuse
 	struct vgextend_params *vp = (struct vgextend_params *) handle->custom_handle;
 	struct pvcreate_params *pp = &vp->pp;
 	int fixed = 0;
-	int i;
+	unsigned i;
 
 	if (!archive(vg))
 		return_0;

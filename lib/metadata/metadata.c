@@ -6383,7 +6383,7 @@ int vg_strip_outdated_historical_lvs(struct volume_group *vg) {
 		 * Removal time in the future? Not likely,
 		 * but skip this item in any case.
 		*/
-		if ((current_time) < glvl->glv->historical->timestamp_removed)
+		if (current_time < (time_t) glvl->glv->historical->timestamp_removed)
 			continue;
 
 		if ((current_time - glvl->glv->historical->timestamp_removed) > threshold) {

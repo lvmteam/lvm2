@@ -707,7 +707,7 @@ int report_for_selection(struct cmd_context *cmd,
 
 static void _check_pv_list(struct cmd_context *cmd, struct report_args *args, struct single_report_args *single_args)
 {
-	unsigned i;
+	int i;
 	int rescan_done = 0;
 
 	if (!args->argv)

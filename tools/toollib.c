@@ -4499,7 +4499,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	int consistent = 0;
 	int must_use_all = (cmd->command->flags & MUST_USE_ALL_ARGS);
 	int found;
-	int i;
+	unsigned i;
 
 	set_pv_notify(cmd);
 

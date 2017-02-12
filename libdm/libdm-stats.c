@@ -3294,7 +3294,7 @@ static void _sum_histogram_bins(const struct dm_stats *dms,
 	struct dm_stats_region *region;
 	struct dm_histogram_bin *bins;
 	struct dm_histogram *dmh_cur;
-	uint64_t bin;
+	int bin;
 
 	region = &dms->regions[region_id];
 	dmh_cur = region->counters[area_id].histogram;
@@ -4003,7 +4003,7 @@ merge:
 static void _stats_copy_histogram_bounds(struct dm_histogram *to,
 					 struct dm_histogram *from)
 {
-	uint64_t i;
+	int i;
 
 	to->nr_bins = from->nr_bins;
 
@@ -4019,7 +4019,7 @@ static void _stats_copy_histogram_bounds(struct dm_histogram *to,
 static int _stats_check_histogram_bounds(struct dm_histogram *h1,
 					 struct dm_histogram *h2)
 {
-	uint64_t i;
+	int i;
 
 	if (!h1 || !h2)
 		return 0;

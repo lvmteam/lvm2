@@ -4209,7 +4209,7 @@ static void _recalculate_fields(struct dm_report *rh)
 {
 	struct row *row;
 	struct dm_report_field *field;
-	size_t len;
+	int len;
 
 	dm_list_iterate_items(row, &rh->rows) {
 		dm_list_iterate_items(field, &row->fields) {
