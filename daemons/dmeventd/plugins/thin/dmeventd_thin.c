@@ -58,8 +58,8 @@ struct dso_state {
 	int restore_sigset;
 	sigset_t old_sigset;
 	pid_t pid;
-	char **argv;
-	char cmd_str[1024];
+	char *argv[3];
+	char *cmd_str;
 };
 
 DM_EVENT_LOG_FN("thin")
@@ -85,7 +85,7 @@ static int _run_command(struct dso_state *state)
 	} else {
 		/* For an error event it's for a user to check status and decide */
 		env[1] = NULL;
-		log_debug("Error event processing");
+		log_debug("Error event processing.");
 	}
 
 	log_verbose("Executing command: %s", state->cmd_str);
@@ -115,7 +115,7 @@ static int _use_policy(struct dm_task *dmt, struct dso_state *state)
 #if THIN_DEBUG
 	log_debug("dmeventd executes: %s.", state->cmd_str);
 #endif
-	if (state->argv)
+	if (state->argv[0])
 		return _run_command(state);
 
 	if (!dmeventd_lvm2_run_with_lock(state->cmd_str)) {
@@ -352,34 +352,43 @@ int register_device(const char *device,
 		    void **user)
 {
 	struct dso_state *state;
-	int maxcmd;
 	char *str;
+	char cmd_str[PATH_MAX + 128 + 2]; /* cmd ' ' vg/lv \0 */
 
 	if (!dmeventd_lvm2_init_with_pool("thin_pool_state", state))
 		goto_bad;
 
-	if (!dmeventd_lvm2_command(state->mem, state->cmd_str,
-				   sizeof(state->cmd_str),
+	if (!dmeventd_lvm2_command(state->mem, cmd_str, sizeof(cmd_str),
 				   "_dmeventd_thin_command", device)) {
 		dmeventd_lvm2_exit_with_pool(state);
 		goto_bad;
 	}
 
-	if (strncmp(state->cmd_str, "lvm ", 4)) {
-		maxcmd = 2; /* space for last NULL element */
-		for (str = state->cmd_str; *str; str++)
-			if (*str == ' ')
-				maxcmd++;
-		if (!(str = dm_pool_strdup(state->mem, state->cmd_str)) ||
-		    !(state->argv = dm_pool_zalloc(state->mem, maxcmd * sizeof(char *)))) {
-			log_error("Failed to allocate memory for command.");
+	if (strncmp(cmd_str, "lvm ", 4) == 0) {
+		if (!(state->cmd_str = dm_pool_strdup(state->mem, cmd_str + 4))) {
+			log_error("Failed to copy lvm command.");
+			goto bad;
+		}
+	} else if (cmd_str[0] == '/') {
+		if (!(state->cmd_str = dm_pool_strdup(state->mem, cmd_str))) {
+			log_error("Failed to copy thin command.");
 			goto bad;
 		}
 
-		dm_split_words(str, maxcmd - 1, 0, state->argv);
+		/* Find last space before 'vg/lv' */
+		if (!(str = strrchr(state->cmd_str, ' ')))
+			goto inval;
+
+		if (!(state->argv[0] = dm_pool_strndup(state->mem, state->cmd_str,
+						       str - state->cmd_str))) {
+			log_error("Failed to copy command.");
+			goto bad;
+		}
+
+		state->argv[1] = str + 1;  /* 1 argument - vg/lv */
 		_init_thread_signals(state);
-	} else
-		memmove(state->cmd_str, state->cmd_str + 4, strlen(state->cmd_str + 4) + 1);
+	} else /* Unuspported command format */
+		goto inval;
 
 	state->pid = -1;
 	*user = state;
@@ -387,6 +396,8 @@ int register_device(const char *device,
 	log_info("Monitoring thin pool %s.", device);
 
 	return 1;
+inval:
+	log_error("Invalid command for monitoring: %s.", cmd_str);
 bad:
 	log_error("Failed to monitor thin pool %s.", device);
 
