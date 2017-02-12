@@ -14,12 +14,13 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+which mkfs.ext4 || skip
 aux have_raid 1 9 0 || skip
 
 correct_raid4_layout=0
 aux have_raid 1 9 1 && correct_raid4_layout=1
 
-aux prepare_vg 8 80
+aux prepare_vg 8
 
 function _lvcreate
 {
@@ -33,8 +34,8 @@ function _lvcreate
 	lvcreate -y -aey --type $level -i $req_stripes -L $size -n $lv $vg
 	check lv_field $vg/$lv segtype "$level"
 	check lv_field $vg/$lv stripes $stripes
-	echo y | mkfs -t ext4 /dev/mapper/$vg-$lv
-	fsck -fn  /dev/mapper/$vg-$lv
+	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
+	fsck -fn "$DM_DEV_DIR/$vg/$lv"
 }
 
 function _lvconvert
@@ -52,17 +53,16 @@ function _lvconvert
 	[ "${level:0:7}" = "striped" ] && wait_and_check=0
 	[ "${level:0:5}" = "raid0" ] && wait_and_check=0
 
-
 	lvconvert -y --ty $req_level $R $vg/$lv
 	[ $? -ne 0 ] && return $?
 	check lv_field $vg/$lv segtype "$level"
 	check lv_field $vg/$lv stripes $stripes
 	if [ "$wait_and_check" -eq 1 ]
 	then
-		fsck -fn  /dev/mapper/$vg-$lv
+		fsck -fn "$DM_DEV_DIR/$vg/$lv"
 		aux wait_for_sync $vg $lv
 	fi
-	fsck -fn  /dev/mapper/$vg-$lv
+	fsck -fn "$DM_DEV_DIR/$vg/$lv"
 }
 
 function _invalid_raid5_conversions
@@ -90,28 +90,28 @@ function _invalid_raid5_conversions
 # aux delay_dev "$dev1" 1
 
 # Create 3-way mirror
-lvcreate --yes -aey --type mirror -R 64K -m 2 -L 64M -n $lv1 $vg
+lvcreate --yes -aey --type mirror -R 64K -m 2 -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 3
 check lv_field $vg/$lv1 regionsize "64.00k"
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert 3-way to 4-way mirror
 lvconvert -m 3 $vg/$lv1
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 4
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Takeover 4-way mirror to raid1
 lvconvert --yes --type raid1 -R 64k $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 regionsize "64.00k"
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 ## Convert 4-way raid1 to 5-way
 lvconvert -m 4 -R 128K $vg/$lv1
@@ -119,9 +119,9 @@ check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 5
 # FIXME: once lv_raid_chanage_image_count() supports region_size changes
 not check lv_field $vg/$lv1 regionsize "128.00k"
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # FIXME: enable once lvconvert rejects early
 ## Try converting 4-way raid1 to 9-way
@@ -136,7 +136,7 @@ dmsetup status $vg-$lv1
 dmsetup table $vg-$lv1
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 2
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert 2-way raid1 to mirror
 lvconvert --yes --type mirror -R 32K $vg/$lv1
@@ -144,7 +144,7 @@ check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 2
 check lv_field $vg/$lv1 regionsize "32.00k"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
 
 # Clean up
@@ -159,7 +159,7 @@ then
 #
 
 # Create 3-way striped raid4 (4 legs total)
-_lvcreate raid4 3 4 64M $vg $lv1
+_lvcreate raid4 3 4 8M $vg $lv1
 aux wait_for_sync $vg $lv1
 
 # Convert raid4 -> striped
@@ -272,7 +272,7 @@ _lvconvert striped striped 3 $vg $lv1
 lvremove -y $vg
 
 # Create + convert 4-way raid5 variations
-_lvcreate raid5 4 5 64M $vg $lv1
+_lvcreate raid5 4 5 8M $vg $lv1
 aux wait_for_sync $vg $lv1
 _invalid_raid5_conversions $vg $lv1
 not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
@@ -282,7 +282,7 @@ _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
 _lvconvert raid5_ls raid5_ls 5 $vg $lv1
 lvremove -y $vg
 
-_lvcreate raid5_ls 4 5 64M $vg $lv1
+_lvcreate raid5_ls 4 5 8M $vg $lv1
 aux wait_for_sync $vg $lv1
 _invalid_raid5_conversions $vg $lv1
 not _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
@@ -292,7 +292,7 @@ _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
 _lvconvert raid5_ls raid5_ls 5 $vg $lv1
 lvremove -y $vg
 
-_lvcreate raid5_rs 4 5 64M $vg $lv1
+_lvcreate raid5_rs 4 5 8M $vg $lv1
 aux wait_for_sync $vg $lv1
 _invalid_raid5_conversions $vg $lv1
 not _lvconvert raid6_ra_6 raid6_ra_6 6 $vg $lv1
@@ -302,7 +302,7 @@ _lvconvert raid6_rs_6 raid6_rs_6 6 $vg $lv1
 _lvconvert raid5_rs raid5_rs 5 $vg $lv1
 lvremove -y $vg
 
-_lvcreate raid5_la 4 5 64M $vg $lv1
+_lvcreate raid5_la 4 5 8M $vg $lv1
 aux wait_for_sync $vg $lv1
 _invalid_raid5_conversions $vg $lv1
 not _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
@@ -312,7 +312,7 @@ _lvconvert raid6_la_6 raid6_la_6 6 $vg $lv1
 _lvconvert raid5_la raid5_la 5 $vg $lv1
 lvremove -y $vg
 
-_lvcreate raid5_ra 4 5 64M $vg $lv1
+_lvcreate raid5_ra 4 5 8M $vg $lv1
 aux wait_for_sync $vg $lv1
 _invalid_raid5_conversions $vg $lv1
 not _lvconvert raid6_ls_6 raid6_ls_6 6 $vg $lv1
@@ -324,7 +324,7 @@ lvremove -y $vg
 
 else
 
-not lvcreate -y -aey --type raid4 -i 3 -L 64M -n $lv4 $vg
+not lvcreate -y -aey --type raid4 -i 3 -L8M -n $lv4 $vg
 not lvconvert -y --ty raid4 $vg/$lv1
 not lvconvert -y --ty raid4 $vg/$lv2
 

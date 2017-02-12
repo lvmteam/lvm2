@@ -14,6 +14,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+which mkfs.ext4 || skip
 aux have_raid 1 9 0 || skip
 
 aux prepare_vg 6
@@ -29,7 +30,7 @@ function _test_regionsize
 	lvconvert --type $type --yes -R $regionsize $vg/$lv
 	[ $? -ne 0 ] && return 1
 	check lv_field $vg/$lv regionsize "$regionsize_str"
-	fsck -fn  /dev/mapper/$vg-$lv
+	fsck -fn "$DM_DEV_DIR/$vg/$lv"
 }
 
 function _test_regionsizes
@@ -47,13 +48,13 @@ function _test_regionsizes
 }
 
 # Create 3-way raid1
-lvcreate --yes -aey --type raid1 -m 2 -R64K -L 64M -n $lv1 $vg
+lvcreate --yes -aey --type raid1 -m 2 -R64K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 3
 check lv_field $vg/$lv1 regionsize "64.00k"
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 _test_regionsizes raid1
 
@@ -61,14 +62,14 @@ _test_regionsizes raid1
 lvremove --yes $vg
 
 # Create 5-way raid6
-lvcreate --yes -aey --type raid6 -i 3 --stripesize 128K -R 256K -L 64M -n $lv1 $vg
+lvcreate --yes -aey --type raid6 -i 3 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid6"
 check lv_field $vg/$lv1 stripes 5
 check lv_field $vg/$lv1 stripesize "128.00k"
 check lv_field $vg/$lv1 regionsize "256.00k"
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 _test_regionsizes raid6
 
@@ -76,14 +77,14 @@ _test_regionsizes raid6
 lvremove --yes $vg
 
 # Create 6-way raid01
-lvcreate --yes -aey --type raid10 -i 3 -m 1 --stripesize 128K -R 256K -L 64M -n $lv1 $vg
+lvcreate --yes -aey --type raid10 -i 3 -m 1 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid10"
 check lv_field $vg/$lv1 stripes 6
 check lv_field $vg/$lv1 stripesize "128.00k"
 check lv_field $vg/$lv1 regionsize "256.00k"
-echo y | mkfs -t ext4 /dev/mapper/$vg-$lv1
+mkfs.ext4 -t ext4 "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
-fsck -fn  /dev/mapper/$vg-$lv1
+fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 _test_regionsizes raid10
 
