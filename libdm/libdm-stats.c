@@ -402,7 +402,7 @@ static int _stats_bound(const struct dm_stats *dms)
 	if (dms->bind_major > 0 || dms->bind_name || dms->bind_uuid)
 		return 1;
 	/* %p format specifier expects a void pointer. */
-	log_debug("Stats handle at %p is not bound.", (void *) dms);
+	log_debug("Stats handle at %p is not bound.", dms);
 	return 0;
 }
 
@@ -3857,9 +3857,9 @@ struct _extent {
  */
 static int _extent_start_compare(const void *p1, const void *p2)
 {
-	struct _extent *r1, *r2;
-	r1 = (struct _extent *) p1;
-	r2 = (struct _extent *) p2;
+	const struct _extent *r1, *r2;
+	r1 = (const struct _extent *) p1;
+	r2 = (const struct _extent *) p2;
 
 	if (r1->start < r2->start)
 		return -1;

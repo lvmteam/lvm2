@@ -626,7 +626,7 @@ uint64_t dm_units_to_factor(const char *units, char *unit_type,
 	uint64_t multiplier;
 
 	if (endptr)
-		*endptr = (char *) units;
+		*endptr = units;
 
 	if (isdigit(*units)) {
 		custom_value = strtod(units, &ptr);
@@ -709,7 +709,7 @@ uint64_t dm_units_to_factor(const char *units, char *unit_type,
 	}
 
 	if (endptr)
-		*endptr = (char *) units + 1;
+		*endptr = units + 1;
 
 	if (_close_enough(custom_value, 0.))
 		return v * multiplier; /* Use integer arithmetic */
