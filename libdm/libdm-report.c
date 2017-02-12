@@ -3062,26 +3062,31 @@ static void _get_final_time(time_range_t range, struct tm *tm,
 				tm_up.tm_sec += 1;
 				break;
 			}
+			/* fall through */
 		case RANGE_MINUTE:
 			if (tm_up.tm_min < 59) {
 				tm_up.tm_min += 1;
 				break;
 			}
+			/* fall through */
 		case RANGE_HOUR:
 			if (tm_up.tm_hour < 23) {
 				tm_up.tm_hour += 1;
 				break;
 			}
+			/* fall through */
 		case RANGE_DAY:
 			if (tm_up.tm_mday < _get_days_in_month(tm_up.tm_mon, tm_up.tm_year)) {
 				tm_up.tm_mday += 1;
 				break;
 			}
+			/* fall through */
 		case RANGE_MONTH:
 			if (tm_up.tm_mon < 11) {
 				tm_up.tm_mon += 1;
 				break;
 			}
+			/* fall through */
 		case RANGE_YEAR:
 			tm_up.tm_year += 1;
 			break;
