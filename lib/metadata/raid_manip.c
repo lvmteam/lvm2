@@ -55,9 +55,9 @@ static int _check_num_areas_in_lv_segments(struct logical_volume *lv, unsigned n
  *
  * Pass in @lv_size, because funcion can be called with an empty @lv.
  */
-uint32_t raid_ensure_min_region_size(const struct logical_volume *lv, uint64_t lv_size, uint32_t region_size)
+uint32_t raid_ensure_min_region_size(const struct logical_volume *lv, uint64_t raid_size, uint32_t region_size)
 {
-	uint32_t min_region_size = lv_size / (1 << 21);
+	uint32_t min_region_size = raid_size / (1 << 21);
 	uint32_t region_size_sav = region_size;
 
 	while (region_size < min_region_size)

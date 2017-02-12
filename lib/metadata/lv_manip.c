@@ -4089,6 +4089,7 @@ int lv_extend(struct logical_volume *lv,
 	uint32_t sub_lv_count;
 	uint32_t old_extents;
 	uint32_t new_extents;	/* Total logical size after extension. */
+	uint64_t raid_size;
 
 	log_very_verbose("Adding segment of type %s to LV %s.", segtype->name, lv->name);
 
@@ -4111,7 +4112,7 @@ int lv_extend(struct logical_volume *lv,
 	/* FIXME log_count should be 1 for mirrors */
 
 	if (segtype_is_raid(segtype) && !segtype_is_any_raid0(segtype)) {
-		uint64_t lv_size = ((uint64_t) lv->le_count + extents) * lv->vg->extent_size;
+		raid_size = ((uint64_t) lv->le_count + extents) * lv->vg->extent_size;
 
 		/*
 		 * The MD bitmap is limited to being able to track 2^21 regions.
@@ -4119,7 +4120,7 @@ int lv_extend(struct logical_volume *lv,
 		 * unless raid0/raid0_meta, which doesn't have a bitmap.
 		 */
 
-		region_size = raid_ensure_min_region_size(lv, lv_size, region_size);
+		region_size = raid_ensure_min_region_size(lv, raid_size, region_size);
 
 		if (first_seg(lv))
 			first_seg(lv)->region_size = region_size;
