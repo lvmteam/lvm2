@@ -1948,16 +1948,13 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 
 		/* Check [un]monitor results */
 		/* Try a couple times if pending, but not forever... */
-		for (i = 0; i < 40; i++) {
+		for (i = 0;; i++) {
 			pending = 0;
 			monitored = seg->segtype->ops->target_monitored(seg, &pending);
-			if (pending ||
-			    (!monitored && monitor) ||
-			    (monitored && !monitor))
-				log_very_verbose("%s %smonitoring still pending: waiting...",
-						 display_lvname(lv), monitor ? "" : "un");
-			else
+			if (!pending || i >= 40)
 				break;
+			log_very_verbose("%s %smonitoring still pending: waiting...",
+					 display_lvname(lv), monitor ? "" : "un");
 			usleep(10000 * i);
 		}
 
