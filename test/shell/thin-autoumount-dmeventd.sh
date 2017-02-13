@@ -42,8 +42,6 @@ export MKE2FS_CONFIG="$TESTDIR/lib/mke2fs.conf"
 
 aux have_thin 1 0 0 || skip
 
-aux lvmconf "dmeventd/thin_command = \"$PWD/testcmd.sh\""
-
 # Simple implementation of umount when lvextend fails
 cat <<- EOF >testcmd.sh
 #!/bin/sh
@@ -54,26 +52,26 @@ echo "Metadata: \$DMEVENTD_THIN_POOL_METADATA"
 $TESTDIR/lib/lvextend --use-policies \$1 || {
 	umount "$mntdir"  || true
 	umount "$mntusedir" || true
-	return 1
+	return 0
 }
 test \$($TESTDIR/lib/lvs -o selected -S "data_percent>95||metadata_percent>95" --noheadings \$1) -eq 0 || {
 	umount "$mntdir"  || true
 	umount "$mntusedir" || true
-	return 1
+	return 0
 }
 EOF
 chmod +x testcmd.sh
 # Show prepared script
 cat testcmd.sh
 
-aux prepare_dmeventd
-
 # Use autoextend percent 0 - so extension fails and triggers umount...
 aux lvmconf "activation/thin_pool_autoextend_percent = 0" \
-            "activation/thin_pool_autoextend_threshold = 70"
+	    "activation/thin_pool_autoextend_threshold = 70" \
+	    "dmeventd/thin_command = \"/$PWD/testcmd.sh\""
+
+aux prepare_dmeventd
 
 aux prepare_vg 2
-
 
 lvcreate -L8M -V8M -n $lv1 -T $vg/pool
 lvcreate -V8M -n $lv2 -T $vg/pool
@@ -85,8 +83,8 @@ lvchange --monitor y $vg/pool
 
 mkdir "$mntdir" "$mntusedir"
 trap 'cleanup_mounted_and_teardown' EXIT
-mount "$DM_DEV_DIR/mapper/$vg-$lv1" "$mntdir"
-mount "$DM_DEV_DIR/mapper/$vg-$lv2" "$mntusedir"
+mount "$DM_DEV_DIR/$vg/$lv1" "$mntdir"
+mount "$DM_DEV_DIR/$vg/$lv2" "$mntusedir"
 
 # Check both LVs are opened (~mounted)
 is_lv_opened_ "$vg/$lv1"
