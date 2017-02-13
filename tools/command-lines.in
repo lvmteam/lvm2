@@ -508,6 +508,20 @@ OO: --chunksize SizeKB, OO_LVCONVERT
 ID: lvconvert_swap_pool_metadata
 DESC: Swap metadata LV in a thin pool or cache pool (for repair only).
 
+lvconvert --poolmetadata LV --thinpool LV_thinpool
+OO: --chunksize SizeKB, OO_LVCONVERT
+ID: lvconvert_swap_thinpool_metadata
+DESC: Swap metadata LV in a thin pool (for repair only).
+DESC: (variant, use --swapmetadata).
+FLAGS: SECONDARY_SYNTAX
+
+lvconvert --poolmetadata LV --cachepool LV_cachepool
+OO: --chunksize SizeKB, OO_LVCONVERT
+ID: lvconvert_swap_cachepool_metadata
+DESC: Swap metadata LV in a cache pool (for repair only).
+DESC: (variant, use --swapmetadata).
+FLAGS: SECONDARY_SYNTAX
+
 ---
 
 # lvconvert --merge is an extremely ambiguous command.

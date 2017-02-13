@@ -4040,7 +4040,6 @@ int lvconvert_swap_pool_metadata_cmd(struct cmd_context *cmd, int argc, char **a
 			       NULL, NULL, &_lvconvert_swap_pool_metadata_single);
 }
 
-#if 0
 int lvconvert_swap_pool_metadata_noarg_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct command *new_command;
@@ -4072,7 +4071,6 @@ int lvconvert_swap_pool_metadata_noarg_cmd(struct cmd_context *cmd, int argc, ch
 
 	return lvconvert_swap_pool_metadata_cmd(cmd, argc, argv);
 }
-#endif
 
 static int _lvconvert_merge_thin_single(struct cmd_context *cmd,
 					 struct logical_volume *lv,

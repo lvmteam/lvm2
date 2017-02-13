@@ -141,6 +141,8 @@ struct command_function command_functions[CMD_COUNT] = {
 	{ lvconvert_to_thin_with_external_CMD,		lvconvert_to_thin_with_external_cmd },
 	{ lvconvert_to_cache_vol_CMD,			lvconvert_to_cache_vol_cmd },
 	{ lvconvert_swap_pool_metadata_CMD,		lvconvert_swap_pool_metadata_cmd },
+	{ lvconvert_swap_thinpool_metadata_CMD,		lvconvert_swap_pool_metadata_noarg_cmd },
+	{ lvconvert_swap_cachepool_metadata_CMD,	lvconvert_swap_pool_metadata_noarg_cmd },
 	{ lvconvert_merge_thin_CMD,			lvconvert_merge_thin_cmd },
 	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_cachepool_cmd },
 	{ lvconvert_split_and_remove_cachepool_CMD,	lvconvert_split_cachepool_cmd },
