@@ -348,9 +348,11 @@ static int val_str_to_num(char *str)
 
 /* convert "--option" to foo_ARG enum */
 
+#define MAX_LONG_OPT_NAME_LEN 32
+
 static int opt_str_to_num(char *str)
 {
-	char long_name[32];
+	char long_name[MAX_LONG_OPT_NAME_LEN];
 	char *p;
 	int i;
 
@@ -361,9 +363,10 @@ static int opt_str_to_num(char *str)
 	 * short option.
 	 */
 	if (strstr(str, "_long")) {
-		strcpy(long_name, str);
-		p = strstr(long_name, "_long");
-		*p = '\0';
+		memset(long_name, 0, sizeof(long_name));
+		strncpy(long_name, str, MAX_LONG_OPT_NAME_LEN-1);
+		if ((p = strstr(long_name, "_long")))
+			*p = '\0';
 
 		for (i = 0; i < ARG_COUNT; i++) {
 			if (!opt_names[i].long_opt)
@@ -451,16 +454,19 @@ static int lv_to_enum(char *name)
  * lvt_bits |= lvt_enum_to_bit(lvt_enum)
  */
 
+#define LVTYPE_LEN 64
+
 static uint64_t lv_to_bits(char *name)
 {
-	char buf[64];
+	char buf[LVTYPE_LEN];
 	char *argv[MAX_LINE_ARGC];
 	uint64_t lvt_bits = 0;
 	int lvt_enum;
 	int argc;
 	int i;
 
-	strcpy(buf, name);
+	memset(buf, 0, sizeof(buf));
+	strncpy(buf, name, LVTYPE_LEN-1);
 
 	split_line(buf, &argc, argv, '_');
 
@@ -737,6 +743,10 @@ static void append_oo_definition_line(const char *new_line)
 	/* +2 = 1 space between old and new + 1 terminating \0 */
 	len = strlen(old_line) + strlen(new_line) + 2;
 	line = malloc(len);
+	if (!line) {
+		log_error("Parsing command defs: no memory");
+		exit(EXIT_FAILURE);
+	}
 	memset(line, 0, len);
 
 	strcat(line, old_line);
@@ -749,14 +759,17 @@ static void append_oo_definition_line(const char *new_line)
 
 /* Find a saved OO_FOO definition. */
 
+#define OO_NAME_LEN 64
+
 static char *get_oo_line(const char *str)
 {
 	char *name;
 	char *end;
-	char str2[64];
+	char str2[OO_NAME_LEN];
 	int i;
 
-	strcpy(str2, str);
+	memset(str2, 0, sizeof(str2));
+	strncpy(str2, str, OO_NAME_LEN-1);
 	if ((end = strstr(str2, ":")))
 		*end = '\0';
 	if ((end = strstr(str2, ",")))
@@ -917,7 +930,7 @@ static void update_prev_pos_arg(struct command *cmd, char *str, int required)
 
 static void add_optional_opt_line(struct command *cmd, int argc, char *argv[])
 {
-	int takes_arg;
+	int takes_arg = 0;
 	int i;
 
 	for (i = 0; i < argc; i++) {
@@ -941,7 +954,7 @@ static void add_optional_opt_line(struct command *cmd, int argc, char *argv[])
 
 static void add_ignore_opt_line(struct command *cmd, int argc, char *argv[])
 {
-	int takes_arg;
+	int takes_arg = 0;
 	int i;
 
 	for (i = 0; i < argc; i++) {
@@ -977,7 +990,7 @@ static void add_optional_pos_line(struct command *cmd, int argc, char *argv[])
 
 static void add_required_opt_line(struct command *cmd, int argc, char *argv[])
 {
-	int takes_arg;
+	int takes_arg = 0;
 	int i;
 
 	for (i = 0; i < argc; i++) {
@@ -1345,10 +1358,12 @@ int define_commands(void)
 			if (cmd->desc) {
 				int newlen = strlen(cmd->desc) + strlen(desc) + 2;
 				char *newdesc = malloc(newlen);
-				memset(newdesc, 0, newlen);
-				snprintf(newdesc, newlen, "%s %s", cmd->desc, desc);
-				cmd->desc = newdesc;
-				free(desc);
+				if (newdesc) {
+					memset(newdesc, 0, newlen);
+					snprintf(newdesc, newlen, "%s %s", cmd->desc, desc);
+					cmd->desc = newdesc;
+					free(desc);
+				}
 			} else
 				cmd->desc = desc;
 			continue;
@@ -1632,7 +1647,7 @@ void print_usage(struct command *cmd)
 
 void print_usage_common(struct command_name *cname, struct command *cmd)
 {
-	int oo, opt_enum, first;
+	int oo, opt_enum, first = 1;
 
 	printf("  Common options:");
 
@@ -1643,8 +1658,6 @@ void print_usage_common(struct command_name *cname, struct command *cmd)
 
 	if (cname->variants < 2)
 		goto all;
-
-	first = 1;
 
 	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
 		if (!cname->common_options[opt_enum])
@@ -2527,9 +2540,11 @@ static char *upper_command_name(char *str)
 	return str_upper;
 }
 
+#define MAX_MAN_DESC (1024 * 1024)
+
 static void include_description_file(char *name, char *des_file)
 {
-	char buf[1024 * 1024];
+	char buf[MAX_MAN_DESC];
 	int fd;
 
 	memset(buf, 0, sizeof(buf));
@@ -2539,7 +2554,9 @@ static void include_description_file(char *name, char *des_file)
 	if (fd < 0)
 		return;
 
-	read(fd, buf, sizeof(buf) - 1);
+	read(fd, buf, sizeof(buf));
+
+	buf[MAX_MAN_DESC-1] = '\0';
 
 	printf(".SH DESCRIPTION\n");
 	printf("%s\n", buf);
@@ -2586,7 +2603,7 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 		if (!(cmd->cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !include_primary)
 			continue;
 
-		if (name && strcmp(name, cmd->name))
+		if (strcmp(name, cmd->name))
 			continue;
 
 		if (!prev_cmd || strcmp(prev_cmd->name, cmd->name)) {

@@ -1155,7 +1155,8 @@ void lvm_register_commands(void)
 		/* old style */
 		if (!commands[i].functions) {
 			struct command_name *cname = find_command_name(commands[i].name);
-			commands[i].fn = cname->fn;
+			if (cname)
+				commands[i].fn = cname->fn;
 		}
 	}
 
@@ -1365,7 +1366,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	char buf[64];
 	int match_required, match_ro, match_rp, match_type, match_unused, mismatch_required;
 	int best_i = 0, best_required = 0, best_type = 0, best_unused = 0;
-	int close_i = 0, close_ro = 0, close_type;
+	int close_i = 0, close_ro = 0, close_type = 0;
 	int temp_unused_options[MAX_UNUSED_COUNT];
 	int temp_unused_count;
 	int best_unused_options[MAX_UNUSED_COUNT] = { 0 };
