@@ -1542,6 +1542,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	if (!best_required) {
 		/* cmd did not have all the required opt/pos args of any command */
 		log_error("Failed to find a matching command definition.");
+		log_error("Run '%s --help' for more information.", name);
 		if (close_ro) {
 			log_warn("Closest command usage is:");
 			print_usage(&_cmdline.commands[close_i]);
