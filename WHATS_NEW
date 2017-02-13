@@ -1,5 +1,14 @@
 Version 2.02.169 - 
 =====================================
+  Add lvconvert --swapmetadata for previous non-specific command.
+  Add lvconvert --startpoll for previous non-specific command.
+  Add lvconvert --mergethin for specific --merge case.
+  Add lvconvert --mergemirrors for specific --merge case.
+  Add lvconvert --mergesnapshot for specific --merge case.
+  Split up lvconvert code based on command definitions.
+  Split up lvchange code based on command definitions.
+  Generate help output and man pages from command definitions.
+  Add command definitions and match every command to one.
   Add extra memory page when limiting pthread stack size in clvmd.
   Support striped/raid0* <-> raid10_near conversions
   Support shrinking of RaidLvs
