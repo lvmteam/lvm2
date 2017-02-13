@@ -254,10 +254,8 @@ int register_device(const char *device,
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvextend,
 				   sizeof(state->cmd_lvextend),
-				   "lvextend --use-policies", device)) {
-		dmeventd_lvm2_exit_with_pool(state);
+				   "lvextend --use-policies", device))
 		goto_bad;
-	}
 
 	state->percent_check = CHECK_MINIMUM;
 	*user = state;
@@ -267,6 +265,9 @@ int register_device(const char *device,
 	return 1;
 bad:
 	log_error("Failed to monitor snapshot %s.", device);
+
+	if (state)
+		dmeventd_lvm2_exit_with_pool(state);
 
 	return 0;
 }

@@ -359,10 +359,8 @@ int register_device(const char *device,
 		goto_bad;
 
 	if (!dmeventd_lvm2_command(state->mem, cmd_str, sizeof(cmd_str),
-				   "_dmeventd_thin_command", device)) {
-		dmeventd_lvm2_exit_with_pool(state);
+				   "_dmeventd_thin_command", device))
 		goto_bad;
-	}
 
 	if (strncmp(cmd_str, "lvm ", 4) == 0) {
 		if (!(state->cmd_str = dm_pool_strdup(state->mem, cmd_str + 4))) {
@@ -400,6 +398,9 @@ inval:
 	log_error("Invalid command for monitoring: %s.", cmd_str);
 bad:
 	log_error("Failed to monitor thin pool %s.", device);
+
+	if (state)
+		dmeventd_lvm2_exit_with_pool(state);
 
 	return 0;
 }

@@ -184,16 +184,12 @@ int register_device(const char *device,
 		goto_bad;
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvscan, sizeof(state->cmd_lvscan),
-				   "lvscan --cache", device)) {
-		dmeventd_lvm2_exit_with_pool(state);
+				   "lvscan --cache", device))
 		goto_bad;
-	}
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
-				   "lvconvert --repair --use-policies", device)) {
-		dmeventd_lvm2_exit_with_pool(state);
+				   "lvconvert --repair --use-policies", device))
 		goto_bad;
-	}
 
 	*user = state;
 
@@ -202,6 +198,9 @@ int register_device(const char *device,
 	return 1;
 bad:
 	log_error("Failed to monitor mirror %s.", device);
+
+	if (state)
+		dmeventd_lvm2_exit_with_pool(state);
 
 	return 0;
 }
