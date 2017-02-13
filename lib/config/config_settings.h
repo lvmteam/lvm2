@@ -1863,7 +1863,9 @@ cfg(dmeventd_thin_command_CFG, "thin_command", dmeventd_CFG_SECTION, CFG_DEFAULT
 	"The plugin runs command with each 5% increment when thin-pool data volume\n"
 	"or metadata volume gets above 50%.\n"
 	"Command which starts with 'lvm ' prefix is internal lvm command.\n"
-	"You can write your own handler to customise behaviour in more details.\n")
+	"You can write your own handler to customise behaviour in more details.\n"
+	"User handler is specified with the full path starting with '/'.\n")
+	/* TODO: systemd service handler */
 
 cfg(dmeventd_executable_CFG, "executable", dmeventd_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_DMEVENTD_PATH, vsn(2, 2, 73), "@DMEVENTD_PATH@", 0, NULL,
 	"The full path to the dmeventd binary.\n")
