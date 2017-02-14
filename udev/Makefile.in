@@ -23,7 +23,7 @@ ifeq ("@BUILD_LVMETAD@", "yes")
 LVM_RULES+=69-dm-lvm-metad.rules
 endif
 
-DM_DIR=$(shell grep "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | awk '{print $$3}')
+DM_DIR=$(shell $(GREP) "\#define DM_DIR" $(top_srcdir)/libdm/misc/dm-ioctl.h | $(AWK) '{print $$3}')
 
 ifeq ("@UDEV_RULE_EXEC_DETECTION@", "yes")
 SBIN=\$$env{DM_SBIN_PATH}

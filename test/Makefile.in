@@ -39,7 +39,7 @@ S ?= @ # never match anything by default
 VERBOSE ?= 0
 ALL := $(shell find -L $(srcdir) \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) | sort)
 comma = ,
-RUN := $(shell find -L $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | sort)
+RUN := $(shell find -L $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | ($SORT))
 RUN_BASE = $(subst $(srcdir)/,,$(RUN))
 
 ifeq ("@BUILD_LVMETAD@", "yes")
@@ -267,7 +267,7 @@ lib/%: lib/%.o .lib-dir-stamp
 
 lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@
-	chmod +x $@
+	$(CHMOD) +x $@
 
 lib/flavour-%: $(srcdir)/lib/flavour-%.sh .lib-dir-stamp
 	cp $< $@

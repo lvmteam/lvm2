@@ -40,6 +40,11 @@ SED = @SED@
 CFLOW_CMD = @CFLOW_CMD@
 AWK = @AWK@
 CHMOD = @CHMOD@
+EGREP = @EGREP@
+GREP = @GREP@
+SORT = @SORT@
+WC = @WC@
+
 PYTHON2 = @PYTHON2@
 PYTHON3 = @PYTHON3@
 PYCOMPILE = $(top_srcdir)/autoconf/py-compile
@@ -512,9 +517,9 @@ ifeq (,$(firstword $(EXPORTED_SYMBOLS)))
 		 ) > $@
 else
 	set -e;\
-	R=$$(sort $^ | uniq -u);\
+	R=$$($(SORT) $^ | uniq -u);\
 	test -z "$$R" || { echo "Mismatch between symbols in shared library and lists in .exported_symbols.* files: $$R"; false; } ;\
-	( for i in $$(echo $(EXPORTED_SYMBOLS) | tr ' ' '\n' | sort -rnt_ -k5 ); do\
+	( for i in $$(echo $(EXPORTED_SYMBOLS) | tr ' ' '\n' | $(SORT) -rnt_ -k5 ); do\
 		echo "$${i##*.} {"; echo "	global:";\
 		$(SED) "s/^/		/;s/$$/;/" $$i;\
 		echo "};";\
