@@ -209,7 +209,7 @@ struct command {
 	int pos_count; /* temp counter used by create-command */
 };
 
-int define_commands(void);
+int define_commands(char *run_name);
 int command_id_to_enum(const char *str);
 void print_usage(struct command *cmd);
 void print_usage_common(struct command_name *cname, struct command *cmd);

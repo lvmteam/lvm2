@@ -1128,7 +1128,7 @@ static struct command_function *_find_command_id_function(int command_enum)
 	return NULL;
 }
 
-void lvm_register_commands(void)
+void lvm_register_commands(char *name)
 {
 	int i;
 
@@ -1138,7 +1138,7 @@ void lvm_register_commands(void)
 	 * populate commands[] array with command definitions
 	 * by parsing command-lines.in/command-lines-input.h
 	 */
-	if (!define_commands()) {
+	if (!define_commands(name)) {
 		log_error("Failed to parse command definitions.");
 		return;
 	}
@@ -3158,6 +3158,7 @@ int lvm2_main(int argc, char **argv)
 	int ret, alias = 0;
 	struct custom_fds custom_fds;
 	struct cmd_context *cmd;
+	char *name;
 
 	if (!argv)
 		return -1;
@@ -3199,7 +3200,14 @@ int lvm2_main(int argc, char **argv)
 
 	cmd->argv = argv;
 
-	lvm_register_commands();
+	if (!alias && argc == 1)
+		name = NULL;
+	else if (alias)
+		name = argv[0];
+	else
+		name = argv[1];
+
+	lvm_register_commands(name);
 
 	if (_lvm1_fallback(cmd)) {
 		/* Attempt to run equivalent LVM1 tool instead */

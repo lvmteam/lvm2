@@ -1292,7 +1292,7 @@ static int copy_line(char *line, int max_line, int *position)
 	return 1;
 }
 
-int define_commands(void)
+int define_commands(char *run_name)
 {
 	struct command *cmd;
 	char line[MAX_LINE];
@@ -1306,6 +1306,10 @@ int define_commands(void)
 	int prev_was_oo = 0;
 	int prev_was_op = 0;
 	int copy_pos = 0;
+	int skip = 0;
+
+	if (run_name && !strcmp(run_name, "help"))
+		run_name = NULL;
 
 	create_opt_names_alpha();
 
@@ -1340,6 +1344,16 @@ int define_commands(void)
 			cmd->command_index = cmd_count;
 			cmd_count++;
 			cmd->name = strdup(name);
+
+			if (run_name && strcmp(run_name, name)) {
+				skip = 1;
+				prev_was_oo_def = 0;
+				prev_was_oo = 0;
+				prev_was_op = 0;
+				continue;
+			}
+			skip = 0;
+
 			cmd->pos_count = 1;
 			add_required_line(cmd, line_argc, line_argv);
 
@@ -1353,7 +1367,7 @@ int define_commands(void)
 		 * context of the existing command[].
 		 */
 
-		if (is_desc_line(line_argv[0])) {
+		if (is_desc_line(line_argv[0]) && !skip) {
 			char *desc = strdup(line_orig);
 			if (cmd->desc) {
 				int newlen = strlen(cmd->desc) + strlen(desc) + 2;
@@ -1369,12 +1383,12 @@ int define_commands(void)
 			continue;
 		}
 
-		if (is_flags_line(line_argv[0])) {
+		if (is_flags_line(line_argv[0]) && !skip) {
 			add_flags(cmd, line_orig);
 			continue;
 		}
 
-		if (is_rule_line(line_argv[0])) {
+		if (is_rule_line(line_argv[0]) && !skip) {
 			add_rule(cmd, line_orig);
 			continue;
 		}
@@ -1394,7 +1408,7 @@ int define_commands(void)
 		}
 
 		/* OO: ... */
-		if (is_oo_line(line_argv[0])) {
+		if (is_oo_line(line_argv[0]) && !skip) {
 			add_optional_opt_line(cmd, line_argc, line_argv);
 			prev_was_oo_def = 0;
 			prev_was_oo = 1;
@@ -1403,7 +1417,7 @@ int define_commands(void)
 		}
 
 		/* OP: ... */
-		if (is_op_line(line_argv[0])) {
+		if (is_op_line(line_argv[0]) && !skip) {
 			add_optional_pos_line(cmd, line_argc, line_argv);
 			prev_was_oo_def = 0;
 			prev_was_oo = 0;
@@ -1412,7 +1426,7 @@ int define_commands(void)
 		}
 
 		/* IO: ... */
-		if (is_io_line(line_argv[0])) {
+		if (is_io_line(line_argv[0]) && !skip) {
 			add_ignore_opt_line(cmd, line_argc, line_argv);
 			prev_was_oo = 0;
 			prev_was_op = 0;
@@ -2703,7 +2717,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	define_commands();
+	define_commands(NULL);
 
 	print_man(argv[1], (argc > 2) ? argv[2] : NULL, 1, 1);
 
