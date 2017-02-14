@@ -69,7 +69,7 @@ struct command_name {
 
 static inline int val_bit_is_set(uint64_t val_bits, int val_enum)
 {
-	return (val_bits & (1 << val_enum)) ? 1 : 0;
+	return (val_bits & (1ULL << val_enum)) ? 1 : 0;
 }
 
 static inline uint64_t val_enum_to_bit(int val_enum)
@@ -79,7 +79,7 @@ static inline uint64_t val_enum_to_bit(int val_enum)
 
 static inline int lvp_bit_is_set(uint64_t lvp_bits, int lvp_enum)
 {
-	return (lvp_bits & (1 << lvp_enum)) ? 1 : 0;
+	return (lvp_bits & (1ULL << lvp_enum)) ? 1 : 0;
 }
 
 static inline uint64_t lvp_enum_to_bit(int lvp_enum)
@@ -89,7 +89,7 @@ static inline uint64_t lvp_enum_to_bit(int lvp_enum)
 
 static inline int lvt_bit_is_set(uint64_t lvt_bits, int lvt_enum)
 {
-	return (lvt_bits & (1 << lvt_enum)) ? 1 : 0;
+	return (lvt_bits & (1ULL << lvt_enum)) ? 1 : 0;
 }
 
 static inline uint64_t lvt_enum_to_bit(int lvt_enum)
