@@ -3868,37 +3868,6 @@ static int _extent_start_compare(const void *p1, const void *p2)
 	return 1;
 }
 
-/*
- * Resize the group bitmap corresponding to group_id so that it can
- * contain at least num_regions members.
- */
-static int _stats_resize_group(struct dm_stats_group *group, int num_regions)
-{
-	int last_bit = dm_bit_get_last(group->regions);
-	dm_bitset_t new, old;
-
-	if (last_bit >= num_regions) {
-		log_error("Cannot resize group bitmap to %d with bit %d set.",
-			  num_regions, last_bit);
-		return 0;
-	}
-
-	log_very_verbose("Resizing group bitmap from %d to %d (last_bit: %d).",
-			 group->regions[0], num_regions, last_bit);
-
-	new = dm_bitset_create(NULL, num_regions);
-	if (!new) {
-		log_error("Could not allocate memory for new group bitmap.");
-		return 0;
-	}
-
-	old = group->regions;
-	dm_bit_copy(new, old);
-	group->regions = new;
-	dm_bitset_destroy(old);
-	return 1;
-}
-
 static int _stats_create_group(struct dm_stats *dms, dm_bitset_t regions,
 			       const char *alias, uint64_t *group_id)
 {
@@ -4202,6 +4171,37 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
 }
 
 #ifdef HAVE_LINUX_FIEMAP_H
+/*
+ * Resize the group bitmap corresponding to group_id so that it can
+ * contain at least num_regions members.
+ */
+static int _stats_resize_group(struct dm_stats_group *group, int num_regions)
+{
+	int last_bit = dm_bit_get_last(group->regions);
+	dm_bitset_t new, old;
+
+	if (last_bit >= num_regions) {
+		log_error("Cannot resize group bitmap to %d with bit %d set.",
+			  num_regions, last_bit);
+		return 0;
+	}
+
+	log_very_verbose("Resizing group bitmap from %d to %d (last_bit: %d).",
+			 group->regions[0], num_regions, last_bit);
+
+	new = dm_bitset_create(NULL, num_regions);
+	if (!new) {
+		log_error("Could not allocate memory for new group bitmap.");
+		return 0;
+	}
+
+	old = group->regions;
+	dm_bit_copy(new, old);
+	group->regions = new;
+	dm_bitset_destroy(old);
+	return 1;
+}
+
 /*
  * Group a table of region_ids corresponding to the extents of a file.
  */
