@@ -2181,7 +2181,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 void print_man_usage_common(struct command *cmd)
 {
 	struct command_name *cname;
-	int i, sep, ro, rp, oo, op, opt_enum;
+	int i, sep, rp, oo, op, opt_enum;
 
 	if (!(cname = find_command_name(cmd->name)))
 		return;
@@ -2569,7 +2569,7 @@ static void include_description_file(char *name, char *des_file)
 	if (fd < 0)
 		return;
 
-	read(fd, buf, sizeof(buf));
+	(void)read(fd, buf, sizeof(buf));
 
 	buf[MAX_MAN_DESC-1] = '\0';
 
@@ -2584,8 +2584,7 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 	struct command_name *cname;
 	struct command *cmd, *prev_cmd = NULL;
 	char *lvmname = name;
-	const char *desc;
-	int i, j, ro, rp, oo, op;
+	int i;
 
 	if (!strncmp(name, "lvm-", 4))
 		name += 4;
