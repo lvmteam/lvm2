@@ -1640,7 +1640,7 @@ void print_usage(struct command *cmd)
 
 	printf(" ]");
  done:
-	printf("\n");
+	printf("\n\n");
 	return;
 }
 
@@ -1704,7 +1704,8 @@ void print_usage_common(struct command_name *cname, struct command *cmd)
 		}
 	}
 
-	printf(" ]\n");
+	printf(" ]");
+	printf("\n\n");
 }
 
 #ifdef MAN_PAGE_GENERATOR

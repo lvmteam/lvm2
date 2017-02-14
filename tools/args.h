@@ -244,6 +244,9 @@ arg(locktype_ARG, '\0', "locktype", locktype_VAL, 0, 0,
 arg(logonly_ARG, '\0', "logonly", 0, 0, 0,
     "Suppress command report and display only log report.\n")
 
+arg(longhelp_ARG, '\0', "longhelp", 0, 0, 0,
+    "Display long help text.\n")
+
 arg(maxrecoveryrate_ARG, '\0', "maxrecoveryrate", sizekb_VAL, 0, 0,
     "Sets the maximum recovery rate for a RAID LV.  The rate value\n"
     "is an amount of data per second for each device in the array.\n"
@@ -920,8 +923,8 @@ arg(force_ARG, 'f', "force", 0, ARG_COUNTABLE, 0,
 /* Not used. */
 arg(full_ARG, 'f', "full", 0, 0, 0, NULL)
 
-arg(help_ARG, 'h', "help", 0, ARG_COUNTABLE, 0,
-    "Display help text. Repeat this option for more information.\n")
+arg(help_ARG, 'h', "help", 0, 0, 0,
+    "Display help text.\n")
 
 arg(cache_ARG, 'H', "cache", 0, 0, 0,
     "Specifies the command is handling a cache LV or cache pool.\n"

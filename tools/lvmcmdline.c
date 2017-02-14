@@ -1384,7 +1384,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 			continue;
 
 		/* For help and version just return the first entry with matching name. */
-		if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG) || arg_is_set(cmd, version_ARG))
+		if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG) || arg_is_set(cmd, longhelp_ARG) || arg_is_set(cmd, version_ARG))
 			return &commands[i];
 
 		match_required = 0;    /* required parameters that match */
@@ -1661,7 +1661,40 @@ static void _short_usage(const char *name)
 	log_error("Run `%s --help' for more information.", name);
 }
 
-static int _usage(const char *name, int help_count)
+static void _usage_notes(void)
+{
+	/*
+	 * Excluding commonly understood syntax style like the meanings of:
+	 * [ ] for optional, ... for repeatable, | for one of the following,
+	 * -- for an option name, lower case strings and digits for literals.
+	 */
+	log_print("Usage notes:");
+	log_print(". Variable parameters are: Number, String, PV, VG, LV, Tag.");
+	log_print(". Select indicates that a required positional parameter can");
+	log_print("  be omitted if the --select option is used.");
+	log_print(". --size Number can be replaced with --extents NumberExtents.");
+	log_print(". When --name is omitted from lvcreate, a new LV name is");
+	log_print("  generated with the \"lvol\" prefix and a unique numeric suffix.");
+	log_print(". The required VG parameter in lvcreate may be omitted when");
+	log_print("  the VG name is included in another option, e.g. --name VG/LV.");
+	log_print(". For required options listed in parentheses, e.g. (--A, --B),");
+	log_print("  any one is required, after which the others are optional.");
+	log_print(". The _new suffix indicates the VG or LV must not yet exist.");
+	log_print(". LV followed by _<type> indicates that an LV of the given type");
+	log_print("  is required.  (raid represents any raid<N> type.)");
+	log_print(". Input units are always treated as base two values, regardless of");
+	log_print("  unit capitalization, e.g. 'k' and 'K' both refer to 1024.");
+	log_print(". The default input unit is specified by letter, followed by |unit");
+	log_print("  which represents other possible input units: bBsSkKmMgGtTpPeE.");
+	log_print(". Output units can be specified with the --units option, for which");
+	log_print("  lower/upper case letters refer to base 2/10 values.");
+	log_print("  formats that are recognized, e.g. for compatibility.");
+	log_print(". See man pages for short option equivalents of long option names,");
+	log_print("  and for more detailed descriptions of variable parameters.");
+	log_print(" ");
+}
+
+static int _usage(const char *name, int longhelp)
 {
 	struct command_name *cname = find_command_name(name);
 	struct command *cmd;
@@ -1678,50 +1711,31 @@ static int _usage(const char *name, int help_count)
 		if (strcmp(_cmdline.commands[i].name, name))
 			continue;
 
-		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && (help_count < 3))
+		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !longhelp)
 			continue;
 
 		print_usage(&_cmdline.commands[i]);
 		cmd = &_cmdline.commands[i];
-		printf("\n");
 	}
 
 	/* Common options are printed once for all variants of a command name. */
 	print_usage_common(cname, cmd);
 
-	if (help_count > 1) {
-		/*
-		 * Excluding commonly understood syntax style like the meanings of:
-		 * [ ] for optional, ... for repeatable, | for one of the following,
-		 * -- for an option name, lower case strings and digits for literals.
-		 */
-		log_print("Usage notes:");
-		log_print(". Variable parameters are: Number, String, PV, VG, LV, Tag.");
-		log_print(". Select indicates that a required positional parameter can");
-		log_print("  be omitted if the --select option is used.");
-		log_print(". --size Number can be replaced with --extents NumberExtents.");
-		log_print(". When --name is omitted from lvcreate, a new LV name is");
-		log_print("  generated with the \"lvol\" prefix and a unique numeric suffix.");
-		log_print(". The required VG parameter in lvcreate may be omitted when");
-		log_print("  the VG name is included in another option, e.g. --name VG/LV.");
-		log_print(". For required options listed in parentheses, e.g. (--A, --B),");
-		log_print("  any one is required, after which the others are optional.");
-		log_print(". The _new suffix indicates the VG or LV must not yet exist.");
-		log_print(". LV followed by _<type> indicates that an LV of the given type");
-		log_print("  is required.  (raid represents any raid<N> type.)");
-		log_print(". Input units are always treated as base two values, regardless of");
-		log_print("  unit capitalization, e.g. 'k' and 'K' both refer to 1024.");
-		log_print(". The default input unit is specified by letter, followed by |unit");
-		log_print("  which represents other possible input units: bBsSkKmMgGtTpPeE.");
-		log_print(". Output units can be specified with the --units option, for which");
-		log_print("  lower/upper case letters refer to base 2/10 values.");
-		log_print(". Use --help --help --help to print secondary command syntax");
-		log_print("  formats that are recognized, e.g. for compatibility.");
-		log_print(". See man pages for short option equivalents of long option names,");
-		log_print("  and for more detailed descriptions of variable parameters.");
-	}
+	if (longhelp)
+		_usage_notes();
 
 	return 1;
+}
+
+static void _usage_all(void)
+{
+	int i;
+
+	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
+		if (!command_names[i].name)
+			break;
+		_usage(command_names[i].name, 0);
+	}
 }
 
 /*
@@ -2158,11 +2172,10 @@ static int _get_settings(struct cmd_context *cmd)
 
 static int _process_common_commands(struct cmd_context *cmd)
 {
-	if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG)) {
-		_usage(cmd->name, arg_count(cmd, help_ARG));
-
-		if (arg_count(cmd, help_ARG) < 2)
-			log_print("(Use --help --help for usage notes.)");
+	if (arg_is_set(cmd, help_ARG) ||
+	    arg_is_set(cmd, longhelp_ARG) ||
+	    arg_is_set(cmd, help2_ARG)) {
+		_usage(cmd->name, arg_is_set(cmd, longhelp_ARG));
 		return ECMD_PROCESSED;
 	}
 
@@ -2195,6 +2208,8 @@ int help(struct cmd_context *cmd __attribute__((unused)), int argc, char **argv)
 
 	if (!argc)
 		_display_help();
+	else if (argc == 1 && !strcmp(argv[0], "all"))
+		_usage_all();
 	else {
 		int i;
 		for (i = 0; i < argc; i++)
