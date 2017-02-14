@@ -175,8 +175,6 @@ liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION): liblvm2cmd.$(LIB_SUFFIX)
 	$(CC) -E -P $(srcdir)/cmdnames.h 2> /dev/null | \
 		$(EGREP) -v '^ *(|#.*|config|devtypes|dumpconfig|formats|fullreport|help|lastlog|lvpoll|pvdata|segtypes|systemid|tags|version) *$$' > .commands
 
-.DELETE_ON_ERROR:
-
 command-count.h: $(srcdir)/command-lines.in Makefile
 	set -o pipefail && \
 	( cat $(top_srcdir)/doc/license.txt && \
@@ -204,6 +202,7 @@ command-lines-input.h: $(srcdir)/command-lines.in Makefile
 	) > $@
 
 $(SOURCES:%.c=%.d) $(SOURCES2:%.c=%.d): command-lines-input.h command-count.h cmds.h
+$(SOURCES:%.c=%.o) $(SOURCES2:%.c=%.o): command-lines-input.h command-count.h cmds.h
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
