@@ -3649,6 +3649,43 @@ static int _lvconvert_combine_split_snapshot_single(struct cmd_context *cmd,
 
 int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
+	const char *vgname = NULL;
+	const char *lvname1;
+	const char *lvname2;
+	char *vglv;
+	int vglv_sz;
+
+	/*
+	 * Hack to accomodate an old parsing quirk that allowed the
+	 * the VG name to be attached to only the LV in arg pos 1,
+	 * i.e. lvconvert -s vgname/lvname lvname
+	 *
+	 * The LV name in arg pos 2 is the one that is processed
+	 * by process_each_lv().  If that LV has no VG name, but
+	 * the first LV does, then copy the VG name from arg pos 1
+	 * and add it to the LV name in arg pos 2 so that the
+	 * standard arg parsing in process_each_lv will find it.
+	 *
+	 * This is the only instance in all commands.
+	 */
+
+	lvname1 = cmd->position_argv[0];
+	lvname2 = cmd->position_argv[1];
+
+	if (strstr("/", lvname1) && !strstr("/", lvname2) && !getenv("LVM_VG_NAME")) {
+		if (!validate_lvname_param(cmd, &vgname, &lvname1))
+			return_ECMD_FAILED;
+
+		vglv_sz = strlen(vgname) + strlen(lvname2) + 2;
+		if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
+		    dm_snprintf(vglv, vglv_sz, "%s/%s", vgname, lvname2) < 0) {
+       			log_error("vg/lv string alloc failed.");
+			return_ECMD_FAILED;
+		}
+
+		cmd->position_argv[1] = vglv;
+	}
+
 	return process_each_lv(cmd, 1, cmd->position_argv + 1, NULL, NULL, READ_FOR_UPDATE,
 			       NULL, NULL, &_lvconvert_combine_split_snapshot_single);
 }
