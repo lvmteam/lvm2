@@ -350,7 +350,7 @@ static int _print_header(struct cmd_context *cmd, struct formatter *f,
 	     _utsname.version, _utsname.machine);
 	if (cmd->system_id && *cmd->system_id)
 		outf(f, "creation_host_system_id = \"%s\"", cmd->system_id);
-	outf(f, "creation_time = %lu\t# %s", t, ctime(&t));
+	outf(f, "creation_time = " FMTu64 "\t# %s", (uint64_t)t, ctime(&t));
 
 	return 1;
 }

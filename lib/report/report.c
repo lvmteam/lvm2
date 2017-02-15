@@ -1008,7 +1008,7 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 	dm_pool_free(info->mem, info->ti_list);
 	info->ti_list = NULL;
 
-	if (dm_snprintf(buf, sizeof(buf), "@%ld:@%ld", t1, t2) == -1) {
+	if (dm_snprintf(buf, sizeof(buf), "@" FMTd64 ":@" FMTd64, (int64_t)t1, (int64_t)t2) == -1) {
 		log_error("_translate_time_items: dm_snprintf failed");
 		return 0;
 	}
@@ -1063,10 +1063,10 @@ static void *_lv_time_handler_get_dynamic_value(struct dm_report *rh,
 						struct dm_pool *mem,
 						const char *data_in)
 {
-	time_t t1, t2;
+	int64_t t1, t2;
 	time_t *result;
 
-	if (sscanf(data_in, "@%ld:@%ld", &t1, &t2) != 2) {
+	if (sscanf(data_in, "@" FMTd64 ":@" FMTd64, &t1, &t2) != 2) {
 		log_error("Failed to get value for parsed time specification.");
 		return NULL;
 	}
@@ -1076,8 +1076,8 @@ static void *_lv_time_handler_get_dynamic_value(struct dm_report *rh,
 		return NULL;
 	}
 
-	result[0] = t1;
-	result[1] = t2;
+	result[0] = (time_t) t1; /* Validate range for 32b arch ? */
+	result[1] = (time_t) t2;
 
 	return result;
 }

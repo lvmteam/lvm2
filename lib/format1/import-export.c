@@ -128,8 +128,8 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 int generate_lvm1_system_id(struct cmd_context *cmd, char *s, const char *prefix)
 {
 
-	if (dm_snprintf(s, NAME_LEN, "%s%s%lu",
-			 prefix, cmd->hostname, time(NULL)) < 0) {
+	if (dm_snprintf(s, NAME_LEN, "%s%s" FMTu64,
+			prefix, cmd->hostname, (uint64_t)time(NULL)) < 0) {
 		log_error("Generated LVM1 format system_id too long");
 		return 0;
 	}
