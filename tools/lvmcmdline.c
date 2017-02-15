@@ -1280,7 +1280,6 @@ check_val:
 static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp, char **argv)
 {
 	const char *name;
-	char *gotenv = NULL;
 
 	/*
 	 * rp is the index in required_pos_args[] of the required positional arg.
@@ -1315,9 +1314,9 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 	    (arg_is_set(cmd, name_ARG) ||
 	     arg_is_set(cmd, thinpool_ARG) ||
 	     arg_is_set(cmd, cachepool_ARG) ||
-	     (gotenv = getenv("LVM_VG_NAME")))) {
+	     getenv("LVM_VG_NAME"))) {
 
-		if (gotenv)
+		if (getenv("LVM_VG_NAME"))
 			return 1;
 
 		if ((name = arg_str_value(cmd, name_ARG, NULL))) {
