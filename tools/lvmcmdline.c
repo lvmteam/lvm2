@@ -1280,6 +1280,7 @@ check_val:
 static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp, char **argv)
 {
 	const char *name;
+	char *gotenv = NULL;
 
 	/*
 	 * rp is the index in required_pos_args[] of the required positional arg.
@@ -1311,13 +1312,18 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 	if (!strcmp(cmd->name, "lvcreate") &&
 	    (rp == 0) &&
 	    val_bit_is_set(commands[ci].required_pos_args[rp].def.val_bits, vg_VAL) &&
-	    (arg_is_set(cmd, name_ARG) || arg_is_set(cmd, thinpool_ARG) || arg_is_set(cmd, cachepool_ARG))) {
+	    (arg_is_set(cmd, name_ARG) ||
+	     arg_is_set(cmd, thinpool_ARG) ||
+	     arg_is_set(cmd, cachepool_ARG) ||
+	     (gotenv = getenv("LVM_VG_NAME")))) {
+
+		if (gotenv)
+			return 1;
+
 		if ((name = arg_str_value(cmd, name_ARG, NULL))) {
-			if (strstr(name, "/") || getenv("LVM_VG_NAME"))
+			if (strstr(name, "/"))
 				return 1;
 		}
-
-		/* FIXME: does LVM_VG_NAME also work with --thinpool/--cachepool ? */
 
 		if ((name = arg_str_value(cmd, thinpool_ARG, NULL))) {
 			if (strstr(name, "/"))
