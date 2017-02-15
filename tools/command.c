@@ -1624,7 +1624,7 @@ void print_usage(struct command *cmd)
 			if (first)
 				printf("\n\t[");
 			else
-				printf(",\n\t ");
+				printf("\n\t ");
 			first = 0;
 
 			printf(" %s", opt_names[opt_enum].long_opt);
@@ -1637,7 +1637,7 @@ void print_usage(struct command *cmd)
 		if (first)
 			printf("\n\t[");
 		else
-			printf(",\n\t ");
+			printf("\n\t ");
 		printf(" COMMON_OPTIONS ]");
 	}
 
@@ -1687,7 +1687,7 @@ void print_usage_common(struct command_name *cname, struct command *cmd)
 		if (first)
 			printf("\n\t[");
 		else
-			printf(",\n\t ");
+			printf("\n\t ");
 		first = 0;
 
 		for (oo = 0; oo < cmd->oo_count; oo++) {
@@ -1712,7 +1712,7 @@ void print_usage_common(struct command_name *cname, struct command *cmd)
 		if (first)
 			printf("\n\t[");
 		else
-			printf(",\n\t ");
+			printf("\n\t ");
 		first = 0;
 
 		printf(" %s", opt_names[opt_enum].long_opt);
@@ -2081,7 +2081,6 @@ void print_man_usage(char *lvmname, struct command *cmd)
 				continue;
 
 			if (sep) {
-				printf(",");
 				printf("\n.br\n");
 				printf(" ");
 			}
@@ -2112,7 +2111,6 @@ void print_man_usage(char *lvmname, struct command *cmd)
 				continue;
 
 			if (sep) {
-				printf(",");
 				printf("\n.br\n");
 				printf(" ");
 			}
@@ -2130,7 +2128,6 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		}
 
 		if (sep) {
-			printf(",");
 			printf("\n.br\n");
 			printf(" ");
 			/* space alignment without short opt */
@@ -2209,7 +2206,6 @@ void print_man_usage_common(struct command *cmd)
 			continue;
 
 		if (sep) {
-			printf(",");
 			printf("\n.br\n");
 			printf(" ");
 		}
@@ -2246,7 +2242,6 @@ void print_man_usage_common(struct command *cmd)
 			continue;
 
 		if (sep) {
-			printf(",");
 			printf("\n.br\n");
 			printf(" ");
 		}
