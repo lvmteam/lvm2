@@ -3434,6 +3434,11 @@ static int _get_arg_lvnames_using_options(struct cmd_context *cmd,
 		return ECMD_PROCESSED;
 	}
 
+	if (*pos_name == '/') {
+		if (!(pos_name = skip_dev_dir(cmd, pos_name, NULL)))
+			return ECMD_FAILED;
+	}
+
 	if ((split = strchr(pos_name, '/'))) {
 		pos_vgname = pos_name;
 		pos_lvname = split + 1;
