@@ -1130,6 +1130,10 @@ void lvm_register_commands(char *name)
 {
 	int i;
 
+	/* already initialized */
+	if (_cmdline.commands)
+		return;
+
 	memset(&commands, 0, sizeof(commands));
 
 	/*
