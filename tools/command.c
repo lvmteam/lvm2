@@ -1197,6 +1197,10 @@ static void factor_common_options(void)
 		if (!command_names[cn].name)
 			break;
 
+		/* already factored */
+		if (command_names[cn].variants)
+			continue;
+
 		for (ci = 0; ci < COMMAND_COUNT; ci++) {
 			cmd = &commands[ci];
 
@@ -1457,17 +1461,10 @@ int define_commands(char *run_name)
 
 	/*
 	 * For usage.
-	 * Looks at all variants of each command name and figures out
-	 * which options are common to all variants (for compact output)
-	 */
-        factor_common_options();
-
-	/*
-	 * For usage.
 	 * Predefined string of options common to all commands
 	 * (for compact output)
 	 */
-        include_optional_opt_args(&lvm_all, "OO_USAGE_COMMON");
+	include_optional_opt_args(&lvm_all, "OO_USAGE_COMMON");
 
 	return 1;
 }
@@ -1563,6 +1560,12 @@ void print_usage(struct command *cmd)
 	struct command_name *cname = find_command_name(cmd->name);
 	int onereq = (cmd->cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) ? 1 : 0;
 	int ro, rp, oo, op, opt_enum, first;
+
+	/*
+	 * Looks at all variants of each command name and figures out
+	 * which options are common to all variants (for compact output)
+	 */
+	factor_common_options();
 
 	if (cmd->desc)
 		_print_usage_description(cmd);
@@ -2716,6 +2719,8 @@ int main(int argc, char *argv[])
 	}
 
 	define_commands(NULL);
+
+	factor_common_options();
 
 	print_man(argv[1], (argc > 2) ? argv[2] : NULL, 1, 1);
 
