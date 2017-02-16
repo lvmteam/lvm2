@@ -166,6 +166,7 @@ struct cmd_rule {
  */
 #define CMD_FLAG_ONE_REQUIRED_OPT   1  /* lvchange/vgchage require one item from required_opt_args */
 #define CMD_FLAG_SECONDARY_SYNTAX   2  /* allows syntax variants to be suppressed in certain output */
+#define CMD_FLAG_PARSE_ERROR        4  /* error parsing command-lines.in def */
 
 /* a register of the lvm commands */
 struct command {

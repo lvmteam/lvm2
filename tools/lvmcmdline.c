@@ -1126,13 +1126,13 @@ static struct command_function *_find_command_id_function(int command_enum)
 	return NULL;
 }
 
-void lvm_register_commands(char *name)
+int lvm_register_commands(char *name)
 {
 	int i;
 
 	/* already initialized */
 	if (_cmdline.commands)
-		return;
+		return 1;
 
 	memset(&commands, 0, sizeof(commands));
 
@@ -1141,8 +1141,8 @@ void lvm_register_commands(char *name)
 	 * by parsing command-lines.in/command-lines-input.h
 	 */
 	if (!define_commands(name)) {
-		log_error("Failed to parse command definitions.");
-		return;
+		log_error(INTERNAL_ERROR "Failed to parse command definitions.");
+		return 0;
 	}
 
 	_cmdline.commands = commands;
@@ -1150,6 +1150,13 @@ void lvm_register_commands(char *name)
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
 		commands[i].command_enum = command_id_to_enum(commands[i].command_id);
+
+		if (!commands[i].command_enum) {
+			log_error(INTERNAL_ERROR "Failed to find command id %s.", commands[i].command_id);
+			_cmdline.commands = NULL;
+			_cmdline.num_commands = 0;
+			return 0;
+		}
 
 		/* new style */
 		commands[i].functions = _find_command_id_function(commands[i].command_enum);
@@ -1172,6 +1179,8 @@ void lvm_register_commands(char *name)
 
 	for (i = 0; i < _cmdline.num_command_names; i++)
 		_set_valid_args_for_command_name(i);
+
+	return 1;
 }
 
 struct lv_props *get_lv_prop(int lvp_enum)
@@ -3214,7 +3223,10 @@ int lvm2_main(int argc, char **argv)
 	else
 		name = argv[1];
 
-	lvm_register_commands(name);
+	if (!lvm_register_commands(name)) {
+		ret = ECMD_FAILED;
+		goto out;
+	}
 
 	if (_lvm1_fallback(cmd)) {
 		/* Attempt to run equivalent LVM1 tool instead */
