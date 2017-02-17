@@ -16,3 +16,6 @@ data on that disk. This can be done by zeroing the first sector with:
 Use \fBvgcreate\fP(8) to create a new VG on the PV, or \fBvgextend\fP(8)
 to add the PV to existing VG.
 
+The force option will create a PV without confirmation.  Repeating the
+force option (\fB-ff\fP) will forcibly create a PV, overriding checks that
+normally prevent it, e.g. if the PV is already in a VG.

@@ -6,6 +6,11 @@ removal.  LVs cannot be deactivated or removed while they are open (e.g.
 if they contain a mounted filesystem). Removing an origin LV will also
 remove all dependent snapshots.
 
+When a single force option is used, LVs are removed without confirmation,
+and the command will try to deactivate unused LVs.
+
+To remove damaged LVs, two force options may be required (\fB-ff\fP).
+
 \fBHistorical LVs\fP
 
 If the configuration setting \fBmetadata/record_lvs_history\fP is enabled
