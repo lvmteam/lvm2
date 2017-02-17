@@ -145,11 +145,11 @@ enum {
 #undef lvt
 };
 
-#else
+#else  /* MAN_PAGE_GENERATOR */
 
 #include "tools.h"
 
-#endif
+#endif /* MAN_PAGE_GENERATOR */
 
 #include "command.h"       /* defines struct command */
 #include "command-count.h" /* defines COMMAND_COUNT */
