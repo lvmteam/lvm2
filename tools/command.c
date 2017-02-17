@@ -1326,7 +1326,7 @@ static int copy_line(char *line, int max_line, int *position)
 
 int define_commands(char *run_name)
 {
-	struct command *cmd;
+	struct command *cmd = NULL;
 	char line[MAX_LINE];
 	char line_orig[MAX_LINE];
 	char *line_argv[MAX_LINE_ARGC];
@@ -1824,7 +1824,6 @@ static void print_def_man(struct arg_def *def, int usage)
 	int val_enum;
 	int lvt_enum;
 	int sep = 0;
-	int i;
 
 	for (val_enum = 0; val_enum < VAL_COUNT; val_enum++) {
 		if (def->val_bits & val_enum_to_bit(val_enum)) {
@@ -1927,7 +1926,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 {
 	struct command_name *cname;
 	int onereq = (cmd->cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) ? 1 : 0;
-	int i, sep, ro, rp, oo, op, opt_enum;
+	int sep, ro, rp, oo, op, opt_enum;
 	int need_ro_indent_end = 0;
 
 	if (!(cname = find_command_name(cmd->name)))
