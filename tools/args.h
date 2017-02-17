@@ -546,7 +546,7 @@ arg(shared_ARG, '\0', "shared", 0, 0, 0,
 arg(sinceversion_ARG, '\0', "sinceversion", string_VAL, 0, 0,
     "Specify an LVM version in x.y.z format where x is the major version,\n"
     "the y is the minor version and z is the patchlevel (e.g. 2.2.106).\n"
-    "This option is currently applicable only with --type new\n"
+    "This option is currently applicable only with --typeconfig new\n"
     "to display all configuration settings introduced since given version.\n")
 
 arg(splitcache_ARG, '\0', "splitcache", 0, 0, 0,
@@ -1024,7 +1024,7 @@ arg(list_ARG, 'l', "list", 0, 0, 0,
     "#dumpconfig\n"
     "#config\n"
     "List config settings with summarizing comment. This is the same as using\n"
-    "options --type list --withsummary.\n"
+    "options --typeconfig list --withsummary.\n"
     "#vgcfgrestore\n"
     "List metadata backup and archive files pertaining to the VG.\n"
     "May be used with --file. Does not restore the VG.\n"
