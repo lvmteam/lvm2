@@ -278,22 +278,6 @@ or vgchange to activate thin snapshots with the "k" attribute.
 
 \&
 
-.SS Alternate syntax for specifying type thin\-pool
-
-\&
-
-The fully specified syntax for creating a thin pool LV shown above is:
-
-.B lvconvert \-\-type thin-pool \-\-poolmetadata VG/ThinMetaLV VG/ThinDataLV
-
-An alternate syntax may be used for the same operation:
-
-.B lvconvert \-\-thinpool VG/ThinDataLV \-\-poolmetadata VG/ThinMetaLV
-
-The thin-pool type is inferred by lvm; the \-\-thinpool option is not an
-alias for \-\-type thin\-pool.
-
-
 .SS Automatic pool metadata LV
 
 \&

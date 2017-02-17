@@ -135,12 +135,12 @@ struct command_function command_functions[CMD_COUNT] = {
 
 	/* lvconvert utilities for creating/maintaining thin and cache objects. */
 	{ lvconvert_to_thinpool_CMD,			lvconvert_to_pool_cmd },
-	{ lvconvert_to_thinpool_noarg_CMD,		lvconvert_to_pool_noarg_cmd },
 	{ lvconvert_to_cachepool_CMD,			lvconvert_to_pool_cmd },
-	{ lvconvert_to_cachepool_noarg_CMD,		lvconvert_to_pool_noarg_cmd },
 	{ lvconvert_to_thin_with_external_CMD,		lvconvert_to_thin_with_external_cmd },
 	{ lvconvert_to_cache_vol_CMD,			lvconvert_to_cache_vol_cmd },
 	{ lvconvert_swap_pool_metadata_CMD,		lvconvert_swap_pool_metadata_cmd },
+	{ lvconvert_to_thinpool_or_swap_metadata_CMD,   lvconvert_to_pool_or_swap_metadata_cmd },
+	{ lvconvert_to_cachepool_or_swap_metadata_CMD,  lvconvert_to_pool_or_swap_metadata_cmd },
 	{ lvconvert_merge_thin_CMD,			lvconvert_merge_thin_cmd },
 	{ lvconvert_split_and_keep_cachepool_CMD,	lvconvert_split_cachepool_cmd },
 	{ lvconvert_split_and_remove_cachepool_CMD,	lvconvert_split_cachepool_cmd },
@@ -1725,6 +1725,9 @@ static int _usage(const char *name, int longhelp)
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
 		if (strcmp(_cmdline.commands[i].name, name))
+			continue;
+
+		if (_cmdline.commands[i].cmd_flags & CMD_FLAG_PREVIOUS_SYNTAX)
 			continue;
 
 		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !longhelp)

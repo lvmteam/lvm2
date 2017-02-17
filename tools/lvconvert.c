@@ -3790,51 +3790,6 @@ int lvconvert_to_pool_cmd(struct cmd_context *cmd, int argc, char **argv)
 			       NULL, NULL, &_lvconvert_to_pool_single);
 }
 
-/*
- * Reformats non-standard command form into standard command form.
- *
- * In the command variants with no position LV arg, the LV arg is taken from
- * the --thinpool/--cachepool arg, and the position args are modified to match
- * the standard command form.
- */
-
-int lvconvert_to_pool_noarg_cmd(struct cmd_context *cmd, int argc, char **argv)
-{
-	struct command *new_command;
-	char *pool_data_name;
-	int i, p;
-
-	switch (cmd->command->command_enum) {
-	case lvconvert_to_thinpool_noarg_CMD:
-		pool_data_name = (char *)arg_str_value(cmd, thinpool_ARG, NULL);
-		new_command = get_command(lvconvert_to_thinpool_CMD);
-		break;
-	case lvconvert_to_cachepool_noarg_CMD:
-		pool_data_name = (char *)arg_str_value(cmd, cachepool_ARG, NULL);
-		new_command = get_command(lvconvert_to_cachepool_CMD);
-		break;
-	default:
-		log_error(INTERNAL_ERROR "Unknown pool conversion.");
-		return 0;
-	};
-
-	log_debug("Changing command %d:%s to standard form %d:%s",
-		  cmd->command->command_index, cmd->command->command_id,
-		  new_command->command_index, new_command->command_id);
-
-	/* Make the LV the first position arg. */
-
-	p = cmd->position_argc;
-	for (i = 0; i < cmd->position_argc; i++)
-		cmd->position_argv[p] = cmd->position_argv[p-1];
-
-	cmd->position_argv[0] = pool_data_name;
-	cmd->position_argc++;
-	cmd->command = new_command;
-
-	return lvconvert_to_pool_cmd(cmd, argc, argv);
-}
-
 static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 					 struct logical_volume *lv,
 					 struct processing_handle *handle)
@@ -4077,39 +4032,96 @@ int lvconvert_swap_pool_metadata_cmd(struct cmd_context *cmd, int argc, char **a
 			       NULL, NULL, &_lvconvert_swap_pool_metadata_single);
 }
 
-#if 0
-int lvconvert_swap_pool_metadata_noarg_cmd(struct cmd_context *cmd, int argc, char **argv)
+static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
+					 struct logical_volume *lv,
+					 struct processing_handle *handle)
 {
-	struct command *new_command;
-	char *pool_name;
+	struct dm_list *use_pvh = NULL;
+	int to_thinpool = 0;
+	int to_cachepool = 0;
 
 	switch (cmd->command->command_enum) {
-	case lvconvert_swap_thinpool_metadata_CMD:
-		pool_name = (char *)arg_str_value(cmd, thinpool_ARG, NULL);
+	case lvconvert_to_thinpool_or_swap_metadata_CMD:
+		to_thinpool = 1;
 		break;
-	case lvconvert_swap_cachepool_metadata_CMD:
-		pool_name = (char *)arg_str_value(cmd, cachepool_ARG, NULL);
+	case lvconvert_to_cachepool_or_swap_metadata_CMD:
+		to_cachepool = 1;
+		break;
+	default:
+		log_error(INTERNAL_ERROR "Invalid lvconvert pool command");
+		return 0;
+	};
+
+	if (cmd->position_argc > 1) {
+		/* First pos arg is required LV, remaining are optional PVs. */
+		if (!(use_pvh = create_pv_list(cmd->mem, lv->vg, cmd->position_argc - 1, cmd->position_argv + 1, 0)))
+			return_ECMD_FAILED;
+	} else
+		use_pvh = &lv->vg->pvs;
+
+	/*
+	 * We can finally determine if this command is supposed to create
+	 * a pool or swap the metadata in an existing pool.
+	 *
+	 * This allows the ambiguous command:
+	 * 'lvconvert --thinpool LV1 --poolmetadata LV2' to mean either:
+	 * 1. convert LV2 to a pool using the specified meta LV2
+	 * 2. swap the meta lv in LV1 with LV2
+	 *
+	 * In case 2, the poolmetadata option is required, but in case 1
+	 * it is optional.  So, the command def is not able to validate
+	 * the required/optional option, and we have to check here
+	 * for missing poolmetadata in case 2.
+	 */
+	if (lv_is_pool(lv)) {
+		if (!arg_is_set(cmd, poolmetadata_ARG)) {
+			log_error("The --poolmetadata option is required to swap metadata.");
+			return ECMD_FAILED;
+		}
+		return _lvconvert_swap_pool_metadata_single(cmd, lv, handle);
+	}
+
+	if (!_lvconvert_to_pool(cmd, lv, to_thinpool, to_cachepool, use_pvh))
+		return_ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
+/*
+ * In the command variants with no position LV arg, the LV arg is taken from
+ * the --thinpool/--cachepool arg, and the position args are modified to match
+ * the standard command form.
+ */
+
+int lvconvert_to_pool_or_swap_metadata_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	char *pool_data_name;
+	int i, p;
+
+	switch (cmd->command->command_enum) {
+	case lvconvert_to_thinpool_or_swap_metadata_CMD:
+		pool_data_name = (char *)arg_str_value(cmd, thinpool_ARG, NULL);
+		break;
+	case lvconvert_to_cachepool_or_swap_metadata_CMD:
+		pool_data_name = (char *)arg_str_value(cmd, cachepool_ARG, NULL);
 		break;
 	default:
 		log_error(INTERNAL_ERROR "Unknown pool conversion.");
 		return 0;
 	};
 
-	new_command = get_command(lvconvert_swap_pool_metadata_CMD);
-
-	log_debug("Changing command %d:%s to standard form %d:%s",
-		  cmd->command->command_index, cmd->command->command_id,
-		  new_command->command_index, new_command->command_id);
-
 	/* Make the LV the first position arg. */
 
-	cmd->position_argv[0] = pool_name;
-	cmd->position_argc++;
-	cmd->command = new_command;
+	p = cmd->position_argc;
+	for (i = 0; i < cmd->position_argc; i++)
+		cmd->position_argv[p] = cmd->position_argv[p-1];
 
-	return lvconvert_swap_pool_metadata_cmd(cmd, argc, argv);
+	cmd->position_argv[0] = pool_data_name;
+	cmd->position_argc++;
+
+	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+			       NULL, NULL, &_lvconvert_to_pool_or_swap_metadata_single);
 }
-#endif
 
 static int _lvconvert_merge_thin_single(struct cmd_context *cmd,
 					 struct logical_volume *lv,

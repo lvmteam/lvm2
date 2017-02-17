@@ -589,9 +589,12 @@ arg(stripes_long_ARG, '\0', "stripes", number_VAL, 0, 0,
     "existing allocated space, only newly allocated space can be striped.\n")
 
 arg(swapmetadata_ARG, '\0', "swapmetadata", 0, 0, 0,
-    "Remove the metadata LV in a pool and replace it with another specified LV.\n"
-    "The removed LV is preserved and given the name of the LV that replaced it.\n"
-    "Used for repair only.\n")
+    "Extracts the metadata LV from a pool and replaces it with another specified LV.\n"
+    "The extracted LV is preserved and given the name of the LV that replaced it.\n"
+    "Use for repair only. When the metadata LV is swapped out of the pool, it can\n"
+    "be activated directly and used with thin provisioning tools:\n"
+    "\\fBcache_dump\\fP(8), \\fBcache_repair\\fP(8), \\fBcache_restore\\fP(8),\n"
+    "\\fBthin_dump\\fP(8), \\fBthin_repair\\fP(8), \\fBthin_restore\\fP(8).\n")
 
 arg(syncaction_ARG, '\0', "syncaction", syncaction_VAL, 0, 0,
     "Initiate different types of RAID synchronization.\n"

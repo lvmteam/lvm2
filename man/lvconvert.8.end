@@ -1,3 +1,24 @@
+.SH NOTES
+
+This previous command syntax would perform two different operations:
+.br
+\fBlvconvert --thinpool\fP \fILV1\fP \fB--poolmetadata\fP \fILV2\fP
+.br
+If LV1 was not a thin pool, the command would convert LV1 to
+a thin pool, optionally using a specified LV for metadata.
+But, if LV1 was already a thin pool, the command would swap
+the current metadata LV with LV2 (for repair purposes.)
+
+In the same way, this previous command syntax would perform two different
+operations:
+.br
+\fBlvconvert --cachepool\fP \fILV1\fP \fB--poolmetadata\fP \fILV2\fP
+.br
+If LV1 was not a cache pool, the command would convert LV1 to
+a cache pool, optionally using a specified LV for metadata.
+But, if LV1 was already a cache pool, the command would swap
+the current metadata LV with LV2 (for repair purposes.)
+
 .SH EXAMPLES
 
 Convert a linear LV to a two-way mirror LV.

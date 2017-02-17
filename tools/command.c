@@ -1128,6 +1128,8 @@ static void add_flags(struct command *cmd, char *line)
 {
 	if (strstr(line, "SECONDARY_SYNTAX"))
 		cmd->cmd_flags |= CMD_FLAG_SECONDARY_SYNTAX;
+	if (strstr(line, "PREVIOUS_SYNTAX"))
+		cmd->cmd_flags |= CMD_FLAG_PREVIOUS_SYNTAX;
 }
 
 #define MAX_RULE_OPTS 64
@@ -2658,6 +2660,9 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 
 			prev_cmd = NULL;
 		}
+
+		if (cmd->cmd_flags & CMD_FLAG_PREVIOUS_SYNTAX)
+			continue;
 
 		if ((cmd->cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !include_secondary)
 			continue;
