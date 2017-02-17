@@ -673,12 +673,11 @@ arg(unconfigured_ARG, '\0', "unconfigured", 0, 0, 0,
 
 arg(units_ARG, '\0', "units", units_VAL, 0, 0,
     "All sizes are output in these units:\n"
-    "human-(r)eadable with rounding,\n"
+    "human-(r)eadable with '<' rounding indicator,\n"
     "(h)uman-readable, (b)ytes, (s)ectors, (k)ilobytes, (m)egabytes,\n"
     "(g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.\n"
     "Capitalise to use multiples of 1000 (S.I.) instead of 1024.\n"
-    "Custom units can be specified, e.g. --units 3M.\n"
-    "r|R rounds numbers and displays the '<' prefix before rounded values.\n")
+    "Custom units can be specified, e.g. --units 3M.\n")
 
 arg(unquoted_ARG, '\0', "unquoted", 0, 0, 0,
     "When used with --nameprefixes, output values in the field=value\n"
