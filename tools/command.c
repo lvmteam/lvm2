@@ -359,46 +359,57 @@ static int opt_str_to_num(struct command *cmd, char *str)
 	char long_name[MAX_LONG_OPT_NAME_LEN];
 	char *p;
 	int i;
+	int first = 0, last = ARG_COUNT - 1, middle;
 
-	/*
-	 * --foo_long means there are two args entries
-	 * for --foo, one with a short option and one
-	 * without, and we want the one without the
-	 * short option.
-	 */
-	if (strstr(str, "_long")) {
-		memset(long_name, 0, sizeof(long_name));
-		strncpy(long_name, str, MAX_LONG_OPT_NAME_LEN-1);
-		if ((p = strstr(long_name, "_long")))
-			*p = '\0';
+	dm_strncpy(long_name, str, sizeof(long_name));
 
-		for (i = 0; i < ARG_COUNT; i++) {
-			if (!opt_names[i].long_opt)
-				continue;
-			/* skip anything with a short opt */
-			if (opt_names[i].short_opt)
-				continue;
-			if (!strcmp(opt_names[i].long_opt, long_name))
-				return opt_names[i].opt_enum;
+	if ((p = strstr(long_name, "_long")))
+		/*
+		 * --foo_long means there are two args entries
+		 * for --foo, one with a short option and one
+		 * without, and we want the one without the
+		 * short option (== 0).
+		 */
+		*p = '\0';
+
+	/* Binary search in sorted array of long options (with duplicates) */
+	while (first <= last) {
+		middle = first + (last - first) / 2;
+		if ((i = strcmp(opt_names_alpha[middle]->long_opt, long_name)) < 0)
+			first = middle + 1;
+		else if (i > 0)
+			last = middle - 1;
+		else {
+			/* Matching long option string found.
+			 * As sorted array contains duplicates, we need to also
+			 * check left & right side for possible match
+			 */
+			for (i = middle;;) {
+				if ((!p && !strstr(opt_names_alpha[i]->name, "_long_ARG")) ||
+				    (p && !opt_names_alpha[i]->short_opt))
+					return opt_names_alpha[i]->opt_enum; /* Found */
+				/* Check if there is something on the 'left-side' */
+				if ((i <= first) || strcmp(opt_names_alpha[--i]->long_opt, long_name))
+					break;
+			}
+
+			/* Nothing on the left, so look on the 'right-side' */
+			for (i = middle + 1; i <= last; ++i) {
+				if (strcmp(opt_names_alpha[i]->long_opt, long_name))
+					break;
+				if ((!p && !strstr(opt_names_alpha[i]->name, "_long_ARG")) ||
+				    (p && !opt_names_alpha[i]->short_opt))
+					return opt_names_alpha[i]->opt_enum; /* Found */
+			}
+
+			break; /* Nothing... */
 		}
-
-		log_error("Parsing command defs: unknown opt str: %s %s", str, long_name);
-		cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
-		return ARG_UNUSED;
 	}
 
-	for (i = 0; i < ARG_COUNT; i++) {
-		if (!opt_names[i].long_opt)
-			continue;
-		/* These are only selected using --foo_long */
-		if (strstr(opt_names[i].name, "_long_ARG"))
-			continue;
-		if (!strcmp(opt_names[i].long_opt, str))
-			return opt_names[i].opt_enum;
-	}
-
-	log_error("Parsing command defs: unknown opt str: \"%s\"", str);
+	log_error("Parsing command defs: unknown opt str: \"%s\"%s%s.",
+		  str, p ? " ": "", p ? long_name : "");
 	cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+
 	return ARG_UNUSED;
 }
 
