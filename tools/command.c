@@ -866,6 +866,11 @@ static void add_opt_arg(struct command *cmd, char *str, int *takes_arg, int requ
 	}
 
 	opt = opt_str_to_num(cmd, str);
+
+	/* If the binary-search finds uuidstr_ARG switch to uuid_ARG */
+	if (opt == uuidstr_ARG)
+		opt = uuid_ARG;
+
 skip:
 	if (required > 0)
 		cmd->required_opt_args[cmd->ro_count++].opt = opt;
