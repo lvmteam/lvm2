@@ -2636,8 +2636,11 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 	char *lvmname = name;
 	int i;
 
-	if (!strncmp(name, "lvm-", 4))
+	if (!strncmp(name, "lvm-", 4)) {
+		char *space = strchr(lvmname, '-');
+		*space = ' ';
 		name += 4;
+	}
 
 	cname = find_command_name(name);
 
