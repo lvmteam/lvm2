@@ -672,10 +672,13 @@ arg(unconfigured_ARG, '\0', "unconfigured", 0, 0, 0,
     "Internal option used for generating config file during build.\n")
 
 arg(units_ARG, '\0', "units", units_VAL, 0, 0,
-    "All sizes are output in these units: (h)uman-readable, (b)ytes, (s)ectors,\n"
-    "(k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.\n"
-    "Capitalise to use multiples of 1000 (S.I.) instead of 1024. Can also specify\n"
-    "custom units e.g. --units 3M.\n")
+    "All sizes are output in these units:\n"
+    "human-(r)eadable with rounding,\n"
+    "(h)uman-readable, (b)ytes, (s)ectors, (k)ilobytes, (m)egabytes,\n"
+    "(g)igabytes, (t)erabytes, (p)etabytes, (e)xabytes.\n"
+    "Capitalise to use multiples of 1000 (S.I.) instead of 1024.\n"
+    "Custom units can be specified, e.g. --units 3M.\n"
+    "r|R rounds numbers and displays the '<' prefix before rounded values.\n")
 
 arg(unquoted_ARG, '\0', "unquoted", 0, 0, 0,
     "When used with --nameprefixes, output values in the field=value\n"
