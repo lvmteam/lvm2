@@ -330,13 +330,13 @@ static char *split_line(char *buf, int *argc, char **argv, char sep)
 
 static int val_str_to_num(char *str)
 {
-	char name[32] = { 0 };
+	char name[32];
 	char *new;
 	int i;
 
 	/* compare the name before any suffix like _new or _<lvtype> */
 
-	strncpy(name, str, 31);
+	dm_strncpy(name, str, sizeof(name));
 	if ((new = strstr(name, "_")))
 		*new = '\0';
 
@@ -757,12 +757,8 @@ static void append_oo_definition_line(struct command *cmd, const char *new_line)
 		cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 		return;
 	}
-	memset(line, 0, len);
 
-	strcat(line, old_line);
-	strcat(line, " ");
-	strcat(line, new_line);
-
+	(void) dm_snprintf(line, len, "%s %s", old_line, new_line);
 	dm_free(oo->line);
 	oo->line = line;
 }
@@ -778,8 +774,7 @@ static char *get_oo_line(const char *str)
 	char str2[OO_NAME_LEN];
 	int i;
 
-	memset(str2, 0, sizeof(str2));
-	strncpy(str2, str, OO_NAME_LEN-1);
+	dm_strncpy(str2, str, sizeof(str2));
 	if ((end = strstr(str2, ":")))
 		*end = '\0';
 	if ((end = strstr(str2, ",")))
