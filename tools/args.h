@@ -1369,7 +1369,8 @@ arg(resizeable_ARG, 'x', "resizeable", bool_VAL, 0, 0,
 
 arg(yes_ARG, 'y', "yes", 0, 0, 0,
     "Do not prompt for confirmation interactively but always assume the\n"
-    "answer yes. Use with extreme caution.\n")
+    "answer yes. Use with extreme caution.\n"
+    "(For automatic no, see -qq.)\n")
 
 arg(zero_ARG, 'Z', "zero", bool_VAL, 0, 0,
     "#lvchange\n"
