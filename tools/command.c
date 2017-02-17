@@ -495,31 +495,32 @@ static struct command_name *find_command_name(const char *name)
 {
 	int i;
 
+	if (!islower(name[0]))
+		return NULL; /* Commands starts with lower-case */
+
 	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
 		if (!command_names[i].name)
 			break;
 		if (!strcmp(command_names[i].name, name))
 			return &command_names[i];
 	}
+
 	return NULL;
 }
 
 static const char *is_command_name(char *str)
 {
-	int i;
+	const struct command_name *c;
 
-	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
-		if (!command_names[i].name)
-			break;
-		if (!strcmp(command_names[i].name, str))
-			return command_names[i].name;
-	}
+	if ((c = find_command_name(str)))
+		return c->name;
+
 	return NULL;
 }
 
 static int is_opt_name(char *str)
 {
-	if (!strncmp(str, "--", 2))
+	if ((str[0] == '-') && (str[1] == '-'))
 		return 1;
 
 	if ((str[0] == '-') && (str[1] != '-'))
@@ -535,18 +536,15 @@ static int is_opt_name(char *str)
 
 static int is_pos_name(char *str)
 {
-	if (!strncmp(str, "VG", 2))
-		return 1;
-	if (!strncmp(str, "LV", 2))
-		return 1;
-	if (!strncmp(str, "PV", 2))
-		return 1;
-	if (!strncmp(str, "Tag", 3))
-		return 1;
-	if (!strncmp(str, "String", 6))
-		return 1;
-	if (!strncmp(str, "Select", 6))
-		return 1;
+	switch (str[0]) {
+	case 'V': return (str[1] == 'G'); /* VG */
+	case 'L': return (str[1] == 'V'); /* LV */
+	case 'P': return (str[1] == 'V'); /* PV */
+	case 'T': return (strncmp(str, "Tag", 3) == 0);
+	case 'S': return ((strncmp(str, "String", 6) == 0) ||
+			  (strncmp(str, "Select", 6) == 0));
+	}
+
 	return 0;
 }
 
