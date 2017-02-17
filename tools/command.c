@@ -48,6 +48,18 @@ do { \
 #define dm_malloc malloc
 #define dm_free free
 #define dm_strdup strdup
+#define dm_snprintf snprintf
+
+static int dm_strncpy(char *dest, const char *src, size_t n)
+{
+	if (memccpy(dest, src, 0, n))
+		return 1;
+
+	if (n > 0)
+		dest[n - 1] = '\0';
+
+	return 0;
+}
 
 /* needed to include args.h */
 #define ARG_COUNTABLE 0x00000001
