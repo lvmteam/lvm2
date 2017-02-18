@@ -912,8 +912,6 @@ static void update_prev_opt_arg(struct command *cmd, char *str, int required)
 		cmd->optional_opt_args[cmd->oo_count-1].def = def;
 	else if (required < 0)
 		cmd->ignore_opt_args[cmd->io_count-1].def = def;
-	else
-		return;
 }
 
 /*
@@ -1529,7 +1527,7 @@ static void _print_usage_description(struct command *cmd)
 {
 	const char *desc = cmd->desc;
 	char buf[MAX_LINE] = {0};
-	int di = 0;
+	unsigned di = 0;
 	int bi = 0;
 
 	for (di = 0; di < strlen(desc); di++) {
