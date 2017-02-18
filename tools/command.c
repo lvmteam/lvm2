@@ -1302,8 +1302,8 @@ static void factor_common_options(void)
 
 static int long_name_compare(const void *on1, const void *on2)
 {
-	struct opt_name **optname1 = (void *)on1;
-	struct opt_name **optname2 = (void *)on2;
+	const struct opt_name * const *optname1 = (const void *)on1;
+	const struct opt_name * const *optname2 = (const void *)on2;
 	return strcmp((*optname1)->long_opt + 2, (*optname2)->long_opt + 2);
 }
 

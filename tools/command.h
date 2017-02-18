@@ -177,7 +177,7 @@ struct command {
 	int command_enum; /* <command_id>_CMD */
 	int command_index; /* position in commands[] */
 
-	struct command_function *functions; /* new style */
+	const struct command_function *functions; /* new style */
 	command_fn fn;                      /* old style */
 
 	unsigned int cmd_flags; /* CMD_FLAG_ */

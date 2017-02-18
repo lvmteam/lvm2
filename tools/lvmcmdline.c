@@ -109,7 +109,7 @@ static struct cmdline_context _cmdline;
  * to use these functions instead of the old per-command-name function.
  * For now, any command id not included here uses the old command fn.
  */
-struct command_function command_functions[CMD_COUNT] = {
+static const struct command_function command_functions[CMD_COUNT] = {
 	{ lvmconfig_general_CMD, lvmconfig },
 	{ lvchange_properties_CMD, lvchange_properties_cmd },
 	{ lvchange_resync_CMD, lvchange_resync_cmd },
@@ -1112,7 +1112,7 @@ static struct command_name *find_command_name(const char *name)
 	return NULL;
 }
 
-static struct command_function *_find_command_id_function(int command_enum)
+static const struct command_function *_find_command_id_function(int command_enum)
 {
 	int i;
 
