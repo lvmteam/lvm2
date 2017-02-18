@@ -2519,7 +2519,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	/* each command should start out with sigint flag cleared */
 	sigint_clear();
 
-	cmd->name = strdup(argv[0]);
+	cmd->name = dm_pool_strdup(cmd->mem, argv[0]);
 
 	/* eliminate '-' from all options starting with -- */
 	for (i = 1; i < argc; i++) {
