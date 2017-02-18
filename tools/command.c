@@ -2635,8 +2635,7 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 	int i;
 
 	if (!strncmp(name, "lvm-", 4)) {
-		char *space = strchr(lvmname, '-');
-		*space = ' ';
+		name[3] = ' ';
 		name += 4;
 	}
 
