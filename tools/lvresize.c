@@ -21,7 +21,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	const char *cmd_name = command_name(cmd);
 	const char *type_str = arg_str_value(cmd, type_ARG, NULL);
 
-	if (type_str && (lp->segtype = get_segtype_from_string(cmd, type_str)))
+	if (type_str && !(lp->segtype = get_segtype_from_string(cmd, type_str)))
 		return_0;
 
 	if (!strcmp(cmd_name, "lvreduce"))
@@ -122,10 +122,13 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		return 0;
 	}
 
-	if ((lp->mirrors = arg_count(cmd, mirrors_ARG)) &&
-	    (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) == SIGN_MINUS)) {
-		log_error("Mirrors argument may not be signed.");
-		return 0;
+	if (arg_is_set(cmd, mirrors_ARG)) {
+		if (arg_sign_value(cmd, mirrors_ARG, SIGN_NONE) != SIGN_NONE) {
+			log_error("Mirrors argument may not be signed.");
+			return 0;
+		}
+		if ((lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0)))
+			lp->mirrors++;
 	}
 
 	if ((lp->stripes = arg_uint_value(cmd, stripes_ARG, 0)) &&
