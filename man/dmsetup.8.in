@@ -27,9 +27,9 @@ dmsetup \(em low level logical volume management
 .  IR uuid ]
 .  RB \%[ \-\-addnodeoncreate | \-\-addnodeonresume ]
 .  RB \%[ \-n | \-\-notable | \-\-table
-.  RI \%{ table | table_file }]
+.  IR \%table | table_file ]
 .  RB [ \-\-readahead
-.  RB \%{[ + ] \fIsectors | auto | none }]
+.  RB \%[ + ] \fIsectors | auto | none ]
 .  ad b
 ..
 .CMD_CREATE
@@ -92,7 +92,7 @@ dmsetup \(em low level logical volume management
 .  BR load
 .  IR device_name
 .  RB [ \-\-table
-.  RI { table | table_file }]
+.  IR table | table_file ]
 .  ad b
 ..
 .CMD_LOAD
@@ -146,7 +146,7 @@ dmsetup \(em low level logical volume management
 .  BR reload
 .  IR device_name
 .  RB [ \-\-table
-.  RI { table | table_file }]
+.  IR table | table_file ]
 .  ad b
 ..
 .CMD_RELOAD
@@ -202,7 +202,7 @@ dmsetup \(em low level logical volume management
 .  RB [ \-\-noflush ]
 .  RB [ \-\-nolockfs ]
 .  RB \%[ \-\-readahead
-.  RB \%{[ + ] \fIsectors | auto | none }]
+.  RB \%[ + ] \fIsectors | auto | none ]
 .  ad b
 ..
 .CMD_RESUME
@@ -447,7 +447,7 @@ The default interval is one second.
 .
 .HP
 .BR \-\-manglename
-.RB { auto | hex | none }
+.BR auto | hex | none
 .br
 Mangle any character not on a whitelist using mangling_mode when
 processing device-mapper device names and UUIDs. The names and UUIDs
@@ -529,7 +529,7 @@ Specify which fields to display.
 .
 .HP
 .BR \-\-readahead
-.RB {[ + ] \fIsectors | auto | none }
+.RB [ + ] \fIsectors | auto | none
 .br
 Specify read ahead size in units of sectors.
 The default value is \fBauto\fP which allows the kernel to choose
