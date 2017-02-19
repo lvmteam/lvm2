@@ -44,7 +44,7 @@ dmstats \(em device-mapper statistics management
 .B dmsetup
 .B stats
 .I command
-.RB [ options ]
+[OPTIONS]
 .sp
 .
 .PD 0
@@ -53,13 +53,13 @@ dmstats \(em device-mapper statistics management
 .de CMD_COMMAND
 .  ad l
 .  IR command
-.  RI [ device_name |
-.  RB [ \-u | \-\-uuid
-.  IR uuid ]
-.  RB | [ \-\-major
+.  IR device_name " |"
+.  BR \-\-major
 .  IR major
 .  BR \-\-minor
-.  IR minor ]
+.  IR minor " |"
+.  BR \-u | \-\-uuid
+.  IR uuid
 .  RB \%[ \-v | \-\-verbose]
 .  ad b
 ..
@@ -82,9 +82,7 @@ dmstats \(em device-mapper statistics management
 .de CMD_CREATE
 .  ad l
 .  BR create
-.  RB [ device_name...
-.  RB | file_path...
-.  RB | [ \-\-alldevices ]]
+.  IR device_name... | file_path... | \fB\-\-alldevices
 .  RB [ \-\-areas
 .  IR nr_areas | \fB\-\-areasize
 .  IR area_size ]
@@ -110,8 +108,7 @@ dmstats \(em device-mapper statistics management
 .de CMD_DELETE
 .  ad l
 .  BR delete
-.  RI [ device_name ]
-.  RB [ \-\-alldevices ]
+.  IR device_name | \fB\-\-alldevices
 .  OPT_PROGRAMS
 .  OPT_REGIONS
 .  ad b
@@ -123,10 +120,9 @@ dmstats \(em device-mapper statistics management
 .de CMD_GROUP
 .  ad l
 .  BR group
-.  RI [ device_name ]
+.  RI [ device_name | \fB\-\-alldevices ]
 .  RB [ \-\-alias
 .  IR name ]
-.  RB [ \-\-alldevices ]
 .  RB [ \-\-regions
 .  IR regions ]
 .  ad b
@@ -205,8 +201,7 @@ dmstats \(em device-mapper statistics management
 .de CMD_UNGROUP
 .  ad l
 .  BR ungroup
-.  RI [ device_name ]
-.  RB [ \-\-alldevices ]
+.  RI [ device_name | \fB\-\-alldevices ]
 .  RB [ \-\-groupid
 .  IR id ]
 .  ad b
@@ -217,7 +212,7 @@ dmstats \(em device-mapper statistics management
 .de CMD_UPDATE_FILEMAP
 .  ad l
 .  BR update_filemap
-.  RI file_path
+.  IR file_path
 .  RB [ \-\-groupid
 .  IR id ]
 .  ad b
