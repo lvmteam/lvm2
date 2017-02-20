@@ -250,7 +250,9 @@ OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 lvchange OO_LVCHANGE_META VG|LV|Tag|Select ...
 OO: --activate Active, OO_LVCHANGE
 ID: lvchange_properties
-DESC: Change a general LV property.
+DESC: Change a general LV attribute.
+DESC: For options listed in parentheses, any one is
+DESC: required, after which the others are optional.
 RULE: all not lv_is_pvmove lv_is_mirror_log lv_is_mirror_image
 RULE: all and lv_is_vg_writable
 RULE: --contiguous not --alloc
@@ -1408,7 +1410,9 @@ vgchange OO_VGCHANGE_META
 OO: OO_VGCHANGE
 OP: VG|Tag|Select ...
 ID: vgchange_properties
-DESC: Change a general VG property.
+DESC: Change a general VG attribute.
+DESC: For options listed in parentheses, any one is
+DESC: required, after which the others are optional.
 
 vgchange --monitor Bool
 OO: --sysinit, --ignorelockingfailure, --poll Bool, OO_VGCHANGE
