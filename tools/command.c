@@ -2498,7 +2498,7 @@ void print_man_all_options_desc(struct command_name *cname)
 		if (!cname->all_options[opt_enum])
 			continue;
 
-		printf("\n.TP\n");
+		printf("\n.HP\n");
 
 		if (opt_names[opt_enum].short_opt) {
 			printf("\\fB-%c\\fP|\\fB%s\\fP",
@@ -2591,7 +2591,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_vg_val) {
-		printf("\n.TP\n");
+		printf("\n.HP\n");
 
 		printf("\\fI%s\\fP", val_names[vg_VAL].name);
 		printf("\n");
@@ -2605,7 +2605,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_lv_val) {
-		printf("\n.TP\n");
+		printf("\n.HP\n");
 
 		printf("\\fI%s\\fP", val_names[lv_VAL].name);
 		printf("\n");
@@ -2619,7 +2619,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_pv_val) {
-		printf("\n.TP\n");
+		printf("\n.HP\n");
 
 		printf("\\fI%s\\fP", val_names[pv_VAL].name);
 		printf("\n");
@@ -2632,7 +2632,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_tag_val) {
-		printf("\n.TP\n");
+		printf("\n.HP\n");
 
 		printf("\\fI%s\\fP", val_names[tag_VAL].name);
 		printf("\n");
@@ -2642,7 +2642,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_select_val) {
-		printf("\n.TP\n");
+		printf("\n.HP\n");
 
 		printf("\\fI%s\\fP", val_names[select_VAL].name);
 		printf("\n");
@@ -2654,7 +2654,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 
 	/* Every command uses a string arg somewhere. */
 
-	printf("\n.TP\n");
+	printf("\n.HP\n");
 	printf("\\fI%s\\fP", val_names[string_VAL].name);
 	printf("\n");
 	printf(".br\n");
@@ -2662,7 +2662,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 
 	/* Nearly every command uses a number arg somewhere. */
 
-	printf("\n.TP\n");
+	printf("\n.HP\n");
 	printf("\\fINumber\\fP, \\fISize\\fP");
 	printf("\n");
 	printf(".br\n");
@@ -2671,7 +2671,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	       "The default input unit is specified by letter, followed by |unit which\n"
 	       "represents other possible input units: bBsSkKmMgGtTpPeE.\n");
 
-	printf("\n.TP\n");
+	printf("\n.HP\n");
 	printf("Environment");
 	printf("\n");
 	printf(".br\n");
