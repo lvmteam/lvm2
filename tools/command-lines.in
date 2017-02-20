@@ -1126,12 +1126,17 @@ ID: lvdisplay_general
 
 ---
 
+# --type is an option in lvextend/lvresize only so that the specified type
+# value can be checked to match the existing type; using it doesn't
+# currently enable any different behavior.
+
 # --extents is not specified; it's an automatic alternative for --size
 
 lvextend --size SizeMB LV
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 --nofsck, --nosync, --noudevsync, --reportformat ReportFmt, --resizefs,
---stripes Number, --stripesize SizeKB, --poolmetadatasize SizeMB
+--stripes Number, --stripesize SizeKB, --poolmetadatasize SizeMB,
+--type SegType
 OP: PV ...
 ID: lvextend_by_size
 DESC: Extend an LV by a specified size.
@@ -1139,7 +1144,8 @@ DESC: Extend an LV by a specified size.
 lvextend LV PV ...
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 --nofsck, --nosync, --noudevsync,
---reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB
+--reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB,
+--type SegType
 ID: lvextend_by_pv
 DESC: Extend an LV by specified PV extents.
 FLAGS: SECONDARY_SYNTAX
@@ -1147,7 +1153,8 @@ FLAGS: SECONDARY_SYNTAX
 lvextend --poolmetadatasize SizeMB LV_thinpool
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 --nofsck, --nosync, --noudevsync,
---reportformat ReportFmt, --stripes Number, --stripesize SizeKB
+--reportformat ReportFmt, --stripes Number, --stripesize SizeKB,
+--type SegType
 OP: PV ...
 ID: lvextend_pool_metadata_by_size
 DESC: Extend a pool metadata SubLV by a specified size.
@@ -1155,7 +1162,8 @@ DESC: Extend a pool metadata SubLV by a specified size.
 lvextend --usepolicies LV_thinpool_snapshot
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 --nofsck, --nosync, --noudevsync,
---reportformat ReportFmt, --resizefs
+--reportformat ReportFmt, --resizefs,
+--type SegType
 OP: PV ...
 ID: lvextend_by_policy
 DESC: Extend an LV according to a predefined policy.
@@ -1193,10 +1201,15 @@ ID: lvrename_lv_lv
 
 ---
 
+# --type is an option in lvextend/lvresize only so that the specified type
+# value can be checked to match the existing type; using it doesn't
+# currently enable any different behavior.
+
 lvresize --size SizeMB LV
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync, --reportformat ReportFmt, --resizefs,
---stripes Number, --stripesize SizeKB, --poolmetadatasize SizeMB
+--stripes Number, --stripesize SizeKB, --poolmetadatasize SizeMB,
+--type SegType
 OP: PV ...
 ID: lvresize_by_size
 DESC: Resize an LV by a specified size.
@@ -1204,7 +1217,8 @@ DESC: Resize an LV by a specified size.
 lvresize LV PV ...
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync,
---reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB
+--reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB,
+--type SegType
 ID: lvresize_by_pv
 DESC: Resize an LV by specified PV extents.
 FLAGS: SECONDARY_SYNTAX
@@ -1212,7 +1226,8 @@ FLAGS: SECONDARY_SYNTAX
 lvresize --poolmetadatasize SizeMB LV_thinpool
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync,
---reportformat ReportFmt, --stripes Number, --stripesize SizeKB
+--reportformat ReportFmt, --stripes Number, --stripesize SizeKB,
+--type SegType
 OP: PV ...
 ID: lvresize_pool_metadata_by_size
 DESC: Resize a pool metadata SubLV by a specified size.
