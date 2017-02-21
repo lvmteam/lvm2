@@ -41,7 +41,7 @@ dmsetup \(em low level logical volume management
 .  BR deps
 .  RB [ \-o
 .  IR options ]
-.  RI [ device_name ]
+.  RI [ device_name ...]
 .  ad b
 ..
 .CMD_DEPS
@@ -58,7 +58,7 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_INFO
 .  BR info
-.  RI [ device_name ]
+.  RI [ device_name ...]
 ..
 .CMD_INFO
 .
@@ -117,7 +117,7 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_MANGLE
 .  BR mangle
-.  RI [ device_name ]
+.  RI [ device_name ...]
 ..
 .CMD_MANGLE
 .
@@ -135,7 +135,7 @@ dmsetup \(em low level logical volume management
 .B dmsetup
 .de CMD_MKNODES
 .  BR mknodes
-.  RI [ device_name ]
+.  RI [ device_name ...]
 ..
 .CMD_MKNODES
 .
@@ -159,7 +159,7 @@ dmsetup \(em low level logical volume management
 .  RB [ \-f | \-\-force ]
 .  RB [ \-\-retry ]
 .  RB [ \-\-deferred ]
-.  IR device_name
+.  IR device_name ...
 .  ad b
 ..
 .CMD_REMOVE
@@ -197,7 +197,7 @@ dmsetup \(em low level logical volume management
 .de CMD_RESUME
 .  ad l
 .  BR resume
-.  IR device_name
+.  IR device_name ...
 .  RB [ \-\-addnodeoncreate | \-\-addnodeonresume ]
 .  RB [ \-\-noflush ]
 .  RB [ \-\-nolockfs ]
@@ -247,7 +247,7 @@ dmsetup \(em low level logical volume management
 .  RB [ \-\-target
 .  IR target_type ]
 .  RB [ \-\-noflush ]
-.  RI [ device_name ]
+.  RI [ device_name ...]
 .  ad b
 ..
 .CMD_STATUS
@@ -259,7 +259,7 @@ dmsetup \(em low level logical volume management
 .  BR suspend
 .  RB [ \-\-nolockfs ]
 .  RB [ \-\-noflush ]
-.  IR device_name
+.  IR device_name ...
 .  ad b
 ..
 .CMD_SUSPEND
@@ -272,7 +272,7 @@ dmsetup \(em low level logical volume management
 .  RB [ \-\-target
 .  IR target_type ]
 .  RB [ \-\-showkeys ]
-.  RI [ device_name ]
+.  RI [ device_name ...]
 .  ad b
 ..
 .CMD_TABLE
@@ -354,7 +354,7 @@ dmsetup \(em low level logical volume management
 .de CMD_WIPE_TABLE
 .  ad l
 .  BR wipe_table
-.  IR device_name
+.  IR device_name ...
 .  RB [ \-f | \-\-force ]
 .  RB [ \-\-noflush ]
 .  RB [ \-\-nolockfs ]

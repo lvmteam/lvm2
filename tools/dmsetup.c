@@ -5726,32 +5726,32 @@ static int _stats_help(CMD_ARGS);
  * dmsetup stats <cmd> [options] [device_name]
  * dmstats <cmd> [options] [device_name]
  *
- *   clear [--allregions|--regionid id] [--alldevices|<device...>]
+ *   clear [--allregions|--regionid id] [--alldevices|<device>...]
  *   create [--start <start> [--length <len>]
  *       [--areas <nr_areas>] [--areasize <size>]
  *       [--programid <id>] [--userdata <data> ]
  *       [--bounds histogram_boundaries] [--precise]
- *       [--alldevices|<device...>]
+ *       [--alldevices|<device>...]
  *   create --filemap [--nogroup]
  *       [--programid <id>] [--userdata <data> ]
  *       [--bounds histogram_boundaries] [--precise] [<file_path>]
  *   delete [--allprograms|--programid id]
  *       [--allregions|--regionid id]
- *       [--alldevices|<device...>]
+ *       [--alldevices|<device>...]
  *   group [--alias NAME] --regions <regions>
- *       [--allprograms|--programid id] [--alldevices|<device...>]
+ *       [--allprograms|--programid id] [--alldevices|<device>...]
  *   list [--allprograms|--programid id] [--allregions|--regionid id]
  *   print [--clear] [--allprograms|--programid id]
  *       [--allregions|--regionid id]
- *       [--alldevices|<device...>]
+ *       [--alldevices|<device>...]
  *   report [--interval <seconds>] [--count <cnt>]
  *       [--units <u>] [--programid <id>] [--regionid <id>]
  *       [-o <fields>] [-O|--sort <sort_fields>]
  *       [-S|--select <selection>] [--nameprefixes]
  *       [--noheadings] [--separator <separator>]
- *       [--allprograms|--programid id] [<device...>]
+ *       [--allprograms|--programid id] [<device>...]
  *   ungroup --groupid <id> [--allprograms|--programid id]
- *       [--alldevices|<device...>]
+ *       [--alldevices|<device>...]
  */
 
 #define INDENT "\n\t    "
@@ -5766,7 +5766,7 @@ static int _stats_help(CMD_ARGS);
 #define EXTRA_OPTS HIST_OPTS PRECISE_OPTS
 #define ALL_PROGS_OPT "[--allprograms|--programid id] "
 #define ALL_REGIONS_OPT "[--allregions|--regionid id] "
-#define ALL_DEVICES_OPT "[--alldevices|<device...>] "
+#define ALL_DEVICES_OPT "[--alldevices|<device>...] "
 #define ALL_PROGS_REGIONS_DEVICES ALL_PROGS_OPT INDENT ALL_REGIONS_OPT INDENT ALL_DEVICES_OPT
 #define FIELD_OPTS "[-o <fields>] [-O|--sort <sort_fields>]"
 #define DM_REPORT_OPTS FIELD_OPTS INDENT "[-S|--select <selection>] [--nameprefixes]" INDENT \
@@ -5795,7 +5795,7 @@ static struct command _stats_subcommands[] = {
 	{"group", GROUP_OPTS, 1, -1, 1, 0, _stats_group},
 	{"list", ALL_PROGS_OPT ALL_REGIONS_OPT, 0, -1, 1, 0, _stats_report},
 	{"print", PRINT_OPTS, 0, -1, 1, 0, _stats_print},
-	{"report", REPORT_OPTS "[<device...>]", 0, -1, 1, 0, _stats_report},
+	{"report", REPORT_OPTS "[<device>...]", 0, -1, 1, 0, _stats_report},
 	{"ungroup", "--groupid <id> " UNGROUP_OPTS, 1, -1, 1, 0, _stats_ungroup},
 	{"update_filemap", "--groupid <id> <file_path>", 1, 1, 0, 0, _stats_update_file},
 	{"version", "", 0, -1, 1, 0, _version},
@@ -5832,27 +5832,27 @@ static struct command _dmsetup_commands[] = {
 	  "\t    [-u|uuid <uuid>] [--addnodeonresume|--addnodeoncreate]\n"
 	  "\t    [--readahead {[+]<sectors>|auto|none}]\n"
 	  "\t    [-n|--notable|--table {<table>|<table_file>}]", 1, 2, 0, 0, _create},
-	{"remove", "[--deferred] [-f|--force] [--retry] <device>", 0, -1, 1, 0, _remove},
+	{"remove", "[--deferred] [-f|--force] [--retry] <device>...", 0, -1, 1, 0, _remove},
 	{"remove_all", "[-f|--force]", 0, 0, 0, 0, _remove_all},
-	{"suspend", "[--noflush] [--nolockfs] <device>", 0, -1, 1, 0, _suspend},
-	{"resume", "[--noflush] [--nolockfs] <device>\n"
+	{"suspend", "[--noflush] [--nolockfs] <device>...", 0, -1, 1, 0, _suspend},
+	{"resume", "[--noflush] [--nolockfs] <device>...\n"
 	  "\t       [--addnodeonresume|--addnodeoncreate]\n"
 	  "\t       [--readahead {[+]<sectors>|auto|none}]", 0, -1, 1, 0, _resume},
 	  {"load", "<device> [<table>|<table_file>]", 0, 2, 0, 0, _load},
 	{"clear", "<device>", 0, -1, 1, 0, _clear},
 	{"reload", "<device> [<table>|<table_file>]", 0, 2, 0, 0, _load},
-	{"wipe_table", "[-f|--force] [--noflush] [--nolockfs] <device>", 1, -1, 1, 0, _error_device},
+	{"wipe_table", "[-f|--force] [--noflush] [--nolockfs] <device>...", 1, -1, 1, 0, _error_device},
 	{"rename", "<device> [--setuuid] <new_name_or_uuid>", 1, 2, 0, 0, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, 0, 0, _message},
 	{"ls", "[--target <target_type>] [--exec <command>] [-o <options>] [--tree]", 0, 0, 0, 0, _ls},
-	{"info", "[<device>]", 0, -1, 1, 0, _info},
-	{"deps", "[-o <options>] [<device>]", 0, -1, 1, 0, _deps},
-	{"stats", "<command> [<options>] [<devices>]", 1, -1, 1, 1, _stats},
-	{"status", "[<device>] [--noflush] [--target <target_type>]", 0, -1, 1, 0, _status},
-	{"table", "[<device>] [--target <target_type>] [--showkeys]", 0, -1, 1, 0, _status},
+	{"info", "[<device>...]", 0, -1, 1, 0, _info},
+	{"deps", "[-o <options>] [<device>...]", 0, -1, 1, 0, _deps},
+	{"stats", "<command> [<options>] [<device>...]", 1, -1, 1, 1, _stats},
+	{"status", "[<device>...] [--noflush] [--target <target_type>]", 0, -1, 1, 0, _status},
+	{"table", "[<device>...] [--target <target_type>] [--showkeys]", 0, -1, 1, 0, _status},
 	{"wait", "<device> [<event_nr>] [--noflush]", 0, 2, 0, 0, _wait},
-	{"mknodes", "[<device>]", 0, -1, 1, 0, _mknodes},
-	{"mangle", "[<device>]", 0, -1, 1, 0, _mangle},
+	{"mknodes", "[<device>...]", 0, -1, 1, 0, _mknodes},
+	{"mangle", "[<device>...]", 0, -1, 1, 0, _mangle},
 	{"udevcreatecookie", "", 0, 0, 0, 0, _udevcreatecookie},
 	{"udevreleasecookie", "[<cookie>]", 0, 1, 0, 0, _udevreleasecookie},
 	{"udevflags", "<cookie>", 1, 1, 0, 0, _udevflags},
@@ -5894,8 +5894,7 @@ static void _stats_usage(FILE *out)
 	for (i = 0; _stats_subcommands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _stats_subcommands[i].name, _stats_subcommands[i].help);
 
-	fprintf(out, "\n<device> may be device name or -u <uuid> or "
-		     "-j <major> -m <minor>\n");
+	fprintf(out, "\n<device> may be device name or (if only one) -u <uuid> or -j <major> -m <minor>\n");
 	fprintf(out, "<fields> are comma-separated.  Use 'help -c' for list.\n");
 	fprintf(out, "\n");
 }
@@ -5920,7 +5919,7 @@ static void _dmsetup_usage(FILE *out)
 	for (i = 0; _dmsetup_commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
 
-	fprintf(out, "\n<device> may be device name or -u <uuid> or "
+	fprintf(out, "\n<device> may be device name or (if only one) -u <uuid> or "
 		     "-j <major> -m <minor>\n");
 	fprintf(out, "<mangling_mode> is one of 'none', 'auto' and 'hex'.\n");
 	fprintf(out, "<fields> are comma-separated.  Use 'help -c' for list.\n");
