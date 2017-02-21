@@ -1229,7 +1229,7 @@ static int is_lvm_all_opt(int opt)
 
 /* Find common options for all variants of each command name. */
 
-static void factor_common_options(void)
+void factor_common_options(void)
 {
 	int cn, opt_enum, ci, oo, ro, found;
 	struct command *cmd;
@@ -1602,7 +1602,7 @@ static void print_usage_def(struct arg_def *def)
 		printf(" ...");
 }
 
-void print_usage(struct command *cmd)
+void print_usage(struct command *cmd, int longhelp)
 {
 	struct command_name *cname = find_command_name(cmd->name);
 	int onereq = (cmd->cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) ? 1 : 0;
@@ -1651,6 +1651,9 @@ void print_usage(struct command *cmd)
 			}
 		}
 	}
+
+	if (!longhelp)
+		goto done;
 
 	if (!cmd->oo_count)
 		goto op_count;
