@@ -406,8 +406,11 @@ teardown_devs_prefixed() {
 
 	# Remove devices, start with closed (sorted by open count)
 	# Run 'dmsetup remove' in parallel
-	rm -f REMOVE_FAILED
 	local need_udev_wait=0
+	rm -f REMOVE_FAILED
+	#local listdevs=( $(dm_info name,open --sort open,name | grep "$prefix.*:0") )
+	#dmsetup remove --deferred ${listdevs[@]%%:0} || touch REMOVE_FAILED
+
 	init_udev_transaction
 	for dm in $(dm_info name --sort open,name | grep "$prefix"); do
 		dmsetup remove "$dm" &>/dev/null || touch REMOVE_FAILED &
