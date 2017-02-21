@@ -1798,6 +1798,38 @@ static void print_val_man(const char *str)
 		return;
 	}
 
+	/*
+	 * The suffix [k|unit] is just printed in plain text.
+	 * Doing bold k and underlined unit creates a lot of
+	 * visual "noise" that is choppy and hard to read.
+	 * The extra markup in this case doesn't add anything
+	 * that isn't already obvious.
+	 */
+
+	if (!strcmp(str, "Number[k|unit]")) {
+		printf("\\fINumber\\fP[k|unit]");
+		return;
+	}
+
+	if (!strcmp(str, "Number[m|unit]")) {
+		printf("\\fINumber\\fP[m|unit]");
+		return;
+	}
+
+	if (!strcmp(str, "[+|-]Number")) {
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP");
+		return;
+	}
+
+	if (!strcmp(str, "[+|-]Number[%VG|%PVS|%FREE]")) {
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[\\fB%%VG\\fP|\\fB%%PVS\\fP|\\fB%%FREE\\fP]");
+		return;
+	}
+
+	/*
+	 * I think this bit is almost unnecessary with the specific
+	 * ones checked above.
+	 */
 	if (strstr(str, "Number[") || strstr(str, "]Number")) {
 		for (i = 0; i < strlen(str); i++) {
 			if (str[i] == 'N')
@@ -2666,7 +2698,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	/* Nearly every command uses a number arg somewhere. */
 
 	printf("\n.HP\n");
-	printf("\\fINumber\\fP, \\fISize\\fP");
+	printf("\\fINumber\\fP");
 	printf("\n");
 	printf(".br\n");
 	printf("Input units are always treated as base two values, regardless of unit\n"
