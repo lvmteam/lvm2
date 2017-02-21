@@ -33,9 +33,9 @@ test_pvmove_resume() {
 	# next LV on same VG and differetnt PV (we want to test 2 pvmoves per VG)
 	lvcreate -an -Zn -l30 -n $lv2 $vg "$dev3"
 
-	aux delay_dev "$dev4" 0 250
+	aux delay_dev "$dev4" 0 250 $(get first_extent_sector "$dev4"):
 	test -e HAVE_DM_DELAY || { lvremove -f $vg; return 0; }
-	aux delay_dev "$dev5" 0 250
+	aux delay_dev "$dev5" 0 250 $(get first_extent_sector "$dev5"):
 
 	pvmove -i5 "$dev1" "$dev4" &
 	PVMOVE=$!
