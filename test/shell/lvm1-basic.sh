@@ -28,7 +28,7 @@ grep "$dev1" out
 # check for RHBZ 1080189 -- SEGV in lvremove/vgremove
 pvcreate -ff -y --metadatatype 1 "$dev1" "$dev2"
 vgcreate --metadatatype 1 $vg1 "$dev1" "$dev2"
-lvcreate -l1 $vg1
+lvcreate -l1 $vg1 "$dev1"
 pvremove -ff -y "$dev2"
 vgchange -an $vg1
 not lvremove $vg1
