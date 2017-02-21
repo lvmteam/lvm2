@@ -646,7 +646,16 @@ arg(trustcache_ARG, '\0', "trustcache", 0, 0, 0,
     "Avoids certain device scanning during command processing. Do not use.\n")
 
 arg(type_ARG, '\0', "type", segtype_VAL, 0, 0,
-    "Specifies an LV type, or \"segment type\".\n")
+    "Specifies an LV type, or \"segment type\".\n"
+    "See usage definitions for specific ways to use these types.\n"
+    "For more information about redundancy and performance (\\fBraid\\fP<N>, \\fBmirror\\fP, \\fBstriped\\fP, \\fBlinear\\fP) see \\fBlvmraid\\fP(7).\n"
+    "For thin provisioning (\\fBthin\\fP, \\fBthin-pool\\fP) see \\fBlvmthin\\fP(7).\n"
+    "For performance caching (\\fBcache\\fP, \\fBcache-pool\\fP) see \\fBlvmcache\\fP(7).\n"
+    "For copy-on-write snapshots (\\fBsnapshot\\fP) see usage definitions.\n"
+    "Several commands omit an explicit type option because the type\n"
+    "is inferred from other options or shortcuts\n"
+    "(e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache).\n"
+    "Use inferred types with care because it can lead to unexpected results.\n")
 
 arg(unbuffered_ARG, '\0', "unbuffered", 0, 0, 0,
     "Produce output immediately without sorting or aligning the columns properly.\n")
