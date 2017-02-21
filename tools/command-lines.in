@@ -191,20 +191,6 @@ OO_ALL: --commandprofile String, --config String, --debug,
 --verbose, --version, --yes, --test
 
 #
-# This list only applies to printing the usage text.
-# These common options are displayed once at the end of
-# a given command's usage.  This is done to avoid excessive
-# repetition of common options, which may obscure the more
-# interesting and relevant parts of a common prototype.
-# This definition is *only* used when generating the command
-# usage strings, and is the basis for the division between
-# the "usage" and "usage_common" strings. This OO defn does
-# not relate to which optional opts are accepted by commands,
-# which is defined by the OO line.
-#
-OO_USAGE_COMMON: OO_ALL, --force, --noudevsync
-
-#
 # options for pvs, lvs, vgs, fullreport
 #
 OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,

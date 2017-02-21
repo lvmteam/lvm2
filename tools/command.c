@@ -1506,12 +1506,7 @@ int define_commands(char *run_name)
 			return 0;
 	}
 
-	/*
-	 * For usage.
-	 * Predefined string of options common to all commands
-	 * (for compact output)
-	 */
-	include_optional_opt_args(&lvm_all, "OO_USAGE_COMMON");
+	include_optional_opt_args(&lvm_all, "OO_ALL");
 
 	return 1;
 }
@@ -1665,11 +1660,22 @@ void print_usage(struct command *cmd, int longhelp)
 			opt_enum = cmd->optional_opt_args[oo].opt;
 
 			/*
-			 * Skip common opts in lvm_all and cname->common_options.
+			 * Skip common lvm options in lvm_all which
+			 * are printed at the end under "Common options for lvm"
+			 * see print_common_options_lvm()
 			 */
 
 			if (is_lvm_all_opt(opt_enum))
 				continue;
+
+			/*
+			 * When there is more than one variant,
+			 * skip common command options from
+			 * cname->common_options (options common
+			 * to all variants), which are printed at
+			 * the end under "Common options for command"
+			 * see print_common_options_cmd()
+			 */
 
 			if ((cname->variants > 1) && cname->common_options[opt_enum])
 				continue;
@@ -1716,11 +1722,35 @@ void print_usage(struct command *cmd, int longhelp)
 }
 
 
-void print_usage_common(struct command_name *cname, struct command *cmd)
+void print_usage_common_lvm(struct command_name *cname, struct command *cmd)
 {
 	int oo, opt_enum, first = 1;
 
-	printf("  Common options:");
+	printf("  Common options for lvm:");
+
+	for (oo = 0; oo < lvm_all.oo_count; oo++) {
+		opt_enum = lvm_all.optional_opt_args[oo].opt;
+
+		if (first)
+			printf("\n\t[");
+		else
+			printf("\n\t ");
+		first = 0;
+
+		printf(" %s", opt_names[opt_enum].long_opt);
+		if (lvm_all.optional_opt_args[oo].def.val_bits) {
+			printf(" ");
+			print_usage_def(&lvm_all.optional_opt_args[oo].def);
+		}
+	}
+
+	printf(" ]");
+	printf("\n\n");
+}
+
+void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
+{
+	int oo, opt_enum, first = 1;
 
 	/*
 	 * when there's more than one variant, options that
@@ -1728,7 +1758,9 @@ void print_usage_common(struct command_name *cname, struct command *cmd)
 	 */
 
 	if (cname->variants < 2)
-		goto all;
+		return;
+
+	printf("  Common options for command:");
 
 	for (opt_enum = 0; opt_enum < ARG_COUNT; opt_enum++) {
 		if (!cname->common_options[opt_enum])
@@ -1753,25 +1785,6 @@ void print_usage_common(struct command_name *cname, struct command *cmd)
 				print_usage_def(&cmd->optional_opt_args[oo].def);
 			}
 			break;
-		}
-	}
-
- all:
-	/* options that are common to all lvm commands */
-
-	for (oo = 0; oo < lvm_all.oo_count; oo++) {
-		opt_enum = lvm_all.optional_opt_args[oo].opt;
-
-		if (first)
-			printf("\n\t[");
-		else
-			printf("\n\t ");
-		first = 0;
-
-		printf(" %s", opt_names[opt_enum].long_opt);
-		if (lvm_all.optional_opt_args[oo].def.val_bits) {
-			printf(" ");
-			print_usage_def(&lvm_all.optional_opt_args[oo].def);
 		}
 	}
 
@@ -2215,7 +2228,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 			printf("\n.br\n");
 			printf(" ");
 			/* space alignment without short opt */
-			printf("   ");
+			/* printf("   "); */
 		}
 		printf(" COMMON_OPTIONS");
 		printf(" ]\n");
@@ -2263,13 +2276,106 @@ void print_man_usage(char *lvmname, struct command *cmd)
  * then options with only long names, alphabetically
  */
 
-void print_man_usage_common(struct command *cmd)
+void print_man_usage_common_lvm(struct command *cmd)
 {
 	struct command_name *cname;
 	int i, sep, rp, oo, op, opt_enum;
 
 	if (!(cname = find_command_name(cmd->name)))
 		return;
+
+	printf("Common options for lvm:\n");
+	printf(".\n");
+
+	sep = 0;
+
+	printf(".RS 4\n");
+	printf("[");
+
+	/* print those with short opts */
+	for (i = 0; i < ARG_COUNT; i++) {
+		opt_enum = opt_names_alpha[i]->opt_enum;
+
+		if (!opt_names[opt_enum].short_opt)
+			continue;
+
+		if (!is_lvm_all_opt(opt_enum))
+			continue;
+
+		if (sep) {
+			printf("\n.br\n");
+			printf(" ");
+		}
+
+		for (oo = 0; oo < cmd->oo_count; oo++) {
+			if (cmd->optional_opt_args[oo].opt != opt_enum)
+				continue;
+
+			printf(" \\fB-%c\\fP|\\fB%s\\fP",
+				opt_names[opt_enum].short_opt,
+				man_long_opt_name(cmd->name, opt_enum));
+
+			if (cmd->optional_opt_args[oo].def.val_bits) {
+				printf(" ");
+				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+			}
+			sep = 1;
+			break;
+		}
+
+	}
+
+	/* print those without short opts */
+	for (i = 0; i < ARG_COUNT; i++) {
+		opt_enum = opt_names_alpha[i]->opt_enum;
+
+		if (opt_names[opt_enum].short_opt)
+			continue;
+
+		if (!is_lvm_all_opt(opt_enum))
+			continue;
+
+		if (sep) {
+			printf("\n.br\n");
+			printf(" ");
+		}
+
+		for (oo = 0; oo < cmd->oo_count; oo++) {
+			if (cmd->optional_opt_args[oo].opt != opt_enum)
+				continue;
+
+			/* space alignment without short opt */
+			printf("   ");
+
+			printf(" \\fB%s\\fP", man_long_opt_name(cmd->name, opt_enum));
+
+			if (cmd->optional_opt_args[oo].def.val_bits) {
+				printf(" ");
+				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+			}
+			sep = 1;
+			break;
+		}
+	}
+
+	printf(" ]\n");
+	printf(".RE\n");
+	return;
+}
+
+void print_man_usage_common_cmd(struct command *cmd)
+{
+	struct command_name *cname;
+	int i, sep, rp, oo, op, opt_enum;
+
+	if (!(cname = find_command_name(cmd->name)))
+		return;
+
+	if (cname->variants < 2)
+		return;
+
+	printf("Common options for command:\n");
+	printf(".\n");
 
 	sep = 0;
 
@@ -2286,7 +2392,11 @@ void print_man_usage_common(struct command *cmd)
 		if (!opt_names[opt_enum].short_opt)
 			continue;
 
-		if ((cname->variants < 2) && !is_lvm_all_opt(opt_enum))
+		/* common cmd options only used with variants */
+		if (cname->variants < 2)
+			continue;
+
+		if (is_lvm_all_opt(opt_enum))
 			continue;
 
 		if (sep) {
@@ -2322,7 +2432,11 @@ void print_man_usage_common(struct command *cmd)
 		if (opt_names[opt_enum].short_opt)
 			continue;
 
-		if ((cname->variants < 2) && !is_lvm_all_opt(opt_enum))
+		/* common cmd options only used with variants */
+		if (cname->variants < 2)
+			continue;
+
+		if (is_lvm_all_opt(opt_enum))
 			continue;
 
 		if (sep) {
@@ -2349,6 +2463,9 @@ void print_man_usage_common(struct command *cmd)
 	}
 
 	printf(" ]\n");
+	printf(".RE\n");
+	printf(".br\n");
+	printf("\n");
 	return;
 }
 
@@ -2811,9 +2928,8 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 		cmd = &commands[i];
 
 		if (prev_cmd && strcmp(prev_cmd->name, cmd->name)) {
-			printf("Common options:\n");
-			printf(".\n");
-			print_man_usage_common(prev_cmd);
+			print_man_usage_common_cmd(prev_cmd);
+			print_man_usage_common_lvm(prev_cmd);
 
 			printf("\n");
 			printf(".SH OPTIONS\n");
@@ -2909,9 +3025,8 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 		print_man_usage(lvmname, cmd);
 
 		if (i == (COMMAND_COUNT - 1)) {
-			printf("Common options:\n");
-			printf(".\n");
-			print_man_usage_common(cmd);
+			print_man_usage_common_cmd(cmd);
+			print_man_usage_common_lvm(cmd);
 
 			printf("\n");
 			printf(".SH OPTIONS\n");

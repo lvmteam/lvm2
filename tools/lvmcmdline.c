@@ -1716,9 +1716,10 @@ static int _usage(const char *name, int longhelp)
 	}
 
 	/* Common options are printed once for all variants of a command name. */
-	if (longhelp)
-		print_usage_common(cname, cmd);
-	else
+	if (longhelp) {
+		print_usage_common_cmd(cname, cmd);
+		print_usage_common_lvm(cname, cmd);
+	} else
 		log_print("Use --longhelp to show all options.");
 
 	return 1;

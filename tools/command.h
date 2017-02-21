@@ -214,7 +214,8 @@ struct command {
 int define_commands(char *run_name);
 int command_id_to_enum(const char *str);
 void print_usage(struct command *cmd, int longhelp);
-void print_usage_common(struct command_name *cname, struct command *cmd);
+void print_usage_common_cmd(struct command_name *cname, struct command *cmd);
+void print_usage_common_lvm(struct command_name *cname, struct command *cmd);
 void factor_common_options(void);
 
 #endif
