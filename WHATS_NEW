@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Fix regression of accepting options --type and -m with lvresize (2.02.158).
   Add lvconvert --swapmetadata, new specific way to swap pool metadata LVs.
   Add lvconvert --startpoll, new specific way to start polling conversions.
   Add lvconvert --mergethin, new specific way to merge thin snapshots.
