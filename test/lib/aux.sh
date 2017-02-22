@@ -866,7 +866,7 @@ common_dev_() {
 		else
 			test -z "${offsets[@]}" && offsets="0:"
 		fi ;;
-	error)  offsets=${@:3}
+	error|zero)  offsets=${@:3}
 		test -z "${offsets[@]}" && offsets="0:" ;;
 	esac
 
@@ -893,8 +893,8 @@ common_dev_() {
 		case "$tgtype" in
 		delay)
 			echo "$from $len delay $pvdev $(($pos + $offset)) $read_ms $pvdev $(($pos + $offset)) $write_ms" ;;
-		error)
-			echo "$from $len error" ;;
+		error|zero)
+			echo "$from $len $tgtype" ;;
 		esac
 		pos=$(($pos + $len))
 	done > "$name.devtable"
@@ -1013,10 +1013,21 @@ restore_from_devtable() {
 #
 # Convert device to device with errors
 # Takes the list of pairs of error segment from:len
-# Original device table is replace with multiple lines
+# Combination with zero or delay is unsupported
+# Original device table is replaced with multiple lines
 # i.e.  error_dev "$dev1" 8:32 96:8
 error_dev() {
 	common_dev_ error "$@"
+}
+
+#
+# Convert existing device to a device with zero segments
+# Takes the list of pairs of zero segment from:len
+# Combination with error or delay is unsupported
+# Original device table is replaced with multiple lines
+# i.e.  zero_dev "$dev1" 8:32 96:8
+zero_dev() {
+	common_dev_ zero "$@"
 }
 
 backup_dev() {
