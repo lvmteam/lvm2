@@ -1785,16 +1785,6 @@ static void print_val_man(const char *str)
 	int line_argc;
 	int i;
 
-	if (!strcmp(str, "Number") ||
-	    !strcmp(str, "String") ||
-	    !strncmp(str, "VG", 2) ||
-	    !strncmp(str, "LV", 2) ||
-	    !strncmp(str, "PV", 2) ||
-	    !strcmp(str, "Tag")) {
-		printf("\\fI%s\\fP", str);
-		return;
-	}
-
 	/*
 	 * The suffix [k|unit] is just printed in plain text.
 	 * Doing bold k and underlined unit creates a lot of
@@ -1823,6 +1813,11 @@ static void print_val_man(const char *str)
 		return;
 	}
 
+	if (!strcmp(str, "PV[:t|n|y]")) {
+		printf("\\fIPV\\fP[\\fB:t\\fP|\\fBn\\fP|\\fBy\\fP]");
+		return;
+	}
+
 	/*
 	 * I think this bit is almost unnecessary with the specific
 	 * ones checked above.
@@ -1838,6 +1833,16 @@ static void print_val_man(const char *str)
 			}
 			printf("%c", str[i]);
 		}
+		return;
+	}
+
+	if (!strcmp(str, "Number") ||
+	    !strcmp(str, "String") ||
+	    !strncmp(str, "VG", 2) ||
+	    !strncmp(str, "LV", 2) ||
+	    !strncmp(str, "PV", 2) ||
+	    !strcmp(str, "Tag")) {
+		printf("\\fI%s\\fP", str);
 		return;
 	}
 
