@@ -176,8 +176,8 @@ struct opt_name {
 	char _padding[7];
 	const char *long_opt;   /* --foo */
 	int val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
-	uint32_t unused1;
-	uint32_t unused2;
+	uint32_t flags;
+	uint32_t prio;
 	const char *desc;
 };
 
@@ -2617,7 +2617,6 @@ void print_man_all_options_list(struct command_name *cname)
 
 /*
  * All options used for a given command name, along with descriptions.
- * listed in order of:
  */
 
 void print_man_all_options_desc(struct command_name *cname)
@@ -2655,6 +2654,9 @@ void print_man_all_options_desc(struct command_name *cname)
 			printf(" ");
 			print_val_man(val_names[val_enum].usage);
 		}
+
+		if (opt_names[opt_enum].flags & ARG_COUNTABLE)
+			printf(" ...");
 
 		if (opt_names[opt_enum].desc) {
 			printf("\n");
