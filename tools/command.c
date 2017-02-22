@@ -1786,20 +1786,19 @@ static void print_val_man(const char *str)
 	int i;
 
 	/*
-	 * The suffix [k|unit] is just printed in plain text.
-	 * Doing bold k and underlined unit creates a lot of
-	 * visual "noise" that is choppy and hard to read.
+	 * Doing bold k before underlined Unit creates a lot of
+	 * visual "noise" that makes the text hard to read.
 	 * The extra markup in this case doesn't add anything
 	 * that isn't already obvious.
 	 */
 
-	if (!strcmp(str, "Number[k|unit]")) {
-		printf("\\fINumber\\fP[k|unit]");
+	if (!strcmp(str, "Number[k|Unit]")) {
+		printf("\\fINumber\\fP[k|\\fIUnit\\fP]");
 		return;
 	}
 
-	if (!strcmp(str, "Number[m|unit]")) {
-		printf("\\fINumber\\fP[m|unit]");
+	if (!strcmp(str, "Number[m|Unit]")) {
+		printf("\\fINumber\\fP[m|\\fIUnit\\fP]");
 		return;
 	}
 
@@ -2799,13 +2798,13 @@ void print_man_all_positions_desc(struct command_name *cname)
 	/* Nearly every command uses a number arg somewhere. */
 
 	printf("\n.HP\n");
-	printf("\\fINumber\\fP");
+	printf("\\fINumber\\fP, \\fIUnit\\fP");
 	printf("\n");
 	printf(".br\n");
 	printf("Input units are always treated as base two values, regardless of unit\n"
 	       "capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
-	       "The default input unit is specified by letter, followed by |unit which\n"
-	       "represents other possible input units: bBsSkKmMgGtTpPeE.\n");
+	       "The default input unit is specified by letter, followed by |\\fIUnit\\fP\n"
+	       "which represents other possible input units: \\fBbBsSkKmMgGtTpPeE\\fP.\n");
 
 	printf("\n.HP\n");
 	printf("Environment");
