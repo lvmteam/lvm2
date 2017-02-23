@@ -482,6 +482,8 @@ GET_LVSEG_STR_PROPERTY_FN(kernel_discards, lvseg_kernel_discards_dup(lvseg->lv->
 #define _kernel_discards_set prop_not_implemented_set
 GET_LVSEG_STR_PROPERTY_FN(cache_mode, lvseg_cachemode_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _cache_mode_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(cache_metadata_format, lvseg->cache_metadata_format)
+#define _cache_metadata_format_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start, (SECTOR_SIZE * lvseg_start(lvseg)))
 #define _seg_start_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(seg_start_pe, lvseg->le)
@@ -513,6 +515,8 @@ GET_LVSEG_STR_PROPERTY_FN(seg_monitor, lvseg_monitor_dup(lvseg->lv->vg->vgmem, l
 #define _kernel_cache_settings_set prop_not_implemented_set
 #define _kernel_cache_policy_get prop_not_implemented_get
 #define _kernel_cache_policy_set prop_not_implemented_set
+#define _kernel_metadata_format_get prop_not_implemented_get
+#define _kernel_metadata_format_set prop_not_implemented_set
 
 /* PVSEG */
 GET_PVSEG_NUM_PROPERTY_FN(pvseg_start, pvseg->pe)

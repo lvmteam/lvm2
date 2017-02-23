@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -140,6 +140,7 @@ FIELD(LVSSTATUS, lv, NUM, "CacheWriteHits", lvid, 16, cache_write_hits, cache_wr
 FIELD(LVSSTATUS, lv, NUM, "CacheWriteMisses", lvid, 0, cache_write_misses, cache_write_misses, "Cache write misses.", 0)
 FIELD(LVSSTATUS, lv, STR_LIST, "KCacheSettings", lvid, 18, kernel_cache_settings, kernel_cache_settings, "Cache settings/parameters as set in kernel, including default values (cached segments only).", 0)
 FIELD(LVSSTATUS, lv, STR, "KCachePolicy", lvid, 18, kernel_cache_policy, kernel_cache_policy, "Cache policy used in kernel.", 0)
+FIELD(LVSSTATUS, lv, NUM, "KMFmt", lvid, 0, kernelmetadataformat, kernel_metadata_format, "Cache metadata format used in kernel.", 0)
 FIELD(LVSSTATUS, lv, STR, "Health", lvid, 15, lvhealthstatus, lv_health_status, "LV health status.", 0)
 FIELD(LVSSTATUS, lv, STR, "KDiscards", lvid, 0, kdiscards, kernel_discards, "For thin pools, how discards are handled in kernel.", 0)
 FIELD(LVSSTATUS, lv, BIN, "CheckNeeded", lvid, 15, lvcheckneeded, lv_check_needed, "For thin pools and cache volumes, whether metadata check is needed.", 0)
@@ -254,7 +255,8 @@ FIELD(SEGS, seg, SIZ, "Region", region_size, 0, size32, region_size, "For mirror
 FIELD(SEGS, seg, SIZ, "Chunk", list, 0, chunksize, chunk_size, "For snapshots, the unit of data used when tracking changes.", 0)
 FIELD(SEGS, seg, NUM, "#Thins", list, 0, thincount, thin_count, "For thin pools, the number of thin volumes in this pool.", 0)
 FIELD(SEGS, seg, STR, "Discards", list, 0, discards, discards, "For thin pools, how discards are handled.", 0)
-FIELD(SEGS, seg, STR, "CacheMode", list, 0, cachemode, cache_mode, "For cache pools, how writes are cached.", 0)
+FIELD(SEGS, seg, NUM, "CMFmt", list, 0, cachemetadataformat, cache_metadata_format, "For cache, metadata format in use.", 0)
+FIELD(SEGS, seg, STR, "CacheMode", list, 0, cachemode, cache_mode, "For cache, how writes are cached.", 0)
 FIELD(SEGS, seg, BIN, "Zero", list, 0, thinzero, zero, "For thin pools and volumes, if zeroing is enabled.", 0)
 FIELD(SEGS, seg, NUM, "TransId", list, 0, transactionid, transaction_id, "For thin pools, the transaction id and creation transaction id for thins.", 0)
 FIELD(SEGS, seg, NUM, "ThId", list, 0, thinid, thin_id, "For thin volume, the thin device id.", 0)

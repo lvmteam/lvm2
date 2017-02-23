@@ -54,6 +54,7 @@ enum {
 
 static const uint64_t _zero64 = UINT64_C(0);
 static const uint64_t _one64 = UINT64_C(1);
+static const uint64_t _two64 = UINT64_C(2);
 static const char _str_zero[] = "0";
 static const char _str_one[] = "1";
 static const char _str_no[] = "no";
@@ -1537,6 +1538,21 @@ static int _kernel_cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 				GET_FIELD_RESERVED_VALUE(cache_policy_undef));
 }
 
+static int _kernelmetadataformat_disp(struct dm_report *rh, struct dm_pool *mem,
+				      struct dm_report_field *field,
+				      const void *data, void *private)
+{
+	const struct lv_with_info_and_seg_status *lvdm = (const struct lv_with_info_and_seg_status *) data;
+	unsigned format;
+
+	if (lvdm->seg_status.type == SEG_STATUS_CACHE) {
+		format = (lvdm->seg_status.cache->feature_flags & DM_CACHE_FEATURE_METADATA2);
+		return dm_report_field_uint64(rh, field, format ? &_two64 : &_one64);
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
 static int _cache_policy_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data, void *private)
@@ -2716,6 +2732,29 @@ static int _cachemode_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
 	return _field_string(rh, field, display_cache_mode(seg));
+}
+
+static int _cachemetadataformat_disp(struct dm_report *rh, struct dm_pool *mem,
+				     struct dm_report_field *field,
+				     const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const uint64_t *fmt;
+
+	if (seg_is_cache(seg))
+		seg = first_seg(seg->pool_lv);
+
+	if (seg_is_cache_pool(seg)) {
+		switch (seg->cache_metadata_format) {
+		case CACHE_METADATA_FORMAT_1:
+		case CACHE_METADATA_FORMAT_2:
+			fmt = (seg->cache_metadata_format == CACHE_METADATA_FORMAT_2) ? &_two64 : &_one64;
+			return dm_report_field_uint64(rh, field, fmt);
+		default: /* unselected/undefined for all other cases */;
+		}
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _originsize_disp(struct dm_report *rh, struct dm_pool *mem,
