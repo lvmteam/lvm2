@@ -3398,19 +3398,26 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 {
 	struct dm_config_node *cn;
 	struct load_segment *seg;
+	static const uint64_t _modemask =
+		DM_CACHE_FEATURE_PASSTHROUGH |
+		DM_CACHE_FEATURE_WRITETHROUGH |
+		DM_CACHE_FEATURE_WRITEBACK;
 
-	switch (feature_flags &
-		(DM_CACHE_FEATURE_PASSTHROUGH |
-		 DM_CACHE_FEATURE_WRITETHROUGH |
-		 DM_CACHE_FEATURE_WRITEBACK)) {
-		 case DM_CACHE_FEATURE_PASSTHROUGH:
-		 case DM_CACHE_FEATURE_WRITETHROUGH:
-		 case DM_CACHE_FEATURE_WRITEBACK:
-			 break;
-		 default:
-			 log_error("Invalid cache's feature flag " FMTu64 ".",
-				   feature_flags);
-			 return 0;
+	switch (feature_flags & _modemask) {
+	case DM_CACHE_FEATURE_PASSTHROUGH:
+	case DM_CACHE_FEATURE_WRITEBACK:
+		if (strcmp(policy_name, "cleaner") == 0) {
+			/* Enforce writethrough mode for cleaner policy */
+			feature_flags = ~_modemask;
+			feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
+		}
+                /* Fall through */
+	case DM_CACHE_FEATURE_WRITETHROUGH:
+		break;
+	default:
+		log_error("Invalid cache's feature flag " FMTu64 ".",
+			  feature_flags);
+		return 0;
 	}
 
 	if (data_block_size < DM_CACHE_MIN_DATA_BLOCK_SIZE) {
@@ -3456,8 +3463,7 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 		return_0;
 
 	seg->data_block_size = data_block_size;
-	/* Enforce WriteThough mode for cleaner policy */
-	seg->flags = (strcmp(policy_name, "cleaner") == 0) ? DM_CACHE_FEATURE_WRITETHROUGH : feature_flags;
+	seg->flags = feature_flags;
 	seg->policy_name = policy_name;
 
 	/* FIXME: better validation missing */
