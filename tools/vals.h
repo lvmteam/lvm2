@@ -85,8 +85,8 @@
  * output, and doesn't indicate which unit is the default.
  * "Number[Units]" would be cleaner, as would a subset of
  * common units, e.g. "Number[kmg...]", but neither helps
- * with default.  "Number[k|Unit]" and "Number[m|Unit]" show
- * the default, and "Unit" indicates that other units
+ * with default.  "Number[k|UNIT]" and "Number[m|UNIT]" show
+ * the default, and "UNIT" indicates that other units
  * are possible without listing them all.  This also
  * suggests using the preferred lower case letters, because
  * --size and other option args treat upper/lower letters
@@ -115,9 +115,9 @@ val(activation_VAL, activation_arg, "Active", "y|n|ay")
 val(cachemode_VAL, cachemode_arg, "CacheMode", "writethrough|writeback")
 val(discards_VAL, discards_arg, "Discards", "passdown|nopassdown|ignore")
 val(mirrorlog_VAL, mirrorlog_arg, "MirrorLog", "core|disk")
-val(sizekb_VAL, size_kb_arg, "SizeKB", "Number[k|Unit]")
-val(sizemb_VAL, size_mb_arg, "SizeMB", "Number[m|Unit]")
-val(regionsize_VAL, regionsize_arg, "RegionSize", "Number[m|Unit]")
+val(sizekb_VAL, size_kb_arg, "SizeKB", "Number[k|UNIT]")
+val(sizemb_VAL, size_mb_arg, "SizeMB", "Number[m|UNIT]")
+val(regionsize_VAL, regionsize_arg, "RegionSize", "Number[m|UNIT]")
 val(numsigned_VAL, int_arg_with_sign, "SNumber", "[+|-]Number")
 val(numsignedper_VAL, int_arg_with_sign_and_percent, "SNumberP", "[+|-]Number[%VG|%PVS|%FREE]")
 val(permission_VAL, permission_arg, "Permission", "rw|r")
