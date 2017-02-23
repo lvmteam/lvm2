@@ -2514,12 +2514,17 @@ static int _cache_emit_segment_line(struct dm_task *dmt,
 	/* Features */
 	/* feature_count = hweight32(seg->flags); */
 	/* EMIT_PARAMS(pos, " %u", feature_count); */
+	if (seg->flags & DM_CACHE_FEATURE_METADATA2)
+		EMIT_PARAMS(pos, " 2 metadata2 ");
+	else
+		EMIT_PARAMS(pos, " 1 ");
+
 	if (seg->flags & DM_CACHE_FEATURE_PASSTHROUGH)
-		EMIT_PARAMS(pos, " 1 passthrough");
-	else if (seg->flags & DM_CACHE_FEATURE_WRITETHROUGH)
-		EMIT_PARAMS(pos, " 1 writethrough");
-	else if (seg->flags & DM_CACHE_FEATURE_WRITEBACK)
-		EMIT_PARAMS(pos, " 1 writeback");
+		EMIT_PARAMS(pos, "passthrough");
+        else if (seg->flags & DM_CACHE_FEATURE_WRITEBACK)
+		EMIT_PARAMS(pos, "writeback");
+	else
+		EMIT_PARAMS(pos, "writethrough");
 
 	/* Cache Policy */
 	name = seg->policy_name ? : "default";
@@ -3402,6 +3407,13 @@ int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 		DM_CACHE_FEATURE_PASSTHROUGH |
 		DM_CACHE_FEATURE_WRITETHROUGH |
 		DM_CACHE_FEATURE_WRITEBACK;
+
+	/* Detect unknown (bigger) feature bit */
+	if (feature_flags >= (DM_CACHE_FEATURE_METADATA2 * 2)) {
+		log_error("Unsupported cache's feature flags set " FMTu64 ".",
+			  feature_flags);
+		return 0;
+	}
 
 	switch (feature_flags & _modemask) {
 	case DM_CACHE_FEATURE_PASSTHROUGH:

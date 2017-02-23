@@ -359,7 +359,7 @@ struct dm_status_cache {
 	uint64_t demotions;
 	uint64_t promotions;
 
-	uint64_t feature_flags;
+	uint64_t feature_flags;		/* DM_CACHE_FEATURE_? */
 
 	int core_argc;
 	char **core_argv;
@@ -1886,6 +1886,7 @@ int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
 #define DM_CACHE_FEATURE_WRITEBACK    0x00000001
 #define DM_CACHE_FEATURE_WRITETHROUGH 0x00000002
 #define DM_CACHE_FEATURE_PASSTHROUGH  0x00000004
+#define DM_CACHE_FEATURE_METADATA2    0x00000008 /* cache v1.10 */
 
 struct dm_config_node;
 /*
