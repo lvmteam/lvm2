@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 1997-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -192,9 +192,9 @@ static int _add_stripe_seg(struct dm_pool *mem,
 		return_0;
 
 	if (!(seg = alloc_lv_segment(segtype, lv, *le_cur,
-				     area_len * usp->num_devs, 0,
+				     area_len * usp->num_devs, 0, 0,
 				     usp->striping, NULL, usp->num_devs,
-				     area_len, 0, 0, 0, NULL))) {
+				     area_len, 0, 0, 0, 0, NULL))) {
 		log_error("Unable to allocate striped lv_segment structure");
 		return 0;
 	}
@@ -232,8 +232,8 @@ static int _add_linear_seg(struct dm_pool *mem,
 		area_len = (usp->devs[j].blocks) / POOL_PE_SIZE;
 
 		if (!(seg = alloc_lv_segment(segtype, lv, *le_cur,
-					     area_len, 0, usp->striping,
-					     NULL, 1, area_len,
+					     area_len, 0, 0, usp->striping,
+					     NULL, 1, area_len, 0,
 					     POOL_PE_SIZE, 0, 0, NULL))) {
 			log_error("Unable to allocate linear lv_segment "
 				  "structure");

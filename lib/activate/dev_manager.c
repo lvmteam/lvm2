@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -214,6 +214,14 @@ typedef enum {
 	STATUS, /* DM_DEVICE_STATUS ioctl */
 } info_type_t;
 
+/* Return length of segment depending on type and reshape_len */
+static uint32_t _seg_len(const struct lv_segment *seg)
+{
+	uint32_t reshape_len = seg_is_raid(seg) ? ((seg->area_count - seg->segtype->parity_devs) * seg->reshape_len) : 0;
+
+	return seg->len - reshape_len;
+}
+
 static int _info_run(const char *dlid, struct dm_info *dminfo,
 		     uint32_t *read_ahead,
 		     struct lv_seg_status *seg_status,
@@ -250,7 +258,7 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 	if (seg_status && dminfo->exists) {
 		start = length = seg_status->seg->lv->vg->extent_size;
 		start *= seg_status->seg->le;
-		length *= seg_status->seg->len;
+		length *= _seg_len(seg_status->seg);
 
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,
@@ -2214,7 +2222,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 	struct lv_segment *seg_i;
 	struct dm_info info;
 	int segno = -1, i = 0;
-	uint64_t size = (uint64_t) seg->len * seg->lv->vg->extent_size;
+	uint64_t size = (uint64_t) _seg_len(seg) * seg->lv->vg->extent_size;
 
 	dm_list_iterate_items(seg_i, &seg->lv->segments) {
 		if (seg == seg_i) {
@@ -2500,7 +2508,7 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 	return seg->segtype->ops->add_target_line(dm, dm->mem, dm->cmd,
 						  &dm->target_state, seg,
 						  laopts, dnode,
-						  extent_size * seg->len,
+						  extent_size * _seg_len(seg),
 						  &dm->pvmove_mirror_count);
 }
 
@@ -2693,7 +2701,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		/* Replace target and all its used devs with error mapping */
 		log_debug_activation("Using error for pending delete %s.",
 				     display_lvname(seg->lv));
-		if (!dm_tree_node_add_error_target(dnode, (uint64_t)seg->lv->vg->extent_size * seg->len))
+		if (!dm_tree_node_add_error_target(dnode, (uint64_t)seg->lv->vg->extent_size * _seg_len(seg)))
 			return_0;
 	} else if (!_add_target_to_dtree(dm, dnode, seg, laopts))
 		return_0;
@@ -3165,7 +3173,6 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 		log_error(INTERNAL_ERROR "_tree_action: Action %u not supported.", action);
 		goto out;
 	}
-
 	r = 1;
 
 out:

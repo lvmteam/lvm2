@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -137,7 +137,11 @@
 									e.g. to prohibit allocation of a RAID image
 									on a PV already holing an image of the RAID set */
 #define LOCKD_SANLOCK_LV	UINT64_C(0x0080000000000000)	/* LV - Internal use only */
-/* Next unused flag:		UINT64_C(0x0100000000000000)    */
+#define LV_RESHAPE_DELTA_DISKS_PLUS		UINT64_C(0x0100000000000000)    /* LV reshape flag delta disks plus image(s) */
+#define LV_RESHAPE_DELTA_DISKS_MINUS		UINT64_C(0x0200000000000000)    /* LV reshape flag delta disks minus image(s) */
+
+#define LV_REMOVE_AFTER_RESHAPE	UINT64_C(0x0400000000000000)	/* LV needs to be removed after a shrinking reshape */
+/* Next unused flag:		UINT64_C(0x0800000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
@@ -446,6 +450,7 @@ struct lv_segment {
 	const struct segment_type *segtype;
 	uint32_t le;
 	uint32_t len;
+	uint32_t reshape_len;   /* For RAID: user hidden additional out of place reshaping length off area_len and len */
 
 	uint64_t status;
 
@@ -454,6 +459,7 @@ struct lv_segment {
 	uint32_t writebehind;   /* For RAID (RAID1 only) */
 	uint32_t min_recovery_rate; /* For RAID */
 	uint32_t max_recovery_rate; /* For RAID */
+	uint32_t data_offset;	/* For RAID: data offset in sectors on each data component image */
 	uint32_t area_count;
 	uint32_t area_len;
 	uint32_t chunk_size;	/* For snapshots/thin_pool.  In sectors. */
@@ -464,6 +470,7 @@ struct lv_segment {
 	struct logical_volume *cow;
 	struct dm_list origin_list;
 	uint32_t region_size;	/* For mirrors, replicators - in sectors */
+	uint32_t data_copies;	/* For RAID: number of data copies (e.g. 3 for RAID 6 */
 	uint32_t extents_copied;/* Number of extents synced for raids/mirrors */
 	struct logical_volume *log_lv;
 	struct lv_segment *pvmove_source_seg;
@@ -1205,7 +1212,8 @@ struct logical_volume *first_replicator_dev(const struct logical_volume *lv);
 int lv_is_raid_with_tracking(const struct logical_volume *lv);
 uint32_t lv_raid_image_count(const struct logical_volume *lv);
 int lv_raid_change_image_count(struct logical_volume *lv,
-			       uint32_t new_count, struct dm_list *allocate_pvs);
+			       uint32_t new_count,
+			       struct dm_list *allocate_pvs);
 int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		  uint32_t new_count, struct dm_list *splittable_pvs);
 int lv_raid_split_and_track(struct logical_volume *lv,
@@ -1233,6 +1241,7 @@ uint32_t raid_ensure_min_region_size(const struct logical_volume *lv, uint64_t r
 int lv_raid_change_region_size(struct logical_volume *lv,
                                int yes, int force, uint32_t new_region_size);
 int lv_raid_in_sync(const struct logical_volume *lv);
+uint32_t lv_raid_data_copies(const struct segment_type *segtype, uint32_t area_count);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */

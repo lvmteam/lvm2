@@ -205,11 +205,14 @@ struct load_segment {
 	struct dm_tree_node *replicator;/* Replicator-dev */
 	uint64_t rdevice_index;		/* Replicator-dev */
 
-	uint64_t rebuilds;		/* raid */
-	uint64_t writemostly;		/* raid */
+	int delta_disks;		/* raid reshape number of disks */
+	int data_offset;		/* raid reshape data offset on disk to set */
+	uint64_t rebuilds[RAID_BITMAP_SIZE];	/* raid */
+	uint64_t writemostly[RAID_BITMAP_SIZE];	/* raid */
 	uint32_t writebehind;		/* raid */
 	uint32_t max_recovery_rate;	/* raid kB/sec/disk */
 	uint32_t min_recovery_rate;	/* raid kB/sec/disk */
+	uint32_t data_copies;		/* raid10 data_copies */
 
 	struct dm_tree_node *metadata;	/* Thin_pool + Cache */
 	struct dm_tree_node *pool;	/* Thin_pool, Thin */
@@ -2353,16 +2356,21 @@ static int _mirror_emit_segment_line(struct dm_task *dmt, struct load_segment *s
 	return 1;
 }
 
-/* Is parameter non-zero? */
-#define PARAM_IS_SET(p) ((p) ? 1 : 0)
+static int _2_if_value(unsigned p)
+{
+	return p ? 2 : 0;
+}
 
-/* Return number of bits assuming 4 * 64 bit size */
-static int _get_params_count(uint64_t bits)
+/* Return number of bits passed in @bits assuming 2 * 64 bit size */
+static int _get_params_count(uint64_t *bits)
 {
 	int r = 0;
+	int i = RAID_BITMAP_SIZE;
 
-	r += 2 * hweight32(bits & 0xFFFFFFFF);
-	r += 2 * hweight32(bits >> 32);
+	while (i--) {
+		r += 2 * hweight32(bits[i] & 0xFFFFFFFF);
+		r += 2 * hweight32(bits[i] >> 32);
+	}
 
 	return r;
 }
@@ -2373,31 +2381,59 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 				   size_t paramsize)
 {
 	uint32_t i;
+	uint32_t area_count = seg->area_count / 2;
 	int param_count = 1; /* mandatory 'chunk size'/'stripe size' arg */
 	int pos = 0;
-	unsigned type = seg->type;
+	unsigned type;
+
+	if (seg->area_count % 2)
+		return 0;
 
 	if ((seg->flags & DM_NOSYNC) || (seg->flags & DM_FORCESYNC))
 		param_count++;
 
-	param_count += 2 * (PARAM_IS_SET(seg->region_size) +
-			    PARAM_IS_SET(seg->writebehind) +
-			    PARAM_IS_SET(seg->min_recovery_rate) +
-			    PARAM_IS_SET(seg->max_recovery_rate));
+	param_count += _2_if_value(seg->data_offset) +
+		       _2_if_value(seg->delta_disks) +
+		       _2_if_value(seg->region_size) +
+		       _2_if_value(seg->writebehind) +
+		       _2_if_value(seg->min_recovery_rate) +
+		       _2_if_value(seg->max_recovery_rate) +
+		       _2_if_value(seg->data_copies > 1);
 
-	/* rebuilds and writemostly are 64 bits */
+	/* rebuilds and writemostly are BITMAP_SIZE * 64 bits */
 	param_count += _get_params_count(seg->rebuilds);
 	param_count += _get_params_count(seg->writemostly);
 
-	if ((type == SEG_RAID1) && seg->stripe_size)
-		log_error("WARNING: Ignoring RAID1 stripe size");
+	if ((seg->type == SEG_RAID1) && seg->stripe_size)
+		log_info("WARNING: Ignoring RAID1 stripe size");
 
 	/* Kernel only expects "raid0", not "raid0_meta" */
+	type = seg->type;
 	if (type == SEG_RAID0_META)
 		type = SEG_RAID0;
+#if 0
+	/* Kernel only expects "raid10", not "raid10_{far,offset}" */
+	else if (type == SEG_RAID10_FAR ||
+		 type == SEG_RAID10_OFFSET) {
+		param_count += 2;
+		type = SEG_RAID10_NEAR;
+	}
+#endif
 
-	EMIT_PARAMS(pos, "%s %d %u", _dm_segtypes[type].target,
+	EMIT_PARAMS(pos, "%s %d %u",
+		    // type == SEG_RAID10_NEAR ? "raid10" : _dm_segtypes[type].target,
+		    type == SEG_RAID10 ? "raid10" : _dm_segtypes[type].target,
 		    param_count, seg->stripe_size);
+
+#if 0
+	if (seg->type == SEG_RAID10_FAR)
+		EMIT_PARAMS(pos, " raid10_format far");
+	else if (seg->type == SEG_RAID10_OFFSET)
+		EMIT_PARAMS(pos, " raid10_format offset");
+#endif
+
+	if (seg->data_copies > 1 && type == SEG_RAID10)
+		EMIT_PARAMS(pos, " raid10_copies %u", seg->data_copies);
 
 	if (seg->flags & DM_NOSYNC)
 		EMIT_PARAMS(pos, " nosync");
@@ -2407,27 +2443,38 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	if (seg->region_size)
 		EMIT_PARAMS(pos, " region_size %u", seg->region_size);
 
-	for (i = 0; i < (seg->area_count / 2); i++)
-		if (seg->rebuilds & (1ULL << i))
+	/* If seg-data_offset == 1, kernel needs a zero offset to adjust to it */
+	if (seg->data_offset)
+		EMIT_PARAMS(pos, " data_offset %d", seg->data_offset == 1 ? 0 : seg->data_offset);
+
+	if (seg->delta_disks)
+		EMIT_PARAMS(pos, " delta_disks %d", seg->delta_disks);
+
+	for (i = 0; i < area_count; i++)
+		if (seg->rebuilds[i/64] & (1ULL << (i%64)))
 			EMIT_PARAMS(pos, " rebuild %u", i);
 
-	if (seg->min_recovery_rate)
-		EMIT_PARAMS(pos, " min_recovery_rate %u",
-			    seg->min_recovery_rate);
-
-	if (seg->max_recovery_rate)
-		EMIT_PARAMS(pos, " max_recovery_rate %u",
-			    seg->max_recovery_rate);
-
-	for (i = 0; i < (seg->area_count / 2); i++)
-		if (seg->writemostly & (1ULL << i))
+	for (i = 0; i < area_count; i++)
+		if (seg->writemostly[i/64] & (1ULL << (i%64)))
 			EMIT_PARAMS(pos, " write_mostly %u", i);
 
 	if (seg->writebehind)
 		EMIT_PARAMS(pos, " max_write_behind %u", seg->writebehind);
 
+	/*
+	 * Has to be before "min_recovery_rate" or the kernels
+	 * check will fail when both set and min > previous max
+	 */
+	if (seg->max_recovery_rate)
+		EMIT_PARAMS(pos, " max_recovery_rate %u",
+			    seg->max_recovery_rate);
+
+	if (seg->min_recovery_rate)
+		EMIT_PARAMS(pos, " min_recovery_rate %u",
+			    seg->min_recovery_rate);
+
 	/* Print number of metadata/data device pairs */
-	EMIT_PARAMS(pos, " %u", seg->area_count/2);
+	EMIT_PARAMS(pos, " %u", area_count);
 
 	if (_emit_areas_line(dmt, seg, params, paramsize, &pos) <= 0)
 		return_0;
@@ -3267,11 +3314,14 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 	seg->region_size = p->region_size;
 	seg->stripe_size = p->stripe_size;
 	seg->area_count = 0;
-	seg->rebuilds = p->rebuilds;
-	seg->writemostly = p->writemostly;
+	seg->delta_disks = p->delta_disks;
+	seg->data_offset = p->data_offset;
+	memcpy(seg->rebuilds, p->rebuilds, sizeof(seg->rebuilds));
+	memcpy(seg->writemostly, p->writemostly, sizeof(seg->writemostly));
 	seg->writebehind = p->writebehind;
 	seg->min_recovery_rate = p->min_recovery_rate;
 	seg->max_recovery_rate = p->max_recovery_rate;
+	seg->data_copies = p->data_copies;
 	seg->flags = p->flags;
 
 	return 1;
@@ -3282,16 +3332,17 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 const char *raid_type,
 				 uint32_t region_size,
 				 uint32_t stripe_size,
-				 uint64_t rebuilds,
+				 uint64_t *rebuilds,
 				 uint64_t flags)
 {
 	struct dm_tree_node_raid_params params = {
 		.raid_type = raid_type,
 		.region_size = region_size,
 		.stripe_size = stripe_size,
-		.rebuilds = rebuilds,
 		.flags = flags
 	};
+
+	memcpy(params.rebuilds, rebuilds, sizeof(params.rebuilds));
 
 	return dm_tree_node_add_raid_target_with_params(node, size, &params);
 }

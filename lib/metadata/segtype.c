@@ -43,7 +43,8 @@ struct segment_type *get_segtype_from_flag(struct cmd_context *cmd, uint64_t fla
 {
 	struct segment_type *segtype;
 
-	dm_list_iterate_items(segtype, &cmd->segtypes)
+	/* Iterate backwards to provide aliases; e.g. raid5 instead of raid5_ls */
+	dm_list_iterate_back_items(segtype, &cmd->segtypes)
 		if (flag & segtype->flags)
 			return segtype;
 

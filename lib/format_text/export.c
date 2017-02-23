@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -583,8 +583,10 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 	outf(f, "start_extent = %u", seg->le);
 	outsize(f, (uint64_t) seg->len * vg->extent_size,
 		"extent_count = %u", seg->len);
-
 	outnl(f);
+	if (seg->reshape_len)
+		outsize(f, (uint64_t) seg->reshape_len * vg->extent_size,
+			"reshape_count = %u", seg->reshape_len);
 	outf(f, "type = \"%s\"", seg->segtype->name);
 
 	if (!_out_list(f, &seg->tags, "tags"))

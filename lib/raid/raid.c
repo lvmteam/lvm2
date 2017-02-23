@@ -137,6 +137,7 @@ static int _raid_text_import(struct lv_segment *seg,
 	} raid_attr_import[] = {
 		{ "region_size",	&seg->region_size },
 		{ "stripe_size",	&seg->stripe_size },
+		{ "data_copies",	&seg->data_copies },
 		{ "writebehind",	&seg->writebehind },
 		{ "min_recovery_rate",	&seg->min_recovery_rate },
 		{ "max_recovery_rate",	&seg->max_recovery_rate },
@@ -146,6 +147,10 @@ static int _raid_text_import(struct lv_segment *seg,
 	for (i = 0; i < DM_ARRAY_SIZE(raid_attr_import); i++, aip++) {
 		if (dm_config_has_node(sn, aip->name)) {
 			if (!dm_config_get_uint32(sn, aip->name, aip->var)) {
+				if (!strcmp(aip->name, "data_copies")) {
+					*aip->var = 0;
+					continue;
+				}
 				log_error("Couldn't read '%s' for segment %s of logical volume %s.",
 					  aip->name, dm_config_parent_name(sn), seg->lv->name);
 				return 0;
@@ -165,6 +170,9 @@ static int _raid_text_import(struct lv_segment *seg,
 		return 0;
 	}
 
+	if (seg->data_copies < 2)
+		seg->data_copies = 0; // lv_raid_data_copies(seg->segtype, seg->area_count);
+
 	if (seg_is_any_raid0(seg))
 		seg->area_len /= seg->area_count;
 
@@ -183,18 +191,31 @@ static int _raid_text_export_raid0(const struct lv_segment *seg, struct formatte
 
 static int _raid_text_export_raid(const struct lv_segment *seg, struct formatter *f)
 {
-	outf(f, "device_count = %u", seg->area_count);
+	int raid0 = seg_is_any_raid0(seg);
+
+	if (raid0)
+		outfc(f, (seg->area_count == 1) ? "# linear" : NULL,
+		      "stripe_count = %u", seg->area_count);
+
+	else {
+		outf(f, "device_count = %u", seg->area_count);
+		if (seg_is_any_raid10(seg) && seg->data_copies > 0)
+			outf(f, "data_copies = %" PRIu32, seg->data_copies);
+		if (seg->region_size)
+			outf(f, "region_size = %" PRIu32, seg->region_size);
+	}
 
 	if (seg->stripe_size)
 		outf(f, "stripe_size = %" PRIu32, seg->stripe_size);
-	if (seg->region_size)
-		outf(f, "region_size = %" PRIu32, seg->region_size);
-	if (seg->writebehind)
-		outf(f, "writebehind = %" PRIu32, seg->writebehind);
-	if (seg->min_recovery_rate)
-		outf(f, "min_recovery_rate = %" PRIu32, seg->min_recovery_rate);
-	if (seg->max_recovery_rate)
-		outf(f, "max_recovery_rate = %" PRIu32, seg->max_recovery_rate);
+
+	if (!raid0) {
+		if (seg_is_raid1(seg) && seg->writebehind)
+			outf(f, "writebehind = %" PRIu32, seg->writebehind);
+		if (seg->min_recovery_rate)
+			outf(f, "min_recovery_rate = %" PRIu32, seg->min_recovery_rate);
+		if (seg->max_recovery_rate)
+			outf(f, "max_recovery_rate = %" PRIu32, seg->max_recovery_rate);
+	}
 
 	return out_areas(f, seg, "raid");
 }
@@ -216,14 +237,16 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 				 struct dm_tree_node *node, uint64_t len,
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
+	int delta_disks = 0, delta_disks_minus = 0, delta_disks_plus = 0, data_offset = 0;
 	uint32_t s;
 	uint64_t flags = 0;
-	uint64_t rebuilds = 0;
-	uint64_t writemostly = 0;
+	uint64_t rebuilds[RAID_BITMAP_SIZE];
+	uint64_t writemostly[RAID_BITMAP_SIZE];
 	struct dm_tree_node_raid_params params;
-	int raid0 = seg_is_any_raid0(seg);
 
 	memset(&params, 0, sizeof(params));
+	memset(&rebuilds, 0, sizeof(rebuilds));
+	memset(&writemostly, 0, sizeof(writemostly));
 
 	if (!seg->area_count) {
 		log_error(INTERNAL_ERROR "_raid_add_target_line called "
@@ -232,62 +255,83 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	}
 
 	/*
-	 * 64 device restriction imposed by kernel as well.  It is
-	 * not strictly a userspace limitation.
+	 * 253 device restriction imposed by kernel due to MD and dm-raid bitfield limitation in superblock.
+	 * It is not strictly a userspace limitation.
 	 */
-	if (seg->area_count > 64) {
-		log_error("Unable to handle more than 64 devices in a "
-			  "single RAID array");
+	if (seg->area_count > DEFAULT_RAID_MAX_IMAGES) {
+		log_error("Unable to handle more than %u devices in a "
+			  "single RAID array", DEFAULT_RAID_MAX_IMAGES);
 		return 0;
 	}
 
-	if (!raid0) {
+	if (!seg_is_any_raid0(seg)) {
 		if (!seg->region_size) {
-			log_error("Missing region size for mirror segment.");
+			log_error("Missing region size for raid segment in %s.",
+				  seg_lv(seg, 0)->name);
 			return 0;
 		}
 
-		for (s = 0; s < seg->area_count; s++)
-			if (seg_lv(seg, s)->status & LV_REBUILD)
-				rebuilds |= 1ULL << s;
+		for (s = 0; s < seg->area_count; s++) {
+			uint64_t status = seg_lv(seg, s)->status;
 
-		for (s = 0; s < seg->area_count; s++)
-			if (seg_lv(seg, s)->status & LV_WRITEMOSTLY)
-				writemostly |= 1ULL << s;
+			if (status & LV_REBUILD)
+				rebuilds[s/64] |= 1ULL << (s%64);
+
+			if (status & LV_RESHAPE_DELTA_DISKS_PLUS) {
+				delta_disks++;
+				delta_disks_plus++;
+			} else if (status & LV_RESHAPE_DELTA_DISKS_MINUS) {
+				delta_disks--;
+				delta_disks_minus++;
+			}
+
+			if (delta_disks_plus && delta_disks_minus) {
+				log_error(INTERNAL_ERROR "Invalid request for delta disks minus and delta disks plus!");
+				return 0;
+			}
+
+			if (status & LV_WRITEMOSTLY)
+				writemostly[s/64] |= 1ULL << (s%64);
+		}
+
+		data_offset = seg->data_offset;
 
 		if (mirror_in_sync())
 			flags = DM_NOSYNC;
 	}
 
 	params.raid_type = lvseg_name(seg);
-	params.stripe_size = seg->stripe_size;
-	params.flags = flags;
 
-	if (raid0) {
-		params.mirrors = 1;
-		params.stripes = seg->area_count;
-	} else if (seg->segtype->parity_devs) {
+	if (seg->segtype->parity_devs) {
 		/* RAID 4/5/6 */
 		params.mirrors = 1;
 		params.stripes = seg->area_count - seg->segtype->parity_devs;
-	} else if (seg_is_raid10(seg)) {
-		/* RAID 10 only supports 2 mirrors now */
-		params.mirrors = 2;
-		params.stripes = seg->area_count / 2;
+	} else if (seg_is_any_raid0(seg)) {
+		params.mirrors = 1;
+		params.stripes = seg->area_count;
+	} else if (seg_is_any_raid10(seg)) {
+		params.data_copies = seg->data_copies;
+		params.stripes = seg->area_count;
 	} else {
 		/* RAID 1 */
-		params.mirrors = seg->area_count;
+		params.mirrors = seg->data_copies;
 		params.stripes = 1;
 		params.writebehind = seg->writebehind;
+		memcpy(params.writemostly, writemostly, sizeof(params.writemostly));
 	}
 
-	if (!raid0) {
+	/* RAID 0 doesn't have a bitmap, thus no region_size, rebuilds etc. */
+	if (!seg_is_any_raid0(seg)) {
 		params.region_size = seg->region_size;
-		params.rebuilds = rebuilds;
-		params.writemostly = writemostly;
+		memcpy(params.rebuilds, rebuilds, sizeof(params.rebuilds));
 		params.min_recovery_rate = seg->min_recovery_rate;
 		params.max_recovery_rate = seg->max_recovery_rate;
+		params.delta_disks = delta_disks;
+		params.data_offset = data_offset;
 	}
+
+	params.stripe_size = seg->stripe_size;
+	params.flags = flags;
 
 	if (!dm_tree_node_add_raid_target_with_params(node, len, &params))
 		return_0;
@@ -450,6 +494,10 @@ static int _raid_target_present(struct cmd_context *cmd,
 		else
 			log_very_verbose("Target raid does not support %s.",
 					 SEG_TYPE_NAME_RAID4);
+
+		if (maj > 1 ||
+		    (maj == 1 && (min > 10 || (min == 10 && patchlevel >= 2))))
+			_raid_attrs |= RAID_FEATURE_RESHAPE;
 	}
 
 	if (attributes)

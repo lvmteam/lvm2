@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -354,7 +354,7 @@ static int _read_segment(struct logical_volume *lv, const struct dm_config_node 
 	struct lv_segment *seg;
 	const struct dm_config_node *sn_child = sn->child;
 	const struct dm_config_value *cv;
-	uint32_t start_extent, extent_count;
+	uint32_t area_extents, start_extent, extent_count, reshape_count, data_copies;
 	struct segment_type *segtype;
 	const char *segtype_str;
 
@@ -375,6 +375,12 @@ static int _read_segment(struct logical_volume *lv, const struct dm_config_node 
 		return 0;
 	}
 
+	if (!_read_int32(sn_child, "reshape_count", &reshape_count))
+		reshape_count = 0;
+
+	if (!_read_int32(sn_child, "data_copies", &data_copies))
+		data_copies = 1;
+
 	segtype_str = SEG_TYPE_NAME_STRIPED;
 
 	if (!dm_config_get_str(sn_child, "type", &segtype_str)) {
@@ -389,9 +395,11 @@ static int _read_segment(struct logical_volume *lv, const struct dm_config_node 
 	    !segtype->ops->text_import_area_count(sn_child, &area_count))
 		return_0;
 
+	area_extents = segtype->parity_devs ?
+		       raid_rimage_extents(segtype, extent_count, area_count - segtype->parity_devs, data_copies) : extent_count;
 	if (!(seg = alloc_lv_segment(segtype, lv, start_extent,
-				     extent_count, 0, 0, NULL, area_count,
-				     extent_count, 0, 0, 0, NULL))) {
+				     extent_count, reshape_count, 0, 0, NULL, area_count,
+				     area_extents, data_copies, 0, 0, 0, NULL))) {
 		log_error("Segment allocation failed");
 		return 0;
 	}

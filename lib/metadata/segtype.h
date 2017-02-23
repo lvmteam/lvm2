@@ -140,7 +140,11 @@ struct dev_manager;
 #define segtype_is_any_raid10(segtype)	((segtype)->flags & SEG_RAID10 ? 1 : 0)
 #define segtype_is_raid10(segtype)	((segtype)->flags & SEG_RAID10 ? 1 : 0)
 #define segtype_is_raid10_near(segtype)	segtype_is_raid10(segtype)
+/* FIXME: once raid10_offset supported */
+#define segtype_is_raid10_offset(segtype)	0 // ((segtype)->flags & SEG_RAID10_OFFSET ? 1 : 0)
 #define segtype_is_raid_with_meta(segtype)	(segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
+#define segtype_is_striped_raid(segtype)        (segtype_is_raid(segtype) && !segtype_is_raid1(segtype))
+#define segtype_is_reshapable_raid(segtype)     ((segtype_is_striped_raid(segtype) && !segtype_is_any_raid0(segtype)) || segtype_is_raid10_near(segtype) || segtype_is_raid10_offset(segtype))
 #define segtype_is_snapshot(segtype)	((segtype)->flags & SEG_SNAPSHOT ? 1 : 0)
 #define segtype_is_striped(segtype)	((segtype)->flags & SEG_AREAS_STRIPED ? 1 : 0)
 #define segtype_is_thin(segtype)	((segtype)->flags & (SEG_THIN_POOL|SEG_THIN_VOLUME) ? 1 : 0)
@@ -190,6 +194,8 @@ struct dev_manager;
 #define seg_is_raid10(seg)	segtype_is_raid10((seg)->segtype)
 #define seg_is_raid10_near(seg)	segtype_is_raid10_near((seg)->segtype)
 #define seg_is_raid_with_meta(seg)	segtype_is_raid_with_meta((seg)->segtype)
+#define seg_is_striped_raid(seg)	segtype_is_striped_raid((seg)->segtype)
+#define	seg_is_reshapable_raid(seg)	segtype_is_reshapable_raid((seg)->segtype)
 #define seg_is_replicator(seg)	((seg)->segtype->flags & SEG_REPLICATOR ? 1 : 0)
 #define seg_is_replicator_dev(seg) ((seg)->segtype->flags & SEG_REPLICATOR_DEV ? 1 : 0)
 #define seg_is_snapshot(seg)	segtype_is_snapshot((seg)->segtype)
@@ -280,6 +286,7 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 #define RAID_FEATURE_RAID0			(1U << 1) /* version 1.7 */
 #define RAID_FEATURE_RESHAPING			(1U << 2) /* version 1.8 */
 #define RAID_FEATURE_RAID4			(1U << 3) /* ! version 1.8 or 1.9.0 */
+#define RAID_FEATURE_RESHAPE			(1U << 4) /* version 1.10.2 */
 
 #ifdef RAID_INTERNAL
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2014 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -912,11 +912,13 @@ static uint32_t _round_to_stripe_boundary(struct volume_group *vg, uint32_t exte
 struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,
+				    uint32_t reshape_len,
 				    uint64_t status,
 				    uint32_t stripe_size,
 				    struct logical_volume *log_lv,
 				    uint32_t area_count,
 				    uint32_t area_len,
+				    uint32_t data_copies,
 				    uint32_t chunk_size,
 				    uint32_t region_size,
 				    uint32_t extents_copied,
@@ -950,10 +952,12 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	seg->lv = lv;
 	seg->le = le;
 	seg->len = len;
+	seg->reshape_len = reshape_len;
 	seg->status = status;
 	seg->stripe_size = stripe_size;
 	seg->area_count = area_count;
 	seg->area_len = area_len;
+	seg->data_copies = data_copies ? : 0; // lv_raid_data_copies(segtype, area_count);
 	seg->chunk_size = chunk_size;
 	seg->region_size = region_size;
 	seg->extents_copied = extents_copied;
@@ -1047,11 +1051,10 @@ static int _release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t
 	if (lv_is_raid_image(lv)) {
 		/* Calculate the amount of extents to reduce per rmate/rimage LV */
 		uint32_t rimage_extents;
+		struct lv_segment *seg1 = first_seg(lv);
 
-		/* FIXME: avoid extra seg_is_*() conditonals */
-		area_reduction =_round_to_stripe_boundary(lv->vg, area_reduction,
-							  (seg_is_raid1(seg) || seg_is_any_raid0(seg)) ? 0 : _raid_stripes_count(seg), 0);
-		rimage_extents = raid_rimage_extents(seg->segtype, area_reduction, seg_is_any_raid0(seg) ? 0 : _raid_stripes_count(seg),
+		/* FIXME: avoid extra seg_is_*() conditionals here */
+		rimage_extents = raid_rimage_extents(seg1->segtype, area_reduction, seg_is_any_raid0(seg) ? 0 : _raid_stripes_count(seg),
 						     seg_is_raid10(seg) ? 1 :_raid_data_copies(seg));
 		if (!rimage_extents)
 			return 0;
@@ -1258,7 +1261,7 @@ static uint32_t _calc_area_multiple(const struct segment_type *segtype,
 	 *          the 'stripes' argument will always need to
 	 *          be given.
 	 */
-	if (!strcmp(segtype->name, _lv_type_names[LV_TYPE_RAID10])) {
+	if (segtype_is_raid10(segtype)) {
 		if (!stripes)
 			return area_count / 2;
 		return stripes;
@@ -1278,16 +1281,17 @@ static uint32_t _calc_area_multiple(const struct segment_type *segtype,
 static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 {
 	uint32_t area_reduction, s;
+	uint32_t areas = (seg->area_count / (seg_is_raid10(seg) ? seg->data_copies : 1)) - seg->segtype->parity_devs;
 
 	/* Caller must ensure exact divisibility */
-	if (seg_is_striped(seg)) {
-		if (reduction % seg->area_count) {
+	if (seg_is_striped(seg) || seg_is_striped_raid(seg)) {
+		if (reduction % areas) {
 			log_error("Segment extent reduction %" PRIu32
 				  " not divisible by #stripes %" PRIu32,
 				  reduction, seg->area_count);
 			return 0;
 		}
-		area_reduction = (reduction / seg->area_count);
+		area_reduction = reduction / areas;
 	} else
 		area_reduction = reduction;
 
@@ -1296,7 +1300,11 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 			return_0;
 
 	seg->len -= reduction;
-	seg->area_len -= area_reduction;
+
+	if (seg_is_raid(seg))
+		seg->area_len = seg->len;
+	else
+		seg->area_len -= area_reduction;
 
 	return 1;
 }
@@ -1306,11 +1314,13 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
  */
 static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 {
-	struct lv_segment *seg;
+	struct lv_segment *seg = first_seg(lv);;
 	uint32_t count = extents;
 	uint32_t reduction;
 	struct logical_volume *pool_lv;
 	struct logical_volume *external_lv = NULL;
+	int is_raid10 = seg_is_any_raid10(seg) && seg->reshape_len;
+	uint32_t data_copies = seg->data_copies;
 
 	if (lv_is_merging_origin(lv)) {
 		log_debug_metadata("Dropping snapshot merge of %s to removed origin %s.",
@@ -1373,7 +1383,15 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 		count -= reduction;
 	}
 
-	lv->le_count -= extents;
+	seg = first_seg(lv);
+
+	if (is_raid10) {
+		lv->le_count -= extents * data_copies;
+		if (seg)
+			seg->len = seg->area_len = lv->le_count;
+	} else
+		lv->le_count -= extents;
+
 	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
 
 	if (!delete)
@@ -1793,10 +1811,10 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint64_t status,
 	area_multiple = _calc_area_multiple(segtype, area_count, 0);
 	extents = aa[0].len * area_multiple;
 
-	if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents,
+	if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents, 0,
 				     status, stripe_size, NULL,
 				     area_count,
-				     aa[0].len, 0u, region_size, 0u, NULL))) {
+				     aa[0].len, 0, 0u, region_size, 0u, NULL))) {
 		log_error("Couldn't allocate new LV segment.");
 		return 0;
 	}
@@ -3234,9 +3252,9 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint64_t status,
 		seg->area_len += extents;
 		seg->len += extents;
 	} else {
-		if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents,
+		if (!(seg = alloc_lv_segment(segtype, lv, lv->le_count, extents, 0,
 					     status, 0, NULL, 0,
-					     extents, 0, 0, 0, NULL))) {
+					     extents, 0, 0, 0, 0, NULL))) {
 			log_error("Couldn't allocate new %s segment.", segtype->name);
 			return 0;
 		}
@@ -3562,10 +3580,10 @@ static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
 	}
 
 	if (!(newseg = alloc_lv_segment(get_segtype_from_string(seg->lv->vg->cmd, SEG_TYPE_NAME_MIRROR),
-					seg->lv, seg->le, seg->len,
+					seg->lv, seg->le, seg->len, 0,
 					seg->status, seg->stripe_size,
 					log_lv,
-					seg->area_count, seg->area_len,
+					seg->area_count, seg->area_len, 0,
 					seg->chunk_size, region_size,
 					seg->extents_copied, NULL))) {
 		log_error("Couldn't allocate converted LV segment.");
@@ -3667,8 +3685,8 @@ int lv_add_segmented_mirror_image(struct alloc_handle *ah,
 		}
 
 		if (!(new_seg = alloc_lv_segment(segtype, copy_lv,
-						 seg->le, seg->len, PVMOVE, 0,
-						 NULL, 1, seg->len,
+						 seg->le, seg->len, 0, PVMOVE, 0,
+						 NULL, 1, seg->len, 0,
 						 0, 0, 0, NULL)))
 			return_0;
 
@@ -3863,9 +3881,9 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 	/*
 	 * First, create our top-level segment for our top-level LV
 	 */
-	if (!(mapseg = alloc_lv_segment(segtype, lv, 0, 0, lv->status,
+	if (!(mapseg = alloc_lv_segment(segtype, lv, 0, 0, 0, lv->status,
 					stripe_size, NULL,
-					devices, 0, 0, region_size, 0, NULL))) {
+					devices, 0, 0, 0, region_size, 0, NULL))) {
 		log_error("Failed to create mapping segment for %s.",
 			  display_lvname(lv));
 		return 0;
@@ -4063,8 +4081,11 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			lv_set_hidden(seg_metalv(seg, s));
 	}
 
-	seg->area_len += extents / area_multiple;
 	seg->len += extents;
+	if (seg_is_raid(seg))
+		seg->area_len = seg->len;
+	else
+		seg->area_len += extents / area_multiple;
 
 	if (!_setup_lv_size(lv, lv->le_count + extents))
 		return_0;
@@ -6309,7 +6330,6 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 
 	log_very_verbose("Updating logical volume %s on disk(s)%s.",
 			 display_lvname(lock_lv), origin_only ? " (origin only)": "");
-
 	if (!vg_write(vg))
 		return_0;
 
@@ -6776,8 +6796,8 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		return_NULL;
 
 	/* allocate a new linear segment */
-	if (!(mapseg = alloc_lv_segment(segtype, lv_where, 0, layer_lv->le_count,
-					status, 0, NULL, 1, layer_lv->le_count,
+	if (!(mapseg = alloc_lv_segment(segtype, lv_where, 0, layer_lv->le_count, 0,
+					status, 0, NULL, 1, layer_lv->le_count, 0,
 					0, 0, 0, NULL)))
 		return_NULL;
 
@@ -6833,8 +6853,8 @@ static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 
 	/* allocate a new segment */
 	if (!(mapseg = alloc_lv_segment(segtype, layer_lv, layer_lv->le_count,
-					seg->area_len, status, 0,
-					NULL, 1, seg->area_len, 0, 0, 0, seg)))
+					seg->area_len, 0, status, 0,
+					NULL, 1, seg->area_len, 0, 0, 0, 0, seg)))
 		return_0;
 
 	/* map the new segment to the original underlying are */

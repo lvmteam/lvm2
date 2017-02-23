@@ -1952,9 +1952,9 @@ static int _alloc_and_add_new_striped_segment(struct logical_volume *lv,
 
 	/* Allocate a segment with seg->area_count areas */
 	if (!(new_seg = alloc_lv_segment(striped_segtype, lv, le, area_len * seg->area_count,
-					 0,
+					 0, 0,
 					 seg->stripe_size, NULL, seg->area_count,
-					 area_len, seg->chunk_size, 0, 0, NULL)))
+					 area_len, 0, seg->chunk_size, 0, 0, NULL)))
 		return_0;
 
 	dm_list_add(new_segments, &new_seg->list);
@@ -2510,8 +2510,8 @@ static int _striped_to_raid0_move_segs_to_raid0_lvs(struct logical_volume *lv,
 			if (!(seg_new = alloc_lv_segment(segtype, dlv,
 							 le, seg_from->area_len,
 							 status,
-							 0 /* stripe_size */, NULL, 1 /* area_count */,
-							 seg_from->area_len,
+							 0, 0 /* stripe_size */, NULL, 1 /* area_count */,
+							 seg_from->area_len, 0,
 							 0 /* chunk_size */, 0 /* region_size */, 0, NULL)))
 				return_0;
 
@@ -2726,9 +2726,9 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	seg = first_seg(dm_list_item(dm_list_first(&data_lvs), struct lv_list)->lv);
 	if (!(raid0_seg = alloc_lv_segment(segtype, lv,
 					   0 /* le */, lv->le_count /* len */,
-					   0,
+					   0, 0,
 					   stripe_size, NULL /* log_lv */,
-					   area_count, area_len,
+					   area_count, area_len, 0,
 					   0 /* chunk_size */,
 					   0 /* seg->region_size */, 0u /* extents_copied */ ,
 					   NULL /* pvmove_source_seg */))) {

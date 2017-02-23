@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1278,6 +1278,9 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
+		else if (lv->status & LV_REMOVE_AFTER_RESHAPE)
+			repstr[8] = 'R';  /* sub-LV got freed from raid set by reshaping
+					     and has to be 'R'emoved */
 	} else if (lvdm->seg_status.type == SEG_STATUS_CACHE) {
 		if (lvdm->seg_status.cache->fail)
 			repstr[8] = 'F';

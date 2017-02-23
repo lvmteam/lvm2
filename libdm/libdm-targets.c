@@ -89,6 +89,8 @@ static unsigned _count_fields(const char *p)
  *   <raid_type> <#devs> <health_str> <sync_ratio>
  * Versions 1.5.0+  (6 fields):
  *   <raid_type> <#devs> <health_str> <sync_ratio> <sync_action> <mismatch_cnt>
+ * Versions 1.9.0+  (7 fields):
+ *   <raid_type> <#devs> <health_str> <sync_ratio> <sync_action> <mismatch_cnt> <data_offset>
  */
 int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		       struct dm_status_raid **status)
@@ -146,6 +148,22 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 
 	if (sscanf(p, "%s %" PRIu64, s->sync_action, &s->mismatch_count) != 2)
 		goto_bad;
+
+	if (num_fields < 7)
+		goto out;
+
+	/*
+	 * All pre-1.9.0 version parameters are read.  Now we check
+	 * for additional 1.9.0+ parameters (i.e. nr_fields at least 7).
+	 *
+	 * Note that data_offset will be 0 if the
+	 * kernel returns a pre-1.9.0 status.
+	 */
+	msg_fields = "<data_offset>";
+	if (!(p = _skip_fields(params, 6))) /* skip pre-1.9.0 params */
+		goto bad;
+	if (sscanf(p, "%" PRIu64, &s->data_offset) != 1)
+		goto bad;
 
 out:
 	*status = s;

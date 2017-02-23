@@ -168,6 +168,8 @@ int lv_snapshot_percent(const struct logical_volume *lv, dm_percent_t *percent);
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		      int wait, dm_percent_t *percent, uint32_t *event_nr);
 int lv_raid_percent(const struct logical_volume *lv, dm_percent_t *percent);
+int lv_raid_dev_count(const struct logical_volume *lv, uint32_t *dev_cnt);
+int lv_raid_data_offset(const struct logical_volume *lv, uint64_t *data_offset);
 int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health);
 int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt);
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action);

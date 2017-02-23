@@ -236,7 +236,7 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 	if (!seg->areas)
 		raid_seg_error("zero areas");
 
-	if (seg->extents_copied > seg->area_len)
+	if (seg->extents_copied > seg->len)
 		raid_seg_error_val("extents_copied too large", seg->extents_copied);
 
 	/* Default < 10, change once raid1 split shift and rename SubLVs works! */
@@ -475,7 +475,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 	struct lv_segment *seg, *seg2;
 	uint32_t le = 0;
 	unsigned seg_count = 0, seg_found, external_lv_found = 0;
-	uint32_t area_multiplier, s;
+	uint32_t data_rimage_count, s;
 	struct seg_list *sl;
 	struct glv_list *glvl;
 	int error_count = 0;
@@ -498,13 +498,13 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			inc_error_count;
 		}
 
-		area_multiplier = segtype_is_striped(seg->segtype) ?
-					seg->area_count : 1;
-
-		if (seg->area_len * area_multiplier != seg->len) {
-			log_error("LV %s: segment %u has inconsistent "
-				  "area_len %u",
-				  lv->name, seg_count, seg->area_len);
+		data_rimage_count = seg->area_count - seg->segtype->parity_devs;
+		/* FIXME: raid varies seg->area_len? */
+		if (seg->len != seg->area_len &&
+		    seg->len != seg->area_len * data_rimage_count) {
+			log_error("LV %s: segment %u with len=%u "
+				  " has inconsistent area_len %u",
+				  lv->name, seg_count, seg->len, seg->area_len);
 			inc_error_count;
 		}
 
@@ -766,10 +766,10 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	/* Clone the existing segment */
 	if (!(split_seg = alloc_lv_segment(seg->segtype,
-					   seg->lv, seg->le, seg->len,
+					   seg->lv, seg->le, seg->len, seg->reshape_len,
 					   seg->status, seg->stripe_size,
 					   seg->log_lv,
-					   seg->area_count, seg->area_len,
+					   seg->area_count, seg->area_len, seg->data_copies,
 					   seg->chunk_size, seg->region_size,
 					   seg->extents_copied, seg->pvmove_source_seg))) {
 		log_error("Couldn't allocate cloned LV segment.");

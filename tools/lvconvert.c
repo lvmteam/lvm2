@@ -1228,6 +1228,9 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 static int _is_valid_raid_conversion(const struct segment_type *from_segtype,
 				    const struct segment_type *to_segtype)
 {
+	if (!from_segtype)
+		return 1;
+
 	if (from_segtype == to_segtype)
 		return 1;
 
@@ -1356,7 +1359,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 					  DEFAULT_RAID1_MAX_IMAGES, lp->segtype->name, display_lvname(lv));
 				return 0;
 			}
-			if (!lv_raid_change_image_count(lv, image_count, lp->pvh))
+			if (!lv_raid_change_image_count(lv, image_count, /* lp->region_size, */ lp->pvh))
 				return_0;
 
 			log_print_unless_silent("Logical volume %s successfully converted.",
@@ -1365,10 +1368,13 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 1;
 		}
 		goto try_new_takeover_or_reshape;
-	} else if (!*lp->type_str || seg->segtype == lp->segtype) {
+	}
+#if 0
+	} else if ((!*lp->type_str || seg->segtype == lp->segtype) && !lp->stripe_size_supplied) {
 		log_error("Conversion operation not yet supported.");
 		return 0;
 	}
+#endif
 
 	if ((seg_is_linear(seg) || seg_is_striped(seg) || seg_is_mirrored(seg) || lv_is_raid(lv)) &&
 	    (lp->type_str && lp->type_str[0])) {
@@ -1390,10 +1396,14 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			return 0;
 		}
 
+		/* FIXME This needs changing globally. */
 		if (!arg_is_set(cmd, stripes_long_ARG))
 			lp->stripes = 0;
+		if (!arg_is_set(cmd, type_ARG))
+		       lp->segtype = NULL;
 
-		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
+		if (!lv_raid_convert(lv, lp->segtype,
+				     lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
 				     lp->region_size, lp->pvh))
 			return_0;
 
@@ -1410,12 +1420,16 @@ try_new_takeover_or_reshape:
 	/* FIXME This needs changing globally. */
 	if (!arg_is_set(cmd, stripes_long_ARG))
 		lp->stripes = 0;
+	if (!arg_is_set(cmd, type_ARG))
+	       lp->segtype = NULL;
 
 	/* Only let raid4 through for now. */
-	if (lp->type_str && lp->type_str[0] && lp->segtype != seg->segtype &&
-	    ((seg_is_raid4(seg) && seg_is_striped(lp) && lp->stripes > 1) ||
-	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp)))) {
-		if (!lv_raid_convert(lv, lp->segtype, lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
+	if (!lp->segtype ||
+	    (lp->type_str && lp->type_str[0] && lp->segtype != seg->segtype &&
+	     ((seg_is_raid4(seg) && seg_is_striped(lp) && lp->stripes > 1) ||
+	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp))))) {
+		if (!lv_raid_convert(lv, lp->segtype,
+				     lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
 				     lp->region_size, lp->pvh))
 			return_0;
 
@@ -1700,6 +1714,8 @@ static int _lvconvert_raid_types(struct cmd_context *cmd, struct logical_volume 
 	/* FIXME This is incomplete */
 	if (_mirror_or_raid_type_requested(cmd, lp->type_str) || _raid0_type_requested(lp->type_str) ||
 	    _striped_type_requested(lp->type_str) || lp->mirrorlog || lp->corelog) {
+		if (!arg_is_set(cmd, type_ARG))
+			lp->segtype = first_seg(lv)->segtype;
 		/* FIXME Handle +/- adjustments too? */
 		if (!get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied))
 			goto_out;
@@ -2990,9 +3006,9 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	}
 
 	/* Allocate a new pool segment */
-	if (!(seg = alloc_lv_segment(pool_segtype, pool_lv, 0, data_lv->le_count,
+	if (!(seg = alloc_lv_segment(pool_segtype, pool_lv, 0, data_lv->le_count, 0,
 				     pool_lv->status, 0, NULL, 1,
-				     data_lv->le_count, 0, 0, 0, NULL)))
+				     data_lv->le_count, 0, 0, 0, 0, NULL)))
 		return_0;
 
 	/* Add the new segment to the layer LV */

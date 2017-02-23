@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -225,8 +225,8 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 	while (le < lvm->lv->le_count) {
 		len = _area_length(lvm, le);
 
-		if (!(seg = alloc_lv_segment(segtype, lvm->lv, le, len, 0, 0,
-					     NULL, 1, len, 0, 0, 0, NULL))) {
+		if (!(seg = alloc_lv_segment(segtype, lvm->lv, le, len, 0, 0, 0,
+					     NULL, 1, len, 0, 0, 0, 0, NULL))) {
 			log_error("Failed to allocate linear segment.");
 			return 0;
 		}
@@ -297,10 +297,10 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 
 		if (!(seg = alloc_lv_segment(segtype, lvm->lv,
 					     lvm->stripes * first_area_le,
-					     lvm->stripes * area_len,
+					     lvm->stripes * area_len, 0,
 					     0, lvm->stripe_size, NULL,
 					     lvm->stripes,
-					     area_len, 0, 0, 0, NULL))) {
+					     area_len, 0, 0, 0, 0, NULL))) {
 			log_error("Failed to allocate striped segment.");
 			return 0;
 		}

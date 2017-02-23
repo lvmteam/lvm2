@@ -238,8 +238,8 @@ static struct lv_segment *_alloc_snapshot_seg(struct logical_volume *lv)
 		return NULL;
 	}
 
-	if (!(seg = alloc_lv_segment(segtype, lv, 0, lv->le_count, 0, 0,
-				     NULL, 0, lv->le_count, 0, 0, 0, NULL))) {
+	if (!(seg = alloc_lv_segment(segtype, lv, 0, lv->le_count, 0, 0, 0,
+				     NULL, 0, lv->le_count, 0, 0, 0, 0, NULL))) {
 		log_error("Couldn't allocate new snapshot segment.");
 		return NULL;
 	}
