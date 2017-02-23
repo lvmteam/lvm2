@@ -238,7 +238,7 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
  * Returns: 1 if in-sync, 0 otherwise.
  */
 #define _RAID_IN_SYNC_RETRIES  6
-static int _raid_in_sync(struct logical_volume *lv)
+static int _raid_in_sync(const struct logical_volume *lv)
 {
 	int retries = _RAID_IN_SYNC_RETRIES;
 	dm_percent_t sync_percent;
@@ -267,6 +267,12 @@ static int _raid_in_sync(struct logical_volume *lv)
 	} while (--retries);
 
 	return (sync_percent == DM_PERCENT_100) ? 1 : 0;
+}
+
+/* External interface to raid in-sync check */
+int lv_raid_in_sync(const struct logical_volume *lv)
+{
+	return _raid_in_sync(lv);
 }
 
 /* Check if RaidLV @lv is synced or any raid legs of @lv are not synced */
