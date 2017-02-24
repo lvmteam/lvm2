@@ -1135,8 +1135,7 @@ uint32_t raid_rimage_extents(const struct segment_type *segtype,
 	uint64_t r;
 
 	if (!extents ||
-	    segtype_is_mirror(segtype) ||
-	    segtype_is_raid1(segtype))
+	    segtype_is_striped_raid(segtype))
 		return extents;
 
 	r = extents;
@@ -1576,7 +1575,6 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 	return 1;
 }
 
-__attribute__ ((__unused__))
 static int _lv_free_reshape_space(struct logical_volume *lv)
 {
 	return _lv_free_reshape_space_with_status(lv, NULL);
