@@ -2533,10 +2533,7 @@ static void print_man_option_desc(struct command_name *cname, int opt_enum)
 }
 
 /*
- * Print a list of all options names for a given
- * command name, listed by:
- * options with short+long names, alphabetically,
- * then options with only long names, alphabetically
+ * Print a list of all options names for a given command name.
  */
 
 void print_man_all_options_list(struct command_name *cname)
@@ -2545,62 +2542,24 @@ void print_man_all_options_list(struct command_name *cname)
 	int sep = 0;
 	int i;
 
-	/* print those with both short and long opts */
 	for (i = 0; i < ARG_COUNT; i++) {
 		opt_enum = opt_names_alpha[i]->opt_enum;
 
-
 		if (!cname->all_options[opt_enum])
-			continue;
-
-		if (!opt_names[opt_enum].short_opt)
 			continue;
 
 		if (sep)
 			printf(".br\n");
 		printf(".ad l\n");
 
-		printf(" \\fB-%c\\fP|\\fB%s\\fP",
-			opt_names[opt_enum].short_opt,
-			man_long_opt_name(cname->name, opt_enum));
-
-		val_enum = opt_names[opt_enum].val_enum;
-
-		if (!val_names[val_enum].fn) {
-			/* takes no arg */
-		} else if (!val_names[val_enum].usage) {
-			printf(" ");
-			printf("\\fI");
-			printf("%s", val_names[val_enum].name);
-			printf("\\fP");
+		if (opt_names[opt_enum].short_opt) {
+			printf(" \\fB-%c\\fP|\\fB%s\\fP",
+				opt_names[opt_enum].short_opt,
+				man_long_opt_name(cname->name, opt_enum));
 		} else {
-			printf(" ");
-			print_val_man(val_names[val_enum].usage);
+			/* spaces for alignment without short opt */
+			printf("    \\fB%s\\fP", man_long_opt_name(cname->name, opt_enum));
 		}
-
-		printf("\n.ad b\n");
-
-		sep = 1;
-	}
-
-	/* print those without short opts */
-	for (i = 0; i < ARG_COUNT; i++) {
-		opt_enum = opt_names_alpha[i]->opt_enum;
-
-		if (!cname->all_options[opt_enum])
-			continue;
-
-		if (opt_names[opt_enum].short_opt)
-			continue;
-
-		if (sep)
-			printf(".br\n");
-		printf(".ad l\n");
-
-		/* space alignment without short opt */
-		printf("   ");
-
-		printf(" \\fB%s\\fP", man_long_opt_name(cname->name, opt_enum));
 
 		val_enum = opt_names[opt_enum].val_enum;
 
