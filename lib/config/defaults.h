@@ -71,8 +71,8 @@
  * FIXME: Increase these to 64 and further to the MD maximum
  *	  once the SubLVs split and name shift got enhanced
  */
-#define DEFAULT_RAID1_MAX_IMAGES 10
-#define DEFAULT_RAID_MAX_IMAGES 10
+#define DEFAULT_RAID1_MAX_IMAGES 64
+#define DEFAULT_RAID_MAX_IMAGES 64
 #define DEFAULT_ALLOCATION_STRIPE_ALL_DEVICES 0 /* Don't stripe across all devices if not -i/--stripes given */
 
 #define DEFAULT_RAID_FAULT_POLICY "warn"
