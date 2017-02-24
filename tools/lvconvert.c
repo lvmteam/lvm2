@@ -2719,6 +2719,16 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	}
 
 	/*
+	 * The internal LV names for pool data/meta LVs.
+	 */
+
+	if ((dm_snprintf(meta_name, sizeof(meta_name), "%s%s", lv->name, to_cachepool ? "_cmeta" : "_tmeta") < 0) ||
+	    (dm_snprintf(data_name, sizeof(data_name), "%s%s", lv->name, to_cachepool ? "_cdata" : "_tdata") < 0)) {
+		log_error("Failed to create internal lv names, pool name is too long.");
+		return 0;
+	}
+
+	/*
 	 * If an existing LV is to be used as the metadata LV,
 	 * verify that it's in a usable state.  These checks are
 	 * not done by command def rules because this LV is not
@@ -2842,7 +2852,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	log_verbose("Pool metadata extents %u chunk_size %u", meta_extents, chunk_size);
 
-
 	/*
 	 * Verify that user wants to use these LVs.
 	 */
@@ -2866,16 +2875,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			  metadata_lv ? " and " : "",
 			  metadata_lv ? display_lvname(metadata_lv) : "") == 'n') {
 		log_error("Conversion aborted.");
-		return 0;
-	}
-
-	/*
-	 * The internal LV names for pool data/meta LVs.
-	 */
-
-	if ((dm_snprintf(meta_name, sizeof(meta_name), "%s%s", lv->name, to_cachepool ? "_cmeta" : "_tmeta") < 0) ||
-	    (dm_snprintf(data_name, sizeof(data_name), "%s%s", lv->name, to_cachepool ? "_cdata" : "_tdata") < 0)) {
-		log_error("Failed to create internal lv names, pool name is too long.");
 		return 0;
 	}
 
