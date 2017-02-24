@@ -2825,8 +2825,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	       "(This should not be confused with the output control --units, where\n"
 	       "capital letters mean multiple of 1000.)\n");
 
-	printf("\n.HP\n");
-	printf("Environment");
+	printf(".SH ENVIRONMENT VARIABLES");
 	printf("\n");
 	printf(".br\n");
 	printf("See \\fBlvm\\fP(8) for information about environment variables used by lvm.\n"
