@@ -957,7 +957,7 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 	seg->stripe_size = stripe_size;
 	seg->area_count = area_count;
 	seg->area_len = area_len;
-	seg->data_copies = data_copies ? : 0; // lv_raid_data_copies(segtype, area_count);
+	seg->data_copies = data_copies ? : lv_raid_data_copies(segtype, area_count);
 	seg->chunk_size = chunk_size;
 	seg->region_size = region_size;
 	seg->extents_copied = extents_copied;

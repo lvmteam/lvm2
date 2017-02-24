@@ -171,7 +171,7 @@ static int _raid_text_import(struct lv_segment *seg,
 	}
 
 	if (seg->data_copies < 2)
-		seg->data_copies = 0; // lv_raid_data_copies(seg->segtype, seg->area_count);
+		seg->data_copies = lv_raid_data_copies(seg->segtype, seg->area_count);
 
 	if (seg_is_any_raid0(seg))
 		seg->area_len /= seg->area_count;
