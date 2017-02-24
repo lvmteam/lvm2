@@ -178,7 +178,7 @@ linear() {
 			$(lvl $lv -o+devices)
 }
 
-# in_sync <VG> <LV>
+# in_sync <VG> <LV> <ignore 'a'>
 # Works for "mirror" and "raid*"
 in_sync() {
 	local a
@@ -187,7 +187,10 @@ in_sync() {
 	local type
 	local snap=""
 	local lvm_name="$1/$2"
+	local ignore_a="$3"
 	local dm_name=$(echo $lvm_name | sed s:-:--: | sed s:/:-:)
+
+	[ -z "$ignore_a" ] && ignore_a=0
 
 	a=( $(dmsetup status $dm_name) )  || \
 		die "Unable to get sync status of $1"
@@ -225,7 +228,7 @@ in_sync() {
 		return 1
 	fi
 
-	[[ ${a[$(($idx - 1))]} =~ a ]] && \
+	[[ ${a[$(($idx - 1))]} =~ a ]] && [ $ignore_a -eq 0 ] && \
 		die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
 
 	echo "$lvm_name ($type$snap) is in-sync \"${a[@]}\""
@@ -306,6 +309,12 @@ vg_attr_bit() {
 
 lv_field() {
 	local actual=$(get lv_field "$1" "$2" "${@:4}")
+	test "$actual" = "$3" || \
+		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
+}
+
+lv_first_seg_field() {
+	local actual=$(get lv_first_seg_field "$1" "$2" "${@:4}")
 	test "$actual" = "$3" || \
 		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }

@@ -42,6 +42,11 @@ lv_field() {
 	trim_ "$r"
 }
 
+lv_first_seg_field() {
+	local r=$(lvs --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1" | head -1)
+	trim_ "$r"
+}
+
 lvh_field() {
 	local r=$(lvs -H --config 'log{prefix=""}' --noheadings -o "$2" "${@:3}" "$1")
 	trim_ "$r"

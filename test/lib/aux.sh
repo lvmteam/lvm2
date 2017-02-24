@@ -1317,7 +1317,7 @@ udev_wait() {
 wait_for_sync() {
 	local i
 	for i in {1..100} ; do
-		check in_sync $1 $2 && return
+		check in_sync $1 $2 $3 && return
 		sleep .2
 	done
 

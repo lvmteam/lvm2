@@ -117,8 +117,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 lvconvert -m 4 -R 128K $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 5
-# FIXME: once lv_raid_chanage_image_count() supports region_size changes
-not check lv_field $vg/$lv1 regionsize "128.00k"
+check lv_field $vg/$lv1 regionsize "128.00k"
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
@@ -258,7 +257,13 @@ _lvconvert raid0 raid0 3 $vg $lv1
 # Convert raid0 -> raid10
 _lvconvert raid10 raid10 6 $vg $lv1
 
-# Convert raid10 -> raid0
+# Convert raid10 -> raid0_meta
+_lvconvert raid0_meta raid0_meta 3 $vg $lv1
+
+# Convert raid0_meta -> raid5
+_lvconvert raid5_n raid5_n 4 $vg $lv1
+
+# Convert raid5_n -> raid0_meta
 _lvconvert raid0_meta raid0_meta 3 $vg $lv1
 
 # Convert raid0_meta -> raid10

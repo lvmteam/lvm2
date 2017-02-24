@@ -1135,7 +1135,7 @@ uint32_t raid_rimage_extents(const struct segment_type *segtype,
 	uint64_t r;
 
 	if (!extents ||
-	    segtype_is_striped_raid(segtype))
+	    !segtype_is_striped_raid(segtype))
 		return extents;
 
 	r = extents;
@@ -2111,7 +2111,6 @@ static int _post_raid_dummy(struct logical_volume *lv, void *data)
  * In case of disk addition, any PVs listed in mandatory
  * @allocate_pvs will be used for allocation of new stripes.
  */
-__attribute__ ((__unused__))
 static int _raid_reshape(struct logical_volume *lv,
 			 const struct segment_type *new_segtype,
 			 int yes, int force,
@@ -2289,7 +2288,6 @@ static int _raid_reshape(struct logical_volume *lv,
  * 2 -> prohibited reshape request
  * 3 -> allowed region size change request
  */
-__attribute__ ((__unused__))
 static int _reshape_requested(const struct logical_volume *lv, const struct segment_type *segtype,
 			      const int data_copies, const uint32_t region_size,
 			      const uint32_t stripes, const uint32_t stripe_size)
@@ -5842,8 +5840,10 @@ int lv_raid_convert(struct logical_volume *lv,
 	uint32_t stripes, stripe_size;
 	uint32_t new_image_count = seg->area_count;
 	uint32_t region_size = new_region_size;
+	uint32_t data_copies = seg->data_copies;
 	takeover_fn_t takeover_fn;
 
+	new_segtype = new_segtype ? : seg->segtype;
 	if (!new_segtype) {
 		log_error(INTERNAL_ERROR "New segtype not specified.");
 		return 0;
@@ -5853,33 +5853,47 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	/* FIXME Ensure caller does *not* set wrong default value! */
 	/* Define new stripe size if not passed in */
-	stripe_size = new_stripe_size ? : seg->stripe_size;
+	stripe_size = new_stripe_size_supplied ? new_stripe_size : seg->stripe_size;
 
 	if (segtype_is_striped(new_segtype))
-		new_image_count = stripes;
+		new_image_count = stripes ? : seg->area_count;
 
-	if (segtype_is_raid(new_segtype) && !_check_max_raid_devices(new_image_count))
+	if (!_check_max_raid_devices(new_image_count))
 		return_0;
 
-	/* Change RAID region size */
+	region_size = new_region_size ? : seg->region_size;
+	region_size = region_size ? : get_default_region_size(lv->vg->cmd);
+
 	/*
-	 * FIXME: workaround with new_region_size until the
-	 *	  cli validation patches got merged when we'll change
-	 *	  the API to have new_region_size_supplied to check for.
+	 * reshape of capable raid type requested
 	 */
-	if (new_region_size) {
-	       if (new_segtype == seg->segtype &&
-	           new_region_size != seg->region_size &&
-		   seg_is_raid(seg) && !seg_is_any_raid0(seg))
-			return _region_size_change_requested(lv, yes, new_region_size);
-	} else
-		region_size = seg->region_size ? : get_default_region_size(lv->vg->cmd);
+	switch (_reshape_requested(lv, new_segtype, data_copies, region_size, stripes, stripe_size)) {
+	case 0:
+		break;
+	case 1:
+		if (!_raid_reshape(lv, new_segtype, yes, force,
+				   data_copies, region_size,
+				   stripes, stripe_size, allocate_pvs)) {
+			log_error("Reshape request failed on LV %s.", display_lvname(lv));
+			return 0;
+		}
+
+		return 1;
+	case 2:
+		log_error("Invalid conversion request on %s.", display_lvname(lv));
+		/* Error if we got here with stripes and/or stripe size change requested */
+		return 0;
+	default:
+		log_error(INTERNAL_ERROR "_reshape_requested failed.");
+		return 0;
+	}
 
 	/*
 	 * Check acceptible options mirrors, region_size,
 	 * stripes and/or stripe_size have been provided.
 	 */
-	if (!_conversion_options_allowed(seg, &new_segtype, yes, 0 /* Takeover */, 0 /*new_data_copies*/, new_region_size,
+	if (!_conversion_options_allowed(seg, &new_segtype, yes,
+					 0 /* Takeover */, 0 /*new_data_copies*/, new_region_size,
 					 new_stripes, new_stripe_size_supplied))
 		return _log_possible_conversion_types(lv, new_segtype);
 	

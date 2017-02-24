@@ -345,6 +345,13 @@ ID: lvconvert_raid_types
 DESC: Convert LV to raid.
 RULE: all not lv_is_locked lv_is_pvmove
 
+lvconvert --type raid LV_raid
+OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+ID: lvconvert_raid_types
+DESC: Convert raid LV to different layout algorithm.
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not LV_raid0 LV_raid1
+
 lvconvert --mirrors SNumber LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
 OP: PV ...
@@ -352,12 +359,34 @@ ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
 RULE: all not lv_is_locked lv_is_pvmove
 
+lvconvert --stripes_long SNumber LV_raid
+OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+OP: PV ...
+ID: lvconvert_raid_types
+DESC: Convert raid LV to change number of stripe images.
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not LV_raid0 LV_raid1
+
+lvconvert --stripesize SizeKB LV_raid
+OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+ID: lvconvert_raid_types
+DESC: Convert raid LV to change the stripe size.
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not LV_raid0 LV_raid1
+
 lvconvert --regionsize RegionSize LV_raid
 OO: OO_LVCONVERT
 ID: lvconvert_change_region_size
 DESC: Change the region size of an LV.
 RULE: all not lv_is_locked lv_is_pvmove
 RULE: all not LV_raid0
+
+lvconvert LV_mirror_raid
+OO: OO_LVCONVERT
+ID: lvconvert_raid_types
+DESC: Remove out-of-place reshape space
+RULE: all not lv_is_locked lv_is_pvmove
+RULE: all not LV_raid0 LV_raid1
 
 ---
 
