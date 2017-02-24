@@ -79,13 +79,13 @@
  * options included in the usage text below that should
  * be removed?  Should "lvm1" be removed?
  *
- * For Number args that take optional units, a full usage
- * could be "Number[bBsSkKmMgGtTpPeE]" (with implied |),
- * but repeating this full specification produces cluttered
- * output, and doesn't indicate which unit is the default.
- * "Number[Units]" would be cleaner, as would a subset of
- * common units, e.g. "Number[kmg...]", but neither helps
- * with default.  "Number[k|UNIT]" and "Number[m|UNIT]" show
+ * Size is a Number that takes an optional unit.
+ * A full usage could be "Size[b|B|s|S|k|K|m|M|g|G|t|T|p|P|e|E]"
+ * but repeating this full specification produces long and
+ * cluttered output, and doesn't indicate which unit is the default.
+ * "Size[Units]" would be cleaner, as would a subset of
+ * common units, e.g. "Size[kmg...]", but neither helps
+ * with default.  "Size[k|UNIT]" and "Size[m|UNIT]" show
  * the default, and "UNIT" indicates that other units
  * are possible without listing them all.  This also
  * suggests using the preferred lower case letters, because
@@ -115,11 +115,11 @@ val(activation_VAL, activation_arg, "Active", "y|n|ay")
 val(cachemode_VAL, cachemode_arg, "CacheMode", "writethrough|writeback")
 val(discards_VAL, discards_arg, "Discards", "passdown|nopassdown|ignore")
 val(mirrorlog_VAL, mirrorlog_arg, "MirrorLog", "core|disk")
-val(sizekb_VAL, size_kb_arg, "SizeKB", "Number[k|UNIT]")
-val(sizemb_VAL, size_mb_arg, "SizeMB", "Number[m|UNIT]")
-val(regionsize_VAL, regionsize_arg, "RegionSize", "Number[m|UNIT]")
+val(sizekb_VAL, size_kb_arg, "SizeKB", "Size[k|UNIT]")
+val(sizemb_VAL, size_mb_arg, "SizeMB", "Size[m|UNIT]")
+val(regionsize_VAL, regionsize_arg, "RegionSize", "Size[m|UNIT]")
 val(numsigned_VAL, int_arg_with_sign, "SNumber", "[+|-]Number")
-val(numsignedper_VAL, int_arg_with_sign_and_percent, "SNumberP", "[+|-]Number[%VG|%PVS|%FREE]")
+val(extents_VAL, extents_arg, "Extents", "[+|-]Number[%VG|%PVS|%FREE]")
 val(permission_VAL, permission_arg, "Permission", "rw|r")
 val(metadatatype_VAL, metadatatype_arg, "MetadataType", "lvm2|lvm1")
 val(units_VAL, string_arg, "Units", "r|R|h|H|b|B|s|S|k|K|m|M|g|G|t|T|p|P|e|E")

@@ -987,7 +987,7 @@ arg(logicalvolume_ARG, 'l', "logicalvolume", uint32_VAL, 0, 0,
 arg(maxlogicalvolumes_ARG, 'l', "maxlogicalvolumes", uint32_VAL, 0, 0,
     "Sets the maximum number of LVs allowed in a VG.\n")
 
-arg(extents_ARG, 'l', "extents", numsignedper_VAL, 0, 0,
+arg(extents_ARG, 'l', "extents", extents_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the size of the new LV in logical extents.\n"
     "The --size and --extents options are alternate methods of specifying size.\n"

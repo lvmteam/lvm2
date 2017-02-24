@@ -79,7 +79,7 @@ static inline int size_mb_arg_with_percent(struct cmd_context *cmd, struct arg_v
 static inline int int_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int uint32_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av) { return 0; }
-static inline int int_arg_with_sign_and_percent(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int extents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int major_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int minor_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int string_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
@@ -1792,13 +1792,13 @@ static void print_val_man(const char *str)
 	 * that isn't already obvious.
 	 */
 
-	if (!strcmp(str, "Number[k|UNIT]")) {
-		printf("\\fINumber\\fP[k|UNIT]");
+	if (!strcmp(str, "Size[k|UNIT]")) {
+		printf("\\fISize\\fP[k|UNIT]");
 		return;
 	}
 
-	if (!strcmp(str, "Number[m|UNIT]")) {
-		printf("\\fINumber\\fP[m|UNIT]");
+	if (!strcmp(str, "Size[m|UNIT]")) {
+		printf("\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
@@ -2807,16 +2807,21 @@ void print_man_all_positions_desc(struct command_name *cname)
 	printf(".br\n");
 	printf("See the option description for information about the string content.\n");
 
-	/* Nearly every command uses a number arg somewhere. */
+	/*
+	 * We could possibly check if the command accepts any option that
+	 * uses Size, and only print this in those cases, but this seems
+	 * so common that we should probably always print it.
+	 */
 
 	printf("\n.HP\n");
-	printf("\\fINumber\\fP, UNIT");
+	printf("\\fISize\\fP[UNIT]");
 	printf("\n");
 	printf(".br\n");
-	printf("Input units are always treated as base two values, regardless of unit\n"
+	printf("Size is an input number that accepts an optional unit.\n"
+	       "Input units are always treated as base two values, regardless of\n"
 	       "capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
-	       "The default input unit is specified by letter, followed by |UNIT\n"
-	       "which represents other possible input units: \\fBbBsSkKmMgGtTpPeE\\fP.\n"
+	       "The default input unit is specified by letter, followed by |UNIT.\n"
+	       "UNIT represents other possible input units: \\fBbBsSkKmMgGtTpPeE\\fP.\n"
 	       "(This should not be confused with the output control --units, where\n"
 	       "capital letters mean multiple of 1000.)\n");
 

@@ -672,8 +672,8 @@ int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct ar
 	return 1;
 }
 
-int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute__((unused)),
-				  struct arg_values *av)
+int extents_arg(struct cmd_context *cmd __attribute__((unused)),
+		struct arg_values *av)
 {
 	char *ptr;
 
