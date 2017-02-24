@@ -338,19 +338,16 @@ ID: lvconvert_raid_types
 DESC: Convert LV to type mirror (also see type raid1).
 RULE: all not lv_is_locked lv_is_pvmove
 
+# When LV is already raid, this changes the raid layout
+# (changing layout of raid0 and raid1 not allowed.)
+
 lvconvert --type raid LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
-DESC: Convert LV to raid.
+DESC: Convert LV to raid or change raid layout.
 RULE: all not lv_is_locked lv_is_pvmove
-
-lvconvert --type raid LV_raid
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT
-ID: lvconvert_raid_types
-DESC: Convert raid LV to different layout algorithm.
-RULE: all not lv_is_locked lv_is_pvmove
-RULE: all not LV_raid0 LV_raid1
+RULE: LV_raid not LV_raid0 LV_raid1
 
 lvconvert --mirrors SNumber LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
@@ -359,8 +356,8 @@ ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
 RULE: all not lv_is_locked lv_is_pvmove
 
-lvconvert --stripes_long SNumber LV_raid
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+lvconvert --stripes_long Number LV_raid
+OO: OO_LVCONVERT, --interval Number, --regionsize RegionSize, --stripesize SizeKB
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert raid LV to change number of stripe images.
@@ -368,7 +365,7 @@ RULE: all not lv_is_locked lv_is_pvmove
 RULE: all not LV_raid0 LV_raid1
 
 lvconvert --stripesize SizeKB LV_raid
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+OO: OO_LVCONVERT, --interval Number, --regionsize RegionSize
 ID: lvconvert_raid_types
 DESC: Convert raid LV to change the stripe size.
 RULE: all not lv_is_locked lv_is_pvmove
@@ -380,13 +377,6 @@ ID: lvconvert_change_region_size
 DESC: Change the region size of an LV.
 RULE: all not lv_is_locked lv_is_pvmove
 RULE: all not LV_raid0
-
-lvconvert LV_mirror_raid
-OO: OO_LVCONVERT
-ID: lvconvert_raid_types
-DESC: Remove out-of-place reshape space
-RULE: all not lv_is_locked lv_is_pvmove
-RULE: all not LV_raid0 LV_raid1
 
 ---
 
@@ -677,7 +667,7 @@ RULE: all not lv_is_locked lv_is_pvmove
 # This command just (re)starts the polling process on the LV
 # to continue a previous conversion.
 
-lvconvert --startpoll LV_mirror
+lvconvert --startpoll LV_mirror_raid
 OO: OO_LVCONVERT
 ID: lvconvert_start_poll
 DESC: Poll LV to continue conversion.
@@ -685,7 +675,7 @@ RULE: all and lv_is_converting
 
 # alternate form of lvconvert --startpoll, this is only kept
 # for compat since this was how it used to be done.
-lvconvert LV_mirror
+lvconvert LV_mirror_raid
 OO: OO_LVCONVERT
 ID: lvconvert_start_poll
 DESC: Poll LV to continue conversion.
