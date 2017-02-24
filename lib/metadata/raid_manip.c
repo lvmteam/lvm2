@@ -434,7 +434,7 @@ static int _lv_update_and_reload_list(struct logical_volume *lv, int origin_only
 			  display_lvname(lock_lv));
 		vg_revert(vg);
 	} else if (!(r = vg_commit(vg)))
-		stack; /* !vg_commit() has implict vg_revert() */
+		stack; /* !vg_commit() has implicit vg_revert() */
 
 	if (r && lv_list) {
 		dm_list_iterate_items(lvl, lv_list) {
