@@ -2866,11 +2866,11 @@ static int _raid_extract_images(struct logical_volume *lv,
 					  display_lvname(lv),
 					  display_lvname(seg_lv(seg, s)));
 
-				log_error("Try removing the PV list and rerun"
+				log_error("Try removing the PV list and rerun."
 					  " the command.");
 				return 0;
 			}
-			log_debug("LVs with error segments to be removed: %s %s.",
+			log_debug("LVs with error segments to be removed: %s %s",
 				  display_lvname(seg_metalv(seg, s)),
 				  display_lvname(seg_lv(seg, s)));
 		} else {
@@ -3013,8 +3013,15 @@ static int _lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_c
 }
 
 int lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_count,
-			       struct dm_list *allocate_pvs)
+			       const uint32_t new_region_size, struct dm_list *allocate_pvs)
 {
+	struct lv_segment *seg = first_seg(lv);
+
+	if (new_region_size) {
+		seg->region_size = new_region_size;
+		_check_and_adjust_region_size(lv);
+	}
+
 	return _lv_raid_change_image_count(lv, new_count, allocate_pvs, NULL, 1, 0);
 }
 
