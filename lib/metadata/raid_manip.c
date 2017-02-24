@@ -2696,11 +2696,13 @@ static int _raid_add_images(struct logical_volume *lv,
 			    int commit, int use_existing_area_len)
 {
 	int rebuild_flag_cleared = 0;
-	struct lv_segment *seg;
-	uint32_t s;
+	struct lv_segment *seg = first_seg(lv);
+	uint32_t region_size = seg->region_size, s;
 
 	if (!_raid_add_images_without_commit(lv, new_count, pvs, use_existing_area_len))
 		return_0;
+
+	first_seg(lv)->region_size = region_size;
 
 	if (!commit)
 		return 1;
@@ -5623,7 +5625,7 @@ static uint64_t _raid_seg_flag_6_to_5(const struct lv_segment *seg)
 	return _get_r56_flag(seg, 1);
 }
 
-/* Change segtype for raid4 <-> raid5 <-> raid6 or raid1 <-> raid5 takeover where necessary. */
+/* Change segtype for raid4 <-> raid5 <-> raid6 where necessary. */
 static int _set_convenient_raid1456_segtype_to(const struct lv_segment *seg_from,
 					       const struct segment_type **segtype,
 					       int yes)
@@ -5649,12 +5651,6 @@ static int _set_convenient_raid1456_segtype_to(const struct lv_segment *seg_from
 			seg_flag = SEG_RAID6_N_6;
 			goto replaced;
 		}
-
-	/* raid1 -> raid5_n with 2 areas */
-	} else if (seg_is_raid1(seg_from) && seg_from->area_count == 2 &&
-                   segtype_is_any_raid5(*segtype) && !segtype_is_raid5_n(*segtype)) {
-		seg_flag = SEG_RAID5_N;
-		goto replaced;
 
 	/* raid4 -> raid5_n */
 	} else if (seg_is_raid4(seg_from) && segtype_is_any_raid5(*segtype)) {
