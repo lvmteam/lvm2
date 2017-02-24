@@ -1401,6 +1401,8 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			lp->stripes = 0;
 		if (!arg_is_set(cmd, type_ARG))
 		       lp->segtype = NULL;
+		if (!arg_is_set(cmd, regionsize_ARG))
+		       lp->region_size = 0;
 
 		if (!lv_raid_convert(lv, lp->segtype,
 				     lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
