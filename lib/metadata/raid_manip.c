@@ -1447,6 +1447,102 @@ static int _lv_free_reshape_space(struct logical_volume *lv)
 	return _lv_free_reshape_space_with_status(lv, NULL);
 }
 
+/*
+ * HM
+ *
+ * Compares current raid disk count of active RAID set @lv to
+ * requested @dev_count returning number of disks as of healths
+ * string in @devs_health and synced disks in @devs_in_sync
+ *
+ * Returns:
+ *
+ * 	0: error
+ * 	1: kernel dev count = @dev_count
+ * 	2: kernel dev count < @dev_count
+ * 	3: kernel dev count > @dev_count
+ *
+ */
+__attribute__ ((__unused__))
+static int _reshaped_state(struct logical_volume *lv, const unsigned dev_count,
+			   unsigned *devs_health, unsigned *devs_in_sync)
+{
+	uint32_t kernel_devs;
+
+	if (!devs_health || !devs_in_sync)
+		return_0;
+
+	if (!_get_dev_health(lv, &kernel_devs, devs_health, devs_in_sync, NULL))
+		return 0;
+
+	if (kernel_devs == dev_count)
+		return 1;
+
+	return kernel_devs < dev_count ? 2 : 3;
+}
+
+/*
+ * Return new length for @lv based on @old_image_count and @new_image_count in @*len
+ *
+ * Subtracts any reshape space and provide data length only!
+ */
+static int _lv_reshape_get_new_len(struct logical_volume *lv,
+				   uint32_t old_image_count, uint32_t new_image_count,
+				   uint32_t *len)
+{
+	struct lv_segment *seg = first_seg(lv);
+	uint32_t di_old = _data_rimages_count(seg, old_image_count);
+	uint32_t di_new = _data_rimages_count(seg, new_image_count);
+	uint32_t old_lv_reshape_len, new_lv_reshape_len;
+	uint64_t r;
+
+	if (!di_old || !di_new)
+		return_0;
+
+	old_lv_reshape_len = di_old * _reshape_len_per_dev(seg);
+	new_lv_reshape_len = di_new * _reshape_len_per_dev(seg);
+
+	r = (uint64_t) lv->le_count;
+	r -= old_lv_reshape_len;
+	if ((r = new_lv_reshape_len + r * di_new / di_old) > UINT_MAX) {
+		log_error("No proper new segment length for %s!", display_lvname(lv));
+		return 0;
+	}
+
+	*len = (uint32_t) r;
+
+	return 1;
+}
+
+/*
+ * Extend/reduce size of @lv and it's first segment during reshape to @extents
+ */
+__attribute__ ((__unused__))
+static int _reshape_adjust_to_size(struct logical_volume *lv,
+				   uint32_t old_image_count, uint32_t new_image_count)
+{
+	struct lv_segment *seg = first_seg(lv);
+	uint32_t new_le_count;
+
+	if (!_lv_reshape_get_new_len(lv, old_image_count, new_image_count, &new_le_count))
+		return 0;
+
+	/* Externally visible LV size w/o reshape space */
+	lv->le_count = seg->len = new_le_count;
+	lv->size = (lv->le_count - new_image_count * _reshape_len_per_dev(seg)) * lv->vg->extent_size;
+	/* seg->area_len does not change */
+
+	if (old_image_count < new_image_count) {
+		/* Extend from raid1 mapping */
+		if (old_image_count == 2 &&
+		    !seg->stripe_size)
+			seg->stripe_size = DEFAULT_STRIPESIZE;
+
+	/* Reduce to raid1 mapping */
+	} else if (new_image_count == 2)
+		seg->stripe_size = 0;
+
+	return 1;
+}
 
 /*
  * _alloc_rmeta_for_lv
