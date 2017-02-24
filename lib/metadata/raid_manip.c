@@ -4579,6 +4579,7 @@ static int _raid1_to_mirrored_wrapper(TAKEOVER_FN_ARGS)
  * order to wipe them then reattach and set back to raid0_meta.
  *
  * Same applies to raid4 <-> raid5.
+ * Same applies to raid10 -> raid0_meta.
  */
 static int _clear_meta_lvs(struct logical_volume *lv)
 {
@@ -4588,11 +4589,11 @@ static int _clear_meta_lvs(struct logical_volume *lv)
 	const struct segment_type *tmp_segtype;
 	struct dm_list meta_lvs;
 	struct lv_list *lvl_array, *lvl;
-	int is_raid4_or_5N = seg_is_raid4(seg) || seg_is_raid5_n(seg);
+	int is_raid45n10 = seg_is_raid4(seg) || seg_is_raid5_n(seg) || seg_is_raid10(seg);
 
 	/* Reject non-raid0_meta/raid4/raid5_n segment types cautiously */
 	if (!seg->meta_areas ||
-	    (!seg_is_raid0_meta(seg) && !is_raid4_or_5N))
+	    (!seg_is_raid0_meta(seg) && !is_raid45n10))
 		return_0;
 
 	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem, seg->area_count * sizeof(*lvl_array))))
