@@ -5323,9 +5323,11 @@ static int _takeover_from_raid1_to_raid10(TAKEOVER_FN_ARGS)
 	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
 }
 
-static int _takeover_from_raid1_to_raid45(TAKEOVER_FN_ARGS)
+static int _takeover_from_raid1_to_raid5(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _takeover_upconvert_wrapper(lv, new_segtype, yes, force,
+					   first_seg(lv)->area_count /* unchanged new_image_count */,
+					   2 /* data_copies */, 0, 0, new_region_size, allocate_pvs);
 }
 
 static int _takeover_from_raid1_to_striped(TAKEOVER_FN_ARGS)
@@ -5357,9 +5359,12 @@ static int _takeover_from_raid45_to_raid0_meta(TAKEOVER_FN_ARGS)
 					     1 /* data_copies */, 0, 0, 0, allocate_pvs);
 }
 
-static int _takeover_from_raid45_to_raid1(TAKEOVER_FN_ARGS)
+
+static int _takeover_from_raid5_to_raid1(TAKEOVER_FN_ARGS)
 {
-	return _takeover_unsupported_yet(lv, new_stripes, new_segtype);
+	return _takeover_downconvert_wrapper(lv, new_segtype, yes, force,
+					     first_seg(lv)->area_count,
+					     2 /* data_copies */, 0, 0, 0, allocate_pvs);
 }
 
 static int _takeover_from_raid45_to_raid54(TAKEOVER_FN_ARGS)
