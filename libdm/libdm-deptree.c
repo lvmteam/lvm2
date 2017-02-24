@@ -4034,18 +4034,59 @@ void dm_tree_node_set_callback(struct dm_tree_node *dnode,
 	dnode->callback_data = data;
 }
 
-/*
- * Backward compatible dm_tree_node_size_changed() implementations.
- *
- * Keep these at the end of the file to avoid adding clutter around the
- * current dm_tree_node_size_changed() version.
- */
 #if defined(__GNUC__)
+/*
+ * Backward compatible implementations.
+ *
+ * Keep these at the end of the file to make sure that
+ * no code in this file accidentally calls it.
+ */
+
+/* Backward compatible dm_tree_node_size_changed() implementations. */
 int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode);
 DM_EXPORT_SYMBOL_BASE(dm_tree_node_size_changed);
 int dm_tree_node_size_changed_base(const struct dm_tree_node *dnode)
 {
 	/* Base does not make difference between smaller and bigger */
 	return dm_tree_node_size_changed(dnode) ? 1 : 0;
+}
+
+/*
+ * Retain ABI compatibility after adding the DM_CACHE_FEATURE_METADATA2
+ * in version 1.02.138.
+ *
+ * Binaries compiled against version 1.02.138 onwards will use
+ * the new function dm_tree_node_add_cache_target which detects unknown
+ * feature flags and returns error for them.
+ */
+int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
+				       uint64_t size,
+				       uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
+				       const char *metadata_uuid,
+				       const char *data_uuid,
+				       const char *origin_uuid,
+				       const char *policy_name,
+				       const struct dm_config_node *policy_settings,
+				       uint32_t data_block_size);
+DM_EXPORT_SYMBOL_BASE(dm_tree_node_add_cache_target);
+int dm_tree_node_add_cache_target_base(struct dm_tree_node *node,
+				       uint64_t size,
+				       uint64_t feature_flags,
+				       const char *metadata_uuid,
+				       const char *data_uuid,
+				       const char *origin_uuid,
+				       const char *policy_name,
+				       const struct dm_config_node *policy_settings,
+				       uint32_t data_block_size)
+{
+	/* Old version supported only these FEATURE bits, others were ignored so masked them */
+	static const uint64_t _mask =
+		DM_CACHE_FEATURE_WRITEBACK |
+		DM_CACHE_FEATURE_WRITETHROUGH |
+		DM_CACHE_FEATURE_PASSTHROUGH;
+
+	return dm_tree_node_add_cache_target(node, size, feature_flags & _mask,
+					     metadata_uuid, data_uuid, origin_uuid,
+					     policy_name, policy_settings, data_block_size);
 }
 #endif

@@ -6,3 +6,4 @@ dm_bitset_parse_list
 dm_stats_bind_from_fd
 dm_stats_start_filemapd
 dm_tree_node_add_raid_target_with_params_v2
+dm_tree_node_add_cache_target

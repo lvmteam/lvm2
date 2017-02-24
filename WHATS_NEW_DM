@@ -1,5 +1,6 @@
 Version 1.02.138 - 
 =====================================
+  Provide dm_tree_node_add_cache_target@base compatible symbol.
   Support DM_CACHE_FEATURE_METADATA2, new cache metadata format 2.
   Improve code to handle mode mask for cache nodes.
   Cache status check for passthrough also require trailing space.

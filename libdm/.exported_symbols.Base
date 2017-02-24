@@ -234,7 +234,6 @@ dm_tree_free
 dm_tree_get_cookie
 dm_tree_children_use_uuid
 dm_tree_next_child
-dm_tree_node_add_cache_target
 dm_tree_node_add_crypt_target
 dm_tree_node_add_error_target
 dm_tree_node_add_linear_target
