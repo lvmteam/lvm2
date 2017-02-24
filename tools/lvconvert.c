@@ -3668,8 +3668,9 @@ static int _lvconvert_combine_split_snapshot_single(struct cmd_context *cmd,
 int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *vgname = NULL;
-	const char *lvname1;
-	const char *lvname2;
+	const char *lvname1_orig;
+	const char *lvname2_orig;
+	const char *lvname1_split;
 	char *vglv;
 	int vglv_sz;
 
@@ -3687,19 +3688,24 @@ int lvconvert_combine_split_snapshot_cmd(struct cmd_context *cmd, int argc, char
 	 * This is the only instance in all commands.
 	 */
 
-	lvname1 = cmd->position_argv[0];
-	lvname2 = cmd->position_argv[1];
+	lvname1_orig = cmd->position_argv[0];
+	lvname2_orig = cmd->position_argv[1];
 
-	if (strstr("/", lvname1) && !strstr("/", lvname2) && !getenv("LVM_VG_NAME")) {
-		if (!validate_lvname_param(cmd, &vgname, &lvname1))
+	if (strchr(lvname1_orig, '/') && !strchr(lvname2_orig, '/') && !getenv("LVM_VG_NAME")) {
+		if (!(lvname1_split = dm_pool_strdup(cmd->mem, lvname1_orig)))
 			return_ECMD_FAILED;
 
-		vglv_sz = strlen(vgname) + strlen(lvname2) + 2;
+		if (!validate_lvname_param(cmd, &vgname, &lvname1_split))
+			return_ECMD_FAILED;
+
+		vglv_sz = strlen(vgname) + strlen(lvname2_orig) + 2;
 		if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
-		    dm_snprintf(vglv, vglv_sz, "%s/%s", vgname, lvname2) < 0) {
+		    dm_snprintf(vglv, vglv_sz, "%s/%s", vgname, lvname2_orig) < 0) {
        			log_error("vg/lv string alloc failed.");
 			return_ECMD_FAILED;
 		}
+
+		/* vglv is now vgname/lvname2 and replaces lvname2_orig */
 
 		cmd->position_argv[1] = vglv;
 	}
