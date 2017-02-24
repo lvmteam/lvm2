@@ -50,6 +50,24 @@ static int _check_num_areas_in_lv_segments(struct logical_volume *lv, unsigned n
 }
 
 /*
+ * Check if reshape is supported in the kernel.
+ */
+__attribute__ ((__unused__))
+static int _reshape_is_supported(struct cmd_context *cmd, const struct segment_type *segtype)
+{
+	unsigned attrs;
+
+	if (!segtype->ops->target_present ||
+            !segtype->ops->target_present(cmd, NULL, &attrs) ||
+            !(attrs & RAID_FEATURE_RESHAPE)) {
+		log_error("RAID module does not support reshape.");
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
  * Ensure region size exceeds the minimum for @lv because
  * MD's bitmap is limited to tracking 2^21 regions.
  *
@@ -223,6 +241,44 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 		if (!lv_remove(lvl->lv))
 			return_0;
 	}
+
+	return 1;
+}
+
+/*
+ * HM Helper:
+ *
+ * report health string in @*raid_health for @lv from kernel reporting # of devs in @*kernel_devs
+ */
+__attribute__ ((__unused__))
+static int _get_dev_health(struct logical_volume *lv, uint32_t *kernel_devs,
+			   uint32_t *devs_health, uint32_t *devs_in_sync,
+			   char **raid_health)
+{
+	unsigned d;
+	char *rh;
+
+	*devs_health = *devs_in_sync = 0;
+
+	if (!lv_raid_dev_count(lv, kernel_devs)) {
+		log_error("Failed to get device count.");
+		return_0;
+	}
+
+	if (!lv_raid_dev_health(lv, &rh)) {
+		log_error("Failed to get device health.");
+		return_0;
+	}
+
+	d = (unsigned) strlen(rh);
+	while (d--) {
+		(*devs_health)++;
+		if (rh[d] == 'A')
+			(*devs_in_sync)++;
+	}
+
+	if (raid_health)
+		*raid_health = rh;
 
 	return 1;
 }
