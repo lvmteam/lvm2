@@ -292,7 +292,7 @@ int validate_lv_cache_create_pool(const struct logical_volume *pool_lv)
 
 	if (!dm_list_empty(&pool_lv->segs_using_this_lv)) {
 		seg = get_only_segment_using_this_lv(pool_lv);
-		log_error("Logical volume %s is already in use by %s",
+		log_error("Logical volume %s is already in use by %s.",
 			  display_lvname(pool_lv),
 			  seg ? display_lvname(seg->lv) : "another LV");
 		return 0;
