@@ -445,6 +445,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 	struct lv_segment *cache_pool_seg;
 	char *metadata_uuid, *data_uuid, *origin_uuid;
 	uint64_t feature_flags = 0;
+	unsigned attr;
 
 	if (!seg->pool_lv || !seg_is_cache(seg)) {
 		log_error(INTERNAL_ERROR "Passed segment is not cache.");
@@ -471,6 +472,26 @@ static int _cache_add_target_line(struct dev_manager *dm,
 			feature_flags |= DM_CACHE_FEATURE_PASSTHROUGH;
 			break;
 		}
+
+	switch (cache_pool_seg->cache_metadata_format) {
+	case CACHE_METADATA_FORMAT_1: break;
+	case CACHE_METADATA_FORMAT_2:
+		if (!_target_present(cmd, NULL, &attr))
+			return_0;
+
+		if (!(attr & CACHE_FEATURE_METADATA2)) {
+			log_error("LV %s has metadata format %u unsuported by kernel.",
+				  display_lvname(seg->lv), cache_pool_seg->cache_metadata_format);
+			return 0;
+		}
+		feature_flags |= DM_CACHE_FEATURE_METADATA2;
+		log_debug_activation("Using metadata2 format for %s.", display_lvname(seg->lv));
+		break;
+	default:
+		log_error(INTERNAL_ERROR "LV %s has unknown metadata format %u.",
+			  display_lvname(seg->lv), cache_pool_seg->cache_metadata_format);
+		return 0;
+	}
 
 	if (!(metadata_uuid = build_dm_uuid(mem, cache_pool_seg->metadata_lv, NULL)))
 		return_0;
