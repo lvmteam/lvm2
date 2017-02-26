@@ -274,7 +274,7 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 			s->feature_flags |= DM_CACHE_FEATURE_WRITETHROUGH;
 		else if (!strncmp(p, "writeback ", 10))
 			s->feature_flags |= DM_CACHE_FEATURE_WRITEBACK;
-		else if (!strncmp(p, "passthrough ", 11))
+		else if (!strncmp(p, "passthrough ", 12))
 			s->feature_flags |= DM_CACHE_FEATURE_PASSTHROUGH;
 		else
 			log_error("Unknown feature in status: %s", params);
