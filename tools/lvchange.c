@@ -622,6 +622,7 @@ static int _lvchange_persistent(struct cmd_context *cmd,
 
 static int _lvchange_cache(struct cmd_context *cmd, struct logical_volume *lv)
 {
+	cache_metadata_format_t format;
 	cache_mode_t mode;
 	const char *name;
 	struct dm_config_tree *settings = NULL;
@@ -632,7 +633,7 @@ static int _lvchange_cache(struct cmd_context *cmd, struct logical_volume *lv)
 	if (lv_is_cache(lv))
 		pool_seg = first_seg(pool_seg->pool_lv);
 
-	if (!get_cache_params(cmd, &chunk_size, &mode, &name, &settings))
+	if (!get_cache_params(cmd, &chunk_size, &format, &mode, &name, &settings))
 		goto_out;
 
 	if ((mode != CACHE_MODE_UNSELECTED) &&

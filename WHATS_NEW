@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Add option for lvcreate/lvconvert --cachemetadataformat auto|1|2.
   Support cache segment with configurable metadata format.
   Add allocation/cache_metadata_format profilable setttings.
   Use function cache_set_params() for both lvcreate and lvconvert.

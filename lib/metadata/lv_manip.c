@@ -7664,6 +7664,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	if (lv_is_cache_pool(lv)) {
 		if (!cache_set_params(first_seg(lv),
 				      lp->chunk_size,
+				      lp->cache_metadata_format,
 				      lp->cache_mode,
 				      lp->policy_name,
 				      lp->policy_settings)) {
@@ -7872,6 +7873,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 		if (!cache_set_params(first_seg(lv),
 				      lp->chunk_size,
+				      lp->cache_metadata_format,
 				      lp->cache_mode,
 				      lp->policy_name,
 				      lp->policy_settings))

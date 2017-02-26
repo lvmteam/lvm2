@@ -645,6 +645,7 @@ static int _read_cache_params(struct cmd_context *cmd,
 
 	if (!get_cache_params(cmd,
 			      &lp->chunk_size,
+			      &lp->cache_metadata_format,
 			      &lp->cache_mode,
 			      &lp->policy_name,
 			      &lp->policy_settings))
@@ -787,6 +788,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	type_ARG
 
 #define CACHE_POOL_ARGS \
+	cachemetadataformat_ARG,\
 	cachemode_ARG,\
 	cachepool_ARG,\
 	cachepolicy_ARG,\

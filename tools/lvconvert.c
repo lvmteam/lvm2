@@ -2679,6 +2679,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	uint32_t meta_extents;
 	uint32_t chunk_size;
 	int chunk_calc;
+	cache_metadata_format_t cache_metadata_format;
 	cache_mode_t cache_mode;
 	const char *policy_name;
 	struct dm_config_tree *policy_settings = NULL;
@@ -2795,7 +2796,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		goto_bad;
 
 	if (to_cachepool &&
-	    !get_cache_params(cmd, &chunk_size, &cache_mode, &policy_name, &policy_settings))
+	    !get_cache_params(cmd, &chunk_size, &cache_metadata_format, &cache_mode, &policy_name, &policy_settings))
 		goto_bad;
 
 	if (metadata_lv)
@@ -3020,7 +3021,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 	/* Apply settings to the new pool seg */
 	if (to_cachepool) {
-		if (!cache_set_params(seg, chunk_size, cache_mode, policy_name, policy_settings))
+		if (!cache_set_params(seg, chunk_size, cache_metadata_format, cache_mode, policy_name, policy_settings))
 			goto_bad;
 	} else {
 		seg->transaction_id = 0;
@@ -3127,6 +3128,7 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 {
 	struct logical_volume *cache_lv;
 	uint32_t chunk_size = 0;
+	cache_metadata_format_t cache_metadata_format;
 	cache_mode_t cache_mode;
 	const char *policy_name;
 	struct dm_config_tree *policy_settings = NULL;
@@ -3135,7 +3137,7 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	if (!validate_lv_cache_create_pool(cachepool_lv))
 		return_0;
 
-	if (!get_cache_params(cmd, &chunk_size, &cache_mode, &policy_name, &policy_settings))
+	if (!get_cache_params(cmd, &chunk_size, &cache_metadata_format, &cache_mode, &policy_name, &policy_settings))
 		goto_bad;
 
 	if (!archive(lv->vg))
@@ -3144,7 +3146,7 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	if (!(cache_lv = lv_cache_create(cachepool_lv, lv)))
 		goto_bad;
 
-	if (!cache_set_params(first_seg(cache_lv), chunk_size, cache_mode, policy_name, policy_settings))
+	if (!cache_set_params(first_seg(cache_lv), chunk_size, cache_metadata_format, cache_mode, policy_name, policy_settings))
 		goto_bad;
 
 	if (!lv_update_and_reload(cache_lv))

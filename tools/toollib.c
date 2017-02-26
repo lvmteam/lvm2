@@ -1343,6 +1343,7 @@ static int _validate_cachepool_params(const char *name,
 
 int get_cache_params(struct cmd_context *cmd,
 		     uint32_t *chunk_size,
+		     cache_metadata_format_t *cache_metadata_format,
 		     cache_mode_t *cache_mode,
 		     const char **name,
 		     struct dm_config_tree **settings)
@@ -1362,6 +1363,9 @@ int get_cache_params(struct cmd_context *cmd,
 		log_very_verbose("Setting pool chunk size to %s.",
 				 display_size(cmd, *chunk_size));
 	}
+
+	*cache_metadata_format = (cache_metadata_format_t)
+		arg_uint_value(cmd, cachemetadataformat_ARG, CACHE_METADATA_FORMAT_UNSELECTED);
 
 	*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNSELECTED);
 

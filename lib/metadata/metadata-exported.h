@@ -1267,10 +1267,12 @@ const char *display_cache_mode(const struct lv_segment *seg);
 const char *get_cache_mode_name(const struct lv_segment *cache_seg);
 int set_cache_mode(cache_mode_t *mode, const char *cache_mode);
 int cache_set_cache_mode(struct lv_segment *cache_seg, cache_mode_t mode);
+int cache_set_metadata_format(struct lv_segment *cache_seg, cache_metadata_format_t format);
 int cache_set_policy(struct lv_segment *cache_seg, const char *name,
 		     const struct dm_config_tree *settings);
 int cache_set_params(struct lv_segment *seg,
 		     uint32_t chunk_size,
+		     cache_metadata_format_t format,
 		     cache_mode_t mode,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings);

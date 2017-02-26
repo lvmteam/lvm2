@@ -675,6 +675,26 @@ static const char *_get_default_cache_policy(struct cmd_context *cmd)
 	return def;
 }
 
+/* Autodetect best available cache metadata format for a user */
+static cache_metadata_format_t _get_default_cache_metadata_format(struct cmd_context *cmd)
+{
+	const struct segment_type *segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_CACHE);
+	unsigned attr;
+	cache_metadata_format_t f;
+
+	if (!segtype ||
+	    !segtype->ops->target_present ||
+	    !segtype->ops->target_present(cmd, NULL, &attr)) {
+		f = CACHE_METADATA_FORMAT_1;
+		log_warn("WARNING: Cannot detect default cache metadata format, using format: %u.", f);
+	} else {
+		f = (attr & CACHE_FEATURE_METADATA2) ? CACHE_METADATA_FORMAT_2 : CACHE_METADATA_FORMAT_1;
+		log_debug_metadata("Detected default cache metadata format: %u.", f);
+	}
+
+	return f;
+}
+
 int cache_set_policy(struct lv_segment *seg, const char *name,
 		     const struct dm_config_tree *settings)
 {
@@ -774,17 +794,93 @@ out:
 }
 
 /*
+ * Sets metadata format on cache pool segment with these rules:
+ * 1. When 'cache-pool' segment is passed, sets only for selected formats (1 or 2).
+ * 2. For 'cache' segment passed in we know cache pool segment.
+ *      When passed format is 0 (UNSELECTED) with 'cache' segment - it's the moment
+ *      lvm2 has to figure out 'default' metadata format (1 or 2) from
+ *      configuration or profiles.
+ * 3. If still unselected or selected format is != 1, figure the best supported format
+ *    and either use it or validate users settings is possible.
+ *
+ * Reasoning: A user may create cache-pool and may or may not specify CMFormat.
+ * If the CMFormat has been selected (1 or 2) store this in metadata, otherwise
+ * for an unused cache-pool UNSELECTED CMFormat is used. When caching LV, CMFormat
+ * must be decided and from this moment it's always stored. To support backward
+ * compatibility 'CMFormat 1' is used when it is NOT specified for a cached LV in
+ * lvm2 metadata (no metadata_format=#F element in cache-pool segment).
+ */
+int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t format)
+{
+	cache_metadata_format_t best;
+	struct profile *profile = seg->lv->profile;
+
+	if (seg_is_cache(seg))
+		seg = first_seg(seg->pool_lv);
+	else if (seg_is_cache_pool(seg)) {
+		if (format == CACHE_METADATA_FORMAT_UNSELECTED)
+			return 1; /* Format can be selected later when caching LV */
+	} else {
+		log_error(INTERNAL_ERROR "Cannot set cache metadata format for non cache volume %s.",
+			  display_lvname(seg->lv));
+		return 0;
+	}
+
+	/* Check if we need to search for configured cache metadata format */
+	if (format == CACHE_METADATA_FORMAT_UNSELECTED) {
+		if (seg->cache_metadata_format != CACHE_METADATA_FORMAT_UNSELECTED)
+			return 1; /* Format already selected in cache pool */
+
+		/* Check configurations and profiles */
+		format = find_config_tree_int(seg->lv->vg->cmd, allocation_cache_metadata_format_CFG,
+					      profile);
+	}
+
+	/* See what is a 'best' available cache metadata format
+	 * when the specifed format is other then always existing CMFormat 1 */
+	if (format != CACHE_METADATA_FORMAT_1) {
+		best = _get_default_cache_metadata_format(seg->lv->vg->cmd);
+
+		/* Format was not selected, so use best present on a system */
+		if (format == CACHE_METADATA_FORMAT_UNSELECTED)
+			format = best;
+		else if (format != best) {
+			/* Format is not valid (Only Format 1 or 2 is supported ATM) */
+			log_error("Cache metadata format %u is not supported by kernel target.", format);
+			return 0;
+		}
+	}
+
+	switch (format) {
+	case CACHE_METADATA_FORMAT_2: seg->lv->status |= LV_METADATA_FORMAT; break;
+	case CACHE_METADATA_FORMAT_1: seg->lv->status &= ~LV_METADATA_FORMAT; break;
+	default:
+		log_error(INTERNAL_ERROR "Invalid cache metadata format %u for cache volume %s.",
+			  format, display_lvname(seg->lv));
+		return 0;
+	}
+
+	seg->cache_metadata_format = format;
+
+	return 1;
+}
+
+/*
  * Universal 'wrapper' function  do-it-all
  * to update all commonly specified cache parameters
  */
 int cache_set_params(struct lv_segment *seg,
 		     uint32_t chunk_size,
+		     cache_metadata_format_t format,
 		     cache_mode_t mode,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings)
 {
 	struct lv_segment *pool_seg;
 	struct cmd_context *cmd = seg->lv->vg->cmd;
+
+	if (!cache_set_metadata_format(seg, format))
+		return_0;
 
 	if (!cache_set_cache_mode(seg, mode))
 		return_0;
