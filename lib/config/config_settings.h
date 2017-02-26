@@ -480,6 +480,15 @@ cfg(allocation_cache_pool_cachemode_CFG, "cache_pool_cachemode", allocation_CFG_
 	"This has been replaced by the allocation/cache_mode setting.\n",
 	"Cache mode.\n")
 
+cfg(allocation_cache_metadata_format_CFG, "cache_metadata_format", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_CACHE_METADATA_FORMAT, vsn(2, 2, 169), NULL, 0, NULL,
+	"Sets default metadata format for new cache.\n"
+	"#\n"
+	"Accepted values:\n"
+	"  0  Automatically detected best available format\n"
+	"  1  Original format\n"
+	"  2  Improved 2nd. generation format\n"
+	"#\n")
+
 cfg(allocation_cache_mode_CFG, "cache_mode", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_CACHE_MODE, vsn(2, 2, 128), NULL, 0, NULL,
 	"The default cache mode used for new cache.\n"
 	"#\n"
@@ -494,7 +503,7 @@ cfg(allocation_cache_mode_CFG, "cache_mode", allocation_CFG_SECTION, CFG_PROFILA
 
 cfg(allocation_cache_policy_CFG, "cache_policy", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, 0, vsn(2, 2, 128), NULL, 0, NULL,
 	"The default cache policy used for new cache volume.\n"
-	"Since kernel 4.2 the default policy is smq (Stochastic multique),\n"
+	"Since kernel 4.2 the default policy is smq (Stochastic multiqueue),\n"
 	"otherwise the older mq (Multiqueue) policy is selected.\n")
 
 cfg_section(allocation_cache_settings_CFG_SECTION, "cache_settings", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, vsn(2, 2, 128), 0, NULL,
@@ -992,7 +1001,7 @@ cfg_array(global_thin_disabled_features_CFG, "thin_disabled_features", global_CF
 cfg_array(global_cache_disabled_features_CFG, "cache_disabled_features", global_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_UNDEFINED, CFG_TYPE_STRING, NULL, vsn(2, 2, 128), NULL, 0, NULL,
 	"Features to not use in the cache driver.\n"
 	"This can be helpful for testing, or to avoid using a feature that is\n"
-	"causing problems. Features include: policy_mq, policy_smq.\n"
+	"causing problems. Features include: policy_mq, policy_smq, metadata2.\n"
 	"#\n"
 	"Example\n"
 	"cache_disabled_features = [ \"policy_smq\" ]\n"

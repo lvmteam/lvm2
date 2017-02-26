@@ -403,9 +403,20 @@ allocation {
 	# This configuration option has an automatic default value.
 	# cache_mode = "writethrough"
 
+	# Configuration option allocation/cache_metadata_format.
+	# Sets default metadata format for new cache.
+	# 
+	# Accepted values:
+	#   0  Automatically detected best available format
+	#   1  Original format
+	#   2  Improved 2nd. generation format
+	# 
+	# This configuration option has an automatic default value.
+	# cache_metadata_format = 0
+
 	# Configuration option allocation/cache_policy.
 	# The default cache policy used for new cache volume.
-	# Since kernel 4.2 the default policy is smq (Stochastic multique),
+	# Since kernel 4.2 the default policy is smq (Stochastic multiqueue),
 	# otherwise the older mq (Multiqueue) policy is selected.
 	# This configuration option does not have a default value defined.
 
@@ -1013,7 +1024,7 @@ global {
 	# Configuration option global/cache_disabled_features.
 	# Features to not use in the cache driver.
 	# This can be helpful for testing, or to avoid using a feature that is
-	# causing problems. Features include: policy_mq, policy_smq.
+	# causing problems. Features include: policy_mq, policy_smq, metadata2.
 	# 
 	# Example
 	# cache_disabled_features = [ "policy_smq" ]
@@ -1277,8 +1288,9 @@ activation {
 
 	# Configuration option activation/raid_region_size.
 	# Size in KiB of each raid or mirror synchronization region.
-	# For raid or mirror segment types, this is the amount of data that is
-	# copied at once when initializing, or moved at once by pvmove.
+	# The clean/dirty state of data is tracked for each region.
+	# The value is rounded down to a power of two if necessary, and
+	# is ignored if it is not a multiple of the machine memory page size.
 	raid_region_size = 512
 
 	# Configuration option activation/error_when_full.

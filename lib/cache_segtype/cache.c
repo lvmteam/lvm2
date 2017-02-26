@@ -213,6 +213,7 @@ static int _target_present(struct cmd_context *cmd,
 		const char *aliasing;
 	} _features[] = {
 		/* Assumption: cache >=1.9 always aliases MQ policy */
+		{ 1, 10, CACHE_FEATURE_METADATA2, 0, "metadata2" },
 		{ 1, 9, CACHE_FEATURE_POLICY_SMQ, CACHE_FEATURE_POLICY_MQ, "policy_smq", "cache-smq",
 		" and aliases cache-mq" },
 		{ 1, 8, CACHE_FEATURE_POLICY_SMQ, 0, "policy_smq", "cache-smq" },
@@ -250,6 +251,16 @@ static int _target_present(struct cmd_context *cmd,
 		for (i = 0; i < DM_ARRAY_SIZE(_features); ++i) {
 			if (_attrs & _features[i].cache_feature)
 				continue; /* already present */
+
+			if (!_features[i].module[0]) {
+				if ((maj > _features[i].maj) ||
+				    (maj == _features[i].maj && min >= _features[i].min)) {
+					log_debug_activation("Cache supports %s.",
+							     _features[i].feature);
+					_attrs |= _features[i].cache_feature;
+				}
+				continue;
+			}
 			if (((maj > _features[i].maj) ||
 			     (maj == _features[i].maj && min >= _features[i].min)) &&
 			    module_present(cmd, _features[i].module)) {

@@ -294,6 +294,13 @@ typedef enum {
 	CACHE_MODE_PASSTHROUGH,
 } cache_mode_t;
 
+/* ATM used for cache only */
+typedef enum {
+	CACHE_METADATA_FORMAT_UNSELECTED = 0,  /* On input means 'auto' */
+	CACHE_METADATA_FORMAT_1,
+	CACHE_METADATA_FORMAT_2,
+} cache_metadata_format_t;
+
 typedef enum {
 	LOCK_TYPE_INVALID = -1,
 	LOCK_TYPE_NONE = 0,

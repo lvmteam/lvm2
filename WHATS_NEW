@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Add allocation/cache_metadata_format profilable setttings.
   Use function cache_set_params() for both lvcreate and lvconvert.
   Skip rounding on cache chunk size boudary when create cache LV.
   Improve cache_set_params support for chunk_size selection.

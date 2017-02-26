@@ -315,6 +315,7 @@ int init_cache_segtypes(struct cmd_context *cmd, struct segtype_library *seglib)
 
 #define CACHE_FEATURE_POLICY_MQ			(1U << 0)
 #define CACHE_FEATURE_POLICY_SMQ		(1U << 1)
+#define CACHE_FEATURE_METADATA2			(1U << 2)
 
 #define SNAPSHOT_FEATURE_FIXED_LEAK		(1U << 0) /* version 1.12 */
 
