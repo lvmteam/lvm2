@@ -1358,14 +1358,19 @@ int get_cache_params(struct cmd_context *cmd,
 	struct dm_config_node *cn;
 	int ok = 0;
 
-	if (cache_mode)
-		*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNSELECTED);
+	if (arg_is_set(cmd, chunksize_ARG)) {
+		*chunk_size = arg_uint_value(cmd, chunksize_ARG, 0);
 
-	if (name)
-		*name = arg_str_value(cmd, cachepolicy_ARG, NULL);
+		if (!validate_cache_chunk_size(cmd, *chunk_size))
+			return_0;
 
-	if (!settings)
-		return 1;
+		log_very_verbose("Setting pool chunk size to %s.",
+				 display_size(cmd, *chunk_size));
+	}
+
+	*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNSELECTED);
+
+	*name = arg_str_value(cmd, cachepolicy_ARG, NULL);
 
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {
 		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))
@@ -1386,22 +1391,21 @@ int get_cache_params(struct cmd_context *cmd,
 			goto_out;
 	}
 
-	if (!current)
-		return 1;
-
-	if (!(result = dm_config_flatten(current)))
-		goto_out;
-
-	if (result->root) {
-		if (!(cn = dm_config_create_node(result, "policy_settings")))
+	if (current) {
+		if (!(result = dm_config_flatten(current)))
 			goto_out;
 
-		cn->child = result->root;
-		result->root = cn;
-	}
+		if (result->root) {
+			if (!(cn = dm_config_create_node(result, "policy_settings")))
+				goto_out;
 
-	if (!_validate_cachepool_params(*name, result))
-		goto_out;
+			cn->child = result->root;
+			result->root = cn;
+		}
+
+		if (!_validate_cachepool_params(*name, result))
+			goto_out;
+	}
 
 	ok = 1;
 out:

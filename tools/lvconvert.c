@@ -3193,8 +3193,6 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	if (!cache_set_params(first_seg(cache_lv), chunk_size, cache_mode, policy_name, policy_settings))
 		goto_bad;
 
-	cache_check_for_warns(first_seg(cache_lv));
-
 	if (!lv_update_and_reload(cache_lv))
 		goto_bad;
 

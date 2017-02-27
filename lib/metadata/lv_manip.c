@@ -7887,8 +7887,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				      lp->policy_settings))
 			return_NULL; /* revert? */
 
-		cache_check_for_warns(first_seg(lv));
-
 		if (!lv_update_and_reload(lv)) {
 			/* FIXME Do a better revert */
 			log_error("Aborting. Manual intervention required.");

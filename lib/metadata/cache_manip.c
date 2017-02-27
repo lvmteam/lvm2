@@ -772,6 +772,7 @@ int cache_set_params(struct lv_segment *seg,
 		     const struct dm_config_tree *policy_settings)
 {
 	struct lv_segment *pool_seg;
+	struct cmd_context *cmd = seg->lv->vg->cmd;
 
 	if (!cache_set_cache_mode(seg, mode))
 		return_0;
@@ -782,15 +783,34 @@ int cache_set_params(struct lv_segment *seg,
 	pool_seg = seg_is_cache(seg) ? first_seg(seg->pool_lv) : seg;
 
 	if (chunk_size) {
-		if (!validate_lv_cache_chunk_size(pool_seg->lv, chunk_size))
+		if (seg_is_cache(seg) &&
+		    !validate_lv_cache_chunk_size(pool_seg->lv, chunk_size))
 			return_0;
 		pool_seg->chunk_size = chunk_size;
-	} else {
-		/* TODO: some calc_policy solution for cache ? */
-		if (!recalculate_pool_chunk_size_with_dev_hints(pool_seg->lv, 0,
+	} else if (seg_is_cache(seg)) {
+		/* Chunk size in profile has priority over cache-pool chunk size */
+		if ((chunk_size = find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG,
+						       seg->lv->profile) * 2)) {
+			if (!validate_lv_cache_chunk_size(pool_seg->lv, chunk_size))
+				return_0;
+			if (pool_seg->chunk_size != chunk_size)
+				log_verbose("Replacing chunk size %s in cache pool %s with "
+					    "chunk size %s from profile.",
+					    display_size(cmd, pool_seg->chunk_size),
+					    display_lvname(seg->lv),
+					    display_size(cmd, chunk_size));
+			pool_seg->chunk_size = chunk_size;
+		}
+	} else if (seg_is_cache_pool(seg)) {
+		if (!pool_seg->chunk_size &&
+		    /* TODO: some calc_policy solution for cache ? */
+		    !recalculate_pool_chunk_size_with_dev_hints(pool_seg->lv,
 								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC))
 			return_0;
 	}
+
+	if (seg_is_cache(seg))
+		cache_check_for_warns(seg);
 
 	return 1;
 }
