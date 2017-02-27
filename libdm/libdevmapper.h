@@ -1739,7 +1739,16 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
  */
 #define DM_CACHE_METADATA_MAX_SECTORS DM_THIN_METADATA_MAX_SECTORS
 
-#define	RAID_BITMAP_SIZE 4
+/*
+ * Define number of elements in rebuild and writemostly arrays
+ * 'of struct dm_tree_node_raid_params'.
+ *
+ * Set to one to keep the current libdm API!
+ *
+ * If we ever raise the maximum number of RAID devices past 64 thus
+ * changing the API, we have to version it for backwards API compatibility.
+ */
+#define	RAID_BITMAP_SIZE 1
 
 struct dm_tree_node_raid_params {
 	const char *raid_type;

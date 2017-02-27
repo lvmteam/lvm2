@@ -23,8 +23,6 @@
 #define DEV_NAME(dmt) (dmt->mangled_dev_name ? : dmt->dev_name)
 #define DEV_UUID(DMT) (dmt->mangled_uuid ? : dmt->uuid)
 
-#define RAID_BITMAP_SIZE	4
-
 int mangle_string(const char *str, const char *str_name, size_t len,
 		  char *buf, size_t buf_len, dm_string_mangling_t mode);
 
