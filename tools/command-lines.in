@@ -347,7 +347,7 @@ OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid or change raid layout.
 RULE: all not lv_is_locked lv_is_pvmove
-RULE: LV_raid not LV_raid0 LV_raid1
+RULE: LV_raid not LV_raid0
 
 lvconvert --mirrors SNumber LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
