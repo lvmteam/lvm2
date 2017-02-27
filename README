@@ -6,11 +6,12 @@ Installation instructions are in INSTALL.
 There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
+  ftp://sourceware.org/pub/lvm2/
   ftp://sources.redhat.com/pub/lvm2/
 
 The source code is stored in git:
-  http://git.fedorahosted.org/git/lvm2.git
-  git clone git://git.fedorahosted.org/git/lvm2.git
+  https://sourceware.org/git/?p=lvm2.git
+  git clone git://sourceware.org/git/lvm2.git
 
 Mailing list for general discussion related to LVM2:
   linux-lvm@redhat.com
