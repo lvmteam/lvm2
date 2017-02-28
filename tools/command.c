@@ -2733,8 +2733,8 @@ void print_man_all_positions_desc(struct command_name *cname)
 		printf("Physical Volume name, a device path under /dev.\n"
 		       "For commands managing physical extents, a PV positional arg\n"
 		       "generally accepts a suffix indicating a range of physical extents.\n"
-		       "Start and end range (inclusive): \\fIPV\\fP[:\\fIPE\\fP[-\\fIPE\\fP].\n"
-		       "Start and length range (counting from 0): \\fIPV\\fP[:\\fIPE\\fP[+\\fIPE\\fP].\n");
+		       "Start and end range (inclusive): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP[\\fB-\\fP\\fIPE\\fP]].\n"
+		       "Start and length range (counting from 0): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP[\\fB+\\fP\\fIPE\\fP]].\n");
 	}
 
 	if (has_tag_val) {
