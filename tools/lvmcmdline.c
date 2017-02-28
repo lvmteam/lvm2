@@ -1720,7 +1720,7 @@ static int _usage(const char *name, int longhelp)
 		print_usage_common_cmd(cname, cmd);
 		print_usage_common_lvm(cname, cmd);
 	} else
-		log_print("Use --longhelp to show all options.");
+		log_print("Use --longhelp to show all options and advanced commands.");
 
 	return 1;
 }

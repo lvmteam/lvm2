@@ -144,12 +144,12 @@ Makefile: Makefile.in
 
 man-generator:
 	$(CC) -DMAN_PAGE_GENERATOR -I$(top_builddir)/tools $(CFLAGS) $(top_srcdir)/tools/command.c -o $@
-	- ./man-generator lvmconfig > test.gen
+	- ./man-generator --primary lvmconfig > test.gen
 	if [ ! -s test.gen ] ; then cp genfiles/*.gen $(top_builddir)/man; fi;
 
 $(MAN8GEN): man-generator
 	echo "Generating $@" ;
-	if [ ! -e $@.gen ]; then ./man-generator $(basename $@) $(top_srcdir)/man/$@.des > $@.gen; fi
+	if [ ! -e $@.gen ]; then ./man-generator --primary $(basename $@) $(top_srcdir)/man/$@.des > $@.gen; ./man-generator --secondary $(basename $@) >> $@.gen; fi
 	if [ -f $(top_srcdir)/man/$@.end ]; then cat $(top_srcdir)/man/$@.end >> $@.gen; fi;
 	cat $(top_srcdir)/man/see_also.end >> $@.gen
 	$(SED) -e "s+#VERSION#+$(LVM_VERSION)+;s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+;s+#DEFAULT_ARCHIVE_DIR#+$(DEFAULT_ARCHIVE_DIR)+;s+#DEFAULT_BACKUP_DIR#+$(DEFAULT_BACKUP_DIR)+;s+#DEFAULT_PROFILE_DIR#+$(DEFAULT_PROFILE_DIR)+;s+#DEFAULT_CACHE_DIR#+$(DEFAULT_CACHE_DIR)+;s+#DEFAULT_LOCK_DIR#+$(DEFAULT_LOCK_DIR)+;s+#CLVMD_PATH#+@CLVMD_PATH@+;s+#LVM_PATH#+@LVM_PATH@+;s+#DEFAULT_RUN_DIR#+@DEFAULT_RUN_DIR@+;s+#DEFAULT_PID_DIR#+@DEFAULT_PID_DIR@+;s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+;s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+;" $@.gen > $@

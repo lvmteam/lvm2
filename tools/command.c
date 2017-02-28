@@ -2866,7 +2866,7 @@ static void include_description_file(char *name, char *des_file)
 	close(fd);
 }
 
-void print_man(char *name, char *des_file, int include_primary, int include_secondary)
+void print_man(char *name, char *des_file, int secondary)
 {
 	struct command_name *cname;
 	struct command *cmd, *prev_cmd = NULL;
@@ -2905,10 +2905,7 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 		if (cmd->cmd_flags & CMD_FLAG_PREVIOUS_SYNTAX)
 			continue;
 
-		if ((cmd->cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !include_secondary)
-			continue;
-
-		if (!(cmd->cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !include_primary)
+		if ((cmd->cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !secondary)
 			continue;
 
 		if (strcmp(name, cmd->name))
@@ -2995,6 +2992,12 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 			printf(".SH VARIABLES\n");
 			printf(".br\n");
 			print_man_all_positions_desc(cname);
+		} else {
+			if (cname->variants > 2) {
+				printf("--\n");
+				printf("\n");
+				printf(".br\n");
+			}
 		}
 
 		printf("\n");
@@ -3002,20 +3005,107 @@ void print_man(char *name, char *des_file, int include_primary, int include_seco
 	}
 }
 
+void print_man_secondary(char *name)
+{
+	struct command *cmd;
+	char *lvmname = name;
+	int header = 0;
+	int i;
+
+	if (!strncmp(name, "lvm-", 4)) {
+		name[3] = ' ';
+		name += 4;
+	}
+
+	for (i = 0; i < COMMAND_COUNT; i++) {
+
+		cmd = &commands[i];
+
+		if (cmd->cmd_flags & CMD_FLAG_PREVIOUS_SYNTAX)
+			continue;
+
+		if (!(cmd->cmd_flags & CMD_FLAG_SECONDARY_SYNTAX))
+			continue;
+
+		if (strcmp(name, cmd->name))
+			continue;
+
+		if (!header) {
+			printf(".SH ADVANCED USAGE\n");
+			printf("Alternate command forms, advanced command usage, and listing of all valid syntax for completeness.\n");
+			printf(".P\n");
+			header = 1;
+		}
+
+		if (cmd->desc) {
+			print_desc_man(cmd->desc);
+			printf(".P\n");
+		}
+
+		print_man_usage(lvmname, cmd);
+
+		printf("--\n");
+		printf("\n");
+		printf(".br\n");
+
+		printf("\n");
+	}
+}
+
 int main(int argc, char *argv[])
 {
+	char *cmdname = NULL;
+	char *desfile = NULL;
+	int primary = 0;
+	int secondary = 0;
+
 	memset(&commands, 0, sizeof(commands));
 
-	if (argc < 2) {
-		log_error("Usage: %s <command> [/path/to/description-file]", argv[0]);
+	static struct option long_options[] = {
+		{"primary", no_argument, 0, 'p' },
+		{"secondary", no_argument, 0, 's' },
+		{0, 0, 0, 0 }
+	};
+
+	while (1) {
+		int c;
+		int option_index = 0;
+
+		c = getopt_long(argc, argv, "ps", long_options, &option_index);
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case '0':
+			break;
+		case 'p':
+			primary = 1;
+			break;
+		case 's':
+			secondary = 1;
+			break;
+		}
+	}
+
+	if (!primary && !secondary) {
+		log_error("Usage: %s --primary|--secondary <command> [/path/to/description-file]", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	if (optind < argc)
+		cmdname = strdup(argv[optind++]);
+
+	if (optind < argc)
+		desfile = argv[optind++];
 
 	define_commands(NULL);
 
 	factor_common_options();
 
-	print_man(argv[1], (argc > 2) ? argv[2] : NULL, 1, 1);
+	if (primary)
+		print_man(cmdname, desfile, secondary);
+	else if (secondary)
+		print_man_secondary(cmdname);
 
 	return 0;
 }
