@@ -310,6 +310,9 @@ OO_LVCONVERT_RAID: --mirrors SNumber, --stripes_long Number,
 OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB
 
+OO_LVCONVERT_CACHE: --cachemode CacheMode, --cachepolicy String,
+--cachesettings String, --zero Bool
+
 OO_LVCONVERT: --alloc Alloc, --background, --force, --noudevsync
 
 ---
@@ -434,16 +437,14 @@ RULE: all not lv_is_locked
 ---
 
 lvconvert --type cache --cachepool LV LV_linear_striped_raid_thinpool
-OO: --cache, --cachemode CacheMode, --cachepolicy String,
---cachesettings String, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
+OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_vol
 DESC: Convert LV to type cache.
 RULE: all and lv_is_visible
 
 # alternate form of lvconvert --type cache
 lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool
-OO: --type cache, --cachemode CacheMode, --cachepolicy String,
---cachesettings String, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
+OO: --type cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_vol
 DESC: Convert LV to type cache (variant, infers --type cache).
 FLAGS: SECONDARY_SYNTAX
@@ -494,8 +495,7 @@ FLAGS: PREVIOUS_SYNTAX
 ---
 
 lvconvert --type cache-pool LV_linear_striped_raid
-OO: OO_LVCONVERT_POOL, OO_LVCONVERT,
---cachemode CacheMode, --cachepolicy String, --cachesettings String
+OO: OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_cachepool
 DESC: Convert LV to type cache-pool.
@@ -523,8 +523,7 @@ DESC: Convert LV to type cache-pool.
 # of creating a pool or swapping metadata should be used.
 
 lvconvert --cachepool LV_linear_striped_raid_cachepool
-OO: --type cache-pool, OO_LVCONVERT_POOL, OO_LVCONVERT,
---cachemode CacheMode, --cachepolicy String, --cachesettings String
+OO: --type cache-pool, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_cachepool_or_swap_metadata
 DESC: Convert LV to type cache-pool (variant, use --type cache-pool).
