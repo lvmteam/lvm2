@@ -7425,7 +7425,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 				if (!activate_lv_excl_local(cmd, pool_lv)) {
 					log_error("Aborting. Failed to locally activate thin pool %s.",
 						  display_lvname(pool_lv));
-					return 0;
+					return NULL;
 				}
 				if (!pool_below_threshold(first_seg(pool_lv))) {
 					log_error("Cannot create new thin volume, free space in "

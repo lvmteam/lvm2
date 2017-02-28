@@ -9,6 +9,6 @@ allocation {
 	cache_mode = "writethrough"
 	cache_policy = "smq"
 	cache_settings {
-	        # currently no settins for "smq" policy
+	        # currently no settings for "smq" policy
 	}
 }

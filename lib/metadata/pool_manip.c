@@ -467,38 +467,6 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 	return 1;
 }
 
-#if 0
-int update_pool_params(const struct segment_type *segtype,
-		       struct volume_group *vg, unsigned target_attr,
-		       int passed_args, uint32_t pool_data_extents,
-		       uint32_t *pool_metadata_extents,
-		       int *chunk_size_calc_policy, uint32_t *chunk_size,
-		       thin_discards_t *discards, int *zero)
-{
-	if (segtype_is_cache_pool(segtype) || segtype_is_cache(segtype)) {
-		if (!update_cache_pool_params(segtype, vg, target_attr, passed_args,
-					      pool_data_extents, pool_metadata_extents,
-					      chunk_size_calc_policy, chunk_size))
-			return_0;
-	} else if (!update_thin_pool_params(segtype, vg, target_attr, passed_args,
-					    pool_data_extents, pool_metadata_extents,
-					    chunk_size_calc_policy, chunk_size,
-					    discards, zero)) /* thin-pool */
-			return_0;
-
-	if ((uint64_t) *chunk_size > (uint64_t) pool_data_extents * vg->extent_size) {
-		log_error("Size of %s data volume cannot be smaller than chunk size %s.",
-			  segtype->name, display_size(vg->cmd, *chunk_size));
-		return 0;
-	}
-
-	log_verbose("Preferred pool metadata size %s.",
-		    display_size(vg->cmd, (uint64_t)*pool_metadata_extents * vg->extent_size));
-
-	return 1;
-}
-#endif
-
 int create_pool(struct logical_volume *pool_lv,
 		const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size)

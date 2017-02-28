@@ -857,16 +857,6 @@ int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_pool_chunk_size(struct cmd_context *cmd, const struct segment_type *segtype, uint32_t chunk_size);
 int update_pool_lv(struct logical_volume *lv, int activate);
-int update_pool_params(const struct segment_type *segtype,
-		       struct volume_group *vg, unsigned target_attr,
-		       int passed_args, uint32_t pool_data_extents,
-		       uint32_t *pool_metadata_extents,
-		       int *chunk_size_calc_policy, uint32_t *chunk_size,
-		       thin_discards_t *discards, int *zero);
-int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profile,
-				  int passed_args, int *chunk_size_calc_method,
-				  uint32_t *chunk_size, thin_discards_t *discards,
-				  int *zero);
 int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
 						uint32_t *chunk_size, int *chunk_size_calc_method);
 int update_thin_pool_params(struct cmd_context *cmd,
