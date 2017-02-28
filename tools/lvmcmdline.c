@@ -1732,7 +1732,7 @@ static void _usage_all(void)
 	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
 		if (!command_names[i].name)
 			break;
-		_usage(command_names[i].name, 0);
+		_usage(command_names[i].name, 1);
 	}
 }
 
