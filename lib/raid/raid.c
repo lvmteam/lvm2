@@ -496,7 +496,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 					 SEG_TYPE_NAME_RAID4);
 
 		if (maj > 1 ||
-		    (maj == 1 && (min > 10 || (min == 10 && patchlevel >= 2))))
+		    (maj == 1 && (min > 10 || (min == 10 && patchlevel >= 1))))
 			_raid_attrs |= RAID_FEATURE_RESHAPE;
 	}
 
