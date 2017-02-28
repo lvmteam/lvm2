@@ -106,7 +106,7 @@ static int _check_region_size_constraints(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (region_size * 8 > lv->size) {
+	if (region_size > lv->size) {
 		log_error("Regionsize too large for %s LV %s.",
 			   segtype->name, display_lvname(lv));
 		return 0;
