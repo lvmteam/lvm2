@@ -3314,14 +3314,13 @@ int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 	seg->region_size = p->region_size;
 	seg->stripe_size = p->stripe_size;
 	seg->area_count = 0;
-	seg->delta_disks = p->delta_disks;
-	seg->data_offset = p->data_offset;
-	memcpy(seg->rebuilds, p->rebuilds, sizeof(seg->rebuilds));
-	memcpy(seg->writemostly, p->writemostly, sizeof(seg->writemostly));
+	memset(seg->rebuilds, 0, sizeof(seg->rebuilds));
+	seg->rebuilds[0] = p->rebuilds;
+	memset(seg->writemostly, 0, sizeof(seg->writemostly));
+	seg->writemostly[0] = p->writemostly;
 	seg->writebehind = p->writebehind;
 	seg->min_recovery_rate = p->min_recovery_rate;
 	seg->max_recovery_rate = p->max_recovery_rate;
-	seg->data_copies = p->data_copies;
 	seg->flags = p->flags;
 
 	return 1;
@@ -3332,10 +3331,70 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 const char *raid_type,
 				 uint32_t region_size,
 				 uint32_t stripe_size,
-				 uint64_t *rebuilds,
+				 uint64_t rebuilds,
 				 uint64_t flags)
 {
 	struct dm_tree_node_raid_params params = {
+		.raid_type = raid_type,
+		.region_size = region_size,
+		.stripe_size = stripe_size,
+		.rebuilds = rebuilds,
+		.flags = flags
+	};
+
+	return dm_tree_node_add_raid_target_with_params(node, size, &params);
+}
+
+/*
+ * Version 2 of dm_tree_node_add_raid_target() allowing for:
+ *
+ * - maximum 253 legs in a raid set (MD kernel limitation)
+ * - delta_disks for disk add/remove reshaping
+ * - data_offset for out-of-place reshaping
+ * - data_copies to cope witth odd numbers of raid10 disks
+ */
+int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
+					        uint64_t size,
+						const struct dm_tree_node_raid_params_v2 *p)
+{
+	unsigned i;
+	struct load_segment *seg = NULL;
+
+	for (i = 0; i < DM_ARRAY_SIZE(_dm_segtypes) && !seg; ++i)
+		if (!strcmp(p->raid_type, _dm_segtypes[i].target))
+			if (!(seg = _add_segment(node,
+						 _dm_segtypes[i].type, size)))
+				return_0;
+	if (!seg) {
+		log_error("Unsupported raid type %s.", p->raid_type);
+		return 0;
+	}
+
+	seg->region_size = p->region_size;
+	seg->stripe_size = p->stripe_size;
+	seg->area_count = 0;
+	seg->delta_disks = p->delta_disks;
+	seg->data_offset = p->data_offset;
+	memcpy(seg->rebuilds, p->rebuilds, sizeof(seg->rebuilds));
+	memcpy(seg->writemostly, p->writemostly, sizeof(seg->writemostly));
+	seg->writebehind = p->writebehind;
+	seg->data_copies = p->data_copies;
+	seg->min_recovery_rate = p->min_recovery_rate;
+	seg->max_recovery_rate = p->max_recovery_rate;
+	seg->flags = p->flags;
+
+	return 1;
+}
+
+int dm_tree_node_add_raid_target_v2(struct dm_tree_node *node,
+				    uint64_t size,
+				    const char *raid_type,
+				    uint32_t region_size,
+				    uint32_t stripe_size,
+				    uint64_t *rebuilds,
+				    uint64_t flags)
+{
+	struct dm_tree_node_raid_params_v2 params = {
 		.raid_type = raid_type,
 		.region_size = region_size,
 		.stripe_size = stripe_size,
@@ -3344,7 +3403,7 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 
 	memcpy(params.rebuilds, rebuilds, sizeof(params.rebuilds));
 
-	return dm_tree_node_add_raid_target_with_params(node, size, &params);
+	return dm_tree_node_add_raid_target_with_params_v2(node, size, &params);
 }
 
 int dm_tree_node_add_cache_target(struct dm_tree_node *node,

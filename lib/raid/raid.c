@@ -242,7 +242,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	uint64_t flags = 0;
 	uint64_t rebuilds[RAID_BITMAP_SIZE];
 	uint64_t writemostly[RAID_BITMAP_SIZE];
-	struct dm_tree_node_raid_params params;
+	struct dm_tree_node_raid_params_v2 params;
 
 	memset(&params, 0, sizeof(params));
 	memset(&rebuilds, 0, sizeof(rebuilds));
@@ -333,7 +333,7 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	params.stripe_size = seg->stripe_size;
 	params.flags = flags;
 
-	if (!dm_tree_node_add_raid_target_with_params(node, len, &params))
+	if (!dm_tree_node_add_raid_target_with_params_v2(node, len, &params))
 		return_0;
 
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);

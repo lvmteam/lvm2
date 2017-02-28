@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2006 Rackable Systems All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
@@ -1720,8 +1720,17 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 const char *raid_type,
 				 uint32_t region_size,
 				 uint32_t stripe_size,
-				 uint64_t *rebuilds,
+				 uint64_t rebuilds,
 				 uint64_t flags);
+
+/* Version 2 coping with 253 (MD kernel limitation) devices */
+int dm_tree_node_add_raid_target_v2(struct dm_tree_node *node,
+				    uint64_t size,
+				    const char *raid_type,
+				    uint32_t region_size,
+				    uint32_t stripe_size,
+				    uint64_t *rebuilds,
+				    uint64_t flags);
 
 /*
  * Defines below are based on kernel's dm-cache.c defines
@@ -1742,15 +1751,45 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 /*
  * Define number of elements in rebuild and writemostly arrays
  * 'of struct dm_tree_node_raid_params'.
- *
- * Set to one to keep the current libdm API!
- *
- * If we ever raise the maximum number of RAID devices past 64 thus
- * changing the API, we have to version it for backwards API compatibility.
  */
-#define	RAID_BITMAP_SIZE 1
 
 struct dm_tree_node_raid_params {
+	const char *raid_type;
+
+	uint32_t stripes;
+	uint32_t mirrors;
+	uint32_t region_size;
+	uint32_t stripe_size;
+
+	/*
+	 * 'rebuilds' and 'writemostly' are bitfields that signify
+	 * which devices in the array are to be rebuilt or marked
+	 * writemostly.  The kernel supports up to 253 legs.
+	 * We limit ourselves by choosing a lower value
+	 * for DEFAULT_RAID{1}_MAX_IMAGES in defaults.h.
+	 */
+	uint64_t rebuilds;
+	uint64_t writemostly;
+	uint32_t writebehind;	    /* I/Os (kernel default COUNTER_MAX / 2) */
+	uint32_t sync_daemon_sleep; /* ms (kernel default = 5sec) */
+	uint32_t max_recovery_rate; /* kB/sec/disk */
+	uint32_t min_recovery_rate; /* kB/sec/disk */
+	uint32_t stripe_cache;      /* sectors */
+
+	uint64_t flags;             /* [no]sync */
+	uint32_t reserved2;
+};
+
+/*
+ * Version 2 of above node raid params struct to keeep API compatibility.
+ *
+ * Extended for more than 64 legs (max 253 in the MD kernel runtime!),
+ * delta_disks for disk add/remove reshaping,
+ * data_offset for out-of-place reshaping
+ * and data_copies for odd number of raid10 legs.
+ */
+#define	RAID_BITMAP_SIZE 4 /* 4 * 64 bit elements in rebuilds/writemostly arrays */
+struct dm_tree_node_raid_params_v2 {
 	const char *raid_type;
 
 	uint32_t stripes;
@@ -1771,19 +1810,23 @@ struct dm_tree_node_raid_params {
 	uint64_t rebuilds[RAID_BITMAP_SIZE];
 	uint64_t writemostly[RAID_BITMAP_SIZE];
 	uint32_t writebehind;	    /* I/Os (kernel default COUNTER_MAX / 2) */
+	uint32_t data_copies;	    /* RAID # of data copies */
 	uint32_t sync_daemon_sleep; /* ms (kernel default = 5sec) */
 	uint32_t max_recovery_rate; /* kB/sec/disk */
 	uint32_t min_recovery_rate; /* kB/sec/disk */
-	uint32_t data_copies;	    /* RAID # of data copies */
 	uint32_t stripe_cache;      /* sectors */
 
 	uint64_t flags;             /* [no]sync */
-	uint64_t reserved2;
 };
 
 int dm_tree_node_add_raid_target_with_params(struct dm_tree_node *node,
 					     uint64_t size,
 					     const struct dm_tree_node_raid_params *p);
+
+/* Version 2 API function taking dm_tree_node_raid_params_v2 for aforementioned extensions. */
+int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
+						uint64_t size,
+						const struct dm_tree_node_raid_params_v2 *p);
 
 /* Cache feature_flags */
 #define DM_CACHE_FEATURE_WRITEBACK    0x00000001
