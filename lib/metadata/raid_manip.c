@@ -4166,6 +4166,10 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 	if (alloc_metadata_devs && !_raid0_add_or_remove_metadata_lvs(lv, 0, allocate_pvs, NULL))
 		return NULL;
 
+	/* Initialize reshape len properly after adding the image component list */
+	if (!_lv_set_reshape_len(lv, 0))
+		return_0;
+
 	if (update_and_reload && !lv_update_and_reload(lv))
 		return NULL;
 
