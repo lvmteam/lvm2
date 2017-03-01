@@ -52,6 +52,12 @@ static void _fix_missing_defaults(struct lv_segment *cpool_seg)
 			    cpool_seg->policy_name);
 	}
 
+	if (cpool_seg->cache_metadata_format == CACHE_METADATA_FORMAT_UNSELECTED) {
+		cpool_seg->cache_metadata_format = CACHE_METADATA_FORMAT_1;
+		log_verbose("Cache pool %s uses implicit metadata format %u.",
+			    display_lvname(cpool_seg->lv), cpool_seg->cache_metadata_format);
+	}
+
 	if (cpool_seg->cache_mode == CACHE_MODE_UNSELECTED) {
 		cpool_seg->cache_mode = CACHE_MODE_WHEN_MISSING;
 		log_verbose("Cache pool %s is missing cache mode, using %s.",
@@ -105,6 +111,16 @@ static int _cache_pool_text_import(struct lv_segment *seg,
 			return SEG_LOG_ERROR("policy must be a string in");
 		if (!(seg->policy_name = dm_pool_strdup(mem, str)))
 			return SEG_LOG_ERROR("Failed to duplicate policy in");
+	}
+
+	if (dm_config_has_node(sn, "metadata_format")) {
+		if (!dm_config_get_uint32(sn, "metadata_format", &seg->cache_metadata_format) ||
+		    ((seg->cache_metadata_format != CACHE_METADATA_FORMAT_1) &&
+		     (seg->cache_metadata_format != CACHE_METADATA_FORMAT_2)))
+			return SEG_LOG_ERROR("Unknown cache metadata format %u number in",
+					     seg->cache_metadata_format);
+		if (seg->cache_metadata_format == CACHE_METADATA_FORMAT_2)
+			seg->lv->status |= LV_METADATA_FORMAT;
 	}
 
 	/*
@@ -163,6 +179,25 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 	outf(f, "data = \"%s\"", seg_lv(seg, 0)->name);
 	outf(f, "metadata = \"%s\"", seg->metadata_lv->name);
 	outf(f, "chunk_size = %" PRIu32, seg->chunk_size);
+
+	switch (seg->cache_metadata_format) {
+	case CACHE_METADATA_FORMAT_UNSELECTED:
+		/* Unselected format is not printed */
+		break;
+	case CACHE_METADATA_FORMAT_1:
+		/* If format 1 was already specified with cache pool, store it,
+		 * otherwise format gets stored when LV is cached.
+		 * NB: format 1 could be lost anytime, it's a default format.
+		 * Older lvm2 tool can easily drop it.
+		 */
+	case CACHE_METADATA_FORMAT_2: /* more in future ? */
+		outf(f, "metadata_format = " FMTu32, seg->cache_metadata_format);
+		break;
+	default:
+		log_error(INTERNAL_ERROR "LV %s is using unknown cache metadada format %u.",
+			  display_lvname(seg->lv), seg->cache_metadata_format);
+		return 0;
+	}
 
 	/*
 	 * Cache pool used by a cache LV holds data. Not ideal,

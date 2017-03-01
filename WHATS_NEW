@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Support cache segment with configurable metadata format.
   Add allocation/cache_metadata_format profilable setttings.
   Use function cache_set_params() for both lvcreate and lvconvert.
   Skip rounding on cache chunk size boudary when create cache LV.
