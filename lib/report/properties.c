@@ -16,7 +16,6 @@
 #include "properties.h"
 #include "activate.h"
 #include "metadata.h"
-#include "segtype.h"
 
 
 #define GET_VG_NUM_PROPERTY_FN(NAME, VALUE) \
@@ -461,7 +460,7 @@ GET_LVSEG_NUM_PROPERTY_FN(parity_chunks, lvseg->data_offset)
 #define _parity_chunks_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(stripes, lvseg->area_count)
 #define _stripes_set prop_not_implemented_set
-GET_LVSEG_NUM_PROPERTY_FN(data_stripes, lvseg->area_count - lvseg->segtype->parity_devs)
+GET_LVSEG_NUM_PROPERTY_FN(data_stripes, lvseg->area_count)
 #define _data_stripes_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(stripe_size, (SECTOR_SIZE * lvseg->stripe_size))
 #define _stripe_size_set prop_not_implemented_set
