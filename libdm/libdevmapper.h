@@ -1723,15 +1723,6 @@ int dm_tree_node_add_raid_target(struct dm_tree_node *node,
 				 uint64_t rebuilds,
 				 uint64_t flags);
 
-/* Version 2 coping with 253 (MD kernel limitation) devices */
-int dm_tree_node_add_raid_target_v2(struct dm_tree_node *node,
-				    uint64_t size,
-				    const char *raid_type,
-				    uint32_t region_size,
-				    uint32_t stripe_size,
-				    uint64_t *rebuilds,
-				    uint64_t flags);
-
 /*
  * Defines below are based on kernel's dm-cache.c defines
  * DM_CACHE_MIN_DATA_BLOCK_SIZE (32 * 1024 >> SECTOR_SHIFT)

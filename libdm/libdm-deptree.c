@@ -3386,26 +3386,6 @@ int dm_tree_node_add_raid_target_with_params_v2(struct dm_tree_node *node,
 	return 1;
 }
 
-int dm_tree_node_add_raid_target_v2(struct dm_tree_node *node,
-				    uint64_t size,
-				    const char *raid_type,
-				    uint32_t region_size,
-				    uint32_t stripe_size,
-				    uint64_t *rebuilds,
-				    uint64_t flags)
-{
-	struct dm_tree_node_raid_params_v2 params = {
-		.raid_type = raid_type,
-		.region_size = region_size,
-		.stripe_size = stripe_size,
-		.flags = flags
-	};
-
-	memcpy(params.rebuilds, rebuilds, sizeof(params.rebuilds));
-
-	return dm_tree_node_add_raid_target_with_params_v2(node, size, &params);
-}
-
 int dm_tree_node_add_cache_target(struct dm_tree_node *node,
 				  uint64_t size,
 				  uint64_t feature_flags, /* DM_CACHE_FEATURE_* */
