@@ -229,6 +229,7 @@ class TestDbusService(unittest.TestCase):
 				dbus.Int32(g_tmo),
 				EOD))
 
+		self._validate_vg_lookup(vg_name, vg_path)
 		self.assertTrue(vg_path is not None and len(vg_path) > 0)
 		return ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
 
@@ -341,6 +342,10 @@ class TestDbusService(unittest.TestCase):
 	def _lookup(self, lvm_id):
 		return self.objs[MANAGER_INT][0].\
 			Manager.LookUpByLvmId(dbus.String(lvm_id))
+
+	def _validate_vg_lookup(self, vg_name, object_path):
+		t = self._lookup(vg_name)
+		self.assertTrue(object_path == t, "%s != %s" % (object_path, t))
 
 	def test_lookup_by_lvm_id(self):
 		# For the moment lets just lookup what we know about which is PVs
@@ -926,7 +931,8 @@ class TestDbusService(unittest.TestCase):
 		self.assertTrue(vg_path == '/')
 		self.assertTrue(vg_job and len(vg_job) > 0)
 
-		self._wait_for_job(vg_job)
+		vg_path = self._wait_for_job(vg_job)
+		self._validate_vg_lookup(vg_name, vg_path)
 
 	def _test_expired_timer(self, num_lvs):
 		rc = False
@@ -1508,12 +1514,14 @@ class TestDbusService(unittest.TestCase):
 						EOD))
 
 		# Create a VG and try to create LVs with different bad names
+		vg_name = vg_n()
 		vg_path = self.handle_return(
 			mgr.VgCreate(
-				dbus.String(vg_n()),
+				dbus.String(vg_name),
 				dbus.Array(pv_paths, 'o'),
 				dbus.Int32(g_tmo),
 				EOD))
+		self._validate_vg_lookup(vg_name, vg_path)
 
 		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
 
@@ -1559,13 +1567,16 @@ class TestDbusService(unittest.TestCase):
 	def test_invalid_tags(self):
 		mgr = self.objs[MANAGER_INT][0].Manager
 		pv_paths = [self.objs[PV_INT][0].object_path]
+		vg_name = vg_n()
 
 		vg_path = self.handle_return(
 			mgr.VgCreate(
-				dbus.String(vg_n()),
+				dbus.String(vg_name),
 				dbus.Array(pv_paths, 'o'),
 				dbus.Int32(g_tmo),
 				EOD))
+		self._validate_vg_lookup(vg_name, vg_path)
+
 		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
 
 		for c in self._invalid_tag_characters():
@@ -1587,13 +1598,15 @@ class TestDbusService(unittest.TestCase):
 	def test_tag_names(self):
 		mgr = self.objs[MANAGER_INT][0].Manager
 		pv_paths = [self.objs[PV_INT][0].object_path]
+		vg_name = vg_n()
 
 		vg_path = self.handle_return(
 			mgr.VgCreate(
-				dbus.String(vg_n()),
+				dbus.String(vg_name),
 				dbus.Array(pv_paths, 'o'),
 				dbus.Int32(g_tmo),
 				EOD))
+		self._validate_vg_lookup(vg_name, vg_path)
 		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
 
 		for i in range(1, 64):
@@ -1618,13 +1631,15 @@ class TestDbusService(unittest.TestCase):
 	def test_tag_regression(self):
 		mgr = self.objs[MANAGER_INT][0].Manager
 		pv_paths = [self.objs[PV_INT][0].object_path]
+		vg_name = vg_n()
 
 		vg_path = self.handle_return(
 			mgr.VgCreate(
-				dbus.String(vg_n()),
+				dbus.String(vg_name),
 				dbus.Array(pv_paths, 'o'),
 				dbus.Int32(g_tmo),
 				EOD))
+		self._validate_vg_lookup(vg_name, vg_path)
 		vg_proxy = ClientProxy(self.bus, vg_path, interfaces=(VG_INT, ))
 
 		tag = '--h/K.6g0A4FOEatf3+k_nI/Yp&L_u2oy-=j649x:+dUcYWPEo6.IWT0c'
