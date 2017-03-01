@@ -188,7 +188,7 @@ run_syncaction_check() {
 	# 'lvs' should show results
 	lvchange --syncaction check $vg/$lv
 	aux wait_for_sync $vg $lv
-	check lv_attr_bit health $vg/$lv "-"
+	check lv_attr_bit health $vg/$lv "-" || check lv_attr_bit health $vg/$lv "m"
 	check lv_field $vg/$lv raid_mismatch_count "0"
 }
 

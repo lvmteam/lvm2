@@ -27,6 +27,7 @@ aux prepare_vg 5
 lvcreate -aey -L 16M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "linear"
 check lv_field $vg/$lv1 stripes 1
+check lv_field $vg/$lv1 data_stripes 1
 echo y|mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
@@ -35,6 +36,7 @@ lvconvert -y -m 1 $vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 2
+check lv_field $vg/$lv1 data_stripes 2
 check lv_field $vg/$lv1 regionsize "512.00k"
 aux wait_for_sync $vg $lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
@@ -44,6 +46,7 @@ lvconvert -y --ty raid5_n $vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 check lv_field $vg/$lv1 segtype "raid5_n"
 check lv_field $vg/$lv1 stripes 2
+check lv_field $vg/$lv1 data_stripes 1
 check lv_field $vg/$lv1 stripesize "64.00k"
 check lv_field $vg/$lv1 regionsize "512.00k"
 
@@ -51,6 +54,7 @@ check lv_field $vg/$lv1 regionsize "512.00k"
 lvconvert -y --stripes 4 $vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 check lv_first_seg_field $vg/$lv1 segtype "raid5_n"
+check lv_first_seg_field $vg/$lv1 data_stripes 4
 check lv_first_seg_field $vg/$lv1 stripes 5
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 regionsize "512.00k"

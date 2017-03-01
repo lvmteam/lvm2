@@ -2412,6 +2412,179 @@ static int _segstartpe_disp(struct dm_report *rh,
 	return dm_report_field_uint32(rh, field, &seg->le);
 }
 
+static int _get_seg_used_stripes(const struct lv_segment *seg)
+{
+	uint32_t s;
+	uint32_t stripes = seg->area_count;
+
+	for (s = seg->area_count - 1; stripes && s; s--) {
+		if (seg_type(seg, s) == AREA_LV &&
+		    seg_lv(seg, s)->status & LV_REMOVE_AFTER_RESHAPE)
+			stripes--;
+		else
+			break;
+	}
+
+	return stripes;
+}
+
+static int _seg_stripes_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private)
+{
+	const struct lv_segment *seg = ((const struct lv_segment *) data);
+
+	return dm_report_field_uint32(rh, field, &seg->area_count);
+}
+
+static int _seg_data_stripes_disp(struct dm_report *rh, struct dm_pool *mem,
+				  struct dm_report_field *field,
+				  const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	uint32_t stripes = _get_seg_used_stripes(seg) - seg->segtype->parity_devs;
+
+	/* FIXME: in case of odd numbers of raid10 stripes */
+	if (seg_is_raid10(seg))
+		stripes /= seg->data_copies;
+
+	return dm_report_field_uint32(rh, field, &stripes);
+}
+
+static int _seg_reshape_len_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	uint32_t reshape_len = seg->reshape_len;
+
+	if (reshape_len && seg->lv) {
+		reshape_len *= seg->area_count * seg->lv->vg->extent_size;
+
+		return _size32_disp(rh, mem, field, &reshape_len, private);
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_32));
+}
+
+static int _seg_reshape_len_le_disp(struct dm_report *rh, struct dm_pool *mem,
+				    struct dm_report_field *field,
+				    const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	uint32_t reshape_len = seg->reshape_len;
+
+	if (reshape_len) {
+		reshape_len *= seg->area_count;
+
+		return dm_report_field_uint32(rh, field, &reshape_len);
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_32));
+}
+
+static int _seg_data_copies_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	if (seg->data_copies > 1)
+		return dm_report_field_uint32(rh, field, &seg->data_copies);
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_32));
+}
+
+static int _segdata_offset(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private, int new_data_offset)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	const char *what = "";
+
+	if (lv_is_raid_image(seg->lv) &&
+	    !seg->le &&
+	    (seg->reshape_len || !new_data_offset)) {
+		struct lv_list *lvl;
+		char *lv_name;
+
+		if ((lv_name = strdup(seg->lv->name))) {
+			char *p = strchr(lv_name, '_');
+
+			if (p) {
+				/* Handle duplicated sub LVs */
+				if (strstr(p, "_dup_"))
+					p = strchr(p + 5, '_');
+
+				if (p) {
+					*p = '\0';
+					if ((lvl = find_lv_in_vg(seg->lv->vg, lv_name))) {
+						if (seg_is_reshapable_raid(first_seg(lvl->lv))) {
+							uint64_t data_offset;
+
+							if (lv_raid_data_offset(lvl->lv, &data_offset)) {
+								if (new_data_offset && !lv_raid_image_in_sync(seg->lv))
+									data_offset = data_offset ? 0 :
+										      seg->reshape_len * seg->lv->vg->extent_size;
+
+								return dm_report_field_uint64(rh, field, &data_offset);
+							}
+
+							what = _str_unknown;
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	return _field_set_value(field, what, &GET_TYPE_RESERVED_VALUE(num_undef_64));
+}
+
+static int _seg_data_offset_disp(struct dm_report *rh, struct dm_pool *mem,
+				 struct dm_report_field *field,
+				 const void *data, void *private)
+{
+	return _segdata_offset(rh, mem, field, data, private, 0);
+}
+
+static int _seg_new_data_offset_disp(struct dm_report *rh, struct dm_pool *mem,
+				     struct dm_report_field *field,
+				     const void *data, void *private)
+{
+	return _segdata_offset(rh, mem, field, data, private, 1);
+}
+
+static int _seg_parity_chunks_disp(struct dm_report *rh, struct dm_pool *mem,
+				   struct dm_report_field *field,
+				   const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	uint32_t parity_chunks = seg->segtype->parity_devs ?: seg->data_copies - 1;
+
+	if (parity_chunks) {
+		uint32_t s, resilient_sub_lvs = 0;
+
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) == AREA_LV) {
+				struct lv_segment *seg1 = first_seg(seg_lv(seg, s));
+
+				if (seg1->segtype->parity_devs ||
+				    seg1->data_copies > 1)
+					resilient_sub_lvs++;
+			}
+		}
+
+		if (resilient_sub_lvs && resilient_sub_lvs == seg->area_count)
+			parity_chunks++;
+
+		return dm_report_field_uint32(rh, field, &parity_chunks);
+	}
+
+	return _field_set_value(field, "", &GET_TYPE_RESERVED_VALUE(num_undef_32));
+}
+
 static int _segsize_disp(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field,
 			 const void *data, void *private)

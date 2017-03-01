@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2013 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2010-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -16,6 +16,7 @@
 #include "properties.h"
 #include "activate.h"
 #include "metadata.h"
+#include "segtype.h"
 
 
 #define GET_VG_NUM_PROPERTY_FN(NAME, VALUE) \
@@ -446,8 +447,22 @@ GET_VG_NUM_PROPERTY_FN(vg_missing_pv_count, vg_missing_pv_count(vg))
 /* LVSEG */
 GET_LVSEG_STR_PROPERTY_FN(segtype, lvseg_segtype_dup(lvseg->lv->vg->vgmem, lvseg))
 #define _segtype_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(data_copies, lvseg->data_copies)
+#define _data_copies_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(reshape_len, lvseg->reshape_len)
+#define _reshape_len_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(reshape_len_le, lvseg->reshape_len)
+#define _reshape_len_le_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(data_offset, lvseg->data_offset)
+#define _data_offset_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(new_data_offset, lvseg->data_offset)
+#define _new_data_offset_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(parity_chunks, lvseg->data_offset)
+#define _parity_chunks_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(stripes, lvseg->area_count)
 #define _stripes_set prop_not_implemented_set
+GET_LVSEG_NUM_PROPERTY_FN(data_stripes, lvseg->area_count - lvseg->segtype->parity_devs)
+#define _data_stripes_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(stripe_size, (SECTOR_SIZE * lvseg->stripe_size))
 #define _stripe_size_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(region_size, (SECTOR_SIZE * lvseg->region_size))
