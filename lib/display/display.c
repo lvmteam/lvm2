@@ -386,6 +386,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	dm_percent_t thin_data_percent, thin_metadata_percent;
 	int thin_active = 0;
 	dm_percent_t thin_percent;
+	struct lv_status_cache *cache_status = NULL;
 
 	if (lv_is_historical(lv))
 		return _lvdisplay_historical_full(cmd, lv);
@@ -491,6 +492,19 @@ int lvdisplay_full(struct cmd_context *cmd,
 		seg = first_seg(lv);
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
 		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
+	} else if (lv_is_cache_origin(lv)) {
+		log_print("LV origin of Cache LV  %s",
+			  get_only_segment_using_this_lv(lv)->lv->name);
+	} else if (lv_is_cache(lv)) {
+		seg = first_seg(lv);
+		if (inkernel && !lv_cache_status(lv, &cache_status))
+                        return_0;
+		log_print("LV Cache pool name     %s", seg->pool_lv->name);
+		log_print("LV Cache origin name   %s", seg_lv(seg, 0)->name);
+	} else if (lv_is_cache_pool(lv)) {
+		seg = first_seg(lv);
+		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
+		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
 	}
 
 	if (inkernel && info.suspended)
@@ -509,6 +523,27 @@ int lvdisplay_full(struct cmd_context *cmd,
 	log_print("LV Size                %s",
 		  display_size(cmd,
 			       snap_seg ? snap_seg->origin->size : lv->size));
+
+	if (cache_status) {
+		log_print("Cache used blocks      %.2f%%",
+			  dm_percent_to_float(cache_status->data_usage));
+		log_print("Cache metadata blocks  %.2f%%",
+			  dm_percent_to_float(cache_status->metadata_usage));
+		log_print("Cache dirty blocks     %.2f%%",
+			  dm_percent_to_float(cache_status->dirty_usage));
+		log_print("Cache read hits/misses " FMTu64 " / " FMTu64,
+			  cache_status->cache->read_hits,
+			  cache_status->cache->read_misses);
+		log_print("Cache wrt hits/misses  " FMTu64 " / " FMTu64,
+			  cache_status->cache->write_hits,
+			  cache_status->cache->write_misses);
+		log_print("Cache demotions        " FMTu64,
+			  cache_status->cache->demotions);
+		log_print("Cache promotions       " FMTu64,
+			  cache_status->cache->promotions);
+
+		dm_pool_destroy(cache_status->mem);
+	}
 
 	if (thin_data_active)
 		log_print("Allocated pool data    %.2f%%",

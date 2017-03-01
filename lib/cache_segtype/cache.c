@@ -36,6 +36,31 @@ static unsigned _feature_mask;
         log_error(t " segment %s of logical volume %s.", ## p,	\
                   dm_config_parent_name(sn), seg->lv->name), 0;
 
+static int _cache_out_line(const char *line, void *_f)
+{
+	log_print("    Setting\t\t%s", line);
+
+	return 1;
+}
+
+static void _cache_display(const struct lv_segment *seg)
+{
+	const struct dm_config_node *n;
+	const struct lv_segment *pool_seg =
+		seg_is_cache_pool(seg) ? seg : first_seg(seg->pool_lv);
+
+	log_print("  Chunk size\t\t%s",
+		  display_size(seg->lv->vg->cmd, pool_seg->chunk_size));
+	log_print("  Metadata format\t%u", pool_seg->cache_metadata_format);
+	log_print("  Mode\t\t%s", get_cache_mode_name(pool_seg));
+	log_print("  Policy\t\t%s", pool_seg->policy_name);
+
+	if ((n = pool_seg->policy_settings->child))
+		dm_config_write_node(n, _cache_out_line, NULL);
+
+	log_print(" ");
+}
+
 /*
  * When older metadata are loaded without newer settings,
  * set then to default settings (the one that could have been
@@ -356,6 +381,7 @@ static int _modules_needed(struct dm_pool *mem,
 #endif /* DEVMAPPER_SUPPORT */
 
 static struct segtype_handler _cache_pool_ops = {
+	.display = _cache_display,
 	.text_import = _cache_pool_text_import,
 	.text_import_area_count = _cache_pool_text_import_area_count,
 	.text_export = _cache_pool_text_export,
@@ -519,6 +545,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 #endif /* DEVMAPPER_SUPPORT */
 
 static struct segtype_handler _cache_ops = {
+	.display = _cache_display,
 	.text_import = _cache_text_import,
 	.text_import_area_count = _cache_text_import_area_count,
 	.text_export = _cache_text_export,

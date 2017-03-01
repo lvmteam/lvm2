@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Lvdisplay [-m] shows more informations for cached volumes.
   Add option for lvcreate/lvconvert --cachemetadataformat auto|1|2.
   Support cache segment with configurable metadata format.
   Add allocation/cache_metadata_format profilable setttings.
