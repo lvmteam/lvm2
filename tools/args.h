@@ -693,7 +693,7 @@ arg(unquoted_ARG, '\0', "unquoted", 0, 0, 0,
     "pairs are not quoted.\n")
 
 arg(usepolicies_ARG, '\0', "usepolicies", 0, 0, 0,
-    "Perform an operation according to the policy configured in lvm.conf.\n"
+    "Perform an operation according to the policy configured in lvm.conf\n"
     "or a profile.\n")
 
 arg(validate_ARG, '\0', "validate", 0, 0, 0,
