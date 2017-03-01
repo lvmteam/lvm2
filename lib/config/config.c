@@ -2442,21 +2442,13 @@ const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_cont
 
 int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile)
 {
-	const char *str;
 	uint32_t chunk_size;
+	int chunk_size_calc_method;
 
-	if (!(str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile))) {
-		log_error(INTERNAL_ERROR "Cannot find configuration.");
-		return 0;
-	}
-
-	if (!strcasecmp(str, "generic"))
+	if (!get_default_allocation_thin_pool_chunk_size(cmd, profile, &chunk_size,
+							 &chunk_size_calc_method)) {
+		stack; /* Ignore this error, never happens... */
 		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
-	else if (!strcasecmp(str, "performance"))
-		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2;
-	else {
-		log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
-		return 0;
 	}
 
 	return (int) chunk_size;

@@ -574,6 +574,30 @@ static size_t _estimate_chunk_size(uint64_t data_size, uint64_t metadata_size, i
 	return chunk_size;
 }
 
+int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
+						uint32_t *chunk_size, int *chunk_size_calc_method)
+{
+	const char *str;
+
+	if (!(str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile))) {
+		log_error(INTERNAL_ERROR "Cannot find configuration.");
+		return 0;
+	}
+
+	if (!strcasecmp(str, "generic")) {
+		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
+		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_GENERIC;
+	} else if (!strcasecmp(str, "performance")) {
+		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2;
+		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE;
+	} else {
+		log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
+		return 0;
+	}
+
+	return 1;
+}
+
 int update_thin_pool_params(const struct segment_type *segtype,
 			    struct volume_group *vg,
 			    unsigned attr, int passed_args,
@@ -591,19 +615,9 @@ int update_thin_pool_params(const struct segment_type *segtype,
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2)) {
-			if (!(str = find_config_tree_str(cmd, allocation_thin_pool_chunk_size_policy_CFG, profile))) {
-				log_error(INTERNAL_ERROR "Could not find configuration.");
-				return 0;
-			}
-			if (!strcasecmp(str, "generic"))
-				*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_GENERIC;
-			else if (!strcasecmp(str, "performance"))
-				*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE;
-			else {
-				log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
-				return 0;
-			}
-			if (!(*chunk_size = get_default_allocation_thin_pool_chunk_size_CFG(cmd, profile)))
+			if (!get_default_allocation_thin_pool_chunk_size(cmd, profile,
+									 chunk_size,
+									 chunk_size_calc_method))
 				return_0;
 		}
 	}

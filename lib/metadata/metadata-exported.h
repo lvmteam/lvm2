@@ -859,6 +859,8 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 				  int passed_args, int *chunk_size_calc_method,
 				  uint32_t *chunk_size, thin_discards_t *discards,
 				  int *zero);
+int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
+						uint32_t *chunk_size, int *chunk_size_calc_method);
 int update_thin_pool_params(const struct segment_type *segtype,
 			    struct volume_group *vg, unsigned attr,
 			    int passed_args, uint32_t pool_data_extents,
