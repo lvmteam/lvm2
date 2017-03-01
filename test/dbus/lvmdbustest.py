@@ -198,6 +198,9 @@ class TestDbusService(unittest.TestCase):
 			self.objs[MANAGER_INT][0].Manager.PvCreate(
 				dbus.String(device), dbus.Int32(g_tmo), EOD)
 		)
+
+		self._validate_lookup(device, pv_path)
+
 		self.assertTrue(pv_path is not None and len(pv_path) > 0)
 		return pv_path
 
