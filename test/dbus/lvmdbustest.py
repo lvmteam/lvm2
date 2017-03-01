@@ -483,7 +483,6 @@ class TestDbusService(unittest.TestCase):
 		(vg, thin_pool) = self._create_raid5_thin_pool()
 
 		vg_name_start = vg.Name
-		mgr = self.objs[MANAGER_INT][0].Manager
 
 		# noinspection PyTypeChecker
 		self._verify_hidden_lookups(thin_pool.LvCommon, vg_name_start)
