@@ -1597,7 +1597,7 @@ static void print_usage_def(struct arg_def *def)
 		printf(" ...");
 }
 
-void print_usage(struct command *cmd, int longhelp)
+void print_usage(struct command *cmd, int longhelp, int desc_first)
 {
 	struct command_name *cname = find_command_name(cmd->name);
 	int onereq = (cmd->cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) ? 1 : 0;
@@ -1609,7 +1609,7 @@ void print_usage(struct command *cmd, int longhelp)
 	 */
 	factor_common_options();
 
-	if (cmd->desc)
+	if (desc_first && cmd->desc)
 		_print_usage_description(cmd);
 
 	printf("  %s", cmd->name);
@@ -1709,7 +1709,12 @@ void print_usage(struct command *cmd, int longhelp)
 
 	printf(" ]");
  done:
-	printf("\n\n");
+	printf("\n");
+
+	if (!desc_first && cmd->desc)
+		_print_usage_description(cmd);
+
+	printf("\n");
 	return;
 }
 
