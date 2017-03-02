@@ -2984,23 +2984,23 @@ void print_man(char *name, char *des_file, int secondary)
 				return;
 
 			if (cname->variant_has_ro && cname->variant_has_rp)
-				printf("\\fB%s\\fP \\fIrequired_option_args\\fP \\fIrequired_position_args\\fP\n", lvmname);
+				printf("\\fB%s\\fP \\fIoption_args\\fP \\fIposition_args\\fP\n", lvmname);
 			else if (cname->variant_has_ro && !cname->variant_has_rp)
-				printf("\\fB%s\\fP \\fIrequired_option_args\\fP\n", lvmname);
+				printf("\\fB%s\\fP \\fIoption_args\\fP\n", lvmname);
 			else if (!cname->variant_has_ro && cname->variant_has_rp)
-				printf("\\fB%s\\fP \\fIrequired_position_args\\fP\n", lvmname);
+				printf("\\fB%s\\fP \\fIposition_args\\fP\n", lvmname);
 			else if (!cname->variant_has_ro && !cname->variant_has_rp)
 				printf("\\fB%s\\fP\n", lvmname);
 
 			printf(".br\n");
 
 			if (cname->variant_has_oo) {
-				printf("    [ \\fIoptional_option_args\\fP ]\n");
+				printf("    [ \\fIoption_args\\fP ]\n");
 				printf(".br\n");
 			}
 
 			if (cname->variant_has_op) {
-				printf("    [ \\fIoptional_position_args\\fP ]\n");
+				printf("    [ \\fIposition_args\\fP ]\n");
 				printf(".br\n");
 			}
 
