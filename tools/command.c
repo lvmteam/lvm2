@@ -845,10 +845,12 @@ static void include_optional_opt_args(struct command *cmd, const char *str)
  * This function sets the opt_args.opt value for it.
  */
 
-static void add_opt_arg(struct command *cmd, char *str, int *takes_arg, int required)
+static void add_opt_arg(struct command *cmd, char *str,
+			int *takes_arg, int *already, int required)
 {
 	char *comma;
 	int opt;
+	int i;
 
 	/* opt_arg.opt set here */
 	/* opt_arg.def will be set in update_prev_opt_arg() if needed */
@@ -871,6 +873,17 @@ static void add_opt_arg(struct command *cmd, char *str, int *takes_arg, int requ
 	/* If the binary-search finds uuidstr_ARG switch to uuid_ARG */
 	if (opt == uuidstr_ARG)
 		opt = uuid_ARG;
+
+	/* Skip adding an optional opt if it is already included. */
+	if (already && !required) {
+		for (i = 0; i < cmd->oo_count; i++) {
+			if (cmd->optional_opt_args[i].opt == opt) {
+				*already = 1;
+				*takes_arg = opt_names[opt].val_enum ? 1 : 0;
+				return;
+			}
+		}
+	}
 
 skip:
 	if (required > 0)
@@ -966,13 +979,17 @@ static void update_prev_pos_arg(struct command *cmd, char *str, int required)
 static void add_optional_opt_line(struct command *cmd, int argc, char *argv[])
 {
 	int takes_arg = 0;
+	int already;
 	int i;
 
 	for (i = 0; i < argc; i++) {
 		if (!i && !strncmp(argv[i], "OO:", 3))
 			continue;
+
+		already = 0;
+
 		if (is_opt_name(argv[i]))
-			add_opt_arg(cmd, argv[i], &takes_arg, OPTIONAL);
+			add_opt_arg(cmd, argv[i], &takes_arg, &already, OPTIONAL);
 		else if (!strncmp(argv[i], "OO_", 3))
 			include_optional_opt_args(cmd, argv[i]);
 		else if (takes_arg)
@@ -983,6 +1000,9 @@ static void add_optional_opt_line(struct command *cmd, int argc, char *argv[])
 			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 			return;
 		}
+
+		if (already && takes_arg)
+			i++;
 	}
 }
 
@@ -997,7 +1017,7 @@ static void add_ignore_opt_line(struct command *cmd, int argc, char *argv[])
 		if (!i && !strncmp(argv[i], "IO:", 3))
 			continue;
 		if (is_opt_name(argv[i]))
-			add_opt_arg(cmd, argv[i], &takes_arg, IGNORE);
+			add_opt_arg(cmd, argv[i], &takes_arg, NULL, IGNORE);
 		else if (takes_arg)
 			update_prev_opt_arg(cmd, argv[i], IGNORE);
 		else {
@@ -1032,7 +1052,7 @@ static void add_required_opt_line(struct command *cmd, int argc, char *argv[])
 
 	for (i = 0; i < argc; i++) {
 		if (is_opt_name(argv[i]))
-			add_opt_arg(cmd, argv[i], &takes_arg, REQUIRED);
+			add_opt_arg(cmd, argv[i], &takes_arg, NULL, REQUIRED);
 		else if (takes_arg)
 			update_prev_opt_arg(cmd, argv[i], REQUIRED);
 		else {
@@ -1090,7 +1110,7 @@ static void add_required_line(struct command *cmd, int argc, char *argv[])
 
 		if (is_opt_name(argv[i])) {
 			/* add new required_opt_arg */
-			add_opt_arg(cmd, argv[i], &takes_arg, REQUIRED);
+			add_opt_arg(cmd, argv[i], &takes_arg, NULL, REQUIRED);
 			prev_was_opt = 1;
 			prev_was_pos = 0;
 
