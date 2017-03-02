@@ -762,6 +762,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	contiguous_ARG,\
 	ignoreactivationskip_ARG,\
 	ignoremonitoring_ARG,\
+	metadataprofile_ARG,\
 	monitor_ARG,\
 	mirrors_ARG,\
 	name_ARG,\
