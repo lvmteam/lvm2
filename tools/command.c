@@ -1635,6 +1635,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 {
 	struct command_name *cname = find_command_name(cmd->name);
 	int onereq = (cmd->cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) ? 1 : 0;
+	int include_extents = 0;
 	int ro, rp, oo, op, opt_enum, first;
 
 	/*
@@ -1653,6 +1654,10 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
+
+			/* special case */
+			if (!strcmp(cmd->name, "lvcreate") && (opt_enum == size_ARG))
+				include_extents = 1;
 
 			if (onereq) {
 				if (first)
@@ -1690,6 +1695,9 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		goto op_count;
 
 	if (cmd->oo_count) {
+		if (include_extents)
+			printf("\n\t[ --extents Number[PERCENT] ]");
+
 		for (oo = 0; oo < cmd->oo_count; oo++) {
 			opt_enum = cmd->optional_opt_args[oo].opt;
 
@@ -1822,8 +1830,9 @@ void print_usage_notes(struct command_name *cname, struct command *cmd)
 
 	if (!strcmp(cname->name, "lvcreate")) {
 		printf("  Special options for command:\n");
-		printf("        [ --extents NumberExtents ]\n"
-		       "        The --extents option can be used in place of --size in each case.\n");
+		printf("        [ --extents Number[PERCENT] ]\n"
+		       "        The --extents option can be used in place of --size in each case.\n"
+		       "        The number allows an optional percent suffix (see man lvcreate).\n");
 		printf("\n");
 		printf("        [ --name String ]\n"
 		       "        The --name option is not required but is typically used.\n"
