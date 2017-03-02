@@ -1908,6 +1908,10 @@ static void print_val_man(struct command_name *cname, const char *str)
 		printf("\\fISize\\fP[m|UNIT]");
 		return;
 	}
+	if (!strcmp(cname->name, "lvcreate") && !strcmp(str, "[+|-]Number[%VG|%PVS|%FREE]")) {
+		printf("\\fINumber\\fP[\\fB%%VG\\fP|\\fB%%PVS\\fP|\\fB%%FREE\\fP]");
+		return;
+	}
 
 	/*
 	 * Doing bold k before UNIT creates a lot of
