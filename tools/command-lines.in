@@ -699,7 +699,8 @@ OO_LVCREATE: --addtag Tag, --alloc Alloc, --autobackup Bool, --activate Active,
 --reportformat ReportFmt, --setactivationskip Bool, --wipesignatures Bool,
 --zero Bool
 
-OO_LVCREATE_CACHE: --cachemode CacheMode, --cachepolicy String, --cachesettings String
+OO_LVCREATE_CACHE: --cachemode CacheMode, --cachepolicy String, --cachesettings String,
+--chunksize SizeKB
 
 OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksize SizeKB
 
