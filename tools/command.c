@@ -2110,6 +2110,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 	int onereq = (cmd->cmd_flags & CMD_FLAG_ONE_REQUIRED_OPT) ? 1 : 0;
 	int sep, ro, rp, oo, op, opt_enum;
 	int need_ro_indent_end = 0;
+	int include_extents = 0;
 
 	if (!(cname = find_command_name(cmd->name)))
 		return;
@@ -2239,6 +2240,10 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			opt_enum = cmd->required_opt_args[ro].opt;
 
+			/* special case */
+			if (!strcmp(cmd->name, "lvcreate") && (opt_enum == size_ARG))
+				include_extents = 1;
+
 			if (opt_names[opt_enum].short_opt) {
 				printf(" \\fB-%c\\fP|\\fB%s\\fP",
 				       opt_names[opt_enum].short_opt,
@@ -2283,6 +2288,13 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 	if (cmd->oo_count) {
 		printf(".RS 4\n");
+
+		if (include_extents) {
+			printf(".ad l\n");
+			printf("[ \\fB-l\\fP|\\fB--extents\\fP \\fINumber\\fP[PERCENT] ]\n");
+			printf(".ad b\n");
+			sep = 1;
+		}
 
 		/* print optional options with short opts */
 
