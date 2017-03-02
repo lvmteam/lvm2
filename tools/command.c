@@ -1817,6 +1817,63 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 	printf("\n\n");
 }
 
+void print_usage_notes(struct command_name *cname, struct command *cmd)
+{
+
+	if (!strcmp(cname->name, "lvcreate")) {
+		printf("  Special options for command:\n");
+		printf("        [ --extents NumberExtents ]\n"
+		       "        The --extents option can be used in place of --size in each case.\n");
+		printf("\n");
+		printf("        [ --name String ]\n"
+		       "        The --name option is not required but is typically used.\n"
+		       "        When a name is not specified, a new LV name is generated\n"
+		       "        with the \"lvol\" prefix and a unique numeric suffix.\n");
+		printf("\n");
+	}
+
+	printf("  Common variables for lvm:\n"
+	       "        Variables in option or position args are capitalized,\n"
+	       "        e.g. PV, VG, LV, Size, Number, String, Tag.\n");
+	printf("\n");
+
+	printf("        PV\n"
+	       "        Physical Volume name, a device path under /dev.\n"
+	       "        For commands managing physical extents, a PV positional\n"
+	       "        arg generally accepts a suffix indicating a range of PEs:\n"
+	       "        PV[:PE[-PE]] is start and end range (inclusive),\n"
+	       "        PV[:PE[+PE]] is start and length range (counting from 0).\n");
+	printf("\n");
+
+	printf("        LV\n"
+	       "        Logical Volume name. See lvm(8) for valid names. An LV positional\n"
+	       "        arg generally includes the VG name and LV name, e.g. VG/LV.\n"
+	       "        LV followed by _<type> indicates that an LV of the given type is\n"
+	       "        required. (raid represents raid<N> type).\n"
+	       "        The _new suffix indicates that the LV name is new.\n");
+	printf("\n");
+
+	printf("        Tag\n"
+	       "        Tag name. See lvm(8) for information about tag names and using\n"
+	       "        tags in place of a VG, LV or PV.\n");
+	printf("\n");
+
+	printf("        Select\n"
+	       "        Select indicates that a required positional arg can be omitted\n"
+	       "        if the --select option is used. No arg appears in this position.\n");
+	printf("\n");
+
+	printf("        Size[UNIT]\n"
+	       "        Size is an input number that accepts an optional unit.\n"
+               "        Input units are always treated as base two values, regardless of\n"
+               "        capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
+               "        The default input unit is specified by letter, followed by |UNIT.\n"
+               "        UNIT represents other possible input units: BbBsSkKmMgGtTpPeE.\n"
+               "        (This should not be confused with the output control --units, where\n"
+               "        capital letters mean multiple of 1000.)\n");
+	printf("\n");
+}
+
 #ifdef MAN_PAGE_GENERATOR
 
 static void print_val_man(struct command_name *cname, const char *str)

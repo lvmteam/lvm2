@@ -1702,6 +1702,7 @@ static int _usage(const char *name, int longhelp)
 {
 	struct command_name *cname = find_command_name(name);
 	struct command *cmd;
+	int show_full = longhelp;
 	int i;
 
 	if (!cname) {
@@ -1720,7 +1721,7 @@ static int _usage(const char *name, int longhelp)
 	/* Reduce the default output when there are several variants. */
 
 	if (cname->variants < 3)
-		longhelp = 1;
+		show_full = 1;
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
 		if (strcmp(_cmdline.commands[i].name, name))
@@ -1729,18 +1730,22 @@ static int _usage(const char *name, int longhelp)
 		if (_cmdline.commands[i].cmd_flags & CMD_FLAG_PREVIOUS_SYNTAX)
 			continue;
 
-		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !longhelp)
+		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !show_full)
 			continue;
 
-		print_usage(&_cmdline.commands[i], longhelp, 1);
+		print_usage(&_cmdline.commands[i], show_full, 1);
 		cmd = &_cmdline.commands[i];
 	}
 
 	/* Common options are printed once for all variants of a command name. */
-	if (longhelp) {
+	if (show_full) {
 		print_usage_common_cmd(cname, cmd);
 		print_usage_common_lvm(cname, cmd);
-	} else
+	}
+
+	if (longhelp)
+		print_usage_notes(cname, cmd);
+	else
 		log_print("Use --longhelp to show all options and advanced commands.");
 
 	return 1;
