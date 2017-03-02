@@ -27,6 +27,39 @@ A command run on a visible LV sometimes operates on a sub LV rather than
 the specified LV.  In other cases, a sub LV must be specified directly on
 the command line.
 
+Striped raid types are
+.B raid0/raid0_meta
+,
+.B raid5
+(an alias for raid5_ls),
+.B raid6
+(an alias for raid6_zr) and
+.B raid10
+(an alias for raid10_near).
+
+As opposed to mirroring, raid5 and raid6 stripe data and calculate parity
+blocks. The parity blocks can be used for data block recovery in case devices
+fail. A maximum number of one device in a raid5 LV may fail  and two in case
+of raid6. Striped raid types typically rotate the parity blocks for performance
+reasons thus avoiding contention on a single device.  Layouts of raid5 rotating
+parity blocks can be one of left-asymmetric (raid5_la), left-symmetric (raid5_ls
+with alias raid5), right-asymmetric (raid5_ra), right-symmetric (raid5_rs) and raid5_n,
+which doesn't rotate parity blocks.  Any \"_n\" layouts allow for conversion between
+raid levels (raid5_n -> raid6 or raid5_n -> striped/raid0/raid0_meta).
+raid6 layouts are zero-restart (raid6_zr with alias raid6), next-restart (raid6_nr),
+next-continue (raid6_nc). Additionally, special raid6 layouts for raid level conversions
+between raid5 and raid6 are raid6_ls_6, raid6_rs_6, raid6_la_6 and raid6_ra_6. Those
+correspond to their raid5 counterparts (e.g. raid5_rs can be directly converted to raid6_rs_6
+and vice-versa).
+raid10 (an alias for raid10_near) is currently limited to one data copy and even number of
+sub LVs. This is a mirror group layout thus a single sub LV may fail per mirror group
+without data loss.
+Striped raid types support converting the layout, their stripesize
+and their number of stripes.
+
+The striped raid types combined with raid1 allow for conversion from linear -> striped/raid0/raid0_meta
+and vice-versa by e.g. linear <-> raid1 <-> raid5_n (then adding stripes) <-> striped/raid0/raid0_meta.
+
 Sub LVs can be displayed with the command
 .B lvs -a
 
