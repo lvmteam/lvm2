@@ -1213,22 +1213,24 @@ EOF
 lvmconf() {
 	unset profile_name
 	generate_config "$@"
-	mv -f CONFIG etc/lvm.conf
+	mv -f CONFIG "$LVM_SYSTEM_DIR/lvm.conf"
 }
 
 profileconf() {
+	local pdir="$LVM_SYSTEM_DIR/profile"
 	profile_name="$1"
 	shift
 	generate_config "$@"
-	mkdir -p etc/profile
-	mv -f "PROFILE_$profile_name" "etc/profile/$profile_name.profile"
+	mkdir -p $pdir
+	mv -f "PROFILE_$profile_name" "$pdir/$profile_name.profile"
 }
 
 prepare_profiles() {
-	mkdir -p etc/profile
+	local pdir="$LVM_SYSTEM_DIR/profile"
+	mkdir -p $pdir
 	for profile_name in $@; do
 		test -L "lib/$profile_name.profile" || skip
-		cp "lib/$profile_name.profile" "etc/profile/$profile_name.profile"
+		cp "lib/$profile_name.profile" "$pdir/$profile_name.profile"
 	done
 }
 
