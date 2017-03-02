@@ -241,7 +241,7 @@ FIELD(VGS, vg, NUM, "#VMdaCps", cmd, 0, vgmdacopies, vg_mda_copies, "Target numb
  * SEGS type fields
  */
 FIELD(SEGS, seg, STR, "Type", list, 0, segtype, segtype, "Type of LV segment.", 0)
-FIELD(SEGS, seg, NUM, "#Str", list, 0, seg_stripes, stripes, "Number of data stripes or mirror/raid1 legs.", 0)
+FIELD(SEGS, seg, NUM, "#Str", list, 0, seg_stripes, stripes, "Number of stripes or mirror/raid1 legs.", 0)
 FIELD(SEGS, seg, NUM, "#DStr", list, 0, seg_data_stripes, data_stripes, "Number of data stripes or mirror/raid1 legs.", 0)
 FIELD(SEGS, seg, NUM, "RSize", list, 0, seg_reshape_len, reshape_len, "Size of out-of-place reshape space in current units.", 0)
 FIELD(SEGS, seg, SIZ, "RSize", list, 0, seg_reshape_len_le, reshape_len_le, "Size of out-of-place reshape space in physical extents.", 0)
@@ -250,7 +250,7 @@ FIELD(SEGS, seg, NUM, "DOff", list, 0, seg_data_offset, data_offset, "Data offse
 FIELD(SEGS, seg, NUM, "NOff", list, 0, seg_new_data_offset, new_data_offset, "New data offset after any reshape on each image device.", 0)
 FIELD(SEGS, seg, NUM, "#Par", list, 0, seg_parity_chunks, parity_chunks, "Number of (rotating) parity chunks.", 0)
 FIELD(SEGS, seg, SIZ, "Stripe", stripe_size, 0, size32, stripe_size, "For stripes, amount of data placed on one device before switching to the next.", 0)
-FIELD(SEGS, seg, SIZ, "Region", region_size, 0, size32, region_size, "For mirrors, the unit of data copied when synchronising devices.", 0)
+FIELD(SEGS, seg, SIZ, "Region", region_size, 0, size32, region_size, "For mirrors/raids, the unit of data per leg when synchronizing devices.", 0)
 FIELD(SEGS, seg, SIZ, "Chunk", list, 0, chunksize, chunk_size, "For snapshots, the unit of data used when tracking changes.", 0)
 FIELD(SEGS, seg, NUM, "#Thins", list, 0, thincount, thin_count, "For thin pools, the number of thin volumes in this pool.", 0)
 FIELD(SEGS, seg, STR, "Discards", list, 0, discards, discards, "For thin pools, how discards are handled.", 0)
