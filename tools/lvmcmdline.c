@@ -629,19 +629,41 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 	return 1;
 }
 
+/* negative not accepted */
 int size_kb_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!_size_arg(cmd, av, 2, 0))
+		return 0;
+
+	if (av->sign == SIGN_MINUS) {
+		log_error("Size may not be negative.");
+		return 0;
+	}
+
+	return 1;
+}
+
+int ssize_kb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	return _size_arg(cmd, av, 2, 0);
 }
 
 int size_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return _size_arg(cmd, av, 2048, 0);
+	if (!_size_arg(cmd, av, 2048, 0))
+		return 0;
+
+	if (av->sign == SIGN_MINUS) {
+		log_error("Size may not be negative.");
+		return 0;
+	}
+
+	return 1;
 }
 
-int size_mb_arg_with_percent(struct cmd_context *cmd, struct arg_values *av)
+int ssize_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
-	return _size_arg(cmd, av, 2048, 1);
+	return _size_arg(cmd, av, 2048, 0);
 }
 
 int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)

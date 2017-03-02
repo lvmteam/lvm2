@@ -74,8 +74,9 @@ static inline int cachemode_arg(struct cmd_context *cmd, struct arg_values *av) 
 static inline int discards_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int mirrorlog_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int size_kb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int ssize_kb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int size_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
-static inline int size_mb_arg_with_percent(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int ssize_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int int_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int uint32_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av) { return 0; }
@@ -1783,12 +1784,29 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 
 #ifdef MAN_PAGE_GENERATOR
 
-static void print_val_man(const char *str)
+static void print_val_man(struct command_name *cname, const char *str)
 {
 	char *line;
 	char *line_argv[MAX_LINE_ARGC];
 	int line_argc;
 	int i;
+
+	/*
+	 * FIXME: this is a terrible hack that needs to be fixed.
+	 * lvcreate and lvresize both use --size, and --size
+	 * accepts a signed number, and a signed number is
+	 * printed with a [+|-] prefix.  But lvcreate does not
+	 * accept negative numbers.  We need to do something to
+	 * have two (or more) variants of --size, one that can
+	 * accept a sign and one that cannot.  For now, this
+	 * hack just detects when we're going to print
+	 * [+|-]Size for "lvcreate" and overrides it to
+	 * omit the +|-.
+	 */
+	if (!strcmp(cname->name, "lvcreate") && !strcmp(str, "[+|-]Size[m|UNIT]")) {
+		printf("\\fISize\\fP[m|UNIT]");
+		return;
+	}
 
 	/*
 	 * Doing bold k before UNIT creates a lot of
@@ -1804,6 +1822,16 @@ static void print_val_man(const char *str)
 
 	if (!strcmp(str, "Size[m|UNIT]")) {
 		printf("\\fISize\\fP[m|UNIT]");
+		return;
+	}
+
+	if (!strcmp(str, "[+|-]Size[k|UNIT]")) {
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[k|UNIT]");
+		return;
+	}
+
+	if (!strcmp(str, "[+|-]Size[m|UNIT]")) {
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
@@ -1868,7 +1896,7 @@ static void print_val_man(const char *str)
 	printf("\\fB%s\\fP", str);
 }
 
-static void print_def_man(struct arg_def *def, int usage)
+static void print_def_man(struct command_name *cname, struct arg_def *def, int usage)
 {
 	int val_enum;
 	int lvt_enum;
@@ -1897,7 +1925,7 @@ static void print_def_man(struct arg_def *def, int usage)
 					printf("%s", val_names[val_enum].name);
 					printf("\\fP");
 				} else {
-					print_val_man(val_names[val_enum].usage);
+					print_val_man(cname, val_names[val_enum].usage);
 				}
 
 				sep = 1;
@@ -2030,7 +2058,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->required_opt_args[ro].def, 1);
+				print_def_man(cname, &cmd->required_opt_args[ro].def, 1);
 			}
 
 			sep++;
@@ -2057,7 +2085,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->required_opt_args[ro].def, 1);
+				print_def_man(cname, &cmd->required_opt_args[ro].def, 1);
 			}
 
 			sep++;
@@ -2073,7 +2101,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		for (rp = 0; rp < cmd->rp_count; rp++) {
 			if (cmd->required_pos_args[rp].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->required_pos_args[rp].def, 1);
+				print_def_man(cname, &cmd->required_pos_args[rp].def, 1);
 			}
 		}
 
@@ -2116,7 +2144,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->required_opt_args[ro].def, 1);
+				print_def_man(cname, &cmd->required_opt_args[ro].def, 1);
 			}
 
 			sep++;
@@ -2128,7 +2156,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		for (rp = 0; rp < cmd->rp_count; rp++) {
 			if (cmd->required_pos_args[rp].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->required_pos_args[rp].def, 1);
+				print_def_man(cname, &cmd->required_pos_args[rp].def, 1);
 			}
 		}
 
@@ -2175,7 +2203,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2207,7 +2235,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2235,7 +2263,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		for (op = 0; op < cmd->op_count; op++) {
 			if (cmd->optional_pos_args[op].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_pos_args[op].def, 1);
+				print_def_man(cname, &cmd->optional_pos_args[op].def, 1);
 			}
 		}
 	}
@@ -2303,7 +2331,7 @@ void print_man_usage_common_lvm(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2338,7 +2366,7 @@ void print_man_usage_common_lvm(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2400,7 +2428,7 @@ void print_man_usage_common_cmd(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2442,7 +2470,7 @@ void print_man_usage_common_cmd(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(&cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2577,7 +2605,7 @@ void print_man_all_options_list(struct command_name *cname)
 			printf("\\fP");
 		} else {
 			printf(" ");
-			print_val_man(val_names[val_enum].usage);
+			print_val_man(cname, val_names[val_enum].usage);
 		}
 
 		printf("\n.ad b\n");
@@ -2625,7 +2653,7 @@ void print_man_all_options_desc(struct command_name *cname)
 			printf("\\fP");
 		} else {
 			printf(" ");
-			print_val_man(val_names[val_enum].usage);
+			print_val_man(cname, val_names[val_enum].usage);
 		}
 
 		if (opt_names[opt_enum].flags & ARG_COUNTABLE)

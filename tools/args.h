@@ -1042,7 +1042,7 @@ arg(list_ARG, 'l', "list", 0, 0, 0,
 arg(lvmpartition_ARG, 'l', "lvmpartition", 0, 0, 0,
     "Only report PVs.\n")
 
-arg(size_ARG, 'L', "size", sizemb_VAL, 0, 0,
+arg(size_ARG, 'L', "size", ssizemb_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the size of the new LV.\n"
     "The --size and --extents options are alternate methods of specifying size.\n"
@@ -1104,7 +1104,7 @@ arg(maps_ARG, 'm', "maps", 0, 0, 0,
 
 /* FIXME: should the unused mirrors option be removed from lvextend? */
 
-arg(mirrors_ARG, 'm', "mirrors", numsigned_VAL, 0, 0,
+arg(mirrors_ARG, 'm', "mirrors", snumber_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the number of mirror images in addition to the original LV\n"
     "image, e.g. --mirrors 1 means there are two images of the data, the\n"
