@@ -1596,6 +1596,10 @@ static void print_val_usage(struct command *cmd, int val_enum)
 	 * lvcreate does not take a relative [+|-] value
 	 * for --size or --extents.
 	 * Should we also squash - for lvextend and + for lvreduce?
+	 *
+	 * Should also squash +|- in front of poolmetadatasize value
+	 * in lvcreate and lvconvert, and squash - in front of
+	 * poolmetadatasize value in lvresize/lvextend.
 	 */
 	squash_sign_prefix = !strcmp(cmd->name, "lvcreate");
 
@@ -2070,6 +2074,10 @@ static void print_val_man(struct command_name *cname, int val_enum)
 	 * lvcreate does not take a relative [+|-] value
 	 * for --size or --extents.
 	 * Should we also squash - for lvextend and + for lvreduce?
+	 *
+	 * Should also squash +|- in front of poolmetadatasize value
+	 * in lvcreate and lvconvert, and squash - in front of
+	 * poolmetadatasize value in lvresize/lvextend.
 	 */
 	squash_sign_prefix = !strcmp(cname->name, "lvcreate");
 

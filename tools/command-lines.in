@@ -307,7 +307,7 @@ RULE: all not LV_thinpool LV_cachepool
 OO_LVCONVERT_RAID: --mirrors SNumber, --stripes_long Number,
 --stripesize SizeKB, --regionsize RegionSize, --interval Number
 
-OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
+OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SSizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB
 
 OO_LVCONVERT_CACHE: --cachemode CacheMode, --cachepolicy String,
@@ -702,7 +702,7 @@ OO_LVCREATE: --addtag Tag, --alloc Alloc, --autobackup Bool, --activate Active,
 OO_LVCREATE_CACHE: --cachemode CacheMode, --cachepolicy String, --cachesettings String,
 --chunksize SizeKB
 
-OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksize SizeKB
+OO_LVCREATE_POOL: --poolmetadatasize SSizeMB, --poolmetadataspare Bool, --chunksize SizeKB
 
 OO_LVCREATE_THIN: --discards Discards, --errorwhenfull Bool
 
@@ -1148,7 +1148,7 @@ ID: lvdisplay_general
 lvextend --size SSizeMB LV
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 --nofsck, --nosync, --noudevsync, --reportformat ReportFmt, --resizefs,
---stripes Number, --stripesize SizeKB, --poolmetadatasize SizeMB,
+--stripes Number, --stripesize SizeKB, --poolmetadatasize SSizeMB,
 --type SegType
 OP: PV ...
 ID: lvextend_by_size
@@ -1162,7 +1162,7 @@ OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 ID: lvextend_by_pv
 DESC: Extend an LV by specified PV extents.
 
-lvextend --poolmetadatasize SizeMB LV_thinpool
+lvextend --poolmetadatasize SSizeMB LV_thinpool
 OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --stripes Number, --stripesize SizeKB,
@@ -1220,7 +1220,7 @@ ID: lvrename_lv_lv
 lvresize --size SSizeMB LV
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync, --reportformat ReportFmt, --resizefs,
---stripes Number, --stripesize SizeKB, --poolmetadatasize SizeMB,
+--stripes Number, --stripesize SizeKB, --poolmetadatasize SSizeMB,
 --type SegType
 OP: PV ...
 ID: lvresize_by_size
@@ -1234,7 +1234,7 @@ OO: --alloc Alloc, --autobackup Bool, --force,
 ID: lvresize_by_pv
 DESC: Resize an LV by specified PV extents.
 
-lvresize --poolmetadatasize SizeMB LV_thinpool
+lvresize --poolmetadatasize SSizeMB LV_thinpool
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --stripes Number, --stripesize SizeKB,

@@ -414,8 +414,15 @@ arg(pooldatasize_ARG, '\0', "pooldatasize", sizemb_VAL, 0, 0, NULL)
 arg(poolmetadata_ARG, '\0', "poolmetadata", lv_VAL, 0, 0,
     "The name of a an LV to use for storing pool metadata.\n")
 
-arg(poolmetadatasize_ARG, '\0', "poolmetadatasize", sizemb_VAL, 0, 0,
-    "The size of the pool metadata LV created by the command.\n")
+arg(poolmetadatasize_ARG, '\0', "poolmetadatasize", ssizemb_VAL, 0, 0,
+    "#lvcreate\n"
+    "#lvconvert\n"
+    "Specifies the size of the new pool metadata LV.\n"
+    "#lvresize\n"
+    "#lvextend\n"
+    "Specifies the new size of the pool metadata LV.\n"
+    "The plus prefix \\fB+\\fP can be used, in which case\n"
+    "the value is added to the current size.\n")
 
 arg(poolmetadataspare_ARG, '\0', "poolmetadataspare", bool_VAL, 0, 0,
     "Enable or disable the automatic creation and management of a\n"
