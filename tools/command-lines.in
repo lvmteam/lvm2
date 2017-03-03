@@ -308,7 +308,8 @@ OO_LVCONVERT_RAID: --mirrors SNumber, --stripes_long Number,
 --stripesize SizeKB, --regionsize RegionSize, --interval Number
 
 OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
---poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB
+--poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
+--zero Bool
 
 OO_LVCONVERT_CACHE: --cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool
@@ -423,7 +424,7 @@ FLAGS: SECONDARY_SYNTAX
 # Create a new command set for these and migrate them out of lvconvert?
 
 lvconvert --type thin --thinpool LV LV_linear_striped_raid_cache
-OO: --thin, --originname LV_new, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
+OO: --thin, --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin.
 RULE: all and lv_is_visible
@@ -431,7 +432,7 @@ RULE: all not lv_is_locked
 
 # alternate form of lvconvert --type thin
 lvconvert --thin --thinpool LV LV_linear_striped_raid_cache
-OO: --type thin, --originname LV_new, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
+OO: --type thin, --originname LV_new, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin
 DESC: (infers --type thin).
@@ -459,7 +460,7 @@ FLAGS: SECONDARY_SYNTAX
 
 lvconvert --type thin-pool LV_linear_striped_raid_cache
 OO: --stripes_long Number, --stripesize SizeKB,
---discards Discards, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
+--discards Discards, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_thinpool
 DESC: Convert LV to type thin-pool.
@@ -490,7 +491,7 @@ RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_orig
 
 lvconvert --thinpool LV_linear_striped_raid_cache_thinpool
 OO: --type thin-pool, --stripes_long Number, --stripesize SizeKB,
---discards Discards, --zero Bool, OO_LVCONVERT_POOL, OO_LVCONVERT
+--discards Discards, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_thinpool_or_swap_metadata
 DESC: Convert LV to type thin-pool (variant, use --type thin-pool).
