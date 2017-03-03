@@ -109,10 +109,10 @@ arg(cachemode_ARG, '\0', "cachemode", cachemode_VAL, 0, 0,
     "been stored in both the cache pool and on the origin LV.\n"
     "While writethrough may be slower for writes, it is more\n"
     "resilient if something should happen to a device associated with the\n"
-    "cache pool LV. With writethrough, all reads are served\n"
+    "cache pool LV. With \\fBpassthrough\\fP, all reads are served\n"
     "from the origin LV (all reads miss the cache) and all writes are\n"
     "forwarded to the origin LV; additionally, write hits cause cache\n"
-    "block invalidates. See lvmcache(7) for more information.\n")
+    "block invalidates. See \\fBlvmcache\\fP(7) for more information.\n")
 
 arg(cachepool_ARG, '\0', "cachepool", lv_VAL, 0, 0,
     "The name of a cache pool LV.\n")
