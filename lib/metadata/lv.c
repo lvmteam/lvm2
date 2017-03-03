@@ -1104,6 +1104,19 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	return 1;
 }
 
+/* Helper: check for any sub LVs after a disk removing reshape */
+static int _sublvs_remove_after_reshape(const struct logical_volume *lv)
+{
+	uint32_t s;
+	struct lv_segment *seg = first_seg(lv);
+
+	for (s = seg->area_count -1; s; s--)
+		if (seg_lv(seg, s)->status & LV_REMOVE_AFTER_RESHAPE)
+			return 1;
+
+	return 0;
+}
+
 char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm)
 {
 	const struct logical_volume *lv = lvdm->lv;
@@ -1269,6 +1282,8 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 		repstr[8] = 'p';
 	else if (lv_is_raid_type(lv)) {
 		uint64_t n;
+		char *sync_action;
+
 		if (!activation())
 			repstr[8] = 'X';	/* Unknown */
 		else if (!lv_raid_healthy(lv))
@@ -1276,6 +1291,12 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 		else if (lv_is_raid(lv)) {
 			if (lv_raid_mismatch_count(lv, &n) && n)
 				repstr[8] = 'm';  /* RAID has 'm'ismatches */
+			else if (lv_raid_sync_action(lv, &sync_action) &&
+				 !strcmp(sync_action, "reshape"))
+				repstr[8] = 's';  /* LV is re(s)haping */
+			else if (_sublvs_remove_after_reshape(lv))
+				repstr[8] = 'R';  /* sub-LV got freed from raid set by reshaping
+						     and has to be 'R'emoved */
 		} else if (lv->status & LV_WRITEMOSTLY)
 			repstr[8] = 'w';  /* sub-LV has 'w'ritemostly */
 		else if (lv->status & LV_REMOVE_AFTER_RESHAPE)
