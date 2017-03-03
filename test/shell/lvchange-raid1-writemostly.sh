@@ -25,7 +25,7 @@ do
 done
 
 #
-# Test writemostly prohibited on resyncrhonizing raid1
+# Test writemostly prohibited on resynchronizing raid1
 #
 
 # Create 4-way striped LV
