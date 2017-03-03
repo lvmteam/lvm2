@@ -1848,10 +1848,12 @@ void print_usage_notes(struct command_name *cname, struct command *cmd)
 
 	printf("        PV\n"
 	       "        Physical Volume name, a device path under /dev.\n"
-	       "        For commands managing physical extents, a PV positional\n"
-	       "        arg generally accepts a suffix indicating a range of PEs:\n"
-	       "        PV[:PE[-PE]] is start and end range (inclusive),\n"
-	       "        PV[:PE[+PE]] is start and length range (counting from 0).\n");
+	       "        For commands managing physical extents, a PV positional arg\n"
+	       "        generally accepts a suffix indicating a range (or multiple ranges)\n"
+	       "        of PEs. When the first PE is omitted, it defaults to the start of\n"
+	       "        the device, and when the last PE is omitted it defaults to the end.\n"
+	       "        PV[:PE-PE]... is start and end range (inclusive),\n"
+	       "        PV[:PE+PE]... is start and length range (counting from 0).\n");
 	printf("\n");
 
 	printf("        LV\n"
@@ -2882,9 +2884,11 @@ void print_man_all_positions_desc(struct command_name *cname)
 		printf(".br\n");
 		printf("Physical Volume name, a device path under /dev.\n"
 		       "For commands managing physical extents, a PV positional arg\n"
-		       "generally accepts a suffix indicating a range of physical extents.\n"
-		       "Start and end range (inclusive): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP[\\fB-\\fP\\fIPE\\fP]].\n"
-		       "Start and length range (counting from 0): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP[\\fB+\\fP\\fIPE\\fP]].\n");
+		       "generally accepts a suffix indicating a range (or multiple ranges)\n"
+		       "of physical extents (PEs). When the first PE is omitted, it defaults\n"
+		       "to the start of the device, and when the last PE is omitted it defaults to end.\n"
+		       "Start and end range (inclusive): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB-\\fP\\fIPE\\fP]...\n"
+		       "Start and length range (counting from 0): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB+\\fP\\fIPE\\fP]...\n");
 	}
 
 	if (has_tag_val) {
