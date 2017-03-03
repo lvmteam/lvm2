@@ -52,7 +52,7 @@ static void _fix_missing_defaults(struct lv_segment *cpool_seg)
 			    cpool_seg->policy_name);
 	}
 
-	if (cpool_seg->cache_mode == CACHE_MODE_UNDEFINED) {
+	if (cpool_seg->cache_mode == CACHE_MODE_UNSELECTED) {
 		cpool_seg->cache_mode = CACHE_MODE_WHEN_MISSING;
 		log_verbose("Cache pool %s is missing cache mode, using %s.",
 			    display_lvname(cpool_seg->lv),
@@ -169,7 +169,7 @@ static int _cache_pool_text_export(const struct lv_segment *seg,
 	 * but not worth to break backward compatibility, by shifting
 	 * content to cache segment
 	 */
-	if (seg->cache_mode != CACHE_MODE_UNDEFINED) {
+	if (seg->cache_mode != CACHE_MODE_UNSELECTED) {
 		if (!(cache_mode = get_cache_mode_name(seg)))
 			return_0;
 		outf(f, "cache_mode = \"%s\"", cache_mode);

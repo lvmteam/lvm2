@@ -1358,7 +1358,7 @@ int get_cache_params(struct cmd_context *cmd,
 	int ok = 0;
 
 	if (cache_mode)
-		*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNDEFINED);
+		*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNSELECTED);
 
 	if (name)
 		*name = arg_str_value(cmd, cachepolicy_ARG, NULL);

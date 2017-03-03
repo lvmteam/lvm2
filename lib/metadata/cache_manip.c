@@ -35,7 +35,7 @@ const char *display_cache_mode(const struct lv_segment *seg)
 		seg = first_seg(seg->pool_lv);
 
 	if (!seg_is_cache_pool(seg) ||
-	    (seg->cache_mode == CACHE_MODE_UNDEFINED))
+	    (seg->cache_mode == CACHE_MODE_UNSELECTED))
 		return "";
 
 	return get_cache_mode_name(seg);
@@ -83,7 +83,7 @@ int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
 	if (seg_is_cache(seg))
 		seg = first_seg(seg->pool_lv);
 	else if (seg_is_cache_pool(seg)) {
-		if (mode == CACHE_MODE_UNDEFINED)
+		if (mode == CACHE_MODE_UNSELECTED)
 			return 1;	/* Defaults only for cache */
 	} else {
 		log_error(INTERNAL_ERROR "Cannot set cache mode for non cache volume %s.",
@@ -91,12 +91,12 @@ int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
 		return 0;
 	}
 
-	if (mode != CACHE_MODE_UNDEFINED) {
+	if (mode != CACHE_MODE_UNSELECTED) {
 		seg->cache_mode = mode;
 		return 1;
 	}
 
-	if (seg->cache_mode != CACHE_MODE_UNDEFINED)
+	if (seg->cache_mode != CACHE_MODE_UNSELECTED)
 		return 1;               /* Default already set in cache pool */
 
 	/* Figure default settings from config/profiles */
