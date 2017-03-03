@@ -1297,9 +1297,10 @@ arg(stdin_ARG, 's', "stdin", 0, 0, 0, NULL)
 
 arg(select_ARG, 'S', "select", string_VAL, ARG_GROUPABLE, 0,
     "Select objects for processing and reporting based on specified criteria.\n"
-    "The criteria syntax is described in lvmreport(7) under Selection.\n"
-    "For reporting commands, display rows that match the criteria.\n"
-    "All rows can be displayed with an additional \"selected\" field (-o selected)\n"
+    "The criteria syntax is described by \\fB--select help\\fP and \\fBlvmreport\\fP(7).\n"
+    "For reporting commands, one row is displayed for each object matching the criteria.\n"
+    "See \\fB--options help\\fP for selectable object fields.\n"
+    "Rows can be displayed with an additional \"selected\" field (-o selected)\n"
     "showing 1 if the row matches the selection and 0 otherwise.\n"
     "For non-reporting commands which process LVM entities, the selection is\n"
     "used to choose items to process.\n")
