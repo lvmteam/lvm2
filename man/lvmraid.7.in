@@ -22,7 +22,7 @@ devices, and MD is used to place data on physical devices.
 LVM creates hidden LVs (dm devices) layered between the visible LV and
 physical devices.  LVs in that middle layers are called sub LVs.
 For LVM raid, a sub LV pair to store data and metadata (raid superblock
-and bitmap) is created per raid leg (see lvs command examples below).
+and bitmap) is created per raid image/leg (see lvs command examples below).
 
 .SH Create a RAID LV
 
