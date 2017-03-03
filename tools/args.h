@@ -1022,10 +1022,9 @@ arg(extents_ARG, 'l', "extents", extents_VAL, 0, 0,
     "When expressed as a percentage, the size defines an upper limit for the\n"
     "number of logical extents in the new LV. The precise number of logical\n"
     "extents in the new LV is not determined until the command has completed.\n"
-    "The plus prefix \\fB+\\fP can be used, in which case\n"
-    "the value is added to the current size,\n"
-    "or the minus prefix \\fB-\\fP can be used, in which case\n"
-    "the value is subtracted from the current size.\n")
+    "The plus \\fB+\\fP or minus \\fB-\\fP prefix can be used, in which case\n"
+    "the value is not an absolute size, but is an amount added or subtracted\n"
+    "relative to the current size.\n")
 
 arg(list_ARG, 'l', "list", 0, 0, 0,
     "#lvmconfig\n"
@@ -1042,6 +1041,14 @@ arg(list_ARG, 'l', "list", 0, 0, 0,
 arg(lvmpartition_ARG, 'l', "lvmpartition", 0, 0, 0,
     "Only report PVs.\n")
 
+/*
+ * FIXME: for lvcreate, size only accepts absolute values, no +|-,
+ * for lvresize, size can relative +|-, for lvreduce, size
+ * can be relative -, and for lvextend, size can be relative +.
+ * Should we define separate val enums for each of those cases,
+ * and at the start of the command, change the val type for
+ * size_ARG?  The same for extents_ARG.
+ */
 arg(size_ARG, 'L', "size", ssizemb_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the size of the new LV.\n"

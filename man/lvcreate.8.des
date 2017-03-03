@@ -29,7 +29,7 @@ to improve performance.
 .SS Usage notes
 
 In the usage section below, \fB--size\fP \fISize\fP can be replaced
-in each case with \fB--extents\fP \fINumber\fP.  See both descriptions
+with \fB--extents\fP \fINumber\fP.  See both descriptions
 the options section.
 
 In the usage section below, \fB--name\fP is omitted from the required

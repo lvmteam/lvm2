@@ -1275,13 +1275,9 @@ static int _command_required_opt_matches(struct cmd_context *cmd, int ci, int ro
 	 * For some commands, --size and --extents are interchangable,
 	 * but command[] definitions use only --size.
 	 */
-	if ((opt_enum == size_ARG) && arg_is_set(cmd, extents_ARG)) {
-		if (!strcmp(commands[ci].name, "lvcreate") ||
-		    !strcmp(commands[ci].name, "lvresize") ||
-		    !strcmp(commands[ci].name, "lvextend") ||
-		    !strcmp(commands[ci].name, "lvreduce"))
-			goto check_val;
-	}
+	if ((opt_enum == size_ARG) && arg_is_set(cmd, extents_ARG) &&
+	    command_has_alternate_extents(commands[ci].name))
+		goto check_val;
 
 	return 0;
 

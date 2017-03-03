@@ -1319,6 +1319,20 @@ void factor_common_options(void)
 	}
 }
 
+/* FIXME: use a flag in command_name struct? */
+
+int command_has_alternate_extents(const char *name)
+{
+	if (name[0] != 'l')
+		return 0;
+	if (!strcmp(name, "lvcreate") ||
+	    !strcmp(name, "lvresize") ||
+	    !strcmp(name, "lvextend") ||
+	    !strcmp(name, "lvreduce"))
+		return 1;
+	return 0;
+}
+
 static int long_name_compare(const void *on1, const void *on2)
 {
 	const struct opt_name * const *optname1 = (const void *)on1;
@@ -1574,6 +1588,33 @@ static void _print_usage_description(struct command *cmd)
 	}
 }
 
+static void print_val_usage(struct command *cmd, int val_enum)
+{
+	int squash_sign_prefix;
+
+	/*
+	 * lvcreate does not take a relative [+|-] value
+	 * for --size or --extents.
+	 * Should we also squash - for lvextend and + for lvreduce?
+	 */
+	squash_sign_prefix = !strcmp(cmd->name, "lvcreate");
+
+	if ((val_enum == ssizemb_VAL) && squash_sign_prefix) {
+		printf("Size[m|UNIT]");
+		return;
+	}
+
+	if ((val_enum == extents_VAL) && squash_sign_prefix) {
+		printf("Number[PERCENT]");
+		return;
+	}
+
+	if (!val_names[val_enum].usage)
+		printf("%s", val_names[val_enum].name);
+	else
+		printf("%s", val_names[val_enum].usage);
+}
+
 static void print_usage_def(struct command *cmd, int opt_enum, struct arg_def *def)
 {
 	int val_enum;
@@ -1591,25 +1632,7 @@ static void print_usage_def(struct command *cmd, int opt_enum, struct arg_def *d
 
 			else {
 				if (sep) printf("|");
-
-				/*
-				 * FIXME: this is a terrible hack that's needed
-				 * until we can differentiate which commands
-				 * use --size with a signed number and which
-				 * commands use only a positive --size.
-				 * (See the same hack when generating man pages
-				 * in print_val_man.)
-				 */
-				if (!strcmp(cmd->name, "lvcreate") &&
-				    (opt_enum == size_ARG) &&
-				    (!strcmp(val_names[val_enum].usage, "[+|-]Size[m|UNIT]")))
-					printf("Size[m|UNIT]");
-
-				else if (!val_names[val_enum].usage)
-					printf("%s", val_names[val_enum].name);
-				else
-					printf("%s", val_names[val_enum].usage);
-
+				print_val_usage(cmd, val_enum);
 				sep = 1;
 			}
 
@@ -1655,8 +1678,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
 
-			/* special case */
-			if (!strcmp(cmd->name, "lvcreate") && (opt_enum == size_ARG))
+			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
 				include_extents = 1;
 
 			if (onereq) {
@@ -1695,8 +1717,11 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		goto op_count;
 
 	if (cmd->oo_count) {
-		if (include_extents)
-			printf("\n\t[ --extents Number[PERCENT] ]");
+		if (include_extents) {
+			printf("\n\t[ --extents ");
+			print_val_usage(cmd, extents_VAL);
+			printf(" ]");
+		}
 
 		for (oo = 0; oo < cmd->oo_count; oo++) {
 			opt_enum = cmd->optional_opt_args[oo].opt;
@@ -1827,13 +1852,15 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 
 void print_usage_notes(struct command_name *cname, struct command *cmd)
 {
-
-	if (!strcmp(cname->name, "lvcreate")) {
+	if (command_has_alternate_extents(cname->name)) {
 		printf("  Special options for command:\n");
 		printf("        [ --extents Number[PERCENT] ]\n"
-		       "        The --extents option can be used in place of --size in each case.\n"
-		       "        The number allows an optional percent suffix (see man lvcreate).\n");
+		       "        The --extents option can be used in place of --size.\n"
+		       "        The number allows an optional percent suffix.\n");
 		printf("\n");
+	}
+
+	if (!strcmp(cname->name, "lvcreate")) {
 		printf("        [ --name String ]\n"
 		       "        The --name option is not required but is typically used.\n"
 		       "        When a name is not specified, a new LV name is generated\n"
@@ -1887,91 +1914,78 @@ void print_usage_notes(struct command_name *cname, struct command *cmd)
 
 #ifdef MAN_PAGE_GENERATOR
 
-static void print_val_man(struct command_name *cname, const char *str)
+/*
+ * FIXME: this just replicates the val usage strings
+ * that officially lives in vals.h.  Should there
+ * be some programatic way to add man markup to
+ * the strings in vals.h without replicating it?
+ * Otherwise, this function has to be updated in
+ * sync with any string changes in vals.h
+ */
+static void print_val_man(struct command_name *cname, int val_enum)
 {
+	const char *str = val_names[val_enum].usage;
 	char *line;
 	char *line_argv[MAX_LINE_ARGC];
 	int line_argc;
 	int i;
+	int squash_sign_prefix;
 
 	/*
-	 * FIXME: this is a terrible hack that needs to be fixed.
-	 * lvcreate and lvresize both use --size, and --size
-	 * accepts a signed number, and a signed number is
-	 * printed with a [+|-] prefix.  But lvcreate does not
-	 * accept negative numbers.  We need to do something to
-	 * have two (or more) variants of --size, one that can
-	 * accept a sign and one that cannot.  For now, this
-	 * hack just detects when we're going to print
-	 * [+|-]Size for "lvcreate" and overrides it to
-	 * omit the +|-.
+	 * lvcreate does not take a relative [+|-] value
+	 * for --size or --extents.
+	 * Should we also squash - for lvextend and + for lvreduce?
 	 */
-	if (!strcmp(cname->name, "lvcreate") && !strcmp(str, "[+|-]Size[m|UNIT]")) {
-		printf("\\fISize\\fP[m|UNIT]");
-		return;
-	}
-	if (!strcmp(cname->name, "lvcreate") && !strcmp(str, "[+|-]Number[%VG|%PVS|%FREE]")) {
-		printf("\\fINumber\\fP[\\fB%%VG\\fP|\\fB%%PVS\\fP|\\fB%%FREE\\fP]");
+	squash_sign_prefix = !strcmp(cname->name, "lvcreate");
+
+	if (val_enum == ssizemb_VAL) {
+		if (squash_sign_prefix)
+			printf("\\fISize\\fP[m|UNIT]");
+		else
+			printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
-	/*
-	 * Doing bold k before UNIT creates a lot of
-	 * visual "noise" that makes the text hard to read.
-	 * The extra markup in this case doesn't add anything
-	 * that isn't already obvious.
-	 */
+	if (val_enum == extents_VAL) {
+		if (squash_sign_prefix)
+			printf("\\fINumber\\fP[PERCENT]");
+		else
+			printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[PERCENT]");
+		return;
+	}
 
-	if (!strcmp(str, "Size[k|UNIT]")) {
+	if (val_enum == sizekb_VAL) {
 		printf("\\fISize\\fP[k|UNIT]");
 		return;
 	}
 
-	if (!strcmp(str, "Size[m|UNIT]")) {
+	if (val_enum == sizemb_VAL) {
 		printf("\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
-	if (!strcmp(str, "[+|-]Size[k|UNIT]")) {
+	if (val_enum == ssizekb_VAL) {
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[k|UNIT]");
 		return;
 	}
 
-	if (!strcmp(str, "[+|-]Size[m|UNIT]")) {
+	if (val_enum == ssizemb_VAL) {
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
-	if (!strcmp(str, "[+|-]Number")) {
-		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP");
+	if (val_enum == regionsize_VAL) {
+		printf("\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
-	if (!strcmp(str, "[+|-]Number[%VG|%PVS|%FREE]")) {
-		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[\\fB%%VG\\fP|\\fB%%PVS\\fP|\\fB%%FREE\\fP]");
+	if (val_enum == snumber_VAL) {
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP");
 		return;
 	}
 
 	if (!strcmp(str, "PV[:t|n|y]")) {
 		printf("\\fIPV\\fP[\\fB:t\\fP|\\fBn\\fP|\\fBy\\fP]");
-		return;
-	}
-
-	/*
-	 * I think this bit is almost unnecessary with the specific
-	 * ones checked above.
-	 */
-	if (strstr(str, "Number[") || strstr(str, "]Number")) {
-		for (i = 0; i < strlen(str); i++) {
-			if (str[i] == 'N')
-				printf("\\fI");
-			if (str[i] == 'r') {
-				printf("%c", str[i]);
-				printf("\\fP");
-				continue;
-			}
-			printf("%c", str[i]);
-		}
 		return;
 	}
 
@@ -2032,7 +2046,7 @@ static void print_def_man(struct command_name *cname, struct arg_def *def, int u
 					printf("%s", val_names[val_enum].name);
 					printf("\\fP");
 				} else {
-					print_val_man(cname, val_names[val_enum].usage);
+					print_val_man(cname, val_enum);
 				}
 
 				sep = 1;
@@ -2242,8 +2256,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			opt_enum = cmd->required_opt_args[ro].opt;
 
-			/* special case */
-			if (!strcmp(cmd->name, "lvcreate") && (opt_enum == size_ARG))
+			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
 				include_extents = 1;
 
 			if (opt_names[opt_enum].short_opt) {
@@ -2293,7 +2306,9 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 		if (include_extents) {
 			printf(".ad l\n");
-			printf("[ \\fB-l\\fP|\\fB--extents\\fP \\fINumber\\fP[PERCENT] ]\n");
+			printf("[ \\fB-l\\fP|\\fB--extents\\fP ");
+			print_val_man(cname, extents_VAL);
+			printf(" ]\n");
 			printf(".ad b\n");
 			sep = 1;
 		}
@@ -2724,7 +2739,7 @@ void print_man_all_options_list(struct command_name *cname)
 			printf("\\fP");
 		} else {
 			printf(" ");
-			print_val_man(cname, val_names[val_enum].usage);
+			print_val_man(cname, val_enum);
 		}
 
 		printf("\n.ad b\n");
@@ -2772,7 +2787,7 @@ void print_man_all_options_desc(struct command_name *cname)
 			printf("\\fP");
 		} else {
 			printf(" ");
-			print_val_man(cname, val_names[val_enum].usage);
+			print_val_man(cname, val_enum);
 		}
 
 		if (opt_names[opt_enum].flags & ARG_COUNTABLE)
