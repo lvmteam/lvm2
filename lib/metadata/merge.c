@@ -396,10 +396,14 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 		if (!validate_thin_pool_chunk_size(lv->vg->cmd, seg->chunk_size))
 			seg_error("has invalid chunk size.");
+
+		if (seg->zero_new_blocks != THIN_ZERO_YES &&
+                    seg->zero_new_blocks != THIN_ZERO_NO)
+			seg_error("zero_new_blocks is invalid");
 	} else { /* !thin_pool */
-		if (seg->zero_new_blocks)
+		if (seg->zero_new_blocks != THIN_ZERO_UNSELECTED)
 			seg_error("sets zero_new_blocks");
-		if (seg->discards)
+		if (seg->discards != THIN_DISCARDS_UNSELECTED)
 			seg_error("sets discards");
 		if (!dm_list_empty(&seg->thin_messages))
 			seg_error("sets thin_messages list");

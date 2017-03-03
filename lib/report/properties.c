@@ -470,7 +470,7 @@ GET_LVSEG_NUM_PROPERTY_FN(chunk_size, (SECTOR_SIZE * lvseg_chunksize(lvseg)))
 #define _chunk_size_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(thin_count, dm_list_size(&lvseg->lv->segs_using_this_lv))
 #define _thin_count_set prop_not_implemented_set
-GET_LVSEG_NUM_PROPERTY_FN(zero, lvseg->zero_new_blocks)
+GET_LVSEG_NUM_PROPERTY_FN(zero, (lvseg->zero_new_blocks == THIN_ZERO_YES))
 #define _zero_set prop_not_implemented_set
 GET_LVSEG_NUM_PROPERTY_FN(transaction_id, lvseg->transaction_id)
 #define _transaction_id_set prop_not_implemented_set

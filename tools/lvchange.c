@@ -98,7 +98,7 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 	}
 
 	if (arg_is_set(cmd, zero_ARG)) {
-		val = arg_uint_value(cmd, zero_ARG, 1);
+		val = arg_uint_value(cmd, zero_ARG, 0) ? THIN_ZERO_YES : THIN_ZERO_NO;
 		if (val != first_seg(lv)->zero_new_blocks) {
 			first_seg(lv)->zero_new_blocks = val;
 			update++;

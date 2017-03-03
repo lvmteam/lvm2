@@ -3063,9 +3063,9 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		const char *discards_name;
 
 		if (arg_is_set(cmd, zero_ARG))
-			seg->zero_new_blocks = arg_int_value(cmd, zero_ARG, 0);
+			seg->zero_new_blocks = arg_int_value(cmd, zero_ARG, 0) ? THIN_ZERO_YES : THIN_ZERO_NO;
 		else
-			seg->zero_new_blocks = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, vg->profile);
+			seg->zero_new_blocks = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, vg->profile) ? THIN_ZERO_YES : THIN_ZERO_NO;
 
 		if (arg_is_set(cmd, discards_ARG))
 			seg->discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_PASSDOWN);
@@ -3097,7 +3097,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
 
-	if (seg->zero_new_blocks &&
+	if ((seg->zero_new_blocks == THIN_ZERO_YES) &&
 	    seg->chunk_size >= DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2)
 		log_warn("WARNING: Pool zeroing and large %s chunk size slows down provisioning.",
 			 display_size(cmd, seg->chunk_size));

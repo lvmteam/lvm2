@@ -1079,7 +1079,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	    (lp->create_pool &&
 	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
-			      &lp->chunk_size, &lp->discards, &lp->zero)) ||
+			      &lp->chunk_size, &lp->discards, &lp->zero_new_blocks)) ||
 	    !_read_cache_params(cmd, lp) ||
 	    !_read_mirror_and_raid_params(cmd, lp))
 		return_0;

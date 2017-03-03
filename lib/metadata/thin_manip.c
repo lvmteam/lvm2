@@ -604,7 +604,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 			    uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
-			    thin_discards_t *discards, int *zero)
+			    thin_discards_t *discards, thin_zero_t *zero_new_blocks)
 {
 	struct cmd_context *cmd = vg->cmd;
 	struct profile *profile = vg->profile;
@@ -625,7 +625,9 @@ int update_thin_pool_params(const struct segment_type *segtype,
 	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
 		return_0;
 
-	if (!(passed_args & PASS_ARG_DISCARDS)) {
+	if (discards &&
+	    (*discards == THIN_DISCARDS_UNSELECTED) &&
+	    find_config_tree_node(cmd, allocation_thin_pool_discards_CFG, profile)) {
 		if (!(str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile))) {
 			log_error(INTERNAL_ERROR "Could not find configuration.");
 			return 0;
@@ -634,8 +636,11 @@ int update_thin_pool_params(const struct segment_type *segtype,
 			return_0;
 	}
 
-	if (!(passed_args & PASS_ARG_ZERO))
-		*zero = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile);
+	if (zero_new_blocks &&
+	    (*zero_new_blocks == THIN_ZERO_UNSELECTED) &&
+	    find_config_tree_node(cmd, allocation_thin_pool_zero_CFG, profile))
+		*zero_new_blocks = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile)
+			? THIN_ZERO_YES : THIN_ZERO_NO;
 
 	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    !is_power_of_2(*chunk_size)) {
@@ -705,6 +710,13 @@ int update_thin_pool_params(const struct segment_type *segtype,
 	      extents_from_size(vg->cmd, pool_metadata_size, extent_size)))
 		return_0;
 
+	if (discards && (*discards == THIN_DISCARDS_UNSELECTED))
+		if (!set_pool_discards(discards, DEFAULT_THIN_POOL_DISCARDS))
+			return_0;
+
+	if (zero_new_blocks && (*zero_new_blocks == THIN_ZERO_UNSELECTED))
+		*zero_new_blocks = (DEFAULT_THIN_POOL_ZERO) ? THIN_ZERO_YES : THIN_ZERO_NO;
+
 	return 1;
 }
 
@@ -733,11 +745,10 @@ const char *get_pool_discards_name(thin_discards_t discards)
 		return "nopassdown";
 	case THIN_DISCARDS_IGNORE:
 		return "ignore";
+	default:
+		log_error(INTERNAL_ERROR "Unknown discards type encountered.");
+		return "unknown";
 	}
-
-	log_error(INTERNAL_ERROR "Unknown discards type encountered.");
-
-	return "unknown";
 }
 
 int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snap_count)

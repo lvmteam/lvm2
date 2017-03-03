@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1199,22 +1199,26 @@ int get_pool_params(struct cmd_context *cmd,
 		    int *pool_metadata_spare,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
-		    int *zero)
+		    thin_zero_t *zero_new_blocks)
 {
 	*passed_args = 0;
 
 	if (segtype_is_thin_pool(segtype) || segtype_is_thin(segtype)) {
 		if (arg_is_set(cmd, zero_ARG)) {
 			*passed_args |= PASS_ARG_ZERO;
-			*zero = arg_int_value(cmd, zero_ARG, 1);
-			log_very_verbose("%s pool zeroing.", *zero ? "Enabling" : "Disabling");
-		}
+			*zero_new_blocks = arg_int_value(cmd, zero_ARG, 0) ? THIN_ZERO_YES : THIN_ZERO_NO;
+			log_very_verbose("%s pool zeroing.",
+					 (*zero_new_blocks == THIN_ZERO_YES) ? "Enabling" : "Disabling");
+		} else
+			*zero_new_blocks = THIN_ZERO_UNSELECTED;
+
 		if (arg_is_set(cmd, discards_ARG)) {
 			*passed_args |= PASS_ARG_DISCARDS;
 			*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 			log_very_verbose("Setting pool discards to %s.",
 					 get_pool_discards_name(*discards));
-		}
+		} else
+			*discards = THIN_DISCARDS_UNSELECTED;
 	}
 
 	if (arg_from_list_is_negative(cmd, "may not be negative",

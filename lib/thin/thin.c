@@ -45,7 +45,7 @@ static void _thin_pool_display(const struct lv_segment *seg)
 		  dm_list_size(&seg->lv->segs_using_this_lv));
 	log_print("  Transaction ID\t%" PRIu64, seg->transaction_id);
 	log_print("  Zero new blocks\t%s",
-		  seg->zero_new_blocks ? "yes" : "no");
+		  (seg->zero_new_blocks == THIN_ZERO_YES) ? "yes" : "no");
 
 	log_print(" ");
 }
@@ -84,6 +84,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	const char *lv_name;
 	struct logical_volume *pool_data_lv, *pool_metadata_lv;
 	const char *discards_str = NULL;
+	uint32_t zero = 0;
 
 	if (!dm_config_get_str(sn, "metadata", &lv_name))
 		return SEG_LOG_ERROR("Metadata must be a string in");
@@ -124,8 +125,10 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 				     seg->device_id);
 
 	if (dm_config_has_node(sn, "zero_new_blocks") &&
-	    !dm_config_get_uint32(sn, "zero_new_blocks", &seg->zero_new_blocks))
+	    !dm_config_get_uint32(sn, "zero_new_blocks", &zero))
 		return SEG_LOG_ERROR("Could not read zero_new_blocks for");
+
+	seg->zero_new_blocks = (zero) ? THIN_ZERO_YES : THIN_ZERO_NO;
 
 	/* Read messages */
 	for (; sn; sn = sn->sib)
@@ -165,8 +168,13 @@ static int _thin_pool_text_export(const struct lv_segment *seg, struct formatter
 		return 0;
 	}
 
-	if (seg->zero_new_blocks)
+	if (seg->zero_new_blocks == THIN_ZERO_YES)
 		outf(f, "zero_new_blocks = 1");
+	else if (seg->zero_new_blocks != THIN_ZERO_NO) {
+		log_error(INTERNAL_ERROR "Invalid zero new blocks value %d.",
+			  seg->zero_new_blocks);
+		return 0;
+	}
 
 	dm_list_iterate_items(tmsg, &seg->thin_messages) {
 		/* Extra validation */
@@ -304,7 +312,7 @@ static int _thin_pool_add_target_line(struct dev_manager *dm,
 					       seg->transaction_id,
 					       metadata_dlid, pool_dlid,
 					       seg->chunk_size, low_water_mark,
-					       seg->zero_new_blocks ? 0 : 1))
+					       (seg->zero_new_blocks == THIN_ZERO_YES) ? 0 : 1))
 		return_0;
 
 	if (attr & THIN_FEATURE_DISCARDS) {

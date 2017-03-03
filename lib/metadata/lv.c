@@ -1279,7 +1279,7 @@ char *lv_attr_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_
 
 	if (((lv_is_thin_volume(lv) && (seg = first_seg(lv)) && seg->pool_lv && (seg = first_seg(seg->pool_lv))) ||
 	     (lv_is_thin_pool(lv) && (seg = first_seg(lv)))) &&
-	    seg->zero_new_blocks)
+	    (seg->zero_new_blocks == THIN_ZERO_YES))
 		repstr[7] = 'z';
 	else
 		repstr[7] = '-';

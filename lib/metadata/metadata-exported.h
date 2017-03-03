@@ -275,6 +275,13 @@ enum {
 };
 
 typedef enum {
+	THIN_ZERO_UNSELECTED = 0,
+	THIN_ZERO_NO,
+	THIN_ZERO_YES,
+} thin_zero_t;
+
+typedef enum {
+	THIN_DISCARDS_UNSELECTED = 0,
 	THIN_DISCARDS_IGNORE,
 	THIN_DISCARDS_NO_PASSDOWN,
 	THIN_DISCARDS_PASSDOWN,
@@ -482,7 +489,7 @@ struct lv_segment {
 	struct lv_segment_area *meta_areas;	/* For RAID */
 	struct logical_volume *metadata_lv;	/* For thin_pool */
 	uint64_t transaction_id;		/* For thin_pool, thin */
-	unsigned zero_new_blocks;		/* For thin_pool */
+	thin_zero_t zero_new_blocks;		/* For thin_pool */
 	thin_discards_t discards;		/* For thin_pool */
 	struct dm_list thin_messages;		/* For thin_pool */
 	struct logical_volume *external_lv;	/* For thin */
@@ -868,7 +875,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 			    int passed_args, uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
-			    thin_discards_t *discards, int *zero);
+			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
 const char *get_pool_discards_name(thin_discards_t discards);
 int set_pool_discards(thin_discards_t *discards, const char *str);
 struct logical_volume *alloc_pool_metadata(struct logical_volume *pool_lv,
@@ -931,6 +938,7 @@ struct lvcreate_params {
 	int activation_skip; /* activation skip flags */
 	activation_change_t activate; /* non-snapshot, non-mirror */
 	thin_discards_t discards;     /* thin */
+	thin_zero_t zero_new_blocks;
 #define THIN_CHUNK_SIZE_CALC_METHOD_GENERIC 0x01
 #define THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE 0x02
 	int thin_chunk_size_calc_policy;

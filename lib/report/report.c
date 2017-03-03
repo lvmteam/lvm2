@@ -3654,7 +3654,7 @@ static int _thinzero_disp(struct dm_report *rh, struct dm_pool *mem,
 		seg = first_seg(seg->pool_lv);
 
 	if (seg_is_thin_pool(seg))
-		return _binary_disp(rh, mem, field, seg->zero_new_blocks, GET_FIRST_RESERVED_NAME(zero_y), private);
+		return _binary_disp(rh, mem, field, (seg->zero_new_blocks == THIN_ZERO_YES), GET_FIRST_RESERVED_NAME(zero_y), private);
 
 	return _binary_undef_disp(rh, mem, field, private);
 }

@@ -214,7 +214,7 @@ int get_pool_params(struct cmd_context *cmd,
 		    int *pool_metadata_spare,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
-		    int *zero);
+		    thin_zero_t *zero_new_blocks);
 
 int get_stripe_params(struct cmd_context *cmd, const struct segment_type *segtype,
 		      uint32_t *stripes, uint32_t *stripe_size,
