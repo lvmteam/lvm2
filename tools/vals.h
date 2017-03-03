@@ -108,6 +108,7 @@ val(tag_VAL, tag_arg, "Tag", NULL)
 val(select_VAL, NULL, "Select", NULL)       /* used only for command defs */
 val(activationmode_VAL, string_arg, "ActivationMode", "partial|degraded|complete")
 val(activation_VAL, activation_arg, "Active", "y|n|ay")
+val(cachemetadataformat_VAL, cachemetadataformat_arg, "CacheMetadataFormat", "auto|1|2")
 val(cachemode_VAL, cachemode_arg, "CacheMode", "writethrough|writeback|passthrough")
 val(discards_VAL, discards_arg, "Discards", "passdown|nopassdown|ignore")
 val(mirrorlog_VAL, mirrorlog_arg, "MirrorLog", "core|disk")

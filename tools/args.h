@@ -102,6 +102,9 @@ arg(cache_long_ARG, '\0', "cache", 0, 0, 0,
     "#lvscan\n"
     "Scan the devices used by an LV and send the metadata to lvmetad.\n")
 
+arg(cachemetadataformat_ARG, '\0', "cachemetadataformat", cachemetadataformat_VAL, 0, 0,
+    "Specifies the cache metadata format used by cache target.\n")
+
 arg(cachemode_ARG, '\0', "cachemode", cachemode_VAL, 0, 0,
     "Specifies when writes to a cache LV should be considered complete.\n"
     "\\fBwriteback\\fP considers a write complete as soon as it is\n"

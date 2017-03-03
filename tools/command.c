@@ -70,6 +70,7 @@ struct arg_values;
 /* needed to include args.h */
 static inline int yes_no_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int activation_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int cachemetadataformat_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int cachemode_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int discards_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int mirrorlog_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }

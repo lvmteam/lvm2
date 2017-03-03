@@ -311,7 +311,8 @@ OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
 --zero Bool, --metadataprofile String
 
-OO_LVCONVERT_CACHE: --cachemode CacheMode, --cachepolicy String,
+OO_LVCONVERT_CACHE: --cachemetadataformat CacheMetadataFormat,
+--cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool
 
 OO_LVCONVERT: --alloc Alloc, --background, --force, --noudevsync
@@ -702,7 +703,7 @@ OO_LVCREATE: --addtag Tag, --alloc Alloc, --autobackup Bool, --activate Active,
 --zero Bool
 
 OO_LVCREATE_CACHE: --cachemode CacheMode, --cachepolicy String, --cachesettings String,
---chunksize SizeKB
+--chunksize SizeKB, --cachemetadataformat CacheMetadataFormat
 
 OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksize SizeKB
 

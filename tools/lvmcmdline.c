@@ -421,6 +421,25 @@ int cachemode_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_va
 	return 1;
 }
 
+int cachemetadataformat_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!strcmp(av->value, "auto")) {
+		av->i_value = CACHE_METADATA_FORMAT_UNSELECTED;
+		av->ui_value = CACHE_METADATA_FORMAT_UNSELECTED;
+	} else if (!int_arg(cmd, av))
+		return_0;
+
+	switch (av->i_value) {
+	case CACHE_METADATA_FORMAT_UNSELECTED:
+	case CACHE_METADATA_FORMAT_1:
+	case CACHE_METADATA_FORMAT_2:
+		return 1;
+	}
+
+	log_error("Selected cache metadata format %d is not supported.", av->i_value);
+	return 0;
+}
+
 int discards_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
 {
 	thin_discards_t discards;
