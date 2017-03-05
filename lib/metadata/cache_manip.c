@@ -196,7 +196,7 @@ int update_cache_pool_params(const struct segment_type *segtype,
 		return 0;
 	}
 
-	if (!validate_pool_chunk_size(vg->cmd, segtype, *chunk_size))
+	if (!validate_cache_chunk_size(vg->cmd, *chunk_size))
 		return_0;
 
 	min_meta_size = _cache_min_metadata_size((uint64_t) pool_data_extents * extent_size, *chunk_size);
@@ -331,6 +331,30 @@ int validate_lv_cache_create_origin(const struct logical_volume *origin_lv)
 	}
 
 	return 1;
+}
+
+int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size)
+{
+	const uint32_t min_size = DM_CACHE_MIN_DATA_BLOCK_SIZE;
+	const uint32_t max_size = DM_CACHE_MAX_DATA_BLOCK_SIZE;
+	int r = 1;
+
+	if ((chunk_size < min_size) || (chunk_size > max_size)) {
+		log_error("Cache chunk size %s is not in the range %s to %s.",
+			  display_size(cmd, chunk_size),
+			  display_size(cmd, min_size),
+			  display_size(cmd, max_size));
+		r = 0;
+	}
+
+	if (chunk_size & (min_size - 1)) {
+		log_error("Cache chunk size %s must be a multiple of %s.",
+			  display_size(cmd, chunk_size),
+			  display_size(cmd, min_size));
+		r = 0;
+	}
+
+	return r;
 }
 
 /*

@@ -847,6 +847,8 @@ int thin_pool_feature_supported(const struct logical_volume *pool_lv, int featur
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 					       int passed_args,
 					       int chunk_size_calc_policy);
+int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
+int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_pool_chunk_size(struct cmd_context *cmd, const struct segment_type *segtype, uint32_t chunk_size);
 int update_pool_lv(struct logical_volume *lv, int activate);
 int update_pool_params(const struct segment_type *segtype,

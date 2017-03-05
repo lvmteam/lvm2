@@ -622,7 +622,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 		}
 	}
 
-	if (!validate_pool_chunk_size(cmd, segtype, *chunk_size))
+	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
 		return_0;
 
 	if (!(passed_args & PASS_ARG_DISCARDS)) {
@@ -829,4 +829,28 @@ int check_new_thin_pool(const struct logical_volume *pool_lv)
 	}
 
 	return 1;
+}
+
+int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size)
+{
+	const uint32_t min_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
+	const uint32_t max_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
+	int r = 1;
+
+	if ((chunk_size < min_size) || (chunk_size > max_size)) {
+		log_error("Thin pool chunk size %s is not in the range %s to %s.",
+			  display_size(cmd, chunk_size),
+			  display_size(cmd, min_size),
+			  display_size(cmd, max_size));
+		r = 0;
+	}
+
+	if (chunk_size & (min_size - 1)) {
+		log_error("Thin pool chunk size %s must be a multiple of %s.",
+			  display_size(cmd, chunk_size),
+			  display_size(cmd, min_size));
+		r = 0;
+	}
+
+	return r;
 }

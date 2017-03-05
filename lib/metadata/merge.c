@@ -339,6 +339,8 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			if (!seg->policy_name)
 				seg_error("is missing cache policy name");
 		}
+		if (!validate_cache_chunk_size(lv->vg->cmd, seg->chunk_size))
+			seg_error("has invalid chunk size.");
 	} else { /* !cache_pool */
 		if (seg->cache_mode)
 			seg_error("sets cache mode");
@@ -380,9 +382,6 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			seg_error("is missing a pool metadata LV");
 		} else if (!(seg2 = first_seg(seg->metadata_lv)) || (find_pool_seg(seg2) != seg))
 			seg_error("metadata LV does not refer back to pool LV");
-
-		if (!validate_pool_chunk_size(lv->vg->cmd, seg->segtype, seg->chunk_size))
-			seg_error("has invalid chunk size.");
 	} else { /* !thin_pool && !cache_pool */
 		if (seg->metadata_lv)
 			seg_error("must not have pool metadata LV set");
@@ -394,6 +393,9 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 		if (lv_is_thin_volume(lv))
 			seg_error("is a thin volume that must not contain thin pool segment");
+
+		if (!validate_thin_pool_chunk_size(lv->vg->cmd, seg->chunk_size))
+			seg_error("has invalid chunk size.");
 	} else { /* !thin_pool */
 		if (seg->zero_new_blocks)
 			seg_error("sets zero_new_blocks");
