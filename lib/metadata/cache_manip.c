@@ -77,6 +77,7 @@ int set_cache_mode(cache_mode_t *mode, const char *cache_mode)
 int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
 {
 	struct cmd_context *cmd = seg->lv->vg->cmd;
+	struct profile *profile = seg->lv->profile;
 	const char *str;
 	int id;
 
@@ -107,7 +108,7 @@ int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode)
 	    find_config_node(cmd, cmd->cft, allocation_cache_pool_cachemode_CFG))
 		id = allocation_cache_pool_cachemode_CFG;
 
-	if (!(str = find_config_tree_str(cmd, id, NULL))) {
+	if (!(str = find_config_tree_str(cmd, id, profile))) {
 		log_error(INTERNAL_ERROR "Cache mode is not determined.");
 		return 0;
 	}
@@ -162,7 +163,7 @@ int update_cache_pool_params(const struct segment_type *segtype,
 	uint32_t extent_size = vg->extent_size;
 	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
 	uint64_t pool_data_size = (uint64_t) pool_data_extents * extent_size;
-	uint64_t max_chunks =
+	const uint64_t max_chunks =
 		get_default_allocation_cache_pool_max_chunks_CFG(vg->cmd, vg->profile);
 	/* min chunk size in a multiple of DM_CACHE_MIN_DATA_BLOCK_SIZE */
 	uint64_t min_chunk_size = (((pool_data_size + max_chunks - 1) / max_chunks +
@@ -170,7 +171,10 @@ int update_cache_pool_params(const struct segment_type *segtype,
 				   DM_CACHE_MIN_DATA_BLOCK_SIZE) * DM_CACHE_MIN_DATA_BLOCK_SIZE;
 
 	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
-		*chunk_size = DEFAULT_CACHE_POOL_CHUNK_SIZE * 2;
+		if (!(*chunk_size = find_config_tree_int(vg->cmd, allocation_cache_pool_chunk_size_CFG,
+							 vg->profile) * 2))
+			*chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(vg->cmd,
+										       vg->profile);
 		if (*chunk_size < min_chunk_size) {
 			/*
 			 * When using more then 'standard' default,
@@ -236,7 +240,7 @@ int update_cache_pool_params(const struct segment_type *segtype,
 int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size)
 {
 	struct volume_group *vg = pool_lv->vg;
-	uint64_t max_chunks = get_default_allocation_cache_pool_max_chunks_CFG(vg->cmd, vg->profile);
+	const uint64_t max_chunks = get_default_allocation_cache_pool_max_chunks_CFG(vg->cmd, pool_lv->profile);
 	uint64_t min_size = _cache_min_metadata_size(pool_lv->size, chunk_size);
 	uint64_t chunks = pool_lv->size / chunk_size;
 	int r = 1;
@@ -393,6 +397,9 @@ struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
 
 	if (!attach_pool_lv(seg, pool_lv, NULL, NULL, NULL))
 		return_NULL;
+
+	if (!seg->lv->profile) /* Inherit profile from cache-pool */
+		seg->lv->profile = seg->pool_lv->profile;
 
 	return cache_lv;
 }
@@ -665,6 +672,7 @@ int cache_set_policy(struct lv_segment *seg, const char *name,
 	struct dm_config_tree *old = NULL, *new = NULL, *tmp = NULL;
 	int r = 0;
 	const int passed_seg_is_cache = seg_is_cache(seg);
+	struct profile *profile = seg->lv->profile;
 
 	if (passed_seg_is_cache)
 		seg = first_seg(seg->pool_lv);
@@ -675,7 +683,8 @@ int cache_set_policy(struct lv_segment *seg, const char *name,
 			return 0;
 		}
 	} else if (!seg->policy_name && passed_seg_is_cache) {
-		if (!(seg->policy_name = find_config_tree_str(seg->lv->vg->cmd, allocation_cache_policy_CFG, NULL)) &&
+		if (!(seg->policy_name = find_config_tree_str(seg->lv->vg->cmd, allocation_cache_policy_CFG,
+							      profile)) &&
 		    !(seg->policy_name = _get_default_cache_policy(seg->lv->vg->cmd)))
 			return_0;
 	}
@@ -702,7 +711,8 @@ int cache_set_policy(struct lv_segment *seg, const char *name,
 		    !(seg->policy_settings = dm_config_clone_node_with_mem(seg->lv->vg->vgmem, cn, 0)))
 			goto_out;
 	} else if (passed_seg_is_cache && /* Look for command's profile cache_policies */
-		   (cns = find_config_tree_node(seg->lv->vg->cmd, allocation_cache_settings_CFG_SECTION, NULL))) {
+		   (cns = find_config_tree_node(seg->lv->vg->cmd, allocation_cache_settings_CFG_SECTION,
+						seg->lv->profile))) {
 		/* Try to find our section for given policy */
 		for (cn = cns->child; cn; cn = cn->sib) {
 			/* Only matching section names */

@@ -1,5 +1,7 @@
 Version 2.02.169 - 
 =====================================
+  Fix metadata profile allocation/cache_[mode|policy] setting.
+  Fix missing support for using allocation/cache_pool_chunk_size setting.
   Upstream git moved to https://sourceware.org/git/?p=lvm2
   Support conversion of raid type, stripesize and number of disks
   Reject writemostly/writebehind in lvchange during resynchronization.
