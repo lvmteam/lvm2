@@ -974,15 +974,15 @@ arg(stripes_ARG, 'i', "stripes", number_VAL, 0, 0,
     "Specifies the number of stripes in a striped LV. This is the number of\n"
     "PVs (devices) that a striped LV is spread across. Data that\n"
     "appears sequential in the LV is spread across multiple devices in units of\n"
-    "the stripe size (see --stripesize). This does not apply to\n"
-    "existing allocated space, only newly allocated space can be striped.\n"
+    "the stripe size (see --stripesize). This does not change existing\n"
+    "allocated space, but only applies to space being allocated by the command.\n"
     "When creating a RAID 4/5/6 LV, this number does not include the extra\n"
     "devices that are required for parity. The largest number depends on\n"
-    "the RAID type (raid0: 64, raid10: 32, raid4/5: 63, raid6: 62.)\n"
-    "When unspecified, the default depends on the RAID type\n"
+    "the RAID type (raid0: 64, raid10: 32, raid4/5: 63, raid6: 62), and\n"
+    "when unspecified, the default depends on the RAID type\n"
     "(raid0: 2, raid10: 4, raid4/5: 3, raid6: 5.)\n"
-    "When unspecified, to stripe across all PVs of the VG,\n"
-    "set lvm.conf allocation/raid_stripe_all_devices=1.\n")
+    "To stripe a new raid LV across all PVs by default,\n"
+    "see lvm.conf allocation/raid_stripe_all_devices.\n")
 
 arg(stripesize_ARG, 'I', "stripesize", sizekb_VAL, 0, 0,
     "The amount of data that is written to one device before\n"
