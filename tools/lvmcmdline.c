@@ -63,29 +63,17 @@ extern struct opt_name opt_names[ARG_COUNT + 1];
 /*
  * Table of LV properties
  */
-static struct lv_props _lv_props[LVP_COUNT + 1] = {
-#define lvp(a, b, c) {a, b, c},
-#include "lv_props.h"
-#undef lvp
-};
+extern struct lv_prop lv_props[LVP_COUNT + 1];
 
 /*
  * Table of LV types
  */
-static struct lv_types _lv_types[LVT_COUNT + 1] = {
-#define lvt(a, b, c) {a, b, c},
-#include "lv_types.h"
-#undef lvt
-};
+extern struct lv_type lv_types[LVT_COUNT + 1];
 
 /*
  * Table of command names
  */
-struct command_name command_names[MAX_COMMAND_NAMES] = {
-#define xx(a, b, c...) { # a, b, c, a},
-#include "commands.h"
-#undef xx
-};
+extern struct command_name command_names[MAX_COMMAND_NAMES];
 
 /*
  * Table of commands (as defined in command-lines.in)
@@ -1197,18 +1185,18 @@ int lvm_register_commands(char *name)
 	return 1;
 }
 
-struct lv_props *get_lv_prop(int lvp_enum)
+struct lv_prop *get_lv_prop(int lvp_enum)
 {
 	if (!lvp_enum)
 		return NULL;
-	return &_lv_props[lvp_enum];
+	return &lv_props[lvp_enum];
 }
 
-struct lv_types *get_lv_type(int lvt_enum)
+struct lv_type *get_lv_type(int lvt_enum)
 {
 	if (!lvt_enum)
 		return NULL;
-	return &_lv_types[lvt_enum];
+	return &lv_types[lvt_enum];
 }
 
 struct command *get_command(int cmd_enum)

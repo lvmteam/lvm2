@@ -2523,7 +2523,7 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *prev_metadata_lv;
 	struct lv_segment *seg;
-	struct lv_types *lvtype;
+	struct lv_type *lvtype;
 	char meta_name[NAME_LEN];
 	const char *swap_name;
 	uint32_t chunk_size;
@@ -3841,7 +3841,7 @@ static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 
 	if (!lv_is_cache_pool(cachepool_lv)) {
 		int lvt_enum = get_lvt_enum(cachepool_lv);
-		struct lv_types *lvtype = get_lv_type(lvt_enum);
+		struct lv_type *lvtype = get_lv_type(lvt_enum);
 
 		if (lvt_enum != striped_LVT && lvt_enum != linear_LVT && lvt_enum != raid_LVT) {
 			log_error("LV %s with type %s cannot be converted to a cache pool.",
@@ -3950,7 +3950,7 @@ static int _lvconvert_to_thin_with_external_single(struct cmd_context *cmd,
 
 	if (!lv_is_thin_pool(thinpool_lv)) {
 		int lvt_enum = get_lvt_enum(thinpool_lv);
-		struct lv_types *lvtype = get_lv_type(lvt_enum);
+		struct lv_type *lvtype = get_lv_type(lvt_enum);
 
 		if (lvt_enum != striped_LVT && lvt_enum != linear_LVT && lvt_enum != raid_LVT) {
 			log_error("LV %s with type %s cannot be converted to a thin pool.",
@@ -4274,7 +4274,7 @@ static int _lvconvert_raid_types_check(struct cmd_context *cmd, struct logical_v
 			int lv_is_named_arg)
 {
 	int lvt_enum = get_lvt_enum(lv);
-	struct lv_types *lvtype = get_lv_type(lvt_enum);
+	struct lv_type *lvtype = get_lv_type(lvt_enum);
 
 	if (!lv_is_visible(lv)) {
 		if (!lv_is_cache_pool_metadata(lv) &&

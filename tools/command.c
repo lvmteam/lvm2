@@ -167,22 +167,6 @@ enum {
 #include "command.h"       /* defines struct command */
 #include "command-count.h" /* defines COMMAND_COUNT */
 
-/* see lvp_names[] below, also see lv_props[] in tools.h and lv_props.h */
-
-struct lvp_name {
-	const char *enum_name; /* "is_foo_LVP" */
-	int lvp_enum;          /* is_foo_LVP */
-	const char *name;      /* "lv_is_foo" */
-};
-
-/* see lvt_names[] below, also see lv_types[] in tools.h and lv_types.h */
-
-struct lvt_name {
-	const char *enum_name; /* "foo_LVT" */
-	int lvt_enum;          /* foo_LVT */
-	const char *name;      /* "foo" */
-};
-
 /* see cmd_names[] below, one for each unique "ID" in command-lines.in */
 
 struct cmd_name {
@@ -209,16 +193,16 @@ struct opt_name opt_names[ARG_COUNT + 1] = {
 
 /* create table of lv property names, e.g. lv_is_foo, and corresponding enum from lv_props.h */
 
-struct lvp_name lvp_names[LVP_COUNT + 1] = {
-#define lvp(a, b, c) { # a, a, b },
+struct lv_prop lv_props[LVP_COUNT + 1] = {
+#define lvp(a, b, c) { # a, a, b, c },
 #include "lv_props.h"
 #undef lvp
 };
 
 /* create table of lv type names, e.g. linear and corresponding enum from lv_types.h */
 
-struct lvt_name lvt_names[LVT_COUNT + 1] = {
-#define lvt(a, b, c) { # a, a, b },
+struct lv_type lv_types[LVT_COUNT + 1] = {
+#define lvt(a, b, c) { # a, a, b, c },
 #include "lv_types.h"
 #undef lvt
 };
@@ -237,16 +221,24 @@ struct cmd_name cmd_names[CMD_COUNT + 1] = {
  */
 
 #ifdef MAN_PAGE_GENERATOR
+
 struct command_name command_names[MAX_COMMAND_NAMES] = {
 #define xx(a, b, c...) { # a, b, c },
 #include "commands.h"
 #undef xx
 };
 struct command commands[COMMAND_COUNT];
-#else
-extern struct command_name command_names[MAX_COMMAND_NAMES]; /* defined in lvmcmdline.c */
+
+#else /* MAN_PAGE_GENERATOR */
+
+struct command_name command_names[MAX_COMMAND_NAMES] = {
+#define xx(a, b, c...) { # a, b, c, a},
+#include "commands.h"
+#undef xx
+};
 extern struct command commands[COMMAND_COUNT]; /* defined in lvmcmdline.c */
-#endif
+
+#endif /* MAN_PAGE_GENERATOR */
 
 /* array of pointers into opt_names[] that is sorted alphabetically (by long opt name) */
 
@@ -422,8 +414,8 @@ static int lvp_name_to_enum(struct command *cmd, char *str)
 	int i;
 
 	for (i = 1; i < LVP_COUNT; i++) {
-		if (!strcmp(str, lvp_names[i].name))
-			return lvp_names[i].lvp_enum;
+		if (!strcmp(str, lv_props[i].name))
+			return lv_props[i].lvp_enum;
 	}
 
 	log_error("Parsing command defs: unknown lv property %s", str);
@@ -438,8 +430,8 @@ static int lvt_name_to_enum(struct command *cmd, char *str)
 	int i;
 
 	for (i = 1; i < LVT_COUNT; i++) {
-		if (!strcmp(str, lvt_names[i].name))
-			return lvt_names[i].lvt_enum;
+		if (!strcmp(str, lv_types[i].name))
+			return lv_types[i].lvt_enum;
 	}
 
 	log_error("Parsing command defs: unknown lv type %s", str);
@@ -1525,7 +1517,7 @@ int define_commands(char *run_name)
 
 static const char *lvt_enum_to_name(int lvt_enum)
 {
-	return lvt_names[lvt_enum].name;
+	return lv_types[lvt_enum].name;
 }
 
 static void _print_usage_description(struct command *cmd)

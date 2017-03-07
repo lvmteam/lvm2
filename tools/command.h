@@ -235,6 +235,25 @@ struct val_name {
 	const char *usage;
 };
 
+/* see global lv_props[] */
+
+struct lv_prop {
+	const char *enum_name; /* "is_foo_LVP" */
+	int lvp_enum;          /* is_foo_LVP */
+	const char *name;      /* "lv_is_foo" */
+	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
+};
+
+/* see global lv_types[] */
+
+struct lv_type {
+	const char *enum_name; /* "foo_LVT" */
+	int lvt_enum;          /* foo_LVT */
+	const char *name;      /* "foo" */
+	int (*fn) (struct cmd_context *cmd, struct logical_volume *lv); /* lv_is_foo() */
+};
+
+
 int define_commands(char *run_name);
 int command_id_to_enum(const char *str);
 void print_usage(struct command *cmd, int longhelp, int desc_first);
