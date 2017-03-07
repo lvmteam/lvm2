@@ -77,10 +77,15 @@ static inline int size_kb_arg(struct cmd_context *cmd, struct arg_values *av) { 
 static inline int ssize_kb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int size_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int ssize_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int psize_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int nsize_mb_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int int_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int uint32_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int extents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int sextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int pextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int nextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int major_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int minor_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int string_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
@@ -1513,6 +1518,61 @@ int define_commands(char *run_name)
 	return 1;
 }
 
+/*
+ * This does not change the option vals in the cmd defs in commands[]
+ * which are used when printing help/man output.
+ *
+ * The specific val types for each command are specified in
+ * command-lines.in/commands[], and those are used for printing
+ * man/help.  But the opt_names[] array for each option is global
+ * and has no command name context.  So the opt_names[] array always
+ * specifies a non-signed val, e.g. sizemb_VAL, extents_VAL.  The
+ * opt_names[] array is used by run time processing, and for part
+ * of the help/man output.  This adjusts the opt_names[] val types
+ * according to the command being run.
+ */
+void configure_command_option_values(const char *name)
+{
+	if (!strcmp(name, "lvresize")) {
+		/* relative +|- allowed */
+		opt_names[size_ARG].val_enum = ssizemb_VAL;
+		opt_names[extents_ARG].val_enum = sextents_VAL;
+		opt_names[poolmetadatasize_ARG].val_enum = ssizemb_VAL;
+		return;
+	}
+
+	if (!strcmp(name, "lvextend")) {
+		/* relative + allowed */
+		opt_names[size_ARG].val_enum = psizemb_VAL;
+		opt_names[extents_ARG].val_enum = pextents_VAL;
+		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
+		return;
+	}
+
+	if (!strcmp(name, "lvreduce")) {
+		/* relative - allowed */
+		opt_names[size_ARG].val_enum = nsizemb_VAL;
+		opt_names[extents_ARG].val_enum = nextents_VAL;
+		return;
+	}
+
+	if (!strcmp(name, "lvcreate")) {
+		/*
+		 * lvcreate is a bit of a mess because it has previously
+		 * accepted + but used it as an absolute value, so we
+		 * have to recognize it.  (We don't want to show the +
+		 * option in man/help, though, since it's confusing,
+		 * so there's a special case when printing man/help
+		 * output to show sizemb_VAL/extents_VAL rather than
+		 * psizemb_VAL/pextents_VAL.)
+		 */
+		opt_names[size_ARG].val_enum = psizemb_VAL;
+		opt_names[extents_ARG].val_enum = pextents_VAL;
+		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
+		return;
+	}
+}
+
 /* type_LVT to "type" */
 
 static const char *lvt_enum_to_name(int lvt_enum)
@@ -1555,29 +1615,21 @@ static void _print_usage_description(struct command *cmd)
 	}
 }
 
-static void print_val_usage(struct command *cmd, int val_enum)
+static void print_val_usage(struct command *cmd, int opt_enum, int val_enum)
 {
-	int squash_sign_prefix;
+	int is_relative_opt = (opt_enum == size_ARG) ||
+			      (opt_enum == extents_ARG) ||
+			      (opt_enum == poolmetadatasize_ARG);
 
 	/*
-	 * lvcreate does not take a relative [+|-] value
-	 * for --size or --extents.
-	 * Should we also squash - for lvextend and + for lvreduce?
-	 *
-	 * Should also squash +|- in front of poolmetadatasize value
-	 * in lvcreate and lvconvert, and squash - in front of
-	 * poolmetadatasize value in lvresize/lvextend.
+	 * Suppress the [+] prefix for lvcreate which we have to
+	 * accept for backwards compat, but don't want to advertise.
 	 */
-	squash_sign_prefix = !strcmp(cmd->name, "lvcreate");
-
-	if ((val_enum == ssizemb_VAL) && squash_sign_prefix) {
-		printf("Size[m|UNIT]");
-		return;
-	}
-
-	if ((val_enum == extents_VAL) && squash_sign_prefix) {
-		printf("Number[PERCENT]");
-		return;
+	if (!strcmp(cmd->name, "lvcreate") && is_relative_opt) {
+		if (val_enum == psizemb_VAL)
+			val_enum = sizemb_VAL;
+		else if (val_enum == pextents_VAL)
+			val_enum = extents_VAL;
 	}
 
 	if (!val_names[val_enum].usage)
@@ -1603,7 +1655,7 @@ static void print_usage_def(struct command *cmd, int opt_enum, struct arg_def *d
 
 			else {
 				if (sep) printf("|");
-				print_val_usage(cmd, val_enum);
+				print_val_usage(cmd, opt_enum, val_enum);
 				sep = 1;
 			}
 
@@ -1724,7 +1776,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 	if (cmd->oo_count) {
 		if (include_extents) {
 			printf("\n\t[ -l|--extents ");
-			print_val_usage(cmd, extents_VAL);
+			print_val_usage(cmd, extents_ARG, opt_names[extents_ARG].val_enum);
 			printf(" ]");
 		}
 
@@ -2028,39 +2080,65 @@ void print_usage_notes(struct command_name *cname)
  * Otherwise, this function has to be updated in
  * sync with any string changes in vals.h
  */
-static void print_val_man(struct command_name *cname, int val_enum)
+static void print_val_man(struct command_name *cname, int opt_enum, int val_enum)
 {
 	const char *str = val_names[val_enum].usage;
 	char *line;
 	char *line_argv[MAX_LINE_ARGC];
 	int line_argc;
 	int i;
-	int squash_sign_prefix;
+	int is_relative_opt = (opt_enum == size_ARG) ||
+			      (opt_enum == extents_ARG) ||
+			      (opt_enum == poolmetadatasize_ARG);
 
 	/*
-	 * lvcreate does not take a relative [+|-] value
-	 * for --size or --extents.
-	 * Should we also squash - for lvextend and + for lvreduce?
-	 *
-	 * Should also squash +|- in front of poolmetadatasize value
-	 * in lvcreate and lvconvert, and squash - in front of
-	 * poolmetadatasize value in lvresize/lvextend.
+	 * Suppress the [+] prefix for lvcreate which we have to
+	 * accept for backwards compat, but don't want to advertise.
 	 */
-	squash_sign_prefix = !strcmp(cname->name, "lvcreate");
+	if (!strcmp(cname->name, "lvcreate") && is_relative_opt) {
+		if (val_enum == psizemb_VAL)
+			val_enum = sizemb_VAL;
+		else if (val_enum == pextents_VAL)
+			val_enum = extents_VAL;
+	}
+
+	if (val_enum == sizemb_VAL) {
+		printf("\\fISize\\fP[m|UNIT]");
+		return;
+	}
 
 	if (val_enum == ssizemb_VAL) {
-		if (squash_sign_prefix)
-			printf("\\fISize\\fP[m|UNIT]");
-		else
-			printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
+		return;
+	}
+
+	if (val_enum == psizemb_VAL) {
+		printf("[\\fB+\\fP]\\fISize\\fP[m|UNIT]");
+		return;
+	}
+
+	if (val_enum == nsizemb_VAL) {
+		printf("[\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
 	if (val_enum == extents_VAL) {
-		if (squash_sign_prefix)
-			printf("\\fINumber\\fP[PERCENT]");
-		else
-			printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[PERCENT]");
+		printf("\\fINumber\\fP[PERCENT]");
+		return;
+	}
+
+	if (val_enum == sextents_VAL) {
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[PERCENT]");
+		return;
+	}
+
+	if (val_enum == pextents_VAL) {
+		printf("[\\fB+\\fP]\\fINumber\\fP[PERCENT]");
+		return;
+	}
+
+	if (val_enum == nextents_VAL) {
+		printf("[\\fB-\\fP]\\fINumber\\fP[PERCENT]");
 		return;
 	}
 
@@ -2069,18 +2147,8 @@ static void print_val_man(struct command_name *cname, int val_enum)
 		return;
 	}
 
-	if (val_enum == sizemb_VAL) {
-		printf("\\fISize\\fP[m|UNIT]");
-		return;
-	}
-
 	if (val_enum == ssizekb_VAL) {
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[k|UNIT]");
-		return;
-	}
-
-	if (val_enum == ssizemb_VAL) {
-		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
@@ -2127,7 +2195,7 @@ static void print_val_man(struct command_name *cname, int val_enum)
 	printf("\\fB%s\\fP", str);
 }
 
-static void print_def_man(struct command_name *cname, struct arg_def *def, int usage)
+static void print_def_man(struct command_name *cname, int opt_enum, struct arg_def *def, int usage)
 {
 	int val_enum;
 	int lvt_enum;
@@ -2156,7 +2224,7 @@ static void print_def_man(struct command_name *cname, struct arg_def *def, int u
 					printf("%s", val_names[val_enum].name);
 					printf("\\fP");
 				} else {
-					print_val_man(cname, val_enum);
+					print_val_man(cname, opt_enum, val_enum);
 				}
 
 				sep = 1;
@@ -2290,7 +2358,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->required_opt_args[ro].def, 1);
+				print_def_man(cname, opt_enum, &cmd->required_opt_args[ro].def, 1);
 			}
 
 			sep++;
@@ -2317,7 +2385,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->required_opt_args[ro].def, 1);
+				print_def_man(cname, opt_enum, &cmd->required_opt_args[ro].def, 1);
 			}
 
 			sep++;
@@ -2333,7 +2401,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		for (rp = 0; rp < cmd->rp_count; rp++) {
 			if (cmd->required_pos_args[rp].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->required_pos_args[rp].def, 1);
+				print_def_man(cname, 0, &cmd->required_pos_args[rp].def, 1);
 			}
 		}
 
@@ -2379,7 +2447,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->required_opt_args[ro].def, 1);
+				print_def_man(cname, opt_enum, &cmd->required_opt_args[ro].def, 1);
 			}
 
 			sep++;
@@ -2391,7 +2459,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		for (rp = 0; rp < cmd->rp_count; rp++) {
 			if (cmd->required_pos_args[rp].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->required_pos_args[rp].def, 1);
+				print_def_man(cname, 0, &cmd->required_pos_args[rp].def, 1);
 			}
 		}
 
@@ -2415,9 +2483,14 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		printf(".RS 4\n");
 
 		if (include_extents) {
+			/*
+			 * NB we don't just pass extents_VAL here because the
+			 * actual val type for extents_ARG has been adjusted
+			 * in opt_names[] according to the command name.
+			 */
 			printf(".ad l\n");
 			printf("[ \\fB-l\\fP|\\fB--extents\\fP ");
-			print_val_man(cname, extents_VAL);
+			print_val_man(cname, extents_ARG, opt_names[extents_ARG].val_enum);
 			printf(" ]\n");
 			printf(".ad b\n");
 			sep = 1;
@@ -2447,7 +2520,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2479,7 +2552,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2507,7 +2580,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 		for (op = 0; op < cmd->op_count; op++) {
 			if (cmd->optional_pos_args[op].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_pos_args[op].def, 1);
+				print_def_man(cname, 0, &cmd->optional_pos_args[op].def, 1);
 			}
 		}
 	}
@@ -2575,7 +2648,7 @@ void print_man_usage_common_lvm(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2610,7 +2683,7 @@ void print_man_usage_common_lvm(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2672,7 +2745,7 @@ void print_man_usage_common_cmd(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2714,7 +2787,7 @@ void print_man_usage_common_cmd(struct command *cmd)
 
 			if (cmd->optional_opt_args[oo].def.val_bits) {
 				printf(" ");
-				print_def_man(cname, &cmd->optional_opt_args[oo].def, 1);
+				print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1);
 			}
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2849,7 +2922,7 @@ void print_man_all_options_list(struct command_name *cname)
 			printf("\\fP");
 		} else {
 			printf(" ");
-			print_val_man(cname, val_enum);
+			print_val_man(cname, opt_enum, val_enum);
 		}
 
 		printf("\n.ad b\n");
@@ -2897,7 +2970,7 @@ void print_man_all_options_desc(struct command_name *cname)
 			printf("\\fP");
 		} else {
 			printf(" ");
-			print_val_man(cname, val_enum);
+			print_val_man(cname, opt_enum, val_enum);
 		}
 
 		if (opt_names[opt_enum].flags & ARG_COUNTABLE)
@@ -3381,6 +3454,9 @@ int main(int argc, char *argv[])
 		desfile = argv[optind++];
 
 	define_commands(NULL);
+
+	if (cmdname)
+		configure_command_option_values(cmdname);
 
 	factor_common_options();
 

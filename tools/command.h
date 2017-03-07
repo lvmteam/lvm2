@@ -17,6 +17,7 @@
 #define _LVM_COMMAND_H
 
 struct cmd_context;
+struct logical_volume;
 
 /* old per-command-name function */
 typedef int (*command_fn) (struct cmd_context *cmd, int argc, char **argv);
@@ -262,5 +263,6 @@ void print_usage_common_lvm(struct command_name *cname, struct command *cmd);
 void print_usage_notes(struct command_name *cname);
 void factor_common_options(void);
 int command_has_alternate_extents(const char *name);
+void configure_command_option_values(const char *name);
 
 #endif

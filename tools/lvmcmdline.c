@@ -633,8 +633,8 @@ int size_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 	if (!_size_arg(cmd, av, 2048, 0))
 		return 0;
 
-	if (av->sign == SIGN_MINUS) {
-		log_error("Size may not be negative.");
+	if ((av->sign == SIGN_MINUS) || (av->sign == SIGN_PLUS)) {
+		log_error("Size may not be relative/signed.");
 		return 0;
 	}
 
@@ -644,6 +644,32 @@ int size_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 int ssize_mb_arg(struct cmd_context *cmd, struct arg_values *av)
 {
 	return _size_arg(cmd, av, 2048, 0);
+}
+
+int psize_mb_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!_size_arg(cmd, av, 2048, 0))
+		return 0;
+
+	if (av->sign == SIGN_MINUS) {
+		log_error("Size may not be negative.");
+		return 0;
+	}
+
+	return 1;
+}
+
+int nsize_mb_arg(struct cmd_context *cmd, struct arg_values *av)
+{
+	if (!_size_arg(cmd, av, 2048, 0))
+		return 0;
+
+	if (av->sign == SIGN_PLUS) {
+		log_error("Size may not be positive.");
+		return 0;
+	}
+
+	return 1;
 }
 
 int int_arg(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
@@ -674,8 +700,8 @@ int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct ar
 	return 1;
 }
 
-int extents_arg(struct cmd_context *cmd __attribute__((unused)),
-		struct arg_values *av)
+static int _extents_arg(struct cmd_context *cmd __attribute__((unused)),
+		        struct arg_values *av)
 {
 	char *ptr;
 
@@ -693,6 +719,54 @@ int extents_arg(struct cmd_context *cmd __attribute__((unused)),
 
 	if (av->ui64_value >= UINT32_MAX) {
 		log_error("Percentage is too big (>=%d%%).", UINT32_MAX);
+		return 0;
+	}
+
+	return 1;
+}
+
+int extents_arg(struct cmd_context *cmd __attribute__((unused)),
+		struct arg_values *av)
+{
+	if (!_extents_arg(cmd, av))
+		return 0;
+
+	if ((av->sign == SIGN_MINUS) || (av->sign == SIGN_PLUS)) {
+		log_error("Extents may not be relative/signed.");
+		return 0;
+	}
+
+	return 1;
+}
+
+int sextents_arg(struct cmd_context *cmd __attribute__((unused)),
+		 struct arg_values *av)
+{
+	return _extents_arg(cmd, av);
+}
+
+int pextents_arg(struct cmd_context *cmd __attribute__((unused)),
+		 struct arg_values *av)
+{
+	if (!_extents_arg(cmd, av))
+		return 0;
+
+	if (av->sign == SIGN_MINUS) {
+		log_error("Extents may not be negative.");
+		return 0;
+	}
+
+	return 1;
+}
+
+int nextents_arg(struct cmd_context *cmd __attribute__((unused)),
+		 struct arg_values *av)
+{
+	if (!_extents_arg(cmd, av))
+		return 0;
+
+	if (av->sign == SIGN_PLUS) {
+		log_error("Extents may not be positive.");
 		return 0;
 	}
 
@@ -1686,6 +1760,8 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 		return 0;
 	}
 
+	configure_command_option_values(name);
+
 	/*
 	 * Looks at all variants of each command name and figures out
 	 * which options are common to all variants (for compact output)
@@ -2515,6 +2591,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	sigint_clear();
 
 	cmd->name = dm_pool_strdup(cmd->mem, argv[0]);
+
+	configure_command_option_values(cmd->name);
 
 	/* eliminate '-' from all options starting with -- */
 	for (i = 1; i < argc; i++) {

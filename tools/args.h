@@ -414,7 +414,7 @@ arg(pooldatasize_ARG, '\0', "pooldatasize", sizemb_VAL, 0, 0, NULL)
 arg(poolmetadata_ARG, '\0', "poolmetadata", lv_VAL, 0, 0,
     "The name of a an LV to use for storing pool metadata.\n")
 
-arg(poolmetadatasize_ARG, '\0', "poolmetadatasize", ssizemb_VAL, 0, 0,
+arg(poolmetadatasize_ARG, '\0', "poolmetadatasize", sizemb_VAL, 0, 0,
     "#lvcreate\n"
     "#lvconvert\n"
     "Specifies the size of the new pool metadata LV.\n"
@@ -994,6 +994,11 @@ arg(logicalvolume_ARG, 'l', "logicalvolume", uint32_VAL, 0, 0,
 arg(maxlogicalvolumes_ARG, 'l', "maxlogicalvolumes", uint32_VAL, 0, 0,
     "Sets the maximum number of LVs allowed in a VG.\n")
 
+/*
+ * The extents_VAL is overriden in configure_command_option_values()
+ * according to the command being run.  Different commands accept
+ * different signs with the value.
+ */
 arg(extents_ARG, 'l', "extents", extents_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the size of the new LV in logical extents.\n"
@@ -1029,9 +1034,9 @@ arg(extents_ARG, 'l', "extents", extents_VAL, 0, 0,
     "When expressed as a percentage, the size defines an upper limit for the\n"
     "number of logical extents in the new LV. The precise number of logical\n"
     "extents in the new LV is not determined until the command has completed.\n"
-    "The plus \\fB+\\fP or minus \\fB-\\fP prefix can be used, in which case\n"
-    "the value is not an absolute size, but is an amount added or subtracted\n"
-    "relative to the current size.\n")
+    "When the plus \\fB+\\fP or minus \\fB-\\fP prefix is used,\n"
+    "the value is not an absolute size, but is relative and added or subtracted\n"
+    "from the current size.\n")
 
 arg(list_ARG, 'l', "list", 0, 0, 0,
     "#lvmconfig\n"
@@ -1049,14 +1054,11 @@ arg(lvmpartition_ARG, 'l', "lvmpartition", 0, 0, 0,
     "Only report PVs.\n")
 
 /*
- * FIXME: for lvcreate, size only accepts absolute values, no +|-,
- * for lvresize, size can relative +|-, for lvreduce, size
- * can be relative -, and for lvextend, size can be relative +.
- * Should we define separate val enums for each of those cases,
- * and at the start of the command, change the val type for
- * size_ARG?  The same for extents_ARG.
+ * The sizemb_VAL is overriden in configure_command_option_values()
+ * according to the command being run.  Different commands accept
+ * different signs with the value.
  */
-arg(size_ARG, 'L', "size", ssizemb_VAL, 0, 0,
+arg(size_ARG, 'L', "size", sizemb_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the size of the new LV.\n"
     "The --size and --extents options are alternate methods of specifying size.\n"
@@ -1069,10 +1071,9 @@ arg(size_ARG, 'L', "size", ssizemb_VAL, 0, 0,
     "The --size and --extents options are alternate methods of specifying size.\n"
     "The total number of physical extents used will be\n"
     "greater when redundant data is needed for RAID levels.\n"
-    "The plus prefix \\fB+\\fP can be used, in which case\n"
-    "the value is added to the current size,\n"
-    "or the minus prefix \\fB-\\fP can be used, in which case\n"
-    "the value is subtracted from the current size.\n")
+    "When the plus \\fB+\\fP or minus \\fB-\\fP prefix is used,\n"
+    "the value is not an absolute size, but is relative and added or subtracted\n"
+    "from the current size.\n")
 
 arg(persistent_ARG, 'M', "persistent", bool_VAL, 0, 0,
     "When yes, makes the specified minor number persistent.\n")

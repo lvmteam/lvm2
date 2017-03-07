@@ -92,10 +92,6 @@
  * --size and other option args treat upper/lower letters
  * the same, all as 1024 SI base.  For this reason, we
  * should avoid suggesting the upper case letters.
- *
- * FIXME: negative numbers should be automatically rejected
- * for anything but int_arg_with_sign(), e.g.
- * size_mb_arg() should reject a negative number.
  */
 
 val(none_VAL, NULL, "None", "ERR")             /* unused, for enum value 0 */
@@ -116,12 +112,17 @@ val(cachemode_VAL, cachemode_arg, "CacheMode", "writethrough|writeback|passthrou
 val(discards_VAL, discards_arg, "Discards", "passdown|nopassdown|ignore")
 val(mirrorlog_VAL, mirrorlog_arg, "MirrorLog", "core|disk")
 val(sizekb_VAL, size_kb_arg, "SizeKB", "Size[k|UNIT]")
-val(sizemb_VAL, size_mb_arg, "SizeMB", "Size[m|UNIT]")
 val(ssizekb_VAL, ssize_kb_arg, "SSizeKB", "[+|-]Size[k|UNIT]")
+val(sizemb_VAL, size_mb_arg, "SizeMB", "Size[m|UNIT]")
 val(ssizemb_VAL, ssize_mb_arg, "SSizeMB", "[+|-]Size[m|UNIT]")
+val(psizemb_VAL, psize_mb_arg, "PSizeMB", "[+]Size[m|UNIT]")
+val(nsizemb_VAL, nsize_mb_arg, "NSizeMB", "[-]Size[m|UNIT]")
 val(regionsize_VAL, regionsize_arg, "RegionSize", "Size[m|UNIT]")
 val(snumber_VAL, int_arg_with_sign, "SNumber", "[+|-]Number")
-val(extents_VAL, extents_arg, "Extents", "[+|-]Number[PERCENT]")
+val(extents_VAL, extents_arg, "Extents", "Number[PERCENT]")
+val(sextents_VAL, sextents_arg, "SExtents", "[+|-]Number[PERCENT]")
+val(pextents_VAL, pextents_arg, "PExtents", "[+]Number[PERCENT]")
+val(nextents_VAL, nextents_arg, "NExtents", "[-]Number[PERCENT]")
 val(permission_VAL, permission_arg, "Permission", "rw|r")
 val(metadatatype_VAL, metadatatype_arg, "MetadataType", "lvm2|lvm1")
 val(units_VAL, string_arg, "Units", "r|R|h|H|b|B|s|S|k|K|m|M|g|G|t|T|p|P|e|E")
