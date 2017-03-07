@@ -227,12 +227,23 @@ char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, co
 {
 	const char *s = "";
 	char *ret;
+	thin_discards_t d;
 
-	if (lvdm->seg_status.type == SEG_STATUS_THIN_POOL)
-		s = get_pool_discards_name(lvdm->seg_status.thin_pool->discards);
+	if (lvdm->seg_status.type == SEG_STATUS_THIN_POOL) {
+		switch (lvdm->seg_status.thin_pool->discards) {
+		case DM_THIN_DISCARDS_IGNORE: d = THIN_DISCARDS_IGNORE; break;
+		case DM_THIN_DISCARDS_NO_PASSDOWN: d = THIN_DISCARDS_NO_PASSDOWN; break;
+		case DM_THIN_DISCARDS_PASSDOWN: d = THIN_DISCARDS_PASSDOWN; break;
+		default:
+			log_error("Kernel reports unknown discards status %u.",
+				  lvdm->seg_status.thin_pool->discards);
+			return 0;
+		}
+		s = get_pool_discards_name(d);
+	}
 
 	if (!(ret = dm_pool_strdup(mem, s))) {
-		log_error("lvseg_kernel_discards_dup_with_info_and_seg_status: dm_pool_strdup failed");
+		log_error("lvseg_kernel_discards_dup_with_info_and_seg_status: dm_pool_strdup failed.");
 		return NULL;
 	}
 
