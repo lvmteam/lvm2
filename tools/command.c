@@ -1989,9 +1989,9 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 	printf("\n\n");
 }
 
-void print_usage_notes(struct command_name *cname, struct command *cmd)
+void print_usage_notes(struct command_name *cname)
 {
-	if (command_has_alternate_extents(cname->name)) {
+	if (cname && command_has_alternate_extents(cname->name)) {
 		printf("  Special options for command:\n");
 		printf("        [ --extents Number[PERCENT] ]\n"
 		       "        The --extents option can be used in place of --size.\n"
@@ -1999,7 +1999,7 @@ void print_usage_notes(struct command_name *cname, struct command *cmd)
 		printf("\n");
 	}
 
-	if (!strcmp(cname->name, "lvcreate")) {
+	if (cname && !strcmp(cname->name, "lvcreate")) {
 		printf("        [ --name String ]\n"
 		       "        The --name option is not required but is typically used.\n"
 		       "        When a name is not specified, a new LV name is generated\n"

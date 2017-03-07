@@ -1694,7 +1694,7 @@ static void _short_usage(const char *name)
 	log_error("Run `%s --help' for more information.", name);
 }
 
-static int _usage(const char *name, int longhelp)
+static int _usage(const char *name, int longhelp, int skip_notes)
 {
 	struct command_name *cname = find_command_name(name);
 	struct command *cmd;
@@ -1739,8 +1739,11 @@ static int _usage(const char *name, int longhelp)
 		print_usage_common_lvm(cname, cmd);
 	}
 
+	if (skip_notes)
+		return 1;
+
 	if (longhelp)
-		print_usage_notes(cname, cmd);
+		print_usage_notes(cname);
 	else
 		log_print("Use --longhelp to show all options and advanced commands.");
 
@@ -1754,8 +1757,10 @@ static void _usage_all(void)
 	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
 		if (!command_names[i].name)
 			break;
-		_usage(command_names[i].name, 1);
+		_usage(command_names[i].name, 1, 1);
 	}
+
+	print_usage_notes(NULL);
 }
 
 /*
@@ -2202,7 +2207,7 @@ static int _process_common_commands(struct cmd_context *cmd)
 	if (arg_is_set(cmd, help_ARG) ||
 	    arg_is_set(cmd, longhelp_ARG) ||
 	    arg_is_set(cmd, help2_ARG)) {
-		_usage(cmd->name, arg_is_set(cmd, longhelp_ARG));
+		_usage(cmd->name, arg_is_set(cmd, longhelp_ARG), 0);
 		return ECMD_PROCESSED;
 	}
 
@@ -2240,7 +2245,7 @@ int help(struct cmd_context *cmd __attribute__((unused)), int argc, char **argv)
 	else {
 		int i;
 		for (i = 0; i < argc; i++)
-			if (!_usage(argv[i], 0))
+			if (!_usage(argv[i], 0, 0))
 				ret = EINVALID_CMD_LINE;
 	}
 
