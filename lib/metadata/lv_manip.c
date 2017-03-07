@@ -1505,11 +1505,10 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
 	struct lv_segment *seg = first_seg(lv);
 
-	/* Ensure stipe boundary extents on RAID LVs */
+	/* Ensure stripe boundary extents on RAID LVs */
 	if (lv_is_raid(lv) && extents != lv->le_count)
 		extents =_round_to_stripe_boundary(lv->vg, extents,
 						   seg_is_raid1(seg) ? 0 : _raid_stripes_count(seg), 0);
-
 	return _lv_reduce(lv, extents, 1);
 }
 
@@ -3943,7 +3942,7 @@ bad:
 static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				 struct logical_volume *lv,
 				 uint32_t extents, uint32_t first_area,
-				 uint32_t stripes, uint32_t stripe_size)
+				 uint32_t mirrors, uint32_t stripes, uint32_t stripe_size)
 {
 	const struct segment_type *segtype;
 	struct logical_volume *sub_lv, *meta_lv;
@@ -3971,7 +3970,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 	for (fa = first_area, s = 0; s < seg->area_count; s++) {
 		if (is_temporary_mirror_layer(seg_lv(seg, s))) {
 			if (!_lv_extend_layered_lv(ah, seg_lv(seg, s), extents / area_multiple,
-						   fa, stripes, stripe_size))
+						   fa, mirrors, stripes, stripe_size))
 				return_0;
 			fa += lv_mirror_count(seg_lv(seg, s));
 			continue;
@@ -3984,6 +3983,8 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				  sub_lv->name, lv->name);
 			return 0;
 		}
+
+		last_seg(lv)->data_copies = mirrors;
 
 		/* Extend metadata LVs only on initial creation */
 		if (seg_is_raid_with_meta(seg) && !lv->le_count) {
@@ -4192,7 +4193,7 @@ int lv_extend(struct logical_volume *lv,
 		}
 
 		if (!(r = _lv_extend_layered_lv(ah, lv, new_extents - lv->le_count, 0,
-						stripes, stripe_size)))
+						mirrors, stripes, stripe_size)))
 			goto_out;
 
 		/*
@@ -5412,6 +5413,17 @@ int lv_resize(struct logical_volume *lv,
 	if (!_lvresize_check(lv, lp))
 		return_0;
 
+	if (seg->reshape_len) {
+		/* Prevent resizing on out-of-sync reshapable raid */
+		if (!lv_raid_in_sync(lv)) {
+			log_error("Can't resize reshaping LV %s.", display_lvname(lv));
+			return 0;
+		}
+		/* Remove any striped raid reshape space for LV resizing */
+		if (!lv_raid_free_reshape_space(lv))
+			return_0;
+	}
+
 	if (lp->use_policies) {
 		lp->extents = 0;
 		lp->sign = SIGN_PLUS;
@@ -5923,6 +5935,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int ask_discard;
 	struct lv_list *lvl;
 	struct seg_list *sl;
+	struct lv_segment *seg = first_seg(lv);
 	int is_last_pool = lv_is_pool(lv);
 
 	vg = lv->vg;
@@ -6027,6 +6040,13 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 						display_lvname(lv));
 		}
 		is_last_pool = 1;
+	}
+
+	/* Special case removing a striped raid LV with allocated reshape space */
+	if (seg && seg->reshape_len) {
+		if (!(seg->segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_STRIPED)))
+			return_0;
+		lv->le_count = seg->len = seg->area_len = seg_lv(seg, 0)->le_count * seg->area_count;
 	}
 
 	/* Used cache pool, COW or historical LV cannot be activated */

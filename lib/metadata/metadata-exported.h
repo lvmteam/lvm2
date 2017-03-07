@@ -1243,6 +1243,7 @@ int lv_raid_change_region_size(struct logical_volume *lv,
                                int yes, int force, uint32_t new_region_size);
 int lv_raid_in_sync(const struct logical_volume *lv);
 uint32_t lv_raid_data_copies(const struct segment_type *segtype, uint32_t area_count);
+int lv_raid_free_reshape_space(const struct logical_volume *lv);
 /* --  metadata/raid_manip.c */
 
 /* ++  metadata/cache_manip.c */

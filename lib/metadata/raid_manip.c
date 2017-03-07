@@ -1312,7 +1312,7 @@ static int _lv_set_image_lvs_start_les(struct logical_volume *lv)
 }
 
 /*
- * Relocate @out_of_place_les_per_disk from @lv's data images  begin <-> end depending on @where
+ * Relocate @out_of_place_les_per_disk from @lv's data images begin <-> end depending on @where
  *
  * @where:
  * alloc_begin: end -> begin
@@ -1448,9 +1448,15 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 	out_of_place_les_per_disk = max(2048U, (unsigned) seg->stripe_size);
 	out_of_place_les_per_disk = (uint32_t) max(out_of_place_les_per_disk / (unsigned long long) lv->vg->extent_size, 1ULL);
 
+	if (!lv_is_active(lv)) {
+		log_error("Can't remove reshape space from inactive LV %s.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	/* Get data_offset and dev_sectors from the kernel */
 	if (!lv_raid_data_offset(lv, &data_offset)) {
-		log_error("Can't get data offset and dev size for %s from kernel.",
+		log_error("Can't get data offset for %s from kernel.",
 			  display_lvname(lv));
 		return 0;
 	}
@@ -1473,13 +1479,13 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 	}
 
 	/*
-	 * If we don't reshape space allocated extend the LV.
+	 * If we don't have reshape space allocated extend the LV.
 	 *
-	 * first_seg(lv)->reshape_len (only segment of top level raid LV)
-	 * is accounting for the data rimages so that unchanged
-	 * lv_extend()/lv_reduce() can be used to allocate/free,
-	 * because seg->len etc. still holds the whole size as before
-	 * including the reshape space
+	 * first_seg(lv)->reshape_len (only segment of top level raid LV
+	 * and first segment of the rimage sub LVs) are accounting for
+	 * the reshape space so that lv_extend()/lv_reduce() can be used
+	 * to allocate/free, because seg->len etc. still holds the whole
+	 * size as before including the reshape space
 	 */
 	if (out_of_place_les_per_disk) {
 		uint32_t data_rimages = _data_rimages_count(seg, seg->area_count);
@@ -1488,7 +1494,7 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 		uint64_t lv_size = lv->size;
 
 		if (!lv_extend(lv, seg->segtype, data_rimages,
-			       seg->stripe_size, 1, seg->region_size,
+			       seg->stripe_size, 1, /* seg_is_any_raid10(seg) ? seg->data_copies : 1, */ seg->region_size,
 			       reshape_len /* # of reshape LEs to add */,
 			       allocate_pvs, lv->alloc, 0)) {
 			log_error("Failed to allocate out-of-place reshape space for %s.",
@@ -1598,6 +1604,11 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 static int _lv_free_reshape_space(struct logical_volume *lv)
 {
 	return _lv_free_reshape_space_with_status(lv, NULL);
+}
+
+int lv_raid_free_reshape_space(const struct logical_volume *lv)
+{
+	return _lv_free_reshape_space_with_status((struct logical_volume *) lv, NULL);
 }
 
 /*
@@ -1753,6 +1764,10 @@ static int _raid_reshape_add_images(struct logical_volume *lv,
 		log_error("Logical volume %s NOT converted.", display_lvname(lv));
 		return 0;
 	}
+
+	/* raid10 new image allocation can't cope with allocated reshape space. */
+	if (seg_is_any_raid10(seg) && !_lv_free_reshape_space(lv))
+		return_0;
 
 	/* Allocate new image component pairs for the additional stripes and grow LV size */
 	log_debug_metadata("Adding %u data and metadata image LV pair%s to %s.",
@@ -4902,6 +4917,8 @@ static int _takeover_downconvert_wrapper(TAKEOVER_FN_ARGS)
 	if (seg_is_raid1(seg))
 		seg->stripe_size = 0;
 
+	seg->data_copies = new_data_copies;
+
 	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs, NULL))
 		return_0;
 
@@ -5125,6 +5142,8 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	}
 
 
+	seg->data_copies = new_data_copies;
+
 	if (segtype_is_raid4(new_segtype) &&
 	    (!_shift_parity_dev(seg) ||
 	     !_rename_area_lvs(lv, "_"))) {
@@ -5132,9 +5151,6 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 		return 0;
 	} else if (segtype_is_raid10_near(new_segtype)) {
 		uint32_t s;
-
-		/* FIXME: raid10 ; needs to change once more than 2 data copies! */
-		seg->data_copies = 2;
 
 		log_debug_metadata("Reordering areas for raid0 -> raid10 takeover.");
 		if (!_reorder_raid10_near_seg_areas(seg, reorder_to_raid10_near))
@@ -5889,6 +5905,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
+	/* FIXME: as long as we only support even numbers of raid10 SubLV pairs */
 	if (seg_is_raid10(seg))
 		stripes *= 2;
 
