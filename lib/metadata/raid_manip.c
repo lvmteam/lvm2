@@ -5878,7 +5878,7 @@ int lv_raid_convert(struct logical_volume *lv,
 		    struct dm_list *allocate_pvs)
 {
 	struct lv_segment *seg = first_seg(lv);
-	uint32_t stripes, stripe_size;
+	uint32_t stripes = new_stripes, stripe_size;
 	uint32_t new_image_count = seg->area_count;
 	uint32_t region_size = new_region_size;
 	uint32_t data_copies = seg->data_copies;
@@ -5890,7 +5890,10 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
-	stripes = new_stripes ? : _data_rimages_count(seg, seg->area_count);
+	if (seg_is_raid10(seg))
+		stripes *= 2;
+
+	stripes = stripes ? : _data_rimages_count(seg, seg->area_count);
 
 	/* FIXME Ensure caller does *not* set wrong default value! */
 	/* Define new stripe size if not passed in */
