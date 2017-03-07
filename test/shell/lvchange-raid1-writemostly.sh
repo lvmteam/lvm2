@@ -21,14 +21,14 @@ aux prepare_vg 4
 
 for d in $dev1 $dev2 $dev3 $dev4
 do
-	aux delay_dev $d 1
+	aux delay_dev $d 1 1
 done
 
 #
 # Test writemostly prohibited on resynchronizing raid1
 #
 
-# Create 4-way striped LV
+# Create 4-way raid1 LV
 lvcreate -aey --ty raid1 -m 3 -L 32M -n $lv1 $vg
 not lvchange -y --writemostly $dev1 $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid1"
