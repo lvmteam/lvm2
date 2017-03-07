@@ -1393,6 +1393,8 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 		lv->le_count -= extents;
 
 	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
+	if (seg)
+		seg->extents_copied = seg->len;
 
 	if (!delete)
 		return 1;
