@@ -1302,12 +1302,11 @@ static int _lv_set_image_lvs_start_les(struct logical_volume *lv)
 			data_seg->le = le;
 			le += data_seg->len;
 		}
-	}
 
-	/* Try merging rimage sub LV segments _after_ adjusting start LEs */
-	for (s = 0; s < seg->area_count; s++)
+		/* Try merging rimage sub LV segments _after_ adjusting start LEs */
 		if (!lv_merge_segments(seg_lv(seg, s)))
 			return_0;
+	}
 
 	return 1;
 }
