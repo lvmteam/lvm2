@@ -108,30 +108,10 @@ struct arg_values {
 /*	void *ptr; // Currently not used. */
 };
 
-/* a global table of possible --option's */
-struct arg_props {
-	int arg_enum; /* foo_ARG from args.h */
-	const char short_arg;
-	char _padding[7];
-	const char *long_arg;
-	int val_enum; /* foo_VAL from vals.h */
-	uint32_t flags;
-	uint32_t prio;
-	const char *desc;
-};
-
 struct arg_value_group_list {
         struct dm_list list;
         struct arg_values arg_values[0];
 	uint32_t prio;
-};
-
-/* a global table of possible --option values */
-struct val_props {
-	int val_enum; /* foo_VAL from vals.h */
-	int (*fn) (struct cmd_context *cmd, struct arg_values *av);
-	const char *name;
-	const char *usage;
 };
 
 /* a global table of possible LV properties */

@@ -167,31 +167,6 @@ enum {
 #include "command.h"       /* defines struct command */
 #include "command-count.h" /* defines COMMAND_COUNT */
 
-
-/* see opt_names[] below, also see arg_props[] in tools.h and args.h */
-
-struct opt_name {
-	const char *name;       /* "foo_ARG" */
-	int opt_enum;           /* foo_ARG */
-	const char short_opt;   /* -f */
-	char _padding[7];
-	const char *long_opt;   /* --foo */
-	int val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
-	uint32_t flags;
-	uint32_t prio;
-	const char *desc;
-};
-
-/* see val_names[] below, also see val_props[] in tools.h and vals.h */
-
-struct val_name {
-	const char *enum_name;  /* "foo_VAL" */
-	int val_enum;           /* foo_VAL */
-	int (*fn) (struct cmd_context *cmd, struct arg_values *av); /* foo_arg() */
-	const char *name;       /* FooVal */
-	const char *usage;
-};
-
 /* see lvp_names[] below, also see lv_props[] in tools.h and lv_props.h */
 
 struct lvp_name {

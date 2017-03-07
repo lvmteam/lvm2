@@ -211,6 +211,30 @@ struct command {
 	int pos_count; /* temp counter used by create-command */
 };
 
+/* see global opt_names[] */
+
+struct opt_name {
+	const char *name;       /* "foo_ARG" */
+	int opt_enum;           /* foo_ARG */
+	const char short_opt;   /* -f */
+	char _padding[7];
+	const char *long_opt;   /* --foo */
+	int val_enum;           /* xyz_VAL when --foo takes a val like "--foo xyz" */
+	uint32_t flags;
+	uint32_t prio;
+	const char *desc;
+};
+
+/* see global val_names[] */
+
+struct val_name {
+	const char *enum_name;  /* "foo_VAL" */
+	int val_enum;           /* foo_VAL */
+	int (*fn) (struct cmd_context *cmd, struct arg_values *av); /* foo_arg() */
+	const char *name;       /* FooVal */
+	const char *usage;
+};
+
 int define_commands(char *run_name);
 int command_id_to_enum(const char *str);
 void print_usage(struct command *cmd, int longhelp, int desc_first);

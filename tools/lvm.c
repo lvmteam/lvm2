@@ -97,8 +97,8 @@ static char *_list_args(const char *text, int state)
 		while (match_no < cname->num_args) {
 			char s[3];
 			char c;
-			if (!(c = (_cmdline->arg_props +
-				   cname->valid_args[match_no++])->short_arg))
+			if (!(c = (_cmdline->opt_names +
+				   cname->valid_args[match_no++])->short_opt))
 				continue;
 
 			sprintf(s, "-%c", c);
@@ -113,8 +113,8 @@ static char *_list_args(const char *text, int state)
 
 	while (match_no - cname->num_args < cname->num_args) {
 		const char *l;
-		l = (_cmdline->arg_props +
-		     cname->valid_args[match_no++ - cname->num_args])->long_arg;
+		l = (_cmdline->opt_names +
+		     cname->valid_args[match_no++ - cname->num_args])->long_opt;
 		if (*(l + 2) && !strncmp(text, l, len))
 			return strdup(l);
 	}

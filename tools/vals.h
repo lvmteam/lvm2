@@ -63,7 +63,7 @@
  * then also be added to the usage string for the val type here.
  * It would be nice if the accepted values could be defined in a
  * more consistent way, and perhaps in a single place, perhaps in
- * struct val_props.
+ * struct val_names.
  *
  * The usage text for an option is not always the full
  * set of words accepted for an option, but may be a
