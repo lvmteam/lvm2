@@ -2296,6 +2296,22 @@ static int _size64_disp(struct dm_report *rh __attribute__((unused)),
 	return _field_set_value(field, repstr, sortval);
 }
 
+static int _lv_size_disp(struct dm_report *rh, struct dm_pool *mem,
+			 struct dm_report_field *field,
+			 const void *data, void *private)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const struct lv_segment *seg = first_seg(lv);
+	uint64_t size = lv->le_count;
+
+	if (!lv_is_raid_image(lv))
+		size -= seg->reshape_len * seg->area_count;
+
+	size *= lv->vg->extent_size;
+
+	return _size64_disp(rh, mem, field, &size, private);
+}
+
 static int _uint32_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
 			struct dm_report_field *field,
 			const void *data, void *private __attribute__((unused)))

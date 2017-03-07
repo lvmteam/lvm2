@@ -69,7 +69,7 @@ FIELD(LVS, lv, BIN, "ActExcl", lvid, 10, lvactiveexclusively, lv_active_exclusiv
 FIELD(LVS, lv, SNUM, "Maj", major, 0, int32, lv_major, "Persistent major number or -1 if not persistent.", 0)
 FIELD(LVS, lv, SNUM, "Min", minor, 0, int32, lv_minor, "Persistent minor number or -1 if not persistent.", 0)
 FIELD(LVS, lv, SIZ, "Rahead", lvid, 0, lvreadahead, lv_read_ahead, "Read ahead setting in current units.", 0)
-FIELD(LVS, lv, SIZ, "LSize", size, 0, size64, lv_size, "Size of LV in current units.", 0)
+FIELD(LVS, lv, SIZ, "LSize", lvid, 0, lv_size, lv_size, "Size of LV in current units.", 0)
 FIELD(LVS, lv, SIZ, "MSize", lvid, 0, lvmetadatasize, lv_metadata_size, "For thin and cache pools, the size of the LV that holds the metadata.", 0)
 FIELD(LVS, lv, NUM, "#Seg", lvid, 0, lvsegcount, seg_count, "Number of segments in LV.", 0)
 FIELD(LVS, lv, STR, "Origin", lvid, 0, origin, origin, "For snapshots and thins, the origin device of this LV.", 0)
