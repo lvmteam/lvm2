@@ -350,7 +350,8 @@ lvconvert --type raid LV
 OO: OO_LVCONVERT_RAID, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
-DESC: Convert LV to raid or change raid layout.
+DESC: Convert LV to raid or change raid layout
+DESC: (a specific raid level must be used, e.g. raid1).
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --mirrors SNumber LV

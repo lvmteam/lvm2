@@ -1698,8 +1698,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 	if (cmd->ro_count) {
 		first = 1;
 
-		/* print options with short opts */
-
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
 
@@ -1717,35 +1715,11 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 				first = 0;
 			}
 
-			printf(" -%c|%s", opt_names[opt_enum].short_opt, opt_names[opt_enum].long_opt);
-			if (cmd->required_opt_args[ro].def.val_bits) {
-				printf(" ");
-				print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
-			}
-		}
-
-		/* print options without short opts */
-
-		for (ro = 0; ro < cmd->ro_count; ro++) {
-			opt_enum = cmd->required_opt_args[ro].opt;
-
 			if (opt_names[opt_enum].short_opt)
-				continue;
+				printf(" -%c|%s", opt_names[opt_enum].short_opt, opt_names[opt_enum].long_opt);
+			else
+				printf(" %s", opt_names[opt_enum].long_opt);
 
-			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
-				include_extents = 1;
-
-			if (onereq) {
-				if (first)
-					printf("\n\t(");
-				else {
-					printf(",\n\t ");
-					printf("   "); /* align for no short opt */
-				}
-				first = 0;
-			}
-
-			printf(" %s", opt_names[opt_enum].long_opt);
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
 				print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
