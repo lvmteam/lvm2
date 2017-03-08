@@ -781,20 +781,16 @@ int lv_is_thin_origin(const struct logical_volume *lv, unsigned int *snap_count)
 	if (snap_count)
 		*snap_count = 0;
 
-	if (!lv_is_thin_volume(lv) ||
-	    dm_list_empty(&lv->segs_using_this_lv))
-		return 0;
+	if (lv_is_thin_volume(lv))
+		dm_list_iterate_items(segl, &lv->segs_using_this_lv)
+			if (segl->seg->origin == lv) {
+				r = 1;
 
-	dm_list_iterate_items(segl, &lv->segs_using_this_lv) {
-		if (segl->seg->origin == lv) {
-			r = 1;
-			if (snap_count)
+				if (!snap_count)
+					break;/* not interested in number of snapshots */
+
 				(*snap_count)++;
-			else
-				/* not interested in number of snapshots */
-				break;
-		}
-	}
+			}
 
 	return r;
 }
