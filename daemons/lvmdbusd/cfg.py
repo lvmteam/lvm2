@@ -84,3 +84,6 @@ db = None
 
 # lvm flight recorder
 blackbox = None
+
+# RequestEntry ctor
+create_request_entry = None

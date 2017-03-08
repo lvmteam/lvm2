@@ -139,11 +139,20 @@ class Manager(AutomatedProperties):
 		Dump the flight recorder to syslog
 		"""
 		cfg.blackbox.dump()
+
+	@staticmethod
+	def _lookup_by_lvm_id(key):
+		p = cfg.om.get_object_path_by_uuid_lvm_id(key, key)
+		if p:
+			return p
+		return '/'
+
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
 		in_signature='s',
-		out_signature='o')
-	def LookUpByLvmId(self, key):
+		out_signature='o',
+		async_callbacks=('cb', 'cbe'))
+	def LookUpByLvmId(self, key, cb, cbe):
 		"""
 		Given a lvm id in one of the forms:
 
@@ -157,10 +166,8 @@ class Manager(AutomatedProperties):
 		:param key: The lookup value
 		:return: Return the object path.  If object not found you will get '/'
 		"""
-		p = cfg.om.get_object_path_by_uuid_lvm_id(key, key)
-		if p:
-			return p
-		return '/'
+		r = RequestEntry(-1, Manager._lookup_by_lvm_id, (key,), cb, cbe, False)
+		cfg.worker_q.put(r)
 
 	@staticmethod
 	def _use_lvm_shell(yes_no):
@@ -181,11 +188,17 @@ class Manager(AutomatedProperties):
 		r = RequestEntry(-1, Manager._use_lvm_shell, (yes_no,), cb, cbe, False)
 		cfg.worker_q.put(r)
 
+	@staticmethod
+	def _external_event(command):
+		utils.log_debug("Processing _external_event= %s" % command,
+							'bg_black', 'fg_orange')
+		cfg.load()
+
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
 		in_signature='s', out_signature='i')
 	def ExternalEvent(self, command):
-
+		utils.log_debug("ExternalEvent %s" % command)
 		# If a user didn't explicitly specify udev, we will turn it off now.
 		if not cfg.args.use_udev:
 			if udevwatch.remove():
@@ -193,8 +206,10 @@ class Manager(AutomatedProperties):
 								"udev monitoring")
 				# We are dependent on external events now to stay current!
 				cfg.ee = True
-		utils.log_debug("ExternalEvent %s" % command)
-		cfg.event()
+
+		r = RequestEntry(
+			-1, Manager._external_event, (command,), None, None, False)
+		cfg.worker_q.put(r)
 		return dbus.Int32(0)
 
 	@staticmethod

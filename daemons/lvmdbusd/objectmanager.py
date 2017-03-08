@@ -32,20 +32,26 @@ class ObjectManager(AutomatedProperties):
 		self._id_to_object_path = {}
 		self.rlock = threading.RLock()
 
-	@dbus.service.method(
-		dbus_interface="org.freedesktop.DBus.ObjectManager",
-		out_signature='a{oa{sa{sv}}}')
-	def GetManagedObjects(self):
-		with self.rlock:
+	@staticmethod
+	def _get_managed_objects(obj):
+		with obj.rlock:
 			rc = {}
 			try:
-				for k, v in list(self._objects.items()):
+				for k, v in list(obj._objects.items()):
 					path, props = v[0].emit_data()
 					rc[path] = props
 			except Exception:
 				traceback.print_exc(file=sys.stdout)
 				sys.exit(1)
 			return rc
+
+	@dbus.service.method(
+		dbus_interface="org.freedesktop.DBus.ObjectManager",
+		out_signature='a{oa{sa{sv}}}', async_callbacks=('cb', 'cbe'))
+	def GetManagedObjects(self, cb, cbe):
+		r = cfg.create_request_entry(-1, ObjectManager._get_managed_objects,
+									(self, ), cb, cbe, False)
+		cfg.worker_q.put(r)
 
 	def locked(self):
 		"""

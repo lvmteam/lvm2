@@ -30,6 +30,7 @@ import argparse
 import os
 import sys
 from .cmdhandler import LvmFlightRecorder
+from .request import RequestEntry
 
 
 class Lvm(objectmanager.ObjectManager):
@@ -97,6 +98,7 @@ def main():
 	os.environ["LC_ALL"] = "C"
 
 	cfg.args = parser.parse_args()
+	cfg.create_request_entry = RequestEntry
 
 	# We create a flight recorder in cmdhandler too, but we replace it here
 	# as the user may be specifying a different size.  The default one in
@@ -144,7 +146,6 @@ def main():
 	thread_list.append(updater.thread)
 
 	cfg.load = updater.load
-	cfg.event = updater.event
 
 	cfg.loop = GLib.MainLoop()
 

@@ -38,7 +38,7 @@ class AutomatedProperties(dbus.service.Object):
 		props = {}
 
 		for i in self.interface():
-			props[i] = self.GetAll(i)
+			props[i] = AutomatedProperties._get_all_prop(self, i)
 
 		return self._ap_o_path, props
 
@@ -65,31 +65,52 @@ class AutomatedProperties(dbus.service.Object):
 
 		return self._ap_interface
 
-	# Properties
-	# noinspection PyUnusedLocal
-	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
-							in_signature='ss', out_signature='v')
-	def Get(self, interface_name, property_name):
-		value = getattr(self, property_name)
+	@staticmethod
+	def _get_prop(obj, interface_name, property_name):
+		value = getattr(obj, property_name)
 		# Note: If we get an exception in this handler we won't know about it,
 		# only the side effect of no returned value!
 		log_debug('Get (%s), type (%s), value(%s)' %
 					(property_name, str(type(value)), str(value)))
 		return value
 
+	# Properties
+	# noinspection PyUnusedLocal
 	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
-							in_signature='s', out_signature='a{sv}')
-	def GetAll(self, interface_name):
-		if interface_name in self.interface(True):
+							in_signature='ss', out_signature='v',
+							async_callbacks=('cb', 'cbe'))
+	def Get(self, interface_name, property_name, cb, cbe):
+		# Note: If we get an exception in this handler we won't know about it,
+		# only the side effect of no returned value!
+		r = cfg.create_request_entry(
+			-1, AutomatedProperties._get_prop,
+			(self, interface_name, property_name),
+			cb, cbe, False)
+		cfg.worker_q.put(r)
+
+
+	@staticmethod
+	def _get_all_prop(obj, interface_name):
+		if interface_name in obj.interface(True):
 			# Using introspection, lets build this dynamically
-			properties = get_properties(self)
+			properties = get_properties(obj)
 			if interface_name in properties:
 				return properties[interface_name][1]
 			return {}
 		raise dbus.exceptions.DBusException(
-			self._ap_interface,
+			obj._ap_interface,
 			'The object %s does not implement the %s interface'
 			% (self.__class__, interface_name))
+
+	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
+							in_signature='s', out_signature='a{sv}',
+							async_callbacks=('cb', 'cbe'))
+	def GetAll(self, interface_name, cb, cbe):
+		r = cfg.create_request_entry(
+			-1, AutomatedProperties._get_all_prop,
+			(self, interface_name),
+			cb, cbe, False)
+		cfg.worker_q.put(r)
 
 	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
 							in_signature='ssv')
