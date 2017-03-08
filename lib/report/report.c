@@ -2304,7 +2304,7 @@ static int _lv_size_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct lv_segment *seg = first_seg(lv);
 	uint64_t size = lv->le_count;
 
-	if (!lv_is_raid_image(lv))
+	if (seg && !lv_is_raid_image(lv))
 		size -= seg->reshape_len * (seg->area_count > 2 ? seg->area_count : 1);
 
 	size *= lv->vg->extent_size;
