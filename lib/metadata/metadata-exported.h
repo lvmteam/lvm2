@@ -916,8 +916,8 @@ struct lvcreate_params {
 	int wipe_signatures; /* all */
 	int32_t major; /* all */
 	int32_t minor; /* all */
-	int log_count; /* mirror */
-	int nosync; /* mirror */
+	int log_count; /* mirror/RAID */
+	int nosync; /* mirror/RAID */
 	int pool_metadata_spare; /* pools */
 	int type;   /* type arg is given */
 	int temporary; /* temporary LV */
@@ -948,15 +948,15 @@ struct lvcreate_params {
 #define PASS_ARG_ZERO			0x08
 	int passed_args;
 
-	uint32_t stripes; /* striped */
-	uint32_t stripe_size; /* striped */
+	uint32_t stripes; /* striped/RAID */
+	uint32_t stripe_size; /* striped/RAID */
 	uint32_t chunk_size; /* snapshot */
-	uint32_t region_size; /* mirror */
+	uint32_t region_size; /* mirror/RAID */
 
-	unsigned stripes_supplied; /* striped */
-	unsigned stripe_size_supplied; /* striped */
+	unsigned stripes_supplied; /* striped/RAID */
+	unsigned stripe_size_supplied; /* striped/RAID */
 
-	uint32_t mirrors; /* mirror */
+	uint32_t mirrors; /* mirror/RAID */
 
 	uint32_t min_recovery_rate; /* RAID */
 	uint32_t max_recovery_rate; /* RAID */
