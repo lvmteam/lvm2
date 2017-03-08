@@ -133,6 +133,13 @@ class Manager(AutomatedProperties):
 		cfg.worker_q.put(r)
 
 	@dbus.service.method(
+		dbus_interface=MANAGER_INTERFACE)
+	def FlightRecorderDump(self):
+		"""
+		Dump the flight recorder to syslog
+		"""
+		cfg.blackbox.dump()
+	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
 		in_signature='s',
 		out_signature='o')
