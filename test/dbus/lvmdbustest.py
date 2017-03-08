@@ -1750,6 +1750,16 @@ class TestDbusService(unittest.TestCase):
 		cmd.extend(pv_paths)
 		self._verify_existence(cmd, cmd[0], vg_name)
 
+	def test_external_lv_create(self):
+		# Lets create a LV outside of service and see if we correctly handle
+		# it's inclusion
+		vg = self._vg_create().Vg
+		lv_name = lv_n()
+		full_name = "%s/%s" % (vg.Name, lv_name)
+
+		cmd = ['lvcreate', '-L4M', '-n', lv_name, vg.Name]
+		self._verify_existence(cmd, cmd[0], full_name)
+
 class AggregateResults(object):
 
 	def __init__(self):
