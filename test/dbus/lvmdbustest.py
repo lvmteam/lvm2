@@ -14,7 +14,6 @@ import dbus
 # noinspection PyUnresolvedReferences
 from dbus.mainloop.glib import DBusGMainLoop
 import unittest
-import time
 import pyudev
 from testlib import *
 import testlib
