@@ -499,6 +499,28 @@ def validate_tag(interface, tag):
 			% (tag, _ALLOWABLE_TAG_CH))
 
 
+def add_no_notify(cmdline):
+	"""
+	Given a command line to execute we will see if `--config` is present, if it
+	is we will add the global/notify_dbus=0 to it, otherwise we will append it
+	to the end
+	:param cmdline:
+	:return: cmdline with notify_dbus config option present
+	"""
+
+	if 'help' in cmdline:
+		return cmdline
+
+	if '--config' in cmdline:
+		for i in range(0, len(cmdline)):
+			if cmdline[i] == '--config':
+				cmdline[i] += "global/notify_dbus=0"
+				break
+	else:
+		cmdline.extend(['--config', 'global/notify_dbus=0'])
+	return cmdline
+
+
 # The methods below which start with mt_* are used to execute the desired code
 # on the the main thread of execution to alleviate any issues the dbus-python
 # library with regards to multi-threaded access.  Essentially, we are trying to

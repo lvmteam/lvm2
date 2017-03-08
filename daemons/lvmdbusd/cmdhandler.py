@@ -16,7 +16,7 @@ import traceback
 import os
 
 from lvmdbusd import cfg
-from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error
+from lvmdbusd.utils import pv_dest_ranges, log_debug, log_error, add_no_notify
 from lvmdbusd.lvm_shell_proxy import LVMShellProxy
 
 try:
@@ -93,6 +93,7 @@ def call_lvm(command, debug=False):
 	# Prepend the full lvm executable so that we can run different versions
 	# in different locations on the same box
 	command.insert(0, cfg.LVM_CMD)
+	command = add_no_notify(command)
 
 	process = Popen(command, stdout=PIPE, stderr=PIPE, close_fds=True,
 					env=os.environ)

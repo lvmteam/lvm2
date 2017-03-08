@@ -29,7 +29,7 @@ except ImportError:
 
 
 from lvmdbusd.cfg import LVM_CMD
-from lvmdbusd.utils import log_debug, log_error
+from lvmdbusd.utils import log_debug, log_error, add_no_notify
 
 SHELL_PROMPT = "lvm> "
 
@@ -205,6 +205,8 @@ class LVMShellProxy(object):
 			raise Exception(
 				self.lvm_shell.returncode,
 				"Underlying lvm shell process is not present!")
+
+		argv = add_no_notify(argv)
 
 		# create the command string
 		cmd = " ".join(_quote_arg(arg) for arg in argv)
