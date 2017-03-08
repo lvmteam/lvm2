@@ -1760,6 +1760,24 @@ class TestDbusService(unittest.TestCase):
 		cmd = ['lvcreate', '-L4M', '-n', lv_name, vg.Name]
 		self._verify_existence(cmd, cmd[0], full_name)
 
+	def test_external_pv_create(self):
+		# Lets create a PV outside of service and see if we correctly handle
+		# it's inclusion
+		target = self.objs[PV_INT][0]
+
+		# Remove the PV
+		rc = self._pv_remove(target)
+		self.assertTrue(rc == '/')
+		self._check_consistency()
+
+		# Make sure the PV we removed no longer exists
+		self.assertTrue(self._lookup(target.Pv.Name) == '/')
+
+		# Add it back with external command line
+		cmd = ['pvcreate', target.Pv.Name]
+		self._verify_existence(cmd, cmd[0], target.Pv.Name)
+
+
 class AggregateResults(object):
 
 	def __init__(self):
