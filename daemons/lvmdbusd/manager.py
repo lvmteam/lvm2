@@ -183,7 +183,7 @@ class Manager(AutomatedProperties):
 		:param yes_no:
 		:param cb:	dbus python call back parameter, not client visible
 		:param cbe:	dbus python error call back parameter, not client visible
-		:return: Nothing
+		:return: Boolean
 		"""
 		r = RequestEntry(-1, Manager._use_lvm_shell, (yes_no,), cb, cbe, False)
 		cfg.worker_q.put(r)
