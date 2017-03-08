@@ -1701,9 +1701,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
 
-			if (!opt_names[opt_enum].short_opt)
-				continue;
-
 			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
 				include_extents = 1;
 
