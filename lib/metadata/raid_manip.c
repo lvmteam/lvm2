@@ -2087,7 +2087,7 @@ static int _activate_sub_lvs_excl_local(struct logical_volume *lv, uint32_t star
 	return 1;
 }
 
-/* Helper: function to activate any sub LVs of @lv exclusively local starting with area indexed by @start_idx */
+/* Helper: function to activate any LVs on @lv_list */
 static int _activate_sub_lvs_excl_local_list(struct logical_volume *lv, struct dm_list *lv_list)
 {
 	int r = 1;
