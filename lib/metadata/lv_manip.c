@@ -7402,21 +7402,20 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		/* Validate volume size to to aling on chunk for small extents */
-		/* Cache chunk size is always set */
-		size = first_seg(pool_lv)->chunk_size;
-		if (size > vg->extent_size) {
-			/* Align extents on chunk boundary size */
-			size = ((uint64_t)vg->extent_size * lp->extents + size - 1) /
-				size * size / vg->extent_size;
-			if (size != lp->extents) {
-				log_print_unless_silent("Rounding size (%d extents) up to chunk boundary "
-							"size (%d extents).", lp->extents, size);
-				lp->extents = size;
-			}
-		}
-
 		if (seg_is_thin_volume(lp)) {
+			/* Validate volume size to to aling on chunk for small extents */
+			size = first_seg(pool_lv)->chunk_size;
+			if (size > vg->extent_size) {
+				/* Align extents on chunk boundary size */
+				size = ((uint64_t)vg->extent_size * lp->extents + size - 1) /
+					size * size / vg->extent_size;
+				if (size != lp->extents) {
+					log_print_unless_silent("Rounding size (%d extents) up to chunk boundary "
+								"size (%d extents).", lp->extents, size);
+					lp->extents = size;
+				}
+			}
+
 			thin_pool_was_active = lv_is_active(pool_lv);
 			if (lv_is_new_thin_pool(pool_lv)) {
 				if (!check_new_thin_pool(pool_lv))
