@@ -126,7 +126,8 @@ run_writemostly_check() {
 	check lv_field $vg/$lv raid_write_behind "512"
 
 	# Converting to linear should clear flags and writebehind
-	lvconvert -m 0 $vg/$lv $d1
+	not lvconvert -m 0 $vg/$lv $d1
+	lvconvert -y -m 0 $vg/$lv $d1
 	lvconvert --type raid1 -m 1 $vg/$lv $d1
 	check lv_field $vg/$lv raid_write_behind ""
 	check lv_attr_bit health $vg/${lv}_rimage_0 "-"
