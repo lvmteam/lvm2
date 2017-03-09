@@ -17,8 +17,6 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
 
-aux have_thin 1 0 0 || skip
-
 aux prepare_vg 1 256
 
 lvcreate -an -n $lv1 -l4 $vg
@@ -70,13 +68,15 @@ lvcreate -an -n $lv6 -l1 $vg
 lvresize -y -l+100%FREE $vg/$lv6
 lvremove $vg/$lv6
 
+if aux have_thin 1 0 0 ; then
 # relative poolmetadatasize
-
 lvcreate --type thin-pool -L64 --poolmetadatasize 32 -n $lv7 $vg
 lvresize --poolmetadatasize 64 $vg/$lv7
 lvresize --poolmetadatasize +8 $vg/$lv7
 not lvresize -y --poolmetadatasize -8 $vg/$lv7
 
 lvextend --poolmetadatasize +8 $vg/$lv7
+not lvextend -y --poolmetadatasize -8 $vg/$lv7
+fi
 
 vgremove -y $vg
