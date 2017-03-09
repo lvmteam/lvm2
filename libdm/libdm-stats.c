@@ -264,8 +264,11 @@ static int _stats_group_id_present(const struct dm_stats *dms, uint64_t id)
 	if (id == DM_STATS_GROUP_NOT_PRESENT)
 		return 0;
 
-	if (!dms || !dms->regions)
+	if (!dms)
 		return_0;
+
+	if (!dms->regions)
+		return 0;
 
 	if (id > dms->max_region)
 		return 0;
