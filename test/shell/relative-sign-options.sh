@@ -17,6 +17,8 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 . lib/inittest
 
+aux have_thin 1 0 0 || skip
+
 aux prepare_vg 1 256
 
 lvcreate -an -n $lv1 -l4 $vg
