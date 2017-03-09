@@ -1243,11 +1243,6 @@ int get_pool_params(struct cmd_context *cmd,
 	}
 
 	if (arg_is_set(cmd, poolmetadatasize_ARG)) {
-		if (arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE) == SIGN_MINUS) {
-			log_error("Negative pool metadata size is invalid.");
-			return 0;
-		}
-
 		if (arg_is_set(cmd, poolmetadata_ARG)) {
 			log_error("Please specify either metadata logical volume or its size.");
 			return 0;
