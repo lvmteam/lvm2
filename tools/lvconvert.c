@@ -1369,12 +1369,6 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		}
 		goto try_new_takeover_or_reshape;
 	}
-#if 0
-	} else if ((!*lp->type_str || seg->segtype == lp->segtype) && !lp->stripe_size_supplied) {
-		log_error("Conversion operation not yet supported.");
-		return 0;
-	}
-#endif
 
 	if ((seg_is_linear(seg) || seg_is_striped(seg) || seg_is_mirrored(seg) || lv_is_raid(lv)) &&
 	    (lp->type_str && lp->type_str[0])) {
