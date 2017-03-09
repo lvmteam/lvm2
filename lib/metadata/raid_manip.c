@@ -3986,6 +3986,10 @@ static int _striped_to_raid0_move_segs_to_raid0_lvs(struct logical_volume *lv,
 		dlv->le_count = le;
 		dlv->size = (uint64_t) le * lv->vg->extent_size;
 		s++;
+
+		/* Try merging raid0 rimage sub LV segments */
+		if (!lv_merge_segments(dlv))
+			return_0;
 	}
 
 	/* Remove the empty segments from the striped LV */
@@ -5122,7 +5126,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	if (!_lv_free_reshape_space(lv))
 		return_0;
 
-	/* This helper can be used to convert from striped/raid0* -> raid10 too */
+	/* This helper can be used to convert from striped/raid0* -> raid10_near too */
 	if (seg_is_striped_target(seg)) {
 		log_debug_metadata("Converting LV %s from %s to %s.",
 				   display_lvname(lv), SEG_TYPE_NAME_STRIPED, SEG_TYPE_NAME_RAID0);
@@ -5179,7 +5183,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	} else if (segtype_is_raid10_near(new_segtype)) {
 		uint32_t s;
 
-		log_debug_metadata("Reordering areas for raid0 -> raid10 takeover.");
+		log_debug_metadata("Reordering areas for raid0 -> raid10_near takeover.");
 		if (!_reorder_raid10_near_seg_areas(seg, reorder_to_raid10_near))
 			return 0;
 		/* Set rebuild flags accordingly */
