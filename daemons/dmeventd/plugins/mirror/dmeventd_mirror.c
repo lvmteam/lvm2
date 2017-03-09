@@ -111,6 +111,9 @@ static int _remove_failed_devices(const char *cmd_lvscan, const char *cmd_lvconv
 		return 0;
 	}
 
+	if (!dmeventd_lvm2_run_with_lock(cmd_lvscan))
+		log_warn("WARNING: Re-scan of mirrored device %s failed.", device);
+
 	log_info("Repair of mirrored device %s finished successfully.", device);
 
 	return 1;
@@ -188,7 +191,7 @@ int register_device(const char *device,
 		goto_bad;
 
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
-				   "lvconvert --repair --use-policies", device))
+				   "lvconvert --config global{use_lvmetad = 0}' --repair --use-policies", device))
 		goto_bad;
 
 	*user = state;
