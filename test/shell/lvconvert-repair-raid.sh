@@ -72,9 +72,10 @@ delay 0
 lvcreate --type raid5 -i 2 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 aux wait_for_sync $vg $lv1
 aux disable_dev "$dev3"
+vgreduce --removemissing -f $vg
 lvconvert -y --repair $vg/$lv1
-vgreduce --removemissing $vg
 aux enable_dev "$dev3"
+pvcreate -yff "$dev3"
 vgextend $vg "$dev3"
 lvremove -ff $vg/$lv1
 
