@@ -1281,6 +1281,11 @@ AC_MSG_RESULT($DMFILEMAPD)
 BUILD_DMFILEMAPD=$DMFILEMAPD
 AC_DEFINE([DMFILEMAPD], 1, [Define to 1 to enable the device-mapper filemap daemon.])
 
+dnl -- dmfilemapd requires FIEMAP
+if test "$DMFILEMAPD" = yes; then
+   AC_CHECK_HEADER([linux/fiemap.h], , [AC_MSG_ERROR(--enable-dmfilemapd requires fiemap.h)])
+fi
+
 ################################################################################
 dnl -- Build notifydbus
 AC_MSG_CHECKING(whether to build notifydbus)
