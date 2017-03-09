@@ -1221,7 +1221,7 @@ ID: lvrename_lv_lv
 lvresize --size SSizeMB LV
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync, --reportformat ReportFmt, --resizefs,
---stripes Number, --stripesize SizeKB, --poolmetadatasize SSizeMB,
+--stripes Number, --stripesize SizeKB, --poolmetadatasize PSizeMB,
 --type SegType
 OP: PV ...
 ID: lvresize_by_size
@@ -1235,7 +1235,7 @@ OO: --alloc Alloc, --autobackup Bool, --force,
 ID: lvresize_by_pv
 DESC: Resize an LV by specified PV extents.
 
-lvresize --poolmetadatasize SSizeMB LV_thinpool
+lvresize --poolmetadatasize PSizeMB LV_thinpool
 OO: --alloc Alloc, --autobackup Bool, --force,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --stripes Number, --stripesize SizeKB,

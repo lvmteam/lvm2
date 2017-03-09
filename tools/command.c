@@ -1534,10 +1534,10 @@ int define_commands(char *run_name)
 void configure_command_option_values(const char *name)
 {
 	if (!strcmp(name, "lvresize")) {
-		/* relative +|- allowed */
+		/* relative +|- allowed for LV, + allowed for metadata */
 		opt_names[size_ARG].val_enum = ssizemb_VAL;
 		opt_names[extents_ARG].val_enum = sextents_VAL;
-		opt_names[poolmetadatasize_ARG].val_enum = ssizemb_VAL;
+		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
 		return;
 	}
 
