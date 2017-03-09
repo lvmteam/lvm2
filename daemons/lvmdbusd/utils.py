@@ -503,9 +503,11 @@ def add_no_notify(cmdline):
 	"""
 	Given a command line to execute we will see if `--config` is present, if it
 	is we will add the global/notify_dbus=0 to it, otherwise we will append it
-	to the end
-	:param cmdline:
+	to the end of the list.
+	:param: cmdline: The command line to inspect
+	:type: cmdline: list
 	:return: cmdline with notify_dbus config option present
+	:rtype: list
 	"""
 
 	if 'help' in cmdline:
