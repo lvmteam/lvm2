@@ -6275,7 +6275,7 @@ try_again:
 	 */
 	if (!_raid_extract_images(lv, force,
 				  raid_seg->area_count - match_count,
-				  partial_segment_removed ?
+				  (partial_segment_removed || !dm_list_size(remove_pvs)) ?
 				  &lv->vg->pvs : remove_pvs, 0,
 				  &old_lvs, &old_lvs)) {
 		log_error("Failed to remove the specified images from %s.",
