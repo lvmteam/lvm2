@@ -514,8 +514,8 @@ def add_no_notify(cmdline):
 		return cmdline
 
 	if '--config' in cmdline:
-		for i in range(0, len(cmdline)):
-			if cmdline[i] == '--config':
+		for i, arg in enumerate(cmdline):
+			if arg == '--config':
 				cmdline[i] += "global/notify_dbus=0"
 				break
 	else:
