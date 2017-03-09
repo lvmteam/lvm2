@@ -514,7 +514,7 @@ static void _filemap_monitor_destroy(struct filemap_monitor *fm)
 		_filemap_monitor_end_notify(fm);
 		_filemap_monitor_close_fd(fm);
 	}
-	dm_free(fm->program_id);
+	dm_free((void *) fm->program_id);
 }
 
 static int _filemap_monitor_check_same_file(int fd1, int fd2)
@@ -690,7 +690,7 @@ static int _dmfilemapd(struct filemap_monitor *fm)
 	if (!_filemap_monitor_set_notify(fm))
 		goto bad;
 
-	if (!dm_stats_list(dms, NULL)) {
+	if (!dm_stats_list(dms, DM_STATS_ALL_PROGRAMS)) {
 		log_error("Failed to list stats handle.");
 		goto bad;
 	}
@@ -705,6 +705,7 @@ static int _dmfilemapd(struct filemap_monitor *fm)
 		fm->program_id = dm_strdup(program_id);
 	else
 		fm->program_id = NULL;
+	dm_stats_set_program_id(dms, 1, program_id);
 
 	do {
 		if (!dm_stats_group_present(dms, fm->group_id)) {
