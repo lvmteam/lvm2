@@ -93,9 +93,10 @@ lvconvert -m+1 --type raid1 $vg/cpool_cdata
 check lv_field $vg/cpool_cdata layout "raid,raid1"
 check lv_field $vg/cpool_cdata role "private,cache,pool,data"
 
-lvconvert -m-1  $vg/cpool_cmeta
+not lvconvert -m-1  $vg/cpool_cmeta
+lvconvert -y -m-1  $vg/cpool_cmeta
 check lv_field $vg/cpool_cmeta layout "linear"
-lvconvert -m-1  $vg/cpool_cdata
+lvconvert -y -m-1  $vg/cpool_cdata
 check lv_field $vg/cpool_cdata layout "linear"
 
 lvremove -f $vg
