@@ -119,7 +119,9 @@ def call_lvm(command):
 	"""
 	Call lvm executable and return a tuple of exitcode, stdout, stderr
 	:param command:     Command to execute
-	:param debug:       Dump debug to stdout
+	:type command: 		list
+	:returns (exitcode, stdout, stderr)
+	:rtype (int, str, str)
 	"""
 
 	# Prepend the full lvm executable so that we can run different versions
