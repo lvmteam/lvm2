@@ -119,7 +119,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 		goto_bad;
 
 	msg_fields = "<raid_type> <#devices> <health_chars> and <sync_ratio> ";
-	if (sscanf(params, "%s %u %s %" PRIu64 "/%" PRIu64,
+	if (sscanf(params, "%s %u %s " FMTu64 "/" FMTu64,
 		   s->raid_type,
 		   &s->dev_count,
 		   s->dev_health,
@@ -146,7 +146,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	if (!(s->sync_action = dm_pool_zalloc(mem, pp - p)))
 		goto_bad;
 
-	if (sscanf(p, "%s %" PRIu64, s->sync_action, &s->mismatch_count) != 2)
+	if (sscanf(p, "%s " FMTu64, s->sync_action, &s->mismatch_count) != 2)
 		goto_bad;
 
 	if (num_fields < 7)
@@ -162,7 +162,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	msg_fields = "<data_offset>";
 	if (!(p = _skip_fields(params, 6))) /* skip pre-1.9.0 params */
 		goto bad;
-	if (sscanf(p, "%" PRIu64, &s->data_offset) != 1)
+	if (sscanf(p, FMTu64, &s->data_offset) != 1)
 		goto bad;
 
 out:
@@ -244,14 +244,14 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 
 	/* Read in args that have definitive placement */
 	if (sscanf(params,
-		   " %" PRIu32
-		   " %" PRIu64 "/%" PRIu64
-		   " %" PRIu32
-		   " %" PRIu64 "/%" PRIu64
-		   " %" PRIu64 " %" PRIu64
-		   " %" PRIu64 " %" PRIu64
-		   " %" PRIu64 " %" PRIu64
-		   " %" PRIu64
+		   " " FMTu32
+		   " " FMTu64 "/" FMTu64
+		   " " FMTu32
+		   " " FMTu64 "/" FMTu64
+		   " " FMTu64 " " FMTu64
+		   " " FMTu64 " " FMTu64
+		   " " FMTu64 " " FMTu64
+		   " " FMTu64
 		   " %d",
 		   &s->metadata_block_size,
 		   &s->metadata_used_blocks, &s->metadata_total_blocks,
