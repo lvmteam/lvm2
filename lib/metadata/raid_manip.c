@@ -1712,7 +1712,7 @@ static int _reshape_adjust_to_size(struct logical_volume *lv,
  * Reshape: add immages to existing raid lv
  *
  */
-static int _lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_count,
+static int _lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_count,
 				       struct dm_list *allocate_pvs, struct dm_list *removal_lvs,
 				       int commit, int use_existing_area_len);
 static int _raid_reshape_add_images(struct logical_volume *lv,
@@ -1773,7 +1773,7 @@ static int _raid_reshape_add_images(struct logical_volume *lv,
 	log_debug_metadata("Adding %u data and metadata image LV pair%s to %s.",
 			   new_image_count - old_image_count, new_image_count - old_image_count > 1 ? "s" : "",
 			   display_lvname(lv));
-	if (!_lv_raid_change_image_count(lv, new_image_count, allocate_pvs, NULL, 0, 0))
+	if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, NULL, 0, 0))
 		return 0;
 
 	/* Reshape adding image component pairs -> change sizes/counters accordingly */
@@ -1949,7 +1949,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		log_debug_metadata("Removing %u data and metadata image LV pair%s from %s.",
 				   old_image_count - new_image_count, old_image_count - new_image_count > 1 ? "s" : "",
 				   display_lvname(lv));
-		if (!_lv_raid_change_image_count(lv, new_image_count, allocate_pvs, removal_lvs, 0, 0))
+		if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, removal_lvs, 0, 0))
 			return 0;
 
 		seg->area_count = new_image_count;
@@ -2959,7 +2959,7 @@ static int _raid_extract_images(struct logical_volume *lv,
 	return 1;
 }
 
-static int _raid_remove_images(struct logical_volume *lv,
+static int _raid_remove_images(struct logical_volume *lv, int yes,
 			       uint32_t new_count, struct dm_list *allocate_pvs,
 			       struct dm_list *removal_lvs, int commit)
 {
@@ -2982,6 +2982,12 @@ static int _raid_remove_images(struct logical_volume *lv,
 
 	/* Convert to linear? */
 	if (new_count == 1) {
+		if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to type %s loosing all resilience? [y/n]: ",
+					  lvseg_name(first_seg(lv)), display_lvname(lv), SEG_TYPE_NAME_LINEAR) == 'n') {
+			log_error("Logical volume %s NOT converted to \"%s\".",
+				  display_lvname(lv), SEG_TYPE_NAME_LINEAR);
+			return 0;
+		}
 		if (!_raid_remove_top_layer(lv, removal_lvs)) {
 			log_error("Failed to remove RAID layer "
 				  "after linear conversion.");
@@ -3024,7 +3030,7 @@ static int _raid_remove_images(struct logical_volume *lv,
  * This function adds or removes _both_ portions of the image and commits
  * the results.
  */
-static int _lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_count,
+static int _lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_count,
 				       struct dm_list *allocate_pvs, struct dm_list *removal_lvs,
 				       int commit, int use_existing_area_len)
 {
@@ -3047,12 +3053,12 @@ static int _lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_c
 	}
 
 	if (old_count > new_count)
-		return _raid_remove_images(lv, new_count, allocate_pvs, removal_lvs, commit);
+		return _raid_remove_images(lv, yes, new_count, allocate_pvs, removal_lvs, commit);
 
 	return _raid_add_images(lv, new_count, allocate_pvs, commit, use_existing_area_len);
 }
 
-int lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_count,
+int lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_count,
 			       const uint32_t new_region_size, struct dm_list *allocate_pvs)
 {
 	struct lv_segment *seg = first_seg(lv);
@@ -3062,7 +3068,7 @@ int lv_raid_change_image_count(struct logical_volume *lv, uint32_t new_count,
 		_check_and_adjust_region_size(lv);
 	}
 
-	return _lv_raid_change_image_count(lv, new_count, allocate_pvs, NULL, 1, 0);
+	return _lv_raid_change_image_count(lv, yes, new_count, allocate_pvs, NULL, 1, 0);
 }
 
 int lv_raid_split(struct logical_volume *lv, const char *split_name,
@@ -3886,7 +3892,7 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 	if (new_image_count != seg->area_count) {
 		log_debug_metadata("Changing image count to %u on %s.",
 				   new_image_count, display_lvname(lv));
-		if (!_lv_raid_change_image_count(lv, new_image_count, allocate_pvs, removal_lvs, 0, 0))
+		if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, removal_lvs, 0, 0))
 			return_0;
 	}
 
@@ -4886,7 +4892,7 @@ static int _takeover_downconvert_wrapper(TAKEOVER_FN_ARGS)
 		log_debug_metadata("Removing %" PRIu32 " component LV pair(s) to %s.",
 				   lv_raid_image_count(lv) - new_image_count,
 				   display_lvname(lv));
-		if (!_lv_raid_change_image_count(lv, new_image_count, allocate_pvs, &removal_lvs, 0, 0))
+		if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, &removal_lvs, 0, 0))
 			return 0;
 
 		seg->area_count = new_image_count;
@@ -5135,7 +5141,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 		log_debug_metadata("Adding %" PRIu32 " component LV pair(s) to %s.",
 				   new_image_count - lv_raid_image_count(lv),
 				   display_lvname(lv));
-		if (!_lv_raid_change_image_count(lv, new_image_count, allocate_pvs, NULL, 0, 1))
+		if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, NULL, 0, 1))
 			return 0;
 
 		seg = first_seg(lv);

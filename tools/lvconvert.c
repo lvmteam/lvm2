@@ -1359,7 +1359,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 					  DEFAULT_RAID1_MAX_IMAGES, lp->segtype->name, display_lvname(lv));
 				return 0;
 			}
-			if (!lv_raid_change_image_count(lv, image_count, lp->region_size, lp->pvh))
+			if (!lv_raid_change_image_count(lv, lp->yes, image_count, lp->region_size, lp->pvh))
 				return_0;
 
 			log_print_unless_silent("Logical volume %s successfully converted.",
