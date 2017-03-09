@@ -361,11 +361,22 @@ static int _update_extents_params(struct volume_group *vg,
 		      extents_from_size(vg->cmd, lp->pool_metadata_size, vg->extent_size)))
 			return_0;
 
-		if (!update_pool_params(lp->segtype, vg, lp->target_attr,
-					lp->passed_args, lp->extents,
-					&lp->pool_metadata_extents,
-					&lp->thin_chunk_size_calc_policy, &lp->chunk_size,
-					&lp->discards, &lp->zero))
+		if (segtype_is_thin_pool(lp->segtype) || segtype_is_thin(lp->segtype)) {
+			if (!update_thin_pool_params(vg->cmd, vg->profile, vg->extent_size,
+						     lp->segtype, lp->target_attr,
+						     lp->extents,
+						     &lp->pool_metadata_extents,
+						     &lp->thin_chunk_size_calc_policy,
+						     &lp->chunk_size,
+						     &lp->discards,
+						     &lp->zero_new_blocks))
+				return_0;
+		} else if (!update_cache_pool_params(vg->cmd, vg->profile, vg->extent_size,
+						     lp->segtype, lp->target_attr,
+						     lp->extents,
+						     &lp->pool_metadata_extents,
+						     &lp->thin_chunk_size_calc_policy,
+						     &lp->chunk_size))
 			return_0;
 
 		if (lcp->percent == PERCENT_FREE || lcp->percent == PERCENT_PVS) {
@@ -1078,7 +1089,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	    !_read_size_params(cmd, lp, lcp) ||
 	    !get_stripe_params(cmd, lp->segtype, &lp->stripes, &lp->stripe_size, &lp->stripes_supplied, &lp->stripe_size_supplied) ||
 	    (lp->create_pool &&
-	     !get_pool_params(cmd, lp->segtype, &lp->passed_args,
+	     !get_pool_params(cmd, lp->segtype,
 			      &lp->pool_metadata_size, &lp->pool_metadata_spare,
 			      &lp->chunk_size, &lp->discards, &lp->zero_new_blocks)) ||
 	    !_read_cache_params(cmd, lp) ||

@@ -2673,7 +2673,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	struct segment_type *pool_segtype;          /* thinpool or cachepool */
 	struct lv_segment *seg;
 	unsigned int target_attr = ~0;
-	unsigned int passed_args = 0;
 	unsigned int activate_pool;
 	unsigned int zero_metadata;
 	uint64_t meta_size;
@@ -2790,7 +2789,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		}
 	}
 
-	if (!get_pool_params(cmd, pool_segtype, &passed_args,
+	if (!get_pool_params(cmd, pool_segtype,
 			     &meta_size, &pool_metadata_spare,
 			     &chunk_size, &discards, &zero_new_blocks))
 		goto_bad;
@@ -2812,15 +2811,17 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 */
 
 	if (to_cachepool) {
-		if (!update_cache_pool_params(pool_segtype, vg, target_attr,
-					      passed_args, lv->le_count,
+		if (!update_cache_pool_params(cmd, vg->profile, vg->extent_size,
+					      pool_segtype, target_attr,
+					      lv->le_count,
 					      &meta_extents,
 					      &chunk_calc,
 					      &chunk_size))
 			goto_bad;
 	} else {
-		if (!update_thin_pool_params(pool_segtype, vg, target_attr,
-					     passed_args, lv->le_count,
+		if (!update_thin_pool_params(cmd, vg->profile, vg->extent_size,
+					     pool_segtype, target_attr,
+					     lv->le_count,
 					     &meta_extents,
 					     &chunk_calc,
 					     &chunk_size,

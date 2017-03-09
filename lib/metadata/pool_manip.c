@@ -401,7 +401,6 @@ int validate_pool_chunk_size(struct cmd_context *cmd,
 }
 
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
-					       int passed_args,
 					       int chunk_size_calc_policy)
 {
 	struct logical_volume *pool_data_lv;
@@ -409,24 +408,17 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 	struct physical_volume *pv;
 	struct cmd_context *cmd = pool_lv->vg->cmd;
 	unsigned long previous_hint = 0, hint = 0;
-	uint32_t default_chunk_size;
 	uint32_t min_chunk_size, max_chunk_size;
 
-	if (passed_args & PASS_ARG_CHUNK_SIZE)
-		return 1;
+	if (!chunk_size_calc_policy)
+		return 1; /* Chunk size was specified by user */
 
 	if (lv_is_thin_pool(pool_lv)) {
-		if (find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, NULL))
-			return 1;
 		min_chunk_size = DM_THIN_MIN_DATA_BLOCK_SIZE;
 		max_chunk_size = DM_THIN_MAX_DATA_BLOCK_SIZE;
-		default_chunk_size = get_default_allocation_thin_pool_chunk_size_CFG(cmd, NULL);
 	} else if (lv_is_cache_pool(pool_lv)) {
-		if (find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG, NULL))
-			return 1;
 		min_chunk_size = DM_CACHE_MIN_DATA_BLOCK_SIZE;
 		max_chunk_size = DM_CACHE_MAX_DATA_BLOCK_SIZE;
-		default_chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(cmd, NULL);
 	} else {
 		log_error(INTERNAL_ERROR "%s is not a pool logical volume.", display_lvname(pool_lv));
 		return 0;
@@ -464,13 +456,18 @@ int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 				display_size(cmd, hint), display_lvname(pool_lv),
 				display_size(cmd, min_chunk_size),
 				display_size(cmd, max_chunk_size));
-	else
-		first_seg(pool_lv)->chunk_size =
-			(hint >= default_chunk_size) ? hint : default_chunk_size;
+	else if (hint > first_seg(pool_lv)->chunk_size) {
+		log_debug_alloc("Updating chunk size %s for pool %s to %s.",
+				display_size(cmd, first_seg(pool_lv)->chunk_size),
+				display_lvname(pool_lv),
+				display_size(cmd, hint));
+		first_seg(pool_lv)->chunk_size = hint;
+	}
 
 	return 1;
 }
 
+#if 0
 int update_pool_params(const struct segment_type *segtype,
 		       struct volume_group *vg, unsigned target_attr,
 		       int passed_args, uint32_t pool_data_extents,
@@ -500,6 +497,7 @@ int update_pool_params(const struct segment_type *segtype,
 
 	return 1;
 }
+#endif
 
 int create_pool(struct logical_volume *pool_lv,
 		const struct segment_type *segtype,

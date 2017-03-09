@@ -1194,18 +1194,14 @@ int get_activation_monitoring_mode(struct cmd_context *cmd,
  */
 int get_pool_params(struct cmd_context *cmd,
 		    const struct segment_type *segtype,
-		    int *passed_args,
 		    uint64_t *pool_metadata_size,
 		    int *pool_metadata_spare,
 		    uint32_t *chunk_size,
 		    thin_discards_t *discards,
 		    thin_zero_t *zero_new_blocks)
 {
-	*passed_args = 0;
-
 	if (segtype_is_thin_pool(segtype) || segtype_is_thin(segtype)) {
 		if (arg_is_set(cmd, zero_ARG)) {
-			*passed_args |= PASS_ARG_ZERO;
 			*zero_new_blocks = arg_int_value(cmd, zero_ARG, 0) ? THIN_ZERO_YES : THIN_ZERO_NO;
 			log_very_verbose("%s pool zeroing.",
 					 (*zero_new_blocks == THIN_ZERO_YES) ? "Enabling" : "Disabling");
@@ -1213,7 +1209,6 @@ int get_pool_params(struct cmd_context *cmd,
 			*zero_new_blocks = THIN_ZERO_UNSELECTED;
 
 		if (arg_is_set(cmd, discards_ARG)) {
-			*passed_args |= PASS_ARG_DISCARDS;
 			*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
 			log_very_verbose("Setting pool discards to %s.",
 					 get_pool_discards_name(*discards));
@@ -1236,7 +1231,6 @@ int get_pool_params(struct cmd_context *cmd,
 		return_0;
 
 	if (arg_is_set(cmd, chunksize_ARG)) {
-		*passed_args |= PASS_ARG_CHUNK_SIZE;
 		*chunk_size = arg_uint_value(cmd, chunksize_ARG, 0);
 
 		if (!validate_pool_chunk_size(cmd, segtype, *chunk_size))
@@ -1244,7 +1238,8 @@ int get_pool_params(struct cmd_context *cmd,
 
 		log_very_verbose("Setting pool chunk size to %s.",
 				 display_size(cmd, *chunk_size));
-	}
+	} else
+		*chunk_size = 0;
 
 	if (arg_is_set(cmd, poolmetadatasize_ARG)) {
 		if (arg_is_set(cmd, poolmetadata_ARG)) {
@@ -1252,13 +1247,13 @@ int get_pool_params(struct cmd_context *cmd,
 			return 0;
 		}
 
-		*passed_args |= PASS_ARG_POOL_METADATA_SIZE;
 		*pool_metadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG,
 						       UINT64_C(0));
-	} else if (arg_is_set(cmd, poolmetadata_ARG))
-		*passed_args |= PASS_ARG_POOL_METADATA_SIZE; /* fixed size */
+	} else
+		*pool_metadata_size = 0;
 
-	/* TODO: default in lvm.conf ? */
+
+	/* TODO: default in lvm.conf and metadata profile ? */
 	*pool_metadata_spare = arg_int_value(cmd, poolmetadataspare_ARG,
 					     DEFAULT_POOL_METADATA_SPARE);
 

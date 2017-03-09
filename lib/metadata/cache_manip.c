@@ -153,28 +153,30 @@ static uint64_t _cache_min_metadata_size(uint64_t data_size, uint32_t chunk_size
 	return min_meta_size;
 }
 
-int update_cache_pool_params(const struct segment_type *segtype,
-			     struct volume_group *vg, unsigned attr,
-			     int passed_args, uint32_t pool_data_extents,
+int update_cache_pool_params(struct cmd_context *cmd,
+			     struct profile *profile,
+			     uint32_t extent_size,
+			     const struct segment_type *segtype,
+			     unsigned attr,
+			     uint32_t pool_data_extents,
 			     uint32_t *pool_metadata_extents,
 			     int *chunk_size_calc_method, uint32_t *chunk_size)
 {
 	uint64_t min_meta_size;
-	uint32_t extent_size = vg->extent_size;
 	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
 	uint64_t pool_data_size = (uint64_t) pool_data_extents * extent_size;
 	const uint64_t max_chunks =
-		get_default_allocation_cache_pool_max_chunks_CFG(vg->cmd, vg->profile);
+		get_default_allocation_cache_pool_max_chunks_CFG(cmd, profile);
 	/* min chunk size in a multiple of DM_CACHE_MIN_DATA_BLOCK_SIZE */
 	uint64_t min_chunk_size = (((pool_data_size + max_chunks - 1) / max_chunks +
 				    DM_CACHE_MIN_DATA_BLOCK_SIZE - 1) /
 				   DM_CACHE_MIN_DATA_BLOCK_SIZE) * DM_CACHE_MIN_DATA_BLOCK_SIZE;
 
-	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
-		if (!(*chunk_size = find_config_tree_int(vg->cmd, allocation_cache_pool_chunk_size_CFG,
-							 vg->profile) * 2))
-			*chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(vg->cmd,
-										       vg->profile);
+	if (!*chunk_size) {
+		if (!(*chunk_size = find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG,
+							 profile) * 2))
+			*chunk_size = get_default_allocation_cache_pool_chunk_size_CFG(cmd,
+										       profile);
 		if (*chunk_size < min_chunk_size) {
 			/*
 			 * When using more then 'standard' default,
@@ -182,25 +184,25 @@ int update_cache_pool_params(const struct segment_type *segtype,
 			 */
 			log_print_unless_silent("Using %s chunk size instead of default %s, "
 						"so cache pool has less then " FMTu64 " chunks.",
-						display_size(vg->cmd, min_chunk_size),
-						display_size(vg->cmd, *chunk_size),
+						display_size(cmd, min_chunk_size),
+						display_size(cmd, *chunk_size),
 						max_chunks);
 			*chunk_size = min_chunk_size;
 		} else
 			log_verbose("Setting chunk size to %s.",
-				    display_size(vg->cmd, *chunk_size));
+				    display_size(cmd, *chunk_size));
 	} else if (*chunk_size < min_chunk_size) {
 		log_error("Chunk size %s is less then required minimal chunk size %s "
 			  "for a cache pool of %s size and limit " FMTu64 " chunks.",
-			  display_size(vg->cmd, *chunk_size),
-			  display_size(vg->cmd, min_chunk_size),
-			  display_size(vg->cmd, pool_data_size),
+			  display_size(cmd, *chunk_size),
+			  display_size(cmd, min_chunk_size),
+			  display_size(cmd, pool_data_size),
 			  max_chunks);
 		log_error("To allow use of more chunks, see setting allocation/cache_pool_max_chunks.");
 		return 0;
 	}
 
-	if (!validate_cache_chunk_size(vg->cmd, *chunk_size))
+	if (!validate_cache_chunk_size(cmd, *chunk_size))
 		return_0;
 
 	min_meta_size = _cache_min_metadata_size((uint64_t) pool_data_extents * extent_size, *chunk_size);
@@ -214,21 +216,30 @@ int update_cache_pool_params(const struct segment_type *segtype,
 
 	if (pool_metadata_size > (2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE)) {
 		pool_metadata_size = 2 * DEFAULT_CACHE_POOL_MAX_METADATA_SIZE;
-		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
+		if (*pool_metadata_extents)
 			log_warn("WARNING: Maximum supported pool metadata size is %s.",
-				 display_size(vg->cmd, pool_metadata_size));
+				 display_size(cmd, pool_metadata_size));
 	} else if (pool_metadata_size < min_meta_size) {
-		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
+		if (*pool_metadata_extents)
 			log_warn("WARNING: Minimum required pool metadata size is %s "
 				 "(needs extra %s).",
-				 display_size(vg->cmd, min_meta_size),
-				 display_size(vg->cmd, min_meta_size - pool_metadata_size));
+				 display_size(cmd, min_meta_size),
+				 display_size(cmd, min_meta_size - pool_metadata_size));
 		pool_metadata_size = min_meta_size;
 	}
 
 	if (!(*pool_metadata_extents =
-	      extents_from_size(vg->cmd, pool_metadata_size, extent_size)))
+	      extents_from_size(cmd, pool_metadata_size, extent_size)))
 		return_0;
+
+	if ((uint64_t) *chunk_size > (uint64_t) pool_data_extents * extent_size) {
+		log_error("Size of %s data volume cannot be smaller than chunk size %s.",
+			  segtype->name, display_size(cmd, *chunk_size));
+		return 0;
+	}
+
+	log_verbose("Preferred pool metadata size %s.",
+		    display_size(cmd, (uint64_t)*pool_metadata_extents * extent_size));
 
 	return 1;
 }

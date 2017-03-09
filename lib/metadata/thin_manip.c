@@ -615,35 +615,31 @@ int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct 
 	return 1;
 }
 
-int update_thin_pool_params(const struct segment_type *segtype,
-			    struct volume_group *vg,
-			    unsigned attr, int passed_args,
+int update_thin_pool_params(struct cmd_context *cmd,
+			    struct profile *profile,
+			    uint32_t extent_size,
+			    const struct segment_type *segtype,
+			    unsigned attr,
 			    uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks)
 {
-	struct cmd_context *cmd = vg->cmd;
-	struct profile *profile = vg->profile;
-	uint32_t extent_size = vg->extent_size;
 	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
-	size_t estimate_chunk_size;
+	uint32_t estimate_chunk_size;
 	const char *str;
 
-	if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
-		if (!(*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2)) {
-			if (!get_default_allocation_thin_pool_chunk_size(cmd, profile,
-									 chunk_size,
-									 chunk_size_calc_method))
-				return_0;
-		}
+	if (!*chunk_size &&
+	    find_config_tree_node(cmd, allocation_thin_pool_chunk_size_CFG, profile))
+		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;
+
+	if (*chunk_size && !(attr & THIN_FEATURE_BLOCK_SIZE) &&
+	    !is_power_of_2(*chunk_size)) {
+		log_error("Chunk size must be a power of 2 for this thin target version.");
+		return 0;
 	}
 
-	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
-		return_0;
-
-	if (discards &&
-	    (*discards == THIN_DISCARDS_UNSELECTED) &&
+	if ((*discards == THIN_DISCARDS_UNSELECTED) &&
 	    find_config_tree_node(cmd, allocation_thin_pool_discards_CFG, profile)) {
 		if (!(str = find_config_tree_str(cmd, allocation_thin_pool_discards_CFG, profile))) {
 			log_error(INTERNAL_ERROR "Could not find configuration.");
@@ -658,12 +654,6 @@ int update_thin_pool_params(const struct segment_type *segtype,
 	    find_config_tree_node(cmd, allocation_thin_pool_zero_CFG, profile))
 		*zero_new_blocks = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile)
 			? THIN_ZERO_YES : THIN_ZERO_NO;
-
-	if (!(attr & THIN_FEATURE_BLOCK_SIZE) &&
-	    !is_power_of_2(*chunk_size)) {
-		log_error("Chunk size must be a power of 2 for this thin target version.");
-		return 0;
-	}
 
 	if (!pool_metadata_size) {
 		if (!*chunk_size) {
@@ -704,7 +694,7 @@ int update_thin_pool_params(const struct segment_type *segtype,
 							   pool_metadata_size, attr);
 
 		/* Check to eventually use bigger chunk size */
-		if (!(passed_args & PASS_ARG_CHUNK_SIZE)) {
+		if (!*chunk_size) {
 			*chunk_size = estimate_chunk_size;
 			log_verbose("Setting chunk size %s.", display_size(cmd, *chunk_size));
 		} else if (*chunk_size < estimate_chunk_size) {
@@ -714,28 +704,40 @@ int update_thin_pool_params(const struct segment_type *segtype,
 		}
 	}
 
+	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
+		return_0;
+
 	if (pool_metadata_size > (2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE)) {
 		pool_metadata_size = 2 * DEFAULT_THIN_POOL_MAX_METADATA_SIZE;
-		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
+		if (*pool_metadata_extents)
 			log_warn("WARNING: Maximum supported pool metadata size is %s.",
 				 display_size(cmd, pool_metadata_size));
 	} else if (pool_metadata_size < (2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE)) {
 		pool_metadata_size = 2 * DEFAULT_THIN_POOL_MIN_METADATA_SIZE;
-		if (passed_args & PASS_ARG_POOL_METADATA_SIZE)
+		if (*pool_metadata_extents)
 			log_warn("WARNING: Minimum supported pool metadata size is %s.",
 				 display_size(cmd, pool_metadata_size));
 	}
 
 	if (!(*pool_metadata_extents =
-	      extents_from_size(vg->cmd, pool_metadata_size, extent_size)))
+	      extents_from_size(cmd, pool_metadata_size, extent_size)))
 		return_0;
 
-	if (discards && (*discards == THIN_DISCARDS_UNSELECTED))
-		if (!set_pool_discards(discards, DEFAULT_THIN_POOL_DISCARDS))
-			return_0;
+	if ((uint64_t) *chunk_size > (uint64_t) pool_data_extents * extent_size) {
+		log_error("Size of %s data volume cannot be smaller than chunk size %s.",
+			  segtype->name, display_size(cmd, *chunk_size));
+		return 0;
+	}
 
-	if (zero_new_blocks && (*zero_new_blocks == THIN_ZERO_UNSELECTED))
+	if ((*discards == THIN_DISCARDS_UNSELECTED) &&
+	    !set_pool_discards(discards, DEFAULT_THIN_POOL_DISCARDS))
+		return_0;
+
+	if (*zero_new_blocks == THIN_ZERO_UNSELECTED)
 		*zero_new_blocks = (DEFAULT_THIN_POOL_ZERO) ? THIN_ZERO_YES : THIN_ZERO_NO;
+
+	log_verbose("Preferred pool metadata size %s.",
+		    display_size(cmd, (uint64_t)*pool_metadata_extents * extent_size));
 
 	return 1;
 }

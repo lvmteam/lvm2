@@ -852,7 +852,6 @@ int pool_is_active(const struct logical_volume *pool_lv);
 int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
 int thin_pool_feature_supported(const struct logical_volume *pool_lv, int feature);
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
-					       int passed_args,
 					       int chunk_size_calc_policy);
 int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
@@ -870,9 +869,12 @@ int update_profilable_pool_params(struct cmd_context *cmd, struct profile *profi
 				  int *zero);
 int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
 						uint32_t *chunk_size, int *chunk_size_calc_method);
-int update_thin_pool_params(const struct segment_type *segtype,
-			    struct volume_group *vg, unsigned attr,
-			    int passed_args, uint32_t pool_data_extents,
+int update_thin_pool_params(struct cmd_context *cmd,
+			    struct profile *profile,
+			    uint32_t extent_size,
+			    const struct segment_type *segtype,
+			    unsigned attr,
+			    uint32_t pool_data_extents,
 			    uint32_t *pool_metadata_extents,
 			    int *chunk_size_calc_method, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
@@ -951,14 +953,6 @@ struct lvcreate_params {
 	const char *pool_name;   /* thin */
 
 	const char *lock_args;
-
-	/* Keep args given by the user on command line */
-	/* FIXME: create some more universal solution here */
-#define PASS_ARG_CHUNK_SIZE		0x01
-#define PASS_ARG_DISCARDS		0x02
-#define PASS_ARG_POOL_METADATA_SIZE	0x04
-#define PASS_ARG_ZERO			0x08
-	int passed_args;
 
 	uint32_t stripes; /* striped/RAID */
 	uint32_t stripe_size; /* striped/RAID */
@@ -1281,9 +1275,12 @@ int cache_set_params(struct lv_segment *seg,
 		     const char *policy_name,
 		     const struct dm_config_tree *policy_settings);
 void cache_check_for_warns(const struct lv_segment *seg);
-int update_cache_pool_params(const struct segment_type *segtype,
-			     struct volume_group *vg, unsigned attr,
-			     int passed_args, uint32_t pool_data_extents,
+int update_cache_pool_params(struct cmd_context *cmd,
+			     struct profile *profile,
+			     uint32_t extent_size,
+			     const struct segment_type *segtype,
+			     unsigned attr,
+			     uint32_t pool_data_extents,
 			     uint32_t *pool_metadata_extents,
 			     int *chunk_size_calc_method, uint32_t *chunk_size);
 int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size);
