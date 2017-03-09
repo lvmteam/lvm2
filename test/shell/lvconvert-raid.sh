@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2011-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -72,7 +72,19 @@ for i in 1 2 3; do
 			lvcreate -aey -s $vg/$lv1 -n snap -l 2
 		fi
 
-		lvconvert -m $((j - 1)) $vg/$lv1
+		mirrors=$((j - 1))
+		if [ $i -eq 1 ]
+		then
+			[ $mirrors -eq 0 ] && lvconvert -m $mirrors $vg/$lv1
+		else
+			if [ $mirrors -eq 0 ]
+			then
+				not lvconvert -m $mirrors $vg/$lv1
+				lvconvert -y -m $mirrors $vg/$lv1
+			else
+				lvconvert -m $mirrors $vg/$lv1
+			fi
+		fi
 
 		# FIXME: ensure no residual devices
 
@@ -157,6 +169,17 @@ lvconvert --merge $vg/${lv1}_rimage_2
 aux wait_for_sync $vg $lv1
 lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
 not fsck.ext4 -fn "$DM_DEV_DIR/mapper/$vg-${lv1}_rimage_2"
+# FIXME: ensure no residual devices
+lvremove -ff $vg
+
+# Check split track changes gets rejected w/o -y on 2-legged raid1
+lvcreate --type raid1 -m 1 -l 1 -n $lv1 $vg
+mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
+aux wait_for_sync $vg $lv1
+fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
+not lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
+lvconvert -y --splitmirrors 1 --trackchanges $vg/$lv1
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 

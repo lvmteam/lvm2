@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2014-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2014-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -39,11 +39,15 @@ lvchange -ay $vg
 
 lvconvert --splitmirrors 1 --name data2 $vg/${lv1}_tdata "$dev2"
 lvconvert --splitmirrors 1 --name data3 $vg/${lv1}_tdata "$dev3"
-lvconvert --splitmirrors 1 --trackchanges $vg/${lv1}_tdata "$dev4"
+# Check split and track gets rejected on 2-legged raid1
+not lvconvert --splitmirrors 1 --trackchanges $vg/${lv1}_tdata "$dev4"
+lvconvert -y --splitmirrors 1 --trackchanges $vg/${lv1}_tdata "$dev4"
 
 lvconvert --splitmirrors 1 --name meta1 $vg/${lv1}_tmeta "$dev1"
 lvconvert --splitmirrors 1 --name meta2 $vg/${lv1}_tmeta "$dev2"
-lvconvert --splitmirrors 1 --trackchanges $vg/${lv1}_tmeta "$dev4"
+# Check split and track gets rejected on 2-legged raid1
+not lvconvert --splitmirrors 1 --trackchanges $vg/${lv1}_tmeta "$dev4"
+lvconvert -y --splitmirrors 1 --trackchanges $vg/${lv1}_tmeta "$dev4"
 
 lvremove -ff $vg/data2 $vg/data3 $vg/meta1 $vg/meta2
 
