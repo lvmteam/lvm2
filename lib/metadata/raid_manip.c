@@ -3228,6 +3228,7 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
  * Returns: 1 on success, 0 on error
  */
 int lv_raid_split_and_track(struct logical_volume *lv,
+			    int yes,
 			    struct dm_list *splittable_pvs)
 {
 	int s;
@@ -3247,6 +3248,14 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	/* Cannot track two split images at once */
 	if (lv_is_raid_with_tracking(lv)) {
 		log_error("Cannot track more than one split image at a time.");
+		return 0;
+	}
+
+	/* Split and track changes on a 2-legged raid1 LV causes loosing resilience for newly written data. */
+	if (seg->area_count == 2 &&
+	    !yes && yes_no_prompt("Are you sure you want to split and track %s LV %s loosing resilience for any newly written data? [y/n]: ",
+				  lvseg_name(seg), display_lvname(lv)) == 'n') {
+		log_error("Logical volume %s NOT split.", display_lvname(lv));
 		return 0;
 	}
 
@@ -3274,6 +3283,10 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	/* Preserving exclusive local activation also for tracked LV */
 	if (!activate_lv_excl_local(lv->vg->cmd, seg_lv(seg, s)))
 		return_0;
+
+	if (seg->area_count == 2)
+		log_warn("Any newly written data will be non-resilient on LV %s during the split!",
+			 display_lvname(lv));
 
 	log_print_unless_silent("Use 'lvconvert --merge %s' to merge back into %s.",
 				display_lvname(seg_lv(seg, s)),

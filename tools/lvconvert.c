@@ -1346,7 +1346,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 	}
 
 	if (lp->track_changes)
-		return lv_raid_split_and_track(lv, lp->pvh);
+		return lv_raid_split_and_track(lv, lp->yes, lp->pvh);
 
 	if (lp->keep_mimages)
 		return lv_raid_split(lv, lp->lv_split_name, image_count, lp->pvh);

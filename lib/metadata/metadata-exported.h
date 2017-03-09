@@ -1219,6 +1219,7 @@ int lv_raid_change_image_count(struct logical_volume *lv,
 int lv_raid_split(struct logical_volume *lv, const char *split_name,
 		  uint32_t new_count, struct dm_list *splittable_pvs);
 int lv_raid_split_and_track(struct logical_volume *lv,
+			    int yes,
 			    struct dm_list *splittable_pvs);
 int lv_raid_merge(struct logical_volume *lv);
 int lv_raid_convert(struct logical_volume *lv,
