@@ -4877,6 +4877,23 @@ out:
 	dm_free((char *) alias);
 	return NULL;
 }
+#else /* !HAVE_LINUX_FIEMAP */
+uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
+					  int group, int precise,
+					  struct dm_histogram *bounds,
+					  const char *alias)
+{
+	log_error("File mapping requires FIEMAP ioctl support.");
+	return 0;
+}
+
+uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
+					  uint64_t group_id)
+{
+	log_error("File mapping requires FIEMAP ioctl support.");
+	return 0;
+}
+#endif /* HAVE_LINUX_FIEMAP */
 
 #ifdef DMFILEMAPD
 static const char *_filemapd_mode_names[] = {
@@ -5025,32 +5042,6 @@ int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
 	return 0;
 }
 #endif /* DMFILEMAPD */
-
-#else /* HAVE_LINUX_FIEMAP */
-
-uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
-					  int group, int precise,
-					  struct dm_histogram *bounds,
-					  const char *alias)
-{
-	log_error("File mapping requires FIEMAP ioctl support.");
-	return 0;
-}
-
-uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
-					  uint64_t group_id)
-{
-	log_error("File mapping requires FIEMAP ioctl support.");
-	return 0;
-}
-
-int dm_stats_start_filemapd(struct dm_stats *dms, int fd, uint64_t group_id,
-			    const char *path)
-{
-	log_error("File mapping requires FIEMAP ioctl support.");
-	return 0;
-}
-#endif /* HAVE_LINUX_FIEMAP */
 
 /*
  * Backward compatible dm_stats_create_region() implementations.
