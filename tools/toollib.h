@@ -221,6 +221,7 @@ int get_stripe_params(struct cmd_context *cmd, const struct segment_type *segtyp
 		      unsigned *stripes_supplied, unsigned *stripe_size_supplied);
 
 int get_cache_params(struct cmd_context *cmd,
+		     uint32_t *chunk_size,
 		     cache_mode_t *cache_mode,
 		     const char **name,
 		     struct dm_config_tree **settings);

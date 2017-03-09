@@ -3046,7 +3046,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		cache_mode_t cache_mode = 0;
 		const char *policy_name = NULL;
 
-		if (!get_cache_params(cmd, &cache_mode, &policy_name, &policy_settings))
+		if (!get_cache_params(cmd, &chunk_size, &cache_mode, &policy_name, &policy_settings))
 			goto_bad;
 
 		if (cache_mode &&
@@ -3172,6 +3172,7 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 				   struct logical_volume *cachepool_lv)
 {
 	struct logical_volume *cache_lv;
+	uint32_t chunk_size = 0;
 	cache_mode_t cache_mode = 0;
 	const char *policy_name = NULL;
 	struct dm_config_tree *policy_settings = NULL;
@@ -3180,7 +3181,7 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	if (!validate_lv_cache_create_pool(cachepool_lv))
 		return_0;
 
-	if (!get_cache_params(cmd, &cache_mode, &policy_name, &policy_settings))
+	if (!get_cache_params(cmd, &chunk_size, &cache_mode, &policy_name, &policy_settings))
 		goto_bad;
 
 	if (!archive(lv->vg))
@@ -3189,10 +3190,7 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	if (!(cache_lv = lv_cache_create(cachepool_lv, lv)))
 		goto_bad;
 
-	if (!cache_set_cache_mode(first_seg(cache_lv), cache_mode))
-		goto_bad;
-
-	if (!cache_set_policy(first_seg(cache_lv), policy_name, policy_settings))
+	if (!cache_set_params(first_seg(cache_lv), chunk_size, cache_mode, policy_name, policy_settings))
 		goto_bad;
 
 	cache_check_for_warns(first_seg(cache_lv));
@@ -3814,7 +3812,6 @@ static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *cachepool_lv;
 	const char *cachepool_name;
-	uint32_t chunk_size = 0;
 
 	if (!(cachepool_name = arg_str_value(cmd, cachepool_ARG, NULL)))
 		goto_out;
@@ -3862,16 +3859,6 @@ static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 			log_error("Cache pool %s is already in use.", cachepool_name);
 			goto out;
 		}
-
-		if (arg_is_set(cmd, chunksize_ARG))
-			chunk_size = arg_uint_value(cmd, chunksize_ARG, 0);
-		if (!chunk_size)
-			chunk_size = first_seg(cachepool_lv)->chunk_size;
-
-		/* FIXME: why is chunk_size read and checked if it's not used? */
-
-		if (!validate_lv_cache_chunk_size(cachepool_lv, chunk_size))
-			goto_out;
 
 		/* Note: requires rather deep know-how to skip zeroing */
 		if (!arg_is_set(cmd, zero_ARG)) {

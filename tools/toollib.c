@@ -1347,6 +1347,7 @@ static int _validate_cachepool_params(const char *name,
 }
 
 int get_cache_params(struct cmd_context *cmd,
+		     uint32_t *chunk_size,
 		     cache_mode_t *cache_mode,
 		     const char **name,
 		     struct dm_config_tree **settings)

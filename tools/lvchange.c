@@ -627,11 +627,12 @@ static int _lvchange_cache(struct cmd_context *cmd, struct logical_volume *lv)
 	struct dm_config_tree *settings = NULL;
 	struct lv_segment *pool_seg = first_seg(lv);
 	int r = 0, is_clean;
+	uint32_t chunk_size = 0; /* FYI: lvchange does NOT support its change */
 
 	if (lv_is_cache(lv))
 		pool_seg = first_seg(pool_seg->pool_lv);
 
-	if (!get_cache_params(cmd, &mode, &name, &settings))
+	if (!get_cache_params(cmd, &chunk_size, &mode, &name, &settings))
 		goto_out;
 
 	if ((mode != CACHE_MODE_UNSELECTED) &&

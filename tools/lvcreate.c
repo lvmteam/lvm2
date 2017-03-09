@@ -633,6 +633,7 @@ static int _read_cache_params(struct cmd_context *cmd,
 		return 1;
 
 	if (!get_cache_params(cmd,
+			      &lp->chunk_size,
 			      &lp->cache_mode,
 			      &lp->policy_name,
 			      &lp->policy_settings))
