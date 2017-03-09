@@ -7672,10 +7672,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 
 	if (lv_is_cache_pool(lv)) {
 		if (!cache_set_params(first_seg(lv),
+				      lp->chunk_size,
 				      lp->cache_mode,
 				      lp->policy_name,
-				      lp->policy_settings,
-				      lp->chunk_size)) {
+				      lp->policy_settings)) {
 			stack;
 			goto revert_new_lv;
 		}
@@ -7881,10 +7881,10 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		lv = tmp_lv;
 
 		if (!cache_set_params(first_seg(lv),
+				      lp->chunk_size,
 				      lp->cache_mode,
 				      lp->policy_name,
-				      lp->policy_settings,
-				      (lp->passed_args & PASS_ARG_CHUNK_SIZE) ? lp->chunk_size : 0))
+				      lp->policy_settings))
 			return_NULL; /* revert? */
 
 		cache_check_for_warns(first_seg(lv));

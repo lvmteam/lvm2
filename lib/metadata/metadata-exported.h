@@ -1276,10 +1276,10 @@ int cache_set_cache_mode(struct lv_segment *cache_seg, cache_mode_t mode);
 int cache_set_policy(struct lv_segment *cache_seg, const char *name,
 		     const struct dm_config_tree *settings);
 int cache_set_params(struct lv_segment *seg,
+		     uint32_t chunk_size,
 		     cache_mode_t mode,
 		     const char *policy_name,
-		     const struct dm_config_tree *policy_settings,
-		     uint32_t chunk_size);
+		     const struct dm_config_tree *policy_settings);
 void cache_check_for_warns(const struct lv_segment *seg);
 int update_cache_pool_params(const struct segment_type *segtype,
 			     struct volume_group *vg, unsigned attr,

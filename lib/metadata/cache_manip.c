@@ -756,10 +756,10 @@ out:
  * to update all commonly specified cache parameters
  */
 int cache_set_params(struct lv_segment *seg,
+		     uint32_t chunk_size,
 		     cache_mode_t mode,
 		     const char *policy_name,
-		     const struct dm_config_tree *policy_settings,
-		     uint32_t chunk_size)
+		     const struct dm_config_tree *policy_settings)
 {
 	struct lv_segment *pool_seg;
 
