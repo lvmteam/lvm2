@@ -3071,7 +3071,7 @@ int lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_
 	return _lv_raid_change_image_count(lv, yes, new_count, allocate_pvs, NULL, 1, 0);
 }
 
-int lv_raid_split(struct logical_volume *lv, const char *split_name,
+int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 		  uint32_t new_count, struct dm_list *splittable_pvs)
 {
 	struct lv_list *lvl;
@@ -3113,6 +3113,14 @@ int lv_raid_split(struct logical_volume *lv, const char *split_name,
 	if (!_raid_in_sync(lv)) {
 		log_error("Unable to split %s while it is not in-sync.",
 			  display_lvname(lv));
+		return 0;
+	}
+
+	/* Split on a 2-legged raid1 LV causes loosing all resilience */
+	if (new_count == 1 &&
+	    !yes && yes_no_prompt("Are you sure you want to split %s LV %s loosing all resilience? [y/n]: ",
+				  lvseg_name(first_seg(lv)), display_lvname(lv)) == 'n') {
+		log_error("Logical volume %s NOT split.", display_lvname(lv));
 		return 0;
 	}
 

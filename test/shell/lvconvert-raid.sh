@@ -134,7 +134,8 @@ lvremove -ff $vg
 # 2-way to linear/linear
 lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
-lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
+not lvconvert --splitmirrors 1 -n $lv2 $vg/$lv1
+lvconvert --yes --splitmirrors 1 -n $lv2 $vg/$lv1
 check linear $vg $lv1
 check linear $vg $lv2
 check active $vg $lv2
@@ -144,7 +145,7 @@ lvremove -ff $vg
 # 4-way
 lvcreate --type raid1 -m 4 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
-lvconvert --yes --splitmirrors 1 --name $lv2 $vg/$lv1 "$dev2"
+lvconvert --splitmirrors 1 --name $lv2 $vg/$lv1 "$dev2"
 lvremove -ff $vg
 
 ###########################################
@@ -179,7 +180,7 @@ fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
 aux wait_for_sync $vg $lv1
 fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
 not lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
-lvconvert -y --splitmirrors 1 --trackchanges $vg/$lv1
+lvconvert --yes --splitmirrors 1 --trackchanges $vg/$lv1
 # FIXME: ensure no residual devices
 lvremove -ff $vg
 

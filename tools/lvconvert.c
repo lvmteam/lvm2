@@ -1349,7 +1349,7 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 		return lv_raid_split_and_track(lv, lp->yes, lp->pvh);
 
 	if (lp->keep_mimages)
-		return lv_raid_split(lv, lp->lv_split_name, image_count, lp->pvh);
+		return lv_raid_split(lv, lp->yes, lp->lv_split_name, image_count, lp->pvh);
 
 	if (lp->mirrors_supplied) {
 		if (!*lp->type_str || !strcmp(lp->type_str, SEG_TYPE_NAME_RAID1) || !strcmp(lp->type_str, SEG_TYPE_NAME_LINEAR) ||

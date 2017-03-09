@@ -47,7 +47,8 @@ lvremove -f $vg
 lvcreate -n corigin -m 1 --type raid1 --nosync -l 10 $vg
 lvcreate -n cpool --type cache $vg/corigin --cachemode writeback -l 10 2>&1 | tee out
 grep "WARNING: Data redundancy is lost" out
-lvconvert --splitmirrors 1 --name split $vg/corigin "$dev1"
+not lvconvert --splitmirrors 1 --name split $vg/corigin "$dev1"
+lvconvert --yes --splitmirrors 1 --name split $vg/corigin "$dev1"
 
 lvremove -f $vg
 
@@ -75,8 +76,9 @@ not lvconvert --splitmirrors 1 --name split_cdata $vg/cpool_cdata "$dev1"
 # but allow manipulating existing LVs with reserved names
 aux wait_for_sync $vg cpool_cmeta
 aux wait_for_sync $vg cpool_cdata
-lvconvert --splitmirrors 1 --name split_meta $vg/cpool_cmeta "$dev1"
-lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
+lvconvert --yes --splitmirrors 1 --name split_meta $vg/cpool_cmeta "$dev1"
+lvconvert --yes --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
+not lvconvert --splitmirrors 1 --name split_data $vg/cpool_cdata "$dev1"
 
 lvremove -f $vg
 
