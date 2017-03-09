@@ -1734,10 +1734,10 @@ class TestDbusService(unittest.TestCase):
 			path = self._lookup(resource_name)
 			self.assertTrue(path != '/')
 		else:
-			self.assertTrue(ec == 0, "%s exit code = %d" % (operation, ec))
 			std_err_print(
 				"%s failed with stdout= %s, stderr= %s" %
 				(operation, stdout, stderr))
+			self.assertTrue(ec == 0, "%s exit code = %d" % (operation, ec))
 
 	def test_external_vg_create(self):
 		# We need to ensure that if a user creates something outside of lvm
