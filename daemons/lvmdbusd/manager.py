@@ -6,7 +6,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
+from utils import log_debug
 from .automatedproperties import AutomatedProperties
 
 from . import utils
@@ -143,9 +143,10 @@ class Manager(AutomatedProperties):
 	@staticmethod
 	def _lookup_by_lvm_id(key):
 		p = cfg.om.get_object_path_by_uuid_lvm_id(key, key)
-		if p:
-			return p
-		return '/'
+		if not p:
+			p = '/'
+		log_debug('LookUpByLvmId: key = %s, result = %s' % (key, p))
+		return p
 
 	@dbus.service.method(
 		dbus_interface=MANAGER_INTERFACE,
