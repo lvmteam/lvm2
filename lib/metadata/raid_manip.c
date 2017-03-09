@@ -4344,12 +4344,12 @@ static struct possible_takeover_reshape_type _possible_takeover_reshape_types[] 
 
 	/* raid1 -> raid5* with 2 legs */
 	{ .current_types  = SEG_RAID1,
-	  .possible_types = SEG_RAID5_LS|SEG_RAID5_RS|SEG_RAID5_RA|SEG_RAID5_LA|SEG_RAID5_N,
+	  .possible_types = SEG_RAID4|SEG_RAID5_LS|SEG_RAID5_RS|SEG_RAID5_RA|SEG_RAID5_LA|SEG_RAID5_N,
 	  .current_areas = 2U,
 	  .options = ALLOW_REGION_SIZE|ALLOW_STRIPE_SIZE },
 
 	/* raid5* -> raid1 with 2 legs */
-	{ .current_types  = SEG_RAID5_LS|SEG_RAID5_RS|SEG_RAID5_RA|SEG_RAID5_LA|SEG_RAID5_N,
+	{ .current_types  = SEG_RAID4|SEG_RAID5_LS|SEG_RAID5_RS|SEG_RAID5_RA|SEG_RAID5_LA|SEG_RAID5_N,
 	  .possible_types = SEG_RAID1,
 	  .current_areas = 2U,
 	  .options = ALLOW_REGION_SIZE },
@@ -5099,7 +5099,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 				  lvseg_name(seg), display_lvname(lv), new_segtype->name);
 			return 0;
 		}
-		if (!segtype_is_any_raid5(new_segtype)) {
+		if (!segtype_is_raid4(new_segtype) && !segtype_is_any_raid5(new_segtype)) {
 			log_error("Can't convert %s LV %s to %s.",
 				  lvseg_name(seg), display_lvname(lv), new_segtype->name);
 			return 0;
@@ -5176,6 +5176,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	seg->data_copies = new_data_copies;
 
 	if (segtype_is_raid4(new_segtype) &&
+	    seg->area_count != 2 &&
 	    (!_shift_parity_dev(seg) ||
 	     !_rename_area_lvs(lv, "_"))) {
 		log_error("Can't convert %s to %s.", display_lvname(lv), new_segtype->name);
