@@ -19,7 +19,7 @@ SOURCES = dmfilemapd.c
 
 TARGETS = dmfilemapd
 
-.PHONY: install_dmeventd install_dmeventd_static
+.PHONY: install_dmfilemapd install_dmfilemapd_static
 
 INSTALL_DMFILEMAPD_TARGETS = install_dmfilemapd_dynamic
 
@@ -35,9 +35,8 @@ all: device-mapper
 device-mapper: $(TARGETS)
 
 LIBS += -ldevmapper
-LVMLIBS += -ldevmapper-event $(PTHREAD_LIBS)
 
-CFLAGS_dmeventd.o += $(EXTRA_EXEC_CFLAGS)
+CFLAGS_dmfilemapd.o += $(EXTRA_EXEC_CFLAGS)
 
 dmfilemapd: $(LIB_SHARED) dmfilemapd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -L. -o $@ dmfilemapd.o \
