@@ -4927,7 +4927,7 @@ dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str)
 }
 
 #define DM_FILEMAPD "dmfilemapd"
-#define NR_FILEMAPD_ARGS 6
+#define NR_FILEMAPD_ARGS 7 /* includes argv[0] */
 /*
  * Start dmfilemapd to monitor the specified file descriptor, and to
  * update the group given by 'group_id' when the file's allocation
