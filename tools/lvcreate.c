@@ -558,8 +558,10 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 			else if (seg_is_any_raid6(lp))
 				max_images -= 2;
 		}
-	} else
+	} else if (seg_is_mirrored(lp))
 		max_images = DEFAULT_MIRROR_MAX_IMAGES;
+	else
+		max_images = MAX_STRIPES;
 
 	/* Common mirror and raid params */
 	if (arg_is_set(cmd, mirrors_ARG)) {
