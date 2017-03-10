@@ -18,6 +18,8 @@
 
 #include "dm-logging.h"
 
+#include "defaults.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -146,7 +148,8 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 	if (pid == getpid())
 		return 0;
 
-	if (dm_snprintf(path_buf, sizeof(path_buf), "/proc/%d/fd", pid) < 0) {
+	if (dm_snprintf(path_buf, sizeof(path_buf),
+			DEFAULT_PROC_DIR "%d/fd", pid) < 0) {
 		log_error("Could not format pid path.");
 		goto bad;
 	}
@@ -170,7 +173,8 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 			continue;
 		if ((len = readlinkat(dirfd(pid_d), pid_dp->d_name, link_buf,
 				      sizeof(link_buf))) < 0) {
-			log_error("readlink failed for /proc/%d/fd/.", pid);
+			log_error("readlink failed for " DEFAULT_PROC_DIR
+				  "/%d/fd/.", pid);
 			goto bad;
 		}
 		link_buf[len] = '\0';
@@ -211,7 +215,7 @@ static int _is_open(const char *path)
 	DIR *proc_d = NULL;
 	pid_t pid;
 
-	proc_d = opendir("/proc");
+	proc_d = opendir(DEFAULT_PROC_DIR);
 	if (!proc_d)
 		return 0;
 	while ((proc_dp = readdir(proc_d)) != NULL) {
@@ -563,13 +567,13 @@ check_unlinked:
 	 * whether it is still reachable in the filesystem, or if it is
 	 * unlinked and anonymous.
 	 */
-	if (dm_snprintf(path_buf, sizeof(path_buf),
-			"/proc/%d/fd/%d", getpid(), fm->fd) < 0) {
+	if (dm_snprintf(path_buf, sizeof(path_buf), DEFAULT_PROC_DIR
+			"/%d/fd/%d", getpid(), fm->fd) < 0) {
 		log_error("Could not format pid path.");
 		return 0;
 	}
 	if ((len = readlink(path_buf, link_buf, sizeof(link_buf))) < 0) {
-		log_error("readlink failed for /proc/%d/fd/%d.",
+		log_error("readlink failed for " DEFAULT_PROC_DIR "/%d/fd/%d.",
 			  getpid(), fm->fd);
 		return 0;
 	}
