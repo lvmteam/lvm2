@@ -1339,7 +1339,7 @@ From striped we can convert to raid10
 raid10 allows to add stripes but can't remove them.
 
 
-A more ellaborate example to convert from linear to striped
+A more elaborate example to convert from linear to striped
 with interim conversions to raid1 then raid5 followed
 by restripe (4 steps).
 
