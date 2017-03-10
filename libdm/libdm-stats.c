@@ -3315,8 +3315,8 @@ static struct dm_histogram *_aggregate_histogram(const struct dm_stats *dms,
 						 uint64_t area_id)
 {
 	struct dm_histogram *dmh_aggr, *dmh_cur, **dmh_cachep;
+	uint64_t group_id = DM_STATS_GROUP_NOT_PRESENT;
 	int bin, nr_bins, group = 1;
-	uint64_t group_id;
 	size_t hist_size;
 
 	if (area_id == DM_STATS_WALK_REGION) {
