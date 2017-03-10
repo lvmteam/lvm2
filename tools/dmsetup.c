@@ -5650,8 +5650,8 @@ static int _stats_update_file(CMD_ARGS)
 	int foreground = _switches[FOREGROUND_ARG];
 	int verbose = _switches[VERBOSE_ARG];
 	char *path, *abspath = NULL;
+	struct dm_stats *dms = NULL;
 	dm_filemapd_mode_t mode;
-	struct dm_stats *dms;
 	int fd = -1;
 
 
@@ -5764,8 +5764,7 @@ bad:
 	if ((fd > -1) && close(fd))
 		log_error("Error closing %s", path);
 
-	if (dms)
-		dm_stats_destroy(dms);
+	dm_stats_destroy(dms);
 
 	return 0;
 }
