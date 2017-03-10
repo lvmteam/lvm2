@@ -83,6 +83,7 @@ static inline int nsize_mb_arg(struct cmd_context *cmd, struct arg_values *av) {
 static inline int int_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int uint32_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av) { return 0; }
+static inline int int_arg_with_plus(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int extents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int sextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
 static inline int pextents_arg(struct cmd_context *cmd, struct arg_values *av) { return 0; }
@@ -1559,6 +1560,11 @@ void configure_command_option_values(const char *name)
 		return;
 	}
 
+	if (!strcmp(name, "lvconvert")) {
+		opt_names[mirrors_ARG].val_enum = snumber_VAL;
+		return;
+	}
+
 	if (!strcmp(name, "lvcreate")) {
 		/*
 		 * lvcreate is a bit of a mess because it has previously
@@ -1572,6 +1578,7 @@ void configure_command_option_values(const char *name)
 		opt_names[size_ARG].val_enum = psizemb_VAL;
 		opt_names[extents_ARG].val_enum = pextents_VAL;
 		opt_names[poolmetadatasize_ARG].val_enum = psizemb_VAL;
+		opt_names[mirrors_ARG].val_enum = pnumber_VAL;
 		return;
 	}
 }
@@ -1622,7 +1629,8 @@ static void print_val_usage(struct command *cmd, int opt_enum, int val_enum)
 {
 	int is_relative_opt = (opt_enum == size_ARG) ||
 			      (opt_enum == extents_ARG) ||
-			      (opt_enum == poolmetadatasize_ARG);
+			      (opt_enum == poolmetadatasize_ARG) ||
+			      (opt_enum == mirrors_ARG);
 
 	/*
 	 * Suppress the [+] prefix for lvcreate which we have to
@@ -1633,6 +1641,8 @@ static void print_val_usage(struct command *cmd, int opt_enum, int val_enum)
 			val_enum = sizemb_VAL;
 		else if (val_enum == pextents_VAL)
 			val_enum = extents_VAL;
+		else if ((val_enum == pnumber_VAL) && (opt_enum == mirrors_ARG))
+			val_enum = number_VAL;
 	}
 
 	if (!val_names[val_enum].usage)
@@ -2056,14 +2066,15 @@ void print_usage_notes(struct command_name *cname)
  */
 static void print_val_man(struct command_name *cname, int opt_enum, int val_enum)
 {
-	const char *str = val_names[val_enum].usage;
+	const char *str;
 	char *line;
 	char *line_argv[MAX_LINE_ARGC];
 	int line_argc;
 	int i;
 	int is_relative_opt = (opt_enum == size_ARG) ||
 			      (opt_enum == extents_ARG) ||
-			      (opt_enum == poolmetadatasize_ARG);
+			      (opt_enum == poolmetadatasize_ARG) ||
+			      (opt_enum == mirrors_ARG);
 
 	/*
 	 * Suppress the [+] prefix for lvcreate which we have to
@@ -2074,6 +2085,8 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 			val_enum = sizemb_VAL;
 		else if (val_enum == pextents_VAL)
 			val_enum = extents_VAL;
+		else if ((val_enum == pnumber_VAL) && (opt_enum == mirrors_ARG))
+			val_enum = number_VAL;
 	}
 
 	if (val_enum == sizemb_VAL) {
@@ -2135,6 +2148,15 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP");
 		return;
 	}
+
+	if (val_enum == pnumber_VAL) {
+		printf("[\\fB+\\fP]\\fINumber\\fP");
+		return;
+	}
+
+	str = val_names[val_enum].usage;
+	if (!str)
+		str = val_names[val_enum].name;
 
 	if (!strcmp(str, "PV[:t|n|y]")) {
 		printf("\\fIPV\\fP[\\fB:t\\fP|\\fBn\\fP|\\fBy\\fP]");

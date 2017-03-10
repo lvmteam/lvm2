@@ -157,6 +157,7 @@ int nsize_mb_arg(struct cmd_context *cmd, struct arg_values *av);
 int int_arg(struct cmd_context *cmd, struct arg_values *av);
 int uint32_arg(struct cmd_context *cmd, struct arg_values *av);
 int int_arg_with_sign(struct cmd_context *cmd, struct arg_values *av);
+int int_arg_with_plus(struct cmd_context *cmd, struct arg_values *av);
 int extents_arg(struct cmd_context *cmd, struct arg_values *av);
 int sextents_arg(struct cmd_context *cmd, struct arg_values *av);
 int pextents_arg(struct cmd_context *cmd, struct arg_values *av);

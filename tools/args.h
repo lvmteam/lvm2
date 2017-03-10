@@ -1121,7 +1121,7 @@ arg(maps_ARG, 'm', "maps", 0, 0, 0,
 
 /* FIXME: should the unused mirrors option be removed from lvextend? */
 
-arg(mirrors_ARG, 'm', "mirrors", snumber_VAL, 0, 0,
+arg(mirrors_ARG, 'm', "mirrors", number_VAL, 0, 0,
     "#lvcreate\n"
     "Specifies the number of mirror images in addition to the original LV\n"
     "image, e.g. --mirrors 1 means there are two images of the data, the\n"

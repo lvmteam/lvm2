@@ -706,7 +706,7 @@ OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksi
 
 OO_LVCREATE_THIN: --discards Discards, --errorwhenfull Bool
 
-OO_LVCREATE_RAID: --mirrors SNumber, --stripes Number, --stripesize SizeKB,
+OO_LVCREATE_RAID: --mirrors PNumber, --stripes Number, --stripesize SizeKB,
 --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB
 
 ---
@@ -760,14 +760,14 @@ DESC: Create a striped LV (infers --type striped).
 ---
 
 lvcreate --type mirror --size SizeMB VG
-OO: --mirrors SNumber, --mirrorlog MirrorLog, --regionsize RegionSize, --stripes Number, OO_LVCREATE
+OO: --mirrors PNumber, --mirrorlog MirrorLog, --regionsize RegionSize, --stripes Number, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_mirror
 DESC: Create a mirror LV (also see --type raid1).
 FLAGS: SECONDARY_SYNTAX
 
 # alternate form of lvcreate --type raid1|mirror
-lvcreate --mirrors SNumber --size SizeMB VG
+lvcreate --mirrors PNumber --size SizeMB VG
 OO: --type raid1, --type mirror, --mirrorlog MirrorLog, --stripes Number, OO_LVCREATE_RAID, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_mirror_or_raid1
@@ -1146,7 +1146,7 @@ ID: lvdisplay_general
 # --extents is not specified; it's an automatic alternative for --size
 
 lvextend --size PSizeMB LV
-OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
+OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync, --reportformat ReportFmt, --resizefs,
 --stripes Number, --stripesize SizeKB, --poolmetadatasize PSizeMB,
 --type SegType
@@ -1155,7 +1155,7 @@ ID: lvextend_by_size
 DESC: Extend an LV by a specified size.
 
 lvextend LV PV ...
-OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
+OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --resizefs, --stripes Number, --stripesize SizeKB,
 --type SegType
@@ -1163,7 +1163,7 @@ ID: lvextend_by_pv
 DESC: Extend an LV by specified PV extents.
 
 lvextend --poolmetadatasize PSizeMB LV_thinpool
-OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
+OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --stripes Number, --stripesize SizeKB,
 --type SegType
@@ -1172,7 +1172,7 @@ ID: lvextend_pool_metadata_by_size
 DESC: Extend a pool metadata SubLV by a specified size.
 
 lvextend --usepolicies LV_thinpool_snapshot
-OO: --alloc Alloc, --autobackup Bool, --force, --mirrors SNumber,
+OO: --alloc Alloc, --autobackup Bool, --force, --mirrors Number,
 --nofsck, --nosync, --noudevsync,
 --reportformat ReportFmt, --resizefs,
 --type SegType

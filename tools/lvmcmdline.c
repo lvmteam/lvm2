@@ -719,6 +719,21 @@ int int_arg_with_sign(struct cmd_context *cmd __attribute__((unused)), struct ar
 	return 1;
 }
 
+int int_arg_with_plus(struct cmd_context *cmd __attribute__((unused)), struct arg_values *av)
+{
+	char *ptr;
+
+	if (!_get_int_arg(av, &ptr) || (*ptr))
+		return 0;
+
+	if (av->sign == SIGN_MINUS) {
+		log_error("Number may not be negative.");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _extents_arg(struct cmd_context *cmd __attribute__((unused)),
 		        struct arg_values *av)
 {
