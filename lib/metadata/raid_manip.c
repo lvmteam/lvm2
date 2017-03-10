@@ -1491,7 +1491,7 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 		uint32_t data_rimages = _data_rimages_count(seg, seg->area_count);
 		uint32_t reshape_len = out_of_place_les_per_disk * data_rimages;
 		uint32_t prev_rimage_len = _lv_total_rimage_len(lv);
-		uint64_t lv_size = lv->size;
+		uint64_t lv_size_cur = lv->size;
 
 		if (!lv_extend(lv, seg->segtype, data_rimages,
 			       seg->stripe_size, 1, /* seg_is_any_raid10(seg) ? seg->data_copies : 1, */ seg->region_size,
@@ -1502,7 +1502,7 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 			return 0;
 		}
 
-		lv->size = lv_size;
+		lv->size = lv_size_cur;
 		/* pay attention to lv_extend maybe having allocated more because of layout specific rounding */
 		if (!_lv_set_reshape_len(lv, _lv_total_rimage_len(lv) - prev_rimage_len))
 			return 0;
