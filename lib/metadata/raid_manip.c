@@ -494,7 +494,7 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 	int flags_reset = 0, r = 0;
 	va_list ap;
 	fn_on_lv_t fn_pre_on_lv = NULL, fn_post_on_lv;
-	void *fn_pre_data, *fn_post_data;
+	void *fn_pre_data, *fn_post_data = NULL;
 	struct dm_list *removal_lvs;
 
 	va_start(ap, origin_only);
