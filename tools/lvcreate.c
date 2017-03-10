@@ -1156,9 +1156,6 @@ static int _determine_cache_argument(struct volume_group *vg,
 		/* Pool exists, create cache volume */
 		lp->create_pool = 0;
 		lp->origin_name = NULL;
-		/* If cache args not given, use those from cache pool */
-		if (!arg_is_set(cmd, chunksize_ARG))
-			lp->chunk_size = first_seg(lv)->chunk_size;
 	} else if (lv) {
 		/* Origin exists, create cache pool volume */
 		if (!validate_lv_cache_create_origin(lv))

@@ -7402,14 +7402,6 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			return NULL;
 		}
 
-		if (seg_is_cache(lp)) {
-			/* validate metadata size */
-			if (!validate_lv_cache_chunk_size(pool_lv, lp->chunk_size))
-				return_0;
-
-			first_seg(pool_lv)->chunk_size = lp->chunk_size;
-		}
-
 		/* Validate volume size to to aling on chunk for small extents */
 		/* Cache chunk size is always set */
 		size = first_seg(pool_lv)->chunk_size;
