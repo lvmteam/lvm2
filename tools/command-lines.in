@@ -304,9 +304,6 @@ RULE: all not LV_thinpool LV_cachepool
 
 ---
 
-OO_LVCONVERT_RAID: --mirrors SNumber, --stripes_long Number,
---stripesize SizeKB, --regionsize RegionSize, --interval Number
-
 OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
 --zero Bool, --metadataprofile String
@@ -323,21 +320,21 @@ OO_LVCONVERT: --alloc Alloc, --background, --force, --noudevsync
 # They are all routed into the core raid conversion code.
 
 lvconvert --type linear LV
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+OO: OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to linear.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type striped LV
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+OO: --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval Number, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to striped.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type mirror LV
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
+OO: --mirrors SNumber, --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to type mirror (also see type raid1),
@@ -349,7 +346,7 @@ FLAGS: SECONDARY_SYNTAX
 # (changing layout of raid0 and raid1 not allowed.)
 
 lvconvert --type raid LV
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT
+OO: --mirrors SNumber, --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval Number, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid or change raid layout
@@ -357,7 +354,7 @@ DESC: (a specific raid level must be used, e.g. raid1).
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --mirrors SNumber LV
-OO: OO_LVCONVERT_RAID, OO_LVCONVERT, --mirrorlog MirrorLog
+OO: --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
