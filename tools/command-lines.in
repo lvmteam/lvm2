@@ -706,9 +706,6 @@ OO_LVCREATE_POOL: --poolmetadatasize SizeMB, --poolmetadataspare Bool, --chunksi
 
 OO_LVCREATE_THIN: --discards Discards, --errorwhenfull Bool
 
-OO_LVCREATE_RAID: --mirrors PNumber, --stripes Number, --stripesize SizeKB,
---regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB
-
 ---
 
 lvcreate --type error --size SizeMB VG
@@ -744,6 +741,33 @@ DESC: Create a linear LV.
 
 ---
 
+# all lvcreate combinations of:
+# a) --type striped
+# b) --type mirror
+# c) --type raid<N>
+# d) --stripes
+# e) --mirrors
+#
+# R1.  a:     striped with default stripes
+# R2.  a,d:   striped with specified stripes
+# R3.  a,e:   NA
+# R4.  a,d,e: NA
+#
+# R5.  b:     mirror with default mirrors
+# R6.  b,d:   NA
+# R7.  b,e:   mirror with specified mirrors
+# R8.  b,d,e: NA
+#
+# R9.  c:     raid<N> with default stripes/mirrors
+# R10. c,d:   raid<N> with specified stripes
+# R11. c,e:   raid<N> with specified mirrors
+# R12. c,d,e: raid10 with specified stripes and mirrors
+#
+# R13. d:     striped with specified stripes
+# R14. e:     mirror with specified mirrors   
+# R15. d,e:   raid10 with specified mirrors
+
+# R1,R2 (--type striped with or without --stripes)
 lvcreate --type striped --size SizeMB VG
 OO: --stripes Number, --stripesize SizeKB, OO_LVCREATE
 OP: PV ...
@@ -751,35 +775,44 @@ ID: lvcreate_striped
 DESC: Create a striped LV (also see lvcreate --stripes).
 FLAGS: SECONDARY_SYNTAX
 
+# R13 (just --stripes)
 lvcreate --stripes Number --size SizeMB VG
-OO: --type striped, --stripesize SizeKB, OO_LVCREATE
+OO: --stripesize SizeKB, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_striped
 DESC: Create a striped LV (infers --type striped).
 
----
-
+# R5,R7 (--type mirror with or without --mirrors)
 lvcreate --type mirror --size SizeMB VG
-OO: --mirrors PNumber, --mirrorlog MirrorLog, --regionsize RegionSize, --stripes Number, OO_LVCREATE
+OO: --mirrors PNumber, --mirrorlog MirrorLog, --regionsize RegionSize,
+--stripes Number, --stripesize SizeKB, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_mirror
 DESC: Create a mirror LV (also see --type raid1).
 FLAGS: SECONDARY_SYNTAX
 
+# R14 (just --mirrors)
 # alternate form of lvcreate --type raid1|mirror
 lvcreate --mirrors PNumber --size SizeMB VG
-OO: --type raid1, --type mirror, --mirrorlog MirrorLog, --stripes Number, OO_LVCREATE_RAID, OO_LVCREATE
+OO: --mirrorlog MirrorLog, --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_mirror_or_raid1
 DESC: Create a raid1 or mirror LV (infers --type raid1|mirror).
 
----
-
+# R9,R10,R11,R12 (--type raid with any use of --stripes/--mirrors)
 lvcreate --type raid --size SizeMB VG
-OO: OO_LVCREATE_RAID, OO_LVCREATE
+OO: --mirrors PNumber, --stripes Number, --stripesize SizeKB,
+--regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB, OO_LVCREATE
 OP: PV ...
 ID: lvcreate_raid_any
 DESC: Create a raid LV (a specific raid level must be used, e.g. raid1).
+
+# R15 (--stripes and --mirrors which implies raid10)
+lvcreate --mirrors PNumber --stripes Number --size SizeMB VG
+OO: --stripesize SizeKB, --regionsize RegionSize, --minrecoveryrate SizeKB, --maxrecoveryrate SizeKB, OO_LVCREATE
+OP: PV ...
+ID: lvcreate_raid_any
+DESC: Create a raid10 LV.
 
 ---
 
