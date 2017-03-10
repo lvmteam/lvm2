@@ -5004,6 +5004,8 @@ static int _stats_check_filemap_switches(void)
 
 static dm_filemapd_mode_t _stats_get_filemapd_mode(void)
 {
+	if (_switches[NOMONITOR_ARG] || _switches[NOGROUP_ARG])
+		return DM_FILEMAPD_FOLLOW_NONE;
 	if (!_switches[FOLLOW_ARG])
 		return DM_FILEMAPD_FOLLOW_INODE;
 	return dm_filemapd_mode_from_string(_string_args[FOLLOW_ARG]);
@@ -5073,9 +5075,9 @@ static int _stats_create_file(CMD_ARGS)
 	precise = _int_args[PRECISE_ARG];
 	group = !_switches[NOGROUP_ARG];
 
-	if (!_switches[NOMONITOR_ARG] && group)
-		if ((mode = _stats_get_filemapd_mode()) == -1)
-			goto bad;
+	mode = _stats_get_filemapd_mode();
+	if (!_switches[NOMONITOR_ARG] && (mode == DM_FILEMAPD_FOLLOW_NONE))
+		goto bad;
 
 	if (!(dms = dm_stats_create(DM_STATS_PROGRAM_ID)))
 		goto_bad;
@@ -5681,9 +5683,9 @@ static int _stats_update_file(CMD_ARGS)
 
 	group_id = (uint64_t) _int_args[GROUP_ID_ARG];
 
-	if (!_switches[NOMONITOR_ARG])
-		if ((mode = _stats_get_filemapd_mode()) < 0)
-			goto bad;
+	mode = _stats_get_filemapd_mode();
+	if (!_switches[NOMONITOR_ARG] && (mode == DM_FILEMAPD_FOLLOW_NONE))
+		goto bad;
 
 	if (_switches[PROGRAM_ID_ARG])
 		program_id = _string_args[PROGRAM_ID_ARG];
