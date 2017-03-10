@@ -1506,7 +1506,8 @@ int define_commands(char *run_name)
 			continue;
 		}
 
-		log_error("Parsing command defs: can't process input line %s", line_orig);
+		if (!skip)
+			log_error("Parsing command defs: can't process input line %s", line_orig);
 	}
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
