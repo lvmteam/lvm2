@@ -2387,6 +2387,9 @@ bad:
  */
 void dm_stats_destroy(struct dm_stats *dms)
 {
+	if (!dms)
+		return;
+
 	_stats_regions_destroy(dms);
 	_stats_groups_destroy(dms);
 	_stats_clear_binding(dms);
