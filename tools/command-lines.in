@@ -309,7 +309,7 @@ OO_LVCONVERT_RAID: --mirrors SNumber, --stripes_long Number,
 
 OO_LVCONVERT_POOL: --poolmetadata LV, --poolmetadatasize SizeMB,
 --poolmetadataspare Bool, --readahead Readahead, --chunksize SizeKB,
---zero Bool
+--zero Bool, --metadataprofile String
 
 OO_LVCONVERT_CACHE: --cachemode CacheMode, --cachepolicy String,
 --cachesettings String, --zero Bool
