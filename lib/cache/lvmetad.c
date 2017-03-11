@@ -1304,7 +1304,7 @@ int lvmetad_vg_remove_pending(struct volume_group *vg)
 	reply = _lvmetad_send(vg->cmd, "set_vg_info",
 			      "name = %s", vg->name,
 			      "uuid = %s", uuid,
-			      "version = %d", 0,
+			      "version = %"PRId64, (int64_t)0,
 			      NULL);
 
 	if (!_lvmetad_handle_reply(reply, "set_vg_info", vg->name, NULL)) {

@@ -260,7 +260,7 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 		key[fmt - next] = '\0';
 		fmt += 2;
 
-		if (!strcmp(fmt, "%d") || !strcmp(fmt, FMTd64)) {
+		if (!strcmp(fmt, FMTd64)) {
 			int64_t value = va_arg(ap, int64_t);
 			if (!(cn = make_int_node(cft, key, value, parent, pre_sib)))
 				return 0;
