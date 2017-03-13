@@ -5810,7 +5810,7 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, con
 		return_0;
 
 	/* CLI validation provides the check but be caucious... */
-	if (seg_is_any_raid0(seg))
+	if (!lv_is_raid(lv) || !seg || seg_is_any_raid0(seg))
 		return_0;
 
 	if (region_size == seg->region_size) {
