@@ -62,7 +62,7 @@ struct filemap_monitor {
 static int _foreground;
 static int _verbose;
 
-const char *const _usage = "dmfilemapd <fd> <group_id> <path> <mode> "
+const char *const _usage = "dmfilemapd <fd> <group_id> <abs_path> <mode> "
 			   "[<foreground>[<log_level>]]";
 
 /*
@@ -296,6 +296,12 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 		_early_log("Path argument is required.");
 		return 0;
 	}
+
+	if (argv[0] != '/') {
+		_early_log("Path argument must specify an absolute path.");
+		return 0;
+	}
+
 	fm->path = dm_strdup(argv[0]);
 	if (!fm->path) {
 		_early_log("Could not allocate memory for path argument.");

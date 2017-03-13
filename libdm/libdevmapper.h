@@ -1421,6 +1421,10 @@ dm_filemapd_mode_t dm_filemapd_mode_from_string(const char *mode_str);
  * detected, call dm_stats_update_regions_from_fd() to update the
  * mapped regions for the file.
  *
+ * The path provided to dm_stats_start_filemapd() must be an absolute
+ * path, and should reflect the path of 'fd' at the time that it was
+ * opened.
+ *
  * The mode parameter controls the behaviour of the daemon when the
  * file being monitored is unlinked or moved: see the comments for
  * dm_filemapd_mode_t for a full description and possible values.

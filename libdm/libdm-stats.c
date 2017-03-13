@@ -4951,6 +4951,11 @@ int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
 		return 0;
 	}
 
+	if (path[0] != '/') {
+		log_error("Path argument must specify an absolute path.");
+		return 0;
+	}
+
 	if (mode > DM_FILEMAPD_FOLLOW_PATH) {
 		log_error("Invalid dmfilemapd mode argument: "
 			  "Must be DM_FILEMAPD_FOLLOW_INODE or "
