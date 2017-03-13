@@ -1643,15 +1643,21 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 
 		/*
 		 * Choose the best match, which in general is the command with
-		 * the most matching required_{opt,pos}.
+		 * the most matching required_{opt,pos}, but it could be a
+		 * command with fewer required_{opt,pos} matches in the case
+		 * where cmddef1 has more required matches, but a match_unused
+		 * and cmddef2 has fewer required matches, but zero match_unused.
 		 *
 		 * A match is better if:
 		 * . more required opt/pos args match
 		 * . type arg matches when other doesn't
-		 * . those being equal, less unused options
+		 * . less unused options
 		 */
 
-		if (!best_required || (match_required > best_required) || (match_type > best_type) ||
+		if (!best_required ||
+		    ((match_required > best_required) && !match_unused) ||
+		    (match_unused < best_unused) ||
+		    (match_type > best_type) ||
 		    ((match_required == best_required) && (match_type == best_type) && (match_unused < best_unused))) {
 			/* log_warn("best %d has match_required %d match_ro %d match_rp %d",
 				 i, match_required, match_ro, match_rp); */
