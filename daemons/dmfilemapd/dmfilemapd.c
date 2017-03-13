@@ -255,7 +255,7 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 	if (argc < 5) {
 		_early_log("Wrong number of arguments.");
 		_early_log("usage: %s", _usage);
-		return 1;
+		return 0;
 	}
 
 	memset(fm, 0, sizeof(*fm));
