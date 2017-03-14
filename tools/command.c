@@ -3135,9 +3135,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	       "(This should not be confused with the output control --units, where\n"
 	       "capital letters mean multiple of 1000.)\n");
 
-	printf(".SH ENVIRONMENT VARIABLES");
-	printf("\n");
-	printf(".br\n");
+	printf(".SH ENVIRONMENT VARIABLES\n");
 	printf("See \\fBlvm\\fP(8) for information about environment variables used by lvm.\n"
 	       "For example, LVM_VG_NAME can generally be substituted for a required VG parameter.\n");
 }
@@ -3244,7 +3242,6 @@ void print_man(char *name, char *des_file, int secondary)
 
 			printf("\n");
 			printf(".SH OPTIONS\n");
-			printf(".br\n");
 			print_man_all_options_desc(cname);
 			printf(".SH VARIABLES\n");
 			printf(".br\n");
@@ -3264,18 +3261,13 @@ void print_man(char *name, char *des_file, int secondary)
 
 		if (!prev_cmd || strcmp(prev_cmd->name, cmd->name)) {
 			printf(".SH NAME\n");
-			printf(".\n");
 			if (cname->desc)
 				printf("%s \\- %s\n", lvmname, cname->desc);
 			else
 				printf("%s\n", lvmname);
-			printf(".P\n");
 
 			printf(".\n");
 			printf(".SH SYNOPSIS\n");
-			printf(".br\n");
-			printf(".P\n");
-			printf(".\n");
 			prev_cmd = cmd;
 
 			if (!(cname = find_command_name(cmd->name)))
@@ -3302,7 +3294,6 @@ void print_man(char *name, char *des_file, int secondary)
 				printf(".br\n");
 			}
 
-			printf(".P\n");
 			printf("\n");
 
 			/* listing them all when there's only 1 or 2 is just repetative */
@@ -3320,9 +3311,6 @@ void print_man(char *name, char *des_file, int secondary)
 			}
 
 			printf(".SH USAGE\n");
-			printf(".br\n");
-			printf(".P\n");
-			printf(".\n");
 		}
 
 		if (cmd->desc) {
@@ -3338,10 +3326,8 @@ void print_man(char *name, char *des_file, int secondary)
 
 			printf("\n");
 			printf(".SH OPTIONS\n");
-			printf(".br\n");
 			print_man_all_options_desc(cname);
 			printf(".SH VARIABLES\n");
-			printf(".br\n");
 			print_man_all_positions_desc(cname);
 		} else {
 			if (cname->variants > 2) {
