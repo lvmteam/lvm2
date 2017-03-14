@@ -3301,13 +3301,10 @@ void print_man(char *name, char *des_file, int secondary)
 				printf(".P\n");
 				print_man_all_options_list(cname);
 				printf("\n");
-				printf(".P\n");
-				printf("\n");
 			}
 
 			if (des_file) {
 				include_description_file(lvmname, des_file);
-				printf(".P\n");
 			}
 
 			printf(".SH USAGE\n");
@@ -3330,11 +3327,8 @@ void print_man(char *name, char *des_file, int secondary)
 			printf(".SH VARIABLES\n");
 			print_man_all_positions_desc(cname);
 		} else {
-			if (cname->variants > 2) {
+			if (cname->variants > 2)
 				printf("--\n");
-				printf("\n");
-				printf(".br\n");
-			}
 		}
 
 		printf("\n");
@@ -3382,9 +3376,6 @@ void print_man_secondary(char *name)
 		print_man_usage(lvmname, cmd);
 
 		printf("--\n");
-		printf("\n");
-		printf(".br\n");
-
 		printf("\n");
 	}
 }
