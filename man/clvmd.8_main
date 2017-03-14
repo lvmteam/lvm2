@@ -176,9 +176,9 @@ clvmd attempts to activate the LV only on the local node.
 If the LV type allows concurrent access, then shared mode is used,
 otherwise exclusive.
 .IP \fBn\fP
-clvmd deactivates the LV on all nodes.
+clvmd attempts to deactivate the LV on all nodes.
 .IP \fBln\fP
-clvmd deactivates the LV on the local node.
+clvmd attempts to deactivate the LV on the local node.
 .
 .SH ENVIRONMENT VARIABLES
 .TP
