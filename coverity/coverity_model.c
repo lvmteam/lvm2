@@ -71,6 +71,17 @@ void model_FD_ZERO(void *fdset)
 		((long*)fdset)[i] = 0;
 }
 
+
+/* Resent Coverity reports quite weird errors... */
+int *__errno_location(void)
+{
+}
+const unsigned short **__ctype_b_loc (void)
+{
+}
+
+
+
 /*
  * Added extra pointer check to not need these models,
  * for now just keep then in file
