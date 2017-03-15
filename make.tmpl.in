@@ -44,6 +44,8 @@ EGREP = @EGREP@
 GREP = @GREP@
 SORT = @SORT@
 WC = @WC@
+AR = ar
+RM = rm -f
 
 PYTHON2 = @PYTHON2@
 PYTHON3 = @PYTHON3@
@@ -156,6 +158,7 @@ INSTALL_ROOT_DIR = $(INSTALL) -m 700 -d
 INSTALL_ROOT_DATA = $(INSTALL) -m 600
 INSTALL_SCRIPT = $(INSTALL) -p $(M_INSTALL_PROGRAM)
 
+.SUFFIXES:
 .SUFFIXES: .c .cpp .d .o .so .a .po .pot .mo .dylib
 
 WFLAGS +=\
@@ -410,6 +413,8 @@ cflow: $(CFLOW_TARGET).cflow $(CFLOW_TARGET).tree $(CFLOW_TARGET).rxref $(CFLOW_
 endif
 endif
 
+.LIBPATTERNS = lib%.so lib%.a
+
 %.o: %.c
 	$(CC) -c $(INCLUDES) $(DEFS) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
@@ -461,7 +466,7 @@ endif
 
 $(LIB_STATIC): $(OBJECTS)
 	$(RM) $@
-	$(AR) rs $@ $(OBJECTS)
+	$(AR) rsv $@ $(OBJECTS)
 
 %.d: %.c $(INC_LNS)
 	$(MKDIR_P) $(dir $@); \
