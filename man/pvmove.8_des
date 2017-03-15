@@ -13,4 +13,3 @@ after an abort depends on whether the atomic option was used.
 More than one pvmove can run concurrently if they are moving data from
 different source PVs, but additional pvmoves will ignore any LVs already
 in the process of being changed, so some data might not get moved.
-

@@ -10,4 +10,3 @@ sectors start at LBA -1, and consequently sector 63 is aligned on a 4KiB
 boundary) manually account for this when initializing for use by LVM.
 .br
 .B pvcreate \-\-dataalignmentoffset 7s /dev/sdb
-

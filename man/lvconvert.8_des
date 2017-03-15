@@ -62,4 +62,3 @@ and vice-versa by e.g. linear <-> raid1 <-> raid5_n (then adding stripes) <-> st
 
 Sub LVs can be displayed with the command
 .B lvs -a
-

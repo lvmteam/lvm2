@@ -1,5 +1,4 @@
 .SH EXAMPLES
-
 Remove an active LV without asking for confirmation.
 .br
 .B lvremove \-f vg00/lvol1
@@ -7,5 +6,3 @@ Remove an active LV without asking for confirmation.
 Remove all LVs the specified VG.
 .br
 .B lvremove vg00
-
-

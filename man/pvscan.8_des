@@ -31,15 +31,12 @@ historical reasons.  To avoid disrupting the system with extraneous disk
 scanning, an ordinary pvscan (without \-\-cache) will simply read metadata
 from lvmetad like other LVM commands.  It does not do anything beyond
 displaying the current state of the cache.
-
 .IP \[bu] 2
 When given specific device name arguments, pvscan \-\-cache will only
 read the named devices.
-
 .IP \[bu] 2
 LVM udev rules and systemd services are used to initiate automatic device
 scanning.
-
 .IP \[bu] 2
 To prevent devices from being scanned by pvscan --cache, add them
 to
@@ -50,22 +47,17 @@ apply to system level scanning.
 For more information, see:
 .br
 .B lvmconfig --withcomments devices/global_filter
-
 .IP \[bu] 2
 If lvmetad is started or restarted after devices are visible, or
 if the global_filter has changed, then all devices must be rescanned
 for metadata with the command pvscan \-\-cache.
-
 .IP \[bu] 2
 lvmetad does not cache older metadata formats, e.g. lvm1, and will
 be temporarily disabled if they are seen.
-
 .IP \[bu] 2
 To notify lvmetad about a device that is no longer present, the major and
 minor numbers must be given, not the path.
-
 .P
-
 \fBAutomatic activation\fP
 
 When event-driven system services detect a new LVM device, the first step
@@ -89,17 +81,13 @@ fully integrated with the event-driven system services.)
 
 When a VG or LV is not auto-activated, traditional activation using
 vgchange or lvchange -a|--activate is needed.
-
 .IP \[bu] 2
 pvscan auto-activation can be only done in combination with \-\-cache.
-
 .IP \[bu] 2
 Auto-activation is designated by the "a" argument in '-a|--activate ay'.
 This is meant to distinguish system generated commands from explicit user
 commands, although it can be used in any activation command.  Whenever it
 is used, the auto_activation_volume_list is applied.
-
 .IP \[bu] 2
 Auto-activation is not yet supported for LVs that are part of partial or
 clustered volume groups.
-

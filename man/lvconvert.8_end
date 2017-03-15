@@ -17,7 +17,6 @@ If LV1 was not a cache pool, the command would convert LV1 to
 a cache pool, optionally using a specified LV for metadata.
 But, if LV1 was already a cache pool, the command would swap
 the current metadata LV with LV2 (for repair purposes.)
-
 .SH EXAMPLES
 Convert a linear LV to a two-way mirror LV.
 .br

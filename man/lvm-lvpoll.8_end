@@ -4,7 +4,6 @@ To find the name of the pvmove LV that was created by an original
 \fBpvmove /dev/name\fP command, use the command:
 .br
 \fBlvs -a -S move_pv=/dev/name\fP.
-
 .SH EXAMPLES
 
 Continue polling a pvmove operation.
@@ -30,4 +29,3 @@ Continue snapshot merge.
 Continue thin snapshot merge.
 .br
 .B lvm lvpoll --polloperation merge_thin vg/thin_snapshot
-

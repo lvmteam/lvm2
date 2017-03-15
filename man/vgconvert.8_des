@@ -4,4 +4,3 @@ format.
 
 Because the LVM1 format should no longer be used, this command is no
 longer needed in general.
-

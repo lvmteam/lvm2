@@ -6,4 +6,3 @@ Rename the VG associated with "/dev/sdc" and "/dev/sdd" from "vg00" to "vg00_sna
 (and change associated UUIDs).
 .br
 .B vgimportclone \-\-basevgname vg00_snap /dev/sdc /dev/sdd
-

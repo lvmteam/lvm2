@@ -73,4 +73,3 @@ Related to Thin Logical Volumes: (F)ailed.
 is permitted at all.
 .IP 10 3
 s(k)ip activation: this volume is flagged to be skipped during activation.
-

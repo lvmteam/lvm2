@@ -24,4 +24,3 @@ some intermediate LVs have been removed. The names of such historical LVs
 acquire a hyphen as a prefix (e.g. '-lvol1') and cannot be reactivated.
 Use lvremove a second time, with the hyphen, to remove the record of the
 former LV completely.
-

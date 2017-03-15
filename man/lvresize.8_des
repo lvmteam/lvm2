@@ -4,4 +4,3 @@ lvresize resizes an LV in the same way as lvextend and lvreduce. See
 In the usage section below, \fB--size\fP \fISize\fP can be replaced
 with \fB--extents\fP \fINumber\fP.  See both descriptions
 the options section.
-
