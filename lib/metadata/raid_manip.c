@@ -1690,7 +1690,7 @@ static int _reshape_adjust_to_size(struct logical_volume *lv,
 
 	/* Externally visible LV size w/o reshape space */
 	lv->le_count = seg->len = new_le_count;
-	lv->size = (lv->le_count - new_image_count * _reshape_len_per_dev(seg)) * lv->vg->extent_size;
+	lv->size = (uint64_t) (lv->le_count - new_image_count * _reshape_len_per_dev(seg)) * lv->vg->extent_size;
 	/* seg->area_len does not change */
 
 	if (old_image_count < new_image_count) {
@@ -1861,7 +1861,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 
 		reduced_le_count -= seg->reshape_len * _data_rimages_count(seg, new_image_count);
 		current_le_count = lv->le_count - seg->reshape_len * _data_rimages_count(seg, old_image_count);
-		extend_le_count = current_le_count * current_le_count / reduced_le_count;
+		extend_le_count = (uint32_t)((uint64_t) current_le_count * current_le_count / reduced_le_count);
 		log_warn("WARNING: Removing stripes from active%s logical "
 			 "volume %s will shrink it from %s to %s!",
 			 info.open_count ? " and open" : "", display_lvname(lv),

@@ -2582,7 +2582,7 @@ static int _segdata_offset(struct dm_report *rh, struct dm_pool *mem,
 
 		if (lv_raid_data_offset(lv, &data_offset)) {
 			if (new_data_offset && !lv_raid_image_in_sync(seg->lv))
-				data_offset = data_offset ? 0 : seg->reshape_len * lv->vg->extent_size;
+				data_offset = data_offset ? 0 : (uint64_t) seg->reshape_len * lv->vg->extent_size;
 
 			return dm_report_field_uint64(rh, field, &data_offset);
 		}
