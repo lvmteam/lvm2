@@ -678,7 +678,7 @@ static void _check_group_regions_present(struct dm_stats *dms,
 
 	group_id = i = dm_bit_get_first(regions);
 
-	for (; i > 0; dm_bit_get_next(regions, i))
+	for (; i > 0; i = dm_bit_get_next(regions, i))
 		if (!_stats_region_present(&dms->regions[i])) {
 			log_warn("Group descriptor " FMTi64 " contains "
 				 "non-existent region_id " FMTi64 ".",
