@@ -510,16 +510,19 @@ def add_no_notify(cmdline):
 	:rtype: list
 	"""
 
-	if 'help' in cmdline:
-		return cmdline
+	# Only after we have seen an external event will be disable lvm from sending
+	# us one when we call lvm
+	if cfg.ee:
+		if 'help' in cmdline:
+			return cmdline
 
-	if '--config' in cmdline:
-		for i, arg in enumerate(cmdline):
-			if arg == '--config':
-				cmdline[i] += "global/notify_dbus=0"
-				break
-	else:
-		cmdline.extend(['--config', 'global/notify_dbus=0'])
+		if '--config' in cmdline:
+			for i, arg in enumerate(cmdline):
+				if arg == '--config':
+					cmdline[i] += "global/notify_dbus=0"
+					break
+		else:
+			cmdline.extend(['--config', 'global/notify_dbus=0'])
 	return cmdline
 
 
