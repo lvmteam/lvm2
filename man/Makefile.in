@@ -112,7 +112,7 @@ MAN5DIR=$(mandir)/man5
 MAN7DIR=$(mandir)/man7
 MAN8DIR=$(mandir)/man8
 
-MANGENERATOR=man-generator
+MANGENERATOR=./man-generator
 TESTMAN=test.gen
 
 include $(top_builddir)/make.tmpl
