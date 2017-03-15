@@ -11,7 +11,8 @@ import subprocess
 from . import cfg
 from .cmdhandler import options_to_cli_args
 import dbus
-from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug
+from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug,\
+	add_no_notify
 import os
 import threading
 
@@ -42,6 +43,10 @@ def _move_merge(interface_name, command, job_state):
 	# the command always as we will be getting periodic output from them on
 	# the status of the long running operation.
 	command.insert(0, cfg.LVM_CMD)
+
+	# Instruct lvm to not register an event with us
+	command = add_no_notify(command)
+
 	process = subprocess.Popen(command, stdout=subprocess.PIPE,
 								env=os.environ,
 								stderr=subprocess.PIPE, close_fds=True)
