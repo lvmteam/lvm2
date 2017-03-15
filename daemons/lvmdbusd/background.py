@@ -64,6 +64,10 @@ def _move_merge(interface_name, command, job_state):
 				(device, ignore, percentage) = line_str.split(':')
 				job_state.Percent = round(
 					float(percentage.strip()[:-1]), 1)
+
+				# While the move is in progress we need to periodically update
+				# the state to reflect where everything is at.
+				cfg.load()
 		except ValueError:
 			log_error("Trying to parse percentage which failed for %s" %
 				line_str)
