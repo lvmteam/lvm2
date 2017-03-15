@@ -1023,6 +1023,7 @@ static int _alloc_image_components(struct logical_volume *lv,
 	struct alloc_handle *ah = NULL;
 	struct dm_list *parallel_areas;
 	struct lv_list *lvl_array;
+	const char *raid_segtype;
 
 	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem,
 					sizeof(*lvl_array) * count * 2)))
@@ -1036,9 +1037,8 @@ static int _alloc_image_components(struct logical_volume *lv,
 	else
 		region_size = seg->region_size;
 
-	if (seg_is_raid(seg))
-		segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID0_META);
-	else if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
+	raid_segtype = seg_is_raid(seg) ? SEG_TYPE_NAME_RAID0_META : SEG_TYPE_NAME_RAID1;
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, raid_segtype)))
 		return_0;
 
 	/*
