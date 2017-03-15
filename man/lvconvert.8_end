@@ -1,5 +1,4 @@
 .SH NOTES
-
 This previous command syntax would perform two different operations:
 .br
 \fBlvconvert --thinpool\fP \fILV1\fP \fB--poolmetadata\fP \fILV2\fP
@@ -20,7 +19,6 @@ But, if LV1 was already a cache pool, the command would swap
 the current metadata LV with LV2 (for repair purposes.)
 
 .SH EXAMPLES
-
 Convert a linear LV to a two-way mirror LV.
 .br
 .B lvconvert \-\-type mirror \-\-mirrors 1 vg/lvol1
@@ -113,4 +111,3 @@ Detach and keep the cache pool from a cache LV.
 Detach and remove the cache pool from a cache LV.
 .br
 .B lvconvert \-\-uncache vg/lvol1
-

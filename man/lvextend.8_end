@@ -1,5 +1,4 @@
 .SH EXAMPLES
-
 Extend the size of an LV by 54MiB, using a specific PV.
 .br
 .B lvextend \-L +54 vg01/lvol10 /dev/sdk3
@@ -13,4 +12,3 @@ space on PV /dev/sdk3. This is equivalent to specifying
 Extend an LV by 16MiB using specific physical extents.
 .br
 .B lvextend \-L+16m vg01/lvol01 /dev/sda:8\-9 /dev/sdb:8\-9
-
