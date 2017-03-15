@@ -1869,7 +1869,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 	if (!desc_first && cmd->desc)
 		_print_usage_description(cmd);
 
-	printf("\n");
 	return;
 }
 
@@ -1916,7 +1915,7 @@ void print_usage_common_lvm(struct command_name *cname, struct command *cmd)
 		printf(" ]");
 	}
 
-	printf("\n\n");
+	printf("\n");
 }
 
 void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
@@ -1989,7 +1988,7 @@ void print_usage_common_cmd(struct command_name *cname, struct command *cmd)
 		printf(" ]");
 	}
 
-	printf("\n\n");
+	printf("\n");
 }
 
 void print_usage_notes(struct command_name *cname)
@@ -2567,7 +2566,7 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
  op_count:
 	if (!cmd->op_count)
-		goto done;
+		return;
 
 	printf(".RS 4\n");
 	printf("[");
@@ -2583,9 +2582,6 @@ void print_man_usage(char *lvmname, struct command *cmd)
 
 	printf(" ]\n");
 	printf(".RE\n");
-
- done:
-	printf("\n");
 }
 
 /*
@@ -2688,7 +2684,7 @@ void print_man_usage_common_lvm(struct command *cmd)
 		}
 	}
 
-	printf("\n.RE\n");
+	printf(".RE\n");
 	return;
 }
 
@@ -2792,8 +2788,7 @@ void print_man_usage_common_cmd(struct command *cmd)
 		}
 	}
 
-	printf("\n.RE\n");
-	printf(".br\n");
+	printf(".RE\n");
 	printf("\n");
 	return;
 }
@@ -2943,7 +2938,7 @@ void print_man_all_options_desc(struct command_name *cname)
 		if (!cname->all_options[opt_enum])
 			continue;
 
-		printf("\n.HP\n");
+		printf(".HP\n");
 
 		printf(".ad l\n");
 
@@ -3043,7 +3038,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_vg_val) {
-		printf("\n.HP\n");
+		printf(".HP\n");
 
 		printf("\\fI%s\\fP", val_names[vg_VAL].name);
 		printf("\n");
@@ -3057,7 +3052,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_lv_val) {
-		printf("\n.HP\n");
+		printf(".HP\n");
 
 		printf("\\fI%s\\fP", val_names[lv_VAL].name);
 		printf("\n");
@@ -3071,7 +3066,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_pv_val) {
-		printf("\n.HP\n");
+		printf(".HP\n");
 
 		printf("\\fI%s\\fP", val_names[pv_VAL].name);
 		printf("\n");
@@ -3086,7 +3081,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_tag_val) {
-		printf("\n.HP\n");
+		printf(".HP\n");
 
 		printf("\\fI%s\\fP", val_names[tag_VAL].name);
 		printf("\n");
@@ -3096,7 +3091,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	}
 
 	if (has_select_val) {
-		printf("\n.HP\n");
+		printf(".HP\n");
 
 		printf("\\fI%s\\fP", val_names[select_VAL].name);
 		printf("\n");
@@ -3108,7 +3103,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 
 	/* Every command uses a string arg somewhere. */
 
-	printf("\n.HP\n");
+	printf(".HP\n");
 	printf("\\fI%s\\fP", val_names[string_VAL].name);
 	printf("\n");
 	printf(".br\n");
@@ -3120,7 +3115,7 @@ void print_man_all_positions_desc(struct command_name *cname)
 	 * so common that we should probably always print it.
 	 */
 
-	printf("\n.HP\n");
+	printf(".HP\n");
 	printf("\\fISize\\fP[UNIT]");
 	printf("\n");
 	printf(".br\n");
@@ -3210,7 +3205,7 @@ static void include_description_file(char *name, char *des_file)
 	buf[MAX_MAN_DESC-1] = '\0';
 
 	printf(".SH DESCRIPTION\n");
-	printf("%s\n", buf);
+	printf("%s", buf);
 
 	close(fd);
 }
@@ -3240,11 +3235,9 @@ void print_man(char *name, char *des_file, int secondary)
 			print_man_usage_common_cmd(prev_cmd);
 			print_man_usage_common_lvm(prev_cmd);
 
-			printf("\n");
 			printf(".SH OPTIONS\n");
 			print_man_all_options_desc(cname);
 			printf(".SH VARIABLES\n");
-			printf(".br\n");
 			print_man_all_positions_desc(cname);
 
 			prev_cmd = NULL;
@@ -3294,13 +3287,10 @@ void print_man(char *name, char *des_file, int secondary)
 				printf(".br\n");
 			}
 
-			printf("\n");
-
 			/* listing them all when there's only 1 or 2 is just repetative */
 			if (cname->variants > 2) {
 				printf(".P\n");
 				print_man_all_options_list(cname);
-				printf("\n");
 			}
 
 			if (des_file) {
@@ -3328,7 +3318,7 @@ void print_man(char *name, char *des_file, int secondary)
 			print_man_all_positions_desc(cname);
 		} else {
 			if (cname->variants > 2)
-				printf("--\n");
+				printf("-\n");
 		}
 
 		printf("\n");
@@ -3375,7 +3365,7 @@ void print_man_secondary(char *name)
 
 		print_man_usage(lvmname, cmd);
 
-		printf("--\n");
+		printf("-\n");
 		printf("\n");
 	}
 }
