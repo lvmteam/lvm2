@@ -186,10 +186,6 @@ int register_device(const char *device,
 	if (!dmeventd_lvm2_init_with_pool("mirror_state", state))
 		goto_bad;
 
-	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvscan, sizeof(state->cmd_lvscan),
-				   "lvscan --cache", device))
-		goto_bad;
-
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
 				   "lvconvert --config global{use_lvmetad = 0}' --repair --use-policies", device))
 		goto_bad;
