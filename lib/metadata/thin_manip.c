@@ -649,8 +649,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			return_0;
 	}
 
-	if (zero_new_blocks &&
-	    (*zero_new_blocks == THIN_ZERO_UNSELECTED) &&
+	if ((*zero_new_blocks == THIN_ZERO_UNSELECTED) &&
 	    find_config_tree_node(cmd, allocation_thin_pool_zero_CFG, profile))
 		*zero_new_blocks = find_config_tree_bool(cmd, allocation_thin_pool_zero_CFG, profile)
 			? THIN_ZERO_YES : THIN_ZERO_NO;
