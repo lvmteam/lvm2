@@ -188,7 +188,7 @@ int register_device(const char *device,
 
         /* CANNOT use --config as this disables cached content */
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
-				   "lvconvert --repair --use-policies", device))
+				   "lvconvert --config global{use_lvmetad = 0}' --repair --use-policies", device))
 		goto_bad;
 
 	*user = state;
