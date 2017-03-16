@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Ensure raid6 upconversion restrictions
   Adjust mirror+raid DSOs to aforementioned lvconvert --repair
   Disable lvmetad when lvconvert --repair is run.
   Remove obsolete lvmchange binary - convert to built-in command.
