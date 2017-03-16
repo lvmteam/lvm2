@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -25,7 +25,6 @@
 
 struct dso_state {
 	struct dm_pool *mem;
-	char cmd_lvscan[512];
 	char cmd_lvconvert[512];
 };
 
@@ -99,20 +98,13 @@ static int _get_mirror_event(struct dso_state *state, char *params)
 	return r;
 }
 
-static int _remove_failed_devices(const char *cmd_lvscan, const char *cmd_lvconvert,
-				  const char *device)
+static int _remove_failed_devices(const char *cmd_lvconvert, const char *device)
 {
-	if (!dmeventd_lvm2_run_with_lock(cmd_lvscan))
-		log_warn("WARNING: Re-scan of mirrored device %s failed.", device);
-
 	/* if repair goes OK, report success even if lvscan has failed */
 	if (!dmeventd_lvm2_run_with_lock(cmd_lvconvert)) {
 		log_error("Repair of mirrored device %s failed.", device);
 		return 0;
 	}
-
-	if (!dmeventd_lvm2_run_with_lock(cmd_lvscan))
-		log_warn("WARNING: Re-scan of mirrored device %s failed.", device);
 
 	log_info("Repair of mirrored device %s finished successfully.", device);
 
@@ -154,9 +146,7 @@ void process_event(struct dm_task *dmt,
 			break;
 		case ME_FAILURE:
 			log_error("Device failure in %s.", device);
-			if (!_remove_failed_devices(state->cmd_lvscan,
-						    state->cmd_lvconvert,
-						    device))
+			if (!_remove_failed_devices(state->cmd_lvconvert, device))
 				/* FIXME Why are all the error return codes unused? Get rid of them? */
 				log_error("Failed to remove faulty devices in %s.",
 					  device);
@@ -188,7 +178,7 @@ int register_device(const char *device,
 
         /* CANNOT use --config as this disables cached content */
 	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
-				   "lvconvert --config global{use_lvmetad = 0}' --repair --use-policies", device))
+				   "lvconvert --repair --use-policies", device))
 		goto_bad;
 
 	*user = state;

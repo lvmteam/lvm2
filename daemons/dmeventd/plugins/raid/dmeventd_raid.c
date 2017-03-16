@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -22,7 +22,6 @@
 
 struct dso_state {
 	struct dm_pool *mem;
-	char cmd_lvscan[512];
 	char cmd_lvconvert[512];
 	uint64_t raid_devs[RAID_DEVS_ELEMS];
 	int failed;
@@ -74,8 +73,6 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 			goto out; /* already reported */
 
 		state->failed = 1;
-		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvscan))
-			log_warn("WARNING: Re-scan of RAID device %s failed.", device);
 
 		/* if repair goes OK, report success even if lvscan has failed */
 		if (!dmeventd_lvm2_run_with_lock(state->cmd_lvconvert)) {
@@ -136,9 +133,7 @@ int register_device(const char *device,
 	if (!dmeventd_lvm2_init_with_pool("raid_state", state))
 		goto_bad;
 
-	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvscan, sizeof(state->cmd_lvscan),
-				   "lvscan --cache", device) ||
-	    !dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
+	if (!dmeventd_lvm2_command(state->mem, state->cmd_lvconvert, sizeof(state->cmd_lvconvert),
 				   "lvconvert --config devices{ignore_suspended_devices=1} "
 				   "--repair --use-policies", device))
 		goto_bad;
