@@ -33,7 +33,7 @@ test $(get lv_field $vg/cpool chunk_size --units s --nosuffix) -gt 1000
 lvcreate -L1M -n $lv1 $vg
 
 # Not let pass small chunks when caching origin
-fail lvconvert -H --chunksize 128K --cachepool $vg/cpool $vg/$lv1 >out 2>&1
+fail lvconvert -y -H --chunksize 128K --cachepool $vg/cpool $vg/$lv1 >out 2>&1
 cat out
 grep "too small chunk size" out
 
