@@ -41,3 +41,11 @@ int pvdata(struct cmd_context *cmd __attribute__((unused)),
 	return ECMD_FAILED;
 }
 
+int lvmchange(struct cmd_context *cmd __attribute__((unused)),
+	      int argc __attribute__((unused)),
+	      char **argv __attribute__((unused)))
+{
+	log_error("There's no 'lvmchange' command in LVM2.");
+	log_error("Use 'dmsetup' commands to reset the kernel device-mapper driver.");
+	return ECMD_FAILED;
+}

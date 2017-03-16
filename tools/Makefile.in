@@ -26,7 +26,6 @@ SOURCES =\
 	lvcreate.c \
 	lvdisplay.c \
 	lvextend.c \
-	lvmchange.c \
 	lvmcmdline.c \
 	lvmdiskscan.c \
 	lvreduce.c \
@@ -173,7 +172,7 @@ liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION): liblvm2cmd.$(LIB_SUFFIX)
 
 .commands: $(srcdir)/commands.h $(srcdir)/cmdnames.h Makefile
 	$(CC) -E -P $(srcdir)/cmdnames.h 2> /dev/null | \
-		$(EGREP) -v '^ *(|#.*|config|devtypes|dumpconfig|formats|fullreport|help|lastlog|lvpoll|pvdata|segtypes|systemid|tags|version) *$$' > .commands
+		$(EGREP) -v '^ *(|#.*|config|devtypes|dumpconfig|formats|fullreport|help|lastlog|lvmchange|lvpoll|pvdata|segtypes|systemid|tags|version) *$$' > .commands
 
 command-count.h: $(srcdir)/command-lines.in Makefile
 	set -o pipefail && \
