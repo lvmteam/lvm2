@@ -205,9 +205,6 @@ Display attributes of a Logical Volume.
 .B lvextend
 Extend the size of a Logical Volume.
 .TP
-.B lvmchange
-Change attributes of the Logical Volume Manager.
-.TP
 .B lvmconfig
 Display the configuration information after
 loading \fBlvm.conf\fP(5) and any other configuration files.
@@ -239,7 +236,7 @@ Scan (all disks) for Logical Volumes.
 .P
 The following commands are not implemented in LVM2 but might be
 in the future:
-.BR lvmsadc ", " lvmsar ", " pvdata .
+.BR lvmchange ", " lvmsadc ", " lvmsar ", " pvdata .
 .
 .SH VALID NAMES
 .
