@@ -88,7 +88,16 @@ function _invalid_raid5_conversions
 	not _lvconvert raid6 raid6_n_6 4 6 $vg $lv1
 }
 
-# Delayst leg so that rebuilding status characters
+# Check raid6 conversion constrainst of minimum 3 stripes
+_lvcreate striped 2 2 4m $vg $lv1
+not _lvconvert raid6 raid6_n_6 2 4 $vg $lv1
+lvremove -y $vg
+
+_lvcreate raid0 3 3 4m $vg $lv1
+_lvconvert raid6 raid6_n_6 3 5 $vg $lv1
+lvremove -y $vg
+
+# Delay 1st leg so that rebuilding status characters
 #  can be read before resync finished too quick.
 # aux delay_dev "$dev1" 1
 

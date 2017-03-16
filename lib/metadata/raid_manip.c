@@ -5087,6 +5087,19 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 		return 0;
 	}
 
+	if (segtype_is_any_raid6(new_segtype)) {
+		uint32_t min_areas = 3;
+
+		if (seg_is_raid4(seg) || seg_is_any_raid5(seg))
+			min_areas = 4;
+
+		if (seg->area_count < min_areas) {
+			log_error("Minimum of %" PRIu32 " stripes needed for conversion from %s to %s.",
+				  min_areas, lvseg_name(seg), new_segtype->name);
+			return 0;
+		}
+	}
+
 	if (seg_is_any_raid5(seg) && segtype_is_any_raid6(new_segtype) && seg->area_count < 4) {
 		log_error("Minimum of 3 stripes needed for conversion from %s to %s.",
 			  lvseg_name(seg), new_segtype->name);
