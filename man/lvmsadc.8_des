@@ -1,3 +1,0 @@
-lvmsadc is not currently supported in LVM. The device-mapper statistics
-facility provides similar performance metrics using the \fBdmstats(8)\fP
-command.

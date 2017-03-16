@@ -82,9 +82,6 @@ if command log reporting is enabled.
 .B lvpoll
 Complete lvmpolld operations (Internal command).
 .TP
-.B pvdata
-Not implemented in LVM2.
-.TP
 .B segtypes
 Display recognised Logical Volume segment types.
 .TP
@@ -234,8 +231,7 @@ Report information about Logical Volumes.
 Scan (all disks) for Logical Volumes.
 .PD
 .P
-The following commands are not implemented in LVM2 but might be
-in the future:
+The following LVM1 commands are not implemented in LVM2:
 .BR lvmchange ", " lvmsadc ", " lvmsar ", " pvdata .
 .
 .SH VALID NAMES
