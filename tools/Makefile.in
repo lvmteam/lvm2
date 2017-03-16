@@ -72,12 +72,14 @@ SOURCES2 =\
 	lvm.c \
 	lvm2cmd-static.c \
 	lvm2cmd.c \
-	lvmcmdlib.c
+	lvmcmdlib.c \
+	man-generator.c
 
 TARGETS =\
 	.commands \
 	liblvm2cmd.a \
-	lvm
+	lvm \
+	man-generator
 
 TARGETS_DM = dmsetup
 
@@ -100,7 +102,7 @@ CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) $(TARGETS_DM) \
 	liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION) lvm-static.o \
 	liblvm2cmd-static.a dmsetup.static lvm.static \
 	$(LDDEPS) .exported_symbols_generated \
-	cmds.h command-lines-input.h command-count.h
+	cmds.h command-lines-input.h command-count.h man-generator.c
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION)
@@ -144,6 +146,14 @@ INCLUDES += -I$(top_builddir)/tools
 lvm: $(OBJECTS) lvm.o $(top_builddir)/lib/liblvm-internal.a
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $(OBJECTS) lvm.o \
 		$(LVMLIBS) $(READLINE_LIBS) $(LIBS) -rdynamic
+
+DEFS_man-generator.o += -DMAN_PAGE_GENERATOR
+
+man-generator.c: command.c
+	$(LN_S) -f $< $@
+
+man-generator: man-generator.o
+	$(CC) $(CFLAGS) -o $@ $<
 
 ifeq ("@BUILD_LVMETAD@", "yes")
 lvm: $(top_builddir)/libdaemon/client/libdaemonclient.a
