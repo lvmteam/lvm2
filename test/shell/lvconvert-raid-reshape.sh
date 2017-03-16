@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 which mkfs.ext4 || skip
-aux have_raid 1 10 2 || skip
+aux have_raid 1 10 1 || skip
 
 aux prepare_pvs 65 64
 
@@ -197,11 +197,11 @@ _lvconvert raid10 raid10 4 8 $vg $lv1
 # Convert raid10 to 10 stripes and 64K stripesize
 # FIXME: change once we support odd numbers of raid10 stripes
 not _reshape_layout raid10 4 9 $vg $lv1 --stripes 9 --stripesize 64K
-_reshape_layout raid10 5 10 $vg $lv1 --stripes 10 --stripesize 64K
+_reshape_layout raid10 10 20 $vg $lv1 --stripes 10 --stripesize 64K
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 
 # Convert raid6_n_6 -> striped
-_lvconvert striped striped 5 5 $vg $lv1
+_lvconvert striped striped 10 10 $vg $lv1
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 
 vgremove -ff $vg

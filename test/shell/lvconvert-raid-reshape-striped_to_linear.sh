@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 which mkfs.ext4 || skip
-aux have_raid 1 10 2 || skip
+aux have_raid 1 10 1 || skip
 
 aux prepare_vg 5
 
@@ -29,7 +29,7 @@ check lv_field $vg/$lv1 segtype "striped"
 check lv_field $vg/$lv1 data_stripes 4
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 stripesize "32.00k"
-check lv_field $vg/$lv1 reshape_len "" 
+check lv_field $vg/$lv1 reshape_len_le ""
 echo y|mkfs -t ext4 $DM_DEV_DIR/$vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
@@ -41,7 +41,7 @@ check lv_field $vg/$lv1 data_stripes 4
 check lv_field $vg/$lv1 stripes 5
 check lv_field $vg/$lv1 stripesize "32.00k"
 check lv_field $vg/$lv1 regionsize "128.00k"
-check lv_field $vg/$lv1 reshape_len ""
+check lv_field $vg/$lv1 reshape_len_le 0
 aux wait_for_sync $vg $lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
@@ -52,7 +52,7 @@ check lv_field $vg/$lv1 data_stripes 4
 check lv_field $vg/$lv1 stripes 5
 check lv_field $vg/$lv1 stripesize "32.00k"
 check lv_field $vg/$lv1 regionsize "128.00k"
-check lv_field $vg/$lv1 reshape_len ""
+check lv_field $vg/$lv1 reshape_len_le "0"
 aux wait_for_sync $vg $lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
@@ -66,10 +66,10 @@ check lv_first_seg_field $vg/$lv1 data_stripes 1
 check lv_first_seg_field $vg/$lv1 stripes 5
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 regionsize "1.00m"
-check lv_first_seg_field $vg/$lv1 reshape_len 10
+check lv_first_seg_field $vg/$lv1 reshape_len_le 10
 # for slv in {0..4}
 # do
-#	check lv_first_seg_field $vg/${lv1}_rimage_${slv} reshape_len 2
+#	check lv_first_seg_field $vg/${lv1}_rimage_${slv} reshape_len_le 2
 # done
 aux wait_for_sync $vg $lv1 1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
@@ -81,7 +81,7 @@ check lv_first_seg_field $vg/$lv1 data_stripes 1
 check lv_first_seg_field $vg/$lv1 stripes 2
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 regionsize "1.00m"
-check lv_first_seg_field $vg/$lv1 reshape_len 4
+check lv_first_seg_field $vg/$lv1 reshape_len_le 4
 
 # Convert raid5_n to raid1
 lvconvert -y --type raid1 $vg/$lv1
@@ -91,7 +91,7 @@ check lv_first_seg_field $vg/$lv1 data_stripes 2
 check lv_first_seg_field $vg/$lv1 stripes 2
 check lv_first_seg_field $vg/$lv1 stripesize "0"
 check lv_first_seg_field $vg/$lv1 regionsize "1.00m"
-check lv_first_seg_field $vg/$lv1 reshape_len ""
+check lv_first_seg_field $vg/$lv1 reshape_len_le ""
 
 # Convert raid5_n -> linear
 lvconvert -y --type linear $vg/$lv1
@@ -101,6 +101,6 @@ check lv_first_seg_field $vg/$lv1 data_stripes 1
 check lv_first_seg_field $vg/$lv1 stripes 1
 check lv_first_seg_field $vg/$lv1 stripesize "0"
 check lv_first_seg_field $vg/$lv1 regionsize "0"
-check lv_first_seg_field $vg/$lv1 reshape_len ""
+check lv_first_seg_field $vg/$lv1 reshape_len_le ""
 
 vgremove -ff $vg
