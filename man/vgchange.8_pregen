@@ -1,21 +1,14 @@
 .TH VGCHANGE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 vgchange \- Change volume group attributes
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBvgchange\fP \fIoption_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .P
 .ad l
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
@@ -200,18 +193,10 @@ vgchange \- Change volume group attributes
 .ad l
  \fB-y\fP|\fB--yes\fP
 .ad b
-
-.P
-
 .SH DESCRIPTION
 vgchange changes VG attributes, changes LV activation in the kernel, and
 includes other utilities for VG maintenance.
-
-.P
 .SH USAGE
-.br
-.P
-.
 Change a general VG attribute. 
 .br
 For options listed in parentheses, any one is 
@@ -291,10 +276,7 @@ required, after which the others are optional.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Start or stop monitoring LVs from dmeventd.
 .br
@@ -320,10 +302,7 @@ Start or stop monitoring LVs from dmeventd.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Start or stop processing LV conversions.
 .br
@@ -341,10 +320,7 @@ Start or stop processing LV conversions.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Activate or deactivate LVs.
 .br
@@ -386,10 +362,7 @@ Activate or deactivate LVs.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Reactivate LVs using the latest metadata.
 .br
@@ -419,10 +392,7 @@ Reactivate LVs using the latest metadata.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Start the lockspace of a shared VG in lvmlockd.
 .br
@@ -440,10 +410,7 @@ Start the lockspace of a shared VG in lvmlockd.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Stop the lockspace of a shared VG in lvmlockd.
 .br
@@ -461,10 +428,7 @@ Stop the lockspace of a shared VG in lvmlockd.
 .RS 4
 [ \fIVG\fP|\fITag\fP|\fISelect\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Common options for command:
 .
@@ -496,9 +460,7 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -550,12 +512,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
@@ -581,7 +539,6 @@ to select which LVs should be automatically activated by the system.
 See lvmlockd(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
 See clvmd(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
 .ad b
-
 .HP
 .ad l
 \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP
@@ -597,7 +554,6 @@ should only be used for recovery or repair.
 For default, see lvm.conf/activation_mode.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--addtag\fP \fITag\fP
@@ -605,7 +561,6 @@ See \fBlvmraid\fP(7) for more information.
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
@@ -627,7 +582,6 @@ Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
 .ad b
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -635,7 +589,6 @@ See \fBlvm\fP(8) for more information about allocation.
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-c\fP|\fB--clustered\fP \fBy\fP|\fBn\fP
@@ -643,7 +596,6 @@ Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 Change the clustered property of a VG using clvmd.
 See clvmd(8) for more information about clustered VGs.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -651,7 +603,6 @@ See clvmd(8) for more information about clustered VGs.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -661,7 +612,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -669,7 +619,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--deltag\fP \fITag\fP
@@ -677,7 +626,6 @@ messages sent to the log file and/or syslog (if configured).
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--detachprofile\fP
@@ -685,7 +633,6 @@ multiple tags at once. See lvm(8) for information about tags.
 Detaches a metadata profile from a VG or LV.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -693,7 +640,6 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
@@ -701,14 +647,12 @@ For testing and debugging.
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB-K\fP|\fB--ignoreactivationskip\fP
@@ -716,7 +660,6 @@ Display help text.
 Ignore the "activation skip" LV flag during activation
 to allow LVs with the flag set to be activated.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelockingfailure\fP
@@ -724,7 +667,6 @@ to allow LVs with the flag set to be activated.
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .ad b
-
 .HP
 .ad l
 \fB--ignoremonitoring\fP
@@ -732,7 +674,6 @@ operations after locking failures.
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
 .ad b
-
 .HP
 .ad l
 \fB--ignoreskippedcluster\fP
@@ -740,7 +681,6 @@ Do not use this if dmeventd is already monitoring a device.
 Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and clustered VGs are skipped.
 .ad b
-
 .HP
 .ad l
 \fB--lockopt\fP \fIString\fP
@@ -748,7 +688,6 @@ without clustered locking and clustered VGs are skipped.
 Used to pass options for special cases to lvmlockd.
 See lvmlockd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--lockstart\fP
@@ -757,7 +696,6 @@ Start the lockspace of a shared VG in lvmlockd.
 lvmlockd locks becomes available for the VG, allowing LVM to use the VG.
 See lvmlockd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--lockstop\fP
@@ -766,7 +704,6 @@ Stop the lockspace of a shared VG in lvmlockd.
 lvmlockd locks become unavailable for the VG, preventing LVM from using the VG.
 See lvmlockd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP
@@ -774,21 +711,18 @@ See lvmlockd(8) for more information.
 Change the VG lock type to or from a shared lock type used with lvmlockd.
 See lvmlockd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-l\fP|\fB--logicalvolume\fP \fINumber\fP
 .br
 Sets the maximum number of LVs allowed in a VG.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-p\fP|\fB--maxphysicalvolumes\fP \fINumber\fP
@@ -798,7 +732,6 @@ The value 0 removes any limitation.
 For large numbers of PVs, also see options --pvmetadatacopies,
 and --vgmetadatacopies for improving performance.
 .ad b
-
 .HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
@@ -806,7 +739,6 @@ and --vgmetadatacopies for improving performance.
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--monitor\fP \fBy\fP|\fBn\fP
@@ -816,7 +748,6 @@ dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
 See dmeventd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--noudevsync\fP
@@ -826,7 +757,6 @@ from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .ad b
-
 .HP
 .ad l
 \fB-P\fP|\fB--partial\fP
@@ -836,7 +766,6 @@ that are only partially available (one or more PVs belonging
 to the VG are missing from the system). Metadata may not be
 changed with this option.
 .ad b
-
 .HP
 .ad l
 \fB-s\fP|\fB--physicalextentsize\fP \fISize\fP[m|UNIT]
@@ -851,7 +780,6 @@ Before increasing the physical extent size, you might need to use lvresize,
 pvresize and/or pvmove so that everything fits. For example, every
 contiguous range of extents used in a LV must start and end on an extent boundary.
 .ad b
-
 .HP
 .ad l
 \fB--poll\fP \fBy\fP|\fBn\fP
@@ -864,7 +792,6 @@ transformation will not complete. It may not be appropriate to immediately
 poll an LV after activation, in which case --poll n can be used to defer
 polling until a later --poll y command.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -872,7 +799,6 @@ polling until a later --poll y command.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB--pvmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
@@ -886,7 +812,6 @@ When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -894,7 +819,6 @@ on the ability to use vgsplit later.)
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--refresh\fP
@@ -904,7 +828,6 @@ This is not necessary in normal operation, but may be useful
 if something has gone wrong, or if some form of manual LV
 sharing is being used.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -916,7 +839,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-x\fP|\fB--resizeable\fP \fBy\fP|\fBn\fP
@@ -924,7 +846,6 @@ output in JSON format. See \fBlvmreport\fP(7) for more information.
 Enables or disables the addition or removal of PVs to/from a VG
 (by vgextend/vgreduce).
 .ad b
-
 .HP
 .ad l
 \fB-S\fP|\fB--select\fP \fIString\fP
@@ -938,7 +859,6 @@ showing 1 if the row matches the selection and 0 otherwise.
 For non-reporting commands which process LVM entities, the selection is
 used to choose items to process.
 .ad b
-
 .HP
 .ad l
 \fB--sysinit\fP
@@ -952,7 +872,6 @@ this is equivalent to using --ignorelockingfailure, --ignoremonitoring,
 When used in conjunction with lvmetad enabled and running,
 vgchange/lvchange skip autoactivation, and defer to pvscan autoactivation.
 .ad b
-
 .HP
 .ad l
 \fB--systemid\fP \fIString\fP
@@ -962,7 +881,6 @@ because the VG may become foreign to the host running the command,
 leaving the host unable to access it.
 See lvmsystemid(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -973,14 +891,12 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-u\fP|\fB--uuid\fP
 .br
 Generate new random UUID for specified VGs.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -988,14 +904,12 @@ Generate new random UUID for specified VGs.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB--[vg]metadatacopies\fP \fBall\fP|\fBunmanaged\fP|\fINumber\fP
@@ -1014,7 +928,6 @@ metadataignore flags.
 \fBall\fP causes LVM to first clear the metadataignore flags on
 all PVs, and then to become unmanaged.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -1024,31 +937,25 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-
 .HP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-
 .HP
 \fISelect\fP
 .br
 Select indicates that a required positional parameter can
 be omitted if the \fB--select\fP option is used.
 No arg appears in this position.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -1063,17 +970,13 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH NOTES
-
 If vgchange recognizes COW snapshot LVs that were dropped because they ran
 out of space, it displays a message informing the administrator that the
 snapshots should be removed.
-
 .SH EXAMPLES
-
 Activate all LVs in all VGs on all existing devices.
 .br
 .B vgchange \-a y
@@ -1081,7 +984,6 @@ Activate all LVs in all VGs on all existing devices.
 Change the maximum number of LVs for an inactive VG.
 .br
 .B vgchange \-l 128 vg00
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -1148,4 +1050,3 @@ Change the maximum number of LVs for an inactive VG.
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

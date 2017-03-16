@@ -1,27 +1,15 @@
 .TH PVCHANGE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 pvchange \- Change attributes of physical volume(s)
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBpvchange\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 pvchange changes PV attributes in the VG.
-
-.P
 .SH USAGE
-.br
-.P
-.
 Change properties of all PVs.
 .br
 .P
@@ -54,7 +42,6 @@ Change properties of all PVs.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Change properties of specified PVs.
 .br
@@ -92,7 +79,6 @@ Change properties of specified PVs.
 .RE
 .br
 
-
 Common options for command:
 .
 .RS 4
@@ -115,9 +101,7 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -169,12 +153,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--addtag\fP \fITag\fP
@@ -182,20 +162,17 @@ Common options for lvm:
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB-a\fP|\fB--all\fP
 .br
 .ad b
-
 .HP
 .ad l
 \fB-x\fP|\fB--allocatable\fP \fBy\fP|\fBn\fP
 .br
 Enable or disable allocation of physical extents on this PV.
 .ad b
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -203,7 +180,6 @@ Enable or disable allocation of physical extents on this PV.
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -211,7 +187,6 @@ Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -221,7 +196,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -229,7 +203,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--deltag\fP \fITag\fP
@@ -237,7 +210,6 @@ messages sent to the log file and/or syslog (if configured).
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -245,7 +217,6 @@ multiple tags at once. See lvm(8) for information about tags.
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
@@ -253,14 +224,12 @@ For testing and debugging.
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--ignoreskippedcluster\fP
@@ -268,14 +237,12 @@ Display help text.
 Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and clustered VGs are skipped.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--metadataignore\fP \fBy\fP|\fBn\fP
@@ -285,7 +252,6 @@ If yes, metadata areas on the PV are ignored, and lvm will
 not store metadata in the metadata areas of the PV.
 If no, lvm will store metadata on the PV.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -293,7 +259,6 @@ If no, lvm will store metadata on the PV.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -301,7 +266,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -313,7 +277,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-S\fP|\fB--select\fP \fIString\fP
@@ -327,7 +290,6 @@ showing 1 if the row matches the selection and 0 otherwise.
 For non-reporting commands which process LVM entities, the selection is
 used to choose items to process.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -338,14 +300,12 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-u\fP|\fB--uuid\fP
 .br
 Generate new random UUID for specified PVs.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -353,14 +313,12 @@ Generate new random UUID for specified PVs.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -370,8 +328,6 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIPV\fP
 .br
@@ -382,19 +338,16 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fISelect\fP
 .br
 Select indicates that a required positional parameter can
 be omitted if the \fB--select\fP option is used.
 No arg appears in this position.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -409,7 +362,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH EXAMPLES
@@ -484,4 +436,3 @@ disk errors, or because it will be removed after freeing it).
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

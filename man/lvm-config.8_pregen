@@ -1,33 +1,21 @@
 .TH LVM CONFIG 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvm config \- Display and manipulate configuration information
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvm config\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 This command is the same as \fBlvmconfig\fP(8).
 
 lvm config produces formatted output from the LVM configuration tree. The
 sources of the configuration data include \fBlvm.conf\fP(5) and command
 line settings from \-\-config.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBlvm config\fP
 .br
 .RS 4
@@ -110,7 +98,6 @@ line settings from \-\-config.
 [ \fIString\fP ... ]
 .RE
 
-
 Common options for lvm:
 .
 .RS 4
@@ -161,12 +148,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--atversion\fP \fIString\fP
@@ -179,7 +162,6 @@ to display a configuration that a certain LVM version understands and
 which does not contain any newer settings for which LVM would
 issue a warning message when checking the configuration.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -187,7 +169,6 @@ issue a warning message when checking the configuration.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -197,7 +178,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -205,7 +185,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -213,35 +192,30 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--file\fP \fIString\fP
 .br
 Write output to the named file.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--ignoreadvanced\fP
 .br
 Exclude advanced configuration settings from the output.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelocal\fP
 .br
 Ignore local section.
 .ad b
-
 .HP
 .ad l
 \fB--ignoreunsupported\fP
@@ -252,7 +226,6 @@ yet complete and they are not meant to be used in production. The \fBcurrent\fP
 and \fBdiff\fP types include unsupported settings in their output by default,
 all the other types ignore unsupported settings.
 .ad b
-
 .HP
 .ad l
 \fB-l\fP|\fB--list\fP
@@ -260,14 +233,12 @@ all the other types ignore unsupported settings.
 List config settings with summarizing comment. This is the same as using
 options --typeconfig list --withsummary.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--mergedconfig\fP
@@ -280,7 +251,6 @@ Without merging, only the configuration at the front of the
 cascade is displayed.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
@@ -288,7 +258,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -296,7 +265,6 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -304,7 +272,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--showdeprecated\fP
@@ -316,7 +283,6 @@ if the specified version is lower than the version in which the settings were
 deprecated. The current and diff types include deprecated settings
 in their output by default, all the other types ignore deprecated settings.
 .ad b
-
 .HP
 .ad l
 \fB--showunsupported\fP
@@ -327,7 +293,6 @@ is not yet complete and they are not meant to be used in production. The
 current and diff types include unsupported settings in their
 output by default, all the other types ignore unsupported settings.
 .ad b
-
 .HP
 .ad l
 \fB--sinceversion\fP \fIString\fP
@@ -337,7 +302,6 @@ the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 This option is currently applicable only with --typeconfig new
 to display all configuration settings introduced since given version.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -348,21 +312,18 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB--typeconfig\fP \fBcurrent\fP|\fBdefault\fP|\fBdiff\fP|\fBfull\fP|\fBlist\fP|\fBmissing\fP|\fBnew\fP|\fBprofilable\fP|\fBprofilable-command\fP|\fBprofilable-metadata\fP
 .br
 See lvmreport(7).
 .ad b
-
 .HP
 .ad l
 \fB--unconfigured\fP
 .br
 Internal option used for generating config file during build.
 .ad b
-
 .HP
 .ad l
 \fB--validate\fP
@@ -373,7 +334,6 @@ at the front of the "config cascade". To validate the whole
 merged configuration tree, also use --mergedconfig.
 The validation is done even if lvm.conf config/checks is disabled.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -381,14 +341,12 @@ The validation is done even if lvm.conf config/checks is disabled.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB--withcomments\fP
@@ -396,21 +354,18 @@ Display version information.
 Display a full comment for each configuration node. For deprecated
 settings, also display comments about deprecation.
 .ad b
-
 .HP
 .ad l
 \fB--withspaces\fP
 .br
 Where appropriate, add more spaces in output for better readability.
 .ad b
-
 .HP
 .ad l
 \fB--withsummary\fP
 .br
 Display a one line comment for each configuration node.
 .ad b
-
 .HP
 .ad l
 \fB--withversions\fP
@@ -419,7 +374,6 @@ Also display a comment containing the version of introduction for
 each configuration node. If the setting is deprecated, also display
 the version since which it is deprecated.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -429,13 +383,10 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -450,7 +401,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
@@ -519,4 +469,3 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

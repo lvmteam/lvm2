@@ -1,21 +1,14 @@
 .TH LVCREATE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvcreate \- Create a logical volume
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvcreate\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .P
 .ad l
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
@@ -248,9 +241,6 @@ lvcreate \- Create a logical volume
 .ad l
  \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
 .ad b
-
-.P
-
 .SH DESCRIPTION
 lvcreate creates a new LV in a VG. For standard LVs, this requires
 allocating logical extents from the VG's free physical extents. If there
@@ -279,9 +269,7 @@ Thin LVs are thinly provisioned from a thin pool, and are created with a
 virtual size rather than a physical size. A cache LV is the combination of
 a standard LV with a cache pool, used to cache active portions of the LV
 to improve performance.
-
 .SS Usage notes
-
 In the usage section below, \fB--size\fP \fISize\fP can be replaced
 with \fB--extents\fP \fINumber\fP.  See both descriptions
 the options section.
@@ -290,13 +278,7 @@ In the usage section below, \fB--name\fP is omitted from the required
 options, even though it is typically used.  When the name is not
 specified, a new LV name is generated with the "lvol" prefix and a unique
 numeric suffix.  Also see the description in the options section.
-
-
-.P
 .SH USAGE
-.br
-.P
-.
 Create a linear LV.
 .br
 .P
@@ -317,10 +299,7 @@ Create a linear LV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a striped LV (infers --type striped).
 .br
@@ -336,20 +315,13 @@ Create a striped LV (infers --type striped).
 [ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
-.ad l
-[    \fB--type\fP \fBstriped\fP ]
-.ad b
-.br
 [ COMMON_OPTIONS ]
 .RE
 .br
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a raid1 or mirror LV (infers --type raid1|mirror).
 .br
@@ -362,23 +334,7 @@ Create a raid1 or mirror LV (infers --type raid1|mirror).
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
-.ad b
-.br
-.ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
 [ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
-.ad b
-.br
-.ad l
-[    \fB--type\fP \fBraid1\fP ]
 .ad b
 .br
 .ad l
@@ -399,10 +355,7 @@ Create a raid1 or mirror LV (infers --type raid1|mirror).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a raid LV (a specific raid level must be used, e.g. raid1).
 .br
@@ -444,10 +397,44 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
+-
 
---
-
+Create a raid10 LV.
 .br
+.P
+\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP
+.RS 5
+ \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+.RE
+.br
+.RS 4
+.ad l
+[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+.ad b
+.br
+.ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+.RS 4
+[ \fIPV\fP ... ]
+.RE
+-
 
 Create a COW snapshot LV of an origin LV.
 .br
@@ -481,10 +468,7 @@ Create a COW snapshot LV of an origin LV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin pool.
 .br
@@ -534,10 +518,7 @@ Create a thin pool.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a cache pool.
 .br
@@ -587,10 +568,7 @@ Create a cache pool.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin LV in a thin pool (infers --type thin).
 .br
@@ -617,10 +595,7 @@ Create a thin LV in a thin pool (infers --type thin).
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV that is a snapshot of an existing thin LV 
 .br
@@ -645,10 +620,7 @@ Create a thin LV that is a snapshot of an existing thin LV
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV that is a snapshot of an external origin LV.
 .br
@@ -683,10 +655,7 @@ Create a thin LV that is a snapshot of an external origin LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV, first creating a thin pool for it, 
 .br
@@ -741,10 +710,7 @@ where the new thin pool is named by the --thinpool arg.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a cache LV, first creating a new origin LV, 
 .br
@@ -809,10 +775,7 @@ by the --cachepool arg.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Common options for command:
 .
@@ -900,9 +863,7 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -954,12 +915,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
@@ -978,7 +935,6 @@ if it matches an item in lvm.conf activation/auto_activation_volume_list.
 See lvmlockd(8) for more information about activation options for shared VGs.
 See clvmd(8) for more information about activation options for clustered VGs.
 .ad b
-
 .HP
 .ad l
 \fB--addtag\fP \fITag\fP
@@ -986,7 +942,6 @@ See clvmd(8) for more information about activation options for clustered VGs.
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
@@ -1008,7 +963,6 @@ Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
 .ad b
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -1016,7 +970,6 @@ See \fBlvm\fP(8) for more information about allocation.
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-H\fP|\fB--cache\fP
@@ -1025,14 +978,12 @@ Specifies the command is handling a cache LV or cache pool.
 See --type cache and --type cache-pool.
 See \fBlvmcache\fP(7) for more information about LVM caching.
 .ad b
-
 .HP
 .ad l
 \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .br
 Specifies the cache metadata format used by cache target.
 .ad b
-
 .HP
 .ad l
 \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
@@ -1049,7 +1000,6 @@ from the origin LV (all reads miss the cache) and all writes are
 forwarded to the origin LV; additionally, write hits cause cache
 block invalidates. See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachepolicy\fP \fIString\fP
@@ -1057,14 +1007,12 @@ block invalidates. See \fBlvmcache\fP(7) for more information.
 Specifies the cache policy for a cache LV.
 See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachepool\fP \fILV\fP
 .br
 The name of a cache pool LV.
 .ad b
-
 .HP
 .ad l
 \fB--cachesettings\fP \fIString\fP
@@ -1077,7 +1025,6 @@ settings back to their default kernel values and removes
 them from the list of settings stored in LVM metadata.
 See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT]
@@ -1093,7 +1040,6 @@ pool metadata size within 128MiB, if the pool metadata size is not specified.
 The value must be a multiple of 64KiB.
 See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -1101,7 +1047,6 @@ See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -1111,7 +1056,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP
@@ -1122,7 +1066,6 @@ It is only possible to change a non-contiguous allocation policy
 to contiguous if all of the allocated physical extents in the LV
 are already contiguous.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -1130,7 +1073,6 @@ are already contiguous.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
@@ -1144,7 +1086,6 @@ allow reuse of unneeded extents in the thin pool.
 (like nopassdown) and pass the discards to the underlying device.
 See \fBlvmthin\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -1152,7 +1093,6 @@ See \fBlvmthin\fP(7) for more information.
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB--errorwhenfull\fP \fBy\fP|\fBn\fP
@@ -1166,7 +1106,6 @@ Errors are returned if no space is available after the timeout.
 (Also see dm-thin-pool kernel module option no_space_timeout.)
 See \fBlvmthin\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT]
@@ -1187,14 +1126,12 @@ When expressed as a percentage, the size defines an upper limit for the
 number of logical extents in the new LV. The precise number of logical
 extents in the new LV is not determined until the command has completed.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB-K\fP|\fB--ignoreactivationskip\fP
@@ -1202,7 +1139,6 @@ Display help text.
 Ignore the "activation skip" LV flag during activation
 to allow LVs with the flag set to be activated.
 .ad b
-
 .HP
 .ad l
 \fB--ignoremonitoring\fP
@@ -1210,21 +1146,18 @@ to allow LVs with the flag set to be activated.
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-j\fP|\fB--major\fP \fINumber\fP
 .br
 Sets the major number of an LV block device.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT]
@@ -1234,7 +1167,6 @@ is an amount of data per second for each device in the array.
 Setting the rate to 0 means it will be unbounded.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
@@ -1242,14 +1174,12 @@ See \fBlvmraid\fP(7) for more information.
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--minor\fP \fINumber\fP
 .br
 Sets the minor number of an LV block device.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT]
@@ -1259,7 +1189,6 @@ is an amount of data per second for each device in the array.
 Setting the rate to 0 means it will be unbounded.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP
@@ -1273,7 +1202,6 @@ In this case, the mirror must be synchronized (by copying LV data from
 the first device to others) each time the LV is activated, e.g. after reboot.
 \fBmirrored\fP is a persistent log that is itself mirrored.
 .ad b
-
 .HP
 .ad l
 \fB-m\fP|\fB--mirrors\fP \fINumber\fP
@@ -1292,7 +1220,6 @@ global/raid10_segtype_default to configure the default types.
 See the --nosync option for avoiding initial image synchronization.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--monitor\fP \fBy\fP|\fBn\fP
@@ -1302,7 +1229,6 @@ dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
 See dmeventd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-n\fP|\fB--name\fP \fIString\fP
@@ -1311,7 +1237,6 @@ Specifies the name of a new LV.
 When unspecified, a default name of "lvol#" is
 generated, where # is a number generated by LVM.
 .ad b
-
 .HP
 .ad l
 \fB--nosync\fP
@@ -1329,7 +1254,6 @@ to reconstruct proper user date in case of device failures.
 raid0 and raid0_meta do not provide any data copies or parity support
 and thus do not support initial synchronization.
 .ad b
-
 .HP
 .ad l
 \fB--noudevsync\fP
@@ -1339,28 +1263,24 @@ from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .ad b
-
 .HP
 .ad l
 \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP
 .br
 Set access permission to read only \fBr\fP or read and write \fBrw\fP.
 .ad b
-
 .HP
 .ad l
 \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP
 .br
 When yes, makes the specified minor number persistent.
 .ad b
-
 .HP
 .ad l
 \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
 .br
 Specifies the size of the new pool metadata LV.
 .ad b
-
 .HP
 .ad l
 \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
@@ -1369,7 +1289,6 @@ Enable or disable the automatic creation and management of a
 spare pool metadata LV in the VG. A spare metadata LV is reserved
 space that can be used when repairing a pool.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -1377,7 +1296,6 @@ space that can be used when repairing a pool.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -1385,7 +1303,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
@@ -1395,7 +1312,6 @@ Sets read ahead sector count of an LV.
 a suitable value automatically.
 \fBnone\fP is equivalent to zero.
 .ad b
-
 .HP
 .ad l
 \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT]
@@ -1404,7 +1320,6 @@ Size of each raid or mirror synchronization region.
 lvm.conf activation/raid_region_size can be used to
 configure a default.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -1416,7 +1331,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP
@@ -1428,7 +1342,6 @@ This flag is set by default on new thin snapshot LVs.
 The flag is not applied to deactivation.
 The current value of the flag is indicated in the lvs lv_attr bits.
 .ad b
-
 .HP
 .ad l
 \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -1438,7 +1351,6 @@ The --size and --extents options are alternate methods of specifying size.
 The total number of physical extents used will be
 greater when redundant data is needed for RAID levels.
 .ad b
-
 .HP
 .ad l
 \fB-s\fP|\fB--snapshot\fP
@@ -1469,7 +1381,6 @@ locations, so the full size is not available for COW data blocks.
 Use lvs to check how much space is used, and see --monitor to
 to automatically extend the size to avoid running out of space.
 .ad b
-
 .HP
 .ad l
 \fB-i\fP|\fB--stripes\fP \fINumber\fP
@@ -1487,7 +1398,6 @@ when unspecified, the default depends on the RAID type
 To stripe a new raid LV across all PVs by default,
 see lvm.conf allocation/raid_stripe_all_devices.
 .ad b
-
 .HP
 .ad l
 \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
@@ -1495,7 +1405,6 @@ see lvm.conf allocation/raid_stripe_all_devices.
 The amount of data that is written to one device before
 moving to the next in a striped LV.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -1506,7 +1415,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-T\fP|\fB--thin\fP
@@ -1515,14 +1423,12 @@ Specifies the command is handling a thin LV or thin pool.
 See --type thin, --type thin-pool, and --virtualsize.
 See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
 .ad b
-
 .HP
 .ad l
 \fB--thinpool\fP \fILV\fP
 .br
 The name of a thin pool LV.
 .ad b
-
 .HP
 .ad l
 \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBthin-pool\fP|\fBcache-pool\fP
@@ -1538,7 +1444,6 @@ is inferred from other options or shortcuts
 (e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache).
 Use inferred types with care because it can lead to unexpected results.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -1546,14 +1451,12 @@ Use inferred types with care because it can lead to unexpected results.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
@@ -1571,7 +1474,6 @@ is created using the zero target, and the LV has the suffix _vorigin.
 Snapshots are less efficient than thin provisioning when creating
 large sparse LVs (GiB).
 .ad b
-
 .HP
 .ad l
 \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP
@@ -1590,7 +1492,6 @@ Otherwise, native LVM code is used to detect signatures
 (only MD RAID, swap and LUKS signatures are detected in this case.)
 The LV is not wiped if the read only flag is set.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -1599,7 +1500,6 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
-
 .HP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
@@ -1611,8 +1511,6 @@ LV is not zeroed if the read only flag is set.
 Warning: trying to mount an unzeroed LV can cause the system to hang.
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
@@ -1620,7 +1518,6 @@ Volume Group name.  See \fBlvm\fP(8) for valid names.
 For lvcreate, the required VG positional arg may be
 omitted when the VG name is included in another option,
 e.g. --name VG/LV.
-
 .HP
 \fILV\fP
 .br
@@ -1628,7 +1525,6 @@ Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
 LV followed by _<type> indicates that an LV of the
 given type is required. (raid represents raid<N> type)
-
 .HP
 \fIPV\fP
 .br
@@ -1639,12 +1535,10 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -1659,7 +1553,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH ADVANCED USAGE
@@ -1678,10 +1571,7 @@ Create an LV that returns errors when used.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create an LV that returns zeros when read.
 .br
@@ -1696,10 +1586,7 @@ Create an LV that returns zeros when read.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a linear LV.
 .br
@@ -1717,10 +1604,7 @@ Create a linear LV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a striped LV (also see lvcreate --stripes).
 .br
@@ -1746,10 +1630,7 @@ Create a striped LV (also see lvcreate --stripes).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a mirror LV (also see --type raid1).
 .br
@@ -1774,6 +1655,10 @@ Create a mirror LV (also see --type raid1).
 .ad b
 .br
 .ad l
+[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
 [    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
 .ad b
 .br
@@ -1783,10 +1668,7 @@ Create a mirror LV (also see --type raid1).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a COW snapshot LV of an origin LV 
 .br
@@ -1822,10 +1704,7 @@ Create a COW snapshot LV of an origin LV
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a sparse COW snapshot LV of a virtual origin LV 
 .br
@@ -1856,10 +1735,7 @@ Create a sparse COW snapshot LV of a virtual origin LV
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a sparse COW snapshot LV of a virtual origin LV.
 .br
@@ -1888,10 +1764,7 @@ Create a sparse COW snapshot LV of a virtual origin LV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin pool (infers --type thin-pool).
 .br
@@ -1941,10 +1814,7 @@ Create a thin pool (infers --type thin-pool).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin pool named by the --thinpool arg 
 .br
@@ -2000,10 +1870,7 @@ Create a thin pool named by the --thinpool arg
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a cache pool named by the --cachepool arg 
 .br
@@ -2058,10 +1925,7 @@ Create a cache pool named by the --cachepool arg
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin LV in a thin pool.
 .br
@@ -2099,10 +1963,7 @@ Create a thin LV in a thin pool.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV in a thin pool named in the first arg 
 .br
@@ -2127,10 +1988,7 @@ Create a thin LV in a thin pool named in the first arg
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV in the thin pool named in the first arg 
 .br
@@ -2161,10 +2019,7 @@ naming pool.)
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV that is a snapshot of an existing thin LV.
 .br
@@ -2187,10 +2042,7 @@ Create a thin LV that is a snapshot of an existing thin LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV that is a snapshot of an existing thin LV 
 .br
@@ -2215,10 +2067,7 @@ Create a thin LV that is a snapshot of an existing thin LV
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV that is a snapshot of an external origin LV 
 .br
@@ -2243,10 +2092,7 @@ Create a thin LV that is a snapshot of an external origin LV
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Create a thin LV, first creating a thin pool for it, 
 .br
@@ -2303,10 +2149,7 @@ where the new thin pool is named by the --thinpool arg
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin LV, first creating a thin pool for it, 
 .br
@@ -2365,10 +2208,7 @@ arg is a VG name.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin LV, first creating a thin pool for it, 
 .br
@@ -2427,10 +2267,7 @@ arg is a VG name (variant, infers --type thin).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a thin LV, first creating a thin pool for it 
 .br
@@ -2498,10 +2335,7 @@ config setting sparse_segtype_default.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a cache LV, first creating a new origin LV, 
 .br
@@ -2559,10 +2393,7 @@ by the --cachepool arg (variant, infers --type cache).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Create a cache LV, first creating a new origin LV, 
 .br
@@ -2624,10 +2455,7 @@ in the first arg (variant, also use --cachepool).
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 When LV is a cache pool, create a cache LV, 
 .br
@@ -2693,10 +2521,7 @@ to type cache after creating a new cache pool LV to use
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 .SH EXAMPLES
 
@@ -2795,7 +2620,6 @@ then combining the new origin LV with an existing cache pool.
 .RS
 .B \-L 100G \-n mylv vg00 /dev/slow1
 .RE
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -2862,4 +2686,3 @@ then combining the new origin LV with an existing cache pool.
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

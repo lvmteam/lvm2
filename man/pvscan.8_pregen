@@ -1,21 +1,14 @@
 .TH PVSCAN 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 pvscan \- List all physical volumes
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBpvscan\fP \fIoption_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 pvscan scans all supported LVM block devices in the system for PVs.
 
@@ -50,15 +43,12 @@ historical reasons.  To avoid disrupting the system with extraneous disk
 scanning, an ordinary pvscan (without \-\-cache) will simply read metadata
 from lvmetad like other LVM commands.  It does not do anything beyond
 displaying the current state of the cache.
-
 .IP \[bu] 2
 When given specific device name arguments, pvscan \-\-cache will only
 read the named devices.
-
 .IP \[bu] 2
 LVM udev rules and systemd services are used to initiate automatic device
 scanning.
-
 .IP \[bu] 2
 To prevent devices from being scanned by pvscan --cache, add them
 to
@@ -69,22 +59,17 @@ apply to system level scanning.
 For more information, see:
 .br
 .B lvmconfig --withcomments devices/global_filter
-
 .IP \[bu] 2
 If lvmetad is started or restarted after devices are visible, or
 if the global_filter has changed, then all devices must be rescanned
 for metadata with the command pvscan \-\-cache.
-
 .IP \[bu] 2
 lvmetad does not cache older metadata formats, e.g. lvm1, and will
 be temporarily disabled if they are seen.
-
 .IP \[bu] 2
 To notify lvmetad about a device that is no longer present, the major and
 minor numbers must be given, not the path.
-
 .P
-
 \fBAutomatic activation\fP
 
 When event-driven system services detect a new LVM device, the first step
@@ -108,26 +93,17 @@ fully integrated with the event-driven system services.)
 
 When a VG or LV is not auto-activated, traditional activation using
 vgchange or lvchange -a|--activate is needed.
-
 .IP \[bu] 2
 pvscan auto-activation can be only done in combination with \-\-cache.
-
 .IP \[bu] 2
 Auto-activation is designated by the "a" argument in '-a|--activate ay'.
 This is meant to distinguish system generated commands from explicit user
 commands, although it can be used in any activation command.  Whenever it
 is used, the auto_activation_volume_list is applied.
-
 .IP \[bu] 2
 Auto-activation is not yet supported for LVs that are part of partial or
 clustered volume groups.
-
-
-.P
 .SH USAGE
-.br
-.P
-.
 Display PV information.
 .br
 .P
@@ -153,7 +129,6 @@ Display PV information.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Populate the lvmetad cache by scanning PVs.
 .br
@@ -184,7 +159,6 @@ Populate the lvmetad cache by scanning PVs.
 [ \fIString\fP|\fIPV\fP ... ]
 .RE
 
-
 Common options for command:
 .
 .RS 4
@@ -195,9 +169,7 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -249,18 +221,13 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
 .ad b
-
 .HP
 .ad l
 \fB-b\fP|\fB--background\fP
@@ -269,14 +236,12 @@ If the operation requires polling, this option causes the command to
 return before the operation is complete, and polling is done in the
 background.
 .ad b
-
 .HP
 .ad l
 \fB--cache\fP
 .br
 Scan one or more devices and send the metadata to lvmetad.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -284,7 +249,6 @@ Scan one or more devices and send the metadata to lvmetad.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -294,7 +258,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -302,7 +265,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -310,21 +272,18 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-e\fP|\fB--exported\fP
 .br
 Only show PVs belonging to exported VGs.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelockingfailure\fP
@@ -332,35 +291,30 @@ Display help text.
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-j\fP|\fB--major\fP \fINumber\fP
 .br
 The major number of a device.
 .ad b
-
 .HP
 .ad l
 \fB--minor\fP \fINumber\fP
 .br
 The minor number of a device.
 .ad b
-
 .HP
 .ad l
 \fB-n\fP|\fB--novolumegroup\fP
 .br
 Only show PVs not belonging to any VG.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -368,7 +322,6 @@ Only show PVs not belonging to any VG.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -376,7 +329,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -388,14 +340,12 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-s\fP|\fB--short\fP
 .br
 Short listing format.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -406,14 +356,12 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-u\fP|\fB--uuid\fP
 .br
 Show UUIDs in addition to device names.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -421,14 +369,12 @@ Show UUIDs in addition to device names.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -438,8 +384,6 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIPV\fP
 .br
@@ -450,12 +394,10 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -470,7 +412,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
@@ -539,4 +480,3 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

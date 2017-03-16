@@ -1,19 +1,12 @@
 .TH LVMDISKSCAN 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvmdiskscan \- List devices that may be used as physical volumes
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvmdiskscan\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 lvmdiskscan scans all SCSI, (E)IDE disks, multiple devices and a bunch of
 other block devices in the system looking for LVM PVs. The size reported
@@ -22,12 +15,7 @@ the scan to avoid a CD ROM, for example.
 
 This command is deprecated, use \fBpvs\fP instead.
 
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBlvmdiskscan\fP
 .br
 .RS 4
@@ -42,7 +30,6 @@ This command is deprecated, use \fBpvs\fP instead.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Common options for lvm:
 .
@@ -94,12 +81,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -107,7 +90,6 @@ Common options for lvm:
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -117,7 +99,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -125,7 +106,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -133,28 +113,24 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-l\fP|\fB--lvmpartition\fP
 .br
 Only report PVs.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -162,7 +138,6 @@ Only report PVs.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -170,7 +145,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--readonly\fP
@@ -185,7 +159,6 @@ will be made to communicate with the device-mapper kernel driver, so
 this option is unable to report whether or not LVs are
 actually in use.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -196,7 +169,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -204,14 +176,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -221,13 +191,10 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -242,7 +209,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
@@ -311,4 +277,3 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

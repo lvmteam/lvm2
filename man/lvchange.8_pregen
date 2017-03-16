@@ -1,19 +1,12 @@
 .TH LVCHANGE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvchange \- Change the attributes of logical volume(s)
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvchange\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .P
 .ad l
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
@@ -226,18 +219,10 @@ lvchange \- Change the attributes of logical volume(s)
 .ad l
  \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
 .ad b
-
-.P
-
 .SH DESCRIPTION
 lvchange changes LV attributes in the VG, changes LV activation in the
 kernel, and includes other utilities for LV maintenance.
-
-.P
 .SH USAGE
-.br
-.P
-.
 Change a general LV attribute. 
 .br
 For options listed in parentheses, any one is 
@@ -341,10 +326,7 @@ required, after which the others are optional.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Resyncronize a mirror or raid LV.
 .br
@@ -359,10 +341,7 @@ Resyncronize a mirror or raid LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Resynchronize or check a raid LV.
 .br
@@ -373,10 +352,7 @@ Resynchronize or check a raid LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Reconstruct data on specific PVs of a raid LV.
 .br
@@ -387,10 +363,7 @@ Reconstruct data on specific PVs of a raid LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Activate or deactivate an LV.
 .br
@@ -421,10 +394,7 @@ Activate or deactivate an LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Reactivate an LV using the latest metadata.
 .br
@@ -443,10 +413,7 @@ Reactivate an LV using the latest metadata.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Start or stop monitoring an LV from dmeventd.
 .br
@@ -461,10 +428,7 @@ Start or stop monitoring an LV from dmeventd.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Start or stop processing an LV conversion.
 .br
@@ -479,10 +443,7 @@ Start or stop processing an LV conversion.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Make the minor device number persistent for an LV.
 .br
@@ -497,10 +458,7 @@ Make the minor device number persistent for an LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Common options for command:
 .
@@ -532,9 +490,7 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -586,12 +542,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
@@ -617,7 +569,6 @@ to select which LVs should be automatically activated by the system.
 See lvmlockd(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
 See clvmd(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
 .ad b
-
 .HP
 .ad l
 \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP
@@ -633,7 +584,6 @@ should only be used for recovery or repair.
 For default, see lvm.conf/activation_mode.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--addtag\fP \fITag\fP
@@ -641,7 +591,6 @@ See \fBlvmraid\fP(7) for more information.
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
@@ -663,7 +612,6 @@ Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
 .ad b
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -671,7 +619,6 @@ See \fBlvm\fP(8) for more information about allocation.
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
@@ -688,7 +635,6 @@ from the origin LV (all reads miss the cache) and all writes are
 forwarded to the origin LV; additionally, write hits cause cache
 block invalidates. See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachepolicy\fP \fIString\fP
@@ -696,7 +642,6 @@ block invalidates. See \fBlvmcache\fP(7) for more information.
 Specifies the cache policy for a cache LV.
 See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachesettings\fP \fIString\fP
@@ -709,7 +654,6 @@ settings back to their default kernel values and removes
 them from the list of settings stored in LVM metadata.
 See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -717,7 +661,6 @@ See \fBlvmcache\fP(7) for more information.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -727,7 +670,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP
@@ -738,7 +680,6 @@ It is only possible to change a non-contiguous allocation policy
 to contiguous if all of the allocated physical extents in the LV
 are already contiguous.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -746,7 +687,6 @@ are already contiguous.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--deltag\fP \fITag\fP
@@ -754,7 +694,6 @@ messages sent to the log file and/or syslog (if configured).
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--detachprofile\fP
@@ -762,7 +701,6 @@ multiple tags at once. See lvm(8) for information about tags.
 Detaches a metadata profile from a VG or LV.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
@@ -776,7 +714,6 @@ allow reuse of unneeded extents in the thin pool.
 (like nopassdown) and pass the discards to the underlying device.
 See \fBlvmthin\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -784,7 +721,6 @@ See \fBlvmthin\fP(7) for more information.
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB--errorwhenfull\fP \fBy\fP|\fBn\fP
@@ -798,7 +734,6 @@ Errors are returned if no space is available after the timeout.
 (Also see dm-thin-pool kernel module option no_space_timeout.)
 See \fBlvmthin\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
@@ -806,14 +741,12 @@ See \fBlvmthin\fP(7) for more information.
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB-K\fP|\fB--ignoreactivationskip\fP
@@ -821,7 +754,6 @@ Display help text.
 Ignore the "activation skip" LV flag during activation
 to allow LVs with the flag set to be activated.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelockingfailure\fP
@@ -829,7 +761,6 @@ to allow LVs with the flag set to be activated.
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .ad b
-
 .HP
 .ad l
 \fB--ignoremonitoring\fP
@@ -837,7 +768,6 @@ operations after locking failures.
 Do not interact with dmeventd unless --monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
 .ad b
-
 .HP
 .ad l
 \fB--ignoreskippedcluster\fP
@@ -845,21 +775,18 @@ Do not use this if dmeventd is already monitoring a device.
 Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and clustered VGs are skipped.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-j\fP|\fB--major\fP \fINumber\fP
 .br
 Sets the major number of an LV block device.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT]
@@ -869,7 +796,6 @@ is an amount of data per second for each device in the array.
 Setting the rate to 0 means it will be unbounded.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
@@ -877,14 +803,12 @@ See \fBlvmraid\fP(7) for more information.
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--minor\fP \fINumber\fP
 .br
 Sets the minor number of an LV block device.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT]
@@ -894,7 +818,6 @@ is an amount of data per second for each device in the array.
 Setting the rate to 0 means it will be unbounded.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--monitor\fP \fBy\fP|\fBn\fP
@@ -904,7 +827,6 @@ dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
 See dmeventd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--noudevsync\fP
@@ -914,7 +836,6 @@ from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .ad b
-
 .HP
 .ad l
 \fB-P\fP|\fB--partial\fP
@@ -924,21 +845,18 @@ that are only partially available (one or more PVs belonging
 to the VG are missing from the system). Metadata may not be
 changed with this option.
 .ad b
-
 .HP
 .ad l
 \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP
 .br
 Set access permission to read only \fBr\fP or read and write \fBrw\fP.
 .ad b
-
 .HP
 .ad l
 \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP
 .br
 When yes, makes the specified minor number persistent.
 .ad b
-
 .HP
 .ad l
 \fB--poll\fP \fBy\fP|\fBn\fP
@@ -951,7 +869,6 @@ transformation will not complete. It may not be appropriate to immediately
 poll an LV after activation, in which case --poll n can be used to defer
 polling until a later --poll y command.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -959,7 +876,6 @@ polling until a later --poll y command.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -967,7 +883,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
@@ -977,7 +892,6 @@ Sets read ahead sector count of an LV.
 a suitable value automatically.
 \fBnone\fP is equivalent to zero.
 .ad b
-
 .HP
 .ad l
 \fB--rebuild\fP \fIPV\fP
@@ -989,7 +903,6 @@ PVs with corrupted data are known, and their data should be reconstructed
 rather than reconstructing default (rotating) data.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--refresh\fP
@@ -999,7 +912,6 @@ This is not necessary in normal operation, but may be useful
 if something has gone wrong, or if some form of manual LV
 sharing is being used.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -1011,7 +923,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--resync\fP
@@ -1024,7 +935,6 @@ and copied to the others. This can take considerable time, during
 which the LV is without a complete redundant copy of the data.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-S\fP|\fB--select\fP \fIString\fP
@@ -1038,7 +948,6 @@ showing 1 if the row matches the selection and 0 otherwise.
 For non-reporting commands which process LVM entities, the selection is
 used to choose items to process.
 .ad b
-
 .HP
 .ad l
 \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP
@@ -1050,7 +959,6 @@ This flag is set by default on new thin snapshot LVs.
 The flag is not applied to deactivation.
 The current value of the flag is indicated in the lvs lv_attr bits.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]syncaction\fP \fBcheck\fP|\fBrepair\fP
@@ -1063,7 +971,6 @@ blocks in the array and check for discrepancies
 \fBrepair\fP will correct discrepancies.
 See lvs for reporting discrepancies found or repaired.
 .ad b
-
 .HP
 .ad l
 \fB--sysinit\fP
@@ -1077,7 +984,6 @@ this is equivalent to using --ignorelockingfailure, --ignoremonitoring,
 When used in conjunction with lvmetad enabled and running,
 vgchange/lvchange skip autoactivation, and defer to pvscan autoactivation.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -1088,7 +994,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -1096,14 +1001,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]writebehind\fP \fINumber\fP
@@ -1115,7 +1018,6 @@ to the constituent devices must complete before the array signals the
 write has completed). Setting the value to zero clears the preference
 and allows the system to choose the value arbitrarily.
 .ad b
-
 .HP
 .ad l
 \fB--[raid]writemostly\fP \fIPV\fP[\fB:t\fP|\fBn\fP|\fBy\fP]
@@ -1129,7 +1031,6 @@ suffix \fB:n\fP at the end of the PV name, or to toggle the value with
 the suffix \fB:t\fP. Repeat this option to change the attribute on
 multiple PVs.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -1138,7 +1039,6 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
-
 .HP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
@@ -1147,13 +1047,10 @@ Set zeroing mode for thin pool. Note: already provisioned blocks from pool
 in non-zero mode are not cleared in unwritten parts when setting --zero y.
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-
 .HP
 \fILV\fP
 .br
@@ -1161,25 +1058,21 @@ Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
 LV followed by _<type> indicates that an LV of the
 given type is required. (raid represents raid<N> type)
-
 .HP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-
 .HP
 \fISelect\fP
 .br
 Select indicates that a required positional parameter can
 be omitted if the \fB--select\fP option is used.
 No arg appears in this position.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -1194,15 +1087,12 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH EXAMPLES
-
 Change LV permission to read-only:
 .sp
 .B lvchange \-pr vg00/lvol1
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -1269,4 +1159,3 @@ Change LV permission to read-only:
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

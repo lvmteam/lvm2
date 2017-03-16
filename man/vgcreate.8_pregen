@@ -1,30 +1,18 @@
 .TH VGCREATE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 vgcreate \- Create a volume group
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBvgcreate\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 vgcreate creates a new VG on block devices. If the devices were not
 previously intialized as PVs with \fBpvcreate\fP(8), vgcreate will
 inititialize them, making them PVs. The pvcreate options for initializing
 devices are also available with vgcreate.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBvgcreate\fP \fIVG\fP\fI_new\fP \fIPV\fP ...
 .br
 .RS 4
@@ -120,7 +108,6 @@ devices are also available with vgcreate.
 .RE
 .br
 
-
 Common options for lvm:
 .
 .RS 4
@@ -171,12 +158,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--addtag\fP \fITag\fP
@@ -184,7 +167,6 @@ Common options for lvm:
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
-
 .HP
 .ad l
 \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
@@ -206,7 +188,6 @@ Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
 .ad b
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -214,7 +195,6 @@ See \fBlvm\fP(8) for more information about allocation.
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-c\fP|\fB--clustered\fP \fBy\fP|\fBn\fP
@@ -225,7 +205,6 @@ clvmd and a lock manager must be configured and running.
 (A clustered VG using clvmd is different from a shared VG using lvmlockd.)
 See clvmd(8) for more information about clustered VGs.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -233,7 +212,6 @@ See clvmd(8) for more information about clustered VGs.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -243,7 +221,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB--dataalignment\fP \fISize\fP[k|UNIT]
@@ -254,14 +231,12 @@ To see the location of the first Physical Extent of an existing PV,
 use pvs -o +pe_start. In addition, it may be shifted by an alignment offset.
 See lvm.conf/data_alignment_offset_detection and --dataalignmentoffset.
 .ad b
-
 .HP
 .ad l
 \fB--dataalignmentoffset\fP \fISize\fP[k|UNIT]
 .br
 Shift the start of the data area by this additional offset.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -269,7 +244,6 @@ Shift the start of the data area by this additional offset.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -277,7 +251,6 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
@@ -285,14 +258,12 @@ For testing and debugging.
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--labelsector\fP \fINumber\fP
@@ -302,7 +273,6 @@ sector (sector 1). This lets you use a different sector near the
 start of the disk (between 0 and 3 inclusive - see LABEL_SCAN_SECTORS
 in the source). Use with care.
 .ad b
-
 .HP
 .ad l
 \fB--lockopt\fP \fIString\fP
@@ -310,7 +280,6 @@ in the source). Use with care.
 Used to pass options for special cases to lvmlockd.
 See lvmlockd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP
@@ -318,21 +287,18 @@ See lvmlockd(8) for more information.
 Specify the VG lock type directly in place of using --shared.
 See lvmlockd(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-l\fP|\fB--maxlogicalvolumes\fP \fINumber\fP
 .br
 Sets the maximum number of LVs allowed in a VG.
 .ad b
-
 .HP
 .ad l
 \fB-p\fP|\fB--maxphysicalvolumes\fP \fINumber\fP
@@ -342,7 +308,6 @@ The value 0 removes any limitation.
 For large numbers of PVs, also see options --pvmetadatacopies,
 and --vgmetadatacopies for improving performance.
 .ad b
-
 .HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
@@ -350,7 +315,6 @@ and --vgmetadatacopies for improving performance.
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--metadatasize\fP \fISize\fP[m|UNIT]
@@ -358,7 +322,6 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 The approximate amount of space used for each VG metadata area.
 The size may be rounded.
 .ad b
-
 .HP
 .ad l
 \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP|\fBlvm1\fP
@@ -368,7 +331,6 @@ Specifies the type of on-disk metadata to use.
 \fBlvm1\fP (or just \fB1\fP) is a historical format that
 can be used for accessing old data.
 .ad b
-
 .HP
 .ad l
 \fB-s\fP|\fB--physicalextentsize\fP \fISize\fP[m|UNIT]
@@ -380,7 +342,6 @@ currently used in the VG), or at least 128KiB.
 Once this value has been set, it is difficult to change
 without recreating the VG, unless no extents need moving.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -388,7 +349,6 @@ without recreating the VG, unless no extents need moving.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB--pvmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
@@ -402,7 +362,6 @@ When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -410,7 +369,6 @@ on the ability to use vgsplit later.)
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -422,7 +380,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--shared\fP
@@ -434,7 +391,6 @@ devices. lvmlockd and a lock manager must be configured and running.
 (A shared VG using lvmlockd is different from a clustered VG using clvmd.)
 See lvmlockd(8) for more information about shared VGs.
 .ad b
-
 .HP
 .ad l
 \fB--systemid\fP \fIString\fP
@@ -447,7 +403,6 @@ system ID of the new VG may not match the system ID of the host running
 the command, leaving the VG inaccessible to the host.
 See lvmsystemid(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -458,7 +413,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -466,14 +420,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB--[vg]metadatacopies\fP \fBall\fP|\fBunmanaged\fP|\fINumber\fP
@@ -492,7 +444,6 @@ metadataignore flags.
 \fBall\fP causes LVM to first clear the metadataignore flags on
 all PVs, and then to become unmanaged.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -501,7 +452,6 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
-
 .HP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
@@ -511,13 +461,10 @@ The default is to wipe these sectors unless either or both of
 --restorefile or --uuid are specified.
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-
 .HP
 \fIPV\fP
 .br
@@ -528,12 +475,10 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -548,7 +493,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH EXAMPLES
@@ -556,7 +500,6 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 Create a VG with two PVs, using the default physical extent size.
 .br
 .B vgcreate myvg /dev/sdk1 /dev/sdl1
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -623,4 +566,3 @@ Create a VG with two PVs, using the default physical extent size.
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

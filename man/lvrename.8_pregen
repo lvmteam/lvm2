@@ -1,28 +1,16 @@
 .TH LVRENAME 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvrename \- Rename a logical volume
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvrename\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 lvrename renames an existing LV or a historical LV (see \fBlvremove\fP for
 historical LV information.)
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBlvrename\fP \fIVG\fP \fILV\fP \fILV\fP\fI_new\fP
 .br
 .RS 4
@@ -30,14 +18,12 @@ historical LV information.)
 .RE
 .br
 
-
 \fBlvrename\fP \fILV\fP \fILV\fP\fI_new\fP
 .br
 .RS 4
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Common options for command:
 .
@@ -53,9 +39,7 @@ Common options for command:
 .ad l
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -107,12 +91,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -120,7 +100,6 @@ Common options for lvm:
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -128,7 +107,6 @@ Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -138,7 +116,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -146,7 +123,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -154,21 +130,18 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--noudevsync\fP
@@ -178,7 +151,6 @@ from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -186,7 +158,6 @@ ignore the devices LVM creates.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -194,7 +165,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -206,7 +176,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -217,7 +186,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -225,14 +193,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -242,24 +208,19 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-
 .HP
 \fILV\fP
 .br
 Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -274,7 +235,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH EXAMPLES
@@ -286,7 +246,6 @@ Rename "lvold" to "lvnew":
 An alternate syntax to rename "lvold" to "lvnew":
 .br
 .B lvrename vg02 lvold lvnew
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -353,4 +312,3 @@ An alternate syntax to rename "lvold" to "lvnew":
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

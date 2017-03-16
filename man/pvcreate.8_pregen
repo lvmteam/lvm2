@@ -1,19 +1,12 @@
 .TH PVCREATE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 pvcreate \- Initialize physical volume(s) for use by LVM
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBpvcreate\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 pvcreate initializes a PV so that it is recognized as belonging to LVM,
 and allows the PV to be used in a VG. A PV can be a disk partition, whole
@@ -36,12 +29,7 @@ to add the PV to existing VG.
 The force option will create a PV without confirmation.  Repeating the
 force option (\fB-ff\fP) will forcibly create a PV, overriding checks that
 normally prevent it, e.g. if the PV is already in a VG.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBpvcreate\fP \fIPV\fP ...
 .br
 .RS 4
@@ -109,7 +97,6 @@ normally prevent it, e.g. if the PV is already in a VG.
 .RE
 .br
 
-
 Common options for lvm:
 .
 .RS 4
@@ -160,12 +147,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--bootloaderareasize\fP \fISize\fP[m|UNIT]
@@ -180,7 +163,6 @@ end up increased due to the alignment, but it's never less than the
 size that is requested. To see the bootloader area start and size of
 an existing PV use pvs -o +pv_ba_start,pv_ba_size.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -188,7 +170,6 @@ an existing PV use pvs -o +pv_ba_start,pv_ba_size.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -198,7 +179,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB--dataalignment\fP \fISize\fP[k|UNIT]
@@ -209,14 +189,12 @@ To see the location of the first Physical Extent of an existing PV,
 use pvs -o +pe_start. In addition, it may be shifted by an alignment offset.
 See lvm.conf/data_alignment_offset_detection and --dataalignmentoffset.
 .ad b
-
 .HP
 .ad l
 \fB--dataalignmentoffset\fP \fISize\fP[k|UNIT]
 .br
 Shift the start of the data area by this additional offset.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -224,7 +202,6 @@ Shift the start of the data area by this additional offset.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -232,7 +209,6 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
@@ -240,14 +216,12 @@ For testing and debugging.
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--labelsector\fP \fINumber\fP
@@ -257,14 +231,12 @@ sector (sector 1). This lets you use a different sector near the
 start of the disk (between 0 and 3 inclusive - see LABEL_SCAN_SECTORS
 in the source). Use with care.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--metadataignore\fP \fBy\fP|\fBn\fP
@@ -274,7 +246,6 @@ If yes, metadata areas on the PV are ignored, and lvm will
 not store metadata in the metadata areas of the PV.
 If no, lvm will store metadata on the PV.
 .ad b
-
 .HP
 .ad l
 \fB--metadatasize\fP \fISize\fP[m|UNIT]
@@ -282,7 +253,6 @@ If no, lvm will store metadata on the PV.
 The approximate amount of space used for each VG metadata area.
 The size may be rounded.
 .ad b
-
 .HP
 .ad l
 \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP|\fBlvm1\fP
@@ -292,7 +262,6 @@ Specifies the type of on-disk metadata to use.
 \fBlvm1\fP (or just \fB1\fP) is a historical format that
 can be used for accessing old data.
 .ad b
-
 .HP
 .ad l
 \fB--norestorefile\fP
@@ -300,7 +269,6 @@ can be used for accessing old data.
 In conjunction with --uuid, this allows a uuid to be specified
 without also requiring that a backup of the metadata be provided.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -308,7 +276,6 @@ without also requiring that a backup of the metadata be provided.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB--[pv]metadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
@@ -322,7 +289,6 @@ When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -330,7 +296,6 @@ on the ability to use vgsplit later.)
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -342,7 +307,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--restorefile\fP \fIString\fP
@@ -355,7 +319,6 @@ the same place and not be overwritten by new metadata. This provides
 a mechanism to upgrade the metadata format or to add/remove metadata
 areas. Use with care.
 .ad b
-
 .HP
 .ad l
 \fB--setphysicalvolumesize\fP \fISize\fP[m|UNIT]
@@ -363,7 +326,6 @@ areas. Use with care.
 Overrides the automatically detected size of the PV.
 Use with care, or prior to reducing the physical size of the device.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -374,7 +336,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-u\fP|\fB--uuid\fP \fIString\fP
@@ -388,7 +349,6 @@ All PVs must have unique UUIDs, and LVM will prevent certain operations
 if multiple devices are seen with the same UUID.
 See vgimportclone(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -396,14 +356,12 @@ See vgimportclone(8) for more information.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -412,7 +370,6 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
-
 .HP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
@@ -422,8 +379,6 @@ The default is to wipe these sectors unless either or both of
 --restorefile or --uuid are specified.
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIPV\fP
 .br
@@ -434,12 +389,10 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -454,7 +407,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH EXAMPLES
@@ -469,7 +421,6 @@ sectors start at LBA -1, and consequently sector 63 is aligned on a 4KiB
 boundary) manually account for this when initializing for use by LVM.
 .br
 .B pvcreate \-\-dataalignmentoffset 7s /dev/sdb
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -536,4 +487,3 @@ boundary) manually account for this when initializing for use by LVM.
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

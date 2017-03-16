@@ -1,27 +1,15 @@
 .TH VGSCAN 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 vgscan \- Search for all volume groups
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBvgscan\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 vgscan scans all supported LVM block devices in the system for VGs.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBvgscan\fP
 .br
 .RS 4
@@ -52,7 +40,6 @@ vgscan scans all supported LVM block devices in the system for VGs.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Common options for lvm:
 .
@@ -104,19 +91,14 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--cache\fP
 .br
 Scan all devices and send the metadata to lvmetad.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -124,7 +106,6 @@ Scan all devices and send the metadata to lvmetad.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -134,7 +115,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -142,7 +122,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -150,14 +129,12 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelockingfailure\fP
@@ -165,14 +142,12 @@ Display help text.
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--mknodes\fP
@@ -180,7 +155,6 @@ Display long help text.
 Also checks the LVM special files in /dev that are needed for active
 LVs and creates any missing ones and removes unused ones.
 .ad b
-
 .HP
 .ad l
 \fB--notifydbus\fP
@@ -189,7 +163,6 @@ Send a notification to D-Bus. The command will exit with an error
 if LVM is not built with support for D-Bus notification, or if the
 notify_dbus config setting is disabled.
 .ad b
-
 .HP
 .ad l
 \fB-P\fP|\fB--partial\fP
@@ -199,7 +172,6 @@ that are only partially available (one or more PVs belonging
 to the VG are missing from the system). Metadata may not be
 changed with this option.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -207,7 +179,6 @@ changed with this option.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -215,7 +186,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -227,7 +197,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -238,7 +207,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -246,14 +214,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -263,13 +229,10 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -284,7 +247,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
@@ -353,4 +315,3 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

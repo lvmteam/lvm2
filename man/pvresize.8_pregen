@@ -1,28 +1,16 @@
 .TH PVRESIZE 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 pvresize \- Resize physical volume(s)
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBpvresize\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 pvresize resizes a PV. The PV may already be in a VG and may have active
 LVs allocated on it.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBpvresize\fP \fIPV\fP ...
 .br
 .RS 4
@@ -37,7 +25,6 @@ LVs allocated on it.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Common options for lvm:
 .
@@ -89,12 +76,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -102,7 +85,6 @@ Common options for lvm:
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -112,7 +94,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -120,7 +101,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -128,21 +108,18 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -150,7 +127,6 @@ Display long help text.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -158,7 +134,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -170,7 +145,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--setphysicalvolumesize\fP \fISize\fP[m|UNIT]
@@ -178,7 +152,6 @@ output in JSON format. See \fBlvmreport\fP(7) for more information.
 Overrides the automatically detected size of the PV.
 Use with care, or prior to reducing the physical size of the device.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -189,7 +162,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -197,14 +169,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -214,8 +184,6 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIPV\fP
 .br
@@ -226,12 +194,10 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -246,16 +212,12 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH NOTES
-
 pvresize will refuse to shrink a PV if it has allocated extents beyond the
 new end.
-
 .SH EXAMPLES
-
 Expand a PV after enlarging the partition.
 .br
 .B pvresize /dev/sda1
@@ -264,7 +226,6 @@ Shrink a PV prior to shrinking the partition (ensure that the PV size is
 appropriate for the intended new partition size).
 .br
 .B pvresize \-\-setphysicalvolumesize 40G /dev/sda1
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -331,4 +292,3 @@ appropriate for the intended new partition size).
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

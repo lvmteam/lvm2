@@ -1,33 +1,21 @@
 .TH PVDISPLAY 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 pvdisplay \- Display various attributes of physical volume(s)
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBpvdisplay\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 pvdisplay shows the attributes of PVs, like size, physical extent size,
 space used for the VG descriptor area, etc.
 
 \fBpvs\fP(8) is a preferred alternative that shows the same information
 and more, using a more compact and configurable output format.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBpvdisplay\fP
 .br
 .RS 4
@@ -130,7 +118,6 @@ and more, using a more compact and configurable output format.
 [ \fIPV\fP|\fITag\fP ... ]
 .RE
 
-
 Common options for lvm:
 .
 .RS 4
@@ -181,19 +168,14 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--aligned\fP
 .br
 Use with --separator to align the output columns
 .ad b
-
 .HP
 .ad l
 \fB-a\fP|\fB--all\fP
@@ -201,7 +183,6 @@ Use with --separator to align the output columns
 Show information about devices that have not been initialized
 by LVM, i.e. they are not PVs.
 .ad b
-
 .HP
 .ad l
 \fB--binary\fP
@@ -210,7 +191,6 @@ Use binary values "0" or "1" instead of descriptive literal values
 for columns that have exactly two valid values to report (not counting
 the "unknown" value which denotes that the value could not be determined).
 .ad b
-
 .HP
 .ad l
 \fB-c\fP|\fB--colon\fP
@@ -218,7 +198,6 @@ the "unknown" value which denotes that the value could not be determined).
 Generate colon separated output for easier parsing in scripts or programs.
 Also see vgs(8) which provides considerably more control over the output.
 .ad b
-
 .HP
 .ad l
 \fB-C\fP|\fB--columns\fP
@@ -226,7 +205,6 @@ Also see vgs(8) which provides considerably more control over the output.
 Display output in columns, the equivalent of vgs(8).
 Options listed are the same as options given in vgs(8).
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -234,7 +212,6 @@ Options listed are the same as options given in vgs(8).
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -244,14 +221,12 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP
 .br
 See lvmreport(7).
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -259,7 +234,6 @@ See lvmreport(7).
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -267,7 +241,6 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB--foreign\fP
@@ -275,14 +248,12 @@ For testing and debugging.
 Report/display foreign VGs that would otherwise be skipped.
 See lvmsystemid(7) for more information about foreign VGs.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelockingfailure\fP
@@ -290,7 +261,6 @@ Display help text.
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .ad b
-
 .HP
 .ad l
 \fB--ignoreskippedcluster\fP
@@ -298,28 +268,24 @@ operations after locking failures.
 Use to avoid exiting with an non-zero status code if the command is run
 without clustered locking and clustered VGs are skipped.
 .ad b
-
 .HP
 .ad l
 \fB--logonly\fP
 .br
 Suppress command report and display only log report.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-m\fP|\fB--maps\fP
 .br
 Display the mapping of physical extents to LVs and logical extents.
 .ad b
-
 .HP
 .ad l
 \fB--noheadings\fP
@@ -327,7 +293,6 @@ Display the mapping of physical extents to LVs and logical extents.
 Suppress the headings line that is normally the first line of output.
 Useful if grepping the output.
 .ad b
-
 .HP
 .ad l
 \fB--nosuffix\fP
@@ -335,7 +300,6 @@ Useful if grepping the output.
 Suppress the suffix on output sizes. Use with --units
 (except h and H) if processing the output.
 .ad b
-
 .HP
 .ad l
 \fB-o\fP|\fB--options\fP \fIString\fP
@@ -346,7 +310,8 @@ The prefix \fB+\fP will append the specified fields to the default fields,
 \fB-\fP will remove the specified fields from the default fields, and
 \fB#\fP will compact specified fields (removing them when empty for all rows.)
 Use \fB-o help\fP to view the list of all available fields.
-The -o option can be repeated, providing several lists.
+Use separate lists of fields to add, remove or compact by repeating the -o option:
+-o+field1,field2 -o-field3,field4 -o#field5.
 These lists are evaluated from left to right.
 Use field name \fBlv_all\fP to view all LV fields,
 \fBvg_all\fP all VG fields,
@@ -357,7 +322,6 @@ Use field name \fBlv_all\fP to view all LV fields,
 See the lvm.conf report section for more config options.
 See lvmreport(7) for more information about reporting.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -365,7 +329,6 @@ See lvmreport(7) for more information about reporting.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -373,7 +336,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--readonly\fP
@@ -388,7 +350,6 @@ will be made to communicate with the device-mapper kernel driver, so
 this option is unable to report whether or not LVs are
 actually in use.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -400,7 +361,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-S\fP|\fB--select\fP \fIString\fP
@@ -414,14 +374,12 @@ showing 1 if the row matches the selection and 0 otherwise.
 For non-reporting commands which process LVM entities, the selection is
 used to choose items to process.
 .ad b
-
 .HP
 .ad l
 \fB--separator\fP \fIString\fP
 .br
 String to use to separate each column. Useful if grepping the output.
 .ad b
-
 .HP
 .ad l
 \fB--shared\fP
@@ -430,14 +388,12 @@ Report/display shared VGs that would otherwise be skipped when
 lvmlockd is not being used on the host.
 See lvmlockd(8) for more information about shared VGs.
 .ad b
-
 .HP
 .ad l
 \fB-s\fP|\fB--short\fP
 .br
 Only display the size of the given PVs.
 .ad b
-
 .HP
 .ad l
 \fB-O\fP|\fB--sort\fP \fIString\fP
@@ -445,7 +401,6 @@ Only display the size of the given PVs.
 Comma-separated ordered list of columns to sort by. Replaces the default
 selection. Precede any column with \fB-\fP for a reverse sort on that column.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -456,14 +411,12 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB--unbuffered\fP
 .br
 Produce output immediately without sorting or aligning the columns properly.
 .ad b
-
 .HP
 .ad l
 \fB--units\fP \fBr\fP|\fBR\fP|\fBh\fP|\fBH\fP|\fBb\fP|\fBB\fP|\fBs\fP|\fBS\fP|\fBk\fP|\fBK\fP|\fBm\fP|\fBM\fP|\fBg\fP|\fBG\fP|\fBt\fP|\fBT\fP|\fBp\fP|\fBP\fP|\fBe\fP|\fBE\fP
@@ -475,7 +428,6 @@ human-(r)eadable with '<' rounding indicator,
 Capitalise to use multiples of 1000 (S.I.) instead of 1024.
 Custom units can be specified, e.g. --units 3M.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -483,14 +435,12 @@ Custom units can be specified, e.g. --units 3M.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -500,8 +450,6 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIPV\fP
 .br
@@ -512,18 +460,15 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -538,7 +483,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
@@ -607,4 +551,3 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

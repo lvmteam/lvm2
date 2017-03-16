@@ -1,21 +1,14 @@
 .TH VGCFGBACKUP 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 vgcfgbackup \- Backup volume group configuration(s)
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBvgcfgbackup\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 vgcfgbackup creates back up files containing metadata of VGs.
 If no VGs are named, back up files are created for all VGs.
@@ -33,12 +26,7 @@ NB. This DOES NOT back up the data content of LVs.
 
 It may also be useful to regularly back up the files in
 \fI/etc/lvm\fP.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBvgcfgbackup\fP
 .br
 .RS 4
@@ -72,7 +60,6 @@ It may also be useful to regularly back up the files in
 .RS 4
 [ \fIVG\fP ... ]
 .RE
-
 
 Common options for lvm:
 .
@@ -124,12 +111,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -137,7 +120,6 @@ Common options for lvm:
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -147,7 +129,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -155,7 +136,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -163,7 +143,6 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--file\fP \fIString\fP
@@ -172,7 +151,6 @@ Write the backup to the named file.
 When backing up more than one VG, the file name is
 treated as a template, and %s is replaced by the VG name.
 .ad b
-
 .HP
 .ad l
 \fB--foreign\fP
@@ -180,14 +158,12 @@ treated as a template, and %s is replaced by the VG name.
 Report/display foreign VGs that would otherwise be skipped.
 See lvmsystemid(7) for more information about foreign VGs.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB--ignorelockingfailure\fP
@@ -195,14 +171,12 @@ Display help text.
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB-P\fP|\fB--partial\fP
@@ -212,7 +186,6 @@ that are only partially available (one or more PVs belonging
 to the VG are missing from the system). Metadata may not be
 changed with this option.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -220,7 +193,6 @@ changed with this option.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -228,7 +200,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB--readonly\fP
@@ -243,7 +214,6 @@ will be made to communicate with the device-mapper kernel driver, so
 this option is unable to report whether or not LVs are
 actually in use.
 .ad b
-
 .HP
 .ad l
 \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
@@ -255,7 +225,6 @@ If there is more than one report per command, each report is prefixed
 with the report name for identification. \fBjson\fP produces report
 output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -266,7 +235,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -274,14 +242,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -291,18 +257,14 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -317,7 +279,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH SEE ALSO
@@ -386,4 +347,3 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

@@ -1,30 +1,18 @@
 .TH LVM LVPOLL 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvm lvpoll \- Continue already initiated poll operation on a logical volume
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvm lvpoll\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
-.P
-
 .SH DESCRIPTION
 lvm lvpoll is an internal command used by \fBlvmpolld\fP(8) to monitor and
 complete \fBlvconvert\fP(8) and \fBpvmove\fP(8) operations. lvpoll itself
 does not initiate these operations and should not normally need to be run
 directly.
-
-.P
 .SH USAGE
-.br
-.P
-.
 \fBlvm lvpoll\fP \fB--polloperation\fP \fBpvmove\fP|\fBconvert\fP|\fBmerge\fP|\fBmerge_thin\fP \fILV\fP ...
 .br
 .RS 4
@@ -47,7 +35,6 @@ directly.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
 
 Common options for lvm:
 .
@@ -99,19 +86,14 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--abort\fP
 .br
 Stop processing a poll operation in lvmpolld.
 .ad b
-
 .HP
 .ad l
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -119,7 +101,6 @@ Stop processing a poll operation in lvmpolld.
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -127,7 +108,6 @@ Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -137,7 +117,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -145,7 +124,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -153,7 +131,6 @@ messages sent to the log file and/or syslog (if configured).
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB--handlemissingpvs\fP
@@ -161,35 +138,30 @@ For testing and debugging.
 Allows a polling operation to continue when PVs are missing,
 e.g. for repairs due to faulty devices.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB-i\fP|\fB--interval\fP \fINumber\fP
 .br
 Report progress at regular intervals.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--polloperation\fP \fBpvmove\fP|\fBconvert\fP|\fBmerge\fP|\fBmerge_thin\fP
 .br
 The command to perform from lvmpolld.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -197,7 +169,6 @@ The command to perform from lvmpolld.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -205,7 +176,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -216,7 +186,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -224,14 +193,12 @@ back metadata it believes has changed but hasn't.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -241,19 +208,15 @@ answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fILV\fP
 .br
 Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -268,7 +231,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH NOTES
@@ -277,7 +239,6 @@ To find the name of the pvmove LV that was created by an original
 \fBpvmove /dev/name\fP command, use the command:
 .br
 \fBlvs -a -S move_pv=/dev/name\fP.
-
 .SH EXAMPLES
 
 Continue polling a pvmove operation.
@@ -303,7 +264,6 @@ Continue snapshot merge.
 Continue thin snapshot merge.
 .br
 .B lvm lvpoll --polloperation merge_thin vg/thin_snapshot
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -370,4 +330,3 @@ Continue thin snapshot merge.
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-

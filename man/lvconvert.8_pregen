@@ -1,21 +1,14 @@
 .TH LVCONVERT 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
 .SH NAME
-.
 lvconvert \- Change logical volume layout
-.P
 .
 .SH SYNOPSIS
-.br
-.P
-.
 \fBlvconvert\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
 .br
-.P
-
 .P
 .ad l
     \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
@@ -240,9 +233,6 @@ lvconvert \- Change logical volume layout
 .ad l
  \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
 .ad b
-
-.P
-
 .SH DESCRIPTION
 lvconvert changes the LV type and includes utilities for LV data
 maintenance. The LV type controls data layout and redundancy.
@@ -308,13 +298,7 @@ and vice-versa by e.g. linear <-> raid1 <-> raid5_n (then adding stripes) <-> st
 
 Sub LVs can be displayed with the command
 .B lvs -a
-
-
-.P
 .SH USAGE
-.br
-.P
-.
 Convert LV to linear.
 .br
 .P
@@ -327,10 +311,7 @@ Convert LV to linear.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert LV to striped.
 .br
@@ -360,10 +341,7 @@ Convert LV to striped.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert LV to raid or change raid layout 
 .br
@@ -399,10 +377,7 @@ Convert LV to raid or change raid layout
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert LV to raid1 or mirror, or change number of mirror images.
 .br
@@ -428,10 +403,7 @@ Convert LV to raid1 or mirror, or change number of mirror images.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert raid LV to change number of stripe images.
 .br
@@ -457,10 +429,7 @@ Convert raid LV to change number of stripe images.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert raid LV to change the stripe size.
 .br
@@ -479,10 +448,7 @@ Convert raid LV to change the stripe size.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Split images from a raid1 or mirror LV and use them to create a new LV.
 .br
@@ -496,10 +462,7 @@ Split images from a raid1 or mirror LV and use them to create a new LV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Split images from a raid1 LV and track changes to origin.
 .br
@@ -513,10 +476,7 @@ Split images from a raid1 LV and track changes to origin.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Merge LV images that were split from a raid1 LV.
 .br
@@ -527,10 +487,7 @@ Merge LV images that were split from a raid1 LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Convert LV to a thin LV, using the original LV as an external origin.
 .br
@@ -577,10 +534,7 @@ Convert LV to a thin LV, using the original LV as an external origin.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Convert LV to type cache.
 .br
@@ -639,10 +593,7 @@ Convert LV to type cache.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Convert LV to type thin-pool.
 .br
@@ -696,10 +647,7 @@ Convert LV to type thin-pool.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert LV to type cache-pool.
 .br
@@ -757,10 +705,7 @@ Convert LV to type cache-pool.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Separate and keep the cache pool from a cache LV.
 .br
@@ -771,10 +716,7 @@ Separate and keep the cache pool from a cache LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Merge thin LV into its origin LV.
 .br
@@ -785,10 +727,7 @@ Merge thin LV into its origin LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Merge COW snapshot LV into its origin.
 .br
@@ -803,10 +742,7 @@ Merge COW snapshot LV into its origin.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Replace failed PVs in a raid or mirror LV. 
 .br
@@ -830,10 +766,7 @@ Repair a thin pool.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Replace specific PV(s) in a raid LV with another PV.
 .br
@@ -847,10 +780,7 @@ Replace specific PV(s) in a raid LV with another PV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Poll LV to continue conversion.
 .br
@@ -861,10 +791,7 @@ Poll LV to continue conversion.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Common options for command:
 .
@@ -884,9 +811,7 @@ Common options for command:
 .ad l
 [    \fB--noudevsync\fP ]
 .ad b
-
 .RE
-.br
 
 Common options for lvm:
 .
@@ -938,12 +863,8 @@ Common options for lvm:
 .ad l
 [    \fB--version\fP ]
 .ad b
-
 .RE
-
 .SH OPTIONS
-.br
-
 .HP
 .ad l
 \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
@@ -965,7 +886,6 @@ Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
 .ad b
-
 .HP
 .ad l
 \fB-b\fP|\fB--background\fP
@@ -974,7 +894,6 @@ If the operation requires polling, this option causes the command to
 return before the operation is complete, and polling is done in the
 background.
 .ad b
-
 .HP
 .ad l
 \fB-H\fP|\fB--cache\fP
@@ -983,14 +902,12 @@ Specifies the command is handling a cache LV or cache pool.
 See --type cache and --type cache-pool.
 See \fBlvmcache\fP(7) for more information about LVM caching.
 .ad b
-
 .HP
 .ad l
 \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .br
 Specifies the cache metadata format used by cache target.
 .ad b
-
 .HP
 .ad l
 \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
@@ -1007,7 +924,6 @@ from the origin LV (all reads miss the cache) and all writes are
 forwarded to the origin LV; additionally, write hits cause cache
 block invalidates. See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachepolicy\fP \fIString\fP
@@ -1015,14 +931,12 @@ block invalidates. See \fBlvmcache\fP(7) for more information.
 Specifies the cache policy for a cache LV.
 See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--cachepool\fP \fILV\fP
 .br
 The name of a cache pool LV.
 .ad b
-
 .HP
 .ad l
 \fB--cachesettings\fP \fIString\fP
@@ -1035,7 +949,6 @@ settings back to their default kernel values and removes
 them from the list of settings stored in LVM metadata.
 See \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT]
@@ -1051,7 +964,6 @@ pool metadata size within 128MiB, if the pool metadata size is not specified.
 The value must be a multiple of 64KiB.
 See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--commandprofile\fP \fIString\fP
@@ -1059,7 +971,6 @@ See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--config\fP \fIString\fP
@@ -1069,7 +980,6 @@ The String arg uses the same format as lvm.conf,
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .ad b
-
 .HP
 .ad l
 \fB-d\fP|\fB--debug\fP ...
@@ -1077,7 +987,6 @@ See \fBlvm.conf\fP(5) for more information about config.
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
-
 .HP
 .ad l
 \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
@@ -1091,7 +1000,6 @@ allow reuse of unneeded extents in the thin pool.
 (like nopassdown) and pass the discards to the underlying device.
 See \fBlvmthin\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--driverloaded\fP \fBy\fP|\fBn\fP
@@ -1099,7 +1007,6 @@ See \fBlvmthin\fP(7) for more information.
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
-
 .HP
 .ad l
 \fB-f\fP|\fB--force\fP ...
@@ -1107,28 +1014,24 @@ For testing and debugging.
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .ad b
-
 .HP
 .ad l
 \fB-h\fP|\fB--help\fP
 .br
 Display help text.
 .ad b
-
 .HP
 .ad l
 \fB-i\fP|\fB--interval\fP \fINumber\fP
 .br
 Report progress at regular intervals.
 .ad b
-
 .HP
 .ad l
 \fB--longhelp\fP
 .br
 Display long help text.
 .ad b
-
 .HP
 .ad l
 \fB--merge\fP
@@ -1136,7 +1039,6 @@ Display long help text.
 An alias for --mergethin, --mergemirrors, or --mergesnapshot,
 depending on the type of LV.
 .ad b
-
 .HP
 .ad l
 \fB--mergemirrors\fP
@@ -1144,7 +1046,6 @@ depending on the type of LV.
 Merge LV images that were split from a raid1 LV.
 See --splitmirrors with --trackchanges.
 .ad b
-
 .HP
 .ad l
 \fB--mergesnapshot\fP
@@ -1162,7 +1063,6 @@ being merged. When the merge finishes, the merged snapshot is removed.
 Multiple snapshots may be specified on the command line or a @tag may be
 used to specify multiple snapshots be merged to their respective origin.
 .ad b
-
 .HP
 .ad l
 \fB--mergethin\fP
@@ -1172,7 +1072,6 @@ The origin thin LV takes the content of the thin snapshot,
 and the thin snapshot LV is removed.
 See \fBlvmthin\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB--metadataprofile\fP \fIString\fP
@@ -1180,7 +1079,6 @@ See \fBlvmthin\fP(7) for more information.
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
-
 .HP
 .ad l
 \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP
@@ -1194,7 +1092,6 @@ In this case, the mirror must be synchronized (by copying LV data from
 the first device to others) each time the LV is activated, e.g. after reboot.
 \fBmirrored\fP is a persistent log that is itself mirrored.
 .ad b
-
 .HP
 .ad l
 \fB-m\fP|\fB--mirrors\fP [\fB+\fP|\fB-\fP]\fINumber\fP
@@ -1216,7 +1113,6 @@ or the minus prefix \fB-\fP can be used, in which case
 the number is subtracted from the current number of images.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-n\fP|\fB--name\fP \fIString\fP
@@ -1225,7 +1121,6 @@ Specifies the name of a new LV.
 When unspecified, a default name of "lvol#" is
 generated, where # is a number generated by LVM.
 .ad b
-
 .HP
 .ad l
 \fB--noudevsync\fP
@@ -1235,7 +1130,6 @@ from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .ad b
-
 .HP
 .ad l
 \fB--originname\fP \fILV\fP
@@ -1244,21 +1138,18 @@ Specifies the name to use for the external origin LV when converting an LV
 to a thin LV. The LV being converted becomes a read-only external origin
 with this name.
 .ad b
-
 .HP
 .ad l
 \fB--poolmetadata\fP \fILV\fP
 .br
 The name of a an LV to use for storing pool metadata.
 .ad b
-
 .HP
 .ad l
 \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
 .br
 Specifies the size of the new pool metadata LV.
 .ad b
-
 .HP
 .ad l
 \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
@@ -1267,7 +1158,6 @@ Enable or disable the automatic creation and management of a
 spare pool metadata LV in the VG. A spare metadata LV is reserved
 space that can be used when repairing a pool.
 .ad b
-
 .HP
 .ad l
 \fB--profile\fP \fIString\fP
@@ -1275,7 +1165,6 @@ space that can be used when repairing a pool.
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .ad b
-
 .HP
 .ad l
 \fB-q\fP|\fB--quiet\fP ...
@@ -1283,7 +1172,6 @@ on the command.
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
-
 .HP
 .ad l
 \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
@@ -1293,7 +1181,6 @@ Sets read ahead sector count of an LV.
 a suitable value automatically.
 \fBnone\fP is equivalent to zero.
 .ad b
-
 .HP
 .ad l
 \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT]
@@ -1302,7 +1189,6 @@ Size of each raid or mirror synchronization region.
 lvm.conf activation/raid_region_size can be used to
 configure a default.
 .ad b
-
 .HP
 .ad l
 \fB--repair\fP
@@ -1311,7 +1197,6 @@ Replace failed PVs in a raid or mirror LV, or run a repair
 utility on a thin pool. See \fBlvmraid\fP(7) and \fBlvmthin\fP(7)
 for more information.
 .ad b
-
 .HP
 .ad l
 \fB--replace\fP \fIPV\fP
@@ -1321,7 +1206,6 @@ The new PV to use can be optionally specified after the LV.
 Multiple PVs can be replaced by repeating this option.
 See \fBlvmraid\fP(7) for more information.
 .ad b
-
 .HP
 .ad l
 \fB-s\fP|\fB--snapshot\fP
@@ -1329,7 +1213,6 @@ See \fBlvmraid\fP(7) for more information.
 Combine a former COW snapshot LV with a former origin LV to reverse
 a previous --splitsnapshot command.
 .ad b
-
 .HP
 .ad l
 \fB--splitcache\fP
@@ -1337,7 +1220,6 @@ a previous --splitsnapshot command.
 Separates a cache pool from a cache LV, and keeps the unused cache pool LV.
 Before the separation, the cache is flushed. Also see --uncache.
 .ad b
-
 .HP
 .ad l
 \fB--splitmirrors\fP \fINumber\fP
@@ -1346,7 +1228,6 @@ Splits the specified number of images from a raid1 or mirror LV
 and uses them to create a new LV. If --trackchanges is also specified,
 changes to the raid1 LV are tracked while the split LV remains detached.
 .ad b
-
 .HP
 .ad l
 \fB--splitsnapshot\fP
@@ -1355,14 +1236,12 @@ Separates a COW snapshot from its origin LV. The LV that is split off
 contains the chunks that differ from the origin LV along with metadata
 describing them. This LV can be wiped and then destroyed with lvremove.
 .ad b
-
 .HP
 .ad l
 \fB--startpoll\fP
 .br
 Start polling an LV to continue processing a conversion.
 .ad b
-
 .HP
 .ad l
 \fB--stripes\fP \fINumber\fP
@@ -1373,7 +1252,6 @@ appears sequential in the LV is spread across multiple devices in units of
 the stripe size (see --stripesize). This does not apply to
 existing allocated space, only newly allocated space can be striped.
 .ad b
-
 .HP
 .ad l
 \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
@@ -1381,7 +1259,6 @@ existing allocated space, only newly allocated space can be striped.
 The amount of data that is written to one device before
 moving to the next in a striped LV.
 .ad b
-
 .HP
 .ad l
 \fB--swapmetadata\fP
@@ -1393,7 +1270,6 @@ be activated directly and used with thin provisioning tools:
 \fBcache_dump\fP(8), \fBcache_repair\fP(8), \fBcache_restore\fP(8),
 \fBthin_dump\fP(8), \fBthin_repair\fP(8), \fBthin_restore\fP(8).
 .ad b
-
 .HP
 .ad l
 \fB-t\fP|\fB--test\fP
@@ -1404,7 +1280,6 @@ returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .ad b
-
 .HP
 .ad l
 \fB-T\fP|\fB--thin\fP
@@ -1413,14 +1288,12 @@ Specifies the command is handling a thin LV or thin pool.
 See --type thin, --type thin-pool, and --virtualsize.
 See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
 .ad b
-
 .HP
 .ad l
 \fB--thinpool\fP \fILV\fP
 .br
 The name of a thin pool LV.
 .ad b
-
 .HP
 .ad l
 \fB--trackchanges\fP
@@ -1432,7 +1305,6 @@ merged efficiently back into the raid1 LV later. Only the regions with
 changed data are resynchronized during merge. (This option only applies
 when using the raid1 LV type.)
 .ad b
-
 .HP
 .ad l
 \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBthin-pool\fP|\fBcache-pool\fP
@@ -1448,7 +1320,6 @@ is inferred from other options or shortcuts
 (e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache).
 Use inferred types with care because it can lead to unexpected results.
 .ad b
-
 .HP
 .ad l
 \fB--uncache\fP
@@ -1456,7 +1327,6 @@ Use inferred types with care because it can lead to unexpected results.
 Separates a cache pool from a cache LV, and deletes the unused cache pool LV.
 Before the separation, the cache is flushed. Also see --splitcache.
 .ad b
-
 .HP
 .ad l
 \fB--usepolicies\fP
@@ -1464,7 +1334,6 @@ Before the separation, the cache is flushed. Also see --splitcache.
 Perform an operation according to the policy configured in lvm.conf
 or a profile.
 .ad b
-
 .HP
 .ad l
 \fB-v\fP|\fB--verbose\fP ...
@@ -1472,14 +1341,12 @@ or a profile.
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
-
 .HP
 .ad l
 \fB--version\fP
 .br
 Display version information.
 .ad b
-
 .HP
 .ad l
 \fB-y\fP|\fB--yes\fP
@@ -1488,7 +1355,6 @@ Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .ad b
-
 .HP
 .ad l
 \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
@@ -1499,13 +1365,10 @@ For thin pools, this controls zeroing of provisioned blocks.
 Provisioning of large zeroed chunks negatively impacts performance.
 .ad b
 .SH VARIABLES
-.br
-
 .HP
 \fIVG\fP
 .br
 Volume Group name.  See \fBlvm\fP(8) for valid names.
-
 .HP
 \fILV\fP
 .br
@@ -1513,7 +1376,6 @@ Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
 LV followed by _<type> indicates that an LV of the
 given type is required. (raid represents raid<N> type)
-
 .HP
 \fIPV\fP
 .br
@@ -1524,18 +1386,15 @@ of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
 Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
 Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
-
 .HP
 \fITag\fP
 .br
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
-
 .HP
 \fIString\fP
 .br
 See the option description for information about the string content.
-
 .HP
 \fISize\fP[UNIT]
 .br
@@ -1550,7 +1409,6 @@ p|P is petabytes, e|E is exabytes.
 (This should not be confused with the output control --units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
-.br
 See \fBlvm\fP(8) for information about environment variables used by lvm.
 For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
 .SH ADVANCED USAGE
@@ -1586,10 +1444,7 @@ Convert LV to type mirror (also see type raid1),
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Change the region size of an LV.
 .br
@@ -1600,10 +1455,7 @@ Change the region size of an LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Change the type of mirror log used by a mirror LV.
 .br
@@ -1617,10 +1469,7 @@ Change the type of mirror log used by a mirror LV.
 .RS 4
 [ \fIPV\fP ... ]
 .RE
-
---
-
-.br
+-
 
 Convert LV to a thin LV, using the original LV as an external origin 
 .br
@@ -1669,10 +1518,7 @@ Convert LV to a thin LV, using the original LV as an external origin
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Convert LV to type cache (infers --type cache).
 .br
@@ -1731,10 +1577,7 @@ Convert LV to type cache (infers --type cache).
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Separate and delete the cache pool from a cache LV.
 .br
@@ -1745,10 +1588,7 @@ Separate and delete the cache pool from a cache LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Swap metadata LV in a thin pool or cache pool (for repair only).
 .br
@@ -1763,10 +1603,7 @@ Swap metadata LV in a thin pool or cache pool (for repair only).
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Merge LV that was split from a mirror (variant, use --mergemirrors). 
 .br
@@ -1785,10 +1622,7 @@ Merge COW snapshot LV into its origin (variant, use --mergesnapshot).
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Separate a COW snapshot from its origin LV.
 .br
@@ -1799,10 +1633,7 @@ Separate a COW snapshot from its origin LV.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Combine a former COW snapshot (second arg) with a former 
 .br
@@ -1827,10 +1658,7 @@ origin LV (first arg) to reverse a splitsnapshot command.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Combine a former COW snapshot (second arg) with a former 
 .br
@@ -1855,10 +1683,7 @@ origin LV (first arg) to reverse a splitsnapshot command.
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 Poll LV to continue conversion (also see --startpoll).
 .br
@@ -1869,13 +1694,9 @@ Poll LV to continue conversion (also see --startpoll).
 [ COMMON_OPTIONS ]
 .RE
 .br
-
---
-
-.br
+-
 
 .SH NOTES
-
 This previous command syntax would perform two different operations:
 .br
 \fBlvconvert --thinpool\fP \fILV1\fP \fB--poolmetadata\fP \fILV2\fP
@@ -1894,9 +1715,7 @@ If LV1 was not a cache pool, the command would convert LV1 to
 a cache pool, optionally using a specified LV for metadata.
 But, if LV1 was already a cache pool, the command would swap
 the current metadata LV with LV2 (for repair purposes.)
-
 .SH EXAMPLES
-
 Convert a linear LV to a two-way mirror LV.
 .br
 .B lvconvert \-\-type mirror \-\-mirrors 1 vg/lvol1
@@ -1989,7 +1808,6 @@ Detach and keep the cache pool from a cache LV.
 Detach and remove the cache pool from a cache LV.
 .br
 .B lvconvert \-\-uncache vg/lvol1
-
 .SH SEE ALSO
 
 .BR lvm (8)
@@ -2056,4 +1874,3 @@ Detach and remove the cache pool from a cache LV.
 .BR lvmraid (7)
 .BR lvmthin (7)
 .BR lvmcache (7)
-
