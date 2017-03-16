@@ -2874,6 +2874,9 @@ int lvmetad_is_disabled(struct cmd_context *cmd, const char **reason)
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_DIRECT)) {
 			*reason = "the disable flag was set directly";
 
+		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_REPAIR)) {
+			*reason = "a repair command was run";
+
 		} else if (strstr(reply_reason, LVMETAD_DISABLE_REASON_LVM1)) {
 			*reason = "LVM1 metadata was found";
 
