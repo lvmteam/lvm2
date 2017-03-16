@@ -233,6 +233,8 @@ Scan (all disks) for Logical Volumes.
 .P
 The following LVM1 commands are not implemented in LVM2:
 .BR lvmchange ", " lvmsadc ", " lvmsar ", " pvdata .
+For performance metrics, use \fBdmstats\fP(8) or to manipulate the kernel
+device-mapper driver used by LVM2 directly, use \fBdmsetup\fP(8).
 .
 .SH VALID NAMES
 .
@@ -543,4 +545,5 @@ directly.
 .BR lvmcache (7)
 
 .BR dmsetup (8),
+.BR dmstats (8),
 .BR readline (3)
