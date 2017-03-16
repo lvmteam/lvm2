@@ -273,16 +273,16 @@ written.
 The RAID implementation keeps track of which parts of a RAID LV are
 synchronized.  This uses a bitmap saved in the RAID metadata.  The bitmap
 can exclude large parts of the LV from synchronization to reduce the
-amount of work.  Without this, the entire LV would need to be synchronized
-every time it was activated.  When a RAID LV is first created and
-activated the first synchronization is called initialization.
+amount of work after a crash.  Without this, the entire LV would need
+to be synchronized every time it was activated.  When a RAID LV is
+first created and activated the first synchronization is called initialization.
 
 Automatic synchronization happens when a RAID LV is activated, but it is
 usually partial because the bitmaps reduce the areas that are checked.
-A full sync may become necessary when devices in the RAID LV are changed.
+A full sync becomes necessary when devices in the RAID LV are replaced.
 
 The synchronization status of a RAID LV is reported by the
-following command, where "image synced" means sync is complete:
+following command, where "Cpy%Sync" = "100%" means sync is complete:
 
 .B lvs -a -o name,sync_percent
 
@@ -824,8 +824,8 @@ synchronous.
 
 RAID takeover is converting a RAID LV from one RAID level to another, e.g.
 raid5 to raid6.  Changing the RAID level is usually done to increase or
-decrease resilience to device failures.  This is done using lvconvert and
-specifying the new RAID level as the LV type:
+decrease resilience to device failures or to restripe LVs.  This is done
+using lvconvert and specifying the new RAID level as the LV type:
 
 .B lvconvert --type
 .I RaidLevel
