@@ -13,13 +13,6 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/*
-#define unimplemented \
-	log_error("Command not implemented yet."); return ECMD_FAILED
-
-int e2fsadm(struct cmd_context *cmd, int argc, char **argv) unimplemented
-*/
-
 int lvmsadc(struct cmd_context *cmd __attribute__((unused)),
 	    int argc __attribute__((unused)),
 	    char **argv __attribute__((unused)))
