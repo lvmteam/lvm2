@@ -190,8 +190,7 @@ install_man7: $(MAN7)
 
 install_man8: $(MAN8) $(MAN8GENERATED)
 	$(INSTALL) -d $(MAN8DIR)
-	$(INSTALL_DATA) $(MAN8) $(MAN8DIR)/
-	$(INSTALL_DATA) $(MAN8GENERATED) $(MAN8DIR)/
+	$(INSTALL_DATA) $(MAN8) $(MAN8GENERATED) $(MAN8DIR)/
 
 install_lvm2: install_man5 install_man7 install_man8
 
