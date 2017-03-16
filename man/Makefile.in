@@ -19,6 +19,7 @@ top_builddir = @top_builddir@
 FSADMMAN = fsadm.8
 BLKDEACTIVATEMAN = blkdeactivate.8
 DMEVENTDMAN = dmeventd.8
+DMFILEMAPDMAN = dmfilemapd.8
 LVMETADMAN = lvmetad.8
 LVMPOLLDMAN = lvmpolld.8
 LVMLOCKDMAN = lvmlockd.8 lvmlockctl.8
@@ -40,7 +41,7 @@ MAN8=lvm.8 lvmconf.8 lvmdump.8 lvm-config.8 lvm-dumpconfig.8 lvm-fullreport.8 \
      vgimport.8 vgimportclone.8 vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 \
      vgrename.8 vgs.8 vgscan.8 vgsplit.8 \
      lvmsar.8 lvmsadc.8 lvmdiskscan.8
-MAN8DM=dmsetup.8 dmstats.8 dmfilemapd.8
+MAN8DM=dmsetup.8 dmstats.8
 MAN8CLUSTER=
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
@@ -55,7 +56,7 @@ endif
 
 ifeq ($(MAN_ALL),"yes")
   MAN8+=$(FSADMMAN) $(LVMETADMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN)
-  MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN)
+  MAN8DM+=$(BLKDEACTIVATEMAN) $(DMEVENTDMAN) $(DMFILEMAPDMAN)
   MAN8CLUSTER+=$(CLVMDMAN) $(CMIRRORDMAN)
   MAN7+=$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMRAIDMAN)
 else
@@ -85,6 +86,10 @@ else
 
   ifeq ("@DMEVENTD@", "yes")
     MAN8DM+=$(DMEVENTDMAN)
+  endif
+
+  ifeq ("@DMFILEMAPD@", "yes")
+    MAN8DM+=$(DMFILEMAPDMAN)
   endif
 
   ifneq ("@CLVMD@", "none")
@@ -121,7 +126,8 @@ CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8:%.8_gen=%.8) $(MAN8CLUSTER) \
 	$(MAN8SYSTEMD_GENERATORS) $(MAN8DM) $(MANGENERATOR) $(TESTMAN)
 DISTCLEAN_TARGETS+=$(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) \
 	$(LVMETADMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(CLVMDMAN) $(CMIRRORDMAN) \
-	$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMDBUSDMAN) $(LVMRAIDMAN)
+	$(LVMCACHEMAN) $(LVMTHINMAN) $(LVMDBUSDMAN) $(LVMRAIDMAN) \
+	$(DMFILEMAPDMAN)
 
 all: man device-mapper
 
