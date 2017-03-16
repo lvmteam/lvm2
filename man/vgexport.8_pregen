@@ -1,4 +1,4 @@
-.TH VGEXPORT 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
+.TH VGEXPORT 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .SH NAME
 vgexport \- Unregister volume group(s) from the system
 .

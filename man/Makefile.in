@@ -122,7 +122,7 @@ TESTMAN=test.gen
 
 include $(top_builddir)/make.tmpl
 
-CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8:%.8_gen=%.8) $(MAN8CLUSTER) \
+CLEAN_TARGETS+=$(MAN5) $(MAN7) $(MAN8) $(MAN8:%.8=%.8_gen) $(MAN8CLUSTER) \
 	$(MAN8SYSTEMD_GENERATORS) $(MAN8DM) $(MANGENERATOR) $(TESTMAN)
 DISTCLEAN_TARGETS+=$(FSADMMAN) $(BLKDEACTIVATEMAN) $(DMEVENTDMAN) \
 	$(LVMETADMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(CLVMDMAN) $(CMIRRORDMAN) \
@@ -150,12 +150,14 @@ $(TESTMAN): $(MANGENERATOR)
 
 SEE_ALSO=$(srcdir)/see_also.end
 
+.PRECIOUS: %.8_gen
+
 %.8_gen: $(srcdir)/%.8_des $(srcdir)/%.8_end $(MANGENERATOR) $(TESTMAN)
 	( \
 	    if [ ! -s $(TESTMAN) ] ; then \
-		echo "Copying pre-generated $@" ; \
+		echo "Copying pre-generated template $@" ; \
 	    else \
-		echo "Generating $@" ; \
+		echo "Generating template $@" ; \
 	    fi \
 	)
 	( \
@@ -222,7 +224,7 @@ install_all_man: install install_systemd_generators
 pregenerated_man: all
 	for i in $(srcdir)/*.8_des; do \
 		CMD=`basename $$i .8_des`; \
-		cat $${CMD}.8 > $(srcdir)/$$CMD.8_pregen ; \
+		cat $${CMD}.8_gen > $(srcdir)/$$CMD.8_pregen ; \
 	done
 
 generate: pregenerated_man

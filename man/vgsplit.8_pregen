@@ -1,4 +1,4 @@
-.TH VGSPLIT 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
+.TH VGSPLIT 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .SH NAME
 vgsplit \- Move physical volumes into a new or existing volume group
 .

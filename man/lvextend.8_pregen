@@ -1,4 +1,4 @@
-.TH LVEXTEND 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
+.TH LVEXTEND 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .SH NAME
 lvextend \- Add space to a logical volume
 .

@@ -1,4 +1,4 @@
-.TH PVS 8 "LVM TOOLS 2.02.169(2)-git (2016-11-30)" "Red Hat, Inc."
+.TH PVS 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .SH NAME
 pvs \- Display information about physical volumes
 .
