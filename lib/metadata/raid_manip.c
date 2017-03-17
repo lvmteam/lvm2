@@ -39,22 +39,6 @@ static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
 	return 1;
 }
 
-__attribute__ ((__unused__))
-/* Check that all lv has segments have exactly the required number of areas */
-static int _check_num_areas_in_lv_segments(struct logical_volume *lv, unsigned num_areas)
-{
-	struct lv_segment *seg;
-
-	dm_list_iterate_items(seg, &lv->segments)
-		if (seg->area_count != num_areas) {
-			log_error("For this operation LV %s needs exactly %u data areas per segment.",
-				  display_lvname(lv), num_areas);
-			return 0;
-		}
-
-	return 1;
-}
-
 /*
  * Check if reshape is supported in the kernel.
  */
