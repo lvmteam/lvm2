@@ -4773,6 +4773,19 @@ static int _lvresize_check(struct logical_volume *lv,
 		return 0;
 	}
 
+	if (lv_is_raid(lv) &&
+	    lp->resize == LV_REDUCE) {
+		unsigned attrs;
+		const struct segment_type *segtype = first_seg(lv)->segtype;
+
+		if (!segtype->ops->target_present ||
+		    !segtype->ops->target_present(lv->vg->cmd, NULL, &attrs) ||
+		    !(attrs & RAID_FEATURE_SHRINK)) {
+			log_error("RAID module does not support shrinking.");
+			return 0;
+		}
+	}
+
 	if (lp->use_policies && !lv_is_cow(lv) && !lv_is_thin_pool(lv)) {
 		log_error("Policy-based resize is supported only for snapshot and thin pool volumes.");
 		return 0;
