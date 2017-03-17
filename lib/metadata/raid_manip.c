@@ -1848,7 +1848,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 				       const unsigned new_stripes, const unsigned new_stripe_size,
 				       struct dm_list *allocate_pvs, struct dm_list *removal_lvs)
 {
-	uint32_t active_lvs, current_le_count, reduced_le_count, removed_lvs, s;
+	uint32_t available_slvs, current_le_count, reduced_le_count, removed_slvs, s;
 	uint64_t extend_le_count;
 	unsigned devs_health, devs_in_sync;
 	struct lv_segment *seg = first_seg(lv);
@@ -1943,7 +1943,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		 * -> remove the freed up images and reduce LV size
 		 *
 		 */
-		if (!_get_available_removed_sublvs(lv, &active_lvs,  &removed_lvs))
+		if (!_get_available_removed_sublvs(lv, &available_slvs,  &removed_slvs))
 			return_0;
 
 		if (devs_in_sync != new_image_count) {
@@ -1951,7 +1951,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 			return 0;
 		}
 
-		if (active_lvs + removed_lvs != old_image_count) {
+		if (available_slvs + removed_slvs != old_image_count) {
 			log_error ("No correct kernel/lvm total LV count on %s.", display_lvname(lv));
 			return 0;
 		}
