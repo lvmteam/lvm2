@@ -331,7 +331,8 @@ arg(mirrorlog_ARG, '\0', "mirrorlog", mirrorlog_VAL, 0, 0,
     "\\fBcore\\fP is not persistent; the log is kept only in memory.\n"
     "In this case, the mirror must be synchronized (by copying LV data from\n"
     "the first device to others) each time the LV is activated, e.g. after reboot.\n"
-    "\\fBmirrored\\fP is a persistent log that is itself mirrored.\n")
+    "\\fBmirrored\\fP is a persistent log that is itself mirrored, but\n"
+    "should be avoided. Instead, use the raid1 type for log redundancy.\n")
 
 arg(mirrorsonly_ARG, '\0', "mirrorsonly", 0, 0, 0,
     "Only remove missing PVs from mirror LVs.\n")
