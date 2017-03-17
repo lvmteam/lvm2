@@ -220,7 +220,12 @@ char *lvseg_segtype_dup(struct dm_pool *mem, const struct lv_segment *seg)
 
 char *lvseg_discards_dup(struct dm_pool *mem, const struct lv_segment *seg)
 {
-	return  dm_pool_strdup(mem, get_pool_discards_name(seg->discards));
+	if (lv_is_thin_pool(seg->lv))
+		return  dm_pool_strdup(mem, get_pool_discards_name(seg->discards));
+
+	log_error("Cannot query non thin-pool segment of LV %s for discards property.",
+		  display_lvname(seg->lv));
+	return NULL;
 }
 
 char *lvseg_kernel_discards_dup_with_info_and_seg_status(struct dm_pool *mem, const struct lv_with_info_and_seg_status *lvdm)
