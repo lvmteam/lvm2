@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Conditionally reject raid convert to striped/raid0* after reshape
   Ensure raid6 upconversion restrictions
   Adjust mirror+raid DSOs to aforementioned lvconvert --repair
   Disable lvmetad when lvconvert --repair is run.
