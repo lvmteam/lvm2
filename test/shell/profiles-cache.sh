@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux have_cache 1 3 0 || skip
+aux have_cache 1 8 0 || skip
 
 PDIR="$LVM_SYSTEM_DIR/profile"
 PFILE="cache-test"
