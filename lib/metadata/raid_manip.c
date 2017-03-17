@@ -6017,7 +6017,7 @@ int lv_raid_convert(struct logical_volume *lv,
 	}
 
 	/* Prohibit any takeover in case sub LVs to be removed still exist after a previous reshape */
-	if (_get_available_removed_sublvs(lv, &available_slvs, &removed_slvs))
+	if (!_get_available_removed_sublvs(lv, &available_slvs, &removed_slvs))
 		return 0;
 	if (removed_slvs) {
 		log_error("Can't convert %s LV %s to %s containing sub LVs to remove after a reshape.",
