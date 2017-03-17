@@ -110,7 +110,7 @@ aux wait_for_sync $vg $lv1
 _reshape_layout raid5_ls 3 4 $vg $lv1 --stripesize 256K
 check lv_first_seg_field $vg/$lv1 stripesize "256.00k"
 
-# Convert raid5(_n) -> striped
+# Convert raid5(_n) -> striped testing raid5_ls gets rejected
 not _lvconvert striped striped 3 3 $vg $lv1 512k
 _reshape_layout raid5_n 3 4 $vg $lv1
 _lvconvert striped striped 3 3 $vg $lv1
@@ -144,8 +144,18 @@ _reshape_layout raid5_ls 63 64 $vg $lv1 --stripes 63
 _reshape_layout raid5_ls 27 64 $vg $lv1 --stripes 27 --force
 _reshape_layout raid5_ls 27 28 $vg $lv1 --stripes 27
 
-# Convert raid5_ls back to 4 stripes
+# Convert raid5_ls back to 4 stripes checking
+# conversion to striped/raid* gets rejected
+# with existing LVs to be removed afer reshape
 _reshape_layout raid5_ls 4 28 $vg $lv1 --stripes 4 --force
+
+# No we got the data reshaped and the freed SubLVs still present
+# -> check takeover request gets rejected
+not lvconvert --yes --type striped $vg/$lv1
+not lvconvert --yes --type raid0 $vg/$lv1
+not lvconvert --yes --type raid0_meta $vg/$lv1
+not lvconvert --yes --type raid6 $vg/$lv1
+# Remove the freed SubLVs
 _reshape_layout raid5_ls 4 5 $vg $lv1 --stripes 4
 
 # Convert raid5_ls back to 3 stripes

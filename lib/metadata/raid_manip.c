@@ -171,6 +171,33 @@ char *top_level_lv_name(struct volume_group *vg, const char *lv_name)
 	return new_lv_name;
 }
 
+/* Get available and removed SubLVs for @lv */
+static int _get_available_removed_sublvs(const struct logical_volume *lv, uint32_t *available_slvs, uint32_t *removed_slvs)
+{
+	uint32_t s;
+	struct lv_segment *seg = first_seg(lv);
+
+	*available_slvs = 0;
+	*removed_slvs = 0;
+
+	if (!lv_is_raid(lv))
+		return 1;
+
+	for (s = 0; s < seg->area_count; s++) {
+		struct logical_volume *slv;
+
+		if (seg_type(seg, s) != AREA_LV || !(slv = seg_lv(seg, s))) {
+			log_error(INTERNAL_ERROR "Missing image sub lv in area %" PRIu32 " of LV %s.",
+				  s, display_lvname(lv));
+			return_0;
+		}
+
+		(slv->status & LV_REMOVE_AFTER_RESHAPE) ? (*removed_slvs)++ : (*available_slvs)++;
+	}
+
+	return 1;
+}
+
 static int _lv_is_raid_with_tracking(const struct logical_volume *lv,
 				     struct logical_volume **tracking)
 {
@@ -1916,19 +1943,8 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		 * -> remove the freed up images and reduce LV size
 		 *
 		 */
-		for (active_lvs = removed_lvs = s = 0; s < seg->area_count; s++) {
-			struct logical_volume *slv;
-
-			if (!seg_lv(seg, s) || !(slv = seg_lv(seg, s))) {
-				log_error("Missing image sub lv off LV %s.", display_lvname(lv));
-				return 0;
-			}
-
-			if (slv->status & LV_REMOVE_AFTER_RESHAPE)
-				removed_lvs++;
-			else
-				active_lvs++;
-		}
+		if (!_get_available_removed_sublvs(lv, &active_lvs,  &removed_lvs))
+			return_0;
 
 		if (devs_in_sync != new_image_count) {
 			log_error("No correct kernel/lvm active LV count on %s.", display_lvname(lv));
@@ -5965,6 +5981,7 @@ int lv_raid_convert(struct logical_volume *lv,
 	uint32_t new_image_count = seg->area_count;
 	uint32_t region_size = new_region_size;
 	uint32_t data_copies = seg->data_copies;
+	uint32_t available_slvs, removed_slvs;
 	takeover_fn_t takeover_fn;
 
 	new_segtype = new_segtype ? : seg->segtype;
@@ -6013,6 +6030,17 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	default:
 		log_error(INTERNAL_ERROR "_reshape_requested failed.");
+		return 0;
+	}
+
+	/* Prohibit any takeover in case sub LVs to be removed still exist after a previous reshape */
+	if (_get_available_removed_sublvs(lv, &available_slvs, &removed_slvs))
+		return 0;
+	if (removed_slvs) {
+		log_error("Can't convert %s LV %s to %s containing sub LVs to remove after a reshape.",
+			  lvseg_name(seg), display_lvname(lv), new_segtype->name);
+		log_error("Run \"lvconvert --stripes %" PRIu32 " %s\" first.",
+			  seg->area_count - removed_slvs - 1, display_lvname(lv));
 		return 0;
 	}
 
