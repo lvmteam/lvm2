@@ -1708,7 +1708,62 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 
 	printf("  %s", cmd->name);
 
-	if (cmd->ro_count) {
+	if (onereq && cmd->ro_count) {
+		/* one required option in a set */
+		first = 1;
+
+		/* options with short and long */
+		for (ro = 0; ro < cmd->ro_count; ro++) {
+			opt_enum = cmd->required_opt_args[ro].opt;
+
+			if (!opt_names[opt_enum].short_opt)
+				continue;
+
+			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
+				include_extents = 1;
+
+			if (first)
+				printf("\n\t(");
+			else
+				printf(",\n\t ");
+			first = 0;
+
+			printf(" -%c|%s", opt_names[opt_enum].short_opt, opt_names[opt_enum].long_opt);
+
+			if (cmd->required_opt_args[ro].def.val_bits) {
+				printf(" ");
+				print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
+			}
+		}
+
+		/* options with only long */
+		for (ro = 0; ro < cmd->ro_count; ro++) {
+			opt_enum = cmd->required_opt_args[ro].opt;
+
+			if (opt_names[opt_enum].short_opt)
+				continue;
+
+			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
+				include_extents = 1;
+
+			if (first)
+				printf("\n\t(");
+			else
+				printf(",\n\t ");
+			first = 0;
+
+			printf("    %s", opt_names[opt_enum].long_opt);
+
+			if (cmd->required_opt_args[ro].def.val_bits) {
+				printf(" ");
+				print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
+			}
+		}
+
+		printf(" )\n");
+	}
+
+	if (!onereq && cmd->ro_count) {
 		first = 1;
 
 		for (ro = 0; ro < cmd->ro_count; ro++) {
@@ -1716,14 +1771,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 
 			if ((opt_enum == size_ARG) && command_has_alternate_extents(cmd->name))
 				include_extents = 1;
-
-			if (onereq) {
-				if (first)
-					printf("\n\t(");
-				else
-					printf(",\n\t ");
-				first = 0;
-			}
 
 			if (opt_names[opt_enum].short_opt)
 				printf(" -%c|%s", opt_names[opt_enum].short_opt, opt_names[opt_enum].long_opt);
@@ -1735,9 +1782,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 				print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
 			}
 		}
-
-		if (onereq)
-			printf(" )\n");
 	}
 
 	if (cmd->rp_count) {
