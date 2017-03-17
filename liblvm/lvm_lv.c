@@ -566,7 +566,21 @@ static lv_create_params_t _lvm_lv_params_create_thin_pool(vg_t vg,
 
 	if (lvcp) {
 		lvcp->vg = vg;
-		lvcp->lvp.discards = (thin_discards_t) discard;
+		switch (discard) {
+		case LVM_THIN_DISCARDS_IGNORE:
+			lvcp->lvp.discards = THIN_DISCARDS_IGNORE;
+			break;
+		case LVM_THIN_DISCARDS_NO_PASSDOWN:
+			lvcp->lvp.discards = THIN_DISCARDS_NO_PASSDOWN;
+			break;
+		case LVM_THIN_DISCARDS_PASSDOWN:
+			lvcp->lvp.discards = THIN_DISCARDS_PASSDOWN;
+			break;
+		default:
+			log_error("Invalid discard argument %d for thin pool creation.", discard);
+			return NULL;
+		}
+		lvcp->lvp.zero_new_blocks = THIN_ZERO_YES;
 
 		if (chunk_size)
 			lvcp->lvp.chunk_size = chunk_size;
