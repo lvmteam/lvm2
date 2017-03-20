@@ -2973,7 +2973,6 @@ static void _print_man_all_options_list(struct command_name *cname)
 static void _print_man_all_options_desc(struct command_name *cname)
 {
 	int opt_enum, val_enum;
-	int sep = 0;
 	int i;
 
 	for (i = 0; i < ARG_COUNT; i++) {
@@ -3018,8 +3017,6 @@ static void _print_man_all_options_desc(struct command_name *cname)
 		}
 
 		printf(".ad b\n");
-
-		sep = 1;
 	}
 }
 
