@@ -26,7 +26,7 @@ bus = None
 args = None
 
 # Set to true if we are depending on external events for updates
-ee = False
+got_external_event = False
 
 # Shared state variable across all processes
 run = multiprocessing.Value('i', 1)

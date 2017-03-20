@@ -512,7 +512,7 @@ def add_no_notify(cmdline):
 
 	# Only after we have seen an external event will be disable lvm from sending
 	# us one when we call lvm
-	if cfg.ee:
+	if cfg.got_external_event:
 		if 'help' in cmdline:
 			return cmdline
 

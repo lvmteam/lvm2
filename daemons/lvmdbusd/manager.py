@@ -206,7 +206,7 @@ class Manager(AutomatedProperties):
 				utils.log_debug("ExternalEvent received, disabling "
 								"udev monitoring")
 				# We are dependent on external events now to stay current!
-				cfg.ee = True
+				cfg.got_external_event = True
 
 		r = RequestEntry(
 			-1, Manager._external_event, (command,), None, None, False)
