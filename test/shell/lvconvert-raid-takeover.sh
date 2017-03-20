@@ -22,6 +22,26 @@ aux have_raid 1 9 1 && correct_raid4_layout=1
 
 aux prepare_vg 8
 
+# FIXME: lvconvert leaks  'error' devices
+detect_error_leak_()
+{
+	local err
+
+	dmsetup info -c -o name --noheadings | tee out
+	if grep $vg out ; then
+		for i in $(grep $vg out) ; do
+			if dmsetup table $i | grep "error "; then
+				err="$err $i"
+			fi
+		done
+		test -z "$err" || {
+			dmsetup table | grep $vg
+			dmsetup ls --tree
+			die "Device(s) $err should not be here."
+		}
+	fi
+}
+
 function _lvcreate
 {
 	local level=$1
@@ -56,7 +76,8 @@ function _lvconvert
 	[ "${level:0:5}" = "raid0" ] && wait_and_check=0
 
 	lvconvert -y --ty $req_level $R $vg/$lv
-	[ $? -ne 0 ] && return $?
+	detect_error_leak_
+
 	check lv_field $vg/$lv segtype "$level"
 	check lv_field $vg/$lv data_stripes $data_stripes
 	check lv_field $vg/$lv stripes $stripes
@@ -112,6 +133,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert 3-way to 4-way mirror
 lvconvert -m 3 $vg/$lv1
+detect_error_leak_
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 4
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
@@ -120,6 +142,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Takeover 4-way mirror to raid1
 lvconvert --yes --type raid1 -R 64k $vg/$lv1
+detect_error_leak_
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 4
 check lv_field $vg/$lv1 regionsize "64.00k"
@@ -127,6 +150,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 ## Convert 4-way raid1 to 5-way
 lvconvert -m 4 -R 128K $vg/$lv1
+detect_error_leak_
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 5
 check lv_field $vg/$lv1 regionsize "128.00k"
@@ -142,6 +166,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert 5-way raid1 to 2-way
 lvconvert --yes -m 1 $vg/$lv1
+detect_error_leak_
 lvs $vg/$lv1
 dmsetup status $vg-$lv1
 dmsetup table $vg-$lv1
@@ -151,6 +176,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert 2-way raid1 to mirror
 lvconvert --yes --type mirror -R 32K $vg/$lv1
+detect_error_leak_
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 2
 check lv_field $vg/$lv1 regionsize "32.00k"
