@@ -1775,6 +1775,16 @@ int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 #define DM_BLOCK_ON_ERROR	0x00000004	/* On error, suspend I/O */
 #define DM_CORELOG		0x00000008	/* In-memory log */
 
+/*
+ * RAID flag: table line is in kernel documented order.
+ *
+ * Target version >= 1.9.0 and < 1.11.0 misordered e.g. 'raid10_copies'
+ *
+ * Keep distinct from mirror log ones above because it
+ * can be passed together with those in load segment flags!
+ */
+#define DM_RAID_TABLE_ORDERED	0x00000010
+
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 				       uint32_t region_size,
 				       unsigned clustered,
