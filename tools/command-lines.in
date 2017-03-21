@@ -1016,8 +1016,21 @@ DESC: Create a thin LV, first creating a thin pool for it,
 DESC: where the new thin pool is named by the --thinpool arg.
 
 # alternate form of lvcreate --type thin
-lvcreate --thin --virtualsize SizeMB --size SizeMB --thinpool LV_new
-OO: --type thin, OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
+lvcreate --virtualsize SizeMB --size SizeMB --thinpool LV_new
+OO: --thin, OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
+--stripes Number, --stripesize SizeKB
+OP: PV ...
+IO: --mirrors 0
+ID: lvcreate_thin_vol_and_thinpool
+DESC: Create a thin LV, first creating a thin pool for it,
+DESC: where the new thin pool is named by the --thinpool arg
+DESC: (variant, infers --type thin).
+FLAGS: SECONDARY_SYNTAX
+
+# same as prev but accepts VG pos arg
+# alternate form of lvcreate --type thin
+lvcreate --virtualsize SizeMB --size SizeMB --thinpool LV_new VG
+OO: --thin, OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
 IO: --mirrors 0
@@ -1042,7 +1055,7 @@ FLAGS: SECONDARY_SYNTAX
 
 # alternate form of lvcreate --type thin
 lvcreate --thin --virtualsize SizeMB --size SizeMB LV_new|VG
-OO: --type thin, OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
+OO: OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
 IO: --mirrors 0
@@ -1056,7 +1069,7 @@ FLAGS: SECONDARY_SYNTAX
 ---
 
 lvcreate --size SizeMB --virtualsize SizeMB VG
-OO: --type thin, --type snapshot, --thin, --snapshot, OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
+OO: --type snapshot, --snapshot, OO_LVCREATE_POOL, OO_LVCREATE_THIN, OO_LVCREATE,
 --stripes Number, --stripesize SizeKB
 OP: PV ...
 IO: --mirrors 0
