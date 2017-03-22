@@ -2432,84 +2432,46 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 		EMIT_PARAMS(pos, " raid10_format offset");
 #endif
 
-	if (seg->flags & DM_RAID_TABLE_ORDERED) {
-		/* Emit order of paramters as of kernel target documentation */
-		if (seg->flags & DM_NOSYNC)
-			EMIT_PARAMS(pos, " nosync");
-		else if (seg->flags & DM_FORCESYNC)
-			EMIT_PARAMS(pos, " sync");
+	if (seg->data_copies > 1 && type == SEG_RAID10)
+		EMIT_PARAMS(pos, " raid10_copies %u", seg->data_copies);
 
-		for (i = 0; i < area_count; i++)
-			if (seg->rebuilds[i/64] & (1ULL << (i%64)))
-				EMIT_PARAMS(pos, " rebuild %u", i);
+	if (seg->flags & DM_NOSYNC)
+		EMIT_PARAMS(pos, " nosync");
+	else if (seg->flags & DM_FORCESYNC)
+		EMIT_PARAMS(pos, " sync");
 
-		if (seg->min_recovery_rate)
-			EMIT_PARAMS(pos, " min_recovery_rate %u",
-				    seg->min_recovery_rate);
+	if (seg->region_size)
+		EMIT_PARAMS(pos, " region_size %u", seg->region_size);
 
-		if (seg->max_recovery_rate)
-			EMIT_PARAMS(pos, " max_recovery_rate %u",
-				    seg->max_recovery_rate);
+	/* If seg-data_offset == 1, kernel needs a zero offset to adjust to it */
+	if (seg->data_offset)
+		EMIT_PARAMS(pos, " data_offset %d", seg->data_offset == 1 ? 0 : seg->data_offset);
 
-		for (i = 0; i < area_count; i++)
-			if (seg->writemostly[i/64] & (1ULL << (i%64)))
-				EMIT_PARAMS(pos, " write_mostly %u", i);
+	if (seg->delta_disks)
+		EMIT_PARAMS(pos, " delta_disks %d", seg->delta_disks);
 
-		if (seg->writebehind)
-			EMIT_PARAMS(pos, " max_write_behind %u", seg->writebehind);
+	for (i = 0; i < area_count; i++)
+		if (seg->rebuilds[i/64] & (1ULL << (i%64)))
+			EMIT_PARAMS(pos, " rebuild %u", i);
 
-		if (seg->region_size)
-			EMIT_PARAMS(pos, " region_size %u", seg->region_size);
+	for (i = 0; i < area_count; i++)
+		if (seg->writemostly[i/64] & (1ULL << (i%64)))
+			EMIT_PARAMS(pos, " write_mostly %u", i);
 
-		if (seg->data_copies > 1 && type == SEG_RAID10)
-			EMIT_PARAMS(pos, " raid10_copies %u", seg->data_copies);
+	if (seg->writebehind)
+		EMIT_PARAMS(pos, " max_write_behind %u", seg->writebehind);
 
-		if (seg->delta_disks)
-			EMIT_PARAMS(pos, " delta_disks %d", seg->delta_disks);
+	/*
+	 * Has to be before "min_recovery_rate" or the kernels
+	 * check will fail when both set and min > previous max
+	 */
+	if (seg->max_recovery_rate)
+		EMIT_PARAMS(pos, " max_recovery_rate %u",
+			    seg->max_recovery_rate);
 
-		/* If seg-data_offset == 1, kernel needs a zero offset to adjust to it */
-		if (seg->data_offset)
-			EMIT_PARAMS(pos, " data_offset %d", seg->data_offset == 1 ? 0 : seg->data_offset);
-
-	} else {
-		/* Target version >= 1.9.0 && < 1.11.0 had a table line parameter ordering flaw */
-		if (seg->data_copies > 1 && type == SEG_RAID10)
-			EMIT_PARAMS(pos, " raid10_copies %u", seg->data_copies);
-
-		if (seg->flags & DM_NOSYNC)
-			EMIT_PARAMS(pos, " nosync");
-		else if (seg->flags & DM_FORCESYNC)
-			EMIT_PARAMS(pos, " sync");
-
-		if (seg->region_size)
-			EMIT_PARAMS(pos, " region_size %u", seg->region_size);
-
-		/* If seg-data_offset == 1, kernel needs a zero offset to adjust to it */
-		if (seg->data_offset)
-			EMIT_PARAMS(pos, " data_offset %d", seg->data_offset == 1 ? 0 : seg->data_offset);
-
-		if (seg->delta_disks)
-			EMIT_PARAMS(pos, " delta_disks %d", seg->delta_disks);
-
-		for (i = 0; i < area_count; i++)
-			if (seg->rebuilds[i/64] & (1ULL << (i%64)))
-				EMIT_PARAMS(pos, " rebuild %u", i);
-
-		for (i = 0; i < area_count; i++)
-			if (seg->writemostly[i/64] & (1ULL << (i%64)))
-				EMIT_PARAMS(pos, " write_mostly %u", i);
-
-		if (seg->writebehind)
-			EMIT_PARAMS(pos, " max_write_behind %u", seg->writebehind);
-
-		if (seg->max_recovery_rate)
-			EMIT_PARAMS(pos, " max_recovery_rate %u",
-				    seg->max_recovery_rate);
-
-		if (seg->min_recovery_rate)
-			EMIT_PARAMS(pos, " min_recovery_rate %u",
-				    seg->min_recovery_rate);
-	}
+	if (seg->min_recovery_rate)
+		EMIT_PARAMS(pos, " min_recovery_rate %u",
+			    seg->min_recovery_rate);
 
 	/* Print number of metadata/data device pairs */
 	EMIT_PARAMS(pos, " %u", area_count);
@@ -2780,7 +2742,7 @@ static int _emit_segment(struct dm_task *dmt, uint32_t major, uint32_t minor,
 			 struct load_segment *seg, uint64_t *seg_start)
 {
 	char *params;
-	size_t paramsize = 4096; /* FIXME: too small for long RAID lines when > 64 devices supported */
+	size_t paramsize = 4096;
 	int ret;
 
 	do {

@@ -288,7 +288,6 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 #define RAID_FEATURE_RAID4			(1U << 3) /* ! version 1.8 or 1.9.0 */
 #define RAID_FEATURE_SHRINK			(1U << 4) /* version 1.9.0 */
 #define RAID_FEATURE_RESHAPE			(1U << 5) /* version 1.10.1 */
-#define RAID_FEATURE_PROPER_TABLE_ORDER		(1U << 6) /* version >= 1.9.0 and < 1.11.0 had wrong parameter order */
 
 #ifdef RAID_INTERNAL
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);

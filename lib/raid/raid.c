@@ -228,9 +228,6 @@ static int _raid_text_export(const struct lv_segment *seg, struct formatter *f)
 	return _raid_text_export_raid(seg, f);
 }
 
-static int _raid_target_present(struct cmd_context *cmd,
-				const struct lv_segment *seg __attribute__((unused)),
-				unsigned *attributes);
 static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 				 struct dm_pool *mem __attribute__((unused)),
 				 struct cmd_context *cmd __attribute__((unused)),
@@ -241,7 +238,6 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 				 uint32_t *pvmove_mirror_count __attribute__((unused)))
 {
 	int delta_disks = 0, delta_disks_minus = 0, delta_disks_plus = 0, data_offset = 0;
-	unsigned attrs;
 	uint32_t s;
 	uint64_t flags = 0;
 	uint64_t rebuilds[RAID_BITMAP_SIZE];
@@ -303,13 +299,6 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 		if (mirror_in_sync())
 			flags = DM_NOSYNC;
 	}
-
-	if (!_raid_target_present(seg->lv->vg->cmd, seg, &attrs))
-		return_0;
-
-	/* RAID target line parameters are in kernel documented order */
-	if (attrs & RAID_FEATURE_PROPER_TABLE_ORDER)
-		flags |= DM_RAID_TABLE_ORDERED;
 
 	params.raid_type = lvseg_name(seg);
 
@@ -490,7 +479,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 
 	static int _raid_checked = 0;
 	static int _raid_present = 0;
-	static unsigned _raid_attrs;
+	static unsigned _raid_attrs = 0;
 	uint32_t maj, min, patchlevel;
 	unsigned i;
 
@@ -499,7 +488,6 @@ static int _raid_target_present(struct cmd_context *cmd,
 
 	if (!_raid_checked) {
 		_raid_checked = 1;
-		_raid_attrs = RAID_FEATURE_PROPER_TABLE_ORDER;
 
 		if (!(_raid_present = target_present(cmd, TARGET_NAME_RAID, 1)))
 			return 0;
@@ -526,15 +514,6 @@ static int _raid_target_present(struct cmd_context *cmd,
 		else
 			log_very_verbose("Target raid does not support %s.",
 					 SEG_TYPE_NAME_RAID4);
-
-		/*
-		 * Target version range check:
-		 *
-		 * raid target line parameters were misordered (e.g. 'raid10_copies')
-		 * in target version >= 1.9.0 and < 1.11.0
-		 */
-		if (maj == 1 && min >= 9 && min < 11)
-			_raid_attrs &= ~RAID_FEATURE_PROPER_TABLE_ORDER;
 	}
 
 	if (attributes)
