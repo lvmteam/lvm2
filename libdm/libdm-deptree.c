@@ -2378,7 +2378,7 @@ static int _get_params_count(uint64_t *bits)
 /*
  * Get target version (major, minor and patchlevel) for @target_name
  *
- * FIXEM: this function is derived from liblvm.
+ * FIXME: this function is derived from liblvm.
  *        Integrate with move of liblvm functions
  *        to libdm in future library layer purge
  *        (e.g. expose as API dm_target_version()?)
