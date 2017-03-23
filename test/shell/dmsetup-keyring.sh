@@ -46,27 +46,30 @@ dmsetup load $PREFIX-crypt --table "0 1 crypt $CIPHER $HEXKEY_32 0 $TESTDIR/dev$
 
 # test dmsetup doesn't hide key descriptions...
 str=`dmsetup table $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = :32:logon:$KEY_NAME || die
+test $str = :32:logon:$KEY_NAME
 str=`dmsetup table --showkeys $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = :32:logon:$KEY_NAME || die
+test $str = :32:logon:$KEY_NAME
 
 # ...but it hides hexbyte representation of keys...
 str=`dmsetup table --inactive $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = $HIDENKEY_32 || die
+test $str = $HIDENKEY_32
 #...unless --showkeys explictly requested
 str=`dmsetup table --showkeys --inactive $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = $HEXKEY_32 || die
+test $str = $HEXKEY_32
 
 # let's swap the tables
 dmsetup resume $PREFIX-crypt
 dmsetup load $PREFIX-crypt --table "0 1 crypt $CIPHER :32:logon:$KEY_NAME 0 $TESTDIR/dev$prefix/mapper/$PREFIX-zero 0"
 
 str=`dmsetup table --inactive $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = :32:logon:$KEY_NAME || die
+test $str = :32:logon:$KEY_NAME
 str=`dmsetup table --showkeys --inactive $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = :32:logon:$KEY_NAME || die
+test $str = :32:logon:$KEY_NAME
 
 str=`dmsetup table $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = $HIDENKEY_32 || die
+test $str = $HIDENKEY_32
 str=`dmsetup table --showkeys $PREFIX-crypt | cut -d ' ' -f 5`
-test $str = $HEXKEY_32 || die
+test $str = $HEXKEY_32
+
+dmsetup remove $PREFIX-crypt
+dmsetup remove $PREFIX-zero
