@@ -2632,7 +2632,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	/* each command should start out with sigint flag cleared */
 	sigint_clear();
 
-	cmd->name = dm_pool_strdup(cmd->mem, argv[0]);
+	cmd->name = dm_pool_strdup(cmd->mem, dm_basename(argv[0]));
 
 	configure_command_option_values(cmd->name);
 
@@ -3356,7 +3356,7 @@ int lvm2_main(int argc, char **argv)
 	if (!alias && argc == 1)
 		name = NULL;
 	else if (alias)
-		name = argv[0];
+		name = (char *)dm_basename(argv[0]);
 	else
 		name = argv[1];
 
