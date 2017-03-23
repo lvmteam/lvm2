@@ -1,5 +1,6 @@
 Version 2.02.169 - 
 =====================================
+  Add configuration command line to 'lvm version' output.
   Adjust to misordered raid parameters
   Conditionally reject raid convert to striped/raid0* after reshape
   Ensure raid6 upconversion restrictions

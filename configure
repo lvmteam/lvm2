@@ -3015,6 +3015,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+CONFIGURE_LINE="$0 $@"
 
 ac_config_headers="$ac_config_headers include/configure.h"
 
@@ -6078,7 +6079,7 @@ fi
 done
 
 
-for ac_header in termios.h sys/statvfs.h sys/timerfd.h linux/magic.h linux/fiemap.h
+for ac_header in termios.h sys/statvfs.h sys/timerfd.h sys/vfs.h linux/magic.h linux/fiemap.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -6270,6 +6271,26 @@ _ACEOF
 
 
 fi
+
+ac_fn_c_check_member "$LINENO" "struct stat" "st_blocks" "ac_cv_member_struct_stat_st_blocks" "$ac_includes_default"
+if test "x$ac_cv_member_struct_stat_st_blocks" = xyes; then :
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_STRUCT_STAT_ST_BLOCKS 1
+_ACEOF
+
+
+$as_echo "#define HAVE_ST_BLOCKS 1" >>confdefs.h
+
+else
+  case " $LIBOBJS " in
+  *" fileblocks.$ac_objext "* ) ;;
+  *) LIBOBJS="$LIBOBJS fileblocks.$ac_objext"
+ ;;
+esac
+
+fi
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether struct tm is in sys/time.h or time.h" >&5
 $as_echo_n "checking whether struct tm is in sys/time.h or time.h... " >&6; }
@@ -15472,6 +15493,12 @@ LVM_MAJOR=`echo "$VER" | $AWK -F '.' '{print $1}'`
 LVM_MINOR=`echo "$VER" | $AWK -F '.' '{print $2}'`
 LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '[(.]' '{print $3}'`
 LVM_LIBAPI=`echo "$VER" | $AWK -F '[()]' '{print $2}'`
+
+
+cat >>confdefs.h <<_ACEOF
+#define LVM_CONFIGURE_LINE "$CONFIGURE_LINE"
+_ACEOF
+
 
 ################################################################################
 

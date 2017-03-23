@@ -2139,6 +2139,7 @@ int version(struct cmd_context *cmd __attribute__((unused)),
 		log_print("Library version: %s", vsn);
 	if (driver_version(vsn, sizeof(vsn)))
 		log_print("Driver version:  %s", vsn);
+	log_print("Configuration:   %s", LVM_CONFIGURE_LINE);
 
 	return ECMD_PROCESSED;
 }
