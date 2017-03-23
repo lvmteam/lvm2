@@ -736,7 +736,7 @@ int int_arg_with_plus(struct cmd_context *cmd __attribute__((unused)), struct ar
 }
 
 static int _extents_arg(struct cmd_context *cmd __attribute__((unused)),
-		        struct arg_values *av)
+			struct arg_values *av)
 {
 	char *ptr;
 
@@ -1237,7 +1237,7 @@ static const struct command_function *_find_command_id_function(int command_enum
 	return NULL;
 }
 
-int lvm_register_commands(char *name)
+int lvm_register_commands(const char *run_name)
 {
 	int i;
 
@@ -1251,7 +1251,7 @@ int lvm_register_commands(char *name)
 	 * populate commands[] array with command definitions
 	 * by parsing command-lines.in/command-lines-input.h
 	 */
-	if (!define_commands(name)) {
+	if (!define_commands(run_name)) {
 		log_error(INTERNAL_ERROR "Failed to parse command definitions.");
 		return 0;
 	}
@@ -1510,12 +1510,12 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 		if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG) || arg_is_set(cmd, longhelp_ARG) || arg_is_set(cmd, version_ARG))
 			return &commands[i];
 
-		match_required = 0;    /* required parameters that match */
-		match_ro = 0;          /* required opt_args that match */
-		match_rp = 0;          /* required pos_args that match */
-		match_type = 0;        /* type arg matches */
-		match_unused = 0;      /* options set that are not accepted by command */
-		mismatch_required = 0; /* required parameters that do not match */
+		match_required = 0;	/* required parameters that match */
+		match_ro = 0;		/* required opt_args that match */
+		match_rp = 0;		/* required pos_args that match */
+		match_type = 0;		/* type arg matches */
+		match_unused = 0;	/* options set that are not accepted by command */
+		mismatch_required = 0;	/* required parameters that do not match */
 		temp_unused_count = 0;
 		memset(&temp_unused_options, 0, sizeof(temp_unused_options));
 
@@ -1807,7 +1807,7 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 	 * Looks at all variants of each command name and figures out
 	 * which options are common to all variants (for compact output)
 	 */
-        factor_common_options();
+	factor_common_options();
 
 	log_print("%s - %s\n", name, cname->desc);
 
@@ -1974,13 +1974,9 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	struct opt_name *a;
 	struct arg_values *av;
 	struct arg_value_group_list *current_group = NULL;
-	struct command_name *cname;
 	int arg_enum; /* e.g. foo_ARG */
 	int goval;    /* the number returned from getopt_long identifying what it found */
 	int i;
-
-	if (!(cname = find_command_name(cmd->name)))
-		return_0;
 
 	if (!(cmd->opt_arg_values = dm_pool_zalloc(cmd->mem, sizeof(*cmd->opt_arg_values) * ARG_COUNT))) {
 		log_fatal("Unable to allocate memory for command line arguments.");
@@ -1992,8 +1988,9 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	 * array (opts) to pass to the getopt_long() function.  IOW we generate
 	 * the arguments to pass to getopt_long() from the opt_names data.
 	 */
-	for (i = 0; i < cname->num_args; i++)
-		_add_getopt_arg(cname->valid_args[i], &ptr, &o);
+	if (cmd->cname)
+		for (i = 0; i < cmd->cname->num_args; i++)
+			_add_getopt_arg(cmd->cname->valid_args[i], &ptr, &o);
 
 	*ptr = '\0';
 	memset(o, 0, sizeof(*o));
@@ -2673,8 +2670,11 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
 		return_ECMD_FAILED;
 
+	/* Look up command - will be NULL if not recognised */
+	cmd->cname = find_command_name(cmd->name);
+
 	if (!_process_command_line(cmd, &argc, &argv)) {
-		log_error("Command name not found.");
+		log_error("Error during parsing of command line.");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -2688,10 +2688,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	log_debug("Parsing: %s", cmd->cmd_line);
 
-	if (!(cmd->cname = find_command_name(cmd->name))) {
-		log_error("Command name not found.\n");
-		return EINVALID_CMD_LINE;
-	}
+	/* Having validated cmdline args, return if we didn't recognised the command */
+	if (!cmd->cname)
+		return ENO_SUCH_CMD;
 
 	if (!(cmd->command = _find_command(cmd, cmd->name, &argc, argv)))
 		return EINVALID_CMD_LINE;
@@ -3311,7 +3310,7 @@ int lvm2_main(int argc, char **argv)
 	int ret, alias = 0;
 	struct custom_fds custom_fds;
 	struct cmd_context *cmd;
-	char *name;
+	const char *run_name;
 
 	if (!argv)
 		return -1;
@@ -3351,26 +3350,25 @@ int lvm2_main(int argc, char **argv)
 	if (!(cmd = init_lvm(0, 0)))
 		return -1;
 
+	/* Store original argv location so we may customise it if we become a daemon */
 	cmd->argv = argv;
 
-	if (!alias && argc == 1)
-		name = NULL;
-	else if (alias)
-		name = (char *)dm_basename(argv[0]);
-	else
-		name = argv[1];
-
-	if (!lvm_register_commands(name)) {
-		ret = ECMD_FAILED;
-		goto out;
-	}
+	/*
+	 * If the invocation command name wasn't itself an alias, shift to the
+	 * first arg.  After this point, run_name holds one of:
+	 *   the LVM command name we want to run;
+	 *   the LVM script name (handled through ENO_SUCH_CMD below);
+	 *   NULL for a shell (if readline is enabled).
+	 */
+	if (!alias) {
+		argc--;
+		argv++;
+		run_name = argv[0];
+	} else
+		run_name = dm_basename(argv[0]);
 
 	if (_lvm1_fallback(cmd)) {
 		/* Attempt to run equivalent LVM1 tool instead */
-		if (!alias) {
-			argv++;
-			argc--;
-		}
 		if (!argc) {
 			log_error("Falling back to LVM1 tools, but no "
 				  "command specified.");
@@ -3381,8 +3379,14 @@ int lvm2_main(int argc, char **argv)
 		ret = ECMD_FAILED;
 		goto_out;
 	}
+
+	if (!lvm_register_commands(run_name)) {
+		ret = ECMD_FAILED;
+		goto out;
+	}
+
+	if (!alias && !argc) {
 #ifdef READLINE_SUPPORT
-	if (!alias && argc == 1) {
 		_nonroot_warning();
 		if (!_prepare_profiles(cmd)) {
 			ret = ECMD_FAILED;
@@ -3390,19 +3394,12 @@ int lvm2_main(int argc, char **argv)
 		}
 		ret = lvm_shell(cmd, &_cmdline);
 		goto out;
-	}
+#else
+		log_fatal("Please supply an LVM command.");
+		_display_help();
+		ret = EINVALID_CMD_LINE;
+		goto out;
 #endif
-
-	if (!alias) {
-		if (argc < 2) {
-			log_fatal("Please supply an LVM command.");
-			_display_help();
-			ret = EINVALID_CMD_LINE;
-			goto out;
-		}
-
-		argc--;
-		argv++;
 	}
 
 	_nonroot_warning();

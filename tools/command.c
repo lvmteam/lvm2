@@ -1348,7 +1348,7 @@ static int copy_line(char *line, int max_line, int *position)
 	return 1;
 }
 
-int define_commands(char *run_name)
+int define_commands(const char *run_name)
 {
 	struct command *cmd = NULL;
 	char line[MAX_LINE];
