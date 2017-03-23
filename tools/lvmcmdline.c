@@ -2674,7 +2674,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 
 	if (!_process_command_line(cmd, &argc, &argv)) {
-		log_error("Error during parsing of command line.");
+		log_error("Command name not found.");
 		return EINVALID_CMD_LINE;
 	}
 
