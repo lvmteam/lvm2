@@ -1613,7 +1613,8 @@ static void _print_usage_description(struct command *cmd)
 		if (!bi && desc[di] == ' ')
 			continue;
 
-		buf[bi++] = desc[di];
+		if (desc[di] != '\\')
+			buf[bi++] = desc[di];
 
 		if (bi == (MAX_LINE - 1))
 			break;
