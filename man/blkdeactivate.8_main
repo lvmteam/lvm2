@@ -15,15 +15,15 @@ blkdeactivate \(em utility to deactivate block devices
 The blkdeactivate utility deactivates block devices. For mounted
 block devices, it attempts to unmount it automatically before
 trying to deactivate. The utility currently supports
-device-mapper devices (DM), including LVM volumes and
+device\-mapper devices (DM), including LVM volumes and
 software RAID MD devices. LVM volumes are handled directly
-using the \fBlvm\fP(8) command, the rest of device-mapper
+using the \fBlvm\fP(8) command, the rest of device\-mapper
 based devices are handled using the \fBdmsetup\fP(8) command.
 MD devices are handled using the \fBmdadm\fP(8) command.
 .SH OPTIONS
 .TP
 .BR \-d ", " \-\-dmoption \ \fIdm_options\fP
-Comma separated list of device-mapper specific options.
+Comma separated list of device\-mapper specific options.
 Accepted \fBdmsetup\fP(8) options are:
 .RS
 .IP \fIretry\fP
@@ -42,7 +42,7 @@ the device was skipped.
 Display the help text.
 .TP
 .BR \-l ", " \-\-lvmoption \ \fIlvm_options\fP
-Comma-separated list of LVM specific options:
+Comma\-separated list of LVM specific options:
 .RS
 .IP \fIretry\fP
 Retry removal several times in case of failure.
@@ -53,12 +53,12 @@ each Logical Volume separately.
 .RE
 .TP
 .BR \-m ", " \-\-mpathoption \ \fImpath_options\fP
-Comma-separated list of device-mapper multipath specific options:
+Comma\-separated list of device\-mapper multipath specific options:
 .RS
 .IP \fIdisablequeueing\fP
 Disable queueing on all multipath devices before deactivation.
 This avoids a situation where blkdeactivate may end up waiting if
-all the paths are unavailable for any underlying device-mapper multipath
+all the paths are unavailable for any underlying device\-mapper multipath
 device.
 .RE
 .TP
@@ -92,7 +92,7 @@ any mounted devices first, if possible.
 .BR
 .P
 Deactivate all supported block devices found in the system. If the deactivation
-of a device-mapper device fails, retry it. Deactivate the whole
+of a device\-mapper device fails, retry it. Deactivate the whole
 Volume Group at once when processing an LVM Logical Volume.
 .BR
 #
@@ -100,7 +100,7 @@ Volume Group at once when processing an LVM Logical Volume.
 .BR
 .P
 Deactivate all supported block devices found in the system. If the deactivation
-of a device-mapper device fails, retry it and force removal.
+of a device\-mapper device fails, retry it and force removal.
 .BR
 #
 .B blkdeactivate \-d force,retry

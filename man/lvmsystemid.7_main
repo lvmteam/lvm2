@@ -15,12 +15,12 @@ from accidental use by other hosts.
 The system_id is not a dynamic property, and can only be changed in very
 limited circumstances (see vgexport and vgimport).  Even limited changes
 to the VG system_id are not perfectly reflected across hosts.  A more
-coherent view of shared storage requires using an inter-host locking
+coherent view of shared storage requires using an inter\-host locking
 system to coordinate access and update caches.
 
 The system_id is a string uniquely identifying a host.  It can be manually
 set to a custom value or it can be assigned automatically by lvm using a
-unique identifier already available on the host, e.g. machine-id or uname.
+unique identifier already available on the host, e.g. machine\-id or uname.
 
 In vgcreate, the local system_id is saved in the new VG metadata.  The
 local host owns the new VG, and other hosts cannot use it.
@@ -72,7 +72,7 @@ A host using an old version of lvm without the system_id feature will not
 recognize a new system_id in VGs from other hosts.  Even though the old
 version of lvm is not blocked from reading a VG with a system_id, it is
 blocked from writing to the VG (or its LVs).  The new system_id changes
-the write mode of a VG, making it appear read-only to previous lvm
+the write mode of a VG, making it appear read\-only to previous lvm
 versions.
 
 This also means that if a host downgrades its version of lvm, it would
@@ -144,12 +144,12 @@ global {
 .B machineid
 .br
 
-The content of /etc/machine-id is used as the system_id if available.
+The content of /etc/machine\-id is used as the system_id if available.
 See
-.BR machine-id (5)
+.BR machine\-id (5)
 and
-.BR systemd-machine-id-setup (1)
-to check if machine-id is available on the host.
+.BR systemd\-machine\-id\-setup (1)
+to check if machine\-id is available on the host.
 
 .I lvm.conf
 .nf
@@ -348,7 +348,7 @@ could be pvscan \-\-cache, or vgs \-\-foreign.
 .BR vgimport (8),
 .BR vgexport (8),
 .BR lvm.conf (5),
-.BR machine-id (5),
+.BR machine\-id (5),
 .BR uname (2),
 .BR vgs (8)
 

@@ -94,13 +94,13 @@ Additionally, when \-f is given they are also sent to standard error.
 Possible levels are: all, fatal, error, warn, info, wire, debug.
 .TP
 .B \-p \fIpidfile_path
-Path to the pidfile. This overrides both the built-in default
+Path to the pidfile. This overrides both the built\-in default
 (#DEFAULT_PID_DIR#/lvmetad.pid) and the environment variable
 \fBLVM_LVMETAD_PIDFILE\fP.  This file is used to prevent more
 than one instance of the daemon running simultaneously.
 .TP
 .B \-s \fIsocket_path
-Path to the socket file. This overrides both the built-in default
+Path to the socket file. This overrides both the built\-in default
 (#DEFAULT_RUN_DIR#/lvmetad.socket) and the environment variable
 \fBLVM_LVMETAD_SOCKET\fP.  To communicate successfully with lvmetad,
 all LVM2 processes should use the same socket path.

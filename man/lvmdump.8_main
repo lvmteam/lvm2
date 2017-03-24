@@ -80,7 +80,7 @@ However, the metadata dump may represent a valuable diagnostic resource.
 .TP
 .B \-p
 Include \fBlvmpolld\fP(8) daemon dump if it is running. The dump contains
-all in-progress operation currently monitored by the daemon and partial
+all in\-progress operation currently monitored by the daemon and partial
 history for all yet uncollected results of polling operations already finished
 including reason.
 .TP

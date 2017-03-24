@@ -12,16 +12,16 @@ options to customize report and filter the report's output.
 
 Based on functionality, commands which make use of the reporting infrastructure
 are divided in two groups:
-.IP \fBReport-oriented commands\fP
+.IP \fBReport\-oriented commands\fP
 These commands inform about current LVM state and their primary role is to
 display this information in compendious way. To make a distinction, we will
-name this report as \fBmain report\fP. The set of report-only commands include:
+name this report as \fBmain report\fP. The set of report\-only commands include:
 pvs, vgs, lvs, pvdisplay, vgdisplay, lvdisplay, lvm devtypes, lvm fullreport.
 For further information about main report, see \fBmain report specifics\fP.
-.IP \fBProcessing-oriented commands\fP
+.IP \fBProcessing\-oriented commands\fP
 These commands are responsible for changing LVM state and they do not contain
-any main report as identified for report-oriented commands, they only perform
-some kind of processing. The set of processing-oriented commands includes:
+any main report as identified for report\-oriented commands, they only perform
+some kind of processing. The set of processing\-oriented commands includes:
 pvcreate, vgcreate, lvcreate, pvchange, vgchange, lvchange, pvremove, vgremove,
 lvremove, pvresize, vgextend, vgreduce, lvextend, lvreduce, lvresize, lvrename,
 pvscan, vgscan, lvscan, pvmove, vgcfgbackup, vgck, vgconvert, vgexport,
@@ -29,9 +29,9 @@ vgimport, vgmknodes.
 
 .RE
 If enabled, so called \fBlog report\fP is either displayed solely
-(for processing-oriented commands) or in addition to main report
-(for report-oriented commands). The log report contains a log of operations,
-messages and per-object status with complete object identification collected
+(for processing\-oriented commands) or in addition to main report
+(for report\-oriented commands). The log report contains a log of operations,
+messages and per\-object status with complete object identification collected
 during LVM command execution. See \fBlog report specifics\fP for more
 information about this report type.
 
@@ -137,7 +137,7 @@ Fields to include to current field set. See \fBmain report specifics\fP\ and
 \fBlog report specifics\fP for information about field sets configured with
 global configuration settings that this option extends.
 .IP - 3
-\-\-options|-o- FieldSet
+\-\-options|-o\- FieldSet
 .br
 Fields to exclude from current field set. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about field sets configured with
@@ -159,7 +159,7 @@ Fields to sort by in ascending order. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about field sets configured with
 global configuration settings that this option overrides.
 .IP - 3
-\-\-sort|-O- FieldSet
+\-\-sort|-O\- FieldSet
 .br
 Fields to sort by in descending order. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about fields sets configured with
@@ -249,7 +249,7 @@ Overrides report/bufffered configuration setting.
 
 The \fBFieldSet\fP mentioned in the lists above is a set of field names where
 each field name is delimited by "," character. Field set definition, sorting
-and selection may be repeated on command line (-o+/-o- includes/excludes fields
+and selection may be repeated on command line (-o+/-o\- includes/excludes fields
 to/from current list, for all the other repeatable options, the last value
 typed for the option on the command line is used). The \fBSelection\fP
 is a string with \fBselection criteria\fP, see also \fBSelection\fP paragraph
@@ -356,7 +356,7 @@ which case LVM will issue an error.
 
 For all main report subtypes except \fBfull\fP, it's not necessary to use
 \fB\-\-configreport ReportName\fP to denote which report any subsequent
-\fB-o, -O or -S\fP option applies to as they always apply to the single main
+\fB\-o, -O or -S\fP option applies to as they always apply to the single main
 report type. Currently, \fBlvm fullreport\fP is the only command that
 includes more than one \fBmain report\fP subtype. Therefore, the \-\-configreport
 is particularly suitable for the full report if you need to configure each of
@@ -387,20 +387,20 @@ log/command_log_selection
 
 .RE
 
-You always need to use \fB\-\-configreport log\fP together with \fB-o|\-\-options,
+You always need to use \fB\-\-configreport log\fP together with \fB\-o|\-\-options,
 -O|\-\-sort or -S|\-\-selection\fP to override configuration settings directly on
 command line for \fBlog report\fP. When compared to \fBmain report\fP, in
 addition to usual configuration settings for report fields and sorting, the
 \fBlog report\fP has also configuration option for selection -
 \fBreport/command_log_selection\fP. This configuration setting is provided for
-convenience so it's not necessary to use \fB-S|\-\-select\fP on command line
+convenience so it's not necessary to use \fB\-S|\-\-select\fP on command line
 each time an LVM command is executed and we need the same selection criteria
 to be applied for \fBlog report\fP. Default selection criteria used for
 \fBlog report\fP are
 \fBlog/command_log_selection="!(log_type=status && message=success)"\fP.
 This means that, by default, \fBlog report\fP doesn't display status messages
 about successful operation and it displays only rows with error, warning,
-print-type messages and messages about failure states (for more information,
+print\-type messages and messages about failure states (for more information,
 see \fBlog report content\fP below).
 
 .B Log report coverage
@@ -411,7 +411,7 @@ entities are iterated and processed one by one. It does not cover any command
 initialization nor command finalization stage. If there is any message issued
 out of log report's coverage range, such message goes directly to output,
 bypassing the \fBlog report\fP. By default, that is \fBstandard error output\fP
-for error and warning messages and \fBstandard output\fP for common print-like
+for error and warning messages and \fBstandard output\fP for common print\-like
 messages.
 
 When running LVM commands in \fBLVM shell\fP, the log report covers the whole
@@ -430,7 +430,7 @@ For these reasons and for completeness, it's not possible to rely fully on
 \fBlog report\fP as the only indicator of LVM command's status and the only
 place where all messages issued during LVM command execution are collected.
 You always need to check whether the command has not failed out of log
-report's range by checking the non-report output too.
+report's range by checking the non\-report output too.
 
 To help with this, LVM can separate output which you can then redirect to
 any \fBcustom file descriptor\fP that you prepare before running an LVM
@@ -441,7 +441,7 @@ descriptor numbers. See also \fBLVM_OUT_FD\fP, \fBLVM_ERR_FD\fP and
 man page.
 
 Also note that, by default, reports use the same file descriptor as
-common print-like messages, which is \fBstandard output\fP. If you plan to
+common print\-like messages, which is \fBstandard output\fP. If you plan to
 use \fBlog report\fP in your scripts or any external tool, you should use
 \fBLVM_OUT_FD\fP, \fBLVM_ERR_FD\fP and \fBLVM_REPORT_FD\fP to separate all
 output types to different file descriptors. For example, with bash, that
@@ -578,7 +578,7 @@ to display complete list of fields that you may use for the \fBlog report\fP.
 .SH Selection
 Selection is used for a report to display only rows that match
 \fBselection criteria\fP. All rows are displayed with the additional
-\fBselected\fP field (\fB-o selected\fP) displaying 1 if the row matches the
+\fBselected\fP field (\fB\-o selected\fP) displaying 1 if the row matches the
 \fISelection\fP and 0 otherwise. The \fBselection criteria\fP are a set of
 \fBstatements\fP combined by \fBlogical and grouping operators\fP.
 The \fBstatement\fP consists of a \fBfield\fP name for which a set of valid
@@ -708,9 +708,9 @@ demonstrating time expressions in selection criteria, see \fBEXAMPLES\fP section
 date
 .RS
 .IP
-YYYY-MM-DD
+YYYY\-MM\-DD
 .IP
-YYYY-MM, auto DD=1
+YYYY\-MM, auto DD=1
 .IP
 YYYY, auto MM=01 and DD=01
 .RE
@@ -735,7 +735,7 @@ timezone
 +hh or -hh
 .RE
 
-The full date/time specification is YYYY-MM-DD hh:mm:ss. Users are able
+The full date/time specification is YYYY\-MM\-DD hh:mm:ss. Users are able
 to leave date/time parts from right to left. Whenever these parts are left out,
 a range is assumed automatically with second granularity. For example:
 
@@ -795,12 +795,12 @@ month names ("January" - "December" or abbreviated as "Jan" - "Dec")
 .IP
 .BR VALUE " = " [VALUE " log_op " VALUE]
 .br
-For list-based types: string list. Matches strictly.
+For list\-based types: string list. Matches strictly.
 The log_op must always be of one type within the whole list value.
 .IP
 .BR VALUE " = " {VALUE " log_op " VALUE}
 .br
-For list-based types: string list. Matches a subset.
+For list\-based types: string list. Matches a subset.
 The log_op must always be of one type within the whole list value.
 .IP
 .BR VALUE " = " value
@@ -840,7 +840,7 @@ prefixes=0
 quoted=1
 columns_as_rows=0
 binary_values_as_numeric=0
-time_format="%Y-%m-%d %T %z"
+time_format="%Y\-%m\-%d %T %z"
 mark_hidden_devices=1
 two_word_unknown_device=0
 buffered=1
@@ -890,17 +890,17 @@ segs_sort="vg_name,lv_name,seg_start"
 
 # vgs
   VG #PV #LV #SN Attr   VSize   VFree  
-  vg   2   2   0 wz\-\-n- 200.00m 180.00m
+  vg   2   2   0 wz\-\-n\- 200.00m 180.00m
 
 # lvs
   LV    VG Attr       LSize Pool Origin Move Log Cpy%Sync Convert
-  lvol0 vg -wi-a\-\-\-\-- 4.00m                                    
-  lvol1 vg rwi-a-r\-\-- 4.00m                      100.00          
+  lvol0 vg -wi\-a\-\-\-\-\- 4.00m                                    
+  lvol1 vg rwi\-a\-r\-\-\- 4.00m                      100.00          
 
 # lvs \-\-segments
   LV    VG Attr       #Str Type   SSize
-  lvol0 vg -wi-a\-\-\-\--    1 linear 4.00m
-  lvol1 vg rwi-a-r\-\--    2 raid1  4.00m
+  lvol0 vg -wi\-a\-\-\-\-\-    1 linear 4.00m
+  lvol1 vg rwi\-a\-r\-\-\-    2 raid1  4.00m
 .fi
 
 We will use \fBreport/lvs_cols\fP and \fBreport/lvs_sort\fP configuration
@@ -921,7 +921,7 @@ lvs_sort="-lv_time"
   lvol0 4.00m  
 .fi
 
-You can use \fB-o|\-\-options\fP command line option to override current
+You can use \fB\-o|\-\-options\fP command line option to override current
 configuration directly on command line.
 
 .nf
@@ -935,12 +935,12 @@ configuration directly on command line.
   lvol1 4.00m             100.00   raid,raid1
   lvol0 4.00m                      linear    
 
-# lvs -o-origin
+# lvs -o\-origin
   LV    LSize Pool Cpy%Sync
   lvol1 4.00m      100.00  
   lvol0 4.00m              
 
-# lvs -o lv_name,lv_size,origin -o+lv_layout -o-origin -O lv_name
+# lvs -o lv_name,lv_size,origin -o+lv_layout -o\-origin -O lv_name
   LV    LSize Layout    
   lvol0 4.00m linear    
   lvol1 4.00m raid,raid1
@@ -1021,7 +1021,7 @@ compact_output=1
 .fi
 
 Alternatively, you can define which fields should be compacted by configuring
-\fBreport/compact_output_cols\fP configuration setting (or \fB-o|\-\-options #\fP
+\fBreport/compact_output_cols\fP configuration setting (or \fB\-o|\-\-options #\fP
 command line option).
 
 .nf
@@ -1048,7 +1048,7 @@ We will use \fBreport/compact_output=1\fP for subsequent examples.
 
 .SS Further formatting options
 
-By default, LVM displays sizes in reports in human-readable form which means
+By default, LVM displays sizes in reports in human\-readable form which means
 that the most suitable unit is used so it's easy to read. You can use
 \fBreport/units\fP configuration setting (or \fB\-\-units\fP option directly
 on command line) and \fBreport/suffix\fP
@@ -1166,7 +1166,7 @@ and time is displayed, including timezone.
 
 .nf
 # lvmconfig \-\-type full report/time_format
-time_format="%Y-%m-%d %T %z"
+time_format="%Y\-%m\-%d %T %z"
 
 # lvs -o+time
   LV    LSize Cpy%Sync CTime                     
@@ -1186,12 +1186,12 @@ time_format="%s"
 
 # lvs
   LV    Attr       LSize Cpy%Sync LV Tags   CTime                     
-  lvol1 rwi-a-r\-\-- 4.00m 100.00             1472468016                
-  lvol0 -wi-a\-\-\-\-- 4.00m          tagA,tagB 1472458517     
+  lvol1 rwi\-a\-r\-\-\- 4.00m 100.00             1472468016                
+  lvol0 -wi\-a\-\-\-\-\- 4.00m          tagA,tagB 1472458517     
 .fi
 
 The \fBlvs\fP does not display hidden LVs by default - to include these LVs
-in the output, you need to use \fB-a|\-\-all\fP command line option. Names for
+in the output, you need to use \fB\-a|\-\-all\fP command line option. Names for
 these hidden LVs are displayed within square brackets.
 
 .nf
@@ -1315,7 +1315,7 @@ look at the bottom of the help output, you can see section about
 # lvs -S help
  ...
 Selection operators
-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\--
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
 Comparison operators:
    =~  - Matching regular expression. [regex]
    !~  - Not matching regular expression. [regex]
@@ -1384,7 +1384,7 @@ together.
   lvol2 8.00m       
 .fi
 
-You can also use selection together with processing-oriented commands.
+You can also use selection together with processing\-oriented commands.
 
 .nf
 # lvchange \-\-addtag test -S 'size < 5000k'
@@ -1593,8 +1593,8 @@ Examples below demonstrates using freeform time expressions.
 .SS Command log reporting
 
 As described in \fBcategorization based on reporting facility\fP section
-at the beginning of this document, both \fBreport-oriented\fP and
-\fBprocessing-oriented\fP LVM commands can report the command log if
+at the beginning of this document, both \fBreport\-oriented\fP and
+\fBprocessing\-oriented\fP LVM commands can report the command log if
 this is enabled with \fBlog/report_command_log\fP configuration setting.
 Just like any other report, we can set the set of fields to display
 (\fBlog/command_log_cols\fP) and to sort by (\fBlog/command_log_sort\fP)
@@ -1659,8 +1659,8 @@ command_log_selection="all"
 .SS Handling multiple reports per single command
 
 To configure the log report directly on command line, we need to use
-\fB\-\-configreport\fP option before we start any \fB-o|\-\-options\fP,
-\fB-O|\-\-sort\fP or \fB-S|\-\-select\fP that is targeted for log report.
+\fB\-\-configreport\fP option before we start any \fB\-o|\-\-options\fP,
+\fB\-O|\-\-sort\fP or \fB\-S|\-\-select\fP that is targeted for log report.
 
 .nf
 # lvs -o lv_name,lv_size \-\-configreport log -o log_object_type, \\

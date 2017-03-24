@@ -2,7 +2,7 @@
 .
 .SH NAME
 .
-lvmdbusd \(em LVM D-Bus daemon
+lvmdbusd \(em LVM D\-Bus daemon
 .
 .SH SYNOPSIS
 .
@@ -14,7 +14,7 @@ lvmdbusd \(em LVM D-Bus daemon
 .
 .SH DESCRIPTION
 .
-lvmdbusd is a service which provides a D-Bus API to the logical volume manager (LVM).
+lvmdbusd is a service which provides a D\-Bus API to the logical volume manager (LVM).
 Run 
 .BR lvmdbusd (8)
 as root.
@@ -34,5 +34,5 @@ Use udev events to trigger updates
 .SH SEE ALSO
 .
 .nh
-.BR dbus-send (1),
+.BR dbus\-send (1),
 .BR lvm (8)

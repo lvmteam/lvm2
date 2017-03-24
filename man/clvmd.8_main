@@ -42,9 +42,9 @@ Tells all clvmds in a cluster to enable/disable debug logging.
 Without this switch, only the local clvmd will change its debug level to that
 given with \fB\-d\fP.
 .br
-This does not work correctly if specified on the command-line that starts clvmd.
+This does not work correctly if specified on the command\-line that starts clvmd.
 If you want to start clvmd \fBand\fP
-enable cluster-wide logging then the command needs to be issued twice, eg:
+enable cluster\-wide logging then the command needs to be issued twice, eg:
 .br
 .BR clvmd
 .br
@@ -94,7 +94,7 @@ communications. As it is quite possible to have multiple managers available on
 the same system you might have to manually specify this option to override the
 search.
 
-By default, omit \fB-I\fP is equivalent to \fB\-Iauto\fP.
+By default, omit \fB\-I\fP is equivalent to \fB\-Iauto\fP.
 Clvmd will use the first cluster manager that succeeds,
 and it checks them in a predefined order
 .BR cman ,
@@ -107,7 +107,7 @@ The available managers will be listed by order as part of the
 .BR \-R
 .br
 Tells all the running instance of \fBclvmd\fP in the cluster to reload their device cache and
-re-read the lvm configuration file \fBlvm.conf\fP(5). This command should be run whenever the
+re\-read the lvm configuration file \fBlvm.conf\fP(5). This command should be run whenever the
 devices on a cluster system are changed.
 .
 .HP

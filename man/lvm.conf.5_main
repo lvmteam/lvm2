@@ -49,8 +49,8 @@ attached/detached by using the \fBlvchange\fP and \fBvgchange\fP commands
 and their \fB\-\-metadataprofile ProfileName\fP and
 \fB\-\-detachprofile\fP options or the \fB\-\-metadataprofile\fP
 option during creation when using \fBvgcreate\fP or \fBlvcreate\fP command.
-The \fBvgs\fP and \fBlvs\fP reporting commands provide \fB-o vg_profile\fP
-and \fB-o lv_profile\fP output options to show the metadata profile
+The \fBvgs\fP and \fBlvs\fP reporting commands provide \fB\-o vg_profile\fP
+and \fB\-o lv_profile\fP output options to show the metadata profile
 currently attached to a Volume Group or a Logical Volume.
 
 The set of options allowed for command profiles is mutually exclusive
@@ -65,8 +65,8 @@ For this purpose, there's the \fBcommand_profile_template.profile\fP
 (for metadata profiles) which contain all settings that are customizable
 by profiles of certain type. Users are encouraged to copy these template
 profiles and edit them as needed. Alternatively, the
-\fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable-command <section>\fP
-or \fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable-metadata <section>\fP
+\fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable\-command <section>\fP
+or \fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable\-metadata <section>\fP
 can be used to generate a configuration with profilable settings in either
 of the type for given section and save it to new ProfileName.profile
 (if the section is not specified, all profilable settings are reported).
@@ -174,12 +174,12 @@ default values, and a full description of each as a comment:
 .B lvmconfig \-\-type default \-\-withcomments
 
 Command to print a list of all possible config settings, with their
-current values (configured, non-default values are shown):
+current values (configured, non\-default values are shown):
 .br
 .B lvmconfig \-\-type current
 
 Command to print all config settings that have been configured with a
-different value than the default (configured, non-default values are
+different value than the default (configured, non\-default values are
 shown):
 .br
 .B lvmconfig \-\-type diff

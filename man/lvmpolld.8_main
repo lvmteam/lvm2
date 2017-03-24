@@ -50,16 +50,16 @@ Select the type of log messages to generate.
 Messages are logged by syslog.
 Additionally, when \-f is given they are also sent to standard error.
 There are two classes of messages: wire and debug. Selecting 'all' supplies both
-and is equivalent to a comma-separated list \-l wire,debug.
+and is equivalent to a comma\-separated list \-l wire,debug.
 .TP
 .BR \-p ", " \-\-pidfile " " \fIpidfile_path
-Path to the pidfile. This overrides both the built-in default
+Path to the pidfile. This overrides both the built\-in default
 (#DEFAULT_PID_DIR#/lvmpolld.pid) and the environment variable
 \fBLVM_LVMPOLLD_PIDFILE\fP.  This file is used to prevent more
 than one instance of the daemon running simultaneously.
 .TP
 .BR \-s ", " \-\-socket " " \fIsocket_path
-Path to the socket file. This overrides both the built-in default
+Path to the socket file. This overrides both the built\-in default
 (#DEFAULT_RUN_DIR#/lvmpolld.socket) and the environment variable
 \fBLVM_LVMPOLLD_SOCKET\fP.
 .TP

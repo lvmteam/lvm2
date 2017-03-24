@@ -353,7 +353,7 @@ lockd VGs need to be "started" and "stopped", unlike other types of VGs.
 See the following section for a full description of starting and stopping.
 
 vgremove of a lockd VG will fail if other hosts have the VG started.
-Run vgchange \-\-lock-stop <vgname> on all other hosts before vgremove.
+Run vgchange \-\-lock\-stop <vgname> on all other hosts before vgremove.
 (It may take several seconds before vgremove recognizes that all hosts
 have stopped a sanlock VG.)
 
@@ -390,9 +390,9 @@ A lockd VG can be stopped if all LVs are deactivated.
 
 All lockd VGs can be started/stopped using:
 .br
-vgchange \-\-lock-start
+vgchange \-\-lock\-start
 .br
-vgchange \-\-lock-stop
+vgchange \-\-lock\-stop
 
 
 Individual VGs can be started/stopped using:
@@ -687,7 +687,7 @@ original cluster:
 .IP \[bu] 2
 Stop the VG on all hosts:
 .br
-vgchange \-\-lock-stop <vgname>
+vgchange \-\-lock\-stop <vgname>
 
 .IP \[bu] 2
 Change the VG lock type to none:
@@ -709,7 +709,7 @@ vgchange \-\-lock\-type dlm <vgname>
 .IP \[bu] 2
 Start the VG on hosts to use it:
 .br
-vgchange \-\-lock-start <vgname>
+vgchange \-\-lock\-start <vgname>
 
 .P
 
@@ -738,7 +738,7 @@ vgchange \-\-lock\-type dlm <vgname>
 .IP \[bu] 2
 Start the VG on hosts to use it:
 .br
-vgchange \-\-lock-start <vgname>
+vgchange \-\-lock\-start <vgname>
 
 
 .SS changing a local VG to a lockd VG
@@ -856,13 +856,13 @@ lvmlockd saves the cluster name for a lockd VG using dlm.  Only hosts in
 the matching cluster can use the VG.
 
 .IP \[bu] 2
-lvmlockd requires starting/stopping lockd VGs with vgchange \-\-lock-start
-and \-\-lock-stop.
+lvmlockd requires starting/stopping lockd VGs with vgchange \-\-lock\-start
+and \-\-lock\-stop.
 
 .IP \[bu] 2
 vgremove of a sanlock VG may fail indicating that all hosts have not
 stopped the VG lockspace.  Stop the VG on all hosts using vgchange
-\-\-lock-stop.
+\-\-lock\-stop.
 
 .IP \[bu] 2
 vgreduce or pvmove of a PV in a sanlock VG will fail if it holds the

@@ -40,7 +40,7 @@
 .
 .SH NAME
 .
-dmstats \(em device-mapper statistics management
+dmstats \(em device\-mapper statistics management
 .
 .SH SYNOPSIS
 .
@@ -235,7 +235,7 @@ dmstats \(em device-mapper statistics management
 .SH DESCRIPTION
 .
 The dmstats program manages IO statistics regions for devices that use
-the device-mapper driver. Statistics regions may be created, deleted,
+the device\-mapper driver. Statistics regions may be created, deleted,
 listed and reported on using the tool.
 
 The first argument to dmstats is a \fIcommand\fP.
@@ -247,7 +247,7 @@ Further options permit the selection of regions, output format
 control, and reporting behaviour.
 
 When no device argument is given dmstats will by default operate on all
-device-mapper devices present. The \fBcreate\fP and \fBdelete\fP
+device\-mapper devices present. The \fBcreate\fP and \fBdelete\fP
 commands require the use of \fB\-\-alldevices\fP when used in this way.
 .
 .SH OPTIONS
@@ -320,16 +320,16 @@ results.
 .br
 Instead of creating regions on a device as specified by command line
 options, open the file found at each \fBfile_path\fP argument, and
-create regions corresponding to the locations of the on-disk extents
+create regions corresponding to the locations of the on\-disk extents
 allocated to the file(s).
 .
 .HP
 .BR \-\-nomonitor
 .br
 Disable the \fBdmfilemapd\fP daemon when creating new file mapped
-groups. Normally the device-mapper filemap monitoring daemon,
+groups. Normally the device\-mapper filemap monitoring daemon,
 \fBdmfilemapd\fP, is started for each file mapped group to update the
-set of regions as the file changes on-disk: use of this option
+set of regions as the file changes on\-disk: use of this option
 disables this behaviour.
 
 Regions in the group may still be updated with the
@@ -345,26 +345,26 @@ affects the behaviour of the daemon when a file under monitoring is
 renamed or unlinked, and the conditions which cause the daemon to
 terminate.
 
-The \fBfollow_mode\fP argument is either "inode", for follow-inode
-mode, or "path", for follow-path.
+The \fBfollow_mode\fP argument is either "inode", for follow\-inode
+mode, or "path", for follow\-path.
 
-If follow-inode mode is used, the daemon will hold the file open, and
+If follow\-inode mode is used, the daemon will hold the file open, and
 continue to update regions from the same file descriptor. This means
 that the mapping will follow rename, move (within the same file
 system), and unlink operations. This mode is useful if the file is
 expected to be moved, renamed, or unlinked while it is being
 monitored.
 
-In follow-inode mode, the daemon will exit once it detects that the
+In follow\-inode mode, the daemon will exit once it detects that the
 file has been unlinked and it is the last holder of a reference to it.
 
-If follow-path is used, the daemon will re-open the provided path on
+If follow\-path is used, the daemon will re\-open the provided path on
 each monitoring iteration. This means that the group will be updated
 to reflect a new file being moved to the same path as the original
 file. This mode is useful for files that are expected to be updated
 via unlink and rename.
 
-In follow-path mode, the daemon will exit if the file is removed and
+In follow\-path mode, the daemon will exit if the file is removed and
 not replaced within a brief tolerance interval.
 
 In either mode, the daemon exits automatically if the monitored group
@@ -462,7 +462,7 @@ Specify which report fields to display.
 .IR sort_fields
 .br
 Sort output according to the list of fields given. Precede any
-sort field with '\fB-\fP' for a reverse sort on that column.
+sort field with '\fB\-\fP' for a reverse sort on that column.
 .
 .HP
 .BR \-\-precise
@@ -477,7 +477,7 @@ statistics regions.
 Specify a program ID string. When creating new statistics regions this
 string is stored with the region. Subsequent operations may supply a
 program ID in order to select only regions with a matching value. The
-default program ID for dmstats-managed regions is "dmstats".
+default program ID for dmstats\-managed regions is "dmstats".
 .
 .HP
 .BR \-\-region
@@ -495,7 +495,7 @@ Specify the region to operate on.
 .BR \-\-regions
 .IR region_list
 .br
-Specify a list of regions to group. The group list is a comma-separated
+Specify a list of regions to group. The group list is a comma\-separated
 list of region identifiers. Continuous sequences of identifiers may be
 expressed as a hyphen separated range, for example: '1-10'.
 .
@@ -544,7 +544,7 @@ alias may be specified using the \fB\-\-alias\fP option.
 .br
 Set the display units for report output.
 All sizes are output in these units:
-.RB ( h )uman-readable,
+.RB ( h )uman\-readable,
 .HELP_UNITS
 Can also specify custom units e.g. \fB\-\-units\ 3M\fP.
 .
@@ -573,7 +573,7 @@ Produce additional output.
 .CMD_CLEAR
 .br
 Instructs the kernel to clear statistics counters for the speficied
-regions (with the exception of in-flight IO counters).
+regions (with the exception of in\-flight IO counters).
 .
 .HP
 .CMD_CREATE
@@ -585,7 +585,7 @@ The region will span the entire device unless \fB\-\-start\fP and
 \fB\-\-length\fP options allow a region of arbitrary length to be placed
 at an arbitrary offset into the device. The \fB\-\-segments\fP option
 causes a new region to be created for each target in the corresponding
-device-mapper device's table.
+device\-mapper device's table.
 
 If the \fB\-\-precise\fP option is used the command will attempt to
 create a region using nanosecond precision counters.
@@ -608,7 +608,7 @@ An optional \fBprogram_id\fP or \fBuser_data\fP string may be associated
 with the region. A \fBprogram_id\fP may then be used to select regions
 for subsequent list, print, and report operations. The \fBuser_data\fP
 stores an arbitrary string and is not used by dmstats or the
-device-mapper kernel statistics subsystem.
+device\-mapper kernel statistics subsystem.
 
 By default dmstats creates regions with a \fBprogram_id\fP of
 "dmstats".
@@ -625,7 +625,7 @@ statistics for individual files in the file system, for example, virtual
 machine images, swap areas, or large database files.
 
 To work with the \fB\-\-filemap\fP option, files must be located on a
-local file system, backed by a device-mapper device, that supports
+local file system, backed by a device\-mapper device, that supports
 physical extent data using the FIEMAP ioctl (Ext4 and XFS for e.g.).
 
 By default regions that map a file are placed into a group and the
@@ -668,9 +668,9 @@ group.
 
 The list of regions to be grouped is specified with \fB\-\-regions\fP
 and an optional alias may be assigned with \fB\-\-alias\fP. The set of
-regions is given as a comma-separated list of region identifiers. A
+regions is given as a comma\-separated list of region identifiers. A
 continuous range of identifers spanning from \fBR1\fP to \fBR2\fP may
-be expressed as '\fBR1\fP-\fBR2\fP'.
+be expressed as '\fBR1\fP\-\fBR2\fP'.
 
 Regions that have a histogram configured can be grouped: in this case
 the number of histogram bins and their bounds must match exactly.
@@ -751,7 +751,7 @@ that were previously created with \fB\-\-filemap\fP, either directly,
 or by starting the monitoring daemon, \fBdmfilemapd\fP.
 
 This will add and remove regions to reflect changes in the allocated
-extents of the file on-disk, since the time that it was crated or last
+extents of the file on\-disk, since the time that it was crated or last
 updated.
 
 Use of this command is not normally needed since the \fBdmfilemapd\fP
@@ -767,10 +767,10 @@ the monitoring daemon.
 .
 .SH REGIONS, AREAS, AND GROUPS
 .
-The device-mapper statistics facility allows separate performance
+The device\-mapper statistics facility allows separate performance
 counters to be maintained for arbitrary regions of devices. A region may
 span any range: from a single sector to the whole device. A region may
-be further sub-divided into a number of distinct areas (one or more),
+be further sub\-divided into a number of distinct areas (one or more),
 each with its own counter set. In this case a summary value for the
 entire region is also available for use in reports.
 
@@ -793,10 +793,10 @@ location on the device.
 Using offsets it is possible to create regions that map individual
 objects within a block device (for example: partitions, files in a file
 system, or stripes or other structures in a RAID volume). Groups allow
-several non-contiguous regions to be assembled together for reporting
+several non\-contiguous regions to be assembled together for reporting
 and data aggregation.
 
-A region may be either divided into the specified number of equal-sized
+A region may be either divided into the specified number of equal\-sized
 areas, or into areas of the given size by specifying one of
 \fB\-\-areas\fP or \fB\-\-areasize\fP when creating a region with the
 \fBcreate\fP command. Depending on the size of the areas and the device
@@ -829,12 +829,12 @@ reference the group.
 .
 Using \fB\-\-filemap\fP, it is possible to create regions that
 correspond to the extents of a file in the file system. This allows
-IO statistics to be monitored on a per-file basis, for example to
+IO statistics to be monitored on a per\-file basis, for example to
 observe large database files, virtual machine images, or other files
 of interest.
 
 To be able to use file mapping, the file must be backed by a
-device-mapper device, and in a file system that supports the FIEMAP
+device\-mapper device, and in a file system that supports the FIEMAP
 ioctl (and which returns data describing the physical location of
 extents). This currently includes \fBxfs(5)\fP and \fBext4(5)\fP.
 
@@ -854,29 +854,29 @@ either manually or automatically.
 .B File follow modes
 .P
 The file map monitoring daemon can monitor files in two distinct ways:
-follow-inode mode, and follow-path mode.
+follow\-inode mode, and follow\-path mode.
 
 The mode affects the behaviour of the daemon when a file under
 monitoring is renamed or unlinked, and the conditions which cause the
 daemon to terminate.
 
-If follow-inode mode is used, the daemon will hold the file open, and
+If follow\-inode mode is used, the daemon will hold the file open, and
 continue to update regions from the same file descriptor. This means
 that the mapping will follow rename, move (within the same file
 system), and unlink operations. This mode is useful if the file is
 expected to be moved, renamed, or unlinked while it is being
 monitored.
 
-In follow-inode mode, the daemon will exit once it detects that the
+In follow\-inode mode, the daemon will exit once it detects that the
 file has been unlinked and it is the last holder of a reference to it.
 
-If follow-path is used, the daemon will re-open the provided path on
+If follow\-path is used, the daemon will re\-open the provided path on
 each monitoring iteration. This means that the group will be updated
 to reflect a new file being moved to the same path as the original
 file. This mode is useful for files that are expected to be updated
 via unlink and rename.
 
-In follow-path mode, the daemon will exit if the file is removed and
+In follow\-path mode, the daemon will exit if the file is removed and
 not replaced within a brief tolerance interval (one second).
 
 To stop the daemon, delete the group containing the mapped regions:
@@ -884,8 +884,8 @@ the daemon will automatically shut down.
 
 The daemon can also be safely killed at any time and the group kept:
 if the file is still being allocated the mapping will become
-progressively out-of-date as extents are added and removed (in this
-case the daemon can be re-started or the group updated manually with
+progressively out\-of\-date as extents are added and removed (in this
+case the daemon can be re\-started or the group updated manually with
 the \fBupdate_filemap\fP command).
 
 See the \fBcreate\fP command and \fB\-\-filemap\fP, \fB\-\-follow\fP,
@@ -899,7 +899,7 @@ extents and the regions contained in the group, however, since it can
 only react to new allocations once they have been written, there are
 inevitably some IO events that cannot be counted when a file is
 growing, particularly if the file is being extended by a single thread
-writing beyond end-of-file (for example, the \fBdd\fP program).
+writing beyond end\-of\-file (for example, the \fBdd\fP program).
 
 There is a further loss of events in that there is currently no way
 to atomically resize a \fBdmstats\fP region and preserve its current
@@ -917,7 +917,7 @@ these limitations when kernel support is available.
 The dmstats report provides several types of field that may be added to
 the default field set, or used to create custom reports.
 
-All performance counters and metrics are calculated per-area.
+All performance counters and metrics are calculated per\-area.
 .
 .SS Derived metrics
 .
@@ -979,7 +979,7 @@ identifier, start, length, and counts, as well as the program ID and
 user data values.
 .TP
 .B region_id
-Region identifier. This is a non-negative integer returned by the kernel
+Region identifier. This is a non\-negative integer returned by the kernel
 when a statistics region is created.
 .TP
 .B region_start
@@ -991,7 +991,7 @@ The length of the region. Display units are selected by the
 \fB\-\-units\fP option.
 .TP
 .B area_id
-Area identifier. Area identifiers are assigned by the device-mapper
+Area identifier. Area identifiers are assigned by the device\-mapper
 statistics library and uniquely identify each area within a region. Each
 ID corresponds to a distinct set of performance counters for that area
 of the statistics region. Area identifiers are always monotonically
@@ -1017,7 +1017,7 @@ The program ID value associated with this region.
 The user data value associated with this region.
 .TP
 .B group_id
-Group identifier. This is a non-negative integer returned by the dmstats
+Group identifier. This is a non\-negative integer returned by the dmstats
 \fBgroup\fP command when a statistics group is created.
 .TP
 .B interval_ns
@@ -1139,7 +1139,7 @@ indicating the unit.
 .B hist_ranges
 A list of the histogram bin ranges for the current statistics area in
 order of ascending latency value.  The values are expressed as
-"LOWER-UPPER" in whole units of seconds, miliseconds, microseconds or
+"LOWER\-UPPER" in whole units of seconds, miliseconds, microseconds or
 nanoseconds with a suffix indicating the unit.
 .TP
 .B hist_bins
@@ -1147,7 +1147,7 @@ The number of latency histogram bins configured for the area.
 .
 .SH EXAMPLES
 .
-Create a whole-device region with one area on vg00/lvol1
+Create a whole\-device region with one area on vg00/lvol1
 .br
 #
 .B dmstats create vg00/lvol1
@@ -1161,7 +1161,7 @@ Create a 32M region 1G into device d0
 .br
 d0: Created new region with 1 area(s) as region ID 0
 .P
-Create a whole-device region with 8 areas on every device
+Create a whole\-device region with 8 areas on every device
 .br
 .br
 #
@@ -1185,7 +1185,7 @@ Delete all regions on all devices
 #
 .B dmstats delete \-\-alldevices \-\-allregions
 .P
-Create a whole-device region with areas 10GiB in size on vg00/lvol1
+Create a whole\-device region with areas 10GiB in size on vg00/lvol1
 using dmsetup
 .br
 .br
@@ -1225,11 +1225,11 @@ Display five statistics reports for vg00/lvol1 at an interval of one second
 .br
 Name             RgID  ArID  AStart ASize  RRqM/s   WRqM/s   R/s   W/s    RSz/s WSz/s   AvRqSz  QSize Util%      AWait RdAWa WrAWa
 .br
-vg_hex-lv_home       0     0      0 61.00g     0.00     0.00  0.00 218.00     0   1.04m   4.50k  2.97      81.70 13.62  0.00 13.62
+vg_hex\-lv_home       0     0      0 61.00g     0.00     0.00  0.00 218.00     0   1.04m   4.50k  2.97      81.70 13.62  0.00 13.62
 .br
-vg_hex-lv_home       1     0 61.00g 19.20g     0.00     0.00  0.00   5.00     0 548.00k 109.50k  0.14      11.00 27.40  0.00 27.40
+vg_hex\-lv_home       1     0 61.00g 19.20g     0.00     0.00  0.00   5.00     0 548.00k 109.50k  0.14      11.00 27.40  0.00 27.40
 .br
-vg_hex-lv_home       2     0 80.20g  2.14g     0.00     0.00  0.00  14.00     0   1.15m  84.00k  0.39      18.70 27.71  0.00 27.71
+vg_hex\-lv_home       2     0 80.20g  2.14g     0.00     0.00  0.00  14.00     0   1.15m  84.00k  0.39      18.70 27.71  0.00 27.71
 .P
 Create one region for reach target contained in device vg00/lvol1
 .br
@@ -1276,9 +1276,9 @@ Bryn M. Reeves <bmr@redhat.com>
 
 LVM2 resource page: https://www.sourceware.org/lvm2/
 .br
-Device-mapper resource page: http://sources.redhat.com/dm/
+Device\-mapper resource page: http://sources.redhat.com/dm/
 .br
 
-Device-mapper statistics kernel documentation
+Device\-mapper statistics kernel documentation
 .br
-.I Documentation/device-mapper/statistics.txt
+.I Documentation/device\-mapper/statistics.txt

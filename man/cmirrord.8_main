@@ -7,7 +7,7 @@ cmirrord \(em cluster mirror log daemon
 
 .SH DESCRIPTION
 \fBcmirrord\fP is the daemon that tracks mirror log information in a cluster.
-It is specific to device-mapper based mirrors (and by extension, LVM
+It is specific to device\-mapper based mirrors (and by extension, LVM
 cluster mirrors).  Cluster mirrors are not possible without this daemon
 running.
 
