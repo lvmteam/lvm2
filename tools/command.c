@@ -2093,7 +2093,7 @@ void print_usage_notes(struct command_name *cname)
                "        capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
                "        The default input unit is specified by letter, followed by |UNIT.\n"
                "        UNIT represents other possible input units: BbBsSkKmMgGtTpPeE.\n"
-               "        (This should not be confused with the output control --units, where\n"
+               "        (This should not be confused with the output control \\-\\-units, where\n"
                "        capital letters mean multiple of 1000.)\n");
 	printf("\n");
 }
@@ -2295,6 +2295,13 @@ static void print_def_man(struct command_name *cname, int opt_enum, struct arg_d
 		printf(" ...");
 }
 
+static const char *_emit_long_opt_name(char *buf, const char *long_opt_name, ssize_t len)
+{
+	strcpy(buf, "\\-\\-");
+	strncat(buf, long_opt_name + 2, len - 3);
+	return buf;
+}
+
 static char *man_long_opt_name(const char *cmdname, int opt_enum)
 {
 	static char long_opt_name[64];
@@ -2303,34 +2310,34 @@ static char *man_long_opt_name(const char *cmdname, int opt_enum)
 
 	switch (opt_enum) {
 	case syncaction_ARG:
-		strncpy(long_opt_name, "--[raid]syncaction", 63);
+		strncpy(long_opt_name, "\\-\\-[raid]syncaction", 63);
 		break;
 	case writemostly_ARG:
-		strncpy(long_opt_name, "--[raid]writemostly", 63);
+		strncpy(long_opt_name, "\\-\\-[raid]writemostly", 63);
 		break;
 	case minrecoveryrate_ARG:
-		strncpy(long_opt_name, "--[raid]minrecoveryrate", 63);
+		strncpy(long_opt_name, "\\-\\-[raid]minrecoveryrate", 63);
 		break;
 	case maxrecoveryrate_ARG:
-		strncpy(long_opt_name, "--[raid]maxrecoveryrate", 63);
+		strncpy(long_opt_name, "\\-\\-[raid]maxrecoveryrate", 63);
 		break;
 	case writebehind_ARG:
-		strncpy(long_opt_name, "--[raid]writebehind", 63);
+		strncpy(long_opt_name, "\\-\\-[raid]writebehind", 63);
 		break;
 	case vgmetadatacopies_ARG:
 		if (!strncmp(cmdname, "vg", 2))
-			strncpy(long_opt_name, "--[vg]metadatacopies", 63);
+			strncpy(long_opt_name, "\\-\\-[vg]metadatacopies", 63);
 		else
-			strncpy(long_opt_name, "--vgmetadatacopies", 63);
+			strncpy(long_opt_name, "\\-\\-vgmetadatacopies", 63);
 		break;
 	case pvmetadatacopies_ARG:
 		if (!strncmp(cmdname, "pv", 2))
-			strncpy(long_opt_name, "--[pv]metadatacopies", 63);
+			strncpy(long_opt_name, "\\-\\-[pv]metadatacopies", 63);
 		else
-			strncpy(long_opt_name, "--pvmetadatacopies", 63);
+			strncpy(long_opt_name, "\\-\\-pvmetadatacopies", 63);
 		break;
 	default:
-		strncpy(long_opt_name, opt_names[opt_enum].long_opt, 63);
+		_emit_long_opt_name(long_opt_name, opt_names[opt_enum].long_opt, 63);
 		break;
 	}
 
@@ -2344,6 +2351,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 	int sep, ro, rp, oo, op, opt_enum;
 	int need_ro_indent_end = 0;
 	int include_extents = 0;
+	char long_opt_name[64];
 
 	if (!(cname = find_command_name(cmd->name)))
 		return;
@@ -2481,7 +2489,8 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				       opt_names[opt_enum].short_opt,
 				       man_long_opt_name(cmd->name, opt_enum));
 			} else {
-				printf(" \\fB%s\\fP", opt_names[cmd->required_opt_args[ro].opt].long_opt);
+				_emit_long_opt_name(long_opt_name, opt_names[cmd->required_opt_args[ro].opt].long_opt, 63);
+				printf(" \\fB%s\\fP", long_opt_name);
 			}
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
@@ -2528,7 +2537,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			 * in opt_names[] according to the command name.
 			 */
 			printf(".ad l\n");
-			printf("[ \\fB-l\\fP|\\fB--extents\\fP ");
+			printf("[ \\fB-l\\fP|\\fB\\-\\-extents\\fP ");
 			print_val_man(cname, extents_ARG, opt_names[extents_ARG].val_enum);
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -3089,7 +3098,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 		if (!strcmp(cname->name, "lvcreate"))
 			printf("For lvcreate, the required VG positional arg may be\n"
 			       "omitted when the VG name is included in another option,\n"
-			       "e.g. --name VG/LV.\n");
+			       "e.g. \\-\\-name VG/LV.\n");
 	}
 
 	if (has_lv_val) {
@@ -3138,7 +3147,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 		printf("\n");
 		printf(".br\n");
 		printf("Select indicates that a required positional parameter can\n"
-		       "be omitted if the \\fB--select\\fP option is used.\n"
+		       "be omitted if the \\fB\\-\\-select\\fP option is used.\n"
 		       "No arg appears in this position.\n");
 	}
 
@@ -3168,7 +3177,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 	       "b|B is bytes, s|S is sectors of 512 bytes, k|K is kilobytes,\n"
 	       "m|M is megabytes, g|G is gigabytes, t|T is terabytes,\n"
 	       "p|P is petabytes, e|E is exabytes.\n"
-	       "(This should not be confused with the output control --units, where\n"
+	       "(This should not be confused with the output control \\-\\-units, where\n"
 	       "capital letters mean multiple of 1000.)\n");
 
 	printf(".SH ENVIRONMENT VARIABLES\n");
