@@ -2299,7 +2299,7 @@ static void print_def_man(struct command_name *cname, int opt_enum, struct arg_d
 static const char *_emit_long_opt_name(char *buf, const char *long_opt_name, size_t len)
 {
 	strcpy(buf, "\\-\\-");
-	strncat(buf, long_opt_name + 2, strlen(buf) - 1);
+	strncat(buf, long_opt_name + 2, len - strlen(buf) - 1);
 	return buf;
 }
 
