@@ -171,7 +171,7 @@ default values:
 Command to print a list of all possible config settings, with their
 default values, and a full description of each as a comment:
 .br
-.B lvmconfig \-\-type default --withcomments
+.B lvmconfig \-\-type default \-\-withcomments
 
 Command to print a list of all possible config settings, with their
 current values (configured, non-default values are shown):
@@ -189,7 +189,7 @@ and a full description, where "Section" refers to the config section,
 e.g. global, and "Setting" refers to the name of the specific setting,
 e.g. umask:
 .br
-.B lvmconfig \-\-type default --withcomments Section/Setting
+.B lvmconfig \-\-type default \-\-withcomments Section/Setting
 
 
 .SH FILES

@@ -53,7 +53,7 @@ command 'vgs -o+systemid'
 A VG will not have a system_id if it was created before this feature was
 added to lvm, or if it was created by a host that did not have a system_id
 defined.  A system_id can be assigned to these VGs by using vgchange
---systemid (see below).
+\-\-systemid (see below).
 
 .IP \[bu] 2
 Two hosts should not be assigned the same system_id.  Doing so defeats
@@ -239,7 +239,7 @@ local {
 In vgcreate, the host running the command assigns its own system_id to the
 new VG.  To override this and set another system_id:
 
-.B vgcreate --systemid
+.B vgcreate \-\-systemid
 .I SystemID VG Devices
 
 Overriding the system_id makes it possible for a host to create a VG that
@@ -247,7 +247,7 @@ it may not be able to use.  Another host with a system_id matching the one
 specified may not recognize the new VG without manually rescanning
 devices.
 
-If the --systemid argument is an empty string (""), the VG is created with
+If the \-\-systemid argument is an empty string (""), the VG is created with
 no system_id, making it accessible to other hosts (see warnings above.)
 
 .SS report/display
@@ -255,11 +255,11 @@ no system_id, making it accessible to other hosts (see warnings above.)
 The system_id of a VG is displayed with the "systemid" reporting option.
 
 Report/display commands ignore foreign VGs by default.  To report foreign
-VGs, the --foreign option can be used.  This causes the VGs to be read
+VGs, the \-\-foreign option can be used.  This causes the VGs to be read
 from disk.  Because lvmetad caching is not used, this option can cause
 poor performance.
 
-.B vgs --foreign -o+systemid
+.B vgs \-\-foreign -o+systemid
 
 When a host with no system_id sees foreign VGs, it warns about them as
 they are skipped.  The host should be assigned a system_id, after which
@@ -271,7 +271,7 @@ vgexport clears the system_id.
 
 Other hosts will continue to see a newly exported VG as foreign because of
 local caching (when lvmetad is used).  Manually updating the local lvmetad
-cache with pvscan --cache will allow a host to recognize the newly
+cache with pvscan \-\-cache will allow a host to recognize the newly
 exported VG.
 
 vgimport sets the VG system_id to the local system_id as determined by
@@ -280,7 +280,7 @@ newly exported VGs.
 
 After vgimport, the exporting host will continue to see the VG as
 exported, and not owned by the new host.  Manually updating the local
-cache with pvscan --cache will allow a host to recognize the newly
+cache with pvscan \-\-cache will allow a host to recognize the newly
 imported VG as foreign.
 
 .SS vgchange
@@ -288,7 +288,7 @@ imported VG as foreign.
 A host can change the system_id of its own VGs, but the command requires
 confirmation because the host may lose access to the VG being changed:
 
-.B vgchange --systemid
+.B vgchange \-\-systemid
 .I SystemID VG
 
 The system_id can be removed from a VG by specifying an empty string ("")
@@ -340,7 +340,7 @@ orphan.  Nothing would automatically prevent the other hosts from using
 the newly allocated PV and corrupting it.  If the other hosts run a
 command to rescan devices, and update lvmetad, they would then recognize
 that the PV has been used by another host.  A command that rescans devices
-could be pvscan --cache, or vgs --foreign.
+could be pvscan \-\-cache, or vgs \-\-foreign.
 
 .SH SEE ALSO
 .BR vgcreate (8),

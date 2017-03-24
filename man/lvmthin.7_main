@@ -117,8 +117,8 @@ Create an LV that will hold thin pool metadata.
 
 # lvs
   LV        VG Attr       LSize
-  pool0     vg -wi-a----- 10.00g
-  pool0meta vg -wi-a----- 1.00g
+  pool0     vg -wi-a\-\-\-\-- 10.00g
+  pool0meta vg -wi-a\-\-\-\-- 1.00g
 
 .SS 3. create ThinPoolLV
 
@@ -137,13 +137,13 @@ The new ThinPoolLV takes the previous name of ThinDataLV.
 
 # lvs vg/pool0
   LV    VG Attr       LSize  Pool Origin Data% Meta%
-  pool0 vg twi-a-tz-- 10.00g      0.00   0.00
+  pool0 vg twi-a-tz\-\- 10.00g      0.00   0.00
 
 # lvs \-a
   LV            VG Attr       LSize
-  pool0         vg twi-a-tz-- 10.00g
-  [pool0_tdata] vg Twi-ao---- 10.00g
-  [pool0_tmeta] vg ewi-ao---- 1.00g
+  pool0         vg twi-a-tz\-\- 10.00g
+  [pool0_tdata] vg Twi-ao\-\-\-\- 10.00g
+  [pool0_tmeta] vg ewi-ao\-\-\-\- 1.00g
 
 .SS 4. create ThinLV
 
@@ -152,8 +152,8 @@ Create a new thin LV from the thin pool LV.
 The thin LV is created with a virtual size.
 Multiple new thin LVs may be created in the thin pool.
 Thin LV names must be unique in the VG.
-The '--type thin' option is inferred from the virtual size option.
-The --thinpool argument specifies which thin pool will
+The '\-\-type thin' option is inferred from the virtual size option.
+The \-\-thinpool argument specifies which thin pool will
 contain the ThinLV.
 .fi
 
@@ -171,8 +171,8 @@ Create another thin LV in the same thin pool:
 
 # lvs vg/thin1 vg/thin2
   LV    VG Attr       LSize Pool  Origin Data%
-  thin1 vg Vwi-a-tz-- 1.00t pool0        0.00
-  thin2 vg Vwi-a-tz-- 1.00t pool0        0.00
+  thin1 vg Vwi-a-tz\-\- 1.00t pool0        0.00
+  thin2 vg Vwi-a-tz\-\- 1.00t pool0        0.00
 
 .SS 5. create SnapLV
 
@@ -204,9 +204,9 @@ Create a snapshot of the first snapshot:
 
 # lvs vg/thin1s1 vg/thin1s2 vg/thin1s1s1
   LV        VG Attr       LSize Pool  Origin
-  thin1s1   vg Vwi---tz-k 1.00t pool0 thin1
-  thin1s2   vg Vwi---tz-k 1.00t pool0 thin1
-  thin1s1s1 vg Vwi---tz-k 1.00t pool0 thin1s1
+  thin1s1   vg Vwi\-\--tz-k 1.00t pool0 thin1
+  thin1s2   vg Vwi\-\--tz-k 1.00t pool0 thin1
+  thin1s1s1 vg Vwi\-\--tz-k 1.00t pool0 thin1s1
 
 .SS 6. activate SnapLV
 
@@ -297,9 +297,9 @@ same VG.
 # lvconvert \-\-type thin\-pool vg/pool0
 
 # lvs \-a
-  pool0           vg          twi-a-tz--  10.00g
-  [pool0_tdata]   vg          Twi-ao----  10.00g
-  [pool0_tmeta]   vg          ewi-ao----  16.00m
+  pool0           vg          twi-a-tz\-\-  10.00g
+  [pool0_tdata]   vg          Twi-ao\-\-\-\-  10.00g
+  [pool0_tmeta]   vg          ewi-ao\-\-\-\-  16.00m
 .fi
 
 
@@ -381,10 +381,10 @@ explicitly.
 # lvconvert \-\-type thin\-pool \-\-poolmetadata vg/pool0meta vg/pool0
 
 # lvs \-a
-  [lvol0_pmspare] vg          ewi-------
-  pool0           vg          twi---tz--
-  [pool0_tdata]   vg          Twi-------
-  [pool0_tmeta]   vg          ewi-------
+  [lvol0_pmspare] vg          ewi\-\-\-\-\-\--
+  pool0           vg          twi\-\--tz\-\-
+  [pool0_tdata]   vg          Twi\-\-\-\-\-\--
+  [pool0_tmeta]   vg          ewi\-\-\-\-\-\--
 .fi
 
 The "Metadata check and repair" section describes the use of
@@ -466,7 +466,7 @@ displayed by lvs:
 .nf
 # lvs vg/thin1s1
   LV         VG  Attr       LSize Pool  Origin
-  thin1s1    vg  Vwi---tz-k 1.00t pool0 thin1
+  thin1s1    vg  Vwi\-\--tz-k 1.00t pool0 thin1
 .fi
 
 This flag causes the snapshot LV to be skipped, i.e. not activated,
@@ -539,7 +539,7 @@ Command to extend thin pool data space:
 1. A thin pool LV is using 26.96% of its data blocks.
 # lvs
   LV    VG           Attr       LSize   Pool  Origin Data%
-  pool0 vg           twi-a-tz--  10.00g               26.96
+  pool0 vg           twi-a-tz\-\-  10.00g               26.96
 
 2. Double the amount of physical space in the thin pool LV.
 # lvextend \-L+10G vg/pool0
@@ -547,7 +547,7 @@ Command to extend thin pool data space:
 3. The percentage of used data blocks is half the previous value.
 # lvs
   LV    VG           Attr       LSize   Pool  Origin Data%
-  pool0 vg           twi-a-tz--  20.00g               13.48
+  pool0 vg           twi-a-tz\-\-  20.00g               13.48
 .fi
 
 Other methods of increasing free data space in a thin pool LV
@@ -579,9 +579,9 @@ Command to extend thin pool metadata space:
 .nf
 # lvs \-a \-oname,attr,size vg
   LV              Attr       LSize
-  pool0           twi-a-tz--  20.00g
-  [pool0_tdata]   Twi-ao----  20.00g
-  [pool0_tmeta]   ewi-ao----  12.00m
+  pool0           twi-a-tz\-\-  20.00g
+  [pool0_tdata]   Twi-ao\-\-\-\-  20.00g
+  [pool0_tmeta]   ewi-ao\-\-\-\-  12.00m
 .fi
 
 3. Double the amount of physical space in the thin metadata LV.
@@ -621,8 +621,8 @@ thin pool.  The fstrim command restores the physical space to the thin pool.
 .nf
 # lvs \-a \-oname,attr,size,pool_lv,origin,data_percent,metadata_percent vg
 LV              Attr       LSize   Pool  Origin Data%  Meta%
-pool0           twi-a-tz--  10.00g               47.01  21.03
-thin1           Vwi-aotz-- 100.00g pool0          2.70
+pool0           twi-a-tz\-\-  10.00g               47.01  21.03
+thin1           Vwi-aotz\-\- 100.00g pool0          2.70
 
 # df \-h /mnt/X
 Filesystem            Size  Used Avail Use% Mounted on
@@ -631,8 +631,8 @@ Filesystem            Size  Used Avail Use% Mounted on
 # dd if=/dev/zero of=/mnt/X/1Gfile bs=4096 count=262144; sync
 
 # lvs
-pool0           vg   twi-a-tz--  10.00g               57.01  25.26
-thin1           vg   Vwi-aotz-- 100.00g pool0          3.70
+pool0           vg   twi-a-tz\-\-  10.00g               57.01  25.26
+thin1           vg   Vwi-aotz\-\- 100.00g pool0          3.70
 
 # df \-h /mnt/X
 /dev/mapper/vg-thin1   99G  2.1G   92G   3% /mnt/X
@@ -640,8 +640,8 @@ thin1           vg   Vwi-aotz-- 100.00g pool0          3.70
 # rm /mnt/X/1Gfile
 
 # lvs
-pool0           vg   twi-a-tz--  10.00g               57.01  25.26
-thin1           vg   Vwi-aotz-- 100.00g pool0          3.70
+pool0           vg   twi-a-tz\-\-  10.00g               57.01  25.26
+thin1           vg   Vwi-aotz\-\- 100.00g pool0          3.70
 
 # df \-h /mnt/X
 /dev/mapper/vg-thin1   99G  1.1G   93G   2% /mnt/X
@@ -649,8 +649,8 @@ thin1           vg   Vwi-aotz-- 100.00g pool0          3.70
 # fstrim \-v /mnt/X
 
 # lvs
-pool0           vg   twi-a-tz--  10.00g               47.01  21.03
-thin1           vg   Vwi-aotz-- 100.00g pool0          2.70
+pool0           vg   twi-a-tz\-\-  10.00g               47.01  21.03
+thin1           vg   Vwi-aotz\-\- 100.00g pool0          2.70
 .fi
 
 The "Discard" section covers an option for automatically freeing data
@@ -714,7 +714,7 @@ lvm.conf monitoring setting.
 
 .IP \[bu]
 To activate or create a thin pool LV without interacting with dmeventd,
-the --ignoremonitoring option can be used.  With this option, the command
+the \-\-ignoremonitoring option can be used.  With this option, the command
 will not ask dmeventd to monitor the thin pool LV.
 
 .IP \[bu]
@@ -740,14 +740,14 @@ is all used (see the section "Automatically extend thin pool LV").  If
 thin pool data space is already exhausted, it can still be extended (see
 the section "Manually manage free data space of thin pool LV".)
 
-The behavior of a full thin pool is configurable with the --errorwhenfull
+The behavior of a full thin pool is configurable with the \-\-errorwhenfull
 y|n option to lvcreate or lvchange.  The errorwhenfull setting applies
 only to writes; reading thin LVs can continue even when data space is
 exhausted.
 
 Command to change the handling of a full thin pool:
 .br
-.B lvchange --errorwhenfull {y|n} VG/ThinPoolLV
+.B lvchange \-\-errorwhenfull {y|n} VG/ThinPoolLV
 
 .BR lvm.conf (5)
 .B error_when_full
@@ -799,7 +799,7 @@ the thin pool LV:
 .nf
 # lvs vg/pool0
   LV     VG           Attr       LSize   Pool  Origin Data%
-  pool0  vg           twi-a-tz-- 512.00m              100.00
+  pool0  vg           twi-a-tz\-\- 512.00m              100.00
 .fi
 
 .I causes
@@ -940,9 +940,9 @@ activation {
         thin_pool_autoextend_percent=10
 }
 
-# lvchange --metadataprofile pool0extend vg/pool0
+# lvchange \-\-metadataprofile pool0extend vg/pool0
 
-# lvextend --use-policies vg/pool0
+# lvextend \-\-use-policies vg/pool0
 .fi
 
 .I Notes
@@ -962,7 +962,7 @@ An LV without a profile of its own will inherit the VG profile.
 .IP \[bu] 2
 Remove a profile from an LV using the command:
 .br
-.B lvchange --detachprofile VG/ThinPoolLV.
+.B lvchange \-\-detachprofile VG/ThinPoolLV.
 
 .IP \[bu] 2
 Commands can also have profiles applied to them.  The settings that can be
@@ -1130,8 +1130,8 @@ to read unwritten parts of the thin snapshot.
 
 # lvs vg/lve vg/snaplve
   LV      VG  Attr       LSize  Pool  Origin Data%
-  lve     vg  ori------- 10.00g
-  snaplve vg  Vwi-a-tz-- 10.00g pool0 lve      0.00
+  lve     vg  ori\-\-\-\-\-\-- 10.00g
+  snaplve vg  Vwi-a-tz\-\- 10.00g pool0 lve      0.00
 .fi
 
 
@@ -1163,15 +1163,15 @@ name of ExampleLV.
 # lvcreate \-n lv_example \-L 10G vg
 
 # lvs
-  lv_example      vg          -wi-a-----  10.00g
+  lv_example      vg          -wi-a\-\-\-\--  10.00g
 
 # lvconvert \-\-type thin \-\-thinpool vg/pool0
           \-\-originname lv_external \-\-thin vg/lv_example
 
 # lvs
   LV              VG          Attr       LSize   Pool  Origin
-  lv_example      vg          Vwi-a-tz--  10.00g pool0 lv_external
-  lv_external     vg          ori-------  10.00g
+  lv_example      vg          Vwi-a-tz\-\-  10.00g pool0 lv_external
+  lv_external     vg          ori\-\-\-\-\-\--  10.00g
 .fi
 
 
@@ -1193,12 +1193,12 @@ and combines the two into a thin pool LV.
 
 # lvs vg/pool0
   LV    VG  Attr       LSize Pool Origin Data%
-  pool0 vg  twi-a-tz-- 8.00m               0.00
+  pool0 vg  twi-a-tz\-\- 8.00m               0.00
 
 # lvs \-a
-  pool0           vg          twi-a-tz--   8.00m
-  [pool0_tdata]   vg          Twi-ao----   8.00m
-  [pool0_tmeta]   vg          ewi-ao----   8.00m
+  pool0           vg          twi-a-tz\-\-   8.00m
+  [pool0_tdata]   vg          Twi-ao\-\-\-\-   8.00m
+  [pool0_tmeta]   vg          ewi-ao\-\-\-\-   8.00m
 .fi
 
 
@@ -1232,10 +1232,10 @@ Equivalent to:
 # lvcreate \-L8M \-V2G \-n thin1 \-\-thinpool vg/pool0
 
 # lvs \-a
-  pool0           vg          twi-a-tz--   8.00m
-  [pool0_tdata]   vg          Twi-ao----   8.00m
-  [pool0_tmeta]   vg          ewi-ao----   8.00m
-  thin1           vg          Vwi-a-tz--   2.00g pool0
+  pool0           vg          twi-a-tz\-\-   8.00m
+  [pool0_tdata]   vg          Twi-ao\-\-\-\-   8.00m
+  [pool0_tmeta]   vg          ewi-ao\-\-\-\-   8.00m
+  thin1           vg          Vwi-a-tz\-\-   2.00g pool0
 .fi
 
 
@@ -1260,16 +1260,16 @@ activated.
 .nf
 # lvs vg
   LV      VG Attr       LSize   Pool  Origin
-  pool0   vg twi-a-tz--  10.00g
-  thin1   vg Vwi-a-tz-- 100.00g pool0
+  pool0   vg twi-a-tz\-\-  10.00g
+  thin1   vg Vwi-a-tz\-\- 100.00g pool0
   thin1s1 vg Vwi-a-tz-k 100.00g pool0 thin1
 
 # lvconvert \-\-merge vg/thin1s1
 
 # lvs vg
   LV      VG Attr       LSize   Pool  Origin
-  pool0   vg twi-a-tz--  10.00g
-  thin1   vg Vwi-a-tz-- 100.00g pool0
+  pool0   vg twi-a-tz\-\-  10.00g
+  thin1   vg Vwi-a-tz\-\- 100.00g pool0
 .fi
 
 .I Example
@@ -1279,8 +1279,8 @@ Delayed merging of open LVs.
 
 # lvs vg
   LV      VG Attr       LSize   Pool  Origin
-  pool0   vg twi-a-tz--  10.00g
-  thin1   vg Vwi-aotz-- 100.00g pool0
+  pool0   vg twi-a-tz\-\-  10.00g
+  thin1   vg Vwi-aotz\-\- 100.00g pool0
   thin1s1 vg Vwi-aotz-k 100.00g pool0 thin1
 
 # df
@@ -1302,10 +1302,10 @@ Merging of thin snapshot thin1s1 will occur on next activation.
 
 # lvs \-a vg
   LV              VG   Attr       LSize   Pool  Origin
-  pool0           vg   twi-a-tz--  10.00g
-  [pool0_tdata]   vg   Twi-ao----  10.00g
-  [pool0_tmeta]   vg   ewi-ao----   1.00g
-  thin1           vg   Owi-a-tz-- 100.00g pool0
+  pool0           vg   twi-a-tz\-\-  10.00g
+  [pool0_tdata]   vg   Twi-ao\-\-\-\-  10.00g
+  [pool0_tmeta]   vg   ewi-ao\-\-\-\-   1.00g
+  thin1           vg   Owi-a-tz\-\- 100.00g pool0
   [thin1s1]       vg   Swi-a-tz-k 100.00g pool0 thin1
 
 # lvchange \-an vg/thin1

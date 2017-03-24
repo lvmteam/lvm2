@@ -108,7 +108,7 @@ report/buffered
 
 This document does not describe these settings in more detail - if you need
 detailed information, including values which are accepted for the settings,
-please run \fBlvmconfig --type default --withcomments <setting>\fP. There are
+please run \fBlvmconfig \-\-type default \-\-withcomments <setting>\fP. There are
 more configuration settings in addition to the common set listed above, but
 they are specific to either \fBmain report\fP or \fBlog report\fP,
 see \fBmain report specifics\fP and \fBlog report specifics\fP for
@@ -125,25 +125,25 @@ or further specify the report configuration.
 Definition of the set set of fields to use
 .RS
 .IP - 3
---options|-o FieldSet
+\-\-options|-o FieldSet
 .br
 Field set to use. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about field sets configured with
 global configuratin settings that this option overrides.
 .IP - 3
---options|-o+ FieldSet
+\-\-options|-o+ FieldSet
 .br
 Fields to include to current field set. See \fBmain report specifics\fP\ and
 \fBlog report specifics\fP for information about field sets configured with
 global configuration settings that this option extends.
 .IP - 3
---options|-o- FieldSet
+\-\-options|-o- FieldSet
 .br
 Fields to exclude from current field set. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about field sets configured with
 global configuration settings that this option reduces.
 .IP - 3
---options|-o# FieldSet
+\-\-options|-o# FieldSet
 .br
 Compaction of unused fields. Overrides report/compact_output_cols configuration
 setting.
@@ -153,13 +153,13 @@ setting.
 Sorting
 .RS
 .IP - 3
---sort|-O+ FieldSet
+\-\-sort|-O+ FieldSet
 .br
 Fields to sort by in ascending order. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about field sets configured with
 global configuration settings that this option overrides.
 .IP - 3
---sort|-O- FieldSet
+\-\-sort|-O- FieldSet
 .br
 Fields to sort by in descending order. See \fBmain report specifics\fP and
 \fBlog report specifics\fP for information about fields sets configured with
@@ -170,7 +170,7 @@ global configuration settings that this options overrides.
 Selection
 .RS
 .IP - 3
---select|-S Selection
+\-\-select|-S Selection
 .br
 Define selection criteria for report output. For \fBlog report\fP, this also
 overrides log/command_log_selection configuration setting, see also
@@ -181,43 +181,43 @@ overrides log/command_log_selection configuration setting, see also
 Changing output format and composition
 .RS
 .IP - 3
---reportformat
+\-\-reportformat
 .br
 Overrides report/output_format configuration setting.
 .IP - 3
---aligned
+\-\-aligned
 .br
 Overrides report/aligned configuration setting.
 .IP - 3
---binary
+\-\-binary
 .br
 Overrides report/binary_values_as_numeric configuration setting.
 .IP - 3
---nameprefixes
+\-\-nameprefixes
 .br
 Overrides report/prefixes configuration setting.
 .IP - 3
---noheadings
+\-\-noheadings
 .br
 Overrides report/noheadings configuration setting.
 .IP - 3
---nosuffix
+\-\-nosuffix
 .br
 Overrides global/suffix configuration setting.
 .IP - 3
---rows
+\-\-rows
 .br
 Overrides report/columns_as_rows configuration setting.
 .IP - 3
---separator
+\-\-separator
 .br
 Overrides report/separator configuration setting.
 .IP - 3
---units
+\-\-units
 .br
 Overrides global/units configuration setting.
 .IP - 3
---unquoted
+\-\-unquoted
 .br
 Overrides report/quoted configuration setting.
 .RE
@@ -226,19 +226,19 @@ Overrides report/quoted configuration setting.
 Special options
 .RS
 .IP - 3
---configreport \fBReportName\fP
+\-\-configreport \fBReportName\fP
 .br
-This defines the \fBReportName\fP for which any subsequent -o|--columns,
--O|--sort or -S|--select applies to. See also \fBmain report specifics\fP
+This defines the \fBReportName\fP for which any subsequent -o|\-\-columns,
+-O|\-\-sort or -S|\-\-select applies to. See also \fBmain report specifics\fP
 and \fBlog report specifics\fP for possible \fBReportName\fP values.
 .IP - 3
---logonly
+\-\-logonly
 .br
 When an LVM command contains both \fBmain report\fP and \fBlog report\fP,
 this option suppresses the \fBmain report\fP output and it causes the
 \fBlog report\fP output to be displayed only.
 .IP - 3
---unbuffered
+\-\-unbuffered
 .br
 Overrides report/bufffered configuration setting.
 .RE
@@ -276,7 +276,7 @@ report/pvs_sort
 .RE
 
 .IP \[bu] 3
-\fBpvseg\fP representing report about Physical Volume Segments (\fBpvs --segments\fP)
+\fBpvseg\fP representing report about Physical Volume Segments (\fBpvs \-\-segments\fP)
 .RS
 .IP - 3
 report/pvseg_cols
@@ -303,7 +303,7 @@ report/lvs_sort
 .RE
 
 .IP \[bu] 3
-\fBseg\fP representing report about Logical Volume Segments (\fBlvs --segments\fP)
+\fBseg\fP representing report about Logical Volume Segments (\fBlvs \-\-segments\fP)
 .RS
 .IP - 3
 report/segs_cols
@@ -355,10 +355,10 @@ groups are combined together. Some of these combinations are not allowed in
 which case LVM will issue an error.
 
 For all main report subtypes except \fBfull\fP, it's not necessary to use
-\fB--configreport ReportName\fP to denote which report any subsequent
+\fB\-\-configreport ReportName\fP to denote which report any subsequent
 \fB-o, -O or -S\fP option applies to as they always apply to the single main
 report type. Currently, \fBlvm fullreport\fP is the only command that
-includes more than one \fBmain report\fP subtype. Therefore, the --configreport
+includes more than one \fBmain report\fP subtype. Therefore, the \-\-configreport
 is particularly suitable for the full report if you need to configure each of
 its subreports in a different way.
 
@@ -387,13 +387,13 @@ log/command_log_selection
 
 .RE
 
-You always need to use \fB--configreport log\fP together with \fB-o|--options,
--O|--sort or -S|--selection\fP to override configuration settings directly on
+You always need to use \fB\-\-configreport log\fP together with \fB-o|\-\-options,
+-O|\-\-sort or -S|\-\-selection\fP to override configuration settings directly on
 command line for \fBlog report\fP. When compared to \fBmain report\fP, in
 addition to usual configuration settings for report fields and sorting, the
 \fBlog report\fP has also configuration option for selection -
 \fBreport/command_log_selection\fP. This configuration setting is provided for
-convenience so it's not necessary to use \fB-S|--select\fP on command line
+convenience so it's not necessary to use \fB-S|\-\-select\fP on command line
 each time an LVM command is executed and we need the same selection criteria
 to be applied for \fBlog report\fP. Default selection criteria used for
 \fBlog report\fP are
@@ -572,7 +572,7 @@ Rreturn code associated with current item.
 .RE
 
 
-You can also run \fB<lvm_command> --configreport log -o help\fP to
+You can also run \fB<lvm_command> \-\-configreport log -o help\fP to
 to display complete list of fields that you may use for the \fBlog report\fP.
 
 .SH Selection
@@ -668,7 +668,7 @@ criteria)
 \fBnumber\fP for integer value
 .IP \[bu] 3
 \fBsize\fP for integer or floating point number with size unit suffix
-(see also \fBlvcreate\fP(8) man page and description for "-L|--size"
+(see also \fBlvcreate\fP(8) man page and description for "-L|\-\-size"
 option for the list of recognized suffixes)
 .IP \[bu] 3
 \fBpercent\fP for floating point number with or without "%" suffix
@@ -818,7 +818,7 @@ including all configuration related to reporting. We will use it throughout
 examples below to display current configuration.
 
 .nf
-# lvmconfig --type full global/units global/suffix \\
+# lvmconfig \-\-type full global/units global/suffix \\
    report/output_format  report/compact_output \\
    report/compact_output_cols report/aligned \\
    report/headings report/separator \\
@@ -854,7 +854,7 @@ type is configured with configuration settings as we already mentioned in
 \fBmain report specifics\fP section in this man page.
 
 .nf
-# lvmconfig --type full report/pvs_cols report/pvs_sort \\
+# lvmconfig \-\-type full report/pvs_cols report/pvs_sort \\
    report/pvsegs_cols report/pvsegs_sort report/vgs_cols \\
    report/vgs_sort report/lvs_cols report/lvs_sort \\
    report/segs_cols report/segs_sort
@@ -875,32 +875,32 @@ segs_sort="vg_name,lv_name,seg_start"
 .nf
 # pvs
   PV         VG Fmt  Attr PSize   PFree 
-  /dev/sda   vg lvm2 a--  100.00m 88.00m
-  /dev/sdb   vg lvm2 a--  100.00m 92.00m
+  /dev/sda   vg lvm2 a\-\-  100.00m 88.00m
+  /dev/sdb   vg lvm2 a\-\-  100.00m 92.00m
 
-# pvs --segments
+# pvs \-\-segments
   PV         VG Fmt  Attr PSize   PFree  Start SSize
-  /dev/sda   vg lvm2 a--  100.00m 88.00m     0     1
-  /dev/sda   vg lvm2 a--  100.00m 88.00m     1     1
-  /dev/sda   vg lvm2 a--  100.00m 88.00m     2     1
-  /dev/sda   vg lvm2 a--  100.00m 88.00m     3    22
-  /dev/sdb   vg lvm2 a--  100.00m 92.00m     0     1
-  /dev/sdb   vg lvm2 a--  100.00m 92.00m     1     1
-  /dev/sdb   vg lvm2 a--  100.00m 92.00m     2    23
+  /dev/sda   vg lvm2 a\-\-  100.00m 88.00m     0     1
+  /dev/sda   vg lvm2 a\-\-  100.00m 88.00m     1     1
+  /dev/sda   vg lvm2 a\-\-  100.00m 88.00m     2     1
+  /dev/sda   vg lvm2 a\-\-  100.00m 88.00m     3    22
+  /dev/sdb   vg lvm2 a\-\-  100.00m 92.00m     0     1
+  /dev/sdb   vg lvm2 a\-\-  100.00m 92.00m     1     1
+  /dev/sdb   vg lvm2 a\-\-  100.00m 92.00m     2    23
 
 # vgs
   VG #PV #LV #SN Attr   VSize   VFree  
-  vg   2   2   0 wz--n- 200.00m 180.00m
+  vg   2   2   0 wz\-\-n- 200.00m 180.00m
 
 # lvs
   LV    VG Attr       LSize Pool Origin Move Log Cpy%Sync Convert
-  lvol0 vg -wi-a----- 4.00m                                    
-  lvol1 vg rwi-a-r--- 4.00m                      100.00          
+  lvol0 vg -wi-a\-\-\-\-- 4.00m                                    
+  lvol1 vg rwi-a-r\-\-- 4.00m                      100.00          
 
-# lvs --segments
+# lvs \-\-segments
   LV    VG Attr       #Str Type   SSize
-  lvol0 vg -wi-a-----    1 linear 4.00m
-  lvol1 vg rwi-a-r---    2 raid1  4.00m
+  lvol0 vg -wi-a\-\-\-\--    1 linear 4.00m
+  lvol1 vg rwi-a-r\-\--    2 raid1  4.00m
 .fi
 
 We will use \fBreport/lvs_cols\fP and \fBreport/lvs_sort\fP configuration
@@ -911,7 +911,7 @@ Also note that in the example below, we don't display the "lv_time" field
 even though we're using it for sorting - this is allowed.
 
 .nf
-# lvmconfig --type full report/lvs_cols report/lvs_sort
+# lvmconfig \-\-type full report/lvs_cols report/lvs_sort
 lvs_cols="lv_name,lv_size,origin,pool_lv,copy_percent"
 lvs_sort="-lv_time"
 
@@ -921,7 +921,7 @@ lvs_sort="-lv_time"
   lvol0 4.00m  
 .fi
 
-You can use \fB-o|--options\fP command line option to override current
+You can use \fB-o|\-\-options\fP command line option to override current
 configuration directly on command line.
 
 .nf
@@ -956,7 +956,7 @@ This way, it's possible to configure different sets of fields to display
 and to sort by for individual reports as well as the full report.
 
 .nf
-# lvmconfig --type full report/pvs_cols_full \\
+# lvmconfig \-\-type full report/pvs_cols_full \\
    report/pvs_sort_full report/pvsegs_cols_full \\
    report/pvsegs_sort_full report/vgs_cols_full \\
    report/vgs_sort_full report/lvs_cols_full \\
@@ -1007,7 +1007,7 @@ output. To enable this feature and to compact all fields, use
 \fBreport/compact_output=1\fP in your configuration.
 
 .nf
-# lvmconfig --type full report/compact_output
+# lvmconfig \-\-type full report/compact_output
 compact_output=1
 
 # lvs
@@ -1021,11 +1021,11 @@ compact_output=1
 .fi
 
 Alternatively, you can define which fields should be compacted by configuring
-\fBreport/compact_output_cols\fP configuration setting (or \fB-o|--options #\fP
+\fBreport/compact_output_cols\fP configuration setting (or \fB-o|\-\-options #\fP
 command line option).
 
 .nf
-# lvmconfig --type full report/compact_output report/compact_output_cols
+# lvmconfig \-\-type full report/compact_output report/compact_output_cols
 compact_output=0
 compact_output_cols="origin"
 
@@ -1050,83 +1050,83 @@ We will use \fBreport/compact_output=1\fP for subsequent examples.
 
 By default, LVM displays sizes in reports in human-readable form which means
 that the most suitable unit is used so it's easy to read. You can use
-\fBreport/units\fP configuration setting (or \fB--units\fP option directly
+\fBreport/units\fP configuration setting (or \fB\-\-units\fP option directly
 on command line) and \fBreport/suffix\fP
-configuration setting (or \fB--nosuffix\fP command line option) to change this.
+configuration setting (or \fB\-\-nosuffix\fP command line option) to change this.
 
 .nf
-# lvs --units b --nosuffix
+# lvs \-\-units b \-\-nosuffix
   LV    LSize   Cpy%Sync
   lvol1 4194304 100.00  
   lvol0 4194304    
 .fi
 
 If you want to configure whether report headings are displayed or not, use
-\fBreport/headings\fP configuration settings (or \fB--noheadings\fP command
+\fBreport/headings\fP configuration settings (or \fB\-\-noheadings\fP command
 line option).
 
 .nf
-# lvs --noheadings
+# lvs \-\-noheadings
   lvol1 4.00m 100.00  
   lvol0 4.00m     
 .fi
 
 In some cases, it may be useful to display report content as key=value pairs
 where key here is actually the field name. Use \fBreport/prefixes\fP
-configuration setting (or \fB--nameprefixes\fP command line option) to switch
+configuration setting (or \fB\-\-nameprefixes\fP command line option) to switch
 between standard output and the key=value output. The key=value pair is the
 output that is suitable for use in scripts and for other tools to parse easily.
 Usually, you also don't want to display headings with the output that has these
 key=value pairs.
 
 .nf
-# lvs --noheadings --nameprefixes
+# lvs \-\-noheadings \-\-nameprefixes
   LVM2_LV_NAME='lvol1' LVM2_LV_SIZE='4.00m' LVM2_COPY_PERCENT='100.00'
   LVM2_LV_NAME='lvol0' LVM2_LV_SIZE='4.00m' LVM2_COPY_PERCENT=''
 .fi
 
 To define whether quotation marks in key=value pairs should be used or not,
-use \fBreport/quoted\fP configuration setting (or \fB--unquoted\fP command
+use \fBreport/quoted\fP configuration setting (or \fB\-\-unquoted\fP command
 line option).
 
 .nf
-# lvs --noheadings --nameprefixes --unquoted
+# lvs \-\-noheadings \-\-nameprefixes \-\-unquoted
   LVM2_LV_NAME=lvol1 LVM2_LV_SIZE=4.00m LVM2_COPY_PERCENT=100.00
   LVM2_LV_NAME=lvol0 LVM2_LV_SIZE=4.00m LVM2_COPY_PERCENT=
 .fi
 
 For easier parsing, you can even transpose the report so each column now
 becomes a row in the output. This is done with \fBreport/output_as_rows\fP
-configuration setting (or \fB--rows\fP command line option).
+configuration setting (or \fB\-\-rows\fP command line option).
 
 .nf
-# lvs --noheadings --nameprefixes --unquoted --rows
+# lvs \-\-noheadings \-\-nameprefixes \-\-unquoted \-\-rows
   LVM2_LV_NAME=lvol1 LVM2_LV_NAME=lvol0
   LVM2_LV_SIZE=4.00m LVM2_LV_SIZE=4.00m
   LVM2_COPY_PERCENT=100.00 LVM2_COPY_PERCENT=
 .fi
 
-Use \fBreport/separator\fP configuration setting (or \fB--separator\fP command
+Use \fBreport/separator\fP configuration setting (or \fB\-\-separator\fP command
 line option) to define your own field separator to use.
 
 .nf
-# lvs --noheadings --nameprefixes --unquoted --separator " | "
+# lvs \-\-noheadings \-\-nameprefixes \-\-unquoted \-\-separator " | "
   LVM2_LV_NAME=lvol1 | LVM2_LV_SIZE=4.00m | LVM2_COPY_PERCENT=100.00
   LVM2_LV_NAME=lvol0 | LVM2_LV_SIZE=4.00m | LVM2_COPY_PERCENT=
 .fi
 
 If you are using your own separator, the columns in the output are not aligned
-by default. Use \fBreport/aligned\fP configuration setting (or \fB--aligned\fP
+by default. Use \fBreport/aligned\fP configuration setting (or \fB\-\-aligned\fP
 command line option) for LVM to add extra spaces in report to align the output
 properly.
 
 .nf
-# lvs --separator " | "
+# lvs \-\-separator " | "
   LV | LSize | Cpy%Sync
   lvol1 | 4.00m | 100.00
   lvol0 | 4.00m | 
 
-# lvs --separator " | " --aligned
+# lvs \-\-separator " | " \-\-aligned
   LV    | LSize | Cpy%Sync
   lvol1 | 4.00m | 100.00  
   lvol0 | 4.00m |         
@@ -1148,7 +1148,7 @@ separator, use \fBreport/list_item_separator\fP configuration setting its
 definition.
 
 .nf
-# lvmconfig --type full report/list_item_separator
+# lvmconfig \-\-type full report/list_item_separator
 list_item_separator=";"
 
 # lvs -o+tags
@@ -1165,7 +1165,7 @@ Format for any of time values displayed in reports can be configured with
 and time is displayed, including timezone.
 
 .nf
-# lvmconfig --type full report/time_format
+# lvmconfig \-\-type full report/time_format
 time_format="%Y-%m-%d %T %z"
 
 # lvs -o+time
@@ -1176,22 +1176,22 @@ time_format="%Y-%m-%d %T %z"
 
 We can change time format in similar way as we do when using \fBdate\fP(1)
 command or \fBstrftime\fP(3) function
-(\fBlvmconfig --type default --withcomments report/time_format\fP will
+(\fBlvmconfig \-\-type default \-\-withcomments report/time_format\fP will
 give you complete list of available formatting options). In the example
 below, we decided to use %s for number of seconds since Epoch (1970-01-01 UTC).
 
 .nf
-# lvmconfig --type full report/time_format
+# lvmconfig \-\-type full report/time_format
 time_format="%s"
 
 # lvs
   LV    Attr       LSize Cpy%Sync LV Tags   CTime                     
-  lvol1 rwi-a-r--- 4.00m 100.00             1472468016                
-  lvol0 -wi-a----- 4.00m          tagA,tagB 1472458517     
+  lvol1 rwi-a-r\-\-- 4.00m 100.00             1472468016                
+  lvol0 -wi-a\-\-\-\-- 4.00m          tagA,tagB 1472458517     
 .fi
 
 The \fBlvs\fP does not display hidden LVs by default - to include these LVs
-in the output, you need to use \fB-a|--all\fP command line option. Names for
+in the output, you need to use \fB-a|\-\-all\fP command line option. Names for
 these hidden LVs are displayed within square brackets.
 
 .nf
@@ -1209,7 +1209,7 @@ You can configure LVM to display the square brackets for hidden LVs or not with
 \fBreport/mark_hidden_devices\fP configuration setting.
 
 .nf
-# lvmconfig --type full report/mark_hidden_devices
+# lvmconfig \-\-type full report/mark_hidden_devices
 mark_hidden_devices=0
 
 # lvs -a
@@ -1254,7 +1254,7 @@ We can change the way how these binary values are displayed with
 \fBreport/binary_values_as_numeric\fP configuration setting.
 
 .nf
-# lvmconfig --type full report/binary_values_as_numeric
+# lvmconfig \-\-type full report/binary_values_as_numeric
 binary_values_as_numeric=1
 
 # lvs -o+lv_active_locally
@@ -1266,12 +1266,12 @@ binary_values_as_numeric=1
 .SS Changing output format
 
 LVM can output reports in different formats - use \fBreport/output_format\fP
-configuration setting (or \fB--reportformat\fP command line option) to swith
+configuration setting (or \fB\-\-reportformat\fP command line option) to swith
 the report output format. Currently, LVM supports \fB"basic"\fP (all the examples
 we used above used this format) and \fB"JSON"\fP output format.
 
 .nf
-# lvs -o lv_name,lv_size --reportformat json
+# lvs -o lv_name,lv_size \-\-reportformat json
   {
       "report": [
           {
@@ -1286,9 +1286,9 @@ we used above used this format) and \fB"JSON"\fP output format.
 
 Note that some configuration settings and command line options have no
 effect with certain report formats. For example, with \fBJSON\fP output,
-it doesn't have any meaning to use \fBreport/aligned\fP (\fB--aligned\fP),
-\fBreport/noheadings\fP (\fB--noheadings\fP), \fBreport/columns_as_rows\fP
-(\fB--rows\fP) or \fBreport/buffered\fP (\fB--unbuffered\fP). All these
+it doesn't have any meaning to use \fBreport/aligned\fP (\fB\-\-aligned\fP),
+\fBreport/noheadings\fP (\fB\-\-noheadings\fP), \fBreport/columns_as_rows\fP
+(\fB\-\-rows\fP) or \fBreport/buffered\fP (\fB\-\-unbuffered\fP). All these
 configuration settings and command line options are ignored if using the
 \fBJSON\fP report output format.
 
@@ -1315,7 +1315,7 @@ look at the bottom of the help output, you can see section about
 # lvs -S help
  ...
 Selection operators
--------------------
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\--
 Comparison operators:
    =~  - Matching regular expression. [regex]
    !~  - Not matching regular expression. [regex]
@@ -1387,13 +1387,13 @@ together.
 You can also use selection together with processing-oriented commands.
 
 .nf
-# lvchange --addtag test -S 'size < 5000k'
+# lvchange \-\-addtag test -S 'size < 5000k'
   Logical volume vg/lvol1 changed.
   Logical volume vg/lvol0 changed.
   Logical volume vg/lvol3 changed.
   Logical volume vg/lvol4 changed.
 
-# lvchange --deltag test -S 'tags = test'
+# lvchange \-\-deltag test -S 'tags = test'
   Logical volume vg/lvol1 changed.
   Logical volume vg/lvol0 changed.
   Logical volume vg/lvol3 changed.
@@ -1534,7 +1534,7 @@ Time operators have synonyms: ">=" for since, "<=" for until,
 Example below demonstrates using absolute time expression.
 
 .nf
-# lvs -o name,time --config report/time_format="%s"
+# lvs -o name,time \-\-config report/time_format="%s"
   LV    CTime                     
   lvol4 1473433064                
   lvol3 1473433008                
@@ -1601,7 +1601,7 @@ Just like any other report, we can set the set of fields to display
 for this report.
 
 .nf
-# lvmconfig --type full log/report_command_log log/command_log_cols \\
+# lvmconfig \-\-type full log/report_command_log log/command_log_cols \\
    log/command_log_sort log/command_log_selection
 report_command_log=1
 command_log_cols="log_seq_num,log_type,log_context,log_object_type,
@@ -1631,7 +1631,7 @@ log report in the example below where we can see that both LVs lvol0 and
 lvol1 were successfully processed as well as the VG vg they are part of.
 
 .nf
-# lvmconfig --type full log/command_log_selection
+# lvmconfig \-\-type full log/command_log_selection
 command_log_selection="all"
 
 # lvs
@@ -1659,11 +1659,11 @@ command_log_selection="all"
 .SS Handling multiple reports per single command
 
 To configure the log report directly on command line, we need to use
-\fB--configreport\fP option before we start any \fB-o|--options\fP,
-\fB-O|--sort\fP or \fB-S|--select\fP that is targeted for log report.
+\fB\-\-configreport\fP option before we start any \fB-o|\-\-options\fP,
+\fB-O|\-\-sort\fP or \fB-S|\-\-select\fP that is targeted for log report.
 
 .nf
-# lvs -o lv_name,lv_size --configreport log -o log_object_type, \\
+# lvs -o lv_name,lv_size \-\-configreport log -o log_object_type, \\
    log_object_name,log_message,log_ret_code
   Logical Volume
   ==============
@@ -1680,7 +1680,7 @@ To configure the log report directly on command line, we need to use
 .fi
 
 The \fBlvm fullreport\fP, with or without log report, consists of several
-reports - the \fB--configreport\fP is also used to target particular
+reports - the \fB\-\-configreport\fP is also used to target particular
 subreport here.
 
 Below is an extended example with \fBlvm fullreport\fP to illustrate
@@ -1693,12 +1693,12 @@ having "sda" in its name. Also, for the log subreport we define ordering
 to be based on "log_object_type" field.
 
 .nf
-# lvm fullreport --reportformat json \\
-   --configreport vg -o vg_name,vg_size \\
-   --configreport pvseg -o pv_name,pvseg_start \\
+# lvm fullreport \-\-reportformat json \\
+   \-\-configreport vg -o vg_name,vg_size \\
+   \-\-configreport pvseg -o pv_name,pvseg_start \\
                         -S 'pv_name=~sda' \\
-   --configreport seg -o lv_name,seg_start \\
-   --configreport log -o log_object_type,log_object_name \\
+   \-\-configreport seg -o lv_name,seg_start \\
+   \-\-configreport log -o log_object_type,log_object_name \\
                       -O log_object_type \\
                       -S 'log_object_name=lvol0 || \\
                           log_object_name=~sda'

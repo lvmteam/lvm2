@@ -253,7 +253,7 @@ least one LV that is still present.  This helps to record the ancestry of
 thin snapshots even after some links in the chain have been removed.
 A reference to the historical LV 'lvol1' in VG 'vg00' would be 'vg00/-lvol1'
 or just '-lvol1' if the VG is already set.  (The latter form must be preceded
-by '--' to terminate command line option processing before reaching this
+by '\-\-' to terminate command line option processing before reaching this
 argument.)
 .P
 There are also various reserved names that are used internally by lvm that can
@@ -288,8 +288,8 @@ When VGs with the same name exist, commands operating on all VGs will
 include all of the VGs with the same name.  If the ambiguous VG name is
 specified on the command line, the command will produce an error.  The
 error states that multiple VGs exist with the specified name.  To process
-one of the VGs specifically, the --select option should be used with the
-UUID of the intended VG: '--select vg_uuid=<uuid>'.
+one of the VGs specifically, the \-\-select option should be used with the
+UUID of the intended VG: '\-\-select vg_uuid=<uuid>'.
 
 An exception is if all but one of the VGs with the shared name is foreign
 (see

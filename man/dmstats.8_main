@@ -1247,7 +1247,7 @@ Create regions mapping each file in the directory images/ and place
 them into separate groups, each named after the corresponding file
 .br
 #
-.B dmstats create --filemap images/*
+.B dmstats create \-\-filemap images/*
 .br
 images/vm1.qcow2: Created new group with 87 region(s) as group ID 0.
 .br

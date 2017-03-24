@@ -423,7 +423,7 @@ Each rimage SubLV holds a portion of LV data.  No parity is used.
 No RAID metadata is used.
 
 .nf
-lvcreate --type raid0 --stripes 2 --name lvr0 ...
+lvcreate \-\-type raid0 \-\-stripes 2 \-\-name lvr0 ...
 
 lvs -a -o name,segtype,devices
   lvr0            raid0  lvr0_rimage_0(0),lvr0_rimage_1(0)
@@ -437,7 +437,7 @@ Each rimage SubLV holds a complete copy of LV data.  No parity is used.
 Each rmeta SubLV holds RAID metadata.
 
 .nf
-lvcreate --type raid1 --mirrors 1 --name lvr1 ...
+lvcreate \-\-type raid1 \-\-mirrors 1 \-\-name lvr1 ...
 
 lvs -a -o name,segtype,devices
   lvr1            raid1  lvr1_rimage_0(0),lvr1_rimage_1(0)
@@ -453,7 +453,7 @@ Two rimage SubLVs each hold a portion of LV data and one rimage SubLV
 holds parity.  Each rmeta SubLV holds RAID metadata.
 
 .nf
-lvcreate --type raid4 --stripes 2 --name lvr4 ...
+lvcreate \-\-type raid4 \-\-stripes 2 \-\-name lvr4 ...
 
 lvs -a -o name,segtype,devices
   lvr4            raid4  lvr4_rimage_0(0),\\
@@ -473,7 +473,7 @@ Three rimage SubLVs each hold a portion of LV data and parity.
 Each rmeta SubLV holds RAID metadata.
 
 .nf
-lvcreate --type raid5 --stripes 2 --name lvr5 ...
+lvcreate \-\-type raid5 \-\-stripes 2 \-\-name lvr5 ...
 
 lvs -a -o name,segtype,devices
   lvr5            raid5  lvr5_rimage_0(0),\\
@@ -493,7 +493,7 @@ Six rimage SubLVs each hold a portion of LV data and parity.
 Each rmeta SubLV holds RAID metadata.
 
 .nf
-lvcreate --type raid6 --stripes 3 --name lvr6
+lvcreate \-\-type raid6 \-\-stripes 3 \-\-name lvr6
 
 lvs -a -o name,segtype,devices
   lvr6            raid6  lvr6_rimage_0(0),\\
@@ -521,7 +521,7 @@ Four rimage SubLVs each hold a portion of LV data.  No parity is used.
 Each rmeta SubLV holds RAID metadata.
 
 .nf
-lvcreate --type raid10 --stripes 2 --mirrors 1 --name lvr10
+lvcreate \-\-type raid10 \-\-stripes 2 \-\-mirrors 1 \-\-name lvr10
 
 lvs -a -o name,segtype,devices
   lvr10            raid10 lvr10_rimage_0(0),\\
@@ -634,7 +634,7 @@ controls the activation mode when not specified by the command.
 
 The default value is printed by:
 .nf
-lvmconfig --type default activation/activation_mode
+lvmconfig \-\-type default activation/activation_mode
 .fi
 
 .SS Replacing Devices
@@ -685,11 +685,11 @@ the lvchange command to refresh an LV:
   LV    VG   Type  Attr       LSize
   raid1 vg   raid1 Rwi-a-r-r- 100.00g
 
-# lvchange --refresh vg/raid1
+# lvchange \-\-refresh vg/raid1
 
 # lvs -o name,vgname,segtype,attr,size vg
   LV    VG   Type  Attr       LSize
-  raid1 vg   raid1 Rwi-a-r--- 100.00g
+  raid1 vg   raid1 Rwi-a-r\-\-- 100.00g
 .fi
 
 .SS Automatic repair
@@ -827,7 +827,7 @@ raid5 to raid6.  Changing the RAID level is usually done to increase or
 decrease resilience to device failures or to restripe LVs.  This is done
 using lvconvert and specifying the new RAID level as the LV type:
 
-.B lvconvert --type
+.B lvconvert \-\-type
 .I RaidLevel
 \fIVG\fP/\fILV\fP
 [\fIPVs\fP]
@@ -906,7 +906,7 @@ between striped/raid0 and raid10.
   LV   Type   LSize
   lv   linear 300.00g
 
-# lvconvert --type raid1 --mirrors 1 vg/lv
+# lvconvert \-\-type raid1 \-\-mirrors 1 vg/lv
 
 # lvs -a -o name,segtype,size vg
   LV            Type   LSize
@@ -938,7 +938,7 @@ between striped and raid4.
   LV   Type   LSize
   lv   linear 300.00g
 
-# lvconvert --type raid1 --mirrors 1 vg/lv
+# lvconvert \-\-type raid1 \-\-mirrors 1 vg/lv
 
 # lvs -a -o name,segtype,size vg
   LV            Type   LSize
@@ -959,7 +959,7 @@ between striped and raid4.
   [lv_mimage_1] linear 100.00g
   [lv_mlog]     linear   3.00m
 
-# lvconvert --type raid1 vg/lv
+# lvconvert \-\-type raid1 vg/lv
 
 # lvs -a -o name,segtype,size vg
   LV            Type   LSize
@@ -980,7 +980,7 @@ Start with a linear LV:
 Convert the linear LV to raid1 with three images
 (original linear image plus 2 mirror images):
 
-# lvconvert --type raid1 --mirrors 2 vg/lv
+# lvconvert \-\-type raid1 \-\-mirrors 2 vg/lv
 .fi
 
 4. Converting an LV from \fBstriped\fP (with 4 stripes) to \fBraid6_nc\fP.
@@ -988,11 +988,11 @@ Convert the linear LV to raid1 with three images
 .nf
 Start with a striped LV:
 
-# lvcreate --stripes 4 -L64M -n lv vg
+# lvcreate \-\-stripes 4 -L64M -n lv vg
 
 Convert the striped LV to raid6_n_6:
 
-# lvconvert --type raid6 vg/lv
+# lvconvert \-\-type raid6 vg/lv
 
 # lvs -a -o lv_name,segtype,sync_percent,data_copies
   LV            Type      Cpy%Sync #Cpy
@@ -1061,7 +1061,7 @@ traditional RAID6.
   [lv_rmeta_4]  linear
   [lv_rmeta_5]  linear
 
-# lvconvert --type raid6_nr vg/lv
+# lvconvert \-\-type raid6_nr vg/lv
 
 # lvs -a -o lv_name,segtype,sync_percent,data_copies
   LV            Type     Cpy%Sync #Cpy
@@ -1114,7 +1114,7 @@ For performance reasons the raid6_nr RaidLV can be restriped.
 Convert it from 3-way striped to 5-way-striped.
 
 .nf
-# lvconvert --stripes 5 -y tb/lv
+# lvconvert \-\-stripes 5 -y tb/lv
   Using default stripesize 64.00 KiB.
   WARNING: Adding stripes to active logical volume tb/lv will grow it from 99 to 165 extents!
   Run "lvresize -l99 tb/lv" to shrink it or use the additional capacity.
@@ -1122,30 +1122,30 @@ Convert it from 3-way striped to 5-way-striped.
 
 # lvs
   LV   VG     Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
-  root fedora -wi-ao----  15.00g
-  swap fedora -wi-ao----   3.99g
+  root fedora -wi-ao\-\-\-\-  15.00g
+  swap fedora -wi-ao\-\-\-\-   3.99g
   lv   tb     rwi-a-r-s- 652.00m                                    52.94
 
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset tb
   LV            Attr       Type     PE Ranges                                                                                   DOff
-  lv            rwi-a-r--- raid6_nr lv_rimage_0:0-33 lv_rimage_1:0-33 lv_rimage_2:0-33 ... lv_rimage_5:0-33 lv_rimage_6:0-33    0
-  [lv_rimage_0] iwi-aor--- linear   /dev/sda:0-32                                                                               0
-  [lv_rimage_0] iwi-aor--- linear   /dev/sda:34-34
-  [lv_rimage_1] iwi-aor--- linear   /dev/sdaa:0-32                                                                              0
-  [lv_rimage_1] iwi-aor--- linear   /dev/sdaa:34-34
-  [lv_rimage_2] iwi-aor--- linear   /dev/sdab:0-32                                                                              0
-  [lv_rimage_2] iwi-aor--- linear   /dev/sdab:34-34
-  [lv_rimage_3] iwi-aor--- linear   /dev/sdac:1-34                                                                              0
-  [lv_rimage_4] iwi-aor--- linear   /dev/sdad:1-34                                                                              0
-  [lv_rimage_5] iwi-aor--- linear   /dev/sdae:1-34                                                                              0
-  [lv_rimage_6] iwi-aor--- linear   /dev/sdaf:1-34                                                                              0
-  [lv_rmeta_0]  ewi-aor--- linear   /dev/sda:33-33
-  [lv_rmeta_1]  ewi-aor--- linear   /dev/sdaa:33-33
-  [lv_rmeta_2]  ewi-aor--- linear   /dev/sdab:33-33
-  [lv_rmeta_3]  ewi-aor--- linear   /dev/sdac:0-0
-  [lv_rmeta_4]  ewi-aor--- linear   /dev/sdad:0-0
-  [lv_rmeta_5]  ewi-aor--- linear   /dev/sdae:0-0
-  [lv_rmeta_6]  ewi-aor--- linear   /dev/sdaf:0-0
+  lv            rwi-a-r\-\-- raid6_nr lv_rimage_0:0-33 lv_rimage_1:0-33 lv_rimage_2:0-33 ... lv_rimage_5:0-33 lv_rimage_6:0-33    0
+  [lv_rimage_0] iwi-aor\-\-- linear   /dev/sda:0-32                                                                               0
+  [lv_rimage_0] iwi-aor\-\-- linear   /dev/sda:34-34
+  [lv_rimage_1] iwi-aor\-\-- linear   /dev/sdaa:0-32                                                                              0
+  [lv_rimage_1] iwi-aor\-\-- linear   /dev/sdaa:34-34
+  [lv_rimage_2] iwi-aor\-\-- linear   /dev/sdab:0-32                                                                              0
+  [lv_rimage_2] iwi-aor\-\-- linear   /dev/sdab:34-34
+  [lv_rimage_3] iwi-aor\-\-- linear   /dev/sdac:1-34                                                                              0
+  [lv_rimage_4] iwi-aor\-\-- linear   /dev/sdad:1-34                                                                              0
+  [lv_rimage_5] iwi-aor\-\-- linear   /dev/sdae:1-34                                                                              0
+  [lv_rimage_6] iwi-aor\-\-- linear   /dev/sdaf:1-34                                                                              0
+  [lv_rmeta_0]  ewi-aor\-\-- linear   /dev/sda:33-33
+  [lv_rmeta_1]  ewi-aor\-\-- linear   /dev/sdaa:33-33
+  [lv_rmeta_2]  ewi-aor\-\-- linear   /dev/sdab:33-33
+  [lv_rmeta_3]  ewi-aor\-\-- linear   /dev/sdac:0-0
+  [lv_rmeta_4]  ewi-aor\-\-- linear   /dev/sdad:0-0
+  [lv_rmeta_5]  ewi-aor\-\-- linear   /dev/sdae:0-0
+  [lv_rmeta_6]  ewi-aor\-\-- linear   /dev/sdaf:0-0
 .fi
 
 Stripes also can be removed from raid5 and 6.
@@ -1154,34 +1154,34 @@ The force option needs to be used, because removing stripes
 (i.e. image SubLVs) from a RaidLV will shrink its size.
 
 .nf
-# lvconvert --stripes 4 --force -y tb/lv
+# lvconvert \-\-stripes 4 \-\-force -y tb/lv
   Using default stripesize 64.00 KiB.
   WARNING: Removing stripes from active logical volume tb/lv will shrink it from 660.00 MiB to 528.00 MiB!
   THIS MAY DESTROY (PARTS OF) YOUR DATA!
   If that leaves the logical volume larger than 206 extents due to stripe rounding,
   you may want to grow the content afterwards (filesystem etc.)
-  WARNING: too remove freed stripes after the conversion has finished, you have to run "lvconvert --stripes 4 tb/lv"
+  WARNING: too remove freed stripes after the conversion has finished, you have to run "lvconvert \-\-stripes 4 tb/lv"
   Logical volume tb/lv successfully converted.
 
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset tb
   LV            Attr       Type     PE Ranges                                                                                   DOff
   lv            rwi-a-r-s- raid6_nr lv_rimage_0:0-33 lv_rimage_1:0-33 lv_rimage_2:0-33 ... lv_rimage_5:0-33 lv_rimage_6:0-33    0
-  [lv_rimage_0] Iwi-aor--- linear   /dev/sda:0-32                                                                               0
-  [lv_rimage_0] Iwi-aor--- linear   /dev/sda:34-34
-  [lv_rimage_1] Iwi-aor--- linear   /dev/sdaa:0-32                                                                              0
-  [lv_rimage_1] Iwi-aor--- linear   /dev/sdaa:34-34
-  [lv_rimage_2] Iwi-aor--- linear   /dev/sdab:0-32                                                                              0
-  [lv_rimage_2] Iwi-aor--- linear   /dev/sdab:34-34
-  [lv_rimage_3] Iwi-aor--- linear   /dev/sdac:1-34                                                                              0
-  [lv_rimage_4] Iwi-aor--- linear   /dev/sdad:1-34                                                                              0
-  [lv_rimage_5] Iwi-aor--- linear   /dev/sdae:1-34                                                                              0
+  [lv_rimage_0] Iwi-aor\-\-- linear   /dev/sda:0-32                                                                               0
+  [lv_rimage_0] Iwi-aor\-\-- linear   /dev/sda:34-34
+  [lv_rimage_1] Iwi-aor\-\-- linear   /dev/sdaa:0-32                                                                              0
+  [lv_rimage_1] Iwi-aor\-\-- linear   /dev/sdaa:34-34
+  [lv_rimage_2] Iwi-aor\-\-- linear   /dev/sdab:0-32                                                                              0
+  [lv_rimage_2] Iwi-aor\-\-- linear   /dev/sdab:34-34
+  [lv_rimage_3] Iwi-aor\-\-- linear   /dev/sdac:1-34                                                                              0
+  [lv_rimage_4] Iwi-aor\-\-- linear   /dev/sdad:1-34                                                                              0
+  [lv_rimage_5] Iwi-aor\-\-- linear   /dev/sdae:1-34                                                                              0
   [lv_rimage_6] Iwi-aor-R- linear   /dev/sdaf:1-34                                                                              0
-  [lv_rmeta_0]  ewi-aor--- linear   /dev/sda:33-33
-  [lv_rmeta_1]  ewi-aor--- linear   /dev/sdaa:33-33
-  [lv_rmeta_2]  ewi-aor--- linear   /dev/sdab:33-33
-  [lv_rmeta_3]  ewi-aor--- linear   /dev/sdac:0-0
-  [lv_rmeta_4]  ewi-aor--- linear   /dev/sdad:0-0
-  [lv_rmeta_5]  ewi-aor--- linear   /dev/sdae:0-0
+  [lv_rmeta_0]  ewi-aor\-\-- linear   /dev/sda:33-33
+  [lv_rmeta_1]  ewi-aor\-\-- linear   /dev/sdaa:33-33
+  [lv_rmeta_2]  ewi-aor\-\-- linear   /dev/sdab:33-33
+  [lv_rmeta_3]  ewi-aor\-\-- linear   /dev/sdac:0-0
+  [lv_rmeta_4]  ewi-aor\-\-- linear   /dev/sdad:0-0
+  [lv_rmeta_5]  ewi-aor\-\-- linear   /dev/sdae:0-0
   [lv_rmeta_6]  ewi-aor-R- linear   /dev/sdaf:0-0
 .fi
 
@@ -1202,84 +1202,84 @@ Now that the reshape is finished the 'R' atribute on the RaidLV shows images can
   lv   rwi-a-r-R- raid6_nr lv_rimage_0:0-33 lv_rimage_1:0-33 lv_rimage_2:0-33 ...  lv_rimage_5:0-33 lv_rimage_6:0-33 8192
 .fi
 
-This is achieved by repeating the command ("lvconvert --stripes 4 tb/lv" would be sufficient).
+This is achieved by repeating the command ("lvconvert \-\-stripes 4 tb/lv" would be sufficient).
 
 .nf
-# lvconvert --stripes 4 --force -y tb/lv
+# lvconvert \-\-stripes 4 \-\-force -y tb/lv
   Using default stripesize 64.00 KiB.
   Logical volume tb/lv successfully converted.
 
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset tb
   LV            Attr       Type     PE Ranges                                                               DOff
-  lv            rwi-a-r--- raid6_nr lv_rimage_0:0-33 lv_rimage_1:0-33 lv_rimage_2:0-33 ... lv_rimage_5:0-33 8192
-  [lv_rimage_0] iwi-aor--- linear   /dev/sda:0-32                                                           8192
-  [lv_rimage_0] iwi-aor--- linear   /dev/sda:34-34
-  [lv_rimage_1] iwi-aor--- linear   /dev/sdaa:0-32                                                          8192
-  [lv_rimage_1] iwi-aor--- linear   /dev/sdaa:34-34
-  [lv_rimage_2] iwi-aor--- linear   /dev/sdab:0-32                                                          8192
-  [lv_rimage_2] iwi-aor--- linear   /dev/sdab:34-34
-  [lv_rimage_3] iwi-aor--- linear   /dev/sdac:1-34                                                          8192
-  [lv_rimage_4] iwi-aor--- linear   /dev/sdad:1-34                                                          8192
-  [lv_rimage_5] iwi-aor--- linear   /dev/sdae:1-34                                                          8192
-  [lv_rmeta_0]  ewi-aor--- linear   /dev/sda:33-33
-  [lv_rmeta_1]  ewi-aor--- linear   /dev/sdaa:33-33
-  [lv_rmeta_2]  ewi-aor--- linear   /dev/sdab:33-33
-  [lv_rmeta_3]  ewi-aor--- linear   /dev/sdac:0-0
-  [lv_rmeta_4]  ewi-aor--- linear   /dev/sdad:0-0
-  [lv_rmeta_5]  ewi-aor--- linear   /dev/sdae:0-0
+  lv            rwi-a-r\-\-- raid6_nr lv_rimage_0:0-33 lv_rimage_1:0-33 lv_rimage_2:0-33 ... lv_rimage_5:0-33 8192
+  [lv_rimage_0] iwi-aor\-\-- linear   /dev/sda:0-32                                                           8192
+  [lv_rimage_0] iwi-aor\-\-- linear   /dev/sda:34-34
+  [lv_rimage_1] iwi-aor\-\-- linear   /dev/sdaa:0-32                                                          8192
+  [lv_rimage_1] iwi-aor\-\-- linear   /dev/sdaa:34-34
+  [lv_rimage_2] iwi-aor\-\-- linear   /dev/sdab:0-32                                                          8192
+  [lv_rimage_2] iwi-aor\-\-- linear   /dev/sdab:34-34
+  [lv_rimage_3] iwi-aor\-\-- linear   /dev/sdac:1-34                                                          8192
+  [lv_rimage_4] iwi-aor\-\-- linear   /dev/sdad:1-34                                                          8192
+  [lv_rimage_5] iwi-aor\-\-- linear   /dev/sdae:1-34                                                          8192
+  [lv_rmeta_0]  ewi-aor\-\-- linear   /dev/sda:33-33
+  [lv_rmeta_1]  ewi-aor\-\-- linear   /dev/sdaa:33-33
+  [lv_rmeta_2]  ewi-aor\-\-- linear   /dev/sdab:33-33
+  [lv_rmeta_3]  ewi-aor\-\-- linear   /dev/sdac:0-0
+  [lv_rmeta_4]  ewi-aor\-\-- linear   /dev/sdad:0-0
+  [lv_rmeta_5]  ewi-aor\-\-- linear   /dev/sdae:0-0
 
 # lvs -a -o lv_name,attr,segtype,reshapelen tb
   LV            Attr       Type     RSize
-  lv            rwi-a-r--- raid6_nr 24.00m
-  [lv_rimage_0] iwi-aor--- linear    4.00m
-  [lv_rimage_0] iwi-aor--- linear
-  [lv_rimage_1] iwi-aor--- linear    4.00m
-  [lv_rimage_1] iwi-aor--- linear
-  [lv_rimage_2] iwi-aor--- linear    4.00m
-  [lv_rimage_2] iwi-aor--- linear
-  [lv_rimage_3] iwi-aor--- linear    4.00m
-  [lv_rimage_4] iwi-aor--- linear    4.00m
-  [lv_rimage_5] iwi-aor--- linear    4.00m
-  [lv_rmeta_0]  ewi-aor--- linear
-  [lv_rmeta_1]  ewi-aor--- linear
-  [lv_rmeta_2]  ewi-aor--- linear
-  [lv_rmeta_3]  ewi-aor--- linear
-  [lv_rmeta_4]  ewi-aor--- linear
-  [lv_rmeta_5]  ewi-aor--- linear
+  lv            rwi-a-r\-\-- raid6_nr 24.00m
+  [lv_rimage_0] iwi-aor\-\-- linear    4.00m
+  [lv_rimage_0] iwi-aor\-\-- linear
+  [lv_rimage_1] iwi-aor\-\-- linear    4.00m
+  [lv_rimage_1] iwi-aor\-\-- linear
+  [lv_rimage_2] iwi-aor\-\-- linear    4.00m
+  [lv_rimage_2] iwi-aor\-\-- linear
+  [lv_rimage_3] iwi-aor\-\-- linear    4.00m
+  [lv_rimage_4] iwi-aor\-\-- linear    4.00m
+  [lv_rimage_5] iwi-aor\-\-- linear    4.00m
+  [lv_rmeta_0]  ewi-aor\-\-- linear
+  [lv_rmeta_1]  ewi-aor\-\-- linear
+  [lv_rmeta_2]  ewi-aor\-\-- linear
+  [lv_rmeta_3]  ewi-aor\-\-- linear
+  [lv_rmeta_4]  ewi-aor\-\-- linear
+  [lv_rmeta_5]  ewi-aor\-\-- linear
 .fi
 
 If the reshape space shall be removed any lvconvert command not changing the layout can be used:
 
 .nf
-# lvconvert --stripes 4 tb/lv
+# lvconvert \-\-stripes 4 tb/lv
   Using default stripesize 64.00 KiB.
   No change in RAID LV tb/lv layout, freeing reshape space.
   Logical volume tb/lv successfully converted.
 
 # lvs -a -o lv_name,attr,segtype,reshapelen tb
   LV            Attr       Type     RSize
-  lv            rwi-a-r--- raid6_nr    0
-  [lv_rimage_0] iwi-aor--- linear      0
-  [lv_rimage_0] iwi-aor--- linear
-  [lv_rimage_1] iwi-aor--- linear      0
-  [lv_rimage_1] iwi-aor--- linear
-  [lv_rimage_2] iwi-aor--- linear      0
-  [lv_rimage_2] iwi-aor--- linear
-  [lv_rimage_3] iwi-aor--- linear      0
-  [lv_rimage_4] iwi-aor--- linear      0
-  [lv_rimage_5] iwi-aor--- linear      0
-  [lv_rmeta_0]  ewi-aor--- linear
-  [lv_rmeta_1]  ewi-aor--- linear
-  [lv_rmeta_2]  ewi-aor--- linear
-  [lv_rmeta_3]  ewi-aor--- linear
-  [lv_rmeta_4]  ewi-aor--- linear
-  [lv_rmeta_5]  ewi-aor--- linear
+  lv            rwi-a-r\-\-- raid6_nr    0
+  [lv_rimage_0] iwi-aor\-\-- linear      0
+  [lv_rimage_0] iwi-aor\-\-- linear
+  [lv_rimage_1] iwi-aor\-\-- linear      0
+  [lv_rimage_1] iwi-aor\-\-- linear
+  [lv_rimage_2] iwi-aor\-\-- linear      0
+  [lv_rimage_2] iwi-aor\-\-- linear
+  [lv_rimage_3] iwi-aor\-\-- linear      0
+  [lv_rimage_4] iwi-aor\-\-- linear      0
+  [lv_rimage_5] iwi-aor\-\-- linear      0
+  [lv_rmeta_0]  ewi-aor\-\-- linear
+  [lv_rmeta_1]  ewi-aor\-\-- linear
+  [lv_rmeta_2]  ewi-aor\-\-- linear
+  [lv_rmeta_3]  ewi-aor\-\-- linear
+  [lv_rmeta_4]  ewi-aor\-\-- linear
+  [lv_rmeta_5]  ewi-aor\-\-- linear
 .fi
 
 In case the RaidLV should be converted to striped:
 
 .nf
-# lvconvert --type striped tb/lv
+# lvconvert \-\-type striped tb/lv
   Unable to convert LV tb/lv from raid6_nr to striped.
   Converting tb/lv from raid6_nr is directly possible to the following layouts:
     raid6_nc
@@ -1290,55 +1290,55 @@ In case the RaidLV should be converted to striped:
     raid6_rs_6
     raid6_n_6
 
-# lvconvert --type raid6_n_6
+# lvconvert \-\-type raid6_n_6
   Using default stripesize 64.00 KiB.
   Converting raid6_nr LV tb/lv to raid6_n_6.
 Are you sure you want to convert raid6_nr LV tb/lv? [y/n]: y
   Logical volume tb/lv successfully converted.
 
-# lvconvert -y --type striped tb/lv
+# lvconvert -y \-\-type striped tb/lv
   Logical volume tb/lv successfully converted.
 
 [root@vm46 ~]# lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset tb
   LV   Attr       Type    PE Ranges                                                      DOff
-  lv   -wi-a----- striped /dev/sda:2-32 /dev/sdaa:2-32 /dev/sdab:2-32 /dev/sdac:3-33
-  lv   -wi-a----- striped /dev/sda:34-35 /dev/sdaa:34-35 /dev/sdab:34-35 /dev/sdac:34-35
+  lv   -wi-a\-\-\-\-- striped /dev/sda:2-32 /dev/sdaa:2-32 /dev/sdab:2-32 /dev/sdac:3-33
+  lv   -wi-a\-\-\-\-- striped /dev/sda:34-35 /dev/sdaa:34-35 /dev/sdab:34-35 /dev/sdac:34-35
 .fi
 
 From striped we can convert to raid10
 
 .nf
-# lvconvert -y --type raid10 tb/lv
+# lvconvert -y \-\-type raid10 tb/lv
   Using default stripesize 64.00 KiB.
   Logical volume tb/lv successfully converted.
 
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset tb
   LV   Attr       Type   PE Ranges                                                                                   DOff
-  lv   rwi-a-r--- raid10 lv_rimage_0:0-32 lv_rimage_4:0-32 lv_rimage_1:0-32 ... lv_rimage_3:0-32 lv_rimage_7:0-32    0
+  lv   rwi-a-r\-\-- raid10 lv_rimage_0:0-32 lv_rimage_4:0-32 lv_rimage_1:0-32 ... lv_rimage_3:0-32 lv_rimage_7:0-32    0
 
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset tb
   WARNING: Cannot find matching striped segment for tb/lv_rimage_3.
   LV            Attr       Type   PE Ranges                                                                                   DOff
-  lv            rwi-a-r--- raid10 lv_rimage_0:0-32 lv_rimage_4:0-32 lv_rimage_1:0-32 ... lv_rimage_3:0-32 lv_rimage_7:0-32    0
-  [lv_rimage_0] iwi-aor--- linear /dev/sda:2-32                                                                                                                              0
-  [lv_rimage_0] iwi-aor--- linear /dev/sda:34-35
-  [lv_rimage_1] iwi-aor--- linear /dev/sdaa:2-32                                                                                                                             0
-  [lv_rimage_1] iwi-aor--- linear /dev/sdaa:34-35
-  [lv_rimage_2] iwi-aor--- linear /dev/sdab:2-32                                                                                                                             0
-  [lv_rimage_2] iwi-aor--- linear /dev/sdab:34-35
-  [lv_rimage_3] iwi-XXr--- linear /dev/sdac:3-35                                                                                                                             0
-  [lv_rimage_4] iwi-aor--- linear /dev/sdad:1-33                                                                                                                             0
-  [lv_rimage_5] iwi-aor--- linear /dev/sdae:1-33                                                                                                                             0
-  [lv_rimage_6] iwi-aor--- linear /dev/sdaf:1-33                                                                                                                             0
-  [lv_rimage_7] iwi-aor--- linear /dev/sdag:1-33                                                                                                                             0
-  [lv_rmeta_0]  ewi-aor--- linear /dev/sda:0-0
-  [lv_rmeta_1]  ewi-aor--- linear /dev/sdaa:0-0
-  [lv_rmeta_2]  ewi-aor--- linear /dev/sdab:0-0
-  [lv_rmeta_3]  ewi-aor--- linear /dev/sdac:0-0
-  [lv_rmeta_4]  ewi-aor--- linear /dev/sdad:0-0
-  [lv_rmeta_5]  ewi-aor--- linear /dev/sdae:0-0
-  [lv_rmeta_6]  ewi-aor--- linear /dev/sdaf:0-0
-  [lv_rmeta_7]  ewi-aor--- linear /dev/sdag:0-0
+  lv            rwi-a-r\-\-- raid10 lv_rimage_0:0-32 lv_rimage_4:0-32 lv_rimage_1:0-32 ... lv_rimage_3:0-32 lv_rimage_7:0-32    0
+  [lv_rimage_0] iwi-aor\-\-- linear /dev/sda:2-32                                                                                                                              0
+  [lv_rimage_0] iwi-aor\-\-- linear /dev/sda:34-35
+  [lv_rimage_1] iwi-aor\-\-- linear /dev/sdaa:2-32                                                                                                                             0
+  [lv_rimage_1] iwi-aor\-\-- linear /dev/sdaa:34-35
+  [lv_rimage_2] iwi-aor\-\-- linear /dev/sdab:2-32                                                                                                                             0
+  [lv_rimage_2] iwi-aor\-\-- linear /dev/sdab:34-35
+  [lv_rimage_3] iwi-XXr\-\-- linear /dev/sdac:3-35                                                                                                                             0
+  [lv_rimage_4] iwi-aor\-\-- linear /dev/sdad:1-33                                                                                                                             0
+  [lv_rimage_5] iwi-aor\-\-- linear /dev/sdae:1-33                                                                                                                             0
+  [lv_rimage_6] iwi-aor\-\-- linear /dev/sdaf:1-33                                                                                                                             0
+  [lv_rimage_7] iwi-aor\-\-- linear /dev/sdag:1-33                                                                                                                             0
+  [lv_rmeta_0]  ewi-aor\-\-- linear /dev/sda:0-0
+  [lv_rmeta_1]  ewi-aor\-\-- linear /dev/sdaa:0-0
+  [lv_rmeta_2]  ewi-aor\-\-- linear /dev/sdab:0-0
+  [lv_rmeta_3]  ewi-aor\-\-- linear /dev/sdac:0-0
+  [lv_rmeta_4]  ewi-aor\-\-- linear /dev/sdad:0-0
+  [lv_rmeta_5]  ewi-aor\-\-- linear /dev/sdae:0-0
+  [lv_rmeta_6]  ewi-aor\-\-- linear /dev/sdaf:0-0
+  [lv_rmeta_7]  ewi-aor\-\-- linear /dev/sdag:0-0
 .fi
 
 raid10 allows to add stripes but can't remove them.
@@ -1353,7 +1353,7 @@ We start with the linear LV.
 .nf
 # lvs -aoname,attr,size,segtype,syncpercent,datastripes,stripesize,reshapelenle,devices vg
   LV   Attr       LSize   Type   Cpy%Sync #DStr Stripe RSize Devices
-  lv   -wi-a----- 128.00m linear              1     0        /dev/sda(0)
+  lv   -wi-a\-\-\-\-- 128.00m linear              1     0        /dev/sda(0)
 .fi
 
 Then convert it to a 2-way raid1.
@@ -1364,11 +1364,11 @@ Then convert it to a 2-way raid1.
 
 # lvs -aoname,attr,size,segtype,syncpercent,datastripes,stripesize,reshapelenle,devices vg
   LV            Attr       LSize   Type   Cpy%Sync #DStr Stripe RSize Devices
-  lv            rwi-a-r--- 128.00m raid1  100.00       2     0        lv_rimage_0(0),lv_rimage_1(0)
-  [lv_rimage_0] iwi-aor--- 128.00m linear              1     0        /dev/sda(0)
-  [lv_rimage_1] iwi-aor--- 128.00m linear              1     0        /dev/sdhx(1)
-  [lv_rmeta_0]  ewi-aor---   4.00m linear              1     0        /dev/sda(32)
-  [lv_rmeta_1]  ewi-aor---   4.00m linear              1     0        /dev/sdhx(0)
+  lv            rwi-a-r\-\-- 128.00m raid1  100.00       2     0        lv_rimage_0(0),lv_rimage_1(0)
+  [lv_rimage_0] iwi-aor\-\-- 128.00m linear              1     0        /dev/sda(0)
+  [lv_rimage_1] iwi-aor\-\-- 128.00m linear              1     0        /dev/sdhx(1)
+  [lv_rmeta_0]  ewi-aor\-\--   4.00m linear              1     0        /dev/sda(32)
+  [lv_rmeta_1]  ewi-aor\-\--   4.00m linear              1     0        /dev/sdhx(0)
 .fi
 
 Once the raid1 LV is fully synchronized we convert it to raid5_n (only 2-way raid1
@@ -1377,17 +1377,17 @@ SubLVs at the end and can be converted to striped directly without any additiona
 conversion.
 
 .nf
-# lvconvert -y --ty raid5_n vg/lv
+# lvconvert -y \-\-ty raid5_n vg/lv
   Using default stripesize 64.00 KiB.
   Logical volume vg/lv successfully converted.
 
 # lvs -aoname,attr,size,segtype,syncpercent,datastripes,stripesize,reshapelenle,devices vg
   LV            Attr       LSize   Type    Cpy%Sync #DStr Stripe RSize Devices
-  lv            rwi-a-r--- 128.00m raid5_n 100.00       1 64.00k     0 lv_rimage_0(0),lv_rimage_1(0)
-  [lv_rimage_0] iwi-aor--- 128.00m linear               1     0      0 /dev/sda(0)
-  [lv_rimage_1] iwi-aor--- 128.00m linear               1     0      0 /dev/sdhx(1)
-  [lv_rmeta_0]  ewi-aor---   4.00m linear               1     0        /dev/sda(32)
-  [lv_rmeta_1]  ewi-aor---   4.00m linear               1     0        /dev/sdhx(0)
+  lv            rwi-a-r\-\-- 128.00m raid5_n 100.00       1 64.00k     0 lv_rimage_0(0),lv_rimage_1(0)
+  [lv_rimage_0] iwi-aor\-\-- 128.00m linear               1     0      0 /dev/sda(0)
+  [lv_rimage_1] iwi-aor\-\-- 128.00m linear               1     0      0 /dev/sdhx(1)
+  [lv_rmeta_0]  ewi-aor\-\--   4.00m linear               1     0        /dev/sda(32)
+  [lv_rmeta_1]  ewi-aor\-\--   4.00m linear               1     0        /dev/sdhx(0)
 .fi
 
 Now we'll change the number of data stripes from 1 to 5 and request 128K stripe size
@@ -1396,7 +1396,7 @@ to the one given).  That additonal space can be used by e.g. growing any contain
 or the LV can be reduced in size after the reshaping conversion has finished.
 
 .nf
-# lvconvert --yes --stripesize 128k --stripes 5 vg/lv
+# lvconvert \-\-yes \-\-stripesize 128k \-\-stripes 5 vg/lv
   Converting stripesize 64.00 KiB of raid5_n LV vg/lv to 128.00 KiB.
   WARNING: Adding stripes to active logical volume vg/lv will grow it from 32 to 160 extents!
   Run "lvresize -l32 vg/lv" to shrink it or use the additional capacity.
@@ -1404,44 +1404,44 @@ or the LV can be reduced in size after the reshaping conversion has finished.
 
 # lvs -aoname,attr,size,segtype,syncpercent,datastripes,stripesize,reshapelenle,devices vg
   LV            Attr       LSize   Type    Cpy%Sync #DStr Stripe  RSize Devices
-  lv            rwi-a-r--- 640.00m raid5_n 100.00       5 128.00k     6 lv_rimage_0(0),lv_rimage_1(0),lv_rimage_2(0),lv_rimage_3(0),lv_rimage_4(0),lv_rimage_5(0)
-  [lv_rimage_0] iwi-aor--- 132.00m linear               1      0      1 /dev/sda(33)
-  [lv_rimage_0] iwi-aor--- 132.00m linear               1      0        /dev/sda(0)
-  [lv_rimage_1] iwi-aor--- 132.00m linear               1      0      1 /dev/sdhx(33)
-  [lv_rimage_1] iwi-aor--- 132.00m linear               1      0        /dev/sdhx(1)
-  [lv_rimage_2] iwi-aor--- 132.00m linear               1      0      1 /dev/sdhw(33)
-  [lv_rimage_2] iwi-aor--- 132.00m linear               1      0        /dev/sdhw(1)
-  [lv_rimage_3] iwi-aor--- 132.00m linear               1      0      1 /dev/sdhv(33)
-  [lv_rimage_3] iwi-aor--- 132.00m linear               1      0        /dev/sdhv(1)
-  [lv_rimage_4] iwi-aor--- 132.00m linear               1      0      1 /dev/sdhu(33)
-  [lv_rimage_4] iwi-aor--- 132.00m linear               1      0        /dev/sdhu(1)
-  [lv_rimage_5] iwi-aor--- 132.00m linear               1      0      1 /dev/sdht(33)
-  [lv_rimage_5] iwi-aor--- 132.00m linear               1      0        /dev/sdht(1)
-  [lv_rmeta_0]  ewi-aor---   4.00m linear               1      0        /dev/sda(32)
-  [lv_rmeta_1]  ewi-aor---   4.00m linear               1      0        /dev/sdhx(0)
-  [lv_rmeta_2]  ewi-aor---   4.00m linear               1      0        /dev/sdhw(0)
-  [lv_rmeta_3]  ewi-aor---   4.00m linear               1      0        /dev/sdhv(0)
-  [lv_rmeta_4]  ewi-aor---   4.00m linear               1      0        /dev/sdhu(0)
-  [lv_rmeta_5]  ewi-aor---   4.00m linear               1      0        /dev/sdht(0)
+  lv            rwi-a-r\-\-- 640.00m raid5_n 100.00       5 128.00k     6 lv_rimage_0(0),lv_rimage_1(0),lv_rimage_2(0),lv_rimage_3(0),lv_rimage_4(0),lv_rimage_5(0)
+  [lv_rimage_0] iwi-aor\-\-- 132.00m linear               1      0      1 /dev/sda(33)
+  [lv_rimage_0] iwi-aor\-\-- 132.00m linear               1      0        /dev/sda(0)
+  [lv_rimage_1] iwi-aor\-\-- 132.00m linear               1      0      1 /dev/sdhx(33)
+  [lv_rimage_1] iwi-aor\-\-- 132.00m linear               1      0        /dev/sdhx(1)
+  [lv_rimage_2] iwi-aor\-\-- 132.00m linear               1      0      1 /dev/sdhw(33)
+  [lv_rimage_2] iwi-aor\-\-- 132.00m linear               1      0        /dev/sdhw(1)
+  [lv_rimage_3] iwi-aor\-\-- 132.00m linear               1      0      1 /dev/sdhv(33)
+  [lv_rimage_3] iwi-aor\-\-- 132.00m linear               1      0        /dev/sdhv(1)
+  [lv_rimage_4] iwi-aor\-\-- 132.00m linear               1      0      1 /dev/sdhu(33)
+  [lv_rimage_4] iwi-aor\-\-- 132.00m linear               1      0        /dev/sdhu(1)
+  [lv_rimage_5] iwi-aor\-\-- 132.00m linear               1      0      1 /dev/sdht(33)
+  [lv_rimage_5] iwi-aor\-\-- 132.00m linear               1      0        /dev/sdht(1)
+  [lv_rmeta_0]  ewi-aor\-\--   4.00m linear               1      0        /dev/sda(32)
+  [lv_rmeta_1]  ewi-aor\-\--   4.00m linear               1      0        /dev/sdhx(0)
+  [lv_rmeta_2]  ewi-aor\-\--   4.00m linear               1      0        /dev/sdhw(0)
+  [lv_rmeta_3]  ewi-aor\-\--   4.00m linear               1      0        /dev/sdhv(0)
+  [lv_rmeta_4]  ewi-aor\-\--   4.00m linear               1      0        /dev/sdhu(0)
+  [lv_rmeta_5]  ewi-aor\-\--   4.00m linear               1      0        /dev/sdht(0)
 .fi
 
 Once the conversion has finished we can can convert to striped.
 
 .nf
-[root@vm46 ~]# lvconvert -y --ty striped vg/lv
+[root@vm46 ~]# lvconvert -y \-\-ty striped vg/lv
   Logical volume vg/lv successfully converted.
 
 [root@vm46 ~]# lvs -aoname,attr,size,segtype,syncpercent,datastripes,stripesize,reshapelenle,devices vg|sed 's/  *$//'
   LV   Attr       LSize   Type    Cpy%Sync #DStr Stripe  RSize Devices
-  lv   -wi-a----- 640.00m striped              5 128.00k       /dev/sda(33),/dev/sdhx(33),/dev/sdhw(33),/dev/sdhv(33),/dev/sdhu(33)
-  lv   -wi-a----- 640.00m striped              5 128.00k       /dev/sda(0),/dev/sdhx(1),/dev/sdhw(1),/dev/sdhv(1),/dev/sdhu(1)
+  lv   -wi-a\-\-\-\-- 640.00m striped              5 128.00k       /dev/sda(33),/dev/sdhx(33),/dev/sdhw(33),/dev/sdhv(33),/dev/sdhu(33)
+  lv   -wi-a\-\-\-\-- 640.00m striped              5 128.00k       /dev/sda(0),/dev/sdhx(1),/dev/sdhw(1),/dev/sdhv(1),/dev/sdhu(1)
 .fi
 
 Reversing these steps wil convert a given striped LV to linear.
 
 Mind the fact that stripes are removed thus the capacity of the RaidLV will shrink.
 
-"lvconvert --stripes 1 vg/lv" for converting to 1 stripe will inform upfront about
+"lvconvert \-\-stripes 1 vg/lv" for converting to 1 stripe will inform upfront about
 the reduced size to allow for resizing the content or growing the RaidLV before
 actually converting to 1 stripe.  The \fB\-\-force\fP option is needed to
 allow stripe removing conversions to prevent data loss.

@@ -143,7 +143,7 @@ $(MAN5) $(MAN7) $(MAN8) $(MAN8DM) $(MAN8CLUSTER) $(MAN8SYSTEMD_GENERATORS): Make
 
 # Test whether or not the man page generator works
 $(TESTMAN): $(MANGENERATOR) Makefile
-	- $(MANGENERATOR) --primary lvmconfig > $@
+	- $(MANGENERATOR) \-\-primary lvmconfig > $@
 
 SEE_ALSO=$(srcdir)/see_also.end
 
@@ -162,8 +162,8 @@ SEE_ALSO=$(srcdir)/see_also.end
 		cat $(srcdir)/$(@:%.8_gen=%.8_pregen) ; \
 	    else \
 		MANCMD=$(basename $@) && \
-		$(MANGENERATOR) --primary $$MANCMD $< && \
-		$(MANGENERATOR) --secondary $$MANCMD && \
+		$(MANGENERATOR) \-\-primary $$MANCMD $< && \
+		$(MANGENERATOR) \-\-secondary $$MANCMD && \
 		cat $(srcdir)/$(basename $@).8_end && \
 		cat $(SEE_ALSO) ; \
 	    fi \

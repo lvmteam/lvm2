@@ -106,7 +106,7 @@ of the thin pool is filled. See
 When a thin pool fills over 50% (data or metadata) thin plugin calls
 configured \fIdmeventd/thin_command\fP with every 5% increase.
 With default setting it calls internal
-\fBlvm lvextend --use-policies\fP to resize thin pool
+\fBlvm lvextend \-\-use-policies\fP to resize thin pool
 when it's been filled above configured threshold
 \fIactivation/thin_pool_autoextend_threshold\fP.
 If the command fails, dmeventd thin plugin will keep
@@ -116,7 +116,7 @@ User may also configure external command to support more advanced
 maintenance operations of a thin pool.
 Such external command can e.g. remove some unneeded snapshots,
 use \fBfstrim\fP(8) to free recover space in a thin pool,
-but also can use \fBlvextend --use-policies\fP if other actions
+but also can use \fBlvextend \-\-use-policies\fP if other actions
 have not released enough space.
 Command is executed with environmental variable
 \fBLVM_RUN_BY_DMEVENTD=1\fP so any lvm2 command executed

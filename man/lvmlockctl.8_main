@@ -55,7 +55,7 @@ lvmlockctl [options]
 
 This collects and displays lock state from lvmlockd.  The display is
 primitive, incomplete and will change in future version.  To print the raw
-lock state from lvmlockd, combine this option with --dump|-d.
+lock state from lvmlockd, combine this option with \-\-dump|-d.
 
 .SS dump
 

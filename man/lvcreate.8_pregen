@@ -11,235 +11,235 @@ lvcreate \- Create a logical volume
 .br
 .P
 .ad l
- \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
+ \fB-a\fP|\fB\-\-activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .ad b
 .br
 .ad l
-    \fB--addtag\fP \fITag\fP
+    \fB\-\-addtag\fP \fITag\fP
 .ad b
 .br
 .ad l
-    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
+    \fB\-\-alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
 .ad b
 .br
 .ad l
- \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
+ \fB-A\fP|\fB\-\-autobackup\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
- \fB-H\fP|\fB--cache\fP
+ \fB-H\fP|\fB\-\-cache\fP
 .ad b
 .br
 .ad l
-    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
+    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .ad b
 .br
 .ad l
-    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
+    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
 .ad b
 .br
 .ad l
-    \fB--cachepolicy\fP \fIString\fP
+    \fB\-\-cachepolicy\fP \fIString\fP
 .ad b
 .br
 .ad l
-    \fB--cachepool\fP \fILV\fP
+    \fB\-\-cachepool\fP \fILV\fP
 .ad b
 .br
 .ad l
-    \fB--cachesettings\fP \fIString\fP
+    \fB\-\-cachesettings\fP \fIString\fP
 .ad b
 .br
 .ad l
- \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT]
+ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT]
 .ad b
 .br
 .ad l
-    \fB--commandprofile\fP \fIString\fP
+    \fB\-\-commandprofile\fP \fIString\fP
 .ad b
 .br
 .ad l
-    \fB--config\fP \fIString\fP
+    \fB\-\-config\fP \fIString\fP
 .ad b
 .br
 .ad l
- \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP
+ \fB-C\fP|\fB\-\-contiguous\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
- \fB-d\fP|\fB--debug\fP
+ \fB-d\fP|\fB\-\-debug\fP
 .ad b
 .br
 .ad l
-    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
+    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
 .ad b
 .br
 .ad l
-    \fB--driverloaded\fP \fBy\fP|\fBn\fP
+    \fB\-\-driverloaded\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
-    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP
+    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
- \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT]
+ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT]
 .ad b
 .br
 .ad l
- \fB-h\fP|\fB--help\fP
+ \fB-h\fP|\fB\-\-help\fP
 .ad b
 .br
 .ad l
- \fB-K\fP|\fB--ignoreactivationskip\fP
+ \fB-K\fP|\fB\-\-ignoreactivationskip\fP
 .ad b
 .br
 .ad l
-    \fB--ignoremonitoring\fP
+    \fB\-\-ignoremonitoring\fP
 .ad b
 .br
 .ad l
-    \fB--longhelp\fP
+    \fB\-\-longhelp\fP
 .ad b
 .br
 .ad l
- \fB-j\fP|\fB--major\fP \fINumber\fP
+ \fB-j\fP|\fB\-\-major\fP \fINumber\fP
 .ad b
 .br
 .ad l
-    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT]
+    \fB\-\-[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT]
 .ad b
 .br
 .ad l
-    \fB--metadataprofile\fP \fIString\fP
+    \fB\-\-metadataprofile\fP \fIString\fP
 .ad b
 .br
 .ad l
-    \fB--minor\fP \fINumber\fP
+    \fB\-\-minor\fP \fINumber\fP
 .ad b
 .br
 .ad l
-    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT]
+    \fB\-\-[raid]minrecoveryrate\fP \fISize\fP[k|UNIT]
 .ad b
 .br
 .ad l
-    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP
+    \fB\-\-mirrorlog\fP \fBcore\fP|\fBdisk\fP
 .ad b
 .br
 .ad l
- \fB-m\fP|\fB--mirrors\fP \fINumber\fP
+ \fB-m\fP|\fB\-\-mirrors\fP \fINumber\fP
 .ad b
 .br
 .ad l
-    \fB--monitor\fP \fBy\fP|\fBn\fP
+    \fB\-\-monitor\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
- \fB-n\fP|\fB--name\fP \fIString\fP
+ \fB-n\fP|\fB\-\-name\fP \fIString\fP
 .ad b
 .br
 .ad l
-    \fB--nosync\fP
+    \fB\-\-nosync\fP
 .ad b
 .br
 .ad l
-    \fB--noudevsync\fP
+    \fB\-\-noudevsync\fP
 .ad b
 .br
 .ad l
- \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP
+ \fB-p\fP|\fB\-\-permission\fP \fBrw\fP|\fBr\fP
 .ad b
 .br
 .ad l
- \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP
+ \fB-M\fP|\fB\-\-persistent\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
-    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
+    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT]
 .ad b
 .br
 .ad l
-    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
+    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
-    \fB--profile\fP \fIString\fP
+    \fB\-\-profile\fP \fIString\fP
 .ad b
 .br
 .ad l
- \fB-q\fP|\fB--quiet\fP
+ \fB-q\fP|\fB\-\-quiet\fP
 .ad b
 .br
 .ad l
- \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
+ \fB-r\fP|\fB\-\-readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
 .ad b
 .br
 .ad l
- \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT]
+ \fB-R\fP|\fB\-\-regionsize\fP \fISize\fP[m|UNIT]
 .ad b
 .br
 .ad l
-    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP
+    \fB\-\-reportformat\fP \fBbasic\fP|\fBjson\fP
 .ad b
 .br
 .ad l
- \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP
+ \fB-k\fP|\fB\-\-setactivationskip\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+ \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT]
 .ad b
 .br
 .ad l
- \fB-s\fP|\fB--snapshot\fP
+ \fB-s\fP|\fB\-\-snapshot\fP
 .ad b
 .br
 .ad l
- \fB-i\fP|\fB--stripes\fP \fINumber\fP
+ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP
 .ad b
 .br
 .ad l
- \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
+ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT]
 .ad b
 .br
 .ad l
- \fB-t\fP|\fB--test\fP
+ \fB-t\fP|\fB\-\-test\fP
 .ad b
 .br
 .ad l
- \fB-T\fP|\fB--thin\fP
+ \fB-T\fP|\fB\-\-thin\fP
 .ad b
 .br
 .ad l
-    \fB--thinpool\fP \fILV\fP
+    \fB\-\-thinpool\fP \fILV\fP
 .ad b
 .br
 .ad l
-    \fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBthin-pool\fP|\fBcache-pool\fP
+    \fB\-\-type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBthin-pool\fP|\fBcache-pool\fP
 .ad b
 .br
 .ad l
- \fB-v\fP|\fB--verbose\fP
+ \fB-v\fP|\fB\-\-verbose\fP
 .ad b
 .br
 .ad l
-    \fB--version\fP
+    \fB\-\-version\fP
 .ad b
 .br
 .ad l
- \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+ \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .ad b
 .br
 .ad l
- \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP
+ \fB-W\fP|\fB\-\-wipesignatures\fP \fBy\fP|\fBn\fP
 .ad b
 .br
 .ad l
- \fB-y\fP|\fB--yes\fP
+ \fB-y\fP|\fB\-\-yes\fP
 .ad b
 .br
 .ad l
- \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
+ \fB-Z\fP|\fB\-\-zero\fP \fBy\fP|\fBn\fP
 .ad b
 .SH DESCRIPTION
 lvcreate creates a new LV in a VG. For standard LVs, this requires
@@ -270,11 +270,11 @@ virtual size rather than a physical size. A cache LV is the combination of
 a standard LV with a cache pool, used to cache active portions of the LV
 to improve performance.
 .SS Usage notes
-In the usage section below, \fB--size\fP \fISize\fP can be replaced
-with \fB--extents\fP \fINumber\fP.  See both descriptions
+In the usage section below, \fB\-\-size\fP \fISize\fP can be replaced
+with \fB\-\-extents\fP \fINumber\fP.  See both descriptions
 the options section.
 
-In the usage section below, \fB--name\fP is omitted from the required
+In the usage section below, \fB\-\-name\fP is omitted from the required
 options, even though it is typically used.  When the name is not
 specified, a new LV name is generated with the "lvol" prefix and a unique
 numeric suffix.  Also see the description in the options section.
@@ -282,15 +282,15 @@ numeric suffix.  Also see the description in the options section.
 Create a linear LV.
 .br
 .P
-\fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBlinear\fP ]
+[    \fB\-\-type\fP \fBlinear\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -301,18 +301,18 @@ Create a linear LV.
 .RE
 -
 
-Create a striped LV (infers --type striped).
+Create a striped LV (infers \-\-type striped).
 .br
 .P
-\fBlvcreate\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -323,30 +323,30 @@ Create a striped LV (infers --type striped).
 .RE
 -
 
-Create a raid1 or mirror LV (infers --type raid1|mirror).
+Create a raid1 or mirror LV (infers \-\-type raid1|mirror).
 .br
 .P
-\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB-m\fP|\fB\-\-mirrors\fP \fINumber\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+[ \fB-R\fP|\fB\-\-regionsize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
+[    \fB\-\-mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
 .ad b
 .br
 .ad l
-[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+[    \fB\-\-[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+[    \fB\-\-[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -360,35 +360,35 @@ Create a raid1 or mirror LV (infers --type raid1|mirror).
 Create a raid LV (a specific raid level must be used, e.g. raid1).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBraid\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBraid\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
+[ \fB-m\fP|\fB\-\-mirrors\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+[ \fB-R\fP|\fB\-\-regionsize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+[    \fB\-\-[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+[    \fB\-\-[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -402,30 +402,30 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 Create a raid10 LV.
 .br
 .P
-\fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP
+\fBlvcreate\fP \fB-m\fP|\fB\-\-mirrors\fP \fINumber\fP \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP
 .RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+ \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+[ \fB-R\fP|\fB\-\-regionsize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
+[    \fB\-\-[raid]minrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
+[    \fB\-\-[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -439,27 +439,27 @@ Create a raid10 LV.
 Create a COW snapshot LV of an origin LV.
 .br
 .P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
+\fBlvcreate\fP \fB-s\fP|\fB\-\-snapshot\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fILV\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBsnapshot\fP ]
+[    \fB\-\-type\fP \fBsnapshot\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -473,43 +473,43 @@ Create a COW snapshot LV of an origin LV.
 Create a thin pool.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBthin-pool\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--thinpool\fP \fILV\fP\fI_new\fP ]
+[    \fB\-\-thinpool\fP \fILV\fP\fI_new\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -523,43 +523,43 @@ Create a thin pool.
 Create a cache pool.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBcache-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBcache-pool\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-H\fP|\fB--cache\fP ]
+[ \fB-H\fP|\fB\-\-cache\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+[    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
+[    \fB\-\-cachepolicy\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachesettings\fP \fIString\fP ]
+[    \fB\-\-cachesettings\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+[    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -570,26 +570,26 @@ Create a cache pool.
 .RE
 -
 
-Create a thin LV in a thin pool (infers --type thin).
+Create a thin LV in a thin pool (infers \-\-type thin).
 .br
 .P
-\fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
+\fBlvcreate\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT] \fB\-\-thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -599,22 +599,22 @@ Create a thin LV in a thin pool (infers --type thin).
 
 Create a thin LV that is a snapshot of an existing thin LV 
 .br
-(infers --type thin).
+(infers \-\-type thin).
 .br
 .P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fILV\fP\fI_thin\fP
+\fBlvcreate\fP \fB-s\fP|\fB\-\-snapshot\fP \fILV\fP\fI_thin\fP
 .br
 .RS 4
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -625,31 +625,31 @@ Create a thin LV that is a snapshot of an existing thin LV
 Create a thin LV that is a snapshot of an external origin LV.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBthin\fP \fB\-\-thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -659,49 +659,49 @@ Create a thin LV that is a snapshot of an external origin LV.
 
 Create a thin LV, first creating a thin pool for it, 
 .br
-where the new thin pool is named by the --thinpool arg.
+where the new thin pool is named by the \-\-thinpool arg.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB\-\-type\fP \fBthin\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP
+ \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fB\-\-thinpool\fP \fILV\fP\fI_new\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -716,57 +716,57 @@ Create a cache LV, first creating a new origin LV,
 .br
 then combining it with the existing cache pool named 
 .br
-by the --cachepool arg.
+by the \-\-cachepool arg.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB\-\-type\fP \fBcache\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB--cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
+ \fB\-\-cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-H\fP|\fB--cache\fP ]
+[ \fB-H\fP|\fB\-\-cache\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+[    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
+[    \fB\-\-cachepolicy\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachesettings\fP \fIString\fP ]
+[    \fB\-\-cachesettings\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+[    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -781,87 +781,87 @@ Common options for command:
 .
 .RS 4
 .ad l
-[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+[ \fB-a\fP|\fB\-\-activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
 .ad b
 .br
 .ad l
-[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+[ \fB-A\fP|\fB\-\-autobackup\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[ \fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP ]
+[ \fB-C\fP|\fB\-\-contiguous\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[ \fB-K\fP|\fB--ignoreactivationskip\fP ]
+[ \fB-K\fP|\fB\-\-ignoreactivationskip\fP ]
 .ad b
 .br
 .ad l
-[ \fB-j\fP|\fB--major\fP \fINumber\fP ]
+[ \fB-j\fP|\fB\-\-major\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-n\fP|\fB--name\fP \fIString\fP ]
+[ \fB-n\fP|\fB\-\-name\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[ \fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP ]
+[ \fB-p\fP|\fB\-\-permission\fP \fBrw\fP|\fBr\fP ]
 .ad b
 .br
 .ad l
-[ \fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP ]
+[ \fB-M\fP|\fB\-\-persistent\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
+[ \fB-r\fP|\fB\-\-readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP ]
+[ \fB-k\fP|\fB\-\-setactivationskip\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
+[ \fB-W\fP|\fB\-\-wipesignatures\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[ \fB-Z\fP|\fB\-\-zero\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--addtag\fP \fITag\fP ]
+[    \fB\-\-addtag\fP \fITag\fP ]
 .ad b
 .br
 .ad l
-[    \fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
+[    \fB\-\-alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP ]
 .ad b
 .br
 .ad l
-[    \fB--ignoremonitoring\fP ]
+[    \fB\-\-ignoremonitoring\fP ]
 .ad b
 .br
 .ad l
-[    \fB--metadataprofile\fP \fIString\fP ]
+[    \fB\-\-metadataprofile\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--minor\fP \fINumber\fP ]
+[    \fB\-\-minor\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-monitor\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--nosync\fP ]
+[    \fB\-\-nosync\fP ]
 .ad b
 .br
 .ad l
-[    \fB--noudevsync\fP ]
+[    \fB\-\-noudevsync\fP ]
 .ad b
 .br
 .ad l
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+[    \fB\-\-reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .RE
 
@@ -869,57 +869,57 @@ Common options for lvm:
 .
 .RS 4
 .ad l
-[ \fB-d\fP|\fB--debug\fP ]
+[ \fB-d\fP|\fB\-\-debug\fP ]
 .ad b
 .br
 .ad l
-[ \fB-h\fP|\fB--help\fP ]
+[ \fB-h\fP|\fB\-\-help\fP ]
 .ad b
 .br
 .ad l
-[ \fB-q\fP|\fB--quiet\fP ]
+[ \fB-q\fP|\fB\-\-quiet\fP ]
 .ad b
 .br
 .ad l
-[ \fB-t\fP|\fB--test\fP ]
+[ \fB-t\fP|\fB\-\-test\fP ]
 .ad b
 .br
 .ad l
-[ \fB-v\fP|\fB--verbose\fP ]
+[ \fB-v\fP|\fB\-\-verbose\fP ]
 .ad b
 .br
 .ad l
-[ \fB-y\fP|\fB--yes\fP ]
+[ \fB-y\fP|\fB\-\-yes\fP ]
 .ad b
 .br
 .ad l
-[    \fB--commandprofile\fP \fIString\fP ]
+[    \fB\-\-commandprofile\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--config\fP \fIString\fP ]
+[    \fB\-\-config\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-driverloaded\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--longhelp\fP ]
+[    \fB\-\-longhelp\fP ]
 .ad b
 .br
 .ad l
-[    \fB--profile\fP \fIString\fP ]
+[    \fB\-\-profile\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--version\fP ]
+[    \fB\-\-version\fP ]
 .ad b
 .RE
 .SH OPTIONS
 .HP
 .ad l
-\fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
+\fB-a\fP|\fB\-\-activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
 Controls the active state of the new LV.
 \fBy\fP makes the LV active, or available.
@@ -928,23 +928,23 @@ New LVs are made active by default.
 In some cases, creating an LV requires it to be active.
 For example, COW snapshots of an active origin LV can only
 be created in the active state (this does not apply to thin snapshots.)
-The --zero option normally requires the LV to be active.
+The \-\-zero option normally requires the LV to be active.
 If autoactivation \fBay\fP is used, the LV is only activated
 if it matches an item in lvm.conf activation/auto_activation_volume_list.
-\fBay\fP implies --zero n and --wipesignatures n.
+\fBay\fP implies \-\-zero n and \-\-wipesignatures n.
 See lvmlockd(8) for more information about activation options for shared VGs.
 See clvmd(8) for more information about activation options for clustered VGs.
 .ad b
 .HP
 .ad l
-\fB--addtag\fP \fITag\fP
+\fB\-\-addtag\fP \fITag\fP
 .br
 Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See lvm(8) for information about tags.
 .ad b
 .HP
 .ad l
-\fB--alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
+\fB\-\-alloc\fP \fBcontiguous\fP|\fBcling\fP|\fBcling_by_tags\fP|\fBnormal\fP|\fBanywhere\fP|\fBinherit\fP
 .br
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
@@ -965,28 +965,28 @@ See \fBlvm\fP(8) for more information about allocation.
 .ad b
 .HP
 .ad l
-\fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
+\fB-A\fP|\fB\-\-autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised! See vgcfgbackup(8) for more information.
 .ad b
 .HP
 .ad l
-\fB-H\fP|\fB--cache\fP
+\fB-H\fP|\fB\-\-cache\fP
 .br
 Specifies the command is handling a cache LV or cache pool.
-See --type cache and --type cache-pool.
+See \-\-type cache and \-\-type cache-pool.
 See \fBlvmcache\fP(7) for more information about LVM caching.
 .ad b
 .HP
 .ad l
-\fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
+\fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP
 .br
 Specifies the cache metadata format used by cache target.
 .ad b
 .HP
 .ad l
-\fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
+\fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
 .br
 Specifies when writes to a cache LV should be considered complete.
 \fBwriteback\fP considers a write complete as soon as it is
@@ -1002,20 +1002,20 @@ block invalidates. See \fBlvmcache\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--cachepolicy\fP \fIString\fP
+\fB\-\-cachepolicy\fP \fIString\fP
 .br
 Specifies the cache policy for a cache LV.
 See \fBlvmcache\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--cachepool\fP \fILV\fP
+\fB\-\-cachepool\fP \fILV\fP
 .br
 The name of a cache pool LV.
 .ad b
 .HP
 .ad l
-\fB--cachesettings\fP \fIString\fP
+\fB\-\-cachesettings\fP \fIString\fP
 .br
 Specifies tunable values for a cache LV in "Key = Value" form.
 Repeat this option to specify multiple values.
@@ -1027,7 +1027,7 @@ See \fBlvmcache\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT]
+\fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT]
 .br
 The size of chunks in a snapshot, cache pool or thin pool.
 For snapshots, the value must be a power of 2 between 4KiB and 512KiB
@@ -1042,14 +1042,14 @@ See \fBlvmthin\fP(7) and \fBlvmcache\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--commandprofile\fP \fIString\fP
+\fB\-\-commandprofile\fP \fIString\fP
 .br
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
 .HP
 .ad l
-\fB--config\fP \fIString\fP
+\fB\-\-config\fP \fIString\fP
 .br
 Config settings for the command. These override lvm.conf settings.
 The String arg uses the same format as lvm.conf,
@@ -1058,7 +1058,7 @@ See \fBlvm.conf\fP(5) for more information about config.
 .ad b
 .HP
 .ad l
-\fB-C\fP|\fB--contiguous\fP \fBy\fP|\fBn\fP
+\fB-C\fP|\fB\-\-contiguous\fP \fBy\fP|\fBn\fP
 .br
 Sets or resets the contiguous allocation policy for LVs.
 Default is no contiguous allocation based on a next free principle.
@@ -1068,14 +1068,14 @@ are already contiguous.
 .ad b
 .HP
 .ad l
-\fB-d\fP|\fB--debug\fP ...
+\fB-d\fP|\fB\-\-debug\fP ...
 .br
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .ad b
 .HP
 .ad l
-\fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
+\fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP
 .br
 Specifies how the device-mapper thin pool layer in the kernel should
 handle discards.
@@ -1088,14 +1088,14 @@ See \fBlvmthin\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--driverloaded\fP \fBy\fP|\fBn\fP
+\fB\-\-driverloaded\fP \fBy\fP|\fBn\fP
 .br
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .ad b
 .HP
 .ad l
-\fB--errorwhenfull\fP \fBy\fP|\fBn\fP
+\fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP
 .br
 Specifies thin pool behavior when data space is exhausted.
 When yes, device-mapper will immediately return an error
@@ -1108,10 +1108,10 @@ See \fBlvmthin\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT]
+\fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT]
 .br
 Specifies the size of the new LV in logical extents.
-The --size and --extents options are alternate methods of specifying size.
+The \-\-size and \-\-extents options are alternate methods of specifying size.
 The total number of physical extents used will be
 greater when redundant data is needed for RAID levels.
 An alternate syntax allows the size to be determined indirectly
@@ -1128,39 +1128,39 @@ extents in the new LV is not determined until the command has completed.
 .ad b
 .HP
 .ad l
-\fB-h\fP|\fB--help\fP
+\fB-h\fP|\fB\-\-help\fP
 .br
 Display help text.
 .ad b
 .HP
 .ad l
-\fB-K\fP|\fB--ignoreactivationskip\fP
+\fB-K\fP|\fB\-\-ignoreactivationskip\fP
 .br
 Ignore the "activation skip" LV flag during activation
 to allow LVs with the flag set to be activated.
 .ad b
 .HP
 .ad l
-\fB--ignoremonitoring\fP
+\fB\-\-ignoremonitoring\fP
 .br
-Do not interact with dmeventd unless --monitor is specified.
+Do not interact with dmeventd unless \-\-monitor is specified.
 Do not use this if dmeventd is already monitoring a device.
 .ad b
 .HP
 .ad l
-\fB--longhelp\fP
+\fB\-\-longhelp\fP
 .br
 Display long help text.
 .ad b
 .HP
 .ad l
-\fB-j\fP|\fB--major\fP \fINumber\fP
+\fB-j\fP|\fB\-\-major\fP \fINumber\fP
 .br
 Sets the major number of an LV block device.
 .ad b
 .HP
 .ad l
-\fB--[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT]
+\fB\-\-[raid]maxrecoveryrate\fP \fISize\fP[k|UNIT]
 .br
 Sets the maximum recovery rate for a RAID LV.  The rate value
 is an amount of data per second for each device in the array.
@@ -1169,20 +1169,20 @@ See \fBlvmraid\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--metadataprofile\fP \fIString\fP
+\fB\-\-metadataprofile\fP \fIString\fP
 .br
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .ad b
 .HP
 .ad l
-\fB--minor\fP \fINumber\fP
+\fB\-\-minor\fP \fINumber\fP
 .br
 Sets the minor number of an LV block device.
 .ad b
 .HP
 .ad l
-\fB--[raid]minrecoveryrate\fP \fISize\fP[k|UNIT]
+\fB\-\-[raid]minrecoveryrate\fP \fISize\fP[k|UNIT]
 .br
 Sets the minimum recovery rate for a RAID LV.  The rate value
 is an amount of data per second for each device in the array.
@@ -1191,7 +1191,7 @@ See \fBlvmraid\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP
+\fB\-\-mirrorlog\fP \fBcore\fP|\fBdisk\fP
 .br
 Specifies the type of mirror log for LVs with the "mirror" type
 (does not apply to the "raid1" type.)
@@ -1204,25 +1204,25 @@ the first device to others) each time the LV is activated, e.g. after reboot.
 .ad b
 .HP
 .ad l
-\fB-m\fP|\fB--mirrors\fP \fINumber\fP
+\fB-m\fP|\fB\-\-mirrors\fP \fINumber\fP
 .br
 Specifies the number of mirror images in addition to the original LV
-image, e.g. --mirrors 1 means there are two images of the data, the
+image, e.g. \-\-mirrors 1 means there are two images of the data, the
 original and one mirror image.
 Optional positional PV args on the command line can specify the devices
 the images should be placed on.
 There are two mirroring implementations: "raid1" and "mirror".
 These are the names of the corresponding LV types, or "segment types".
-Use the --type option to specify which to use (raid1 is default,
+Use the \-\-type option to specify which to use (raid1 is default,
 and mirror is legacy)
 Use lvm.conf global/mirror_segtype_default and
 global/raid10_segtype_default to configure the default types.
-See the --nosync option for avoiding initial image synchronization.
+See the \-\-nosync option for avoiding initial image synchronization.
 See \fBlvmraid\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB--monitor\fP \fBy\fP|\fBn\fP
+\fB\-\-monitor\fP \fBy\fP|\fBn\fP
 .br
 Start (yes) or stop (no) monitoring an LV with dmeventd.
 dmeventd monitors kernel events for an LV, and performs
@@ -1231,7 +1231,7 @@ See dmeventd(8) for more information.
 .ad b
 .HP
 .ad l
-\fB-n\fP|\fB--name\fP \fIString\fP
+\fB-n\fP|\fB\-\-name\fP \fIString\fP
 .br
 Specifies the name of a new LV.
 When unspecified, a default name of "lvol#" is
@@ -1239,7 +1239,7 @@ generated, where # is a number generated by LVM.
 .ad b
 .HP
 .ad l
-\fB--nosync\fP
+\fB\-\-nosync\fP
 .br
 Causes the creation of mirror, raid1, raid4, raid5 and raid10 to skip the
 initial synchronization. In case of mirror, raid1 and raid10, any data
@@ -1256,7 +1256,7 @@ and thus do not support initial synchronization.
 .ad b
 .HP
 .ad l
-\fB--noudevsync\fP
+\fB\-\-noudevsync\fP
 .br
 Disables udev synchronisation. The process will not wait for notification
 from udev. It will continue irrespective of any possible udev processing
@@ -1265,25 +1265,25 @@ ignore the devices LVM creates.
 .ad b
 .HP
 .ad l
-\fB-p\fP|\fB--permission\fP \fBrw\fP|\fBr\fP
+\fB-p\fP|\fB\-\-permission\fP \fBrw\fP|\fBr\fP
 .br
 Set access permission to read only \fBr\fP or read and write \fBrw\fP.
 .ad b
 .HP
 .ad l
-\fB-M\fP|\fB--persistent\fP \fBy\fP|\fBn\fP
+\fB-M\fP|\fB\-\-persistent\fP \fBy\fP|\fBn\fP
 .br
 When yes, makes the specified minor number persistent.
 .ad b
 .HP
 .ad l
-\fB--poolmetadatasize\fP \fISize\fP[m|UNIT]
+\fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT]
 .br
 Specifies the size of the new pool metadata LV.
 .ad b
 .HP
 .ad l
-\fB--poolmetadataspare\fP \fBy\fP|\fBn\fP
+\fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP
 .br
 Enable or disable the automatic creation and management of a
 spare pool metadata LV in the VG. A spare metadata LV is reserved
@@ -1291,21 +1291,21 @@ space that can be used when repairing a pool.
 .ad b
 .HP
 .ad l
-\fB--profile\fP \fIString\fP
+\fB\-\-profile\fP \fIString\fP
 .br
-An alias for --commandprofile or --metadataprofile, depending
+An alias for \-\-commandprofile or \-\-metadataprofile, depending
 on the command.
 .ad b
 .HP
 .ad l
-\fB-q\fP|\fB--quiet\fP ...
+\fB-q\fP|\fB\-\-quiet\fP ...
 .br
-Suppress output and log messages. Overrides --debug and --verbose.
+Suppress output and log messages. Overrides \-\-debug and \-\-verbose.
 Repeat once to also suppress any prompts with answer no.
 .ad b
 .HP
 .ad l
-\fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
+\fB-r\fP|\fB\-\-readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP
 .br
 Sets read ahead sector count of an LV.
 \fBauto\fP is the default which allows the kernel to choose
@@ -1314,7 +1314,7 @@ a suitable value automatically.
 .ad b
 .HP
 .ad l
-\fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT]
+\fB-R\fP|\fB\-\-regionsize\fP \fISize\fP[m|UNIT]
 .br
 Size of each raid or mirror synchronization region.
 lvm.conf activation/raid_region_size can be used to
@@ -1322,7 +1322,7 @@ configure a default.
 .ad b
 .HP
 .ad l
-\fB--reportformat\fP \fBbasic\fP|\fBjson\fP
+\fB\-\-reportformat\fP \fBbasic\fP|\fBjson\fP
 .br
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in lvm.conf.
@@ -1333,27 +1333,27 @@ output in JSON format. See \fBlvmreport\fP(7) for more information.
 .ad b
 .HP
 .ad l
-\fB-k\fP|\fB--setactivationskip\fP \fBy\fP|\fBn\fP
+\fB-k\fP|\fB\-\-setactivationskip\fP \fBy\fP|\fBn\fP
 .br
 Persistently sets (yes) or clears (no) the "activation skip" flag on an LV.
 An LV with this flag set is not activated unless the
---ignoreactivationskip option is used by the activation command.
+\-\-ignoreactivationskip option is used by the activation command.
 This flag is set by default on new thin snapshot LVs.
 The flag is not applied to deactivation.
 The current value of the flag is indicated in the lvs lv_attr bits.
 .ad b
 .HP
 .ad l
-\fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+\fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT]
 .br
 Specifies the size of the new LV.
-The --size and --extents options are alternate methods of specifying size.
+The \-\-size and \-\-extents options are alternate methods of specifying size.
 The total number of physical extents used will be
 greater when redundant data is needed for RAID levels.
 .ad b
 .HP
 .ad l
-\fB-s\fP|\fB--snapshot\fP
+\fB-s\fP|\fB\-\-snapshot\fP
 .br
 Create a snapshot. Snapshots provide a "frozen image" of an origin LV.
 The snapshot LV can be used, e.g. for backups, while the origin LV
@@ -1364,7 +1364,7 @@ Thin snapshots are created when the origin is a thin LV and
 the size option is NOT specified. Thin snapshots share the same blocks
 in the thin pool, and do not allocate new space from the VG.
 Thin snapshots are created with the "activation skip" flag,
-see --setactivationskip.
+see \-\-setactivationskip.
 A thin snapshot of a non-thin "external origin" LV is created
 when a thin pool is specified. Unprovisioned blocks in the thin snapshot
 LV are read from the external origin LV. The external origin LV must
@@ -1378,17 +1378,17 @@ often 20% of the origin LV is enough. If COW space runs low, it can
 be extended with lvextend (shrinking is also allowed with lvreduce.)
 A small amount of the COW snapshot LV size is used to track COW block
 locations, so the full size is not available for COW data blocks.
-Use lvs to check how much space is used, and see --monitor to
+Use lvs to check how much space is used, and see \-\-monitor to
 to automatically extend the size to avoid running out of space.
 .ad b
 .HP
 .ad l
-\fB-i\fP|\fB--stripes\fP \fINumber\fP
+\fB-i\fP|\fB\-\-stripes\fP \fINumber\fP
 .br
 Specifies the number of stripes in a striped LV. This is the number of
 PVs (devices) that a striped LV is spread across. Data that
 appears sequential in the LV is spread across multiple devices in units of
-the stripe size (see --stripesize). This does not change existing
+the stripe size (see \-\-stripesize). This does not change existing
 allocated space, but only applies to space being allocated by the command.
 When creating a RAID 4/5/6 LV, this number does not include the extra
 devices that are required for parity. The largest number depends on
@@ -1400,14 +1400,14 @@ see lvm.conf allocation/raid_stripe_all_devices.
 .ad b
 .HP
 .ad l
-\fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
+\fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT]
 .br
 The amount of data that is written to one device before
 moving to the next in a striped LV.
 .ad b
 .HP
 .ad l
-\fB-t\fP|\fB--test\fP
+\fB-t\fP|\fB\-\-test\fP
 .br
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
@@ -1417,21 +1417,21 @@ back metadata it believes has changed but hasn't.
 .ad b
 .HP
 .ad l
-\fB-T\fP|\fB--thin\fP
+\fB-T\fP|\fB\-\-thin\fP
 .br
 Specifies the command is handling a thin LV or thin pool.
-See --type thin, --type thin-pool, and --virtualsize.
+See \-\-type thin, \-\-type thin-pool, and \-\-virtualsize.
 See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
 .ad b
 .HP
 .ad l
-\fB--thinpool\fP \fILV\fP
+\fB\-\-thinpool\fP \fILV\fP
 .br
 The name of a thin pool LV.
 .ad b
 .HP
 .ad l
-\fB--type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBthin-pool\fP|\fBcache-pool\fP
+\fB\-\-type\fP \fBlinear\fP|\fBstriped\fP|\fBsnapshot\fP|\fBmirror\fP|\fBraid\fP|\fBthin\fP|\fBcache\fP|\fBthin-pool\fP|\fBcache-pool\fP
 .br
 The LV type, also known as "segment type" or "segtype".
 See usage descriptions for the specific ways to use these types.
@@ -1441,25 +1441,25 @@ For performance caching (\fBcache\fP, \fBcache-pool\fP) see \fBlvmcache\fP(7).
 For copy-on-write snapshots (\fBsnapshot\fP) see usage definitions.
 Several commands omit an explicit type option because the type
 is inferred from other options or shortcuts
-(e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache).
+(e.g. \-\-stripes, \-\-mirrors, \-\-snapshot, \-\-virtualsize, \-\-thin, \-\-cache).
 Use inferred types with care because it can lead to unexpected results.
 .ad b
 .HP
 .ad l
-\fB-v\fP|\fB--verbose\fP ...
+\fB-v\fP|\fB\-\-verbose\fP ...
 .br
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .ad b
 .HP
 .ad l
-\fB--version\fP
+\fB\-\-version\fP
 .br
 Display version information.
 .ad b
 .HP
 .ad l
-\fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+\fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .br
 The virtual size of a new thin LV.
 See \fBlvmthin\fP(7) for more information about LVM thin provisioning.
@@ -1476,13 +1476,13 @@ large sparse LVs (GiB).
 .ad b
 .HP
 .ad l
-\fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP
+\fB-W\fP|\fB\-\-wipesignatures\fP \fBy\fP|\fBn\fP
 .br
 Controls detection and subsequent wiping of signatures on new LVs.
 There is a prompt for each signature detected to confirm its wiping
-(unless --yes is used to override confirmations.)
+(unless \-\-yes is used to override confirmations.)
 When not specified, signatures are wiped whenever zeroing is done
-(see --zero). This behaviour can be configured with
+(see \-\-zero). This behaviour can be configured with
 lvm.conf allocation/wipe_signatures_when_zeroing_new_lvs.
 If blkid wiping is used (lvm.conf allocation/use_blkid_wiping)
 and LVM is compiled with blkid wiping support, then the blkid(8)
@@ -1494,7 +1494,7 @@ The LV is not wiped if the read only flag is set.
 .ad b
 .HP
 .ad l
-\fB-y\fP|\fB--yes\fP
+\fB-y\fP|\fB\-\-yes\fP
 .br
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
@@ -1502,7 +1502,7 @@ answer yes. Use with extreme caution.
 .ad b
 .HP
 .ad l
-\fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
+\fB-Z\fP|\fB\-\-zero\fP \fBy\fP|\fBn\fP
 .br
 Controls zeroing of the first 4KiB of data in the new LV.
 Default is \fBy\fP.
@@ -1517,7 +1517,7 @@ Warning: trying to mount an unzeroed LV can cause the system to hang.
 Volume Group name.  See \fBlvm\fP(8) for valid names.
 For lvcreate, the required VG positional arg may be
 omitted when the VG name is included in another option,
-e.g. --name VG/LV.
+e.g. \-\-name VG/LV.
 .HP
 \fILV\fP
 .br
@@ -1550,7 +1550,7 @@ UNIT represents other possible input units: \fBbBsSkKmMgGtTpPeE\fP.
 b|B is bytes, s|S is sectors of 512 bytes, k|K is kilobytes,
 m|M is megabytes, g|G is gigabytes, t|T is terabytes,
 p|P is petabytes, e|E is exabytes.
-(This should not be confused with the output control --units, where
+(This should not be confused with the output control \-\-units, where
 capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
 See \fBlvm\fP(8) for information about environment variables used by lvm.
@@ -1561,11 +1561,11 @@ Alternate command forms, advanced command usage, and listing of all valid syntax
 Create an LV that returns errors when used.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBerror\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBerror\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1576,11 +1576,11 @@ Create an LV that returns errors when used.
 Create an LV that returns zeros when read.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBzero\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBzero\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1591,11 +1591,11 @@ Create an LV that returns zeros when read.
 Create a linear LV.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBlinear\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBlinear\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1606,22 +1606,22 @@ Create a linear LV.
 .RE
 -
 
-Create a striped LV (also see lvcreate --stripes).
+Create a striped LV (also see lvcreate \-\-stripes).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBstriped\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBstriped\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1632,34 +1632,34 @@ Create a striped LV (also see lvcreate --stripes).
 .RE
 -
 
-Create a mirror LV (also see --type raid1).
+Create a mirror LV (also see \-\-type raid1).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBmirror\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBmirror\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
+[ \fB-m\fP|\fB\-\-mirrors\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-R\fP|\fB--regionsize\fP \fISize\fP[m|UNIT] ]
+[ \fB-R\fP|\fB\-\-regionsize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
+[    \fB\-\-mirrorlog\fP \fBcore\fP|\fBdisk\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1672,30 +1672,30 @@ Create a mirror LV (also see --type raid1).
 
 Create a COW snapshot LV of an origin LV 
 .br
-(also see --snapshot).
+(also see \-\-snapshot).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBsnapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBsnapshot\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fILV\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-s\fP|\fB--snapshot\fP ]
+[ \fB-s\fP|\fB\-\-snapshot\fP ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1708,25 +1708,25 @@ Create a COW snapshot LV of an origin LV
 
 Create a sparse COW snapshot LV of a virtual origin LV 
 .br
-(also see --snapshot).
+(also see \-\-snapshot).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBsnapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB\-\-type\fP \fBsnapshot\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
+ \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-s\fP|\fB--snapshot\fP ]
+[ \fB-s\fP|\fB\-\-snapshot\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1740,22 +1740,22 @@ Create a sparse COW snapshot LV of a virtual origin LV
 Create a sparse COW snapshot LV of a virtual origin LV.
 .br
 .P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB-s\fP|\fB\-\-snapshot\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
+ \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBsnapshot\fP ]
+[    \fB\-\-type\fP \fBsnapshot\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1766,46 +1766,46 @@ Create a sparse COW snapshot LV of a virtual origin LV.
 .RE
 -
 
-Create a thin pool (infers --type thin-pool).
+Create a thin pool (infers \-\-type thin-pool).
 .br
 .P
-\fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB-T\fP|\fB\-\-thin\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin-pool\fP ]
+[    \fB\-\-type\fP \fBthin-pool\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1816,52 +1816,52 @@ Create a thin pool (infers --type thin-pool).
 .RE
 -
 
-Create a thin pool named by the --thinpool arg 
+Create a thin pool named by the \-\-thinpool arg 
 .br
-(infers --type thin-pool).
+(infers \-\-type thin-pool).
 .br
 .P
-\fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP \fIVG\fP
+\fBlvcreate\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fB\-\-thinpool\fP \fILV\fP\fI_new\fP \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin-pool\fP ]
+[    \fB\-\-type\fP \fBthin-pool\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1872,51 +1872,51 @@ Create a thin pool named by the --thinpool arg
 .RE
 -
 
-Create a cache pool named by the --cachepool arg 
+Create a cache pool named by the \-\-cachepool arg 
 .br
-(variant, uses --cachepool in place of --name).
+(variant, uses \-\-cachepool in place of \-\-name).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBcache-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB\-\-type\fP \fBcache-pool\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB--cachepool\fP \fILV\fP\fI_new\fP \fIVG\fP
+ \fB\-\-cachepool\fP \fILV\fP\fI_new\fP \fIVG\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-H\fP|\fB--cache\fP ]
+[ \fB-H\fP|\fB\-\-cache\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+[    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
+[    \fB\-\-cachepolicy\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachesettings\fP \fIString\fP ]
+[    \fB\-\-cachesettings\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+[    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1930,34 +1930,34 @@ Create a cache pool named by the --cachepool arg
 Create a thin LV in a thin pool.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB\-\-type\fP \fBthin\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
+ \fB\-\-thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1967,22 +1967,22 @@ Create a thin LV in a thin pool.
 
 Create a thin LV in a thin pool named in the first arg 
 .br
-(variant, also see --thinpool for naming pool).
+(variant, also see \-\-thinpool for naming pool).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fILV\fP\fI_thinpool\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBthin\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT] \fILV\fP\fI_thinpool\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -1992,28 +1992,28 @@ Create a thin LV in a thin pool named in the first arg
 
 Create a thin LV in the thin pool named in the first arg 
 .br
-(variant, infers --type thin, also see --thinpool for 
+(variant, infers \-\-type thin, also see \-\-thinpool for 
 .br
 naming pool.)
 .br
 .P
-\fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fILV\fP\fI_thinpool\fP
+\fBlvcreate\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT] \fILV\fP\fI_thinpool\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2024,19 +2024,19 @@ naming pool.)
 Create a thin LV that is a snapshot of an existing thin LV.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fILV\fP\fI_thin\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBthin\fP \fILV\fP\fI_thin\fP
 .br
 .RS 4
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2046,22 +2046,22 @@ Create a thin LV that is a snapshot of an existing thin LV.
 
 Create a thin LV that is a snapshot of an existing thin LV 
 .br
-(infers --type thin).
+(infers \-\-type thin).
 .br
 .P
-\fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fILV\fP\fI_thin\fP
+\fBlvcreate\fP \fB-T\fP|\fB\-\-thin\fP \fILV\fP\fI_thin\fP
 .br
 .RS 4
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2071,22 +2071,22 @@ Create a thin LV that is a snapshot of an existing thin LV
 
 Create a thin LV that is a snapshot of an external origin LV 
 .br
-(infers --type thin).
+(infers \-\-type thin).
 .br
 .P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
+\fBlvcreate\fP \fB-s\fP|\fB\-\-snapshot\fP \fB\-\-thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
 .br
 .RS 4
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2096,51 +2096,51 @@ Create a thin LV that is a snapshot of an external origin LV
 
 Create a thin LV, first creating a thin pool for it, 
 .br
-where the new thin pool is named by the --thinpool arg 
+where the new thin pool is named by the \-\-thinpool arg 
 .br
-(variant, infers --type thin).
+(variant, infers \-\-type thin).
 .br
 .P
-\fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB-T\fP|\fB\-\-thin\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP
+ \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fB\-\-thinpool\fP \fILV\fP\fI_new\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2160,46 +2160,46 @@ or the new thin pool name is generated when the first
 arg is a VG name.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB\-\-type\fP \fBthin\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP|\fILV\fP\fI_new\fP
+ \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP|\fILV\fP\fI_new\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2216,49 +2216,49 @@ where the new thin pool is named in the first arg,
 .br
 or the new thin pool name is generated when the first 
 .br
-arg is a VG name (variant, infers --type thin).
+arg is a VG name (variant, infers \-\-type thin).
 .br
 .P
-\fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
+\fBlvcreate\fP \fB-T\fP|\fB\-\-thin\fP \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP|\fILV\fP\fI_new\fP
+ \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fIVG\fP|\fILV\fP\fI_new\fP
 .RE
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2271,62 +2271,62 @@ arg is a VG name (variant, infers --type thin).
 
 Create a thin LV, first creating a thin pool for it 
 .br
-(infers --type thin). 
+(infers \-\-type thin). 
 .br
 Create a sparse snapshot of a virtual origin LV 
 .br
-(infers --type snapshot). 
+(infers \-\-type snapshot). 
 .br
-Chooses --type thin or --type snapshot according to 
+Chooses \-\-type thin or \-\-type snapshot according to 
 .br
 config setting sparse_segtype_default.
 .br
 .P
-\fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
+\fBlvcreate\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fB-V\fP|\fB\-\-virtualsize\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-T\fP|\fB--thin\fP ]
+[ \fB-T\fP|\fB\-\-thin\fP ]
 .ad b
 .br
 .ad l
-[ \fB-s\fP|\fB--snapshot\fP ]
+[ \fB-s\fP|\fB\-\-snapshot\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBthin\fP ]
+[    \fB\-\-type\fP \fBthin\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
+[    \fB\-\-discards\fP \fBpassdown\fP|\fBnopassdown\fP|\fBignore\fP ]
 .ad b
 .br
 .ad l
-[    \fB--errorwhenfull\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-errorwhenfull\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2341,50 +2341,50 @@ Create a cache LV, first creating a new origin LV,
 .br
 then combining it with the existing cache pool named 
 .br
-by the --cachepool arg (variant, infers --type cache).
+by the \-\-cachepool arg (variant, infers \-\-type cache).
 .br
 .P
-\fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
+\fBlvcreate\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fB\-\-cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-H\fP|\fB--cache\fP ]
+[ \fB-H\fP|\fB\-\-cache\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--type\fP \fBcache\fP ]
+[    \fB\-\-type\fP \fBcache\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+[    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
+[    \fB\-\-cachepolicy\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachesettings\fP \fIString\fP ]
+[    \fB\-\-cachesettings\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+[    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2399,54 +2399,54 @@ Create a cache LV, first creating a new origin LV,
 .br
 then combining it with the existing cache pool named 
 .br
-in the first arg (variant, also use --cachepool).
+in the first arg (variant, also use \-\-cachepool).
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP\fI_cachepool\fP
+\fBlvcreate\fP \fB\-\-type\fP \fBcache\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fILV\fP\fI_cachepool\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-H\fP|\fB--cache\fP ]
+[ \fB-H\fP|\fB\-\-cache\fP ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+[    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
+[    \fB\-\-cachepolicy\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachesettings\fP \fIString\fP ]
+[    \fB\-\-cachesettings\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+[    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -2463,7 +2463,7 @@ first creating a new origin LV, then combining it with
 .br
 the existing cache pool named in the first arg 
 .br
-(variant, infers --type cache, also use --cachepool). 
+(variant, infers \-\-type cache, also use \-\-cachepool). 
 .br
 When LV is not a cache pool, convert the specified LV 
 .br
@@ -2472,47 +2472,47 @@ to type cache after creating a new cache pool LV to use
 (use lvconvert).
 .br
 .P
-\fBlvcreate\fP \fB-H\fP|\fB--cache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
+\fBlvcreate\fP \fB-H\fP|\fB\-\-cache\fP \fB-L\fP|\fB\-\-size\fP \fISize\fP[m|UNIT] \fILV\fP
 .br
 .RS 4
 .ad l
-[ \fB-l\fP|\fB--extents\fP \fINumber\fP[PERCENT] ]
+[ \fB-l\fP|\fB\-\-extents\fP \fINumber\fP[PERCENT] ]
 .ad b
 .br
 .ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+[ \fB-c\fP|\fB\-\-chunksize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[ \fB-i\fP|\fB\-\-stripes\fP \fINumber\fP ]
 .ad b
 .br
 .ad l
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[ \fB-I\fP|\fB\-\-stripesize\fP \fISize\fP[k|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
+[    \fB\-\-cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachepolicy\fP \fIString\fP ]
+[    \fB\-\-cachepolicy\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachesettings\fP \fIString\fP ]
+[    \fB\-\-cachesettings\fP \fIString\fP ]
 .ad b
 .br
 .ad l
-[    \fB--cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
+[    \fB\-\-cachemetadataformat\fP \fBauto\fP|\fB1\fP|\fB2\fP ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadatasize\fP \fISize\fP[m|UNIT] ]
+[    \fB\-\-poolmetadatasize\fP \fISize\fP[m|UNIT] ]
 .ad b
 .br
 .ad l
-[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
+[    \fB\-\-poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]

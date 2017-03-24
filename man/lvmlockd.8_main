@@ -687,7 +687,7 @@ original cluster:
 .IP \[bu] 2
 Stop the VG on all hosts:
 .br
-vgchange --lock-stop <vgname>
+vgchange \-\-lock-stop <vgname>
 
 .IP \[bu] 2
 Change the VG lock type to none:
@@ -709,7 +709,7 @@ vgchange \-\-lock\-type dlm <vgname>
 .IP \[bu] 2
 Start the VG on hosts to use it:
 .br
-vgchange --lock-start <vgname>
+vgchange \-\-lock-start <vgname>
 
 .P
 
@@ -738,7 +738,7 @@ vgchange \-\-lock\-type dlm <vgname>
 .IP \[bu] 2
 Start the VG on hosts to use it:
 .br
-vgchange --lock-start <vgname>
+vgchange \-\-lock-start <vgname>
 
 
 .SS changing a local VG to a lockd VG

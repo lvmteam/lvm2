@@ -71,9 +71,9 @@ a minimum size of 8MiB.
 .nf
 # lvs -a vg
   LV         VG   Attr       LSize   Pool Origin
-  cache0     vg   -wi-a-----  10.00g                                                    
-  cache0meta vg   -wi-a-----  12.00m                                                    
-  lvol0      vg   -wi-a----- 100.00g
+  cache0     vg   -wi-a\-\-\-\--  10.00g                                                    
+  cache0meta vg   -wi-a\-\-\-\--  12.00m                                                    
+  lvol0      vg   -wi-a\-\-\-\-- 100.00g
 .fi
 
 
@@ -100,10 +100,10 @@ CacheMetaLV is renamed CachePoolLV_cmeta and becomes hidden.
 .nf
 # lvs -a vg
   LV              VG   Attr       LSize   Pool Origin
-  cache0          vg   Cwi---C---  10.00g
-  [cache0_cdata]  vg   Cwi-------  10.00g
-  [cache0_cmeta]  vg   ewi-------  12.00m
-  lvol0           vg   -wi-a----- 100.00g
+  cache0          vg   Cwi\-\--C\-\--  10.00g
+  [cache0_cdata]  vg   Cwi\-\-\-\-\-\--  10.00g
+  [cache0_cmeta]  vg   ewi\-\-\-\-\-\--  12.00m
+  lvol0           vg   -wi-a\-\-\-\-- 100.00g
 .fi
 
 
@@ -127,11 +127,11 @@ OriginLV is renamed OriginLV_corig and becomes hidden.
 .nf
 # lvs -a vg
   LV              VG   Attr       LSize   Pool   Origin
-  cache0          vg   Cwi---C---  10.00g                                                             
-  [cache0_cdata]  vg   Cwi-ao----  10.00g                                                             
-  [cache0_cmeta]  vg   ewi-ao----  12.00m                                                             
-  lvol0           vg   Cwi-a-C--- 100.00g cache0 [lvol0_corig]                                        
-  [lvol0_corig]   vg   -wi-ao---- 100.00g                                                             
+  cache0          vg   Cwi\-\--C\-\--  10.00g                                                             
+  [cache0_cdata]  vg   Cwi-ao\-\-\-\-  10.00g                                                             
+  [cache0_cmeta]  vg   ewi-ao\-\-\-\-  12.00m                                                             
+  lvol0           vg   Cwi-a-C\-\-- 100.00g cache0 [lvol0_corig]                                        
+  [lvol0_corig]   vg   -wi-ao\-\-\-\- 100.00g                                                             
 .fi
 
 
@@ -145,7 +145,7 @@ A cache pool LV can be disconnected from a cache LV, leaving an
 unused cache pool LV, and an uncached origin LV.  This command
 writes back data from the cache pool to the origin LV when necessary.
 
-.B lvconvert --splitcache VG/CacheLV
+.B lvconvert \-\-splitcache VG/CacheLV
 
 .SS Removing a cache pool LV without removing its linked origin LV
 
@@ -159,20 +159,20 @@ then removes the cache pool LV, leaving the uncached origin LV.
 An alternative command that also disconnects the cache pool from the cache
 LV, and deletes the cache pool:
 
-.B lvconvert --uncache VG/CacheLV
+.B lvconvert \-\-uncache VG/CacheLV
 
 .I Example
 .nf
 # lvs vg
   LV     VG   Attr       LSize   Pool   Origin
-  cache0 vg   Cwi---C---  10.00g
-  lvol0  vg   Cwi-a-C--- 100.00g cache0 [lvol0_corig]
+  cache0 vg   Cwi\-\--C\-\--  10.00g
+  lvol0  vg   Cwi-a-C\-\-- 100.00g cache0 [lvol0_corig]
 
 # lvremove vg/cache0
 
 # lvs vg
   LV    VG   Attr       LSize   Pool Origin
-  lvol0 vg   -wi-a----- 100.00g
+  lvol0 vg   -wi-a\-\-\-\-- 100.00g
 .fi
 
 .SS Removing a cache LV: both origin LV and the cache pool LV
@@ -349,7 +349,7 @@ the same VG.
 
 .B lvcreate -n CacheDataLV -L CacheSize VG
 .br
-.B lvconvert --type cache\-pool VG/CacheDataLV
+.B lvconvert \-\-type cache\-pool VG/CacheDataLV
 
 
 .SS Create a new cache LV without an existing origin LV
@@ -390,7 +390,7 @@ may optionally be specified.
 .br
 .B lvcreate -n CacheDataLV -L CacheSize VG
 .br
-.B lvconvert --type cache --cachepool VG/CataDataLV VG/OriginLV
+.B lvconvert \-\-type cache \-\-cachepool VG/CataDataLV VG/OriginLV
 
 This is equivalent to:
 
@@ -398,9 +398,9 @@ This is equivalent to:
 .br
 .B lvcreate -n CacheDataLV -L CacheSize VG
 .br
-.B lvconvert --type cache-pool VG/CacheDataLV
+.B lvconvert \-\-type cache-pool VG/CacheDataLV
 .br
-.B lvconvert --type cache --cachepool VG/CachePoolLV VG/OriginLV
+.B lvconvert \-\-type cache \-\-cachepool VG/CachePoolLV VG/OriginLV
 
 
 .SH SEE ALSO
