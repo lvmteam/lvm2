@@ -732,7 +732,8 @@ static int _lvchange_rebuild(struct logical_volume *lv)
 
 static int _lvchange_writemostly(struct logical_volume *lv)
 {
-	int s, pv_count, i = 0;
+	int pv_count, i = 0;
+	uint32_t s, writemostly;
 	char **pv_names;
 	const char *tmp_str;
 	size_t tmp_str_len;
@@ -808,7 +809,7 @@ static int _lvchange_writemostly(struct logical_volume *lv)
 				return 0;
 			}
 
-			for (s = 0; s < (int) raid_seg->area_count; s++) {
+			for (s = 0; s < raid_seg->area_count; s++) {
 				/*
 				 * We don't bother checking the metadata area,
 				 * since writemostly only affects the data areas.
@@ -830,6 +831,19 @@ static int _lvchange_writemostly(struct logical_volume *lv)
 						return_0;
 				}
 			}
+
+		}
+
+		/* Only allow a maximum on N-1 images to be set writemostly. */
+		writemostly = 0;
+		for (s = 0; s < raid_seg->area_count; s++)
+			if (seg_lv(raid_seg, s)->status & LV_WRITEMOSTLY)
+				writemostly++;
+
+		if (writemostly == raid_seg->area_count) {
+			log_error("Can't set all images of %s LV %s to writemostly.",
+				  lvseg_name(raid_seg), display_lvname(lv));
+			return 0;
 		}
 	}
 
