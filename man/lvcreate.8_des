@@ -26,11 +26,11 @@ virtual size rather than a physical size. A cache LV is the combination of
 a standard LV with a cache pool, used to cache active portions of the LV
 to improve performance.
 .SS Usage notes
-In the usage section below, \fB\-\-size\fP \fISize\fP can be replaced
-with \fB\-\-extents\fP \fINumber\fP.  See both descriptions
+In the usage section below, \fB--size\fP \fISize\fP can be replaced
+with \fB--extents\fP \fINumber\fP.  See both descriptions
 the options section.
 
-In the usage section below, \fB\-\-name\fP is omitted from the required
+In the usage section below, \fB--name\fP is omitted from the required
 options, even though it is typically used.  When the name is not
 specified, a new LV name is generated with the "lvol" prefix and a unique
 numeric suffix.  Also see the description in the options section.

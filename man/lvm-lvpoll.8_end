@@ -8,24 +8,24 @@ To find the name of the pvmove LV that was created by an original
 
 Continue polling a pvmove operation.
 .br
-.B lvm lvpoll \-\-polloperation pvmove vg00/pvmove0
+.B lvm lvpoll --polloperation pvmove vg00/pvmove0
 
 Abort a pvmove operation.
 .br
-.B lvm lvpoll \-\-polloperation pvmove \-\-abort vg00/pvmove0
+.B lvm lvpoll --polloperation pvmove --abort vg00/pvmove0
 
 Continue polling a mirror conversion.
 .br
-.B lvm lvpoll \-\-polloperation convert vg00/lvmirror
+.B lvm lvpoll --polloperation convert vg00/lvmirror
 
 Continue mirror repair.
 .br
-.B lvm lvpoll \-\-polloperation convert vg/damaged_mirror \-\-handlemissingpvs
+.B lvm lvpoll --polloperation convert vg/damaged_mirror --handlemissingpvs
 
 Continue snapshot merge.
 .br
-.B lvm lvpoll \-\-polloperation merge vg/snapshot_old
+.B lvm lvpoll --polloperation merge vg/snapshot_old
 
 Continue thin snapshot merge.
 .br
-.B lvm lvpoll \-\-polloperation merge_thin vg/thin_snapshot
+.B lvm lvpoll --polloperation merge_thin vg/thin_snapshot

@@ -14,7 +14,7 @@ The settings defined in lvm.conf can be overridden by any
 of these extended configuration methods:
 .TP
 .B direct config override on command line
-The \fB\-\-config ConfigurationString\fP command line option takes the
+The \fB--config ConfigurationString\fP command line option takes the
 ConfigurationString as direct string representation of the configuration
 to override the existing configuration. The ConfigurationString is of
 exactly the same format as used in any LVM configuration file.
@@ -34,7 +34,7 @@ The \fBcommand profile\fP is used to override selected configuration
 settings at global LVM command level - it is applied at the very beginning
 of LVM command execution and it is used throughout the whole time of LVM
 command execution. The command profile is applied by using the
-\fB\-\-commandprofile ProfileName\fP command line option that is recognised by
+\fB--commandprofile ProfileName\fP command line option that is recognised by
 all LVM2 commands.
 
 The \fBmetadata profile\fP is used to override selected configuration
@@ -46,11 +46,11 @@ processed, the profile is applied automatically. If Volume Group and
 any of its Logical Volumes have different profiles defined, the profile
 defined for the Logical Volume is preferred. The metadata profile can be
 attached/detached by using the \fBlvchange\fP and \fBvgchange\fP commands
-and their \fB\-\-metadataprofile ProfileName\fP and
-\fB\-\-detachprofile\fP options or the \fB\-\-metadataprofile\fP
+and their \fB--metadataprofile ProfileName\fP and
+\fB--detachprofile\fP options or the \fB--metadataprofile\fP
 option during creation when using \fBvgcreate\fP or \fBlvcreate\fP command.
-The \fBvgs\fP and \fBlvs\fP reporting commands provide \fB\-o vg_profile\fP
-and \fB\-o lv_profile\fP output options to show the metadata profile
+The \fBvgs\fP and \fBlvs\fP reporting commands provide \fB-o vg_profile\fP
+and \fB-o lv_profile\fP output options to show the metadata profile
 currently attached to a Volume Group or a Logical Volume.
 
 The set of options allowed for command profiles is mutually exclusive
@@ -65,8 +65,8 @@ For this purpose, there's the \fBcommand_profile_template.profile\fP
 (for metadata profiles) which contain all settings that are customizable
 by profiles of certain type. Users are encouraged to copy these template
 profiles and edit them as needed. Alternatively, the
-\fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable\-command <section>\fP
-or \fBlvmconfig \-\-file <ProfileName.profile> \-\-type profilable\-metadata <section>\fP
+\fBlvmconfig --file <ProfileName.profile> --type profilable-command <section>\fP
+or \fBlvmconfig --file <ProfileName.profile> --type profilable-metadata <section>\fP
 can be used to generate a configuration with profilable settings in either
 of the type for given section and save it to new ProfileName.profile
 (if the section is not specified, all profilable settings are reported).
@@ -166,30 +166,30 @@ See the man page
 Command to print a list of all possible config settings, with their
 default values:
 .br
-.B lvmconfig \-\-type default
+.B lvmconfig --type default
 
 Command to print a list of all possible config settings, with their
 default values, and a full description of each as a comment:
 .br
-.B lvmconfig \-\-type default \-\-withcomments
+.B lvmconfig --type default --withcomments
 
 Command to print a list of all possible config settings, with their
-current values (configured, non\-default values are shown):
+current values (configured, non-default values are shown):
 .br
-.B lvmconfig \-\-type current
+.B lvmconfig --type current
 
 Command to print all config settings that have been configured with a
-different value than the default (configured, non\-default values are
+different value than the default (configured, non-default values are
 shown):
 .br
-.B lvmconfig \-\-type diff
+.B lvmconfig --type diff
 
 Command to print a single config setting, with its default value,
 and a full description, where "Section" refers to the config section,
 e.g. global, and "Setting" refers to the name of the specific setting,
 e.g. umask:
 .br
-.B lvmconfig \-\-type default \-\-withcomments Section/Setting
+.B lvmconfig --type default --withcomments Section/Setting
 
 
 .SH FILES

@@ -2094,7 +2094,7 @@ void print_usage_notes(struct command_name *cname)
                "        capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
                "        The default input unit is specified by letter, followed by |UNIT.\n"
                "        UNIT represents other possible input units: BbBsSkKmMgGtTpPeE.\n"
-               "        (This should not be confused with the output control \\-\\-units, where\n"
+               "        (This should not be confused with the output control --units, where\n"
                "        capital letters mean multiple of 1000.)\n");
 	printf("\n");
 }
@@ -2140,7 +2140,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 	}
 
 	if (val_enum == ssizemb_VAL) {
-		printf("[\\fB+\\fP|\\fB\\-\\fP]\\fISize\\fP[m|UNIT]");
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
@@ -2150,7 +2150,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 	}
 
 	if (val_enum == nsizemb_VAL) {
-		printf("[\\fB\\-\\fP]\\fISize\\fP[m|UNIT]");
+		printf("[\\fB-\\fP]\\fISize\\fP[m|UNIT]");
 		return;
 	}
 
@@ -2160,7 +2160,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 	}
 
 	if (val_enum == sextents_VAL) {
-		printf("[\\fB+\\fP|\\fB\\-\\fP]\\fINumber\\fP[PERCENT]");
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP[PERCENT]");
 		return;
 	}
 
@@ -2170,7 +2170,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 	}
 
 	if (val_enum == nextents_VAL) {
-		printf("[\\fB\\-\\fP]\\fINumber\\fP[PERCENT]");
+		printf("[\\fB-\\fP]\\fINumber\\fP[PERCENT]");
 		return;
 	}
 
@@ -2180,7 +2180,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 	}
 
 	if (val_enum == ssizekb_VAL) {
-		printf("[\\fB+\\fP|\\fB\\-\\fP]\\fISize\\fP[k|UNIT]");
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fISize\\fP[k|UNIT]");
 		return;
 	}
 
@@ -2190,7 +2190,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 	}
 
 	if (val_enum == snumber_VAL) {
-		printf("[\\fB+\\fP|\\fB\\-\\fP]\\fINumber\\fP");
+		printf("[\\fB+\\fP|\\fB-\\fP]\\fINumber\\fP");
 		return;
 	}
 
@@ -2244,28 +2244,19 @@ static void print_def_man(struct command_name *cname, int opt_enum, struct arg_d
 	for (val_enum = 0; val_enum < VAL_COUNT; val_enum++) {
 		if (def->val_bits & val_enum_to_bit(val_enum)) {
 
-			if (val_enum == conststr_VAL) {
-				printf("\\fB");
-				printf("%s", def->str);
-				printf("\\fP");
-			}
+			if (val_enum == conststr_VAL)
+				printf("\\fB%s\\fP", def->str);
 
-			else if (val_enum == constnum_VAL) {
-				printf("\\fB");
-				printf("%llu", (unsigned long long)def->num);
-				printf("\\fP");
-			}
+			else if (val_enum == constnum_VAL)
+				printf("\\fB%llu\\fP", (unsigned long long)def->num);
 
 			else {
 				if (sep) printf("|");
 
-				if (!usage || !val_names[val_enum].usage) {
-					printf("\\fI");
-					printf("%s", val_names[val_enum].name);
-					printf("\\fP");
-				} else {
+				if (!usage || !val_names[val_enum].usage)
+					printf("\\fI%s\\fP", val_names[val_enum].name);
+				else
 					print_val_man(cname, opt_enum, val_enum);
-				}
 
 				sep = 1;
 			}
@@ -2279,28 +2270,14 @@ static void print_def_man(struct command_name *cname, int opt_enum, struct arg_d
 				printf("\\fP");
 			}
 
-			if ((val_enum == vg_VAL) && (def->flags & ARG_DEF_FLAG_NEW_VG)) {
-				printf("\\fI");
-				printf("_new");
-				printf("\\fP");
-			}
-			if ((val_enum == lv_VAL) && (def->flags & ARG_DEF_FLAG_NEW_LV)) {
-				printf("\\fI");
-				printf("_new");
-				printf("\\fP");
-			}
+			if (((val_enum == vg_VAL) && (def->flags & ARG_DEF_FLAG_NEW_VG)) ||
+			    ((val_enum == lv_VAL) && (def->flags & ARG_DEF_FLAG_NEW_LV)))
+				printf("\\fI_new\\fP");
 		}
 	}
 
 	if (def->flags & ARG_DEF_FLAG_MAY_REPEAT)
 		printf(" ...");
-}
-
-static const char *_emit_long_opt_name(char *buf, const char *long_opt_name, size_t len)
-{
-	strcpy(buf, "\\-\\-");
-	strncat(buf, long_opt_name + 2, len - strlen(buf) - 1);
-	return buf;
 }
 
 #define	LONG_OPT_NAME_LEN	64
@@ -2344,7 +2321,7 @@ static const char *man_long_opt_name(const char *cmdname, int opt_enum)
 		break;
 	}
 
-	return _emit_long_opt_name(long_opt_name, long_opt, sizeof(long_opt_name));
+	return long_opt;
 }
 
 static void _print_man_usage(char *lvmname, struct command *cmd)
@@ -2354,9 +2331,6 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 	int sep, ro, rp, oo, op, opt_enum;
 	int need_ro_indent_end = 0;
 	int include_extents = 0;
-	char long_opt_name[LONG_OPT_NAME_LEN];
-
-	memset (long_opt_name, 0, sizeof(long_opt_name));
 
 	if (!(cname = find_command_name(cmd->name)))
 		return;
@@ -2400,7 +2374,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			}
 
 			if (opt_names[opt_enum].short_opt) {
-				printf(" \\fB\\-%c\\fP|\\fB%s\\fP",
+				printf(" \\fB-%c\\fP|\\fB%s\\fP",
 				       opt_names[opt_enum].short_opt,
 				       man_long_opt_name(cmd->name, opt_enum));
 			} else {
@@ -2490,14 +2464,11 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				include_extents = 1;
 
 			if (opt_names[opt_enum].short_opt) {
-				printf(" \\fB\\-%c\\fP|\\fB%s\\fP",
+				printf(" \\fB-%c\\fP|\\fB%s\\fP",
 				       opt_names[opt_enum].short_opt,
 				       man_long_opt_name(cmd->name, opt_enum));
-			} else {
-				_emit_long_opt_name(long_opt_name, opt_names[cmd->required_opt_args[ro].opt].long_opt,
-						    sizeof(long_opt_name));
-				printf(" \\fB%s\\fP", long_opt_name);
-			}
+			} else
+				printf(" \\fB%s\\fP", opt_names[cmd->required_opt_args[ro].opt].long_opt);
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
@@ -2543,7 +2514,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			 * in opt_names[] according to the command name.
 			 */
 			printf(".ad l\n");
-			printf("[ \\fB\\-l\\fP|\\fB\\-\\-extents\\fP ");
+			printf("[ \\fB-l\\fP|\\fB--extents\\fP ");
 			print_val_man(cname, extents_ARG, opt_names[extents_ARG].val_enum);
 			printf(" ]\n");
 			printf(".ad b\n");
@@ -2568,7 +2539,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				printf(".br\n");
 			printf(".ad l\n");
 
-			printf("[ \\fB\\-%c\\fP|\\fB%s\\fP",
+			printf("[ \\fB-%c\\fP|\\fB%s\\fP",
 				opt_names[opt_enum].short_opt,
 				man_long_opt_name(cmd->name, opt_enum));
 
@@ -2693,7 +2664,7 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 			if (cmd->optional_opt_args[oo].opt != opt_enum)
 				continue;
 
-			printf("[ \\fB\\-%c\\fP|\\fB%s\\fP",
+			printf("[ \\fB-%c\\fP|\\fB%s\\fP",
 				opt_names[opt_enum].short_opt,
 				man_long_opt_name(cmd->name, opt_enum));
 
@@ -2790,7 +2761,7 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 			if (cmd->optional_opt_args[oo].opt != opt_enum)
 				continue;
 
-			printf("[ \\fB\\-%c\\fP|\\fB%s\\fP",
+			printf("[ \\fB-%c\\fP|\\fB%s\\fP",
 				opt_names[opt_enum].short_opt,
 				man_long_opt_name(cmd->name, opt_enum));
 
@@ -2953,7 +2924,7 @@ static void _print_man_all_options_list(struct command_name *cname)
 		printf(".ad l\n");
 
 		if (opt_names[opt_enum].short_opt) {
-			printf(" \\fB\\-%c\\fP|\\fB%s\\fP",
+			printf(" \\fB-%c\\fP|\\fB%s\\fP",
 				opt_names[opt_enum].short_opt,
 				man_long_opt_name(cname->name, opt_enum));
 		} else {
@@ -3001,7 +2972,7 @@ static void _print_man_all_options_desc(struct command_name *cname)
 		printf(".ad l\n");
 
 		if (opt_names[opt_enum].short_opt) {
-			printf("\\fB\\-%c\\fP|\\fB%s\\fP",
+			printf("\\fB-%c\\fP|\\fB%s\\fP",
 			       opt_names[opt_enum].short_opt,
 			       man_long_opt_name(cname->name, opt_enum));
 		} else {
@@ -3104,7 +3075,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 		if (!strcmp(cname->name, "lvcreate"))
 			printf("For lvcreate, the required VG positional arg may be\n"
 			       "omitted when the VG name is included in another option,\n"
-			       "e.g. \\-\\-name VG/LV.\n");
+			       "e.g. --name VG/LV.\n");
 	}
 
 	if (has_lv_val) {
@@ -3132,7 +3103,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 		       "generally accepts a suffix indicating a range (or multiple ranges)\n"
 		       "of physical extents (PEs). When the first PE is omitted, it defaults\n"
 		       "to the start of the device, and when the last PE is omitted it defaults to end.\n"
-		       "Start and end range (inclusive): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB\\-\\fP\\fIPE\\fP]...\n"
+		       "Start and end range (inclusive): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB-\\fP\\fIPE\\fP]...\n"
 		       "Start and length range (counting from 0): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB+\\fP\\fIPE\\fP]...\n");
 	}
 
@@ -3153,7 +3124,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 		printf("\n");
 		printf(".br\n");
 		printf("Select indicates that a required positional parameter can\n"
-		       "be omitted if the \\fB\\-\\-select\\fP option is used.\n"
+		       "be omitted if the \\fB--select\\fP option is used.\n"
 		       "No arg appears in this position.\n");
 	}
 
@@ -3183,7 +3154,7 @@ static void _print_man_all_positions_desc(struct command_name *cname)
 	       "b|B is bytes, s|S is sectors of 512 bytes, k|K is kilobytes,\n"
 	       "m|M is megabytes, g|G is gigabytes, t|T is terabytes,\n"
 	       "p|P is petabytes, e|E is exabytes.\n"
-	       "(This should not be confused with the output control \\-\\-units, where\n"
+	       "(This should not be confused with the output control --units, where\n"
 	       "capital letters mean multiple of 1000.)\n");
 
 	printf(".SH ENVIRONMENT VARIABLES\n");
@@ -3311,7 +3282,7 @@ static void _print_man(char *name, char *des_file, int secondary)
 		if (!prev_cmd || strcmp(prev_cmd->name, cmd->name)) {
 			printf(".SH NAME\n");
 			if (cname->desc)
-				printf("%s \\- %s\n", lvmname, cname->desc);
+				printf("%s - %s\n", lvmname, cname->desc);
 			else
 				printf("%s\n", lvmname);
 

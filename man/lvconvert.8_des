@@ -4,7 +4,7 @@ The LV type is also called the segment type or segtype.
 
 To display the current LV type, run the command:
 
-.B lvs \-o name,segtype
+.B lvs -o name,segtype
 .I LV
 
 The

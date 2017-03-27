@@ -35,32 +35,32 @@ filesystem.
 .SH OPTIONS
 .
 .HP
-.BR \-e | \-\-ext\-offline
+.BR -e | --ext-offline
 .br
 Unmount ext2/ext3/ext4 filesystem before doing resize.
 .
 .HP
-.BR \-f | \-\-force
+.BR -f | --force
 .br
 Bypass some sanity checks.
 .
 .HP
-.BR \-h | \-\-help
+.BR -h | --help
 .br
 Display the help text.
 .
 .HP
-.BR \-n | \-\-dry\-run
+.BR -n | --dry-run
 .br
 Print commands without running them.
 .
 .HP
-.BR \-v | \-\-verbose
+.BR -v | --verbose
 .br
 Be more verbose.
 .
 .HP
-.BR \-y | \-\-yes
+.BR -y | --yes
 .br
 Answer "yes" at any prompts.
 .
@@ -87,7 +87,7 @@ If \fI/dev/vg/test\fP contains ext2/ext3/ext4
 filesystem it will be unmounted prior the resize.
 All [y/n] questions will be answered 'y'.
 .sp
-.B fsadm \-e \-y resize /dev/vg/test 1000M
+.B fsadm -e -y resize /dev/vg/test 1000M
 .
 .SH ENVIRONMENT VARIABLES
 .

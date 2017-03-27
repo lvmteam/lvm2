@@ -33,50 +33,50 @@ dlm: uses network communication and a cluster manager.
 
 lvmlockd [options]
 
-For default settings, see lvmlockd \-h.
+For default settings, see lvmlockd -h.
 
-.B  \-\-help | \-h
+.B  --help | -h
         Show this help information.
 
-.B  \-\-version | \-V
+.B  --version | -V
         Show version of lvmlockd.
 
-.B  \-\-test | \-T
+.B  --test | -T
         Test mode, do not call lock manager.
 
-.B  \-\-foreground | \-f
+.B  --foreground | -f
         Don't fork.
 
-.B  \-\-daemon\-debug | \-D
+.B  --daemon-debug | -D
         Don't fork and print debugging to stdout.
 
-.B  \-\-pid\-file | \-p
+.B  --pid-file | -p
 .I path
         Set path to the pid file.
 
-.B  \-\-socket\-path | \-s
+.B  --socket-path | -s
 .I path
         Set path to the socket to listen on.
 
-.B  \-\-syslog\-priority | \-S err|warning|debug
+.B  --syslog-priority | -S err|warning|debug
         Write log messages from this level up to syslog.
 
-.B  \-\-gl\-type | \-g sanlock|dlm
+.B  --gl-type | -g sanlock|dlm
         Set global lock type to be sanlock or dlm.
 
-.B  \-\-host\-id | \-i
+.B  --host-id | -i
 .I num
         Set the local sanlock host id.
 
-.B  \-\-host\-id\-file | \-F
+.B  --host-id-file | -F
 .I path
         A file containing the local sanlock host_id.
 
-.B  \-\-sanlock\-timeout | \-o
+.B  --sanlock-timeout | -o
 .I seconds
         Override the default sanlock I/O timeout.
 
-.B  \-\-adopt | \-A 0|1
+.B  --adopt | -A 0|1
         Adopt locks from a previous instance of lvmlockd.
 
 
@@ -84,7 +84,7 @@ For default settings, see lvmlockd \-h.
 
 .SS Initial set up
 
-Using LVM with lvmlockd for the first time includes some one\-time set up
+Using LVM with lvmlockd for the first time includes some one-time set up
 steps:
 
 .SS 1. choose a lock manager
@@ -111,7 +111,7 @@ use_lvmlockd = 1
 
 .I sanlock
 .br
-Assign each host a unique host_id in the range 1\-2000 by setting
+Assign each host a unique host_id in the range 1-2000 by setting
 .br
 /etc/lvm/lvmlocal.conf local/host_id
 
@@ -133,7 +133,7 @@ systemctl start corosync dlm
 
 .SS 5. create VG on shared devices
 
-vgcreate \-\-shared <vgname> <devices>
+vgcreate --shared <vgname> <devices>
 
 The shared option sets the VG lock type to sanlock or dlm depending on
 which lock manager is running.  LVM commands will perform locking for the
@@ -141,7 +141,7 @@ VG using lvmlockd.  lvmlockd will use the chosen lock manager.
 
 .SS 6. start VG on all hosts
 
-vgchange \-\-lock\-start
+vgchange --lock-start
 
 lvmlockd requires shared VGs to be started before they are used.  This is
 a lock manager operation to start (join) the VG lockspace, and it may take
@@ -156,7 +156,7 @@ LVs in a shared VG.
 
 An LV activated exclusively on one host cannot be activated on another.
 When multiple hosts need to use the same LV concurrently, the LV can be
-activated with a shared lock (see lvchange options \-aey vs \-asy.)
+activated with a shared lock (see lvchange options -aey vs -asy.)
 (Shared locks are disallowed for certain LV types that cannot be used from
 multiple hosts.)
 
@@ -177,7 +177,7 @@ start lvmlockd
 start lock manager
 .br
 \[bu]
-vgchange \-\-lock\-start
+vgchange --lock-start
 .br
 \[bu]
 activate LVs in shared VGs
@@ -189,7 +189,7 @@ The shut down sequence is the reverse:
 deactivate LVs in shared VGs
 .br
 \[bu]
-vgchange \-\-lock\-stop
+vgchange --lock-stop
 .br
 \[bu]
 stop lock manager
@@ -227,7 +227,7 @@ activate the VG will fail without the necessary locks.
 
 A "local VG" is meant to be used by a single host.  It has no lock type or
 lock type "none".  LVM commands and lvmlockd do not perform locking for
-these VGs.  A local VG typically exists on local (non\-shared) devices and
+these VGs.  A local VG typically exists on local (non-shared) devices and
 cannot be used concurrently from different hosts.
 
 If a local VG does exist on shared devices, it should be owned by a single
@@ -252,8 +252,8 @@ using lvmlockd.  From a host not using lvmlockd, visible lockd VGs are
 ignored in the same way as foreign VGs (see
 .BR lvmsystemid (7).)
 
-The \-\-shared option for reporting and display commands causes lockd VGs
-to be displayed on a host not using lvmlockd, like the \-\-foreign option
+The --shared option for reporting and display commands causes lockd VGs
+to be displayed on a host not using lvmlockd, like the --foreign option
 does for foreign VGs.
 
 
@@ -275,7 +275,7 @@ Creates a clvm VG when clvm is configured.
 
 .P
 
-.B vgcreate \-\-shared <vgname> <devices>
+.B vgcreate --shared <vgname> <devices>
 .IP \[bu] 2
 Requires lvmlockd to be configured and running.
 .IP \[bu] 2
@@ -288,7 +288,7 @@ lvmlockd obtains locks from the selected lock manager.
 
 .P
 
-.B vgcreate \-c|\-\-clustered y <vgname> <devices>
+.B vgcreate -c|--clustered y <vgname> <devices>
 .IP \[bu] 2
 Requires clvm to be configured and running.
 .IP \[bu] 2
@@ -343,29 +343,29 @@ global lock will be available, and LVM will be fully operational.
 
 When a new lockd VG is created, its lockspace is automatically started on
 the host that creates it.  Other hosts need to run 'vgchange
-\-\-lock\-start' to start the new VG before they can use it.
+--lock-start' to start the new VG before they can use it.
 
 From the 'vgs' command, lockd VGs are indicated by "s" (for shared) in the
 sixth attr field.  The specific lock type and lock args for a lockd VG can
-be displayed with 'vgs \-o+locktype,lockargs'.
+be displayed with 'vgs -o+locktype,lockargs'.
 
 lockd VGs need to be "started" and "stopped", unlike other types of VGs.
 See the following section for a full description of starting and stopping.
 
 vgremove of a lockd VG will fail if other hosts have the VG started.
-Run vgchange \-\-lock\-stop <vgname> on all other hosts before vgremove.
+Run vgchange --lock-stop <vgname> on all other hosts before vgremove.
 (It may take several seconds before vgremove recognizes that all hosts
 have stopped a sanlock VG.)
 
 .SS starting and stopping VGs
 
-Starting a lockd VG (vgchange \-\-lock\-start) causes the lock manager to
+Starting a lockd VG (vgchange --lock-start) causes the lock manager to
 start (join) the lockspace for the VG on the host where it is run.  This
 makes locks for the VG available to LVM commands on the host.  Before a VG
 is started, only LVM commands that read/display the VG are allowed to
 continue without locks (and with a warning).
 
-Stopping a lockd VG (vgchange \-\-lock\-stop) causes the lock manager to
+Stopping a lockd VG (vgchange --lock-stop) causes the lock manager to
 stop (leave) the lockspace for the VG on the host where it is run.  This
 makes locks for the VG inaccessible to the host.  A VG cannot be stopped
 while it has active LVs.
@@ -390,24 +390,24 @@ A lockd VG can be stopped if all LVs are deactivated.
 
 All lockd VGs can be started/stopped using:
 .br
-vgchange \-\-lock\-start
+vgchange --lock-start
 .br
-vgchange \-\-lock\-stop
+vgchange --lock-stop
 
 
 Individual VGs can be started/stopped using:
 .br
-vgchange \-\-lock\-start <vgname> ...
+vgchange --lock-start <vgname> ...
 .br
-vgchange \-\-lock\-stop <vgname> ...
+vgchange --lock-stop <vgname> ...
 
 To make vgchange not wait for start to complete:
 .br
-vgchange \-\-lock\-start \-\-lock\-opt nowait ...
+vgchange --lock-start --lock-opt nowait ...
 
 lvmlockd can be asked directly to stop all lockspaces:
 .br
-lvmlockctl \-\-stop\-lockspaces
+lvmlockctl --stop-lockspaces
 
 To start only selected lockd VGs, use the lvm.conf
 activation/lock_start_list.  When defined, only VG names in this list are
@@ -429,7 +429,7 @@ Scripts or programs on a host that automatically start VGs will use the
 "auto" option to indicate that the command is being run automatically by
 the system:
 
-vgchange \-\-lock\-start \-\-lock\-opt auto [<vgname> ...]
+vgchange --lock-start --lock-opt auto [<vgname> ...]
 
 Without any additional configuration, including the "auto" option has no
 effect; all VGs are started unless restricted by lock_start_list.
@@ -545,7 +545,7 @@ If the situation arises where more than one sanlock VG contains a global
 lock, the global lock should be manually disabled in all but one of them
 with the command:
 
-lvmlockctl \-\-gl\-disable <vgname>
+lvmlockctl --gl-disable <vgname>
 
 (The one VG with the global lock enabled must be visible to all hosts.)
 
@@ -555,7 +555,7 @@ and subsequent LVM commands will fail to acquire it.  In this case, the
 global lock needs to be manually enabled in one of the remaining sanlock
 VGs with the command:
 
-lvmlockctl \-\-gl\-enable <vgname>
+lvmlockctl --gl-enable <vgname>
 
 A small sanlock VG dedicated to holding the global lock can avoid the case
 where the GL lock must be manually enabled after a vgremove.
@@ -593,7 +593,7 @@ cannot be acquired, the LV is not activated and an error is reported.
 This would happen if the LV is active exclusively on another host.  If the
 LV type prohibits shared access, such as a snapshot, the command will
 report an error and fail.
-The shared mode is intended for a multi\-host/cluster application or
+The shared mode is intended for a multi-host/cluster application or
 file system.
 LV types that cannot be used concurrently
 from multiple hosts include thin, cache, raid, mirror, and snapshot.
@@ -638,18 +638,18 @@ acquired by other hosts.  The VG must be forcibly deactivated on the host
 with the expiring lease before other hosts can acquire its locks.
 
 When the sanlock daemon detects that the lease storage is lost, it runs
-the command lvmlockctl \-\-kill <vgname>.  This command emits a syslog
+the command lvmlockctl --kill <vgname>.  This command emits a syslog
 message stating that lease storage is lost for the VG and LVs must be
 immediately deactivated.
 
 If no LVs are active in the VG, then the lockspace with an expiring lease
 will be removed, and errors will be reported when trying to use the VG.
-Use the lvmlockctl \-\-drop command to clear the stale lockspace from
+Use the lvmlockctl --drop command to clear the stale lockspace from
 lvmlockd.
 
 If the VG has active LVs when the lock storage is lost, the LVs must be
 quickly deactivated before the lockspace lease expires.  After all LVs are
-deactivated, run lvmlockctl \-\-drop <vgname> to clear the expiring
+deactivated, run lvmlockctl --drop <vgname> to clear the expiring
 lockspace from lvmlockd.  If all LVs in the VG are not deactivated within
 about 40 seconds, sanlock will reset the host using the local watchdog.
 The machine reset is effectively a severe form of "deactivating" LVs
@@ -687,12 +687,12 @@ original cluster:
 .IP \[bu] 2
 Stop the VG on all hosts:
 .br
-vgchange \-\-lock\-stop <vgname>
+vgchange --lock-stop <vgname>
 
 .IP \[bu] 2
 Change the VG lock type to none:
 .br
-vgchange \-\-lock\-type none <vgname>
+vgchange --lock-type none <vgname>
 
 .IP \[bu] 2
 Change the dlm cluster name on the host or move the VG to the new cluster.
@@ -704,12 +704,12 @@ cat /sys/kernel/config/dlm/cluster/cluster_name
 .IP \[bu] 2
 Change the VG lock type back to dlm which sets the new cluster name:
 .br
-vgchange \-\-lock\-type dlm <vgname>
+vgchange --lock-type dlm <vgname>
 
 .IP \[bu] 2
 Start the VG on hosts to use it:
 .br
-vgchange \-\-lock\-start <vgname>
+vgchange --lock-start <vgname>
 
 .P
 
@@ -728,17 +728,17 @@ cat /sys/kernel/config/dlm/cluster/cluster_name
 .IP \[bu] 2
 Change the VG lock type to none:
 .br
-vgchange \-\-lock\-type none \-\-force <vgname>
+vgchange --lock-type none --force <vgname>
 
 .IP \[bu] 2
 Change the VG lock type back to dlm which sets the new cluster name:
 .br
-vgchange \-\-lock\-type dlm <vgname>
+vgchange --lock-type dlm <vgname>
 
 .IP \[bu] 2
 Start the VG on hosts to use it:
 .br
-vgchange \-\-lock\-start <vgname>
+vgchange --lock-start <vgname>
 
 
 .SS changing a local VG to a lockd VG
@@ -749,18 +749,18 @@ lvmlockd must be configured and running as described in USAGE.
 
 Change a local VG to a lockd VG with the command:
 .br
-vgchange \-\-lock\-type sanlock|dlm <vgname>
+vgchange --lock-type sanlock|dlm <vgname>
 
 Start the VG on hosts to use it:
 .br
-vgchange \-\-lock\-start <vgname>
+vgchange --lock-start <vgname>
 
 
 .SS changing a lockd VG to a local VG
 
 Stop the lockd VG on all hosts, then run:
 .br
-vgchange \-\-lock\-type none <vgname>
+vgchange --lock-type none <vgname>
 
 To change a VG from one lockd type to another (i.e. between sanlock and
 dlm), first change it to a local VG, then to the new type.
@@ -773,15 +773,15 @@ All LVs must be inactive to change the lock type.
 First change the clvm VG to a local VG.  Within a running clvm cluster,
 change a clvm VG to a local VG with the command:
 
-vgchange \-cn <vgname>
+vgchange -cn <vgname>
 
 If the clvm cluster is no longer running on any nodes, then extra options
 can be used to forcibly make the VG local.  Caution: this is only safe if
 all nodes have stopped using the VG:
 
-vgchange \-\-config 'global/locking_type=0 global/use_lvmlockd=0'
+vgchange --config 'global/locking_type=0 global/use_lvmlockd=0'
 .RS
-\-cn <vgname>
+-cn <vgname>
 .RE
 
 After the VG is local, follow the steps described in "changing a local VG
@@ -830,7 +830,7 @@ lvm.conf must be configured to use either lvmlockd (use_lvmlockd=1) or
 clvmd (locking_type=3), but not both.
 
 .IP \[bu] 2
-vgcreate \-\-shared creates a lockd VG, and vgcreate \-\-clustered y
+vgcreate --shared creates a lockd VG, and vgcreate --clustered y
 creates a clvm VG.
 
 .IP \[bu] 2
@@ -839,7 +839,7 @@ need for network clustering.
 
 .IP \[bu] 2
 lvmlockd defaults to the exclusive activation mode whenever the activation
-mode is unspecified, i.e. \-ay means \-aey, not \-asy.
+mode is unspecified, i.e. -ay means -aey, not -asy.
 
 .IP \[bu] 2
 lvmlockd commands always apply to the local host, and never have an effect
@@ -856,13 +856,13 @@ lvmlockd saves the cluster name for a lockd VG using dlm.  Only hosts in
 the matching cluster can use the VG.
 
 .IP \[bu] 2
-lvmlockd requires starting/stopping lockd VGs with vgchange \-\-lock\-start
-and \-\-lock\-stop.
+lvmlockd requires starting/stopping lockd VGs with vgchange --lock-start
+and --lock-stop.
 
 .IP \[bu] 2
 vgremove of a sanlock VG may fail indicating that all hosts have not
 stopped the VG lockspace.  Stop the VG on all hosts using vgchange
-\-\-lock\-stop.
+--lock-stop.
 
 .IP \[bu] 2
 vgreduce or pvmove of a PV in a sanlock VG will fail if it holds the

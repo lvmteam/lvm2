@@ -173,17 +173,25 @@ define SUBSTVARS
 echo "Generating $@" ; $(SED) -e "s+#VERSION#+$(LVM_VERSION)+;s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+;s+#DEFAULT_ARCHIVE_DIR#+$(DEFAULT_ARCHIVE_DIR)+;s+#DEFAULT_BACKUP_DIR#+$(DEFAULT_BACKUP_DIR)+;s+#DEFAULT_PROFILE_DIR#+$(DEFAULT_PROFILE_DIR)+;s+#DEFAULT_CACHE_DIR#+$(DEFAULT_CACHE_DIR)+;s+#DEFAULT_LOCK_DIR#+$(DEFAULT_LOCK_DIR)+;s+#CLVMD_PATH#+/data/lvmtest/usr/sbin/clvmd+;s+#LVM_PATH#+/data/lvmtest/sbin/lvm+;s+#DEFAULT_RUN_DIR#+/var/run/lvm+;s+#DEFAULT_PID_DIR#+/var/run+;s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+;s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+;" $< > $@
 endef
 
+define ESCAPEHYPHENS
+	sed -i "s+\([^\\]\)--+\1\\\-\\\-+g;s+\([^\\]\)-+\1\\\-+g" $@
+endef
+
 %.5: $(srcdir)/%.5_main
 	$(SUBSTVARS)
+	$(ESCAPEHYPHENS)
 
 %.7: $(srcdir)/%.7_main
 	$(SUBSTVARS)
+	$(ESCAPEHYPHENS)
 
 %.8: $(srcdir)/%.8_main
 	$(SUBSTVARS)
+	$(ESCAPEHYPHENS)
 
 %.8: %.8_gen
 	$(SUBSTVARS)
+	$(ESCAPEHYPHENS)
 
 install_man5: $(MAN5)
 	$(INSTALL) -d $(MAN5DIR)

@@ -3,11 +3,11 @@
 cmirrord \(em cluster mirror log daemon
 
 .SH SYNOPSIS
-\fBcmirrord\fR [\fB\-f\fR] [\fB\-h\fR]
+\fBcmirrord\fR [\fB-f\fR] [\fB-h\fR]
 
 .SH DESCRIPTION
 \fBcmirrord\fP is the daemon that tracks mirror log information in a cluster.
-It is specific to device\-mapper based mirrors (and by extension, LVM
+It is specific to device-mapper based mirrors (and by extension, LVM
 cluster mirrors).  Cluster mirrors are not possible without this daemon
 running.
 
@@ -26,9 +26,9 @@ ignored. Active cluster mirrors should be shutdown before stopping the cluster
 mirror log daemon.
 
 .SH OPTIONS
-.IP "\fB\-f\fR, \fB\-\-foreground\fR" 4
+.IP "\fB-f\fR, \fB--foreground\fR" 4
 Do not fork and log to the terminal.
-.IP "\fB\-h\fR, \fB\-\-help\fR" 4
+.IP "\fB-h\fR, \fB--help\fR" 4
 Print usage.
 
 .SH SEE ALSO

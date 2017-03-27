@@ -11,7 +11,7 @@ lvm \(em LVM2 tools
 .
 .SH DESCRIPTION
 .
-lvm provides the command\-line tools for LVM2.  A separate
+lvm provides the command-line tools for LVM2.  A separate
 manual page describes each command in detail.
 .P
 If \fBlvm\fP is invoked with no arguments it presents a readline prompt
@@ -36,9 +36,9 @@ as "vg0/lvol0".  Where a list of VGs is required but is left empty,
 a list of all VGs will be substituted.  Where a list of LVs is required
 but a VG is given, a list of all the LVs in that VG will be substituted.
 So \fBlvdisplay vg0\fP will display all the LVs in "vg0".
-Tags can also be used - see \fB\-\-addtag\fP below.
+Tags can also be used - see \fB--addtag\fP below.
 .P
-One advantage of using the built\-in shell is that configuration
+One advantage of using the built-in shell is that configuration
 information gets cached internally between commands.
 .P
 A file containing a simple script with one command per line
@@ -47,9 +47,9 @@ executed directly if the first line is #! followed by the absolute
 path of \fBlvm\fP.
 .P
 Additional hyphens within option names are ignored.  For example,
-\fB\-\-readonly\fP and \fB\-\-read\-only\fP are both accepted.
+\fB--readonly\fP and \fB--read-only\fP are both accepted.
 .
-.SH BUILT\-IN COMMANDS
+.SH BUILT-IN COMMANDS
 .
 The following commands are built into lvm without links
 normally being created in the filesystem for them.
@@ -60,7 +60,7 @@ normally being created in the filesystem for them.
 The same as \fBlvmconfig\fP(8) below.
 .TP
 .B devtypes
-Display the recognised built\-in block device types.
+Display the recognised built-in block device types.
 .TP
 .B dumpconfig
 The same as \fBlvmconfig\fP(8) below.
@@ -234,7 +234,7 @@ Scan (all disks) for Logical Volumes.
 The following LVM1 commands are not implemented in LVM2:
 .BR lvmchange ", " lvmsadc ", " lvmsar ", " pvdata .
 For performance metrics, use \fBdmstats\fP(8) or to manipulate the kernel
-device\-mapper driver used by LVM2 directly, use \fBdmsetup\fP(8).
+device-mapper driver used by LVM2 directly, use \fBdmsetup\fP(8).
 .
 .SH VALID NAMES
 .
@@ -253,7 +253,7 @@ least one LV that is still present.  This helps to record the ancestry of
 thin snapshots even after some links in the chain have been removed.
 A reference to the historical LV 'lvol1' in VG 'vg00' would be 'vg00/-lvol1'
 or just '-lvol1' if the VG is already set.  (The latter form must be preceded
-by '\-\-' to terminate command line option processing before reaching this
+by '--' to terminate command line option processing before reaching this
 argument.)
 .P
 There are also various reserved names that are used internally by lvm that can
@@ -288,8 +288,8 @@ When VGs with the same name exist, commands operating on all VGs will
 include all of the VGs with the same name.  If the ambiguous VG name is
 specified on the command line, the command will produce an error.  The
 error states that multiple VGs exist with the specified name.  To process
-one of the VGs specifically, the \-\-select option should be used with the
-UUID of the intended VG: '\-\-select vg_uuid=<uuid>'.
+one of the VGs specifically, the --select option should be used with the
+UUID of the intended VG: '--select vg_uuid=<uuid>'.
 
 An exception is if all but one of the VGs with the shared name is foreign
 (see
@@ -313,9 +313,9 @@ those ranges on the specified Physical Volumes are considered.
 
 Then they try each allocation policy in turn, starting with the strictest
 policy (\fBcontiguous\fP) and ending with the allocation policy specified
-using \fB\-\-alloc\fP or set as the default for the particular Logical
+using \fB--alloc\fP or set as the default for the particular Logical
 Volume or Volume Group concerned.  For each policy, working from the
-lowest\-numbered Logical Extent of the empty Logical Volume space that
+lowest-numbered Logical Extent of the empty Logical Volume space that
 needs to be filled, they allocate as much space as possible according to
 the restrictions imposed by the policy.  If more space is needed,
 they move on to the next policy.
@@ -371,7 +371,7 @@ restrictions described above applied to each step leave the tools no
 discretion over the layout.
 
 To view the way the allocation process currently works in any specific
-case, read the debug logging output, for example by adding \fB\-vvvv\fP to
+case, read the debug logging output, for example by adding \fB-vvvv\fP to
 a command.
 .
 .SH LOGICAL VOLUME TYPES
@@ -384,8 +384,8 @@ and thin provisioning (\fBlvmthin\fP(7)) types are examples of this.
 .
 .SH DIAGNOSTICS
 .
-All tools return a status code of zero on success or non\-zero on failure.
-The non\-zero codes distinguish only between the broad categories of
+All tools return a status code of zero on success or non-zero on failure.
+The non-zero codes distinguish only between the broad categories of
 unrecognised commands, problems processing the command line arguments
 and any other failures.  As LVM remains under active development, the
 code used in a specific case occasionally changes between releases.
@@ -409,7 +409,7 @@ File descriptor to use for report output from LVM commands.
 .TP
 .B LVM_COMMAND_PROFILE
 Name of default command profile to use for LVM commands. This profile
-is overriden by direct use of \fB\-\-commandprofile\fP command line option.
+is overriden by direct use of \fB--commandprofile\fP command line option.
 .TP
 .B LVM_RUN_BY_DMEVENTD
 This variable is normally set by dmeventd plugin to inform lvm2 command
@@ -464,7 +464,7 @@ Used to suppress warning messages when the configured locking is known
 to be unavailable.
 .TP
 .B DM_ABORT_ON_INTERNAL_ERRORS
-Abort processing if the code detects a non\-fatal internal error.
+Abort processing if the code detects a non-fatal internal error.
 .TP
 .B DM_DISABLE_UDEV
 Avoid interaction with udev.  LVM will manage the relevant nodes in /dev
@@ -525,7 +525,7 @@ directly.
 .BR lvs (8)
 .BR lvscan (8)
 
-.BR lvm2-activation\-generator (8)
+.BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)
 

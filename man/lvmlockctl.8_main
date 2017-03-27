@@ -11,41 +11,41 @@ This command interacts with
 
 lvmlockctl [options]
 
-.B  \-\-help | \-h
+.B  --help | -h
         Show this help information.
 
-.B  \-\-quit | \-q
+.B  --quit | -q
         Tell lvmlockd to quit.
 
-.B  \-\-info | \-i
+.B  --info | -i
         Print lock state information from lvmlockd.
 
-.B  \-\-dump | \-d
+.B  --dump | -d
         Print log buffer from lvmlockd.
 
-.B  \-\-wait | \-w 0|1
+.B  --wait | -w 0|1
         Wait option for other commands.
 
-.B  \-\-force | \-f 0|1
+.B  --force | -f 0|1
         Force option for other commands.
 
-.B  \-\-kill | \-k
+.B  --kill | -k
 .I vgname
         Kill access to the VG when sanlock cannot renew lease.
 
-.B  \-\-drop | \-r
+.B  --drop | -r
 .I vgname
         Clear locks for the VG when it is unused after kill (-k).
 
-.B  \-\-gl\-enable | \-E
+.B  --gl-enable | -E
 .I vgname
         Tell lvmlockd to enable the global lock in a sanlock VG.
 
-.B  \-\-gl\-disable | \-D
+.B  --gl-disable | -D
 .I vgname
         Tell lvmlockd to disable the global lock in a sanlock VG.
 
-.B  \-\-stop\-lockspaces | \-S
+.B  --stop-lockspaces | -S
         Stop all lockspaces.
 
 
@@ -55,7 +55,7 @@ lvmlockctl [options]
 
 This collects and displays lock state from lvmlockd.  The display is
 primitive, incomplete and will change in future version.  To print the raw
-lock state from lvmlockd, combine this option with \-\-dump|-d.
+lock state from lvmlockd, combine this option with --dump|-d.
 
 .SS dump
 
@@ -73,28 +73,28 @@ forcibly deactivate the VG.  For more, see
 .SS drop
 
 This should only be run after a VG has been successfully deactivated
-following an lvmlockctl \-\-kill command.  It clears the stale lockspace
+following an lvmlockctl --kill command.  It clears the stale lockspace
 from lvmlockd.  In the future, this may become automatic along with an
-automatic handling of \-\-kill.  For more, see
+automatic handling of --kill.  For more, see
 .BR lvmlockd (8).
 
-.SS gl\-enable
+.SS gl-enable
 
 This enables the global lock in a sanlock VG.  This is necessary if the VG
 that previously held the global lock is removed.  For more, see
 .BR lvmlockd (8).
 
-.SS gl\-disable
+.SS gl-disable
 
 This disables the global lock in a sanlock VG.  This is necessary if the
 global lock has mistakenly been enabled in more than one VG.  The global
 lock should be disabled in all but one sanlock VG.  For more, see
 .BR lvmlockd (8).
 
-.SS stop\-lockspaces
+.SS stop-lockspaces
 
 This tells lvmlockd to stop all lockspaces.  It can be useful to stop
-lockspaces for VGs that the vgchange \-\-lock\-stop comand can no longer
+lockspaces for VGs that the vgchange --lock-stop comand can no longer
 see, or to stop the dlm global lockspace which is not directly stopped by
 the vgchange command.  The wait and force options can be used with this
 command.

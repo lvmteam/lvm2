@@ -2,24 +2,24 @@
 .
 .SH NAME
 .
-dmeventd \(em Device\-mapper event daemon
+dmeventd \(em Device-mapper event daemon
 .
 .SH SYNOPSIS
 .
 .B dmeventd
-.RB [ \-d
-.RB [ \-d
-.RB [ \-d ]]]
-.RB [ \-f ]
-.RB [ \-h ]
-.RB [ \-l ]
-.RB [ \-R ]
-.RB [ \-V ]
-.RB [ \-? ]
+.RB [ -d
+.RB [ -d
+.RB [ -d ]]]
+.RB [ -f ]
+.RB [ -h ]
+.RB [ -l ]
+.RB [ -R ]
+.RB [ -V ]
+.RB [ -? ]
 .
 .SH DESCRIPTION
 .
-dmeventd is the event monitoring daemon for device\-mapper devices.
+dmeventd is the event monitoring daemon for device-mapper devices.
 Library plugins can register and carry out actions triggered when
 particular events occur.
 .
@@ -27,46 +27,46 @@ particular events occur.
 .SH OPTIONS
 .
 .HP
-.BR \-d
+.BR -d
 .br
 Repeat from 1 to 3 times (
-.BR \-d ,
-.BR \-dd ,
-.BR \-ddd
+.BR -d ,
+.BR -dd ,
+.BR -ddd
 ) to increase the detail of
 debug messages sent to syslog.
 Each extra d adds more debugging information.
 .
 .HP
-.BR \-f
+.BR -f
 .br
 Don't fork, run in the foreground.
 .
 .HP
-.BR \-h
+.BR -h
 .br
 Show help information.
 .
 .HP
-.BR \-l
+.BR -l
 .br
 Log through stdout and stderr instead of syslog.
-This option works only with option \-f, otherwise it is ignored.
+This option works only with option -f, otherwise it is ignored.
 .
 .HP
-.BR \-?
+.BR -?
 .br
 Show help information on stderr.
 .
 .HP
-.BR \-R
+.BR -R
 .br
 Replace a running dmeventd instance. The running dmeventd must be version
 2.02.77 or newer. The new dmeventd instance will obtain a list of devices and
 events to monitor from the currently running daemon.
 .
 .HP
-.BR \-V
+.BR -V
 .br
 Show version of dmeventd.
 .
@@ -106,7 +106,7 @@ of the thin pool is filled. See
 When a thin pool fills over 50% (data or metadata) thin plugin calls
 configured \fIdmeventd/thin_command\fP with every 5% increase.
 With default setting it calls internal
-\fBlvm lvextend \-\-use\-policies\fP to resize thin pool
+\fBlvm lvextend --use-policies\fP to resize thin pool
 when it's been filled above configured threshold
 \fIactivation/thin_pool_autoextend_threshold\fP.
 If the command fails, dmeventd thin plugin will keep
@@ -116,7 +116,7 @@ User may also configure external command to support more advanced
 maintenance operations of a thin pool.
 Such external command can e.g. remove some unneeded snapshots,
 use \fBfstrim\fP(8) to free recover space in a thin pool,
-but also can use \fBlvextend \-\-use\-policies\fP if other actions
+but also can use \fBlvextend --use-policies\fP if other actions
 have not released enough space.
 Command is executed with environmental variable
 \fBLVM_RUN_BY_DMEVENTD=1\fP so any lvm2 command executed

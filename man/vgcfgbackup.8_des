@@ -6,7 +6,7 @@ files.
 In a default installation, each VG is backed up into a separate file
 bearing the name of the VG in the directory \fI#DEFAULT_BACKUP_DIR#\fP.
 
-To use an alternative back up file, use \fB\-f\fP. In this case, when
+To use an alternative back up file, use \fB-f\fP. In this case, when
 backing up multiple VGs, the file name is treated as a template, with %s
 replaced by the VG name.
 

@@ -9,4 +9,4 @@ Expand a PV after enlarging the partition.
 Shrink a PV prior to shrinking the partition (ensure that the PV size is
 appropriate for the intended new partition size).
 .br
-.B pvresize \-\-setphysicalvolumesize 40G /dev/sda1
+.B pvresize --setphysicalvolumesize 40G /dev/sda1

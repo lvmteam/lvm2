@@ -5,8 +5,8 @@ snapshots should be removed.
 .SH EXAMPLES
 Activate all LVs in all VGs on all existing devices.
 .br
-.B vgchange \-a y
+.B vgchange -a y
 
 Change the maximum number of LVs for an inactive VG.
 .br
-.B vgchange \-l 128 vg00
+.B vgchange -l 128 vg00

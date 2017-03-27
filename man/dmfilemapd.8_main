@@ -21,7 +21,7 @@
 .
 .SH NAME
 .
-dmfilemapd \(em device\-mapper filemap monitoring daemon
+dmfilemapd \(em device-mapper filemap monitoring daemon
 .
 .SH SYNOPSIS
 .
@@ -44,7 +44,7 @@ dmfilemapd \(em device\-mapper filemap monitoring daemon
 .
 The dmfilemapd daemon monitors groups of \fIdmstats\fP regions that
 correspond to the extents of a file, adding and removing regions to
-reflect the changing state of the file on\-disk.
+reflect the changing state of the file on-disk.
 
 The daemon is normally launched automatically by the \fPdmstats
 create\fP command, but can be run manually, either to create a new
@@ -86,8 +86,8 @@ and the \fBmode\fP option for more information.
 .br
 The filemap monitoring mode the daemon should use: either "inode"
 (\fBDM_FILEMAP_FOLLOW_INODE\fP), or "path"
-(\fBDM_FILEMAP_FOLLOW_PATH\fP), to enable follow\-inode or
-follow\-path mode respectively.
+(\fBDM_FILEMAP_FOLLOW_PATH\fP), to enable follow-inode or
+follow-path mode respectively.
 .
 .HP
 .BR [foreground]
@@ -130,7 +130,7 @@ within the file system, while it is being monitored.
 .B Follow path
 .P
 The daemon follows the path that was given on the daemon command
-line. The file descriptor referencing the file is re\-opened on each
+line. The file descriptor referencing the file is re-opened on each
 iteration of the daemon, and the daemon will exit if no file exists
 at this location (a tolerance is allowed so that a brief delay
 between removal and replacement is permitted).
@@ -164,13 +164,13 @@ Normally the daemon is started automatically by the \fBdmstats\fP
 \fBcreate\fP or \fBupdate_filemap\fP commands but it can be run
 manually for debugging or testing purposes.
 .P
-Start the daemon in the background, in follow\-path mode
+Start the daemon in the background, in follow-path mode
 .br
 #
 .B dmfilemapd 3 0 /srv/images/vm.img path 0 0 3< /srv/images/vm.img
 .br
 .P
-Start the daemon in follow\-inode mode, disable forking and enable
+Start the daemon in follow-inode mode, disable forking and enable
 verbose logging
 .br
 #
@@ -208,5 +208,5 @@ Bryn M. Reeves <bmr@redhat.com>
 
 LVM2 resource page: https://www.sourceware.org/lvm2/
 .br
-Device\-mapper resource page: http://sources.redhat.com/dm/
+Device-mapper resource page: http://sources.redhat.com/dm/
 .br
