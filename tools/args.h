@@ -837,7 +837,7 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
     "\\fBn\\fP makes the LV inactive, or unavailable, only when possible.\n"
     "In some cases, creating an LV requires it to be active.\n"
     "For example, COW snapshots of an active origin LV can only\n"
-    "be created in the active state (this does not apply to thin snapshots.)\n"
+    "be created in the active state (this does not apply to thin snapshots).\n"
     "The --zero option normally requires the LV to be active.\n"
     "If autoactivation \\fBay\\fP is used, the LV is only activated\n"
     "if it matches an item in lvm.conf activation/auto_activation_volume_list.\n"
@@ -995,7 +995,7 @@ arg(stripes_ARG, 'i', "stripes", number_VAL, 0, 0,
     "devices that are required for parity. The largest number depends on\n"
     "the RAID type (raid0: 64, raid10: 32, raid4/5: 63, raid6: 62), and\n"
     "when unspecified, the default depends on the RAID type\n"
-    "(raid0: 2, raid10: 4, raid4/5: 3, raid6: 5.)\n"
+    "(raid0: 2, raid10: 2, raid4/5: 3, raid6: 5.)\n"
     "To stripe a new raid LV across all PVs by default,\n"
     "see lvm.conf allocation/raid_stripe_all_devices.\n")
 
