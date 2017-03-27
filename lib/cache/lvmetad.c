@@ -66,7 +66,7 @@ static int _log_debug_inequality(const char *name, struct dm_config_node *a, str
 					log_debug_lvmetad("VG %s metadata inequality at %s / %s: %s / %s",
 							  name, a->key, b->key, av->v.str, bv->v.str);
 				else if (a->v->type == DM_CFG_INT && b->v->type == DM_CFG_INT)
-					log_debug_lvmetad("VG %s metadata inequality at %s / %s: " FMTi64 " / " FMTi64,
+					log_debug_lvmetad("VG %s metadata inequality at %s / %s: " FMTd64 " / " FMTd64,
 							  name, a->key, b->key, av->v.i, bv->v.i);
 				else
 					log_debug_lvmetad("VG %s metadata inequality at %s / %s: type %d / type %d",

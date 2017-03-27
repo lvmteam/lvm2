@@ -689,7 +689,7 @@ static int _do_usleep_wait(void)
 	} else {
 		dm_timestamp_get(_now);
 		delta_t = dm_timestamp_delta(_now, _start_timestamp);
-		log_debug("Interval timer drift: "FMTi64,
+		log_debug("Interval timer drift: "FMTd64,
 			  (delta_t % _interval));
 
 		/* FIXME: usleep timer drift over large counts. */

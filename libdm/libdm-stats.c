@@ -680,8 +680,8 @@ static void _check_group_regions_present(struct dm_stats *dms,
 
 	for (; i > 0; i = dm_bit_get_next(regions, i))
 		if (!_stats_region_present(&dms->regions[i])) {
-			log_warn("Group descriptor " FMTi64 " contains "
-				 "non-existent region_id " FMTi64 ".",
+			log_warn("Group descriptor " FMTd64 " contains "
+				 "non-existent region_id " FMTd64 ".",
 				 group_id, i);
 			dm_bit_clear(regions, i);
 		}
@@ -4563,7 +4563,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 		log_error("Could not finalize region extent table.");
 		goto out;
 	}
-	log_very_verbose("Kept " FMTi64 " of " FMTi64 " old extents",
+	log_very_verbose("Kept " FMTd64 " of " FMTd64 " old extents",
 			 nr_kept, nr_old);
 	log_very_verbose("Found " FMTu64 " new extents",
 			 *count - nr_kept);
