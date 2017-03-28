@@ -539,6 +539,10 @@ for the kernel device-mapper.
 %{_sbindir}/dmstats
 %{_mandir}/man8/dmsetup.8.gz
 %{_mandir}/man8/dmstats.8.gz
+%if %{enable_dmfilemapd}
+%{_sbindir}/dmfilemapd
+%{_mandir}/man8/dmfilemapd.8.gz
+%endif
 %if %{enable_udev}
 %doc udev/12-dm-permissions.rules
 %dir %{_udevbasedir}

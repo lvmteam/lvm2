@@ -15,6 +15,7 @@
 %global enable_lvmlockd 1
 %global enable_lvmetad 1
 %global enable_lvmpolld 1
+%global enable_dmfilemapd 0
 #%global enable_lockd_dlm 0
 #%global enable_lockd_sanlock 0
 
@@ -89,6 +90,12 @@
 %if %{enable_python3}
   %global buildreq_python3_devel python3-devel
   %global buildreq_python_setuptools python-setuptools
+%endif
+
+##############################################################
+
+%if %{rhel} >= 7 || %{fedora} >= 25
+  %global enable_dmfilemapd 1
 %endif
 
 ##############################################################
