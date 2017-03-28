@@ -1,17 +1,17 @@
-Version 2.02.169 - 
-=====================================
-  man-generator - escape '-'
-  Add configuration command line to 'lvm version' output.
-  Adjust to misordered raid parameters
-  Conditionally reject raid convert to striped/raid0* after reshape
-  Ensure raid6 upconversion restrictions
-  Adjust mirror+raid DSOs to aforementioned lvconvert --repair
+Version 2.02.169 - 28th March 2017
+==================================
+  Automatically decide whether '-' in a man page is a hyphen or a minus sign.
+  Add build-time configuration command line to 'lvm version' output.
+  Handle known table line parameter order change in specific raid target vsns.
+  Conditionally reject raid convert to striped/raid0* after reshape.
+  Ensure raid6 upconversion restrictions.
+  Adjust mirror & raid dmeventd plugins for new lvconvert --repair behaviour.
   Disable lvmetad when lvconvert --repair is run.
   Remove obsolete lvmchange binary - convert to built-in command.
-  Lvdisplay [-m] shows more informations for cached volumes.
+  Show more information for cached volumes in lvdisplay [-m].
   Add option for lvcreate/lvconvert --cachemetadataformat auto|1|2.
   Support cache segment with configurable metadata format.
-  Add allocation/cache_metadata_format profilable setttings.
+  Add allocation/cache_metadata_format profilable settings.
   Use function cache_set_params() for both lvcreate and lvconvert.
   Skip rounding on cache chunk size boudary when create cache LV.
   Improve cache_set_params support for chunk_size selection.
@@ -21,7 +21,7 @@ Version 2.02.169 -
   Support conversion of raid type, stripesize and number of disks
   Reject writemostly/writebehind in lvchange during resynchronization.
   Deactivate active origin first before removal for improved workflow.
-  Fix regression of accepting options --type and -m with lvresize (2.02.158).
+  Fix regression of accepting both --type and -m with lvresize. (2.02.158)
   Add lvconvert --swapmetadata, new specific way to swap pool metadata LVs.
   Add lvconvert --startpoll, new specific way to start polling conversions.
   Add lvconvert --mergethin, new specific way to merge thin snapshots.
@@ -34,9 +34,9 @@ Version 2.02.169 -
   Match every command run to one command definition.
   Specify every allowed command definition/syntax in command-lines.in.
   Add extra memory page when limiting pthread stack size in clvmd.
-  Support striped/raid0* <-> raid10_near conversions
-  Support shrinking of RaidLvs
-  Support region size changes on existing RaidLVs
+  Support striped/raid0* <-> raid10_near conversions.
+  Support shrinking of RaidLVs.
+  Support region size changes on existing RaidLVs.
   Avoid parallel usage of cpg_mcast_joined() in clvmd with corosync.
   Support raid6_{ls,rs,la,ra}_6 segment types and conversions from/to it.
   Support raid6_n_6 segment type and conversions from/to it.

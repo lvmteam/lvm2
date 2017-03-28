@@ -1734,9 +1734,11 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		    !child->callback(child, DM_NODE_CALLBACK_DEACTIVATED,
 				     child->callback_data))
 			stack;
-			// FIXME: We need to let lvremove pass,
-			// so for now deactivation ignores check result
-			//r = 0; // FIXME: _node_clear_table() without callback ?
+			/* FIXME Deactivation must currently ignore failure
+			 * here so that lvremove can continue: we need an
+			 * alternative way to handle this state without 
+			 * setting r=0.  Or better, skip calling thin_check
+			 * entirely if the device is about to be removed. */
 
 		if (dm_tree_node_num_children(child, 0) &&
 		    !_dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len, level + 1))
@@ -2457,17 +2459,8 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 	type = seg->type;
 	if (type == SEG_RAID0_META)
 		type = SEG_RAID0;
-#if 0
-	/* Kernel only expects "raid10", not "raid10_{far,offset}" */
-	else if (type == SEG_RAID10_FAR ||
-		 type == SEG_RAID10_OFFSET) {
-		param_count += 2;
-		type = SEG_RAID10_NEAR;
-	}
-#endif
 
 	EMIT_PARAMS(pos, "%s %d %u",
-		    // type == SEG_RAID10_NEAR ? "raid10" : _dm_segtypes[type].target,
 		    type == SEG_RAID10 ? "raid10" : _dm_segtypes[type].target,
 		    param_count, seg->stripe_size);
 
@@ -2508,12 +2501,7 @@ static int _raid_emit_segment_line(struct dm_task *dmt, uint32_t major,
 
 		if (seg->data_copies > 1 && type == SEG_RAID10)
 			EMIT_PARAMS(pos, " raid10_copies %u", seg->data_copies);
-#if 0
-	if (seg->type == SEG_RAID10_FAR)
-		EMIT_PARAMS(pos, " raid10_format far");
-	else if (seg->type == SEG_RAID10_OFFSET)
-		EMIT_PARAMS(pos, " raid10_format offset");
-#endif
+
 		if (seg->delta_disks)
 			EMIT_PARAMS(pos, " delta_disks %d", seg->delta_disks);
 

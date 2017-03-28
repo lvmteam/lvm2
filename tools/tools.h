@@ -105,7 +105,6 @@ struct arg_values {
 	uint64_t ui64_value;
 	sign_t sign;
 	percent_type_t percent;
-/*	void *ptr; // Currently not used. */
 };
 
 struct arg_value_group_list {

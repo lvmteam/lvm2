@@ -141,7 +141,7 @@ struct dev_manager;
 #define segtype_is_raid10(segtype)	((segtype)->flags & SEG_RAID10 ? 1 : 0)
 #define segtype_is_raid10_near(segtype)	segtype_is_raid10(segtype)
 /* FIXME: once raid10_offset supported */
-#define segtype_is_raid10_offset(segtype)	0 // ((segtype)->flags & SEG_RAID10_OFFSET ? 1 : 0)
+#define segtype_is_raid10_offset(segtype)	0 /* FIXME ((segtype)->flags & SEG_RAID10_OFFSET ? 1 : 0 */
 #define segtype_is_raid_with_meta(segtype)	(segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
 #define segtype_is_striped_raid(segtype)        (segtype_is_raid(segtype) && !segtype_is_raid1(segtype))
 #define segtype_is_reshapable_raid(segtype)     ((segtype_is_striped_raid(segtype) && !segtype_is_any_raid0(segtype)) || segtype_is_raid10_near(segtype) || segtype_is_raid10_offset(segtype))

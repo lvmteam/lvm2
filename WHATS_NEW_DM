@@ -1,23 +1,24 @@
-Version 1.02.138 - 
-=====================================
+Version 1.02.138 - 28th March 2017
+==================================
+  Support additional raid5/6 configurations.
   Provide dm_tree_node_add_cache_target@base compatible symbol.
   Support DM_CACHE_FEATURE_METADATA2, new cache metadata format 2.
   Improve code to handle mode mask for cache nodes.
   Cache status check for passthrough also require trailing space.
   Add extra memory page when limiting pthread stack size in dmeventd.
   Avoids immediate resume when preloaded device is smaller.
-  Do not suppress kernel key description in dmsetup table output.
+  Do not suppress kernel key description in dmsetup table output for dm-crypt.
   Support configurable command executed from dmeventd thin plugin.
   Support new R|r human readable units output format.
   Thin dmeventd plugin reacts faster on lvextend failure path with umount.
   Add dm_stats_bind_from_fd() to bind a stats handle from a file descriptor.
   Do not try call callback when reverting activation on error path.
-  Fix file mapping for extents with physically adjacent extents.
+  Fix file mapping for extents with physically adjacent extents in dmstats.
   Validation vsnprintf result in runtime translate of dm_log (1.02.136).
-  Separate filemap extent allocation from region table.
-  Fix segmentation fault when filemap region creation fails.
-  Fix performance of region cleanup for failed filemap creation.
-  Fix very slow region deletion with many regions.
+  Separate filemap extent allocation from region table in dmstats.
+  Fix segmentation fault when filemap region creation fails in dmstats.
+  Fix performance of region cleanup for failed filemap creation in dmstats.
+  Fix very slow region deletion with many regions in dmstats.
 
 Version 1.02.137 - 30th November 2016
 =====================================

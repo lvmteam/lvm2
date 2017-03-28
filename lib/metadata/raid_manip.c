@@ -2305,7 +2305,8 @@ static int _raid_reshape(struct logical_volume *lv,
 	} if (!_vg_write_commit_backup(lv->vg))
 		return 0;
 
-	return 1; // force_repair ? _lv_cond_repair(lv) : 1;
+	return 1; 
+	/* FIXME force_repair ? _lv_cond_repair(lv) : 1; */
 }
 
 /*
@@ -2325,6 +2326,8 @@ static int _raid_reshape(struct logical_volume *lv,
  * 1 -> allowed reshape request
  * 2 -> prohibited reshape request
  * 3 -> allowed region size change request
+ *
+ * FIXME Use alternative mechanism - separate parameter or enum.
  */
 static int _reshape_requested(const struct logical_volume *lv, const struct segment_type *segtype,
 			      const int data_copies, const uint32_t region_size,
@@ -2364,33 +2367,6 @@ static int _reshape_requested(const struct logical_volume *lv, const struct segm
 			  display_lvname(lv));
 		return 2;
 	}
-#if 0
-	if ((_lv_is_duplicating(lv) || lv_is_duplicated(lv)) &&
-	    ((seg_is_raid1(seg) ? 0 : (stripes != _data_rimages_count(seg, seg->area_count))) ||
-	     data_copies != seg->data_copies))
-		goto err;
-	if ((!seg_is_striped(seg) && segtype_is_raid10_far(segtype)) ||
-	    (seg_is_raid10_far(seg) && !segtype_is_striped(segtype))) {
-		if (data_copies == seg->data_copies &&
-		    region_size == seg->region_size) {
-			log_error("Can't convert %sraid10_far.",
-				  seg_is_raid10_far(seg) ? "" : "to ");
-			goto err;
-		}
-	}
-
-	if (seg_is_raid10_far(seg)) {
-		if (stripes != _data_rimages_count(seg, seg->area_count)) {
-			log_error("Can't change stripes in raid10_far.");
-			goto err;
-		}
-
-		if (stripe_size != seg->stripe_size) {
-			log_error("Can't change stripe size in raid10_far.");
-			goto err;
-		}
-	}
-#endif
 
 	if (seg_is_any_raid10(seg) && seg->area_count > 2 &&
 	    stripes && stripes < seg->area_count - seg->segtype->parity_devs) {
@@ -2401,45 +2377,7 @@ static int _reshape_requested(const struct logical_volume *lv, const struct segm
 	if (data_copies != seg->data_copies) {
 		if (seg_is_raid10_near(seg))
 			return 0;
-#if 0
-		if (seg_is_raid10_far(seg))
-			return segtype_is_raid10_far(segtype) ? 1 : 0;
-
-		if (seg_is_raid10_offset(seg)) {
-			log_error("Can't change number of data copies on %s LV %s.",
-				  lvseg_name(seg), display_lvname(lv));
-			goto err;
-		}
-#endif
 	}
-
-#if 0
-	/* raid10_{near,offset} case */
-	if ((seg_is_raid10_near(seg) && segtype_is_raid10_offset(segtype)) ||
-	    (seg_is_raid10_offset(seg) && segtype_is_raid10_near(segtype))) {
-		if (stripes >= seg->area_count)
-			return 1;
-
-		goto err;
-	}
-
-	/*
-	 * raid10_far is not reshapable in MD at all;
-	 * lvm/dm adds reshape capability to add/remove data_copies
-	 */
-	if (seg_is_raid10_far(seg) && segtype_is_raid10_far(segtype)) {
-		if (stripes && stripes == seg->area_count &&
-		    data_copies > 1 &&
-		    data_copies <= seg->area_count &&
-		    data_copies != seg->data_copies)
-			return 1;
-
-		goto err;
-
-	} else if (seg_is_any_raid10(seg) && segtype_is_any_raid10(segtype) &&
-		   data_copies > 1 && data_copies != seg->data_copies)
-		goto err;
-#endif
 
 	/* Change layout (e.g. raid5_ls -> raid5_ra) keeping # of stripes */
 	if (seg->segtype != segtype) {
@@ -2459,12 +2397,6 @@ static int _reshape_requested(const struct logical_volume *lv, const struct segm
 	return (stripes || stripe_size) ? 1 : 0;
 
 err:
-#if 0
-	if (lv_is_duplicated(lv))
-		log_error("Conversion of duplicating sub LV %s rejected.", display_lvname(lv));
-	else
-		log_error("Use \"lvconvert --duplicate --type %s ... %s.", segtype->name, display_lvname(lv));
-#endif
 	return 2;
 }
 
