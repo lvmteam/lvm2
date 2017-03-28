@@ -41,7 +41,7 @@ MAN8=lvm.8 lvmconf.8 lvmdump.8 lvm-fullreport.8 lvm-lvpoll.8 \
      vgimport.8 vgimportclone.8 vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 \
      vgrename.8 vgs.8 vgscan.8 vgsplit.8 \
      lvmsar.8 lvmsadc.8 lvmdiskscan.8
-MAN8SO=lvmconfig-common.8 lvmconfig.8.tmp lvm-config.8 lvm-dumpconfig.8
+MAN8SO=lvm-config.8 lvm-dumpconfig.8
 MAN8DM=dmsetup.8 dmstats.8
 MAN8CLUSTER=
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
@@ -208,17 +208,6 @@ $(SED) -i -e "s+\([^\\]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([0-9]\)-\([0-9]\)+\1\\\-\2+g" \
 	  -e "s+\(\\\f.\)-\([^-]\)+\1\\\-\2+g" \
 	  -e "s+\([[:digit:]]\{4\}\)\\\-\([[:digit:]]\{2\}\)\\\-\([[:digit:]]\{2\}\)+\1-\2-\3+g" $@
-
-endef
-
-define LVMCONFIGHEADER
-	echo ".TH $(1) 8 \"LVM TOOLS #VERSION#\" \"Red Hat, Inc.\"" | $(SED) -e "s+#VERSION#+$(LVM_VERSION)+" > $@
-	echo ".SH NAME\n" >> $@
-	echo "$(2) \\- Display and manipulate configuration information\n" >> $@
-	echo ".\n" >> $@
-	echo ".SH SYNOPSIS\n" >> $@
-	echo "\\fB$(2)\\fP\n" >> $@
-	echo ".so $<" >> $@
 endef
 
 %.5: $(srcdir)/%.5_main
@@ -237,21 +226,8 @@ endef
 	$(SUBSTVARS)
 	$(ESCAPEHYPHENS)
 
-# Create lvmconfig-common.8 to be shared by lvmconfig.8, lvm-config.8 and lvm.dumpconfig.8
-lvmconfig-common.8: lvmconfig.8
-	$(SED) -e "1,6d" $< > $@
-
-# Create headers for lvmconfig, lvm-config and lvm.dumpconfig and share lvmconfig-common.8
-# Needs temporary target to avoid conflict with %8: target above
-lvmconfig.8.tmp: lvmconfig-common.8
-	$(call LVMCONFIGHEADER,LVMCONFIG,lvmconfig)
-	mv $@ $(@:%.8.tmp=%.8)
-
-lvm-config.8: lvmconfig-common.8
-	$(call LVMCONFIGHEADER,LVM-CONFIG,lvm config)
-
-lvm-dumpconfig.8: lvmconfig-common.8
-	$(call LVMCONFIGHEADER,LVM-DUMPCONFIG,lvm dumpconfig)
+lvm-config.8 lvm-dumpconfig.8: lvmconfig.8
+	echo ".so $<" > $@
 
 install_man5: $(MAN5)
 	$(INSTALL) -d $(MAN5DIR)
@@ -261,9 +237,9 @@ install_man7: $(MAN7)
 	$(INSTALL) -d $(MAN7DIR)
 	$(INSTALL_DATA) $(MAN7) $(MAN7DIR)/
 
-install_man8: $(MAN8) $(MAN8GENERATED)
+install_man8: $(MAN8) $(MAN8SO)
 	$(INSTALL) -d $(MAN8DIR)
-	$(INSTALL_DATA) $(MAN8) $(MAN8GENERATED) $(MAN8DIR)/
+	$(INSTALL_DATA) $(MAN8) $(MAN8SO) $(MAN8DIR)/
 
 install_lvm2: install_man5 install_man7 install_man8
 
@@ -277,7 +253,7 @@ install_device-mapper: $(MAN8DM)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8DM) $(MAN8DIR)/
 
-install_systemd_generators: $(MAN8SYSTEMD_GENERATORS)
+install_systemdgenerators: $(MAN8SYSTEMD_GENERATORS)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8SYSTEMD_GENERATORS) $(MAN8DIR)/
 
