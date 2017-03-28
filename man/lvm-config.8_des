@@ -1,5 +1,0 @@
-This command is the same as \fBlvmconfig\fP(8).
-
-lvm config produces formatted output from the LVM configuration tree. The
-sources of the configuration data include \fBlvm.conf\fP(5) and command
-line settings from --config.

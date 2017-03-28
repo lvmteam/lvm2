@@ -10,7 +10,8 @@ lvmconfig - Display and manipulate configuration information
     [ \fIposition_args\fP ]
 .br
 .SH DESCRIPTION
-lvmconfig produces formatted output from the LVM configuration tree. The
+lvmconfig, lvm dumpconfig, lvm config produce
+formatted output from the LVM configuration tree. The
 sources of the configuration data include \fBlvm.conf\fP(5) and command
 line settings from --config.
 .SH USAGE
