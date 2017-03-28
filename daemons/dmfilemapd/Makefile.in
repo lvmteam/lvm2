@@ -60,7 +60,7 @@ install_dmfilemapd_dynamic: dmfilemapd
 install_dmfilemapd_static: dmfilemapd.static
 	$(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 
-install_dmfilemapd: $(INSTALL_DMEVENTD_TARGETS)
+install_dmfilemapd: $(INSTALL_DMFILEMAPD_TARGETS)
 
 install: install_dmfilemapd
 
