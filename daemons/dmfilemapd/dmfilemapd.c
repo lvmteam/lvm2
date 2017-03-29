@@ -600,12 +600,14 @@ check_unlinked:
 	 */
 	if ((fd = open(link_buf, O_RDONLY)) < 0)
 		fm->deleted = 1;
-
-	if ((same = _filemap_monitor_check_same_file(fm->fd, fd)) < 0)
-		return 0;
+	else
+		same = _filemap_monitor_check_same_file(fm->fd, fd);
 
 	if ((fd > 0) && close(fd))
 		log_error("Error closing fd %d", fd);
+
+	if (same < 0)
+		return 0;
 
 	/* Should not happen with normal /proc. */
 	if ((fd > 0) && !same) {
