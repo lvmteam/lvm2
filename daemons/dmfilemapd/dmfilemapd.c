@@ -409,13 +409,13 @@ static int _filemap_monitor_set_notify(struct filemap_monitor *fm)
 	 * and does not fork or exec.
 	 */
 	if ((inotify_fd = inotify_init1(IN_NONBLOCK)) < 0) {
-		_early_log("Failed to initialise inotify.");
+		log_sys_error("inotify_init1", "IN_NONBLOCK");
 		return 0;
 	}
 
 	if ((watch_fd = inotify_add_watch(inotify_fd, fm->path,
 					  IN_MODIFY | IN_DELETE_SELF)) < 0) {
-		_early_log("Failed to add inotify watch.");
+		log_sys_error("inotify_add_watch", fm->path);
 		return 0;
 	}
 	fm->inotify_fd = inotify_fd;
