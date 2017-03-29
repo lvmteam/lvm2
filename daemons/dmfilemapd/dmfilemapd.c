@@ -593,6 +593,7 @@ check_unlinked:
 			  getpid(), fm->fd);
 		return 0;
 	}
+	link_buf[len] = '\0';
 
 	/*
 	 * Try to re-open the file, from the path now reported in /proc/pid/fd.
