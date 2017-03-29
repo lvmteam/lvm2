@@ -251,7 +251,7 @@ install_dmsetup_dynamic: dmsetup
 
 install_dmsetup_static: dmsetup.static
 	$(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
-	$(LN_S) -f $(<F) $(sbindir)/dmstats
+	$(LN_S) -f $(<F) $(staticdir)/dmstats
 
 install_device-mapper: $(INSTALL_DMSETUP_TARGETS)
 
