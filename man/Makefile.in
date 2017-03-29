@@ -260,7 +260,7 @@ install_device-mapper: $(MAN8DM)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8DM) $(MAN8DIR)/
 
-install_systemdgenerators: $(MAN8SYSTEMD_GENERATORS)
+install_systemd_generators: $(MAN8SYSTEMD_GENERATORS)
 	$(INSTALL) -d $(MAN8DIR)
 	$(INSTALL_DATA) $(MAN8SYSTEMD_GENERATORS) $(MAN8DIR)/
 
