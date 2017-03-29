@@ -4743,7 +4743,8 @@ out_remove:
 	 * single list operation and call _stats_delete_region() directly
 	 * to avoid a @stats_list ioctl and list parsing for each region.
 	 */
-	dm_stats_list(dms, NULL);
+	if (!dm_stats_list(dms, NULL))
+		goto out;
 
 	fail_region = i;
 	_stats_cleanup_region_ids(dms, regions, fail_region);
