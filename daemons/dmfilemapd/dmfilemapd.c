@@ -229,13 +229,13 @@ static int _is_open(const char *path)
 		if (!pid)
 			continue;
 		if (_is_open_in_pid(pid, path)) {
-			if (closedir(pid_d))
+			if (closedir(proc_d))
 				log_sys_error("closedir", DEFAULT_PROC_DIR);
 			return 1;
 		}
 	}
 
-	if (closedir(pid_d))
+	if (closedir(proc_d))
 		log_sys_error("closedir", DEFAULT_PROC_DIR);
 
 	return 0;
