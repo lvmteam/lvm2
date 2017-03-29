@@ -38,8 +38,8 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, struct processing_handle *handle)
 {
 	struct vgrename_params *vp = (struct vgrename_params *) handle->custom_handle;
-	char old_path[NAME_LEN];
-	char new_path[NAME_LEN];
+	char old_path[PATH_MAX];
+	char new_path[PATH_MAX];
 	struct id id;
 	const char *name;
 	char *dev_dir;
@@ -136,8 +136,12 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 		goto error;
 	}
 
-	sprintf(old_path, "%s%s", dev_dir, vg_name);
-	sprintf(new_path, "%s%s", dev_dir, vp->vg_name_new);
+	if ((dm_snprintf(old_path, sizeof(old_path), "%s%s", dev_dir, vg_name) < 0) ||
+	    (dm_snprintf(new_path, sizeof(new_path), "%s%s", dev_dir, vp->vg_name_new) < 0)) {
+		log_error("Renaming path is too long %s/%s  %s/%s",
+			  dev_dir, vg_name, dev_dir, vp->vg_name_new);
+		goto error;
+	}
 
 	if (activation() && dir_exists(old_path)) {
 		log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);

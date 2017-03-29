@@ -1,5 +1,6 @@
 Version 2.02.170 - 
 ==================================
+  Check and use PATH_MAX buffers when creating vgrename device paths.
 
 Version 2.02.169 - 28th March 2017
 ==================================

@@ -377,7 +377,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	uint32_t block_on_error = 0;
 
 	int disk_log;
-	char disk_path[128];
+	char disk_path[PATH_MAX];
 	int unlink_path = 0;
 	long page_size;
 	int pages;
