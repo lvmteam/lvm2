@@ -4777,7 +4777,8 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 	}
 
 	if (!(regions = _stats_map_file_regions(dms, fd, bounds, precise,
-						-1, &count, &regroup)))
+						DM_STATS_GROUP_NOT_PRESENT,
+						&count, &regroup)))
 		return NULL;
 
 	if (!group)
