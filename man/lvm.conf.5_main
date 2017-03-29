@@ -1,4 +1,4 @@
-.TH LVM.CONF 5 "LVM TOOLS #VERSION#" "Sistina Software UK" \" -*- nroff -*-
+.TH LVM.CONF 5 "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .SH NAME
 lvm.conf \(em Configuration file for LVM2
 .SH SYNOPSIS
