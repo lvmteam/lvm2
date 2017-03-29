@@ -660,7 +660,7 @@ static int _daemonise(struct filemap_monitor *fm)
 		}
 	}
 
-	for (fd = sysconf(_SC_OPEN_MAX) - 1; fd > STDERR_FILENO; fd--) {
+	for (fd = (int) sysconf(_SC_OPEN_MAX) - 1; fd > STDERR_FILENO; fd--) {
 		if (fd == fm->fd)
 			continue;
 		close(fd);
