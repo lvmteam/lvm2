@@ -151,7 +151,7 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 	if (dm_snprintf(path_buf, sizeof(path_buf),
 			DEFAULT_PROC_DIR "%d/fd", pid) < 0) {
 		log_error("Could not format pid path.");
-		goto bad;
+		return 0;
 	}
 
 	/*
@@ -160,12 +160,13 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 	if (dm_snprintf(deleted_path, sizeof(deleted_path), "%s %s",
 			path, PROC_FD_DELETED_STR) < 0) {
 		log_error("Could not format check path.");
+		return 0;
 	}
 
 	pid_d = opendir(path_buf);
 	if (!pid_d) {
 		log_error("Could not open proc path: %s.", path_buf);
-		goto bad;
+		return 0;
 	}
 
 	while ((pid_dp = readdir(pid_d)) != NULL) {
