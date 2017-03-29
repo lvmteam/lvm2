@@ -5032,7 +5032,7 @@ int dm_stats_start_filemapd(int fd, uint64_t group_id, const char *path,
 	}
 
 	execvp(args[0], args);
-	log_error("execvp() failed.");
+	log_sys_error("execvp", args[0]);
 	if (!foreground)
 		_exit(127);
 	return 0;
