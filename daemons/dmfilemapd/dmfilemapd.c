@@ -559,7 +559,8 @@ static int _filemap_monitor_check_file_unlinked(struct filemap_monitor *fm)
 {
 	char path_buf[PATH_MAX];
 	char link_buf[PATH_MAX];
-	int same, fd, len;
+	int same, fd;
+	ssize_t len;
 
 	fm->deleted = 0;
 
