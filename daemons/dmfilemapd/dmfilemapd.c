@@ -55,7 +55,7 @@ struct filemap_monitor {
 
 	/* monitoring heuristics */
 	int64_t blocks; /* allocated blocks, from stat.st_blocks */
-	int64_t nr_regions;
+	uint64_t nr_regions;
 	int deleted;
 };
 
