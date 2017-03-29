@@ -566,11 +566,13 @@ static int _filemap_monitor_check_file_unlinked(struct filemap_monitor *fm)
 	if ((fd = open(fm->path, O_RDONLY)) < 0)
 		goto check_unlinked;
 
-	if ((same = _filemap_monitor_check_same_file(fm->fd, fd)) < 0)
-		return 0;
+	same = _filemap_monitor_check_same_file(fm->fd, fd);
 
 	if (close(fd))
 		log_error("Error closing fd %d", fd);
+
+	if (same < 0)
+		return 0;
 
 	if (same)
 		return 1;
