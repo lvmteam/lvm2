@@ -603,7 +603,7 @@ check_unlinked:
 	else
 		same = _filemap_monitor_check_same_file(fm->fd, fd);
 
-	if ((fd > 0) && close(fd))
+	if ((fd >= 0) && close(fd))
 		log_error("Error closing fd %d", fd);
 
 	if (same < 0)
