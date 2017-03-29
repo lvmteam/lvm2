@@ -5730,11 +5730,6 @@ fallback:
 	 */
 	regions = dm_stats_update_regions_from_fd(dms, fd, group_id);
 
-	if (close(fd))
-		log_error("Error closing %s", abspath);
-
-	fd = -1;
-
 	if (!regions) {
 		log_error("Could not update regions from file %s", abspath);
 		goto bad;
@@ -5753,6 +5748,9 @@ fallback:
 	       path, group_id, count);
 
 out:
+	if (close(fd))
+		log_error("Error closing %s", abspath);
+
 	dm_free(regions);
 	dm_free(abspath);
 	dm_stats_destroy(dms);
