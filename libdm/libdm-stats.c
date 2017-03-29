@@ -4511,8 +4511,9 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 {
 	struct dm_stats_region *region = NULL;
 	struct dm_stats_group *group = NULL;
-	int64_t nr_kept, nr_old, i;
+	uint64_t nr_kept, nr_old;
 	struct _extent ext;
+	int64_t i;
 
 	group = &dms->groups[group_id];
 
@@ -4571,7 +4572,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 	log_very_verbose("Found " FMTu64 " new extents",
 			 *count - nr_kept);
 
-	return nr_kept;
+	return (int) nr_kept;
 out:
 	dm_pool_abandon_object(mem);
 	return -1;
@@ -4594,15 +4595,15 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 					 uint64_t *count, int *regroup)
 {
 	struct _extent *extents = NULL, *old_extents = NULL;
-	uint64_t *regions = NULL, fail_region;
+	uint64_t *regions = NULL, fail_region, i, num_bits;
 	struct dm_stats_group *group = NULL;
 	struct dm_pool *extent_mem = NULL;
 	struct _extent *old_ext;
 	char *hist_arg = NULL;
-	int update, num_bits;
 	struct statfs fsbuf;
-	int64_t nr_kept = 0, i;
+	int64_t nr_kept = 0;
 	struct stat buf;
+	int update;
 
 	update = _stats_group_id_present(dms, group_id);
 
