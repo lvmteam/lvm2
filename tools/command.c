@@ -3439,6 +3439,10 @@ int main(int argc, char *argv[])
 
 	if (optind < argc)
 		cmdname = strdup(argv[optind++]);
+	else {
+		log_error("Missing command name");
+		exit(EXIT_FAILURE);
+	}
 
 	if (optind < argc)
 		desfile = argv[optind++];
