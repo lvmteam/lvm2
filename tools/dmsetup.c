@@ -5716,17 +5716,18 @@ static int _stats_update_file(CMD_ARGS)
 	 * If starting the daemon fails, fall back to a direct update.
 	 */
 	if (!_switches[NOMONITOR_ARG]) {
-		if (!dm_stats_start_filemapd(fd, group_id, abspath, mode,
-					     foreground, verbose)) {
-			log_warn("Failed to start filemap monitoring daemon.");
-			goto fallback;
-		}
-		goto out;
+		if (dm_stats_start_filemapd(fd, group_id, abspath, mode,
+					    foreground, verbose))
+			goto out;
+
+		log_warn("Failed to start filemap monitoring daemon.");
+
+		/* fall back to one-shot update */
 	}
 
-fallback:
 	/*
-	 * --nomonitor case - perform a one-shot update directly from dmstats.
+	 * --nomonitor and fall back case - perform a one-shot update directly
+	 *  from dmsetup.
 	 */
 	regions = dm_stats_update_regions_from_fd(dms, fd, group_id);
 
