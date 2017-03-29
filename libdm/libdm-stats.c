@@ -4472,7 +4472,7 @@ bad:
 #define MATCH_EXTENT(e, s, l) \
 (((e).start == (s)) && ((e).len == (l)))
 
-static struct _extent *_find_extent(size_t nr_extents, struct _extent *extents,
+static struct _extent *_find_extent(uint64_t nr_extents, struct _extent *extents,
 				    uint64_t start, uint64_t len)
 {
 	size_t i;
@@ -4685,9 +4685,10 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 	 */
 	for (i = 0; i < *count; i++) {
 		if (update) {
-			if ((old_ext = _find_extent(nr_kept, old_extents,
-						       extents[i].start,
-						       extents[i].len))) {
+			if ((old_ext = _find_extent((uint64_t) nr_kept,
+						    old_extents,
+						    extents[i].start,
+						    extents[i].len))) {
 				regions[i] = old_ext->id;
 				continue;
 			}
