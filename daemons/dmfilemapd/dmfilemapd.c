@@ -305,7 +305,7 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 		return 0;
 	}
 
-	if (argv[0] != '/') {
+	if (*argv[0] != '/') {
 		_early_log("Path argument must specify an absolute path.");
 		return 0;
 	}
