@@ -4540,8 +4540,9 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 			ext.id = i;
 			nr_kept++;
 
-			dm_pool_grow_object(mem, &ext,
-					    sizeof(ext));
+			if (!dm_pool_grow_object(mem, &ext, sizeof(ext)))
+				goto out;
+
 			log_very_verbose("Kept region " FMTu64, i);
 		} else {
 
