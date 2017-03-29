@@ -687,7 +687,7 @@ static int _update_regions(struct dm_stats *dms, struct filemap_monitor *fm)
 			 fm->group_id, regions[0]);
 		fm->group_id = regions[0];
 	}
-
+	dm_free(regions);
 	fm->nr_regions = nr_regions;
 	return 1;
 }
