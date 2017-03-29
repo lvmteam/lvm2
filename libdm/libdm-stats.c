@@ -4181,21 +4181,23 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  * Resize the group bitmap corresponding to group_id so that it can
  * contain at least num_regions members.
  */
-static int _stats_resize_group(struct dm_stats_group *group, int num_regions)
+static int _stats_resize_group(struct dm_stats_group *group,
+			       uint64_t num_regions)
 {
-	int last_bit = dm_bit_get_last(group->regions);
+	uint64_t last_bit = dm_bit_get_last(group->regions);
 	dm_bitset_t new, old;
 
 	if (last_bit >= num_regions) {
-		log_error("Cannot resize group bitmap to %d with bit %d set.",
-			  num_regions, last_bit);
+		log_error("Cannot resize group bitmap to " FMTu64
+			  " with bit " FMTu64 " set.", num_regions, last_bit);
 		return 0;
 	}
 
-	log_very_verbose("Resizing group bitmap from %d to %d (last_bit: %d).",
+	log_very_verbose("Resizing group bitmap from " FMTu64
+			 " to " FMTu64 " (last_bit: " FMTu64 ").",
 			 group->regions[0], num_regions, last_bit);
 
-	new = dm_bitset_create(NULL, num_regions);
+	new = dm_bitset_create(NULL, (unsigned) num_regions);
 	if (!new) {
 		log_error("Could not allocate memory for new group bitmap.");
 		return 0;
