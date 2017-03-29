@@ -4219,7 +4219,7 @@ static int _stats_group_file_regions(struct dm_stats *dms, uint64_t *region_ids,
 	dm_bitset_t regions = dm_bitset_create(NULL, dms->nr_regions);
 	uint64_t i, group_id = DM_STATS_GROUP_NOT_PRESENT;
 	char *members = NULL;
-	int buflen;
+	size_t buflen;
 
 	if (!regions) {
 		log_error("Cannot map file: failed to allocate group bitmap.");
