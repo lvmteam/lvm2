@@ -5110,6 +5110,11 @@ static int _stats_create_file(CMD_ARGS)
 	regions = dm_stats_create_regions_from_fd(dms, fd, group, precise,
 						  bounds, alias);
 
+	if (!regions) {
+		log_error("Could not create regions from file %s", abspath);
+		goto bad;
+	}
+
 	if (!_switches[NOMONITOR_ARG] && group) {
 		if (!dm_stats_start_filemapd(fd, regions[0], abspath, mode,
 					     foreground, verbose))
@@ -5120,11 +5125,6 @@ static int _stats_create_file(CMD_ARGS)
 		log_error("Error closing %s", abspath);
 
 	fd = -1;
-
-	if (!regions) {
-		log_error("Could not create regions from file %s", abspath);
-		goto bad;
-	}
 
 	for (region = regions; *region != DM_STATS_REGIONS_ALL; region++)
 		count++;
