@@ -4401,10 +4401,14 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 	unsigned long flags = 0;
 	uint64_t *buf;
 
+	/* grow temporary extent table in the pool */
+	if (!dm_pool_begin_object(mem, sizeof(*extents)))
+		return NULL;
+
 	buf = dm_zalloc(STATS_FIE_BUF_LEN);
 	if (!buf) {
 		log_error("Could not allocate memory for FIEMAP buffer.");
-		return NULL;
+		goto bad;
 	}
 
 	/* initialise pointers into the ioctl buffer. */
@@ -4414,10 +4418,6 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 	/* space available per ioctl */
 	*count = (STATS_FIE_BUF_LEN - sizeof(*fiemap))
 		  / sizeof(struct fiemap_extent);
-
-	/* grow temporary extent table in the pool */
-	if (!dm_pool_begin_object(mem, sizeof(*extents)))
-		return NULL;
 
 	flags = FIEMAP_FLAG_SYNC;
 
