@@ -179,13 +179,16 @@ static int _is_open_in_pid(pid_t pid, const char *path)
 		}
 		link_buf[len] = '\0';
 		if (!strcmp(deleted_path, link_buf)) {
-			closedir(pid_d);
+			if (closedir(pid_d))
+				log_sys_error("closedir", path_buf);
 			return 1;
 		}
 	}
 
 bad:
-	closedir(pid_d);
+	if (closedir(pid_d))
+		log_sys_error("closedir", path_buf);
+
 	return 0;
 }
 
@@ -225,11 +228,15 @@ static int _is_open(const char *path)
 		if (!pid)
 			continue;
 		if (_is_open_in_pid(pid, path)) {
-			closedir(proc_d);
+			if (closedir(pid_d))
+				log_sys_error("closedir", DEFAULT_PROC_DIR);
 			return 1;
 		}
 	}
-	closedir(proc_d);
+
+	if (closedir(pid_d))
+		log_sys_error("closedir", DEFAULT_PROC_DIR);
+
 	return 0;
 }
 
