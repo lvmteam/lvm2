@@ -751,6 +751,11 @@ static int _reorder_raid10_near_seg_areas(struct lv_segment *seg, enum raid0_rai
 	uint32_t *idx, stripes = seg->area_count;
 	unsigned i = 0;
 
+	if (!stripes) {
+		log_error(INTERNAL_ERROR "stripes may not be 0.");
+		return 0;
+	}
+
 	/* Internal sanity checks... */
 	if (!(conv == reorder_to_raid10_near || conv == reorder_from_raid10_near))
 		return_0;
@@ -2082,7 +2087,7 @@ static int _activate_sub_lvs_excl_local(struct logical_volume *lv, uint32_t star
 			   display_lvname(lv));
 	for (s = start_idx; s < seg->area_count; s++)
 		if (!_activate_sub_lv_excl_local(seg_lv(seg, s)) ||
-		    !_activate_sub_lv_excl_local(seg_metalv(seg, s)))
+		    (seg->meta_areas && !_activate_sub_lv_excl_local(seg_metalv(seg, s))))
 			return 0;
 
 	return 1;
@@ -4598,15 +4603,12 @@ static int _clear_meta_lvs(struct logical_volume *lv)
 	struct lv_segment_area *tmp_areas;
 	const struct segment_type *tmp_segtype;
 	struct dm_list meta_lvs;
-	struct lv_list *lvl_array, *lvl;
+	struct lv_list *lvl;
 	int is_raid45n10 = seg_is_raid4(seg) || seg_is_raid5_n(seg) || seg_is_raid10(seg);
 
 	/* Reject non-raid0_meta/raid4/raid5_n segment types cautiously */
 	if (!seg->meta_areas ||
 	    (!seg_is_raid0_meta(seg) && !is_raid45n10))
-		return_0;
-
-	if (!(lvl_array = dm_pool_alloc(lv->vg->vgmem, seg->area_count * sizeof(*lvl_array))))
 		return_0;
 
 	dm_list_init(&meta_lvs);
@@ -5894,7 +5896,7 @@ int lv_raid_convert(struct logical_volume *lv,
 	struct lv_segment *seg = first_seg(lv);
 	uint32_t stripes = new_stripes, stripe_size;
 	uint32_t new_image_count = seg->area_count;
-	uint32_t region_size = new_region_size;
+	uint32_t region_size;
 	uint32_t data_copies = seg->data_copies;
 	uint32_t available_slvs, removed_slvs;
 	takeover_fn_t takeover_fn;
