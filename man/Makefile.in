@@ -191,11 +191,10 @@ endef
 #
 # - multiple (>= 2)
 # - in ' -'
-# - in (cache|thin)-*
 # - in ranges
-# - in "$vg-$lv"
-# - in middle of options (e.g. '--use-policies')
+# - in middle of options (e.g. '--use-policies') and their arguments
 # - in symbolic use (e.g. '->')
+# - in "$vg-$lv"
 # - in single one in '\\f.-'
 define ESCAPEHYPHENS
 $(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
@@ -207,6 +206,7 @@ $(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([^\]\)-\([[:alnum:]\?]\)+\1\\\-\2+g" \
 	  -e "s+ --+\\\-\\\-+g" \
 	  -e "s+|-|+|\\\-|+g" \
+	  -e "s+|-\\\-+\\\-\\\-+g" \
 	  -e "s+ -\"+ \\\-\"+g" \
 	  -e "s+'--'+'\\\-\\\-'+g" \
 	  -e "s+^--+\\\-\\\-+g" \
