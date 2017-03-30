@@ -3418,13 +3418,17 @@ static void _print_man_secondary(char *name)
 	}
 }
 
+#define	STDOUT_BUF_SIZE	 (MAX_MAN_DESC + 4 * 1024)
+
 int main(int argc, char *argv[])
 {
 	char *cmdname = NULL;
 	char *desfile = NULL;
+	char *stdout_buf;
 	int primary = 0;
 	int secondary = 0;
-	int r = 1;
+	int r = 0;
+	size_t sz = STDOUT_BUF_SIZE;
 
 	static struct option long_options[] = {
 		{"primary", no_argument, 0, 'p' },
@@ -3433,6 +3437,11 @@ int main(int argc, char *argv[])
 	};
 
 	memset(&commands, 0, sizeof(commands));
+
+	if (!(stdout_buf = dm_malloc(sz)))
+		log_error("Failed to allocate stdout buffer; carrying on with default buffering.");
+	else
+		setbuffer(stdout, stdout_buf, sz);
 
 	while (1) {
 		int c;
@@ -3456,14 +3465,14 @@ int main(int argc, char *argv[])
 
 	if (!primary && !secondary) {
 		log_error("Usage: %s --primary|--secondary <command> [/path/to/description-file].", argv[0]);
-		goto out;
+		goto out_free;
 	}
 
 	if (optind < argc)
 		cmdname = strdup(argv[optind++]);
 	else {
 		log_error("Missing command name.");
-		goto out;
+		goto out_free;
 	}
 
 	if (optind < argc)
@@ -3477,10 +3486,15 @@ int main(int argc, char *argv[])
 
 	if (primary)
 		r = _print_man(cmdname, desfile, secondary);
-	else if (secondary)
+	else if (secondary) {
+		r = 1;
 		_print_man_secondary(cmdname);
+	}
 
-out:
+out_free:
+	if (stdout_buf)
+		free(stdout_buf);
+
 	exit(r ? EXIT_SUCCESS: EXIT_FAILURE);
 }
 
