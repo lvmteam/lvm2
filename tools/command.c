@@ -3492,8 +3492,11 @@ int main(int argc, char *argv[])
 	}
 
 out_free:
-	if (stdout_buf)
+	if (stdout_buf) {
+		fflush(stdout);
+		setlinebuf(stdout);
 		free(stdout_buf);
+	}
 
 	exit(r ? EXIT_SUCCESS: EXIT_FAILURE);
 }
