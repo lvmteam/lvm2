@@ -4193,7 +4193,7 @@ static int _stats_resize_group(struct dm_stats_group *group,
 		return 0;
 	}
 
-	log_very_verbose("Resizing group bitmap from %u to " FMTu64
+	log_very_verbose("Resizing group bitmap from " FMTu32 " to " FMTu64
 			 " (last_bit: " FMTu64 ").", group->regions[0],
 			 num_regions, last_bit);
 
