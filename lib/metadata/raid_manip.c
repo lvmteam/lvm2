@@ -937,11 +937,12 @@ static int _shift_and_rename_image_components(struct lv_segment *seg)
 static char *_generate_raid_name(struct logical_volume *lv,
 				 const char *suffix, int count)
 {
-	const char *format = (count >= 0) ? "%s_%s_%u" : "%s_%s";
 	char name[NAME_LEN], *lvname;
 	int historical;
 
-	if (dm_snprintf(name, sizeof(name), format, lv->name, suffix, count) < 0) {
+	if (dm_snprintf(name, sizeof(name), 
+			(count >= 0) ? "%s_%s_%u" : "%s_%s",
+			lv->name, suffix, count) < 0) {
 		log_error("Failed to new raid name for %s.",
 			  display_lvname(lv));
 		return NULL;
@@ -1701,7 +1702,7 @@ static int _reshape_adjust_to_size(struct logical_volume *lv,
 
 	/* Externally visible LV size w/o reshape space */
 	lv->le_count = seg->len = new_le_count;
-	lv->size = (uint64_t) (lv->le_count - new_image_count * _reshape_len_per_dev(seg)) * lv->vg->extent_size;
+	lv->size = (uint64_t) (lv->le_count - new_image_count * (uint32_t) _reshape_len_per_dev(seg)) * lv->vg->extent_size;
 	/* seg->area_len does not change */
 
 	if (old_image_count < new_image_count) {
