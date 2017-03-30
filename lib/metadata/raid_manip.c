@@ -3091,8 +3091,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	}
 
 	/* Get first item */
-	dm_list_iterate_items(lvl, &data_list)
-		break;
+	lvl = (struct lv_list *) dm_list_first(&data_list);
 
 	lvl->lv->name = split_name;
 
