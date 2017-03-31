@@ -296,10 +296,15 @@ OO: --monitor Bool, OO_LVCHANGE
 ID: lvchange_poll
 DESC: Start or stop processing an LV conversion.
 
-lvchange --persistent y --minor Number LV
-OO: --major Number, OO_LVCHANGE
+lvchange --persistent y --minor Number --activate Active LV
+OO: --minor Number, OO_LVCHANGE
 ID: lvchange_persistent
 DESC: Make the minor device number persistent for an LV.
+RULE: all not LV_thinpool LV_cachepool
+
+lvchange --persistent n --activate LV
+ID: lvchange_persistent
+DESC: Remove the minor device number persistent for an LV.
 RULE: all not LV_thinpool LV_cachepool
 
 ---
