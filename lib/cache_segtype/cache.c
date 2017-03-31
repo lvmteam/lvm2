@@ -258,6 +258,39 @@ static void _destroy(struct segment_type *segtype)
 }
 
 #ifdef DEVMAPPER_SUPPORT
+/*
+ * Parse and look for kernel symbol in /proc/kallsyms
+ * this could be our only change to figure out there is
+ * cache policy symbol already in the monolithic kernel
+ * where 'modprobe dm-cache-smq' will simply not work
+ */
+static int _lookup_kallsyms(const char *symbol)
+{
+	static const char _syms[] = "/proc/kallsyms";
+	int ret = 0;
+	char *line = NULL;
+	size_t len;
+	FILE *s;
+
+	if (!(s = fopen(_syms, "r")))
+		log_sys_debug("fopen", _syms);
+	else {
+		while (getline(&line, &len, s) != -1)
+			if (strstr(line, symbol)) {
+				ret = 1; /* Found symbol */
+				log_debug("Found kernel symbol%s.", symbol); /* space is in symbol */
+				break;
+			}
+
+		free(line);
+		if (fclose(s))
+			log_sys_debug("fclose", _syms);
+	}
+
+	return ret;
+}
+
+
 static int _target_present(struct cmd_context *cmd,
 			   const struct lv_segment *seg __attribute__((unused)),
 			   unsigned *attributes __attribute__((unused)))
@@ -270,14 +303,15 @@ static int _target_present(struct cmd_context *cmd,
 		unsigned cache_alias;
 		const char feature[12];
 		const char module[12]; /* check dm-%s */
+		const char ksymbol[12]; /* check for kernel symbol */
 		const char *aliasing;
 	} _features[] = {
-		/* Assumption: cache >=1.9 always aliases MQ policy */
 		{ 1, 10, CACHE_FEATURE_METADATA2, 0, "metadata2" },
+		/* Assumption: cache >=1.9 always aliases MQ policy */
 		{ 1, 9, CACHE_FEATURE_POLICY_SMQ, CACHE_FEATURE_POLICY_MQ, "policy_smq", "cache-smq",
-		" and aliases cache-mq" },
-		{ 1, 8, CACHE_FEATURE_POLICY_SMQ, 0, "policy_smq", "cache-smq" },
-		{ 1, 3, CACHE_FEATURE_POLICY_MQ, 0, "policy_mq", "cache-mq" },
+		 " smq_exit", " and aliases cache-mq" },
+		{ 1, 8, CACHE_FEATURE_POLICY_SMQ, 0, "policy_smq", "cache-smq", " smq_exit" },
+		{ 1, 3, CACHE_FEATURE_POLICY_MQ, 0, "policy_mq", "cache-mq", " mq_init" },
 	};
 	static const char _lvmconf[] = "global/cache_disabled_features";
 	static unsigned _attrs = 0;
@@ -323,7 +357,8 @@ static int _target_present(struct cmd_context *cmd,
 			}
 			if (((maj > _features[i].maj) ||
 			     (maj == _features[i].maj && min >= _features[i].min)) &&
-			    module_present(cmd, _features[i].module)) {
+			    ((_features[i].ksymbol[0] && _lookup_kallsyms(_features[i].ksymbol)) ||
+			     module_present(cmd, _features[i].module))) {
 				log_debug_activation("Cache policy %s is available%s.",
 						     _features[i].module,
 						     _features[i].aliasing ? : "");
