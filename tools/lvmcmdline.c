@@ -1832,7 +1832,7 @@ static void _short_usage(const char *name)
 static int _usage(const char *name, int longhelp, int skip_notes)
 {
 	struct command_name *cname = find_command_name(name);
-	struct command *cmd;
+	struct command *cmd = NULL;
 	int show_full = longhelp;
 	int i;
 
@@ -1876,6 +1876,11 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 	}
 
 	/* Common options are printed once for all variants of a command name. */
+	if (!cmd) {
+		log_error(INTERNAL_ERROR "Command %s not found.", name);
+		return 0;
+	}
+
 	print_usage_common_cmd(cname, cmd);
 	print_usage_common_lvm(cname, cmd);
 
