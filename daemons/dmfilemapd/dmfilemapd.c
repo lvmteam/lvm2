@@ -589,7 +589,7 @@ check_unlinked:
 		log_error("Could not format pid path.");
 		return 0;
 	}
-	if ((len = readlink(path_buf, link_buf, sizeof(link_buf))) < 0) {
+	if ((len = readlink(path_buf, link_buf, sizeof(link_buf) - 1)) < 0) {
 		log_error("readlink failed for " DEFAULT_PROC_DIR "/%d/fd/%d.",
 			  getpid(), fm->fd);
 		return 0;
