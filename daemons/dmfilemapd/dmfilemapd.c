@@ -533,6 +533,7 @@ static void _filemap_monitor_destroy(struct filemap_monitor *fm)
 		_filemap_monitor_close_fd(fm);
 	}
 	dm_free((void *) fm->program_id);
+	dm_free(fm->path);
 }
 
 static int _filemap_monitor_check_same_file(int fd1, int fd2)
@@ -800,8 +801,10 @@ int main(int argc, char **argv)
 {
 	struct filemap_monitor fm;
 
-	if (!_parse_args(argc, argv, &fm))
+	if (!_parse_args(argc, argv, &fm)) {
+		dm_free(fm.path);
 		return 1;
+	}
 
 	_setup_logging();
 
