@@ -297,7 +297,7 @@ ID: lvchange_poll
 DESC: Start or stop processing an LV conversion.
 
 lvchange --persistent y --minor Number LV
-OO: --major Number, --activate Activate OO_LVCHANGE
+OO: --major Number, --activate Activate, OO_LVCHANGE
 ID: lvchange_persistent
 DESC: Make the minor device number persistent for an LV.
 RULE: all not LV_thinpool LV_cachepool
