@@ -1835,15 +1835,13 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 			         _cmdline.commands[i].command_enum,
 			         _cmdline.commands[i].command_id);
 
-		print_usage(&_cmdline.commands[i], show_full, 1);
+		print_usage(&_cmdline.commands[i], 1, 1);
 		cmd = &_cmdline.commands[i];
 	}
 
 	/* Common options are printed once for all variants of a command name. */
-	if (show_full) {
-		print_usage_common_cmd(cname, cmd);
-		print_usage_common_lvm(cname, cmd);
-	}
+	print_usage_common_cmd(cname, cmd);
+	print_usage_common_lvm(cname, cmd);
 
 	if (skip_notes)
 		return 1;
