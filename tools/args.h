@@ -1223,13 +1223,11 @@ arg(maxphysicalvolumes_ARG, 'p', "maxphysicalvolumes", uint32_VAL, 0, 0,
 arg(permission_ARG, 'p', "permission", permission_VAL, 0, 0,
     "Set access permission to read only \\fBr\\fP or read and write \\fBrw\\fP.\n")
 
-/* FIXME: I left out some of the previous description that didn't sound correct. */
-
 arg(partial_ARG, 'P', "partial", 0, 0, 0,
-    "When set, the tools will do their best to provide access to VGs\n"
-    "that are only partially available (one or more PVs belonging\n"
-    "to the VG are missing from the system). Metadata may not be\n"
-    "changed with this option.\n")
+    "Commands will do their best to activate LVs with missing PV extents.\n"
+    "Missing extents may be replaced with error or zero segments\n"
+    "according to the lvm.conf missing_stripe_filler setting.\n"
+    "Metadata may not be changed with this option.\n")
 
 /* Not used */
 arg(physicalvolume_ARG, 'P', "physicalvolume", 0, 0, 0, NULL)
