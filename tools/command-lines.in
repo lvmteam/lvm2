@@ -196,7 +196,7 @@ OO_ALL: --commandprofile String, --config String, --debug,
 OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,
 --ignorelockingfailure, --ignoreskippedcluster, --logonly,
 --nameprefixes, --noheadings, --nolocking, --nosuffix,
---options String, --partial, --readonly, --reportformat ReportFmt, --rows,
+--options String, --readonly, --reportformat ReportFmt, --rows,
 --select String, --separator String, --shared, --sort String,
 --trustcache, --unbuffered, --units Units, --unquoted
 
@@ -1177,10 +1177,11 @@ lvdisplay
 OO: --aligned, --all, --binary, --colon, --columns,
 --configreport ConfigReport, --foreign, --history, --ignorelockingfailure,
 --ignoreskippedcluster, --logonly, --maps, --noheadings,
---nosuffix, --options String, --sort String, --partial, --readonly,
+--nosuffix, --options String, --sort String, --readonly,
 --reportformat ReportFmt, --segments, --select String, --separator String,
 --shared, --unbuffered, --units Units
 OP: VG|LV|Tag ...
+IO: --partial
 ID: lvdisplay_general
 
 ---
@@ -1294,19 +1295,22 @@ DESC: Resize a pool metadata SubLV by a specified size.
 lvs
 OO: --history, --segments, OO_REPORT
 OP: VG|LV|Tag ...
+IO: --partial
 ID: lvs_general
 
 ---
 
 lvscan
-OO: --all, --blockdevice, --ignorelockingfailure, --partial,
+OO: --all, --blockdevice, --ignorelockingfailure,
 --readonly, --reportformat ReportFmt
+IO: --partial
 ID: lvscan_general
 
 lvscan --cache_long
-OO: --blockdevice, --ignorelockingfailure, --partial,
+OO: --blockdevice, --ignorelockingfailure,
 --readonly, --reportformat ReportFmt
 OP: LV ...
+IO: --partial
 ID: lvscan_cache
 
 ---
@@ -1390,6 +1394,7 @@ ID: pvremove_general
 pvs
 OO: --segments, OO_REPORT
 OP: PV|Tag ...
+IO: --partial
 ID: pvs_general
 
 ---
@@ -1410,9 +1415,10 @@ DESC: Populate the lvmetad cache by scanning PVs.
 ---
 
 vgcfgbackup
-OO: --file String, --foreign, --ignorelockingfailure, --partial, --readonly,
+OO: --file String, --foreign, --ignorelockingfailure, --readonly,
 --reportformat ReportFmt
 OP: VG ...
+IO: --partial
 ID: vgcfgbackup_general
 
 ---
@@ -1538,9 +1544,10 @@ vgdisplay
 OO: --activevolumegroups, --aligned, --binary, --colon, --columns,
 --configreport ConfigReport, --foreign, --ignorelockingfailure,
 --ignoreskippedcluster, --logonly, --noheadings, --nosuffix,
---options String, --partial, --readonly, --reportformat ReportFmt, --select String,
+--options String, --readonly, --reportformat ReportFmt, --select String,
 --shared, --short, --separator String, --sort String, --unbuffered, --units Units
 OP: VG|Tag ...
+IO: --partial
 ID: vgdisplay_general
 
 ---
@@ -1642,13 +1649,15 @@ DESC: Rename a VG by specifying the VG UUID.
 vgs
 OO: OO_REPORT
 OP: VG|Tag ...
+IO: --partial
 ID: vgs_general
 
 ---
 
 vgscan
 OO: --cache_long, --ignorelockingfailure, --mknodes, --notifydbus,
---partial, --reportformat ReportFmt
+--reportformat ReportFmt
+IO: --partial
 ID: vgscan_general
 
 ---
@@ -1695,6 +1704,7 @@ ID: devtypes_general
 fullreport
 OO: OO_REPORT
 OP: VG ...
+IO: --partial
 ID: fullreport_general
 
 lastlog
