@@ -281,7 +281,7 @@ ID: lvchange_activate
 DESC: Activate or deactivate an LV.
 
 lvchange --refresh VG|LV|Tag|Select ...
-OO: --partial, --poll Bool, OO_LVCHANGE
+OO: --activationmode ActivationMode, --partial, --poll Bool, OO_LVCHANGE
 ID: lvchange_refresh
 DESC: Reactivate an LV using the latest metadata.
 
