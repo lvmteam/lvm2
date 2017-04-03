@@ -34,7 +34,7 @@ mount "$DM_DEV_DIR/$vg/$lv1" mnt
 lvcreate -s -n snap $vg/$lv1
 check lv_field $vg/snap thin_id "3"
 
-lvconvert --mergethin $vg/snap
+lvconvert --merge $vg/snap
 
 umount mnt
 

@@ -29,9 +29,11 @@ aux wait_for_sync $vg $lv1
 aux wait_for_sync $vg $lv2
 lvchange -an $vg/$lv1
 
+# FIXME: temporarily we return error code 5
+INVALID=not
 # conversion fails for internal volumes
-not lvconvert --thinpool $vg/${lv1}_rimage_0
-not lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_rimage_0
+$INVALID lvconvert --thinpool $vg/${lv1}_rimage_0
+$INVALID lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/${lv2}_rimage_0
 
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 

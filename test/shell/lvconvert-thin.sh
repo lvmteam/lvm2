@@ -57,14 +57,17 @@ lvchange -an $vg/$lv1
 
 # conversion fails for mirror segment type
 fail lvconvert --thinpool $vg/$lv1
+
+# FIXME: temporarily we return error code 5
+INVALID=not
 # cannot use same LV
-not lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
+$INVALID lvconvert --yes --thinpool $vg/$lv2 --poolmetadata $vg/$lv2
 
 prepare_lvs
 
 # conversion fails for internal volumes
 # can't use --readahead with --poolmetadata
-not lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
+invalid lvconvert --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 --readahead 512
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
 prepare_lvs
@@ -81,9 +84,9 @@ grep "Pool zeroing and large" err
 UUID=$(get lv_field $vg/$lv2 uuid)
 # Fail is pool is active
 # TODO  maybe detect inactive pool and deactivate
-fail lvconvert --swapmetadata --yes --poolmetadata $lv2 $vg/$lv1
+fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
 lvchange -an $vg
-lvconvert --swapmetadata --yes --poolmetadata $lv2 $vg/$lv1
+lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
 check lv_field $vg/${lv1}_tmeta uuid "$UUID"
 lvremove -f $vg
 
@@ -96,20 +99,20 @@ lvcreate -L1M -n $lv3 $vg
 # chunk size is bigger then size of thin pool data
 fail lvconvert --yes -c 1G --thinpool $vg/$lv3
 # stripes can't be used with poolmetadata
-not lvconvert --stripes 2 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+invalid lvconvert --stripes 2 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too small metadata (<2M)
 fail lvconvert --yes -c 64 --thinpool $vg/$lv1 --poolmetadata $vg/$lv3
 # too small chunk size fails
-not lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+$INVALID lvconvert -c 4 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # too big chunk size fails
-not lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+$INVALID lvconvert -c 2G --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # negative chunk size fails
-not lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+$INVALID lvconvert -c -256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 # non multiple of 64KiB fails
-not lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
+$INVALID lvconvert -c 88 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2
 
 # cannot use same LV for pool and convertion
-not lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
+$INVALID lvconvert --yes --thinpool $vg/$lv3 -T $vg/$lv3
 
 # Warning about smaller then suggested
 lvconvert --yes -c 256 --thinpool $vg/$lv1 --poolmetadata $vg/$lv2 2>&1 | tee err
@@ -129,7 +132,7 @@ if test "$TSIZE" = 64T; then
 lvcreate -L24T -n $lv1 $vg
 # Warning about bigger then needed (24T data and 16G -> 128K chunk)
 lvconvert --yes -c 64 --thinpool $vg/$lv1 2>&1 | tee err
-grep "too small" err
+grep "WARNING: Chunk size is too small" err
 lvremove -f $vg
 fi
 

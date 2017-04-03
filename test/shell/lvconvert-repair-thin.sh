@@ -45,7 +45,7 @@ lvchange -an $vg/$lv2 $vg/$lv1 $vg/pool $vg/repair
 
 # Manual repair steps:
 # Test swapping - swap out thin-pool's metadata with our repair volume
-lvconvert -y -f --swapmetadata --poolmetadata $vg/repair $vg/pool
+lvconvert -y -f --poolmetadata $vg/repair --thinpool $vg/pool
 
 lvchange -ay $vg/repair
 
@@ -74,7 +74,7 @@ not "$LVM_TEST_THIN_DUMP_CMD" "$DM_DEV_DIR/$vg/repair" | tee dump
 lvchange -an $vg
 
 # Swap repaired metadata back
-lvconvert -y -f --swapmetadata --poolmetadata $vg/fixed $vg/pool
+lvconvert -y -f --poolmetadata $vg/fixed --thinpool $vg/pool
 
 # Check pool still preserves its original settings
 check lv_field $vg/pool chunksize "128.00k"
@@ -87,7 +87,7 @@ vgchange -ay $vg
 vgchange -an $vg
 
 # Put back 'broken' metadata
-lvconvert -y -f --swapmetadata --poolmetadata $vg/repair $vg/pool
+lvconvert -y -f --poolmetadata $vg/repair --thinpool $vg/pool
 
 # Check --repair usage
 lvconvert -v --repair $vg/pool
@@ -98,7 +98,7 @@ lvchange -ay $vg/pool
 vgchange -an $vg
 
 # Restore damaged metadata
-lvconvert -y -f --swapmetadata --poolmetadata $vg/pool_meta0 $vg/pool
+lvconvert -y -f --poolmetadata $vg/pool_meta0 --thinpool $vg/pool
 
 # Check lvremove -ff works even with damaged pool
 lvremove -ff $vg
