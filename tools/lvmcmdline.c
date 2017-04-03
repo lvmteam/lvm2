@@ -1154,7 +1154,7 @@ static void _set_valid_args_for_command_name(int ci)
 	int num_args = 0;
 	int opt_enum; /* foo_ARG from args.h */
 	int opt_syn;
-	int i, ro, oo;
+	int i, ro, oo, io;
 
 	/*
 	 * all_args is indexed by the foo_ARG enum vals
@@ -1171,6 +1171,10 @@ static void _set_valid_args_for_command_name(int ci)
 		}
 		for (oo = 0; oo < commands[i].oo_count; oo++) {
 			opt_enum = commands[i].optional_opt_args[oo].opt;
+			all_args[opt_enum] = 1;
+		}
+		for (io = 0; io < commands[i].io_count; io++) {
+			opt_enum = commands[i].ignore_opt_args[io].opt;
 			all_args[opt_enum] = 1;
 		}
 	}
