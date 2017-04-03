@@ -1830,6 +1830,11 @@ static int _usage(const char *name, int longhelp, int skip_notes)
 		if ((_cmdline.commands[i].cmd_flags & CMD_FLAG_SECONDARY_SYNTAX) && !show_full)
 			continue;
 
+		log_very_verbose("Command definition index %d enum %d id %s",
+			         _cmdline.commands[i].command_index,
+			         _cmdline.commands[i].command_enum,
+			         _cmdline.commands[i].command_id);
+
 		print_usage(&_cmdline.commands[i], show_full, 1);
 		cmd = &_cmdline.commands[i];
 	}
