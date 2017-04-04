@@ -234,7 +234,7 @@ OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 # in combination with unrelated metadata changes.
 
 lvchange OO_LVCHANGE_META VG|LV|Tag|Select ...
-OO: --activate Active, OO_LVCHANGE
+OO: --activate Active, --poll Bool, --monitor Bool, OO_LVCHANGE
 ID: lvchange_properties
 DESC: Change a general LV attribute.
 DESC: For options listed in parentheses, any one is
@@ -275,18 +275,18 @@ DESC: Reconstruct data on specific PVs of a raid LV.
 RULE: all not LV_raid0
 
 lvchange --activate Active VG|LV|Tag|Select ...
-OO: --activationmode ActivationMode, --partial, --ignoreactivationskip,
---ignorelockingfailure, --sysinit, OO_LVCHANGE
+OO: --activationmode ActivationMode, --partial, --poll Bool, --monitor Bool,
+--ignoreactivationskip, --ignorelockingfailure, --sysinit, OO_LVCHANGE
 ID: lvchange_activate
 DESC: Activate or deactivate an LV.
 
 lvchange --refresh VG|LV|Tag|Select ...
-OO: --activationmode ActivationMode, --partial, --poll Bool, OO_LVCHANGE
+OO: --activationmode ActivationMode, --partial, --poll Bool, --monitor Bool, OO_LVCHANGE
 ID: lvchange_refresh
 DESC: Reactivate an LV using the latest metadata.
 
 lvchange --monitor Bool VG|LV|Tag|Select ...
-OO: --poll Bool, OO_LVCHANGE
+OO: OO_LVCHANGE
 ID: lvchange_monitor
 DESC: Start or stop monitoring an LV from dmeventd.
 RULE: all not lv_is_pvmove
@@ -297,7 +297,7 @@ ID: lvchange_poll
 DESC: Start or stop processing an LV conversion.
 
 lvchange --persistent y --minor Number LV
-OO: --major Number, --activate Activate, OO_LVCHANGE
+OO: --major Number, --activate Activate, --poll Bool, --monitor Bool, OO_LVCHANGE
 ID: lvchange_persistent
 DESC: Make the minor device number persistent for an LV.
 RULE: all not LV_thinpool LV_cachepool
@@ -1470,7 +1470,7 @@ OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
 --profile String, --detachprofile, --metadataprofile String
 
 vgchange OO_VGCHANGE_META
-OO: OO_VGCHANGE
+OO: --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
 ID: vgchange_properties
 DESC: Change a general VG attribute.
@@ -1497,7 +1497,7 @@ ID: vgchange_activate
 DESC: Activate or deactivate LVs.
 
 vgchange --refresh
-OO: --sysinit, --ignorelockingfailure, --monitor Bool, --poll Bool, OO_VGCHANGE
+OO: --sysinit, --ignorelockingfailure, --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
 ID: vgchange_refresh
 DESC: Reactivate LVs using the latest metadata.

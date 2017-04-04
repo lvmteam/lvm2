@@ -141,6 +141,11 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 	return 1;
 }
 
+/*
+ * The --monitor y|n value is taken indirectly from dmeventd_monitor_mode()
+ * whose value was set via init_dmeventd_monitor().
+ */
+
 static int _lvchange_monitoring(struct cmd_context *cmd,
 				struct logical_volume *lv)
 {
@@ -152,12 +157,19 @@ static int _lvchange_monitoring(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if ((dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) &&
-	    !monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode()))
-		return_0;
+	if (dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
+		log_verbose("Monitoring LV %s", display_lvname(lv));
+		if (!monitor_dev_for_events(cmd, lv, 0, dmeventd_monitor_mode()))
+			return_0;
+	}
 
 	return 1;
 }
+
+/*
+ * The --poll y|n value is taken indirectly from background_polling(),
+ * whose value was set via init_background_polling().
+ */
 
 static int _lvchange_background_polling(struct cmd_context *cmd,
 					struct logical_volume *lv)
@@ -169,8 +181,10 @@ static int _lvchange_background_polling(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (background_polling())
+	if (background_polling()) {
+		log_verbose("Polling LV %s", display_lvname(lv));
 		lv_spawn_background_polling(cmd, lv);
+	}
 
 	return 1;
 }
@@ -1246,6 +1260,9 @@ int lvchange_properties_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, activate_ARG)) {
 		log_warn("WARNING: Combining activation change with other commands is not advised.");
 		ret = lvchange_activate_cmd(cmd, argc, argv);
+
+	} else if (arg_is_set(cmd, monitor_ARG) || arg_is_set(cmd, poll_ARG)) {
+		ret = lvchange_monitor_poll_cmd(cmd, argc, argv);
 	}
 
 	return ret;
@@ -1321,6 +1338,8 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 
 int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
+	int ret;
+
 	cmd->handles_missing_pvs = 1;
 	cmd->lockd_vg_default_sh = 1;
 
@@ -1335,8 +1354,16 @@ int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
 		cmd->lockd_vg_enforce_sh = 1;
 
-	return process_each_lv(cmd, argc, argv, NULL, NULL, 0,
-			       NULL, &_lvchange_activate_check, &_lvchange_activate_single);
+	ret = process_each_lv(cmd, argc, argv, NULL, NULL, 0,
+			      NULL, &_lvchange_activate_check, &_lvchange_activate_single);
+
+	if (ret != ECMD_PROCESSED)
+		return ret;
+
+	if (arg_is_set(cmd, monitor_ARG) || arg_is_set(cmd, poll_ARG))
+		ret = lvchange_monitor_poll_cmd(cmd, argc, argv);
+
+	return ret;
 }
 
 static int _lvchange_refresh_single(struct cmd_context *cmd,
@@ -1354,6 +1381,10 @@ static int _lvchange_refresh_single(struct cmd_context *cmd,
 	 */
 	if (arg_is_set(cmd, poll_ARG) &&
 	    !_lvchange_background_polling(cmd, lv))
+		return_ECMD_FAILED;
+
+	if (arg_is_set(cmd, monitor_ARG) &&
+	    !_lvchange_monitoring(cmd, lv))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -1560,9 +1591,24 @@ static int _lvchange_persistent_check(struct cmd_context *cmd,
 
 int lvchange_persistent_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
+	int ret;
+
 	cmd->handles_missing_pvs = 1;
-	return process_each_lv(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE,
-			       NULL, &_lvchange_persistent_check, &_lvchange_persistent_single);
+
+	ret = process_each_lv(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE,
+			      NULL, &_lvchange_persistent_check, &_lvchange_persistent_single);
+
+	if (ret != ECMD_PROCESSED)
+		return ret;
+
+	/* See comment in lvchange_properties about needing to allow these. */
+	if (arg_is_set(cmd, activate_ARG)) {
+		log_warn("WARNING: Combining activation change with other commands is not advised.");
+		ret = lvchange_activate_cmd(cmd, argc, argv);
+
+	} else if (arg_is_set(cmd, monitor_ARG) || arg_is_set(cmd, poll_ARG)) {
+		ret = lvchange_monitor_poll_cmd(cmd, argc, argv);
+	}
 }
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)
