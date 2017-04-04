@@ -495,6 +495,7 @@ ID: lvconvert_to_thinpool_or_swap_metadata
 DESC: Convert LV to type thin-pool (variant, use \\-\\-type thin-pool).
 DESC: Swap metadata LV in a thin pool (variant, use \\-\\-swapmetadata).
 FLAGS: PREVIOUS_SYNTAX
+RULE: all and lv_is_visible
 
 ---
 
@@ -533,6 +534,7 @@ ID: lvconvert_to_cachepool_or_swap_metadata
 DESC: Convert LV to type cache-pool (variant, use \\-\\-type cache-pool).
 DESC: Swap metadata LV in a cache pool (variant, use \\-\\-swapmetadata).
 FLAGS: PREVIOUS_SYNTAX
+RULE: all and lv_is_visible
 
 ---
 
