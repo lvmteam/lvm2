@@ -1554,7 +1554,8 @@ raid6_n_6
 RAID6 last parity devices
 .br
 \[bu]
-Dedicated last parity devices used for striped/raid0 conversions
+Fixed dedicated last devices (P-Syndrome N-1 and Q-Syndrome N)
+with striped data used for striped/raid0 conversions
 \[bu]
 Used for RAID Takeover
 
@@ -1565,17 +1566,6 @@ RAID6 last parity device
 .br
 \[bu]
 Dedicated last parity device used for conversions from/to raid5_{ls,rs,la,ra}
-
-raid6_n_6
-.br
-\[bu]
-RAID6 N continue
-.br
-\[bu]
-Fixed P-Syndrome N-1 and Q-Syndrome N with striped data
-.br
-\[bu]
-Used for RAID Takeover
 
 raid6_ls_6
 .br
