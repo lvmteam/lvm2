@@ -1618,6 +1618,8 @@ int lvchange_persistent_cmd(struct cmd_context *cmd, int argc, char **argv)
 	} else if (arg_is_set(cmd, monitor_ARG) || arg_is_set(cmd, poll_ARG)) {
 		ret = lvchange_monitor_poll_cmd(cmd, argc, argv);
 	}
+
+	return ret;
 }
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)
