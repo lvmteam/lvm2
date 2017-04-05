@@ -1933,7 +1933,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		 * -> remove the freed up images and reduce LV size
 		 *
 		 */
-		if (!_get_available_removed_sublvs(lv, &available_slvs,  &removed_slvs))
+		if (!_get_available_removed_sublvs(lv, &available_slvs, &removed_slvs))
 			return_0;
 
 		if (devs_in_sync != new_image_count) {
