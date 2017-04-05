@@ -1685,6 +1685,10 @@ static int _lvconvert_raid_types(struct cmd_context *cmd, struct logical_volume 
 	struct lv_segment *seg = first_seg(lv);
 	int ret = 0;
 
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_ECMD_FAILED;
+
 	/* Set up segtype either from type_str or else to match the existing one. */
 	if (!*lp->type_str)
 		lp->segtype = seg->segtype;
@@ -2734,6 +2738,10 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return 0;
+
 	/*
 	 * If an existing LV is to be used as the metadata LV,
 	 * verify that it's in a usable state.  These checks are
@@ -2789,6 +2797,10 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 				  display_lvname(metadata_lv));
 			return 0;
 		}
+
+		/* If LV is inactive here, ensure it's not active elsewhere. */
+		if (!lockd_lv(cmd, metadata_lv, "ex", 0))
+			return 0;
 	}
 
 	if (!get_pool_params(cmd, pool_segtype,
@@ -3134,6 +3146,10 @@ static int _lvconvert_to_cache_vol(struct cmd_context *cmd,
 	const char *policy_name;
 	struct dm_config_tree *policy_settings = NULL;
 	int r = 0;
+
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_0;
 
 	if (!validate_lv_cache_create_pool(cachepool_lv))
 		return_0;
@@ -3958,6 +3974,12 @@ static int _lvconvert_swap_pool_metadata_single(struct cmd_context *cmd,
 	struct logical_volume *metadata_lv;
 	const char *metadata_name;
 
+	if (is_lockd_type(lv->vg->lock_type)) {
+		/* FIXME: need to swap locks betwen LVs? */
+		log_error("Unable to swap pool metadata in VG with lock_type %s", lv->vg->lock_type);
+		goto out;
+	}
+
 	if (!(metadata_name = arg_str_value(cmd, poolmetadata_ARG, NULL)))
 		goto_out;
 
@@ -4132,6 +4154,10 @@ static int _lvconvert_split_cachepool_single(struct cmd_context *cmd,
 		log_error("Cannot find cache pool LV from %s.", display_lvname(lv));
 		return ECMD_FAILED;
 	}
+
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, cache_lv, "ex", 0))
+		return_0;
 
 	switch (cmd->command->command_enum) {
 	case lvconvert_split_and_keep_cachepool_CMD:

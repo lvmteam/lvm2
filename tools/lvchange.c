@@ -1056,16 +1056,9 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 	int i, opt_enum;
 	uint32_t mr = 0;
 
-	/*
-	 * If a persistent lv lock already exists from activation
-	 * (with the needed mode or higher), this will be a no-op.
-	 * Otherwise, the lv lock will be taken as non-persistent
-	 * and released when this command exits.
-	 */
-	if (!lockd_lv(cmd, lv, "ex", 0)) {
-		stack;
-		return ECMD_FAILED;
-	}
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_ECMD_FAILED;
 
 	/* First group of options which allow for one metadata commit/update for the whole group */
 	for (i = 0; i < cmd->command->ro_count; i++) {
@@ -1451,6 +1444,10 @@ static int _lvchange_resync_single(struct cmd_context *cmd,
 				    struct logical_volume *lv,
 				    struct processing_handle *handle)
 {
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_ECMD_FAILED;
+
 	if (!_lvchange_resync(cmd, lv))
 		return_ECMD_FAILED;
 
@@ -1502,6 +1499,10 @@ static int _lvchange_syncaction_single(struct cmd_context *cmd,
 				       struct logical_volume *lv,
 				       struct processing_handle *handle)
 {
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_ECMD_FAILED;
+
 	if (!lv_raid_message(lv, arg_str_value(cmd, syncaction_ARG, NULL)))
 		return_ECMD_FAILED;
 
@@ -1532,6 +1533,10 @@ static int _lvchange_rebuild_single(struct cmd_context *cmd,
 				    struct logical_volume *lv,
 				    struct processing_handle *handle)
 {
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_ECMD_FAILED;
+
 	if (!_lvchange_rebuild(lv))
 		return_ECMD_FAILED;
 
@@ -1600,6 +1605,10 @@ static int _lvchange_persistent_single(struct cmd_context *cmd,
 				       struct processing_handle *handle)
 {
 	uint32_t mr = 0;
+
+	/* If LV is inactive here, ensure it's not active elsewhere. */
+	if (!lockd_lv(cmd, lv, "ex", 0))
+		return_ECMD_FAILED;
 
 	if (!_lvchange_persistent(cmd, lv, &mr))
 		return_ECMD_FAILED;
