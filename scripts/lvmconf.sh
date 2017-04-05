@@ -361,7 +361,8 @@ function set_service {
     if [ "$type" = "systemd" ]; then
         if [ "$action" = "activate" ]; then
             for i in $@; do
-                eval $($SYSTEMCTL_BIN show $i -p LoadState)
+                unset LoadState
+                eval $($SYSTEMCTL_BIN show $i -p LoadState 2>/dev/null)
                 test  "$LoadState" = "loaded" || continue
                 $SYSTEMCTL_BIN enable $i
                 if [ "$START_STOP_SERVICES" = "1" ]; then
@@ -370,7 +371,8 @@ function set_service {
             done
         elif [ "$action" = "deactivate" ]; then
             for i in $@; do
-                eval $($SYSTEMCTL_BIN show $i -p LoadState)
+                unset LoadState
+                eval $($SYSTEMCTL_BIN show $i -p LoadState 2>/dev/null)
                 test  "$LoadState" = "loaded" || continue
                 $SYSTEMCTL_BIN disable $i
                 if [ "$START_STOP_SERVICES" = "1" ]; then
