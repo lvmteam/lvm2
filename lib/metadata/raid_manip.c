@@ -1592,7 +1592,6 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 		 */
 		if (!_lv_alloc_reshape_space(lv, alloc_end, &where, NULL))
 			return_0;
-
 		seg->extents_copied = first_seg(lv)->area_len;
 		if (!lv_reduce(lv, total_reshape_len))
 			return_0;
@@ -2918,6 +2917,8 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 		return 0;
 	}
 
+	first_seg(lv)->area_count = new_count;
+
 	/* Convert to linear? */
 	if (new_count == 1) {
 		if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to type %s loosing all resilience? [y/n]: ",
@@ -2944,13 +2945,11 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 	/*
 	 * Eliminate the extracted LVs
 	 */
-	if (!dm_list_empty(removal_lvs)) {
-		if (!_deactivate_and_remove_lvs(lv->vg, removal_lvs))
-			return_0;
+	if (!_deactivate_and_remove_lvs(lv->vg, removal_lvs))
+		return_0;
 
-		if (!vg_write(lv->vg) || !vg_commit(lv->vg))
-			return_0;
-	}
+	if (!lv_update_and_reload_origin(lv))
+		return_0;
 
 	backup(lv->vg);
 
