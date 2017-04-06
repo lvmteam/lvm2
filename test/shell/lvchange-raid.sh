@@ -128,7 +128,7 @@ run_writemostly_check() {
 	# Converting to linear should clear flags and writebehind
 	not lvconvert -m 0 $vg/$lv $d1
 	lvconvert -y -m 0 $vg/$lv $d1
-	lvconvert --type raid1 -m 1 $vg/$lv $d1
+	lvconvert -y --type raid1 -m 1 $vg/$lv $d1
 	check lv_field $vg/$lv raid_write_behind ""
 	check lv_attr_bit health $vg/${lv}_rimage_0 "-"
 	check lv_attr_bit health $vg/${lv}_rimage_1 "-"
@@ -274,7 +274,7 @@ run_checks() {
 		printf "#\n#\n# run_checks: RAID as thinpool data\n#\n#\n"
 
 # Hey, specifying devices for thin allocation doesn't work
-#		lvconvert --thinpool $1/$2 "$dev6"
+#		lvconvert -y --thinpool $1/$2 "$dev6"
 		lvcreate -aey -L 2M -n ${2}_meta $1 "$dev6"
 		lvconvert --thinpool $1/$2 --poolmetadata ${2}_meta
 		lvcreate -T $1/$2 -V 1 -n thinlv
@@ -289,7 +289,7 @@ run_checks() {
 
 		lvrename $1/$2 ${2}_meta
 		lvcreate -aey -L 2M -n $2 $1 "$dev6"
-		lvconvert --thinpool $1/$2 --poolmetadata ${2}_meta
+		lvconvert -y --thinpool $1/$2 --poolmetadata ${2}_meta
 		lvcreate -T $1/$2 -V 1 -n thinlv
 		THIN_POSTFIX="_tmeta"
 

@@ -132,7 +132,7 @@ aux wait_for_sync $vg $lv1
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 # Convert 3-way to 4-way mirror
-lvconvert -m 3 $vg/$lv1
+lvconvert -y -m 3 $vg/$lv1
 detect_error_leak_
 check lv_field $vg/$lv1 segtype "mirror"
 check lv_field $vg/$lv1 stripes 4
@@ -149,7 +149,7 @@ check lv_field $vg/$lv1 regionsize "64.00k"
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 ## Convert 4-way raid1 to 5-way
-lvconvert -m 4 -R 128K $vg/$lv1
+lvconvert -y -m 4 -R 128K $vg/$lv1
 detect_error_leak_
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 5

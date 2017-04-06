@@ -75,14 +75,14 @@ for i in 1 2 3; do
 		mirrors=$((j - 1))
 		if [ $i -eq 1 ]
 		then
-			[ $mirrors -eq 0 ] && lvconvert -m $mirrors $vg/$lv1
+			[ $mirrors -eq 0 ] && lvconvert -y -m $mirrors $vg/$lv1
 		else
 			if [ $mirrors -eq 0 ]
 			then
 				not lvconvert -m $mirrors $vg/$lv1
 				lvconvert -y -m $mirrors $vg/$lv1
 			else
-				lvconvert -m $mirrors $vg/$lv1
+				lvconvert -y -m $mirrors $vg/$lv1
 			fi
 		fi
 
@@ -105,13 +105,13 @@ lvcreate --type raid1 -m 1 -l 2 -n $lv1 $vg --nosync
 not lvconvert -m +1 $vg/$lv1
 lvchange --resync -y $vg/$lv1
 aux wait_for_sync $vg $lv1
-lvconvert -m +1 $vg/$lv1
+lvconvert -y -m +1 $vg/$lv1
 lvremove -ff $vg
 
 # 3-way to 2-way convert while specifying devices
 lvcreate --type raid1 -m 2 -l 2 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
 aux wait_for_sync $vg $lv1
-lvconvert -m1 $vg/$lv1 "$dev2"
+lvconvert -y -m 1 $vg/$lv1 "$dev2"
 lvremove -ff $vg
 
 #
@@ -188,7 +188,7 @@ lvremove -ff $vg
 # Linear to RAID1 conversion ("raid1" default segtype)
 ###########################################
 lvcreate -aey -l 2 -n $lv1 $vg
-lvconvert -m 1 $vg/$lv1 \
+lvconvert -y -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "raid1" }'
 lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
 lvremove -ff $vg
@@ -197,7 +197,7 @@ lvremove -ff $vg
 # Linear to RAID1 conversion (override "mirror" default segtype)
 ###########################################
 lvcreate -aey -l 2 -n $lv1 $vg
-lvconvert --type raid1 -m 1 $vg/$lv1 \
+lvconvert --yes --type raid1 -m 1 $vg/$lv1 \
 	--config 'global { mirror_segtype_default = "mirror" }'
 lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
 lvremove -ff $vg
@@ -207,7 +207,7 @@ lvremove -ff $vg
 ###########################################
 if [ -e LOCAL_CLVMD ]; then
 	lvcreate -l 2 -n $lv1 $vg
-	not lvconvert --type raid1 -m 1 $vg/$lv1 \
+	not lvconvert -y --type raid1 -m 1 $vg/$lv1 \
 		--config 'global { mirror_segtype_default = "mirror" }'
 	lvremove -ff $vg
 fi
@@ -218,7 +218,7 @@ fi
 for i in 1 2 3 ; do
 	lvcreate -aey --type mirror -m $i -l 2 -n $lv1 $vg
 	aux wait_for_sync $vg $lv1
-	lvconvert --type raid1 $vg/$lv1
+	lvconvert -y --type raid1 $vg/$lv1
 	lvremove -ff $vg
 done
 

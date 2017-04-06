@@ -2999,7 +2999,14 @@ int lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_
 			       const uint32_t new_region_size, struct dm_list *allocate_pvs)
 {
 	struct lv_segment *seg = first_seg(lv);
+	const char *level = seg->area_count == 1 ? "raid1 with " : "";
+	const char *resil = new_count == 1 ? " loosing all" : (new_count < seg->area_count ? "s reducing" : "s enhancing");
 
+	if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to %s%u image%s resilience? [y/n]: ",
+				  lvseg_name(first_seg(lv)), display_lvname(lv), level, new_count, resil) == 'n') {
+		log_error("Logical volume %s NOT converted.", display_lvname(lv));
+		return 0;
+	}
 	if (new_region_size) {
 		seg->region_size = new_region_size;
 		_check_and_adjust_region_size(lv);

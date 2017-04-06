@@ -66,8 +66,8 @@ aux wait_for_sync $vg cpool_cmeta
 lvchange --syncaction repair $vg/cpool_cdata
 aux wait_for_sync $vg cpool_cdata
 
-lvconvert --repair -y $vg/cpool_cmeta
-lvconvert --repair -y $vg/cpool_cdata
+lvconvert -y --repair $vg/cpool_cmeta
+lvconvert -y --repair $vg/cpool_cdata
 
 # do not allow reserved names for *new* LVs
 not lvconvert --splitmirrors 1 --name split_cmeta $vg/cpool_cmeta "$dev1"
@@ -87,18 +87,18 @@ lvremove -f $vg
 lvcreate --type cache-pool $vg/cpool -l 10
 lvcreate -n corigin -H $vg/cpool -l 20
 
-lvconvert -m+1 --type raid1 $vg/cpool_cmeta
+lvconvert -y -m +1 --type raid1 $vg/cpool_cmeta
 check lv_field $vg/cpool_cmeta layout "raid,raid1"
 check lv_field $vg/cpool_cmeta role "private,cache,pool,metadata"
 
-lvconvert -m+1 --type raid1 $vg/cpool_cdata
+lvconvert -y -m +1 --type raid1 $vg/cpool_cdata
 check lv_field $vg/cpool_cdata layout "raid,raid1"
 check lv_field $vg/cpool_cdata role "private,cache,pool,data"
 
-not lvconvert -m-1  $vg/cpool_cmeta
-lvconvert -y -m-1  $vg/cpool_cmeta
+not lvconvert -m -1  $vg/cpool_cmeta
+lvconvert -y -m -1  $vg/cpool_cmeta
 check lv_field $vg/cpool_cmeta layout "linear"
-lvconvert -y -m-1  $vg/cpool_cdata
+lvconvert -y -m -1  $vg/cpool_cdata
 check lv_field $vg/cpool_cdata layout "linear"
 
 lvremove -f $vg

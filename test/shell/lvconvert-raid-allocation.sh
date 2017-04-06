@@ -24,11 +24,11 @@ vgcreate -s 256k $vg $(cat DEVICES)
 lvcreate -aey -l 4 -n $lv1 $vg "$dev1:0-1" "$dev2:0-1"
 not lvconvert --type raid1 -m 1 $vg/$lv1 "$dev1" "$dev2"
 not lvconvert --type raid1 -m 1 $vg/$lv1 "$dev1" "$dev3:0-2"
-lvconvert --type raid1 -m 1 $vg/$lv1 "$dev3"
+lvconvert -y --type raid1 -m 1 $vg/$lv1 "$dev3"
 not lvconvert -m 0 $vg/$lv1
 lvconvert -y -m 0 $vg/$lv1
 # RAID conversions are not honoring allocation policy!
-# lvconvert --type raid1 -m 1 --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
+# lvconvert -y --type raid1 -m 1 --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
 lvremove -ff $vg
 
 
@@ -48,12 +48,12 @@ aux wait_for_sync $vg $lv1
 # Should not be enough non-overlapping space.
 not lvconvert -m +1 $vg/$lv1 \
     "$dev5:0-1" "$dev1" "$dev2" "$dev3" "$dev4"
-lvconvert -m +1 $vg/$lv1 "$dev5"
+lvconvert -y -m +1 $vg/$lv1 "$dev5"
 not lvconvert -m 0 $vg/$lv1
 lvconvert -y -m 0 $vg/$lv1
 # Should work due to '--alloc anywhere'
 # RAID conversion not honoring allocation policy!
-#lvconvert -m +1 --alloc anywhere $vg/$lv1 \
+#lvconvert -y -m +1 --alloc anywhere $vg/$lv1 \
 #    "$dev5:0-1" "$dev1" "$dev2" "$dev3" "$dev4"
 lvremove -ff $vg
 
@@ -68,7 +68,7 @@ lvcreate --type raid1 -m 1 -l 3 -n $lv1 $vg \
     "$dev1:0-1" "$dev2:0-1" "$dev3:0-1" "$dev4:0-1"
 aux wait_for_sync $vg $lv1
 aux disable_dev "$dev1"
-lvconvert --repair -y $vg/$lv1 "$dev2" "$dev3" "$dev4"
+lvconvert -y --repair $vg/$lv1 "$dev2" "$dev3" "$dev4"
 #FIXME: ensure non-overlapping images (they should not share PVs)
 aux enable_dev "$dev1"
 lvremove -ff $vg

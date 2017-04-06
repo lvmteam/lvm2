@@ -54,7 +54,7 @@ lvremove -ff $vg/data2 $vg/data3 $vg/meta1 $vg/meta2
 lvconvert --merge $vg/${lv1}_tdata_rimage_1
 lvconvert --merge $vg/${lv1}_tmeta_rimage_1
 
-lvconvert -m+1 $vg/${lv1}_tdata "$dev2"
-lvconvert -m+1 $vg/${lv1}_tmeta "$dev1"
+lvconvert -y -m +1 $vg/${lv1}_tdata "$dev2"
+lvconvert -y -m +1 $vg/${lv1}_tmeta "$dev1"
 
 vgremove -ff $vg

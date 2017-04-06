@@ -99,7 +99,7 @@ lvremove -ff $vg1
 # Convert large 200 TiB linear to RAID1 (belong in different test script?)
 #
 lvcreate -aey -L 200T -n $lv1 $vg1
-lvconvert --type raid1 -m 1 $vg1/$lv1
+lvconvert -y --type raid1 -m 1 $vg1/$lv1
 check lv_field $vg1/$lv1 size "200.00t"
 check raid_leg_status $vg1 $lv1 "aa"
 lvremove -ff $vg1
