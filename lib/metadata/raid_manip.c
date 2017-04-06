@@ -1989,8 +1989,8 @@ static int _raid_reshape_keep_images(struct logical_volume *lv,
 	if (seg->segtype != new_segtype)
 		log_print_unless_silent("Converting %s LV %s to %s.",
 					lvseg_name(seg), display_lvname(lv), new_segtype->name);
-	if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s? [y/n]: ",
-				  lvseg_name(seg), display_lvname(lv)) == 'n') {
+	if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to %s? [y/n]: ",
+				  lvseg_name(seg), display_lvname(lv), new_segtype->name) == 'n') {
 			log_error("Logical volume %s NOT converted.", display_lvname(lv));
 			return 0;
 	}
@@ -4577,7 +4577,7 @@ static int _raid1_to_mirrored_wrapper(TAKEOVER_FN_ARGS)
 	if (!_raid_in_sync(lv))
 		return_0;
 
-	if (!yes && yes_no_prompt("Are you sure you want to convert %s back to the older \"%s\" type? [y/n]: ",
+	if (!yes && yes_no_prompt("Are you sure you want to convert %s back to the older %s type? [y/n]: ",
 				  display_lvname(lv), SEG_TYPE_NAME_MIRROR) == 'n') {
 		log_error("Logical volume %s NOT converted to \"%s\".",
 			  display_lvname(lv), SEG_TYPE_NAME_MIRROR);
@@ -4887,13 +4887,6 @@ static int _takeover_downconvert_wrapper(TAKEOVER_FN_ARGS)
 			return_0;
 	} else
 		*res_str = '\0';
-
-	if (!yes && yes_no_prompt("Are you sure you want to convert \"%s\" LV %s to \"%s\" type%s? [y/n]: ",
-				  lvseg_name(seg), display_lvname(lv), new_segtype->name, res_str) == 'n') {
-		log_error("Logical volume %s NOT converted to \"%s\"",
-			  display_lvname(lv), new_segtype->name);
-		return 0;
-	}
 
 	/* Archive metadata */
 	if (!archive(lv->vg))
@@ -5737,13 +5730,6 @@ replaced:
 	if (segtype_sav != *segtype)
 		log_warn("Replaced LV type %s with possible type %s.",
 			 segtype_sav->name, (*segtype)->name);
-	if (!yes && yes_no_prompt("Do you want to convert %s LV %s to %s? [y/n]: ",
-				  lvseg_name(seg_from), display_lvname(seg_from->lv),
-				  (*segtype)->name) == 'n') {
-		log_error("Logical volume %s NOT converted.", display_lvname(seg_from->lv));
-		return 0;
-	}
-
 	return 1;
 }
 
@@ -5852,6 +5838,15 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 	if (new_region_size && !(opts & ALLOW_REGION_SIZE)) {
 		if (!_log_prohibited_option(seg_from, *segtype_to, "-R/--regionsize"))
 			stack;
+		r = 0;
+	}
+
+	if (r &&
+	    strcmp((*segtype_to)->name, SEG_TYPE_NAME_MIRROR) && /* "mirror" is prompted for later */
+	    !yes && yes_no_prompt("Are you sure you want to convert %s LV %s to %s type? [y/n]: ",
+				  lvseg_name(seg_from), display_lvname(seg_from->lv),
+				  (*segtype_to)->name) == 'n') {
+		log_error("Logical volume %s NOT converted.", display_lvname(seg_from->lv));
 		r = 0;
 	}
 
