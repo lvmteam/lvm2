@@ -5099,7 +5099,6 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	    !_clear_meta_lvs(lv))
 		return_0;
 
-
 	extents_copied = seg->extents_copied;
 	seg_len = seg->len;
 	stripe_size = seg->stripe_size;
@@ -5166,7 +5165,8 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 						       _pre_raid_add_legs, NULL))
 		return 0;
 
-	if (segtype_is_raid4(new_segtype)) {
+	if (segtype_is_raid4(new_segtype) &&
+	    seg->area_count != 2) {
 		/* We had to rename SubLVs because of collision free shifting, rename back... */
 		if (!_rename_area_lvs(lv, NULL))
 			return_0;
