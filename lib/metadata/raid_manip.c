@@ -5734,10 +5734,11 @@ static int _set_convenient_raid1456_segtype_to(const struct lv_segment *seg_from
 replaced:
 	if (!(*segtype = get_segtype_from_flag(cmd, seg_flag)))
 		return_0;
-	log_warn("Replaced LV type %s with possible type %s.",
-		 segtype_sav->name, (*segtype)->name);
+	if (segtype_sav != *segtype)
+		log_warn("Replaced LV type %s with possible type %s.",
+			 segtype_sav->name, (*segtype)->name);
 	if (!yes && yes_no_prompt("Do you want to convert %s LV %s to %s? [y/n]: ",
-				  segtype_sav->name, display_lvname(seg_from->lv),
+				  lvseg_name(seg_from), display_lvname(seg_from->lv),
 				  (*segtype)->name) == 'n') {
 		log_error("Logical volume %s NOT converted.", display_lvname(seg_from->lv));
 		return 0;
