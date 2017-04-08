@@ -260,6 +260,11 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 		start *= seg_status->seg->le;
 		length *= _seg_len(seg_status->seg);
 
+		/* Uses max DM_THIN_MAX_METADATA_SIZE sectors for metadata device */
+		if (lv_is_thin_pool_metadata(seg_status->seg->lv) &&
+		    (length > DM_THIN_MAX_METADATA_SIZE))
+			length = DM_THIN_MAX_METADATA_SIZE;
+
 		do {
 			target = dm_get_next_target(dmt, target, &target_start,
 						    &target_length, &target_name, &target_params);

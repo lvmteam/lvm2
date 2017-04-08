@@ -37,6 +37,11 @@ lvcreate -L4M --chunksize 64k --poolmetadatasize 17G -T $vg/pool2 2>out
 grep "WARNING: Maximum" out
 check lv_field $vg/pool1_tmeta size "2.00m"
 check lv_field $vg/pool2_tmeta size "16.00g"
+
+# Check can start and see thinpool with metadata size above kernel limit
+lvcreate -L4M --poolmetadatasize 16G -T $vg/poolM
+check lv_field $vg/poolM data_percent "0.00"
+
 lvremove -ff $vg
 
 # Test automatic calculation of pool metadata size
