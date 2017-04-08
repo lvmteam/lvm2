@@ -15319,6 +15319,14 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+
+FSADM_PATH="$lvm_exec_prefix/sbin/fsadm"
+
+cat >>confdefs.h <<_ACEOF
+#define FSADM_PATH "$FSADM_PATH"
+_ACEOF
+
+
 ################################################################################
 if test "$BUILD_DMEVENTD" = yes; then
 

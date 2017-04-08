@@ -1,5 +1,6 @@
 Version 2.02.170 - 
 ==================================
+  Introduce global/fsadm_executable to make fsadm path configurable.
   Look for limited thin pool metadata size when using 16G metadata.
   Add lvconvert pool creation rule disallowing options with poolmetadata.
   Fix lvconvert when the same LV is incorrectly reused in options.

@@ -1895,6 +1895,10 @@ test "$prefix" != NONE && clvmd_prefix=$prefix
 CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
 AC_DEFINE_UNQUOTED(CLVMD_PATH, ["$CLVMD_PATH"], [Path to clvmd binary.])
 
+
+FSADM_PATH="$lvm_exec_prefix/sbin/fsadm"
+AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
+
 ################################################################################
 dnl -- dmeventd pidfile and executable path
 if test "$BUILD_DMEVENTD" = yes; then

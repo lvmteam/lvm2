@@ -4567,13 +4567,13 @@ static int _request_confirmation(const struct logical_volume *lv,
 }
 
 enum fsadm_cmd_e { FSADM_CMD_CHECK, FSADM_CMD_RESIZE };
-#define FSADM_CMD "fsadm"
+
 #define FSADM_CMD_MAX_ARGS 6
 #define FSADM_CHECK_FAILS_FOR_MOUNTED 3 /* shell exist status code */
 
 /*
- * FSADM_CMD --dry-run --verbose --force check lv_path
- * FSADM_CMD --dry-run --verbose --force resize lv_path size
+ * fsadm --dry-run --verbose --force check lv_path
+ * fsadm --dry-run --verbose --force resize lv_path size
  */
 static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 		      struct logical_volume *lv,
@@ -4588,7 +4588,7 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 	const char *argv[FSADM_CMD_MAX_ARGS + 2];
 	unsigned i = 0;
 
-	argv[i++] = FSADM_CMD;
+	argv[i++] = find_config_tree_str(cmd, global_fsadm_executable_CFG, NULL);
 
 	if (test_mode())
 		argv[i++] = "--dry-run";

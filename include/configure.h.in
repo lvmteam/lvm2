@@ -148,6 +148,9 @@
 /* Library version */
 #undef DM_LIB_VERSION
 
+/* Path to fsadm binary. */
+#undef FSADM_PATH
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
