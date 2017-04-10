@@ -98,7 +98,7 @@ void sigint_restore(void)
 		return;
 
 	if (!_handler_installed ||
-	    --_handler_installed > MAX_SIGINTS)
+	    --_handler_installed >= MAX_SIGINTS)
 		return;
 
 	/* Nesting count went below MAX_SIGINTS. */
