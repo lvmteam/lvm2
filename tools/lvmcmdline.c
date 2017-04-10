@@ -1338,6 +1338,25 @@ static int _opt_synonym_is_set(struct cmd_context *cmd, int opt_std)
 	return opt_syn && arg_is_set(cmd, opt_syn);
 }
 
+static int _command_optional_opt_matches(struct cmd_context *cmd, int ci, int oo)
+{
+	int opt_enum = commands[ci].optional_opt_args[oo].opt;
+
+	if (val_bit_is_set(commands[ci].optional_opt_args[oo].def.val_bits, conststr_VAL)) {
+		if (!strcmp(commands[ci].optional_opt_args[oo].def.str, arg_str_value(cmd, opt_enum, "")))
+			return 1;
+		return 0;
+	}
+
+	if (val_bit_is_set(commands[ci].optional_opt_args[oo].def.val_bits, constnum_VAL)) {
+		if (commands[ci].optional_opt_args[oo].def.num == arg_int_value(cmd, opt_enum, 0))
+			return 1;
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _command_ignore_opt_matches(struct cmd_context *cmd, int ci, int io)
 {
 	int opt_enum = commands[ci].ignore_opt_args[io].opt;
@@ -1625,7 +1644,8 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 				continue;
 
 			for (j = 0; j < commands[i].oo_count; j++) {
-				if (commands[i].optional_opt_args[j].opt == opt_enum) {
+				if ((commands[i].optional_opt_args[j].opt == opt_enum) &&
+				    _command_optional_opt_matches(cmd, i, j)) {
 					accepted = 1;
 					break;
 				}
@@ -1695,8 +1715,13 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 
 	if (best_unused_count) {
 		for (i = 0; i < best_unused_count; i++) {
-			log_error("Invalid option for command: %s.",
-				  arg_long_option_name(best_unused_options[i]));
+			const char *opt_val = NULL;
+			opt_enum = best_unused_options[i];
+			opt_val = arg_value(cmd, opt_enum);
+
+			log_error("Invalid option for command: %s%s%s.",
+				  arg_long_option_name(opt_enum),
+				  opt_val ? " " : "", opt_val ?: "");
 		}
 		return NULL;
 	}
