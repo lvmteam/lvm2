@@ -2750,6 +2750,11 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	 */
 
 	if ((pool_metadata_name = arg_str_value(cmd, poolmetadata_ARG, NULL))) {
+		if (!validate_lvname_param(cmd, &vg->name, &pool_metadata_name)) {
+			log_error("Metadata LV %s not found.", pool_metadata_name);
+			return 0;
+		}
+
 		if (!(metadata_lv = find_lv(vg, pool_metadata_name))) {
 			log_error("Unknown pool metadata LV %s.", pool_metadata_name);
 			return 0;
