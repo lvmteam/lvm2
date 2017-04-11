@@ -1976,6 +1976,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
  * Reshape: keep images in RAID @lv but change stripe size or data copies
  *
  */
+static const char *_get_segtype_alias(const struct segment_type *segtype);
 static int _raid_reshape_keep_images(struct logical_volume *lv,
 				     const struct segment_type *new_segtype,
 				     int yes, int force, int *force_repair,
@@ -1995,8 +1996,6 @@ static int _raid_reshape_keep_images(struct logical_volume *lv,
 			return 0;
 	}
 
-	seg->stripe_size = new_stripe_size;
-
 	/*
 	 * Reshape layout alogorithm or chunksize:
 	 *
@@ -2010,8 +2009,22 @@ static int _raid_reshape_keep_images(struct logical_volume *lv,
 	 * The dm-raid target is able to use the space whereever it
 	 * is found by appropriately selecting forward or backward reshape.
 	 */
-	if (seg->area_count != 2 &&
-	    alloc_reshape_space &&
+	if (seg->segtype != new_segtype) {
+		const char *alias = _get_segtype_alias(seg->segtype);
+
+		if (!strcmp(alias, new_segtype->name))
+			alloc_reshape_space = 0;
+	}
+
+	if (seg->stripe_size != new_stripe_size)
+		alloc_reshape_space = 1;
+
+	seg->stripe_size = new_stripe_size;
+
+	if (seg->area_count == 2)
+		alloc_reshape_space = 0;
+
+	if (alloc_reshape_space &&
 	    !_lv_alloc_reshape_space(lv, where, NULL, allocate_pvs))
 		return 0;
 
@@ -4410,6 +4423,12 @@ static const char *_get_segtype_alias(const struct segment_type *segtype)
 
 	if (!strcmp(segtype->name, SEG_TYPE_NAME_RAID6_ZR))
 		return SEG_TYPE_NAME_RAID6;
+
+	if (!strcmp(segtype->name, SEG_TYPE_NAME_RAID10))
+		return SEG_TYPE_NAME_RAID10_NEAR;
+
+	if (!strcmp(segtype->name, SEG_TYPE_NAME_RAID10_NEAR))
+		return SEG_TYPE_NAME_RAID10;
 
 	return "";
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2016 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -89,6 +89,7 @@ struct dev_manager;
 #define SEG_TYPE_NAME_RAID0_META	"raid0_meta"
 #define SEG_TYPE_NAME_RAID1		"raid1"
 #define SEG_TYPE_NAME_RAID10		"raid10"
+#define SEG_TYPE_NAME_RAID10_NEAR	"raid10_near"
 #define SEG_TYPE_NAME_RAID4		"raid4"
 #define SEG_TYPE_NAME_RAID5		"raid5"
 #define SEG_TYPE_NAME_RAID5_N		"raid5_n"
@@ -137,11 +138,12 @@ struct dev_manager;
 #define segtype_is_raid6_rs_6(segtype)	((segtype)->flags & SEG_RAID6_RS_6 ? 1 : 0)
 #define segtype_is_raid6_la_6(segtype)	((segtype)->flags & SEG_RAID6_LA_6 ? 1 : 0)
 #define segtype_is_raid6_ra_6(segtype)	((segtype)->flags & SEG_RAID6_RA_6 ? 1 : 0)
-#define segtype_is_any_raid10(segtype)	((segtype)->flags & SEG_RAID10 ? 1 : 0)
 #define segtype_is_raid10(segtype)	((segtype)->flags & SEG_RAID10 ? 1 : 0)
-#define segtype_is_raid10_near(segtype)	segtype_is_raid10(segtype)
-/* FIXME: once raid10_offset supported */
+#define segtype_is_raid10_near(segtype)	((segtype)->flags & SEG_RAID10_NEAR ? 1 : 0)
+/* FIXME: once raid10_{far,offset} supported */
+#define segtype_is_raid10_far(segtype)		0 /* FIXME ((segtype)->flags & SEG_RAID10_FAR ? 1 : 0 */
 #define segtype_is_raid10_offset(segtype)	0 /* FIXME ((segtype)->flags & SEG_RAID10_OFFSET ? 1 : 0 */
+#define segtype_is_any_raid10(segtype)	(segtype_is_raid10(segtype) || segtype_is_raid10_near(segtype) || segtype_is_raid10_far(segtype) || segtype_is_raid10_offset(segtype))
 #define segtype_is_raid_with_meta(segtype)	(segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
 #define segtype_is_striped_raid(segtype)        (segtype_is_raid(segtype) && !segtype_is_raid1(segtype))
 #define segtype_is_reshapable_raid(segtype)     ((segtype_is_striped_raid(segtype) && !segtype_is_any_raid0(segtype)) || segtype_is_raid10_near(segtype) || segtype_is_raid10_offset(segtype))

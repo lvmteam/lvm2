@@ -108,6 +108,7 @@ static const struct {
 	 */
 	{ SEG_RAID5_LS, "raid5"}, /* same as "raid5_ls" (default for MD also) */
 	{ SEG_RAID6_ZR, "raid6"}, /* same as "raid6_zr" */
+	{ SEG_RAID10, "raid10_near"}, /* same as "raid10" */
 };
 
 /* Some segment types have a list of areas of other devices attached */
