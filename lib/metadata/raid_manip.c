@@ -1891,7 +1891,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		log_print_unless_silent("If that leaves the logical volume larger than %llu extents due to stripe rounding,",
 					(unsigned long long) extend_le_count);
 		log_print_unless_silent("you may want to grow the content afterwards (filesystem etc.)");
-		log_warn("WARNING: too remove freed stripes after the conversion has finished, you have to run \"lvconvert --stripes %u %s\"",
+		log_warn("WARNING: to remove freed stripes after the conversion has finished, you have to run \"lvconvert --stripes %u %s\"",
 			 new_stripes, display_lvname(lv));
 
 		if (!force) {
