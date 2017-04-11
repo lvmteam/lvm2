@@ -3826,6 +3826,12 @@ static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 			goto out;
 		}
 
+		if (cachepool_lv == lv) {
+			log_error("Use a different LV for cache pool LV and cache LV %s.",
+				  display_lvname(cachepool_lv));
+			goto out;
+		}
+
 		if (!_lvconvert_to_pool(cmd, cachepool_lv, lv, 0, 1, &vg->pvs)) {
 			log_error("LV %s could not be converted to a cache pool.",
 				  display_lvname(cachepool_lv));
@@ -3921,6 +3927,12 @@ static int _lvconvert_to_thin_with_external_single(struct cmd_context *cmd,
 		if (lvt_enum != striped_LVT && lvt_enum != linear_LVT && lvt_enum != raid_LVT) {
 			log_error("LV %s with type %s cannot be converted to a thin pool.",
 				  display_lvname(thinpool_lv), lvtype ? lvtype->name : "unknown");
+			goto out;
+		}
+
+		if (thinpool_lv == lv) {
+			log_error("Use a different LV for thin pool LV and thin LV %s.",
+				  display_lvname(thinpool_lv));
 			goto out;
 		}
 
