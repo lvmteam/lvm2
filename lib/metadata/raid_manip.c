@@ -5006,6 +5006,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 {
 	uint32_t extents_copied, region_size, seg_len, stripe_size;
 	struct lv_segment *seg = first_seg(lv);
+	const struct segment_type *initial_segtype = seg->segtype;
 	struct dm_list removal_lvs;
 
 	dm_list_init(&removal_lvs);
@@ -5083,7 +5084,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 	/* Add metadata LVs */
 	if (seg_is_raid0(seg)) {
 		log_debug_metadata("Adding metadata LVs to %s.", display_lvname(lv));
-		if (!_raid0_add_or_remove_metadata_lvs(lv, 1 /* update_and_reload */, allocate_pvs, NULL))
+		if (!_raid0_add_or_remove_metadata_lvs(lv, 0 /* update_and_reload */, allocate_pvs, NULL))
 			return 0;
 	/* raid0_meta -> raid4 needs clearing of MetaLVs in order to avoid raid disk role change issues in the kernel */
 	}
@@ -5111,8 +5112,28 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 		log_debug_metadata("Adding %" PRIu32 " component LV pair(s) to %s.",
 				   new_image_count - lv_raid_image_count(lv),
 				   display_lvname(lv));
-		if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, NULL, 0, 1))
+		if (!_lv_raid_change_image_count(lv, 1, new_image_count, allocate_pvs, NULL, 0, 1)) {
+			/*
+			 * Rollback to initial type raid0/striped after failure to upconvert
+			 * to raid4/5/6/10 elminating any newly allocated metadata devices
+			 * (raid4/5 -> raid6 doesn't need any explicit changes after
+			 *  the allocation of the additional sub LV pair failed)
+			 *
+			 * - initial type is raid0 -> just remove remove metadata devices
+			 *
+			 * - initial type is striped -> convert back to it (removes metadata devices)
+			 */
+			if (segtype_is_raid0(initial_segtype) &&
+			    !_raid0_add_or_remove_metadata_lvs(lv, 0, NULL, &removal_lvs))
+				return_0;
+			if (segtype_is_striped_target(initial_segtype) &&
+			    !_convert_raid0_to_striped(lv, 0, &removal_lvs))
+				return_0;
+			if (!_eliminate_extracted_lvs(lv->vg, &removal_lvs)) /* Updates vg */
+				return_0;
+
 			return 0;
+		}
 
 		seg = first_seg(lv);
 	}
