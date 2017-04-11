@@ -2658,10 +2658,15 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
  * Create a new pool LV, using the lv arg as the data sub LV.
  * The metadata sub LV is either a new LV created here, or an
  * existing LV specified by --poolmetadata.
+ *
+ * process_single_lv is the LV currently being processed by
+ * process_each_lv().  It will sometimes be the same as the
+ * lv arg, and sometimes not.
  */
 
 static int _lvconvert_to_pool(struct cmd_context *cmd,
 			      struct logical_volume *lv,
+			      struct logical_volume *process_single_lv,
 			      int to_thinpool,
 			      int to_cachepool,
 			      struct dm_list *use_pvh)
@@ -2769,6 +2774,12 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 
 		if (metadata_lv == lv) {
 			log_error("Can't use same LV for pool data and metadata LV %s.",
+				  display_lvname(metadata_lv));
+			return 0;
+		}
+
+		if (metadata_lv == process_single_lv) {
+			log_error("Use a different LV for pool metadata %s.",
 				  display_lvname(metadata_lv));
 			return 0;
 		}
@@ -3765,7 +3776,7 @@ static int _lvconvert_to_pool_single(struct cmd_context *cmd,
 	} else
 		use_pvh = &lv->vg->pvs;
 
-	if (!_lvconvert_to_pool(cmd, lv, to_thinpool, to_cachepool, use_pvh))
+	if (!_lvconvert_to_pool(cmd, lv, lv, to_thinpool, to_cachepool, use_pvh))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -3815,7 +3826,7 @@ static int _lvconvert_to_cache_vol_single(struct cmd_context *cmd,
 			goto out;
 		}
 
-		if (!_lvconvert_to_pool(cmd, cachepool_lv, 0, 1, &vg->pvs)) {
+		if (!_lvconvert_to_pool(cmd, cachepool_lv, lv, 0, 1, &vg->pvs)) {
 			log_error("LV %s could not be converted to a cache pool.",
 				  display_lvname(cachepool_lv));
 			goto out;
@@ -3913,7 +3924,7 @@ static int _lvconvert_to_thin_with_external_single(struct cmd_context *cmd,
 			goto out;
 		}
 
-		if (!_lvconvert_to_pool(cmd, thinpool_lv, 1, 0, &vg->pvs)) {
+		if (!_lvconvert_to_pool(cmd, thinpool_lv, lv, 1, 0, &vg->pvs)) {
 			log_error("LV %s could not be converted to a thin pool.",
 				  display_lvname(thinpool_lv));
 			goto out;
@@ -4066,7 +4077,7 @@ static int _lvconvert_to_pool_or_swap_metadata_single(struct cmd_context *cmd,
 		return _lvconvert_swap_pool_metadata_single(cmd, lv, handle);
 	}
 
-	if (!_lvconvert_to_pool(cmd, lv, to_thinpool, to_cachepool, use_pvh))
+	if (!_lvconvert_to_pool(cmd, lv, lv, to_thinpool, to_cachepool, use_pvh))
 		return_ECMD_FAILED;
 
 	return ECMD_PROCESSED;
