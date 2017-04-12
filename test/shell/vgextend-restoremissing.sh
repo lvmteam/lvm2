@@ -24,7 +24,7 @@ invalid vgextend
 # --metadatacopies => use --pvmetadatacopies
 invalid vgextend --metadatacopies 3 $vg "$dev1" 2>&1 | tee out
 #grep -- "use --pvmetadatacopies" out
-grep -- "unrecognized option '--metadatacopies'" out
+egrep -- "unrecognized option.*--metadatacopies" out
 
 # VG name should exist
 fail vgextend --restoremissing $vg-invalid "$dev1"
