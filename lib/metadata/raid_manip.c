@@ -2227,7 +2227,7 @@ static int _raid_reshape(struct logical_volume *lv,
 		if (where_it_was == alloc_none) {
 			log_print_unless_silent("LV %s does not have reshape space allocated.",
 						display_lvname(lv));
-			return 1;
+			return 0;
 		}
 
 		if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, NULL, NULL))
