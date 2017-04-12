@@ -1,4 +1,4 @@
-Version 1.02.139 - 
+Version 1.02.139 - 13th April 2017
 ==================================
   Fix assignment in _target_version() when dm task can't run.
   Flush stdout on each iteration when using --count or --interval.

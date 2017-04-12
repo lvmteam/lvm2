@@ -1,4 +1,4 @@
-Version 2.02.170 - 
+Version 2.02.170 - 13th April 2017
 ==================================
   Introduce global/fsadm_executable to make fsadm path configurable.
   Look for limited thin pool metadata size when using 16G metadata.
