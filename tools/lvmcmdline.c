@@ -1506,10 +1506,13 @@ static int _command_required_pos_matches(struct cmd_context *cmd, int ci, int rp
 /* The max number of unused options we keep track of to warn about */
 #define MAX_UNUSED_COUNT 8
 
+#define MAX_OPTS_MSG 64
+
 static struct command *_find_command(struct cmd_context *cmd, const char *path, int *argc, char **argv)
 {
 	const char *name;
-	char buf[64];
+	char opts_msg[MAX_OPTS_MSG];
+	char check_opts_msg[MAX_OPTS_MSG];
 	int match_required, match_ro, match_rp, match_type, match_unused, mismatch_required;
 	int best_i = 0, best_required = 0, best_type = 0, best_unused = 0;
 	int close_i = 0, close_ro = 0, close_type = 0;
@@ -1792,16 +1795,24 @@ out:
 					   &opts_match_count, &opts_unmatch_count);
 
 			if (opts_match_count && (rule->rule == RULE_INVALID)) {
-				memset(buf, 0, sizeof(buf));
-				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
-				log_error("Invalid options for command: %s", buf);
+				memset(opts_msg, 0, sizeof(opts_msg));
+				memset(check_opts_msg, 0, sizeof(check_opts_msg));
+
+				if (rule->opts_count)
+					opt_array_to_str(cmd, rule->opts, rule->opts_count, opts_msg, sizeof(opts_msg));
+				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, check_opts_msg, sizeof(check_opts_msg));
+
+				if (rule->opts_count)
+					log_error("Invalid option combination: %s with %s", opts_msg, check_opts_msg);
+				else
+					log_error("Invalid options: %s", check_opts_msg);
 				return NULL;
 			}
 
 			if (opts_unmatch_count && (rule->rule == RULE_REQUIRE)) {
-				memset(buf, 0, sizeof(buf));
-				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
-				log_error("Required options for command: %s", buf);
+				memset(check_opts_msg, 0, sizeof(check_opts_msg));
+				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, check_opts_msg, sizeof(check_opts_msg));
+				log_error("Required options for command: %s", check_opts_msg);
 				return NULL;
 			}
 		}
