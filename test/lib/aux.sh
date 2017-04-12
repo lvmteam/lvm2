@@ -1156,6 +1156,7 @@ global/thin_repair_executable = "$LVM_TEST_THIN_REPAIR_CMD"
 global/use_lvmetad = $LVM_TEST_LVMETAD
 global/use_lvmpolld = $LVM_TEST_LVMPOLLD
 global/use_lvmlockd = $LVM_TEST_LVMLOCKD
+global/fsadm_executable = "$TESTDIR/lib/fsadm"
 log/activation = 1
 log/file = "$TESTDIR/debug.log"
 log/indent = 1
