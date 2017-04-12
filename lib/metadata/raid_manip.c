@@ -5792,9 +5792,10 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, con
 		return_0;
 
 	if (region_size == seg->region_size) {
-		log_print_unless_silent("Region size wouldn't change on %s LV %s.",
-					lvseg_name(seg), display_lvname(lv));
-		return 1;
+		log_error("Region size is already %s on %s LV %s.",
+			  display_size(lv->vg->cmd, region_size),
+			  lvseg_name(seg), display_lvname(lv));
+		return 0;
 	}
 
 	if (!_check_region_size_constraints(lv, seg->segtype, region_size, seg->stripe_size))
