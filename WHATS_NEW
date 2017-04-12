@@ -1,5 +1,10 @@
 Version 2.02.170 - 
 ==================================
+  Better message on lvconvert --regionsize
+  Allow valid lvconvert --regionsize change
+  Add raid10 alias raid10_near
+  Handle insufficient PVs on lvconvert takeover
+  Fix SIGINT blocking to prevent corrupted metadata
   Fix systemd unit existence check for lvmconf --services --startstopservices.
   Check and use PATH_MAX buffers when creating vgrename device paths.
 
