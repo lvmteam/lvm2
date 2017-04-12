@@ -28,8 +28,11 @@ function _test_regionsize
 	local lv=$5
 
 	lvconvert --type $type --yes -R $regionsize $vg/$lv
-	[ $? -ne 0 ] && return 1
 	check lv_field $vg/$lv regionsize "$regionsize_str"
+
+	not lvconvert --regionsize $regionsize $vg/$lv 2>err
+	grep "is already" err
+
 	fsck -fn "$DM_DEV_DIR/$vg/$lv"
 }
 

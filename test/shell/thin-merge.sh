@@ -109,5 +109,12 @@ check lv_not_exists $vg oldsnapof_${lv1}
 lvcreate -s -L10 -n oldsnapof_snap $vg/snap
 lvconvert --merge $vg/snap
 lvremove -f $vg/oldsnapof_snap
+check lv_field  $vg/$lv1 thin_id "3"
+
+# Check --mergethin
+lvcreate -s -n snap $vg/$lv1
+check lv_field  $vg/snap thin_id "4"
+lvconvert --mergethin $vg/snap
+check lv_field  $vg/$lv1 thin_id "4"
 
 vgremove -ff $vg

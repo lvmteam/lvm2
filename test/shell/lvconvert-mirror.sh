@@ -216,6 +216,21 @@ check mirror_no_temporaries $vg $lv1
 check mirror_legs $vg $lv1 2
 lvremove -ff $vg
 
+# Check the same with new --startpool lvconvert command option
+lvcreate -aey -l2 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3:$DEVRANGE"
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -m+1 -b $vg/$lv1 "$dev4"
+# FIXME: Extra wait here for mirror upconvert synchronization
+# otherwise we may fail her on parallel upconvert and downconvert
+# lvconvert-mirror-updown.sh tests this errornous case separately
+should lvconvert --startpoll $vg/$lv1
+lvconvert -m-1 $vg/$lv1 "$dev2"
+should lvconvert --startpoll $vg/$lv1
+
+check mirror $vg $lv1 "$dev3"
+check mirror_no_temporaries $vg $lv1
+check mirror_legs $vg $lv1 2
+lvremove -ff $vg
+
 # ---------------------------------------------------------------------
 
 # "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated"

@@ -56,6 +56,9 @@ not lvconvert --merge
 lvconvert --merge $vg/$(snap_lv_name_ $lv1)
 lvremove -f $vg/$lv1
 
+setup_merge_ $vg $lv1
+lvconvert --mergesnapshot $vg/$(snap_lv_name_ $lv1)
+lvremove -f $vg/$lv1
 
 # test that an actively merging snapshot may not be removed
 setup_merge_ $vg $lv1

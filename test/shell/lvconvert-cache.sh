@@ -63,6 +63,10 @@ UUID=$(get lv_field $vg/$lv5 uuid)
 lvconvert --yes --cachepool $vg/$lv3 --poolmetadata $lv5
 check lv_field $vg/${lv3}_cmeta uuid "$UUID"
 
+# Check swap of cache pool metadata with --swapmetadata
+# (should swap back to lv5)
+lvconvert --yes --swapmetadata $vg/$lv3 --poolmetadata $lv5
+check lv_field $vg/$lv5 uuid "$UUID"
 
 #fail lvconvert --cachepool $vg/$lv1 --poolmetadata $vg/$lv2
 #lvconvert --yes --type cache-pool --poolmetadata $vg/$lv2 $vg/$lv1

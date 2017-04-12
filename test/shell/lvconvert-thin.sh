@@ -88,6 +88,10 @@ fail lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
 lvchange -an $vg
 lvconvert --yes --thinpool $vg/$lv1 --poolmetadata $lv2
 check lv_field $vg/${lv1}_tmeta uuid "$UUID"
+
+# and swap again with new command --swapmetadata
+lvconvert --yes --swapmetadata $vg/$lv1 --poolmetadata $lv2
+check lv_field $vg/$lv2 uuid "$UUID"
 lvremove -f $vg
 
 
