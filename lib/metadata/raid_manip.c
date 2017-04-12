@@ -2225,8 +2225,8 @@ static int _raid_reshape(struct logical_volume *lv,
 		log_print_unless_silent("No change in RAID LV %s layout, freeing reshape space.", display_lvname(lv));
 
 		if (where_it_was == alloc_none) {
-			log_print_unless_silent("LV %s does not have reshape space allocated.",
-						display_lvname(lv));
+			log_error("LV %s does not have reshape space allocated.",
+				  display_lvname(lv));
 			return 0;
 		}
 
