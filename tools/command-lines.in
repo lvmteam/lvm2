@@ -427,6 +427,7 @@ ID: lvconvert_to_thin_with_external
 DESC: Convert LV to a thin LV, using the original LV as an external origin.
 RULE: all and lv_is_visible
 RULE: all not lv_is_locked
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type thin
 lvconvert --thin --thinpool LV LV_linear_striped_raid_cache
@@ -437,6 +438,7 @@ DESC: (infers \\-\\-type thin).
 FLAGS: SECONDARY_SYNTAX
 RULE: all and lv_is_visible
 RULE: all not lv_is_locked
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
 
@@ -445,6 +447,7 @@ OO: --cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_vol
 DESC: Convert LV to type cache.
 RULE: all and lv_is_visible
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # alternate form of lvconvert --type cache
 lvconvert --cache --cachepool LV LV_linear_striped_raid_thinpool
@@ -452,6 +455,7 @@ OO: --type cache, OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 ID: lvconvert_to_cache_vol
 DESC: Convert LV to type cache (infers \\-\\-type cache).
 RULE: all and lv_is_visible
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 FLAGS: SECONDARY_SYNTAX
 
 ---
@@ -464,6 +468,7 @@ ID: lvconvert_to_thinpool
 DESC: Convert LV to type thin-pool.
 RULE: all and lv_is_visible
 RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # This command syntax has two different meanings depending on
 # whether the LV pos arg is already a thin pool or not.
@@ -496,6 +501,7 @@ DESC: Convert LV to type thin-pool (variant, use \\-\\-type thin-pool).
 DESC: Swap metadata LV in a thin pool (variant, use \\-\\-swapmetadata).
 FLAGS: PREVIOUS_SYNTAX
 RULE: all and lv_is_visible
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
 
@@ -504,6 +510,7 @@ OO: OO_LVCONVERT_CACHE, OO_LVCONVERT_POOL, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_to_cachepool
 DESC: Convert LV to type cache-pool.
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 # This command syntax has two different meanings depending on
 # whether the LV pos arg is already a cache pool or not.
@@ -535,6 +542,7 @@ DESC: Convert LV to type cache-pool (variant, use \\-\\-type cache-pool).
 DESC: Swap metadata LV in a cache pool (variant, use \\-\\-swapmetadata).
 FLAGS: PREVIOUS_SYNTAX
 RULE: all and lv_is_visible
+RULE: --poolmetadata not --readahead --stripesize --stripes_long
 
 ---
 
