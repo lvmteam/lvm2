@@ -45,10 +45,6 @@ Common options for command:
 .ad b
 .br
 .ad l
-[ \fB-P\fP|\fB--partial\fP ]
-.ad b
-.br
-.ad l
 [    \fB--ignorelockingfailure\fP ]
 .ad b
 .br
@@ -181,15 +177,6 @@ operations after locking failures.
 \fB--longhelp\fP
 .br
 Display long help text.
-.ad b
-.HP
-.ad l
-\fB-P\fP|\fB--partial\fP
-.br
-When set, the tools will do their best to provide access to VGs
-that are only partially available (one or more PVs belonging
-to the VG are missing from the system). Metadata may not be
-changed with this option.
 .ad b
 .HP
 .ad l

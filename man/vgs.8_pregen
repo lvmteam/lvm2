@@ -24,10 +24,6 @@ vgs produces formatted output about VGs.
 .ad b
 .br
 .ad l
-[ \fB-P\fP|\fB--partial\fP ]
-.ad b
-.br
-.ad l
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .ad b
 .br
@@ -318,15 +314,6 @@ Use field name \fBlv_all\fP to view all LV fields,
 \fBpvseg_all\fP all PV segment columns.
 See the lvm.conf report section for more config options.
 See lvmreport(7) for more information about reporting.
-.ad b
-.HP
-.ad l
-\fB-P\fP|\fB--partial\fP
-.br
-When set, the tools will do their best to provide access to VGs
-that are only partially available (one or more PVs belonging
-to the VG are missing from the system). Metadata may not be
-changed with this option.
 .ad b
 .HP
 .ad l

@@ -389,6 +389,17 @@ allocation {
 	# Cache pool metadata and data will always use different PVs.
 	cache_pool_metadata_require_separate_pvs = 0
 
+	# Configuration option allocation/cache_metadata_format.
+	# Sets default metadata format for new cache.
+	# 
+	# Accepted values:
+	#   0  Automatically detected best available format
+	#   1  Original format
+	#   2  Improved 2nd. generation format
+	# 
+	# This configuration option has an automatic default value.
+	# cache_metadata_format = 0
+
 	# Configuration option allocation/cache_mode.
 	# The default cache mode used for new cache.
 	# 
@@ -402,17 +413,6 @@ allocation {
 	# This setting replaces allocation/cache_pool_cachemode.
 	# This configuration option has an automatic default value.
 	# cache_mode = "writethrough"
-
-	# Configuration option allocation/cache_metadata_format.
-	# Sets default metadata format for new cache.
-	# 
-	# Accepted values:
-	#   0  Automatically detected best available format
-	#   1  Original format
-	#   2  Improved 2nd. generation format
-	# 
-	# This configuration option has an automatic default value.
-	# cache_metadata_format = 0
 
 	# Configuration option allocation/cache_policy.
 	# The default cache policy used for new cache volume.
@@ -1068,6 +1068,12 @@ global {
 	# List of options passed to the cache_repair command.
 	# This configuration option has an automatic default value.
 	# cache_repair_options = [ "" ]
+
+	# Configuration option global/fsadm_executable.
+	# The full path to the fsadm command.
+	# LVM uses this command to help with lvresize -r operations.
+	# This configuration option has an automatic default value.
+	# fsadm_executable = "@FSADM_PATH@"
 
 	# Configuration option global/system_id_source.
 	# The method LVM uses to set the local system ID.

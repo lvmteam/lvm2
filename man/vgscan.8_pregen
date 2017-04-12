@@ -14,10 +14,6 @@ vgscan scans all supported LVM block devices in the system for VGs.
 .br
 .RS 4
 .ad l
-[ \fB-P\fP|\fB--partial\fP ]
-.ad b
-.br
-.ad l
 [    \fB--cache\fP ]
 .ad b
 .br
@@ -162,15 +158,6 @@ LVs and creates any missing ones and removes unused ones.
 Send a notification to D-Bus. The command will exit with an error
 if LVM is not built with support for D-Bus notification, or if the
 notify_dbus config setting is disabled.
-.ad b
-.HP
-.ad l
-\fB-P\fP|\fB--partial\fP
-.br
-When set, the tools will do their best to provide access to VGs
-that are only partially available (one or more PVs belonging
-to the VG are missing from the system). Metadata may not be
-changed with this option.
 .ad b
 .HP
 .ad l

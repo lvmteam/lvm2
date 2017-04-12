@@ -270,6 +270,10 @@ required, after which the others are optional.
 .RE
 .br
 .RS 4
+.ad l
+[    \fB--poll\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -376,10 +380,6 @@ Reactivate LVs using the latest metadata.
 .br
 .ad l
 [    \fB--ignorelockingfailure\fP ]
-.ad b
-.br
-.ad l
-[    \fB--monitor\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 .ad l
@@ -761,10 +761,10 @@ ignore the devices LVM creates.
 .ad l
 \fB-P\fP|\fB--partial\fP
 .br
-When set, the tools will do their best to provide access to VGs
-that are only partially available (one or more PVs belonging
-to the VG are missing from the system). Metadata may not be
-changed with this option.
+Commands will do their best to activate LVs with missing PV extents.
+Missing extents may be replaced with error or zero segments
+according to the lvm.conf missing_stripe_filler setting.
+Metadata may not be changed with this option.
 .ad b
 .HP
 .ad l
