@@ -2389,7 +2389,7 @@ static int _reshape_requested(const struct logical_volume *lv, const struct segm
 	if (seg_is_any_raid10(seg) && seg->area_count > 2 &&
 	    stripes && stripes < seg->area_count - seg->segtype->parity_devs) {
 		log_error("Can't remove stripes from raid10");
-		goto err;
+		return 2;
 	}
 
 	if (data_copies != seg->data_copies) {
@@ -2400,22 +2400,20 @@ static int _reshape_requested(const struct logical_volume *lv, const struct segm
 	/* Change layout (e.g. raid5_ls -> raid5_ra) keeping # of stripes */
 	if (seg->segtype != segtype) {
 		if (stripes && stripes != _data_rimages_count(seg, seg->area_count))
-			goto err;
+			return 2;
 
 		return 1;
 	}
 
 	if (stripes && stripes == _data_rimages_count(seg, seg->area_count) &&
-	    stripe_size == seg->stripe_size) {
+	    stripe_size == seg->stripe_size &&
+	    region_size == seg->region_size) {
 		log_error("LV %s already has %u stripes.",
 			  display_lvname(lv), stripes);
 		return 2;
 	}
 
 	return (stripes || stripe_size) ? 1 : 0;
-
-err:
-	return 2;
 }
 
 /*
