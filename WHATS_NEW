@@ -1,5 +1,14 @@
 Version 2.02.170 - 
 ==================================
+  Add lvconvert pool creation rule disallowing options with poolmetadata.
+  Fix lvconvert when the same LV is incorrectly reused in options.
+  Fix lvconvert VG name validation in option values.
+  Fix missing lvmlockd LV locks in lvchange and lvconvert.
+  Fix dmeventd setup for lvchange --poll.
+  Fix use of --poll and --monitor with lvchange and vgchange.
+  Disallow lvconvert of hidden LV to a pool.
+  Ignore --partial option when not used for activation.
+  Allow --activationmode option with lvchange --refresh.
   Better message on lvconvert --regionsize
   Allow valid lvconvert --regionsize change
   Add raid10 alias raid10_near
