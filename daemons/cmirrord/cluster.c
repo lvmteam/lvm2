@@ -182,7 +182,7 @@ int cluster_send(struct clog_request *rq)
 	}
 
 	/*
-	 * Once the request heads for the cluster, the luid looses
+	 * Once the request heads for the cluster, the luid loses
 	 * all its meaning.
 	 */
 	rq->u_rq.luid = 0;

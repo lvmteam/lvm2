@@ -2932,7 +2932,7 @@ static int _raid_remove_images(struct logical_volume *lv, int yes,
 
 	/* Convert to linear? */
 	if (new_count == 1) {
-		if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to type %s loosing all resilience? [y/n]: ",
+		if (!yes && yes_no_prompt("Are you sure you want to convert %s LV %s to type %s losing all resilience? [y/n]: ",
 					  lvseg_name(first_seg(lv)), display_lvname(lv), SEG_TYPE_NAME_LINEAR) == 'n') {
 			log_error("Logical volume %s NOT converted to \"%s\".",
 				  display_lvname(lv), SEG_TYPE_NAME_LINEAR);
@@ -3072,9 +3072,9 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 		return 0;
 	}
 
-	/* Split on a 2-legged raid1 LV causes loosing all resilience */
+	/* Split on a 2-legged raid1 LV causes losing all resilience */
 	if (new_count == 1 &&
-	    !yes && yes_no_prompt("Are you sure you want to split %s LV %s loosing all resilience? [y/n]: ",
+	    !yes && yes_no_prompt("Are you sure you want to split %s LV %s losing all resilience? [y/n]: ",
 				  lvseg_name(first_seg(lv)), display_lvname(lv)) == 'n') {
 		log_error("Logical volume %s NOT split.", display_lvname(lv));
 		return 0;
@@ -3214,9 +3214,9 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		return 0;
 	}
 
-	/* Split and track changes on a 2-legged raid1 LV causes loosing resilience for newly written data. */
+	/* Split and track changes on a 2-legged raid1 LV causes losing resilience for newly written data. */
 	if (seg->area_count == 2 &&
-	    !yes && yes_no_prompt("Are you sure you want to split and track %s LV %s loosing resilience for any newly written data? [y/n]: ",
+	    !yes && yes_no_prompt("Are you sure you want to split and track %s LV %s losing resilience for any newly written data? [y/n]: ",
 				  lvseg_name(seg), display_lvname(lv)) == 'n') {
 		log_error("Logical volume %s NOT split.", display_lvname(lv));
 		return 0;
