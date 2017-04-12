@@ -1,5 +1,9 @@
 Version 1.02.139 - 
 ==================================
+  Flush stdout on each iteration when using --count or --interval.
+  Show detailed error message when execvp fails while starting dmfilemapd.
+  Fix segmentation fault when dmfilemapd is run with no arguments.
+  Numerous minor dmfilemapd fixes from coverity.
 
 Version 1.02.138 - 28th March 2017
 ==================================
