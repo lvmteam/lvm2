@@ -1,5 +1,6 @@
 Version 2.02.171 - 
 ==================================
+  lvcreate - raise mirror/raid default regionsize to 2MiB
   Add missing configurable prefix to configuration file installation directory.
 
 Version 2.02.170 - 13th April 2017
