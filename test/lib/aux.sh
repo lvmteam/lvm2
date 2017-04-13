@@ -1127,6 +1127,7 @@ activation/snapshot_autoextend_threshold = 50
 activation/udev_rules = 1
 activation/udev_sync = 1
 activation/verify_udev_operations = $LVM_VERIFY_UDEV
+activation/raid_region_size = 512
 allocation/wipe_signatures_when_zeroing_new_lvs = 0
 backup/archive = 0
 backup/backup = 0
