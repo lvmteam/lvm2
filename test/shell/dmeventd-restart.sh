@@ -45,11 +45,6 @@ sleep 7
 not pgrep dmeventd
 rm LOCAL_DMEVENTD
 
-# set dmeventd path
-if test -n "$abs_top_builddir"; then
-    aux lvmconf "dmeventd/executable=\"$abs_top_builddir/test/lib/dmeventd\""
-fi
-
 lvchange --monitor y --verbose $vg/3way 2>&1 | tee lvchange.out
 pgrep -o dmeventd >LOCAL_DMEVENTD
 not grep 'already monitored' lvchange.out

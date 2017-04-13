@@ -1157,7 +1157,6 @@ global/thin_repair_executable = "$LVM_TEST_THIN_REPAIR_CMD"
 global/use_lvmetad = $LVM_TEST_LVMETAD
 global/use_lvmpolld = $LVM_TEST_LVMPOLLD
 global/use_lvmlockd = $LVM_TEST_LVMLOCKD
-global/fsadm_executable = "$TESTDIR/lib/fsadm"
 log/activation = 1
 log/file = "$TESTDIR/debug.log"
 log/indent = 1
@@ -1166,6 +1165,14 @@ log/overwrite = 1
 log/syslog = 0
 log/verbose = 0
 EOF
+		# For 'rpm' builds use system installed binaries.
+		# For test suite run use binaries from builddir.
+		test -z "${abs_top_builddir+varset}" || {
+			cat >> "$config_values" <<-EOF
+dmeventd/executable = "$abs_top_builddir/test/lib/dmeventd"
+global/fsadm_executable = "$abs_top_builddir/test/lib/fsadm"
+EOF
+		}
 	}
 
 	local v
