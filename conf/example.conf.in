@@ -1297,7 +1297,7 @@ activation {
 	# The clean/dirty state of data is tracked for each region.
 	# The value is rounded down to a power of two if necessary, and
 	# is ignored if it is not a multiple of the machine memory page size.
-	raid_region_size = 512
+	raid_region_size = 2048
 
 	# Configuration option activation/error_when_full.
 	# Return errors if a thin pool runs out of space.
