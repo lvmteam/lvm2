@@ -48,8 +48,8 @@ install_localconf: $(CONFLOCAL)
 	fi
 
 install_profiles: $(PROFILES)
-	$(INSTALL_DIR) $(DESTDIR)$(DEFAULT_PROFILE_DIR)
-	$(INSTALL_DATA) $(PROFILES) $(DESTDIR)$(DEFAULT_PROFILE_DIR)/
+	$(INSTALL_DIR) $(profiledir)
+	$(INSTALL_DATA) $(PROFILES) $(profiledir)/
 
 install_lvm2: install_conf install_localconf install_profiles
 
