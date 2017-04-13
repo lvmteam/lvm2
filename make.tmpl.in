@@ -44,7 +44,7 @@ EGREP = @EGREP@
 GREP = @GREP@
 SORT = @SORT@
 WC = @WC@
-AR = ar
+AR = @AR@
 RM = rm -f
 
 PYTHON2 = @PYTHON2@
