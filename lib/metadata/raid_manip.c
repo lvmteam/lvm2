@@ -2985,7 +2985,7 @@ static int _lv_raid_change_image_count(struct logical_volume *lv, int yes, uint3
 	uint32_t old_count = lv_raid_image_count(lv);
 
 	if (old_count == new_count) {
-		log_warn("WARGNING: %s already has image count of %d.",
+		log_warn("WARNING: %s already has image count of %d.",
 			 display_lvname(lv), new_count);
 		return 1;
 	}
