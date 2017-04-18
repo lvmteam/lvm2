@@ -89,7 +89,7 @@ else
     MAN8DM+=$(DMEVENTDMAN)
   endif
 
-  ifeq ("@DMFILEMAPD@", "yes")
+  ifeq ("@BUILD_DMFILEMAPD@", "yes")
     MAN8DM+=$(DMFILEMAPDMAN)
   endif
 

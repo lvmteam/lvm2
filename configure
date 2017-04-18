@@ -703,7 +703,6 @@ FSADM_PATH
 FSADM
 ELDFLAGS
 DM_LIB_PATCHLEVEL
-DMFILEMAPD
 DMEVENTD_PATH
 DMEVENTD
 DL_LIBS
@@ -738,7 +737,6 @@ CLDWHOLEARCHIVE
 CLDNOWHOLEARCHIVE
 CLDFLAGS
 CACHE
-BUILD_NOTIFYDBUS
 BUILD_DMFILEMAPD
 BUILD_LOCKDDLM
 BUILD_LOCKDSANLOCK
@@ -955,8 +953,8 @@ enable_valgrind_pool
 enable_devmapper
 enable_lvmetad
 enable_lvmpolld
-enable_lockd_sanlock
-enable_lockd_dlm
+enable_lvmlockd_sanlock
+enable_lvmlockd_dlm
 enable_use_lvmlockd
 with_lvmlockd_pidfile
 enable_use_lvmetad
@@ -1693,8 +1691,9 @@ Optional Features:
   --disable-devmapper     disable LVM2 device-mapper interaction
   --enable-lvmetad        enable the LVM Metadata Daemon
   --enable-lvmpolld       enable the LVM Polling Daemon
-  --enable-lockd-sanlock  enable the LVM lock daemon using sanlock
-  --enable-lockd-dlm      enable the LVM lock daemon using dlm
+  --enable-lvmlockd-sanlock
+                          enable the LVM lock daemon using sanlock
+  --enable-lvmlockd-dlm   enable the LVM lock daemon using dlm
   --disable-use-lvmlockd  disable usage of LVM lock daemon
   --disable-use-lvmetad   disable usage of LVM Metadata Daemon
   --disable-use-lvmpolld  disable usage of LVM Poll Daemon
@@ -11774,11 +11773,11 @@ $as_echo "$BUILD_LVMPOLLD" >&6; }
 ################################################################################
 BUILD_LVMLOCKD=no
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lockdsanlock" >&5
-$as_echo_n "checking whether to build lockdsanlock... " >&6; }
-# Check whether --enable-lockd-sanlock was given.
-if test "${enable_lockd_sanlock+set}" = set; then :
-  enableval=$enable_lockd_sanlock; LOCKDSANLOCK=$enableval
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmlockdsanlock" >&5
+$as_echo_n "checking whether to build lvmlockdsanlock... " >&6; }
+# Check whether --enable-lvmlockd-sanlock was given.
+if test "${enable_lvmlockd_sanlock+set}" = set; then :
+  enableval=$enable_lvmlockd_sanlock; LOCKDSANLOCK=$enableval
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $LOCKDSANLOCK" >&5
@@ -11865,11 +11864,11 @@ $as_echo "#define LOCKDSANLOCK_SUPPORT 1" >>confdefs.h
 fi
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lockddlm" >&5
-$as_echo_n "checking whether to build lockddlm... " >&6; }
-# Check whether --enable-lockd-dlm was given.
-if test "${enable_lockd_dlm+set}" = set; then :
-  enableval=$enable_lockd_dlm; LOCKDDLM=$enableval
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build lvmlockddlm" >&5
+$as_echo_n "checking whether to build lvmlockddlm... " >&6; }
+# Check whether --enable-lvmlockd-dlm was given.
+if test "${enable_lvmlockd_dlm+set}" = set; then :
+  enableval=$enable_lvmlockd_dlm; LOCKDDLM=$enableval
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $LOCKDDLM" >&5
@@ -12105,17 +12104,18 @@ _ACEOF
 $as_echo_n "checking whether to build dmfilemapd... " >&6; }
 # Check whether --enable-dmfilemapd was given.
 if test "${enable_dmfilemapd+set}" = set; then :
-  enableval=$enable_dmfilemapd; DMFILEMAPD=$enableval
+  enableval=$enable_dmfilemapd; BUILD_DMFILEMAPD=$enableval
+else
+  BUILD_DMFILEMAPD=no
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DMFILEMAPD" >&5
-$as_echo "$DMFILEMAPD" >&6; }
-BUILD_DMFILEMAPD=$DMFILEMAPD
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_DMFILEMAPD" >&5
+$as_echo "$BUILD_DMFILEMAPD" >&6; }
 
-$as_echo "#define DMFILEMAPD 1" >>confdefs.h
+$as_echo "#define DMFILEMAPD \$BUILD_DMFILEMAPD" >>confdefs.h
 
 
-if test "$DMFILEMAPD" = yes; then
+if test "$BUILD_DMFILEMAPD" = yes; then
    ac_fn_c_check_header_mongrel "$LINENO" "linux/fiemap.h" "ac_cv_header_linux_fiemap_h" "$ac_includes_default"
 if test "x$ac_cv_header_linux_fiemap_h" = xyes; then :
 
@@ -12131,15 +12131,15 @@ fi
 $as_echo_n "checking whether to build notifydbus... " >&6; }
 # Check whether --enable-notify-dbus was given.
 if test "${enable_notify_dbus+set}" = set; then :
-  enableval=$enable_notify_dbus; NOTIFYDBUS=$enableval
+  enableval=$enable_notify_dbus; NOTIFYDBUS_SUPPORT=$enableval
+else
+  NOTIFYDBUS_SUPPORT=no
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $NOTIFYDBUS" >&5
-$as_echo "$NOTIFYDBUS" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $NOTIFYDBUS_SUPPORT" >&5
+$as_echo "$NOTIFYDBUS_SUPPORT" >&6; }
 
-BUILD_NOTIFYDBUS=$NOTIFYDBUS
-
-if test "$BUILD_NOTIFYDBUS" = yes; then
+if test "$NOTIFYDBUS_SUPPORT" = yes; then
 
 $as_echo "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
 
@@ -12147,7 +12147,7 @@ $as_echo "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
 fi
 
 ################################################################################
-if test "$BUILD_NOTIFYDBUS" = yes; then
+if test "$NOTIFYDBUS_SUPPORT" = yes; then
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for NOTIFY_DBUS" >&5
@@ -15175,7 +15175,7 @@ done
 
 fi
 
-if test "$DMFILEMAPD" = yes; then
+if test "$BUILD_DMFILEMAPD" = yes; then
 	for ac_header in sys/inotify.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "sys/inotify.h" "ac_cv_header_sys_inotify_h" "$ac_includes_default"
@@ -15510,8 +15510,6 @@ _ACEOF
 
 
 ################################################################################
-
-
 
 
 
