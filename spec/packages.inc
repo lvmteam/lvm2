@@ -275,10 +275,10 @@ This package contains shared lvm2 libraries for applications.
 Summary: LVM locking daemon
 Group: System Environment/Base
 Requires: lvm2 = %{version}-%{release}
-%if %{enable_lockd_dlm}
+%if %{enable_lvmlockd_dlm}
 Requires: dlm-lib >= %{dlm_version}
 %endif
-%if %{enable_lockd_sanlock}
+%if %{enable_lvmlockd_sanlock}
 Requires: sanlock-lib >= %{sanlock_version}
 %endif
 Requires(post): systemd-units

@@ -27,8 +27,8 @@
 %enableif %{enable_lvmpolld} lvmpolld
 %global enable_lvmlockd %(if echo %{services} | grep -q lvmlockd; then echo 1; else echo 0; fi)
 %if %{enable_lvmlockd}
-%enableif %{enable_lockd_dlm} lockd-dlm
-%enableif %{enable_lockd_sanlock} lockd-sanlock
+%enableif %{enable_lvmlockd_dlm} lvmlockd-dlm
+%enableif %{enable_lvmlockd_sanlock} lvmlockd-sanlock
 %endif
 %enableif %{enable_python} python2-bindings
 %enableif %{enable_python3} python3-bindings

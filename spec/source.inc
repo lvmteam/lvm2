@@ -16,8 +16,8 @@
 %global enable_lvmetad 1
 %global enable_lvmpolld 1
 %global enable_dmfilemapd 0
-#%global enable_lockd_dlm 0
-#%global enable_lockd_sanlock 0
+#%global enable_lvmlockd_dlm 0
+#%global enable_lvmlockd_sanlock 0
 
 %if %{enable_udev}
 %service lvmetad 1
@@ -52,24 +52,24 @@
 %if %{fedora} >= 24 || %{rhel} >= 7
  %service lvmlockd 1
  %global sanlock_version 3.3.0-1
- %global enable_lockd_dlm 1
- %global enable_lockd_sanlock 1
+ %global enable_lvmlockd_dlm 1
+ %global enable_lvmlockd_sanlock 1
  %if %{rhel}
   %ifarch i686 x86_64 s390x
-   %global buildreq_lockd_dlm dlm-devel >= %{dlm_version}
+   %global buildreq_lvmlockd_dlm dlm-devel >= %{dlm_version}
   %else
-   %global enable_lockd_dlm 0
+   %global enable_lvmlockd_dlm 0
   %endif
   %ifarch x86_64 ppc64le ppc64 aarch64
-   %global buildreq_lockd_sanlock sanlock-devel >= %{sanlock_version}
+   %global buildreq_lvmlockd_sanlock sanlock-devel >= %{sanlock_version}
   %else
-   %global enable_lockd_sanlock 0
+   %global enable_lvmlockd_sanlock 0
   %endif
  %endif
 %else
  %if %{fedora} >= 22
   %service lvmlockd 1
-  %global enable_lockd_dlm 1
+  %global enable_lvmlockd_dlm 1
  %endif
 %endif
 
@@ -192,8 +192,8 @@ BuildRequires: pkgconfig
 
 %maybe BuildRequires: %{?buildreq_udev}
 %maybe BuildRequires: %{?buildreq_cluster}
-%maybe BuildRequires: %{?buildreq_lockd_dlm}
-%maybe BuildRequires: %{?buildreq_lockd_sanlock}
+%maybe BuildRequires: %{?buildreq_lvmlockd_dlm}
+%maybe BuildRequires: %{?buildreq_lvmlockd_sanlock}
 %maybe BuildRequires: %{?buildreq_python2_devel}
 %maybe BuildRequires: %{?buildreq_python3_devel}
 %maybe BuildRequires: %{?buildreq_python_setuptools}
