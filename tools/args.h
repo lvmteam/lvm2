@@ -1234,7 +1234,7 @@ arg(physicalvolume_ARG, 'P', "physicalvolume", 0, 0, 0, NULL)
 
 arg(quiet_ARG, 'q', "quiet", 0, ARG_COUNTABLE, 0,
     "Suppress output and log messages. Overrides --debug and --verbose.\n"
-    "Repeat once to also suppress any prompts with answer no.\n")
+    "Repeat once to also suppress any prompts with answer 'no'.\n")
 
 arg(readahead_ARG, 'r', "readahead", readahead_VAL, 0, 0,
     "Sets read ahead sector count of an LV.\n"
