@@ -1150,10 +1150,10 @@ AC_MSG_RESULT($BUILD_LVMPOLLD)
 ################################################################################
 BUILD_LVMLOCKD=no
 
-dnl -- Build lockdsanlock
-AC_MSG_CHECKING(whether to build lockdsanlock)
-AC_ARG_ENABLE(lockd-sanlock,
-	      AC_HELP_STRING([--enable-lockd-sanlock],
+dnl -- Build lvmlockdsanlock
+AC_MSG_CHECKING(whether to build lvmlockdsanlock)
+AC_ARG_ENABLE(lvmlockd-sanlock,
+	      AC_HELP_STRING([--enable-lvmlockd-sanlock],
 			     [enable the LVM lock daemon using sanlock]),
 	      LOCKDSANLOCK=$enableval)
 AC_MSG_RESULT($LOCKDSANLOCK)
@@ -1168,10 +1168,10 @@ if test "$BUILD_LOCKDSANLOCK" = yes; then
 fi
 
 ################################################################################
-dnl -- Build lockddlm
-AC_MSG_CHECKING(whether to build lockddlm)
-AC_ARG_ENABLE(lockd-dlm,
-	      AC_HELP_STRING([--enable-lockd-dlm],
+dnl -- Build lvmlockddlm
+AC_MSG_CHECKING(whether to build lvmlockddlm)
+AC_ARG_ENABLE(lvmlockd-dlm,
+	      AC_HELP_STRING([--enable-lvmlockd-dlm],
 			     [enable the LVM lock daemon using dlm]),
 	      LOCKDDLM=$enableval)
 AC_MSG_RESULT($LOCKDDLM)
