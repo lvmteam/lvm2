@@ -1,5 +1,6 @@
 Version 1.02.141 - 
 ===============================
+  Restore Warning by 5% increment when thin-pool is over 80% (1.02.138).
 
 Version 1.02.140 - 3rd May 2017
 ===============================
