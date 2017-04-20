@@ -1490,6 +1490,11 @@ have_readline() {
 	echo version | lvm &>/dev/null
 }
 
+have_single_core() {
+	which nproc &>/dev/null || return 0
+	[ $(nproc) -eq 1 ] && return 1
+}
+
 dmsetup_wrapped() {
 	udev_wait
 	dmsetup "$@"
