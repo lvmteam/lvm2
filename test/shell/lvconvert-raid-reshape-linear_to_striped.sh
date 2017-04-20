@@ -19,7 +19,7 @@ aux have_raid 1 10 1 || skip
 
 # Temporarily skip reshape tests on single-core CPUs until there's a fix for
 # https://bugzilla.redhat.com/1443999 - AGK 2017/04/20
-aux have_single_core || skip
+aux have_single_core && skip
 
 aux prepare_vg 5
 
