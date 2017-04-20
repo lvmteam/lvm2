@@ -530,18 +530,18 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 		 * Returning 2 from pre function -> lv is suspended and
 		 * metadata got updated, don't need to do it again
 		 */
-		if (!(origin_only ? resume_lv_origin(lv->vg->cmd, lv_lock_holder(lv)) :
-				    resume_lv(lv->vg->cmd, lv_lock_holder(lv)))) {
+		if (!(r = (origin_only ? resume_lv_origin(lv->vg->cmd, lv_lock_holder(lv)) :
+					 resume_lv(lv->vg->cmd, lv_lock_holder(lv))))) {
 			log_error("Failed to resume %s.", display_lvname(lv));
 			goto err;
 		}
 
 	/* Update metadata and reload mappings including flags (e.g. LV_REBUILD, LV_RESHAPE_DELTA_DISKS_PLUS) */
-	} else if (!(origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv)))
+	} else if (!(r = (origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv))))
 		goto err;
 
 	/* Eliminate any residual LV and don't commit the metadata */
-	if (!_eliminate_extracted_lvs_optional_write_vg(lv->vg, removal_lvs, 0))
+	if (!(r = _eliminate_extracted_lvs_optional_write_vg(lv->vg, removal_lvs, 0)))
 		goto err;
 
 	/*
@@ -554,7 +554,7 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 	 * and if successful, performs metadata backup.
 	 */
 	log_debug_metadata("Clearing any flags for %s passed to the kernel.", display_lvname(lv));
-	if (!_reset_flags_passed_to_kernel(lv, &flags_reset))
+	if (!(r = _reset_flags_passed_to_kernel(lv, &flags_reset)))
 		goto err;
 
 	/* Call any @fn_post_on_lv before the second update call (e.g. to rename LVs back) */
@@ -565,7 +565,7 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 
 	/* Update and reload to clear out reset flags in the metadata and in the kernel */
 	log_debug_metadata("Updating metadata mappings for %s.", display_lvname(lv));
-	if ((r != 2 || flags_reset) && !(origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv))) {
+	if ((r != 2 || flags_reset) && !(r = (origin_only ? lv_update_and_reload_origin(lv) : lv_update_and_reload(lv)))) {
 		log_error(INTERNAL_ERROR "Update of LV %s failed.", display_lvname(lv));
 		goto err;
 	}
