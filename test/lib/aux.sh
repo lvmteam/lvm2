@@ -1490,9 +1490,9 @@ have_readline() {
 	echo version | lvm &>/dev/null
 }
 
-have_single_core() {
+have_multi_core() {
 	which nproc &>/dev/null || return 0
-	[ $(nproc) -eq 1 ] && return 1
+	[ $(nproc) -ne 1 ]
 }
 
 dmsetup_wrapped() {
