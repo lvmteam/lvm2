@@ -5061,12 +5061,6 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 		}
 	}
 
-	if (seg_is_any_raid5(seg) && segtype_is_any_raid6(new_segtype) && seg->area_count < 4) {
-		log_error("Minimum of 3 stripes needed for conversion from %s to %s.",
-			  lvseg_name(seg), new_segtype->name);
-		return 0;
-	}
-
 	if (seg_is_raid1(seg)) {
 		if (seg->area_count != 2) {
 			log_error("Can't convert %s LV %s to %s with != 2 legs.",
