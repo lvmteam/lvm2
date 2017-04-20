@@ -7514,7 +7514,8 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			status |= LV_NOTSYNCED;
 		}
 
-		lp->region_size = adjusted_mirror_region_size(vg->extent_size,
+		lp->region_size = adjusted_mirror_region_size(vg->cmd,
+							      vg->extent_size,
 							      lp->extents,
 							      lp->region_size, 0,
 							      vg_is_clustered(vg));

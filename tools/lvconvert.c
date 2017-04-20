@@ -622,7 +622,7 @@ static int _lv_update_log_type(struct cmd_context *cmd,
 
 	/* Adding redundancy to the log */
 	if (old_log_count < log_count) {
-		region_size = adjusted_mirror_region_size(lv->vg->extent_size,
+		region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
 							  lv->le_count,
 							  region_size, 0,
 							  vg_is_clustered(lv->vg));
@@ -827,7 +827,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 		return 1;
 	}
 
-	region_size = adjusted_mirror_region_size(lv->vg->extent_size,
+	region_size = adjusted_mirror_region_size(cmd, lv->vg->extent_size,
 						  lv->le_count,
 						  lp->region_size ? : seg->region_size, 0,
 						  vg_is_clustered(lv->vg));

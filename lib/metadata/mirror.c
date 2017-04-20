@@ -157,7 +157,8 @@ struct lv_segment *find_mirror_seg(struct lv_segment *seg)
  *
  * For internal use only log only in verbose mode
  */
-uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
+uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
+				     uint32_t extent_size, uint32_t extents,
 				     uint32_t region_size, int internal, int clustered)
 {
 	uint64_t region_max;
@@ -168,11 +169,11 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 	if (region_max < UINT32_MAX && region_size > region_max) {
 		region_size = (uint32_t) region_max;
 		if (!internal)
-			log_print_unless_silent("Using reduced mirror region size of %"
-						PRIu32 " sectors.", region_size);
+			log_print_unless_silent("Using reduced mirror region size of %s",
+						display_size(cmd, region_size));
                 else
-			log_verbose("Using reduced mirror region size of %"
-				    PRIu32 " sectors.", region_size);
+			log_verbose("Using reduced mirror region size of %s",
+				    display_size(cmd, region_size));
 	}
 
 #ifdef CMIRROR_REGION_COUNT_LIMIT
@@ -199,13 +200,13 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 
 		if (region_size < region_min_pow2) {
 			if (internal)
-				log_print_unless_silent("Increasing mirror region size from %"
-							PRIu32 " to %" PRIu64 " sectors.",
-							region_size, region_min_pow2);
+				log_print_unless_silent("Increasing mirror region size from %s to %s",
+							display_size(cmd, region_size),
+							display_size(cmd, region_min_pow2));
 			else
-				log_verbose("Increasing mirror region size from %"
-					    PRIu32 " to %" PRIu64 " sectors.",
-					    region_size, region_min_pow2);
+				log_verbose("Increasing mirror region size from %s to %s",
+					    display_size(cmd, region_size),
+					    display_size(cmd, region_min_pow2));
 			region_size = region_min_pow2;
 		}
 	}
@@ -1665,7 +1666,8 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 	if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
 		return_0;
 
-	adjusted_region_size = adjusted_mirror_region_size(lv->vg->extent_size,
+	adjusted_region_size = adjusted_mirror_region_size(cmd,
+							   lv->vg->extent_size,
 							   lv->le_count,
 							   region_size, 1,
 							   vg_is_clustered(lv->vg));
