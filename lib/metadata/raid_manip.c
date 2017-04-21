@@ -4808,10 +4808,7 @@ static int _shift_parity_dev(struct lv_segment *seg)
 static int _raid45_to_raid54_wrapper(TAKEOVER_FN_ARGS)
 {
 	struct lv_segment *seg = first_seg(lv);
-	struct dm_list removal_lvs;
 	uint32_t region_size = seg->region_size;
-
-	dm_list_init(&removal_lvs);
 
 	if (!(seg_is_raid4(seg) && segtype_is_raid5_n(new_segtype)) &&
 	    !(seg_is_raid5_n(seg) && segtype_is_raid4(new_segtype))) {
@@ -4841,6 +4838,7 @@ static int _raid45_to_raid54_wrapper(TAKEOVER_FN_ARGS)
 		return 0;
 	}
 
+	/* Have to clear rmeta LVs or the kernel will reject due to reordering disks */
 	if (!_clear_meta_lvs(lv))
 		return_0;
 
@@ -4853,7 +4851,7 @@ static int _raid45_to_raid54_wrapper(TAKEOVER_FN_ARGS)
 	seg->region_size = new_region_size ?: region_size;
 	seg->segtype = new_segtype;
 
-	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs, NULL))
+	if (!lv_update_and_reload(lv))
 		return_0;
 
 	init_mirror_in_sync(0);
