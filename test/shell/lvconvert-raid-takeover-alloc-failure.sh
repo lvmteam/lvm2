@@ -49,6 +49,10 @@ function check_no_sub_lvs
 
 # 6-way striped: neither conversion to raid5 nor raid6 possible
 lvcreate --yes --stripes 6 --size 4M --name $lv1 $vg
+not lvconvert --yes --type raid4 $vg/$lv1
+check lv_field $vg/$lv1 segtype "striped"
+check_no_sub_lvs $vg $lv1 0 5
+
 not lvconvert --yes --type raid5 $vg/$lv1
 check lv_field $vg/$lv1 segtype "striped"
 check_no_sub_lvs $vg $lv1 0 5
