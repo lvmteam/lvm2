@@ -45,7 +45,7 @@ aux wait_for_sync $vg $lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
 # Convert raid1 -> raid5_n
-lvconvert -y --ty raid5_n $vg/$lv1
+lvconvert -y --ty raid5_n --stripesize 64K --regionsize 512K $vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 check lv_field $vg/$lv1 segtype "raid5_n"
 check lv_field $vg/$lv1 stripes 2
