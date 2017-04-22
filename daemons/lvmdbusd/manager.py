@@ -48,7 +48,7 @@ class Manager(AutomatedProperties):
 		pv = cfg.om.get_object_path_by_uuid_lvm_id(device, device)
 		if pv:
 			raise dbus.exceptions.DBusException(
-				MANAGER_INTERFACE, "PV Already exists!")
+				MANAGER_INTERFACE, "PV %s Already exists!" % device)
 
 		rc, out, err = cmdhandler.pv_create(create_options, [device])
 		Manager.handle_execute(rc, out, err)
