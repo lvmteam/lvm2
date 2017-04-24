@@ -919,7 +919,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				    MIRROR_BY_LV)) {
 			layer_lv = seg_lv(first_seg(lv), 0);
 			if (!remove_layer_from_lv(lv, layer_lv) ||
-			    !deactivate_lv(cmd, layer_lv) ||
+			    (lv_is_active(lv) && !deactivate_lv(cmd, layer_lv)) ||
 			    !lv_remove(layer_lv) ||
 			    !vg_write(lv->vg) || !vg_commit(lv->vg)) {
 				log_error("ABORTING: Failed to remove "
