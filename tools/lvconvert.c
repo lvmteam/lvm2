@@ -917,6 +917,7 @@ static int _lvconvert_mirrors_aux(struct cmd_context *cmd,
 				    lp->stripes, lp->stripe_size,
 				    region_size, 0U, operable_pvs, lp->alloc,
 				    MIRROR_BY_LV)) {
+			/* FIXME: failure inside library -> move error path processing into library. */
 			layer_lv = seg_lv(first_seg(lv), 0);
 			if (!remove_layer_from_lv(lv, layer_lv) ||
 			    (lv_is_active(lv) && !deactivate_lv(cmd, layer_lv)) ||
