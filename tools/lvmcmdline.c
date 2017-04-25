@@ -1700,7 +1700,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 
 	if (!best_required) {
 		/* cmd did not have all the required opt/pos args of any command */
-		log_error("Incorrect syntax. Run '%s --help' for more information.", name);
+		log_error("No command with matching syntax recognised.  Run '%s --help' for more information.", name);
 		if (close_ro) {
 			log_warn("Nearest similar command has syntax:");
 			print_usage(&_cmdline.commands[close_i], 0, 0);
@@ -1722,7 +1722,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 			opt_enum = best_unused_options[i];
 			opt_val = arg_value(cmd, opt_enum);
 
-			log_error("Invalid option for command: %s%s%s.",
+			log_error("Command does not accept option: %s%s%s.",
 				  arg_long_option_name(opt_enum),
 				  opt_val ? " " : "", opt_val ?: "");
 		}
@@ -1753,7 +1753,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 			break;
 
 		if (count >= (commands[best_i].rp_count + commands[best_i].op_count)) {
-			log_error("Invalid positional argument for command: %s.", argv[count]);
+			log_error("Command does not accept argument: %s.", argv[count]);
 
 			/* FIXME: to warn/ignore, clear so it can't be used when processing. */
 			/*
@@ -1803,16 +1803,16 @@ out:
 				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, check_opts_msg, sizeof(check_opts_msg));
 
 				if (rule->opts_count)
-					log_error("Invalid option combination: %s with %s", opts_msg, check_opts_msg);
+					log_error("Command does not accept option combination: %s with %s", opts_msg, check_opts_msg);
 				else
-					log_error("Invalid options: %s", check_opts_msg);
+					log_error("Command does not accept options: %s", check_opts_msg);
 				return NULL;
 			}
 
 			if (opts_unmatch_count && (rule->rule == RULE_REQUIRE)) {
 				memset(check_opts_msg, 0, sizeof(check_opts_msg));
 				opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, check_opts_msg, sizeof(check_opts_msg));
-				log_error("Required options for command: %s", check_opts_msg);
+				log_error("Command requires options: %s", check_opts_msg);
 				return NULL;
 			}
 		}

@@ -2701,7 +2701,7 @@ static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, i
 	if (!ret) {
 		int lvt_enum = get_lvt_enum(lv);
 		struct lv_type *type = get_lv_type(lvt_enum);
-		log_warn("Operation on LV %s which has invalid type %s.",
+		log_warn("Command on LV %s does not accept LV type %s.",
 			 display_lvname(lv), type ? type->name : "unknown");
 	}
 
@@ -2811,7 +2811,8 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		if (rule->check_opts && (rule->rule == RULE_INVALID) && opts_match_count) {
 			memset(buf, 0, sizeof(buf));
 			opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
-			log_warn("An invalid option is set: %s", buf);
+			log_warn("Command on LV %s does not accept option %s.",
+				 display_lvname(lv), buf);
 			ret = 0;
 		}
 
@@ -2820,14 +2821,15 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		if (rule->check_opts && (rule->rule == RULE_REQUIRE) && opts_unmatch_count)  {
 			memset(buf, 0, sizeof(buf));
 			opt_array_to_str(cmd, rule->check_opts, rule->check_opts_count, buf, sizeof(buf));
-			log_warn("A required option is not set: %s", buf);
+			log_warn("Command on LV %s requires option %s.",
+				 display_lvname(lv), buf);
 			ret = 0;
 		}
 
 		/* Fail if the LV matches any of the invalid LV types. */
 
 		if (rule->check_lvt_bits && (rule->rule == RULE_INVALID) && lv_types_match_bits) {
-			log_warn("Command on LV %s with invalid type: %s",
+			log_warn("Command on LV %s does not accept LV type %s.",
 				 display_lvname(lv), lvtype ? lvtype->name : "unknown");
 			ret = 0;
 		}
@@ -2837,7 +2839,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		if (rule->check_lvt_bits && (rule->rule == RULE_REQUIRE) && !lv_types_match_bits) {
 			memset(buf, 0, sizeof(buf));
 			lvt_bits_to_str(rule->check_lvt_bits, buf, sizeof(buf));
-			log_warn("Command on LV %s with type %s does not match required type: %s",
+			log_warn("Command on LV %s does not accept LV type %s. Required LV types are %s.",
 				 display_lvname(lv), lvtype ? lvtype->name : "unknown", buf);
 			ret = 0;
 		}
@@ -2847,7 +2849,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		if (rule->check_lvp_bits && (rule->rule == RULE_INVALID) && lv_props_match_bits) {
 			memset(buf, 0, sizeof(buf));
 			lvp_bits_to_str(lv_props_match_bits, buf, sizeof(buf));
-			log_warn("Command on LV %s with invalid properties: %s",
+			log_warn("Command on LV %s does not accept LV with properties: %s.",
 				 display_lvname(lv), buf);
 			ret = 0;
 		}
@@ -2857,7 +2859,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 		if (rule->check_lvp_bits && (rule->rule == RULE_REQUIRE) && lv_props_unmatch_bits) {
 			memset(buf, 0, sizeof(buf));
 			lvp_bits_to_str(lv_props_unmatch_bits, buf, sizeof(buf));
-			log_warn("Command on LV %s requires properties: %s",
+			log_warn("Command on LV %s requires LV with properties: %s.",
 				 display_lvname(lv), buf);
 			ret = 0;
 		}
@@ -3108,7 +3110,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!_check_lv_types(cmd, lvl->lv, lv_arg_pos)) {
 			/* FIXME: include this result in report log? */
 			if (lv_is_named_arg) {
-				log_error("Operation not permitted on LV %s.", display_lvname(lvl->lv));
+				log_error("Command not permitted on LV %s.", display_lvname(lvl->lv));
 				ret_max = ECMD_FAILED;
 			}
 			continue;
@@ -3117,7 +3119,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (!_check_lv_rules(cmd, lvl->lv)) {
 			/* FIXME: include this result in report log? */
 			if (lv_is_named_arg) {
-				log_error("Operation not permitted on LV %s.", display_lvname(lvl->lv));
+				log_error("Command not permitted on LV %s.", display_lvname(lvl->lv));
 				ret_max = ECMD_FAILED;
 			} 
 			continue;
