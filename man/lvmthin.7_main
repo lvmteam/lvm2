@@ -1016,7 +1016,7 @@ Possible discard behaviors:
 ignore: Ignore any discards that are received.
 
 nopassdown: Process any discards in the thin pool itself and allow
-the no longer needed extends to be overwritten by new data.
+the no longer needed extents to be overwritten by new data.
 
 passdown: Process discards in the thin pool (as with nopassdown), and
 pass the discards down the the underlying device.  This is the default
