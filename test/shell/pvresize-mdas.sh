@@ -21,7 +21,7 @@ check pv_field "$dev1" pv_size 8.00m
 check pv_field "$dev1" pv_mda_count 2
 pvs "$dev1"
 
-pvresize --setphysicalvolumesize 4m "$dev1"
+pvresize --setphysicalvolumesize 4m -y "$dev1"
 check pv_field "$dev1" pv_size 4.00m
 check pv_field "$dev1" pv_mda_count 2
 pvs "$dev1"

@@ -58,10 +58,10 @@ vgremove -f $vg
 # missing params
 not pvresize
 # negative size
-not pvresize --setphysicalvolumesize -10M "$dev1"
+not pvresize --setphysicalvolumesize -10M -y "$dev1"
 # not existing device
-not pvresize --setphysicalvolumesize 10M "$dev7"
-pvresize --setphysicalvolumesize 10M "$dev1"
+not pvresize --setphysicalvolumesize 10M -y "$dev7"
+pvresize --setphysicalvolumesize 10M -y "$dev1"
 pvresize "$dev1"
 
 

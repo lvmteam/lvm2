@@ -26,7 +26,7 @@ pvcreate "$dev1"
 pvcreate "$dev2"
 vgcreate $vg1 "$dev1"
 vgcreate $vg2 "$dev2"
-pvresize --setphysicalvolumesize 8m "$dev2"
+pvresize --setphysicalvolumesize 8m -y "$dev2"
 lvcreate -an -l1 -n $lv1 $vg1
 
 # Both devs are shown and used by the VG
@@ -275,7 +275,7 @@ pvremove -ff -y "$dev2"
 
 pvcreate "$dev3"
 pvcreate "$dev4"
-pvresize --setphysicalvolumesize 8m "$dev4"
+pvresize --setphysicalvolumesize 8m -y "$dev4"
 
 UUID3=$(pvs --noheadings -o uuid $dev3 | xargs)
 UUID4=$(pvs --noheadings -o uuid $dev4 | xargs)
