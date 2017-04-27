@@ -60,6 +60,7 @@ struct lvconvert_params {
 	int need_polling;
 
 	uint32_t region_size;
+	unsigned region_size_supplied;
 
 	uint32_t mirrors;
 	sign_t mirrors_sign;
@@ -247,10 +248,13 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 				return 0;
 			}
 
-			if (arg_is_set(cmd, regionsize_ARG))
+			if (arg_is_set(cmd, regionsize_ARG)) {
 				lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
-			else
+				lp->region_size_supplied = 1;
+			} else {
 				lp->region_size = get_default_region_size(cmd);
+				lp->region_size_supplied = 0;
+			}
 
 			/* FIXME man page says in one place that --type and --mirrors can't be mixed */
 			if (lp->mirrors_supplied && !lp->mirrors)
@@ -1360,7 +1364,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 					  DEFAULT_RAID1_MAX_IMAGES, lp->segtype->name, display_lvname(lv));
 				return 0;
 			}
-			if (!lv_raid_change_image_count(lv, lp->yes, image_count, lp->region_size, lp->pvh))
+			if (!lv_raid_change_image_count(lv, lp->yes, image_count,
+							(lp->region_size_supplied || !seg->region_size) ?
+							lp->region_size : seg->region_size , lp->pvh))
 				return_0;
 
 			log_print_unless_silent("Logical volume %s successfully converted.",
@@ -1427,7 +1433,8 @@ try_new_takeover_or_reshape:
 	     (seg_is_striped(seg) && seg->area_count > 1 && seg_is_raid4(lp))))) {
 		if (!lv_raid_convert(lv, lp->segtype,
 				     lp->yes, lp->force, lp->stripes, lp->stripe_size_supplied, lp->stripe_size,
-				     lp->region_size, lp->pvh))
+				     (lp->region_size_supplied || !seg->region_size) ?
+				     lp->region_size : seg->region_size , lp->pvh))
 			return_0;
 
 		log_print_unless_silent("Logical volume %s successfully converted.",
