@@ -4751,6 +4751,7 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 enum {
 	PROMPT_PVCREATE_PV_IN_VG = 1,
 	PROMPT_PVREMOVE_PV_IN_VG = 2,
+	PROMPT_PVCREATE_DEV_SIZE = 4,
 };
 
 enum {
@@ -4767,6 +4768,8 @@ enum {
 struct pvcreate_prompt {
 	struct dm_list list;
 	uint32_t type;
+	uint64_t size;
+	uint64_t new_size;
 	const char *pv_name;
 	const char *vg_name;
 	struct device *dev;
@@ -4808,12 +4811,14 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 {
 	const char *vgname = prompt->vg_name ? prompt->vg_name : "<unknown>";
 	const char *pvname = prompt->pv_name;
+	int answer_yes = 0;
+	int answer_no = 0;
 
 	/* The VG name can be unknown when the PV is used but metadata is not available */
 
-	if (prompt->type == PROMPT_PVCREATE_PV_IN_VG) {
+	if (prompt->type & PROMPT_PVCREATE_PV_IN_VG) {
 		if (pp->force != DONT_PROMPT_OVERRIDE) {
-			prompt->answer = PROMPT_ANSWER_NO;
+			answer_no = 1;
 
 			if (prompt->vg_name_unknown) {
 				log_error("PV %s is used by a VG but its metadata is missing.", pvname);
@@ -4825,20 +4830,39 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 				log_error("Unable to add physical volume '%s' to volume group '%s'", pvname, vgname);
 			}
 		} else if (pp->yes) {
-			prompt->answer = PROMPT_ANSWER_YES;
+			answer_yes = 1;
 		} else if (ask) {
 			if (yes_no_prompt("Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ", pvname, vgname) == 'n') {
-				prompt->answer = PROMPT_ANSWER_NO;
-				log_error("%s: physical volume not initialized", pvname);
+				answer_no = 1;
 			} else {
-				prompt->answer = PROMPT_ANSWER_YES;
+				answer_yes = 1;
 				log_warn("WARNING: Forcing physical volume creation on %s of volume group \"%s\"", pvname, vgname);
 			}
 		}
 
-	} else if (prompt->type == PROMPT_PVREMOVE_PV_IN_VG) {
+	}
+
+	if (prompt->type & PROMPT_PVCREATE_DEV_SIZE) {
+		if (pp->yes) {
+			log_warn("WARNING: Faking size of PV %s. Don't write outside real device.", pvname);
+			answer_yes = 1;
+		} else if (ask) {
+			if (prompt->new_size != prompt->size) {
+				if (yes_no_prompt("WARNING: %s: device size %s does not match requested size %s. Proceed? [y/n]: ", pvname,
+						  display_size(cmd, (uint64_t)prompt->size),
+						  display_size(cmd, (uint64_t)prompt->new_size)) == 'n') {
+					answer_no = 1;
+				} else {
+					answer_yes = 1;
+					log_warn("WARNING: Faking size of PV %s. Don't write outside real device.", pvname);
+				}
+			}
+		}
+	}
+	
+	if (prompt->type & PROMPT_PVREMOVE_PV_IN_VG) {
 		if (pp->force != DONT_PROMPT_OVERRIDE) {
-			prompt->answer = PROMPT_ANSWER_NO;
+			answer_no = 1;
 
 			if (prompt->vg_name_unknown)
 				log_error("PV %s is used by a VG but its metadata is missing.", pvname);
@@ -4847,20 +4871,51 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 			log_error("(If you are certain you need pvremove, then confirm by using --force twice.)");
 		} else if (pp->yes) {
 			log_warn("WARNING: PV %s is used by VG %s", pvname, vgname);
-			prompt->answer = PROMPT_ANSWER_YES;
+			answer_yes = 1;
 		} else if (ask) {
 			log_warn("WARNING: PV %s is used by VG %s", pvname, vgname);
-			if (yes_no_prompt("Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ", pvname, vgname) == 'n') {
-				prompt->answer = PROMPT_ANSWER_NO;
-				log_error("%s: physical volume label not removed", pvname);
-			} else {
-				prompt->answer = PROMPT_ANSWER_YES;
-			}
+			if (yes_no_prompt("Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ", pvname, vgname) == 'n')
+				answer_no = 1;
+			else
+				answer_yes = 1;
 		}
-
-		if ((prompt->answer == PROMPT_ANSWER_YES) && (pp->force == DONT_PROMPT_OVERRIDE))
-			log_warn("WARNING: Wiping physical volume label from %s of volume group \"%s\"", pvname, vgname);
 	}
+
+	if (answer_yes && answer_no) {
+		log_warn("WARNING: prompt answer yes is overriden by prompt answer no.");
+		answer_yes = 0;
+	}
+
+	/*
+	 * no answer is valid when not asking the user.
+	 * the caller uses this to check if all the prompts
+	 * can be answered automatically without prompts.
+	 */
+	if (!ask && !answer_yes && !answer_no)
+		return;
+
+	if (answer_no)
+		prompt->answer = PROMPT_ANSWER_NO;
+	else if (answer_yes)
+		prompt->answer = PROMPT_ANSWER_YES;
+
+	/*
+	 * Mostly historical messages.  Other messages above could be moved
+	 * here to separate the answer logic from the messages.
+	 */
+
+	if ((prompt->type & (PROMPT_PVCREATE_DEV_SIZE | PROMPT_PVCREATE_PV_IN_VG)) &&
+	    (prompt->answer == PROMPT_ANSWER_NO))
+		log_error("%s: physical volume not initialized.", pvname);
+
+	if ((prompt->type & PROMPT_PVREMOVE_PV_IN_VG) &&
+	    (prompt->answer == PROMPT_ANSWER_NO))
+		log_error("%s: physical volume label not removed.", pvname);
+
+	if ((prompt->type & PROMPT_PVREMOVE_PV_IN_VG) &&
+	    (prompt->answer == PROMPT_ANSWER_YES) &&
+	    (pp->force == DONT_PROMPT_OVERRIDE))
+		log_warn("WARNING: Wiping physical volume label from %s of volume group \"%s\".", pvname, vgname);
 }
 
 static struct pvcreate_device *_pvcreate_list_find_dev(struct dm_list *devices, struct device *dev)
@@ -4912,6 +4967,10 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 	struct pvcreate_params *pp = (struct pvcreate_params *) handle->custom_handle;
 	struct pvcreate_device *pd;
 	struct pvcreate_prompt *prompt;
+	uint64_t size = 0;
+	uint64_t new_size = 0;
+	int need_size_prompt = 0;
+	int need_vg_prompt = 0;
 	int found = 0;
 
 	if (!pv->dev)
@@ -4996,35 +5055,57 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 		pd->is_not_pv = 1;
 	}
 
+	if (arg_is_set(cmd, setphysicalvolumesize_ARG)) {
+		new_size = arg_uint64_value(cmd, setphysicalvolumesize_ARG, UINT64_C(0));
+
+		if (!dev_get_size(pv->dev, &size)) {
+			log_error("Can't get device size of %s.", pv_dev_name(pv));
+			dm_list_move(&pp->arg_fail, &pd->list);
+			return 1;
+		} else if (new_size != size)
+			need_size_prompt = 1;
+	}
+
 	/*
 	 * pvcreate is being run on this device, and it's not a PV,
 	 * or is an orphan PV.  Neither case requires a prompt.
+	 * Or, pvcreate is being run on this device, but the device
+	 * is already a PV in a VG.  A prompt or force option is required
+	 * to use it.
 	 */
-	if (pd->is_orphan_pv || pd->is_not_pv) {
+	if (pd->is_orphan_pv || pd->is_not_pv)
+		need_vg_prompt = 0;
+	else
+		need_vg_prompt = 1;
+
+	if (!need_size_prompt && !need_vg_prompt) {
 		pd->dev = pv->dev;
 		dm_list_move(&pp->arg_process, &pd->list);
 		return 1;
 	}
 
-	/*
-	 * pvcreate is being run on this device, but the device is already
-	 * a PV in a VG.  A prompt or force option is required to use it.
-	 */
 	if (!(prompt = dm_pool_zalloc(cmd->mem, sizeof(*prompt)))) {
 		log_error("prompt alloc failed.");
 		pp->check_failed = 1;
 		return 0;
 	}
 	prompt->dev = pd->dev;
-	prompt->type = PROMPT_PVCREATE_PV_IN_VG;
 	prompt->pv_name = dm_pool_strdup(cmd->mem, pd->name);
+	prompt->size = size;
+	prompt->new_size = new_size;
 
 	if (pd->is_used_unknown_pv)
 		prompt->vg_name_unknown = 1;
-	else
+	else if (need_vg_prompt)
 		prompt->vg_name = dm_pool_strdup(cmd->mem, vg->name);
-	dm_list_add(&pp->prompts, &prompt->list);
 
+	if (need_size_prompt)
+		prompt->type |= PROMPT_PVCREATE_DEV_SIZE;
+
+	if (need_vg_prompt)
+		prompt->type |= PROMPT_PVCREATE_PV_IN_VG;
+
+	dm_list_add(&pp->prompts, &prompt->list);
 	pd->dev = pv->dev;
 	dm_list_move(&pp->arg_process, &pd->list);
 
@@ -5254,7 +5335,7 @@ static int _pvremove_check_single(struct cmd_context *cmd,
 		prompt->vg_name_unknown = 1;
 	else
 		prompt->vg_name = dm_pool_strdup(cmd->mem, vg->name);
-	prompt->type = PROMPT_PVREMOVE_PV_IN_VG;
+	prompt->type |= PROMPT_PVREMOVE_PV_IN_VG;
 	dm_list_add(&pp->prompts, &prompt->list);
 
 	pd->dev = pv->dev;

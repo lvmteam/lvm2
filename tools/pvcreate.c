@@ -52,11 +52,11 @@ static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
 		pp->pva.idp = &pp->pva.id;
 	}
 
-	if (arg_sign_value(cmd, physicalvolumesize_ARG, SIGN_NONE) == SIGN_MINUS) {
+	if (arg_sign_value(cmd, setphysicalvolumesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 		log_error("Physical volume size may not be negative");
 		return 0;
 	}
-	pp->pva.size = arg_uint64_value(cmd, physicalvolumesize_ARG, UINT64_C(0));
+	pp->pva.size = arg_uint64_value(cmd, setphysicalvolumesize_ARG, UINT64_C(0));
 
 	if (arg_is_set(cmd, restorefile_ARG) || arg_is_set(cmd, uuidstr_ARG))
 		pp->zero = 0;

@@ -78,7 +78,7 @@ aux lvmconf "activation/snapshot_autoextend_percent = 20" \
             "activation/snapshot_autoextend_threshold = 50"
 
 # Check usability with smallest (1k) extent size ($lv has 15P)
-pvcreate --setphysicalvolumesize 4T "$DM_DEV_DIR/$vg/$lv"
+pvcreate --yes --setphysicalvolumesize 4T "$DM_DEV_DIR/$vg/$lv"
 trap 'cleanup_tail' EXIT
 vgcreate -s 1K $vg1 "$DM_DEV_DIR/$vg/$lv"
 

@@ -27,7 +27,7 @@ not grep "$CHECK_MSG" err
 vgremove -ff $vg
 
 # set PV size to 2x dev size
-pvcreate --setphysicalvolumesize 16m $dev1
+pvcreate --yes --setphysicalvolumesize 16m $dev1
 vgcreate $vg $dev1 2>err
 grep "$CHECK_MSG" err
 pvs 2>err
@@ -36,7 +36,7 @@ vgremove -ff $vg
 
 # should be quiet if requested
 aux lvmconf 'metadata/check_pv_device_sizes = 0'
-pvcreate --setphysicalvolumesize 16m $dev1
+pvcreate --yes --setphysicalvolumesize 16m $dev1
 vgcreate $vg $dev1 2>err
 not grep "$CHECK_MSG" err
 pvs 2>err

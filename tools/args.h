@@ -402,7 +402,7 @@ arg(originname_ARG, '\0', "originname", lv_VAL, 0, 0,
     "to a thin LV. The LV being converted becomes a read-only external origin\n"
     "with this name.\n")
 
-arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", sizemb_VAL, 0, 0,
+arg(setphysicalvolumesize_ARG, '\0', "setphysicalvolumesize", sizemb_VAL, 0, 0,
     "Overrides the automatically detected size of the PV.\n"
     "Use with care, or prior to reducing the physical size of the device.\n")
 
