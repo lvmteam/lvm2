@@ -57,7 +57,7 @@ fail lvcreate -l 1 --cachepool pool8 $vg
 # no size specified
 invalid lvcreate --cachepool pool $vg 2>&1 | tee err
 #grep "specify either size or extents" err
-grep "Incorrect syntax" err
+grep "No command with matching syntax recognised" err
 
 # Check nothing has been created yet
 check vg_field $vg lv_count 0
