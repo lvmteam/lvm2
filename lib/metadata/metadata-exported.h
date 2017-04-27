@@ -748,7 +748,8 @@ int pvremove_many(struct cmd_context *cmd, struct dm_list *pv_names,
 int pv_resize_single(struct cmd_context *cmd,
 			     struct volume_group *vg,
 			     struct physical_volume *pv,
-			     const uint64_t new_size);
+			     const uint64_t new_size,
+			     int yes);
 
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	       uint64_t label_sector);

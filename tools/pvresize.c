@@ -52,7 +52,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 		cmd->lockd_gl_disable = 1;
 	}
 
-	if (!pv_resize_single(cmd, vg, pv, params->new_size))
+	if (!pv_resize_single(cmd, vg, pv, params->new_size, arg_is_set(cmd, yes_ARG)))
 		return_ECMD_FAILED;
 
 	params->done++;

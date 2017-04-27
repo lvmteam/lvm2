@@ -1,5 +1,6 @@
 Version 2.02.171 - 
 ==================================
+  Adjust pvresize messages and add prompt if underlying dev size differs.
   lvconvert - preserve region size on raid1 image count changes
   raid - sanely handle insufficient space on takeover
   Fix configure --enable-notify-dbus status message.
