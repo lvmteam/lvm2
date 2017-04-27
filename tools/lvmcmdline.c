@@ -1516,6 +1516,7 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	int match_required, match_ro, match_rp, match_type, match_unused, mismatch_required;
 	int best_i = 0, best_required = 0, best_type = 0, best_unused = 0;
 	int close_i = 0, close_ro = 0, close_type = 0;
+	int only_i = 0;
 	int temp_unused_options[MAX_UNUSED_COUNT];
 	int temp_unused_count;
 	int best_unused_options[MAX_UNUSED_COUNT] = { 0 };
@@ -1525,12 +1526,23 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	int i, j;
 	int opt_enum, opt_i;
 	int accepted, count;
+	int variants = 0;
 
 	name = last_path_component(path);
+
+	/* factor_common_options() is only for usage, so cname->variants is not set. */
+	for (i = 0; i < COMMAND_COUNT; i++) {
+		if (strcmp(name, commands[i].name))
+			continue;
+		variants++;
+	}
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
 		if (strcmp(name, commands[i].name))
 			continue;
+
+		if (variants == 1)
+			only_i = i;
 
 		/* For help and version just return the first entry with matching name. */
 		if (arg_is_set(cmd, help_ARG) || arg_is_set(cmd, help2_ARG) || arg_is_set(cmd, longhelp_ARG) || arg_is_set(cmd, version_ARG))
@@ -1701,7 +1713,11 @@ static struct command *_find_command(struct cmd_context *cmd, const char *path, 
 	if (!best_required) {
 		/* cmd did not have all the required opt/pos args of any command */
 		log_error("No command with matching syntax recognised.  Run '%s --help' for more information.", name);
-		if (close_ro) {
+
+		if (only_i) {
+			log_warn("Correct command syntax is:");
+			print_usage(&_cmdline.commands[only_i], 0, 0);
+		} else if (close_ro) {
 			log_warn("Nearest similar command has syntax:");
 			print_usage(&_cmdline.commands[close_i], 0, 0);
 		}
