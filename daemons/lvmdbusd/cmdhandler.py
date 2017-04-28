@@ -553,7 +553,7 @@ def pv_resize(device, size_bytes, create_options):
 	cmd.extend(options_to_cli_args(create_options))
 
 	if size_bytes != 0:
-		cmd.extend(['--setphysicalvolumesize', str(size_bytes) + 'B'])
+		cmd.extend(['--yes', '--setphysicalvolumesize', str(size_bytes) + 'B'])
 
 	cmd.extend([device])
 	return call(cmd)
