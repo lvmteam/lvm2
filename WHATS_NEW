@@ -1,7 +1,7 @@
 Version 2.02.171 - 
 ==================================
   lvconvert - preserve region size on raid1 image count changes
-  Adjust pvresize messages and add prompt if underlying dev size differs.
+  Adjust pvresize/pvcreate messages and prompt if underlying dev size differs.
   raid - sanely handle insufficient space on takeover.
   Fix configure --enable-notify-dbus status message.
   Change configure option name prefix from --enable-lockd to --enable-lvmlockd.
