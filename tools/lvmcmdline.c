@@ -3444,6 +3444,10 @@ int lvm2_main(int argc, char **argv)
 		goto_out;
 	}
 
+	/* Can be the name of a script file. */
+	if (run_name && !find_command_name(run_name))
+		run_name = NULL;
+
 	if (!lvm_register_commands(run_name)) {
 		ret = ECMD_FAILED;
 		goto out;

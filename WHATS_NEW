@@ -1,5 +1,6 @@
 Version 2.02.171 - 
 ==================================
+  Fix running commands from a script file.
   Add pvcreate prompt when device size doesn't match setphysicalvolumesize.
   lvconvert - preserve region size on raid1 image count changes
   Adjust pvresize/pvcreate messages and prompt if underlying dev size differs.
