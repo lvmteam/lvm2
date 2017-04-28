@@ -255,7 +255,7 @@ struct lv_type {
 };
 
 
-int define_commands(const char *run_name);
+int define_commands(struct cmd_context *cmdtool, const char *run_name);
 int command_id_to_enum(const char *str);
 void print_usage(struct command *cmd, int longhelp, int desc_first);
 void print_usage_common_cmd(struct command_name *cname, struct command *cmd);

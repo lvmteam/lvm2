@@ -34,7 +34,7 @@ void *cmdlib_lvm2_init(unsigned static_compile)
 	if (!(cmd = init_lvm(1, 1)))
 		return NULL;
 
-	if (!lvm_register_commands(NULL))
+	if (!lvm_register_commands(cmd, NULL))
 		return NULL;
 
 	return (void *) cmd;

@@ -1241,7 +1241,16 @@ static const struct command_function *_find_command_id_function(int command_enum
 	return NULL;
 }
 
-int lvm_register_commands(const char *run_name)
+static void _unregister_commands(void)
+{
+	_cmdline.commands = NULL;
+	_cmdline.num_commands = 0;
+	_cmdline.command_names = NULL;
+	_cmdline.num_command_names = 0;
+	memset(&commands, 0, sizeof(commands));
+}
+
+int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 {
 	int i;
 
@@ -1255,7 +1264,7 @@ int lvm_register_commands(const char *run_name)
 	 * populate commands[] array with command definitions
 	 * by parsing command-lines.in/command-lines-input.h
 	 */
-	if (!define_commands(run_name)) {
+	if (!define_commands(cmd, run_name)) {
 		log_error(INTERNAL_ERROR "Failed to parse command definitions.");
 		return 0;
 	}
@@ -1285,6 +1294,7 @@ int lvm_register_commands(const char *run_name)
 	}
 
 	_cmdline.command_names = command_names;
+	_cmdline.num_command_names = 0;
 
 	for (i = 0; i < MAX_COMMAND_NAMES; i++) {
 		if (!command_names[i].name)
@@ -3268,6 +3278,7 @@ struct cmd_context *init_lvm(unsigned set_connections, unsigned set_filters)
 
 void lvm_fin(struct cmd_context *cmd)
 {
+	_unregister_commands();
 	destroy_toolcontext(cmd);
 	udev_fin_library_context();
 }
@@ -3448,7 +3459,7 @@ int lvm2_main(int argc, char **argv)
 	if (run_name && !find_command_name(run_name))
 		run_name = NULL;
 
-	if (!lvm_register_commands(run_name)) {
+	if (!lvm_register_commands(cmd, run_name)) {
 		ret = ECMD_FAILED;
 		goto out;
 	}
