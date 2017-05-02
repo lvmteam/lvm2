@@ -5,11 +5,12 @@ lvmsystemid \(em LVM system ID
 
 .SH DESCRIPTION
 
-The LVM system ID restricts VG access to one host.  This is useful when a
-VG is placed on shared storage devices, or when local devices are visible
-to both host and guest operating systems.  In cases like these, a VG can
-be visible to multiple hosts at once, and some mechanism is needed to
-protect it from being used by more than one host at a time.
+The \fBlvm\fP(8) system ID restricts VG access to one host.  This is
+useful when a VG is placed on shared storage devices, or when local
+devices are visible to both host and guest operating systems.  In cases
+like these, a VG can be visible to multiple hosts at once, and some
+mechanism is needed to protect it from being used by more than one host at
+a time.
 
 A VG's system ID identifies one host as the VG owner.  The host with a
 matching system ID can use the VG and its LVs, while LVM on other hosts

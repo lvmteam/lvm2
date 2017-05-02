@@ -11,8 +11,20 @@ lvm \(em LVM2 tools
 .
 .SH DESCRIPTION
 .
-lvm provides the command-line tools for LVM2.  A separate
-manual page describes each command in detail.
+
+The Logical Volume Manager (LVM) provides tools to create virtual block
+devices from physical devices.  Virtual devices may be easier to manage
+than physical devices, and can have capabilities beyond what the physical
+devices provide themselves.  A Volume Group (VG) is a collection of one or
+more physical devices, each called a Physical Volume (PV).  A Logical
+Volume (LV) is a virtual block device that can be used by the system or
+applications.  Each block of data in an LV is stored on one or more PV in
+the VG, according to algorithms implemented by Device Mapper (DM) in the
+kernel.
+.P
+
+The lvm command, and other commands listed below, are the command-line
+tools for LVM.  A separate manual page describes each command in detail.
 .P
 If \fBlvm\fP is invoked with no arguments it presents a readline prompt
 (assuming it was compiled with readline support).
