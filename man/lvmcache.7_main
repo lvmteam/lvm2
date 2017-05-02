@@ -4,9 +4,9 @@ lvmcache \(em LVM caching
 
 .SH DESCRIPTION
 
-The \fBcache\fP logical volume type uses a small and fast LV to improve
-the performance of a large and slow LV.  It does this by storing the
-frequently used blocks on the faster LV.
+An \fBlvm\fP(8) \fBcache\fP Logical Volume (LV) uses a small and
+fast LV to improve the performance of a large and slow LV.  It does this
+by storing the frequently used blocks on the faster LV.
 LVM refers to the small fast LV as a \fBcache pool LV\fP.  The large
 slow LV is called the \fBorigin LV\fP.  Due to requirements from dm-cache
 (the kernel driver), LVM further splits the cache pool LV into two
@@ -16,7 +16,8 @@ origin LV to increase speed.  The cache metadata LV holds the
 accounting information that specifies where data blocks are stored (e.g.
 on the origin LV or on the cache data LV).  Users should be familiar with
 these LVs if they wish to create the best and most robust cached
-logical volumes.  All of these associated LVs must be in the same VG.
+LVs.  All of these associated LVs must be in the same Volume
+Group (VG).
 
 .SH Cache Terms
 .nf
@@ -29,7 +30,7 @@ cache LV            CacheLV       OriginLV + CachePoolLV
 
 .SH Cache Usage
 
-The primary method for using a cache type logical volume:
+The primary method for using a cache type LV:
 
 
 .SS 0. create OriginLV

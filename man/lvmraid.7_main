@@ -5,14 +5,16 @@ lvmraid \(em LVM RAID
 
 .SH DESCRIPTION
 
-LVM RAID is a way to create logical volumes (LVs) that use multiple physical
-devices to improve performance or tolerate device failure.  How blocks of
-data in an LV are placed onto physical devices is determined by the RAID
-level.  RAID levels are commonly referred by a level specific number
-suffixed to the string 'raid', e.g. raid1, raid5 or raid6.
-Selecting a RAID level involves tradeoffs among physical device
-requirements, fault tolerance, and performance.  A description of the RAID
-levels can be found at
+\fBlvm\fP(8) RAID is a way to create a Logical Volume (LV) that uses
+multiple physical devices to improve performance or tolerate device
+failures.  In LVM, the physical devices are Physical Volumes (PVs) in a
+single Volume Group (VG).
+
+How LV data blocks are placed onto PVs is determined by the RAID level.
+RAID levels are commonly referred to as 'raid' followed by a number, e.g.
+raid1, raid5 or raid6.  Selecting a RAID level involves making tradeoffs
+among: physical device requirements, fault tolerance, and performance.  A
+description of the RAID levels can be found at
 .br
 www.snia.org/sites/default/files/SNIA_DDF_Technical_Position_v2.0.pdf
 

@@ -5,17 +5,17 @@ lvmthin \(em LVM thin provisioning
 
 .SH DESCRIPTION
 
-Blocks in a standard logical volume are allocated when the LV is created,
-but blocks in a thin provisioned logical volume are allocated as they are
-written.  Because of this, a thin provisioned LV is given a virtual size,
-and can then be much larger than physically available storage.  The amount
-of physical storage provided for thin provisioned LVs can be increased
-later as the need arises.
+Blocks in a standard \fBlvm\fP(8) Logical Volume (LV) are allocated when
+the LV is created, but blocks in a thin provisioned LV are allocated as
+they are written.  Because of this, a thin provisioned LV is given a
+virtual size, and can then be much larger than physically available
+storage.  The amount of physical storage provided for thin provisioned LVs
+can be increased later as the need arises.
 
-Blocks in a standard LV are allocated (during creation) from the VG, but
-blocks in a thin LV are allocated (during use) from a special "thin pool
-LV".  The thin pool LV contains blocks of physical storage, and blocks in
-thin LVs just reference blocks in the thin pool LV.
+Blocks in a standard LV are allocated (during creation) from the Volume
+Group (VG), but blocks in a thin LV are allocated (during use) from a
+special "thin pool LV".  The thin pool LV contains blocks of physical
+storage, and blocks in thin LVs just reference blocks in the thin pool LV.
 
 A thin pool LV must be created before thin LVs can be created within it.
 A thin pool LV is created by combining two standard LVs: a large data LV
