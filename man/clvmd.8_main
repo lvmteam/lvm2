@@ -31,6 +31,9 @@ clvmd \(em cluster LVM daemon
 clvmd is the daemon that distributes LVM metadata updates around a cluster.
 It must be running on all nodes in the cluster and will give an error
 if a node in the cluster does not have this daemon running.
+
+Also see \fBlvmlockd\fP(8) for a newer method of using LVM on shared
+storage.
 .
 .SH OPTIONS
 .
@@ -196,4 +199,6 @@ Defaults to \fI#LVM_PATH#\fP.
 .SH SEE ALSO
 .BR syslog (3),
 .BR lvm.conf (5),
-.BR lvm (8)
+.BR lvm (8),
+.BR lvmlockd (8),
+.BR lvmsystemid (7)
