@@ -948,7 +948,7 @@ configuration directly on command line.
 
 You can obtain the same information with single command where all the
 information about PVs, PV segments, LVs and LV segments are obtained
-per VG under a single VG lock for consistency, see also \fBlvm fullreport\fP(8)
+per VG under a single VG lock for consistency, see also \fBlvm-fullreport\fP(8)
 man page for more information. The fullreport has its own configuration
 settings to define field sets to use, similar to individual reports as
 displayed above, but configuration settings have "_full" suffix now.
