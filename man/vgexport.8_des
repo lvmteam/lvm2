@@ -1,6 +1,6 @@
 vgexport makes inactive VGs unknown to the system. In this state, all the
 PVs in the VG can be moved to a different system, from which
-\fBvgimport\fP can then be run.
+\fBvgimport\fP(8) can then be run.
 
 Most LVM tools ignore exported VGs.
 
