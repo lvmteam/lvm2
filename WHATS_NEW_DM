@@ -1,5 +1,5 @@
-Version 1.02.140 - 
-==================================
+Version 1.02.140 - 3rd May 2017
+===============================
   Add missing configure --enable-dmfilemapd status message and fix --disable.
 
 Version 1.02.139 - 13th April 2017
