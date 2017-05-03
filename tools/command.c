@@ -3240,29 +3240,29 @@ static int include_description_file(char *name, char *des_file)
 	char *buf;
 	int fd, r = 0;
 	ssize_t sz;
-	struct stat stat;
+	struct stat statbuf;
 
 	if ((fd = open(des_file, O_RDONLY)) < 0) {
 		log_error("Failed to open description file %s.", des_file);
 		return 0;
 	}
 
-	if (fstat(fd, &stat) < 0) {
+	if (fstat(fd, &statbuf) < 0) {
 		log_error("Failed to stat description file %s.", des_file);
 		goto out_close;
 	}
 
-	if (stat.st_size > MAX_MAN_DESC) {
+	if (statbuf.st_size > MAX_MAN_DESC) {
 		log_error("Description file %s is too large.", des_file);
 		goto out_close;
 	}
 
-	if (!(buf = dm_malloc(stat.st_size + 1))) {
+	if (!(buf = dm_malloc(statbuf.st_size + 1))) {
 		log_error("Failed to allocate buffer for description file %s.", des_file);
 		goto out_close;
 	}
 
-	if ((sz = read(fd, buf, stat.st_size)) < 0) {
+	if ((sz = read(fd, buf, statbuf.st_size)) < 0) {
 		log_error("Failed to read description file %s.", des_file);
 		goto out_free;
 	}
