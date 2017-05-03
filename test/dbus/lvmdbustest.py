@@ -18,6 +18,8 @@ import pyudev
 from testlib import *
 import testlib
 from subprocess import Popen, PIPE
+from glob import glob
+import os
 
 g_tmo = 0
 
@@ -1864,6 +1866,46 @@ class TestDbusService(unittest.TestCase):
 
 		for i in range(0, 5):
 			pv_object_path = self._create_nested(pv_object_path)
+
+	def test_pv_symlinks(self):
+		# Lets take one of our test PVs, pvremove it, find a symlink to it
+		# and re-create using the symlink to ensure we return an object
+		# path to it.  Additionally, we will take the symlink and do a lookup
+		# (Manager.LookUpByLvmId) using it and the original device path to
+		# ensure that we can find the PV.
+		symlink = None
+
+		pv = self.objs[PV_INT][0]
+		pv_device_path = pv.Pv.Name
+
+		self._pv_remove(pv)
+
+		# Make sure we no longer find the pv
+		rc = self._lookup(pv_device_path)
+		self.assertEqual(rc, '/')
+
+		# Lets locate a symlink for it
+		devices = glob('/dev/disk/*/*')
+		for d in devices:
+			if pv_device_path == os.path.realpath(d):
+				symlink = d
+				break
+
+		self.assertIsNotNone(symlink, "We expected to find at least 1 symlink!")
+
+		# Make sure symlink look up fails too
+		rc = self._lookup(symlink)
+		self.assertEqual(rc, '/')
+
+		pv_object_path = self._pv_create(symlink)
+		self.assertNotEqual(pv_object_path, '/')
+
+		pv_proxy = ClientProxy(self.bus, pv_object_path, interfaces=(PV_INT, ))
+		self.assertEqual(pv_proxy.Pv.Name, pv_device_path)
+
+		# Lets check symlink lookup
+		self.assertEqual(pv_object_path, self._lookup(symlink))
+		self.assertEqual(pv_object_path, self._lookup(pv_device_path))
 
 
 class AggregateResults(object):
