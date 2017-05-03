@@ -848,6 +848,8 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
 arg(all_ARG, 'a', "all", 0, 0, 0,
     "#vgreduce\n"
     "Removes all empty PVs if none are named on the command line.\n"
+    "#pvchange\n"
+    "Change all visible PVs.\n"
     "#lvscan\n"
     "#lvdisplay\n"
     "#lvs\n"
