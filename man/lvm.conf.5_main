@@ -10,6 +10,10 @@ being loaded - settings read in later override earlier
 settings.  File timestamps are checked between commands and if
 any have changed, all the files are reloaded.
 
+For a description of each lvm.conf setting, run:
+
+.B lvmconfig --typeconfig default --withcomments --withspaces
+
 The settings defined in lvm.conf can be overridden by any
 of these extended configuration methods:
 .TP
