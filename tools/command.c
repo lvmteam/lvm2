@@ -40,6 +40,8 @@
  */
 #ifdef MAN_PAGE_GENERATOR
 
+#define stack
+
 struct cmd_context {
 	void *libmem;
 };
@@ -699,8 +701,15 @@ static void set_opt_def(struct cmd_context *cmdtool, struct command *cmd, char *
 		if (val_enum == constnum_VAL)
 			def->num = (uint64_t)atoi(name);
 
-		if (val_enum == conststr_VAL)
+		if (val_enum == conststr_VAL) {
 			def->str = dm_pool_strdup(cmdtool->libmem, name);
+
+			if (!def->str) {
+				/* FIXME */
+				stack;
+				return;
+			}
+		}
 
 		if (val_enum == lv_VAL) {
 			if (strchr(name, '_'))
@@ -1416,6 +1425,12 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 			cmd_count++;
 			cmd->name = dm_pool_strdup(cmdtool->libmem, name);
 
+			if (!cmd->name) {
+				/* FIXME */
+				stack;
+				return 0;
+			}
+
 			if (run_name && strcmp(run_name, name)) {
 				skip = 1;
 				prev_was_oo_def = 0;
@@ -1447,6 +1462,10 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 					memset(newdesc, 0, newlen);
 					snprintf(newdesc, newlen, "%s %s", cmd->desc, desc);
 					cmd->desc = newdesc;
+				} else {
+					/* FIXME */
+					stack;
+					return 0;
 				}
 			} else
 				cmd->desc = desc;
@@ -1465,6 +1484,12 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 
 		if (is_id_line(line_argv[0]) && cmd) {
 			cmd->command_id = dm_pool_strdup(cmdtool->libmem, line_argv[1]);
+
+			if (!cmd->command_id) {
+				/* FIXME */
+				stack;
+				return 0;
+			}
 			continue;
 		}
 
