@@ -185,7 +185,7 @@ on the command.
 \fB-q\fP|\fB--quiet\fP ...
 .br
 Suppress output and log messages. Overrides --debug and --verbose.
-Repeat once to also suppress any prompts with answer no.
+Repeat once to also suppress any prompts with answer 'no'.
 .ad b
 .HP
 .ad l
