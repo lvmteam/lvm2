@@ -850,6 +850,8 @@ arg(all_ARG, 'a', "all", 0, 0, 0,
     "Removes all empty PVs if none are named on the command line.\n"
     "#pvchange\n"
     "Change all visible PVs.\n"
+    "#vgimport\n"
+    "Import all visible VGs.\n"
     "#lvscan\n"
     "#lvdisplay\n"
     "#lvs\n"
