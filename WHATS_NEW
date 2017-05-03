@@ -1,3 +1,6 @@
+Version 2.02.172 - 
+===============================
+
 Version 2.02.171 - 3rd May 2017
 ===============================
   Fix memory warnings by using mempools for command definition processing.
