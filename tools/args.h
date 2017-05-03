@@ -808,6 +808,9 @@ arg(metadatacopies_ARG, '\0', "metadatacopies", metadatacopies_VAL, 0, 0, NULL)
  * ... and now the short args.
  */
 arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
+    "#pvscan\n"
+    "Auto-activate LVs in a VG when the PVs scanned have completed the VG.\n"
+    "(Only \\fBay\\fP is applicable.)\n"
     "#lvchange\n"
     "#vgchange\n"
     "Change the active state of LVs.\n"
