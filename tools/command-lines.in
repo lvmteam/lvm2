@@ -1417,7 +1417,7 @@ DESC: Display PV information.
 
 pvscan --cache_long
 OO: --ignorelockingfailure, --reportformat ReportFmt, --background,
---activate Active, --major Number, --minor Number
+--activate ay, --major Number, --minor Number
 OP: PV|String ...
 ID: pvscan_cache
 DESC: Populate the lvmetad cache by scanning PVs.
