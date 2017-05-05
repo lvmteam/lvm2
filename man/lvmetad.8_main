@@ -53,10 +53,13 @@ metadata.
 In some cases, lvmetad will be temporarily disabled while it continues
 running.  In this state, LVM commands will ignore the lvmetad cache and
 revert to scanning disks.  A warning will also be printed which includes
-the reason why lvmetad is not being used.  The most common reason is the
-existence of duplicate PVs (lvmetad cannot cache data for duplicate PVs.)
-Once duplicates have been resolved, the lvmetad cache is can be updated
-with pvscan --cache and commands will return to using the cache.
+the reason why lvmetad is not being used.  The most common reasons are the
+existence of duplicate PVs (lvmetad cannot cache data for duplicate PVs),
+or an 'lvconvert --repair' command has been run (the lvmetad cache may
+not be reliable while repairs are neeeded.)
+Once duplicates have been resolved, or repairs have been completed,
+the lvmetad cache is can be updated with pvscan --cache and commands
+will return to using the cache.
 
 Use of lvmetad is enabled/disabled by:
 .br
