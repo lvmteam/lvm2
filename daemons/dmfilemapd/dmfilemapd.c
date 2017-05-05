@@ -266,8 +266,6 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 		return 0;
 	}
 
-	memset(fm, 0, sizeof(*fm));
-
 	/*
 	 * We don't know the true nr_regions at daemon start time,
 	 * and it is not worth a dm_stats_list()/group walk to count:
@@ -800,6 +798,8 @@ static const char * _mode_names[] = {
 int main(int argc, char **argv)
 {
 	struct filemap_monitor fm;
+
+	memset(&fm, 0, sizeof(fm));
 
 	if (!_parse_args(argc, argv, &fm)) {
 		dm_free(fm.path);
