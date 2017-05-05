@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Disallow cachepool creation with policy cleaner and mode writeback.
 
 Version 2.02.171 - 3rd May 2017
 ===============================
