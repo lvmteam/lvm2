@@ -1335,9 +1335,17 @@ int get_stripe_params(struct cmd_context *cmd, const struct segment_type *segtyp
 	return _validate_stripe_params(cmd, segtype, stripes, stripe_size);
 }
 
-static int _validate_cachepool_params(const char *name,
-				      const struct dm_config_tree *settings)
+static int _validate_cachepool_params(const char *policy_name, cache_mode_t cache_mode)
 {
+	/*
+	 * FIXME: it might be nice if cmd def rules could check option values,
+	 * then a rule could do this.
+	 */
+	if ((cache_mode == CACHE_MODE_WRITEBACK) && policy_name && !strcmp(policy_name, "cleaner")) {
+		log_error("Cache mode \"writeback\" is not compatible with cache policy \"cleaner\".");
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -1371,6 +1379,9 @@ int get_cache_params(struct cmd_context *cmd,
 
 	*name = arg_str_value(cmd, cachepolicy_ARG, NULL);
 
+	if (!_validate_cachepool_params(*name, *cache_mode))
+		goto_out;
+
 	dm_list_iterate_items(group, &cmd->arg_value_groups) {
 		if (!grouped_arg_is_set(group->arg_values, cachesettings_ARG))
 			continue;
@@ -1401,9 +1412,6 @@ int get_cache_params(struct cmd_context *cmd,
 			cn->child = result->root;
 			result->root = cn;
 		}
-
-		if (!_validate_cachepool_params(*name, result))
-			goto_out;
 	}
 
 	ok = 1;
