@@ -2748,7 +2748,8 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 
 	/* Look up command - will be NULL if not recognised */
-	cmd->cname = find_command_name(cmd->name);
+	if (!(cmd->cname = find_command_name(cmd->name)))
+		return ENO_SUCH_CMD;
 
 	if (!_process_command_line(cmd, &argc, &argv)) {
 		log_error("Error during parsing of command line.");
@@ -2764,10 +2765,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	_apply_current_output_settings(cmd);
 
 	log_debug("Parsing: %s", cmd->cmd_line);
-
-	/* Having validated cmdline args, return if we didn't recognised the command */
-	if (!cmd->cname)
-		return ENO_SUCH_CMD;
 
 	if (!(cmd->command = _find_command(cmd, cmd->name, &argc, argv)))
 		return EINVALID_CMD_LINE;
@@ -3293,7 +3290,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 {
 	FILE *script;
 	char buffer[CMD_LEN];
-	int ret = 0;
+	int ret = ENO_SUCH_CMD;
 	int magic_number = 0;
 	char *script_file = argv[0];
 
@@ -3328,6 +3325,13 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit"))
 			break;
 		ret = lvm_run_command(cmd, argc, argv);
+		/*
+		 * FIXME: handling scripts with invalid or failing commands
+		 * could use some cleaning up, e.g. error_message_produced
+		 * check and error are repeated again in the caller.
+		 */
+		if (ret == ENO_SUCH_CMD)
+			break;
 		if (ret != ECMD_PROCESSED) {
 			if (!error_message_produced()) {
 				log_debug(INTERNAL_ERROR "Failed command did not use log_error");
