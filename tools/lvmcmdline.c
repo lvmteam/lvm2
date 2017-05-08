@@ -3292,7 +3292,6 @@ void lvm_fin(struct cmd_context *cmd)
 static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 {
 	FILE *script;
-
 	char buffer[CMD_LEN];
 	int ret = 0;
 	int magic_number = 0;
@@ -3391,7 +3390,10 @@ int lvm2_main(int argc, char **argv)
 	int ret, alias = 0;
 	struct custom_fds custom_fds;
 	struct cmd_context *cmd;
+	int run_shell = 0;
+	int run_script = 0;
 	const char *run_name;
+	const char *run_command_name = NULL;
 
 	if (!argv)
 		return -1;
@@ -3461,16 +3463,30 @@ int lvm2_main(int argc, char **argv)
 		goto_out;
 	}
 
-	/* Can be the name of a script file. */
-	if (run_name && !find_command_name(run_name))
-		run_name = NULL;
+	/*
+	 * Decide if we are running a shell or a command or a script.  When
+	 * there is no run_name, it's a shell, when run_name is a recognized
+	 * lvm command it's that command, when run_name is not a recognized
+	 * command name, try it as an lvm script.
+	 */
+	if (!run_name)
+		run_shell = 1;
+	else if (!find_command_name(run_name))
+		run_script = 1;
+	else
+		run_command_name = run_name;
 
-	if (!lvm_register_commands(cmd, run_name)) {
+	/*
+	 * NULL run_command_name means register all command defs because
+	 * a script or shell needs to access any command name, while a
+	 * single command needs to access only defs for the named command.
+	 */
+	if (!lvm_register_commands(cmd, run_command_name)) {
 		ret = ECMD_FAILED;
 		goto out;
 	}
 
-	if (!alias && !argc) {
+	if (run_shell) {
 #ifdef READLINE_SUPPORT
 		_nonroot_warning();
 		if (!_prepare_profiles(cmd)) {
@@ -3488,11 +3504,16 @@ int lvm2_main(int argc, char **argv)
 	}
 
 	_nonroot_warning();
-	ret = lvm_run_command(cmd, argc, argv);
-	if ((ret == ENO_SUCH_CMD) && (!alias))
+
+	if (run_script)
 		ret = _run_script(cmd, argc, argv);
-	if (ret == ENO_SUCH_CMD)
+	else
+		ret = lvm_run_command(cmd, argc, argv);
+
+	if (ret == ENO_SUCH_CMD) {
 		log_error("No such command.  Try 'help'.");
+		goto out;
+	}
 
 	if ((ret != ECMD_PROCESSED) && !error_message_produced()) {
 		log_debug(INTERNAL_ERROR "Failed command did not use log_error");
