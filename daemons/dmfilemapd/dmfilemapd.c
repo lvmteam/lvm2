@@ -562,6 +562,7 @@ static int _filemap_monitor_check_file_unlinked(struct filemap_monitor *fm)
 	ssize_t len;
 
 	fm->deleted = 0;
+	same = 0;
 
 	if ((fd = open(fm->path, O_RDONLY)) < 0)
 		goto check_unlinked;
