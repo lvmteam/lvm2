@@ -4039,6 +4039,7 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 				   struct volume_group *vg,
 				   int repair, int *inconsistent_pvs)
 {
+	char uuid[64] __attribute__((aligned(8)));
 	struct lvmcache_info *info;
 	uint32_t ext_version, ext_flags;
 	struct pv_list *pvl;
@@ -4051,6 +4052,14 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 		/* Missing PV - nothing to do. */
 		if (is_missing_pv(pvl->pv))
 			continue;
+
+		if (!pvl->pv->dev) {
+			/* is_missing_pv doesn't catch NULL dev */
+			memset(&uuid, 0, sizeof(uuid));
+			id_write_format(&pvl->pv->id, uuid, sizeof(uuid));
+			log_warn("WARNING: Not repairing PV %s with missing device.", uuid);
+			continue;
+		}
 
 		if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, pvl->pv->dev, 0))) {
 			log_error("Failed to find cached info for PV %s.", pv_dev_name(pvl->pv));
