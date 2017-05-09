@@ -183,7 +183,8 @@ decode_size() {
 detect_fs() {
 	VOLUME_ORIG=$1
 	VOLUME=${1/#"${DM_DEV_DIR}/"/}
-	VOLUME=$("$READLINK" $READLINK_E "$DM_DEV_DIR/$VOLUME") || error "Cannot get readlink \"$1\""
+	VOLUME=$("$READLINK" $READLINK_E "$DM_DEV_DIR/$VOLUME")
+	test -n "$VOLUME" || error "Cannot get readlink \"$1\"."
 	RVOLUME=$VOLUME
 	case "$RVOLUME" in
           # hardcoded /dev  since udev does not create these entries elsewhere
@@ -192,7 +193,8 @@ detect_fs() {
 		read </sys/block/${RVOLUME#/dev/}/dev MAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\""
 		;;
 	  *)
-		STAT=$(stat --format "MAJOR=%t MINOR=%T" ${RVOLUME}) || error "Cannot get major:minor for \"$VOLUME\""
+		STAT=$(stat --format "MAJOR=%t MINOR=%T" ${RVOLUME})
+		test -n "$STAT" || error "Cannot get major:minor for \"$VOLUME\"."
 		eval $STAT
 		MAJOR=$((0x${MAJOR}))
 		MINOR=$((0x${MINOR}))
@@ -201,7 +203,8 @@ detect_fs() {
 	esac
 	# use null device as cache file to be sure about the result
 	# not using option '-o value' to be compatible with older version of blkid
-	FSTYPE=$("$BLKID" -c "$NULL" -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
+	FSTYPE=$("$BLKID" -c "$NULL" -s TYPE "$VOLUME")
+	test -n "$FSTYPE" || error "Cannot get FSTYPE of \"$VOLUME\"."
 	FSTYPE=${FSTYPE##*TYPE=\"} # cut quotation marks
 	FSTYPE=${FSTYPE%%\"*}
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
@@ -257,10 +260,13 @@ detect_device_size() {
 	# check if blockdev supports getsize64
 	"$BLOCKDEV" 2>&1 | "$GREP" getsize64 >"$NULL"
 	if test $? -eq 0; then
-		DEVSIZE=$("$BLOCKDEV" --getsize64 "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
+		DEVSIZE=$("$BLOCKDEV" --getsize64 "$VOLUME")
+		test -n "$DEVSIZE" || error "Cannot read size of device \"$VOLUME\"."
 	else
-		DEVSIZE=$("$BLOCKDEV" --getsize "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
-		SSSIZE=$("$BLOCKDEV" --getss "$VOLUME") || error "Cannot block size read device \"$VOLUME\""
+		DEVSIZE=$("$BLOCKDEV" --getsize "$VOLUME")
+		test -n "$DEVSIZE" || error "Cannot read size of device \"$VOLUME\"."
+		SSSIZE=$("$BLOCKDEV" --getss "$VOLUME")
+		test -n "$SSSIZE" || error "Cannot read sector size of device \"$VOLUME\"."
 		DEVSIZE=$(($DEVSIZE * $SSSIZE))
 	fi
 }
