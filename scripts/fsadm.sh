@@ -191,6 +191,8 @@ detect_fs() {
 	  /dev/dm-[0-9]*)
 		read </sys/block/${RVOLUME#/dev/}/dm/name SYSVOLUME 2>&1 && VOLUME="$DM_DEV_DIR/mapper/$SYSVOLUME"
 		read </sys/block/${RVOLUME#/dev/}/dev MAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\"."
+		MAJOR=${MAJORMINOR%%:*}
+		MINOR=${MAJORMINOR##*:}
 		;;
 	  *)
 		STAT=$(stat --format "MAJOR=\$((0x%t)) MINOR=\$((0x%T))" ${RVOLUME})
