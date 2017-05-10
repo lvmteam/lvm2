@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Extend validation of filesystems resized by fsadm.
   Enhance lvconvert automatic settings of possible (raid) LV types.
   Allow lvchange to change properties on a thin pool data sub LV.
   Fix lvcreate extent percentage calculation for mirrors.
