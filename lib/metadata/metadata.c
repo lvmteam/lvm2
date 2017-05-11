@@ -3910,7 +3910,13 @@ static int _check_reappeared_pv(struct volume_group *correct_vg,
          * confusing.
          */
         if (correct_vg->cmd->handles_missing_pvs)
-            return rv;
+		return rv;
+
+	/*
+	 * Skip this if there is no underlying device present for this PV.
+	 */
+	if (!pv->dev)
+		return rv;
 
 	dm_list_iterate_items(pvl, &correct_vg->pvs)
 		if (pv->dev == pvl->pv->dev && is_missing_pv(pvl->pv)) {
@@ -4174,8 +4180,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (lvmetad_used() && !use_precommitted) {
 		if ((correct_vg = lvmcache_get_vg(cmd, vgname, vgid, precommitted))) {
 			dm_list_iterate_items(pvl, &correct_vg->pvs)
-				if (pvl->pv->dev)
-					reappeared += _check_reappeared_pv(correct_vg, pvl->pv, *consistent);
+				reappeared += _check_reappeared_pv(correct_vg, pvl->pv, *consistent);
 			if (reappeared && *consistent)
 				*consistent = _repair_inconsistent_vg(correct_vg);
 			else
