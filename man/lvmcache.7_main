@@ -404,6 +404,24 @@ This is equivalent to:
 .B lvconvert --type cache --cachepool VG/CachePoolLV VG/OriginLV
 
 
+.SS Cache metadata formats
+
+\&
+
+There are two disk formats for cache metadata.  The metadata format can be
+specified when a cache pool is created, and cannot be changed.
+Format \fB2\fP has better performance; it is more compact, and stores
+dirty bits in a separate btree, which improves the speed of shutting down
+the cache.
+With \fBauto\fP, lvm selects the best option provided by the current
+dm-cache kernel target.
+
+.B lvconvert --type cache-pool --cachemetadataformat auto|1|2
+.RS
+.B VG/CacheDataLV
+.RE
+
+
 .SH SEE ALSO
 .BR lvm.conf (5),
 .BR lvchange (8),
