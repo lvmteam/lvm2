@@ -251,6 +251,7 @@ static int _update_extents_params(struct volume_group *vg,
 	uint32_t size_rest;
 	uint32_t stripesize_extents;
 	uint32_t extents;
+	uint32_t base_calc_extents;
 
 	if (lcp->size &&
 	    !(lp->extents = extents_from_size(vg->cmd, lcp->size,
@@ -275,17 +276,17 @@ static int _update_extents_params(struct volume_group *vg,
 
 	switch (lcp->percent) {
 		case PERCENT_VG:
-			extents = percent_of_extents(lp->extents, vg->extent_count, 0);
+			extents = percent_of_extents(lp->extents, base_calc_extents = vg->extent_count, 0);
 			break;
 		case PERCENT_FREE:
-			extents = percent_of_extents(lp->extents, vg->free_count, 0);
+			extents = percent_of_extents(lp->extents, base_calc_extents = vg->free_count, 0);
 			break;
 		case PERCENT_PVS:
 			if (lcp->pv_count) {
 				pv_extent_count = pv_list_extents_free(lp->pvh);
-				extents = percent_of_extents(lp->extents, pv_extent_count, 0);
+				extents = percent_of_extents(lp->extents, base_calc_extents = pv_extent_count, 0);
 			} else
-				extents = percent_of_extents(lp->extents, vg->extent_count, 0);
+				extents = percent_of_extents(lp->extents, base_calc_extents = vg->extent_count, 0);
 			break;
 		case PERCENT_LV:
 			log_error("Please express size as %%FREE%s, %%PVS or %%VG.",
@@ -304,7 +305,7 @@ static int _update_extents_params(struct volume_group *vg,
 			}
 			/* Add whole metadata size estimation */
 			extents = cow_max_extents(origin_lv, lp->chunk_size) - origin_lv->le_count +
-				percent_of_extents(lp->extents, origin_lv->le_count, 1);
+				percent_of_extents(lp->extents, base_calc_extents = origin_lv->le_count, 1);
 			break;
 		case PERCENT_NONE:
 			extents = lp->extents;
@@ -314,10 +315,27 @@ static int _update_extents_params(struct volume_group *vg,
 			return 0;
 	}
 
-	if (lcp->percent) {
+	if (lcp->percent != PERCENT_NONE) {
 		/* FIXME Don't do the adjustment for parallel allocation with PERCENT_ORIGIN! */
 		lp->approx_alloc = 1;
-		log_verbose("Converted %" PRIu32 "%%%s into %" PRIu32 " extents.", lp->extents, get_percent_string(lcp->percent), extents);
+		if (!extents) {
+			log_error("Calculated size of logical volume is 0 extents. Needs to be larger.");
+			return 0;
+		}
+
+		/* For mirrors and raid with percentages based on physical extents, convert the total number of PEs 
+		 * into the number of logical extents per image (minimum 1) */
+		/* FIXME Handle all the supported raid layouts here based on already-known segtype. */
+		if ((lcp->percent != PERCENT_ORIGIN) && lp->mirrors) {
+			extents /= lp->mirrors;
+			if (!extents)
+				extents = 1;
+		}
+
+		log_verbose("Converted %" PRIu32 "%% of %s (%" PRIu32 ") extents into %" PRIu32 " (with mimages %" PRIu32 " and stripes %" PRIu32
+			    " for segtype %s).", lp->extents, get_percent_string(lcp->percent), base_calc_extents,
+			    extents, lp->mirrors, lp->stripes, lp->segtype->name);
+
 		lp->extents = extents;
 	}
 
@@ -387,6 +405,11 @@ static int _update_extents_params(struct volume_group *vg,
 			/* FIXME: persistent hidden space in VG wanted */
 			lp->extents -= (2 * lp->pool_metadata_extents);
 		}
+	}
+
+	if (!lp->extents) {
+		log_error("Adjusted size of logical volume is 0 extents. Needs to be larger.");
+		return 0;
 	}
 
 	return 1;
