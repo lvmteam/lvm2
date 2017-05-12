@@ -407,7 +407,7 @@ static int _update_extents_params(struct volume_group *vg,
 		}
 	}
 
-	if (!lp->extents) {
+	if ((lcp->percent != PERCENT_NONE) && !lp->extents) {
 		log_error("Adjusted size of logical volume is 0 extents. Needs to be larger.");
 		return 0;
 	}
