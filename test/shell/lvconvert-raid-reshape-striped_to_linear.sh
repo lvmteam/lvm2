@@ -79,7 +79,7 @@ aux wait_for_sync $vg $lv1 1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 
 # Remove the now freed legs
-lvconvert --stripes 1 $vg/$lv1
+lvconvert -y --stripes 1 $vg/$lv1
 check lv_first_seg_field $vg/$lv1 segtype "raid5_n"
 check lv_first_seg_field $vg/$lv1 data_stripes 1
 check lv_first_seg_field $vg/$lv1 stripes 2
