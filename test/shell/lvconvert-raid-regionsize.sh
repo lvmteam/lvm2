@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 which mkfs.ext4 || skip
-aux have_raid 1 11 0 || skip
+aux have_raid 1 9 0 || skip
 
 aux prepare_vg 6
 
@@ -61,6 +61,7 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 _test_regionsizes raid1
 
+if aux have_raid 1 11 0; then
 # Clean up
 lvremove --yes $vg
 
@@ -78,6 +79,9 @@ _test_regionsizes raid6
 
 # Clean up
 lvremove --yes $vg
+else
+  echo "Skipping RAID6 tests"
+fi
 
 # Create 6-way raid01
 lvcreate --yes -aey --type raid10 -i 3 -m 1 --stripesize 128K -R 256K -L8M -n $lv1 $vg
