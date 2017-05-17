@@ -61,10 +61,10 @@ fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 _test_regionsizes raid1
 
-if aux have_raid 1 11 0; then
 # Clean up
 lvremove --yes $vg
 
+if aux have_raid 1 11 0; then
 # Create 5-way raid6
 lvcreate --yes -aey --type raid6 -i 3 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid6"
