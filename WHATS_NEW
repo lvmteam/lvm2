@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Enhance lvconvert automatic settings of possible (raid) LV types.
   Allow lvchange to change properties on a thin pool data sub LV.
   Fix lvcreate extent percentage calculation for mirrors.
   Don't reinstate still-missing devices when correcting inconsistent metadata.
