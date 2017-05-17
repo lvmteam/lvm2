@@ -519,7 +519,9 @@ def add_no_notify(cmdline):
 		if '--config' in cmdline:
 			for i, arg in enumerate(cmdline):
 				if arg == '--config':
-					cmdline[i] += "global/notify_dbus=0"
+					if len(cmdline) <= i+1:
+						raise dbus.exceptions.DBusException("Missing value for --config option.")
+					cmdline[i+1] += " global/notify_dbus=0"
 					break
 		else:
 			cmdline.extend(['--config', 'global/notify_dbus=0'])
