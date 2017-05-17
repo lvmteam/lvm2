@@ -5871,8 +5871,8 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			seg_flag = SEG_RAID5_N;
 
 		else if (seg_is_any_raid5(seg_from) &&
-		    segtype_is_raid4(*segtype) &&
-		    !segtype_is_raid5_n(*segtype))
+			 segtype_is_raid4(*segtype) &&
+			 !segtype_is_raid5_n(*segtype))
 			seg_flag = SEG_RAID5_N;
 
 		else if (segtype_is_raid10(*segtype)) {
@@ -6071,7 +6071,7 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 	    !is_same_level(seg_from->segtype, *segtype_to)) { /* Prompt here for takeover */
 		const char *basic_fmt = "Are you sure you want to convert %s LV %s";
 		const char *type_fmt = " to %s type";
-		const char *question_fmt = " to %s type";
+		const char *question_fmt = "? [y/n]: ";
 		char *fmt;
 		size_t sz = strlen(basic_fmt) + ((seg_from->segtype == *segtype_to) ? 0 : strlen(type_fmt)) + strlen(question_fmt) + 1;
 
