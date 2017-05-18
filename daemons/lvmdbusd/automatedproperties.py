@@ -100,7 +100,7 @@ class AutomatedProperties(dbus.service.Object):
 		raise dbus.exceptions.DBusException(
 			obj._ap_interface,
 			'The object %s does not implement the %s interface'
-			% (self.__class__, interface_name))
+			% (obj.__class__, interface_name))
 
 	@dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
 							in_signature='s', out_signature='a{sv}',
