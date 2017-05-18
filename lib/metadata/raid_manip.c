@@ -5792,27 +5792,33 @@ static uint64_t _r5_to_r6[][2] = {
 
 
 /* Return segment type flag for raid5 -> raid6 conversions */
-static uint64_t _get_r56_flag(const struct lv_segment *seg, unsigned idx)
+static uint64_t _get_r56_flag(const struct segment_type *segtype, unsigned idx)
 {
 	unsigned elems = ARRAY_SIZE(_r5_to_r6);
 
 	while (elems--)
-		if (seg->segtype->flags & _r5_to_r6[elems][idx])
+		if (segtype->flags & _r5_to_r6[elems][idx])
 			return _r5_to_r6[elems][!idx];
 
 	return 0;
 }
 
-/* Return segment type flag for raid5 -> raid6 conversions */
+/* Return segment type flag of @seg for raid5 -> raid6 conversions */
 static uint64_t _raid_seg_flag_5_to_6(const struct lv_segment *seg)
 {
-	return _get_r56_flag(seg, 0);
+	return _get_r56_flag(seg->segtype, 0);
 }
 
-/* Return segment type flag for raid6 -> raid5 conversions */
+/* Return segment type flag of @seg for raid6 -> raid5 conversions */
 static uint64_t _raid_seg_flag_6_to_5(const struct lv_segment *seg)
 {
-	return _get_r56_flag(seg, 1);
+	return _get_r56_flag(seg->segtype, 1);
+}
+
+/* Return segment type flag of @segtype for raid5 -> raid6 conversions */
+static uint64_t _raid_segtype_flag_5_to_6(const struct segment_type *segtype)
+{
+	return _get_r56_flag(segtype, 0);
 }
 
 /* Change segtype for raid* for convenience where necessary. */
@@ -5892,17 +5898,16 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 
 			} else if (seg_is_raid4(seg_from) && !segtype_is_raid6_n_6(*segtype))
 				seg_flag = SEG_RAID6_N_6;
-
-			else if (!(seg_flag = _raid_seg_flag_5_to_6(seg_from)))
-				seg_flag = SEG_RAID5_N;
+			else
+				seg_flag = _raid_seg_flag_5_to_6(seg_from);
 		}
 
 	/* raid6 -> striped/raid0/raid5/raid10 */
 	} else if (seg_is_any_raid6(seg_from)) {
 		if (segtype_is_raid1(*segtype)) {
 			/* No result for raid6_{zr,nr,nc} */
-			if (!((seg_flag = _raid_seg_flag_6_to_5(seg_from)) ||
-			      !(seg_flag & (*segtype)->flags)))
+			if (!(seg_flag = _raid_seg_flag_6_to_5(seg_from)) ||
+			    !(seg_flag & (*segtype)->flags))
 				seg_flag = SEG_RAID6_LS_6;
 
 		} else if (segtype_is_any_raid10(*segtype)) {
@@ -5917,9 +5922,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 
 		} else if (segtype_is_any_raid5(*segtype))
 			/* No result for raid6_{zr,nr,nc} */
-			if (!((seg_flag = _raid_seg_flag_6_to_5(seg_from)) ||
-			      !(seg_flag & (*segtype)->flags)))
-				seg_flag = SEG_RAID6_N_6;
+			if (!(seg_flag = _raid_seg_flag_6_to_5(seg_from)) ||
+			    !(seg_flag & (*segtype)->flags))
+				seg_flag = _raid_segtype_flag_5_to_6(*segtype);
 
 	/* -> raid1 */
 	} else if (!seg_is_mirror(seg_from) && segtype_is_raid1(*segtype)) {
