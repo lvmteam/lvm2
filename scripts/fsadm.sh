@@ -318,6 +318,9 @@ validate_parsing() {
 # - unmounted for downsize
 ####################################
 resize_ext() {
+	local IS_MOUNTED=0
+	detect_mounted && IS_MOUNTED=1
+
 	verbose "Parsing $TUNE_EXT -l \"$VOLUME\""
 	for i in $(LC_ALL=C "$TUNE_EXT" -l "$VOLUME"); do
 		case "$i" in
@@ -330,7 +333,7 @@ resize_ext() {
 	FSFORCE=$FORCE
 
 	if [ "$NEWBLOCKCOUNT" -lt "$BLOCKCOUNT" -o "$EXTOFF" -eq 1 ]; then
-		detect_mounted && verbose "$RESIZE_EXT needs unmounted filesystem" && try_umount
+		test $IS_MOUNTED -eq 1 && verbose "$RESIZE_EXT needs unmounted filesystem" && try_umount
 		REMOUNT=$MOUNTED
 		if test -n "$MOUNTED" ; then
 			# Forced fsck -f for umounted extX filesystem.
