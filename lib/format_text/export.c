@@ -501,7 +501,13 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
  */
 static const char *_get_pv_name_from_uuid(struct formatter *f, char *uuid)
 {
-	return dm_hash_lookup(f->pv_names, uuid);
+	const char *pv_name = dm_hash_lookup(f->pv_names, uuid);
+
+	if (!pv_name)
+		log_error(INTERNAL_ERROR "PV name for uuid %s missing from text metadata export hash table.",
+			  uuid);
+
+	return pv_name;
 }
 
 static const char *_get_pv_name(struct formatter *f, struct physical_volume *pv)
@@ -607,6 +613,7 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 {
 	const char *name;
 	unsigned int s;
+	struct physical_volume *pv;
 
 	outnl(f);
 
@@ -616,7 +623,13 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 	for (s = 0; s < seg->area_count; s++) {
 		switch (seg_type(seg, s)) {
 		case AREA_PV:
-			if (!(name = _get_pv_name(f, seg_pv(seg, s))))
+			if (!(pv = seg_pv(seg, s))) {
+				log_error(INTERNAL_ERROR "Missing PV for area %" PRIu32 " of %s segment of LV %s.",
+					  s, type, display_lvname(seg->lv));
+				return 0;
+			}
+				
+			if (!(name = _get_pv_name(f, pv)))
 				return_0;
 
 			outf(f, "\"%s\", %u%s", name,
@@ -650,6 +663,8 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 
 			break;
 		case AREA_UNASSIGNED:
+			log_error(INTERNAL_ERROR "Invalid type for area %" PRIu32 " of %s segment of LV %s.",
+				  s, type, display_lvname(seg->lv));
 			return 0;
 		}
 	}
