@@ -4781,9 +4781,6 @@ static int _rename_area_lvs(struct logical_volume *lv, const char *suffix)
 			return_0;
 	}
 
-	for (s = 0; s < SLV_COUNT; s++)
-		dm_pool_free(lv->vg->cmd->mem, sfx[s]);
-
 	return 1;
 }
 
