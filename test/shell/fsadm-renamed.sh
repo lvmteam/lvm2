@@ -73,7 +73,7 @@ mount | grep $vg
 # fails on renamed LV
 fail lvresize -L+10M -r $vg_lv_ren
 
-# fials on unknown mountpoint  (FIXME: umount)
+# fails on unknown mountpoint  (FIXME: umount)
 not umount "$dev_vg_lv"
 
 lvcreate -L20 -n $lv1 $vg
@@ -81,13 +81,14 @@ lvcreate -L20 -n $lv1 $vg
 
 mount "$dev_vg_lv" "$mount_dolar_dir"
 
-cat /proc/self/mountinfo
+mount | grep $vg
 
 not lvresize -L+10M -r $vg_lv_ren
 
 umount "$mount_dir"
 
-lvresize -L+10M -r $vg_lv
+# FIXME:  lvresize  CANNOT handle/propagage '--yes' to fsadm
+echo y | lvresize -L+10M -vvvv -r $vg_lv
 
 umount "$mount_dolar_dir"
 
