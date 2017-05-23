@@ -401,10 +401,15 @@ yes_no() {
 
 	while read -r -s -n 1 ANS ; do
 		case "$ANS" in
-		 "y" | "Y" | "") echo y ; return 0 ;;
-		 "n" | "N") echo n ; return 1 ;;
+		 "y" | "Y" ) echo y ; return 0 ;;
+		 "" ) if [ -t 1 ] ; then
+			echo y ; return 0
+		      fi ;;
 		esac
 	done
+
+	echo n
+	return 1
 }
 
 try_umount() {
