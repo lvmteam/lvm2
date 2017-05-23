@@ -3711,6 +3711,36 @@ struct _vg_read_orphan_baton {
 	int repair;
 };
 
+/*
+ * If we know that the PV is orphan, meaning there's at least one MDA on
+ * that PV which does not reference any VG and at the same time there's
+ * PV_EXT_USED flag set, we're certainly in an inconsistent state and we
+ * need to fix this.
+ *
+ * For example, such situation can happen during vgremove/vgreduce if we
+ * removed/reduced the VG, but we haven't written PV headers yet because
+ * vgremove stopped abruptly for whatever reason just before writing new
+ * PV headers with updated state, including PV extension flags (and so the
+ * PV_EXT_USED flag).
+ *
+ * However, in case the PV has no MDAs at all, we can't double-check
+ * whether the PV_EXT_USED is correct or not - if that PV is marked
+ * as used, it's either:
+ *  - really used (but other disks with MDAs are missing)
+ *  - or the error state as described above is hit
+ *
+ * User needs to overwrite the PV header directly if it's really clear
+ * the PV having no MDAs does not belong to any VG and at the same time
+ * it's still marked as being in use (pvcreate -ff <dev_name> will fix this).
+ *
+ * Note that the above doesn't account for the case where the PV has
+ * VG metadata that fails to be parsed.  In that case, the PV looks
+ * like an in-use orphan, and is auto-repaired here.  A PV with
+ * unparsable metadata should be kept on a special list of devices
+ * (like duplicate PVs) that are not auto-repaired, cannot be used
+ * by pvcreate, and are displayed with a special flag by 'pvs'.
+ */
+
 static int _check_or_repair_orphan_pv_ext(struct physical_volume *pv,
 					  struct lvmcache_info *info,
 					  struct _vg_read_orphan_baton *b)
