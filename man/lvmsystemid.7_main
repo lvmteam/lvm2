@@ -94,19 +94,18 @@ corrupting the PVs.  See the
 section for more information.
 
 .IP \[bu] 2
-The system ID does not protect devices in VG from programs other than LVM.
+The system ID does not protect devices in a VG from programs other than LVM.
 
 .IP \[bu] 2
-A host using an old version of LVM without the system ID feature will not
-recognize a system ID in VGs from other hosts.  Even though the old
-version of LVM is not blocked from reading a VG with a system ID, it is
-blocked from writing to the VG (or its LVs).  The system ID feature
-changes the write mode of a VG, making it appear read-only to previous
-versions of LVM.
+A host using an old LVM version (without the system ID feature) will not
+recognize a system ID set in VGs.  The old LVM can read a VG with a
+system ID, but is prevented from writing to the VG (or its LVs).
+The system ID feature changes the write mode of a VG, making it appear
+read-only to previous versions of LVM.
 
-This also means that if a host downgrades its version of LVM, it would
+This also means that if a host downgrades to the old LVM version, it would
 lose access to any VGs it had created with a system ID.  To avoid this,
-the system ID should be removed from VGs before downgrading to an LVM
+the system ID should be removed from local VGs before downgrading LVM to a
 version without the system ID feature.
 
 
