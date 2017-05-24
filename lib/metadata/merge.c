@@ -222,7 +222,7 @@ static void _check_non_raid_seg_members(struct lv_segment *seg, int *error_count
 }
 
 /*
- * Check RAID segment sruct members of @seg for acceptable
+ * Check RAID segment struct members of @seg for acceptable
  * properties and increment @error_count for any bogus ones.
  */
 static void _check_raid_seg(struct lv_segment *seg, int *error_count)
