@@ -42,6 +42,7 @@ run_writemostly_check() {
 
 	printf "#\n#\n#\n# %s/%s (%s): run_writemostly_check\n#\n#\n#\n" \
 		$vg $lv $segtype
+	aux wait_for_sync $vg $lv
 
 	# No writemostly flag should be there yet.
 	check lv_attr_bit health $vg/${lv}_rimage_0 "-"
