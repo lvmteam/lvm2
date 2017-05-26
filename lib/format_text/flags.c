@@ -114,7 +114,7 @@ static const struct flag *_get_flags(int type)
 		return _lv_flags;
 	}
 
-	log_error("Unknown flag set requested.");
+	log_error(INTERNAL_ERROR "Unknown flag set requested.");
 	return NULL;
 }
 
