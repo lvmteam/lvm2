@@ -70,8 +70,12 @@ def lv_n(suffix=None):
 	return g_prefix + rs(8, s)
 
 
+def _is_testsuite_pv(pv_name):
+	return g_prefix != "" and pv_name[-1].isdigit() and pv_name[:-1].endswith(g_prefix + "pv")
+
+
 def is_nested_pv(pv_name):
-	return pv_name.count('/') == 3
+	return pv_name.count('/') == 3 and not _is_testsuite_pv(pv_name)
 
 
 def _root_pv_name(res, pv_name):
@@ -241,6 +245,7 @@ class TestDbusService(unittest.TestCase):
 
 		# Check to make sure the PVs we had to start exist, else re-create
 		# them
+		self.objs, self.bus = get_objects()
 		if len(self.pvs) != len(self.objs[PV_INT]):
 			for p in self.pvs:
 				found = False
