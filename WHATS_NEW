@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Disable automatic clearing of PVs that look like in-use orphans.
   Cache format2 flag is now using segment name type field.
   Support storing status flags via segtype name field.
   Stop using '--yes' mode when fsadm runs without terminal.

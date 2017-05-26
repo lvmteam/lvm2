@@ -3741,6 +3741,7 @@ struct _vg_read_orphan_baton {
  * by pvcreate, and are displayed with a special flag by 'pvs'.
  */
 
+#if 0
 static int _check_or_repair_orphan_pv_ext(struct physical_volume *pv,
 					  struct lvmcache_info *info,
 					  struct _vg_read_orphan_baton *b)
@@ -3794,6 +3795,7 @@ static int _check_or_repair_orphan_pv_ext(struct physical_volume *pv,
 
 	return 1;
 }
+#endif
 
 static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 {
@@ -3815,10 +3817,25 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 	pvl->pv = pv;
 	add_pvl_to_vgs(b->vg, pvl);
 
+	/*
+	 * FIXME: this bit of code that does the auto repair is disabled
+	 * until we can distinguish cases where the repair should not
+	 * happen, i.e. the VG metadata could not be read/parsed.
+	 *
+	 * A PV holding VG metadata that lvm can't understand
+	 * (e.g. damaged, checksum error, unrecognized flag)
+	 * will appear as an in-use orphan, and would be cleared
+	 * by this repair code.  Disable this repair until the
+	 * code can keep track of these problematic PVs, and
+	 * distinguish them from actual in-use orphans.
+	 */
+
+	/*
 	if (!_check_or_repair_orphan_pv_ext(pv, info, baton)) {
 		stack;
 		return 0;
 	}
+	*/
 
 	return 1;
 }
