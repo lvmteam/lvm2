@@ -101,9 +101,9 @@ static const struct flag _lv_flags[] = {
 	{0, NULL, 0}
 };
 
-static const struct flag *_get_flags(int type)
+static const struct flag *_get_flags(enum pv_vg_lv_e type)
 {
-	switch (type & ~STATUS_FLAG) {
+	switch (type) {
 	case VG_FLAGS:
 		return _vg_flags;
 
@@ -123,7 +123,7 @@ static const struct flag *_get_flags(int type)
  * using one of the tables defined at the top of
  * the file.
  */
-int print_flags(uint64_t status, int type, char *buffer, size_t size)
+int print_flags(char *buffer, size_t size, enum pv_vg_lv_e type, int mask, uint64_t status)
 {
 	int f, first = 1;
 	const struct flag *flags;
@@ -167,9 +167,9 @@ int print_flags(uint64_t status, int type, char *buffer, size_t size)
 	return 1;
 }
 
-int read_flags(uint64_t *status, int type, const struct dm_config_value *cv)
+int read_flags(uint64_t *status, enum pv_vg_lv_e type, int mask, const struct dm_config_value *cv)
 {
-	int f;
+	unsigned f;
 	uint64_t s = UINT64_C(0);
 	const struct flag *flags;
 
@@ -186,7 +186,8 @@ int read_flags(uint64_t *status, int type, const struct dm_config_value *cv)
 		}
 
 		for (f = 0; flags[f].description; f++)
-			if (!strcmp(flags[f].description, cv->v.str)) {
+			if ((flags[f].kind & mask) &&
+			    !strcmp(flags[f].description, cv->v.str)) {
 				s |= flags[f].mask;
 				break;
 			}
@@ -200,7 +201,7 @@ int read_flags(uint64_t *status, int type, const struct dm_config_value *cv)
 			 * by this case.
 			 */
 			s |= PARTIAL_VG;
-		} else if (!flags[f].description && (type & STATUS_FLAG)) {
+		} else if (!flags[f].description && (mask & STATUS_FLAG)) {
 			log_error("Unknown status flag '%s'.", cv->v.str);
 			return 0;
 		}

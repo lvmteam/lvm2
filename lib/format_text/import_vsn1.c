@@ -140,13 +140,13 @@ static int _read_flag_config(const struct dm_config_node *n, uint64_t *status, i
 		return 0;
 	}
 
-	if (!(read_flags(status, type | STATUS_FLAG, cv))) {
+	if (!(read_flags(status, type, STATUS_FLAG, cv))) {
 		log_error("Could not read status flags.");
 		return 0;
 	}
 
 	if (dm_config_get_list(n, "flags", &cv)) {
-		if (!(read_flags(status, type, cv))) {
+		if (!(read_flags(status, type, COMPATIBLE_FLAG, cv))) {
 			log_error("Could not read flags.");
 			return 0;
 		}
