@@ -716,9 +716,9 @@ class TestDbusService(unittest.TestCase):
 			LV_BASE_INT)
 		self._validate_lookup("%s/%s" % (vg.Name, lv_name), lv.object_path)
 
-	def _create_lv(self, thinpool=False, size=None, vg=None):
+	def _create_lv(self, thinpool=False, size=None, vg=None, suffix=None):
 
-		lv_name = lv_n()
+		lv_name = lv_n(suffix=suffix)
 		interfaces = list(LV_BASE_INT)
 
 		if thinpool:
@@ -1842,7 +1842,8 @@ class TestDbusService(unittest.TestCase):
 		self.assertIn(pv_object_path, vg.Vg.Pvs,
 						"Expecting PV object path in Vg.Pvs")
 
-		lv = self._create_lv(vg=vg.Vg, size=vg.Vg.FreeBytes)
+		lv = self._create_lv(vg=vg.Vg, size=vg.Vg.FreeBytes,
+								suffix="_pv")
 		device_path = '/dev/%s/%s' % (vg.Vg.Name, lv.LvCommon.Name)
 		new_pv_object_path = self._pv_create(device_path)
 
