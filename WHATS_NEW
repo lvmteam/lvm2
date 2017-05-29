@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Cache format2 flag is now using segment name type field.
   Support storing status flags via segtype name field.
   Stop using '--yes' mode when fsadm runs without terminal.
   Extend validation of filesystems resized by fsadm.

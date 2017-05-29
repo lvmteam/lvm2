@@ -67,7 +67,7 @@ static const struct flag _lv_flags[] = {
 	{LV_WRITEMOSTLY, "WRITEMOSTLY", STATUS_FLAG},
 	{LV_ACTIVATION_SKIP, "ACTIVATION_SKIP", COMPATIBLE_FLAG},
 	{LV_ERROR_WHEN_FULL, "ERROR_WHEN_FULL", COMPATIBLE_FLAG},
-	{LV_METADATA_FORMAT, "METADATA_FORMAT", STATUS_FLAG},
+	{LV_METADATA_FORMAT, "METADATA_FORMAT", SEGTYPE_FLAG},
 	{LV_NOSCAN, NULL, 0},
 	{LV_TEMPORARY, NULL, 0},
 	{POOL_METADATA_SPARE, NULL, 0},
@@ -138,7 +138,7 @@ int print_flags(char *buffer, size_t size, enum pv_vg_lv_e type, int mask, uint6
 		if (status & flags[f].mask) {
 			status &= ~flags[f].mask;
 
-			if ((type & STATUS_FLAG) != flags[f].kind)
+			if (mask != flags[f].kind)
 				continue;
 
 			/* Internal-only flag? */

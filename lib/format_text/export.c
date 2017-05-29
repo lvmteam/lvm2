@@ -584,6 +584,11 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 static int _print_segment(struct formatter *f, struct volume_group *vg,
 			  int count, struct lv_segment *seg)
 {
+	char buffer[2048];
+
+	if (!print_segtype_lvflags(buffer, sizeof(buffer), seg->lv->status))
+		return_0;
+
 	outf(f, "segment%u {", count);
 	_inc_indent(f);
 
@@ -594,7 +599,8 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 	if (seg->reshape_len)
 		outsize(f, (uint64_t) seg->reshape_len * vg->extent_size,
 			"reshape_count = %u", seg->reshape_len);
-	outf(f, "type = \"%s\"", seg->segtype->name);
+
+	outf(f, "type = \"%s%s\"", seg->segtype->name, buffer);
 
 	if (!_out_list(f, &seg->tags, "tags"))
 		return_0;

@@ -43,6 +43,7 @@ enum pv_vg_lv_e {
 
 #define COMPATIBLE_FLAG	0x01
 #define STATUS_FLAG	0x02
+#define SEGTYPE_FLAG	0x04
 
 struct text_vg_version_ops {
 	int (*check_version) (const struct dm_config_tree * cf);
