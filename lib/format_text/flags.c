@@ -132,7 +132,7 @@ int print_flags(char *buffer, size_t size, enum pv_vg_lv_e type, int mask, uint6
 		return_0;
 
 	if (!emit_to_buffer(&buffer, &size, "["))
-		return 0;
+		return_0;
 
 	for (f = 0; flags[f].mask; f++) {
 		if (status & flags[f].mask) {
@@ -147,18 +147,18 @@ int print_flags(char *buffer, size_t size, enum pv_vg_lv_e type, int mask, uint6
 
 			if (!first) {
 				if (!emit_to_buffer(&buffer, &size, ", "))
-					return 0;
+					return_0;
 			} else
 				first = 0;
 	
 			if (!emit_to_buffer(&buffer, &size, "\"%s\"",
-			    flags[f].description))
-				return 0;
+					    flags[f].description))
+				return_0;
 		}
 	}
 
 	if (!emit_to_buffer(&buffer, &size, "]"))
-		return 0;
+		return_0;
 
 	if (status)
 		log_warn(INTERNAL_ERROR "Metadata inconsistency: "
