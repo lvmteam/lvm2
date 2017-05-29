@@ -213,3 +213,61 @@ int read_flags(uint64_t *status, enum pv_vg_lv_e type, int mask, const struct dm
 	*status |= s;
 	return 1;
 }
+
+/*
+ * Parse extra status flags from segment "type" string.
+ * These flags are seen as INCOMPATIBLE by any older lvm2 code.
+ * All flags separated by '+' are trimmed from passed string.
+ * All UNKNOWN flags will again cause the "UNKNOWN" segtype.
+ *
+ * Note: using these segtype status flags instead of actual
+ * status flags ensures wanted incompatiblity.
+ */
+int read_segtype_lvflags(uint64_t *status, char *segtype_str)
+{
+	unsigned i;
+	const struct flag *flags = _lv_flags;
+	char *delim;
+	char *flag;
+
+	if (!(delim = strchr(segtype_str, '+')))
+		return 1; /* No flags */
+
+	*delim = '\0'; /* Cut away 1st. '+' */
+	do {
+		flag = delim + 1;
+		if ((delim = strchr(segtype_str, '+')))
+			*delim = '\0';
+
+		for (i = 0; flags[i].description; i++)
+			if ((flags[i].kind & SEGTYPE_FLAG) &&
+			    !strcmp(flags[i].description, flag)) {
+				*status |= flags[i].mask;
+				break;
+			}
+
+		if (!flags[i].description) {
+			log_error("Unknown flag %s passed with segment type %s.",
+				  flag, segtype_str);
+			return 0; /* Unknown flag is incompatible */
+		}
+	} while (delim); /* Till no more flags in type appear */
+
+	return 1;
+}
+
+int print_segtype_lvflags(char *buffer, size_t size, uint64_t status)
+{
+	unsigned i;
+	const struct flag *flags = _lv_flags;
+
+	buffer[0] = 0;
+	for (i = 0; flags[i].mask; i++)
+		if ((flags[i].kind & SEGTYPE_FLAG) &&
+		    (status & flags[i].mask) &&
+		    !emit_to_buffer(&buffer, &size, "+%s",
+				    flags[i].description))
+			return 0;
+
+	return 1;
+}
