@@ -68,7 +68,8 @@ mount "$dev_vg_lv" "$mount_dir"
 
 lvrename $vg_lv $vg_lv_ren
 
-mount | grep $vg
+mount | tee out
+grep $vg out
 
 # fails on renamed LV
 fail lvresize -L+10M -r $vg_lv_ren
@@ -88,7 +89,7 @@ not lvresize -L+10M -r $vg_lv_ren
 umount "$mount_dir"
 
 # FIXME:  lvresize  CANNOT handle/propagage '--yes' to fsadm
-echo y | lvresize -L+10M -vvvv -r $vg_lv
+echo y | lvresize -L+10M -r $vg_lv
 
 umount "$mount_dolar_dir"
 
