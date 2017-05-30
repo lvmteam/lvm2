@@ -18,9 +18,10 @@ aux prepare_vg 4
 
 lvcreate -an -Zn -l 1 -n $lv1 $vg
 lvcreate -an -Zn -l 2 --type mirror -m 1 -n $lv2 $vg
+lvcreate -an -Zn --type zero -l 1 -n $lv3 $vg
 
 vgcfgbackup -f bak0 $vg
-sed -e 's,striped,unstriped,;s,mirror,unmirror,' -i.orig bak0
+sed -e 's,striped,unstriped,;s,mirror,unmirror,;s,zero,zero+NEWFLAG,' -i.orig bak0
 vgcfgrestore -f bak0 $vg
 
 # we have on-disk metadata with unknown segments now
@@ -28,11 +29,13 @@ not lvchange -aey $vg/$lv1 # check that activation is refused
 
 # try once more to catch invalid memory access with valgrind
 # when clvmd flushes cmd mem pool
-not lvchange -aey $vg/$lv1 # check that activation is refused
+not lvchange -aey $vg/$lv2 # check that activation is refused
+
+not lvchange -aey $vg/$lv3 # check that activation is refused
 
 vgcfgbackup -f bak1 $vg
 cat bak1
-sed -e 's,unstriped,striped,;s,unmirror,mirror,' -i.orig bak1
+sed -e 's,unstriped,striped,;s,unmirror,mirror,;s,zero+NEWFLAG,zero,' -i.orig bak1
 vgcfgrestore -f bak1 $vg
 vgcfgbackup -f bak2 $vg
 
