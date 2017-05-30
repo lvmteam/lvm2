@@ -20,6 +20,7 @@ SKIP_WITH_LVMPOLLD=1
 FSCK=${FSCK-fsck}
 MKFS=${MKFS-mkfs.ext3}
 RESIZEFS=${RESIZEFS-resize2fs}
+export LVM_BINARY=$(which lvm)
 
 which $FSCK || skip
 which $MKFS || skip
