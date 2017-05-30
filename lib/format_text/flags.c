@@ -229,16 +229,22 @@ int read_segtype_lvflags(uint64_t *status, char *segtype_str)
 	unsigned i;
 	const struct flag *flags = _lv_flags;
 	char *delim;
-	char *flag;
+	char *flag, *buffer, *str;
 
-	if (!(delim = strchr(segtype_str, '+')))
+	if (!(str = strchr(segtype_str, '+')))
 		return 1; /* No flags */
 
-	*delim = '\0'; /* Cut away 1st. '+' */
+	if (!(buffer = dm_strdup(str + 1))) {
+		log_error("Cannot duplicate segment string.");
+		return 0;
+	}
+
+	delim = buffer;
+
 	do {
-		flag = delim + 1;
-		if ((delim = strchr(segtype_str, '+')))
-			*delim = '\0';
+		flag = delim;
+		if ((delim = strchr(delim, '+')))
+			*delim++ = '\0';
 
 		for (i = 0; flags[i].description; i++)
 			if ((flags[i].kind & SEGTYPE_FLAG) &&
@@ -247,12 +253,16 @@ int read_segtype_lvflags(uint64_t *status, char *segtype_str)
 				break;
 			}
 
-		if (!flags[i].description) {
-			log_error("Unknown flag %s passed with segment type %s.",
-				  flag, segtype_str);
-			return 0; /* Unknown flag is incompatible */
-		}
-	} while (delim); /* Till no more flags in type appear */
+	} while (delim && flags[i].description); /* Till no more flags in type appear */
+
+	if (!flags[i].description)
+		/* Unknown flag is incompatible - returns unmodified segtype_str */
+		log_warn("WARNING: Unrecognised flag %s in segment type %s.",
+			 flag, segtype_str);
+	else
+		*str = '\0'; /* Cut away 1st. '+' */
+
+	dm_free(buffer);
 
 	return 1;
 }
