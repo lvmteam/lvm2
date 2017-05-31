@@ -64,7 +64,7 @@ _test_regionsizes raid1
 # Clean up
 lvremove --yes $vg
 
-if aux have_raid 1 10 0; then
+if aux have_raid 1 10 1; then
 # Create 5-way raid6
 lvcreate --yes -aey --type raid6 -i 3 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid6"
@@ -83,6 +83,7 @@ else
   echo "Skipping RAID6 tests"
 fi
 
+if aux have_raid 1 10 1; then
 # Create 6-way raid01
 lvcreate --yes -aey --type raid10 -i 3 -m 1 --stripesize 128K -R 256K -L8M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "raid10"
@@ -94,5 +95,8 @@ aux wait_for_sync $vg $lv1
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 
 _test_regionsizes raid10
+else
+  echo "Skipping RAID10 tests"
+fi
 
 vgremove -ff $vg
