@@ -64,7 +64,18 @@ esac
 echo "$i"
 "$i" $MKFS_ARGS "$dev_vg_lv"
 
+# Adding couple udev wait ops as some older systemd
+# might get confused and was 'randomly/racy' umounting
+# devices  just mounted.
+# 
+# See for explanation: 
+#   https://github.com/systemd/systemd/commit/628c89cc68ab96fce2de7ebba5933725d147aecc
+#   https://github.com/systemd/systemd/pull/2017
+aux udev_wait
+
 mount "$dev_vg_lv" "$mount_dir"
+
+aux udev_wait
 
 lvrename $vg_lv $vg_lv_ren
 
@@ -80,9 +91,12 @@ not umount "$dev_vg_lv"
 lvcreate -L20 -n $lv1 $vg
 "$i" $MKFS_ARGS "$dev_vg_lv"
 
+aux udev_wait
+
 mount "$dev_vg_lv" "$mount_dolar_dir"
 
-mount | grep $vg
+mount | tee out
+grep $vg out
 
 not lvresize -L+10M -r $vg_lv_ren
 
@@ -90,6 +104,8 @@ umount "$mount_dir"
 
 # FIXME:  lvresize  CANNOT handle/propagage '--yes' to fsadm
 echo y | lvresize -L+10M -r $vg_lv
+
+aux udev_wait
 
 umount "$mount_dolar_dir"
 
