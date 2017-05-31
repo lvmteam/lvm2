@@ -35,7 +35,7 @@ _sync() {
 
 # Delay 1st leg so that rebuilding status characters
 #  can be read before resync finished too quick.
-aux delay_dev "$dev1" 0 90 $(get first_extent_sector "$dev1")
+aux delay_dev "$dev1" 0 100 $(get first_extent_sector "$dev1")
 
 # raid0/raid0_meta don't support resynchronization
 for r in raid0 raid0_meta
@@ -58,7 +58,7 @@ lvremove --yes $vg/$lv1
 for r in $segtypes
 do
 	# raid4/5 support resynchronization
-	lvcreate --type $r -Zn -i 3 -l 4 -n $lv1 $vg
+	lvcreate --type $r -Zn -i 3 -L10 -n $lv1 $vg
 	check raid_leg_status $vg $lv1 "aaaa"
 	_sync "AAAA"
 
@@ -77,7 +77,7 @@ _sync "AAAAA"
 not lvcreate --type raid6 --nosync -Zn -i 3 -l 1 -n $lv1 $vg
 
 # raid10 supports resynchronization
-lvcreate --type raid10 -m 1 -Zn -i 3 -l 4 -n $lv1 $vg
+lvcreate --type raid10 -m 1 -Zn -i 3 -L10 -n $lv1 $vg
 check raid_leg_status $vg $lv1 "aaaaaa"
 _sync "AAAAAA"
 
