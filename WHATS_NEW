@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Print a warning about in-use PVs with no VG using them.
   Disable automatic clearing of PVs that look like in-use orphans.
   Cache format2 flag is now using segment name type field.
   Support storing status flags via segtype name field.

@@ -3802,6 +3802,8 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 	struct _vg_read_orphan_baton *b = baton;
 	struct physical_volume *pv = NULL;
 	struct pv_list *pvl;
+	uint32_t ext_version;
+	uint32_t ext_flags;
 
 	if (!(pv = _pv_read(b->vg->cmd, b->vg->vgmem, dev_name(lvmcache_device(info)),
 			    b->vg->fid, b->warn_flags, 0))) {
@@ -3836,6 +3838,40 @@ static int _vg_read_orphan_pv(struct lvmcache_info *info, void *baton)
 		return 0;
 	}
 	*/
+
+	/*
+	 * Nothing to do if PV header extension < 2:
+	 *  - version 0 is PV header without any extensions,
+	 *  - version 1 has bootloader area support only and
+	 *    we're not checking anything for that one here.
+	 */
+	ext_version = lvmcache_ext_version(info);
+	ext_flags = lvmcache_ext_flags(info);
+
+	/*
+	 * Warn about a PV that has the in-use flag set, but appears in
+	 * the orphan VG (no VG was found referencing it.)
+	 * There are a number of conditions that could lead to this:
+	 *
+	 * . The PV was created with no mdas and is used in a VG with
+	 * other PVs (with metadata) that have not yet appeared on
+	 * the system.  So, no VG metadata is found by lvm which
+	 * references the in-use PV with no mdas.
+	 *
+	 * . vgremove could have failed after clearing mdas but
+	 * before clearing the in-use flag.  In this case, the
+	 * in-use flag needs to be manually cleared on the PV.
+	 *
+	 * . The PV may have damanged/unrecognized VG metadata
+	 * that lvm could not read.
+	 *
+	 * . The PV may have no mdas, and the PVs with the metadata
+	 * may have damaged/unrecognized metadata.
+	 */
+	if ((ext_version >= 2) && (ext_flags & PV_EXT_USED)) {
+		log_warn("WARNING: PV %s is marked in use but no VG was found using it.", pv_dev_name(pv));
+		log_warn("WARNING: PV %s might need repairing.", pv_dev_name(pv));
+	}
 
 	return 1;
 }
