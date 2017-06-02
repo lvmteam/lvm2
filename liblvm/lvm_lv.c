@@ -507,7 +507,7 @@ static int _lv_set_pool_params(struct lvcreate_params *lp,
 		pool_metadata_size = extents * vg->extent_size /
 			(lp->chunk_size * (SECTOR_SIZE / 64));
 		while ((pool_metadata_size >
-			(2 * DEFAULT_THIN_POOL_OPTIMAL_SIZE / SECTOR_SIZE)) &&
+			(2 * DEFAULT_THIN_POOL_OPTIMAL_METADATA_SIZE / SECTOR_SIZE)) &&
 		       lp->chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE) {
 			lp->chunk_size <<= 1;
 			pool_metadata_size >>= 1;
