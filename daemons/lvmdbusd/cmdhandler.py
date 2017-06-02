@@ -37,6 +37,7 @@ cmd_lock = threading.RLock()
 class LvmExecutionMeta(object):
 
 	def __init__(self, start, ended, cmd, ec, stdout_txt, stderr_txt):
+		self.lock = threading.RLock()
 		self.start = start
 		self.ended = ended
 		self.cmd = cmd
@@ -45,12 +46,13 @@ class LvmExecutionMeta(object):
 		self.stderr_txt = stderr_txt
 
 	def __str__(self):
-		return "EC= %d for %s\n" \
-			"STARTED: %f, ENDED: %f\n" \
-			"STDOUT=%s\n" \
-			"STDERR=%s\n" % \
-			(self.ec, str(self.cmd), self.start, self.ended, self.stdout_txt,
-			self.stderr_txt)
+		with self.lock:
+			return "EC= %d for %s\n" \
+				"STARTED: %f, ENDED: %f\n" \
+				"STDOUT=%s\n" \
+				"STDERR=%s\n" % \
+				(self.ec, str(self.cmd), self.start, self.ended, self.stdout_txt,
+				self.stderr_txt)
 
 
 class LvmFlightRecorder(object):

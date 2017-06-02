@@ -9,12 +9,13 @@
 
 import subprocess
 from . import cfg
-from .cmdhandler import options_to_cli_args
+from .cmdhandler import options_to_cli_args, LvmExecutionMeta
 import dbus
 from .utils import pv_range_append, pv_dest_ranges, log_error, log_debug,\
 	add_no_notify
 import os
 import threading
+import time
 
 
 def pv_move_lv_cmd(move_options, lv_full_name,
@@ -47,6 +48,11 @@ def _move_merge(interface_name, command, job_state):
 	# Instruct lvm to not register an event with us
 	command = add_no_notify(command)
 
+	#(self, start, ended, cmd, ec, stdout_txt, stderr_txt)
+	meta = LvmExecutionMeta(time.time(), 0, command, -1000, None, None)
+
+	cfg.blackbox.add(meta)
+
 	process = subprocess.Popen(command, stdout=subprocess.PIPE,
 								env=os.environ,
 								stderr=subprocess.PIPE, close_fds=True)
@@ -73,6 +79,11 @@ def _move_merge(interface_name, command, job_state):
 				line_str)
 
 	out = process.communicate()
+
+	with meta.lock:
+		meta.ended = time.time()
+		meta.ec = process.returncode
+		meta.stderr_txt = out[1]
 
 	if process.returncode == 0:
 		job_state.Percent = 100
