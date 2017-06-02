@@ -82,10 +82,10 @@ class StateUpdate(object):
 
 	@staticmethod
 	def update_thread(obj):
+		queued_requests = []
 		while cfg.run.value != 0:
 			# noinspection PyBroadException
 			try:
-				queued_requests = []
 				refresh = True
 				emit_signal = True
 				cache_refresh = True
@@ -96,7 +96,7 @@ class StateUpdate(object):
 					wait = not obj.deferred
 					obj.deferred = False
 
-				if wait:
+				if len(queued_requests) == 0 and wait:
 					queued_requests.append(obj.queue.get(True, 2))
 
 				# Ok we have one or the deferred queue has some,
@@ -131,11 +131,17 @@ class StateUpdate(object):
 				for i in queued_requests:
 					i.set_result(num_changes)
 
+				# Only clear out the requests after we have given them a result
+				# otherwise we can orphan the waiting threads and they never
+				# wake up if we get an exception
+				queued_requests = []
+
 			except queue.Empty:
 				pass
 			except Exception:
 				st = traceback.format_exc()
 				log_error("update_thread exception: \n%s" % st)
+				cfg.blackbox.dump()
 
 	def __init__(self):
 		self.lock = threading.RLock()
