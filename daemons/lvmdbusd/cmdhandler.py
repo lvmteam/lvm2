@@ -618,10 +618,10 @@ def vg_reduce(vg_name, missing, pv_devices, reduce_options):
 	cmd = ['vgreduce']
 	cmd.extend(options_to_cli_args(reduce_options))
 
-	if len(pv_devices) == 0:
-		cmd.append('--all')
 	if missing:
 		cmd.append('--removemissing')
+	elif len(pv_devices) == 0:
+		cmd.append('--all')
 
 	cmd.append(vg_name)
 	cmd.extend(pv_devices)
