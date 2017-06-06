@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -24,15 +24,15 @@ UNITS = \
 	string_t.c\
 	run.c
 
+ifeq ("@TESTING@", "yes")
+SOURCES = $(UNITS)
+TARGETS = run
+endif
+
 include $(top_builddir)/make.tmpl
 
 ifeq ($(MAKECMDGOALS),distclean)
 SOURCES = $(UNITS)
-endif
-
-ifeq ("$(TESTING)", "yes")
-SOURCES = $(UNITS)
-TARGETS = run
 endif
 
 ifeq ("$(TESTING)", "yes")
@@ -42,6 +42,8 @@ CFLAGS += @CUNIT_CFLAGS@
 check: unit
 
 $(TARGETS): $(OBJECTS) $(top_builddir)/libdm/libdevmapper.$(LIB_SUFFIX)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -L$(top_builddir)/libdm \
+	      -o $@ $(OBJECTS) $(LDLIBS)
 
 unit: $(TARGETS)
 	@echo Running unit tests
