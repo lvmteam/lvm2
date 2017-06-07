@@ -686,7 +686,10 @@ static int _update_regions(struct dm_stats *dms, struct filemap_monitor *fm)
 	for (region = regions; *region != DM_STATS_REGIONS_ALL; region++)
 		nr_regions++;
 
-	if (regions[0] != fm->group_id) {
+	if (!nr_regions)
+		log_warn("File contains no extents: exiting.");
+
+	if (nr_regions && (regions[0] != fm->group_id)) {
 		log_warn("group_id changed from " FMTu64 " to " FMTu64,
 			 fm->group_id, regions[0]);
 		fm->group_id = regions[0];
@@ -753,16 +756,15 @@ static int _dmfilemapd(struct filemap_monitor *fm)
 		if ((check = _filemap_fd_check_changed(fm)) < 0)
 			goto bad;
 
-		if (!check)
-			goto wait;
-
-		if (!_update_regions(dms, fm))
+		if (check && !_update_regions(dms, fm))
 			goto bad;
+
+		running = !!fm->nr_regions;
+		if (!running)
+			continue;
 
 wait:
 		_filemap_monitor_wait(FILEMAPD_WAIT_USECS);
-
-		running = !!fm->nr_regions;
 
 		/* mode=inode termination condions */
 		if (fm->mode == DM_FILEMAPD_FOLLOW_INODE) {
