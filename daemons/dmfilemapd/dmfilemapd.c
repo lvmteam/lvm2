@@ -357,30 +357,33 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 	return 1;
 }
 
-static int _filemap_fd_check_changed(struct filemap_monitor *fm)
+static int _filemap_fd_update_blocks(struct filemap_monitor *fm)
 {
-	int64_t blocks, old_blocks;
 	struct stat buf;
 
 	if (fm->fd < 0) {
 		log_error("Filemap fd is not open.");
-		return -1;
+		return 0;
 	}
 
 	if (fstat(fm->fd, &buf)) {
 		log_error("Failed to fstat filemap file descriptor.");
-		return -1;
+		return 0;
 	}
 
-	blocks = buf.st_blocks;
+	fm->blocks = buf.st_blocks;
 
-	/* first check? */
-	if (fm->blocks < 0)
-		old_blocks = buf.st_blocks;
-	else
-		old_blocks = fm->blocks;
+	return 1;
+}
 
-	fm->blocks = blocks;
+static int _filemap_fd_check_changed(struct filemap_monitor *fm)
+{
+	int64_t old_blocks;
+
+	old_blocks = fm->blocks;
+
+	if (!_filemap_fd_update_blocks(fm))
+		return -1;
 
 	return (fm->blocks != old_blocks);
 }
@@ -712,6 +715,9 @@ static int _dmfilemapd(struct filemap_monitor *fm)
 	}
 
 	if (!_filemap_monitor_set_notify(fm))
+		goto bad;
+
+	if (!_filemap_fd_update_blocks(fm))
 		goto bad;
 
 	if (!dm_stats_list(dms, DM_STATS_ALL_PROGRAMS)) {
