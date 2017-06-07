@@ -4466,6 +4466,7 @@ static struct _extent *_stats_get_extents_for_file(struct dm_pool *mem, int fd,
 	return extents;
 
 bad:
+	*count = 0;
 	dm_pool_abandon_object(mem);
 	dm_free(buf);
 	return NULL;
@@ -4536,7 +4537,7 @@ static int _stats_unmap_regions(struct dm_stats *dms, uint64_t group_id,
 		region = &dms->regions[i];
 		nr_old++;
 
-		if (_find_extent(*count, extents,
+		if (extents && _find_extent(*count, extents,
 				  region->start, region->len)) {
 			ext.start = region->start;
 			ext.len = region->len;
@@ -4653,11 +4654,12 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
          * causing complications in the error path.
          */
 	if (!(extent_mem = dm_pool_create("extents", sizeof(*extents))))
-		return_0;
+		return_NULL;
 
 	if (!(extents = _stats_get_extents_for_file(extent_mem, fd, count))) {
-		dm_pool_destroy(extent_mem);
-		return_0;
+		log_very_verbose("No extents found in fd %d", fd);
+		if (!update)
+			goto out;
 	}
 
 	if (update) {
@@ -4734,7 +4736,10 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 	if (bounds)
 		dm_free(hist_arg);
 
-	dm_pool_free(extent_mem, extents);
+	/* the extent table will be empty if the file has been truncated. */
+	if (extents)
+		dm_pool_free(extent_mem, extents);
+
 	dm_pool_destroy(extent_mem);
 
 	return regions;
@@ -4755,12 +4760,6 @@ out_remove:
 	*count = 0;
 
 out:
-	/*
-	 * The table of file extents in 'extents' is always built, so free
-	 * it explicitly: this will also free any 'old_extents' table that
-	 * was later allocated from the 'extent_mem' pool by this function.
-	 */
-	dm_pool_free(extent_mem, extents);
 	dm_pool_destroy(extent_mem);
 	dm_free(hist_arg);
 	dm_free(regions);
@@ -4872,7 +4871,8 @@ uint64_t *dm_stats_update_regions_from_fd(struct dm_stats *dms, int fd,
 	if (!dm_stats_list(dms, NULL))
 		goto bad;
 
-	if (regroup)
+	/* regroup if there are regions to group */
+	if (regroup && (*regions != DM_STATS_REGION_NOT_PRESENT))
 		if (!_stats_group_file_regions(dms, regions, count, alias))
 			goto bad;
 
