@@ -3058,6 +3058,13 @@ int lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_
 	const char *level = seg->area_count == 1 ? "raid1 with " : "";
 	const char *resil = new_count < seg->area_count ? "reducing" : "enhancing";
 
+	/* LV must be active to perform raid conversion operations */
+	if (!lv_is_active(lv)) {
+		log_error("%s must be active to perform this operation.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	if (new_count != 1 && /* Already prompted for in _raid_remove_images() */
 	    !yes && yes_no_prompt("Are you sure you want to convert %s LV %s to %s%u images %s resilience? [y/n]: ",
 				  lvseg_name(first_seg(lv)), display_lvname(lv), level, new_count, resil) == 'n') {
@@ -6158,6 +6165,15 @@ int lv_raid_convert(struct logical_volume *lv,
 	uint32_t available_slvs, removed_slvs;
 	takeover_fn_t takeover_fn;
 
+	/* FIXME If not active, prompt and activate */
+	/* FIXME Some operations do not require the LV to be active */
+	/* LV must be active to perform raid conversion operations */
+	if (!lv_is_active(lv)) {
+		log_error("%s must be active to perform this operation.",
+			  display_lvname(lv));
+		return 0;
+	}
+
 	new_segtype = new_segtype ? : seg->segtype;
 	if (!new_segtype) {
 		log_error(INTERNAL_ERROR "New segtype not specified.");
@@ -6260,15 +6276,6 @@ int lv_raid_convert(struct logical_volume *lv,
 		    display_lvname(lv), lvseg_name(first_seg(lv)),
 		    (segtype_is_striped_target(new_segtype) &&
 		    (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
-
-	/* FIXME If not active, prompt and activate */
-	/* FIXME Some operations do not require the LV to be active */
-	/* LV must be active to perform raid conversion operations */
-	if (!lv_is_active(lv)) {
-		log_error("%s must be active to perform this operation.",
-			  display_lvname(lv));
-		return 0;
-	}
 
 	/* In clustered VGs, the LV must be active on this node exclusively. */
 	if (vg_is_clustered(lv->vg) && !lv_is_active_exclusive_locally(lv)) {
