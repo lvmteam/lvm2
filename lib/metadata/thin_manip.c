@@ -563,6 +563,12 @@ static uint64_t _estimate_metadata_size(uint32_t data_extents, uint32_t extent_s
 	return _estimate_size(data_extents, extent_size, chunk_size);
 }
 
+/* Estimate maximal supportable thin pool data size for given chunk_size */
+static uint64_t _estimate_max_data_size(uint32_t chunk_size)
+{
+	return  chunk_size * (DEFAULT_THIN_POOL_MAX_METADATA_SIZE * 2) * SECTOR_SIZE / UINT64_C(64);
+}
+
 /* Estimate thin pool chunk size from data and metadata size (in sector units) */
 static uint32_t _estimate_chunk_size(uint32_t data_extents, uint32_t extent_size,
 				     uint64_t metadata_size, int attr)
@@ -628,6 +634,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 {
 	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
 	uint32_t estimate_chunk_size;
+	uint64_t max_pool_data_size;
 	const char *str;
 
 	if (!*chunk_size &&
@@ -703,6 +710,16 @@ int update_thin_pool_params(struct cmd_context *cmd,
 				 display_size(cmd, estimate_chunk_size));
 		}
 	}
+
+	max_pool_data_size = _estimate_max_data_size(*chunk_size);
+	if ((max_pool_data_size / extent_size) < pool_data_extents) {
+		log_error("Selected chunk size %s cannot address more then %s of thin pool data space.",
+			  display_size(cmd, *chunk_size), display_size(cmd, max_pool_data_size));
+		return 0;
+	}
+
+	log_print_unless_silent("Thin pool data with chunk size %s can address at most %s of data.",
+				display_size(cmd, *chunk_size), display_size(cmd, max_pool_data_size));
 
 	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
 		return_0;
