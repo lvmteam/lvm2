@@ -718,7 +718,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 		return 0;
 	}
 
-	log_print_unless_silent("Thin pool data with chunk size %s can address at most %s of data.",
+	log_print_unless_silent("Thin pool volume with chunk size %s can address at most %s of data.",
 				display_size(cmd, *chunk_size), display_size(cmd, max_pool_data_size));
 
 	if (!validate_thin_pool_chunk_size(cmd, *chunk_size))
