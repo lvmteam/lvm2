@@ -172,7 +172,7 @@ static int _do_lvs_with_info_and_status_single(struct cmd_context *cmd,
 	if (lv_is_merging_origin(lv)) {
 		if (!_check_merging_origin(lv, &status, &merged))
 		      goto_out;
-		if (merged)
+		if (merged && lv_is_thin_volume(lv->snapshot->lv))
 			lv = lv->snapshot->lv;
 	}
 
@@ -234,7 +234,7 @@ static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
 	if (lv_is_merging_origin(seg->lv)) {
 		if (!_check_merging_origin(seg->lv, &status, &merged))
 			goto_out;
-		if (merged)
+		if (merged && lv_is_thin_volume(seg->lv->snapshot->lv))
 			seg = seg->lv->snapshot;
 	}
 

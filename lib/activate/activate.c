@@ -835,7 +835,6 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 				 * When merge is in progress, query merging origin LV instead.
 				 * COW volume is already mapped as error target in this case.
 				 */
-				status->lv = olv;
 				return 1;
 			}
 
