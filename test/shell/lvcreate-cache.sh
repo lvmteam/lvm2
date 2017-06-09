@@ -26,6 +26,7 @@ aux prepare_vg 5 80000
 
 aux lvmconf 'global/cache_disabled_features = [ "policy_smq" ]'
 
+
 #######################
 # Cache_Pool creation #
 #######################
@@ -62,6 +63,11 @@ grep "No command with matching syntax recognised" err
 # Check nothing has been created yet
 check vg_field $vg lv_count 0
 
+# Checks that argument passed with --cachepool is really a cache-pool
+lvcreate -an -l 1 -n $lv1 $vg
+# Hint: nice way to 'tee' only stderr.log so we can check it's log_error()
+fail lvcreate -L10 --cachepool $vg/$lv1 2> >(tee -a stderr.log >&2)
+grep "not a cache pool" stderr.log
 
 # With --type cache-pool we are clear which segtype has to be created
 lvcreate -l 1 --type cache-pool $vg/pool1

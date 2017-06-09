@@ -1193,6 +1193,13 @@ static int _determine_cache_argument(struct volume_group *vg,
 		lp->create_pool = 0;
 		lp->origin_name = NULL;
 	} else if (lv) {
+		if (arg_is_set(cmd, cachepool_ARG)) {
+			/* Argument of --cachepool has to be a cache-pool */
+			log_error("Logical volume %s is not a cache pool.",
+				  display_lvname(lv));
+			return 0;
+		}
+
 		/* Origin exists, create cache pool volume */
 		if (!validate_lv_cache_create_origin(lv))
 			return_0;
