@@ -673,7 +673,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 
 			/* Check if we should eventually use bigger chunk size */
 			while ((pool_metadata_size >
-				(DEFAULT_THIN_POOL_OPTIMAL_METADATA_SIZE / SECTOR_SIZE)) &&
+				(DEFAULT_THIN_POOL_OPTIMAL_METADATA_SIZE * 2)) &&
 			       (*chunk_size < DM_THIN_MAX_DATA_BLOCK_SIZE)) {
 				*chunk_size <<= 1;
 				pool_metadata_size >>= 1;
