@@ -135,7 +135,7 @@ lvremove -f $vg
 if test "$TSIZE" = 64T; then
 lvcreate -L24T -n $lv1 $vg
 # Warning about bigger then needed (24T data and 16G -> 128K chunk)
-lvconvert --yes -c 64 --thinpool $vg/$lv1 2>&1 | tee err
+fail lvconvert --yes -c 64 --thinpool $vg/$lv1 2>&1 | tee err
 grep "WARNING: Chunk size is too small" err
 lvremove -f $vg
 fi
