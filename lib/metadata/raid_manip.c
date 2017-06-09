@@ -1637,6 +1637,8 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 	} else if (where_it_was)
 		*where_it_was = alloc_none;
 
+	lv->status &= ~LV_RESHAPE;
+
 	return 1;
 }
 
@@ -1844,6 +1846,9 @@ static int _raid_reshape_add_images(struct logical_volume *lv,
 
 	seg->stripe_size = new_stripe_size;
 
+	/* Define image adding reshape (used as SEGTYPE_FLAG to avoid incompatible activations on old runtime) */
+	lv->status |= LV_RESHAPE;
+
 	return 1;
 }
 
@@ -1943,6 +1948,8 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		if (seg_is_any_raid5(seg) && new_image_count == 2)
 			seg->data_copies = 2;
 
+		/* Define image removing reshape (used as SEGTYPE_FLAG to avoid incompatible activations on old runtime) */
+		lv ->status |= LV_RESHAPE;
 		break;
 
 	case 1:
@@ -1981,7 +1988,6 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 			return 0;
 
 		seg->area_count = new_image_count;
-
 		break;
 
 	default:
@@ -2053,6 +2059,9 @@ static int _raid_reshape_keep_images(struct logical_volume *lv,
 		return 0;
 
 	seg->segtype = new_segtype;
+
+	/* Define stripesize/raid algorithm reshape (used as SEGTYPE_FLAG to avoid incompatible activations on old runtime) */
+	lv->status |= LV_RESHAPE;
 
 	return 1;
 }
@@ -2236,6 +2245,8 @@ static int _raid_reshape(struct logical_volume *lv,
 			  display_lvname(lv));
 		return 0;
 	}
+
+	lv->status &= ~LV_RESHAPE; /* Reset any reshaping segtype flag */
 
 	dm_list_init(&removal_lvs);
 
@@ -6040,6 +6051,8 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, con
 		return 0;
 	}
 
+	lv->status &= ~LV_RESHAPE;
+
 	if (!lv_update_and_reload_origin(lv))
 		return_0;
 
@@ -6290,6 +6303,8 @@ int lv_raid_convert(struct logical_volume *lv,
 			  display_lvname(lv));
 		return 0;
 	}
+
+	lv->status &= ~LV_RESHAPE;
 
 	return takeover_fn(lv, new_segtype, yes, force, new_image_count, 0, new_stripes, stripe_size,
 			   region_size, allocate_pvs);
