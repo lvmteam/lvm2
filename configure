@@ -9256,6 +9256,11 @@ $as_echo "$as_me: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" fo
 				CACHE_CHECK_VERSION_WARN=y
 				CACHE_CHECK_NEEDS_CHECK=no
 			fi
+			if test "$CACHE_CHECK_VSN_MINOR" -lt 7 ; then
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" does not support new cache format V2" >&5
+$as_echo "$as_me: WARNING: $CACHE_CHECK_CMD: Old version \"$CACHE_CHECK_VSN\" does not support new cache format V2" >&2;}
+				CACHE_CHECK_VERSION_WARN=y
+			fi
 		fi
 	fi
 	# Empty means a config way to ignore cache dumping
@@ -17044,14 +17049,20 @@ $as_echo "$as_me: WARNING: Support for thin provisioning is limited since some t
 fi
 
 if test -n "$THIN_CHECK_VERSION_WARN"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: You should also install thin_check vsn 0.3.2 (or later) to use lvm2 thin provisioning" >&5
-$as_echo "$as_me: WARNING: You should also install thin_check vsn 0.3.2 (or later) to use lvm2 thin provisioning" >&2;}
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: You should also install latest thin_check vsn 0.7.0 (or later) for lvm2 thin provisioning" >&5
+$as_echo "$as_me: WARNING: You should also install latest thin_check vsn 0.7.0 (or later) for lvm2 thin provisioning" >&2;}
 fi
 
 if test -n "$CACHE_CONFIGURE_WARN"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Support for cache is limited since some cache tools are missing!" >&5
 $as_echo "$as_me: WARNING: Support for cache is limited since some cache tools are missing!" >&2;}
 fi
+
+if test -n "$CACHE_CHECK_VERSION_WARN"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2" >&5
+$as_echo "$as_me: WARNING: You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2" >&2;}
+fi
+
 
 if test "$ODIRECT" != yes; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: O_DIRECT disabled: low-memory pvmove may lock up" >&5

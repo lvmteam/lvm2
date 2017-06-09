@@ -617,6 +617,10 @@ case "$CACHE" in
 				CACHE_CHECK_VERSION_WARN=y
 				CACHE_CHECK_NEEDS_CHECK=no
 			fi
+			if test "$CACHE_CHECK_VSN_MINOR" -lt 7 ; then
+				AC_MSG_WARN([$CACHE_CHECK_CMD: Old version "$CACHE_CHECK_VSN" does not support new cache format V2])
+				CACHE_CHECK_VERSION_WARN=y
+			fi
 		fi
 	fi
 	# Empty means a config way to ignore cache dumping
@@ -2256,10 +2260,14 @@ AS_IF([test -n "$THIN_CONFIGURE_WARN"],
       [AC_MSG_WARN([Support for thin provisioning is limited since some thin provisioning tools are missing!])])
 
 AS_IF([test -n "$THIN_CHECK_VERSION_WARN"],
-      [AC_MSG_WARN([You should also install thin_check vsn 0.3.2 (or later) to use lvm2 thin provisioning])])
+      [AC_MSG_WARN([You should also install latest thin_check vsn 0.7.0 (or later) for lvm2 thin provisioning])])
 
 AS_IF([test -n "$CACHE_CONFIGURE_WARN"],
       [AC_MSG_WARN([Support for cache is limited since some cache tools are missing!])])
+
+AS_IF([test -n "$CACHE_CHECK_VERSION_WARN"],
+      [AC_MSG_WARN([You should install latest cache_check vsn 0.7.0 to use lvm2 cache metadata format 2])])
+
 
 AS_IF([test "$ODIRECT" != yes],
       [AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])])
