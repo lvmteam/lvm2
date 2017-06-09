@@ -9623,8 +9623,6 @@ _ACEOF
 
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable readline" >&5
-$as_echo_n "checking whether to enable readline... " >&6; }
 # Check whether --enable-readline was given.
 if test "${enable_readline+set}" = set; then :
   enableval=$enable_readline; READLINE=$enableval
@@ -9632,8 +9630,6 @@ else
   READLINE=maybe
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $READLINE" >&5
-$as_echo "$READLINE" >&6; }
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable realtime support" >&5
@@ -14444,7 +14440,8 @@ if test "x$ac_cv_lib_readline_readline" = xyes; then :
 
 $as_echo "#define READLINE_SUPPORT 1" >>confdefs.h
 
-				LIBS=$lvm_saved_libs
+				READLINE=yes
+		LIBS=$lvm_saved_libs
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for rl_line_buffer in -lreadline" >&5
 $as_echo_n "checking for rl_line_buffer in -lreadline... " >&6; }
 if ${ac_cv_lib_readline_rl_line_buffer+:} false; then :
@@ -14764,6 +14761,10 @@ fi
 done
 
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable readline" >&5
+$as_echo_n "checking whether to enable readline... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $READLINE" >&5
+$as_echo "$READLINE" >&6; }
 
 if test "$BUILD_CMIRRORD" = yes; then
 	for ac_func in atexit
