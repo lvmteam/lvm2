@@ -240,7 +240,7 @@ static int _do_segs_with_info_and_status_single(struct cmd_context *cmd,
 
 	if (!report_object(sh ? : handle->custom_handle, sh != NULL,
 			   seg->lv->vg, seg->lv, NULL, seg, NULL, &status, NULL))
-	goto_out;
+		goto_out;
 
 	r = ECMD_PROCESSED;
 out:
