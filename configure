@@ -12223,8 +12223,6 @@ fi
 
 ################################################################################
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
-$as_echo_n "checking whether to enable libblkid detection of signatures when wiping... " >&6; }
 # Check whether --enable-blkid_wiping was given.
 if test "${enable_blkid_wiping+set}" = set; then :
   enableval=$enable_blkid_wiping; BLKID_WIPING=$enableval
@@ -12232,9 +12230,8 @@ else
   BLKID_WIPING=maybe
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BLKID_WIPING" >&5
-$as_echo "$BLKID_WIPING" >&6; }
 
+DEFAULT_USE_BLKID_WIPING=0
 if test "$BLKID_WIPING" != no; then
 	pkg_config_init
 
@@ -12314,20 +12311,19 @@ else
 	BLKID_LIBS=$pkg_cv_BLKID_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	test "$BLKID_WIPING" = maybe && BLKID_WIPING=yes
-fi
-	if test "$BLKID_WIPING" = yes; then
-		BLKID_PC="blkid"
-		DEFAULT_USE_BLKID_WIPING=1
+	 BLKID_WIPING=yes
+			    BLKID_PC="blkid"
+			    DEFAULT_USE_BLKID_WIPING=1
 
 $as_echo "#define BLKID_WIPING_SUPPORT 1" >>confdefs.h
 
-	else
-		DEFAULT_USE_BLKID_WIPING=0
-	fi
-else
-	DEFAULT_USE_BLKID_WIPING=0
+
 fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable libblkid detection of signatures when wiping" >&5
+$as_echo_n "checking whether to enable libblkid detection of signatures when wiping... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BLKID_WIPING" >&5
+$as_echo "$BLKID_WIPING" >&6; }
 
 cat >>confdefs.h <<_ACEOF
 #define DEFAULT_USE_BLKID_WIPING $DEFAULT_USE_BLKID_WIPING
@@ -12335,8 +12331,6 @@ _ACEOF
 
 
 ################################################################################
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use udev-systemd protocol for jobs in background" >&5
-$as_echo_n "checking whether to use udev-systemd protocol for jobs in background... " >&6; }
 # Check whether --enable-udev-systemd-background-jobs was given.
 if test "${enable_udev_systemd_background_jobs+set}" = set; then :
   enableval=$enable_udev_systemd_background_jobs; UDEV_SYSTEMD_BACKGROUND_JOBS=$enableval
@@ -12344,8 +12338,6 @@ else
   UDEV_SYSTEMD_BACKGROUND_JOBS=maybe
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $UDEV_SYSTEMD_BACKGROUND_JOBS" >&5
-$as_echo "$UDEV_SYSTEMD_BACKGROUND_JOBS" >&6; }
 
 if test "$UDEV_SYSTEMD_BACKGROUND_JOBS" != no; then
 	pkg_config_init
@@ -12426,9 +12418,14 @@ else
 	SYSTEMD_LIBS=$pkg_cv_SYSTEMD_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	test "$UDEV_SYSTEMD_BACKGROUND_JOBS" = maybe && UDEV_SYSTEMD_BACKGROUND_JOBS=yes
+	UDEV_SYSTEMD_BACKGROUND_JOBS=yes
 fi
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use udev-systemd protocol for jobs in background" >&5
+$as_echo_n "checking whether to use udev-systemd protocol for jobs in background... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $UDEV_SYSTEMD_BACKGROUND_JOBS" >&5
+$as_echo "$UDEV_SYSTEMD_BACKGROUND_JOBS" >&6; }
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable synchronisation with udev processing" >&5

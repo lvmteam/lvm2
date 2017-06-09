@@ -1310,56 +1310,52 @@ fi
 ################################################################################
 
 dnl -- Enable blkid wiping functionality
-AC_MSG_CHECKING(whether to enable libblkid detection of signatures when wiping)
 AC_ARG_ENABLE(blkid_wiping,
 	      AC_HELP_STRING([--disable-blkid_wiping],
 			     [disable libblkid detection of signatures when wiping and use native code instead]),
 	      BLKID_WIPING=$enableval, BLKID_WIPING=maybe)
-AC_MSG_RESULT($BLKID_WIPING)
 
+DEFAULT_USE_BLKID_WIPING=0
 if test "$BLKID_WIPING" != no; then
 	pkg_config_init
 	PKG_CHECK_MODULES(BLKID, blkid >= 2.24,
-			  [test "$BLKID_WIPING" = maybe && BLKID_WIPING=yes],
-			  [if test "$BLKID_WIPING" = maybe; then
+			  [ BLKID_WIPING=yes
+			    BLKID_PC="blkid"
+			    DEFAULT_USE_BLKID_WIPING=1
+			    AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
+			  ], [if test "$BLKID_WIPING" = maybe; then
 				BLKID_WIPING=no
 			   else
 			        AC_MSG_ERROR([bailing out... blkid library >= 2.24 is required])
 			   fi])
-	if test "$BLKID_WIPING" = yes; then
-		BLKID_PC="blkid"
-		DEFAULT_USE_BLKID_WIPING=1
-		AC_DEFINE([BLKID_WIPING_SUPPORT], 1, [Define to 1 to use libblkid detection of signatures when wiping.])
-	else
-		DEFAULT_USE_BLKID_WIPING=0
-	fi
-else
-	DEFAULT_USE_BLKID_WIPING=0
 fi
+AC_MSG_CHECKING([whether to enable libblkid detection of signatures when wiping])
+AC_MSG_RESULT($BLKID_WIPING)
 AC_DEFINE_UNQUOTED(DEFAULT_USE_BLKID_WIPING, [$DEFAULT_USE_BLKID_WIPING],
 		   [Use blkid wiping by default.])
 
 ################################################################################
 dnl -- Enable udev-systemd protocol to instantiate a service for background jobs
 dnl -- Requires systemd version 205 at least (including support for systemd-run)
-AC_MSG_CHECKING(whether to use udev-systemd protocol for jobs in background)
 AC_ARG_ENABLE(udev-systemd-background-jobs,
 	      AC_HELP_STRING([--disable-udev-systemd-background-jobs],
 			     [disable udev-systemd protocol to instantiate a service for background job]),
 	      UDEV_SYSTEMD_BACKGROUND_JOBS=$enableval,
 	      UDEV_SYSTEMD_BACKGROUND_JOBS=maybe)
-AC_MSG_RESULT($UDEV_SYSTEMD_BACKGROUND_JOBS)
 
 if test "$UDEV_SYSTEMD_BACKGROUND_JOBS" != no; then
 	pkg_config_init
 	PKG_CHECK_MODULES(SYSTEMD, systemd >= 205,
-			  [test "$UDEV_SYSTEMD_BACKGROUND_JOBS" = maybe && UDEV_SYSTEMD_BACKGROUND_JOBS=yes],
+			  [UDEV_SYSTEMD_BACKGROUND_JOBS=yes],
 			  [if test "$UDEV_SYSTEMD_BACKGROUND_JOBS" = maybe; then
 				UDEV_SYSTEMD_BACKGROUND_JOBS=no
 			   else
 				AC_MSG_ERROR([bailing out... systemd >= 205 is required])
 			   fi])
 fi
+
+AC_MSG_CHECKING(whether to use udev-systemd protocol for jobs in background)
+AC_MSG_RESULT($UDEV_SYSTEMD_BACKGROUND_JOBS)
 
 ################################################################################
 dnl -- Enable udev synchronisation
