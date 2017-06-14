@@ -409,23 +409,6 @@ int lv_raid_in_sync(const struct logical_volume *lv)
 	return _raid_in_sync(lv);
 }
 
-/* Check if RaidLV @lv is synced or any raid legs of @lv are not synced */
-static int _raid_devs_sync_healthy(struct logical_volume *lv)
-{
-	char *raid_health;
-
-	if (!_raid_in_sync(lv))
-		return 0;
-
-	if (!seg_is_raid1(first_seg(lv)))
-		return 1;
-
-	if (!lv_raid_dev_health(lv, &raid_health))
-		return_0;
-
-	return (strchr(raid_health, 'a') || strchr(raid_health, 'D')) ? 0 : 1;
-}
-
 /*
  * _raid_remove_top_layer
  * @lv
@@ -2964,20 +2947,8 @@ static int _raid_extract_images(struct logical_volume *lv,
 			if (!lv_is_on_pvs(seg_lv(seg, s), target_pvs) &&
 			    !lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
 				continue;
-
-			/*
-			 * Kernel may report raid LV in-sync but still
-			 * image devices may not be in-sync or faulty.
-			 */
-			if (!_raid_devs_sync_healthy(lv) &&
-			    (!seg_is_mirrored(seg) || (s == 0 && !force))) {
-				log_error("Unable to extract %sRAID image"
-					  " while RAID array is not in-sync%s.",
-					  seg_is_mirrored(seg) ? "primary " : "",
-					  seg_is_mirrored(seg) ? " (use --force option to replace)" : "");
-				return 0;
-			}
 		}
+
 		if (!_extract_image_components(seg, s, &rmeta_lv, &rimage_lv)) {
 			log_error("Failed to extract %s from %s.",
 				  display_lvname(seg_lv(seg, s)),
