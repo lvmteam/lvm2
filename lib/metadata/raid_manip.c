@@ -2862,6 +2862,87 @@ static int _extract_image_components(struct lv_segment *seg, uint32_t idx,
 }
 
 /*
+ * _raid_allow_extraction
+ * @lv
+ * @extract_count
+ * @target_pvs
+ *
+ * returns: 0 if no, 1 if yes
+ */
+static int _raid_allow_extraction(struct logical_volume *lv,
+				  int extract_count,
+				  struct dm_list *target_pvs)
+{
+	int s, redundancy = 0;
+	char *dev_health;
+	char *sync_action;
+	struct lv_segment *seg = first_seg(lv);
+	struct cmd_context *cmd = lv->vg->cmd;
+
+	/* If in-sync or hanlding repairs, allow to proceed. */
+	if (_raid_in_sync(lv) || lv->vg->cmd->handles_missing_pvs)
+		return 1;
+
+	/*
+	 * FIXME:
+	 * Right now, we are primarily concerned with down-converting of
+	 * RAID1 LVs, but parity RAIDs and RAID10 will also have to be
+	 * considered.
+	 * (e.g. It would not be good to allow extracting a dev from a
+	 * stripe set while upconverting to RAID5/6.)
+	 */
+	if (!segtype_is_raid1(seg->segtype))
+		return 1;
+
+	/*
+	 * We can allow extracting images if the array is performing a
+	 * sync operation as long as it is "recover" and the image is not
+	 * a primary image or if "resync".
+	 */
+	if (!lv_raid_sync_action(lv, &sync_action) ||
+	    !lv_raid_dev_health(lv, &dev_health))
+		return_0;
+
+	if (!strcmp("idle", sync_action)) {
+		log_error(INTERNAL_ERROR
+			  "RAID LV should not be out-of-sync and \"idle\"");
+		return 0;
+	}
+
+	if (!strcmp("resync", sync_action))
+		return 1;
+
+	/* If anything other than "recover" */
+	if (strcmp("recover", sync_action)) {
+		log_error("Unable to remove RAID image while array"
+			  " is performing \"%s\"", sync_action);
+		return 0;
+	}
+
+	if (seg->area_count != strlen(dev_health)) {
+		log_error(INTERNAL_ERROR
+			  "RAID LV area_count differs from number of health characters");
+		return 0;
+	}
+
+	for (s = 0; s < seg->area_count; s++)
+		if (dev_health[s] == 'A')
+			redundancy++;
+
+	for (s = 0; (s < seg->area_count) && extract_count; s++) {
+		if (!lv_is_on_pvs(seg_lv(seg, s), target_pvs) &&
+		    !lv_is_on_pvs(seg_metalv(seg, s), target_pvs))
+			continue;
+		if ((dev_health[s] == 'A') && !--redundancy) {
+			log_error("Unable to remove all primary source devices");
+			return 0;
+		}
+		extract_count--;
+	}
+	return 1;
+}
+
+/*
  * _raid_extract_images
  * @lv
  * @force: force a replacement in case of primary mirror leg
@@ -2892,6 +2973,10 @@ static int _raid_extract_images(struct logical_volume *lv,
 	struct segment_type *error_segtype;
 
 	extract = seg->area_count - new_count;
+
+	if (!_raid_allow_extraction(lv, extract, target_pvs))
+		return_0;
+
 	log_verbose("Extracting %u %s from %s.", extract,
 		    (extract > 1) ? "images" : "image",
 		    display_lvname(lv));

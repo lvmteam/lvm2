@@ -223,6 +223,67 @@ for i in 1 2 3 ; do
 done
 
 ###########################################
+# Upconverted RAID1 should not allow loss of primary
+#  - don't allow removal of primary while syncing
+#  - DO allow removal of secondaries while syncing
+###########################################
+aux delay_dev $dev2 0 100
+lvcreate -aey -l 2 -n $lv1 $vg $dev1 $dev2
+lvconvert -y -m 1 $vg/$lv1 \
+	--config 'global { mirror_segtype_default = "raid1" }'
+lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
+not lvconvert --yes -m 0 $vg/$lv1 $dev1
+lvconvert --yes -m 0 $vg/$lv1 $dev2
+aux enable_dev $dev2
+lvremove -ff $vg
+
+###########################################
+# lvcreated RAID1 should allow all down-conversion
+#  - DO allow removal of primary while syncing
+#  - DO allow removal of secondaries while syncing
+###########################################
+aux delay_dev $dev2 0 100
+lvcreate --type raid1 -m 2 -aey -l 2 -n $lv1 $vg $dev1 $dev2 $dev3
+lvconvert --yes -m 1 $vg/$lv1 $dev3
+lvconvert --yes -m 0 $vg/$lv1 $dev1
+aux enable_dev $dev2
+lvremove -ff $vg
+
+###########################################
+# Converting from 2-way RAID1 to 3-way
+#  - DO allow removal of one of primary sources
+#  - Do not allow removal of all primary sources
+###########################################
+lvcreate --type raid1 -m 1 -aey -l 2 -n $lv1 $vg $dev1 $dev2
+aux wait_for_sync $vg $lv1
+aux delay_dev $dev3 0 100
+lvconvert --yes -m +1 $vg/$lv1 $dev3
+# should allow 1st primary to be removed
+lvconvert --yes -m -1 $vg/$lv1 $dev1
+# should NOT allow last primary to be removed
+not lvconvert --yes -m -1 $vg/$lv1 $dev2
+# should allow non-primary to be removed
+lvconvert --yes -m 0 $vg/$lv1 $dev3
+aux enable_dev $dev3
+lvremove -ff $vg
+
+###########################################
+# Converting from 2-way RAID1 to 3-way
+#  - Should allow removal of two devices,
+#    as long as they aren't both primary
+###########################################
+lvcreate --type raid1 -m 1 -aey -l 2 -n $lv1 $vg $dev1 $dev2
+aux wait_for_sync $vg $lv1
+aux delay_dev $dev3 0 100
+lvconvert --yes -m +1 $vg/$lv1 $dev3
+# should NOT allow both primaries to be removed
+not lvconvert -m 0 $vg/$lv1 $dev1 $dev2
+# should allow primary + non-primary
+lvconvert --yes -m 0 $vg/$lv1 $dev1 $dev3
+aux enable_dev $dev3
+lvremove -ff $vg
+
+###########################################
 # Device Replacement Testing
 ###########################################
 # RAID1: Replace up to n-1 devices - trying different combinations
