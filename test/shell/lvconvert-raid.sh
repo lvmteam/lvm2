@@ -228,9 +228,9 @@ done
 #  - DO allow removal of secondaries while syncing
 ###########################################
 aux delay_dev $dev2 0 100
-lvcreate -aey -l 2 -n $lv1 $vg $dev1 $dev2
+lvcreate -aey -l 2 -n $lv1 $vg $dev1
 lvconvert -y -m 1 $vg/$lv1 \
-	--config 'global { mirror_segtype_default = "raid1" }'
+	--config 'global { mirror_segtype_default = "raid1" }' $dev2
 lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
 not lvconvert --yes -m 0 $vg/$lv1 $dev1
 lvconvert --yes -m 0 $vg/$lv1 $dev2

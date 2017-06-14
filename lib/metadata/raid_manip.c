@@ -2877,7 +2877,6 @@ static int _raid_allow_extraction(struct logical_volume *lv,
 	char *dev_health;
 	char *sync_action;
 	struct lv_segment *seg = first_seg(lv);
-	struct cmd_context *cmd = lv->vg->cmd;
 
 	/* If in-sync or hanlding repairs, allow to proceed. */
 	if (_raid_in_sync(lv) || lv->vg->cmd->handles_missing_pvs)
@@ -6510,7 +6509,7 @@ has_enough_space:
  * Returns: 1 if the state is detected, 0 otherwise.
  * FIXME: would be better to return -1,0,1 to allow error report.
  */
-int _lv_raid_has_primary_failure_on_recover(struct logical_volume *lv)
+static int _lv_raid_has_primary_failure_on_recover(struct logical_volume *lv)
 {
 	char *tmp_dev_health;
 	char *tmp_sync_action;
