@@ -58,6 +58,22 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 		dead = 1;
 	}
 
+	/*
+	 * if we are converting from non-RAID to RAID (e.g. linear -> raid1)
+	 * and too many original devices die, such that we cannot continue
+	 * the "recover" operation, the sync action will go to "idle", the
+	 * unsynced devs will remain at 'a', and the original devices will
+	 * NOT SWITCH TO 'D', but will remain at 'A' - hoping to be revived.
+	 *
+	 * This is simply the way the kernel works...
+	 */
+	if (!strcmp(status->sync_action, "idle") &&
+	    strchr(status->dev_health, 'a')) {
+		log_error("Primary sources for new RAID, %s, have failed.",
+			  device);
+		dead = 1; /* run it through LVM repair */
+	}
+
 	if (dead) {
 		if (status->insync_regions < status->total_regions) {
 			if (!state->warned) {

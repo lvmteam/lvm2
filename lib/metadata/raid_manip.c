@@ -6408,6 +6408,39 @@ has_enough_space:
 }
 
 /*
+ * _lv_raid_has_primary_failure_on_recover
+ * @lv
+ *
+ * The kernel behaves strangely in the presense of a primary failure
+ * during a "recover" sync operation.  It's not technically a bug, I
+ * suppose, but the output of the status line can make it difficult
+ * to determine that we are in this state.  The sync ratio will be
+ * 100% and the sync action will be "idle", but the health characters
+ * will be e.g. "Aaa" or "Aa", where the 'A' is the dead
+ * primary source that cannot be marked dead by the kernel b/c
+ * it is the only source for the remainder of data.
+ *
+ * This function helps to detect that condition.
+ *
+ * Returns: 1 if the state is detected, 0 otherwise.
+ * FIXME: would be better to return -1,0,1 to allow error report.
+ */
+int _lv_raid_has_primary_failure_on_recover(struct logical_volume *lv)
+{
+	char *tmp_dev_health;
+	char *tmp_sync_action;
+
+	if (!lv_raid_sync_action(lv, &tmp_sync_action) ||
+	    !lv_raid_dev_health(lv, &tmp_dev_health))
+		return_0;
+
+	if (!strcmp(tmp_sync_action, "idle") && strchr(tmp_dev_health, 'a'))
+		return 1;
+
+	return 0;
+}
+
+/*
  * Helper:
  *
  * _lv_raid_rebuild_or_replace
@@ -6458,8 +6491,35 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 	}
 
 	if (!_raid_in_sync(lv)) {
+		/*
+		 * FIXME: There is a bug in the kernel that prevents 'rebuild'
+		 *        from being specified when the array is not in-sync.
+		 *        There are conditions where this should be allowed,
+		 *        but only when we are doing a repair - as indicated by
+		 *        'lv->vg->cmd->handles_missing_pvs'.  The above
+		 *        conditional should be:
+		 (!lv->vg->cmd->handles_missing_pvs && !_raid_in_sync(lv))
+		 */
 		log_error("Unable to replace devices in %s while it is "
 			  "not in-sync.", display_lvname(lv));
+		return 0;
+	}
+
+	if (_lv_raid_has_primary_failure_on_recover(lv)) {
+		/*
+		 * I hate having multiple error lines, but this
+		 * seems to work best for syslog and CLI.
+		 */
+		log_error("Unable to repair %s/%s.  Source devices failed"
+			  " before the RAID could synchronize.",
+			  lv->vg->name, lv->name);
+		log_error("You should choose one of the following:");
+		log_error("  1) deactivate %s/%s, revive failed "
+			  "device, re-activate LV, and proceed.",
+			  lv->vg->name, lv->name);
+		log_error("  2) remove the LV (all data is lost).");
+		log_error("  3) Seek expert advice to attempt to salvage any"
+			  " data from remaining devices.");
 		return 0;
 	}
 
