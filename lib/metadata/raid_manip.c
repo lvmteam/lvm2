@@ -57,6 +57,25 @@ static int _reshape_is_supported(struct cmd_context *cmd, const struct segment_t
 }
 
 /*
+ * Check if rebuild CTR args are allowed when other images exist in the array
+ * with empty metadata areas for this kernel.
+ */
+static int _rebuild_with_emptymeta_is_supported(struct cmd_context *cmd,
+						const struct segment_type *segtype)
+{
+	unsigned attrs;
+
+	if (!segtype->ops->target_present ||
+            !segtype->ops->target_present(cmd, NULL, &attrs) ||
+            !(attrs & RAID_FEATURE_NEW_DEVICES_ACCEPT_REBUILD)) {
+		log_verbose("RAID module does not support rebuild+emptymeta.");
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
  * Ensure region size exceeds the minimum for @lv because
  * MD's bitmap is limited to tracking 2^21 regions.
  *
@@ -2550,6 +2569,7 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	struct dm_list meta_lvs, data_lvs;
 	struct lv_list *lvl;
 	struct lv_segment_area *new_areas;
+	struct segment_type *segtype;
 
 	if (lv_is_not_synced(lv)) {
 		log_error("Can't add image to out-of-sync RAID LV:"
@@ -2581,8 +2601,19 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	 * LV to accompany it.
 	 */
 	if (seg_is_linear(seg)) {
-		/* A complete resync will be done, no need to mark each sub-lv */
-		status_mask = ~(LV_REBUILD);
+		/*
+		 * As of dm-raid version 1.9.0, it is possible to specify
+		 * RAID table lines with the 'rebuild' parameters necessary
+		 * to force a "recover" instead of a "resync" on upconvert.
+		 *
+		 * LVM's interaction with older kernels should be as before -
+		 * performing a complete resync rather than a set of rebuilds.
+		 */
+		if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
+			return_0;
+
+		if (!_rebuild_with_emptymeta_is_supported(lv->vg->cmd, segtype))
+			status_mask = ~(LV_REBUILD);
 
 		/* FIXME: allow setting region size on upconvert from linear */
 		seg->region_size = get_default_region_size(lv->vg->cmd);

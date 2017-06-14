@@ -290,6 +290,24 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 #define RAID_FEATURE_RAID4			(1U << 3) /* ! version 1.8 or 1.9.0 */
 #define RAID_FEATURE_SHRINK			(1U << 4) /* version 1.9.0 */
 #define RAID_FEATURE_RESHAPE			(1U << 5) /* version 1.10.1 */
+/*
+ * RAID_FEATURE_NEW_DEVICES_ACCEPT_REBUILD
+ * This signifies a behavioral change in dm-raid.  Prior to upstream kernel
+ * commit 33e53f068, the kernel would refuse to allow 'rebuild' CTR args to
+ * be submitted when other devices in the array had uninitialized superblocks.
+ * After the commit, these parameters were allowed.
+ *
+ * The most obvious useful case of this new behavior is up-converting a
+ * linear device to RAID1.  A new superblock is allocated for the linear dev
+ * and it will be uninitialized, while all the new images are specified for
+ * 'rebuild'.  This valid scenario would not have been allowed prior to
+ * commit 33e53f068.
+ *
+ * Commit 33e53f068 did not bump the dm-raid version number.  So it exists
+ * in some, but not all 1.8.1 versions of dm-raid.  The only way to be
+ * certain the new behavior exists is to check for version 1.9.0.
+ */
+#define RAID_FEATURE_NEW_DEVICES_ACCEPT_REBUILD	(1U << 6) /* version 1.9.0 */
 
 #ifdef RAID_INTERNAL
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);

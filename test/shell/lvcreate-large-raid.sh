@@ -101,7 +101,15 @@ lvremove -ff $vg1
 lvcreate -aey -L 200T -n $lv1 $vg1
 lvconvert -y --type raid1 -m 1 $vg1/$lv1
 check lv_field $vg1/$lv1 size "200.00t"
-check raid_leg_status $vg1 $lv1 "aa"
+if aux have_raid 1 9 0; then
+	# The 1.9.0 version of dm-raid is capable of performing
+	# linear -> RAID1 upconverts as "recover" not "resync"
+	# The LVM code now checks the dm-raid version when
+	# upconverting and if 1.9.0+ is found, it uses "recover"
+	check raid_leg_status $vg1 $lv1 "Aa"
+else
+	check raid_leg_status $vg1 $lv1 "aa"
+fi
 lvremove -ff $vg1
 
 # bz837927 END

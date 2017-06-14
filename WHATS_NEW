@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Linear to RAID1 upconverts now use "recover" sync action, not "resync".
   Improve lvcreate --cachepool arg validation.
   Limit maximal size of thin-pool for specific chunk size.
   Print a warning about in-use PVs with no VG using them.
