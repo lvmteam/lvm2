@@ -309,7 +309,7 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 				  "LVs must be set visible before removing.");
 			return 0;
 		}
-		/* Got to get any cluster lock an SubLVs to be removed. */
+		/* Must get a cluster lock on SubLVs that will be removed. */
 		if (!activate_lv_excl_local(vg->cmd, lvl->lv))
 			return_0;
 	}
