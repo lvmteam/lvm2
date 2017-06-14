@@ -48,7 +48,7 @@ function check_no_sub_lvs
 # Check takover upconversion fails allocation errors nicely without leaving image pair remnants behind
 
 # 6-way striped: neither conversion to raid5 nor raid6 possible
-lvcreate --yes --stripes 6 --size 4M --name $lv1 $vg
+lvcreate -aey --yes --stripes 6 --size 4M --name $lv1 $vg
 not lvconvert --yes --type raid4 $vg/$lv1
 check lv_field $vg/$lv1 segtype "striped"
 check_no_sub_lvs $vg $lv1 0 5
@@ -69,7 +69,7 @@ check_sub_lvs $vg $lv1 0 5
 lvremove -y $vg
 
 # 5-way striped: conversion to raid5 possible but not to raid6
-lvcreate --yes --stripes 5 --size 4M --name $lv1 $vg
+lvcreate -aey --stripes 5 --size 4M --name $lv1 $vg
 not lvconvert --yes --type raid6 $vg/$lv1
 check lv_field $vg/$lv1 segtype "striped"
 check_no_sub_lvs $vg $lv1 0 5
@@ -83,7 +83,7 @@ check_sub_lvs $vg $lv1 0 5
 lvremove -y $vg
 
 # 4-way striped: conversion to raid5 and raid6 possible
-lvcreate --yes --stripes 4 --size 4M --name $lv1 $vg
+lvcreate -aey --stripes 4 --size 4M --name $lv1 $vg
 lvconvert --yes --type raid5 $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid5_n"
 check lv_field $vg/$lv1 stripes 5
@@ -92,7 +92,8 @@ check_sub_lvs $vg $lv1 0 4
 check_no_sub_lvs $vg $lv1 5 5
 
 lvremove -y $vg
-lvcreate --yes --stripes 4 --size 4M --name $lv1 $vg
+
+lvcreate -aey --stripes 4 --size 4M --name $lv1 $vg
 lvconvert --yes --type raid6 $vg/$lv1
 check lv_field $vg/$lv1 segtype "raid6_n_6"
 check lv_field $vg/$lv1 stripes 6
