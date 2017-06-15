@@ -3220,11 +3220,13 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	}
 
 	/* Split on a 2-legged raid1 LV causes losing all resilience */
-	if (new_count == 1 &&
-	    !yes && yes_no_prompt("Are you sure you want to split %s LV %s losing all resilience? [y/n]: ",
-				  lvseg_name(first_seg(lv)), display_lvname(lv)) == 'n') {
-		log_error("Logical volume %s NOT split.", display_lvname(lv));
-		return 0;
+	if (new_count == 1) {
+		if (!yes && yes_no_prompt("Are you sure you want to split %s LV %s losing all resilience? [y/n]: ",
+					  lvseg_name(first_seg(lv)), display_lvname(lv)) == 'n') {
+			log_error("Logical volume %s NOT split.", display_lvname(lv));
+			return 0;
+		}
+		log_verbose("Losing all resilience for logical volume %s.", display_lvname(lv));
 	}
 
 	/*
@@ -3362,11 +3364,14 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	}
 
 	/* Split and track changes on a 2-legged raid1 LV causes losing resilience for newly written data. */
-	if (seg->area_count == 2 &&
-	    !yes && yes_no_prompt("Are you sure you want to split and track %s LV %s losing resilience for any newly written data? [y/n]: ",
-				  lvseg_name(seg), display_lvname(lv)) == 'n') {
-		log_error("Logical volume %s NOT split.", display_lvname(lv));
-		return 0;
+	if (seg->area_count == 2) {
+		if (!yes && yes_no_prompt("Are you sure you want to split and track %s LV %s losing resilience for any newly written data? [y/n]: ",
+					  lvseg_name(seg), display_lvname(lv)) == 'n') {
+			log_error("Logical volume %s NOT split.", display_lvname(lv));
+			return 0;
+		}
+		log_verbose("Losing resilience for newly written data on logical volume %s.",
+			    display_lvname(lv));
 	}
 
 	for (s = seg->area_count - 1; s >= 0; --s) {
@@ -3395,7 +3400,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 		return_0;
 
 	if (seg->area_count == 2)
-		log_warn("Any newly written data will be non-resilient on LV %s during the split!",
+		log_warn("WARNING: Any newly written data will be non-resilient on LV %s during the split!",
 			 display_lvname(lv));
 
 	log_print_unless_silent("Use 'lvconvert --merge %s' to merge back into %s.",
