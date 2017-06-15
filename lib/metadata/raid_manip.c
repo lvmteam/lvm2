@@ -3994,7 +3994,6 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 				    uint32_t new_image_count,
 				    uint32_t new_region_size,
 				    struct dm_list *allocate_pvs,
-				    int update_and_reload,
 				    struct dm_list *removal_lvs)
 {
 	struct logical_volume *log_lv;
@@ -4051,7 +4050,10 @@ static int _convert_raid1_to_mirror(struct logical_volume *lv,
 	if (!attach_mirror_log(first_seg(lv), log_lv))
 		return_0;
 
-	return update_and_reload ? _lv_update_reload_fns_reset_eliminate_lvs(lv, 0, removal_lvs, NULL) : 1;
+	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, removal_lvs, NULL))
+		return_0;
+
+	return 1;
 }
 
 /*
@@ -4786,7 +4788,7 @@ static int _raid1_to_mirrored_wrapper(TAKEOVER_FN_ARGS)
 		return_0;
 
 	return _convert_raid1_to_mirror(lv, new_segtype, new_image_count, new_region_size,
-					allocate_pvs, 1, &removal_lvs);
+					allocate_pvs, &removal_lvs);
 }
 
 /*
