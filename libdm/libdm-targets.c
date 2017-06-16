@@ -99,6 +99,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	unsigned num_fields;
 	const char *p, *pp, *msg_fields = "";
 	struct dm_status_raid *s = NULL;
+	unsigned a = 0;
 
 	if ((num_fields = _count_fields(params)) < 4)
 		goto_bad;
@@ -167,6 +168,23 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 
 out:
 	*status = s;
+
+	if (s->insync_regions == s->total_regions) {
+		/* FIXME: kernel gives misleading info here
+		 * Trying to recognize a true state */
+		while (i-- > 0)
+			if (s->dev_health[i] == 'a')
+				a++; /* Count number of 'a' */
+
+		if (a && a < s->dev_count) {
+			/* SOME legs are in 'a' */
+			if (!strcasecmp(s->sync_action, "recover")
+			    || !strcasecmp(s->sync_action, "idle"))
+				/* Kernel may possibly start some action
+				 * in near-by future, do not report 100% */
+				s->insync_regions--;
+		}
+	}
 
 	return 1;
 
