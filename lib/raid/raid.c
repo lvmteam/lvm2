@@ -475,7 +475,7 @@ static int _raid_target_present(struct cmd_context *cmd,
 		{ 1, 7, 0, RAID_FEATURE_RAID0, SEG_TYPE_NAME_RAID0 },
 		{ 1, 9, 0, RAID_FEATURE_SHRINK, "shrinking" },
 		{ 1, 9, 0, RAID_FEATURE_NEW_DEVICES_ACCEPT_REBUILD, "rebuild+emptymeta" },
-		{ 1, 10, 1, RAID_FEATURE_RESHAPE, "reshaping" },
+		{ 1, 12, 0, RAID_FEATURE_RESHAPE, "reshaping" },
 	};
 
 	static int _raid_checked = 0;
