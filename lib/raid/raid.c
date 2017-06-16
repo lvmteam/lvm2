@@ -358,36 +358,21 @@ static int _raid_target_percent(void **target_state,
 				uint64_t *total_numerator,
 				uint64_t *total_denominator)
 {
-	int i;
-	uint64_t numerator, denominator;
-	char *pos = params;
-	/*
-	 * Status line:
-	 *    <raid_type> <#devs> <status_chars> <synced>/<total>
-	 * Example:
-	 *    raid1 2 AA 1024000/1024000
-	 */
-	for (i = 0; i < 3; i++) {
-		pos = strstr(pos, " ");
-		if (pos)
-			pos++;
-		else
-			break;
-	}
-	if (!pos || (sscanf(pos, FMTu64 "/" FMTu64 "%n", &numerator, &denominator, &i) != 2) ||
-	    !denominator) {
-		log_error("Failed to parse %s status fraction: %s",
-			  (seg) ? seg->segtype->name : "segment", params);
-		return 0;
-	}
+	struct dm_status_raid *sr;
 
-	*total_numerator += numerator;
-	*total_denominator += denominator;
+	if (!dm_get_status_raid(mem, params, &sr))
+		return_0;
+
+	*total_numerator += sr->insync_regions;
+	*total_denominator += sr->total_regions;
 
 	if (seg)
-		seg->extents_copied = (uint64_t) seg->area_len * dm_make_percent(numerator, denominator) / DM_PERCENT_100;
+		seg->extents_copied = (uint64_t) seg->area_len
+			* dm_make_percent(sr->insync_regions , sr->total_regions) / DM_PERCENT_100;
 
-	*percent = dm_make_percent(numerator, denominator);
+	*percent = dm_make_percent(sr->insync_regions, sr->total_regions);
+
+	dm_pool_free(mem, sr);
 
 	return 1;
 }
