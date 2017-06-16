@@ -395,6 +395,15 @@ dm_percent_t lvseg_percent_with_info_and_seg_status(const struct lv_with_info_an
 			}
 		}
 		break;
+	case SEG_STATUS_RAID:
+		switch (type) {
+		case PERCENT_GET_DIRTY:
+			p = dm_make_percent(s->raid->insync_regions, s->raid->total_regions);
+			break;
+		default:
+			p = DM_PERCENT_INVALID;
+		}
+		break;
 	case SEG_STATUS_SNAPSHOT:
 		if (s->snapshot->merge_failed)
 			p = DM_PERCENT_INVALID;

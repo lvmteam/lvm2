@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Improve raid status reporting with lvs.
   No longer necessary to '--force' a repair for RAID1
   Linear to RAID1 upconverts now use "recover" sync action, not "resync".
   Improve lvcreate --cachepool arg validation.
