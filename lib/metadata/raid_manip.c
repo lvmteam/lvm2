@@ -2346,12 +2346,6 @@ static int _raid_reshape(struct logical_volume *lv,
 
 	/* Handle disk addition reshaping */
 	if (old_image_count < new_image_count) {
-		/* FIXME: remove once MD kernel rhbz1443999 got fixed. */
-		if (sysconf(_SC_NPROCESSORS_ONLN) < 2) {
-			log_error("Can't add stripes to LV %s on single core.", display_lvname(lv));
-			return 0;
-		}
-
 		if (!_raid_reshape_add_images(lv, new_segtype, yes,
 					      old_image_count, new_image_count,
 					      new_stripes, new_stripe_size, allocate_pvs))
@@ -2359,12 +2353,6 @@ static int _raid_reshape(struct logical_volume *lv,
 
 	/* Handle disk removal reshaping */
 	} else if (old_image_count > new_image_count) {
-		/* FIXME: remove once MD kernel rhbz1443999 got fixed. */
-		if (sysconf(_SC_NPROCESSORS_ONLN) < 2) {
-			log_error("Can't remove stripes from LV %s on single core.", display_lvname(lv));
-			return 0;
-		}
-
 		if (!_raid_reshape_remove_images(lv, new_segtype, yes, force,
 						 old_image_count, new_image_count,
 						 new_stripes, new_stripe_size,
