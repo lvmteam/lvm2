@@ -1096,7 +1096,7 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	}
 
 	if (!seg_is_raid(raid_seg)) {
-		log_error("%s on %s is not a RAID segment",
+		log_error(INTERNAL_ERROR "%s on %s is not a RAID segment.",
 			  raid_seg->lv->name, lv->name);
 		return 0;
 	}
