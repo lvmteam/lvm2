@@ -6267,6 +6267,8 @@ int lv_raid_convert(struct logical_volume *lv,
 	uint32_t region_size;
 	uint32_t data_copies = seg->data_copies;
 	uint32_t available_slvs, removed_slvs;
+	char *dev_path;
+	size_t sz;
 	takeover_fn_t takeover_fn;
 
 	/* FIXME If not active, prompt and activate */
@@ -6328,6 +6330,17 @@ int lv_raid_convert(struct logical_volume *lv,
 		/* Conversion of reshapable raids is the cluster is not supported yet. */
 		if (locking_is_clustered()) {
 			log_error("Conversion of %s not supported in the cluster.", display_lvname(lv));
+			return 0;
+		}
+
+		/* BZ1447812 */
+		sz = strlen(lv->vg->cmd->dev_dir) + strlen(lv->vg->name) + strlen(lv->name) + 2;
+		if (!(dev_path = dm_pool_alloc(lv->vg->cmd->mem, sz)))
+			return_0;
+		if (dm_snprintf(dev_path, sz, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
+			return_0;
+		if (open(dev_path, O_RDONLY|O_EXCL) && errno) {
+			log_error("Reshape of open %s not supported.", display_lvname(lv));
 			return 0;
 		}
 
