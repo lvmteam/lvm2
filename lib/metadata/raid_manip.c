@@ -2552,14 +2552,6 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (lv_is_active(lv_lock_holder(lv)) &&
-	    (old_count == 1) &&
-	    (lv_is_thin_pool_data(lv) || lv_is_thin_pool_metadata(lv))) {
-		log_error("Can't add image to active thin pool LV %s yet. Deactivate first.",
-			  display_lvname(lv));
-		return 0;
-	}
-
 	if (!archive(lv->vg))
 		return_0;
 
@@ -6278,6 +6270,12 @@ int lv_raid_convert(struct logical_volume *lv,
 		log_error("%s must be active to perform this operation.",
 			  display_lvname(lv));
 		return 0;
+	} else if (vg_is_clustered(lv->vg) &&
+		   !lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
+		/* In clustered VGs, the LV must be active on this node exclusively. */
+		log_error("%s must be active exclusive locally to "
+			  "perform this operation.", display_lvname(lv));
+		return 0;
 	}
 
 	new_segtype = new_segtype ? : seg->segtype;
@@ -6405,13 +6403,6 @@ int lv_raid_convert(struct logical_volume *lv,
 		    display_lvname(lv), lvseg_name(first_seg(lv)),
 		    (segtype_is_striped_target(new_segtype) &&
 		    (new_stripes == 1)) ? SEG_TYPE_NAME_LINEAR : new_segtype->name);
-
-	/* In clustered VGs, the LV must be active on this node exclusively. */
-	if (vg_is_clustered(lv->vg) && !lv_is_active_exclusive_locally(lv)) {
-		log_error("%s must be active exclusive locally to "
-			  "perform this operation.", display_lvname(lv));
-		return 0;
-	}
 
 	/* LV must be in sync. */
 	if (!_raid_in_sync(lv)) {
