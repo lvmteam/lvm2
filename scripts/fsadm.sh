@@ -402,6 +402,7 @@ yes_no() {
 	while read -r -s -n 1 ANS ; do
 		case "$ANS" in
 		 "y" | "Y" ) echo y ; return 0 ;;
+		 "n" | "N") break ;;
 		 "" ) if [ -t 1 ] ; then
 			echo y ; return 0
 		      fi ;;
