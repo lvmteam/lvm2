@@ -6319,6 +6319,12 @@ int lv_raid_convert(struct logical_volume *lv,
 	case 0:
 		break;
 	case 1:
+		/* Conversion of reshapable raids is the cluster is not supported yet. */
+		if (locking_is_clustered()) {
+			log_error("Conversion of %s not supported in the cluster.", display_lvname(lv));
+			return 0;
+		}
+
 		if (!_raid_reshape(lv, new_segtype, yes, force,
 				   data_copies, region_size,
 				   stripes, stripe_size, allocate_pvs)) {
