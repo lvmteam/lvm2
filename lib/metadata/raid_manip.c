@@ -6312,6 +6312,12 @@ int lv_raid_convert(struct logical_volume *lv,
 					 new_stripes, new_stripe_size_supplied))
 		return _log_possible_conversion_types(lv, new_segtype);
 
+	/* BZ1439399 */
+	if (lv_is_origin(lv)) {
+		log_error("Can't convert %s under snapshot.", display_lvname(lv));
+		return 0;
+	}
+
 	/*
 	 * reshape of capable raid type requested
 	 */
