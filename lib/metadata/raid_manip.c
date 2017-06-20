@@ -84,7 +84,8 @@ static int _check_lv_open_count(struct logical_volume *lv, int open_count) {
 		return 0;
 	}
 	if (info.open_count != open_count) {
-		log_error("Reshape of open %s not supported.", display_lvname(lv));
+		log_error("Reshape is only supported when %s is not in use (e.g. unmount filesystem).",
+			  display_lvname(lv));
 		return 0;
 	}
 
@@ -6205,7 +6206,8 @@ static int _lv_open_excl(struct logical_volume *lv, struct device **dev) {
 	if (!(*dev = dev_create_file(dev_path, NULL, NULL, 0)))
 		return_0;
 	if (!dev_open_flags(*dev, O_EXCL, 1, 1)) {
-		log_error("Reshape of open %s not supported.", display_lvname(lv));
+		log_error("Reshape is only supported when %s is not in use (e.g. unmount filesystem).",
+			  display_lvname(lv));
 		return 0;
 	}
 
