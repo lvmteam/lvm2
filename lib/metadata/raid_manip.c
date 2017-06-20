@@ -2160,24 +2160,6 @@ static int _activate_sub_lv_excl_local(struct logical_volume *lv)
 	return 1;
 }
 
-/* Helper: function to activate any sub LVs of @lv exclusively local starting with area indexed by @start_idx */
-static int _activate_sub_lvs_excl_local(struct logical_volume *lv, uint32_t start_idx)
-{
-	uint32_t s;
-	struct lv_segment *seg = first_seg(lv);
-
-	/* seg->area_count may be 0 here! */
-	log_debug_metadata("Activating %u image component%s of LV %s.",
-			   seg->area_count - start_idx, seg->meta_areas ? " pairs" : "s",
-			   display_lvname(lv));
-	for (s = start_idx; s < seg->area_count; s++)
-		if (!_activate_sub_lv_excl_local(seg_lv(seg, s)) ||
-		    (seg->meta_areas && !_activate_sub_lv_excl_local(seg_metalv(seg, s))))
-			return_0;
-
-	return 1;
-}
-
 /* Helper: function to activate any LVs on @lv_list */
 static int _activate_sub_lvs_excl_local_list(struct logical_volume *lv, struct dm_list *lv_list)
 {
@@ -2196,20 +2178,6 @@ static int _activate_sub_lvs_excl_local_list(struct logical_volume *lv, struct d
 	return r;
 }
 
-/* Helper: callback function to activate image component pairs of @lv to update size after reshape space allocation */
-static int _pre_raid_reactivate_legs(struct logical_volume *lv, void *data)
-{
-	if (!_vg_write_lv_suspend_vg_commit(lv, 1))
-		return 0;
-
-	/* Reload any changed image component pairs for out-of-place reshape space */
-	if (!_activate_sub_lvs_excl_local(lv, 0))
-		return 0;
-
-	/* 1: ok+ask caller to update, 2: metadata commited+ask caller to resume */
-	return 2;
-}
-
 /* Helper: callback function to activate any rmetas on @data list */
 __attribute__ ((__unused__))
 static int _pre_raid0_remove_rmeta(struct logical_volume *lv, void *data)
@@ -2221,20 +2189,6 @@ static int _pre_raid0_remove_rmeta(struct logical_volume *lv, void *data)
 
 	/* 1: ok+ask caller to update, 2: metadata commited+ask caller to resume */
 	return _activate_sub_lvs_excl_local_list(lv, lv_list) ? 2 : 0;
-}
-
-/* Helper: callback dummy needed for takeover+reshape */
-static int _post_raid_reshape(struct logical_volume *lv, void *data)
-{
-	/* 1: ask caller to update, 2: don't ask caller to update */
-	return 1;
-}
-
-/* Helper: callback dummy needed for takeover+reshape */
-static int _post_raid_takeover(struct logical_volume *lv, void *data)
-{
-	/* 1: ask caller to update, 2: don't ask caller to update */
-	return 2;
 }
 
 /*
@@ -2404,9 +2358,7 @@ static int _raid_reshape(struct logical_volume *lv,
 		return 0;
 
 	if (seg->area_count != 2 || old_image_count != seg->area_count) {
-		if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs,
-							       _post_raid_reshape, NULL,
-							       _pre_raid_reactivate_legs, NULL))
+		if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs, NULL))
 			return 0;
 	} if (!_vg_write_commit_backup(lv->vg))
 		return 0;
@@ -5454,9 +5406,7 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 
 	log_debug_metadata("Updating VG metadata and reloading %s LV %s.",
 			   lvseg_name(seg), display_lvname(lv));
-	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs,
-						       _post_raid_takeover, NULL,
-						       _pre_raid_reactivate_legs, NULL))
+	if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs, NULL))
 		return 0;
 
 	if (segtype_is_raid4(new_segtype) &&
