@@ -22,10 +22,10 @@ aux have_raid 1 9 0 || skip
 
 aux prepare_vg 6
 
-lvcreate -L4  -i3 -T  $vg/pool  -V10
+lvcreate -L4 -i3 -T $vg/pool -V10
 
 for i in 1 2 ; do
-lvconvert --type raid10 -y  $vg/pool_tdata
+lvconvert --type raid10 -y $vg/pool_tdata
 check grep_dmsetup table $vg-pool_tdata "raid10"
 aux wait_for_sync $vg pool_tdata
 
@@ -35,7 +35,27 @@ done
 
 lvremove -f $vg
 
-lvcreate -L4  -T $vg/pool -V10
+lvcreate -L4  -T $vg/pool -V10 -n $lv1
+
+for j in data meta ; do
+  LV=pool_t${j}
+  for i in 1 2 ; do
+    lvconvert --type raid1 -m1 -y  $vg/$LV
+    check grep_dmsetup table $vg-${LV} "raid1"
+    aux wait_for_sync $vg $LV
+
+    lvconvert --type raid1 -m0 -y  $vg/$LV
+    check grep_dmsetup table ${vg}-${LV} "linear"
+  done
+done
+
+
+#
+# Now same test again, when lock holding LV is not a thin-poll
+# but thinLV $lv1
+#
+lvchange -an $vg
+lvchange -ay $vg/$lv1
 
 for j in data meta ; do
   LV=pool_t${j}
