@@ -75,6 +75,23 @@ static int _rebuild_with_emptymeta_is_supported(struct cmd_context *cmd,
 	return 1;
 }
 
+/* BZ1447812: check open count of @lv vs. @open_count */
+static int _check_lv_open_count(struct logical_volume *lv, int open_count) {
+	struct lvinfo info = { 0 };
+
+	if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0)) {
+		log_error("lv_info failed: aborting.");
+		return 0;
+	}
+	if (info.open_count != open_count) {
+		log_error("Reshape of open %s not supported.", display_lvname(lv));
+		return 0;
+	}
+
+	return 1;
+}
+
+
 /*
  * Ensure region size exceeds the minimum for @lv because
  * MD's bitmap is limited to tracking 2^21 regions.
@@ -2370,6 +2387,10 @@ static int _raid_reshape(struct logical_volume *lv,
 	init_mirror_in_sync(0);
 
 	seg->region_size = new_region_size;
+
+	/* BZ1447812: also check open count */
+	if (!_check_lv_open_count(lv, 1))
+		return 0;
 
 	if (seg->area_count != 2 || old_image_count != seg->area_count) {
 		if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs,
@@ -6351,8 +6372,14 @@ int lv_raid_convert(struct logical_volume *lv,
 		}
 
 		/* BZ1447812: reject reshape on open LV */
+		if (!_check_lv_open_count(lv, 0))
+			return 0;
 		if (!_lv_open_excl(lv, &dev))
 			return 0;
+		if (!_check_lv_open_count(lv, 1)) {
+			dev_close(dev);
+			return 0;
+		}
 
 		if (!_raid_reshape(lv, new_segtype, yes, force,
 				   data_copies, region_size,
