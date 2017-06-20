@@ -411,7 +411,7 @@ raid_leg_status() {
 
 grep_dmsetup() {
 	dmsetup $1 $2 | tee out
-	grep "${@:3}" out || die "Expected output from dmsetup $1 not found!"
+	grep -q "${@:3}" out || die "Expected output \"${@:3}\" from dmsetup $1 not found!"
 }
 
 #set -x
