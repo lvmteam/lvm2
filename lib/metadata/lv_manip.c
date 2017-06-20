@@ -6368,6 +6368,12 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 	if (!vg_write(vg))
 		return_0;
 
+	if (lock_lv != lv) {
+		log_debug_activation("Dropping origin_only for %s as lock holds %s",
+				     display_lvname(lv), display_lvname(lock_lv));
+		origin_only = 0;
+	}
+
 	if (!(origin_only ? suspend_lv_origin(vg->cmd, lock_lv) : suspend_lv(vg->cmd, lock_lv))) {
 		log_error("Failed to lock logical volume %s.",
 			  display_lvname(lock_lv));

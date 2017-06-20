@@ -551,9 +551,20 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 	fn_on_lv_t fn_pre_on_lv = NULL, fn_post_on_lv;
 	void *fn_pre_data, *fn_post_data = NULL;
 	struct dm_list *removal_lvs;
+	const struct logical_volume *lock_lv = lv_lock_holder(lv);
 
 	va_start(ap, origin_only);
 	removal_lvs = va_arg(ap, struct dm_list *);
+
+	if (lock_lv != lv) {
+		log_debug_activation("Dropping origin_only for %s as lock holds %s",
+				     display_lvname(lv), display_lvname(lock_lv));
+		origin_only = 0;
+	}
+	origin_only = 0;
+
+	/* TODO/FIXME:  this function should be simplified to just call
+	 * lv_update_and_reload() and cleanup of remained LVs */
 
 	/* Retrieve post/pre functions and post/pre data reference from variable arguments, if any */
 	if ((fn_post_on_lv = va_arg(ap, fn_on_lv_t))) {
@@ -576,8 +587,8 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 		 * Returning 2 from pre function -> lv is suspended and
 		 * metadata got updated, don't need to do it again
 		 */
-		if (!(r = (origin_only ? resume_lv_origin(lv->vg->cmd, lv_lock_holder(lv)) :
-					 resume_lv(lv->vg->cmd, lv_lock_holder(lv))))) {
+		if (!(r = (origin_only ? resume_lv_origin(lv->vg->cmd, lock_lv) :
+					 resume_lv(lv->vg->cmd, lock_lv)))) {
 			log_error("Failed to resume %s.", display_lvname(lv));
 			return 0;
 		}
