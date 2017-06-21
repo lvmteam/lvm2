@@ -4578,6 +4578,7 @@ enum fsadm_cmd_e { FSADM_CMD_CHECK, FSADM_CMD_RESIZE };
 static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 		      struct logical_volume *lv,
 		      uint32_t extents,
+		      int yes,
 		      int force,
 		      int *status)
 {
@@ -4585,7 +4586,7 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 	struct cmd_context *cmd = vg->cmd;
 	char lv_path[PATH_MAX];
 	char size_buf[SIZE_BUF];
-	const char *argv[FSADM_CMD_MAX_ARGS + 2];
+	const char *argv[FSADM_CMD_MAX_ARGS + 4];
 	unsigned i = 0;
 
 	argv[i++] = find_config_tree_str(cmd, global_fsadm_executable_CFG, NULL);
@@ -4595,6 +4596,9 @@ static int _fsadm_cmd(enum fsadm_cmd_e fcmd,
 
 	if (verbose_level() >= _LOG_NOTICE)
 		argv[i++] = "--verbose";
+
+	if (yes)
+		argv[i++] = "--yes";
 
 	if (force)
 		argv[i++] = "--force";
@@ -5498,7 +5502,7 @@ int lv_resize(struct logical_volume *lv,
 
 	if (lp->resizefs) {
 		if (!lp->nofsck &&
-		    !_fsadm_cmd(FSADM_CMD_CHECK, lv, 0, lp->force, &status)) {
+		    !_fsadm_cmd(FSADM_CMD_CHECK, lv, 0, lp->yes, lp->force, &status)) {
 			if (status != FSADM_CHECK_FAILS_FOR_MOUNTED) {
 				log_error("Filesystem check failed.");
 				return 0;
@@ -5508,7 +5512,7 @@ int lv_resize(struct logical_volume *lv,
 
 		/* FIXME forks here */
 		if ((lp->resize == LV_REDUCE) &&
-		    !_fsadm_cmd(FSADM_CMD_RESIZE, lv, lp->extents, lp->force, NULL)) {
+		    !_fsadm_cmd(FSADM_CMD_RESIZE, lv, lp->extents, lp->yes, lp->force, NULL)) {
 			log_error("Filesystem resize failed.");
 			return 0;
 		}
@@ -5589,7 +5593,7 @@ out:
 				display_lvname(lv));
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND) &&
-	    !_fsadm_cmd(FSADM_CMD_RESIZE, lv, lp->extents, lp->force, NULL))
+	    !_fsadm_cmd(FSADM_CMD_RESIZE, lv, lp->extents, lp->yes, lp->force, NULL))
 		return_0;
 
 	ret = 1;

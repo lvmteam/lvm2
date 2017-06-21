@@ -649,6 +649,7 @@ struct lvresize_params {
 	int use_policies;
 
 	alloc_policy_t alloc;
+	int yes;
 	int force;
 	int nosync;
 	int nofsck;
