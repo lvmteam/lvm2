@@ -1459,7 +1459,8 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 			log_error("Segment is not mirrored: %s:%" PRIu32,
 				  lv->name, seg->le);
 			return 0;
-		} if ((seg->status & status_mask) != status_mask) {
+		}
+		if ((seg->status & status_mask) != status_mask) {
 			log_error("Segment status does not match: %s:%" PRIu32
 				  " status:0x%" PRIx64 "/0x%" PRIx64, lv->name, seg->le,
 				  seg->status, status_mask);
