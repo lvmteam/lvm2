@@ -562,7 +562,6 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 				     display_lvname(lv), display_lvname(lock_lv));
 		origin_only = 0;
 	}
-	origin_only = 0;
 
 	/* TODO/FIXME:  this function should be simplified to just call
 	 * lv_update_and_reload() and cleanup of remained LVs */
