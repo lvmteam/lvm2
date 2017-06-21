@@ -650,6 +650,12 @@ static int _lv_update_and_reload_list(struct logical_volume *lv, int origin_only
 	struct lv_list *lvl;
 	int r;
 
+	if (lock_lv != lv) {
+		log_debug_activation("Dropping origin_only for %s as lock holds %s",
+				     display_lvname(lv), display_lvname(lock_lv));
+		origin_only = 0;
+	}
+
 	log_very_verbose("Updating logical volume %s on disk(s)%s.",
 			 display_lvname(lock_lv), origin_only ? " (origin only)": "");
 
@@ -2112,15 +2118,22 @@ static int _vg_write_lv_suspend_commit_backup(struct volume_group *vg,
 					      struct logical_volume *lv,
 					      int origin_only, int do_backup)
 {
+	const struct logical_volume *lock_lv = lv_lock_holder(lv);
 	int r = 1;
+
+	if (lock_lv != lv) {
+		log_debug_activation("Dropping origin_only for %s as lock holds %s",
+				     display_lvname(lv), display_lvname(lock_lv));
+		origin_only = 0;
+	}
 
 	if (!vg_write(vg)) {
 		log_error("Write of VG %s failed.", vg->name);
 		return_0;
 	}
 
-	if (lv && !(r = (origin_only ? suspend_lv_origin(vg->cmd, lv_lock_holder(lv)) :
-				       suspend_lv(vg->cmd, lv_lock_holder(lv))))) {
+	if (lv && !(r = (origin_only ? suspend_lv_origin(vg->cmd, lock_lv) :
+				       suspend_lv(vg->cmd, lock_lv)))) {
 		log_error("Failed to suspend %s before committing changes.",
 			  display_lvname(lv));
 		vg_revert(lv->vg);
