@@ -2373,7 +2373,7 @@ static int _raid_reshape(struct logical_volume *lv,
 	if (seg->area_count != 2 || old_image_count != seg->area_count) {
 		if (!_lv_update_reload_fns_reset_eliminate_lvs(lv, 0, &removal_lvs, NULL))
 			return_0;
-	} if (!_vg_write_commit_backup(lv->vg))
+	} else if (!_vg_write_commit_backup(lv->vg))
 		return_0;
 
 	return 1; 
