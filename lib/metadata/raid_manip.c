@@ -6661,9 +6661,14 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 	}
 
 	if (!match_count) {
-		log_error("Logical volume %s does not contain devices specified to %s.",
-			  display_lvname(lv), action_str);
-		return 0;
+		if (remove_pvs && !dm_list_empty(remove_pvs)) {
+			log_error("Logical volume %s does not contain devices specified to %s.",
+				  display_lvname(lv), action_str);
+			return 0;
+		}
+		log_print_unless_silent("%s does not contain devices specified to %s.",
+					display_lvname(lv), action_str);
+		return 1;
 	} else if (match_count == raid_seg->area_count) {
 		log_error("Unable to %s all PVs from %s at once.",
 			  action_str, display_lvname(lv));
