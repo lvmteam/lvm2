@@ -557,7 +557,7 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
 	va_start(ap, origin_only);
 	removal_lvs = va_arg(ap, struct dm_list *);
 
-	if (lock_lv != lv) {
+	if (origin_only && (lock_lv != lv)) {
 		log_debug_activation("Dropping origin_only for %s as lock holds %s",
 				     display_lvname(lv), display_lvname(lock_lv));
 		origin_only = 0;
@@ -649,7 +649,7 @@ static int _lv_update_and_reload_list(struct logical_volume *lv, int origin_only
 	struct lv_list *lvl;
 	int r;
 
-	if (lock_lv != lv) {
+	if (origin_only && (lock_lv != lv)) {
 		log_debug_activation("Dropping origin_only for %s as lock holds %s",
 				     display_lvname(lv), display_lvname(lock_lv));
 		origin_only = 0;
@@ -2120,7 +2120,7 @@ static int _vg_write_lv_suspend_commit_backup(struct volume_group *vg,
 	const struct logical_volume *lock_lv = lv_lock_holder(lv);
 	int r = 1;
 
-	if (lock_lv != lv) {
+	if (origin_only && (lock_lv != lv)) {
 		log_debug_activation("Dropping origin_only for %s as lock holds %s",
 				     display_lvname(lv), display_lvname(lock_lv));
 		origin_only = 0;
