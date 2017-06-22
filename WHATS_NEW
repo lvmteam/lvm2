@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Do not lvdisplay --maps unset settings of cache pool.
   Fix lvdisplay --maps for cache pool without policy settings.
   Avoid using origin_only manipulation with cached device.
   Support aborting of flushing cache LV.

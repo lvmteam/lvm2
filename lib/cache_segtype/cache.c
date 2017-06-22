@@ -51,9 +51,15 @@ static void _cache_display(const struct lv_segment *seg)
 
 	log_print("  Chunk size\t\t%s",
 		  display_size(seg->lv->vg->cmd, pool_seg->chunk_size));
-	log_print("  Metadata format\t%u", pool_seg->cache_metadata_format);
-	log_print("  Mode\t\t%s", get_cache_mode_name(pool_seg));
-	log_print("  Policy\t\t%s", pool_seg->policy_name);
+
+	if (pool_seg->cache_metadata_format != CACHE_METADATA_FORMAT_UNSELECTED)
+		log_print("  Metadata format\t%u", pool_seg->cache_metadata_format);
+
+	if (pool_seg->cache_mode != CACHE_MODE_UNSELECTED)
+		log_print("  Mode\t\t%s", get_cache_mode_name(pool_seg));
+
+	if (pool_seg->policy_name)
+		log_print("  Policy\t\t%s", pool_seg->policy_name);
 
 	if (pool_seg->policy_settings &&
 	    (n = pool_seg->policy_settings->child))
