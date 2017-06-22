@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Support aborting of flushing cache LV.
   Reenable conversion of data and metadata thin-pool volumes to raid.
   Improve raid status reporting with lvs.
   No longer necessary to '--force' a repair for RAID1

@@ -22,6 +22,7 @@
 #include "activate.h"
 #include "defaults.h"
 #include "lv_alloc.h"
+#include "lvm-signal.h"
 
 /* https://github.com/jthornber/thin-provisioning-tools/blob/master/caching/cache_metadata_size.cc */
 #define DM_TRANSACTION_OVERHEAD		4096  /* KiB */
@@ -431,6 +432,20 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 
 	//FIXME: use polling to do this...
 	for (;;) {
+		sigint_allow();
+		sigint_restore();
+		if (sigint_caught()) {
+			sigint_clear();
+			log_error("Flushing of %s aborted.", display_lvname(cache_lv));
+			if (cache_seg->cleaner_policy) {
+				cache_seg->cleaner_policy = 0;
+				/* Restore normal table */
+				if (!lv_update_and_reload(cache_lv))
+					stack;
+			}
+			return 0;
+		}
+
 		if (!lv_cache_status(cache_lv, &status))
 			return_0;
 
@@ -452,9 +467,12 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 
 		log_print_unless_silent("Flushing " FMTu64 " blocks for cache %s.",
 					dirty_blocks, display_lvname(cache_lv));
+
 		if (cleaner_policy) {
 			/* TODO: Use centralized place */
+			sigint_allow();
 			usleep(500000);
+			sigint_restore();
 			continue;
 		}
 
