@@ -55,7 +55,8 @@ static void _cache_display(const struct lv_segment *seg)
 	log_print("  Mode\t\t%s", get_cache_mode_name(pool_seg));
 	log_print("  Policy\t\t%s", pool_seg->policy_name);
 
-	if ((n = pool_seg->policy_settings->child))
+	if (pool_seg->policy_settings &&
+	    (n = pool_seg->policy_settings->child))
 		dm_config_write_node(n, _cache_out_line, NULL);
 
 	log_print(" ");
