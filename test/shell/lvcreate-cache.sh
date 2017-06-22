@@ -251,6 +251,8 @@ fail lvcreate --type cache-pool -l1 --chunksize 1G $vg/cpool3
 lvcreate --type cache-pool -L10 $vg/cpool4
 fail lvcreate -H -L10 --chunksize 16M $vg/cpool4
 
+lvdisplay --maps $vg
+
 lvremove -f $vg
 
 lvcreate --type cache-pool -L10 $vg/cpool
