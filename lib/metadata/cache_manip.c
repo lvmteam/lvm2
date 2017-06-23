@@ -440,7 +440,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 			if (cache_seg->cleaner_policy) {
 				cache_seg->cleaner_policy = 0;
 				/* Restore normal table */
-				if (!lv_update_and_reload(cache_lv))
+				if (!lv_update_and_reload_origin(cache_lv))
 					stack;
 			}
 			return 0;
@@ -485,7 +485,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 		/* Switch to cleaner policy to flush the cache */
 		cache_seg->cleaner_policy = 1;
 		/* Reload cache volume with "cleaner" policy */
-		if (!lv_update_and_reload(cache_lv))
+		if (!lv_update_and_reload_origin(cache_lv))
 			return_0;
 
 		if (!sync_local_dev_names(cache_lv->vg->cmd)) {
