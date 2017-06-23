@@ -122,13 +122,13 @@ static int _check_region_size_constraints(struct logical_volume *lv,
 					  uint32_t stripe_size)
 {
 	if (region_size < stripe_size) {
-		log_error("Regionsize may not be smaller than stripe size on %s LV %s.",
+		log_error("Region size may not be smaller than stripe size on %s LV %s.",
 			  segtype->name, display_lvname(lv));
 		return 0;
 	}
 
 	if (region_size > lv->size) {
-		log_error("Regionsize too large for %s LV %s.",
+		log_error("Region size is too large for %s LV %s.",
 			   segtype->name, display_lvname(lv));
 		return 0;
 	}
@@ -2442,14 +2442,14 @@ static int _reshape_requested(const struct logical_volume *lv, const struct segm
 	    !seg_is_any_raid0(seg) &&
 	    (region_size || stripe_size) &&
 	    ((region_size ?: seg->region_size) < (stripe_size ?: seg->stripe_size))) {
-		log_error("region size may not be smaller than stripe size on LV %s.",
+		log_error("Region size may not be smaller than stripe size on LV %s.",
 			  display_lvname(lv));
 		return 2;
 	}
 
 	if (seg_is_any_raid10(seg) && seg->area_count > 2 &&
 	    stripes && stripes < seg->area_count - seg->segtype->parity_devs) {
-		log_error("Can't remove stripes from raid10");
+		log_error("Can't remove stripes from raid10.");
 		return 2;
 	}
 

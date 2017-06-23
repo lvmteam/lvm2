@@ -3762,7 +3762,7 @@ int process_each_lv(struct cmd_context *cmd,
 			ret_max = ret;
 		if (dm_list_empty(&arg_vgnames) && dm_list_empty(&arg_tags)) {
 			ret_max = ECMD_FAILED;
-			goto out;
+			goto_out;
 		}
 	}
 
@@ -4693,7 +4693,7 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 	if (arg_is_set(cmd, pvmetadatacopies_ARG) &&
 	    !arg_int_value(cmd, pvmetadatacopies_ARG, -1) &&
 	    pp->pva.metadataignore) {
-		log_error("metadataignore only applies to metadatacopies > 0");
+		log_error("metadataignore only applies to metadatacopies > 0.");
 		return 0;
 	}
 
@@ -4711,7 +4711,7 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 	}
 
 	if (arg_sign_value(cmd, dataalignmentoffset_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error("Physical volume data alignment offset may not be negative");
+		log_error("Physical volume data alignment offset may not be negative.");
 		return 0;
 	}
 	pp->pva.data_alignment_offset = arg_uint64_value(cmd, dataalignmentoffset_ARG, UINT64_C(0));
@@ -4725,7 +4725,7 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 	    (pp->pva.pe_start != PV_PE_START_CALC)) {
 		if ((pp->pva.data_alignment ? pp->pva.pe_start % pp->pva.data_alignment : pp->pva.pe_start) != pp->pva.data_alignment_offset) {
 			log_warn("WARNING: Ignoring data alignment %s"
-				 " incompatible with restored pe_start value %s)",
+				 " incompatible with restored pe_start value %s.",
 				 display_size(cmd, pp->pva.data_alignment + pp->pva.data_alignment_offset),
 				 display_size(cmd, pp->pva.pe_start));
 			pp->pva.data_alignment = 0;
@@ -4878,10 +4878,10 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 				log_error("PV %s is used by VG %s so please use vgreduce first.", pvname, vgname);
 			log_error("(If you are certain you need pvremove, then confirm by using --force twice.)");
 		} else if (pp->yes) {
-			log_warn("WARNING: PV %s is used by VG %s", pvname, vgname);
+			log_warn("WARNING: PV %s is used by VG %s.", pvname, vgname);
 			answer_yes = 1;
 		} else if (ask) {
-			log_warn("WARNING: PV %s is used by VG %s", pvname, vgname);
+			log_warn("WARNING: PV %s is used by VG %s.", pvname, vgname);
 			if (yes_no_prompt("Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ", pvname, vgname) == 'n')
 				answer_no = 1;
 			else
