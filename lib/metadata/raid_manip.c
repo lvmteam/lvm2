@@ -6653,6 +6653,8 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 
 		if (lv_is_virtual(seg_lv(raid_seg, s)) ||
 		    lv_is_virtual(seg_metalv(raid_seg, s)) ||
+		    lv_is_partial(seg_lv(raid_seg, s)) ||
+		    lv_is_partial(seg_metalv(raid_seg, s)) ||
 		    lv_is_on_pvs(seg_lv(raid_seg, s), remove_pvs) ||
 		    lv_is_on_pvs(seg_metalv(raid_seg, s), remove_pvs)) {
 			match_count++;

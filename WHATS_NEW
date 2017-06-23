@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Lvconvert --repair handles failing raid legs (present but marked 'D'ead).
   Do not lvdisplay --maps unset settings of cache pool.
   Fix lvdisplay --maps for cache pool without policy settings.
   Support aborting of flushing cache LV.

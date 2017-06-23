@@ -3319,6 +3319,8 @@ static int _lvconvert_repair_pvs_raid(struct cmd_context *cmd, struct logical_vo
 		return 0;
 	}
 
+	lv_check_transient(lv); /* TODO check this in lib for all commands? */
+
 	_lvconvert_repair_pvs_raid_ask(cmd, &do_it);
 
 	if (do_it) {
