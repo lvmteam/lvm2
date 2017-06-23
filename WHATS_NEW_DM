@@ -1,5 +1,6 @@
 Version 1.02.141 - 
 ===============================
+  Reset array with dead rimage devices once raid gets in sync.
   Drop unneeded --config option from raid dmeventd plugin.
   dm_get_status_raid() handle better some incosistent md statuses.
   Accept truncated files in calls to dm_stats_update_regions_from_fd().

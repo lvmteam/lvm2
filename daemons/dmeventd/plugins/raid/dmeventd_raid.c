@@ -68,7 +68,8 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 	 * This is simply the way the kernel works...
 	 */
 	if (!strcmp(status->sync_action, "idle") &&
-	    strchr(status->dev_health, 'a')) {
+	    (status->dev_health[0] == 'a') &&
+	    (status->insync_regions < status->total_regions)) {
 		log_error("Primary sources for new RAID, %s, have failed.",
 			  device);
 		dead = 1; /* run it through LVM repair */
@@ -97,6 +98,8 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 		}
 	} else {
 		state->failed = 0;
+		if (status->insync_regions == status->total_regions)
+			memset(&state->raid_devs, 0, sizeof(state->raid_devs));
 		log_info("%s array, %s, is %s in-sync.",
 			 status->raid_type, device,
 			 (status->insync_regions == status->total_regions) ? "now" : "not");
