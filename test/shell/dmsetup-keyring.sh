@@ -31,7 +31,8 @@ aux target_at_least dm-zero 1 0 0 || skip "missing dm-zero target"
 aux target_at_least dm-crypt 1 15 0 || skip "dm-crypt doesn't support keys in kernel keyring service"
 which keyctl || skip "test requires keyctl utility"
 
-keyctl newring $PREFIX-keyring @u
+keyctl new_session || true   # fails with 'su', works with 'su -'
+keyctl newring $PREFIX-keyring @s
 keyctl timeout %:$PREFIX-keyring 60
 
 trap '_teardown' EXIT
