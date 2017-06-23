@@ -6090,8 +6090,11 @@ static int _region_size_change_requested(struct logical_volume *lv, int yes, con
 		return_0;
 
 	/* CLI validation provides the check but be caucious... */
-	if (!lv_is_raid(lv) || !seg || seg_is_any_raid0(seg))
-		return_0;
+	if (!lv_is_raid(lv) || !seg || seg_is_any_raid0(seg)) {
+		log_error(INTERNAL_ERROR "Cannot change region size of %s.",
+			  display_lvname(lv));
+		return 0;
+	}
 
 	if (region_size == seg->region_size) {
 		log_error("Region size is already %s on %s LV %s.",
