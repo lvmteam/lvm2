@@ -49,7 +49,7 @@ static int _reshape_is_supported(struct cmd_context *cmd, const struct segment_t
 	if (!segtype->ops->target_present ||
             !segtype->ops->target_present(cmd, NULL, &attrs) ||
             !(attrs & RAID_FEATURE_RESHAPE)) {
-		log_error("RAID module does not support reshape.");
+		log_debug("RAID module does not support reshape.");
 		return 0;
 	}
 
