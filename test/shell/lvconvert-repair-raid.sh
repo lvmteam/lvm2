@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2013-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -18,7 +18,8 @@ aux have_raid 1 3 0 || skip
 aux raid456_replace_works || skip
 
 aux lvmconf 'allocation/maximise_cling = 0' \
-	    'allocation/mirror_logs_require_separate_pvs = 1'
+	    'allocation/mirror_logs_require_separate_pvs = 1' \
+	    'activation/raid_fault_policy = "allocate"'
 
 aux prepare_vg 8 80
 
@@ -36,6 +37,23 @@ RAID_SIZE=32
 
 # Fast sync and repair afterwards
 delay 0
+
+# RAID1 transient failure check
+lvcreate --type raid1 -m 1 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2"
+aux wait_for_sync $vg $lv1
+# enforce replacing live rimage leg with error target
+dmsetup remove -f $vg-${lv1}_rimage_1 || true
+# let it notice there is problem
+echo a > "$DM_DEV_DIR/$vg/$lv1"
+check grep_dmsetup status $vg-$lv1 AD
+lvconvert -y --repair $vg/$lv1 "$dev3"
+lvs -a -o+devices $vg
+aux wait_for_sync $vg $lv1
+# Raid should have fixed device
+check grep_dmsetup status $vg-$lv1 AA
+check lv_on $vg ${lv1}_rimage_1 "$dev3"
+lvremove -ff $vg/$lv1
+
 
 # RAID1 dual-leg single replace after initial sync
 lvcreate --type raid1 -m 1 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2"
