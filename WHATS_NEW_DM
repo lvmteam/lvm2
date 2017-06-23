@@ -1,5 +1,6 @@
 Version 1.02.141 - 
 ===============================
+  Drop unneeded --config option from raid dmeventd plugin.
   dm_get_status_raid() handle better some incosistent md statuses.
   Accept truncated files in calls to dm_stats_update_regions_from_fd().
   Restore Warning by 5% increment when thin-pool is over 80% (1.02.138).
