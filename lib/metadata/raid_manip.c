@@ -2886,17 +2886,14 @@ static int _raid_allow_extraction(struct logical_volume *lv,
 	    !lv_raid_dev_health(lv, &dev_health))
 		return_0;
 
-	if (!strcmp("idle", sync_action)) {
-		log_error(INTERNAL_ERROR
-			  "RAID LV should not be out-of-sync and \"idle\"");
-		return 0;
-	}
-
 	if (!strcmp("resync", sync_action))
 		return 1;
 
-	/* If anything other than "recover" */
-	if (strcmp("recover", sync_action)) {
+	/* If anything other than "recover", rebuild or "idle" */
+        /* Targets reports for a while 'idle' state, before recover starts */
+	if (strcmp("recover", sync_action) &&
+	    strcmp("rebuild", sync_action) &&
+	    strcmp("idle", sync_action)) {
 		log_error("Unable to remove RAID image while array"
 			  " is performing \"%s\"", sync_action);
 		return 0;
