@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -150,6 +150,30 @@ const char *display_lvname(const struct logical_volume *lv)
 	lv->vg->cmd->display_lvname_idx += r + 1;
 
 	return name;
+}
+
+/* Display percentage with (TODO) configurable precision */
+const char *display_percent(struct cmd_context *cmd, dm_percent_t percent)
+{
+	char *buf;
+	int r;
+
+        /* Reusing same  ring buffer we use for displaying LV names */
+	if ((cmd->display_lvname_idx + NAME_LEN) >= sizeof((cmd->display_buffer)))
+		cmd->display_lvname_idx = 0;
+
+	buf = cmd->display_buffer + cmd->display_lvname_idx;
+	/* TODO: Make configurable hardcoded 2 digits */
+	r = dm_snprintf(buf, NAME_LEN, "%.2f", dm_percent_to_round_float(percent, 2));
+
+	if (r < 0) {
+		log_error("Percentage %d does not fit.", percent);
+		return NULL;
+	}
+
+	cmd->display_lvname_idx += r + 1;
+
+	return buf;
 }
 
 /* Size supplied in sectors */
