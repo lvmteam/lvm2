@@ -373,7 +373,7 @@ int dm_report_field_percent(struct dm_report *rh,
 		return 0;
 	}
 
-	if (dm_snprintf(repstr, 7, "%.2f", dm_percent_to_float(*data)) < 0) {
+	if (dm_snprintf(repstr, 7, "%.2f", dm_percent_to_round_float(*data, 2)) < 0) {
 		dm_pool_free(rh->mem, sortval);
 		log_error("dm_report_field_percent: percentage too large.");
 		return 0;

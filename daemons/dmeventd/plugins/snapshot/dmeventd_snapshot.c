@@ -231,7 +231,7 @@ void process_event(struct dm_task *dmt,
 
 		if (percent >= WARNING_THRESH) /* Print a warning to syslog. */
 			log_warn("WARNING: Snapshot %s is now %.2f%% full.",
-				 device, dm_percent_to_float(percent));
+				 device, dm_percent_to_round_float(percent, 2));
 
 		/* Try to extend the snapshot, in accord with user-set policies */
 		if (!_extend(state->cmd_lvextend))

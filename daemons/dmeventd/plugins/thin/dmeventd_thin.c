@@ -172,8 +172,8 @@ void process_event(struct dm_task *dmt,
 
 #if THIN_DEBUG
 	log_debug("Watch for tp-data:%.2f%%  tp-metadata:%.2f%%.",
-		  dm_percent_to_float(state->data_percent_check),
-		  dm_percent_to_float(state->metadata_percent_check));
+		  dm_percent_to_round_float(state->data_percent_check, 2),
+		  dm_percent_to_round_float(state->metadata_percent_check, 2));
 #endif
 	if (!_wait_for_pid(state)) {
 		log_warn("WARNING: Skipping event, child %d is still running (%s).",
@@ -254,7 +254,7 @@ void process_event(struct dm_task *dmt,
 	if ((state->metadata_percent > WARNING_THRESH) &&
 	    (state->metadata_percent > state->metadata_percent_check))
 		log_warn("WARNING: Thin pool %s metadata is now %.2f%% full.",
-			 device, dm_percent_to_float(state->metadata_percent));
+			 device, dm_percent_to_round_float(state->metadata_percent, 2));
 	if (state->metadata_percent > CHECK_MINIMUM) {
 		/* Run action when usage raised more than CHECK_STEP since the last time */
 		if (state->metadata_percent > state->metadata_percent_check)
@@ -269,7 +269,7 @@ void process_event(struct dm_task *dmt,
 	if ((state->data_percent > WARNING_THRESH) &&
 	    (state->data_percent > state->data_percent_check))
 		log_warn("WARNING: Thin pool %s data is now %.2f%% full.",
-			 device, dm_percent_to_float(state->data_percent));
+			 device, dm_percent_to_round_float(state->data_percent, 2));
 	if (state->data_percent > CHECK_MINIMUM) {
 		/* Run action when usage raised more than CHECK_STEP since the last time */
 		if (state->data_percent > state->data_percent_check)
