@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2015-2017 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -28,6 +28,7 @@ DECL(config);
 DECL(dmlist);
 DECL(dmstatus);
 DECL(regex);
+DECL(percent);
 DECL(string);
 
 #endif

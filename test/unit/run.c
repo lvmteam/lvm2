@@ -18,6 +18,7 @@ CU_SuiteInfo suites[] = {
 	USE(dmlist),
 	USE(dmstatus),
 	USE(regex),
+	USE(percent),
 	USE(string),
 	CU_SUITE_INFO_NULL
 };

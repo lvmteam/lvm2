@@ -21,6 +21,7 @@ UNITS = \
 	dmlist_t.c\
 	dmstatus_t.c\
 	matcher_t.c\
+	percent_t.c\
 	string_t.c\
 	run.c
 
