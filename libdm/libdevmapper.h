@@ -2836,6 +2836,16 @@ typedef enum {
 typedef int32_t dm_percent_t;
 
 float dm_percent_to_float(dm_percent_t percent);
+/*
+ * Return adjusted/rounded float for better percent value printing.
+ * Function ensures for given precision of digits:
+ * 100.0% returns only when the value is DM_PERCENT_100
+ *        for close smaller values rounds to nearest smaller value
+ * 0.0% returns only for value DM_PERCENT_0
+ *        for close bigger values rounds to nearest bigger value
+ * In all other cases returns same value as dm_percent_to_float()
+ */
+float dm_percent_to_round_float(dm_percent_t percent, unsigned digits);
 dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator);
 
 /********************

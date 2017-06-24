@@ -2425,6 +2425,29 @@ float dm_percent_to_float(dm_percent_t percent)
 	return (float) percent / DM_PERCENT_1 + 0.f;
 }
 
+float dm_percent_to_round_float(dm_percent_t percent, unsigned digits)
+{
+	static const float power10[] = {
+		1.f, .1f, .01f, .001f, .0001f, .00001f, .000001f,
+		.0000001f, .00000001f, .000000001f,
+		.0000000001f
+	};
+	float r;
+	float f = dm_percent_to_float(percent);
+
+	if (digits >= DM_ARRAY_SIZE(power10))
+		digits = DM_ARRAY_SIZE(power10) - 1; /* no better precision */
+
+	r = DM_PERCENT_1 * power10[digits];
+
+	if ((percent < r) && (percent > DM_PERCENT_0))
+		f = power10[digits];
+	else if ((percent > (DM_PERCENT_100 - r)) && (percent < DM_PERCENT_100))
+		f = (float) (DM_PERCENT_100 - r) / DM_PERCENT_1;
+
+	return f;
+}
+
 dm_percent_t dm_make_percent(uint64_t numerator, uint64_t denominator)
 {
 	dm_percent_t percent;

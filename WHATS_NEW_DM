@@ -1,5 +1,6 @@
 Version 1.02.141 - 
 ===============================
+  Add dm_percent_to_round_float for adjusted percentage rounding.
   Reset array with dead rimage devices once raid gets in sync.
   Drop unneeded --config option from raid dmeventd plugin.
   dm_get_status_raid() handle better some incosistent md statuses.
