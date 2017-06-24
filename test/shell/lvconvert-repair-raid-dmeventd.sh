@@ -33,4 +33,7 @@ mkfs.ext3 "$DM_DEV_DIR/$vg/4way"
 sleep 5 # FIXME: need a "poll" utility, akin to "check"
 aux enable_dev "$dev2" "$dev4"
 
-vgremove -ff $vg
+dmsetup table
+dmsetup status
+dmsetup info -c
+vgremove -vvvv -ff $vg
