@@ -1037,7 +1037,8 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 			goto_out;
 	}
 
-	log_debug_activation("LV percent: %.2f", dm_percent_to_float(*overall_percent));
+	log_debug_activation("LV percent: %s",
+			     display_percent(dm->cmd, *overall_percent));
 	r = 1;
 
       out:

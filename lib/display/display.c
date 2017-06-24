@@ -549,12 +549,12 @@ int lvdisplay_full(struct cmd_context *cmd,
 			       snap_seg ? snap_seg->origin->size : lv->size));
 
 	if (cache_status) {
-		log_print("Cache used blocks      %.2f%%",
-			  dm_percent_to_float(cache_status->data_usage));
-		log_print("Cache metadata blocks  %.2f%%",
-			  dm_percent_to_float(cache_status->metadata_usage));
-		log_print("Cache dirty blocks     %.2f%%",
-			  dm_percent_to_float(cache_status->dirty_usage));
+		log_print("Cache used blocks      %s%%",
+			  display_percent(cmd, cache_status->data_usage));
+		log_print("Cache metadata blocks  %s%%",
+			  display_percent(cmd, cache_status->metadata_usage));
+		log_print("Cache dirty blocks     %s%%",
+			  display_percent(cmd, cache_status->dirty_usage));
 		log_print("Cache read hits/misses " FMTu64 " / " FMTu64,
 			  cache_status->cache->read_hits,
 			  cache_status->cache->read_misses);
@@ -570,16 +570,16 @@ int lvdisplay_full(struct cmd_context *cmd,
 	}
 
 	if (thin_data_active)
-		log_print("Allocated pool data    %.2f%%",
-			  dm_percent_to_float(thin_data_percent));
+		log_print("Allocated pool data    %s%%",
+			  display_percent(cmd, thin_data_percent));
 
 	if (thin_metadata_active)
-		log_print("Allocated metadata     %.2f%%",
-			  dm_percent_to_float(thin_metadata_percent));
+		log_print("Allocated metadata     %s%%",
+			  display_percent(cmd, thin_metadata_percent));
 
 	if (thin_active)
-		log_print("Mapped size            %.2f%%",
-			  dm_percent_to_float(thin_percent));
+		log_print("Mapped size            %s%%",
+			  display_percent(cmd, thin_percent));
 
 	log_print("Current LE             %u",
 		  snap_seg ? snap_seg->origin->le_count : lv->le_count);
@@ -590,8 +590,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("COW-table LE           %u", lv->le_count);
 
 		if (snap_active)
-			log_print("Allocated to snapshot  %.2f%%",
-				  dm_percent_to_float(snap_percent));
+			log_print("Allocated to snapshot  %s%%",
+				  display_percent(cmd, snap_percent));
 
 		log_print("Snapshot chunk size    %s",
 			  display_size(cmd, (uint64_t) snap_seg->chunk_size));

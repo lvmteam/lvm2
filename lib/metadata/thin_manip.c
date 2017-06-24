@@ -241,10 +241,11 @@ int pool_metadata_min_threshold(const struct lv_segment *pool_seg)
 
 int pool_below_threshold(const struct lv_segment *pool_seg)
 {
+	struct cmd_context *cmd = pool_seg->lv->vg->cmd;
 	dm_percent_t percent;
 	dm_percent_t min_threshold = pool_metadata_min_threshold(pool_seg);
 	dm_percent_t threshold = DM_PERCENT_1 *
-		find_config_tree_int(pool_seg->lv->vg->cmd, activation_thin_pool_autoextend_threshold_CFG,
+		find_config_tree_int(cmd, activation_thin_pool_autoextend_threshold_CFG,
 				     lv_config_profile(pool_seg->lv));
 
 	/* Data */
@@ -253,10 +254,10 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 
 	if (percent > threshold || percent >= DM_PERCENT_100) {
 		log_debug("Threshold configured for free data space in "
-			  "thin pool %s has been reached (%.2f%% >= %.2f%%).",
+			  "thin pool %s has been reached (%s%% >= %s%%).",
 			  display_lvname(pool_seg->lv),
-			  dm_percent_to_float(percent),
-			  dm_percent_to_float(threshold));
+			  display_percent(cmd, percent),
+			  display_percent(cmd, threshold));
 		return 0;
 	}
 
@@ -267,21 +268,21 @@ int pool_below_threshold(const struct lv_segment *pool_seg)
 
 	if (percent >= min_threshold) {
 		log_warn("WARNING: Remaining free space in metadata of thin pool %s "
-			 "is too low (%.2f%% >= %.2f%%). "
+			 "is too low (%s%% >= %s%%). "
 			 "Resize is recommended.",
 			 display_lvname(pool_seg->lv),
-			 dm_percent_to_float(percent),
-			 dm_percent_to_float(min_threshold));
+			 display_percent(cmd, percent),
+			 display_percent(cmd, min_threshold));
 		return 0;
 	}
 
 
 	if (percent > threshold) {
 		log_debug("Threshold configured for free metadata space in "
-			  "thin pool %s has been reached (%.2f%% > %.2f%%).",
+			  "thin pool %s has been reached (%s%% > %s%%).",
 			  display_lvname(pool_seg->lv),
-			  dm_percent_to_float(percent),
-			  dm_percent_to_float(threshold));
+			  display_percent(cmd, percent),
+			  display_percent(cmd, threshold));
 		return 0;
 	}
 

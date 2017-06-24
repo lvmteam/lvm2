@@ -1273,11 +1273,11 @@ uint32_t extents_from_percent_size(struct volume_group *vg, const struct dm_list
 	}
 
 	if (!(count = percent_of_extents(size, extents, roundup)))
-		log_error("Converted  %.2f%%%s into 0 extents.",
-			  (double) size / DM_PERCENT_1, get_percent_string(percent));
+		log_error("Converted  %s%%%s into 0 extents.",
+			  display_percent(vg->cmd, size), get_percent_string(percent));
 	else
-		log_verbose("Converted %.2f%%%s into %" PRIu32 " extents.",
-			    (double) size / DM_PERCENT_1, get_percent_string(percent), count);
+		log_verbose("Converted %s%%%s into %" PRIu32 " extents.",
+			    display_percent(vg->cmd, size), get_percent_string(percent), count);
 
 	return count;
 }

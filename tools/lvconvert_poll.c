@@ -152,11 +152,11 @@ progress_t poll_merge_progress(struct cmd_context *cmd,
 	}
 
 	if (parms->progress_display)
-		log_print_unless_silent("%s: %s: %.2f%%", lv->name, parms->progress_title,
-					dm_percent_to_float(DM_PERCENT_100 - percent));
+		log_print_unless_silent("%s: %s: %s%%", lv->name, parms->progress_title,
+					display_percent(cmd, DM_PERCENT_100 - percent));
 	else
-		log_verbose("%s: %s: %.2f%%", lv->name, parms->progress_title,
-			    dm_percent_to_float(DM_PERCENT_100 - percent));
+		log_verbose("%s: %s: %s%%", lv->name, parms->progress_title,
+			    display_percent(cmd, DM_PERCENT_100 - percent));
 
 	if (percent == DM_PERCENT_0)
 		return PROGRESS_FINISHED_ALL;
