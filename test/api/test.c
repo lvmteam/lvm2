@@ -51,6 +51,9 @@ static int lvm_split(char *str, int *argc, char **argv, int max)
 			break;
 	}
 
+	if (*argc < max)
+		argv[*argc] = NULL;
+
 	return *argc;
 }
 

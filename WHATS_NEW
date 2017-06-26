@@ -1,5 +1,6 @@
 Version 2.02.172 - 
 ===============================
+  Add missing NULL to argv array when spliting cmdline arguments.
   Add display_percent helper function for printing percent values.
   Lvconvert --repair handles failing raid legs (present but marked 'D'ead).
   Do not lvdisplay --maps unset settings of cache pool.
