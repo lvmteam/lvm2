@@ -517,8 +517,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
 		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
 	} else if (lv_is_cache_origin(lv)) {
-		log_print("LV origin of Cache LV  %s",
-			  get_only_segment_using_this_lv(lv)->lv->name);
+		if ((seg = get_only_segment_using_this_lv(lv)))
+			log_print("LV origin of Cache LV  %s", seg->lv->name);
 	} else if (lv_is_cache(lv)) {
 		seg = first_seg(lv);
 		if (inkernel && !lv_cache_status(lv, &cache_status))

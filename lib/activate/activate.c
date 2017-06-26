@@ -781,7 +781,8 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 	if (lv_is_used_cache_pool(lv)) {
 		/* INFO is not set as cache-pool cannot be active.
 		 * STATUS is collected from cache LV */
-		lv_seg = get_only_segment_using_this_lv(lv);
+		if (!(lv_seg = get_only_segment_using_this_lv(lv)))
+			return_0;
 		(void) _lv_info(cmd, lv_seg->lv, 1, NULL, lv_seg, &status->seg_status, 0, 0);
 		return 1;
 	}
