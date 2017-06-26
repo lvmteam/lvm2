@@ -4149,7 +4149,8 @@ static int _check_or_repair_pv_ext(struct cmd_context *cmd,
 		if (!pvl->pv->dev) {
 			/* is_missing_pv doesn't catch NULL dev */
 			memset(&uuid, 0, sizeof(uuid));
-			id_write_format(&pvl->pv->id, uuid, sizeof(uuid));
+			if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid)))
+				goto_out;
 			log_warn("WARNING: Not repairing PV %s with missing device.", uuid);
 			continue;
 		}
