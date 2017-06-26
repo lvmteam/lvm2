@@ -275,7 +275,8 @@ static int _info_run(const char *dlid, struct dm_info *dminfo,
 			target_params = NULL; /* Marking this target_params unusable */
 		} while (target);
 
-		if (!_get_segment_status_from_target_params(target_name, target_params, seg_status))
+		if (!target_name ||
+		    !_get_segment_status_from_target_params(target_name, target_params, seg_status))
 			stack;
 	}
 
