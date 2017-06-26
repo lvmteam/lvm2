@@ -467,7 +467,7 @@ static void _dm_zfree_dmi(struct dm_ioctl *dmi)
 	}
 }
 
-void dm_task_destroy(struct dm_task *dmt)
+static void _dm_task_free_targets(struct dm_task *dmt)
 {
 	struct target *t, *n;
 
@@ -478,6 +478,12 @@ void dm_task_destroy(struct dm_task *dmt)
 		dm_free(t);
 	}
 
+	dmt->head = dmt->tail = NULL;
+}
+
+void dm_task_destroy(struct dm_task *dmt)
+{
+	_dm_task_free_targets(dmt);
 	_dm_zfree_dmi(dmt->dmi.v4);
 	dm_free(dmt->dev_name);
 	dm_free(dmt->mangled_dev_name);
@@ -651,6 +657,8 @@ static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 	char *outptr = outbuf;
 	uint32_t i;
 	struct dm_target_spec *spec;
+
+	_dm_task_free_targets(dmt);
 
 	for (i = 0; i < dmi->target_count; i++) {
 		spec = (struct dm_target_spec *) outptr;
