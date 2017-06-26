@@ -335,7 +335,8 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 	free(input);
 
 	if (cmd->cmd_report.report_group) {
-		dm_report_group_destroy(cmd->cmd_report.report_group);
+		if (!dm_report_group_destroy(cmd->cmd_report.report_group))
+			stack;
 		cmd->cmd_report.report_group = NULL;
 	}
 
