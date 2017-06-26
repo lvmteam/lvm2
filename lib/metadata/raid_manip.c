@@ -2147,8 +2147,8 @@ static int _vg_write_lv_suspend_commit_backup(struct volume_group *vg,
 	} else if (!(r = vg_commit(vg)))
 		stack; /* !vg_commit() has implicit vg_revert() */
 
-	if (r && do_backup && !backup(vg))
-		log_error("Backup of VG %s failed; continuing.", vg->name);
+	if (r && do_backup)
+		backup(vg);
 
 	return r;
 }
