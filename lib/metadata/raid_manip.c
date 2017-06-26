@@ -2163,12 +2163,6 @@ static int _vg_write_commit_backup(struct volume_group *vg)
 	return 1;
 }
 
-__attribute__ ((__unused__))
-static int _vg_write_commit(struct volume_group *vg)
-{
-	return _vg_write_lv_suspend_commit_backup(vg, NULL, 1, 0);
-}
-
 /* Write vg of @lv, suspend @lv and commit the vg */
 static int _vg_write_lv_suspend_vg_commit(struct logical_volume *lv, int origin_only)
 {
