@@ -2703,7 +2703,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	/* each command should start out with sigint flag cleared */
 	sigint_clear();
 
-	cmd->name = dm_pool_strdup(cmd->mem, dm_basename(argv[0]));
+	if (!(cmd->name = dm_pool_strdup(cmd->mem, dm_basename(argv[0])))) {
+		log_error("Failed to strdup command basename.");
+		return ECMD_FAILED;
+	}
 
 	configure_command_option_values(cmd->name);
 

@@ -709,7 +709,8 @@ static int _dmfilemapd(struct filemap_monitor *fm)
 	 * The correct program_id is retrieved from the group leader
 	 * following the call to dm_stats_list().
 	 */
-	dms = dm_stats_create(NULL);
+	if (!(dms = dm_stats_create(NULL)))
+		goto_bad;
 
 	if (!dm_stats_bind_from_fd(dms, fm->fd)) {
 		log_error("Could not bind dm_stats handle to file descriptor "
