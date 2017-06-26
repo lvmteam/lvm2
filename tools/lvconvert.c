@@ -2724,7 +2724,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	if (!pool_segtype ||
 	    !pool_segtype->ops->target_present(cmd, NULL, &target_attr)) {
 		log_error("%s: Required device-mapper target(s) not detected in your kernel.",
-			  pool_segtype->name);
+			  str_seg_type);
 		return 0;
 	}
 
