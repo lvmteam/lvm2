@@ -4606,6 +4606,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 	struct stat buf;
 	int update;
 
+	*count = 0;
 	update = _stats_group_id_present(dms, group_id);
 
 #ifdef BTRFS_SUPER_MAGIC
@@ -4771,7 +4772,7 @@ uint64_t *dm_stats_create_regions_from_fd(struct dm_stats *dms, int fd,
 					  struct dm_histogram *bounds,
 					  const char *alias)
 {
-	uint64_t *regions, count = 0;
+	uint64_t *regions, count;
 	int regroup = 1;
 
 	if (alias && !group) {
