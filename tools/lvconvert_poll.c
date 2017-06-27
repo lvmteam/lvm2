@@ -34,7 +34,7 @@ int lvconvert_mirror_finish(struct cmd_context *cmd,
 	if (!lv_update_and_reload(lv))
 		return_0;
 
-	log_print_unless_silent("Logical volume %s converted.", lv->name);
+	log_print_unless_silent("Logical volume %s converted.", display_lvname(lv));
 
 	return 1;
 }
@@ -89,7 +89,7 @@ int thin_merge_finish(struct cmd_context *cmd,
 {
 	if (!swap_lv_identifiers(cmd, merge_lv, lv)) {
 		log_error("Failed to swap %s with merging %s.",
-			  lv->name, merge_lv->name);
+			  display_lvname(lv), display_lvname(merge_lv));
 		return 0;
 	}
 
@@ -111,11 +111,13 @@ int lvconvert_merge_finish(struct cmd_context *cmd,
 	struct lv_segment *snap_seg = find_snapshot(lv);
 
 	if (!lv_is_merging_origin(lv)) {
-		log_error("Logical volume %s has no merging snapshot.", lv->name);
+		log_error("Logical volume %s has no merging snapshot.",
+			  display_lvname(lv));
 		return 0;
 	}
 
-	log_print_unless_silent("Merge of snapshot into logical volume %s has finished.", lv->name);
+	log_print_unless_silent("Merge of snapshot into logical volume %s has finished.",
+				display_lvname(lv));
 
 	if (seg_is_thin_volume(snap_seg)) {
 		clear_snapshot_merge(lv);
@@ -125,7 +127,7 @@ int lvconvert_merge_finish(struct cmd_context *cmd,
 
 	} else if (!lv_remove_single(cmd, snap_seg->cow, DONT_PROMPT, 0)) {
 		log_error("Could not remove snapshot %s merged into %s.",
-			  snap_seg->cow->name, lv->name);
+			  display_lvname(snap_seg->cow), display_lvname(lv));
 		return 0;
 	}
 
@@ -141,21 +143,24 @@ progress_t poll_merge_progress(struct cmd_context *cmd,
 
 	if (!lv_is_merging_origin(lv) ||
 	    !lv_snapshot_percent(lv, &percent)) {
-		log_error("%s: Failed query for merging percentage. Aborting merge.", lv->name);
+		log_error("%s: Failed query for merging percentage. Aborting merge.",
+			  display_lvname(lv));
 		return PROGRESS_CHECK_FAILED;
 	} else if (percent == DM_PERCENT_INVALID) {
-		log_error("%s: Merging snapshot invalidated. Aborting merge.", lv->name);
+		log_error("%s: Merging snapshot invalidated. Aborting merge.",
+			  display_lvname(lv));
 		return PROGRESS_CHECK_FAILED;
 	} else if (percent == LVM_PERCENT_MERGE_FAILED) {
-		log_error("%s: Merge failed. Retry merge or inspect manually.", lv->name);
+		log_error("%s: Merge failed. Retry merge or inspect manually.",
+			  display_lvname(lv));
 		return PROGRESS_CHECK_FAILED;
 	}
 
 	if (parms->progress_display)
-		log_print_unless_silent("%s: %s: %s%%", lv->name, parms->progress_title,
+		log_print_unless_silent("%s: %s: %s%%", display_lvname(lv), parms->progress_title,
 					display_percent(cmd, DM_PERCENT_100 - percent));
 	else
-		log_verbose("%s: %s: %s%%", lv->name, parms->progress_title,
+		log_verbose("%s: %s: %s%%", display_lvname(lv), parms->progress_title,
 			    display_percent(cmd, DM_PERCENT_100 - percent));
 
 	if (percent == DM_PERCENT_0)
@@ -182,7 +187,7 @@ progress_t poll_thin_merge_progress(struct cmd_context *cmd,
 	 */
 
 	if (device_id != find_snapshot(lv)->device_id) {
-		log_error("LV %s is not merged.", lv->name);
+		log_error("LV %s is not merged.", display_lvname(lv));
 		return PROGRESS_CHECK_FAILED;
 	}
 

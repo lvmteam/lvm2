@@ -29,17 +29,18 @@ int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 	struct lv_thin_message *tmsg;
 
 	if (!seg_is_thin_pool(pool_seg)) {
-		log_error(INTERNAL_ERROR "Cannot attach message to non-pool LV %s.", pool_seg->lv->name);
+		log_error(INTERNAL_ERROR "Cannot attach message to non-pool LV %s.",
+			  display_lvname(pool_seg->lv));
 		return 0;
 	}
 
 	if (pool_has_message(pool_seg, lv, delete_id)) {
 		if (lv)
 			log_error("Message referring LV %s already queued in pool %s.",
-				  lv->name, pool_seg->lv->name);
+				  display_lvname(lv), display_lvname(pool_seg->lv));
 		else
 			log_error("Delete for device %u already queued in pool %s.",
-				  delete_id, pool_seg->lv->name);
+				  delete_id, display_lvname(pool_seg->lv));
 		return 0;
 	}
 
@@ -81,8 +82,8 @@ int attach_thin_external_origin(struct lv_segment *seg,
 				struct logical_volume *external_lv)
 {
 	if (seg->external_lv) {
-		log_error(INTERNAL_ERROR "LV \"%s\" already has external origin.",
-			  seg->lv->name);
+		log_error(INTERNAL_ERROR "LV %s already has external origin.",
+			  display_lvname(seg->lv));
 		return 0;
 	}
 
@@ -96,7 +97,7 @@ int attach_thin_external_origin(struct lv_segment *seg,
 
 		if (external_lv->status & LVM_WRITE) {
 			log_verbose("Setting logical volume \"%s\" read-only.",
-				    external_lv->name);
+				    display_lvname(external_lv));
 			external_lv->status &= ~LVM_WRITE;
 		}
 
@@ -144,7 +145,7 @@ int pool_has_message(const struct lv_segment *seg,
 	const struct lv_thin_message *tmsg;
 
 	if (!seg_is_thin_pool(seg)) {
-		log_error(INTERNAL_ERROR "LV %s is not pool.", seg->lv->name);
+		log_error(INTERNAL_ERROR "LV %s is not pool.", display_lvname(seg->lv));
 		return 0;
 	}
 
@@ -204,7 +205,7 @@ int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 	struct lv_segment *seg;
 
 	if (!lv_is_thin_pool(lv)) {
-		log_error(INTERNAL_ERROR "LV %s is not thin pool.", lv->name);
+		log_error(INTERNAL_ERROR "LV %s is not thin pool.", display_lvname(lv));
 		return 0;
 	}
 
@@ -213,7 +214,7 @@ int thin_pool_feature_supported(const struct logical_volume *lv, int feature)
 	    seg->segtype->ops->target_present &&
 	    !seg->segtype->ops->target_present(lv->vg->cmd, NULL, &attr)) {
 		log_error("%s: Required device-mapper target(s) not "
-			  "detected in your kernel.", seg->segtype->name);
+			  "detected in your kernel.", lvseg_name(seg));
 		return 0;
 	}
 
@@ -404,7 +405,7 @@ struct logical_volume *find_pool_lv(const struct logical_volume *lv)
 	struct lv_segment *seg;
 
 	if (!(seg = first_seg(lv))) {
-		log_error("LV %s has no segment", lv->name);
+		log_error("LV %s has no segment.", display_lvname(lv));
 		return NULL;
 	}
 
@@ -431,7 +432,7 @@ uint32_t get_free_pool_device_id(struct lv_segment *thin_pool_seg)
 	if (!seg_is_thin_pool(thin_pool_seg)) {
 		log_error(INTERNAL_ERROR
 			  "Segment in %s is not a thin pool segment.",
-			  thin_pool_seg->lv->name);
+			  display_lvname(thin_pool_seg->lv));
 		return 0;
 	}
 
@@ -482,7 +483,7 @@ int update_pool_lv(struct logical_volume *lv, int activate)
 	int ret = 1;
 
 	if (!lv_is_thin_pool(lv)) {
-		log_error(INTERNAL_ERROR "Updated LV %s is not pool.", lv->name);
+		log_error(INTERNAL_ERROR "Updated LV %s is not pool.", display_lvname(lv));
 		return 0;
 	}
 
