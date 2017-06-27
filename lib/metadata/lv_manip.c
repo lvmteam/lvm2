@@ -5288,6 +5288,8 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 static int _lvresize_check_type(const struct logical_volume *lv,
 				const struct lvresize_params *lp)
 {
+	struct lv_segment *seg;
+
 	if (lv_is_origin(lv)) {
 		if (lp->resize == LV_REDUCE) {
 			log_error("Snapshot origin volumes cannot be reduced in size yet.");
@@ -5313,7 +5315,8 @@ static int _lvresize_check_type(const struct logical_volume *lv,
 		}
 	} else if (lp->resize == LV_EXTEND)  {
 		if (lv_is_thin_pool_metadata(lv) &&
-		    !thin_pool_feature_supported(find_pool_seg(first_seg(lv))->lv, THIN_FEATURE_METADATA_RESIZE)) {
+		    (!(seg = find_pool_seg(first_seg(lv))) ||
+		     !thin_pool_feature_supported(seg->lv, THIN_FEATURE_METADATA_RESIZE))) {
 			log_error("Support for online metadata resize of %s not detected.",
 				  display_lvname(lv));
 			return 0;

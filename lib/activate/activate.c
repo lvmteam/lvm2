@@ -1849,12 +1849,15 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 	 *  However in case command would have crashed, such LV is
 	 *  left unmonitored and may potentially require dmeventd.
 	 */
-	if ((lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) &&
-	    !lv_is_used_cache_pool((find_pool_seg(first_seg(lv))->lv))) {
-		log_debug_activation("Skipping %smonitor of %s.%s",
-				     (monitor) ? "" : "un", display_lvname(lv),
-				     (monitor) ? " Cache pool activation for clearing only." : "");
-		return 1;
+	if (lv_is_cache_pool_data(lv) || lv_is_cache_pool_metadata(lv)) {
+		if (!(seg = find_pool_seg(first_seg(lv))))
+			return_0;
+		if (!lv_is_used_cache_pool(seg->lv)) {
+			log_debug_activation("Skipping %smonitor of %s.%s",
+					     (monitor) ? "" : "un", display_lvname(lv),
+					     (monitor) ? " Cache pool activation for clearing only." : "");
+			return 1;
+		}
 	}
 
 	/*
