@@ -375,8 +375,8 @@ void fin_syslog(void)
 
 void init_msg_prefix(const char *prefix)
 {
-	strncpy(_msg_prefix, prefix, sizeof(_msg_prefix) - 1);
-	_msg_prefix[sizeof(_msg_prefix) - 1] = '\0';
+	if (prefix)
+		dm_strncpy(_msg_prefix, prefix, sizeof(_msg_prefix) - 1);
 }
 
 void init_indent(int indent)
