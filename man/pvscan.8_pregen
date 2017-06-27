@@ -141,7 +141,7 @@ Populate the lvmetad cache by scanning PVs.
 .ad b
 .br
 .ad l
-[ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
+[ \fB-a\fP|\fB--activate\fP \fBay\fP ]
 .ad b
 .br
 .ad l
@@ -227,6 +227,8 @@ Common options for lvm:
 .ad l
 \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
+Auto-activate LVs in a VG when the PVs scanned have completed the VG.
+(Only \fBay\fP is applicable.)
 .ad b
 .HP
 .ad l
@@ -462,6 +464,8 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

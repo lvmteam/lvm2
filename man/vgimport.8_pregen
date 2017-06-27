@@ -106,6 +106,7 @@ Common options for lvm:
 .ad l
 \fB-a\fP|\fB--all\fP
 .br
+Import all visible VGs.
 .ad b
 .HP
 .ad l
@@ -309,6 +310,8 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

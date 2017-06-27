@@ -536,8 +536,8 @@ If the list is not set, all LVs are considered to match, and if
 if the list is set but empty, no LVs match.
 Autoactivation should be used during system boot to make it possible
 to select which LVs should be automatically activated by the system.
-See lvmlockd(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
-See clvmd(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
+See \fBlvmlockd\fP(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
+See \fBclvmd\fP(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
 .ad b
 .HP
 .ad l
@@ -559,7 +559,7 @@ See \fBlvmraid\fP(7) for more information.
 \fB--addtag\fP \fITag\fP
 .br
 Adds a tag to a PV, VG or LV. This option can be repeated to add
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
@@ -587,14 +587,14 @@ See \fBlvm\fP(8) for more information about allocation.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See vgcfgbackup(8) for more information.
+Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
 .ad b
 .HP
 .ad l
 \fB-c\fP|\fB--clustered\fP \fBy\fP|\fBn\fP
 .br
 Change the clustered property of a VG using clvmd.
-See clvmd(8) for more information about clustered VGs.
+See \fBclvmd\fP(8) for more information about clustered VGs.
 .ad b
 .HP
 .ad l
@@ -624,7 +624,7 @@ messages sent to the log file and/or syslog (if configured).
 \fB--deltag\fP \fITag\fP
 .br
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
@@ -686,7 +686,7 @@ without clustered locking and clustered VGs are skipped.
 \fB--lockopt\fP \fIString\fP
 .br
 Used to pass options for special cases to lvmlockd.
-See lvmlockd(8) for more information.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -694,7 +694,7 @@ See lvmlockd(8) for more information.
 .br
 Start the lockspace of a shared VG in lvmlockd.
 lvmlockd locks becomes available for the VG, allowing LVM to use the VG.
-See lvmlockd(8) for more information.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -702,14 +702,14 @@ See lvmlockd(8) for more information.
 .br
 Stop the lockspace of a shared VG in lvmlockd.
 lvmlockd locks become unavailable for the VG, preventing LVM from using the VG.
-See lvmlockd(8) for more information.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l
 \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP
 .br
 Change the VG lock type to or from a shared lock type used with lvmlockd.
-See lvmlockd(8) for more information.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -746,7 +746,7 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 Start (yes) or stop (no) monitoring an LV with dmeventd.
 dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
-See dmeventd(8) for more information.
+See \fBdmeventd\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -879,7 +879,7 @@ vgchange/lvchange skip autoactivation, and defer to pvscan autoactivation.
 Changes the system ID of the VG.  Using this option requires caution
 because the VG may become foreign to the host running the command,
 leaving the host unable to access it.
-See lvmsystemid(7) for more information.
+See \fBlvmsystemid\fP(7) for more information.
 .ad b
 .HP
 .ad l
@@ -1032,6 +1032,8 @@ Change the maximum number of LVs for an inactive VG.
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

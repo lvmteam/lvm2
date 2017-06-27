@@ -201,14 +201,14 @@ the "unknown" value which denotes that the value could not be determined).
 \fB-c\fP|\fB--colon\fP
 .br
 Generate colon separated output for easier parsing in scripts or programs.
-Also see vgs(8) which provides considerably more control over the output.
+Also see \fBvgs\fP(8) which provides considerably more control over the output.
 .ad b
 .HP
 .ad l
 \fB-C\fP|\fB--columns\fP
 .br
-Display output in columns, the equivalent of vgs(8).
-Options listed are the same as options given in vgs(8).
+Display output in columns, the equivalent of \fBvgs\fP(8).
+Options listed are the same as options given in \fBvgs\fP(8).
 .ad b
 .HP
 .ad l
@@ -230,7 +230,7 @@ See \fBlvm.conf\fP(5) for more information about config.
 .ad l
 \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP
 .br
-See lvmreport(7).
+See \fBlvmreport\fP(7).
 .ad b
 .HP
 .ad l
@@ -251,7 +251,7 @@ For testing and debugging.
 \fB--foreign\fP
 .br
 Report/display foreign VGs that would otherwise be skipped.
-See lvmsystemid(7) for more information about foreign VGs.
+See \fBlvmsystemid\fP(7) for more information about foreign VGs.
 .ad b
 .HP
 .ad l
@@ -335,7 +335,7 @@ Use field name \fBlv_all\fP to view all LV fields,
 \fBseg_all\fP all LV segment fields, and
 \fBpvseg_all\fP all PV segment columns.
 See the lvm.conf report section for more config options.
-See lvmreport(7) for more information about reporting.
+See \fBlvmreport\fP(7) for more information about reporting.
 .ad b
 .HP
 .ad l
@@ -406,7 +406,7 @@ String to use to separate each column. Useful if grepping the output.
 .br
 Report/display shared VGs that would otherwise be skipped when
 lvmlockd is not being used on the host.
-See lvmlockd(8) for more information about shared VGs.
+See \fBlvmlockd\fP(8) for more information about shared VGs.
 .ad b
 .HP
 .ad l
@@ -546,6 +546,8 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

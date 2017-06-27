@@ -213,7 +213,10 @@ Exclude advanced configuration settings from the output.
 .ad l
 \fB--ignorelocal\fP
 .br
-Ignore local section.
+Ignore the local section. The local section should be defined in
+the lvmlocal.conf file, and should contain config settings
+specific to the local host which should not be copied to
+other hosts.
 .ad b
 .HP
 .ad l
@@ -315,7 +318,38 @@ back metadata it believes has changed but hasn't.
 .ad l
 \fB--typeconfig\fP \fBcurrent\fP|\fBdefault\fP|\fBdiff\fP|\fBfull\fP|\fBlist\fP|\fBmissing\fP|\fBnew\fP|\fBprofilable\fP|\fBprofilable-command\fP|\fBprofilable-metadata\fP
 .br
-See lvmreport(7).
+\fBcurrent\fP prints the config settings that would be applied
+to an lvm command (assuming the command does not override them
+on the command line.) This includes:
+settings that have been modified in lvm config files,
+settings that get their default values from config files,
+and default settings that have been uncommented in config files.
+\fBdefault\fP prints all settings with their default values.
+Changes made in lvm config files are not reflected in the output.
+Some settings get their default values internally,
+and these settings are printed as comments.
+Other settings get their default values from config files,
+and these settings are not printed as comments.
+\fBdiff\fP prints only config settings that have been modified
+from their default values in config files (the difference between
+current and default.)
+\fBfull\fP prints every setting uncommented and set to the
+current value, i.e. how it would be used by an lvm command.
+This includes settings modified in config files, settings that usually
+get defaults internally, and settings that get defaults from config files.
+\fBlist\fP prints all config names without values.
+\fBmissing\fP prints settings that are missing from the
+lvm config files. A missing setting that usually gets its default
+from config files is printed uncommented and set to the internal default.
+Settings that get their default internally and are not set in config files
+are printed commented with the internal default.
+\fBnew\fP prints config settings that have been added since
+the lvm version specified by --sinceversion. They are printed
+with their default values.
+\fBprofilable\fP prints settings with their default values that can be set from a profile.
+\fBprofilable-command\fP prints settings with their default values that can be set from a command profile.
+\fBprofilable-metadata\fP prints settings with their default values that can be set from a metadata profile.
+Also see \fBlvm.conf\fP(5).
 .ad b
 .HP
 .ad l
@@ -450,6 +484,8 @@ For example, LVM_VG_NAME can generally be substituted for a required VG paramete
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

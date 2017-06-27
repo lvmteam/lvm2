@@ -598,8 +598,8 @@ If the list is not set, all LVs are considered to match, and if
 if the list is set but empty, no LVs match.
 Autoactivation should be used during system boot to make it possible
 to select which LVs should be automatically activated by the system.
-See lvmlockd(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
-See clvmd(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
+See \fBlvmlockd\fP(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
+See \fBclvmd\fP(8) for more information about activation options \fBey\fP, \fBsy\fP, \fBly\fP and \fBln\fP for clustered VGs.
 .ad b
 .HP
 .ad l
@@ -621,7 +621,7 @@ See \fBlvmraid\fP(7) for more information.
 \fB--addtag\fP \fITag\fP
 .br
 Adds a tag to a PV, VG or LV. This option can be repeated to add
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
@@ -649,7 +649,7 @@ See \fBlvm\fP(8) for more information about allocation.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See vgcfgbackup(8) for more information.
+Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -724,7 +724,7 @@ messages sent to the log file and/or syslog (if configured).
 \fB--deltag\fP \fITag\fP
 .br
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
@@ -857,7 +857,7 @@ See \fBlvmraid\fP(7) for more information.
 Start (yes) or stop (no) monitoring an LV with dmeventd.
 dmeventd monitors kernel events for an LV, and performs
 automated maintenance for the LV in reponse to specific events.
-See dmeventd(8) for more information.
+See \fBdmeventd\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -1173,6 +1173,8 @@ Change LV permission to read-only:
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

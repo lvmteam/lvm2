@@ -379,8 +379,9 @@ allocation {
 
 	# Configuration option allocation/raid_stripe_all_devices.
 	# Stripe across all PVs when RAID stripes are not specified.
-	# If enabled, all PVs in the VG or on the command line are used for raid0/4/5/6/10
-	# when the command does not specify the number of stripes to use.
+	# If enabled, all PVs in the VG or on the command line are used for
+	# raid0/4/5/6/10 when the command does not specify the number of
+	# stripes to use.
 	# This was the default behaviour until release 2.02.162.
 	# This configuration option has an automatic default value.
 	# raid_stripe_all_devices = 0
@@ -939,7 +940,7 @@ global {
 	use_lvmetad = @DEFAULT_USE_LVMETAD@
 
 	# Configuration option global/lvmetad_update_wait_time.
-	# The number of seconds a command will wait for lvmetad update to finish.
+	# Number of seconds a command will wait for lvmetad update to finish.
 	# After waiting for this period, a command will not use lvmetad, and
 	# will revert to disk scanning.
 	# This configuration option has an automatic default value.

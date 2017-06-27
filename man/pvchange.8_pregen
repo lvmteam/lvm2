@@ -9,6 +9,9 @@ pvchange - Change attributes of physical volume(s)
 .br
 .SH DESCRIPTION
 pvchange changes PV attributes in the VG.
+
+For options listed in parentheses, any one is required, after which the
+others are optional.
 .SH USAGE
 Change properties of all PVs.
 .br
@@ -160,12 +163,13 @@ Common options for lvm:
 \fB--addtag\fP \fITag\fP
 .br
 Adds a tag to a PV, VG or LV. This option can be repeated to add
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
 \fB-a\fP|\fB--all\fP
 .br
+Change all visible PVs.
 .ad b
 .HP
 .ad l
@@ -178,7 +182,7 @@ Enable or disable allocation of physical extents on this PV.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See vgcfgbackup(8) for more information.
+Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -208,7 +212,7 @@ messages sent to the log file and/or syslog (if configured).
 \fB--deltag\fP \fITag\fP
 .br
 Deletes a tag from a PV, VG or LV. This option can be repeated to delete
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
@@ -418,6 +422,8 @@ disk errors, or because it will be removed after freeing it).
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

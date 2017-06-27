@@ -165,7 +165,7 @@ Common options for lvm:
 \fB--addtag\fP \fITag\fP
 .br
 Adds a tag to a PV, VG or LV. This option can be repeated to add
-multiple tags at once. See lvm(8) for information about tags.
+multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .ad b
 .HP
 .ad l
@@ -193,7 +193,7 @@ See \fBlvm\fP(8) for more information about allocation.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See vgcfgbackup(8) for more information.
+Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -203,7 +203,7 @@ Create a clustered VG using clvmd if LVM is compiled with cluster support.
 This allows multiple hosts to share a VG on shared devices.
 clvmd and a lock manager must be configured and running.
 (A clustered VG using clvmd is different from a shared VG using lvmlockd.)
-See clvmd(8) for more information about clustered VGs.
+See \fBclvmd\fP(8) for more information about clustered VGs.
 .ad b
 .HP
 .ad l
@@ -278,14 +278,14 @@ in the source). Use with care.
 \fB--lockopt\fP \fIString\fP
 .br
 Used to pass options for special cases to lvmlockd.
-See lvmlockd(8) for more information.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l
 \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP
 .br
 Specify the VG lock type directly in place of using --shared.
-See lvmlockd(8) for more information.
+See \fBlvmlockd\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -389,7 +389,7 @@ lvmlockd will select lock type sanlock or dlm depending on which lock
 manager is running. This allows multiple hosts to share a VG on shared
 devices. lvmlockd and a lock manager must be configured and running.
 (A shared VG using lvmlockd is different from a clustered VG using clvmd.)
-See lvmlockd(8) for more information about shared VGs.
+See \fBlvmlockd\fP(8) for more information about shared VGs.
 .ad b
 .HP
 .ad l
@@ -401,7 +401,7 @@ without this option, in which case the new VG is given the system ID of
 the host creating it. Using this option requires caution because the
 system ID of the new VG may not match the system ID of the host running
 the command, leaving the VG inaccessible to the host.
-See lvmsystemid(7) for more information.
+See \fBlvmsystemid\fP(7) for more information.
 .ad b
 .HP
 .ad l
@@ -548,6 +548,8 @@ Create a VG with two PVs, using the default physical extent size.
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

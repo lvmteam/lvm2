@@ -220,7 +220,7 @@ See \fBlvm.conf\fP(5) for more information about config.
 .ad l
 \fB--configreport\fP \fBlog\fP|\fBvg\fP|\fBlv\fP|\fBpv\fP|\fBpvseg\fP|\fBseg\fP
 .br
-See lvmreport(7).
+See \fBlvmreport\fP(7).
 .ad b
 .HP
 .ad l
@@ -241,7 +241,7 @@ For testing and debugging.
 \fB--foreign\fP
 .br
 Report/display foreign VGs that would otherwise be skipped.
-See lvmsystemid(7) for more information about foreign VGs.
+See \fBlvmsystemid\fP(7) for more information about foreign VGs.
 .ad b
 .HP
 .ad l
@@ -331,7 +331,7 @@ Use field name \fBlv_all\fP to view all LV fields,
 \fBseg_all\fP all LV segment fields, and
 \fBpvseg_all\fP all PV segment columns.
 See the lvm.conf report section for more config options.
-See lvmreport(7) for more information about reporting.
+See \fBlvmreport\fP(7) for more information about reporting.
 .ad b
 .HP
 .ad l
@@ -409,7 +409,7 @@ String to use to separate each column. Useful if grepping the output.
 .br
 Report/display shared VGs that would otherwise be skipped when
 lvmlockd is not being used on the host.
-See lvmlockd(8) for more information about shared VGs.
+See \fBlvmlockd\fP(8) for more information about shared VGs.
 .ad b
 .HP
 .ad l
@@ -637,6 +637,8 @@ s(k)ip activation: this volume is flagged to be skipped during activation.
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)

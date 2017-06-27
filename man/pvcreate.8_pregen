@@ -343,11 +343,11 @@ back metadata it believes has changed but hasn't.
 Specify a UUID for the device.
 Without this option, a random UUID is generated.
 This option is needed before restoring a backup of LVM metadata
-onto a replacement device; see vgcfgrestore(8). As such, use of
+onto a replacement device; see \fBvgcfgrestore\fP(8). As such, use of
 --restorefile is compulsory unless the --norestorefile is used.
 All PVs must have unique UUIDs, and LVM will prevent certain operations
 if multiple devices are seen with the same UUID.
-See vgimportclone(8) for more information.
+See \fBvgimportclone\fP(8) for more information.
 .ad b
 .HP
 .ad l
@@ -469,6 +469,8 @@ boundary) manually account for this when initializing for use by LVM.
 .BR lvs (8)
 .BR lvscan (8)
 
+.BR lvm-fullreport (8)
+.BR lvm-lvpoll (8)
 .BR lvm2-activation-generator (8)
 .BR blkdeactivate (8)
 .BR lvmdump (8)
