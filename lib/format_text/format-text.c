@@ -1043,6 +1043,11 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 
 	if (strcmp(slash, vg->name)) {
 		len = slash - tc->path_live;
+		if ((len + strlen(vg->name)) > (sizeof(new_name) - 1)) {
+			log_error("Renaming path %s is too long for VG %s.",
+				  tc->path_live, vg->name);
+			return 0;
+		}
 		strncpy(new_name, tc->path_live, len);
 		strcpy(new_name + len, vg->name);
 		log_debug_metadata("Renaming %s to %s", tc->path_live, new_name);
