@@ -2690,7 +2690,7 @@ static int _lv_props_match(struct cmd_context *cmd, struct logical_volume *lv, u
 
 static int _check_lv_types(struct cmd_context *cmd, struct logical_volume *lv, int pos)
 {
-	int ret = 1;
+	int ret;
 
 	if (!pos)
 		return 1;

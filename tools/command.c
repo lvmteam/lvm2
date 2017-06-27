@@ -1817,8 +1817,6 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 	}
 
 	if (!onereq && cmd->ro_count) {
-		first = 1;
-
 		for (ro = 0; ro < cmd->ro_count; ro++) {
 			opt_enum = cmd->required_opt_args[ro].opt;
 

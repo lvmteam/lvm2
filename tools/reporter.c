@@ -1387,7 +1387,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv, report_type_t
 	struct single_report_args *single_args = &args.single_args[REPORT_IDX_SINGLE];
 	static char report_name[] = "report";
 	struct processing_handle *handle;
-	int r = ECMD_FAILED;
+	int r;
 
 	/*
 	 * Include foreign VGs that contain active LVs.
