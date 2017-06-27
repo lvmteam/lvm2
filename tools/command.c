@@ -743,7 +743,11 @@ static void add_oo_definition_line(const char *name, const char *line)
 	char *start;
 
 	oo = &oo_lines[oo_line_count++];
-	oo->name = dm_strdup(name);
+
+	if (!(oo->name = dm_strdup(name))) {
+		log_error("Failer to duplicate name %s.", name);
+		return; /* FIXME: return code */
+	}
 
 	if ((colon = strchr(oo->name, ':')))
 		*colon = '\0';
@@ -753,7 +757,10 @@ static void add_oo_definition_line(const char *name, const char *line)
 	}
 
 	start = strchr(line, ':') + 2;
-	oo->line = dm_strdup(start);
+	if (!(oo->line = dm_strdup(start))) {
+		log_error("Failer to duplicate line %s.", start);
+		return;
+	}
 }
 
 /* Support OO_FOO: continuing on multiple lines. */
