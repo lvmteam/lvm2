@@ -98,7 +98,7 @@ while getopts :acd:hlpmus opt; do
 	esac
 done
 
-NOW=`$DATE -u +%G%m%d%k%M%S | $TR -d ' '`
+NOW=$("$DATE" -u +%G%m%d%k%M%S | "$TR" -d ' ')
 if test -n "$userdir"; then
 	dir="$userdir"
 else
