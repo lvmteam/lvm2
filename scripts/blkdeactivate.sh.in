@@ -147,7 +147,7 @@ add_vg_to_skip_list() {
 is_top_level_device() {
 	# top level devices do not have any holders, that is
 	# the SYS_BLK_DIR/<device_name>/holders dir is empty
-	files="`echo $SYS_BLK_DIR/$kname/holders/*`"
+	files=$(echo "$SYS_BLK_DIR/$kname/holders/"*)
 	test -z "$files"
 }
 
@@ -182,7 +182,7 @@ device_umount() {
 	else
 		while $FINDMNT_READ; do
 			device_umount_one || return 1
-		done <<< "`$FINDMNT $DEV_DIR/$kname`"
+		done <<< "$($FINDMNT $DEV_DIR/$kname)"
 	fi
 
 }
@@ -201,7 +201,7 @@ deactivate_holders () {
 		# try to deactivate the holder
 		test $skip -eq 1 && skip=0 && continue
 		deactivate || return 1
-	done <<< "`$LSBLK $1`"
+	done <<< "$($LSBLK $1)"
 }
 
 deactivate_dm () {
@@ -337,7 +337,7 @@ deactivate_all() {
 		# Unmount all relevant mountpoints first
 		while $LSBLK_READ; do
 			device_umount
-		done <<< "`$LSBLK | $SORT_MNT`"
+		done <<< "$($LSBLK | $SORT_MNT)"
 
 		# Do deactivate
 		while $LSBLK_READ; do
@@ -360,7 +360,7 @@ deactivate_all() {
 			# device's subtree to be skipped when processing
 			# devices further in this loop
 			deactivate || skip=1
-		done <<< "`$LSBLK -s`"
+		done <<< "$($LSBLK -s)"
 	else
 		##################################
 		# Process only specified devices #
@@ -370,12 +370,12 @@ deactivate_all() {
 			# Unmount all relevant mountpoints first
 			while $LSBLK_READ; do
 				device_umount
-			done <<< "`$LSBLK $1 | $SORT_MNT`"
+			done <<< "$($LSBLK $1 | $SORT_MNT)"
 
 			# Do deactivate
 			# Single dm device tree deactivation.
 			if test -b "$1"; then
-				$LSBLK_READ <<< "`$LSBLK --nodeps $1`"
+				$LSBLK_READ <<< "$($LSBLK --nodeps $1)"
 
 				# check if the device is not on the skip list already
 				test -z ${SKIP_DEVICE_LIST["$kname"]} || {
