@@ -229,8 +229,10 @@ detect_fs() {
 # Check that passed mounted MAJOR:MINOR is not matching $MAJOR:MINOR of resized $VOLUME
 validate_mounted_major_minor() {
 	test "$1" = "$MAJORMINOR" || {
-		local REFNAME=$(dmsetup info -c -j "${1%%:*}" -m "${1##*:}" -o name --noheadings 2>/dev/null)
-		local CURNAME=$(dmsetup info -c -j "$MAJOR" -m "$MINOR" -o name --noheadings 2>/dev/null)
+		local REFNAME
+		local CURNAME
+		REFNAME=$(dmsetup info -c -j "${1%%:*}" -m "${1##*:}" -o name --noheadings 2>/dev/null)
+		CURNAME=$(dmsetup info -c -j "$MAJOR" -m "$MINOR" -o name --noheadings 2>/dev/null)
 		error "Cannot ${CHECK+CHECK}${RESIZE+RESIZE} device \"$VOLUME\" without umounting filesystem $MOUNTED first." \
 		      "Mounted filesystem is using device $CURNAME, but referenced device is $REFNAME." \
 		      "Filesystem utilities currently do not support renamed devices."
@@ -243,10 +245,12 @@ validate_mounted_major_minor() {
 # abort further command processing
 check_valid_mounted_device() {
 	local MOUNTEDMAJORMINOR
-	local VOL=$("$READLINK" $READLINK_E "$1")
-	local CURNAME=$(dmsetup info -c -j "$MAJOR" -m "$MINOR" -o name --noheadings)
+	local VOL
+	local CURNAME
 	local SUGGEST="Possibly device \"$1\" has been renamed to \"$CURNAME\"?"
 
+	VOL=$("$READLINK" $READLINK_E "$1")
+	CURNAME=$(dmsetup info -c -j "$MAJOR" -m "$MINOR" -o name --noheadings)
 	# more confused, device is not DM....
 	test -n "$CURNAME" || SUGGEST="Mounted volume is not a device mapper device???"
 
