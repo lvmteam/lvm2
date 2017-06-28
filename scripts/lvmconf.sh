@@ -134,7 +134,7 @@ function parse_args
         esac
     done
 
-    if [ "$LOCKINGLIBDIR" -o "$LOCKINGLIB" ]; then
+    if [ -n "$LOCKINGLIBDIR" ] || [ -n "$LOCKINGLIB" ]; then
         LOCKING_TYPE=2
         USE_LVMETAD=0
     fi
