@@ -259,7 +259,7 @@ NOVGDEVLIST=$("$LVM" pvs -a -o pv_name --select vg_name="" --noheadings)
 checkvalue $? "Failed to collect information for PV check"
 if [ -n "${NOVGDEVLIST}" ]; then
     FOLLOWLIST=""
-    while read PVNAME; do
+    while read -r PVNAME; do
         FOLLOW=$("$READLINK" "$PVNAME")
         FOLLOWLIST="$FOLLOWLIST $FOLLOW"
     done <<< "$(echo "$NOVGDEVLIST")"
@@ -272,7 +272,7 @@ fi
 VGLIST=$("$LVM" vgs -o vg_name,vg_exported,vg_missing_pv_count --noheadings --binary)
 checkvalue $? "Failed to collect VG information"
 
-while read VGNAME VGEXPORTED VGMISSINGPVCOUNT; do
+while read -r VGNAME VGEXPORTED VGMISSINGPVCOUNT; do
     if [ "$VGMISSINGPVCOUNT" -gt 0 ]; then
         echo "Volume Group ${VGNAME} has unknown PV(s), skipping."
         echo "- Were all associated PV(s) supplied as arguments?"
