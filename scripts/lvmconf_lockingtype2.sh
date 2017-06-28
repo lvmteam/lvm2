@@ -110,8 +110,10 @@ function validate_args
         
     fi
 
-    if [ "$LOCKING_TYPE" = "1" ] && [ -n "$LOCKINGLIBDIR" -o -n "$LOCKINGLIB" ]; then
-	echo "Superfluous locking lib parameter, ignoring"
+    if [ "$LOCKING_TYPE" = "1" ] ; then
+	if [ -n "$LOCKINGLIBDIR" ] || [ -n "$LOCKINGLIB" ]; then
+	    echo "Superfluous locking lib parameter, ignoring"
+	fi
     fi
 }
 
@@ -143,9 +145,7 @@ grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' $CONFIGFILE
 have_library=$?
 
 # Those options are in section "global {" so we must have one if any are present.
-if [ "$have_type" = "0" -o "$have_dir" = "0" -o "$have_library" = "0" ]
-then
-
+if [ "$have_type" = "0" ] || [ "$have_dir" = "0" ] || [ "$have_library" = "0" ]; then
     # See if we can find it...
     grep -q '^[[:blank:]]*global[[:blank:]]*{' $CONFIGFILE
     have_global=$?
