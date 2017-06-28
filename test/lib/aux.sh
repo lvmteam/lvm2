@@ -309,7 +309,7 @@ prepare_lvmdbusd() {
 
         # FIXME: This is not correct! Daemon is auto started.
 	echo "checking lvmdbusd is NOT running..."
-	if ps -elf | grep lvmdbusd | grep python3; then
+	if pgrep lvmdbusd | grep python3; then
 		echo "Cannot run while existing lvmdbusd process exists"
 		return 1
 	fi
@@ -343,7 +343,7 @@ prepare_lvmdbusd() {
 
 	sleep 1
 	echo "checking lvmdbusd IS running..."
-	if ! ps -elf | grep lvmdbusd | grep python3; then
+	if ! pgrep lvmdbusd | grep python3; then
 		echo "Failed to start lvmdbusd daemon"
 		return 1
 	fi
