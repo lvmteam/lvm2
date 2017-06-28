@@ -221,7 +221,7 @@ deactivate_dm () {
 }
 
 deactivate_lvm () {
-	local DM_VG_NAME; local DM_LV_NAME; local DM_LV_LAYER
+	local DM_VG_NAME; local DM_LV_NAME
 
 	eval "$(eval "$DMSETUP" splitname --nameprefixes --noheadings --rows "$name" LVM "$ERR")"
 	test -b "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || return 0
