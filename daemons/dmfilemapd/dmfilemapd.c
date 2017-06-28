@@ -662,11 +662,11 @@ static int _daemonise(struct filemap_monitor *fm)
 			return 0;
 		}
 	}
-
+	/* TODO: Use libdaemon/server/daemon-server.c _daemonise() */
 	for (fd = (int) sysconf(_SC_OPEN_MAX) - 1; fd > STDERR_FILENO; fd--) {
 		if (fd == fm->fd)
 			continue;
-		close(fd);
+		(void) close(fd);
 	}
 
 	return 1;
