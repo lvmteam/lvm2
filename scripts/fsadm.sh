@@ -204,8 +204,8 @@ detect_fs() {
 	case "$RVOLUME" in
 	  # hardcoded /dev  since udev does not create these entries elsewhere
 	  /dev/dm-[0-9]*)
-		read <"/sys/block/${RVOLUME#/dev/}/dm/name" SYSVOLUME 2>&1 && VOLUME="$DM_DEV_DIR/mapper/$SYSVOLUME"
-		read <"/sys/block/${RVOLUME#/dev/}/dev" MAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\"."
+		read -r <"/sys/block/${RVOLUME#/dev/}/dm/name" SYSVOLUME 2>&1 && VOLUME="$DM_DEV_DIR/mapper/$SYSVOLUME"
+		read -r <"/sys/block/${RVOLUME#/dev/}/dev" MAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\"."
 		MAJOR=${MAJORMINOR%%:*}
 		MINOR=${MAJORMINOR##*:}
 		;;
@@ -262,7 +262,7 @@ check_valid_mounted_device() {
 	case "$VOL" in
 	  # hardcoded /dev  since udev does not create these entries elsewhere
 	  /dev/dm-[0-9]*)
-		read <"/sys/block/${VOL#/dev/}/dev" MOUNTEDMAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\"."
+		read -r <"/sys/block/${VOL#/dev/}/dev" MOUNTEDMAJORMINOR 2>&1 || error "Cannot get major:minor for \"$VOLUME\"."
 		;;
 	  *)
 		STAT=$(stat --format "MOUNTEDMAJORMINOR=\$((0x%t)):\$((0x%T))" "$VOL")
