@@ -295,7 +295,7 @@ if (( sysreport )); then
 						   lvm2-activation-net.service \
 						   > \"$sysreport_dir/systemd_lvm2_services_status\" 2>> \"$log\""
 		log "$SYSTEMCTL list-units -l -a --no-legend --no-pager > \"$sysreport_dir/systemd_unit_list\" 2>> \"$log\""
-		for unit in $(cat "$sysreport_dir/systemd_unit_list" | "$GREP" lvm2-pvscan | cut -d " " -f 1); do
+		for unit in $("$GREP" lvm2-pvscan "$sysreport_dir/systemd_unit_list" | cut -d " " -f 1); do
 			log "$SYSTEMCTL status -l --no-pager -n $log_lines -o short-precise $unit >> \"$sysreport_dir/systemd_lvm2_pvscan_service_status\""
 		done
 	fi
