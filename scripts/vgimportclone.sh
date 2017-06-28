@@ -50,7 +50,7 @@ function getvgname {
 
     while [[ "${VGLIST}" =~ ":${NAME}:" ]]
     do
-        I=$(($I+1))
+        I=$(( I + 1 ))
         NAME="${BNAME}$I"
     done
     echo "${NAME}"
@@ -201,7 +201,7 @@ do
     then
         ln -s "$ARG" "${TMP_LVM_SYSTEM_DIR}/vgimport${DEVNO}"
         DISKS="${DISKS} ${TMP_LVM_SYSTEM_DIR}/vgimport${DEVNO}"
-        DEVNO=$((${DEVNO}+1))
+        DEVNO=$(( DEVNO + 1 ))
     else
         die 3 "$ARG is not a block device."
     fi
