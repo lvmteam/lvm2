@@ -353,7 +353,11 @@ deactivate_all() {
 			# top-level device could not be deactivated anyway
 			test "$skip" -eq 1 && {
 				# reset 'skip' on top level device
-				is_top_level_device && skip=0 || continue
+				if is_top_level_device ; then
+					skip=0
+				else
+					continue
+				fi
 			}
 
 			# check if the device is not on the skip list already
