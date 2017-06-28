@@ -3304,8 +3304,7 @@ static int include_description_file(char *name, char *des_file)
 out_free:
 	dm_free(buf);
 out_close:
-	if (close(fd))
-		log_sys_debug("close", des_file);
+	(void) close(fd);
 
 	return r;
 }
