@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the lvm2-cluster package.
 #
@@ -34,7 +34,7 @@ function usage
 function parse_args
 {
     while [ -n "$1" ]; do
-        case $1 in
+        case "$1" in
             --enable-cluster)
                 LOCKING_TYPE=2
                 shift
@@ -135,19 +135,19 @@ have_dir=1
 have_library=1
 have_global=1
 
-grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' "$CONFIGFILE"
 have_type=$?
 
-grep -q '^[[:blank:]]*library_dir[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*library_dir[[:blank:]]*=' "$CONFIGFILE"
 have_dir=$?
 
-grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' "$CONFIGFILE"
 have_library=$?
 
 # Those options are in section "global {" so we must have one if any are present.
 if [ "$have_type" = "0" ] || [ "$have_dir" = "0" ] || [ "$have_library" = "0" ]; then
     # See if we can find it...
-    grep -q '^[[:blank:]]*global[[:blank:]]*{' $CONFIGFILE
+    grep -q '^[[:blank:]]*global[[:blank:]]*{' "$CONFIGFILE"
     have_global=$?
     
     if [ "$have_global" = "1" ] 
@@ -171,7 +171,7 @@ then
 	LOCKING_TYPE=1
     fi
     if [ "$LOCKING_TYPE" = "2" ]; then
-        cat $CONFIGFILE - <<EOF > $TMPFILE
+        cat "$CONFIGFILE" - <<EOF > $TMPFILE
 global {
     # Enable locking for cluster LVM
     locking_type = $LOCKING_TYPE
@@ -230,8 +230,8 @@ else
         fi
     fi
 
-    echo -e $SEDCMD > $SCRIPTFILE
-    sed  <$CONFIGFILE >$TMPFILE -f $SCRIPTFILE
+    echo -e "$SEDCMD" > "$SCRIPTFILE"
+    sed  <"$CONFIGFILE" >"$TMPFILE" -f "$SCRIPTFILE"
     if [ $? != 0 ]
     then
 	echo "sed failed, $CONFIGFILE not updated"
@@ -242,18 +242,18 @@ fi
 # Now we have a suitably editted config file in a temp place,
 # backup the original and copy our new one into place.
 
-cp $CONFIGFILE $CONFIGFILE.lvmconfold
+cp "$CONFIGFILE" "$CONFIGFILE.lvmconfold"
 if [ $? != 0 ]
     then
     echo "failed to backup old config file, $CONFIGFILE not updated"
     exit 2
 fi
 
-cp $TMPFILE $CONFIGFILE
+cp "$TMPFILE" "$CONFIGFILE"
 if [ $? != 0 ]
     then
     echo "failed to copy new config file into place, check $CONFIGFILE is still OK"
     exit 3
 fi
 
-rm -f $SCRIPTFILE $TMPFILE
+rm -f "$SCRIPTFILE" "$TMPFILE"
