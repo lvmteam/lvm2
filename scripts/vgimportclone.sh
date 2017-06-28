@@ -95,8 +95,7 @@ function cleanup {
 SCRIPTNAME=$("$BASENAME" "$0")
 
 
-if [ "$UID" != "0" -a "$EUID" != "0" ]
-then
+if [ "$UID" != 0 ] && [ "$EUID" != 0 ]; then
     die 3 "${SCRIPTNAME} must be run as root."
 fi
 
@@ -183,14 +182,13 @@ do
 done
 
 # turn on DEBUG (special case associated with -v use)
-if [ -z "$DEBUG" -a $VERBOSE_COUNT -gt 3 ]; then
+if [ -z "$DEBUG" ] && [ "$VERBOSE_COUNT" -gt 3 ]; then
     DEBUG="-d"
     set -x
 fi
 
 # setup LVM_OPTS
-if [ -n "${DEBUG}" -o -n "${VERBOSE}" ]
-then
+if [ -n "$DEBUG" ] || [ -n "$VERBOSE" ]; then
     LVM_OPTS="${LVM_OPTS} ${DEBUG} ${VERBOSE}"
 fi
 
