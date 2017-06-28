@@ -139,7 +139,7 @@ warnings
 myecho "Creating dump directory: $dir"
 echo " "
 
-if (( $advanced )); then
+if (( advanced )); then
 	myecho "Gathering LVM volume info..."
 
 	myecho "  vgscan..."
@@ -158,7 +158,7 @@ if (( $advanced )); then
 	log "\"$LVM\" vgs -v >> \"$dir/vgs\" 2>> \"$log\""
 fi
 
-if (( $clustered )); then
+if (( clustered )); then
 	myecho "Gathering cluster info..."
 
 	{
@@ -234,7 +234,7 @@ myecho "Gathering /sys/block listing..."
 log "$LS -laR /sys/block >> \"$dir/sysblock_listing\"  2>> \"$log\""
 log "$LS -laR /sys/devices/virtual/block >> \"$dir/sysblock_listing\"  2>> \"$log\""
 
-if (( $metadata )); then
+if (( metadata )); then
 	myecho "Gathering LVM metadata from Physical Volumes..."
 
 	log "$MKDIR -p \"$dir/metadata\""
@@ -252,7 +252,7 @@ if (( $metadata )); then
 	done
 fi
 
-if (( $sysreport )); then
+if (( sysreport )); then
 	myecho "Gathering system info..."
 
 	sysreport_dir="$dir/sysreport"
@@ -301,7 +301,7 @@ if (( $sysreport )); then
 	fi
 fi
 
-if (( $udev )); then
+if (( udev )); then
 	myecho "Gathering udev info..."
 
 	udev_dir="$dir/udev"
@@ -315,7 +315,7 @@ if (( $udev )); then
 	log "$CP -RL --preserve=all /lib/udev/rules.d \"$udev_dir/rules_lib\" 2>> \"$log\""
 fi
 
-if (( $lvmetad )); then
+if (( lvmetad )); then
     (echo 'request="dump"'; echo '##') | {
 	if type -p "$SOCAT" >& /dev/null; then
 	    echo "$SOCAT unix-connect:$LVMETAD_SOCKET -" >> "$log"
@@ -331,7 +331,7 @@ if (( $lvmetad )); then
     } > "$dir/lvmetad.txt"
 fi
 
-if (( $lvmpolld )); then
+if (( lvmpolld )); then
     (echo 'request="dump"'; echo '##') | {
 	if type -p "$SOCAT" >& /dev/null; then
 	    echo "$SOCAT unix-connect:$LVMPOLLD_SOCKET -" >> "$log"
