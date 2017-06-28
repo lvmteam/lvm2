@@ -150,7 +150,7 @@ function validate_args
             exit 10
     fi
 
-    if [ "$HANDLE_CLUSTER" = "1" -a "$HANDLE_HALVM" = "1" ]; then
+    if [ "$HANDLE_CLUSTER" = 1 ] && [ "$HANDLE_HALVM" = 1 ]; then
         echo "Either HA LVM or cluster method may be used at one time"
 	    exit 18
     fi
@@ -187,8 +187,10 @@ function validate_args
 
     fi
 
-    if [ "$LOCKING_TYPE" = "1" ] && [ -n "$LOCKINGLIBDIR" -o -n "$LOCKINGLIB" ]; then
-	echo "Superfluous locking lib parameter, ignoring"
+    if [ "$LOCKING_TYPE" = 1 ] ; then
+	if [ -n "$LOCKINGLIBDIR" ] || [ -n "$LOCKINGLIB" ]; then
+		echo "Superfluous locking lib parameter, ignoring"
+	fi
     fi
 }
 
@@ -224,7 +226,7 @@ grep -q '^[[:blank:]]*use_lvmetad[[:blank:]]*=' $CONFIGFILE
 have_use_lvmetad=$?
 
 # Those options are in section "global {" so we must have one if any are present.
-if [ "$have_type" = "0" -o "$have_dir" = "0" -o "$have_library" = "0" -o "$have_use_lvmetad" = "0" ]
+if [ "$have_type" = 0 ] || [ "$have_dir" = 0 ] || [ "$have_library" = 0 ] || [ "$have_use_lvmetad" = 0 ]
 then
 
     # See if we can find it...
@@ -430,7 +432,7 @@ if [ "$HANDLE_SERVICES" == "1" ]; then
         fi
 
     # System V init scripts
-    elif [ -n "$SERVICE_BIN" -a -n "$CHKCONFIG_BIN" ]; then
+    elif [ -n "$SERVICE_BIN" ] && [ -n "$CHKCONFIG_BIN" ]; then
         if [ "$USE_LVMETAD" = "0" ]; then
             set_service sysv deactivate lvm2-lvmetad
         else
