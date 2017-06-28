@@ -29,7 +29,7 @@ LVM="${LVM_BINARY:-lvm}"
 
 die() {
     code=$1; shift
-    echo "Fatal: $@" 1>&2
+    echo "Fatal:" "$@" 1>&2
     exit $code
 }
 
