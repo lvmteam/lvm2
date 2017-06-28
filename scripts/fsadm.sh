@@ -111,7 +111,7 @@ tool_usage() {
 }
 
 verbose() {
-	test -n "$VERB" && echo "$TOOL:" "$@" || true
+	test -z "$VERB" || echo "$TOOL:" "$@"
 }
 
 # Support multi-line error messages
@@ -423,7 +423,9 @@ try_umount() {
 }
 
 validate_parsing() {
-	test -n "$BLOCKSIZE" && test -n "$BLOCKCOUNT" || error "Cannot parse $1 output."
+	if test -z "$BLOCKSIZE" || test -z "$BLOCKCOUNT" ; then
+		error "Cannot parse $1 output."
+	fi
 }
 ####################################
 # Resize ext2/ext3/ext4 filesystem
@@ -445,7 +447,7 @@ resize_ext() {
 	decode_size "$1" "$BLOCKSIZE"
 	FSFORCE=$FORCE
 
-	if [ "$NEWBLOCKCOUNT" -lt "$BLOCKCOUNT" -o "$EXTOFF" -eq 1 ]; then
+	if test "$NEWBLOCKCOUNT" -lt "$BLOCKCOUNT" || test "$EXTOFF" -eq 1 ; then
 		test "$IS_MOUNTED" -eq 1 && verbose "$RESIZE_EXT needs unmounted filesystem" && try_umount
 		REMOUNT=$MOUNTED
 		if test -n "$MOUNTED" ; then
