@@ -1,5 +1,5 @@
-Version 1.02.141 - 
-===============================
+Version 1.02.141 - 28th June 2017
+=================================
   Fix reusing of dm_task structure for status reading (used by dmeventd).
   Add dm_percent_to_round_float for adjusted percentage rounding.
   Reset array with dead rimage devices once raid gets in sync.

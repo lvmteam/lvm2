@@ -1,17 +1,17 @@
-Version 2.02.172 - 
-===============================
+Version 2.02.172 - 28th June 2017
+=================================
   Add missing NULL to argv array when spliting cmdline arguments.
   Add display_percent helper function for printing percent values.
-  Lvconvert --repair handles failing raid legs (present but marked 'D'ead).
+  lvconvert --repair handles failing raid legs (present but marked 'D'ead).
   Do not lvdisplay --maps unset settings of cache pool.
   Fix lvdisplay --maps for cache pool without policy settings.
   Support aborting of flushing cache LV.
   Reenable conversion of data and metadata thin-pool volumes to raid.
   Improve raid status reporting with lvs.
-  No longer necessary to '--force' a repair for RAID1
+  No longer necessary to '--force' a repair for RAID1.
   Linear to RAID1 upconverts now use "recover" sync action, not "resync".
   Improve lvcreate --cachepool arg validation.
-  Limit maximal size of thin-pool for specific chunk size.
+  Limit maximum size of thin-pool for specific chunk size.
   Print a warning about in-use PVs with no VG using them.
   Disable automatic clearing of PVs that look like in-use orphans.
   Cache format2 flag is now using segment name type field.
