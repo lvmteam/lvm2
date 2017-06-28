@@ -1,3 +1,6 @@
+Version 1.02.142 -
+=================================
+
 Version 1.02.141 - 28th June 2017
 =================================
   Fix reusing of dm_task structure for status reading (used by dmeventd).
