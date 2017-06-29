@@ -242,7 +242,7 @@ deactivate_lvm () {
 		}
 
 		echo -n "  [LVM]: deactivating Logical Volume $DM_VG_NAME/$DM_LV_NAME... "
-		if eval "$LVM" lvchange $LVM_OPTS --config \'log{prefix=\"\"} $LVM_CONFIG\' -aln "$DM_VG_NAME/$DM_LV_NAME" "$OUT" "$ERR"; then
+		if eval "$LVM" lvchange $LVM_OPTS --config \'log\{prefix=\"\"\} $LVM_CONFIG\' -aln "$DM_VG_NAME/$DM_LV_NAME" "$OUT" "$ERR"; then
 			echo "done"
 		else
 			echo "skipping"
@@ -266,7 +266,7 @@ deactivate_lvm () {
 		done
 
 		echo -n "  [LVM]: deactivating Volume Group $DM_VG_NAME... "
-		if eval "$LVM" vgchange $LVM_OPTS --config \'log{prefix=\"    \"} $LVM_CONFIG\' -aln "$DM_VG_NAME" "$OUT" "$ERR"; then
+		if eval "$LVM" vgchange $LVM_OPTS --config \'log\{prefix=\"    \"\} $LVM_CONFIG\' -aln "$DM_VG_NAME" "$OUT" "$ERR"; then
 			echo "done"
 		else
 			echo "skipping"
