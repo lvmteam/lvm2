@@ -52,8 +52,8 @@ then
 fi
 
 
-SCRIPTFILE=`mktemp -t lvmscript.XXXXXXXXXX`
-TMPFILE=`mktemp -t lvmtmp.XXXXXXXXXX`
+SCRIPTFILE=$(mktemp -t lvmscript.XXXXXXXXXX)
+TMPFILE=$(mktemp -t lvmtmp.XXXXXXXXXX)
 
 
 # Flags so we know which parts of the file we can replace and which need
