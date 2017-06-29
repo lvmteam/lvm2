@@ -208,14 +208,14 @@ in_sync() {
 		# 6th argument is the sync ratio for RAID
 		idx=6
 		type=${a[3]}
-		if [ "${a[$(($idx + 1))]}" != "idle" ]; then
+		if [ "${a[$(( idx + 1 ))]}" != "idle" ]; then
 			echo "$lvm_name ($type$snap) is not in-sync"
 			return 1
 		fi
 		;;
 	"mirror")
 		# 4th Arg tells us how far to the sync ratio
-		idx=$((${a[3]} + 4))
+		idx=$(( a[3] + 4 ))
 		type=${a[2]}
 		;;
 	*)
@@ -230,7 +230,7 @@ in_sync() {
 		return 1
 	fi
 
-	if [[ ${a[$(($idx - 1))]} =~ a ]] ; then
+	if [[ ${a[$(( idx - 1 ))]} =~ a ]] ; then
 		[ $ignore_a -eq 0 ] && \
 			die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
 		echo "$lvm_name ($type$snap) is not in-sync"
