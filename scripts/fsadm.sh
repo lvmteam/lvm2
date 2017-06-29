@@ -613,10 +613,10 @@ for i in "$TUNE_EXT" "$RESIZE_EXT" "$TUNE_REISER" "$RESIZE_REISER" \
 done
 
 "$LVM" version >"$NULL" 2>&1 || error "Could not run lvm binary \"$LVM\"."
-$("$READLINK" -e / >"$NULL" 2>&1) || READLINK_E="-f"
+"$READLINK" -e / >"$NULL" 2>&1 || READLINK_E="-f"
 TEST64BIT=$(( 1000 * 1000000000000 ))
 test "$TEST64BIT" -eq 1000000000000000 || error "Shell does not handle 64bit arithmetic."
-$(echo Y | "$GREP" Y >"$NULL") || error "Grep does not work properly."
+echo Y | "$GREP" Y >"$NULL" || error "Grep does not work properly."
 test "$("$DATE" -u -d"Jan 01 00:00:01 1970" +%s)" -eq 1 || error "Date translation does not work."
 
 
