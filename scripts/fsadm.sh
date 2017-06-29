@@ -111,7 +111,7 @@ tool_usage() {
 }
 
 verbose() {
-	test -n "$VERB" && echo "$TOOL: $@" || true
+	test -n "$VERB" && echo "$TOOL:" "$@" || true
 }
 
 # Support multi-line error messages
@@ -124,10 +124,10 @@ error() {
 
 dry() {
 	if [ "$DRY" -ne 0 ]; then
-		verbose "Dry execution $@"
+		verbose "Dry execution" "$@"
 		return 0
 	fi
-	verbose "Executing $@"
+	verbose "Executing" "$@"
 	"$@"
 }
 
@@ -397,7 +397,7 @@ temp_umount() {
 }
 
 yes_no() {
-	echo -n "$@? [Y|n] "
+	echo -n "$@" "? [Y|n] "
 
 	if [ -n "$YES" ]; then
 		echo y ; return 0
