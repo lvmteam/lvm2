@@ -877,7 +877,7 @@ common_dev_() {
 	local pvdev
 	local offset
 
-	read pos size type pvdev offset < "$name.table"
+	read -r pos size type pvdev offset < "$name.table"
 
 	for fromlen in "${offsets[@]}"; do
 		from=${fromlen%%:*}
