@@ -1,5 +1,6 @@
 Version 2.02.173 - 
 =================================
+  Fix shellcheck reported issues for script files.
 
 Version 2.02.172 - 28th June 2017
 =================================
