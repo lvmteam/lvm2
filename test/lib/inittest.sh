@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2011-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -10,7 +10,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 initskip() {
-	test "$#" -eq 0 || echo "TEST SKIPPED: $@"
+	test "$#" -eq 0 || echo "TEST SKIPPED: " "$@"
 	exit 200
 }
 
@@ -26,7 +26,7 @@ PS4='#${BASH_SOURCE[0]##*/}:${LINENO}+ '
 export TESTNAME PS4
 
 if test -n "$LVM_TEST_FLAVOUR"; then
-	. lib/flavour-$LVM_TEST_FLAVOUR
+	. "lib/flavour-$LVM_TEST_FLAVOUR"
 fi
 
 test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && initskip
