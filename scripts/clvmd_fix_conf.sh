@@ -63,21 +63,20 @@ have_dir=1
 have_library=1
 have_global=1
 
-grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' $LVMCONF
+grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' "$LVMCONF"
 have_type=$?
 
-grep -q '^[[:blank:]]*library_dir[[:blank:]]*=' $LVMCONF
+grep -q '^[[:blank:]]*library_dir[[:blank:]]*=' "$LVMCONF"
 have_dir=$?
 
-grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' $LVMCONF
+grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' "$LVMCONF"
 have_library=$?
 
 # Those options are in section "global {" so we must have one if any are present.
-if [ "$have_type" = "0" -o "$have_dir" = "0" -o "$have_library" = "0" ]
-then
+if [ "$have_type" = 0 ] || [ "$have_dir" = 0 ] || [ "$have_library" = 0 ] ; then
 
     # See if we can find it...
-    grep -q '^[[:blank:]]*global[[:blank:]]*{' $LVMCONF
+    grep -q '^[[:blank:]]*global[[:blank:]]*{' "$LVMCONF"
     have_global=$?
     
     if [ "$have_global" = "1" ] 
@@ -92,7 +91,7 @@ fi
 
 if [ "$have_global" = "1" ]
 then
-    cat $LVMCONF - <<EOF > $TMPFILE
+    cat "$LVMCONF" - <<EOF > "$TMPFILE"
 global {
     # Enable locking for cluster LVM
     locking_type = $locking_type
@@ -132,8 +131,8 @@ else
 	SEDCMD="${SEDCMD}\n/global[[:blank:]]*{/a\ \ \ \ locking_library = \"$LIB\""
     fi
 
-    echo -e $SEDCMD > $SCRIPTFILE
-    sed  <$LVMCONF >$TMPFILE -f $SCRIPTFILE
+    echo -e "$SEDCMD" > "$SCRIPTFILE"
+    sed  <"$LVMCONF" >"$TMPFILE" -f "$SCRIPTFILE"
     if [ $? != 0 ]
     then
 	echo "sed failed, $LVMCONF not updated"
@@ -144,19 +143,19 @@ fi
 # Now we have a suitably editted config file in a temp place,
 # backup the original and copy our new one into place.
 
-cp $LVMCONF $LVMCONF.nocluster
+cp "$LVMCONF" "$LVMCONF.nocluster"
 if [ $? != 0 ]
     then
     echo "failed to backup old config file, $LVMCONF not updated"
     exit 2
 fi
 
-cp $TMPFILE $LVMCONF
+cp "$TMPFILE" "$LVMCONF"
 if [ $? != 0 ]
     then
     echo "failed to copy new config file into place, check $LVMCONF is still OK"
     exit 3
 fi
 
-rm -f $SCRIPTFILE $TMPFILE
+rm -f "$SCRIPTFILE" "$TMPFILE"
 
