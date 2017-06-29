@@ -188,7 +188,8 @@ STACKTRACE() {
 
 init_udev_transaction() {
 	if test "$DM_UDEV_SYNCHRONISATION" = 1; then
-		local cookie=$(dmsetup udevcreatecookie)
+		local cookie
+		cookie=$(dmsetup udevcreatecookie)
 		# Cookie is not generated if udev is not running!
 		test -z "$cookie" || export DM_UDEV_COOKIE=$cookie
 	fi
