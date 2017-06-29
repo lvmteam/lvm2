@@ -398,7 +398,7 @@ teardown_devs_prefixed() {
 
 	local mounts=( $(grep "$prefix" /proc/mounts | cut -d' ' -f1) )
 	if test ${#mounts[@]} -gt 0; then
-		test "$stray" -eq 0 || echo "Removing stray mounted devices containing $prefix: ${mounts[@]}"
+		test "$stray" -eq 0 || echo "Removing stray mounted devices containing $prefix:" "${mounts[@]}"
 		if umount -fl "${mounts[@]}"; then
 			udev_wait
 		fi
@@ -461,7 +461,7 @@ teardown_devs() {
 		local stray_loops=( $(losetup -a | grep "$COMMON_PREFIX" | cut -d: -f1) )
 		test ${#stray_loops[@]} -eq 0 || {
 			teardown_devs_prefixed "$COMMON_PREFIX" 1
-			echo "Removing stray loop devices containing $COMMON_PREFIX: ${stray_loops[@]}"
+			echo "Removing stray loop devices containing $COMMON_PREFIX:" "${stray_loops[@]}"
 			for i in "${stray_loops[@]}" ; do test ! -b "$i" || losetup -d "$i" || true ; done
 			# Leave test when udev processed all removed devices
 			udev_wait
@@ -1400,7 +1400,7 @@ driver_at_least() {
 	local version=$(dmsetup version | tail -1 2>/dev/null)
 	version=${version##*:}
 	version_at_least "$version" "$@" || {
-		echo "Found driver version $version, but requested $@." >&2
+		echo "Found driver version $version, but requested" "$@" "." >&2
 		return 1
 	}
 }
@@ -1424,7 +1424,7 @@ have_thin() {
 		CONF[2]="global/thin_repair_executable = \"\""
 	fi
 	if test ${#CONF[@]} -ne 0 ; then
-		echo "TEST WARNING: Reconfiguring ${CONF[@]}"
+		echo "TEST WARNING: Reconfiguring" "${CONF[@]}"
 		lvmconf "${CONF[@]}"
 	fi
 }
@@ -1472,7 +1472,7 @@ have_cache() {
 		CONF[2]="global/cache_repair_executable = \"\""
 	fi
 	if test ${#CONF[@]} -ne 0 ; then
-		echo "TEST WARNING: Reconfiguring ${CONF[@]}"
+		echo "TEST WARNING: Reconfiguring" "${CONF[@]}"
 		lvmconf "${CONF[@]}"
 	fi
 }
