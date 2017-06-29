@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2011-2013 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -82,18 +82,18 @@ lv_tree_devices_() {
 			do lv_tree_devices_ "$1" "$i"; done
 		;;
 	thin)
-		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv pool_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ "$lv" pool_lv)"
 		;;
 	thin-pool)
-		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv data_lv)"
-		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv metadata_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ "$lv" data_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ "$lv" metadata_lv)"
 		;;
 	cache)
-		lv_tree_devices_ "$1" "$(lv_devices $lv)"
+		lv_tree_devices_ "$1" "$(lv_devices "$lv")"
 		;;
 	cache-pool)
-		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv data_lv)"
-		lv_tree_devices_ "$1" "$(lv_field_lv_ $lv metadata_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ "$lv" data_lv)"
+		lv_tree_devices_ "$1" "$(lv_field_lv_ "$lv" metadata_lv)"
 		;;
 	esac
 }
