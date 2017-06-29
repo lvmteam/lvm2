@@ -49,7 +49,7 @@ mirror_images_redundant() {
 
 	(grep -v ^# check.tmp.all || true) | sort | uniq -d > check.tmp
 
-	test "$(cat check.tmp | wc -l)" -eq 0 || \
+	test "$(wc -l < check.tmp)" -eq 0 || \
 		die "mirror images of $lv expected redundant, but are not:" \
 			"$(cat check.tmp.all)"
 }
