@@ -48,6 +48,6 @@ esac
 if test -n "$abs_top_builddir"; then
     exec $RUN_DBG "$abs_top_builddir/tools/lvm" $CMD "$@"
 else # we are testing the lvm on $PATH
-    PATH=`echo $PATH | sed -e s,[^:]*lvm2-testsuite[^:]*:,,g`
+    PATH=$(echo "$PATH" | sed -e s,[^:]*lvm2-testsuite[^:]*:,,g)
     exec $RUN_DBG lvm $CMD "$@"
 fi
