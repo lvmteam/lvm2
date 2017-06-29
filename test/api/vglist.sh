@@ -14,4 +14,4 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_vg 2
-aux apitest vglist $vg `get vg_field $vg vg_uuid | sed -e s,-,,g`
+aux apitest vglist $vg "$(get vg_field $vg vg_uuid | sed -e s,-,,g)"

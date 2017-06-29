@@ -30,8 +30,8 @@ aux prepare_dmeventd
 # gdb -ex r --args python FULL_PATH/lvm2/test/api/python_lvm_unit.py -v TestLvm.test_lv_active_inactive
 
 #Locate the python binding library to use.
-if [[ -n $abs_top_builddir ]]; then
-  python_lib=($(find $abs_top_builddir -name lvm.so))
+if [[ -n "$abs_top_builddir" ]]; then
+  python_lib=($(find "$abs_top_builddir" -name lvm.so))
   if [[ ${#python_lib[*]} -ne 1 ]]; then
     if [[ ${#python_lib[*]} -gt 1 ]]; then
       # Unable to test python bindings if multiple libraries found:
@@ -43,7 +43,8 @@ if [[ -n $abs_top_builddir ]]; then
     fi
   fi
 
-  export PYTHONPATH=$(dirname $python_lib):$PYTHONPATH
+  PYTHONPATH=$(dirname "${python_lib[*]}"):$PYTHONPATH
+  export PYTHONPATH
 elif rpm -q lvm2-python-libs &>/dev/null; then
   true
 else
@@ -54,7 +55,8 @@ fi
 aux prepare_pvs 6
 
 #Setup which devices the unit test can use.
-export PY_UNIT_PVS=$(cat DEVICES)
+PY_UNIT_PVS=$(cat DEVICES)
+export PY_UNIT_PVS
 
 #python_lvm_unit.py -v -f
 
