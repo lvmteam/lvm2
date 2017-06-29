@@ -198,14 +198,16 @@ if (( clustered )); then
 fi
 
 myecho "Gathering LVM & device-mapper version info..."
-echo "LVM VERSION:" >> "$dir/versions"
-"$LVM" lvs --version >> "$dir/versions" 2>> "$log"
-echo "DEVICE MAPPER VERSION:" >> "$dir/versions"
-"$DMSETUP" --version >> "$dir/versions" 2>> "$log"
-echo "KERNEL VERSION:" >> "$dir/versions"
-"$UNAME" -a >> "$dir/versions" 2>> "$log"
-echo "DM TARGETS VERSIONS:" >> "$dir/versions"
-"$DMSETUP" targets >> "$dir/versions" 2>> "$log"
+{
+	echo "LVM VERSION:"
+	"$LVM" lvs --version
+	echo "DEVICE MAPPER VERSION:"
+	"$DMSETUP" --version
+	echo "KERNEL VERSION:"
+	"$UNAME" -a
+	echo "DM TARGETS VERSIONS:"
+	"$DMSETUP" targets
+} >> "$dir/versions" 2>> "$log"
 
 myecho "Gathering dmsetup info..."
 log "\"$DMSETUP\" info -c >> \"$dir/dmsetup_info\" 2>> \"$log\""
