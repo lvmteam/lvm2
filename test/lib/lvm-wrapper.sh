@@ -33,9 +33,9 @@ fi
 
 case "$CMD" in
   lvs|pvs|vgs|vgck|vgscan)
-	test ${LVM_DEBUG_LEVEL:-0} -lt 2 && RUN_DBG= ;;
+	test "${LVM_DEBUG_LEVEL:-0}" -lt 2 && RUN_DBG= ;;
   pvcreate|pvremove|lvremove|vgcreate|vgremove)
-	test ${LVM_DEBUG_LEVEL:-0} -lt 1 && RUN_DBG= ;;
+	test "${LVM_DEBUG_LEVEL:-0}" -lt 1 && RUN_DBG= ;;
 esac
 
 # Capture parallel users of debug.log file
