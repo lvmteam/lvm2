@@ -237,7 +237,7 @@ in_sync() {
 		return 1
 	fi
 
-	echo "$lvm_name ($type$snap) is in-sync \"${a[@]}\""
+	echo "$lvm_name ($type$snap) is in-sync" "${a[@]}"
 }
 
 active() {
@@ -434,7 +434,7 @@ raid_leg_status() {
 
 grep_dmsetup() {
 	dmsetup "$1" "$2" | tee out
-	grep -q "${@:3}" out || die "Expected output \"${@:3}\" from dmsetup $1 not found!"
+	grep -q "${@:3}" out || die "Expected output \"" "${@:3}" "\" from dmsetup $1 not found!"
 }
 
 #set -x
