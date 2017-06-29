@@ -225,7 +225,7 @@ in_sync() {
 
 	b=( $(echo "${a[$idx]}" | sed s:/:' ':) )
 
-	if [ "${b[0]}" -eq 0 -o "${b[0]}" != "${b[1]}" ]; then
+	if [ "${b[0]}" -eq 0 ] || [ "${b[0]}" != "${b[1]}" ]; then
 		echo "$lvm_name ($type$snap) is not in-sync"
 		return 1
 	fi
