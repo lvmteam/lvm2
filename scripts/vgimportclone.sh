@@ -48,7 +48,7 @@ function getvgname {
     NAME="${BNAME}"
     I=0
 
-    while [[ "${VGLIST}" =~ ":${NAME}:" ]]
+    while [[ "${VGLIST}" =~ :${NAME}: ]]
     do
         I=$(( I + 1 ))
         NAME="${BNAME}$I"
