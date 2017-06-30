@@ -32,7 +32,7 @@ fail lvs $vg1
 fail lvchange -ay $vg1/$lv1
 vgimport $vg1
 check lv_exists $vg1
-check lv_field $vg/$lv1 lv_active ""
+check lv_field $vg1/$lv1 lv_active ""
 
 # Check that an LV cannot be activated by pvscan while VG is exported
 vgexport $vg1
