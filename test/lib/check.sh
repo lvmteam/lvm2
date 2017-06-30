@@ -261,14 +261,14 @@ inactive() {
 # Check for list of LVs from given VG
 lv_exists() {
 	local vg=$1
-	local lv=
+	declare -a list=()
 	while [ $# -gt 1 ]; do
 		shift
-		lv="$lv $vg/$1"
+		list+=( "$vg/$1" )
 	done
-	test -n "$lv" || lv=$vg
-	lvl "$lv" &>/dev/null || \
-		die "$lv expected to exist but does not"
+	test  "${#list[@]}" -gt 0 || list=( "$vg" )
+	lvl "${list[@]}" &>/dev/null || \
+		die "${list[@]}" "expected to exist, but does not!"
 }
 
 lv_not_exists() {
