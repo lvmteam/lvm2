@@ -131,9 +131,11 @@ STACKTRACE() {
 
 	# Get backtraces from coredumps
 	if which gdb &>/dev/null; then
-		echo bt full > gdb_commands.txt
-		echo l >> gdb_commands.txt
-		echo quit >> gdb_commands.txt
+		{
+			echo bt full
+			echo l
+			echo quit
+		} > gdb_commands.txt
 		# TODO: use sysctl to get 'core' position in system
 		for i in core*; do
 			test -f "$i" || break   # empty globbing
