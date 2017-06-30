@@ -1542,7 +1542,7 @@ wait_pvmove_lv_ready() {
 		while : ; do
 			test "$retries" -le 0 && die "Waiting for lvmpolld timed out"
 			test -n "$lvid" || {
-				lvid=$(get lv_field "${1//-/\/}" vg_uuid,lv_uuid -a 2>/dev/null)
+				lvid=$(get lv_field "${1//-//}" vg_uuid,lv_uuid -a 2>/dev/null)
 				lvid=${lvid//\ /}
 				lvid=${lvid//-/}
 			}
