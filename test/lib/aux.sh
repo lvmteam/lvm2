@@ -309,9 +309,8 @@ prepare_lvmdbusd() {
 
         # FIXME: This is not correct! Daemon is auto started.
 	echo "checking lvmdbusd is NOT running..."
-	if pgrep lvmdbusd | grep python3; then
-		echo "Cannot run while existing lvmdbusd process exists"
-		return 1
+	if pgrep -f -l lvmdbusd | grep python3 ; then
+		skip "Cannot run while existing lvmdbusd process exists"
 	fi
 	echo ok
 
@@ -320,7 +319,7 @@ prepare_lvmdbusd() {
 		# NOTE: this is always present - additional checks are needed:
 		daemon="$abs_top_builddir/daemons/lvmdbusd/lvmdbusd"
 		# Setup the python path so we can run
-		export PYTHONPATH=$abs_top_builddir/daemons
+		export PYTHONPATH="$abs_top_builddir/daemons"
 	else
 		daemon=$(which lvmdbusd || :)
 	fi
@@ -343,7 +342,7 @@ prepare_lvmdbusd() {
 
 	sleep 1
 	echo "checking lvmdbusd IS running..."
-	if ! pgrep lvmdbusd | grep python3; then
+	if ! pgrep -f -l lvmdbusd | grep python3; then
 		echo "Failed to start lvmdbusd daemon"
 		return 1
 	fi
@@ -496,7 +495,6 @@ count_processes_with_tag() {
 
 kill_tagged_processes() {
 	local pid
-	local pids
 	local wait
 
 	# read uses all vars within pipe subshell
