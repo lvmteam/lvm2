@@ -2279,6 +2279,7 @@ static void print_val_man(struct command_name *cname, int opt_enum, int val_enum
 			else
 				printf("\\fB%s\\fP", line_argv[i]);
 		}
+		dm_free(line);
 		return;
 	}
 
