@@ -844,7 +844,7 @@ static int _reorder_raid10_near_seg_areas(struct lv_segment *seg, enum raid0_rai
 
 	if (!(idx = dm_pool_zalloc(seg_lv(seg, 0)->vg->vgmem, seg->area_count * sizeof(*idx)))) {
 		log_error("Memory allocation failed.");
-		return_0;
+		return 0;
 	}
 
 	/* Set up positional index array */
@@ -874,6 +874,11 @@ static int _reorder_raid10_near_seg_areas(struct lv_segment *seg, enum raid0_rai
 		 * _reorder_raid10_near_seg_areas 2137 idx[8]=8
 		 */
 		/* idx[from] = to */
+		if (!stripes) {
+			log_error(INTERNAL_ERROR "LV %s is missing stripes.",
+				  display_lvname(seg->lv));
+			return 0;
+		}
 		for (s = ss = 0; s < seg->area_count; s++)
 			if (s < stripes)
 				idx[s] = s * data_copies;
