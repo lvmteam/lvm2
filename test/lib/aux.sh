@@ -697,7 +697,8 @@ prepare_md_dev() {
 	local level=$1
 	local rchunk=$2
 	local rdevs=$3
-
+	local with_bitmap="--bitmap=internal"
+	local coption="--chunk"
 	local maj
 	local mddev
 	maj=$(mdadm --version 2>&1) || skip "mdadm tool is missing!"
@@ -706,8 +707,10 @@ prepare_md_dev() {
 
 	rm -f debug.log strace.log MD_DEV MD_DEV_PV MD_DEVICES
 
-	coption="--chunk"
-	test "$level" = "1" && coption="--bitmap-chunk"
+	case "$level" in
+	"1")  coption="--bitmap-chunk" ;;
+	"0")  unset with_bitmap ;;
+	esac
 	# Have MD use a non-standard name to avoid colliding with an existing MD device
 	# - mdadm >= 3.0 requires that non-standard device names be in /dev/md/
 	# - newer mdadm _completely_ defers to udev to create the associated device node
@@ -717,7 +720,7 @@ prepare_md_dev() {
 		mddev=/dev/md/md_lvm_test0 || \
 		mddev=/dev/md_lvm_test0
 
-	mdadm --create --metadata=1.0 "$mddev" --auto=md --level "$level" --bitmap=internal "$coption"="$rchunk" --raid-devices="$rdevs" "${@:4}" || {
+	mdadm --create --metadata=1.0 "$mddev" --auto=md --level "$level" $with_bitmap "$coption"="$rchunk" --raid-devices="$rdevs" "${@:4}" || {
 		# Some older 'mdadm' version managed to open and close devices internaly
 		# and reporting non-exclusive access on such device
 		# let's just skip the test if this happens.
