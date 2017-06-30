@@ -2232,7 +2232,7 @@ static int _raid_reshape(struct logical_volume *lv,
 	int force_repair = 0, r, too_few = 0;
 	unsigned devs_health, devs_in_sync;
 	uint32_t new_image_count, old_image_count;
-	enum alloc_where where_it_was;
+	enum alloc_where where_it_was = alloc_none;
 	struct lv_segment *seg = first_seg(lv);
 	struct dm_list removal_lvs;
 
