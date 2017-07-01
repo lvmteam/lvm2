@@ -206,7 +206,7 @@ static int lock_vg(struct local_client *client)
 	lock_mode = ((int) lock_cmd & LCK_TYPE_MASK);
 	/* lock_flags = args[1]; */
 	lockname = &args[2];
-	DEBUGLOG("doing PRE command LOCK_VG '%s' at %x (client=%p)\n", lockname, lock_cmd, client);
+	DEBUGLOG("(%p) doing PRE command LOCK_VG '%s' at %x\n", client, lockname, lock_cmd);
 
 	if (lock_mode == LCK_UNLOCK) {
 		if (!(lkid = (int) (long) dm_hash_lookup(lock_hash, lockname)))
@@ -323,7 +323,7 @@ void cmd_client_cleanup(struct local_client *client)
 	int lkid;
 	char *lockname;
 
-	DEBUGLOG("Client thread cleanup (%p)\n", client);
+	DEBUGLOG("(%p) Client thread cleanup\n", client);
 	if (!client->bits.localsock.private)
 		return;
 
@@ -332,7 +332,7 @@ void cmd_client_cleanup(struct local_client *client)
 	dm_hash_iterate(v, lock_hash) {
 		lkid = (int)(long)dm_hash_get_data(lock_hash, v);
 		lockname = dm_hash_get_key(lock_hash, v);
-		DEBUGLOG("Cleanup (%p): Unlocking lock %s %x\n", client, lockname, lkid);
+		DEBUGLOG("(%p) Cleanup: Unlocking lock %s %x\n", client, lockname, lkid);
 		(void) sync_unlock(lockname, lkid);
 	}
 
