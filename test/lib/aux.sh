@@ -545,7 +545,7 @@ teardown() {
 
 	kill_sleep_kill_ LOCAL_LVMETAD "${LVM_VALGRIND_LVMETAD:-0}"
 
-	dm_table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
+	dm_table | not grep -E -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
 		if dm_info suspended,name | grep -q "^Suspended:.*$prefix" ; then
