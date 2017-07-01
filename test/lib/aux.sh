@@ -585,7 +585,7 @@ teardown() {
 	}
 
 	test -n "$TESTDIR" && {
-		cd "$TESTOLDPWD"
+		cd "$TESTOLDPWD" || die "Failed to enter $TESTOLDPWD"
 		rm -rf "$TESTDIR" || echo BLA
 	}
 
