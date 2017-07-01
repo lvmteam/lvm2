@@ -548,7 +548,7 @@ teardown() {
 	dm_table | not egrep -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
-		if echo "$(dm_info suspended,name)" | grep -q "^Suspended:.*$prefix" ; then
+		if dm_info suspended,name | grep -q "^Suspended:.*$prefix" ; then
 			echo "Skipping vgremove, suspended devices detected."
 		else
 			vgremove -ff "$cfg"  \
@@ -1207,8 +1207,7 @@ EOF
 
 	# read sequential list and put into associative array
 	while IFS=$IFS_NL read -r v; do
-		# trim white-space-chars via echo when inserting
-		CONF["$(echo ${v%%[={]*})"]=${v#*/}
+		CONF["${v%%[={ ]*}"]=${v#*/}
 	done < "$config_values"
 
 	# sort by section and iterate through them
