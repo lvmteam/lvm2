@@ -47,7 +47,7 @@ invalid vgcfgrestore -f "bak-$vg1" $vg1-inv@lid
 invalid vgcfgrestore -f "bak-$vg1" $vg1 $vg2
 
 vgcfgrestore -l $vg1 | tee out
-test $(grep Description out | wc -l) -eq 2
+test "$(grep -c Description out)" -eq 2
 
 vgcfgrestore -l -f "bak-$vg1" $vg1
 

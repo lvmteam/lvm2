@@ -29,7 +29,7 @@ wait_warn_() {
 
 	for i in $(seq 1 7)
 	do
-		test $(egrep "WARNING: Thin pool.*is now" debug.log_DMEVENTD_out | wc -l) -eq $1 && return 0
+		test "$(grep -E -c "WARNING: Thin pool.*is now" debug.log_DMEVENTD_out)" -eq "$1" && return 0
 		sleep 2
 	done
 
