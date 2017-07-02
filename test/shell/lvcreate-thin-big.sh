@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Copyright (C) 2015 Red Hat, Inc. All rights reserved.
 #

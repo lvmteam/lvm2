@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
 # Copyright (C) 2008-2013 Red Hat, Inc. All rights reserved.
 # Copyright (C) 2007 NEC Corporation
 #

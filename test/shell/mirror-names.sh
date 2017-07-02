@@ -1,5 +1,6 @@
-#!/bin/sh
-# Copyright (C) 2007-2012 Red Hat, Inc. All rights reserved.
+#!/usr/bin/env bash
+
+# Copyright (C) 2007-2017 Red Hat, Inc. All rights reserved.
 # Copyright (C) 2007-2008 NEC Corporation
 #
 # This copyrighted material is made available to anyone wishing to use,
