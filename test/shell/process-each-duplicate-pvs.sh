@@ -76,7 +76,7 @@ grep "prefers device" warn
 
 # Find which is the preferred dev and which is the duplicate.
 PV=$(pvs --noheadings -o name -S uuid=$UUID1)
-if [ $PV == "$dev1" ]; then
+if [ "$PV" = "$dev1" ]; then
 	DUP=$dev2
 else
 	DUP=$dev1

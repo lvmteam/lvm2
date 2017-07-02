@@ -55,16 +55,16 @@ while true; do
 	if [ ${b[0]} -ne ${b[1]} ]; then
 		# If the sync operation ("recover" in this case) is not
 		# finished, then it better be as follows:
-		[ ${a[5]} == "Aa" ]
-		[ ${a[7]} == "recover" ]
+		[ ${a[5]} = "Aa" ]
+		[ ${a[7]} = "recover" ]
 	else
 		# Tough to tell the INVALID case,
 		#   Before starting sync thread: "Aa X/X recover"
 		# from the valid case,
 		#   Just finished sync thread: "Aa X/X recover"
 		# We'll just put "should" for now
-		should [ ${a[5]} == "AA" ]
-		should [ ${a[7]} == "idle" ]
+		should [ ${a[5]} = "AA" ]
+		should [ ${a[7]} = "idle" ]
 		break
 	fi
         sleep .1
@@ -84,16 +84,16 @@ while true; do
 	if [ ${b[0]} -ne ${b[1]} ]; then
 		# If the sync operation ("recover" in this case) is not
 		# finished, then it better be as follows:
-		[ ${a[5]} == "AAa" ]
-		[ ${a[7]} == "recover" ]
+		[ ${a[5]} = "AAa" ]
+		[ ${a[7]} = "recover" ]
 	else
 		# Tough to tell the INVALID case,
 		#   Before starting sync thread: "Aa X/X recover"
 		# from the valid case,
 		#   Just finished sync thread: "Aa X/X recover"
 		# We'll just put "should" for now
-		should [ ${a[5]} == "AAA" ]
-		should [ ${a[7]} == "idle" ]
+		should [ ${a[5]} = "AAA" ]
+		should [ ${a[7]} = "idle" ]
 		break
 	fi
         sleep .1
@@ -112,11 +112,11 @@ while true; do
 	if [ ${b[0]} -ne ${b[1]} ]; then
 		# If the sync operation ("resync" in this case) is not
 		# finished, then it better be as follows:
-		[ ${a[5]} == "aa" ]
-		[ ${a[7]} == "resync" ]
+		[ ${a[5]} = "aa" ]
+		[ ${a[7]} = "resync" ]
 	else
-		should [ ${a[5]} == "AA" ]
-		should [ ${a[7]} == "idle" ]
+		should [ ${a[5]} = "AA" ]
+		should [ ${a[7]} = "idle" ]
 		break
 	fi
         sleep .1

@@ -261,17 +261,17 @@ run_recovery_rate_check() {
 run_checks() {
 	THIN_POSTFIX=""
 
-	if [ -z $3 ]; then
+	if [ -z "$3" ]; then
 		printf "#\n#\n# run_checks: Too few arguments\n#\n#\n"
 		return 1
-	elif [ '-' == $3 ]; then
+	elif [ '-' = "$3" ]; then
 		printf "#\n#\n# run_checks: Simple check\n#\n#\n"
 
 		run_writemostly_check $1 $2
 		run_syncaction_check $1 $2
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
-	elif [ 'thinpool_data' == $3 ]; then
+	elif [ "thinpool_data" = "$3" ]; then
 		printf "#\n#\n# run_checks: RAID as thinpool data\n#\n#\n"
 
 # Hey, specifying devices for thin allocation doesn't work
@@ -285,7 +285,7 @@ run_checks() {
 		run_syncaction_check $1 $2
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
-	elif [ 'thinpool_meta' == $3 ]; then
+	elif [ "thinpool_meta" = "$3" ]; then
 		printf "#\n#\n# run_checks: RAID as thinpool metadata\n#\n#\n"
 
 		lvrename $1/$2 ${2}_meta
@@ -298,7 +298,7 @@ run_checks() {
 		run_syncaction_check $1 $2
 		run_refresh_check $1 $2
 		run_recovery_rate_check $1 $2
-	elif [ 'snapshot' == $3 ]; then
+	elif [ "snapshot" = "$3" ]; then
 		printf "#\n#\n# run_checks: RAID under snapshot\n#\n#\n"
 		lvcreate -aey -s $1/$2 -l 4 -n snap "$dev6"
 
