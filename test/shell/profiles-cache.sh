@@ -25,7 +25,7 @@ PFILE="cache-test"
 
 aux prepare_profiles
 
-cat <<EOF > $PDIR/${PFILE}.profile
+cat <<EOF > "$PDIR/${PFILE}.profile"
 allocation {
 	cache_pool_chunk_size = 128
 	cache_mode = "writeback"
@@ -47,7 +47,7 @@ allocation {
 }
 EOF
 
-cat <<EOF > $PDIR/${PFILE}1.profile
+cat <<EOF > "$PDIR/${PFILE}1.profile"
 allocation {
 	cache_pool_chunk_size = 512
 	cache_mode = "passthrough"
@@ -88,14 +88,14 @@ check lv_field $vg/cpool cachesettings ""
 
 
 lvcreate -L10 -n $lv1 $vg
-lvconvert --metadataprofile ${PFILE}1 -y -H --cachepool $vg/cpool $vg/$lv1
+lvconvert --metadataprofile "${PFILE}1" -y -H --cachepool $vg/cpool $vg/$lv1
 # chunk size 128k is replace with 512k from PFILE1
 check lv_field $vg/$lv1 chunksize "512.00k"
 # cachemode is from PFILE1
 check lv_field $vg/$lv1 cachemode "passthrough"
 lvremove -f $vg
 
-lvcreate -L1G --metadataprofile $PFILE --type cache-pool $vg/cpool
+lvcreate -L1G --metadataprofile "$PFILE" --type cache-pool $vg/cpool
 lvcreate -H -L10 -n $lv1 --cachepool $vg/cpool
 # profile name is stored with cache
 check lv_field $vg/$lv1 profile "$PFILE"
@@ -114,7 +114,7 @@ lvremove -f $vg
 
 #####
 
-lvcreate -L1G --metadataprofile $PFILE --type cache-pool $vg/cpool
+lvcreate -L1G --metadataprofile "$PFILE" --type cache-pool $vg/cpool
 lvcreate --cachesettings 'sequential_threshold=300'  -H -L10 -n $lv1 --cachepool $vg/cpool
 check lv_field $vg/$lv1 profile "$PFILE"
 check lv_field $vg/$lv1 cachesettings "sequential_threshold=300"
@@ -122,7 +122,7 @@ lvremove -f $vg
 
 #####
 
-lvcreate -L1G --metadataprofile $PFILE --type cache-pool $vg/cpool
+lvcreate -L1G --metadataprofile "$PFILE" --type cache-pool $vg/cpool
 lvcreate --chunksize 256    -H -L10 -n $lv1 --cachepool $vg/cpool
 check lv_field $vg/$lv1 cachemode "writeback"
 check lv_field $vg/$lv1 chunksize "256.00k"
@@ -131,8 +131,8 @@ lvremove -f $vg
 
 #####
 
-lvcreate -L1G --metadataprofile $PFILE --type cache-pool $vg/cpool
-lvcreate --metadataprofile ${PFILE}1   -H -L10 -n $lv1 --cachepool $vg/cpool
+lvcreate -L1G --metadataprofile "$PFILE" --type cache-pool $vg/cpool
+lvcreate --metadataprofile "${PFILE}1"   -H -L10 -n $lv1 --cachepool $vg/cpool
 check lv_field $vg/$lv1 chunksize "512.00k"
 check lv_field $vg/$lv1 cachemode "passthrough"
 lvremove -f $vg

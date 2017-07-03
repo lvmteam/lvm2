@@ -40,8 +40,8 @@ sed -e 's,unstriped,striped,;s,unmirror,mirror,;s,zero+NEWFLAG,zero,' -i.orig ba
 vgcfgrestore -f bak1 $vg
 vgcfgbackup -f bak2 $vg
 
-egrep -v 'description|seqno|creation_time|Generated' < bak0.orig > a
-egrep -v 'description|seqno|creation_time|Generated' < bak2 > b
+grep -v -E 'description|seqno|creation_time|Generated' < bak0.orig > a
+grep -v -E 'description|seqno|creation_time|Generated' < bak2 > b
 diff -u a b
 
 vgremove -ff $vg

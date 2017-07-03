@@ -31,7 +31,7 @@ aux prepare_profiles "thin-performance"
 aux prepare_scsi_debug_dev $DEV_SIZE sector_size=4096 opt_blks=256 || skip
 EXPECT=1048576
 check sysfs "$(< SCSI_DEBUG_DEV)" queue/optimal_io_size "$EXPECT"
-aux prepare_pvs 1 $DEV_SIZE
+aux prepare_pvs 1 "$DEV_SIZE"
 
 # Check we are not running on buggy kernel (broken lcm())
 # If so, turn chunk_size test into  'should'

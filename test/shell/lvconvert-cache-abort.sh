@@ -50,7 +50,7 @@ sleep 0.2
 kill -INT $PID_CONVERT
 aux enable_dev "$dev1"
 wait
-egrep "Flushing.*aborted" log
+grep -E "Flushing.*aborted" log
 # check the table got restored
 check grep_dmsetup table $vg-$lv1 "writeback"
 

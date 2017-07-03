@@ -17,13 +17,13 @@ SKIP_WITH_LVMPOLLD=1
 
 # Just skip this test if minor is already in use...
 dmsetup info | tee info
-egrep "^Major, minor: *[0-9]+, 123" info && skip
+grep -E "^Major, minor: *[0-9]+, 123" info && skip
 
 aux prepare_vg 2
 lvcreate -a n --zero n -l 1 -n foo $vg
 lvchange $vg/foo -My --major=255 --minor=123
 lvchange $vg/foo -a y
 dmsetup info $vg-foo | tee info
-egrep "^Major, minor: *[0-9]+, 123" info
+grep -E "^Major, minor: *[0-9]+, 123" info
 
 vgremove -ff $vg

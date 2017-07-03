@@ -54,8 +54,8 @@ pvmove --abort "$dev1"
 
 # check if proper pvmove was canceled
 get lv_field $vg name -a | tee out
-not egrep "^\[?pvmove0" out
-egrep "^\[?pvmove1" out
+not grep -E "^\[?pvmove0" out
+grep -E "^\[?pvmove1" out
 
 fi
 

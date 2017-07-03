@@ -33,7 +33,7 @@ for i in "$dev1" "$dev2" "$dev3" ; do
 		vgreduce --removemissing --force $vg
 
 		# check if reduced device was removed
-		test "$i" = "$dev1" && dm_table | not egrep "$vg-$lv1: *[^ ]+"
+		test "$i" = "$dev1" && dm_table | not grep -E "$vg-$lv1: *[^ ]+"
 
 		lvcreate -l1 -n $lv2 $vg
 
