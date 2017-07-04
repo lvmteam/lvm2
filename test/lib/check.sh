@@ -234,6 +234,7 @@ in_sync() {
 		[ $ignore_a -eq 0 ] && \
 			die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
 		echo "$lvm_name ($type$snap) is not in-sync"
+		[ $ignore_a -eq 1 ] && return 0
 		return 1
 	fi
 
