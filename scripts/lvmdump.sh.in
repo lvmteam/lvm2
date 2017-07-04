@@ -100,7 +100,7 @@ done
 
 NOW=$("$DATE" -u +%G%m%d%k%M%S | "$TR" -d ' ')
 if test -n "$userdir"; then
-	dir="$userdir"
+	dir=$userdir
 else
 	dirbase="lvmdump-$HOSTNAME-$NOW"
 	dir="$HOME/$dirbase"
@@ -127,7 +127,7 @@ log() {
 }
 
 warnings() {
-	if test "$UID" != "0" && test "$EUID" != "0"; then
+	if test "$UID" != 0 && test "$EUID" != 0; then
 		myecho "WARNING! Running as non-privileged user, dump is likely incomplete!"
 	elif test "$DMSETUP" = ":"; then
 		myecho "WARNING! Could not run dmsetup, dump is likely incomplete."
@@ -163,7 +163,7 @@ if (( clustered )); then
 
 	{
 	for i in nodes status services; do
-		cap_i=$(echo $i|tr a-z A-Z)
+		cap_i=$(echo "$i"|tr a-z A-Z)
 		echo "$cap_i:"
 		echo "----------------------------------"
 		log "cman_tool $i 2>> \"$log\""

@@ -52,7 +52,7 @@ function usage
 function set_default_use_lvmetad_var
 {
 	eval "$(lvm dumpconfig --type default global/use_lvmetad 2>/dev/null)"
-	if [ "$?" != "0" ]; then
+	if [ "$?" != 0 ]; then
 		USE_LVMETAD=0
 	else
                 USE_LVMETAD=$use_lvmetad
@@ -62,7 +62,7 @@ function set_default_use_lvmetad_var
 function parse_args
 {
     while [ -n "$1" ]; do
-        case $1 in
+        case "$1" in
             --enable-cluster)
                 LOCKING_TYPE=3
                 USE_LVMETAD=0
@@ -155,12 +155,12 @@ function validate_args
 	    exit 18
     fi
 
-    if [ "$HANDLE_SERVICES" = "0" ]; then
-        if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
+    if [ "$HANDLE_SERVICES" = 0 ]; then
+        if [ "$HANDLE_MIRROR_SERVICE" = 1 ]; then
             echo "--mirrorservice may be used only with --services"
             exit 19
         fi
-        if [ "$START_STOP_SERVICES" = "1" ]; then
+        if [ "$START_STOP_SERVICES" = 1 ]; then
             echo "--startstopservices may be used only with --services"
             exit 19
         fi
@@ -213,16 +213,16 @@ have_library=1
 have_use_lvmetad=1
 have_global=1
 
-grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*locking_type[[:blank:]]*=' "$CONFIGFILE"
 have_type=$?
 
-grep -q '^[[:blank:]]*library_dir[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*library_dir[[:blank:]]*=' "$CONFIGFILE"
 have_dir=$?
 
-grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*locking_library[[:blank:]]*=' "$CONFIGFILE"
 have_library=$?
 
-grep -q '^[[:blank:]]*use_lvmetad[[:blank:]]*=' $CONFIGFILE
+grep -q '^[[:blank:]]*use_lvmetad[[:blank:]]*=' "$CONFIGFILE"
 have_use_lvmetad=$?
 
 # Those options are in section "global {" so we must have one if any are present.
@@ -233,14 +233,14 @@ then
     grep -q '^[[:blank:]]*global[[:blank:]]*{' $CONFIGFILE
     have_global=$?
 
-    if [ "$have_global" = "1" ] 
+    if [ "$have_global" = 1 ] 
 	then
 	echo "global keys but no 'global {' found, can't edit file"
 	exit 13
     fi
 fi
 
-if [ "$LOCKING_TYPE" = "2" ] && [ -z "$LOCKINGLIBDIR" ] && [ "$have_dir" = "1" ]; then
+if [ "$LOCKING_TYPE" = 2 ] && [ -z "$LOCKINGLIBDIR" ] && [ "$have_dir" = 1 ]; then
 	echo "no library_dir specified in $CONFIGFILE"
 	exit 16
 fi
@@ -248,13 +248,13 @@ fi
 # So if we don't have "global {" we need to create one and 
 # populate it
 
-if [ "$have_global" = "1" ]
+if [ "$have_global" = 1 ]
 then
     if [ -z "$LOCKING_TYPE" ]; then
 	LOCKING_TYPE=1
     fi
-    if [ "$LOCKING_TYPE" = "3" ] || [ "$LOCKING_TYPE" = "2" ]; then
-        cat $CONFIGFILE - <<EOF > $TMPFILE
+    if [ "$LOCKING_TYPE" = 3 ] || [ "$LOCKING_TYPE" = 2 ]; then
+        cat "$CONFIGFILE" - <<EOF > "$TMPFILE"
 global {
     # Enable locking for cluster LVM
     locking_type = $LOCKING_TYPE
@@ -268,7 +268,7 @@ EOF
 	    exit 14
         fi
 	if [ -n "$LOCKINGLIB" ]; then
-	    cat - <<EOF >> $TMPFILE
+	    cat - <<EOF >> "$TMPFILE"
     locking_library = "$LOCKINGLIB"
 EOF
             if [ $? != 0 ]
@@ -277,7 +277,7 @@ EOF
 	        exit 16
             fi
 	fi
-	cat - <<EOF >> $TMPFILE
+	cat - <<EOF >> "$TMPFILE"
 }
 EOF
     fi # if we aren't setting cluster locking, we don't need to create a global section
@@ -294,7 +294,7 @@ else
     #
 
     if [ -n "$LOCKING_TYPE" ]; then
-	if [ "$have_type" = "0" ] 
+	if [ "$have_type" = 0 ] 
 	then
 	    SEDCMD=" s/^[[:blank:]]*locking_type[[:blank:]]*=.*/\ \ \ \ locking_type = $LOCKING_TYPE/g"
 	else
@@ -303,7 +303,7 @@ else
     fi
 
     if [ -n "$LOCKINGLIBDIR" ]; then
-        if [ "$have_dir" = "0" ] 
+        if [ "$have_dir" = 0 ] 
             then
             SEDCMD="${SEDCMD}\ns'^[[:blank:]]*library_dir[[:blank:]]*=.*'\ \ \ \ library_dir = \"$LOCKINGLIBDIR\"'g"
         else
@@ -312,7 +312,7 @@ else
     fi
 
     if [ -n "$LOCKINGLIB" ]; then
-        if [ "$have_library" = "0" ]
+        if [ "$have_library" = 0 ]
             then
             SEDCMD="${SEDCMD}\ns/^[[:blank:]]*locking_library[[:blank:]]*=.*/\ \ \ \ locking_library = \"$LOCKINGLIB\"/g"
         else
@@ -320,7 +320,7 @@ else
         fi
     fi
 
-    if [ "$have_use_lvmetad" = "0" ]
+    if [ "$have_use_lvmetad" = 0 ]
     then
         SEDCMD="${SEDCMD}\ns'^[[:blank:]]*use_lvmetad[[:blank:]]*=.*'\ \ \ \ use_lvmetad = $USE_LVMETAD'g"
     else
@@ -356,8 +356,8 @@ fi
 rm -f "$SCRIPTFILE" "$TMPFILE"
 
 function set_service {
-    local type="$1"
-    local action="$2"
+    local type=$1
+    local action=$2
     shift 2
 
     if [ "$type" = "systemd" ]; then
@@ -367,7 +367,7 @@ function set_service {
                 eval "$($SYSTEMCTL_BIN show "$i" -p LoadState 2>/dev/null)"
                 test  "$LoadState" = "loaded" || continue
                 $SYSTEMCTL_BIN enable "$i"
-                if [ "$START_STOP_SERVICES" = "1" ]; then
+                if [ "$START_STOP_SERVICES" = 1 ]; then
                     $SYSTEMCTL_BIN start "$i"
                 fi
             done
@@ -376,28 +376,28 @@ function set_service {
                 unset LoadState
                 eval "$($SYSTEMCTL_BIN show "$i" -p LoadState 2>/dev/null)"
                 test  "$LoadState" = "loaded" || continue
-                $SYSTEMCTL_BIN disable "$i"
-                if [ "$START_STOP_SERVICES" = "1" ]; then
-                    $SYSTEMCTL_BIN stop "$i"
+                "$SYSTEMCTL_BIN" disable "$i"
+                if [ "$START_STOP_SERVICES" = 1 ]; then
+                    "$SYSTEMCTL_BIN" stop "$i"
                 fi
             done
         fi
     elif [ "$type" = "sysv" ]; then
         if [ "$action" = "activate" ]; then
             for i in "$@"; do
-                $CHKCONFIG_BIN --list "$i" > /dev/null || continue
-                $CHKCONFIG_BIN "$i" on
-                if [ "$START_STOP_SERVICES" = "1" ]; then
-                    $SERVICE_BIN "$i" start
+                "$CHKCONFIG_BIN" --list "$i" > /dev/null || continue
+                "$CHKCONFIG_BIN" "$i" on
+                if [ "$START_STOP_SERVICES" = 1 ]; then
+                    "$SERVICE_BIN" "$i" start
                 fi
             done
         elif [ "$action" = "deactivate" ]; then
             for i in "$@"; do
-                $CHKCONFIG_BIN --list "$i" > /dev/null  || continue
-                if [ "$START_STOP_SERVICES" = "1" ]; then
-                    $SERVICE_BIN "$i" stop
+                "$CHKCONFIG_BIN" --list "$i" > /dev/null  || continue
+                if [ "$START_STOP_SERVICES" = 1 ]; then
+                    "$SERVICE_BIN" "$i" stop
                 fi
-                $CHKCONFIG_BIN "$i" off
+                "$CHKCONFIG_BIN" "$i" off
             done
         fi
     fi
@@ -405,7 +405,7 @@ function set_service {
 
 # Start/stop and enable/disable services if needed.
 
-if [ "$HANDLE_SERVICES" == "1" ]; then
+if [ "$HANDLE_SERVICES" = 1 ]; then
 
     SYSTEMCTL_BIN=$(which systemctl 2>/dev/null)
     CHKCONFIG_BIN=$(which chkconfig 2>/dev/null)
@@ -413,40 +413,40 @@ if [ "$HANDLE_SERVICES" == "1" ]; then
 
     # Systemd services
     if [ -n "$SYSTEMCTL_BIN" ]; then
-        if [ "$USE_LVMETAD" = "0" ]; then
+        if [ "$USE_LVMETAD" = 0 ]; then
             set_service systemd deactivate lvm2-lvmetad.service lvm2-lvmetad.socket
         else
             set_service systemd activate lvm2-lvmetad.socket
         fi
 
-        if [ "$LOCKING_TYPE" = "3" ]; then
+        if [ "$LOCKING_TYPE" = 3 ]; then
             set_service systemd activate lvm2-cluster-activation.service
-            if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
+            if [ "$HANDLE_MIRROR_SERVICE" = 1 ]; then
                 set_service activate lvm2-cmirrord.service
             fi
         else
             set_service systemd deactivate lvm2-cluster-activation.service
-            if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
+            if [ "$HANDLE_MIRROR_SERVICE" = 1 ]; then
                 set_service systemd deactivate lvm2-cmirrord.service
             fi
         fi
 
     # System V init scripts
     elif [ -n "$SERVICE_BIN" ] && [ -n "$CHKCONFIG_BIN" ]; then
-        if [ "$USE_LVMETAD" = "0" ]; then
+        if [ "$USE_LVMETAD" = 0 ]; then
             set_service sysv deactivate lvm2-lvmetad
         else
             set_service sysv activate lvm2-lvmetad
         fi
 
-        if [ "$LOCKING_TYPE" = "3" ]; then
+        if [ "$LOCKING_TYPE" = 3 ]; then
             set_service sysv activate clvmd
-            if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
+            if [ "$HANDLE_MIRROR_SERVICE" = 1 ]; then
                 set_service sysv activate cmirrord
             fi
         else
             set_service sysv deactivate clvmd
-            if [ "$HANDLE_MIRROR_SERVICE" = "1" ]; then
+            if [ "$HANDLE_MIRROR_SERVICE" = 1 ]; then
                 set_service sysv deactivate cmirrord
             fi
         fi

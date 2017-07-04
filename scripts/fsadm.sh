@@ -641,14 +641,14 @@ do
 	  "-e"|"--ext-offline") EXTOFF=1 ;;
 	  "-y"|"--yes") YES="-y" ;;
 	  "-l"|"--lvresize") DO_LVRESIZE=1 ;;
-	  "check") CHECK="$2" ; shift ;;
-	  "resize") RESIZE="$2"; NEWSIZE="$3" ; shift 2 ;;
+	  "check") CHECK=$2 ; shift ;;
+	  "resize") RESIZE=$2 ; NEWSIZE=$3 ; shift 2 ;;
 	  *) error "Wrong argument \"$1\". (see: $TOOL --help)"
 	esac
 	shift
 done
 
-test "$YES" = "-y" || YES=
+test "$YES" = "-y" || YES=""
 test "$EXTOFF" -eq 1 || EXTOFF=0
 
 if [ -n "$CHECK" ]; then

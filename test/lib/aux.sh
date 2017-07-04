@@ -22,31 +22,31 @@ expect_failure() {
 }
 
 COROSYNC_CONF="/etc/corosync/corosync.conf"
-COROSYNC_NODE="$(hostname)"
+COROSYNC_NODE=$(hostname)
 create_corosync_conf() {
-	if test -a $COROSYNC_CONF; then
-		if ! grep "created by lvm test suite" $COROSYNC_CONF; then
-			rm $COROSYNC_CONF
+	if test -a "$COROSYNC_CONF"; then
+		if ! grep "created by lvm test suite" "$COROSYNC_CONF"; then
+			rm "$COROSYNC_CONF"
 		else
-			mv $COROSYNC_CONF $COROSYNC_CONF.prelvmtest
+			mv "$COROSYNC_CONF" "$COROSYNC_CONF.prelvmtest"
 		fi
 	fi
 
-	sed -e "s/@LOCAL_NODE@/$COROSYNC_NODE/" lib/test-corosync-conf > $COROSYNC_CONF
+	sed -e "s/@LOCAL_NODE@/$COROSYNC_NODE/" lib/test-corosync-conf > "$COROSYNC_CONF"
 	echo "created new $COROSYNC_CONF"
 }
 
 DLM_CONF="/etc/dlm/dlm.conf"
 create_dlm_conf() {
-	if test -a $DLM_CONF; then
-		if ! grep "created by lvm test suite" $DLM_CONF; then
-			rm $DLM_CONF
+	if test -a "$DLM_CONF"; then
+		if ! grep "created by lvm test suite" "$DLM_CONF"; then
+			rm "$DLM_CONF"
 		else
-			mv $DLM_CONF $DLM_CONF.prelvmtest
+			mv "$DLM_CONF" "$DLM_CONF.prelvmtest"
 		fi
 	fi
 
-	cp lib/test-dlm-conf $DLM_CONF
+	cp lib/test-dlm-conf "$DLM_CONF"
 	echo "created new $DLM_CONF"
 }
 
@@ -81,15 +81,15 @@ prepare_dlm() {
 
 SANLOCK_CONF="/etc/sanlock/sanlock.conf"
 create_sanlock_conf() {
-	if test -a $SANLOCK_CONF; then
-		if ! grep "created by lvm test suite" $SANLOCK_CONF; then
-			rm $SANLOCK_CONF
+	if test -a "$SANLOCK_CONF"; then
+		if ! grep "created by lvm test suite" "$SANLOCK_CONF"; then
+			rm "$SANLOCK_CONF"
 		else
-			mv $SANLOCK_CONF $SANLOCK_CONF.prelvmtest
+			mv "$SANLOCK_CONF" "$SANLOCK_CONF.prelvmtest"
 		fi
 	fi
 
-	cp lib/test-sanlock-conf $SANLOCK_CONF
+	cp lib/test-sanlock-conf "$SANLOCK_CONF"
 	echo "created new $SANLOCK_CONF"
 }
 

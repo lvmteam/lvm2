@@ -25,7 +25,7 @@ READLINK=readlink
 GETOPT=getopt
 
 # user may override lvm location by setting LVM_BINARY
-LVM="${LVM_BINARY:-lvm}"
+LVM=${LVM_BINARY:-lvm}
 
 die() {
     code=$1; shift
@@ -45,7 +45,7 @@ function getvgname {
     NEWVG=$3
 
     BNAME="${NEWVG:-${VG}}"
-    NAME="${BNAME}"
+    NAME=${BNAME}
     I=0
 
     while [[ "${VGLIST}" =~ :${NAME}: ]]
@@ -131,7 +131,7 @@ while true
 do
     case $1 in
         -n|--basevgname)
-            NEWVG="$2"; shift; shift
+            NEWVG=$2; shift; shift
             ;;
         -i|--import)
             IMPORT=1; shift
@@ -230,7 +230,7 @@ do
 done
 export FILTER="filter=[ ${FILTER} \"r|.*|\" ]"
 
-LVMCONF=${TMP_LVM_SYSTEM_DIR}/lvm.conf
+LVMCONF="${TMP_LVM_SYSTEM_DIR}/lvm.conf"
 
 CMD_CONFIG_LINE="devices { \
                    scan = [ \"${TMP_LVM_SYSTEM_DIR}\" ] \
@@ -278,7 +278,7 @@ while read -r VGNAME VGEXPORTED VGMISSINGPVCOUNT; do
     fi
 
     if [ "$VGEXPORTED" = "1" ]; then
-        if [ ${IMPORT} -eq 1 ]; then
+        if [ "${IMPORT}" -eq 1 ]; then
             "$LVM" vgimport ${LVM_OPTS} ${TEST_OPT} "${VGNAME}"
             checkvalue $? "Volume Group ${VGNAME} could not be imported"
         else
@@ -318,12 +318,12 @@ fi
 
 ### update the device cache and make sure all
 ### the device nodes we need are straight
-if [ ${CHANGES_MADE} -eq 1 ]
+if [ "${CHANGES_MADE}" -eq 1 ]
 then
     # get global/use_lvmetad config and if set also notify lvmetad about changes
     # since we were running LVM commands above with use_lvmetad=0
     eval "$("$LVM" dumpconfig ${LVM_OPTS} global/use_lvmetad)"
-    if [ "$use_lvmetad" = "1" ]
+    if [ "$use_lvmetad" = 1 ]
     then
       echo "Notifying lvmetad about changes since it was disabled temporarily."
       echo "(This resolves any WARNING message about restarting lvmetad that appears above.)"

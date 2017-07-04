@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2011-2014 Red Hat, Inc.
+# Copyright (C) 2011-2017 Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -33,9 +33,9 @@ fi
 
 case "$CMD" in
   lvs|pvs|vgs|vgck|vgscan)
-	test "${LVM_DEBUG_LEVEL:-0}" -lt 2 && RUN_DBG= ;;
+	test "${LVM_DEBUG_LEVEL:-0}" -lt 2 && RUN_DBG="" ;;
   pvcreate|pvremove|lvremove|vgcreate|vgremove)
-	test "${LVM_DEBUG_LEVEL:-0}" -lt 1 && RUN_DBG= ;;
+	test "${LVM_DEBUG_LEVEL:-0}" -lt 1 && RUN_DBG="" ;;
 esac
 
 # Capture parallel users of debug.log file
@@ -48,6 +48,6 @@ esac
 if test -n "$abs_top_builddir"; then
     exec $RUN_DBG "$abs_top_builddir/tools/lvm" $CMD "$@"
 else # we are testing the lvm on $PATH
-    PATH=$(echo "$PATH" | sed -e s,[^:]*lvm2-testsuite[^:]*:,,g)
+    PATH=$(echo "$PATH" | sed -e 's,[^:]*lvm2-testsuite[^:]*:,,g')
     exec $RUN_DBG lvm $CMD "$@"
 fi

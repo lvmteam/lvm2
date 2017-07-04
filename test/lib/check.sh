@@ -40,7 +40,7 @@ lvdevices() {
 
 mirror_images_redundant() {
 	local vg=$1
-	local lv=$vg/$2
+	local lv="$vg/$2"
 	lvs -a "$vg" -o+devices
 	for i in $(lvdevices "$lv"); do
 		echo "# $i:"
@@ -77,7 +77,7 @@ lv_on() {
 
 	devs=( $(lvdevices "$1/$2" | sort | uniq ) )
 
-	lv_on_diff_ devs[@] "${@}"
+	lv_on_diff_ devs[@] "$@"
 }
 
 # list devices for given LV and all its subdevices
@@ -87,7 +87,7 @@ lv_tree_on() {
 	# Get sorted list of devices
 	devs=( $(get lv_tree_devices "$1" "$2") )
 
-	lv_on_diff_ devs[@] "${@}"
+	lv_on_diff_ devs[@] "$@"
 }
 
 mirror_images_on() {
@@ -112,14 +112,14 @@ mirror_log_on() {
 }
 
 lv_is_contiguous() {
-	local lv=$1/$2
+	local lv="$1/$2"
 	test "$(lvl --segments "$lv" | wc -l)" -eq 1 || \
 		die "LV $lv expected to be contiguous, but is not:" \
 			"$(lvl --segments "$lv")"
 }
 
 lv_is_clung() {
-	local lv=$1/$2
+	local lv="$1/$2"
 	test "$(lvdevices "$lv" | sort | uniq | wc -l)" -eq 1 || \
 		die "LV $lv expected to be clung, but is not:" \
 			"$(lvdevices "$lv" | sort | uniq)"
@@ -188,7 +188,7 @@ in_sync() {
 	local type
 	local snap=""
 	local lvm_name="$1/$2"
-	local ignore_a="$3"
+	local ignore_a=$3
 	local dm_name
 
 	dm_name=$(echo "$lvm_name" | sed s:-:--: | sed s:/:-:)
