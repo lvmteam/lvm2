@@ -67,7 +67,7 @@ check vg_field $vg2 vg_tags 105
 vgchange --deltag 105
 
 # select contains PVS field
-vgchange --addtag 106 -S "pv_name="$dev1""
+vgchange --addtag 106 -S pv_name="$dev1"
 check vg_field $vg1 vg_tags 106
 not check vg_field $vg2 vg_tags 106
 vgchange --deltag 106
