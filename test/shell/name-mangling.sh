@@ -76,13 +76,13 @@ function check_create_and_remove()
 
 	if [ "$dm_name" = "FAIL_MIXED" ]; then
 		r=0
-		grep "$FAILED_MIXED_STR" err || r=1
+		grep "$FAIL_MIXED_STR" err || r=1
 	elif [ "$dm_name" = "FAIL_MULTI" ]; then
 		r=0
-		grep "$FAILED_MULTI_STR" err || r=1
+		grep "$FAIL_MULTI_STR" err || r=1
 	elif [ "$dm_name" = "FAIL_BLACK" ]; then
 		r=0
-		grep "$FAILED_BLACK_STR" err || r=1
+		grep "$FAIL_BLACK_STR" err || r=1
 	fi
 
 	return $r
