@@ -37,8 +37,9 @@ aux have_thin 1 0 0 || skip
 which mkfs.ext4 || skip
 
 aux prepare_pvs 2 64
+get_devs
 
-vgcreate $vg -s 64K $(cat DEVICES)
+vgcreate -s 64K "$vg" "${DEVICES[@]}"
 
 # Create named pool only
 lvcreate -l1 -T $vg/pool1

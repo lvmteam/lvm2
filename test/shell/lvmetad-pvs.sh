@@ -16,8 +16,10 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_pvs 1 20000
-pvs $(cat DEVICES) | grep "$dev1"
+get_devs
+
+pvs "${DEVICES[@]}" | grep "$dev1"
 
 # check for PV size overflows
-pvs $(cat DEVICES) | grep 19.53g
-pvs $(cat DEVICES) | not grep 16.00e
+pvs "${DEVICES[@]}" | grep 19.53g
+pvs "${DEVICES[@]}" | not grep 16.00e

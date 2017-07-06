@@ -16,10 +16,11 @@ SKIP_WITH_LVMPOLLD=1
 
 aux have_thin 1 0 0 || skip
 aux prepare_pvs 1 16
+get_devs
 
 aux lvmconf "metadata/record_lvs_history=1"
 
-vgcreate $vg -s 64K $(cat DEVICES)
+vgcreate -s 64K "$vg" "${DEVICES[@]}"
 
 lvcreate -l100%FREE -T ${vg}/pool
 

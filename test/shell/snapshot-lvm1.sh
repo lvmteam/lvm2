@@ -19,8 +19,9 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_devs 2
+get_devs
 
-vgcreate --metadatatype 1 $vg $(cat DEVICES)
+vgcreate --metadatatype 1 "$vg" "${DEVICES[@]}"
 
 # Make origin volume
 lvcreate -ae -l5 $vg -n origin

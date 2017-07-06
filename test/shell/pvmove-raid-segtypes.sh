@@ -21,7 +21,9 @@ which md5sum || skip
 aux have_raid 1 3 5 || skip
 
 aux prepare_pvs 5 20
-vgcreate -c n -s 128k $vg $(cat DEVICES)
+get_devs
+
+vgcreate -c n -s 128k "$vg" "${DEVICES[@]}"
 
 for mode in "--atomic" ""
 do

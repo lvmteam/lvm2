@@ -18,6 +18,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_devs 5
+get_devs
 
 if test -n "$LVM_TEST_LVM1" ; then
 mdatypes='1 2'
@@ -28,21 +29,21 @@ fi
 for mdatype in $mdatypes
 do
 
-pvcreate -M$mdatype $(cat DEVICES)
+pvcreate -M$mdatype "${DEVICES[@]}"
 
 # ensure name order does not matter
 # NOTE: if we're using lvm1, we must use -M on vgsplit
-vgcreate -M$mdatype $vg1 $(cat DEVICES)
+vgcreate -M$mdatype "$vg1" "${DEVICES[@]}"
 vgsplit -M$mdatype $vg1 $vg2 "$dev1"
 vgremove $vg1 $vg2
 
-vgcreate -M$mdatype $vg2 $(cat DEVICES)
+vgcreate -M$mdatype "$vg2" "${DEVICES[@]}"
 vgsplit -M$mdatype $vg2 $vg1 "$dev1"
 vgremove $vg1 $vg2
 
 # vgsplit accepts new vg as destination of split
 # lvm1 -- bz244792
-vgcreate -M$mdatype $vg1 $(cat DEVICES)
+vgcreate -M$mdatype "$vg1" "${DEVICES[@]}"
 vgsplit $vg1 $vg2 "$dev1" 1>err
 grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err
 vgremove $vg1 $vg2

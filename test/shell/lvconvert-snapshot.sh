@@ -18,8 +18,9 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_pvs 1
+get_devs
 
-vgcreate -s 1k $vg $(cat DEVICES)
+vgcreate -s 1k "$vg" "${DEVICES[@]}"
 
 lvcreate --type snapshot -V50 -L1 -n $lv1 -s $vg
 

@@ -17,8 +17,10 @@ SKIP_WITH_LVMLOCKD=1
 . lib/inittest
 
 aux prepare_pvs 4
+get_devs
+
 aux pvcreate --metadatacopies 0 "$dev1"
-vgcreate $vg $(cat DEVICES)
+aux vgcreate "$vg" "${DEVICES[@]}"
 
 invalid lvcreate --type free -l1 -n $lv1 $vg 2>err
 grep "Invalid argument for --type" err

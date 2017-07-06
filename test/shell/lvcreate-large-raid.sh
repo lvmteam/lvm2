@@ -27,13 +27,14 @@ aux have_raid4 && segtypes="raid4 raid5"
 
 # Prepare 5x ~1P sized devices
 aux prepare_pvs 5 1000000000
+get_devs
 
-vgcreate $vg1 $(< DEVICES)
+vgcreate "$vg1" "${DEVICES[@]}"
 
 aux lvmconf 'devices/issue_discards = 1'
 
 # Delay PVs so that resynchronization doesn't fill too much space
-for device in $(< DEVICES)
+for device in "${DEVICES[@]}"
 do
 	aux delay_dev "$device" 0 10  "$(get first_extent_sector "$device")"
 done

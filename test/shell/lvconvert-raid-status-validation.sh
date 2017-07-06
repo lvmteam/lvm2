@@ -27,7 +27,9 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 aux have_raid 1 9 0 || skip
 
 aux prepare_pvs 9
-vgcreate -s 2m $vg $(cat DEVICES)
+get_devs
+
+vgcreate -s 2m "$vg" "${DEVICES[@]}"
 
 ###########################################
 # Upconverted RAID1 should never have all 'a's in status output

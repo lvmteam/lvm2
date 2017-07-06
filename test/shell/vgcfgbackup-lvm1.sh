@@ -16,6 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_pvs 4
+get_devs
 
 if test -n "$LVM_TEST_LVM1" ; then
 
@@ -26,8 +27,8 @@ aux lvmconf "backup/backup = 0"
 
 # vgcfgbackup correctly stores metadata LVM1 with missing PVs
 
-pvcreate -M1 $(cat DEVICES)
-vgcreate -M1 -c n $vg $(cat DEVICES)
+pvcreate -M1 "${DEVICES[@]}"
+vgcreate -M1 -c n "$vg" "${DEVICES[@]}"
 lvcreate -l1 -n $lv1 $vg "$dev1"
 pvremove -ff -y "$dev2"
 not lvcreate -l1 -n $lv1 $vg "$dev3"

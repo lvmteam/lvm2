@@ -17,8 +17,9 @@ SKIP_WITH_LVMLOCKD=1
 . lib/inittest
 
 aux prepare_pvs 3
+get_devs
 
-vgcreate -s 64k $vg $(cat DEVICES)
+vgcreate -s 64k "$vg" "${DEVICES[@]}"
 
 lvcreate -aey -l10 --type mirror -m1 -n $lv1 $vg "$dev1" "$dev2"
 

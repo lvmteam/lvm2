@@ -18,9 +18,11 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 . lib/inittest
 
 aux prepare_pvs 5 20
+get_devs
+
 # proper DEVRANGE needs to be set according to extent size
 DEVRANGE="0-32"
-vgcreate -s 32k $vg $(cat DEVICES)
+vgcreate -s 32k "$vg" "${DEVICES[@]}"
 
 # convert from linear to 2-way mirror ("mirror" default type)
 lvcreate -aey -l2 -n $lv1 $vg "$dev1"

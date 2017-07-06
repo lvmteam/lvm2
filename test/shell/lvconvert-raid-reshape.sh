@@ -24,7 +24,7 @@ aux have_multi_core || skip
 
 aux prepare_pvs 65 64
 
-vgcreate -s 1M $vg $(cat DEVICES)
+vgcreate -s 1M "$vg" "${DEVICES[@]}"
 
 function _lvcreate
 {

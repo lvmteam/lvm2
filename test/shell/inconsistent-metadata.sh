@@ -16,15 +16,16 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_vg 3 12
+get_devs
 
 lvcreate -aye --type mirror -m 1 -l 1 -n mirror $vg
 lvcreate -l 1 -n resized $vg
 lvchange -a n $vg/mirror
 
-aux backup_dev $(cat DEVICES)
+aux backup_dev "${DEVICES[@]}"
 
 init() {
-	aux restore_dev $(cat DEVICES)
+	aux restore_dev "${DEVICES[@]}"
 	not check lv_field $vg/resized lv_size "8.00m"
 	lvresize -L 8192K $vg/resized
 	aux restore_dev "$dev1"
@@ -69,8 +70,8 @@ fi
 
 echo Check auto-repair of failed vgextend - metadata written to original pv but not new pv
 vgremove -f $vg
-pvremove -ff $(cat DEVICES)
-pvcreate $(cat DEVICES)
+pvremove -ff "${DEVICES[@]}"
+pvcreate "${DEVICES[@]}"
 aux backup_dev "$dev2"
 vgcreate $vg "$dev1"
 vgextend $vg "$dev2"

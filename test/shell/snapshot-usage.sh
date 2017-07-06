@@ -57,7 +57,9 @@ if aux target_at_least dm-snapshot 1 10 0 ; then
 fi
 
 aux prepare_pvs 1
-vgcreate -s 4M $vg $(cat DEVICES)
+get_devs
+
+vgcreate -s 4M "$vg" "${DEVICES[@]}"
 
 # Play with 1 extent
 lvcreate -aey -l1 -n $lv $vg

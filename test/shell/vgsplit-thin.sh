@@ -22,8 +22,9 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 aux have_thin 1 0 0 || skip
 
 aux prepare_devs 5
+get_devs
 
-vgcreate $vg1 $(cat DEVICES)
+vgcreate "$vg1" "${DEVICES[@]}"
 lvcreate -T -L8M $vg1/pool1 -V10M -n $lv1 "$dev1" "$dev2"
 lvcreate -T -L8M $vg1/pool2 -V10M -n $lv2 "$dev3" "$dev4"
 

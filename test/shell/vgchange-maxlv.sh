@@ -17,14 +17,15 @@ SKIP_WITH_LVMPOLLD=1
 
 aux prepare_dmeventd
 aux prepare_pvs 3
+get_devs
 
-vgcreate -l 2 $vg $(cat DEVICES)
+vgcreate -l 2 "$vg" "${DEVICES[@]}"
 lvcreate -aey -n one -l 1 $vg
 lvcreate -n two -l 1 $vg
 not lvcreate -n three -l 1 $vg
 vgremove -ff $vg
 
-vgcreate -l 3 $vg $(cat DEVICES)
+vgcreate -l 3 "$vg" "${DEVICES[@]}"
 lvcreate -aey -n one -l 1 $vg
 lvcreate -n snap -s -l 1 $vg/one
 lvcreate -n two -l 1 $vg

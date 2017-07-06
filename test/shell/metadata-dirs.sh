@@ -16,9 +16,10 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_devs 3
+get_devs
 
-pvcreate --metadatacopies 0 $(cat DEVICES)
-not vgcreate $vg $(cat DEVICES)
+pvcreate --metadatacopies 0 "${DEVICES[@]}"
+not vgcreate "$vg" "${DEVICES[@]}"
 
 aux lvmconf "metadata/dirs = [ \"$TESTDIR/mda\" ]"
 
@@ -26,22 +27,22 @@ vgcreate $vg "$dev1"
 check vg_field $vg vg_mda_count 1
 vgremove -ff $vg
 
-vgcreate $vg $(cat DEVICES)
+vgcreate "$vg" "${DEVICES[@]}"
 check vg_field $vg vg_mda_count 1
 vgremove -ff $vg
 
 pvcreate --metadatacopies 1 --metadataignore y "$dev1"
-vgcreate $vg $(cat DEVICES)
+vgcreate "$vg" "${DEVICES[@]}"
 check vg_field $vg vg_mda_count 2
 vgremove -ff $vg
 
 pvcreate --metadatacopies 1 --metadataignore n "$dev1"
-vgcreate $vg $(cat DEVICES)
+vgcreate "$vg" "${DEVICES[@]}"
 check vg_field $vg vg_mda_count 2
 vgremove -ff $vg
 
 pvcreate --metadatacopies 0 "$dev1"
 aux lvmconf "metadata/dirs = [ \"$TESTDIR/mda\", \"$TESTDIR/mda2\" ]"
-vgcreate $vg $(cat DEVICES)
+vgcreate "$vg" "${DEVICES[@]}"
 check vg_field $vg vg_mda_count 2
 vgremove -ff $vg

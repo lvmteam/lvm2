@@ -28,8 +28,9 @@ which fsck || skip
 aux have_thin 1 3 0 || skip
 
 aux prepare_pvs 2 64
+get_devs
 
-vgcreate $vg -s 64K $(cat DEVICES)
+vgcreate -s 64K "$vg" "${DEVICES[@]}"
 
 # Newer thin-pool target (>= 1.13) supports unaligned external origin
 # But this test is written to test and expect older behavior

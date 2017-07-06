@@ -24,8 +24,10 @@ cleanup_lvs() {
 }
 
 aux prepare_pvs 2
+get_devs
+
 aux pvcreate --metadatacopies 0 "$dev1"
-aux vgcreate $vg $(cat DEVICES)
+aux vgcreate "$vg" "${DEVICES[@]}"
 
 # ---
 # Create snapshots of LVs on --metadatacopies 0 PV (bz450651)

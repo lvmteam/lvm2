@@ -19,21 +19,22 @@ SKIP_WITH_LVMPOLLD=1
 # FIXME: lvmetad fails with i.e. 1500 device on memory failure...
 
 # Number of LVs to create
-DEVICES=1000
+TEST_DEVS=1000
 # On low-memory boxes let's not stress too much
-test "$(aux total_mem)" -gt 524288 || DEVICES=256
+test "$(aux total_mem)" -gt 524288 || TEST_DEVS=256
 
 aux prepare_pvs 1 400
+get_devs
 
-vgcreate -s 128K $vg $(cat DEVICES)
+vgcreate -s 128K "$vg" "${DEVICES[@]}"
 
 vgcfgbackup -f data $vg
 
 # Generate a lot of devices (size of 1 extent)
-awk -v DEVICES=$DEVICES '/^\t\}/ {
+awk -v TEST_DEVS=$TEST_DEVS '/^\t\}/ {
     printf("\t}\n\tlogical_volumes {\n");
     cnt=0;
-    for (i = 0; i < DEVICES; i++) {
+    for (i = 0; i < TEST_DEVS; i++) {
 	printf("\t\tlvol%06d  {\n", i);
 	printf("\t\t\tid = \"%06d-1111-2222-3333-2222-1111-%06d\"\n", i, i);
 	print "\t\t\tstatus = [\"READ\", \"WRITE\", \"VISIBLE\"]";

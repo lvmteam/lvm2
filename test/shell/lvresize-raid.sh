@@ -22,8 +22,9 @@ aux have_raid4 && levels="4 $levels"
 aux have_raid 1 7 0 && levels="0 0_meta $levels"
 
 aux prepare_pvs 6
+get_devs
 
-vgcreate -s 256K $vg $(cat DEVICES)
+vgcreate -s 256K "$vg" "${DEVICES[@]}"
 
 for deactivate in true false; do
 

@@ -25,7 +25,9 @@ aux have_thin 1 0 0 || skip
 # Test --poolmetadatasize range
 # allocating large devices for testing
 aux prepare_pvs 10 16500
-vgcreate $vg -s 64K $(cat DEVICES)
+get_devs
+
+vgcreate -s 64K "$vg" "${DEVICES[@]}"
 
 # Size 0 is not valid
 invalid lvcreate -L4M --chunksize 128 --poolmetadatasize 0 -T $vg/pool1 2>out

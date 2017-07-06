@@ -16,8 +16,9 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_pvs
+get_devs
 
-vgcreate -s 1k $vg $(cat DEVICES)
+vgcreate -s 1k "$vg" "${DEVICES[@]}"
 
 # 3 Chunks
 lvcreate -aey -n one -l 10 $vg

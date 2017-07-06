@@ -16,6 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_pvs 4
+get_devs
 
 pvcreate --metadatacopies 0 "$dev4"
 
@@ -57,7 +58,7 @@ vgremove -ff $vg1 $vg2
 # and vgcfgrestore able to restore them when device reappears
 pv1_uuid=$(get pv_field "$dev1" pv_uuid)
 pv2_uuid=$(get pv_field "$dev2" pv_uuid)
-vgcreate $vg $(cat DEVICES)
+vgcreate "$vg" "${DEVICES[@]}"
 lvcreate -l1 -n $lv1 $vg "$dev1"
 lvcreate -l1 -n $lv2 $vg "$dev2"
 lvcreate -l1 -n $lv3 $vg "$dev3"

@@ -26,8 +26,9 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 aux have_thin 1 4 0 || skip
 
 aux prepare_pvs 2 64
+get_devs
 
-vgcreate $vg -s 64K $(cat DEVICES)
+vgcreate -s 64K "$vg" "${DEVICES[@]}"
 
 # create non-power-of-2 pool
 lvcreate -l100 -c 192 -T $vg/pool

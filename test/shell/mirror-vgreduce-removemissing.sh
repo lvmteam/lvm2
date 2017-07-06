@@ -95,8 +95,9 @@ rest_pvs_()
 # Initialize PVs and VGs
 
 aux prepare_pvs 5 80
+get_devs
 
-vgcreate -s 64k $vg $(cat DEVICES)
+vgcreate -s 64k "$vg" "${DEVICES[@]}"
 BLOCKS=0-7
 BLOCKS1=8-15
 # ---------------------------------------------------------------------

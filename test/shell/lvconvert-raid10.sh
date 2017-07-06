@@ -32,7 +32,9 @@ aux have_raid 1 3 1 || skip
 
 # 9 PVs needed for RAID10 testing (3-stripes/2-mirror - replacing 3 devs)
 aux prepare_pvs 9 80
-vgcreate -s 256k $vg $(cat DEVICES)
+get_devs
+
+vgcreate -s 256k "$vg" "${DEVICES[@]}"
 
 lvcreate --type raid10 -m 1 -i 3 -l 3 -n $lv1 $vg
 aux wait_for_sync $vg $lv1

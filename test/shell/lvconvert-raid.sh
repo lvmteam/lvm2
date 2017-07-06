@@ -33,8 +33,10 @@ get_image_pvs() {
 aux have_raid 1 3 0 || skip
 
 aux prepare_pvs 9
-# vgcreate -s 256k $vg $(cat DEVICES)
-vgcreate -s 2m $vg $(cat DEVICES)
+get_devs
+
+# vgcreate -s 256k "$vg" "${DEVICES[@]}"
+vgcreate -s 2m "$vg" "${DEVICES[@]}"
 
 ###########################################
 # RAID1 convert tests

@@ -18,7 +18,9 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_pvs 2 128
-vgcreate $vg $(cat DEVICES)
+get_devs
+
+aux vgcreate "$vg" "${DEVICES[@]}"
 
 lvcreate -L64 -n $lv $vg
 

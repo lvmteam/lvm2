@@ -62,8 +62,9 @@ aux have_thin 1 10 0 || skip
 aux prepare_dmeventd
 
 aux prepare_pvs 3 256
+get_devs
 
-vgcreate -s 1M $vg $(cat DEVICES)
+vgcreate -s 1M "$vg" "${DEVICES[@]}"
 
 # Testing dmeventd does NOT autoresize when default threshold 100% is left
 lvcreate -L200M -V50M -n thin -T $vg/pool

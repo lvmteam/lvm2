@@ -17,7 +17,7 @@ SKIP_WITH_LVMLOCKD=1
 recreate_vg_()
 {
 	vgremove -ff $vg
-	vgcreate $vg "$@" $(cat DEVICES)
+	vgcreate "$vg" "$@" "${DEVICES[@]}"
 }
 
 _check_mlog()
@@ -36,6 +36,8 @@ aux lvmconf "allocation/maximise_cling = 0" \
 
 # 4-way, disk log => 2-way, disk log
 aux prepare_vg 8
+get_devs
+
 lvcreate -aey --type mirror -m 3 --ignoremonitoring -L 1 -n 4way $vg "$dev1" "$dev2" "$dev3" "$dev4" "$dev5":0
 aux disable_dev "$dev2" "$dev4"
 echo n | lvconvert --repair $vg/4way 2>&1 | tee 4way.out

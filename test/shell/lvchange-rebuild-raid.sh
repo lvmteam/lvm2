@@ -18,19 +18,20 @@ SKIP_WITH_LVMPOLLD=1
 aux have_raid 1 3 2 || skip
 
 aux prepare_vg 8
+get_devs
 
 _sync() {
-	aux enable_dev $(< DEVICES)
+	aux enable_dev "${DEVICES[@]}"
 
 	aux wait_for_sync $vg $lv1
 	test -z "$1" || check raid_leg_status $vg $lv1 $1
 
 	# restore to delay_dev tables for all devices
-	aux restore_from_devtable $(< DEVICES)
+	aux restore_from_devtable "${DEVICES[@]}"
 }
 
 # Delay legs so that rebuilding status characters can be read
-for d in $(< DEVICES)
+for d in "${DEVICES[@]}"
 do
 	aux delay_dev "$d" 0 50 "$(get first_extent_sector "$d")"
 done

@@ -16,6 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 aux prepare_devs 4
+get_devs
 
 if test -n "$LVM_TEST_LVM1" ; then
 mdatypes='1 2'
@@ -78,11 +79,11 @@ not vgs $vg1 # just double-check it's really gone
 
 #COMM "vgreduce rejects --removemissing --mirrorsonly --force when nonmirror lv lost too"
 # (lvm$mdatype) setup: create mirror + linear lvs
-vgcreate -M$mdatype $vg1 $(cat DEVICES)
+vgcreate -M$mdatype "$vg1" "${DEVICES[@]}"
 lvcreate -n $lv2 -l 4 $vg1
 lvcreate -aey --type mirror -m1 -n $lv1 -l 4 $vg1 "$dev1" "$dev2" "$dev3"
 lvcreate -n $lv3 -l 4 $vg1 "$dev3"
-pvs --segments -o +lv_name $(cat DEVICES) # for record only
+pvs --segments -o +lv_name "${DEVICES[@]}" # for record only
 # (lvm$mdatype) setup: damage one pv
 vgchange -an $vg1
 aux disable_dev "$dev1"
@@ -94,7 +95,7 @@ vgreduce --removemissing --mirrorsonly --force $vg1
 
 aux enable_dev "$dev1"
 
-pvs -P $(cat DEVICES) # for record
+pvs -P "${DEVICES[@]}" # for record
 lvs -P $vg1           # for record
 vgs -P $vg1           # for record
 

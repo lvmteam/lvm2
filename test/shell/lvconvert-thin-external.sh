@@ -28,8 +28,9 @@ which fsck || skip
 aux have_thin 1 5 0 || skip
 
 aux prepare_pvs 2 64
+get_devs
 
-vgcreate $vg --metadatasize 128K -s 64K $(cat DEVICES)
+vgcreate "$vg" --metadatasize 128K -s 64K "${DEVICES[@]}"
 
 if test 0 -eq 1 ; then
 # FIXME: needs patch to allow inactive old-snap creation

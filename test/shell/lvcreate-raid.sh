@@ -28,7 +28,9 @@ RAID4=""
 aux have_raid4 && RAID4=raid4
 
 aux prepare_pvs 6 20  # 6 devices for RAID10 (2-mirror,3-stripe) test
-vgcreate -s 512k $vg $(cat DEVICES)
+get_devs
+
+vgcreate -s 512k "$vg" "${DEVICES[@]}"
 
 ###########################################
 # Create, wait for sync, remove tests

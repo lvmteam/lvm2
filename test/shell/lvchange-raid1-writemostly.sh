@@ -19,6 +19,7 @@ which mkfs.ext4 || skip
 aux have_raid 1 3 5 || skip
 
 aux prepare_vg 4
+get_devs
 
 for d in "$dev1" "$dev2" "$dev3" "$dev4"
 do
@@ -35,7 +36,7 @@ not lvchange -y --writemostly "$dev1" "$vg/$lv1"
 check lv_field $vg/$lv1 segtype "raid1"
 check lv_field $vg/$lv1 stripes 4
 check lv_attr_bit health $vg/${lv1}_rimage_0 "-"
-aux enable_dev $(< DEVICES)
+aux enable_dev "${DEVICES[@]}"
 aux wait_for_sync $vg $lv1
 lvchange -y --writemostly "$dev1" "$vg/$lv1"
 check lv_attr_bit health $vg/${lv1}_rimage_0 "w"

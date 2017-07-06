@@ -26,6 +26,7 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 aux have_thin 1 1 0 || skip
 
 aux prepare_vg 2 64
+get_devs
 
 aux extend_filter_LVMTEST
 
@@ -79,7 +80,7 @@ vgremove -ff $vg
 # device below does not support it, the kernel value
 # of discards actually used will be "nopassdown".
 # This is why we have "-o discards" and "-o kernel_discards".
-vgcreate -s 1m ${vg}_1 $(cat DEVICES)
+vgcreate -s 1m "${vg}_1" "${DEVICES[@]}"
 lvcreate -l 10 -T ${vg}_1/pool --discards ignore
 lvcreate -V 9m -T ${vg}_1/pool -n device_with_ignored_discards
 vgcreate -s 1m ${vg}_2 "$DM_DEV_DIR/${vg}_1/device_with_ignored_discards"
