@@ -44,10 +44,10 @@ log_name_to_count() {
 
 test_lvconvert() {
 	local start_count=$1
-	local start_count_p1=$(($start_count + 1))
+	local start_count_p1=$(( start_count + 1 ))
 	local start_log_type=$2
 	local finish_count=$3
-	local finish_count_p1=$(($finish_count + 1))
+	local finish_count_p1=$(( finish_count + 1 ))
 	local finish_log_type=$4
 	local dev_array=( "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" )
 	local start_log_count
@@ -78,7 +78,7 @@ test_lvconvert() {
 
 	if [ $start_count -gt 0 ]; then
 		# Are there extra devices for the log or do we overlap
-		if [ $(($start_count_p1 + $start_log_count)) -gt ${#dev_array[@]} ]; then
+		if [ $(( start_count_p1 + start_log_count )) -gt ${#dev_array[@]} ]; then
 			alloc="--alloc anywhere"
 		fi
 
@@ -94,7 +94,7 @@ test_lvconvert() {
 	test $active || lvchange -an $vg/$lv1
 
 	# Are there extra devices for the log or do we overlap
-	if [ $(($finish_count_p1 + $finish_log_count)) -gt ${#dev_array[@]} ]; then
+	if [ $(( finish_count_p1 +  finish_log_count )) -gt ${#dev_array[@]} ]; then
 		alloc="--alloc anywhere"
 	fi
 

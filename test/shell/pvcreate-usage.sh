@@ -15,7 +15,7 @@ SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 PAGESIZE=$(getconf PAGESIZE)
 # MDA_SIZE_MIN defined in lib/format_text/layout.h
-MDA_SIZE_MIN=$((8*$PAGESIZE))
+MDA_SIZE_MIN=$(( 8 * PAGESIZE ))
 
 . lib/inittest
 
@@ -28,7 +28,7 @@ not pvcreate --setphysicalvolumesize -1024 "$dev1"
 not pvcreate --metadatasize -1024 "$dev1"
 
 #COMM 'pvcreate rejects metadatasize that is less than minimum size'
-not pvcreate --dataalignment $((${MDA_SIZE_MIN}/2))b --metadatasize $((${MDA_SIZE_MIN}/2))b "$dev1" 2>err
+not pvcreate --dataalignment $(( MDA_SIZE_MIN / 2 ))b --metadatasize $(( MDA_SIZE_MIN / 2 ))b "$dev1" 2>err
 grep "Metadata area size too small" err
 
 #COMM 'pvcreate accepts metadatasize that is at least the minimum size'
@@ -193,11 +193,11 @@ for ignore in y n; do
 	echo "vgcreate has proper vg_mda_count and vg_mda_used_count"
 	if [ $pv_in_vg = 1 ]; then
 		vgcreate $vg "$dev1" "$dev2"
-		check vg_field $vg vg_mda_count "$(($mdacp * 2))"
+		check vg_field $vg vg_mda_count $(( mdacp * 2 ))
 		if [ $ignore = y ]; then
 			check vg_field $vg vg_mda_used_count "1"
 		else
-			check vg_field $vg vg_mda_used_count "$(($mdacp * 2))"
+			check vg_field $vg vg_mda_used_count "$(( mdacp * 2 ))"
 		fi
 		check vg_field $vg vg_mda_copies "unmanaged"
 		vgremove $vg

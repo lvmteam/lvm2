@@ -65,7 +65,7 @@ for i in 1 2 3; do
 
 			lvcreate -aey -l 2 -n $lv1 $vg
 		else
-			lvcreate --type raid1 -m $(($i - 1)) -l 2 -n $lv1 $vg
+			lvcreate --type raid1 -m $(( i - 1 )) -l 2 -n $lv1 $vg
 			aux wait_for_sync $vg $lv1
 		fi
 
@@ -299,7 +299,7 @@ for i in {1..3}; do
 		devices=( $(get_image_pvs $vg $lv1) )
 
 		for k in $(seq "$j"); do
-			index=$((($k + $o) % ($i + 1)))
+			index=$(( ( k +  o ) % ( i + 1 ) ))
 			replace="$replace --replace ${devices[$index]}"
 		done
 		aux wait_for_sync $vg $lv1

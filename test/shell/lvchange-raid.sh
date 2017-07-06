@@ -152,15 +152,15 @@ run_syncaction_check() {
 	device=$(get lv_devices $vg/${lv}_rimage_1)
 
 	size=$(get lv_field $vg/${lv}_rimage_1 size -a --units 1k)
-	size=$((${size%\.00k} / 2))
+	size=$(( ${size%\.00k} / 2 ))
 
 	tmp=$(get pv_field "$device" mda_size --units 1k)
 	seek=${tmp%\.00k} # Jump over MDA
 
 	tmp=$(get lv_field $vg/${lv}_rmeta_1 size -a --units 1k)
-	seek=$(($seek + ${tmp%\.00k}))  # Jump over RAID metadata image
+	seek=$(( seek + ${tmp%\.00k} ))  # Jump over RAID metadata image
 
-	seek=$(($seek + $size)) # Jump halfway through the RAID image
+	seek=$(( seek + size )) # Jump halfway through the RAID image
 
 	check lv_attr_bit health $vg/$lv "-"
 	check lv_field $vg/$lv raid_mismatch_count "0"

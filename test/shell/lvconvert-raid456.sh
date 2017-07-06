@@ -53,7 +53,7 @@ for i in $levels; do
 		devices=( $(get_image_pvs $vg $lv1) )
 
 		for k in $(seq $j); do
-			index=$((($k + $o) % $dev_cnt))
+			index=$(( ( k + o ) % dev_cnt ))
 			replace="$replace --replace ${devices[$index]}"
 		done
 		aux wait_for_sync $vg $lv1

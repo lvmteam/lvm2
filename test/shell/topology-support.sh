@@ -45,7 +45,7 @@ test_snapshot_mount() {
 
 NUM_DEVS=1
 PER_DEV_SIZE=34
-DEV_SIZE=$(($NUM_DEVS*$PER_DEV_SIZE))
+DEV_SIZE=$(( NUM_DEVS * PER_DEV_SIZE ))
 
 # ---------------------------------------------
 # Create "desktop-class" 4K drive

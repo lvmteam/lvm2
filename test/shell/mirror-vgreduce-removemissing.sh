@@ -83,7 +83,7 @@ rest_pvs_()
 	local n
 	local dev
 
-	for n in $(seq 1 $(($index - 1))) $(seq $(($index + 1)) $num); do
+	for n in $(seq 1 $(( index - 1 )) ) $(seq $(( index + 1 )) $num); do
 		eval dev=$\dev$n
 		rem="$rem $dev"
 	done

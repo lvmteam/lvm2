@@ -96,7 +96,7 @@ EOF
 		alignment_offset=0
 
 	# default alignment is 1M, add alignment_offset
-	pv_align=$((1048576+$alignment_offset))
+	pv_align=$(( 1048576 + alignment_offset ))
 	check pv_field "${pvdev}p1" pe_start $pv_align --units b --nosuffix
 
 	pvremove "${pvdev}p1"

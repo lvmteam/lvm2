@@ -127,11 +127,11 @@ for ignore in y n; do
 		check pv_field "$dev2" pv_mda_used_count $mdacp
 	fi
 	echo vg has proper vg_mda_count and vg_mda_used_count
-	check vg_field $vg vg_mda_count $(($mdacp * 2 + 1))
+	check vg_field $vg vg_mda_count $(( mdacp * 2 + 1 ))
 	if [ $ignore = y ]; then
 		check vg_field $vg vg_mda_used_count 1
 	else
-		check vg_field $vg vg_mda_used_count $(($mdacp * 2 + 1))
+		check vg_field $vg vg_mda_used_count $(( mdacp * 2 + 1 ))
 	fi
 	check vg_field $vg vg_mda_copies unmanaged
 	vgremove $vg
