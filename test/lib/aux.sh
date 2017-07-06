@@ -960,8 +960,7 @@ disable_dev() {
 	done
 
 	test -n "$silent" || for num in $notify; do
-		notify_lvmetad --major "$(echo "$num" | sed -e "s,:.*,,")" \
-		               --minor "$(echo "$num" | sed -e "s,.*:,,")"
+		notify_lvmetad --major "${num%%:*}" --minor "${num##*:}"
 	done
 }
 
