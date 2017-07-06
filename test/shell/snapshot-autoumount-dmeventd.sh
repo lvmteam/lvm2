@@ -38,7 +38,7 @@ mount -o errors=remount-ro "$DM_DEV_DIR/mapper/$vg-snap" "$mntdir"
 
 test "$(dmsetup info -c --noheadings -o open $vg-snap)" -eq 1
 
-cat /proc/mounts | grep "$mntdir"
+grep "$mntdir" /proc/mounts
 
 # overfill 4M snapshot (with metadata)
 not dd if=/dev/zero of="$mntdir/file$1" bs=1M count=4 conv=fdatasync
@@ -52,6 +52,6 @@ for i in {1..100}; do
 	test "$(dmsetup info -c --noheadings -o open $vg-snap)" -eq 0 && break
 done
 
-cat /proc/mounts | not grep "$mntdir"
+not grep "$mntdir" /proc/mounts
 
 vgremove -f $vg
