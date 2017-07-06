@@ -81,10 +81,9 @@ aux profileconf valid_cmd_profile 'global/units = "h"' \
 
 aux profileconf valid_mda_profile 'allocation/thin_pool_zero = 0' \
 				  'allocation/thin_pool_discards = "passdown"' \
-				  'allocation/thin_pool_chunk_size = 64'\
+				  'allocation/thin_pool_chunk_size = 64' \
 				  'activation/thin_pool_autoextend_threshold = 100' \
-				  'activation/thin_pool_autoextend_percent = 20' \
-
+				  'activation/thin_pool_autoextend_percent = 20'
 
 aux profileconf extra_mda_profile 'allocation/thin_pool_chunk_size = 128'
 
