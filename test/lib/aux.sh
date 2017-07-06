@@ -351,7 +351,7 @@ prepare_lvmdbusd() {
 		echo "Failed to start lvmdbusd daemon"
 		return 1
 	fi
-	echo $pid > LOCAL_LVMDBUSD
+	echo "$pid" > LOCAL_LVMDBUSD
 	echo ok
 }
 
@@ -384,7 +384,7 @@ teardown_devs_prefixed() {
 	local IFS=$IFS_NL
 	local dm
 
-	rm -rf "$TESTDIR/dev/$prefix"*
+	rm -rf "$TESTDIR/dev/$prefix*"
 
 	# Resume suspended devices first
 	for dm in $(dm_info suspended,name | grep "^Suspended:.*$prefix"); do
@@ -642,7 +642,7 @@ prepare_loop() {
 		done
 	fi
 	test -n "$LOOP" # confirm or fail
-	BACKING_DEV="$LOOP"
+	BACKING_DEV=$LOOP
 	echo "$LOOP" > LOOP
 	echo "$LOOP" > BACKING_DEV
 	echo "ok ($LOOP)"
@@ -1040,7 +1040,7 @@ backup_dev() {
 	local dev
 
 	for dev in "$@"; do
-		dd if="$dev" of="$dev.backup" bs=1024
+		dd if="$dev" of="${dev}.backup" bs=1024
 	done
 }
 
@@ -1048,9 +1048,9 @@ restore_dev() {
 	local dev
 
 	for dev in "$@"; do
-		test -e "$dev.backup" || \
+		test -e "${dev}.backup" || \
 			die "Internal error: $dev not backed up, can't restore!"
-		dd of="$dev" if="$dev.backup" bs=1024
+		dd of="$dev" if="${dev}.backup" bs=1024
 	done
 }
 
@@ -1232,7 +1232,7 @@ lvmconf() {
 
 profileconf() {
 	local pdir="$LVM_SYSTEM_DIR/profile"
-	profile_name="$1"
+	local profile_name=$1
 	shift
 	generate_config "$@"
 	mkdir -p "$pdir"
@@ -1598,7 +1598,7 @@ test -z "$LVM_TEST_AUX_TRACE" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)
 
-if test "$1" = dmsetup; then
+if test "$1" = "dmsetup" ; then
     shift
     dmsetup_wrapped "$@"
 else
