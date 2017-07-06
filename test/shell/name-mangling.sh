@@ -197,8 +197,8 @@ ln -s "$DM_DEV_DIR/mapper/${PREFIX}abc" "$DM_DEV_DIR/${PREFIX}xyz"
 aux dmsetup status "$DM_DEV_DIR/${PREFIX}xyz" || r=1
 rm -f "$DM_DEV_DIR/${PREFIX}xyz"
 remove_dm_dev auto "abc"
-if [ r = 1 ]; then
-	exit 1
+if [ "$r" = 1 ]; then
+	return "$r"
 fi
 
 ### ALL WHITELISTED CHARACTERS ###
