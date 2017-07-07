@@ -4907,14 +4907,10 @@ static int get_lockd_vgs(struct list_head *vg_lockd)
 				continue;
 
 			for (lv_cn = md_cn->child; lv_cn; lv_cn = lv_cn->sib) {
-				snprintf(find_str_path, PATH_MAX, "%s/lock_type", lv_cn->key);
-				lock_type = dm_config_find_str(lv_cn, find_str_path, NULL);
-
-				if (!lock_type)
-					continue;
-
 				snprintf(find_str_path, PATH_MAX, "%s/lock_args", lv_cn->key);
 				lock_args = dm_config_find_str(lv_cn, find_str_path, NULL);
+				if (!lock_args)
+					continue;
 
 				snprintf(find_str_path, PATH_MAX, "%s/id", lv_cn->key);
 				lv_uuid = dm_config_find_str(lv_cn, find_str_path, NULL);
@@ -4960,7 +4956,7 @@ out:
 	return rv;
 }
 
-static char _dm_uuid[64];
+static char _dm_uuid[72];
 
 static char *get_dm_uuid(char *dm_name)
 {
