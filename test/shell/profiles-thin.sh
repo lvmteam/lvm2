@@ -62,7 +62,7 @@ vgremove -ff $vg
 
 if test -d "$DM_DEV_DIR/$vg" ; then
 	should not echo "Udev has left \"$DM_DEV_DIR/$vg\"!"
-	rm -rf "$DM_DEV_DIR/$vg"
+	rm -rf "${DM_DEV_DIR:?/dev}/$vg"
 fi
 
 # The profile must be also applied if using the profile
