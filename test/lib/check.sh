@@ -90,12 +90,18 @@ lv_tree_on() {
 	lv_on_diff_ devs[@] "$@"
 }
 
+# Test if all mimage_X LV legs are sitting on given ordered list of PVs
+# When LV is composed of imagetmp, such leg is decomposed so only
+# real _mimage LVs are always checked
 mirror_images_on() {
 	local vg=$1
 	local lv=$2
 	shift 2
-	for i in $(lvdevices "$lv"); do
-		lv_on "$vg" "$lv" "$1"
+	local mimages=()
+	readarray -t mimages <<< "$(get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" )"
+
+	for i in  "${mimages[@]}"; do
+		lv_on "$vg" "$i" "$1"
 		shift
 	done
 }
