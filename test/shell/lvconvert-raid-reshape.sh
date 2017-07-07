@@ -59,8 +59,8 @@ function _lvconvert
 	[ "${level:0:7}" = "striped" ] && wait_and_check=0
 	[ "${level:0:5}" = "raid0" ] && wait_and_check=0
 
-	lvconvert -y --ty $req_level $R $vg/$lv
-	[ $? -ne 0 ] && return $?
+	lvconvert -y --ty $req_level $R $vg/$lv || return $?
+
 	check lv_first_seg_field $vg/$lv segtype "$level"
 	check lv_first_seg_field $vg/$lv data_stripes $data_stripes
 	check lv_first_seg_field $vg/$lv stripes $stripes
