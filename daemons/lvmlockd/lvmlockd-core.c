@@ -19,6 +19,7 @@
 #include "lvm-version.h"
 #include "lvmetad-client.h"
 #include "lvmlockd-client.h"
+#include "dm-ioctl.h" /* for DM_UUID_LEN */
 
 /* #include <assert.h> */
 #include <errno.h>
@@ -4956,7 +4957,7 @@ out:
 	return rv;
 }
 
-static char _dm_uuid[72];
+static char _dm_uuid[DM_UUID_LEN];
 
 static char *get_dm_uuid(char *dm_name)
 {
