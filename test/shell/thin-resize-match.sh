@@ -62,7 +62,7 @@ diff MD5  MD5-2
 
 
 # Do not want to see Live & Inactive table entry
-echo $(dm_info attr,name) | not grep "LI-.*${PREFIX}" || {
+( dm_info attr,name | not grep "LI-.*${PREFIX}" ) || {
         dmsetup table --inactive | grep ${PREFIX}
 	die "Found device with Inactive table"
 }
