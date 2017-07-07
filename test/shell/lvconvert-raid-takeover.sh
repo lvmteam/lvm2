@@ -28,19 +28,17 @@ detect_error_leak_()
 {
 	local err
 
-	dmsetup info -c -o name --noheadings | tee out
-	if grep $vg out ; then
-		for i in $(grep $vg out) ; do
-			if dmsetup table $i | grep "error "; then
-				err="$err $i"
-			fi
-		done
-		test -z "$err" || {
-			dmsetup table | grep $vg
-			dmsetup ls --tree
-			die "Device(s) $err should not be here."
-		}
-	fi
+	for i in $(dmsetup info -c -o name --noheadings) ; do
+		case "$i" in
+		"$vg*") (dmsetup table "$i" | grep "error ") && err="$err $i" ;;
+		esac
+	done
+
+	test -z "$err" || {
+		dmsetup table | grep $vg
+		dmsetup ls --tree
+		die "Device(s) $err should not be here."
+	}
 }
 
 function _lvcreate
