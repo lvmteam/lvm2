@@ -2077,6 +2077,10 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (lv_is_thin_pool(lv)) {
 		pool_lv = lv;
 
+	} else if (lv_is_thin_pool_data(lv)) {
+		/* FIXME: there should be a function to get pool lv from data lv. */
+		pool_lv = lv_parent(lv);
+
 	} else {
 		/* This should not happen AFAIK. */
 		log_error("Lock on incorrect thin lv type %s/%s",
