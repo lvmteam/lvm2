@@ -63,7 +63,7 @@ sel() {
 
 	# the number of lines on output must match
 	test "$items_found" -eq $# || {
-		echo "  >>> NUMBER OF ITEMS EXPECTED: $# ($@)"
+		echo "  >>> NUMBER OF ITEMS EXPECTED: $#" "$@"
 		echo "  >>> NUMBER OF ITEMS FOUND: $items_found ($(< $OUT_LOG_FILE))"
 		return 1
 	}
