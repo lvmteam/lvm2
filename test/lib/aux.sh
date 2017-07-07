@@ -1226,6 +1226,18 @@ EOF
 
 lvmconf() {
 	unset profile_name
+	test $# -eq 0 || {
+		# Compare if passed args aren't already all in generated lvm.conf
+		local needed=0
+		for i in "$@"; do
+			val=$(grep "${i%%[={ ]*}" CONFIG_VALUES 2>/dev/null | tail -1) || { needed=1; break; }
+			test "$val" = "$i" || { needed=1; break; }
+		done
+		test "$needed" -eq 0 && {
+			echo "## LVMCONF: values are already there, skipping."
+			return 0 # not needed
+		}
+	}
 	generate_config "$@"
 	mv -f CONFIG "$LVM_SYSTEM_DIR/lvm.conf"
 }
