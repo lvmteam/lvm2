@@ -80,7 +80,7 @@ fscheck_reiserfs()
 check_missing()
 {
 	local t
-	eval t=$\check_$1
+	eval "t=\$check_$1"
 	test -z "$t" && return 0
 	test "$t" = skip && return 1
 	echo "WARNING: fsadm test skipped $1 tests, $t tool is missing."
