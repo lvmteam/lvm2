@@ -95,7 +95,7 @@ lvconvert -m2 $vg/$lv1 "$dev1" "$dev2" "$dev4" "$dev3:0" # If the above "should"
 
 aux wait_for_sync $vg $lv1
 lvconvert -m-1 $vg/$lv1 "$dev1"
-check mirror_images_on $lv1 "$dev2" "$dev4"
+check mirror_images_on $vg $lv1 "$dev2" "$dev4"
 lvconvert -m-1 $vg/$lv1 "$dev2"
 check linear $vg $lv1
 check lv_on $vg $lv1 "$dev4"
@@ -253,7 +253,7 @@ lvremove -ff $vg
 
 # lvconvert from linear (on multiple PVs) to mirror
 lvcreate -aey -l 8 -n $lv1 $vg "$dev1:0-3" "$dev2:0-3"
-lvconvert --type mirror -vvvv -m1 $vg/$lv1
+lvconvert --type mirror -m1 $vg/$lv1
 
 should check mirror $vg $lv1
 check mirror_legs $vg $lv1 2
