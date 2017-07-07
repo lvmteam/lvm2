@@ -173,7 +173,7 @@ function check_mangle_cmd()
 		fi
 	fi
 
-	if [ $r = 0 -a $rename_expected = 1 ]; then
+	if [ "$r" = 0 ] && [ "$rename_expected" = 1 ]; then
 		# successfuly renamed to expected name
 		remove_dm_dev none "$expected"
 	elif [ $r = 1 ]; then

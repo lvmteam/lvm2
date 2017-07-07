@@ -147,7 +147,7 @@ STACKTRACE() {
 
 	test -f SKIP_THIS_TEST && exit 200
 
-	test -z "$LVM_TEST_NODEBUG" -a -f TESTNAME && {
+	test -z "$LVM_TEST_NODEBUG" && test -f TESTNAME && {
 		local name
 		local idx
 		for i in debug.log* ; do
@@ -200,7 +200,7 @@ init_udev_transaction() {
 }
 
 finish_udev_transaction() {
-	if test "$DM_UDEV_SYNCHRONISATION" = 1 -a -n "$DM_UDEV_COOKIE"; then
+	if test "$DM_UDEV_SYNCHRONISATION" = 1 && test -n "$DM_UDEV_COOKIE" ; then
 		dmsetup udevreleasecookie
 		unset DM_UDEV_COOKIE
 	fi

@@ -1442,13 +1442,13 @@ have_thin() {
 
 	declare -a CONF
 	# disable thin_check if not present in system
-	if test -n "$LVM_TEST_THIN_CHECK_CMD" -a ! -x "$LVM_TEST_THIN_CHECK_CMD" ; then
+	if test -n "$LVM_TEST_THIN_CHECK_CMD" && test ! -x "$LVM_TEST_THIN_CHECK_CMD"; then
 		CONF[0]="global/thin_check_executable = \"\""
 	fi
-	if test -n "$LVM_TEST_THIN_DUMP_CMD" -a ! -x "$LVM_TEST_THIN_DUMP_CMD" ; then
+	if test -n "$LVM_TEST_THIN_DUMP_CMD" && test ! -x "$LVM_TEST_THIN_DUMP_CMD"; then
 		CONF[1]="global/thin_dump_executable = \"\""
 	fi
-	if test -n "$LVM_TEST_THIN_REPAIR_CMD" -a ! -x "$LVM_TEST_THIN_REPAIR_CMD" ; then
+	if test -n "$LVM_TEST_THIN_REPAIR_CMD" && test ! -x "$LVM_TEST_THIN_REPAIR_CMD"; then
 		CONF[2]="global/thin_repair_executable = \"\""
 	fi
 	if test ${#CONF[@]} -ne 0 ; then

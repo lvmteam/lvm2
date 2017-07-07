@@ -332,7 +332,7 @@ TEST_TYPES="- snapshot"
 # thinpool works EX in cluster
 # but they don't work together in a cluster yet
 #  (nor does thinpool+mirror work in a cluster yet)
-test ! -e LOCAL_CLVMD -a aux have_thin 1 8 0 && TEST_TYPE="$TEST_TYPES thinpool_data thinpool_meta"
+test ! -e LOCAL_CLVMD && aux have_thin 1 8 0 && TEST_TYPE="$TEST_TYPES thinpool_data thinpool_meta"
 
 # Implicit test for 'raid1' only
 if test "${TEST_RAID:-raid1}" = raid1 ; then
