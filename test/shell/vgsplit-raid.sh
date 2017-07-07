@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 COMM() {
-	LAST_TEST="$@"
+	LAST_TEST="$*"
 }
 
 create_vg_() {

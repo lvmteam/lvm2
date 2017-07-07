@@ -21,7 +21,7 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 . lib/inittest
 
 COMM() {
-	LAST_TEST="$@"
+	LAST_TEST="$*"
 }
 
 create_vg_() {
