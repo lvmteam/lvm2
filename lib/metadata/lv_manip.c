@@ -7983,7 +7983,8 @@ deactivate_and_revert_new_lv:
 	}
 
 revert_new_lv:
-	lockd_free_lv(vg->cmd, vg, lp->lv_name, &lv->lvid.id[1], lp->lock_args);
+	lockd_lv(cmd, lv, "un", LDLV_PERSISTENT);
+	lockd_free_lv(vg->cmd, vg, lp->lv_name, &lv->lvid.id[1], lv->lock_args);
 
 	/* FIXME Better to revert to backup of metadata? */
 	if (!lv_remove(lv) || !vg_write(vg) || !vg_commit(vg))
