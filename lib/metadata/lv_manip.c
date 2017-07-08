@@ -7310,7 +7310,7 @@ static int _vg_check_features(struct volume_group *vg,
  * If lp->thin OR lp->activate is AY*, activate the pool if not already active.
  * If lp->thin, create thin LV within the pool - as a snapshot if lp->snapshot.
  *   If lp->activate is AY*, activate it.
- *   If lp->activate was AN* and the pool was originally inactive, deactivate it.
+ *   If lp->activate is AN* and the pool was originally not active, deactivate it.
  */
 static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					       struct lvcreate_params *lp,
