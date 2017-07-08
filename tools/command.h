@@ -150,7 +150,7 @@ struct cmd_rule {
 /*
  * Array sizes
  *
- * CMD_RO_ARGS needs to accomodate a list of options,
+ * CMD_RO_ARGS needs to accommodate a list of options,
  * of which one is required after which the rest are
  * optional.
  */

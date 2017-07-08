@@ -34,7 +34,7 @@
  *	opt = addr.nl_groups;
  *	setsockopt(fd, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, &opt, sizeof(opt));
  *
- * User-space will then wait to receive requests form the kernel, which it
+ * User-space will then wait to receive requests from the kernel, which it
  * will process as described below.  The requests are received in the form,
  * ((struct dm_ulog_request) + (additional data)).  Depending on the request
  * type, there may or may not be 'additional data'.  In the descriptions below,
