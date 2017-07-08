@@ -21,10 +21,10 @@ export LVM_TEST_LVMETAD_DEBUG_OPTS=${LVM_TEST_LVMETAD_DEBUG_OPTS-}
 
 get_image_pvs() {
 	local d
-	local images
+	local images=()
 
-	images=$(dmsetup ls | grep "${1}-${2}_.image_.*" | cut -f1 | sed -e s:-:/:)
-	lvs --noheadings -a -o devices "$images" | sed s/\(.\)//
+	images=( $(dmsetup ls | grep "${1}-${2}_.image_.*" | cut -f1 | sed -e s:-:/:) )
+	lvs --noheadings -a -o devices "${images[@]}" | sed s/\(.\)//
 }
 
 ########################################################
@@ -296,21 +296,22 @@ for i in {1..3}; do
 
 	for j in $(seq $(( i + 1 ))); do # The number of devs to replace at once
 	for o in $(seq 0 $i); do        # The offset into the device list
-		replace=""
+		replace=()
 
 		devices=( $(get_image_pvs $vg $lv1) )
 
 		for k in $(seq "$j"); do
 			index=$(( ( k +  o ) % ( i + 1 ) ))
-			replace="$replace --replace ${devices[$index]}"
+			replace+=( "--replace" )
+			replace+=( "${devices[$index]}" )
 		done
 		aux wait_for_sync $vg $lv1
 
 		if [ "$j" -ge $(( i + 1 )) ]; then
 			# Can't replace all at once.
-			not lvconvert "$replace" $vg/$lv1
+			not lvconvert "${replace[@]}" $vg/$lv1
 		else
-			lvconvert "$replace" $vg/$lv1
+			lvconvert "${replace[@]}" $vg/$lv1
 		fi
 	done
 	done

@@ -32,14 +32,14 @@ function _check_raid
 	shift
 	local good=$1
 	shift
-	local devs=$*
+	local devs=( "$@" )
 
 	aux wait_for_sync $vg $lv
-	aux disable_dev --error --silent "$devs"
+	aux disable_dev --error --silent "${devs[@]}"
 	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
 	fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv"
 	check raid_leg_status $vg $lv "$fail"
-	aux enable_dev --silent "$devs"
+	aux enable_dev --silent "${devs[@]}"
 	lvs -a -o +devices $vg | tee out
 	not grep unknown out
 	lvchange --refresh $vg/$lv
