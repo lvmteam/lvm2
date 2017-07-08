@@ -41,7 +41,7 @@ Create an LV or identify an existing LV to be the origin LV.
 
 .I Example
 .br
-# lvcreate -n lvol0 -L 100G vg
+# lvcreate -n lvol0 -L 100G vg /dev/slow
 
 
 .SS 1. create CacheDataLV
@@ -199,7 +199,7 @@ pool sub-LVs redundant.
 .I Example
 .nf
 0. Create an origin LV we wish to cache
-# lvcreate -L 10G -n lv1 vg /dev/slow_devs
+# lvcreate -L 10G -n lv1 vg /dev/slow
 
 1. Create a 2-way RAID1 cache data LV
 # lvcreate --type raid1 -m 1 -L 1G -n cache1 vg \\
