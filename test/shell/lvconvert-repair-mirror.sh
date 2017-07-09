@@ -13,12 +13,10 @@
 SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_LVMPOLLD=1
 
-MKFS=mkfs.ext3
-MOUNT_DIR=mnt
-
 . lib/inittest
 
-which "$MKFS" || skp
+MOUNT_DIR=mnt
+MKFS=$(which mkfs.ext3) || skip
 
 cleanup_mounted_and_teardown()
 {
