@@ -12,7 +12,6 @@
 
 test_description='Set up things to run tests with dlm'
 
-. lib/utils
 . lib/inittest
 
 [ -z "$LVM_TEST_LOCK_TYPE_DLM" ] && skip;
