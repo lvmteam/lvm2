@@ -246,12 +246,10 @@ prepare_test_vars() {
 	vg="${PREFIX}vg"
 	lv=LV
 
-	for i in $(seq 1 16); do
-		name="${PREFIX}pv$i"
-		dev="$DM_DEV_DIR/mapper/$name"
-		eval "dev$i=\"$dev\""
-		eval "lv$i=LV$i"
-		eval "vg$i=${PREFIX}vg$i"
+	for i in {1..16}; do
+		eval "dev$i=\"$DM_DEV_DIR/mapper/${PREFIX}pv$i\""
+		eval "lv$i=\"LV$i\""
+		eval "vg$i=\"${PREFIX}vg$i\""
 	done
 }
 
