@@ -513,7 +513,7 @@ kill_tagged_processes() {
 		echo "$pid" >> PIDS
 	done
 
-	test -f PIDS || return 0
+	test -s PIDS || return 0
 
 	# wait if process exited and eventually -KILL
 	wait=0
@@ -527,6 +527,7 @@ kill_tagged_processes() {
 }
 
 teardown() {
+	local TEST_LEAKED_DEVICES
 	echo -n "## teardown..."
 	unset LVM_LOG_FILE_EPOCH
 
@@ -597,7 +598,9 @@ teardown() {
 
 	echo "ok"
 
-	test "${LVM_TEST_PARALLEL:-0}" -eq 1 -o -n "$RUNNING_DMEVENTD" || not pgrep dmeventd #&>/dev/null
+	if test "${LVM_TEST_PARALLEL:-0}" = 1 || test -n "$RUNNING_DMEVENTD"; then
+		not pgrep dmeventd #&>/dev/null
+	fi
 }
 
 prepare_loop() {
@@ -872,7 +875,7 @@ common_dev_() {
 		read_ms=${3:-0}
 		write_ms=${4:-0}
 		offsets=( ${@:5} )
-		if test "$read_ms" -eq 0 -a "$write_ms" -eq 0 ; then
+		if test "$read_ms" -eq 0 && test "$write_ms" -eq 0 ; then
 			offsets=( )
 		else
 			test -z "${offsets[@]}" && offsets=( "0:" )
@@ -928,8 +931,8 @@ common_dev_() {
 delay_dev() {
 	if test ! -f HAVE_DM_DELAY ; then
 		target_at_least dm-delay 1 1 0 || return 0
+		touch HAVE_DM_DELAY
 	fi
-	touch HAVE_DM_DELAY
 	common_dev_ delay "$@"
 }
 
@@ -1187,10 +1190,9 @@ EOF
 		}
 	}
 
+	# append all parameters  (avoid adding empty \n)
 	local v
-	for v in "$@"; do
-	    echo "$v"
-	done >> "$config_values"
+	test $# -gt 0 && printf "%s\n" "$@" >> "$config_values"
 
 	declare -A CONF 2>/dev/null || {
 		# Associative arrays is not available
@@ -1259,6 +1261,7 @@ profileconf() {
 
 prepare_profiles() {
 	local pdir="$LVM_SYSTEM_DIR/profile"
+	local profile_name
 	mkdir -p "$pdir"
 	for profile_name in "$@"; do
 		test -L "lib/$profile_name.profile" || skip
