@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2011-2015 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2011-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -21,9 +21,10 @@ expect_failure() {
         echo "TEST EXPECT FAILURE"
 }
 
-COROSYNC_CONF="/etc/corosync/corosync.conf"
-COROSYNC_NODE=$(hostname)
 create_corosync_conf() {
+	COROSYNC_CONF="/etc/corosync/corosync.conf"
+	COROSYNC_NODE=$(hostname)
+
 	if test -a "$COROSYNC_CONF"; then
 		if ! grep "created by lvm test suite" "$COROSYNC_CONF"; then
 			rm "$COROSYNC_CONF"
