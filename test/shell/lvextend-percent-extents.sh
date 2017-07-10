@@ -39,7 +39,7 @@ lvremove -f $vg/$lv
 # 'lvextend computes necessary free space correctly - bz213552'
 vgsize=$(get vg_field $vg vg_extent_count)
 lvcreate -l $vgsize  -n $lv $vg
-lvreduce -f -l $(( $vgsize / 2 )) $vg/$lv
+lvreduce -f -l $(( vgsize / 2 )) $vg/$lv
 lvextend -l $vgsize $vg/$lv
 
 # 'Reset LV to original size'
@@ -73,13 +73,13 @@ check pv_field "$dev2" pv_free "0"
 # Thus, total size for the LV should be 18 * 4M = 72M
 #
 # 'Reset LV to 12 extents, allocate every other 2 extents'
-create_pvs=$(for i in $(seq 0 4 20); do echo -n "$dev1:$i-$(($i + 1)) "; done)
+create_pvs=$(for i in $(seq 0 4 20); do echo -n "$dev1:$i-$(( i + 1 )) "; done)
 lvremove -f $vg/$lv
 lvcreate -l 12 -n $lv $vg $create_pvs
 check lv_field $vg/$lv lv_size "48.00m"
 
 # 'lvextend with partially allocated PVs and extents 100%PVS with PE ranges'
-extend_pvs=$(for i in $(seq 0 6 18); do echo -n "$dev1:$i-$(($i + 2)) "; done)
+extend_pvs=$(for i in $(seq 0 6 18); do echo -n "$dev1:$i-$(( i + 2 )) "; done)
 lvextend -l +100%PVS $vg/$lv $extend_pvs | tee out
 grep "Logical volume $vg/$lv successfully resized" out
 check lv_field $vg/$lv lv_size "72.00m"
@@ -90,17 +90,17 @@ check lv_field $vg/$lv lv_size "72.00m"
 # FIXME: test other segment fields such as seg_size, pvseg_start, pvseg_size
 lvremove -f $vg/$lv
 pe_count=$(get pv_field "$dev1" pv_pe_count)
-pe1=$(( $pe_count / 2 ))
+pe1=$(( pe_count / 2 ))
 lvcreate -l $pe1 -n $lv $vg
 pesize=$(get lv_field $vg/$lv vg_extent_size --units b --nosuffix)
-segsize=$(( $pe1 * $pesize / 1024 / 1024 ))m
+segsize=$(( pe1 * pesize / 1024 / 1024 ))m
 check lv_field $vg/$lv seg_count "1"
 check lv_field $vg/$lv seg_start "0"
 check lv_field $vg/$lv seg_start_pe "0"
 #check lv_field $vg/$lv seg_size $segsize
-lvextend -l +$(( $pe_count * 1 )) $vg/$lv
+lvextend -l +$(( pe_count * 1 )) $vg/$lv
 check lv_field $vg/$lv seg_count "2"
-lvreduce -f -l -$(( $pe_count * 1 )) $vg/$lv
+lvreduce -f -l -$(( pe_count * 1 )) $vg/$lv
 check lv_field $vg/$lv seg_count "1"
 
 # do not reduce to 0 extents

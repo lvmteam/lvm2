@@ -34,7 +34,7 @@ aux lvmconf 'devices/issue_discards = 1'
 # Delay PVs so that resynchronization doesn't fill too much space
 for device in $(< DEVICES)
 do
-	aux delay_dev "$device" 0 10  $(get first_extent_sector "$device")
+	aux delay_dev "$device" 0 10  "$(get first_extent_sector "$device")"
 done
 
 # bz837927 START

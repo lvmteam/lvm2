@@ -23,7 +23,7 @@ lvdev_() {
 }
 
 snap_lv_name_() {
-    echo ${1}_snap
+    echo "${1}_snap"
 }
 
 setup_merge_() {
@@ -53,24 +53,24 @@ setup_merge_ $vg $lv1
 
 # make sure lvconvert --merge requires explicit LV listing
 not lvconvert --merge
-lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
 lvremove -f $vg/$lv1
 
 setup_merge_ $vg $lv1
-lvconvert --mergesnapshot $vg/$(snap_lv_name_ $lv1)
+lvconvert --mergesnapshot "$vg/$(snap_lv_name_ "$lv1")"
 lvremove -f $vg/$lv1
 
 # test that an actively merging snapshot may not be removed
 setup_merge_ $vg $lv1
-lvconvert -i+100 --merge --background $vg/$(snap_lv_name_ $lv1)
-not lvremove -f $vg/$(snap_lv_name_ $lv1)
+lvconvert -i+100 --merge --background "$vg/$(snap_lv_name_ "$lv1")"
+not lvremove -f "$vg/$(snap_lv_name_ "$lv1")"
 lvremove -f $vg/$lv1
 
 
 # "onactivate merge" test
 setup_merge_ $vg $lv1
 mount "$(lvdev_ $vg $lv1)" test_mnt
-lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
 # -- refresh LV while FS is still mounted (merge must not start),
 #    verify 'snapshot-origin' target is still being used
 lvchange --refresh $vg/$lv1
@@ -91,7 +91,7 @@ lvremove -f $vg/$lv1
 #    to make sure preload of origin's metadata is _not_ performed
 setup_merge_ $vg $lv1
 mount "$(lvdev_ $vg $lv1)" test_mnt
-lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
 # -- refresh LV while FS is still mounted (merge must not start),
 #    verify 'snapshot-origin' target is still being used
 lvchange --refresh $vg/$lv1
@@ -102,19 +102,19 @@ lvremove -f $vg/$lv1
 
 # test multiple snapshot merge; tests copy out that is driven by merge
 setup_merge_ $vg $lv1 1
-lvconvert --merge $vg/$(snap_lv_name_ $lv1)
+lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
 lvremove -f $vg/$lv1
 
 
 # test merging multiple snapshots that share the same tag
 setup_merge_ $vg $lv1
 setup_merge_ $vg $lv2
-lvchange --addtag this_is_a_test $vg/$(snap_lv_name_ $lv1)
-lvchange --addtag this_is_a_test $vg/$(snap_lv_name_ $lv2)
+lvchange --addtag this_is_a_test "$vg/$(snap_lv_name_ "$lv1")"
+lvchange --addtag this_is_a_test "$vg/$(snap_lv_name_ "$lv2")"
 lvconvert --merge @this_is_a_test
 lvs $vg | tee out
-not grep $(snap_lv_name_ $lv1) out
-not grep $(snap_lv_name_ $lv2) out
+not grep "$(snap_lv_name_ "$lv1")" out
+not grep "$(snap_lv_name_ "$lv2")" out
 lvremove -f $vg/$lv1 $vg/$lv2
 
 # FIXME following tests would need to poll merge progress, via periodic lvs?

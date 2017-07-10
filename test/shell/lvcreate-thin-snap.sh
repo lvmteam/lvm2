@@ -22,8 +22,8 @@ check_lv_field_modules_()
 	mod=$1
 	shift
 
-	for d in $*; do
-		check lv_field $vg/$d modules $mod
+	for d in "$@"; do
+		check lv_field "$vg/$d" modules "$mod"
 	done
 }
 

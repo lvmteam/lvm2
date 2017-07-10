@@ -22,7 +22,7 @@ lvdev_() {
 
 test_snapshot_mount() {
     lvcreate -aey -L4M -n $lv1 $vg "$dev1"
-    mkfs.ext3 $(lvdev_ $vg $lv1)
+    mkfs.ext3 "$(lvdev_ $vg $lv1)"
     mkdir test_mnt
     mount "$(lvdev_ $vg $lv1)" test_mnt
     lvcreate -L4M -n $lv2 -s $vg/$lv1
@@ -53,11 +53,11 @@ LOGICAL_BLOCK_SIZE=512
 aux prepare_scsi_debug_dev $DEV_SIZE \
     sector_size=$LOGICAL_BLOCK_SIZE physblk_exp=3
 # Test that kernel supports topology
-if [ ! -e /sys/block/$(basename $(< SCSI_DEBUG_DEV))/alignment_offset ] ; then
+if [ ! -e "/sys/block/$(basename "$(< SCSI_DEBUG_DEV)")/alignment_offset" ] ; then
 	aux cleanup_scsi_debug_dev
 	skip
 fi
-check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size $LOGICAL_BLOCK_SIZE
+check sysfs "$(< SCSI_DEBUG_DEV)" queue/logical_block_size "$LOGICAL_BLOCK_SIZE"
 aux prepare_pvs $NUM_DEVS $PER_DEV_SIZE
 get_devs
 

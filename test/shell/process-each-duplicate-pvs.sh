@@ -41,17 +41,17 @@ check pv_field "$dev1" pv_allocatable "allocatable"
 check pv_field "$dev2" pv_allocatable "allocatable"
 not grep WARNING out
 
-UUID1=$(pvs --noheadings -o uuid $dev1 | xargs)
-UUID2=$(pvs --noheadings -o uuid $dev2 | xargs)
+UUID1=$(get pv_field "$dev1" uuid)
+UUID2=$(get pv_field "$dev2" uuid)
 
-SIZE1=$(pvs --noheadings -o dev_size $dev1)
-SIZE2=$(pvs --noheadings -o dev_size $dev2)
+SIZE1=$(get pv_field "$dev1" dev_size)
+SIZE2=$(get pv_field "$dev2" dev_size)
 
-MINOR1=$(pvs --noheadings -o minor $dev1)
-MINOR2=$(pvs --noheadings -o minor $dev2)
+MINOR1=$(get pv_field "$dev1" minor)
+MINOR2=$(get pv_field "$dev2" minor)
 
-check pv_field "$dev1" dev_size $SIZE1
-check pv_field "$dev2" dev_size $SIZE2
+check pv_field "$dev1" dev_size "$SIZE1"
+check pv_field "$dev2" dev_size "$SIZE2"
 
 # Copy dev1 over dev2.
 dd if="$dev1" of="$dev2" bs=1M iflag=direct oflag=direct,sync
@@ -65,8 +65,8 @@ grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
 # Don't know yet if dev1 or dev2 is preferred, so count just one is.
-test $(grep $vg1 main | wc -l) -eq 1
-test $(grep $UUID1 main | wc -l) -eq 1
+test "$(grep -c "$vg1" main)" -eq 1
+test "$(grep -c "$UUID1" main)" -eq 1
 not grep duplicate main
 not grep $vg2 main
 not grep $UUID2 main
@@ -75,18 +75,18 @@ grep "was already found on" warn
 grep "prefers device" warn
 
 # Find which is the preferred dev and which is the duplicate.
-PV=$(pvs --noheadings -o name -S uuid=$UUID1)
+PV=$(pvs --noheadings -o name -S uuid="$UUID1" | xargs)
 if [ "$PV" = "$dev1" ]; then
 	DUP=$dev2
 else
 	DUP=$dev1
 fi
 
-echo PV is $PV
-echo DUP is $DUP
+echo "PV is $PV"
+echo "DUP is $DUP"
 
-grep $PV main
-not grep $DUP main
+grep "$PV" main
+not grep "$DUP" main
 
 # Repeat above checking preferred/dup in output
 pvs 2>&1 | tee out
@@ -95,8 +95,8 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-grep $PV main
-not grep $DUP main
+grep "$PV" main
+not grep "$DUP" main
 
 # The duplicate dev is included in 'pvs -a'
 pvs -a -o+uuid,duplicate 2>&1 | tee out
@@ -109,7 +109,7 @@ grep "$dev1" main
 grep "$dev2" main
 grep $PV main
 grep $DUP main
-test $(grep duplicate main | wc -l) -eq 1
+test "$(grep -c duplicate main)" -eq 1
 grep $DUP main | grep duplicate
 not grep $vg2 main
 not grep $UUID2 main
@@ -133,8 +133,8 @@ grep -v WARNING out > main || true
 
 grep "$dev1" main
 not grep "$dev2" main
-grep $UUID1 main
-grep $vg1 main
+grep "$UUID1" main
+grep "$vg1" main
 grep "was already found on" warn
 grep "prefers device" warn
 
@@ -146,8 +146,8 @@ grep -v WARNING out > main || true
 
 grep "$dev2" main
 not grep "$dev1" main
-grep $UUID1 main
-grep $vg1 main
+grep "$UUID1" main
+grep "$vg1" main
 grep "was already found on" warn
 grep "prefers device" warn
 
@@ -163,7 +163,7 @@ grep "$dev1" main | grep $vg1
 grep "$dev2" main | grep $vg1
 grep "$dev1" main | grep $UUID1
 grep "$dev2" main | grep $UUID1
-test $(grep duplicate main | wc -l) -eq 1
+test "$(grep -c duplicate main)" -eq 1
 grep $DUP main | grep duplicate
 
 #
@@ -181,11 +181,11 @@ rm out1 out2 main1 main2 || true
 check pv_field "$dev1" pv_in_use "used"
 check pv_field "$dev2" pv_in_use "used"
 
-check pv_field $PV  pv_allocatable "allocatable"
-check pv_field $DUP pv_allocatable ""
+check pv_field "$PV"  pv_allocatable "allocatable"
+check pv_field "$DUP" pv_allocatable ""
 
-check pv_field $PV  pv_duplicate ""
-check pv_field $DUP pv_duplicate "duplicate"
+check pv_field "$PV"  pv_duplicate ""
+check pv_field "$DUP" pv_duplicate "duplicate"
 
 pvs --noheadings -o name,pv_allocatable "$dev1" "$dev2" 2>&1 | tee out
 
@@ -193,11 +193,11 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-grep $PV main
-grep $DUP main
-grep $dev1 main
-grep $dev2 main
-test $(grep allocatable main | wc -l) -eq 1
+grep "$PV" main
+grep "$DUP" main
+grep "$dev1" main
+grep "$dev2" main
+test "$(grep -c allocatable main)" -eq 1
 
 pvs --noheadings -o name,pv_duplicate "$dev1" "$dev2" 2>&1 | tee out
 
@@ -205,11 +205,11 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-grep $PV main
-grep $DUP main
-grep $dev1 main
-grep $dev2 main
-test $(grep duplicate main | wc -l) -eq 1
+grep "$PV" main
+grep "$DUP" main
+grep "$dev1" main
+grep "$dev2" main
+test "$(grep -c duplicate main)" -eq 1
 
 #
 # A filter can be used to show only one.
@@ -221,8 +221,8 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-not grep $dev1 main
-grep $dev2 main
+not grep "$dev1" main
+grep "$dev2" main
 
 not grep "was already found on" warn
 not grep "prefers device" warn
@@ -234,19 +234,19 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-grep $dev1 main
-not grep $dev2 main
+grep "$dev1" main
+not grep "$dev2" main
 
 not grep "was already found on" warn
 not grep "prefers device" warn
 
 # PV size and minor is still reported correctly for each.
 
-check pv_field "$dev1" dev_size $SIZE1
-check pv_field "$dev2" dev_size $SIZE2
+check pv_field "$dev1" dev_size "$SIZE1"
+check pv_field "$dev2" dev_size "$SIZE2"
 
-check pv_field "$dev1" minor $MINOR1
-check pv_field "$dev2" minor $MINOR2
+check pv_field "$dev1" minor "$MINOR1"
+check pv_field "$dev2" minor "$MINOR2"
 
 # With allow_changes_with_duplicate_pvs=0, a VG with duplicate devs
 # cannot be modified or activated.
@@ -277,14 +277,14 @@ pvcreate "$dev3"
 pvcreate "$dev4"
 pvresize --setphysicalvolumesize 8m -y "$dev4"
 
-UUID3=$(pvs --noheadings -o uuid $dev3 | xargs)
-UUID4=$(pvs --noheadings -o uuid $dev4 | xargs)
+UUID3=$(get pv_field "$dev3" uuid)
+UUID4=$(get pv_field "$dev4" uuid)
 
-SIZE3=$(pvs --noheadings -o dev_size $dev3)
-SIZE4=$(pvs --noheadings -o dev_size $dev4)
+SIZE3=$(get pv_field "$dev3" dev_size)
+SIZE4=$(get pv_field "$dev4" dev_size)
 
-check pv_field "$dev3" dev_size $SIZE3
-check pv_field "$dev4" dev_size $SIZE4
+check pv_field "$dev3" dev_size "$SIZE3"
+check pv_field "$dev4" dev_size "$SIZE4"
 
 pvs 2>&1 | tee out
 
@@ -302,8 +302,8 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-test $(grep $UUID3 main | wc -l) -eq 1
-not grep $UUID4 main
+test "$(grep -c "$UUID3" main)" -eq 1
+not grep "$UUID4" main
 
 grep "was already found on" warn
 grep "prefers device" warn
@@ -316,7 +316,7 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-test $(grep $UUID3 main | wc -l) -eq 2
+test "$(grep -c "$UUID3" main)" -eq 2
 
 grep "$dev3" main
 grep "$dev4" main
@@ -367,8 +367,8 @@ grep "prefers device" warn
 
 # Same sizes shown.
 
-check pv_field "$dev3" dev_size $SIZE3
-check pv_field "$dev4" dev_size $SIZE4
+check pv_field "$dev3" dev_size "$SIZE3"
+check pv_field "$dev4" dev_size "$SIZE4"
 
 # Verify that devs being used by an active LV are
 # preferred over duplicates that are not used by an LV.
@@ -377,7 +377,7 @@ dd if=/dev/zero of="$dev3" bs=1M oflag=direct,sync || true
 dd if=/dev/zero of="$dev4" bs=1M oflag=direct,sync || true
 pvscan --cache
 
-vgcreate $vg2 $dev3 $dev4
+vgcreate "$vg2" "$dev3" "$dev4"
 lvcreate -l1 -n $lv1 $vg2 "$dev3"
 lvcreate -l1 -n $lv2 $vg2 "$dev4"
 
@@ -410,7 +410,7 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-test $(grep duplicate main | wc -l) -eq 2
+test "$(grep -c duplicate main)" -eq 2
 grep "$dev3" main
 grep "$dev4" main
 grep "$dev5" main
@@ -427,7 +427,7 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-test $(grep duplicate main | wc -l) -eq 2
+test "$(grep -c duplicate main)" -eq 2
 grep "$dev3" main
 grep "$dev4" main
 grep "$dev5" main
@@ -484,7 +484,7 @@ rm warn main || true
 grep    WARNING out > warn || true
 grep -v WARNING out > main || true
 
-test $(grep duplicate main | wc -l) -eq 2
+test "$(grep -c duplicate main)" -eq 2
 grep "$dev3" main
 grep "$dev4" main
 grep "$dev5" main
@@ -502,4 +502,3 @@ pvscan --cache
 lvremove -y $vg2/$lv1
 lvremove -y $vg2/$lv2
 vgremove $vg2
-

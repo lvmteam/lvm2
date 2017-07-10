@@ -352,7 +352,7 @@ pvmove $mode "$dev1"
 dmsetup create $vg-pvmove0 --notable
 not pvmove $mode -i 1 "$dev2"
 dmsetup info --noheadings -c -o suspended $vg-$lv1
-test $(dmsetup info --noheadings -c -o suspended $vg-$lv1) = "Active"
+test "$(dmsetup info --noheadings -c -o suspended "$vg-$lv1")" = "Active"
 if dmsetup info $vg-pvmove0_mimage_0 > /dev/null; then
         dmsetup remove $vg-pvmove0 $vg-pvmove0_mimage_0 $vg-pvmove0_mimage_1
 else

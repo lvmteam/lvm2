@@ -47,19 +47,19 @@ lvcreate -L8 -V8 -T $vg/pool -n $lv1
 
 
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=26
-test $(percent_) -gt 80
+test "$(percent_)" -gt 80
 
 # Give it some time to dmeventd to log WARNING
 wait_warn_ 1
 
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=30
-test $(percent_) -gt 90
+test "$(percent_)" -gt 90
 
 # Give it some time to dmeventd to log WARNING
 wait_warn_ 2
 
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=8
-test $(percent_) -eq 100
+test "$(percent_)" -eq 100
 
 wait_warn_ 3
 
@@ -74,7 +74,7 @@ sleep 11
 
 
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=256K count=30
-test $(percent_) -gt 90
+test "$(percent_)" -gt 90
 
 lvs -a $vg
 dmsetup status ${vg}-pool-tpool

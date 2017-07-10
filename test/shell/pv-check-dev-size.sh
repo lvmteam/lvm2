@@ -20,15 +20,15 @@ aux lvmconf 'metadata/check_pv_device_sizes = 1'
 
 CHECK_MSG="smaller than corresponding PV size"
 
-vgcreate $vg $dev1 2>err
+vgcreate "$vg" "$dev1" 2>err
 not grep "$CHECK_MSG" err
 pvs 2>err
 not grep "$CHECK_MSG" err
 vgremove -ff $vg
 
 # set PV size to 2x dev size
-pvcreate --yes --setphysicalvolumesize 16m $dev1
-vgcreate $vg $dev1 2>err
+pvcreate --yes --setphysicalvolumesize 16m "$dev1"
+vgcreate "$vg" "$dev1" 2>err
 grep "$CHECK_MSG" err
 pvs 2>err
 grep "$CHECK_MSG" err
@@ -36,8 +36,8 @@ vgremove -ff $vg
 
 # should be quiet if requested
 aux lvmconf 'metadata/check_pv_device_sizes = 0'
-pvcreate --yes --setphysicalvolumesize 16m $dev1
-vgcreate $vg $dev1 2>err
+pvcreate --yes --setphysicalvolumesize 16m "$dev1"
+vgcreate "$vg" "$dev1" 2>err
 not grep "$CHECK_MSG" err
 pvs 2>err
 not grep "$CHECK_MSG" err

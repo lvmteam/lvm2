@@ -20,7 +20,7 @@ aux prepare_pvs 2
 vgcreate $vg1 "$dev1" "$dev2"
 vgs | grep $vg1
 
-kill $(< LOCAL_LVMETAD)
+kill "$(< LOCAL_LVMETAD)"
 aux prepare_lvmetad
 
 vgs | grep $vg1

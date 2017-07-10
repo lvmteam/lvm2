@@ -30,7 +30,7 @@ test_pvmove_resume() {
 	lvcreate -an -Zn -l15 -n $lv1 $vg "$dev1"
 	lvcreate -an -Zn -l15 -n $lv2 $vg "$dev1"
 
-	aux delay_dev "$dev2" 0 1000 $(get first_extent_sector "$dev2"):
+	aux delay_dev "$dev2" 0 1000 "$(get first_extent_sector "$dev2"):"
 
 	pvmove -i5 "$dev1" &
 	PVMOVE=$!
@@ -57,7 +57,7 @@ test_pvmove_resume() {
 		# as clvmd starts to abort on internal errors on various
 		# errors, based on the fact pvmove is killed -9
 		# Restart clvmd
-		kill $(< LOCAL_CLVMD)
+		kill "$(< LOCAL_CLVMD)"
 		for i in $(seq 1 100) ; do
 			test $i -eq 100 && die "Shutdown of clvmd is too slow."
 			test -e "$CLVMD_PIDFILE" || break
@@ -101,7 +101,7 @@ lvchange_all() {
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0" || should false
 	elif test -e HAVE_DM_DELAY; then
-		test $(aux count_processes_with_tag) -eq $1 || should false
+		test "$(aux count_processes_with_tag)" -eq "$1" || should false
 	fi
 }
 
@@ -112,7 +112,7 @@ vgchange_single() {
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0"
 	elif test -e HAVE_DM_DELAY; then
-		test $(aux count_processes_with_tag) -eq $1
+		test "$(aux count_processes_with_tag)" -eq "$1"
 	fi
 }
 
@@ -125,7 +125,7 @@ pvmove_fg() {
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
 	else
-		test $(aux count_processes_with_tag) -eq 0
+		test "$(aux count_processes_with_tag)" -eq 0
 	fi
 
 	# ...thus finish polling
@@ -145,7 +145,7 @@ pvmove_bg() {
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
 	else
-		test $(aux count_processes_with_tag) -eq 0
+		test "$(aux count_processes_with_tag)" -eq 0
 	fi
 
 	# ...thus finish polling
@@ -163,7 +163,7 @@ pvmove_fg_single() {
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
 	else
-		test $(aux count_processes_with_tag) -eq 0
+		test "$(aux count_processes_with_tag)" -eq 0
 	fi
 
 	# ...thus finish polling
@@ -183,7 +183,7 @@ pvmove_bg_single() {
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
 		aux check_lvmpolld_init_rq_count 0 "$vg/pvmove0"
 	else
-		test $(aux count_processes_with_tag) -eq 0
+		test "$(aux count_processes_with_tag)" -eq 0
 	fi
 
 	# ...thus finish polling

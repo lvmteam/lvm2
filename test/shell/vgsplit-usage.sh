@@ -156,7 +156,7 @@ vgremove -f $vg2 $vg1
 # Restart clvm because using the same
 # devs as lvm1 and then lvm2 causes problems.
 if test -e LOCAL_CLVMD ; then
-	kill $(< LOCAL_CLVMD)
+	kill "$(< LOCAL_CLVMD)"
 	for i in $(seq 1 100) ; do
 		test $i -eq 100 && die "Shutdown of clvmd is too slow."
 		pgrep clvmd || break

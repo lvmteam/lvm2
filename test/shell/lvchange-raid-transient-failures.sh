@@ -34,11 +34,11 @@ function _check_raid
 	local devs=$*
 
 	aux wait_for_sync $vg $lv
-	aux disable_dev --error --silent $devs
+	aux disable_dev --error --silent "$devs"
 	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
 	fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv"
 	check raid_leg_status $vg $lv "$fail"
-	aux enable_dev --silent $devs
+	aux enable_dev --silent "$devs"
 	lvs -a -o +devices $vg | tee out
 	not grep unknown out
 	lvchange --refresh $vg/$lv
@@ -51,19 +51,19 @@ function _check_raid
 # raid1 with transiently failing devices
 lv=4way
 lvcreate -aey --type raid1 -m 3 --ignoremonitoring -L 1 -n $lv $vg
-_check_raid $vg $lv "ADAD" "AAAA" $dev2 $dev4
+_check_raid $vg $lv "ADAD" "AAAA" "$dev2" "$dev4"
 lvremove -y $vg/$lv
 
 # raid6 with transiently failing devices
 lv=6way
 lvcreate -aey --type raid6 -i 4 --ignoremonitoring -L 1 -n $lv $vg
-_check_raid $vg $lv "ADADAA" "AAAAAA" $dev2 $dev4
+_check_raid $vg $lv "ADADAA" "AAAAAA" "$dev2" "$dev4"
 lvremove -y $vg/$lv
 
 # raid10 with transiently failing devices
 lv=6way
 lvcreate -aey --type raid10 -i 3 -m 1 --ignoremonitoring -L 1 -n $lv $vg
-_check_raid $vg $lv "ADADDA" "AAAAAA" $dev2 $dev4 $dev5
+_check_raid $vg $lv "ADADDA" "AAAAAA" "$dev2" "$dev4" "$dev5"
 lvremove -y $vg/$lv
 
 vgremove -f $vg

@@ -54,7 +54,7 @@ mkdir test_mnt
 
 setup_merge_ $vg1 $lv1
 mount "$(lvdev_ $vg1 $lv1)" test_mnt
-lvconvert --merge $vg1/$(snap_lv_name_ $lv1)
+lvconvert --merge "$vg1/$(snap_lv_name_ "$lv1")"
 umount test_mnt
 vgchange -an $vg1
 
@@ -63,7 +63,7 @@ pvscan --cache -aay "$dev1"
 
 check active $vg1 $lv1
 i=100
-while ! check lv_not_exists $vg1/$(snap_lv_name_ $lv1); do
+while ! check lv_not_exists "$vg1/$(snap_lv_name_ "$lv1")"; do
 	test $i -lt 0 && fail "Background polling failed to remove merged snapshot LV"
 	sleep .1
 	i=$((i-1))

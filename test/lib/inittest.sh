@@ -10,7 +10,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 initskip() {
-	test "$#" -eq 0 || echo "TEST SKIPPED: " "$@"
+	test $# -eq 0 || echo "TEST SKIPPED:" "$@"
 	exit 200
 }
 

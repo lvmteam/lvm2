@@ -31,7 +31,7 @@ _sync() {
 # Delay legs so that rebuilding status characters can be read
 for d in $(< DEVICES)
 do
-	aux delay_dev "$d" 0 50 $(get first_extent_sector "$d")
+	aux delay_dev "$d" 0 50 "$(get first_extent_sector "$d")"
 done
 
 # rhbz 1064592

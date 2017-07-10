@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-kill -0 $(< LOCAL_LVMETAD) || die "lvmetad is already dead"
+kill -0 "$(< LOCAL_LVMETAD)" || die "lvmetad is already dead"
 
 lvmetad_timeout=3
 
@@ -23,14 +23,14 @@ aux prepare_pvs 1
 
 vgcreate $vg1 "$dev1"
 
-kill $(< LOCAL_LVMETAD)
+kill "$(< LOCAL_LVMETAD)"
 aux prepare_lvmetad -t $lvmetad_timeout
 
 sleep $lvmetad_timeout
 
 # lvmetad should die after timeout, but give it some time to do so
 i=0
-while kill -0 $(< LOCAL_LVMETAD) 2>/dev/null; do
+while kill -0 "$(< LOCAL_LVMETAD)" 2>/dev/null; do
 	test $i -ge $((lvmetad_timeout*10)) && die "lvmetad didn't shutdown with optional timeout: $lvmetad_timeout seconds"
 	sleep .1
 	i=$((i+1))
@@ -39,9 +39,9 @@ done
 aux prepare_lvmetad -t 0
 sleep 1
 # lvmetad must not die with -t 0 option
-kill -0 $(< LOCAL_LVMETAD) || die "lvmetad died"
+kill -0 "$(< LOCAL_LVMETAD)" || die "lvmetad died"
 
-kill $(< LOCAL_LVMETAD)
+kill "$(< LOCAL_LVMETAD)"
 aux prepare_lvmetad -t $lvmetad_timeout
 
 sleep 1
@@ -52,6 +52,6 @@ sleep 1
 vgs
 
 # check that connection to lvmetad resets the timeout
-kill -0 $(< LOCAL_LVMETAD) || die "lvmetad died too soon"
+kill -0 "$(< LOCAL_LVMETAD)" || die "lvmetad died too soon"
 
 vgremove -ff $vg1

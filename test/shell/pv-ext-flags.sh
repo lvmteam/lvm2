@@ -78,7 +78,7 @@ aux enable_dev "$dev1"
 #        causing LVM tools to not see the VG inconsistency and once
 #        VG repair is always done, delete this line which removes
 #        persistent .cache as a workaround
-rm -f $TESTDIR/etc/.cache
+rm -f "$TESTDIR/etc/.cache"
 
 vgck $vg1
 # check $dev1 does not contain the PV_EXT_FLAG anymore - it
@@ -143,7 +143,7 @@ aux enable_dev "$dev1"
 #        causing LVM tools to not see the VG inconsistency and once
 #        VG repair is always done, delete this line which removes
 #        persistent .cache as a workaround
-rm -f $TESTDIR/etc/.cache
+rm -f "$TESTDIR/etc/.cache"
 
 vgck $vg1
 # check $dev1 does not contain the PV_EXT_FLAG anymore - it

@@ -35,7 +35,7 @@ _sync() {
 
 # Delay 1st leg so that rebuilding status characters
 #  can be read before resync finished too quick.
-aux delay_dev "$dev1" 0 100 $(get first_extent_sector "$dev1")
+aux delay_dev "$dev1" 0 100 "$(get first_extent_sector "$dev1")"
 
 # raid0/raid0_meta don't support resynchronization
 for r in raid0 raid0_meta

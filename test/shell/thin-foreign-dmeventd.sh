@@ -70,12 +70,12 @@ mkdir "$MOUNT_DIR"
 # This mkfs should fill 2MB pool over 95%
 # no autoresize is configured
 mkfs.ext4 "$DM_DEV_DIR/mapper/$THIN"
-test $(percent_) -gt 95
+test "$(percent_)" -gt 95
 mount "$DM_DEV_DIR/mapper/$THIN" "$MOUNT_DIR"
 
 pvchange -x n "$dev1" "$dev2"
 
-test $(percent_) -gt 95
+test "$(percent_)" -gt 95
 # Configure autoresize
 aux lvmconf 'activation/thin_pool_autoextend_percent = 10' \
 	    'activation/thin_pool_autoextend_threshold = 75'
@@ -85,7 +85,7 @@ sleep 20
 
 # And check foreign thin device is still mounted
 mount | grep "$MOUNT_DIR" | grep "$THIN"
-test $(percent_) -gt 95
+test "$(percent_)" -gt 95
 
 pvchange -x y "$dev1" "$dev2"
 
@@ -96,11 +96,11 @@ lvchange --refresh $vg/pool
 
 # Give it some time and let dmeventd do some work
 for i in $(seq 1 15) ; do
-	test $(percent_) -ge 75 || break
+	test "$(percent_)" -ge 75 || break
 	sleep 1
 done
 
-test $(percent_) -lt 75
+test "$(percent_)" -lt 75
 
 # And check foreign thin device is still mounted
 mount | grep "$MOUNT_DIR" | grep "$THIN"

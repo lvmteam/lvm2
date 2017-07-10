@@ -145,7 +145,7 @@ run_syncaction_check() {
 	local lv=${2}${THIN_POSTFIX}
 
 	printf "#\n#\n#\n# %s/%s (%s): run_syncaction_check\n#\n#\n#\n" \
-		$vg $lv $(get lv_field $vg/$lv segtype -a)
+		$vg $lv "$(get lv_field "$vg/$lv" segtype -a)"
 	aux wait_for_sync $vg $lv
 
 	device=$(get lv_devices $vg/${lv}_rimage_1)
@@ -203,7 +203,7 @@ run_refresh_check() {
 	local lv=${2}${THIN_POSTFIX}
 
 	printf "#\n#\n#\n# %s/%s (%s): run_refresh_check\n#\n#\n#\n" \
-		$vg $lv $(get lv_field $vg/$lv segtype -a)
+		$vg $lv "$(get lv_field $vg/$lv segtype -a)"
 
 	aux wait_for_sync $vg $lv
 
@@ -249,7 +249,7 @@ run_recovery_rate_check() {
 	local lv=${2}${THIN_POSTFIX}
 
 	printf "#\n#\n#\n# %s/%s (%s): run_recovery_rate_check\n#\n#\n#\n" \
-		 $vg $lv $(get lv_field $vg/$lv segtype -a)
+		 $vg $lv "$(get lv_field $vg/$lv segtype -a)"
 	lvchange --minrecoveryrate 50 $vg/$lv
 	lvchange --maxrecoveryrate 100 $vg/$lv
 

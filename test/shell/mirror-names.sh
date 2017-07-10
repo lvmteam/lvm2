@@ -45,19 +45,15 @@ lv_convert_lv_() {
 }
 
 enable_devs() {
-	aux enable_dev "$dev1"
-	aux enable_dev "$dev2"
-	aux enable_dev "$dev3"
-	aux enable_dev "$dev4"
-	aux enable_dev "$dev5"
+	for i in "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" ; do
+		aux enable_dev "$i"
+	done
 }
 
 delay_devs() {
-	aux delay_dev "$dev1" 0 1000 $(get first_extent_sector "$dev1"):
-	aux delay_dev "$dev2" 0 1000 $(get first_extent_sector "$dev2"):
-	aux delay_dev "$dev3" 0 1000 $(get first_extent_sector "$dev3"):
-	aux delay_dev "$dev4" 0 1000 $(get first_extent_sector "$dev4"):
-	aux delay_dev "$dev5" 0 1000 $(get first_extent_sector "$dev5"):
+	for i in "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" ; do
+		aux delay_dev "$i" 0 1000 "$(get first_extent_sector "$i"):"
+	done
 }
 
 # ---------------------------------------------------------------------

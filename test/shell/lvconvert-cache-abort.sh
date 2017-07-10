@@ -37,7 +37,7 @@ done
 
 
 # Delay dev to ensure we have some time to 'capture' interrupt in flush
-aux delay_dev "$dev1" 0 500 $(get first_extent_sector "$dev1"):
+aux delay_dev "$dev1" 0 500 "$(get first_extent_sector "$dev1"):"
 
 lvdisplay --maps $vg
 sync

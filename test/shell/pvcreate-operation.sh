@@ -100,7 +100,7 @@ done
 # pvcreate (lvm2) fails writing LVM label at sector 4
 not pvcreate --labelsector 4 "$dev1"
 
-backupfile=$PREFIX.mybackupfile
+backupfile="$PREFIX.mybackupfile"
 uuid1=freddy-fred-fred-fred-fred-fred-freddy
 uuid2=freddy-fred-fred-fred-fred-fred-fredie
 bogusuuid=fred
@@ -116,47 +116,47 @@ pvcreate --norestorefile --uuid $uuid1 "$dev1"
 not pvcreate --norestorefile --uuid $uuid1 "$dev2"
 
 # pvcreate rejects non-existent file given with restorefile
-not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1"
+not pvcreate --uuid $uuid1 --restorefile "$backupfile" "$dev1"
 
 # pvcreate rejects restorefile with uuid not found in file
 pvcreate --norestorefile --uuid $uuid1 "$dev1"
-vgcfgbackup -f $backupfile
-not pvcreate --uuid $uuid2 --restorefile $backupfile "$dev2"
+vgcfgbackup -f "$backupfile"
+not pvcreate --uuid $uuid2 --restorefile "$backupfile" "$dev2"
 
 # vgcfgrestore of a VG containing a PV with zero PEs (bz #820116)
 # (use case: one PV in a VG used solely to keep metadata)
 size_mb=$(($(blockdev --getsz "$dev1") / 2048))
 pvcreate --metadatasize $size_mb "$dev1"
 vgcreate $vg1 "$dev1"
-vgcfgbackup -f $backupfile
-vgcfgrestore -f $backupfile $vg1
+vgcfgbackup -f "$backupfile"
+vgcfgrestore -f "$backupfile" "$vg1"
 vgremove -f $vg1
 pvremove -f "$dev1"
 
 # pvcreate --restorefile should handle --dataalignment and --dataalignmentoffset
 # and check it's compatible with pe_start value being restored
 # X * dataalignment + dataalignmentoffset == pe_start
-pvcreate --norestorefile --uuid $uuid1 --dataalignment 600k --dataalignmentoffset 32k "$dev1"
+pvcreate --norestorefile --uuid "$uuid1" --dataalignment 600k --dataalignmentoffset 32k "$dev1"
 vgcreate $vg1 "$dev1"
-vgcfgbackup -f $backupfile $vg1
+vgcfgbackup -f "$backupfile" "$vg1"
 vgremove -ff $vg1
 pvremove -ff "$dev1"
 # the dataalignment and dataalignmentoffset is ignored here since they're incompatible with pe_start
-pvcreate --restorefile $backupfile --uuid $uuid1 --dataalignment 500k --dataalignmentoffset 10k "$dev1" 2> err
+pvcreate --restorefile "$backupfile" --uuid "$uuid1" --dataalignment 500k --dataalignmentoffset 10k "$dev1" 2> err
 grep "incompatible with restored pe_start value" err
 # 300k is multiple of 600k so this should pass
-pvcreate --restorefile $backupfile --uui $uuid1 --dataalignment 300k --dataalignmentoffset 32k "$dev1" 2> err
+pvcreate --restorefile "$backupfile" --uui "$uuid1" --dataalignment 300k --dataalignmentoffset 32k "$dev1" 2> err
 not grep "incompatible with restored pe_start value" err
-rm -f $backupfile
+rm -f "$backupfile"
 
 # pvcreate rejects non-existent uuid given with restorefile
-not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1"
+not pvcreate --uuid "$uuid1" --restorefile "$backupfile" "$dev1"
 
 # pvcreate rejects restorefile without uuid
-not pvcreate --restorefile $backupfile "$dev1"
+not pvcreate --restorefile "$backupfile" "$dev1"
 
 # pvcreate rejects uuid restore with multiple volumes specified
-not pvcreate --uuid $uuid1 --restorefile $backupfile "$dev1" "$dev2"
+not pvcreate --uuid "$uuid1" --restorefile "$backupfile" "$dev1" "$dev2"
 
 # pvcreate wipes swap signature when forced
 dd if=/dev/zero of="$dev1" bs=1024 count=64

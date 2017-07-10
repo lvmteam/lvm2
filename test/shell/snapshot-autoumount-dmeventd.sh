@@ -35,7 +35,7 @@ mkdir "$mntdir"
 # Use remount-ro  to avoid logging kernel WARNING
 mount -o errors=remount-ro "$DM_DEV_DIR/mapper/$vg-snap" "$mntdir"
 
-test $(dmsetup info -c --noheadings -o open $vg-snap) -eq 1
+test "$(dmsetup info -c --noheadings -o open $vg-snap)" -eq 1
 
 cat /proc/mounts | grep "$mntdir"
 
@@ -48,7 +48,7 @@ not dd if=/dev/zero of="$mntdir/file$1" bs=1M count=4 conv=fdatasync
 # removed from /proc/mounts, but still opened).
 for i in {1..100}; do
 	sleep .1
-	test $(dmsetup info -c --noheadings -o open $vg-snap) -eq 0 && break
+	test "$(dmsetup info -c --noheadings -o open $vg-snap)" -eq 0 && break
 done
 
 cat /proc/mounts | not grep "$mntdir"

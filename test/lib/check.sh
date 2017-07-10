@@ -374,8 +374,8 @@ compare_fields() {
 	local field2=$6
 	local val1
 	local val2
-	val1=$($cmd1 --noheadings -o "$field1" "$obj1")
-	val2=$($cmd2 --noheadings -o "$field2" "$obj2")
+	val1=$("$cmd1" --noheadings -o "$field1" "$obj1")
+	val2=$("$cmd2" --noheadings -o "$field2" "$obj2")
 	test "$val1" = "$val2" || \
 		die "compare_fields $obj1($field1): $val1 $obj2($field2): $val2"
 }

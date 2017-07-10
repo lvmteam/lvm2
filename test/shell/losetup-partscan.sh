@@ -23,7 +23,7 @@ aux prepare_loop 1000 -P || skip
 test -f LOOP
 LOOP=$(< LOOP)
 
-echo "1 2" | sfdisk $LOOP
+echo "1 2" | sfdisk "$LOOP"
 
 # wait for links
 aux udev_wait
@@ -35,8 +35,8 @@ test -e "${LOOP}p1"
 aux extend_filter "a|$LOOP|"
 
 # creation should fail for 'partitioned' loop device
-not pvcreate -y $LOOP
-not vgcreate vg $LOOP
+not pvcreate -y "$LOOP"
+not vgcreate vg "$LOOP"
 
 aux teardown_devs
 
@@ -46,7 +46,7 @@ test -f LOOP
 LOOP=$(< LOOP)
 
 
-echo "1 2" | sfdisk $LOOP
+echo "1 2" | sfdisk "$LOOP"
 
 # wait for links
 aux udev_wait
@@ -58,6 +58,6 @@ test ! -e "${LOOP}p1"
 aux extend_filter "a|$LOOP|"
 
 # creation should pass for 'non-partitioned' loop device
-pvcreate -y $LOOP
+pvcreate -y "$LOOP"
 
-vgcreate vg $LOOP
+vgcreate vg "$LOOP"

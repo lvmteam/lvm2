@@ -63,7 +63,7 @@ vgimportclone --basevgname $vg2 "$dev2"
 # concerned, can only live on a single device. With the last pvscan, we told it
 # that PV from $dev1 now lives on $dev2, but in fact this is not true anymore,
 # since we wrote a different PV over $dev2.
-rm -f $TESTDIR/etc/.cache
+rm -f "$TESTDIR/etc/.cache"
 aux notify_lvmetad "$dev2"
 aux notify_lvmetad "$dev1"
 

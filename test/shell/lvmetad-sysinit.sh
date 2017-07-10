@@ -52,7 +52,7 @@ check inactive $vg1 $lv1
 # lvmetad is configured and not running
 #
 
-kill $(< LOCAL_LVMETAD)
+kill "$(< LOCAL_LVMETAD)"
 
 lvchange -ay $vg1 2>&1 | tee out
 grep "WARNING: Failed to connect" out

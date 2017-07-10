@@ -27,7 +27,7 @@ function delay
 {
 	for d in $(< DEVICES)
 	do
-		aux delay_dev "$d" 0 $1 $(get first_extent_sector "$d")
+		aux delay_dev "$d" 0 $1 "$(get first_extent_sector "$d")"
 	done
 }
 

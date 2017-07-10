@@ -29,8 +29,8 @@ pvcreate --metadatacopies 0 "$dev6"
 vgextend $vg1 "$dev6"
 
 # Slowdown writes
-aux delay_dev "$dev3" 0 800 $(get first_extent_sector "$dev3"):
-aux delay_dev "$dev6" 0 800 $(get first_extent_sector "$dev6"):
+aux delay_dev "$dev3" 0 800 "$(get first_extent_sector "$dev3"):"
+aux delay_dev "$dev6" 0 800 "$(get first_extent_sector "$dev6"):"
 
 for mode in "--atomic" "" ;
 do

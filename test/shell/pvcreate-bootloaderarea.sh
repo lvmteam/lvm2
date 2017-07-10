@@ -45,16 +45,16 @@ grep "Bootloader area with data-aligned start must not exceed device size" err
 pvremove -ff "$dev1"
 pvcreate --dataalignment 256k --bootloaderareasize 600k "$dev1"
 vgcreate $vg "$dev1"
-vgcfgbackup -f $TESTDIR/vg_with_ba_backup $vg
+vgcfgbackup -f "$TESTDIR/vg_with_ba_backup" "$vg"
 pv_uuid=$(get pv_field "$dev1" pv_uuid)
 vgremove -ff $vg
 pvremove -ff "$dev1"
-pvcreate --dataalignment 256k --restorefile $TESTDIR/vg_with_ba_backup --uuid "$pv_uuid" "$dev1"
+pvcreate --dataalignment 256k --restorefile "$TESTDIR/vg_with_ba_backup" --uuid "$pv_uuid" "$dev1"
 check pv_field "$dev1" ba_start "262144"
 check pv_field "$dev1" ba_size "786432"
 check pv_field "$dev1" pe_start "1048576"
 
 # error out when restoring the PV and trying to use overlapping bootloader area
 pvremove -ff "$dev1"
-not pvcreate --restorefile $TESTDIR/vg_with_ba_backup --uuid "$pv_uuid" --bootloaderareasize 1m "$dev1" 2>err
+not pvcreate --restorefile "$TESTDIR/vg_with_ba_backup" --uuid "$pv_uuid" --bootloaderareasize 1m "$dev1" 2>err
 grep "Bootloader area would overlap data area" err

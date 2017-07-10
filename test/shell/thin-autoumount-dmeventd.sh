@@ -31,7 +31,7 @@ cleanup_mounted_and_teardown()
 
 is_lv_opened_()
 {
-	test $(get lv_field "$1" lv_device_open --binary) = "1"
+	test "$(get lv_field "$1" lv_device_open --binary)" = 1
 }
 
 #
@@ -49,12 +49,12 @@ cat <<- EOF >testcmd.sh
 echo "Data: \$DMEVENTD_THIN_POOL_DATA"
 echo "Metadata: \$DMEVENTD_THIN_POOL_METADATA"
 
-$TESTDIR/lib/lvextend --use-policies \$1 || {
+"$TESTDIR/lib/lvextend" --use-policies \$1 || {
 	umount "$mntdir"  || true
 	umount "$mntusedir" || true
 	return 0
 }
-test \$($TESTDIR/lib/lvs -o selected -S "data_percent>95||metadata_percent>95" --noheadings \$1) -eq 0 || {
+test "\$($TESTDIR/lib/lvs -o selected -S "data_percent>95||metadata_percent>95" --noheadings \$1)" -eq 0 || {
 	umount "$mntdir"  || true
 	umount "$mntusedir" || true
 	return 0

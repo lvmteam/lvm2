@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 lv_devices() {
-	test $3 -eq $(get lv_devices $1/$2 | wc -w)
+	test "$3" -eq "$(get lv_devices "$1/$2" | wc -w)"
 }
 
 ########################################################
@@ -120,7 +120,7 @@ EAT_SIZE=$(get lv_field $vg/eat_space size)
 lvcreate --type raid1 -m 1 -l 100%FREE -an -Zn -n raid1 $vg "$dev1" "$dev2"
 check lv_field $vg/raid1 size "9.50m"
 # Ensure image size is the same as the RAID1 size
-check lv_field $vg/raid1 size $(get lv_field $vg/raid1_rimage_0 size -a)
+check lv_field $vg/raid1 size "$(get lv_field $vg/raid1_rimage_0 size -a)"
 # Amount remaining in dev2 should equal the amount taken by 'lv' in dev1
 check pv_field "$dev2" pv_free "$EAT_SIZE"
 lvremove -ff $vg/raid1

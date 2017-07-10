@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-kill $(< LOCAL_LVMETAD)
+kill "$(< LOCAL_LVMETAD)"
 rm LOCAL_LVMETAD
 
 aux prepare_devs 2

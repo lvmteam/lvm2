@@ -44,16 +44,16 @@ done
 
 # Can't replace adjacent devices
 devices=( $(get_image_pvs $vg $lv1) )
-not lvconvert --replace ${devices[0]} --replace ${devices[1]} $vg/$lv1
-not lvconvert --replace ${devices[2]} --replace ${devices[3]} $vg/$lv1
-not lvconvert --replace ${devices[4]} --replace ${devices[5]} $vg/$lv1
+not lvconvert --replace "${devices[0]}" --replace "${devices[1]}" $vg/$lv1
+not lvconvert --replace "${devices[2]}" --replace "${devices[3]}" $vg/$lv1
+not lvconvert --replace "${devices[4]}" --replace "${devices[5]}" $vg/$lv1
 
 # Can replace non-adjacent devices
 for i in 0 1; do
 	lvconvert \
-		--replace ${devices[$i]} \
-		--replace ${devices[$(($i + 2))]} \
-		--replace ${devices[$(($i + 4))]} \
+		--replace "${devices[$i]}" \
+		--replace "${devices[$(( i + 2 ))]}" \
+		--replace "${devices[$(( i + 4 ))]}" \
 		 $vg/$lv1
 	aux wait_for_sync $vg $lv1
 done

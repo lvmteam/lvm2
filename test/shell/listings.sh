@@ -33,11 +33,11 @@ pvcreate --metadatacopies 0 "$dev5"
 
 #COMM bz195276 -- pvs doesn't show PVs until a VG is created
 pvs --noheadings "${DEVICES[@]}"
-test $(pvs --noheadings "${DEVICES[@]}" | wc -l) -eq 5
+test "$(pvs --noheadings "${DEVICES[@]}" | wc -l)" -eq 5
 pvdisplay
 
 #COMM pvs with segment attributes works even for orphans
-test $(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all "${DEVICES[@]}" | wc -l) -eq 5
+test "$(pvs --noheadings -o seg_all,pv_all,lv_all,vg_all "${DEVICES[@]}" | wc -l)" -eq 5
 
 vgcreate $vg "${DEVICES[@]}"
 
@@ -59,16 +59,16 @@ check pv_field "$dev2" vg_name $vg
 #COMM lvs displays snapshots (bz171215)
 lvcreate -aey -l4 -n $lv1 $vg
 lvcreate -l4 -s -n $lv2 $vg/$lv1
-test $(lvs --noheadings $vg | wc -l) -eq 2
+test "$(lvs --noheadings $vg | wc -l)" -eq 2
 # should lvs -a display cow && real devices? (it doesn't)
-test $(lvs -a --noheadings $vg | wc -l)  -eq 2
+test "$(lvs -a --noheadings $vg | wc -l)"  -eq 2
 dmsetup ls | grep "$PREFIX" | grep -v "LVMTEST.*pv."
 lvremove -f $vg/$lv2
 
 #COMM lvs -a displays mirror legs and log
 lvcreate -aey -l2 --type mirror -m2 -n $lv3 $vg
-test $(lvs --noheadings $vg | wc -l) -eq 2
-test $(lvs -a --noheadings $vg | wc -l) -eq 6
+test "$(lvs --noheadings $vg | wc -l)" -eq 2
+test "$(lvs -a --noheadings $vg | wc -l)" -eq 6
 dmsetup ls | grep "$PREFIX" | grep -v "LVMTEST.*pv."
 
 # Check we parse /dev/mapper/vg-lv

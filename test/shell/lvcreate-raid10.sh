@@ -15,7 +15,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 lv_devices() {
-	test $3 -eq $(get lv_devices $1/$2 | wc -w)
+	test "$3" -eq "$(get lv_devices "$1/$2" | wc -w)"
 }
 
 ########################################################

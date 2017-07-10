@@ -28,7 +28,7 @@ lvcreate -L1T -n cpool $vg
 lvconvert -y --type cache-pool $vg/cpool
 
 # Check chunk size in sectors is more then 512K
-test $(get lv_field $vg/cpool chunk_size --units s --nosuffix) -gt 1000
+test "$(get lv_field "$vg/cpool" chunk_size --units s --nosuffix)" -gt 1000
 
 lvcreate -L1M -n $lv1 $vg
 

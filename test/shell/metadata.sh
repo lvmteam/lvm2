@@ -73,9 +73,9 @@ check pv_field "$dev3" pe_start $pv_align
 pvs --units k -o name,pe_start,vg_mda_size,vg_name $(cat DEVICES)
 
 # create backup and then restore $dev3
-vgcfgbackup -f $TESTDIR/bak-%s $vg
-pvcreate -ff -y --restorefile $TESTDIR/bak-$vg --uuid $pv3_uuid "$dev3"
-vgcfgrestore -f $TESTDIR/bak-$vg $vg
+vgcfgbackup -f "$TESTDIR/bak-%s" "$vg"
+pvcreate -ff -y --restorefile "$TESTDIR/bak-$vg" --uuid "$pv3_uuid" "$dev3"
+vgcfgrestore -f "$TESTDIR/bak-$vg" "$vg"
 
 # verify pe_start of $dev3
 check pv_field "$dev3" pe_start $pv_align

@@ -27,7 +27,7 @@ CLVMD_SOCKET="/var/run/lvm/clvmd.sock"
 
 restart_clvmd_() {
 	"$LVM_CLVMD_BINARY" -S
-	ls -la $CLVMD_SOCKET || true
+	ls -la "$CLVMD_SOCKET" || true
 
 	for i in $(seq 1 20) ; do
 		test -S "$CLVMD_SOCKET" && break
