@@ -3434,6 +3434,10 @@ int lvm2_main(int argc, char **argv)
 	if (!alias && argc > 1 && !strcmp(argv[1], "version"))
 		return lvm_return_code(version(NULL, argc, argv));
 
+	/* turn 'lvm -h' and 'lvm --help' into 'lvm help' */
+	if (!alias && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")))
+		argv[1] = (char *)"help";
+
 	if (!(cmd = init_lvm(0, 0)))
 		return -1;
 
@@ -3515,7 +3519,7 @@ int lvm2_main(int argc, char **argv)
 		ret = lvm_run_command(cmd, argc, argv);
 
 	if (ret == ENO_SUCH_CMD) {
-		log_error("No such command.  Try 'help'.");
+		log_error("No such command.  Try 'lvm help'.");
 		goto out;
 	}
 
