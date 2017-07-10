@@ -14,7 +14,7 @@ test_description='Hello world for vgcreate with lvmlockd and sanlock'
 
 . lib/inittest
 
-[ -z "$LVM_TEST_LVMLOCKD" ] && skip;
+[ -z "$LVM_TEST_LVMLOCKD" ] && skip
 
 aux prepare_pvs 1
 
