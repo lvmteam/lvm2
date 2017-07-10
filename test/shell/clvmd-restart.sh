@@ -21,7 +21,7 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 # only clvmd based test, skip otherwise
-read LOCAL_CLVMD < LOCAL_CLVMD
+read -r LOCAL_CLVMD < LOCAL_CLVMD
 
 # TODO read from build, for now hardcoded
 CLVMD_SOCKET="/var/run/lvm/clvmd.sock"
