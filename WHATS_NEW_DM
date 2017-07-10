@@ -1,5 +1,6 @@
 Version 1.02.142 -
 =================================
+  Create /dev/disk/by-part{uuid,label} and gpt-auto-root symlinks with udev.
 
 Version 1.02.141 - 28th June 2017
 =================================
