@@ -225,7 +225,7 @@ prepare_lvmetad() {
 	# by setting LVM_TEST_LVMETAD_DEBUG_OPTS before calling inittest.
 	echo -n "## preparing lvmetad..."
 	$run_valgrind lvmetad -f "$@" -s "$TESTDIR/lvmetad.socket" \
-		"${LVM_TEST_LVMETAD_DEBUG_OPTS--l all}" "$@" &
+		"${LVM_TEST_LVMETAD_DEBUG_OPTS--l all}" &
 	echo $! > LOCAL_LVMETAD
 	for i in {1..100} ; do
 		test "$i" -eq 100 && die "Startup of lvmetad is too slow."
