@@ -98,7 +98,11 @@ mirror_images_on() {
 	local lv=$2
 	shift 2
 	local mimages=()
-	readarray -t mimages <<< "$(get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" )"
+	local line
+
+	while IFS= read -r line ; do
+		mimages+=( "$line" )
+	done < <( get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" )
 
 	for i in  "${mimages[@]}"; do
 		lv_on "$vg" "$i" "$1"

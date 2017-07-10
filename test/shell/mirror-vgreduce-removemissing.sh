@@ -49,8 +49,10 @@ mimages_are_on_ ()
 	echo "Check if mirror images of $lv are on PVs" "${list_pvs[@]}"
 	printf "%s\n" "${list_pvs[@]}" | sort | uniq > out1
 
-	get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" | tr -d [] | tee lvs_log
-	readarray -t mimages < lvs_log
+	get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" | tee lvs_log
+	while IFS= read -r i ; do
+		mimages+=( "$i" )
+	done < lvs_log
 
 	for i in "${mimages[@]}"; do
 		echo "Checking $vg/$i"
@@ -161,7 +163,11 @@ test_3way_mirror_fail_1_()
 	mirrorlog_is_on_ $lv1 "$dev4"
 	eval aux disable_dev "\$dev$index"
 	vgreduce --removemissing --force $vg
-	readarray -t list_pvs <<< "$(rest_pvs_ "$index" 3)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$index" 3 )
+
 	mimages_are_on_ "$lv1" "${list_pvs[@]}"
 	mirrorlog_is_on_ $lv1 "$dev4"
 }
@@ -186,7 +192,10 @@ test_3way_mirror_fail_2_()
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3"
 	mirrorlog_is_on_ $lv1 "$dev4"
 
-	readarray -t list_pvs <<< "$(rest_pvs_ "$index" 3)"
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$index" 3 )
+
 	aux disable_dev "${list_pvs[@]}"
 	vgreduce --force --removemissing $vg
 	lv_is_linear_ $lv1
@@ -197,7 +206,11 @@ for n in $(seq 1 3); do
 	#COMM fail mirror images other than mirror image $(($n - 1)) of 3-way mirrored LV
 	prepare_lvs_
 	test_3way_mirror_fail_2_ $n
-	readarray -t list_pvs <<< "$(rest_pvs_ "$n" 3)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$n" 3 )
+
 	recover_vg_ "${list_pvs[@]}"
 done
 
@@ -215,10 +228,12 @@ test_3way_mirror_plus_1_fail_1_()
 	check mirror_images_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	check mirror_log_on $vg $lv1 "$dev5"
 	eval aux disable_dev \$dev$index
-        lvs -a -o +devices
 	vgreduce --removemissing --force $vg
-	lvs -a -o+devices # $vg
-	readarray -t list_pvs <<< "$(rest_pvs_ "$index" 4)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$index" 4 )
+
 	check mirror_images_on $vg $lv1 "${list_pvs[@]}"
 	check mirror_log_on $vg $lv1 "$dev5"
 }
@@ -244,8 +259,11 @@ test_3way_mirror_plus_1_fail_3_()
 	lvconvert -m+1 $vg/$lv1 "$dev4"
 	check mirror_images_on $vg $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	check mirror_log_on $vg $lv1 "$dev5"
-	lvs -a -o+devices $vg
-	readarray -t list_pvs <<< "$(rest_pvs_ "$index" 4)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$index" 4 )
+
 	aux disable_dev "${list_pvs[@]}"
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
@@ -258,7 +276,11 @@ for n in $(seq 1 4); do
 	#COMM "fail mirror images other than mirror image $(($n - 1)) of 4-way (1 converting) mirrored LV"
 	prepare_lvs_
 	test_3way_mirror_plus_1_fail_3_ $n
-	readarray -t list_pvs <<< "$(rest_pvs_ "$n" 4)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$n" 4 )
+
 	recover_vg_ "${list_pvs[@]}"
 done
 
@@ -277,7 +299,11 @@ test_2way_mirror_plus_2_fail_1_()
 	mirrorlog_is_on_ $lv1 "$dev5"
 	eval aux disable_dev \$dev$n
 	vgreduce --removemissing --force $vg
-	readarray -t list_pvs <<< "$(rest_pvs_ "$index" 4)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$index" 4 )
+
 	mimages_are_on_ "$lv1" "${list_pvs[@]}"
 	mirrorlog_is_on_ $lv1 "$dev5"
 }
@@ -303,7 +329,12 @@ test_2way_mirror_plus_2_fail_3_()
 	lvconvert -m+2 $vg/$lv1 "$dev3" "$dev4"
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	mirrorlog_is_on_ $lv1 "$dev5"
-	readarray -t list_pvs <<< "$(rest_pvs_ "$index" 4)"
+
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$index" 4 )
+
 	aux disable_dev "${list_pvs[@]}"
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
@@ -316,7 +347,11 @@ for n in $(seq 1 4); do
 	#COMM "fail mirror images other than mirror image $(($n - 1)) of 4-way (2 converting) mirrored LV"
 	prepare_lvs_
 	test_2way_mirror_plus_2_fail_3_ $n
-	readarray -t list_pvs <<< "$(rest_pvs_ "$n" 4)"
+
+	list_pvs=(); while IFS= read -r line ; do
+		list_pvs+=( "$line" )
+	done < <( rest_pvs_ "$n" 4 )
+
 	recover_vg_ "${list_pvs[@]}"
 done
 
