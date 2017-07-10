@@ -3438,6 +3438,11 @@ int lvm2_main(int argc, char **argv)
 	if (!alias && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")))
 		argv[1] = (char *)"help";
 
+	if (!alias && (*argv[1] == '-')) {
+		log_error("Specify options after a command: lvm [command] [options].");
+		return -1;
+	}
+
 	if (!(cmd = init_lvm(0, 0)))
 		return -1;
 
