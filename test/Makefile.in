@@ -273,22 +273,26 @@ lib/flavour-%: $(srcdir)/lib/flavour-%.sh .lib-dir-stamp
 	cp $< $@
 
 lib/paths-common: $(srcdir)/Makefile.in .lib-dir-stamp Makefile
-	echo 'export DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
-	echo 'export THIN=@THIN@' >> $@-t
-	echo 'export RAID=@RAID@' >> $@-t
-	echo 'export CACHE=@CACHE@' >> $@-t
-	echo 'export LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
-	echo 'export LVMPOLLD_PIDFILE="@LVMPOLLD_PIDFILE@"' >> $@-t
-	echo 'export DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
-	echo 'export CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
-	echo 'export LVM_TEST_THIN_CHECK_CMD=$${LVM_TEST_THIN_CHECK_CMD-@THIN_CHECK_CMD@}' >> $@-t
-	echo 'export LVM_TEST_THIN_DUMP_CMD=$${LVM_TEST_THIN_DUMP_CMD-@THIN_DUMP_CMD@}' >> $@-t
-	echo 'export LVM_TEST_THIN_REPAIR_CMD=$${LVM_TEST_THIN_REPAIR_CMD-@THIN_REPAIR_CMD@}' >> $@-t
-	echo 'export LVM_TEST_THIN_RESTORE_CMD=$${LVM_TEST_THIN_RESTORE_CMD-@THIN_RESTORE_CMD@}' >> $@-t
-	echo 'export LVM_TEST_CACHE_CHECK_CMD=$${LVM_TEST_CACHE_CHECK_CMD-@CACHE_CHECK_CMD@}' >> $@-t
-	echo 'export LVM_TEST_CACHE_DUMP_CMD=$${LVM_TEST_CACHE_DUMP_CMD-@CACHE_DUMP_CMD@}' >> $@-t
-	echo 'export LVM_TEST_CACHE_REPAIR_CMD=$${LVM_TEST_CACHE_REPAIR_CMD-@CACHE_REPAIR_CMD@}' >> $@-t
-	echo 'export LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD-@CACHE_RESTORE_CMD@}' >> $@-t
+	echo 'DM_UDEV_SYNCHRONISATION=$(dm_udev_synchronisation)' >> $@-t
+	echo 'THIN=@THIN@' >> $@-t
+	echo 'RAID=@RAID@' >> $@-t
+	echo 'CACHE=@CACHE@' >> $@-t
+	echo 'LVMETAD_PIDFILE="@LVMETAD_PIDFILE@"' >> $@-t
+	echo 'LVMPOLLD_PIDFILE="@LVMPOLLD_PIDFILE@"' >> $@-t
+	echo 'DMEVENTD_PIDFILE="@DMEVENTD_PIDFILE@"' >> $@-t
+	echo 'CLVMD_PIDFILE="@CLVMD_PIDFILE@"' >> $@-t
+	echo 'LVM_TEST_THIN_CHECK_CMD=$${LVM_TEST_THIN_CHECK_CMD-@THIN_CHECK_CMD@}' >> $@-t
+	echo 'LVM_TEST_THIN_DUMP_CMD=$${LVM_TEST_THIN_DUMP_CMD-@THIN_DUMP_CMD@}' >> $@-t
+	echo 'LVM_TEST_THIN_REPAIR_CMD=$${LVM_TEST_THIN_REPAIR_CMD-@THIN_REPAIR_CMD@}' >> $@-t
+	echo 'LVM_TEST_THIN_RESTORE_CMD=$${LVM_TEST_THIN_RESTORE_CMD-@THIN_RESTORE_CMD@}' >> $@-t
+	echo 'LVM_TEST_CACHE_CHECK_CMD=$${LVM_TEST_CACHE_CHECK_CMD-@CACHE_CHECK_CMD@}' >> $@-t
+	echo 'LVM_TEST_CACHE_DUMP_CMD=$${LVM_TEST_CACHE_DUMP_CMD-@CACHE_DUMP_CMD@}' >> $@-t
+	echo 'LVM_TEST_CACHE_REPAIR_CMD=$${LVM_TEST_CACHE_REPAIR_CMD-@CACHE_REPAIR_CMD@}' >> $@-t
+	echo 'LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD-@CACHE_RESTORE_CMD@}' >> $@-t
+	echo 'export DM_UDEV_SYNCHRONISATION THIN RAID CACHE\' >> $@-t
+	echo ' LVMETAD_PIDFILE LVMPOLLD_PIDFILE DMEVENTD_PIDFILE CLVMD_PIDFILE\' >> $@-t
+	echo ' LVM_TEST_THIN_CHECK_CMD LVM_TEST_THIN_DUMP_CMD LVM_TEST_THIN_REPAIR_CMD LVM_TEST_THIN_RESTORE_CMD\' >> $@-t
+	echo ' LVM_TEST_CACHE_CHECK_CMD LVM_TEST_CACHE_DUMP_CMD LVM_TEST_CACHE_REPAIR_CMD LVM_TEST_CACHE_RESTORE_CMD' >> $@-t
 	mv $@-t $@
 
 lib/paths-installed: lib/paths-common
