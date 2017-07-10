@@ -68,7 +68,7 @@ lv_devices() {
 }
 
 lv_field_lv_() {
-	lv_field "$1" "$2" -a --unbuffered | sed 's/\[//; s/]//'
+	lv_field "$1" "$2" -a --unbuffered | tr -d []
 }
 
 lv_tree_devices_() {
