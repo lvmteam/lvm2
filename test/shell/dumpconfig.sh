@@ -17,7 +17,7 @@ SKIP_WITH_LVMPOLLD=1
 
 flatten() {
 	cat > flatten.config
-	for s in `egrep '^[a-z]+ {$' flatten.config | sed -e s,{$,,`; do
+	for s in $(grep -E '^[a-z]+ {$' flatten.config | sed -e 's,{$,,'); do
 		sed -e "/^$s/,/^}/p;d" flatten.config | sed -e '1d;$d' | sed -e "s,^[ \t]*,$s/,";
 	done
 }

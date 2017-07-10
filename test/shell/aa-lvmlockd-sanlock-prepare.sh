@@ -33,7 +33,7 @@ dmsetup remove GL_DEV || true
 rm -f "$GL_FILE"
 dd if=/dev/zero of="$GL_FILE" bs=$((1024*1024)) count=1024 2> /dev/null
 GL_LOOP=$(losetup -f "$GL_FILE" --show)
-echo "0 `blockdev --getsize $GL_LOOP` linear $GL_LOOP 0" | dmsetup create GL_DEV
+echo "0 $(blockdev --getsize $GL_LOOP linear $GL_LOOP 0)" | dmsetup create GL_DEV
 
 aux prepare_sanlock
 aux prepare_lvmlockd

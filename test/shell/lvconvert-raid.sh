@@ -23,7 +23,7 @@ get_image_pvs() {
 	local d
 	local images
 
-	images=`dmsetup ls | grep ${1}-${2}_.image_.* | cut -f1 | sed -e s:-:/:`
+	images=$(dmsetup ls | grep "${1}-${2}_.image_.*" | cut -f1 | sed -e s:-:/:)
 	lvs --noheadings -a -o devices "$images" | sed s/\(.\)//
 }
 
@@ -162,7 +162,7 @@ lvconvert --splitmirrors 1 --trackchanges $vg/$lv1
 check lv_exists $vg $lv1
 check linear $vg ${lv1}_rimage_2
 fsck.ext4 -fn "$DM_DEV_DIR/mapper/$vg-${lv1}_rimage_2"
-dd of="$DM_DEV_DIR/$vg/$lv1" if=/dev/zero bs=512 oflag=direct count=`blockdev --getsz "$DM_DEV_DIR/$vg/$lv1"`
+dd of="$DM_DEV_DIR/$vg/$lv1" if=/dev/zero bs=512 oflag=direct count="$(blockdev --getsz "$DM_DEV_DIR/$vg/$lv1")"
 not fsck.ext4 -fn "$DM_DEV_DIR/$vg/$lv1"
 fsck.ext4 -fn "$DM_DEV_DIR/mapper/$vg-${lv1}_rimage_2"
 # FIXME: needed on tiny loop but not on real block backend ?

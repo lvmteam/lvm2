@@ -25,7 +25,7 @@ function check_sub_lvs
 	local lv=$2
 	local end=$3
 
-	for s in `seq 0 $end`
+	for s in $(seq 0 "$end")
 	do
 		check lv_exists $vg ${lv}_rmeta_$s
 		check lv_exists $vg ${lv}_rimage_$s
@@ -39,7 +39,7 @@ function check_no_sub_lvs
 	local start=$3
 	local end=$4
 
-	for s in `seq $start $end`
+	for s in $(seq "$start" "$end")
 	do
 		check lv_not_exists $vg ${lv}_rmeta_$s
 		check lv_not_exists $vg ${lv}_rimage_$s

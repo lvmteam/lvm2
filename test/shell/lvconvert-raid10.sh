@@ -19,7 +19,7 @@ get_image_pvs() {
 	local d
 	local images
 
-	images=`dmsetup ls | grep ${1}-${2}_.image_.* | cut -f1 | sed -e s:-:/:`
+	images=$(dmsetup ls | grep "${1}-${2}_.image_.*" | cut -f1 | sed -e s:-:/:)
 	lvs --noheadings -a -o devices $images | sed s/\(.\)//
 }
 
