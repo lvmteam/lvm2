@@ -504,20 +504,18 @@ kill_tagged_processes() {
 	local wait
 
 	# read uses all vars within pipe subshell
-	rm -f PIDS
-	print_procs_by_tag_ "$@" | while read -r pid wait; do
+	local pids=()
+	while read -r pid wait; do
 		if test -n "$pid" ; then
 			echo "## killing tagged process: $pid ${wait:0:120}..."
 			kill -TERM "$pid" 2>/dev/null || true
 		fi
-		echo "$pid" >> PIDS
-	done
-
-	test -s PIDS || return 0
+		pids+=( "$pid" )
+	done < <(print_procs_by_tag_ "$@")
 
 	# wait if process exited and eventually -KILL
 	wait=0
-	for pid in $(< PIDS) ; do
+	for pid in "${pids[@]}" ; do
 		while ps "$pid" > /dev/null && test "$wait" -le 10; do
 			sleep .2
 			wait=$(( wait + 1 ))
