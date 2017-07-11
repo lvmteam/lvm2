@@ -43,7 +43,7 @@ if [[ -n "$abs_top_builddir" ]]; then
     fi
   fi
 
-  PYTHONPATH=$(dirname "${python_lib[*]}"):$PYTHONPATH
+  PYTHONPATH=$(dirname "${python_lib[*]}"):${PYTHONPATH-}
   export PYTHONPATH
 elif rpm -q lvm2-python-libs &>/dev/null; then
   true

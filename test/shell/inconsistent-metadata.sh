@@ -32,6 +32,7 @@ init() {
 }
 
 # vgscan fixes up metadata (needs --cache option for direct scan if lvmetad is used)
+cache=""
 test -e LOCAL_LVMETAD && cache="--cache"
 init
 vgscan $cache 2>&1 | tee cmd.out
