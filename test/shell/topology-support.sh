@@ -116,6 +116,7 @@ aux prepare_pvs 1 $PER_DEV_SIZE
 
 # Kernel (3.19) could provide wrong results - in this case skip
 # test with incorrect result - lvm2 can't figure out good values.
+SHOULD=""
 check sysfs "$dev1" queue/optimal_io_size 786432 || SHOULD=should
 $SHOULD check pv_field "${DEVICES[@]}" pe_start 768.00k
 

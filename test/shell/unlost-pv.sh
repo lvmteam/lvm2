@@ -16,10 +16,11 @@ SKIP_WITH_LVMPOLLD=1
 . lib/inittest
 
 check_() {
+	local cache=""
 	# vgscan needs --cache option for direct scan if lvmetad is used
 	test -e LOCAL_LVMETAD && cache="--cache"
 	vgscan $cache 2>&1 | tee vgscan.out
-	$1 grep "Inconsistent metadata found for VG $vg" vgscan.out
+	"$@" grep "Inconsistent metadata found for VG $vg" vgscan.out
 }
 
 aux prepare_vg 3

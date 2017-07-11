@@ -41,7 +41,7 @@ test "$(dmsetup info -c --noheadings -o open $vg-snap)" -eq 1
 grep "$mntdir" /proc/mounts
 
 # overfill 4M snapshot (with metadata)
-not dd if=/dev/zero of="$mntdir/file$1" bs=1M count=4 conv=fdatasync
+not dd if=/dev/zero of="$mntdir/file" bs=1M count=4 conv=fdatasync
 
 # Should be nearly instant check of dmeventd for invalid snapshot.
 # Wait here for umount and open_count drops to 0 as it may

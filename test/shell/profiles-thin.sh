@@ -35,6 +35,7 @@ aux prepare_pvs 1 "$DEV_SIZE"
 
 # Check we are not running on buggy kernel (broken lcm())
 # If so, turn chunk_size test into  'should'
+SHOULD=""
 check sysfs "$dev1" queue/optimal_io_size "$EXPECT" || SHOULD=should
 
 vgcreate $vg "$dev1"

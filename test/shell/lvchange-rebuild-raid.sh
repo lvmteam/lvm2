@@ -24,7 +24,7 @@ _sync() {
 	aux enable_dev "${DEVICES[@]}"
 
 	aux wait_for_sync $vg $lv1
-	test -z "$1" || check raid_leg_status $vg $lv1 $1
+	test "$#" -eq 0 || check raid_leg_status $vg $lv1 "$@"
 
 	# restore to delay_dev tables for all devices
 	aux restore_from_devtable "${DEVICES[@]}"

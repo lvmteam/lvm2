@@ -38,6 +38,7 @@ lvconvert --mirrorlog core $vg/lv
 
 # Log conversion (core -> mirrored)
 # FIXME on cluster
+SHOULD=""
 test -e LOCAL_CLVMD && SHOULD=should
 $SHOULD lvconvert --mirrorlog mirrored $vg/lv
 
