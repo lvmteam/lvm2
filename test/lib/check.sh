@@ -194,15 +194,13 @@ linear() {
 in_sync() {
 	local a
 	local b
+	local c
 	local idx
 	local type
 	local snap=""
 	local lvm_name="$1/$2"
-	local ignore_a=$3
-	local dm_name
-
-	dm_name=$(echo "$lvm_name" | sed s:-:--: | sed s:/:-:)
-	[ -z "$ignore_a" ] && ignore_a=0
+	local ignore_a=${3:-0}
+	local dm_name="$1-$2"
 
 	a=( $(dmsetup status "$dm_name") )  || \
 		die "Unable to get sync status of $1"
@@ -233,9 +231,10 @@ in_sync() {
 		;;
 	esac
 
-	b=( $(echo "${a[$idx]}" | sed s:/:' ':) )
+	b=${a[$idx]%%/*} # split ratio   x/y
+	c=${a[$idx]##*/}
 
-	if [ "${b[0]}" -eq 0 ] || [ "${b[0]}" != "${b[1]}" ]; then
+	if [ "$b" -eq 0 ] || [ "$b" != "$c" ]; then
 		echo "$lvm_name ($type$snap) is not in-sync"
 		return 1
 	fi
