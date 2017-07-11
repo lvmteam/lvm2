@@ -63,7 +63,7 @@ static uint32_t _calc_crc_new(uint32_t initial, const uint8_t *buf, uint32_t siz
 	const uint32_t *start = (const uint32_t *) buf;
 	const uint32_t *end = (const uint32_t *) (buf + (size & 0xfffffffc));
 	uint32_t crc = initial;
-   
+
 	/* Process 4 bytes per iteration */
 	while (start < end) {
 		crc = crc ^ xlate32(*start++);
