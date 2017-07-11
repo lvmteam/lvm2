@@ -28,10 +28,10 @@ function _test_regionsize
 	local vg=$4
 	local lv=$5
 
-	lvconvert --type $type --yes -R $regionsize $vg/$lv
+	lvconvert --type "$type" --yes -R "$regionsize" "$vg/$lv"
 	check lv_field $vg/$lv regionsize "$regionsize_str"
 
-	not lvconvert --regionsize $regionsize $vg/$lv 2>err
+	not lvconvert --regionsize "$regionsize" "$vg/$lv" 2>err
 	grep "is already" err
 
 	fsck -fn "$DM_DEV_DIR/$vg/$lv"
@@ -43,12 +43,12 @@ function _test_regionsizes
 	local type=$1
 
 	# Test RAID regionsize changes
-	_test_regionsize $type 128K "128.00k" $vg $lv1
-	_test_regionsize $type 256K "256.00k" $vg $lv1
-	not _test_regionsize $type 1K "1.00k" $vg $lv1
-	_test_regionsize $type 1m "1.00m" $vg $lv1
-	not _test_regionsize $type 1G "1.00g" $vg $lv1
-	not _test_regionsize $type 16K "16.00k" $vg $lv1
+	_test_regionsize "$type" 128K "128.00k" $vg $lv1
+	_test_regionsize "$type" 256K "256.00k" $vg $lv1
+	not _test_regionsize "$type" 1K "1.00k" $vg $lv1
+	_test_regionsize "$type" 1m "1.00m" $vg $lv1
+	not _test_regionsize "$type" 1G "1.00g" $vg $lv1
+	not _test_regionsize "$type" 16K "16.00k" $vg $lv1
 }
 
 # Create 3-way raid1
