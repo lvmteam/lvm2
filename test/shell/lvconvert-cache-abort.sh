@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2014-2016 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -44,13 +44,21 @@ lvdisplay --maps $vg
 sync
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=4k count=100 conv=fdatasync
 
-LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -v --splitcache $vg/$lv1 >log 2>&1 &
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -v --splitcache $vg/$lv1 >logconvert 2>&1 &
 PID_CONVERT=$!
-sleep 0.2
+while ! (dmsetup table $vg-$lv1 | grep cleaner) ; do
+	echo "Waiting for cleaner policy on $vg/$lv1"
+	sleep .05
+done
 kill -INT $PID_CONVERT
 aux enable_dev "$dev1"
 wait
-grep -E "Flushing.*aborted" log
+
+grep -E "Flushing.*aborted" logconvert || {
+	cat logconvert || true
+	die "Flushing of $vg/$lv1 not aborted ?"
+}
+
 # check the table got restored
 check grep_dmsetup table $vg-$lv1 "writeback"
 
