@@ -3430,17 +3430,19 @@ int lvm2_main(int argc, char **argv)
 			log_sys_error("unsetenv", "LVM_DID_EXEC");
 	}
 
-	/* "version" command is simple enough so it doesn't need any complex init */
-	if (!alias && argc > 1 && !strcmp(argv[1], "version"))
-		return lvm_return_code(version(NULL, argc, argv));
+	if (!alias && argc > 1) {
+		/* "version" command is simple enough so it doesn't need any complex init */
+		if (!strcmp(argv[1], "version"))
+			return lvm_return_code(version(NULL, argc, argv));
 
-	/* turn 'lvm -h' and 'lvm --help' into 'lvm help' */
-	if (!alias && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")))
-		argv[1] = (char *)"help";
+		/* turn 'lvm -h' and 'lvm --help' into 'lvm help' */
+		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
+			argv[1] = (char *)"help";
 
-	if (!alias && (*argv[1] == '-')) {
-		log_error("Specify options after a command: lvm [command] [options].");
-		return -1;
+		if (*argv[1] == '-') {
+			log_error("Specify options after a command: lvm [command] [options].");
+			return -1;
+		}
 	}
 
 	if (!(cmd = init_lvm(0, 0)))

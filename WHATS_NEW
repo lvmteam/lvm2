@@ -1,5 +1,6 @@
 Version 2.02.173 - 
 =================================
+  Accept 'lvm -h' and 'lvm --help' as well as 'lvm help' for help.
   Suppress error message from accept() on clean lvmetad shutdown.
   Tidy clvmd client list processing and fix segfaults.
   Protect clvmd debug log messages with mutex and add client id.
