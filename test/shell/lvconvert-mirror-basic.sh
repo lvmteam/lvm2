@@ -49,23 +49,22 @@ test_lvconvert() {
 	local finish_count=$3
 	local finish_count_p1=$(( finish_count + 1 ))
 	local finish_log_type=$4
-	local dev_array=( "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" )
 	local start_log_count
 	local finish_log_count
 	local max_log_count
 	local alloc=""
-	local active=true
+	local active="-aey"
 	local i
 
-	test "$5" = "active" && active=false
+	test "$5" = "active" && active="-an"
 	#test $finish_count -gt $start_count && up=true
 
 	# Do we have enough devices for the mirror images?
-	test $start_count_p1 -gt ${#dev_array[@]} && \
+	test $start_count_p1 -gt ${#DEVICES[@]} && \
 		die "Action requires too many devices"
 
 	# Do we have enough devices for the mirror images?
-	test $finish_count_p1 -gt ${#dev_array[@]} && \
+	test $finish_count_p1 -gt ${#DEVICES[@]} && \
 		die "Action requires too many devices"
 
 	start_log_count=$(log_name_to_count $start_log_type)
@@ -78,23 +77,22 @@ test_lvconvert() {
 
 	if [ $start_count -gt 0 ]; then
 		# Are there extra devices for the log or do we overlap
-		if [ $(( start_count_p1 + start_log_count )) -gt ${#dev_array[@]} ]; then
+		if [ $(( start_count_p1 + start_log_count )) -gt ${#DEVICES[@]} ]; then
 			alloc="--alloc anywhere"
 		fi
 
-		lvcreate -aey -l2 --type mirror -m $start_count --mirrorlog $start_log_type \
+		lvcreate "$active" -Zn -l2 --type mirror -m $start_count --mirrorlog $start_log_type \
 			-n $lv1 $vg $alloc
 		check mirror_legs $vg $lv1 $start_count_p1
 		# FIXME: check mirror log
 	else
-		lvcreate -aey -l2 -n $lv1 $vg
+		lvcreate "$active" -Zn -l2 -n $lv1 $vg
 	fi
 
 	lvs -a -o name,copy_percent,devices $vg
-	test $active || lvchange -an $vg/$lv1
 
 	# Are there extra devices for the log or do we overlap
-	if [ $(( finish_count_p1 +  finish_log_count )) -gt ${#dev_array[@]} ]; then
+	if [ $(( finish_count_p1 +  finish_log_count )) -gt ${#DEVICES[@]} ]; then
 		alloc="--alloc anywhere"
 	fi
 
@@ -109,7 +107,7 @@ test_lvconvert() {
 	lvconvert --type mirror -m $finish_count $mirrorlog $finish_log_type \
 		$vg/$lv1 $alloc
 
-	test $active || lvchange -aey $vg/$lv1
+	test "$active" = "-an" || lvchange "$active" $vg/$lv1
 
 	check mirror_no_temporaries $vg $lv1
 	if [ "$finish_count_p1" -eq 1 ]; then
@@ -125,6 +123,7 @@ test_lvconvert() {
 }
 
 aux prepare_vg 5 5
+get_devs
 
 MIRRORED="mirrored"
 # FIXME: Cluster is not supporting exlusive activation of mirrored log
