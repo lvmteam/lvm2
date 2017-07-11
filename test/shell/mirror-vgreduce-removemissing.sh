@@ -50,6 +50,8 @@ mimages_are_on_ ()
 	printf "%s\n" "${list_pvs[@]}" | sort | uniq > out1
 
 	get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" | tee lvs_log
+	test -s lvs_log || return 1
+
 	while IFS= read -r i ; do
 		mimages+=( "$i" )
 	done < lvs_log
@@ -330,7 +332,6 @@ test_2way_mirror_plus_2_fail_3_()
 	mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3" "$dev4"
 	mirrorlog_is_on_ $lv1 "$dev5"
 
-
 	list_pvs=(); while IFS= read -r line ; do
 		list_pvs+=( "$line" )
 	done < <( rest_pvs_ "$index" 4 )
@@ -339,7 +340,8 @@ test_2way_mirror_plus_2_fail_3_()
 	vgreduce --removemissing --force $vg
 	lvs -a -o+devices $vg
 	eval dev=\$dev$n
-	mimages_are_on_ $lv1 "$dev" || lv_is_on_ $lv1 "$dev"
+	not mimages_are_on_ $lv1 "$dev"
+	lv_is_on_ $lv1 "$dev"
 	not mirrorlog_is_on_ $lv1 "$dev5"
 }
 
