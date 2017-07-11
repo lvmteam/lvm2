@@ -48,7 +48,7 @@ grep "$MARKED_AS_USED_MSG" err
 not pvchange -u "$dev1" 2>err
 grep "$MARKED_AS_USED_MSG" err
 not vgcreate $vg2 "$dev1" 2>err
-grep "$MARKED_AS_USED" err
+grep "$MARKED_AS_USED_MSG" err
 not pvremove "$dev1" 2>err
 grep "$MARKED_AS_USED_MSG" err
 
@@ -113,7 +113,7 @@ grep "$MARKED_AS_USED_MSG" err
 not pvchange -u "$dev1" 2>err
 grep "$MARKED_AS_USED_MSG" err
 not vgcreate $vg2 "$dev1" 2>err
-grep "$MARKED_AS_USED" err
+grep "$MARKED_AS_USED_MSG" err
 not pvremove "$dev1" 2>err
 grep "$MARKED_AS_USED_MSG" err
 
