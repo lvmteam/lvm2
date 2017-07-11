@@ -25,6 +25,24 @@ TESTNAME=${0##*/}
 PS4='#${BASH_SOURCE[0]##*/}:${LINENO}+ '
 export TESTNAME PS4
 
+LVM_TEST_NODEBUG=${LVM_TEST_NODEBUG-}
+
+LVM_TEST_LVMETAD=${LVM_TEST_LVMETAD-}
+LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD-}
+LVM_TEST_LVMLOCKD_TEST=${LVM_TEST_LVMLOCKD_TEST-}
+LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD-}
+LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM-}
+LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK-}
+
+SKIP_WITHOUT_CLVMD=${SKIP_WITHOUT_CLVMD-}
+SKIP_WITH_CLVMD=${SKIP_WITH_CLVMD-}
+
+SKIP_WITHOUT_LVMETAD=${SKIP_WITHOUT_LVMETAD-}
+SKIP_WITH_LVMETAD=${SKIP_WITH_LVMETAD-}
+
+SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
+SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
+
 if test -n "$LVM_TEST_FLAVOUR"; then
 	. "lib/flavour-$LVM_TEST_FLAVOUR"
 fi
@@ -106,7 +124,9 @@ free -m || true
 # Set vars from utils now that we have TESTDIR/PREFIX/...
 prepare_test_vars
 
-test -n "$BASH" && set -eE -o pipefail
+# Set strict shell mode
+# see: http://redsymbol.net/articles/unofficial-bash-strict-mode
+test -n "$BASH" && set -euE -o pipefail
 
 # Vars for harness
 echo "@TESTDIR=$TESTDIR"
