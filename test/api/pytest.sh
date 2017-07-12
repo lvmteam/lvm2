@@ -30,7 +30,7 @@ aux prepare_dmeventd
 # gdb -ex r --args python FULL_PATH/lvm2/test/api/python_lvm_unit.py -v TestLvm.test_lv_active_inactive
 
 #Locate the python binding library to use.
-if [[ -n "$abs_top_builddir" ]]; then
+if [[ -n "${abs_top_builddir+varset}" ]]; then
   python_lib=($(find "$abs_top_builddir" -name lvm.so))
   if [[ ${#python_lib[*]} -ne 1 ]]; then
     if [[ ${#python_lib[*]} -gt 1 ]]; then

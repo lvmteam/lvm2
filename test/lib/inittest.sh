@@ -91,7 +91,7 @@ cd "$TESTDIR"
 mkdir lib
 
 # Setting up symlink from $i to $TESTDIR/lib
-test -n "$abs_top_builddir" && \
+test -n "${abs_top_builddir+varset}" && \
     find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so' \
     -exec ln -s -t lib "{}" +
 find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
