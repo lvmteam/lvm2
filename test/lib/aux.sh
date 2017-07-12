@@ -589,16 +589,19 @@ teardown() {
 		return 1
 	}
 
+	if test "${LVM_TEST_PARALLEL:-0}" = 0 && test -z "$RUNNING_DMEVENTD"; then
+		not pgrep dmeventd &>/dev/null # printed in STACKTRACE
+	fi
+
+	echo -n .
+
 	test -n "$TESTDIR" && {
 		cd "$TESTOLDPWD" || die "Failed to enter $TESTOLDPWD"
+		# after this delete no further write is possible
 		rm -rf "$TESTDIR" || echo BLA
 	}
 
 	echo "ok"
-
-	if test "${LVM_TEST_PARALLEL:-0}" = 1 || test -n "$RUNNING_DMEVENTD"; then
-		not pgrep dmeventd #&>/dev/null
-	fi
 }
 
 prepare_loop() {
