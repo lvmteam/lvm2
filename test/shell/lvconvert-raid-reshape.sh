@@ -20,9 +20,11 @@ aux have_raid 1 12 0 || skip
 
 # Temporarily skip reshape tests on single-core CPUs until there's a fix for
 # https://bugzilla.redhat.com/1443999 - AGK 2017/04/20
-aux have_multi_core || skip
+#aux have_multi_core || skip
+# dropping single-core limitation with  1.12 target
 
-aux prepare_pvs 65 64
+aux prepare_pvs 65 32
+get_devs
 
 vgcreate -s 1M "$vg" "${DEVICES[@]}"
 
@@ -51,7 +53,7 @@ function _lvconvert
 	local stripes=$4
 	local vg=$5
 	local lv=$6
-	local region_size=$7
+	local region_size=${7-}
 	local wait_and_check=1
 	local R=""
 
