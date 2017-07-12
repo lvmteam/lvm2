@@ -610,12 +610,26 @@ The command deactivates the LV.  After deactivating the LV, the command
 uses lvmlockd to release the current lock on the LV.
 
 
+.SS manually repairing a shared VG
+
+Some failure conditions may not be repairable while the VG has a shared
+lock type.  In these cases, it may be possible to repair the VG by
+forcibly changing the lock type to "none".  This is done by adding
+"--lock-opt force" to the normal command for changing the lock type:
+vgchange --lock-type none VG.  The VG lockspace should first be stopped on
+all hosts, and be certain that no hosts are using the VG before this is
+done.
+
+
 .SS recover from lost PV holding sanlock locks
 
-The general approach is to change the VG lock type to "none", and then
-change the lock type back to "sanlock".  This recreates the internal
-lvmlock LV and the necessary locks on it.  Additional steps may be
-required to deal with the missing PV.
+In a sanlock VG, the sanlock locks are held on the hidden "lvmlock" LV.
+If the PV holding this LV is lost, a new lvmlock LV needs to be created.
+To do this, ensure no hosts are using the VG, then forcibly change the
+lock type to "none" (see above).  Then change the lock type back to
+"sanlock" with the normal command for changing the lock type:  vgchange
+--lock-type sanlock VG.  This recreates the internal lvmlock LV with the
+necessary locks.
 
 
 .SS locking system failures
@@ -733,7 +747,7 @@ cat /sys/kernel/config/dlm/cluster/cluster_name
 .IP \[bu] 2
 Change the VG lock type to none:
 .br
-vgchange --lock-type none --force <vgname>
+vgchange --lock-type none --lock-opt force <vgname>
 
 .IP \[bu] 2
 Change the VG lock type back to dlm which sets the new cluster name:
