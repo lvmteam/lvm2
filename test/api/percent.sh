@@ -18,8 +18,9 @@ SKIP_WITH_LVMPOLLD=1
 aux kernel_at_least 2 6 33 || skip
 
 aux prepare_pvs 2
+get_devs
 
-vgcreate -s 4k $vg $(cat DEVICES)
+vgcreate -s 4k "$vg" "${DEVICES[@]}"
 lvcreate -aey -l 5 -n foo $vg
 lvcreate -s -n snap $vg/foo -l 3 -c 4k
 lvcreate -s -n snap2 $vg/foo -l 6 -c 4k
