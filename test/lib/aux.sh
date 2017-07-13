@@ -411,18 +411,23 @@ teardown_devs_prefixed() {
 
 	# Remove devices, start with closed (sorted by open count)
 	# Run 'dmsetup remove' in parallel
-	local need_udev_wait=0
 	rm -f REMOVE_FAILED
 	#local listdevs=( $(dm_info name,open --sort open,name | grep "$prefix.*:0") )
 	#dmsetup remove --deferred ${listdevs[@]%%:0} || touch REMOVE_FAILED
+	for i in {1..100}; do
+		local need_udev_wait=0
+		local cnt
+		while IFS=' ' read -r dm cnt; do
+			test "$cnt" -eq 0 || break
+			dmsetup remove "$dm" &>/dev/null || touch REMOVE_FAILED &
+			need_udev_wait=1
+		done < <(dm_info name,open --separator ' ' --sort open,name | grep "$prefix")
+		test "$need_udev_wait" -eq 1 || break
+		udev_wait
+		test -f REMOVE_FAILED && break
+	done # looping till there are some removed devicess
 
-	for dm in $(dm_info name --sort open,name | grep "$prefix"); do
-		dmsetup remove "$dm" &>/dev/null || touch REMOVE_FAILED &
-		need_udev_wait=1
-		sleep 1 # give 'dmsetup' some time to proceed with removal
-	done
 	wait
-	test "$need_udev_wait" -eq 0 || udev_wait
 
 	if test -f REMOVE_FAILED; then
 		local num_devs
