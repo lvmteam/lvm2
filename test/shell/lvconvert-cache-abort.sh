@@ -40,7 +40,12 @@ done
 # Delay dev to ensure we have some time to 'capture' interrupt in flush
 aux delay_dev "$dev1" 100 0 "$(get first_extent_sector "$dev1"):"
 
-lvdisplay --maps $vg
+# TODO, how to make writeback cache dirty
+test "$(get lv_field $vg/$lv1 cache_dirty_blocks)" -gt 0 || {
+	lvdisplay --maps $vg
+	skip "Cannot make a dirty writeback cache LV."
+}
+
 sync
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=4k count=100 conv=fdatasync
 
