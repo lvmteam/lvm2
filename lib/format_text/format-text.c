@@ -2002,6 +2002,9 @@ static int _create_vg_text_instance(struct format_instance *fid,
 			 */
 			if (!critical_section())
 				/* Scan PVs in VG for any further MDAs */
+				/*
+				 * FIXME Only scan PVs believed to be in the VG.
+ 				 */
 				lvmcache_label_scan(fid->fmt->cmd);
 
 			if (!(vginfo = lvmcache_vginfo_from_vgname(vg_name, vg_id)))
@@ -2010,7 +2013,7 @@ static int _create_vg_text_instance(struct format_instance *fid,
 				goto_out;
 		}
 
-		/* FIXME Check raw metadata area count - rescan if required */
+		/* FIXME If PV list or raw metadata area count are not as expected rescan */
 	}
 
 out:
