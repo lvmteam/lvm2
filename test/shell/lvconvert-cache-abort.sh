@@ -38,7 +38,7 @@ done
 
 
 # Delay dev to ensure we have some time to 'capture' interrupt in flush
-aux delay_dev "$dev1" 0 500 "$(get first_extent_sector "$dev1"):"
+aux delay_dev "$dev1" 100 0 "$(get first_extent_sector "$dev1"):"
 
 lvdisplay --maps $vg
 sync
@@ -46,7 +46,9 @@ dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=4k count=100 conv=fdatasync
 
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -v --splitcache $vg/$lv1 >logconvert 2>&1 &
 PID_CONVERT=$!
-while ! (dmsetup table $vg-$lv1 | grep cleaner) ; do
+for i in {1..50}; do
+	dmsetup table "$vg-$lv1" | grep cleaner && break
+	test "$i" -ge 100 && die "Waited for cleaner policy on $vg/$lv1 too long!"
 	echo "Waiting for cleaner policy on $vg/$lv1"
 	sleep .05
 done
@@ -56,6 +58,7 @@ wait
 
 grep -E "Flushing.*aborted" logconvert || {
 	cat logconvert || true
+	vgremove -f $vg
 	die "Flushing of $vg/$lv1 not aborted ?"
 }
 
