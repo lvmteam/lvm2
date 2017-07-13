@@ -690,7 +690,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg,
 			   struct processing_handle *handle)
 {
-	struct vgchange_params *vp = (struct vgchange_params *)handle->custom_handle;
 	int ret = ECMD_PROCESSED;
 	unsigned i;
 	struct lv_list *lvl;
@@ -712,7 +711,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ metadataprofile_ARG, &_vgchange_profile },
 		{ profile_ARG, &_vgchange_profile },
 		{ detachprofile_ARG, &_vgchange_profile },
-		{ systemid_ARG, &_vgchange_system_id },
 	};
 
 	if (vg_is_exported(vg)) {
@@ -803,51 +801,6 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	return ret;
 }
 
-/*
- * vgchange can do different things that require different
- * locking, so look at each of those things here.
- *
- * Set up overrides for the default VG locking for various special cases.
- * The VG lock will be acquired in process_each_vg.
- *
- * Acquire the gl lock according to which kind of vgchange command this is.
- */
-
-static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
-{
-	/* The default vg lock mode is ex, but these options only need sh. */
-
-	if (arg_is_set(cmd, activate_ARG) || arg_is_set(cmd, refresh_ARG)) {
-		cmd->lockd_vg_default_sh = 1;
-		/* Allow deactivating if locks fail. */
-		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
-			cmd->lockd_vg_enforce_sh = 1;
-	}
-
-	/*
-	 * Changing system_id or lock_type must only be done on explicitly
-	 * named vgs.
-	 */
-
-	if (arg_is_set(cmd, systemid_ARG))
-		cmd->cname->flags &= ~ALL_VGS_IS_DEFAULT;
-
-	if (arg_is_set(cmd, systemid_ARG)) {
-		/*
-		 * This is a special case where taking the global lock is
-		 * not needed to protect global state, because the change is
-		 * only to an existing VG.  But, taking the global lock ex is
-		 * helpful in this case to trigger a global cache validation
-		 * on other hosts, to cause them to see the new system_id or
-		 * lock_type.
-		 */
-		if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
-			return 0;
-	}
-
-	return 1;
-}
-
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
@@ -875,8 +828,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		arg_is_set(cmd, physicalextentsize_ARG) ||
 		arg_is_set(cmd, clustered_ARG) ||
 		arg_is_set(cmd, alloc_ARG) ||
-		arg_is_set(cmd, vgmetadatacopies_ARG) ||
-		arg_is_set(cmd, systemid_ARG);
+		arg_is_set(cmd, vgmetadatacopies_ARG);
 
 	int update = update_partial_safe || update_partial_unsafe;
 
@@ -964,8 +916,14 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_is_set(cmd, activate_ARG))
 		cmd->include_active_foreign_vgs = 1;
 
-	if (!_lockd_vgchange(cmd, argc, argv))
-		return_ECMD_FAILED;
+	/* The default vg lock mode is ex, but these options only need sh. */
+	if ((cmd->command->command_enum == vgchange_activate_CMD) ||
+	    (cmd->command->command_enum == vgchange_refresh_CMD)) {
+		cmd->lockd_vg_default_sh = 1;
+		/* Allow deactivating if locks fail. */
+		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+			cmd->lockd_vg_enforce_sh = 1;
+	}
 
 	if (update)
 		flags |= READ_FOR_UPDATE;
@@ -1355,6 +1313,58 @@ int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
 			log_print_unless_silent("Starting locking.  VG can only be read until locks are ready.");
 		}
 	}
+
+	destroy_processing_handle(cmd, handle);
+	return ret;
+}
+
+static int _vgchange_systemid_single(struct cmd_context *cmd, const char *vg_name,
+			             struct volume_group *vg,
+			             struct processing_handle *handle)
+{
+	if (vg_is_exported(vg)) {
+		log_error("Volume group \"%s\" is exported", vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return_ECMD_FAILED;
+
+	if (!_vgchange_system_id(cmd, vg))
+		return_ECMD_FAILED;
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return_ECMD_FAILED;
+
+	backup(vg);
+
+	log_print_unless_silent("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
+int vgchange_systemid_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	int ret;
+
+	/*
+	 * This is a special case where taking the global lock is
+	 * not needed to protect global state, because the change is
+	 * only to an existing VG.  But, taking the global lock ex is
+	 * helpful in this case to trigger a global cache validation
+	 * on other hosts, to cause them to see the new system_id or
+	 * lock_type.
+	 */
+	if (!lockd_gl(cmd, "ex", LDGL_UPDATE_NAMES))
+		return 0;
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE, 0, handle, &_vgchange_systemid_single);
 
 	destroy_processing_handle(cmd, handle);
 	return ret;

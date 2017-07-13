@@ -1474,7 +1474,7 @@ OO_VGCHANGE: --autobackup Bool, --ignoremonitoring, --ignoreskippedcluster,
 OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
 --logicalvolume Uint32, --maxphysicalvolumes Uint32, --alloc Alloc, --uuid,
 --clustered Bool, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
---physicalextentsize SizeMB, --resizeable Bool, --systemid String,
+--physicalextentsize SizeMB, --resizeable Bool,
 --profile String, --detachprofile, --metadataprofile String
 
 vgchange OO_VGCHANGE_META
@@ -1509,6 +1509,10 @@ OO: --sysinit, --ignorelockingfailure, --poll Bool, OO_VGCHANGE
 OP: VG|Tag|Select ...
 ID: vgchange_refresh
 DESC: Reactivate LVs using the latest metadata.
+
+vgchange --systemid String VG
+ID: vgchange_systemid
+DESC: Change the system ID of a VG.
 
 vgchange --lockstart
 OO: --lockopt String, --select String

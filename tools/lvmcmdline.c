@@ -106,6 +106,7 @@ static const struct command_function command_functions[CMD_COUNT] = {
 	{ vgchange_locktype_CMD, vgchange_locktype_cmd },
 	{ vgchange_lockstart_CMD, vgchange_lock_start_stop_cmd },
 	{ vgchange_lockstop_CMD, vgchange_lock_start_stop_cmd },
+	{ vgchange_systemid_CMD, vgchange_systemid_cmd },
 
 	/* lvconvert utilities related to repair. */
 	{ lvconvert_repair_pvs_or_thinpool_CMD,	lvconvert_repair_pvs_or_thinpool_cmd },
