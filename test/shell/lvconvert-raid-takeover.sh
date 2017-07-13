@@ -26,7 +26,7 @@ aux prepare_vg 8
 # FIXME: lvconvert leaks  'error' devices
 detect_error_leak_()
 {
-	local err
+	local err=""
 
 	for i in $(dmsetup info -c -o name --noheadings) ; do
 		case "$i" in
@@ -66,7 +66,7 @@ function _lvconvert
 	local stripes=$4
 	local vg=$5
 	local lv=$6
-	local region_size=$7
+	local region_size=${7-}
 	local wait_and_check=1
 	local R=""
 
