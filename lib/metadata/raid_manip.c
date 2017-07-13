@@ -1529,8 +1529,29 @@ static int _lv_relocate_reshape_space(struct logical_volume *lv, enum alloc_wher
  * and adjust the rest to remove the reshape space.
  * If it's at the end, just lv_reduce() and set seg->reshape_len to 0.
  *
- * Does not write metadata!
+ * Writes metadata in case of new allocation!
  */
+/* HM Helper: reset @lv to @segtype, @stripe_size and @lv_size post lv_extend() when changed for area_count < 3. */
+static int _lv_alloc_reshape_post_extend(struct logical_volume *lv,
+					 const struct segment_type *segtype,
+					 uint32_t stripe_size, uint64_t lv_size)
+{
+	struct lv_segment *seg = first_seg(lv);
+
+	if (seg->area_count < 3) {
+		/* Reset segment type, stripe and lv size */
+		seg->segtype = segtype;
+		seg->stripe_size = stripe_size;
+		lv->size = lv_size;
+
+		/* Update and reload mapping for proper size of data SubLVs in the cluster */
+		if (!lv_update_and_reload(lv))
+			return_0;
+	}
+
+	return 1;
+}
+
 static int _lv_alloc_reshape_space(struct logical_volume *lv,
 				   enum alloc_where where,
 				   enum alloc_where *where_it_was,
@@ -1538,6 +1559,7 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 {
 	uint32_t out_of_place_les_per_disk;
 	uint64_t data_offset;
+	uint64_t lv_size_cur = lv->size;
 	struct lv_segment *seg = first_seg(lv);
 
 	if (!seg->stripe_size)
@@ -1553,7 +1575,7 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 		return 0;
 	}
 
-	/* Get data_offset and dev_sectors from the kernel */
+	/* Get data_offset from the kernel */
 	if (!lv_raid_data_offset(lv, &data_offset)) {
 		log_error("Can't get data offset for %s from kernel.",
 			  display_lvname(lv));
@@ -1587,23 +1609,49 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 	 * size as before including the reshape space
 	 */
 	if (out_of_place_les_per_disk) {
+		const struct segment_type *segtype = seg->segtype, *segtype_sav = segtype;
 		uint32_t data_rimages = _data_rimages_count(seg, seg->area_count);
+		uint32_t mirrors = 1;
 		uint32_t reshape_len = out_of_place_les_per_disk * data_rimages;
+		uint32_t stripe_size = seg->stripe_size, stripe_size_sav = stripe_size;
 		uint32_t prev_rimage_len = _lv_total_rimage_len(lv);
-		uint64_t lv_size_cur = lv->size;
 
-		if (!lv_extend(lv, seg->segtype, data_rimages,
-			       seg->stripe_size, 1, /* seg_is_any_raid10(seg) ? seg->data_copies : 1, */ seg->region_size,
-			       reshape_len /* # of reshape LEs to add */,
+		/* Special case needed to add reshape space for raid4/5 with 2 total stripes */
+		if (seg->area_count < 3) {
+			if ((mirrors = seg->area_count) < 2)
+				return_0;
+			if (!seg_is_raid4(seg) &&
+			    !seg_is_any_raid5(seg))
+				return_0;
+			if (!(segtype = seg->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_RAID1)))
+				return_0;
+			reshape_len = out_of_place_les_per_disk;
+			stripe_size = seg->stripe_size = 0;
+			data_rimages = 1;
+
+			/* Temporarily convert to raid1 for proper extensions of data SubLVs. */
+			if (!lv_update_and_reload(lv))
+				return_0;
+		}
+
+		if (!lv_extend(lv, segtype, data_rimages, stripe_size,
+			       mirrors, /* seg_is_any_raid10(seg) ? seg->data_copies : mirrors, */
+			       seg->region_size, reshape_len /* # of reshape LEs to add */,
 			       allocate_pvs, lv->alloc, 0)) {
 			log_error("Failed to allocate out-of-place reshape space for %s.",
 				  display_lvname(lv));
-			return 0;
+			return _lv_alloc_reshape_post_extend(lv, segtype_sav, stripe_size_sav, lv_size_cur);
 		}
 
-		lv->size = lv_size_cur;
 		/* pay attention to lv_extend maybe having allocated more because of layout specific rounding */
 		if (!_lv_set_reshape_len(lv, _lv_total_rimage_len(lv) - prev_rimage_len))
+			return_0;
+
+		if (!_lv_alloc_reshape_post_extend(lv, segtype_sav, stripe_size_sav, lv_size_cur))
+			return 0;
+
+		/* Update and reload mapping for proper size of data SubLVs in the cluster */
+		if (!lv_update_and_reload(lv))
 			return_0;
 	}
 
@@ -1674,14 +1722,6 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 		 */
 		if (!_lv_alloc_reshape_space(lv, alloc_end, &where, NULL))
 			return_0;
-		seg->extents_copied = first_seg(lv)->area_len;
-		if (!lv_reduce(lv, total_reshape_len))
-			return_0;
-
-		seg->extents_copied = first_seg(lv)->area_len;
-
-		if (!_lv_set_reshape_len(lv, 0))
-			return_0;
 
 		/*
 		 * Only in case reshape space was freed at the beginning,
@@ -1692,6 +1732,19 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 		 * "data_offset 0" to be emitted in the segment line.
 		 */
 		seg->data_offset = (where == alloc_begin) ? 1 : 0;
+
+		if (seg->data_offset &&
+		    !lv_update_and_reload(lv))
+			return_0;
+
+		seg->extents_copied = first_seg(lv)->area_len;
+		if (!lv_reduce(lv, total_reshape_len))
+			return_0;
+
+		seg->extents_copied = first_seg(lv)->area_len;
+
+		if (!_lv_set_reshape_len(lv, 0))
+			return_0;
 
 	} else if (where_it_was)
 		*where_it_was = alloc_none;
@@ -1880,6 +1933,19 @@ static int _raid_reshape_add_images(struct logical_volume *lv,
 	if (!_reshape_adjust_to_size(lv, old_image_count, new_image_count)) {
 		log_error("Failed to adjust LV %s to new size!", display_lvname(lv));
 		return 0;
+	}
+
+	/*
+	 * https://bugzilla.redhat.com/1447812
+	 * https://bugzilla.redhat.com/1448116
+	 *
+	 * Preallocate out of place reshape space at the end of all data image LVs
+	 * and reload _before_ potentially switching that space to the begin.
+	 */
+	if (!_reshape_len_per_lv(lv)) {
+		log_debug_metadata("Allocating reshape space for %s.", display_lvname(lv));
+		if (!_lv_alloc_reshape_space(lv, alloc_end, NULL, allocate_pvs))
+			return 0;
 	}
 
 	/* Allocate forward out of place reshape space at the beginning of all data image LVs */
@@ -2073,7 +2139,6 @@ static int _raid_reshape_keep_images(struct logical_volume *lv,
 				     struct dm_list *allocate_pvs)
 {
 	int alloc_reshape_space = 1;
-	enum alloc_where where = alloc_anywhere;
 	struct lv_segment *seg = first_seg(lv);
 
 	if (seg->segtype != new_segtype)
@@ -2113,9 +2178,31 @@ static int _raid_reshape_keep_images(struct logical_volume *lv,
 	if (seg->area_count == 2)
 		alloc_reshape_space = 0;
 
-	if (alloc_reshape_space &&
-	    !_lv_alloc_reshape_space(lv, where, NULL, allocate_pvs))
-		return_0;
+	if (alloc_reshape_space) {
+		enum alloc_where where;
+		const char *what;
+
+		/*
+		 * https://bugzilla.redhat.com/1447812
+		 * https://bugzilla.redhat.com/1448116
+		 *
+		 * Preallocate out of place reshape space at the end of all data image LVs
+		 * and reload _before_ potentially switching that space to the begin.
+		 */
+		if (_reshape_len_per_lv(lv)) {
+			what = "Rea";
+			where = alloc_anywhere;
+
+		} else {
+			what = "A";
+			where = alloc_end;
+		}
+
+		log_debug_metadata("%sllocating reshape space for %s.", what, display_lvname(lv));
+		if (!_lv_alloc_reshape_space(lv, where, NULL, allocate_pvs))
+			return_0;
+	}
+
 
 	seg->segtype = new_segtype;
 
@@ -2350,6 +2437,7 @@ static int _raid_reshape(struct logical_volume *lv,
 					lvseg_name(seg), display_lvname(lv),
 					display_size(lv->vg->cmd, new_stripe_size));
 
+	/* raid4/5 with N image component pairs (i.e. N-1 stripes): allow for raid4/5 reshape to 2 devices, i.e. raid1 layout */
 	/* Handle disk addition reshaping */
 	if (old_image_count < new_image_count) {
 		if (!_raid_reshape_add_images(lv, new_segtype, yes,

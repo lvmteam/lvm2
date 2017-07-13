@@ -141,13 +141,15 @@ static int _raid_text_import(struct lv_segment *seg,
 		{ "writebehind",	&seg->writebehind },
 		{ "min_recovery_rate",	&seg->min_recovery_rate },
 		{ "max_recovery_rate",	&seg->max_recovery_rate },
+		{ "data_offset",	&seg->data_offset },
 	}, *aip = raid_attr_import;
 	unsigned i;
 
 	for (i = 0; i < DM_ARRAY_SIZE(raid_attr_import); i++, aip++) {
 		if (dm_config_has_node(sn, aip->name)) {
 			if (!dm_config_get_uint32(sn, aip->name, aip->var)) {
-				if (!strcmp(aip->name, "data_copies")) {
+				if (!strcmp(aip->name, "data_copies") ||
+				    !strcmp(aip->name, "data_offset")) {
 					*aip->var = 0;
 					continue;
 				}
@@ -155,6 +157,9 @@ static int _raid_text_import(struct lv_segment *seg,
 					  aip->name, dm_config_parent_name(sn), seg->lv->name);
 				return 0;
 			}
+
+			if (!strcmp(aip->name, "data_offset") && !*aip->var)
+				*aip->var = 1;
 		}
 	}
 
@@ -215,6 +220,8 @@ static int _raid_text_export_raid(const struct lv_segment *seg, struct formatter
 			outf(f, "min_recovery_rate = %" PRIu32, seg->min_recovery_rate);
 		if (seg->max_recovery_rate)
 			outf(f, "max_recovery_rate = %" PRIu32, seg->max_recovery_rate);
+		if (seg->data_offset)
+			outf(f, "data_offset = %" PRIu32, seg->data_offset == 1 ? 0 : seg->data_offset);
 	}
 
 	return out_areas(f, seg, "raid");
