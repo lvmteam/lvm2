@@ -1511,13 +1511,13 @@ ID: vgchange_refresh
 DESC: Reactivate LVs using the latest metadata.
 
 vgchange --lockstart
-OO: --lockopt String, OO_VGCHANGE
+OO: --lockopt String, --select String
 OP: VG|Tag|Select ...
 ID: vgchange_lockstart
 DESC: Start the lockspace of a shared VG in lvmlockd.
 
 vgchange --lockstop
-OO: --lockopt String, OO_VGCHANGE
+OO: --lockopt String, --select String
 OP: VG|Tag|Select ...
 ID: vgchange_lockstop
 DESC: Stop the lockspace of a shared VG in lvmlockd.

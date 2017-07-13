@@ -715,8 +715,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		{ systemid_ARG, &_vgchange_system_id },
 	};
 
-	if (vg_is_exported(vg) &&
-	    !(arg_is_set(cmd, lockstop_ARG) || arg_is_set(cmd, lockstart_ARG))) {
+	if (vg_is_exported(vg)) {
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
@@ -801,15 +800,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	    !vgchange_background_polling(cmd, vg))
 			return_ECMD_FAILED;
 
-	if (arg_is_set(cmd, lockstart_ARG)) {
-		if (!_vgchange_lock_start(cmd, vg, vp))
-			return_ECMD_FAILED;
-	} else if (arg_is_set(cmd, lockstop_ARG)) {
-		if (!_vgchange_lock_stop(cmd, vg))
-			return_ECMD_FAILED;
-	}
-
-        return ret;
+	return ret;
 }
 
 /*
@@ -826,39 +817,11 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* The default vg lock mode is ex, but these options only need sh. */
 
-	if (!lvmlockd_use() && (arg_is_set(cmd, lockstart_ARG) || arg_is_set(cmd, lockstop_ARG))) {
-		log_error("Using lock start and lock stop requires lvmlockd.");
-		return 0;
-	}
-
 	if (arg_is_set(cmd, activate_ARG) || arg_is_set(cmd, refresh_ARG)) {
 		cmd->lockd_vg_default_sh = 1;
 		/* Allow deactivating if locks fail. */
 		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
 			cmd->lockd_vg_enforce_sh = 1;
-	}
-
-	if (arg_is_set(cmd, lockstop_ARG))
-		cmd->lockd_vg_default_sh = 1;
-
-	/*
-	 * Starting lockspaces.  For VGs not yet started, locks are not
-	 * available to acquire, and for VGs already started, there's nothing
-	 * to do, so disable VG locks.  Try to acquire the global lock sh to
-	 * validate the cache (if no gl is available, lockd_gl will force a
-	 * cache validation).  If the global lock is available, it can be
-	 * benficial to hold sh to serialize lock-start with vgremove of the
-	 * same VG from another host.
-	 */
-	if (arg_is_set(cmd, lockstart_ARG)) {
-		cmd->lockd_vg_disable = 1;
-
-		if (!lockd_gl(cmd, "sh", 0))
-			log_debug("No global lock for lock start");
-
-		/* Disable the lockd_gl in process_each_vg. */
-		cmd->lockd_gl_disable = 1;
-		return 1;
 	}
 
 	/*
@@ -888,14 +851,11 @@ static int _lockd_vgchange(struct cmd_context *cmd, int argc, char **argv)
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
-	struct vgchange_params vp = { 0 };
 	uint32_t flags = 0;
 	int ret;
 
 	int noupdate =
 		arg_is_set(cmd, activate_ARG) ||
-		arg_is_set(cmd, lockstart_ARG) ||
-		arg_is_set(cmd, lockstop_ARG) ||
 		arg_is_set(cmd, monitor_ARG) ||
 		arg_is_set(cmd, poll_ARG) ||
 		arg_is_set(cmd, refresh_ARG);
@@ -1009,36 +969,13 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (update)
 		flags |= READ_FOR_UPDATE;
-	if (arg_is_set(cmd, lockstart_ARG) || arg_is_set(cmd, lockstop_ARG))
-		flags |= READ_ALLOW_EXPORTED;
 
 	if (!(handle = init_processing_handle(cmd, NULL))) {
 		log_error("Failed to initialize processing handle.");
 		return ECMD_FAILED;
 	}
 
-	handle->custom_handle = &vp;
-
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, flags, 0, handle, &vgchange_single);
-
-	/* Wait for lock-start ops that were initiated in vgchange_lockstart. */
-
-	if (arg_is_set(cmd, lockstart_ARG) && vp.lock_start_count) {
-		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
-
-		if (!lockd_gl(cmd, "un", 0))
-			stack;
-
-		if (!start_opt || !strcmp(start_opt, "auto")) {
-			if (vp.lock_start_sanlock)
-				log_print_unless_silent("Starting locking.  Waiting for sanlock may take 20 sec to 3 min...");
-			else
-				log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
-			lockd_start_wait(cmd);
-		} else if (!strcmp(start_opt, "nowait") || !strcmp(start_opt, "autonowait")) {
-			log_print_unless_silent("Starting locking.  VG can only be read until locks are ready.");
-		}
-	}
 
 	destroy_processing_handle(cmd, handle);
 	return ret;
@@ -1336,6 +1273,88 @@ process:
 	}
 
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE, 0, handle, &_vgchange_locktype_single);
+
+	destroy_processing_handle(cmd, handle);
+	return ret;
+}
+
+static int _vgchange_lock_start_stop_single(struct cmd_context *cmd, const char *vg_name,
+					    struct volume_group *vg,
+					    struct processing_handle *handle)
+{
+	struct vgchange_params *vp = (struct vgchange_params *)handle->custom_handle;
+
+	if (arg_is_set(cmd, lockstart_ARG)) {
+		if (!_vgchange_lock_start(cmd, vg, vp))
+			return_ECMD_FAILED;
+	} else if (arg_is_set(cmd, lockstop_ARG)) {
+		if (!_vgchange_lock_stop(cmd, vg))
+			return_ECMD_FAILED;
+	}
+
+	return ECMD_PROCESSED;
+}
+
+int vgchange_lock_start_stop_cmd(struct cmd_context *cmd, int argc, char **argv)
+{
+	struct processing_handle *handle;
+	struct vgchange_params vp = { 0 };
+	int ret;
+
+	if (!lvmlockd_use()) {
+		log_error("Using lock start and lock stop requires lvmlockd.");
+		return 0;
+	}
+
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	if (arg_is_set(cmd, lockstop_ARG))
+		cmd->lockd_vg_default_sh = 1;
+
+	/*
+	 * Starting lockspaces.  For VGs not yet started, locks are not
+	 * available to acquire, and for VGs already started, there's nothing
+	 * to do, so disable VG locks.  Try to acquire the global lock sh to
+	 * validate the cache (if no gl is available, lockd_gl will force a
+	 * cache validation).  If the global lock is available, it can be
+	 * benficial to hold sh to serialize lock-start with vgremove of the
+	 * same VG from another host.
+	 */
+	if (arg_is_set(cmd, lockstart_ARG)) {
+		cmd->lockd_vg_disable = 1;
+
+		if (!lockd_gl(cmd, "sh", 0))
+			log_debug("No global lock for lock start");
+
+		/* Disable the lockd_gl in process_each_vg. */
+		cmd->lockd_gl_disable = 1;
+	}
+
+	handle->custom_handle = &vp;
+
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL, READ_ALLOW_EXPORTED, 0, handle, &_vgchange_lock_start_stop_single);
+
+	/* Wait for lock-start ops that were initiated in vgchange_lockstart. */
+
+	if (arg_is_set(cmd, lockstart_ARG) && vp.lock_start_count) {
+		const char *start_opt = arg_str_value(cmd, lockopt_ARG, NULL);
+
+		if (!lockd_gl(cmd, "un", 0))
+			stack;
+
+		if (!start_opt || !strcmp(start_opt, "auto")) {
+			if (vp.lock_start_sanlock)
+				log_print_unless_silent("Starting locking.  Waiting for sanlock may take 20 sec to 3 min...");
+			else
+				log_print_unless_silent("Starting locking.  Waiting until locks are ready...");
+			lockd_start_wait(cmd);
+		} else if (!strcmp(start_opt, "nowait") || !strcmp(start_opt, "autonowait")) {
+			log_print_unless_silent("Starting locking.  VG can only be read until locks are ready.");
+		}
+	}
 
 	destroy_processing_handle(cmd, handle);
 	return ret;
