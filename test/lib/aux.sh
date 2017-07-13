@@ -416,13 +416,12 @@ teardown_devs_prefixed() {
 	#local listdevs=( $(dm_info name,open --sort open,name | grep "$prefix.*:0") )
 	#dmsetup remove --deferred ${listdevs[@]%%:0} || touch REMOVE_FAILED
 
-	init_udev_transaction
 	for dm in $(dm_info name --sort open,name | grep "$prefix"); do
 		dmsetup remove "$dm" &>/dev/null || touch REMOVE_FAILED &
 		need_udev_wait=1
+		sleep 1 # give 'dmsetup' some time to proceed with removal
 	done
 	wait
-	finish_udev_transaction
 	test "$need_udev_wait" -eq 0 || udev_wait
 
 	if test -f REMOVE_FAILED; then
@@ -1214,7 +1213,7 @@ EOF
 	local last_sec
 
 	# read sequential list and put into associative array
-	while IFS=$IFS_NL read -r v; do
+	while IFS= read -r v; do
 		CONF["${v%%[={ ]*}"]=${v#*/}
 	done < "$config_values"
 
