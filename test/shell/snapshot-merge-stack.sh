@@ -26,6 +26,7 @@ aux prepare_vg 2 100
 snap_and_merge() {
 	lvcreate -s -n $lv2 -L20 $vg/$lv1 "$dev2"
 	#dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=10 conv=fdatasync
+	aux udev_wait
 	mkfs.ext3 "$DM_DEV_DIR/$vg/$lv2"
 	sync
 	lvs -a $vg
