@@ -1622,7 +1622,8 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 			       allocate_pvs, lv->alloc, 0)) {
 			log_error("Failed to allocate out-of-place reshape space for %s.",
 				  display_lvname(lv));
-			return _lv_alloc_reshape_post_extend(lv, segtype_sav, stripe_size_sav, lv_size_cur);
+			if (!_lv_alloc_reshape_post_extend(lv, segtype_sav, stripe_size_sav, lv_size_cur))
+				return_0;
 		}
 
 		/* pay attention to lv_extend maybe having allocated more because of layout specific rounding */
@@ -1630,7 +1631,7 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 			return_0;
 
 		if (!_lv_alloc_reshape_post_extend(lv, segtype_sav, stripe_size_sav, lv_size_cur))
-			return 0;
+			return_0;
 
 		/* Update and reload mapping for proper size of data SubLVs in the cluster */
 		if (!lv_update_and_reload(lv))
