@@ -119,6 +119,8 @@ static void _check_raid0_seg(struct lv_segment *seg, int *error_count)
 		raid_seg_error_val("non-zero min recovery rate", seg->min_recovery_rate);
 	if (seg->max_recovery_rate)
 		raid_seg_error_val("non-zero max recovery rate", seg->max_recovery_rate);
+	if (seg->lv->status & LV_RESHAPE_DATA_OFFSET)
+		raid_seg_error_val("data_offset", seg->data_offset);
 }
 
 /* Check RAID @seg for non-zero, power of 2 region size and min recovery rate <= max */
@@ -141,6 +143,8 @@ static void _check_raid1_seg(struct lv_segment *seg, int *error_count)
 		raid_seg_error("no meta areas");
 	if (seg->stripe_size)
 		raid_seg_error_val("non-zero stripe size", seg->stripe_size);
+	if (seg->lv->status & LV_RESHAPE_DATA_OFFSET)
+		raid_seg_error_val("data_offset", seg->data_offset);
 	_check_raid_region_recovery(seg, error_count);
 }
 
@@ -164,6 +168,10 @@ static void _check_raid45610_seg(struct lv_segment *seg, int *error_count)
 		raid_seg_error_val("non power of 2 stripe size", seg->stripe_size);
 	_check_raid_region_recovery(seg, error_count);
 	/* END: checks applying to any raid4/5/6/10 */
+
+	if ((seg->lv->status & LV_RESHAPE_DATA_OFFSET) &&
+	    (seg->data_offset & (seg->lv->vg->extent_size - 1)))
+		raid_seg_error_val("data_offset", seg->data_offset);
 
 	/* Specific checks per raid level */
 	if (seg_is_raid4(seg) ||
