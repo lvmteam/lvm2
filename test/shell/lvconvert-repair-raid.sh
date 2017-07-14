@@ -23,11 +23,11 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 	    'activation/raid_fault_policy = "allocate"'
 
 aux prepare_vg 8 80
+get_devs
 
 function delay
 {
-	for d in $(< DEVICES)
-	do
+	for d in "${DEVICES[@]}"; do
 		aux delay_dev "$d" 0 $1 "$(get first_extent_sector "$d")"
 	done
 }
