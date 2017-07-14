@@ -1636,6 +1636,9 @@ static int _lv_alloc_reshape_space(struct logical_volume *lv,
 		/* Update and reload mapping for proper size of data SubLVs in the cluster */
 		if (!lv_update_and_reload(lv))
 			return_0;
+
+		/* Define out of place reshape (used as SEGTYPE_FLAG to avoid incompatible activations on old runtime) */
+		lv->status |= LV_RESHAPE_DATA_OFFSET;
 	}
 
 	/* Preset data offset in case we fail relocating reshape space below */
@@ -1728,6 +1731,8 @@ static int _lv_free_reshape_space_with_status(struct logical_volume *lv, enum al
 
 		if (!_lv_set_reshape_len(lv, 0))
 			return_0;
+
+		lv->status &= ~LV_RESHAPE_DATA_OFFSET;
 
 	} else if (where_it_was)
 		*where_it_was = alloc_none;
