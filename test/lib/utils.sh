@@ -109,11 +109,14 @@ grep1_() {
 
 stacktrace() {
 	trap - ERR
-	local i=0
+	# i=1 - ignoring innermost frame - it is always stacktrace function
+	local i=1 n=${#BASH_LINENO[*]}
+	# n-=1 - ignoring last frame as well - it is not interesting
+	let n-=1
 
-	echo "## - $0:${BASH_LINENO[0]}"
-	while FUNC=${FUNCNAME[$i]}; test "$FUNC" != "main"; do
-		echo "## $i ${FUNC}() called from ${BASH_SOURCE[$i]}:${BASH_LINENO[$i]}"
+	echo "## - $0:${BASH_LINENO[$((n-1))]}"
+	while [[ $i -lt $n ]]; do
+		echo "## $i ${FUNCNAME[$i]}() called from ${BASH_SOURCE[$((i+1))]}:${BASH_LINENO[$i]}"
 		i=$(( i + 1 ))
 	done
 }
