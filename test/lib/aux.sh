@@ -414,36 +414,41 @@ teardown_devs_prefixed() {
 	rm -f REMOVE_FAILED
 	#local listdevs=( $(dm_info name,open --sort open,name | grep "$prefix.*:0") )
 	#dmsetup remove --deferred ${listdevs[@]%%:0} || touch REMOVE_FAILED
-	for i in {1..100}; do
-		local need_udev_wait=0
-		local cnt
-		while IFS=' ' read -r dm cnt; do
-			test "$cnt" -eq 0 || break
-			dmsetup remove "$dm" &>/dev/null || touch REMOVE_FAILED &
-			need_udev_wait=1
-		done < <(dm_info name,open --separator ' ' --sort open,name | grep "$prefix")
-		test "$need_udev_wait" -eq 1 || break
-		udev_wait
-		test -f REMOVE_FAILED && break
-	done # looping till there are some removed devicess
 
-	wait
+	# 2nd. loop is trying --force removal which can possibly 'unstuck' some bloked operations
+	for i in 0 1; do
+		local num_remaining_devs=999999
+		local num_devs=0
+		test "$i" = 1 && test "$stray" = 0 && break  # no stray device removal
 
-	if test -f REMOVE_FAILED; then
-		local num_devs
-		local num_remaining_devs=999
-		while num_devs=$(dm_table | grep -c "$prefix") && \
-		    test "$num_devs" -lt "$num_remaining_devs" -a "$num_devs" -ne 0; do
-			test "$stray" -eq 0 || echo "## removing $num_devs stray mapped devices with names beginning with $prefix: "
+		while :; do
+			local cnt
+			local sortby="name"
+			local need_udev_wait=0
+
 			# HACK: sort also by minors - so we try to close 'possibly later' created device first
-			for dm in $(dm_info name --sort open,-minor | grep "$prefix") ; do
-				dmsetup remove -f "$dm" || true
-			done
-			num_remaining_devs=$num_devs
-		done
-	fi
+			test "$i" = 0 || sortby="-minor"
 
-	udev_wait
+			# when nothing left for removal, escape both loops...
+			dm_info name,open --separator ' ' --sort open,"$sortby" | grep "$prefix" > out || break 2
+			num_devs=$(wc -l < out)
+			test "$num_devs" -lt "$num_remaining_devs" || break  # not managed to reduce table size anymore
+			test "$i" = 0 || echo "## removing $num_devs stray mapped devices with names beginning with $prefix: "
+			while IFS=' ' read -r dm cnt; do
+				if test "$i" = 0; then
+					test "$cnt" -eq 0 || break  # stop loop with 1st. opened device
+					dmsetup remove "$dm" &>/dev/null || touch REMOVE_FAILED &
+				else
+					dmsetup remove -f "$dm" || true
+				fi
+				need_udev_wait=1
+			done < out
+			test "$need_udev_wait" -eq 1 || break
+			udev_wait
+			wait
+			num_remaining_devs=$num_devs
+		done # looping till there are some removed devicess
+	done
 }
 
 teardown_devs() {
@@ -684,7 +689,7 @@ prepare_scsi_debug_dev() {
 	# last param wins.. so num_tgts=1 is imposed
 	touch SCSI_DEBUG_DEV
 	modprobe scsi_debug dev_size_mb="$DEV_SIZE" "${SCSI_DEBUG_PARAMS[@]}" num_tgts=1 || skip
-	
+
 	for i in {1..20} ; do
 		DEBUG_DEV="/dev/$(grep -H scsi_debug /sys/block/*/device/model | cut -f4 -d /)"
 		test -b "$DEBUG_DEV" && break
