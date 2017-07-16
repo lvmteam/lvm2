@@ -566,7 +566,7 @@ teardown() {
 	dm_table | not grep -E -q "$vg|$vg1|$vg2|$vg3|$vg4" || {
 		# Avoid activation of dmeventd if there is no pid
 		cfg=$(test -s LOCAL_DMEVENTD || echo "--config activation{monitoring=0}")
-		if dm_info suspended,name | grep -q "^Suspended:.*$prefix" ; then
+		if dm_info suspended,name | grep -q "^Suspended:.*$PREFIX" ; then
 			echo "## skipping vgremove, suspended devices detected."
 		else
 			vgremove -ff "$cfg"  \
@@ -681,7 +681,7 @@ prepare_scsi_debug_dev() {
 
 	rm -f debug.log strace.log
 	test ! -f "SCSI_DEBUG_DEV" || return 0
-	test -z "$LOOP"
+	test ! -f LOOP
 	test -n "$DM_DEV_DIR"
 
 	# Skip test if scsi_debug module is unavailable or is already in use
@@ -786,12 +786,12 @@ cleanup_md_dev() {
 		notify_lvmetad "$dev"
 	done
 	udev_wait
-	if [ -b "$mddev" ]; then
+	if [ -b "$dev" ]; then
 		# mdadm doesn't always cleanup the device node
 		# sleeps offer hack to defeat: 'md: md127 still in use'
 		# see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
 		sleep 2
-		rm -f "$mddev"
+		rm -f "$dev"
 	fi
 	rm -f MD_DEV MD_DEVICES MD_DEV_PV
 }
