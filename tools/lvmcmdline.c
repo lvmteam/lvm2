@@ -560,8 +560,10 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 		av->sign = SIGN_NONE;
 	}
 
-	if (!isdigit(*val))
+	if (*val == '+' || *val == '-') {
+		log_error("Multiple sign symbols detected.");
 		return 0;
+	}
 
 	errno = 0;
 	v = strtod(val, &ptr);
@@ -596,6 +598,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 				break;
 
 		if (i < 0) {
+			log_error("Can't parse size argument.");
 			return 0;
 		} else if (i == 7) {
 			/* v is already in sectors */
