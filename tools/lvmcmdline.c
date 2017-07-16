@@ -617,7 +617,8 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 	} else
 		v *= factor;
 
-	if ((uint64_t) v >= (UINT64_MAX >> SECTOR_SHIFT)) {
+	/* Compare (double) */
+	if (v >= (double) (UINT64_MAX >> SECTOR_SHIFT)) {
 		log_error("Size is too big (>=16EiB).");
 		return 0;
 	}
