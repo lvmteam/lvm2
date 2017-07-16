@@ -2578,14 +2578,12 @@ static void _dump_pairs(struct buffer *buf, struct dm_hash_table *ht, const char
 	dm_hash_iterate(n, ht) {
 		const char *key = dm_hash_get_key(ht, n),
 			   *val = dm_hash_get_data(ht, n);
-		buffer_append(buf, "    ");
 		if (int_key)
-			(void) dm_asprintf(&append, "%d = \"%s\"", *(const int*)key, val);
+			(void) dm_asprintf(&append, "    %d = \"%s\"\n", *(const int*)key, val);
 		else
-			(void) dm_asprintf(&append, "%s = \"%s\"", key, val);
+			(void) dm_asprintf(&append, "    %s = \"%s\"\n", key, val);
 		if (append)
 			buffer_append(buf, append);
-		buffer_append(buf, "\n");
 		dm_free(append);
 	}
 	buffer_append(buf, "}\n");
@@ -2603,11 +2601,9 @@ static void _dump_info_version(struct buffer *buf, struct dm_hash_table *ht, con
 	while (n) {
 		const char *key = dm_hash_get_key(ht, n);
 		info = dm_hash_get_data(ht, n);
-		buffer_append(buf, "    ");
-		(void) dm_asprintf(&append, "%s = %lld", key, (long long)info->external_version);
+		(void) dm_asprintf(&append, "    %s = %lld\n", key, (long long)info->external_version);
 		if (append)
 			buffer_append(buf, append);
-		buffer_append(buf, "\n");
 		dm_free(append);
 		n = dm_hash_get_next(ht, n);
 	}
@@ -2626,11 +2622,9 @@ static void _dump_info_flags(struct buffer *buf, struct dm_hash_table *ht, const
 	while (n) {
 		const char *key = dm_hash_get_key(ht, n);
 		info = dm_hash_get_data(ht, n);
-		buffer_append(buf, "    ");
-		(void) dm_asprintf(&append, "%s = %llx", key, (long long)info->flags);
+		(void) dm_asprintf(&append, "    %s = %llx\n", key, (long long)info->flags);
 		if (append)
 			buffer_append(buf, append);
-		buffer_append(buf, "\n");
 		dm_free(append);
 		n = dm_hash_get_next(ht, n);
 	}
