@@ -27,8 +27,19 @@ grep "Invalid argument for --type" err
 invalid lvcreate --type $RANDOM -l1 -n $lv1 $vg
 invalid lvcreate --type unknown -l1 -n $lv1 $vg
 
+invalid lvcreate -L10000000000000000000 -n $lv $vg 2>&1 | tee err
+grep "Size is too big" err
+invalid lvcreate -L+-10 -n $lv $vg 2>&1 | tee err
+grep "Multiple sign" err
+invalid lvcreate -L-.1 -n $lv $vg  2>&1 | tee err
+grep "Size may not be negative" err
+invalid lvcreate -L..1 -n $lv $vg  2>&1 | tee err
+grep "Can't parse size" err
+
 lvcreate --type linear -aey -m0 -l1 -n $lv1 $vg
 lvcreate --type snapshot -l1 -n $lv2 $vg/$lv1
+# Supporting decimal point with size
+lvcreate -L.1 -n $lv3 $vg
 
 # Reject repeated invocation (run 2 times) (bz178216)
 lvcreate -n $lv -l 4 $vg
