@@ -706,6 +706,12 @@ static int _insert_dev(const char *path, dev_t d)
 		}
 	}
 
+	if (dm_hash_lookup(_cache.names, path) == dev) {
+		/* Hash already has matching entry present */
+		log_debug("Path already cached %s.", path);
+		return 1;
+	}
+
 	if (!(path_copy = dm_pool_strdup(_cache.mem, path))) {
 		log_error("Failed to duplicate path string.");
 		return 0;
