@@ -679,13 +679,23 @@ static struct dm_config_value *_type(struct parser *p)
 	switch (p->t) {
 	case TOK_INT:
 		v->type = DM_CFG_INT;
+		errno = 0;
 		v->v.i = strtoll(p->tb, NULL, 0);	/* FIXME: check error */
+		if (errno) {
+			log_error("Failed to read int token.");
+			return NULL;
+		}
 		match(TOK_INT);
 		break;
 
 	case TOK_FLOAT:
 		v->type = DM_CFG_FLOAT;
+		errno = 0;
 		v->v.f = strtod(p->tb, NULL);	/* FIXME: check error */
+		if (errno) {
+			log_error("Failed to read float token.");
+			return NULL;
+		}
 		match(TOK_FLOAT);
 		break;
 

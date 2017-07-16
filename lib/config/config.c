@@ -742,14 +742,16 @@ static struct dm_config_value *_get_def_array_values(struct cmd_context *cmd,
 		switch (toupper(token[0])) {
 			case 'I':
 			case 'B':
+				errno = 0;
 				v->v.i = strtoll(token + 1, &r, 10);
-				if (*r)
+				if (errno || *r)
 					goto bad;
 				v->type = DM_CFG_INT;
 				break;
 			case 'F':
+				errno = 0;
 				v->v.f = strtod(token + 1, &r);
-				if (*r)
+				if (errno || *r)
 					goto bad;
 				v->type = DM_CFG_FLOAT;
 				break;

@@ -1270,8 +1270,9 @@ static int _message(CMD_ARGS)
 		argv++;
 	}
 
+	errno = 0;
 	sector = strtoull(argv[0], &endptr, 10);
-	if (*endptr || endptr == argv[0]) {
+	if (errno || *endptr || endptr == argv[0]) {
 		err("invalid sector");
 		goto out;
 	}

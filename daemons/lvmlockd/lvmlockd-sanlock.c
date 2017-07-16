@@ -224,7 +224,10 @@ static int lock_lv_offset_from_args(char *lv_args, uint64_t *lock_lv_offset)
 	if (rv < 0)
 		return rv;
 
+	errno = 0;
 	*lock_lv_offset = strtoull(offset_str, NULL, 10);
+	if (errno)
+		return -1;
 	return 0;
 }
 

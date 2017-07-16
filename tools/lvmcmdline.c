@@ -563,6 +563,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 	if (!isdigit(*val))
 		return 0;
 
+	errno = 0;
 	v = strtod(val, &ptr);
 
 	if (*ptr == '.') {
@@ -571,13 +572,16 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 		 * Lets be toleran and retry with standard C locales
 		 */
 		if (setlocale(LC_ALL, "C")) {
+			errno = 0;
 			v = strtod(val, &ptr);
 			setlocale(LC_ALL, "");
 		}
 	}
 
-	if (ptr == val)
+	if (ptr == val || errno) {
+		log_error("Can't parse size argument at '%c'.%s%s", ptr[0], (errno) ? " " :"", (errno) ? strerror(errno) : "");
 		return 0;
+	}
 
 	if (percent && *ptr == '%') {
 		if (!_get_percent_arg(av, ++ptr))

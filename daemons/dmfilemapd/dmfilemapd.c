@@ -225,8 +225,9 @@ static int _is_open(const char *path)
 	while ((proc_dp = readdir(proc_d)) != NULL) {
 		if (!isdigit(proc_dp->d_name[0]))
 			continue;
+		errno = 0;
 		pid = (pid_t) strtol(proc_dp->d_name, NULL, 10);
-		if (!pid)
+		if (errno || !pid)
 			continue;
 		if (_is_open_in_pid(pid, path)) {
 			if (closedir(proc_d))
@@ -278,8 +279,9 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 	fm->nr_regions = 1;
 
 	/* parse <fd> */
+	errno = 0;
 	fm->fd = (int) strtol(argv[0], &endptr, 10);
-	if (*endptr) {
+	if (errno || *endptr) {
 		_early_log("Could not parse file descriptor: %s", argv[0]);
 		return 0;
 	}
@@ -288,8 +290,9 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 	argv++;
 
 	/* parse <group_id> */
+	errno = 0;
 	fm->group_id = strtoull(argv[0], &endptr, 10);
-	if (*endptr) {
+	if (*endptr || errno) {
 		_early_log("Could not parse group identifier: %s", argv[0]);
 		return 0;
 	}
@@ -332,8 +335,9 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 
 	/* parse [<foreground>[<verbose>]] */
 	if (argc) {
+		errno = 0;
 		_foreground = (int) strtol(argv[0], &endptr, 10);
-		if (*endptr) {
+		if (errno || *endptr) {
 			_early_log("Could not parse debug argument: %s.",
 				   argv[0]);
 			return 0;
@@ -341,8 +345,9 @@ static int _parse_args(int argc, char **argv, struct filemap_monitor *fm)
 		argc--;
 		argv++;
 		if (argc) {
+			errno = 0;
 			_verbose = (int) strtol(argv[0], &endptr, 10);
-			if (*endptr) {
+			if (errno || *endptr) {
 				_early_log("Could not parse verbose "
 					   "argument: %s", argv[0]);
 				return 0;

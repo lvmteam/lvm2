@@ -853,8 +853,9 @@ static int _stats_parse_histogram_spec(struct dm_stats *dms,
 			val_start = c;
 			endptr = NULL;
 
+			errno = 0;
 			this_val = strtoull(val_start, &endptr, 10);
-			if (!endptr) {
+			if (errno || !endptr) {
 				log_error("Could not parse histogram boundary.");
 				goto bad;
 			}
@@ -1174,8 +1175,9 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 			val_start = c;
 			endptr = NULL;
 
+			errno = 0;
 			this_val = strtoull(val_start, &endptr, 10);
-			if (!endptr) {
+			if (errno || !endptr) {
 				log_error("Could not parse histogram value.");
 				goto bad;
 			}
@@ -1992,8 +1994,9 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 	}
 
 	if (region_id) {
+		errno = 0;
 		*region_id = strtoull(resp, &endptr, 10);
-		if (resp == endptr)
+		if (errno || resp == endptr)
 			goto_out;
 	}
 

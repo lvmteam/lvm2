@@ -3185,6 +3185,7 @@ static const char *_tok_value_time(const struct dm_report_field_type *ft,
 			goto out;
 		}
 
+		errno = 0;
 		if (((t = strtoull(time_str, NULL, 10)) == ULLONG_MAX) && errno == ERANGE) {
 			log_error(_out_of_range_msg, time_str, ft->id);
 			goto out;
@@ -3555,6 +3556,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 					if (rvw->reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE)
 						fs->value->next->v.i = (((const uint64_t *) rvw->value)[1]);
 				} else {
+					errno = 0;
 					if (((fs->value->v.i = strtoull(s, NULL, 10)) == ULLONG_MAX) &&
 						 (errno == ERANGE)) {
 						log_error(_out_of_range_msg, s, field_id);
@@ -3573,6 +3575,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 					if (rvw->reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE)
 						fs->value->next->v.d = (((const double *) rvw->value)[1]);
 				} else {
+					errno = 0;
 					fs->value->v.d = strtod(s, NULL);
 					if (errno == ERANGE) {
 						log_error(_out_of_range_msg, s, field_id);
@@ -3594,6 +3597,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 					if (rvw->reserved->type & DM_REPORT_FIELD_RESERVED_VALUE_RANGE)
 						fs->value->next->v.i = (((const uint64_t *) rvw->value)[1]);
 				} else {
+					errno = 0;
 					fs->value->v.d = strtod(s, NULL);
 					if ((errno == ERANGE) || (fs->value->v.d < 0) || (fs->value->v.d > 100)) {
 						log_error(_out_of_range_msg, s, field_id);
