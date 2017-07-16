@@ -808,7 +808,8 @@ static int _update_pvid_to_vgid(lvmetad_state *s, struct dm_config_tree *vg,
 
 		if ((mode == REMOVE_EMPTY) && vgid_old) {
 			/* This copies the vgid_old string, doesn't reference it. */
-			if (!dm_hash_insert(to_check, vgid_old, (void*) 1)) {
+			if ((dm_hash_lookup(to_check, vgid_old) != (void*) 1) &&
+			    !dm_hash_insert(to_check, vgid_old, (void*) 1)) {
 				ERROR(s, "update_pvid_to_vgid out of memory for hash insert vgid_old %s", vgid_old);
 				goto abort_daemon;
 			}
