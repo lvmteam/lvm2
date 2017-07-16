@@ -662,7 +662,7 @@ static int _lvmetad_handle_reply(daemon_reply reply, const char *id, const char 
 	}
 
 	if (reply.error) {
-		log_warn("WARNING: lvmetad cannot be used due to error: %s", strerror(reply.error));
+		log_error("lvmetad cannot be used due to error: %s", strerror(reply.error));
 		goto fail;
 	}
 
