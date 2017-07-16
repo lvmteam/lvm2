@@ -1927,7 +1927,7 @@ static response pv_found(lvmetad_state *s, request r)
 	const char *arg_pvid = NULL;
 	const char *arg_pvid_lookup = NULL;
 	const char *new_pvid = NULL;
-	const char *new_pvid_dup = NULL;
+	char *new_pvid_dup = NULL;
 	const char *arg_name = NULL;
 	const char *arg_vgid = NULL;
 	const char *arg_vgid_lookup = NULL;
@@ -2090,7 +2090,7 @@ static response pv_found(lvmetad_state *s, request r)
 		if (!(new_pvid_dup = dm_strdup(new_pvid)))
 			goto nomem_free1;
 
-		if (!dm_hash_insert_binary(s->device_to_pvid, &new_device, sizeof(new_device), (char *)new_pvid_dup))
+		if (!dm_hash_insert_binary(s->device_to_pvid, &new_device, sizeof(new_device), new_pvid_dup))
 			goto nomem_free2;
 
 		if (!dm_hash_insert(s->pvid_to_pvmeta, new_pvid, new_pvmeta))
@@ -2138,7 +2138,7 @@ static response pv_found(lvmetad_state *s, request r)
 		if (!(new_pvid_dup = dm_strdup(new_pvid)))
 			goto nomem_free1;
 
-		if (!dm_hash_insert_binary(s->device_to_pvid, &arg_device, sizeof(arg_device), (char *)new_pvid_dup))
+		if (!dm_hash_insert_binary(s->device_to_pvid, &arg_device, sizeof(arg_device), new_pvid_dup))
 			goto nomem_free2;
 
 		if (!dm_hash_insert(s->pvid_to_pvmeta, new_pvid, new_pvmeta))
@@ -2251,7 +2251,7 @@ static response pv_found(lvmetad_state *s, request r)
 				   NULL);
 
  nomem_free2:
-	dm_free((char *)new_pvid_dup);
+	dm_free(new_pvid_dup);
  nomem_free1:
 	dm_config_destroy(new_pvmeta);
  nomem:
