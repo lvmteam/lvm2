@@ -11,6 +11,8 @@
 
 . lib/utils
 
+test -n "$BASH" && set -euE -o pipefail
+
 run_valgrind() {
 	# Execute script which may use $TESTNAME for creating individual
 	# log files for each execute command
@@ -195,7 +197,7 @@ prepare_dmeventd() {
 	check_daemon_in_builddir dmeventd
 	lvmconf "activation/monitoring = 1"
 
-	local run_valgrind
+	local run_valgrind=""
 	test "${LVM_VALGRIND_DMEVENTD:-0}" -eq 0 || run_valgrind="run_valgrind"
 	echo -n "## preparing dmeventd..."
 #	LVM_LOG_FILE_EPOCH=DMEVENTD $run_valgrind dmeventd -fddddl "$@" 2>&1 &
@@ -215,7 +217,7 @@ prepare_dmeventd() {
 prepare_lvmetad() {
 	check_daemon_in_builddir lvmetad
 
-	local run_valgrind
+	local run_valgrind=""
 	test "${LVM_VALGRIND_LVMETAD:-0}" -eq 0 || run_valgrind="run_valgrind"
 
 	kill_sleep_kill_ LOCAL_LVMETAD "${LVM_VALGRIND_LVMETAD:-0}"
@@ -536,7 +538,7 @@ kill_tagged_processes() {
 }
 
 teardown() {
-	local TEST_LEAKED_DEVICES
+	local TEST_LEAKED_DEVICES=""
 	echo -n "## teardown..."
 	unset LVM_LOG_FILE_EPOCH
 
@@ -728,7 +730,7 @@ prepare_md_dev() {
 
 	case "$level" in
 	"1")  coption="--bitmap-chunk" ;;
-	"0")  unset with_bitmap ;;
+	"0")  with_bitmap="" ;;
 	esac
 	# Have MD use a non-standard name to avoid colliding with an existing MD device
 	# - mdadm >= 3.0 requires that non-standard device names be in /dev/md/
@@ -950,9 +952,9 @@ delay_dev() {
 
 disable_dev() {
 	local dev
-	local silent
-	local error
-	local notify
+	local silent=""
+	local error=""
+	local notify=""
 
 	while test -n "$1"; do
 	    if test "$1" = "--silent"; then
@@ -987,7 +989,7 @@ disable_dev() {
 
 enable_dev() {
 	local dev
-	local silent
+	local silent=""
 
 	if test "$1" = "--silent"; then
 	    silent=1
@@ -1015,7 +1017,7 @@ enable_dev() {
 # this is a quick way to restore to this table entry
 restore_from_devtable() {
 	local dev
-	local silent
+	local silent=""
 
 	if test "$1" = "--silent"; then
 	    silent=1
@@ -1222,7 +1224,7 @@ EOF
 	}
 
 	local sec
-	local last_sec
+	local last_sec=""
 
 	# read sequential list and put into associative array
 	while IFS= read -r v; do
@@ -1245,7 +1247,7 @@ EOF
 }
 
 lvmconf() {
-	unset profile_name
+	local profile_name=""
 	test $# -eq 0 || {
 		# Compare if passed args aren't already all in generated lvm.conf
 		local needed=0
@@ -1355,7 +1357,7 @@ thin_pool_error_works_32() {
 udev_wait() {
 	pgrep udev >/dev/null || return 0
 	which udevadm &>/dev/null || return 0
-	if test -n "$1" ; then
+	if test -n "${1-}" ; then
 		udevadm settle --exit-if-exists="$1" || true
 	else
 		udevadm settle --timeout=15 || true
@@ -1366,7 +1368,7 @@ udev_wait() {
 wait_for_sync() {
 	local i
 	for i in {1..100} ; do
-		check in_sync "$1" "$2" "$3" && return
+		check in_sync "$@" && return
 		sleep .2
 	done
 
@@ -1452,7 +1454,7 @@ have_thin() {
 	}
 	target_at_least dm-thin-pool "$@"
 
-	declare -a CONF
+	declare -a CONF=()
 	# disable thin_check if not present in system
 	if test -n "$LVM_TEST_THIN_CHECK_CMD" && test ! -x "$LVM_TEST_THIN_CHECK_CMD"; then
 		CONF[0]="global/thin_check_executable = \"\""
@@ -1500,7 +1502,7 @@ have_cache() {
 	}
 	target_at_least dm-cache "$@"
 
-	declare -a CONF
+	declare -a CONF=()
 	# disable cache_check if not present in system
 	if test -n "$LVM_TEST_CACHE_CHECK_CMD" -a ! -x "$LVM_TEST_CACHE_CHECK_CMD" ; then
 		CONF[0]="global/cache_check_executable = \"\""
@@ -1569,7 +1571,7 @@ wait_pvmove_lv_ready() {
 	local retries=${2:-300}
 
 	if [ -e LOCAL_LVMPOLLD ]; then
-		local lvid
+		local lvid=""
 		while : ; do
 			test "$retries" -le 0 && die "Waiting for lvmpolld timed out"
 			test -n "$lvid" || {
@@ -1627,7 +1629,7 @@ kernel_at_least() {
 	version_at_least "$(uname -r)" "$@"
 }
 
-test -z "$LVM_TEST_AUX_TRACE" || set -x
+test -z "${LVM_TEST_AUX_TRACE-}" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)
 
