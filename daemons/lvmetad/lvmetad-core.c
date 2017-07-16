@@ -258,6 +258,21 @@ static void destroy_metadata_hashes(lvmetad_state *s)
 	dm_hash_iterate(n, s->pvid_to_pvmeta)
 		dm_config_destroy(dm_hash_get_data(s->pvid_to_pvmeta, n));
 
+	dm_hash_iterate(n, s->vgid_to_vgname)
+		dm_free(dm_hash_get_data(s->vgid_to_vgname, n));
+
+	dm_hash_iterate(n, s->vgname_to_vgid)
+		dm_free(dm_hash_get_data(s->vgname_to_vgid, n));
+
+	dm_hash_iterate(n, s->vgid_to_info)
+		dm_free(dm_hash_get_data(s->vgid_to_info, n));
+
+	dm_hash_iterate(n, s->device_to_pvid)
+		dm_free(dm_hash_get_data(s->device_to_pvid, n));
+
+	dm_hash_iterate(n, s->pvid_to_vgid)
+		dm_free(dm_hash_get_data(s->pvid_to_vgid, n));
+
 	dm_hash_destroy(s->pvid_to_pvmeta);
 	dm_hash_destroy(s->vgid_to_metadata);
 	dm_hash_destroy(s->vgid_to_vgname);
@@ -2111,6 +2126,8 @@ static response pv_found(lvmetad_state *s, request r)
 				DEBUGLOG(s, "pv_found ignore duplicate device %" PRIu64 " of existing PV for pvid %s",
 				         arg_device, arg_pvid);
 				dm_config_destroy(new_pvmeta);
+				/* device_to_pvid no longer references prev_pvid_lookup */
+				dm_free((void*)prev_pvid_on_dev);
 				s->flags |= GLFL_DISABLE;
 				s->flags |= GLFL_DISABLE_REASON_DUPLICATES;
 				return reply_fail("Ignore duplicate PV");

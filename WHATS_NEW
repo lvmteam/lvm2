@@ -1,5 +1,6 @@
 Version 2.02.173 - 
 =================================
+  Fix memory leak in lvmetad when working with duplicates.
   Accept 'lvm -h' and 'lvm --help' as well as 'lvm help' for help.
   Suppress error message from accept() on clean lvmetad shutdown.
   Tidy clvmd client list processing and fix segfaults.
