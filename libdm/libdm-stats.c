@@ -330,11 +330,9 @@ static void _stats_region_destroy(struct dm_stats_region *region)
 	region->counters = NULL;
 	region->bounds = NULL;
 
-	if (region->program_id)
-		dm_free(region->program_id);
+	dm_free(region->program_id);
 	region->program_id = NULL;
-	if (region->aux_data)
-		dm_free(region->aux_data);
+	dm_free(region->aux_data);
 	region->aux_data = NULL;
 	region->region_id = DM_STATS_REGION_NOT_PRESENT;
 }
@@ -415,8 +413,7 @@ static void _stats_clear_binding(struct dm_stats *dms)
 		dm_pool_free(dms->mem, dms->bind_name);
 	if (dms->bind_uuid)
 		dm_pool_free(dms->mem, dms->bind_uuid);
-	if (dms->name)
-		dm_free((char *) dms->name);
+	dm_free((char *) dms->name);
 
 	dms->bind_name = dms->bind_uuid = NULL;
 	dms->bind_major = dms->bind_minor = -1;
@@ -2996,8 +2993,7 @@ int dm_stats_set_program_id(struct dm_stats *dms, int allow_empty,
 	if (!program_id)
 		program_id = "";
 
-	if (dms->program_id)
-		dm_free(dms->program_id);
+	dm_free(dms->program_id);
 
 	if (!(dms->program_id = dm_strdup(program_id)))
 		return_0;

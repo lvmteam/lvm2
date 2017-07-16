@@ -268,8 +268,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 
 	r = 1;
  out:
-	if (buf)
-		dm_free(buf);
+	dm_free(buf);
 	if (!dev_close(area->dev))
 		stack;
 	return r;

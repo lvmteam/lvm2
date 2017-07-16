@@ -884,16 +884,13 @@ static int remove_metadata(lvmetad_state *s, const char *vgid, int update_pvids)
 
 	/* free the unmapped data */
 
-	if (info_lookup)
-		dm_free(info_lookup);
 	if (meta_lookup)
 		dm_config_destroy(meta_lookup);
-	if (name_lookup)
-		dm_free(name_lookup);
 	if (outdated_pvs_lookup)
 		dm_config_destroy(outdated_pvs_lookup);
-	if (vgid_lookup)
-		dm_free(vgid_lookup);
+	dm_free(info_lookup);
+	dm_free(name_lookup);
+	dm_free(vgid_lookup);
 	return 1;
 }
 
@@ -1220,10 +1217,8 @@ static int _update_metadata_add_new(lvmetad_state *s, const char *new_name, cons
 out:
 out_free:
 	if (!new_name_dup || !new_vgid_dup || abort_daemon) {
-		if (new_name_dup)
-			dm_free(new_name_dup);
-		if (new_vgid_dup)
-			dm_free(new_vgid_dup);
+		dm_free(new_name_dup);
+		dm_free(new_vgid_dup);
 		ERROR(s, "lvmetad could not be updated and is aborting.");
 		exit(EXIT_FAILURE);
 	}
@@ -1813,8 +1808,7 @@ static response pv_gone(lvmetad_state *s, request r)
 	}
 
 	dm_config_destroy(pvmeta);
-	if (old_pvid)
-		dm_free(old_pvid);
+	dm_free(old_pvid);
 
 	return daemon_reply_simple("OK", NULL );
 }
@@ -2238,8 +2232,7 @@ static response pv_found(lvmetad_state *s, request r)
 	}
 
 	/* This was unhashed from device_to_pvid above. */
-	if (prev_pvid_on_dev)
-		dm_free((void *)prev_pvid_on_dev);
+	dm_free((void *)prev_pvid_on_dev);
 
 	return daemon_reply_simple("OK",
 				   "status = %s", vg_status,

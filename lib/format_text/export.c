@@ -910,8 +910,8 @@ static int _print_historical_lv(struct formatter *f, struct historical_logical_v
 
 	r = 1;
 out:
-	if (descendants_buffer)
-		dm_free(descendants_buffer);
+	dm_free(descendants_buffer);
+
 	return r;
 }
 

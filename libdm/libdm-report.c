@@ -547,8 +547,8 @@ static int _report_field_string_list(struct dm_report *rh,
 out:
 	if (!r && sort_value)
 		dm_pool_free(rh->mem, sort_value);
-	if (arr)
-		dm_free(arr);
+	dm_free(arr);
+
 	return r;
 }
 

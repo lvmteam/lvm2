@@ -1898,8 +1898,7 @@ static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstat
 						   info->vginfo->creation_host))
 		goto set_lock_type;
 
-	if (info->vginfo->creation_host)
-		dm_free(info->vginfo->creation_host);
+	dm_free(info->vginfo->creation_host);
 
 	if (!(info->vginfo->creation_host = dm_strdup(creation_host))) {
 		log_error("cache creation host alloc failed for %s.",
@@ -1918,8 +1917,7 @@ set_lock_type:
 	if (info->vginfo->lock_type && !strcmp(lock_type, info->vginfo->lock_type))
 		goto set_system_id;
 
-	if (info->vginfo->lock_type)
-		dm_free(info->vginfo->lock_type);
+	dm_free(info->vginfo->lock_type);
 
 	if (!(info->vginfo->lock_type = dm_strdup(lock_type))) {
 		log_error("cache lock_type alloc failed for %s", lock_type);
@@ -1937,8 +1935,7 @@ set_system_id:
 	if (info->vginfo->system_id && !strcmp(system_id, info->vginfo->system_id))
 		goto out;
 
-	if (info->vginfo->system_id)
-		dm_free(info->vginfo->system_id);
+	dm_free(info->vginfo->system_id);
 
 	if (!(info->vginfo->system_id = dm_strdup(system_id))) {
 		log_error("cache system_id alloc failed for %s", system_id);
