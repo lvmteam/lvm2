@@ -544,7 +544,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 	char *val;
 	double v;
 	uint64_t v_tmp, adjustment;
-	char *radixchar = nl_langinfo(RADIXCHAR);
+	const char *radixchar = nl_langinfo(RADIXCHAR) ? : ".";
 
 	av->percent = PERCENT_NONE;
 
@@ -567,10 +567,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 		return 0;
 	}
 
-
-	if (!isdigit(*val) &&
-	    (*val != '.') &&
-	    (radixchar && (*val != radixchar[0]))) {
+	if (!isdigit(*val) && (*val != '.') && (*val != radixchar[0])) {
 		log_error("Size requires number argument.");
 		return 0;
 	}
@@ -578,10 +575,10 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 	errno = 0;
 	v = strtod(val, &ptr);
 
-	if (*ptr == '.') {
+	if (*ptr == '.' && radixchar[0] != '.') {
 		/*
 		 * Maybe user has non-C locale with different decimal point ?
-		 * Lets be toleran and retry with standard C locales
+		 * Lets be tolerant and retry with standard C locales
 		 */
 		if (setlocale(LC_ALL, "C")) {
 			errno = 0;
