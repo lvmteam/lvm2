@@ -925,6 +925,7 @@ static void main_loop(int cmd_timeout)
 
 				/* Queue cleanup, this also frees the client struct */
 				add_to_lvmqueue(thisfd, NULL, 0, NULL);
+				continue;
 			}
 
 			if (thisfd->removeme)
