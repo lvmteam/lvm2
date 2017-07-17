@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <paths.h>
 #include <locale.h>
+#include <langinfo.h>
 
 #ifdef HAVE_VALGRIND
 #include <valgrind.h>
@@ -543,6 +544,7 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 	char *val;
 	double v;
 	uint64_t v_tmp, adjustment;
+	char *radixchar = nl_langinfo(RADIXCHAR);
 
 	av->percent = PERCENT_NONE;
 
@@ -562,6 +564,14 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 
 	if (*val == '+' || *val == '-') {
 		log_error("Multiple sign symbols detected.");
+		return 0;
+	}
+
+
+	if (!isdigit(*val) &&
+	    (*val != '.') &&
+	    (radixchar && (*val != radixchar[0]))) {
+		log_error("Size requires number argument.");
 		return 0;
 	}
 
