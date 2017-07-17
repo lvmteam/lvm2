@@ -526,6 +526,8 @@ kill_tagged_processes() {
 		pids+=( "$pid" )
 	done < <(print_procs_by_tag_ "$@")
 
+	test ${#pids[@]} -eq 0 && return
+
 	# wait if process exited and eventually -KILL
 	wait=0
 	for pid in "${pids[@]}" ; do
@@ -619,7 +621,7 @@ teardown() {
 
 prepare_loop() {
 	local size=${1=32}
-	local losetup_params=( ${@:2} )
+	shift # all other params are directly passed to all 'losetup' calls
 	local i
 	local slash
 
@@ -644,9 +646,9 @@ prepare_loop() {
 	local LOOPFILE="$PWD/test.img"
 	rm -f "$LOOPFILE"
 	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=0 seek=$(( size + 1 )) 2> /dev/null
-	if LOOP=$(losetup "${losetup_params[@]}" -s -f "$LOOPFILE" 2>/dev/null); then
+	if LOOP=$(losetup "$@" -s -f "$LOOPFILE" 2>/dev/null); then
 		:
-	elif LOOP=$(losetup -f) && losetup "${losetup_params[@]}" "$LOOP" "$LOOPFILE"; then
+	elif LOOP=$(losetup -f) && losetup "$@" "$LOOP" "$LOOPFILE"; then
 		# no -s support
 		:
 	else
@@ -657,7 +659,7 @@ prepare_loop() {
 				local dev="$DM_DEV_DIR/loop$slash$i"
 				! losetup "$dev" >/dev/null 2>&1 || continue
 				# got a free
-				losetup "${losetup_params[@]}" "$dev" "$LOOPFILE"
+				losetup "$@" "$dev" "$LOOPFILE"
 				LOOP=$dev
 				break
 			done
@@ -1215,7 +1217,7 @@ EOF
 			echo "$s {"
 			local k
 			for k in $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
-				grep "^$k" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ,"
+				grep "^$k" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ," || true
 			done
 			echo "}"
 			echo
