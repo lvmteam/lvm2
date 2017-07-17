@@ -1,5 +1,6 @@
 Version 2.02.173 - 
 =================================
+  Initialize debugging mutex before any debug message in clvmd.
   Log error instad of warn when noticing connection problem with lvmetad.
   Fix memory leak in lvmetad when working with duplicates.
   Accept 'lvm -h' and 'lvm --help' as well as 'lvm help' for help.

@@ -124,7 +124,7 @@ static const size_t STACK_SIZE = 128 * 1024;
 static pthread_attr_t stack_attr;
 static int lvm_thread_exit = 0;
 static pthread_mutex_t lvm_thread_mutex;
-static pthread_mutex_t _debuglog_mutex;
+static pthread_mutex_t _debuglog_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t lvm_thread_cond;
 static pthread_barrier_t lvm_start_barrier;
 static struct dm_list lvm_cmd_head;
@@ -559,7 +559,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	pthread_mutex_init(&lvm_thread_mutex, NULL);
-	pthread_mutex_init(&_debuglog_mutex, NULL);
 	pthread_cond_init(&lvm_thread_cond, NULL);
 	pthread_barrier_init(&lvm_start_barrier, NULL, 2);
 	init_lvhash();
