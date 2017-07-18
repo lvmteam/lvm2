@@ -44,9 +44,17 @@ test_pvmove_resume() {
 
 	wait
 
-	while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
-	while dmsetup status "$vg-$lv2"; do dmsetup remove "$vg-$lv2" || true; done
-	while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
+	local finished
+	for i in {1..100}; do
+		finished=1
+		for d in  "$vg-$lv1" "$vg-$lv2" "$vg-pvmove0" ; do
+			dmsetup status "$d" 2>/dev/null && {
+				dmsetup remove "$d" || finished=0
+			}
+		done
+		test "$finished" -eq 0 || break
+	done
+	test "$finished" -eq 0 && die "Can't remove device"
 
 	check lv_attr_bit type $vg/pvmove0 "p"
 
@@ -59,7 +67,7 @@ test_pvmove_resume() {
 		# errors, based on the fact pvmove is killed -9
 		# Restart clvmd
 		kill "$(< LOCAL_CLVMD)"
-		for i in $(seq 1 100) ; do
+		for i in {1 100} ; do
 			test $i -eq 100 && die "Shutdown of clvmd is too slow."
 			test -e "$CLVMD_PIDFILE" || break
 			sleep .1

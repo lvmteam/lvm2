@@ -54,10 +54,17 @@ test_pvmove_resume() {
 
 	wait
 
-	while dmsetup status "$vg-$lv1"; do dmsetup remove "$vg-$lv1" || true; done
-	while dmsetup status "$vg1-$lv1"; do dmsetup remove "$vg1-$lv1" || true; done
-	while dmsetup status "$vg-pvmove0"; do dmsetup remove "$vg-pvmove0" || true; done
-	while dmsetup status "$vg1-pvmove0"; do dmsetup remove "$vg1-pvmove0" || true; done
+	local finished
+	for i in {1..100}; do
+		finished=1
+		for d in  "$vg-$lv1" "$vg1-$lv1" "$vg-pvmove0" "$vg1-pvmove0" ; do
+			dmsetup status "$d" 2>/dev/null && {
+				dmsetup remove "$d" || finished=0
+			}
+		done
+		test "$finished" -eq 0 || break
+	done
+	test "$finished" -eq 0 && die "Can't remove device"
 
 	check lv_attr_bit type $vg/pvmove0 "p"
 	check lv_attr_bit type $vg1/pvmove0 "p"
