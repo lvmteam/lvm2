@@ -1563,7 +1563,7 @@ check_lvmpolld_init_rq_count() {
 
 wait_pvmove_lv_ready() {
 	# given sleep .1 this is about 60 secs of waiting
-	local retries=${2:-300}
+	local retries=${2-300}
 
 	if [ -e LOCAL_LVMPOLLD ]; then
 		local lvid=""
@@ -1597,7 +1597,7 @@ wait_pvmove_lv_ready() {
 hold_device_open() {
 	local vgname=$1
 	local lvname=$2
-	local sec=${3:-20} # default 20sec
+	local sec=${3-20} # default 20sec
 
 	sleep "$sec" < "$DM_DEV_DIR/$vgname/$lvname" >/dev/null 2>&1 &
 	SLEEP_PID=$!
