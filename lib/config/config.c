@@ -927,7 +927,7 @@ static int _check_value_differs_from_default(struct cft_check_handle *handle,
 			case DM_CFG_FLOAT:
 				f = v_def ? v_def->v.f
 					  : cfg_def_get_default_value(handle->cmd, def, CFG_TYPE_FLOAT, NULL);
-				diff = fabs(f - v->v.f) < FLT_EPSILON;
+				diff = fabsf(f - v->v.f) < FLT_EPSILON;
 				break;
 			case DM_CFG_STRING:
 				/* string value can be a real string but it can also represent bool */
