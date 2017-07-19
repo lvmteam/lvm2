@@ -26,7 +26,7 @@ typedef int (*fn_on_lv_t)(struct logical_volume *lv, void *data);
 static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 						      struct dm_list *removal_lvs,
 						      int vg_write_requested);
-#define	ARRAY_SIZE(a) (sizeof(a) / sizeof(*a))
+#define	ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 
 static int _check_restriping(uint32_t new_stripes, struct logical_volume *lv)
 {

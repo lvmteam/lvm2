@@ -284,7 +284,7 @@ static struct oo_line oo_lines[MAX_OO_LINES];
 
 #define REQUIRED 1  /* required option */
 #define OPTIONAL 0  /* optional option */
-#define IGNORE -1   /* ignore option */
+#define IGNORE (-1)   /* ignore option */
 
 #define MAX_LINE 1024
 #define MAX_LINE_ARGC 256

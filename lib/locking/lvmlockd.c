@@ -134,7 +134,7 @@ static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_fla
  * will not return.  daemon_reply_int reverts to this
  * value if it finds no result value.
  */
-#define NO_LOCKD_RESULT -1000
+#define NO_LOCKD_RESULT (-1000)
 
 static int _lockd_result(daemon_reply reply, int *result, uint32_t *lockd_flags)
 {

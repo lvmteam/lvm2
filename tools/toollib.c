@@ -23,8 +23,8 @@
 #include <sys/utsname.h>
 
 #define report_log_ret_code(ret_code) report_current_object_cmdlog(REPORT_OBJECT_CMDLOG_NAME, \
-					ret_code == ECMD_PROCESSED ? REPORT_OBJECT_CMDLOG_SUCCESS \
-								   : REPORT_OBJECT_CMDLOG_FAILURE, ret_code)
+					((ret_code) == ECMD_PROCESSED) ? REPORT_OBJECT_CMDLOG_SUCCESS \
+								   : REPORT_OBJECT_CMDLOG_FAILURE, (ret_code))
 
 struct device_id_list {
 	struct dm_list list;

@@ -296,7 +296,7 @@ static uint64_t _new_interval = 0; /* flag top-of-interval */
 static uint64_t _last_interval = 0; /* approx. measured interval in nsecs */
 
 /* Invalid fd value used to signal end-of-reporting. */
-#define TIMER_STOPPED -2
+#define TIMER_STOPPED (-2)
 
 #define NSEC_PER_USEC	UINT64_C(1000)
 #define NSEC_PER_MSEC	UINT64_C(1000000)

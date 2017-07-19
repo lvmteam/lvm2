@@ -1426,10 +1426,10 @@ static int _dbl_less_or_equal(double d1, double d2)
 }
 
 #define _uint64 *(const uint64_t *)
-#define _uint64arr(var,index) ((const uint64_t *)var)[index]
+#define _uint64arr(var,index) ((const uint64_t *)(var))[(index)]
 #define _str (const char *)
 #define _dbl *(const double *)
-#define _dblarr(var,index) ((const double *)var)[index]
+#define _dblarr(var,index) ((const double *)(var))[(index)]
 
 static int _do_check_value_is_strictly_reserved(unsigned type, const void *res_val, int res_range,
 						const void *val, struct field_selection *fs)

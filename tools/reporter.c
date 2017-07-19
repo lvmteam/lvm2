@@ -780,7 +780,7 @@ static void _del_option_from_list(struct dm_list *sll, const char *prefix,
 }
 
 #define _get_report_idx(report_type,single_report_type) \
-	(((report_type != FULL) && (report_type == single_report_type)) ? REPORT_IDX_SINGLE : REPORT_IDX_FULL_ ## single_report_type)
+	((((report_type) != FULL) && ((report_type) == single_report_type)) ? REPORT_IDX_SINGLE : REPORT_IDX_FULL_ ## single_report_type)
 
 static report_idx_t _get_report_idx_from_name(report_type_t report_type, const char *name)
 {
@@ -1262,10 +1262,10 @@ out:
 
 #define _set_full_report_single(cmd,args,type,name) \
 	do { \
-		args->single_args[REPORT_IDX_FULL_ ## type].report_type = type; \
-		args->single_args[REPORT_IDX_FULL_ ## type].keys = find_config_tree_str(cmd, report_ ## name ## _sort_full_CFG, NULL); \
-		args->single_args[REPORT_IDX_FULL_ ## type].options = find_config_tree_str(cmd, report_ ## name ## _cols_full_CFG, NULL); \
-		if (!_set_report_prefix_and_name(args, &args->single_args[REPORT_IDX_FULL_ ## type])) \
+		(args)->single_args[REPORT_IDX_FULL_ ## type].report_type = type; \
+		(args)->single_args[REPORT_IDX_FULL_ ## type].keys = find_config_tree_str(cmd, report_ ## name ## _sort_full_CFG, NULL); \
+		(args)->single_args[REPORT_IDX_FULL_ ## type].options = find_config_tree_str(cmd, report_ ## name ## _cols_full_CFG, NULL); \
+		if (!_set_report_prefix_and_name((args), &(args)->single_args[REPORT_IDX_FULL_ ## type])) \
 			return_0; \
 	} while (0)
 

@@ -37,13 +37,13 @@ typedef int (*section_fn) (struct format_instance * fid,
 			   unsigned report_missing_devices);
 
 #define _read_int32(root, path, result) \
-	dm_config_get_uint32(root, path, (uint32_t *) result)
+	dm_config_get_uint32(root, path, (uint32_t *) (result))
 
 #define _read_uint32(root, path, result) \
-	dm_config_get_uint32(root, path, result)
+	dm_config_get_uint32(root, path, (result))
 
 #define _read_uint64(root, path, result) \
-	dm_config_get_uint64(root, path, result)
+	dm_config_get_uint64(root, path, (result))
 
 /*
  * Logs an attempt to read an invalid format file.

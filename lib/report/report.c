@@ -162,7 +162,7 @@ struct time_prop {
 	time_id_t granularity;
 };
 
-#define ADD_TIME_PROP(id, flags, granularity) [id] = {id, flags, granularity},
+#define ADD_TIME_PROP(id, flags, granularity) [(id)] = {(id), (flags), (granularity)},
 
 static const struct time_prop _time_props[] = {
 	ADD_TIME_PROP(TIME_NULL,                    0,							TIME_NULL)
@@ -228,7 +228,7 @@ struct time_reg {
 	uint32_t reg_flags;
 };
 
-#define TIME_PROP(id) (_time_props + id)
+#define TIME_PROP(id) (_time_props + (id))
 
 static const struct time_reg _time_reg[] = {
 	/*
@@ -3915,7 +3915,7 @@ static const struct dm_report_object_type _devtypes_report_types[] = {
 #define STR_LIST DM_REPORT_FIELD_TYPE_STRING_LIST
 #define SNUM DM_REPORT_FIELD_TYPE_NUMBER
 #define FIELD(type, strct, sorttype, head, field, width, func, id, desc, writeable) \
-	{type, sorttype, offsetof(type_ ## strct, field), width ? : sizeof(head) - 1, \
+	{type, sorttype, offsetof(type_ ## strct, field), (width) ? : sizeof(head) - 1, \
 	 #id, head, &_ ## func ## _disp, desc},
 
 typedef struct cmd_log_item type_cmd_log_item;

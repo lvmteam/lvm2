@@ -42,7 +42,7 @@ typedef int (*nl_fn) (struct formatter * f);
 #define _out_with_comment(f, buffer, fmt, ap) \
 	do { \
 		va_start(ap, fmt); \
-		r = f->out_with_comment(f, buffer, fmt, ap); \
+		r = (f)->out_with_comment((f), (buffer), (fmt), ap); \
 		va_end(ap); \
 	} while (r == -1)
 
