@@ -2365,7 +2365,7 @@ static int _2_if_value(unsigned p)
 }
 
 /* Return number of bits passed in @bits assuming 2 * 64 bit size */
-static int _get_params_count(uint64_t *bits)
+static int _get_params_count(const uint64_t *bits)
 {
 	int r = 0;
 	int i = RAID_BITMAP_SIZE;
