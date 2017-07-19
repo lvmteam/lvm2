@@ -1396,15 +1396,14 @@ static uint32_t _get_cookie_value(const char *str_value)
 	char *p;
 
 	errno = 0;
-	if (!(value = strtoul(str_value, &p, 0)) ||
-	    *p ||
-	    (value == ULONG_MAX && errno == ERANGE) ||
-	    value > 0xFFFFFFFF) {
+	value = strtoul(str_value, &p, 0);
+
+	if (errno || !value || (*p) || (value > UINT32_MAX)) {
 		err("Incorrect cookie value");
 		return 0;
 	}
-	else
-		return (uint32_t) value;
+
+	return (uint32_t) value;
 }
 
 static int _udevflags(CMD_ARGS)
