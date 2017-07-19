@@ -488,15 +488,16 @@ teardown_devs() {
 }
 
 kill_sleep_kill_() {
-	pidfile=$1
-	slow=$2
+	local pidfile=$1
+	local slow=$2
+
 	if test -s "$pidfile" ; then
 		pid=$(< "$pidfile")
 		rm -f "$pidfile"
 		kill -TERM "$pid" 2>/dev/null || return 0
 		if test "$slow" -eq 0 ; then sleep .1 ; else sleep 1 ; fi
 		kill -KILL "$pid" 2>/dev/null || true
-		wait=0
+		local wait=0
 		while ps "$pid" > /dev/null && test "$wait" -le 10; do
 			sleep .5
 			wait=$(( wait + 1 ))
@@ -1085,7 +1086,7 @@ prepare_vg() {
 }
 
 extend_filter() {
-	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for rx in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\[:[ \"$rx\", :")
 	done
@@ -1097,7 +1098,7 @@ extend_filter_LVMTEST() {
 }
 
 hide_dev() {
-	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for dev in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\[:[ \"r|$dev|\", :")
 	done
@@ -1105,7 +1106,7 @@ hide_dev() {
 }
 
 unhide_dev() {
-	filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
+	local filter=$(grep ^devices/global_filter CONFIG_VALUES | tail -n 1)
 	for dev in "$@"; do
 		filter=$(echo "$filter" | sed -e "s:\"r|$dev|\", ::")
 	done
@@ -1556,8 +1557,7 @@ check_lvmpolld_init_rq_count() {
 	local ret
 	ret=$(awk -v vvalue="$2" -v vkey="${3:-lvname}" "$(awk_parse_init_count_in_lvmpolld_dump)" lvmpolld_dump.txt)
 	test "$ret" -eq "$1" || {
-		echo "check_lvmpolld_init_rq_count failed. Expected $1, got $ret"
-		return 1
+		die "check_lvmpolld_init_rq_count failed. Expected $1, got $ret"
 	}
 }
 
@@ -1570,9 +1570,11 @@ wait_pvmove_lv_ready() {
 		while : ; do
 			test "$retries" -le 0 && die "Waiting for lvmpolld timed out"
 			test -n "$lvid" || {
-				lvid=$(get lv_field "${1//-//}" vg_uuid,lv_uuid -a 2>/dev/null)
-				lvid=${lvid//\ /}
-				lvid=${lvid//-/}
+				# wait till wanted LV really appears
+				lvid=$(get lv_field "${1//-//}" vg_uuid,lv_uuid -a 2>/dev/null) && {
+					lvid=${lvid//\ /}
+					lvid=${lvid//-/}
+				}
 			}
 			test -z "$lvid" || {
 				lvmpolld_dump > lvmpolld_dump.txt
@@ -1615,6 +1617,9 @@ hold_device_open() {
 
 # return total memory size in kB units
 total_mem() {
+	local a
+	local b
+
 	while IFS=":" read -r a b ; do
 		case "$a" in MemTotal*) echo "${b%% kB}" ; break ;; esac
 	done < /proc/meminfo
