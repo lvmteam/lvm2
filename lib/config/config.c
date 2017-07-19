@@ -481,7 +481,8 @@ int override_config_tree_from_profile(struct cmd_context *cmd,
 
 	if (profile->source == CONFIG_PROFILE_COMMAND)
 		return _override_config_tree_from_command_profile(cmd, profile);
-	else if (profile->source == CONFIG_PROFILE_METADATA)
+
+	if (profile->source == CONFIG_PROFILE_METADATA)
 		return _override_config_tree_from_metadata_profile(cmd, profile);
 
 	log_error(INTERNAL_ERROR "override_config_tree_from_profile: incorrect profile source type");

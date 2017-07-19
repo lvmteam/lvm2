@@ -627,7 +627,9 @@ static int _replicator_dev_add_target_line(struct dev_manager *dm,
 		if (!(rdev_dlid = build_dm_uuid(mem, seg->lv->rdevice->lv, NULL)))
 			return_0;
 		return dm_tree_node_add_target_area(node, NULL, rdev_dlid, 0);
-	} else if (seg->lv->rdevice->rsite->site_index) {
+	}
+
+	if (seg->lv->rdevice->rsite->site_index) {
 		log_error("Active site with site_index != 0 (%s, %d)",
 			  seg->lv->rdevice->rsite->name,
 			  seg->lv->rdevice->rsite->site_index);

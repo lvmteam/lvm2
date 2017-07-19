@@ -250,10 +250,9 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 		if (ret < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN))
 				continue;
-			else {
-				log_error("Unable to read from event server.");
-				return 0;
-			}
+
+			log_error("Unable to read from event server.");
+			return 0;
 		}
 
 		bytes += ret;
@@ -329,10 +328,9 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 		if (ret < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN))
 				continue;
-			else {
-				log_error("Unable to talk to event daemon.");
-				return 0;
-			}
+
+			log_error("Unable to talk to event daemon.");
+			return 0;
 		}
 
 		bytes += ret;
@@ -454,7 +452,8 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		if (close(fifos->client))
 			log_sys_debug("close", fifos->client_path);
 		return 1;
-	} else if (errno != ENXIO && errno != ENOENT)  {
+	}
+	if (errno != ENXIO && errno != ENOENT)  {
 		/* problem */
 		log_sys_error("open", fifos->client_path);
 		return 0;

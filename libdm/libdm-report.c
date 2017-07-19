@@ -1013,16 +1013,18 @@ static int _field_match(struct dm_report *rh, const char *field, size_t flen,
 			rh->report_types |= implicit ? _implicit_report_fields[f].type
 						     : rh->fields[f].type;
 			return 1;
-		} else
-			return _add_field(rh, f, implicit, 0) ? 1 : 0;
+		}
+
+		return _add_field(rh, f, implicit, 0) ? 1 : 0;
 	}
 
 	if ((type = _all_match(rh, field, flen))) {
 		if (report_type_only) {
 			rh->report_types |= type;
 			return 1;
-		} else
-			return  _add_all_fields(rh, type);
+		}
+
+		return  _add_all_fields(rh, type);
 	}
 
 	return 0;

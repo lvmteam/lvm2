@@ -198,7 +198,9 @@ static int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		log_error("Physical volume '%s' is already in volume group "
 			  "'%s'", pv_name, pv->vg_name);
 		return 0;
-	} else if (!new_pv) {
+	}
+
+	if (!new_pv) {
 		if ((used = is_used_pv(pv)) < 0)
 			return_0;
 
@@ -730,7 +732,9 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 		log_error("%s not identified as an existing "
 			  "physical volume", pv_name);
 		return 0;
-	} else if (!pv && pp) {
+	}
+
+	if (!pv && pp) {
 		if (!(pv = pvcreate_vol(vg->cmd, pv_name, pp, 0)))
 			return_0;
 		new_pv = 1;
@@ -5725,10 +5729,10 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 			log_error("Cannot access VG %s due to failed lock.", vg->name);
 			*failure |= FAILED_LOCK_MODE;
 			return 0;
-		} else {
-			log_warn("Reading VG %s without a lock.", vg->name);
-			return 1;
 		}
+
+		log_warn("Reading VG %s without a lock.", vg->name);
+		return 1;
 	}
 
 	if (test_mode()) {

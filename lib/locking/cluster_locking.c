@@ -519,11 +519,14 @@ static int decode_lock_type(const char *response)
 {
 	if (!response)
 		return LCK_NULL;
-	else if (!strcmp(response, "EX"))
+
+	if (!strcmp(response, "EX"))
 		return LCK_EXCL;
-	else if (!strcmp(response, "CR"))
+
+	if (!strcmp(response, "CR"))
 		return LCK_READ;
-	else if (!strcmp(response, "PR"))
+
+	if (!strcmp(response, "PR"))
 		return LCK_PREAD;
 
 	return_0;

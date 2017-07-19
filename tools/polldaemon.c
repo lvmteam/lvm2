@@ -559,17 +559,18 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
 		}
 
 		return r ? ECMD_PROCESSED : ECMD_FAILED;
-	} else {
-		/* process all in-flight operations */
-		if (!(handle = init_processing_handle(cmd, NULL))) {
-			log_error("Failed to initialize processing handle.");
-			return ECMD_FAILED;
-		} else {
-			_lvmpolld_poll_for_all_vgs(cmd, parms, handle);
-			destroy_processing_handle(cmd, handle);
-			return ECMD_PROCESSED;
-		}
 	}
+
+	/* process all in-flight operations */
+	if (!(handle = init_processing_handle(cmd, NULL))) {
+		log_error("Failed to initialize processing handle.");
+		return ECMD_FAILED;
+	}
+
+	_lvmpolld_poll_for_all_vgs(cmd, parms, handle);
+	destroy_processing_handle(cmd, handle);
+
+	return ECMD_PROCESSED;
 }
 #else
 #	define _lvmpoll_daemon(cmd, id, parms) (ECMD_FAILED)
@@ -592,7 +593,8 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 		daemon_mode = become_daemon(cmd, 0);
 		if (daemon_mode == 0)
 			return ECMD_PROCESSED;	    /* Parent */
-		else if (daemon_mode == 1)
+
+		if (daemon_mode == 1)
 			parms->progress_display = 0; /* Child */
 		/* FIXME Use wait_event (i.e. interval = 0) and */
 		/*       fork one daemon per copy? */
@@ -680,9 +682,8 @@ int poll_daemon(struct cmd_context *cmd, unsigned background,
 
 	if (lvmpolld_use())
 		return _lvmpoll_daemon(cmd, id, &parms);
-	else {
-		/* classical polling allows only PMVOVE or 0 values */
-		parms.lv_type &= PVMOVE;
-		return _poll_daemon(cmd, id, &parms);
-	}
+
+	/* classical polling allows only PMVOVE or 0 values */
+	parms.lv_type &= PVMOVE;
+	return _poll_daemon(cmd, id, &parms);
 }

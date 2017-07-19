@@ -628,7 +628,9 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 		log_error("Only up to %u stripes in %s supported currently.",
 			  max_images / lp->mirrors, lp->segtype->name);
 		return 0;
-	} else if (seg_is_mirrored(lp)) {
+	}
+
+	if (seg_is_mirrored(lp)) {
 		if (lp->mirrors > max_images) {
 			log_error("Only up to %u mirrors in %s supported currently.",
 				  max_images, lp->segtype->name);

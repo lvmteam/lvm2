@@ -732,7 +732,9 @@ static int _check_time_items(struct time_info *info)
 			if (label_date) {
 				log_error("Ambiguous date specification found at \"%s\".", ti->s);
 				return 0;
-			} else if (_is_time_label_date(ti->prop->id))
+			}
+
+			if (_is_time_label_date(ti->prop->id))
 				label_date = 1;
 		}
 
@@ -749,7 +751,9 @@ static int _check_time_items(struct time_info *info)
 			if (label_time) {
 				log_error("Ambiguous time specification found at \"%s\".", ti->s);
 				return 0;
-			} else if (_is_time_label_time(ti->prop->id))
+			}
+
+			if (_is_time_label_time(ti->prop->id))
 				label_time = 1;
 		}
 	}
@@ -1251,9 +1255,9 @@ static int _binary_disp(struct dm_report *rh, struct dm_pool *mem __attribute__(
 	if (cmd->report_binary_values_as_numeric)
 		/* "0"/"1" */
 		return _field_set_value(field, bin_value ? _str_one : _str_zero, bin_value ? &_one64 : &_zero64);
-	else
-		/* blank/"word" */
-		return _field_set_value(field, bin_value ? word : "", bin_value ? &_one64 : &_zero64);
+
+	/* blank/"word" */
+	return _field_set_value(field, bin_value ? word : "", bin_value ? &_one64 : &_zero64);
 }
 
 static int _binary_undef_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1263,8 +1267,8 @@ static int _binary_undef_disp(struct dm_report *rh, struct dm_pool *mem __attrib
 
 	if (cmd->report_binary_values_as_numeric)
 		return _field_set_value(field, GET_FIRST_RESERVED_NAME(num_undef_64), &GET_TYPE_RESERVED_VALUE(num_undef_64));
-	else
-		return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
+
+	return _field_set_value(field, _str_unknown, &GET_TYPE_RESERVED_VALUE(num_undef_64));
 }
 
 static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1772,8 +1776,8 @@ static int _do_loglv_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (uuid)
 		return _uuid_disp(rh, mem, field, &mirror_log_lv->lvid.id[1], private);
-	else
-		return _lvname_disp(rh, mem, field, mirror_log_lv, private);
+
+	return _lvname_disp(rh, mem, field, mirror_log_lv, private);
 }
 
 static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1829,8 +1833,8 @@ static int _do_datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute
 
 	if (uuid)
 		return _uuid_disp(rh, mem, field, &data_lv->lvid.id[1], private);
-	else
-		return _lvname_disp(rh, mem, field, data_lv, private);
+
+	return _lvname_disp(rh, mem, field, data_lv, private);
 }
 
 static int _datalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1860,8 +1864,8 @@ static int _do_metadatalv_disp(struct dm_report *rh, struct dm_pool *mem __attri
 
 	if (uuid)
 		return _uuid_disp(rh, mem, field, &metadata_lv->lvid.id[1], private);
-	else
-		return _lvname_disp(rh, mem, field, metadata_lv, private);
+
+	return _lvname_disp(rh, mem, field, metadata_lv, private);
 }
 
 static int _metadatalv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1891,8 +1895,8 @@ static int _do_poollv_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (uuid)
 		return _uuid_disp(rh, mem, field, &pool_lv->lvid.id[1], private);
-	else
-		return _lvname_disp(rh, mem, field, pool_lv, private);
+
+	return _lvname_disp(rh, mem, field, pool_lv, private);
 }
 
 static int _poollv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -1948,8 +1952,8 @@ static int _do_origin_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (uuid)
 		return _uuid_disp(rh, mem, field, &origin_lv->lvid.id[1], private);
-	else
-		return _lvname_disp(rh, mem, field, origin_lv, private);
+
+	return _lvname_disp(rh, mem, field, origin_lv, private);
 }
 
 static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -2241,8 +2245,8 @@ static int _do_convertlv_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (uuid)
 		return _uuid_disp(rh, mem, field, &convert_lv->lvid.id[1], private);
-	else
-		return _lvname_disp(rh, mem, field, convert_lv, private);
+
+	return _lvname_disp(rh, mem, field, convert_lv, private);
 }
 
 static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute__((unused)),
@@ -2361,9 +2365,9 @@ static int _lvwhenfull_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (lv->status & LV_ERROR_WHEN_FULL)
 			return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_error),
 						GET_FIELD_RESERVED_VALUE(lv_when_full_error));
-		else
-			return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_queue),
-						GET_FIELD_RESERVED_VALUE(lv_when_full_queue));
+
+		return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_queue),
+					GET_FIELD_RESERVED_VALUE(lv_when_full_queue));
 	}
 
 	return _field_set_value(field, GET_FIRST_RESERVED_NAME(lv_when_full_undef),
@@ -3584,8 +3588,8 @@ static int _lvactiveremotely_disp(struct dm_report *rh, struct dm_pool *mem,
 		 */
 		if (lv_is_active_locally(lv))
 			return _binary_undef_disp(rh, mem, field, private);
-		else
-			active_remotely = lv_is_active_but_not_locally(lv);
+
+		active_remotely = lv_is_active_but_not_locally(lv);
 	} else
 		active_remotely = 0;
 
@@ -3725,7 +3729,7 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (lvdm->seg_status.type != SEG_STATUS_CACHE)
 			return _field_set_value(field, GET_FIRST_RESERVED_NAME(health_undef),
 						GET_FIELD_RESERVED_VALUE(health_undef));
-		else if (lvdm->seg_status.cache->fail)
+		if (lvdm->seg_status.cache->fail)
 			health = "failed";
 		else if (lvdm->seg_status.cache->read_only)
 			health = "metadata_read_only";
@@ -3733,7 +3737,7 @@ static int _lvhealthstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (lvdm->seg_status.type != SEG_STATUS_THIN_POOL)
 			return _field_set_value(field, GET_FIRST_RESERVED_NAME(health_undef),
 						GET_FIELD_RESERVED_VALUE(health_undef));
-		else if (lvdm->seg_status.thin_pool->fail)
+		if (lvdm->seg_status.thin_pool->fail)
 			health = "failed";
 		else if (lvdm->seg_status.thin_pool->out_of_data_space)
 			health = "out_of_data";

@@ -2252,7 +2252,8 @@ int main(int argc, char *argv[])
 					 "for %ld second(s), exiting.",
 					 (long) (time(NULL) - _idle_since));
 				break;
-			} else if (idle_exit_timeout) {
+			}
+			if (idle_exit_timeout) {
 				now = time(NULL);
 				if (now < _idle_since)
 					_idle_since = now; /* clock change? */

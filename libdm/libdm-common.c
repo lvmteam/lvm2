@@ -1137,13 +1137,12 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 				 errno == ENOENT)
 				/* assume udev already deleted this */
 				return 1;
-			else {
-				log_warn("The node %s should have been renamed to %s "
-					 "by udev but old node is still present. "
-					 "Falling back to direct old node removal.",
-					 oldpath, newpath);
-				return _rm_dev_node(old_name, 0);
-			}
+
+			log_warn("The node %s should have been renamed to %s "
+				 "by udev but old node is still present. "
+				 "Falling back to direct old node removal.",
+				 oldpath, newpath);
+			return _rm_dev_node(old_name, 0);
 		}
 
 		if (unlink(newpath) < 0) {

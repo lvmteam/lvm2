@@ -187,9 +187,9 @@ int init_locking(int type, struct cmd_context *cmd, int suppress_messages)
 				  "be inaccessible.");
 		if (init_file_locking(&_locking, cmd, suppress_messages))
 			return 1;
-		else
-			log_error_suppress(suppress_messages,
-					   "File-based locking initialisation failed.");
+
+		log_error_suppress(suppress_messages,
+				   "File-based locking initialisation failed.");
 	}
 
 	if (!ignorelockingfailure())
@@ -232,7 +232,9 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
 		log_error("%s exists: Is the original LVM driver using "
 			  "this volume group?", path);
 		return 0;
-	} else if (errno != ENOENT && errno != ENOTDIR) {
+	}
+
+	if (errno != ENOENT && errno != ENOTDIR) {
 		log_sys_error("stat", path);
 		return 0;
 	}

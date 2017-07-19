@@ -145,13 +145,14 @@ int lvmetad_connect(struct cmd_context *cmd)
 		_lvmetad_use = 1;
 		_lvmetad_cmd = cmd;
 		return 1;
-	} else {
-		log_debug_lvmetad("Failed to connect to lvmetad: %s", strerror(_lvmetad.error));
-		_lvmetad_connected = 0;
-		_lvmetad_use = 0;
-		_lvmetad_cmd = NULL;
-		return 0;
 	}
+
+	log_debug_lvmetad("Failed to connect to lvmetad: %s", strerror(_lvmetad.error));
+	_lvmetad_connected = 0;
+	_lvmetad_use = 0;
+	_lvmetad_cmd = NULL;
+
+	return 0;
 }
 
 int lvmetad_used(void)

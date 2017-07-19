@@ -1251,10 +1251,13 @@ uint32_t lv_raid_data_copies(const struct segment_type *segtype, uint32_t area_c
 	if (segtype_is_any_raid10(segtype))
 		/* FIXME: change for variable number of data copies */
 		return 2;
-	else if (segtype_is_mirrored(segtype))
+
+	if (segtype_is_mirrored(segtype))
 		return area_count;
-	else if (segtype_is_striped_raid(segtype))
+
+	if (segtype_is_striped_raid(segtype))
 		return segtype->parity_devs + 1;
+
 	return 1;
 }
 
@@ -4807,8 +4810,8 @@ static int _raid0_meta_change_wrapper(struct logical_volume *lv,
 
 	if (alloc_metadata_devs)
 		return _raid0_add_or_remove_metadata_lvs(lv, 1, allocate_pvs, NULL);
-	else
-		return _raid0_add_or_remove_metadata_lvs(lv, 1, allocate_pvs, &removal_lvs);
+
+	return _raid0_add_or_remove_metadata_lvs(lv, 1, allocate_pvs, &removal_lvs);
 }
 
 static int _raid0_to_striped_wrapper(struct logical_volume *lv,
@@ -6040,8 +6043,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			log_error("Convert %s LV %s to 2 images first.",
 				 lvseg_name(seg_from), display_lvname(seg_from->lv));
 			return 0;
+		}
 
-		} else if (segtype_is_striped(*segtype) ||
+		if (segtype_is_striped(*segtype) ||
 			   segtype_is_any_raid0(*segtype) ||
 			   segtype_is_raid10(*segtype))
 			seg_flag = SEG_RAID5_N;
@@ -6056,8 +6060,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			log_error("Convert %s LV %s to 2 stripes first (i.e. --stripes 1).",
 				  lvseg_name(seg_from), display_lvname(seg_from->lv));
 			return 0;
+		}
 
-		} else if (seg_is_raid4(seg_from) &&
+		if (seg_is_raid4(seg_from) &&
 			   segtype_is_any_raid5(*segtype) &&
 			   !segtype_is_raid5_n(*segtype))
 			seg_flag = SEG_RAID5_N;
@@ -6081,8 +6086,9 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 				log_error("Convert %s LV %s to minimum 4 stripes first (i.e. --stripes 3).",
 					  lvseg_name(seg_from), display_lvname(seg_from->lv));
 				return 0;
+			}
 
-			} else if (seg_is_raid4(seg_from) && !segtype_is_raid6_n_6(*segtype))
+			if (seg_is_raid4(seg_from) && !segtype_is_raid6_n_6(*segtype))
 				seg_flag = SEG_RAID6_N_6;
 			else
 				seg_flag = _raid_seg_flag_5_to_6(seg_from);
@@ -6118,12 +6124,12 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			log_error("Convert %s LV %s to raid4/raid5 first.",
 				  lvseg_name(seg_from), display_lvname(seg_from->lv));
 			return 0;
+		}
 
-		} else if (seg_from->area_count != 2) {
+		if (seg_from->area_count != 2) {
 			log_error("Convert %s LV %s to 2 stripes first (i.e. --stripes 1).",
 				 lvseg_name(seg_from), display_lvname(seg_from->lv));
 			return 0;
-
 		}
 
 	/* raid10 -> ... */
@@ -6352,7 +6358,9 @@ int lv_raid_convert(struct logical_volume *lv,
 		log_error("%s must be active to perform this operation.",
 			  display_lvname(lv));
 		return 0;
-	} else if (vg_is_clustered(lv->vg) &&
+	}
+
+	if (vg_is_clustered(lv->vg) &&
 		   !lv_is_active_exclusive_locally(lv_lock_holder(lv))) {
 		/* In clustered VGs, the LV must be active on this node exclusively. */
 		log_error("%s must be active exclusive locally to "
@@ -6710,17 +6718,23 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 		log_print_unless_silent("%s does not contain devices specified to %s.",
 					display_lvname(lv), action_str);
 		return 1;
-	} else if (match_count == raid_seg->area_count) {
+	}
+
+	if (match_count == raid_seg->area_count) {
 		log_error("Unable to %s all PVs from %s at once.",
 			  action_str, display_lvname(lv));
 		return 0;
-	} else if (raid_seg->segtype->parity_devs &&
-		   (match_count > raid_seg->segtype->parity_devs)) {
+	}
+
+	if (raid_seg->segtype->parity_devs &&
+	    (match_count > raid_seg->segtype->parity_devs)) {
 		log_error("Unable to %s more than %u PVs from (%s) %s.",
 			  action_str, raid_seg->segtype->parity_devs,
 			  lvseg_name(raid_seg), display_lvname(lv));
 		return 0;
-	} else if (seg_is_raid10(raid_seg)) {
+	}
+
+	if (seg_is_raid10(raid_seg)) {
 		uint32_t i, rebuilds_per_group = 0;
 		/* FIXME: We only support 2-way mirrors (i.e. 2 data copies) in RAID10 currently */
 		uint32_t copies = 2;
@@ -7039,8 +7053,10 @@ static int _partial_raid_lv_is_redundant(const struct logical_volume *lv)
 		log_verbose("All components of raid LV %s have failed.",
 			    display_lvname(lv));
 		return 0;	/* Insufficient redundancy to activate */
-	} else if (raid_seg->segtype->parity_devs &&
-		   (failed_components > raid_seg->segtype->parity_devs)) {
+	}
+
+	if (raid_seg->segtype->parity_devs &&
+	    (failed_components > raid_seg->segtype->parity_devs)) {
 		log_verbose("More than %u components from %s %s have failed.",
 			    raid_seg->segtype->parity_devs,
 			    lvseg_name(raid_seg),

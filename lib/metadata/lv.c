@@ -581,8 +581,8 @@ static char *_do_lv_origin_dup(struct dm_pool *mem, const struct logical_volume 
 
 	if (uuid)
 		return lv_uuid_dup(mem, origin_lv);
-	else
-		return lv_name_dup(mem, origin_lv);
+
+	return lv_name_dup(mem, origin_lv);
 }
 
 char *lv_origin_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -650,6 +650,7 @@ char *lv_modules_dup(struct dm_pool *mem, const struct logical_volume *lv)
 
 	if (!list_lv_modules(mem, lv, modules))
 		return_NULL;
+
 	return tags_format_and_copy(mem, modules);
 }
 
@@ -675,8 +676,8 @@ static char *_do_lv_mirror_log_dup(struct dm_pool *mem, const struct logical_vol
 
 	if (uuid)
 		return lv_uuid_dup(mem, mirror_log_lv);
-	else
-		return lv_name_dup(mem, mirror_log_lv);
+
+	return lv_name_dup(mem, mirror_log_lv);
 }
 
 char *lv_mirror_log_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -708,8 +709,8 @@ static char *_do_lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume
 
 	if (uuid)
 		return lv_uuid_dup(mem, pool_lv);
-	else
-		return lv_name_dup(mem, pool_lv);
+
+	return lv_name_dup(mem, pool_lv);
 }
 
 char *lv_pool_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -741,8 +742,8 @@ static char *_do_lv_data_lv_dup(struct dm_pool *mem, const struct logical_volume
 
 	if (uuid)
 		return lv_uuid_dup(mem, data_lv);
-	else
-		return lv_name_dup(mem, data_lv);
+
+	return lv_name_dup(mem, data_lv);
 }
 
 char *lv_data_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -774,8 +775,8 @@ static char *_do_lv_metadata_lv_dup(struct dm_pool *mem, const struct logical_vo
 
 	if (uuid)
 		return lv_uuid_dup(mem, metadata_lv);
-	else
-		return lv_name_dup(mem, metadata_lv);
+
+	return lv_name_dup(mem, metadata_lv);
 }
 
 char *lv_metadata_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -792,7 +793,8 @@ const char *lv_layer(const struct logical_volume *lv)
 {
 	if (lv_is_thin_pool(lv))
 		return "tpool";
-	else if (lv_is_origin(lv) || lv_is_external_origin(lv))
+
+	if (lv_is_origin(lv) || lv_is_external_origin(lv))
 		return "real";
 
 	return NULL;
@@ -841,8 +843,8 @@ static char *_do_lv_convert_lv_dup(struct dm_pool *mem, const struct logical_vol
 
 	if (uuid)
 		return lv_uuid_dup(mem, convert_lv);
-	else
-		return lv_name_dup(mem, convert_lv);
+
+	return lv_name_dup(mem, convert_lv);
 }
 
 char *lv_convert_lv_dup(struct dm_pool *mem, const struct logical_volume *lv)
@@ -877,8 +879,8 @@ static char *_do_lv_move_pv_dup(struct dm_pool *mem, const struct logical_volume
 
 			if (uuid)
 				return pv_uuid_dup(mem, pvseg->pv);
-			else
-				return pv_name_dup(mem, pvseg->pv);
+
+			return pv_name_dup(mem, pvseg->pv);
 		}
 	}
 
@@ -1104,12 +1106,8 @@ int lv_raid_healthy(const struct logical_volume *lv)
 	if (!lv_raid_dev_health(raid_seg->lv, &raid_health))
 		return_0;
 
-	if (lv_is_raid(lv)) {
-		if (strchr(raid_health, 'D'))
-			return 0;
-		else
-			return 1;
-	}
+	if (lv_is_raid(lv))
+		return (strchr(raid_health, 'D')) ? 0 : 1;
 
 	/* Find out which sub-LV this is. */
 	for (s = 0; s < raid_seg->area_count; s++)

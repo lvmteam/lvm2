@@ -1532,8 +1532,8 @@ const char *get_pvmove_pvname_from_lv(const struct logical_volume *lv)
 
 	if (pvmove_lv)
 		return get_pvmove_pvname_from_lv_mirr(pvmove_lv);
-	else
-		return NULL;
+
+	return NULL;
 }
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
@@ -2170,7 +2170,9 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		return _add_mirrors_that_preserve_segments(lv, MIRROR_BY_SEG,
 							   mirrors, region_size,
 							   pvs, alloc);
-	} else if (flags & MIRROR_BY_SEGMENTED_LV) {
+	}
+
+	if (flags & MIRROR_BY_SEGMENTED_LV) {
 		if (stripes > 1) {
 			log_error("Striped-mirroring is not supported on "
 				  "segment-by-segment mirroring.");
@@ -2180,7 +2182,9 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		return _add_mirrors_that_preserve_segments(lv, MIRROR_BY_SEGMENTED_LV,
 							   mirrors, region_size,
 							   pvs, alloc);
-	} else if (flags & MIRROR_BY_LV) {
+	}
+
+	if (flags & MIRROR_BY_LV) {
 		if (!mirrors)
 			return add_mirror_log(cmd, lv, log_count,
 					      region_size, pvs, alloc);

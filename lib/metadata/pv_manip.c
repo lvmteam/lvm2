@@ -358,10 +358,11 @@ static uint32_t _overlap_pe(const struct pv_segment *pvseg,
 
 	start = max(pvseg->pe, per->start);
 	end = min(pvseg->pe + pvseg->len, per->start + per->count);
+
 	if (end < start)
 		return 0;
-	else
-		return end - start;
+
+	return end - start;
 }
 
 /*
@@ -608,8 +609,8 @@ static int pv_resize(struct physical_volume *pv,
 
 		if (new_pe_count > old_pe_count)
 			return _extend_pv(pv, vg, old_pe_count, new_pe_count);
-		else
-			return _reduce_pv(pv, vg, old_pe_count, new_pe_count);
+
+		return _reduce_pv(pv, vg, old_pe_count, new_pe_count);
 	}
 
 	return 1;

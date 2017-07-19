@@ -990,7 +990,8 @@ static uint32_t _raid_data_copies(struct lv_segment *seg)
 	 */
 	if (seg_is_raid10(seg))
 		return 2;
-	else if (seg_is_raid1(seg))
+
+	if (seg_is_raid1(seg))
 		return seg->area_count;
 
 	return seg->segtype->parity_devs + 1;
@@ -1531,11 +1532,11 @@ int historical_glv_remove(struct generic_logical_volume *glv)
 			log_error(INTERNAL_ERROR "historical_glv_remove: historical LV %s/-%s not found ",
 				  hlv->vg->name, hlv->name);
 			return 0;
-		} else {
-			log_verbose("Historical LV %s/-%s already on removed list ",
-				    hlv->vg->name, hlv->name);
-			return 1;
 		}
+
+		log_verbose("Historical LV %s/-%s already on removed list ",
+			    hlv->vg->name, hlv->name);
+		return 1;
 	}
 
 	if ((origin_glv = hlv->indirect_origin) &&
@@ -2057,7 +2058,7 @@ static int _comp_area(const void *l, const void *r)
 	if (lhs->used < rhs->used)
 		return 1;
 
-	else if (lhs->used > rhs->used)
+	if (lhs->used > rhs->used)
 		return -1;
 
 	return 0;
@@ -5773,7 +5774,9 @@ struct logical_volume *lv_create_empty(const char *name,
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;
-	} else if (lv_name_is_used_in_vg(vg, name, &historical)) {
+	}
+
+	if (lv_name_is_used_in_vg(vg, name, &historical)) {
 		log_error("Unable to create LV %s in Volume Group %s: "
 			  "name already in use%s.", name, vg->name,
 			  historical ? " by historical LV" : "");
@@ -6000,7 +6003,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_error("Can't remove logical volume %s used by a pool.",
 			  display_lvname(lv));
 		return 0;
-	} else if (lv_is_thin_volume(lv)) {
+	}
+
+	if (lv_is_thin_volume(lv)) {
 		if (!(pool_lv = first_seg(lv)->pool_lv)) {
 			log_error(INTERNAL_ERROR "Thin LV %s without pool.",
 				  display_lvname(lv));
@@ -6036,9 +6041,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					  display_lvname(lv)) == 'n') {
 				log_error("Logical volume %s not removed.", display_lvname(lv));
 				return 0;
-			} else {
-				ask_discard = 0;
 			}
+
+			ask_discard = 0;
 		}
 	}
 
@@ -6269,18 +6274,21 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 						  display_lvname(lv));
 					return 0;
 				}
+
 				if ((snap_percent != DM_PERCENT_INVALID) &&
 				     (snap_percent != LVM_PERCENT_MERGE_FAILED)) {
 					log_error("Can't remove merging snapshot logical volume %s.",
 						  display_lvname(lv));
 					return 0;
-				} else if ((snap_percent == LVM_PERCENT_MERGE_FAILED) &&
-					   (force == PROMPT) &&
-					   yes_no_prompt("Removing snapshot %s that failed to merge "
-							 "may leave origin %s inconsistent. Proceed? [y/n]: ",
-							 display_lvname(lv),
-							 display_lvname(origin_from_cow(lv))) == 'n')
-                                        goto no_remove;
+				}
+
+				if ((snap_percent == LVM_PERCENT_MERGE_FAILED) &&
+				    (force == PROMPT) &&
+				    yes_no_prompt("Removing snapshot %s that failed to merge "
+						  "may leave origin %s inconsistent. Proceed? [y/n]: ",
+						  display_lvname(lv),
+						  display_lvname(origin_from_cow(lv))) == 'n')
+					goto no_remove;
 			}
 		} else if (!level && lv_is_virtual_origin(origin = origin_from_cow(lv)))
 			/* If this is a sparse device, remove its origin too. */

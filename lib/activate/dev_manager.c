@@ -1056,10 +1056,11 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		if (_percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
 				 event_nr, fail_if_percent_unsupported))
 			return 1;
-		else if (_original_uuid_format_check_required(dm->cmd) &&
-			 _percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX) - 1,
-				      target_type, wait, lv, percent,
-				      event_nr, fail_if_percent_unsupported))
+
+		if (_original_uuid_format_check_required(dm->cmd) &&
+		    _percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX) - 1,
+				 target_type, wait, lv, percent,
+				 event_nr, fail_if_percent_unsupported))
 			return 1;
 	}
 

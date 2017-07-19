@@ -186,11 +186,11 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			    !stat(lv_path, &buf)) {
 				if (buf_lp.st_rdev == buf.st_rdev)
 					return 1;
-				else
-					log_warn("Symlink %s that should have been "
-						 "created by udev does not have "
-						 "correct target. Falling back to "
-						 "direct link creation", lv_path);
+
+				log_warn("Symlink %s that should have been "
+					 "created by udev does not have "
+					 "correct target. Falling back to "
+					 "direct link creation", lv_path);
 			} else
 				log_warn("Symlink %s that should have been "
 					 "created by udev could not be checked "
@@ -239,7 +239,9 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 			return 1;
 		log_sys_error("lstat", lv_path);
 		return 0;
-	} else if (dm_udev_get_sync_support() && udev_checking() && check_udev)
+	}
+
+	if (dm_udev_get_sync_support() && udev_checking() && check_udev)
 		log_warn("The link %s should have been removed by udev "
 			 "but it is still present. Falling back to "
 			 "direct link removal.", lv_path);
@@ -478,9 +480,9 @@ int fs_rename_lv(const struct logical_volume *lv, const char *dev,
 			 _fs_op(FS_ADD, lv->vg->cmd->dev_dir, lv->vg->name,
 				lv->name, dev, "", lv->vg->cmd->current_settings.udev_rules));
 	}
-	else 
-		return _fs_op(FS_RENAME, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
-			      dev, old_lvname, lv->vg->cmd->current_settings.udev_rules);
+
+	return _fs_op(FS_RENAME, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
+		      dev, old_lvname, lv->vg->cmd->current_settings.udev_rules);
 }
 
 void fs_unlock(void)

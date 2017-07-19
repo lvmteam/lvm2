@@ -615,38 +615,38 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 			if (force < DONT_PROMPT) {
 				log_error(MSG_FAILED_SIG_OFFSET, type, name);
 				return 0;
-			} else {
-				log_error("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
-				return 2;
 			}
+
+			log_error("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
+			return 2;
 		}
 		if (blkid_probe_lookup_value(probe, "SBMAGIC", &magic, &len)) {
 			if (force < DONT_PROMPT) {
 				log_error(MSG_FAILED_SIG_LENGTH, type, name);
 				return 0;
-			} else {
-				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH MSG_WIPING_SKIPPED, type, name);
-				return 2;
 			}
+
+			log_warn("WARNING: " MSG_FAILED_SIG_LENGTH MSG_WIPING_SKIPPED, type, name);
+			return 2;
 		}
 	} else if (!blkid_probe_lookup_value(probe, "PTTYPE", &type, NULL)) {
 		if (blkid_probe_lookup_value(probe, "PTMAGIC_OFFSET", &offset, NULL)) {
 			if (force < DONT_PROMPT) {
 				log_error(MSG_FAILED_SIG_OFFSET, type, name);
 				return 0;
-			} else {
-				log_warn("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
-				return 2;
 			}
+
+			log_warn("WARNING: " MSG_FAILED_SIG_OFFSET MSG_WIPING_SKIPPED, type, name);
+			return 2;
 		}
 		if (blkid_probe_lookup_value(probe, "PTMAGIC", &magic, &len)) {
 			if (force < DONT_PROMPT) {
 				log_error(MSG_FAILED_SIG_LENGTH, type, name);
 				return 0;
-			} else {
-				log_warn("WARNING: " MSG_FAILED_SIG_LENGTH MSG_WIPING_SKIPPED, type, name);
-				return 2;
 			}
+
+			log_warn("WARNING: " MSG_FAILED_SIG_LENGTH MSG_WIPING_SKIPPED, type, name);
+			return 2;
 		}
 		usage = "partition table";
 	} else

@@ -208,8 +208,9 @@ static int _get_proc_number(const char *file, const char *name,
 		if (require_module_loaded) {
 			log_error("%s: No entry for %s found", file, name);
 			return 0;
-		} else
-			return 2;
+		}
+
+		return 2;
 	}
 
 	return 1;
@@ -368,11 +369,11 @@ int dm_is_dm_major(uint32_t major)
 			return 0;
 		return dm_bit(_dm_bitset, major) ? 1 : 0;
 	}
-	else {
-		if (!_dm_device_major)
-			return 0;
-		return (major == _dm_device_major) ? 1 : 0;
-	}
+
+	if (!_dm_device_major)
+		return 0;
+
+	return (major == _dm_device_major) ? 1 : 0;
 }
 
 static void _close_control_fd(void)
@@ -1704,7 +1705,9 @@ static int _do_dm_ioctl_unmangle_string(char *str, const char *str_name,
 		log_debug_activation("_do_dm_ioctl_unmangle_string: failed to "
 				     "unmangle %s \"%s\"", str_name, str);
 		return 0;
-	} else if (r)
+	}
+
+	if (r)
 		memcpy(str, buf, strlen(buf) + 1);
 
 	return 1;

@@ -938,9 +938,9 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 			if (clustery) {
 				log_error("The --clustered option requires clvmd (locking_type=3).");
 				return 0;
-			} else {
-				lock_type = "none";
 			}
+
+			lock_type = "none";
 		}
 
 	} else if (arg_is_set(cmd, shared_ARG)) {
@@ -4676,10 +4676,10 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 		log_error("labelsector must be less than %lu.",
 			  LABEL_SCAN_SECTORS);
 		return 0;
-	} else {
-		pp->pva.label_sector = arg_int64_value(cmd, labelsector_ARG,
-						  DEFAULT_LABELSECTOR);
 	}
+
+	pp->pva.label_sector = arg_int64_value(cmd, labelsector_ARG,
+					       DEFAULT_LABELSECTOR);
 
 	if (!(cmd->fmt->features & FMT_MDAS) &&
 	    (arg_is_set(cmd, pvmetadatacopies_ARG) ||
@@ -5084,7 +5084,9 @@ static int _pvcreate_check_single(struct cmd_context *cmd,
 			log_error("Can't get device size of %s.", pv_dev_name(pv));
 			dm_list_move(&pp->arg_fail, &pd->list);
 			return 1;
-		} else if (new_size != size)
+		}
+
+		if (new_size != size)
 			need_size_prompt = 1;
 	}
 

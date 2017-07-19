@@ -60,13 +60,16 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 		return vgs(cmd, argc, argv);
-	} else if (arg_is_set(cmd, aligned_ARG) ||
-		   arg_is_set(cmd, binary_ARG) ||
-		   arg_is_set(cmd, noheadings_ARG) ||
-		   arg_is_set(cmd, options_ARG) ||
-		   arg_is_set(cmd, separator_ARG) ||
-		   arg_is_set(cmd, sort_ARG) || arg_is_set(cmd, unbuffered_ARG)) {
-		log_error("Incompatible options selected");
+	}
+
+	if (arg_is_set(cmd, aligned_ARG) ||
+	    arg_is_set(cmd, binary_ARG) ||
+	    arg_is_set(cmd, noheadings_ARG) ||
+	    arg_is_set(cmd, options_ARG) ||
+	    arg_is_set(cmd, separator_ARG) ||
+	    arg_is_set(cmd, sort_ARG) ||
+	    arg_is_set(cmd, unbuffered_ARG)) {
+		log_error("Incompatible options selected.");
 		return EINVALID_CMD_LINE;
 	}
 

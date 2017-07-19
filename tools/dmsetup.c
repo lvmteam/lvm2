@@ -4538,10 +4538,11 @@ static int _ls(CMD_ARGS)
 	if ((_switches[TARGET_ARG] && _target) ||
 	    (_switches[EXEC_ARG] && _command_to_exec))
 		return _status(cmd, NULL, argc, argv, NULL, 0);
-	else if ((_switches[TREE_ARG]))
+
+	if ((_switches[TREE_ARG]))
 		return _display_tree(cmd, NULL, 0, NULL, NULL, 0);
-	else
-		return _process_all(cmd, NULL, argc, argv, 0, _display_name);
+
+	return _process_all(cmd, NULL, argc, argv, 0, _display_name);
 }
 
 static int _mangle(CMD_ARGS)

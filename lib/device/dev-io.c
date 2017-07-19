@@ -405,8 +405,8 @@ int dev_get_size(struct device *dev, uint64_t *size)
 
 	if ((dev->flags & DEV_REGULAR))
 		return _dev_get_size_file(dev, size);
-	else
-		return _dev_get_size_dev(dev, size);
+
+	return _dev_get_size_dev(dev, size);
 }
 
 int dev_get_read_ahead(struct device *dev, uint32_t *read_ahead)

@@ -152,8 +152,8 @@ static uint64_t _get_prev_sector_circular(uint64_t region_start,
 {
 	if (region_ptr >= region_start + SECTOR_SIZE)
 		return region_ptr - SECTOR_SIZE;
-	else
-		return (region_start + region_size - SECTOR_SIZE);
+
+	return (region_start + region_size - SECTOR_SIZE);
 }
 
 /*
@@ -447,9 +447,9 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
 		return rlocn;
-	else
-		log_debug_metadata("Volume group name found in metadata does "
-				   "not match expected name %s.", vgname);
+
+	log_debug_metadata("Volume group name found in metadata does "
+			   "not match expected name %s.", vgname);
 
       bad:
 	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, dev_area->dev, 0)) &&
@@ -893,8 +893,9 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 		log_error("'%s' does not contain volume group '%s'.",
 			  read_path, vgname);
 		return NULL;
-	} else
-		log_debug_metadata("Read volume group %s from %s", vg->name, read_path);
+	}
+
+	log_debug_metadata("Read volume group %s from %s", vg->name, read_path);
 
 	return vg;
 }
@@ -1634,10 +1635,10 @@ static int _text_pv_initialise(const struct format_type *fmt,
 				log_error("%s: Bootloader area would overlap "
 					  "data area.", pv_dev_name(pv));
 				return 0;
-			} else {
-				pv->ba_start = pva->ba_start ? : final_alignment;
-				pv->ba_size = pva->ba_size;
 			}
+
+			pv->ba_start = pva->ba_start ? : final_alignment;
+			pv->ba_size = pva->ba_size;
 		}
 	}
 

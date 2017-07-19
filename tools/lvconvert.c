@@ -341,9 +341,9 @@ static int _lvconvert_poll_by_id(struct cmd_context *cmd, struct poll_operation_
 				(MERGING | (is_merging_origin_thin ? THIN_VOLUME : SNAPSHOT)),
 				is_merging_origin_thin ? &_lvconvert_thin_merge_fns : &_lvconvert_merge_fns,
 				"Merged", id);
-	else
-		return poll_daemon(cmd, background, CONVERTING,
-				&_lvconvert_mirror_fns, "Converted", id);
+
+	return poll_daemon(cmd, background, CONVERTING,
+			   &_lvconvert_mirror_fns, "Converted", id);
 }
 
 int lvconvert_poll(struct cmd_context *cmd, struct logical_volume *lv,
@@ -1313,7 +1313,9 @@ static int _lvconvert_raid(struct logical_volume *lv, struct lvconvert_params *l
 			log_error("Linear LV %s cannot be converted to %s.",
 				  display_lvname(lv), lp->type_str);
 			return 0;
-		} else if (!strcmp(lp->type_str, SEG_TYPE_NAME_RAID1)) {
+		}
+
+		if (!strcmp(lp->type_str, SEG_TYPE_NAME_RAID1)) {
 			log_error("Raid conversions of LV %s require -m/--mirrors.",
 				  display_lvname(lv));
 			return 0;
@@ -3398,10 +3400,11 @@ static int _lvconvert_repair_pvs_or_thinpool_single(struct cmd_context *cmd, str
 {
 	if (lv_is_thin_pool(lv))
 		return _lvconvert_repair_thinpool(cmd, lv, handle);
-	else if (lv_is_raid(lv) || lv_is_mirror(lv))
+
+	if (lv_is_raid(lv) || lv_is_mirror(lv))
 		return _lvconvert_repair_pvs(cmd, lv, handle);
-	else
-		return_ECMD_FAILED;
+
+	return_ECMD_FAILED;
 }
 
 /*
