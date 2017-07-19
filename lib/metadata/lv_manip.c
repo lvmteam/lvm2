@@ -2155,53 +2155,54 @@ static int _match_pv_tags(const struct dm_config_node *cling_tag_list_cn,
 				}
 				continue;
 			}
+
 			if (!str_list_match_list(&pv1->tags, tags_to_match, &tag_matched))
 				continue;
-			else {
-				if (!pv_tags) {
-					if (parallel_pv)
-						log_debug_alloc("Not using free space on %s: Matched allocation PV tag %s on existing parallel PV %s.",
-								pv_dev_name(pv1), tag_matched, pv2 ? pv_dev_name(pv2) : "-");
-					else
-						log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
-								tag_matched, pv_dev_name(pv1), pv2 ? pv_dev_name(pv2) : "-");
-				} else
-					log_debug_alloc("Eliminating allocation area %" PRIu32 " at PV %s start PE %" PRIu32
-							" from consideration: PV tag %s already used.",
-							area_num, pv_dev_name(pv1), pv1_start_pe, tag_matched);
-				return 1;
-			}
+
+			if (!pv_tags) {
+				if (parallel_pv)
+					log_debug_alloc("Not using free space on %s: Matched allocation PV tag %s on existing parallel PV %s.",
+							pv_dev_name(pv1), tag_matched, pv2 ? pv_dev_name(pv2) : "-");
+				else
+					log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
+							tag_matched, pv_dev_name(pv1), pv2 ? pv_dev_name(pv2) : "-");
+			} else
+				log_debug_alloc("Eliminating allocation area %" PRIu32 " at PV %s start PE %" PRIu32
+						" from consideration: PV tag %s already used.",
+						area_num, pv_dev_name(pv1), pv1_start_pe, tag_matched);
+			return 1;
 		}
 
 		if (!str_list_match_item(&pv1->tags, str) ||
 		    (tags_to_match && !str_list_match_item(tags_to_match, str)))
 			continue;
-		else {
-			if (mem) {
-				if (!first_tag && !dm_pool_grow_object(mem, ",", 0)) {
-					log_error("PV tags string extension failed.");
-					return 0;
-				}
-				first_tag = 0;
-				if (!dm_pool_grow_object(mem, str, 0)) {
-					log_error("PV tags string extension failed.");
-					return 0;
-				}
-				continue;
+
+		if (mem) {
+			if (!first_tag && !dm_pool_grow_object(mem, ",", 0)) {
+				log_error("PV tags string extension failed.");
+				return 0;
 			}
-			if (!pv_tags) {
-				if (parallel_pv)
-					log_debug_alloc("Not using free space on %s: Matched allocation PV tag %s on existing parallel PV %s.",
- 							pv2 ? pv_dev_name(pv2) : "-", str, pv_dev_name(pv1));
-				else
-					log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
-							str, pv_dev_name(pv1), pv2 ? pv_dev_name(pv2) : "-");
-			} else
-				log_debug_alloc("Eliminating allocation area %" PRIu32 " at PV %s start PE %" PRIu32
-						" from consideration: PV tag %s already used.",
-						area_num, pv_dev_name(pv1), pv1_start_pe, str);
-			return 1;
+			first_tag = 0;
+			if (!dm_pool_grow_object(mem, str, 0)) {
+				log_error("PV tags string extension failed.");
+				return 0;
+			}
+			continue;
 		}
+
+		if (!pv_tags) {
+			if (parallel_pv)
+				log_debug_alloc("Not using free space on %s: Matched allocation PV tag %s on existing parallel PV %s.",
+						pv2 ? pv_dev_name(pv2) : "-", str, pv_dev_name(pv1));
+			else
+				log_debug_alloc("Matched allocation PV tag %s on existing %s with free space on %s.",
+						str, pv_dev_name(pv1), pv2 ? pv_dev_name(pv2) : "-");
+		} else
+			log_debug_alloc("Eliminating allocation area %" PRIu32 " at PV %s start PE %" PRIu32
+					" from consideration: PV tag %s already used.",
+					area_num, pv_dev_name(pv1), pv1_start_pe, str);
+
+		return 1;
 	}
 
 	if (mem)

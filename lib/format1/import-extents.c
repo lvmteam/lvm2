@@ -134,37 +134,35 @@ static int _fill_maps(struct dm_hash_table *maps, struct volume_group *vg,
 			if (lv_num == UNMAPPED_EXTENT)
 				continue;
 
-			else {
-				lv_num--;
-				lvm = lvms[lv_num];
+			lv_num--;
+			lvm = lvms[lv_num];
 
-				if (!lvm) {
-					log_error("Invalid LV in extent map "
-						  "(PV %s, PE %" PRIu32
-						  ", LV %" PRIu32
-						  ", LE %" PRIu32 ")",
-						  dev_name(pv->dev), i,
-						  lv_num, e[i].le_num);
-					return 0;
-				}
-
-				le = e[i].le_num;
-
-				if (le >= lvm->lv->le_count) {
-					log_error("logical extent number "
-						  "out of bounds");
-					return 0;
-				}
-
-				if (lvm->map[le].pv) {
-					log_error("logical extent (%u) "
-						  "already mapped.", le);
-					return 0;
-				}
-
-				lvm->map[le].pv = pv;
-				lvm->map[le].pe = i;
+			if (!lvm) {
+				log_error("Invalid LV in extent map "
+					  "(PV %s, PE %" PRIu32
+					  ", LV %" PRIu32
+					  ", LE %" PRIu32 ")",
+					  dev_name(pv->dev), i,
+					  lv_num, e[i].le_num);
+				return 0;
 			}
+
+			le = e[i].le_num;
+
+			if (le >= lvm->lv->le_count) {
+				log_error("logical extent number "
+					  "out of bounds");
+				return 0;
+			}
+
+			if (lvm->map[le].pv) {
+				log_error("logical extent (%u) "
+					  "already mapped.", le);
+				return 0;
+			}
+
+			lvm->map[le].pv = pv;
+			lvm->map[le].pe = i;
 		}
 	}
 

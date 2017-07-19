@@ -150,15 +150,15 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 				    || str_list_match_list(&cmd->tags,
 							   &lv->vg->tags, NULL))
 					    return 1;
-				else
-					continue;
+
+				continue;
 			}
 			/* If supplied tag matches LV or VG tag, activate */
 			if (str_list_match_item(&lv->tags, str) ||
 			    str_list_match_item(&lv->vg->tags, str))
 				return 1;
-			else
-				continue;
+
+			continue;
 		}
 
 		/* If supplied name is vgname[/lvname] */
