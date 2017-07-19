@@ -2311,13 +2311,11 @@ static void ntoh_clvm(struct clvm_header *hdr)
 static void sigusr2_handler(int sig)
 {
 	DEBUGLOG("SIGUSR2 received\n");
-	return;
 }
 
 static void sigterm_handler(int sig)
 {
 	quit = 1;
-	return;
 }
 
 static void sighup_handler(int sig)

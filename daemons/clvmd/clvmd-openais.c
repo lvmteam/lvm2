@@ -425,8 +425,6 @@ static void _add_up_node(const char *csid)
 	DEBUGLOG("openais_add_up_node %d\n", ninfo->nodeid);
 
 	ninfo->state = NODE_CLVMD;
-
-	return;
 }
 
 /* Call a callback for each node, so the caller knows whether it's up or down */

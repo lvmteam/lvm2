@@ -1600,8 +1600,6 @@ void lvmcache_del(struct lvmcache_info *info)
 	info->label->labeller->ops->destroy_label(info->label->labeller,
 						  info->label);
 	dm_free(info);
-
-	return;
 }
 
 /*
