@@ -329,6 +329,13 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 			return_0;
 	}
 
+	/* Wait for events following any deactivation. */
+	if (!sync_local_dev_names(vg->cmd)) {
+		log_error("Failed to sync local devices after removing %u LVs in VG %s.",
+			  dm_list_size(removal_lvs), vg->name);
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -3851,13 +3858,6 @@ static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 
 	if (!_deactivate_and_remove_lvs(vg, removal_lvs))
 		return_0;
-
-	/* Wait for events following any deactivation. */
-	if (!sync_local_dev_names(vg->cmd)) {
-		log_error("Failed to sync local devices after removing %u LVs in VG %s.",
-			  dm_list_size(removal_lvs), vg->name);
-		return 0;
-	}
 
 	dm_list_init(removal_lvs);
 

@@ -1,5 +1,6 @@
 Version 2.02.173 - 
 =================================
+  Add synchornization points with udev during conversion of raid LVs.
   Improve --size args validation and report more detailed error message.
   Initialize debugging mutex before any debug message in clvmd.
   Log error instad of warn when noticing connection problem with lvmetad.
