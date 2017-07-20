@@ -778,10 +778,11 @@ cleanup_md_dev() {
 
 	local IFS=$IFS_NL
 	local dev
-	dev=$(< MD_DEV)
+	local mddev
+	mddev=$(< MD_DEV)
 	udev_wait
-	mdadm --stop "$dev" || true
-	test "$DM_DEV_DIR" != "/dev" && rm -f "$DM_DEV_DIR/$(basename "$dev")"
+	mdadm --stop "$mddev" || true
+	test "$DM_DEV_DIR" != "/dev" && rm -f "$DM_DEV_DIR/$(basename "$mddev")"
 	notify_lvmetad "$(< MD_DEV_PV)"
 	udev_wait  # wait till events are process, not zeroing to early
 	for dev in $(< MD_DEVICES); do
@@ -789,12 +790,12 @@ cleanup_md_dev() {
 		notify_lvmetad "$dev"
 	done
 	udev_wait
-	if [ -b "$dev" ]; then
+	if [ -b "$mddev" ]; then
 		# mdadm doesn't always cleanup the device node
 		# sleeps offer hack to defeat: 'md: md127 still in use'
 		# see: https://bugzilla.redhat.com/show_bug.cgi?id=509908#c25
 		sleep 2
-		rm -f "$dev"
+		rm -f "$mddev"
 	fi
 	rm -f MD_DEV MD_DEVICES MD_DEV_PV
 }
