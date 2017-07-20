@@ -1,10 +1,12 @@
-Version 2.02.173 - 
+Version 2.02.173 - 20th July 2017
 =================================
-  Add synchornization points with udev during conversion of raid LVs.
+  Add synchronization points with udev during conversion of raid LVs.
   Improve --size args validation and report more detailed error message.
   Initialize debugging mutex before any debug message in clvmd.
-  Log error instad of warn when noticing connection problem with lvmetad.
+  Log error instead of warn when noticing connection problem with lvmetad.
   Fix memory leak in lvmetad when working with duplicates.
+  Remove restrictions on reshaping open and clustered raid devices.
+  Add incompatible data_offset to raid metadata to fix reshape activation.
   Accept 'lvm -h' and 'lvm --help' as well as 'lvm help' for help.
   Suppress error message from accept() on clean lvmetad shutdown.
   Tidy clvmd client list processing and fix segfaults.
