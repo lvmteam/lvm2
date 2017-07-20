@@ -172,7 +172,7 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 			       struct metadata_area *mda);
 
 unsigned mda_is_ignored(struct metadata_area *mda);
-void mda_set_ignored(struct metadata_area *mda, unsigned ignored);
+void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
 struct device *mda_get_device(struct metadata_area *mda);
 
@@ -405,7 +405,7 @@ int check_new_thin_pool(const struct logical_volume *pool_lv);
 /*
  * Remove a dev_dir if present.
  */
-const char *strip_dir(const char *vg_name, const char *dir);
+const char *strip_dir(const char *vg_name, const char *dev_dir);
 
 struct logical_volume *alloc_lv(struct dm_pool *mem);
 
@@ -423,7 +423,7 @@ int lv_has_constant_stripes(struct logical_volume *lv);
 /*
  * Checks that a replicator segment is correct.
  */
-int check_replicator_segment(const struct lv_segment *replicator_seg);
+int check_replicator_segment(const struct lv_segment *rseg);
 
 /*
  * Sometimes (eg, after an lvextend), it is possible to merge two
@@ -446,9 +446,9 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segm
 
 int add_glv_to_indirect_glvs(struct dm_pool *mem,
 			     struct generic_logical_volume *origin_glv,
-			     struct generic_logical_volume *user_glv);
-int remove_glv_from_indirect_glvs(struct generic_logical_volume *glv,
-				  struct generic_logical_volume *user_glv);
+			     struct generic_logical_volume *glv);
+int remove_glv_from_indirect_glvs(struct generic_logical_volume *origin_glv,
+				  struct generic_logical_volume *glv);
 
 int for_each_sub_lv_except_pools(struct logical_volume *lv,
 				 int (*fn)(struct logical_volume *lv, void *data),
@@ -491,20 +491,20 @@ int fixup_imported_mirrors(struct volume_group *vg);
  * From thin_manip.c
  */
 int attach_pool_lv(struct lv_segment *seg, struct logical_volume *pool_lv,
-		   struct logical_volume *origin_lv,
+		   struct logical_volume *origin,
 		   struct generic_logical_volume *indirect_origin,
 		   struct logical_volume *merge_lv);
 int detach_pool_lv(struct lv_segment *seg);
 int attach_pool_message(struct lv_segment *pool_seg, dm_thin_message_t type,
 			struct logical_volume *lv, uint32_t delete_id,
-			int auto_increment);
+			int no_update);
 int lv_is_merging_thin_snapshot(const struct logical_volume *lv);
 int pool_has_message(const struct lv_segment *seg,
 		     const struct logical_volume *lv, uint32_t device_id);
 int pool_metadata_min_threshold(const struct lv_segment *pool_seg);
 int pool_below_threshold(const struct lv_segment *pool_seg);
 int pool_check_overprovisioning(const struct logical_volume *lv);
-int create_pool(struct logical_volume *lv, const struct segment_type *segtype,
+int create_pool(struct logical_volume *pool_lv, const struct segment_type *segtype,
 		struct alloc_handle *ah, uint32_t stripes, uint32_t stripe_size);
 
 /*

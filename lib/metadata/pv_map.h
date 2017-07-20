@@ -65,7 +65,7 @@ struct pv_map {
 struct dm_list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 			    struct dm_list *allocatable_pvs);
 
-void consume_pv_area(struct pv_area *area, uint32_t to_go);
+void consume_pv_area(struct pv_area *pva, uint32_t to_go);
 void reinsert_changed_pv_area(struct pv_area *pva);
 
 uint32_t pv_maps_size(struct dm_list *pvms);

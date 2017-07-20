@@ -863,9 +863,9 @@ uint32_t extents_from_percent_size(struct volume_group *vg, const struct dm_list
 				   percent_type_t percent, uint64_t size);
 
 struct logical_volume *find_pool_lv(const struct logical_volume *lv);
-int pool_is_active(const struct logical_volume *pool_lv);
+int pool_is_active(const struct logical_volume *lv);
 int pool_supports_external_origin(const struct lv_segment *pool_seg, const struct logical_volume *external_lv);
-int thin_pool_feature_supported(const struct logical_volume *pool_lv, int feature);
+int thin_pool_feature_supported(const struct logical_volume *lv, int feature);
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 					       int chunk_size_calc_policy);
 int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
@@ -899,9 +899,9 @@ int attach_thin_external_origin(struct lv_segment *seg,
 				struct logical_volume *external_lv);
 int detach_thin_external_origin(struct lv_segment *seg);
 int attach_pool_metadata_lv(struct lv_segment *pool_seg,
-                            struct logical_volume *pool_metadata_lv);
+                            struct logical_volume *metadata_lv);
 int detach_pool_metadata_lv(struct lv_segment *pool_seg,
-                            struct logical_volume **pool_metadata_lv);
+                            struct logical_volume **metadata_lv);
 int attach_pool_data_lv(struct lv_segment *pool_seg,
                         struct logical_volume *pool_data_lv);
 int is_mirror_image_removable(struct logical_volume *mimage_lv, void *baton);
@@ -1011,7 +1011,7 @@ struct logical_volume *lv_create_single(struct volume_group *vg,
  * skip on next activations is stored directly in metadata for each LV
  * as ACTIVATION_SKIP flag.
  */
-void lv_set_activation_skip(struct logical_volume *lv, int override_default, int add_skip_flag);
+void lv_set_activation_skip(struct logical_volume *lv, int override_default, int add_skip);
 int lv_activation_skip(struct logical_volume *lv, activation_change_t activate,
 		       int override_lv_skip_flag);
 
@@ -1022,7 +1022,7 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 				    struct logical_volume *lv_where,
 				    struct logical_volume *layer_lv,
 				    uint64_t status,
-				    struct pv_list *pv,
+				    struct pv_list *pvl,
 				    struct dm_list *lvs_changed);
 int remove_layers_for_segments(struct cmd_context *cmd,
 			       struct logical_volume *lv,
@@ -1181,8 +1181,8 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t stripes, uint32_t stripe_size, uint32_t region_size,
 		      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
 		      uint32_t log_count);
-struct logical_volume *detach_mirror_log(struct lv_segment *seg);
-int attach_mirror_log(struct lv_segment *seg, struct logical_volume *lv);
+struct logical_volume *detach_mirror_log(struct lv_segment *mirrored_seg);
+int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv);
 int remove_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 		      struct dm_list *removable_pvs, int force);
 struct logical_volume *prepare_mirror_log(struct logical_volume *lv,
@@ -1203,12 +1203,12 @@ int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage);
 
 /* ++  metadata/replicator_manip.c */
 int replicator_add_replicator_dev(struct logical_volume *replicator_lv,
-				  struct lv_segment *rdev_seg);
+				  struct lv_segment *replicator_dev_seg);
 struct logical_volume *replicator_remove_replicator_dev(struct lv_segment *rdev_seg);
 int replicator_add_rlog(struct lv_segment *replicator_seg, struct logical_volume *rlog_lv);
 struct logical_volume *replicator_remove_rlog(struct lv_segment *replicator_seg);
 
-int replicator_dev_add_slog(struct replicator_device *rdev, struct logical_volume *slog_lv);
+int replicator_dev_add_slog(struct replicator_device *rdev, struct logical_volume *slog);
 struct logical_volume *replicator_dev_remove_slog(struct replicator_device *rdev);
 int replicator_dev_add_rimage(struct replicator_device *rdev, struct logical_volume *lv);
 struct logical_volume *replicator_dev_remove_rimage(struct replicator_device *rdev);
@@ -1234,11 +1234,11 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 int lv_raid_split_and_track(struct logical_volume *lv,
 			    int yes,
 			    struct dm_list *splittable_pvs);
-int lv_raid_merge(struct logical_volume *lv);
+int lv_raid_merge(struct logical_volume *image_lv);
 int lv_raid_convert(struct logical_volume *lv,
 		    const struct segment_type *new_segtype,
 		    int yes, int force,
-		    const unsigned stripes,
+		    const unsigned new_stripes,
 		    const unsigned new_stripe_size_supplied,
 		    const unsigned new_stripe_size,
 		    const uint32_t new_region_size,
@@ -1247,7 +1247,7 @@ int lv_raid_rebuild(struct logical_volume *lv, struct dm_list *rebuild_pvs);
 int lv_raid_replace(struct logical_volume *lv, int force,
 		    struct dm_list *remove_pvs, struct dm_list *allocate_pvs);
 int lv_raid_remove_missing(struct logical_volume *lv);
-int partial_raid_lv_supports_degraded_activation(const struct logical_volume *lv);
+int partial_raid_lv_supports_degraded_activation(const struct logical_volume *clv);
 uint32_t raid_rmeta_extents_delta(struct cmd_context *cmd,
 				  uint32_t rimage_extents_cur, uint32_t rimage_extents_new,
 				  uint32_t region_size, uint32_t extent_size);
@@ -1271,11 +1271,11 @@ struct lv_status_cache {
 };
 
 const char *display_cache_mode(const struct lv_segment *seg);
-const char *get_cache_mode_name(const struct lv_segment *cache_seg);
+const char *get_cache_mode_name(const struct lv_segment *pool_seg);
 int set_cache_mode(cache_mode_t *mode, const char *cache_mode);
-int cache_set_cache_mode(struct lv_segment *cache_seg, cache_mode_t mode);
-int cache_set_metadata_format(struct lv_segment *cache_seg, cache_metadata_format_t format);
-int cache_set_policy(struct lv_segment *cache_seg, const char *name,
+int cache_set_cache_mode(struct lv_segment *seg, cache_mode_t mode);
+int cache_set_metadata_format(struct lv_segment *seg, cache_metadata_format_t format);
+int cache_set_policy(struct lv_segment *seg, const char *name,
 		     const struct dm_config_tree *settings);
 int cache_set_params(struct lv_segment *seg,
 		     uint32_t chunk_size,
@@ -1295,8 +1295,8 @@ int update_cache_pool_params(struct cmd_context *cmd,
 int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size);
 int validate_lv_cache_create_pool(const struct logical_volume *pool_lv);
 int validate_lv_cache_create_origin(const struct logical_volume *origin_lv);
-struct logical_volume *lv_cache_create(struct logical_volume *pool,
-				       struct logical_volume *origin);
+struct logical_volume *lv_cache_create(struct logical_volume *pool_lv,
+				       struct logical_volume *origin_lv);
 int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean);
 int lv_cache_remove(struct logical_volume *cache_lv);
 int wipe_cache_pool(struct logical_volume *cache_pool_lv);
@@ -1324,7 +1324,7 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
 
 uint32_t find_free_lvnum(struct logical_volume *lv);
-dm_percent_t copy_percent(const struct logical_volume *lv_mirr);
+dm_percent_t copy_percent(const struct logical_volume *lv);
 char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len);
 char *top_level_lv_name(struct volume_group *vg, const char *lv_name);
@@ -1335,7 +1335,7 @@ struct glv_list *get_or_create_glvl(struct dm_pool *mem, struct logical_volume *
 /*
 * Begin skeleton for external LVM library
 */
-int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignore);
+int pv_change_metadataignore(struct physical_volume *pv, uint32_t mda_ignored);
 
 
 int vg_flag_write_locked(struct volume_group *vg);

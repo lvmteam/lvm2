@@ -174,7 +174,7 @@ int lv_raid_dev_health(const struct logical_volume *lv, char **dev_health);
 int lv_raid_mismatch_count(const struct logical_volume *lv, uint64_t *cnt);
 int lv_raid_sync_action(const struct logical_volume *lv, char **sync_action);
 int lv_raid_message(const struct logical_volume *lv, const char *msg);
-int lv_cache_status(const struct logical_volume *lv,
+int lv_cache_status(const struct logical_volume *cache_lv,
 		    struct lv_status_cache **status);
 int lv_thin_pool_percent(const struct logical_volume *lv, int metadata,
 			 dm_percent_t *percent);
@@ -202,12 +202,12 @@ int lv_has_target_type(struct dm_pool *mem, const struct logical_volume *lv,
 		       const char *layer, const char *target_type);
 
 int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume *lv,
-			   const struct lv_activate_opts *laopts, int do_reg);
+			   const struct lv_activate_opts *laopts, int monitor);
 
 #ifdef DMEVENTD
 #  include "libdevmapper-event.h"
 char *get_monitor_dso_path(struct cmd_context *cmd, const char *libpath);
-int target_registered_with_dmeventd(struct cmd_context *cmd, const char *libpath,
+int target_registered_with_dmeventd(struct cmd_context *cmd, const char *dso,
 				    const struct logical_volume *lv, int *pending);
 int target_register_events(struct cmd_context *cmd, const char *dso, const struct logical_volume *lv,
 			    int evmask __attribute__((unused)), int set, int timeout);

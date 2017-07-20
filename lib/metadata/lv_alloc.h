@@ -47,20 +47,20 @@ int release_and_discard_lv_segment_area(struct lv_segment *seg, uint32_t s, uint
 struct alloc_handle;
 struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      struct logical_volume *lv,
-                                      const struct segment_type *segtype,
-                                      uint32_t stripes,
-                                      uint32_t mirrors, uint32_t log_count,
-				      uint32_t log_region_size, uint32_t extents,
-                                      struct dm_list *allocatable_pvs,
+				      const struct segment_type *segtype,
+				      uint32_t stripes,
+				      uint32_t mirrors, uint32_t log_count,
+				      uint32_t region_size, uint32_t extents,
+				      struct dm_list *allocatable_pvs,
 				      alloc_policy_t alloc, int approx_alloc,
 				      struct dm_list *parallel_areas);
 
 int lv_add_segment(struct alloc_handle *ah,
 		   uint32_t first_area, uint32_t num_areas,
 		   struct logical_volume *lv,
-                   const struct segment_type *segtype,
-                   uint32_t stripe_size,
-                   uint64_t status,
+		   const struct segment_type *segtype,
+		   uint32_t stripe_size,
+		   uint64_t status,
 		   uint32_t region_size);
 
 int lv_add_mirror_areas(struct alloc_handle *ah,

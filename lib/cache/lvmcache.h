@@ -181,7 +181,7 @@ int lvmcache_foreach_ba(struct lvmcache_info *info,
 			int (*fun)(struct disk_locn *, void *),
 			void *baton);
 
-int lvmcache_foreach_pv(struct lvmcache_vginfo *vg,
+int lvmcache_foreach_pv(struct lvmcache_vginfo *vginfo,
 			int (*fun)(struct lvmcache_info *, void *), void * baton);
 
 uint64_t lvmcache_device_size(struct lvmcache_info *info);
