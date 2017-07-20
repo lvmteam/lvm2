@@ -1,3 +1,6 @@
+Version 2.02.174 - 
+=================================
+
 Version 2.02.173 - 20th July 2017
 =================================
   Add synchronization points with udev during conversion of raid LVs.
