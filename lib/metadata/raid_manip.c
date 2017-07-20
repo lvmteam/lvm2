@@ -1526,7 +1526,7 @@ static int _lv_relocate_reshape_space(struct logical_volume *lv, enum alloc_wher
 /* HM Helper: reset @lv to @segtype, @stripe_size and @lv_size post lv_extend() when changed for area_count < 3. */
 static int _lv_alloc_reshape_post_extend(struct logical_volume *lv,
 					 const struct segment_type *segtype,
-					 uint32_t stripe_size, uint64_t lv_size)
+					 uint32_t stripe_size, uint64_t lv_size_cur)
 {
 	struct lv_segment *seg = first_seg(lv);
 
@@ -1534,7 +1534,7 @@ static int _lv_alloc_reshape_post_extend(struct logical_volume *lv,
 		/* Reset segment type, stripe and lv size */
 		seg->segtype = segtype;
 		seg->stripe_size = stripe_size;
-		lv->size = lv_size;
+		lv->size = lv_size_cur;
 
 		/* Update and reload mapping for proper size of data SubLVs in the cluster */
 		if (!lv_update_and_reload(lv))
