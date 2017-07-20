@@ -2389,7 +2389,7 @@ struct _lv_postorder_baton {
 	void *data;
 };
 
-static int _lv_postorder_visit(struct logical_volume *,
+static int _lv_postorder_visit(struct logical_volume *lv,
 			       int (*fn)(struct logical_volume *lv, void *data),
 			       void *data);
 
