@@ -1294,7 +1294,7 @@ static dm_bitset_t _bitset_with_random_bits(struct dm_pool *mem, uint32_t num_bi
 	char buf[32];
 	uint32_t i = num_bits - num_set_bits;
 
-	if (!(bs = dm_bitset_create(mem, (unsigned) num_bits))) {
+	if (!(bs = dm_bitset_create(mem, num_bits))) {
 		log_error("Failed to allocate bitset for setting random bits.");
 		return NULL;
 	}

@@ -65,8 +65,7 @@ const char *lvm_lv_get_name(const lv_t lv)
 {
 	const char *rc;
 	struct saved_env e = store_user_env(lv->vg->cmd);
-	rc = dm_pool_strndup(lv->vg->vgmem, (const char *)lv->name,
-			       NAME_LEN+1);
+	rc = dm_pool_strndup(lv->vg->vgmem, lv->name, NAME_LEN+1);
 	restore_user_env(&e);
 	return rc;
 }

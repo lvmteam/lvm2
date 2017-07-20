@@ -648,23 +648,23 @@ int pv_resize_single(struct cmd_context *cmd,
 			log_warn("WARNING: %s: Overriding real size %s. You could lose data.",
 				 pv_name, display_size(cmd, (uint64_t) size));
 			if (!yes && yes_no_prompt("%s: Requested size %s exceeds real size %s. Proceed?  [y/n]: ",
-						  pv_name, display_size(cmd, (uint64_t) new_size),
-						  display_size(cmd, (uint64_t) size)) == 'n') {
+						  pv_name, display_size(cmd, new_size),
+						  display_size(cmd, size)) == 'n') {
 				log_error("Physical Volume %s not resized.", pv_name);
 				goto_out;
 			}
 
 		}  else if (new_size < size)
 			if (!yes && yes_no_prompt("%s: Requested size %s is less than real size %s. Proceed?  [y/n]: ",
-						  pv_name, display_size(cmd, (uint64_t) new_size),
-						  display_size(cmd, (uint64_t) size)) == 'n') {
+						  pv_name, display_size(cmd, new_size),
+						  display_size(cmd, size)) == 'n') {
 				log_error("Physical Volume %s not resized.", pv_name);
 				goto_out;
 			}
 
 		if (new_size == size)
 			log_verbose("%s: Size is already %s (%" PRIu64 " sectors).",
-				    pv_name, display_size(cmd, (uint64_t) new_size), new_size);
+				    pv_name, display_size(cmd, new_size), new_size);
 		else
 			log_warn("WARNING: %s: Pretending size is %" PRIu64 " not %" PRIu64 " sectors.",
 				 pv_name, new_size, size);

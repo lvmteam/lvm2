@@ -2291,9 +2291,9 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		}
 
 		/* Wipe metadata area with zeroes. */
-		if (!dev_set((struct device *) pv->dev, mda_start,
-			(size_t) ((mda_size > wipe_size) ?
-				  wipe_size : mda_size), 0)) {
+		if (!dev_set(pv->dev, mda_start,
+			     (size_t) ((mda_size > wipe_size) ?
+				       wipe_size : mda_size), 0)) {
 				log_error("Failed to wipe new metadata area "
 					  "at the %s of the %s",
 					   mda_index ? "end" : "start",

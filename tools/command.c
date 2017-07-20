@@ -1337,8 +1337,8 @@ int command_has_alternate_extents(const char *name)
 
 static int long_name_compare(const void *on1, const void *on2)
 {
-	const struct opt_name * const *optname1 = (const void *)on1;
-	const struct opt_name * const *optname2 = (const void *)on2;
+	const struct opt_name * const *optname1 = on1;
+	const struct opt_name * const *optname2 = on2;
 	return strcmp((*optname1)->long_opt + 2, (*optname2)->long_opt + 2);
 }
 

@@ -76,7 +76,7 @@ struct dev_types *create_dev_types(const char *proc_dir,
 			i++;
 
 		/* If it's not a number it may be name of section */
-		line_maj = atoi(((char *) (line + i)));
+		line_maj = atoi(line + i);
 
 		if (line_maj < 0 || line_maj >= NUMBER_OF_MAJORS) {
 			/*

@@ -4871,8 +4871,8 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 		} else if (ask) {
 			if (prompt->new_size != prompt->size) {
 				if (yes_no_prompt("WARNING: %s: device size %s does not match requested size %s. Proceed? [y/n]: ", pvname,
-						  display_size(cmd, (uint64_t)prompt->size),
-						  display_size(cmd, (uint64_t)prompt->new_size)) == 'n') {
+						  display_size(cmd, prompt->size),
+						  display_size(cmd, prompt->new_size)) == 'n') {
 					answer_no = 1;
 				} else {
 					answer_yes = 1;

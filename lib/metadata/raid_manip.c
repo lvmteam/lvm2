@@ -1834,7 +1834,7 @@ static int _reshape_adjust_to_size(struct logical_volume *lv,
 
 	/* Externally visible LV size w/o reshape space */
 	lv->le_count = seg->len = new_le_count;
-	lv->size = (uint64_t) (lv->le_count - new_image_count * (uint32_t) _reshape_len_per_dev(seg)) * lv->vg->extent_size;
+	lv->size = (uint64_t) (lv->le_count - new_image_count * _reshape_len_per_dev(seg)) * lv->vg->extent_size;
 	/* seg->area_len does not change */
 
 	if (old_image_count < new_image_count) {
