@@ -752,8 +752,19 @@ int update_thin_pool_params(struct cmd_context *cmd,
 	    !set_pool_discards(discards, DEFAULT_THIN_POOL_DISCARDS))
 		return_0;
 
-	if (*zero_new_blocks == THIN_ZERO_UNSELECTED)
+	if (*zero_new_blocks == THIN_ZERO_UNSELECTED) {
 		*zero_new_blocks = (DEFAULT_THIN_POOL_ZERO) ? THIN_ZERO_YES : THIN_ZERO_NO;
+		log_verbose("%s pool zeroing on default.", (*zero_new_blocks == THIN_ZERO_YES) ?
+			    "Enabling" : "Disabling");
+	}
+
+	if ((*zero_new_blocks == THIN_ZERO_YES) &&
+	    (*chunk_size >= DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2)) {
+		log_warn("WARNING: Pool zeroing and %s large chunk size slows down thin provisioning.",
+			 display_size(cmd, *chunk_size));
+		log_warn("WARNING: Consider disabling zeroing (-Zn) or using smaller chunk size (<%s).",
+			 display_size(cmd, DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2));
+	}
 
 	log_verbose("Preferred pool metadata size %s.",
 		    display_size(cmd, (uint64_t)*pool_metadata_extents * extent_size));

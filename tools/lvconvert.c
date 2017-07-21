@@ -3088,11 +3088,6 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_bad;
 
-	if ((seg->zero_new_blocks == THIN_ZERO_YES) &&
-	    seg->chunk_size >= DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2)
-		log_warn("WARNING: Pool zeroing and large %s chunk size slows down provisioning.",
-			 display_size(cmd, seg->chunk_size));
-
 	if (activate_pool && !lockd_lv(cmd, pool_lv, "ex", LDLV_PERSISTENT)) {
 		log_error("Failed to lock pool LV %s.", display_lvname(pool_lv));
 		goto out;

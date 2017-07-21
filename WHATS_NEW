@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Add warning when creating thin-pool with zeroing and chunk size >= 512KiB.
   Introduce exit code 4 EINIT_FAILED to replace -1 when initialisation fails.
   Add synchronization points with udev during reshape of raid LVs.
 
