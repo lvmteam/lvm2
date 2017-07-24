@@ -938,7 +938,7 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	}
 
 	if (!with_open_count && !dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if (!(r = dm_task_run(dmt)))
 		goto_out;
@@ -1053,7 +1053,7 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 	}
 
 	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if (cookie)
 		if (!dm_task_set_cookie(dmt, cookie, udev_flags))
@@ -1343,7 +1343,7 @@ static int _rename_node(const char *old_name, const char *new_name, uint32_t maj
 		goto_out;
 
 	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto out;
@@ -1384,10 +1384,10 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	}
 
 	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if (!dm_task_set_read_ahead(dmt, read_ahead, read_ahead_flags))
-		log_error("Failed to set read ahead");
+		log_warn("WARNING: Failed to set read ahead.");
 
 	if (!dm_task_set_cookie(dmt, cookie, udev_flags))
 		goto_out;
@@ -1430,13 +1430,13 @@ static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
 	}
 
 	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if (skip_lockfs && !dm_task_skip_lockfs(dmt))
-		log_error("Failed to set skip_lockfs flag.");
+		log_warn("WARNING: Failed to set skip_lockfs flag.");
 
 	if (no_flush && !dm_task_no_flush(dmt))
-		log_error("Failed to set no_flush flag.");
+		log_warn("WARNING: Failed to set no_flush flag.");
 
 	if ((r = dm_task_run(dmt))) {
 		inc_suspended();
@@ -1467,7 +1467,7 @@ static int _thin_pool_get_status(struct dm_tree_node *dnode,
 	}
 
 	if (!dm_task_no_flush(dmt))
-		log_warn("Can't set no_flush flag."); /* Non fatal */
+		log_warn("WARNING: Can't set no_flush flag."); /* Non fatal */
 
 	if (!dm_task_run(dmt))
 		goto_out;
@@ -2031,7 +2031,7 @@ static int _create_node(struct dm_tree_node *dnode)
 	}
 
 	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	if ((r = dm_task_run(dmt))) {
 		if (!(r = dm_task_get_info(dmt, &dnode->info)))
