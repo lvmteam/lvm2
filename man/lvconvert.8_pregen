@@ -1424,7 +1424,7 @@ Alternate command forms, advanced command usage, and listing of all valid syntax
 .P
 Convert LV to type mirror (also see type raid1), 
 .br
-(also see lvconvert \-\-mirrors).
+(also see lvconvert --mirrors).
 .br
 .P
 \fBlvconvert\fP \fB--type\fP \fBmirror\fP \fILV\fP
@@ -1481,7 +1481,7 @@ Change the type of mirror log used by a mirror LV.
 
 Convert LV to a thin LV, using the original LV as an external origin 
 .br
-(infers \-\-type thin).
+(infers --type thin).
 .br
 .P
 \fBlvconvert\fP \fB-T\fP|\fB--thin\fP \fB--thinpool\fP \fILV\fP \fILV\fP\fI_linear_striped_cache_raid\fP
@@ -1528,7 +1528,7 @@ Convert LV to a thin LV, using the original LV as an external origin
 .br
 -
 
-Convert LV to type cache (infers \-\-type cache).
+Convert LV to type cache (infers --type cache).
 .br
 .P
 \fBlvconvert\fP \fB-H\fP|\fB--cache\fP \fB--cachepool\fP \fILV\fP \fILV\fP\fI_linear_striped_thinpool_raid\fP
@@ -1613,11 +1613,11 @@ Swap metadata LV in a thin pool or cache pool (for repair only).
 .br
 -
 
-Merge LV that was split from a mirror (variant, use \-\-mergemirrors). 
+Merge LV that was split from a mirror (variant, use --mergemirrors). 
 .br
-Merge thin LV into its origin LV (variant, use \-\-mergethin). 
+Merge thin LV into its origin LV (variant, use --mergethin). 
 .br
-Merge COW snapshot LV into its origin (variant, use \-\-mergesnapshot).
+Merge COW snapshot LV into its origin (variant, use --mergesnapshot).
 .br
 .P
 \fBlvconvert\fP \fB--merge\fP \fIVG\fP|\fILV\fP\fI_linear_striped_snapshot_thin_raid\fP|\fITag\fP ...
@@ -1693,7 +1693,7 @@ origin LV (first arg) to reverse a splitsnapshot command.
 .br
 -
 
-Poll LV to continue conversion (also see \-\-startpoll).
+Poll LV to continue conversion (also see --startpoll).
 .br
 .P
 \fBlvconvert\fP \fILV\fP\fI_mirror_raid\fP

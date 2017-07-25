@@ -300,7 +300,7 @@ Create a linear LV.
 .RE
 -
 
-Create a striped LV (infers \-\-type striped).
+Create a striped LV (infers --type striped).
 .br
 .P
 \fBlvcreate\fP \fB-i\fP|\fB--stripes\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
@@ -322,7 +322,7 @@ Create a striped LV (infers \-\-type striped).
 .RE
 -
 
-Create a raid1 or mirror LV (infers \-\-type raid1|mirror).
+Create a raid1 or mirror LV (infers --type raid1|mirror).
 .br
 .P
 \fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
@@ -569,7 +569,7 @@ Create a cache pool.
 .RE
 -
 
-Create a thin LV in a thin pool (infers \-\-type thin).
+Create a thin LV in a thin pool (infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fIVG\fP
@@ -598,7 +598,7 @@ Create a thin LV in a thin pool (infers \-\-type thin).
 
 Create a thin LV that is a snapshot of an existing thin LV 
 .br
-(infers \-\-type thin).
+(infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fILV\fP\fI_thin\fP
@@ -658,7 +658,7 @@ Create a thin LV that is a snapshot of an external origin LV.
 
 Create a thin LV, first creating a thin pool for it, 
 .br
-where the new thin pool is named by the \-\-thinpool arg.
+where the new thin pool is named by the --thinpool arg.
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
@@ -715,7 +715,7 @@ Create a cache LV, first creating a new origin LV,
 .br
 then combining it with the existing cache pool named 
 .br
-by the \-\-cachepool arg.
+by the --cachepool arg.
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -1606,7 +1606,7 @@ Create a linear LV.
 .RE
 -
 
-Create a striped LV (also see lvcreate \-\-stripes).
+Create a striped LV (also see lvcreate --stripes).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBstriped\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
@@ -1632,7 +1632,7 @@ Create a striped LV (also see lvcreate \-\-stripes).
 .RE
 -
 
-Create a mirror LV (also see \-\-type raid1).
+Create a mirror LV (also see --type raid1).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBmirror\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
@@ -1672,7 +1672,7 @@ Create a mirror LV (also see \-\-type raid1).
 
 Create a COW snapshot LV of an origin LV 
 .br
-(also see \-\-snapshot).
+(also see --snapshot).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBsnapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP
@@ -1708,7 +1708,7 @@ Create a COW snapshot LV of an origin LV
 
 Create a sparse COW snapshot LV of a virtual origin LV 
 .br
-(also see \-\-snapshot).
+(also see --snapshot).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBsnapshot\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -1766,7 +1766,7 @@ Create a sparse COW snapshot LV of a virtual origin LV.
 .RE
 -
 
-Create a thin pool (infers \-\-type thin-pool).
+Create a thin pool (infers --type thin-pool).
 .br
 .P
 \fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
@@ -1816,9 +1816,9 @@ Create a thin pool (infers \-\-type thin-pool).
 .RE
 -
 
-Create a thin pool named by the \-\-thinpool arg 
+Create a thin pool named by the --thinpool arg 
 .br
-(infers \-\-type thin-pool).
+(infers --type thin-pool).
 .br
 .P
 \fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP\fI_new\fP \fIVG\fP
@@ -1872,9 +1872,9 @@ Create a thin pool named by the \-\-thinpool arg
 .RE
 -
 
-Create a cache pool named by the \-\-cachepool arg 
+Create a cache pool named by the --cachepool arg 
 .br
-(variant, uses \-\-cachepool in place of \-\-name).
+(variant, uses --cachepool in place of --name).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBcache-pool\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -1967,7 +1967,7 @@ Create a thin LV in a thin pool.
 
 Create a thin LV in a thin pool named in the first arg 
 .br
-(variant, also see \-\-thinpool for naming pool).
+(variant, also see --thinpool for naming pool).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fILV\fP\fI_thinpool\fP
@@ -1992,7 +1992,7 @@ Create a thin LV in a thin pool named in the first arg
 
 Create a thin LV in the thin pool named in the first arg 
 .br
-(variant, infers \-\-type thin, also see \-\-thinpool for 
+(variant, infers --type thin, also see --thinpool for 
 .br
 naming pool.)
 .br
@@ -2046,7 +2046,7 @@ Create a thin LV that is a snapshot of an existing thin LV.
 
 Create a thin LV that is a snapshot of an existing thin LV 
 .br
-(infers \-\-type thin).
+(infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fILV\fP\fI_thin\fP
@@ -2071,7 +2071,7 @@ Create a thin LV that is a snapshot of an existing thin LV
 
 Create a thin LV that is a snapshot of an external origin LV 
 .br
-(infers \-\-type thin).
+(infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB--thinpool\fP \fILV\fP\fI_thinpool\fP \fILV\fP
@@ -2096,9 +2096,9 @@ Create a thin LV that is a snapshot of an external origin LV
 
 Create a thin LV, first creating a thin pool for it, 
 .br
-where the new thin pool is named by the \-\-thinpool arg 
+where the new thin pool is named by the --thinpool arg 
 .br
-(variant, infers \-\-type thin).
+(variant, infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -2153,9 +2153,9 @@ where the new thin pool is named by the \-\-thinpool arg
 
 Create a thin LV, first creating a thin pool for it, 
 .br
-where the new thin pool is named by the \-\-thinpool arg 
+where the new thin pool is named by the --thinpool arg 
 .br
-(variant, infers \-\-type thin).
+(variant, infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
@@ -2273,7 +2273,7 @@ where the new thin pool is named in the first arg,
 .br
 or the new thin pool name is generated when the first 
 .br
-arg is a VG name (variant, infers \-\-type thin).
+arg is a VG name (variant, infers --type thin).
 .br
 .P
 \fBlvcreate\fP \fB-T\fP|\fB--thin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
@@ -2324,13 +2324,13 @@ arg is a VG name (variant, infers \-\-type thin).
 
 Create a thin LV, first creating a thin pool for it 
 .br
-(infers \-\-type thin). 
+(infers --type thin). 
 .br
 Create a sparse snapshot of a virtual origin LV 
 .br
-(infers \-\-type snapshot). 
+(infers --type snapshot). 
 .br
-Chooses \-\-type thin or \-\-type snapshot according to 
+Chooses --type thin or --type snapshot according to 
 .br
 config setting sparse_segtype_default.
 .br
@@ -2390,7 +2390,7 @@ Create a cache LV, first creating a new origin LV,
 .br
 then combining it with the existing cache pool named 
 .br
-by the \-\-cachepool arg (variant, infers \-\-type cache).
+by the --cachepool arg (variant, infers --type cache).
 .br
 .P
 \fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--cachepool\fP \fILV\fP\fI_cachepool\fP \fIVG\fP
@@ -2448,7 +2448,7 @@ Create a cache LV, first creating a new origin LV,
 .br
 then combining it with the existing cache pool named 
 .br
-in the first arg (variant, also use \-\-cachepool).
+in the first arg (variant, also use --cachepool).
 .br
 .P
 \fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fILV\fP\fI_cachepool\fP
@@ -2512,7 +2512,7 @@ first creating a new origin LV, then combining it with
 .br
 the existing cache pool named in the first arg 
 .br
-(variant, infers \-\-type cache, also use \-\-cachepool). 
+(variant, infers --type cache, also use --cachepool). 
 .br
 When LV is not a cache pool, convert the specified LV 
 .br

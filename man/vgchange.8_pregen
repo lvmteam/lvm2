@@ -3,7 +3,7 @@
 vgchange - Change volume group attributes
 .
 .SH SYNOPSIS
-\fBvgchange\fP \fIoption_args\fP
+\fBvgchange\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
 .br
@@ -250,14 +250,6 @@ required, after which the others are optional.
 .ad b
 .br
 .ad l
-     \fB--systemid\fP \fIString\fP,
-.ad b
-.br
-.ad l
-     \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP,
-.ad b
-.br
-.ad l
      \fB--profile\fP \fIString\fP,
 .ad b
 .br
@@ -271,7 +263,35 @@ required, after which the others are optional.
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-f\fP|\fB--force\fP ]
+.ad b
+.br
+.ad l
 [    \fB--poll\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoreskippedcluster\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -289,6 +309,18 @@ Start or stop monitoring LVs from dmeventd.
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-f\fP|\fB--force\fP ]
+.ad b
+.br
+.ad l
 [    \fB--sysinit\fP ]
 .ad b
 .br
@@ -298,6 +330,22 @@ Start or stop monitoring LVs from dmeventd.
 .br
 .ad l
 [    \fB--poll\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoreskippedcluster\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -315,7 +363,35 @@ Start or stop processing LV conversions.
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-f\fP|\fB--force\fP ]
+.ad b
+.br
+.ad l
 [    \fB--ignorelockingfailure\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoreskippedcluster\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]
@@ -341,6 +417,18 @@ Activate or deactivate LVs.
 .ad b
 .br
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-f\fP|\fB--force\fP ]
+.ad b
+.br
+.ad l
 [    \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP ]
 .ad b
 .br
@@ -360,6 +448,22 @@ Activate or deactivate LVs.
 [    \fB--poll\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoreskippedcluster\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -375,6 +479,18 @@ Reactivate LVs using the latest metadata.
 .br
 .RS 4
 .ad l
+[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+.ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
+.ad l
+[ \fB-f\fP|\fB--force\fP ]
+.ad b
+.br
+.ad l
 [    \fB--sysinit\fP ]
 .ad b
 .br
@@ -386,6 +502,22 @@ Reactivate LVs using the latest metadata.
 [    \fB--poll\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
+.ad l
+[    \fB--ignoremonitoring\fP ]
+.ad b
+.br
+.ad l
+[    \fB--ignoreskippedcluster\fP ]
+.ad b
+.br
+.ad l
+[    \fB--noudevsync\fP ]
+.ad b
+.br
+.ad l
+[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
+.ad b
+.br
 [ COMMON_OPTIONS ]
 .RE
 .br
@@ -394,12 +526,27 @@ Reactivate LVs using the latest metadata.
 .RE
 -
 
+Change the system ID of a VG.
+.br
+.P
+\fBvgchange\fP \fB--systemid\fP \fIString\fP \fIVG\fP
+.br
+.RS 4
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
 Start the lockspace of a shared VG in lvmlockd.
 .br
 .P
 \fBvgchange\fP \fB--lockstart\fP
 .br
 .RS 4
+.ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
 .ad l
 [    \fB--lockopt\fP \fIString\fP ]
 .ad b
@@ -419,6 +566,10 @@ Stop the lockspace of a shared VG in lvmlockd.
 .br
 .RS 4
 .ad l
+[ \fB-S\fP|\fB--select\fP \fIString\fP ]
+.ad b
+.br
+.ad l
 [    \fB--lockopt\fP \fIString\fP ]
 .ad b
 .br
@@ -430,36 +581,24 @@ Stop the lockspace of a shared VG in lvmlockd.
 .RE
 -
 
+Change the lock type for a shared VG.
+.br
+.P
+\fBvgchange\fP \fB--locktype\fP \fBsanlock\fP|\fBdlm\fP|\fBnone\fP \fIVG\fP
+.br
+.RS 4
+.ad l
+[    \fB--lockopt\fP \fIString\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
 Common options for command:
 .
 .RS 4
-.ad l
-[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
-.ad l
-[ \fB-f\fP|\fB--force\fP ]
-.ad b
-.br
-.ad l
-[ \fB-S\fP|\fB--select\fP \fIString\fP ]
-.ad b
-.br
-.ad l
-[    \fB--ignoremonitoring\fP ]
-.ad b
-.br
-.ad l
-[    \fB--ignoreskippedcluster\fP ]
-.ad b
-.br
-.ad l
-[    \fB--noudevsync\fP ]
-.ad b
-.br
-.ad l
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP ]
-.ad b
 .RE
 
 Common options for lvm:
