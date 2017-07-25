@@ -2224,8 +2224,7 @@ static int _status(CMD_ARGS)
 				_print_string_quoted(name);
 				putchar(',');
 				_print_string_quoted(dm_task_get_uuid(dmt));
-				putchar(',');
-				printf("%s", info.read_only ? "ro" : "rw");
+				printf(",%u,%s", info.minor, info.read_only ? "ro" : "rw");
 			}
 			/* Next print any target-specific information */
 			if (target_type) {
