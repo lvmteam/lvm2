@@ -269,6 +269,7 @@ dmsetup \(em low level logical volume management
 .de CMD_TABLE
 .  ad l
 .  BR table
+.  RB [ --concise ]
 .  RB [ --target
 .  IR target_type ]
 .  RB [ --showkeys ]
@@ -824,6 +825,10 @@ Real encryption keys are suppressed in the table output for the crypt
 target unless the \fB--showkeys\fP parameter is supplied. Kernel key
 references prefixed with \fB:\fP are not affected by the parameter and get
 displayed always.
+With \fB--concise\fP, the output is presented concisely on a single line.
+Commas then separate the name, uuid, flags ('ro' or 'rw') and the table
+(if present). Semi-colons separate devices. Backslashes escape any commas,
+semi-colons or backslashes.
 .
 .HP
 .CMD_TARGETS
