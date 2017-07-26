@@ -474,10 +474,12 @@ bad:
 
 int process_profilable_config(struct cmd_context *cmd)
 {
+	const char *units;
+
 	if (!(cmd->default_settings.unit_factor =
-	      dm_units_to_factor(find_config_tree_str(cmd, global_units_CFG, NULL),
+	      dm_units_to_factor(units = find_config_tree_str(cmd, global_units_CFG, NULL),
 				 &cmd->default_settings.unit_type, 1, NULL))) {
-		log_error("Invalid units specification");
+		log_error("Unrecognised configuration setting for global/units: %s", units);
 		return 0;
 	}
 
@@ -2008,7 +2010,6 @@ out:
 		destroy_toolcontext(cmd);
 		cmd = NULL;
 	}
-
 
 	return cmd;
 }
