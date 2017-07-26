@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Introduce exit code 4 EINIT_FAILED to replace -1 when initialisation fails.
   Add synchronization points with udev during reshape of raid LVs.
 
 Version 2.02.173 - 20th July 2017

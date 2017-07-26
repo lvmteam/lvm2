@@ -40,6 +40,7 @@ typedef void (*lvm2_log_fn_t) (int level, const char *file, int line,
 #define LVM2_COMMAND_SUCCEEDED	1	/* ECMD_PROCESSED */
 #define LVM2_NO_SUCH_COMMAND	2	/* ENO_SUCH_CMD */
 #define LVM2_INVALID_PARAMETERS	3	/* EINVALID_CMD_LINE */
+#define LVM2_INIT_FAILED	4	/* EINIT_FAILED */
 #define LVM2_PROCESSING_FAILED	5	/* ECMD_FAILED */
 
 /*

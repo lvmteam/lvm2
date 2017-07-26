@@ -3420,7 +3420,7 @@ int lvm2_main(int argc, char **argv)
 	const char *run_command_name = NULL;
 
 	if (!argv)
-		return -1;
+		return EINIT_FAILED;
 
 	base = last_path_component(argv[0]);
 	if (strcmp(base, "lvm") && strcmp(base, "lvm.static") &&
@@ -3428,16 +3428,16 @@ int lvm2_main(int argc, char **argv)
 		alias = 1;
 
 	if (!_check_standard_fds())
-		return -1;
+		return EINIT_FAILED;
 
 	if (!_get_custom_fds(&custom_fds))
-		return -1;
+		return EINIT_FAILED;
 
 	if (!_close_stray_fds(base, &custom_fds))
-		return -1;
+		return EINIT_FAILED;
 
 	if (!init_custom_log_streams(&custom_fds))
-		return -1;
+		return EINIT_FAILED;
 
 	if (is_static() && strcmp(base, "lvm.static") &&
 	    path_exists(LVM_PATH) &&
@@ -3461,12 +3461,12 @@ int lvm2_main(int argc, char **argv)
 
 		if (*argv[1] == '-') {
 			log_error("Specify options after a command: lvm [command] [options].");
-			return -1;
+			return EINVALID_CMD_LINE;
 		}
 	}
 
 	if (!(cmd = init_lvm(0, 0)))
-		return -1;
+		return EINIT_FAILED;
 
 	/* Store original argv location so we may customise it if we become a daemon */
 	cmd->argv = argv;

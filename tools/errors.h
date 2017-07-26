@@ -19,6 +19,7 @@
 #define ECMD_PROCESSED		1
 #define ENO_SUCH_CMD		2
 #define EINVALID_CMD_LINE	3
+#define EINIT_FAILED		4
 #define ECMD_FAILED		5
 
 /* FIXME Also returned by cmdlib. */
