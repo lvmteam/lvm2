@@ -48,6 +48,10 @@ ifeq ("@CACHE@", "shared")
   SUBDIRS += cache_segtype
 endif
 
+ifeq ("@CLUSTER@", "shared")
+  SUBDIRS += locking
+endif
+
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
@@ -147,10 +151,6 @@ endif
 
 ifeq ("@CLUSTER@", "internal")
   SOURCES += locking/cluster_locking.c
-endif
-
-ifeq ("@CLUSTER@", "shared")
-  SUBDIRS += locking
 endif
 
 ifeq ("@SNAPSHOTS@", "internal")

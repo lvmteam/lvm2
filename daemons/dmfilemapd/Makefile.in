@@ -34,9 +34,8 @@ include $(top_builddir)/make.tmpl
 all: device-mapper
 device-mapper: $(TARGETS)
 
-LIBS += -ldevmapper
-
 CFLAGS_dmfilemapd.o += $(EXTRA_EXEC_CFLAGS)
+LIBS += -ldevmapper
 
 dmfilemapd: $(LIB_SHARED) dmfilemapd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \

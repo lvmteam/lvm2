@@ -16,7 +16,7 @@ top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
 SOURCES = lvmetad-core.c
-SOURCES2 = testclient.c
+SOURCES2 = lvmetactl.c
 
 TARGETS = lvmetad lvmetactl
 

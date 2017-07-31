@@ -31,9 +31,9 @@ SALCK_LIBS = @SALCK_LIBS@
 SALCK_CFLAGS = @SALCK_CFLAGS@
 
 SOURCES = \
-	clvmd-command.c  \
-	clvmd.c          \
-	lvm-functions.c  \
+	clvmd-command.c\
+	clvmd.c\
+	lvm-functions.c\
 	refresh_clvmd.c
 
 ifneq (,$(findstring cman,, "@CLVMD@,"))
