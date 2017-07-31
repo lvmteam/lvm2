@@ -57,12 +57,12 @@ STATIC_LIBS = $(SELINUX_LIBS) $(UDEV_LIBS) $(BLKID_LIBS)
 DEFS += @DEFS@
 # FIXME set this only where it's needed, not globally?
 CFLAGS ?= @COPTIMISE_FLAG@ @CFLAGS@
-LDFLAGS ?= @COPTIMISE_FLAG@ @LDFLAGS@
+LDFLAGS ?= @LDFLAGS@
 CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
 LIB_SUFFIX = @LIB_SUFFIX@
-LVMINTERNAL_LIBS = -llvm-internal $(DAEMON_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
+LVMINTERNAL_LIBS = -llvm-internal $(DMEVENT_LIBS) $(DAEMON_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
 DL_LIBS = @DL_LIBS@
 M_LIBS = @M_LIBS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
@@ -235,11 +235,24 @@ ifeq (,$(findstring fPIC,$(CFLAGS)))
 CFLAGS += -fPIC
 
 ifeq ("@DEBUG@", "yes")
-  CFLAGS += -g -fno-omit-frame-pointer
+ifeq (,$(findstring -g,$(CFLAGS)))
+  CFLAGS += -g
+endif
+  CFLAGS += -fno-omit-frame-pointer
   DEFS += -DDEBUG
   # memory debugging is not thread-safe yet
   ifneq ("@DMEVENTD@", "yes")
+  ifneq ("@DMFILEMAPD@", "yes")
+  ifneq ("@LVMLOCKD@", "yes")
+  ifneq ("@LVMPOLLD@", "yes")
+  ifneq ("@LVMETAD@", "yes")
+  ifneq ("@CLVMD@", "yes")
     DEFS += -DDEBUG_MEM
+  endif
+  endif
+  endif
+  endif
+  endif
   endif
 endif
 
@@ -254,6 +267,7 @@ LDFLAGS += -L$(top_builddir)/libdaemon/client
 CLDFLAGS += -L$(top_builddir)/libdaemon/client
 
 ifeq ("@DMEVENTD@", "yes")
+  DMEVENT_LIBS = -ldevmapper-event
   LDFLAGS += -L$(top_builddir)/daemons/dmeventd
   CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
 endif
@@ -420,14 +434,13 @@ endif
 .LIBPATTERNS = lib%.so lib%.a
 
 %.o: %.c
-	$(CC) -c $(INCLUDES) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
+	$(CC) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) $(DEFS_$@) $(WFLAGS) $(WCFLAGS) $(CFLAGS) $(CFLAGS_$@) $< -o $@
 
 %.o: %.cpp
-	$(CXX) -c $(INCLUDES) $(DEFS) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
+	$(CXX) -c $(INCLUDES) $(VALGRIND_CFLAGS) $(DEFS) $(WFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) $< -o $@
 
 %.pot: %.c Makefile
-	$(CC) -E $(INCLUDES) $(BLKID_CFLAGS) $(VALGRIND_CFLAGS) $(UDEV_CFLAGS) -include $(top_builddir)/include/pogen.h \
-		$(DEFS) $(WFLAGS) $(CFLAGS) $< > $@
+	$(CC) -E $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) -include $(top_builddir)/include/pogen.h $(DEFS) $(WFLAGS) $(CFLAGS) $< >$@
 
 %.so: %.o
 	$(CC) -c $(CFLAGS) $(CLDFLAGS) $< $(LIBS) -o $@
@@ -477,7 +490,7 @@ $(LIB_STATIC): $(OBJECTS)
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-	$(CC) -MM $(INCLUDES) $(BLKID_CFLAGS) $(VALGRIND_CFLAGS) $(UDEV_CFLAGS) $(DEFS) -o $@ $<; \
+	$(CC) -MM $(INCLUDES) $(VALGRIND_CFLAGS) $(PROGS_CFLAGS) $(DEFS) -o $@ $<; \
 	sed -i "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" $@; \
 	DEPLIST=`sed 's/ \\\\//;s/.*://;' < $@`; \
 	echo $$DEPLIST | fmt -1 | sed 's/ //g;s/\(.*\)/\1:/' >> $@; \

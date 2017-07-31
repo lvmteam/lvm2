@@ -28,22 +28,19 @@ CFLOW_TARGET = lvmetad
 
 include $(top_builddir)/make.tmpl
 
+CFLAGS_lvmetactl.o += $(EXTRA_EXEC_CFLAGS)
+CFLAGS_lvmetad-core.o += $(EXTRA_EXEC_CFLAGS)
 INCLUDES += -I$(top_srcdir)/libdaemon/server
-LVMLIBS = -ldaemonserver $(LVMINTERNAL_LIBS) -ldevmapper
-
-LIBS += $(PTHREAD_LIBS)
-
-LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS)
-CLDFLAGS += -L$(top_builddir)/libdaemon/server
-CFLAGS += $(EXTRA_EXEC_CFLAGS)
+LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
+LIBS += $(DAEMON_LIBS) -ldevmapper $(PTHREAD_LIBS)
 
 lvmetad: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
 		    $(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LVMLIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) -ldaemonserver $(LIBS)
 
 lvmetactl: lvmetactl.o $(top_builddir)/libdaemon/client/libdaemonclient.a \
 	$(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmetactl.o $(LVMLIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmetactl.o $(LIBS)
 
 CLEAN_TARGETS += lvmetactl.o
 

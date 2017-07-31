@@ -39,12 +39,12 @@ LIBS += -ldevmapper
 CFLAGS_dmfilemapd.o += $(EXTRA_EXEC_CFLAGS)
 
 dmfilemapd: $(LIB_SHARED) dmfilemapd.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -L. -o $@ dmfilemapd.o \
-	$(DL_LIBS) $(LVMLIBS) $(LIBS) -rdynamic
+	$(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
+		-o $@ dmfilemapd.o $(DL_LIBS) $(LIBS)
 
 dmfilemapd.static: $(LIB_STATIC) dmfilemapd.o $(interfacebuilddir)/libdevmapper.a
-	$(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -static -L. -L$(interfacebuilddir) -o $@ \
-	dmfilemapd.o $(DL_LIBS) $(LVMLIBS) $(LIBS) $(STATIC_LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -static -L$(interfacebuilddir) \
+		-o $@ dmfilemapd.o $(DL_LIBS) $(LIBS) $(STATIC_LIBS)
 
 ifneq ("$(CFLOW_CMD)", "")
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES))
@@ -65,4 +65,3 @@ install_dmfilemapd: $(INSTALL_DMFILEMAPD_TARGETS)
 install: install_dmfilemapd
 
 install_device-mapper: install_dmfilemapd
-

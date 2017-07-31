@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Imporove makefiles' linking.
   Fix some paths in generated makefiles to respected configured settings.
   Add warning when creating thin-pool with zeroing and chunk size >= 512KiB.
   Introduce exit code 4 EINIT_FAILED to replace -1 when initialisation fails.

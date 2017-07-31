@@ -204,11 +204,6 @@ ifeq ("@BUILD_LVMLOCKD@", "yes")
 	locking/lvmlockd.c
 endif
 
-ifeq ("@DMEVENTD@", "yes")
-  CLDFLAGS += -L$(top_builddir)/daemons/dmeventd
-  LIBS += -ldevmapper-event
-endif
-
 LIB_NAME = liblvm-internal
 LIB_STATIC = $(LIB_NAME).a
 
@@ -229,9 +224,9 @@ endif
 CFLOW_LIST = $(SOURCES)
 CFLOW_LIST_TARGET = $(LIB_NAME).cflow
 
-include $(top_builddir)/make.tmpl
+PROGS_CFLAGS = $(BLKID_CFLAGS) $(UDEV_CFLAGS)
 
-CFLAGS += $(BLKID_CFLAGS) $(UDEV_CFLAGS) $(VALGRIND_CFLAGS)
+include $(top_builddir)/make.tmpl
 
 $(SUBDIRS): $(LIB_STATIC)
 

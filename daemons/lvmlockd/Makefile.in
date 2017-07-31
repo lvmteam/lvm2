@@ -19,10 +19,12 @@ SOURCES = lvmlockd-core.c
 
 ifeq ("@BUILD_LOCKDSANLOCK@", "yes")
   SOURCES += lvmlockd-sanlock.c
+  LOCK_LIBS += -lsanlock_client
 endif
 
 ifeq ("@BUILD_LOCKDDLM@", "yes")
   SOURCES += lvmlockd-dlm.c
+  LOCK_LIBS += -ldlm_lt
 endif
 
 TARGETS = lvmlockd lvmlockctl
@@ -31,29 +33,17 @@ TARGETS = lvmlockd lvmlockctl
 
 include $(top_builddir)/make.tmpl
 
+CFLAGS += $(EXTRA_EXEC_CFLAGS)
 INCLUDES += -I$(top_srcdir)/libdaemon/server
-LVMLIBS = -ldaemonserver $(LVMINTERNAL_LIBS) -ldevmapper
-
-LIBS += $(PTHREAD_LIBS)
-
-ifeq ("@BUILD_LOCKDSANLOCK@", "yes")
-  LIBS += -lsanlock_client
-endif
-
-ifeq ("@BUILD_LOCKDDLM@", "yes")
-  LIBS += -ldlm_lt
-endif
-
-LDFLAGS += -L$(top_builddir)/libdaemon/server
-CLDFLAGS += -L$(top_builddir)/libdaemon/server
+LDFLAGS += -L$(top_builddir)/libdaemon/server $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS)
+LIBS +=  $(DAEMON_LIBS) -ldevmapper $(PTHREAD_LIBS)
 
 lvmlockd: $(OBJECTS) $(top_builddir)/libdaemon/client/libdaemonclient.a \
 		    $(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LVMLIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LOCK_LIBS) -ldaemonserver $(LIBS)
 
-lvmlockctl: lvmlockctl.o $(top_builddir)/libdaemon/client/libdaemonclient.a \
-		    $(top_builddir)/libdaemon/server/libdaemonserver.a
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o $(LVMLIBS)
+lvmlockctl: lvmlockctl.o $(top_builddir)/libdaemon/client/libdaemonclient.a
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ lvmlockctl.o $(LIBS)
 
 install_lvmlockd: lvmlockd
 	$(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
