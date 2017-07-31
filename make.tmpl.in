@@ -163,6 +163,7 @@ INSTALL_SCRIPT = $(INSTALL) -p $(M_INSTALL_PROGRAM)
 .SUFFIXES:
 .SUFFIXES: .c .cpp .d .o .so .a .po .pot .mo .dylib
 
+ifeq ("$(notdir $(CC))", "gcc")
 WFLAGS +=\
  -Wall\
  -Wcast-align\
@@ -206,6 +207,7 @@ endif
 
 ifeq ("@HAVE_WSYNCNAND@", "yes")
 WFLAGS += -Wsync-nand
+endif
 endif
 
 ifneq ("@STATIC_LINK@", "yes")
