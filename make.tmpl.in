@@ -243,12 +243,12 @@ endif
   CFLAGS += -fno-omit-frame-pointer
   DEFS += -DDEBUG
   # memory debugging is not thread-safe yet
-  ifneq ("@DMEVENTD@", "yes")
-  ifneq ("@DMFILEMAPD@", "yes")
-  ifneq ("@LVMLOCKD@", "yes")
-  ifneq ("@LVMPOLLD@", "yes")
-  ifneq ("@LVMETAD@", "yes")
-  ifneq ("@CLVMD@", "yes")
+  ifneq ("@BUILD_DMEVENTD@", "yes")
+  ifneq ("@BUILD_DMFILEMAPD@", "yes")
+  ifneq ("@BUILD_LVMLOCKD@", "yes")
+  ifneq ("@BUILD_LVMPOLLD@", "yes")
+  ifneq ("@BUILD_LVMETAD@", "yes")
+  ifeq ("@CLVMD@", "none")
     DEFS += -DDEBUG_MEM
   endif
   endif
