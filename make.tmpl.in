@@ -62,7 +62,7 @@ CLDFLAGS += @CLDFLAGS@
 ELDFLAGS += @ELDFLAGS@
 LDDEPS += @LDDEPS@
 LIB_SUFFIX = @LIB_SUFFIX@
-LVMINTERNAL_LIBS = -llvm-internal $(DMEVENT_LIBS) $(DAEMON_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
+LVMINTERNAL_LIBS = -llvm-internal $(DMEVENT_LIBS) $(DAEMON_LIBS) $(SYSTEMD_LIBS) $(UDEV_LIBS) $(DL_LIBS) $(BLKID_LIBS)
 DL_LIBS = @DL_LIBS@
 RT_LIBS = @RT_LIBS@
 M_LIBS = @M_LIBS@
@@ -73,6 +73,7 @@ UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 BLKID_CFLAGS = @BLKID_CFLAGS@
 BLKID_LIBS = @BLKID_LIBS@
+SYSTEMD_LIBS = @SYSTEMD_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 TESTING = @TESTING@
 
@@ -267,7 +268,7 @@ DAEMON_LIBS = -ldaemonclient
 LDFLAGS += -L$(top_builddir)/libdaemon/client
 CLDFLAGS += -L$(top_builddir)/libdaemon/client
 
-ifeq ("@DMEVENTD@", "yes")
+ifeq ("@BUILD_DMEVENTD@", "yes")
   DMEVENT_LIBS = -ldevmapper-event
   LDFLAGS += -L$(top_builddir)/daemons/dmeventd
   CLDFLAGS += -L$(top_builddir)/daemons/dmeventd

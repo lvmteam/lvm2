@@ -704,7 +704,6 @@ FSADM
 ELDFLAGS
 DM_LIB_PATCHLEVEL
 DMEVENTD_PATH
-DMEVENTD
 DL_LIBS
 DEVMAPPER
 DEFAULT_USE_LVMLOCKD
@@ -12238,7 +12237,7 @@ if test "$NOTIFYDBUS_SUPPORT" = yes; then
 
 $as_echo "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
 
-	LIBS="-lsystemd $LIBS"
+	SYSTEMD_LIBS="-lsystemd"
 fi
 
 ################################################################################
@@ -13917,15 +13916,15 @@ $as_echo "$BLKDEACTIVATE" >&6; }
 $as_echo_n "checking whether to use dmeventd... " >&6; }
 # Check whether --enable-dmeventd was given.
 if test "${enable_dmeventd+set}" = set; then :
-  enableval=$enable_dmeventd; DMEVENTD=$enableval
+  enableval=$enable_dmeventd; BUILD_DMEVENTD=$enableval
+else
+  BUILD_DMEVENTD=no
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DMEVENTD" >&5
-$as_echo "$DMEVENTD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_DMEVENTD" >&5
+$as_echo "$BUILD_DMEVENTD" >&6; }
 
-BUILD_DMEVENTD=$DMEVENTD
-
-if test "$DMEVENTD" = yes; then
+if test "$BUILD_DMEVENTD" = yes; then
    if test "$MIRRORS" != internal; then
       as_fn_error $? "--enable-dmeventd currently requires --with-mirrors=internal" "$LINENO" 5
    fi
@@ -15218,7 +15217,7 @@ done
 
 fi
 
-if test "$DMEVENTD" = yes; then
+if test "$BUILD_DMEVENTD" = yes; then
 	for ac_header in arpa/inet.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "arpa/inet.h" "ac_cv_header_arpa_inet_h" "$ac_includes_default"

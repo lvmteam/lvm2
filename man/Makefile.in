@@ -85,7 +85,7 @@ else
     MAN8DM+=$(BLKDEACTIVATEMAN)
   endif
 
-  ifeq ("@DMEVENTD@", "yes")
+  ifeq ("@BUILD_DMEVENTD@", "yes")
     MAN8DM+=$(DMEVENTDMAN)
   endif
 
