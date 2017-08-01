@@ -80,8 +80,8 @@ lvremove -f $vg
 lvcreate -L1T -n $lv1 $vg
 lvcreate -L32 -n $lv2 $vg
 lvconvert --yes -c 8M --type thin-pool $vg/$lv1 2>&1 | tee err
-# Check tther is warning for large chunk size and zeroing enabled
-grep "Pool zeroing and large" err
+# Check there is a warning for large chunk size and zeroing enabled
+grep "WARNING: Pool zeroing and" err
 UUID=$(get lv_field $vg/$lv2 uuid)
 # Fail is pool is active
 # TODO  maybe detect inactive pool and deactivate
