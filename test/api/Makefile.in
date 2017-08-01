@@ -46,10 +46,10 @@ LDFLAGS += -L$(top_builddir)/liblvm -L$(top_builddir)/daemons/dmeventd
 LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS) -ldevmapper
 
 %.t: %.o $(DEPLIBS)
-	$(CC) -o $@ $(<) $(LDFLAGS) $(LIBS)
+	$(CC) -o $@ $(<) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS)
 
 test: $(OBJECTS) $(DEPLIBS)
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS) $(LIBS) $(READLINE_LIBS)
+	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) $(LIBS) $(READLINE_LIBS)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status test/api/Makefile

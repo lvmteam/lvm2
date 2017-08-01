@@ -256,14 +256,14 @@ lib/fail: lib/not
 	$(LN_S) -f not lib/fail
 
 lib/runner: lib/runner.o .lib-dir-stamp
-	$(CXX) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) -o $@ $<
+	$(CXX) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $<
 
 lib/runner.o: $(wildcard $(srcdir)/lib/*.h)
 
 CFLAGS_runner.o += $(EXTRA_EXEC_CFLAGS)
 
 lib/%: lib/%.o .lib-dir-stamp
-	$(CC) $(LDFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -o $@ $<
 
 lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	cp $< $@
