@@ -1671,12 +1671,16 @@ fi
 
 ################################################################################
 dnl -- Check for realtime clock support
+RT_LIBS=
+HAVE_REALTIME=no
 if test "$REALTIME" = yes; then
-	AC_CHECK_LIB(rt, clock_gettime, HAVE_REALTIME=yes, HAVE_REALTIME=no)
+	AC_CHECK_FUNCS([clock_gettime], HAVE_REALTIME=yes)
+
+	AS_IF([test "$HAVE_REALTIME" != yes], [ # try again with -lrt
+	      AC_CHECK_LIB([rt], [clock_gettime], RT_LIBS="-lrt"; HAVE_REALTIME=yes)])
 
 	if test "$HAVE_REALTIME" = yes; then
 		AC_DEFINE([HAVE_REALTIME], 1, [Define to 1 to include support for realtime clock.])
-		RT_LIB="-lrt"
 	else
 		AC_MSG_WARN(Disabling realtime clock)
 	fi
@@ -1835,7 +1839,8 @@ if test "$BUILD_CMIRRORD" = yes; then
 fi
 
 if test "$BUILD_LVMLOCKD" = yes; then
-	AC_CHECK_FUNCS(clock_gettime strtoull,,hard_bailout)
+	AS_IF([test "$HAVE_REALTIME" != yes], [AC_MSG_ERROR([Realtime clock support is mandatory for lvmlockd.])])
+	AC_CHECK_FUNCS(strtoull,,hard_bailout)
 fi
 
 if test "$BUILD_LVMPOLLD" = yes; then
@@ -2117,7 +2122,7 @@ AC_SUBST(PYTHON3DIR)
 AC_SUBST(QUORUM_CFLAGS)
 AC_SUBST(QUORUM_LIBS)
 AC_SUBST(RAID)
-AC_SUBST(RT_LIB)
+AC_SUBST(RT_LIBS)
 AC_SUBST(READLINE_LIBS)
 AC_SUBST(REPLICATORS)
 AC_SUBST(SACKPT_CFLAGS)
