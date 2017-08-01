@@ -42,21 +42,14 @@ include $(top_builddir)/make.tmpl
 
 DEFS += -D_REENTRANT
 DEPLIBS += $(top_builddir)/liblvm/liblvm2app.so $(top_builddir)/libdm/libdevmapper.so
-LDFLAGS += -L$(top_builddir)/liblvm
-LVMLIBS = @LVM2APP_LIB@ -ldevmapper
-
-ifeq ("@DMEVENTD@", "yes")
-       LVMLIBS += -ldevmapper-event
-       LDFLAGS += -L$(top_builddir)/daemons/dmeventd
-endif
-
-LVMLIBS += $(LIBS)
+LDFLAGS += -L$(top_builddir)/liblvm -L$(top_builddir)/daemons/dmeventd
+LIBS += @LVM2APP_LIB@ $(DMEVENT_LIBS) -ldevmapper
 
 %.t: %.o $(DEPLIBS)
-	$(CC) -o $@ $(<) $(LDFLAGS) $(LVMLIBS)
+	$(CC) -o $@ $(<) $(LDFLAGS) $(LIBS)
 
 test: $(OBJECTS) $(DEPLIBS)
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS) $(LVMLIBS) $(READLINE_LIBS)
+	$(CC) -o $@ $(OBJECTS) $(LDFLAGS) $(LIBS) $(READLINE_LIBS)
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status test/api/Makefile
