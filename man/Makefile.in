@@ -179,10 +179,10 @@ $(SED)	-e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_PROFILE_DIR#+$(DEFAULT_PROFILE_DIR)+" \
 	-e "s+#DEFAULT_CACHE_DIR#+$(DEFAULT_CACHE_DIR)+" \
 	-e "s+#DEFAULT_LOCK_DIR#+$(DEFAULT_LOCK_DIR)+" \
-	-e "s+#CLVMD_PATH#+/data/lvmtest/usr/sbin/clvmd+" \
-	-e "s+#LVM_PATH#+/data/lvmtest/sbin/lvm+" \
-	-e "s+#DEFAULT_RUN_DIR#+/var/run/lvm+" \
-	-e "s+#DEFAULT_PID_DIR#+/var/run+" \
+	-e "s+#CLVMD_PATH#+$(exec_prefix)/clvmd+" \
+	-e "s+#LVM_PATH#+$(exec_prefix)/lvm+" \
+	-e "s+#DEFAULT_RUN_DIR#+$(DEFAULT_RUN_DIR)+" \
+	-e "s+#DEFAULT_PID_DIR#+$(DEFAULT_PID_DIR)+" \
 	-e "s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+" \
 	-e "s+#DEFAULT_MANGLING#+$(DEFAULT_MANGLING)+" $< > $@
 endef
