@@ -359,6 +359,23 @@ static int _parse_line(struct dm_task *dmt, char *buffer, const char *file,
 	return 1;
 }
 
+/* Parse multiple lines of table */
+static int _parse_table_lines(struct dm_task *dmt)
+{
+	char *pos = _table, *next_pos;
+	int line = 0;
+
+	do {
+		/* Identify and terminate each line */
+		if ((next_pos = strchr(_table, '\n')))
+			*next_pos++ = '\0';
+		if (!_parse_line(dmt, pos, "", ++line))
+			return_0;
+	} while ((pos = next_pos));
+
+	return 1;
+}
+
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
 	char *buffer = NULL;
@@ -366,9 +383,9 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	FILE *fp;
 	int r = 0, line = 0;
 
-	/* one-line table on cmdline */
+	/* Table on cmdline or from stdin with --concise */
 	if (_table)
-		return _parse_line(dmt, _table, "", ++line);
+		return _parse_table_lines(dmt);
 
 	/* OK for empty stdin */
 	if (file) {
@@ -1098,21 +1115,17 @@ out:
 	return r;
 }
 
-static int _create(CMD_ARGS)
+static int _create_one_device(const char *name, const char *file)
 {
 	int r = 0;
 	struct dm_task *dmt;
-	const char *file = NULL;
 	uint32_t cookie = 0;
 	uint16_t udev_flags = 0;
-
-	if (argc == 2)
-		file = argv[1];
 
 	if (!(dmt = dm_task_create(DM_DEVICE_CREATE)))
 		return_0;
 
-	if (!dm_task_set_name(dmt, argv[0]))
+	if (!dm_task_set_name(dmt, name))
 		goto_out;
 
 	if (_switches[UUID_ARG] && !dm_task_set_uuid(dmt, _uuid))
@@ -1185,6 +1198,221 @@ out:
 	dm_task_destroy(dmt);
 
 	return r;
+}
+
+#define DEFAULT_BUF_SIZE 4096
+
+static char *_slurp_stdin(void)
+{
+	char *buf, *pos;
+	size_t bufsize = DEFAULT_BUF_SIZE;
+	size_t total = 0;
+	ssize_t n = 0;
+
+	if (!(buf = dm_malloc(bufsize))) {
+		log_error("Buffer memory allocation failed.");
+		return NULL;
+	}
+
+	pos = buf;
+	do  {
+		do
+			n = read(STDIN_FILENO, pos, (size_t) bufsize - total - 1);
+		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
+
+		if (n < 0) {
+			log_error("Read from stdin aborted: %s", strerror(errno));
+			dm_free(buf);
+			return NULL;
+		}
+
+		if (!n)
+			break;
+
+		total += n;
+		pos += n;
+		if (total == bufsize - 1) {
+			bufsize *= 2;
+			if (!(buf = dm_realloc(buf, bufsize))) {
+				log_error("Buffer memory extension to %" PRIsize_t " bytes failed.", bufsize);
+				return NULL;
+			}
+		}
+	} while (1);
+
+	buf[total] = '\0';
+
+	return buf;
+}
+
+static int _create_concise(const struct command *cmd, int argc, char **argv)
+{
+	char *concise_format;
+	char *c, *n;
+	char *fields[5] = { NULL };	/* name,uuid,minor,flags,table */
+	int f = 0;
+
+	if (_switches[TABLE_ARG] || _switches[MINOR_ARG] || _switches[UUID_ARG] ||
+	    _switches[NOTABLE_ARG] || _switches[INACTIVE_ARG]){
+		log_error("--concise is incompatible with --[no]table, --minor, --uuid and --inactive.");
+		return 0;
+	}
+
+	if (argc)
+		concise_format = argv[0];
+	else if (!(concise_format = _slurp_stdin()))
+		return_0;
+
+	/* Work through input string c, parsing into sets of 5 fields. */
+	/* Strip out any characters quoted by backslashes in-place. */
+	/* Read characters from c and prepare them in situ for final processing at n */
+	c = n = fields[f] = concise_format;
+
+	while (*c) {
+		/* Quoted character?  Skip past quote. */
+		if (*c == '\\') {
+			if (!*(++c)) {
+				log_error("Backslash must be followed by another character at end of string.");
+				*n = '\0';
+				log_error("Parsed %d fields: name: %s uuid: %s minor: %s flags: %s table: %s",
+					  f + 1, fields[0], fields[1], fields[2], fields[3], fields[4]);
+				goto out;
+			}
+
+			/* Don't interpret next character */
+			*n++ = *c++;
+
+			continue;
+		} 
+
+		/* Comma marking end of field? */
+		if (*c == ',' && f < 4) {
+			/* Terminate string */
+			*n++ = '\0', c++;
+
+			/* Store start of next field */
+			fields[++f] = n;
+
+			/* Skip any whitespace after field-separating commas */
+			while(isspace(*c))
+				c++;
+
+			continue;
+		} 
+
+		/* Comma marking end of a table line? */
+		if (*c == ',' && f >= 4) {
+			/* Replace comma with newline to match standard table input format */
+			*n++ = '\n', c++;
+
+			continue;
+		} 
+
+		/* Semi-colon marking end of device? */
+		if (*c == ';' || *(c + 1) == '\0') {
+			/* End of input? */
+			if (*c != ';')
+				/* Copy final character */
+				*n++ = *c;
+
+			/* Terminate string */
+			*n++ = '\0', c++;
+
+			if (f != 4) {
+				log_error("Five comma-separated fields are required for each device");
+				log_error("Parsed %d fields: name: %s uuid: %s minor: %s flags: %s table: %s",
+					  f + 1, fields[0], fields[1], fields[2], fields[3], fields[4]);
+				goto out;
+			}
+
+			/* Set up parameters the same way as when specified directly on command line */
+			if (*fields[1]) {
+				_switches[UUID_ARG] = 1;
+				_uuid = fields[1];
+			}
+
+			if (*fields[2]) {
+				_switches[MINOR_ARG] = 1;
+				_int_args[MINOR_ARG] = atoi(fields[2]);
+			}
+
+			if (!strcmp(fields[3], "ro"))
+				_switches[READ_ONLY] = 1;
+			else if (*fields[3] && strcmp(fields[3], "rw")) {
+				log_error("Invalid flags parameter '%s' must be 'ro' or 'rw' or empty.", fields[3]);
+				_uuid = NULL;
+				goto out;
+			}
+
+			_table = fields[4];
+
+			/* Create the device */
+			if (!_create_one_device(fields[0], NULL)) {
+				_uuid = _table = NULL;
+				goto out;
+			}
+
+			/* Clear parameters ready for any further devices */
+			_switches[UUID_ARG] = 0;
+			_switches[MINOR_ARG] = 0;
+			_switches[READ_ONLY] = 0;
+			_uuid = _table = NULL;
+
+			f = 0;
+			fields[0] = n;
+			fields[1] = fields[2] = fields[3] = fields[4] = NULL;
+
+			/* Skip any whitespace after semi-colons */
+			while(isspace(*c))
+				c++;
+
+			continue;
+		} 
+
+		/* Normal character */
+		*n++ = *c++;
+	}
+
+	if (fields[0] != n) {
+		*n = '\0';
+		log_error("Incomplete entry: five comma-separated fields are required for each device");
+		log_error("Parsed %d fields: name: %s uuid: %s minor: %s flags: %s table: %s",
+			  f + 1, fields[0], fields[1], fields[2], fields[3], fields[4]);
+		goto out;
+	}
+
+	return 1;
+
+out:
+	if (!argc)
+		dm_free(concise_format);
+
+	return 0;
+}
+
+static int _create(CMD_ARGS)
+{
+	const char *name;
+	const char *file = NULL;
+
+	if (_switches[CONCISE_ARG]) {
+		if (argc > 1) {
+			log_error("dmsetup create --concise takes at most one argument");
+			return 0;
+		}
+		return _create_concise(cmd, argc, argv);
+	}
+
+	if (!argc) {
+		log_error("Please provide a name for the new device.");
+		return 0;
+	}
+
+	name = argv[0];
+	if (argc == 2)
+		file = argv[1];
+
+	return _create_one_device(name, file);
 }
 
 static int _do_rename(const char *name, const char *new_name, const char *new_uuid) {
@@ -2148,6 +2376,7 @@ static int _status(CMD_ARGS)
 		name = names->name;
 	else {
 		if (!argc && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			/* FIXME Respect deps in concise mode, so they are correctly ordered for recreation */
 			return _process_all(cmd, NULL, argc, argv, 0, _status);
 		name = argv[0];
 	}
@@ -5930,7 +6159,8 @@ static struct command _dmsetup_commands[] = {
 	  "\t    [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
 	  "\t    [-u|uuid <uuid>] [--addnodeonresume|--addnodeoncreate]\n"
 	  "\t    [--readahead {[+]<sectors>|auto|none}]\n"
-	  "\t    [-n|--notable|--table {<table>|<table_file>}]", 1, 2, 0, 0, _create},
+	  "\t    [-n|--notable|--table {<table>|<table_file>}]\n"
+	  "\tcreate --concise [<concise_device_spec_list>]", 0, 2, 0, 0, _create},
 	{"remove", "[--deferred] [-f|--force] [--retry] <device>...", 0, -1, 1, 0, _remove},
 	{"remove_all", "[-f|--force]", 0, 0, 0, 0, _remove_all},
 	{"suspend", "[--noflush] [--nolockfs] <device>...", 0, -1, 1, 0, _suspend},
@@ -6022,6 +6252,11 @@ static void _dmsetup_usage(FILE *out)
 		     "-j <major> -m <minor>\n");
 	fprintf(out, "<mangling_mode> is one of 'none', 'auto' and 'hex'.\n");
 	fprintf(out, "<fields> are comma-separated.  Use 'help -c' for list.\n");
+	fprintf(out, "<concise_device_specification> has single-device entries separated by semi-colons:\n"
+		     "    <name>,<uuid>,<minor>,<flags>,<table>\n"
+		     "        where <flags> is 'ro' or 'rw' (the default) and any of <uuid>, <minor>\n"
+		     "        and <flags> may be empty. Separate extra table lines with commas.\n"
+		     "    E.g.: dev1,,,,0 100 linear 253:1 0,100 100 error;dev2,,,ro,0 1 error\n");
 	fprintf(out, "Table_file contents may be supplied on stdin.\n");
 	fprintf(out, "Options are: devno, devname, blkdevname.\n");
 	fprintf(out, "Tree specific options are: ascii, utf, vt100; compact, inverted, notrunc;\n"
