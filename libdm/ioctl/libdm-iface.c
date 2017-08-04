@@ -1172,17 +1172,17 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	dmi->data_start = sizeof(struct dm_ioctl);
 
 	if (dmt->minor >= 0) {
-		if (dmt->major <= 0) {
-			log_error("Missing major number for persistent device.");
-			goto bad;
-		}
-
 		if (!_dm_multiple_major_support && dmt->allow_default_major_fallback &&
 		    dmt->major != (int) _dm_device_major) {
 			log_verbose("Overriding major number of %d "
 				    "with %u for persistent device.",
 				    dmt->major, _dm_device_major);
 			dmt->major = _dm_device_major;
+		}
+
+		if (dmt->major <= 0) {
+			log_error("Missing major number for persistent device.");
+			goto bad;
 		}
 
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;

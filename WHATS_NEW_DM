@@ -1,5 +1,6 @@
 Version 1.02.143 - 
 =================================
+  Accept minor number without major in library when it knows dm major number.
   Introduce single-line concise table output format: dmsetup table --concise
 
 Version 1.02.142 - 20th July 2017
