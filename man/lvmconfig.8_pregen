@@ -79,6 +79,14 @@ line settings from --config.
 .ad b
 .br
 .ad l
+[    \fB--withgeneralpreamble\fP ]
+.ad b
+.br
+.ad l
+[    \fB--withlocalpreamble\fP ]
+.ad b
+.br
+.ad l
 [    \fB--withspaces\fP ]
 .ad b
 .br
@@ -386,6 +394,18 @@ Display version information.
 .br
 Display a full comment for each configuration node. For deprecated
 settings, also display comments about deprecation.
+.ad b
+.HP
+.ad l
+\fB--withgeneralpreamble\fP
+.br
+Display general file preamble at start of output.
+.ad b
+.HP
+.ad l
+\fB--withlocalpreamble\fP
+.br
+Display local file preamble at start of output.
 .ad b
 .HP
 .ad l

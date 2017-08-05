@@ -206,7 +206,7 @@ OO_REPORT: --aligned, --all, --binary, --configreport ConfigReport, --foreign,
 OO_CONFIG: --atversion String, --typeconfig ConfigType, --file String, --ignoreadvanced,
 --ignoreunsupported, --ignorelocal, --list, --mergedconfig, --metadataprofile String,
 --sinceversion String, --showdeprecated, --showunsupported, --validate, --withsummary,
---withcomments, --withspaces, --unconfigured, --withversions
+--withcomments, --withgeneralpreamble, --withlocalpreamble, --withspaces, --unconfigured, --withversions
 
 ---
 

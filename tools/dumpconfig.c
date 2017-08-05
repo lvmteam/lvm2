@@ -234,6 +234,14 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			log_error("--withcomments has no effect with --type list");
 			return EINVALID_CMD_LINE;
 		}
+		if (arg_is_set(cmd, withlocalpreamble_ARG)) {
+			log_error("--withlocalpreamble has no effect with --type list");
+			return EINVALID_CMD_LINE;
+		}
+		if (arg_is_set(cmd, withgeneralpreamble_ARG)) {
+			log_error("--withgeneralpreamble has no effect with --type list");
+			return EINVALID_CMD_LINE;
+		}
 		/* list type does not require status check */
 	} else if (!strcmp(type, "full")) {
 		tree_spec.type = CFG_DEF_TREE_FULL;
@@ -293,13 +301,21 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, withsummary_ARG) || arg_is_set(cmd, list_ARG))
 		tree_spec.withsummary = 1;
+
 	if (arg_is_set(cmd, withcomments_ARG))
 		tree_spec.withcomments = 1;
+
 	if (arg_is_set(cmd, unconfigured_ARG))
 		tree_spec.unconfigured = 1;
 
 	if (arg_is_set(cmd, withversions_ARG))
 		tree_spec.withversions = 1;
+
+	if (arg_is_set(cmd, withgeneralpreamble_ARG))
+		tree_spec.withgeneralpreamble = 1;
+
+	if (arg_is_set(cmd, withlocalpreamble_ARG))
+		tree_spec.withlocalpreamble = 1;
 
 	if (arg_is_set(cmd, withspaces_ARG))
 		tree_spec.withspaces = 1;

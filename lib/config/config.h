@@ -141,6 +141,7 @@ typedef struct cfg_def_item {
 	uint16_t deprecated_since_version;				/* version since this item is deprecated */
 	const char *deprecation_comment;				/* comment about reasons for deprecation and settings that supersede this one */
 	const char *comment;						/* comment */
+	const char *file_premable;					/* comment text to use at the start of the file */
 } cfg_def_item_t;
 
 /* configuration definition tree types */
@@ -173,6 +174,8 @@ struct config_def_tree_spec {
 	unsigned withversions:1;		/* include versions */
 	unsigned withspaces:1;			/* add more spaces in output for better readability */
 	unsigned unconfigured:1;		/* use unconfigured path strings */
+	unsigned withgeneralpreamble:1;		/* include preamble for a general config file */
+	unsigned withlocalpreamble:1;		/* include preamble for a local config file */
 	uint8_t *check_status;			/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };
 

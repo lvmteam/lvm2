@@ -1880,6 +1880,12 @@ int config_write(struct dm_config_tree *cft,
 	}
 
 	log_verbose("Dumping configuration to %s", file);
+
+	if (tree_spec->withgeneralpreamble)
+		fprintf(baton.fp, CFG_PREAMBLE_GENERAL);
+	if (tree_spec->withlocalpreamble)
+		fprintf(baton.fp, CFG_PREAMBLE_LOCAL);
+
 	if (!argc) {
 		if (!dm_config_write_node_out(cft->root, &_out_spec, &baton)) {
 			log_error("Failure while writing to %s", file);

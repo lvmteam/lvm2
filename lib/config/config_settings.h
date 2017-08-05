@@ -121,6 +121,30 @@
 
 cfg_section(root_CFG_SECTION, "(root)", root_CFG_SECTION, 0, vsn(0, 0, 0), 0, NULL, NULL)
 
+#define CFG_PREAMBLE_GENERAL \
+	"# This is an example configuration file for the LVM2 system.\n" \
+	"# It contains the default settings that would be used if there was no\n" \
+	"# @DEFAULT_SYS_DIR@/lvm.conf file.\n" \
+	"#\n" \
+	"# Refer to 'man lvm.conf' for further information including the file layout.\n" \
+	"#\n" \
+	"# Refer to 'man lvm.conf' for information about how settings configured in\n" \
+	"# this file are combined with built-in values and command line options to\n" \
+	"# arrive at the final values used by LVM.\n" \
+	"#\n" \
+	"# Refer to 'man lvmconfig' for information about displaying the built-in\n" \
+	"# and configured values used by LVM.\n" \
+	"#\n" \
+	"# If a default value is set in this file (not commented out), then a\n" \
+	"# new version of LVM using this file will continue using that value,\n" \
+	"# even if the new version of LVM changes the built-in default value.\n" \
+	"#\n" \
+	"# To put this file in a different directory and override @DEFAULT_SYS_DIR@ set\n" \
+	"# the environment variable LVM_SYSTEM_DIR before running the tools.\n" \
+	"#\n" \
+	"# N.B. Take care that each setting only appears once if uncommenting\n" \
+	"# example settings in this file.\n\n"
+
 cfg_section(config_CFG_SECTION, "config", root_CFG_SECTION, 0, vsn(2, 2, 99), 0, NULL,
 	"How LVM configuration settings are handled.\n")
 
@@ -160,6 +184,26 @@ cfg_section(tags_CFG_SECTION, "tags", root_CFG_SECTION, CFG_DEFAULT_COMMENTED, v
 
 cfg_section(local_CFG_SECTION, "local", root_CFG_SECTION, 0, vsn(2, 2, 117), 0, NULL,
 	"LVM settings that are specific to the local host.\n")
+
+#define CFG_PREAMBLE_LOCAL \
+	"# This is a local configuration file template for the LVM2 system\n" \
+	"# which should be installed as @DEFAULT_SYS_DIR@/lvmlocal.conf .\n" \
+	"#\n" \
+	"# Refer to 'man lvm.conf' for information about the file layout.\n" \
+	"#\n" \
+	"# To put this file in a different directory and override\n" \
+	"# @DEFAULT_SYS_DIR@ set the environment variable LVM_SYSTEM_DIR before\n" \
+	"# running the tools.\n" \
+	"#\n" \
+	"# The lvmlocal.conf file is normally expected to contain only the\n" \
+	"# \"local\" section which contains settings that should not be shared or\n" \
+	"# repeated among different hosts.  (But if other sections are present,\n" \
+	"# they *will* get processed.  Settings in this file override equivalent\n" \
+	"# ones in lvm.conf and are in turn overridden by ones in any enabled\n" \
+	"# lvm_<tag>.conf files.)\n" \
+	"#\n" \
+	"# Please take care that each setting only appears once if uncommenting\n" \
+	"# example settings in this file and never copy this file between hosts.\n\n"
 
 cfg(config_checks_CFG, "checks", config_CFG_SECTION, 0, CFG_TYPE_BOOL, 1, vsn(2, 2, 99), NULL, 0, NULL,
 	"If enabled, any LVM configuration mismatch is reported.\n"

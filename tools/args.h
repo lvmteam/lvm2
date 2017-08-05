@@ -783,6 +783,12 @@ arg(withcomments_ARG, '\0', "withcomments", 0, 0, 0,
     "Display a full comment for each configuration node. For deprecated\n"
     "settings, also display comments about deprecation.\n")
 
+arg(withgeneralpreamble_ARG, '\0', "withgeneralpreamble", 0, 0, 0,
+    "Include general config file preamble.\n")
+
+arg(withlocalpreamble_ARG, '\0', "withlocalpreamble", 0, 0, 0,
+    "Include local config file preamble.\n")
+
 arg(withspaces_ARG, '\0', "withspaces", 0, 0, 0,
     "Where appropriate, add more spaces in output for better readability.\n")
 
