@@ -5263,7 +5263,7 @@ static void adopt_locks(void)
 	list_for_each_entry_safe(ls1, l1safe, &ls_found, list) {
 
 		/* The dlm global lockspace is special and doesn't match a VG. */
-		if (!strcmp(ls1->name, gl_lsname_dlm)) {
+		if ((ls1->lm_type == LD_LM_DLM) && !strcmp(ls1->name, gl_lsname_dlm)) {
 			list_del(&ls1->list);
 			free(ls1);
 			continue;
