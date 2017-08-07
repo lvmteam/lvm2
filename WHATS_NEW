@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Fix lvmlockd check for running lock managers during lock adoption.
   Add --withgeneralpreamble and --withlocalpreamble to lvmconfig.
   Improve makefiles' linking.
   Fix some paths in generated makefiles to respected configured settings.

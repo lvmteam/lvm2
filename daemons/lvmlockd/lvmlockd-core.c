@@ -5176,20 +5176,17 @@ static void adopt_locks(void)
 	 * Get list of lockspaces from lock managers.
 	 * Get list of VGs from lvmetad with a lockd type.
 	 * Get list of active lockd type LVs from /dev.
-	 *
-	 * ECONNREFUSED means the lock manager is not running.
-	 * This is expected for at least one of them.
 	 */
 
-	if (lm_support_dlm()) {
+	if (lm_support_dlm() && lm_is_running_dlm()) {
 		rv = lm_get_lockspaces_dlm(&ls_found);
-		if ((rv < 0) && (rv != -ECONNREFUSED))
+		if (rv < 0)
 			goto fail;
 	}
 
-	if (lm_support_sanlock()) {
+	if (lm_support_sanlock() && lm_is_running_sanlock()) {
 		rv = lm_get_lockspaces_sanlock(&ls_found);
-		if ((rv < 0) && (rv != -ECONNREFUSED))
+		if (rv < 0)
 			goto fail;
 	}
 
