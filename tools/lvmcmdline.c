@@ -3465,9 +3465,11 @@ int lvm2_main(int argc, char **argv)
 		}
 	}
 
-	/* turn command -? into command -h */
+	/* turn command -? into command -h and lvm command -? into lvm command -h */
 	if (alias && (argc > 1) && !strcmp(argv[1], "-?"))
 		argv[1] = (char *)"-h";
+	if (!alias && (argc > 2) && !strcmp(argv[2], "-?"))
+		argv[2] = (char *)"-h";
 
 	if (!(cmd = init_lvm(0, 0)))
 		return EINIT_FAILED;
