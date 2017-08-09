@@ -3455,8 +3455,8 @@ int lvm2_main(int argc, char **argv)
 		if (!strcmp(argv[1], "version"))
 			return lvm_return_code(version(NULL, argc, argv));
 
-		/* turn 'lvm -h' and 'lvm --help' into 'lvm help' */
-		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
+		/* turn 'lvm -h', 'lvm --help', 'lvm -?' into 'lvm help' */
+		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-?"))
 			argv[1] = (char *)"help";
 
 		if (*argv[1] == '-') {
@@ -3464,6 +3464,10 @@ int lvm2_main(int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 	}
+
+	/* turn command -? into command -h */
+	if (alias && (argc > 1) && !strcmp(argv[1], "-?"))
+		argv[1] = (char *)"-h";
 
 	if (!(cmd = init_lvm(0, 0)))
 		return EINIT_FAILED;
