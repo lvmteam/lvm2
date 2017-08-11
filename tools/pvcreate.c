@@ -135,6 +135,15 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!pvcreate_params_from_args(cmd, &pp))
 		return EINVALID_CMD_LINE;
 
+	/*
+	 * If --metadatasize was not given with --restorefile, set it to pe_start.
+	 * Later code treats this as a maximum size and reduces it to fit.
+	 */
+	if (!arg_is_set(cmd, metadatasize_ARG) && arg_is_set(cmd, restorefile_ARG))
+		pp.pva.pvmetadatasize = pp.pva.pe_start;
+
+	/* FIXME Also needs to check any 2nd metadata area isn't inside the data area! */
+
 	pp.pv_count = argc;
 	pp.pv_names = argv;
 
