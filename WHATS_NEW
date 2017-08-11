@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Always clear cached bootloaderarea when wiping label e.g. in pvcreate.
   Disallow --bootloaderareasize with pvcreate --restorefile.
   Fix lvmlockd check for running lock managers during lock adoption.
   Add --withgeneralpreamble and --withlocalpreamble to lvmconfig.

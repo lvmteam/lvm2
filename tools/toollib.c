@@ -5398,7 +5398,6 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	struct pvcreate_prompt *prompt, *prompt2;
 	struct physical_volume *pv;
 	struct volume_group *orphan_vg;
-	struct lvmcache_info *info;
 	struct dm_list remove_duplicates;
 	struct dm_list arg_sort;
 	struct pv_list *pvl;
@@ -5810,10 +5809,6 @@ do_command:
 			dm_list_move(&pp->arg_fail, &pd->list);
 			continue;
 		}
-
-		info = lvmcache_info_from_pvid(pd->pvid, pd->dev, 0);
-		if (info)
-			lvmcache_del(info);
 
 		if (!lvmetad_pv_gone_by_dev(pd->dev)) {
 			log_error("Failed to remove PV %s from lvmetad.", pd->name);

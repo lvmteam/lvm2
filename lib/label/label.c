@@ -202,6 +202,7 @@ int label_remove(struct device *dev)
 	int wipe;
 	struct labeller_i *li;
 	struct label_header *lh;
+	struct lvmcache_info *info;
 
 	memset(buf, 0, LABEL_SIZE);
 
@@ -245,8 +246,13 @@ int label_remove(struct device *dev)
 		if (wipe) {
 			log_very_verbose("%s: Wiping label at sector %" PRIu64,
 					 dev_name(dev), sector);
-			if (!dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
+			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
 				       buf)) {
+				/* Also remove the PV record from cache. */
+				info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
+				if (info)
+					lvmcache_del(info);
+			} else {
 				log_error("Failed to remove label from %s at "
 					  "sector %" PRIu64, dev_name(dev),
 					  sector);
