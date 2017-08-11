@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Disallow --bootloaderareasize with pvcreate --restorefile.
   Fix lvmlockd check for running lock managers during lock adoption.
   Add --withgeneralpreamble and --withlocalpreamble to lvmconfig.
   Improve makefiles' linking.

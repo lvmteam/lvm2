@@ -1367,6 +1367,8 @@ OO: --dataalignment SizeKB, --dataalignmentoffset SizeKB, --bootloaderareasize S
 --metadataignore Bool, --norestorefile, --setphysicalvolumesize SizeMB,
 --reportformat ReportFmt, --restorefile String, --uuidstr String, --zero Bool
 ID: pvcreate_general
+RULE: --norestorefile not --restorefile
+RULE: --bootloaderareasize not --restorefile
 
 ---
 
