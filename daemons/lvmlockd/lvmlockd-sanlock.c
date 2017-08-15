@@ -938,7 +938,9 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_resourced rd;
 	uint64_t offset;
+	uint64_t start_offset;
 	int rv;
+	int round = 0;
 
 	if (daemon_test) {
 		*free_offset = (1048576 * LV_LOCK_BEGIN) + (1048576 * (daemon_test_lv_count + 1));
@@ -951,9 +953,22 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
 	rd.rs.num_disks = 1;
 	strncpy(rd.rs.disks[0].path, lms->ss.host_id_disk.path, SANLK_PATH_LEN-1);
 
-	offset = lms->align_size * LV_LOCK_BEGIN;
+	if (ls->free_lock_offset)
+		offset = ls->free_lock_offset;
+	else
+		offset = lms->align_size * LV_LOCK_BEGIN;
+
+	start_offset = offset;
 
 	while (1) {
+		if (offset >= start_offset && round) {
+			/* This indicates the all space are allocated. */
+			log_debug("S %s init_lv_san read back to start offset %llu",
+				ls->name, (unsigned long long)offset);
+			rv = -EMSGSIZE;
+			return rv;
+		}
+
 		rd.rs.disks[0].offset = offset;
 
 		memset(rd.rs.name, 0, SANLK_NAME_LEN);
@@ -963,7 +978,14 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t *free_offset)
 			/* This indicates the end of the device is reached. */
 			log_debug("S %s find_free_lock_san read limit offset %llu",
 				  ls->name, (unsigned long long)offset);
-			return -EMSGSIZE;
+
+			/* remember the NO SPACE offset, if no free area left,
+			 * search from this offset after extend */
+			*free_offset = offset;
+
+			offset = lms->align_size * LV_LOCK_BEGIN;
+			round = 1;
+			continue;
 		}
 
 		/*

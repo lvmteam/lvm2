@@ -3304,7 +3304,6 @@ static int work_init_lv(struct action *act)
 		lm_type = ls->lm_type;
 		memcpy(vg_args, ls->vg_args, MAX_ARGS);
 		free_offset = ls->free_lock_offset;
-		ls->free_lock_offset = 0;
 	}
 	pthread_mutex_unlock(&lockspaces_mutex);
 
