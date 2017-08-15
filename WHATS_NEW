@@ -1,5 +1,6 @@
 Version 2.02.174 - 
 =================================
+  Fix check for 2nd mda at end of disk fits if using pvcreate --restorefile.
   Use maximum metadataarea size that fits with pvcreate --restorefile.
   Always clear cached bootloaderarea when wiping label e.g. in pvcreate.
   Disallow --bootloaderareasize with pvcreate --restorefile.

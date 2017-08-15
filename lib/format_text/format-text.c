@@ -2078,7 +2078,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 {
 	struct format_instance *fid = pv->fid;
 	const char *pvid = (const char *) (*pv->old_id.uuid ? &pv->old_id : &pv->id);
-	uint64_t ba_size, pe_start, pe_end;
+	uint64_t ba_size, pe_start, first_unallocated;
 	uint64_t alignment, alignment_offset;
 	uint64_t disk_size;
 	uint64_t mda_start;
@@ -2213,14 +2213,24 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		 * if defined or locked. If pe_start is not defined yet, count
 		 * with any existing MDA0. If MDA0 does not exist, just use
 		 * LABEL_SCAN_SIZE.
+		 *
+		 * The first_unallocated here is the first unallocated byte
+		 * beyond existing pe_end if there is any preallocated data area
+		 * reserved already so we can take that as lower limit for our MDA1
+		 * start calculation. If data area is not reserved yet, we set
+		 * first_unallocated to 0, meaning this is not our limiting factor
+		 * and we will look at other limiting factors if they exist.
+		 * Of course, if we have preallocated data area, we also must
+		 * have pe_start assigned too (simply, data area needs its start
+		 * and end specification).
 		 */
-		pe_end = pv->pe_count ? (pv->pe_start +
-					 pv->pe_count * (uint64_t)pv->pe_size - 1) << SECTOR_SHIFT
-				      : 0;
+		first_unallocated = pv->pe_count ? (pv->pe_start + pv->pe_count *
+						    (uint64_t)pv->pe_size) << SECTOR_SHIFT
+						 : 0;
 
 		if (pe_start || pe_start_locked) {
-			limit = pe_end ? pe_end : pe_start;
-			limit_name = pe_end ? "pe_end" : "pe_start";
+			limit = first_unallocated ? first_unallocated : pe_start;
+			limit_name = first_unallocated ? "pe_end" : "pe_start";
 		} else {
 			if ((mda = fid_get_mda_indexed(fid, pvid, ID_LEN, 0)) &&
 				 (mdac = mda->metadata_locn)) {
@@ -2239,7 +2249,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 			}
 		}
 
-		if (limit > disk_size)
+		if (limit >= disk_size)
 			goto bad;
 
 		if (mda_size > disk_size) {
@@ -2265,16 +2275,6 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 				mda_start = disk_size - mda_size;
 			}
 		}
-
-		/*
-		 * If PV's pe_end not set yet, set it to the end of the
-		 * area that precedes the MDA1 we've just calculated.
-		 * FIXME: do we need to set this? Isn't it always set before?
-		 */
-		/*if (!pe_end) {
-			pe_end = mda_start;
-			pv->pe_end = pe_end >> SECTOR_SHIFT;
-		}*/
 	}
 
 	if (limit_applied)

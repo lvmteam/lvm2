@@ -149,16 +149,36 @@ grep "incompatible with restored pe_start value" err
 # 300k is multiple of 600k so this should pass
 pvcreate --restorefile "$backupfile" --uui "$uuid1" --dataalignment 300k --dataalignmentoffset 32k "$dev1" 2> err
 not grep "incompatible with restored pe_start value" err
-rm -f "$backupfile"
 
 # pvcreate rejects non-existent uuid given with restorefile
-not pvcreate --uuid "$uuid1" --restorefile "$backupfile" "$dev1"
+not pvcreate --uuid "$uuid2" --restorefile "$backupfile" "$dev1" 2> err
+grep "Can't find uuid $uuid2 in backup file $backupfile" err
 
 # pvcreate rejects restorefile without uuid
-not pvcreate --restorefile "$backupfile" "$dev1"
+not pvcreate --restorefile "$backupfile" "$dev1" 2>err
+grep -- "--uuid is required with --restorefile" err
 
 # pvcreate rejects uuid restore with multiple volumes specified
-not pvcreate --uuid "$uuid1" --restorefile "$backupfile" "$dev1" "$dev2"
+not pvcreate --uuid "$uuid1" --restorefile "$backupfile" "$dev1" "$dev2" 2>err
+grep "Can only set uuid on one volume at once" err
+
+# --bootloaderareasize not allowed with pvcreate --restorefile
+not pvcreate --uuid "$uuid1" --restorefile "$backupfile" --bootloaderareasize 1m "$dev1" "$dev2" 2>err
+grep -- "Command does not accept option combination: --bootloaderareasize  with --restorefile" err
+
+rm -f "$backupfile"
+
+pvcreate --norestorefile --uuid $uuid1 "$dev1"
+vgcreate --physicalextentsize 1m $vg1 "$dev1"
+vgcfgbackup -f "$backupfile" "$vg1"
+vgremove -ff "$vg1"
+pvremove -ff "$dev1"
+
+# when 2nd mda requested on pvcreate --restorefile and not enough space for it, pvcreate fails
+not pvcreate --restorefile "$backupfile" --uuid $uuid1 --metadatacopies 2 "$dev1" 2>err
+grep "Not enough space available for metadata area with index 1 on PV $dev1" err
+
+rm -f "$backupfile"
 
 # pvcreate wipes swap signature when forced
 dd if=/dev/zero of="$dev1" bs=1024 count=64
