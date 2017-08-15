@@ -55,7 +55,4 @@ check pv_field "$dev1" ba_start "262144"
 check pv_field "$dev1" ba_size "786432"
 check pv_field "$dev1" pe_start "1048576"
 
-# error out when restoring the PV and trying to use overlapping bootloader area
 pvremove -ff "$dev1"
-not pvcreate --restorefile "$TESTDIR/vg_with_ba_backup" --uuid "$pv_uuid" --bootloaderareasize 1m "$dev1" 2>err
-grep "Bootloader area would overlap data area" err
