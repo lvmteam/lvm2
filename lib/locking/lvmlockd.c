@@ -365,6 +365,9 @@ static int _remove_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg)
 
 static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, int extend_mb)
 {
+	struct device *dev;
+	char path[PATH_MAX];
+	uint64_t old_size_bytes, new_size_bytes;
 	struct logical_volume *lv = vg->sanlock_lv;
 	struct lvresize_params lp = {
 		.sign = SIGN_NONE,
@@ -374,11 +377,48 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		.force = 1,
 	};
 
+	old_size_bytes = lv->size * SECTOR_SIZE;
+
 	if (!lv_resize(lv, &lp, &vg->pvs)) {
-		log_error("Extend LV %s to size %s failed.",
+		log_error("Extend sanlock LV %s to size %s failed.",
 			  display_lvname(lv), display_size(cmd, lp.size));
 		return 0;
 	}
+
+	new_size_bytes = lv->size * SECTOR_SIZE;
+
+	if (dm_snprintf(path, sizeof(path), "%s/mapper/%s-%s", lv->vg->cmd->dev_dir,
+			lv->vg->name, lv->name) < 0) {
+		log_error("Extend sanlock LV %s name too long - extended size not zeroed.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	log_debug("Extend sanlock LV zeroing blocks from offset " FMTu64 " bytes len %u bytes",
+		  old_size_bytes, (uint32_t)(new_size_bytes - old_size_bytes));
+
+	log_print("Zeroing %u MiB on extended internal lvmlock LV...", extend_mb);
+
+	if (!(dev = dev_cache_get(path, NULL))) {
+		log_error("Extend sanlock LV %s cannot find device.", display_lvname(lv));
+		return 0;
+	}
+
+	if (!dev_open_quiet(dev)) {
+		log_error("Extend sanlock LV %s cannot open device.", display_lvname(lv));
+		return 0;
+	}
+
+	if (!dev_set(dev, old_size_bytes, new_size_bytes - old_size_bytes, 0)) {
+		log_error("Extend sanlock LV %s cannot zero device.", display_lvname(lv));
+		dev_close_immediate(dev);
+		return 0;
+	}
+
+	dev_flush(dev);
+
+	if (!dev_close_immediate(dev))
+		stack;
 
 	return 1;
 }
