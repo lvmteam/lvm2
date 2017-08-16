@@ -2653,9 +2653,9 @@ out_act:
 	if (ls->lm_type == LD_LM_DLM && !strcmp(ls->name, gl_lsname_dlm))
 		global_dlm_lockspace_exists = 0;
 	/* Avoid a name collision of the same lockspace is added again before this thread is cleaned up. */
-	memset(tmp_name, 0, sizeof(tmp_name));
-	snprintf(tmp_name, MAX_NAME, "REM:%s", ls->name);
-	memcpy(ls->name, tmp_name, MAX_NAME);
+	/* FIXME: detect loss of 4 chars? (use 'size(tmp_name) == (MAX_NAME - 4)' and fail??) */
+	dm_strncpy(tmp_name, ls->name, sizeof(tmp_name));
+	snprintf(ls->name, sizeof(ls->name), "REM:%s", tmp_name);
 	pthread_mutex_unlock(&lockspaces_mutex);
 
 	/* worker_thread will join this thread, and free the ls */
