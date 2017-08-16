@@ -437,7 +437,9 @@ out:
 	baton.info = info;
 	baton.label = *label;
 
-	lvmcache_foreach_mda(info, _update_mda, &baton);
+	if (!lvmcache_foreach_mda(info, _update_mda, &baton))
+		return_0;
+
 	lvmcache_make_valid(info);
 
 	return 1;
