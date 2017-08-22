@@ -1,5 +1,6 @@
 Version 1.02.143 - 
 =================================
+  Restore umask when creation of node fails.
   Add --concise to dmsetup create for many devices with tables in one command.
   Accept minor number without major in library when it knows dm major number.
   Introduce single-line concise table output format: dmsetup table --concise

@@ -293,13 +293,12 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
 		  MKDEV((dev_t)major, (dev_t)minor)) < 0)  {
 		log_sys_error("mknod", control);
-		(void) dm_prepare_selinux_context(NULL, 0);
-		return 0;
+		ret = 0;
 	}
 	umask(old_umask);
 	(void) dm_prepare_selinux_context(NULL, 0);
 
-	return 1;
+	return ret;
 }
 #endif
 
