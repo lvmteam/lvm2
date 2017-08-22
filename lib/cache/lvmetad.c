@@ -1281,7 +1281,7 @@ int lvmetad_vg_update_finish(struct volume_group *vg)
 		if (pvl->pv->dev && !lvmetad_pv_found(vg->cmd, &pvl->pv->id, pvl->pv->dev,
 						      vgu->fid ? vgu->fid->fmt : pvl->pv->fmt,
 						      pvl->pv->label_sector, NULL, NULL, NULL))
-			return 0;
+			return_0;
 	}
 
 	vg->lvmetad_update_pending = 0;
