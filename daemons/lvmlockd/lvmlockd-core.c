@@ -2652,8 +2652,14 @@ out_act:
 	ls->drop_vg = drop_vg;
 	if (ls->lm_type == LD_LM_DLM && !strcmp(ls->name, gl_lsname_dlm))
 		global_dlm_lockspace_exists = 0;
-	/* Avoid a name collision of the same lockspace is added again before this thread is cleaned up. */
-	/* FIXME: detect loss of 4 chars? (use 'size(tmp_name) == (MAX_NAME - 4)' and fail??) */
+
+	/*
+	 * Avoid a name collision of the same lockspace is added again before
+	 * this thread is cleaned up.  We just set ls->name to a "junk" value
+	 * for the short period until the struct is freed.  We could make it
+	 * blank or fill it with garbage, but instead set it to REM:<name>
+	 * to make it easier to follow progress of freeing is via log_debug.
+	 */
 	dm_strncpy(tmp_name, ls->name, sizeof(tmp_name));
 	snprintf(ls->name, sizeof(ls->name), "REM:%s", tmp_name);
 	pthread_mutex_unlock(&lockspaces_mutex);
