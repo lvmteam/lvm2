@@ -3842,8 +3842,9 @@ static int add_lock_action(struct action *act)
 	pthread_mutex_lock(&lockspaces_mutex);
 	if (ls_name[0])
 		ls = find_lockspace_name(ls_name);
-	pthread_mutex_unlock(&lockspaces_mutex);
 	if (!ls) {
+		pthread_mutex_unlock(&lockspaces_mutex);
+
 		if (act->op == LD_OP_UPDATE && act->rt == LD_RT_VG) {
 			log_debug("lockspace \"%s\" not found ignored for vg update", ls_name);
 			return -ENOLS;
