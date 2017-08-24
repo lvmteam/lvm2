@@ -397,7 +397,7 @@ the pmspare LV.
 
 If thin pool metadata is damaged, it may be repairable.
 Checking and repairing thin pool metadata is analagous to
-running fsck on a file system.
+running fsck/repair on a file system.
 
 When a thin pool LV is activated, lvm runs the thin_check command
 to check the correctness of the metadata on the pool metadata LV.
@@ -774,7 +774,7 @@ While waiting to be extended, the thin pool will queue writes for up to 60
 seconds (the default).  If data space has not been extended after this
 time, the queued writes will return an error to the caller, e.g. the file
 system.  This can result in file system corruption for non-journaled file
-systems that may require fsck.  When a thin pool returns errors for writes
+systems that may require repair.  When a thin pool returns errors for writes
 to a thin LV, any file system is subject to losing unsynced user data.
 
 The 60 second timeout can be changed or disabled with the dm-thin-pool
@@ -789,7 +789,7 @@ deadlocks.  (The timeout applies to all thin pools on the system.)
 
 Writes to thin LVs immediately return an error, and no writes are queued.
 In the case of a file system, this can result in corruption that may
-require fsck (the specific consequences depend on the thin LV user.)
+require fs repair (the specific consequences depend on the thin LV user.)
 
 .I data percent
 
@@ -858,7 +858,7 @@ repair.
 .br
    See "Manually manage free metadata space of a thin pool LV".
 
-4. Check and repair file system with fsck.
+4. Check and repair file system.
 
 
 .SS Automatic extend settings
