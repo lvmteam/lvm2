@@ -898,7 +898,12 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 		id = ti->prop->id;
 
 		if (_is_time_num(id)) {
+			errno = 0;
 			num = strtol(ti->s, &end, 10);
+			if (errno) {
+				log_error("_translate_time_items: invalid time.");
+				return 0;
+			}
 			switch (id) {
 				case TIME_NUM_MULTIPLIER_NEGATIVE:
 					multiplier = -num;
