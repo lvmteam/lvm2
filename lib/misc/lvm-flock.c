@@ -116,23 +116,26 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 		old_errno = errno;
 		if (!nonblock) {
 			sigint_restore();
-			if (sigint_caught())
+			if (sigint_caught()) {
 				log_error("Giving up waiting for lock.");
+				break;
+			}
 		}
 
 		if (r) {
 			errno = old_errno;
 			log_sys_error("flock", file);
-			if (close(*fd))
-				log_sys_debug("close", file);
-			*fd = -1;
-			return 0;
+			break;
 		}
 
 		if (!stat(file, &buf1) && !fstat(*fd, &buf2) &&
 		    is_same_inode(buf1, buf2))
 			return 1;
 	} while (!nonblock);
+
+	if (close(*fd))
+		log_sys_debug("close", file);
+	*fd = -1;
 
 	return_0;
 }
