@@ -379,7 +379,7 @@ static int setup_dump_socket(void)
 	rv = bind(s, (struct sockaddr *) &dump_addr, dump_addrlen);
 	if (rv < 0) {
 		rv = -errno;
-		if (!close(s))
+		if (close(s))
 			log_error("failed to close dump socket");
 		return rv;
 	}
