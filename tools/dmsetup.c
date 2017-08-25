@@ -7054,7 +7054,13 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		if (c == 'M' || ind == MODE_ARG) {
 			_switches[MODE_ARG]++;
 			/* FIXME Accept modes as per chmod */
-			_int_args[MODE_ARG] = (int) strtol(optarg, NULL, 8);
+			errno = 0;
+			_int_args[MODE_ARG] = (int) strtol(optarg, &s, 8);
+			if (errno || !s || *s || !_int_args[MODE_ARG]) {
+				log_error("Invalid argument for --mode: %s. %s",
+					  optarg, errno ? strerror(errno) : "");
+				return 0;
+			}
 		}
 		if (ind == DEFERRED_ARG)
 			_switches[DEFERRED_ARG]++;
