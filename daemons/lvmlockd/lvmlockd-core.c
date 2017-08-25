@@ -3539,11 +3539,15 @@ static int setup_worker_thread(void)
 
 static void close_worker_thread(void)
 {
+	int perrno;
+
 	pthread_mutex_lock(&worker_mutex);
 	worker_stop = 1;
 	pthread_cond_signal(&worker_cond);
 	pthread_mutex_unlock(&worker_mutex);
-	pthread_join(worker_thread, NULL);
+
+	if ((perrno = pthread_join(worker_thread, NULL)))
+		log_error("pthread_join worker_thread error %d", perrno);
 }
 
 /* client_mutex is locked */
@@ -3769,7 +3773,8 @@ static int client_send_result(struct client *cl, struct action *act)
 	if (dump_fd >= 0) {
 		/* To avoid deadlock, send data here after the reply. */
 		send_dump_buf(dump_fd, dump_len);
-		close(dump_fd);
+		if (close(dump_fd))
+			log_error("failed to close dump socket %d", dump_fd);
 	}
 
 	return rv;
@@ -4786,11 +4791,15 @@ static int setup_client_thread(void)
 
 static void close_client_thread(void)
 {
+	int perrno;
+
 	pthread_mutex_lock(&client_mutex);
 	client_stop = 1;
 	pthread_cond_signal(&client_cond);
 	pthread_mutex_unlock(&client_mutex);
-	pthread_join(client_thread, NULL);
+
+	if ((perrno = pthread_join(client_thread, NULL)))
+		log_error("pthread_join client_thread error %d", perrno);
 }
 
 /*
