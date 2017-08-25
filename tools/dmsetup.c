@@ -6157,7 +6157,7 @@ static struct command _dmsetup_commands[] = {
 	{"create", "<dev_name>\n"
 	  "\t    [-j|--major <major> -m|--minor <minor>]\n"
 	  "\t    [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
-	  "\t    [-u|uuid <uuid>] [--addnodeonresume|--addnodeoncreate]\n"
+	  "\t    [-u|--uuid <uuid>] [--addnodeonresume|--addnodeoncreate]\n"
 	  "\t    [--readahead {[+]<sectors>|auto|none}]\n"
 	  "\t    [-n|--notable|--table {<table>|<table_file>}]\n"
 	  "\tcreate --concise [<concise_device_spec_list>]", 0, 2, 0, 0, _create},
