@@ -4761,8 +4761,8 @@ static void *client_thread_main(void *arg_in)
 			} else {
 				pthread_mutex_unlock(&cl->mutex);
 			}
-		}
-		pthread_mutex_unlock(&client_mutex);
+		} else
+			pthread_mutex_unlock(&client_mutex);
 	}
 out:
 	return NULL;
