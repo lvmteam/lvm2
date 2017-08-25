@@ -1105,31 +1105,25 @@ static void be_daemon(int timeout)
 		break;
 
 	default:       /* Parent */
+		(void) close(devnull);
 		(void) close(child_pipe[1]);
-		wait_for_child(child_pipe[0], timeout);
+		wait_for_child(child_pipe[0], timeout); /* noreturn */
 	}
 
 	/* Detach ourself from the calling environment */
-	if (close(0) || close(1) || close(2)) {
-		perror("Error closing terminal FDs");
-		exit(4);
-	}
-	setsid();
+	(void) dup2(devnull, STDIN_FILENO);
+	(void) dup2(devnull, STDOUT_FILENO);
+	(void) dup2(devnull, STDERR_FILENO);
 
-	if (dup2(devnull, 0) < 0 || dup2(devnull, 1) < 0
-	    || dup2(devnull, 2) < 0) {
-		perror("Error setting terminal FDs to /dev/null");
-		log_error("Error setting terminal FDs to /dev/null: %m");
-		exit(5);
-	}
-	if ((devnull > STDERR_FILENO) && close(devnull)) {
-		log_sys_error("close", "/dev/null");
-		exit(7);
-	}
+	if (devnull > STDERR_FILENO)
+		(void) close(devnull);
+
 	if (chdir("/")) {
 		log_error("Error setting current directory to /: %m");
 		exit(6);
 	}
+
+	setsid();
 }
 
 static int verify_message(char *buf, int len)
