@@ -28,6 +28,7 @@
 #define LD_RF_NO_GL_LS          0x00000002
 #define LD_RF_WARN_GL_REMOVED   0x00000004
 #define LD_RF_DUP_GL_LS         0x00000008
+#define LD_RF_NO_LM		0x00000010
 
 /* lockd_state flags */
 #define LDST_EX			0x00000001

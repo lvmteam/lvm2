@@ -115,6 +115,9 @@ static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_fla
 	if (strstr(flags_str, "NO_GL_LS"))
 		*lockd_flags |= LD_RF_NO_GL_LS;
 
+	if (strstr(flags_str, "NO_LM"))
+		*lockd_flags |= LD_RF_NO_LM;
+
 	if (strstr(flags_str, "DUP_GL_LS"))
 		*lockd_flags |= LD_RF_DUP_GL_LS;
 
@@ -1362,6 +1365,9 @@ int lockd_gl_create(struct cmd_context *cmd, const char *def_mode, const char *v
 			log_error("Global lock failed: check that VG holding global lock exists and is started.");
 		else
 			log_error("Global lock failed: check that global lockspace is started.");
+
+		if (lockd_flags & LD_RF_NO_LM)
+			log_error("Start a lock manager, lvmlockd did not find one running.");
 		return 0;
 	}
 
@@ -1565,6 +1571,9 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 	 * access to lease storage.
 	 */
 
+	if (result == -ENOLS && (lockd_flags & LD_RF_NO_LM))
+		log_error("Start a lock manager, lvmlockd did not find one running.");
+
 	if (result == -ENOLS ||
 	    result == -ESTARTING ||
 	    result == -EVGKILLED ||
@@ -1583,6 +1592,7 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 				log_error("Global lock failed: storage failed for sanlock leases");
 			else
 				log_error("Global lock failed: error %d", result);
+
 			return 0;
 		}
 

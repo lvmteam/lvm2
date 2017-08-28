@@ -3676,7 +3676,7 @@ static int client_send_result(struct client *cl, struct action *act)
 			if (!gl_lsname_dlm[0])
 				strcat(result_flags, "NO_GL_LS,");
 		} else {
-			strcat(result_flags, "NO_GL_LS,");
+			strcat(result_flags, "NO_GL_LS,NO_LM");
 		}
 	}
 
