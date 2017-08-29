@@ -3676,7 +3676,17 @@ static int client_send_result(struct client *cl, struct action *act)
 			if (!gl_lsname_dlm[0])
 				strcat(result_flags, "NO_GL_LS,");
 		} else {
-			strcat(result_flags, "NO_GL_LS,NO_LM");
+			int found_lm = 0;
+
+			if (lm_support_dlm() && lm_is_running_dlm())
+				found_lm++;
+			if (lm_support_sanlock() && lm_is_running_sanlock())
+				found_lm++;
+
+			if (!found_lm)
+				strcat(result_flags, "NO_GL_LS,NO_LM");
+			else
+				strcat(result_flags, "NO_GL_LS");
 		}
 	}
 
