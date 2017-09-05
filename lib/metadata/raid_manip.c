@@ -3426,6 +3426,12 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	int s;
 	struct lv_segment *seg = first_seg(lv);
 
+	if (is_lockd_type(lv->vg->lock_type)) {
+		log_error("Splitting raid image is not allowed with lock_type %s.",
+			  lv->vg->lock_type);
+		return 0;
+	}
+
 	if (!seg_is_mirrored(seg)) {
 		log_error("Unable to split images from non-mirrored RAID.");
 		return 0;
