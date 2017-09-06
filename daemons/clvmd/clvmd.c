@@ -1111,12 +1111,18 @@ static void be_daemon(int timeout)
 	}
 
 	/* Detach ourself from the calling environment */
-	(void) dup2(devnull, STDIN_FILENO);
-	(void) dup2(devnull, STDOUT_FILENO);
-	(void) dup2(devnull, STDERR_FILENO);
+	if ((dup2(devnull, STDIN_FILENO) == -1) ||
+	    (dup2(devnull, STDOUT_FILENO) == -1) ||
+	    (dup2(devnull, STDERR_FILENO) == -1)) {
+		perror("Error setting terminal FDs to /dev/null");
+		log_error("Error setting terminal FDs to /dev/null: %m");
+		exit(5);
+	}
 
-	if (devnull > STDERR_FILENO)
-		(void) close(devnull);
+	if ((devnull > STDERR_FILENO) && close(devnull)) {
+		log_sys_error("close", "/dev/null");
+		exit(7);
+	}
 
 	if (chdir("/")) {
 		log_error("Error setting current directory to /: %m");

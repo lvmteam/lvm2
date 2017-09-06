@@ -377,15 +377,22 @@ static void _daemonise(daemon_state s)
 		exit(WEXITSTATUS(child_status));
 	}
 
-	if (chdir("/"))
+	if (chdir("/")) {
+		perror("Cannot chdir to /");
 		exit(1);
+	}
 
-	(void) dup2(fd, STDIN_FILENO);
-	(void) dup2(fd, STDOUT_FILENO);
-	(void) dup2(fd, STDERR_FILENO);
+	if ((dup2(fd, STDIN_FILENO) == -1) ||
+	    (dup2(fd, STDOUT_FILENO) == -1) ||
+	    (dup2(fd, STDERR_FILENO) == -1)) {
+		perror("Error setting terminal FDs to /dev/null");
+		exit(2);
+	}
 
-	if (fd > STDERR_FILENO)
-		(void) close(fd);
+	if ((fd > STDERR_FILENO) && close(fd)) {
+		perror("Failed to close /dev/null descriptor");
+		exit(3);
+	}
 
 	/* Switch to sysconf(_SC_OPEN_MAX) ?? */
 	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0)
