@@ -124,10 +124,16 @@ fi
 
 echo "$TESTNAME" >TESTNAME
 
+# Require 50M of free space in testdir
+test $(df -k . | awk '/\// {print $4}') -gt 51200  ||
+	die "Testing requires more then 50M of free space in directory $TESTDIR!\n$(df -H)"
+
 echo "Kernel is $(uname -a)"
 # Report SELinux mode
 echo "Selinux mode is $(getenforce 2>/dev/null || echo not installed)."
 free -m || true
+
+df -h || true
 
 # Set vars from utils now that we have TESTDIR/PREFIX/...
 prepare_test_vars
