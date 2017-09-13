@@ -399,13 +399,13 @@ settings, also display comments about deprecation.
 .ad l
 \fB--withgeneralpreamble\fP
 .br
-Display general file preamble at start of output.
+Include general config file preamble.
 .ad b
 .HP
 .ad l
 \fB--withlocalpreamble\fP
 .br
-Display local file preamble at start of output.
+Include local config file preamble.
 .ad b
 .HP
 .ad l

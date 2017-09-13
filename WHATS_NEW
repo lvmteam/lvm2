@@ -1,5 +1,5 @@
-Version 2.02.174 - 
-=================================
+Version 2.02.174 - 13th September 2017
+======================================
   Prevent raid1 split with trackchanges in a shared VG.
   Avoid double unlocking of client & lockspace mutexes in lvmlockd.
   Fix leaking of file descriptor for non-blocking filebased locking.
