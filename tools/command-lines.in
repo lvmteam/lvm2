@@ -664,12 +664,13 @@ FLAGS: SECONDARY_SYNTAX
 # and the LV type is known.
 
 lvconvert --repair LV_raid_mirror_thinpool
-OO: --usepolicies, --interval Number, OO_LVCONVERT
+OO: --usepolicies, --interval Number, --poolmetadataspare Bool, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_repair_pvs_or_thinpool
 DESC: Replace failed PVs in a raid or mirror LV.
 DESC: Repair a thin pool.
 RULE: all not lv_is_locked lv_is_pvmove
+RULE: --poolmetadataspare Bool and LV_cache LV_cachepool LV_thinpool
 
 lvconvert --replace PV LV_raid
 OO: OO_LVCONVERT
