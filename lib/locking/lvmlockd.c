@@ -1646,15 +1646,15 @@ int lockd_gl(struct cmd_context *cmd, const char *def_mode, uint32_t flags)
 			 */
 			log_error("Global lock failed: held by other host.");
 			return 0;
+		} else {
+			/*
+			 * We don't intend to reach this.  We should check
+			 * any known/possible error specifically and print
+			 * a more helpful message.  This is for completeness.
+			 */
+			log_error("Global lock failed: error %d.", result);
+			return 0;
 		}
-
-		/*
-		 * We don't intend to reach this.  We should check
-		 * any known/possible error specifically and print
-		 * a more helpful message.  This is for completeness.
-		 */
-		log_error("Global lock failed: error %d.", result);
-		return 0;
 	}
 
  allow:
@@ -2380,16 +2380,15 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 	if (!_lvmlockd_connected)
 		return 0;
 
-	if (!lp->needs_lockd_init)
+	if (!lp->needs_lockd_init) {
 		/* needs_lock_init is set for LVs that need a lockd lock. */
 		return 1;
 
-	if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
+	} else if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
 		log_error("Use lvconvert for cache with lock type %s", vg->lock_type);
 		return 0;
-	}
 
-	if (!seg_is_thin_volume(lp) && lp->snapshot) {
+	} else if (!seg_is_thin_volume(lp) && lp->snapshot) {
 		struct logical_volume *origin_lv;
 
 		/*
@@ -2414,9 +2413,8 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		}
 		lv->lock_args = NULL;
 		return 1;
-	}
 
-	if (seg_is_thin(lp)) {
+	} else if (seg_is_thin(lp)) {
 		if ((seg_is_thin_volume(lp) && !lp->create_pool) ||
 		    (!seg_is_thin_volume(lp) && lp->snapshot)) {
 			struct lv_list *lvl;
@@ -2437,9 +2435,8 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			}
 			lv->lock_args = NULL;
 			return 1;
-		}
 
-		if (seg_is_thin_volume(lp) && lp->create_pool) {
+		} else if (seg_is_thin_volume(lp) && lp->create_pool) {
 			/*
 			 * Creating a thin pool and a thin lv in it.  We could
 			 * probably make this work.
@@ -2447,20 +2444,20 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			log_error("Create thin pool and thin LV separately with lock type %s",
 				  vg->lock_type);
 			return 0;
-		}
 
-		if (!seg_is_thin_volume(lp) && lp->create_pool) {
+		} else if (!seg_is_thin_volume(lp) && lp->create_pool) {
 			/* Creating a thin pool only. */
 			/* lv_name_lock = lp->pool_name; */
 
+		} else {
+			log_error("Unknown thin options for lock init.");
+			return 0;
 		}
 
-		log_error("Unknown thin options for lock init.");
-		return 0;
+	} else {
+		/* Creating a normal lv. */
+		/* lv_name_lock = lv_name; */
 	}
-
-	/* Creating a normal lv. */
-	/* lv_name_lock = lv_name; */
 
 	/*
 	 * The LV gets its own lock, so set lock_args to non-NULL.
