@@ -2385,6 +2385,10 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 		return 1;
 
 	} else if (seg_is_cache(lp) || seg_is_cache_pool(lp)) {
+		/*
+		 * This should not happen because the command defs are
+		 * checked and excluded for shared VGs early in lvcreate.
+		 */
 		log_error("Use lvconvert for cache with lock type %s", vg->lock_type);
 		return 0;
 
@@ -2440,6 +2444,9 @@ int lockd_init_lv(struct cmd_context *cmd, struct volume_group *vg, struct logic
 			/*
 			 * Creating a thin pool and a thin lv in it.  We could
 			 * probably make this work.
+			 *
+			 * This should not happen because the command defs are
+			 * checked and excluded for shared VGs early in lvcreate.
 			 */
 			log_error("Create thin pool and thin LV separately with lock type %s",
 				  vg->lock_type);
