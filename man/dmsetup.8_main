@@ -559,14 +559,14 @@ Set the table being loaded read-only.
 .BR -S | --select
 .IR selection
 .br
-Display only rows that match \fIselection\fP criteria. All rows are displayed
-with the additional "selected" column (\fB-o selected\fP) showing 1 if the row
-matches the \fIselection\fP and 0 otherwise. The selection criteria are defined
-by specifying column names and their valid values while making use of
-supported comparison operators. As a quick help and to see full list of
-column names that can be used in selection and the set of supported
-selection operators, check the output of \fBdmsetup\ info\ -c\ -S\ help\fP
-command.
+Process only items that match \fIselection\fP criteria.  If the command is
+producing report output, adding the "selected" column (\fB-o
+selected\fP) displays all rows and shows 1 if the row matches the
+\fIselection\fP and 0 otherwise. The selection criteria are defined by
+specifying column names and their valid values while making use of supported
+comparison operators. As a quick help and to see full list of column names that
+can be used in selection and the set of supported selection operators, check
+the output of \fBdmsetup\ info\ -c\ -S\ help\fP command.
 .
 .HP
 .BR --table
