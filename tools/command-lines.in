@@ -658,17 +658,24 @@ FLAGS: SECONDARY_SYNTAX
 # lvconvert --repair-thinpool LV_thinpool
 # DESC: Repair a thin pool.
 #
+# lvconvert --repair-cache LV_cache
+# DESC: Repair a cache.
+#
+# lvconvert --repair-cachepool LV_cachepool
+# DESC: Repair a cachepool.
+#
 # lvm may want to do different things, or allow different options 
 # depending on which operation is being run, but as it stands, it
 # cannot do anything operation-specific until after the VG is read
 # and the LV type is known.
 
-lvconvert --repair LV_raid_mirror_thinpool
+lvconvert --repair LV_cache_cachepool_mirror_raid_thinpool
 OO: --usepolicies, --interval Number, --poolmetadataspare Bool, OO_LVCONVERT
 OP: PV ...
-ID: lvconvert_repair_pvs_or_thinpool
+ID: lvconvert_repair
 DESC: Replace failed PVs in a raid or mirror LV.
 DESC: Repair a thin pool.
+DESC: Repair a cache pool.
 RULE: all not lv_is_locked lv_is_pvmove
 RULE: --poolmetadataspare Bool and LV_cache LV_cachepool LV_thinpool
 

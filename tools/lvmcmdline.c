@@ -109,7 +109,7 @@ static const struct command_function command_functions[CMD_COUNT] = {
 	{ vgchange_systemid_CMD, vgchange_systemid_cmd },
 
 	/* lvconvert utilities related to repair. */
-	{ lvconvert_repair_pvs_or_thinpool_CMD,	lvconvert_repair_pvs_or_thinpool_cmd },
+	{ lvconvert_repair_CMD,	lvconvert_repair_cmd },
 	{ lvconvert_replace_pv_CMD, lvconvert_replace_pv_cmd },
 
 	/* lvconvert utilities related to snapshots. */
@@ -2877,7 +2877,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		lvmetad_make_unused(cmd);
 	}
 
-	if (cmd->command->command_enum == lvconvert_repair_pvs_or_thinpool_CMD) {
+	if (cmd->command->command_enum == lvconvert_repair_CMD) {
 		log_warn("WARNING: Disabling lvmetad cache for repair command.");
 		lvmetad_set_disabled(cmd, LVMETAD_DISABLE_REASON_REPAIR);
 		log_warn("WARNING: Not using lvmetad because of repair.");

@@ -1,5 +1,6 @@
 Version 2.02.175 - 
 ======================================
+  Support lvconvert --repair with cache and cachepool volumes.
   lvconvert --repair respects --poolmetadataspare option.
 
 Version 2.02.174 - 13th September 2017

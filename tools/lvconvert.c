@@ -2386,6 +2386,180 @@ deactivate_pmslv:
 	return 1;
 }
 
+/* TODO: lots of similar code with  thinpool repair
+ *       investigate possible better code sharing...
+ */
+static int _lvconvert_cache_repair(struct cmd_context *cmd,
+				   struct logical_volume *cache_lv,
+				   struct dm_list *pvh, int poolmetadataspare)
+{
+	const char *dmdir = dm_dir();
+	const char *cache_repair =
+		find_config_tree_str_allow_empty(cmd, global_cache_repair_executable_CFG, NULL);
+	const struct dm_config_node *cn;
+	const struct dm_config_value *cv;
+	int ret = 0, status;
+	int args = 0;
+	const char *argv[19]; /* Max supported 10 args */
+	char *dm_name;
+	char meta_path[PATH_MAX];
+	char pms_path[PATH_MAX];
+	struct logical_volume *pool_lv;
+	struct logical_volume *pmslv;
+	struct logical_volume *mlv;
+
+	pool_lv = lv_is_cache_pool(cache_lv) ? cache_lv : first_seg(cache_lv)->pool_lv;
+	mlv = first_seg(pool_lv)->metadata_lv;
+
+	if (!cache_repair || !cache_repair[0]) {
+		log_error("Cache repair commnand is not configured. Repair is disabled.");
+		return 0; /* Checking disabled */
+	}
+
+	pmslv = cache_lv->vg->pool_metadata_spare_lv;
+
+	/* Check we have pool metadata spare LV */
+	if (!handle_pool_metadata_spare(cache_lv->vg, 0, pvh, 1))
+		return_0;
+
+	if (pmslv != cache_lv->vg->pool_metadata_spare_lv) {
+		if (!vg_write(cache_lv->vg) || !vg_commit(cache_lv->vg))
+			return_0;
+		pmslv = cache_lv->vg->pool_metadata_spare_lv;
+	}
+
+	if (!(dm_name = dm_build_dm_name(cmd->mem, mlv->vg->name,
+					 mlv->name, NULL)) ||
+	    (dm_snprintf(meta_path, sizeof(meta_path), "%s/%s", dmdir, dm_name) < 0)) {
+		log_error("Failed to build cache metadata path.");
+		return 0;
+	}
+
+	if (!(dm_name = dm_build_dm_name(cmd->mem, pmslv->vg->name,
+					 pmslv->name, NULL)) ||
+	    (dm_snprintf(pms_path, sizeof(pms_path), "%s/%s", dmdir, dm_name) < 0)) {
+		log_error("Failed to build pool metadata spare path.");
+		return 0;
+	}
+
+	if (!(cn = find_config_tree_array(cmd, global_cache_repair_options_CFG, NULL))) {
+		log_error(INTERNAL_ERROR "Unable to find configuration for global/cache_repair_options");
+		return 0;
+	}
+
+	for (cv = cn->v; cv && args < 16; cv = cv->next) {
+		if (cv->type != DM_CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "global/cache_repair_options");
+			return 0;
+		}
+		argv[++args] = cv->v.str;
+	}
+
+	if (args == 10) {
+		log_error("Too many options for cache repair command.");
+		return 0;
+	}
+
+	argv[0] = cache_repair;
+	argv[++args] = "-i";
+	argv[++args] = meta_path;
+	argv[++args] = "-o";
+	argv[++args] = pms_path;
+	argv[++args] = NULL;
+
+	if (lv_is_active(cache_lv)) {
+		log_error("Only inactive cache can be repaired.");
+		return 0;
+	}
+
+	if (!activate_lv_local(cmd, pmslv)) {
+		log_error("Cannot activate pool metadata spare volume %s.",
+			  pmslv->name);
+		return 0;
+	}
+
+	if (!activate_lv_local(cmd, mlv)) {
+		log_error("Cannot activate cache pool metadata volume %s.",
+			  mlv->name);
+		goto deactivate_pmslv;
+	}
+
+	if (!(ret = exec_cmd(cmd, (const char * const *)argv, &status, 1))) {
+		log_error("Repair of cache metadata volume of cache %s failed (status:%d). "
+			  "Manual repair required!",
+			  display_lvname(cache_lv), status);
+		goto deactivate_mlv;
+	}
+
+	/* TODO: any active validation of cache-pool metadata? */
+
+deactivate_mlv:
+	if (!deactivate_lv(cmd, mlv)) {
+		log_error("Cannot deactivate pool metadata volume %s.",
+			  mlv->name);
+		return 0;
+	}
+
+deactivate_pmslv:
+	if (!deactivate_lv(cmd, pmslv)) {
+		log_error("Cannot deactivate pool metadata spare volume %s.",
+			  mlv->name);
+		return 0;
+	}
+
+	if (!ret)
+		return 0;
+
+	if (pmslv == cache_lv->vg->pool_metadata_spare_lv) {
+		cache_lv->vg->pool_metadata_spare_lv = NULL;
+		pmslv->status &= ~POOL_METADATA_SPARE;
+		lv_set_visible(pmslv);
+	}
+
+	/* Try to allocate new pool metadata spare LV */
+	if (!handle_pool_metadata_spare(cache_lv->vg, 0, pvh, poolmetadataspare))
+		stack;
+
+	if (dm_snprintf(meta_path, sizeof(meta_path), "%s_meta%%d", cache_lv->name) < 0) {
+		log_error("Can't prepare new metadata name for %s.", cache_lv->name);
+		return 0;
+	}
+
+	if (!generate_lv_name(cache_lv->vg, meta_path, pms_path, sizeof(pms_path))) {
+		log_error("Can't generate new name for %s.", meta_path);
+		return 0;
+	}
+
+	if (!detach_pool_metadata_lv(first_seg(pool_lv), &mlv))
+		return_0;
+
+	/* Swap _pmspare and _cmeta name */
+	if (!swap_lv_identifiers(cmd, mlv, pmslv))
+		return_0;
+
+	if (!attach_pool_metadata_lv(first_seg(pool_lv), pmslv))
+		return_0;
+
+	/* Used _cmeta (now _pmspare) becomes _meta%d */
+	if (!lv_rename_update(cmd, mlv, pms_path, 0))
+		return_0;
+
+	if (!vg_write(cache_lv->vg) || !vg_commit(cache_lv->vg))
+		return_0;
+
+	/* FIXME: just as with  thinpool repair - fix the warning
+	 *        where moving doesn't make any sense (same disk storage)
+         */
+	log_warn("WARNING: If everything works, remove %s volume.",
+		 display_lvname(mlv));
+
+	log_warn("WARNING: Use pvmove command to move %s on the best fitting PV.",
+		 display_lvname(first_seg(pool_lv)->metadata_lv));
+
+	return 1;
+}
+
 static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 			   struct logical_volume *lv,
 			   struct logical_volume *thinpool_lv)
@@ -3371,12 +3545,11 @@ static int _lvconvert_repair_pvs(struct cmd_context *cmd, struct logical_volume 
 	return ret ? ECMD_PROCESSED : ECMD_FAILED;
 }
 
-static int _lvconvert_repair_thinpool(struct cmd_context *cmd, struct logical_volume *lv,
+static int _lvconvert_repair_cachepool_thinpool(struct cmd_context *cmd, struct logical_volume *lv,
 			struct processing_handle *handle)
 {
 	int poolmetadataspare = arg_int_value(cmd, poolmetadataspare_ARG, DEFAULT_POOL_METADATA_SPARE);
 	struct dm_list *use_pvh;
-	int ret;
 
 	if (cmd->position_argc > 1) {
 		/* First pos arg is required LV, remaining are optional PVs. */
@@ -3385,28 +3558,41 @@ static int _lvconvert_repair_thinpool(struct cmd_context *cmd, struct logical_vo
 	} else
 		use_pvh = &lv->vg->pvs;
 
-	ret = _lvconvert_thin_pool_repair(cmd, lv, use_pvh, poolmetadataspare);
+	if (lv_is_thin_pool(lv)) {
+		if (!_lvconvert_thin_pool_repair(cmd, lv, use_pvh, poolmetadataspare))
+			return_ECMD_FAILED;
+	} else /* cache */ {
+		if (!_lvconvert_cache_repair(cmd, lv, use_pvh, poolmetadataspare))
+			return_ECMD_FAILED;
+	}
 
-	return ret ? ECMD_PROCESSED : ECMD_FAILED;
+	return ECMD_PROCESSED;
 }
 
-static int _lvconvert_repair_pvs_or_thinpool_single(struct cmd_context *cmd, struct logical_volume *lv,
+static int _lvconvert_repair_single(struct cmd_context *cmd, struct logical_volume *lv,
 			struct processing_handle *handle)
 {
-	if (lv_is_thin_pool(lv))
-		return _lvconvert_repair_thinpool(cmd, lv, handle);
+	if (lv_is_thin_pool(lv) ||
+	    lv_is_cache(lv) ||
+	    lv_is_cache_pool(lv))
+		return _lvconvert_repair_cachepool_thinpool(cmd, lv, handle);
 
 	if (lv_is_raid(lv) || lv_is_mirror(lv))
 		return _lvconvert_repair_pvs(cmd, lv, handle);
 
-	return_ECMD_FAILED;
+	log_error("Unsupported volume type for repair of volume %s.",
+		  display_lvname(lv));
+
+	return ECMD_FAILED;
 }
 
 /*
  * FIXME: add option --repair-pvs to call _lvconvert_repair_pvs() directly,
  * and option --repair-thinpool to call _lvconvert_repair_thinpool().
+ * and option --repair-cache to call _lvconvert_repair_cache().
+ * and option --repair-cachepool to call _lvconvert_repair_cachepool().
  */
-int lvconvert_repair_pvs_or_thinpool_cmd(struct cmd_context *cmd, int argc, char **argv)
+int lvconvert_repair_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
 	struct lvconvert_result lr = { 0 };
@@ -3429,7 +3615,7 @@ int lvconvert_repair_pvs_or_thinpool_cmd(struct cmd_context *cmd, int argc, char
 	cmd->handles_missing_pvs = 1;
 
 	ret = process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
-			      handle, NULL, &_lvconvert_repair_pvs_or_thinpool_single);
+			      handle, NULL, &_lvconvert_repair_single);
 
 	init_ignore_suspended_devices(saved_ignore_suspended_devices);
 

@@ -240,7 +240,7 @@ int lvchange_rebuild_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvchange_monitor_poll_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvchange_persistent_cmd(struct cmd_context *cmd, int argc, char **argv);
 
-int lvconvert_repair_pvs_or_thinpool_cmd(struct cmd_context *cmd, int argc, char **argv);
+int lvconvert_repair_cmd(struct cmd_context *cmd, int argc, char **argv);
 int lvconvert_replace_pv_cmd(struct cmd_context *cmd, int argc, char **argv);
 
 int lvconvert_merge_snapshot_cmd(struct cmd_context *cmd, int argc, char **argv);
