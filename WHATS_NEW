@@ -1,5 +1,6 @@
 Version 2.02.175 - 
 ======================================
+  Allow shared active mirror LVs with lvmlockd, dlm, and cmirrord.
   Support lvconvert --repair with cache and cachepool volumes.
   lvconvert --repair respects --poolmetadataspare option.
 

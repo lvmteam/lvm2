@@ -160,6 +160,7 @@ struct cmd_context {
 	unsigned lockd_vg_rescan:1;
 	unsigned lockd_vg_default_sh:1;
 	unsigned lockd_vg_enforce_sh:1;
+	unsigned lockd_lv_sh:1;
 	unsigned vg_notify:1;
 	unsigned lv_notify:1;
 	unsigned pv_notify:1;

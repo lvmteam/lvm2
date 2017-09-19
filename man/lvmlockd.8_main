@@ -601,9 +601,11 @@ report an error and fail.
 The shared mode is intended for a multi-host/cluster application or
 file system.
 LV types that cannot be used concurrently
-from multiple hosts include thin, cache, raid, mirror, and snapshot.
+from multiple hosts include thin, cache, raid, and snapshot.
 lvextend on LV with shared locks is not yet allowed.  The LV must be
-deactivated, or activated exclusively to run lvextend.
+deactivated, or activated exclusively to run lvextend.  (LVs with
+the mirror type can be activated in shared mode from multiple hosts
+when using the dlm lock type and cmirrord.)
 
 .IP \fBn\fP
 The command deactivates the LV.  After deactivating the LV, the command

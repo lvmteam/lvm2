@@ -2145,6 +2145,18 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm")) {
+		if (!cluster_mirror_is_available(cmd)) {
+			log_error("Shared cluster mirrors are not available.");
+			return 0;
+		}
+
+		if (log_count > 1) {
+			log_error("Log type, \"mirrored\", is unavailable to cluster mirrors.");
+			return 0;
+		}
+	}
+
 	/* For corelog mirror, activation code depends on
 	 * the global mirror_in_sync status. As we are adding
 	 * a new mirror, it should be set as 'out-of-sync'
