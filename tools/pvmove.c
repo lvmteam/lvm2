@@ -480,7 +480,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		 * If the VG is clustered, we are unable to handle
 		 * snapshots, origins, thin types, RAID or mirror
 		 */
-		if (vg_is_clustered(vg) &&
+		if ((vg_is_clustered(vg) || is_lockd_type(vg->lock_type)) &&
 		    (lv_is_origin(lv) || lv_is_cow(lv) ||
 		     lv_is_thin_type(lv) || lv_is_raid_type(lv))) {
 			log_print_unless_silent("Skipping %s LV %s",
@@ -692,6 +692,7 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 	struct dm_list *allocatable_pvs;
 	struct dm_list *lvs_changed;
 	struct logical_volume *lv_mirr;
+	struct logical_volume *lv = NULL;
 	const char *pv_name = pv_dev_name(pv);
 	unsigned flags = PVMOVE_FIRST_TIME;
 	unsigned exclusive;
@@ -712,27 +713,32 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 			pp->setup_result = EINVALID_CMD_LINE;
 			return ECMD_FAILED;
 		}
+
+		if (!(lv = find_lv(vg, lv_name))) {
+			log_error("Failed to find LV with name %s", lv_name);
+			return ECMD_FAILED;
+		}
 	}
 
 	/*
-	 * We cannot move blocks from under the sanlock leases, so disallow
-	 * pvmoving any PVs used by the lvmlock LV.
+	 * We would need to avoid any PEs used by LVs that are active (ex) on
+	 * other hosts.  For LVs that are active on multiple hosts (sh), we
+	 * would need to used cluster mirrors.
 	 */
-	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
-		struct lv_segment *lvseg;
-		struct physical_volume *sanlock_pv;
-		unsigned s;
+	if (is_lockd_type(vg->lock_type)) {
+		if (!lv) {
+			log_error("pvmove in a shared VG requires a named LV.");
+			return ECMD_FAILED;
+		}
 
-		dm_list_iterate_items(lvseg, &vg->sanlock_lv->segments) {
-			for (s = 0; s < lvseg->area_count; s++) {
-				if (seg_type(lvseg, s) == AREA_PV) {
-					sanlock_pv = seg_pv(lvseg, s);
-					if (sanlock_pv->dev == pv->dev) {
-						log_error("Cannot pvmove device %s used for sanlock leases.", pv_name);
-						return ECMD_FAILED;
-					}
-				}
-			}
+		if (lv_is_lockd_sanlock_lv(lv)) {
+			log_error("pvmove not allowed on internal sanlock LV.");
+			return ECMD_FAILED;
+		}
+
+		if (!lockd_lv(cmd, lv, "ex", LDLV_PERSISTENT)) {
+			log_error("pvmove in a shared VG requires exclusive lock on named LV.");
+			return ECMD_FAILED;
 		}
 	}
 

@@ -826,6 +826,9 @@ using external origins for thin LVs
 splitting mirrors and snapshots from LVs
 .br
 \[bu]
+pvmove of entire PVs, or under LVs activated with shared locks
+.br
+\[bu]
 vgsplit
 .br
 \[bu]

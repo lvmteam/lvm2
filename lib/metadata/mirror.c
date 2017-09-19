@@ -2145,7 +2145,7 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm")) {
+	if (lv->vg->lock_type && !strcmp(lv->vg->lock_type, "dlm") && cmd->lockd_lv_sh) {
 		if (!cluster_mirror_is_available(cmd)) {
 			log_error("Shared cluster mirrors are not available.");
 			return 0;
