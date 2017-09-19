@@ -4464,7 +4464,7 @@ int process_each_pv(struct cmd_context *cmd,
 	 * from all VGs are processed first, removing them from all_devices.  Then
 	 * any devs remaining in all_devices are processed.
 	 */
-	if ((ret = _get_all_devices(cmd, &all_devices) != ECMD_PROCESSED)) {
+	if ((ret = _get_all_devices(cmd, &all_devices)) != ECMD_PROCESSED) {
 		ret_max = ret;
 		goto_out;
 	}
