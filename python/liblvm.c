@@ -2085,6 +2085,8 @@ PyMODINIT_FUNC initlvm(void)
 		PyModule_AddObject(m, "LibLVMError", _LibLVMError);
 	}
 
+	PyErr_Warn(PyExc_DeprecationWarning, "Python API is deprecated, use D-Bus API instead.");
+
 	Py_AtExit(_liblvm_cleanup);
 #ifdef IS_PY3K
 	return m;

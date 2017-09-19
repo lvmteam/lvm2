@@ -18,6 +18,8 @@
 
 #include <stdint.h>
 
+#warning "liblvm2app is deprecated, use D-Bus API instead."
+
 #ifdef __cplusplus
 extern "C" {
 #endif
