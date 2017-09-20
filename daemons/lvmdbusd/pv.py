@@ -79,7 +79,9 @@ class PvState(State):
 
 		self.lv = self._lv_object_list(vg_name)
 
-		if vg_name:
+		# It's possible to have a vg_name and no uuid with the main example
+		# being when the vg_name == '[unknown]'
+		if vg_uuid and vg_name:
 			self.vg_path = cfg.om.get_object_path_by_uuid_lvm_id(
 				vg_uuid, vg_name, vg_obj_path_generate)
 		else:
