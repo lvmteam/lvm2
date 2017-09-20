@@ -60,6 +60,24 @@ aux enable_dev "$dev1"
 lvcreate --type cache-pool -L10 $vg/cpool "$dev1"
 lvconvert -H --cachemode writethrough --cachepool $vg/cpool -Zy $lv1
 
+# Check basic --repair of cachepool metadata
+lvchange -an $vg/$lv1
+lvconvert --repair $vg/$lv1
+
+lvs -a $vg
+check lv_exists $vg ${lv1}_meta0
+
+eval $(lvs -S 'name=~_pmspare' -a --config 'report/mark_hidden_devices=0' -o name --noheading --nameprefixes $vg)
+lvremove -f --yes "$vg/$LVM2_LV_NAME"
+
+# check --repair without creation of _pmspare device
+lvconvert --repair --poolmetadataspare n $vg/$lv1
+check lv_exists $vg ${lv1}_meta1
+
+# check no _pmspare has been created in previous --repair
+test "0" = $(lvs -S 'name=~_pmspare' -a -o name --noheading --nameprefixes $vg | wc -l)
+
+
 aux disable_dev "$dev2"
 
 # Deactivate before remove
@@ -70,11 +88,6 @@ lvchange -an $vg/$lv1
 not lvconvert --uncache $vg/$lv1
 # --yes to drop when Check its prompting
 lvconvert --yes --uncache $vg/$lv1
-
-#lvconvert --repair $vg/$lv1 -vvvvv
-#/$lv1
-
-#lvchange -ay $vg
 
 aux enable_dev "$dev2"
 
