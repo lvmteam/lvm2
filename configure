@@ -12825,6 +12825,10 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_LVMDBUSD" >&5
 $as_echo "$BUILD_LVMDBUSD" >&6; }
+if test "$NOTIFYDBUS_SUPPORT" = yes && test "BUILD_LVMDBUSD" = yes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Building D-Bus support without D-Bus notifications." >&5
+$as_echo "$as_me: WARNING: Building D-Bus support without D-Bus notifications." >&2;}
+fi
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build Python wrapper for liblvm2app.so" >&5
