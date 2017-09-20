@@ -20,7 +20,7 @@ from lvmdbusd import cfg
 # noinspection PyUnresolvedReferences
 from gi.repository import GLib
 import threading
-
+import traceback
 
 STDOUT_TTY = os.isatty(sys.stdout.fileno())
 
@@ -568,6 +568,7 @@ class MThreadRunner(object):
 	def __init__(self, function, *args):
 		self.f = function
 		self.rc = None
+		self.exception = None
 		self.args = args
 		self.function_complete = False
 		self.cond = threading.Condition(threading.Lock())
@@ -577,13 +578,21 @@ class MThreadRunner(object):
 		with self.cond:
 			if not self.function_complete:
 				self.cond.wait()
+		if self.exception:
+			raise self.exception
 		return self.rc
 
 	def _run(self):
-		if len(self.args):
-			self.rc = self.f(*self.args)
-		else:
-			self.rc = self.f()
+		try:
+			if len(self.args):
+				self.rc = self.f(*self.args)
+			else:
+				self.rc = self.f()
+		except BaseException as be:
+			self.exception = be
+			st = traceback.format_exc()
+			log_error("MThreadRunner: exception \n %s" % st)
+			log_error("Exception will be raised in calling thread!")
 
 
 def _remove_objects(dbus_objects_rm):
