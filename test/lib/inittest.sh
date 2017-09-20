@@ -125,7 +125,7 @@ fi
 echo "$TESTNAME" >TESTNAME
 
 # Require 50M of free space in testdir
-test $(df -k . | awk '/\// {print $4}') -gt 51200  ||
+test $(df -k -P . | awk '/\// {print $4}') -gt 51200  ||
 	die "Testing requires more then 50M of free space in directory $TESTDIR!\n$(df -H)"
 
 echo "Kernel is $(uname -a)"
