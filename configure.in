@@ -1464,6 +1464,8 @@ AC_SUBST([LVM2APP_LIB])
 test "$APPLIB" = yes \
   && LVM2APP_LIB=-llvm2app \
   || LVM2APP_LIB=
+AS_IF([test "$APPLIB"],
+      [AC_MSG_WARN([Python bindings are deprecated. Use D-Bus API])])
 
 ################################################################################
 dnl -- Enable cmdlib
@@ -1546,6 +1548,7 @@ if test "$BUILD_LVMDBUSD" = yes; then
 fi
 
 if test "$PYTHON_BINDINGS" = yes -o "$PYTHON2_BINDINGS" = yes -o "$PYTHON3_BINDINGS" = yes; then
+	AC_MSG_WARN([Python bindings are deprecated. Use D-Bus API])
 	test "$APPLIB" != yes && AC_MSG_ERROR([Python_bindings require --enable-applib])
 fi
 
