@@ -12791,6 +12791,10 @@ $as_echo "$APPLIB" >&6; }
 test "$APPLIB" = yes \
   && LVM2APP_LIB=-llvm2app \
   || LVM2APP_LIB=
+if test "$APPLIB"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Python bindings are deprecated. Use D-Bus API" >&5
+$as_echo "$as_me: WARNING: Python bindings are deprecated. Use D-Bus API" >&2;}
+fi
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to compile liblvm2cmd.so" >&5
@@ -13868,6 +13872,8 @@ $as_echo "no" >&6; }
 fi
 
 if test "$PYTHON_BINDINGS" = yes -o "$PYTHON2_BINDINGS" = yes -o "$PYTHON3_BINDINGS" = yes; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Python bindings are deprecated. Use D-Bus API" >&5
+$as_echo "$as_me: WARNING: Python bindings are deprecated. Use D-Bus API" >&2;}
 	test "$APPLIB" != yes && as_fn_error $? "Python_bindings require --enable-applib" "$LINENO" 5
 fi
 
