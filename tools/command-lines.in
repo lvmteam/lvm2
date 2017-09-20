@@ -677,7 +677,7 @@ DESC: Replace failed PVs in a raid or mirror LV.
 DESC: Repair a thin pool.
 DESC: Repair a cache pool.
 RULE: all not lv_is_locked lv_is_pvmove
-RULE: --poolmetadataspare Bool and LV_cache LV_cachepool LV_thinpool
+RULE: --poolmetadataspare and LV_cache LV_cachepool LV_thinpool
 
 lvconvert --replace PV LV_raid
 OO: OO_LVCONVERT
