@@ -1,5 +1,6 @@
 Version 1.02.144 - 
 ======================================
+  Correct return value testing when get reserved values for reporting.
   Take -S with dmsetup suspend/resume/clear/wipe_table/remove/deps/status/table.
 
 Version 1.02.143 - 13th September 2017

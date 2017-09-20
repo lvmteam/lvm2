@@ -3414,7 +3414,7 @@ static int _get_reserved_value(struct dm_report *rh, uint32_t field_num,
 		handler = (dm_report_reserved_handler) tmp_value;
 		if ((r = handler(rh, rh->selection->mem, field_num,
 				 DM_REPORT_RESERVED_GET_DYNAMIC_VALUE,
-				 rvw->matched_name, &tmp_value) <= 0)) {
+				 rvw->matched_name, &tmp_value)) <= 0) {
 			if (r == -1)
 				log_error(INTERNAL_ERROR "%s reserved value handler for field %s has missing"
 					  "implementation of DM_REPORT_RESERVED_GET_DYNAMIC_VALUE action",
