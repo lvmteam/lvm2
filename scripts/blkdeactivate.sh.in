@@ -113,13 +113,13 @@ usage() {
 	echo "      If devices are specified, deactivate only supplied devices and their holders."
 	echo
 	echo "  Options:"
-	echo "    -e | --errors                    Show errors reported from tools"
-	echo "    -h | --help                      Show this help message"
-	echo "    -d | --dmoption    DM_OPTIONS    Comma separated DM specific options"
-	echo "    -l | --lvmoption   LVM_OPTIONS   Comma separated LVM specific options"
-	echo "    -m | --mpathoption MPATH_OPTIONS Comma separated DM-multipath specific options"
-	echo "    -u | --umount                    Unmount the device if mounted"
-	echo "    -v | --verbose                   Verbose mode (also implies -e)"
+	echo "    -e | --errors                     Show errors reported from tools"
+	echo "    -h | --help                       Show this help message"
+	echo "    -d | --dmoptions    DM_OPTIONS    Comma separated DM specific options"
+	echo "    -l | --lvmoptions   LVM_OPTIONS   Comma separated LVM specific options"
+	echo "    -m | --mpathoptions MPATH_OPTIONS Comma separated DM-multipath specific options"
+	echo "    -u | --umount                     Unmount the device if mounted"
+	echo "    -v | --verbose                    Verbose mode (also implies -e)"
 	echo
 	echo "  Device specific options:"
 	echo "    DM_OPTIONS:"
@@ -490,9 +490,9 @@ while test $# -ne 0; do
 		"") ;;
 		"-e"|"--errors") ERRORS=1 ;;
 		"-h"|"--help") usage ;;
-		"-d"|"--dmoption ") get_dmopts "$2" ; shift ;;
-		"-l"|"--lvmoption ") get_lvmopts "$2" ; shift ;;
-		"-m"|"--mpathoption ") get_mpathopts "$2" ; shift ;;
+		"-d"|"--dmoptions") get_dmopts "$2" ; shift ;;
+		"-l"|"--lvmoptions") get_lvmopts "$2" ; shift ;;
+		"-m"|"--mpathoptions") get_mpathopts "$2" ; shift ;;
 		"-u"|"--umount") DO_UMOUNT=1 ;;
 		"-v"|"--verbose") VERBOSE=1 ; ERRORS=1 ;;
 		"-vv") VERBOSE=1 ; ERRORS=1 ; set -x ;;

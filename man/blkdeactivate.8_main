@@ -22,7 +22,7 @@ based devices are handled using the \fBdmsetup\fP(8) command.
 MD devices are handled using the \fBmdadm\fP(8) command.
 .SH OPTIONS
 .TP
-.BR -d ", " --dmoption \ \fIdm_options\fP
+.BR -d ", " --dmoptions \ \fIdm_options\fP
 Comma separated list of device-mapper specific options.
 Accepted \fBdmsetup\fP(8) options are:
 .RS
@@ -41,7 +41,7 @@ the device was skipped.
 .BR -h ", " --help
 Display the help text.
 .TP
-.BR -l ", " --lvmoption \ \fIlvm_options\fP
+.BR -l ", " --lvmoptions \ \fIlvm_options\fP
 Comma-separated list of LVM specific options:
 .RS
 .IP \fIretry\fP
@@ -52,7 +52,7 @@ Deactivating the Volume Group as a whole is quicker than deactivating
 each Logical Volume separately.
 .RE
 .TP
-.BR -m ", " --mpathoption \ \fImpath_options\fP
+.BR -m ", " --mpathoptions \ \fImpath_options\fP
 Comma-separated list of device-mapper multipath specific options:
 .RS
 .IP \fIdisablequeueing\fP
