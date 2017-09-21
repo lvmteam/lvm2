@@ -97,7 +97,7 @@ declare -A SKIP_VG_LIST=()
 # listed here will be added to SKIP_DEVICE_LIST (and SKIP_VG_LIST) automatically.
 # (list is an associative array!)
 #
-declare -A SKIP_UMOUNT_LIST=(["/"]=1 ["/boot"]=1 \
+declare -A SKIP_UMOUNT_LIST=(["/"]=1 \
                              ["/lib"]=1 ["/lib64"]=1 \
                              ["/bin"]=1 ["/sbin"]=1 \
                              ["/var"]=1 ["/var/log"]=1 \
