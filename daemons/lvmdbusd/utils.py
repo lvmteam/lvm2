@@ -584,7 +584,7 @@ class MThreadRunner(object):
 
 	def _run(self):
 		try:
-			if len(self.args):
+			if self.args:
 				self.rc = self.f(*self.args)
 			else:
 				self.rc = self.f()
