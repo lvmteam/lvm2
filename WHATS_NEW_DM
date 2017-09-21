@@ -1,5 +1,6 @@
 Version 1.02.144 - 
 ======================================
+  Fix blkdeactivate regression with failing DM/MD devs deactivation (1.02.142).
   Fix typo in blkdeactivate's '--{dm,lvm,mpath}options' option name.
   Correct return value testing when get reserved values for reporting.
   Take -S with dmsetup suspend/resume/clear/wipe_table/remove/deps/status/table.
