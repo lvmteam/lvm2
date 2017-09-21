@@ -8,6 +8,7 @@ blkdeactivate \(em utility to deactivate block devices
 .RB [ -h ]
 .RB [ -l \  \fIlvm_options\fP ]
 .RB [ -m \  \fImpath_options\fP ]
+.RB [ -r \  \fImdraid_options\fP ]
 .RB [ -u ]
 .RB [ -v ]
 .RI [ device ]
@@ -60,6 +61,14 @@ Disable queueing on all multipath devices before deactivation.
 This avoids a situation where blkdeactivate may end up waiting if
 all the paths are unavailable for any underlying device-mapper multipath
 device.
+.RE
+.TP
+.BR -r ", " --mdraidoption \ \fImdraid_options\fP
+Comma-separated list of MD RAID specific options:
+.RS
+.IP \fIwait\fP
+Wait MD device's resync, recovery or reshape action to complete
+before deactivation.
 .RE
 .TP
 .BR -u ", " --umount
