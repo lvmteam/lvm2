@@ -211,14 +211,15 @@ deactivate_holders () {
 }
 
 deactivate_dm () {
-	local name=$(printf "%s" "$name")
-	test -b "$DEV_DIR/mapper/$name" || return 0
+	local xname
+	xname=$(printf "%s" "$name")
+	test -b "$DEV_DIR/mapper/$xname" || return 0
 	test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
 
-	deactivate_holders "$DEV_DIR/mapper/$name" || return 1
+	deactivate_holders "$DEV_DIR/mapper/$xname" || return 1
 
-	echo -n "  [DM]: deactivating $devtype device $name ($kname)... "
-	if eval "$DMSETUP" $DMSETUP_OPTS remove "$name" "$OUT" "$ERR"; then
+	echo -n "  [DM]: deactivating $devtype device $xname ($kname)... "
+	if eval "$DMSETUP" $DMSETUP_OPTS remove "$xname" "$OUT" "$ERR"; then
 		echo "done"
 	else
 		echo "skipping"
@@ -280,9 +281,10 @@ deactivate_lvm () {
 }
 
 deactivate_md () {
-	local name=$(printf "%s" "$name")
+	local xname
+	xname=$(printf "%s" "$name")
 	local sync_action
-	test -b "$DEV_DIR/$name" || return 0
+	test -b "$DEV_DIR/$xname" || return 0
 	test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
 
 	# Skip MD device deactivation if MD tools missing.
@@ -291,7 +293,7 @@ deactivate_md () {
 		return 1
 	}
 
-	deactivate_holders "$DEV_DIR/$name" || return 1
+	deactivate_holders "$DEV_DIR/$xname" || return 1
 
 	echo -n "  [MD]: deactivating $devtype device $kname... "
 
@@ -307,7 +309,7 @@ deactivate_md () {
 		}
 	}
 
-	if eval "$MDADM" $MDADM_OPTS -S "$name" "$OUT" "$ERR"; then
+	if eval "$MDADM" $MDADM_OPTS -S "$xname" "$OUT" "$ERR"; then
 		echo "done"
 	else
 		echo "skipping"

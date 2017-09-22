@@ -63,7 +63,7 @@ all the paths are unavailable for any underlying device-mapper multipath
 device.
 .RE
 .TP
-.BR -r ", " --mdraidoption \ \fImdraid_options\fP
+.BR -r ", " --mdraidoptions \ \fImdraid_options\fP
 Comma-separated list of MD RAID specific options:
 .RS
 .IP \fIwait\fP
