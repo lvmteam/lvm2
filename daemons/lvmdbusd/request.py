@@ -13,7 +13,7 @@ from gi.repository import GLib
 from .job import Job
 from . import cfg
 import traceback
-from .utils import log_error, mt_async_result
+from .utils import log_error, mt_async_call
 
 
 class RequestEntry(object):
@@ -116,9 +116,9 @@ class RequestEntry(object):
 				if error_rc == 0:
 					if self.cb:
 						if self._return_tuple:
-							mt_async_result(self.cb, (result, '/'))
+							mt_async_call(self.cb, (result, '/'))
 						else:
-							mt_async_result(self.cb, result)
+							mt_async_call(self.cb, result)
 				else:
 					if self.cb_error:
 						if not error_exception:
@@ -129,7 +129,7 @@ class RequestEntry(object):
 							else:
 								error_exception = Exception(error_msg)
 
-						mt_async_result(self.cb_error, error_exception)
+						mt_async_call(self.cb_error, error_exception)
 			else:
 				# We have a job and it's complete, indicate that it's done.
 				self._job.Complete = True

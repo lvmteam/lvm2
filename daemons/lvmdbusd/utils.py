@@ -534,20 +534,26 @@ def add_no_notify(cmdline):
 # ensure all dbus library interaction is done from the same thread!
 
 
-def _async_result(call_back, results):
-	log_debug('Results = %s' % str(results))
-	call_back(results)
+def _async_handler(call_back, parameters):
+	params_str = ", ".join([str(x) for x in parameters])
+	log_debug('Main thread execution, callback = %s, parameters = (%s)' %
+				(str(call_back), params_str))
+
+	try:
+		if parameters:
+			call_back(*parameters)
+		else:
+			call_back()
+	except:
+		st = traceback.format_exc()
+		log_error("mt_async_call: exception (logged, not reported!) \n %s" % st)
 
 
-# Return result in main thread
-def mt_async_result(call_back, results):
-	GLib.idle_add(_async_result, call_back, results)
+# Execute the function on the main thread with the provided parameters, do
+# not return *any* value or wait for the execution to complete!
+def mt_async_call(function_call_back, *parameters):
+	GLib.idle_add(_async_handler, function_call_back, parameters)
 
-
-# Take the supplied function and run it on the main thread and not wait for
-# a result!
-def mt_run_no_wait(function, param):
-	GLib.idle_add(function, param)
 
 # Run the supplied function and arguments on the main thread and wait for them
 # to complete while allowing the ability to get the return value too.

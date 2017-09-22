@@ -8,7 +8,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .automatedproperties import AutomatedProperties
-from .utils import job_obj_path_generate, mt_async_result, mt_run_no_wait
+from .utils import job_obj_path_generate, mt_async_call
 from . import cfg
 from .cfg import JOB_INTERFACE
 import dbus
@@ -30,7 +30,7 @@ class WaitingClient(object):
 				# Remove ourselves from waiting client
 				wc.job_state.remove_waiting_client(wc)
 				wc.timer_id = -1
-				mt_async_result(wc.cb, wc.job_state.Complete)
+				mt_async_call(wc.cb, wc.job_state.Complete)
 				wc.job_state = None
 
 	def __init__(self, job_state, tmo, cb, cbe):
@@ -55,7 +55,7 @@ class WaitingClient(object):
 					GLib.source_remove(self.timer_id)
 					self.timer_id = -1
 
-				mt_async_result(self.cb, self.job_state.Complete)
+				mt_async_call(self.cb, self.job_state.Complete)
 				self.job_state = None
 
 
@@ -188,7 +188,7 @@ class Job(AutomatedProperties):
 	@Complete.setter
 	def Complete(self, value):
 		self.state.Complete = value
-		mt_run_no_wait(Job._signal_complete, self)
+		mt_async_call(Job._signal_complete, self)
 
 	@property
 	def GetError(self):
