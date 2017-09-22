@@ -705,6 +705,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!vg_rename(cmd, vg_to, vg_name_to))
 		goto_bad;
 
+	/* Set old VG name so the metadata operations recognise that the PVs are in an existing VG */
+	vg_to->old_name = vg_from->name;
+
 	/* store it on disks */
 	log_verbose("Writing out updated volume groups");
 

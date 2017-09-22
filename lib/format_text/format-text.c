@@ -448,8 +448,9 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
 		return rlocn;
 
-	log_debug_metadata("Volume group name found in metadata does "
-			   "not match expected name %s.", vgname);
+	log_debug_metadata("Volume group name found in metadata on %s at %" PRIu64 " does "
+			   "not match expected name %s.", 
+			   dev_name(dev_area->dev), dev_area->start + rlocn->offset, vgname);
 
       bad:
 	if ((info = lvmcache_info_from_pvid(dev_area->dev->pvid, dev_area->dev, 0)) &&
