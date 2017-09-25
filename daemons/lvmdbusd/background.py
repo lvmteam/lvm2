@@ -158,5 +158,6 @@ def _run_cmd(req):
 
 
 def cmd_runner(request):
-	t = threading.Thread(target=_run_cmd, args=(request,))
+	t = threading.Thread(target=_run_cmd, args=(request,),
+							name="cmd_runner %s" % str(request.method))
 	t.start()

@@ -138,7 +138,8 @@ def main():
 
 	# Using a thread to process requests, we cannot hang the dbus library
 	# thread that is handling the dbus interface
-	thread_list.append(threading.Thread(target=process_request))
+	thread_list.append(threading.Thread(target=process_request,
+										name='process_request'))
 
 	# Have a single thread handling updating lvm and the dbus model so we
 	# don't have multiple threads doing this as the same time

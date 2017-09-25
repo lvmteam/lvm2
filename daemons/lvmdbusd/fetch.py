@@ -152,7 +152,8 @@ class StateUpdate(object):
 		load(refresh=False, emit_signal=False, need_main_thread=False)
 
 		self.thread = threading.Thread(target=StateUpdate.update_thread,
-										args=(self,))
+										args=(self,),
+										name="StateUpdate.update_thread")
 
 	def load(self, refresh=True, emit_signal=True, cache_refresh=True,
 					log=True, need_main_thread=True):
