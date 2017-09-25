@@ -21,6 +21,7 @@ from lvmdbusd import cfg
 from gi.repository import GLib
 import threading
 import traceback
+import signal
 
 STDOUT_TTY = os.isatty(sys.stdout.fileno())
 
@@ -281,12 +282,47 @@ def log_error(msg, *attributes):
 	_common_log(msg, *attributes)
 
 
+def dump_threads_stackframe():
+	ident_to_name = {}
+
+	for thread_object in threading.enumerate():
+		ident_to_name[thread_object.ident] = thread_object
+
+	stacks = []
+	for thread_ident, frame in sys._current_frames().items():
+		stack = traceback.format_list(traceback.extract_stack(frame))
+
+		# There is a possibility that a thread gets created after we have
+		# enumerated all threads, so this lookup table may be incomplete, so
+		# account for this
+		if thread_ident in ident_to_name:
+			thread_name = ident_to_name[thread_ident].name
+		else:
+			thread_name = "unknown"
+
+		stacks.append("Thread: %s" % (thread_name))
+		stacks.append("".join(stack))
+
+	log_error("Dumping thread stack frames!\n" + "\n".join(stacks))
+
+
 # noinspection PyUnusedLocal
-def handler(signum, frame):
-	cfg.run.value = 0
-	log_debug('Signal handler called with signal %d' % signum)
-	if cfg.loop is not None:
-		cfg.loop.quit()
+def handler(signum):
+	try:
+		if signum == signal.SIGUSR1:
+			dump_threads_stackframe()
+		else:
+			cfg.run.value = 0
+			log_debug('Exiting daemon with signal %d' % signum)
+			if cfg.loop is not None:
+				cfg.loop.quit()
+	except:
+		st = traceback.format_exc()
+		log_error("signal handler: exception (logged, not reported!) \n %s" % st)
+
+	# It's important we report that we handled the exception for the exception
+	# handler to continue to work, especially for signal 10 (SIGUSR1)
+	return True
 
 
 def pv_obj_path_generate():
@@ -535,7 +571,7 @@ def add_no_notify(cmdline):
 
 
 def _async_handler(call_back, parameters):
-	params_str = ", ".join([str(x) for x in parameters])
+	params_str = ", ".join(str(x) for x in parameters)
 	log_debug('Main thread execution, callback = %s, parameters = (%s)' %
 				(str(call_back), params_str))
 
