@@ -538,6 +538,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	}
 
 	if (lv_name && !lv_found) {
+		/* NOTE: Is this now an internal error? It is already checked in _pvmove_setup_single */
 		log_error("Logical volume %s not found.", lv_name);
 		return NULL;
 	}
@@ -715,7 +716,7 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 		}
 
 		if (!(lv = find_lv(vg, lv_name))) {
-			log_error("Failed to find LV with name %s", lv_name);
+			log_error("Logical volume %s not found.", lv_name);
 			return ECMD_FAILED;
 		}
 	}
