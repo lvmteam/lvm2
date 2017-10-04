@@ -6423,7 +6423,7 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	/* https://bugzilla.redhat.com/1439399 */
 	if (lv_is_origin(lv)) {
-		log_error("Can't convert snapshot origin %s.", display_lvname(lv));
+		log_error("Can't convert RAID LV %s while under snapshot.", display_lvname(lv));
 		return 0;
 	}
 
