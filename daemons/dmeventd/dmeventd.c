@@ -62,6 +62,8 @@
 
 #include <syslog.h>
 
+#define DM_SIGNALED_EXIT  1
+#define DM_SCHEDULED_EXIT 2
 static volatile sig_atomic_t _exit_now = 0;	/* set to '1' when signal is given to exit */
 
 /* List (un)link macros. */
@@ -1750,7 +1752,7 @@ static void _init_thread_signals(void)
  */
 static void _exit_handler(int sig __attribute__((unused)))
 {
-	_exit_now = 1;
+	_exit_now = DM_SIGNALED_EXIT;
 }
 
 #ifdef __linux__
@@ -2248,6 +2250,8 @@ int main(int argc, char *argv[])
 	for (;;) {
 		if (_idle_since) {
 			if (_exit_now) {
+				if (_exit_now == DM_SCHEDULED_EXIT)
+					break; /* Only prints shutdown message */
 				log_info("dmeventd detected break while being idle "
 					 "for %ld second(s), exiting.",
 					 (long) (time(NULL) - _idle_since));
@@ -2264,15 +2268,14 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
-		} else if (_exit_now) {
-			_exit_now = 0;
+		} else if (_exit_now == DM_SIGNALED_EXIT) {
+			_exit_now = DM_SCHEDULED_EXIT;
 			/*
 			 * When '_exit_now' is set, signal has been received,
 			 * but can not simply exit unless all
 			 * threads are done processing.
 			 */
-			log_warn("WARNING: There are still devices being monitored.");
-			log_warn("WARNING: Refusing to exit.");
+			log_info("dmeventd received break, scheduling exit.");
 		}
 		_process_request(&fifos);
 		_cleanup_unused_threads();

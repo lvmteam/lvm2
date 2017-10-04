@@ -1,5 +1,6 @@
 Version 1.02.144 - 
 ======================================
+  Schedule exit when received SIGTERM in dmeventd.
   Also try to unmount /boot on blkdeactivate -u if on top of supported device.
   Use blkdeactivate -r wait in blk-availability systemd service/initscript.
   Add blkdeactivate -r wait option to wait for MD resync/recovery/reshape.
