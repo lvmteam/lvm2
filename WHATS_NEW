@@ -1,5 +1,6 @@
 Version 2.02.175 - 
 ======================================
+  Use --help with blockdev when checking for --getsize64 support in fsadm.
   Fix metadata corruption in vgsplit intermediate state.
   Require LV name with pvmove in a shared VG.
   Allow shared active mirror LVs with lvmlockd, dlm, and cmirrord.

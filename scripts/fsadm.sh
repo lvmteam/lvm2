@@ -365,7 +365,7 @@ detect_mounted() {
 # get the full size of device in bytes
 detect_device_size() {
 	# check if blockdev supports getsize64
-	"$BLOCKDEV" 2>&1 | "$GREP" getsize64 >"$NULL"
+	"$BLOCKDEV" --help 2>&1 | "$GREP" getsize64 >"$NULL"
 	if test $? -eq 0; then
 		DEVSIZE=$("$BLOCKDEV" --getsize64 "$VOLUME")
 		test -n "$DEVSIZE" || error "Cannot read size of device \"$VOLUME\"."
