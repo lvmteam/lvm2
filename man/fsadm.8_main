@@ -65,6 +65,11 @@ Be more verbose.
 Answer "yes" at any prompts.
 .
 .HP
+.BR -c | --cryptresize
+.br
+Resize dm-crypt mapping together with filesystem detected on the device. The dm-crypt device must be recognizable by cryptsetup(8).
+.
+.HP
 .BR \fInew_size [ B | K | M | G | T | P | E ]
 .br
 Absolute number of filesystem blocks to be in the filesystem,
@@ -111,4 +116,5 @@ Defaults to "\fI/dev\fP" and must be an absolute path.
 .BR resize_reiserfs (8),
 .BR xfs_info (8),
 .BR xfs_growfs (8),
-.BR xfs_check (8)
+.BR xfs_check (8),
+.BR cryptsetup (8)

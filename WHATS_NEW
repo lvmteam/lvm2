@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Support for encrypted devices in fsadm.
   Improve thin pool overprovisioning and repair warning messages.
 
 Version 2.02.175 - 6th October 2017
