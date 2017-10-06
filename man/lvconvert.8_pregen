@@ -753,10 +753,12 @@ Merge COW snapshot LV into its origin.
 
 Replace failed PVs in a raid or mirror LV. 
 .br
-Repair a thin pool.
+Repair a thin pool. 
+.br
+Repair a cache pool.
 .br
 .P
-\fBlvconvert\fP \fB--repair\fP \fILV\fP\fI_thinpool_mirror_raid\fP
+\fBlvconvert\fP \fB--repair\fP \fILV\fP\fI_thinpool_cache_cachepool_mirror_raid\fP
 .br
 .RS 4
 .ad l
@@ -765,6 +767,10 @@ Repair a thin pool.
 .br
 .ad l
 [    \fB--usepolicies\fP ]
+.ad b
+.br
+.ad l
+[    \fB--poolmetadataspare\fP \fBy\fP|\fBn\fP ]
 .ad b
 .br
 [ COMMON_OPTIONS ]

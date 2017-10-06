@@ -76,8 +76,7 @@ When event-driven system services detect a new LVM device, the first step
 is to automatically scan and cache the metadata from the device.  This is
 done by pvscan --cache.  A second step is to automatically activate LVs
 that are present on the new device.  This auto-activation is done by the
-same pvscan --cache command when the option '-a|--activate ay' is
-included.
+same pvscan --cache command when the option --activate ay is included.
 
 Auto-activation of VGs or LVs can be enabled/disabled using:
 .br
@@ -92,11 +91,11 @@ When this setting is undefined, all LVs are auto-activated (when lvm is
 fully integrated with the event-driven system services.)
 
 When a VG or LV is not auto-activated, traditional activation using
-vgchange or lvchange -a|--activate is needed.
+vgchange or lvchange --activate is needed.
 .IP \[bu] 2
 pvscan auto-activation can be only done in combination with --cache.
 .IP \[bu] 2
-Auto-activation is designated by the "a" argument in '-a|--activate ay'.
+Auto-activation is designated by the "a" argument in --activate ay.
 This is meant to distinguish system generated commands from explicit user
 commands, although it can be used in any activation command.  Whenever it
 is used, the auto_activation_volume_list is applied.
