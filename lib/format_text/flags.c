@@ -48,6 +48,7 @@ static const struct flag _pv_flags[] = {
 	{EXPORTED_VG, "EXPORTED", STATUS_FLAG},
 	{MISSING_PV, "MISSING", COMPATIBLE_FLAG},
 	{MISSING_PV, "MISSING", STATUS_FLAG},
+	{PV_MOVED_VG, NULL, 0},
 	{UNLABELLED_PV, NULL, 0},
 	{0, NULL, 0}
 };

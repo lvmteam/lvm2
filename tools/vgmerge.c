@@ -111,6 +111,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		del_pvl_from_vgs(vg_from, pvl);
 		add_pvl_to_vgs(vg_to, pvl);
 		pvl->pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
+		/* Mark the VGs that still hold metadata for the old VG */
+		pvl->pv->status |= PV_MOVED_VG;
 	}
 
 	/* Fix up LVIDs */
@@ -167,6 +169,9 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	vg_to->extent_count += vg_from->extent_count;
 	vg_to->free_count += vg_from->free_count;
+
+	/* Flag up that some PVs have moved from another VG */
+	vg_to->old_name = vg_from->name;
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");

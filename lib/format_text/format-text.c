@@ -609,14 +609,17 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	struct mda_header *mdah;
 	struct pv_list *pvl;
 	int r = 0;
-       uint64_t new_wrap = 0, old_wrap = 0, new_end;
+	uint64_t new_wrap = 0, old_wrap = 0, new_end;
 	int found = 0;
 	int noprecommit = 0;
+	const char *old_vg_name = NULL;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (pvl->pv->dev == mdac->area.dev) {
 			found = 1;
+			if (pvl->pv->status & PV_MOVED_VG)
+				old_vg_name = vg->old_name;
 			break;
 		}
 	}
@@ -630,8 +633,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area)))
 		goto_out;
 
-	rlocn = _find_vg_rlocn(&mdac->area, mdah,
-			vg->old_name ? vg->old_name : vg->name, &noprecommit);
+	rlocn = _find_vg_rlocn(&mdac->area, mdah, old_vg_name ? : vg->name, &noprecommit);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
 	if (!fidtc->raw_metadata_buf &&
@@ -719,11 +721,14 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	int r = 0;
 	int found = 0;
 	int noprecommit = 0;
+	const char *old_vg_name = NULL;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (pvl->pv->dev == mdac->area.dev) {
 			found = 1;
+			if (pvl->pv->status & PV_MOVED_VG)
+				old_vg_name = vg->old_name;
 			break;
 		}
 	}
@@ -734,9 +739,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area)))
 		goto_out;
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah,
-				     vg->old_name ? vg->old_name : vg->name,
-				     &noprecommit))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, old_vg_name ? : vg->name, &noprecommit))) {
 		mdah->raw_locns[0].offset = 0;
 		mdah->raw_locns[0].size = 0;
 		mdah->raw_locns[0].checksum = 0;

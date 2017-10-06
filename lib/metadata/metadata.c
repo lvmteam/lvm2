@@ -520,6 +520,8 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 				  pv_dev_name(pvl->pv));
 			return 0;
 		}
+                /* Mark the PVs that still hold metadata with the old VG name */
+                pvl->pv->status |= PV_MOVED_VG;
 	}
 
 	return 1;
@@ -3616,6 +3618,7 @@ static int _vg_commit_mdas(struct volume_group *vg)
 int vg_commit(struct volume_group *vg)
 {
 	int cache_updated = 0;
+	struct pv_list *pvl;
 
 	if (!lvmcache_vgname_is_locked(vg->name)) {
 		log_error(INTERNAL_ERROR "Attempt to write new VG metadata "
@@ -3631,11 +3634,14 @@ int vg_commit(struct volume_group *vg)
 		/* Instruct remote nodes to upgrade cached metadata. */
 		if (!remote_commit_cached_metadata(vg))
 			stack; // FIXME: What should we do?
+
 		/*
 		 * We need to clear old_name after a successful commit.
 		 * The volume_group structure could be reused later.
 		 */
 		vg->old_name = NULL;
+	        dm_list_iterate_items(pvl, &vg->pvs)
+			pvl->pv->status &= ~PV_MOVED_VG;
 
 		/* This *is* the original now that it's commited. */
 		release_vg(vg->vg_committed);

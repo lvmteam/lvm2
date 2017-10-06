@@ -84,6 +84,7 @@
 #define CONVERTING		UINT64_C(0x0000000000400000)	/* LV */
 
 #define MISSING_PV		UINT64_C(0x0000000000800000)	/* PV */
+#define PV_MOVED_VG		UINT64_C(0x4000000000000000)	/* PV - Moved to a new VG */
 #define PARTIAL_LV		UINT64_C(0x0000000001000000)	/* LV - derived flag, not
 							   written out in metadata*/
 
@@ -146,7 +147,7 @@
 #define LV_RESHAPE		UINT64_C(0x1000000000000000)    /* Ongoing reshape (number of stripes, stripesize or raid algorithm change):
 								   used as SEGTYPE_FLAG to prevent activation on old runtime */
 #define LV_RESHAPE_DATA_OFFSET	UINT64_C(0x2000000000000000)    /* LV reshape flag data offset (out of place reshaping) */
-/* Next unused flag:		UINT64_C(0x4000000000000000)    */
+/* Next unused flag:		UINT64_C(0x8000000000000000)    */
 
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */

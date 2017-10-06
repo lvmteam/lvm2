@@ -1,7 +1,8 @@
 Version 2.02.175 - 
 ======================================
   Use --help with blockdev when checking for --getsize64 support in fsadm.
-  Fix metadata corruption in vgsplit intermediate state.
+  Fix metadata corruption in vgsplit and vgmerge intermediate states.
+  Add PV_MOVED_VG PV status flag to mark PVs moving between VGs.
   Require LV name with pvmove in a shared VG.
   Allow shared active mirror LVs with lvmlockd, dlm, and cmirrord.
   Support lvconvert --repair with cache and cachepool volumes.
