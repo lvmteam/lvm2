@@ -1,12 +1,17 @@
-Version 2.02.175 - 
-======================================
+Version 2.02.175 - 6th October 2017
+===================================
   Use --help with blockdev when checking for --getsize64 support in fsadm.
+  Dump lvmdbusd debug information with SIGUSR1.
   Fix metadata corruption in vgsplit and vgmerge intermediate states.
   Add PV_MOVED_VG PV status flag to mark PVs moving between VGs.
+  Fix lvmdbus hang and recognise unknown VG correctly.
+  Improve error messages when command rules fail.
   Require LV name with pvmove in a shared VG.
   Allow shared active mirror LVs with lvmlockd, dlm, and cmirrord.
   Support lvconvert --repair with cache and cachepool volumes.
   lvconvert --repair respects --poolmetadataspare option.
+  Mark that we don't plan to develop liblvm2app and python bindings any further.
+  Fix thin pool creation in shared VG. (2.02.173)
 
 Version 2.02.174 - 13th September 2017
 ======================================
