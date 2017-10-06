@@ -1,3 +1,6 @@
+Version 1.02.145 - 
+===================================
+
 Version 1.02.144 - 6th October 2017
 ===================================
   Schedule exit when received SIGTERM in dmeventd.
