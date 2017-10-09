@@ -2272,7 +2272,7 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 	argv[++args] = NULL;
 
 	if (pool_is_active(pool_lv)) {
-		log_error("Only inactive pool can be repaired.");
+		log_error("Active pools cannot be repaired.  Use lvchange -an first.");
 		return 0;
 	}
 
@@ -2377,11 +2377,12 @@ deactivate_pmslv:
 	if (!vg_write(pool_lv->vg) || !vg_commit(pool_lv->vg))
 		return_0;
 
-	log_warn("WARNING: If everything works, remove %s volume.",
+	log_warn("WARNING: LV %s holds a backup of the unrepaired metadata. Use lvremove when no longer required.",
 		 display_lvname(mlv));
 
-	log_warn("WARNING: Use pvmove command to move %s on the best fitting PV.",
-		 display_lvname(first_seg(pool_lv)->metadata_lv));
+	if (dm_list_size(&pool_lv->vg->pvs) > 1)
+		log_warn("WARNING: New metadata LV %s might use different PVs.  Move it with pvmove if required.",
+			 display_lvname(first_seg(pool_lv)->metadata_lv));
 
 	return 1;
 }

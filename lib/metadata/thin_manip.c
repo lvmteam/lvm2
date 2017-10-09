@@ -365,16 +365,19 @@ int pool_check_overprovisioning(const struct logical_volume *lv)
 
 	if (sz != UINT64_C(~0)) {
 		log_warn("WARNING: Sum of all thin volume sizes (%s) exceeds the "
-			 "size of thin pool%s%s%s (%s)!",
+			 "size of thin pool%s%s%s (%s).",
 			 display_size(cmd, thinsum),
 			 more_pools ? "" : " ",
 			 more_pools ? "s" : display_lvname(pool_lv),
 			 txt,
 			 (sz > 0) ? display_size(cmd, sz) : "no free space in volume group");
+		if (max_threshold > 99 || !min_percent)
+			log_print_unless_silent("WARNING: You have not turned on protection against thin pools running out of space.");
 		if (max_threshold > 99)
-			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_threshold should be below 100.");
+			log_print_unless_silent("WARNING: Set activation/thin_pool_autoextend_threshold below 100 to trigger automatic extension of thin pools before they get full.");
 		if (!min_percent)
-			log_print_unless_silent("For thin pool auto extension activation/thin_pool_autoextend_percent should be above 0.");
+			log_print_unless_silent("WARNING: Set activation/thin_pool_autoextend_percent above 0 to specify by how much to extend thin pools reaching the threshold.");
+		/* FIXME Also warn if there isn't sufficient free space for one pool extension to occur? */
 	}
 
 	return 1;
