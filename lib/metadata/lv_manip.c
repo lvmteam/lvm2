@@ -7536,11 +7536,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			status |= LV_NOTSYNCED;
 		}
 
-		lp->region_size = adjusted_mirror_region_size(vg->cmd,
-							      vg->extent_size,
-							      lp->extents,
-							      lp->region_size, 0,
-							      vg_is_clustered(vg));
+		if (seg_is_raid(lp)) {
+			/* Value raid target constraint */
+			if (lp->region_size > (uint64_t)vg->extent_size * lp->extents) {
+				log_error("Cannot create RAID LV with region size larger than LV size.");
+				return NULL;
+			}
+		} else
+			lp->region_size = adjusted_mirror_region_size(vg->cmd,
+								      vg->extent_size,
+								      lp->extents,
+								      lp->region_size, 0,
+								      vg_is_clustered(vg));
 	} else if (pool_lv && seg_is_thin_volume(lp)) {
 		if (!lv_is_thin_pool(pool_lv)) {
 			log_error("Logical volume %s is not a thin pool.",
