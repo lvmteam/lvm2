@@ -143,7 +143,7 @@ static void _check_raid1_seg(struct lv_segment *seg, int *error_count)
 		raid_seg_error("no meta areas");
 	if (seg->stripe_size)
 		raid_seg_error_val("non-zero stripe size", seg->stripe_size);
-	if ((seg->lv->status & LV_RESHAPE_DATA_OFFSET) || seg->data_offset)
+	if ((seg->lv->status & LV_RESHAPE_DATA_OFFSET) || seg->data_offset > 1)
 		raid_seg_error_val("data_offset", seg->data_offset);
 	_check_raid_region_recovery(seg, error_count);
 }
@@ -170,7 +170,7 @@ static void _check_raid45610_seg(struct lv_segment *seg, int *error_count)
 	/* END: checks applying to any raid4/5/6/10 */
 
 	if (seg->lv->status & LV_RESHAPE_DATA_OFFSET) {
-		if (seg->data_offset & (seg->lv->vg->extent_size - 1))
+		if (seg->data_offset > 1 && (seg->data_offset & (seg->lv->vg->extent_size - 1)))
 			raid_seg_error_val("data_offset", seg->data_offset);
 	} else if (seg->data_offset)
 		raid_seg_error_val("data_offset", seg->data_offset);
