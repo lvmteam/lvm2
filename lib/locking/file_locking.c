@@ -51,8 +51,8 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_ACTIVATION:
 		if (dm_snprintf(lockfile, sizeof(lockfile),
-				"%s/A_%s", _lock_dir, resource + 1) < 0) {
-			log_error("Too long locking filename %s/A_%s.", _lock_dir, resource + 1);
+				"%s/A_%s", _lock_dir, resource) < 0) {
+			log_error("Too long locking filename %s/A_%s.", _lock_dir, resource);
 			return 0;
 		}
 
