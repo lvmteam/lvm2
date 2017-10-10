@@ -584,14 +584,14 @@ resize_luks() {
 	NEWCBLOCKCOUNT=$((NEWBLOCKCOUNT - CRYPT_DATA_OFFSET))
 	NEWFSIZE=$(( NEWCBLOCKCOUNT * 512))
 
-	VOLUME="/dev/mapper/$NAME"
+	VOLUME="$DM_DEV_DIR/mapper/$NAME"
 	detect_device_size
 
 	test "$DEVSIZE" -le "$NEWSIZE" || SHRINK=1
 
 	if [ $SHRINK -eq 1 ]; then
 		# shrink fs on LUKS device first
-		resize "/dev/mapper/$NAME" "$NEWFSIZE"b
+		resize "$DM_DEV_DIR/mapper/$NAME" "$NEWFSIZE"b
 	fi
 
 	# resize LUKS device
@@ -599,7 +599,7 @@ resize_luks() {
 
 	if [ $SHRINK -eq 0 ]; then
 		# grow fs on top of LUKS device
-		resize "/dev/mapper/$NAME" "$NEWFSIZE"b
+		resize "$DM_DEV_DIR/mapper/$NAME" "$NEWFSIZE"b
 	fi
 }
 
