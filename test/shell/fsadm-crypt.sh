@@ -130,7 +130,7 @@ crypt_format() {
 # $3 name
 crypt_open() {
 	local kname=
-	echo "$2" | cryptsetup open "$1" "$3"
+	echo "$2" | cryptsetup luksOpen "$1" "$3"
 	test -L "$DM_DEV_DIR/mapper/$3" || {
 		kname=$(get_crypt_kname $3)
 		ln -s "$DM_DEV_DIR/$kname" "$3"
@@ -144,7 +144,7 @@ crypt_open() {
 # $4 header
 crypt_open_detached() {
 	local kname=
-	echo "$2" | cryptsetup open --header "$4" "$1" "$3"
+	echo "$2" | cryptsetup luksOpen --header "$4" "$1" "$3"
 	test -L "$DM_DEV_DIR/mapper/$3" || {
 		kname=$(get_crypt_kname $3)
 		ln -s "$DM_DEV_DIR/$kname" "$3"
@@ -402,8 +402,8 @@ test_reiserfs_plain() {
 	not lvreduce -L-10M -r $1
 	fscheck_reiserfs "$3"
 
-	fsadm --cryptresize resize $3 30M
-	fsadm --cryptresize resize $3 35M
+	fsadm -y --cryptresize resize $3 30M
+	fsadm -y --cryptresize resize $3 35M
 	fscheck_reiserfs "$3"
 
 	crypt_close "$4"
