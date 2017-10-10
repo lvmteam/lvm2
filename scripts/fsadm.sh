@@ -548,9 +548,9 @@ detect_luks_device() {
 		return
 	fi
 
-	_LUKS_UUID="CRYPT-LUKS$_LUKS_VERSION-${_LUKS_UUID//[UID:[:space:]-]/}-*"
+	_LUKS_UUID="CRYPT-LUKS$_LUKS_VERSION-${_LUKS_UUID//[UID:[:space:]-]/}-"
 
-	CRYPT_NAME=$(dmsetup info -c --noheadings -S "UUID=~$_LUKS_UUID&&segments=1&&devnos_used='$MAJOR:$MINOR'" -o name)
+	CRYPT_NAME=$(dmsetup info -c --noheadings -S "UUID=~^$_LUKS_UUID&&segments=1&&devnos_used='$MAJOR:$MINOR'" -o name)
 	test -z "$CRYPT_NAME" || CRYPT_DATA_OFFSET=$(dmsetup table $CRYPT_NAME | cut -d ' ' -f 8)
 }
 
