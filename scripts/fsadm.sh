@@ -534,7 +534,7 @@ detect_luks_device() {
 
 	_LUKS_VERSION=$($CRYPTSETUP luksDump $VOLUME 2> /dev/null | $GREP "Version:")
 
-	if [ -z $_LUKS_VERSION ]; then
+	if [ -z "$_LUKS_VERSION" ]; then
 		verbose "Failed to parse LUKS version on volume \"$VOLUME\""
 		return
 	fi
@@ -543,7 +543,7 @@ detect_luks_device() {
 
 	_LUKS_UUID=$($CRYPTSETUP luksDump $VOLUME 2> /dev/null | $GREP "UUID:")
 
-	if [ -z $_LUKS_UUID ]; then
+	if [ -z "$_LUKS_UUID" ]; then
 		verbose "Failed to parse LUKS UUID on volume \"$VOLUME\""
 		return
 	fi
@@ -552,6 +552,11 @@ detect_luks_device() {
 
 	CRYPT_NAME=$(dmsetup info -c --noheadings -S "UUID=~^$_LUKS_UUID&&segments=1&&devnos_used='$MAJOR:$MINOR'" -o name)
 	test -z "$CRYPT_NAME" || CRYPT_DATA_OFFSET=$(dmsetup table $CRYPT_NAME | cut -d ' ' -f 8)
+
+	# LUKS device must be active and mapped over volume where detected
+	if [ -z "$CRYPT_NAME" -o -z "$CRYPT_DATA_OFFSET" ]; then
+		error "Can not find active LUKS device. Unlock \"$VOLUME\" volume first."
+	fi
 }
 
 ######################################
@@ -565,11 +570,6 @@ resize_luks() {
 	local SHRINK=0
 
 	detect_luks_device
-
-	# LUKS device must be active and mapped over volume where detected
-	if [ -z "$CRYPT_NAME" -o -z "$CRYPT_DATA_OFFSET" ]; then
-		error "Can not find active LUKS device. Unlock \"$VOLUME\" volume first."
-	fi
 
 	NAME=$CRYPT_NAME
 
@@ -682,6 +682,12 @@ diff_dates() {
          echo $(( $("$DATE" -u -d"$1" +%s 2>"$NULL") - $("$DATE" -u -d"$2" +%s 2>"$NULL") ))
 }
 
+check_luks() {
+	detect_luks_device
+
+	check "$DM_DEV_DIR/mapper/$CRYPT_NAME"
+}
+
 ###################
 # Check filesystem
 ###################
@@ -731,6 +737,9 @@ check() {
 		  *i*) dry "$FSCK" $YES $FORCE "$VOLUME" ;;
 		  *) dry "$FSCK" $FORCE -p "$VOLUME" ;;
 		esac ;;
+	  "crypto_LUKS")
+		which $CRYPTSETUP > /dev/null 2>&1 || error "$CRYPTSETUP utility required."
+		check_luks ;;
 	  *)
 		error "Filesystem \"$FSTYPE\" on device \"$VOLUME\" is not supported by this tool." ;;
 	esac
