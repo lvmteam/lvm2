@@ -174,14 +174,20 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 /*
  * Activation locks are wrapped around activation commands that have to
  * be processed atomically one-at-a-time.
- * If a VG WRITE lock is held, an activation lock is redundant.
+ * If a VG WRITE lock is held or clustered activation activates simple LV
+ * an activation lock is redundant.
  *
- * FIXME Test and support this for thin and cache types.
- * FIXME Add cluster support.
+ * Some LV types do require taking a lock common for whole group of LVs.
+ * TODO: For simplicity reasons ATM take a VG activation global lock and
+ *       later more fine-grained component detection algorithm can be added
  */
-#define lv_supports_activation_locking(lv) (!vg_is_clustered((lv)->vg) && !lv_is_thin_type(lv) && !lv_is_cache_type(lv))
-#define lock_activation(cmd, lv)	(vg_write_lock_held() && lv_supports_activation_locking(lv) ? 1 : lock_vol(cmd, (lv)->lvid.s, LCK_ACTIVATE_LOCK, lv))
-#define unlock_activation(cmd, lv)	(vg_write_lock_held() && lv_supports_activation_locking(lv) ? 1 : lock_vol(cmd, (lv)->lvid.s, LCK_ACTIVATE_UNLOCK, lv))
+
+#define lv_type_requires_activation_lock(lv) ((lv_is_thin_type(lv) || lv_is_cache_type(lv) || lv_is_mirror_type(lv) || lv_is_raid_type(lv) || lv_is_origin(lv) || lv_is_snapshot(lv)) ? 1 : 0)
+#define lv_activation_lock_name(lv) (lv_type_requires_activation_lock(lv) ? (lv)->vg->name : (lv)->lvid.s)
+#define lv_requires_activation_lock_now(lv) ((!vg_write_lock_held() && (!vg_is_clustered((lv)->vg) || !lv_type_requires_activation_lock(lv))) ? 1 : 0)
+
+#define lock_activation(cmd, lv)	(lv_requires_activation_lock_now(lv) ? lock_vol(cmd, lv_activation_lock_name(lv), LCK_ACTIVATE_LOCK, lv) : 1)
+#define unlock_activation(cmd, lv)	(lv_requires_activation_lock_now(lv) ? lock_vol(cmd, lv_activation_lock_name(lv), LCK_ACTIVATE_UNLOCK, lv) : 1)
 
 /*
  * Place temporary exclusive 'activation' lock around an LV locking operation

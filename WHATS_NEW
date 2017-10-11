@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Improve selection of resource name for activation lock.
   Avoid cutting 1st. character of resource name for activation lock.
   Support for encrypted devices in fsadm.
   Improve thin pool overprovisioning and repair warning messages.
