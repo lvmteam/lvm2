@@ -725,11 +725,14 @@ check() {
 			# Think about better way....
 			dry "$XFS_REPAIR" -n -o force_geometry "$VOLUME"
 		 fi ;;
-	  *)    # check if executed from interactive shell environment
+	  "ext2"|"ext3"|"ext4"|"reiserfs")
+	        # check if executed from interactive shell environment
 		case "$-" in
 		  *i*) dry "$FSCK" $YES $FORCE "$VOLUME" ;;
 		  *) dry "$FSCK" $FORCE -p "$VOLUME" ;;
-		esac
+		esac ;;
+	  *)
+		error "Filesystem \"$FSTYPE\" on device \"$VOLUME\" is not supported by this tool." ;;
 	esac
 }
 
