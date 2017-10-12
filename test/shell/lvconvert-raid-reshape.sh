@@ -15,6 +15,11 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
+if [[ "$TESTDIR" == /dev/shm/* ]]; then
+	echo "Disabled. This tests is permanently causing /dev/shm exhaustion. RHBZ#1501145"
+	false
+fi
+
 which mkfs.ext4 || skip
 aux have_raid 1 12 0 || skip
 
