@@ -7701,6 +7701,13 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		       lp->pvh, lp->alloc, lp->approx_alloc))
 		return_NULL;
 
+	/* rhbz1269533: allow for 100%FREE allocation to work with "mirror" and a disk log */
+	if (segtype_is_mirror(create_segtype) &&
+	    lp->log_count &&
+	    !vg->free_count &&
+	    lv->le_count > 1)
+		lv_reduce(lv, 1);
+
 	/* Unlock memory if possible */
 	memlock_unlock(vg->cmd);
 
