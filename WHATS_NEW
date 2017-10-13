@@ -1,9 +1,11 @@
 Version 2.02.176 -
 ===================================
-  Improve selection of resource name for activation lock.
-  Avoid cutting 1st. character of resource name for activation lock.
+  Allow lvcreate --type mirror to work with 100%FREE.
+  Improve selection of resource name for complex volume activation lock.
+  Avoid cutting first character of resource name for activation lock.
   Support for encrypted devices in fsadm.
   Improve thin pool overprovisioning and repair warning messages.
+  Fix incorrect adjustment of region size on striped RaidLVs.
 
 Version 2.02.175 - 6th October 2017
 ===================================
