@@ -166,10 +166,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_LV_CLUSTERED(lv)	\
 	(vg_is_clustered((lv)->vg) ? LCK_CLUSTER_VG : 0)
 
-#define lock_lv_vol(cmd, lv, flags)	\
-	(find_replicator_vgs((lv)) ? \
-		 lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv), lv) :	\
-		0)
+#define lock_lv_vol(cmd, lv, flags) lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv), lv) 
 
 /*
  * Activation locks are wrapped around activation commands that have to

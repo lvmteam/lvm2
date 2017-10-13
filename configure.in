@@ -408,22 +408,6 @@ AC_DEFINE_UNQUOTED([DEFAULT_RAID10_SEGTYPE], ["$DEFAULT_RAID10_SEGTYPE"],
 		   [Default segtype used for raid10 volumes.])
 
 ################################################################################
-dnl -- asynchronous volume replicator inclusion type
-AC_MSG_CHECKING(whether to include replicators)
-AC_ARG_WITH(replicators,
-	    AC_HELP_STRING([--with-replicators=TYPE],
-			   [replicator support: internal/shared/none [none]]),
-	    REPLICATORS=$withval, REPLICATORS=none)
-AC_MSG_RESULT($REPLICATORS)
-
-case "$REPLICATORS" in
-  none|shared) ;;
-  internal) AC_DEFINE([REPLICATOR_INTERNAL], 1,
-		[Define to 1 to include built-in support for replicators.]) ;;
-  *) AC_MSG_ERROR([--with-replicators parameter invalid ($REPLICATORS)]) ;;
-esac
-
-
 AC_ARG_WITH(default-sparse-segtype,
 	    AC_HELP_STRING([--with-default-sparse-segtype=TYPE],
 			   [default sparse segtype: thin/snapshot [thin]]),
@@ -2211,7 +2195,6 @@ lib/format1/Makefile
 lib/format_pool/Makefile
 lib/locking/Makefile
 lib/mirror/Makefile
-lib/replicator/Makefile
 include/lvm-version.h
 lib/raid/Makefile
 lib/snapshot/Makefile

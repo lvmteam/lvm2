@@ -19,7 +19,6 @@
 
 union lvid;
 struct lv_segment;
-struct replicator_device;
 enum activation_change;
 
 struct logical_volume {
@@ -42,9 +41,6 @@ struct logical_volume {
 	uint32_t external_count;
 	struct dm_list snapshot_segs;
 	struct lv_segment *snapshot;
-
-	struct replicator_device *rdevice;/* For replicator-devs, rimages, slogs - reference to rdevice */
-	struct dm_list rsites;	/* For replicators - all sites */
 
 	struct dm_list segments;
 	struct dm_list tags;

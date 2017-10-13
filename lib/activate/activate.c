@@ -2125,9 +2125,6 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	if (!lv_read_replicator_vgs(lv))
-		goto_out;
-
 	lv_calculate_readahead(lv, NULL);
 
 	/*
@@ -2249,10 +2246,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 out:
 	if (lv_pre_to_free)
 		release_vg(lv_pre_to_free->vg);
-	if (lv_to_free) {
-		lv_release_replicator_vgs(lv_to_free);
+	if (lv_to_free)
 		release_vg(lv_to_free->vg);
-	}
 
 	return r;
 }
@@ -2436,9 +2431,6 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 			goto_out;
 	}
 
-	if (!lv_read_replicator_vgs(lv))
-		goto_out;
-
 	if (!monitor_dev_for_events(cmd, lv, &laopts, 0))
 		stack;
 
@@ -2453,10 +2445,8 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 		r = 0;
 	}
 out:
-	if (lv_to_free) {
-		lv_release_replicator_vgs(lv_to_free);
+	if (lv_to_free)
 		release_vg(lv_to_free->vg);
-	}
 
 	return r;
 }
@@ -2571,9 +2561,6 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		goto out;
 	}
 
-	if (!lv_read_replicator_vgs(lv))
-		goto_out;
-
 	lv_calculate_readahead(lv, NULL);
 
 	critical_section_inc(cmd, "activating");
@@ -2585,10 +2572,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		stack;
 
 out:
-	if (lv_to_free) {
-		lv_release_replicator_vgs(lv_to_free);
+	if (lv_to_free)
 		release_vg(lv_to_free->vg);
-	}
 
 	return r;
 }

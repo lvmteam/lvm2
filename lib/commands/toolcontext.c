@@ -1501,11 +1501,6 @@ static int _init_segtypes(struct cmd_context *cmd)
 		dm_list_add(&cmd->segtypes, &segtype->list);
 	}
 
-#ifdef REPLICATOR_INTERNAL
-	if (!init_replicator_segtype(cmd, &seglib))
-		return 0;
-#endif
-
 #ifdef RAID_INTERNAL
 	if (!init_raid_segtypes(cmd, &seglib))
 		return 0;

@@ -1774,84 +1774,6 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	return 1;
 }
 
-/*
- * Add replicator devices
- *
- * Using _add_dev_to_dtree() directly instead of _add_lv_to_dtree()
- * to avoid extra checks with extensions.
- */
-static int _add_partial_replicator_to_dtree(struct dev_manager *dm,
-					    struct dm_tree *dtree,
-					    const struct logical_volume *lv)
-{
-	struct logical_volume *rlv = first_seg(lv)->replicator;
-	struct replicator_device *rdev;
-	struct replicator_site *rsite;
-	struct dm_tree_node *rep_node, *rdev_node;
-	const char *uuid;
-
-	if (!lv_is_active_replicator_dev(lv)) {
-		if (!_add_dev_to_dtree(dm, dtree, lv->rdevice->lv,
-				      NULL))
-			return_0;
-		return 1;
-	}
-
-	/* Add _rlog and replicator device */
-	if (!_add_dev_to_dtree(dm, dtree, first_seg(rlv)->rlog_lv, NULL))
-		return_0;
-
-	if (!_add_dev_to_dtree(dm, dtree, rlv, NULL))
-		return_0;
-
-	if (!(uuid = build_dm_uuid(dm->mem, rlv, NULL)))
-		return_0;
-
-	rep_node = dm_tree_find_node_by_uuid(dtree, uuid);
-
-	/* Add all related devices for replicator */
-	dm_list_iterate_items(rsite, &rlv->rsites)
-		dm_list_iterate_items(rdev, &rsite->rdevices) {
-			if (rsite->state == REPLICATOR_STATE_ACTIVE) {
-				/* Add _rimage LV */
-				if (!_add_dev_to_dtree(dm, dtree, rdev->lv, NULL))
-					return_0;
-
-				/* Add replicator-dev LV, except of the already added one */
-				if ((lv != rdev->replicator_dev->lv) &&
-				    !_add_dev_to_dtree(dm, dtree,
-						       rdev->replicator_dev->lv, NULL))
-					return_0;
-
-				/* If replicator exists - try connect existing heads */
-				if (rep_node) {
-					uuid = build_dm_uuid(dm->mem,
-							     rdev->replicator_dev->lv,
-							     NULL);
-					if (!uuid)
-						return_0;
-
-					rdev_node = dm_tree_find_node_by_uuid(dtree, uuid);
-					if (rdev_node)
-						dm_tree_node_set_presuspend_node(rdev_node,
-										 rep_node);
-				}
-			}
-
-			if (!rdev->rsite->vg_name)
-				continue;
-
-			if (!_add_dev_to_dtree(dm, dtree, rdev->lv, NULL))
-				return_0;
-
-			if (rdev->slog &&
-			    !_add_dev_to_dtree(dm, dtree, rdev->slog, NULL))
-				return_0;
-		}
-
-	return 1;
-}
-
 struct pool_cb_data {
 	struct dev_manager *dm;
 	const struct logical_volume *pool_lv;
@@ -2155,11 +2077,6 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				dm->track_pending_delete = 0;
 			}
 		}
-
-	/* Adding LV head of replicator adds all other related devs */
-	if (lv_is_replicator_dev(lv) &&
-	    !_add_partial_replicator_to_dtree(dm, dtree, lv))
-		return_0;
 
 	/* Add any LVs used by segments in this LV */
 	dm_list_iterate_items(seg, &lv->segments) {
@@ -2524,64 +2441,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				struct lv_activate_opts *laopts,
 				const char *layer);
 
-/* Add all replicators' LVs */
-static int _add_replicator_dev_target_to_dtree(struct dev_manager *dm,
-					       struct dm_tree *dtree,
-					       struct lv_segment *seg,
-					       struct lv_activate_opts *laopts)
-{
-	struct replicator_device *rdev;
-	struct replicator_site *rsite;
-
-	/* For inactive replicator add linear mapping */
-	if (!lv_is_active_replicator_dev(seg->lv)) {
-		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv->rdevice->lv, laopts, NULL))
-			return_0;
-		return 1;
-	}
-
-	/* Add rlog and replicator nodes */
-	if (!seg->replicator ||
-	    !first_seg(seg->replicator)->rlog_lv ||
-	    !_add_new_lv_to_dtree(dm, dtree,
-				  first_seg(seg->replicator)->rlog_lv,
-				  laopts, NULL) ||
-	    !_add_new_lv_to_dtree(dm, dtree, seg->replicator, laopts, NULL))
-	    return_0;
-
-	/* Activation of one replicator_dev node activates all other nodes */
-	dm_list_iterate_items(rsite, &seg->replicator->rsites) {
-		dm_list_iterate_items(rdev, &rsite->rdevices) {
-			if (rdev->lv &&
-			    !_add_new_lv_to_dtree(dm, dtree, rdev->lv,
-						  laopts, NULL))
-				return_0;
-
-			if (rdev->slog &&
-			    !_add_new_lv_to_dtree(dm, dtree, rdev->slog,
-						  laopts, NULL))
-				return_0;
-		}
-	}
-	/* Add remaining replicator-dev nodes in the second loop
-	 * to avoid multiple retries for inserting all elements */
-	dm_list_iterate_items(rsite, &seg->replicator->rsites) {
-		if (rsite->state != REPLICATOR_STATE_ACTIVE)
-			continue;
-		dm_list_iterate_items(rdev, &rsite->rdevices) {
-			if (rdev->replicator_dev->lv == seg->lv)
-				continue;
-			if (!rdev->replicator_dev->lv ||
-			    !_add_new_lv_to_dtree(dm, dtree,
-						  rdev->replicator_dev->lv,
-						  laopts, NULL))
-				return_0;
-		}
-	}
-
-	return 1;
-}
-
 static int _add_new_external_lv_to_dtree(struct dev_manager *dm,
 					 struct dm_tree *dtree,
 					 struct logical_volume *external_lv,
@@ -2681,11 +2540,6 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	    !_add_new_lv_to_dtree(dm, dtree, seg->pool_lv, laopts,
 				  lv_layer(seg->pool_lv)))
 		return_0;
-
-	if (seg_is_replicator_dev(seg)) {
-		if (!_add_replicator_dev_target_to_dtree(dm, dtree, seg, laopts))
-			return_0;
-	}
 
 	/* Add any LVs used by this segment */
 	for (s = 0; s < seg->area_count; ++s) {

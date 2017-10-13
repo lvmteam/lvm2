@@ -219,17 +219,6 @@ static void _check_non_raid_seg_members(struct lv_segment *seg, int *error_count
 		raid_seg_error("non-zero cow LV");
 	if (!dm_list_empty(&seg->origin_list)) /* snap */
 		raid_seg_error("non-zero origin_list");
-	/* replicator members (deprecated) */
-	if (seg->replicator)
-		raid_seg_error("non-zero replicator");
-	if (seg->rlog_lv)
-		raid_seg_error("non-zero rlog LV");
-	if (seg->rlog_type)
-		raid_seg_error("non-zero rlog type");
-	if (seg->rdevice_index_highest)
-		raid_seg_error("non-zero rdevice_index_highests");
-	if (seg->rsite_index_highest)
-		raid_seg_error("non-zero rsite_index_highests");
 	/* .... more members? */
 }
 
@@ -513,8 +502,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 	struct seg_list *sl;
 	struct glv_list *glvl;
 	int error_count = 0;
-	struct replicator_site *rsite;
-	struct replicator_device *rdev;
 
 	dm_list_iterate_items(seg, &lv->segments) {
 		seg_count++;
@@ -550,9 +537,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				inc_error_count;
 			}
 		}
-
-		if (seg_is_replicator(seg) && !check_replicator_segment(seg))
-			inc_error_count;
 
 		if (complete_vg)
 			_check_lv_segment(lv, seg, seg_count, &error_count);
@@ -655,18 +639,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			if (seg->meta_areas && seg_is_raid_with_meta(seg) && (lv == seg_metalv(seg, s)))
 				seg_found++;
 		}
-		if (seg_is_replicator_dev(seg)) {
-			dm_list_iterate_items(rsite, &seg->replicator->rsites) {
-				dm_list_iterate_items(rdev, &rsite->rdevices) {
-					if (lv == rdev->lv || lv == rdev->slog)
-						seg_found++;
-				}
-			}
-			if (lv == seg->replicator)
-				seg_found++;
-		}
-		if (seg_is_replicator(seg) && lv == seg->rlog_lv)
-			seg_found++;
 		if (seg->log_lv == lv)
 			seg_found++;
 		if (seg->metadata_lv == lv || seg->pool_lv == lv)

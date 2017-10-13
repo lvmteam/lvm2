@@ -90,8 +90,6 @@ static const struct flag _lv_flags[] = {
 	{PARTIAL_LV, NULL, 0},
 	{POSTORDER_FLAG, NULL, 0},
 	{VIRTUAL_ORIGIN, NULL, 0},
-	{REPLICATOR, NULL, 0},
-	{REPLICATOR_LOG, NULL, 0},
 	{THIN_VOLUME, NULL, 0},
 	{THIN_POOL, NULL, 0},
 	{THIN_POOL_DATA, NULL, 0},

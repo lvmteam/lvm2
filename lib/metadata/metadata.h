@@ -421,11 +421,6 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg);
 int lv_has_constant_stripes(struct logical_volume *lv);
 
 /*
- * Checks that a replicator segment is correct.
- */
-int check_replicator_segment(const struct lv_segment *rseg);
-
-/*
  * Sometimes (eg, after an lvextend), it is possible to merge two
  * adjacent segments into a single segment.  This function trys
  * to merge as many segments as possible.

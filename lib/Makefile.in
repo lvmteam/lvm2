@@ -36,10 +36,6 @@ ifeq ("@RAID@", "shared")
   SUBDIRS += raid
 endif
 
-ifeq ("@REPLICATORS@", "shared")
-  SUBDIRS += replicator
-endif
-
 ifeq ("@THIN@", "shared")
   SUBDIRS += thin
 endif
@@ -106,7 +102,6 @@ SOURCES =\
 	metadata/pv_manip.c \
 	metadata/pv_map.c \
 	metadata/raid_manip.c \
-	metadata/replicator_manip.c \
 	metadata/segtype.c \
 	metadata/snapshot_manip.c \
 	metadata/thin_manip.c \
@@ -165,10 +160,6 @@ ifeq ("@RAID@", "internal")
   SOURCES += raid/raid.c
 endif
 
-ifeq ("@REPLICATORS@", "internal")
-  SOURCES += replicator/replicator.c
-endif
-
 ifeq ("@THIN@", "internal")
   SOURCES += thin/thin.c
 endif
@@ -215,7 +206,6 @@ ifeq ($(MAKECMDGOALS),distclean)
 	mirror \
 	notify \
 	raid \
-	replicator \
 	thin \
 	cache_segtype \
 	locking

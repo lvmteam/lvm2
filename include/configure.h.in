@@ -685,9 +685,6 @@
 /* Define to 1 to include the LVM readline shell. */
 #undef READLINE_SUPPORT
 
-/* Define to 1 to include built-in support for replicators. */
-#undef REPLICATOR_INTERNAL
-
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 

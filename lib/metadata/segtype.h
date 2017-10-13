@@ -36,8 +36,6 @@ struct dev_manager;
 #define SEG_VIRTUAL		(1ULL <<  5)
 #define SEG_CANNOT_BE_ZEROED	(1ULL <<  6)
 #define SEG_MONITORED		(1ULL <<  7)
-#define SEG_REPLICATOR		(1ULL <<  8)
-#define SEG_REPLICATOR_DEV	(1ULL <<  9)
 #define SEG_RAID		(1ULL << 10)
 #define SEG_THIN_POOL		(1ULL << 11)
 #define SEG_THIN_VOLUME		(1ULL << 12)
@@ -198,8 +196,6 @@ struct dev_manager;
 #define seg_is_raid_with_meta(seg)	segtype_is_raid_with_meta((seg)->segtype)
 #define seg_is_striped_raid(seg)	segtype_is_striped_raid((seg)->segtype)
 #define	seg_is_reshapable_raid(seg)	segtype_is_reshapable_raid((seg)->segtype)
-#define seg_is_replicator(seg)	((seg)->segtype->flags & SEG_REPLICATOR ? 1 : 0)
-#define seg_is_replicator_dev(seg) ((seg)->segtype->flags & SEG_REPLICATOR_DEV ? 1 : 0)
 #define seg_is_snapshot(seg)	segtype_is_snapshot((seg)->segtype)
 #define seg_is_striped(seg)	segtype_is_striped((seg)->segtype)
 #define seg_is_thin(seg)	segtype_is_thin((seg)->segtype)
@@ -311,10 +307,6 @@ struct segment_type *init_unknown_segtype(struct cmd_context *cmd,
 
 #ifdef RAID_INTERNAL
 int init_raid_segtypes(struct cmd_context *cmd, struct segtype_library *seglib);
-#endif
-
-#ifdef REPLICATOR_INTERNAL
-int init_replicator_segtype(struct cmd_context *cmd, struct segtype_library *seglib);
 #endif
 
 #define THIN_FEATURE_DISCARDS			(1U << 0)
