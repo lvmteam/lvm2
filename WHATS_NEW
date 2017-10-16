@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Monitor external origin LVs.
   Remove the replicator code, including configure --with-replicators.
   Allow lvcreate --type mirror to work with 100%FREE.
   Improve selection of resource name for complex volume activation lock.

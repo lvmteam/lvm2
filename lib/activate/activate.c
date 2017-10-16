@@ -1707,7 +1707,7 @@ static char *_build_target_uuid(struct cmd_context *cmd, const struct logical_vo
 
 	if (lv_is_thin_pool(lv))
 		layer = "tpool"; /* Monitor "tpool" for the "thin pool". */
-	else if (lv_is_origin(lv))
+	else if (lv_is_origin(lv) || lv_is_external_origin(lv))
 		layer = "real"; /* Monitor "real" for "snapshot-origin". */
 	else
 		layer = NULL;
@@ -1944,6 +1944,13 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 		 */
 		if (seg->pool_lv &&
 		    !monitor_dev_for_events(cmd, seg->pool_lv,
+					    (!monitor) ? laopts : NULL, monitor)) {
+			stack;
+			r = 0;
+		}
+
+		if (seg->external_lv &&
+		    !monitor_dev_for_events(cmd, seg->external_lv,
 					    (!monitor) ? laopts : NULL, monitor)) {
 			stack;
 			r = 0;
