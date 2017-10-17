@@ -356,12 +356,19 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	log_debug("sanlock daemon version %08x proto %08x",
 		  daemon_version, daemon_proto);
 
-	align_size = sanlock_align(&disk);
-	if (align_size <= 0) {
-		log_error("S %s init_vg_san bad disk align size %d %s",
-			  ls_name, align_size, disk.path);
-		return -EARGS;
-	}
+	rv = sanlock_align(&disk);
+	if (rv <= 0) {
+		if (rv == -EACCES) {
+			log_error("S %s init_vg_san sanlock error -EACCES: no permission to access %s",
+				  ls_name, disk.path);
+			return -EDEVOPEN;
+		} else {
+			log_error("S %s init_vg_san sanlock error %d trying to get align size of %s",
+				  ls_name, rv, disk.path);
+			return -EARGS;
+		}
+	} else
+		align_size = rv;
 
 	strncpy(ss.name, ls_name, SANLK_NAME_LEN);
 	memcpy(ss.host_id_disk.path, disk.path, SANLK_PATH_LEN);

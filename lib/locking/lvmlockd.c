@@ -667,6 +667,10 @@ static int _init_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg, in
 	case -EARGS:
 		log_error("VG %s init failed: invalid parameters for sanlock", vg->name);
 		break;
+	case -EDEVOPEN:
+		log_error("VG %s init failed: sanlock cannot open device /dev/mapper/%s-%s", vg->name, vg->name, LOCKD_SANLOCK_LV_NAME);
+		log_error("Check that sanlock has permission to access disks.");
+		break;
 	case -EMANAGER:
 		log_error("VG %s init failed: lock manager sanlock is not running", vg->name);
 		break;
