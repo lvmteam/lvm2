@@ -55,6 +55,7 @@ int dev_cache_add_dir(const char *path);
 int dev_cache_add_loopfile(const char *path);
 __attribute__((nonnull(1)))
 struct device *dev_cache_get(const char *name, struct dev_filter *f);
+const char *dev_cache_filtered_reason(const char *name);
 
 // TODO
 struct device *dev_cache_get_by_devt(dev_t device, struct dev_filter *f);

@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Distinguish between device not found and excluded by filter.
   Monitor external origin LVs.
   Remove the replicator code, including configure --with-replicators.
   Allow lvcreate --type mirror to work with 100%FREE.

@@ -5532,7 +5532,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * Check if all arg_devices were found by process_each_pv.
 	 */
 	dm_list_iterate_items(pd, &pp->arg_devices)
-		log_error("Device %s not found (or ignored by filtering).", pd->name);
+		log_error("Device %s %s.", pd->name, dev_cache_filtered_reason(pd->name));
 
 	/*
 	 * Can the command continue if some specified devices were not found?
@@ -5652,7 +5652,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	process_each_pv(cmd, 0, NULL, NULL, 1, 0, handle, _pv_confirm_single);
 
 	dm_list_iterate_items(pd, &pp->arg_confirm)
-		log_error("Device %s not found (or ignored by filtering).", pd->name);
+		log_error("Device %s %s.", pd->name, dev_cache_filtered_reason(pd->name));
 
 	/* Some devices were not found during the second check. */
 	if (!dm_list_empty(&pp->arg_confirm) && must_use_all)

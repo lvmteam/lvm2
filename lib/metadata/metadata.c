@@ -5488,8 +5488,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 
 	dev = dev_cache_get(pv_name, cmd->filter);
 	if (!dev) {
-		log_error("Device %s not found (or ignored by filtering).",
-			  pv_name);
+		log_error("Device %s %s.", pv_name, dev_cache_filtered_reason(pv_name));
 		return 0;
 	}
 

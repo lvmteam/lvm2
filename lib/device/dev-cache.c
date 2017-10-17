@@ -1370,6 +1370,19 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 	return dev_name(dev);
 }
 
+/* Provide a custom reason when a device is ignored */
+const char *dev_cache_filtered_reason(const char *name)
+{
+	const char *reason = "not found";
+	struct device *d = (struct device *) dm_hash_lookup(_cache.names, name);
+
+	if (d)
+		/* FIXME Record which filter caused the exclusion */
+		reason = "excluded by a filter";
+
+	return reason;
+}
+
 struct device *dev_cache_get(const char *name, struct dev_filter *f)
 {
 	struct stat buf;
