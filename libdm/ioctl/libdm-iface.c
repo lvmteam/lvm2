@@ -594,7 +594,7 @@ int dm_cookie_supported(void)
 		_dm_version_minor >= 15);
 }
 
-static int dm_inactive_supported(void)
+static int _dm_inactive_supported(void)
 {
 	int inactive_supported = 0;
 
@@ -1231,7 +1231,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_SECURE_DATA_FLAG;
 	}
 	if (dmt->query_inactive_table) {
-		if (!dm_inactive_supported())
+		if (!_dm_inactive_supported())
 			log_warn("WARNING: Inactive table query unsupported "
 				 "by kernel.  It will use live table.");
 		dmi->flags |= DM_QUERY_INACTIVE_TABLE_FLAG;

@@ -529,7 +529,7 @@ static struct volume_group *_vgsplit_from(struct cmd_context *cmd,
 /*
  * Has the user given an option related to a new vg as the split destination?
  */
-static int new_vg_option_specified(struct cmd_context *cmd)
+static int _new_vg_option_specified(struct cmd_context *cmd)
 {
 	return(arg_is_set(cmd, clustered_ARG) ||
 	       arg_is_set(cmd, alloc_ARG) ||
@@ -616,7 +616,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (existing_vg) {
-		if (new_vg_option_specified(cmd)) {
+		if (_new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
 				    "option specified", vg_name_to);
 			goto bad;

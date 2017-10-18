@@ -515,7 +515,7 @@ static int _lock_resource(struct cmd_context *cmd, const char *resource,
 	return _lock_for_cluster(cmd, clvmd_cmd, flags, lockname);
 }
 
-static int decode_lock_type(const char *response)
+static int _decode_lock_type(const char *response)
 {
 	if (!response)
 		return LCK_NULL;
@@ -566,8 +566,8 @@ int query_resource(const char *resource, const char *node, int *mode)
 		 * If two nodes report different locks,
 		 * something is broken - just return more important mode.
 		 */
-		if (decode_lock_type(response[i].response) > *mode)
-			*mode = decode_lock_type(response[i].response);
+		if (_decode_lock_type(response[i].response) > *mode)
+			*mode = _decode_lock_type(response[i].response);
 
 		log_debug_locking("Lock held for %s, node %s : %s", resource,
 				  response[i].node, response[i].response);

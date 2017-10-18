@@ -4625,8 +4625,8 @@ FIELD_F(STATS_META, STR, "ObjType", 7, dm_stats_object_type, "obj_type", "Type o
 #undef NUM
 #undef SIZ
 
-static const char *default_report_options = "name,major,minor,attr,open,segments,events,uuid";
-static const char *splitname_report_options = "vg_name,lv_name,lv_layer";
+static const char *_default_report_options = "name,major,minor,attr,open,segments,events,uuid";
+static const char *_splitname_report_options = "vg_name,lv_name,lv_layer";
 
 /* Stats counters & derived metrics. */
 #define RD_COUNTERS "read_count,reads_merged_count,read_sector_count,read_time,read_ticks"
@@ -4661,7 +4661,7 @@ static const char *_stats_hist_relative_options = STATS_HIST ",hist_percent_boun
 
 static int _report_init(const struct command *cmd, const char *subcommand)
 {
-	char *options = (char *) default_report_options;
+	char *options = (char *) _default_report_options;
 	char *opt_fields = NULL; /* optional fields from command line */
 	const char *keys = "";
 	const char *separator = " ";
@@ -4673,7 +4673,7 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 	int r = 0;
 
 	if (cmd && !strcmp(cmd->name, "splitname")) {
-		options = (char *) splitname_report_options;
+		options = (char *) _splitname_report_options;
 		_report_type |= DR_NAME;
 	}
 
@@ -6490,7 +6490,7 @@ static int _process_tree_options(const char *options)
 	return 1;
 }
 
-static char *parse_loop_device_name(const char *dev, const char *dev_dir)
+static char *_parse_loop_device_name(const char *dev, const char *dev_dir)
 {
 	char *buf;
 	char *device = NULL;
@@ -6657,7 +6657,7 @@ static int _process_losetup_switches(const char *base, int *argcp, char ***argvp
 		return 0;
 	}
 
-	if (!(device_name = parse_loop_device_name((*argvp)[0], dev_dir))) {
+	if (!(device_name = _parse_loop_device_name((*argvp)[0], dev_dir))) {
 		fprintf(stderr, "%s: Could not parse loop_device %s\n",
 			base, (*argvp)[0]);
 		_usage(stderr);

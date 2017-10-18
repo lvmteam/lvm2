@@ -22,8 +22,8 @@
  * Output arguments:
  * pp: structure allocated by caller, fields written / validated here
  */
-static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
-					     struct pvcreate_params *pp)
+static int _pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
+					      struct pvcreate_params *pp)
 {
 	pp->restorefile = arg_str_value(cmd, restorefile_ARG, NULL);
 
@@ -63,7 +63,7 @@ static int pvcreate_restore_params_from_args(struct cmd_context *cmd, int argc,
 	return 1;
 }
 
-static int pvcreate_restore_params_from_backup(struct cmd_context *cmd,
+static int _pvcreate_restore_params_from_backup(struct cmd_context *cmd,
 					       struct pvcreate_params *pp)
 {
 	struct volume_group *vg;
@@ -110,7 +110,7 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	/*
 	 * Device info needs to be available for reading the VG backup file in
-	 * pvcreate_restore_params_from_backup.
+	 * _pvcreate_restore_params_from_backup.
 	 */
 	lvmcache_seed_infos_from_lvmetad(cmd);
 
@@ -126,10 +126,10 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	pvcreate_params_set_defaults(&pp);
 
-	if (!pvcreate_restore_params_from_args(cmd, argc, &pp))
+	if (!_pvcreate_restore_params_from_args(cmd, argc, &pp))
 		return EINVALID_CMD_LINE;
 
-	if (!pvcreate_restore_params_from_backup(cmd, &pp))
+	if (!_pvcreate_restore_params_from_backup(cmd, &pp))
 		return EINVALID_CMD_LINE;
 
 	if (!pvcreate_params_from_args(cmd, &pp))

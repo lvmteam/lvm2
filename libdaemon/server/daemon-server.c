@@ -498,7 +498,7 @@ fail:
 	return NULL;
 }
 
-static int handle_connect(daemon_state s)
+static int _handle_connect(daemon_state s)
 {
 	thread_state *ts;
 	struct sockaddr_un sockaddr;
@@ -651,7 +651,7 @@ void daemon_start(daemon_state s)
 			perror("select error");
 		if (FD_ISSET(s.socket_fd, &in)) {
 			timeout_count = 0;
-			handle_connect(s);
+			_handle_connect(s);
 		}
 
 		_reap(s, 0);

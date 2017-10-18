@@ -15,9 +15,9 @@
 
 #include "tools.h"
 
-static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
-			    struct volume_group *vg,
-			    struct processing_handle *handle __attribute__((unused)))
+static int _vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
+			     struct volume_group *vg,
+			     struct processing_handle *handle __attribute__((unused)))
 {
 	if (arg_is_set(cmd, activevolumegroups_ARG) && !lvs_in_vg_activated(vg))
 		return ECMD_PROCESSED;
@@ -93,7 +93,7 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 **********/
 
 	return process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL,
-			       vgdisplay_single);
+			       _vgdisplay_single);
 
 /******** FIXME Need to count number processed
 	  Add this to process_each_vg if arg_is_set(cmd,activevolumegroups_ARG) ?

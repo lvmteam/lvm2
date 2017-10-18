@@ -293,7 +293,7 @@ static int _insert_pvmove_mirrors(struct cmd_context *cmd,
  *
  * Returns: 1 if true, 0 otherwise
  */
-static int sub_lv_of(struct logical_volume *lv, const char *lv_name)
+static int _sub_lv_of(struct logical_volume *lv, const char *lv_name)
 {
 	struct lv_segment *seg;
 
@@ -308,7 +308,7 @@ static int sub_lv_of(struct logical_volume *lv, const char *lv_name)
 		return 1;
 
 	/* Continue up the tree */
-	return sub_lv_of(seg->lv, lv_name);
+	return _sub_lv_of(seg->lv, lv_name);
 }
 
 /*
@@ -319,7 +319,7 @@ static int sub_lv_of(struct logical_volume *lv, const char *lv_name)
  *
  * If this LV is below a cache LV (at any depth), return 1.
  */
-static int parent_lv_is_cache_type(struct logical_volume *lv)
+static int _parent_lv_is_cache_type(struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
@@ -334,7 +334,7 @@ static int parent_lv_is_cache_type(struct logical_volume *lv)
 		return 1;
 
 	/* Continue up the tree */
-	return parent_lv_is_cache_type(seg->lv);
+	return _parent_lv_is_cache_type(seg->lv);
 }
 
 /* Create new LV with mirror segments for the required copies */
@@ -451,7 +451,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 
 		if (lv_name) {
-			if (strcmp(lv->name, lv_name) && !sub_lv_of(lv, lv_name))
+			if (strcmp(lv->name, lv_name) && !_sub_lv_of(lv, lv_name))
 				continue;
 			lv_found = 1;
 		}
@@ -469,7 +469,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 		}
 
-		if (parent_lv_is_cache_type(lv)) {
+		if (_parent_lv_is_cache_type(lv)) {
 			log_print_unless_silent("Skipping %s because a parent"
 						" is of cache type", lv->name);
 			lv_skipped = 1;

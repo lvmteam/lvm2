@@ -84,8 +84,8 @@ int peg_dup(struct dm_pool *mem, struct dm_list *peg_new, struct dm_list *peg_ol
 }
 
 /* Find segment at a given physical extent in a PV */
-static struct pv_segment *find_peg_by_pe(const struct physical_volume *pv,
-					 uint32_t pe)
+static struct pv_segment *_find_peg_by_pe(const struct physical_volume *pv,
+					  uint32_t pe)
 {
 	struct pv_segment *pvseg;
 
@@ -137,7 +137,7 @@ int pv_split_segment(struct dm_pool *mem,
 	if (pe == pv->pe_count)
 		goto out;
 
-	if (!(pvseg = find_peg_by_pe(pv, pe))) {
+	if (!(pvseg = _find_peg_by_pe(pv, pe))) {
 		log_error("Segment with extent %" PRIu32 " in PV %s not found",
 			  pe, pv_dev_name(pv));
 		return 0;
@@ -158,7 +158,7 @@ out:
 	return 1;
 }
 
-static struct pv_segment null_pv_segment = {
+static struct pv_segment _null_pv_segment = {
 	.pv = NULL,
 	.pe = 0,
 };
@@ -172,7 +172,7 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 
 	/* Missing format1 PV */
 	if (!pv)
-		return &null_pv_segment;
+		return &_null_pv_segment;
 
 	if (!pv_split_segment(seg->lv->vg->vgmem, pv, pe, &peg) ||
 	    !pv_split_segment(seg->lv->vg->vgmem, pv, pe + area_len, NULL))
@@ -556,9 +556,7 @@ static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
  * Resize a PV in a VG, adding or removing segments as needed.
  * New size must fit within pv->size.
  */
-static int pv_resize(struct physical_volume *pv,
-	      struct volume_group *vg,
-	      uint64_t size)
+static int _pv_resize(struct physical_volume *pv, struct volume_group *vg, uint64_t size)
 {
 	uint32_t old_pe_count, new_pe_count = 0;
 
@@ -674,7 +672,7 @@ int pv_resize_single(struct cmd_context *cmd,
 	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
 		    pv_name, size);
 
-	if (!pv_resize(pv, vg, size))
+	if (!_pv_resize(pv, vg, size))
 		goto_out;
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
@@ -712,8 +710,8 @@ out:
  * Decide whether it is "safe" to wipe the labels on this device.
  * 0 indicates we may not.
  */
-static int pvremove_check(struct cmd_context *cmd, const char *name,
-			  unsigned force_count, unsigned prompt, struct dm_list *pvslist)
+static int _pvremove_check(struct cmd_context *cmd, const char *name,
+			   unsigned force_count, unsigned prompt, struct dm_list *pvslist)
 {
 	static const char really_wipe_msg[] = "Really WIPE LABELS from physical volume";
 	struct device *dev;
@@ -804,7 +802,7 @@ int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	struct lvmcache_info *info;
 	int r = 0;
 
-	if (!pvremove_check(cmd, pv_name, force_count, prompt, pvslist))
+	if (!_pvremove_check(cmd, pv_name, force_count, prompt, pvslist))
 		goto out;
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {

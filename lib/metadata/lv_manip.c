@@ -4719,7 +4719,7 @@ static int _lvresize_adjust_policy(const struct logical_volume *lv,
 	return 1;
 }
 
-static uint32_t lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
+static uint32_t _lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 {
 	uint32_t s;
 	struct lv_segment *seg_mirr;
@@ -5165,7 +5165,7 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 			seg_physical_extents = seg->area_len * seg->area_count;	/* FIXME Also metadata, cow etc. */
 
 			/* Check for underlying stripe sizes */
-			seg_stripes = lvseg_get_stripes(seg, &seg_stripesize);
+			seg_stripes = _lvseg_get_stripes(seg, &seg_stripesize);
 
 			if (seg_is_mirrored(seg))
 				seg_mirrors = lv_mirror_count(seg->lv);

@@ -72,7 +72,7 @@ static int _set_daemon_parms(struct cmd_context *cmd, struct daemon_parms *parms
 	return 1;
 }
 
-static int poll_lv(struct cmd_context *cmd, const char *lv_name)
+static int _poll_lv(struct cmd_context *cmd, const char *lv_name)
 {
 	struct daemon_parms parms = { 0 };
 	struct poll_operation_id id = {
@@ -110,5 +110,5 @@ int lvpoll(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return poll_lv(cmd, argv[0]);
+	return _poll_lv(cmd, argv[0]);
 }

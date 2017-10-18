@@ -24,7 +24,7 @@ struct backend {
 	void (*log)(log_state *s, void **state, int type, const char *message);
 };
 
-static void log_syslog(log_state *s, void **state, int type, const char *message)
+static void _log_syslog(log_state *s, void **state, int type, const char *message)
 {
 	int prio;
 
@@ -44,7 +44,7 @@ static void log_syslog(log_state *s, void **state, int type, const char *message
 	syslog(prio, "%s", message);
 }
 
-static void log_stderr(log_state *s, void **state, int type, const char *message)
+static void _log_stderr(log_state *s, void **state, int type, const char *message)
 {
 	const char *prefix;
 
@@ -60,8 +60,8 @@ static void log_stderr(log_state *s, void **state, int type, const char *message
 }
 
 struct backend backend[] = {
-	{ DAEMON_LOG_OUTLET_SYSLOG, log_syslog },
-	{ DAEMON_LOG_OUTLET_STDERR, log_stderr },
+	{ DAEMON_LOG_OUTLET_SYSLOG, _log_syslog },
+	{ DAEMON_LOG_OUTLET_STDERR, _log_stderr },
 	{ 0, 0 }
 };
 

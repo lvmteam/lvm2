@@ -261,8 +261,7 @@ out:
 /*
  * Retrieve chunk size from md device using sysfs.
  */
-static unsigned long dev_md_chunk_size(struct dev_types *dt,
-				       struct device *dev)
+static unsigned long _dev_md_chunk_size(struct dev_types *dt, struct device *dev)
 {
 	const char *attribute = "chunk_size";
 	unsigned long chunk_size_bytes = 0UL;
@@ -280,7 +279,7 @@ static unsigned long dev_md_chunk_size(struct dev_types *dt,
 /*
  * Retrieve level from md device using sysfs.
  */
-static int dev_md_level(struct dev_types *dt, struct device *dev)
+static int _dev_md_level(struct dev_types *dt, struct device *dev)
 {
 	char level_string[MD_MAX_SYSFS_SIZE];
 	const char *attribute = "level";
@@ -303,7 +302,7 @@ static int dev_md_level(struct dev_types *dt, struct device *dev)
 /*
  * Retrieve raid_disks from md device using sysfs.
  */
-static int dev_md_raid_disks(struct dev_types *dt, struct device *dev)
+static int _dev_md_raid_disks(struct dev_types *dt, struct device *dev)
 {
 	const char *attribute = "raid_disks";
 	int raid_disks = 0;
@@ -327,15 +326,15 @@ unsigned long dev_md_stripe_width(struct dev_types *dt, struct device *dev)
 	unsigned long stripe_width_sectors = 0UL;
 	int level, raid_disks, data_disks;
 
-	chunk_size_sectors = dev_md_chunk_size(dt, dev);
+	chunk_size_sectors = _dev_md_chunk_size(dt, dev);
 	if (!chunk_size_sectors)
 		return 0;
 
-	level = dev_md_level(dt, dev);
+	level = _dev_md_level(dt, dev);
 	if (level < 0)
 		return 0;
 
-	raid_disks = dev_md_raid_disks(dt, dev);
+	raid_disks = _dev_md_raid_disks(dt, dev);
 	if (!raid_disks)
 		return 0;
 

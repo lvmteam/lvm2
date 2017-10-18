@@ -15,9 +15,9 @@
 
 #include "tools.h"
 
-static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
-			    struct volume_group *vg,
-			    struct processing_handle *handle __attribute__((unused)))
+static int _vgconvert_single(struct cmd_context *cmd, const char *vg_name,
+			     struct volume_group *vg,
+			     struct processing_handle *handle __attribute__((unused)))
 {
 	struct pv_create_args pva = { 0 };
 	struct logical_volume *lv;
@@ -170,5 +170,5 @@ int vgconvert(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	return process_each_vg(cmd, argc, argv, NULL, NULL, READ_FOR_UPDATE, 0, NULL,
-			       &vgconvert_single);
+			       &_vgconvert_single);
 }

@@ -35,9 +35,9 @@ void dm_pools_check_leaks(void);
  * - Only pool-fast is properly handled for now.
  * - Checksum is slower compared to mprotect.
  */
-static size_t pagesize = 0;
-static size_t pagesize_mask = 0;
-#define ALIGN_ON_PAGE(size) (((size) + (pagesize_mask)) & ~(pagesize_mask))
+static size_t _pagesize = 0;
+static size_t _pagesize_mask = 0;
+#define ALIGN_ON_PAGE(size) (((size) + (_pagesize_mask)) & ~(_pagesize_mask))
 #endif
 
 #ifdef DEBUG_POOL

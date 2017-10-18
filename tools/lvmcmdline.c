@@ -91,7 +91,7 @@ static struct cmdline_context _cmdline;
  * to use these functions instead of the old per-command-name function.
  * For now, any command id not included here uses the old command fn.
  */
-static const struct command_function command_functions[CMD_COUNT] = {
+static const struct command_function _command_functions[CMD_COUNT] = {
 	{ lvmconfig_general_CMD, lvmconfig },
 	{ lvchange_properties_CMD, lvchange_properties_cmd },
 	{ lvchange_resync_CMD, lvchange_resync_cmd },
@@ -1234,7 +1234,7 @@ static void _set_valid_args_for_command_name(int ci)
 	command_names[ci].num_args = num_args;
 }
 
-static struct command_name *find_command_name(const char *name)
+static struct command_name *_find_command_name(const char *name)
 {
 	int i;
 	
@@ -1255,8 +1255,8 @@ static const struct command_function *_find_command_id_function(int command_enum
 		return NULL;
 
 	for (i = 0; i < CMD_COUNT; i++) {
-		if (command_functions[i].command_enum == command_enum)
-			return &command_functions[i];
+		if (_command_functions[i].command_enum == command_enum)
+			return &_command_functions[i];
 	}
 	return NULL;
 }
@@ -1307,7 +1307,7 @@ int lvm_register_commands(struct cmd_context *cmd, const char *run_name)
 
 		/* old style */
 		if (!commands[i].functions) {
-			struct command_name *cname = find_command_name(commands[i].name);
+			struct command_name *cname = _find_command_name(commands[i].name);
 			if (cname)
 				commands[i].fn = cname->fn;
 		}
@@ -1877,7 +1877,7 @@ static void _short_usage(const char *name)
 
 static int _usage(const char *name, int longhelp, int skip_notes)
 {
-	struct command_name *cname = find_command_name(name);
+	struct command_name *cname = _find_command_name(name);
 	struct command *cmd = NULL;
 	int show_full = longhelp;
 	int i;
@@ -2041,7 +2041,7 @@ static int _find_arg(const char *cmd_name, int goval)
 	int arg_enum;
 	int i;
 
-	if (!(cname = find_command_name(cmd_name)))
+	if (!(cname = _find_command_name(cmd_name)))
 		return -1;
 
 	for (i = 0; i < cname->num_args; i++) {
@@ -2768,7 +2768,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		return_ECMD_FAILED;
 
 	/* Look up command - will be NULL if not recognised */
-	if (!(cmd->cname = find_command_name(cmd->name)))
+	if (!(cmd->cname = _find_command_name(cmd->name)))
 		return ENO_SUCH_CMD;
 
 	if (!_process_command_line(cmd, &argc, &argv)) {
@@ -3512,7 +3512,7 @@ int lvm2_main(int argc, char **argv)
 	 */
 	if (!run_name)
 		run_shell = 1;
-	else if (!find_command_name(run_name))
+	else if (!_find_command_name(run_name))
 		run_script = 1;
 	else
 		run_command_name = run_name;

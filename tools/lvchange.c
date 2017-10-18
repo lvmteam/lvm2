@@ -241,7 +241,7 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 	return 1;
 }
 
-static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
+static int _detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
 	uint32_t s;
 	uint32_t num_meta_lvs;
@@ -274,7 +274,7 @@ static int detach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 	return 1;
 }
 
-static int attach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
+static int _attach_metadata_devices(struct lv_segment *seg, struct dm_list *list)
 {
 	struct lv_list *lvl;
 
@@ -407,7 +407,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	lv->status &= ~LV_NOTSYNCED;
 
 	/* Separate mirror log or metadata devices so we can clear them */
-	if (!detach_metadata_devices(seg, &device_list)) {
+	if (!_detach_metadata_devices(seg, &device_list)) {
 		log_error("Failed to clear %s %s for %s.",
 			  lvseg_name(seg), seg_is_raid(seg) ?
 			  "metadata area" : "mirror log", display_lvname(lv));
@@ -458,7 +458,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	/* Put metadata sub-LVs back in place */
-	if (!attach_metadata_devices(seg, &device_list)) {
+	if (!_attach_metadata_devices(seg, &device_list)) {
 		log_error("Failed to reattach %s device after clearing.",
 			  (seg_is_raid(seg)) ? "metadata" : "log");
 		return 0;

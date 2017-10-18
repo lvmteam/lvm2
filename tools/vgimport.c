@@ -15,10 +15,10 @@
 
 #include "tools.h"
 
-static int vgimport_single(struct cmd_context *cmd,
-			   const char *vg_name,
-			   struct volume_group *vg,
-			   struct processing_handle *handle __attribute__((unused)))
+static int _vgimport_single(struct cmd_context *cmd,
+			    const char *vg_name,
+			    struct volume_group *vg,
+			    struct processing_handle *handle __attribute__((unused)))
 {
 	struct pv_list *pvl;
 	struct physical_volume *pv;
@@ -110,5 +110,5 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 	return process_each_vg(cmd, argc, argv, NULL, NULL,
 			       READ_FOR_UPDATE | READ_ALLOW_EXPORTED,
 			       0, NULL,
-			       &vgimport_single);
+			       &_vgimport_single);
 }

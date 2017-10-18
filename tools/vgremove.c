@@ -15,9 +15,9 @@
 
 #include "tools.h"
 
-static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
-			   struct volume_group *vg,
-			   struct processing_handle *handle __attribute__((unused)))
+static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
+			    struct volume_group *vg,
+			    struct processing_handle *handle __attribute__((unused)))
 {
 	/*
 	 * Though vgremove operates per VG by definition, internally, it
@@ -111,7 +111,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	cmd->handles_missing_pvs = 1;
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL,
 			      READ_FOR_UPDATE, 0,
-			      NULL, &vgremove_single);
+			      NULL, &_vgremove_single);
 
 	return ret;
 }

@@ -237,13 +237,13 @@ struct poll_id_list {
 	struct poll_operation_id *id;
 };
 
-static struct poll_operation_id *copy_poll_operation_id(struct dm_pool *mem,
+static struct poll_operation_id *_copy_poll_operation_id(struct dm_pool *mem,
 							const struct poll_operation_id *id)
 {
 	struct poll_operation_id *copy;
 
 	if (!id || !id->vg_name || !id->lv_name || !id->display_name || !id->uuid) {
-		log_error(INTERNAL_ERROR "Wrong params for copy_poll_operation_id.");
+		log_error(INTERNAL_ERROR "Wrong params for _copy_poll_operation_id.");
 		return NULL;
 	}
 
@@ -264,8 +264,8 @@ static struct poll_operation_id *copy_poll_operation_id(struct dm_pool *mem,
 	return copy;
 }
 
-static struct poll_id_list* poll_id_list_create(struct dm_pool *mem,
-						const struct poll_operation_id *id)
+static struct poll_id_list* _poll_id_list_create(struct dm_pool *mem,
+						 const struct poll_operation_id *id)
 {
 	struct poll_id_list *idl = (struct poll_id_list *) dm_pool_alloc(mem, sizeof(struct poll_id_list));
 
@@ -274,7 +274,7 @@ static struct poll_id_list* poll_id_list_create(struct dm_pool *mem,
 		return NULL;
 	}
 
-	if (!(idl->id = copy_poll_operation_id(mem, id))) {
+	if (!(idl->id = _copy_poll_operation_id(mem, id))) {
 		dm_pool_free(mem, idl);
 		return NULL;
 	}
@@ -329,7 +329,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		id.vg_name = vg->name;
 		id.uuid = lv->lvid.s;
 
-		idl = poll_id_list_create(cmd->mem, &id);
+		idl = _poll_id_list_create(cmd->mem, &id);
 		if (!idl) {
 			log_error("Failed to create poll_id_list.");
 			goto err;
@@ -379,8 +379,8 @@ typedef struct {
 	struct dm_list idls;
 } lvmpolld_parms_t;
 
-static int report_progress(struct cmd_context *cmd, struct poll_operation_id *id,
-			   struct daemon_parms *parms)
+static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *id,
+			    struct daemon_parms *parms)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -482,7 +482,7 @@ static int _lvmpolld_init_poll_vg(struct cmd_context *cmd, const char *vgname,
 		r = lvmpolld_poll_init(cmd, &id, lpdp->parms);
 
 		if (r && !lpdp->parms->background) {
-			if (!(idl = poll_id_list_create(cmd->mem, &id)))
+			if (!(idl = _poll_id_list_create(cmd->mem, &id)))
 				return ECMD_FAILED;
 
 			dm_list_add(&lpdp->idls, &idl->list);
@@ -519,7 +519,7 @@ static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 			if (!r || finished)
 				dm_list_del(&idl->list);
 			else if (!parms->aborting)
-				report_progress(cmd, idl->id, lpdp.parms);
+				_report_progress(cmd, idl->id, lpdp.parms);
 		}
 
 		if (lpdp.parms->interval)
@@ -548,7 +548,7 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
 			while (1) {
 				if (!(r = lvmpolld_request_info(id, parms, &finished)) ||
 				    finished ||
-				    (!parms->aborting && !(r = report_progress(cmd, id, parms))))
+				    (!parms->aborting && !(r = _report_progress(cmd, id, parms))))
 					break;
 
 				if (parms->interval)

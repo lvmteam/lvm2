@@ -680,9 +680,9 @@ static int _vgchange_lock_stop(struct cmd_context *cmd, struct volume_group *vg)
 	return lockd_stop_vg(cmd, vg);
 }
 
-static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
-			   struct volume_group *vg,
-			   struct processing_handle *handle)
+static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
+			    struct volume_group *vg,
+			    struct processing_handle *handle)
 {
 	int ret = ECMD_PROCESSED;
 	unsigned i;
@@ -927,7 +927,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	ret = process_each_vg(cmd, argc, argv, NULL, NULL, flags, 0, handle, &vgchange_single);
+	ret = process_each_vg(cmd, argc, argv, NULL, NULL, flags, 0, handle, &_vgchange_single);
 
 	destroy_processing_handle(cmd, handle);
 	return ret;

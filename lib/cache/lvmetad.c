@@ -39,7 +39,7 @@ static int64_t _lvmetad_update_timeout;
 
 static int _found_lvm1_metadata = 0;
 
-static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg);
+static struct volume_group *_lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg);
 
 static uint64_t _monotonic_seconds(void)
 {
@@ -1090,7 +1090,7 @@ struct volume_group *lvmetad_vg_lookup(struct cmd_context *cmd, const char *vgna
 		 * invalidated the cached vg.
 		 */
 		if (rescan) {
-			if (!(vg2 = lvmetad_pvscan_vg(cmd, vg))) {
+			if (!(vg2 = _lvmetad_pvscan_vg(cmd, vg))) {
 				log_debug_lvmetad("VG %s from lvmetad not found during rescan.", vgname);
 				fid = NULL;
 				release_vg(vg);
@@ -1787,7 +1787,7 @@ static int _lvmetad_pvscan_single(struct metadata_area *mda, void *baton)
  * the VG, and that PV may have been reused for another VG.
  */
 
-static struct volume_group *lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg)
+static struct volume_group *_lvmetad_pvscan_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
 	char pvid_s[ID_LEN + 1] __attribute__((aligned(8)));
 	char uuid[64] __attribute__((aligned(8)));

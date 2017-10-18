@@ -396,7 +396,7 @@ static int _memlock_maps(struct cmd_context *cmd, lvmlock_t lock, size_t *mstats
 #define _GNU_SOURCE
 #endif
 #include <dlfcn.h>
-static const unsigned char INSTRUCTION_HLT = 0x94;
+static const unsigned char _instruction_hlt = 0x94;
 static char _mmap_orig;
 static unsigned char *_mmap_addr;
 #ifdef __i386__
@@ -429,8 +429,8 @@ static int _disable_mmap(void)
 		}
 		_mmap_orig = *_mmap_addr;
 	}
-	log_debug_mem("Remapping mmap entry %02x to %02x.", _mmap_orig, INSTRUCTION_HLT);
-	*_mmap_addr = INSTRUCTION_HLT;
+	log_debug_mem("Remapping mmap entry %02x to %02x.", _mmap_orig, _instruction_hlt);
+	*_mmap_addr = _instruction_hlt;
 
 #ifdef __i386__
 	if (!_mmap64_addr) {

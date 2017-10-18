@@ -177,8 +177,8 @@ void del_pvl_from_vgs(struct volume_group *vg, struct pv_list *pvl)
  *  1 - success
  * FIXME: remove pv_name - obtain safely from pv
  */
-static int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
-		        struct physical_volume *pv, int new_pv)
+static int _add_pv_to_vg(struct volume_group *vg, const char *pv_name,
+		         struct physical_volume *pv, int new_pv)
 {
 	struct pv_list *pvl;
 	struct format_instance *fid = vg->fid;
@@ -720,9 +720,9 @@ static int _check_pv_dev_sizes(struct volume_group *vg)
  * - max_phys_block_size: largest physical block size found amongst PVs in a VG
  *
  */
-static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
-			       struct pvcreate_params *pp,
-			       unsigned int *max_phys_block_size)
+static int _vg_extend_single_pv(struct volume_group *vg, char *pv_name,
+			        struct pvcreate_params *pp,
+			        unsigned int *max_phys_block_size)
 {
 	struct physical_volume *pv;
 	struct pv_to_write *pvw;
@@ -746,7 +746,7 @@ static int vg_extend_single_pv(struct volume_group *vg, char *pv_name,
 					  max_phys_block_size)))
 		goto_bad;
 
-	if (!add_pv_to_vg(vg, pv_name, pv, new_pv))
+	if (!_add_pv_to_vg(vg, pv_name, pv, new_pv))
 		goto_bad;
 
 	if ((pv->fmt->features & FMT_PV_FLAGS) ||
@@ -774,7 +774,7 @@ bad:
  * source file.  All the following and more are only used by liblvm:
  *
  * . vg_extend()
- * . vg_extend_single_pv()
+ * . _vg_extend_single_pv()
  * . pvcreate_vol()
  * . _pvcreate_check()
  * . _pvcreate_write()
@@ -813,7 +813,7 @@ int vg_extend(struct volume_group *vg, int pv_count, const char *const *pv_names
 			return 0;
 		}
 		dm_unescape_colons_and_at_signs(pv_name, NULL, NULL);
-		if (!vg_extend_single_pv(vg, pv_name, pp, &max_phys_block_size)) {
+		if (!_vg_extend_single_pv(vg, pv_name, pp, &max_phys_block_size)) {
 			log_error("Unable to add physical volume '%s' to "
 				  "volume group '%s'.", pv_name, vg->name);
 			dm_free(pv_name);
@@ -849,7 +849,7 @@ int vg_extend_each_pv(struct volume_group *vg, struct pvcreate_params *pp)
 			return 0;
 		}
 
-		if (!add_pv_to_vg(vg, pv_dev_name(pvl->pv), pvl->pv, 0)) {
+		if (!_add_pv_to_vg(vg, pv_dev_name(pvl->pv), pvl->pv, 0)) {
 			log_error("PV %s cannot be added to VG %s.",
 				  pv_dev_name(pvl->pv), vg->name);
 			return 0;

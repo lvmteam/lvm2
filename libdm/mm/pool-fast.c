@@ -269,16 +269,16 @@ static struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 		p->spare_chunk = 0;
 	} else {
 #ifdef DEBUG_ENFORCE_POOL_LOCKING
-		if (!pagesize) {
-			pagesize = getpagesize(); /* lvm_pagesize(); */
-			pagesize_mask = pagesize - 1;
+		if (!_pagesize) {
+			_pagesize = getpagesize(); /* lvm_pagesize(); */
+			_pagesize_mask = _pagesize - 1;
 		}
 		/*
 		 * Allocate page aligned size so malloc could work.
 		 * Otherwise page fault would happen from pool unrelated
 		 * memory writes of internal malloc pointers.
 		 */
-#  define aligned_malloc(s)	(posix_memalign((void**)&c, pagesize, \
+#  define aligned_malloc(s)	(posix_memalign((void**)&c, _pagesize, \
 						ALIGN_ON_PAGE(s)) == 0)
 #else
 #  define aligned_malloc(s)	(c = dm_malloc(s))

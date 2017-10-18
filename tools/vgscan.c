@@ -15,9 +15,9 @@
 
 #include "tools.h"
 
-static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
-			 struct volume_group *vg,
-			 struct processing_handle *handle __attribute__((unused)))
+static int _vgscan_single(struct cmd_context *cmd, const char *vg_name,
+			  struct volume_group *vg,
+			  struct processing_handle *handle __attribute__((unused)))
 {
 	log_print_unless_silent("Found %svolume group \"%s\" using metadata type %s",
 				vg_is_exported(vg) ? "exported " : "", vg_name,
@@ -117,7 +117,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 	else
 		log_print_unless_silent("Reading volume groups from cache.");
 
-	maxret = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, &vgscan_single);
+	maxret = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0, NULL, &_vgscan_single);
 
 	if (arg_is_set(cmd, mknodes_ARG)) {
 		ret = vgmknodes(cmd, argc, argv);

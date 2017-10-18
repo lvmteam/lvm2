@@ -20,8 +20,7 @@
 #define MAX_PAGESIZE	(64 * 1024)
 #define SIGNATURE_SIZE  10
 
-static int
-_swap_detect_signature(const char *buf)
+static int _swap_detect_signature(const char *buf)
 {
 	if (memcmp(buf, "SWAP-SPACE", 10) == 0 ||
             memcmp(buf, "SWAPSPACE2", 10) == 0)

@@ -45,8 +45,8 @@ static int _lvscan_single_lvmetad(struct cmd_context *cmd, struct logical_volume
 	return ECMD_PROCESSED;
 }
 
-static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
-			 struct processing_handle *handle __attribute__((unused)))
+static int _lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
+			  struct processing_handle *handle __attribute__((unused)))
 {
 	struct lvinfo info;
 	int inkernel, snap_active = 1;
@@ -119,5 +119,5 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 		 */
 	}
 
-	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, NULL, &lvscan_single);
+	return process_each_lv(cmd, argc, argv, NULL, NULL, 0, NULL, NULL, &_lvscan_single);
 }

@@ -2375,7 +2375,7 @@ void opt_array_to_str(struct cmd_context *cmd, int *opts, int count,
 	buf[len - 1] = '\0';
 }
 
-static void lvp_bits_to_str(uint64_t bits, char *buf, int len)
+static void _lvp_bits_to_str(uint64_t bits, char *buf, int len)
 {
 	struct lv_prop *prop;
 	int lvp_enum;
@@ -2396,7 +2396,7 @@ static void lvp_bits_to_str(uint64_t bits, char *buf, int len)
 	buf[len - 1] = '\0';
 }
 
-static void lvt_bits_to_str(uint64_t bits, char *buf, int len)
+static void _lvt_bits_to_str(uint64_t bits, char *buf, int len)
 {
 	struct lv_type *type;
 	int lvt_enum;
@@ -2850,7 +2850,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 
 		if (rule->check_lvt_bits && (rule->rule == RULE_REQUIRE) && !lv_types_match_bits) {
 			memset(buf, 0, sizeof(buf));
-			lvt_bits_to_str(rule->check_lvt_bits, buf, sizeof(buf));
+			_lvt_bits_to_str(rule->check_lvt_bits, buf, sizeof(buf));
 			if (rule->opts_count)
 				log_warn("Command on LV %s uses options that require LV types %s.",
 					 display_lvname(lv), buf);
@@ -2864,7 +2864,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 
 		if (rule->check_lvp_bits && (rule->rule == RULE_INVALID) && lv_props_match_bits) {
 			memset(buf, 0, sizeof(buf));
-			lvp_bits_to_str(lv_props_match_bits, buf, sizeof(buf));
+			_lvp_bits_to_str(lv_props_match_bits, buf, sizeof(buf));
 			if (rule->opts_count)
 				log_warn("Command on LV %s uses options that are invalid with LV properties: %s.",
 				 	 display_lvname(lv), buf);
@@ -2878,7 +2878,7 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 
 		if (rule->check_lvp_bits && (rule->rule == RULE_REQUIRE) && lv_props_unmatch_bits) {
 			memset(buf, 0, sizeof(buf));
-			lvp_bits_to_str(lv_props_unmatch_bits, buf, sizeof(buf));
+			_lvp_bits_to_str(lv_props_unmatch_bits, buf, sizeof(buf));
 			if (rule->opts_count)
 				log_warn("Command on LV %s uses options that require LV properties: %s.",
 				 	 display_lvname(lv), buf);

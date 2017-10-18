@@ -38,8 +38,7 @@ struct lvm_report_object {
 	struct label *label;
 };
 
-static uint32_t log_seqnum = 1;
-
+static uint32_t _log_seqnum = 1;
 
 /*
  *  Enum for field_num index to use in per-field reserved value definition.
@@ -1091,10 +1090,10 @@ static void *_lv_time_handler_get_dynamic_value(struct dm_report *rh,
 	return result;
 }
 
-static int lv_time_handler(struct dm_report *rh, struct dm_pool *mem,
-			   uint32_t field_num,
-			   dm_report_reserved_action_t action,
-			   const void *data_in, const void **data_out)
+static int _lv_time_handler(struct dm_report *rh, struct dm_pool *mem,
+			    uint32_t field_num,
+			    dm_report_reserved_action_t action,
+			    const void *data_in, const void **data_out)
 {
 	*data_out = NULL;
 	if (!data_in)
@@ -4128,7 +4127,7 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 		  const char *object_group_id, const char *msg,
 		  int current_errno, int ret_code)
 {
-	struct cmd_log_item log_item = {log_seqnum++, type, context, object_type_name,
+	struct cmd_log_item log_item = {_log_seqnum++, type, context, object_type_name,
 					object_name ? : "", object_id ? : "",
 					object_group ? : "", object_group_id ? : "",
 					msg ? : "", current_errno, ret_code};
@@ -4141,7 +4140,7 @@ int report_cmdlog(void *handle, const char *type, const char *context,
 
 void report_reset_cmdlog_seqnum(void)
 {
-	log_seqnum = 1;
+	_log_seqnum = 1;
 }
 
 int report_current_object_cmdlog(const char *type, const char *msg, int32_t ret_code)

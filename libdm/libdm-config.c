@@ -72,7 +72,7 @@ static struct dm_config_node *_create_node(struct dm_pool *mem);
 static char *_dup_tok(struct parser *p);
 static char *_dup_token(struct dm_pool *mem, const char *b, const char *e);
 
-static const int sep = '/';
+static const int _sep = '/';
 
 #define MAX_INDENT 32
 
@@ -530,11 +530,11 @@ static struct dm_config_node *_find_or_make_node(struct dm_pool *mem,
 
 	while (cn || mem) {
 		/* trim any leading slashes */
-		while (*path && (*path == sep))
+		while (*path && (*path == _sep))
 			path++;
 
 		/* find the end of this segment */
-		for (e = path; *e && (*e != sep); e++) ;
+		for (e = path; *e && (*e != _sep); e++) ;
 
 		/* hunt for the node */
 		cn_found = NULL;
