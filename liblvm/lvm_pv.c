@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 #include "lib.h"
-#include "metadata.h"
+#include "metadata-exported.h"
 #include "lvm-string.h"
 #include "str_list.h"
 #include "lvm_misc.h"

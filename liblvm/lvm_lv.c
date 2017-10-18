@@ -13,7 +13,7 @@
  */
 
 #include "lib.h"
-#include "metadata.h"
+#include "metadata-exported.h"
 #include "lvm-string.h"
 #include "defaults.h"
 #include "segtype.h"

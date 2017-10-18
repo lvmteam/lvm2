@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Move lib code used only by liblvm into metadata-liblvm.c.
   Distinguish between device not found and excluded by filter.
   Monitor external origin LVs.
   Remove the replicator code, including configure --with-replicators.

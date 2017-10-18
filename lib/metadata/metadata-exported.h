@@ -688,9 +688,9 @@ uint32_t vg_read_error(struct volume_group *vg_handle);
 struct physical_volume *pv_create(const struct cmd_context *cmd,
 				  struct device *dev, struct pv_create_args *pva);
 
-int pvremove_single(struct cmd_context *cmd, const char *pv_name,
-		    void *handle __attribute__((unused)), unsigned force_count,
-		    unsigned prompt, struct dm_list *pvslist);
+struct physical_volume *pvcreate_vol(struct cmd_context *cmd, const char *pv_name,
+				     struct pvcreate_params *pp, int write_now);
+
 int pvremove_many(struct cmd_context *cmd, struct dm_list *pv_names,
 		  unsigned force_count, unsigned prompt);
 
