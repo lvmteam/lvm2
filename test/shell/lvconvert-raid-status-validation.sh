@@ -76,9 +76,8 @@ while true; do
 		#   Before starting sync thread: "Aa X/X recover"
 		# from the valid case,
 		#   Just finished sync thread: "Aa X/X recover"
-		# We'll just put "should" for now
-		should [ "${a[5]}" = "AA" ]
-		should [ "${a[7]}" = "idle" ]
+		[ "${a[5]}" = "AA" ]
+		[ "${a[7]}" = "idle" ]
 		break
 	fi
         sleep .1
@@ -105,9 +104,8 @@ while true; do
 		#   Before starting sync thread: "Aa X/X recover"
 		# from the valid case,
 		#   Just finished sync thread: "Aa X/X recover"
-		# We'll just put "should" for now
-		should [ "${a[5]}" = "AAA" ]
-		should [ "${a[7]}" = "idle" ]
+		[ "${a[5]}" = "AAA" ]
+		[ "${a[7]}" = "idle" ]
 		break
 	fi
         sleep .1
@@ -129,8 +127,8 @@ while true; do
 		[ "${a[5]}" = "aa" ]
 		[ "${a[7]}" = "resync" ]
 	else
-		should [ "${a[5]}" = "AA" ]
-		should [ "${a[7]}" = "idle" ]
+		[ "${a[5]}" = "AA" ]
+		[ "${a[7]}" = "idle" ]
 		break
 	fi
         sleep .1
