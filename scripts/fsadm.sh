@@ -591,7 +591,7 @@ resize_luks() {
 	VOLUME="$DM_DEV_DIR/mapper/$NAME"
 	detect_device_size
 
-	test "$DEVSIZE" -le "$NEWSIZE" || SHRINK=1
+	test "$DEVSIZE" -le "$NEWFSIZE" || SHRINK=1
 
 	if [ $SHRINK -eq 1 ]; then
 		# shrink fs on LUKS device first
