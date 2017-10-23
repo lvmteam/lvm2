@@ -581,6 +581,10 @@ resize_luks() {
 		error "New size is not sector alligned"
 	fi
 
+	if [ $((NEWBLOCKCOUNT - CRYPT_DATA_OFFSET)) -lt 1 ]; then
+		error "New size is smaller than minimum ($(((CRYPT_DATA_OFFSET + 1) * 512)) bytes) for LUKS device $VOLUME"
+	fi
+
 	NEWCBLOCKCOUNT=$((NEWBLOCKCOUNT - CRYPT_DATA_OFFSET))
 	NEWFSIZE=$(( NEWCBLOCKCOUNT * 512))
 
