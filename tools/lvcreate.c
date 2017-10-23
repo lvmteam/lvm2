@@ -1425,7 +1425,7 @@ static int _check_pool_parameters(struct cmd_context *cmd,
 	if (lp->create_pool) {
 		/* Given pool name needs to follow restrictions for created LV */
 		if (lp->pool_name) {
-			if (!apply_lvname_restrictions(lp->pool_name))
+			if (!seg_is_cache(lp) && !apply_lvname_restrictions(lp->pool_name))
 				return_0;
 			/* We could check existance only when we have vg */
 			if (vg && find_lv(vg, lp->pool_name)) {

@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Allow lvcreate to be used for caching of _tdata LV.
   Avoid internal error when resizing cache type _tdata LV (not yet supported).
   Show original converted names when lvconverting LV to pool volume.
   Move lib code used only by liblvm into metadata-liblvm.c.
