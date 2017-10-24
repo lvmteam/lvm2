@@ -101,9 +101,9 @@ while true; do
 		[ "${a[7]}" = "recover" ]
 	else
 		# Tough to tell the INVALID case,
-		#   Before starting sync thread: "Aa X/X recover"
+		#   Before starting sync thread: "AAa X/X recover"
 		# from the valid case,
-		#   Just finished sync thread: "Aa X/X recover"
+		#   Just finished sync thread: "AAa X/X recover"
 		[ "${a[5]}" = "AAA" ]
 		[ "${a[7]}" = "idle" ]
 		break
