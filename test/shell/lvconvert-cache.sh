@@ -93,6 +93,12 @@ check lv_exists $vg $lv1 ${lv1}_cachepool
 lvremove -f $vg
 
 
+lvcreate -L 2 -n $lv1 $vg
+lvcreate --type cache-pool -l 1 -n ${lv1}_cachepool "$DM_DEV_DIR/$vg"
+lvconvert --cache --cachepool "$DM_DEV_DIR/$vg/${lv1}_cachepool" --cachemode writeback -Zy "$DM_DEV_DIR/$vg/$lv1"
+lvremove -f $vg
+
+
 lvcreate -n corigin -l 10 $vg
 lvcreate -n pool -l 10 $vg
 lvs -a -o +devices
@@ -124,8 +130,10 @@ invalid lvconvert --cache --cachepool $vg/$lv1
 INVALID=not
 # Single vg is required
 $INVALID lvconvert --type cache --cachepool $vg/$lv1 --poolmetadata $vg1/$lv2 $vg/$lv3
+$INVALID lvconvert --type cache --cachepool "$DM_DEV_DIR/$vg/$lv1" --poolmetadata "$DM_DEV_DIR/$vg1/$lv2" $vg/$lv3
 $INVALID lvconvert --type cache --cachepool $vg/$lv1 --poolmetadata $lv2 $vg1/$lv3
 $INVALID lvconvert --type cache --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2 $vg/$lv3
+$INVALID lvconvert --type cache --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2 "$DM_DEV_DIR/$vg/$lv3"
 $INVALID lvconvert --type cache-pool --poolmetadata $vg2/$lv2 $vg1/$lv1
 
 $INVALID lvconvert --cachepool $vg1/$lv1 --poolmetadata $vg2/$lv2
