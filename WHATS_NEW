@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Fix regression in more advanced vgname extraction in lvconvert (2.02.169).
   Allow lvcreate to be used for caching of _tdata LV.
   Avoid internal error when resizing cache type _tdata LV (not yet supported).
   Show original converted names when lvconverting LV to pool volume.
