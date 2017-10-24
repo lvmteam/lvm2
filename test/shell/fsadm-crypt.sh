@@ -16,7 +16,7 @@ SKIP_WITH_LVMPOLLD=1
 
 . lib/inittest
 
-aux prepare_vg 1 200
+aux prepare_vg 1 300
 
 # set to "skip" to avoid testing given fs and test warning result
 # i.e. check_reiserfs=skip
@@ -188,7 +188,7 @@ create_crypt_device()
 which lsblk > /dev/null || skip
 check_missing cryptsetup || skip
 
-# Test for block sizes != 1024 (rhbz #480022)
+vgchange -s 128k
 lvcreate -n $lv1 -L25M $vg
 lvcreate -n ${lv1}bar -L35M $vg
 lvcreate -n ${lv1}plain -L35M $vg
@@ -217,6 +217,15 @@ test_ext2_resize() {
 	fscheck_ext3 "$3"
 }
 
+test_ext2_small_shrink() {
+	mkfs.ext2 "$3"
+
+	lvresize -L-1 -r $1
+	lvresize -L-1 -r $1
+
+	fscheck_ext3 "$3"
+}
+
 test_ext3_resize() {
 	mkfs.ext3 -b4096 -j "$3"
 
@@ -237,6 +246,15 @@ test_ext3_resize() {
 	umount "$mount_dir"
 }
 
+test_ext3_small_shrink() {
+	mkfs.ext3 "$3"
+
+	lvresize -L-1 -r $1
+	lvresize -L-1 -r $1
+
+	fscheck_ext3 "$3"
+}
+
 test_xfs_resize() {
 	mkfs.xfs -l internal,size=1000b -f "$3"
 
@@ -252,6 +270,13 @@ test_xfs_resize() {
 	fscheck_xfs "$3"
 }
 
+test_xfs_small_shrink() {
+	mkfs.xfs -l internal,size=1000b -f "$3"
+
+	not lvresize -L-1 -r $1
+	fscheck_xfs "$3"
+}
+
 test_reiserfs_resize() {
 	mkfs.reiserfs -s 513 -f "$3"
 
@@ -264,6 +289,15 @@ test_reiserfs_resize() {
 
 	fsadm -y --lvresize resize $1 30M
 	umount "$mount_dir"
+	fscheck_reiserfs "$3"
+}
+
+test_reiserfs_small_shrink() {
+	mkfs.reiserfs -s 513 -f "$3"
+
+	lvresize -L-1 -r $1
+	lvresize -L-1 -r $1
+
 	fscheck_reiserfs "$3"
 }
 
@@ -478,6 +512,12 @@ if check_missing ext2; then
 	test_ext2_plain "$vg_lv3" "$dev_vg_lv3" "$CRYPT_DEV_PLAIN" "$CRYPT_NAME_PLAIN"
 	crypt_close "$CRYPT_NAME_PLAIN"
 
+	lvresize -f -L100M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+	test_ext2_small_shrink "$vg_lv" "$dev_vg_lv" "$CRYPT_DEV"
+	lvresize -f -L25M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+
 	if [ -z "$SKIP_DETACHED" ]; then
 		crypt_open_detached "$dev_vg_lv3" $PWD2 "$CRYPT_NAME2" "$dev_vg_lv2"
 		test_ext2_detached "$vg_lv2" "$dev_vg_lv2" "$CRYPT_DEV2" "$CRYPT_NAME2"
@@ -495,6 +535,12 @@ if check_missing ext3; then
 	crypt_open_plain "$dev_vg_lv3" $PWD3 "$CRYPT_NAME_PLAIN"
 	test_ext3_plain "$vg_lv3" "$dev_vg_lv3" "$CRYPT_DEV_PLAIN" "$CRYPT_NAME_PLAIN"
 	crypt_close "$CRYPT_NAME_PLAIN"
+
+	lvresize -f -L100M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+	test_ext3_small_shrink "$vg_lv" "$dev_vg_lv" "$CRYPT_DEV"
+	lvresize -f -L25M $vg_lv
+	cryptsetup resize $CRYPT_NAME
 
 	if [ -z "$SKIP_DETACHED" ]; then
 		crypt_open_detached "$dev_vg_lv3" $PWD2 "$CRYPT_NAME2" "$dev_vg_lv2"
@@ -514,6 +560,12 @@ if check_missing xfs; then
 	test_xfs_plain "$vg_lv3" "$dev_vg_lv3" "$CRYPT_DEV_PLAIN" "$CRYPT_NAME_PLAIN"
 	crypt_close "$CRYPT_NAME_PLAIN"
 
+	lvresize -f -L100M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+	test_xfs_small_shrink "$vg_lv" "$dev_vg_lv" "$CRYPT_DEV"
+	lvresize -f -L25M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+
 	if [ -z "$SKIP_DETACHED" ]; then
 		crypt_open_detached "$dev_vg_lv3" $PWD2 "$CRYPT_NAME2" "$dev_vg_lv2"
 		test_xfs_detached "$vg_lv2" "$dev_vg_lv2" "$CRYPT_DEV2" "$CRYPT_NAME2"
@@ -531,6 +583,12 @@ if check_missing reiserfs; then
 	crypt_open_plain "$dev_vg_lv3" $PWD3 "$CRYPT_NAME_PLAIN"
 	test_reiserfs_plain "$vg_lv3" "$dev_vg_lv3" "$CRYPT_DEV_PLAIN" "$CRYPT_NAME_PLAIN"
 	crypt_close "$CRYPT_NAME_PLAIN"
+
+	lvresize -f -L100M $vg_lv
+	cryptsetup resize $CRYPT_NAME
+	test_reiserfs_small_shrink "$vg_lv" "$dev_vg_lv" "$CRYPT_DEV"
+	lvresize -f -L25M $vg_lv
+	cryptsetup resize $CRYPT_NAME
 
 	if [ -z "$SKIP_DETACHED" ]; then
 		crypt_open_detached "$dev_vg_lv3" $PWD2 "$CRYPT_NAME2" "$dev_vg_lv2"
