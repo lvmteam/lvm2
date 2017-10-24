@@ -607,16 +607,12 @@ resize_luks() {
 	fi
 }
 
-#################################
-# Resize active crypt device
-#  (on direct user request only)
-#################################
-resize_crypt() {
-	local CRYPT_TYPE=
-	local TMP=
-	local SHRINK=0
+detect_crypt_device() {
+	local CRYPT_TYPE
+	local L_NEWSIZE
+	local TMP
 
-	which $CRYPTSETUP > /dev/null 2>&1 || error "$CRYPTSETUP utility required to resize LUKS volume"
+	which $CRYPTSETUP > /dev/null 2>&1 || error "$CRYPTSETUP utility required to resize crypt device"
 
 	CRYPT_TYPE=$($CRYPTSETUP status $1 2> /dev/null | $GREP "type:")
 
@@ -624,31 +620,38 @@ resize_crypt() {
 
 	CRYPT_TYPE=${CRYPT_TYPE##*[[:space:]]}
 
-	TMP=$NEWSIZE
-
-	decode_size "$2" 512
-	detect_device_size
-
-	if [ "$DEVSIZE" -gt "$NEWSIZE" ]; then
-		SHRINK=1
-	fi
-
-	NEWSIZE=$TMP
-
-	if [ $SHRINK -eq 1 -a -z "$3" ]; then
-		return
-	fi
-
-	# going to resize, drop the request flag
-	unset DO_CRYPTRESIZE
-
 	case "$CRYPT_TYPE" in
 	 LUKS[12]|PLAIN)
-		dry $CRYPTSETUP resize "$1" --size $NEWBLOCKCOUNT || error "Failed to resize device $1"
+		verbose "\"$1\" crypt device is type $CRYPT_TYPE"
 		;;
 	 *)
 		error "Unsupported crypt type \"$CRYPT_TYPE\""
 	esac
+
+	TMP=$NEWSIZE
+	decode_size "$2" 512
+	L_NEWSIZE=$NEWSIZE
+	NEWSIZE=$TMP
+
+	if [ $((L_NEWSIZE % 512)) -ne 0 ]; then
+		error "New size is not sector alligned"
+	fi
+
+	CRYPT_RESIZE_BLOCKS=$NEWBLOCKCOUNT
+
+	if [ "$DEVSIZE" -ge "$L_NEWSIZE" ]; then
+		CRYPT_SHRINK=1
+	else
+		CRYPT_GROW=1
+	fi
+}
+
+#################################
+# Resize active crypt device
+#  (on direct user request only)
+#################################
+resize_crypt() {
+	dry $CRYPTSETUP resize "$1" --size $CRYPT_RESIZE_BLOCKS || error "$CRYPTSETUP failed to resize device $1"
 }
 
 ####################
@@ -664,7 +667,8 @@ resize() {
 	test -z "$NEWSIZE" && NEWSIZE=${DEVSIZE}b
 	test -n "$NEWSIZE_ORIG" || NEWSIZE_ORIG=$NEWSIZE
 	IFS=$NL
-	test -z "$DO_CRYPTRESIZE" || resize_crypt "$VOLUME_ORIG" "$NEWSIZE_ORIG"
+	test -z "$DO_CRYPTRESIZE" || detect_crypt_device "$VOLUME_ORIG" "$NEWSIZE_ORIG"
+	test -z "$CRYPT_GROW" || resize_crypt "$VOLUME_ORIG"
 	case "$FSTYPE" in
 	  "ext3"|"ext2"|"ext4") resize_ext $NEWSIZE ;;
 	  "reiserfs") resize_reiser $NEWSIZE ;;
@@ -674,7 +678,7 @@ resize() {
 		resize_luks $NEWSIZE ;;
 	  *) error "Filesystem \"$FSTYPE\" on device \"$VOLUME\" is not supported by this tool." ;;
 	esac || error "Resize $FSTYPE failed."
-	test -z "$DO_CRYPTRESIZE" || resize_crypt "$VOLUME_ORIG" "$NEWSIZE_ORIG" do_shrink
+	test -z "$CRYPT_SHRINK" || resize_crypt "$VOLUME_ORIG"
 }
 
 ####################################
