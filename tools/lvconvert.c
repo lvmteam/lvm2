@@ -1945,8 +1945,9 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	 * LV_foo specification because this LV is not processed by process_each_lv.
 	 */
 	if ((lv_is_cache_type(org) && !lv_is_cache(org)) ||
-	    lv_is_thin_type(org) ||
-	    lv_is_mirrored(org) ||
+	    (lv_is_thin_type(org) && !lv_is_thin_volume(org)) ||
+	    (lv_is_mirror_type(org) && !lv_is_mirror(org)) ||
+	    (lv_is_raid_type(org) && !lv_is_raid(org)) ||
 	    lv_is_cow(org)) {
 		log_error("Unable to use LV %s as snapshot origin: invald LV type.",
 			  display_lvname(lv));

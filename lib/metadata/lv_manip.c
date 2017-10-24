@@ -7622,9 +7622,18 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			}
 
 			if (lv_is_mirror_type(origin_lv)) {
+				if (!lv_is_mirror(origin_lv)) {
+					log_error("Snapshots of mirror subvolumes are not supported.");
+					return NULL;
+				}
 				log_warn("WARNING: Snapshots of mirrors can deadlock under rare device failures.");
 				log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
 				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
+			}
+
+			if (lv_is_raid_type(origin_lv) && !lv_is_raid(origin_lv)) {
+				log_error("Snapshots of raid subvolumes are not supported.");
+				return NULL;
 			}
 
 			if (vg_is_clustered(vg) && lv_is_active(origin_lv) &&
