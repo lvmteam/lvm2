@@ -191,9 +191,15 @@ AC_SUBST(HAVE_FULL_RELRO)
 ################################################################################
 dnl -- Prefix is /usr by default, the exec_prefix default is setup later
 AC_PREFIX_DEFAULT(/usr)
-if test "$prefix" = NONE; then
-  datarootdir=${ac_default_prefix}/share
-fi
+
+################################################################################
+dnl -- Clear default exec_prefix - install into /sbin rather than /usr/sbin
+test "$exec_prefix" = NONE -a "$prefix" = NONE && exec_prefix=""
+
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+# Let make expand exec_prefix.
+test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+
 
 ################################################################################
 dnl -- Setup the ownership of the files
@@ -1599,10 +1605,6 @@ AC_CHECK_LIB(c, canonicalize_file_name,
     [Define to 1 if canonicalize_file_name is available.]))
 
 ################################################################################
-dnl -- Clear default exec_prefix - install into /sbin rather than /usr/sbin
-test "$exec_prefix" = NONE -a "$prefix" = NONE && exec_prefix=""
-
-################################################################################
 dnl -- Check for dlopen
 AC_CHECK_LIB(dl, dlopen,
 	     [AC_DEFINE([HAVE_LIBDL], 1, [Define to 1 if dynamic libraries are available.])
@@ -1874,20 +1876,17 @@ if test -n "$MODPROBE_CMD"; then
 	AC_DEFINE_UNQUOTED([MODPROBE_CMD], ["$MODPROBE_CMD"], [The path to 'modprobe', if available.])
 fi
 
+SYSCONFDIR="$(eval echo $(eval echo $sysconfdir))"
 
-lvm_exec_prefix=$exec_prefix
-test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$prefix
-test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$ac_default_prefix
-LVM_PATH="$lvm_exec_prefix/sbin/lvm"
+SBINDIR="$(eval echo $(eval echo $sbindir))"
+LVM_PATH="$SBINDIR/lvm"
 AC_DEFINE_UNQUOTED(LVM_PATH, ["$LVM_PATH"], [Path to lvm binary.])
 
-clvmd_prefix=$ac_default_prefix
-test "$prefix" != NONE && clvmd_prefix=$prefix
-CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
+USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
+CLVMD_PATH="$USRSBINDIR/clvmd"
 AC_DEFINE_UNQUOTED(CLVMD_PATH, ["$CLVMD_PATH"], [Path to clvmd binary.])
 
-
-FSADM_PATH="$lvm_exec_prefix/sbin/fsadm"
+FSADM_PATH="$SBINDIR/fsadm"
 AC_DEFINE_UNQUOTED(FSADM_PATH, ["$FSADM_PATH"], [Path to fsadm binary.])
 
 ################################################################################
@@ -1907,7 +1906,7 @@ if test "$BUILD_DMEVENTD" = yes; then
 		    AC_HELP_STRING([--with-dmeventd-path=PATH],
 				   [dmeventd path [EPREFIX/sbin/dmeventd]]),
 		    DMEVENTD_PATH=$withval,
-		    DMEVENTD_PATH="$lvm_exec_prefix/sbin/dmeventd")
+		    DMEVENTD_PATH="$SBINDIR/dmeventd")
 	AC_DEFINE_UNQUOTED(DMEVENTD_PATH, ["$DMEVENTD_PATH"],
 			   [Path to dmeventd binary.])
 fi
@@ -1950,13 +1949,17 @@ AC_ARG_WITH(default-cache-subdir,
 AC_DEFINE_UNQUOTED(DEFAULT_CACHE_SUBDIR, ["$DEFAULT_CACHE_SUBDIR"],
 		   [Name of default metadata cache subdirectory.])
 
+# Select default system locking dir, prefer /run/lock over /var/lock
+DEFAULT_SYS_LOCK_DIR="$RUN_DIR/lock"
+test -d "$DEFAULT_SYS_LOCK_DIR" || DEFAULT_SYS_LOCK_DIR="/var/lock"
+
+# Support configurable locking subdir for lvm
 AC_ARG_WITH(default-locking-dir,
 	    AC_HELP_STRING([--with-default-locking-dir=DIR],
 			   [default locking directory [autodetect_lock_dir/lvm]]),
 	    DEFAULT_LOCK_DIR=$withval,
 	    [AC_MSG_CHECKING(for default lock directory)
-	     DEFAULT_LOCK_DIR="$RUN_DIR/lock/lvm"
-	     test -d "$RUN_DIR/lock" || DEFAULT_LOCK_DIR="/var/lock/lvm"
+	     DEFAULT_LOCK_DIR="$DEFAULT_SYS_LOCK_DIR/lvm"
 	     AC_MSG_RESULT($DEFAULT_LOCK_DIR)])
 AC_DEFINE_UNQUOTED(DEFAULT_LOCK_DIR, ["$DEFAULT_LOCK_DIR"],
 		   [Name of default locking directory.])
@@ -2051,6 +2054,7 @@ AC_SUBST(DEFAULT_RAID10_SEGTYPE)
 AC_SUBST(DEFAULT_RUN_DIR)
 AC_SUBST(DEFAULT_SPARSE_SEGTYPE)
 AC_SUBST(DEFAULT_SYS_DIR)
+AC_SUBST(DEFAULT_SYS_LOCK_DIR)
 AC_SUBST(DEFAULT_USE_BLKID_WIPING)
 AC_SUBST(DEFAULT_USE_LVMETAD)
 AC_SUBST(DEFAULT_USE_LVMPOLLD)
@@ -2115,8 +2119,10 @@ AC_SUBST(SACKPT_CFLAGS)
 AC_SUBST(SACKPT_LIBS)
 AC_SUBST(SALCK_CFLAGS)
 AC_SUBST(SALCK_LIBS)
+AC_SUBST(SBINDIR)
 AC_SUBST(SELINUX_LIBS)
 AC_SUBST(SELINUX_PC)
+AC_SUBST(SYSCONFDIR)
 AC_SUBST(SYSTEMD_LIBS)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
@@ -2139,6 +2145,7 @@ AC_SUBST(UDEV_SYSTEMD_BACKGROUND_JOBS)
 AC_SUBST(UDEV_RULE_EXEC_DETECTION)
 AC_SUBST(UDEV_HAS_BUILTIN_BLKID)
 AC_SUBST(USE_TRACKING)
+AC_SUBST(USRSBINDIR)
 AC_SUBST(VALGRIND_POOL)
 AC_SUBST(WRITE_INSTALL)
 AC_SUBST(DMEVENTD_PIDFILE)

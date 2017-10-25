@@ -643,6 +643,7 @@ LVMETAD_PIDFILE
 DMEVENTD_PIDFILE
 WRITE_INSTALL
 VALGRIND_POOL
+USRSBINDIR
 USE_TRACKING
 UDEV_HAS_BUILTIN_BLKID
 UDEV_RULE_EXEC_DETECTION
@@ -656,8 +657,10 @@ TESTING
 STATIC_LINK
 STATICDIR
 SNAPSHOTS
+SYSCONFDIR
 SELINUX_PC
 SELINUX_LIBS
+SBINDIR
 REPLICATORS
 READLINE_LIBS
 RT_LIBS
@@ -710,6 +713,7 @@ DEFAULT_USE_LVMLOCKD
 DEFAULT_USE_LVMPOLLD
 DEFAULT_USE_LVMETAD
 DEFAULT_USE_BLKID_WIPING
+DEFAULT_SYS_LOCK_DIR
 DEFAULT_SYS_DIR
 DEFAULT_SPARSE_SEGTYPE
 DEFAULT_RUN_DIR
@@ -8238,9 +8242,14 @@ $as_echo "$ac_cv_flag_HAVE_FULL_RELRO" >&6; }
 
 ################################################################################
 
-if test "$prefix" = NONE; then
-  datarootdir=${ac_default_prefix}/share
-fi
+
+################################################################################
+test "$exec_prefix" = NONE -a "$prefix" = NONE && exec_prefix=""
+
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+# Let make expand exec_prefix.
+test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking file owner" >&5
@@ -12890,7 +12899,7 @@ if ${am_cv_pathless_PYTHON+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-	for am_cv_pathless_PYTHON in python python2 python3 python3.3 python3.2 python3.1 python3.0 python2.7  python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 none; do
+	for am_cv_pathless_PYTHON in python python2 python3 python3.5 python3.4 python3.3 python3.2 python3.1 python3.0 python2.7  python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 none; do
 	  test "$am_cv_pathless_PYTHON" = none && break
 	  prog="import sys
 # split strings by '.' and convert to numeric.  Append some zeros
@@ -13458,7 +13467,7 @@ if ${am_cv_pathless_PYTHON+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-	for am_cv_pathless_PYTHON in python python2 python3 python3.3 python3.2 python3.1 python3.0 python2.7  python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 none; do
+	for am_cv_pathless_PYTHON in python python2 python3 python3.5 python3.4 python3.3 python3.2 python3.1 python3.0 python2.7  python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 none; do
 	  test "$am_cv_pathless_PYTHON" = none && break
 	  prog="import sys
 # split strings by '.' and convert to numeric.  Append some zeros
@@ -14012,9 +14021,6 @@ $as_echo "#define HAVE_CANONICALIZE_FILE_NAME 1" >>confdefs.h
 
 fi
 
-
-################################################################################
-test "$exec_prefix" = NONE -a "$prefix" = NONE && exec_prefix=""
 
 ################################################################################
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
@@ -15397,28 +15403,25 @@ _ACEOF
 
 fi
 
+SYSCONFDIR="$(eval echo $(eval echo $sysconfdir))"
 
-lvm_exec_prefix=$exec_prefix
-test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$prefix
-test "$lvm_exec_prefix" = NONE && lvm_exec_prefix=$ac_default_prefix
-LVM_PATH="$lvm_exec_prefix/sbin/lvm"
+SBINDIR="$(eval echo $(eval echo $sbindir))"
+LVM_PATH="$SBINDIR/lvm"
 
 cat >>confdefs.h <<_ACEOF
 #define LVM_PATH "$LVM_PATH"
 _ACEOF
 
 
-clvmd_prefix=$ac_default_prefix
-test "$prefix" != NONE && clvmd_prefix=$prefix
-CLVMD_PATH="$clvmd_prefix/sbin/clvmd"
+USRSBINDIR="$(eval echo $(eval echo $usrsbindir))"
+CLVMD_PATH="$USRSBINDIR/clvmd"
 
 cat >>confdefs.h <<_ACEOF
 #define CLVMD_PATH "$CLVMD_PATH"
 _ACEOF
 
 
-
-FSADM_PATH="$lvm_exec_prefix/sbin/fsadm"
+FSADM_PATH="$SBINDIR/fsadm"
 
 cat >>confdefs.h <<_ACEOF
 #define FSADM_PATH "$FSADM_PATH"
@@ -15448,7 +15451,7 @@ if test "$BUILD_DMEVENTD" = yes; then
 if test "${with_dmeventd_path+set}" = set; then :
   withval=$with_dmeventd_path; DMEVENTD_PATH=$withval
 else
-  DMEVENTD_PATH="$lvm_exec_prefix/sbin/dmeventd"
+  DMEVENTD_PATH="$SBINDIR/dmeventd"
 fi
 
 
@@ -15529,6 +15532,11 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+# Select default system locking dir, prefer /run/lock over /var/lock
+DEFAULT_SYS_LOCK_DIR="$RUN_DIR/lock"
+test -d "$DEFAULT_SYS_LOCK_DIR" || DEFAULT_SYS_LOCK_DIR="/var/lock"
+
+# Support configurable locking subdir for lvm
 
 # Check whether --with-default-locking-dir was given.
 if test "${with_default_locking_dir+set}" = set; then :
@@ -15536,8 +15544,7 @@ if test "${with_default_locking_dir+set}" = set; then :
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for default lock directory" >&5
 $as_echo_n "checking for default lock directory... " >&6; }
-	     DEFAULT_LOCK_DIR="$RUN_DIR/lock/lvm"
-	     test -d "$RUN_DIR/lock" || DEFAULT_LOCK_DIR="/var/lock/lvm"
+	     DEFAULT_LOCK_DIR="$DEFAULT_SYS_LOCK_DIR/lvm"
 	     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DEFAULT_LOCK_DIR" >&5
 $as_echo "$DEFAULT_LOCK_DIR" >&6; }
 fi
@@ -15607,6 +15614,10 @@ _ACEOF
 
 
 ################################################################################
+
+
+
+
 
 
 
