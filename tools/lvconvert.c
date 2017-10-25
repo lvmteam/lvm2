@@ -1949,7 +1949,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	    (lv_is_mirror_type(org) && !lv_is_mirror(org)) ||
 	    (lv_is_raid_type(org) && !lv_is_raid(org)) ||
 	    lv_is_cow(org)) {
-		log_error("Unable to use LV %s as snapshot origin: invald LV type.",
+		log_error("Unable to use LV %s as snapshot origin: invalid LV type.",
 			  display_lvname(lv));
 		return 0;
 	}
