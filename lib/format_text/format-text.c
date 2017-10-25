@@ -1362,7 +1362,9 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 
 static int _text_scan(const struct format_type *fmt, const char *vgname)
 {
-	return (_scan_file(fmt, vgname) & _scan_raw(fmt, vgname));
+	_scan_file(fmt, vgname);
+	_scan_raw(fmt, vgname);
+	return 1;
 }
 
 struct _write_single_mda_baton {
