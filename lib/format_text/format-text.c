@@ -1141,6 +1141,9 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 
 	dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
+	if (!dm_list_empty(dir_list))
+		log_debug_metadata("Scanning independent files for %s", vgname ? vgname : "VGs");
+
 	dm_list_iterate_items(dl, dir_list) {
 		if (!(d = opendir(dl->dir))) {
 			log_sys_error("opendir", dl->dir);
@@ -1173,10 +1176,14 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 					stack;
 					break;
 				}
+
+				log_debug_metadata("Scanning independent file %s for VG %s", path, scanned_vgname);
+
 				if ((vg = _vg_read_file_name(fid, scanned_vgname,
 							     path))) {
 					/* FIXME Store creation host in vg */
 					lvmcache_update_vg(vg, 0);
+					lvmcache_set_independent_location(vg->name);
 					release_vg(vg);
 				}
 			}
@@ -1302,6 +1309,8 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	return 1;
 }
 
+/* used for independent_metadata_areas */
+
 static int _scan_raw(const struct format_type *fmt, const char *vgname __attribute__((unused)))
 {
 	struct raw_list *rl;
@@ -1313,11 +1322,16 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 
+	if (!dm_list_empty(raw_list))
+		log_debug_metadata("Scanning independent raw locations for %s", vgname ? vgname : "VGs");
+
 	fid.fmt = fmt;
 	dm_list_init(&fid.metadata_areas_in_use);
 	dm_list_init(&fid.metadata_areas_ignored);
 
 	dm_list_iterate_items(rl, raw_list) {
+		log_debug_metadata("Scanning independent dev %s", dev_name(rl->dev_area.dev));
+
 		/* FIXME We're reading mdah twice here... */
 		if (!dev_open_readonly(rl->dev_area.dev)) {
 			stack;
@@ -1331,8 +1345,10 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 
 		if (read_metadata_location_summary(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
 			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0, 0);
-			if (vg)
+			if (vg) {
 				lvmcache_update_vg(vg, 0);
+				lvmcache_set_independent_location(vg->name);
+			}
 		}
 	close_dev:
 		if (!dev_close(rl->dev_area.dev))
@@ -1341,6 +1357,8 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 
 	return 1;
 }
+
+/* used for independent_metadata_areas */
 
 static int _text_scan(const struct format_type *fmt, const char *vgname)
 {
@@ -1796,6 +1814,8 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.mda_import_text = _mda_import_text_raw
 };
 
+/* used only for sending info to lvmetad */
+
 static int _mda_export_text_raw(struct metadata_area *mda,
 				struct dm_config_tree *cft,
 				struct dm_config_node *parent)
@@ -1819,6 +1839,8 @@ static int _mda_export_text_raw(struct metadata_area *mda,
 				 "free_sectors = " FMTd64, (int64_t) mdc->free_sectors,
 				 NULL) ? 1 : 0;
 }
+
+/* used only for receiving info from lvmetad */
 
 static int _mda_import_text_raw(struct lvmcache_info *info, const struct dm_config_node *cn)
 {
