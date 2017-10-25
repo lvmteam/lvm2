@@ -300,7 +300,7 @@ deactivate_md () {
 	echo -n "  [MD]: deactivating $devtype device $kname... "
 
 	test "$MDRAID_DO_WAIT" -eq 1 && {
-		sync_action="$(cat $SYS_BLK_DIR/$kname/md/sync_action)"
+		sync_action=$(cat "$SYS_BLK_DIR/$kname/md/sync_action")
 		test "$sync_action" != "idle" && {
 			echo -n "$sync_action action in progress... "
 			if eval "$MDADM" $MDADM_OPTS -W "$DEV_DIR/$kname" "$OUT" "$ERR"; then

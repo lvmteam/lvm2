@@ -83,12 +83,12 @@ function usage {
 
 function cleanup {
     #set to use old lvm.conf
-    LVM_SYSTEM_DIR=${ORIG_LVM_SYS_DIR}
+    LVM_SYSTEM_DIR=$ORIG_LVM_SYS_DIR
 
     if [ "$KEEP_TMP_LVM_SYSTEM_DIR" -eq 1 ]; then
         echo "${SCRIPTNAME}: LVM_SYSTEM_DIR (${TMP_LVM_SYSTEM_DIR}) must be cleaned up manually."
     else
-        "$RM" -rf -- "${TMP_LVM_SYSTEM_DIR}"
+        "$RM" -rf -- "$TMP_LVM_SYSTEM_DIR"
     fi
 }
 
@@ -309,11 +309,11 @@ done <<< "$(echo "$VGLIST")"
 ### Restore the old environment
 #####################################################################
 ### set to use old lvm.conf
-if [ -z "${ORIG_LVM_SYS_DIR}" ]
+if [ -z "$ORIG_LVM_SYS_DIR" ]
 then
     unset LVM_SYSTEM_DIR
 else
-    LVM_SYSTEM_DIR=${ORIG_LVM_SYS_DIR}
+    LVM_SYSTEM_DIR=$ORIG_LVM_SYS_DIR
 fi
 
 ### update the device cache and make sure all

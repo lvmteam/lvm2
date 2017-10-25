@@ -25,8 +25,8 @@ LOCK_FILE="@DEFAULT_SYS_LOCK_DIR@/subsys/$DAEMON"
 start()
 {
 	rtrn=0
-	if ! pidof $DAEMON > /dev/null 
-	then 
+	if ! pidof "$DAEMON" > /dev/null
+	then
 		echo -n "Starting $DAEMON: "
 		daemon "$usrsbindir/$DAEMON"
 		rtrn=$?
@@ -39,7 +39,7 @@ start()
 stop()
 {
 	echo -n "Stopping $DAEMON:"
-	killproc $DAEMON -TERM
+	killproc "$DAEMON" -TERM
 	rtrn=$?
 	echo
 
@@ -55,8 +55,8 @@ wait_for_finish()
 		sleep 1
 		count=$((count + 1))
 	done
-	
-	if [ `pidof $DAEMON` ]
+
+	if [ "$(pidof "$DAEMON")" ]
 	then
 		return 1
 	else
@@ -66,7 +66,7 @@ wait_for_finish()
 
 cmirror_status()
 {
-	status $DAEMON
+	status "$DAEMON"
 }
 
 rtrn=1
@@ -76,13 +76,13 @@ case "$1" in
 	start)
 		start
 		rtrn=$?
-		[ $rtrn = 0 ] && touch $LOCK_FILE
+		[ "$rtrn" = 0 ] && touch "$LOCK_FILE"
 		;;
 
 	stop)
 		stop
 		rtrn=$?
-		[ $rtrn = 0 ] && rm -f $LOCK_FILE
+		[ "$rtrn" = 0 ] && rm -f "$LOCK_FILE"
 		;;
 
 	restart)
@@ -97,7 +97,7 @@ case "$1" in
 	status)
 		cmirror_status
 		rtrn=$?
-		if [ $rtrn -eq 0 ]; then
+		if [ "$rtrn" -eq 0 ]; then
 			echo "cmirror is running."
 		fi
 		;;

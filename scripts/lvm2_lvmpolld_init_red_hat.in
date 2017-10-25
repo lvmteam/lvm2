@@ -43,7 +43,7 @@ LOCK_FILE="@DEFAULT_LOCK_DIR@/subsys/$DAEMON"
 PID_FILE="@LVMPOLLD_PIDFILE@"
 
 rh_status() {
-	status -p $PID_FILE $DAEMON
+	status -p "$PID_FILE" "$DAEMON"
 }
 
 rh_status_q() {
@@ -57,12 +57,11 @@ start()
 	return $ret
 }
 
-
 stop()
 {
 	ret=0
-	action "Signaling LVM poll daemon to exit:" killproc -p $PID_FILE $DAEMON -TERM || ret=$?
-	return $ret
+	action "Signaling LVM poll daemon to exit:" killproc -p "$PID_FILE" "$DAEMON" -TERM || ret=$?
+	return "$ret"
 }
 
 rtrn=1
@@ -73,14 +72,14 @@ case "$1" in
 	rh_status_q && exit 0
 	start
 	rtrn=$?
-	[ $rtrn = 0 ] && touch $LOCK_FILE
+	[ $rtrn = 0 ] && touch "$LOCK_FILE"
 	;;
 
   stop|force-stop)
 	rh_status_q || exit 0
 	stop
 	rtrn=$?
-	[ $rtrn = 0 ] && rm -f $LOCK_FILE
+	[ $rtrn = 0 ] && rm -f "$LOCK_FILE"
 	;;
 
   restart)

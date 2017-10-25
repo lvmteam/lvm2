@@ -47,7 +47,7 @@ WARN=1
 export LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES=1
 
 rh_status() {
-	status -p $PID_FILE $DMEVENTD_DAEMON
+	status -p "$PID_FILE" "$DMEVENTD_DAEMON"
 }
 
 rh_status_q() {
@@ -60,7 +60,7 @@ start()
 	VGSLIST=`$VGS --noheadings -o name --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
 	for vg in $VGSLIST
 	do
-	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y --poll y --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
+	    action "Starting monitoring for VG $vg:" "$VGCHANGE" --monitor y --poll y --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
 	done
 
 	return $ret
@@ -78,7 +78,7 @@ stop()
 	VGSLIST=`$VGS --noheadings -o name --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' 2> /dev/null`
 	for vg in $VGSLIST
 	do
-	    action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
+	    action "Stopping monitoring for VG $vg:" "$VGCHANGE" --monitor n --ignoreskippedcluster --config 'log{command_names=0 prefix="  "}' $vg || ret=$?
 	done
 	return $ret
 }
@@ -91,7 +91,7 @@ case "$1" in
 	rh_status_q && exit 0
 	start
 	rtrn=$?
-	[ $rtrn = 0 ] && touch $LOCK_FILE
+	[ "$rtrn" = 0 ] && touch "$LOCK_FILE"
 	;;
 
   force-stop)
@@ -99,7 +99,7 @@ case "$1" in
 	WARN=0
 	stop
 	rtrn=$?
-	[ $rtrn = 0 ] && rm -f $LOCK_FILE
+	[ "$rtrn" = 0 ] && rm -f "$LOCK_FILE"
 	;;
 
   stop)
@@ -108,7 +108,7 @@ case "$1" in
 	test "$runlevel" = "6" && WARN=0
 	stop
 	rtrn=$?
-	[ $rtrn = 0 ] && rm -f $LOCK_FILE
+	[ "$rtrn" = 0 ] && rm -f "$LOCK_FILE"
 	;;
 
   restart)
@@ -123,7 +123,7 @@ case "$1" in
   status)
 	rh_status
 	rtrn=$?
-	[ $rtrn = 0 ] && $LVS -S 'seg_monitor=monitored' -o lv_full_name,seg_monitor
+	[ "$rtrn" = 0 ] && "$LVS" -S 'seg_monitor=monitored' -o lv_full_name,seg_monitor
 	;;
 
   *)

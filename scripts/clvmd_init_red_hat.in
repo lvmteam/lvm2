@@ -23,15 +23,15 @@ DAEMON=clvmd
 sbindir="@SBINDIR@"
 usrsbindir="@USRSBINDIR@"
 
-lvm_vgchange=${sbindir}/vgchange
-lvm_vgs=${sbindir}/vgs
-lvm_vgscan=${sbindir}/vgscan
-lvm_lvs=${sbindir}/lvs
+lvm_vgchange="$sbindir/vgchange"
+lvm_vgs="$sbindir/vgs"
+lvm_vgscan="$sbindir/vgscan"
+lvm_lvs="$sbindir/lvs"
 
 CLVMDOPTS="-T30"
 
 [ -f /etc/sysconfig/cluster ] && . /etc/sysconfig/cluster
-[ -f /etc/sysconfig/$DAEMON ] && . /etc/sysconfig/$DAEMON
+[ -f "/etc/sysconfig/$DAEMON" ] && . "/etc/sysconfig/$DAEMON"
 
 [ -n "$CLVMD_CLUSTER_IFACE" ] && CLVMDOPTS="$CLVMDOPTS -I $CLVMD_CLUSTER_IFACE" 
 
@@ -43,15 +43,15 @@ CLVMDOPTS="-T30"
 LOCK_FILE="/var/lock/subsys/$DAEMON"
 
 clustered_vgs() {
-	${lvm_vgs} --noheadings -o vg_name -S 'vg_clustered=1' 2>/dev/null
+	"$lvm_vgs" --noheadings -o vg_name -S 'vg_clustered=1' 2>/dev/null
 }
 
 clustered_active_lvs() {
-	${lvm_lvs} --noheadings -o lv_name -S 'vg_clustered=1 && lv_active!=""' 2>/dev/null
+	"$lvm_lvs" --noheadings -o lv_name -S 'vg_clustered=1 && lv_active!=""' 2>/dev/null
 }
 
 rh_status() {
-	status $DAEMON
+	status "$DAEMON"
 }
 
 rh_status_q() {
@@ -81,11 +81,11 @@ start()
 	# Ideally vgscan should have a startup mode that would not print
 	# unnecessary warnings.
 
-	${lvm_vgscan} > /dev/null 2>&1
+	"$lvm_vgscan" > /dev/null 2>&1
 
-	action "Activating VG(s):" ${lvm_vgchange} -aay $LVM_VGS || return $?
+	action "Activating VG(s):" "$lvm_vgchange" -aay $LVM_VGS || return $?
 
-	touch $LOCK_FILE
+	touch "$LOCK_FILE"
 
 	return 0
 }
@@ -108,10 +108,10 @@ stop()
 
 	[ -z "$LVM_VGS" ] && LVM_VGS="$(clustered_vgs)"
 	if [ -n "$LVM_VGS" ]; then
-		action "Deactivating clustered VG(s):" ${lvm_vgchange} -anl $LVM_VGS || return $?
+		action "Deactivating clustered VG(s):" "$lvm_vgchange" -anl $LVM_VGS || return $?
 	fi
 
-	action "Signaling $DAEMON to exit" kill -TERM $(pidofproc $DAEMON) || return $?
+	action "Signaling $DAEMON to exit" kill -TERM "$(pidofproc "$DAEMON")" || return $?
 
 	# wait half second before we start the waiting loop or we will show
 	# the loop more time than really necessary
@@ -131,7 +131,7 @@ stop()
 		echo
 	fi
 
-	rm -f $LOCK_FILE
+	rm -f "$LOCK_FILE"
 
 	return 0
 }
@@ -156,7 +156,7 @@ restart() {
 	    stop && start
 	    return $?
 	else
-	    touch $LOCK_FILE
+	    touch "$LOCK_FILE"
 	    return 0
 	fi
 }
@@ -197,7 +197,7 @@ case "$1" in
   status)
 	rh_status
 	rtrn=$?
-	if [ $rtrn = 0 ]; then
+	if [ "$rtrn" = 0 ]; then
 		cvgs="$(clustered_vgs)"
 		echo Clustered Volume Groups: ${cvgs:-"(none)"}
 		clvs="$(clustered_active_lvs)"
