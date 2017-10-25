@@ -5,7 +5,7 @@ Documentation=man:lvmdbusd(8)
 [Service]
 Type=dbus
 BusName=com.redhat.lvmdbus1
-ExecStart=@sbindir@/lvmdbusd
+ExecStart=@SBINDIR@/lvmdbusd
 
 [Install]
 WantedBy=multi-user.target

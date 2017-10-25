@@ -13,8 +13,8 @@ Conflicts=shutdown.target
 [Service]
 Type=forking
 Environment=CLVMD_OPTS=-T30
-EnvironmentFile=-@sysconfdir@/sysconfig/clvmd
-ExecStart=@sbindir@/clvmd $CLVMD_OPTS
+EnvironmentFile=-@SYSCONFDIR@/sysconfig/clvmd
+ExecStart=@USRSBINDIR@/clvmd $CLVMD_OPTS
 SuccessExitStatus=5
 TimeoutStartSec=30
 TimeoutStopSec=10

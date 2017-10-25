@@ -9,7 +9,7 @@ DefaultDependencies=no
 
 [Service]
 Type=simple
-ExecStart=@sbindir@/dmeventd -f
+ExecStart=@SBINDIR@/dmeventd -f
 Environment=SD_ACTIVATION=1
 PIDFile=@DMEVENTD_PIDFILE@
 OOMScoreAdjust=-1000

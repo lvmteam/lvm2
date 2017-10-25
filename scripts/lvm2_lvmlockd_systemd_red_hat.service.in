@@ -6,7 +6,7 @@ After=lvm2-lvmetad.service
 [Service]
 Type=simple
 NonBlocking=true
-ExecStart=@sbindir@/lvmlockd -f
+ExecStart=@SBINDIR@/lvmlockd -f
 Environment=SD_ACTIVATION=1
 PIDFile=@LVMLOCKD_PIDFILE@
 SendSIGKILL=no

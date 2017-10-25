@@ -9,7 +9,7 @@ Conflicts=shutdown.target
 [Service]
 Type=simple
 NonBlocking=true
-ExecStart=@sbindir@/lvmetad -f
+ExecStart=@SBINDIR@/lvmetad -f
 Environment=SD_ACTIVATION=1
 Restart=on-abort
 PIDFile=@LVMETAD_PIDFILE@
