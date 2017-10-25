@@ -20,8 +20,8 @@
 
 DAEMON=clvmd
 
-exec_prefix=@exec_prefix@
-sbindir=@sbindir@
+sbindir="@SBINDIR@"
+usrsbindir="@USRSBINDIR@"
 
 lvm_vgchange=${sbindir}/vgchange
 lvm_vgs=${sbindir}/vgs
@@ -62,7 +62,7 @@ start()
 {
 	if ! rh_status_q; then
 		echo -n "Starting $DAEMON: "
-		$DAEMON $CLVMDOPTS || return $?
+		"$usrsbindir/$DAEMON" $CLVMDOPTS || return $?
 		echo
 	fi
 
@@ -138,7 +138,7 @@ stop()
 
 reload() {
 	rh_status_q || exit 7
-	action "Reloading $DAEMON configuration: " $DAEMON -R || return $?
+	action "Reloading $DAEMON configuration: " "$usrsbindir/$DAEMON" -R || return $?
 }
 
 restart() {
@@ -149,7 +149,7 @@ restart() {
 
 	# Try to get clvmd to restart itself. This will preserve 
 	# exclusive LV locks
-	action "Restarting $DAEMON: " $DAEMON -S
+	action "Restarting $DAEMON: " "$usrsbindir/$DAEMON" -S
 
 	# If that fails then do a normal stop & restart
 	if  [ $? != 0 ]; then

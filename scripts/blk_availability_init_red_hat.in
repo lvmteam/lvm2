@@ -31,14 +31,12 @@
 
 . /etc/init.d/functions
 
-sbindir=@sbindir@
 script=blkdeactivate
+
+sbindir=@SBINDIR@
 options="-u -l wholevg -m disablequeueing -r wait"
 
-LOCK_FILE="/var/lock/subsys/blk-availability"
-
-
-rtrn=1
+LOCK_FILE="@DEFAULT_LOCK_DIR@/subsys/blk-availability"
 
 case "$1" in
   start)

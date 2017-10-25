@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sbindir=@sbindir@
+sbindir="@SBINDIR@"
 
 lvm_vgchange="${sbindir}/vgchange"
 lvm_vgscan="${sbindir}/vgscan"

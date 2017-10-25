@@ -37,10 +37,9 @@
 
 DAEMON=lvmpolld
 
-exec_prefix=@exec_prefix@
-sbindir=@sbindir@
+sbindir="@SBINDIR@"
 
-LOCK_FILE="/var/lock/subsys/$DAEMON"
+LOCK_FILE="@DEFAULT_LOCK_DIR@/subsys/$DAEMON"
 PID_FILE="@LVMPOLLD_PIDFILE@"
 
 rh_status() {
@@ -54,7 +53,7 @@ rh_status_q() {
 start()
 {
 	ret=0
-	action "Starting LVM poll daemon:" $DAEMON || ret=$?
+	action "Starting LVM poll daemon:" "$sbindir/$DAEMON" || ret=$?
 	return $ret
 }
 

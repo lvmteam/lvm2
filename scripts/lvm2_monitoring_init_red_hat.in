@@ -34,14 +34,13 @@
 DAEMON=lvm2-monitor
 DMEVENTD_DAEMON=dmeventd
 
-exec_prefix=@exec_prefix@
-sbindir=@sbindir@
+sbindir=@SBINDIR@
 
-VGCHANGE=${sbindir}/vgchange
-VGS=${sbindir}/vgs
-LVS=${sbindir}/lvs
+VGCHANGE="$sbindir/vgchange"
+VGS="$sbindir/vgs"
+LVS="$sbindir/lvs"
 
-LOCK_FILE="/var/lock/subsys/$DAEMON"
+LOCK_FILE="@DEFAULT_SYS_LOCK_DIR@/subsys/$DAEMON"
 PID_FILE="@DMEVENTD_PIDFILE@"
 
 WARN=1

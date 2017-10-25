@@ -18,7 +18,9 @@
 
 DAEMON=cmirrord
 
-LOCK_FILE="/var/lock/subsys/$DAEMON"
+usrsbindir="@USRSBINDIR@"
+
+LOCK_FILE="@DEFAULT_SYS_LOCK_DIR@/subsys/$DAEMON"
 
 start()
 {
@@ -26,7 +28,7 @@ start()
 	if ! pidof $DAEMON > /dev/null 
 	then 
 		echo -n "Starting $DAEMON: "
-		daemon $DAEMON
+		daemon "$usrsbindir/$DAEMON"
 		rtrn=$?
 		echo
 	fi
