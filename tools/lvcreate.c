@@ -643,7 +643,7 @@ static int _read_mirror_and_raid_params(struct cmd_context *cmd,
 	}
 
 	if ((lp->nosync = arg_is_set(cmd, nosync_ARG)) && seg_is_any_raid6(lp)) {
-		log_error("nosync option prohibited on RAID6");
+		log_error("nosync option prohibited on RAID6.");
 		return 0;
 	}
 
