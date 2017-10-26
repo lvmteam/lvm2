@@ -114,8 +114,9 @@ help:
 	@echo "  LVM_STRACE		Enable strace logging."
 	@echo "  LVM_DEBUG_LEVEL	Sets debuging level for valgrind/strace (use > 0)."
 	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
-	@echo "  S			Skip given test (regex)."
-	@echo "  T			Run given test (regex)."
+	@echo "  LVM_LOG_FILE_MAX_LINES	Maximum number of logged lines for lvm2 command [1000000]."
+	@echo "  S			Skip given test(s) (regex)."
+	@echo "  T			Run given test(s) (regex)."
 	@echo "  VERBOSE		Verbose output (1), timing (2)."
 
 check: .tests-stamp
