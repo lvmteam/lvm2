@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Ignore --stripes/--stripesize on RAID takeover
   Improve used paths for generated systemd units and init shells.
   Disallow creation of snapshot of mirror/raid subLV (was never supported).
   Fix regression in more advanced vgname extraction in lvconvert (2.02.169).
