@@ -2431,8 +2431,13 @@ static int _status(CMD_ARGS)
 	if (!_task_run(dmt))
 		goto_out;
 
-	if (!dm_task_get_info(dmt, &info) || !info.exists)
+	if (!dm_task_get_info(dmt, &info))
 		goto_out;
+
+	if (!info.exists) {
+		fprintf(stderr, "Device does not exist.\n");
+		goto_out;
+	}
 
 	if (!name)
 		name = dm_task_get_name(dmt);

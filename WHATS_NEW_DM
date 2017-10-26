@@ -1,5 +1,6 @@
 Version 1.02.145 - 
 ===================================
+  Issue a specific error with dmsetup status if device is unknown.
   Fix RT_LIBS reference in generated libdevmapper.pc for pkg-config
 
 Version 1.02.144 - 6th October 2017
