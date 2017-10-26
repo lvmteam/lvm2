@@ -502,7 +502,6 @@ static int _reset_flags_passed_to_kernel(struct logical_volume *lv, int *flags_r
 			return 0;
 
 		if (slv->status & LV_RESHAPE_DELTA_DISKS_MINUS) {
-			*flags_reset = 1;
 			slv->status |= LV_REMOVE_AFTER_RESHAPE;
 			seg_metalv(seg, s)->status |= LV_REMOVE_AFTER_RESHAPE;
 		}
@@ -6293,6 +6292,17 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 		r = 0;
 	}
 
+	/* Can't reshape stripes or stripe size when performing a takeover! */
+	if (!_is_same_level(seg_from->segtype, *segtype_to)) {
+		if (stripes && stripes != _data_rimages_count(seg_from, seg_from->area_count))
+			log_warn("WARNING: ignoring --stripes option on takeover of %s (reshape afterwards).",
+				 display_lvname(seg_from->lv));
+
+		if (!seg_is_raid1(seg_from) && new_stripe_size_supplied)
+			log_warn("WARNING: ignoring --stripesize option on takeover of %s (reshape afterwards).",
+				 display_lvname(seg_from->lv));
+	}
+
 	if (r &&
 	    !yes &&
 	    strcmp((*segtype_to)->name, SEG_TYPE_NAME_MIRROR) && /* "mirror" is prompted for later */
@@ -6465,11 +6475,20 @@ int lv_raid_convert(struct logical_volume *lv,
 		return 0;
 	}
 
+	/*
+	 * stripes and stripe_size can only be changed via reshape, not in a takeover!
+	 *
+	 * Ignore any of them here unless a takeover from raid1 to
+	 * raid4/5 is requested when stripe size may be defined.
+	 */
+	stripes = _data_rimages_count(seg, seg->area_count);
+	stripe_size = seg_is_raid1(seg) ? stripe_size : seg->stripe_size;
+
 	takeover_fn = _get_takeover_fn(first_seg(lv), new_segtype, new_image_count);
 
 	/* Exit without doing activation checks if the combination isn't possible */
 	if (_takeover_not_possible(takeover_fn))
-		return takeover_fn(lv, new_segtype, yes, force, new_image_count, 0, new_stripes, stripe_size,
+		return takeover_fn(lv, new_segtype, yes, force, new_image_count, 0, stripes, stripe_size,
 			   region_size, allocate_pvs);
 
 	/*
@@ -6498,7 +6517,7 @@ int lv_raid_convert(struct logical_volume *lv,
 
 	lv->status &= ~LV_RESHAPE;
 
-	return takeover_fn(lv, new_segtype, yes, force, new_image_count, 0, new_stripes, stripe_size,
+	return takeover_fn(lv, new_segtype, yes, force, new_image_count, 0, stripes, stripe_size,
 			   region_size, allocate_pvs);
 }
 
