@@ -646,11 +646,16 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		vfprintf(_log_file, trformat, ap);
 		va_end(ap);
 
+		if (_log_file_max_lines && ++_log_file_lines >= _log_file_max_lines) {
+			fprintf(_log_file, "\n%s:%d %sAborting. Command has reached limit "
+				"for logged lines (LVM_LOG_FILE_MAX_LINES=" FMTu64 ").",
+				file, line, _msg_prefix,
+				_log_file_max_lines);
+			fatal_internal_error = 1;
+		}
+
 		fputc('\n', _log_file);
 		fflush(_log_file);
-
-		if (_log_file_max_lines && ++_log_file_lines >= _log_file_max_lines)
-			fatal_internal_error = 1;
 	}
 
 	if (_syslog && (_log_while_suspended || !critical_section())) {
