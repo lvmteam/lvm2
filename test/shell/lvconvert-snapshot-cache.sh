@@ -28,7 +28,7 @@ vgchange -s 16k $vg
 lvcreate -L1 -n cow $vg
 
 # Thin and snapshot conversion
-lvcreate -L1 -n ch $vg
+lvcreate -aey -L1 -n ch $vg
 lvcreate -H -L1 -n cpool $vg/ch
 
 # Cannot create snapshot of cpool

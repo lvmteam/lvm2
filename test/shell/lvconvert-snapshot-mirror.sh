@@ -24,7 +24,7 @@ vgchange -s 16k $vg
 lvcreate -L1 -n cow $vg
 
 # Mirror and snapshot conversion
-lvcreate --type mirror -L1 -m1 -n mir $vg
+lvcreate -aye --type mirror -L1 -m1 -n mir $vg
 
 # Cannot create snapshot of mirror leg
 not lvcreate -s -L1 $vg/mir_mimage_0 2>&1 | tee err
