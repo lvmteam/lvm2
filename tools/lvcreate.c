@@ -1579,6 +1579,7 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 	struct processing_params *pp = (struct processing_params *) handle->custom_handle;
 	struct lvcreate_params *lp = pp->lp;
 	struct lvcreate_cmdline_params *lcp = pp->lcp;
+	struct logical_volume *spare = vg->pool_metadata_spare_lv;
 	int ret = ECMD_FAILED;
 
 	if (!_read_activation_params(cmd, vg, lp))
@@ -1652,6 +1653,12 @@ static int _lvcreate_single(struct cmd_context *cmd, const char *vg_name,
 
 	ret = ECMD_PROCESSED;
 out:
+	if (ret != ECMD_PROCESSED && !spare && vg->pool_metadata_spare_lv)
+		/* Remove created spare volume for failed pool creation */
+		if (!lvremove_single(cmd, vg->pool_metadata_spare_lv, NULL))
+			log_error("Removal of created spare volume failed. "
+				  "Manual intervention required.");
+
 	return ret;
 }
 
