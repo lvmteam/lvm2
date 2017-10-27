@@ -414,11 +414,14 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	struct lvmcache_vgsummary vgsummary_orphan = {
 		.vgname = FMT_TEXT_ORPHAN_VG_NAME,
 	};
+	int rlocn_was_ignored;
 
 	memcpy(&vgsummary_orphan.vgid, FMT_TEXT_ORPHAN_VG_NAME, sizeof(FMT_TEXT_ORPHAN_VG_NAME));
 
 	rlocn = mdah->raw_locns;	/* Slot 0 */
 	rlocn_precommitted = rlocn + 1;	/* Slot 1 */
+
+	rlocn_was_ignored = rlocn_is_ignored(rlocn);
 
 	/* Should we use precommitted metadata? */
 	if (*precommitted && rlocn_precommitted->size &&
@@ -438,6 +441,12 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	if (!*vgname)
 		return rlocn;
 
+	/*
+	 * If live rlocn has ignored flag, data will be out-of-date so skip further checks.
+	 */
+	if (rlocn_was_ignored)
+		return rlocn;
+
 	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
@@ -448,8 +457,9 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
 		return rlocn;
 
-	log_debug_metadata("Volume group name found in metadata on %s at %" PRIu64 " does "
+	log_debug_metadata("Volume group name found in %smetadata on %s at %" PRIu64 " does "
 			   "not match expected name %s.", 
+			   *precommitted ? "precommitted " : "",
 			   dev_name(dev_area->dev), dev_area->start + rlocn->offset, vgname);
 
       bad:
@@ -750,6 +760,14 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 		mdah->raw_locns[2].size = 0;
 		mdah->raw_locns[2].checksum = 0;
 		rlocn = &mdah->raw_locns[0];
+	} else if (precommit && rlocn_is_ignored(rlocn) && !mda_is_ignored(mda)) {
+		/*
+		 * If precommitting into a previously-ignored mda, wipe the live rlocn
+		 * as a precaution so that nothing can use it by mistake.
+		 */
+		mdah->raw_locns[0].offset = 0;
+		mdah->raw_locns[0].size = 0;
+		mdah->raw_locns[0].checksum = 0;
 	}
 
 	if (precommit)
@@ -766,12 +784,14 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 		rlocn->offset = mdac->rlocn.offset;
 		rlocn->size = mdac->rlocn.size;
 		rlocn->checksum = mdac->rlocn.checksum;
-		log_debug_metadata("%sCommitting %s metadata (%u) to %s header at %"
-			  PRIu64, precommit ? "Pre-" : "", vg->name, vg->seqno,
+		log_debug_metadata("%sCommitting %s %smetadata (%u) to %s header at %"
+			  PRIu64, precommit ? "Pre-" : "", vg->name, 
+			  mda_is_ignored(mda) ? "(ignored) " : "", vg->seqno,
 			  dev_name(mdac->area.dev), mdac->area.start);
 	} else
-		log_debug_metadata("Wiping pre-committed %s metadata from %s "
+		log_debug_metadata("Wiping pre-committed %s %smetadata from %s "
 				   "header at %" PRIu64, vg->name,
+				   mda_is_ignored(mda) ? "(ignored) " : "",
 				   dev_name(mdac->area.dev), mdac->area.start);
 
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
