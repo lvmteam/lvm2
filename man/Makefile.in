@@ -46,6 +46,19 @@ MAN8DM=dmsetup.8 dmstats.8
 MAN8CLUSTER=
 MAN8SYSTEMD_GENERATORS=lvm2-activation-generator.8
 
+ifeq ("$(origin V)", "command line")
+  BUILD_VERBOSE = $(V)
+endif
+ifndef BUILD_VERBOSE
+  BUILD_VERBOSE = 0
+endif
+
+ifeq ($(BUILD_VERBOSE),1)
+  Q =
+else
+  Q = @
+endif
+
 
 ifeq ($(MAKECMDGOALS),all_man)
   MAN_ALL="yes"
@@ -151,14 +164,14 @@ SEE_ALSO=$(srcdir)/see_also.end
 .PRECIOUS: %.8_gen
 
 %.8_gen: $(srcdir)/%.8_des $(srcdir)/%.8_end $(MANGENERATOR) $(TESTMAN)
-	@( \
+	$(Q)( \
 	    if [ ! -s $(TESTMAN) ] ; then \
 		echo "Copying pre-generated template $@" ; \
 	    else \
 		echo "Generating template $@" ; \
 	    fi \
 	)
-	set -e ; ( \
+	$(Q)set -e ; ( \
 	    if [ ! -s $(TESTMAN) ] ; then \
 		cat $(srcdir)/$(@:%.8_gen=%.8_pregen) ; \
 	    else \
@@ -171,8 +184,8 @@ SEE_ALSO=$(srcdir)/see_also.end
 	) > $@
 
 define SUBSTVARS
-echo "Generating $@"
-$(SED)	-e "s+#VERSION#+$(LVM_VERSION)+" \
+$(Q)echo "Generating $@"
+$(Q)$(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+" \
 	-e "s+#DEFAULT_ARCHIVE_DIR#+$(DEFAULT_ARCHIVE_DIR)+" \
 	-e "s+#DEFAULT_BACKUP_DIR#+$(DEFAULT_BACKUP_DIR)+" \
@@ -197,7 +210,7 @@ endef
 # - in "$vg-$lv"
 # - in single one in '\\f.-'
 define ESCAPEHYPHENS
-$(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
+$(Q)$(SED) -i -e "s+\([ [:alpha:]]\)-\{7\}+\1\\\-\\\-\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([ [:alpha:]]\)-\{6\}+\1\\\-\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([ [:alpha:]]\)-\{5\}+\1\\\-\\\-\\\-\\\-\\\-+g" \
 	  -e "s+\([ [:alpha:]]\)-\{4\}+\1\\\-\\\-\\\-\\\-+g" \
