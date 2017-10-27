@@ -112,6 +112,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		add_pvl_to_vgs(vg_to, pvl);
 		pvl->pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
 		/* Mark the VGs that still hold metadata for the old VG */
+		log_debug_metadata("Marking PV %s as moved to VG %s", dev_name(pvl->pv->dev), vg_to->name);
 		pvl->pv->status |= PV_MOVED_VG;
 	}
 

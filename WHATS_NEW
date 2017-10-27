@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Fix detection of moved PVs in vgsplit. (2.02.175)
   Ignore --stripes/--stripesize on RAID takeover
   Improve used paths for generated systemd units and init shells.
   Disallow creation of snapshot of mirror/raid subLV (was never supported).

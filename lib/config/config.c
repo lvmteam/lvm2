@@ -542,7 +542,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 	if (checksum_fn && checksum !=
 	    (checksum_fn(checksum_fn(INITIAL_CRC, (const uint8_t *)fb, size),
 			 (const uint8_t *)(fb + size), size2))) {
-		log_error("%s: Checksum error", dev_name(dev));
+		log_error("%s: Checksum error at offset %" PRIu64, dev_name(dev), (uint64_t) offset);
 		goto out;
 	}
 

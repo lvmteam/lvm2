@@ -512,13 +512,19 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
+		/* Skip if VG didn't change e.g. with vgsplit */
+		if (pvl->pv->vg_name && !strcmp(new_name, pvl->pv->vg_name))
+			continue;
+
 		if (!(pvl->pv->vg_name = dm_pool_strdup(mem, new_name))) {
 			log_error("pv->vg_name allocation failed for '%s'",
 				  pv_dev_name(pvl->pv));
 			return 0;
 		}
+
                 /* Mark the PVs that still hold metadata with the old VG name */
-                pvl->pv->status |= PV_MOVED_VG;
+		log_debug_metadata("Marking PV %s as moved to VG %s", dev_name(pvl->pv->dev), new_name);
+		pvl->pv->status |= PV_MOVED_VG;
 	}
 
 	return 1;
