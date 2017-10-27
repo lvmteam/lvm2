@@ -386,3 +386,47 @@ int vg_remove_snapshot(struct logical_volume *cow)
 
 	return 1;
 }
+
+/* Check if given LV is usable as snapshot origin LV */
+int validate_snapshot_origin(const struct logical_volume *origin_lv)
+{
+	const char *err = NULL; /* For error string */
+
+	if (lv_is_cow(origin_lv))
+		err = "snapshots";
+	else if (lv_is_locked(origin_lv))
+		err = "locked volumes";
+	else if (lv_is_pvmove(origin_lv))
+		err = "pvmoved volumes";
+	else if (!lv_is_visible(origin_lv))
+		err = "hidden volumes";
+	else if (lv_is_merging_origin(origin_lv))
+		err = "an origin that has a merging snapshot";
+	else if (lv_is_cache_type(origin_lv) && !lv_is_cache(origin_lv))
+		err = "cache type volumes";
+	else if (lv_is_thin_type(origin_lv) && !lv_is_thin_volume(origin_lv))
+		err = "thin pool type volumes";
+	else if (lv_is_mirror_type(origin_lv)) {
+		if (!lv_is_mirror(origin_lv))
+			err = "mirror subvolumes";
+		else {
+			log_warn("WARNING: Snapshots of mirrors can deadlock under rare device failures.");
+			log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
+			log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
+		}
+	} else if (lv_is_raid_type(origin_lv) && !lv_is_raid(origin_lv))
+		err = "raid subvolumes";
+
+	if (err) {
+		log_error("Snapshots of %s are not supported.", err);
+		return 0;
+	}
+
+	if (vg_is_clustered(origin_lv->vg) && lv_is_active(origin_lv) &&
+	    !lv_is_active_exclusive_locally(origin_lv)) {
+		log_error("Snapshot origin must be active exclusively.");
+		return 0;
+	}
+
+	return 1;
+}

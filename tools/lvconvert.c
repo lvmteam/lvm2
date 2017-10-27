@@ -1909,13 +1909,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 	uint32_t chunk_size;
 	int zero;
 
-	if (!(org = find_lv(lv->vg, origin_name))) {
-		log_error("Couldn't find origin volume %s in Volume group %s.",
-			  origin_name, lv->vg->name);
-		return 0;
-	}
-
-	if (org == lv) {
+	if (strcmp(lv->name, origin_name) == 0) {
 		log_error("Unable to use %s as both snapshot and origin.", snap_name);
 		return 0;
 	}
@@ -1925,34 +1919,29 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		log_error("Chunk size must be a power of 2 in the range 4K to 512K.");
 		return 0;
 	}
-	log_verbose("Setting chunk size to %s.", display_size(cmd, chunk_size));
 
 	if (!cow_has_min_chunks(lv->vg, lv->le_count, chunk_size))
 		return_0;
+
+	log_verbose("Setting chunk size to %s.", display_size(cmd, chunk_size));
+
+	if (!(org = find_lv(lv->vg, origin_name))) {
+		log_error("Couldn't find origin volume %s in Volume group %s.",
+			  origin_name, lv->vg->name);
+		return 0;
+	}
 
 	/*
 	 * check_lv_rules() checks cannot be done via command definition
 	 * rules because this LV is not processed by process_each_lv.
 	 */
-	if (lv_is_locked(org) || lv_is_pvmove(org)) {
-		log_error("Unable to use LV %s as snapshot origin: LV is %s.",
-			  display_lvname(lv), lv_is_locked(org) ? "locked" : "pvmove");
-		return 0;
-	}
 
 	/*
 	 * check_lv_types() checks cannot be done via command definition
 	 * LV_foo specification because this LV is not processed by process_each_lv.
 	 */
-	if ((lv_is_cache_type(org) && !lv_is_cache(org)) ||
-	    (lv_is_thin_type(org) && !lv_is_thin_volume(org)) ||
-	    (lv_is_mirror_type(org) && !lv_is_mirror(org)) ||
-	    (lv_is_raid_type(org) && !lv_is_raid(org)) ||
-	    lv_is_cow(org)) {
-		log_error("Unable to use LV %s as snapshot origin: invalid LV type.",
-			  display_lvname(lv));
-		return 0;
-	}
+	if (!validate_snapshot_origin(org))
+                return_0;
 
 	log_warn("WARNING: Converting logical volume %s to snapshot exception store.",
 		 snap_name);

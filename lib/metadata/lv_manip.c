@@ -7592,56 +7592,9 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 					  "Use --virtualsize.");
 				return NULL;
 			}
-			if (lv_is_cow(origin_lv)) {
-				log_error("Snapshots of snapshots are not supported.");
-				return NULL;
-			}
-			if (lv_is_locked(origin_lv)) {
-				log_error("Snapshots of locked devices are not supported.");
-				return NULL;
-			}
-			if (lv_is_merging_origin(origin_lv)) {
-				log_error("Snapshots of an origin that has a "
-					  "merging snapshot is not supported");
-				return NULL;
-			}
 
-			if (lv_is_cache_type(origin_lv) && !lv_is_cache(origin_lv)) {
-				log_error("Snapshots of cache type volume %s "
-					  "is not supported.", display_lvname(origin_lv));
-				return NULL;
-			}
-
-			if (lv_is_thin_type(origin_lv) && !lv_is_thin_volume(origin_lv)) {
-				log_error("Snapshots of thin pool %sdevices "
-					  "are not supported.",
-					  lv_is_thin_pool_data(origin_lv) ? "data " :
-					  lv_is_thin_pool_metadata(origin_lv) ?
-					  "metadata " : "");
-				return NULL;
-			}
-
-			if (lv_is_mirror_type(origin_lv)) {
-				if (!lv_is_mirror(origin_lv)) {
-					log_error("Snapshots of mirror subvolumes are not supported.");
-					return NULL;
-				}
-				log_warn("WARNING: Snapshots of mirrors can deadlock under rare device failures.");
-				log_warn("WARNING: Consider using the raid1 mirror type to avoid this.");
-				log_warn("WARNING: See global/mirror_segtype_default in lvm.conf.");
-			}
-
-			if (lv_is_raid_type(origin_lv) && !lv_is_raid(origin_lv)) {
-				log_error("Snapshots of raid subvolumes are not supported.");
-				return NULL;
-			}
-
-			if (vg_is_clustered(vg) && lv_is_active(origin_lv) &&
-			    !lv_is_active_exclusive_locally(origin_lv)) {
-				log_error("%s must be active exclusively to"
-					  " create snapshot", origin_lv->name);
-				return NULL;
-			}
+			if (!validate_snapshot_origin(origin_lv))
+                                return_0;
 		}
 
 		if (!cow_has_min_chunks(vg, lp->extents, lp->chunk_size))

@@ -1074,6 +1074,9 @@ int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
 
 int vg_remove_snapshot(struct logical_volume *cow);
 
+int validate_snapshot_origin(const struct logical_volume *origin_lv);
+
+
 int vg_check_status(const struct volume_group *vg, uint64_t status);
 
 int vg_check_pv_dev_block_sizes(const struct volume_group *vg);
