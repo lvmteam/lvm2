@@ -42,11 +42,11 @@ grep "lv_is_visible" err
 
 # cannot use _mimage
 not lvconvert --yes --type snapshot $vg/mir_mimage_0 $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 # cannot use _mlog
 not lvconvert --yes --type snapshot $vg/mir_mlog $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 lvconvert --yes -s $vg/mir $vg/cow
 

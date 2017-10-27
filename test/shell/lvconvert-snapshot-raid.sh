@@ -44,11 +44,11 @@ grep "lv_is_visible" err
 
 # Cannot use _rimage
 not lvconvert --yes --type snapshot $vg/rd_rimage_0 $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 # Cannot use _rmeta
 not lvconvert --yes --type snapshot $vg/rd_rmeta_0 $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 lvconvert --yes -s $vg/rd $vg/cow
 

@@ -58,13 +58,13 @@ grep "lv_is_visible" err
 
 # Cannot use thin-pool, _tdata, _tmeta as origin
 not lvconvert --yes --type snapshot $vg/cpool $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 not lvconvert --yes --type snapshot $vg/cpool_cdata $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 not lvconvert --yes --type snapshot $vg/cpool_cmeta $vg/cow 2>&1 | tee err
-grep "invalid" err
+grep "not supported" err
 
 lvconvert --yes -s $vg/ch $vg/cow
 
