@@ -628,6 +628,11 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		inc_error_count;
 	}
 
+	if (!le) {
+		log_error("LV %s: has no segment.", lv->name);
+		inc_error_count;
+	}
+
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
 		seg = sl->seg;
 		seg_found = 0;

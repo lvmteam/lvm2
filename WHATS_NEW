@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Do not allow storing VG metadata with LV without any segment.
   Fix printed message when thin snapshot was already merged.
   Remove created spare LV when creation of thin-pool failed.
   Avoid reading ignored metadata when mda gets used again.

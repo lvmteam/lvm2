@@ -189,8 +189,8 @@ done
 echo Test special situations, vgsplit, vgmerge, etc
 for mdacp in 1 2; do
 	pvcreate --metadatacopies $mdacp "$dev1" "$dev2" "$dev3" "$dev4" "$dev5"
-	vgcreate --vgmetadatacopies 2 $vg1 "$dev1" "$dev2" "$dev3"
-	vgcreate --vgmetadatacopies $(( mdacp * 1 )) $vg2 "$dev4" "$dev5"
+	vgcreate -cy --vgmetadatacopies 2 $vg1 "$dev1" "$dev2" "$dev3"
+	vgcreate -cy --vgmetadatacopies $(( mdacp * 1 )) $vg2 "$dev4" "$dev5"
 	echo vgsplit/vgmerge preserves value of metadata copies
 	check vg_field $vg1 vg_mda_copies 2
 	check vg_field $vg2 vg_mda_copies $(( mdacp * 1 ))
@@ -200,7 +200,16 @@ for mdacp in 1 2; do
 	check vg_field $vg1 vg_mda_copies 2
 	check vg_field $vg1 vg_mda_count $(( mdacp * 5 ))
 	echo vgsplit into new vg sets proper value of vgmetadatacopies
-	vgsplit --vgmetadatacopies $(( mdacp * 2 )) $vg1 $vg2 "$dev1" "$dev2"
+#	echo y | pvchange -y --metadataignore n "$dev3" || true
+#	echo y | pvchange -y --metadataignore y "$dev4" || true
+#	echo y | pvchange -y --metadataignore n "$dev5" || true
+#	echo y | pvchange -y --metadataignore y "$dev1" || true
+#	echo y | pvchange -y --metadataignore y "$dev2" || true
+        pvs -o+pv_mda_size,pv_mda_count,pv_mda_used_count,pv_in_use
+        pvdisplay
+
+	#LVM_GDB=1
+        vgsplit --vgmetadatacopies $(( mdacp * 2 )) $vg1 $vg2 "$dev1" "$dev2"
 	check vg_field $vg2 vg_mda_copies $(( mdacp * 2 ))
 	echo vgchange fails if given both vgmetadatacopies and metadatacopies
 	not vgchange --vgmetadatacopies 5 --metadatacopies 7 $vg2
