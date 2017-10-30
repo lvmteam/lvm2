@@ -4028,6 +4028,15 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		fa += stripes;
 	}
 
+	seg->len += extents;
+	if (seg_is_raid(seg))
+		seg->area_len = seg->len;
+	else
+		seg->area_len += extents / area_multiple;
+
+	if (!_setup_lv_size(lv, lv->le_count + extents))
+		return_0;
+
 	if (clear_metadata) {
 		/*
 		 * We must clear the metadata areas upon creation.
@@ -4091,15 +4100,6 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 		for (s = 0; s < seg->area_count; s++)
 			lv_set_hidden(seg_metalv(seg, s));
 	}
-
-	seg->len += extents;
-	if (seg_is_raid(seg))
-		seg->area_len = seg->len;
-	else
-		seg->area_len += extents / area_multiple;
-
-	if (!_setup_lv_size(lv, lv->le_count + extents))
-		return_0;
 
 	return 1;
 }
