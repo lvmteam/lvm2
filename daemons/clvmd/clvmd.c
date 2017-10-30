@@ -2151,6 +2151,14 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 }
 
 /* Return 0 if we can talk to an existing clvmd */
+/*
+ * FIXME:
+ *
+ * This function returns only -1 or 0, but there are
+ * different levels of errors, some of them should stop
+ * further execution of clvmd thus another state is needed
+ * and some error message need to be only informational.
+ */
 static int check_local_clvmd(void)
 {
 	int local_socket;
@@ -2170,7 +2178,11 @@ static int check_local_clvmd(void)
 
 	if (connect(local_socket,(struct sockaddr *) &sockaddr,
 		    sizeof(sockaddr))) {
-		log_sys_error("connect", "local socket");
+		/* connection failure is expected state */
+		if (errno == ENOENT)
+			log_sys_debug("connect", "local socket");
+		else
+			log_sys_error("connect", "local socket");
 		ret = -1;
 	}
 

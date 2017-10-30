@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Do not print error when clvmd cannot find running clvmd.
   Prevent start of new merge of snapshot if origin is already being merged.
 
 Version 2.02.176 - 3rd November 2017
