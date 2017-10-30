@@ -45,7 +45,8 @@ touch mntsnap/test_snap
 
 lvs -o+tags,thin_id $vg
 
-lvconvert --merge $vg/snap
+lvconvert --merge $vg/snap &>out
+grep "Merging of thin snapshot $vg/snap will occur on next activation of $vg/${lv1}." out
 
 umount mnt
 
@@ -115,7 +116,8 @@ check lv_field  $vg/$lv1 thin_id "3"
 # Check --mergethin
 lvcreate -s -n snap $vg/$lv1
 check lv_field  $vg/snap thin_id "4"
-lvconvert --mergethin $vg/snap
+lvconvert --mergethin $vg/snap  &>out
+grep "Volume $vg/snap replaced origin $vg/${lv1}." out
 check lv_field  $vg/$lv1 thin_id "4"
 
 vgremove -ff $vg

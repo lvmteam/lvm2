@@ -2098,7 +2098,7 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 					  struct logical_volume *lv)
 {
-	int origin_is_active = 0, r = 0;
+	int origin_is_active = 0;
 	struct lv_segment *snap_seg = first_seg(lv);
 	struct logical_volume *origin = snap_seg->origin;
 
@@ -2151,16 +2151,18 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 		 * replace the origin LV with its snapshot LV.
 		 */
 		if (!thin_merge_finish(cmd, origin, lv))
-			goto_out;
+			return_0;
+
+		log_print_unless_silent("Volume %s replaced origin %s.",
+					display_lvname(origin), display_lvname(lv));
 
 		if (origin_is_active && !activate_lv(cmd, lv)) {
 			log_error("Failed to reactivate origin %s.",
 				  display_lvname(lv));
-			goto out;
+			return 0;
 		}
 
-		r = 1;
-		goto out;
+		return 1;
 	}
 
 	init_snapshot_merge(snap_seg, origin);
@@ -2169,16 +2171,12 @@ static int _lvconvert_merge_thin_snapshot(struct cmd_context *cmd,
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
 		return_0;
 
-	r = 1;
-out:
+	log_print_unless_silent("Merging of thin snapshot %s will occur on "
+				"next activation of %s.",
+				display_lvname(lv), display_lvname(origin));
 	backup(lv->vg);
 
-	if (r)
-		log_print_unless_silent("Merging of thin snapshot %s will occur on "
-					"next activation of %s.",
-					display_lvname(lv), display_lvname(origin));
-
-	return r;
+	return 1;
 }
 
 static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,

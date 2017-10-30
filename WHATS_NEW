@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Fix printed message when thin snapshot was already merged.
   Remove created spare LV when creation of thin-pool failed.
   Avoid reading ignored metadata when mda gets used again.
   Fix detection of moved PVs in vgsplit. (2.02.175)
