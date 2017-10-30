@@ -36,6 +36,7 @@ grep xfs /proc/filesystems || check_xfs=${check_xfs:-no_xfs}
 
 which mkfs.reiserfs || check_reiserfs=${check_reiserfs:-mkfs.reiserfs}
 which reiserfsck || check_reiserfs=${check_reiserfs:-reiserfsck}
+modprobe reiserfs || true
 grep reiserfs /proc/filesystems || check_reiserfs=${check_reiserfs:-no_reiserfs}
 
 vg_lv=$vg/$lv1

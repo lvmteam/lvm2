@@ -55,6 +55,7 @@ grep xfs /proc/filesystems || check_xfs=${check_xfs:-no_xfs}
 
 which mkfs.reiserfs || check_reiserfs=${check_reiserfs:-mkfs.reiserfs}
 which reiserfsck || check_reiserfs=${check_reiserfs:-reiserfsck}
+modprobe reiserfs || true
 grep reiserfs /proc/filesystems || check_reiserfs=${check_reiserfs:-no_reiserfs}
 
 vg_lv=$vg/$lv1
@@ -295,8 +296,8 @@ test_reiserfs_resize() {
 test_reiserfs_small_shrink() {
 	mkfs.reiserfs -s 513 -f "$3"
 
-	lvresize -L-1 -r $1
-	lvresize -L-1 -r $1
+	lvresize -y -L-1 -r $1
+	lvresize -y -L-1 -r $1
 
 	fscheck_reiserfs "$3"
 }
