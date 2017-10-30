@@ -602,9 +602,6 @@ static int _pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto out;
 	}
 
-	if (info)
-		lvmcache_del(info);
-
 	if (!lvmetad_pv_gone_by_dev(dev))
 		goto_out;
 
