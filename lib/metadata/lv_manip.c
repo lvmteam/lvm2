@@ -941,8 +941,7 @@ struct lv_segment *alloc_lv_segment(const struct segment_type *segtype,
 		return_NULL;
 	}
 
-	if (segtype_is_raid(segtype) &&
-	    !segtype_is_raid0(segtype) &&
+	if (segtype_is_raid_with_meta(segtype) &&
 	    !(seg->meta_areas = dm_pool_zalloc(mem, areas_sz))) {
 		dm_pool_free(mem, seg); /* frees everything alloced since seg */
 		return_NULL;
@@ -3923,7 +3922,7 @@ static int _lv_insert_empty_sublvs(struct logical_volume *lv,
 			return_0;
 
 		/* Metadata LVs for raid */
-		if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype)) {
+		if (segtype_is_raid_with_meta(segtype)) {
 			if (dm_snprintf(img_name, sizeof(img_name), "%s_rmeta_%u",
 					lv->name, i) < 0)
 				goto_bad;
@@ -4144,7 +4143,7 @@ int lv_extend(struct logical_volume *lv,
 		else if (segtype_is_raid0_meta(segtype))
 			/* Extend raid0 metadata LVs too */
 			log_count = stripes;
-		else if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
+		else if (segtype_is_raid_with_meta(segtype))
 			log_count = mirrors * stripes;
 	}
 	/* FIXME log_count should be 1 for mirrors */
@@ -4171,7 +4170,7 @@ int lv_extend(struct logical_volume *lv,
 		return_0;
 
 	new_extents = ah->new_extents;
-	if (segtype_is_raid(segtype) && !segtype_is_raid0(segtype))
+	if (segtype_is_raid_with_meta(segtype))
 		new_extents -= ah->log_len * ah->area_multiple;
 
 	if (segtype_is_pool(segtype)) {
