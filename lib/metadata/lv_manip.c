@@ -7054,8 +7054,18 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 			 layer_lv->name, lv_where->name,
 			 pvl ? pv_dev_name(pvl->pv) : "any");
 
+	/* Temporarily hide layer_lv from vg->lvs list
+	 * so the lv_split_segment() passes  vg_validate()
+	 * since here layer_lv has empty segment list */
+	if (!(lvl = find_lv_in_vg(lv_where->vg, layer_lv->name)))
+		return_0;
+	dm_list_del(&lvl->list);
+
 	if (!_align_segment_boundary_to_pe_range(lv_where, pvl))
 		return_0;
+
+	/* Put back layer_lv in vg->lv */
+	dm_list_add(&lv_where->vg->lvs, &lvl->list);
 
 	/* Work through all segments on the supplied PV */
 	dm_list_iterate_items(seg, &lv_where->segments) {
