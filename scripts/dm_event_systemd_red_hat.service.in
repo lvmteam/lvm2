@@ -13,6 +13,3 @@ ExecStart=@SBINDIR@/dmeventd -f
 Environment=SD_ACTIVATION=1
 PIDFile=@DMEVENTD_PIDFILE@
 OOMScoreAdjust=-1000
-
-[Install]
-WantedBy=sysinit.target

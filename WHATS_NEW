@@ -1,5 +1,6 @@
 Version 2.02.176 -
 ===================================
+  Keep Install section only in lvm2-{lvmetad,lvmpolld}.socket systemd unit.
   liblvm: Fix segfault in lvm_pv_remove. (2.02.173)
   Do not allow storing VG metadata with LV without any segment.
   Fix printed message when thin snapshot was already merged.

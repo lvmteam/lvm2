@@ -12,6 +12,3 @@ NonBlocking=true
 ExecStart=@SBINDIR@/lvmpolld -t 60 -f
 Environment=SD_ACTIVATION=1
 PIDFile=@LVMPOLLD_PIDFILE@
-
-[Install]
-WantedBy=sysinit.target
