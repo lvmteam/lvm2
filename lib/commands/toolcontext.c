@@ -688,9 +688,6 @@ static int _process_config(struct cmd_context *cmd)
 	if (find_config_tree_bool(cmd, report_two_word_unknown_device_CFG, NULL))
 		init_unknown_device_name("unknown device");
 
-	init_detect_internal_vg_cache_corruption
-		(find_config_tree_bool(cmd, global_detect_internal_vg_cache_corruption_CFG, NULL));
-
 	if (!_init_system_id(cmd))
 		return_0;
 
@@ -2010,7 +2007,6 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived,
 	if (set_filters && !init_filters(cmd, 1))
 		goto_out;
 
-	cmd->default_settings.cache_vgmetadata = 1;
 	cmd->current_settings = cmd->default_settings;
 
 	cmd->initialized.config = 1;

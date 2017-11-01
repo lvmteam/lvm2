@@ -3767,7 +3767,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct dm_list all_pvs;
 	char uuid[64] __attribute__((aligned(8)));
 
-	unsigned seqno = 0;
 	int reappeared = 0;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	unsigned use_previous_vg;
@@ -3788,7 +3787,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	if (lvmetad_used() && !use_precommitted) {
-		if ((correct_vg = lvmcache_get_vg(cmd, vgname, vgid, precommitted))) {
+		if ((correct_vg = lvmetad_vg_lookup(cmd, vgname, vgid))) {
 			dm_list_iterate_items(pvl, &correct_vg->pvs)
 				reappeared += _check_reappeared_pv(correct_vg, pvl->pv, *consistent);
 			if (reappeared && *consistent)
@@ -3816,23 +3815,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 
 		return correct_vg;
-	}
-
-	/*
-	 * If cached metadata was inconsistent and *consistent is set
-	 * then repair it now.  Otherwise just return it.
-	 * Also return if use_precommitted is set due to the FIXME in
-	 * the missing PV logic below.
-	 */
-	if ((correct_vg = lvmcache_get_vg(cmd, vgname, vgid, precommitted)) &&
-	    (use_precommitted || !*consistent)) {
-		*consistent = 1;
-		return correct_vg;
-	} else {
-		if (correct_vg && correct_vg->seqno > seqno)
-			seqno = correct_vg->seqno;
-		release_vg(correct_vg);
-		correct_vg = NULL;
 	}
 
 	/*
@@ -4521,20 +4503,9 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 					    unsigned precommitted)
 {
 	const char *vgname;
-	struct dm_list *vgnames;
 	struct volume_group *vg;
-	struct dm_str_list *strl;
 	uint32_t warn_flags = WARN_PV_READ | WARN_INCONSISTENT;
 	int consistent = 0;
-
-	/* Is corresponding vgname already cached? */
-	if (lvmcache_vgid_is_cached(vgid)) {
-		if ((vg = _vg_read(cmd, NULL, vgid, warn_flags, &consistent, precommitted)) &&
-		    id_equal(&vg->id, (const struct id *)vgid)) {
-			return vg;
-		}
-		release_vg(vg);
-	}
 
 	/*
 	 * When using lvmlockd we should never reach this point.
@@ -4548,36 +4519,28 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 
 	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
 	if (critical_section())
-		return_NULL;
+		log_debug_metadata("Reading VG by vgid in critical section pre %d vgid %.8s", precommitted, vgid);
 
-	/* FIXME Need a genuine read by ID here - don't vg_read_internal by name! */
-	/* FIXME Disabled vgrenames while active for now because we aren't
-	 *       allowed to do a full scan here any more. */
+	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
+		log_debug_metadata("Reading VG by vgid %.8s no VG name found, retrying.", vgid);
+		lvmcache_destroy(cmd, 0, 0);
+		lvmcache_force_next_label_scan();
+		lvmcache_label_scan(cmd);
+	}
 
-	// The slow way - full scan required to cope with vgrename
-	lvmcache_force_next_label_scan();
-	lvmcache_label_scan(cmd);
-	if (!(vgnames = get_vgnames(cmd, 0))) {
-		log_error("vg_read_by_vgid: get_vgnames failed");
+	if (!(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
+		log_debug_metadata("Reading VG by vgid %.8s no VG name found.", vgid);
 		return NULL;
 	}
 
-	dm_list_iterate_items(strl, vgnames) {
-		vgname = strl->str;
-		if (!vgname)
-			continue;	// FIXME Unnecessary?
-		consistent = 0;
-		if ((vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted)) &&
-		    id_equal(&vg->id, (const struct id *)vgid)) {
-			if (!consistent) {
-				release_vg(vg);
-				return NULL;
-			}
-			return vg;
-		}
-		release_vg(vg);
+	consistent = 0;
+
+	if ((vg = _vg_read(cmd, vgname, vgid, warn_flags, &consistent, precommitted))) {
+		/* Does it matter if consistent is 0 or 1? */
+		return vg;
 	}
 
+	log_debug_metadata("Reading VG by vgid %.8s not found.", vgid);
 	return NULL;
 }
 
@@ -4593,7 +4556,7 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 
 	log_very_verbose("Finding %svolume group for uuid %s", precommitted ? "precommitted " : "", lvid_s);
 	if (!(vg = _vg_read_by_vgid(cmd, (const char *)lvid->id[0].uuid, precommitted))) {
-		log_error("Volume group for uuid not found: %s", lvid_s);
+		log_error("Reading VG not found for LVID %s", lvid_s);
 		return NULL;
 	}
 

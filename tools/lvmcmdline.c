@@ -2281,7 +2281,6 @@ static int _get_current_settings(struct cmd_context *cmd)
 
 	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
-	cmd->current_settings.cache_vgmetadata = cmd->cname->flags & CACHE_VGMETADATA ? 1 : 0;
 
 	if (arg_is_set(cmd, readonly_ARG)) {
 		cmd->current_settings.activation = 0;

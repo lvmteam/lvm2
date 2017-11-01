@@ -133,9 +133,6 @@ int lvmcache_get_vgnameids(struct cmd_context *cmd, int include_internal,
 struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid);
 
-/* Returns cached volume group metadata. */
-struct volume_group *lvmcache_get_vg(struct cmd_context *cmd, const char *vgname,
-				     const char *vgid, unsigned precommitted);
 void lvmcache_drop_metadata(const char *vgname, int drop_precommitted);
 void lvmcache_commit_metadata(const char *vgname);
 
@@ -218,5 +215,9 @@ int lvmcache_get_vg_devs(struct cmd_context *cmd,
 			 struct lvmcache_vginfo *vginfo,
 			 struct dm_list *devs);
 void lvmcache_set_independent_location(const char *vgname);
+
+void lvmcache_save_suspended_vg(struct volume_group *vg, int precommitted);
+struct volume_group *lvmcache_get_suspended_vg(const char *vgid);
+void lvmcache_drop_suspended_vg(struct volume_group *vg);
 
 #endif

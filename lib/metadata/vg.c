@@ -97,11 +97,6 @@ void release_vg(struct volume_group *vg)
 	if (!vg || (vg->fid && vg == vg->fid->fmt->orphan_vg))
 		return;
 
-	/* Check if there are any vginfo holders */
-	if (vg->vginfo &&
-	    !lvmcache_vginfo_holders_dec_and_test_for_zero(vg->vginfo))
-		return;
-
 	release_vg(vg->vg_committed);
 	release_vg(vg->vg_precommitted);
 	_free_vg(vg);

@@ -51,7 +51,6 @@ void init_udev_checking(int checking);
 void init_dev_disable_after_error_count(int value);
 void init_pv_min_size(uint64_t sectors);
 void init_activation_checks(int checks);
-void init_detect_internal_vg_cache_corruption(int detect);
 void init_retry_deactivation(int retry);
 void init_unknown_device_name(const char *name);
 
@@ -85,7 +84,6 @@ int udev_checking(void);
 const char *sysfs_dir_path(void);
 uint64_t pv_min_size(void);
 int activation_checks(void);
-int detect_internal_vg_cache_corruption(void);
 int retry_deactivation(void);
 const char *unknown_device_name(void);
 

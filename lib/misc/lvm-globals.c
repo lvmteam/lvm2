@@ -53,8 +53,6 @@ static int _activation_checks = 0;
 static char _sysfs_dir_path[PATH_MAX] = "";
 static int _dev_disable_after_error_count = DEFAULT_DISABLE_AFTER_ERROR_COUNT;
 static uint64_t _pv_min_size = (DEFAULT_PV_MIN_SIZE_KB * 1024L >> SECTOR_SHIFT);
-static int _detect_internal_vg_cache_corruption =
-	DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION;
 static const char *_unknown_device_name = DEFAULT_UNKNOWN_DEVICE_NAME;
 
 void init_verbose(int level)
@@ -195,11 +193,6 @@ void init_dev_disable_after_error_count(int value)
 void init_pv_min_size(uint64_t sectors)
 {
 	_pv_min_size = sectors;
-}
-
-void init_detect_internal_vg_cache_corruption(int detect)
-{
-	_detect_internal_vg_cache_corruption = detect;
 }
 
 void set_cmd_name(const char *cmd)
@@ -382,11 +375,6 @@ int dev_disable_after_error_count(void)
 uint64_t pv_min_size(void)
 {
 	return _pv_min_size;
-}
-
-int detect_internal_vg_cache_corruption(void)
-{
-	return _detect_internal_vg_cache_corruption;
 }
 
 const char *unknown_device_name(void)

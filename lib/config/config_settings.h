@@ -868,11 +868,8 @@ cfg(global_abort_on_internal_errors_CFG, "abort_on_internal_errors", global_CFG_
 	"Treat any internal errors as fatal errors, aborting the process that\n"
 	"encountered the internal error. Please only enable for debugging.\n")
 
-cfg(global_detect_internal_vg_cache_corruption_CFG, "detect_internal_vg_cache_corruption", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_DETECT_INTERNAL_VG_CACHE_CORRUPTION, vsn(2, 2, 96), NULL, 0, NULL,
-	"Internal verification of VG structures.\n"
-	"Check if CRC matches when a parsed VG is used multiple times. This\n"
-	"is useful to catch unexpected changes to cached VG structures.\n"
-	"Please only enable for debugging.\n")
+cfg(global_detect_internal_vg_cache_corruption_CFG, "detect_internal_vg_cache_corruption", global_CFG_SECTION, 0, CFG_TYPE_BOOL, 0, vsn(2, 2, 96), NULL, vsn(2, 2, 174), NULL,
+	"No longer used.\n")
 
 cfg(global_metadata_read_only_CFG, "metadata_read_only", global_CFG_SECTION, 0, CFG_TYPE_BOOL, DEFAULT_METADATA_READ_ONLY, vsn(2, 2, 75), NULL, 0, NULL,
 	"No operations that change on-disk metadata are permitted.\n"

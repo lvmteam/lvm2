@@ -113,7 +113,6 @@ struct arg_value_group_list {
 	uint32_t prio;
 };
 
-#define CACHE_VGMETADATA	0x00000001
 #define PERMITTED_READ_ONLY 	0x00000002
 /* Process all VGs if none specified on the command line. */
 #define ALL_VGS_IS_DEFAULT	0x00000004
