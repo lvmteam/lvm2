@@ -184,15 +184,8 @@ run_syncaction_check() {
 	# 'lvs' should show results
 	lvchange --syncaction check $vg/$lv
 	aux wait_for_sync $vg $lv
-        # FIXME: this needs kernel fix in md-raid
-        # currently let just this test to cause 'warning'
-	if ! get lv_field $vg/$lv lv_attr -a | grep '.*m.$'; then
-		dmsetup status | grep $vg
-		# false
-	fi
-        # FIXME: with fixed kernel this should not fail
-        # add 'wrapper' detecting kernel for this
-	should not check lv_field $vg/$lv raid_mismatch_count "0"
+	check lv_attr_bit health $vg/$lv "m"
+	not check lv_field $vg/$lv raid_mismatch_count "0"
 
 	# "repair" will fix discrepancies
 	lvchange --syncaction repair $vg/$lv
@@ -202,7 +195,7 @@ run_syncaction_check() {
 	# 'lvs' should show results
 	lvchange --syncaction check $vg/$lv
 	aux wait_for_sync $vg $lv
-	check lv_attr_bit health $vg/$lv "-" || check lv_attr_bit health $vg/$lv "m"
+	check lv_attr_bit health $vg/$lv "-"
 	check lv_field $vg/$lv raid_mismatch_count "0"
 }
 
