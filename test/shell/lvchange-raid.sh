@@ -43,6 +43,9 @@ run_writemostly_check() {
 
 	printf "#\n#\n#\n# %s/%s (%s): run_writemostly_check\n#\n#\n#\n" \
 		$vg $lv $segtype
+
+	# I've seen this sync fail.  when it does, it looks like sync
+	# thread has not been started... haven't repo'ed yet.
 	aux wait_for_sync $vg $lv
 
 	# No writemostly flag should be there yet.
@@ -168,6 +171,14 @@ run_syncaction_check() {
 	# Overwrite the last half of one of the PVs with crap
 	dd if=/dev/urandom of="$device" bs=1k count=$size seek=$seek
 	sync
+
+	# Cycle the LV so we don't grab stripe cache buffers instead
+	#  of reading disk.  This can happen with RAID 4/5/6.  You
+	#  may think this is bad because those buffers could prevent
+	#  us from seeing bad disk blocks, however, the stripe cache
+	#  is not long lived.  (RAID1/10 are immediately checked.)
+	lvchange -an $vg/$lv
+	lvchange -ay $vg/$lv
 
 	# "check" should find discrepancies but not change them
 	# 'lvs' should show results
