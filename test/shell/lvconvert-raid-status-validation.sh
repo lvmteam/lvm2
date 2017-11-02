@@ -83,7 +83,12 @@ while true; do
 		# If the sync operation ("recover" in this case) is not
 		# finished, then it better be as follows:
 		[ "${a[5]}" = "Aa" ]
-		[ "${a[7]}" = "recover" ]
+
+		# Might be transitioning from "idle" to "recover".
+		# Kernel could check mddev->recovery for the intent to
+		# begin a "recover" and report that... probably would be
+		# better.  RHBZ 1507719
+		should [ "${a[7]}" = "recover" ]
 	else
 		# Tough to tell the INVALID case,
 		#   Before starting sync thread: "Aa X/X recover"
