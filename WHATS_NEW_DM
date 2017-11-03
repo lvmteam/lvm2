@@ -1,5 +1,5 @@
-Version 1.02.145 - 
-===================================
+Version 1.02.145 - 3rd November 2017
+====================================
   Keep Install section only in dm-event.socket systemd unit.
   Issue a specific error with dmsetup status if device is unknown.
   Fix RT_LIBS reference in generated libdevmapper.pc for pkg-config
