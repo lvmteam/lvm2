@@ -31,17 +31,17 @@ shopt -s dotglob nullglob
 
 TOOL=blkdeactivate
 
-sbindir="@SBINDIR@"
-
 DEV_DIR="/dev"
 SYS_BLK_DIR="/sys/block"
 
+MDADM="/sbin/mdadm"
 MOUNTPOINT="/bin/mountpoint"
+MPATHD="/sbin/multipathd"
 UMOUNT="/bin/umount"
+
+sbindir="@SBINDIR@"
 DMSETUP="$sbindir/dmsetup"
 LVM="$sbindir/lvm"
-MDADM="$sbindir/mdadm"
-MPATHD="/sbin/multipathd"
 
 if "$UMOUNT" --help | grep -- "--all-targets" >"$DEV_DIR/null"; then
 	UMOUNT_OPTS="--all-targets "
