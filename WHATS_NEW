@@ -1,3 +1,6 @@
+Version 2.02.177 -
+====================================
+
 Version 2.02.176 - 3rd November 2017
 ====================================
   Keep Install section only in lvm2-{lvmetad,lvmpolld}.socket systemd unit.

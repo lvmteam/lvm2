@@ -1,3 +1,6 @@
+Version 1.02.146 -
+====================================
+
 Version 1.02.145 - 3rd November 2017
 ====================================
   Keep Install section only in dm-event.socket systemd unit.
