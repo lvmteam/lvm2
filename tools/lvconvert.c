@@ -2008,6 +2008,15 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	struct lvinfo info;
 	dm_percent_t snap_percent;
 
+	/* Check if merge is possible */
+	if (lv_is_merging_origin(origin)) {
+		log_error("Cannot merge snapshot %s into the origin %s "
+			  "with merging snapshot %s.",
+			  display_lvname(lv), display_lvname(origin),
+			  display_lvname(find_snapshot(origin)->lv));
+		return 0;
+	}
+
 	if (lv_is_external_origin(origin_from_cow(lv))) {
 		log_error("Cannot merge snapshot \"%s\" into "
 			  "the read-only external origin \"%s\".",
