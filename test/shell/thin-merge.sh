@@ -45,8 +45,14 @@ touch mntsnap/test_snap
 
 lvs -o+tags,thin_id $vg
 
+lvcreate -s -n snap1 $vg/$lv1
+
 lvconvert --merge $vg/snap &>out
 grep "Merging of thin snapshot $vg/snap will occur on next activation of $vg/${lv1}." out
+
+# Can't merge another snapshot while "snap" is still being 'merged'.
+not lvconvert --merge $vg/snap1 &>out
+grep "Cannot merge snapshot" out
 
 umount mnt
 
@@ -111,13 +117,13 @@ check lv_not_exists $vg oldsnapof_${lv1}
 lvcreate -s -L10 -n oldsnapof_snap $vg/snap
 lvconvert --merge $vg/snap
 lvremove -f $vg/oldsnapof_snap
-check lv_field  $vg/$lv1 thin_id "3"
+check lv_field  $vg/$lv1 thin_id "4"
 
 # Check --mergethin
 lvcreate -s -n snap $vg/$lv1
-check lv_field  $vg/snap thin_id "4"
+check lv_field  $vg/snap thin_id "5"
 lvconvert --mergethin $vg/snap  &>out
 grep "Volume $vg/snap replaced origin $vg/${lv1}." out
-check lv_field  $vg/$lv1 thin_id "4"
+check lv_field  $vg/$lv1 thin_id "5"
 
 vgremove -ff $vg

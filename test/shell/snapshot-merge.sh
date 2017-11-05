@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2010-2012 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2010-2017 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -106,6 +106,14 @@ setup_merge_ $vg $lv1 1
 lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
 lvremove -f $vg/$lv1
 
+# test merging cannot start on already merging origin
+setup_merge_ $vg $lv1 3
+lvchange -an $vg
+lvs -a $vg
+lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")"
+not lvconvert --merge "$vg/$(snap_lv_name_ "$lv1")_1" 2>&1 | tee err
+grep "Cannot merge snapshot" err
+lvremove -f $vg/$lv1
 
 # test merging multiple snapshots that share the same tag
 setup_merge_ $vg $lv1
