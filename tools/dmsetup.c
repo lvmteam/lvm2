@@ -902,7 +902,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 		if (!dm_report_object_is_selected(_report, &obj, _selection_cmd ? 0 : 1, &selected))
 			goto_out;
 		if (_selection_cmd && selected) {
-			device_name = dm_task_get_name(dmt);
+			device_name = (char*) dm_task_get_name(dmt);
 			if (!_selection_cmd->fn(_selection_cmd, NULL, 1, &device_name, NULL, 1))
 				goto_out;
 		}
