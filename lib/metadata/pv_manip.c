@@ -19,12 +19,8 @@
 #include "toolcontext.h"
 #include "locking.h"
 #include "defaults.h"
-#include "lvmcache.h"
-#include "lvmetad.h"
 #include "display.h"
-#include "label.h"
 #include "archiver.h"
-#include "lvm-signal.h"
 
 static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,
