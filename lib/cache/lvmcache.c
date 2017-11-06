@@ -2454,55 +2454,28 @@ int lvmcache_fid_add_mdas_vg(struct lvmcache_vginfo *vginfo, struct format_insta
 	return 1;
 }
 
-static int _get_pv_if_in_vg(struct lvmcache_info *info,
-			    struct physical_volume *pv)
-{
-	char vgname[NAME_LEN + 1];
-	char vgid[ID_LEN + 1];
-
-	if (info->vginfo && info->vginfo->vgname &&
-	    !is_orphan_vg(info->vginfo->vgname)) {
-		/*
-		 * get_pv_from_vg_by_id() may call
-		 * lvmcache_label_scan() and drop cached
-		 * vginfo so make a local copy of string.
-		 */
-		(void) dm_strncpy(vgname, info->vginfo->vgname, sizeof(vgname));
-		memcpy(vgid, info->vginfo->vgid, sizeof(vgid));
-
-		if (get_pv_from_vg_by_id(info->fmt, vgname, vgid,
-					 info->dev->pvid, pv))
-			return 1;
-	}
-
-	return 0;
-}
-
 int lvmcache_populate_pv_fields(struct lvmcache_info *info,
-				struct physical_volume *pv,
-				int scan_label_only)
+				struct volume_group *vg,
+				struct physical_volume *pv)
 {
 	struct data_area_list *da;
-
-	/* Have we already cached vgname? */
-	if (!scan_label_only && _get_pv_if_in_vg(info, pv))
-		return 1;
-
-	/* Perform full scan (just the first time) and try again */
-	if (!scan_label_only && !critical_section() && !full_scan_done()) {
-		lvmcache_force_next_label_scan();
-		lvmcache_label_scan(info->fmt->cmd);
-
-		if (_get_pv_if_in_vg(info, pv))
-			return 1;
+	
+	if (!info->label) {
+		log_error("No cached label for orphan PV %s", pv_dev_name(pv));
+		return 0;
 	}
 
-	/* Orphan */
+	pv->label_sector = info->label->sector;
 	pv->dev = info->dev;
 	pv->fmt = info->fmt;
 	pv->size = info->device_size >> SECTOR_SHIFT;
 	pv->vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	memcpy(&pv->id, &info->dev->pvid, sizeof(pv->id));
+
+	if (!pv->size) {
+		log_error("PV %s size is zero.", dev_name(info->dev));
+		return 0;
+	}
 
 	/* Currently only support exactly one data area */
 	if (dm_list_size(&info->das) != 1) {

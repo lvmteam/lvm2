@@ -1593,36 +1593,6 @@ static uint64_t _metadata_locn_offset_raw(void *metadata_locn)
 	return mdac->area.start;
 }
 
-static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, int scan_label_only)
-{
-	struct lvmcache_info *info;
-	struct device *dev;
-
-	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter)))
-		return_0;
-
-	if (lvmetad_used()) {
-		info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
-		if (!info && !lvmetad_pv_lookup_by_dev(fmt->cmd, dev, NULL))
-			return 0;
-		info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
-	} else {
-		struct label *label;
-		if (!(label_read(dev, &label, UINT64_C(0))))
-			return_0;
-		info = label->info;
-	}
-
-	if (!info)
-		return_0;
-
-	if (!lvmcache_populate_pv_fields(info, pv, scan_label_only))
-		return 0;
-
-	return 1;
-}
-
 static int _text_pv_initialise(const struct format_type *fmt,
 			       struct pv_create_args *pva,
 			       struct physical_volume *pv)
@@ -2471,7 +2441,6 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 
 static struct format_handler _text_handler = {
 	.scan = _text_scan,
-	.pv_read = _text_pv_read,
 	.pv_initialise = _text_pv_initialise,
 	.pv_setup = _text_pv_setup,
 	.pv_add_metadata_area = _text_pv_add_metadata_area,

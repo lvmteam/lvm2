@@ -145,8 +145,8 @@ int lvmcache_fid_add_mdas(struct lvmcache_info *info, struct format_instance *fi
 int lvmcache_fid_add_mdas_pv(struct lvmcache_info *info, struct format_instance *fid);
 int lvmcache_fid_add_mdas_vg(struct lvmcache_vginfo *vginfo, struct format_instance *fid);
 int lvmcache_populate_pv_fields(struct lvmcache_info *info,
-				struct physical_volume *pv,
-				int scan_label_only);
+				struct volume_group *vg,
+				struct physical_volume *pv);
 int lvmcache_check_format(struct lvmcache_info *info, const struct format_type *fmt);
 void lvmcache_del_mdas(struct lvmcache_info *info);
 void lvmcache_del_das(struct lvmcache_info *info);
