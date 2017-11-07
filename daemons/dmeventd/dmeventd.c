@@ -865,6 +865,7 @@ static int _event_wait(struct thread_status *thread)
 	 * This is so that you can break out of waiting on an event,
 	 * either for a timeout event, or to cancel the thread.
 	 */
+	sigemptyset(&old);
 	sigemptyset(&set);
 	sigaddset(&set, SIGALRM);
 	if (pthread_sigmask(SIG_UNBLOCK, &set, &old) != 0) {

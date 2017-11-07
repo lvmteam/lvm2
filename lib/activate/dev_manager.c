@@ -1787,7 +1787,7 @@ struct pool_cb_data {
 static int _pool_callback(struct dm_tree_node *node,
 			  dm_node_callback_t type, void *cb_data)
 {
-	int ret, status, fd;
+	int ret, status = 0, fd;
 	const struct dm_config_node *cn;
 	const struct dm_config_value *cv;
 	const struct pool_cb_data *data = cb_data;

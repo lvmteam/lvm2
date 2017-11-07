@@ -1158,10 +1158,10 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 			      struct logical_volume *lv,
 			      struct lvconvert_params *lp)
 {
-	uint32_t old_mimage_count;
-	uint32_t old_log_count;
-	uint32_t new_mimage_count;
-	uint32_t new_log_count;
+	uint32_t old_mimage_count = 0;
+	uint32_t old_log_count = 0;
+	uint32_t new_mimage_count = 0;
+	uint32_t new_log_count = 0;
 
 	if ((lp->corelog || lp->mirrorlog) && *lp->type_str && strcmp(lp->type_str, SEG_TYPE_NAME_MIRROR)) {
 		log_error("--corelog and --mirrorlog are only compatible with mirror devices.");

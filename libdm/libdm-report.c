@@ -2626,7 +2626,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 							    "for selection field %s.";
 	struct selection_str_list *ssl = NULL;
 	struct dm_str_list *item;
-	const char *begin_item, *end_item, *tmp;
+	const char *begin_item = NULL, *end_item = NULL, *tmp;
 	uint32_t op_flags, end_op_flag_expected, end_op_flag_hit = 0;
 	struct dm_str_list **arr;
 	size_t list_size;

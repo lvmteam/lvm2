@@ -2723,9 +2723,9 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 	char buf[64];
 	struct cmd_rule *rule;
 	struct lv_type *lvtype = NULL;
-	uint64_t lv_props_match_bits, lv_props_unmatch_bits;
-	uint64_t lv_types_match_bits, lv_types_unmatch_bits;
-	int opts_match_count, opts_unmatch_count;
+	uint64_t lv_props_match_bits = 0, lv_props_unmatch_bits = 0;
+	uint64_t lv_types_match_bits = 0, lv_types_unmatch_bits = 0;
+	int opts_match_count = 0, opts_unmatch_count = 0;
 	int lvt_enum;
 	int ret = 1;
 	int i;
