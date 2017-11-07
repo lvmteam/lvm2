@@ -2057,15 +2057,15 @@ static int _lvconvert_merge_old_snapshot(struct cmd_context *cmd,
 	 */
 	if (lv_is_active_locally(origin)) {
 		if (!lv_check_not_in_use(origin, 0)) {
-			log_print_unless_silent("Can't merge until origin volume is closed.");
+			log_print_unless_silent("Delaying merge since origin is open.");
 			merge_on_activate = 1;
 		} else if (!lv_check_not_in_use(lv, 0)) {
-			log_print_unless_silent("Can't merge until snapshot is closed.");
+			log_print_unless_silent("Delaying merge since snapshot is open.");
 			merge_on_activate = 1;
 		}
 	} else if (vg_is_clustered(origin->vg) && lv_is_active(origin)) {
 		/* When it's active somewhere else */
-		log_print_unless_silent("Can't check whether remotely active snapshot is open.");
+		log_print_unless_silent("Delaying merge since origin is remotely active.");
 		merge_on_activate = 1;
 	}
 
