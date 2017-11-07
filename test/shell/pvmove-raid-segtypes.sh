@@ -35,7 +35,7 @@ do
 
 # Testing pvmove of RAID1 LV
 lvcreate -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate -l 2 --type raid1 -m 1 -n $lv1 $vg "$dev1" "$dev2"
+lvcreate --regionsize 16K -l 2 --type raid1 -m 1 -n $lv1 $vg "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg $lv1 "$dev1" "$dev2"
 aux mkdev_md5sum $vg $lv1
