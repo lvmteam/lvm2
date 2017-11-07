@@ -902,7 +902,7 @@ class TestLvm(unittest.TestCase):
 			lvm.pvCreate(d)
 
 	def test_pv_create(self):
-		size = [0, 1024 * 1024 * 4]
+		size = [0, 1024 * 1024 * 8]
 		pvmeta_copies = [0, 1, 2]
 		pvmeta_size = [0, 255, 512, 1024]
 		data_alignment = [0, 2048, 4096]
