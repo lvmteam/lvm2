@@ -242,7 +242,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 				lock_lv_vol(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD | LCK_REMOTE)
 
 struct logical_volume;
-int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv);
+int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv);
 
 #define activate_lv_local(cmd, lv)	\
 	lock_lv_vol_serially(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)

@@ -437,7 +437,7 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
  * Then if the VG is clustered and the LV is not yet active (e.g. due to 
  * an activation filter) try activating on remote nodes.
  */
-int activate_lv_excl(struct cmd_context *cmd, struct logical_volume *lv) 
+int activate_lv_excl(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	/* Non-clustered VGs are only activated locally. */
 	if (!vg_is_clustered(lv->vg))
