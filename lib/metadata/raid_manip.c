@@ -6424,7 +6424,7 @@ int lv_raid_convert(struct logical_volume *lv,
 	stripe_size = new_stripe_size_supplied ? new_stripe_size : seg->stripe_size;
 
 	if (segtype_is_striped(new_segtype))
-		new_image_count = stripes ? : seg->area_count;
+		new_image_count = stripes > 1 ? stripes : seg->area_count;
 
 	if (!_check_max_raid_devices(new_image_count))
 		return_0;
