@@ -5163,15 +5163,23 @@ static int _takeover_downconvert_wrapper(TAKEOVER_FN_ARGS)
 		return 0;
 	}
 
-	if (seg_is_any_raid5(seg) &&
-	    segtype_is_raid1(new_segtype)) {
-		if (seg->area_count != 2) {
-			log_error("Can't convert %s LV %s to %s with != 2 legs.",
-				  lvseg_name(seg), display_lvname(lv), new_segtype->name);
-			return 0;
+	if (seg_is_raid4(seg) || seg_is_any_raid5(seg)) {
+		if (segtype_is_raid1(new_segtype)) {
+			if (seg->area_count != 2) {
+				log_error("Can't convert %s LV %s to %s with != 2 legs.",
+					  lvseg_name(seg), display_lvname(lv), new_segtype->name);
+				return 0;
+			}
+			if (seg->area_count != new_image_count) {
+				log_error(INTERNAL_ERROR "Bogus new_image_count converting %s LV %s to %s.",
+					  lvseg_name(seg), display_lvname(lv), new_segtype->name);
+				return 0;
+			}
 		}
-		if (seg->area_count != new_image_count) {
-			log_error(INTERNAL_ERROR "Bogus new_image_count converting %s LV %s to %s.",
+
+		if ((segtype_is_striped_target(new_segtype) || segtype_is_any_raid0(new_segtype)) &&
+		    seg->area_count < 3) {
+			log_error("Can't convert %s LV %s to %s with < 3 legs.",
 				  lvseg_name(seg), display_lvname(lv), new_segtype->name);
 			return 0;
 		}
