@@ -18,6 +18,9 @@ SKIP_WITH_CLVMD=1
 
 aux prepare_pvs 6
 
+# Required by test_nesting:
+aux extend_filter_LVMTEST
+
 # We need the lvmdbusd.profile for the daemon to utilize JSON
 # output
 mkdir -p "$TESTDIR/etc/profile"

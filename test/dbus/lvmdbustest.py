@@ -1868,6 +1868,9 @@ class TestDbusService(unittest.TestCase):
 	def test_nesting(self):
 		# check to see if we handle an LV becoming a PV which has it's own
 		# LV
+		#
+		# NOTE: This needs an equivalent of aux extend_filter_LVMTEST
+		# when run from lvm2 testsuite. See dbustest.sh.
 		pv_object_path = self.objs[PV_INT][0].object_path
 
 		for i in range(0, 5):
