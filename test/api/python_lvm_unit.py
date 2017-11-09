@@ -264,7 +264,7 @@ class TestLvm(unittest.TestCase):
 		self.assertTrue(found)
 
 	@staticmethod
-	def test_pv_methods():
+	def _test_pv_methods():
 		with AllowedPVS() as pvs:
 			for p in pvs:
 				p.getName()
@@ -863,7 +863,7 @@ class TestLvm(unittest.TestCase):
 			vg.close()
 
 	@staticmethod
-	def test_listing():
+	def _test_listing():
 
 		env = os.environ
 
