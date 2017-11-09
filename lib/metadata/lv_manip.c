@@ -7057,6 +7057,7 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 	struct lv_list *lvl;
 	int lv_used = 0;
 	uint32_t s;
+	struct logical_volume *holder = (struct logical_volume *) lv_lock_holder(lv_where);
 
 	log_very_verbose("Inserting layer %s for segments of %s on %s",
 			 layer_lv->name, lv_where->name,
@@ -7083,13 +7084,23 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 
 			/* First time, add LV to list of LVs affected */
 			if (!lv_used && lvs_changed) {
-				if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
-					log_error("lv_list alloc failed");
-					return 0;
+				/* First check if LV is listed already */
+				dm_list_iterate_items(lvl, lvs_changed)
+					if (lvl->lv == holder) {
+						lv_used = 1;
+						break;
+					}
+
+				if (!lv_used) {
+					if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
+						log_error("lv_list alloc failed.");
+						return 0;
+					}
+
+					lvl->lv = holder;
+					dm_list_add(lvs_changed, &lvl->list);
+					lv_used = 1;
 				}
-				lvl->lv = lv_where;
-				dm_list_add(lvs_changed, &lvl->list);
-				lv_used = 1;
 			}
 
 			if (!_extend_layer_lv_for_segment(layer_lv, seg, s,
