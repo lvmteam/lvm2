@@ -24,6 +24,10 @@
 #include "metadata.h"
 #include "lv_alloc.h"
 
+static int _raid_target_present(struct cmd_context *cmd,
+				const struct lv_segment *seg __attribute__((unused)),
+				unsigned *attributes);
+
 static void _raid_display(const struct lv_segment *seg)
 {
 	unsigned s;
@@ -247,13 +251,19 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 	int delta_disks = 0, delta_disks_minus = 0, delta_disks_plus = 0, data_offset = 0;
 	uint32_t s;
 	uint64_t flags = 0;
-	uint64_t rebuilds[RAID_BITMAP_SIZE];
-	uint64_t writemostly[RAID_BITMAP_SIZE];
-	struct dm_tree_node_raid_params_v2 params;
+	uint64_t rebuilds[RAID_BITMAP_SIZE] = { 0 };
+	uint64_t writemostly[RAID_BITMAP_SIZE] = { 0 };
+	struct dm_tree_node_raid_params_v2 params = { 0 };
+	unsigned attrs;
 
-	memset(&params, 0, sizeof(params));
-	memset(&rebuilds, 0, sizeof(rebuilds));
-	memset(&writemostly, 0, sizeof(writemostly));
+	if (seg_is_raid4(seg)) {
+		if (!_raid_target_present(cmd, NULL, &attrs) ||
+		    !(attrs & RAID_FEATURE_RAID4)) {
+			log_error("RAID target does not support RAID4 for LV %s.",
+				  display_lvname(seg->lv));
+			return 0;
+		}
+	}
 
 	if (!seg->area_count) {
 		log_error(INTERNAL_ERROR "_raid_add_target_line called "
