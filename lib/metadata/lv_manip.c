@@ -6413,7 +6413,7 @@ static int _lv_update_and_reload(struct logical_volume *lv, int origin_only)
 		r = 0;
 	}
 
-	if (do_backup)
+	if (do_backup && !critical_section())
 		backup(vg);
 
 	return r;
