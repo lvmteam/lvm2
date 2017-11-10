@@ -371,67 +371,6 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 	return 1;
 }
 
-/* Unlock list of LVs */
-int resume_lvs(struct cmd_context *cmd, struct dm_list *lvs)
-{
-	struct lv_list *lvl;
-	int r = 1;
-
-	dm_list_iterate_items(lvl, lvs)
-		if (!resume_lv(cmd, lvl->lv)) {
-			r = 0;
-			stack;
-		}
-
-	return r;
-}
-
-/* Unlock and revert list of LVs */
-int revert_lvs(struct cmd_context *cmd, struct dm_list *lvs)
-{
-	struct lv_list *lvl;
-	int r = 1;
-
-	dm_list_iterate_items(lvl, lvs)
-		if (!revert_lv(cmd, lvl->lv)) {
-			r = 0;
-			stack;
-		}
-
-	return r;
-}
-/*
- * Lock a list of LVs.
- * On failure to lock any LV, calls vg_revert() if vg_to_revert is set and 
- * then unlocks any LVs on the list already successfully locked.
- */
-int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
-		struct volume_group *vg_to_revert)
-{
-	struct lv_list *lvl;
-
-	dm_list_iterate_items(lvl, lvs) {
-		if (!suspend_lv(cmd, lvl->lv)) {
-			log_error("Failed to suspend %s", display_lvname(lvl->lv));
-			if (vg_to_revert)
-				vg_revert(vg_to_revert);
-			/*
-			 * FIXME Should be
-			 * 	dm_list_uniterate(lvh, lvs, &lvl->list) {
-			 *	lvl = dm_list_item(lvh, struct lv_list);
-			 * but revert would need fixing to use identical tree deps first.
-			 */
-			dm_list_iterate_items(lvl, lvs)
-				if (!revert_lv(cmd, lvl->lv))
-					stack;
-
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
 /*
  * First try to activate exclusively locally.
  * Then if the VG is clustered and the LV is not yet active (e.g. due to 
