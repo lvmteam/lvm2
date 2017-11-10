@@ -12,7 +12,6 @@
 
 test_description="ensure pvmove works with thin segment types"
 SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_CLVMD=1
 
 . lib/inittest
 
