@@ -4337,7 +4337,7 @@ endvg:
 		/* Quit early when possible. */
 		if (!process_all_pvs && dm_list_empty(arg_tags) && dm_list_empty(arg_devices)) {
 			do_report_ret_code = 0;
-			goto_out;
+			goto out;
 		}
 
 		log_set_report_object_name_and_id(NULL, NULL);
