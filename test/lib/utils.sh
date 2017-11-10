@@ -180,7 +180,7 @@ STACKTRACE() {
 			echo "<======== Inactive table ========>"
 			dmsetup table --inactive  | grep "$PREFIX" | sed -e "s,^,## DMITABLE: ,"
 			echo "<======== Status ========>"
-			dmsetup status | grep "$PREFIX" | sed -e "s,^,## DMSTATUS: ,"
+			dmsetup status --noflush | grep "$PREFIX" | sed -e "s,^,## DMSTATUS: ,"
 			echo "<======== Tree ========>"
 			dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
 			echo "<======== Recursive list of $DM_DEV_DIR ========>"
