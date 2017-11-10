@@ -1613,6 +1613,9 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 			continue; /* Skip thin snaphost */
 		if (lv_is_pending_delete(sl->seg->lv))
 			continue; /* Skip deleted LVs */
+		if (lv_is_cache_pool(sl->seg->lv) &&
+		    !lv_is_used_cache_pool(sl->seg->lv))
+			continue; /* Skip unused cache-pool */
 		return lv_lock_holder(sl->seg->lv);
 	}
 
