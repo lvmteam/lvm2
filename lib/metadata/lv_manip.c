@@ -6357,6 +6357,15 @@ int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *
 	    !_lv_remove_segs_using_this_lv(cmd, lv, force, level, "pool"))
 		return_0;
 
+	if (lv_is_cache_pool(lv) && !lv_is_used_cache_pool(lv)) {
+		if (!deactivate_lv(cmd, first_seg(lv)->metadata_lv) ||
+		    !deactivate_lv(cmd, seg_lv(first_seg(lv),0))) {
+			log_error("Unable to fully deactivate unused cache-pool %s.",
+				  display_lvname(lv));
+			return 0;
+		}
+	}
+
 	if (lv_is_pool_metadata_spare(lv) &&
 	    (force == PROMPT)) {
 		dm_list_iterate_items(lvl, &lv->vg->lvs)
