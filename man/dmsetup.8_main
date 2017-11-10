@@ -842,10 +842,10 @@ Outputs the current table for the device in a format that can be fed
 back in using the create or load commands.
 With \fB--target\fP, only information relating to the specified target type
 is displayed.
-Real encryption keys are suppressed in the table output for the crypt
-target unless the \fB--showkeys\fP parameter is supplied. Kernel key
+Real encryption keys are suppressed in the table output for crypt and integrity
+targets unless the \fB--showkeys\fP parameter is supplied. Kernel key
 references prefixed with \fB:\fP are not affected by the parameter and get
-displayed always.
+displayed always (crypt target only).
 With \fB--concise\fP, the output is presented concisely on a single line.
 Commas then separate the name, uuid, minor device number, flags ('ro' or 'rw')
 and the table (if present). Semi-colons separate devices. Backslashes escape

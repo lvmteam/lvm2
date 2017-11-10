@@ -2375,6 +2375,24 @@ static void _print_string_quoted(const char *s)
 	}
 }
 
+static void hide_key(char *params, const char *name)
+{
+	char *c = strstr(params, name);
+
+	if (!c)
+		return;
+
+	c += strlen(name);
+
+	/* key is optional */
+	c = strpbrk(c, " :");
+	if (!c || *c++ != ':')
+		return;
+
+	while (*c && *c != ' ')
+		*c++ = '0';
+}
+
 static int _status(CMD_ARGS)
 {
 	int r = 0;
@@ -2480,24 +2498,34 @@ static int _status(CMD_ARGS)
 			}
 			/* Next print any target-specific information */
 			if (target_type) {
-				/* Suppress encryption key */
+				/* Suppress encryption keys */
 				if (!_switches[SHOWKEYS_ARG] &&
-				    cmdno == DM_DEVICE_TABLE &&
-				    !strcmp(target_type, "crypt")) {
-					c = params;
-					while (*c && *c != ' ')
-						c++;
-					if (*c)
-						c++;
-					/*
-					 * Do not suppress kernel key references prefixed
-					 * with colon ':'. Displaying those references is
-					 * harmless. crypt target supports kernel keys
-					 * starting with v1.15.0 (merged in kernel 4.10)
-					 */
-					if (*c != ':')
+				    cmdno == DM_DEVICE_TABLE) {
+					if (!strcmp(target_type, "crypt")) {
+						c = params;
 						while (*c && *c != ' ')
-							*c++ = '0';
+							c++;
+						if (*c)
+							c++;
+						/*
+						 * Do not suppress kernel key references prefixed
+						 * with colon ':'. Displaying those references is
+						 * harmless. crypt target supports kernel keys
+						 * starting with v1.15.0 (merged in kernel 4.10)
+						 */
+						if (*c != ':')
+							while (*c && *c != ' ')
+								*c++ = '0';
+					} else if (!strcmp(target_type, "integrity")) {
+						/*
+						 * "internal_hash", "journal_crypt" and "journal_mac"
+						 *  params allow keys optionally in hexbyte
+						 *  representation.
+						 */
+						hide_key(params, "internal_hash:");
+						hide_key(params, "journal_crypt:");
+						hide_key(params, "journal_mac:");
+					}
 				}
 				if (use_concise)
 					putchar(',');
