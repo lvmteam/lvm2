@@ -2276,6 +2276,17 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned o
 	return _lv_suspend(cmd, lvid_s, &laopts, 0, lv, lv_pre);
 }
 
+static int _check_suspended_lv(struct logical_volume *lv, void *data)
+{
+	struct lvinfo info;
+
+	if (lv_info(lv->vg->cmd, lv, 0, &info, 0, 0) && info.exists && info.suspended) {
+		log_debug("Found suspended LV %s in critical section().", display_lvname(lv));
+		return 0; /* There is suspended subLV in the tree */
+	}
+
+	return 1;
+}
 
 static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		      struct lv_activate_opts *laopts, int error_if_not_active,
@@ -2315,10 +2326,18 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!info.exists || !info.suspended) {
 		if (error_if_not_active)
 			goto_out;
-		r = 1;
-		if (!info.suspended)
-			critical_section_dec(cmd, "already resumed");
-		goto out;
+
+		if (!info.suspended && critical_section()) {
+			/* check if any subLV is suspended */
+			if ((r = for_each_sub_lv((struct logical_volume *)lv, &_check_suspended_lv, NULL))) {
+				/* Everything seems resumed */
+				critical_section_dec(cmd, "already resumed");
+				goto out;
+			}
+		} else {
+			r = 1;
+			goto out;
+		}
 	}
 
 	laopts->read_only = _passes_readonly_filter(cmd, lv);
