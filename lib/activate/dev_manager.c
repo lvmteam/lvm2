@@ -1939,6 +1939,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	struct lv_segment *seg;
 	struct dm_tree_node *node;
 	const char *uuid;
+	const struct logical_volume *plv;
 
 	if (lv_is_cache_pool(lv)) {
 		if (!dm_list_empty(&lv->segs_using_this_lv)) {
@@ -2061,9 +2062,12 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	/* Add any LVs referencing a PVMOVE LV unless told not to. */
 	if (dm->track_pvmove_deps && lv_is_pvmove(lv)) {
 		dm->track_pvmove_deps = 0;
-		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-			if (!_add_lv_to_dtree(dm, dtree, sl->seg->lv, origin_only))
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
+			/* If LV is snapshot COW - whole snapshot needs reload */
+			plv = lv_is_cow(sl->seg->lv) ? origin_from_cow(sl->seg->lv) : sl->seg->lv;
+			if (!_add_lv_to_dtree(dm, dtree, plv, 0))
 				return_0;
+		}
 		dm->track_pvmove_deps = 1;
 	}
 
