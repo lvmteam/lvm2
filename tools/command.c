@@ -140,6 +140,7 @@ static inline int configtype_arg(struct cmd_context *cmd __attribute__((unused))
 #define ENABLE_DUPLICATE_DEVS    0x00000400
 #define DISALLOW_TAG_ARGS        0x00000800
 #define GET_VGNAME_FROM_OPTIONS  0x00001000
+#define IGNORE_PERSISTENT_FILTER 0x00002000
 
 /* create foo_CMD enums for command def ID's in command-lines.in */
 

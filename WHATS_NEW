@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Avoid importing persistent filter in vgscan/pvscan/vgrename.
   Fix memleak of string buffer when vgcfgbackup runs in secure mode.
   Do not print error when clvmd cannot find running clvmd.
   Prevent start of new merge of snapshot if origin is already being merged.

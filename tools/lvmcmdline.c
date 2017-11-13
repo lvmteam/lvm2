@@ -2706,6 +2706,21 @@ static int _cmd_no_meta_proc(struct cmd_context *cmd)
 	return cmd->cname->flags & NO_METADATA_PROCESSING;
 }
 
+static int _cmd_no_lvmetad_autoscan(struct cmd_context *cmd)
+{
+	return cmd->cname->flags & NO_LVMETAD_AUTOSCAN;
+}
+
+static int _cmd_requires_full_label_scan(struct cmd_context *cmd)
+{
+	return cmd->cname->flags & REQUIRES_FULL_LABEL_SCAN;
+}
+
+static int _cmd_ignores_persistent_filter(struct cmd_context *cmd)
+{
+	return cmd->cname->flags & IGNORE_PERSISTENT_FILTER;
+}
+
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct dm_config_tree *config_string_cft, *config_profile_command_cft, *config_profile_metadata_cft;
@@ -2831,8 +2846,10 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	/* Note: Load persistent cache only if we haven't refreshed toolcontext!
 	 *       If toolcontext has been refreshed, it means config has changed
 	 *       and we can't rely on persistent cache anymore.
+	 * Similarly ignore the persistent cache if the command is going to discard it regardless.
 	 */
-	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) && !init_filters(cmd, !refresh_done))
+	if (!cmd->initialized.filters && !_cmd_no_meta_proc(cmd) &&
+	    !init_filters(cmd, !(refresh_done || _cmd_requires_full_label_scan(cmd) || _cmd_ignores_persistent_filter(cmd))))
 		return_ECMD_FAILED;
 
 	if (arg_is_set(cmd, readonly_ARG))
@@ -2945,7 +2962,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	 * In this case, disable the *use* of lvmetad by this command, reverting to
 	 * disk scanning.
 	 */
-	if (lvmetad_used() && !(cmd->cname->flags & NO_LVMETAD_AUTOSCAN)) {
+	if (lvmetad_used() && !_cmd_no_lvmetad_autoscan(cmd)) {
 		if (cmd->include_foreign_vgs || !lvmetad_token_matches(cmd)) {
 			if (lvmetad_used() && !lvmetad_pvscan_all_devs(cmd, cmd->include_foreign_vgs ? 1 : 0)) {
 				log_warn("WARNING: Not using lvmetad because cache update failed.");
