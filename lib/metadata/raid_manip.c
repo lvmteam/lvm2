@@ -6141,9 +6141,12 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 			seg_flag = SEG_RAID6_N_6;
 
 		} else if (segtype_is_any_raid5(*segtype))
-			/* No result for raid6_{zr,nr,nc} */
-			if (!(seg_flag = _raid_seg_flag_6_to_5(seg_from)) ||
-			    !(seg_flag & (*segtype)->flags))
+			if (!(seg_flag = _raid_seg_flag_6_to_5(seg_from)))
+				/*
+				 * No result for raid6_{zr,nr,nc}.
+				 *
+				 * Offer to convert to corresponding raid6_*_6 type first.
+				 */
 				seg_flag = _raid_segtype_flag_5_to_6(*segtype);
 
 	/* -> raid1 */
