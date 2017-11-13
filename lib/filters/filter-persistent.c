@@ -119,6 +119,7 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 	if (!config_file_read(cft))
 		goto_out;
 
+	log_debug_devs("Loading persistent filter cache from %s", pf->file);
 	_read_array(pf, cft, "persistent_filter_cache/valid_devices",
 		    PF_GOOD_DEVICE);
 	/* We don't gain anything by holding invalid devices */

@@ -1864,8 +1864,8 @@ out:
 		}
 	}
 
-	log_debug("Using command index %d id %s enum %d.",
-		  best_i, commands[best_i].command_id, commands[best_i].command_enum);
+	log_debug("Recognised command %s (id %d / enum %d).",
+		  commands[best_i].command_id, best_i, commands[best_i].command_enum);
 
 	return &commands[best_i];
 }
@@ -2873,9 +2873,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		goto_out;
 	init_dmeventd_monitor(monitoring);
 
-	log_debug("Processing: %s", cmd->cmd_line);
+	log_debug("Processing command: %s", cmd->cmd_line);
 	log_debug("Command pid: %d", getpid());
-	log_debug("system ID: %s", cmd->system_id ? : "");
+	log_debug("System ID: %s", cmd->system_id ? : "");
 
 #ifdef O_DIRECT_SUPPORT
 	log_debug("O_DIRECT will be used");

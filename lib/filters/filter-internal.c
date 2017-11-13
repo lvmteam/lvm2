@@ -74,7 +74,7 @@ struct dev_filter *internal_filter_create(void)
 	f->destroy = _destroy;
 	f->use_count = 0;
 
-	log_debug_devs("internal filter initialised.");
+	log_debug_devs("Internal filter initialised.");
 
 	return f;
 }

@@ -1967,7 +1967,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 		    (!dm_list_empty(arg_tags) && str_list_match_list(arg_tags, &vg->tags, NULL))) &&
 		    select_match_vg(cmd, handle, vg) && _select_matches(handle)) {
 
-			log_very_verbose("Process single VG %s", vg_name);
+			log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
 
 			ret = process_single_vg(cmd, vg_name, vg, handle);
 			_update_selection_result(handle, &whole_selected);
@@ -2231,7 +2231,7 @@ int process_each_vg(struct cmd_context *cmd,
 	 * . A VG name is specified which may refer to one
 	 *   of multiple VGs on the system with that name.
 	 */
-	log_debug("Get list of VGs on system");
+	log_very_verbose("Obtaining the complete list of VGs to process");
 
 	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, include_internal)) {
 		ret_max = ECMD_FAILED;
@@ -3733,7 +3733,7 @@ int process_each_lv(struct cmd_context *cmd,
 	 * . A VG name is specified which may refer to one
 	 *   of multiple VGs on the system with that name.
 	 */
-	log_debug("Get list of VGs on system");
+	log_very_verbose("Obtaining the complete list of VGs before processing their LVs");
 
 	if (!get_vgnameids(cmd, &vgnameids_on_system, NULL, 0)) {
 		ret_max = ECMD_FAILED;

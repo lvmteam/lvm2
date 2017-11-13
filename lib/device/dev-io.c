@@ -142,7 +142,7 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 			r = 0;
 			goto out;
 		}
-		log_debug_devs("%s: block size is %u bytes", name, dev->block_size);
+		log_debug_devs("%s: Block size is %u bytes", name, dev->block_size);
 	}
 
 #ifdef BLKPBSZGET
@@ -153,7 +153,7 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 			r = 0;
 			goto out;
 		}
-		log_debug_devs("%s: physical block size is %u bytes", name, dev->phys_block_size);
+		log_debug_devs("%s: Physical block size is %u bytes", name, dev->phys_block_size);
 	}
 #elif defined (BLKSSZGET)
 	/* if we can't get physical block size, just use logical block size instead */
@@ -163,15 +163,13 @@ int dev_get_block_size(struct device *dev, unsigned int *physical_block_size, un
 			r = 0;
 			goto out;
 		}
-		log_debug_devs("%s: physical block size can't be determined, using logical "
-			       "block size of %u bytes", name, dev->phys_block_size);
+		log_debug_devs("%s: Physical block size can't be determined: Using logical block size of %u bytes", name, dev->phys_block_size);
 	}
 #else
 	/* if even BLKSSZGET is not available, use default 512b */
 	if (dev->phys_block_size == -1) {
 		dev->phys_block_size = 512;
-		log_debug_devs("%s: physical block size can't be determined, using block "
-			       "size of %u bytes instead", name, dev->phys_block_size);
+		log_debug_devs("%s: Physical block size can't be determined: Using block size of %u bytes instead", name, dev->phys_block_size);
 	}
 #endif
 
@@ -464,7 +462,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		}
 
 		if (dev->open_count && !need_excl) {
-			log_debug_devs("%s already opened read-only. Upgrading "
+			log_debug_devs("%s: Already opened read-only. Upgrading "
 				       "to read-write.", dev_name(dev));
 			dev->open_count++;
 		}

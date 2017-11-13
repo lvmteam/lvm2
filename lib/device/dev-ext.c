@@ -100,8 +100,6 @@ const char *dev_ext_name(struct device *dev)
 	return _ext_registry[dev->ext.src].name;
 }
 
-static const char *_ext_attached_msg = "External handle attached to device";
-
 struct dev_ext *dev_ext_get(struct device *dev)
 {
 	struct dev_ext *ext;
@@ -110,10 +108,10 @@ struct dev_ext *dev_ext_get(struct device *dev)
 	handle_ptr = dev->ext.handle;
 
 	if (!(ext = _ext_registry[dev->ext.src].dev_ext_get(dev)))
-		log_error("Failed to get external handle for device %s [%s].",
+		log_error("%s: Failed to get external handle [%s].",
 			   dev_name(dev), dev_ext_name(dev));
 	else if (handle_ptr != dev->ext.handle)
-		log_debug_devs("%s %s [%s:%p]", _ext_attached_msg, dev_name(dev),
+		log_debug_devs("%s: External handle [%s:%p] attached", dev_name(dev),
 				dev_ext_name(dev), dev->ext.handle);
 
 	return ext;
@@ -131,10 +129,10 @@ int dev_ext_release(struct device *dev)
 	handle_ptr = dev->ext.handle;
 
 	if (!(r = _ext_registry[dev->ext.src].dev_ext_release(dev)))
-		log_error("Failed to release external handle for device %s [%s:%p].",
+		log_error("%s: Failed to release external handle [%s:%p]",
 			  dev_name(dev), dev_ext_name(dev), dev->ext.handle);
 	else
-		log_debug_devs("External handle detached from device %s [%s:%p]",
+		log_debug_devs("%s: External handle [%s:%p] detached",
 				dev_name(dev), dev_ext_name(dev), handle_ptr);
 
 	return r;
@@ -143,7 +141,7 @@ int dev_ext_release(struct device *dev)
 int dev_ext_enable(struct device *dev, dev_ext_t src)
 {
 	if (dev->ext.enabled && (dev->ext.src != src) && !dev_ext_release(dev)) {
-		log_error("Failed to enable external handle for device %s [%s].",
+		log_error("%s: Failed to enable external handle [%s].",
 			   dev_name(dev), _ext_registry[src].name); 
 		return 0;
 	}
@@ -160,7 +158,7 @@ int dev_ext_disable(struct device *dev)
 		return 1;
 
 	if (!dev_ext_release(dev)) {
-		log_error("Failed to disable external handle for device %s [%s].",
+		log_error("%s: Failed to disable external handle [%s].",
 			   dev_name(dev), dev_ext_name(dev));
 		return 0;
 	}

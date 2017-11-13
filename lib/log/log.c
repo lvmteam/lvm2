@@ -594,7 +594,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
       log_it:
 	if (!logged_via_report && ((verbose_level() >= level) && !_log_suppress)) {
 		if (verbose_level() > _LOG_DEBUG) {
-			(void) dm_snprintf(buf, sizeof(buf), "#%s:%d ",
+			(void) dm_snprintf(buf, sizeof(buf), "#%s:%-5d ",
 					   file, line);
 		} else
 			buf[0] = '\0';
@@ -639,7 +639,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 	}
 
 	if (_log_to_file && (_log_while_suspended || !critical_section())) {
-		fprintf(_log_file, "%s:%d %s%s", file, line, log_command_name(),
+		fprintf(_log_file, "%s:%-5d %s%s", file, line, log_command_name(),
 			_msg_prefix);
 
 		va_copy(ap, orig_ap);
@@ -647,7 +647,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		va_end(ap);
 
 		if (_log_file_max_lines && ++_log_file_lines >= _log_file_max_lines) {
-			fprintf(_log_file, "\n%s:%d %sAborting. Command has reached limit "
+			fprintf(_log_file, "\n%s:%-5d %sAborting. Command has reached limit "
 				"for logged lines (LVM_LOG_FILE_MAX_LINES=" FMTu64 ").",
 				file, line, _msg_prefix,
 				_log_file_max_lines);
@@ -673,7 +673,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		memset(&buf, ' ', sizeof(buf));
 		bufused = 0;
 		if ((n = dm_snprintf(buf, sizeof(buf),
-				      "%s:%d %s%s", file, line, log_command_name(),
+				      "%s:%-5d %s%s", file, line, log_command_name(),
 				      _msg_prefix)) == -1)
 			goto done;
 

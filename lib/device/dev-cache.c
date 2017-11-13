@@ -708,7 +708,7 @@ static int _insert_dev(const char *path, dev_t d)
 
 	if (dm_hash_lookup(_cache.names, path) == dev) {
 		/* Hash already has matching entry present */
-		log_debug("Path already cached %s.", path);
+		log_debug("%s: Path already cached.", path);
 		return 1;
 	}
 
@@ -1423,7 +1423,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 	if (!d || (f && !(d->flags & DEV_REGULAR) && !(f->passes_filter(f, d))))
 		return NULL;
 
-	log_debug_devs("Using %s", dev_name(d));
+	log_debug_devs("%s: Using device (%d:%d)", dev_name(d), (int) MAJOR(d->dev), (int) MINOR(d->dev));
 	return d;
 }
 
@@ -1533,7 +1533,7 @@ struct device *dev_iter_get(struct dev_iter *iter)
 		struct device *d = _iter_next(iter);
 		if (!iter->filter || (d->flags & DEV_REGULAR) ||
 		    iter->filter->passes_filter(iter->filter, d)) {
-			log_debug_devs("Using %s", dev_name(d));
+			log_debug_devs("%s: Using device (%d:%d)", dev_name(d), (int) MAJOR(d->dev), (int) MINOR(d->dev));
 			return d;
 		}
 	}

@@ -154,7 +154,7 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 		vginfo->cft = NULL;
 	}
 
-	log_debug_cache("Metadata cache: VG %s wiped.", vginfo->vgname);
+	log_debug_cache("lvmcache: VG %s wiped.", vginfo->vgname);
 
 	release_vg(vginfo->cached_vg);
 }
@@ -197,7 +197,7 @@ static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 		return;
 	}
 
-	log_debug_cache("Metadata cache: VG %s (%s) stored (%" PRIsize_t " bytes%s).",
+	log_debug_cache("lvmcache: VG %s (%s) stored (%" PRIsize_t " bytes%s).",
 			vginfo->vgname, uuid, size,
 			precommitted ? ", precommitted" : "");
 }
@@ -289,7 +289,7 @@ void lvmcache_commit_metadata(const char *vgname)
 		return;
 
 	if (vginfo->precommitted) {
-		log_debug_cache("Precommitted metadata cache: VG %s upgraded to committed.",
+		log_debug_cache("lvmcache: Upgraded pre-committed VG %s metadata to committed.",
 				vginfo->vgname);
 		vginfo->precommitted = 0;
 	}
@@ -616,7 +616,7 @@ struct lvmcache_vginfo *lvmcache_vginfo_from_vgid(const char *vgid)
 	id[ID_LEN] = '\0';
 
 	if (!(vginfo = dm_hash_lookup(_vgid_hash, id))) {
-		log_debug_cache("Metadata cache has no info for vgid \"%s\"", id);
+		log_debug_cache("lvmcache has no info for vgid \"%s\"", id);
 		return NULL;
 	}
 
@@ -1870,7 +1870,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				vginfo->vgid[0] ? vginfo->vgid : "",
 				vginfo->vgid[0] ? ")" : "", mdabuf);
 	} else
-		log_debug_cache("lvmcache initialised VG %s.", vgname);
+		log_debug_cache("lvmcache: Initialised VG %s.", vgname);
 
 	return 1;
 }

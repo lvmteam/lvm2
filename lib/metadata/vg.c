@@ -71,7 +71,7 @@ struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
 	dm_list_init(&vg->removed_historical_lvs);
 	dm_list_init(&vg->removed_pvs);
 
-	log_debug_mem("Allocated VG %s at %p.", vg->name, vg);
+	log_debug_mem("Allocated VG %s at %p.", vg->name ? : "<no name>", vg);
 
 	return vg;
 }
@@ -86,7 +86,7 @@ static void _free_vg(struct volume_group *vg)
 		return;
 	}
 
-	log_debug_mem("Freeing VG %s at %p.", vg->name, vg);
+	log_debug_mem("Freeing VG %s at %p.", vg->name ? : "<no name>", vg);
 
 	dm_hash_destroy(vg->hostnames);
 	dm_pool_destroy(vg->vgmem);

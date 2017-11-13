@@ -3797,12 +3797,18 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct dm_list *pvids;
 	struct pv_list *pvl;
 	struct dm_list all_pvs;
+	char uuid[64] __attribute__((aligned(8)));
+
 	unsigned seqno = 0;
 	int reappeared = 0;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
 	unsigned use_previous_vg;
 
-	log_very_verbose("Reading VG %s %.32s", vgname ?: "<no name>", vgid ?: "<no vgid>");
+	uuid[0] = '\0';
+	if (vgid && !id_write_format((const struct id*)vgid, uuid, sizeof(uuid)))
+		stack;
+
+	log_very_verbose("Reading VG %s %s", vgname ?: "<no name>", vgid ? uuid : "<no vgid>");
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
@@ -3879,7 +3885,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	/* Now determine the correct vgname if none was supplied */
 	if (!vgname && !(vgname = lvmcache_vgname_from_vgid(cmd->mem, vgid))) {
-		log_debug_metadata("Cache did not find VG name from vgid %.32s", vgid);
+		log_debug_metadata("Cache did not find VG name from vgid %s", uuid);
 		return_NULL;
 	}
 
