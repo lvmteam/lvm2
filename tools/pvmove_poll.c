@@ -92,6 +92,8 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		  struct logical_volume *lv_mirr, struct dm_list *lvs_changed)
 {
+	struct lv_list *lvl;
+	struct logical_volume *holder;
 	int r = 1;
 
 	if (!dm_list_empty(lvs_changed) &&
@@ -101,48 +103,27 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	/* Store metadata without dependencies on mirror segments */
-	if (!vg_write(vg)) {
-		log_error("ABORTING: Failed to write new data locations "
-			  "to disk.");
+	if (!lv_update_and_reload(lv_mirr))
+		return_0;
+
+	/* Takes locks and resumed volumes (should be still suspended, but preloaded) */
+	dm_list_iterate_items(lvl, lvs_changed) {
+		holder = (struct logical_volume *) lv_lock_holder(lvl->lv);
+		if (!resume_lv(cmd, holder)) {
+			log_error("Failed to reactivate logical volume %s.",
+				  display_lvname(holder));
+			r = 0; /* But try to resume as much as we can */
+		}
+	}
+
+	if (!r)
 		return 0;
-	}
-
-	/* Suspend LVs changed (implicitly suspends lv_mirr) */
-	if (!suspend_lvs(cmd, lvs_changed, vg)) {
-		log_error("ABORTING: Locking LVs to remove temporary mirror failed");
-		if (!revert_lv(cmd, lv_mirr))
-			stack;
-		return 0;
-	}
-
-	/* Store metadata without dependencies on mirror segments */
-	if (!vg_commit(vg)) {
-		log_error("ABORTING: Failed to write new data locations "
-			  "to disk.");
-		if (!revert_lv(cmd, lv_mirr))
-			stack;
-		if (!revert_lvs(cmd, lvs_changed))
-			stack;
-		return 0;
-	}
-
-	/* Unsuspend LVs */
-	if (!resume_lvs(cmd, lvs_changed))
-		stack;
-
-	/* Release mirror LV.  (No pending I/O because it's been suspended.) */
-	if (!activate_lv_excl_local(cmd, lv_mirr)) {
-		log_error("Unable to reactivate logical volume \"%s\"",
-			  lv_mirr->name);
-		r = 0;
-	}
 
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {
 		log_error("ABORTING: Unable to deactivate temporary logical "
 			  "volume %s.", display_lvname(lv_mirr));
-		r = 0;
+		return 0;
 	}
 
 	log_verbose("Removing temporary pvmove LV");
@@ -162,5 +143,5 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 	/* FIXME backup positioning */
 	backup(vg);
 
-	return r;
+	return 1;
 }
