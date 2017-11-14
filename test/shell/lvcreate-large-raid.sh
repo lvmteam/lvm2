@@ -21,6 +21,8 @@ SKIP_WITH_LVMPOLLD=1
 aux can_use_16T || skip
 
 aux have_raid 1 3 0 || skip
+v1_9_0=0
+aux have_raid 1 9 0 && v1_9_0=1
 
 segtypes="raid5"
 aux have_raid4 && segtypes="raid4 raid5"
@@ -78,7 +80,7 @@ lvremove -ff $vg1
 
 
 # Check --nosync is rejected for raid6
-if aux have_raid 1 9 0 ; then
+if [ $v1_9_0 -eq 1 ] ; then
 	not lvcreate --type raid6 -i 3 -L 750T -n $lv1 $vg1 --nosync
 fi
 
@@ -103,7 +105,7 @@ lvremove -ff $vg1
 lvcreate -aey -L 200T -n $lv1 $vg1
 lvconvert -y --type raid1 -m 1 $vg1/$lv1
 check lv_field $vg1/$lv1 size "200.00t"
-if aux have_raid 1 9 0; then
+if [ $v1_9_0 -eq 1 ] ; then
 	# The 1.9.0 version of dm-raid is capable of performing
 	# linear -> RAID1 upconverts as "recover" not "resync"
 	# The LVM code now checks the dm-raid version when
