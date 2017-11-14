@@ -141,7 +141,7 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {
 		log_error("ABORTING: Unable to deactivate temporary logical "
-			  "volume \"%s\"", lv_mirr->name);
+			  "volume %s.", display_lvname(lv_mirr));
 		r = 0;
 	}
 

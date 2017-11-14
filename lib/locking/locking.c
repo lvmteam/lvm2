@@ -412,7 +412,7 @@ int suspend_lvs(struct cmd_context *cmd, struct dm_list *lvs,
 
 	dm_list_iterate_items(lvl, lvs) {
 		if (!suspend_lv(cmd, lvl->lv)) {
-			log_error("Failed to suspend %s", lvl->lv->name);
+			log_error("Failed to suspend %s", display_lvname(lvl->lv));
 			if (vg_to_revert)
 				vg_revert(vg_to_revert);
 			/*
