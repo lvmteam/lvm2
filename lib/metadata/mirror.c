@@ -1512,6 +1512,9 @@ const struct logical_volume *find_pvmove_lv_in_lv(const struct logical_volume *l
 	const struct lv_segment *seg;
 	uint32_t s;
 
+	if (lv_is_pvmove(lv))
+		return lv;
+
 	dm_list_iterate_items(seg, &lv->segments) {
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
