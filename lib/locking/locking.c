@@ -475,7 +475,7 @@ int activate_lvs(struct cmd_context *cmd, struct dm_list *lvs, unsigned exclusiv
 			log_error("Failed to activate %s", lvl->lv->name);
 			dm_list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = dm_list_item(lvh, struct lv_list);
-				if (!activate_lv(cmd, lvl->lv))
+				if (!deactivate_lv(cmd, lvl->lv))
 					stack;
 			}
 			return 0;

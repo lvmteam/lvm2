@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Deactivate activated LVs on error path when pvmove activation fails.
   Add "io" to log/debug_classes for logging low-level I/O.
   Eliminate redundant nested VG metadata in VG struct.
   Avoid importing persistent filter in vgscan/pvscan/vgrename.
