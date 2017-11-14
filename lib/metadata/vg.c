@@ -104,8 +104,6 @@ void release_vg(struct volume_group *vg)
 
 	release_vg(vg->vg_committed);
 	release_vg(vg->vg_precommitted);
-	if (vg->cft_precommitted)
-		dm_config_destroy(vg->cft_precommitted);
 	_free_vg(vg);
 }
 

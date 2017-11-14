@@ -905,22 +905,21 @@ int vgcreate_params_validate(struct cmd_context *cmd,
  */
 static int _vg_update_vg_precommitted(struct volume_group *vg)
 {
+	struct dm_config_tree *cft_precommitted;
+
 	release_vg(vg->vg_precommitted);
 	vg->vg_precommitted = NULL;
 
-	if (vg->cft_precommitted) {
-		dm_config_destroy(vg->cft_precommitted);
-		vg->cft_precommitted = NULL;
-	}
-
-	if (!(vg->cft_precommitted = export_vg_to_config_tree(vg)))
+	/* Copy the VG using an export followed by import */
+	if (!(cft_precommitted = export_vg_to_config_tree(vg)))
 		return_0;
 
-	if (!(vg->vg_precommitted = import_vg_from_config_tree(vg->cft_precommitted, vg->fid))) {
-		dm_config_destroy(vg->cft_precommitted);
-		vg->cft_precommitted = NULL;
+	if (!(vg->vg_precommitted = import_vg_from_config_tree(cft_precommitted, vg->fid))) {
+		dm_config_destroy(cft_precommitted);
 		return_0;
 	}
+
+	dm_config_destroy(cft_precommitted);
 
 	return 1;
 }
@@ -938,10 +937,6 @@ static int _vg_update_vg_committed(struct volume_group *vg)
 
 	vg->vg_committed = vg->vg_precommitted;
 	vg->vg_precommitted = NULL;
-	if (vg->cft_precommitted) {
-		dm_config_destroy(vg->cft_precommitted);
-		vg->cft_precommitted = NULL;
-	}
 
 	return 1;
 }
@@ -3185,10 +3180,6 @@ int vg_commit(struct volume_group *vg)
 		release_vg(vg->vg_committed);
 		vg->vg_committed = vg->vg_precommitted;
 		vg->vg_precommitted = NULL;
-		if (vg->cft_precommitted) {
-			dm_config_destroy(vg->cft_precommitted);
-			vg->cft_precommitted = NULL;
-		}
 	}
 
 	/* If update failed, remove any cached precommitted metadata. */
@@ -3223,10 +3214,6 @@ void vg_revert(struct volume_group *vg)
 
 	release_vg(vg->vg_precommitted);  /* VG is no longer needed */
 	vg->vg_precommitted = NULL;
-	if (vg->cft_precommitted) {
-		dm_config_destroy(vg->cft_precommitted);
-		vg->cft_precommitted = NULL;
-	}
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
 		if (mda->ops->vg_revert &&
