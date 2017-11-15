@@ -2204,7 +2204,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	 * NOTE: Mirror repair requires noflush for proper repair!
 	 * TODO: Relax this limiting condition further */
 	if (!flush_required &&
-	    (lv_is_pvmove(lv) ||
+	    (lv_is_pvmove(lv) || pvmove_lv ||
 	     (!lv_is_mirror(lv) && !lv_is_thin_pool(lv) && !lv_is_thin_volume(lv)))) {
 		log_debug("Requiring flush for LV %s.", display_lvname(lv));
 		flush_required = 1;
