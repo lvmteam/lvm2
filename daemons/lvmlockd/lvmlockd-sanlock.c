@@ -1528,6 +1528,26 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EAGAIN;
 	}
 
+	if (rv == SANLK_AIO_TIMEOUT) {
+		/*
+		 * sanlock got an i/o timeout when trying to acquire the
+		 * lease on disk.
+		 */
+		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		*retry = 0;
+		return -EAGAIN;
+	}
+
+	if (rv == SANLK_DBLOCK_LVER || rv == SANLK_DBLOCK_MBAL) {
+		/*
+		 * There was contention with another host for the lease,
+		 * and we lost.
+		 */
+		log_debug("S %s R %s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		*retry = 0;
+		return -EAGAIN;
+	}
+
 	if (rv == SANLK_ACQUIRE_OWNED_RETRY) {
 		/*
 		 * The lock is held by a failed host, and will eventually
