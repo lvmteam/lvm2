@@ -1460,6 +1460,12 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	rv = sanlock_acquire(lms->sock, -1, flags, 1, &rs, &opt);
 
+	/*
+	 * errors: translate the sanlock error number to an lvmlockd error.
+	 * We don't want to return an sanlock-specific error number from
+	 * this function to code that doesn't recognize sanlock error numbers.
+	 */
+
 	if (rv == -EAGAIN) {
 		/*
 		 * It appears that sanlock_acquire returns EAGAIN when we request
@@ -1598,8 +1604,16 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		if (rv == -ENOSPC)
 			rv = -ELOCKIO;
 
-		return rv;
+		/*
+		 * generic error number for sanlock errors that we are not
+		 * catching above.
+		 */
+		return -ELMERR;
 	}
+
+	/*
+	 * sanlock acquire success (rv 0)
+	 */
 
 	if (rds->vb) {
 		rv = sanlock_get_lvb(0, rs, (char *)&vb, sizeof(vb));
@@ -1607,6 +1621,8 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 			log_error("S %s R %s lock_san get_lvb error %d", ls->name, r->name, rv);
 			memset(rds->vb, 0, sizeof(struct val_blk));
 			memset(vb_out, 0, sizeof(struct val_blk));
+			/* the lock is still acquired, the vb values considered invalid */
+			rv = 0;
 			goto out;
 		}
 
@@ -1659,6 +1675,7 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 		if (rv < 0) {
 			log_error("S %s R %s convert_san set_lvb error %d",
 				  ls->name, r->name, rv);
+			rv = -ELMERR;
 		}
 	}
 
@@ -1679,6 +1696,7 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	}
 	if (rv < 0) {
 		log_error("S %s R %s convert_san convert error %d", ls->name, r->name, rv);
+		rv = -ELMERR;
 	}
 
 	return rv;
@@ -1715,6 +1733,7 @@ static int release_rename(struct lockspace *ls, struct resource *r)
 	rv = sanlock_release(lms->sock, -1, SANLK_REL_RENAME, 2, res_args);
 	if (rv < 0) {
 		log_error("S %s R %s unlock_san release rename error %d", ls->name, r->name, rv);
+		rv = -ELMERR;
 	}
 
 	free(res_args);
@@ -1771,6 +1790,7 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 		if (rv < 0) {
 			log_error("S %s R %s unlock_san set_lvb error %d",
 				  ls->name, r->name, rv);
+			rv = -ELMERR;
 		}
 	}
 
@@ -1789,6 +1809,8 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 
 	if (rv == -EIO)
 		rv = -ELOCKIO;
+	else if (rv < 0)
+		rv = -ELMERR;
 
 	return rv;
 }

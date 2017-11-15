@@ -49,5 +49,6 @@ static inline void lvmlockd_close(daemon_handle h)
 #define ELOCKIO   218 /* sanlock io errors during lock op, may be transient. */
 #define EREMOVED  219
 #define EDEVOPEN  220 /* sanlock failed to open lvmlock LV */
+#define ELMERR    221
 
 #endif	/* _LVM_LVMLOCKD_CLIENT_H */

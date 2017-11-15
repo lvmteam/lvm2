@@ -508,7 +508,7 @@ lockrv:
 	}
 	if (rv < 0) {
 		log_error("S %s R %s lock_dlm acquire error %d errno %d", ls->name, r->name, rv, errno);
-		return rv;
+		return -ELMERR;
 	}
 
 	if (rdd->vb) {
@@ -581,6 +581,7 @@ int lm_convert_dlm(struct lockspace *ls, struct resource *r,
 	}
 	if (rv < 0) {
 		log_error("S %s R %s convert_dlm error %d", ls->name, r->name, rv);
+		rv = -ELMERR;
 	}
 	return rv;
 }
@@ -654,6 +655,7 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
 			      0, NULL, NULL, NULL);
 	if (rv < 0) {
 		log_error("S %s R %s unlock_dlm error %d", ls->name, r->name, rv);
+		rv = -ELMERR;
 	}
 
 	return rv;
