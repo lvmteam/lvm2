@@ -2214,10 +2214,6 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		/* FIXME Consider aborting here */
 		stack;
 
-	critical_section_inc(cmd, "suspending");
-	if (pvmove_lv)
-		critical_section_inc(cmd, "suspending pvmove LV");
-
 	if (!laopts->origin_only &&
 	    (lv_is_origin(lv_pre) || lv_is_cow(lv_pre)))
 		lockfs = 1;
@@ -2229,30 +2225,10 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (laopts->origin_only && lv_is_thin_volume(lv) && lv_is_thin_volume(lv_pre))
 		lockfs = 1;
 
-	/*
-	 * Suspending an LV directly above a PVMOVE LV also
- 	 * suspends other LVs using that same PVMOVE LV.
-	 * FIXME Remove this and delay the 'clear node' until
- 	 * after the code knows whether there's a different
- 	 * inactive table to load or not instead so lv_suspend
- 	 * can be called separately for each LV safely.
- 	 */
-	if ((lv_pre->vg->status & PRECOMMITTED) &&
-	    lv_is_locked(lv_pre) && find_pvmove_lv_in_lv(lv_pre)) {
-		if (!_lv_suspend_lv(lv_pre, laopts, lockfs, flush_required)) {
-			critical_section_dec(cmd, "failed precommitted suspend");
-			if (pvmove_lv)
-				critical_section_dec(cmd, "failed precommitted suspend (pvmove)");
-			goto_out;
-		}
-	} else {
-		/* Normal suspend */
-		if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
-			critical_section_dec(cmd, "failed suspend");
-			if (pvmove_lv)
-				critical_section_dec(cmd, "failed suspend (pvmove)");
-			goto_out;
-		}
+	critical_section_inc(cmd, "suspending");
+	if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
+		critical_section_dec(cmd, "failed suspend");
+		goto_out;
 	}
 
 	r = 1;

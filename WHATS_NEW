@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Avoid using precommitted metadata for suspending pvmove tree.
   Ehnance pvmove locking.
   Deactivate activated LVs on error path when pvmove activation fails.
   Add "io" to log/debug_classes for logging low-level I/O.
