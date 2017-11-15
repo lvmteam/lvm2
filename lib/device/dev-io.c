@@ -72,6 +72,11 @@ static int _io(struct device_area *where, char *buffer, int should_write)
 		return 0;
 	}
 
+	log_debug_io("%s %s:%8" PRIu64 " bytes (sync) at %" PRIu64 "%s",
+		     should_write ? "Write" : "Read ", dev_name(where->dev),
+		     where->size, (uint64_t) where->start,
+		     (should_write && test_mode()) ? " (test mode - suppressed)" : "");
+
 	/*
 	 * Skip all writes in test mode.
 	 */

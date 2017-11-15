@@ -283,6 +283,8 @@ static int _parse_debug_classes(struct cmd_context *cmd)
 			debug_classes |= LOG_CLASS_LVMPOLLD;
 		else if (!strcasecmp(cv->v.str, "dbus"))
 			debug_classes |= LOG_CLASS_DBUS;
+		else if (!strcasecmp(cv->v.str, "io"))
+			debug_classes |= LOG_CLASS_IO;
 		else
 			log_verbose("Unrecognised value for log/debug_classes: %s", cv->v.str);
 	}
