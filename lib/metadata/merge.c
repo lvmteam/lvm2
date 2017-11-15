@@ -98,6 +98,14 @@ int lv_merge_segments(struct logical_volume *lv)
 		return; \
 }
 
+/* Check segment LV for reshape flags. */
+static int _check_raid_seg_reshape_flags(struct lv_segment *seg)
+{
+	return ((seg->lv->status & LV_RESHAPE) ||
+		(seg->lv->status & LV_RESHAPE_DELTA_DISKS_MINUS) ||
+		(seg->lv->status & LV_RESHAPE_DELTA_DISKS_PLUS));
+}
+
 /* Check raid0 segment properties in @seg */
 static void _check_raid0_seg(struct lv_segment *seg, int *error_count)
 {
@@ -121,6 +129,8 @@ static void _check_raid0_seg(struct lv_segment *seg, int *error_count)
 		raid_seg_error_val("non-zero max recovery rate", seg->max_recovery_rate);
 	if ((seg->lv->status & LV_RESHAPE_DATA_OFFSET) || seg->data_offset > 1)
 		raid_seg_error_val("data_offset", seg->data_offset);
+	if (_check_raid_seg_reshape_flags(seg))
+		raid_seg_error("reshape");
 }
 
 /* Check RAID @seg for non-zero, power of 2 region size and min recovery rate <= max */
@@ -145,6 +155,8 @@ static void _check_raid1_seg(struct lv_segment *seg, int *error_count)
 		raid_seg_error_val("non-zero stripe size", seg->stripe_size);
 	if ((seg->lv->status & LV_RESHAPE_DATA_OFFSET) || seg->data_offset > 1)
 		raid_seg_error_val("data_offset", seg->data_offset);
+	if (_check_raid_seg_reshape_flags(seg))
+		raid_seg_error("reshape");
 	_check_raid_region_recovery(seg, error_count);
 }
 
@@ -388,6 +400,9 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	if (seg_is_raid(seg))
 		_check_raid_seg(seg, error_count);
+	else if (!lv_is_raid_type(lv) &&
+		 _check_raid_seg_reshape_flags(seg))
+		seg_error("reshape");
 
 	if (seg_is_pool(seg)) {
 		if ((seg->area_count != 1) || (seg_type(seg, 0) != AREA_LV)) {
