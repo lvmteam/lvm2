@@ -6,6 +6,11 @@ Version 2.02.177 -
   Fix memleak of string buffer when vgcfgbackup runs in secure mode.
   Do not print error when clvmd cannot find running clvmd.
   Prevent start of new merge of snapshot if origin is already being merged.
+  Fix offered type for raid6_n_6 to raid5 conversion (raid5_n).
+  Deactivate sub LVs when removing unused cache-pool.
+  Do not take backup with suspended devices.
+  Avoid RAID4 activation on incompatible kernels under all circumstances.
+  Reject conversion request to striped/raid0 on 2-legged raid4/5.
 
 Version 2.02.176 - 3rd November 2017
 ====================================
