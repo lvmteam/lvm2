@@ -751,6 +751,31 @@ Merge COW snapshot LV into its origin.
 .br
 -
 
+Combine a former COW snapshot (second arg) with a former 
+.br
+origin LV (first arg) to reverse a splitsnapshot command.
+.br
+.P
+\fBlvconvert\fP \fB--type\fP \fBsnapshot\fP \fILV\fP \fILV\fP\fI_linear\fP
+.br
+.RS 4
+.ad l
+[ \fB-s\fP|\fB--snapshot\fP ]
+.ad b
+.br
+.ad l
+[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
+.ad b
+.br
+.ad l
+[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+.ad b
+.br
+[ COMMON_OPTIONS ]
+.RE
+.br
+-
+
 Replace failed PVs in a raid or mirror LV. 
 .br
 Repair a thin pool. 
@@ -1644,31 +1669,6 @@ Separate a COW snapshot from its origin LV.
 \fBlvconvert\fP \fB--splitsnapshot\fP \fILV\fP\fI_snapshot\fP
 .br
 .RS 4
-[ COMMON_OPTIONS ]
-.RE
-.br
--
-
-Combine a former COW snapshot (second arg) with a former 
-.br
-origin LV (first arg) to reverse a splitsnapshot command.
-.br
-.P
-\fBlvconvert\fP \fB--type\fP \fBsnapshot\fP \fILV\fP \fILV\fP\fI_linear\fP
-.br
-.RS 4
-.ad l
-[ \fB-s\fP|\fB--snapshot\fP ]
-.ad b
-.br
-.ad l
-[ \fB-c\fP|\fB--chunksize\fP \fISize\fP[k|UNIT] ]
-.ad b
-.br
-.ad l
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
-.ad b
-.br
 [ COMMON_OPTIONS ]
 .RE
 .br

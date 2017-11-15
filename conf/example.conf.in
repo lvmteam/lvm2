@@ -611,9 +611,9 @@ log {
 	# Select log messages by class.
 	# Some debugging messages are assigned to a class and only appear in
 	# debug output if the class is listed here. Classes currently
-	# available: memory, devices, activation, allocation, lvmetad,
+	# available: memory, devices, io, activation, allocation, lvmetad,
 	# metadata, cache, locking, lvmpolld. Use "all" to see everything.
-	debug_classes = [ "memory", "devices", "activation", "allocation", "lvmetad", "metadata", "cache", "locking", "lvmpolld", "dbus" ]
+	debug_classes = [ "memory", "devices", "io", "activation", "allocation", "lvmetad", "metadata", "cache", "locking", "lvmpolld", "dbus" ]
 }
 
 # Configuration section backup.
