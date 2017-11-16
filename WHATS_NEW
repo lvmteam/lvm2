@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Remove unnecessary single read from lvmdiskscan.
   Avoid using precommitted metadata for suspending pvmove tree.
   Ehnance pvmove locking.
   Deactivate activated LVs on error path when pvmove activation fails.

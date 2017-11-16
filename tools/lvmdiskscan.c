@@ -69,28 +69,15 @@ static void _print(struct cmd_context *cmd, const struct device *dev,
 
 static int _check_device(struct cmd_context *cmd, struct device *dev)
 {
-	char buffer;
 	uint64_t size;
 
-	if (!dev_open_readonly(dev))
-		return_0;
-
-	if (!dev_read(dev, UINT64_C(0), (size_t) 1, &buffer)) {
-		stack;
-		if (!dev_close(dev))
-			stack;
-		return 0;
-	}
 	if (!dev_get_size(dev, &size)) {
 		log_error("Couldn't get size of \"%s\"", dev_name(dev));
 		size = 0;
 	}
 	_print(cmd, dev, size, NULL);
 	_count(dev, &disks_found, &parts_found);
-	if (!dev_close(dev)) {
-		log_error("dev_close on \"%s\" failed", dev_name(dev));
-		return 0;
-	}
+
 	return 1;
 }
 
