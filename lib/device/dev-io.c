@@ -234,6 +234,9 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	    !((uintptr_t) buffer & mask))
 		return _io(where, buffer, should_write);
 
+	log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s",
+		     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev));
+
 	/* Allocate a bounce buffer with an extra block */
 	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
 		log_error("Bounce buffer malloc failed");
