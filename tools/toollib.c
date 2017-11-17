@@ -1271,7 +1271,7 @@ static int _validate_stripe_params(struct cmd_context *cmd, const struct segment
 	if (!stripe_size_required && *stripe_size) {
 		log_print_unless_silent("Ignoring stripesize argument for %s devices.", segtype->name);
 		*stripe_size = 0;
-	} else if (*stripes == 1 && (segtype_is_striped_target(segtype) || segtype_is_mirror(segtype))) {
+	} else if (*stripes == 1 && stripe_size_required) {
 		stripe_size_required = 0;
 		if (*stripe_size) {
 			log_print_unless_silent("Ignoring stripesize argument with single stripe.");

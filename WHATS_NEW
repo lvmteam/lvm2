@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Fix printing of default stripe size when user is not using stripes.
   Activation code for pvmove automatically discovers holding LVs for resume.
   Make a pvmove LV locking holder.
   Do not change critical section counter on resume path without real resume.
