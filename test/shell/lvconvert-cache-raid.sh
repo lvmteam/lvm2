@@ -39,7 +39,7 @@ lvcreate --type raid1 -m 1 --nosync -l 2 -n $lv1 $vg
 lvcreate --type raid1 -m 1 --nosync -l 2 -n ${lv1}_cachepool $vg
 #should lvs -a $vg/${lv1}_cdata_rimage_0  # ensure images are properly renamed
 lvconvert --yes --type cache --cachemode writeback --cachepool $vg/${lv1}_cachepool $vg/$lv1 2>&1 | tee out
-grep "WARNING: Data redundancy is lost" out
+grep "WARNING: Data redundancy could be lost" out
 check lv_exists $vg/${lv1}_corig_rimage_0        # ensure images are properly renamed
 dmsetup table ${vg}-$lv1 | grep cache   # ensure it is loaded in kernel
 lvremove -f $vg
@@ -47,7 +47,7 @@ lvremove -f $vg
 
 lvcreate -n corigin -m 1 --type raid1 --nosync -l 10 $vg
 lvcreate -n cpool --type cache $vg/corigin --cachemode writeback -l 10 2>&1 | tee out
-grep "WARNING: Data redundancy is lost" out
+grep "WARNING: Data redundancy could be lost" out
 not lvconvert --splitmirrors 1 --name split $vg/corigin "$dev1"
 lvconvert --yes --splitmirrors 1 --name split $vg/corigin "$dev1"
 
