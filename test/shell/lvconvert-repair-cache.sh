@@ -50,6 +50,8 @@ aux disable_dev "$dev1"
 not lvconvert --uncache $vg/$lv1
 # --yes to drop when Check its prompting
 lvconvert --yes --uncache $vg/$lv1
+should not dmsetup remove ${vg}-cpool_cmeta-missing_0_0
+should not dmsetup remove ${vg}-cpool_cdata-missing_0_0
 
 "$FSCK" -n "$DM_DEV_DIR/$vg/$lv1"
 
