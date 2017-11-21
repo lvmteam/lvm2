@@ -46,7 +46,7 @@ aux disable_dev "$dev1"
 
 #lvchange -an $vg
 
-# Check it is prompting fro confirmation
+# Check it is prompting for confirmation
 not lvconvert --uncache $vg/$lv1
 # --yes to drop when Check its prompting
 lvconvert --yes --uncache $vg/$lv1
