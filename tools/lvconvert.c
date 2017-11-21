@@ -3828,6 +3828,11 @@ static int _lvconvert_combine_split_snapshot_single(struct cmd_context *cmd,
 {
 	const char *origin_name = cmd->position_argv[0];
 
+	if (is_lockd_type(lv->vg->lock_type)) {
+		log_error("Unable to combine split snapshots in VG with lock_type %s", lv->vg->lock_type);
+		return ECMD_FAILED;
+	}
+
 	/* If origin_name includes VG name, the VG name is removed. */
 	if (!validate_lvname_param(cmd, &lv->vg->name, &origin_name))
 		return_ECMD_FAILED;
