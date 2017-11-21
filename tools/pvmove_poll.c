@@ -64,7 +64,7 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, _is_pvmove_image_removable, &mimage_to_remove, PVMOVE) ||
 	    !remove_layers_for_segments_all(cmd, lv_mirr, PVMOVE,
 					    &lvs_completed)) {
-		return 0;
+		return_0;
 	}
 
 	dm_list_iterate_items(lvl, &lvs_completed)

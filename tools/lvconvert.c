@@ -2328,15 +2328,15 @@ static int _lvconvert_thin_pool_repair(struct cmd_context *cmd,
 deactivate_mlv:
 	if (!deactivate_lv(cmd, mlv)) {
 		log_error("Cannot deactivate thin pool metadata volume %s.",
-			  mlv->name);
-		return 0;
+			  display_lvname(mlv));
+		ret = 0;
 	}
 
 deactivate_pmslv:
 	if (!deactivate_lv(cmd, pmslv)) {
-		log_error("Cannot deactivate thin pool metadata volume %s.",
-			  mlv->name);
-		return 0;
+		log_error("Cannot deactivate pool metadata spare volume %s.",
+			  display_lvname(pmslv));
+		ret = 0;
 	}
 
 	if (!ret)
@@ -2500,15 +2500,15 @@ static int _lvconvert_cache_repair(struct cmd_context *cmd,
 deactivate_mlv:
 	if (!deactivate_lv(cmd, mlv)) {
 		log_error("Cannot deactivate pool metadata volume %s.",
-			  mlv->name);
-		return 0;
+			  display_lvname(mlv));
+		ret = 0;
 	}
 
 deactivate_pmslv:
 	if (!deactivate_lv(cmd, pmslv)) {
 		log_error("Cannot deactivate pool metadata spare volume %s.",
-			  mlv->name);
-		return 0;
+			  display_lvname(pmslv));
+		ret = 0;
 	}
 
 	if (!ret)
