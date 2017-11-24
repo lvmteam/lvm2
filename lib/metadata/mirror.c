@@ -1038,50 +1038,8 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * remove the LVs from the mirror set, commit that metadata
 	 * then deactivate and remove them fully.
 	 */
-	if (!vg_write(mirrored_seg->lv->vg)) {
-		log_error("intermediate VG write failed.");
-		return 0;
-	}
-
-	if (!suspend_lv_origin(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
-		log_error("Failed to lock %s.", display_lvname(mirrored_seg->lv));
-		vg_revert(mirrored_seg->lv->vg);
-		return 0;
-	}
-
-	/* FIXME: second suspend should not be needed
-	 * Explicitly suspend temporary LV.
-	 * This balances critical_section_inc() calls with critical_section_dec()
-	 * in resume (both local and cluster) and also properly propagates precommitted
-	 * metadata into dm table on other nodes.
-	 * FIXME: check propagation of suspend with visible flag
-	 */
-	if (temp_layer_lv && !suspend_lv(temp_layer_lv->vg->cmd, temp_layer_lv))
-		log_error("Problem suspending temporary LV %s.", display_lvname(temp_layer_lv));
-
-	if (!vg_commit(mirrored_seg->lv->vg)) {
-		if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv))
-			stack;
+	if (!lv_update_and_reload_origin(mirrored_seg->lv))
 		return_0;
-	}
-
-	log_very_verbose("Updating %s in kernel.", display_lvname(mirrored_seg->lv));
-
-	/*
-	 * Avoid having same mirror target loaded twice simultaneously by first
-	 * resuming the removed LV which now contains an error segment.
-	 * As it's now detached from mirrored_seg->lv we must resume it
-	 * explicitly.
-	 */
-	if (temp_layer_lv && !resume_lv(temp_layer_lv->vg->cmd, temp_layer_lv)) {
-		log_error("Problem resuming temporary LV %s.", display_lvname(temp_layer_lv));
-		return 0;
-	}
-
-	if (!resume_lv_origin(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
-		log_error("Problem reactivating %s.", display_lvname(mirrored_seg->lv));
-		return 0;
-	}
 
 	/* Save or delete the 'orphan' LVs */
 	reactivate = lv_is_active(lv_lock_holder(lv));
