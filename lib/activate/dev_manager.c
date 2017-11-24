@@ -26,6 +26,7 @@
 #include "activate.h"
 #include "lvm-exec.h"
 #include "str_list.h"
+#include "dm-ioctl.h" /* for DM_UUID_LEN */
 
 #include <limits.h>
 #include <dirent.h>
@@ -1717,6 +1718,104 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_vol
 	return udev_flags;
 }
 
+static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
+			    const struct logical_volume *lv, int origin_only);
+/*
+ * Add exiting devices which holds given LV device open.
+ * This is used in case when metadata already do not contain information
+ * i.e. PVMOVE is being finished and final table is going to be resumed.
+ */
+static int _add_holders_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
+				 const struct logical_volume *lv, struct dm_info *info)
+{
+	const char *default_uuid_prefix = dm_uuid_prefix();
+	const size_t default_uuid_prefix_len = strlen(default_uuid_prefix);
+	const char *sysfs_dir = dm_sysfs_dir();
+	char sysfs_path[PATH_MAX];
+	char uuid_path[PATH_MAX];
+	char uuid_buf[DM_UUID_LEN + 1];
+	char *uuid;
+	struct dirent *dirent;
+	DIR *d;
+	FILE *fp;
+	struct logical_volume *lv_det;
+	int r = 0;
+
+	/* Sysfs path of holders */
+	if (dm_snprintf(sysfs_path, sizeof(sysfs_path), "%sdev/block/" FMTu32
+			":" FMTu32 "/holders", sysfs_dir, info->major, info->minor) < 0) {
+		log_error("sysfs_path dm_snprintf failed.");
+		return 0;
+	}
+
+	if (!(d = opendir(sysfs_path))) {
+		if (errno != ENOENT)
+			log_sys_error("opendir", sysfs_path);
+		return 0;
+	}
+
+	while ((dirent = readdir(d))) {
+		if (!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, ".."))
+			continue;
+
+		/* Determine path where sysfs holds UUID for holding dm device */
+		if (dm_snprintf(uuid_path, sizeof(uuid_path), "%s/%s/dm/uuid",
+				sysfs_path, dirent->d_name) < 0) {
+			log_error("uuid_path dm_snprintf failed.");
+			goto out;
+		}
+
+		if (!(fp = fopen(uuid_path, "r"))) {
+			log_sys_error("fopen", uuid_path);
+			goto out;
+		}
+
+		if (!fgets(uuid_buf, sizeof(uuid_buf), fp)) {
+			log_sys_error("fgets", uuid_path);
+			fclose(fp);
+			goto out;
+		}
+
+		if (fclose(fp))
+			log_sys_debug("fclose", uuid_path);
+
+		uuid = uuid_buf;
+		log_debug_activation("Checking holder of LV %s with uuid %s.",
+				     display_lvname(lv), uuid);
+
+		/* Skip common uuid LVM prefix */
+		if (!strncmp(default_uuid_prefix, uuid, default_uuid_prefix_len))
+			uuid += default_uuid_prefix_len;
+
+		/* Check holder comes from processed VG and is not yet in dmtree */
+		if (!strncmp(uuid, (char*)&lv->vg->id, sizeof(lv->vg->id)) &&
+		    !dm_tree_find_node_by_uuid(dtree, uuid)) {
+			uuid[2 * sizeof(struct id)] = 0; /* Cut any suffix */
+			/* If UUID is not yet in dtree, look for matching LV */
+			if (!(lv_det = find_lv_in_vg_by_lvid(lv->vg, (union lvid*)uuid))) {
+				log_error("Cannot find holding uuid %s in VG %s.",
+					  uuid, lv->vg->name);
+				goto out;
+			}
+
+			if (lv_is_cow(lv_det))
+				lv_det = origin_from_cow(lv_det);
+			log_debug_activation("Found holder %s of %s.",
+					     display_lvname(lv_det),
+					     display_lvname(lv));
+			if (!_add_lv_to_dtree(dm, dtree, lv_det, 0))
+				goto_out;
+		}
+	}
+
+	r = 1;
+out:
+	if (closedir(d))
+		log_sys_error("closedir", "holders");
+
+	return r;
+}
+
 static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			     const struct logical_volume *lv, const char *layer)
 {
@@ -1770,6 +1869,15 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!str_list_add(dm->mem, &dm->pending_delete, dlid))
 			return_0;
 	}
+
+	/*
+	 * Find holders of existing active LV where name starts with 'pvmove',
+	 * but it's not anymore PVMOVE LV and also it's not PVMOVE _mimage
+	 */
+	if (info.exists && !lv_is_pvmove(lv) &&
+	    !strchr(lv->name, '_') && !strncmp(lv->name, "pvmove", 6))
+		if (!_add_holders_to_dtree(dm, dtree, lv, &info))
+			return_0;
 
 	return 1;
 }
