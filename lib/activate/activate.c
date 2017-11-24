@@ -2353,11 +2353,17 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		if (error_if_not_active)
 			goto_out;
 
+
+		/* ATM only thin-pool with origin-only suspend does not really suspend anything
+		 * it's used only for message passing to thin-pool */
+		if (laopts->origin_only && lv_is_thin_pool(lv))
+			critical_section_dec(cmd, "resumed");
+
 		if (!info.suspended && critical_section()) {
 			/* check if any subLV is suspended */
 			if ((r = for_each_sub_lv((struct logical_volume *)lv, &_check_suspended_lv, NULL))) {
 				/* Everything seems resumed */
-				critical_section_dec(cmd, "already resumed");
+				log_debug_activation("LV %s not suspended.", display_lvname(lv));
 				goto out;
 			}
 		} else {
