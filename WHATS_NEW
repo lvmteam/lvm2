@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Enhance activation code to automatically suspend pvmove participants.
   Remove unnecessary single read from lvmdiskscan.
   Avoid using precommitted metadata for suspending pvmove tree.
   Ehnance pvmove locking.

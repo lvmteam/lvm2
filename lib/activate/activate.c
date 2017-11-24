@@ -2095,6 +2095,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	struct lvinfo info;
 	int r = 0, lockfs = 0, flush_required = 0;
 	struct detached_lv_data detached;
+	struct dm_pool *mem = NULL;
+	struct dm_list suspend_lvs;
+	struct lv_list *lvl;
 
 	if (!activation())
 		return 1;
@@ -2226,13 +2229,54 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		lockfs = 1;
 
 	critical_section_inc(cmd, "suspending");
-	if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
-		critical_section_dec(cmd, "failed suspend");
-		goto_out;
-	}
+
+	if (!lv_is_locked(lv) && lv_is_locked(lv_pre) &&
+	    (pvmove_lv = find_pvmove_lv_in_lv(lv_pre))) {
+		/*
+		 * When starting PVMOVE, suspend participating LVs first
+		 * with committed metadata by looking at precommited pvmove list.
+		 * In committed metadata these LVs are not connected in any way.
+		 *
+		 * TODO: prepare list of LVs needed to be suspended and pass them
+		 *       via 'struct laopts' directly to _lv_suspend_lv() and handle this
+		 *       with a single 'dmtree' call.
+		 */
+		if (!(mem = dm_pool_create("suspend_lvs", 128)))
+			goto_out;
+
+		/* Prepare list of all LVs for suspend ahead */
+		dm_list_init(&suspend_lvs);
+		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
+			if (!(lvl = dm_pool_alloc(mem, sizeof(*lvl)))) {
+				log_error("lv_list alloc failed.");
+				goto out;
+			}
+			/* Look for precommitted LV name in commmitted VG */
+			if (!(lvl->lv = find_lv(lv->vg, sl->seg->lv->name))) {
+				log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
+					  display_lvname(sl->seg->lv));
+				goto out;
+			}
+			/* Never suspend COW, always has to be origin */
+			if (lv_is_cow(lvl->lv))
+				lvl->lv = origin_from_cow(lvl->lv);
+			dm_list_add(&suspend_lvs, &lvl->list);
+		}
+		dm_list_iterate_items(lvl, &suspend_lvs)
+			if (!_lv_suspend_lv(lvl->lv, laopts, lockfs, 1)) {
+				critical_section_dec(cmd, "failed suspend");
+				goto_out; /* FIXME: resume on recovery path? */
+			}
+	} else  /* Standard suspend */
+		if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
+			critical_section_dec(cmd, "failed suspend");
+			goto_out;
+		}
 
 	r = 1;
 out:
+	if (mem)
+		dm_pool_destroy(mem);
 	if (lv_pre_to_free)
 		release_vg(lv_pre_to_free->vg);
 	if (lv_to_free)
