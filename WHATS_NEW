@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Make a pvmove LV locking holder.
   Do not change critical section counter on resume path without real resume.
   Enhance activation code to automatically suspend pvmove participants.
   Remove unnecessary single read from lvmdiskscan.

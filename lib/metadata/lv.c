@@ -1604,6 +1604,9 @@ const struct logical_volume *lv_lock_holder(const struct logical_volume *lv)
 	if ((lv_is_raid_image(lv) || lv_is_raid_metadata(lv)) && lv_is_visible(lv))
 		return lv;
 
+	if (lv_is_pvmove(lv))
+		return lv;
+
 	/* For other types, by default look for the first user */
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
 		/* FIXME: complete this exception list */
