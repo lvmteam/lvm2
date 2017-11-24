@@ -1,5 +1,6 @@
 Version 1.02.146 -
 ====================================
+  Propagate delayed resume for pvmove subvolumes.
   Suppress integrity encryption keys in 'table' output unless --showkeys supplied.
 
 Version 1.02.145 - 3rd November 2017
