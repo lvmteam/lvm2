@@ -92,10 +92,6 @@ int pvmove_update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		  struct logical_volume *lv_mirr, struct dm_list *lvs_changed)
 {
-	struct lv_list *lvl;
-	struct logical_volume *holder;
-	int r = 1;
-
 	if (!dm_list_empty(lvs_changed) &&
 	    (!_detach_pvmove_mirror(cmd, lv_mirr) ||
 	    !replace_lv_with_error_segment(lv_mirr))) {
@@ -105,19 +101,6 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!lv_update_and_reload(lv_mirr))
 		return_0;
-
-	/* Takes locks and resumed volumes (should be still suspended, but preloaded) */
-	dm_list_iterate_items(lvl, lvs_changed) {
-		holder = (struct logical_volume *) lv_lock_holder(lvl->lv);
-		if (!resume_lv(cmd, holder)) {
-			log_error("Failed to reactivate logical volume %s.",
-				  display_lvname(holder));
-			r = 0; /* But try to resume as much as we can */
-		}
-	}
-
-	if (!r)
-		return 0;
 
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {
