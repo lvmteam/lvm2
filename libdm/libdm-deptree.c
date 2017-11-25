@@ -2963,8 +2963,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 	/* Preload children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
 		/* Propagate delay of resume from parent node */
-		if (dnode->props.delay_resume_if_new)
-			child->props.delay_resume_if_new = 1;
+		if (dnode->props.delay_resume_if_new > 1)
+			child->props.delay_resume_if_new = dnode->props.delay_resume_if_new;
 
 		/* Skip existing non-device-mapper devices */
 		if (!child->info.exists && child->info.major)
@@ -3342,7 +3342,8 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 		}
 		if ((flags & DM_CORELOG))
 			/* For pvmove: immediate resume (for size validation) isn't needed. */
-			node->props.delay_resume_if_new = 1;
+			/* pvmove flag passed via unused UUID and its suffix */
+			node->props.delay_resume_if_new = strstr(log_uuid, "pvmove") ? 2 : 1;
 		else {
 			if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
 				log_error("Couldn't find mirror log uuid %s.", log_uuid);

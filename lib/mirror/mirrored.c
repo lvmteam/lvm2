@@ -303,7 +303,7 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 		}
 	} else {
 		/* If core log, use mirror's UUID and set DM_CORELOG flag */
-		if (!(log_dlid = build_dm_uuid(mem, seg->lv, NULL))) {
+		if (!(log_dlid = build_dm_uuid(mem, seg->lv, lv_is_pvmove(seg->lv) ? "pvmove" : NULL))) {
 			log_error("Failed to build uuid for mirror LV %s.",
 				  seg->lv->name);
 			return 0;
