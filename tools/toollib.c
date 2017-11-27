@@ -1266,37 +1266,39 @@ int get_pool_params(struct cmd_context *cmd,
 static int _validate_stripe_params(struct cmd_context *cmd, const struct segment_type *segtype,
 				   uint32_t *stripes, uint32_t *stripe_size)
 {
-	int stripe_size_required = segtype_supports_stripe_size(segtype);
+	if (*stripes < 1 || *stripes > MAX_STRIPES) {
+		log_error("Number of stripes (%d) must be between %d and %d.",
+			  *stripes, 1, MAX_STRIPES);
+		return 0;
+	}
 
-	if (!stripe_size_required && *stripe_size) {
-		log_print_unless_silent("Ignoring stripesize argument for %s devices.", segtype->name);
-		*stripe_size = 0;
-	} else if (*stripes == 1 && stripe_size_required) {
-		stripe_size_required = 0;
+	if (!segtype_supports_stripe_size(segtype)) {
+		if (*stripe_size) {
+			log_print_unless_silent("Ignoring stripesize argument for %s devices.",
+						segtype->name);
+			*stripe_size = 0;
+		}
+	} else if (*stripes == 1) {
 		if (*stripe_size) {
 			log_print_unless_silent("Ignoring stripesize argument with single stripe.");
 			*stripe_size = 0;
 		}
-	}
-
-	if (stripe_size_required) {
+	} else {
 		if (!*stripe_size) {
 			*stripe_size = find_config_tree_int(cmd, metadata_stripesize_CFG, NULL) * 2;
 			log_print_unless_silent("Using default stripesize %s.",
 						display_size(cmd, (uint64_t) *stripe_size));
 		}
 
-		if (*stripe_size < STRIPE_SIZE_MIN || !is_power_of_2(*stripe_size)) {
+		if (*stripe_size > STRIPE_SIZE_LIMIT * 2) {
+			log_error("Stripe size cannot be larger than %s.",
+				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
+			return 0;
+		} else if (*stripe_size < STRIPE_SIZE_MIN || !is_power_of_2(*stripe_size)) {
 			log_error("Invalid stripe size %s.",
 				  display_size(cmd, (uint64_t) *stripe_size));
 			return 0;
 		}
-	}
-
-	if (*stripes < 1 || *stripes > MAX_STRIPES) {
-		log_error("Number of stripes (%d) must be between %d and %d.",
-			  *stripes, 1, MAX_STRIPES);
-		return 0;
 	}
 
 	return 1;
@@ -1314,23 +1316,33 @@ int get_stripe_params(struct cmd_context *cmd, const struct segment_type *segtyp
 {
 	/* stripes_long_ARG takes precedence (for lvconvert) */
 	/* FIXME Cope with relative +/- changes for lvconvert. */
-	*stripes = arg_uint_value(cmd, arg_is_set(cmd, stripes_long_ARG) ? stripes_long_ARG : stripes_ARG, 1);
-	*stripes_supplied = arg_is_set(cmd, stripes_long_ARG) ? : arg_is_set(cmd, stripes_ARG);
+	if (arg_is_set(cmd, stripes_long_ARG)) {
+		*stripes = arg_uint_value(cmd, stripes_long_ARG, 0);
+		*stripes_supplied = 1;
+	} else if (arg_is_set(cmd, stripes_ARG)) {
+		*stripes = arg_uint_value(cmd, stripes_ARG, 0);
+		*stripes_supplied = 1;
+	} else {
+		/*
+		 * FIXME add segtype parameter for min_stripes and remove logic for this
+		 *       from all other places
+		 */
+		if (segtype_is_any_raid6(segtype))
+			*stripes = 3;
+		else if (segtype_is_striped_raid(segtype))
+			*stripes = 2;
+		else
+			*stripes = 1;
+		*stripes_supplied = 0;
+	}
 
-	*stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
-	*stripe_size_supplied = arg_is_set(cmd, stripesize_ARG);
-	if (*stripe_size) {
+	if ((*stripe_size = arg_uint_value(cmd, stripesize_ARG, 0))) {
 		if (arg_sign_value(cmd, stripesize_ARG, SIGN_NONE) == SIGN_MINUS) {
 			log_error("Negative stripesize is invalid.");
 			return 0;
 		}
-
-		if (arg_uint64_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT * 2) {
-			log_error("Stripe size cannot be larger than %s.",
-				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
-			return 0;
-		}
 	}
+	*stripe_size_supplied = arg_is_set(cmd, stripesize_ARG);
 
 	return _validate_stripe_params(cmd, segtype, stripes, stripe_size);
 }
