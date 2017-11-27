@@ -508,10 +508,10 @@ static int _get_int_arg(struct arg_values *av, char **ptr)
 	if (*ptr == val || errno)
 		return 0;
 
-	av->i_value = (int32_t) v;
-	av->ui_value = (uint32_t) v;
-	av->i64_value = (int64_t) v;
-	av->ui64_value = (uint64_t) v;
+	av->i_value = (v < INT32_MAX) ? (int32_t) v : INT32_MAX;
+	av->ui_value = (v < UINT32_MAX) ? (uint32_t) v : UINT32_MAX;
+	av->i64_value = (v < INT64_MAX) ? (int64_t) v : INT64_MAX;
+	av->ui64_value = (v < UINT64_MAX) ? (uint64_t) v : UINT64_MAX;
 
 	return 1;
 }
@@ -641,10 +641,11 @@ static int _size_arg(struct cmd_context *cmd __attribute__((unused)),
 		log_error("Size is too big (>=16EiB).");
 		return 0;
 	}
-	av->i_value = (int32_t) v;
-	av->ui_value = (uint32_t) v;
-	av->i64_value = (int64_t) v;
-	av->ui64_value = (uint64_t) v;
+
+	av->i_value = (v < INT32_MAX) ? (int32_t) v : INT32_MAX;
+	av->ui_value = (v < UINT32_MAX) ? (uint32_t) v : UINT32_MAX;
+	av->i64_value = (v < INT64_MAX) ? (int64_t) v : INT64_MAX;
+	av->ui64_value = (v < UINT64_MAX) ? (uint64_t) v : UINT64_MAX;
 
 	return 1;
 }
