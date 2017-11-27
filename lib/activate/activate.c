@@ -323,12 +323,6 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 {
 	return 0;
 }
-/******
-int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
-{
-	return 1;
-}
-*******/
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s, unsigned origin_only, unsigned exclusive,
 			 const struct logical_volume *lv, const struct logical_volume *lv_pre)
 {
@@ -2368,7 +2362,6 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!info.exists || !info.suspended) {
 		if (error_if_not_active)
 			goto_out;
-
 
 		/* ATM only thin-pool with origin-only suspend does not really suspend anything
 		 * it's used only for message passing to thin-pool */

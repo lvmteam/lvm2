@@ -3135,8 +3135,6 @@ static int _tree_action(struct dev_manager *dm, const struct logical_volume *lv,
 		if (!dm_tree_preload_children(root, dlid, DLID_SIZE))
 			goto_out;
 
-		//if (action == PRELOAD) { log_debug("SLEEP"); sleep(7); }
-
 		if ((dm_tree_node_size_changed(root) < 0))
 			dm->flush_required = 1;
 		/* Currently keep the code require flush for any
