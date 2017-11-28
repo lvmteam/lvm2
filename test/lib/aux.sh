@@ -912,6 +912,10 @@ common_dev_() {
 	for fromlen in "${@-0:}"; do
 		from=${fromlen%%:*}
 		len=${fromlen##*:}
+		if test "$len" = "$fromlen"; then
+			# Missing the colon at the end: empty len
+			len=
+		fi
 		test -n "$len" || len=$(( size - from ))
 		diff=$(( from - pos ))
 		if test $diff -gt 0 ; then
@@ -937,7 +941,7 @@ common_dev_() {
 
 # Replace linear PV device with its 'delayed' version
 # Could be used to more deterministicaly hit some problems.
-# Parameters: {device path} [read delay ms] [write delay ms] [offset:size]...
+# Parameters: {device path} [read delay ms] [write delay ms] [offset[:[size]]]...
 # Original device is restored when both delay params are 0 (or missing).
 # If the size is missing, the remaing portion of device is taken
 # i.e.  delay_dev "$dev1" 0 200 256:
