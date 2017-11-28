@@ -464,7 +464,6 @@ struct label_ops _text_ops = {
 	.can_handle = _text_can_handle,
 	.write = _text_write,
 	.read = _text_read,
-	.verify = _text_can_handle,
 	.initialise_label = _text_initialise_label,
 	.destroy_label = _text_destroy_label,
 	.destroy = _fmt_text_destroy,

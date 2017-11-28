@@ -109,7 +109,6 @@ struct label_ops _lvm1_ops = {
 	.can_handle = _lvm1_can_handle,
 	.write = _lvm1_write,
 	.read = _lvm1_read,
-	.verify = _lvm1_can_handle,
 	.initialise_label = _lvm1_initialise_label,
 	.destroy_label = _lvm1_destroy_label,
 	.destroy = _lvm1_destroy,

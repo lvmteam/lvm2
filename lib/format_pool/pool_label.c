@@ -83,7 +83,6 @@ struct label_ops _pool_ops = {
       .can_handle = _pool_can_handle,
       .write = _pool_write,
       .read = _pool_read,
-      .verify = _pool_can_handle,
       .initialise_label = _pool_initialise_label,
       .destroy_label = _pool_destroy_label,
       .destroy = _label_pool_destroy,

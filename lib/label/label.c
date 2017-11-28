@@ -353,33 +353,6 @@ int label_write(struct device *dev, struct label *label)
 	return r;
 }
 
-/* Unused */
-int label_verify(struct device *dev)
-{
-	struct labeller *l;
-	char buf[LABEL_SIZE] __attribute__((aligned(8)));
-	uint64_t sector;
-	struct lvmcache_info *info;
-	int r = 0;
-
-	if (!dev_open_readonly(dev)) {
-		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
-			_update_lvmcache_orphan(info);
-		return_0;
-	}
-
-	if (!(l = _find_labeller(dev, buf, &sector, UINT64_C(0))))
-		goto out;
-
-	r = l->ops->verify ? l->ops->verify(l, buf, sector) : 1;
-
-      out:
-	if (!dev_close(dev))
-		stack;
-
-	return r;
-}
-
 void label_destroy(struct label *label)
 {
 	label->labeller->ops->destroy_label(label->labeller, label);

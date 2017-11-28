@@ -66,11 +66,6 @@ struct label_ops {
 		     void *buf, struct label ** label);
 
 	/*
-	 * Additional consistency checks for the paranoid.
-	 */
-	int (*verify) (struct labeller * l, void *buf, uint64_t sector);
-
-	/*
 	 * Populate label_type etc.
 	 */
 	int (*initialise_label) (struct labeller * l, struct label * label);
@@ -102,7 +97,6 @@ int label_remove(struct device *dev);
 int label_read(struct device *dev, struct label **result,
 		uint64_t scan_sector);
 int label_write(struct device *dev, struct label *label);
-int label_verify(struct device *dev);
 struct label *label_create(struct labeller *labeller);
 void label_destroy(struct label *label);
 

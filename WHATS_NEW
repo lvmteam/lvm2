@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Remove label_verify that has never been used.
   Ensure very large numbers used as arguments are not casted to lower values. 
   Enhance reading and validation of options stripes and stripes_size.
   Fix printing of default stripe size when user is not using stripes.
