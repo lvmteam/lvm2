@@ -52,7 +52,6 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 {
 	uint32_t mimage_to_remove = 0;
 	struct dm_list lvs_completed;
-	struct lv_list *lvl;
 
 	/* Update metadata to remove mirror segments and break dependencies */
 	dm_list_init(&lvs_completed);
@@ -66,10 +65,6 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 					    &lvs_completed)) {
 		return_0;
 	}
-
-	dm_list_iterate_items(lvl, &lvs_completed)
-		/* FIXME Assumes only one pvmove at a time! */
-		lvl->lv->status &= ~LOCKED;
 
 	return 1;
 }

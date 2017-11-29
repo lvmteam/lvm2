@@ -6633,6 +6633,12 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 	if (!lv_empty(layer_lv))
 		return_0;
 
+	/* Assumes only used by PVMOVE ATM when unlocking LVs */
+	dm_list_iterate_items(lvl, lvs_changed) {
+		/* FIXME Assumes only one pvmove at a time! */
+		lvl->lv->status &= ~LOCKED;
+	}
+
 	return 1;
 }
 
