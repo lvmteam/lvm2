@@ -1688,6 +1688,16 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	if (daemon_test)
 		return 0;
 
+	/*
+	 * Don't block waiting for a failed lease to expire since it causes
+	 * sanlock_convert to block for a long time, which would prevent this
+	 * thread from processing other lock requests.
+	 *
+	 * FIXME: SANLK_CONVERT_OWNER_NOWAIT is the same as SANLK_ACQUIRE_OWNER_NOWAIT.
+	 * Change to use the CONVERT define when the latest sanlock version has it.
+	 */
+	flags |= SANLK_ACQUIRE_OWNER_NOWAIT;
+
 	rv = sanlock_convert(lms->sock, -1, flags, rs);
 	if (rv == -EAGAIN) {
 		/* FIXME: When could this happen?  Should something different be done? */
