@@ -6637,6 +6637,8 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 	dm_list_iterate_items(lvl, lvs_changed) {
 		/* FIXME Assumes only one pvmove at a time! */
 		lvl->lv->status &= ~LOCKED;
+		if (!lv_merge_segments(lvl->lv))
+			return_0;
 	}
 
 	return 1;
