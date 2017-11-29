@@ -1389,12 +1389,11 @@ static int res_convert(struct lockspace *ls, struct resource *r,
 	}
 
 	rv = lm_convert(ls, r, act->mode, act, r_version);
-	if (rv < 0) {
-		log_error("S %s R %s res_convert lm error %d", ls->name, r->name, rv);
-		return rv;
-	}
 
-	log_debug("S %s R %s res_convert lm done", ls->name, r->name);
+	log_debug("S %s R %s res_convert rv %d", ls->name, r->name, rv);
+
+	if (rv < 0)
+		return rv;
 
 	if (lk->mode == LD_LK_EX && act->mode == LD_LK_SH) {
 		r->sh_count = 1;

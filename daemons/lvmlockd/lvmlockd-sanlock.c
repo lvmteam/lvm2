@@ -1699,12 +1699,22 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	flags |= SANLK_ACQUIRE_OWNER_NOWAIT;
 
 	rv = sanlock_convert(lms->sock, -1, flags, rs);
-	if (rv == -EAGAIN) {
-		/* FIXME: When could this happen?  Should something different be done? */
-		log_error("S %s R %s convert_san EAGAIN", ls->name, r->name);
+	if (!rv)
+		return 0;
+
+	switch (rv) {
+	case -EAGAIN:
+	case SANLK_ACQUIRE_IDLIVE:
+	case SANLK_ACQUIRE_OWNED:
+	case SANLK_ACQUIRE_OWNED_RETRY:
+	case SANLK_ACQUIRE_OTHER:
+	case SANLK_AIO_TIMEOUT:
+	case SANLK_DBLOCK_LVER:
+	case SANLK_DBLOCK_MBAL:
+		/* expected errors from known/normal cases like lock contention or io timeouts */
+		log_debug("S %s R %s convert_san error %d", ls->name, r->name, rv);
 		return -EAGAIN;
-	}
-	if (rv < 0) {
+	default:
 		log_error("S %s R %s convert_san convert error %d", ls->name, r->name, rv);
 		rv = -ELMERR;
 	}
