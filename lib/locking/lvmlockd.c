@@ -1913,6 +1913,23 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	}
 
 	/*
+	 * The lock is held by another host, and retries have been unsuccessful.
+	 */
+	if (result == -EAGAIN) {
+		if (!strcmp(mode, "un")) {
+			ret = 1;
+			goto out;
+		} else if (!strcmp(mode, "sh")) {
+			log_warn("VG %s lock skipped: held by other host.", vg_name, result);
+			ret = 1;
+			goto out;
+		} else {
+			log_error("VG %s lock failed: held by other host.", vg_name, result);
+			ret = 0;
+			goto out;
+		}
+	}
+	/*
 	 * No lockspace for the VG was found.  It may be a local
 	 * VG that lvmlockd doesn't keep track of, or it may be
 	 * a lockd VG that lvmlockd doesn't yet know about (it hasn't
