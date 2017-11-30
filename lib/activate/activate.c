@@ -2089,7 +2089,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	const struct logical_volume *pvmove_lv = NULL;
 	const struct logical_volume *lv_to_free = NULL;
 	const struct logical_volume *lv_pre_to_free = NULL;
-	struct logical_volume *lv_pre_tmp;
+	struct logical_volume *lv_pre_tmp, *lv_tmp;
 	struct seg_list *sl;
 	struct lv_segment *snap_seg;
 	struct lvinfo info;
@@ -2098,6 +2098,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	struct dm_pool *mem = NULL;
 	struct dm_list suspend_lvs;
 	struct lv_list *lvl;
+	int found;
 
 	if (!activation())
 		return 1;
@@ -2247,19 +2248,28 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		/* Prepare list of all LVs for suspend ahead */
 		dm_list_init(&suspend_lvs);
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
+			lv_tmp = sl->seg->lv;
+			if (lv_is_cow(lv_tmp))
+				/* Never suspend COW, always has to be origin */
+				lv_tmp = origin_from_cow(lv_tmp);
+			found = 0;
+			dm_list_iterate_items(lvl, &suspend_lvs)
+				if (strcmp(lvl->lv->name, lv_tmp->name) == 0) {
+					found = 1;
+					break;
+				}
+			if (found)
+				continue; /* LV is already in the list */
 			if (!(lvl = dm_pool_alloc(mem, sizeof(*lvl)))) {
 				log_error("lv_list alloc failed.");
 				goto out;
 			}
 			/* Look for precommitted LV name in commmitted VG */
-			if (!(lvl->lv = find_lv(lv->vg, sl->seg->lv->name))) {
+			if (!(lvl->lv = find_lv(lv->vg, lv_tmp->name))) {
 				log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
-					  display_lvname(sl->seg->lv));
+					  display_lvname(lv_tmp));
 				goto out;
 			}
-			/* Never suspend COW, always has to be origin */
-			if (lv_is_cow(lvl->lv))
-				lvl->lv = origin_from_cow(lvl->lv);
 			dm_list_add(&suspend_lvs, &lvl->list);
 		}
 		dm_list_iterate_items(lvl, &suspend_lvs)
