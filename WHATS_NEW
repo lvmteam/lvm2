@@ -8,7 +8,13 @@ Version 2.02.177 -
   Make a pvmove LV locking holder.
   Do not change critical section counter on resume path without real resume.
   Enhance activation code to automatically suspend pvmove participants.
+  Prevent conversion of thin volumes to snapshot origin when lvmlockd is used.
+  Correct the steps to change lock type in lvmlockd man page.
+  Retry lock acquisition on recognized sanlock errors.
+  Fix lock manager error codes in lvmlockd.
   Remove unnecessary single read from lvmdiskscan.
+  Check raid reshape flags in vg_validate().
+  Add support for pvmove of cache and snapshot origins.
   Avoid using precommitted metadata for suspending pvmove tree.
   Ehnance pvmove locking.
   Deactivate activated LVs on error path when pvmove activation fails.
