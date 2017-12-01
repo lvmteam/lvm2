@@ -22,7 +22,7 @@ aux have_raid 1 12 0 || skip
 # https://bugzilla.redhat.com/1443999 - AGK 2017/04/20
 aux have_multi_core || skip
 
-aux prepare_vg 5
+aux prepare_vg 5 20
 
 #
 # Test single step linear -> striped conversion
@@ -69,7 +69,7 @@ fsck -fn $DM_DEV_DIR/$vg/$lv1
 check lv_first_seg_field $vg/$lv1 segtype "raid5_n"
 check lv_first_seg_field $vg/$lv1 data_stripes 1
 check lv_first_seg_field $vg/$lv1 stripes 5
-check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
+check lv_first_seg_field $vg/$lv1 stripesize "32.00k"
 check lv_first_seg_field $vg/$lv1 regionsize "1.00m"
 check lv_first_seg_field $vg/$lv1 reshape_len_le 10
 # for slv in {0..4}
@@ -84,7 +84,7 @@ lvconvert -y --stripes 1 $vg/$lv1
 check lv_first_seg_field $vg/$lv1 segtype "raid5_n"
 check lv_first_seg_field $vg/$lv1 data_stripes 1
 check lv_first_seg_field $vg/$lv1 stripes 2
-check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
+check lv_first_seg_field $vg/$lv1 stripesize "32.00k"
 check lv_first_seg_field $vg/$lv1 regionsize "1.00m"
 check lv_first_seg_field $vg/$lv1 reshape_len_le 4
 
@@ -98,7 +98,7 @@ check lv_first_seg_field $vg/$lv1 stripesize "0"
 check lv_first_seg_field $vg/$lv1 regionsize "1.00m"
 check lv_first_seg_field $vg/$lv1 reshape_len_le ""
 
-# Convert raid5_n -> linear
+# Convert raid1 -> linear
 lvconvert -y --type linear $vg/$lv1
 fsck -fn $DM_DEV_DIR/$vg/$lv1
 check lv_first_seg_field $vg/$lv1 segtype "linear"
