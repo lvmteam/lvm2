@@ -25,10 +25,12 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 aux prepare_vg 8 80
 get_devs
 
+offset=$(get first_extent_sector $dev1)
+
 function delay
 {
 	for d in "${DEVICES[@]}"; do
-		aux delay_dev "$d" 0 $1 "$(get first_extent_sector "$d")"
+		aux delay_dev "$d" 0 $1 "$offset"
 	done
 }
 
