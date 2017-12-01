@@ -26,7 +26,7 @@ lvcreate --type raid10 -m 1 -i 2 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
 lvchange -an $vg/$lv1
 aux disable_dev "$dev1" "$dev3"
-lvchange -ay $vg/$lv1 --partial
+lvchange -ay --partial $vg/$lv1
 lvchange -an $vg/$lv1
 
 aux enable_dev "$dev1"
