@@ -20,7 +20,7 @@ LVM_SKIP_LARGE_TESTS=1
 # Test reshaping under io load
 
 which mkfs.ext4 || skip
-aux have_raid 1 12 0 || skip
+aux have_raid 1 13 1 || skip
 
 mpoint=/tmp/mpoint.$$
 
