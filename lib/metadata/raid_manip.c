@@ -1989,11 +1989,15 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 				       const unsigned new_stripes, const unsigned new_stripe_size,
 				       struct dm_list *allocate_pvs, struct dm_list *removal_lvs)
 {
-	uint32_t available_slvs, current_le_count, reduced_le_count, removed_slvs, s;
+	int stripe_size_changed;
+	uint32_t available_slvs, current_le_count, reduced_le_count, removed_slvs, s, stripe_size;
 	uint64_t extend_le_count;
 	unsigned devs_health, devs_in_sync;
 	struct lv_segment *seg = first_seg(lv);
 	struct lvinfo info = { 0 };
+
+	stripe_size = seg->stripe_size;
+	stripe_size_changed = new_stripe_size && (stripe_size != new_stripe_size);
 
 	if (seg_is_any_raid6(seg) && new_stripes < 3) {
 		log_error("Minimum 3 stripes required for %s LV %s.",
@@ -2119,7 +2123,15 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		return 0;
 	}
 
-	seg->stripe_size = new_stripe_size;
+	/* May allow stripe size changes > 2 legs */
+	if (new_image_count > 2)
+		seg->stripe_size = new_stripe_size;
+	else {
+		seg->stripe_size = stripe_size;
+		if (stripe_size_changed)
+			log_warn("WARNING: ignoring --stripesize on conversion of %s to 1 stripe.",
+				 display_lvname(lv));
+	}
 
 	return 1;
 }
