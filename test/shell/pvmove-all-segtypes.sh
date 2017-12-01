@@ -29,12 +29,22 @@ aux prepare_vg 5 20
 # Testing pvmove of linear LV
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
 lvcreate -aey -l 2 -n $lv1 $vg "$dev1"
-check lv_tree_on $vg ${lv1}_foo "$dev1"
-check lv_tree_on $vg $lv1 "$dev1"
+lvextend -l+2 $vg/${lv1}_foo "$dev1"
+lvextend -l+2 $vg/${lv1} "$dev1"
+lvextend -l+2 $vg/${lv1}_foo "$dev2"
+lvextend -l+2 $vg/${lv1} "$dev3"
+check lv_tree_on $vg ${lv1}_foo "$dev1" "$dev2"
+check lv_tree_on $vg $lv1 "$dev1" "$dev3"
+check lv_field $vg/${lv1}_foo seg_count 3
+check lv_field $vg/$lv1 seg_count 3
 aux mkdev_md5sum $vg $lv1
-pvmove "$dev1" "$dev5"
-check lv_tree_on $vg ${lv1}_foo "$dev5"
-check lv_tree_on $vg $lv1 "$dev5"
+dmsetup table
+pvmove --atomic "$dev1" "$dev5"
+check lv_tree_on $vg ${lv1}_foo "$dev2" "$dev5"
+check lv_tree_on $vg $lv1 "$dev3" "$dev5"
+# Also check 2 segments from $dev1 were merged on $dev5
+check lv_field $vg/${lv1}_foo seg_count 2
+check lv_field $vg/$lv1 seg_count 2
 check dev_md5sum $vg $lv1
 pvmove -n $lv1 "$dev5" "$dev4"
 check lv_tree_on $vg $lv1 "$dev4"
