@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Command will lock memory only when suspending volumes.
   Merge segments when pvmove is finished.
   Remove label_verify that has never been used.
   Ensure very large numbers used as arguments are not casted to lower values. 
