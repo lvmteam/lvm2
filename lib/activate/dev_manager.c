@@ -26,7 +26,6 @@
 #include "activate.h"
 #include "lvm-exec.h"
 #include "str_list.h"
-#include "dm-ioctl.h" /* for DM_UUID_LEN */
 
 #include <limits.h>
 #include <dirent.h>
