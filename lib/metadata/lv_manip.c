@@ -4233,7 +4233,8 @@ int lv_extend(struct logical_volume *lv,
 				log_error("Failed to get sync percent for %s.",
 					  display_lvname(lv));
 				goto out;
-			} else if (sync_percent == DM_PERCENT_100) {
+			} else if (lv_is_not_synced(lv) ||
+				   sync_percent == DM_PERCENT_100) {
 				log_verbose("Skipping initial resync for "
 					    "extended portion of %s",
 					    display_lvname(lv));
