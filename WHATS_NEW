@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Categorise I/O with reason annotations in debug messages.
   Command will lock memory only when suspending volumes.
   Merge segments when pvmove is finished.
   Remove label_verify that has never been used.

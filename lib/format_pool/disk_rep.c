@@ -40,7 +40,7 @@ static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
 	char buf[512] __attribute__((aligned(8)));
 
 	/* FIXME: Need to check the cache here first */
-	if (!dev_read(dev, UINT64_C(0), 512, buf)) {
+	if (!dev_read(dev, UINT64_C(0), 512, DEV_IO_POOL, buf)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
 		return 0;

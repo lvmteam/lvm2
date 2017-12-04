@@ -79,6 +79,20 @@ struct device {
 	char _padding[7];
 };
 
+/*
+ * All I/O is annotated with the reason it is performed.
+ */
+typedef enum dev_io_reason {
+	DEV_IO_SIGNATURES = 0,	/* Scanning device signatures */
+	DEV_IO_LABEL,		/* LVM PV disk label */
+	DEV_IO_MDA_HEADER,	/* Text format metadata area header */
+	DEV_IO_MDA_CONTENT,	/* Text format metadata area content */
+	DEV_IO_FMT1,		/* Original LVM1 metadata format */
+	DEV_IO_POOL,		/* Pool metadata format */
+	DEV_IO_LV,		/* Content written to an LV */
+	DEV_IO_LOG		/* Logging messages */
+} dev_io_reason_t;
+
 struct device_list {
 	struct dm_list list;
 	struct device *dev;
@@ -129,12 +143,12 @@ int dev_test_excl(struct device *dev);
 int dev_fd(struct device *dev);
 const char *dev_name(const struct device *dev);
 
-int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer);
+int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer);
 int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
-		      uint64_t offset2, size_t len2, char *buf);
-int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer);
-int dev_append(struct device *dev, size_t len, char *buffer);
-int dev_set(struct device *dev, uint64_t offset, size_t len, int value);
+		      uint64_t offset2, size_t len2, dev_io_reason_t reason, char *buf);
+int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer);
+int dev_append(struct device *dev, size_t len, dev_io_reason_t reason, char *buffer);
+int dev_set(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, int value);
 void dev_flush(struct device *dev);
 
 struct device *dev_create_file(const char *filename, struct device *dev,

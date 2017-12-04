@@ -533,7 +533,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			return 0;
 		}
 		if (!dev_read_circular(dev, (uint64_t) offset, size,
-				       (uint64_t) offset2, size2, buf)) {
+				       (uint64_t) offset2, size2, DEV_IO_MDA_CONTENT, buf)) {
 			goto out;
 		}
 		fb = buf;

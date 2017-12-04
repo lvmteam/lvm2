@@ -363,7 +363,7 @@ static int _has_partition_table(struct device *dev)
 		uint16_t magic;
 	} __attribute__((packed)) buf; /* sizeof() == SECTOR_SIZE */
 
-	if (!dev_read(dev, UINT64_C(0), sizeof(buf), &buf))
+	if (!dev_read(dev, UINT64_C(0), sizeof(buf), DEV_IO_SIGNATURES, &buf))
 		return_0;
 
 	/* FIXME Check for other types of partition table too */
@@ -675,7 +675,7 @@ static int _blkid_wipe(blkid_probe probe, struct device *dev, const char *name,
 	} else
 		log_verbose(_msg_wiping, type, name);
 
-	if (!dev_set(dev, offset_value, len, 0)) {
+	if (!dev_set(dev, offset_value, len, DEV_IO_SIGNATURES, 0)) {
 		log_error("Failed to wipe %s signature on %s.", type, name);
 		return 0;
 	}
@@ -772,7 +772,7 @@ static int _wipe_signature(struct device *dev, const char *type, const char *nam
 	}
 
 	log_print_unless_silent("Wiping %s on %s.", type, name);
-	if (!dev_set(dev, offset_found, wipe_len, 0)) {
+	if (!dev_set(dev, offset_found, wipe_len, DEV_IO_SIGNATURES, 0)) {
 		log_error("Failed to wipe %s on %s.", type, name);
 		return 0;
 	}

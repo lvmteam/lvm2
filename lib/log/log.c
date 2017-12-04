@@ -694,7 +694,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		buf[bufused] = '\n';
 		buf[sizeof(buf) - 1] = '\n';
 		/* FIXME real size bufused */
-		dev_append(&_log_dev, sizeof(buf), buf);
+		dev_append(&_log_dev, sizeof(buf), DEV_IO_LOG, buf);
 		_already_logging = 0;
 	}
 }

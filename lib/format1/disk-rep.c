@@ -205,7 +205,7 @@ int munge_pvd(struct device *dev, struct pv_disk *pvd)
 
 static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 {
-	if (!dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd)) {
+	if (!dev_read(dev, UINT64_C(0), sizeof(*pvd), DEV_IO_FMT1, pvd)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
 		return 0;
@@ -216,7 +216,7 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 
 static int _read_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
-	if (!dev_read(dev, pos, sizeof(*disk), disk))
+	if (!dev_read(dev, pos, sizeof(*disk), DEV_IO_FMT1, disk))
 		return_0;
 
 	_xlate_lvd(disk);
@@ -228,7 +228,7 @@ int read_vgd(struct device *dev, struct vg_disk *vgd, struct pv_disk *pvd)
 {
 	uint64_t pos = pvd->vg_on_disk.base;
 
-	if (!dev_read(dev, pos, sizeof(*vgd), vgd))
+	if (!dev_read(dev, pos, sizeof(*vgd), DEV_IO_FMT1, vgd))
 		return_0;
 
 	_xlate_vgd(vgd);
@@ -252,7 +252,7 @@ static int _read_uuids(struct disk_list *data)
 	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
 	while (pos < end && num_read < data->vgd.pv_cur) {
-		if (!dev_read(data->dev, pos, sizeof(buffer), buffer))
+		if (!dev_read(data->dev, pos, sizeof(buffer), DEV_IO_FMT1, buffer))
 			return_0;
 
 		if (!(ul = dm_pool_alloc(data->mem, sizeof(*ul))))
@@ -311,7 +311,7 @@ static int _read_extents(struct disk_list *data)
 	if (!extents)
 		return_0;
 
-	if (!dev_read(data->dev, pos, len, extents))
+	if (!dev_read(data->dev, pos, len, DEV_IO_FMT1, extents))
 		return_0;
 
 	_xlate_extents(extents, data->pvd.pe_total);
@@ -539,7 +539,7 @@ static int _write_vgd(struct disk_list *data)
 			   data->pvd.vg_name, dev_name(data->dev), pos, sizeof(*vgd));
 
 	_xlate_vgd(vgd);
-	if (!dev_write(data->dev, pos, sizeof(*vgd), vgd))
+	if (!dev_write(data->dev, pos, sizeof(*vgd), DEV_IO_FMT1, vgd))
 		return_0;
 
 	_xlate_vgd(vgd);
@@ -564,7 +564,7 @@ static int _write_uuids(struct disk_list *data)
 				   data->pvd.vg_name, dev_name(data->dev),
 				   pos, NAME_LEN);
 
-		if (!dev_write(data->dev, pos, NAME_LEN, ul->uuid))
+		if (!dev_write(data->dev, pos, NAME_LEN, DEV_IO_FMT1, ul->uuid))
 			return_0;
 
 		pos += NAME_LEN;
@@ -580,7 +580,7 @@ static int _write_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 			   pos, sizeof(*disk));
 
 	_xlate_lvd(disk);
-	if (!dev_write(dev, pos, sizeof(*disk), disk))
+	if (!dev_write(dev, pos, sizeof(*disk), DEV_IO_FMT1, disk))
 		return_0;
 
 	_xlate_lvd(disk);
@@ -595,7 +595,7 @@ static int _write_lvs(struct disk_list *data)
 
 	pos = data->pvd.lv_on_disk.base;
 
-	if (!dev_set(data->dev, pos, data->pvd.lv_on_disk.size, 0)) {
+	if (!dev_set(data->dev, pos, data->pvd.lv_on_disk.size, DEV_IO_FMT1, 0)) {
 		log_error("Couldn't zero lv area on device '%s'",
 			  dev_name(data->dev));
 		return 0;
@@ -626,7 +626,7 @@ static int _write_extents(struct disk_list *data)
 			   pos, len);
 
 	_xlate_extents(extents, data->pvd.pe_total);
-	if (!dev_write(data->dev, pos, len, extents))
+	if (!dev_write(data->dev, pos, len, DEV_IO_FMT1, extents))
 		return_0;
 
 	_xlate_extents(extents, data->pvd.pe_total);
@@ -661,7 +661,7 @@ static int _write_pvd(struct disk_list *data)
 			   pos, size);
 
 	_xlate_pvd((struct pv_disk *) buf);
-	if (!dev_write(data->dev, pos, size, buf)) {
+	if (!dev_write(data->dev, pos, size, DEV_IO_FMT1, buf)) {
 		dm_free(buf);
 		return_0;
 	}

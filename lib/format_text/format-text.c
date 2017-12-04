@@ -230,8 +230,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		if (!(buf = dm_malloc(size + size2)))
 			goto_out;
 
-		if (!dev_read_circular(area->dev, offset, size,
-				       offset2, size2, buf))
+		if (!dev_read_circular(area->dev, offset, size, offset2, size2, DEV_IO_MDA_CONTENT, buf))
 			goto_out;
 
 		/*
@@ -321,7 +320,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
-	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
+	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, DEV_IO_MDA_HEADER, mdah)) {
 		if (!dev_close(dev_area->dev))
 			stack;
 		return_0;
@@ -396,7 +395,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
-	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, mdah))
+	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, DEV_IO_MDA_HEADER, mdah))
 		return_0;
 
 	return 1;
@@ -450,7 +449,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-		      sizeof(vgnamebuf), vgnamebuf))
+		      sizeof(vgnamebuf), DEV_IO_MDA_CONTENT, vgnamebuf))
 		goto_bad;
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
@@ -678,7 +677,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	/* Write text out, circularly */
 	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		       (size_t) (mdac->rlocn.size - new_wrap),
+		       (size_t) (mdac->rlocn.size - new_wrap), DEV_IO_MDA_CONTENT,
 		       fidtc->raw_metadata_buf))
 		goto_out;
 
@@ -687,11 +686,9 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 				  dev_name(mdac->area.dev), mdac->area.start +
 				  MDA_HEADER_SIZE, new_wrap);
 
-		if (!dev_write(mdac->area.dev,
-			       mdac->area.start + MDA_HEADER_SIZE,
-			       (size_t) new_wrap,
-			       fidtc->raw_metadata_buf +
-			       mdac->rlocn.size - new_wrap))
+		if (!dev_write(mdac->area.dev, mdac->area.start + MDA_HEADER_SIZE,
+			       (size_t) new_wrap, DEV_IO_MDA_CONTENT,
+			       fidtc->raw_metadata_buf + mdac->rlocn.size - new_wrap))
 			goto_out;
 	}
 
@@ -1207,7 +1204,7 @@ int vgname_from_mda(const struct format_type *fmt,
 
 	/* Do quick check for a vgname */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-		      NAME_LEN, buf))
+		      NAME_LEN, DEV_IO_MDA_CONTENT, buf))
 		return_0;
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
@@ -2316,13 +2313,13 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 
 		/* Wipe metadata area with zeroes. */
 		if (!dev_set(pv->dev, mda_start,
-			     (size_t) ((mda_size > wipe_size) ?
-				       wipe_size : mda_size), 0)) {
-				log_error("Failed to wipe new metadata area "
-					  "at the %s of the %s",
-					   mda_index ? "end" : "start",
-					   pv_dev_name(pv));
-				return 0;
+			     (size_t) ((mda_size > wipe_size) ?  wipe_size : mda_size),
+			     DEV_IO_MDA_HEADER, 0)) {
+			log_error("Failed to wipe new metadata area "
+				  "at the %s of the %s",
+				   mda_index ? "end" : "start",
+				   pv_dev_name(pv));
+			return 0;
 		}
 
 		/* Finally, add new metadata area to PV's format instance. */

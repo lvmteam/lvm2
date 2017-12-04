@@ -7192,7 +7192,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 			    display_size(lv->vg->cmd, zero_sectors),
 			    lv->vg->name, lv->name, wp.zero_value);
 
-		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, wp.zero_value))
+		if (!dev_set(dev, UINT64_C(0), (size_t) zero_sectors << SECTOR_SHIFT, DEV_IO_LV, wp.zero_value))
 			stack;
 	}
 

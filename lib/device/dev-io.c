@@ -56,11 +56,27 @@
 static DM_LIST_INIT(_open_devices);
 static unsigned _dev_size_seqno = 1;
 
+static const char *_reasons[] = {
+	"dev signatures",
+	"PV labels",
+	"VG metadata header",
+	"VG metadata content",
+	"LVM1 metadata",
+	"pool metadata",
+	"LV content",
+	"logging",
+};
+
+static const char *_reason_text(dev_io_reason_t reason)
+{
+	return _reasons[(unsigned) reason];
+}
+
 /*-----------------------------------------------------------------
  * The standard io loop that keeps submitting an io until it's
  * all gone.
  *---------------------------------------------------------------*/
-static int _io(struct device_area *where, char *buffer, int should_write)
+static int _io(struct device_area *where, char *buffer, int should_write, dev_io_reason_t reason)
 {
 	int fd = dev_fd(where->dev);
 	ssize_t n = 0;
@@ -72,10 +88,10 @@ static int _io(struct device_area *where, char *buffer, int should_write)
 		return 0;
 	}
 
-	log_debug_io("%s %s:%8" PRIu64 " bytes (sync) at %" PRIu64 "%s",
+	log_debug_io("%s %s:%8" PRIu64 " bytes (sync) at %" PRIu64 "%s (for %s)",
 		     should_write ? "Write" : "Read ", dev_name(where->dev),
 		     where->size, (uint64_t) where->start,
-		     (should_write && test_mode()) ? " (test mode - suppressed)" : "");
+		     (should_write && test_mode()) ? " (test mode - suppressed)" : "", _reason_text(reason));
 
 	/*
 	 * Skip all writes in test mode.
@@ -210,7 +226,7 @@ static void _widen_region(unsigned int block_size, struct device_area *region,
 }
 
 static int _aligned_io(struct device_area *where, char *buffer,
-		       int should_write)
+		       int should_write, dev_io_reason_t reason)
 {
 	char *bounce, *bounce_buf;
 	unsigned int physical_block_size = 0;
@@ -232,10 +248,10 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	mask = block_size - 1;
 	if (!memcmp(where, &widened, sizeof(widened)) &&
 	    !((uintptr_t) buffer & mask))
-		return _io(where, buffer, should_write);
+		return _io(where, buffer, should_write, reason);
 
-	log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s",
-		     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev));
+	log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
+		     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
 
 	/* Allocate a bounce buffer with an extra block */
 	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
@@ -250,7 +266,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 		bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
 
 	/* channel the io through the bounce buffer */
-	if (!_io(&widened, bounce, 0)) {
+	if (!_io(&widened, bounce, 0, reason)) {
 		if (!should_write)
 			goto_out;
 		/* FIXME pre-extend the file */
@@ -262,7 +278,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 		       (size_t) where->size);
 
 		/* ... then we write */
-		if (!(r = _io(&widened, bounce, 1)))
+		if (!(r = _io(&widened, bounce, 1, reason)))
 			stack;
 			
 		goto out;
@@ -699,7 +715,7 @@ static void _dev_inc_error_count(struct device *dev)
 			 dev->max_error_count, dev_name(dev));
 }
 
-int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
+int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer)
 {
 	struct device_area where;
 	int ret;
@@ -714,9 +730,7 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 	where.start = offset;
 	where.size = len;
 
-	// fprintf(stderr, "READ: %s, %lld, %d\n", dev_name(dev), offset, len);
-
-	ret = _aligned_io(&where, buffer, 0);
+	ret = _aligned_io(&where, buffer, 0, reason);
 	if (!ret)
 		_dev_inc_error_count(dev);
 
@@ -729,9 +743,9 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
  * 'buf' should be len+len2.
  */
 int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
-		      uint64_t offset2, size_t len2, char *buf)
+		      uint64_t offset2, size_t len2, dev_io_reason_t reason, char *buf)
 {
-	if (!dev_read(dev, offset, len, buf)) {
+	if (!dev_read(dev, offset, len, reason, buf)) {
 		log_error("Read from %s failed", dev_name(dev));
 		return 0;
 	}
@@ -743,7 +757,7 @@ int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 	if (!len2)
 		return 1;
 
-	if (!dev_read(dev, offset2, len2, buf + len)) {
+	if (!dev_read(dev, offset2, len2, reason, buf + len)) {
 		log_error("Circular read from %s failed",
 			  dev_name(dev));
 		return 0;
@@ -757,14 +771,14 @@ int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
  */
 
 /* FIXME pre-extend the file */
-int dev_append(struct device *dev, size_t len, char *buffer)
+int dev_append(struct device *dev, size_t len, dev_io_reason_t reason, char *buffer)
 {
 	int r;
 
 	if (!dev->open_count)
 		return_0;
 
-	r = dev_write(dev, dev->end, len, buffer);
+	r = dev_write(dev, dev->end, len, reason, buffer);
 	dev->end += (uint64_t) len;
 
 #ifndef O_DIRECT_SUPPORT
@@ -773,7 +787,7 @@ int dev_append(struct device *dev, size_t len, char *buffer)
 	return r;
 }
 
-int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
+int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer)
 {
 	struct device_area where;
 	int ret;
@@ -790,14 +804,14 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 
 	dev->flags |= DEV_ACCESSED_W;
 
-	ret = _aligned_io(&where, buffer, 1);
+	ret = _aligned_io(&where, buffer, 1, reason);
 	if (!ret)
 		_dev_inc_error_count(dev);
 
 	return ret;
 }
 
-int dev_set(struct device *dev, uint64_t offset, size_t len, int value)
+int dev_set(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, int value)
 {
 	size_t s;
 	char buffer[4096] __attribute__((aligned(8)));
@@ -816,7 +830,7 @@ int dev_set(struct device *dev, uint64_t offset, size_t len, int value)
 	memset(buffer, value, sizeof(buffer));
 	while (1) {
 		s = len > sizeof(buffer) ? sizeof(buffer) : len;
-		if (!dev_write(dev, offset, s, buffer))
+		if (!dev_write(dev, offset, s, reason, buffer))
 			break;
 
 		len -= s;

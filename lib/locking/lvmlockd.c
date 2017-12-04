@@ -412,7 +412,7 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 		return 0;
 	}
 
-	if (!dev_set(dev, old_size_bytes, new_size_bytes - old_size_bytes, 0)) {
+	if (!dev_set(dev, old_size_bytes, new_size_bytes - old_size_bytes, DEV_IO_LV, 0)) {
 		log_error("Extend sanlock LV %s cannot zero device.", display_lvname(lv));
 		dev_close_immediate(dev);
 		return 0;

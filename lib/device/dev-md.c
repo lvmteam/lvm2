@@ -37,7 +37,7 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 	uint32_t md_magic;
 
 	/* Version 1 is little endian; version 0.90.0 is machine endian */
-	if (dev_read(dev, sb_offset, sizeof(uint32_t), &md_magic) &&
+	if (dev_read(dev, sb_offset, sizeof(uint32_t), DEV_IO_SIGNATURES, &md_magic) &&
 	    ((md_magic == MD_SB_MAGIC) ||
 	     ((MD_SB_MAGIC != xlate32(MD_SB_MAGIC)) && (md_magic == xlate32(MD_SB_MAGIC)))))
 		return 1;

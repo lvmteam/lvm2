@@ -304,7 +304,7 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 	if (!dev_open_quiet(dev))
 		return 0;
 
-	if (!dev_write(dev, UINT64_C(0), sizeof(log_header), &log_header)) {
+	if (!dev_write(dev, UINT64_C(0), sizeof(log_header), DEV_IO_LV, &log_header)) {
 		log_error("Failed to write log header to %s.", name);
 		dev_close_immediate(dev);
 		return 0;

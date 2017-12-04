@@ -122,7 +122,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
 
 	if (!dev_read(dev, scan_sector << SECTOR_SHIFT,
-		      LABEL_SCAN_SIZE, readbuf)) {
+		      LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -217,7 +217,7 @@ int label_remove(struct device *dev)
 	 */
 	dev_flush(dev);
 
-	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf)) {
+	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -246,7 +246,7 @@ int label_remove(struct device *dev)
 		if (wipe) {
 			log_very_verbose("%s: Wiping label at sector %" PRIu64,
 					 dev_name(dev), sector);
-			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
+			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL,
 				       buf)) {
 				/* Also remove the PV record from cache. */
 				info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
@@ -342,7 +342,7 @@ int label_write(struct device *dev, struct label *label)
 	log_very_verbose("%s: Writing label to sector %" PRIu64 " with stored offset %"
 			 PRIu32 ".", dev_name(dev), label->sector,
 			 xlate32(lh->offset_xl));
-	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
+	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL, buf)) {
 		log_debug_devs("Failed to write label to %s", dev_name(dev));
 		r = 0;
 	}

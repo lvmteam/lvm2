@@ -493,7 +493,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 				return 0;
 			}
 
-			if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
+			if (!dev_set(dev, UINT64_C(0), (size_t) 2048, DEV_IO_LABEL, 0)) {
 				log_error("%s not wiped: aborting", pv_name);
 				if (!dev_close(dev))
 					stack;
