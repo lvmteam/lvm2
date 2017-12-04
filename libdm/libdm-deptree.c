@@ -803,13 +803,11 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		 struct dm_info *info, struct dm_deps **deps)
 {
 	memset(info, 0, sizeof(*info));
+	*name = "";
+	*uuid = "";
+	*deps = NULL;
 
 	if (!dm_is_dm_major(major)) {
-		if (name)
-			*name = "";
-		if (uuid)
-			*uuid = "";
-		*deps = NULL;
 		info->major = major;
 		info->minor = minor;
 		return 1;
@@ -820,14 +818,8 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		return 0;
 	}
 
-	if (!dm_task_set_major(*dmt, major)) {
-		log_error("_deps: failed to set major for (%" PRIu32 ":%" PRIu32 ")",
-			  major, minor);
-		goto failed;
-	}
-
-	if (!dm_task_set_minor(*dmt, minor)) {
-		log_error("_deps: failed to set minor for (%" PRIu32 ":%" PRIu32 ")",
+	if (!dm_task_set_major(*dmt, major) || !dm_task_set_minor(*dmt, minor)) {
+		log_error("_deps: failed to set major:minor for (" FMTu32 ":" FMTu32 ").",
 			  major, minor);
 		goto failed;
 	}
@@ -850,11 +842,7 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		goto failed;
 	}
 
-	if (!info->exists) {
-		*name = "";
-		*uuid = "";
-		*deps = NULL;
-	} else {
+	if (info->exists) {
 		if (info->major != major) {
 			log_error("Inconsistent dtree major number: %u != %u",
 				  major, info->major);
@@ -874,6 +862,8 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 
 failed:
 	dm_task_destroy(*dmt);
+	*dmt = NULL;
+
 	return 0;
 }
 
