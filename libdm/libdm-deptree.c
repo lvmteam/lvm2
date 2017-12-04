@@ -2929,7 +2929,8 @@ int dm_tree_children_use_uuid(struct dm_tree_node *dnode,
 
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
 		if (!(uuid = dm_tree_node_get_uuid(child))) {
-			log_error("Failed to get uuid for dtree node.");
+			log_warn("WARNING: Failed to get uuid for dtree node %s.",
+				 _node_name(child));
 			return 1;
 		}
 
