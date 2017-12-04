@@ -917,33 +917,26 @@ out:
 
 static int _check_device_not_in_use(const char *name, struct dm_info *info)
 {
+	const char *reason;
+
 	if (!info->exists)
 		return 1;
 
 	/* If sysfs is not used, use open_count information only. */
 	if (!*dm_sysfs_dir()) {
-		if (info->open_count) {
-			log_error("Device %s (%" PRIu32 ":%" PRIu32 ") in use",
-				  name, info->major, info->minor);
-			return 0;
-		}
-
+		if (!info->open_count)
+			return 1;
+		reason = "in use";
+	} else if (dm_device_has_holders(info->major, info->minor))
+		reason = "is used by another device";
+	else if (dm_device_has_mounted_fs(info->major, info->minor))
+		reason = "constains a filesystem in use";
+	else
 		return 1;
-	}
 
-	if (dm_device_has_holders(info->major, info->minor)) {
-		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") is used "
-			  "by another device.", name, info->major, info->minor);
-		return 0;
-	}
-
-	if (dm_device_has_mounted_fs(info->major, info->minor)) {
-		log_error("Device %s (%" PRIu32 ":%" PRIu32 ") contains "
-			  "a filesystem in use.", name, info->major, info->minor);
-		return 0;
-	}
-
-	return 1;
+	log_error("Device %s (" FMTu32 ":" FMTu32 ") %s.",
+		  name, info->major, info->minor, reason);
+	return 0;
 }
 
 /* Check if all parent nodes of given node have open_count == 0 */
