@@ -513,14 +513,13 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 	dev = MKDEV((dev_t)info->major, (dev_t)info->minor);
 
 	if (!dm_hash_insert_binary(dtree->devs, (const char *) &dev,
-				sizeof(dev), node)) {
+				   sizeof(dev), node)) {
 		log_error("dtree node hash insertion failed");
 		dm_pool_free(dtree->mem, node);
 		return NULL;
 	}
 
-	if (uuid && *uuid &&
-	    !dm_hash_insert(dtree->uuids, uuid, node)) {
+	if (*uuid && !dm_hash_insert(dtree->uuids, uuid, node)) {
 		log_error("dtree uuid hash insertion failed");
 		dm_hash_remove_binary(dtree->devs, (const char *) &dev,
 				      sizeof(dev));
