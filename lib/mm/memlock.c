@@ -602,7 +602,9 @@ static void _unlock_mem_if_possible(struct cmd_context *cmd)
  */
 void critical_section_inc(struct cmd_context *cmd, const char *reason)
 {
-	if (!_critical_section && (strcmp(reason, "suspending") == 0)) {
+	if (!_critical_section &&
+	    ((strcmp(reason, "suspending") == 0) ||
+	     (strcmp(reason, "locking for suspend") == 0))) {
 		/*
 		 * Profiles are loaded on-demand so make sure that before
 		 * entering the critical section all needed profiles are
