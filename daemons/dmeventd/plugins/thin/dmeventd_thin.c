@@ -62,8 +62,6 @@ struct dso_state {
 
 DM_EVENT_LOG_FN("thin")
 
-#define UUID_PREFIX "LVM-"
-
 static int _run_command(struct dso_state *state)
 {
 	char val[3][36];
