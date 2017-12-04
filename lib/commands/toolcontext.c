@@ -566,7 +566,7 @@ static int _process_config(struct cmd_context *cmd)
 #ifdef DEVMAPPER_SUPPORT
 	dm_set_dev_dir(cmd->dev_dir);
 
-	if (!dm_set_uuid_prefix("LVM-"))
+	if (!dm_set_uuid_prefix(UUID_PREFIX))
 		return_0;
 #endif
 
