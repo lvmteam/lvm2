@@ -1011,8 +1011,10 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 			return_0;	/* FIXME Is this normal? */
 
 		/* Refresh open_count */
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||
-		    !info.exists)
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL))
+			return_0;
+
+		if (!info.exists)
 			continue;
 
 		if (info.open_count) {
@@ -1137,7 +1139,7 @@ static int _node_clear_table(struct dm_tree_node *dnode, uint16_t udev_flags)
 
 		if (!_info_by_dev(MAJOR(deps->device[i]), MINOR(deps->device[i]), 1,
 				  &deps_info, dnode->dtree->mem, &name, &uuid))
-			continue;
+			goto_out;
 
 		/* Proceed if device is an 'orphan' - unreferenced and without a live table. */
 		if (!deps_info.exists || deps_info.live_table || deps_info.open_count)
@@ -1653,8 +1655,10 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			continue;
 
 		/* Refresh open_count */
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL) ||
-		    !info.exists)
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info, NULL, NULL, NULL))
+			return_0;
+
+		if (!info.exists)
 			continue;
 
 		if (info.open_count) {
@@ -1773,8 +1777,10 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 		if (!_children_suspended(child, 1, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info, NULL, NULL, NULL) ||
-		    !info.exists || info.suspended)
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info, NULL, NULL, NULL))
+			return_0;
+
+		if (!info.exists || info.suspended)
 			continue;
 
 		/* If child has some real messages send them */
