@@ -1287,7 +1287,7 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 	struct dm_task *dmt;
 	int r = 0;
 
-	log_verbose("Resuming %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
+	log_verbose("Resuming %s (" FMTu32 ":" FMTu32 ").", name, major, minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RESUME))) {
 		log_debug_activation("Suspend dm_task creation failed for %s.", name);
@@ -1607,8 +1607,8 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 
 			/* When retry is not allowed, error */
 			if (!child->dtree->retry_remove) {
-				log_error("Unable to deactivate open %s (%" PRIu32
-					  ":%" PRIu32 ")", name, info.major, info.minor);
+				log_error("Unable to deactivate open %s (" FMTu32 ":"
+					  FMTu32 ").", name, info.major, info.minor);
 				r = 0;
 				continue;
 			}
@@ -1628,9 +1628,8 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 					       uuid_prefix, uuid_prefix_len))) {
 			/* Only report error from (likely non-internal) dependency at top level */
 			if (!level) {
-				log_error("Unable to deactivate open %s (%" PRIu32
-					  ":%" PRIu32 ")", name, info.major,
-				  	info.minor);
+				log_error("Unable to deactivate open %s (" FMTu32 ":"
+					  FMTu32 ").", name, info.major, info.minor);
 				r = 0;
 			}
 			continue;
@@ -1644,9 +1643,8 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 		if (!_deactivate_node(name, info.major, info.minor,
 				      &child->dtree->cookie, child->udev_flags,
 				      (level == 0) ? child->dtree->retry_remove : 0)) {
-			log_error("Unable to deactivate %s (%" PRIu32
-				  ":%" PRIu32 ")", name, info.major,
-				  info.minor);
+			log_error("Unable to deactivate %s (" FMTu32 ":"
+				  FMTu32 ").", name, info.major, info.minor);
 			r = 0;
 			continue;
 		}
@@ -1738,9 +1736,8 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 		if (!_suspend_node(name, info.major, info.minor,
 				   child->dtree->skip_lockfs,
 				   child->dtree->no_flush, &newinfo)) {
-			log_error("Unable to suspend %s (%" PRIu32
-				  ":%" PRIu32 ")", name, info.major,
-				  info.minor);
+			log_error("Unable to suspend %s (" FMTu32 ":"
+				  FMTu32 ")", name, info.major, info.minor);
 			r = 0;
 			continue;
 		}
