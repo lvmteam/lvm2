@@ -2705,7 +2705,7 @@ static int _load_node(struct dm_tree_node *dnode)
 	}
 
 	if (!dm_task_no_open_count(dmt))
-		log_error("Failed to disable open_count");
+		log_warn("WARNING: Failed to disable open_count.");
 
 	dm_list_iterate_items(seg, &dnode->props.segs)
 		if (!_emit_segment(dmt, dnode->info.major, dnode->info.minor,
@@ -2713,7 +2713,7 @@ static int _load_node(struct dm_tree_node *dnode)
 			goto_out;
 
 	if (!dm_task_suppress_identical_reload(dmt))
-		log_error("Failed to suppress reload of identical tables.");
+		log_warn("WARNING: Failed to suppress reload of identical tables.");
 
 	if ((r = dm_task_run(dmt))) {
 		r = dm_task_get_info(dmt, &dnode->info);
