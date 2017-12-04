@@ -2033,7 +2033,7 @@ int dm_mknodes(const char *name)
 	int r = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
-		return 0;
+		return_0;
 
 	if (name && !dm_task_set_name(dmt, name))
 		goto out;
@@ -2054,7 +2054,7 @@ int dm_driver_version(char *version, size_t size)
 	int r = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_VERSION)))
-		return 0;
+		return_0;
 
 	if (!dm_task_run(dmt))
 		log_error("Failed to get driver version");

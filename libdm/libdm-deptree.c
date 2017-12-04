@@ -813,10 +813,8 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		return 1;
 	}
 
-	if (!(*dmt = dm_task_create(DM_DEVICE_DEPS))) {
-		log_error("deps dm_task creation failed");
-		return 0;
-	}
+	if (!(*dmt = dm_task_create(DM_DEVICE_DEPS)))
+		return_0;
 
 	if (!dm_task_set_major(*dmt, major) || !dm_task_set_minor(*dmt, minor)) {
 		log_error("_deps: failed to set major:minor for (" FMTu32 ":" FMTu32 ").",
@@ -877,10 +875,8 @@ static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
 	struct dm_task *dmt;
 	int r = 0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
-		log_error("_info_by_dev: dm_task creation failed");
-		return 0;
-	}
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+		return_0;
 
 	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
 		log_error("_info_by_dev: Failed to set device number.");
