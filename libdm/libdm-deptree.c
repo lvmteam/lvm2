@@ -1025,18 +1025,13 @@ out:
 static int _node_clear_table(struct dm_tree_node *dnode, uint16_t udev_flags)
 {
 	struct dm_task *dmt = NULL, *deps_dmt = NULL;
-	struct dm_info *info, deps_info;
+	struct dm_info *info = &dnode->info, deps_info;
 	struct dm_deps *deps = NULL;
 	const char *name, *uuid, *depname, *depuuid;
 	const char *default_uuid_prefix;
 	size_t default_uuid_prefix_len;
 	uint32_t i;
 	int r = 0;
-
-	if (!(info = &dnode->info)) {
-		log_error("_node_clear_table failed: missing info");
-		return 0;
-	}
 
 	if (!(name = dm_tree_node_get_name(dnode))) {
 		log_error("_node_clear_table failed: missing name");
