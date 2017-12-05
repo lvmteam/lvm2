@@ -1920,11 +1920,11 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 			ret = 1;
 			goto out;
 		} else if (!strcmp(mode, "sh")) {
-			log_warn("VG %s lock skipped: held by other host.", vg_name, result);
+			log_warn("VG %s lock skipped: held by other host.", vg_name);
 			ret = 1;
 			goto out;
 		} else {
-			log_error("VG %s lock failed: held by other host.", vg_name, result);
+			log_error("VG %s lock failed: held by other host.", vg_name);
 			ret = 0;
 			goto out;
 		}
