@@ -2161,6 +2161,10 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 		/* FIXME: there should be a function to get pool lv from data lv. */
 		pool_lv = lv_parent(lv);
 
+	} else if (lv_is_thin_pool_metadata(lv)) {
+		struct lv_segment *pool_seg = get_only_segment_using_this_lv(lv);
+		pool_lv = pool_seg->lv;
+
 	} else {
 		/* This should not happen AFAIK. */
 		log_error("Lock on incorrect thin lv type %s/%s",
