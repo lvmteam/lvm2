@@ -231,6 +231,7 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	char *bounce, *bounce_buf;
 	unsigned int physical_block_size = 0;
 	unsigned int block_size = 0;
+	unsigned buffer_was_widened = 0;
 	uintptr_t mask;
 	struct device_area widened;
 	int r = 0;
@@ -241,17 +242,18 @@ static int _aligned_io(struct device_area *where, char *buffer,
 
 	if (!block_size)
 		block_size = lvm_getpagesize();
+	mask = block_size - 1;
 
 	_widen_region(block_size, where, &widened);
 
-	/* Do we need to use a bounce buffer? */
-	mask = block_size - 1;
-	if (!memcmp(where, &widened, sizeof(widened)) &&
-	    !((uintptr_t) buffer & mask))
+	/* Did we widen the buffer?  When writing, this means means read-modify-write. */
+	if (where->size != widened.size || where->start != widened.start) {
+		buffer_was_widened = 1;
+		log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
+			     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
+	} else if (!((uintptr_t) buffer & mask))
+		/* Perform the I/O directly. */
 		return _io(where, buffer, should_write, reason);
-
-	log_debug_io("Widening request for %" PRIu64 " bytes at %" PRIu64 " to %" PRIu64 " bytes at %" PRIu64 " on %s (for %s)",
-		     where->size, (uint64_t) where->start, widened.size, (uint64_t) widened.start, dev_name(where->dev), _reason_text(reason));
 
 	/* Allocate a bounce buffer with an extra block */
 	if (!(bounce_buf = bounce = dm_malloc((size_t) widened.size + block_size))) {
@@ -265,10 +267,12 @@ static int _aligned_io(struct device_area *where, char *buffer,
 	if (((uintptr_t) bounce) & mask)
 		bounce = (char *) ((((uintptr_t) bounce) + mask) & ~mask);
 
-	/* channel the io through the bounce buffer */
-	if (!_io(&widened, bounce, 0, reason)) {
+	/* Do we need to read into the bounce buffer? */
+	if ((!should_write || buffer_was_widened) &&
+	    !_io(&widened, bounce, 0, reason)) {
 		if (!should_write)
 			goto_out;
+		/* FIXME Handle errors properly! */
 		/* FIXME pre-extend the file */
 		memset(bounce, '\n', widened.size);
 	}
