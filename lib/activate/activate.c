@@ -2506,6 +2506,16 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s, const struct logi
 
 	critical_section_inc(cmd, "deactivating");
 	r = _lv_deactivate(lv);
+
+	/*
+	 * Remove any transiently activated error
+	 * devices which arean't used any more.
+	 */
+	if (r && lv_is_raid(lv) && !lv_deactivate_any_missing_subdevs(lv)) {
+		log_error("Failed to remove temporary SubLVs from %s",
+			  display_lvname(lv));
+		r = 0;
+	}
 	critical_section_dec(cmd, "deactivated");
 
 	if (!lv_info(cmd, lv, 0, &info, 0, 0) || info.exists) {
@@ -2735,10 +2745,8 @@ static int _lv_remove_any_missing_subdevs(struct logical_volume *lv)
 		struct lv_segment *seg;
 
 		dm_list_iterate_items(seg, &lv->segments) {
-			if (seg->area_count != 1)
-				return_0;
 			if (dm_snprintf(name, sizeof(name), "%s-%s-missing_%u_0", seg->lv->vg->name, seg->lv->name, seg_no) < 0)
-				return 0;
+				return_0;
 			if (!_remove_dm_dev_by_name(name))
 				return 0;
 
