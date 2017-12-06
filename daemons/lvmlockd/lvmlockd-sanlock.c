@@ -1675,7 +1675,7 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 		if (rv < 0) {
 			log_error("S %s R %s convert_san set_lvb error %d",
 				  ls->name, r->name, rv);
-			rv = -ELMERR;
+			return -ELMERR;
 		}
 	}
 
@@ -1810,7 +1810,7 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 		if (rv < 0) {
 			log_error("S %s R %s unlock_san set_lvb error %d",
 				  ls->name, r->name, rv);
-			rv = -ELMERR;
+			return -ELMERR;
 		}
 	}
 
