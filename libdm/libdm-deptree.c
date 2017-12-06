@@ -1485,6 +1485,16 @@ out:
 	return r;
 }
 
+static struct load_segment *_get_last_load_segment(struct dm_tree_node *node)
+{
+	if (dm_list_empty(&node->props.segs)) {
+		log_error("Node %s is missing a segment.", _node_name(node));
+		return NULL;
+	}
+
+	return dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
+}
+
 /* For preload pass only validate pool's transaction_id */
 static int _node_send_messages(struct dm_tree_node *dnode,
 			       const char *uuid_prefix,
@@ -1497,10 +1507,12 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 	const char *uuid;
 	int have_messages;
 
-	if (!dnode->info.exists || (dm_list_size(&dnode->props.segs) != 1))
+	if (!dnode->info.exists)
 		return 1;
 
-	seg = dm_list_item(dm_list_last(&dnode->props.segs), struct load_segment);
+	if (!(seg = _get_last_load_segment(dnode)))
+		return_0;
+
 	if (seg->type != SEG_THIN_POOL)
 		return 1;
 
@@ -3146,12 +3158,8 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 	struct dm_tree_node *log_node = NULL;
 	struct load_segment *seg;
 
-	if (!node->props.segment_count) {
-		log_error(INTERNAL_ERROR "Attempt to add target area to missing segment.");
-		return 0;
-	}
-
-	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
+	if (!(seg = _get_last_load_segment(node)))
+		return_0;
 
 	if (log_uuid) {
 		if (!(seg->uuid = dm_pool_strdup(node->dtree->mem, log_uuid))) {
@@ -3429,13 +3437,16 @@ static struct load_segment *_get_single_load_segment(struct dm_tree_node *node,
 {
 	struct load_segment *seg;
 
+	if (!(seg = _get_last_load_segment(node)))
+		return_NULL;
+
+	/* Never used past _load_node(), so can test segment_count */
 	if (node->props.segment_count != 1) {
 		log_error("Node %s must have only one segment.",
 			  _dm_segtypes[type].target);
 		return NULL;
 	}
 
-	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 	if (seg->type != type) {
 		log_error("Node %s has segment type %s.",
 			  _dm_segtypes[type].target,
@@ -3741,12 +3752,8 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 			return_0;
 	}
 
-	if (!node->props.segment_count) {
-		log_error(INTERNAL_ERROR "Attempt to add target area to missing segment.");
-		return 0;
-	}
-
-	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
+	if (!(seg = _get_last_load_segment(node)))
+		return_0;
 
 	if (!_add_area(node, seg, dev_node, offset))
 		return_0;
@@ -3758,7 +3765,8 @@ int dm_tree_node_add_null_area(struct dm_tree_node *node, uint64_t offset)
 {
 	struct load_segment *seg;
 
-	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
+	if (!(seg = _get_last_load_segment(node)))
+		return_0;
 
 	switch (seg->type) {
 	case SEG_RAID0:
