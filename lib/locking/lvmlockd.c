@@ -2163,7 +2163,8 @@ static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 
 	} else if (lv_is_thin_pool_metadata(lv)) {
 		struct lv_segment *pool_seg = get_only_segment_using_this_lv(lv);
-		pool_lv = pool_seg->lv;
+		if (pool_seg)
+			pool_lv = pool_seg->lv;
 
 	} else {
 		/* This should not happen AFAIK. */
