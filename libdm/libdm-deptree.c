@@ -1493,7 +1493,7 @@ static int _node_send_messages(struct dm_tree_node *dnode,
 {
 	struct load_segment *seg;
 	struct thin_message *tmsg;
-	struct dm_status_thin_pool stp = { 0 };
+	struct dm_status_thin_pool stp;
 	const char *uuid;
 	int have_messages;
 

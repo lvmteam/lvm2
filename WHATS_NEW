@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  Ensure _node_send_message always uses clean status of thin pool.
   Fix lvmlockd to use pool lock when accessing _tmeta volume.
   Report expected sanlock_convert errors only when retries fail.
   Avoid blocking in sanlock_convert on SH to EX lock conversion.
