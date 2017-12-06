@@ -1394,9 +1394,9 @@ static int _thin_pool_get_status(struct dm_tree_node *dnode,
 
 	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
 
-	if (type && (strcmp(type, "thin-pool") != 0)) {
+	if (!type || (strcmp(type, "thin-pool") != 0)) {
 		log_error("Expected thin-pool target for %s and got %s.",
-			  _node_name(dnode), type);
+			  _node_name(dnode), type ? : "no target");
 		goto out;
 	}
 
