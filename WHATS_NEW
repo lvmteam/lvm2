@@ -1,7 +1,12 @@
 Version 2.02.177 -
 ====================================
+  Fix lvmlockd to use pool lock when accessing _tmeta volume.
+  Report expected sanlock_convert errors only when retries fail.
+  Avoid blocking in sanlock_convert on SH to EX lock conversion.
+  Deactivate missing raid LV legs (_rimage_X-missing_Y_Z) on decativation.
   Skip read-modify-write when entire block is replaced.
   Categorise I/O with reason annotations in debug messages.
+  Allow extending of raid LVs created with --nosync after a failed repair.
   Command will lock memory only when suspending volumes.
   Merge segments when pvmove is finished.
   Remove label_verify that has never been used.
