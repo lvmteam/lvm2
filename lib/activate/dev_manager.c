@@ -1912,11 +1912,42 @@ static int _pool_callback(struct dm_tree_node *node,
 	const struct logical_volume *mlv = first_seg(pool_lv)->metadata_lv;
 	long buf[64 / sizeof(long)]; /* buffer for short disk header (64B) */
 	int args = 0;
-	const char *argv[19] = { /* Max supported 15 args */
-		find_config_tree_str_allow_empty(pool_lv->vg->cmd, data->exec, NULL) /* argv[0] */
-	};
+	char *mpath;
+	const char *argv[19] = { 0 }; /* Max supported 15 args */
 
-	if (!*argv[0])
+	if (!(mpath = lv_dmpath_dup(data->dm->mem, mlv))) {
+		log_error("Failed to build device path for checking pool metadata %s.",
+			  display_lvname(mlv));
+		return 0;
+	}
+
+	if (data->skip_zero) {
+		if ((fd = open(mpath, O_RDONLY)) < 0) {
+			log_sys_error("open", mpath);
+			return 0;
+		}
+		/* let's assume there is no problem to read 64 bytes */
+		if (read(fd, buf, sizeof(buf)) < (int)sizeof(buf)) {
+			log_sys_error("read", mpath);
+			if (close(fd))
+				log_sys_error("close", mpath);
+			return 0;
+		}
+		for (ret = 0; ret < (int) DM_ARRAY_SIZE(buf); ++ret)
+			if (buf[ret])
+				break;
+
+		if (close(fd))
+			log_sys_error("close", mpath);
+
+		if (ret == (int) DM_ARRAY_SIZE(buf)) {
+			log_debug_activation("Metadata checking skipped, detected empty disk header on %s.",
+					     mpath);
+			return 1;
+		}
+	}
+
+	if (!(argv[0] = find_config_tree_str_allow_empty(pool_lv->vg->cmd, data->exec, NULL)))
 		return 1; /* Checking disabled */
 
 	if (!(cn = find_config_tree_array(mlv->vg->cmd, data->opts, NULL))) {
@@ -1939,36 +1970,7 @@ static int _pool_callback(struct dm_tree_node *node,
 		return 0;
 	}
 
-	if (!(argv[++args] = lv_dmpath_dup(data->dm->mem, mlv))) {
-		log_error("Failed to build pool metadata path.");
-		return 0;
-	}
-
-	if (data->skip_zero) {
-		if ((fd = open(argv[args], O_RDONLY)) < 0) {
-			log_sys_error("open", argv[args]);
-			return 0;
-		}
-		/* let's assume there is no problem to read 64 bytes */
-		if (read(fd, buf, sizeof(buf)) < (int)sizeof(buf)) {
-			log_sys_error("read", argv[args]);
-			if (close(fd))
-				log_sys_error("close", argv[args]);
-			return 0;
-		}
-		for (ret = 0; ret < (int) DM_ARRAY_SIZE(buf); ++ret)
-			if (buf[ret])
-				break;
-
-		if (close(fd))
-			log_sys_error("close", argv[args]);
-
-		if (ret == (int) DM_ARRAY_SIZE(buf)) {
-			log_debug_activation("%s skipped, detect empty disk header on %s.",
-					     argv[0], argv[args]);
-			return 1;
-		}
-	}
+	argv[++args] = mpath;
 
 	if (!(ret = exec_cmd(pool_lv->vg->cmd, (const char * const *)argv,
 			     &status, 0))) {
