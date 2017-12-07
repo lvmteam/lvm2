@@ -1920,7 +1920,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	 * resume should continue further, just whole command
 	 * has to report failure.
 	 */
-	if (r && dnode->props.send_messages &&
+	if (r && (dnode->props.send_messages > 1) &&
 	    !(r = _node_send_messages(dnode, uuid_prefix, uuid_prefix_len, 1)))
 		stack;
 
