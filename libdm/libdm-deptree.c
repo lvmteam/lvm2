@@ -2786,9 +2786,9 @@ static int _dm_tree_revert_activated(struct dm_tree_node *parent)
 	struct dm_tree_node *child;
 
 	dm_list_iterate_items_gen(child, &parent->activated, activated_list) {
-		log_debug_activation("Reverting %s.", child->name);
+		log_debug_activation("Reverting %s.", _node_name(child));
 		if (child->callback) {
-			log_debug_activation("Dropping callback for %s.", child->name);
+			log_debug_activation("Dropping callback for %s.", _node_name(child));
 			child->callback = NULL;
 		}
 		if (!_deactivate_node(child->name, child->info.major, child->info.minor,
