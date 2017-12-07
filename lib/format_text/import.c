@@ -36,7 +36,7 @@ static void _init_text_import(void)
  * Find out vgname on a given device.
  */
 int text_vgsummary_import(const struct format_type *fmt,
-		       struct device *dev,
+		       struct device *dev, dev_io_reason_t reason,
 		       off_t offset, uint32_t size,
 		       off_t offset2, uint32_t size2,
 		       checksum_fn_t checksum_fn,
@@ -53,7 +53,7 @@ int text_vgsummary_import(const struct format_type *fmt,
 		return_0;
 
 	if ((!dev && !config_file_read(cft)) ||
-	    (dev && !config_file_read_fd(cft, dev, offset, size,
+	    (dev && !config_file_read_fd(cft, dev, reason, offset, size,
 					 offset2, size2, checksum_fn,
 					 vgsummary->mda_checksum,
 					 checksum_only, 1))) {
@@ -96,7 +96,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       struct cached_vg_fmtdata **vg_fmtdata,
 				       unsigned *use_previous_vg,
 				       int single_device,
-				       struct device *dev,
+				       struct device *dev, int primary_mda,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
 				       checksum_fn_t checksum_fn,
@@ -128,7 +128,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		     ((*vg_fmtdata)->cached_mda_size == (size + size2));
 
 	if ((!dev && !config_file_read(cft)) ||
-	    (dev && !config_file_read_fd(cft, dev, offset, size,
+	    (dev && !config_file_read_fd(cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
 					 offset2, size2, checksum_fn, checksum,
 					 skip_parse, 1)))
 		goto_out;
@@ -170,7 +170,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 const char *file,
 					 time_t *when, char **desc)
 {
-	return text_vg_import_fd(fid, file, NULL, NULL, 0, NULL, (off_t)0, 0, (off_t)0, 0, NULL, 0,
+	return text_vg_import_fd(fid, file, NULL, NULL, 0, NULL, 0, (off_t)0, 0, (off_t)0, 0, NULL, 0,
 				 when, desc);
 }
 

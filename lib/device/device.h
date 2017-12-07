@@ -87,6 +87,8 @@ typedef enum dev_io_reason {
 	DEV_IO_LABEL,		/* LVM PV disk label */
 	DEV_IO_MDA_HEADER,	/* Text format metadata area header */
 	DEV_IO_MDA_CONTENT,	/* Text format metadata area content */
+	DEV_IO_MDA_EXTRA_HEADER,	/* Header of any extra metadata areas on device */
+	DEV_IO_MDA_EXTRA_CONTENT,	/* Content of any extra metadata areas on device */
 	DEV_IO_FMT1,		/* Original LVM1 metadata format */
 	DEV_IO_POOL,		/* Pool metadata format */
 	DEV_IO_LV,		/* Content written to an LV */

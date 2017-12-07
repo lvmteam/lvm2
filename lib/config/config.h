@@ -17,12 +17,12 @@
 #define _LVM_CONFIG_H
 
 #include "libdevmapper.h"
+#include "device.h"
 
 /* 16 bits: 3 bits for major, 4 bits for minor, 9 bits for patchlevel */
 /* FIXME Max LVM version supported: 7.15.511. Extend bits when needed. */
 #define vsn(major, minor, patchlevel) (major << 13 | minor << 9 | patchlevel)
 
-struct device;
 struct cmd_context;
 
 typedef enum {
@@ -239,7 +239,7 @@ config_source_t config_get_source_type(struct dm_config_tree *cft);
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, const uint8_t *buf, uint32_t size);
 
 struct dm_config_tree *config_open(config_source_t source, const char *filename, int keep_open);
-int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
+int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_reason_t reason,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum,
 			int skip_parse, int no_dup_node_check);

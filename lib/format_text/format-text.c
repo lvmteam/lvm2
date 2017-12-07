@@ -190,7 +190,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	if (!dev_open_readonly(area->dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fmt, area)))
+	if (!(mdah = raw_read_mda_header(fmt, area, mda_is_primary(mda))))
 		goto_out;
 
 	rlocn = mdah->raw_locns;
@@ -230,7 +230,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		if (!(buf = dm_malloc(size + size2)))
 			goto_out;
 
-		if (!dev_read_circular(area->dev, offset, size, offset2, size2, DEV_IO_MDA_CONTENT, buf))
+		if (!dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
 			goto_out;
 
 		/*
@@ -315,12 +315,12 @@ static void _xlate_mdah(struct mda_header *mdah)
 	}
 }
 
-static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area)
+static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area, int primary_mda)
 {
 	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
-	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, DEV_IO_MDA_HEADER, mdah)) {
+	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah)) {
 		if (!dev_close(dev_area->dev))
 			stack;
 		return_0;
@@ -365,7 +365,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 }
 
 struct mda_header *raw_read_mda_header(const struct format_type *fmt,
-				       struct device_area *dev_area)
+				       struct device_area *dev_area, int primary_mda)
 {
 	struct mda_header *mdah;
 
@@ -374,7 +374,7 @@ struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 		return NULL;
 	}
 
-	if (!_raw_read_mda_header(mdah, dev_area)) {
+	if (!_raw_read_mda_header(mdah, dev_area, primary_mda)) {
 		dm_pool_free(fmt->cmd->mem, mdah);
 		return NULL;
 	}
@@ -383,7 +383,7 @@ struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 }
 
 static int _raw_write_mda_header(const struct format_type *fmt,
-				 struct device *dev,
+				 struct device *dev, int primary_mda,
 				 uint64_t start_byte, struct mda_header *mdah)
 {
 	strncpy((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic));
@@ -395,14 +395,14 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
-	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, DEV_IO_MDA_HEADER, mdah))
+	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah))
 		return_0;
 
 	return 1;
 }
 
 static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
-				       struct mda_header *mdah,
+				       struct mda_header *mdah, int primary_mda,
 				       const char *vgname,
 				       int *precommitted)
 {
@@ -449,7 +449,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-		      sizeof(vgnamebuf), DEV_IO_MDA_CONTENT, vgnamebuf))
+		      sizeof(vgnamebuf), MDA_CONTENT_REASON(primary_mda), vgnamebuf))
 		goto_bad;
 
 	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
@@ -497,10 +497,10 @@ static int _raw_holds_vgname(struct format_instance *fid,
 	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, dev_area)))
+	if (!(mdah = raw_read_mda_header(fid->fmt, dev_area, 0)))
 		return_0;
 
-	if (_find_vg_rlocn(dev_area, mdah, vgname, &noprecommit))
+	if (_find_vg_rlocn(dev_area, mdah, 0, vgname, &noprecommit))
 		r = 1;
 
 	if (!dev_close(dev_area->dev))
@@ -515,7 +515,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 					      struct cached_vg_fmtdata **vg_fmtdata,
 					      unsigned *use_previous_vg,
 					      int precommitted,
-					      int single_device)
+					      int single_device, int primary_mda)
 {
 	struct volume_group *vg = NULL;
 	struct raw_locn *rlocn;
@@ -524,10 +524,10 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	char *desc;
 	uint32_t wrap = 0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, area)))
+	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda)))
 		goto_out;
 
-	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname, &precommitted))) {
+	if (!(rlocn = _find_vg_rlocn(area, mdah, primary_mda, vgname, &precommitted))) {
 		log_debug_metadata("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
@@ -543,6 +543,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 
 	/* FIXME 64-bit */
 	if (!(vg = text_vg_import_fd(fid, NULL, vg_fmtdata, use_previous_vg, single_device, area->dev, 
+				     primary_mda,
 				     (off_t) (area->start + rlocn->offset),
 				     (uint32_t) (rlocn->size - wrap),
 				     (off_t) (area->start + MDA_HEADER_SIZE),
@@ -581,7 +582,7 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, single_device);
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 0, single_device, mda_is_primary(mda));
 
 	if (!dev_close(mdac->area.dev))
 		stack;
@@ -601,7 +602,7 @@ static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
 	if (!dev_open_readonly(mdac->area.dev))
 		return_NULL;
 
-	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, 0);
+	vg = _vg_read_raw_area(fid, vgname, &mdac->area, vg_fmtdata, use_previous_vg, 1, 0, mda_is_primary(mda));
 
 	if (!dev_close(mdac->area.dev))
 		stack;
@@ -639,10 +640,10 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!dev_open(mdac->area.dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area)))
+	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
-	rlocn = _find_vg_rlocn(&mdac->area, mdah, old_vg_name ? : vg->name, &noprecommit);
+	rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), old_vg_name ? : vg->name, &noprecommit);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
 	if (!fidtc->raw_metadata_buf &&
@@ -677,7 +678,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	/* Write text out, circularly */
 	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		       (size_t) (mdac->rlocn.size - new_wrap), DEV_IO_MDA_CONTENT,
+		       (size_t) (mdac->rlocn.size - new_wrap), MDA_CONTENT_REASON(mda_is_primary(mda)),
 		       fidtc->raw_metadata_buf))
 		goto_out;
 
@@ -687,7 +688,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 				  MDA_HEADER_SIZE, new_wrap);
 
 		if (!dev_write(mdac->area.dev, mdac->area.start + MDA_HEADER_SIZE,
-			       (size_t) new_wrap, DEV_IO_MDA_CONTENT,
+			       (size_t) new_wrap, MDA_CONTENT_REASON(mda_is_primary(mda)),
 			       fidtc->raw_metadata_buf + mdac->rlocn.size - new_wrap))
 			goto_out;
 	}
@@ -743,10 +744,10 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	if (!found)
 		return 1;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area)))
+	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, old_vg_name ? : vg->name, &noprecommit))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), old_vg_name ? : vg->name, &noprecommit))) {
 		mdah->raw_locns[0].offset = 0;
 		mdah->raw_locns[0].size = 0;
 		mdah->raw_locns[0].checksum = 0;
@@ -793,7 +794,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 
-	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
+	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mda_is_primary(mda), mdac->area.start,
 				   mdah)) {
 		dm_pool_free(fid->fmt->cmd->mem, mdah);
 		log_error("Failed to write metadata area header");
@@ -863,10 +864,10 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!dev_open(mdac->area.dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area)))
+	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, &noprecommit))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), vg->name, &noprecommit))) {
 		rlocn = &mdah->raw_locns[0];
 		mdah->raw_locns[1].offset = 0;
 	}
@@ -876,7 +877,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	rlocn->checksum = 0;
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 
-	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
+	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mda_is_primary(mda), mdac->area.start,
 				   mdah)) {
 		dm_pool_free(fid->fmt->cmd->mem, mdah);
 		log_error("Failed to write metadata area header");
@@ -1172,7 +1173,7 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 }
 
 int vgname_from_mda(const struct format_type *fmt,
-		    struct mda_header *mdah, struct device_area *dev_area,
+		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
 		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors)
 {
 	struct raw_locn *rlocn;
@@ -1204,7 +1205,7 @@ int vgname_from_mda(const struct format_type *fmt,
 
 	/* Do quick check for a vgname */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-		      NAME_LEN, DEV_IO_MDA_CONTENT, buf))
+		      NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
 		return_0;
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
@@ -1235,7 +1236,7 @@ int vgname_from_mda(const struct format_type *fmt,
 		used_cached_metadata = 1;
 
 	/* FIXME 64-bit */
-	if (!text_vgsummary_import(fmt, dev_area->dev,
+	if (!text_vgsummary_import(fmt, dev_area->dev, MDA_CONTENT_REASON(primary_mda),
 				(off_t) (dev_area->start + rlocn->offset),
 				(uint32_t) (rlocn->size - wrap),
 				(off_t) (dev_area->start + MDA_HEADER_SIZE),
@@ -1292,14 +1293,14 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 			continue;
 		}
 
-		if (!(mdah = raw_read_mda_header(fmt, &rl->dev_area))) {
+		if (!(mdah = raw_read_mda_header(fmt, &rl->dev_area, 0))) {
 			stack;
 			goto close_dev;
 		}
 
 		/* TODO: caching as in vgname_from_mda() (trigger this code?) */
-		if (vgname_from_mda(fmt, mdah, &rl->dev_area, &vgsummary, NULL)) {
-			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0);
+		if (vgname_from_mda(fmt, mdah, 0, &rl->dev_area, &vgsummary, NULL)) {
+			vg = _vg_read_raw_area(&fid, vgsummary.vgname, &rl->dev_area, NULL, NULL, 0, 0, 0);
 			if (vg)
 				lvmcache_update_vg(vg, 0);
 		}
@@ -1333,7 +1334,7 @@ static int _write_single_mda(struct metadata_area *mda, void *baton)
 	mdah->size = mdac->area.size;
 	rlocn_set_ignored(mdah->raw_locns, mda_is_ignored(mda));
 
-	if (!_raw_write_mda_header(p->fmt, mdac->area.dev,
+	if (!_raw_write_mda_header(p->fmt, mdac->area.dev, mda_is_primary(mda),
 				   mdac->area.start, mdah)) {
 		if (!dev_close(p->pv->dev))
 			stack;
@@ -1772,7 +1773,7 @@ static int _mda_export_text_raw(struct metadata_area *mda,
 	struct mda_context *mdc = (struct mda_context *) mda->metadata_locn;
 	char mdah[MDA_HEADER_SIZE]; /* temporary */
 
-	if (!mdc || !_raw_read_mda_header((struct mda_header *)mdah, &mdc->area))
+	if (!mdc || !_raw_read_mda_header((struct mda_header *)mdah, &mdc->area, mda_is_primary(mda)))
 		return 1; /* pretend the MDA does not exist */
 
 	return config_make_nodes(cft, parent, NULL,
@@ -2314,7 +2315,7 @@ static int _text_pv_add_metadata_area(const struct format_type *fmt,
 		/* Wipe metadata area with zeroes. */
 		if (!dev_set(pv->dev, mda_start,
 			     (size_t) ((mda_size > wipe_size) ?  wipe_size : mda_size),
-			     DEV_IO_MDA_HEADER, 0)) {
+			     MDA_HEADER_REASON(!mda_index), 0)) {
 			log_error("Failed to wipe new metadata area "
 				  "at the %s of the %s",
 				   mda_index ? "end" : "start",

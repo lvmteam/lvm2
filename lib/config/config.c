@@ -494,7 +494,7 @@ int override_config_tree_from_profile(struct cmd_context *cmd,
  * and function avoids parsing of mda into config tree which
  * remains unmodified and should not be used.
  */
-int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
+int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_reason_t reason,
 			off_t offset, size_t size, off_t offset2, size_t size2,
 			checksum_fn_t checksum_fn, uint32_t checksum,
 			int checksum_only, int no_dup_node_check)
@@ -533,7 +533,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev,
 			return 0;
 		}
 		if (!dev_read_circular(dev, (uint64_t) offset, size,
-				       (uint64_t) offset2, size2, DEV_IO_MDA_CONTENT, buf)) {
+				       (uint64_t) offset2, size2, reason, buf)) {
 			goto out;
 		}
 		fb = buf;
@@ -601,7 +601,7 @@ int config_file_read(struct dm_config_tree *cft)
 		}
 	}
 
-	r = config_file_read_fd(cft, cf->dev, 0, (size_t) info.st_size, 0, 0,
+	r = config_file_read_fd(cft, cf->dev, DEV_IO_MDA_CONTENT, 0, (size_t) info.st_size, 0, 0,
 				(checksum_fn_t) NULL, 0, 0, 0);
 
 	if (!cf->keep_open) {

@@ -245,9 +245,9 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *
 	    struct device *dev, uint64_t start, uint64_t size, unsigned ignored)
 {
 /* FIXME List size restricted by pv_header SECTOR_SIZE */
-	struct metadata_area *mdal;
+	struct metadata_area *mdal, *mda;
 	struct mda_lists *mda_lists = (struct mda_lists *) fmt->private;
-	struct mda_context *mdac;
+	struct mda_context *mdac, *mdac2;
 
 	if (!mem) {
 		if (!(mdal = dm_malloc(sizeof(struct metadata_area)))) {
@@ -274,13 +274,23 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *
 
 	mdal->ops = mda_lists->raw_ops;
 	mdal->metadata_locn = mdac;
-	mdal->status = 0;
 
 	mdac->area.dev = dev;
 	mdac->area.start = start;
 	mdac->area.size = size;
 	mdac->free_sectors = UINT64_C(0);
 	memset(&mdac->rlocn, 0, sizeof(mdac->rlocn));
+
+	/* Set MDA_PRIMARY only if this is the first metadata area on this device. */
+	mdal->status = MDA_PRIMARY;
+	dm_list_iterate_items(mda, mdas) {
+		mdac2 = mda->metadata_locn;
+		if (mdac2->area.dev == dev) {
+			mdal->status = 0;
+			break;
+		}
+	}
+
 	mda_set_ignored(mdal, ignored);
 
 	dm_list_add(mdas, &mdal->list);
@@ -334,7 +344,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	if (!(mdah = raw_read_mda_header(fmt, &mdac->area))) {
+	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda)))) {
 		stack;
 		goto close_dev;
 	}
@@ -350,7 +360,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	if (vgname_from_mda(fmt, mdah, &mdac->area, &vgsummary,
+	if (vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
 			     &mdac->free_sectors) &&
 	    !lvmcache_update_vgname_and_id(p->info, &vgsummary)) {
 		if (!dev_close(mdac->area.dev))

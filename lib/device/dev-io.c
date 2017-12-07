@@ -61,6 +61,8 @@ static const char *_reasons[] = {
 	"PV labels",
 	"VG metadata header",
 	"VG metadata content",
+	"extra VG metadata header",
+	"extra VG metadata content",
 	"LVM1 metadata",
 	"pool metadata",
 	"LV content",

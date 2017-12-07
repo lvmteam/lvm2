@@ -162,6 +162,13 @@ struct metadata_area_ops {
 #define MDA_INCONSISTENT 0x00000002
 #define MDA_FAILED       0x00000004
 
+/* The primary metadata area on a device if the format supports more than one. */
+#define MDA_PRIMARY	 0x00000008
+
+#define mda_is_primary(mda) (((mda->status) & MDA_PRIMARY) ? 1 : 0)
+#define MDA_CONTENT_REASON(primary_mda) ((primary_mda) ? DEV_IO_MDA_CONTENT : DEV_IO_MDA_EXTRA_CONTENT)
+#define MDA_HEADER_REASON(primary_mda)  ((primary_mda) ? DEV_IO_MDA_HEADER : DEV_IO_MDA_EXTRA_HEADER)
+
 struct metadata_area {
 	struct dm_list list;
 	struct metadata_area_ops *ops;
