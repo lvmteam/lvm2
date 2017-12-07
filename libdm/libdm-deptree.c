@@ -1848,7 +1848,6 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	int resolvable_name_conflict, awaiting_peer_rename = 0;
 	void *handle = NULL;
 	struct dm_tree_node *child = dnode;
-	struct dm_info newinfo;
 	const char *name;
 	const char *uuid;
 	int priority;
@@ -1913,14 +1912,11 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 			if (!_resume_node(child->name, child->info.major, child->info.minor,
 					  child->props.read_ahead, child->props.read_ahead_flags,
-					  &newinfo, &child->dtree->cookie, child->udev_flags, child->info.suspended)) {
+					  &child->info, &child->dtree->cookie, child->udev_flags, child->info.suspended)) {
 				log_error("Unable to resume %s.", _node_name(child));
 				r = 0;
 				continue;
 			}
-
-			/* Update cached info */
-			child->info = newinfo;
 		}
 		if (awaiting_peer_rename)
 			priority--; /* redo priority level */
@@ -2814,7 +2810,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 	int r = 1, node_created = 0;
 	void *handle = NULL;
 	struct dm_tree_node *child;
-	struct dm_info newinfo;
 	int update_devs_flag = 0;
 
 	/* Preload children first */
@@ -2870,7 +2865,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 		if (!_resume_node(child->name, child->info.major, child->info.minor,
 				  child->props.read_ahead, child->props.read_ahead_flags,
-				  &newinfo, &child->dtree->cookie, child->udev_flags,
+				  &child->info, &child->dtree->cookie, child->udev_flags,
 				  child->info.suspended)) {
 			log_error("Unable to resume %s.", _node_name(child));
 			/* If the device was not previously active, we might as well remove this node. */
@@ -2883,7 +2878,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			continue;
 		}
 
-		if (!child->info.live_table) {
+		if (node_created) {
 			/* Collect newly introduced devices for revert */
 			dm_list_add_h(&dnode->activated, &child->activated_list);
 
@@ -2900,8 +2895,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			}
 		}
 
-		/* Update cached info */
-		child->info = newinfo;
 		/*
 		 * Prepare for immediate synchronization with udev and flush all stacked
 		 * dev node operations if requested by immediate_dev_node property. But
