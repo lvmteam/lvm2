@@ -1519,7 +1519,7 @@ int lvmetad_vg_list_to_lvmcache(struct cmd_context *cmd)
 	return 1;
 }
 
-struct _extract_dl_baton {
+struct extract_dl_baton {
 	int i;
 	struct dm_config_tree *cft;
 	struct dm_config_node *pre_sib;
@@ -1527,7 +1527,7 @@ struct _extract_dl_baton {
 
 static int _extract_mda(struct metadata_area *mda, void *baton)
 {
-	struct _extract_dl_baton *b = baton;
+	struct extract_dl_baton *b = baton;
 	struct dm_config_node *cn;
 	char id[32];
 
@@ -1548,7 +1548,7 @@ static int _extract_mda(struct metadata_area *mda, void *baton)
 
 static int _extract_disk_location(const char *name, struct disk_locn *dl, void *baton)
 {
-	struct _extract_dl_baton *b = baton;
+	struct extract_dl_baton *b = baton;
 	struct dm_config_node *cn;
 	char id[32];
 
@@ -1583,7 +1583,7 @@ static int _extract_ba(struct disk_locn *ba, void *baton)
 static int _extract_mdas(struct lvmcache_info *info, struct dm_config_tree *cft,
 			 struct dm_config_node *pre_sib)
 {
-	struct _extract_dl_baton baton = { .cft = cft };
+	struct extract_dl_baton baton = { .cft = cft };
 
 	if (!lvmcache_foreach_mda(info, &_extract_mda, &baton))
 		return 0;
