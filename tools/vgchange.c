@@ -58,19 +58,12 @@ static int _poll_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
-	struct lvinfo info;
-	int lv_active;
 	int count = 0;
 
 	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (!lv_info(cmd, lv, 0, &info, 0, 0))
-			lv_active = 0;
-		else
-			lv_active = info.exists;
-
-		if (lv_active &&
+		if (lv_is_active_locally(lv) &&
 		    (lv_is_pvmove(lv) || lv_is_converting(lv) || lv_is_merging(lv))) {
 			lv_spawn_background_polling(cmd, lv);
 			count++;
