@@ -1913,7 +1913,12 @@ static int _pool_callback(struct dm_tree_node *node,
 	long buf[64 / sizeof(long)]; /* buffer for short disk header (64B) */
 	int args = 0;
 	char *mpath;
-	const char *argv[19] = { 0 }; /* Max supported 15 args */
+	const char *argv[19] = { /* Max supported 15 args */
+		find_config_tree_str_allow_empty(pool_lv->vg->cmd, data->exec, NULL)
+	};
+
+	if (!*argv[0]) /* *_check tool is unconfigured/disabled with "" setting */
+		return 1;
 
 	if (!(mpath = lv_dmpath_dup(data->dm->mem, mlv))) {
 		log_error("Failed to build device path for checking pool metadata %s.",
@@ -1946,9 +1951,6 @@ static int _pool_callback(struct dm_tree_node *node,
 			return 1;
 		}
 	}
-
-	if (!(argv[0] = find_config_tree_str_allow_empty(pool_lv->vg->cmd, data->exec, NULL)))
-		return 1; /* Checking disabled */
 
 	if (!(cn = find_config_tree_array(mlv->vg->cmd, data->opts, NULL))) {
 		log_error(INTERNAL_ERROR "Unable to find configuration for pool check options.");
