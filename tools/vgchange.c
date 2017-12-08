@@ -124,8 +124,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 				 * If the LV is active exclusive remotely,
 				 * then ignore it here
 				 */
-				log_verbose("%s/%s is exclusively active on"
-					    " a remote node", vg->name, lv->name);
+				log_verbose("%s is exclusively active on a remote node.",
+					    display_lvname(lv));
 				expected_count--; /* not accounted */
 			}
 			continue;
@@ -783,7 +783,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (!arg_is_set(cmd, refresh_ARG) &&
 	    !vgchange_background_polling(cmd, vg))
-			return_ECMD_FAILED;
+		return_ECMD_FAILED;
 
 	return ret;
 }
