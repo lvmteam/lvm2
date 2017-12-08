@@ -472,19 +472,24 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 /*
  * Determine offset for uncommitted metadata
  */
-static uint64_t _next_rlocn_offset(struct raw_locn *rlocn,
-				   struct mda_header *mdah)
+static uint64_t _next_rlocn_offset(struct raw_locn *rlocn, struct mda_header *mdah, uint64_t mdac_area_start, uint64_t alignment)
 {
+	uint64_t new_start_offset;
+
 	if (!rlocn)
 		/* Find an empty slot */
 		/* FIXME Assume only one VG per mdah for now */
-		return MDA_HEADER_SIZE;
+		return alignment;
 
-	/* Start of free space - round up to next sector; circular */
-	return ((rlocn->offset + rlocn->size +
-		(SECTOR_SIZE - rlocn->size % SECTOR_SIZE) -
-		MDA_HEADER_SIZE) % (mdah->size - MDA_HEADER_SIZE))
-	       + MDA_HEADER_SIZE;
+	/* Calculate new start position within buffer rounded up to absolute alignment */
+	new_start_offset = rlocn->offset + rlocn->size +
+			   (alignment - (mdac_area_start + rlocn->offset + rlocn->size) % alignment);
+
+	/* If new location is beyond the end of the buffer, wrap around back to start of circular buffer */
+	if (new_start_offset > mdah->size - MDA_HEADER_SIZE)
+		new_start_offset -= (mdah->size - MDA_HEADER_SIZE);
+
+	return new_start_offset;
 }
 
 static int _raw_holds_vgname(struct format_instance *fid,
@@ -643,9 +648,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
-	rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), old_vg_name ? : vg->name, &noprecommit);
-	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
-
 	if (!fidtc->raw_metadata_buf &&
 	    !(fidtc->raw_metadata_buf_size =
 			text_vg_export_raw(vg, "", &fidtc->raw_metadata_buf))) {
@@ -653,6 +655,9 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
+	rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), old_vg_name ? : vg->name, &noprecommit);
+
+	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah, mdac->area.start, MDA_ORIGINAL_ALIGNMENT);
 	mdac->rlocn.size = fidtc->raw_metadata_buf_size;
 
 	if (mdac->rlocn.offset + mdac->rlocn.size > mdah->size)
@@ -683,7 +688,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto_out;
 
 	if (new_wrap) {
-		log_debug_metadata("Writing metadata to %s at %" PRIu64 " len %" PRIu64,
+		log_debug_metadata("Writing wrapped metadata to %s at %" PRIu64 " len %" PRIu64,
 				  dev_name(mdac->area.dev), mdac->area.start +
 				  MDA_HEADER_SIZE, new_wrap);
 

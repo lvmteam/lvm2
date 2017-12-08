@@ -102,6 +102,7 @@ struct mda_context {
 #define MDA_HEADER_SIZE 512
 #define LVM2_LABEL "LVM2 001"
 #define MDA_SIZE_MIN (8 * (unsigned) lvm_getpagesize())
+#define MDA_ORIGINAL_ALIGNMENT 512	/* Original alignment used for start of VG metadata content */
 
 int vgname_from_mda(const struct format_type *fmt, struct mda_header *mdah, int primary_mda, 
 		    struct device_area *dev_area, struct lvmcache_vgsummary *vgsummary,
