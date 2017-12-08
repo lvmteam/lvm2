@@ -627,8 +627,6 @@ void critical_section_dec(struct cmd_context *cmd, const char *reason)
 		log_debug_activation("Leaving critical section (%s).", reason);
 	} else
 		log_debug_activation("Leaving section (%s).", reason);
-
-	_restore_priority_if_possible(cmd);
 }
 
 int critical_section(void)
@@ -683,6 +681,7 @@ void memlock_reset(void)
 void memlock_unlock(struct cmd_context *cmd)
 {
 	_unlock_mem_if_possible(cmd);
+	_restore_priority_if_possible(cmd);
 }
 
 int memlock_count_daemon(void)
