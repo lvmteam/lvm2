@@ -178,7 +178,7 @@ int vgchange_background_polling(struct cmd_context *cmd, struct volume_group *vg
 {
 	int polled;
 
-	if (lvs_in_vg_activated(vg) && background_polling()) {
+	if (background_polling()) {
 	        polled = _poll_lvs_in_vg(cmd, vg);
 		if (polled)
 			log_print_unless_silent("Background polling started for %d logical volume(s) "
