@@ -148,7 +148,7 @@ static int _text_write(struct label *label, void *buf)
 		 !xlate64(pvhdr->disk_areas_xl[mda2].size))
 		mda2 = 0;
 
-	log_debug_metadata("%s: Preparing PV label header %s size %" PRIu64 " with"
+	log_debug_metadata("%s: Preparing PV label header %s size " FMTu64 " with"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
 			   "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
@@ -352,7 +352,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
 	if (mda_is_ignored(mda)) {
-		log_debug_metadata("Ignoring mda on device %s at offset %"PRIu64,
+		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
 				   dev_name(mdac->area.dev),
 				   mdac->area.start);
 		if (!dev_close(mdac->area.dev))
@@ -428,7 +428,7 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	if (!(ext_version = xlate32(pvhdr_ext->version)))
 		goto out;
 
-	log_debug_metadata("%s: PV header extension version %" PRIu32 " found",
+	log_debug_metadata("%s: PV header extension version " FMTu32 " found",
 			   dev_name(dev), ext_version);
 
 	/* Extension version */

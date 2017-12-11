@@ -413,7 +413,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg,
 			new_pvl->pv = pv;
 			dm_list_add(&new_pvs, &new_pvl->list);
 
-			log_verbose("Set up physical volume for \"%s\" with %" PRIu64
+			log_verbose("Set up physical volume for \"%s\" with " FMTu64
 				    " available sectors.", pv_dev_name(pv), pv_size(pv));
 		}
 

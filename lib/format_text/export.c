@@ -121,7 +121,7 @@ static int _extend_buffer(struct formatter *f)
 {
 	char *newbuf;
 
-	log_debug_metadata("Doubling metadata output buffer to %" PRIu32,
+	log_debug_metadata("Doubling metadata output buffer to " FMTu32,
 			   f->data.buf.size * 2);
 	if (!(newbuf = dm_realloc(f->data.buf.start,
 				   f->data.buf.size * 2))) {
@@ -561,15 +561,15 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		if (!_out_list(f, &pv->tags, "tags"))
 			return_0;
 
-		outsize(f, pv->size, "dev_size = %" PRIu64, pv->size);
+		outsize(f, pv->size, "dev_size = " FMTu64, pv->size);
 
-		outf(f, "pe_start = %" PRIu64, pv->pe_start);
+		outf(f, "pe_start = " FMTu64, pv->pe_start);
 		outsize(f, vg->extent_size * (uint64_t) pv->pe_count,
 			"pe_count = %u", pv->pe_count);
 
 		if (pv->ba_start && pv->ba_size) {
-			outf(f, "ba_start = %" PRIu64, pv->ba_start);
-			outsize(f, pv->ba_size, "ba_size = %" PRIu64, pv->ba_size);
+			outf(f, "ba_start = " FMTu64, pv->ba_start);
+			outsize(f, pv->ba_size, "ba_size = " FMTu64, pv->ba_size);
 		}
 
 		_dec_indent(f);
@@ -631,7 +631,7 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 		switch (seg_type(seg, s)) {
 		case AREA_PV:
 			if (!(pv = seg_pv(seg, s))) {
-				log_error(INTERNAL_ERROR "Missing PV for area %" PRIu32 " of %s segment of LV %s.",
+				log_error(INTERNAL_ERROR "Missing PV for area " FMTu32 " of %s segment of LV %s.",
 					  s, type, display_lvname(seg->lv));
 				return 0;
 			}
@@ -670,7 +670,7 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 
 			break;
 		case AREA_UNASSIGNED:
-			log_error(INTERNAL_ERROR "Invalid type for area %" PRIu32 " of %s segment of LV %s.",
+			log_error(INTERNAL_ERROR "Invalid type for area " FMTu32 " of %s segment of LV %s.",
 				  s, type, display_lvname(seg->lv));
 			return 0;
 		}
@@ -694,7 +694,7 @@ static int _print_timestamp(struct formatter *f,
 			      "%Y-%m-%d %T %z", local_tm))
 			buf[0] = 0;
 
-		outfc(f, buf, "%s = %" PRIu64, name, (uint64_t) ts);
+		outfc(f, buf, "%s = " FMTu64, name, (uint64_t) ts);
 	}
 
 	return 1;
