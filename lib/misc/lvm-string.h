@@ -47,6 +47,7 @@ int validate_tag(const char *n);
 void copy_systemid_chars(const char *src, char *dst);
 
 int apply_lvname_restrictions(const char *name);
+int is_component_lvname(const char *name);
 int is_reserved_lvname(const char *name);
 
 /*

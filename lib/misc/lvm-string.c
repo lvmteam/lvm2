@@ -150,22 +150,41 @@ static const char *_lvname_has_reserved_prefix(const char *lvname)
 	return NULL;
 }
 
-static const char *_lvname_has_reserved_string(const char *lvname)
+static const char *_lvname_has_reserved_component_string(const char *lvname)
 {
 	static const char _strings[][12] = {
+		/* Suffixes for compoment LVs */
 		"_cdata",
 		"_cmeta",
 		"_corig",
 		"_mimage",
 		"_mlog",
-		"_pmspare",
 		"_rimage",
 		"_rmeta",
 		"_tdata",
-		"_tmeta",
+		"_tmeta"
+	};
+	unsigned i;
+
+	for (i = 0; i < DM_ARRAY_SIZE(_strings); ++i)
+		if (strstr(lvname, _strings[i]))
+			return _strings[i];
+
+	return NULL;
+}
+
+static const char *_lvname_has_reserved_string(const char *lvname)
+{
+	static const char _strings[][12] = {
+		/* Additional suffixes for non-compoment LVs */
+		"_pmspare",
 		"_vorigin"
 	};
 	unsigned i;
+	const char *cs;
+
+	if ((cs = _lvname_has_reserved_component_string(lvname)))
+		return cs;
 
 	for (i = 0; i < DM_ARRAY_SIZE(_strings); ++i)
 		if (strstr(lvname, _strings[i]))
@@ -206,6 +225,11 @@ int is_reserved_lvname(const char *name)
 {
 	return (_lvname_has_reserved_prefix(name) ||
 		_lvname_has_reserved_string(name)) ? 1 : 0;
+}
+
+int is_component_lvname(const char *name)
+{
+	return (_lvname_has_reserved_component_string(name)) ? 1 : 0;
 }
 
 char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
