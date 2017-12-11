@@ -2186,6 +2186,7 @@ daemons/dmeventd/plugins/snapshot/Makefile
 daemons/dmeventd/plugins/thin/Makefile
 daemons/dmfilemapd/Makefile
 daemons/lvmdbusd/Makefile
+daemons/lvmdbusd/lvmdbusd
 daemons/lvmdbusd/path.py
 daemons/lvmetad/Makefile
 daemons/lvmpolld/Makefile
