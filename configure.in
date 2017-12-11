@@ -1530,7 +1530,7 @@ if test "$PYTHON3_BINDINGS" = yes -o "$BUILD_LVMDBUSD" = yes; then
 	PYTHON3_INCDIRS=`"$PYTHON3_CONFIG" --includes`
 	PYTHON3_LIBDIRS=`"$PYTHON3_CONFIG" --libs`
 	PYTHON3DIR=$pythondir
-	PYTHON_BINDINGS=yes
+	test "$PYTHON3_BINDINGS" = yes && PYTHON_BINDINGS=yes
 fi
 
 if test "$BUILD_LVMDBUSD" = yes; then
