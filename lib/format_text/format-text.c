@@ -1292,7 +1292,7 @@ int vgname_from_mda(const struct format_type *fmt,
 			   (char *)&vgsummary->vgid);
 
 	if (mda_free_sectors) {
-		current_usage = ALIGN_ABSOLUTE(rlocn->size, 0, MDA_ORIGINAL_ALIGNMENT);
+		current_usage = ALIGN_ABSOLUTE(rlocn->size, dev_area->start + rlocn->offset, MDA_ORIGINAL_ALIGNMENT);
 
 		buffer_size = mdah->size - MDA_HEADER_SIZE;
 
