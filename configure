@@ -12777,8 +12777,8 @@ test "$APPLIB" = yes \
   && LVM2APP_LIB=-llvm2app \
   || LVM2APP_LIB=
 if test "$APPLIB"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Python bindings are deprecated. Use D-Bus API" >&5
-$as_echo "$as_me: WARNING: Python bindings are deprecated. Use D-Bus API" >&2;}
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: liblvm2app is deprecated. Use D-Bus API" >&5
+$as_echo "$as_me: WARNING: liblvm2app is deprecated. Use D-Bus API" >&2;}
 fi
 
 ################################################################################
@@ -13791,7 +13791,7 @@ fi
 	PYTHON3_INCDIRS=`"$PYTHON3_CONFIG" --includes`
 	PYTHON3_LIBDIRS=`"$PYTHON3_CONFIG" --libs`
 	PYTHON3DIR=$pythondir
-	PYTHON_BINDINGS=yes
+	test "$PYTHON3_BINDINGS" = yes && PYTHON_BINDINGS=yes
 fi
 
 if test "$BUILD_LVMDBUSD" = yes; then

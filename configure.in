@@ -1455,7 +1455,7 @@ test "$APPLIB" = yes \
   && LVM2APP_LIB=-llvm2app \
   || LVM2APP_LIB=
 AS_IF([test "$APPLIB"],
-      [AC_MSG_WARN([Python bindings are deprecated. Use D-Bus API])])
+      [AC_MSG_WARN([liblvm2app is deprecated. Use D-Bus API])])
 
 ################################################################################
 dnl -- Enable cmdlib
