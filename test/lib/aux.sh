@@ -324,10 +324,13 @@ prepare_lvmdbusd() {
 	echo ok
 
 	# skip if we don't have our own lvmdbusd...
+	echo -n "## find lvmdbusd to use..."
 	if test -z "${installed_testsuite+varset}"; then
 		# NOTE: this is always present - additional checks are needed:
 		daemon="$abs_top_builddir/daemons/lvmdbusd/lvmdbusd"
-		if ! test -x "$daemon" && chmod ugo+x "$daemon"; then
+		if test -x "$daemon" || chmod ugo+x "$daemon"; then
+			echo "$daemon"
+		else
 			echo "Failed to make '$daemon' executable">&2
 			return 1
 		fi
@@ -335,6 +338,7 @@ prepare_lvmdbusd() {
 		export PYTHONPATH="$abs_top_builddir/daemons"
 	else
 		daemon=$(which lvmdbusd || :)
+		echo "$daemon"
 	fi
 	test -x "$daemon" || skip "The lvmdbusd daemon is missing"
 	which python3 >/dev/null || skip "Missing python3"
