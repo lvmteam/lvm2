@@ -23,6 +23,7 @@
 #include "lvm-version.h"
 #include "toolcontext.h"
 #include "config-util.h"
+#include "layout.h"
 
 #include <stdarg.h>
 #include <time.h>
@@ -1079,7 +1080,12 @@ size_t text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 		goto_out;
 	}
 
-	r = f->data.buf.used + 1;
+	f->data.buf.used += 1;	/* Terminating NUL */
+
+	/* Zero fill up to next alignment boundary */
+	memset(f->data.buf.start + f->data.buf.used, 0, MDA_ALIGNMENT - f->data.buf.used % MDA_ALIGNMENT);
+
+	r = f->data.buf.used;
 	*buf = f->data.buf.start;
 
       out:

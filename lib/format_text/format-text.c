@@ -704,11 +704,12 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	struct mda_header *mdah;
 	struct pv_list *pvl;
 	int r = 0;
-	uint64_t new_wrap;	/* Number of bytes of new metadata that wrap around to start of buffer */
+	uint64_t new_wrap = 0;	/* Number of bytes of new metadata that wrap around to start of buffer */
 	uint64_t alignment = MDA_ALIGNMENT;
 	int found = 0;
 	int noprecommit = 0;
 	const char *old_vg_name = NULL;
+	uint64_t new_size_rounded;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
 	dm_list_iterate_items(pvl, &vg->pvs) {
@@ -735,6 +736,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
+	/* Following space is zero-filled up to the next MDA_ALIGNMENT boundary */
 	if (!fidtc->raw_metadata_buf &&
 	    !(fidtc->raw_metadata_buf_size =
 			text_vg_export_raw(vg, "", &fidtc->raw_metadata_buf))) {
@@ -775,19 +777,33 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 				  vg->name, dev_name(mdac->area.dev), mdac->rlocn.size, mdah->size - MDA_HEADER_SIZE, rlocn ? rlocn->size : 0);
 			goto out;
 		}
+
+		new_size_rounded = mdac->rlocn.size;
+	} else {
+		/* Round up to a multiple of the new alignment */
+		if (mdac->rlocn.offset + new_size_rounded < mdah->size)
+			new_size_rounded = (mdac->rlocn.size | (alignment - 1)) + 1;
+		else
+			new_size_rounded = mdac->rlocn.size;
 	}
 
-	log_debug_metadata("Writing %s metadata to %s at " FMTu64 " len " FMTu64 " of " FMTu64 " aligned to " FMTu64,
+	log_debug_metadata("Writing %s metadata to %s at " FMTu64 " len " FMTu64 " (rounded to " FMTu64 ") of " FMTu64 " aligned to " FMTu64,
 			    vg->name, dev_name(mdac->area.dev), mdac->area.start +
-			    mdac->rlocn.offset, mdac->rlocn.size - new_wrap, mdac->rlocn.size, alignment);
+			    mdac->rlocn.offset, mdac->rlocn.size - new_wrap, new_size_rounded, mdac->rlocn.size, alignment);
 
-	/* Write text out, circularly */
-	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		       (size_t) (mdac->rlocn.size - new_wrap), MDA_CONTENT_REASON(mda_is_primary(mda)),
-		       fidtc->raw_metadata_buf))
-		goto_out;
+	if (!new_wrap) {
+		/* Write text out, in alignment-sized blocks */
+		if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
+			       (size_t) new_size_rounded, MDA_CONTENT_REASON(mda_is_primary(mda)),
+			       fidtc->raw_metadata_buf))
+			goto_out;
+	} else {
+		/* Write text out, circularly */
+		if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
+			       (size_t) (mdac->rlocn.size - new_wrap), MDA_CONTENT_REASON(mda_is_primary(mda)),
+			       fidtc->raw_metadata_buf))
+			goto_out;
 
-	if (new_wrap) {
 		log_debug_metadata("Writing wrapped metadata to %s at " FMTu64 " len " FMTu64 " of " FMTu64,
 				  dev_name(mdac->area.dev), mdac->area.start +
 				  MDA_HEADER_SIZE, new_wrap, mdac->rlocn.size);
