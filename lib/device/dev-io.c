@@ -491,11 +491,12 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 			return 1;
 		}
 
-		if (dev->open_count && !need_excl) {
+		if (dev->open_count && !need_excl)
 			log_debug_devs("%s: Already opened read-only. Upgrading "
 				       "to read-write.", dev_name(dev));
-			dev->open_count++;
-		}
+
+		/* dev_close_immediate will decrement this */
+		dev->open_count++;
 
 		dev_close_immediate(dev);
 		// FIXME: dev with DEV_ALLOCED is released
