@@ -804,6 +804,11 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t r
 	if (!_dev_is_valid(dev))
 		return 0;
 
+	if (!len) {
+		log_error(INTERNAL_ERROR "Attempted to write 0 bytes to %s at " FMTu64, dev_name(dev), offset);
+		return 0;
+	}
+
 	where.dev = dev;
 	where.start = offset;
 	where.size = len;
