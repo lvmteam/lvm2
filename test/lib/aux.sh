@@ -318,7 +318,7 @@ prepare_lvmdbusd() {
 
         # FIXME: This is not correct! Daemon is auto started.
 	echo -n "## checking lvmdbusd is NOT running..."
-	if pgrep -f -l lvmdbusd | grep python3 ; then
+	if pgrep -f -l lvmdbusd | grep python3 || pgrep -x -l lvmdbusd ; then
 		skip "Cannot run lvmdbusd while existing lvmdbusd process exists"
 	fi
 	echo ok
@@ -327,6 +327,10 @@ prepare_lvmdbusd() {
 	if test -z "${installed_testsuite+varset}"; then
 		# NOTE: this is always present - additional checks are needed:
 		daemon="$abs_top_builddir/daemons/lvmdbusd/lvmdbusd"
+		if ! test -x "$daemon" && chmod ugo+x "$daemon"; then
+			echo "Failed to make '$daemon' executable">&2
+			return 1
+		fi
 		# Setup the python path so we can run
 		export PYTHONPATH="$abs_top_builddir/daemons"
 	else
@@ -351,12 +355,9 @@ prepare_lvmdbusd() {
 
 	sleep 1
 	echo -n "## checking lvmdbusd IS running..."
-	if ! pgrep -f -l lvmdbusd | grep python3; then
-		echo "Failed to start lvmdbusd daemon"
-		return 1
-	fi
+	comm=
 	# TODO: Is there a better check than wait 1 second and check pid?
-	if ! ps -p $pid -o comm= >/dev/null || [[ $(ps -p $pid -o comm=) != python3 ]]; then
+	if ! comm=$(ps -p $pid -o comm=) >/dev/null || [[ $comm != lvmdbusd ]]; then
 		echo "Failed to start lvmdbusd daemon"
 		return 1
 	fi
