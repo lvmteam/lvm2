@@ -1,5 +1,6 @@
 Version 2.02.177 -
 ====================================
+  When writing metadata, consistently skip mdas marked as failed.
   Refactor and adjust text format metadata alignment calculation.
   Fix python3 path in lvmdbusd to use value detected by configure.
   Reduce checks for active LVs in vgchange before background polling.

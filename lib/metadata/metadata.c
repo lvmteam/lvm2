@@ -3039,6 +3039,8 @@ int vg_write(struct volume_group *vg)
 
 	/* Write to each copy of the metadata area */
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use) {
+		if (mda->status & MDA_FAILED)
+			continue;
 		if (!mda->ops->vg_write) {
 			log_error("Format does not support writing volume"
 				  "group metadata areas");
@@ -3062,6 +3064,9 @@ int vg_write(struct volume_group *vg)
 		log_error("Failed to write VG %s.", vg->name);
 		dm_list_uniterate(mdah, &vg->fid->metadata_areas_in_use, &mda->list) {
 			mda = dm_list_item(mdah, struct metadata_area);
+
+			if (mda->status & MDA_FAILED)
+				continue;
 
 			if (mda->ops->vg_revert &&
 			    !mda->ops->vg_revert(vg->fid, vg, mda)) {
