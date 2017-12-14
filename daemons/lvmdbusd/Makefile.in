@@ -26,9 +26,7 @@ LVMDBUS_SRCDIR_FILES = \
 	__init__.py \
 	job.py \
 	loader.py \
-	lvmdb.py \
 	main.py \
-	lvm_shell_proxy.py \
 	lv.py \
 	manager.py \
 	objectmanager.py \
@@ -40,13 +38,18 @@ LVMDBUS_SRCDIR_FILES = \
 	vg.py
 
 LVMDBUS_BUILDDIR_FILES = \
+	lvmdb.py \
+	lvm_shell_proxy.py \
 	path.py
 
-LVMDBUSD = $(srcdir)/lvmdbusd
+LVMDBUSD = lvmdbusd
 
 include $(top_builddir)/make.tmpl
 
 .PHONY: install_lvmdbusd
+
+all:
+	test -x $(LVMDBUSD) || chmod 755 $(LVMDBUSD)
 
 install_lvmdbusd:
 	$(INSTALL_DIR) $(sbindir)
@@ -63,4 +66,5 @@ install_lvm2: install_lvmdbusd
 install: install_lvm2
 
 DISTCLEAN_TARGETS+= \
-	$(LVMDBUS_BUILDDIR_FILES)
+	$(LVMDBUS_BUILDDIR_FILES) \
+	$(LVMDBUSD)
