@@ -261,6 +261,8 @@ endif
 # end of fPIC protection
 endif
 
+DEFS += -D_BUILDING_LVM
+
 LDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 CLDFLAGS += -L$(top_builddir)/libdm -L$(top_builddir)/lib
 

@@ -18,7 +18,9 @@
 
 #include <stdint.h>
 
+#ifndef _BUILDING_LVM
 #warning "liblvm2app is deprecated, use D-Bus API instead."
+#endif
 
 #ifdef __cplusplus
 extern "C" {

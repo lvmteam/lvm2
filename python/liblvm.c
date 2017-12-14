@@ -22,6 +22,7 @@
  */
 
 #include <Python.h>
+#define _BUILDING_LVM
 #include "lvm2app.h"
 #include "defaults.h"
 
