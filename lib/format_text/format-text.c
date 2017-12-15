@@ -185,6 +185,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	char *buf=NULL;
 	struct device_area *area;
 	struct mda_context *mdac;
+	unsigned circular = 0;
 	int r=0;
 
 	mdac = (struct mda_context *) mda->metadata_locn;
@@ -236,7 +237,12 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		if (!(buf = dm_malloc(size + size2)))
 			goto_out;
 
-		if (!dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
+		circular = size2 ? 1 : 0;
+
+		if (circular) {
+			if (!dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
+				goto_out;
+		} else if (!dev_read(area->dev, offset, size, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
 			goto_out;
 
 		/*
@@ -708,7 +714,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	int found = 0;
 	int noprecommit = 0;
 	const char *old_vg_name = NULL;
-	uint64_t new_size_rounded;
+	uint64_t new_size_rounded = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
 	dm_list_iterate_items(pvl, &vg->pvs) {

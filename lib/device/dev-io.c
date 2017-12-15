@@ -745,7 +745,7 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t re
 }
 
 /*
- * Read from 'dev' into 'buf', possibly in 2 distinct regions, denoted
+ * Read from 'dev' into 'buf' in 2 distinct regions, denoted
  * by (offset,len) and (offset2,len2).  Thus, the total size of
  * 'buf' should be len+len2.
  */
@@ -756,13 +756,6 @@ int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 		log_error("Read from %s failed", dev_name(dev));
 		return 0;
 	}
-
-	/*
-	 * The second region is optional, and allows for
-	 * a circular buffer on the device.
-	 */
-	if (!len2)
-		return 1;
 
 	if (!dev_read(dev, offset2, len2, reason, buf + len)) {
 		log_error("Circular read from %s failed",

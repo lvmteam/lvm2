@@ -504,6 +504,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	int use_mmap = 1;
 	off_t mmap_offset = 0;
 	char *buf = NULL;
+	unsigned circular = size2 ? 1 : 0;	/* Wrapped around end of disk metadata buffer? */
 	struct config_source *cs = dm_config_get_custom(cft);
 
 	if (!_is_file_based_config_source(cs->type)) {
@@ -514,7 +515,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	}
 
 	/* Only use mmap with regular files */
-	if (!(dev->flags & DEV_REGULAR) || size2)
+	if (!(dev->flags & DEV_REGULAR) || circular)
 		use_mmap = 0;
 
 	if (use_mmap) {
@@ -528,13 +529,23 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 		}
 		fb = fb + mmap_offset;
 	} else {
-		if (!(buf = dm_malloc(size + size2))) {
-			log_error("Failed to allocate circular buffer.");
-			return 0;
-		}
-		if (!dev_read_circular(dev, (uint64_t) offset, size,
-				       (uint64_t) offset2, size2, reason, buf)) {
-			goto out;
+		if (circular) {
+			if (!(buf = dm_malloc(size + size2))) {
+				log_error("Failed to allocate circular buffer.");
+				return 0;
+			}
+			if (!dev_read_circular(dev, (uint64_t) offset, size,
+					       (uint64_t) offset2, size2, reason, buf)) {
+				goto out;
+			}
+		} else {
+			if (!(buf = dm_malloc(size))) {
+				log_error("Failed to allocate buffer for metadata read.");
+				return 0;
+			}
+			if (!dev_read(dev, (uint64_t) offset, size, reason, buf)) {
+				goto out;
+			}
 		}
 		fb = buf;
 	}
