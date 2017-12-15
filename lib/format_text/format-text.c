@@ -234,16 +234,18 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		 * "dm_config_maybe_section" returning true when there's no valid
 		 * metadata in a sector (sectors with all nulls).
 		 */
-		if (!(buf = dm_malloc(size + size2)))
-			goto_out;
 
 		circular = size2 ? 1 : 0;
 
 		if (circular) {
-			if (!dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
+			if (!(buf = dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)))))
 				goto_out;
-		} else if (!dev_read(area->dev, offset, size, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
-			goto_out;
+		} else {
+			if (!(buf = dm_malloc(size)))
+				goto_out;
+			if (!dev_read(area->dev, offset, size, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
+				goto_out;
+		}
 
 		/*
 		 * FIXME: We could add more sophisticated metadata detection
