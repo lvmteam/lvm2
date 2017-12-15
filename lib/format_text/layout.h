@@ -81,8 +81,7 @@ struct mda_header {
 	struct raw_locn raw_locns[0];	/* NULL-terminated list */
 } __attribute__ ((packed));
 
-struct mda_header *raw_read_mda_header(const struct format_type *fmt,
-				       struct device_area *dev_area, int primary_mda);
+struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda);
 
 struct mda_lists {
 	struct dm_list dirs;

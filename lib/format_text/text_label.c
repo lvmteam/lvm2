@@ -19,6 +19,7 @@
 #include "label.h"
 #include "xlate.h"
 #include "lvmcache.h"
+#include "toolcontext.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -344,7 +345,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, mda_is_primary(mda)))) {
+	if (!(mdah = raw_read_mda_header(fmt->cmd->mem, &mdac->area, mda_is_primary(mda)))) {
 		stack;
 		goto close_dev;
 	}

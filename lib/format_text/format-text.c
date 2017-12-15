@@ -196,7 +196,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	if (!dev_open_readonly(area->dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fmt, area, mda_is_primary(mda))))
+	if (!(mdah = raw_read_mda_header(fmt->cmd->mem, area, mda_is_primary(mda))))
 		goto_out;
 
 	rlocn = mdah->raw_locns;
@@ -370,18 +370,17 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	return 1;
 }
 
-struct mda_header *raw_read_mda_header(const struct format_type *fmt,
-				       struct device_area *dev_area, int primary_mda)
+struct mda_header *raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda)
 {
 	struct mda_header *mdah;
 
-	if (!(mdah = dm_pool_alloc(fmt->cmd->mem, MDA_HEADER_SIZE))) {
+	if (!(mdah = dm_pool_alloc(mem, MDA_HEADER_SIZE))) {
 		log_error("struct mda_header allocation failed");
 		return NULL;
 	}
 
 	if (!_raw_read_mda_header(mdah, dev_area, primary_mda)) {
-		dm_pool_free(fmt->cmd->mem, mdah);
+		dm_pool_free(mem, mdah);
 		return NULL;
 	}
 
@@ -529,7 +528,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, dev_area, 0)))
+	if (!(mdah = raw_read_mda_header(fid->fmt->cmd->mem, dev_area, 0)))
 		return_0;
 
 	if (_find_vg_rlocn(dev_area, mdah, 0, vgname, &noprecommit))
@@ -556,7 +555,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	char *desc;
 	uint32_t wrap = 0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, area, primary_mda)))
+	if (!(mdah = raw_read_mda_header(fid->fmt->cmd->mem, area, primary_mda)))
 		goto_out;
 
 	if (!(rlocn = _find_vg_rlocn(area, mdah, primary_mda, vgname, &precommitted))) {
@@ -733,7 +732,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!dev_open(mdac->area.dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
+	if (!(mdah = raw_read_mda_header(fid->fmt->cmd->mem, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
 	/* Following space is zero-filled up to the next MDA_ALIGNMENT boundary */
@@ -865,7 +864,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	if (!found)
 		return 1;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
+	if (!(mdah = raw_read_mda_header(fid->fmt->cmd->mem, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
 	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), old_vg_name ? : vg->name, &noprecommit))) {
@@ -985,7 +984,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!dev_open(mdac->area.dev))
 		return_0;
 
-	if (!(mdah = raw_read_mda_header(fid->fmt, &mdac->area, mda_is_primary(mda))))
+	if (!(mdah = raw_read_mda_header(fid->fmt->cmd->mem, &mdac->area, mda_is_primary(mda))))
 		goto_out;
 
 	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, mda_is_primary(mda), vg->name, &noprecommit))) {
@@ -1414,7 +1413,7 @@ static int _scan_raw(const struct format_type *fmt, const char *vgname __attribu
 			continue;
 		}
 
-		if (!(mdah = raw_read_mda_header(fmt, &rl->dev_area, 0))) {
+		if (!(mdah = raw_read_mda_header(fmt->cmd->mem, &rl->dev_area, 0))) {
 			stack;
 			goto close_dev;
 		}
