@@ -1,3 +1,6 @@
+Version 1.02.147 - 
+=====================================
+
 Version 1.02.146 - 18th December 2017
 =====================================
   Activation tree of thin pool skips duplicated check of pool status.

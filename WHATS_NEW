@@ -1,3 +1,6 @@
+Version 2.02.178 - 
+=====================================
+
 Version 2.02.177 - 18th December 2017
 =====================================
   When writing text metadata content, use complete 4096 byte blocks.
