@@ -2148,7 +2148,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 static int _lockd_lv_thin(struct cmd_context *cmd, struct logical_volume *lv,
 			  const char *def_mode, uint32_t flags)
 {
-	struct logical_volume *pool_lv;
+	struct logical_volume *pool_lv = NULL;
 
 	if (lv_is_thin_volume(lv)) {
 		struct lv_segment *pool_seg = first_seg(lv);
