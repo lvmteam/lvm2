@@ -145,9 +145,15 @@ int dev_test_excl(struct device *dev);
 int dev_fd(struct device *dev);
 const char *dev_name(const struct device *dev);
 
-int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer);
+/* Returns a read-only buffer */
+char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason);
 char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 			uint64_t offset2, size_t len2, dev_io_reason_t reason);
+
+/* Read data and copy it into a supplied private buffer. */
+/* Only use for tiny reads or on unimportant code paths. */
+int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf);
+
 int dev_write(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer);
 int dev_append(struct device *dev, size_t len, dev_io_reason_t reason, char *buffer);
 int dev_set(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, int value);

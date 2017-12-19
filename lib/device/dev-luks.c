@@ -31,7 +31,7 @@ int dev_is_luks(struct device *dev, uint64_t *offset_found)
 	if (offset_found)
 		*offset_found = 0;
 
-	if (!dev_read(dev, 0, LUKS_SIGNATURE_SIZE, DEV_IO_SIGNATURES, buf))
+	if (!dev_read_buf(dev, 0, LUKS_SIGNATURE_SIZE, DEV_IO_SIGNATURES, buf))
 		goto_out;
 
 	ret = memcmp(buf, LUKS_SIGNATURE, LUKS_SIGNATURE_SIZE) ? 0 : 1;

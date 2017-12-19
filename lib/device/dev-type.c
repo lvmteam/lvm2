@@ -363,7 +363,7 @@ static int _has_partition_table(struct device *dev)
 		uint16_t magic;
 	} __attribute__((packed)) buf; /* sizeof() == SECTOR_SIZE */
 
-	if (!dev_read(dev, UINT64_C(0), sizeof(buf), DEV_IO_SIGNATURES, &buf))
+	if (!dev_read_buf(dev, UINT64_C(0), sizeof(buf), DEV_IO_SIGNATURES, &buf))
 		return_0;
 
 	/* FIXME Check for other types of partition table too */

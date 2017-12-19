@@ -182,7 +182,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	uint64_t offset2;
 	size_t size;
 	size_t size2;
-	char *buf=NULL;
+	char *buf = NULL;
 	struct device_area *area;
 	struct mda_context *mdac;
 	unsigned circular = 0;
@@ -240,12 +240,8 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		if (circular) {
 			if (!(buf = dev_read_circular(area->dev, offset, size, offset2, size2, MDA_CONTENT_REASON(mda_is_primary(mda)))))
 				goto_out;
-		} else {
-			if (!(buf = dm_malloc(size)))
+		} else if (!(buf = dev_read(area->dev, offset, size, MDA_CONTENT_REASON(mda_is_primary(mda)))))
 				goto_out;
-			if (!dev_read(area->dev, offset, size, MDA_CONTENT_REASON(mda_is_primary(mda)), buf))
-				goto_out;
-		}
 
 		/*
 		 * FIXME: We could add more sophisticated metadata detection
@@ -334,7 +330,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 	if (!dev_open_readonly(dev_area->dev))
 		return_0;
 
-	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah)) {
+	if (!dev_read_buf(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah)) {
 		if (!dev_close(dev_area->dev))
 			stack;
 		return_0;
@@ -420,13 +416,13 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				       int *precommitted)
 {
 	size_t len;
-	char vgnamebuf[NAME_LEN + 2] __attribute__((aligned(8)));
 	struct raw_locn *rlocn, *rlocn_precommitted;
 	struct lvmcache_info *info;
 	struct lvmcache_vgsummary vgsummary_orphan = {
 		.vgname = FMT_TEXT_ORPHAN_VG_NAME,
 	};
 	int rlocn_was_ignored;
+	char *buf;
 
 	memcpy(&vgsummary_orphan.vgid, FMT_TEXT_ORPHAN_VG_NAME, sizeof(FMT_TEXT_ORPHAN_VG_NAME));
 
@@ -461,13 +457,17 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
 	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
-	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-		      sizeof(vgnamebuf), MDA_CONTENT_REASON(primary_mda), vgnamebuf))
+	if (!(buf = dev_read(dev_area->dev, dev_area->start + rlocn->offset,
+			     NAME_LEN + 2, MDA_CONTENT_REASON(primary_mda))))
 		goto_bad;
 
-	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
-	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{'))
+	if (!strncmp(buf, vgname, len = strlen(vgname)) &&
+	    (isspace(*(buf + len)) || *(buf + len) == '{')) {
+		dm_free(buf);
 		return rlocn;
+	}
+
+	dm_free(buf);
 
 	log_debug_metadata("Volume group name found in %smetadata on %s at " FMTu64 " does "
 			   "not match expected name %s.", 
@@ -1332,8 +1332,8 @@ int vgname_from_mda(const struct format_type *fmt,
 	}
 
 	/* Do quick check for a vgname */
-	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-		      NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
+	if (!dev_read_buf(dev_area->dev, dev_area->start + rlocn->offset,
+			  NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
 		return_0;
 
 	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&

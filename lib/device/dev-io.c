@@ -722,7 +722,7 @@ static void _dev_inc_error_count(struct device *dev)
 			 dev->max_error_count, dev_name(dev));
 }
 
-int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *buffer)
+static int _dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, char *buf)
 {
 	struct device_area where;
 	int ret;
@@ -737,11 +737,45 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t re
 	where.start = offset;
 	where.size = len;
 
-	ret = _aligned_io(&where, buffer, 0, reason);
+	ret = _aligned_io(&where, buf, 0, reason);
 	if (!ret)
 		_dev_inc_error_count(dev);
 
 	return ret;
+}
+
+/* Caller is responsible for dm_free */
+char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason)
+{
+	char *buf;
+
+	if (!(buf = dm_malloc(len))) {
+		log_error("Buffer allocation failed for device read.");
+		return NULL;
+	}
+
+	if (!_dev_read(dev, offset, len, reason, buf)) {
+		log_error("Read from %s failed", dev_name(dev));
+		dm_free(buf);
+		return NULL;
+	}
+
+	return buf;
+}
+
+/* Read into supplied retbuf */
+int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
+{
+	char *buf = NULL;
+
+	if (!(buf = dev_read(dev, offset, len, reason)))
+		return_0;
+	
+	memcpy(retbuf, buf, len);
+
+	dm_free(buf);
+
+	return 1;
 }
 
 /*
@@ -758,13 +792,13 @@ char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 		return NULL;
 	}
 
-	if (!dev_read(dev, offset, len, reason, buf)) {
+	if (!_dev_read(dev, offset, len, reason, buf)) {
 		log_error("Read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;
 	}
 
-	if (!dev_read(dev, offset2, len2, reason, buf + len)) {
+	if (!_dev_read(dev, offset2, len2, reason, buf + len)) {
 		log_error("Circular read from %s failed", dev_name(dev));
 		dm_free(buf);
 		return NULL;

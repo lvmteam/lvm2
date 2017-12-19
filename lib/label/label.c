@@ -109,7 +109,7 @@ static void _update_lvmcache_orphan(struct lvmcache_info *info)
 		stack;
 }
 
-static struct labeller *_find_labeller(struct device *dev, char *buf,
+static struct labeller *_find_labeller(struct device *dev, char *labelbuf,
 				       uint64_t *label_sector,
 				       uint64_t scan_sector)
 {
@@ -119,10 +119,9 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	struct lvmcache_info *info;
 	uint64_t sector;
 	int found = 0;
-	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
+	char *buf = NULL;
 
-	if (!dev_read(dev, scan_sector << SECTOR_SHIFT,
-		      LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
+	if (!(buf = dev_read(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -130,8 +129,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf +
-					      (sector << SECTOR_SHIFT));
+		lh = (struct label_header *) (buf + (sector << SECTOR_SHIFT));
 
 		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
 			if (found) {
@@ -173,7 +171,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 					continue;
 				}
 				r = li->l;
-				memcpy(buf, lh, LABEL_SIZE);
+				memcpy(labelbuf, lh, LABEL_SIZE);
 				if (label_sector)
 					*label_sector = sector + scan_sector;
 				found = 1;
@@ -183,6 +181,8 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	}
 
       out:
+	dm_free(buf);
+
 	if (!found) {
 		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
@@ -195,16 +195,16 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 /* FIXME Also wipe associated metadata area headers? */
 int label_remove(struct device *dev)
 {
-	char buf[LABEL_SIZE] __attribute__((aligned(8)));
-	char readbuf[LABEL_SCAN_SIZE] __attribute__((aligned(8)));
+	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
 	int r = 1;
 	uint64_t sector;
 	int wipe;
 	struct labeller_i *li;
 	struct label_header *lh;
 	struct lvmcache_info *info;
+	char *buf = NULL;
 
-	memset(buf, 0, LABEL_SIZE);
+	memset(labelbuf, 0, LABEL_SIZE);
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
@@ -217,7 +217,7 @@ int label_remove(struct device *dev)
 	 */
 	dev_flush(dev);
 
-	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL, readbuf)) {
+	if (!(buf = dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
 		log_debug_devs("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -225,8 +225,7 @@ int label_remove(struct device *dev)
 	/* Scan first few sectors for anything looking like a label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (readbuf +
-					      (sector << SECTOR_SHIFT));
+		lh = (struct label_header *) (buf + (sector << SECTOR_SHIFT));
 
 		wipe = 0;
 
@@ -246,8 +245,7 @@ int label_remove(struct device *dev)
 		if (wipe) {
 			log_very_verbose("%s: Wiping label at sector %" PRIu64,
 					 dev_name(dev), sector);
-			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL,
-				       buf)) {
+			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE, DEV_IO_LABEL, labelbuf)) {
 				/* Also remove the PV record from cache. */
 				info = lvmcache_info_from_pvid(dev->pvid, dev, 0);
 				if (info)
@@ -265,6 +263,7 @@ int label_remove(struct device *dev)
 	if (!dev_close(dev))
 		stack;
 
+	dm_free(buf);
 	return r;
 }
 

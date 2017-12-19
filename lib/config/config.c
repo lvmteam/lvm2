@@ -533,11 +533,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 			if (!(buf = dev_read_circular(dev, (uint64_t) offset, size, (uint64_t) offset2, size2, reason)))
 				goto_out;
 		} else {
-			if (!(buf = dm_malloc(size))) {
-				log_error("Failed to allocate buffer for metadata read.");
-				return 0;
-			}
-			if (!dev_read(dev, (uint64_t) offset, size, reason, buf))
+			if (!(buf = dev_read(dev, (uint64_t) offset, size, reason)))
 				goto_out;
 		}
 		fb = buf;
