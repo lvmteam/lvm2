@@ -232,7 +232,6 @@ class LvState(State):
 @utils.dbus_property(LV_COMMON_INTERFACE, 'Attr', 's')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'DataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'SnapPercent', 'u')
-@utils.dbus_property(LV_COMMON_INTERFACE, 'DataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'MetaDataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'CopyPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'SyncPercent', 'u')
