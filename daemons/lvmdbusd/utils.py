@@ -56,6 +56,12 @@ def n32(v):
 		return 0
 	return int(float(v))
 
+@rtype(dbus.Double)
+def d(v):
+	if not v:
+		return 0.0
+	return float(v)
+
 
 # noinspection PyProtectedMember
 def init_class_from_arguments(obj_instance):

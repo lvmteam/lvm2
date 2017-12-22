@@ -17,7 +17,7 @@ from . import cfg
 from .cfg import LV_INTERFACE, THIN_POOL_INTERFACE, SNAPSHOT_INTERFACE, \
 	LV_COMMON_INTERFACE, CACHE_POOL_INTERFACE, LV_CACHED
 from .request import RequestEntry
-from .utils import n, n32
+from .utils import n, n32, d
 from .loader import common
 from .state import State
 from . import background
@@ -78,14 +78,14 @@ def lvs_state_retrieve(selection, cache_refresh=True):
 			l['vg_name'],
 			l['vg_uuid'], l['pool_lv_uuid'],
 			l['pool_lv'], l['origin_uuid'], l['origin'],
-			n32(l['data_percent']), l['lv_attr'],
+			d(l['data_percent']), l['lv_attr'],
 			l['lv_tags'], l['lv_active'], l['data_lv'],
 			l['metadata_lv'], l['segtype'], l['lv_role'],
 			l['lv_layout'],
-			n32(l['snap_percent']),
-			n32(l['metadata_percent']),
-			n32(l['copy_percent']),
-			n32(l['sync_percent']),
+			d(l['snap_percent']),
+			d(l['metadata_percent']),
+			d(l['copy_percent']),
+			d(l['sync_percent']),
 			n(l['lv_metadata_size']),
 			l['move_pv'],
 			l['move_pv_uuid']))
@@ -232,7 +232,6 @@ class LvState(State):
 @utils.dbus_property(LV_COMMON_INTERFACE, 'Attr', 's')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'DataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'SnapPercent', 'u')
-@utils.dbus_property(LV_COMMON_INTERFACE, 'DataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'MetaDataPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'CopyPercent', 'u')
 @utils.dbus_property(LV_COMMON_INTERFACE, 'SyncPercent', 'u')
