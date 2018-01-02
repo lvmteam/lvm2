@@ -119,6 +119,14 @@ static void _update_lvmcache_orphan(struct lvmcache_info *info)
 		stack;
 }
 
+static void _set_label_read_result(struct device *dev, uint64_t sector, struct label **result)
+{
+	if (result && *result) {
+		(*result)->dev = dev;
+		(*result)->sector = sector;
+	}
+}
+
 static struct labeller *_find_labeller(struct device *dev, char *labelbuf,
 				       uint64_t *label_sector,
 				       uint64_t scan_sector)
@@ -277,8 +285,7 @@ int label_remove(struct device *dev)
 	return r;
 }
 
-int label_read(struct device *dev, struct label **result,
-		uint64_t scan_sector)
+static int _label_read(struct device *dev, struct label **result, uint64_t scan_sector)
 {
 	char buf[LABEL_SIZE] __attribute__((aligned(8)));
 	struct labeller *l;
@@ -304,15 +311,18 @@ int label_read(struct device *dev, struct label **result,
 	}
 
 	if ((l = _find_labeller(dev, buf, &sector, scan_sector)))
-		if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result) {
-			(*result)->dev = dev;
-			(*result)->sector = sector;
-		}
+		if ((r = (l->ops->read)(l, dev, buf, result)))
+			_set_label_read_result(dev, sector, result);
 
 	if (!dev_close(dev))
 		stack;
 
 	return r;
+}
+
+int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
+{
+	return _label_read(dev, result, scan_sector);
 }
 
 /* Caller may need to use label_get_handler to create label struct! */
