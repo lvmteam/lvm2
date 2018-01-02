@@ -119,42 +119,48 @@ static void _update_lvmcache_orphan(struct lvmcache_info *info)
 		stack;
 }
 
-static void _set_label_read_result(int failed, struct device *dev, uint64_t sector, struct label **result)
+struct find_labeller_params {
+	struct device *dev;
+	uint64_t scan_sector;	/* Sector to be scanned */
+
+	uint64_t label_sector;	/* Sector where label found */
+	struct label **result;
+};
+
+static void _set_label_read_result(int failed, struct find_labeller_params *flp)
 {
+	struct label **result = flp->result;
+
 	if (failed)
 		goto_out;
 
 	if (result && *result) {
-		(*result)->dev = dev;
-		(*result)->sector = sector;
+		(*result)->dev = flp->dev;
+		(*result)->sector = flp->label_sector;
 	}
 
 out:
-	if (!dev_close(dev))
+	if (!dev_close(flp->dev))
 		stack;
 }
 
-static int _find_labeller(struct device *dev, uint64_t scan_sector, struct label **result)
+static int _find_labeller(struct find_labeller_params *flp, char *readbuf)
 {
+	struct device *dev = flp->dev;
+	uint64_t scan_sector = flp->scan_sector;
+	struct label **result = flp->result;
 	char labelbuf[LABEL_SIZE] __attribute__((aligned(8)));
-	uint64_t label_sector;
 	struct labeller_i *li;
 	struct labeller *l = NULL;	/* Set when a labeller claims the label */
 	struct label_header *lh;
 	struct lvmcache_info *info;
 	uint64_t sector;
-	char *buf = NULL;
 	int r = 0;
-
-	if (!(buf = dev_read(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
-		log_debug_devs("%s: Failed to read label area", dev_name(dev));
-		goto out;
-	}
 
 	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
-		lh = (struct label_header *) (buf + (sector << SECTOR_SHIFT));
+		lh = (struct label_header *) (readbuf + (sector << SECTOR_SHIFT));
 
 		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
 			if (l) {
@@ -196,15 +202,14 @@ static int _find_labeller(struct device *dev, uint64_t scan_sector, struct label
 					continue;
 				}
 				memcpy(labelbuf, lh, LABEL_SIZE);
-				label_sector = sector + scan_sector;
+				flp->label_sector = sector + scan_sector;
 				l = li->l;
 				break;
 			}
 		}
 	}
 
-      out:
-	dm_free(buf);
+	dm_free(readbuf);
 
 	if (!l) {
 		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
@@ -213,7 +218,7 @@ static int _find_labeller(struct device *dev, uint64_t scan_sector, struct label
 	} else
 		r = (l->ops->read)(l, dev, labelbuf, result);
 
-	_set_label_read_result(!r, dev, label_sector, result);
+	_set_label_read_result(!r, flp);
 
 	return r;
 }
@@ -296,12 +301,27 @@ int label_remove(struct device *dev)
 static int _label_read(struct device *dev, uint64_t scan_sector, struct label **result)
 {
 	struct lvmcache_info *info;
+	struct find_labeller_params *flp;
+	char *readbuf = NULL;
 
 	if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 1))) {
 		log_debug_devs("Reading label from lvmcache for %s", dev_name(dev));
 		*result = lvmcache_get_label(info);
 		return 1;
 	}
+
+	if (!(flp = dm_pool_zalloc(_labeller_mem, sizeof *flp))) {
+		log_error("find_labeller_params allocation failed.");
+		return 0;
+	}
+
+	flp->dev = dev;
+	flp->scan_sector = scan_sector;
+	flp->result = result;
+
+	/* Ensure result is always wiped as a precaution */
+	if (result)
+		*result = NULL;
 
 	log_debug_devs("Reading label from device %s", dev_name(dev));
 
@@ -314,7 +334,13 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	return _find_labeller(dev, scan_sector, result);
+	if (!(readbuf = dev_read(dev, scan_sector << SECTOR_SHIFT, LABEL_SCAN_SIZE, DEV_IO_LABEL))) {
+		log_debug_devs("%s: Failed to read label area", dev_name(dev));
+		_set_label_read_result(1, flp);
+		return 0;
+	}
+
+	return _find_labeller(flp, readbuf);
 }
 
 int label_read(struct device *dev, struct label **result, uint64_t scan_sector)
