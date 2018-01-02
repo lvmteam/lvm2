@@ -15,7 +15,7 @@ coordinate reading and writing of LVM metadata
 validate caching of LVM metadata
 .br
 \[bu]
-prevent concurrent activation of logical volumes
+prevent conflicting activation of logical volumes
 .br
 
 lvmlockd uses an external lock manager to perform basic locking.
