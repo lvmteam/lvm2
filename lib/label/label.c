@@ -26,6 +26,8 @@
 
 /* FIXME Allow for larger labels?  Restricted to single sector currently */
 
+static struct dm_pool *_labeller_mem;
+
 /*
  * Internal labeller struct.
  */
@@ -58,7 +60,13 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 
 int label_init(void)
 {
+	if (!(_labeller_mem = dm_pool_create("label scan", 128))) {
+		log_error("Labeller pool creation failed.");
+		return 0;
+	}
+
 	dm_list_init(&_labellers);
+
 	return 1;
 }
 
@@ -73,6 +81,8 @@ void label_exit(void)
 	}
 
 	dm_list_init(&_labellers);
+
+	dm_pool_destroy(_labeller_mem);
 }
 
 int label_register_handler(struct labeller *handler)
