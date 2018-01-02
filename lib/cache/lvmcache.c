@@ -1204,7 +1204,7 @@ int lvmcache_label_scan(struct cmd_context *cmd)
 	 */
 	if (_force_label_scan && cmd->is_long_lived &&
 	    cmd->dump_filter && cmd->full_filter && cmd->full_filter->dump &&
-	    !cmd->full_filter->dump(cmd->full_filter, 0))
+	    !cmd->full_filter->dump(cmd->full_filter, cmd->mem, 0))
 		stack;
 
 	r = 1;

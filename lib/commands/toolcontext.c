@@ -1287,7 +1287,7 @@ int init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 		lvm_stat_ctim(&ts, &st);
 		cts = config_file_timestamp(cmd->cft);
 		if (timespeccmp(&ts, &cts, >) &&
-		    !persistent_filter_load(cmd->filter, NULL))
+		    !persistent_filter_load(cmd->mem, cmd->filter, NULL))
 			log_verbose("Failed to load existing device cache from %s",
 				    dev_cache);
 	}
@@ -2225,7 +2225,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	int flags;
 
 	if (cmd->dump_filter && cmd->filter && cmd->filter->dump &&
-	    !cmd->filter->dump(cmd->filter, 1))
+	    !cmd->filter->dump(cmd->filter, cmd->mem, 1))
 		stack;
 
 	archive_exit(cmd);

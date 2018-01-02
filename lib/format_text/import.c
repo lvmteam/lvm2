@@ -16,6 +16,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "import-export.h"
+#include "toolcontext.h"
 
 /* FIXME Use tidier inclusion method */
 static struct text_vg_version_ops *(_text_vsn_list[2]);
@@ -52,8 +53,8 @@ int text_vgsummary_import(const struct format_type *fmt,
 	if (!(cft = config_open(CONFIG_FILE_SPECIAL, NULL, 0)))
 		return_0;
 
-	if ((!dev && !config_file_read(cft)) ||
-	    (dev && !config_file_read_fd(cft, dev, reason, offset, size,
+	if ((!dev && !config_file_read(fmt->cmd->mem, cft)) ||
+	    (dev && !config_file_read_fd(fmt->cmd->mem, cft, dev, reason, offset, size,
 					 offset2, size2, checksum_fn,
 					 vgsummary->mda_checksum,
 					 checksum_only, 1))) {
@@ -127,8 +128,8 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		     ((*vg_fmtdata)->cached_mda_checksum == checksum) &&
 		     ((*vg_fmtdata)->cached_mda_size == (size + size2));
 
-	if ((!dev && !config_file_read(cft)) ||
-	    (dev && !config_file_read_fd(cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
+	if ((!dev && !config_file_read(fid->mem, cft)) ||
+	    (dev && !config_file_read_fd(fid->mem, cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
 					 offset2, size2, checksum_fn, checksum,
 					 skip_parse, 1)))
 		goto_out;

@@ -87,7 +87,7 @@ static int _read_array(struct pfilter *pf, struct dm_config_tree *cft,
 	return 1;
 }
 
-int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out)
+int persistent_filter_load(struct dm_pool *mem, struct dev_filter *f, struct dm_config_tree **cft_out)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	struct dm_config_tree *cft;
@@ -116,7 +116,7 @@ int persistent_filter_load(struct dev_filter *f, struct dm_config_tree **cft_out
 	if (!(cft = config_open(CONFIG_FILE_SPECIAL, pf->file, 1)))
 		return_0;
 
-	if (!config_file_read(cft))
+	if (!config_file_read(mem, cft))
 		goto_out;
 
 	log_debug_devs("Loading persistent filter cache from %s", pf->file);
@@ -175,7 +175,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 		fprintf(fp, "\n\t]\n");
 }
 
-static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
+static int _persistent_filter_dump(struct dev_filter *f, struct dm_pool *mem, int merge_existing)
 {
 	struct pfilter *pf;
 	char *tmp_file;
@@ -234,7 +234,7 @@ static int _persistent_filter_dump(struct dev_filter *f, int merge_existing)
 	lvm_stat_ctim(&ts, &info);
 	if (merge_existing && timespeccmp(&ts, &pf->ctime, !=))
 		/* Keep cft open to avoid losing lock */
-		persistent_filter_load(f, &cft);
+		persistent_filter_load(mem, f, &cft);
 
 	tmp_file = alloca(strlen(pf->file) + 5);
 	sprintf(tmp_file, "%s.tmp", pf->file);
