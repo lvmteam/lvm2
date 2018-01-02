@@ -2138,6 +2138,8 @@ int refresh_toolcontext(struct cmd_context *cmd)
 
 	cmd->lib_dir = NULL;
 
+	label_init();
+
 	if (!_init_lvm_conf(cmd))
 		return_0;
 
