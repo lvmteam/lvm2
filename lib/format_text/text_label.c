@@ -325,13 +325,74 @@ struct update_mda_baton {
 	int ret;
 };
 
+struct process_mda_header_params {
+	struct update_mda_baton *umb;
+	struct metadata_area *mda;
+	struct device *dev;
+	struct lvmcache_vgsummary vgsummary;
+};
+
+static int _process_vgsummary(struct process_mda_header_params *pmp, struct lvmcache_vgsummary *vgsummary)
+{
+	int r = 0;
+
+	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
+		pmp->umb->ret = 0;
+		goto_out;
+	}
+
+	r = 1;
+
+out:
+	if (!dev_close(pmp->dev))
+		stack;
+
+	return r;
+}
+
+static int _process_mda_header(struct process_mda_header_params *pmp, struct mda_header *mdah)
+{
+	struct update_mda_baton *umb = pmp->umb;
+	const struct format_type *fmt = umb->label->labeller->fmt;
+	struct metadata_area *mda = pmp->mda;
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+
+	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
+
+	if (mda_is_ignored(mda)) {
+		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
+				   dev_name(mdac->area.dev),
+				   mdac->area.start);
+		if (!dev_close(pmp->dev))
+			stack;
+		return 1;
+	}
+
+	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary,
+			     &mdac->free_sectors)) {
+		/* FIXME Separate fatal and non-fatal error cases? */
+		stack;
+		if (!dev_close(pmp->dev))
+			stack;
+		return 1;
+	}
+
+	return _process_vgsummary(pmp, &pmp->vgsummary);
+}
+
 static int _update_mda(struct metadata_area *mda, void *baton)
 {
+	struct process_mda_header_params *pmp;
 	struct update_mda_baton *umb = baton;
 	const struct format_type *fmt = umb->label->labeller->fmt;
+	struct dm_pool *mem = umb->label->labeller->fmt->cmd->mem;
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
-	struct lvmcache_vgsummary vgsummary = { 0 };
+
+	if (!(pmp = dm_pool_zalloc(mem, sizeof(*pmp)))) {
+		log_error("struct process_mda_header_params allocation failed");
+		return 0;
+	}
 
 	/*
 	 * Using the labeller struct to preserve info about
@@ -346,41 +407,19 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
+	pmp->dev = mdac->area.dev;
+
+	pmp->umb = umb;
+	pmp->mda = mda;
+
 	if (!(mdah = raw_read_mda_header(fmt->cmd->mem, &mdac->area, mda_is_primary(mda)))) {
 		stack;
-		goto close_dev;
-	}
-
-	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
-
-	if (mda_is_ignored(mda)) {
-		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
-				   dev_name(mdac->area.dev),
-				   mdac->area.start);
-		if (!dev_close(mdac->area.dev))
+		if (!dev_close(pmp->dev))
 			stack;
 		return 1;
 	}
 
-	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &vgsummary,
-			     &mdac->free_sectors)) {
-		/* FIXME Separate fatal and non-fatal error cases? */
-		stack;
-		goto close_dev;
-	}
-
-	if (!lvmcache_update_vgname_and_id(umb->info, &vgsummary)) {
-		if (!dev_close(mdac->area.dev))
-			stack;
-		umb->ret = 0;
-		return_0;
-	}
-
-close_dev:
-	if (!dev_close(mdac->area.dev))
-		stack;
-
-	return 1;
+	return _process_mda_header(pmp, mdah);
 }
 
 static int _text_read(struct labeller *l, struct device *dev, void *buf, struct label **label)
