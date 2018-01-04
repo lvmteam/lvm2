@@ -1328,16 +1328,118 @@ static int _scan_file(const struct format_type *fmt, const char *vgname)
 	return 1;
 }
 
+struct vgname_from_mda_params{
+	const struct format_type *fmt;
+	struct mda_header *mdah;
+	struct device_area *dev_area;
+	int primary_mda;
+	struct lvmcache_vgsummary *vgsummary;
+	uint64_t *mda_free_sectors;
+	uint32_t wrap;
+	unsigned used_cached_metadata;
+};
+
+static int _vgname_from_mda_process(struct vgname_from_mda_params *vfmp)
+{
+	struct mda_header *mdah = vfmp->mdah;
+	struct device_area *dev_area = vfmp->dev_area;
+	struct lvmcache_vgsummary *vgsummary = vfmp->vgsummary;
+	uint64_t *mda_free_sectors = vfmp->mda_free_sectors;
+	struct raw_locn *rlocn = mdah->raw_locns;
+	uint64_t buffer_size, current_usage;
+	int r = 0;
+
+	/* Ignore this entry if the characters aren't permissible */
+	if (!validate_name(vgsummary->vgname))
+		goto_out;
+
+	log_debug_metadata("%s: %s metadata at " FMTu64 " size " FMTu64 " with wrap " FMTu32
+			   " (in area at " FMTu64 " size " FMTu64
+			   ") for %s (" FMTVGID ")",
+			   dev_name(dev_area->dev),
+			   vfmp->used_cached_metadata ? "Using cached" : "Found",
+			   dev_area->start + rlocn->offset,
+			   rlocn->size, vfmp->wrap, dev_area->start, dev_area->size, vgsummary->vgname,
+			   (char *)&vgsummary->vgid);
+
+	if (mda_free_sectors) {
+		current_usage = ALIGN_ABSOLUTE(rlocn->size, dev_area->start + rlocn->offset, MDA_ALIGNMENT);
+
+		buffer_size = mdah->size - MDA_HEADER_SIZE;
+
+		if (current_usage * 2 >= buffer_size)
+			*mda_free_sectors = UINT64_C(0);
+		else
+			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
+	}
+
+	r = 1;
+
+out:
+	return r;
+}
+
+static int _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *buffer)
+{
+	const struct format_type *fmt = vfmp->fmt;
+	struct mda_header *mdah = vfmp->mdah;
+	struct device_area *dev_area = vfmp->dev_area;
+	struct lvmcache_vgsummary *vgsummary = vfmp->vgsummary;
+	struct raw_locn *rlocn = mdah->raw_locns;
+	unsigned len = 0;
+	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
+
+	memcpy(buf, buffer, NAME_LEN + 1);
+
+	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
+	       len < (NAME_LEN - 1))
+		len++;
+
+	buf[len] = '\0';
+
+	/* Ignore this entry if the characters aren't permissible */
+	if (!validate_name(buf))
+		goto_out;
+
+	/* We found a VG - now check the metadata */
+	if (rlocn->offset + rlocn->size > mdah->size)
+		vfmp->wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
+
+	if (vfmp->wrap > rlocn->offset) {
+		log_error("%s: metadata (" FMTu64 " bytes) too large for circular buffer (" FMTu64 " bytes)",
+			  dev_name(dev_area->dev), rlocn->size, mdah->size - MDA_HEADER_SIZE);
+		goto out;
+	}
+
+	/* Did we see this metadata before? */
+	vgsummary->mda_checksum = rlocn->checksum;
+	vgsummary->mda_size = rlocn->size;
+
+	if (lvmcache_lookup_mda(vgsummary))
+		vfmp->used_cached_metadata = 1;
+
+	/* FIXME 64-bit */
+	if (!text_vgsummary_import(fmt, dev_area->dev, MDA_CONTENT_REASON(vfmp->primary_mda),
+				(off_t) (dev_area->start + rlocn->offset),
+				(uint32_t) (rlocn->size - vfmp->wrap),
+				(off_t) (dev_area->start + MDA_HEADER_SIZE),
+				vfmp->wrap, calc_crc, vgsummary->vgname ? 1 : 0,
+				vgsummary))
+		goto_out;
+
+	return _vgname_from_mda_process(vfmp);
+
+out:
+	return 0;
+}
+
 int vgname_from_mda(const struct format_type *fmt,
 		    struct mda_header *mdah, int primary_mda, struct device_area *dev_area,
 		    struct lvmcache_vgsummary *vgsummary, uint64_t *mda_free_sectors)
 {
 	struct raw_locn *rlocn;
-	uint32_t wrap = 0;
-	unsigned int len = 0;
 	char buf[NAME_LEN + 1] __attribute__((aligned(8)));
-	uint64_t buffer_size, current_usage;
-	unsigned used_cached_metadata = 0;
+	struct vgname_from_mda_params *vfmp;
 
 	if (mda_free_sectors)
 		*mda_free_sectors = ((dev_area->size - MDA_HEADER_SIZE) / 2) >> SECTOR_SHIFT;
@@ -1359,72 +1461,25 @@ int vgname_from_mda(const struct format_type *fmt,
 		return 0;
 	}
 
+	if (!(vfmp = dm_pool_zalloc(fmt->cmd->mem, sizeof(*vfmp)))) {
+		log_error("vgname_from_mda_params allocation failed");
+		return 0;
+	}
+
+	vfmp->fmt = fmt;
+	vfmp->mdah = mdah;
+	vfmp->dev_area = dev_area;
+	vfmp->vgsummary = vgsummary;
+	vfmp->primary_mda = primary_mda;
+	vfmp->mda_free_sectors = mda_free_sectors;
+
 	/* Do quick check for a vgname */
+	/* We cannot read the full metadata here because the name has to be validated before we use the size field */
 	if (!dev_read_buf(dev_area->dev, dev_area->start + rlocn->offset,
 			  NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
 		return_0;
 
-	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
-	       len < (NAME_LEN - 1))
-		len++;
-
-	buf[len] = '\0';
-
-	/* Ignore this entry if the characters aren't permissible */
-	if (!validate_name(buf))
-		return_0;
-
-	/* We found a VG - now check the metadata */
-	if (rlocn->offset + rlocn->size > mdah->size)
-		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
-
-	if (wrap > rlocn->offset) {
-		log_error("%s: metadata (" FMTu64 " bytes) too large for circular buffer (" FMTu64 " bytes)",
-			  dev_name(dev_area->dev), rlocn->size, mdah->size - MDA_HEADER_SIZE);
-		return 0;
-	}
-
-	/* Did we see this metadata before? */
-	vgsummary->mda_checksum = rlocn->checksum;
-	vgsummary->mda_size = rlocn->size;
-
-	if (lvmcache_lookup_mda(vgsummary))
-		used_cached_metadata = 1;
-
-	/* FIXME 64-bit */
-	if (!text_vgsummary_import(fmt, dev_area->dev, MDA_CONTENT_REASON(primary_mda),
-				(off_t) (dev_area->start + rlocn->offset),
-				(uint32_t) (rlocn->size - wrap),
-				(off_t) (dev_area->start + MDA_HEADER_SIZE),
-				wrap, calc_crc, vgsummary->vgname ? 1 : 0,
-				vgsummary))
-		return_0;
-
-	/* Ignore this entry if the characters aren't permissible */
-	if (!validate_name(vgsummary->vgname))
-		return_0;
-
-	log_debug_metadata("%s: %s metadata at " FMTu64 " size " FMTu64 " with wrap " FMTu32
-			   " (in area at " FMTu64 " size " FMTu64
-			   ") for %s (" FMTVGID ")",
-			   dev_name(dev_area->dev),
-			   used_cached_metadata ? "Using cached" : "Found",
-			   dev_area->start + rlocn->offset,
-			   rlocn->size, wrap, dev_area->start, dev_area->size, vgsummary->vgname,
-			   (char *)&vgsummary->vgid);
-
-	if (mda_free_sectors) {
-		current_usage = ALIGN_ABSOLUTE(rlocn->size, dev_area->start + rlocn->offset, MDA_ALIGNMENT);
-
-		buffer_size = mdah->size - MDA_HEADER_SIZE;
-
-		if (current_usage * 2 >= buffer_size)
-			*mda_free_sectors = UINT64_C(0);
-		else
-			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
-	}
-
-	return 1;
+	return _vgname_from_mda_validate(vfmp, buf);
 }
 
 static int _scan_raw(const struct format_type *fmt, const char *vgname __attribute__((unused)))
