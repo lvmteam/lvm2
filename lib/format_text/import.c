@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -38,18 +38,16 @@ struct import_vgsummary_params {
 	struct dm_config_tree *cft;
 	int checksum_only;
 	struct lvmcache_vgsummary *vgsummary;
+	int ret;
 };
 
-static int _import_vgsummary(struct import_vgsummary_params *ivsp)
+static void _import_vgsummary(struct import_vgsummary_params *ivsp)
 {
 	struct text_vg_version_ops **vsn;
-	int r = 0;
 
-	if (ivsp->checksum_only) {
+	if (ivsp->checksum_only)
 		/* Checksum matches already-cached content - no need to reparse. */
-		r = 1;
 		goto out;
-	}
 
 	/*
 	 * Find a set of version functions that can read this file
@@ -58,16 +56,19 @@ static int _import_vgsummary(struct import_vgsummary_params *ivsp)
 		if (!(*vsn)->check_version(ivsp->cft))
 			continue;
 
-		if (!(*vsn)->read_vgsummary(ivsp->fmt, ivsp->cft, ivsp->vgsummary))
+		if (!(*vsn)->read_vgsummary(ivsp->fmt, ivsp->cft, ivsp->vgsummary)) {
+			ivsp->ret = 0;
 			goto_out;
+		}
 
-		r = 1;
-		break;
+		goto out;
 	}
+
+	/* Nothing found */
+	ivsp->ret = 0;
 
 out:
 	config_destroy(ivsp->cft);
-	return r;
 }
 
 /*
@@ -96,6 +97,7 @@ int text_vgsummary_import(const struct format_type *fmt,
 	ivsp->fmt = fmt;
 	ivsp->checksum_only = checksum_only;
 	ivsp->vgsummary = vgsummary;
+	ivsp->ret = 1;
 
 	if (!dev && !config_file_read(fmt->cmd->mem, ivsp->cft)) {
 		log_error("Couldn't read volume group metadata.");
@@ -112,7 +114,9 @@ int text_vgsummary_import(const struct format_type *fmt,
 		return 0;
 	}
 
-	return _import_vgsummary(ivsp);
+	_import_vgsummary(ivsp);
+
+	return ivsp->ret;
 }
 
 struct cached_vg_fmtdata {

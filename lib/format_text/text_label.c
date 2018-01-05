@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -330,27 +330,23 @@ struct process_mda_header_params {
 	struct metadata_area *mda;
 	struct device *dev;
 	struct lvmcache_vgsummary vgsummary;
+	int ret;
 };
 
-static int _process_vgsummary(struct process_mda_header_params *pmp, struct lvmcache_vgsummary *vgsummary)
+static void _process_vgsummary(struct process_mda_header_params *pmp, struct lvmcache_vgsummary *vgsummary)
 {
-	int r = 0;
-
 	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
 		pmp->umb->ret = 0;
+		pmp->ret = 0;
 		goto_out;
 	}
-
-	r = 1;
 
 out:
 	if (!dev_close(pmp->dev))
 		stack;
-
-	return r;
 }
 
-static int _process_mda_header(struct process_mda_header_params *pmp, struct mda_header *mdah)
+static void _process_mda_header(struct process_mda_header_params *pmp, struct mda_header *mdah)
 {
 	struct update_mda_baton *umb = pmp->umb;
 	const struct format_type *fmt = umb->label->labeller->fmt;
@@ -365,7 +361,7 @@ static int _process_mda_header(struct process_mda_header_params *pmp, struct mda
 				   mdac->area.start);
 		if (!dev_close(pmp->dev))
 			stack;
-		return 1;
+		return;
 	}
 
 	if (!vgname_from_mda(fmt, mdah, mda_is_primary(mda), &mdac->area, &pmp->vgsummary,
@@ -374,10 +370,10 @@ static int _process_mda_header(struct process_mda_header_params *pmp, struct mda
 		stack;
 		if (!dev_close(pmp->dev))
 			stack;
-		return 1;
+		return;
 	}
 
-	return _process_vgsummary(pmp, &pmp->vgsummary);
+	_process_vgsummary(pmp, &pmp->vgsummary);
 }
 
 static int _update_mda(struct metadata_area *mda, void *baton)
@@ -411,6 +407,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 
 	pmp->umb = umb;
 	pmp->mda = mda;
+	pmp->ret = 1;
 
 	if (!(mdah = raw_read_mda_header(fmt->cmd->mem, &mdac->area, mda_is_primary(mda)))) {
 		stack;
@@ -419,7 +416,9 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	return _process_mda_header(pmp, mdah);
+	_process_mda_header(pmp, mdah);
+
+	return pmp->ret;
 }
 
 static int _text_read(struct labeller *l, struct device *dev, void *buf, struct label **label)

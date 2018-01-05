@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -125,6 +125,8 @@ struct find_labeller_params {
 
 	uint64_t label_sector;	/* Sector where label found */
 	struct label **result;
+
+	int ret;
 };
 
 static void _set_label_read_result(int failed, struct find_labeller_params *flp)
@@ -144,7 +146,7 @@ out:
 		stack;
 }
 
-static int _find_labeller(struct find_labeller_params *flp, char *readbuf)
+static void _find_labeller(struct find_labeller_params *flp, char *readbuf)
 {
 	struct device *dev = flp->dev;
 	uint64_t scan_sector = flp->scan_sector;
@@ -155,7 +157,8 @@ static int _find_labeller(struct find_labeller_params *flp, char *readbuf)
 	struct label_header *lh;
 	struct lvmcache_info *info;
 	uint64_t sector;
-	int r = 0;
+
+int r = 0;
 
 	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
@@ -215,12 +218,11 @@ static int _find_labeller(struct find_labeller_params *flp, char *readbuf)
 		if ((info = lvmcache_info_from_pvid(dev->pvid, dev, 0)))
 			_update_lvmcache_orphan(info);
 		log_very_verbose("%s: No label detected", dev_name(dev));
+		flp->ret = 0;
 	} else
-		r = (l->ops->read)(l, dev, labelbuf, result);
+		flp->ret = (l->ops->read)(l, dev, labelbuf, result);
 
-	_set_label_read_result(!r, flp);
-
-	return r;
+	_set_label_read_result(!flp->ret, flp);
 }
 
 /* FIXME Also wipe associated metadata area headers? */
@@ -318,6 +320,7 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 	flp->dev = dev;
 	flp->scan_sector = scan_sector;
 	flp->result = result;
+	flp->ret = 1;
 
 	/* Ensure result is always wiped as a precaution */
 	if (result)
@@ -340,7 +343,8 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	return _find_labeller(flp, readbuf);
+	_find_labeller(flp, readbuf);
+	return flp->ret;
 }
 
 int label_read(struct device *dev, struct label **result, uint64_t scan_sector)

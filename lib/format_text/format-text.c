@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -329,16 +329,18 @@ static void _xlate_mdah(struct mda_header *mdah)
 struct process_raw_mda_header_params {
 	struct mda_header *mdah;
 	struct device_area dev_area;
+	int ret;
 };
 
-static int _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
+static void _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
 {
 	struct mda_header *mdah = prmp->mdah;
 	struct device_area *dev_area = &prmp->dev_area;
-	int r = 0;
 
-	if (!dev_close(dev_area->dev))
+	if (!dev_close(dev_area->dev)) {
+		prmp->ret = 0;
 		goto_out;
+	}
 
 	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 						  MDA_HEADER_SIZE -
@@ -346,6 +348,7 @@ static int _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
 		log_error("Incorrect metadata area header checksum on %s"
 			  " at offset " FMTu64, dev_name(dev_area->dev),
 			  dev_area->start);
+		prmp->ret = 0;
 		goto out;
 	}
 
@@ -355,6 +358,7 @@ static int _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
 		log_error("Wrong magic number in metadata area header on %s"
 			  " at offset " FMTu64, dev_name(dev_area->dev),
 			  dev_area->start);
+		prmp->ret = 0;
 		goto out;
 	}
 
@@ -362,6 +366,7 @@ static int _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
 		log_error("Incompatible metadata area header version: %d on %s"
 			  " at offset " FMTu64, mdah->version,
 			  dev_name(dev_area->dev), dev_area->start);
+		prmp->ret = 0;
 		goto out;
 	}
 
@@ -369,13 +374,12 @@ static int _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
 		log_error("Incorrect start sector in metadata area header: "
 			  FMTu64 " on %s at offset " FMTu64, mdah->start,
 			  dev_name(dev_area->dev), dev_area->start);
+		prmp->ret = 0;
 		goto out;
 	}
 
-	r = 1;
-
 out:
-	return r;
+	;
 }
 
 static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct device_area *dev_area, int primary_mda)
@@ -401,6 +405,7 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 
 	prmp->mdah = mdah;
 	prmp->dev_area = *dev_area;
+	prmp->ret = 1;
 
 	if (!dev_read_buf(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, MDA_HEADER_REASON(primary_mda), mdah)) {
 		if (!dev_close(dev_area->dev))
@@ -408,7 +413,9 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 		return_NULL;
 	}
 
-	if (!_process_raw_mda_header(prmp))
+	_process_raw_mda_header(prmp);
+
+	if (!prmp->ret)
 		return_NULL;
 
 	return mdah;
@@ -1337,9 +1344,10 @@ struct vgname_from_mda_params{
 	uint64_t *mda_free_sectors;
 	uint32_t wrap;
 	unsigned used_cached_metadata;
+	int ret;
 };
 
-static int _vgname_from_mda_process(struct vgname_from_mda_params *vfmp)
+static void _vgname_from_mda_process(struct vgname_from_mda_params *vfmp)
 {
 	struct mda_header *mdah = vfmp->mdah;
 	struct device_area *dev_area = vfmp->dev_area;
@@ -1347,11 +1355,12 @@ static int _vgname_from_mda_process(struct vgname_from_mda_params *vfmp)
 	uint64_t *mda_free_sectors = vfmp->mda_free_sectors;
 	struct raw_locn *rlocn = mdah->raw_locns;
 	uint64_t buffer_size, current_usage;
-	int r = 0;
 
 	/* Ignore this entry if the characters aren't permissible */
-	if (!validate_name(vgsummary->vgname))
+	if (!validate_name(vgsummary->vgname)) {
+		vfmp->ret = 0;
 		goto_out;
+	}
 
 	log_debug_metadata("%s: %s metadata at " FMTu64 " size " FMTu64 " with wrap " FMTu32
 			   " (in area at " FMTu64 " size " FMTu64
@@ -1373,13 +1382,11 @@ static int _vgname_from_mda_process(struct vgname_from_mda_params *vfmp)
 			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
 	}
 
-	r = 1;
-
 out:
-	return r;
+	;
 }
 
-static int _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *buffer)
+static void _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *buffer)
 {
 	const struct format_type *fmt = vfmp->fmt;
 	struct mda_header *mdah = vfmp->mdah;
@@ -1398,8 +1405,10 @@ static int _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *
 	buf[len] = '\0';
 
 	/* Ignore this entry if the characters aren't permissible */
-	if (!validate_name(buf))
+	if (!validate_name(buf)) {
+		vfmp->ret = 0;
 		goto_out;
+	}
 
 	/* We found a VG - now check the metadata */
 	if (rlocn->offset + rlocn->size > mdah->size)
@@ -1408,6 +1417,7 @@ static int _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *
 	if (vfmp->wrap > rlocn->offset) {
 		log_error("%s: metadata (" FMTu64 " bytes) too large for circular buffer (" FMTu64 " bytes)",
 			  dev_name(dev_area->dev), rlocn->size, mdah->size - MDA_HEADER_SIZE);
+		vfmp->ret = 0;
 		goto out;
 	}
 
@@ -1424,13 +1434,15 @@ static int _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *
 				(uint32_t) (rlocn->size - vfmp->wrap),
 				(off_t) (dev_area->start + MDA_HEADER_SIZE),
 				vfmp->wrap, calc_crc, vgsummary->vgname ? 1 : 0,
-				vgsummary))
+				vgsummary)) {
+		vfmp->ret = 0;
 		goto_out;
+	}
 
-	return _vgname_from_mda_process(vfmp);
+	_vgname_from_mda_process(vfmp);
 
 out:
-	return 0;
+	;
 }
 
 int vgname_from_mda(const struct format_type *fmt,
@@ -1472,6 +1484,7 @@ int vgname_from_mda(const struct format_type *fmt,
 	vfmp->vgsummary = vgsummary;
 	vfmp->primary_mda = primary_mda;
 	vfmp->mda_free_sectors = mda_free_sectors;
+	vfmp->ret = 1;
 
 	/* Do quick check for a vgname */
 	/* We cannot read the full metadata here because the name has to be validated before we use the size field */
@@ -1479,7 +1492,9 @@ int vgname_from_mda(const struct format_type *fmt,
 			  NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
 		return_0;
 
-	return _vgname_from_mda_validate(vfmp, buf);
+	_vgname_from_mda_validate(vfmp, buf);
+
+	return vfmp->ret;
 }
 
 static int _scan_raw(const struct format_type *fmt, const char *vgname __attribute__((unused)))

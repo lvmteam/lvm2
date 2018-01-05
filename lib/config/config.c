@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2011 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2018 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -500,12 +500,12 @@ struct process_config_file_params {
 	uint32_t checksum;
 	int checksum_only;
 	int no_dup_node_check;
+	int ret;
 };
 
-static int _process_config_file_buffer(struct process_config_file_params *pcfp, char *buffer)
+static void _process_config_file_buffer(struct process_config_file_params *pcfp, char *buffer)
 {
 	char *fb, *fe;
-	int r = 0;
 
 	fb = buffer;
 
@@ -513,6 +513,7 @@ static int _process_config_file_buffer(struct process_config_file_params *pcfp, 
 	    (pcfp->checksum_fn(pcfp->checksum_fn(INITIAL_CRC, (const uint8_t *)fb, pcfp->size),
 			 (const uint8_t *)(fb + pcfp->size), pcfp->size2))) {
 		log_error("%s: Checksum error at offset %" PRIu64, dev_name(pcfp->dev), (uint64_t) pcfp->offset);
+		pcfp->ret = 0;
 		goto out;
 	}
 
@@ -520,16 +521,13 @@ static int _process_config_file_buffer(struct process_config_file_params *pcfp, 
 		fe = fb + pcfp->size + pcfp->size2;
 		if (pcfp->no_dup_node_check) {
 			if (!dm_config_parse_without_dup_node_check(pcfp->cft, fb, fe))
-				goto_out;
-		} else {
-			if (!dm_config_parse(pcfp->cft, fb, fe))
-				goto_out;
-		}
+				pcfp->ret = 0;
+		} else if (!dm_config_parse(pcfp->cft, fb, fe))
+			pcfp->ret = 0;
 	}
 
-	r = 1;
 out:
-	return r;
+	;
 }
 
 /*
@@ -573,6 +571,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 	pcfp->checksum = checksum;
 	pcfp->checksum_only = checksum_only;
 	pcfp->no_dup_node_check = no_dup_node_check;
+	pcfp->ret = 1;
 
 	/* Only use mmap with regular files */
 	if (!(dev->flags & DEV_REGULAR) || circular)
@@ -599,7 +598,8 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 		fb = buf;
 	}
 
-	r = _process_config_file_buffer(pcfp, fb);
+	_process_config_file_buffer(pcfp, fb);
+	r = pcfp->ret;
 
       out:
 	if (!use_mmap)
