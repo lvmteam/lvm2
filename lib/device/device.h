@@ -33,6 +33,11 @@
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
 
 /*
+ * Standard format for callback functions
+ */
+typedef void (*lvm_callback_fn_t)(int failed, void *context, void *data);
+
+/*
  * Support for external device info.
  * Any new external device info source needs to be
  * registered using EXT_REGISTER macro in dev-ext.c.

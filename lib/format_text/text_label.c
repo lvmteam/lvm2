@@ -333,8 +333,11 @@ struct process_mda_header_params {
 	int ret;
 };
 
-static void _process_vgsummary(struct process_mda_header_params *pmp, struct lvmcache_vgsummary *vgsummary)
+static void _process_vgsummary(int failed, void *context, void *data)
 {
+	struct process_mda_header_params *pmp = context;
+	struct lvmcache_vgsummary *vgsummary = data;
+
 	if (!lvmcache_update_vgname_and_id(pmp->umb->info, vgsummary)) {
 		pmp->umb->ret = 0;
 		pmp->ret = 0;
@@ -346,8 +349,10 @@ out:
 		stack;
 }
 
-static void _process_mda_header(struct process_mda_header_params *pmp, struct mda_header *mdah)
+static void _process_mda_header(int failed, void *context, void *data)
 {
+	struct process_mda_header_params *pmp = context;
+	struct mda_header *mdah = data;
 	struct update_mda_baton *umb = pmp->umb;
 	const struct format_type *fmt = umb->label->labeller->fmt;
 	struct metadata_area *mda = pmp->mda;
@@ -373,7 +378,7 @@ static void _process_mda_header(struct process_mda_header_params *pmp, struct md
 		return;
 	}
 
-	_process_vgsummary(pmp, &pmp->vgsummary);
+	_process_vgsummary(0, pmp, &pmp->vgsummary);
 }
 
 static int _update_mda(struct metadata_area *mda, void *baton)
@@ -416,7 +421,7 @@ static int _update_mda(struct metadata_area *mda, void *baton)
 		return 1;
 	}
 
-	_process_mda_header(pmp, mdah);
+	_process_mda_header(0, pmp, mdah);
 
 	return pmp->ret;
 }

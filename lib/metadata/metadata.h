@@ -48,7 +48,6 @@
  */
 #define dm_round_up(n, sz) (dm_div_up((n), (sz)) * (sz))
 
-
 /* Various flags */
 /* See metadata-exported.h for the complete list. */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */

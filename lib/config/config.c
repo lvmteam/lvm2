@@ -503,8 +503,10 @@ struct process_config_file_params {
 	int ret;
 };
 
-static void _process_config_file_buffer(struct process_config_file_params *pcfp, char *buffer)
+static void _process_config_file_buffer(int failed, void *context, void *data)
 {
+	struct process_config_file_params *pcfp = context;
+	char *buffer = data;
 	char *fb, *fe;
 
 	fb = buffer;
@@ -598,7 +600,7 @@ int config_file_read_fd(struct dm_pool *mem, struct dm_config_tree *cft, struct 
 		fb = buf;
 	}
 
-	_process_config_file_buffer(pcfp, fb);
+	_process_config_file_buffer(0, pcfp, fb);
 	r = pcfp->ret;
 
       out:

@@ -146,8 +146,10 @@ out:
 		stack;
 }
 
-static void _find_labeller(struct find_labeller_params *flp, char *readbuf)
+static void _find_labeller(int failed, void *context, void *data)
 {
+	struct find_labeller_params *flp = context;
+	char *readbuf = data;
 	struct device *dev = flp->dev;
 	uint64_t scan_sector = flp->scan_sector;
 	struct label **result = flp->result;
@@ -157,8 +159,6 @@ static void _find_labeller(struct find_labeller_params *flp, char *readbuf)
 	struct label_header *lh;
 	struct lvmcache_info *info;
 	uint64_t sector;
-
-int r = 0;
 
 	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
@@ -343,7 +343,7 @@ static int _label_read(struct device *dev, uint64_t scan_sector, struct label **
 		return 0;
 	}
 
-	_find_labeller(flp, readbuf);
+	_find_labeller(0, flp, readbuf);
 	return flp->ret;
 }
 

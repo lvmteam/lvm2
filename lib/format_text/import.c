@@ -41,8 +41,9 @@ struct import_vgsummary_params {
 	int ret;
 };
 
-static void _import_vgsummary(struct import_vgsummary_params *ivsp)
+static void _import_vgsummary(int failed, void *context, void *data)
 {
+	struct import_vgsummary_params *ivsp = context;
 	struct text_vg_version_ops **vsn;
 
 	if (ivsp->checksum_only)
@@ -114,7 +115,7 @@ int text_vgsummary_import(const struct format_type *fmt,
 		return 0;
 	}
 
-	_import_vgsummary(ivsp);
+	_import_vgsummary(0, ivsp, NULL);
 
 	return ivsp->ret;
 }
@@ -138,8 +139,9 @@ struct import_vg_params {
 	char **desc;
 };
 
-static void _import_vg(struct import_vg_params *ivp)
+static void _import_vg(int failed, void *context, void *data)
 {
+	struct import_vg_params *ivp = context;
 	struct text_vg_version_ops **vsn;
 
 	ivp->vg = NULL;
@@ -234,7 +236,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		return_NULL;
 	}
 
-	_import_vg(ivp);
+	_import_vg(0, ivp, NULL);
 
 	return ivp->vg;
 }

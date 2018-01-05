@@ -332,8 +332,9 @@ struct process_raw_mda_header_params {
 	int ret;
 };
 
-static void _process_raw_mda_header(struct process_raw_mda_header_params *prmp)
+static void _process_raw_mda_header(int failed, void *context, void *data)
 {
+	struct process_raw_mda_header_params *prmp = context;
 	struct mda_header *mdah = prmp->mdah;
 	struct device_area *dev_area = &prmp->dev_area;
 
@@ -413,7 +414,7 @@ static struct mda_header *_raw_read_mda_header(struct dm_pool *mem, struct devic
 		return_NULL;
 	}
 
-	_process_raw_mda_header(prmp);
+	_process_raw_mda_header(0, prmp, NULL);
 
 	if (!prmp->ret)
 		return_NULL;
@@ -1347,8 +1348,9 @@ struct vgname_from_mda_params{
 	int ret;
 };
 
-static void _vgname_from_mda_process(struct vgname_from_mda_params *vfmp)
+static void _vgname_from_mda_process(int failed, void *context, void *data)
 {
+	struct vgname_from_mda_params *vfmp = context;
 	struct mda_header *mdah = vfmp->mdah;
 	struct device_area *dev_area = vfmp->dev_area;
 	struct lvmcache_vgsummary *vgsummary = vfmp->vgsummary;
@@ -1386,8 +1388,10 @@ out:
 	;
 }
 
-static void _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char *buffer)
+static void _vgname_from_mda_validate(int failed, void *context, void *data)
 {
+	struct vgname_from_mda_params *vfmp = context;
+	char *buffer = data;
 	const struct format_type *fmt = vfmp->fmt;
 	struct mda_header *mdah = vfmp->mdah;
 	struct device_area *dev_area = vfmp->dev_area;
@@ -1439,7 +1443,7 @@ static void _vgname_from_mda_validate(struct vgname_from_mda_params *vfmp, char 
 		goto_out;
 	}
 
-	_vgname_from_mda_process(vfmp);
+	_vgname_from_mda_process(0, vfmp, NULL);
 
 out:
 	;
@@ -1492,7 +1496,7 @@ int vgname_from_mda(const struct format_type *fmt,
 			  NAME_LEN, MDA_CONTENT_REASON(primary_mda), buf))
 		return_0;
 
-	_vgname_from_mda_validate(vfmp, buf);
+	_vgname_from_mda_validate(0, vfmp, buf);
 
 	return vfmp->ret;
 }
