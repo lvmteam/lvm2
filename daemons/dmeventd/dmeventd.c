@@ -754,6 +754,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 	struct thread_status *thread;
 	struct timespec timeout;
 	time_t curr_time;
+	int ret;
 
 	DEBUGLOG("Timeout thread starting.");
 	pthread_cleanup_push(_exit_timeout, NULL);
@@ -775,7 +776,10 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 				} else {
 					DEBUGLOG("Sending SIGALRM to Thr %x for timeout.",
 						 (int) thread->thread);
-					pthread_kill(thread->thread, SIGALRM);
+					ret = pthread_kill(thread->thread, SIGALRM);
+					if (ret && (ret != ESRCH))
+						log_error("Unable to wakeup Thr %x for timeout: %s.",
+							  (int) thread->thread, strerror(ret));
 				}
 				_unlock_mutex();
 			}
