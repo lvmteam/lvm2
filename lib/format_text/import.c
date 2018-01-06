@@ -46,6 +46,11 @@ static void _import_vgsummary(int failed, void *context, void *data)
 	struct import_vgsummary_params *ivsp = context;
 	struct text_vg_version_ops **vsn;
 
+	if (failed) {
+		ivsp->ret = 0;
+		goto_out;
+	}
+
 	if (ivsp->checksum_only)
 		/* Checksum matches already-cached content - no need to reparse. */
 		goto out;
@@ -100,22 +105,19 @@ int text_vgsummary_import(const struct format_type *fmt,
 	ivsp->vgsummary = vgsummary;
 	ivsp->ret = 1;
 
-	if (!dev && !config_file_read(fmt->cmd->mem, ivsp->cft)) {
-		log_error("Couldn't read volume group metadata.");
-		config_destroy(ivsp->cft);
-		return 0;
-	}
-
-	if (dev && !config_file_read_fd(fmt->cmd->mem, ivsp->cft, dev, reason, offset, size,
+	if (!dev) {
+		if (!config_file_read(fmt->cmd->mem, ivsp->cft)) {
+			log_error("Couldn't read volume group metadata.");
+			ivsp->ret = 0;
+		}
+		_import_vgsummary(!ivsp->ret, ivsp, NULL);
+	} else if (!config_file_read_fd(fmt->cmd->mem, ivsp->cft, dev, reason, offset, size,
 					offset2, size2, checksum_fn,
 					vgsummary->mda_checksum,
-					checksum_only, 1)) {
+					checksum_only, 1, &_import_vgsummary, ivsp)) {
 		log_error("Couldn't read volume group metadata.");
-		config_destroy(ivsp->cft);
 		return 0;
 	}
-
-	_import_vgsummary(0, ivsp, NULL);
 
 	return ivsp->ret;
 }
@@ -229,14 +231,15 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		return_NULL;
 	}
 
-	if (dev && !config_file_read_fd(fid->mem, ivp->cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
+	if (dev) {
+		if (!config_file_read_fd(fid->mem, ivp->cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
 					offset2, size2, checksum_fn, checksum,
-					ivp->skip_parse, 1)) {
-		config_destroy(ivp->cft);
-		return_NULL;
-	}
-
-	_import_vg(0, ivp, NULL);
+					ivp->skip_parse, 1, &_import_vg, ivp)) {
+			config_destroy(ivp->cft);
+			return_NULL;
+		}
+	} else
+		_import_vg(0, ivp, NULL);
 
 	return ivp->vg;
 }

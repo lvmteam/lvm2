@@ -33,7 +33,9 @@
 #define DEV_NOT_O_NOATIME	0x00000400	/* Don't use O_NOATIME */
 
 /*
- * Standard format for callback functions
+ * Standard format for callback functions.
+ * When provided, callback functions are called exactly once.
+ * If failed is set, data cannot be accessed.
  */
 typedef void (*lvm_callback_fn_t)(int failed, void *context, void *data);
 
@@ -154,6 +156,10 @@ const char *dev_name(const struct device *dev);
 char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason);
 char *dev_read_circular(struct device *dev, uint64_t offset, size_t len,
 			uint64_t offset2, size_t len2, dev_io_reason_t reason);
+
+/* Passes the data to dev_read_callback_fn */
+int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
+		      lvm_callback_fn_t dev_read_callback_fn, void *callback_context);
 
 /* Read data and copy it into a supplied private buffer. */
 /* Only use for tiny reads or on unimportant code paths. */

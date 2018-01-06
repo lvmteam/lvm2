@@ -1,5 +1,6 @@
 Version 2.02.178 - 
 =====================================
+  Refactor metadata reading code to use callback functions.
   Move memory allocation for the key dev_reads into the device layer.
 
 Version 2.02.177 - 18th December 2017

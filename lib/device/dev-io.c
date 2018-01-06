@@ -763,6 +763,33 @@ char *dev_read(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t 
 	return buf;
 }
 
+/* Callback fn is responsible for dm_free */
+int dev_read_callback(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason,
+		      lvm_callback_fn_t dev_read_callback_fn, void *callback_context)
+{
+	char *buf;
+	int r = 0;
+
+	if (!(buf = dm_malloc(len))) {
+		log_error("Buffer allocation failed for device read.");
+		goto out;
+	}
+
+	if (!_dev_read(dev, offset, len, reason, buf)) {
+		log_error("Read from %s failed", dev_name(dev));
+		dm_free(buf);
+		goto out;
+	}
+
+	r = 1;
+
+out:
+	if (dev_read_callback_fn)
+		dev_read_callback_fn(!r, callback_context, buf);
+
+	return r;
+}
+
 /* Read into supplied retbuf */
 int dev_read_buf(struct device *dev, uint64_t offset, size_t len, dev_io_reason_t reason, void *retbuf)
 {
